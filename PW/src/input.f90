@@ -139,7 +139,8 @@ SUBROUTINE iosys()
                             yukawa_           => yukawa, &
                             ecutvcut_         => ecutvcut, &
                             ecutfock_         => ecutfock, &
-                            local_thr, use_scdm, use_ace
+                            use_ace, local_thr 
+  USE loc_scdm,      ONLY : use_scdm, scdm_den, scdm_grd 
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
@@ -211,7 +212,6 @@ SUBROUTINE iosys()
   USE read_pseudo_mod,       ONLY : readpp
 
   USE qmmm,                  ONLY : qmmm_config
-
   !
   ! ... CONTROL namelist
   !
@@ -242,7 +242,8 @@ SUBROUTINE iosys()
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
                                exx_fraction, screening_parameter, ecutfock, &
-                               gau_parameter, localization_thr, scdm, ace,  &
+                               gau_parameter, localization_thr, scdm, ace,    &
+                               scdmden, scdmgrd,                              & 
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
@@ -295,9 +296,8 @@ SUBROUTINE iosys()
   ! ... CARDS
   !
   USE input_parameters,      ONLY : k_points, xk, wk, nk1, nk2, nk3,  &
-                                    k1, k2, k3, nkstot
+                                 k1, k2, k3, nkstot
   USE input_parameters,      ONLY : nconstr_inp, trd_ht, rd_ht, cell_units
-  USE input_parameters,      ONLY : deallocate_input_parameters
   !
   USE constraints_module,    ONLY : init_constraint
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
@@ -306,6 +306,7 @@ SUBROUTINE iosys()
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
   USE us,                    ONLY : spline_ps_ => spline_ps
   !
+  USE input_parameters,      ONLY : deallocate_input_parameters
   USE wyckoff,               ONLY : nattot, sup_spacegroup
   USE qexsd_module,          ONLY : qexsd_input_obj
   USE qes_types_module,      ONLY: input_type
@@ -1536,13 +1537,11 @@ SUBROUTINE iosys()
   exxdiv_treatment_ = trim(exxdiv_treatment)
   yukawa_   = yukawa
   ecutvcut_ = ecutvcut
+  use_ace   = ace
   local_thr = localization_thr
   use_scdm  = scdm
-  use_ace   = ace
-  IF ( .NOT.scdm .AND. localization_thr > 0.0_dp ) &
-     CALL infomsg ('iosys', 'localization threshold needs SCDM')
-  IF ( scdm .AND..NOT.ace ) &
-     CALL errore  ('iosys', 'SCDM implemented only with ACE',1)
+  scdm_den = scdmden
+  scdm_grd = scdmgrd
   !
   IF(ecutfock <= 0.0_DP) THEN
      ! default case

@@ -185,6 +185,7 @@ s_psi.o \
 save_in_cbands.o \
 save_in_electrons.o \
 scale_h.o \
+loc_scdm.o \
 scf_mod.o \
 set_kplusq.o \
 set_kup_and_kdw.o \

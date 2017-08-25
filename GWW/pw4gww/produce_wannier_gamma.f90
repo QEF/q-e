@@ -177,7 +177,7 @@
             CALL exx_grid_init()
             CALL exx_div_check()
             call stop_exx()
-            call  exxinit
+            call  exxinit(.false.)
             call start_exx()
             current_k= 1
                !the following is very important                                                                                                                            
@@ -432,7 +432,7 @@
 !if EXX is one calculates stuff for Fock operator
                 if(dft_is_hybrid()) then
 !NOT_TO_BE_INCLUDED_START
-                   call  exxinit
+                   call  exxinit(.false.)
                    current_k= 1
 !NOT_TO_BE_INCLUDED_END
                 endif

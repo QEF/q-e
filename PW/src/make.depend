@@ -412,6 +412,7 @@ electrons.o : extfield.o
 electrons.o : exx.o
 electrons.o : io_rho_xml.o
 electrons.o : ldaU.o
+electrons.o : loc_scdm.o
 electrons.o : newd.o
 electrons.o : paw_onecenter.o
 electrons.o : paw_symmetry.o
@@ -885,6 +886,7 @@ init_vloc.o : pwcom.o
 input.o : ../../KS_Solvers/CG/constants.o
 input.o : ../../Modules/bfgs_module.o
 input.o : ../../Modules/cell_base.o
+input.o : ../../Modules/check_stop.o
 input.o : ../../Modules/constraints_module.o
 input.o : ../../Modules/control_flags.o
 input.o : ../../Modules/fcp_variables.o
@@ -921,6 +923,7 @@ input.o : esm.o
 input.o : extfield.o
 input.o : exx.o
 input.o : ldaU.o
+input.o : loc_scdm.o
 input.o : martyna_tuckerman.o
 input.o : pwcom.o
 input.o : realus.o
@@ -967,6 +970,19 @@ ldaU.o : ../../Modules/ions_base.o
 ldaU.o : ../../Modules/kind.o
 ldaU.o : ../../Modules/parameters.o
 ldaU.o : atomic_wfc_mod.o
+loc_scdm.o : ../../KS_Solvers/CG/constants.o
+loc_scdm.o : ../../Modules/cell_base.o
+loc_scdm.o : ../../Modules/fft_base.o
+loc_scdm.o : ../../Modules/io_global.o
+loc_scdm.o : ../../Modules/ions_base.o
+loc_scdm.o : ../../Modules/kind.o
+loc_scdm.o : ../../Modules/mp_bands.o
+loc_scdm.o : ../../Modules/noncol.o
+loc_scdm.o : ../../Modules/xc_vdW_DF.o
+loc_scdm.o : ../../UtilXlib/mp.o
+loc_scdm.o : exx.o
+loc_scdm.o : pwcom.o
+loc_scdm.o : scf_mod.o
 make_pointlists.o : ../../Modules/cell_base.o
 make_pointlists.o : ../../Modules/fft_base.o
 make_pointlists.o : ../../Modules/io_global.o

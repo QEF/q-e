@@ -32,6 +32,7 @@ MODULE exx
   COMPLEX(DP), ALLOCATABLE :: psi_exx(:,:), hpsi_exx(:,:)
   COMPLEX(DP), ALLOCATABLE :: evc_exx(:,:), psic_exx(:)
   INTEGER :: lda_original, n_original
+  integer :: ibnd_buff_start, ibnd_buff_end
   !
   ! general purpose vars
   !
@@ -56,19 +57,19 @@ MODULE exx
   INTEGER :: ibnd_end = 0                ! ending band index used in bgrp parallelization
 
   COMPLEX(DP), ALLOCATABLE :: exxbuff(:,:,:)
-                                         ! temporary buffer for wfc storage
+                                         ! temporary (complex) buffer for wfc storage
+  REAL(DP), ALLOCATABLE    :: locbuff(:,:,:)
+                                         ! temporary (real) buffer for wfc storage
   !
-  LOGICAL :: use_ace=.true.  !  true: Use Lin Lin's ACE method
-                             !  false: do not use ACE, use old algorithm instead
+  LOGICAL :: use_ace        !  true: Use Lin Lin's ACE method
+                            !  false: do not use ACE, use old algorithm instead
   COMPLEX(DP), ALLOCATABLE :: xi(:,:,:)  ! ACE projectors
   INTEGER :: nbndproj
   LOGICAL :: domat
+  REAL(DP)::  local_thr        ! threshold for Lin Lin's SCDM localized orbitals:
+                               ! discard contribution to V_x if overlap between
+                               ! localized orbitals is smaller than "local_thr"
   !
-  LOGICAL :: use_scdm=.false. ! if .true. enable Lin Lin's SCDM localization
-                              ! currently implemented only within ACE formalism
-  REAL(DP):: local_thr        ! threshold for Lin Lin's SCDM localized orbitals:
-                              ! discard contribution to V_x if overlap between
-                              ! localized orbitals is smaller than "local_thr"
   !
 #if defined(__USE_INTEL_HBM_DIRECTIVES)
 !DIR$ ATTRIBUTES FASTMEM :: exxbuff
@@ -294,7 +295,7 @@ MODULE exx
     IF ( allocated(x_occupation) ) DEALLOCATE(x_occupation)
     IF ( allocated(xkq_collect) )  DEALLOCATE(xkq_collect)
     IF ( allocated(exxbuff) )      DEALLOCATE(exxbuff)
-!civn
+    IF ( allocated(locbuff) )      DEALLOCATE(locbuff)
     IF ( allocated(xi) )      DEALLOCATE(xi)
     !
     IF(allocated(becxx)) THEN
@@ -752,19 +753,25 @@ MODULE exx
      exxalfa = get_exx_fraction()
      CALL start_exx()
      CALL weights()
-     CALL exxinit()
+     IF(local_thr.gt.0.0d0) Call errore('exx_restart','SCDM with restart NYI',1)
+     CALL exxinit(.false.)
+     IF ( use_ace) CALL aceinit ( )
      fock0 = exxenergy2()
+     !
      RETURN
      !------------------------------------------------------------------------
   END SUBROUTINE exx_restart
   !------------------------------------------------------------------------
   !
   !------------------------------------------------------------------------
-  SUBROUTINE exxinit()
+  SUBROUTINE exxinit(DoLoc)
   !------------------------------------------------------------------------
 
     ! This SUBROUTINE is run before the first H_psi() of each iteration.
     ! It saves the wavefunctions for the right density matrix, in real space
+    !
+    ! DoLoc = .true.  ... Real Array exxbuff(ir, nbnd, nkqs)
+    !         .false. ... Complex Array exxbuff(ir, nbnd/2, nkqs)
     !
     USE wavefunctions_module, ONLY : evc, psic
     USE io_files,             ONLY : nwordwfc, iunwfc_exx
@@ -791,7 +798,7 @@ MODULE exx
     IMPLICIT NONE
     INTEGER :: ik,ibnd, i, j, k, ir, isym, ikq, ig
     INTEGER :: h_ibnd
-    INTEGER :: ibnd_loop_start, ibnd_buff_start, ibnd_buff_end
+    INTEGER :: ibnd_loop_start
     INTEGER :: ipol, jpol
     REAL(dp), ALLOCATABLE   :: occ(:,:)
     COMPLEX(DP),ALLOCATABLE :: temppsic(:)
@@ -811,8 +818,11 @@ MODULE exx
     INTEGER, EXTERNAL :: global_kpoint_index
     INTEGER :: ibnd_start_new, ibnd_end_new
     INTEGER :: ibnd_exx, evc_offset
+    LOGICAL :: DoLoc 
     !
     CALL start_clock ('exxinit')
+    write(stdout,'(A,L)') 'exxinit: DoLoc=',DoLoc
+    IF(DoLoc.and..not.gamma_only) Call errore('exxinit','SCDM with K-points NYI',1)
     !
     CALL transform_evc_to_exx(2)
     !
@@ -900,23 +910,38 @@ MODULE exx
         ibnd_buff_end   = ibnd_end_new
     ENDIF
     !
-    IF (.not. allocated(exxbuff)) THEN
-       IF (gamma_only) THEN
-          ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nks))
-       ELSE
-          ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nkqs))
-       END IF
+    IF( DoLoc) then 
+      IF (.not. allocated(locbuff)) ALLOCATE( locbuff(nrxxs*npol, nbnd, nks))
+    ELSE
+      IF (.not. allocated(exxbuff)) THEN
+         IF (gamma_only) THEN
+            ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nks))
+         ELSE
+            ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nkqs))
+         END IF
+      END IF
     END IF
 
     !assign buffer
 !$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs,ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
-    DO ikq=1,SIZE(exxbuff,3)
-       DO ibnd=ibnd_buff_start,ibnd_buff_end
-          DO ir=1,nrxxs*npol
-             exxbuff(ir,ibnd,ikq)=(0.0_DP,0.0_DP)
-          ENDDO
-       ENDDO
-    ENDDO
+    IF(DoLoc) then
+      DO ikq=1,SIZE(locbuff,3) 
+         DO ibnd=1, x_nbnd_occ 
+            DO ir=1,nrxxs*npol
+               locbuff(ir,ibnd,ikq)=(0.0_DP,0.0_DP)
+            ENDDO
+         ENDDO
+      ENDDO
+    ELSE
+      DO ikq=1,SIZE(exxbuff,3) 
+         DO ibnd=ibnd_buff_start,ibnd_buff_end
+            DO ir=1,nrxxs*npol
+               exxbuff(ir,ibnd,ikq)=(0.0_DP,0.0_DP)
+            ENDDO
+         ENDDO
+      ENDDO
+    END IF
+
     !
     !   This is parallelized over pools. Each pool computes only its k-points
     !
@@ -973,8 +998,12 @@ MODULE exx
              ENDIF
 
              CALL invfft ('CustomWave', psic_exx, exx_fft%dfftt)
-
-             exxbuff(1:nrxxs,h_ibnd,ik)=psic_exx(1:nrxxs)
+             IF(DoLoc) then
+               locbuff(1:nrxxs,ibnd-ibnd_loop_start+evc_offset+1,ik)=Dble(  psic_exx(1:nrxxs) )
+               locbuff(1:nrxxs,ibnd-ibnd_loop_start+evc_offset+2,ik)=Aimag( psic_exx(1:nrxxs) )
+             ELSE
+               exxbuff(1:nrxxs,h_ibnd,ik)=psic_exx(1:nrxxs)
+             END IF
              
           ENDDO
           !
@@ -1162,8 +1191,6 @@ MODULE exx
     IF(okpaw) CALL PAW_init_fock_kernel()
     !
     CALL change_data_structure(.FALSE.)
-    !
-    IF ( use_ace) CALL aceinit ( )
     !
     CALL stop_clock ('exxinit')
     !
@@ -5205,11 +5232,6 @@ END SUBROUTINE compute_becpsi
   END SUBROUTINE exxbuff_comm_gamma
   !-----------------------------------------------------------------------
 
-
-
-
-
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE matprt(label,n,m,A)
 IMPLICIT NONE
@@ -5224,6 +5246,7 @@ IMPLICIT NONE
   DO i = 1,n
     WRITE(stdout,frmt) A(i,:)
   ENDDO
+
 END SUBROUTINE
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE errinfo(routine,message,INFO)
@@ -5287,35 +5310,50 @@ SUBROUTINE aceinit( )
 END SUBROUTINE aceinit
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE aceinit_gamma(nnpw,nbnd,phi,xitmp,becpsi,exxe)
-USE becmod,               ONLY : bec_type
-USE wvfct,                ONLY : current_k
+USE becmod,         ONLY : bec_type
+USE wvfct,          ONLY : current_k
+USE mp,             ONLY : mp_stop
 !
 ! compute xi(npw,nbndproj) for the ACE method
 !
 IMPLICIT NONE
-  INTEGER :: nnpw,nbnd
+  INTEGER :: nnpw,nbnd, nrxxs
   COMPLEX(DP) :: phi(nnpw,nbnd)
   real(DP), ALLOCATABLE :: mexx(:,:)
   COMPLEX(DP) :: xitmp(nnpw,nbndproj)
-  INTEGER :: i
   real(DP) :: exxe
   real(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
   TYPE(bec_type), INTENT(in) :: becpsi
+  logical :: domat0
 
   CALL start_clock( 'aceinit' )
 
   IF(nbndproj>nbnd) CALL errore('aceinit','nbndproj greater than nbnd.',1)
   IF(nbndproj<=0) CALL errore('aceinit','nbndproj le 0.',1)
 
+  nrxxs= exx_fft%dfftt%nnr * npol
+
   ALLOCATE( mexx(nbndproj,nbndproj) )
   xitmp = (Zero,Zero)
   mexx = Zero
-! |xi> = Vx[phi]|phi>
-  CALL vexx(nnpw, nnpw, nbndproj, phi, xitmp, becpsi)
-! mexx = <phi|Vx[phi]|phi>
-  CALL matcalc('exact',.true.,.false.,nnpw,nbndproj,nbndproj,phi,xitmp,mexx,exxe)
-! |xi> = -One * Vx[phi]|phi> * rmexx^T
-  CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
+  !
+  IF( local_thr.gt.0.0d0 ) then  
+!    CALL measure_localization(locbuff(1,1,1), nrxxs, nbndproj, mexx)
+    CALL measure_localization_G(locbuff(1,1,1), nrxxs, nbndproj, mexx)
+    CALL vexx_loc(nnpw, nbndproj, xitmp, mexx)
+    CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
+    domat0 = domat
+    domat = .true.
+    CALL vexxace_gamma(nnpw,nbndproj,phi,exxe)
+    domat = domat0
+  ELSE
+!   |xi> = Vx[phi]|phi>
+    CALL vexx(nnpw, nnpw, nbndproj, phi, xitmp, becpsi)
+!   mexx = <phi|Vx[phi]|phi>
+    CALL matcalc('exact',.true.,.false.,nnpw,nbndproj,nbndproj,phi,xitmp,mexx,exxe)
+!   |xi> = -One * Vx[phi]|phi> * rmexx^T
+    CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
+  END IF
   DEALLOCATE( mexx )
 
   CALL stop_clock( 'aceinit' )
@@ -5410,7 +5448,7 @@ IMPLICIT NONE
     DO i = 1,n
      ee = ee + wg(i,current_k)*mat(i,i)
     ENDDO
-    !WRITE(stdout,'(A,f16.8,A)') string//label, ee, ' Ry'
+    WRITE(stdout,'(A,f16.8,A)') string//label, ee, ' Ry'
   ENDIF
 
   CALL stop_clock('matcalc')
@@ -5577,9 +5615,6 @@ IMPLICIT NONE
   CALL stop_clock('aceupdate')
 
 END SUBROUTINE
-
-
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE vexxace_k(nnpw,nbnd,phi,exxe,vphi)
 USE becmod,               ONLY : calbec
@@ -5633,6 +5668,258 @@ IMPLICIT NONE
 
 END SUBROUTINE
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!-----------------------------------------------------------------------
+SUBROUTINE vexx_loc(npw, nbnd, hpsi, mexx)
+USE noncollin_module,  ONLY : npol
+USE cell_base,         ONLY : omega, alat
+USE wvfct,             ONLY : current_k
+USE klist,             ONLY : xk, nks, nkstot
+USE fft_interfaces,    ONLY : fwfft, invfft
+USE mp,                ONLY : mp_stop, mp_barrier, mp_sum
+USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
+implicit none
+!
+!  Exact exchange with SCDM orbitals. 
+!    - Vx|phi> =  Vx|psi> <psi|Vx|psi>^(-1) <psi|Vx|phi>
+!  mexx in input contains the localization integrals, in output the exchange matrix
+!   
+  integer :: npw, nbnd, nrxxs, npairs
+  integer :: ig, ir, ik, ikq, iq, ibnd, jbnd, kbnd, NQR
+  INTEGER :: current_ik
+  real(DP) :: ovpairs(2), mexx(nbnd,nbnd), exxe
+  complex(DP) :: hpsi(npw,nbnd)
+  COMPLEX(DP),ALLOCATABLE :: rhoc(:), vc(:), RESULT(:,:) 
+  REAL(DP),ALLOCATABLE :: fac(:)
+  REAL(DP) :: xkp(3), xkq(3)
+  INTEGER, EXTERNAL  :: global_kpoint_index
+
+
+  write(stdout,'(A)') '---------------------------------'
+  write(stdout,'(A)') 'Exact-exchange with SCDM orbitals'
+  write(stdout,'(A)') '---------------------------------'
+
+  if(nbnd.gt.x_nbnd_occ) CALL errore('vexx_loc', 'nbnd > x_nbnd_occ not debugged yet',1)    
+
+  CALL start_clock('vexxloc')
+
+  write(stdout,'(A,f24.12)') 'local_thr =', local_thr
+  nrxxs= exx_fft%dfftt%nnr
+  NQR = nrxxs*npol
+
+! exchange projected onto localized orbitals (nbnd=occ only)
+  ALLOCATE( fac(exx_fft%ngmt) )
+  ALLOCATE( rhoc(nrxxs), vc(NQR) )
+  ALLOCATE( RESULT(nrxxs,nbnd) ) 
+
+  current_ik = global_kpoint_index ( nkstot, current_k )
+  xkp = xk(:,current_k)
+
+  vc=(0.0d0, 0.0d0)
+  npairs = 0 
+  ovpairs = 0.0d0
+
+  DO iq=1,nqs
+     ikq  = index_xkq(current_ik,iq)
+     ik   = index_xk(ikq)
+     xkq  = xkq_collect(:,ikq)
+     CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xkp, xkq, fac)
+     RESULT = (0.0d0, 0.0d0)
+     DO ibnd = 1,x_nbnd_occ
+!      write(*,'(I1,A,2I1,A)') ibnd, '(',ibnd,ibnd,')'
+       DO ir = 1, NQR 
+         rhoc(ir) = locbuff(ir,ibnd,ikq) * locbuff(ir,ibnd,ikq) / omega
+       ENDDO
+       CALL fwfft ('Custom', rhoc, exx_fft%dfftt)
+       vc=(0.0d0, 0.0d0)
+       DO ig = 1, exx_fft%ngmt
+           vc(exx_fft%nlt(ig))  = fac(ig) * rhoc(exx_fft%nlt(ig)) 
+           vc(exx_fft%nltm(ig)) = fac(ig) * rhoc(exx_fft%nltm(ig))
+       ENDDO
+       CALL invfft ('Custom', vc, exx_fft%dfftt)
+       DO ir = 1, NQR 
+         RESULT(ir,ibnd) = RESULT(ir,ibnd) + locbuff(ir,ibnd,nkqs) * vc(ir) 
+       ENDDO
+
+       DO kbnd = 1, ibnd-1
+         ovpairs(2) = ovpairs(2) + mexx(ibnd,kbnd) 
+         IF(mexx(ibnd,kbnd).gt.local_thr) then 
+           ovpairs(1) = ovpairs(1) + mexx(ibnd,kbnd) 
+           DO ir = 1, NQR 
+             rhoc(ir) = locbuff(ir,ibnd,ikq) * locbuff(ir,kbnd,ikq) / omega
+           ENDDO
+           npairs = npairs + 1
+           CALL fwfft ('Custom', rhoc, exx_fft%dfftt)
+           vc=(0.0d0, 0.0d0)
+           DO ig = 1, exx_fft%ngmt
+               vc(exx_fft%nlt(ig))  = fac(ig) * rhoc(exx_fft%nlt(ig)) 
+               vc(exx_fft%nltm(ig)) = fac(ig) * rhoc(exx_fft%nltm(ig))
+           ENDDO
+           CALL invfft ('Custom', vc, exx_fft%dfftt)
+           DO ir = 1, NQR 
+             RESULT(ir,kbnd) = RESULT(ir,kbnd) + locbuff(ir,ibnd,nkqs) * vc(ir) 
+           ENDDO
+           DO ir = 1, NQR 
+             RESULT(ir,ibnd) = RESULT(ir,ibnd) + locbuff(ir,kbnd,nkqs) * vc(ir) 
+           ENDDO
+!          write(stdout,'(2I4,2f12.6,I10,2f12.6)') ibnd, kbnd, mexx(ibnd,kbnd), ovpairs(1)
+         end if 
+       ENDDO 
+     ENDDO 
+
+     DO jbnd = 1, nbnd
+       CALL fwfft( 'CustomWave' , RESULT(:,jbnd), exx_fft%dfftt )
+       DO ig = 1, npw
+          hpsi(ig,jbnd) = hpsi(ig,jbnd) - exxalfa*RESULT(exx_fft%nlt(ig),jbnd) 
+       ENDDO
+     ENDDO
+
+   ENDDO 
+   DEALLOCATE( fac, vc )
+   DEALLOCATE( RESULT )
+
+!  Localized functions to G-space and exchange matrix onto localized functions
+   allocate( RESULT(npw,nbnd) )
+   RESULT = (0.0d0,0.0d0)
+   DO jbnd = 1, nbnd
+     rhoc(:) = dble(locbuff(:,jbnd,nkqs)) + (0.0d0,1.0d0)*0.0d0
+     CALL fwfft( 'CustomWave' , rhoc, exx_fft%dfftt )
+     DO ig = 1, npw
+       RESULT(ig,jbnd) = rhoc(exx_fft%nlt(ig))
+     ENDDO
+   ENDDO
+   deallocate ( rhoc )
+   CALL matcalc('M1-',.true.,.false.,npw,nbnd,nbnd,RESULT,hpsi,mexx,exxe)
+   deallocate( RESULT )
+
+   write(stdout,'(2(A,I12),A,f12.2)') 'Pairs(full): ', (nbnd*nbnd-nbnd)/2, &
+          ' Pairs(red): ', npairs,       ' % ', float(npairs)/float((nbnd*nbnd-nbnd)/2 )*100.0d0  
+   write(stdout,'(3(A,f12.6))')       'OvPairs(included): ', ovpairs(1),   &
+          ' OvPairs(tot): ', ovpairs(2), ' OvPairs(%): ', ovpairs(1)/ovpairs(2)*100.0d0
+
+  CALL stop_clock('vexxloc')
+
+END SUBROUTINE vexx_loc
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE measure_localization(orbt, NGrid, NBands, MatLoc) 
+USE kinds,             ONLY : DP
+USE cell_base,         ONLY : omega
+USE ions_base,         ONLY : nat  
+USE mp,                ONLY : mp_sum
+USE mp_bands,          ONLY : intra_bgrp_comm
+implicit none
+  integer :: NGrid, NBands, nxxs, ir, jbnd, kbnd
+  real(DP) :: orbt(NGrid, NBands)
+  real(DP) ::  cost, loc_diag, loc_off, tmp 
+  real(DP), allocatable :: Mat(:,:)
+  real(DP), optional :: MatLoc(NBands,NBands)
+  real(DP), parameter :: epss=0.0010d0
+
+  call start_clock('measure')
+
+  write(stdout,'(A)') '-------------------'
+  write(stdout,'(A)') 'Localization matrix'
+  write(stdout,'(A)') '-------------------'
+
+  nxxs = exx_fft%dfftt%nr1x *exx_fft%dfftt%nr2x *exx_fft%dfftt%nr3x
+  cost = 1.0d0/float(nxxs)
+  loc_diag = 0.0d0
+  loc_off = 0.0d0  
+
+  allocate( Mat(NBands,NBands) )
+  Mat = 0.0d0
+  DO ir = 1, NGrid 
+    DO jbnd = 1, NBands
+      Mat(jbnd,jbnd) = Mat(jbnd,jbnd) + cost * abs(orbt(ir,jbnd)) * abs(orbt(ir,jbnd))
+      DO kbnd = 1, jbnd - 1 
+        tmp = cost * abs(orbt(ir,jbnd)) * abs(orbt(ir,kbnd))
+        Mat(jbnd,kbnd) = Mat(jbnd,kbnd) + tmp 
+        Mat(kbnd,jbnd) = Mat(kbnd,jbnd) + tmp
+      ENDDO
+    ENDDO
+  ENDDO
+  call mp_sum(mat,intra_bgrp_comm)
+  DO jbnd = 1, NBands
+    loc_diag = loc_diag + Mat(jbnd,jbnd) 
+    DO kbnd = 1, jbnd - 1 
+      loc_off = loc_off + Mat(jbnd,kbnd) 
+    ENDDO
+  ENDDO
+  IF(present(MatLoc)) MAtLoc = Mat
+  deallocate( Mat )
+
+  write(stdout,'(A,f12.6,I3)') '    Total Charge =', loc_diag 
+  write(stdout,'(A,f12.6,I3)') '    Total Localization =', loc_off 
+  tmp = float(NBands*(NBands-1))/2.0d0  
+  write(stdout,'(A,f12.6,I3)') '    Localization per orbital pair =', loc_off/tmp 
+  write(stdout,'(A,f12.6,I3)') '    Localization per unit vol =', loc_off/omega
+  write(stdout,'(A,f12.6,I3)') '    Localization per atom =', loc_off/float(nat)
+  if(abs(loc_diag-float(NBands)).gt.epss) Call errore('measure_localization','Orthonormality broken',1)
+
+  call stop_clock('measure')
+
+END SUBROUTINE 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE measure_localization_G(orbt, NGrid, NBands, MatLoc) 
+USE kinds,             ONLY : DP
+USE cell_base,         ONLY : omega
+USE ions_base,         ONLY : nat  
+USE mp,                ONLY : mp_sum
+USE mp_bands,          ONLY : intra_bgrp_comm
+USE fft_interfaces,    ONLY : fwfft, invfft
+USE wvfct,             ONLY : npwx
+implicit none
+  integer :: NGrid, NBands, nxxs, ir, jbnd, kbnd, ig
+  real(DP) :: orbt(NGrid, NBands)
+  real(DP) ::  cost, loc_diag, loc_off, tmp 
+  real(DP), allocatable :: Mat(:,:)
+  complex(DP), allocatable :: buffer(:), Gorbt(:,:)
+  real(DP), optional :: MatLoc(NBands,NBands)
+  real(DP), parameter :: epss=0.000010d0
+
+  call start_clock('measure')
+
+  write(stdout,'(A)') '-----------------------'
+  write(stdout,'(A)') 'Localization matrix (G)'
+  write(stdout,'(A)') '-----------------------'
+
+! Localized functions to G-space and exchange matrix onto localized functions
+  allocate( buffer(NGrid), Gorbt(npwx,NBands) )
+  allocate( Mat(NBands,NBands) )
+  Mat = 0.0d0
+  buffer = (0.0d0,0.0d0)
+  Gorbt = (0.0d0,0.0d0) 
+  DO jbnd = 1, NBands 
+    buffer(:) = abs(dble(orbt(:,jbnd))) + (0.0d0,1.0d0)*0.0d0
+    CALL fwfft( 'CustomWave' , buffer, exx_fft%dfftt )
+    DO ig = 1, npwx
+      Gorbt(ig,jbnd) = buffer(exx_fft%nlt(ig))
+    ENDDO
+  ENDDO
+  deallocate ( buffer )
+  CALL matcalc('Coeff-',.false.,.false.,npwx,NBands,NBands,Gorbt,Gorbt,Mat,tmp)
+  deallocate ( Gorbt )
+
+  loc_diag = 0.0d0
+  loc_off = 0.0d0
+  DO jbnd = 1, NBands
+    loc_diag = loc_diag + Mat(jbnd,jbnd) 
+    DO kbnd = 1, jbnd - 1 
+      loc_off = loc_off + Mat(jbnd,kbnd) 
+    ENDDO
+  ENDDO
+  IF(present(MatLoc)) MAtLoc = Mat
+  deallocate( Mat )
+
+  write(stdout,'(A,f12.6,I3)') '    Total Charge =', loc_diag 
+  write(stdout,'(A,f12.6,I3)') '    Total Localization =', loc_off 
+  tmp = float(NBands*(NBands-1))/2.0d0  
+  write(stdout,'(A,f12.6,I3)') '    Localization per orbital pair =', loc_off/tmp 
+  write(stdout,'(A,f12.6,I3)') '    Localization per unit vol =', loc_off/omega
+  write(stdout,'(A,f12.6,I3)') '    Localization per atom =', loc_off/float(nat)
+! if(abs(loc_diag-float(NBands)).gt.epss) Call errore('measure_localization','Orthonormality broken',1)
+
+  call stop_clock('measure')
+
+END SUBROUTINE 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END MODULE exx
 !-----------------------------------------------------------------------

@@ -219,9 +219,11 @@ MODULE read_namelists_module
        !
        ! ... EXX
        !
+       ace=.TRUE.
        localization_thr = 0.0_dp
        scdm=.FALSE.
-       ace=.TRUE.
+       scdmden=0.10d0
+       scdmgrd=0.20d0
        !
        ! ... electric fields
        !
@@ -798,9 +800,11 @@ MODULE read_namelists_module
 
        ! ... EXX
 
+       CALL mp_bcast( ace,                 ionode_id, intra_image_comm )
        CALL mp_bcast( localization_thr,    ionode_id, intra_image_comm )
        CALL mp_bcast( scdm,                ionode_id, intra_image_comm )
-       CALL mp_bcast( ace,                 ionode_id, intra_image_comm )
+       CALL mp_bcast( scdmden,             ionode_id, intra_image_comm )
+       CALL mp_bcast( scdmgrd,             ionode_id, intra_image_comm )
        CALL mp_bcast( nqx1,                   ionode_id, intra_image_comm )
        CALL mp_bcast( nqx2,                   ionode_id, intra_image_comm )
        CALL mp_bcast( nqx3,                   ionode_id, intra_image_comm )
