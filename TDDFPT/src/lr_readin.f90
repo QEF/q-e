@@ -69,7 +69,6 @@ SUBROUTINE lr_readin
                                   environ_clean, environ_initbase,         &
                                   environ_initions_allocate
   USE environ_main,        ONLY : calc_venviron
-  USE mp_bands,            ONLY : me_bgrp
   USE plugin_flags,        ONLY : use_environ
 #endif
   
@@ -610,15 +609,17 @@ CONTAINS
     !
     ! No taskgroups and EXX.
     !
-    IF (dffts%have_task_groups .AND. dft_is_hybrid()) &
-         & CALL errore( 'lr_readin', ' Linear response calculation ' // &
-         & 'not implemented for EXX+Task groups', 1 )
+    !IF (dffts%have_task_groups .AND. dft_is_hybrid()) &
+    !     & CALL errore( 'lr_readin', ' Linear response calculation ' // &
+    !     & 'not implemented for EXX+Task groups', 1 )
     !
     ! Experimental task groups warning.
     !
     IF (dffts%have_task_groups) &
-         & CALL infomsg( 'lr_readin','Usage of task &
-         &groups with TDDFPT is still experimental. Use at your own risk.' )
+    !     & CALL infomsg( 'lr_readin','Usage of task &
+    !     &groups with TDDFPT is still experimental. Use at your own risk.' )
+          & CALL errore( 'lr_readin', ' Linear response calculation ' // &
+          & 'not implemented for task groups', 1 )
     !
     ! No PAW support.
     !
