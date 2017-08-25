@@ -117,7 +117,7 @@
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: stress_kin, enkin
       USE fft_interfaces,     ONLY: fwfft, invfft
-      USE fft_base,           ONLY: dffts, dfftp, dfft3d
+      USE fft_base,           ONLY: dffts, dfftp
       USE cp_interfaces,      ONLY: checkrho, ennl, calrhovan, dennl
       USE cp_main_variables,  ONLY: iprint_stdout, descla
       USE wannier_base,       ONLY: iwf
@@ -152,8 +152,7 @@
 
       ! local variables
 
-      INTEGER  :: iss, isup, isdw, iss1, iss2, ios, i, ir, ig, k
-      INTEGER  :: ioff, ioff_tg, nxyp, ir3
+      INTEGER  :: iss, isup, isdw, iss1, iss2, i, ir, ig, k
       REAL(DP) :: rsumr(2), rsumg(2), sa1, sa2, detmp(6), mtmp(3,3)
       REAL(DP) :: rnegsum, rmin, rmax, rsum
       COMPLEX(DP) :: ci,fp,fm

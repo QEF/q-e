@@ -34,7 +34,7 @@
       use gvecs,                only: gcutms, gvecs_init
       use gvecw,                only: gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY: ggenb
-      USE fft_base,             ONLY: dfftp, dffts, dfftb, dfft3d, fft_base_info
+      USE fft_base,             ONLY: dfftp, dffts, dfftb, fft_base_info
       USE fft_smallbox,         ONLY: cft_b_omp_init
       USE fft_base,             ONLY: smap
       USE control_flags,        ONLY: gamma_only, smallmem
@@ -89,6 +89,9 @@
 
       ! ... Initialize FFT real-space grids and small box grid
       nyfft_ = ntask_groups
+      dffts%have_task_groups = (ntask_groups >1)
+      dfftp%have_task_groups = .FALSE.
+      lpara = ( nproc_bgrp > 1 )
       !
       IF ( ref_cell ) THEN
         !
@@ -100,17 +103,13 @@
         WRITE( stdout,'(3X,"ref_cell_a2 =",1X,3f14.8,3x,"ref_cell_b2 =",3f14.8)') ref_at(:,2)*ref_alat,ref_bg(:,2)/ref_alat
         WRITE( stdout,'(3X,"ref_cell_a3 =",1X,3f14.8,3x,"ref_cell_b3 =",3f14.8)') ref_at(:,3)*ref_alat,ref_bg(:,3)/ref_alat
         !
-        dffts%have_task_groups = (ntask_groups >1)
         CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg, gkcut, nyfft=nyfft_ )
         CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, ref_at, ref_bg,  gcutm, nyfft=nyfft_ )
-        CALL fft_type_init( dfft3d, smap, "wave", gamma_only, .false., intra_bgrp_comm, ref_at, ref_bg, gkcut, nyfft=nyfft_)
         !
       ELSE
         !
-        dffts%have_task_groups = (ntask_groups >1)
         CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, at, bg, gkcut, nyfft=nyfft_ )
         CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, at, bg,  gcutm, nyfft=nyfft_ )
-        CALL fft_type_init( dfft3d, smap, "wave", gamma_only, .false., intra_bgrp_comm, at, bg, gkcut, nyfft=nyfft_)
         !
       END IF
       !
