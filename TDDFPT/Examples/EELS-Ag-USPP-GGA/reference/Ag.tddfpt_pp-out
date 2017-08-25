@@ -1,6 +1,6 @@
  Warning: Only a single CPU will be used!
 
-     Program TDDFPT_PP v.6.0 (svn rev. 13298) starts on 10Feb2017 at  9:47:11 
+     Program TDDFPT_PP v.6.1 (svn rev. 13774) starts on 25Aug2017 at 12:51: 2 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -16,8 +16,8 @@
         500 steps will be considered
 
      Lanczos coefficients:
-     Average =    19.76750832
-     Average oscillation amplitude =     0.11790700
+     Average =    19.76750868
+     Average oscillation amplitude =     0.11790714
 
      Data ready, starting to calculate observables...
 
@@ -35,10 +35,10 @@
      The exact number of electrons:  11.00
      The violation of the f-sum rule:  41.44 %
  
-     TDDFPT_PP    :     3.19s CPU         3.29s WALL
+     TDDFPT_PP    :     3.38s CPU         3.38s WALL
 
  
-   This run was terminated on:   9:47:14  10Feb2017            
+   This run was terminated on:  12:51: 5  25Aug2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
