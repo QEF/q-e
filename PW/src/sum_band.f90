@@ -252,7 +252,7 @@ SUBROUTINE sum_band()
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
        LOGICAL :: use_tg
-       INTEGER :: right_nnr, right_nr3, right_inc
+       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp
        !
        !
        ! ... here we sum for each k point the contribution
@@ -269,7 +269,7 @@ SUBROUTINE sum_band()
           ALLOCATE( tg_psi( v_siz ) )
           ALLOCATE( tg_rho( v_siz ) )
           !
-          incr  = 2 *  dffts%nproc2
+          incr  = 2 *  fftx_ntgrp(dffts)
           !
        END IF
        !
@@ -306,10 +306,11 @@ SUBROUTINE sum_band()
                 ioff   = 0
                 !
                 CALL tg_get_nnr( dffts, right_nnr )
+                ntgrp = fftx_ntgrp(dffts)
                 !
-                DO idx = 1, 2*dffts%nproc2, 2
+                DO idx = 1, 2*ntgrp, 2
                    !
-                   ! ... 2*dffts%nproc2 ffts at the same time
+                   ! ... 2*ntgrp ffts at the same time
                    !
                    IF( idx + ibnd - 1 < ibnd_end ) THEN
                       DO j = 1, npw
@@ -332,7 +333,7 @@ SUBROUTINE sum_band()
                 CALL invfft ('tgWave', tg_psi, dffts )
                 !
                 ! Now the first proc of the group holds the first two bands
-                ! of the 2*dffts%nproc2 bands that we are processing at the same time,
+                ! of the 2*ntgrp bands that we are processing at the same time,
                 ! the second proc. holds the third and fourth band
                 ! and so on
                 !
@@ -491,7 +492,7 @@ SUBROUTINE sum_band()
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:), tg_psi_nc(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:), tg_rho_nc(:,:)
        LOGICAL  :: use_tg
-       INTEGER :: right_nnr, right_nr3, right_inc
+       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -512,7 +513,7 @@ SUBROUTINE sum_band()
              ALLOCATE( tg_rho( v_siz ) )
           ENDIF
           !
-          incr  = dffts%nproc2
+          incr  = fftx_ntgrp(dffts)
           !
        END IF
        !
@@ -540,7 +541,7 @@ SUBROUTINE sum_band()
           DO ibnd = ibnd_start, ibnd_end, incr
              !
              IF( use_tg ) THEN
-                DO idx = 1, dffts%nproc2
+                DO idx = 1, fftx_ntgrp(dffts)
                    IF( idx + ibnd - 1 <= ibnd_end ) eband = eband + et( idx + ibnd - 1, ik ) * wg( idx + ibnd - 1, ik )
                 END DO
              ELSE
@@ -558,12 +559,13 @@ SUBROUTINE sum_band()
                    tg_psi_nc = ( 0.D0, 0.D0 )
                    !
                    CALL tg_get_nnr( dffts, right_nnr )
+                   ntgrp = fftx_ntgrp( dffts )
                    !
                    ioff   = 0
                    !
-                   DO idx = 1, dffts%nproc2
+                   DO idx = 1, ntgrp
                       !
-                      ! ... dffts%nproc2 ffts at the same time
+                      ! ... ntgrp ffts at the same time
                       !
                       IF( idx + ibnd - 1 <= ibnd_end ) THEN
                          DO j = 1, npw
@@ -582,7 +584,7 @@ SUBROUTINE sum_band()
                    CALL invfft ('tgWave', tg_psi_nc(:,2), dffts)
                    !
                    ! Now the first proc of the group holds the first band
-                   ! of the dffts%nproc2 bands that we are processing at the same time,
+                   ! of the ntgrp bands that we are processing at the same time,
                    ! the second proc. holds the second and so on
                    !
                    ! Compute the proper factor for each band
@@ -651,10 +653,11 @@ SUBROUTINE sum_band()
                    ioff   = 0
                    !
                    CALL tg_get_nnr( dffts, right_nnr )
+                   ntgrp = fftx_ntgrp( dffts )
                    !
-                   DO idx = 1, dffts%nproc2
+                   DO idx = 1, ntgrp
                       !
-                      ! ... dffts%nproc2 ffts at the same time
+                      ! ... ntgrp ffts at the same time
                       !
                       IF( idx + ibnd - 1 <= ibnd_end ) THEN
 !$omp do
@@ -672,7 +675,7 @@ SUBROUTINE sum_band()
                    CALL invfft ('tgWave', tg_psi, dffts)
                    !
                    ! Now the first proc of the group holds the first band
-                   ! of the dffts%nproc2 bands that we are processing at the same time,
+                   ! of the ntgrp bands that we are processing at the same time,
                    ! the second proc. holds the second and so on
                    !
                    ! Compute the proper factor for each band

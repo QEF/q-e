@@ -53,7 +53,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
      CALL tg_gather( dffts, v, tg_v )
      CALL stop_clock ('vloc_psi:tg_gather')
      !
-     incr = 2 * dffts%nproc2
+     incr = 2 * fftx_ntgrp(dffts)
      !
   ENDIF
   !
@@ -68,7 +68,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         tg_psic = (0.d0, 0.d0)
         ioff   = 0
         !
-        DO idx = 1, 2*dffts%nproc2, 2
+        DO idx = 1, 2*fftx_ntgrp(dffts), 2
            IF( idx + ibnd - 1 < m ) THEN
               DO j = 1, n
                  tg_psic(nls (j)+ioff) =        psi(j,idx+ibnd-1) + &
@@ -141,7 +141,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         !
         CALL tg_get_recip_inc( dffts, right_inc )
         !
-        DO idx = 1, 2*dffts%nproc2, 2
+        DO idx = 1, 2*fftx_ntgrp(dffts), 2
            !
            IF( idx + ibnd - 1 < m ) THEN
               DO j = 1, n
@@ -254,12 +254,12 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
 
      CALL tg_get_nnr( dffts, right_nnr )
 
-     DO ibnd = 1, m, dffts%nproc2
+     DO ibnd = 1, m, fftx_ntgrp(dffts)
         !
         tg_psic = (0.d0, 0.d0)
         ioff   = 0
         !
-        DO idx = 1, dffts%nproc2
+        DO idx = 1, fftx_ntgrp(dffts)
 
            IF( idx + ibnd - 1 <= m ) THEN
 !$omp parallel do
@@ -297,7 +297,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
         !
         CALL tg_get_recip_inc( dffts, right_inc )
         !
-        DO idx = 1, dffts%nproc2
+        DO idx = 1, fftx_ntgrp(dffts)
            !
            IF( idx + ibnd - 1 <= m ) THEN
 !$omp parallel do
@@ -422,7 +422,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
      ALLOCATE( tg_psic( v_siz, npol ) )
      CALL stop_clock ('vloc_psi:tg_gather')
 
-     incr = dffts%nproc2
+     incr = fftx_ntgrp(dffts)
   ENDIF
   !
   ! the local potential V_Loc psi. First the psi in real space
@@ -438,7 +438,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
            tg_psic(:,ipol) = ( 0.D0, 0.D0 )
            ioff   = 0
            !
-           DO idx = 1, dffts%nproc2
+           DO idx = 1, fftx_ntgrp(dffts)
               !
               IF( idx + ibnd - 1 <= m ) THEN
                  DO j = 1, n
@@ -513,7 +513,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
            !
            CALL tg_get_recip_inc( dffts, right_inc )
            !
-           DO idx = 1, dffts%nproc2
+           DO idx = 1, fftx_ntgrp(dffts)
               !
               IF( idx + ibnd - 1 <= m ) THEN
                  DO j = 1, n

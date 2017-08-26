@@ -1988,6 +1988,7 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : invfft
+    USE fft_helper_subroutines
 
     IMPLICIT NONE
 
@@ -1999,7 +2000,7 @@ MODULE realus
     ! if this flag is true, the orbital is stored in temporary memory
 
     !Internal temporary variables
-    INTEGER :: j, idx, ioff
+    INTEGER :: j, idx, ioff, right_inc, ntgrp
 
     !Task groups
 
@@ -2012,8 +2013,10 @@ MODULE realus
 
         tg_psic = (0.d0, 0.d0)
         ioff   = 0
+        CALL tg_get_recip_inc( dffts, right_inc )
+        ntgrp = fftx_ntgrp(dffts)
         !
-        DO idx = 1, 2*dffts%nproc2, 2
+        DO idx = 1, 2*ntgrp, 2
 
            IF( idx + ibnd - 1 < last ) THEN
               DO j = 1, ngk(1)
@@ -2029,7 +2032,7 @@ MODULE realus
               ENDDO
            ENDIF
 
-           ioff = ioff + dffts%nnr 
+           ioff = ioff + right_inc
 
         ENDDO
         !
@@ -2101,6 +2104,7 @@ MODULE realus
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
     USE mp_bands,      ONLY : me_bgrp
+    USE fft_helper_subroutines
 
     IMPLICIT NONE
 
@@ -2114,7 +2118,7 @@ MODULE realus
 
     !Internal temporary variables
     COMPLEX(DP) :: fp, fm
-    INTEGER :: j, idx, ioff
+    INTEGER :: j, idx, ioff, right_inc, ntgrp
 
     !Task groups
     !print *, "->fourier space"
@@ -2125,8 +2129,10 @@ MODULE realus
         CALL fwfft ('tgWave', tg_psic, dffts )
         !
         ioff   = 0
+        CALL tg_get_recip_inc( dffts, right_inc )
+        ntgrp = fftx_ntgrp(dffts)
         !
-        DO idx = 1, 2*dffts%nproc2, 2
+        DO idx = 1, 2*ntgrp, 2
            !
            IF( idx + ibnd - 1 < last ) THEN
               DO j = 1, ngk(1)
@@ -2143,7 +2149,7 @@ MODULE realus
               ENDDO
            ENDIF
            !
-           ioff = ioff + dffts%nr3x * dffts%nsw( me_bgrp + 1 )
+           ioff = ioff + right_inc
            !
         ENDDO
         !
@@ -2206,6 +2212,7 @@ MODULE realus
     USE gvecs,                    ONLY : nls, nlsm, doublegrid
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : invfft
+    USE fft_helper_subroutines
 
     IMPLICIT NONE
 
@@ -2218,7 +2225,7 @@ MODULE realus
     !if this flag is true, the orbital is stored in temporary memory
 
     ! Internal variables
-    INTEGER :: ioff, idx, ik_
+    INTEGER :: ioff, idx, ik_ , right_inc, ntgrp
 
     CALL start_clock( 'invfft_orbital' )
 
@@ -2228,8 +2235,10 @@ MODULE realus
        !
        tg_psic = ( 0.D0, 0.D0 )
        ioff   = 0
+       CALL tg_get_recip_inc( dffts, right_inc )
+       ntgrp = fftx_ntgrp(dffts)
        !
-       DO idx = 1, dffts%nproc2
+       DO idx = 1, ntgrp
           !
           IF( idx + ibnd - 1 <= last ) THEN
              !DO j = 1, size(orbital,1)
@@ -2237,7 +2246,7 @@ MODULE realus
              !END DO
           ENDIF
 
-          ioff = ioff + dffts%nnr
+          ioff = ioff + right_inc
 
        ENDDO
        !
@@ -2291,6 +2300,7 @@ MODULE realus
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : fwfft
     USE mp_bands,                 ONLY : me_bgrp
+    USE fft_helper_subroutines
 
     IMPLICIT NONE
 
@@ -2303,7 +2313,7 @@ MODULE realus
     !if this flag is true, the orbital is stored in temporary memory
 
     ! Internal variables
-    INTEGER :: ioff, idx, ik_
+    INTEGER :: ioff, idx, ik_ , right_inc, ntgrp
 
     CALL start_clock( 'fwfft_orbital' )
 
@@ -2314,15 +2324,17 @@ MODULE realus
        CALL fwfft ('tgWave', tg_psic, dffts)
        !
        ioff   = 0
+       CALL tg_get_recip_inc( dffts, right_inc )
+       ntgrp = fftx_ntgrp(dffts)
        !
-       DO idx = 1, dffts%nproc2
+       DO idx = 1, ntgrp
           !
           IF( idx + ibnd - 1 <= last ) THEN
              orbital (:, ibnd+idx-1) = tg_psic( nls(igk_k(:,ik_)) + ioff )
 
           ENDIF
           !
-          ioff = ioff + dffts%nr3x * dffts%nsw( me_bgrp + 1 )
+          ioff = ioff + right_inc
           !
        ENDDO
        IF (present(conserved)) THEN

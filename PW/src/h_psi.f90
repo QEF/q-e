@@ -99,6 +99,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE fft_base, ONLY : dffts
   USE exx,      ONLY : use_ace, vexx, vexxace_gamma, vexxace_k
   USE funct,    ONLY : exx_is_active
+  USE fft_helper_subroutines
   !
   IMPLICIT NONE
   !
@@ -125,7 +126,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         ! ... fixme: real_space without beta functions does not make sense
         !
         IF ( dffts%have_task_groups ) then 
-           incr = 2 * dffts%nproc2
+           incr = 2 * fftx_ntgrp(dffts)
         ELSE
            incr = 2
         ENDIF
@@ -162,7 +163,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         ! ... fixme: real_space without beta functions does not make sense
         !
         IF ( dffts%have_task_groups ) then 
-           incr = dffts%nproc2
+           incr = fftx_ntgrp(dffts)
         ELSE
            incr = 1
         ENDIF
