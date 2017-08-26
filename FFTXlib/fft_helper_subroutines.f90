@@ -4,7 +4,8 @@ MODULE fft_helper_subroutines
   SAVE
 
   INTERFACE tg_reduce_rho
-    MODULE PROCEDURE tg_reduce_rho_1,tg_reduce_rho_2,tg_reduce_rho_3
+    MODULE PROCEDURE tg_reduce_rho_1,tg_reduce_rho_2,tg_reduce_rho_3,tg_reduce_rho_4, &
+&                    tg_reduce_rho_5
   END INTERFACE
 
 
@@ -118,6 +119,68 @@ CONTAINS
      END DO
   END SUBROUTINE
 
+
+  SUBROUTINE tg_reduce_rho_4( rhos, tmp_rhos, desc )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     COMPLEX(DP), INTENT(INOUT)  :: tmp_rhos(:)
+     COMPLEX(DP), INTENT(OUT) :: rhos(:)
+
+     INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
+
+     IF ( desc%nproc2 > 1 ) THEN
+#ifdef __MPI
+        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+#endif
+     ENDIF
+     !
+     !BRING CHARGE DENSITY BACK TO ITS ORIGINAL POSITION
+     !
+     !If the current processor is not the "first" processor in its
+     !orbital group then does a local copy (reshuffling) of its data
+     !
+     nxyp = desc%nr1x * desc%my_nr2p
+     DO ir3 = 1, desc%my_nr3p
+        ioff    = desc%nr1x * desc%my_nr2p * (ir3-1)
+        ioff_tg = desc%nr1x * desc%nr2x    * (ir3-1) + desc%nr1x * desc%my_i0r2p
+        rhos(ioff+1:ioff+nxyp) = rhos(ioff+1:ioff+nxyp) + tmp_rhos(ioff_tg+1:ioff_tg+nxyp)
+     END DO
+  END SUBROUTINE
+
+
+  SUBROUTINE tg_reduce_rho_5( rhos, tmp_rhos, desc )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     COMPLEX(DP), INTENT(INOUT)  :: tmp_rhos(:,:)
+     COMPLEX(DP), INTENT(OUT) :: rhos(:,:)
+
+     INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
+
+     IF ( desc%nproc2 > 1 ) THEN
+#ifdef __MPI
+        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+#endif
+     ENDIF
+     !
+     !BRING CHARGE DENSITY BACK TO ITS ORIGINAL POSITION
+     !
+     !If the current processor is not the "first" processor in its
+     !orbital group then does a local copy (reshuffling) of its data
+     !
+     nxyp = desc%nr1x * desc%my_nr2p
+     DO ir3 = 1, desc%my_nr3p
+        ioff    = desc%nr1x * desc%my_nr2p * (ir3-1)
+        ioff_tg = desc%nr1x * desc%nr2x    * (ir3-1) + desc%nr1x * desc%my_i0r2p
+        rhos(ioff+1:ioff+nxyp,:) = rhos(ioff+1:ioff+nxyp,:) + tmp_rhos(ioff_tg+1:ioff_tg+nxyp,:)
+     END DO
+  END SUBROUTINE
+
+
+
   SUBROUTINE tg_get_nnr( desc, right_nnr )
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
@@ -149,6 +212,14 @@ CONTAINS
      INTEGER, INTENT(OUT) :: val
      val = desc%nnr
   END SUBROUTINE
+
+  PURE FUNCTION fftx_ntgrp( desc )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     INTEGER :: fftx_ntgrp
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     fftx_ntgrp = desc%nproc2
+  END FUNCTION
 
   SUBROUTINE fftx_add_field( r, f, desc )
      USE fft_param
