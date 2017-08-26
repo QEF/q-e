@@ -440,7 +440,7 @@
 
          CALL tg_get_nnr( dffts, right_nnr )
 
-         do i = 1, nbsp_bgrp, 2*dffts%nproc2
+         do i = 1, nbsp_bgrp, 2 * fftx_ntgrp(dffts)
 
             !
             !  Initialize wave-functions in Fourier space (to be FFTed)
@@ -462,7 +462,7 @@
             !
             eig_offset = 0
 
-            do eig_index = 1, 2*dffts%nproc2, 2   
+            do eig_index = 1, 2 * fftx_ntgrp(dffts), 2   
                !
                !  here we pack 2*nogrp electronic states in the psis array
                !  note that if nogrp == nproc_bgrp each proc perform a full 3D

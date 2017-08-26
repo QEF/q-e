@@ -17,6 +17,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
     USE gvecs,                   ONLY  : nlsm, nls
     USE mp_wave,                 ONLY  : redistwfr
     USE io_global,               ONLY  : stdout         !print/write argument for standard output (to output file)
+    USE fft_helper_subroutines
     !
     IMPLICIT NONE
     !
@@ -105,7 +106,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       !write(stdout,'("dffts%nnr*nogrp:",I10)'), dffts%nnr*nogrp
       !write(stdout,'("nogrp*nr3 should be smaller or equal to nproc_image:")')
       !
-      nogrp = dffts%nproc2
+      nogrp = fftx_ntgrp(dffts)
       !
       ALLOCATE( sdispls(nproc_image), sendcount(nproc_image) ); sdispls=0; sendcount=0
       ALLOCATE( rdispls(nproc_image), recvcount(nproc_image) ); rdispls=0; recvcount=0 

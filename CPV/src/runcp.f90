@@ -40,6 +40,7 @@
       use gvecw,               only : ngw, ngwx
       USE cp_interfaces,       ONLY : dforce
       USE ldaU_cp,             ONLY : lda_plus_u, vupsi
+      USE fft_helper_subroutines
       !
       IMPLICIT NONE
       !
@@ -131,7 +132,7 @@
               CALL tg_gather( dffts, rhos(:,i), tg_rhos(:,i) )
            END DO
 
-           incr = 2 * dffts%nproc2
+           incr = 2 * fftx_ntgrp( dffts )
 
         ELSE
 

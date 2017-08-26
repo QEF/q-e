@@ -43,6 +43,7 @@ SUBROUTINE exx_gs(nfi, c)
     USE exx_module,              ONLY  : dexx_dh
     USE exx_module,              ONLY  : exx_energy_cell_derivative
     USE exx_module,              ONLY  : exxalfa
+    USE fft_helper_subroutines
     !
     IMPLICIT NONE
     COMPLEX(DP)   c(ngw, nbspx)        ! wave functions at time t
@@ -886,7 +887,7 @@ SUBROUTINE exx_gs(nfi, c)
       !
       !-----------Zhaofeng's vpsil (local) to exx_potential (global) -----------
       !
-      nogrp = dffts%nproc2
+      nogrp = fftx_ntgrp(dffts)
       !
       ALLOCATE( sdispls(nproc_image), sendcount(nproc_image) ); sdispls=0; sendcount=0
       ALLOCATE( rdispls(nproc_image), recvcount(nproc_image) ); rdispls=0; recvcount=0 

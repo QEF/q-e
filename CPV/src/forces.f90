@@ -80,7 +80,7 @@
       END IF
 !=======================================================================
 
-      nogrp_ = dffts%nproc2
+      nogrp_ = fftx_ntgrp(dffts)
       ALLOCATE( psi( dffts%nnr_tg ) )
       !
       ci = ( 0.0d0, 1.0d0 )
