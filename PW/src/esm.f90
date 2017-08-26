@@ -6978,86 +6978,253 @@ END SUBROUTINE esm_force_lc_bc4
 ! Prints out vlocal and vhartree to stdout once electrons are converged
 ! Format: z, rho(r), v_hartree, v_local, (v_hartree + v_local) 
 !
-SUBROUTINE esm_printpot ()
-  USE constants,            ONLY : pi, tpi, fpi, eps4, eps8, e2
-  USE cell_base,            ONLY : at, alat
-  USE scf,                  ONLY : rho, vltot
-  USE lsda_mod,             ONLY : nspin
-  USE mp,                   ONLY : mp_sum
-  USE mp_global,            ONLY : intra_bgrp_comm
-  USE fft_base,             ONLY : dfftp
-  USE io_global,            ONLY : ionode, stdout
-  USE io_files,             ONLY : prefix, tmp_dir
-  USE constants,            ONLY : rytoev, bohr_radius_angs
-  !
-  IMPLICIT NONE
-  !
-  real(DP)                :: z1,z2,z3,z4,charge,ehart,L,area
-  real(DP),allocatable    :: work1(:),work2(:,:),work3(:), work4(:,:)
-  integer                 :: ix,iy,iz,izz,i,k3
-  character (len=256)     :: esm1_file = 'os.esm1'
+!-----------------------------------------------------------------------
+!--------------ESM FINAL PRINTOUT SUBROUTINE----------------------------
+!-----------------------------------------------------------------------
+!
+! Prints out vlocal and vhartree to stdout once electrons are converged
+! Format: z, rho(r), v_hartree, v_local, (v_hartree + v_local) 
+!
+SUBROUTINE esm_printpot( rhog )
+    use kinds,         only : DP
+    use gvect,         only : ngm, mill, igtongl
+    use lsda_mod,      only : nspin
+    use constants,     only : pi, sqrtpm1, tpi, fpi, e2
+    use constants,     only : AUTOEV, BOHR_RADIUS_ANGS
+    use cell_base,     only : omega, alat, at, tpiba, bg
+    use ions_base,     only : zv, nat, tau, ityp, ntyp => nsp
+    USE vlocal,        only : strf, vloc
+    use control_flags, only : gamma_only
+    use fft_base,      only : dfftp
+    use fft_scalar,    only : cft_1z
+    USE io_files,      only : prefix, tmp_dir
+    implicit none
 
-  allocate(work1(dfftp%nnr))
-  allocate(work2(dfftp%nnr,nspin))
-  allocate(work3(dfftp%nnr))
-  allocate(work4(5,dfftp%nr3))
-  work1(:)=0.d0; work2(:,:)=0.d0; work3(:)=0.d0; work4(:,:)=0.d0
-  L=alat*at(3,3)
-  area=(at(1,1)*at(2,2)-at(2,1)*at(1,2))*alat**2
-  CALL v_h (rho%of_g, ehart, charge, work2)
-  work3(1:dfftp%nnr)=vltot(1:dfftp%nnr)
-  if( nspin == 2 ) then
-     work1(:)=rho%of_r(:,1)+rho%of_r(:,2)
-  else
-     work1(:)=rho%of_r(:,1)
-  endif
+    complex(DP), intent(in) :: rhog(ngm,nspin)   !  n(G)
 
-! z = position along slab (A)
-! rho = planar-summed charge density of slab section (e)
-! v_hartree = planar-averaged hartree potential term (eV)
-! v_local = planar-averaged local potential term (eV)
+    integer :: ig, iga, igb, igz, iz, ia
+    real(DP) :: L, S, z0, z1, z, gz, alpha, salp
+    real(DP) :: Qa, ra(2), za
+    complex(DP), parameter :: ci = dcmplx(0.0d0, 1.0d0)
+    complex(DP) :: rg3, vg3, sum1c, sum2c
+    complex(DP) :: expimgpr, experfcm, experfcp, dexperfcm_dgp, dexperfcp_dgp
 
-!$omp parallel do private( iz, izz, k3, z1, z2, z3, z4, iy, ix, i )
-  do iz = 1, dfftp%my_nr3p
-     izz = iz + dfftp%my_i0r3p
-     k3 = izz - 1
-     if( k3 > dfftp%nr3/2 ) k3 = k3 - dfftp%nr3
-     z1=0.d0;z2=0.d0;z3=0.d0;z4=0.d0
-     do iy=1,dfftp%my_nr2p
-        do ix=1,dfftp%nr1
-           i=ix+(iy-1)*dfftp%nr1+(iz-1)*dfftp%nr1*dfftp%my_nr2p
-           z1=z1+work1(i)*area/dble(dfftp%nr1*dfftp%nr2)
-           z2=z2+(work2(i,1)+work3(i))/dble(dfftp%nr1*dfftp%nr2)
-           z3=z3+work2(i,1)/dble(dfftp%nr1*dfftp%nr2)
-           z4=z4+work3(i)/dble(dfftp%nr1*dfftp%nr2)
-        enddo
-     enddo
-     work4(1:5,izz) = (/dble(k3)/dble(dfftp%nr3)*L*bohr_radius_angs, &
-        z1/bohr_radius_angs, z3*rytoev,z4*rytoev, &
-        z2*rytoev/)
-  enddo
-  !
-  call mp_sum(work4, intra_bgrp_comm)
-  !
-  IF ( ionode ) THEN
-     esm1_file = TRIM( tmp_dir ) // TRIM( prefix ) // ".esm1"
-     open( UNIT = 4, FILE = esm1_file, STATUS = "UNKNOWN", &
-           ACTION = "WRITE" )
-     !
-     write( UNIT = 4, FMT = 9050 )
-     do k3 = dfftp%nr3/2-dfftp%nr3+1, dfftp%nr3/2
-        iz = k3 + dfftp%nr3 + 1
-        if( iz > dfftp%nr3 ) iz = iz - dfftp%nr3
-        write( UNIT = 4, FMT = 9051 ) work4(1:5,iz)
-     enddo
-     close( UNIT = 4 )
-  ENDIF
-  deallocate(work1,work2,work3,work4)
+    complex(DP), allocatable :: rho0r(:), rho0g(:)
+    complex(DP), allocatable :: Vhar0r(:), Vhar0g(:)
+    complex(DP), allocatable :: Vloc0r(:), Vloc0g(:)
+    character (len=256)     :: esm1_file = 'os.esm1'
+
+    if( imill_2d(0,0) == 0 ) return
+
+    !****For gp=0 case ********************
+
+    ! cell settings
+    L  = at(3,3)*alat
+    S  = omega/L
+    z0 = L/2.d0
+    z1 = z0+esm_w
+    alpha = 1.0d0
+    salp = sqrt(alpha)
+
+    allocate( rho0r(dfftp%nr3),  rho0g(dfftp%nr3)  )
+    allocate( Vhar0r(dfftp%nr3), Vhar0g(dfftp%nr3) )
+    allocate( Vloc0r(dfftp%nr3), Vloc0g(dfftp%nr3) )
+
+    rho0g(:)=(0.d0,0.d0)
+
+    !!---- calculate density potential
+    do ig=1, ngm
+       iga = mill(1,ig)
+       igb = mill(2,ig)
+       igz = mill(3,ig)+1
+
+       if( .not. (iga==0 .and. igb==0) ) cycle
+
+       if( igz<1 ) then
+          igz = igz + dfftp%nr3
+       end if
+
+       if( nspin == 2 ) then
+          rg3 = rhog(ig,1) + rhog(ig,2)
+       else
+          rg3 = rhog(ig,1)
+       endif
+       rho0g(igz) = rg3
+
+       if( gamma_only .and. iga==0 .and. igb==0 ) then
+          igz = 1-mill(3,ig)
+          if( igz<1 ) then
+             igz = igz + dfftp%nr3
+          end if
+          rho0g(igz) = CONJG(rg3)
+       end if
+    end do ! ig
+
+    call cft_1z( rho0g,1,dfftp%nr3,dfftp%nr3,+1,rho0r )
+
+    !!---- calculate hartree potential
+    Vhar0g(:) = 0.0d0
+    do igz=2, dfftp%nr3
+       if( igz<=dfftp%nr3/2 ) then
+          gz = dble(igz-1)*tpi/L
+       else
+          gz = dble(igz-1-dfftp%nr3)*tpi/L
+       end if
+
+       rg3 = rho0g(igz)
+       Vhar0g(igz) = fpi*rg3/gz**2
+    end do ! igz
+
+    call cft_1z(Vhar0g,1,dfftp%nr3,dfftp%nr3,+1,Vhar0r)
+
+    ! summations over gz
+    sum1c = (0.d0,0.d0)
+    sum2c = (0.d0,0.d0)
+    do igz=2, dfftp%nr3
+       if( igz<=dfftp%nr3/2 ) then
+          gz = dble(igz-1)*tpi/L
+       else
+          gz = dble(igz-1-dfftp%nr3)*tpi/L
+       end if
+
+       rg3 = rho0g(igz)
+       sum1c = sum1c + rg3*ci*cos(gz*z0)/gz
+       sum2c = sum2c + rg3*cos(gz*z0)/gz**2
+    end do ! igz
+
+    rg3 = rho0g(1)
+    do iz=1, dfftp%nr3
+       if( iz-1 .gt. dfftp%nr3/2 ) then
+          z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+       else
+          z = dble(iz-1)/dble(dfftp%nr3)*L
+       end if
+
+       !! BC1 terms
+       Vhar0r(iz) = Vhar0r(iz) &
+            - tpi*z**2*rg3 &
+            - tpi*z0**2*rg3 &
+            - fpi*z*sum1c &
+            - fpi*sum2c
+
+       if( esm_bc == 'bc2' ) then
+          !! BC2 terms
+          Vhar0r(iz) = Vhar0r(iz) &
+               + tpi*z1*2*z0 * rg3 - tpi*(-z/z1)*2*z0*sum1c
+       else if( esm_bc == 'bc3' ) then
+          !! BC3 terms
+          Vhar0r(iz) = Vhar0r(iz) &
+               - tpi*(z-2*z1)*2*z0 * rg3 + fpi*z0*sum1c
+       end if
+    end do ! iz
+
+    !!---- calculate local potential
+    ! short range
+    Vloc0g(:) = 0.0d0
+    do ig=1, ngm
+       iga = mill(1,ig)
+       igb = mill(2,ig)
+
+       if( .not. (iga==0 .and. igb==0) ) cycle
+
+       igz = mill(3,ig)+1
+       if( igz<1 ) then
+          igz = igz + dfftp%nr3
+       end if
+
+       vg3 = 0.0d0
+       do ia=1, ntyp
+          vg3 = vg3 + vloc(igtongl(ig),ia)*strf(ig,ia)/e2
+       end do
+       Vloc0g(igz) = vg3
+
+       if( gamma_only .and. iga==0 .and. igb==0 ) then
+          igz = 1-mill(3,ig)
+          if( igz<1 ) then
+             igz = igz + dfftp%nr3
+          end if
+
+          Vloc0g(igz) = CONJG(vg3)
+       end if
+    end do
+    call cft_1z( Vloc0g,1,dfftp%nr3,dfftp%nr3,+1,Vloc0r )
+
+    ! long range
+    do iz=1, dfftp%nr3
+       if( iz-1 .gt. dfftp%nr3/2 ) then
+          z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+       else
+          z = dble(iz-1)/dble(dfftp%nr3)*L
+       end if
+
+       if( esm_bc == 'bc2' ) then
+          Vloc0r(iz) = Vloc0r(iz) + (z1-z)*esm_efield/e2
+       end if
+
+       do ia=1, nat
+          Qa = (-1.0d0)*zv(ityp(ia))
+          ra(1:2) = tau(1:2,ia)*alat
+          za = tau(3,ia)*alat
+          if( za > L*0.5d0 ) then
+             za = za - L
+          end if
+
+          !! BC1 terms
+          Vloc0r(iz) = Vloc0r(iz) - tpi * Qa/S &
+               * ( (z-za)*qe_erf(salp*(z-za)) &
+               + exp(-alpha*(z-za)**2)*sqrtpm1/salp )
+
+          if( esm_bc == 'bc2' ) then
+             !! BC2 terms
+             Vloc0r(iz) = Vloc0r(iz) &
+                  + tpi * Qa/S * ( -z*za + z1*z1 )/z1
+          else if( esm_bc == 'bc3' ) then
+             !! BC3 terms
+             Vloc0r(iz) = Vloc0r(iz) &
+                  + tpi * Qa/S * (-z+2*z1-za)
+          end if
+
+       end do ! ia
+    end do ! iz
+
+    !!---- output potentials
+    esm1_file = TRIM( tmp_dir ) // TRIM( prefix ) // ".esm1"
+    open( UNIT = 4, FILE = esm1_file, STATUS = "UNKNOWN", &
+         ACTION = "WRITE" )
+    write( UNIT = 4, FMT = 9050 )
+
+    do iz=dfftp%nr3/2+2, dfftp%nr3
+       z = dble(iz-1-dfftp%nr3)/dble(dfftp%nr3)*L
+
+       write( UNIT = 4, FMT = 9051 ) &
+            z*BOHR_RADIUS_ANGS, &
+            real(rho0r(iz))*S/BOHR_RADIUS_ANGS, &
+            real(Vhar0r(iz))*AUTOEV, &
+            real(Vloc0r(iz))*AUTOEV, &
+            real(Vhar0r(iz))*AUTOEV + real(Vloc0r(iz))*AUTOEV
+    end do
+    do iz=1, dfftp%nr3/2+1
+       z = dble(iz-1)/dble(dfftp%nr3)*L
+
+       write( UNIT = 4, FMT = 9051 ) &
+            z*BOHR_RADIUS_ANGS, &
+            real(rho0r(iz))*S/BOHR_RADIUS_ANGS, &
+            real(Vhar0r(iz))*AUTOEV, &
+            real(Vloc0r(iz))*AUTOEV, &
+            real(Vhar0r(iz))*AUTOEV + real(Vloc0r(iz))*AUTOEV
+    end do
+    close( UNIT = 4 )
+
+    deallocate( rho0r, rho0g )
+    deallocate( Vhar0r, Vhar0g )
+    deallocate( Vloc0r, Vloc0g )
+
+    return
+
 9050 FORMAT( '#z (A)',2X,'Tot chg (e/A)',2X,'Avg v_hartree (eV)',2X,&
-        &'Avg v_local (eV)',2x,'Avg v_hart+v_loc (eV)' )
-9051 FORMAT( F6.2,F14.4,F20.7,F18.7,F18.7 )
+         &'Avg v_local (eV)',2x,'Avg v_hart+v_loc (eV)' )
+9051 FORMAT( F6.2,F20.7,F20.7,F18.7,F18.7 )
 END SUBROUTINE esm_printpot
-
 !
 !-----------------------------------------------------------------------
 !--------------ESM SUMMARY PRINTOUT SUBROUTINE--------------------------

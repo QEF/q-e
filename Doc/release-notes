@@ -3,9 +3,15 @@ New in svn version:
   * SCAN functional with libxc v.3; bands with meta-GGA can be computed
    (Davide Ceresoli)
 
+  * EXX with localization (experimental)
+
+  * Stress calculation is enabled in ESM
+    “starting_charge” option added to SYSTEM namelist
+
 Fixed in svn version
 
-  * ESM stress and forces in ESM for 'bc2' case were not correct (r13727)
+  * ESM energy and forces for 'bc2' case and nonzero esm_efield were not 
+    correct (r13727). Also: problem with restart in NEB with ESM fixed
 
   * EXX with k-points and pool parallelization was occasionally crashing
     due to questionable custom FFT grid initialization (r13728)

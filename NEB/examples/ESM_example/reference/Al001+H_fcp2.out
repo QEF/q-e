@@ -1,5 +1,5 @@
 
-     Program NEB v.6.0 (svn rev. 13286) starts on  8Feb2017 at 14:32:36 
+     Program NEB v.6.1 (svn rev. 13369) starts on 26Aug2017 at 20:22: 7 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -8,8 +8,9 @@
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
-     R & G space division:  proc/nbgrp/npool/nimage =       4
+     Parallel version (MPI & OpenMP), running on       2 processor cores
+     Number of MPI processes:                 1
+     Threads/MPI process:                     2
 
      parsing_file_name: Al001+H_fcp2.in
      Reading input from pw_1.in
@@ -37,86 +38,86 @@
 
      ------------------------------ iteration   1 ------------------------------
 
-     tcpu =      0.1    self-consistency for image   1
-     tcpu =     12.0    self-consistency for image   2
+     tcpu =      0.0    self-consistency for image   1
+     tcpu =     10.9    self-consistency for image   2
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =     24.3    self-consistency for image   3
+     tcpu =     23.4    self-consistency for image   3
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =     37.2    self-consistency for image   4
+     tcpu =     36.3    self-consistency for image   4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =     47.8    self-consistency for image   5
+     tcpu =     48.3    self-consistency for image   5
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
 
-     activation energy (->) =   0.538553 eV
-     activation energy (<-) =   0.538565 eV
+     activation energy (->) =   0.538536 eV
+     activation energy (<-) =   0.538538 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1       -689.3175756            0.006248            T
-         2       -689.1789743            1.141901            F
-         3       -688.7790221            1.051026            F
-         4       -689.1789690            1.140135            F
-         5       -689.3175871            0.006342            T
+         1       -689.3175825            0.006427            T
+         2       -689.1789158            1.140507            F
+         3       -688.7790463            1.048407            F
+         4       -689.1790100            1.141641            F
+         5       -689.3175845            0.006088            T
 
      image  Fermi energy (eV)           error (V)    tot_charge
 
-         1          -4.010996           -0.012956     -0.021744
-         2          -3.973318           -0.050634     -0.021744
-         3          -3.979974           -0.043977     -0.021744
-         4          -3.973195           -0.050757     -0.021744
-         5          -4.010515           -0.013437     -0.021744
+         1          -4.010832           -0.013119     -0.021744
+         2          -3.975833           -0.048118     -0.021744
+         3          -3.978923           -0.045029     -0.021744
+         4          -3.971732           -0.052219     -0.021744
+         5          -4.010575           -0.013377     -0.021744
 
      path length          =  7.653 bohr
      inter-image distance =  1.913 bohr
 
      ------------------------------ iteration   2 ------------------------------
 
-     tcpu =     58.4    self-consistency for image   2
+     tcpu =     59.1    self-consistency for image   2
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =     63.7    self-consistency for image   3
+     tcpu =     64.9    self-consistency for image   3
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =     69.9    self-consistency for image   4
+     tcpu =     69.7    self-consistency for image   4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
 
-     activation energy (->) =   0.527387 eV
-     activation energy (<-) =   0.527398 eV
+     activation energy (->) =   0.527469 eV
+     activation energy (<-) =   0.527471 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1       -689.3175756            0.006248            T
-         2       -689.1920832            1.115702            F
-         3       -688.7901891            1.043689            F
-         4       -689.1920578            1.116502            F
-         5       -689.3175871            0.006342            T
+         1       -689.3175825            0.006427            T
+         2       -689.1920463            1.115553            F
+         3       -688.7901135            1.044113            F
+         4       -689.1920709            1.117315            F
+         5       -689.3175845            0.006088            T
 
      image  Fermi energy (eV)           error (V)    tot_charge
 
-         1          -4.010996           -0.012956     -0.021744
-         2          -3.968646           -0.055305     -0.021372
-         3          -3.977956           -0.045995     -0.021421
-         4          -3.969046           -0.054906     -0.021371
-         5          -4.010515           -0.013437     -0.021744
+         1          -4.010832           -0.013119     -0.021744
+         2          -3.969557           -0.054395     -0.021390
+         3          -3.979512           -0.044439     -0.021413
+         4          -3.969112           -0.054840     -0.021360
+         5          -4.010575           -0.013377     -0.021744
 
      path length          =  7.653 bohr
      inter-image distance =  1.913 bohr
@@ -128,888 +129,808 @@
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =     87.4    self-consistency for image   3
+     tcpu =     87.6    self-consistency for image   3
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =     98.6    self-consistency for image   4
+     tcpu =     99.6    self-consistency for image   4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
 
-     activation energy (->) =   0.353503 eV
-     activation energy (<-) =   0.353515 eV
+     activation energy (->) =   0.354800 eV
+     activation energy (<-) =   0.354802 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1       -689.3175756            0.006248            T
-         2       -689.3533543            0.504477            F
-         3       -688.9640724            0.896269            F
-         4       -689.3534119            0.503872            F
-         5       -689.3175871            0.006342            T
+         1       -689.3175825            0.006427            T
+         2       -689.3532952            0.504630            F
+         3       -688.9627822            0.896796            F
+         4       -689.3534527            0.503905            F
+         5       -689.3175845            0.006088            T
 
      image  Fermi energy (eV)           error (V)    tot_charge
 
-         1          -4.010996           -0.012956     -0.021744
-         2          -3.812600           -0.211352     -0.023043
-         3          -3.826313           -0.197638     -0.022810
-         4          -3.812825           -0.211127     -0.023030
-         5          -4.010515           -0.013437     -0.021744
+         1          -4.010832           -0.013119     -0.021744
+         2          -3.812858           -0.211094     -0.023034
+         3          -3.885076           -0.138876     -0.020071
+         4          -3.812984           -0.210967     -0.023017
+         5          -4.010575           -0.013377     -0.021744
 
      path length          =  7.726 bohr
      inter-image distance =  1.932 bohr
 
      ------------------------------ iteration   4 ------------------------------
 
-     tcpu =    110.3    self-consistency for image   2
+     tcpu =    111.8    self-consistency for image   2
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    123.7    self-consistency for image   3
+     tcpu =    125.4    self-consistency for image   3
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    135.1    self-consistency for image   4
+     tcpu =    137.1    self-consistency for image   4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
 
-     activation energy (->) =   0.207677 eV
-     activation energy (<-) =   0.207688 eV
+     activation energy (->) =   0.207198 eV
+     activation energy (<-) =   0.207200 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1       -689.3175756            0.006248            T
-         2       -689.3617030            0.506896            F
-         3       -689.1098987            0.702244            F
-         4       -689.3615254            0.507192            F
-         5       -689.3175871            0.006342            T
+         1       -689.3175825            0.006427            T
+         2       -689.3617959            0.505279            F
+         3       -689.1103846            0.701779            F
+         4       -689.3614232            0.509897            F
+         5       -689.3175845            0.006088            T
 
      image  Fermi energy (eV)           error (V)    tot_charge
 
-         1          -4.010996           -0.012956     -0.021744
-         2          -3.768019           -0.255933     -0.020780
-         3          -3.763492           -0.260459     -0.020999
-         4          -3.769852           -0.254099     -0.020788
-         5          -4.010515           -0.013437     -0.021744
+         1          -4.010832           -0.013119     -0.021744
+         2          -3.768098           -0.255853     -0.020820
+         3          -3.741415           -0.282537     -0.022045
+         4          -3.771102           -0.252849     -0.020778
+         5          -4.010575           -0.013377     -0.021744
 
      path length          =  7.919 bohr
      inter-image distance =  1.980 bohr
 
      ------------------------------ iteration   5 ------------------------------
 
-     tcpu =    146.9    self-consistency for image   2
+     tcpu =    149.0    self-consistency for image   2
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    154.0    self-consistency for image   3
+     tcpu =    158.1    self-consistency for image   3
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    160.4    self-consistency for image   4
+     tcpu =    164.8    self-consistency for image   4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
 
-     activation energy (->) =   0.222926 eV
-     activation energy (<-) =   0.222938 eV
+     activation energy (->) =   0.228916 eV
+     activation energy (<-) =   0.228918 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1       -689.3175756            0.006248            T
-         2       -689.3803581            0.273554            F
-         3       -689.0946495            0.735686            F
-         4       -689.3804269            0.272800            F
-         5       -689.3175871            0.006342            T
+         1       -689.3175825            0.006427            T
+         2       -689.3804876            0.268312            F
+         3       -689.0886668            0.728543            F
+         4       -689.3802587            0.271344            F
+         5       -689.3175845            0.006088            T
 
      image  Fermi energy (eV)           error (V)    tot_charge
 
-         1          -4.010996           -0.012956     -0.021744
-         2          -3.615491           -0.408460     -0.028511
-         3          -3.607131           -0.416820     -0.028507
-         4          -3.610776           -0.413175     -0.028464
-         5          -4.010515           -0.013437     -0.021744
+         1          -4.010832           -0.013119     -0.021744
+         2          -3.614449           -0.409503     -0.028549
+         3          -3.846894           -0.177058     -0.018162
+         4          -3.617567           -0.406384     -0.028416
+         5          -4.010575           -0.013377     -0.021744
 
      path length          =  7.869 bohr
      inter-image distance =  1.967 bohr
 
      ------------------------------ iteration   6 ------------------------------
 
-     tcpu =    169.5    self-consistency for image   2
+     tcpu =    173.9    self-consistency for image   2
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    175.8    self-consistency for image   3
+     tcpu =    178.9    self-consistency for image   3
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    180.6    self-consistency for image   4
+     tcpu =    185.8    self-consistency for image   4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
 
-     activation energy (->) =   0.218712 eV
-     activation energy (<-) =   0.218723 eV
+     activation energy (->) =   0.220066 eV
+     activation energy (<-) =   0.220068 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1       -689.3175756            0.006248            T
-         2       -689.3715058            0.319695            F
-         3       -689.0988637            0.723229            F
-         4       -689.3713119            0.313541            F
-         5       -689.3175871            0.006342            T
+         1       -689.3175825            0.006427            T
+         2       -689.3716524            0.308071            F
+         3       -689.0975167            0.723584            F
+         4       -689.3715048            0.312321            F
+         5       -689.3175845            0.006088            T
 
      image  Fermi energy (eV)           error (V)    tot_charge
 
-         1          -4.010996           -0.012956     -0.021744
-         2          -3.887385           -0.136567     -0.016172
-         3          -3.885658           -0.138293     -0.015916
-         4          -3.892676           -0.131275     -0.015983
-         5          -4.010515           -0.013437     -0.021744
+         1          -4.010832           -0.013119     -0.021744
+         2          -3.887398           -0.136554     -0.016178
+         3          -3.959822           -0.064130     -0.012814
+         4          -3.887349           -0.136602     -0.016140
+         5          -4.010575           -0.013377     -0.021744
 
      path length          =  7.878 bohr
-     inter-image distance =  1.970 bohr
+     inter-image distance =  1.969 bohr
 
      ------------------------------ iteration   7 ------------------------------
 
-     tcpu =    185.2    self-consistency for image   2
+     tcpu =    190.8    self-consistency for image   2
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    191.1    self-consistency for image   3
+     tcpu =    195.7    self-consistency for image   3
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    197.0    self-consistency for image   4
+     tcpu =    201.7    self-consistency for image   4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
 
-     activation energy (->) =   0.212844 eV
-     activation energy (<-) =   0.212855 eV
+     activation energy (->) =   0.213290 eV
+     activation energy (<-) =   0.213293 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1       -689.3175756            0.006248            T
-         2       -689.3706432            0.301917            F
-         3       -689.1047320            0.708815            F
-         4       -689.3705345            0.302580            F
-         5       -689.3175871            0.006342            T
+         1       -689.3175825            0.006427            T
+         2       -689.3707273            0.300479            F
+         3       -689.1042920            0.710701            F
+         4       -689.3705413            0.304301            F
+         5       -689.3175845            0.006088            T
 
      image  Fermi energy (eV)           error (V)    tot_charge
 
-         1          -4.010996           -0.012956     -0.021744
-         2          -3.984681           -0.039270     -0.012047
-         3          -3.976974           -0.046977     -0.011738
-         4          -3.985626           -0.038326     -0.012017
-         5          -4.010515           -0.013437     -0.021744
+         1          -4.010832           -0.013119     -0.021744
+         2          -3.986516           -0.037435     -0.012053
+         3          -3.995265           -0.028686     -0.010876
+         4          -3.990534           -0.033418     -0.012014
+         5          -4.010575           -0.013377     -0.021744
 
      path length          =  7.874 bohr
-     inter-image distance =  1.969 bohr
+     inter-image distance =  1.968 bohr
 
      ------------------------------ iteration   8 ------------------------------
 
-     tcpu =    201.8    self-consistency for image   2
+     tcpu =    206.5    self-consistency for image   2
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    211.3    self-consistency for image   3
+     tcpu =    216.4    self-consistency for image   3
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    222.4    self-consistency for image   4
+     tcpu =    227.5    self-consistency for image   4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
 
-     activation energy (->) =   0.095220 eV
-     activation energy (<-) =   0.095232 eV
+     activation energy (->) =   0.091189 eV
+     activation energy (<-) =   0.091191 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1       -689.3175756            0.006248            T
-         2       -689.3737953            0.415757            F
-         3       -689.2223553            0.440281            F
-         4       -689.3737971            0.416536            F
-         5       -689.3175871            0.006342            T
+         1       -689.3175825            0.006427            T
+         2       -689.3735938            0.441372            F
+         3       -689.2263933            0.427051            F
+         4       -689.3735475            0.442502            F
+         5       -689.3175845            0.006088            T
 
      image  Fermi energy (eV)           error (V)    tot_charge
 
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.059801            0.035850     -0.010860
-         3          -3.927933           -0.096019     -0.010319
-         4          -4.059568            0.035616     -0.010859
-         5          -4.010515           -0.013437     -0.021744
+         1          -4.010832           -0.013119     -0.021744
+         2          -4.058307            0.034356     -0.010923
+         3          -3.930097           -0.093854     -0.010010
+         4          -4.059042            0.035090     -0.011004
+         5          -4.010575           -0.013377     -0.021744
 
-     path length          =  7.945 bohr
-     inter-image distance =  1.986 bohr
+     path length          =  7.955 bohr
+     inter-image distance =  1.989 bohr
 
      ------------------------------ iteration   9 ------------------------------
 
-     tcpu =    231.8    self-consistency for image   2
+     tcpu =    237.7    self-consistency for image   2
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    236.8    self-consistency for image   3
+     tcpu =    241.8    self-consistency for image   3
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    243.4    self-consistency for image   4
+     tcpu =    247.2    self-consistency for image   4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
 
-     activation energy (->) =   0.087567 eV
-     activation energy (<-) =   0.087578 eV
+     activation energy (->) =   0.088258 eV
+     activation energy (<-) =   0.088260 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1       -689.3175756            0.006248            T
-         2       -689.3740469            0.407167            F
-         3       -689.2300087            0.412323            F
-         4       -689.3740685            0.407764            F
-         5       -689.3175871            0.006342            T
+         1       -689.3175825            0.006427            T
+         2       -689.3741370            0.404696            F
+         3       -689.2293249            0.411077            F
+         4       -689.3741137            0.405744            F
+         5       -689.3175845            0.006088            T
 
      image  Fermi energy (eV)           error (V)    tot_charge
 
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.045897            0.021945     -0.011427
-         3          -3.859709           -0.164243     -0.013098
-         4          -4.045869            0.021918     -0.011417
-         5          -4.010515           -0.013437     -0.021744
+         1          -4.010832           -0.013119     -0.021744
+         2          -4.041599            0.017648     -0.011464
+         3          -3.900199           -0.123752     -0.011258
+         4          -4.041152            0.017201     -0.011521
+         5          -4.010575           -0.013377     -0.021744
 
      path length          =  7.961 bohr
      inter-image distance =  1.990 bohr
 
      ------------------------------ iteration  10 ------------------------------
 
-     tcpu =    248.5    self-consistency for image   2
+     tcpu =    252.2    self-consistency for image   2
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    253.6    self-consistency for image   3
+     tcpu =    258.8    self-consistency for image   3
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    260.6    self-consistency for image   4
+     tcpu =    266.3    self-consistency for image   4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
 
-     activation energy (->) =   0.073064 eV
-     activation energy (<-) =   0.073075 eV
+     activation energy (->) =   0.073068 eV
+     activation energy (<-) =   0.073070 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1       -689.3175756            0.006248            T
-         2       -689.3730417            0.464668            F
-         3       -689.2445120            0.360619            F
-         4       -689.3731068            0.465359            F
-         5       -689.3175871            0.006342            T
+         1       -689.3175825            0.006427            T
+         2       -689.3731893            0.464045            F
+         3       -689.2445142            0.358794            F
+         4       -689.3730176            0.465717            F
+         5       -689.3175845            0.006088            T
 
      image  Fermi energy (eV)           error (V)    tot_charge
 
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.040446            0.016494     -0.012089
-         3          -3.959755           -0.064196     -0.008136
-         4          -4.040351            0.016399     -0.012079
-         5          -4.010515           -0.013437     -0.021744
+         1          -4.010832           -0.013119     -0.021744
+         2          -4.036609            0.012657     -0.011997
+         3          -3.974841           -0.049110     -0.007519
+         4          -4.042080            0.018129     -0.012019
+         5          -4.010575           -0.013377     -0.021744
 
-     path length          =  8.009 bohr
+     path length          =  8.010 bohr
      inter-image distance =  2.002 bohr
 
      ------------------------------ iteration  11 ------------------------------
 
-     tcpu =    265.7    self-consistency for image   2
+     tcpu =    272.1    self-consistency for image   2
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    271.4    self-consistency for image   3
+     tcpu =    278.5    self-consistency for image   3
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    278.3    self-consistency for image   4
+     tcpu =    285.4    self-consistency for image   4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
 
-     activation energy (->) =   0.084581 eV
-     activation energy (<-) =   0.084593 eV
+     activation energy (->) =   0.080548 eV
+     activation energy (<-) =   0.080550 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1       -689.3175756            0.006248            T
-         2       -689.3744075            0.397372            F
-         3       -689.2329945            0.399010            F
-         4       -689.3744953            0.397642            F
-         5       -689.3175871            0.006342            T
+         1       -689.3175825            0.006427            T
+         2       -689.3744155            0.389223            F
+         3       -689.2370350            0.384766            F
+         4       -689.3740943            0.389896            F
+         5       -689.3175845            0.006088            T
 
      image  Fermi energy (eV)           error (V)    tot_charge
 
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.019510           -0.004441     -0.012588
-         3          -4.010215           -0.013737     -0.006197
-         4          -4.014679           -0.009272     -0.012574
-         5          -4.010515           -0.013437     -0.021744
+         1          -4.010832           -0.013119     -0.021744
+         2          -4.023661           -0.000291     -0.012379
+         3          -4.012309           -0.011642     -0.006036
+         4          -4.044818            0.020866     -0.011471
+         5          -4.010575           -0.013377     -0.021744
 
-     path length          =  7.974 bohr
-     inter-image distance =  1.993 bohr
+     path length          =  7.985 bohr
+     inter-image distance =  1.996 bohr
 
      ------------------------------ iteration  12 ------------------------------
 
-     tcpu =    283.6    self-consistency for image   2
+     tcpu =    291.8    self-consistency for image   2
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    287.9    self-consistency for image   3
+     tcpu =    296.6    self-consistency for image   3
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    293.1    self-consistency for image   4
+     tcpu =    301.8    self-consistency for image   4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
 
-     activation energy (->) =   0.082253 eV
-     activation energy (<-) =   0.082265 eV
+     activation energy (->) =   0.074542 eV
+     activation energy (<-) =   0.074544 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1       -689.3175756            0.006248            T
-         2       -689.3748134            0.355639            F
-         3       -689.2353224            0.391564            F
-         4       -689.3748227            0.356126            F
-         5       -689.3175871            0.006342            T
+         1       -689.3175825            0.006427            T
+         2       -689.3746668            0.350788            F
+         3       -689.2430407            0.361986            F
+         4       -689.3745106            0.351456            F
+         5       -689.3175845            0.006088            T
 
      image  Fermi energy (eV)           error (V)    tot_charge
 
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.019405           -0.004546     -0.012482
-         3          -4.019065           -0.004886     -0.005782
-         4          -4.021153           -0.002799     -0.012395
-         5          -4.010515           -0.013437     -0.021744
+         1          -4.010832           -0.013119     -0.021744
+         2          -4.022781           -0.001170     -0.012371
+         3          -4.016711           -0.007240     -0.005684
+         4          -4.029346            0.005394     -0.012101
+         5          -4.010575           -0.013377     -0.021744
 
-     path length          =  7.980 bohr
-     inter-image distance =  1.995 bohr
+     path length          =  8.004 bohr
+     inter-image distance =  2.001 bohr
 
      ------------------------------ iteration  13 ------------------------------
 
-     tcpu =    297.7    self-consistency for image   2
+     tcpu =    306.6    self-consistency for image   2
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    305.4    self-consistency for image   3
+     tcpu =    314.1    self-consistency for image   3
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
-     tcpu =    315.7    self-consistency for image   4
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-
-     activation energy (->) =   0.057662 eV
-     activation energy (<-) =   0.057674 eV
-
-     image        energy (eV)        error (eV/A)        frozen
-
-         1       -689.3175756            0.006248            T
-         2       -689.3784128            0.125601            F
-         3       -689.2599136            0.280254            F
-         4       -689.3783429            0.125424            F
-         5       -689.3175871            0.006342            T
-
-     image  Fermi energy (eV)           error (V)    tot_charge
-
-         1          -4.010996           -0.012956     -0.021744
-         2          -3.997300           -0.026651     -0.012619
-         3          -4.004412           -0.019539     -0.005634
-         4          -4.004198           -0.019754     -0.012318
-         5          -4.010515           -0.013437     -0.021744
-
-     path length          =  8.070 bohr
-     inter-image distance =  2.017 bohr
-
-     ------------------------------ iteration  14 ------------------------------
-
-     tcpu =    323.5    self-consistency for image   2
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    327.9    self-consistency for image   3
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    332.9    self-consistency for image   4
+     tcpu =    325.3    self-consistency for image   4
 
    Info: using nr1, nr2, nr3 values from input
 
    Info: using nr1, nr2, nr3 values from input
 
-     activation energy (->) =   0.058462 eV
-     activation energy (<-) =   0.058474 eV
+     activation energy (->) =   0.035266 eV
+     activation energy (<-) =   0.035268 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1       -689.3175756            0.006248            T
-         2       -689.3785004            0.093785            F
-         3       -689.2591135            0.279372            F
-         4       -689.3785045            0.092838            F
-         5       -689.3175871            0.006342            T
+         1       -689.3175825            0.006427            T
+         2       -689.3716672            0.287319            F
+         3       -689.2823161            0.069718            F
+         4       -689.3714464            0.288626            F
+         5       -689.3175845            0.006088            T
 
      image  Fermi energy (eV)           error (V)    tot_charge
 
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.000546           -0.023405     -0.012454
-         3          -4.002416           -0.021536     -0.005831
-         4          -4.001630           -0.022322     -0.012408
-         5          -4.010515           -0.013437     -0.021744
-
-     path length          =  8.065 bohr
-     inter-image distance =  2.016 bohr
-
-     ------------------------------ iteration  15 ------------------------------
-
-     tcpu =    337.5    self-consistency for image   2
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    341.7    self-consistency for image   3
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    345.7    self-consistency for image   4
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-
-     activation energy (->) =   0.058371 eV
-     activation energy (<-) =   0.058383 eV
-
-     image        energy (eV)        error (eV/A)        frozen
-
-         1       -689.3175756            0.006248            T
-         2       -689.3783733            0.098710            F
-         3       -689.2592043            0.281271            F
-         4       -689.3783861            0.098030            F
-         5       -689.3175871            0.006342            T
-
-     image  Fermi energy (eV)           error (V)    tot_charge
-
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.017544           -0.006407     -0.011747
-         3          -4.015795           -0.008156     -0.005180
-         4          -4.017801           -0.006151     -0.011734
-         5          -4.010515           -0.013437     -0.021744
-
-     path length          =  8.065 bohr
-     inter-image distance =  2.016 bohr
-
-     ------------------------------ iteration  16 ------------------------------
-
-     tcpu =    349.9    self-consistency for image   2
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    354.3    self-consistency for image   3
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    358.9    self-consistency for image   4
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-
-     activation energy (->) =   0.057630 eV
-     activation energy (<-) =   0.057642 eV
-
-     image        energy (eV)        error (eV/A)        frozen
-
-         1       -689.3175756            0.006248            T
-         2       -689.3784305            0.089507            F
-         3       -689.2599452            0.277225            F
-         4       -689.3784451            0.088938            F
-         5       -689.3175871            0.006342            T
-
-     image  Fermi energy (eV)           error (V)    tot_charge
-
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.020649           -0.003303     -0.011553
-         3          -4.022273           -0.001678     -0.004934
-         4          -4.020706           -0.003245     -0.011548
-         5          -4.010515           -0.013437     -0.021744
-
-     path length          =  8.069 bohr
-     inter-image distance =  2.017 bohr
-
-     ------------------------------ iteration  17 ------------------------------
-
-     tcpu =    363.2    self-consistency for image   2
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    366.8    self-consistency for image   3
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    371.9    self-consistency for image   4
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-
-     activation energy (->) =   0.056680 eV
-     activation energy (<-) =   0.056692 eV
-
-     image        energy (eV)        error (eV/A)        frozen
-
-         1       -689.3175756            0.006248            T
-         2       -689.3785795            0.084236            F
-         3       -689.2608954            0.268709            F
-         4       -689.3785925            0.083511            F
-         5       -689.3175871            0.006342            T
-
-     image  Fermi energy (eV)           error (V)    tot_charge
-
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.019594           -0.004357     -0.011453
-         3          -4.023333           -0.000619     -0.004883
-         4          -4.019695           -0.004256     -0.011450
-         5          -4.010515           -0.013437     -0.021744
-
-     path length          =  8.074 bohr
-     inter-image distance =  2.018 bohr
-
-     ------------------------------ iteration  18 ------------------------------
-
-     tcpu =    375.4    self-consistency for image   2
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    381.7    self-consistency for image   3
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    390.7    self-consistency for image   4
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-
-     activation energy (->) =   0.042149 eV
-     activation energy (<-) =   0.042160 eV
-
-     image        energy (eV)        error (eV/A)        frozen
-
-         1       -689.3175756            0.006248            T
-         2       -689.3792113            0.040859            F
-         3       -689.2754266            0.162231            F
-         4       -689.3792222            0.040639            F
-         5       -689.3175871            0.006342            T
-
-     image  Fermi energy (eV)           error (V)    tot_charge
-
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.004753           -0.019198     -0.011585
-         3          -4.008837           -0.015115     -0.004865
-         4          -4.004734           -0.019217     -0.011579
-         5          -4.010515           -0.013437     -0.021744
-
-     path length          =  8.168 bohr
-     inter-image distance =  2.042 bohr
-
-     ------------------------------ iteration  19 ------------------------------
-
-     tcpu =    397.0    self-consistency for image   2
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    401.8    self-consistency for image   3
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    410.2    self-consistency for image   4
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-
-     activation energy (->) =   0.037000 eV
-     activation energy (<-) =   0.037011 eV
-
-     image        energy (eV)        error (eV/A)        frozen
-
-         1       -689.3175756            0.006248            T
-         2       -689.3775934            0.104354            F
-         3       -689.2805760            0.099542            F
-         4       -689.3776343            0.103891            F
-         5       -689.3175871            0.006342            T
-
-     image  Fermi energy (eV)           error (V)    tot_charge
-
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.000950           -0.023001     -0.011415
-         3          -3.999781           -0.024170     -0.004884
-         4          -4.001231           -0.022720     -0.011414
-         5          -4.010515           -0.013437     -0.021744
-
-     path length          =  8.229 bohr
-     inter-image distance =  2.057 bohr
-
-     ------------------------------ iteration  20 ------------------------------
-
-     tcpu =    415.0    self-consistency for image   2
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    422.8    self-consistency for image   3
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    435.2    self-consistency for image   4
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-
-     activation energy (->) =   0.043567 eV
-     activation energy (<-) =   0.043579 eV
-
-     image        energy (eV)        error (eV/A)        frozen
-
-         1       -689.3175756            0.006248            T
-         2       -689.3548908            0.405097            F
-         3       -689.2740086            0.180372            F
-         4       -689.3553965            0.403521            F
-         5       -689.3175871            0.006342            T
-
-     image  Fermi energy (eV)           error (V)    tot_charge
-
-         1          -4.010996           -0.012956     -0.021744
-         2          -3.956600           -0.067351     -0.012110
-         3          -4.009958           -0.013993     -0.004832
-         4          -3.957022           -0.066929     -0.012100
-         5          -4.010515           -0.013437     -0.021744
-
-     path length          =  8.563 bohr
-     inter-image distance =  2.141 bohr
-
-     ------------------------------ iteration  21 ------------------------------
-
-     tcpu =    443.0    self-consistency for image   2
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    449.8    self-consistency for image   3
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    466.6    self-consistency for image   4
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-
-     activation energy (->) =   0.033917 eV
-     activation energy (<-) =   0.033928 eV
-
-     image        energy (eV)        error (eV/A)        frozen
-
-         1       -689.3175756            0.006248            T
-         2       -689.3752719            0.154808            F
-         3       -689.2836590            0.031306            F
-         4       -689.3753585            0.154172            F
-         5       -689.3175871            0.006342            T
-
-     image  Fermi energy (eV)           error (V)    tot_charge
-
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.010915           -0.013037     -0.011054
-         3          -4.003030           -0.020922     -0.004761
-         4          -4.011275           -0.012676     -0.011061
-         5          -4.010515           -0.013437     -0.021744
-
-     path length          =  8.302 bohr
-     inter-image distance =  2.075 bohr
-
-     ------------------------------ iteration  22 ------------------------------
-
-     tcpu =    473.3    self-consistency for image   2
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    477.4    self-consistency for image   3
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    479.8    self-consistency for image   4
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-
-     activation energy (->) =   0.033906 eV
-     activation energy (<-) =   0.033918 eV
-
-     image        energy (eV)        error (eV/A)        frozen
-
-         1       -689.3175756            0.006248            T
-         2       -689.3759629            0.137934            F
-         3       -689.2836692            0.030161            F
-         4       -689.3760405            0.137313            F
-         5       -689.3175871            0.006342            T
-
-     image  Fermi energy (eV)           error (V)    tot_charge
-
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.012806           -0.011146     -0.010801
-         3          -3.996291           -0.027661     -0.004977
-         4          -4.012867           -0.011084     -0.010818
-         5          -4.010515           -0.013437     -0.021744
-
-     path length          =  8.302 bohr
-     inter-image distance =  2.075 bohr
-
-     ------------------------------ iteration  23 ------------------------------
-
-     tcpu =    483.9    self-consistency for image   2
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    488.8    self-consistency for image   3
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    492.5    self-consistency for image   4
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-
-     activation energy (->) =   0.033971 eV
-     activation energy (<-) =   0.033982 eV
-
-     image        energy (eV)        error (eV/A)        frozen
-
-         1       -689.3175756            0.006248            T
-         2       -689.3787649            0.058801            F
-         3       -689.2836047            0.029357            F
-         4       -689.3787941            0.058518            F
-         5       -689.3175871            0.006342            T
-
-     image  Fermi energy (eV)           error (V)    tot_charge
-
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.024529            0.000577     -0.010464
-         3          -4.013756           -0.010196     -0.004141
-         4          -4.024256            0.000304     -0.010483
-         5          -4.010515           -0.013437     -0.021744
-
-     path length          =  8.308 bohr
-     inter-image distance =  2.077 bohr
-
-     ------------------------------ iteration  24 ------------------------------
-
-     tcpu =    497.4    self-consistency for image   2
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    501.4    self-consistency for image   3
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-     tcpu =    504.9    self-consistency for image   4
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
-
-     activation energy (->) =   0.033968 eV
-     activation energy (<-) =   0.033980 eV
-
-     image        energy (eV)        error (eV/A)        frozen
-
-         1       -689.3175756            0.006248            T
-         2       -689.3801698            0.028963            F
-         3       -689.2836074            0.030717            F
-         4       -689.3801782            0.028379            F
-         5       -689.3175871            0.006342            T
-
-     image  Fermi energy (eV)           error (V)    tot_charge
-
-         1          -4.010996           -0.012956     -0.021744
-         2          -4.023665           -0.000287     -0.010481
-         3          -4.018387           -0.005565     -0.003833
-         4          -4.023393           -0.000559     -0.010492
-         5          -4.010515           -0.013437     -0.021744
+         1          -4.010832           -0.013119     -0.021744
+         2          -4.011085           -0.012867     -0.012382
+         3          -3.980756           -0.043195     -0.005466
+         4          -4.013903           -0.010048     -0.012264
+         5          -4.010575           -0.013377     -0.021744
 
      path length          =  8.315 bohr
      inter-image distance =  2.079 bohr
 
+     ------------------------------ iteration  14 ------------------------------
+
+     tcpu =    332.9    self-consistency for image   2
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    337.9    self-consistency for image   3
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    344.2    self-consistency for image   4
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     activation energy (->) =   0.034346 eV
+     activation energy (<-) =   0.034348 eV
+
+     image        energy (eV)        error (eV/A)        frozen
+
+         1       -689.3175825            0.006427            T
+         2       -689.3720625            0.273334            F
+         3       -689.2832361            0.049049            F
+         4       -689.3718236            0.274709            F
+         5       -689.3175845            0.006088            T
+
+     image  Fermi energy (eV)           error (V)    tot_charge
+
+         1          -4.010832           -0.013119     -0.021744
+         2          -4.010594           -0.013357     -0.012369
+         3          -3.976622           -0.047329     -0.005728
+         4          -4.015789           -0.008163     -0.012158
+         5          -4.010575           -0.013377     -0.021744
+
+     path length          =  8.341 bohr
+     inter-image distance =  2.085 bohr
+
+     ------------------------------ iteration  15 ------------------------------
+
+     tcpu =    349.2    self-consistency for image   2
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    355.1    self-consistency for image   3
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    363.8    self-consistency for image   4
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     activation energy (->) =   0.033297 eV
+     activation energy (<-) =   0.033299 eV
+
+     image        energy (eV)        error (eV/A)        frozen
+
+         1       -689.3175825            0.006427            T
+         2       -689.3744566            0.203865            F
+         3       -689.2842854            0.018450            F
+         4       -689.3741110            0.204876            F
+         5       -689.3175845            0.006088            T
+
+     image  Fermi energy (eV)           error (V)    tot_charge
+
+         1          -4.010832           -0.013119     -0.021744
+         2          -3.993402           -0.030549     -0.012712
+         3          -4.009344           -0.014607     -0.004299
+         4          -4.011517           -0.012434     -0.011912
+         5          -4.010575           -0.013377     -0.021744
+
+     path length          =  8.432 bohr
+     inter-image distance =  2.108 bohr
+
+     ------------------------------ iteration  16 ------------------------------
+
+     tcpu =    369.7    self-consistency for image   2
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    374.3    self-consistency for image   3
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    382.3    self-consistency for image   4
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     activation energy (->) =   0.033699 eV
+     activation energy (<-) =   0.033702 eV
+
+     image        energy (eV)        error (eV/A)        frozen
+
+         1       -689.3175825            0.006427            T
+         2       -689.3739033            0.232837            F
+         3       -689.2838830            0.016644            F
+         4       -689.3738274            0.233679            F
+         5       -689.3175845            0.006088            T
+
+     image  Fermi energy (eV)           error (V)    tot_charge
+
+         1          -4.010832           -0.013119     -0.021744
+         2          -4.012648           -0.011304     -0.012104
+         3          -4.020029           -0.003922     -0.003857
+         4          -4.008094           -0.015858     -0.012287
+         5          -4.010575           -0.013377     -0.021744
+
+     path length          =  8.376 bohr
+     inter-image distance =  2.094 bohr
+
+     ------------------------------ iteration  17 ------------------------------
+
+     tcpu =    386.9    self-consistency for image   2
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    392.1    self-consistency for image   3
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    395.1    self-consistency for image   4
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     activation energy (->) =   0.014479 eV
+     activation energy (<-) =   0.014481 eV
+
+     image        energy (eV)        error (eV/A)        frozen
+
+         1       -689.3175825            0.006427            T
+         2       -689.3745976            0.225346            F
+         3       -689.3031038            0.020511            F
+         4       -689.3744899            0.226637            F
+         5       -689.3175845            0.006088            T
+
+     image  Fermi energy (eV)           error (V)    tot_charge
+
+         1          -4.010832           -0.013119     -0.021744
+         2          -4.019666           -0.004285     -0.011762
+         3          -4.025326            0.001374     -0.003739
+         4          -4.018847           -0.005104     -0.011808
+         5          -4.010575           -0.013377     -0.021744
+
+     path length          =  8.374 bohr
+     inter-image distance =  2.093 bohr
+
+     ------------------------------ iteration  18 ------------------------------
+
+     tcpu =    400.3    self-consistency for image   2
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    410.8    self-consistency for image   3
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    417.3    self-consistency for image   4
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     activation energy (->) =   0.033348 eV
+     activation energy (<-) =   0.033350 eV
+
+     image        energy (eV)        error (eV/A)        frozen
+
+         1       -689.3175825            0.006427            T
+         2       -689.3695991            0.277361            F
+         3       -689.2842340            0.005453            F
+         4       -689.3693550            0.276898            F
+         5       -689.3175845            0.006088            T
+
+     image  Fermi energy (eV)           error (V)    tot_charge
+
+         1          -4.010832           -0.013119     -0.021744
+         2          -3.979496           -0.044456     -0.011633
+         3          -4.018840           -0.005111     -0.003770
+         4          -3.978892           -0.045060     -0.011654
+         5          -4.010575           -0.013377     -0.021744
+
+     path length          =  8.337 bohr
+     inter-image distance =  2.084 bohr
+
+     ------------------------------ iteration  19 ------------------------------
+
+     tcpu =    427.9    self-consistency for image   2
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    436.4    self-consistency for image   3
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    442.2    self-consistency for image   4
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     activation energy (->) =   0.033482 eV
+     activation energy (<-) =   0.033484 eV
+
+     image        energy (eV)        error (eV/A)        frozen
+
+         1       -689.3175825            0.006427            T
+         2       -689.3808638            0.012194            F
+         3       -689.2841006            0.005637            F
+         4       -689.3808829            0.013385            F
+         5       -689.3175845            0.006088            T
+
+     image  Fermi energy (eV)           error (V)    tot_charge
+
+         1          -4.010832           -0.013119     -0.021744
+         2          -4.000213           -0.023738     -0.011776
+         3          -4.021012           -0.002939     -0.003745
+         4          -3.997918           -0.026034     -0.011828
+         5          -4.010575           -0.013377     -0.021744
+
+     path length          =  8.351 bohr
+     inter-image distance =  2.088 bohr
+
+     ------------------------------ iteration  20 ------------------------------
+
+     tcpu =    450.6    self-consistency for image   2
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    454.7    self-consistency for image   3
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    458.6    self-consistency for image   4
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     activation energy (->) =   0.033472 eV
+     activation energy (<-) =   0.033474 eV
+
+     image        energy (eV)        error (eV/A)        frozen
+
+         1       -689.3175825            0.006427            T
+         2       -689.3809131            0.001925            F
+         3       -689.2841104            0.006144            F
+         4       -689.3809423            0.002778            F
+         5       -689.3175845            0.006088            T
+
+     image  Fermi energy (eV)           error (V)    tot_charge
+
+         1          -4.010832           -0.013119     -0.021744
+         2          -3.991409           -0.032542     -0.011940
+         3          -4.021351           -0.002601     -0.003713
+         4          -3.987921           -0.036030     -0.012066
+         5          -4.010575           -0.013377     -0.021744
+
+     path length          =  8.350 bohr
+     inter-image distance =  2.088 bohr
+
+     ------------------------------ iteration  21 ------------------------------
+
+     tcpu =    463.0    self-consistency for image   2
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    466.0    self-consistency for image   3
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    469.1    self-consistency for image   4
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     activation energy (->) =   0.033478 eV
+     activation energy (<-) =   0.033480 eV
+
+     image        energy (eV)        error (eV/A)        frozen
+
+         1       -689.3175825            0.006427            T
+         2       -689.3807545            0.001773            F
+         3       -689.2841044            0.005188            F
+         4       -689.3806999            0.002868            F
+         5       -689.3175845            0.006088            T
+
+     image  Fermi energy (eV)           error (V)    tot_charge
+
+         1          -4.010832           -0.013119     -0.021744
+         2          -4.004238           -0.019714     -0.011333
+         3          -4.022758           -0.001194     -0.003634
+         4          -4.007951           -0.016000     -0.011208
+         5          -4.010575           -0.013377     -0.021744
+
+     path length          =  8.350 bohr
+     inter-image distance =  2.088 bohr
+
+     ------------------------------ iteration  22 ------------------------------
+
+     tcpu =    472.0    self-consistency for image   2
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    474.8    self-consistency for image   3
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+     tcpu =    477.7    self-consistency for image   4
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     activation energy (->) =   0.033481 eV
+     activation energy (<-) =   0.033483 eV
+
+     image        energy (eV)        error (eV/A)        frozen
+
+         1       -689.3175825            0.006427            T
+         2       -689.3805845            0.002747            F
+         3       -689.2841014            0.006298            F
+         4       -689.3818834            0.002485            F
+         5       -689.3175845            0.006088            T
+
+     image  Fermi energy (eV)           error (V)    tot_charge
+
+         1          -4.010832           -0.013119     -0.021744
+         2          -4.019203           -0.004749     -0.010738
+         3          -4.023592           -0.000360     -0.003598
+         4          -4.022348           -0.001603     -0.010725
+         5          -4.010575           -0.013377     -0.021744
+
+     path length          =  8.350 bohr
+     inter-image distance =  2.088 bohr
+
      ---------------------------------------------------------------------------
 
 
-     neb: convergence achieved in  24 iterations
+     neb: convergence achieved in  22 iterations
 
-     NEB          :  8m10.47s CPU     8m29.01s WALL
+     NEB          :  9m42.18s CPU     7m59.95s WALL
 
 
-   This run was terminated on:  14:41: 5   8Feb2017            
+   This run was terminated on:  20:30: 7  26Aug2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
