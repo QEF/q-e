@@ -60,6 +60,7 @@ subroutine solve_e
   USE eqv,                   ONLY : dpsi, dvpsi
   USE control_lr,            ONLY : nbnd_occ, lgamma
   USE dv_of_drho_lr
+  USE fft_helper_subroutines
 
   implicit none
 
@@ -143,7 +144,7 @@ subroutine solve_e
      v_siz =  dffts%nnr_tg
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
      ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = dffts%nproc2
+     incr = fftx_ntgrp(dffts)
      !
   ENDIF
   !

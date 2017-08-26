@@ -295,6 +295,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE eqv,        ONLY : dvpsi, evq
   USE qpoint,     ONLY : nksq, ikks, ikqs, nksqtot
   USE control_lr, ONLY : lgamma
+  USE fft_helper_subroutines
 
   IMPLICIT NONE
   !
@@ -331,7 +332,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
      v_siz =  dffts%nnr_tg
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
      ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = dffts%nproc2
+     incr = fftx_ntgrp(dffts)
      !
   ENDIF
   !

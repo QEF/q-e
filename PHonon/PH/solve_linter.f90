@@ -73,6 +73,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE qpoint,       ONLY : xq, nksq, ikks, ikqs
   USE control_lr,   ONLY : alpha_pv, nbnd_occ, lgamma
   USE dv_of_drho_lr
+  USE fft_helper_subroutines
 
   implicit none
 
@@ -174,7 +175,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      v_siz =  dffts%nnr_tg
      ALLOCATE( tg_dv  ( v_siz, nspin_mag ) )
      ALLOCATE( tg_psic( v_siz, npol ) )
-     incr = dffts%nproc2
+     incr = fftx_ntgrp(dffts)
      !
   ENDIF
   !
