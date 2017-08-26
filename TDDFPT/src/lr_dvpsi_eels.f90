@@ -40,6 +40,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   use uspp,                  only : vkb, okvan
   USE mp_bands,              ONLY : ntask_groups
   USE buffers,               ONLY : get_buffer
+  USE fft_helper_subroutines
  
   IMPLICIT NONE
   !
@@ -70,7 +71,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
      !
      ALLOCATE( tg_psic(v_siz,npol) )
      !
-     incr = dffts%nproc2
+     incr = fftx_ntgrp(dffts)
      !
   ENDIF 
   !

@@ -33,6 +33,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE cell_base,            ONLY : tpiba2
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : fwfft
+  USE fft_helper_subroutines
   USE gvecs,                ONLY : nls, nlsm
   USE gvect,                ONLY : nl, ngm, gstart, g, gg
   USE io_global,            ONLY : stdout
@@ -421,7 +422,7 @@ CONTAINS
          !
          v_siz =  dffts%nnr_tg
          !
-         incr = 2 * dffts%nproc2
+         incr = 2 * fftx_ntgrp(dffts)
          !
          ALLOCATE( tg_dvrss(1:v_siz) )
          tg_dvrss=0.0d0

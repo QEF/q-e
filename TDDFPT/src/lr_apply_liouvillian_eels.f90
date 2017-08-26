@@ -34,6 +34,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE eqv,                  ONLY : evq, dpsi, dvpsi
   USE control_lr,           ONLY : nbnd_occ
   USE dv_of_drho_lr
+  USE fft_helper_subroutines
  
   IMPLICIT NONE
   !
@@ -81,7 +82,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ALLOCATE( tg_dvrssc(v_siz,nspin_mag) )
      ALLOCATE( tg_psic(v_siz,npol) )
      !
-     incr = dffts%nproc2
+     incr = fftx_ntgrp(dffts)
      !
   ENDIF
   !

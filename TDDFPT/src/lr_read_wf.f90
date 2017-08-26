@@ -45,6 +45,7 @@ SUBROUTINE lr_read_wf()
   USE buffers,              ONLY : open_buffer
   USE qpoint,               ONLY : nksq
   USE noncollin_module,     ONLY : npol
+  USE fft_helper_subroutines
   !
   IMPLICIT NONE
   !
@@ -222,7 +223,7 @@ SUBROUTINE normal_read()
   IF ( dffts%have_task_groups ) THEN
        !
        v_siz =  dffts%nnr_tg
-       incr = 2 * dffts%nproc2
+       incr = 2 * fftx_ntgrp(dffts)
        tg_revc0 = (0.0d0,0.0d0)
        !
   ELSE

@@ -60,6 +60,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE lr_exx_kernel,          ONLY : lr_exx_kernel_int, revc_int,&
                                      & revc_int_c
   USE constants,              ONLY : eps12
+  USE fft_helper_subroutines
   !
   IMPLICIT NONE
   !
@@ -341,7 +342,7 @@ CONTAINS
        !
        v_siz =  dffts%nnr_tg
        !
-       incr = 2 * dffts%nproc2
+       incr = 2 * fftx_ntgrp(dffts)
        !
        ALLOCATE( tg_rho( v_siz ) )
        tg_rho= 0.0_DP
@@ -357,7 +358,7 @@ CONTAINS
        IF (dffts%have_task_groups) THEN
           !
           ! Now the first proc of the group holds the first two bands
-          ! of the 2*dffts%nproc2 bands that we are processing at the same time,
+          ! of the 2*ntgrp bands that we are processing at the same time,
           ! the second proc. holds the third and fourth band
           ! and so on.
           !
