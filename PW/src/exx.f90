@@ -923,8 +923,8 @@ MODULE exx
     END IF
 
     !assign buffer
-!$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs,ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
     IF(DoLoc) then
+!$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs,ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
       DO ikq=1,SIZE(locbuff,3) 
          DO ibnd=1, x_nbnd_occ 
             DO ir=1,nrxxs*npol
@@ -933,6 +933,7 @@ MODULE exx
          ENDDO
       ENDDO
     ELSE
+!$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs,ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
       DO ikq=1,SIZE(exxbuff,3) 
          DO ibnd=ibnd_buff_start,ibnd_buff_end
             DO ir=1,nrxxs*npol
