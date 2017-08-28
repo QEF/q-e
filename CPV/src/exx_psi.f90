@@ -173,10 +173,10 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
         !
 #if defined(__MPI)
         !
-        CALL mp_barrier( dffts%comm2 )
+        CALL mp_barrier( fftx_tgcomm(dffts) )
         CALL MPI_ALLTOALLV(psis, sendcount1, sdispls1, MPI_DOUBLE_COMPLEX, &
             &         psis1, recvcount1, rdispls1, MPI_DOUBLE_COMPLEX, &
-            &         dffts%comm2, ierr)
+            &         fftx_tgcomm(dffts), ierr)
 #endif
         !
         ngpww1 = 0

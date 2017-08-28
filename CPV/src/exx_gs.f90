@@ -962,10 +962,10 @@ SUBROUTINE exx_gs(nfi, c)
 #if defined(__MPI)
       !
       DO ir=1,nproc_image/nogrp
-        CALL mp_barrier( dffts%comm2 )
+        CALL mp_barrier( fftx_tgcomm(dffts) )
         CALL MPI_ALLTOALLV(exx_tmp3(1,ir), sendcount1, sdispls1, MPI_DOUBLE_PRECISION, &
             &         exx_potential(1,ir),recvcount1, rdispls1, MPI_DOUBLE_PRECISION, &
-            &         dffts%comm2, ierr)
+            &         fftx_tgcomm(dffts), ierr)
       END DO
 #endif
       !
