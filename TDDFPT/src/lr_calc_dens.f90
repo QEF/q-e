@@ -364,7 +364,7 @@ CONTAINS
           !
           ! Compute the proper factor for each band
           !
-          idx = dffts%mype2 + 1
+          idx = fftx_tgpe(dffts) + 1
           !
           ! Remember two bands are packed in a single array :
           ! proc 0 has bands ibnd   and ibnd+1
