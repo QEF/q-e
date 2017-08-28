@@ -41,6 +41,7 @@ lr_alloc_init.o : ../../PW/src/pwcom.o
 lr_alloc_init.o : ../../PW/src/realus.o
 lr_alloc_init.o : lr_charg_resp.o
 lr_alloc_init.o : lr_variables.o
+lr_apply_liouvillian.o : ../../FFTXlib/fft_helper_subroutines.o
 lr_apply_liouvillian.o : ../../FFTXlib/fft_interfaces.o
 lr_apply_liouvillian.o : ../../LR_Modules/dv_of_drho.o
 lr_apply_liouvillian.o : ../../Modules/becmod.o
@@ -63,6 +64,7 @@ lr_apply_liouvillian.o : ../../PW/src/scf_mod.o
 lr_apply_liouvillian.o : ../../UtilXlib/mp.o
 lr_apply_liouvillian.o : lr_exx_kernel.o
 lr_apply_liouvillian.o : lr_variables.o
+lr_apply_liouvillian_eels.o : ../../FFTXlib/fft_helper_subroutines.o
 lr_apply_liouvillian_eels.o : ../../LR_Modules/dv_of_drho.o
 lr_apply_liouvillian_eels.o : ../../LR_Modules/lrcom.o
 lr_apply_liouvillian_eels.o : ../../Modules/fft_base.o
@@ -75,6 +77,7 @@ lr_apply_liouvillian_eels.o : ../../Modules/wavefunctions.o
 lr_apply_liouvillian_eels.o : ../../PW/src/buffers.o
 lr_apply_liouvillian_eels.o : ../../PW/src/pwcom.o
 lr_apply_liouvillian_eels.o : lr_variables.o
+lr_calc_dens.o : ../../FFTXlib/fft_helper_subroutines.o
 lr_calc_dens.o : ../../FFTXlib/fft_interfaces.o
 lr_calc_dens.o : ../../Modules/becmod.o
 lr_calc_dens.o : ../../Modules/cell_base.o
@@ -246,6 +249,7 @@ lr_dvpsi_e.o : ../../Modules/uspp.o
 lr_dvpsi_e.o : ../../Modules/wavefunctions.o
 lr_dvpsi_e.o : ../../PW/src/pwcom.o
 lr_dvpsi_e.o : lr_variables.o
+lr_dvpsi_eels.o : ../../FFTXlib/fft_helper_subroutines.o
 lr_dvpsi_eels.o : ../../LR_Modules/lrcom.o
 lr_dvpsi_eels.o : ../../Modules/fft_base.o
 lr_dvpsi_eels.o : ../../Modules/gvecw.o
@@ -377,6 +381,7 @@ lr_read_d0psi.o : ../../Modules/io_global.o
 lr_read_d0psi.o : ../../Modules/noncol.o
 lr_read_d0psi.o : ../../PW/src/pwcom.o
 lr_read_d0psi.o : lr_variables.o
+lr_read_wf.o : ../../FFTXlib/fft_helper_subroutines.o
 lr_read_wf.o : ../../FFTXlib/fft_interfaces.o
 lr_read_wf.o : ../../LR_Modules/lrcom.o
 lr_read_wf.o : ../../Modules/becmod.o
@@ -456,7 +461,6 @@ lr_run_nscf.o : lr_variables.o
 lr_set_boxes_density.o : ../../Modules/fft_base.o
 lr_set_boxes_density.o : ../../Modules/io_global.o
 lr_set_boxes_density.o : ../../Modules/kind.o
-lr_set_boxes_density.o : ../../Modules/mp_global.o
 lr_set_boxes_density.o : lr_variables.o
 lr_setup_nscf.o : ../../LR_Modules/lrcom.o
 lr_setup_nscf.o : ../../Modules/cell_base.o

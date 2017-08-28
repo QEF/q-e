@@ -32,6 +32,7 @@ apply_dpot.o : ../Modules/kind.o
 apply_dpot.o : ../Modules/mp_bands.o
 apply_dpot.o : ../Modules/noncol.o
 apply_dpot.o : ../PW/src/pwcom.o
+cft_wave.o : ../FFTXlib/fft_helper_subroutines.o
 cft_wave.o : ../FFTXlib/fft_interfaces.o
 cft_wave.o : ../Modules/fft_base.o
 cft_wave.o : ../Modules/kind.o
@@ -155,6 +156,7 @@ h_prec.o : ../Modules/recvec.o
 h_prec.o : ../PW/src/pwcom.o
 h_prec.o : ../UtilXlib/mp.o
 h_prec.o : lrcom.o
+incdrhoscf.o : ../FFTXlib/fft_helper_subroutines.o
 incdrhoscf.o : ../FFTXlib/fft_interfaces.o
 incdrhoscf.o : ../Modules/cell_base.o
 incdrhoscf.o : ../Modules/fft_base.o
@@ -167,6 +169,7 @@ incdrhoscf.o : ../Modules/wavefunctions.o
 incdrhoscf.o : ../PW/src/pwcom.o
 incdrhoscf.o : ../UtilXlib/mp.o
 incdrhoscf.o : lrcom.o
+incdrhoscf_nc.o : ../FFTXlib/fft_helper_subroutines.o
 incdrhoscf_nc.o : ../FFTXlib/fft_interfaces.o
 incdrhoscf_nc.o : ../Modules/cell_base.o
 incdrhoscf_nc.o : ../Modules/fft_base.o

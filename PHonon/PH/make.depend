@@ -661,6 +661,7 @@ elph_tetra_mod.o : ../../PW/src/tetra.o
 elph_tetra_mod.o : ../../UtilXlib/mp.o
 elph_tetra_mod.o : elph.o
 elph_tetra_mod.o : phcom.o
+elphon.o : ../../FFTXlib/fft_helper_subroutines.o
 elphon.o : ../../LR_Modules/lrcom.o
 elphon.o : ../../Modules/cell_base.o
 elphon.o : ../../Modules/constants.o
@@ -1319,6 +1320,7 @@ set_small_group_of_q.o : ../../PW/src/symm_base.o
 setlocq.o : ../../Modules/constants.o
 setlocq.o : ../../Modules/kind.o
 sgam_ph.o : ../../Modules/kind.o
+solve_e.o : ../../FFTXlib/fft_helper_subroutines.o
 solve_e.o : ../../LR_Modules/dv_of_drho.o
 solve_e.o : ../../LR_Modules/lrcom.o
 solve_e.o : ../../Modules/cell_base.o
@@ -1392,6 +1394,7 @@ solve_e_nscf.o : ../../Modules/wavefunctions.o
 solve_e_nscf.o : ../../PW/src/buffers.o
 solve_e_nscf.o : ../../PW/src/pwcom.o
 solve_e_nscf.o : phcom.o
+solve_linter.o : ../../FFTXlib/fft_helper_subroutines.o
 solve_linter.o : ../../LR_Modules/dv_of_drho.o
 solve_linter.o : ../../LR_Modules/lrcom.o
 solve_linter.o : ../../Modules/cell_base.o

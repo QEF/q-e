@@ -1,6 +1,6 @@
 bcast_ph_input.o : ../../LR_Modules/lrcom.o
+bcast_ph_input.o : ../../Modules/check_stop.o
 bcast_ph_input.o : ../../Modules/control_flags.o
-bcast_ph_input.o : ../../Modules/input_parameters.o
 bcast_ph_input.o : ../../Modules/io_files.o
 bcast_ph_input.o : ../../Modules/io_global.o
 bcast_ph_input.o : ../../Modules/ions_base.o
@@ -59,6 +59,7 @@ openfilq.o : ../../PHonon/PH/save_ph_input.o
 openfilq.o : ../../PW/src/buffers.o
 openfilq.o : ../../PW/src/pwcom.o
 phq_readin.o : ../../LR_Modules/lrcom.o
+phq_readin.o : ../../Modules/check_stop.o
 phq_readin.o : ../../Modules/control_flags.o
 phq_readin.o : ../../Modules/input_parameters.o
 phq_readin.o : ../../Modules/io_files.o
@@ -91,7 +92,6 @@ solve_head.o : ../../FFTXlib/fft_interfaces.o
 solve_head.o : ../../LR_Modules/lrcom.o
 solve_head.o : ../../Modules/becmod.o
 solve_head.o : ../../Modules/cell_base.o
-solve_head.o : ../../Modules/check_stop.o
 solve_head.o : ../../Modules/constants.o
 solve_head.o : ../../Modules/fft_base.o
 solve_head.o : ../../Modules/io_files.o

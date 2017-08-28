@@ -61,7 +61,6 @@ cglib.o : cp_interfaces.o
 cglib.o : mainvar.o
 chargedensity.o : ../../FFTXlib/fft_helper_subroutines.o
 chargedensity.o : ../../FFTXlib/fft_interfaces.o
-chargedensity.o : ../../FFTXlib/fft_scalar.o
 chargedensity.o : ../../KS_Solvers/CG/constants.o
 chargedensity.o : ../../Modules/cell_base.o
 chargedensity.o : ../../Modules/control_flags.o
@@ -400,6 +399,7 @@ exx_es.o : exx_module.o
 exx_es.o : printout_base.o
 exx_es.o : wannier.o
 exx_es.o : wannier_base.o
+exx_gs.o : ../../FFTXlib/fft_helper_subroutines.o
 exx_gs.o : ../../KS_Solvers/CG/constants.o
 exx_gs.o : ../../Modules/cell_base.o
 exx_gs.o : ../../Modules/electrons_base.o
@@ -418,6 +418,7 @@ exx_gs.o : mainvar.o
 exx_gs.o : printout_base.o
 exx_gs.o : wannier.o
 exx_gs.o : wannier_base.o
+exx_module.o : ../../FFTXlib/fft_helper_subroutines.o
 exx_module.o : ../../KS_Solvers/CG/constants.o
 exx_module.o : ../../Modules/cell_base.o
 exx_module.o : ../../Modules/command_line_options.o
@@ -442,6 +443,7 @@ exx_pair.o : ../../UtilXlib/mp.o
 exx_pair.o : ../../UtilXlib/parallel_include.o
 exx_pair.o : exx_module.o
 exx_pair.o : wannier_base.o
+exx_psi.o : ../../FFTXlib/fft_helper_subroutines.o
 exx_psi.o : ../../FFTXlib/fft_interfaces.o
 exx_psi.o : ../../Modules/cell_base.o
 exx_psi.o : ../../Modules/fft_base.o
@@ -1066,6 +1068,7 @@ restart_sub.o : ions_nose.o
 restart_sub.o : ions_positions.o
 restart_sub.o : mainvar.o
 restart_sub.o : printout_base.o
+runcp.o : ../../FFTXlib/fft_helper_subroutines.o
 runcp.o : ../../Modules/control_flags.o
 runcp.o : ../../Modules/electrons_base.o
 runcp.o : ../../Modules/fft_base.o

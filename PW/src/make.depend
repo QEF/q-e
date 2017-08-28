@@ -434,7 +434,6 @@ esm.o : ../../Modules/mp_global.o
 esm.o : ../../Modules/recvec.o
 esm.o : ../../UtilXlib/mp.o
 esm.o : pwcom.o
-esm.o : scf_mod.o
 ewald.o : ../../KS_Solvers/CG/constants.o
 ewald.o : ../../Modules/kind.o
 ewald.o : ../../Modules/mp_bands.o
@@ -696,7 +695,6 @@ gradcorr.o : ../../Modules/noncol.o
 gradcorr.o : ../../Modules/recvec.o
 gradcorr.o : ../../Modules/wavefunctions.o
 gradcorr.o : pwcom.o
-gradient.bak.o : ../../Modules/cell_base.o
 gweights.o : ../../Modules/kind.o
 h_1psi.o : ../../Modules/control_flags.o
 h_1psi.o : ../../Modules/kind.o
@@ -735,6 +733,7 @@ h_epsi_her_set.o : buffers.o
 h_epsi_her_set.o : ldaU.o
 h_epsi_her_set.o : pwcom.o
 h_epsi_her_set.o : scf_mod.o
+h_psi.o : ../../FFTXlib/fft_helper_subroutines.o
 h_psi.o : ../../Modules/becmod.o
 h_psi.o : ../../Modules/control_flags.o
 h_psi.o : ../../Modules/fft_base.o
@@ -971,23 +970,14 @@ ldaU.o : ../../Modules/ions_base.o
 ldaU.o : ../../Modules/kind.o
 ldaU.o : ../../Modules/parameters.o
 ldaU.o : atomic_wfc_mod.o
-loc_scdm.o : ../../FFTXlib/fft_interfaces.o
-loc_scdm.o : ../../Modules/becmod.o
 loc_scdm.o : ../../Modules/cell_base.o
-loc_scdm.o : ../../Modules/constants.o
 loc_scdm.o : ../../Modules/fft_base.o
-loc_scdm.o : ../../Modules/io_files.o
 loc_scdm.o : ../../Modules/io_global.o
-loc_scdm.o : ../../Modules/ions_base.o
 loc_scdm.o : ../../Modules/kind.o
-loc_scdm.o : ../../UtilXlib/mp.o  
 loc_scdm.o : ../../Modules/mp_bands.o
-loc_scdm.o : ../../Modules/mp_pools.o
 loc_scdm.o : ../../Modules/noncol.o
-loc_scdm.o : ../../Modules/uspp.o
-loc_scdm.o : ../../Modules/wavefunctions.o
 loc_scdm.o : ../../Modules/xc_vdW_DF.o
-loc_scdm.o : buffers.o
+loc_scdm.o : ../../UtilXlib/mp.o
 loc_scdm.o : exx.o
 loc_scdm.o : pwcom.o
 loc_scdm.o : scf_mod.o
@@ -1644,6 +1634,7 @@ read_file_new.o : pwcom.o
 read_file_new.o : realus.o
 read_file_new.o : scf_mod.o
 read_file_new.o : symm_base.o
+realus.o : ../../FFTXlib/fft_helper_subroutines.o
 realus.o : ../../FFTXlib/fft_interfaces.o
 realus.o : ../../FFTXlib/fft_types.o
 realus.o : ../../KS_Solvers/CG/constants.o

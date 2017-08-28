@@ -29,7 +29,6 @@ cell_base.o : io_global.o
 cell_base.o : kind.o
 check_stop.o : ../UtilXlib/clocks_handler.o
 check_stop.o : ../UtilXlib/mp.o
-check_stop.o : input_parameters.o
 check_stop.o : io_files.o
 check_stop.o : io_global.o
 check_stop.o : kind.o
