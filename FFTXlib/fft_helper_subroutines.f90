@@ -229,6 +229,14 @@ CONTAINS
      fftx_tgpe = desc%mype2
   END FUNCTION
 
+  PURE FUNCTION fftx_tgcomm( desc )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     INTEGER :: fftx_tgcomm
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     fftx_tgcomm = desc%comm2
+  END FUNCTION
+
   SUBROUTINE fftx_add_field( r, f, desc )
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
