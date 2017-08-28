@@ -536,7 +536,6 @@ SUBROUTINE iosys()
             '(5x,"Presently stress not available with electric field and gates",/)' )
   ENDIF
   !TB Why no E-field with SOC?
-  !IF ( tefield .and. ( nspin > 2 ) ) THEN
   IF ( (tefield .and. ( nspin > 2 )) .and. (.not.gate) ) THEN
      CALL errore( 'iosys', 'LSDA not available with electric field' , 1 )
   ENDIF
@@ -1542,6 +1541,13 @@ SUBROUTINE iosys()
   use_scdm  = scdm
   scdm_den = scdmden
   scdm_grd = scdmgrd
+  IF ( local_thr > 0.0_dp .AND. .NOT. gamma_only) &
+     CALL errore('input','localization for k-points not yet implemented',1)
+  IF ( local_thr > 0.0_dp .AND. .NOT. use_ace ) &
+     CALL errore('input','localization without ACE not yet implemented',1)
+  IF ( local_thr > 0.0_dp .AND. nspin > 1 ) &
+     CALL errore('input','spin-polarized localization not yet implemented',1)
+  IF ( use_scdm ) CALL errore('input','use_scdm not yet implemented',1)
   !
   IF(ecutfock <= 0.0_DP) THEN
      ! default case

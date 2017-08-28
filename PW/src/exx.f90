@@ -60,6 +60,8 @@ MODULE exx
                                          ! temporary (complex) buffer for wfc storage
   REAL(DP), ALLOCATABLE    :: locbuff(:,:,:)
                                          ! temporary (real) buffer for wfc storage
+  REAL(DP), ALLOCATABLE    :: locmat(:,:)
+                                         ! buffer for matrix of localization integrals
   !
   LOGICAL :: use_ace        !  true: Use Lin Lin's ACE method
                             !  false: do not use ACE, use old algorithm instead
@@ -244,6 +246,8 @@ MODULE exx
        CALL fft_type_init( exx_fft%dfftt, smap, "rho", gamma_only, lpara, &
             intra_comm, at, bg, exx_fft%gcutmt, exx_fft%dual_t, nyfft=nyfft )
     ELSE
+       WRITE(6,"(5X,'Exchange parallelized over bands (',i4,' band groups)')")&
+            negrp
        intra_comm = intra_egrp_comm
        CALL fft_type_init( exx_fft%dfftt, smap_exx, "rho", gamma_only, lpara, &
             intra_comm, at, bg, exx_fft%gcutmt, exx_fft%dual_t, nyfft=nyfft )
@@ -296,6 +300,7 @@ MODULE exx
     IF ( allocated(xkq_collect) )  DEALLOCATE(xkq_collect)
     IF ( allocated(exxbuff) )      DEALLOCATE(exxbuff)
     IF ( allocated(locbuff) )      DEALLOCATE(locbuff)
+    IF ( allocated(locmat) )      DEALLOCATE(locmat)
     IF ( allocated(xi) )      DEALLOCATE(xi)
     !
     IF(allocated(becxx)) THEN
@@ -567,7 +572,7 @@ MODULE exx
           WRITE( stdout, '(5x,a)' ) "(set verbosity='high' to see the list)"
       END IF
     ELSE
-      WRITE(stdout, '("EXX: grid of k+q points same as grid of k-points")')
+      WRITE(stdout, '(5X,"EXX: grid of k+q points same as grid of k-points")')
     ENDIF
 
     ! if nspin == 2, the kpoints are repeated in couples (spin up, spin down)
@@ -755,7 +760,7 @@ MODULE exx
      CALL weights()
      IF(local_thr.gt.0.0d0) Call errore('exx_restart','SCDM with restart NYI',1)
      CALL exxinit(.false.)
-     IF ( use_ace) CALL aceinit ( )
+     IF (use_ace) CALL aceinit ( )
      fock0 = exxenergy2()
      !
      RETURN
@@ -821,8 +826,14 @@ MODULE exx
     LOGICAL :: DoLoc 
     !
     CALL start_clock ('exxinit')
-    write(stdout,'(A,L)') 'exxinit: DoLoc=',DoLoc
-    IF(DoLoc.and..not.gamma_only) Call errore('exxinit','SCDM with K-points NYI',1)
+    IF ( Doloc ) THEN
+        WRITE(stdout,'(/,5X,"Using localization algorithm with threshold: ",&
+                & D10.2)') local_thr
+        IF(.NOT.gamma_only) CALL errore('exxinit','SCDM with K-points NYI',1)
+        IF(okvan.OR.okpaw) CALL errore('exxinit','SCDM with USPP/PAW not implemented',1)
+    END IF 
+    IF ( use_ace ) &
+        WRITE(stdout,'(/,5X,"Using ACE for calculation of exact exchange")') 
     !
     CALL transform_evc_to_exx(2)
     !
@@ -912,6 +923,7 @@ MODULE exx
     !
     IF( DoLoc) then 
       IF (.not. allocated(locbuff)) ALLOCATE( locbuff(nrxxs*npol, nbnd, nks))
+      IF (.not. allocated(locmat))  ALLOCATE( locmat(x_nbnd_occ, x_nbnd_occ))
     ELSE
       IF (.not. allocated(exxbuff)) THEN
          IF (gamma_only) THEN
@@ -5233,35 +5245,6 @@ END SUBROUTINE compute_becpsi
   END SUBROUTINE exxbuff_comm_gamma
   !-----------------------------------------------------------------------
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE matprt(label,n,m,A)
-IMPLICIT NONE
-  INTEGER :: n,m,i
-  real*8 :: A(n,m)
-  CHARACTER(len=50) :: frmt
-  CHARACTER(len=*) :: label
-
-  WRITE(stdout,'(A)') label
-  frmt = ' '
-  WRITE(frmt,'(A,I4,A)') '(',m,'f16.10)'
-  DO i = 1,n
-    WRITE(stdout,frmt) A(i,:)
-  ENDDO
-
-END SUBROUTINE
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE errinfo(routine,message,INFO)
-IMPLICIT NONE
-  INTEGER :: INFO
-  CHARACTER(len=*) :: routine,message
-
-  IF(INFO/=0) THEN
-    WRITE(*,*) routine,' exited with INFO= ',INFO
-    CALL errore(routine,message,1)
-  ENDIF
-
-END SUBROUTINE
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE aceinit( )
   !
   USE wvfct,      ONLY : nbnd, npwx, current_k
@@ -5305,7 +5288,7 @@ SUBROUTINE aceinit( )
      eexx = eexx + ee
   ENDDO
   CALL mp_sum( eexx, inter_pool_comm)
-  WRITE(stdout,'(/,5X,"ACE energy",f15.8)') eexx
+  ! WRITE(stdout,'(/,5X,"ACE energy",f15.8)') eexx
   IF ( okvan ) CALL deallocate_bec_type(becpsi)
   domat = .false.
 END SUBROUTINE aceinit
@@ -5339,8 +5322,6 @@ IMPLICIT NONE
   mexx = Zero
   !
   IF( local_thr.gt.0.0d0 ) then  
-!    CALL measure_localization(locbuff(1,1,1), nrxxs, nbndproj, mexx)
-    CALL measure_localization_G(locbuff(1,1,1), nrxxs, nbndproj, mexx)
     CALL vexx_loc(nnpw, nbndproj, xitmp, mexx)
     CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
     domat0 = domat
@@ -5351,7 +5332,7 @@ IMPLICIT NONE
 !   |xi> = Vx[phi]|phi>
     CALL vexx(nnpw, nnpw, nbndproj, phi, xitmp, becpsi)
 !   mexx = <phi|Vx[phi]|phi>
-    CALL matcalc('exact',.true.,.false.,nnpw,nbndproj,nbndproj,phi,xitmp,mexx,exxe)
+    CALL matcalc('exact',.true.,0,nnpw,nbndproj,nbndproj,phi,xitmp,mexx,exxe)
 !   |xi> = -One * Vx[phi]|phi> * rmexx^T
     CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
   END IF
@@ -5359,7 +5340,7 @@ IMPLICIT NONE
 
   CALL stop_clock( 'aceinit' )
 
-END SUBROUTINE
+END SUBROUTINE aceinit_gamma
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE vexxace_gamma(nnpw,nbnd,phi,exxe,vphi)
 USE wvfct,    ONLY : current_k, wg
@@ -5391,7 +5372,7 @@ IMPLICIT NONE
   rmexx = Zero
   cmexx = (Zero,Zero)
 ! <xi|phi>
-  CALL matcalc('<xi|phi>',.false.,.false.,nnpw,nbndproj,nbnd,xi(1,1,current_k),phi,rmexx,exxe)
+  CALL matcalc('<xi|phi>',.false.,0,nnpw,nbndproj,nbnd,xi(1,1,current_k),phi,rmexx,exxe)
 ! |vv> = |vphi> + (-One) * |xi> * <xi|phi>
   cmexx = (One,Zero)*rmexx
   CALL ZGEMM ('N','N',nnpw,nbnd,nbndproj,-(One,Zero),xi(1,1,current_k), &
@@ -5400,7 +5381,7 @@ IMPLICIT NONE
 
   IF(domat) THEN
     ALLOCATE( rmexx(nbnd,nbnd) )
-    CALL matcalc('ACE',.true.,.false.,nnpw,nbnd,nbnd,phi,vv,rmexx,exxe)
+    CALL matcalc('ACE',.true.,0,nnpw,nbnd,nbnd,phi,vv,rmexx,exxe)
     DEALLOCATE( rmexx )
 #if defined(__DEBUG)
     WRITE(stdout,'(4(A,I3),A,I9,A,f12.6)') 'vexxace: nbnd=', nbnd, ' nbndproj=',nbndproj, &
@@ -5418,47 +5399,9 @@ IMPLICIT NONE
 
 END SUBROUTINE vexxace_gamma
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE matcalc(label,DoE,PrtMat,ninner,n,m,U,V,mat,ee)
-USE becmod,   ONLY : calbec
-USE wvfct,    ONLY : current_k, wg
-IMPLICIT NONE
-!
-! compute the (n,n) matrix representation <U|V>
-! and energy from V (m,n) and U(m,n)
-!
-  INTEGER :: ninner,n,m,i
-  real(DP) :: ee
-  COMPLEX(DP) :: U(ninner,n), V(ninner,m)
-  real(DP) :: mat(n,m)
-  real(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
-  CHARACTER(len=*) :: label
-  CHARACTER(len=2) :: string
-  LOGICAL :: DoE,PrtMat
-
-  CALL start_clock('matcalc')
-
-  string = 'M-'
-  mat = Zero
-  CALL calbec(ninner, U, V, mat, m)
-
-  IF(DoE) THEN
-    IF(n/=m) CALL errore('matcalc','no trace for rectangular matrix.',1)
-    IF(PrtMat) CALL matprt(string//label,n,m,mat)
-    string = 'E-'
-    ee = Zero
-    DO i = 1,n
-     ee = ee + wg(i,current_k)*mat(i,i)
-    ENDDO
-    WRITE(stdout,'(A,f16.8,A)') string//label, ee, ' Ry'
-  ENDIF
-
-  CALL stop_clock('matcalc')
-
-END SUBROUTINE
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE aceupdate(nbndproj,nnpw,xitmp,rmexx)
 IMPLICIT NONE
-  INTEGER :: INFO,nbndproj,nnpw
+  INTEGER :: nbndproj,nnpw
   real(DP) :: rmexx(nbndproj,nbndproj)
   COMPLEX(DP),ALLOCATABLE :: cmexx(:,:)
   COMPLEX(DP) ::  xitmp(nnpw,nbndproj)
@@ -5467,13 +5410,8 @@ IMPLICIT NONE
   CALL start_clock('aceupdate')
 
 ! rmexx = -(Cholesky(rmexx))^-1
-  INFO = -1
   rmexx = -rmexx
-  CALL DPOTRF( 'L', nbndproj, rmexx, nbndproj, INFO )
-  CALL errinfo('DPOTRF','Cholesky failed in aceupdate.',INFO)
-  INFO = -1
-  CALL DTRTRI( 'L', 'N', nbndproj, rmexx, nbndproj, INFO )
-  CALL errinfo('DTRTRI','inversion failed in aceupdate.',INFO)
+  CALL invchol( nbndproj, rmexx )
 
 ! |xi> = -One * Vx[phi]|phi> * rmexx^T
   ALLOCATE( cmexx(nbndproj,nbndproj) )
@@ -5512,7 +5450,7 @@ TYPE(bec_type), INTENT(in) :: becpsi
 ! |xi> = Vx[phi]|phi>
   CALL vexx(npwx, nnpw, nbndproj, phi, xitmp, becpsi)
 ! mexx = <phi|Vx[phi]|phi>
-  CALL matcalc_k('exact',.true.,.false.,current_k,npwx*npol,nbndproj,nbndproj,phi,xitmp,mexx,exxe)
+  CALL matcalc_k('exact',.true.,0,current_k,npwx*npol,nbndproj,nbndproj,phi,xitmp,mexx,exxe)
 #if defined(__DEBUG)
   WRITE(stdout,'(3(A,I3),A,I9,A,f12.6)') 'aceinit_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                                     ' k=',current_k,' npw=',nnpw,' Ex(k)=',exxe
@@ -5524,98 +5462,28 @@ TYPE(bec_type), INTENT(in) :: becpsi
 
   CALL stop_clock( 'aceinit' )
 
-END SUBROUTINE
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE matcalc_k(label,DoE,PrtMat,ik,ninner,n,m,U,V,mat,ee)
-USE wvfct,                ONLY : wg, npwx
-USE becmod,               ONLY : calbec
-USE noncollin_module,     ONLY : noncolin, npol
-IMPLICIT NONE
-!
-! compute the (n,n) matrix representation <U|V>
-! and energy from V (m,n) and U(m,n)
-!
-  INTEGER :: ninner,n,m,i,ik, neff
-  real(DP) :: ee
-  COMPLEX(DP) :: U(ninner,n), V(ninner,m), mat(n,m)
-  real(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
-  CHARACTER(len=*) :: label
-  CHARACTER(len=2) :: string
-  LOGICAL :: DoE,PrtMat
-
-  CALL start_clock('matcalc')
-
-  string = 'M-'
-  mat = (Zero,Zero)
-  IF(noncolin) THEN
-    noncolin = .false.
-    CALL calbec(ninner, U, V, mat, m)
-    noncolin = .true.
-  ELSE
-    CALL calbec(ninner, U, V, mat, m)
-  ENDIF
-
-  IF(DoE) THEN
-    IF(n/=m) CALL errore('matcalc','no trace for rectangular matrix.',1)
-    IF(PrtMat) CALL matprt_k(string//label,n,m,mat)
-    string = 'E-'
-    ee = Zero
-    DO i = 1,n
-      ee = ee + wg(i,ik)*DBLE(mat(i,i))
-    ENDDO
-    !write(stdout,'(A,f16.8,A)') string//label, ee, ' Ry'
-  ENDIF
-
-  CALL stop_clock('matcalc')
-
-END SUBROUTINE
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE matprt_k(label,n,m,A)
-IMPLICIT NONE
-  INTEGER :: n,m,i
-  COMPLEX(DP) :: A(n,m)
-  CHARACTER(len=50) :: frmt
-  CHARACTER(len=*) :: label
-
-  WRITE(stdout,'(A)') label//'(real)'
-  frmt = ' '
-  WRITE(frmt,'(A,I4,A)') '(',m,'f12.6)'
-  DO i = 1,n
-    WRITE(stdout,frmt) dreal(A(i,:))
-  ENDDO
-
-  WRITE(stdout,'(A)') label//'(imag)'
-  frmt = ' '
-  WRITE(frmt,'(A,I4,A)') '(',m,'f12.6)'
-  DO i = 1,n
-    WRITE(stdout,frmt) aimag(A(i,:))
-  ENDDO
-END SUBROUTINE
+END SUBROUTINE aceinit_k
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE aceupdate_k(nbndproj,nnpw,xitmp,mexx)
 USE wvfct ,               ONLY : npwx
 USE noncollin_module,     ONLY : noncolin, npol
 IMPLICIT NONE
-  INTEGER :: INFO,nbndproj,nnpw
+  INTEGER :: nbndproj,nnpw
   COMPLEX(DP) :: mexx(nbndproj,nbndproj), xitmp(npwx*npol,nbndproj)
-  real(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
 
   CALL start_clock('aceupdate')
 
 ! mexx = -(Cholesky(mexx))^-1
-  INFO = -1
   mexx = -mexx
-  CALL ZPOTRF( 'L', nbndproj, mexx, nbndproj, INFO )
-  CALL errinfo('DPOTRF','Cholesky failed in aceupdate.',INFO)
-  INFO = -1
-  CALL ZTRTRI( 'L', 'N', nbndproj, mexx, nbndproj, INFO )
-  CALL errinfo('DTRTRI','inversion failed in aceupdate.',INFO)
+  CALL invchol_k( nbndproj, mexx )
+
 ! |xi> = -One * Vx[phi]|phi> * mexx^T
-  CALL ZTRMM('R','L','C','N',npwx*npol,nbndproj,(One,Zero),mexx,nbndproj,xitmp,npwx*npol)
+  CALL ZTRMM('R','L','C','N',npwx*npol,nbndproj,(1.0_dp,0.0_dp),mexx,nbndproj,&
+          xitmp,npwx*npol)
 
   CALL stop_clock('aceupdate')
 
-END SUBROUTINE
+END SUBROUTINE aceupdate_k
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE vexxace_k(nnpw,nbnd,phi,exxe,vphi)
 USE becmod,               ONLY : calbec
@@ -5646,13 +5514,13 @@ IMPLICIT NONE
   ALLOCATE( cmexx(nbndproj,nbnd) )
   cmexx = (Zero,Zero)
 ! <xi|phi>
-  CALL matcalc_k('<xi|phi>',.false.,.false.,current_k,npwx*npol,nbndproj,nbnd,xi(1,1,current_k),phi,cmexx,exxe)
+  CALL matcalc_k('<xi|phi>',.false.,0,current_k,npwx*npol,nbndproj,nbnd,xi(1,1,current_k),phi,cmexx,exxe)
 
 ! |vv> = |vphi> + (-One) * |xi> * <xi|phi>
   CALL ZGEMM ('N','N',npwx*npol,nbnd,nbndproj,-(One,Zero),xi(1,1,current_k),npwx*npol,cmexx,nbndproj,(One,Zero),vv,npwx*npol)
 
   IF(domat) THEN
-     CALL matcalc_k('ACE',.true.,.false.,current_k,npwx*npol,nbnd,nbnd,phi,vv,cmexx,exxe)
+     CALL matcalc_k('ACE',.true.,0,current_k,npwx*npol,nbnd,nbnd,phi,vv,cmexx,exxe)
 #if defined(__DEBUG)
     WRITE(stdout,'(3(A,I3),A,I9,A,f12.6)') 'vexxace_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                    ' k=',current_k,' npw=',nnpw, ' Ex(k)=',exxe
@@ -5667,7 +5535,7 @@ IMPLICIT NONE
 
   CALL stop_clock('vexxace')
 
-END SUBROUTINE
+END SUBROUTINE vexxace_k
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE vexx_loc(npw, nbnd, hpsi, mexx)
 USE noncollin_module,  ONLY : npol
@@ -5681,7 +5549,8 @@ implicit none
 !
 !  Exact exchange with SCDM orbitals. 
 !    - Vx|phi> =  Vx|psi> <psi|Vx|psi>^(-1) <psi|Vx|phi>
-!  mexx in input contains the localization integrals, in output the exchange matrix
+!  locmat contains localization integrals
+!  mexx contains in output the exchange matrix
 !   
   integer :: npw, nbnd, nrxxs, npairs
   integer :: ig, ir, ik, ikq, iq, ibnd, jbnd, kbnd, NQR
@@ -5741,9 +5610,9 @@ implicit none
        ENDDO
 
        DO kbnd = 1, ibnd-1
-         ovpairs(2) = ovpairs(2) + mexx(ibnd,kbnd) 
-         IF(mexx(ibnd,kbnd).gt.local_thr) then 
-           ovpairs(1) = ovpairs(1) + mexx(ibnd,kbnd) 
+         ovpairs(2) = ovpairs(2) + locmat(ibnd,kbnd) 
+         IF(locmat(ibnd,kbnd).gt.local_thr) then 
+           ovpairs(1) = ovpairs(1) + locmat(ibnd,kbnd) 
            DO ir = 1, NQR 
              rhoc(ir) = locbuff(ir,ibnd,ikq) * locbuff(ir,kbnd,ikq) / omega
            ENDDO
@@ -5788,7 +5657,7 @@ implicit none
      ENDDO
    ENDDO
    deallocate ( rhoc )
-   CALL matcalc('M1-',.true.,.false.,npw,nbnd,nbnd,RESULT,hpsi,mexx,exxe)
+   CALL matcalc('M1-',.true.,0,npw,nbnd,nbnd,RESULT,hpsi,mexx,exxe)
    deallocate( RESULT )
 
    write(stdout,'(2(A,I12),A,f12.2)') 'Pairs(full): ', (nbnd*nbnd-nbnd)/2, &
@@ -5799,128 +5668,6 @@ implicit none
   CALL stop_clock('vexxloc')
 
 END SUBROUTINE vexx_loc
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE measure_localization(orbt, NGrid, NBands, MatLoc) 
-USE kinds,             ONLY : DP
-USE cell_base,         ONLY : omega
-USE ions_base,         ONLY : nat  
-USE mp,                ONLY : mp_sum
-USE mp_bands,          ONLY : intra_bgrp_comm
-implicit none
-  integer :: NGrid, NBands, nxxs, ir, jbnd, kbnd
-  real(DP) :: orbt(NGrid, NBands)
-  real(DP) ::  cost, loc_diag, loc_off, tmp 
-  real(DP), allocatable :: Mat(:,:)
-  real(DP), optional :: MatLoc(NBands,NBands)
-  real(DP), parameter :: epss=0.0010d0
-
-  call start_clock('measure')
-
-  write(stdout,'(A)') '-------------------'
-  write(stdout,'(A)') 'Localization matrix'
-  write(stdout,'(A)') '-------------------'
-
-  nxxs = exx_fft%dfftt%nr1x *exx_fft%dfftt%nr2x *exx_fft%dfftt%nr3x
-  cost = 1.0d0/float(nxxs)
-  loc_diag = 0.0d0
-  loc_off = 0.0d0  
-
-  allocate( Mat(NBands,NBands) )
-  Mat = 0.0d0
-  DO ir = 1, NGrid 
-    DO jbnd = 1, NBands
-      Mat(jbnd,jbnd) = Mat(jbnd,jbnd) + cost * abs(orbt(ir,jbnd)) * abs(orbt(ir,jbnd))
-      DO kbnd = 1, jbnd - 1 
-        tmp = cost * abs(orbt(ir,jbnd)) * abs(orbt(ir,kbnd))
-        Mat(jbnd,kbnd) = Mat(jbnd,kbnd) + tmp 
-        Mat(kbnd,jbnd) = Mat(kbnd,jbnd) + tmp
-      ENDDO
-    ENDDO
-  ENDDO
-  call mp_sum(mat,intra_bgrp_comm)
-  DO jbnd = 1, NBands
-    loc_diag = loc_diag + Mat(jbnd,jbnd) 
-    DO kbnd = 1, jbnd - 1 
-      loc_off = loc_off + Mat(jbnd,kbnd) 
-    ENDDO
-  ENDDO
-  IF(present(MatLoc)) MAtLoc = Mat
-  deallocate( Mat )
-
-  write(stdout,'(A,f12.6,I3)') '    Total Charge =', loc_diag 
-  write(stdout,'(A,f12.6,I3)') '    Total Localization =', loc_off 
-  tmp = float(NBands*(NBands-1))/2.0d0  
-  write(stdout,'(A,f12.6,I3)') '    Localization per orbital pair =', loc_off/tmp 
-  write(stdout,'(A,f12.6,I3)') '    Localization per unit vol =', loc_off/omega
-  write(stdout,'(A,f12.6,I3)') '    Localization per atom =', loc_off/float(nat)
-  if(abs(loc_diag-float(NBands)).gt.epss) Call errore('measure_localization','Orthonormality broken',1)
-
-  call stop_clock('measure')
-
-END SUBROUTINE 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE measure_localization_G(orbt, NGrid, NBands, MatLoc) 
-USE kinds,             ONLY : DP
-USE cell_base,         ONLY : omega
-USE ions_base,         ONLY : nat  
-USE mp,                ONLY : mp_sum
-USE mp_bands,          ONLY : intra_bgrp_comm
-USE fft_interfaces,    ONLY : fwfft, invfft
-USE wvfct,             ONLY : npwx
-implicit none
-  integer :: NGrid, NBands, nxxs, ir, jbnd, kbnd, ig
-  real(DP) :: orbt(NGrid, NBands)
-  real(DP) ::  cost, loc_diag, loc_off, tmp 
-  real(DP), allocatable :: Mat(:,:)
-  complex(DP), allocatable :: buffer(:), Gorbt(:,:)
-  real(DP), optional :: MatLoc(NBands,NBands)
-  real(DP), parameter :: epss=0.000010d0
-
-  call start_clock('measure')
-
-  write(stdout,'(A)') '-----------------------'
-  write(stdout,'(A)') 'Localization matrix (G)'
-  write(stdout,'(A)') '-----------------------'
-
-! Localized functions to G-space and exchange matrix onto localized functions
-  allocate( buffer(NGrid), Gorbt(npwx,NBands) )
-  allocate( Mat(NBands,NBands) )
-  Mat = 0.0d0
-  buffer = (0.0d0,0.0d0)
-  Gorbt = (0.0d0,0.0d0) 
-  DO jbnd = 1, NBands 
-    buffer(:) = abs(dble(orbt(:,jbnd))) + (0.0d0,1.0d0)*0.0d0
-    CALL fwfft( 'CustomWave' , buffer, exx_fft%dfftt )
-    DO ig = 1, npwx
-      Gorbt(ig,jbnd) = buffer(exx_fft%nlt(ig))
-    ENDDO
-  ENDDO
-  deallocate ( buffer )
-  CALL matcalc('Coeff-',.false.,.false.,npwx,NBands,NBands,Gorbt,Gorbt,Mat,tmp)
-  deallocate ( Gorbt )
-
-  loc_diag = 0.0d0
-  loc_off = 0.0d0
-  DO jbnd = 1, NBands
-    loc_diag = loc_diag + Mat(jbnd,jbnd) 
-    DO kbnd = 1, jbnd - 1 
-      loc_off = loc_off + Mat(jbnd,kbnd) 
-    ENDDO
-  ENDDO
-  IF(present(MatLoc)) MAtLoc = Mat
-  deallocate( Mat )
-
-  write(stdout,'(A,f12.6,I3)') '    Total Charge =', loc_diag 
-  write(stdout,'(A,f12.6,I3)') '    Total Localization =', loc_off 
-  tmp = float(NBands*(NBands-1))/2.0d0  
-  write(stdout,'(A,f12.6,I3)') '    Localization per orbital pair =', loc_off/tmp 
-  write(stdout,'(A,f12.6,I3)') '    Localization per unit vol =', loc_off/omega
-  write(stdout,'(A,f12.6,I3)') '    Localization per atom =', loc_off/float(nat)
-! if(abs(loc_diag-float(NBands)).gt.epss) Call errore('measure_localization','Orthonormality broken',1)
-
-  call stop_clock('measure')
-
-END SUBROUTINE 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END MODULE exx
 !-----------------------------------------------------------------------

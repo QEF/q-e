@@ -1,4 +1,5 @@
-! Copyright (C) 2005-2015 Quantum ESPRESSO group
+! Copyright (C) 2017 Quantum ESPRESSO Foundation
+! Author: Ivan Carnimeo
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,13 +9,13 @@
 MODULE loc_scdm 
   !--------------------------------------
   !
-  ! Variables and subroutines related to the calculation of 
-  ! SCDM localization of molecular orbitals 
-  ! Implements ACE: Lin Lin, J. Chem. Theory Comput. 2016, 12, 2242
+  ! Variables and subroutines for localizing molecular orbitals based
+  ! on a modified SCDM approach. Original SCDM method:
+  ! A. Damle, L. Lin, L. Ying: J. Chem. Theory Comput. 2015, 11, 1463
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE exx,                  ONLY : exx_fft, x_nbnd_occ, locbuff, nkqs
+  USE exx,                  ONLY : exx_fft, x_nbnd_occ, locbuff, locmat, nkqs
 
   IMPLICIT NONE
   SAVE
@@ -63,7 +64,6 @@ IMPLICIT NONE
   nnr = dfftp%nnr
 
 #if defined (__MPI)
-!  ir_end = MIN(nnr,dfftp%nr1x*dfftp%nr2x*dfftp%npp(me_bgrp+1))
   ir_end = dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
 #else
   ir_end = nnr
@@ -133,9 +133,7 @@ IMPLICIT NONE
       end if 
     end if 
   end do 
-! call matprt('small',nbnd_eff,nptot,small)
   call mp_sum(small,intra_bgrp_comm)
-! call matprt('small',nbnd_eff,nptot,small)
   call mp_sum(list,intra_bgrp_comm)
 
   lwork = 4*nptot
@@ -152,8 +150,6 @@ IMPLICIT NONE
     ncpu_end   = 0
     ncpu_start = sum(cpu_npt(0:me_bgrp-1))
     ncpu_end   = sum(cpu_npt(0:me_bgrp))
-!   if(pivot(i).le.ncpu_end.and.pivot(i).ge.ncpu_start+1) &
-!             write(*,'(A,3I9,2f16.8)') 'pivoting: ', me_bgrp, i, pivot(i), den(j), grad 
   end do 
   deallocate( den, grad_den) 
   deallocate( tau, work )
@@ -164,17 +160,13 @@ IMPLICIT NONE
   allocate( mat(nbnd_eff,nbnd_eff), mat2(nbnd_eff,nbnd_eff), tau(nbnd_eff), work(lwork) )
   mat = 0.0d0
   do i = 1, nbnd_eff
-!   mat(:,i) = QRbuff(:,list(pivot(i)))
     ncpu_start = 0
     ncpu_end   = 0
     ncpu_start = sum(cpu_npt(0:me_bgrp-1))
     ncpu_end   = sum(cpu_npt(0:me_bgrp))
     if(pivot(i).le.ncpu_end.and.pivot(i).ge.ncpu_start+1) mat(:,i) = psi(list(pivot(i)),:)
   end do 
-! call matprt('Q',nbnd_eff,nbnd_eff,mat)
   call mp_sum(mat,intra_bgrp_comm)
-! call matprt('Q',nbnd_eff,nbnd_eff,mat)
-! deallocate( QRbuff ) 
   deallocate( mat2, tau, work )
 
 ! Pc = Psi * Psi(pivot(1:nbnd_eff),:)' in QRbuff
@@ -191,12 +183,9 @@ IMPLICIT NONE
     ncpu_start = sum(cpu_npt(0:me_bgrp-1))
     ncpu_end   = sum(cpu_npt(0:me_bgrp))
     if(pivot(i).le.ncpu_end.and.pivot(i).ge.ncpu_start+1) mat(i,:) = QRBuff(list(pivot(i)),:) 
-!   mat(i,:) = QRbuff(list(pivot(i)),:)
   end do 
   deallocate( cpu_npt )
-! call matprt('Q2',nbnd_eff,nbnd_eff,mat)
   call mp_sum(mat,intra_bgrp_comm)
-! call matprt('Q2',nbnd_eff,nbnd_eff,mat)
 
 ! Cholesky(psi)^(-1) in mat 
   CALL invchol(nbnd_eff,mat)
@@ -218,44 +207,149 @@ IMPLICIT NONE
 
 END SUBROUTINE SCDM_PGG
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE invchol(n,A)
-USE exx, ONLY : errinfo
-IMPLICIT NONE
-!
-! given a matrix A, returns the inverse of the Cholesky decomposition of A
-! for real matrices
-!
-  real(DP) :: A(n,n)
-  integer :: n, INFO
-
-  INFO = -1
-  CALL DPOTRF( 'L', n, A, n, INFO )
-  CALL errinfo('DPOTRF','Cholesky failed in invchol.',INFO)
-  INFO = -1
-  CALL DTRTRI( 'L', 'N', n, A, n, INFO )
-  CALL errinfo('DTRTRI','inversion failed in invchol.',INFO)
-
-END SUBROUTINE
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE localize_orbitals( )
   !
   ! Driver for SCDM orbital localization 
   !
   USE noncollin_module,  ONLY : npol
-  USE exx,               ONLY : locbuff, measure_localization, measure_localization_G
+  USE wvfct,             ONLY : nbnd
   !   
   implicit none
   integer :: NQR
- 
+  
+  if( nbnd > x_nbnd_occ) CALL errore('localize_orbitals', 'nbnd > x_nbnd_occ allowed',1)    
+
   NQR = exx_fft%dfftt%nnr * npol
 
-! CALL measure_localization(locbuff(1,1,1), NQR, x_nbnd_occ)
-  CALL measure_localization_G(locbuff(1,1,1), NQR, x_nbnd_occ)
+! CALL measure_localization(locbuff(1,1,1), NQR, x_nbnd_occ, locmat)
+  CALL measure_localization_G(locbuff(1,1,1), NQR, x_nbnd_occ, locmat)
   CALL SCDM_PGG(locbuff(1,1,1), NQR, x_nbnd_occ)
-! CALL measure_localization(locbuff(1,1,1), NQR, x_nbnd_occ)
-  CALL measure_localization_G(locbuff(1,1,1), NQR, x_nbnd_occ)
+! CALL measure_localization(locbuff(1,1,1), NQR, x_nbnd_occ, locmat)
+  CALL measure_localization_G(locbuff(1,1,1), NQR, x_nbnd_occ, locmat)
 
 END SUBROUTINE localize_orbitals
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE measure_localization(orbt, NGrid, NBands, MatLoc) 
+USE kinds,             ONLY : DP
+USE cell_base,         ONLY : omega
+USE ions_base,         ONLY : nat  
+USE mp,                ONLY : mp_sum
+USE mp_bands,          ONLY : intra_bgrp_comm
+implicit none
+  integer :: NGrid, NBands, nxxs, ir, jbnd, kbnd
+  real(DP) :: orbt(NGrid, NBands)
+  real(DP) ::  cost, loc_diag, loc_off, tmp 
+  real(DP), allocatable :: Mat(:,:)
+  real(DP), optional :: MatLoc(NBands,NBands)
+  real(DP), parameter :: epss=0.0010d0
+
+  call start_clock('measure')
+
+  write(stdout,'(A)') '-------------------'
+  write(stdout,'(A)') 'Localization matrix'
+  write(stdout,'(A)') '-------------------'
+
+  nxxs = exx_fft%dfftt%nr1x *exx_fft%dfftt%nr2x *exx_fft%dfftt%nr3x
+  cost = 1.0d0/float(nxxs)
+  loc_diag = 0.0d0
+  loc_off = 0.0d0  
+
+  allocate( Mat(NBands,NBands) )
+  Mat = 0.0d0
+  DO ir = 1, NGrid 
+    DO jbnd = 1, NBands
+      Mat(jbnd,jbnd) = Mat(jbnd,jbnd) + cost * abs(orbt(ir,jbnd)) * abs(orbt(ir,jbnd))
+      DO kbnd = 1, jbnd - 1 
+        tmp = cost * abs(orbt(ir,jbnd)) * abs(orbt(ir,kbnd))
+        Mat(jbnd,kbnd) = Mat(jbnd,kbnd) + tmp 
+        Mat(kbnd,jbnd) = Mat(kbnd,jbnd) + tmp
+      ENDDO
+    ENDDO
+  ENDDO
+  call mp_sum(mat,intra_bgrp_comm)
+  DO jbnd = 1, NBands
+    loc_diag = loc_diag + Mat(jbnd,jbnd) 
+    DO kbnd = 1, jbnd - 1 
+      loc_off = loc_off + Mat(jbnd,kbnd) 
+    ENDDO
+  ENDDO
+  IF(present(MatLoc)) MAtLoc = Mat
+  deallocate( Mat )
+
+  write(stdout,'(A,f12.6,I3)') '    Total Charge =', loc_diag 
+  write(stdout,'(A,f12.6,I3)') '    Total Localization =', loc_off 
+  tmp = float(NBands*(NBands-1))/2.0d0  
+  write(stdout,'(A,f12.6,I3)') '    Localization per orbital pair =', loc_off/tmp 
+  write(stdout,'(A,f12.6,I3)') '    Localization per unit vol =', loc_off/omega
+  write(stdout,'(A,f12.6,I3)') '    Localization per atom =', loc_off/float(nat)
+  if(abs(loc_diag-float(NBands)).gt.epss) Call errore('measure_localization','Orthonormality broken',1)
+
+  call stop_clock('measure')
+
+END SUBROUTINE measure_localization
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE measure_localization_G(orbt, NGrid, NBands, MatLoc) 
+USE kinds,             ONLY : DP
+USE cell_base,         ONLY : omega
+USE ions_base,         ONLY : nat  
+USE mp,                ONLY : mp_sum
+USE mp_bands,          ONLY : intra_bgrp_comm
+USE fft_interfaces,    ONLY : fwfft, invfft
+USE wvfct,             ONLY : npwx
+implicit none
+  integer :: NGrid, NBands, nxxs, ir, jbnd, kbnd, ig
+  real(DP) :: orbt(NGrid, NBands)
+  real(DP) ::  cost, loc_diag, loc_off, tmp 
+  real(DP), allocatable :: Mat(:,:)
+  complex(DP), allocatable :: buffer(:), Gorbt(:,:)
+  real(DP), optional :: MatLoc(NBands,NBands)
+  real(DP), parameter :: epss=0.000010d0
+
+  call start_clock('measure')
+
+  write(stdout,'(A)') '-----------------------'
+  write(stdout,'(A)') 'Localization matrix (G)'
+  write(stdout,'(A)') '-----------------------'
+
+! Localized functions to G-space and exchange matrix onto localized functions
+  allocate( buffer(NGrid), Gorbt(npwx,NBands) )
+  allocate( Mat(NBands,NBands) )
+  Mat = 0.0d0
+  buffer = (0.0d0,0.0d0)
+  Gorbt = (0.0d0,0.0d0) 
+  DO jbnd = 1, NBands 
+    buffer(:) = abs(dble(orbt(:,jbnd))) + (0.0d0,1.0d0)*0.0d0
+    CALL fwfft( 'CustomWave' , buffer, exx_fft%dfftt )
+    DO ig = 1, npwx
+      Gorbt(ig,jbnd) = buffer(exx_fft%nlt(ig))
+    ENDDO
+  ENDDO
+  deallocate ( buffer )
+  CALL matcalc('Coeff-',.false.,0,npwx,NBands,NBands,Gorbt,Gorbt,Mat,tmp)
+  deallocate ( Gorbt )
+
+  loc_diag = 0.0d0
+  loc_off = 0.0d0
+  DO jbnd = 1, NBands
+    loc_diag = loc_diag + Mat(jbnd,jbnd) 
+    DO kbnd = 1, jbnd - 1 
+      loc_off = loc_off + Mat(jbnd,kbnd) 
+    ENDDO
+  ENDDO
+  IF(present(MatLoc)) MAtLoc = Mat
+  deallocate( Mat )
+
+  write(stdout,'(A,f12.6,I3)') '    Total Charge =', loc_diag 
+  write(stdout,'(A,f12.6,I3)') '    Total Localization =', loc_off 
+  tmp = float(NBands*(NBands-1))/2.0d0  
+  write(stdout,'(A,f12.6,I3)') '    Localization per orbital pair =', loc_off/tmp 
+  write(stdout,'(A,f12.6,I3)') '    Localization per unit vol =', loc_off/omega
+  write(stdout,'(A,f12.6,I3)') '    Localization per atom =', loc_off/float(nat)
+! if(abs(loc_diag-float(NBands)).gt.epss) Call errore('measure_localization','Orthonormality broken',1)
+
+  call stop_clock('measure')
+
+END SUBROUTINE measure_localization_G
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END MODULE loc_scdm 
 !-----------------------------------------------------------------------

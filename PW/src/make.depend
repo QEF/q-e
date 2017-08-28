@@ -970,9 +970,11 @@ ldaU.o : ../../Modules/ions_base.o
 ldaU.o : ../../Modules/kind.o
 ldaU.o : ../../Modules/parameters.o
 ldaU.o : atomic_wfc_mod.o
+loc_scdm.o : ../../FFTXlib/fft_interfaces.o
 loc_scdm.o : ../../Modules/cell_base.o
 loc_scdm.o : ../../Modules/fft_base.o
 loc_scdm.o : ../../Modules/io_global.o
+loc_scdm.o : ../../Modules/ions_base.o
 loc_scdm.o : ../../Modules/kind.o
 loc_scdm.o : ../../Modules/mp_bands.o
 loc_scdm.o : ../../Modules/noncol.o
@@ -2107,6 +2109,11 @@ usnldiag.o : ../../Modules/kind.o
 usnldiag.o : ../../Modules/noncol.o
 usnldiag.o : ../../Modules/uspp.o
 usnldiag.o : pwcom.o
+utils.o : ../../Modules/becmod.o
+utils.o : ../../Modules/io_global.o
+utils.o : ../../Modules/kind.o
+utils.o : ../../Modules/noncol.o
+utils.o : pwcom.o
 v_of_rho.o : ../../FFTXlib/fft_interfaces.o
 v_of_rho.o : ../../KS_Solvers/CG/constants.o
 v_of_rho.o : ../../Modules/cell_base.o

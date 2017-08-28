@@ -179,7 +179,7 @@ SUBROUTINE electrons()
         !
         CALL exxinit(DoLoc)
         IF( DoLoc ) CALL localize_orbitals( )
-        IF ( use_ace) THEN
+        IF (use_ace) THEN
            CALL aceinit ( ) 
            fock2 = exxenergyace()
         ELSE
@@ -204,7 +204,7 @@ SUBROUTINE electrons()
         ! fock1 is the exchange energy calculated for orbitals at step n,
         !       using orbitals at step n-1 in the expression of exchange
         !
-        IF ( use_ace) THEN
+        IF (use_ace) THEN
            fock1 = exxenergyace()
         ELSE
            fock1 = exxenergy2()
@@ -221,7 +221,7 @@ SUBROUTINE electrons()
         ! fock0 is fock2 at previous step
         !
         fock0 = fock2
-        IF ( use_ace) THEN
+        IF (use_ace) THEN
            fock2 = exxenergyace()
         ELSE
            fock2 = exxenergy2()
@@ -255,14 +255,18 @@ SUBROUTINE electrons()
         ELSE
            WRITE( stdout, 9066 ) '  ', etot, hwf_energy
         END IF
-        IF(dexx>1.d-8)THEN
+        IF ( dexx>1.d-8 ) THEN
           WRITE( stdout, 9067 ) dexx
         ELSE
           WRITE( stdout, 9068 ) dexx
         ENDIF
         
         WRITE( stdout, 9062 ) - fock1
-        WRITE( stdout, 9064 ) 0.5D0*fock2
+        IF (use_ace) THEN
+           WRITE( stdout, 9063 ) 0.5D0*fock2
+        ELSE
+           WRITE( stdout, 9064 ) 0.5D0*fock2
+        ENDIF
         !
         IF ( dexx < tr2_final ) THEN
            IF ( do_makov_payne ) CALL makov_payne( etot )
@@ -302,7 +306,8 @@ SUBROUTINE electrons()
   ! ... formats
   !
 9062 FORMAT( '     - averaged Fock potential =',0PF17.8,' Ry' )
-9064 FORMAT( '     + Fock energy             =',0PF17.8,' Ry' )
+9063 FORMAT( '     + Fock energy (ACE)       =',0PF17.8,' Ry' )
+9064 FORMAT( '     + Fock energy (full)      =',0PF17.8,' Ry' )
 9066 FORMAT(/,A2,'   total energy              =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' )
 9067 FORMAT('     est. exchange err (dexx)  =',0PF17.8,' Ry' )
