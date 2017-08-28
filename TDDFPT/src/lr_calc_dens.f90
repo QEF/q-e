@@ -444,17 +444,7 @@ CONTAINS
        !
        ! reduce the group charge
        !
-       CALL mp_sum( tg_rho, gid = dffts%comm2 )
-       !
-       ! copy the charge back to the processor location
-       !
-       nxyp = dffts%nr1x * dffts%my_nr2p
-       DO ir3 = 1, dffts%my_nr3p
-          ioff    = dffts%nr1x * dffts%my_nr2p * (ir3-1)
-          ioff_tg = dffts%nr1x * dffts%nr2x    * (ir3-1) + dffts%nr1x * dffts%my_i0r2p
-          rho_1(ioff+1:ioff+nxyp,1) = rho_1(ioff+1:ioff+nxyp,1) + tg_rho(ioff_tg+1:ioff_tg+nxyp)
-          rho_1(ir,1) = rho_1(ir,1) + tg_rho(ir+ioff)
-       END DO
+       CALL tg_reduce_rho( rho_1, tg_rho, 1, dffts )
        !
     ENDIF
     !
