@@ -229,6 +229,7 @@ vcsubs.o \
 vhpsi.o \
 vloc_of_g.o \
 vloc_psi.o \
+utils.o \
 xdm_dispersion.o \
 wfcinit.o \
 write_ns.o \
