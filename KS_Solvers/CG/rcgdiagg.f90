@@ -7,8 +7,8 @@
 !
 ! define __VERBOSE to print a message after each eigenvalue is computed
 !----------------------------------------------------------------------------
-SUBROUTINE rcgdiagg( hs_1psi, s_1psi, &
-                     npwx, npw, nbnd, psi, e, btype, precondition, &
+SUBROUTINE rcgdiagg( hs_1psi, s_1psi, precondition, &
+                     npwx, npw, nbnd, psi, e, btype, &
                      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
   !

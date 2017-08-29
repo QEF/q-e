@@ -10,9 +10,9 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE regterg(  h_psi, s_psi, g_psi, &
+SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
                     npw, npwx, nvec, nvecx, evc, ethr, &
-                    uspp, e, btype, notcnv, lrot, dav_iter )
+                    e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -495,9 +495,9 @@ END SUBROUTINE regterg
 !  (written by Carlo Cavazzoni)
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pregterg(h_psi, s_psi, g_psi, &
+SUBROUTINE pregterg(h_psi, s_psi, uspp, g_psi, &
                     npw, npwx, nvec, nvecx, evc, ethr, &
-                    uspp, e, btype, notcnv, lrot, dav_iter )
+                    e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:

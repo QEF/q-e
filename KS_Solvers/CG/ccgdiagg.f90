@@ -11,8 +11,8 @@
 ! define __VERBOSE to print a message after each eigenvalue is computed
 !
 !----------------------------------------------------------------------------
-SUBROUTINE ccgdiagg( hs_1psi, s_1psi, &
-                     npwx, npw, nbnd, npol, psi, e, btype, precondition, &
+SUBROUTINE ccgdiagg( hs_1psi, s_1psi, precondition, &
+                     npwx, npw, nbnd, npol, psi, e, btype, &
                      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
   !

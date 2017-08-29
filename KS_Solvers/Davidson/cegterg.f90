@@ -9,9 +9,9 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cegterg( h_psi, s_psi, g_psi, &
+SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
                     npw, npwx, nvec, nvecx, npol, evc, ethr, &
-                    uspp, e, btype, notcnv, lrot, dav_iter )
+                    e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -519,9 +519,9 @@ END SUBROUTINE cegterg
 !  (written by Carlo Cavazzoni)
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pcegterg(h_psi, s_psi, g_psi, &  
+SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &  
                     npw, npwx, nvec, nvecx, npol, evc, ethr, &
-                    uspp, e, btype, notcnv, lrot, dav_iter )
+                    e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:

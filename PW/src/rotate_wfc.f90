@@ -55,14 +55,14 @@ SUBROUTINE rotate_wfc &
      IF ( gamma_only ) THEN
   !write (*,*) 'inside para gamma'; FLUSH(6)
         !
-        CALL protate_wfc_gamma ( h_psi, s_psi, &
-                                 npwx, npw, nstart, nbnd, psi, overlap, evc, e )
+        CALL protate_wfc_gamma ( h_psi, s_psi, overlap, &
+                                 npwx, npw, nstart, nbnd, psi, evc, e )
         !
      ELSE
   !write (*,*) 'inside para k'; FLUSH(6)
         !
-        CALL protate_wfc_k ( h_psi, s_psi, &
-                             npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
+        CALL protate_wfc_k ( h_psi, s_psi, overlap, &
+                             npwx, npw, nstart, nbnd, npol, psi, evc, e )
         !
      END IF
      !
@@ -73,14 +73,14 @@ SUBROUTINE rotate_wfc &
      IF ( gamma_only ) THEN
   !write (*,*) 'inside serial gamma'; FLUSH(6)
         !
-        CALL rotate_wfc_gamma ( h_psi, s_psi, &
-                                npwx, npw, nstart, nbnd, psi, overlap, evc, e )
+        CALL rotate_wfc_gamma ( h_psi, s_psi, overlap, &
+                                npwx, npw, nstart, nbnd, psi, evc, e )
         !
      ELSE
   !write (*,*) 'inside serial k'; FLUSH(6)
         !
-        CALL rotate_wfc_k ( h_psi, s_psi, &
-                            npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
+        CALL rotate_wfc_k ( h_psi, s_psi, overlap, &
+                            npwx, npw, nstart, nbnd, npol, psi, evc, e )
         !
      END IF
      !

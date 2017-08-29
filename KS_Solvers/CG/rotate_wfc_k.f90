@@ -7,8 +7,8 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_wfc_k( h_psi, s_psi, &
-                         npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
+SUBROUTINE rotate_wfc_k( h_psi, s_psi, overlap, &
+                         npwx, npw, nstart, nbnd, npol, psi, evc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Serial version of rotate_wfc for colinear, k-point calculations
@@ -141,8 +141,8 @@ END SUBROUTINE rotate_wfc_k
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE protate_wfc_k( h_psi, s_psi, &
-                          npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
+SUBROUTINE protate_wfc_k( h_psi, s_psi, overlap, &
+                          npwx, npw, nstart, nbnd, npol, psi, evc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Parallel version of rotate_wfc for colinear, k-point calculations

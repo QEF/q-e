@@ -288,9 +288,9 @@ CONTAINS
              !
           END IF
           !
-          CALL rcgdiagg( h_1psi, s_1psi, &
+          CALL rcgdiagg( h_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
-                         h_diag, ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
+                         ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
           !
           avg_iter = avg_iter + cg_iter
           !
@@ -323,17 +323,15 @@ CONTAINS
           IF ( use_para_diag ) then
              !
 !             ! make sure that all processors have the same wfc
-             CALL pregterg( h_psi, s_psi, g_psi, &
+             CALL pregterg( h_psi, s_psi, okvan, g_psi, &
                          npw, npwx, nbnd, nbndx, evc, ethr, &
-                         okvan, et(1,ik), btype(1,ik), & !    BEWARE gstart has been removed from call 
-                         notconv, lrot, dav_iter )
+                         et(1,ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call 
              !
           ELSE
              !
-             CALL regterg (  h_psi, s_psi, g_psi, &
-                         npw, npwx, nbnd, nbndx, evc, ethr, & !    BEWARE gstart has been removed from call
-                         okvan, et(1,ik), btype(1,ik), &
-                         notconv, lrot, dav_iter )
+             CALL regterg (  h_psi, s_psi, okvan, g_psi, &
+                         npw, npwx, nbnd, nbndx, evc, ethr, &
+                         et(1,ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
           END IF
           !
           avg_iter = avg_iter + dav_iter
@@ -428,9 +426,9 @@ CONTAINS
              !
           END IF
           !
-          CALL ccgdiagg( h_1psi, s_1psi, &
+          CALL ccgdiagg( h_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
-                         h_diag, ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
+                         ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
           !
           avg_iter = avg_iter + cg_iter
           !
@@ -466,17 +464,15 @@ CONTAINS
           !
           IF ( use_para_diag ) then
              !
-             CALL pcegterg( h_psi, s_psi, g_psi, &
-                         npw, npwx, nbnd, nbndx, npol, evc, ethr, &
-                         okvan, et(1,ik), btype(1,ik), &
-                         notconv, lrot, dav_iter )
+             CALL pcegterg( h_psi, s_psi, okvan, g_psi, &
+                            npw, npwx, nbnd, nbndx, npol, evc, ethr, &
+                            et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
              !
           ELSE
              !
-             CALL cegterg ( h_psi, s_psi, g_psi, &
-                         npw, npwx, nbnd, nbndx, npol, evc, ethr, &
-                         okvan, et(1,ik), btype(1,ik), &
-                         notconv, lrot, dav_iter )
+             CALL cegterg ( h_psi, s_psi, okvan, g_psi, &
+                            npw, npwx, nbnd, nbndx, npol, evc, ethr, &
+                            et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
           END IF
           !
           avg_iter = avg_iter + dav_iter

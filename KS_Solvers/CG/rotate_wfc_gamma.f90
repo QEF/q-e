@@ -7,8 +7,8 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, &
-                             npwx, npw, nstart, nbnd, psi, overlap, evc, e )
+SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
+                             npwx, npw, nstart, nbnd, psi, evc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Serial version of rotate_wfc for Gamma-only calculations
@@ -146,8 +146,8 @@ END SUBROUTINE rotate_wfc_gamma
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE protate_wfc_gamma( h_psi, s_psi, &
-                              npwx, npw, nstart, nbnd, psi, overlap, evc, e )
+SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
+                              npwx, npw, nstart, nbnd, psi, evc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Parallel version of rotate_wfc for Gamma-only calculations
