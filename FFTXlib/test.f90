@@ -47,7 +47,6 @@ program test
   !!  
   USE fft_types
   USE stick_base
-  USE task_groups
   USE fft_parallel
   USE fft_support
   IMPLICIT NONE
@@ -1084,7 +1083,6 @@ end subroutine hpsort_eps
 
 
 subroutine prepare_psi( ib, nbnd, ngms, psi, tg_psic, nls, nlsm, dtgs)
-   USE task_groups
    USE fft_param
    implicit none
    integer, intent(in) :: ib, nbnd, ngms
@@ -1121,7 +1119,6 @@ subroutine prepare_psi( ib, nbnd, ngms, psi, tg_psic, nls, nlsm, dtgs)
 end subroutine prepare_psi
 
 subroutine accumulate_hpsi( ib, nbnd, ngms, hpsi, tg_psic, nls, nlsm, dtgs, dffts)
-   USE task_groups
    USE fft_types
    USE fft_param
    implicit none
