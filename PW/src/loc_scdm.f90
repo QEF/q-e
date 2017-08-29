@@ -112,7 +112,7 @@ IMPLICIT NONE
   call mp_sum(cpu_npt,intra_bgrp_comm)
   write(*,'(2(A,I8))') '    npt = ', npt, '  procID= ', me_bgrp 
   write(stdout,*) '    reduced matrix, allocate: ', nptot
-  write(stdout,*) '    cpu_npt = ', cpu_npt(:)
+  ! write(stdout,*) '    cpu_npt = ', cpu_npt(:)
 
 
 ! find the map of the index 

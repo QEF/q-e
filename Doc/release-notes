@@ -64,6 +64,7 @@ Incompatible changes in svn version:
   * MAJOR restructuring of the distribution:
     - diagonalizers moved to KS_Solvers/
     - general utility modules moved to UtilsXlib
+  * MAJOR restructuring of parallel FFTs, affecting ordering of real-space arrays
   * Restructuring of C routines, introduction of ISO_C_BINDING:
     - memstat moved to module wrappers
     - f_wall and f_tcpu, in module mytime, replace previous fortran wrappers 
