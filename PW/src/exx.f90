@@ -1013,7 +1013,8 @@ MODULE exx
              CALL invfft ('CustomWave', psic_exx, exx_fft%dfftt)
              IF(DoLoc) then
                locbuff(1:nrxxs,ibnd-ibnd_loop_start+evc_offset+1,ik)=Dble(  psic_exx(1:nrxxs) )
-               IF(ibnd-ibnd_loop_start+evc_offset+2.le.nbnd) locbuff(1:nrxxs,ibnd-ibnd_loop_start+evc_offset+2,ik)=Aimag( psic_exx(1:nrxxs) )
+               IF(ibnd-ibnd_loop_start+evc_offset+2.le.nbnd) &
+                  locbuff(1:nrxxs,ibnd-ibnd_loop_start+evc_offset+2,ik)=Aimag( psic_exx(1:nrxxs) )
              ELSE
                exxbuff(1:nrxxs,h_ibnd,ik)=psic_exx(1:nrxxs)
              END IF
