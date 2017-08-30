@@ -76,7 +76,7 @@ IMPLICIT NONE
   den(:) = rho%of_r(:,1)
   IF ( nspin == 2 ) den(:) = den(:) + rho%of_r(:,2) 
   do ir = 1, ir_end 
-    charge = charge + den(ir) * omega / float(nxxs)
+    charge = charge + den(ir) * omega / dble(nxxs)
   end do 
   call mp_sum(charge,intra_bgrp_comm)
   write(stdout,'(A,f12.6)') '    charge = ', charge
@@ -87,7 +87,7 @@ IMPLICIT NONE
   charge = 0.0d0
   do ir = 1, ir_end 
     grad = sqrt( grad_den(ir,1)**2 +  grad_den(ir,2)**2 +  grad_den(ir,3)**2 )
-    charge = charge + grad * omega / float(nxxs)
+    charge = charge + grad * omega / dble(nxxs)
   end do 
   call mp_sum(charge,intra_bgrp_comm)
   write(stdout,'(A,f12.6)') '    grad   = ', charge
@@ -250,7 +250,7 @@ implicit none
   write(stdout,'(A)') '-------------------'
 
   nxxs = exx_fft%dfftt%nr1x *exx_fft%dfftt%nr2x *exx_fft%dfftt%nr3x
-  cost = 1.0d0/float(nxxs)
+  cost = 1.0d0/dble(nxxs)
   loc_diag = 0.0d0
   loc_off = 0.0d0  
 
@@ -278,11 +278,11 @@ implicit none
 
   write(stdout,'(A,f12.6,I3)') '    Total Charge =', loc_diag 
   write(stdout,'(A,f12.6,I3)') '    Total Localization =', loc_off 
-  tmp = float(NBands*(NBands-1))/2.0d0  
+  tmp = dble(NBands*(NBands-1))/2.0d0  
   write(stdout,'(A,f12.6,I3)') '    Localization per orbital pair =', loc_off/tmp 
   write(stdout,'(A,f12.6,I3)') '    Localization per unit vol =', loc_off/omega
-  write(stdout,'(A,f12.6,I3)') '    Localization per atom =', loc_off/float(nat)
-  if(abs(loc_diag-float(NBands)).gt.epss) Call errore('measure_localization','Orthonormality broken',1)
+  write(stdout,'(A,f12.6,I3)') '    Localization per atom =', loc_off/dble(nat)
+  if(abs(loc_diag-dble(NBands)).gt.epss) Call errore('measure_localization','Orthonormality broken',1)
 
   call stop_clock('measure')
 
@@ -341,11 +341,11 @@ implicit none
 
   write(stdout,'(A,f12.6,I3)') '    Total Charge =', loc_diag 
   write(stdout,'(A,f12.6,I3)') '    Total Localization =', loc_off 
-  tmp = float(NBands*(NBands-1))/2.0d0  
+  tmp = dble(NBands*(NBands-1))/2.0d0  
   write(stdout,'(A,f12.6,I3)') '    Localization per orbital pair =', loc_off/tmp 
   write(stdout,'(A,f12.6,I3)') '    Localization per unit vol =', loc_off/omega
-  write(stdout,'(A,f12.6,I3)') '    Localization per atom =', loc_off/float(nat)
-! if(abs(loc_diag-float(NBands)).gt.epss) Call errore('measure_localization','Orthonormality broken',1)
+  write(stdout,'(A,f12.6,I3)') '    Localization per atom =', loc_off/dble(nat)
+! if(abs(loc_diag-dble(NBands)).gt.epss) Call errore('measure_localization','Orthonormality broken',1)
 
   call stop_clock('measure')
 

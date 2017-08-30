@@ -388,9 +388,6 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE wrappers,             ONLY : memstat
   !
   USE plugin_variables,     ONLY : plugin_etot
-  USE exx,                  ONLY : exxinit
-  USE loc_scdm,             ONLY : use_scdm, localize_orbitals
-  USE funct,                ONLY : dft_is_hybrid, stop_exx
   !
   IMPLICIT NONE
   !

@@ -775,7 +775,7 @@ MODULE exx
     ! This SUBROUTINE is run before the first H_psi() of each iteration.
     ! It saves the wavefunctions for the right density matrix, in real space
     !
-    ! DoLoc = .true.  ... Real Array exxbuff(ir, nbnd, nkqs)
+    ! DoLoc = .true.  ...    Real Array locbuff(ir, nbnd, nkqs)
     !         .false. ... Complex Array exxbuff(ir, nbnd/2, nkqs)
     !
     USE wavefunctions_module, ONLY : evc, psic
@@ -940,7 +940,7 @@ MODULE exx
       DO ikq=1,SIZE(locbuff,3) 
          DO ibnd=1, x_nbnd_occ 
             DO ir=1,nrxxs*npol
-               locbuff(ir,ibnd,ikq)=(0.0_DP,0.0_DP)
+               locbuff(ir,ibnd,ikq)=0.0_DP
             ENDDO
          ENDDO
       ENDDO
