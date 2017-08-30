@@ -377,7 +377,7 @@ CONTAINS
       !
       CALL allocate_input_ions(ntyp,nat)
       !
-      if_pos = 1
+      rd_if_pos = 1
       !
       sp_pos = 0
       rd_pos = 0.0_DP
@@ -488,7 +488,7 @@ CONTAINS
                            & 'in ATOMIC_POSITIONS', ia )
          DO k = fieldused+1, nfield
             CALL get_field(k, field_str, input_line)
-            READ(field_str, *) if_pos(k-fieldused,ia)
+            READ(field_str, *) rd_if_pos(k-fieldused,ia)
          ENDDO
          !
          match_label: DO is = 1, ntyp

@@ -49,7 +49,7 @@
                                 ip_lfcpopt => lfcpopt, ip_fcp_mu => fcp_mu,                                           &
                                 ecfixed, qcutz, q2sigma,                                                              &    
                                 tforces, rd_for,                                                                      &
-                                if_pos,                                                                               &
+                                rd_if_pos,                                                                               &
                                 tionvel, rd_vel,                                                                      &
                                 tefield, lelfield, dipfield, edir, emaxpos, eamp, eopreg, efield, efield_cart,gdir,   &
                                 lberry,nppstr,nberrycyc,                                                              &
@@ -316,7 +316,7 @@
   IF ( TRIM(calculation) .NE. "scf" .AND. TRIM(calculation) .NE. "nscf" .AND. &
                                            TRIM(calculation) .NE. "bands") THEN
       obj%free_positions_ispresent=.TRUE.
-      CALL qexsd_init_free_positions( obj%free_positions, if_pos, ip_nat)
+      CALL qexsd_init_free_positions( obj%free_positions, rd_if_pos, ip_nat)
   ELSE
       obj%free_positions_ispresent = .FALSE.
   END IF

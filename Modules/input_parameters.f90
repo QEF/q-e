@@ -1400,7 +1400,7 @@ MODULE input_parameters
 !
         REAL(DP), ALLOCATABLE :: rd_pos(:,:)  ! unsorted positions from input
         INTEGER,  ALLOCATABLE :: sp_pos(:)
-        INTEGER,  ALLOCATABLE :: if_pos(:,:)
+        INTEGER,  ALLOCATABLE :: rd_if_pos(:,:)
         INTEGER,  ALLOCATABLE :: na_inp(:)
         LOGICAL  :: tapos = .false.
         LOGICAL  :: lsg   = .false.
@@ -1534,7 +1534,7 @@ SUBROUTINE reset_input_checks()
     !
     IF ( allocated( rd_pos ) ) DEALLOCATE( rd_pos )
     IF ( allocated( sp_pos ) ) DEALLOCATE( sp_pos )
-    IF ( allocated( if_pos ) ) DEALLOCATE( if_pos )
+    IF ( allocated( rd_if_pos ) ) DEALLOCATE( rd_if_pos )
     IF ( allocated( na_inp ) ) DEALLOCATE( na_inp )
     IF ( allocated( rd_vel ) ) DEALLOCATE( rd_vel )
     IF ( allocated( sp_vel ) ) DEALLOCATE( sp_vel )
@@ -1542,7 +1542,7 @@ SUBROUTINE reset_input_checks()
     !
     ALLOCATE( rd_pos( 3, nat ) )
     ALLOCATE( sp_pos( nat)   )
-    ALLOCATE( if_pos( 3, nat ) )
+    ALLOCATE( rd_if_pos( 3, nat ) )
     ALLOCATE( na_inp( ntyp)  )
     ALLOCATE( rd_vel( 3, nat ) )
     ALLOCATE( sp_vel( nat)   )
@@ -1550,7 +1550,7 @@ SUBROUTINE reset_input_checks()
     !
     rd_pos = 0.0_DP
     sp_pos = 0
-    if_pos = 1
+    rd_if_pos = 1
     na_inp = 0
     rd_vel = 0.0_DP
     sp_vel = 0
@@ -1608,7 +1608,7 @@ SUBROUTINE reset_input_checks()
     IF ( allocated( wk ) ) DEALLOCATE( wk )
     IF ( allocated( rd_pos ) ) DEALLOCATE( rd_pos )
     IF ( allocated( sp_pos ) ) DEALLOCATE( sp_pos )
-    IF ( allocated( if_pos ) ) DEALLOCATE( if_pos )
+    IF ( allocated( rd_if_pos ) ) DEALLOCATE( rd_if_pos )
     IF ( allocated( na_inp ) ) DEALLOCATE( na_inp )
     IF ( allocated( rd_vel ) ) DEALLOCATE( rd_vel )
     IF ( allocated( sp_vel ) ) DEALLOCATE( sp_vel )

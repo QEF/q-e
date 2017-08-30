@@ -200,7 +200,7 @@ CONTAINS
        IF (.not.ionode) THEN
           CALL allocate_input_ions( ntyp, nat )
        END IF
-       CALL mp_bcast( if_pos, ionode_id, intra_image_comm )
+       CALL mp_bcast( rd_if_pos, ionode_id, intra_image_comm )
        CALL mp_bcast( na_inp, ionode_id, intra_image_comm )
        CALL mp_bcast( sp_pos, ionode_id, intra_image_comm )
        CALL mp_bcast( rd_pos, ionode_id, intra_image_comm )
@@ -853,7 +853,7 @@ CONTAINS
     ! ... allocation of needed arrays
     CALL allocate_input_ions( ntyp, nat )
     !
-    if_pos = 1
+    rd_if_pos = 1
     sp_pos = 0
     rd_pos = 0.0_DP
     sp_vel = 0
@@ -957,15 +957,15 @@ CONTAINS
        !
        IF ( image  == 1 ) THEN
           !
-          CALL iotk_scan_attr( attr, 'ifx', if_pos(1,ia), default = 1, ierr=ierr )
+          CALL iotk_scan_attr( attr, 'ifx', rd_if_pos(1,ia), default = 1, ierr=ierr )
           IF ( ierr /= 0) CALL errore( 'read_image', &
                'error reading ifx attribute of atom node', image )
           !
-          CALL iotk_scan_attr( attr, 'ify', if_pos(2,ia), default = 1, ierr = ierr )
+          CALL iotk_scan_attr( attr, 'ify', rd_if_pos(2,ia), default = 1, ierr = ierr )
           IF ( ierr /= 0) CALL errore( 'read_image', &
                'error reading ify attribute of atom node', image )
           !
-          CALL iotk_scan_attr( attr, 'ifz', if_pos(3,ia), default = 1, ierr = ierr )
+          CALL iotk_scan_attr( attr, 'ifz', rd_if_pos(3,ia), default = 1, ierr = ierr )
           IF ( ierr /= 0) CALL errore( 'read_image', &
                'error reading ifz attribute of atom node', image )
           !

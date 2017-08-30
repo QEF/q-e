@@ -280,7 +280,7 @@ SUBROUTINE iosys()
                                pot_extrapolation,  wfc_extrapolation,          &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
                                trust_radius_ini, bfgs_ndim, rd_pos, sp_pos, &
-                               rd_for, rd_if_pos => if_pos, lsg
+                               rd_for, rd_if_pos, lsg
   !
   ! ... CELL namelist
   !
@@ -1687,14 +1687,14 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   !
   USE kinds,              ONLY : DP
   USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, taspc, &
-                                 tapos, rd_pos, atomic_positions, if_pos,  &
+                                 tapos, rd_pos, atomic_positions, rd_if_pos,  &
                                  sp_pos, f_inp, rd_for, tavel, sp_vel, rd_vel, &
                                  lsg
   USE dynamics_module,    ONLY : vel
   USE cell_base,          ONLY : at, ibrav
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
   USE fixed_occ,          ONLY : tfixed_occ, f_inp_ => f_inp
-  USE ions_base,          ONLY : if_pos_ =>  if_pos, amass, fixatom
+  USE ions_base,          ONLY : if_pos, amass, fixatom
   USE control_flags,      ONLY : textfor, tv0rd
   USE wyckoff,            ONLY : nattot, tautot, ityptot, extfortot, &
                                  if_postot, clean_spacegroup
@@ -1736,7 +1736,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
      tau(:,:)=tautot(:,:)
      ityp(:) = ityptot(:)
      extfor(:,:) = extfortot(:,:)
-     if_pos_(:,:) = if_postot(:,:)
+     if_pos(:,:) = if_postot(:,:)
      CALL clean_spacegroup()
   ELSE 
      DO ia = 1, nat
@@ -1744,7 +1744,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
         tau(:,ia) = rd_pos(:,ia)
         ityp(ia)  = sp_pos(ia)
         extfor(:,ia) = rd_for(:,ia)
-        if_pos_(:,ia) = if_pos(:,ia)
+        if_pos(:,ia) = rd_if_pos(:,ia)
         !
      ENDDO
   ENDIF
@@ -1766,7 +1766,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
   ! ... if_pos whose value is 0 when the coordinate is to be kept fixed, 1
   ! ... otherwise. 
   !
-  fixatom = COUNT( if_pos_(1,:)==0 .AND. if_pos_(2,:)==0 .AND. if_pos_(3,:)==0 )
+  fixatom = COUNT( if_pos(1,:)==0 .AND. if_pos(2,:)==0 .AND. if_pos(3,:)==0 )
   !
   tau_format = trim( atomic_positions )
   !
