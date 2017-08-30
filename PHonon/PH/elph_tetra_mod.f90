@@ -42,19 +42,20 @@ SUBROUTINE elph_tetra_lambda()
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE cell_base, ONLY : at, bg
   USE ions_base, ONLY : nat
-  USE symm_base, ONLY : s, irt, invs
+  USE symm_base, ONLY : s, irt, nsym, invs
   USE klist,  ONLY: nks, nkstot
   USE wvfct, ONLY: et, nbnd
   USE qpoint, ONLY : xq, nksq, ikks
   USE dynmat, ONLY : dyn, w2
   USE el_phon, ONLY : el_ph_mat, elph_nbnd_min, elph_nbnd_max, done_elph, gamma_disp
   USE control_lr,  ONLY : lgamma
-  USE control_ph, ONLY : current_iq, qplot
+  USE control_ph, ONLY : current_iq, qplot, xmldyn
   USE modes, ONLY : u, nirr
   USE lr_symm_base, ONLY : minus_q, nsymq, rtau, irotmq
   USE lsda_mod,   ONLY : nspin
   USE ktetra,     ONLY : ntetra, tetra, opt_tetra_dos_t
   USE output, ONLY : fildyn
+  USE xml_io_base, ONLY : create_directory
   !
   IMPLICIT NONE
   !
@@ -70,6 +71,18 @@ SUBROUTINE elph_tetra_lambda()
   INTEGER, EXTERNAL :: find_free_unit
   CHARACTER(LEN=6) :: int_to_char
   !
+  ! Used to generate a2fq2r
+  !
+  integer :: nq, isq (48), imq, isig
+  ! nq :  degeneracy of the star of q
+  ! isq: index of q in the star of a given sym.op.
+  ! imq: index of -q in the star of q (0 if not present)
+  real(DP) :: sxq (3, 48)
+  ! list of vectors in the star of q
+  COMPLEX(DP) :: dyn22(3*nat,3*nat)
+  CHARACTER(LEN=256) :: elph_dir
+  LOGICAL  :: exst, xmldyn_save
+  !  
   DO irr=1,nirr
      IF (.NOT.done_elph(irr)) RETURN
   ENDDO
@@ -210,6 +223,45 @@ SUBROUTINE elph_tetra_lambda()
 9010 FORMAT(5x,'lambda(',i5,')=',f8.4,'   gamma=',f8.2,' GHz')
   !
   IF (ionode) CLOSE (unit = iuelph)
+  !
+  !    Prepare interface to q2r and matdyn
+  !
+  elph_dir='elph_dir/'
+  IF (ionode) INQUIRE(file=TRIM(elph_dir), EXIST=exst)
+  CALL mp_bcast(exst, ionode_id, intra_image_comm) 
+  IF (.NOT.exst) CALL create_directory( elph_dir )
+  !
+  call star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE. )
+  !
+  DO isig = 1, 10 !=nsig in elphsum
+     filelph = TRIM(elph_dir)//'a2Fq2r.'// TRIM(int_to_char(50 + isig)) &
+                                  //'.'//TRIM(int_to_char(current_iq))
+     IF (ionode) THEN
+        iuelph = find_free_unit()
+        OPEN(iuelph, file=filelph, STATUS = 'unknown', FORM = 'formatted', &
+                     iostat=ios)
+     ELSE
+        !
+        ! this node doesn't write: unit 6 is redirected to /dev/null
+        !
+        iuelph =6
+     END IF
+     CALL mp_bcast(ios, ionode_id, intra_image_comm)
+     IF (ios /= 0) CALL errore('elph_tetra_lambda','opening output file '// TRIM(filelph),1)
+     dyn22(1:3*nat,1:3*nat) = el_ph_sum(1:3*nat,1:3*nat)
+     WRITE(iuelph,*) 0.0_dp, ef, SUM(dosef(1:2))
+     IF ( imq == 0 ) THEN
+        write(iuelph,*) 2*nq
+     ELSE
+        write(iuelph,*) nq
+     ENDIF
+     xmldyn_save=xmldyn
+     xmldyn=.FALSE.
+     CALL q2qstar_ph (dyn22, at, bg, nat, nsym, s, invs, &
+          irt, rtau, nq, sxq, isq, imq, iuelph)
+     xmldyn=xmldyn_save
+     IF (ionode) CLOSE( UNIT = iuelph, STATUS = 'KEEP' )
+  END DO
   !
   DEALLOCATE(wght, et_col)
   !
@@ -445,27 +497,29 @@ SUBROUTINE elph_tetra_gamma()
   ! expand that to whole BZ.
   !
   USE ener, ONLY : ef
-  USE constants, ONLY : pi, ry_to_cmm1, ry_to_ghz, rytoev
+  USE constants, ONLY : pi, ry_to_cmm1, ry_to_ghz, rytoev, amu_ry
   USE kinds, ONLY : dp
   USE mp, ONLY : mp_sum, mp_bcast
   USE mp_pools, ONLY : inter_pool_comm
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE cell_base, ONLY : at, bg
   USE ions_base, ONLY : nat
-  USE symm_base, ONLY : s, irt, invs
+  USE symm_base, ONLY : s, irt, nsym, invs
   USE klist,  ONLY: nks, nkstot
   USE wvfct, ONLY: et, nbnd
   USE qpoint, ONLY : xq, nksq, ikks
   USE dynmat, ONLY : dyn, w2
   USE el_phon, ONLY : el_ph_mat, elph_nbnd_min, elph_nbnd_max, done_elph, gamma_disp
   USE control_lr,  ONLY : lgamma
-  USE control_ph, ONLY : current_iq, qplot
+  USE control_ph, ONLY : current_iq, qplot, xmldyn
   USE modes, ONLY : u, nirr
   USE lr_symm_base, ONLY : minus_q, nsymq, rtau, irotmq
   USE lsda_mod,   ONLY : nspin
   USE ktetra,     ONLY : ntetra, tetra, opt_tetra_dos_t
   USE mp_images, ONLY : me_image, nproc_image, intra_image_comm
   USE output, ONLY : fildyn
+  USE xml_io_base, ONLY : create_directory
+  USE ions_base, ONLY : ityp, amass
   !
   IMPLICIT NONE
   !
@@ -480,6 +534,18 @@ SUBROUTINE elph_tetra_gamma()
   character(len=80) :: filelph
   INTEGER, EXTERNAL :: find_free_unit
   CHARACTER(LEN=6) :: int_to_char
+  !
+  ! Used to generate a2fq2r
+  !
+  integer :: nq, isq (48), imq, isig
+  ! nq :  degeneracy of the star of q
+  ! isq: index of q in the star of a given sym.op.
+  ! imq: index of -q in the star of q (0 if not present)
+  real(DP) :: sxq (3, 48)
+  ! list of vectors in the star of q
+  COMPLEX(DP) :: dyn22(3*nat,3*nat)
+  CHARACTER(LEN=256) :: elph_dir
+  LOGICAL  :: exst, xmldyn_save
   !
   DO irr=1,nirr
      IF (.NOT.done_elph(irr)) RETURN
@@ -619,6 +685,51 @@ SUBROUTINE elph_tetra_gamma()
 9010 FORMAT(5x,'lambda(',i5,')=',f8.4,'   gamma=',f8.2,' GHz')
   !
   IF (ionode) CLOSE (unit = iuelph)
+  !
+  !    Prepare interface to q2r and matdyn
+  !
+  elph_dir='elph_dir/'
+  IF (ionode) INQUIRE(file=TRIM(elph_dir), EXIST=exst)
+  CALL mp_bcast(exst, ionode_id, intra_image_comm) 
+  IF (.NOT.exst) CALL create_directory( elph_dir )
+  !
+  call star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq, .TRUE. )
+  !
+  DO isig = 1, 10 !=nsig in elphsum
+     filelph = TRIM(elph_dir)//'a2Fq2r.'// TRIM(int_to_char(50 + isig)) &
+                                  //'.'//TRIM(int_to_char(current_iq))
+     IF (ionode) THEN
+        iuelph = find_free_unit()
+        OPEN(iuelph, file=filelph, STATUS = 'unknown', FORM = 'formatted', &
+                     iostat=ios)
+     ELSE
+        !
+        ! this node doesn't write: unit 6 is redirected to /dev/null
+        !
+        iuelph =6
+     END IF
+     CALL mp_bcast(ios, ionode_id, intra_image_comm)
+     IF (ios /= 0) CALL errore('elph_tetra_lambda','opening output file '// TRIM(filelph),1)
+     DO ipert = 1, 3 * nat
+        DO jpert = 1, 3 * nat
+           dyn22(jpert,ipert) = 2.0_dp * SUM(dosef(1:2)) &
+           &  * amu_ry**2 * amass(ityp((ipert+2)/3)) * amass(ityp((jpert+2)/3)) &
+           &  * SUM(lambda(1:3*nat) * w2(1:3*nat) * dyn(jpert, 1:3*nat) * CONJG(dyn(ipert, 1:3*nat)))
+        END DO
+     END DO
+     WRITE(iuelph,*) 0.0_dp, ef, SUM(dosef(1:2))
+     IF ( imq == 0 ) THEN
+        write(iuelph,*) 2*nq
+     ELSE
+        write(iuelph,*) nq
+     ENDIF
+     xmldyn_save=xmldyn
+     xmldyn=.FALSE.
+     CALL q2qstar_ph (dyn22, at, bg, nat, nsym, s, invs, &
+          irt, rtau, nq, sxq, isq, imq, iuelph)
+     xmldyn=xmldyn_save
+     IF (ionode) CLOSE( UNIT = iuelph, STATUS = 'KEEP' )
+  END DO
   !
   DEALLOCATE(wght, et_col)
   !

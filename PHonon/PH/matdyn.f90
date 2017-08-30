@@ -393,9 +393,9 @@ PROGRAM matdyn
         IF (nk1 < 1 .OR. nk2 < 1 .OR. nk3 < 1) &
              CALL errore  ('matdyn','specify correct q-point grid!',1)
         nqx = nk1*nk2*nk3
-        ALLOCATE ( q(3,nqx) )
+        ALLOCATE ( q(3,nqx), wq(nqx) )
         CALL gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
-             nqx, nq, q, nosym)
+             nqx, nq, q, nosym, wq)
      ELSE
         !
         ! read q-point list
@@ -744,7 +744,7 @@ PROGRAM matdyn
          call a2Fdos (nat, nq, nr1, nr2, nr3, ibrav, at, bg, tau, alat, &
                            nsc, nat_blk, at_blk, bg_blk, itau_blk, omega_blk, &
                            rws, nrws, dos, Emin, DeltaE, ndos, &
-                           asr, q, freq,fd)
+                           asr, q, freq,fd, wq)
          !
          IF (.NOT.dos) THEN
             DO isig=1,10
@@ -1959,7 +1959,7 @@ END SUBROUTINE write_tau
 !
 !-----------------------------------------------------------------------
 SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
-     nqx, nq, q, nosym)
+     nqx, nq, q, nosym, wk)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -1975,9 +1975,9 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   LOGICAL :: nosym
   ! output
   INTEGER :: nqx, nq
-  REAL(DP) :: q(3,nqx)
+  REAL(DP) :: q(3,nqx), wk(nqx)
   ! local
-  REAL(DP) :: xqq(3), wk(nqx), mdum(3,nat)
+  REAL(DP) :: xqq(3), mdum(3,nat)
   LOGICAL :: magnetic_sym=.FALSE., skip_equivalence=.FALSE.
   !
   time_reversal = .true.
@@ -2010,7 +2010,7 @@ END SUBROUTINE gen_qpoints
 SUBROUTINE a2Fdos &
      (nat, nq, nr1, nr2, nr3, ibrav, at, bg, tau, alat, &
      nsc, nat_blk, at_blk, bg_blk, itau_blk, omega_blk, rws, nrws, &
-     dos, Emin, DeltaE, ndos, asr, q, freq,fd )
+     dos, Emin, DeltaE, ndos, asr, q, freq,fd, wq )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -2021,13 +2021,14 @@ SUBROUTINE a2Fdos &
   USE ifconstants, ONLY : zeu, tau_blk
   USE constants,  ONLY : pi, RY_TO_THZ
   USE ktetra,     ONLY : tetra_init
+  USE constants, ONLY : K_BOLTZMANN_RY
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: nat, nq, nr1, nr2, nr3, ibrav, ndos
   LOGICAL, INTENT(in) :: dos,fd
   CHARACTER(LEN=*), INTENT(IN) :: asr
-  REAL(DP), INTENT(in) :: freq(3*nat,nq), q(3,nq), at(3,3), bg(3,3), &
+  REAL(DP), INTENT(in) :: freq(3*nat,nq), q(3,nq), wq(nq), at(3,3), bg(3,3), &
        tau(3,nat), alat, Emin, DeltaE
   !
   INTEGER, INTENT(in) :: nsc, nat_blk, itau_blk(nat), nrws
@@ -2178,8 +2179,24 @@ SUBROUTINE a2Fdos &
         enddo  !ndos
         write(ifn,*) " lambda =",lambda,'   Delta = ',DeltaE
         close (ifn)
-        write(400,'(" Broadening ",F8.4," lambda ",F12.4," dos(Ef)",F8.4)') &
-             deg(isig),lambda, dos_ee(isig)
+        !
+        ! lambda from alternative way, simple sum.
+        ! Also Omega_ln is computed
+        !
+        lambda = 0.0_dp
+        E = 0.0_dp
+        do n = 1, nq
+           lambda = lambda &
+           &      + sum(gamma(1:nmodes,n)/freq(1:nmodes,n)**2, &
+           &             freq(1:nmodes,n) > 1.0e-5_dp) * wq(n)
+           E = E &
+           & + sum(log(freq(1:nmodes,n)) * gamma(1:nmodes,n)/freq(1:nmodes,n)**2, &
+           &             freq(1:nmodes,n) > 1.0e-5_dp) * wq(n)
+        end do
+        E = exp(E / lambda) / K_BOLTZMANN_RY
+        lambda = lambda / (dos_ee(isig) * pi)
+        write(400,'(" Broadening ",F8.4," lambda ",F12.4," dos(Ef)",F8.4," omega_ln [K]",F12.4)') &
+             deg(isig),lambda, dos_ee(isig), E
         !
      endif !dos
      !

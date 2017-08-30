@@ -75,11 +75,11 @@ SUBROUTINE rotate_k_fs(equiv)
   !
   DO ik = 1, nk
      !
-     xk_frac(1:3) = matmul(xk(1:3,ik), at(1:3,1:3)) * REAL((/nk1, nk2, nk3/), DP)
+     xk_frac(1:3) = matmul(xk(1:3,ik), at(1:3,1:3))
      !
      DO isym = 1, nsym
         !
-        kv(1:3) = MATMUL(REAL(s(1:3,1:3,isym), DP), xk_frac(1:3))
+        kv(1:3) = MATMUL(REAL(s(1:3,1:3,isym), DP), xk_frac(1:3)) * REAL((/nk1, nk2, nk3/), DP)
         IF(t_rev(isym)==1) kv(1:3) = - kv(1:3)
         !
         kv(1:3) = kv(1:3) - 0.5_dp * REAL((/k1, k2, k3/), DP)

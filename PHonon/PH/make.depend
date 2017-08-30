@@ -655,6 +655,7 @@ elph_tetra_mod.o : ../../Modules/ions_base.o
 elph_tetra_mod.o : ../../Modules/kind.o
 elph_tetra_mod.o : ../../Modules/mp_images.o
 elph_tetra_mod.o : ../../Modules/mp_pools.o
+elph_tetra_mod.o : ../../Modules/xml_io_base.o
 elph_tetra_mod.o : ../../PW/src/pwcom.o
 elph_tetra_mod.o : ../../PW/src/symm_base.o
 elph_tetra_mod.o : ../../PW/src/tetra.o
