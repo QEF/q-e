@@ -37,7 +37,6 @@ fft_types.o : stick_base.o
 scatter_mod.o : fft_param.o
 scatter_mod.o : fft_types.o
 stick_base.o : fft_param.o
-test.o : @task_groups@
 test.o : fft_parallel.o
 test.o : fft_param.o
 test.o : fft_support.o

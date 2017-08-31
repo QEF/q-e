@@ -36,7 +36,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE grid_irr_iq,     ONLY : done_bands
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der, ir_point, delta_vrs
   USE scf,             ONLY : vrs
-  USE mp_bands,        ONLY : ntask_groups, intra_bgrp_comm
+  USE mp_bands,        ONLY : intra_bgrp_comm, nyfft
 
   USE lr_symm_base,    ONLY : minus_q, nsymq, invsymq
   USE qpoint,          ONLY : xq
@@ -79,8 +79,8 @@ SUBROUTINE run_nscf(do_band, iq)
   restart = ext_restart
   conv_ions=.true.
   !
-  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm )
-  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm)
+  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft )
+  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
   CALL setup_nscf ( newgrid, xq, elph_mat )
   CALL init_run()
   !
