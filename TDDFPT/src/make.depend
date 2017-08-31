@@ -452,10 +452,13 @@ lr_restart.o : ../../PW/src/pwcom.o
 lr_restart.o : ../../UtilXlib/mp.o
 lr_restart.o : lr_charg_resp.o
 lr_restart.o : lr_variables.o
+lr_run_nscf.o : ../../FFTXlib/fft_types.o
+lr_run_nscf.o : ../../Modules/cell_base.o
 lr_run_nscf.o : ../../Modules/control_flags.o
 lr_run_nscf.o : ../../Modules/fft_base.o
 lr_run_nscf.o : ../../Modules/io_files.o
 lr_run_nscf.o : ../../Modules/mp_bands.o
+lr_run_nscf.o : ../../Modules/recvec.o
 lr_run_nscf.o : ../../PW/src/atomic_wfc_mod.o
 lr_run_nscf.o : lr_variables.o
 lr_set_boxes_density.o : ../../Modules/fft_base.o

@@ -609,17 +609,17 @@ CONTAINS
     !
     ! No taskgroups and EXX.
     !
-    !IF (dffts%have_task_groups .AND. dft_is_hybrid()) &
-    !     & CALL errore( 'lr_readin', ' Linear response calculation ' // &
-    !     & 'not implemented for EXX+Task groups', 1 )
+    IF (dffts%have_task_groups .AND. dft_is_hybrid()) &
+         & CALL errore( 'lr_readin', ' Linear response calculation ' // &
+         & 'not implemented for EXX+Task groups', 1 )
     !
     ! Experimental task groups warning.
     !
     IF (dffts%have_task_groups) &
-    !     & CALL infomsg( 'lr_readin','Usage of task &
-    !     &groups with TDDFPT is still experimental. Use at your own risk.' )
-          & CALL errore( 'lr_readin', ' Linear response calculation ' // &
-          & 'not implemented for task groups', 1 )
+         & CALL infomsg( 'lr_readin','Usage of task &
+         & groups with TDDFPT is still experimental. Use at your own risk.' )
+    !      & CALL errore( 'lr_readin', ' Linear response calculation ' // &
+    !      & 'not implemented for task groups', 1 )
     !
     ! No PAW support.
     !
