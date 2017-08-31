@@ -23,7 +23,7 @@ subroutine init_us_0
   USE kinds,        ONLY : DP
   USE gvect,        ONLY : ecutrho
   USE io_global,    ONLY : stdout
-  USE constants,    ONLY : fpi, sqrt2, eps8
+  USE constants,    ONLY : fpi, sqrt2, eps8, eps6
   USE atom,         ONLY : rgrid
   USE ions_base,    ONLY : ntyp => nsp
   USE cell_base,    ONLY : omega, tpiba
@@ -36,7 +36,9 @@ subroutine init_us_0
   !
   !     here a few local variables
   !
-  logical, parameter :: tprint=.true.    ! whether the q_l(r) and its relatives are printed or not
+!sdg 
+! logical, parameter :: tprint=.true.    ! whether the q_l(r) and its relatives are printed or not
+  logical, parameter :: tprint=.false.    ! whether the q_l(r) and its relatives are printed or not
   integer, parameter :: nn=16   ! smoothing parameter, order of the polynomial inverse gaussian approximant
   real(DP), parameter:: a=22.0  ! smoothing parameter, exponent of the gaussian decaying factor
                                 ! a=0.d0 ; nn=0 would be no smoothing.
@@ -104,14 +106,14 @@ subroutine init_us_0
   !   
   call divide (intra_bgrp_comm, nqxq, startq, lastq)
   qmax = sqrt(ecutrho)
-  write (6, *) ' qmax : sqrt(ecutrho) =',sqrt(ecutrho), dq*nqxq*tpiba, tpiba 
-  write (6,'(a,f6.2,a,i4,4(a,f11.8))') 'FILTER : a=',a,', nn=',nn,', filter(1.1d0)=', filter(1.1d0,a,nn), &
+  write (stdout, *) ' qmax : sqrt(ecutrho) =',sqrt(ecutrho), dq*nqxq*tpiba, tpiba 
+  write (stdout,'(a,f6.2,a,i4,4(a,f11.8))') 'FILTER : a=',a,', nn=',nn,', filter(1.1d0)=', filter(1.1d0,a,nn), &
                                                                   ', filter(1.0d0)=', filter(1.0d0,a,nn), &
                                                                   ', filter(0.9d0)=', filter(0.9d0,a,nn), &
                                                                   ', filter(0.8d0)=', filter(0.8d0,a,nn)
   !
   do nt = 1, ntyp
-     write (*,*) ' NT = ', nt
+     write (stdout,*) ' NT = ', nt
      !
      if ( upf(nt)%tvanp ) then
 !-
@@ -214,15 +216,15 @@ subroutine init_us_0
                  power_q (ijv,0) = power_q (ijv,0) + power_q (ijv,l+1)
                  power_r (ijv,0) = power_r (ijv,0) + power_r (ijv,l+1)
               end do
-              !write (*, *) ' nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb
-              !write (*,'(a,12f16.10)') 'power_0 ',(power_0 (ijv,l+1), l=0,lnb+lmb)
-              !write (*,'(a,12f16.10)') 'power_r ',(power_r (ijv,l+1), l=0,lnb+lmb)
-              !write (*,'(a,12f16.10)') 'power_q ',(power_q (ijv,l+1), l=0,lnb+lmb)
-              !write (*,*) 'ratio   ',1.d0-(power_r (ijv,0)/power_q (ijv,0)), 1.d0-(power_r (ijv,0)/power_0 (ijv,0))
+              !write (stdout, *) ' nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb
+              !write (stdout,'(a,12f16.10)') 'power_0 ',(power_0 (ijv,l+1), l=0,lnb+lmb)
+              !write (stdout,'(a,12f16.10)') 'power_r ',(power_r (ijv,l+1), l=0,lnb+lmb)
+              !write (stdout,'(a,12f16.10)') 'power_q ',(power_q (ijv,l+1), l=0,lnb+lmb)
+              !write (stdout,*) 'ratio   ',1.d0-(power_r (ijv,0)/power_q (ijv,0)), 1.d0-(power_r (ijv,0)/power_0 (ijv,0))
               if (power_0(ijv,0).gt.eps8) target_ratio = min(target_ratio,power_r(ijv,0)/power_0(ijv,0))
            enddo ! mb
         enddo ! nb
-        write (*,*) ' TARGET Qs SPILLOVER : 1.d0-target_ratio, target_ratio ',1.d0-target_ratio, target_ratio
+        write (stdout,*) ' TARGET Qs SPILLOVER : 1.d0-target_ratio, target_ratio ',1.d0-target_ratio, target_ratio
 !
         fac = 1.2d0
  99     continue
@@ -252,7 +254,7 @@ subroutine init_us_0
               if (power_q(ijv,0).gt.eps8) ratio = min (ratio, power_qs(ijv,0)/power_q(ijv,0))
            end do
         end do
-        !WRITE (*,*) ' filter factor and power_qs/power_q ratio:', fac, ratio
+        !WRITE (stdout,*) ' filter factor and power_qs/power_q ratio:', fac, ratio
 ! 
 ! with a given fac the smoothed Qs qre built
 !        
@@ -301,17 +303,19 @@ subroutine init_us_0
               do l=0,lnb+lmb
                  power_rs (ijv,0) = power_rs (ijv,0) + power_rs (ijv,l+1)
               end do
-              !write (*, *) ' nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb
-              !write (*,'(a,12f16.10)') 'power_rs',(power_rs(ijv,l+1), l=0,lnb+lmb)
-              !write (*,'(a,12f16.10)') 'power_qs',(power_qs(ijv,l+1), l=0,lnb+lmb)
-              !write (*,*) 'ratio   ',1.d0-(power_rs(ijv,0)/power_qs(ijv,0)), 1.d0-(power_qs(ijv,0)/power_q (ijv,0))
+              !write (stdout, *) ' nb :', nb,lnb,' mb :',mb,lmb,' lmax :',lnb+lmb
+              !write (stdout,'(a,12f16.10)') 'power_rs',(power_rs(ijv,l+1), l=0,lnb+lmb)
+              !write (stdout,'(a,12f16.10)') 'power_qs',(power_qs(ijv,l+1), l=0,lnb+lmb)
+              !write (stdout,*) 'ratio   ',1.d0-(power_rs(ijv,0)/power_qs(ijv,0)), 1.d0-(power_qs(ijv,0)/power_q (ijv,0))
               if (power_qs(ijv,0).gt.eps8) ratio_s = min (ratio_s, power_rs(ijv,0)/power_qs(ijv,0))
            enddo ! mb
         enddo ! nb
 
-        WRITE (*,*) ' filter factor, 1.d0-power_rs/power_qs and power_qs/power_q ratio :', fac, 1.d0-ratio_s, ratio
+        WRITE (stdout,*) ' filter factor, 1.d0-power_rs/power_qs and power_qs/power_q ratio :', fac, 1.d0-ratio_s, ratio
         fac = fac -0.05d0
+!sdg  
         if (ratio .lt. target_ratio .and. (1.d0-ratio_s).lt. eps8) go to 99
+!       if (ratio .lt. target_ratio .and. (1.d0-ratio_s).lt. eps6) go to 99
         fac = fac + 0.05d0 ! reset the last successful  value of fac 
 
 !- save the smoothed real space qs in qfuncl
