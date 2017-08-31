@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2017 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,8 +21,7 @@ SUBROUTINE lr_psym_eels (dvtosym)
   USE mp_global,        ONLY : me_bgrp
   USE fft_base,         ONLY : dfftp
   USE scatter_mod,      ONLY : cgather_sym
-
-  USE lr_symm_base, ONLY : nsymq, minus_q
+  USE lr_symm_base,     ONLY : nsymq, minus_q
   !
   IMPLICIT NONE
   !
@@ -31,7 +30,7 @@ SUBROUTINE lr_psym_eels (dvtosym)
     
 #if defined (__MPI)
   !
-  INTEGER :: i, is, iper, npp0
+  INTEGER :: i, is, iper, ir3, ioff, ioff_tg, nxyp 
   COMPLEX(DP), ALLOCATABLE :: ddvtosym(:,:)
   ! the potential to symm
   !
@@ -42,30 +41,23 @@ SUBROUTINE lr_psym_eels (dvtosym)
   !
   ALLOCATE(ddvtosym(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, nspin_mag))
   !
-  npp0 = 1
-  !
-  DO i = 1, me_bgrp
-       !
-       npp0 = npp0 + dfftp%nr3p(i) * dfftp%nnp
-       !
-  ENDDO
-  !
   ! Gather complex data for the symmetrization.
   !
   DO is = 1, nspin_mag
-       !
-       CALL cgather_sym ( dfftp, dvtosym(:,is), ddvtosym(:,is) )
-       !
+     CALL cgather_sym ( dfftp, dvtosym(:,is), ddvtosym(:,is) )
   ENDDO
   !
   ! Symmetrization
   !
   CALL lr_sym_eels (ddvtosym)
   !
+  nxyp = dfftp%nr1x * dfftp%my_nr2p
   DO is = 1, nspin_mag
-       !
-       CALL zcopy (dfftp%my_nr3p * dfftp%nnp, ddvtosym(npp0, is), 1, dvtosym(1, is), 1)
-       !
+     DO ir3 = 1, dfftp%my_nr3p
+        ioff    = dfftp%nr1x * dfftp%my_nr2p * (ir3-1)
+        ioff_tg = dfftp%nr1x * dfftp%nr2x    * (dfftp%my_i0r3p+ir3-1) + dfftp%nr1x * dfftp%my_i0r2p
+        CALL zcopy (nxyp, ddvtosym (ioff_tg+1, is), 1, dvtosym (ioff+1, is), 1)
+     ENDDO
   ENDDO
   !
   DEALLOCATE (ddvtosym)
