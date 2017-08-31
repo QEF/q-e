@@ -23,6 +23,7 @@ CONTAINS
      REAL(DP), INTENT(OUT) :: rhos(:,:)
 
      INTEGER :: ierr, ioff, idx, ir3, ir, ipol, ioff_tg, nxyp, npol_
+!     write (*,*) ' enter tg_reduce_rho_1'
 
 #ifdef __MPI
      IF( noncolin) THEN
@@ -72,6 +73,7 @@ CONTAINS
      REAL(DP), INTENT(OUT) :: rhos(:,:)
 
      INTEGER :: ierr, ioff, idx, ir3, nxyp, ioff_tg
+!     write (*,*) ' enter tg_reduce_rho_2'
 
      IF ( desc%nproc2 > 1 ) THEN
 #ifdef __MPI
@@ -99,6 +101,7 @@ CONTAINS
      REAL(DP), INTENT(OUT) :: rhos(:,:)
 
      INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
+!     write (*,*) ' enter tg_reduce_rho_3'
 
      IF ( desc%nproc2 > 1 ) THEN
 #ifdef __MPI
@@ -129,10 +132,11 @@ CONTAINS
      COMPLEX(DP), INTENT(OUT) :: rhos(:)
 
      INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
+!     write (*,*) ' enter tg_reduce_rho_4'
 
      IF ( desc%nproc2 > 1 ) THEN
 #ifdef __MPI
-        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, 2*SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
 #endif
      ENDIF
      !
@@ -159,10 +163,11 @@ CONTAINS
      COMPLEX(DP), INTENT(OUT) :: rhos(:,:)
 
      INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
+!     write (*,*) ' enter tg_reduce_rho_5'
 
      IF ( desc%nproc2 > 1 ) THEN
 #ifdef __MPI
-        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, 2*SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
 #endif
      ENDIF
      !
