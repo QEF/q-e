@@ -88,7 +88,7 @@ subroutine scale_h
   !
   ! for hybrid functionals
   !
-  IF ( dft_is_hybrid() ) CALL exx_grid_reinit()
+  IF ( dft_is_hybrid() ) CALL exx_grid_reinit( at_old )
   !
   return
 end subroutine scale_h

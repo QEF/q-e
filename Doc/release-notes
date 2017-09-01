@@ -1,4 +1,4 @@
-New in 6.2b version:
+New in 6.2 version:
 
   * SCAN functional with libxc v.3; bands with meta-GGA can be computed
    (Davide Ceresoli)
@@ -8,11 +8,14 @@ New in 6.2b version:
   * Stress calculation is enabled in ESM
     “starting_charge” option added to SYSTEM namelist
 
-KNOWN BUGS IN 6.2b VERSION:
+KNOWN BUGS IN 6.2 VERSION:
 
   * EXX with reduced cutoff and k-points doesn't work well
 
-Fixed in 6.2b version
+Fixed in 6.2 version
+
+  * In variable-cell EXX, G-vectors used in the FFT of 1/|r-r'| should be
+    rescaled as well (courtesy Satomichi Nisihara) (r13817)
 
   * Bug in DFPT with tetrahedrai and in "fermisurfer", plus some extensions
     to el-ph with tetrahedra (Mitsuaki Kawamura) (r13806).
@@ -63,12 +66,13 @@ Fixed in 6.2b version
     the results. It is anyway recommended to re-generate the kernel file.
     Thanks to C.Y. Ren for noticing this. (r13438)
 
-Incompatible changes in 6.2b version:
+Incompatible changes in 6.2 version:
 
   * MAJOR restructuring of the distribution:
     - diagonalizers moved to KS_Solvers/
     - general utility modules moved to UtilsXlib
-  * MAJOR restructuring of parallel FFTs, affecting ordering of real-space arrays
+  * MAJOR restructuring of parallel FFTs, affecting ordering of real-space
+    arrays
   * Restructuring of C routines, introduction of ISO_C_BINDING:
     - memstat moved to module wrappers
     - f_wall and f_tcpu, in module mytime, replace previous fortran wrappers 

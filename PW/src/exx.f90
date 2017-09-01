@@ -316,8 +316,14 @@ MODULE exx
   END SUBROUTINE deallocate_exx
   !------------------------------------------------------------------------
   !
-  SUBROUTINE exx_grid_reinit()
+  SUBROUTINE exx_grid_reinit( at_old )
+    !
+    USE cell_base,  ONLY : bg
     IMPLICIT NONE
+    REAL(dp), INTENT(in) :: at_old(3,3)
+    INTEGER :: ig
+    REAL(dp) :: gx, gy, gz
+    !
     DEALLOCATE(xkq_collect,index_xk,index_sym)
     exx_grid_initialized = .false.
     nkqs = 0
@@ -325,6 +331,19 @@ MODULE exx
     !
     DEALLOCATE(working_pool)
     CALL exx_mp_init()
+    !
+    ! ... scale g-vectors
+    !
+    CALL cryst_to_cart(exx_fft%ngmt, exx_fft%gt, at_old, -1)
+    CALL cryst_to_cart(exx_fft%ngmt, exx_fft%gt, bg,     +1)
+    !
+    DO ig = 1, exx_fft%ngmt
+       gx = exx_fft%gt(1, ig)
+       gy = exx_fft%gt(2, ig)
+       gz = exx_fft%gt(3, ig)
+       exx_fft%ggt(ig) = gx * gx + gy * gy + gz * gz
+    END DO
+    !
   END SUBROUTINE exx_grid_reinit
   
   !------------------------------------------------------------------------
