@@ -24,7 +24,8 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE noncollin_module,     ONLY : noncolin, npol
   USE eqv,                  ONLY : evq
   USE qpoint,               ONLY : ikqs
-  USE mp_bands,             ONLY : intra_bgrp_comm, ntask_groups
+  USE mp_bands,             ONLY : use_bgrp_in_hpsi, set_bgrp_indices, intra_bgrp_comm
+  USE funct,                ONLY : exx_is_active
   USE mp,                   ONLY : mp_sum
   USE control_lr,           ONLY : alpha_pv, nbnd_occ, lgamma
   !Needed only for TDDFPT
@@ -121,6 +122,7 @@ CONTAINS
     USE becmod, ONLY : becp, calbec
     
     IMPLICIT NONE
+    INTEGER :: m_start, m_end
     !
     !   Here we compute the projector in the valence band
     !
@@ -151,7 +153,12 @@ CONTAINS
     !
     !    And apply S again
     !
-    CALL calbec (n, vkb, hpsi, becp, m)
+    if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
+       call set_bgrp_indices( m, m_start, m_end)
+       if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
+    else
+       CALL calbec (n, vkb, hpsi, becp, m)
+    end if
     CALL s_psi (npwx, n, m, hpsi, spsi)
     DO ibnd = 1, m
        DO ig = 1, n
@@ -178,6 +185,7 @@ CONTAINS
     use gvect,  only : gstart
 
     IMPLICIT NONE
+    INTEGER :: m_start, m_end
 
     ps (:,:) = 0.d0
     
@@ -211,7 +219,12 @@ CONTAINS
           CALL fwfft_orbital_gamma(spsi,ibnd,m)
        ENDDO
     ELSE
-       CALL calbec (n, vkb, hpsi, becp, m)
+       if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
+          call set_bgrp_indices( m, m_start, m_end)
+          if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
+       else
+          CALL calbec (n, vkb, hpsi, becp, m)
+       end if
        CALL s_psi (npwx, n, m, hpsi, spsi)
     ENDIF
     DO ibnd = 1, m

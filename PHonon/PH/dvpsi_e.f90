@@ -27,6 +27,8 @@ subroutine dvpsi_e (ik, ipol)
   USE noncollin_module,ONLY : noncolin, npol
   USE becmod,          ONLY : bec_type, becp, calbec, &
                               allocate_bec_type, deallocate_bec_type
+  USE mp_bands,        ONLY : use_bgrp_in_hpsi, set_bgrp_indices
+  USE funct,           ONLY : exx_is_active
   USE uspp,            ONLY : okvan, nkb, vkb
   USE uspp_param,      ONLY : nh, nhm
   USE ramanm,          ONLY : eth_rps
@@ -58,6 +60,7 @@ subroutine dvpsi_e (ik, ipol)
   ! the desired convergence of linter
   logical :: conv_root
   ! true if convergence has been achieved
+  INTEGER :: n_start, n_end
 
   external ch_psi_all, cg_psi
   !
@@ -125,7 +128,12 @@ subroutine dvpsi_e (ik, ipol)
      call save_buffer(dvpsi, lrcom, iucom, nrec)
      !
      allocate (spsi ( npwx*npol, nbnd))
-     CALL calbec (npw, vkb, dvpsi, becp )
+     if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .and. nbnd>1 ) then
+        call set_bgrp_indices(nbnd,n_start,n_end)
+        if (n_end >= n_start) CALL calbec (npw, vkb, dvpsi(:,n_start:n_end), becp , n_end-n_start+1 )
+     else
+        CALL calbec (npw, vkb, dvpsi, becp )
+     end if
      CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
      call dcopy(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
      deallocate (spsi)
