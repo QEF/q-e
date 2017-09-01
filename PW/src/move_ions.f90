@@ -43,7 +43,7 @@ SUBROUTINE move_ions ( idone )
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE mp_images,              ONLY : intra_image_comm
-  USE mp_bands,               ONLY : intra_bgrp_comm
+  USE mp_bands,               ONLY : intra_bgrp_comm, nyfft
   USE io_global,              ONLY : ionode_id, ionode
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
@@ -353,9 +353,9 @@ SUBROUTINE move_ions ( idone )
      ! ... re-set and re-calculate FFT grid 
      !
      dfftp%nr1=0; dfftp%nr2=0; dfftp%nr3=0
-     CALL fft_type_allocate (dfftp, at, bg, gcutm, intra_bgrp_comm )
+     CALL fft_type_allocate (dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft)
      dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
-     CALL fft_type_allocate (dffts, at, bg, gcutms, intra_bgrp_comm)
+     CALL fft_type_allocate (dffts, at, bg, gcutms,intra_bgrp_comm, nyfft=nyfft)
      !
      CALL init_run()
      !
