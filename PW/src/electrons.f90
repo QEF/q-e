@@ -423,7 +423,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
   REAL(DP), EXTERNAL :: ewald, get_clock
   REAL(DP) :: etot_cmp_paw(nat,2,2)
-!
+  !
   !
   iter = 0
   dr2  = 0.0_dp
@@ -1250,7 +1250,7 @@ FUNCTION exxenergyace ( )
   USE kinds,    ONLY : DP
   USE buffers,  ONLY : get_buffer
   USE exx,      ONLY : vexxace_gamma, vexxace_k, domat
-  USE klist,    ONLY : nks, ngk, igk_k
+  USE klist,    ONLY : nks, ngk
   USE wvfct,    ONLY : nbnd, npwx, current_k
   USE lsda_mod, ONLY : lsda, isk, current_spin
   USE io_files, ONLY : iunwfc, nwordwfc

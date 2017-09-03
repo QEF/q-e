@@ -264,6 +264,10 @@ MODULE exx
     CALL gvec_init (exx_fft, ngs_ , intra_comm )
     !
     CALL ggent(exx_fft)
+    !
+    WRITE( stdout, '(/5x,"EXX grid: ",i8," G-vectors", 5x, &
+         &   "FFT dimensions: (",i4,",",i4,",",i4,")")') exx_fft%ngmt_g, &
+         &   exx_fft%dfftt%nr1, exx_fft%dfftt%nr2, exx_fft%dfftt%nr3
     exx_fft%initialized = .true.
     !
     IF(tqr)THEN

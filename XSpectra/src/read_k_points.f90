@@ -63,7 +63,7 @@
               'noncolinear not implemented', 1 )
       else 
          isk(1:nks)=1
-         wk(1:nks)=2.d0/dfloat(nks)
+         wk(1:nks)=2.d0/DBLE(nks)
       endif
       
       

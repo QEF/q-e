@@ -155,7 +155,7 @@ CONTAINS
 
     jblock = 7
     
-    max_ibands = CEILING(float(nbnd)/float(negrp))+2
+    max_ibands = CEILING(DBLE(nbnd)/DBLE(negrp))+2
     IF (ALLOCATED(all_start)) THEN
        DEALLOCATE( all_start, all_end )
        DEALLOCATE( iexx_istart, iexx_iend )

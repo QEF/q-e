@@ -954,7 +954,7 @@ SUBROUTINE initialize_gamma_tab
   REAL(dp) :: e, x, y, dx
   INTEGER  :: i, j, n
 
-  dx = (xemax-xemin)/dfloat(xnepoint)
+  dx = (xemax-xemin)/DBLE(xnepoint)
 
   DO n = 1, xnepoint
      x = xemin + (n-1)*dx

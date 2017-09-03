@@ -1865,8 +1865,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
                 opt -val 'cg' {
                     Conjugate-gradient-like band-by-band diagonalization.
-                    Typically slower than 'david' but it uses less memory
-                    and is more robust (it seldom fails).
+                    Slower than 'david' but uses less memory and is 
+                    (a little bit) more robust.
                 }
 
                 opt -val {'cg-serial', 'david-serial'} {
