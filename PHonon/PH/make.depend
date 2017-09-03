@@ -468,8 +468,10 @@ dvkb3.o : phcom.o
 dvpsi_e.o : ../../LR_Modules/lrcom.o
 dvpsi_e.o : ../../Modules/becmod.o
 dvpsi_e.o : ../../Modules/cell_base.o
+dvpsi_e.o : ../../Modules/funct.o
 dvpsi_e.o : ../../Modules/io_global.o
 dvpsi_e.o : ../../Modules/kind.o
+dvpsi_e.o : ../../Modules/mp_bands.o
 dvpsi_e.o : ../../Modules/noncol.o
 dvpsi_e.o : ../../Modules/recvec.o
 dvpsi_e.o : ../../Modules/uspp.o

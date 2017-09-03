@@ -52,6 +52,7 @@ ch_psi_all.o : ../Modules/becmod.o
 ch_psi_all.o : ../Modules/cell_base.o
 ch_psi_all.o : ../Modules/control_flags.o
 ch_psi_all.o : ../Modules/fft_base.o
+ch_psi_all.o : ../Modules/funct.o
 ch_psi_all.o : ../Modules/kind.o
 ch_psi_all.o : ../Modules/mp_bands.o
 ch_psi_all.o : ../Modules/noncol.o
@@ -211,6 +212,7 @@ newdq.o : ../UtilXlib/mp.o
 newdq.o : lrcom.o
 orthogonalize.o : ../Modules/becmod.o
 orthogonalize.o : ../Modules/control_flags.o
+orthogonalize.o : ../Modules/funct.o
 orthogonalize.o : ../Modules/kind.o
 orthogonalize.o : ../Modules/mp_bands.o
 orthogonalize.o : ../Modules/noncol.o
