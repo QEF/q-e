@@ -204,19 +204,23 @@ MODULE exx
   SUBROUTINE exx_fft_create ()
 
     USE gvecw,        ONLY : ecutwfc
-    USE gvect,        ONLY : ecutrho, ig_l2g
-    USE klist,        ONLY : qnorm
+    USE gvect,        ONLY : ecutrho
     USE cell_base,    ONLY : at, bg, tpiba2
     USE fft_custom,   ONLY : ggent, gvec_init
     USE fft_base,     ONLY : smap
     USE fft_types,    ONLY : fft_type_init
     USE mp_exx,       ONLY : negrp, intra_egrp_comm
     USE mp_bands,     ONLY : intra_bgrp_comm, nyfft
+    !
+    USE klist,        ONLY : nks, xk, qnorm
+    USE mp_pools,     ONLY : inter_pool_comm
+    USE mp,           ONLY : mp_max
+    !
     USE control_flags,ONLY : tqr
-    USE realus,       ONLY : qpointlist, tabxx, tabp!, tabs
+    USE realus,       ONLY : qpointlist, tabxx, tabp
 
     IMPLICIT NONE
-    INTEGER :: intra_comm, ngs_
+    INTEGER :: intra_comm, ngs_, ik
 #if defined (__MPI) && ! defined (__USE_3D_FFT)
     LOGICAL :: lpara = .true.
 #else
@@ -229,12 +233,22 @@ MODULE exx
     ! onto the new (smaller) grid for rho (and vice versa)
     !
     exx_fft%ecutt=ecutwfc
-    ! with k-points the following instructions guarantees that the sphere in
-    ! G space contains k+G points - needed if ecutfock \simeq ecutwfc
-    IF ( gamma_only ) THEN
+    IF ( gamma_only ) THEN       
        exx_fft%dual_t = ecutfock/ecutwfc
     ELSE
+       !
+       ! with k-points the following instructions guarantees that the sphere in
+       ! G space with G^2 < EcutFock contains k+G PW's for all k-points
+       ! Needed if ecutfock \simeq ecutwfc - qnorm is max |k| 
+       !
+       qnorm = 0.0_dp
+       DO ik = 1,nks
+          qnorm = MAX ( qnorm, sqrt( tpiba2*sum(xk(:,ik)**2) ) )
+       ENDDO
+       CALL mp_max( qnorm, inter_pool_comm )
+       !
        exx_fft%dual_t = max(ecutfock,(sqrt(ecutwfc)+qnorm)**2)/ecutwfc
+       !
     ENDIF
     !
     exx_fft%gcutmt = exx_fft%dual_t*exx_fft%ecutt / tpiba2
@@ -270,12 +284,12 @@ MODULE exx
          &   exx_fft%dfftt%nr1, exx_fft%dfftt%nr2, exx_fft%dfftt%nr3
     exx_fft%initialized = .true.
     !
-    IF(tqr)THEN
-       WRITE(stdout, '(5x,a)') "Initializing real-space augmentation for EXX grid"
-       IF(ecutfock==ecutrho)THEN
-          WRITE(stdout, '(7x,a)') " EXX grid -> DENSE grid"
+    IF(tqr) THEN
+       IF(ecutfock==ecutrho) THEN
+          WRITE(stdout,'(5x,"Real-space augmentation: EXX grid -> DENSE grid")')
           tabxx => tabp
        ELSE
+          WRITE(stdout,'(5x,"Real-space augmentation: initializing EXX grid")')
           CALL qpointlist(exx_fft%dfftt, tabxx)
        ENDIF
     ENDIF
@@ -409,12 +423,11 @@ MODULE exx
     USE cell_base,  ONLY : bg, at
     USE spin_orb,   ONLY : domag
     USE noncollin_module, ONLY : nspin_lsda
-    USE klist,      ONLY : xk, wk, nkstot, nks, qnorm
+    USE klist,      ONLY : xk, wk, nkstot, nks
     USE wvfct,      ONLY : nbnd
     USE start_k,    ONLY : nk1,nk2,nk3
     USE control_flags, ONLY : iverbosity
     USE mp_pools,   ONLY : inter_pool_comm
-    USE mp,         ONLY : mp_max
     !
     IMPLICIT NONE
     !
@@ -619,16 +632,6 @@ MODULE exx
     ! check that everything is what it should be
     CALL exx_grid_check ( xk_collect(:,:) )
     DEALLOCATE( xk_collect )
-    !
-    ! qnorm = max |k+q|, useful for reduced-cutoff calculations with k-points
-    !
-    qnorm = 0.0_dp
-    DO iq = 1,nkqs
-       DO ik = 1,nks
-          qnorm = max(qnorm, sqrt( sum((xk(:,ik)-xkq_collect(:,iq))**2) ))
-       ENDDO
-    ENDDO
-    CALL mp_max( qnorm, inter_pool_comm )
     !
     CALL stop_clock ('exx_grid')
     !
