@@ -2,6 +2,8 @@ clocks_handler.o : parallel_include.o
 clocks_handler.o : util_param.o
 error_handler.o : mp.o
 error_handler.o : util_param.o
+fletcher32_mod.o : util_param.o
+hash.o : fletcher32_mod.o
 mp.o : parallel_include.o
 mp.o : util_param.o
 mp_bands_util.o : mp.o
