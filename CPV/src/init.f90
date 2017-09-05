@@ -141,7 +141,7 @@
       !        for a left-handed triplet, ainv is minus the inverse of a)
       !
       CALL fft_base_info( ionode, stdout )
-      //CALL fft_extra_info()
+      !!CALL fft_extra_info()
       ngw_ = dffts%nwl( dffts%mype + 1 )
       ngs_ = dffts%ngl( dffts%mype + 1 )
       ngm_ = dfftp%ngl( dfftp%mype + 1 )
@@ -488,7 +488,7 @@
         WRITE( stdout,1020) dfftp%nnr
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
         WRITE( stdout, fmt = '( 5("  |",I4,",",I4) )' ) &
-           ( ((dfftp%nr2p(j), dfftp%nr3p( i )), i = 1, dfftp%nproc3 ), j=1,dfftp%nproc2)
+        &   ( ((dfftp%nr2p(j), dfftp%nr3p( i )), i = 1, dfftp%nproc3 ), j=1,dfftp%nproc2)
 
         CALL tg_get_local_nr3( dffts, nr3l )
 
@@ -500,7 +500,7 @@
         WRITE( stdout,1020) dffts%nnr
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
         WRITE( stdout, fmt = '( 5("  |",I4,",",I4) )' ) &
-           ( ((dffts%nr2p(j), dffts%nr3p( i )), i = 1, dffts%nproc3 ), j=1,dffts%nproc2)
+        &   ( ((dffts%nr2p(j), dffts%nr3p( i )), i = 1, dffts%nproc3 ), j=1,dffts%nproc2)
 
       END IF
 
