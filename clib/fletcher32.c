@@ -14,7 +14,7 @@ SdG,  September 3rd 2017
 
 #include <unistd.h>
 #include <stdio.h>
-#include "pstdint.h"
+#include <stdint.h>
 
 uint32_t fletcher32( uint16_t const *data, uint32_t *ndata )
 {
