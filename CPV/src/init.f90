@@ -483,24 +483,28 @@
         WRITE( stdout,*)
         WRITE( stdout,*) '  Real Mesh'
         WRITE( stdout,*) '  ---------'
-        WRITE( stdout,1000) dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1, dfftp%my_nr2p, dfftp%my_nr3p, 1, dfftp%nproc2, dfftp%nproc3
+        WRITE( stdout,1000) dfftp%nr1, dfftp%nr2, dfftp%nr3, &
+                            dfftp%nr1, dfftp%my_nr2p, dfftp%my_nr3p, &
+                            1, dfftp%nproc2, dfftp%nproc3
         WRITE( stdout,1010) dfftp%nr1x, dfftp%nr2x, dfftp%nr3x
         WRITE( stdout,1020) dfftp%nnr
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
-        WRITE( stdout, fmt = '( 5("  |",I4,",",I4) )' ) &
-        &   ( ((dfftp%nr2p(j), dfftp%nr3p( i )), i = 1, dfftp%nproc3 ), j=1,dfftp%nproc2)
+        WRITE( stdout, fmt = '( 5("  |",I4,",",I4) )' ) ( ( dfftp%nr2p(j), &
+                dfftp%nr3p(i), i = 1, dfftp%nproc3 ), j=1,dfftp%nproc2 )
 
         CALL tg_get_local_nr3( dffts, nr3l )
 
         WRITE( stdout,*)
         WRITE( stdout,*) '  Smooth Real Mesh'
         WRITE( stdout,*) '  ----------------'
-        WRITE( stdout,1000) dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1, dffts%my_nr2p, dffts%my_nr3p, 1, dffts%nproc2, dffts%nproc3
+        WRITE( stdout,1000) dffts%nr1, dffts%nr2, dffts%nr3, &
+                            dffts%nr1, dffts%my_nr2p, dffts%my_nr3p, &
+                            1, dffts%nproc2, dffts%nproc3
         WRITE( stdout,1010) dffts%nr1x, dffts%nr2x, dffts%nr3x
         WRITE( stdout,1020) dffts%nnr
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
-        WRITE( stdout, fmt = '( 5("  |",I4,",",I4) )' ) &
-        &   ( ((dffts%nr2p(j), dffts%nr3p( i )), i = 1, dffts%nproc3 ), j=1,dffts%nproc2)
+        WRITE( stdout, fmt = '( 5("  |",I4,",",I4) )' ) ( ( dffts%nr2p(j), &
+                dffts%nr3p(i), i = 1, dffts%nproc3 ), j=1,dffts%nproc2 )
 
       END IF
 

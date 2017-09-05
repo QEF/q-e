@@ -21,7 +21,7 @@ SUBROUTINE hinit0()
   USE klist,        ONLY : init_igk
   USE wvfct,        ONLY : npwx
   USE fft_base,     ONLY : dfftp
-  USE gvect,        ONLY : ngm, ig_l2g, g, eigts1, eigts2, eigts3
+  USE gvect,        ONLY : ngm, g, eigts1, eigts2, eigts3
   USE vlocal,       ONLY : strf
   USE gvecw,        ONLY : gcutw
   USE realus,       ONLY : generate_qpointlist,betapointlist,init_realspace_vars,real_space

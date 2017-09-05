@@ -110,7 +110,8 @@ IMPLICIT NONE
   call mp_sum(nptot,intra_bgrp_comm)
   if(nptot.le.0) call errore('SCDM_PGG', 'No points prescreened. Loose the thresholds', 1) 
   call mp_sum(cpu_npt,intra_bgrp_comm)
-  write(*,'(2(A,I8))') '    npt = ', npt, '  procID= ', me_bgrp 
+  write(stdout,'(2(A,I8))') '    max npt = ', maxval(cpu_npt(:)), &
+          ' min npt = ', minval(cpu_npt(:))
   write(stdout,*) '    reduced matrix, allocate: ', nptot
   ! write(stdout,*) '    cpu_npt = ', cpu_npt(:)
 
