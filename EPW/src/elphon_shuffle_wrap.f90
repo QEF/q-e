@@ -151,8 +151,6 @@
   ! 
   real(kind=DP), allocatable :: xqc_irr(:,:)
   !! The qpoints in the irr wedge
-  real(kind=DP), allocatable :: wqlist_irr(:)
-  !! The corresponding weigths
   real(kind=DP), allocatable :: xqc(:,:)
   !! The qpoints in the uniform mesh
   real(kind=DP), allocatable :: wqlist(:)
@@ -191,12 +189,12 @@
   !
   IF (meta_ionode) READ(5,*) nqc_irr
   CALL mp_bcast (nqc_irr, meta_ionode_id, world_comm)
-  allocate ( xqc_irr(3,nqc_irr), wqlist_irr(nqc_irr) )
+  allocate ( xqc_irr(3,nqc_irr)  )
   allocate ( xqc(3,nq1*nq2*nq3), wqlist(nq1*nq2*nq3) )
   !  
   IF (meta_ionode) then
     DO iq = 1, nqc_irr
-      READ (5,*) xqc_irr (:,iq), wqlist_irr (iq)
+      READ (5,*) xqc_irr (:,iq)
     ENDDO
   ENDIF
   CALL mp_bcast (xqc_irr, meta_ionode_id, world_comm)
