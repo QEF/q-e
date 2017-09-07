@@ -53,7 +53,135 @@ MODULE fft_custom
 CONTAINS
 !=----------------------------------------------------------------------------=!
 
-     SUBROUTINE gvec_init( fc, ngm_, comm )
+  !-----------------------------------------------------------------------
+  SUBROUTINE ggenx( ngm, g, comm, fc )
+  !-----------------------------------------------------------------------
+    !
+    ! Initialize g-vectors for custom grid, in exactly the same ordering
+    ! as for the dense and smooth grids
+    !
+    ! FIXME: Quick-and-dirty solution
+    !
+    !--------------------------------------------------------------------
+    !
+    USE kinds,              ONLY : DP
+    USE cell_base,          ONLY : at, tpiba2
+    USE control_flags,      ONLY : gamma_only
+    USE constants,          ONLY : eps8
+    USE mp,                 ONLY : mp_max, mp_sum
+    
+    IMPLICIT NONE
+    ! number of input G-vectors
+    INTEGER, INTENT(IN) :: ngm
+    ! G-vectors in FFT grid
+    REAL(dp), INTENT(IN) :: g(3,ngm)
+    ! communicator of the group on which g-vecs are distributed
+    INTEGER, INTENT(IN) :: comm
+    TYPE(fft_cus), INTENT(INOUT) :: fc
+    !
+    INTEGER :: n1, n2, n3, i
+    !
+    ! fc%ngmt is the local number of G-vectors
+    !
+    fc%ngmt = fc%dfftt%ngl( fc%dfftt%mype + 1 )
+    IF( gamma_only ) fc%ngmt = (fc%ngmt + 1)/2
+    !
+    !  calculate fc%ngmt_l, maximum over all processors
+    !
+    fc%ngmt_l = fc%ngmt
+    CALL mp_max( fc%ngmt_l, comm )
+    !
+    !  calculate fc%ngmt_g, sum over all processors
+    !
+    fc%ngmt_g = fc%ngmt
+    CALL mp_sum( fc%ngmt_g, comm )
+    !
+    !  allocate arrays
+    !
+    ALLOCATE( fc%ggt(fc%ngmt) )
+    ALLOCATE( fc%gt (3, fc%ngmt) )
+    ALLOCATE( fc%nlt (fc%ngmt) )
+    ALLOCATE( fc%nltm(fc%ngmt) )
+    ALLOCATE( fc%ig1t(fc%ngmt) )
+    ALLOCATE( fc%ig2t(fc%ngmt) )
+    ALLOCATE( fc%ig3t(fc%ngmt) )
+    !  
+    ! fc%npwt = number of PW in sphere of radius ecutwfc (useful for Gamma)
+    !
+    fc%npwt=0
+    !
+    DO i = 1, fc%ngmt
+       !
+       fc%gt(:,i) = g(:,i)
+       !
+       ! compute fc%npwt
+       !
+       fc%ggt(i) = SUM(fc%gt (1:3,i)**2)
+       IF ( fc%ggt(i) <= fc%ecutt / tpiba2) fc%npwt = fc%npwt + 1
+       !
+       !     Now set nl and nls with the correct fft correspondence
+       !
+       !     n1, n2, n3 are Miller indices: G= n1*b1+n2*b2+n3*b3
+       !
+       n1 = NINT (SUM(fc%gt (:, i) * at (:, 1)))
+       !
+       !     Miller index n1 is stored in ig1t for later usage
+       !
+       fc%ig1t(i) = n1
+       !
+       !     negative n1 are refolded so that 1 <= n1 <= nr1
+       !
+       n1 = n1 + 1
+       IF (n1<1) n1 = n1 + fc%dfftt%nr1
+       !
+       !     Same for n2 and n3
+       !
+       n2 = NINT (SUM(fc%gt (:, i) * at (:, 2))) 
+       fc%ig2t(i) = n2
+       n2 = n2 + 1
+       IF (n2<1) n2 = n2 + fc%dfftt%nr2 
+       
+       n3 = NINT (SUM(fc%gt (:, i) * at (:, 3)))
+       fc%ig3t(i) = n3
+       n3 = n3 + 1
+       IF (n3<1) n3 = n3 + fc%dfftt%nr3 
+       
+       IF ( n1>fc%dfftt%nr1 .OR. n2>fc%dfftt%nr2 .OR. n3>fc%dfftt%nr3) &
+            CALL errore('ggenx','Mesh too small?',i)
+       !
+       !     now find the position in FFT grid of G-vector i
+       !
+       IF ( fc%dfftt%lpara ) THEN
+          fc%nlt (i) = n3 + ( fc%dfftt%isind (n1 + (n2-1)*fc%dfftt%nr1x) -1 ) &
+               * fc%dfftt%nr3x
+       ELSE
+          fc%nlt (i) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * &
+               & fc%dfftt%nr1x * fc%dfftt%nr2x 
+       END IF
+       !
+    END DO
+    !
+    !     determine first nonzero g vector
+    !
+    IF (fc%ggt(1).LE.eps8) THEN
+       fc%gstart_t=2
+    ELSE
+       fc%gstart_t=1
+    ENDIF
+    !
+    !     compute indices for -G (gamma-only case) - needs ig1t, ig2t, ig3t
+    !
+    IF ( gamma_only) CALL index_minusg_custom(fc)
+    !
+    !     ig1t, ig2t, ig3t are no longer needed
+    !
+    DEALLOCATE ( fc%ig3t )
+    DEALLOCATE ( fc%ig2t )
+    DEALLOCATE ( fc%ig1t )
+    !
+  END SUBROUTINE ggenx
+  !
+  SUBROUTINE gvec_init( fc, ngm_, comm )
        !
        ! Set local and global dimensions, allocate arrays
        !
@@ -79,11 +207,9 @@ CONTAINS
        !
        ALLOCATE( fc%ggt(fc%ngmt) )
        ALLOCATE( fc%gt (3, fc%ngmt) )
-!       ALLOCATE( mill(3, fc%ngmt) )
        ALLOCATE( fc%nlt (fc%ngmt) )
        ALLOCATE( fc%nltm(fc%ngmt) )
        ALLOCATE( fc%ig_l2gt(fc%ngmt) )
-!       ALLOCATE( igtongl(fc%ngmt) )
        !
        RETURN 
        !
@@ -207,8 +333,6 @@ CONTAINS
     INTEGER :: i, j, k, ipol, ng, igl, iswap, indsw, ni, nj, nk
     
     
-!    ALLOCATE( fc%gt(3,fc%ngmt), fc%ggt(fc%ngmt) )
-!    ALLOCATE( fc%ig_l2gt( fc%ngmt_l ) )
     ALLOCATE( mill_g( 3, fc%ngmt_g ), mill_unsorted( 3, fc%ngmt_g ) )
     ALLOCATE( igsrt( fc%ngmt_g ) )
     ALLOCATE( g2sort_g( fc%ngmt_g ) )
@@ -405,7 +529,7 @@ CONTAINS
             &%dfftt%nr1x) - 1) * fc%dfftt%nr3x
        ELSE
           fc%nltm(ng) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * fc&
-            &%dfftt%nr1x * fc%dfftt%nr1x
+            &%dfftt%nr1x * fc%dfftt%nr2x
        ENDIF
 
     ENDDO
@@ -422,10 +546,15 @@ CONTAINS
 
     IF(.NOT. fc%initialized) RETURN
 
-    DEALLOCATE(fc%nlt,fc%nltm)
     CALL fft_type_deallocate(fc%dfftt)
-    DEALLOCATE(fc%ig_l2gt,fc%ggt,fc%gt)
-    DEALLOCATE(fc%ig1t,fc%ig2t,fc%ig3t)
+    IF ( ASSOCIATED (fc%gt)  )  DEALLOCATE(fc%gt)
+    IF ( ASSOCIATED (fc%ggt) )  DEALLOCATE(fc%ggt)
+    IF ( ASSOCIATED (fc%nlt) )  DEALLOCATE(fc%nlt)
+    IF ( ASSOCIATED (fc%nltm))  DEALLOCATE(fc%nltm)
+    IF ( ASSOCIATED (fc%ig1t) ) DEALLOCATE(fc%ig1t)
+    IF ( ASSOCIATED (fc%ig2t) ) DEALLOCATE(fc%ig2t)
+    IF ( ASSOCIATED (fc%ig3t) ) DEALLOCATE(fc%ig3t)
+    IF ( ASSOCIATED (fc%ig_l2gt) ) DEALLOCATE(fc%ig_l2gt)
     fc%initialized=.FALSE.
 
     RETURN
@@ -448,7 +577,7 @@ CONTAINS
     ! mergewf and splitwf however that scales very badly with number
     ! of procs.
     !
-    ! Written by P. Umari, documentationa added by S. Binnie
+    ! Written by P. Umari, documentation added by S. Binnie
     !
     
     USE kinds

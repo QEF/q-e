@@ -204,9 +204,9 @@ MODULE exx
   SUBROUTINE exx_fft_create ()
 
     USE gvecw,        ONLY : ecutwfc
-    USE gvect,        ONLY : ecutrho
+    USE gvect,        ONLY : ecutrho, ngm, g
     USE cell_base,    ONLY : at, bg, tpiba2
-    USE fft_custom,   ONLY : ggent, gvec_init
+    USE fft_custom,   ONLY : ggenx, gvec_init, ggent
     USE fft_base,     ONLY : smap
     USE fft_types,    ONLY : fft_type_init
     USE mp_exx,       ONLY : negrp, intra_egrp_comm
@@ -220,7 +220,7 @@ MODULE exx
     USE realus,       ONLY : qpointlist, tabxx, tabp
 
     IMPLICIT NONE
-    INTEGER :: intra_comm, ngs_, ik
+    INTEGER :: ngs_, ik
 #if defined (__MPI) && ! defined (__USE_3D_FFT)
     LOGICAL :: lpara = .true.
 #else
@@ -256,28 +256,27 @@ MODULE exx
     ! ... set up fft descriptors, including parallel stuff: sticks, planes, etc.
     !
     IF( negrp == 1 ) THEN
-       intra_comm = intra_bgrp_comm
+       !
+       ! ... no band parallelization: exx grid is a subgrid of general grid
+       !
        CALL fft_type_init( exx_fft%dfftt, smap, "rho", gamma_only, lpara, &
-            intra_comm, at, bg, exx_fft%gcutmt, exx_fft%dual_t, nyfft=nyfft )
+            intra_bgrp_comm, at, bg, exx_fft%gcutmt, exx_fft%dual_t, &
+            nyfft=nyfft )
+       CALL ggenx(ngm, g, intra_bgrp_comm, exx_fft)
+       !
     ELSE
+       !
        WRITE(6,"(5X,'Exchange parallelized over bands (',i4,' band groups)')")&
             negrp
-       intra_comm = intra_egrp_comm
        CALL fft_type_init( exx_fft%dfftt, smap_exx, "rho", gamma_only, lpara, &
-            intra_comm, at, bg, exx_fft%gcutmt, exx_fft%dual_t, nyfft=nyfft )
+            intra_egrp_comm, at, bg, exx_fft%gcutmt, exx_fft%dual_t, &
+            nyfft=nyfft )
+       ngs_ = exx_fft%dfftt%ngl( exx_fft%dfftt%mype + 1 )
+       IF( gamma_only ) ngs_ = (ngs_ + 1)/2
+       CALL gvec_init (exx_fft, ngs_ , intra_egrp_comm )
+       CALL ggent(exx_fft)
+       !
     END IF
-    !
-    ngs_ = exx_fft%dfftt%ngl( exx_fft%dfftt%mype + 1 )
-    IF( gamma_only ) THEN
-       ngs_ = (ngs_ + 1)/2
-    END IF
-    !
-    !     on output, ngm_ and ngs_ contain the local number of G-vectors
-    !     for the two grids. Initialize local and global number of G-vectors
-    !
-    CALL gvec_init (exx_fft, ngs_ , intra_comm )
-    !
-    CALL ggent(exx_fft)
     !
     WRITE( stdout, '(/5x,"EXX grid: ",i8," G-vectors", 5x, &
          &   "FFT dimensions: (",i4,",",i4,",",i4,")")') exx_fft%ngmt_g, &
@@ -5688,7 +5687,7 @@ implicit none
    deallocate( RESULT )
 
    write(stdout,'(2(A,I12),A,f12.2)') 'Pairs(full): ', (nbnd*nbnd-nbnd)/2, &
-          ' Pairs(red): ', npairs,       ' % ', float(npairs)/float((nbnd*nbnd-nbnd)/2 )*100.0d0  
+          ' Pairs(red): ', npairs,       ' % ', dble(npairs)/dble((nbnd*nbnd-nbnd)/2 )*100.0d0  
    write(stdout,'(3(A,f12.6))')       'OvPairs(included): ', ovpairs(1),   &
           ' OvPairs(tot): ', ovpairs(2), ' OvPairs(%): ', ovpairs(1)/ovpairs(2)*100.0d0
 

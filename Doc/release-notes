@@ -8,11 +8,13 @@ New in 6.2 version:
   * Stress calculation is enabled in ESM
     “starting_charge” option added to SYSTEM namelist
 
-KNOWN BUGS IN 6.2 VERSION:
-
-  * EXX with reduced cutoff and k-points doesn't work well
-
 Fixed in 6.2 version
+
+  * Under some circumstances (k-points, reduced ecutfock, other unclear  
+    reasons), EXX with reduced cutoff wasn't giving accurate results, 
+    due to a mismatch between the ordering of G-vectors in the original 
+    FFT grid and in the grid for ecutfock. Also fixed: incorrect indices
+    of -G (used in Gamma-only case) when nr1 /= nr2 (r13833)
 
   * In variable-cell EXX, G-vectors used in the FFT of 1/|r-r'| should be
     rescaled as well (courtesy Satomichi Nisihara) (r13817)
