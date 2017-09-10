@@ -60,7 +60,7 @@ MODULE pw_restart_new
       USE io_files,             ONLY : nwordwfc, iunwfc, psfile
       USE buffers,              ONLY : get_buffer
       USE wavefunctions_module, ONLY : evc
-      USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
+      USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, smearing, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw, tot_charge
       USE start_k,              ONLY : nk1, nk2, nk3, k1, k2, k3, &
@@ -1584,7 +1584,7 @@ MODULE pw_restart_new
     !-----------------------------------------------------------------------------------------------------
        !
        USE lsda_mod, ONLY : lsda, isk
-       USE klist,    ONLY : nkstot, xk, wk, qnorm
+       USE klist,    ONLY : nkstot, xk, wk
        USE start_k,  ONLY : nks_start, xk_start, wk_start, &
                               nk1, nk2, nk3, k1, k2, k3
        USE symm_base,ONLY : nrot, s, sname

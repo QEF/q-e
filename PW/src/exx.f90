@@ -212,7 +212,7 @@ MODULE exx
     USE mp_exx,       ONLY : negrp, intra_egrp_comm
     USE mp_bands,     ONLY : intra_bgrp_comm, nyfft
     !
-    USE klist,        ONLY : nks, xk, qnorm
+    USE klist,        ONLY : nks, xk
     USE mp_pools,     ONLY : inter_pool_comm
     USE mp,           ONLY : mp_max
     !
@@ -221,6 +221,7 @@ MODULE exx
 
     IMPLICIT NONE
     INTEGER :: ngs_, ik
+    REAL(dp) :: gkcut
 #if defined (__MPI) && ! defined (__USE_3D_FFT)
     LOGICAL :: lpara = .true.
 #else
@@ -228,30 +229,35 @@ MODULE exx
 #endif
 
     IF( exx_fft%initialized) RETURN
-
+    !
     ! Initialise the custom grid that allows us to put the wavefunction
-    ! onto the new (smaller) grid for rho (and vice versa)
+    ! onto the new (smaller) grid for \rho=\psi_{k+q}\psi^*_k and vice versa
     !
     exx_fft%ecutt=ecutwfc
+    !
+    ! gkcut is such that all |k+G|^2 < gkcut (in units of (2pi/a)^2)
+    ! Note that with k-points, gkcut > ecutwfc/(2pi/a)^2
+    ! gcutmt is such that |q+G|^2 < gcutmt
+    !
     IF ( gamma_only ) THEN       
-       exx_fft%dual_t = ecutfock/ecutwfc
+       gkcut = ecutwfc/tpiba2
+       exx_fft%gcutmt = ecutfock / tpiba2
     ELSE
        !
-       ! with k-points the following instructions guarantees that the sphere in
-       ! G space with G^2 < EcutFock contains k+G PW's for all k-points
-       ! Needed if ecutfock \simeq ecutwfc - qnorm is max |k| 
        !
-       qnorm = 0.0_dp
+       gkcut = 0.0_dp
        DO ik = 1,nks
-          qnorm = MAX ( qnorm, sqrt( tpiba2*sum(xk(:,ik)**2) ) )
+          gkcut = MAX ( gkcut, sqrt( sum(xk(:,ik)**2) ) )
        ENDDO
-       CALL mp_max( qnorm, inter_pool_comm )
+       CALL mp_max( gkcut, inter_pool_comm )
+       gkcut = ( sqrt(ecutwfc/tpiba2) + gkcut )**2
+       ! 
+       ! The following instruction may be needed if ecutfock \simeq ecutwfc
+       ! and guarantees that all k+G are included
        !
-       exx_fft%dual_t = max(ecutfock,(sqrt(ecutwfc)+qnorm)**2)/ecutwfc
+       exx_fft%gcutmt = max(ecutfock/tpiba2,gkcut)
        !
     ENDIF
-    !
-    exx_fft%gcutmt = exx_fft%dual_t*exx_fft%ecutt / tpiba2
     !
     ! ... set up fft descriptors, including parallel stuff: sticks, planes, etc.
     !
@@ -260,7 +266,7 @@ MODULE exx
        ! ... no band parallelization: exx grid is a subgrid of general grid
        !
        CALL fft_type_init( exx_fft%dfftt, smap, "rho", gamma_only, lpara, &
-            intra_bgrp_comm, at, bg, exx_fft%gcutmt, exx_fft%dual_t, &
+            intra_bgrp_comm, at, bg, exx_fft%gcutmt, exx_fft%gcutmt/gkcut, &
             nyfft=nyfft )
        CALL ggenx(ngm, g, intra_bgrp_comm, exx_fft)
        !
@@ -269,7 +275,7 @@ MODULE exx
        WRITE(6,"(5X,'Exchange parallelized over bands (',i4,' band groups)')")&
             negrp
        CALL fft_type_init( exx_fft%dfftt, smap_exx, "rho", gamma_only, lpara, &
-            intra_egrp_comm, at, bg, exx_fft%gcutmt, exx_fft%dual_t, &
+            intra_egrp_comm, at, bg, exx_fft%gcutmt, exx_fft%gcutmt/gkcut,    &
             nyfft=nyfft )
        ngs_ = exx_fft%dfftt%ngl( exx_fft%dfftt%mype + 1 )
        IF( gamma_only ) ngs_ = (ngs_ + 1)/2
