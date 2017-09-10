@@ -480,6 +480,11 @@ CONTAINS
   rho_down  = rho_valence(:,2) + 0.5D0*rho_core(:)
   total_rho = rho_up + rho_down
 
+#if defined (__SPIN_BALANCED)
+     rho_up   = total_rho*0.5D0
+     rho_down = rho_up
+     write(stdout,'(/,/,"     Performing spin-balanced Ecnl calculation!")')
+#endif
 
   ! --------------------------------------------------------------------
   ! Here we calculate the gradient in reciprocal space using FFT.
@@ -1562,7 +1567,17 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Tests
 
-  if ( nspin>1 ) call errore('stress_vdW_DF','spin polarized vdW stress not implemented', nspin)
+#if defined (__SPIN_BALANCED)
+  if ( nspin==2 ) then
+     write(stdout,'(/,/ "     Performing spin-balanced Ecnl stress calculation!")')
+  else if ( nspin > 2 ) then
+     call errore ('stres_vdW_DF','noncollinear vdW stress not implemented',1)
+  end if
+#else
+  if ( nspin>=2 ) then
+     call errore ('stres_vdW_DF',   'vdW stress not implemented for nspin > 1',1)
+  end if
+#endif
 
   sigma(:,:)      = 0.0_DP
   sigma_grad(:,:) = 0.0_DP
@@ -1583,6 +1598,11 @@ CONTAINS
   ! Charge
 
   total_rho = rho_valence(:,1) + rho_core(:)
+#if defined (__SPIN_BALANCED)
+  if ( nspin == 2 ) then
+     total_rho = rho_valence(:,2) + total_rho(:)
+  end if
+#endif
 
 
   ! --------------------------------------------------------------------
@@ -1749,10 +1769,7 @@ CONTAINS
      end do
 
   end do
-
-#if defined(__MPI)
   call mp_sum(  sigma, intra_bgrp_comm )
-#endif
 
   call dscal (9, 1.d0 / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3), sigma, 1)
 
@@ -1834,10 +1851,7 @@ CONTAINS
      if (g_i < gstart ) sigma(:,:) = sigma(:,:) / G_multiplier
 
   enddo
-
-#if defined(__MPI)
   call mp_sum(  sigma, intra_bgrp_comm )
-#endif
 
   deallocate( dkernel_of_dk )
 

@@ -8,6 +8,9 @@ New in 6.2 version:
   * Stress calculation is enabled in ESM
     “starting_charge” option added to SYSTEM namelist
 
+  * Unscreened hybrid vdW-DF (JCP 146, 234106 (2017), contributed by 
+    Per Hyldgaard and Jeff Neaton
+
 Fixed in 6.2 version
 
   * Under some circumstances (k-points, reduced ecutfock, other unclear  
@@ -23,7 +26,7 @@ Fixed in 6.2 version
     to el-ph with tetrahedra (Mitsuaki Kawamura) (r13806).
 
   * EXX with k-points and pool parallelization was occasionally crashing
-    due to questionable custom FFT grid initialization (r13728)
+    due to questionable custom FFT grid initialization (r13728+r13835)
 
   * __USE_3D_FFT was broken since v.6.0 (r13700, r13706)
 

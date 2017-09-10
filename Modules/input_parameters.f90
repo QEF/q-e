@@ -556,7 +556,7 @@ MODULE input_parameters
           ! used to enable debug mode (output v_hartree and v_local)
 
         INTEGER :: esm_debug_gpmax = 0
-          ! if esm_debug is .TRUE., calcualte v_hartree and v_local
+          ! if esm_debug is .TRUE., calculate v_hartree and v_local
           ! for abs(gp)<=esm_debug_gpmax (gp is integer and has tpiba unit)
 
         REAL(DP) :: fcp_mu         = 0.0_DP
