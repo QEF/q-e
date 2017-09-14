@@ -480,7 +480,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
       CHARACTER(iotk_attlenx)  :: attr
-#if defined(__HDF5)	
+#if defined(__HDF5)
       TYPE(hdf5_type)       :: gvecs_h5desc
 #endif
       !

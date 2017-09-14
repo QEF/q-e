@@ -47,7 +47,7 @@ CONTAINS
 #if defined(__MPI)
     INTEGER :: ierr
 #endif
-#if defined(__OPENMP) 	 
+#if defined(__OPENMP)
     INTEGER :: PROVIDED
 #endif
     !
@@ -59,9 +59,9 @@ CONTAINS
     CALL MPI_Initialized ( library_mode, ierr)
     IF (ierr/=0) CALL mp_stop( 8000 )
     IF (.NOT. library_mode ) THEN
-#if defined(__OPENMP) 	 
+#if defined(__OPENMP)
        CALL MPI_Init_thread(MPI_THREAD_FUNNELED, PROVIDED, ierr)
-#else 	 
+#else
        CALL MPI_Init(ierr)
 #endif
        IF (ierr/=0) CALL mp_stop( 8001 )

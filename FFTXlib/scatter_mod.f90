@@ -152,7 +152,9 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
         ENDDO
         offset = offset + desc%nr2p( iproc2 )
 #if defined(__NON_BLOCKING_SCATTER)
-        CALL mpi_isend( f_aux( (iproc2-1)*sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc2-1, me2, desc%comm2, sh( iproc2 ), ierr )
+        CALL mpi_isend( f_aux( (iproc2-1)*sendsize + 1 ), sendsize, &
+                        MPI_DOUBLE_COMPLEX, iproc2-1, me2, desc%comm2, &
+                        sh( iproc2 ), ierr )
 #endif
      ENDDO
      !
@@ -163,14 +165,17 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
         !
         ! now post the receive
         !
-        CALL mpi_irecv( f_in( (iproc2-1)*sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc2-1, MPI_ANY_TAG, desc%comm2, rh( iproc2 ), ierr )
+        CALL mpi_irecv( f_in( (iproc2-1)*sendsize + 1 ), sendsize, &
+                        MPI_DOUBLE_COMPLEX, iproc2-1, MPI_ANY_TAG, &
+                        desc%comm2, rh( iproc2 ), ierr )
         !IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' forward receive info<>0', abs(ierr) )
      ENDDO
      
      call mpi_waitall( nproc2, sh, MPI_STATUSES_IGNORE, ierr )
      !
 #else
-     CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
+     CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), &
+                        sendsize, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
      !
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
 #endif
@@ -214,7 +219,9 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
            it = it + nr2px
         ENDDO
 #if defined(__NON_BLOCKING_SCATTER)
-        IF( nproc2 > 1 ) CALL mpi_isend( f_in( ( iproc2 - 1 ) * sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc2-1, me2, desc%comm2, sh( iproc2 ), ierr )
+        IF( nproc2 > 1 ) CALL mpi_isend( f_in( ( iproc2 - 1 ) * sendsize + 1 ), &
+                              sendsize, MPI_DOUBLE_COMPLEX, iproc2-1, me2, &
+                              desc%comm2, sh( iproc2 ), ierr )
 #endif
      ENDDO
      IF (nproc2==1) GO TO 20
@@ -223,12 +230,15 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
      !  step two: communication
      !
 #if ! defined(__NON_BLOCKING_SCATTER)
-     CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
+     CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), &
+                        sendsize, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
 #else
      DO iproc2 = 1, nproc2
-        CALL mpi_irecv( f_aux( (iproc2-1)*sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc2-1, MPI_ANY_TAG, desc%comm2, rh(iproc2), ierr )
+        CALL mpi_irecv( f_aux( (iproc2-1)*sendsize + 1 ), sendsize, &
+                        MPI_DOUBLE_COMPLEX, iproc2-1, MPI_ANY_TAG, &
+                        desc%comm2, rh(iproc2), ierr )
         ! IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward receive info<>0', abs(ierr) )
      ENDDO
         
@@ -383,7 +393,9 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
         ENDDO
         offset = offset + desc%nr3p( iproc3 )
 #if defined(__NON_BLOCKING_SCATTER)
-        CALL mpi_isend( f_aux( ( iproc3 - 1 ) * sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc3-1, me3, desc%comm3, sh( iproc3 ), ierr )
+        CALL mpi_isend( f_aux( ( iproc3 - 1 ) * sendsize + 1 ), sendsize, &
+                        MPI_DOUBLE_COMPLEX, iproc3-1, me3, desc%comm3, &
+                        sh( iproc3 ), ierr )
 #endif
      ENDDO
      !
@@ -397,7 +409,9 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
         !
         ! now post the receive
         !
-        CALL mpi_irecv( f_in( (iproc3-1)*sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc3-1, MPI_ANY_TAG, desc%comm3, rh( iproc3 ), ierr )
+        CALL mpi_irecv( f_in( (iproc3-1)*sendsize + 1 ), sendsize, &
+                        MPI_DOUBLE_COMPLEX, iproc3-1, MPI_ANY_TAG, &
+                        desc%comm3, rh( iproc3 ), ierr )
         !IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' forward receive info<>0', abs(ierr) )
         !
         !
@@ -406,7 +420,8 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      call mpi_waitall( nproc3, sh, MPI_STATUSES_IGNORE, ierr )
      !
 #else
-     CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
+     CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), &
+                        sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
 #endif     
@@ -457,7 +472,9 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
            ENDDO
         ENDDO
 #if defined(__NON_BLOCKING_SCATTER)
-        IF( nproc3 > 1 ) CALL mpi_isend( f_in( ( iproc3 - 1 ) * sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc3-1, me3, desc%comm3, sh( iproc3 ), ierr )
+        IF( nproc3 > 1 ) CALL mpi_isend( f_in( ( iproc3 - 1 ) * sendsize + 1 ), &
+                                        sendsize, MPI_DOUBLE_COMPLEX, iproc3-1, &
+                                        me3, desc%comm3, sh( iproc3 ), ierr )
 #endif
      ENDDO
      
@@ -466,12 +483,15 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      !  step two: communication
      !
 #if ! defined(__NON_BLOCKING_SCATTER)
-     CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
+     CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), &
+                        sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
 #else
      DO iproc3 = 1, desc%nproc3
-        CALL mpi_irecv( f_aux( (iproc3-1)*sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc3-1, MPI_ANY_TAG, desc%comm3, rh(iproc3), ierr )
+        CALL mpi_irecv( f_aux( (iproc3-1)*sendsize + 1 ), sendsize, &
+                        MPI_DOUBLE_COMPLEX, iproc3-1, MPI_ANY_TAG, &
+                        desc%comm3, rh(iproc3), ierr )
         ! IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward receive info<>0', abs(ierr) )
      ENDDO
         

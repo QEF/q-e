@@ -1791,7 +1791,7 @@ MODULE exx
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:,:),result_nc(:,:,:)
     INTEGER          :: request_send, request_recv
     !
-	COMPLEX(DP),ALLOCATABLE :: deexx(:,:)
+    COMPLEX(DP),ALLOCATABLE :: deexx(:,:)
     COMPLEX(DP),ALLOCATABLE,TARGET :: rhoc(:,:), vc(:,:)
 #if defined(__USE_3D_FFT) & defined(__USE_MANY_FFT)
     COMPLEX(DP),POINTER :: prhoc(:), pvc(:)
@@ -1802,12 +1802,12 @@ MODULE exx
 !DIR$ memory(bandwidth) rhoc, vc
 #endif
     REAL(DP),   ALLOCATABLE :: fac(:), facb(:)
-    INTEGER          :: ibnd, ik, im , ikq, iq, ipol
-    INTEGER          :: ir, ig, ir_start, ir_end
-	INTEGER			 :: irt, nrt, nblock
-    INTEGER          :: current_ik
-    INTEGER          :: ibnd_loop_start
-    INTEGER          :: h_ibnd, nrxxs
+    INTEGER  :: ibnd, ik, im , ikq, iq, ipol
+    INTEGER  :: ir, ig, ir_start, ir_end
+    INTEGER  :: irt, nrt, nblock
+    INTEGER  :: current_ik
+    INTEGER  :: ibnd_loop_start
+    INTEGER  :: h_ibnd, nrxxs
     REAL(DP) :: x1, x2, xkp(3), omega_inv, nqs_inv
     REAL(DP) :: xkq(3)
     ! <LMS> temp array for vcut_spheric
@@ -2847,7 +2847,6 @@ MODULE exx
     INTEGER  :: h_ibnd, nrxxs, current_ik, ibnd_loop_start, nblock, nrt, irt, ir_start, ir_end
     REAL(DP) :: x1, x2
     REAL(DP) :: xkq(3), xkp(3), vc, omega_inv
-	!REAL(DP), ALLOCATEABLE :: vcarr(:)
     ! temp array for vcut_spheric
     INTEGER, EXTERNAL :: global_kpoint_index
     !
@@ -3009,7 +3008,7 @@ MODULE exx
                    ENDDO
 !$omp end parallel do
                 ELSE
-					
+
                    !calculate rho in real space
                    nblock=2048
                    nrt = nrxxs / nblock

@@ -819,7 +819,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
                npw = ngk(ik-iks+1)
                local_pw = npw
-	       CALL init_us_2(npw, igk_k(1,ik-iks+1), xk(1, ik), vkb)
+               CALL init_us_2(npw, igk_k(1,ik-iks+1), xk(1, ik), vkb)
 
                IF ( gamma_only ) THEN
                   CALL calbec ( npw, vkb, evc, becp )

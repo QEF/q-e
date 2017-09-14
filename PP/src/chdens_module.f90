@@ -1403,7 +1403,7 @@ SUBROUTINE isostm_plot(rhor, nr1x, nr2x, nr3x, &
   ! input parameters
   REAL(DP) :: maximum,minimum
   ! max and min value of iLDOS
-  LOGICAL :: saturation			! check on the image
+  LOGICAL :: saturation ! check on the image
 
   INTEGER :: i, j, k
 
