@@ -2242,7 +2242,9 @@ SUBROUTINE mp_count_nodes(num_nodes, group)
   IMPLICIT NONE
   INTEGER, INTENT (OUT) :: num_nodes
   INTEGER, INTENT (IN)  :: group
+#if defined (__MPI)
   CHARACTER(len=MPI_MAX_PROCESSOR_NAME) :: nodename
+#endif
   CHARACTER(len=:), ALLOCATABLE :: all_node_names
   CHARACTER(len=:), ALLOCATABLE :: current_name
   INTEGER, ALLOCATABLE   :: node_counter(:)
