@@ -42,6 +42,8 @@ test.o : fft_param.o
 test.o : fft_support.o
 test.o : fft_types.o
 test.o : stick_base.o
+test.o : fft_helper_subroutines.o
+test.o : fft_interfaces.o
 test0.o : fft_interfaces.o
 test0.o : fft_parallel.o
 test0.o : fft_param.o

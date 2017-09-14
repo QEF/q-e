@@ -6,31 +6,40 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! by F. Affinito and C. Cavazzoni, Cineca
+! by P. Bonfa', F. Affinito and C. Cavazzoni, Cineca
 !  & S. de Gironcoli, SISSA
 
-program test 
+module timers
+  save
+  LOGICAL :: ignore_time = .true.
+  REAL*8  :: times(20) = 0.d0
+end module
+
+program test
   !! This mini-app provides a tool for testing and benchmarking the FFT drivers
   !! contained in the FFTXlib.
   !!
-  !! The mini-app mimics a charge-density transformation from complex-to-real
-  !! space and back.
+  !! The mini-app mimics the workload of vloc_psi (a charge-density transformation
+  !! from complex-to-real space and back and contribution to h).
   !!
-  !! To compile the test program, once you have properly edit the make.sys file 
+  !! To compile the test program, once you have properly edit the make.sys file
   !! included in the FFTXlib and type:
   !!
   !!      make TEST
+  !!      
+  !! N.B.: do not run the make command alone, otherwise the FFT times will
+  !!       not be present in the final summary.
   !!
   !! Then you can run your FFT tests using command like:
   !!
-  !!      mpirun -np 4 ./fft_test.x -ecutwfc 80 -alat 20  -nbnd 128 -ntg 4
+  !!      mpirun -np 4 ./fft_test.x -ecutwfc 80 -alat 20  -nbnd 128 -ntg 4 -gamma .true.
   !!
   !! or, in case of serial build
   !!
   !!      ./fft_test.x -ecutwfc 80 -alat 20  -nbnd 128 -ntg 4
   !!
   !! Command line arguments:
-  !! 
+  !!
   !!-ecutwfc  Plane wave energy cut off
   !!
   !!-alat     Lattice parameter
@@ -39,44 +48,48 @@ program test
   !!
   !!-ntg      Number of task groups
   !!
+  !!-gamma    Enables gamma point trick. Should be about 2 times faster.
+  !!
   !! Timings of different stages of execution are provided at the end of the
   !! run.
   !! In the present version, a preliminar implementation with non-blocking MPI
   !! calls as been implemented. This version requires the precompilation flags
-  !! -D__NON_BLOCKING_SCATTER and -D__DOUBLE_BUFFER
-  !!  
+  !! -D__NON_BLOCKING_SCATTER
+  !!
   USE fft_types
   USE stick_base
   USE fft_parallel
   USE fft_support
+  USE fft_helper_subroutines
+  USE fft_interfaces, ONLY:fwfft, invfft
+  USE timers
   IMPLICIT NONE
-#if defined(__MPI)
-  INTEGER, ALLOCATABLE :: req_p(:),req_u(:)
-#endif
+  !
   TYPE(fft_type_descriptor) :: dfftp, dffts, dfft3d
-  TYPE(task_groups_descriptor) :: dtgs
+  !
   TYPE(sticks_map) :: smap
   INTEGER :: nx = 128
-   !! grid points along x (modified after)
+  !! grid points along x (modified after)
   INTEGER :: ny = 128
-   !! grid points along y (modified after)
+  !! grid points along y (modified after)
   INTEGER :: nz = 256
-   !! grid points along z (modified after)
+  !! grid points along z (modified after)
   !
-  INTEGER :: mype, npes, comm, root 
-   !! MPI handles
+  INTEGER :: mype, npes, comm, root
+  !! MPI handles
   INTEGER :: ntgs
-   !! number of taskgroups
+  !! number of taskgroups
   INTEGER :: nbnd
-   !! number of bands
+  !! number of bands
   LOGICAL :: iope
-   !! I/O process
-  INTEGER :: ierr, i, j, ncount, ib, ireq, nreq, ipsi, iloop
-  INTEGER :: ngw_ , ngm_ , ngs_
+  !! I/O process
+  INTEGER :: ierr, i, j, ncount, ib
+  INTEGER :: incr=1, right_nr3
+  INTEGER :: ngw_, ngm_, ngs_
   REAL*8  :: gcutm, gkcut, gcutms
   REAL*8  :: ecutm, ecutw, ecutms
   REAL*8  :: ecutrho
-  !! cut-off for density 
+  !! cut-off for density
   REAL*8  :: ecutwfc
   !! cut-off for the wave-function
   REAL*8  :: tpiba, alat, alat_in
@@ -89,28 +102,26 @@ program test
   REAL*8  :: wall
   REAL*8  :: wall_avg
   !
-  LOGICAL :: gamma_only
-   !! if calculations require only gamma point
-  REAL*8  :: at(3,3), bg(3,3)
-  REAL(DP), PARAMETER :: pi     = 3.14159265358979323846_DP
+  LOGICAL :: gamma_only = .false.
+  LOGICAL :: use_tg
+  !! if calculations require only gamma point
+  REAL*8  :: at(3, 3), bg(3, 3)
+  REAL(DP), PARAMETER :: pi = 3.14159265358979323846_DP
   !
-  COMPLEX(DP), ALLOCATABLE :: psis(:,:)
-  COMPLEX(DP), ALLOCATABLE :: psi(:,:)
-   !! fake wave-function to be (anti-)transformed 
-  COMPLEX(DP), ALLOCATABLE :: aux(:)
-   !! fake argument returned by the FFT 
-  COMPLEX(DP), ALLOCATABLE :: tg_v(:)
-  COMPLEX(DP), ALLOCATABLE :: hpsi(:,:)
-   !! array representing the potential
-  INTEGER, ALLOCATABLE :: nls( : ), nlsm( : )
+  COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
+  COMPLEX(DP), ALLOCATABLE :: psic(:)
+  COMPLEX(DP), ALLOCATABLE :: psi(:, :)
+  !! fake argument returned by the FFT
+  REAL(DP), ALLOCATABLE :: v(:)
+  REAL(DP), ALLOCATABLE :: tg_v(:)
+  COMPLEX(DP), ALLOCATABLE :: hpsi(:, :)
+  !! array representing the potential
+  INTEGER, ALLOCATABLE :: nls(:), nlsm(:)
   INTEGER :: ngms, ngsx, ngms_g
-  INTEGER, ALLOCATABLE :: mill(:,:), nl(:), nlm(:), ig_l2g(:)
-  COMPLEX(DP), ALLOCATABLE :: g(:,:), gg(:)
+  INTEGER, ALLOCATABLE :: mill(:, :), nl(:), nlm(:), ig_l2g(:)
+  REAL(DP), ALLOCATABLE :: g(:, :), gg(:)
   INTEGER :: ngm, ngmx, ngm_g, gstart
   !
-  INTEGER :: ibnd, ioff, idx, incr, m
-  COMPLEX(DP) :: fp, fm
-
   !
   integer :: nargs
   CHARACTER(LEN=80) :: arg
@@ -131,30 +142,34 @@ program test
   !
   nargs = command_argument_count()
   do i = 1, nargs - 1
-     CALL get_command_argument(i, arg)
-     IF( TRIM( arg ) == '-ecutrho' ) THEN
-        CALL get_command_argument(i+1, arg)
-        READ( arg, * ) ecutrho
-     END IF 
-     IF( TRIM( arg ) == '-ecutwfc' ) THEN
-        CALL get_command_argument(i+1, arg)
-        READ( arg, * ) ecutwfc
-     END IF 
-     IF( TRIM( arg ) == '-alat' ) THEN
-        CALL get_command_argument(i+1, arg)
-        READ( arg, * ) alat_in
-     END IF 
-     IF( TRIM( arg ) == '-ntg' ) THEN
-        CALL get_command_argument(i+1, arg)
-        READ( arg, * ) ntgs
-     END IF 
-     IF( TRIM( arg ) == '-nbnd' ) THEN
-        CALL get_command_argument(i+1, arg)
-        READ( arg, * ) nbnd
-     END IF 
+    CALL get_command_argument(i, arg)
+    IF (TRIM(arg) == '-ecutrho') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) ecutrho
+    END IF
+    IF (TRIM(arg) == '-ecutwfc') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) ecutwfc
+    END IF
+    IF (TRIM(arg) == '-alat') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) alat_in
+    END IF
+    IF (TRIM(arg) == '-ntg') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) ntgs
+    END IF
+    IF (TRIM(arg) == '-nbnd') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) nbnd
+    END IF
+    IF (TRIM(arg) == '-gamma') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) gamma_only
+    END IF
   end do
-  if (ecutrho == 0.d0) ecutrho = 4.0d0 * ecutwfc
-  
+  if (ecutrho == 0.d0) ecutrho = 4.0d0*ecutwfc
+
 #if defined(__MPI)
 
 #if defined(__OPENMP)
@@ -162,14 +177,14 @@ program test
 #else
   CALL MPI_Init(ierr)
 #endif
-  CALL mpi_comm_rank(MPI_COMM_WORLD,mype,ierr)
-  CALL mpi_comm_size(MPI_COMM_WORLD,npes,ierr)
+  CALL mpi_comm_rank(MPI_COMM_WORLD, mype, ierr)
+  CALL mpi_comm_size(MPI_COMM_WORLD, npes, ierr)
   comm = MPI_COMM_WORLD
   root = 0
-  IF(mype==root) THEN
-     iope = .true.
+  IF (mype == root) THEN
+    iope = .true.
   ELSE
-     iope = .false.
+    iope = .false.
   ENDIF
 
 #else
@@ -185,11 +200,11 @@ program test
   !
   !  Broadcast input parameter first
   !
-  CALL MPI_BCAST(ecutrho, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
-  CALL MPI_BCAST(ecutwfc, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
-  CALL MPI_BCAST(alat_in, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr )
-  CALL MPI_BCAST(ntgs,    1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr )
-  CALL MPI_BCAST(nbnd,    1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr )
+  CALL MPI_BCAST(ecutrho, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+  CALL MPI_BCAST(ecutwfc, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+  CALL MPI_BCAST(alat_in, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+  CALL MPI_BCAST(ntgs, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
+  CALL MPI_BCAST(nbnd, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
   !
   !
   ! --------  INITIALIZE DIMENSIONS AND DESCRIPTORS
@@ -200,15 +215,15 @@ program test
   ecutm  = ecutrho
   ecutms = ecutrho
   !
-  at(1,:) = (/ 0.5d0 , 1.0d0, 0.0d0 /)
-  at(2,:) = (/ 0.5d0 , 0.0d0, 0.5d0 /)
-  at(3,:) = (/ 0.0d0 , 0.5d0, 1.5d0 /)
+  at(1, :) = (/0.5d0, 1.0d0, 0.0d0/)
+  at(2, :) = (/0.5d0, 0.0d0, 0.5d0/)
+  at(3, :) = (/0.0d0, 0.5d0, 1.5d0/)
   !
-  at = at * alat_in
+  at = at*alat_in
   !
-  alat = SQRT ( at(1,1)**2+at(2,1)**2+at(3,1)**2 )
+  alat = SQRT(at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2)
   !
-  tpiba = 2.0d0 * pi / alat 
+  tpiba = 2.0d0*pi/alat
   !
   gcutm = ecutm    / tpiba**2  ! potential cut-off
   gcutms= ecutms   / tpiba**2  ! smooth mesh cut-off
@@ -216,285 +231,226 @@ program test
   !
   if( mype == 0 ) then
 
-    write(*,*) '+-----------------------------------+'
-    write(*,*) '|               QE FFT              |'
-    write(*,*) '|          testing & timing         |'
-    write(*,*) '|         by Carlo Cavazzoni        |'
-    write(*,*) '+-----------------------------------+'
-    write(*,*) 
-    write(*,*) 'alat    = ', alat
-    write(*,*) 'Ecutwfc = ', ecutw
-    write(*,*) 'Ecutrho = ', ecutm
-    write(*,*) 'Ecuts   = ', ecutms
-    write(*,*) 'Gcutrho = ', SQRT(gcutm)
-    write(*,*) 'Gcuts   = ', SQRT(gcutms)
-    write(*,*) 'Gcutwfc = ', SQRT(gkcut)
-    write(*,*) 'Num bands      = ', nbnd
-    write(*,*) 'Num procs      = ', npes
-    write(*,*) 'Num Task Group = ', ntgs
+    write (*, *) '+-----------------------------------+'
+    write (*, *) '|               QE FFT              |'
+    write (*, *) '|          testing & timing         |'
+    write (*, *) '|         by Carlo Cavazzoni        |'
+    write (*, *) '+-----------------------------------+'
+    write (*, *)
+    write (*, *) 'alat    = ', alat
+    write (*, *) 'Ecutwfc = ', ecutw
+    write (*, *) 'Ecutrho = ', ecutm
+    write (*, *) 'Ecuts   = ', ecutms
+    write (*, *) 'Gcutrho = ', SQRT(gcutm)
+    write (*, *) 'Gcuts   = ', SQRT(gcutms)
+    write (*, *) 'Gcutwfc = ', SQRT(gkcut)
+    write (*, *) 'Num bands      = ', nbnd
+    write (*, *) 'Num procs      = ', npes
+    write (*, *) 'Num Task Group = ', ntgs
+    write (*, *) 'Gamma trick    = ', gamma_only
   end if
   !
-  at = at / alat
+  at = at/alat
   !
-  call recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+  call recips(at(1, 1), at(1, 2), at(1, 3), bg(1, 1), bg(1, 2), bg(1, 3))
   !
-  nx = 2 * int ( sqrt (gcutm) * sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
-  ny = 2 * int ( sqrt (gcutm) * sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
-  nz = 2 * int ( sqrt (gcutm) * sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
+  nx = 2*int(sqrt(gcutm)*sqrt(at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2)) + 1
+  ny = 2*int(sqrt(gcutm)*sqrt(at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2)) + 1
+  nz = 2*int(sqrt(gcutm)*sqrt(at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2)) + 1
   !
-  if( mype == 0 ) then
-    write(*,*) 'nx = ', nx,' ny = ', ny, ' nz = ', nz
+  if (mype == 0) then
+    write (*, *) 'nx = ', nx, ' ny = ', ny, ' nz = ', nz
   end if
   !
-  gamma_only = .true.
-  CALL fft_type_init( dffts, smap, "wave", gamma_only, .true., comm, at, bg, gkcut, gcutms/gkcut, ntgs )
-  CALL fft_type_init( dfftp, smap, "rho", gamma_only, .true., comm, at, bg,  gcutm )
-  CALL fft_type_init( dfft3d, smap, "wave", gamma_only, .false., comm, at, bg, gkcut)
+  IF (gamma_only) incr = 2
+  dffts%have_task_groups = (ntgs > 1)
+  use_tg = dffts%have_task_groups
   !
-  if( mype == 0 ) then
-    write(*,*) 'dffts:  nr1 = ', dffts%nr1 ,' nr2 = ', dffts%nr2 , ' nr3 = ', dffts%nr3
-    write(*,*) '        nr1x= ', dffts%nr1x,' nr2x= ', dffts%nr2x, ' nr3x= ', dffts%nr3x
+  CALL fft_type_init(dffts, smap, "wave", gamma_only, .true., comm, at, bg, gkcut, gcutms/gkcut, nyfft=ntgs)
+  CALL fft_type_init(dfftp, smap, "rho", gamma_only, .true., comm, at, bg, gcutm, 4.d0, nyfft=ntgs)
+  !
+  if (mype == 0) then
+    write (*, *) 'dffts:  nr1 = ', dffts%nr1, ' nr2 = ', dffts%nr2, ' nr3 = ', dffts%nr3
+    write (*, *) '        nr1x= ', dffts%nr1x, ' nr2x= ', dffts%nr2x, ' nr3x= ', dffts%nr3x
   end if
-
-  CALL task_groups_init( dffts, dtgs, ntgs )
-  ngw_ = dffts%nwl( dffts%mype + 1 )
-  ngs_ = dffts%ngl( dffts%mype + 1 )
-  ngm_ = dfftp%ngl( dfftp%mype + 1 )
-  IF( gamma_only ) THEN
-     ngw_ = (ngw_ + 1)/2
-     ngs_ = (ngs_ + 1)/2
-     ngm_ = (ngm_ + 1)/2
+  !
+  ngw_ = dffts%nwl(dffts%mype + 1)
+  ngs_ = dffts%ngl(dffts%mype + 1)
+  ngm_ = dfftp%ngl(dfftp%mype + 1)
+  !
+  IF (gamma_only) THEN
+    ngw_ = (ngw_ + 1)/2
+    ngs_ = (ngs_ + 1)/2
+    ngm_ = (ngm_ + 1)/2
   END IF
-
+  !
   ngms = ngs_
-  CALL MPI_ALLREDUCE( ngms, ngsx, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr )
-  CALL MPI_ALLREDUCE( ngms, ngms_g, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE(ngms, ngsx, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
+  CALL MPI_ALLREDUCE(ngms, ngms_g, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr)
   ngm = ngm_
-  CALL MPI_ALLREDUCE( ngm, ngmx, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr )
-  CALL MPI_ALLREDUCE( ngm, ngm_g, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr )
-
-
+  CALL MPI_ALLREDUCE(ngm, ngmx, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
+  CALL MPI_ALLREDUCE(ngm, ngm_g, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr)
+  !
   ! --------  ALLOCATE
-
-
-  ALLOCATE( psis( dtgs%tg_nnr * dtgs%nogrp, 2 ) )
-  ALLOCATE( psi( ngms, nbnd ) )
-  ALLOCATE( req_p(nbnd) )
-  ALLOCATE( req_u(nbnd) )
-  ALLOCATE( aux( dtgs%tg_nnr * dtgs%nogrp ) )
-  ALLOCATE( tg_v( dtgs%tg_nnr * dtgs%nogrp ) )
-  ALLOCATE( hpsi( nbnd, dtgs%tg_nnr * dtgs%nogrp ) )
-  ALLOCATE( nls( ngms ) )
-  ALLOCATE( nlsm( ngms ) )
-  ALLOCATE( nl( ngm ) )
-  ALLOCATE( nlm( ngm ) )
-  ALLOCATE( mill( 3, ngm ) )
-  ALLOCATE( g( 3, ngm ) )
-  ALLOCATE( gg( ngm ) )
-  ALLOCATE( ig_l2g( ngm ) )
-
-
+  !
+  ALLOCATE (psic(dffts%nnr))
+  ALLOCATE (psi(ngms, nbnd))
+  ALLOCATE (hpsi(ngms, nbnd))
+  ALLOCATE (v(dffts%nnr))
+  ALLOCATE (nls(ngms))
+  ALLOCATE (nlsm(ngms))
+  ALLOCATE (nl(ngm))
+  ALLOCATE (nlm(ngm))
+  ALLOCATE (mill(3, ngm))
+  ALLOCATE (g(3, ngm))
+  ALLOCATE (gg(ngm))
+  ALLOCATE (ig_l2g(ngm))
+  !
   ! --------  GENERATE G-VECTORS
-
-
-  call ggen ( gamma_only, at, bg, .true., ngm, ngms, ngm_g, ngms_g, mill, &
-&                    nl, nls, nlm, nlsm, gg, g, ig_l2g, gstart, gcutm, gcutms, dfftp, dffts )
-
-
+  !
+  call ggen(gamma_only, at, bg, .true., ngm, ngms, ngm_g, ngms_g, mill, &
+&                    nl, nls, nlm, nlsm, gg, g, ig_l2g, gstart, gcutm, gcutms, dfftp, dffts)
+  !
   ! --------  RESET TIMERS
-
+  !
   time = 0.0d0
   my_time = 0.0d0
   time_min = 0.0d0
   time_max = 0.0d0
   time_avg = 0.0d0
-
   !
   ! Test FFT for wave functions - First calls may be biased by MPI and FFT initialization
   !
-  aux = 0.0d0
-  CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
-  CALL pack_group_sticks( aux, psis(:,1), dtgs )
-  CALL fw_tg_cft3_z( psis(:,1), dffts, aux, dtgs )
-  CALL fw_tg_cft3_scatter( psis(:,1), dffts, aux, dtgs )
-  CALL fw_tg_cft3_xy( psis(:,1), dffts, dtgs )
-  CALL bw_tg_cft3_xy( psis(:,1), dffts, dtgs )
-  CALL bw_tg_cft3_scatter( psis(:,1), dffts, aux, dtgs )
-  CALL bw_tg_cft3_z( psis(:,1), dffts, aux, dtgs )
-  CALL unpack_group_sticks( psis(:,1), aux, dtgs )
-
+  CALL MPI_BARRIER(MPI_COMM_WORLD, ierr)
+  !
+  IF (use_tg) THEN
+    ALLOCATE (tg_psic(dffts%nnr_tg))
+    CALL invfft('tgWave', tg_psic, dffts)
+    DEALLOCATE (tg_psic)
+  ELSE
+    CALL invfft('Wave', psic, dffts)
+  END IF
+  !
+  IF (use_tg) THEN
+    ALLOCATE (tg_psic(dffts%nnr_tg))
+    CALL fwfft('tgWave', tg_psic, dffts)
+    DEALLOCATE (tg_psic)
+  ELSE
+    CALL fwfft('Wave', psic, dffts)
+  END IF
+  ! Now for real,
+  !
+  ! --------  RECORD TIMES
+  !
+  wall = MPI_WTIME()
+  ignore_time = .false.
   !
   ! --------  INITIALIZE WAVE FUNCTIONS psi
-
+  !
   psi = 0.0d0
-
-  ! --------  INITIALIZE POTENTIAL tg_v
-
-  tg_v = 1.0d0
-
-  ! --------  INITIALIZE FORCE hpsi
-
-  hpsi = 0.0d0
+  !
+  ! --------  INITIALIZE POTENTIAL v
+  !
+  v = 1.0d0
+  !
+  IF (use_tg) THEN
+    !
+    ALLOCATE (tg_v(dffts%nnr_tg))
+    ALLOCATE (tg_psic(dffts%nnr_tg))
+    !
+    CALL tg_gather(dffts, v, tg_v)
+    !      incr is already set to 2 for gamma_only
+    incr = incr*fftx_ntgrp(dffts)
+    !
+  ENDIF
 
   !
   ! Execute FFT calls once more and Take time
   !
   ncount = 0
   !
-  wall = MPI_WTIME() 
   !
-#if defined(__DOUBLE_BUFFER)
-
-  ireq = 1
-  ipsi = MOD( ireq + 1, 2 ) + 1 
   !
-  CALL prepare_psi( 1, nbnd, ngms, psi, aux, nls, nlsm, dtgs)
-  CALL pack_group_sticks_i( aux, psis(:, ipsi ), dtgs, req_p( ireq ) )
-  !
-  nreq = 0
-  DO ib = 1, nbnd, 2*dtgs%nogrp 
-    nreq = nreq + 1
-  END DO
-  ! 
-  DO ib = 1, nbnd, 2*dtgs%nogrp 
- 
-     ireq = ireq + 1
-
-     aux = 0.0d0
-     aux(1) = 1.0d0
-
-
-     time(1) = MPI_WTIME()
-
-     IF( ireq <= nreq ) THEN
-        call  prepare_psi( ib+1, nbnd, ngms, psi, aux, nls, nlsm, dtgs)
-        ipsi = MOD( ireq + 1, 2 ) + 1 
-        CALL pack_group_sticks_i( aux, psis(:,ipsi), dtgs, req_p(ireq) )
-     END IF
-
-     ipsi = MOD(ipsi-1,2)+1 
-
-     CALL MPI_WAIT( req_p( ireq - 1 ),MPI_STATUS_IGNORE)
-
-     time(2) = MPI_WTIME()
-
-     CALL fw_tg_cft3_z( psis( :, ipsi ), dffts, aux, dtgs )
-     time(3) = MPI_WTIME()
-     CALL fw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux, dtgs )
-     time(4) = MPI_WTIME()
-     CALL fw_tg_cft3_xy( psis( :, ipsi ), dffts, dtgs )
-     time(5) = MPI_WTIME()
-     !
-     DO j = 1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( dffts%mype + 1 )
-        psis (j,ipsi) = psis (j,ipsi) * tg_v(j)
-     ENDDO
-     !
-     time(6) = MPI_WTIME()
-     CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts, dtgs )
-     time(7) = MPI_WTIME()
-     CALL bw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux, dtgs )
-     time(8) = MPI_WTIME()
-     CALL bw_tg_cft3_z( psis( :, ipsi ), dffts, aux, dtgs )
-     time(9) = MPI_WTIME()
-     !
-     IF(ireq == 2)THEN
-       CALL unpack_group_sticks_i( psis( :, ipsi ), aux, dtgs , req_u(ireq) )
-     ELSE
-       CALL MPI_WAIT(req_u(ireq-1), MPI_STATUS_IGNORE, ierr )
-       ipsi = MOD( ireq + 1, 2 ) + 1 ! ireq = 2, ipsi = 2; ireq = 3, ipsi = 1
-       CALL unpack_group_sticks_i( psis( :, ipsi ), aux, dtgs, req_u(ireq) )
-     ENDIF
-
-     call accumulate_hpsi( ib, nbnd, ngms, hpsi, aux, nls, nlsm, dtgs, dffts)
-
-     time(10) = MPI_WTIME()
-     !
-     do i = 2, 10
-        my_time(i) = my_time(i) + (time(i) - time(i-1))
-     end do
-     !
-     ncount = ncount + 1
-     !
+  DO ib = 1, nbnd, incr
+    !
+    time(1) = MPI_WTIME()
+    !
+    IF (use_tg) THEN
+      !
+      call prepare_psi_tg(ib, nbnd, ngms, psi, tg_psic, nls, nlsm, dffts, gamma_only)
+      time(2) = MPI_WTIME()
+      !
+      CALL invfft('tgWave', tg_psic, dffts); 
+      time(3) = MPI_WTIME()
+      !
+      CALL tg_get_group_nr3(dffts, right_nr3)
+      !
+      DO j = 1, dffts%nr1x*dffts%nr2x*right_nr3
+        tg_psic(j) = tg_psic(j)*tg_v(j)
+      ENDDO
+      !
+      time(4) = MPI_WTIME()
+      !
+      CALL fwfft('tgWave', tg_psic, dffts); 
+      time(5) = MPI_WTIME()
+      !
+      CALL accumulate_hpsi_tg(ib, nbnd, ngms, hpsi, tg_psic, nls, nlsm, dffts, gamma_only)
+      time(6) = MPI_WTIME()
+    ELSE
+      !
+      call prepare_psi(ib, nbnd, ngms, psi, psic, nls, nlsm, dffts, gamma_only)
+      time(2) = MPI_WTIME()
+      !
+      CALL invfft('Wave', psic, dffts); time(3) = MPI_WTIME()
+      !
+      DO j = 1, dffts%nnr
+        psic(j) = psic(j)*v(j)
+      ENDDO
+      time(4) = MPI_WTIME()
+      !
+      CALL fwfft('Wave', psic, dffts); 
+      time(5) = MPI_WTIME()
+      !
+      CALL accumulate_hpsi(ib, nbnd, ngms, hpsi, psic, nls, nlsm, dffts, gamma_only)
+      time(6) = MPI_WTIME()
+      !
+    ENDIF
+    !
+    do i = 2, 6
+      my_time(i) = my_time(i) + (time(i) - time(i - 1))
+    end do
+    !
+    ncount = ncount + 1
+    !
   enddo
-  CALL MPI_WAIT(req_u(ireq),MPI_STATUS_IGNORE,ierr)
-
-#else
-
-  ipsi = 1 
-  ! 
-  DO ib = 1, nbnd, 2*dtgs%nogrp 
- 
-     aux = 0.0d0
-     aux(1) = 1.0d0
-
-     call  prepare_psi( ib, nbnd, ngms, psi, aux, nls, nlsm, dtgs)
-
-     time(1) = MPI_WTIME()
-
-     CALL pack_group_sticks( aux, psis(:,ipsi), dtgs )
-
-     time(2) = MPI_WTIME()
-
-     CALL fw_tg_cft3_z( psis( :, ipsi ), dffts, aux, dtgs )
-     time(3) = MPI_WTIME()
-     CALL fw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux, dtgs )
-     time(4) = MPI_WTIME()
-     CALL fw_tg_cft3_xy( psis( :, ipsi ), dffts, dtgs )
-     time(5) = MPI_WTIME()
-     !
-     DO j = 1, dffts%nr1x*dffts%nr2x*dtgs%tg_npp( dffts%mype + 1 )
-        psis (j,ipsi) = psis (j,ipsi) * tg_v(j)
-     ENDDO
-     !
-     time(6) = MPI_WTIME()
-     CALL bw_tg_cft3_xy( psis( :, ipsi ), dffts, dtgs )
-     time(7) = MPI_WTIME()
-     CALL bw_tg_cft3_scatter( psis( :, ipsi ), dffts, aux, dtgs )
-     time(8) = MPI_WTIME()
-     CALL bw_tg_cft3_z( psis( :, ipsi ), dffts, aux, dtgs )
-     time(9) = MPI_WTIME()
-
-     CALL unpack_group_sticks( psis( :, ipsi ), aux, dtgs )
-
-     time(10) = MPI_WTIME()
-     !
-     do i = 2, 10
-        my_time(i) = my_time(i) + (time(i) - time(i-1))
-     end do
-     !
-     ncount = ncount + 1
-     !
-  enddo
-#endif
-
+  !
   wall = MPI_WTIME() - wall
 
-  DEALLOCATE( psis, aux )
-
-
-  if( ncount > 0 ) then
-     my_time = my_time / DBLE(ncount)
-  endif
-
-!write(*,*)my_time(2), my_time(3), my_time(4)
+  DEALLOCATE (psic)
+  DEALLOCATE (hpsi)
+  IF (use_tg) THEN
+    !
+    DEALLOCATE (tg_psic)
+    DEALLOCATE (tg_v)
+    !
+  ENDIF
 
 #if defined(__MPI)
-  CALL MPI_ALLREDUCE( my_time, time_min, 10, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr )
-  CALL MPI_ALLREDUCE( my_time, time_max, 10, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr )
-  CALL MPI_ALLREDUCE( my_time, time_avg, 10, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
-  CALL MPI_ALLREDUCE( wall, wall_avg,       1, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE(my_time, time_min, 10, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr)
+  CALL MPI_ALLREDUCE(my_time, time_max, 10, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr)
+  CALL MPI_ALLREDUCE(my_time, time_avg, 10, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
+  CALL MPI_ALLREDUCE(wall, wall_avg, 1, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
 #else
   time_min = time
   time_max = time
+  time_avg = time
 #endif
-
-!write(*,*)time_min(2), time_min(3), time_min(4)
 
   time_avg = time_avg / npes
   wall_avg = wall_avg / npes
 
   if( mype == 0 ) then
-
+    
     write(*,*) '**** QE 3DFFT Timing ****'
     write(*,*) 'grid size = ', dffts%nr1, dffts%nr2, dffts%nr3
     write(*,*) 'num proc  = ', npes
@@ -510,34 +466,26 @@ program test
     write(*,4) time_min(4), time_max(4), time_avg(4)
     write(*,5) time_min(5), time_max(5), time_avg(5)
     write(*,6) time_min(6), time_max(6), time_avg(6)
-    write(*,7) time_min(7), time_max(7), time_avg(7)
-    write(*,8) time_min(8), time_max(8), time_avg(8)
-    write(*,9) time_min(9), time_max(9), time_avg(9)
-    write(*,10) time_min(10), time_max(10), time_avg(10)
-    write(*,11) wall 
+    write(*,7) wall 
     write(*,100) 
 
 100 FORMAT(' +--------------------+----------------+-----------------+----------------+' )
-1   FORMAT(' |FFT subroutine      |  sec. min      | sec. max        | sec.  avg      |' )
-2   FORMAT(' |pack_group_sticks/w | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3,   ' |' )
-3   FORMAT(' |fw_tg_cft3_z        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3,   ' |' )
-4   FORMAT(' |fw_tg_cft3_scatter  | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-5   FORMAT(' |fw_tg_cft3_xy       | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-6   FORMAT(' |workload            | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-7   FORMAT(' |bw_tg_cft3_xy       | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-8   FORMAT(' |bw_tg_cft3_scatter  | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-9   FORMAT(' |bw_tg_cft3_z        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-10  FORMAT(' |unpack_group_sticks | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
-11  FORMAT(' |wall time           | ',    D14.5, ' |')
-
+1   FORMAT(' |FFT TEST subroutine |  sec. min      | sec. max        | sec.  avg      |' )
+2   FORMAT(' |prepare_psi         | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3,    ' |' )
+3   FORMAT(' |invfft              | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3,    ' |' )
+4   FORMAT(' |workload            | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,   ' |')
+5   FORMAT(' |fwfft               | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,   ' |')
+6   FORMAT(' |accumulate_hpsi     | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,   ' |')
+7   FORMAT(' |wall time           | ',    D14.5, ' |')
 
   end if
+  ! now print FFT clocks
+  call print_clock(mype, npes, ncount)
 
-  CALL fft_type_deallocate( dffts )
-  CALL fft_type_deallocate( dfftp )
-  CALL fft_type_deallocate( dfft3d )
-  CALL task_groups_deallocate( dtgs )
-  
+  CALL fft_type_deallocate(dffts)
+  CALL fft_type_deallocate(dfftp)
+  CALL fft_type_deallocate(dfft3d)
+
 #if defined(__MPI)
   CALL mpi_finalize(ierr)
 #endif
@@ -627,17 +575,177 @@ end subroutine recips
 
 end program test
 
-
-subroutine start_clock( label )
-implicit none
-character(len=*) :: label
+subroutine start_clock(label)
+  use timers
+  use mpi, ONLY:MPI_WTIME
+  implicit none
+  character(len=*) :: label
+  if (ignore_time) RETURN
+  select case (label)
+  case ("cft_1z")
+    times(1) = times(1) - MPI_WTIME()
+  case ("cft_2xy")
+    times(2) = times(2) - MPI_WTIME()
+  case ("cgather")
+    times(3) = times(3) - MPI_WTIME()
+  case ("cgather_grid")
+    times(4) = times(4) - MPI_WTIME()
+  case ("cscatter_grid")
+    times(5) = times(5) - MPI_WTIME()
+  case ("cscatter_sym")
+    times(6) = times(6) - MPI_WTIME()
+  case ("fft")
+    times(7) = times(7) - MPI_WTIME()
+  case ("fft_scatt_tg")
+    times(8) = times(8) - MPI_WTIME()
+  case ("fft_scatt_xy")
+    times(9) = times(9) - MPI_WTIME()
+  case ("fft_scatt_yz")
+    times(10) = times(10) - MPI_WTIME()
+  case ("fftb")
+    times(11) = times(11) - MPI_WTIME()
+  case ("fftc")
+    times(12) = times(12) - MPI_WTIME()
+  case ("fftcw")
+    times(13) = times(13) - MPI_WTIME()
+  case ("ffts")
+    times(14) = times(14) - MPI_WTIME()
+  case ("fftw")
+    times(15) = times(15) - MPI_WTIME()
+  case ("rgather_grid")
+    times(16) = times(16) - MPI_WTIME()
+  case ("rscatter_grid")
+    times(17) = times(17) - MPI_WTIME()
+  case ("fft_scatter") !alt version compatibility
+    times(18) = times(18) - MPI_WTIME()
+  case ("ALLTOALL") !alt version compatibility
+    times(19) = times(19) - MPI_WTIME()
+  case default
+    write (*, *) "Error, label not found", label
+  end select
 end subroutine
 
-subroutine stop_clock( label )
-implicit none
-character(len=*) :: label
+subroutine stop_clock(label)
+  use timers
+  use mpi, ONLY:MPI_WTIME
+  implicit none
+  character(len=*) :: label
+  if (ignore_time) RETURN
+  select case (label)
+  case ("cft_1z")
+    times(1) = times(1) + MPI_WTIME()
+  case ("cft_2xy")
+    times(2) = times(2) + MPI_WTIME()
+  case ("cgather")
+    times(3) = times(3) + MPI_WTIME()
+  case ("cgather_grid")
+    times(4) = times(4) + MPI_WTIME()
+  case ("cscatter_grid")
+    times(5) = times(5) + MPI_WTIME()
+  case ("cscatter_sym")
+    times(6) = times(6) + MPI_WTIME()
+  case ("fft")
+    times(7) = times(7) + MPI_WTIME()
+  case ("fft_scatt_tg")
+    times(8) = times(8) + MPI_WTIME()
+  case ("fft_scatt_xy")
+    times(9) = times(9) + MPI_WTIME()
+  case ("fft_scatt_yz")
+    times(10) = times(10) + MPI_WTIME()
+  case ("fftb")
+    times(11) = times(11) + MPI_WTIME()
+  case ("fftc")
+    times(12) = times(12) + MPI_WTIME()
+  case ("fftcw")
+    times(13) = times(13) + MPI_WTIME()
+  case ("ffts")
+    times(14) = times(14) + MPI_WTIME()
+  case ("fftw")
+    times(15) = times(15) + MPI_WTIME()
+  case ("rgather_grid")
+    times(16) = times(16) + MPI_WTIME()
+  case ("rscatter_grid")
+    times(17) = times(17) + MPI_WTIME()
+  case ("fft_scatter") !alt version compatibility
+    times(18) = times(18) + MPI_WTIME()
+  case ("ALLTOALL") !alt version compatibility
+    times(19) = times(19) + MPI_WTIME()
+  case default
+    write (*, *) "Error, label not found", label
+  end select
 end subroutine
 !
+subroutine print_clock(mype, npes, ncount)
+  use timers
+  use mpi
+  implicit none
+  integer, intent(in) :: mype, npes, ncount
+  REAL*8  :: time_min(20)
+  REAL*8  :: time_max(20)
+  REAL*8  :: time_avg(20)
+  integer :: ierr
+
+#if defined(__MPI)
+  CALL MPI_ALLREDUCE(times, time_min, 20, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr)
+  CALL MPI_ALLREDUCE(times, time_max, 20, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr)
+  CALL MPI_ALLREDUCE(times, time_avg, 20, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
+  time_avg = time_avg/npes
+#else
+  time_min(:) = times(:)
+  time_max(:) = times(:)
+  time_avg(:) = times(:)
+#endif
+
+  if (mype == 0) then
+    write (*, 10100)
+    write (*, 101)
+    write (*, 10100)
+    if (times(1) > 0.d0) write (*, 102) time_min(1), time_max(1), time_avg(1)
+    if (times(2) > 0.d0) write (*, 103) time_min(2), time_max(2), time_avg(2)
+    if (times(3) > 0.d0) write (*, 104) time_min(3), time_max(3), time_avg(3)
+    if (times(4) > 0.d0) write (*, 105) time_min(4), time_max(4), time_avg(4)
+    if (times(5) > 0.d0) write (*, 106) time_min(5), time_max(5), time_avg(5)
+    if (times(6) > 0.d0) write (*, 107) time_min(6), time_max(6), time_avg(6)
+    if (times(7) > 0.d0) write (*, 108) time_min(7), time_max(7), time_avg(7)
+    if (times(8) > 0.d0) write (*, 109) time_min(8), time_max(8), time_avg(8)
+    if (times(9) > 0.d0) write (*, 1010) time_min(9), time_max(9), time_avg(9)
+    if (times(10) > 0.d0) write (*, 1011) time_min(10), time_max(10), time_avg(10)
+    if (times(11) > 0.d0) write (*, 1012) time_min(11), time_max(11), time_avg(11)
+    if (times(12) > 0.d0) write (*, 1013) time_min(12), time_max(12), time_avg(12)
+    if (times(13) > 0.d0) write (*, 1014) time_min(13), time_max(13), time_avg(13)
+    if (times(14) > 0.d0) write (*, 1015) time_min(14), time_max(14), time_avg(14)
+    if (times(15) > 0.d0) write (*, 1016) time_min(15), time_max(15), time_avg(15)
+    if (times(16) > 0.d0) write (*, 1017) time_min(16), time_max(16), time_avg(16)
+    if (times(17) > 0.d0) write (*, 1018) time_min(17), time_max(17), time_avg(17)
+    if (times(18) > 0.d0) write (*, 1019) time_min(18), time_max(18), time_avg(18)
+    if (times(19) > 0.d0) write (*, 1020) time_min(19), time_max(19), time_avg(19)
+    write (*, 10100)
+  end if
+10100 FORMAT(' +--------------------+----------------+-----------------+----------------+' )
+101   FORMAT(' |FFT subroutine      |  sec. min      | sec. max        | sec.  avg      |' )
+102   FORMAT(' |cft_1z              | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3,   ' |' )
+103   FORMAT(' |cft_2xy             | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3,   ' |' )
+104   FORMAT(' |cgather             | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+105   FORMAT(' |cgather_grid        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+106   FORMAT(' |cscatter_grid       | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+107   FORMAT(' |cscatter_sym        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+108   FORMAT(' |fft                 | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+109   FORMAT(' |fft_scatt_tg        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+1010  FORMAT(' |fft_scatt_xy        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+1011  FORMAT(' |fft_scatt_yz        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+1012  FORMAT(' |fftb                | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+1013  FORMAT(' |fftc                | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+1014  FORMAT(' |fftcw               | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+1015  FORMAT(' |ffts                | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+1016  FORMAT(' |fftw                | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+1017  FORMAT(' |rgather_grid        | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+1018  FORMAT(' |rscatter_grid       | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+1019  FORMAT(' |fft_scatter         | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+1020  FORMAT(' |ALLTOALL            | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
+ 
+end subroutine
+!
+!-----------------------------------------------------------------------
    !-----------------------------------------------------------------------
    SUBROUTINE ggen ( gamma_only, at, bg, no_global_sort, ngm, ngms, ngm_g, ngms_g, mill, &
 &                    nl, nls, nlm, nlsm, gg, g, ig_l2g, gstart, gcutm, gcutms, dfftp, dffts )
@@ -682,7 +790,7 @@ end subroutine
    INTEGER, ALLOCATABLE :: igsrt(:)
    !
    INTEGER :: m1, m2, mc
-   INTEGER :: ni, nj, nk, i, j, k, ipol, ng, igl, indsw
+   INTEGER :: ni, nj, nk, i, j, k, ng
    INTEGER :: mype, npe, comm
    LOGICAL :: global_sort
    INTEGER, ALLOCATABLE :: ngmpe(:)
@@ -900,61 +1008,61 @@ end subroutine
 
    END SUBROUTINE ggen
 
-   !
-   !-----------------------------------------------------------------------
-   SUBROUTINE index_minusg( ngm, ngms, nlm, nlsm, mill, dfftp, dffts )
-   !----------------------------------------------------------------------
-   !
-   !     compute indices nlm and nlms giving the correspondence
-   !     between the fft mesh points and -G (for gamma-only calculations)
-   !
-   USE fft_types
-   !
-   IMPLICIT NONE
-   !
-   TYPE(fft_type_descriptor) :: dfftp, dffts
-   INTEGER :: ngm, ngms
-   INTEGER :: mill(3,ngm), nlm(ngm), nlsm(ngms)
-   !
-   INTEGER :: n1, n2, n3, n1s, n2s, n3s, ng
-   !
-   DO ng = 1, ngm
-      n1 = -mill (1,ng) + 1
-      n1s = n1
-      IF (n1 < 1) THEN
-         n1 = n1 + dfftp%nr1
-         n1s = n1s + dffts%nr1
-      END IF
+!
+!-----------------------------------------------------------------------
+SUBROUTINE index_minusg(ngm, ngms, nlm, nlsm, mill, dfftp, dffts)
+  !----------------------------------------------------------------------
+  !
+  !     compute indices nlm and nlms giving the correspondence
+  !     between the fft mesh points and -G (for gamma-only calculations)
+  !
+  USE fft_types
+  !
+  IMPLICIT NONE
+  !
+  TYPE(fft_type_descriptor) :: dfftp, dffts
+  INTEGER :: ngm, ngms
+  INTEGER :: mill(3, ngm), nlm(ngm), nlsm(ngms)
+  !
+  INTEGER :: n1, n2, n3, n1s, n2s, n3s, ng
+  !
+  DO ng = 1, ngm
+    n1 = -mill(1, ng) + 1
+    n1s = n1
+    IF (n1 < 1) THEN
+      n1 = n1 + dfftp%nr1
+      n1s = n1s+dffts%nr1
+    END IF
 
-      n2 = -mill (2,ng) + 1
-      n2s = n2
-      IF (n2 < 1) THEN
-         n2 = n2 + dfftp%nr2
-         n2s = n2s + dffts%nr2
-      END IF
-      n3 = -mill (3,ng) + 1
-      n3s = n3
-      IF (n3 < 1) THEN
-         n3 = n3 + dfftp%nr3
-         n3s = n3s + dffts%nr3
-      END IF
+    n2 = -mill(2, ng) + 1
+    n2s = n2
+    IF (n2 < 1) THEN
+      n2 = n2 + dfftp%nr2
+      n2s = n2s+dffts%nr2
+    END IF
+    n3 = -mill(3, ng) + 1
+    n3s = n3
+    IF (n3 < 1) THEN
+      n3 = n3 + dfftp%nr3
+      n3s = n3s+dffts%nr3
+    END IF
 
-      IF (n1>dfftp%nr1 .or. n2>dfftp%nr2 .or. n3>dfftp%nr3) THEN
-         CALL fftx_error__('index_minusg','Mesh too small?',ng)
-      ENDIF
+    IF (n1 > dfftp%nr1 .or. n2 > dfftp%nr2 .or. n3 > dfftp%nr3) THEN
+      CALL fftx_error__('index_minusg', 'Mesh too small?', ng)
+    ENDIF
 
 #if defined (__MPI) && !defined (__USE_3D_FFT)
-      nlm(ng) = n3 + (dfftp%isind (n1 + (n2 - 1) * dfftp%nr1x) - 1) * dfftp%nr3x
-      IF (ng<=ngms) &
-         nlsm(ng) = n3s + (dffts%isind (n1s+(n2s-1) * dffts%nr1x) - 1) * dffts%nr3x
+    nlm(ng) = n3 + (dfftp%isind(n1 + (n2 - 1)*dfftp%nr1x) - 1)*dfftp%nr3x
+    IF (ng <= ngms) &
+      nlsm(ng) = n3s+(dffts%isind(n1s+(n2s-1)*dffts%nr1x) - 1)*dffts%nr3x
 #else
-      nlm(ng) = n1 + (n2 - 1) * dfftp%nr1x + (n3 - 1) * dfftp%nr1x * dfftp%nr2x
-      IF (ng<=ngms) &
-         nlsm(ng) = n1s + (n2s - 1) * dffts%nr1x + (n3s-1) * dffts%nr1x * dffts%nr2x
+    nlm(ng) = n1 + (n2 - 1)*dfftp%nr1x+(n3 - 1)*dfftp%nr1x*dfftp%nr2x
+    IF (ng <= ngms) &
+      nlsm(ng) = n1s+(n2s-1)*dffts%nr1x+(n3s-1)*dffts%nr1x*dffts%nr2x
 #endif
-   ENDDO
+  ENDDO
 
-   END SUBROUTINE index_minusg
+END SUBROUTINE index_minusg
 !
 ! Copyright (C) 2001 PWSCF group
 ! This file is distributed under the terms of the
@@ -963,7 +1071,7 @@ end subroutine
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-subroutine hpsort_eps (n, ra, ind, eps)
+subroutine hpsort_eps(n, ra, ind, eps)
   !---------------------------------------------------------------------
   ! sort an array ra(1:n) into ascending order using heapsort algorithm,
   ! and considering two elements being equal if their values differ
@@ -1074,91 +1182,205 @@ subroutine hpsort_eps (n, ra, ind, eps)
           endif
        end if
     enddo
-    ra (i) = rra  
-    ind (i) = iind  
+    ra(i) = rra
+    ind(i) = iind
 
-  end do sorting    
+  end do sorting
   !
 end subroutine hpsort_eps
 
+subroutine prepare_psi_tg(ibnd, nbnd, ngms, psi, tg_psi, nls, nlsm, dffts, gamma_only)
+  USE fft_param
+  USE fft_types
+  USE fft_helper_subroutines
+  implicit none
+  integer, intent(in) :: ibnd, nbnd, ngms
+  TYPE(fft_type_descriptor), intent(in) :: dffts
+  complex(DP) :: tg_psi(dffts%nnr_tg)
+  complex(DP) :: psi(ngms, nbnd)
+  integer, intent(in) :: nls(ngms), nlsm(ngms)
+  logical, intent(in) :: gamma_only
+  integer ioff, idx, j, ntgrp, right_nnr
+!
+   tg_psi(:) = ( 0.D0, 0.D0 )
+   ioff   = 0
+   !
+   CALL tg_get_nnr( dffts, right_nnr )
+   ntgrp = fftx_ntgrp(dffts)
+   !
+   IF (gamma_only) THEN
+      DO idx = 1, 2*ntgrp, 2
+         !
+         ! ... 2*ntgrp ffts at the same time
+         !
+         IF( idx + ibnd - 1 < nbnd ) THEN
+            DO j = 1, ngms
+               tg_psi(nls (j)+ioff)=     psi(j,idx+ibnd-1)+&
+                    (0.0d0,1.d0) * psi(j,idx+ibnd)
+               tg_psi(nlsm(j)+ioff)=CONJG(psi(j,idx+ibnd-1) -&
+                    (0.0d0,1.d0) * psi(j,idx+ibnd) )
+            END DO
+         ELSE IF( idx + ibnd - 1 == nbnd ) THEN
+            DO j = 1, ngms
+               tg_psi(nls (j)+ioff)=       psi(j,idx+ibnd-1)
+               tg_psi(nlsm(j)+ioff)=CONJG( psi(j,idx+ibnd-1) )
+            END DO
+         END IF
+      
+         ioff = ioff + right_nnr
+      
+      END DO
+   ELSE
+      !
+      DO idx = 1, ntgrp
+         IF( idx + ibnd - 1 <= nbnd ) THEN
+!$omp parallel do
+            DO j = 1, ngms
+                          ! here we forget about igk
+               tg_psi(nls (j+ioff)) =  psi(j,idx+ibnd-1)
+            ENDDO
+!$omp end parallel do
+         ENDIF
+         ioff = ioff + right_nnr
+      ENDDO
+   END IF
+end subroutine prepare_psi_tg
 
-subroutine prepare_psi( ib, nbnd, ngms, psi, tg_psic, nls, nlsm, dtgs)
+subroutine prepare_psi( ibnd, nbnd, ngms, psi, psic, nls, nlsm, dffts, gamma_only)
    USE fft_param
+   USE fft_types
+   USE fft_helper_subroutines
    implicit none
-   integer, intent(in) :: ib, nbnd, ngms
-   TYPE(task_groups_descriptor), intent(in) :: dtgs
-   complex(DP) :: tg_psic( dtgs%tg_nnr * dtgs%nogrp )
+   integer, intent(in) :: ibnd, nbnd, ngms
+   TYPE(fft_type_descriptor), intent(in) :: dffts
+   complex(DP) :: psic( dffts%nnr )
    complex(DP) :: psi( ngms, nbnd )
    integer, intent(in) :: nls(ngms), nlsm(ngms)
-   integer ioff, n, ibnd, m, idx, j
-   !
-   ibnd = ib
-   m = nbnd
-   n = ngms
-
-        tg_psic = (0.d0, 0.d0)
-        ioff   = 0
-        DO idx = 1, 2*dtgs%nogrp, 2
-           IF( idx + ibnd - 1 < m ) THEN
-              DO j = 1, n
-                 tg_psic(nls (j)+ioff) =        psi(j,idx+ibnd-1) + &
-                                      (0.0d0,1.d0) * psi(j,idx+ibnd)
-                 tg_psic(nlsm(j)+ioff) = conjg( psi(j,idx+ibnd-1) - &
-                                      (0.0d0,1.d0) * psi(j,idx+ibnd) )
-              ENDDO
-           ELSEIF( idx + ibnd - 1 == m ) THEN
-              DO j = 1, n
-                 tg_psic(nls (j)+ioff) =        psi(j,idx+ibnd-1)
-                 tg_psic(nlsm(j)+ioff) = conjg( psi(j,idx+ibnd-1) )
-              ENDDO
-           ENDIF
-           ioff = ioff + dtgs%tg_nnr
-        END DO
-
-   return
+   logical, intent(in) :: gamma_only
+   integer :: j
+   psic(:) = (0.d0, 0.d0)
+   IF (gamma_only) THEN
+     IF (ibnd < nbnd) THEN
+         ! two ffts at the same time
+         DO j = 1, ngms
+           psic(nls (j))=      psi(j,ibnd) + (0.0d0,1.d0)*psi(j,ibnd+1)
+           psic(nlsm(j))=conjg(psi(j,ibnd) - (0.0d0,1.d0)*psi(j,ibnd+1))
+         ENDDO
+     ELSE
+         DO j = 1, ngms
+           psic (nls (j)) =       psi(j, ibnd)
+           psic (nlsm(j)) = conjg(psi(j, ibnd))
+         ENDDO
+     ENDIF
+   ELSE
+      DO j = 1, ngms
+              ! here we forget about igk
+         psic (nls (j)) = psi(j, ibnd)
+      END DO
+   END IF
 end subroutine prepare_psi
 
-subroutine accumulate_hpsi( ib, nbnd, ngms, hpsi, tg_psic, nls, nlsm, dtgs, dffts)
+
+subroutine accumulate_hpsi( ibnd, nbnd, ngms, hpsi, psic, nls, nlsm, dffts, gamma_only)
    USE fft_types
    USE fft_param
+   USE fft_helper_subroutines
    implicit none
-   integer, intent(in) :: ib, nbnd, ngms
+   integer, intent(in) :: ibnd, nbnd, ngms
    integer, intent(in) :: nls(ngms), nlsm(ngms)
-   TYPE(task_groups_descriptor), intent(in) :: dtgs
    TYPE(fft_type_descriptor) :: dffts
-   complex(DP) :: tg_psic( dtgs%tg_nnr * dtgs%nogrp )
+   complex(DP) :: psic( dffts%nnr )
    complex(DP) :: hpsi( ngms, nbnd )
-   integer ioff, n, ibnd, m, idx, j
+   logical, intent(in) :: gamma_only
+   integer j
    complex(DP) :: fp, fm
    !
-   ibnd = ib
-   m = nbnd
-   n = ngms
-        !
-        ioff   = 0
-        !
-        DO idx = 1, 2*dtgs%nogrp, 2
-           !
-           IF( idx + ibnd - 1 < m ) THEN
-              DO j = 1, n
-                 fp= ( tg_psic( nls(j) + ioff ) +  &
-                       tg_psic( nlsm(j) + ioff ) ) * 0.5d0
-                 fm= ( tg_psic( nls(j) + ioff ) -  &
-                       tg_psic( nlsm(j) + ioff ) ) * 0.5d0
-                 hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
-                                        cmplx( dble(fp), aimag(fm),kind=DP)
-                 hpsi (j, ibnd+idx  ) = hpsi (j, ibnd+idx  ) + &
-                                        cmplx(aimag(fp),- dble(fm),kind=DP)
-              ENDDO
-           ELSEIF( idx + ibnd - 1 == m ) THEN
-              DO j = 1, n
-                 hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
-                                         tg_psic( nls(j) + ioff )
-              ENDDO
-           ENDIF
-           !
-           ioff = ioff + dffts%nr3x * dffts%nsw( dffts%mype + 1 )
-           !
-        ENDDO
-        !
+   !
+   !   addition to the total product
+   !
+   IF (gamma_only) THEN
+      IF (ibnd < nbnd) THEN
+          ! two ffts at the same time
+          DO j = 1, ngms
+            fp = (psic (nls(j)) + psic (nlsm(j)))*0.5d0
+            fm = (psic (nls(j)) - psic (nlsm(j)))*0.5d0
+            hpsi (j, ibnd)   = hpsi (j, ibnd)   + &
+                                cmplx( dble(fp), aimag(fm),kind=DP)
+            hpsi (j, ibnd+1) = hpsi (j, ibnd+1) + &
+                                cmplx(aimag(fp),- dble(fm),kind=DP)
+          ENDDO
+      ELSE
+          DO j = 1, ngms
+            hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (nls(j))
+          ENDDO
+      ENDIF
+    ELSE
+       DO j = 1, ngms                                ! here we forget about igk_k
+          hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (nls(j))
+       ENDDO
+    END IF
+    !
 end subroutine accumulate_hpsi
+subroutine accumulate_hpsi_tg( ibnd, nbnd, ngms, hpsi, tg_psic, nls, nlsm, dffts, gamma_only)
+   USE fft_types
+   USE fft_param
+   USE fft_helper_subroutines
+   implicit none
+   integer, intent(in) :: ibnd, nbnd, ngms
+   integer, intent(in) :: nls(ngms), nlsm(ngms)
+   TYPE(fft_type_descriptor) :: dffts
+   complex(DP) :: tg_psic( dffts%nnr_tg  )
+   complex(DP) :: hpsi( ngms, nbnd )
+   logical, intent(in) :: gamma_only
+   integer ioff, idx, j, right_inc
+   complex(DP) :: fp, fm
+   !
+   !   addition to the total product
+   !
+   ioff   = 0
+   !
+   CALL tg_get_recip_inc( dffts, right_inc )
+   !
+   IF (gamma_only) THEN
+      DO idx = 1, 2*fftx_ntgrp(dffts), 2
+         !
+         IF( idx + ibnd - 1 < nbnd ) THEN
+            DO j = 1, ngms
+               fp= ( tg_psic( nls(j) + ioff ) +  &
+                     tg_psic( nlsm(j) + ioff ) ) * 0.5d0
+               fm= ( tg_psic( nls(j) + ioff ) -  &
+                     tg_psic( nlsm(j) + ioff ) ) * 0.5d0
+               hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
+                                      cmplx( dble(fp), aimag(fm),kind=DP)
+               hpsi (j, ibnd+idx  ) = hpsi (j, ibnd+idx  ) + &
+                                      cmplx(aimag(fp),- dble(fm),kind=DP)
+            ENDDO
+         ELSEIF( idx + ibnd - 1 == nbnd ) THEN
+            DO j = 1, ngms
+               hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
+                                       tg_psic( nls(j) + ioff )
+            ENDDO
+         ENDIF
+         !
+         ioff = ioff + right_inc
+         !
+      ENDDO
+   ELSE
+      DO idx = 1, fftx_ntgrp(dffts)
+         !
+         IF( idx + ibnd - 1 <= nbnd ) THEN
+!$omp parallel do
+            DO j = 1, ngms
+               hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
+                  tg_psic( nls(j) + ioff )
+                  ! we forgot about igk above
+            ENDDO
+!$omp end parallel do
+         ENDIF
+         !
+         ioff = ioff + right_inc
+         !
+      ENDDO
+   END IF 
+   !
+end subroutine accumulate_hpsi_tg

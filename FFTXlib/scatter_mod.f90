@@ -42,10 +42,6 @@
       CONTAINS
 !=----------------------------------------------------------------------=!
 !
-#if ! defined __NON_BLOCKING_SCATTER
-!
-!   ALLTOALL based SCATTER, should be better on network
-!   with a defined topology, like on bluegene and cray machine
 !
 !-----------------------------------------------------------------------
 SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
@@ -95,7 +91,9 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
   INTEGER :: i, it, j, k, kfrom, kdest, offset, ioff, mc, m1, m3, i1, icompact, sendsize
   INTEGER, ALLOCATABLE :: ncp_(:), nr1p_(:), indx(:,:)
   !
-  
+#if defined(__NON_BLOCKING_SCATTER)
+  INTEGER :: sh(desc%nproc2), rh(desc%nproc2)
+#endif
   me2    = desc%mype2 + 1
   nproc2 = desc%nproc2 ; if ( abs(isgn) == 3 ) nproc2 = 1 
 
@@ -153,17 +151,37 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
            kfrom = kfrom + desc%nr2x
         ENDDO
         offset = offset + desc%nr2p( iproc2 )
+#if defined(__NON_BLOCKING_SCATTER)
+        CALL mpi_isend( f_aux( (iproc2-1)*sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc2-1, me2, desc%comm2, sh( iproc2 ), ierr )
+#endif
      ENDDO
      !
      ! step two: communication  across the    nproc3    group
      !
+#if defined(__NON_BLOCKING_SCATTER)
+     DO iproc2 = 1, nproc2
+        !
+        ! now post the receive
+        !
+        CALL mpi_irecv( f_in( (iproc2-1)*sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc2-1, MPI_ANY_TAG, desc%comm2, rh( iproc2 ), ierr )
+        !IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' forward receive info<>0', abs(ierr) )
+     ENDDO
+     
+     call mpi_waitall( nproc2, sh, MPI_STATUSES_IGNORE, ierr )
+     !
+#else
      CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
-
+     !
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
+#endif
      !
 10   CONTINUE
      !
      f_aux = (0.0_DP, 0.0_DP)
+     !
+#if defined(__NON_BLOCKING_SCATTER)
+     if (nproc2 > 1) call mpi_waitall( nproc2, rh, MPI_STATUSES_IGNORE, ierr )
+#endif
      !
      DO iproc2 = 1, nproc2
         it = ( iproc2 - 1 ) * sendsize
@@ -195,15 +213,28 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
            ENDDO
            it = it + nr2px
         ENDDO
+#if defined(__NON_BLOCKING_SCATTER)
+        IF( nproc2 > 1 ) CALL mpi_isend( f_in( ( iproc2 - 1 ) * sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc2-1, me2, desc%comm2, sh( iproc2 ), ierr )
+#endif
      ENDDO
      IF (nproc2==1) GO TO 20
 
      !
      !  step two: communication
      !
+#if ! defined(__NON_BLOCKING_SCATTER)
      CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
+#else
+     DO iproc2 = 1, nproc2
+        CALL mpi_irecv( f_aux( (iproc2-1)*sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc2-1, MPI_ANY_TAG, desc%comm2, rh(iproc2), ierr )
+        ! IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward receive info<>0', abs(ierr) )
+     ENDDO
+        
+     call mpi_waitall( nproc2, sh, MPI_STATUSES_IGNORE, ierr )
+     call mpi_waitall( nproc2, rh, MPI_STATUSES_IGNORE, ierr )
+#endif
      !
      !  step one: store contiguously the columns
      !
@@ -289,7 +320,10 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
   INTEGER, ALLOCATABLE :: ncp_(:), ir1p_(:)
   INTEGER :: my_nr1p_
   !
-  
+#if defined(__NON_BLOCKING_SCATTER)
+  INTEGER :: sh(desc%nproc3), rh(desc%nproc3)
+#endif
+  !
   me     = desc%mype  + 1
   me2    = desc%mype2 + 1
   me3    = desc%mype3 + 1
@@ -348,6 +382,9 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
            ENDDO
         ENDDO
         offset = offset + desc%nr3p( iproc3 )
+#if defined(__NON_BLOCKING_SCATTER)
+        CALL mpi_isend( f_aux( ( iproc3 - 1 ) * sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc3-1, me3, desc%comm3, sh( iproc3 ), ierr )
+#endif
      ENDDO
      !
      ! ensures that no garbage is present in the output 
@@ -355,13 +392,31 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      !
      ! step two: communication  across the    nproc3    group
      !
+#if defined(__NON_BLOCKING_SCATTER)
+     DO iproc3 = 1, nproc3
+        !
+        ! now post the receive
+        !
+        CALL mpi_irecv( f_in( (iproc3-1)*sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc3-1, MPI_ANY_TAG, desc%comm3, rh( iproc3 ), ierr )
+        !IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' forward receive info<>0', abs(ierr) )
+        !
+        !
+     ENDDO
+     
+     call mpi_waitall( nproc3, sh, MPI_STATUSES_IGNORE, ierr )
+     !
+#else
      CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
+#endif     
      !
 10   CONTINUE
      !
      f_aux = (0.0_DP, 0.0_DP) !
+#if defined(__NON_BLOCKING_SCATTER)
+     if (nproc3 > 1) call mpi_waitall( nproc3, rh, MPI_STATUSES_IGNORE, ierr )
+#endif
      !
      DO iproc3 = 1, desc%nproc3
         it = ( iproc3 - 1 ) * sendsize
@@ -401,16 +456,28 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
               it = it + nr3px
            ENDDO
         ENDDO
+#if defined(__NON_BLOCKING_SCATTER)
+        IF( nproc3 > 1 ) CALL mpi_isend( f_in( ( iproc3 - 1 ) * sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc3-1, me3, desc%comm3, sh( iproc3 ), ierr )
+#endif
      ENDDO
      
      IF( nproc3 == 1 ) GO TO 20
      !
      !  step two: communication
      !
-
+#if ! defined(__NON_BLOCKING_SCATTER)
      CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
+#else
+     DO iproc3 = 1, desc%nproc3
+        CALL mpi_irecv( f_aux( (iproc3-1)*sendsize + 1 ), sendsize, MPI_DOUBLE_COMPLEX, iproc3-1, MPI_ANY_TAG, desc%comm3, rh(iproc3), ierr )
+        ! IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward receive info<>0', abs(ierr) )
+     ENDDO
+        
+     call mpi_waitall( desc%nproc3, sh, MPI_STATUSES_IGNORE, ierr )
+     call mpi_waitall( desc%nproc3, rh, MPI_STATUSES_IGNORE, ierr )
+#endif
      !
      !  step one: store contiguously the columns
      !
@@ -555,23 +622,6 @@ SUBROUTINE fft_scatter_tg_opt ( desc, f_in, f_out, nxx_, isgn )
 99 format ( 20 ('(',2f12.9,')') )
 
 END SUBROUTINE fft_scatter_tg_opt
-
-#else
-!
-!   NON BLOCKING SCATTER, should be better on switched network
-!   like infiniband, ethernet, myrinet
-!
-!-----------------------------------------------------------------------
-SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
-  !-----------------------------------------------------------------------
-
-to be rewritten with the new data distribution in mind
-
-  RETURN
-
-END SUBROUTINE fft_scatter
-!
-#endif
 !
 !----------------------------------------------------------------------------
 SUBROUTINE gather_real_grid ( dfft, f_in, f_out )
