@@ -16,7 +16,7 @@ MODULE environment
   USE kinds, ONLY: DP
   USE io_files, ONLY: crash_file, nd_nmbr
   USE io_global, ONLY: stdout, meta_ionode
-  USE mp_world,  ONLY: nproc
+  USE mp_world,  ONLY: nproc, nnode
   USE mp_images, ONLY: me_image, my_image_id, root_image, nimage, &
       nproc_image
   USE mp_pools,  ONLY: npool
@@ -221,6 +221,8 @@ CONTAINS
          &I5," processors")' ) nproc 
 #endif
     !
+    WRITE( stdout, '(/5X,"MPI processes distributed on ",&
+         &I5," nodes")' ) nnode
     IF ( nimage > 1 ) WRITE( stdout, &
          '(5X,"path-images division:  nimage    = ",I7)' ) nimage
     IF ( npool > 1 ) WRITE( stdout, &
