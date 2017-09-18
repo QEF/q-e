@@ -28,7 +28,6 @@ subroutine wannier_check()
   
   if ( gamma_only ) call errore ('wannier_check', 'gamma_only calculation not implemented', 1) 
 
-  if (lmax_wfc > 3) call errore ('wannier_check', 'l > 3 not yet implemented', 1) 
   if (nwan > nbnd ) call errore( 'wannier_check','too few bands', nwan-nbnd)
   ! here we will write to stdout source of wannier functions (atomic functions from which wannier are generated) 
   do ispin=1, nspin
@@ -81,6 +80,7 @@ subroutine wannier_check()
   ! do iwan=1,nwan
   !   write(stdout,'(7x,"Wannier #",i3," atomic wavefunction", i3)') iwan, wan_in(iwan,1)%ing(1)%iatomwfc
  ! end do ! iwannier
+  if (lmax_wfc > 3) call errore ('wannier_check', 'l > 3 not yet implemented', 1) 
   if (nwfc /= natomwfc) call errore ('wannier_check', 'wrong # of atomic wfcs?', 1)
 
   return
