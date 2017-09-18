@@ -157,7 +157,7 @@ then
                         # should work for recent MKL versions only
                         #
                         if test "$use_openmp" -eq 0; then
-                           if test "$f90" = "g95" -o "$f90" = "gfortran" ; then
+                           if test "$f90" = "gfortran" ; then
      			      AC_SEARCH_LIBS(dgemm, mkl_gf_ipf, 
                                  have_blas=1 have_mkl=1 
                                  blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
@@ -173,7 +173,7 @@ then
                                  -lmkl_sequential -lmkl_core)
 			   fi
                         else
-                           if test "$f90" = "g95" -o"$f90" = "gfortran"; then
+                           if test "$f90" = "gfortran"; then
      			      AC_SEARCH_LIBS(dgemm, mkl_gf_ipf, 
                                  have_blas=1 have_mkl=1 
                                  blas_libs="$try_loption $LIBS -lmkl_gnu_thread -lmkl_core"
@@ -249,7 +249,7 @@ then
                         # should work for recent MKL versions only
                         #
                         if test "$use_openmp" -eq 0; then
-                           if test "$f90" = "g95" -o "$f90" = "gfortran" ; then
+                           if test "$f90" = "gfortran" ; then
      			      AC_SEARCH_LIBS(dgemm, mkl_gf_lp64, 
                                  have_blas=1 have_mkl=1 
                                  blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
@@ -265,7 +265,7 @@ then
                                  -lmkl_sequential -lmkl_core)
 			   fi
                         else
-                           if test "$f90" = "g95" -o "$f90" = "gfortran" ; then
+                           if test "$f90" = "gfortran" ; then
      			      AC_SEARCH_LIBS(dgemm, mkl_gf_lp64, 
                                  have_blas=1 have_mkl=1 
                                  blas_libs="$try_loption $LIBS -lmkl_gnu_thread -lmkl_core"
@@ -312,7 +312,7 @@ then
                         # should work for recent MKL versions only
                         #
                         if test "$use_openmp" -eq 0; then
-                           if test "$f90" = "g95" -o "$f90" = "gfortran"; then
+                           if test "$f90" = "gfortran"; then
      			      AC_SEARCH_LIBS(dgemm, mkl_gf, 
                                  have_blas=1 have_mkl=1 
                                  blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core"
@@ -328,7 +328,7 @@ then
                                  -lmkl_sequential -lmkl_core)
 			   fi
                         else
-                           if test "$f90" = "g95" -o "$f90" = "gfortran" ; then
+                           if test "$f90" = "gfortran" ; then
      			      AC_SEARCH_LIBS(dgemm, mkl_gf, 
                                  have_blas=1 have_mkl=1 
                                  blas_libs="$try_loption $LIBS -lmkl_gnu_thread -lmkl_core"

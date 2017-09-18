@@ -15,7 +15,7 @@ AC_ARG_ENABLE(parallel,
    
 # candidate fortran compilers good for all cases
 try_mpif90="mpif90"
-try_f90="gfortran g95 f90"
+try_f90="gfortran f90"
 
 # candidate compilers and flags based on architecture
 case $arch in
@@ -136,7 +136,6 @@ case "$arch" in
         sunf95_version=`$mpif90 -V 2>&1 | grep "Sun Fortran"`
         openf95_version=`$mpif90 -V 2>&1 | grep "^Open64"`
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
-        g95_version=`$mpif90 -v 2>&1 | grep "g95"`
         enzo_version=`$mpif90 -v 2>&1 | grep "PathScale ENZO"`
         eko_version=`$mpif90 -v 2>&1 | grep "PathScale EKOPath"`
         pathf95_version=`$mpif90 -v 2>&1 | grep "PathScale"`
@@ -181,11 +180,6 @@ case "$arch" in
                 version=`echo $eko_version | cut -d ' ' -f6`
                 echo "${ECHO_T}pathf95 $version"
                 f90_in_mpif90="pathf95"
-        elif test "$g95_version" != ""
-        then
-                version=`echo $g95_version | cut -d ' ' -f3`
-                echo "${ECHO_T}g95 $version"
-                f90_in_mpif90="g95"
         elif test "$pathf95_version" != ""
         then
                 version=`echo $pathf95_version | cut -d ' ' -f5`
@@ -238,8 +232,6 @@ f90 | fc | ftn )
         f90_flavor=pathf95
     elif $f90 -version 2>&1 | grep -q "PathScale" ; then
         f90_flavor=pathf95
-    elif $f90 -v 2>&1 | grep -q "g95" ; then
-        f90_flavor=g95
     elif $f90 -v 2>&1 | grep -q "gcc version" ; then
         f90_flavor=gfortran
     elif $f90 -V 2>&1 | grep -q "Cray Fortran" ; then

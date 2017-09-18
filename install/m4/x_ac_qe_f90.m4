@@ -87,17 +87,6 @@ ia32:path* | ia64:path* | x86_64:path* )
         try_ldflags_static="-static"
         have_cpp=0
         ;;
-*:g95 )
-        if test "$use_debug" -eq 1; then
-            try_fflags="-O3 -g -freal=nan -finteger=12345678 -flogical=none -cpp"
-        else
-            try_fflags="-O3 -cpp"
-        fi
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-O0 -cpp"
-        try_ldflags=""
-        try_ldflags_static="-static"
-        ;;
 *:*gfortran )
         if test "$use_debug" -eq 1; then
             try_fflags="-O3 -g  -Wall -fbounds-check -frange-check"
