@@ -1048,7 +1048,7 @@ MODULE ph_restart
                      TRIM(int_to_char(iq)) // '.' 
 
            DO irr=0,irr_iq(iq)
-              IF (comp_irr_iq(irr,iq).OR..NOT.low_directory_check) THEN
+              IF (comp_irr_iq(irr,iq).AND..NOT.low_directory_check) THEN
                  filename1=TRIM(filename) // TRIM(int_to_char(irr)) // '.xml'
                  INQUIRE(FILE=TRIM(filename1), EXIST=exst)
                  IF (.NOT.exst) CYCLE
