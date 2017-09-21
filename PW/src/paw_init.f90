@@ -86,7 +86,7 @@ SUBROUTINE PAW_post_init()
     USE control_flags,      ONLY : iverbosity
     USE funct,              ONLY : dft_is_hybrid
     !
-    INTEGER :: nt, np, ia, ia_s, ia_e, mykey
+    INTEGER :: nt, np, ia, ia_s, ia_e, mykey, nnodes
     INTEGER :: info(0:nproc_image-1,ntyp)
 
     !
@@ -115,13 +115,14 @@ SUBROUTINE PAW_post_init()
         IF (ASSOCIATED(upf(nt)%paw%ptfunc)) DEALLOCATE( upf(nt)%paw%ptfunc )    
         IF (ASSOCIATED(upf(nt)%paw%pfunc_rel)) DEALLOCATE(upf(nt)%paw%pfunc_rel)    
         IF (ASSOCIATED(upf(nt)%paw%ae_vloc)) DEALLOCATE( upf(nt)%paw%ae_vloc )    
-                  
         info(me_image,nt) = 1
+                  
     ENDDO types
 
     CALL mp_sum(info, intra_image_comm)
 
-    IF(ionode .and. iverbosity>0) THEN
+    IF(ionode .and. iverbosity > 0 ) THEN
+#if defined (__DEBUG)
         DO np = 0,nproc_image-1
         DO nt = 1,ntyp
             IF( info(np,nt) > 0 ) &
@@ -129,6 +130,14 @@ SUBROUTINE PAW_post_init()
                          ", deallocated PAW data for type:", nt
         ENDDO
         ENDDO
+#else
+        DO nt = 1,ntyp
+            nnodes = SUM ( info(:,nt) ) 
+            IF ( nnodes > 0 ) WRITE(stdout,'(7x,"PAW data deallocated on ",&
+                    &                        i4," nodes for type:",i3)')   &
+                    &         nnodes,nt
+        ENDDO
+#endif
     ENDIF
 
 END SUBROUTINE PAW_post_init

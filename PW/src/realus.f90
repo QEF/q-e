@@ -328,9 +328,11 @@ MODULE realus
          jmax = NINT((posi(2) + boxrad_ia * sqrt(bg(1,2)*bg(1,2)+bg(2,2)*bg(2,2)+bg(3,2)*bg(3,2)))*dfft%nr2)
          kmin = NINT((posi(3) - boxrad_ia * sqrt(bg(1,3)*bg(1,3)+bg(2,3)*bg(2,3)+bg(3,3)*bg(3,3)))*dfft%nr3)
          kmax = NINT((posi(3) + boxrad_ia * sqrt(bg(1,3)*bg(1,3)+bg(2,3)*bg(2,3)+bg(3,3)*bg(3,3)))*dfft%nr3)
+#if defined(__DEBUG)
          write (*,*) tau(:,ia)
          write (*,*) posi
          write (*,*) imin,imax,jmin,jmax,kmin,kmax
+#endif
          DO k = kmin, kmax
             kk = modulo(k,dfft%nr3) - dfft%my_i0r3p
             if (kk .LT. 0 .OR. kk .ge. dfft%my_nr3p ) cycle
@@ -650,7 +652,9 @@ MODULE realus
 !                      if (l==0) then
                          qtot(1) = qtot(2)
                          qtot(1) = qtot(3)
+#if defined(__DEBUG)
                          write (6,*) qtot(2),qtot(3)
+#endif
 !                      else
 !                         qtot(1) = 0.d0
 !                      end if
