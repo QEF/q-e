@@ -9,7 +9,8 @@
 MODULE realus
   !----------------------------------------------------------------------------
   !
-  USE kinds, ONLY : DP
+  USE kinds,     ONLY : DP
+  USE io_global, ONLY : stdout
   !
   ! ... module originally written by Antonio Suriano and Stefano de Gironcoli
   ! ... modified by Carlo Sbraccia
@@ -87,7 +88,6 @@ MODULE realus
       USE fft_base,     ONLY : dfftp, dffts
       USE funct,        ONLY : dft_is_hybrid
       USE gvecs,        ONLY : doublegrid
-      USE io_global,    ONLY : stdout
       !USE exx,  ONLY : exx_fft
       IMPLICIT NONE
       !
@@ -121,7 +121,6 @@ MODULE realus
     !---------------------------------------------------------------------------
      USE control_flags,        ONLY : tqr
      USE fft_base,             ONLY : dffts
-     USE io_global,            ONLY : stdout
 
      IMPLICIT NONE
 
@@ -273,7 +272,9 @@ MODULE realus
          boxrad(:) = boxrad(:) / alat
          !
       ENDIF
-      write (*,*) 'BOXRAD = ', boxrad(:) * alat
+#if defined(__DEBUG)
+      write (stdout,*) 'BOXRAD = ', boxrad(:) * alat
+#endif
       !
       ! ... a rough estimate for the number of grid-points per box
       ! ... is provided here
@@ -357,7 +358,9 @@ MODULE realus
                END DO
             END DO
          END DO
-   WRITE (*,*) 'QPOINTLIST  ATOM ', ia, ' MBIA =', mbia
+#if defined(__DEBUG)
+         WRITE (stdout,*) 'QPOINTLIST  ATOM ', ia, ' MBIA =', mbia
+#endif
          !
          IF ( mbia == 0 ) CYCLE
          !
@@ -433,7 +436,6 @@ MODULE realus
 
       CALL start_clock( 'realus:tabp' )
 
-      write (6,*) 'real space q: ia,nt,mbia,tab(ia)%maxbox ', ia, nt, mbia, tab(ia)%maxbox
       if (mbia.ne.tab(ia)%maxbox) then
          write (6,*) 'real space q: ia,nt,mbia,tab(ia)%maxbox ', ia, nt, mbia, tab(ia)%maxbox
          call errore('real_space_q','inconsistent tab(ia)%maxbox dimension',ia)
@@ -1199,9 +1201,9 @@ MODULE realus
        charge = sum( rho_1(:,1:nspin_lsda) )*omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
        CALL mp_sum(  charge , intra_bgrp_comm )
        CALL mp_sum(  charge , inter_pool_comm )
-
-       write (6,*) 'charge before rescaling ', charge
-
+#if defined (__DEBUG)
+       write (stdout,*) 'charge before rescaling ', charge
+#endif
        IF ( abs( charge - nelec ) / nelec > eps6 ) THEN
           !
           ! ... the error on the charge is too large, stop and complain
