@@ -333,7 +333,9 @@ MODULE exx
       DEALLOCATE(becxx)
     ENDIF
     !
+    IF ( allocated(working_pool) )  DEALLOCATE(working_pool)
     CALL deallocate_fft_custom(exx_fft)
+    exx_grid_initialized = .false.
     !
     !------------------------------------------------------------------------
   END SUBROUTINE deallocate_exx
