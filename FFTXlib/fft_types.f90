@@ -823,8 +823,10 @@ CONTAINS
          !
          CALL grid_set( dfft, bg, gcutm, dfft%nr1, dfft%nr2, dfft%nr3 )
          !
+#if defined (__DEBUG)
        ELSE
           WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
+#endif
        END IF
 
        IF (PRESENT(fft_fact)) THEN
