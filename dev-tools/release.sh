@@ -2,8 +2,8 @@
 
 #tempdir=$HOME/Downloads
 tempdir=/tmp
-version=6.1
-revision=13369
+version=6.2
+revision=13853
 
 # make sure there is no locale setting creating unneeded differences.
 #LC_ALL=C

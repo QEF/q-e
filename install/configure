@@ -2736,7 +2736,7 @@ fi
 
 # candidate fortran compilers good for all cases
 try_mpif90="mpif90"
-try_f90="gfortran g95 f90"
+try_f90="gfortran f90"
 
 # candidate compilers and flags based on architecture
 case $arch in
@@ -3775,7 +3775,6 @@ case "$arch" in
         sunf95_version=`$mpif90 -V 2>&1 | grep "Sun Fortran"`
         openf95_version=`$mpif90 -V 2>&1 | grep "^Open64"`
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
-        g95_version=`$mpif90 -v 2>&1 | grep "g95"`
         enzo_version=`$mpif90 -v 2>&1 | grep "PathScale ENZO"`
         eko_version=`$mpif90 -v 2>&1 | grep "PathScale EKOPath"`
         pathf95_version=`$mpif90 -v 2>&1 | grep "PathScale"`
@@ -3820,11 +3819,6 @@ case "$arch" in
                 version=`echo $eko_version | cut -d ' ' -f6`
                 echo "${ECHO_T}pathf95 $version"
                 f90_in_mpif90="pathf95"
-        elif test "$g95_version" != ""
-        then
-                version=`echo $g95_version | cut -d ' ' -f3`
-                echo "${ECHO_T}g95 $version"
-                f90_in_mpif90="g95"
         elif test "$pathf95_version" != ""
         then
                 version=`echo $pathf95_version | cut -d ' ' -f5`
@@ -3879,8 +3873,6 @@ f90 | fc | ftn )
         f90_flavor=pathf95
     elif $f90 -version 2>&1 | grep -q "PathScale" ; then
         f90_flavor=pathf95
-    elif $f90 -v 2>&1 | grep -q "g95" ; then
-        f90_flavor=g95
     elif $f90 -v 2>&1 | grep -q "gcc version" ; then
         f90_flavor=gfortran
     elif $f90 -V 2>&1 | grep -q "Cray Fortran" ; then
@@ -4728,17 +4720,6 @@ ia32:path* | ia64:path* | x86_64:path* )
         try_ldflags_static="-static"
         have_cpp=0
         ;;
-*:g95 )
-        if test "$use_debug" -eq 1; then
-            try_fflags="-O3 -g -freal=nan -finteger=12345678 -flogical=none -cpp"
-        else
-            try_fflags="-O3 -cpp"
-        fi
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-O0 -cpp"
-        try_ldflags=""
-        try_ldflags_static="-static"
-        ;;
 *:*gfortran )
         if test "$use_debug" -eq 1; then
             try_fflags="-O3 -g  -Wall -fbounds-check -frange-check"
@@ -5475,7 +5456,7 @@ fi
                         # should work for recent MKL versions only
                         #
                         if test "$use_openmp" -eq 0; then
-                           if test "$f90" = "g95" -o "$f90" = "gfortran" ; then
+                           if test "$f90" = "gfortran" ; then
      			      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
 if ${ac_cv_search_dgemm+:} false; then :
@@ -5573,7 +5554,7 @@ fi
 
 			   fi
                         else
-                           if test "$f90" = "g95" -o"$f90" = "gfortran"; then
+                           if test "$f90" = "gfortran"; then
      			      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
 if ${ac_cv_search_dgemm+:} false; then :
@@ -5773,7 +5754,7 @@ fi
                         # should work for recent MKL versions only
                         #
                         if test "$use_openmp" -eq 0; then
-                           if test "$f90" = "g95" -o "$f90" = "gfortran" ; then
+                           if test "$f90" = "gfortran" ; then
      			      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
 if ${ac_cv_search_dgemm+:} false; then :
@@ -5871,7 +5852,7 @@ fi
 
 			   fi
                         else
-                           if test "$f90" = "g95" -o "$f90" = "gfortran" ; then
+                           if test "$f90" = "gfortran" ; then
      			      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
 if ${ac_cv_search_dgemm+:} false; then :
@@ -6000,7 +5981,7 @@ fi
                         # should work for recent MKL versions only
                         #
                         if test "$use_openmp" -eq 0; then
-                           if test "$f90" = "g95" -o "$f90" = "gfortran"; then
+                           if test "$f90" = "gfortran"; then
      			      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
 if ${ac_cv_search_dgemm+:} false; then :
@@ -6098,7 +6079,7 @@ fi
 
 			   fi
                         else
-                           if test "$f90" = "g95" -o "$f90" = "gfortran" ; then
+                           if test "$f90" = "gfortran" ; then
      			      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
 if ${ac_cv_search_dgemm+:} false; then :
