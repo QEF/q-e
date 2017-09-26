@@ -339,9 +339,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
                 the Brillouin Zone includes k=0 only. The gamma_gamma
                 trick exploits symmetry and acoustic sum rule to reduce
                 the number of linear response calculations to the strict
-                minimum, as it is done in code phcg.x. This option MUST 
-                BE USED if a run with ph.x is to be followed by a run
-                with d3.x for third-order terms calculation.
+                minimum, as it is done in code phcg.x. 
 	    }
 	}
 
