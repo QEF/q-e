@@ -5,6 +5,8 @@ include make.versions
 VFSDIR=pwgui.vfs
 LIBDIR=$(VFSDIR)/lib
 HERE = $(PWD)
+MKDIR = mkdir -p
+#MKDIR = $(HERE)/MakeDir.sh
 
 default: check-default clean tclkit-runtime main.tcl copylib debian_stupid starkit
 
@@ -15,7 +17,7 @@ tclkit-runtime:
 	if test -x $(TCLKIT) ; then cp $(TCLKIT) tclkit-runtime ; fi
 
 main.tcl: check-default
-	if test ! -d $(LIBDIR) ; then $(HERE)/MakeDir.sh $(LIBDIR); fi
+	if test ! -d $(LIBDIR) ; then $(MKDIR) $(LIBDIR); fi
 	VSFDIR=$(VFSDIR) \
 	GUIB_VERSION=$(GUIB_VERSION) \
 	PWGUI_VERSION=$(PWGUI_VERSION) \

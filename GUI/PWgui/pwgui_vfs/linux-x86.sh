@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ln -sf make.linux make.sys
+ln -sf make.linux make.inc
 make
 
 version=
