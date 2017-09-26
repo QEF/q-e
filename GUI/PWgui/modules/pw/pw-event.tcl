@@ -119,11 +119,11 @@ tracevar calculation w {
     widgetconfigure atomic_coordinates -caption "Enter atomic coordinates:"    	
 }
 
-tracevar monopole w {
-    if { [vartextvalue monopole] == "Yes" } {
-	groupwidget monopole_group enable
+tracevar gate w {
+    if { [vartextvalue gate] == "Yes" } {
+	groupwidget gate_group enable
     } else {
-	groupwidget monopole_group disable
+	groupwidget gate_group disable
     }
 }
 
@@ -215,7 +215,8 @@ tracevar nat w {
 tracevar ntyp w {
     set ntyp [varvalue ntyp]
     widgetconfigure atomic_species -rows $ntyp;
-    
+
+    widgetconfigure starting_charge -end $ntyp
     widgetconfigure starting_magnetization -end $ntyp; # nspin-dependent
     varset nspin -value [varvalue nspin]
 
@@ -554,7 +555,7 @@ tracevar specify_atomic_forces w {
 # ------------------------------------------------------------------------
 postprocess {    
     varset calculation     -value 'scf'
-    varset monopole        -value {}
+    varset gate        -value {}
     varset ibrav           -value {}
     varset how_lattice     -value celldm
     varset nspin           -value {}

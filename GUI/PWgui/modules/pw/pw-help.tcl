@@ -159,7 +159,7 @@ help wf_collect -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>wf_collect</b></big>
 </li>
 <br><li> <em>Type: </em>LOGICAL</li>
-<br><li> <em>Default: </em> .FALSE.
+<br><li> <em>Default: </em> .TRUE.
          </li>
 <br><li> <em>Description:</em>
 </li>
@@ -167,12 +167,14 @@ help wf_collect -helpfmt helpdoc -helptext {
 This flag controls the way wavefunctions are stored to disk :
 
 .TRUE.  collect wavefunctions from all processors, store them
-        into the output data directory "outdir"/"prefix".save,
-        ...
+        into the output data directory "outdir"/"prefix".save
+        The resulting format is portable to a different number
+        of processor, or different kind of parallelization
 
-        .FALSE. do not collect wavefunctions, leave them in temporary
-                local files (one per processor). The resulting format
-                ...
+.FALSE. do not collect wavefunctions, leave them in temporary
+        local files (one per processor). The resulting format
+        is readable only on the same number of processors and
+        with the same knd of paralleliztio used to write it.
 
 Note that this flag has no effect on reading, only on writing.
          </pre></blockquote>
@@ -700,29 +702,30 @@ NB:
 
 
 # ------------------------------------------------------------------------
-help monopole -helpfmt helpdoc -helptext {
+help gate -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>monopole</b></big>
+<li> <em>Variable: </em><big><b>gate</b></big>
 </li>
 <br><li> <em>Type: </em>LOGICAL</li>
 <br><li> <em>Default: </em> .FALSE.
          </li>
-<br><li> <em>See: </em> zmon, realxz, block, block_1, block_2, block_height
+<br><li> <em>See: </em> zgate, relaxz, block, block_1, block_2, block_height
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-In the case of charged cells ("tot_charge" .ne. 0) setting monopole = .TRUE.
+In the case of charged cells ("tot_charge" .ne. 0) setting gate = .TRUE.
 represents the counter charge (i.e. -tot_charge) not by a homogenous
-background charge but with a charged plate, which is placed at "zmon"
-(see below). Details of the monopole potential can be found in
+background charge but with a charged plate, which is placed at "zgate"
+(see below). Details of the gate potential can be found in
 T. Brumme, M. Calandra, F. Mauri; "PRB 89, 245406 (2014)".
 Note, that in systems which are not symmetric with respect to the plate,
 one needs to enable the dipole correction! ("dipfield"=.true.).
-Currently, symmetry can be used with monopole=.true. but carefully check
+Currently, symmetry can be used with gate=.true. but carefully check
 that no symmetry is included which maps <i>z</i> to -<i>z</i> even if in principle one
 could still use them for symmetric systems (i.e. no dipole correction).
 For "nosym"=.false. verbosity is set to 'high'.
+Note: this option was called "monopole" in v6.0 and 6.1 of pw.x
          </pre></blockquote>
 </ul>      
       
@@ -750,7 +753,7 @@ help ibrav -helpfmt helpdoc -helptext {
   or = A (in Angstrom), or else it is taken from "CELL_PARAMETERS"
 
 ibrav      structure                   celldm(2)-celldm(6)
-                                     or: b,c,cosab,cosac,cosbc
+                                     or: b,c,cosbc,cosac,cosab
   0          free
       crystal axis provided in input: see card "CELL_PARAMETERS"
 
@@ -762,18 +765,20 @@ ibrav      structure                   celldm(2)-celldm(6)
 
   3          cubic I (bcc)
       v1 = (a/2)(1,1,1),  v2 = (a/2)(-1,1,1),  v3 = (a/2)(-1,-1,1)
+ -3          cubic I (bcc), more symmetric axis:
+      v1 = (a/2)(-1,1,1), v2 = (a/2)(1,-1,1),  v3 = (a/2)(1,1,-1)
 
   4          Hexagonal and Trigonal P        celldm(3)=c/a
       v1 = a(1,0,0),  v2 = a(-1/2,sqrt(3)/2,0),  v3 = a(0,0,c/a)
 
-  5          Trigonal R, 3fold axis c        celldm(4)=cos(alpha)
+  5          Trigonal R, 3fold axis c        celldm(4)=cos(gamma)
       The crystallographic vectors form a three-fold star around
       the z-axis, the primitive cell is a simple rhombohedron:
       v1 = a(tx,-ty,tz),   v2 = a(0,2ty,tz),   v3 = a(-tx,-ty,tz)
-      where c=cos(alpha) is the cosine of the angle alpha between
+      where c=cos(gamma) is the cosine of the angle gamma between
       any pair of crystallographic vectors, tx, ty, tz are:
         tx=sqrt((1-c)/2), ty=sqrt((1-c)/6), tz=sqrt((1+2c)/3)
- -5          Trigonal R, 3fold axis &lt;111&gt;    celldm(4)=cos(alpha)
+ -5          Trigonal R, 3fold axis &lt;111&gt;    celldm(4)=cos(gamma)
       The crystallographic vectors form a three-fold star around
       &lt;111&gt;. Defining a' = a/sqrt(3) :
       v1 = a' (u,v,v),   v2 = a' (v,u,v),   v3 = a' (v,v,u)
@@ -986,6 +991,25 @@ inserted to remove divergences if the cell is not neutral.
 
 
 # ------------------------------------------------------------------------
+help starting_charge -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variables: </em><big><b>starting_charge(i), i=1,ntyp</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+starting charge on atomic type 'i',
+to create starting potential with "startingpot" = 'atomic'.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help tot_magnetization -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>tot_magnetization</b></big>
@@ -1167,7 +1191,7 @@ help nosym -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if (.TRUE.) symmetry is not used, which means that:
+if (.TRUE.) symmetry is not used. Consequences:
 
 - if a list of k points is provided in input, it is used
   "as is": symmetry-inequivalent k-points are not generated,
@@ -1179,7 +1203,8 @@ if (.TRUE.) symmetry is not used, which means that:
   Time reversal symmetry is assumed so k and -k are considered
   as equivalent unless "noinv"=.true. is specified.
 
-A careful usage of this option can be advantageous:
+Do not use this option unless you know exactly what you want
+and what you get. May be useful in the following cases:
 - in low-symmetry large cells, if you cannot afford a k-point
   grid with the correct symmetry
 - in MD simulations
@@ -2334,6 +2359,16 @@ NB:
      or by very slight displacement (i.e., 5e-4 a.u.)
      of the slab along z.
 
+   - Components of the total stress; sigma_xy, sigma_yz,
+     sigma_zz, sigma_zy, and sigma_zx are meaningless
+     bacause ESM stress routines calculate only
+     components of stress; sigma_xx, sigma_xy, sigma_yx,
+     and sigma_yy.
+
+   - In case of calculation='vc-relax', use
+     cell_dofree='2Dxy' or other parameters so that
+     c-vector along z-axis should not be moved.
+
 See "esm_bc", "esm_efield", "esm_w", "esm_nfit".
             </pre></dd>
 </dl>
@@ -2817,9 +2852,9 @@ to the rhombohedral axes and "ibrav"=5 is used in both cases.
 
 
 # ------------------------------------------------------------------------
-help zmon -helpfmt helpdoc -helptext {
+help zgate -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>zmon</b></big>
+<li> <em>Variable: </em><big><b>zgate</b></big>
 </li>
 <br><li> <em>Type: </em>REAL</li>
 <br><li> <em>Default: </em> 0.5
@@ -2827,11 +2862,11 @@ help zmon -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-used only if "monopole" = .TRUE.
+used only if "gate" = .TRUE.
 Specifies the position of the charged plate which represents
 the counter charge in doped systems ("tot_charge" .ne. 0).
-In units of the unit cell length in <i>z</i> direction, "zmon" in ]0,1[
-Details of the monopole potential can be found in
+In units of the unit cell length in <i>z</i> direction, "zgate" in ]0,1[
+Details of the gate potential can be found in
 T. Brumme, M. Calandra, F. Mauri; "PRB 89, 245406 (2014)".
             </pre></blockquote>
 </ul>      
@@ -2840,9 +2875,9 @@ T. Brumme, M. Calandra, F. Mauri; "PRB 89, 245406 (2014)".
 
 
 # ------------------------------------------------------------------------
-help realxz -helpfmt helpdoc -helptext {
+help relaxz -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>realxz</b></big>
+<li> <em>Variable: </em><big><b>relaxz</b></big>
 </li>
 <br><li> <em>Type: </em>LOGICAL</li>
 <br><li> <em>Default: </em> .FALSE.
@@ -2850,7 +2885,7 @@ help realxz -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-used only if "monopole" = .TRUE.
+used only if "gate" = .TRUE.
 Allows the relaxation of the system towards the charged plate.
 Use carefully and utilize either a layer of fixed atoms or a
 potential barrier ("block"=.TRUE.) to avoid the atoms moving to
@@ -2873,7 +2908,7 @@ help block -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-used only if "monopole" = .TRUE.
+used only if "gate" = .TRUE.
 Adds a potential barrier to the total potential seen by the
 electrons to mimic a dielectric in field effect configuration
 and/or to avoid electrons spilling into the vacuum region for
@@ -2898,7 +2933,7 @@ help block_1 -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-used only if "monopole" = .TRUE. and "block" = .TRUE.
+used only if "gate" = .TRUE. and "block" = .TRUE.
 lower beginning of the potential barrier, in units of the
 unit cell size along <i>z,</i> "block_1" in ]0,1[
             </pre></blockquote>
@@ -2918,7 +2953,7 @@ help block_2 -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-used only if "monopole" = .TRUE. and "block" = .TRUE.
+used only if "gate" = .TRUE. and "block" = .TRUE.
 upper beginning of the potential barrier, in units of the
 unit cell size along <i>z,</i> "block_2" in ]0,1[
             </pre></blockquote>
@@ -2938,7 +2973,7 @@ help block_height -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-used only if "monopole" = .TRUE. and "block" = .TRUE.
+used only if "gate" = .TRUE. and "block" = .TRUE.
 Height of the potential barrier in Rydberg.
             </pre></blockquote>
 </ul>      
@@ -3183,8 +3218,8 @@ Davidson iterative diagonalization with overlap matrix
 <dt><tt><b>'cg'</b> :</tt></dt>
 <dd><pre style="margin-top: 0em; margin-bottom: -1em;">
 Conjugate-gradient-like band-by-band diagonalization.
-Typically slower than 'david' but it uses less memory
-and is more robust (it seldom fails).
+Slower than 'david' but uses less memory and is
+(a little bit) more robust.
             </pre></dd>
 </dl>
 <dl style="margin-left: 1.5em;">

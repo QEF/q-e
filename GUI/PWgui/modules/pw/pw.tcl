@@ -218,8 +218,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -value     { .true. .false. }
 		}
 
-		var monopole {
-		    -label "Perform charged cell calculation using counter charged plate (monopole):"
+		var gate {
+		    -label "Perform charged cell calculation using counter charged plate (gate):"
 		    -widget    radiobox
 		    -textvalue { Yes No }	      
 		    -value     { .true. .false. }
@@ -373,6 +373,13 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -fmt      %f
 		}
 
+		dimension starting_charge {
+		    -label "Starting charge (starting_charge):"
+		    -text  "Starting charge for atomic species"
+		    -validate  fortranreal
+		    -start 1 -end 1
+		}
+		
 		var input_dft -label    "Exchange-correlation functional (input_dft):"
 
 		separator -label "--- Symmetry ---"
@@ -879,16 +886,16 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    }
 		}		    
 
-		separator -label "--- Charged plate (monopole) options ---"
+		separator -label "--- Charged plate (gate) options ---"
 		
-		group monopole_group -decor normal {
-		    var zmon {
-			-label "Z position of the charged plate (zmon):"
+		group gate_group -decor normal {
+		    var zgate {
+			-label "Z position of the charged plate (zgate):"
 			-validate fortranposreal
 		    }
 
-		    var realxz {
-			-label "Allow the system to relax towards the charged plate (realxz):"
+		    var relaxz {
+			-label "Allow the system to relax towards the charged plate (relaxz):"
 			-widget    radiobox
 			-textvalue { Yes No }	      
 			-value     { .true. .false. }
