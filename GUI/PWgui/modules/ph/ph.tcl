@@ -67,6 +67,13 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		    -fmt       %s
 		}
 
+		var asr {
+		    -label "Apply acoustic sum rule for \"gamma_gamma\" (asr):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+
 		var ldiag {
 		    -label     "Force diagonalization of the incomplete dynamical matrix (ldiag):"
 		    -textvalue {Yes No}

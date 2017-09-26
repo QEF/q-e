@@ -246,7 +246,11 @@ help fildrho -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> File where the charge density responses are written.
+<blockquote><pre>
+File where the charge density responses are written. Note that the file
+                  will actually be saved as ${outdir}/_ph0/${prefix}.${fildrho}1
+                  where  ${outdir}, ${prefix} and ${fildrho} are the values of the
+                  corresponding input variables
          </pre></blockquote>
 </ul>      
       
@@ -265,7 +269,7 @@ help fildvscf -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 File where the the potential variation is written
-(for later use in electron-phonon calculation).
+(for later use in electron-phonon calculation, see also fildrho).
          </pre></blockquote>
 </ul>      
       
@@ -740,6 +744,25 @@ the number of linear response calculations to the strict
 minimum, as it is done in code phcg.x. This option MUST
 BE USED if a run with ph.x is to be followed by a run
 with d3.x for third-order terms calculation.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help asr -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>asr</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Apply Acoustic Sum Rule to dynamical matrix, effective charges
+Works only in conjunction with "gamma_gamma" tricks (see above)
          </pre></blockquote>
 </ul>      
       
