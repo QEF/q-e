@@ -13,6 +13,8 @@ New in 6.2 version:
 
 Fixed in 6.2 version
 
+  * NEB + EXX works again (r13851)
+
   * Under some circumstances (k-points, reduced ecutfock, other unclear  
     reasons), EXX with reduced cutoff wasn't giving accurate results, 
     due to a mismatch between the ordering of G-vectors in the original 
@@ -22,7 +24,7 @@ Fixed in 6.2 version
   * In variable-cell EXX, G-vectors used in the FFT of 1/|r-r'| should be
     rescaled as well (courtesy Satomichi Nisihara) (r13817)
 
-  * Bug in DFPT with tetrahedrai and in "fermisurfer", plus some extensions
+  * Bug in DFPT with tetrahedra and in "fermisurfer", plus some extensions
     to el-ph with tetrahedra (Mitsuaki Kawamura) (r13806).
 
   * EXX with k-points and pool parallelization was occasionally crashing

@@ -1929,6 +1929,7 @@ stres_loc.o : pwcom.o
 stres_loc.o : scf_mod.o
 stres_nonloc_dft.o : ../../Modules/fft_base.o
 stres_nonloc_dft.o : ../../Modules/funct.o
+stres_nonloc_dft.o : ../../Modules/io_global.o
 stres_nonloc_dft.o : ../../Modules/kind.o
 stres_nonloc_dft.o : ../../Modules/xc_rVV10.o
 stres_nonloc_dft.o : ../../Modules/xc_vdW_DF.o
