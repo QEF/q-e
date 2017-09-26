@@ -72,7 +72,7 @@
   IF ( ( laniso .AND. iverbosity .eq. 2 ) .OR. liso ) THEN
      IF ( temp .lt. 10.d0 ) THEN
         WRITE(name1,'(a,a1,a4,a7,f4.2)') TRIM(prefix), '.', cname, '_iso_00', temp
-     ELSEIF ( temp .ge. 10.d0 ) THEN
+     ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0  ) THEN
         WRITE(name1,'(a,a1,a4,a6,f5.2)') TRIM(prefix), '.', cname, '_iso_0', temp
      ELSEIF ( temp .ge. 100.d0 ) THEN
         WRITE(name1,'(a,a1,a4,a5,f6.2)') TRIM(prefix), '.', cname, '_iso_', temp
@@ -120,7 +120,7 @@
      IF ( iverbosity .eq. 2 ) THEN
         IF ( temp .lt. 10.d0 ) THEN
            WRITE(name1,'(a,a1,a4,a9,f4.2)') TRIM(prefix), '.', cname, '_aniso_00', temp
-        ELSEIF ( temp .ge. 10.d0 ) THEN
+        ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0  ) THEN
            WRITE(name1,'(a,a1,a4,a8,f5.2)') TRIM(prefix), '.', cname, '_aniso_0', temp
         ELSEIF ( temp .ge. 100.d0 ) THEN
            WRITE(name1,'(a,a1,a4,a7,f6.2)') TRIM(prefix), '.', cname, '_aniso_', temp
@@ -165,7 +165,7 @@
   IF ( ( laniso .AND. iverbosity .eq. 2 ) .OR. liso ) THEN
      IF ( temp .lt. 10.d0 ) THEN
         WRITE(name1,'(a,a1,a4,a7,f4.2)') TRIM(prefix), '.', cname, '_iso_00', temp
-     ELSEIF ( temp .ge. 10.d0 ) THEN
+     ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0  ) THEN
         WRITE(name1,'(a,a1,a4,a6,f5.2)') TRIM(prefix), '.', cname, '_iso_0', temp
      ELSEIF ( temp .ge. 100.d0 ) THEN
         WRITE(name1,'(a,a1,a4,a5,f6.2)') TRIM(prefix), '.', cname, '_iso_', temp
@@ -237,7 +237,7 @@
   !
   IF ( temp .lt. 10.d0 ) THEN
      WRITE(name1,'(a,a1,a4,a14,f4.2)') TRIM(prefix), '.', cname, '_aniso_gap0_00', temp
-  ELSEIF ( temp .ge. 10.d0 ) THEN
+  ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0  ) THEN
      WRITE(name1,'(a,a1,a4,a13,f5.2)') TRIM(prefix), '.', cname, '_aniso_gap0_0', temp
   ELSEIF ( temp .ge. 100.d0 ) THEN
      WRITE(name1,'(a,a1,a4,a12,f6.2)') TRIM(prefix), '.', cname, '_aniso_gap0_', temp
@@ -306,17 +306,17 @@
       ELSEIF ( ibnd < 100 ) THEN
         IF ( temp < 10.d0 ) THEN
            WRITE(name1,'(a,a1,a4,a14,f4.2,a1,i2,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_00', temp, '_', ibnd, '.cube'
-        ELSEIF ( temp < 100.d0 ) THEN
+        ELSEIF ( temp < 100.d0 .and. temp > 9.9999d0 ) THEN
            WRITE(name1,'(a,a1,a4,a13,f5.2,a1,i2,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_0', temp, '_', ibnd, '.cube'
-        ELSEIF ( temp < 1000.d0 ) THEN
+        ELSEIF ( temp < 1000.d0 .and. temp > 99.9999d0 ) THEN
            WRITE(name1,'(a,a1,a4,a12,f6.2,a1,i2,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_', temp, '_', ibnd, '.cube'
         ENDIF
       ELSEIF ( ibnd < 1000 ) THEN
         IF ( temp < 10.d0 ) THEN
            WRITE(name1,'(a,a1,a4,a14,f4.2,a1,i3,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_00', temp, '_', ibnd, '.cube'
-        ELSEIF ( temp < 100.d0 ) THEN
+        ELSEIF ( temp < 100.d0 .and. temp > 9.9999d0  ) THEN
            WRITE(name1,'(a,a1,a4,a13,f5.2,a1,i3,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_0', temp, '_', ibnd, '.cube'
-        ELSEIF ( temp < 1000.d0 ) THEN
+        ELSEIF ( temp < 1000.d0 .and. temp > 99.9999d0 ) THEN
            WRITE(name1,'(a,a1,a4,a12,f6.2,a1,i3,a5)')TRIM(prefix), '.', cname, '_aniso_gap0_', temp, '_', ibnd, '.cube'
         ENDIF
       ELSE
@@ -342,7 +342,7 @@
   !
   IF ( temp .lt. 10.d0 ) THEN
      WRITE(name1,'(a,a1,a4,a16,f4.2)') TRIM(prefix), '.', cname, '_aniso_gap_FS_00', temp
-  ELSEIF ( temp .ge. 10.d0 ) THEN
+  ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0) THEN
      WRITE(name1,'(a,a1,a4,a15,f5.2)') TRIM(prefix), '.', cname, '_aniso_gap_FS_0', temp
   ELSEIF ( temp .ge. 100.d0 ) THEN
      WRITE(name1,'(a,a1,a4,a14,f6.2)') TRIM(prefix), '.', cname, '_aniso_gap_FS_', temp

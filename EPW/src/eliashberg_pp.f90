@@ -42,7 +42,7 @@
   temp = estemp(itemp) / kelvin2eV
   IF ( temp .lt. 10.d0 ) THEN
      WRITE(fildos,'(a,a8,f4.2)') TRIM(prefix),'.qdos_00', temp
-  ELSEIF ( temp .ge. 10.d0 ) THEN
+  ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0 ) THEN
      WRITE(fildos,'(a,a7,f5.2)') TRIM(prefix),'.qdos_0', temp
   ELSEIF ( temp .ge. 100.d0 ) THEN
      WRITE(fildos,'(a,a6,f6.2)') TRIM(prefix),'.qdos_', temp
@@ -111,7 +111,7 @@
   temp = estemp(itemp) / kelvin2eV
   IF ( temp .lt. 10.d0 ) THEN
      WRITE(filfe,'(a,a6,f4.2)') TRIM(prefix),'.fe_00', temp
-  ELSEIF ( temp .ge. 10.d0 ) THEN
+  ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0 ) THEN
      WRITE(filfe,'(a,a5,f5.2)') TRIM(prefix),'.fe_0', temp
   ELSEIF ( temp .ge. 100.d0 ) THEN
      WRITE(filfe,'(a,a4,f6.2)') TRIM(prefix),'.fe_', temp
