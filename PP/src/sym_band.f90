@@ -938,6 +938,7 @@ SUBROUTINE rotate_all_psi_so(ik,evc_nc,evcr,s,ftau,d_spin,has_e,gk)
   zone_border=(gk(1)/=0.or.gk(2)/=0.or.gk(3)/=0)
   !
   npw = ngk(ik)
+  evcr_save=(0.0_DP,0.0_DP)
   DO ipol=1,npol
      !
      psic = ( 0.D0, 0.D0 )
