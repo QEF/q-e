@@ -9,10 +9,11 @@
   band_plot   = .true.
 
   elph        = .true.
+  kmaps       = .true.
   epbwrite    = .false.
   epbread     = .false.
 
-  etf_mem     = .true.
+  etf_mem     = 0
 
   epwwrite    = .false.
   epwread     = .true.

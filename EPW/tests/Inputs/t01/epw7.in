@@ -12,7 +12,7 @@
   restart    = .true.
   restart_freq = 100
 
-  etf_mem     = .true.
+  etf_mem     = 0
 
   epwwrite    = .false.
   epwread     = .true.
