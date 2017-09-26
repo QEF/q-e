@@ -1,5 +1,5 @@
 
-include make.inc
+-include make.inc
 include make.versions
 
 VFSDIR=pwgui.vfs
