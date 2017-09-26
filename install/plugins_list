@@ -55,7 +55,7 @@ WEST=West-2.0.1
 WEST_URL=http://www.west-code.org/downloads/$(WEST).tar.gz
 #
 # Package maintainer: Martin Schlipf
-SternheimerGW_version=0.12
+SternheimerGW_version=0.14_qe6.2
 SternheimerGW=SternheimerGW-$(SternheimerGW_version)
 SternheimerGW_archive=v$(SternheimerGW_version).tar.gz
 SternheimerGW_URL=https://github.com/QEF/SternheimerGW/archive/$(SternheimerGW_archive)
