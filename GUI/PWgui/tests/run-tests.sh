@@ -50,4 +50,4 @@ run ../examples/ph ph
 run ../examples/pp pp
 run ../examples/projwfc projwfc
 run ../examples/chdens chdens
-run ../examples/d3 d3
+#run ../examples/d3 d3

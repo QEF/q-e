@@ -1,4 +1,4 @@
-#
+
 # $RCSfile: menustate.itcl,v $ --
 #
 #      This file contains ...
@@ -52,7 +52,8 @@ proc ::pwscf::menustate::runnable {obj moduleIdent} {
 
     ::tclu::DEBUG runnable: moduleIdent = $moduleIdent
 
-    if { [regexp {(pw|ph|pp|pr|d3|atomic)} $moduleIdent] } {
+    #if { [regexp {(pw|ph|pp|pr|d3|atomic)} $moduleIdent] } {}
+    if { [regexp {(pw|ph|pp|pr|atomic)} $moduleIdent] } {
 	return normal
     } else {
 	return disabled

@@ -88,9 +88,9 @@ $gui addModule module bands "Bands.X" [file join $env(PWGUI) modules bands bands
 $gui addModule module dos "Dos.X" [file join $env(PWGUI) modules dos dos.tcl] {
     {{Dos.X Input Files} {*.dos.in *.dos.inp}}
 }
-$gui addModule module d3 "D3.X" [file join $env(PWGUI) modules d3 d3.tcl] {
-    {{D3.X Input Files} {*.d3.in *.d3.inp}}
-}
+#$gui addModule module d3 "D3.X" [file join $env(PWGUI) modules d3 d3.tcl] {
+#    {{D3.X Input Files} {*.d3.in *.d3.inp}}
+#}
 $gui addModule module ld "LD1.X" [file join $env(PWGUI) modules atomic atomic.tcl] {
     {{LD1.X Input Files} {*.ld1.in *.ld1.inp}}
 }
@@ -120,7 +120,7 @@ $gui addHelp help pp           "PP.X Input Syntax"  [file join $env(PWGUI) doc p
 $gui addHelp help projwfc "ProjWFC.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PROJWFC.html] none
 $gui addHelp help bands     "Bands.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_BANDS.html] none
 $gui addHelp help dos         "Dos.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_DOS.html] none
-$gui addHelp help d3           "D3.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_D3.html] none
+#$gui addHelp help d3           "D3.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_D3.html] none
 $gui addHelp help ld          "LD1.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_LD1.html] none
 
 $gui addHelp separator
