@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 module_message() {
     # Usage: $0 module
@@ -22,10 +22,12 @@ run() {
     # usage: $0 dir module
     module_message $2
     here=`pwd`
+    pwgui_dir=$here/..
     cd $1
-    for file in `ls *.inp`; do
+    files=`ls *.{in,inp} neb.dat 2> /dev/null`
+    for file in $files; do
 	file_message $file
-	$PWGUI/pwgui_reformat $2 $file
+	$pwgui_dir/pwgui_reformat $2 $file
 	if test $? != 0 ; then
 	    echo "an error occurred for module: $2 , file: $file"
 	    exit 1
@@ -34,20 +36,8 @@ run() {
     cd $here
 }
 
-#for module in \
-#    pw \
-#    ph \
-#    pp \
-#    projwfc \
-#    chdens \
-#    d3
-#  do
-#  run ../examples/$module $module
-#done
-
-run ../examples/pw pw
-run ../examples/ph ph
-run ../examples/pp pp
-run ../examples/projwfc projwfc
-run ../examples/chdens chdens
-#run ../examples/d3 d3
+for dir in atomic  neb.dat  ph  pp  projwfc  pw
+do
+    module=${dir%.dat}; # neb.dat --> neb
+    run ../examples/$dir $module
+done
