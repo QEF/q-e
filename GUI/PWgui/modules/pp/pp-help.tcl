@@ -86,7 +86,7 @@ Selects what to save in filplot:
 
    6  = spin polarization (rho(up)-rho(down))
 
-   7  = contribution of a selected wavefunction to the
+   7  = contribution of selected wavefunction(s) to the
         (pseudo-)charge density. For norm-conserving PPs,
         |psi|^2 (psi=selected wavefunction). Noncollinear case:
         contribution of the given state to the charge or
@@ -176,8 +176,8 @@ help spin_component -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 <b>Noncollinear case only:</b>
-plot the contribution of the given state to the charge
-or to the magnetization along the direction indicated
+plot the contribution of the given state(s) to the charge
+or to the magnetization along the direction(s) indicated
 by spin_component:
         0 = charge (default),
         1 = x,
@@ -186,9 +186,8 @@ by spin_component:
 
 Ignored in unpolarized or LSDA case
 
-When both spin_component(1) and spin_component(2) are specified,
-all components in the range [spin_component(1),spin_component(2)]
-are plotted.
+To plot a single component ispin, specify spin_component=ispin or spin_component(1)=ispin
+To plot a range of components [imin, imax], specify spin_component(1)=imin and spin_component(2)=imax
                </pre></blockquote>
 </ul>      
       
@@ -379,13 +378,13 @@ help kpoint -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Unpolarized and noncollinear case:
-        k-point to be plotted
+        k-point(s) to be plotted
 LSDA:
-        k-point and spin polarization to be plotted
+        k-point(s) and spin polarization to be plotted
         (spin-up and spin-down correspond to different k-points!)
 
-When both kpoint(1) and kpoint(2) are specified, all
-kpoints in the range [kpoint(1),kpoint(2)] are plotted.
+To plot a single kpoint ikpt, specify kpoint=ikpt or kpoint(1)=ikpt
+To plot a range of kpoints [imin, imax], specify kpoint(1)=imin and kpoint(2)=imax
                </pre></blockquote>
 </ul>      
       
@@ -401,10 +400,10 @@ help kband -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Band to be plotted.
+Band(s) to be plotted.
 
-When both kband(1) and kband(2) are specified, all
-bands in the range [kband(1),kband(2)] are plotted.
+To plot a single band ibnd, specify kband=ibnd or kband(1)=ibnd
+To plot a range of bands [imin, imax], specify kband(1)=imin and kband(2)=imax
                </pre></blockquote>
 </ul>      
       
