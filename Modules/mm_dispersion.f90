@@ -67,6 +67,8 @@ MODULE london_module
       !
       USE cell_base ,          ONLY : alat, omega
       !
+      USE constants,           ONLY : eps16
+      !
       USE io_global,           ONLY : ionode, ionode_id, stdout
       !
 #if defined __MPI
@@ -207,7 +209,7 @@ MODULE london_module
            !
            i = atomic_number ( atom_label ( ilab ) )
            IF ( i > 0 .AND. i < 87 ) THEN
-              IF ( in_C6 (ilab) > 0.0_DP ) THEN
+              IF ( in_C6 (ilab) > -eps16 ) THEN
                  C6_i  ( ilab )  = in_C6 (ilab)
               ELSE
                  C6_i  ( ilab )  = vdw_coeffs(1,i)
@@ -228,8 +230,8 @@ MODULE london_module
          !
          DO ilab = 1 , ntyp
            !
-           IF ( ( C6_i  ( ilab ) < 0.d0 ) .or. &
-                ( R_vdw ( ilab ) < 0.d0 ) ) THEN
+           IF ( ( C6_i  ( ilab ) < -eps16 ) .or. &
+                ( R_vdw ( ilab ) < 0.0_DP ) ) THEN
              !
              CALL errore ( ' init_london ' ,&
                            ' one or more parameters not found ' , 4 )
