@@ -155,7 +155,7 @@ MODULE pw_restart
       USE esm,                  ONLY : do_comp_esm, esm_nfit, esm_efield, esm_w, &
                                        esm_a, esm_bc
       USE acfdt_ener,           ONLY : acfdt_in_pw 
-      USE london_module,        ONLY : scal6, lon_rcut
+      USE london_module,        ONLY : scal6, lon_rcut, in_C6, in_rvdw
       USE tsvdw_module,         ONLY : vdw_isolated
 
       !
@@ -419,8 +419,8 @@ MODULE pw_restart
                         PSEUDO_DIR = pseudo_dir, DIRNAME = dirname, &
                         ACFDT_IN_PW = acfdt_in_pw, &
                         LLONDON = llondon, LONDON_S6 = scal6,         &
-                        LONDON_RCUT = lon_rcut, LXDM = lxdm,          &
-                        TS_VDW = ts_vdw, VDW_ISOLATED = vdw_isolated )
+                        LONDON_RCUT = lon_rcut, LONDON_C6 = in_C6, LONDON_RVDW = in_rvdw, &
+                        LXDM = lxdm, TS_VDW = ts_vdw, VDW_ISOLATED = vdw_isolated )
 
 
          IF ( dft_is_hybrid() ) CALL qexml_write_exx &
@@ -1892,7 +1892,7 @@ MODULE pw_restart
       USE kernel_table, ONLY : vdw_table_name
       USE acfdt_ener,   ONLY : acfdt_in_pw
       USE control_flags,ONLY : llondon, lxdm, ts_vdw
-      USE london_module,ONLY : scal6, lon_rcut
+      USE london_module,ONLY : scal6, lon_rcut, in_C6, in_rvdw
       USE tsvdw_module, ONLY : vdw_isolated
       !
       IMPLICIT NONE
@@ -1915,7 +1915,7 @@ MODULE pw_restart
                              Hubbard_lmax, Hubbard_l, nsp_, Hubbard_U, Hubbard_J, &
                              Hubbard_J0, Hubbard_alpha, Hubbard_beta, &
                              inlc, vdw_table_name,  acfdt_in_pw, llondon, scal6, &
-                             lon_rcut, lxdm, ts_vdw, vdw_isolated, ierr )
+                             lon_rcut, in_C6, in_rvdw, lxdm, ts_vdw, vdw_isolated, ierr )
          !
       END IF
       !
