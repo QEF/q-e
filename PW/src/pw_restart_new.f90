@@ -1397,7 +1397,7 @@ MODULE pw_restart_new
                             Hubbard_J0, Hubbard_beta, U_projection
       USE kernel_table,     ONLY : vdw_table_name
       USE control_flags,    ONLY : llondon, lxdm, ts_vdw
-      USE london_module,    ONLY : scal6, lon_rcut
+      USE london_module,    ONLY : scal6, lon_rcut, in_C6
       USE tsvdw_module,     ONLY : vdw_isolated
       USE qes_types_module, ONLY : atomic_species_type, dft_type
       ! 
@@ -1548,7 +1548,19 @@ MODULE pw_restart_new
           END IF 
           IF ( dft_obj%vdW%london_rcut_ispresent ) THEN 
              lon_rcut = dft_obj%vdW%london_rcut
-          END IF 
+          END IF
+          IF ( dft_obj%vdW%london_c6_ispresent ) THEN
+             loop_on_londonC6:DO ihub =1, dft_obj%vdW%ndim_london_c6
+                symbol = TRIM(dft_obj%vdW%london_c6(ihub)%specie)
+                loop_on_speciesC6:DO isp = 1, nsp_
+                   IF ( TRIM(symbol) == TRIM ( atomic_specs%species(isp)%name) ) THEN 
+                      in_C6(isp) = dft_obj%vdW%london_c6(ihub)%HubbardCommon
+                      EXIT loop_on_speciesC6
+                   END IF
+                END DO loop_on_speciesC6
+             END DO loop_on_londonC6
+          END IF
+          !
           IF (dft_obj%vdW%ts_vdW_isolated_ispresent ) THEN 
              vdW_isolated = dft_obj%vdW%ts_vdW_isolated
           END IF 
