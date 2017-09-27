@@ -137,12 +137,18 @@ proc ::helpdoc::writeOutputs {} {
 	puts -nonewline "   Executing:  $xsltproc --stringparam version \"$::opt(version)\" --stringparam current-date \"[clock format [clock seconds]]\" $head.xml > $head.html ..."
 	
 	if { [catch [list exec $xsltproc --stringparam version "$::opt(version)" --stringparam current-date [clock format [clock seconds]] $head.xml > $head.html] errorMsg] } {
-	    puts " \[Error\]"
-	    puts "Execution of xsltproc failed with error message:\n\n$errorMsg"
+	    puts stderr " \[Error\]"
+	    puts stderr "Execution of xsltproc failed with error message:\n\n$errorMsg"
 	} else {
 	    puts " \[OK\]"
 	    puts "File $head.html has been written."
 	}	
+    } else {
+	puts "***"
+	puts "*** \[WARNING\] xsltproc not found, XML --> HTML conversion skipped"
+	puts "***"	
+	puts "***  please install the xsltproc program to convert INPUT_*.xml to INPUT_*.html"
+	puts "***"
     }
     
     # run ROBODOC 
