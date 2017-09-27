@@ -1315,7 +1315,8 @@ CONTAINS
                          Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_J, Hubbard_J0, &
                          Hubbard_beta, Hubbard_alpha,                               &
                          inlc, vdw_table_name, pseudo_dir, acfdt_in_pw, dirname, & 
-                         llondon, london_s6, london_rcut, lxdm, ts_vdw, vdw_isolated )
+                         llondon, london_s6, london_rcut, london_c6, london_rvdw, &
+                         lxdm, ts_vdw, vdw_isolated )
       !------------------------------------------------------------------------
       !
       CHARACTER(LEN=*),   INTENT(IN) :: dft
@@ -1332,7 +1333,7 @@ CONTAINS
       LOGICAL, OPTIONAL,  INTENT(IN) :: acfdt_in_pw
       !
       LOGICAL,  OPTIONAL, INTENT(IN) :: llondon, lxdm, ts_vdw, vdw_isolated
-      REAL(DP), OPTIONAL, INTENT(IN) :: london_s6, london_rcut
+      REAL(DP), OPTIONAL, INTENT(IN) :: london_s6, london_rcut, london_c6(:), london_rvdw(:)
 
       INTEGER            :: i, flen, ierrl
       CHARACTER(LEN=256) :: file_table
@@ -1341,17 +1342,22 @@ CONTAINS
       !
       CALL iotk_write_dat( ounit, "DFT", dft )
       !
+      IF ( lda_plus_u .OR. (PRESENT(llondon) .AND. llondon) ) THEN         
+         ! N.B.: nsp is needed for LDA+U and DFT-D2
+         IF ( .NOT. PRESENT( nsp ) ) &
+              CALL errore( 'write_xc', ' variable nsp not present', 1 )
+         CALL iotk_write_dat( ounit, "NUMBER_OF_SPECIES", nsp )
+      ENDIF
+      !
       IF ( lda_plus_u ) THEN
          !
          IF ( .NOT. PRESENT( Hubbard_lmax ) .OR. &
               .NOT. PRESENT( Hubbard_l )    .OR. & 
-              .NOT. PRESENT( Hubbard_U )    .OR. &
-              .NOT. PRESENT( nsp )              )&
+              .NOT. PRESENT( Hubbard_U )    ) &
             CALL errore( 'write_xc', &
                          ' variables for LDA+U not present', 1 )
          !
          CALL iotk_write_dat( ounit, "LDA_PLUS_U_CALCULATION", lda_plus_u )
-         CALL iotk_write_dat( ounit, "NUMBER_OF_SPECIES", nsp )
          CALL iotk_write_dat( ounit, "HUBBARD_LMAX", Hubbard_lmax )
          CALL iotk_write_dat( ounit, "HUBBARD_L", Hubbard_l(1:nsp) )
          CALL iotk_write_dat( ounit, "HUBBARD_U", Hubbard_U(1:nsp) )
@@ -1404,12 +1410,18 @@ CONTAINS
       IF ( PRESENT (llondon) ) THEN
          IF ( llondon ) THEN
             IF ( .NOT. PRESENT( london_s6 )  .OR. &
-                 .NOT. PRESENT( london_rcut ) ) & 
-               CALL errore( 'write_xc', &
-                            ' variables for DFT+D not present', 1 )
+                 .NOT. PRESENT( london_rcut ).OR. &
+                 .NOT. PRESENT( london_c6 )  .OR. &
+                 .NOT. PRESENT( london_rvdw ) ) & 
+                 CALL errore( 'write_xc', &
+                              ' variables for DFT+D not present', 1 )
             CALL iotk_write_begin( ounit, "DFT_D2" )
+            !
             CALL iotk_write_dat( ounit, "SCALING_FACTOR", london_s6 )
             CALL iotk_write_dat( ounit, "CUTOFF_RADIUS",  london_rcut )
+            CALL iotk_write_dat( ounit, "C6",             london_c6(1:nsp) )
+            CALL iotk_write_dat( ounit, "RADIUS_VDW",     london_rvdw(1:nsp) )
+            !
             CALL iotk_write_end  ( ounit, "DFT_D2" )
          ENDIF
       ENDIF
@@ -3425,7 +3437,8 @@ CONTAINS
                               Hubbard_lmax, Hubbard_l, nsp, Hubbard_U, Hubbard_J,&
                               Hubbard_J0, Hubbard_alpha, Hubbard_beta, &
                               inlc, vdw_table_name, acfdt_in_pw, llondon, london_s6, &
-                              london_rcut, lxdm, ts_vdw, vdw_isolated, ierr )
+                              london_rcut, london_c6, london_rvdw, &
+                              lxdm, ts_vdw, vdw_isolated, ierr )
       !----------------------------------------------------------------------
       !
       CHARACTER(len=*), OPTIONAL, INTENT(out) :: dft
@@ -3443,12 +3456,12 @@ CONTAINS
       CHARACTER(LEN=*), OPTIONAL, INTENT(out) :: vdw_table_name
       LOGICAL,          OPTIONAL, INTENT(out) :: acfdt_in_pw
       LOGICAL,  OPTIONAL, INTENT(out) :: llondon, lxdm, ts_vdw, vdw_isolated
-      REAL(DP), OPTIONAL, INTENT(out) :: london_s6, london_rcut
+      REAL(DP), OPTIONAL, INTENT(out) :: london_s6, london_rcut, london_c6(:), london_rvdw(:)
       !
       INTEGER,                    INTENT(out) :: ierr
       !
       CHARACTER(LEN=256)      :: dft_, vdw_table_name_, U_projection_
-      LOGICAL                 :: lda_plus_u_, found
+      LOGICAL                 :: lda_plus_u_, found, found_nsp
       LOGICAL                 :: acfdt_in_pw_
       INTEGER                 :: Hubbard_lmax_, nsp_,lda_plus_u_kind_, inlc_
       INTEGER,    ALLOCATABLE :: Hubbard_l_(:)
@@ -3456,6 +3469,7 @@ CONTAINS
       REAL(DP),   ALLOCATABLE :: Hubbard_alpha_(:), Hubbard_J0_(:), Hubbard_beta_(:)
       LOGICAL                 :: llondon_, lxdm_, ts_vdw_, vdw_isolated_
       REAL(DP)                :: london_s6_=0._dp, london_rcut_=0._dp
+      REAL(DP),   ALLOCATABLE :: london_c6_(:), london_rvdw_(:)
       !
       ierr = 0
       !
@@ -3466,14 +3480,16 @@ CONTAINS
       CALL iotk_scan_dat( iunit, "DFT", dft_, IERR=ierr )
       IF ( ierr/=0 ) RETURN
       !
+      CALL iotk_scan_dat( iunit, "NUMBER_OF_SPECIES", nsp_, FOUND=found_nsp, IERR=ierr )
+      IF ( ierr/=0 ) RETURN
+      !
       CALL iotk_scan_dat( iunit, "LDA_PLUS_U_CALCULATION", lda_plus_u_, FOUND=found, IERR=ierr )
       IF ( ierr/=0 ) RETURN
       IF ( .NOT. found ) lda_plus_u_ = .FALSE.
       !
       IF ( lda_plus_u_ ) THEN
          !
-         CALL iotk_scan_dat( iunit, "NUMBER_OF_SPECIES", nsp_, IERR=ierr )
-         IF ( ierr/=0 ) RETURN
+         IF ( .not.found_nsp ) RETURN
          !
          CALL iotk_scan_dat( iunit, "HUBBARD_LMAX", Hubbard_lmax_, IERR=ierr )
          IF ( ierr/=0 ) RETURN
@@ -3550,8 +3566,19 @@ CONTAINS
       IF ( ierr/=0 ) RETURN
       llondon_ = found
       IF ( llondon_ ) THEN
+         !         
+         IF ( .not. found_nsp ) RETURN
+         !
+         ALLOCATE( london_c6_(nsp_) )
+         ALLOCATE( london_rvdw_(nsp_) )
+         !
+         london_c6_(:) = -1.0_DP
+         london_rvdw_(:) = -1.0_DP
+         !
          CALL iotk_scan_dat( iunit, "SCALING_FACTOR", london_s6_ )
          CALL iotk_scan_dat( iunit, "CUTOFF_RADIUS",  london_rcut_)
+         CALL iotk_scan_dat( iunit, "C6",             london_c6_ )
+         CALL iotk_scan_dat( iunit, "RADIUS_VDW",     london_rvdw_ )
          CALL iotk_scan_end( iunit, "DFT_D2" )
       ENDIF
       !
@@ -3603,6 +3630,12 @@ CONTAINS
          llondon = llondon_
          IF (present(london_s6) )   london_s6   = london_s6_
          IF (present(london_rcut) ) london_rcut = london_rcut_
+         IF (present(london_c6) )   london_c6(1:nsp_)   = london_c6_(1:nsp_)
+         IF (present(london_rvdw) ) london_rvdw(1:nsp_) = london_rvdw_(1:nsp_)
+         !
+         DEALLOCATE( london_c6_ )
+         DEALLOCATE( london_rvdw_ )
+         !
       ELSE IF (present(lxdm) ) THEN
          lxdm = lxdm_
       ELSE IF (present(ts_vdw) ) THEN
