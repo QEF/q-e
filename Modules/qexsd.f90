@@ -623,6 +623,7 @@ CONTAINS
          Hubbard_beta, Hubbard_J, starting_ns, U_projection_type, is_hubbard, &
          psd,  Hubbard_ns, Hubbard_ns_nc )
       !------------------------------------------------------------------------
+      USE  constants,            ONLY:  eps16
       USE  parameters,           ONLY:  lqmax
       USE  input_parameters,     ONLY:  nspinx
       IMPLICIT NONE
@@ -869,19 +870,19 @@ CONTAINS
            london_s6_ispresent = .TRUE. 
            london_rcut_ispresent = .TRUE. 
            xdm_a1_ispresent = .TRUE. 
-           xdm_a2_ispresent = .TRUE. 
-           IF ( ANY(london_c6 .GT.  0.d0 )) THEN 
+           xdm_a2_ispresent = .TRUE.
+           IF ( ANY(london_c6 .GT.  -eps16 )) THEN ! -eps16 to allow london_c6(i) = 0.0 
               london_c6_ispresent = .TRUE.
               ndim_london_c6 = 0 
               DO isp = 1, nsp 
-                 IF ( london_c6(isp) .GT. 0.d0 ) THEN 
+                 IF ( london_c6(isp) .GT. -eps16 ) THEN 
                     ndim_london_c6 = ndim_london_c6 + 1
                  END IF 
               END DO
               ALLOCATE (london_c6_obj(ndim_london_c6))
               ndim_london_c6 = 0 
               DO isp = 1, nsp
-                 IF ( london_c6(isp) .GT. 0.d0) THEN
+                 IF ( london_c6(isp) .GT. -eps16 ) THEN
                     ndim_london_c6 = ndim_london_c6 + 1  
                     CALL qes_init_hubbardcommon(london_c6_obj(ndim_london_c6), "london_c6", TRIM(species(isp)),"",&
                                                 london_c6(isp))
