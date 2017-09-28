@@ -2,7 +2,7 @@
 # This file is sourced by "gen-emacs-mode" script and contains the
 # machinery for generating the Emacs major mode files for Quantum
 # ESPRESSO. It relies heavily on: (1) helpdoc utility, (2) INPUT_*.def
-# files, and (3) templates provided in qe-emacs.templates/ directory.
+# files, and (3) templates provided in ../GUI/QE-modes/qe-modes.templates/ directory.
 #
 
 ###
@@ -18,8 +18,10 @@ proc ::helpdoc::modulename_from_defname {deffile} {
     return [string tolower [regsub {^INPUT_} [file rootname $def_file] {}]]
 }
 
-# Purpose: quote list, i.e., transform {a b c} to {"${prefix}a" "${prefix}b" "${prefix}c"},
-#          where $prefix stands for the value of prefix
+# Purpose: quote the list elements, i.e., transform {a b c} to either {"a" "b" "c"},
+#          or {"${prefix}a" "${prefix}b" "${prefix}c"} if $prefix != ""
+#
+#          prefix = optional argument (default = "")
 proc ::helpdoc::quote_list {lst {prefix {}}} {    
     set result ""
     foreach item $lst {
@@ -153,7 +155,7 @@ proc ::helpdoc::qe_mode_init {} {
 }
 
 
-# Purpose: process a given *.def file for the pupose of generating qe-modes
+# Purpose: process a given *.def file for the purpose of generating qe-modes
 proc ::helpdoc::qe_mode_process_def {deffile} {
     variable tree
     variable inside_namelist
@@ -205,7 +207,14 @@ proc ::helpdoc::qe_mode_generate {module_list} {
 
     # cards & flags, namelists & vars
     set cards_l   [concat [value_of fontlock(keywords)] [value_of fontlock(cards)]]
+    #
+    # N.B: if there are no cards, the auto-indentation will not work in emacs;
+    #      Workaround: create a dummy __NO-CARDS card
+    if { $cards_l == "" } {
+	set cards_l "__NO-CARDS"
+    }
     set cards     [quote_list [lsort -unique $cards_l]]
+    
     set flags     [quote_list [lsort -unique [value_of fontlock(flags)]]]
     set namelists [quote_list [lsort -nocase -unique [value_of fontlock(namelists)]] $opt(nmlprefix)]
     set vars      [quote_list [lsort -nocase -unique [value_of fontlock(vars)]]]
