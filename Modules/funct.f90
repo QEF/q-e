@@ -2683,7 +2683,7 @@ subroutine tau_xc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
   elseif (imeta == 5) then
      call  SCANcxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
   else
-     call errore('v_xc_meta','wrong igcx and/or igcc',1)
+     call errore('tau_xc','wrong igcx and/or igcc',1)
   end if
   
   return
@@ -2753,7 +2753,7 @@ subroutine tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,   &
      
   else
   
-     call errore('v_xc_meta','wrong igcx and/or igcc',1)
+     call errore('tau_xc_spin','This case not implemented',imeta)
      
   end if
   
