@@ -1,7 +1,7 @@
 #!/bin/sh -x
 
 version=6.2
-revision=13871
+revision=13888
 user=giannozz
 tempdir=$HOME/tempdir
 

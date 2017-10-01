@@ -1,3 +1,7 @@
+Known problems in 6.2 version:
+
+  * New XML format does not work with Intel v.12 compiler
+
 New in 6.2 version:
 
   * SCAN functional with libxc v.3; bands with meta-GGA can be computed
@@ -80,7 +84,7 @@ Incompatible changes in 6.2 version:
 
   * MAJOR restructuring of the distribution:
     - diagonalizers moved to KS_Solvers/
-    - general utility modules moved to UtilsXlib
+    - general utility modules moved to UtilsXlib/
   * MAJOR restructuring of parallel FFTs, affecting ordering of real-space
     arrays
   * Restructuring of C routines, introduction of ISO_C_BINDING:
@@ -90,12 +94,13 @@ Incompatible changes in 6.2 version:
     - fft_defs.h and related configure and makedep stuff deleted
   * module pwcom no longer contains modules gvect, gvecs, references to
     some variables in modules constants, cell_base
-  * The new xml format with schema is now the default. Use configure option
+  * The new XML format with schema is now the default. Use configure option
     "--disable-xml", or add -D__OLDXML to MANUAL_FLAGS in make.inc, to revert
     to the old xml format. IMPORTANT NOTICE: the format is incompatibile both
     with the "old" format and with the previous "new" one: files may be in
     different locations with different names and contain different data.
     IMPORTANT NOTICE 2: the "collected" format is now the default
+    IMPORTANT NOTICE 3: the new format uses FoX instad opf iotk
   * Hybrid functionals: ACE is now the default for scf calculations (it wasn't
     in 6.1 contrary to what previously stated in this file); it is disabled
     for TD-DFPT. See variable "use_ace".
