@@ -886,6 +886,7 @@ MODULE cp_restart
       USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, inter_bgrp_comm, intra_pool_comm
       USE parameters,               ONLY : ntypx
       USE constants,                ONLY : eps8, angstrom_au, pi
+      USE mytime,                   ONLY : f_wall
       !
       IMPLICIT NONE
       !
@@ -1653,9 +1654,6 @@ MODULE cp_restart
       ! BS : Wannier centers
       IF ( lwf ) CALL mp_bcast( wfc, ionode_id, intra_image_comm )
       !-------------------------------------------------------------------------
-      !
-      IF ( PRESENT( mat_z ) ) &
-         CALL mp_bcast( mat_z(:,:,:), ionode_id, intra_image_comm )
       !
       IF ( ionode ) &
          CALL iotk_close_read( iunpun )

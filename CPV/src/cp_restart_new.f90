@@ -2134,6 +2134,8 @@ MODULE cp_restart_new
     END DO
     !
     DEALLOCATE( mrepl )
+    ! not sure about the following line
+    ! CALL mp_bcast( mat_z(:,:,:), ionode_id, intra_image_comm )
     !
   END SUBROUTINE cp_read_zmat
   !------------------------------------------------------------------------
