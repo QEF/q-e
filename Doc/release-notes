@@ -100,7 +100,7 @@ Incompatible changes in 6.2 version:
     with the "old" format and with the previous "new" one: files may be in
     different locations with different names and contain different data.
     IMPORTANT NOTICE 2: the "collected" format is now the default
-    IMPORTANT NOTICE 3: the new format uses FoX instad opf iotk
+    IMPORTANT NOTICE 3: the new format uses FoX instead of iotk
   * Hybrid functionals: ACE is now the default for scf calculations (it wasn't
     in 6.1 contrary to what previously stated in this file); it is disabled
     for TD-DFPT. See variable "use_ace".

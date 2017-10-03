@@ -228,7 +228,17 @@ CONTAINS
       ! ... convergence is checked here
       !
       energy_error = ABS( energy_p - energy )
+      !
+      ! ... obscure PGI bug as of v.17.4
+      !
+#if defined (__PGI)
+      grad_in = MATMUL( TRANSPOSE(hinv_block), grad(1:n-9) )
+      grad_error = MAXVAL( ABS( grad_in ) )
+#else
       grad_error = MAXVAL( ABS( MATMUL( TRANSPOSE(hinv_block), grad(1:n-9)) ) )
+#endif
+      print *, 'grad:',grad_error
+      print '(3f18.12)',grad(1:n-9)
       conv_bfgs = energy_error < energy_thr
       conv_bfgs = conv_bfgs .AND. ( grad_error < grad_thr )
       !
