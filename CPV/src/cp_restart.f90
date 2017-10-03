@@ -754,6 +754,8 @@ MODULE cp_restart
                !
             END IF
             !
+            DEALLOCATE( mrepl )
+            !
          END DO
          !
          IF ( ionode ) &
