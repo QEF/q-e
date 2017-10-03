@@ -3630,12 +3630,15 @@ CONTAINS
          llondon = llondon_
          IF (present(london_s6) )   london_s6   = london_s6_
          IF (present(london_rcut) ) london_rcut = london_rcut_
-         IF (present(london_c6) )   london_c6(1:nsp_)   = london_c6_(1:nsp_)
-         IF (present(london_rvdw) ) london_rvdw(1:nsp_) = london_rvdw_(1:nsp_)
-         !
-         DEALLOCATE( london_c6_ )
-         DEALLOCATE( london_rvdw_ )
-         !
+         IF ( llondon ) THEN
+            !
+            IF (present(london_c6) )   london_c6(1:nsp_)  =london_c6_(1:nsp_)
+            IF (present(london_rvdw) ) london_rvdw(1:nsp_)=london_rvdw_(1:nsp_)
+            DEALLOCATE( london_c6_ )
+            DEALLOCATE( london_rvdw_ )
+           !
+        END IF
+        !
       ELSE IF (present(lxdm) ) THEN
          lxdm = lxdm_
       ELSE IF (present(ts_vdw) ) THEN
