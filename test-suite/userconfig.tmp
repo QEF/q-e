@@ -11,7 +11,8 @@ tolerance = ( (8.0e-4, 1.0e-4, 'e1'),
               (1.0e-2, 1.0e-2, 'eh1'),
               (1.0e-2, 5.0e-2, 'el1'),
               (5.0e-2, None,   'band'),
-              (1.0e-2, 1.0e-2, 'tf1') )
+              (1.0e-2, 1.0e-2, 'tf1'),
+              (2.5e-3, None,   'geom') )
 skip_program = grep
 skip_args = 'not present in this version'
 
