@@ -172,8 +172,7 @@ CONTAINS
          &/5X,"for quantum simulation of materials; please cite",   &
          &/9X,"""P. Giannozzi et al., J. Phys.:Condens. Matter 21 ",&
          &    "395502 (2009);", &
-         &/9X,"""P. Giannozzi et al., J. Phys.:Condens. Matter. ",&
-         &    "in press (2017);", &
+         &/9X,"""P. Giannozzi et al., http://arxiv.org/abs/1709.10010;", &
          &/9X," URL http://www.quantum-espresso.org"", ", &
          &/5X,"in publications or presentations arising from this work. More details at",&
          &/5x,"http://www.quantum-espresso.org/quote")' )

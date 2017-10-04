@@ -163,6 +163,7 @@ metagga.o : kind.o
 metagga.o : libxc.o
 mm_dispersion.o : ../UtilXlib/mp.o
 mm_dispersion.o : cell_base.o
+mm_dispersion.o : constants.o
 mm_dispersion.o : io_global.o
 mm_dispersion.o : ions_base.o
 mm_dispersion.o : kind.o
