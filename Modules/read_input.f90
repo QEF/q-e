@@ -53,12 +53,12 @@ MODULE read_input
      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
      IF ( ierr > 0 ) CALL errore('read_input', 'opening input file',ierr)
      CALL mp_bcast( xmlinput, ionode_id, intra_image_comm )
-     CALL mp_bcast( attr, ionode_id, intra_image_comm )
      !
      CALL reset_input_checks () 
      !
      IF ( xmlinput ) THEN
         !
+        CALL mp_bcast( attr, ionode_id, intra_image_comm )
         CALL read_xml ( prog, attr )
         !
      ELSE
