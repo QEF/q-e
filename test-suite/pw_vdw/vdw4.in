@@ -15,8 +15,6 @@
     ntyp            = 1
 
     occupations     = 'fixed'
-    smearing        = 'methfessel-paxton'
-    degauss         = 0.02
 
     ecutwfc         = 30.0
     ecutrho         = 180.0
@@ -26,6 +24,7 @@
 
 &electrons
     conv_thr        = 1.0d-8
+    startingwfc='atomic'
 /
 &ions
 /
