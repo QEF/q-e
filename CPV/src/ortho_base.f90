@@ -803,22 +803,22 @@ CONTAINS
             !
             IF( MOD( root , nbgrp ) == my_bgrp_id ) THEN
 
-            root = root * leg_ortho
+               root = root * leg_ortho
 
-            IF( ngw > 0 ) THEN
-              CALL dgemm( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
-                  cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, rhop, nx )
-            ELSE
-              rhop = 0.0d0
-            END IF
-            !
-            !     q = 0  components has weight 1.0
-            !
-            IF (gstart == 2) THEN
-               CALL DGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, rhop, nx )
-            END IF
+               IF( ngw > 0 ) THEN
+                  CALL dgemm( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
+                              cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, rhop, nx )
+               ELSE
+                  rhop = 0.0d0
+               END IF
+               !
+               !     q = 0  components has weight 1.0
+               !
+               IF (gstart == 2) THEN
+                  CALL DGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, rhop, nx )
+               END IF
 
-            CALL mp_root_sum( rhop, rho, root, intra_bgrp_comm )
+               CALL mp_root_sum( rhop, rho, root, intra_bgrp_comm )
 
             END IF
 
@@ -1052,6 +1052,8 @@ CONTAINS
       INTEGER :: np( 2 ), coor_ip( 2 )
       TYPE(la_descriptor) :: desc_ip
 
+      CALL start_clock( 'updatc' )
+
       DO iss = 1, nspin
          !
          !  size of the local block
@@ -1078,7 +1080,6 @@ CONTAINS
          np(1) = desc( iss )%npr
          np(2) = desc( iss )%npc
          !
-         CALL start_clock( 'updatc' )
    
          ALLOCATE( xd( nrcx, nrcx ) )
    
