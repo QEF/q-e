@@ -1311,7 +1311,7 @@ CONTAINS
     CALL qes_reset_scf_conv(scf_conv_obj)
     ! 
     CALL qexsd_init_atomic_structure(atomic_struct_obj, ntyp, atm, ityp, nat, tau, &
-                                     alat, a1*alat, a2*alat, a3*alat, 0)
+                                     alat, a1, a2, a3, 0)
     step_obj%atomic_structure=atomic_struct_obj
     CALL qes_reset_atomic_structure( atomic_struct_obj )
     ! 

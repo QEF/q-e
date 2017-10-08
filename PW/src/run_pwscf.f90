@@ -183,6 +183,7 @@ SUBROUTINE run_pwscf ( exit_status )
      !
      ! ... exit condition (ionic convergence) is checked here
      !
+     CALL add_qexsd_step(idone)
      IF ( conv_ions ) EXIT main_loop
      !
      ! ... receive new positions from MM code in QM/MM run
@@ -198,7 +199,6 @@ SUBROUTINE run_pwscf ( exit_status )
         ! ... update_pot initializes structure factor array as well
         !
         CALL update_pot()
-        CALL add_qexsd_step(idone)
         !
         ! ... re-initialize atomic position-dependent quantities
         !
