@@ -338,7 +338,7 @@ MODULE io_base
 #if defined __HDF5
                
                CALL qeh5_set_file_hyperslab (h5dset_wfc, OFFSET = [0,j-1], COUNT = [2*npol*igwx_,1] )
-               CALL qeh5_read_dataset (wtmp, h5dset_wfc )  
+               CALL qeh5_read_dataset (wtmp, h5dset_wfc )
 #else
                READ (iuni) wtmp(1:npol*igwx_) 
 #endif
@@ -431,8 +431,13 @@ MODULE io_base
 #if defined __HDF5
       TYPE (qeh5_file)          ::  h5file
       TYPE (qeh5_dataset)       ::  h5dset_mill, h5dset_rho_g
-      CHARACTER(LEN=10)          :: bool_char = ".FALSE.", datasets(2) = ['rhotot_g  ','rhodiff_g ']
+      CHARACTER(LEN=10)          :: bool_char = ".FALSE.", datasets(4)        
       !
+      IF ( nspin <=2) THEN 
+         datasets = ["rhotot_g", "rhodiff_g", "", ""]
+      ELSE 
+         datasets = ["n_11", "n_21", "n_12", "n_22"]
+      END IF  
 #endif
       me_in_group     = mp_rank( intra_group_comm )
       nproc_in_group  = mp_size( intra_group_comm )
@@ -553,7 +558,8 @@ MODULE io_base
          IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
          CALL qeh5_set_space ( h5dset_rho_g, rho_g(1), RANK = 1 , DIMENSIONS = [ngm_g] ) 
-         CALL qeh5_open_dataset( h5file, h5dset_rho_g, NAME = datasets(ns) , ACTION = 'write', ERROR = ierr )
+         CALL qeh5_open_dataset( h5file, h5dset_rho_g, NAME = TRIM(datasets(ns)) , ACTION = 'write', ERROR = ierr )
+         if (ierr /= 0 ) CALL infomsg('write_rho:', 'error while opening h5 dataset in charge_density.hdf5') 
          CALL qeh5_write_dataset(rho_g, h5dset_rho_g) 
          CALL qeh5_close( h5dset_rho_g)     
 #else
@@ -622,8 +628,13 @@ MODULE io_base
 #if defined __HDF5
       TYPE ( qeh5_file)       :: h5file
       TYPE ( qeh5_dataset)    :: h5dset_mill, h5dset_rho_g
-      CHARACTER(LEN=10)       :: tempchar, datasets(2) = ['rhotot_g  ', 'rhodiff_g ']
+      CHARACTER(LEN=10)       :: tempchar, datasets(4)
       !
+      IF (nspin <= 2) THEN 
+        datasets =["rhotot_g", "rhodiff_g", "", ""]
+      ELSE
+        datasets =["n_11", "n_21", "n_12", "n_22"]
+      END IF 
       filename = TRIM( dirname ) // 'charge-density.hdf5'
 #else 
       filename = TRIM( dirname ) // 'charge-density.dat'
@@ -679,7 +690,7 @@ MODULE io_base
       IF ( nspin > nspin_ ) &
          CALL infomsg('read_rhog', 'some spin components not found')
       IF ( ngm_g < MAXVAL (ig_l2g(:)) ) &
-           CALL errore('read_rhog', 'some G-vectors are missing', 1)
+           CALL infomsg('read_rhog', 'some G-vectors are missing' )
       !
       ! ... skip record containing G-vector indices
       !
@@ -706,7 +717,7 @@ MODULE io_base
          !
          IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
-            CALL qeh5_open_dataset( h5file, h5dset_rho_g, NAME = datasets(ns), ACTION = 'read', ERROR = ierr) 
+            CALL qeh5_open_dataset( h5file, h5dset_rho_g, NAME = TRIM(datasets(ns)), ACTION = 'read', ERROR = ierr) 
             CALL qeh5_read_dataset ( rho_g , h5dset_rho_g )
             CALL qeh5_close ( h5dset_rho_g )  
 #else 
