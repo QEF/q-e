@@ -222,8 +222,10 @@ CONTAINS
          &I5," processors")' ) nproc 
 #endif
     !
+#if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
     WRITE( stdout, '(/5X,"MPI processes distributed on ",&
          &I5," nodes")' ) nnode
+#endif
     IF ( nimage > 1 ) WRITE( stdout, &
          '(5X,"path-images division:  nimage    = ",I7)' ) nimage
     IF ( npool > 1 ) WRITE( stdout, &

@@ -9,7 +9,10 @@
 MODULE mp_world
   !----------------------------------------------------------------------------
   !
-  USE mp, ONLY : mp_barrier, mp_start, mp_end, mp_stop, mp_count_nodes
+  USE mp, ONLY : mp_barrier, mp_start, mp_end, mp_stop 
+#if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
+  USE mp, ONLY : mp_count_nodes
+#endif
   USE io_global, ONLY : meta_ionode_id, meta_ionode
   !
   USE parallel_include
@@ -70,7 +73,9 @@ CONTAINS
 #endif
     !
     CALL mp_start( nproc, mpime, world_comm )
+#if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
     CALL mp_count_nodes ( nnode, world_comm )
+#endif
     !
     ! ... meta_ionode is true if this processor is the root processor
     ! ... of the world group - "ionode_world" would be a better name

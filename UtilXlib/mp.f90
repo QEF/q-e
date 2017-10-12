@@ -23,7 +23,10 @@
         mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, &
         mp_group_create, mp_comm_split, mp_set_displs, &
         mp_circular_shift_left, &
-        mp_get_comm_null, mp_get_comm_self, mp_count_nodes
+        mp_get_comm_null, mp_get_comm_self 
+#if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
+      PUBLIC :: mp_count_nodes
+#endif
 
 !
       INTERFACE mp_bcast
@@ -2234,6 +2237,8 @@ SUBROUTINE mp_circular_shift_left_c2d( buf, itag, gid )
    RETURN
 END SUBROUTINE mp_circular_shift_left_c2d
 !
+
+#if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
 !------------------------------------------------------------------------------!
 !..mp_count_nodes
 SUBROUTINE mp_count_nodes(num_nodes, group)
@@ -2317,9 +2322,11 @@ SUBROUTINE mp_count_nodes(num_nodes, group)
   !
   num_nodes = SUM(node_counter)
   DEALLOCATE(current_name,all_node_names,node_counter)
+!
 #endif
   RETURN
 END SUBROUTINE mp_count_nodes
+#endif 
 !
 FUNCTION mp_get_comm_null( )
   IMPLICIT NONE
