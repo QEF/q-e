@@ -222,7 +222,7 @@ CONTAINS
          &I5," processors")' ) nproc 
 #endif
     !
-#if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
+#if !defined(__GFORTRAN__) ||  ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
     WRITE( stdout, '(/5X,"MPI processes distributed on ",&
          &I5," nodes")' ) nnode
 #endif

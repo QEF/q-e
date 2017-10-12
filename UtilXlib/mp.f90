@@ -24,7 +24,7 @@
         mp_group_create, mp_comm_split, mp_set_displs, &
         mp_circular_shift_left, &
         mp_get_comm_null, mp_get_comm_self 
-#if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
+#if !defined(__GFORTRAN__) || ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
       PUBLIC :: mp_count_nodes
 #endif
 
@@ -2238,7 +2238,7 @@ SUBROUTINE mp_circular_shift_left_c2d( buf, itag, gid )
 END SUBROUTINE mp_circular_shift_left_c2d
 !
 
-#if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
+#if !defined(__GFORTRAN__) ||  ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
 !------------------------------------------------------------------------------!
 !..mp_count_nodes
 SUBROUTINE mp_count_nodes(num_nodes, group)

@@ -10,7 +10,7 @@ MODULE mp_world
   !----------------------------------------------------------------------------
   !
   USE mp, ONLY : mp_barrier, mp_start, mp_end, mp_stop 
-#if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
+#if !defined(__GFORTRAN__) || ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
   USE mp, ONLY : mp_count_nodes
 #endif
   USE io_global, ONLY : meta_ionode_id, meta_ionode
@@ -73,7 +73,7 @@ CONTAINS
 #endif
     !
     CALL mp_start( nproc, mpime, world_comm )
-#if (__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8))
+#if !defined(__GFORTRAN__) || ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
     CALL mp_count_nodes ( nnode, world_comm )
 #endif
     !
