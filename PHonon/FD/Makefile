@@ -9,7 +9,7 @@ include ../../make.inc
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
           $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../../FFTXlib \
           $(MOD_FLAG)../../PW/src $(MOD_FLAG)../../KS_Solvers/CG $(MOD_FLAG) ../../KS_Solvers/Davidson \
-          $(MOD_FLAG).
+          $(MOD_FLAG)../../dft-d3 $(MOD_FLAG).
 
 
 FDOBJS = \
@@ -17,7 +17,7 @@ FDOBJS = \
 
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 PWOBJS = ../../PW/src/libpw.a
 
 
