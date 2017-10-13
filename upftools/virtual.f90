@@ -19,60 +19,6 @@
 !   \beta^{{n)}_i(r) are the projectors for pseudopot n
 !   D^{(n))_{ij} are the (bare) components of matrix D for pseudopot n
 !
-MODULE pseudo
-  !
-  ! All variables to be read from the UPF file
-  ! (UPF = unified pseudopotential format)
-  !
-  INTEGER ,PARAMETER :: npsx = 2
-  ! npsx  : maximum number of different pseudopotentials
-  INTEGER, PARAMETER :: lmaxx  = 3, nchix  = 6, ndm = 2000
-  ! lmaxx : maximum non local angular momentum in PP
-  ! nchix : maximum number of atomic wavefunctions per PP
-  ! ndm   : maximum number of points in the radial mesh
-  INTEGER, PARAMETER :: nbrx = 8, lqmax = 5, nqfx = 8
-  ! nbrx  : maximum number of beta functions
-  ! lqmax : maximum number of angular momentum of Q
-  ! nqfx  : maximum number of coefficients in Q smoothing
-  !
-  ! pp_header
-  CHARACTER (len=80):: generated, date_author, comment
-  CHARACTER (len=2) :: psd(npsx), pseudotype
-  CHARACTER (len=20):: dft(npsx)
-  INTEGER :: lmax(npsx), mesh(npsx), nbeta(npsx), ntwfc(npsx)
-  LOGICAL :: nlcc(npsx), isus(npsx)
-  real(8) :: zp(npsx), ecutrho, ecutwfc, etotps
-  real(8) :: oc(nchix,npsx)
-  CHARACTER(len=2) :: els(nchix,npsx)
-  INTEGER :: lchi(nchix,npsx)
-  !
-  ! pp_mesh
-  real(8) :: r(ndm,npsx), rab(ndm,npsx)
-  !   pp_nlcc
-  real(8) :: rho_atc(ndm,npsx)
-  !
-  ! pp_local
-  real(8) ::  vloc0(ndm,npsx)
-  !
-  ! pp_nonlocal
-  ! pp_beta
-  real(8) :: betar(ndm, nbrx, npsx)
-  INTEGER :: lll(nbrx,npsx), ikk2(nbrx,npsx)
-  ! pp_dij
-  real(8) :: dion(nbrx,nbrx,npsx)
-  ! pp_qij
-  INTEGER ::  nqf(npsx), nqlc(npsx)
-  real(8) :: rinner(lqmax,npsx), qqq(nbrx,nbrx,npsx), &
-       qfunc(ndm,nbrx,nbrx,npsx)
-  ! pp_qfcoef
-  real(8) :: qfcoef(nqfx,lqmax,nbrx,nbrx,npsx)
-  !
-  ! pp_pswfc
-  real(8) :: chi(ndm,nchix,npsx)
-  !
-  ! pp_rhoatom
-  real(8) :: rho_at(ndm,npsx)
-END MODULE pseudo
 !
 PROGRAM virtual
   !---------------------------------------------------------------------
@@ -119,7 +65,7 @@ END PROGRAM virtual
 !
 !---------------------------------------------------------------------
 SUBROUTINE compute_virtual(x,filein)
-  USE pseudo
+  USE pseudo_mod
   USE upf, ONLY : &
            upf_rel => rel, upf_rcloc => rcloc, upf_nwfs => nwfs, &
            upf_oc => oc, upf_rcut => rcut, upf_rcutus => rcutus, &

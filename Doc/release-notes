@@ -17,6 +17,9 @@ New in 6.2 version:
 
 Fixed in 6.2 version
 
+  * virtual.x was linking a duplicate obsolete "pseudo" module, leading 
+    to an "unrecognized dft" error (fix provided by Stefano Dal Forno)
+
   * NEB + EXX works again (r13851)
 
   * Under some circumstances (k-points, reduced ecutfock, other unclear  
