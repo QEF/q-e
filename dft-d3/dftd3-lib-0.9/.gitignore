@@ -1,0 +1,7 @@
+*.o
+*~
+*.mod
+dftd3
+lib/libdftd3.a
+prg/dftd3
+test/testapi

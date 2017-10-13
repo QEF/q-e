@@ -1,0 +1,17 @@
+The subdirectory contains interface library to Grimme DFT-D3 code, as found on:
+   http://www.thch.uni-bonn.de/tc/index.php?section=downloads&subsection=getd3 
+Since quantum-espresso uses some additional subroutines, they are placed in this directory.
+
+To compile only the interface library type 'make dftd3'. It is also compiled by 'make pw'.
+
+Orginal file api.f90 has been slightly modified. Changes are
+marked with (QE 2016).
+
+There is a test program (test.x), which calculates the force and stress as obtained
+directly from dftd3-API code, and compares the results with numerically computed 
+force and stress from the obtained dispersion energy. 
+
+Parameters for dftd3 calculation can be found in ../Modules/input_parameters.f90. The 
+values there correspond to values of PBE functional. Parameter 'version' can take values
+from 2 to 6 (as of the time writing this text), only version=3 has been tested by QE,
+which corresponds to DFT-D3 with zero-damping function. 
