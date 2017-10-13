@@ -238,6 +238,7 @@ MODULE ener
        etxcc,          &! the nlcc exchange and correlation
        ewld,           &! the ewald energy
        elondon,        &! the semi-empirical dispersion energy
+       edftd3,         &! the grimme-d3 dispersion energy
        exdm,           &! the XDM dispersion energy
        demet,          &! variational correction ("-TS") for metals
        epaw,           &! sum of one-center paw contributions

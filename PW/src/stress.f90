@@ -13,7 +13,7 @@ subroutine stress ( sigma )
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
   USE cell_base,     ONLY : omega, alat, at, bg
-  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE constants,     ONLY : ry_kbar
   USE ener,          ONLY : etxc, vtxc
   USE gvect,         ONLY : ngm, gstart, nl, g, gg, gcutm
@@ -21,13 +21,15 @@ subroutine stress ( sigma )
   USE ldaU,          ONLY : lda_plus_u, U_projection
   USE lsda_mod,      ONLY : nspin
   USE scf,           ONLY : rho, rho_core, rhog_core
-  USE control_flags, ONLY : iverbosity, gamma_only, llondon, lxdm, ts_vdw
+  USE control_flags, ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw
   USE noncollin_module, ONLY : noncolin
   USE funct,         ONLY : dft_is_meta, dft_is_gradient
   USE symme,         ONLY : symmatrix
   USE bp,            ONLY : lelfield
   USE uspp,          ONLY : okvan
   USE london_module, ONLY : stres_london
+  USE dftd3_api,     ONLY : get_atomic_number, dftd3_calc
+  USE dftd3_qe,      ONLY : dftd3_pbc_gdisp, dftd3
   USE xdm_module,    ONLY : stress_xdm
   USE exx,           ONLY : exx_stress
   USE funct,         ONLY : dft_is_hybrid
@@ -43,9 +45,16 @@ subroutine stress ( sigma )
   real(DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &
        sigmaxc (3, 3), sigmaxcc (3, 3), sigmaewa (3, 3), sigmanlc (3, 3), &
        sigmabare (3, 3), sigmah (3, 3), sigmael( 3, 3), sigmaion(3, 3), &
-       sigmalon ( 3 , 3 ), sigmaxdm(3, 3), sigma_nonloc_dft (3 ,3), sigmaexx(3,3), sigma_ts(3,3)
+       sigmalon ( 3 , 3 ), sigmad3(3, 3), sigmaxdm(3, 3), sigma_nonloc_dft (3 ,3), sigmaexx(3,3), sigma_ts(3,3)
   real(DP) :: sigmaloclong(3,3)  ! for ESM stress
   integer :: l, m
+  !
+  ! Auxiliary variables for Grimme-D3
+  !
+  INTEGER :: atnum(1:nat)
+  REAL(DP) :: latvecs(3,3)
+  REAL(DP) :: stress_dftd3(3,3)
+  REAL(DP), ALLOCATABLE :: force_d3(:,:)
   !
   WRITE( stdout, '(//5x,"Computing stress (Cartesian axis) and pressure"/)')
 
@@ -110,7 +119,24 @@ subroutine stress ( sigma )
   !
   IF ( llondon ) &
     sigmalon = stres_london ( alat , nat , ityp , at , bg , tau , omega )
-
+  !
+  ! Grimme-D3 dispersion contribution
+  !
+  sigmad3 (:,:) = 0.d0
+  !
+  IF ( ldftd3 ) THEN
+    ALLOCATE(force_d3(3,nat))
+    force_d3 ( : , : ) = 0.0_DP
+    latvecs(:,:) = at(:,:)*alat
+    tau(:,:) = tau(:,:)*alat
+    atnum(:) = get_atomic_number(atm(ityp(:)))
+    CALL dftd3_pbc_gdisp(dftd3, tau, atnum, latvecs, &
+                         force_d3, stress_dftd3)
+    sigmad3 = 2.d0*stress_dftd3
+    tau(:,:)=tau(:,:)/alat
+    DEALLOCATE(force_d3)
+  END IF
+  !
   ! xdm dispersion
   sigmaxdm = 0._dp
   if (lxdm) sigmaxdm = stress_xdm()
@@ -152,7 +178,7 @@ subroutine stress ( sigma )
   sigma(:,:) = sigmakin(:,:) + sigmaloc(:,:) + sigmahar(:,:) + &
                sigmaxc(:,:) + sigmaxcc(:,:) + sigmaewa(:,:) + &
                sigmanlc(:,:) + sigmah(:,:) + sigmael(:,:) +  &
-               sigmaion(:,:) + sigmalon(:,:) + sigmaxdm(:,:) + &
+               sigmaion(:,:) + sigmalon(:,:) + sigmad3(:,:) + sigmaxdm(:,:) + &
                sigma_nonloc_dft(:,:) + sigma_ts(:,:)
   !
   IF (dft_is_hybrid()) THEN
@@ -191,6 +217,7 @@ subroutine stress ( sigma )
      (sigmaewa(l,1)*ry_kbar,sigmaewa(l,2)*ry_kbar,sigmaewa(l,3)*ry_kbar, l=1,3),&
      (sigmah  (l,1)*ry_kbar,sigmah  (l,2)*ry_kbar,sigmah  (l,3)*ry_kbar, l=1,3),&
      (sigmalon(l,1)*ry_kbar,sigmalon(l,2)*ry_kbar,sigmalon(l,3)*ry_kbar, l=1,3), &
+     (sigmad3 (l,1)*ry_kbar,sigmad3 (l,2)*ry_kbar,sigmad3 (l,3)*ry_kbar, l=1,3), &
      (sigmaxdm(l,1)*ry_kbar,sigmaxdm(l,2)*ry_kbar,sigmaxdm(l,3)*ry_kbar, l=1,3), &
      (sigma_nonloc_dft(l,1)*ry_kbar,sigma_nonloc_dft(l,2)*ry_kbar,sigma_nonloc_dft(l,3)*ry_kbar, l=1,3),&
      (sigma_ts(l,1)*ry_kbar,sigma_ts(l,2)*ry_kbar,sigma_ts(l,3)*ry_kbar, l=1,3)
@@ -221,6 +248,7 @@ subroutine stress ( sigma )
          &   5x,'ewald   stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'hubbard stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'london  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
+         &   5x,'DFT-D3  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'XDM     stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'dft-nl  stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'TS-vdW  stress (kbar)',3f10.2/2(26x,3f10.2/)/ )

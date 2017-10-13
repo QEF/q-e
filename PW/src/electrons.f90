@@ -26,7 +26,7 @@ SUBROUTINE electrons()
   USE lsda_mod,             ONLY : nspin, magtot, absmag
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
-                                   elondon, ef_up, ef_dw
+                                   elondon, edftd3, ef_up, ef_dw
   USE scf,                  ONLY : rho, rho_core, rhog_core, v, vltot, vrs, &
                                    kedtau, vnew
   USE control_flags,        ONLY : tr2, niter, conv_elec, restart, lmd, &
@@ -334,7 +334,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
-  USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor
+  USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor, atm
   USE basis,                ONLY : starting_pot
   USE bp,                   ONLY : lelfield
   USE fft_base,             ONLY : dfftp
@@ -348,7 +348,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE gvecw,                ONLY : ecutwfc
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
-                                   elondon, ef_up, ef_dw, exdm, ef
+                                   elondon, edftd3, ef_up, ef_dw, exdm, ef
   USE scf,                  ONLY : scf_type, scf_type_COPY, bcast_scf_type,&
                                    create_scf_type, destroy_scf_type, &
                                    open_mix_file, close_mix_file, &
@@ -358,7 +358,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    iprint, conv_elec, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
-                                   llondon, scf_must_converge, lxdm, ts_vdw
+                                   llondon, ldftd3, scf_must_converge, lxdm, ts_vdw
   USE control_flags,        ONLY : n_scf_steps, scf_error
 
   USE io_files,             ONLY : iunmix, output_drho, &
@@ -376,6 +376,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE mp,                   ONLY : mp_sum, mp_bcast
   !
   USE london_module,        ONLY : energy_london
+  USE dftd3_api,            ONLY : dftd3_pbc_dispersion, &
+                                   dftd3_init, dftd3_set_functional, &
+                                   get_atomic_number, dftd3_input, &
+                                   dftd3_calc
+  USE dftd3_qe,             ONLY : dftd3, dftd3_in, energy_dftd3
   USE xdm_module,           ONLY : energy_xdm
   USE tsvdw_module,         ONLY : EtsvdW
   !
@@ -424,6 +429,10 @@ SUBROUTINE electrons_scf ( printout, exxen )
   REAL(DP), EXTERNAL :: ewald, get_clock
   REAL(DP) :: etot_cmp_paw(nat,2,2)
   !
+  ! auxiliary variables for grimme-d3
+  !
+  REAL(DP) :: latvecs(3,3)
+  INTEGER:: atnum(1:nat), na
   !
   iter = 0
   dr2  = 0.0_dp
@@ -452,6 +461,22 @@ SUBROUTINE electrons_scf ( printout, exxen )
   ELSE
      elondon = 0.d0
   END IF
+  !
+  ! Grimme-D3 correction to the energy
+  !
+  IF(ldftd3) THEN
+     latvecs(:,:)=at(:,:)*alat
+     tau(:,:)=tau(:,:)*alat
+     do na=1, nat
+        atnum(na) = get_atomic_number(trim(atm(ityp(na))))
+     end do
+     call dftd3_pbc_dispersion(dftd3,tau,atnum,latvecs,energy_dftd3)
+     edftd3=energy_dftd3*2.d0
+     tau(:,:)=tau(:,:)/alat
+  ELSE
+     edftd3= 0.0
+  END IF
+  !
   !
   call create_scf_type ( rhoin )
   !
@@ -769,6 +794,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
         etot = etot + elondon
         hwf_energy = hwf_energy + elondon
      END IF
+     !
+     ! grimme-d3 dispersion energy
+     IF (ldftd3) THEN
+        etot = etot + edftd3
+        hwf_energy = hwf_energy + edftd3
+     END IF
+     !
      ! calculate the xdm energy contribution with converged density
      if (lxdm .and. conv_elec) then
         exdm = energy_xdm()
@@ -1131,6 +1163,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                ( eband + deband ), ehart, ( etxc - etxcc ), ewld
           !
           IF ( llondon ) WRITE ( stdout , 9074 ) elondon
+          IF ( ldftd3 )  WRITE ( stdout , 9078 ) edftd3
           IF ( lxdm )    WRITE ( stdout , 9075 ) exdm
           IF ( ts_vdw )  WRITE ( stdout , 9076 ) 2.0d0*EtsvdW
           IF ( textfor)  WRITE ( stdout , 9077 ) eext
@@ -1223,6 +1256,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
 9075 FORMAT( '     Dispersion XDM Correction =',F17.8,' Ry' )
 9076 FORMAT( '     Dispersion T-S Correction =',F17.8,' Ry' )
 9077 FORMAT( '     External forces energy    =',F17.8,' Ry' )
+9078 FORMAT( '     DFT-D3 Dispersion         =',F17.8,' Ry' )
 9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
             /'     estimated scf accuracy    <',0PF17.8,' Ry' )
