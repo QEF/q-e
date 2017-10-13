@@ -65,7 +65,7 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
-pw : bindir libfft libdavid libcg libla libutil mods liblapack libs libiotk 
+pw : bindir libfft libdavid libcg libla libutil mods liblapack libs libiotk dftd3
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
@@ -187,6 +187,9 @@ libs : mods
 
 lrmods : libs libla libfft  libutil
 	( cd LR_Modules ; $(MAKE) TLDEPS= all || exit 1 )
+
+dftd3 : mods
+	( cd dft-d3 ; $(MAKE) TLDEPS= all || exit 1 )
 
 bindir :
 	test -d bin || mkdir bin
