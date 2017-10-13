@@ -514,6 +514,17 @@ MODULE input_parameters
                        london_c6( nsx ) = -1.0_DP, &
                        london_rvdw( nsx ) = -1.0_DP
 
+          ! Grimme-D3 (DFT-D3) dispersion correction.
+          ! Values taken for PBE functional,
+          ! as found in original code of Grimme.
+        REAL ( DP ) :: dftd3_s6  =  1.0_DP ,&
+                       dftd3_rs6 =  1.217_DP ,&
+                       dftd3_s18 =  0.722_DP ,&
+                       dftd3_rs18 = 1.0_DP ,&
+                       dftd3_alp =  14.0_DP
+        integer  ::    dftd3_version = 3
+        logical ::     dftd3_threebody = .true.
+
         LOGICAL   :: ts_vdw = .false.
           ! OBSOLESCENT: same as vdw_corr='Tkatchenko-Scheffler'
         LOGICAL :: ts_vdw_isolated = .FALSE.
@@ -626,6 +637,8 @@ MODULE input_parameters
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
              tot_charge, tot_magnetization, spline_ps, one_atom_occupations,  &
              vdw_corr, london, london_s6, london_rcut, london_c6, london_rvdw,&
+             dftd3_s6, dftd3_rs6, dftd3_s18, dftd3_rs18, dftd3_alp,           &
+             dftd3_version,                                                   &
              ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,                       &
              xdm, xdm_a1, xdm_a2,                                             &
              step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev,                 &
