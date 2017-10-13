@@ -434,7 +434,7 @@ MODULE io_base
       CHARACTER(LEN=10)          :: bool_char = ".FALSE.", datasets(4)        
       !
       IF ( nspin <=2) THEN 
-         datasets = ["rhotot_g", "rhodiff_g", "", ""]
+         datasets(1:2) = ["rhotot_g  ", "rhodiff_g "]
       ELSE 
          datasets = ["n_11", "n_21", "n_12", "n_22"]
       END IF  
@@ -631,7 +631,7 @@ MODULE io_base
       CHARACTER(LEN=10)       :: tempchar, datasets(4)
       !
       IF (nspin <= 2) THEN 
-        datasets =["rhotot_g", "rhodiff_g", "", ""]
+        datasets(1:2) =["rhotot_g  ", "rhodiff_g "]
       ELSE
         datasets =["n_11", "n_21", "n_12", "n_22"]
       END IF 
