@@ -158,6 +158,7 @@ MODULE control_flags
     lbands  =.FALSE., &! if .TRUE. the calc. is band structure
     lconstrain=.FALSE.,&! if .TRUE. the calc. is constraint
     llondon =.FALSE., & ! if .TRUE. compute Grimme D2 dispersion corrections
+    ldftd3 =.FALSE., & ! if .TRUE. compute Grimme D3 dispersion corrections
     ts_vdw  =.FALSE., & ! as above for Tkatchenko-Scheffler disp.corrections
     lxdm    =.FALSE., & ! if .TRUE. compute XDM dispersion corrections
     restart =.FALSE.   ! if .TRUE. restart from results of a preceding run
