@@ -34,7 +34,7 @@ SUBROUTINE potinit()
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : ngm, gstart, nl, g, gg, ig_l2g
   USE gvecs,                ONLY : doublegrid
-  USE control_flags,        ONLY : lscf
+  USE control_flags,        ONLY : lscf, gamma_only
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, v, vrs, kedtau
   USE funct,                ONLY : dft_is_meta
@@ -87,7 +87,7 @@ SUBROUTINE potinit()
      ! ... this also reads rho%ns if lda+U and rho%bec if PAW
      !
      IF ( .NOT.lforcet ) THEN
-        CALL read_scf ( rho, nspin )
+        CALL read_scf ( rho, nspin, gamma_only )
 #if !defined (__OLDXML)
         CALL rho_g2r ( rho%of_g, rho%of_r )
 #endif
@@ -100,7 +100,7 @@ SUBROUTINE potinit()
         CALL read_rho ( dirname, rho%of_r, 2 )
 #else
         CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
-             ig_l2g, nspin, rho%of_g )
+             ig_l2g, nspin, rho%of_g, gamma_only )
         CALL rho_g2r ( rho%of_g, rho%of_r )
 #endif
         CALL nc_magnetization_from_lsda ( dfftp%nnr, nspin, rho%of_r )
@@ -156,7 +156,7 @@ SUBROUTINE potinit()
         CALL read_rho ( dirname, v%of_r, 1, input_drho )
 #else
         CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
-             ig_l2g, nspin, v%of_g )
+             ig_l2g, nspin, v%of_g, gamma_only )
         CALL rho_g2r ( v%of_g, v%of_r )
 #endif
         !

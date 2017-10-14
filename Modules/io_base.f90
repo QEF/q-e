@@ -589,7 +589,7 @@ MODULE io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_rhog ( dirname, root_in_group, intra_group_comm, &
-         ig_l2g, nspin, rho )
+         ig_l2g, nspin, rho, gamma_only )
       !------------------------------------------------------------------------
       !! Read and distribute rho(G) from file  'charge-density.*' 
       !! (* = dat if fortran binary, * = hdf5 if HDF5)
@@ -616,6 +616,8 @@ MODULE io_base
       INTEGER,          INTENT(IN) :: nspin
       !! read up to nspin components
       COMPLEX(dp),  INTENT(INOUT) :: rho(:,:)
+      !! temporary check while waiting for more definitive solutions
+      LOGICAL, OPTIONAL, INTENT(IN) :: gamma_only
       !
       COMPLEX(dp), ALLOCATABLE :: rho_g(:)
       COMPLEX(dp), ALLOCATABLE :: rhoaux(:)
@@ -624,7 +626,7 @@ MODULE io_base
       INTEGER                  :: ngm, nspin_, ngm_g, isup, isdw
       INTEGER                  :: iun, mill_dum, ns, ig, ierr
       INTEGER                  :: me_in_group, nproc_in_group
-      LOGICAL                  :: ionode_in_group, gamma_only
+      LOGICAL                  :: ionode_in_group, gamma_only_
       CHARACTER(LEN=320)       :: filename
       !
 #if defined __HDF5
@@ -661,9 +663,9 @@ MODULE io_base
          CALL qeh5_read_attribute (h5file%id, "nspin", nspin_)  
          SELECT CASE (TRIM(tempchar) )  
             CASE ('.true.', '.TRUE.' ) 
-                gamma_only = .TRUE.
+                gamma_only_ = .TRUE.
             CASE DEFAULT
-                gamma_only = .FALSE.
+                gamma_only_ = .FALSE.
          END SELECT    
 #else
          OPEN ( UNIT = iun, FILE = TRIM( filename ), &
@@ -672,7 +674,7 @@ MODULE io_base
             ierr = 1
             GO TO 10
          END IF
-         READ (iun, iostat=ierr) gamma_only, ngm_g, nspin_
+         READ (iun, iostat=ierr) gamma_only_, ngm_g, nspin_
          IF ( ierr /= 0 ) THEN
             ierr = 2
             GO TO 10
@@ -689,6 +691,16 @@ MODULE io_base
       CALL mp_bcast( ngm_g, root_in_group, intra_group_comm )
       CALL mp_bcast( nspin_, root_in_group, intra_group_comm )
       !
+      IF ( PRESENT(gamma_only) ) THEN
+         CALL mp_bcast( gamma_only_, root_in_group, intra_group_comm )
+         IF ( gamma_only .NEQV. gamma_only_ ) THEN
+            WRITE(6,'(/," *** read rho(G) for half G-sphere,", &
+                   & " complete rho(G) required: unsupported case")')
+           WRITE(6,'(" *** Do not use Gamma tricks to generate rho(G),", &
+                   &" or, use the old file format")')
+            CALL errore ( 'read_rhog','See above, case not yet implemented', 1)
+         END IF
+      END IF
       IF ( nspin > nspin_ ) &
          CALL infomsg('read_rhog', 'some spin components not found')
       IF ( ngm_g < MAXVAL (ig_l2g(:)) ) &

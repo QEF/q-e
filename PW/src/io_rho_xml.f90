@@ -116,7 +116,7 @@ MODULE io_rho_xml
       RETURN
     END SUBROUTINE write_scf
 
-    SUBROUTINE read_scf ( rho, nspin )
+    SUBROUTINE read_scf ( rho, nspin, gamma_only )
       !
       USE scf,              ONLY : scf_type
       USE paw_variables,    ONLY : okpaw
@@ -134,6 +134,8 @@ MODULE io_rho_xml
       IMPLICIT NONE
       TYPE(scf_type),   INTENT(INOUT)        :: rho
       INTEGER,          INTENT(IN)           :: nspin
+      LOGICAL, OPTIONAL,INTENT(IN)           :: gamma_only
+      !
       CHARACTER(LEN=256) :: dirname
       LOGICAL :: lexist
       INTEGER :: nspin_, iunocc, iunpaw, ierr
@@ -150,7 +152,7 @@ MODULE io_rho_xml
       CALL read_rho ( dirname, rho%of_r, nspin_ )
 #else
       CALL read_rhog( dirname, root_bgrp, intra_bgrp_comm, &
-           ig_l2g, nspin_, rho%of_g )
+           ig_l2g, nspin_, rho%of_g, gamma_only )
 #endif
       IF ( nspin > nspin_) rho%of_r(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
       !
