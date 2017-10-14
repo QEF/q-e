@@ -433,11 +433,6 @@ MODULE io_base
       TYPE (qeh5_dataset)       ::  h5dset_mill, h5dset_rho_g
       CHARACTER(LEN=10)          :: bool_char = ".FALSE.", datasets(4)        
       !
-      IF ( nspin <=2) THEN 
-         datasets(1:2) = ["rhotot_g  ", "rhodiff_g "]
-      ELSE 
-         datasets = ["n_11", "n_21", "n_12", "n_22"]
-      END IF  
 #endif
       me_in_group     = mp_rank( intra_group_comm )
       nproc_in_group  = mp_size( intra_group_comm )
@@ -446,6 +441,13 @@ MODULE io_base
       IF (ngm /= SIZE (mill, 2) .OR. ngm /= SIZE (ig_l2g, 1) ) &
          CALL errore('write_rhog', 'inconsistent input dimensions', 1)
       nspin= SIZE (rho, 2)
+#if defined(__HDF5) 
+      IF ( nspin <=2) THEN 
+         datasets(1:2) = ["rhotot_g  ", "rhodiff_g "]
+      ELSE 
+         datasets = ["n_11", "n_21", "n_12", "n_22"]
+      END IF  
+#endif
       iun  = 4
       !
       ! ... find out the global number of G vectors: ngm_g

@@ -465,9 +465,6 @@ MODULE pw_restart_new
       USE mp_pools,             ONLY : intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : my_bgrp_id, root_bgrp, intra_bgrp_comm,&
                                        root_bgrp_id, nbgrp
-#if defined(__HDF5) 
-      USE hdf5_qe,              ONLY : hdf5_type
-#endif
       !
       IMPLICIT NONE
       !
@@ -480,9 +477,6 @@ MODULE pw_restart_new
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
       CHARACTER(iotk_attlenx)  :: attr
-#if defined(__HDF5)
-      TYPE(hdf5_type)       :: gvecs_h5desc
-#endif
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
