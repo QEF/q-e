@@ -762,7 +762,11 @@ MODULE io_base
          END IF
       END DO
       !
+#if defined(__HDF5)
+      IF ( ionode_in_group ) CALL qeh5_close( h5file)
+#else
       IF ( ionode_in_group ) CLOSE (UNIT = iun, status ='keep' )
+#endif
       !
       DEALLOCATE( rhoaux )
       DEALLOCATE( rho_g )
