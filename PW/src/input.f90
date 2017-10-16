@@ -1024,7 +1024,7 @@ SUBROUTINE iosys()
   CASE( 'not_controlled', 'not-controlled', 'not controlled' )
      !
      control_temp = .false.
-     IF ( dynamics(1:8) == 'langevin' ) THEN
+     IF ( ion_dynamics(1:8) == 'langevin' ) THEN
         temperature  = 0.0_dp
      ELSE
         temperature  = tempw
