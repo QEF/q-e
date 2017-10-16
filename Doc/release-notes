@@ -19,10 +19,11 @@ New in 6.2 version:
 
 Fixed in 6.2 version
 
-  * Bug in DFPT with a constrained magnetization for insulators 
+  * DFPT with constrained magnetization for insulators wasn't working
+    (r13915)
 
-  * virtual.x was linking a duplicate obsolete "pseudo" module, leading 
-    to an "unrecognized dft" error (fix provided by Stefano Dal Forno)
+  * virtual.x was linking a duplicate obsolete "pseudo" module, leading to
+    "unrecognized dft" error (fix provided by Stefano Dal Forno, r13910)
 
   * NEB + EXX works again (r13851)
 

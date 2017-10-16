@@ -244,12 +244,14 @@ MODULE exx
        exx_fft%gcutmt = ecutfock / tpiba2
     ELSE
        !
-       !
        gkcut = 0.0_dp
        DO ik = 1,nks
           gkcut = MAX ( gkcut, sqrt( sum(xk(:,ik)**2) ) )
        ENDDO
        CALL mp_max( gkcut, inter_pool_comm )
+       ! Alternatively, variable "qnorm" earlier computed in "exx_grid_init"
+       ! could be used as follows:
+       ! gkcut = ( sqrt(ecutwfc/tpiba2) + qnorm )**2
        gkcut = ( sqrt(ecutwfc/tpiba2) + gkcut )**2
        ! 
        ! The following instruction may be needed if ecutfock \simeq ecutwfc
@@ -430,7 +432,7 @@ MODULE exx
     USE cell_base,  ONLY : bg, at
     USE spin_orb,   ONLY : domag
     USE noncollin_module, ONLY : nspin_lsda
-    USE klist,      ONLY : xk, wk, nkstot, nks
+    USE klist,      ONLY : xk, wk, nkstot, nks, qnorm
     USE wvfct,      ONLY : nbnd
     USE start_k,    ONLY : nk1,nk2,nk3
     USE control_flags, ONLY : iverbosity
@@ -639,6 +641,16 @@ MODULE exx
     ! check that everything is what it should be
     CALL exx_grid_check ( xk_collect(:,:) )
     DEALLOCATE( xk_collect )
+    !
+    ! qnorm = max |q|, used in allocate_nlpot to compute the maximum size
+    !         of some arrays (e.g. qrad) - beware: needed for US/PAW+EXX
+    !
+    qnorm = 0.0_dp
+    DO iq = 1,nkqs
+       DO ik = 1,nks
+          qnorm = max(qnorm, sqrt( sum((xk(:,ik)-xkq_collect(:,iq))**2) ))
+       ENDDO
+    ENDDO
     !
     CALL stop_clock ('exx_grid')
     !
