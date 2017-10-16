@@ -1025,9 +1025,9 @@ SUBROUTINE iosys()
      !
      control_temp = .false.
      IF ( ion_dynamics(1:8) == 'langevin' ) THEN
-        temperature  = 0.0_dp
-     ELSE
         temperature  = tempw
+     ELSE
+        temperature  = 0.0_dp
      END IF
      !
   CASE( 'initial' )
