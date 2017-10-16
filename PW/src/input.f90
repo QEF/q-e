@@ -405,12 +405,10 @@ SUBROUTINE iosys()
      CASE( 'langevin' )
         !
         calc        = 'ld'
-        temperature = tempw
         !
      CASE( 'langevin-smc', 'langevin+smc' )
         !
         calc        = 'ls'
-        temperature = tempw
         !
         !
      CASE DEFAULT
@@ -1026,6 +1024,11 @@ SUBROUTINE iosys()
   CASE( 'not_controlled', 'not-controlled', 'not controlled' )
      !
      control_temp = .false.
+     IF ( dynamics(1:8) == 'langevin' ) THEN
+        temperature  = 0.0_dp
+     ELSE
+        temperature  = tempw
+     END IF
      !
   CASE( 'initial' )
      !
