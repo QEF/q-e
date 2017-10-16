@@ -431,7 +431,7 @@ MODULE realus
       TYPE(realsp_augmentation), INTENT(INOUT), POINTER :: tab(:)
       !
       INTEGER  :: l, nb, mb, ijv, lllnbnt, lllmbnt, ir, nfuncs, lm, &
-           i, ijh, ih, jh, ipol
+           i0, ijh, ih, jh, ipol
       REAL(dp) :: first, second, qtot_int
       REAL(dp), ALLOCATABLE :: qtot(:), dqtot(:), xsp(:), wsp(:), &
            rl2(:), spher(:,:)
@@ -471,6 +471,14 @@ MODULE realus
       !
       xsp(:) = rgrid(nt)%r(1:upf(nt)%kkbeta)
       !
+      ! ... prevent FP errors if r(1) = 0  (may happen for some grids)
+      !
+      IF ( rgrid(nt)%r(1) < eps16 ) THEN
+         i0 = 2
+      ELSE
+         i0 = 1
+      END IF
+      !
       DO l = 0, upf(nt)%nqlc - 1
          !
          ! ... first we build for each nb,mb,l the total Q(|r|) function
@@ -489,10 +497,10 @@ MODULE realus
                             mod( l + lllnbnt + lllmbnt, 2 ) == 0 ) ) CYCLE
                !
                IF( upf(nt)%tvanp ) THEN
-                  qtot(1:upf(nt)%kkbeta) = &
-                       upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l) &
-                       / rgrid(nt)%r(1:upf(nt)%kkbeta)**2
-                  if (rgrid(nt)%r(1)< eps16) qtot(1) = qtot(2)
+                  qtot(i0:upf(nt)%kkbeta) = &
+                       upf(nt)%qfuncl(i0:upf(nt)%kkbeta,ijv,l) &
+                       / rgrid(nt)%r(i0:upf(nt)%kkbeta)**2
+                  IF ( i0 == 2 ) qtot(1) = qtot(2)
                ENDIF
                !
                ! ... compute the first derivative
