@@ -233,7 +233,7 @@ MODULE io_base
       COMPLEX(DP), ALLOCATABLE          :: wtmp(:)
       INTEGER, ALLOCATABLE              :: itmp(:,:)
       INTEGER                           :: ierr_
-      INTEGER                           :: igwx, igwx_, npwx, ik_
+      INTEGER                           :: igwx, igwx_, npwx, ik_, nbnd_
       INTEGER                           :: me_in_group, nproc_in_group
       LOGICAL                           :: ionode_in_group
 #if defined(__HDF5)
@@ -279,12 +279,12 @@ MODULE io_base
          END IF
          CALL qeh5_read_attribute (h5file%id, "scale_factor",scalef)
          CALL qeh5_read_attribute (h5file%id, "ngw", ngw)
-         CALL qeh5_read_attribute (h5file%id, "nbnd", nbnd)
+         CALL qeh5_read_attribute (h5file%id, "nbnd", nbnd_)
          CALL qeh5_read_attribute (h5file%id, "npol",npol)
          CALL qeh5_read_attribute (h5file%id, "igwx",igwx_)
 #else
          READ (iuni) ik_, xk, ispin, gamma_only, scalef
-         READ (iuni) ngw, igwx_, npol, nbnd
+         READ (iuni) ngw, igwx_, npol, nbnd_
 #endif
       END IF
       !
@@ -296,7 +296,7 @@ MODULE io_base
       CALL mp_bcast( ngw,    root_in_group, intra_group_comm )
       CALL mp_bcast( igwx_,  root_in_group, intra_group_comm )
       CALL mp_bcast( npol,   root_in_group, intra_group_comm )
-      CALL mp_bcast( nbnd,   root_in_group, intra_group_comm )
+      CALL mp_bcast( nbnd_,   root_in_group, intra_group_comm )
       !
       npwx = SIZE( wfc, 1 ) / npol
       !
@@ -330,7 +330,7 @@ MODULE io_base
       ELSE
          ALLOCATE( wtmp(1) )
       ENDIF
-      DO j = 1, nbnd
+      DO j = 1, MIN(nbnd, nbnd_) 
          !
          IF ( j <= SIZE( wfc, 2 ) ) THEN
             !
