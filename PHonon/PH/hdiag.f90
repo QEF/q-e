@@ -67,8 +67,8 @@ subroutine hdiag( npw, max_iter, avg_iter, et_ )
        ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et_ )
      avg_iter = avg_iter + 1.d0
   endif
-  CALL ccgdiagg( h_1psi, s_1psi, &
-       npwx, npw, nbnd, npol, evc, et_, btype, h_prec, eth_ns, &
+  CALL ccgdiagg( h_1psi, s_1psi, h_prec, &
+       npwx, npw, nbnd, npol, evc, et_, btype, eth_ns, &
        max_iter, .true., notconv, cg_iter)
   avg_iter = avg_iter + cg_iter
   ntry = ntry + 1
