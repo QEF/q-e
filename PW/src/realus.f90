@@ -35,7 +35,7 @@ MODULE realus
   INTEGER               :: current_phase_kpoint=-1 ! the kpoint index for which the xkphase is currently set
                                                     ! negative initial value  means not set
   !General
-  LOGICAL               :: real_space
+  LOGICAL               :: real_space = .false.
   ! if true perform calculations in real space
   INTEGER               :: real_space_debug = 0 ! FIXME: must disappear
   INTEGER               :: initialisation_level
