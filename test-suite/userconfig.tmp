@@ -68,17 +68,17 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0e-5, 1.0e-5, 'dos1'),
               (1.0e-3, 5.0e-3, 'e2'),
               (3.0e-1, 1.0e-1, 'rsig'), # epw_base3 on desktop 0.054364
-              (5.0e-2, 6.0e-4, 'isig'),
+              (1.0e-1, 5.0e-1, 'isig'),
               (3.0e-2, 3.0e-3, 'z1'),  # epw_soc on desktop
-              (5.0e-3, 2.0e-1, 'lam'), # epw_base3 on desktop 7e-06
+              (5.0e-3, 5.0e-1, 'lam'), # epw_base3 on desktop 7e-06
               (1.0e-5, 1.0e-5, 'lambda'),
               (6.0e-1, None, 'lambda_tr'),  #epw_trev on desktop -0.004794
-              (8.0e-3, 9.0e+0, 'gamma'),
+              (8.0e-3, None, 'gamma'),
               (1.1e-2, 5.0e-4, 'omega'),
               (1.0e-4, 2.0e-4, 'lam_tot'),
               (3.0e+1, 1.0e+0, 'lam_tr'),
               (1.0e-5, 2.0e-3, 'logavg'),
-              (1.0e-3, 9.9e-3, 'l_a2F'),
+              (1.0e-4, 9.9e-3, 'l_a2F'),
               (1.0e-5, 1.0e-5, 'efm'),
               (5.0e-4, 1.0e-4, 'lam_max'),
               (5.0e-4, 5.0e-4, 'lam_kmax'),
