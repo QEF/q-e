@@ -68,7 +68,7 @@ CONTAINS
   !
   ntetra =6*nk1*nk2*nk3
   nntetra=4
-  ALLOCATE ( tetra (nntetra, ntetra) )
+  IF(.NOT. ALLOCATED(tetra)) ALLOCATE ( tetra (nntetra, ntetra) )
   !
   ! Re-generate a uniform grid of k-points xkg
   !
@@ -325,7 +325,8 @@ CONTAINS
      WRITE(stdout,*) "    [opt_tetra]  Linear tetrahedron method is used."
      !
      nntetra = 4
-     ALLOCATE ( tetra(nntetra,ntetra), wlsm(4,nntetra) )
+     IF(.NOT. ALLOCATED(tetra)) ALLOCATE ( tetra(nntetra,ntetra) )
+     IF(.NOT. ALLOCATED(wlsm))  ALLOCATE ( wlsm(4,nntetra) )
      wlsm(:,:) = 0.0_dp
      !
      wlsm(1,1) = 1.0_dp
@@ -338,7 +339,8 @@ CONTAINS
      WRITE(stdout,*) "    [opt_tetra]  Optimized tetrahedron method is used."
      !
      nntetra = 20
-     ALLOCATE ( tetra(nntetra,ntetra), wlsm(4,nntetra) )
+     IF(.NOT. ALLOCATED(tetra)) ALLOCATE ( tetra(nntetra,ntetra) )
+     IF(.NOT. ALLOCATED(wlsm))  ALLOCATE ( wlsm(4,nntetra) )
      !
      wlsm(1, 1: 4) = REAL((/1440,    0,   30,    0/), dp)
      wlsm(2, 1: 4) = REAL((/   0, 1440,    0,   30/), dp)

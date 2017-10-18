@@ -96,14 +96,13 @@ SUBROUTINE clean_pw( lflag )
      CALL dealloca_london()
      CALL cleanup_xdm()
      CALL deallocate_constraint()
+     CALL deallocate_tetra ( )
      !
   END IF
   !
   CALL deallocate_bp_efield()
   !
   CALL deallocate_ldaU ( lflag )
-  !
-  CALL deallocate_tetra ( )
   !
   IF ( ALLOCATED( f_inp ) .and. lflag )      DEALLOCATE( f_inp )
   !

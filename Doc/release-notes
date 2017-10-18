@@ -33,8 +33,9 @@ Fixed in 6.2 version
     FFT grid and in the grid for ecutfock. Also fixed: incorrect indices
     of -G (used in Gamma-only case) when nr1 /= nr2 (r13833)
 
-  * In variable-cell EXX, G-vectors used in the FFT of 1/|r-r'| should be
-    rescaled as well (courtesy Satomichi Nisihara) (r13817)
+  * Variable-cell glitches: with EXX, G-vectors used in the FFT of 1/|r-r'|
+    should be rescaled as well (courtesy Satomichi Nisihara) (r13817);
+    with tetrahedra, deallocation must be done only at the end (r13932).
 
   * Bug in DFPT with tetrahedra and in "fermisurfer", plus some extensions
     to el-ph with tetrahedra (Mitsuaki Kawamura) (r13806).
