@@ -1154,7 +1154,11 @@ MODULE ph_restart
            tmp_dir=tmp_dir_ph
         ENDIF
         !
+#if defined (__OLDXML)
         filename=TRIM(dirname) // '/data-file.xml'
+#else
+        filename=TRIM(dirname) // '/data-file-schema.xml'
+#endif
         !
         IF (ionode) inquire (file =TRIM(filename), exist = exst)
         !
