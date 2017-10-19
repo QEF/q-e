@@ -330,6 +330,7 @@ MODULE io_base
       ELSE
          ALLOCATE( wtmp(1) )
       ENDIF
+      nbnd = nbnd_ 
       DO j = 1, nbnd_ 
          !
          IF ( j <= SIZE( wfc, 2 ) ) THEN
