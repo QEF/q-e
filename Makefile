@@ -73,7 +73,7 @@ pw-lib : bindir libdavid libcg libfft libla libutil mods liblapack libs libiotk
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= pw-lib || exit 1) ; fi
 
-cp : bindir libfft libla libutil mods liblapack libs libiotk libfox
+cp : bindir libdavid libcg libfft libla libutil mods liblapack libs libiotk libfox
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
