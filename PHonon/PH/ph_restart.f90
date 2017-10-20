@@ -1303,9 +1303,12 @@ MODULE ph_restart
       !
       ! ... create the main restart directory
       !
-      IF (ionode) inquire (file =TRIM(dirname)//'/data-file.xml', &
-                           exist = exst)
-      !
+      IF (ionode) inquire (file = & 
+#if defined (__OLDXML)
+        & TRIM(dirname) // '/data-file.xml',        exist = exst)
+#else
+        & TRIM(dirname) // '/data-file-schema.xml', exist = exst)
+#endif
       CALL mp_bcast( exst, ionode_id, intra_image_comm )
       !
       IF (.NOT. exst) CALL create_directory( dirname )

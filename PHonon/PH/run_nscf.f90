@@ -37,11 +37,11 @@ SUBROUTINE run_nscf(do_band, iq)
   USE acfdtest,        ONLY : acfdt_is_active, acfdt_num_der, ir_point, delta_vrs
   USE scf,             ONLY : vrs
   USE mp_bands,        ONLY : intra_bgrp_comm, nyfft
-
+  USE mp_pools,        ONLY : kunit
   USE lr_symm_base,    ONLY : minus_q, nsymq, invsymq
   USE qpoint,          ONLY : xq
   USE el_phon,         ONLY : elph_mat
- !
+  !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: do_band
@@ -57,6 +57,13 @@ SUBROUTINE run_nscf(do_band, iq)
      CALL close_files(.true.)
      wfc_dir=tmp_dir_phq
      tmp_dir=tmp_dir_phq
+     ! FIXME: kunit is set here: in this case we do not go through setup_nscf
+     ! FIXME: and read_file calls divide_et_impera that needs kunit
+     IF ( lgamma_iq(iq) ) THEN
+        kunit = 1
+     ELSE
+        kunit = 2
+     ENDIF
      CALL read_file()
      IF (.NOT.lgamma_iq(iq).OR.(qplot.AND.iq>1)) CALL &
                                   set_small_group_of_q(nsymq,invsymq,minus_q)

@@ -590,7 +590,11 @@ SUBROUTINE phq_readin()
         IF (.NOT.ext_recover.AND..NOT.ext_restart) tmp_dir_phq=tmp_dir_ph
      ENDIF
      !
+#if defined (__OLDXML)
      filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/data-file.xml'
+#else
+     filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/data-file-schema.xml'
+#endif
      IF (ionode) inquire (file =TRIM(filename), exist = exst)
      !
      CALL mp_bcast( exst, ionode_id, intra_image_comm )
