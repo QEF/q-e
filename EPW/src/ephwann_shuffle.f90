@@ -429,8 +429,10 @@
   IF ( ALLOCATED (cuq) )     DEALLOCATE (cuq)
   IF ( ALLOCATED (lwin) )    DEALLOCATE (lwin)
   IF ( ALLOCATED (lwinq) )   DEALLOCATE (lwinq)
-  CLOSE(iunepmatwp)
   CLOSE(iunepmatwe)
+#ifdef __MPI
+  CLOSE(iunepmatwp)
+#endif
   ! 
   ! Check Memory usage
   CALL system_mem_usage(valueRSS)
