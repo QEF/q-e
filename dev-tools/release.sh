@@ -1,7 +1,7 @@
 #!/bin/sh -x
 
 version=6.2
-revision=13904
+revision=13944
 user=giannozz
 tempdir=$HOME/tempdir
 
@@ -12,10 +12,10 @@ export LC_ALL
 # work in $tempdir/qe-$version
 cd $tempdir
 
-# Get the svn copy via tag
-# svn checkout http://qeforge.qe-forge.org/svn/q-e/tags/QE-$version/espresso qe-$version
+# Get the svn copy via tag (or branch)
+svn checkout svn+ssh://qeforge.qe-forge.org/svnroot/q-e/branches/QE-$version qe-$version
 # -OR- get the svn copy via revision checkout
-svn checkout -r$revision svn+ssh://$user@qeforge.qe-forge.org/svnroot/q-e/trunk/espresso qe-$version
+#svn checkout -r$revision svn+ssh://$user@qeforge.qe-forge.org/svnroot/q-e/trunk/espresso qe-$version
 cd qe-$version
 
 # Following operations require make.inc and svn files
