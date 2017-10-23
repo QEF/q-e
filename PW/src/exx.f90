@@ -351,12 +351,14 @@ MODULE exx
     INTEGER :: ig
     REAL(dp) :: gx, gy, gz
     !
-    DEALLOCATE(xkq_collect,index_xk,index_sym)
+    IF (ALLOCATED(xkq_collect))  DEALLOCATE(xkq_collect)
+    IF (ALLOCATED(index_xk))     DEALLOCATE(index_xk)
+    IF (ALLOCATED(index_sym))    DEALLOCATE(index_sym)
     exx_grid_initialized = .false.
     nkqs = 0
     CALL exx_grid_init()
     !
-    DEALLOCATE(working_pool)
+    IF (ALLOCATED(working_pool)) DEALLOCATE(working_pool)
     CALL exx_mp_init()
     !
     ! ... scale g-vectors
