@@ -105,7 +105,7 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
     CALL scatter_grid ( dfftp, gradtmp(:,ipol), gradaux(:,ipol) )
   ENDDO
 #else
-  gradaux = gradtmp
+  gradaux(1:nnr,:) = gradtmp(1:nnr,:)
 #endif
   !
   DEALLOCATE( gradtmp )
