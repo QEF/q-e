@@ -43,11 +43,11 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
   INTEGER :: idx, j0, k0, i, ir, ir_end, ipol, in
   INTEGER :: ix(-nfdpoint:nfdpoint),iy(-nfdpoint:nfdpoint),iz(-nfdpoint:nfdpoint)
   INTEGER :: ixc, iyc, izc, ixp, ixm, iyp, iym, izp, izm
-  REAL( DP ), DIMENSION( :, : ), ALLOCATABLE :: gradtmp
+  REAL( DP ), DIMENSION( :, : ), ALLOCATABLE :: gradtmp, gradaux
   !
   grad = 0.D0
   !
-  ALLOCATE( gradtmp( 3, dfftp%nr1x*dfftp%nr2x*dfftp%nr3x ) )
+  ALLOCATE( gradtmp( dfftp%nr1x*dfftp%nr2x*dfftp%nr3x, 3 ) )
   gradtmp = 0.D0
   !
 #if defined (__MPI)
@@ -89,29 +89,32 @@ SUBROUTINE calc_fd_gradient( nfdpoint, icfd, ncfd, nnr, f, grad )
     !
     DO in = -nfdpoint, nfdpoint
       i = ix(in) + iy(0) * dfftp%nr1x + iz(0) * dfftp%nr1x * dfftp%nr2x + 1
-      gradtmp(1,i) = gradtmp(1,i) - icfd(in)*f(ir)*dfftp%nr1
+      gradtmp(i,1) = gradtmp(i,1) - icfd(in)*f(ir)*dfftp%nr1
       i = ix(0) + iy(in) * dfftp%nr1x + iz(0) * dfftp%nr1x * dfftp%nr2x + 1
-      gradtmp(2,i) = gradtmp(2,i) - icfd(in)*f(ir)*dfftp%nr2
+      gradtmp(i,2) = gradtmp(i,2) - icfd(in)*f(ir)*dfftp%nr2
       i = ix(0) + iy(0) * dfftp%nr1x + iz(in) * dfftp%nr1x * dfftp%nr2x + 1
-      gradtmp(3,i) = gradtmp(3,i) - icfd(in)*f(ir)*dfftp%nr3
+      gradtmp(i,3) = gradtmp(i,3) - icfd(in)*f(ir)*dfftp%nr3
     ENDDO
     !
   ENDDO
   !
+  ALLOCATE( gradaux(nnr,3) )
 #if defined (__MPI)
   DO ipol = 1, 3
-    CALL mp_sum( gradtmp(ipol,:), intra_bgrp_comm )
-    CALL scatter_grid ( dfftp, gradtmp(ipol,:), grad(ipol,:) )
+    CALL mp_sum( gradtmp(:,ipol), intra_bgrp_comm )
+    CALL scatter_grid ( dfftp, gradtmp(:,ipol), gradaux(:,ipol) )
   ENDDO
 #else
-  grad = gradtmp
+  gradaux = gradtmp
 #endif
   !
   DEALLOCATE( gradtmp )
   !
   DO ir = 1,nnr
-    grad(:,ir) = MATMUL( bg, grad(:,ir) )
+    grad(:,ir) = MATMUL( bg, gradaux(ir,:) )
   ENDDO
+  DEALLOCATE( gradaux )
+  !
   grad = grad / DBLE(ncfd) / alat
   !
   RETURN
