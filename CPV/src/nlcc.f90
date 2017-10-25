@@ -202,7 +202,7 @@
       real(dp), allocatable :: fcc(:,:)
       external  boxdotgrid
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
       INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
@@ -225,7 +225,7 @@
 
       isa = 0
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
       mytid = omp_get_thread_num()  ! take the thread ID
       ntids = omp_get_num_threads() ! take the number of threads
       itid  = 0
@@ -252,7 +252,7 @@
             if( ia .eq. na(is) ) nfft=1
 #endif
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
             IF ( mytid /= itid ) THEN
                itid = MOD( itid + 1, ntids )
                CYCLE
@@ -345,7 +345,7 @@
       complex(dp), allocatable :: wrk1(:)
       complex(dp), allocatable :: qv(:)
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
       INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
@@ -365,7 +365,7 @@
 !
       isa = 0
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
       mytid = omp_get_thread_num()  ! take the thread ID
       ntids = omp_get_num_threads() ! take the number of threads
       itid  = 0
@@ -391,7 +391,7 @@
             if( ia.eq.na(is) ) nfft=1
 #endif
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
             IF ( mytid /= itid ) THEN
                itid = MOD( itid + 1, ntids )
                CYCLE

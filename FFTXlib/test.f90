@@ -126,7 +126,7 @@ program test
   integer :: nargs
   CHARACTER(LEN=80) :: arg
   !
-#if defined(__OPENMP)
+#if defined(_OPENMP)
   INTEGER :: PROVIDED
 #endif
   !
@@ -172,7 +172,7 @@ program test
 
 #if defined(__MPI)
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
   CALL MPI_Init_thread(MPI_THREAD_FUNNELED, PROVIDED, ierr)
 #else
   CALL MPI_Init(ierr)

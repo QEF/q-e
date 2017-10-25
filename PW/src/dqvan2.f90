@@ -124,7 +124,7 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
         !
         ! calculate quantites depending on the module of G only when needed
         !
-#if !defined(__OPENMP)
+#if !defined(_OPENMP)
         IF ( ABS( qmod(ig) - qm1 ) > 1.0D-6 ) THEN
 #endif
            qm = qmod (ig) * dqi
@@ -151,7 +151,7 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
 
            work1 = work1 * dqi
 
-#if !defined(__OPENMP)
+#if !defined(_OPENMP)
            qm1 = qmod(ig)
         END IF
 #endif

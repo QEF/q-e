@@ -277,7 +277,7 @@ SUBROUTINE invfft_b( f, dfft, ia )
      
   IF( (dfft%np3( ia ) > 0) .AND. (dfft%np2( ia ) > 0) ) THEN
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
 
      CALL cft_b_omp( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                         dfft%nr1x,dfft%nr2x,dfft%nr3x, &
@@ -295,7 +295,7 @@ SUBROUTINE invfft_b( f, dfft, ia )
 
 #else
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
   CALL cft_b_omp( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                      dfft%nr1x,dfft%nr2x,dfft%nr3x, &
                      dfft%imin2( ia ), dfft%imax2( ia ), &

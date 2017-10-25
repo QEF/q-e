@@ -12,7 +12,7 @@ MODULE start_end
     !this module contains routines to initialize the MPI environment
     IMPLICIT NONE
     CHARACTER (len=10), PARAMETER :: code = 'GWW'
-#if defined(__OPENMP)
+#if defined(_OPENMP)
     INTEGER, SAVE :: ntids
 #endif
 

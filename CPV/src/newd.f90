@@ -48,7 +48,7 @@
       INTEGER :: na_bgrp, ia_bgrp
       EXTERNAL boxdotgrid
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
       INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
       EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
@@ -69,7 +69,7 @@
 
       isa = 1
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
       mytid = omp_get_thread_num()  ! take the thread ID
       ntids = omp_get_num_threads() ! take the number of threads
       itid  = 0
@@ -96,7 +96,7 @@
             nfft=2
 #endif
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
             IF ( mytid /= itid ) THEN
                isa = isa + nfft
                itid = MOD( itid + 1, ntids )
@@ -181,7 +181,7 @@
          iss=1
          isa=1
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
          mytid = omp_get_thread_num()  ! take the thread ID
          ntids = omp_get_num_threads() ! take the number of threads
          itid  = 0
@@ -201,7 +201,7 @@
                nfft=2
 #endif
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
                IF ( mytid /= itid ) THEN
                   isa = isa + nfft
                   itid = MOD( itid + 1, ntids )

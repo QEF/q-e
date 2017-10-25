@@ -65,7 +65,7 @@
 
      INTEGER :: tid
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
      INTEGER :: offset, ldz_t
      INTEGER :: omp_get_max_threads
      EXTERNAL :: omp_get_max_threads
@@ -231,7 +231,7 @@
      LOGICAL :: dofft( nfftx ), found
      INTEGER, PARAMETER  :: stdout = 6
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
      INTEGER :: offset
      INTEGER :: nx_t, ny_t, nzl_t, ldx_t, ldy_t
      INTEGER  :: itid, mytid, ntids

@@ -64,11 +64,11 @@ program lax_test
   CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), allocatable :: proc_name(:)
   CHARACTER(LEN=MPI_MAX_PROCESSOR_NAME), allocatable :: node_name(:)
   INTEGER, allocatable :: proc2node(:)
-#if defined(__OPENMP)
+#if defined(_OPENMP)
   INTEGER, EXTERNAL :: omp_get_max_threads
 #endif
   !
-#if defined(__OPENMP)
+#if defined(_OPENMP)
   INTEGER :: PROVIDED
 #endif
   !
@@ -89,7 +89,7 @@ program lax_test
 
 #if defined(__MPI)
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
   CALL MPI_Init_thread(MPI_THREAD_FUNNELED, PROVIDED, ierr)
 #else
   CALL MPI_Init(ierr)

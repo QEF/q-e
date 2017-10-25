@@ -111,7 +111,7 @@ MODULE exx_module
   REAL(DP), PUBLIC                    :: dexx_dh(3,3)           ! dexx/dhab for vofrho.f90
   REAL(DP), PUBLIC                    :: exxalfa                ! fraction of exx mixing (locally used in CP)
   !
-#if defined(__OPENMP)
+#if defined(_OPENMP)
   INTEGER, EXTERNAL                   :: omp_get_max_threads
 #endif
   !==========================================================================
@@ -164,7 +164,7 @@ CONTAINS
       WRITE(stdout,'(/,3X,"Parallelization info :")')
       WRITE(stdout,'(5X,"electronic states   ",3X,I7)') nbsp
       WRITE(stdout,'(5X,"MPI tasks           ",3X,I7)') nproc_image 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
       WRITE(stdout,'(5X,"OpenMP threads/MPI task",3X,I4)') omp_get_max_threads() 
 #endif
       WRITE(stdout,'(5X,"Taskgroups          ",3X,I7)') fftx_ntgrp(dffts)

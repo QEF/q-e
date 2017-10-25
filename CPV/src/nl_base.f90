@@ -724,7 +724,7 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
   !
   real(DP), allocatable :: tmpbec(:,:), tmpdr(:,:) 
   real(DP), allocatable :: fion_loc(:,:)
-#if defined(__OPENMP) 
+#if defined(_OPENMP) 
   INTEGER :: mytid, ntids, omp_get_thread_num, omp_get_num_threads
 #endif  
   !
@@ -744,7 +744,7 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
 !$omp shared(becdr_bgrp,bec_bgrp,fion_loc,k,f_bgrp,deeq,dvan,nbsp_bgrp,ish,nh,na,nsp,nhm,nbspx_bgrp,ispin_bgrp), &
 !$omp private(tmpbec,tmpdr,isa,is,ia,iv,jv,inl,temp,i,mytid,ntids,sum_tmpdr)
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
      mytid = omp_get_thread_num()  ! take the thread ID
      ntids = omp_get_num_threads() ! take the number of threads
 #endif
@@ -758,7 +758,7 @@ subroutine nlfq_bgrp_x( c_bgrp, eigr, bec_bgrp, becdr_bgrp, fion )
 
            isa=isa+1
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
            ! distribute atoms round robin to threads
            !
            IF( MOD( isa, ntids ) /= mytid ) CYCLE

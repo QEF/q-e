@@ -12,7 +12,4 @@ AC_ARG_ENABLE(openmp,
    fi],
    [use_openmp=0])
    
-# preprocessing flag for OpenMP
-if test "$use_openmp" -eq 1 ; then try_dflags="$try_dflags -D__OPENMP" ; fi
-
 ])

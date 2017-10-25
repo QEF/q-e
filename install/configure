@@ -2502,9 +2502,6 @@ else
 fi
 
 
-# preprocessing flag for OpenMP
-if test "$use_openmp" -eq 1 ; then try_dflags="$try_dflags -D__OPENMP" ; fi
-
 
 
 # Checking MPIF90...

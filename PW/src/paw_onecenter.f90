@@ -433,7 +433,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     INTEGER               :: kpol
     INTEGER               :: mytid, ntids
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
     INTEGER, EXTERNAL     :: omp_get_thread_num, omp_get_num_threads
 #endif
 
@@ -449,7 +449,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     !
 !$omp parallel default(private), &
 !$omp shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid,nspin,g,lsd,nspin_mag,with_small_so,g_rad)
-#if defined(__OPENMP)
+#if defined(_OPENMP)
     mytid = omp_get_thread_num()+1 ! take the thread ID
     ntids = omp_get_num_threads()  ! take the number of threads
 #else
@@ -625,7 +625,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
 
     
     INTEGER :: mytid, ntids
-#if defined(__OPENMP)
+#if defined(_OPENMP)
     INTEGER, EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
     REAL(DP),ALLOCATABLE :: egcxc_of_tid(:)
@@ -661,7 +661,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
 
     mytid = 1
     ntids = 1
-#if defined(__OPENMP)
+#if defined(_OPENMP)
     mytid = omp_get_thread_num()+1 ! take the thread ID
     ntids = omp_get_num_threads()  ! take the number of threads
 #endif

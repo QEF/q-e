@@ -43,7 +43,7 @@
    INTEGER :: ie
    REAL(kind=DP) :: energy
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
    INTEGER :: omp_get_num_threads, omp_get_max_threads
    EXTERNAL omp_set_num_threads, omp_get_num_threads, omp_get_max_threads
 #endif
@@ -56,14 +56,14 @@
 
    !CALL remove_stack_limit ( )
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
      ntids=omp_get_max_threads()
      ! call omp_set_num_threads(1)
 #endif
 
 
 
-#if defined(__OPENMP)
+#if defined(_OPENMP)
    write(stdout,*)  'ntids = ', ntids
 #endif
 
