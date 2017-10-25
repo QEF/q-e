@@ -11,7 +11,7 @@ SUBROUTINE new_ns(ns)
   !-----------------------------------------------------------------------
   !
   ! This routine computes the new value for ns (the occupation numbers of
-  ! ortogonalized atomic wfcs).
+  ! orthogonalized atomic wfcs).
   ! These quantities are defined as follows: ns_{I,s,m1,m2} = \sum_{k,v}
   ! f_{kv} <\fi^{at}_{I,m1}|\psi_{k,v,s}><\psi_{k,v,s}|\fi^{at}_{I,m2}>
 

@@ -67,7 +67,7 @@ SUBROUTINE ortho_wfc(lda,ldb,wfc,ierr)
      ENDDO
   ENDDO
   !
-  ! trasform wfs O^-.5 psi
+  ! transform wfs O^-.5 psi
   !
   wfc_ortho(:,:) = ZERO
   call ZGEMM('N', 'N', lda, ldb, lda, ONE, overlap, lda, &

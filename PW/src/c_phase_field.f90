@@ -20,7 +20,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
 !----------------------------------------------------------------------!
 
 !   Geometric phase calculation along a strip of nppstr_3d(pdir) k-points
-!   averaged over a 2D grid of nkort k-points ortogonal to nppstr_3d(pdir) 
+!   averaged over a 2D grid of nkort k-points orthogonal to nppstr_3d(pdir) 
 
 !  --- Make use of the module with common information ---
    USE kinds,                ONLY : DP

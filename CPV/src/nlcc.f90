@@ -11,7 +11,7 @@
    subroutine core_charge_ftr( tpre )
 !=----------------------------------------------------------------------------=!
      !
-     !  Compute the fourier trasform of the core charge, from the radial
+     !  Compute the fourier transform of the core charge, from the radial
      !  mesh to the reciprocal space
      !
      use kinds,              ONLY : DP

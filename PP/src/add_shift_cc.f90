@@ -44,7 +44,7 @@ SUBROUTINE add_shift_cc (shift_cc)
 
   real(DP), ALLOCATABLE :: vxc (:,:), rhocg (:), shift_(:)
   ! exchange-correlation potential
-  ! radial fourier trasform of rho core
+  ! radial fourier transform of rho core
   real(DP)  ::  arg, fact
   !
   IF ( any (upf(1:ntyp)%nlcc) ) GOTO 15

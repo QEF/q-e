@@ -321,7 +321,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   ! ... and the core correction charge (if any) - This is done here
   ! ... for compatibility with the previous version of read_file
   !
-  ! 2D calcualtions: re-initialize cutoff fact before calculating potentials
+  ! 2D calculations: re-initialize cutoff fact before calculating potentials
   IF(do_cutoff_2D) CALL cutoff_fact()
   !
   CALL init_vloc()

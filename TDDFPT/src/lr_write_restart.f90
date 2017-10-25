@@ -113,7 +113,7 @@ SUBROUTINE lr_write_restart()
      WRITE(158,*) beta_store(pol_index,i+1)
      WRITE(158,*) gamma_store(pol_index,i+1)
      !
-     ! This is absolutely necessary for cross platform compatibilty
+     ! This is absolutely necessary for cross platform compatibility
      !
      DO j=1,n_ipol
       WRITE(158,*) zeta_store (pol_index,j,i)

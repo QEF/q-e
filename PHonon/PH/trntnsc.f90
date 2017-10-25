@@ -10,7 +10,7 @@
 subroutine trntnsc (phi, at, bg, iflg)
   !-----------------------------------------------------------------------
   !
-  ! trasforms a COMPLEX tensor (like the dynamical matrix)
+  ! transforms a COMPLEX tensor (like the dynamical matrix)
   ! from crystal to cartesian axis (iflg >=  1) or viceversa (iflg <= -1)
   !
   USE kinds, only : DP

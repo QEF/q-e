@@ -149,7 +149,7 @@ SUBROUTINE c_phase
 !----------------------------------------------------------------------!
 
 !   Geometric phase calculation along a strip of nppstr k-points
-!   averaged over a 2D grid of nkort k-points ortogonal to nppstr 
+!   averaged over a 2D grid of nkort k-points orthogonal to nppstr 
 
 !  --- Make use of the module with common information ---
    USE kinds,                ONLY : DP

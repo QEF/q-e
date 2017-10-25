@@ -108,7 +108,7 @@ SUBROUTINE stop_lr( full_run  )
         WRITE(158,*) beta_store(ip,i+1)
         WRITE(158,*) gamma_store(ip,i+1)
         !
-        ! This is absolutely necessary for cross platform compatibilty
+        ! This is absolutely necessary for cross platform compatibility
         !
         DO j = 1, n_ipol
            WRITE(158,*) zeta_store (ip,j,i)

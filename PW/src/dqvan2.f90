@@ -11,7 +11,7 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   !
   !    This routine computes the derivatives of the fourier transform of
   !    the Q function needed in stress assuming that the radial fourier
-  !    trasform is already computed and stored in table qrad.
+  !    transform is already computed and stored in table qrad.
   !
   !    The formula implemented here is
   !

@@ -175,7 +175,7 @@ subroutine init_us_0
                  enddo
               enddo
               !
-              ! 3) back-fourier trasform of the Qs to real space
+              ! 3) back-fourier transform of the Qs to real space
               !
               do ir =1, upf(nt)%kkbeta
                  ! q_nb_mb_l(r) from the back fourier transform up to qmax of q_nb_mb_l(q)
@@ -228,7 +228,7 @@ subroutine init_us_0
 !
         fac = 1.2d0
  99     continue
-        ! smooth the fourier trasform of the Qs and compute its integrated power spectrum
+        ! smooth the fourier transform of the Qs and compute its integrated power spectrum
         power_qs(:,:) = 0.d0
         do nb = 1, upf(nt)%nbeta
            do mb = nb, upf(nt)%nbeta
@@ -266,7 +266,7 @@ subroutine init_us_0
               call sph_bes ( upf(nt)%kkbeta, rgrid(nt)%r, q, l, aux)
               ! .. and here we integrate with all the Q functions
               !
-              ! 5) back-fourier trasform of the smoothed Qs to real space
+              ! 5) back-fourier transform of the smoothed Qs to real space
               !
               do ir =1, upf(nt)%kkbeta
                  ! q_nb_mb_l(r) from the back fourier transform up to qmax of q_nb_mb_l(q)

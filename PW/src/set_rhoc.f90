@@ -38,7 +38,7 @@ subroutine set_rhoc
   ! used for the fft of the core charge
 
   real(DP) , allocatable ::  rhocg(:)
-  ! the radial fourier trasform
+  ! the radial fourier transform
   real(DP) ::  rhoima, rhoneg, rhorea
   ! used to check the core charge
   real(DP) ::  vtxcc

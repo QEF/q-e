@@ -45,7 +45,7 @@ subroutine force_cc (forcecc)
 
   real(DP), allocatable :: vxc (:,:), rhocg (:)
   ! exchange-correlation potential
-  ! radial fourier trasform of rho core
+  ! radial fourier transform of rho core
   real(DP)  ::  arg, fact
 
   !

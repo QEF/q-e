@@ -249,7 +249,7 @@ SUBROUTINE ortho_swfc ( npw, normalize_only, m, wfc, swfc )
      ENDDO
   ENDDO
   !
-  ! trasform atomic orbitals O^-.5 psi
+  ! transform atomic orbitals O^-.5 psi
   ! FIXME: can be done in a faster way by using wfc as work space 
   !
   DO i = 1, npw

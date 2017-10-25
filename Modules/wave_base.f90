@@ -90,7 +90,7 @@
 !  BEGIN manual
       SUBROUTINE gram_gamma_base(wf, gzero, gid)
 
-! Gram-Schmidt ortogonalization procedure
+! Gram-Schmidt orthogonalization procedure
 ! input: cp(2,ngik,n) = ( <g(1 )|psi(1)>..<g(1 )|psi(k)>..<g(1 )|psi(n)> )
 !                       ( <g(2 )|psi(1)>..<g(2 )|psi(k)>..<g(2 )|psi(n)> )
 !                       ( ...............................................)

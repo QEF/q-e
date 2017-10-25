@@ -11,7 +11,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   !-----------------------------------------------------------------------
   !
   !    This routine computes the fourier transform of the Q functions
-  !    The interpolation table for the radial fourier trasform is stored 
+  !    The interpolation table for the radial fourier transform is stored 
   !    in qrad.
   !
   !    The formula implemented here is

@@ -257,7 +257,7 @@ END SUBROUTINE check_vector_f
 SUBROUTINE check_all_bands_gamma (x,sx,nbnd1,nbnd2)
   !----------------------------------------------------------------------
   !
-  ! Checks all bands of given KS states for orthoganilty
+  ! Checks all bands of given KS states for orthogonality
   ! input: evc and sevc
   ! output : screen output
   !

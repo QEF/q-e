@@ -482,7 +482,7 @@
             end do
 
             !
-            !  2*NOGRP bands are trasformed at the same time
+            !  2*NOGRP bands are transformed at the same time
             !
 
             CALL invfft ('tgWave', psis, dffts )
