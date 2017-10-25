@@ -48,6 +48,7 @@ PROGRAM q2r
   !                   molecule or if all the atoms are aligned, etc.).
   !                   In these cases the supplementary asr are cancelled
   !                   during the orthonormalization procedure (see below).
+  !     loto_2d    :  set to .true. to activate two-dimensional treatment of LO-TO splitting. 
   !
   !  If a file "fildyn"0 is not found, the code will ignore variable "fildyn"
   !  and will try to read from the following cards the missing information
@@ -84,6 +85,7 @@ PROGRAM q2r
   CHARACTER(len=4) :: post=''
   !
   LOGICAL :: lq, lrigid, lrigid1, lnogridinfo, xmldyn
+  LOGICAL :: loto_2d 
   CHARACTER (LEN=10) :: zasr
   INTEGER :: m1, m2, m3, m(3), l1, l2, l3, i, j, j1, j2, na1, na2, ipol, nn
   INTEGER :: nat, nq, ntyp, iq, icar, nfile, ifile, nqs, nq_log
@@ -102,7 +104,7 @@ PROGRAM q2r
   logical           :: la2F
   LOGICAL, EXTERNAL :: has_xml
   !
-  NAMELIST / input / fildyn, flfrc, zasr, la2F
+  NAMELIST / input / fildyn, flfrc, zasr, la2F, loto_2d 
   !
   CALL mp_startup()
   CALL environment_start('Q2R')
@@ -111,6 +113,7 @@ PROGRAM q2r
      !
   fildyn = ' '
   flfrc = ' '
+  loto_2d=.false.
   zasr = 'no'
      !
   la2F=.false.
@@ -124,6 +127,7 @@ PROGRAM q2r
   CALL mp_bcast(fildyn, ionode_id, world_comm)
   CALL mp_bcast(flfrc, ionode_id, world_comm)
   CALL mp_bcast(zasr, ionode_id, world_comm)
+  CALL mp_bcast(loto_2d, ionode_id, world_comm)  
   CALL mp_bcast(la2f, ionode_id, world_comm)
      !
      ! check input
@@ -260,7 +264,7 @@ PROGRAM q2r
               nc(m(1),m(2),m(3))=1
               IF (lrigid) THEN
                  CALL rgd_blk (nr1,nr2,nr3,nat,phiq(1,1,1,1,nq),q(1,nq), &
-                  tau,epsil,zeu,bg,omega,-1.d0)
+                  tau,epsil,zeu,bg,omega,celldm(1), loto_2d,-1.d0) ! 2D added celldm and flag
               END IF
               CALL trasl ( phid, phiq, nq, nr1,nr2,nr3, nat, m(1),m(2),m(3))
            ELSE

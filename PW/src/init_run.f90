@@ -32,6 +32,7 @@ SUBROUTINE init_run()
   USE mp_bands,           ONLY : intra_bgrp_comm, inter_bgrp_comm, nbgrp, root_bgrp_id
   USE mp,                 ONLY : mp_bcast
   USE tsvdw_module,       ONLY : tsvdw_initialize
+  USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
   USE wavefunctions_module, ONLY : evc
 #if defined(__HDF5) && defined(__OLDXML)
   USE hdf5_qe, ONLY : initialize_hdf5
@@ -72,6 +73,11 @@ SUBROUTINE init_run()
   END IF
   !
   IF (do_comp_esm) CALL esm_init()
+  !
+  ! ... setup the 2D cutoff factor
+  !
+  IF (do_cutoff_2D) CALL cutoff_fact()
+  !
   CALL gshells ( lmovecell )
   !
   ! ... variable initialization for parallel symmetrization

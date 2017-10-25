@@ -88,7 +88,8 @@ MODULE qexsd_module
             qexsd_init_symmetries, qexsd_init_basis_set, qexsd_init_dft, &
             qexsd_init_magnetization, qexsd_init_band_structure, & 
             qexsd_init_total_energy, qexsd_init_forces, qexsd_init_stress, &
-            qexsd_init_dipole_info, qexsd_init_outputElectricField
+            qexsd_init_dipole_info, qexsd_init_outputElectricField,   &
+            qexsd_init_outputPBC
   !
   PUBLIC :: qexsd_step_addstep, qexsd_set_status    
   ! 
@@ -942,6 +943,19 @@ CONTAINS
       IF (dft_is_vdW .OR. empirical_vdw )  CALL qes_reset_vdW(vdW)
       !
     END SUBROUTINE qexsd_init_dft
+    !
+    !--------------------------------------------------------------------------------------------
+    SUBROUTINE qexsd_init_outputPBC(obj,assume_isolated)
+    !--------------------------------------------------------------------------------------------
+    ! 
+    IMPLICIT NONE
+    ! 
+    TYPE (outputPBC_type)                       :: obj
+    CHARACTER(LEN=*),INTENT(IN)                  :: assume_isolated
+    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="boundary_conditions"
+    !
+    CALL qes_init_outputPBC(obj,TAGNAME,ASSUME_ISOLATED =assume_isolated)
+    END SUBROUTINE qexsd_init_outputPBC
     !
     !
     !---------------------------------------------------------------------------------------

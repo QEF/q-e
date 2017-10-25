@@ -90,6 +90,7 @@ MODULE qes_read_module
     MODULE PROCEDURE qes_read_symmetry
     MODULE PROCEDURE qes_read_equivalent_atoms
     MODULE PROCEDURE qes_read_info
+    MODULE PROCEDURE qes_read_outputPBC
     MODULE PROCEDURE qes_read_magnetization
     MODULE PROCEDURE qes_read_total_energy
     MODULE PROCEDURE qes_read_band_structure
@@ -116,8 +117,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -212,8 +211,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -380,8 +377,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -761,8 +756,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "n_step")) THEN
@@ -939,8 +932,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -1060,6 +1051,26 @@ MODULE qes_read_module
     tmp_node => item(tmp_node_list, 0)
     IF (ASSOCIATED(tmp_node))&
        CALL qes_read_dft(tmp_node, obj%dft, ierr )
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "boundary_conditions")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:outputType","boundary_conditions: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:outputType","boundary_conditions: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%boundary_conditions_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_outputPBC(tmp_node, obj%boundary_conditions, ierr )
+    ELSE
+       obj%boundary_conditions_ispresent = .FALSE.
+    END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "magnetization")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -1242,8 +1253,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -1679,8 +1688,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "NAME")) THEN
@@ -1731,8 +1738,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -1785,8 +1790,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "DATE")) THEN
@@ -1837,8 +1840,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -1901,8 +1902,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -2076,8 +2075,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "nat")) THEN
@@ -2184,8 +2181,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -2226,8 +2221,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -2280,8 +2273,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -2344,8 +2335,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -2440,8 +2429,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -2548,8 +2535,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -2733,8 +2718,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "nqx1")) THEN
@@ -2798,8 +2781,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -2991,8 +2972,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "specie")) THEN
@@ -3044,8 +3023,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "specie")) THEN
@@ -3096,8 +3073,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -3170,8 +3145,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     INTEGER :: i, length
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -3272,8 +3245,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -3533,8 +3504,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -3628,8 +3597,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -3797,8 +3764,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "degauss")) THEN
@@ -3837,8 +3802,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "spin")) THEN
@@ -3870,8 +3833,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -4034,8 +3995,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -4287,8 +4246,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "nr1")) THEN
@@ -4352,8 +4309,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -4448,8 +4403,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -4793,8 +4746,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -4880,8 +4831,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -4986,8 +4935,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "weight")) THEN
@@ -5026,8 +4973,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -5199,8 +5144,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -5366,8 +5309,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -5582,8 +5523,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -5815,8 +5754,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -5983,8 +5920,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -6107,8 +6042,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -6227,8 +6160,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -6322,8 +6253,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -6422,8 +6351,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -6695,8 +6622,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -6785,8 +6710,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -6882,8 +6805,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "ispin")) THEN
@@ -6941,8 +6862,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -7025,8 +6944,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -7119,8 +7036,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -7264,8 +7179,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -7335,8 +7248,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -7424,8 +7335,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -7503,8 +7412,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -7588,8 +7495,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "ionic")) THEN
@@ -7635,8 +7540,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -7695,8 +7598,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -7768,8 +7669,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -7839,8 +7738,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -7935,8 +7832,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -8059,8 +7954,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -8163,8 +8056,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "nat")) THEN
@@ -8210,8 +8101,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "name")) THEN
@@ -8246,6 +8135,52 @@ MODULE qes_read_module
   END SUBROUTINE qes_read_info
   !
   !
+  SUBROUTINE qes_read_outputPBC(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(outputPBC_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr 
+    ! 
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+    !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "assume_isolated")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:outputPBCType","assume_isolated: wrong number of occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:outputPBCType","assume_isolated: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%assume_isolated, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN 
+          CALL infomsg("qes_read:outputPBCType","error reading assume_isolated")
+          ierr = ierr + 1
+       ELSE 
+          CALL errore ("qes_read:outputPBCType","error reading assume_isolated",10)
+       END IF
+    END IF
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_outputPBC
+  !
+  !
   SUBROUTINE qes_read_magnetization(xml_node, obj, ierr )
     !
     IMPLICIT NONE
@@ -8257,8 +8192,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -8425,8 +8358,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -8697,8 +8628,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -9129,8 +9058,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     !
@@ -9225,8 +9152,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "DATE")) THEN
@@ -9278,8 +9203,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "size"))  THEN
@@ -9311,8 +9234,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -9346,8 +9267,6 @@ MODULE qes_read_module
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
     INTEGER :: i, length
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !
@@ -9397,8 +9316,6 @@ MODULE qes_read_module
     INTEGER :: tmp_node_list_size, index, iostat_
     INTEGER :: i, length
     !
-     
-    !
     obj%tagname = getTagName(xml_node)
     !
     IF (hasAttribute(xml_node, "rank"))  THEN
@@ -9445,8 +9362,6 @@ MODULE qes_read_module
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
     INTEGER :: tmp_node_list_size, index, iostat_
-    !
-     
     !
     obj%tagname = getTagName(xml_node)
     !

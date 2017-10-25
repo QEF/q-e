@@ -1,0 +1,233 @@
+#!/bin/sh
+
+###############################################################################
+##
+##  HIGH VERBOSITY EXAMPLE
+##
+###############################################################################
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to calculate the phonon dispersion of monolayer"
+$ECHO "boron nitride along the Gamma-M-K-Gamma path"
+$ECHO
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x ph.x q2r.x matdyn.x plotband.x"
+PSEUDO_LIST="B.pbe-n-kjpaw_psl.0.1.UPF N.pbe.theos.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"64611
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
+MATDYN_COMMAND="$PARA_PREFIX $BIN_DIR/matdyn.x $PARA_POSTFIX"
+Q2R_COMMAND="$PARA_PREFIX $BIN_DIR/q2r.x $PARA_POSTFIX"
+PLOTBAND_COMMAND="$BIN_DIR/plotband.x"
+GP_COMMAND=`which gnuplot 2>/dev/null`
+if [ "$GP_COMMAND" = "" ]; then
+        $ECHO
+        $ECHO "gnuplot not in PATH"
+        $ECHO "Results will not be plotted"
+fi
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running ph.x as: $PH_COMMAND"
+$ECHO "  running q2r.x as:    $Q2R_COMMAND"
+$ECHO "  running matdyn.x as: $MATDYN_COMMAND"
+$ECHO "  running plotband.x as: $PLOTBAND_COMMAND"
+$ECHO "  running gnuplot as: $GP_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/bn*
+rm -rf $TMP_DIR/_ph0/bn*
+$ECHO "  done"
+#
+#  SCF at k-mesh good enough for phonons
+#
+cat > bn.scf.in << EOF
+ &control
+   calculation='scf'
+   restart_mode='from_scratch',
+   prefix='bn',
+   pseudo_dir = '$PSEUDO_DIR/',
+   outdir='$TMP_DIR/'
+   wf_collect = .false.
+ /
+ &system
+    ibrav=  4, celldm(1) =4.7419, celldm(3) =4.3, nat= 2, ntyp= 2,
+    ecutwfc =55,
+    ecutrho =440,
+    occupations='fixed', 
+    assume_isolated='2D', 
+ /
+ &electrons
+    conv_thr =  1d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+B 10.81     B.pbe-n-kjpaw_psl.0.1.UPF
+N 14.00674  N.pbe.theos.UPF
+ATOMIC_POSITIONS (alat)
+B        0.000000000   0.288675135   0.000000000
+N        0.000000000  -0.288675135   0.000000000 
+K_POINTS {automatic}
+12 12 1  0 0 0
+EOF
+$ECHO "  running the scf calculation...\c"
+$PW_COMMAND < bn.scf.in > bn.scf.out
+check_failure $?
+$ECHO "  done"
+#
+cat > bn.ph.disp.in << EOF
+Phonon dispersions for BN
+ &inputph
+  tr2_ph=1.0d-15,
+  prefix='bn',
+  outdir='$TMP_DIR/',
+  fildyn='bn.disp.dyn',
+  ldisp=.true.
+  nq1=8, nq2=8, nq3=1,
+ /
+EOF
+$ECHO "  running the ph calculation...\c"
+$PH_COMMAND < bn.ph.disp.in > bn.ph.disp.out
+check_failure $?
+$ECHO "  done"
+#
+cat > q2r.in << EOF
+ &input
+  zasr='simple',  fildyn='bn.disp.dyn', flfrc='bn881.fc', loto_2d=.true.,
+ /
+EOF
+$ECHO "  running q2r...\c"
+$Q2R_COMMAND < q2r.in > q2r.out
+check_failure $?
+$ECHO "  done"
+#
+cat > matdyn.in <<EOF
+ &input
+    asr='simple', 
+    flfrc='bn881.fc', flfrq='bn.freq', q_in_band_form=.true., loto_2d=.true.,
+ /
+ 4
+  0.00000000 0.00000000 0.0   40
+  0.33333333 0.57735027 0.0   20
+  0.00000000 0.57735027 0.0   30
+  0.00000000 0.00000000 0.0   1
+EOF
+
+$ECHO "  running matdyn to interpolate the dispersion...\c"
+$MATDYN_COMMAND < matdyn.in > matdyn.out
+check_failure $?
+$ECHO "  done"
+
+cat > plotband.in <<EOF
+bn.freq
+0 1650
+freq.disp.plot
+freq.disp.ps
+0.0
+50.0 0.0
+EOF
+#
+$ECHO "  writing the phonon dispersions in freq.disp.plot...\c"
+$PLOTBAND_COMMAND < plotband.in > /dev/null
+check_failure $?
+$ECHO " done"
+#
+
+if [ "$GP_COMMAND" = "" ]; then
+    break
+else
+cat > gnuplot.tmp <<EOF
+set encoding iso_8859_15
+set terminal postscript enhanced solid color "Helvetica" 20
+set output "al.dispersions.ps"
+#
+set key off
+
+set xrange [0:1.577350] 
+dim=1600
+set yrange [0:dim]
+set arrow from 1,0. to 1,dim nohead  lw 2
+set arrow from 2,0. to 2,dim nohead  lw 2
+set arrow from 1.5,0. to 1.5,dim nohead  lw 2
+set arrow from 3.4142,0. to 3.4142,dim nohead  lw 2
+set ylabel "frequency (cm^{-1})"
+unset xtics
+lpos=-15
+set label "{/Symbol G}" at -0.05,lpos
+set label "K" at 0.66666666,lpos
+set label "M" at 1.00000,lpos
+set label "{/Symbol G}" at 1.58,lpos 
+
+plot "freq.disp.plot" u 1:2 w l lw 3
+EOF
+$ECHO "  creating the postscript file al.dispersion.ps...\c"
+$GP_COMMAND gnuplot.tmp
+check_failure $?
+$ECHO " done"
+fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

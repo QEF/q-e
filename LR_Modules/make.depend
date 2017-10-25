@@ -1,3 +1,14 @@
+Coul_cut_2D_ph.o : ../Modules/cell_base.o
+Coul_cut_2D_ph.o : ../Modules/constants.o
+Coul_cut_2D_ph.o : ../Modules/fft_base.o
+Coul_cut_2D_ph.o : ../Modules/io_global.o
+Coul_cut_2D_ph.o : ../Modules/ions_base.o
+Coul_cut_2D_ph.o : ../Modules/kind.o
+Coul_cut_2D_ph.o : ../Modules/noncol.o
+Coul_cut_2D_ph.o : ../Modules/recvec.o
+Coul_cut_2D_ph.o : ../Modules/uspp.o
+Coul_cut_2D_ph.o : ../PW/src/Coul_cut_2D.o
+Coul_cut_2D_ph.o : lrcom.o
 adddvepsi_us.o : ../Modules/becmod.o
 adddvepsi_us.o : ../Modules/control_flags.o
 adddvepsi_us.o : ../Modules/ions_base.o
@@ -118,8 +129,10 @@ dv_of_drho.o : ../Modules/kind.o
 dv_of_drho.o : ../Modules/noncol.o
 dv_of_drho.o : ../Modules/recvec.o
 dv_of_drho.o : ../Modules/uspp.o
+dv_of_drho.o : ../PW/src/Coul_cut_2D.o
 dv_of_drho.o : ../PW/src/martyna_tuckerman.o
 dv_of_drho.o : ../PW/src/scf_mod.o
+dv_of_drho.o : Coul_cut_2D_ph.o
 dv_of_drho.o : lrcom.o
 dv_rVV10.o : ../FFTXlib/fft_interfaces.o
 dv_rVV10.o : ../Modules/cell_base.o

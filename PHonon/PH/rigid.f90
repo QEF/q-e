@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
+subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,alat,loto_2d,sign)
   !-----------------------------------------------------------------------
   ! compute the rigid-ion (long-range) term for q
   ! The long-range term used here, to be added to or subtracted from the
@@ -16,7 +16,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   ! have negligible r-space contribution
   !
   use kinds, only: dp
-  use constants, only: pi, fpi, e2
+  use constants, only: pi,tpi, fpi, e2
   implicit none
   integer ::  nr1, nr2, nr3    !  FFT grid
   integer ::  nat              ! number of atoms
@@ -29,15 +29,17 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
        at(3,3),        &! direct     lattice basis vectors
        bg(3,3),        &! reciprocal lattice basis vectors
        omega,          &! unit cell volume
+       alat,           &! cell dimension units 
        sign             ! sign=+/-1.0 ==> add/subtract rigid-ion term
+  logical :: loto_2d ! 2D LOTO correction 
   !
   ! local variables
   !
-  real(DP):: geg                    !  <q+G| epsil | q+G>
+  real(DP):: geg, gp2, r                    !  <q+G| epsil | q+G>,  For 2d loto: gp2, r
   integer :: na,nb, i,j, m1, m2, m3
   integer :: nr1x, nr2x, nr3x
   real(DP) :: alph, fac,g1,g2,g3, facgd, arg, gmax
-  real(DP) :: zag(3),zbg(3),zcg(3), fnat(3)
+  real(DP) :: zag(3),zbg(3),zcg(3), fnat(3), reff(2,2) 
   complex(dp) :: facg
   !
   ! alph is the Ewald parameter, geg is an estimate of G^2
@@ -76,7 +78,20 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   if (abs(sign) /= 1.0_DP) &
        call errore ('rgd_blk',' wrong value for sign ',1)
   !
-  fac = sign*e2*fpi/omega
+  IF (loto_2d) THEN 
+     fac = sign*e2*fpi/omega*0.5d0*alat/bg(3,3)
+     reff=0.0d0
+     DO i=1,2
+        DO j=1,2
+           reff(i,j)=epsil(i,j)*0.5d0*tpi/bg(3,3) ! (eps)*c/2 in 2pi/a units
+        ENDDO
+     ENDDO
+     DO i=1,2
+        reff(i,i)=reff(i,i)-0.5d0*tpi/bg(3,3) ! (-1)*c/2 in 2pi/a units
+     ENDDO 
+  ELSE
+    fac = sign*e2*fpi/omega
+  ENDIF
   do m1 = -nr1x,nr1x
   do m2 = -nr2x,nr2x
   do m3 = -nr3x,nr3x
@@ -85,13 +100,27 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
      g2 = m1*bg(2,1) + m2*bg(2,2) + m3*bg(2,3)
      g3 = m1*bg(3,1) + m2*bg(3,2) + m3*bg(3,3)
      !
-     geg = (g1*(epsil(1,1)*g1+epsil(1,2)*g2+epsil(1,3)*g3)+      &
+     IF (loto_2d) THEN 
+        geg = g1**2 + g2**2 + g3**2
+        r=0.0d0
+        gp2=g1**2+g2**2
+        IF (gp2>1.0d-8) THEN
+           r=g1*reff(1,1)*g1+g1*reff(1,2)*g2+g2*reff(2,1)*g1+g2*reff(2,2)*g2
+           r=r/gp2
+        ENDIF
+     ELSE
+         geg = (g1*(epsil(1,1)*g1+epsil(1,2)*g2+epsil(1,3)*g3)+      &
             g2*(epsil(2,1)*g1+epsil(2,2)*g2+epsil(2,3)*g3)+      &
             g3*(epsil(3,1)*g1+epsil(3,2)*g2+epsil(3,3)*g3))
+     ENDIF
      !
      if (geg > 0.0_DP .and. geg/alph/4.0_DP < gmax ) then
         !
-        facgd = fac*exp(-geg/alph/4.0d0)/geg
+        IF (loto_2d) THEN 
+          facgd = fac*exp(-geg/alph/4.0d0)/SQRT(geg)/(1.0+r*SQRT(geg)) 
+        ELSE
+          facgd = fac*exp(-geg/alph/4.0d0)/geg
+        ENDIF
         !
         do na = 1,nat
            zag(:)=g1*zeu(1,:,na)+g2*zeu(2,:,na)+g3*zeu(3,:,na)
@@ -116,13 +145,27 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
      g2 = g2 + q(2)
      g3 = g3 + q(3)
      !
+     IF (loto_2d) THEN 
+        geg = g1**2+g2**2+g3**2
+        r=0.0d0
+        gp2=g1**2+g2**2
+        IF (gp2>1.0d-8) THEN
+           r=g1*reff(1,1)*g1+g1*reff(1,2)*g2+g2*reff(2,1)*g1+g2*reff(2,2)*g2
+           r=r/gp2
+        ENDIF
+     ELSE
      geg = (g1*(epsil(1,1)*g1+epsil(1,2)*g2+epsil(1,3)*g3)+      &
             g2*(epsil(2,1)*g1+epsil(2,2)*g2+epsil(2,3)*g3)+      &
             g3*(epsil(3,1)*g1+epsil(3,2)*g2+epsil(3,3)*g3))
+     ENDIF
      !
      if (geg > 0.0_DP .and. geg/alph/4.0_DP < gmax ) then
         !
-        facgd = fac*exp(-geg/alph/4.0d0)/geg
+        IF (loto_2d) THEN 
+          facgd = fac*exp(-geg/alph/4.0d0)/SQRT(geg)/(1.0+r*SQRT(geg))
+        ELSE
+          facgd = fac*exp(-geg/alph/4.0d0)/geg
+        ENDIF
         !
         do nb = 1,nat
            zbg(:)=g1*zeu(1,:,nb)+g2*zeu(2,:,nb)+g3*zeu(3,:,nb)

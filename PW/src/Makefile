@@ -52,6 +52,7 @@ compute_qdipol.o \
 compute_qdipol_so.o \
 compute_ux.o \
 coset.o \
+Coul_cut_2D.o \
 d_matrix.o \
 data_structure.o \
 deriv_drhoc.o \

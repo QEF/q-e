@@ -21,6 +21,7 @@ subroutine init_vloc()
   USE cell_base,  ONLY : omega, tpiba2
   USE vlocal,     ONLY : vloc
   USE gvect,      ONLY : ngl, gl
+  USE Coul_cut_2D, ONLY : do_cutoff_2D, cutoff_lr_Vloc
   !
   implicit none
   !
@@ -58,6 +59,13 @@ subroutine init_vloc()
         !
      END IF
   enddo
+  ! in 2D calculations the long range part of vloc(g) (erf/r part)
+  ! was not re-added in g-space because everything is caclulated in
+  ! radial coordinates, which is not compatible with 2D cutoff. 
+  ! It will be re-added each time vloc(g) is used in the code. 
+  ! Here, this cutoff long-range part of vloc(g) is computed only once
+  ! by the routine below and stored
+  IF (do_cutoff_2D) call cutoff_lr_Vloc() 
   call stop_clock ('init_vloc')
   return
 end subroutine init_vloc

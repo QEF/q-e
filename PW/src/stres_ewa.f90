@@ -17,6 +17,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   USE constants, only : tpi, e2, eps6
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
+  USE Coul_cut_2D, ONLY: do_cutoff_2D, cutoff_stres_sigmaewa
 
   implicit none
   !
@@ -109,6 +110,9 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   else
     fact = 1.d0
   end if
+  IF (do_cutoff_2D) then 
+     CALL cutoff_stres_sigmaewa(alpha, sdewald, sigmaewa)
+  ELSE
   do ng = gstart, ngm
      g2 = gg (ng) * tpiba2
      g2a = g2 / 4.d0 / alpha
@@ -128,6 +132,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
         enddo
      enddo
   enddo
+  ENDIF 
   do l = 1, 3
      sigmaewa (l, l) = sigmaewa (l, l) + sdewald
   enddo

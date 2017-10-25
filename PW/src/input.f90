@@ -207,6 +207,8 @@ SUBROUTINE iosys()
                             nwan_             => nwan, &
                             print_wannier_coeff_    => print_wannier_coeff
 
+  USE Coul_cut_2D,  ONLY :  do_cutoff_2D 
+
   USE realus,                ONLY : real_space_ => real_space
 
   USE read_pseudo_mod,       ONLY : readpp
@@ -1375,6 +1377,7 @@ SUBROUTINE iosys()
   do_makov_payne  = .false.
   do_comp_mt      = .false.
   do_comp_esm     = .false.
+  do_cutoff_2D    = .false.
   !
   SELECT CASE( trim( assume_isolated ) )
       !
@@ -1396,6 +1399,11 @@ SUBROUTINE iosys()
       !
       do_comp_esm    = .true.
       !
+    CASE( '2D' )
+      !
+      do_cutoff_2D   = .true.
+      !
+
   END SELECT
   !
   IF ( do_comp_mt .AND. lstres ) THEN

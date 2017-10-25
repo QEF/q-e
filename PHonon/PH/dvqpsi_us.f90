@@ -41,6 +41,8 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   USE klist,      ONLY : ngk, igk_k
   USE gc_lr,      ONLY: grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
 
+  USE Coul_cut_2D, ONLY: do_cutoff_2D  
+  USE Coul_cut_2D_ph, ONLY : cutoff_localq
   implicit none
   !
   !   The dummy variables
@@ -103,6 +105,10 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
            aux1 (nls (ig) ) = aux1 (nls (ig) ) + vlocq (ig, nt) * gu * &
                 fact * gtau
         enddo
+        IF (do_cutoff_2D) then  
+           call cutoff_localq( aux1, fact, u1, u2, u3, gu0, nt, na) 
+        ENDIF
+        !
      endif
   enddo
   !

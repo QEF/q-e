@@ -26,6 +26,8 @@ subroutine compute_dvloc (mode, dvlocin)
   USE modes,     ONLY : u
   USE qpoint,    ONLY : xq, eigqts
   USE eqv,       ONLY : evq, vlocq
+  USE Coul_cut_2D,    ONLY: do_cutoff_2D 
+  USE Coul_cut_2D_ph, ONLY: cutoff_localq 
   implicit none
   !
   !   The dummy variables
@@ -63,6 +65,9 @@ subroutine compute_dvloc (mode, dvlocin)
            dvlocin (nls (ig) ) = dvlocin (nls (ig) ) + vlocq (ig, nt) &
                 * gu * fact * gtau
         enddo
+        IF (do_cutoff_2D) then
+           call cutoff_localq( dvlocin, fact, u1, u2, u3, gu0, nt, na) ! 2D: re-add cutoff LR part
+        ENDIF
      endif
   enddo
   !

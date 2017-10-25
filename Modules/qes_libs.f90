@@ -6491,6 +6491,50 @@ SUBROUTINE qes_reset_outputElectricField(obj)
 
 END SUBROUTINE qes_reset_outputElectricField
 
+SUBROUTINE qes_write_outputPBC(xp, obj)
+   IMPLICIT NONE
+
+   TYPE(xmlf_t)  :: xp
+   TYPE(outputPBC_type) :: obj
+   !
+   INTEGER  :: i
+
+   IF (.NOT. obj%lwrite) RETURN
+   !
+
+   CALL xml_NewElement(xp, TRIM(obj%tagname))
+      !
+      CALL xml_NewElement(xp, 'assume_isolated' )
+         CALL xml_addCharacters(xp,  TRIM(obj%assume_isolated))
+      CALL xml_EndElement(xp, 'assume_isolated')
+      !
+   CALL xml_EndElement(xp, TRIM(obj%tagname))
+   !
+END SUBROUTINE qes_write_outputPBC
+
+SUBROUTINE qes_init_outputPBC(obj, tagname, assume_isolated)
+   IMPLICIT NONE
+
+   TYPE(outputPBC_type) :: obj
+   CHARACTER(len=*) :: tagname
+   INTEGER  :: i
+   CHARACTER(len=*) :: assume_isolated
+
+   obj%tagname = TRIM(tagname)
+   obj%lwrite   = .TRUE.
+   obj%lread    = .TRUE.
+   obj%assume_isolated = assume_isolated
+END SUBROUTINE qes_init_outputPBC
+
+SUBROUTINE qes_reset_outputPBC(obj)
+   IMPLICIT NONE
+   TYPE(outputPBC_type) :: obj
+   INTEGER  :: i
+
+   obj%tagname = ""
+   obj%lwrite  =.FALSE.
+
+END SUBROUTINE qes_reset_outputPBC
 
 SUBROUTINE qes_write_output(xp, obj)
    IMPLICIT NONE
@@ -6521,6 +6565,10 @@ SUBROUTINE qes_write_output(xp, obj)
       CALL qes_write_basis_set(xp, obj%basis_set)
       !
       CALL qes_write_dft(xp, obj%dft)
+      !Tsoh
+      IF(obj%boundary_conditions_ispresent) THEN
+         CALL qes_write_outputPBC(xp,obj%boundary_conditions)
+      ENDIF
       !
       CALL qes_write_magnetization(xp, obj%magnetization)
       !
@@ -6565,7 +6613,7 @@ SUBROUTINE qes_init_output(obj, tagname, convergence_info, algorithmic_info, &
                               band_structure, forces_ispresent, forces, stress_ispresent, &
                               stress, electric_field_ispresent, electric_field, &
                               FCP_force_ispresent, FCP_force, FCP_tot_charge_ispresent, &
-                              FCP_tot_charge)
+                              FCP_tot_charge,boundary_conditions_ispresent, boundary_conditions)
    IMPLICIT NONE
 
    TYPE(output_type) :: obj
@@ -6579,6 +6627,8 @@ SUBROUTINE qes_init_output(obj, tagname, convergence_info, algorithmic_info, &
    TYPE(symmetries_type) :: symmetries
    TYPE(basis_set_type) :: basis_set
    TYPE(dft_type) :: dft
+   LOGICAL  :: boundary_conditions_ispresent
+   TYPE(outputPBC_type) :: boundary_conditions
    TYPE(magnetization_type) :: magnetization
    TYPE(total_energy_type) :: total_energy
    TYPE(band_structure_type) :: band_structure
@@ -6606,6 +6656,9 @@ SUBROUTINE qes_init_output(obj, tagname, convergence_info, algorithmic_info, &
    ENDIF
    obj%basis_set = basis_set
    obj%dft = dft
+   IF(obj%boundary_conditions_ispresent) THEN
+      obj%boundary_conditions=boundary_conditions
+   ENDIF
    obj%magnetization = magnetization
    obj%total_energy = total_energy
    obj%band_structure = band_structure
@@ -6663,6 +6716,10 @@ SUBROUTINE qes_reset_output(obj)
    IF(obj%stress_ispresent) THEN
       CALL qes_reset_matrix(obj%stress)
       obj%stress_ispresent = .FALSE.
+   ENDIF
+   IF(obj%boundary_conditions_ispresent) THEN
+      CALL qes_reset_outputPBC(obj%boundary_conditions)
+      obj%boundary_conditions_ispresent=.FALSE.
    ENDIF
    IF(obj%electric_field_ispresent) THEN
       CALL qes_reset_outputElectricField(obj%electric_field)

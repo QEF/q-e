@@ -42,6 +42,8 @@ SUBROUTINE dynmat_us()
   USE mp_pools,             ONLY : my_pool_id, inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
+  USE Coul_cut_2D,          ONLY : do_cutoff_2D 
+  USE Coul_cut_2D_ph,       ONLY : cutoff_dynmat0 
 
   USE lrus,                 ONLY : becp1
   USE qpoint,               ONLY : nksq, ikks
@@ -121,6 +123,7 @@ SUBROUTINE dynmat_us()
         ENDDO
      ENDDO
   ENDDO
+  IF (do_cutoff_2D) call cutoff_dynmat0(dynwrk, rhog)  
 
   CALL mp_sum (dynwrk, intra_bgrp_comm)
   !

@@ -373,6 +373,7 @@ MODULE input_parameters
           ! (do not) use symmetry, q => -q symmetry in k-point generation
         LOGICAL :: nosym_evc = .false.
           ! if .true. use symmetry only to symmetrize k points
+
         LOGICAL :: force_symmorphic = .false.
           ! if .true. disable fractionary translations (nonsymmorphic groups)
         LOGICAL :: use_all_frac = .false.

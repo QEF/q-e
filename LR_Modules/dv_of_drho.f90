@@ -30,6 +30,8 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   USE uspp,              ONLY : nlcc_any
   USE control_flags,     ONLY : gamma_only
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
+  USE Coul_cut_2D,       ONLY : do_cutoff_2D  
+  USE Coul_cut_2D_ph,    ONLY : cutoff_dv_of_drho 
   USE qpoint,            ONLY : xq
   USE gc_lr,             ONLY : grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
   USE control_lr,        ONLY : lrpa
@@ -209,13 +211,17 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
       !
       do is = 1, nspin_lsda
          CALL fwfft ('Dense', dvaux (:, is), dfftp)
-         do ig = 1, ngm
-            qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-            if (qg2 > 1.d-8) then
-               dvaux(nl(ig),is) = dvaux(nl(ig),is) + &
-                              & e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
-            endif
-         enddo
+         IF (do_cutoff_2D) THEN 
+            call cutoff_dv_of_drho(dvaux, is, dvscf)
+         ELSE
+            do ig = 1, ngm
+               qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
+               if (qg2 > 1.d-8) then
+                  dvaux(nl(ig),is) = dvaux(nl(ig),is) + &
+                                 & e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
+               endif
+            enddo
+         ENDIF
          !
          ! Transformed back to real space
          !

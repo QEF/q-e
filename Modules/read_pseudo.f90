@@ -58,7 +58,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   LOGICAL, OPTIONAL, INTENT(IN) :: printout
   REAL(DP), OPTIONAL, INTENT(OUT) :: ecutwfc_pp, ecutrho_pp  
   !
-  REAL(DP), parameter :: rcut = 10.d0
+  REAL(DP), parameter :: rcut = 10.d0 
+  !2D Coulomb cutoff: modify this (at your own risks) if problems with cutoff being smaller than pseudo rcut. original value=10.0
   CHARACTER(len=256) :: file_pseudo ! file name complete with path
   LOGICAL :: printout_ = .FALSE.
   INTEGER :: iunps, isupf, nt, nb, ir, ios

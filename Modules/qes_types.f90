@@ -905,6 +905,16 @@ MODULE qes_types_module
     !
   END TYPE symmetry_type
   !
+  TYPE :: outputPBC_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: assume_isolated
+    !
+  END TYPE outputPBC_type
+  !
   TYPE :: magnetization_type
     !
     CHARACTER(len=100) :: tagname
@@ -1243,6 +1253,8 @@ MODULE qes_types_module
     TYPE(symmetries_type) :: symmetries
     TYPE(basis_set_type) :: basis_set
     TYPE(dft_type) :: dft
+    LOGICAL  :: boundary_conditions_ispresent = .FALSE.
+    TYPE(outputPBC_type) :: boundary_conditions
     TYPE(magnetization_type) :: magnetization
     TYPE(total_energy_type) :: total_energy
     TYPE(band_structure_type) :: band_structure

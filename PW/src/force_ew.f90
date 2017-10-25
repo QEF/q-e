@@ -18,6 +18,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   USE constants, ONLY : tpi, e2
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
+  USE Coul_cut_2D, ONLY : do_cutoff_2D, cutoff_force_ew 
   implicit none
   !
   !   First the dummy variables
@@ -106,10 +107,14 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
         aux (ig) = aux (ig) + zv (nt) * CONJG(strf (ig, nt) )
      enddo
   enddo
-  do ig = gstart, ngm
-     aux (ig) = aux (ig) * exp ( - gg (ig) * tpiba2 / alpha / 4.d0) &
-          / (gg (ig) * tpiba2)
-  enddo
+  IF (do_cutoff_2D) THEN 
+     call cutoff_force_ew(aux, alpha)
+  ELSE
+     do ig = gstart, ngm
+        aux (ig) = aux (ig) * exp ( - gg (ig) * tpiba2 / alpha / 4.d0) &
+             / (gg (ig) * tpiba2)
+     enddo
+  ENDIF
   if (gamma_only) then
      fact = 4.d0
   else

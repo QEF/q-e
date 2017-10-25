@@ -110,6 +110,7 @@ PROGRAM matdyn
   !                constants if finite displacement method is used (as in Wang et al.
   !                Phys. Rev. B 85, 224303 (2012)) [to be used in conjunction with fd.x]
   !     nosym      if .true., no symmetry and no time reversal are imposed
+  !     loto_2d    set to .true. to activate two-dimensional treatment of LO-TO splitting.
   !
   !  if (readtau) atom types and positions in the supercell follow:
   !     (tau(i,na),i=1,3), ityp(na)
@@ -181,7 +182,7 @@ PROGRAM matdyn
 
   INTEGER :: nspin_mag, nqs, ios
   !
-  LOGICAL :: readtau, la2F, xmlifc, lo_to_split, na_ifc, fd, nosym
+  LOGICAL :: readtau, la2F, xmlifc, lo_to_split, na_ifc, fd, nosym,  loto_2d 
   !
   REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, DOSofE(2), qq
   REAL(DP) :: delta, pathL
@@ -210,7 +211,8 @@ PROGRAM matdyn
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, fleig, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
        &           la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord, &
-       &           eigen_similarity, fldyn, na_ifc, fd, point_label_type, nosym
+       &           eigen_similarity, fldyn, na_ifc, fd, point_label_type, nosym, &
+       &           loto_2d
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
@@ -251,6 +253,7 @@ PROGRAM matdyn
      fd=.FALSE.
      point_label_type='SC'
      nosym = .false.
+     loto_2d=.false.
      !
      !
      IF (ionode) READ (5,input,IOSTAT=ios)
@@ -285,6 +288,7 @@ PROGRAM matdyn
      CALL mp_bcast(eigen_similarity,ionode_id, world_comm)
      CALL mp_bcast(q_in_cryst_coord,ionode_id, world_comm)
      CALL mp_bcast(point_label_type,ionode_id, world_comm)
+     CALL mp_bcast(loto_2d,ionode_id, world_comm) 
 
      !
      ! read force constants
@@ -543,8 +547,9 @@ PROGRAM matdyn
 
         CALL setupmat (q(1,n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
              dyn_blk, nat_blk, at_blk, bg_blk, tau_blk, omega_blk,  &
+                   loto_2d, &
              epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws, na_ifc,f_of_q,fd)
-
+        IF (.not.loto_2d) THEN 
         qhat(1) = q(1,n)*at(1,1)+q(2,n)*at(2,1)+q(3,n)*at(3,1)
         qhat(2) = q(1,n)*at(1,2)+q(2,n)*at(2,2)+q(3,n)*at(3,2)
         qhat(3) = q(1,n)*at(1,3)+q(2,n)*at(2,3)+q(3,n)*at(3,3)
@@ -590,7 +595,8 @@ PROGRAM matdyn
            !
         END IF
         !
-        
+        END IF 
+
         if(iout_dyn.ne.0) call write_dyn_on_file(q(1,n),dyn,nat, iout_dyn)
         
 
@@ -1009,12 +1015,14 @@ END SUBROUTINE frc_blk
 !-----------------------------------------------------------------------
 SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      &         dyn_blk,nat_blk,at_blk,bg_blk,tau_blk,omega_blk, &
-     &                 epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd)
+     &         loto_2d, & 
+     &         epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws,na_ifc,f_of_q,fd)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
   !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : tpi
+  USE cell_base, ONLY: celldm
   !
   IMPLICIT NONE
   !
@@ -1027,7 +1035,7 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
   REAL(DP) :: tau_blk(3,nat_blk), at_blk(3,3), bg_blk(3,3), omega_blk
   COMPLEX(DP) dyn_blk(3,3,nat_blk,nat_blk), f_of_q(3,3,nat,nat)
   COMPLEX(DP) ::  dyn(3,3,nat,nat)
-  LOGICAL :: has_zstar, na_ifc, fd
+  LOGICAL :: has_zstar, na_ifc, fd, loto_2d 
   !
   ! local variables
   !
@@ -1050,7 +1058,8 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
           &              nr1,nr2,nr3,frc,at_blk,bg_blk,rws,nrws,f_of_q,fd)
       IF (has_zstar .and. .not.na_ifc) &
            CALL rgd_blk(nr1,nr2,nr3,nat_blk,dyn_blk,qp,tau_blk,   &
-                        epsil,zeu,bg_blk,omega_blk,+1.d0)
+                         epsil,zeu,bg_blk,omega_blk,celldm(1), loto_2d,+1.d0)
+           ! LOTO 2D added celldm(1)=alat to passed arguments
      !
      DO na=1,nat
         na_blk = itau_blk(na)

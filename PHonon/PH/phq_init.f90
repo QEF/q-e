@@ -62,6 +62,8 @@ SUBROUTINE phq_init()
   USE el_phon,             ONLY : elph_mat, iunwfcwann, npwq_refolded, &
                                   kpq,g_kpq,igqg,xk_gamma, lrwfcr
   USE wannier_gw,           ONLY : l_head
+  USE Coul_cut_2D,         ONLY : do_cutoff_2D     
+  USE Coul_cut_2D_ph,         ONLY : cutoff_lr_Vlocq , cutoff_fact_qg 
 
   USE lrus,                 ONLY : becp1, dpqq, dpqq_so
   USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
@@ -124,6 +126,16 @@ SUBROUTINE phq_init()
      END IF
      !
   END DO
+  ! for 2d calculations, we need to initialize the fact for the q+G 
+  ! component of the cutoff of the COulomb interaction
+  IF (do_cutoff_2D) call cutoff_fact_qg() 
+  !  in 2D calculations the long range part of vlocq(g) (erf/r part)
+  ! was not re-added in g-space because everything is caclulated in
+  ! radial coordinates, which is not compatible with 2D cutoff. 
+  ! It will be re-added each time vlocq(g) is used in the code. 
+  ! Here, this cutoff long-range part of vlocq(g) is computed only once
+  ! by the routine below and stored
+  IF (do_cutoff_2D) call cutoff_lr_Vlocq() 
   !
   ! only for electron-phonon coupling with wannier functions
   ! 

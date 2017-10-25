@@ -18,6 +18,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
   USE esm,       ONLY : esm_force_lc, do_comp_esm, esm_bc
+  USE Coul_cut_2D, ONLY : do_cutoff_2D, cutoff_force_lc
   implicit none
   !
   !   first the dummy variables
@@ -97,6 +98,14 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
      !
      CALL esm_force_lc ( aux, forcelc )
   ENDIF
+  !
+  ! IN 2D calculations: re-add the erf/r contribution to the forces. It was substracted from
+  ! vloc (in vloc_of_g) and readded to vltot only (in setlocal)
+  IF ( do_cutoff_2D ) THEN
+     !     !
+      CALL cutoff_force_lc (aux, forcelc )
+  ENDIF 
+  !
   !
   call mp_sum(  forcelc, intra_bgrp_comm )
   !

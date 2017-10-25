@@ -148,5 +148,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dynma
             }   
             default { 'dynmat.axsf' }
         }
+        var loto_2d -type LOGICAL {
+            info {
+                set to .true. to activate two-dimensional treatment of LO-TO splitting.
+            }   
+            default { '.false.' }
+        }
     }
 }

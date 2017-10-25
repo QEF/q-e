@@ -157,7 +157,8 @@ MODULE pw_restart
       USE acfdt_ener,           ONLY : acfdt_in_pw 
       USE london_module,        ONLY : scal6, lon_rcut, in_C6, in_rvdw
       USE tsvdw_module,         ONLY : vdw_isolated
-
+      USE Coul_cut_2D,          ONLY : do_cutoff_2D 
+      
       !
       IMPLICIT NONE
       !
@@ -353,8 +354,8 @@ MODULE pw_restart
          !
          CALL qexml_write_cell( ibrav, celldm, alat, &
                           at(:,1), at(:,2), at(:,3), bg(:,1), bg(:,2), bg(:,3), &
-                          "Bohr","Bohr","2 pi / a", &
-                          do_makov_payne, do_comp_mt, do_comp_esm )
+                      "Bohr","Bohr","2 pi / a", &  
+                       do_makov_payne, do_comp_mt, do_comp_esm, do_cutoff_2D ) 
          !
          IF (lmovecell) CALL qexml_write_moving_cell(lmovecell, cell_factor)
          !
@@ -1351,6 +1352,7 @@ MODULE pw_restart
       USE control_flags,     ONLY : do_makov_payne
       USE martyna_tuckerman, ONLY : do_comp_mt
       USE esm,               ONLY : do_comp_esm
+      USE Coul_cut_2D,       ONLY : do_cutoff_2D 
       
       !
       IMPLICIT NONE
@@ -1379,19 +1381,28 @@ MODULE pw_restart
          CASE ("Makov-Payne")
             do_makov_payne = .true.
             do_comp_mt     = .false.
-            do_comp_esm    = .false. 
+            do_comp_esm    = .false.
+            do_cutoff_2D   = .false.
          CASE ("Martyna-Tuckerman")
             do_makov_payne = .false.
             do_comp_mt     = .true.
             do_comp_esm    = .false.
+            do_cutoff_2D   = .false.
          CASE ("ESM")
             do_makov_payne = .false.
             do_comp_mt     = .false.
             do_comp_esm    = .true.
+            do_cutoff_2D   = .false.
+         CASE ("2D")
+            do_makov_payne = .false.
+            do_comp_mt     = .false.
+            do_comp_esm    = .false.
+            do_cutoff_2D   = .true.
          CASE ("None")
             do_makov_payne = .false.
             do_comp_mt     = .false.
             do_comp_esm    = .false.
+            do_cutoff_2D   = .false.
          END SELECT
          !
          SELECT CASE ( TRIM(bravais_lattice) )
@@ -1463,6 +1474,7 @@ MODULE pw_restart
       CALL mp_bcast( do_makov_payne, ionode_id, intra_image_comm )
       CALL mp_bcast( do_comp_mt,     ionode_id, intra_image_comm )
       CALL mp_bcast( do_comp_esm,    ionode_id, intra_image_comm )
+      CALL mp_bcast( do_cutoff_2D,   ionode_id, intra_image_comm ) 
       CALL mp_bcast( lmovecell, ionode_id, intra_image_comm )
       IF (lmovecell) THEN
          CALL mp_bcast( cell_factor,  ionode_id, intra_image_comm )

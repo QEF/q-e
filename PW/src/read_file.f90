@@ -125,6 +125,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE recvec_subs,          ONLY : ggen
   USE gvect,                ONLY : gg, ngm, g, gcutm, &
                                    eigts1, eigts2, eigts3, nl, gstart
+  USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact
   USE fft_base,             ONLY : dfftp, dffts
   USE gvecs,                ONLY : ngms, nls, gcutms 
   USE spin_orb,             ONLY : lspinorb, domag
@@ -319,6 +320,9 @@ SUBROUTINE read_xml_file_internal(withbs)
   ! ... re-calculate the local part of the pseudopotential vltot
   ! ... and the core correction charge (if any) - This is done here
   ! ... for compatibility with the previous version of read_file
+  !
+  ! 2D calcualtions: re-initialize cutoff fact before calculating potentials
+  IF(do_cutoff_2D) CALL cutoff_fact()
   !
   CALL init_vloc()
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2, &

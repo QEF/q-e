@@ -266,12 +266,14 @@ compute_drhous_nc.o : ../../PW/src/buffers.o
 compute_drhous_nc.o : ../../PW/src/pwcom.o
 compute_drhous_nc.o : phcom.o
 compute_dvloc.o : ../../FFTXlib/fft_interfaces.o
+compute_dvloc.o : ../../LR_Modules/Coul_cut_2D_ph.o
 compute_dvloc.o : ../../LR_Modules/lrcom.o
 compute_dvloc.o : ../../Modules/cell_base.o
 compute_dvloc.o : ../../Modules/fft_base.o
 compute_dvloc.o : ../../Modules/ions_base.o
 compute_dvloc.o : ../../Modules/kind.o
 compute_dvloc.o : ../../Modules/recvec.o
+compute_dvloc.o : ../../PW/src/Coul_cut_2D.o
 compute_dvloc.o : phcom.o
 compute_nldyn.o : ../../LR_Modules/lrcom.o
 compute_nldyn.o : ../../Modules/becmod.o
@@ -289,10 +291,12 @@ compute_weight.o : ../../Modules/kind.o
 compute_weight.o : ../../Modules/paw_variables.o
 compute_weight.o : ../../PW/src/pwcom.o
 compute_weight.o : phcom.o
+d2ionq.o : ../../LR_Modules/Coul_cut_2D_ph.o
 d2ionq.o : ../../Modules/constants.o
 d2ionq.o : ../../Modules/io_global.o
 d2ionq.o : ../../Modules/kind.o
 d2ionq.o : ../../Modules/mp_bands.o
+d2ionq.o : ../../PW/src/Coul_cut_2D.o
 d2ionq.o : ../../UtilXlib/mp.o
 d2ionq_mm.o : ../../Modules/constants.o
 d2ionq_mm.o : ../../Modules/mm_dispersion.o
@@ -444,6 +448,7 @@ drhodvus.o : ../../PW/src/buffers.o
 drhodvus.o : ../../UtilXlib/mp.o
 drhodvus.o : phcom.o
 dvanqq.o : ../../FFTXlib/fft_interfaces.o
+dvanqq.o : ../../LR_Modules/Coul_cut_2D_ph.o
 dvanqq.o : ../../LR_Modules/lrcom.o
 dvanqq.o : ../../Modules/cell_base.o
 dvanqq.o : ../../Modules/fft_base.o
@@ -453,6 +458,7 @@ dvanqq.o : ../../Modules/mp_bands.o
 dvanqq.o : ../../Modules/noncol.o
 dvanqq.o : ../../Modules/recvec.o
 dvanqq.o : ../../Modules/uspp.o
+dvanqq.o : ../../PW/src/Coul_cut_2D.o
 dvanqq.o : ../../PW/src/pwcom.o
 dvanqq.o : ../../PW/src/scf_mod.o
 dvanqq.o : ../../UtilXlib/mp.o
@@ -496,6 +502,7 @@ dvpsi_e2.o : ../../UtilXlib/mp.o
 dvpsi_e2.o : phcom.o
 dvpsi_e2.o : ramanm.o
 dvqpsi_us.o : ../../FFTXlib/fft_interfaces.o
+dvqpsi_us.o : ../../LR_Modules/Coul_cut_2D_ph.o
 dvqpsi_us.o : ../../LR_Modules/lrcom.o
 dvqpsi_us.o : ../../Modules/cell_base.o
 dvqpsi_us.o : ../../Modules/fft_base.o
@@ -506,6 +513,7 @@ dvqpsi_us.o : ../../Modules/noncol.o
 dvqpsi_us.o : ../../Modules/recvec.o
 dvqpsi_us.o : ../../Modules/uspp.o
 dvqpsi_us.o : ../../Modules/wavefunctions.o
+dvqpsi_us.o : ../../PW/src/Coul_cut_2D.o
 dvqpsi_us.o : ../../PW/src/pwcom.o
 dvqpsi_us.o : ../../PW/src/scf_mod.o
 dvqpsi_us.o : phcom.o
@@ -543,6 +551,7 @@ dynmat0.o : ../../PW/src/symm_base.o
 dynmat0.o : ph_restart.o
 dynmat0.o : phcom.o
 dynmat_us.o : ../../FFTXlib/fft_interfaces.o
+dynmat_us.o : ../../LR_Modules/Coul_cut_2D_ph.o
 dynmat_us.o : ../../LR_Modules/lrcom.o
 dynmat_us.o : ../../Modules/becmod.o
 dynmat_us.o : ../../Modules/cell_base.o
@@ -557,6 +566,7 @@ dynmat_us.o : ../../Modules/noncol.o
 dynmat_us.o : ../../Modules/recvec.o
 dynmat_us.o : ../../Modules/uspp.o
 dynmat_us.o : ../../Modules/wavefunctions.o
+dynmat_us.o : ../../PW/src/Coul_cut_2D.o
 dynmat_us.o : ../../PW/src/buffers.o
 dynmat_us.o : ../../PW/src/pwcom.o
 dynmat_us.o : ../../PW/src/scf_mod.o
@@ -933,6 +943,7 @@ phonon.o : ../../Modules/mp_global.o
 phonon.o : ph_restart.o
 phonon.o : phcom.o
 phonon.o : yambo.o
+phq_init.o : ../../LR_Modules/Coul_cut_2D_ph.o
 phq_init.o : ../../LR_Modules/lrcom.o
 phq_init.o : ../../Modules/atom.o
 phq_init.o : ../../Modules/becmod.o
@@ -949,6 +960,7 @@ phq_init.o : ../../Modules/recvec.o
 phq_init.o : ../../Modules/uspp.o
 phq_init.o : ../../Modules/wannier_gw.o
 phq_init.o : ../../Modules/wavefunctions.o
+phq_init.o : ../../PW/src/Coul_cut_2D.o
 phq_init.o : ../../PW/src/buffers.o
 phq_init.o : ../../PW/src/pwcom.o
 phq_init.o : ../../UtilXlib/mp.o
@@ -1322,6 +1334,7 @@ set_small_group_of_q.o : ../../Modules/paw_variables.o
 set_small_group_of_q.o : ../../PW/src/symm_base.o
 setlocq.o : ../../Modules/constants.o
 setlocq.o : ../../Modules/kind.o
+setlocq.o : ../../PW/src/Coul_cut_2D.o
 sgam_ph.o : ../../Modules/kind.o
 solve_e.o : ../../FFTXlib/fft_helper_subroutines.o
 solve_e.o : ../../LR_Modules/dv_of_drho.o

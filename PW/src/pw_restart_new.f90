@@ -24,7 +24,8 @@ MODULE pw_restart_new
                           qexsd_init_dipole_info, qexsd_init_total_energy,             &
                           qexsd_init_forces,qexsd_init_stress, qexsd_xf,               &
                           qexsd_init_outputElectricField,                              &
-                          qexsd_input_obj, qexsd_occ_obj, qexsd_smear_obj
+                          qexsd_input_obj, qexsd_occ_obj, qexsd_smear_obj,             &
+                          qexsd_init_outputPBC
   USE iotk_module
   USE io_global, ONLY : ionode, ionode_id
   USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir
@@ -106,7 +107,8 @@ MODULE pw_restart_new
       USE xdm_module,           ONLY : xdm_a1=>a1i, xdm_a2=>a2i
       USE tsvdw_module,         ONLY : vdw_isolated, vdw_econv_thr
       USE input_parameters,     ONLY : verbosity, calculation, ion_dynamics, starting_ns_eigenvalue, &
-                                       vdw_corr, london, k_points, input_parameters_occupations => occupations
+                                       vdw_corr, london, k_points, assume_isolated, &  
+                                       input_parameters_occupations => occupations                                        
       USE bp,                   ONLY : lelfield, lberry, bp_mod_el_pol => el_pol, bp_mod_ion_pol => ion_pol
       !
       USE rap_point_group,      ONLY : elem, nelem, name_class
@@ -301,6 +303,15 @@ MODULE pw_restart_new
               nsp, nat, atm, ityp, Hubbard_U, Hubbard_J0,  &
               Hubbard_alpha, Hubbard_beta, Hubbard_J, starting_ns_eigenvalue, &
               U_projection, is_hubbard, upf(1:nsp)%psd, rho%ns, rho%ns_nc )
+         !
+!-------------------------------------------------------------------------------
+! ... PERIODIC BOUNDARY CONDITIONS 
+!-------------------------------------------------------------------------------
+         !
+         IF (TRIM( assume_isolated ) .EQ. "2D" ) THEN
+            output%boundary_conditions_ispresent=.TRUE.
+            CALL  qexsd_init_outputPBC(output%boundary_conditions, assume_isolated)
+          ENDIF
          !
 !-------------------------------------------------------------------------------
 ! ... MAGNETIZATION
@@ -725,7 +736,7 @@ MODULE pw_restart_new
             GOTO 100
          END IF
          ! CALL qes_write_parallel_info ( 82, restart_parallel_info )
-      END IF 
+      END IF  
       ! 
       IF ( PRESENT ( restart_output ) ) THEN
          nodePointer => item ( getElementsByTagname(root, "output"),0)
@@ -768,7 +779,7 @@ MODULE pw_restart_new
       LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
                             lxc, locc, lbz, lbs, lwfc, lheader,          &
                             lsymm, lrho, lefield, ldim, &
-                            lef, lexx, lesm
+                            lef, lexx, lesm, lpbc
       !
       LOGICAL            :: need_qexml, found, electric_field_ispresent
       INTEGER            :: tmp, iotk_err 
@@ -799,6 +810,7 @@ MODULE pw_restart_new
       lexx    = .FALSE.
       lesm    = .FALSE.
       lheader = .FALSE.
+      lpbc    = .FALSE.  
       !
      
          
@@ -870,6 +882,7 @@ MODULE pw_restart_new
          lsymm   = .TRUE.
          lefield = .TRUE.
          lrho    = .TRUE.
+         lpbc    = .TRUE. 
          need_qexml = .TRUE.
          !
       CASE( 'ef' )
@@ -887,6 +900,10 @@ MODULE pw_restart_new
          lesm       = .TRUE.
          need_qexml = .TRUE.
          !
+      CASE( 'boundary_conditions' )  
+         !
+         lpbc       = .TRUE.
+         need_qexml = .TRUE.
       END SELECT
       !
       !
@@ -954,6 +971,10 @@ MODULE pw_restart_new
       IF ( lef ) THEN
                CALL readschema_ef ( output_obj%band_structure) 
          !
+      END IF
+      ! 
+      IF ( lpbc ) THEN
+         CALL readschema_outputPBC ( output_obj%boundary_conditions)
       END IF
       !
       IF ( lexx .AND. output_obj%dft%hybrid_ispresent  ) CALL readschema_exx ( output_obj%dft%hybrid )
@@ -1584,7 +1605,23 @@ MODULE pw_restart_new
        nrot = symmetries_obj%nrot
        !
     END SUBROUTINE readschema_kdim    
-
+    !
+    ! --------- For 2D cutoff: to read the fact that 2D cutoff was used in scf from new xml----------------
+    !-----------------------------------------------------------------------------------------------------
+    SUBROUTINE readschema_outputPBC( boundary_conditions_obj )
+    !-----------------------------------------------------------------------------------------------------
+       !
+       USE Coul_cut_2D,       ONLY : do_cutoff_2D
+       !
+       IMPLICIT NONE
+       !
+       TYPE ( outputPBC_type ),INTENT(IN)    :: boundary_conditions_obj 
+       ! 
+       IF ( TRIM(boundary_conditions_obj%assume_isolated) .EQ. "2D" ) THEN
+          do_cutoff_2D=.TRUE.  
+       ENDIF
+       !
+    END SUBROUTINE readschema_outputPBC
     !-----------------------------------------------------------------------------------------------------
     SUBROUTINE readschema_brillouin_zone( symmetries_obj, band_structure )
     !-----------------------------------------------------------------------------------------------------
@@ -1632,8 +1669,7 @@ MODULE pw_restart_new
        ELSE IF (band_structure%starting_k_points%nk_ispresent ) THEN 
            nks_start = band_structure%starting_k_points%nk
            IF ( nks_start > 0 ) THEN 
-              IF ( .NOT. ALLOCATED(xk_start) ) ALLOCATE (xk_start(3,nks_start))
-              IF ( .NOT. ALLOCATED(wk_start) ) ALLOCATE (wk_start(nks_start))
+              ALLOCATE (xk_start(3,nks_start), wk_start(nks_start))
               IF ( nks_start == size( band_structure%starting_k_points%k_point ) ) THEN 
                  DO ik =1, nks_start
                     xk_start(:,ik) = band_structure%starting_k_points%k_point(ik)%k_point(:) 
@@ -1842,9 +1878,9 @@ MODULE pw_restart_new
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       !
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
-      CHARACTER(LEN=320)   :: filename, msg
+      CHARACTER(LEN=320)   :: filename
       INTEGER              :: i, ik, ik_g, ig, ipol, ik_s
-      INTEGER              :: npol_, npwx_g, nbnd_
+      INTEGER              :: npol_, npwx_g
       INTEGER              :: nupdwn(2), ike, iks, npw_g, ispin
       INTEGER, EXTERNAL    :: global_kpoint_index
       INTEGER, ALLOCATABLE :: ngk_g(:), mill_k(:,:)
@@ -1927,19 +1963,14 @@ MODULE pw_restart_new
          ENDIF
          !
          CALL read_wfc( iunpun, filename, root_bgrp, intra_bgrp_comm, &
-              ik_g, xk_, ispin, npol_, evc, npw_g, gamma_only, nbnd_, &
+              ik_g, xk_, ispin, npol_, evc, npw_g, gamma_only, nbnd, &
               igk_l2g_kdip(:), ngk(ik), b1, b2, b3, mill_k, scalef )
          !
          ! ... here one should check for consistency between what is read
          ! ... and what is expected
          !
-         IF ( nbnd_ < nbnd ) THEN
-            WRITE (msg,'("The number of bands for this run is",I6,", but only",&
-                 & I6," bands were read from file")')  nbnd, nbnd_  
-            CALL errore ('pw_restart - read_collected_to_evc', msg, 1 )
-         END IF
          CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
-         ! 
+         !
       END DO k_points_loop
       !
       DEALLOCATE ( mill_k )

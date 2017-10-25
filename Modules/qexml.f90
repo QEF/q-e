@@ -725,7 +725,7 @@ CONTAINS
     !------------------------------------------------------------------------
     SUBROUTINE qexml_write_cell( ibravais_latt, celldm, alat, &
                                  a1, a2, a3, b1, b2, b3, alat_units, a_units, b_units, &
-                                 do_mp, do_mt, do_esm)
+                                 do_mp, do_mt, do_esm, do_cutoff_2D) 
       !------------------------------------------------------------------------
       !
       INTEGER,          INTENT(in) :: ibravais_latt
@@ -733,7 +733,7 @@ CONTAINS
       REAL(DP),        INTENT(in) :: a1(3), a2(3), a3(3)
       REAL(DP),        INTENT(in) :: b1(3), b2(3), b3(3)
       CHARACTER(len=*), INTENT(in) :: alat_units, a_units, b_units
-      LOGICAL,          INTENT(in) :: do_mp, do_mt, do_esm
+      LOGICAL,          INTENT(in) :: do_mp, do_mt, do_esm , do_cutoff_2D
       !
       CHARACTER(len=256) :: bravais_lattice, es_corr
       !
@@ -778,6 +778,8 @@ CONTAINS
         es_corr = "Martyna-Tuckerman"
       ELSE IF(do_esm) THEN
         es_corr = "ESM"
+      ELSE IF(do_cutoff_2D) THEN
+        es_corr = "2D"
       ELSE
         es_corr = "None"
       ENDIF
@@ -2406,7 +2408,8 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_read_cell( bravais_lattice, celldm, alat, &
-                                a1, a2, a3, b1, b2, b3, alat_units, a_units, b_units, es_corr, ierr )
+                    a1, a2, a3, b1, b2, b3, alat_units, a_units, b_units, &
+                    es_corr, ierr )
       !------------------------------------------------------------------------
       !
       CHARACTER(len=*),  OPTIONAL, INTENT(out) :: bravais_lattice

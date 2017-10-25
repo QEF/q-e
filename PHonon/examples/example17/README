@@ -1,0 +1,16 @@
+This example illustrates how to use the phonon code to calculate
+the dispersions along some the a path of the BZ for two-dimensional materials.
+The Gamma-K-M-Gamma path of monolayer Boron Nitride is used as an example.  
+The calculation proceeds as follows 
+
+1) make a self-consistent calculation for BN, setting assume_isolated='2D' 
+in the SYSTEM namelist to activate the 2D Coulomb cutoff. 
+   (input=bn.scf.in, output=bn.scf.out) 
+
+2) make the phonon calculation for a grid of 881 q-points. The 2D Coulomb 
+cutoff is automatically activated for a phonon run done on top of a 2D scf run 
+(no need to specify any additional flag in the phonon input).
+
+3) interpolate the phonon dispersion using q2r and matdyn. This time, and especially for polar 2D material, one should set :
+loto_2d=.true. 
+in input so that LO-TO splitting is treated in the correct two-dimensional framework.

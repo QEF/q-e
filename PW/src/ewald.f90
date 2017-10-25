@@ -20,6 +20,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE martyna_tuckerman, ONLY : wg_corr_ewald, do_comp_mt
+  USE Coul_cut_2D, ONLY : do_cutoff_2D, cutoff_ewald
   implicit none
   !
   !   first the dummy variables
@@ -97,34 +98,38 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   ! G-space sum here.
   ! Determine if this processor contains G=0 and set the constant term
   !
-  if (gstart==2) then
-     ewaldg = - charge**2 / alpha / 4.0d0
-  else
-     ewaldg = 0.0d0
-  endif
-  if (gamma_only) then
-     fact = 2.d0
-  else
-     fact = 1.d0
-  end if
-  do ng = gstart, ngm
-     rhon = (0.d0, 0.d0)
-     do nt = 1, ntyp
-        rhon = rhon + zv (nt) * CONJG(strf (ng, nt) )
+  IF (do_cutoff_2D) then ! cutoff ewald sums
+     CALL cutoff_ewald(alpha, ewaldg, omega)
+  ELSE
+     if (gstart==2) then
+        ewaldg = - charge**2 / alpha / 4.0d0
+     else
+        ewaldg = 0.0d0
+     endif
+     if (gamma_only) then
+        fact = 2.d0
+     else
+        fact = 1.d0
+     end if
+     do ng = gstart, ngm
+        rhon = (0.d0, 0.d0)
+        do nt = 1, ntyp
+           rhon = rhon + zv (nt) * CONJG(strf (ng, nt) )
+        enddo
+        ewaldg = ewaldg + fact * abs (rhon) **2 * exp ( - gg (ng) * tpiba2 / &
+           alpha / 4.d0) / gg (ng) / tpiba2
      enddo
-     ewaldg = ewaldg + fact * abs (rhon) **2 * exp ( - gg (ng) * tpiba2 / &
-        alpha / 4.d0) / gg (ng) / tpiba2
-  enddo
-  ewaldg = 2.d0 * tpi / omega * ewaldg
-  !
-  !  Here add the other constant term
-  !
-  if (gstart.eq.2) then
-     do na = 1, nat
-        ewaldg = ewaldg - zv (ityp (na) ) **2 * sqrt (8.d0 / tpi * &
-           alpha)
-     enddo
-  endif
+     ewaldg = 2.d0 * tpi / omega * ewaldg
+     !
+     !  Here add the other constant term
+     !
+     if (gstart.eq.2) then
+        do na = 1, nat
+           ewaldg = ewaldg - zv (ityp (na) ) **2 * sqrt (8.d0 / tpi * &
+                alpha)
+        enddo
+     endif
+  ENDIF
   !
   ! R-space sum here (only for the processor that contains G=0)
   !

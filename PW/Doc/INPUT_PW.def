@@ -1453,6 +1453,30 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                        
                     See @ref esm_bc, @ref esm_efield, @ref esm_w, @ref esm_nfit.
                 }
+                opt -val '2D' {
+                    Truncation of the Coulomb interaction in the z direction 
+                    for structures periodic in the x-y plane. Total energy, 
+                    forces and stresses are computed in a two-dimensional framework. 
+                    Linear-response calculations () done on top of a self-consistent 
+                    calculation with this flag will automatically be performed in 
+                    the 2D framework as well. Please refer to:
+                    Sohier, T., Calandra, M., & Mauri, F. (2017), Density functional 
+                    perturbation theory for gated two-dimensional heterostructures:
+                    Theoretical developments and application to flexural phonons in graphene.
+                    Physical Review B, 96(7), 75448. https://doi.org/10.1103/PhysRevB.96.075448
+            NB:
+                       - The length of the unit-cell along the z direction should
+                         be larger than twice the thickness of the 2D material 
+                         (including electrons). A reasonable estimate for a 
+                         layer's thickness could be the interlayer distance in the 
+                         corresponding layered bulk material. Otherwise,  
+                         the atomic thickness + 10 bohr should be a safe estimate. 
+                         There is also a lower limit of 20 bohr imposed by the cutoff 
+                         radius used to read pseudopotentials (see read_pseudo.f90 in Modules).
+
+                       - As for ESM above, only in-plane stresses make sense and one
+                         should use cell_dofree='2Dxy' in a vc-relax calculation.
+                }
             }
         }
 

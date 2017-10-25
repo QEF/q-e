@@ -1,3 +1,12 @@
+Coul_cut_2D.o : ../../KS_Solvers/CG/constants.o
+Coul_cut_2D.o : ../../Modules/cell_base.o
+Coul_cut_2D.o : ../../Modules/fft_base.o
+Coul_cut_2D.o : ../../Modules/io_global.o
+Coul_cut_2D.o : ../../Modules/ions_base.o
+Coul_cut_2D.o : ../../Modules/kind.o
+Coul_cut_2D.o : ../../Modules/recvec.o
+Coul_cut_2D.o : ../../Modules/uspp.o
+Coul_cut_2D.o : pwcom.o
 a2fmod.o : ../../Modules/io_files.o
 a2fmod.o : ../../Modules/io_global.o
 a2fmod.o : ../../Modules/ions_base.o
@@ -254,6 +263,7 @@ clean_pw.o : ../../Modules/tsvdw.o
 clean_pw.o : ../../Modules/uspp.o
 clean_pw.o : ../../Modules/wannier_new.o
 clean_pw.o : ../../Modules/wavefunctions.o
+clean_pw.o : Coul_cut_2D.o
 clean_pw.o : atomic_wfc_mod.o
 clean_pw.o : bp_mod.o
 clean_pw.o : dynamics_module.o
@@ -358,6 +368,7 @@ drhoc.o : ../../KS_Solvers/CG/constants.o
 drhoc.o : ../../Modules/kind.o
 dvloc_of_g.o : ../../KS_Solvers/CG/constants.o
 dvloc_of_g.o : ../../Modules/kind.o
+dvloc_of_g.o : Coul_cut_2D.o
 dvloc_of_g.o : esm.o
 dynamics_module.o : ../../KS_Solvers/CG/constants.o
 dynamics_module.o : ../../Modules/basic_algebra_routines.o
@@ -404,6 +415,8 @@ electrons.o : ../../Modules/uspp.o
 electrons.o : ../../Modules/wavefunctions.o
 electrons.o : ../../Modules/wrappers.o
 electrons.o : ../../UtilXlib/mp.o
+electrons.o : ../../dft-d3/api.o
+electrons.o : ../../dft-d3/dftd3_qe.o
 electrons.o : atomic_wfc_mod.o
 electrons.o : bp_mod.o
 electrons.o : buffers.o
@@ -438,6 +451,7 @@ ewald.o : ../../KS_Solvers/CG/constants.o
 ewald.o : ../../Modules/kind.o
 ewald.o : ../../Modules/mp_bands.o
 ewald.o : ../../UtilXlib/mp.o
+ewald.o : Coul_cut_2D.o
 ewald.o : martyna_tuckerman.o
 ewald_dipole.o : ../../KS_Solvers/CG/constants.o
 ewald_dipole.o : ../../Modules/cell_base.o
@@ -535,6 +549,7 @@ force_ew.o : ../../KS_Solvers/CG/constants.o
 force_ew.o : ../../Modules/kind.o
 force_ew.o : ../../Modules/mp_bands.o
 force_ew.o : ../../UtilXlib/mp.o
+force_ew.o : Coul_cut_2D.o
 force_hub.o : ../../Modules/becmod.o
 force_hub.o : ../../Modules/cell_base.o
 force_hub.o : ../../Modules/control_flags.o
@@ -559,6 +574,7 @@ force_lc.o : ../../Modules/fft_base.o
 force_lc.o : ../../Modules/kind.o
 force_lc.o : ../../Modules/mp_bands.o
 force_lc.o : ../../UtilXlib/mp.o
+force_lc.o : Coul_cut_2D.o
 force_lc.o : esm.o
 force_us.o : ../../Modules/becmod.o
 force_us.o : ../../Modules/cell_base.o
@@ -588,6 +604,8 @@ forces.o : ../../Modules/qmmm.o
 forces.o : ../../Modules/recvec.o
 forces.o : ../../Modules/tsvdw.o
 forces.o : ../../Modules/uspp.o
+forces.o : ../../dft-d3/api.o
+forces.o : ../../dft-d3/dftd3_qe.o
 forces.o : bp_mod.o
 forces.o : esm.o
 forces.o : extfield.o
@@ -825,6 +843,7 @@ init_run.o : ../../Modules/uspp.o
 init_run.o : ../../Modules/wannier_new.o
 init_run.o : ../../Modules/wavefunctions.o
 init_run.o : ../../UtilXlib/mp.o
+init_run.o : Coul_cut_2D.o
 init_run.o : bp_mod.o
 init_run.o : dynamics_module.o
 init_run.o : esm.o
@@ -882,6 +901,7 @@ init_vloc.o : ../../Modules/ions_base.o
 init_vloc.o : ../../Modules/kind.o
 init_vloc.o : ../../Modules/recvec.o
 init_vloc.o : ../../Modules/uspp.o
+init_vloc.o : Coul_cut_2D.o
 init_vloc.o : pwcom.o
 input.o : ../../KS_Solvers/CG/constants.o
 input.o : ../../Modules/bfgs_module.o
@@ -915,6 +935,9 @@ input.o : ../../Modules/wannier_new.o
 input.o : ../../Modules/wrappers.o
 input.o : ../../Modules/wyckoff.o
 input.o : ../../UtilXlib/mp.o
+input.o : ../../dft-d3/api.o
+input.o : ../../dft-d3/dftd3_qe.o
+input.o : Coul_cut_2D.o
 input.o : a2fmod.o
 input.o : atomic_wfc_mod.o
 input.o : bp_mod.o
@@ -1481,6 +1504,7 @@ pw_restart.o : ../../Modules/wavefunctions.o
 pw_restart.o : ../../Modules/xml_io_base.o
 pw_restart.o : ../../UtilXlib/mp.o
 pw_restart.o : ../../iotk/src/iotk_module.o
+pw_restart.o : Coul_cut_2D.o
 pw_restart.o : acfdt_in_pw.o
 pw_restart.o : atomic_wfc_mod.o
 pw_restart.o : buffers.o
@@ -1505,7 +1529,6 @@ pw_restart_new.o : ../../Modules/fcp_variables.o
 pw_restart_new.o : ../../Modules/fft_base.o
 pw_restart_new.o : ../../Modules/funct.o
 pw_restart_new.o : ../../Modules/gvecw.o
-pw_restart_new.o : ../../Modules/hdf5_qe.o
 pw_restart_new.o : ../../Modules/input_parameters.o
 pw_restart_new.o : ../../Modules/io_base.o
 pw_restart_new.o : ../../Modules/io_files.o
@@ -1531,6 +1554,7 @@ pw_restart_new.o : ../../Modules/version.o
 pw_restart_new.o : ../../Modules/wavefunctions.o
 pw_restart_new.o : ../../UtilXlib/mp.o
 pw_restart_new.o : ../../iotk/src/iotk_module.o
+pw_restart_new.o : Coul_cut_2D.o
 pw_restart_new.o : atomic_wfc_mod.o
 pw_restart_new.o : bp_mod.o
 pw_restart_new.o : buffers.o
@@ -1585,6 +1609,7 @@ read_file.o : ../../Modules/recvec.o
 read_file.o : ../../Modules/recvec_subs.o
 read_file.o : ../../Modules/uspp.o
 read_file.o : ../../Modules/wavefunctions.o
+read_file.o : Coul_cut_2D.o
 read_file.o : buffers.o
 read_file.o : esm.o
 read_file.o : extfield.o
@@ -1623,6 +1648,7 @@ read_file_new.o : ../../Modules/recvec.o
 read_file_new.o : ../../Modules/recvec_subs.o
 read_file_new.o : ../../Modules/uspp.o
 read_file_new.o : ../../Modules/wavefunctions.o
+read_file_new.o : Coul_cut_2D.o
 read_file_new.o : buffers.o
 read_file_new.o : esm.o
 read_file_new.o : extfield.o
@@ -1795,6 +1821,7 @@ setlocal.o : ../../Modules/mp_bands.o
 setlocal.o : ../../Modules/qmmm.o
 setlocal.o : ../../Modules/recvec.o
 setlocal.o : ../../UtilXlib/mp.o
+setlocal.o : Coul_cut_2D.o
 setlocal.o : esm.o
 setlocal.o : extfield.o
 setlocal.o : martyna_tuckerman.o
@@ -1860,6 +1887,7 @@ stres_ewa.o : ../../KS_Solvers/CG/constants.o
 stres_ewa.o : ../../Modules/kind.o
 stres_ewa.o : ../../Modules/mp_bands.o
 stres_ewa.o : ../../UtilXlib/mp.o
+stres_ewa.o : Coul_cut_2D.o
 stres_gradcorr.o : ../../Modules/funct.o
 stres_gradcorr.o : ../../Modules/kind.o
 stres_gradcorr.o : ../../Modules/mp_bands.o
@@ -1875,6 +1903,7 @@ stres_har.o : ../../Modules/mp_bands.o
 stres_har.o : ../../Modules/recvec.o
 stres_har.o : ../../Modules/wavefunctions.o
 stres_har.o : ../../UtilXlib/mp.o
+stres_har.o : Coul_cut_2D.o
 stres_har.o : pwcom.o
 stres_har.o : scf_mod.o
 stres_hub.o : ../../Modules/becmod.o
@@ -1925,6 +1954,7 @@ stres_loc.o : ../../Modules/recvec.o
 stres_loc.o : ../../Modules/uspp.o
 stres_loc.o : ../../Modules/wavefunctions.o
 stres_loc.o : ../../UtilXlib/mp.o
+stres_loc.o : Coul_cut_2D.o
 stres_loc.o : pwcom.o
 stres_loc.o : scf_mod.o
 stres_nonloc_dft.o : ../../Modules/fft_base.o
@@ -1959,6 +1989,8 @@ stress.o : ../../Modules/noncol.o
 stress.o : ../../Modules/recvec.o
 stress.o : ../../Modules/tsvdw.o
 stress.o : ../../Modules/uspp.o
+stress.o : ../../dft-d3/api.o
+stress.o : ../../dft-d3/dftd3_qe.o
 stress.o : bp_mod.o
 stress.o : esm.o
 stress.o : exx.o
@@ -2129,6 +2161,7 @@ v_of_rho.o : ../../Modules/noncol.o
 v_of_rho.o : ../../Modules/recvec.o
 v_of_rho.o : ../../Modules/tsvdw.o
 v_of_rho.o : ../../UtilXlib/mp.o
+v_of_rho.o : Coul_cut_2D.o
 v_of_rho.o : esm.o
 v_of_rho.o : ldaU.o
 v_of_rho.o : martyna_tuckerman.o
@@ -2160,6 +2193,7 @@ vhpsi.o : pwcom.o
 vhpsi.o : scf_mod.o
 vloc_of_g.o : ../../KS_Solvers/CG/constants.o
 vloc_of_g.o : ../../Modules/kind.o
+vloc_of_g.o : Coul_cut_2D.o
 vloc_of_g.o : esm.o
 vloc_psi.o : ../../FFTXlib/fft_helper_subroutines.o
 vloc_psi.o : ../../FFTXlib/fft_interfaces.o

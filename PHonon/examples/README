@@ -134,6 +134,10 @@ example15:
 example16:
     Graphite with DFT-D2
 
+example17:
+    This example shows how to compute the phonon dispersions of two-dimensional
+    materials
+
 Additional feature-specific examples:
 
 Partial_example
