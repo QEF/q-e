@@ -77,9 +77,6 @@ read_pseudo.o \
 read_upf_v1.o \
 read_upf_v2.o \
 read_uspp.o \
-read_xml.o \
-read_xml_cards.o \
-read_xml_fields.o \
 recvec.o \
 recvec_subs.o \
 run_info.o \

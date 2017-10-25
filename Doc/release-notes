@@ -1,10 +1,13 @@
 New in development version:
 
   * DFT-D3
+  * 2D cutoff for Coulomb potential 
 
 Incompatible changes in development version:
 
-  * __OPENMP (set by configure) replaced by _OPENMP (set by OpenMP compilers)
+  * __OPENMP with two underscores (set by configure) replaced by _OPENMP
+    with one underscore (automatically set by all OpenMP-aware compilers)
+  * "Old" xml input file deleted
 
 Problems fixed by development version:
 
