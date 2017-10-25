@@ -11,7 +11,7 @@ Incompatible changes in development version:
 
 Problems fixed by development version:
 
-(none yet)
+  * FFT's for ARM libraries were broken (courtesy Jason Wood)
 
 Known problems in 6.2 version:
 
