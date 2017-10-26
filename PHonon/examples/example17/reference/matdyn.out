@@ -1,10 +1,10 @@
 
-     Program MATDYN v.6.2 starts on 18Oct2017 at 11:10:18 
+     Program MATDYN v.6.2 (svn rev. 13952M) starts on 25Oct2017 at 21:25:33 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
-         "P. Giannozzi et al., http://arxiv.org/abs/1709.10010;
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
@@ -16,10 +16,10 @@
  mass for atomic type   1 not given; uses mass from file bn881.fc                                                                                                                                                                                                                                                        
  mass for atomic type   2 not given; uses mass from file bn881.fc                                                                                                                                                                                                                                                        
  
-     MATDYN       :     0.04s CPU         0.04s WALL
+     MATDYN       :     0.03s CPU         0.04s WALL
 
  
-   This run was terminated on:  11:10:18  18Oct2017            
+   This run was terminated on:  21:25:33  25Oct2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

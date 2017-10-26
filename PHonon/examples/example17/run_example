@@ -25,7 +25,7 @@ $ECHO
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x q2r.x matdyn.x plotband.x"
-PSEUDO_LIST="B.pbe-n-kjpaw_psl.0.1.UPF N.pbe.theos.UPF"
+PSEUDO_LIST="B.pbe-n-kjpaw_psl.0.1.UPF N.pbe-n-kjpaw_psl.0.1.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -126,7 +126,7 @@ cat > bn.scf.in << EOF
  /
 ATOMIC_SPECIES
 B 10.81     B.pbe-n-kjpaw_psl.0.1.UPF
-N 14.00674  N.pbe.theos.UPF
+N 14.00674  N.pbe-n-kjpaw_psl.0.1.UPF
 ATOMIC_POSITIONS (alat)
 B        0.000000000   0.288675135   0.000000000
 N        0.000000000  -0.288675135   0.000000000 

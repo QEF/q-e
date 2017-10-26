@@ -2,7 +2,7 @@ Phonon dispersions for BN
  &inputph
   tr2_ph=1.0d-15,
   prefix='bn',
-  outdir='/home/sohier/Codes/q-e/tempdir/',
+  outdir='/home/paulatto/espresso/tempdir/',
   fildyn='bn.disp.dyn',
   ldisp=.true.
   nq1=8, nq2=8, nq3=1,

@@ -1,10 +1,10 @@
 
-     Program Q2R v.6.2 starts on 18Oct2017 at 11:10:18 
+     Program Q2R v.6.2 (svn rev. 13952M) starts on 25Oct2017 at 21:25:33 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
-         "P. Giannozzi et al., http://arxiv.org/abs/1709.10010;
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
@@ -17,17 +17,17 @@
      reading grid info from file bn.disp.dyn0    
   reading force constants from file bn.disp.dyn1
  macroscopic fields = T
-   2.16225   0.00000   0.00000
-   0.00000   2.16225   0.00000
-   0.00000   0.00000   1.19210
+   2.16599   0.00000   0.00000
+   0.00000   2.16599   0.00000
+   0.00000   0.00000   1.19221
   na=            1
-   2.71726   0.00000   0.00000
-   0.00000   2.71726   0.00000
-   0.00000   0.00000   0.24434
+   2.71348   0.00000   0.00000
+   0.00000   2.71348   0.00000
+   0.00000   0.00000   0.24303
   na=            2
-  -2.69651   0.00000   0.00000
-   0.00000  -2.69651   0.00000
-   0.00000   0.00000  -0.22275
+  -2.72028   0.00000   0.00000
+   0.00000  -2.72028   0.00000
+   0.00000   0.00000  -0.24985
   nqs=            1
  q=   0.00000000  0.00000000  0.00000000
   reading force constants from file bn.disp.dyn2
@@ -114,12 +114,12 @@
 
       q-space grid ok, #points =   64
 
-      fft-check warning: sum of imaginary terms = 4.319552E-06
+      fft-check warning: sum of imaginary terms = 4.344657E-06
  
-     Q2R          :     0.02s CPU         0.03s WALL
+     Q2R          :     0.02s CPU         0.02s WALL
 
  
-   This run was terminated on:  11:10:18  18Oct2017            
+   This run was terminated on:  21:25:33  25Oct2017            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
