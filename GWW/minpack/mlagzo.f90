@@ -1,15 +1,15 @@
        SUBROUTINE LAGZO(N,X,W)
-C
-C       =========================================================
-C       Purpose : Compute the zeros of Laguerre polynomial Ln(x)
-C                 in the interval [0,�], and the corresponding
-C                 weighting coefficients for Gauss-Laguerre
-C                 integration
-C       Input :   n    --- Order of the Laguerre polynomial
-C                 X(n) --- Zeros of the Laguerre polynomial
-C                 W(n) --- Corresponding weighting coefficients
-C       =========================================================
-C
+!
+!       =========================================================
+!       Purpose : Compute the zeros of Laguerre polynomial Ln(x)
+!                 in the interval [0,�], and the corresponding
+!                 weighting coefficients for Gauss-Laguerre
+!                 integration
+!       Input :   n    --- Order of the Laguerre polynomial
+!                 X(n) --- Zeros of the Laguerre polynomial
+!                 W(n) --- Corresponding weighting coefficients
+!       =========================================================
+!
         IMPLICIT DOUBLE PRECISION (A-H,O-Z)
         DIMENSION X(N),W(N)
         HN=1.0D0/N
@@ -47,4 +47,4 @@ C
 35      CONTINUE
         RETURN
         END
-
+!

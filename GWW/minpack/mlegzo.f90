@@ -1,15 +1,15 @@
         SUBROUTINE LEGZO(N,X,W)
-C
-C       =========================================================
-C       Purpose : Compute the zeros of Legendre polynomial Pn(x)
-C                 in the interval [-1,1], and the corresponding
-C                 weighting coefficients for Gauss-Legendre
-C                 integration
-C       Input :   n    --- Order of the Legendre polynomial
-C       Output:   X(n) --- Zeros of the Legendre polynomial
-C                 W(n) --- Corresponding weighting coefficients
-C       =========================================================
-C
+!
+!       =========================================================
+!       Purpose : Compute the zeros of Legendre polynomial Pn(x)
+!                 in the interval [-1,1], and the corresponding
+!                 weighting coefficients for Gauss-Legendre
+!                 integration
+!       Input :   n    --- Order of the Legendre polynomial
+!       Output:   X(n) --- Zeros of the Legendre polynomial
+!                 W(n) --- Corresponding weighting coefficients
+!       =========================================================
+!
         IMPLICIT DOUBLE PRECISION (A-H,O-Z)
         DIMENSION X(N),W(N)
         N0=(N+1)/2
@@ -45,4 +45,4 @@ C
 45         W(N+1-NR)=W(NR)
         RETURN
         END
-
+!
