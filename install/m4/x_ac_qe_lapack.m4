@@ -41,18 +41,6 @@ if test "$use_netlib" -eq 0
                 AC_SEARCH_LIBS(dspev, sunperf, have_lapack=1
                                lapack_libs="-xlic_lib=sunperf $LIBS")
                 ;;
-        aix:* )
-                # check for essl - OBSOLETE 
-                unset ac_cv_search_dspev # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS="$blas_libs"
-                AC_SEARCH_LIBS(dspev, essl, have_lapack=1
-                                lapack_libs="$try_loption $LIBS"
-                                try_dflags="$try_dflags -D__ESSL")
-                # essl may not have been found in previous test on blas
-                if test "$have_lapack" -eq 1; then have_essl=1; fi
-                ;;
         ppc64:* )
                 # check for essl
                 unset ac_cv_search_dspev # clear cached value

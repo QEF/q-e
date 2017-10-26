@@ -116,23 +116,6 @@ ia32:path* | ia64:path* | x86_64:path* )
         try_ldflags=""
         imod="-I"
         ;;
-aix:*xlf* )
-        if test "$use_debug" -eq 1; then
-            try_fflags="-q64 -qalias=noaryovrlp -g -C \
--qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
-        else
-            try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
--qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
-        fi
-        try_fflags_openmp="-qsmp=omp"
-        try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90 -qfree=f90"
-        try_fflags_noopt="-q64 -O0"
-        try_ldflags="-q64"
-        try_ldflags_openmp="-qsmp=omp"
-        # try_ldflags_static="-bstatic"
-        pre_fdflags="-WF,"
-        xlf_flags=1
-        ;;
 solaris:sunf95 )
         try_fflags="-fast -O2 -fpp"
         try_f90flags="\$(FFLAGS)"

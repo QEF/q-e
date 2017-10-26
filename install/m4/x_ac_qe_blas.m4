@@ -350,29 +350,6 @@ then
                 done
                 ;;
 
-        aix:* )
-                # check for essl
-                unset ac_cv_search_dgemm # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS=""
-                AC_SEARCH_LIBS(dgemm, essl, have_blas=1
-                               blas_libs="$LIBS" )
-                # notice that some IBM machines may not need -lessl
-                # to load blas so the above test may fail
-                if test "`echo $blas_libs | grep essl`" != ""
-                then
-                    have_essl=1
-                    try_dflags="$try_dflags -D__ESSL"
-                fi
-		# we need esslsmp for hybrid (MPI+OpenMP) build
-		if test "$have_essl"="1"; then
-		    if test "$use_openmp" -ne 0 ; then
-		         blas_libs="-lesslsmp"
-		    fi
-		fi
-                ;;
-
         sparc:* | solaris:* )
                 # check for SUNperf library
                 unset ac_cv_search_dgemm # clear cached value

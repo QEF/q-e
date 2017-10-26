@@ -9,12 +9,6 @@ case "$arch:$f90_flavor" in
 *:pgf* )
         try_f77="pgf77 $f90"
         ;;
-aix:*xlf*_r )
-        try_f77="xlf_r $f90"
-        ;;
-aix:*xlf* )
-        try_f77="xlf $f90"
-        ;;
 sparc:* | solaris:sunf95 )
         try_f77="f77 $f90"
         ;;

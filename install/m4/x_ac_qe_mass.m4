@@ -4,7 +4,7 @@ AC_DEFUN([X_AC_QE_MASS], [
 
   AC_MSG_CHECKING([MASS])
  
- # check for mass on aix
+ # check for IBM mass
 if test "$mass_libs" = ""
 then
         # check directories in LD_LIBRARY_PATH too
@@ -12,7 +12,7 @@ then
         ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
 
         case "$arch" in
-        aix | ppc64-bg )
+        ppc64-bg )
                 # check for mass (in several directories)
                 try_libdirs="/opt/ibmcmp/xlmass/bg/7.3/bglib64 /opt/ibmcmp/xlmass/bg/4.4/bglib /cineca/lib /cineca/lib/mass"
                 try_libdirs="$libdirs $try_libdirs $ld_library_path"

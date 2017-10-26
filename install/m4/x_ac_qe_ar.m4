@@ -19,9 +19,6 @@ AC_DEFUN([X_AC_QE_AR], [
   
   AC_MSG_CHECKING([setting ARFLAGS... ])
   case $arch in
-  aix )
-        try_arflags="-X64 ruv"
-        ;;
   necsx )
         try_arflags="rv"
         ;;

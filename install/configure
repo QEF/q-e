@@ -2412,7 +2412,6 @@ then
                 x86_64-*-linux-gnu )    arch=x86_64 ;;
                 arm-*linux* )           arch=arm    ;;
                 *-pc-linux-gnu )        arch=ia32   ;;
-                *-ibm-aix* )            arch=aix    ;;
                 sparc-sun-* )           arch=sparc  ;;
                 i386-pc-solaris* )      arch=solaris;;
                 *86-apple-darwin* )     arch=mac686 ;;
@@ -2468,9 +2467,6 @@ $as_echo "${ar}" >&6; }
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking setting ARFLAGS... " >&5
 $as_echo_n "checking setting ARFLAGS... ... " >&6; }
   case $arch in
-  aix )
-        try_arflags="-X64 ruv"
-        ;;
   necsx )
         try_arflags="rv"
         ;;
@@ -2745,11 +2741,6 @@ arm )
         ;;
 solaris )
         try_f90="sunf95 $try_f90"
-        ;;
-aix )
-        try_mpif90="mpxlf90_r mpxlf90"
-        try_f90="xlf90_r xlf90 $try_f90"
-        try_dflags="-D__AIX -D__XLF"
         ;;
 crayxt* )
         try_f90="ftn"
@@ -3937,12 +3928,6 @@ case "$arch:$f90_flavor" in
 *:openf95 )
         try_cc="opencc $try_cc"
         ;;
-aix:*xlf*_r )
-        try_cc="xlc_r $try_cc"
-        ;;
-aix:*xlf* )
-        try_cc="xlc $try_cc"
-        ;;
 cray*:* )
         try_cc="cc"
         ;;
@@ -4325,14 +4310,6 @@ case "$arch:$cc" in
         # Do I need preprocessing here?
         try_cflags="-fast -Mpreprocess"
         ;;
-# pathcc -E seems to give problems when preprocessing iotk
-#*:pathcc )
-#       try_cpp="pathcc -E"
-#       ;;
-aix:xlc* | aix:cc )
-        try_cflags="-q64 -O2"
-        c_ldflags="-q64"
-        ;;
 *:suncc  )
         try_cflags="-fast -O"
         ;;
@@ -4383,12 +4360,6 @@ try_f77="$f90"
 case "$arch:$f90_flavor" in
 *:pgf* )
         try_f77="pgf77 $f90"
-        ;;
-aix:*xlf*_r )
-        try_f77="xlf_r $f90"
-        ;;
-aix:*xlf* )
-        try_f77="xlf $f90"
         ;;
 sparc:* | solaris:sunf95 )
         try_f77="f77 $f90"
@@ -4745,23 +4716,6 @@ ia32:path* | ia64:path* | x86_64:path* )
         try_fflags_noopt="-O0"
         try_ldflags=""
         imod="-I"
-        ;;
-aix:*xlf* )
-        if test "$use_debug" -eq 1; then
-            try_fflags="-q64 -qalias=noaryovrlp -g -C \
--qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
-        else
-            try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
--qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
-        fi
-        try_fflags_openmp="-qsmp=omp"
-        try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90 -qfree=f90"
-        try_fflags_noopt="-q64 -O0"
-        try_ldflags="-q64"
-        try_ldflags_openmp="-qsmp=omp"
-        # try_ldflags_static="-bstatic"
-        pre_fdflags="-WF,"
-        xlf_flags=1
         ;;
 solaris:sunf95 )
         try_fflags="-fast -O2 -fpp"
@@ -6180,71 +6134,6 @@ fi
                 done
                 ;;
 
-        aix:* )
-                # check for essl
-                unset ac_cv_search_dgemm # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS=""
-                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
-$as_echo_n "checking for library containing dgemm... " >&6; }
-if ${ac_cv_search_dgemm+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat > conftest.$ac_ext <<_ACEOF
-      program main
-      call dgemm
-      end
-_ACEOF
-for ac_lib in '' essl; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_f77_try_link "$LINENO"; then :
-  ac_cv_search_dgemm=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_dgemm+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_dgemm+:} false; then :
-
-else
-  ac_cv_search_dgemm=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_dgemm" >&5
-$as_echo "$ac_cv_search_dgemm" >&6; }
-ac_res=$ac_cv_search_dgemm
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  have_blas=1
-                               blas_libs="$LIBS"
-fi
-
-                # notice that some IBM machines may not need -lessl
-                # to load blas so the above test may fail
-                if test "`echo $blas_libs | grep essl`" != ""
-                then
-                    have_essl=1
-                    try_dflags="$try_dflags -D__ESSL"
-                fi
-		# we need esslsmp for hybrid (MPI+OpenMP) build
-		if test "$have_essl"="1"; then
-		    if test "$use_openmp" -ne 0 ; then
-		         blas_libs="-lesslsmp"
-		    fi
-		fi
-                ;;
-
         sparc:* | solaris:* )
                 # check for SUNperf library
                 unset ac_cv_search_dgemm # clear cached value
@@ -6921,60 +6810,6 @@ if test "$ac_res" != no; then :
 fi
 
                 ;;
-        aix:* )
-                # check for essl - OBSOLETE
-                unset ac_cv_search_dspev # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS="$blas_libs"
-                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dspev" >&5
-$as_echo_n "checking for library containing dspev... " >&6; }
-if ${ac_cv_search_dspev+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat > conftest.$ac_ext <<_ACEOF
-      program main
-      call dspev
-      end
-_ACEOF
-for ac_lib in '' essl; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_f77_try_link "$LINENO"; then :
-  ac_cv_search_dspev=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_dspev+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_dspev+:} false; then :
-
-else
-  ac_cv_search_dspev=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_dspev" >&5
-$as_echo "$ac_cv_search_dspev" >&6; }
-ac_res=$ac_cv_search_dspev
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  have_lapack=1
-                                lapack_libs="$try_loption $LIBS"
-                                try_dflags="$try_dflags -D__ESSL"
-fi
-
-                # essl may not have been found in previous test on blas
-                if test "$have_lapack" -eq 1; then have_essl=1; fi
-                ;;
         ppc64:* )
                 # check for essl
                 unset ac_cv_search_dspev # clear cached value
@@ -7611,7 +7446,7 @@ $as_echo_n "checking FFT... " >&6; }
 
 # check for FFT libraries (no check for explicit openmp)
 # supported vendor replacements:
-#   essl on aix and some IBM linux machines
+#   essl on IBM linux machines
 #   SUNperf on sparc
 #   ASL/Mathkeisan on Nec
 #   acml on amd
@@ -7622,56 +7457,6 @@ then
         ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
 
         case "$arch" in
-        aix )
-                # check for essl
-                unset ac_cv_search_dcft # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS="$fft_libs"
-                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dcft" >&5
-$as_echo_n "checking for library containing dcft... " >&6; }
-if ${ac_cv_search_dcft+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat > conftest.$ac_ext <<_ACEOF
-      program main
-      call dcft
-      end
-_ACEOF
-for ac_lib in '' essl; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_f77_try_link "$LINENO"; then :
-  ac_cv_search_dcft=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_dcft+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_dcft+:} false; then :
-
-else
-  ac_cv_search_dcft=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_dcft" >&5
-$as_echo "$ac_cv_search_dcft" >&6; }
-ac_res=$ac_cv_search_dcft
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  have_fft=1 fft_libs="$LIBS"
-fi
-
-            ;;
         ppc64 | ppc64-mn )
                 # check for essl
                 unset ac_cv_search_dcft # clear cached value
@@ -8147,7 +7932,55 @@ ac_compiler_gnu=$ac_cv_f77_compiler_gnu
 
                   if test "$use_openmp" -eq 1
                   then
+                    # Try testing openmp without -lfftw3 first, if that fails then return
+                    # to previous behaviour
                     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dfftw_execute_dft" >&5
+$as_echo_n "checking for library containing dfftw_execute_dft... " >&6; }
+if ${ac_cv_search_dfftw_execute_dft+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat > conftest.$ac_ext <<_ACEOF
+      program main
+      call dfftw_execute_dft
+      end
+_ACEOF
+for ac_lib in '' fftw3_omp; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib -lm $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_f77_try_link "$LINENO"; then :
+  ac_cv_search_dfftw_execute_dft=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_dfftw_execute_dft+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_dfftw_execute_dft+:} false; then :
+
+else
+  ac_cv_search_dfftw_execute_dft=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_dfftw_execute_dft" >&5
+$as_echo "$ac_cv_search_dfftw_execute_dft" >&6; }
+ac_res=$ac_cv_search_dfftw_execute_dft
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  have_fft=1
+                               fft_libs="$try_loption $LIBS"
+fi
+
+                    if test "$have_fft" -eq 0
+                    then
+                      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dfftw_execute_dft" >&5
 $as_echo_n "checking for library containing dfftw_execute_dft... " >&6; }
 if ${ac_cv_search_dfftw_execute_dft+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8188,9 +8021,10 @@ ac_res=$ac_cv_search_dfftw_execute_dft
 if test "$ac_res" != no; then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   have_fft=1
-                               fft_libs="$try_loption $LIBS -lfftw3"
+                                 fft_libs="$try_loption $LIBS -lfftw3"
 fi
 
+                    fi
                   else
                     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dfftw_execute_dft" >&5
 $as_echo_n "checking for library containing dfftw_execute_dft... " >&6; }
@@ -8302,7 +8136,7 @@ fi
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking MASS" >&5
 $as_echo_n "checking MASS... " >&6; }
 
- # check for mass on aix
+ # check for IBM mass
 if test "$mass_libs" = ""
 then
         # check directories in LD_LIBRARY_PATH too
@@ -8310,7 +8144,7 @@ then
         ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
 
         case "$arch" in
-        aix | ppc64-bg )
+        ppc64-bg )
                 # check for mass (in several directories)
                 try_libdirs="/opt/ibmcmp/xlmass/bg/7.3/bglib64 /opt/ibmcmp/xlmass/bg/4.4/bglib /cineca/lib /cineca/lib/mass"
                 try_libdirs="$libdirs $try_libdirs $ld_library_path"

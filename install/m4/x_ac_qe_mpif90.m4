@@ -28,11 +28,6 @@ arm )
 solaris )
         try_f90="sunf95 $try_f90"
         ;;
-aix )
-        try_mpif90="mpxlf90_r mpxlf90"
-        try_f90="xlf90_r xlf90 $try_f90"
-        try_dflags="-D__AIX -D__XLF"
-        ;;
 crayxt* )
         try_f90="ftn"
         try_mpif90="ftn"

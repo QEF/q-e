@@ -419,7 +419,7 @@ located in the \texttt{install/} subdirectory. \configure\
 will (try to) detect compilers and libraries available on
 your machine, and set up things accordingly. Presently it is expected
 to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs) and
-PC clusters, SGI Altix, IBM SP and BlueGene machines, NEC SX, Cray XT
+PC clusters, SGI Altix, IBM BlueGene machines, NEC SX, Cray XT
 machines, Mac OS X, MS-Windows PCs. Detailed installation instructions for some
 specific HPC machines can be found in files \texttt{install/README.}{\em sys},
 where {\em sys} is the machine name.
@@ -517,7 +517,6 @@ for NEC SX6 on a PC). Currently supported architectures are:
 \texttt{ia32}&    Intel 32-bit machines (x86) running Linux\\
 \texttt{ia64}&    Intel 64-bit (Itanium) running Linux\\
 \texttt{x86\_64}&  Intel and AMD 64-bit running Linux - see note below\\
-\texttt{aix}&     IBM AIX machines\\
 \texttt{solaris}& PC's running SUN-Solaris\\
 \texttt{sparc}&   Sun SPARC machines\\
 \texttt{crayxt4}& Cray XT4/XT5/XE machines\\
@@ -535,7 +534,8 @@ for NEC SX6 on a PC). Currently supported architectures are:
 Cray Unicos machines, SGI
 machines with MIPS architecture, HP-Compaq Alphas are no longer supported
 since v.4.2; PowerPC Macs are no longer
-supported since v.5.0.
+supported since v.5.0. IBM machines with AIX are no longer supported
+since v.6.0.
 Finally, \configure\ recognizes the following command-line options:\\
 \begin{tabular}{ll}
 \texttt{--enable-parallel}&     compile for parallel (MPI) execution if possible (default: yes)\\
@@ -655,7 +655,7 @@ happen, especially on PC clusters, see Sec.\ref{SubSec:LinuxPCMPI}.
 
 \paragraph{Other libraries}
 \qe\ can use the MASS vector math
-library from IBM, if available (only on AIX).
+library from IBM, if available (only on machines with XLF compiler).
 
 \paragraph{If optimized libraries are not found}
 The \configure\ script attempts to find optimized libraries, but may fail
@@ -947,14 +947,10 @@ For Cray XT machines, use \texttt{./configure ARCH=crayxt4} or else
 
 Older Cray machines: T3D, T3E, X1, are no longer supported.
 
-\subsubsection{IBM AIX}
-
-As of v.6.0 IBM machines with AIX are no longer supported.
-
 \subsubsection{IBM BlueGene}
 
-The current \configure\ is tested and works on the machines at CINECA
-and at J\"ulich. For other sites, you may need something like
+The current \configure\ was working on the machines at CINECA and at J\"ulich.
+For other machines, you may need something like
 \begin{verbatim}
   ./configure ARCH=ppc64-bg BLAS_LIBS=...  LAPACK_LIBS=... \
               SCALAPACK_DIR=... BLACS_DIR=..."

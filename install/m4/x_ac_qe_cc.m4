@@ -21,12 +21,6 @@ case "$arch:$f90_flavor" in
 *:openf95 )
         try_cc="opencc $try_cc"
         ;;
-aix:*xlf*_r )
-        try_cc="xlc_r $try_cc"
-        ;;
-aix:*xlf* )
-        try_cc="xlc $try_cc"
-        ;;
 cray*:* )
         try_cc="cc"
         ;;
@@ -62,14 +56,6 @@ case "$arch:$cc" in
 *:pgcc )
         # Do I need preprocessing here?
         try_cflags="-fast -Mpreprocess"
-        ;;
-# pathcc -E seems to give problems when preprocessing iotk
-#*:pathcc )
-#       try_cpp="pathcc -E"
-#       ;;
-aix:xlc* | aix:cc )
-        try_cflags="-q64 -O2"
-        c_ldflags="-q64"
         ;;
 *:suncc  )
         try_cflags="-fast -O"
