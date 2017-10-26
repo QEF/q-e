@@ -419,7 +419,7 @@ located in the \texttt{install/} subdirectory. \configure\
 will (try to) detect compilers and libraries available on
 your machine, and set up things accordingly. Presently it is expected
 to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs) and
-PC clusters, SGI Altix, IBM BlueGene machines, NEC SX, Cray XT
+PC clusters, IBM BlueGene machines, NEC SX, Cray XT
 machines, Mac OS X, MS-Windows PCs. Detailed installation instructions for some
 specific HPC machines can be found in files \texttt{install/README.}{\em sys},
 where {\em sys} is the machine name.
@@ -517,8 +517,6 @@ for NEC SX6 on a PC). Currently supported architectures are:
 \texttt{ia32}&    Intel 32-bit machines (x86) running Linux\\
 \texttt{ia64}&    Intel 64-bit (Itanium) running Linux\\
 \texttt{x86\_64}&  Intel and AMD 64-bit running Linux - see note below\\
-\texttt{solaris}& PC's running SUN-Solaris\\
-\texttt{sparc}&   Sun SPARC machines\\
 \texttt{crayxt4}& Cray XT4/XT5/XE machines\\
 \texttt{mac686}&  Apple Intel machines running Mac OS X\\
 \texttt{cygwin}&  MS-Windows PCs with Cygwin\\
@@ -602,8 +600,6 @@ like those contained e.g. in the following libraries:
 MKL for Intel CPUs\\
 ACML for AMD CPUs\\
 ESSL for IBM machines\\
-SCSL for SGI Altix\\
-SUNperf for Sun
 \end{quote}
 
 If none of these is available, we suggest that you use the optimized ATLAS
@@ -970,9 +966,9 @@ but it is not guaranteed to work and will not give
 any advantage anyway.
 
 Currently, \configure\ supports Intel (ifort), NAG (nagfor), PGI (pgf90)
-and gfortran compilers. Support for other compilers: Pathscale
-(pathf95), Sun Studio (sunf95), AMD Open64 (openf95), added in the past,
-is still there, but it is likely obsolete.
+and gfortran compilers. Pathscale, Sun Studio, AMD Open64, are no
+longaer supported after v.6.2: g95, since v.6.1.
+
 Both Intel MKL and AMD acml mathematical libraries are supported, the
 former much better than the latter.
 
@@ -1014,44 +1010,6 @@ as well: if you compile with gfortran, link \texttt{-lmkl\_gf\_lp64},
 not \texttt{-lmkl\_intel\_lp64}, and the like for other architectures.
 Since v.5.1, you may use the following workaround:
 add preprocessing option \texttt{-Dzdotc=zdotc\_wrapper} to \texttt{DFLAGS}.
-
-\paragraph{Linux PCs with g95}
-
-Since v.6.1, g95 is no longer supported.
-
-\paragraph{Linux PCs with Pathscale compiler}
-
-Version 3.1 and version 4 (open source!) of the Pathscale EKO compiler
-work (info by Cezary Sliwa, April 2011, and Carlo Nervi, June 2011).
-In case of mysterious errors while compiling \texttt{iotk},
-remove all lines like:
-\begin{verbatim}
-# 1 "iotk_base.spp"
-\end{verbatim}
-from all \texttt{iotk} source files.
-
-\paragraph{Linux PCs with Sun Studio compiler}
-
-``The Sun Studio compiler, sunf95, is free (web site:
-\texttt{http://developers.sun.com/sunstudio/} and comes
-with a set of algebra libraries that can be used in place of the slow
-built-in libraries. It also supports OpenMP, which g95 does not. On the
-other hand, it is a pain to compile MPI with it. Furthermore the most
-recent version has a terrible bug that totally miscompiles the iotk
-input/output library (you'll have to compile it with reduced optimization).''
-(info by Lorenzo Paulatto, March 2010).
-
-\paragraph{Linux PCs with AMD Open64 suite}
-
-The AMD Open64 compiler suite, openf95 (web site:
-\texttt{http://developer.amd.com/cpu/open64/pages/default.aspx})
-can be freely downloaded from the AMD site.
-It is recognized by \configure\ but little tested. It sort of works
-but it fails to pass several tests (info by Paolo Giannozzi, March 2010).
-"I have configured for Pathscale, then switched to the Open64 compiler by
-editing make.inc. "make pw" succeeded and pw.x did process my file, but with
-"make all" I get an internal compiler error [in CPV/wf.f90]" (info by Cezary
-Sliwa, April 2011).
 
 \paragraph{Linux PCs with Intel compiler (ifort)}
 

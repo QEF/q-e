@@ -194,36 +194,6 @@ then
                 done
                 ;;
 
-        *:sunf95 )
-                # check for acml - note that it contains lapack as well
-                if test "$arch" = "x86_64"
-                then
-                        try_libdirs="/usr/local/sunstudio*/lib/amd64/"
-                else
-                        try_libdirs="/usr/local/sunstudio*/lib/"
-                fi
-                try_libdirs="$libdirs $ld_library_path $try_libdirs"
-
-                for dir in none $try_libdirs
-                do
-                        unset ac_cv_search_dgemm # clear cached value
-                        if test "$dir" = "none"
-                        then
-                                try_loption=
-                        else
-                                echo $ECHO_N "in $dir: " $ECHO_C
-                                try_loption="-L$dir"
-                        fi
-                        FFLAGS="$test_fflags"
-                        LDFLAGS="$test_ldflags $try_loption"
-                        LIBS=""
-                        AC_SEARCH_LIBS(dgemm, sunperf, have_blas=1 have_lapack=1
-                                blas_libs="$try_loption $LIBS")
-                        if test "$ac_cv_search_dgemm" != "no"
-                        then break ; fi
-                done
-                ;;
-
         x86_64:* )
                 try_libdirs="/opt/intel/composer*/mkl/lib/intel64
                              /opt/intel/Compiler/*/*/mkl/lib/em64t
@@ -350,15 +320,6 @@ then
                 done
                 ;;
 
-        sparc:* | solaris:* )
-                # check for SUNperf library
-                unset ac_cv_search_dgemm # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS=""
-                AC_SEARCH_LIBS(dgemm, sunperf, have_blas=1 have_lapack=1
-                               blas_libs="-xlic_lib=sunperf $LIBS")
-                ;;
         necsx:* )
                 #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib
                 #sx8-nec-idris: check in /SX/opt/mathkeisan/inst/lib0

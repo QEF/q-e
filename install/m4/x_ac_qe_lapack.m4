@@ -32,15 +32,6 @@ if test "$use_netlib" -eq 0
                 fi
                 ;;
 
-        sparc:* )
-                # check for SUNperf library - likely OBSOLETE 
-                unset ac_cv_search_dspev # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS="$blas_libs"
-                AC_SEARCH_LIBS(dspev, sunperf, have_lapack=1
-                               lapack_libs="-xlic_lib=sunperf $LIBS")
-                ;;
         ppc64:* )
                 # check for essl
                 unset ac_cv_search_dspev # clear cached value

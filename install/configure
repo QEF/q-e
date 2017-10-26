@@ -2412,9 +2412,6 @@ then
                 x86_64-*-linux-gnu )    arch=x86_64 ;;
                 arm-*linux* )           arch=arm    ;;
                 *-pc-linux-gnu )        arch=ia32   ;;
-                sparc-sun-* )           arch=sparc  ;;
-                i386-pc-solaris* )      arch=solaris;;
-                *86-apple-darwin* )     arch=mac686 ;;
                 *-apple-darwin* )       arch=mac686 ;;
                 *-pc-cygwin )           arch=cygwin ;;
                 sx*-nec* )              arch=necsx  ;;
@@ -2734,13 +2731,10 @@ try_f90="gfortran f90"
 # candidate compilers and flags based on architecture
 case $arch in
 ia32 | ia64 | x86_64 )
-        try_f90="ifort pgf90 pathf95 sunf95 openf95 nagfor $try_f90"
+        try_f90="ifort pgf90 nagfor $try_f90"
         ;;
 arm )
         try_f90="$try_f90"
-        ;;
-solaris )
-        try_f90="sunf95 $try_f90"
         ;;
 crayxt* )
         try_f90="ftn"
@@ -3760,12 +3754,7 @@ case "$arch" in
         ia32 | ia64 | x86_64 | mac686 )
         echo $ECHO_N "checking version of $mpif90... $ECHO_C"
         ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
-        sunf95_version=`$mpif90 -V 2>&1 | grep "Sun Fortran"`
-        openf95_version=`$mpif90 -V 2>&1 | grep "^Open64"`
         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
-        enzo_version=`$mpif90 -v 2>&1 | grep "PathScale ENZO"`
-        eko_version=`$mpif90 -v 2>&1 | grep "PathScale EKOPath"`
-        pathf95_version=`$mpif90 -v 2>&1 | grep "PathScale"`
         gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
         nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
         #
@@ -3780,16 +3769,6 @@ case "$arch" in
                    MKL_FLAGS="-static-intel"
                 fi
 
-        elif test "$sunf95_version" != ""
-        then
-                version=`echo $sunf95_version | cut -d ' ' -f5`
-                echo "${ECHO_T}sunf95 $version"
-                f90_in_mpif90="sunf95"
-        elif test "$openf95_version" != ""
-        then
-                version=`echo $openf95_version | cut -d ' ' -f5`
-                echo "${ECHO_T}openf95 $version"
-                f90_in_mpif90="openf95"
         elif test "$pgf_version" != ""
         then
                 version=`echo $pgf_version | cut -d ' ' -f2`
@@ -3797,21 +3776,6 @@ case "$arch" in
                 f90_in_mpif90="pgf90"
                 # flag to test MKL with PGI
                 MKL_FLAGS="-pgf90libs"
-        elif test "$enzo_version" != ""
-        then
-                version=`echo $enzo_version | cut -d ' ' -f6`
-                echo "${ECHO_T}pathf95 $version"
-                f90_in_mpif90="pathf95"
-        elif test "$eko_version" != ""
-        then
-                version=`echo $eko_version | cut -d ' ' -f6`
-                echo "${ECHO_T}pathf95 $version"
-                f90_in_mpif90="pathf95"
-        elif test "$pathf95_version" != ""
-        then
-                version=`echo $pathf95_version | cut -d ' ' -f5`
-                echo "${ECHO_T}pathf95 $version"
-                f90_in_mpif90="pathf95"
         elif test "$gfortran_version" != ""
         then
                 version=`echo $gfortran_version | cut -d ' ' -f3`
@@ -3849,18 +3813,8 @@ f90 | fc | ftn )
 
     if $f90 -V 2>&1 | grep -q "Intel(R)" ; then
         f90_flavor=ifort
-    elif $f90 -V 2>&1 | grep -q "Sun Fortran" ; then
-        f90_flavor=sunf95
-    elif $f90 -V 2>&1 | grep -q "^Open64" ; then
-        f90_flavor=openf95
     elif $f90 -V 2>&1 | grep -q "^pgf" ; then
         f90_flavor=pgf
-    elif $f90 -v 2>&1 | grep -q "PathScale ENZO" ; then
-        f90_flavor=pathf95
-    elif $f90 -v 2>&1 | grep -q "PathScale EKOPath" ; then
-        f90_flavor=pathf95
-    elif $f90 -version 2>&1 | grep -q "PathScale" ; then
-        f90_flavor=pathf95
     elif $f90 -v 2>&1 | grep -q "gcc version" ; then
         f90_flavor=gfortran
     elif $f90 -V 2>&1 | grep -q "Cray Fortran" ; then
@@ -3918,15 +3872,6 @@ case "$arch:$f90_flavor" in
         ;;
 *:pgf90 )
         try_cc="pgcc $try_cc"
-        ;;
-*:pathf95 )
-        try_cc="pathcc $try_cc"
-        ;;
-*:sunf95 )
-        try_cc="suncc $try_cc"
-        ;;
-*:openf95 )
-        try_cc="opencc $try_cc"
         ;;
 cray*:* )
         try_cc="cc"
@@ -4310,14 +4255,6 @@ case "$arch:$cc" in
         # Do I need preprocessing here?
         try_cflags="-fast -Mpreprocess"
         ;;
-*:suncc  )
-        try_cflags="-fast -O"
-        ;;
-sparc:cc )
-        try_cflags="-fast -dalign -xchip=ultra3 -xarch=v8plusb \
--xlic_lib=sunperf"
-        try_cpp="fpp"
-        ;;
 crayxt*:cc )
         # Actually we need something like is done for ftn to detect
         # the proper compiler used (NdFilippo)
@@ -4360,9 +4297,6 @@ try_f77="$f90"
 case "$arch:$f90_flavor" in
 *:pgf* )
         try_f77="pgf77 $f90"
-        ;;
-sparc:* | solaris:sunf95 )
-        try_f77="f77 $f90"
         ;;
 ppc64-bg*:*xlf90_r )
         try_f77="bgxlf_r"
@@ -4700,38 +4634,6 @@ ia32:path* | ia64:path* | x86_64:path* )
         try_ldflags="-g -pthread"
         try_ldflags_openmp="-fopenmp"
         try_ldflags_static="-static"
-        ;;
-*:sunf95 )
-        try_fflags="-O4"
-        try_fflags_openmp="-openmp"
-        try_f90flags="\$(FFLAGS) -fpp"
-        try_fflags_noopt="-O0"
-        try_ldflags="-fast"
-        try_ldflags_static="-Bstatic"
-        imod="-M"
-        ;;
-*:openf95 )
-        try_fflags="-O3"
-        try_f90flags="\$(FFLAGS) -ftpp"
-        try_fflags_noopt="-O0"
-        try_ldflags=""
-        imod="-I"
-        ;;
-solaris:sunf95 )
-        try_fflags="-fast -O2 -fpp"
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-O0 "
-        try_ldflags=""
-        imod="-M"
-        ;;
-sparc:f90 )
-        try_fflags="-fast -O1 -nodepend -xvector=no -xchip=ultra3 \
--xarch=v8plusb -xlic_lib=sunperf"
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-O0 -xlic_lib=sunperf"
-        try_ldflags=""
-        imod="-M"
-        have_cpp=0
         ;;
 crayxt*:cray* )
         try_fflags_nomain=""
@@ -5608,78 +5510,6 @@ fi
                 done
                 ;;
 
-        *:sunf95 )
-                # check for acml - note that it contains lapack as well
-                if test "$arch" = "x86_64"
-                then
-                        try_libdirs="/usr/local/sunstudio*/lib/amd64/"
-                else
-                        try_libdirs="/usr/local/sunstudio*/lib/"
-                fi
-                try_libdirs="$libdirs $ld_library_path $try_libdirs"
-
-                for dir in none $try_libdirs
-                do
-                        unset ac_cv_search_dgemm # clear cached value
-                        if test "$dir" = "none"
-                        then
-                                try_loption=
-                        else
-                                echo $ECHO_N "in $dir: " $ECHO_C
-                                try_loption="-L$dir"
-                        fi
-                        FFLAGS="$test_fflags"
-                        LDFLAGS="$test_ldflags $try_loption"
-                        LIBS=""
-                        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
-$as_echo_n "checking for library containing dgemm... " >&6; }
-if ${ac_cv_search_dgemm+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat > conftest.$ac_ext <<_ACEOF
-      program main
-      call dgemm
-      end
-_ACEOF
-for ac_lib in '' sunperf; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_f77_try_link "$LINENO"; then :
-  ac_cv_search_dgemm=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_dgemm+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_dgemm+:} false; then :
-
-else
-  ac_cv_search_dgemm=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_dgemm" >&5
-$as_echo "$ac_cv_search_dgemm" >&6; }
-ac_res=$ac_cv_search_dgemm
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  have_blas=1 have_lapack=1
-                                blas_libs="$try_loption $LIBS"
-fi
-
-                        if test "$ac_cv_search_dgemm" != "no"
-                        then break ; fi
-                done
-                ;;
-
         x86_64:* )
                 try_libdirs="/opt/intel/composer*/mkl/lib/intel64
                              /opt/intel/Compiler/*/*/mkl/lib/em64t
@@ -6134,57 +5964,6 @@ fi
                 done
                 ;;
 
-        sparc:* | solaris:* )
-                # check for SUNperf library
-                unset ac_cv_search_dgemm # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS=""
-                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
-$as_echo_n "checking for library containing dgemm... " >&6; }
-if ${ac_cv_search_dgemm+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat > conftest.$ac_ext <<_ACEOF
-      program main
-      call dgemm
-      end
-_ACEOF
-for ac_lib in '' sunperf; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_f77_try_link "$LINENO"; then :
-  ac_cv_search_dgemm=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_dgemm+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_dgemm+:} false; then :
-
-else
-  ac_cv_search_dgemm=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_dgemm" >&5
-$as_echo "$ac_cv_search_dgemm" >&6; }
-ac_res=$ac_cv_search_dgemm
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  have_blas=1 have_lapack=1
-                               blas_libs="-xlic_lib=sunperf $LIBS"
-fi
-
-                ;;
         necsx:* )
                 #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib
                 #sx8-nec-idris: check in /SX/opt/mathkeisan/inst/lib0
@@ -6759,57 +6538,6 @@ fi
                 fi
                 ;;
 
-        sparc:* )
-                # check for SUNperf library - likely OBSOLETE
-                unset ac_cv_search_dspev # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS="$blas_libs"
-                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dspev" >&5
-$as_echo_n "checking for library containing dspev... " >&6; }
-if ${ac_cv_search_dspev+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat > conftest.$ac_ext <<_ACEOF
-      program main
-      call dspev
-      end
-_ACEOF
-for ac_lib in '' sunperf; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_f77_try_link "$LINENO"; then :
-  ac_cv_search_dspev=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_dspev+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_dspev+:} false; then :
-
-else
-  ac_cv_search_dspev=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_dspev" >&5
-$as_echo "$ac_cv_search_dspev" >&6; }
-ac_res=$ac_cv_search_dspev
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  have_lapack=1
-                               lapack_libs="-xlic_lib=sunperf $LIBS"
-fi
-
-                ;;
         ppc64:* )
                 # check for essl
                 unset ac_cv_search_dspev # clear cached value
@@ -7447,7 +7175,6 @@ $as_echo_n "checking FFT... " >&6; }
 # check for FFT libraries (no check for explicit openmp)
 # supported vendor replacements:
 #   essl on IBM linux machines
-#   SUNperf on sparc
 #   ASL/Mathkeisan on Nec
 #   acml on amd
 if test "$fft_libs" = "" && test "$use_openmp" -eq 0
@@ -7557,59 +7284,6 @@ if test "$ac_res" != no; then :
 fi
 
             ;;
-        sparc )
-                # check for SUNperf FFT library on Sun Sparcs
-                # but not on solaris PC! it is slower than FFTW
-                unset ac_cv_search_zfft3i # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS="$libs"
-                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing zfft3i" >&5
-$as_echo_n "checking for library containing zfft3i... " >&6; }
-if ${ac_cv_search_zfft3i+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat > conftest.$ac_ext <<_ACEOF
-      program main
-      call zfft3i
-      end
-_ACEOF
-for ac_lib in '' sunperf; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_f77_try_link "$LINENO"; then :
-  ac_cv_search_zfft3i=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_zfft3i+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_zfft3i+:} false; then :
-
-else
-  ac_cv_search_zfft3i=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_zfft3i" >&5
-$as_echo "$ac_cv_search_zfft3i" >&6; }
-ac_res=$ac_cv_search_zfft3i
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-  have_fft=1
-                               try_dflags="$try_dflags -D__SUNPERF"
-                               fft_libs="-xlic_lib=sunperf $LIBS"
-fi
-
-                ;;
         necsx )
                 if test "$use_fft_mathkeisan" -ne 0
                 then

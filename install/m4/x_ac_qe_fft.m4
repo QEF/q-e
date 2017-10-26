@@ -10,7 +10,6 @@ have_fft_include=0
 # check for FFT libraries (no check for explicit openmp)
 # supported vendor replacements:
 #   essl on IBM linux machines
-#   SUNperf on sparc
 #   ASL/Mathkeisan on Nec
 #   acml on amd
 if test "$fft_libs" = "" && test "$use_openmp" -eq 0
@@ -36,17 +35,6 @@ then
                 LIBS="$fft_libs $blas_libs"
                 AC_SEARCH_LIBS(dcft, esslbg, have_fft=1 fft_libs="$LIBS")
             ;;
-        sparc )
-                # check for SUNperf FFT library on Sun Sparcs
-                # but not on solaris PC! it is slower than FFTW
-                unset ac_cv_search_zfft3i # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS="$libs"
-                AC_SEARCH_LIBS(zfft3i, sunperf, have_fft=1
-                               try_dflags="$try_dflags -D__SUNPERF"
-                               fft_libs="-xlic_lib=sunperf $LIBS")
-                ;;
         necsx )
                 if test "$use_fft_mathkeisan" -ne 0
                 then

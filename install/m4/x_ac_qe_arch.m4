@@ -28,9 +28,6 @@ then
                 x86_64-*-linux-gnu )    arch=x86_64 ;;
                 arm-*linux* )           arch=arm    ;;
                 *-pc-linux-gnu )        arch=ia32   ;;
-                sparc-sun-* )           arch=sparc  ;;
-                i386-pc-solaris* )      arch=solaris;;
-                *86-apple-darwin* )     arch=mac686 ;;
                 *-apple-darwin* )       arch=mac686 ;;
                 *-pc-cygwin )           arch=cygwin ;;
                 sx*-nec* )              arch=necsx  ;;
