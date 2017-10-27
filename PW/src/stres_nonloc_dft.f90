@@ -32,17 +32,6 @@ subroutine stres_nonloc_dft( rho, rho_core, nspin, sigma_nonloc_dft )
   inlc = get_inlc()
 
   if ( inlc==1 .or. inlc==2 .or. inlc==4 .or. inlc==5 .or. inlc==6 ) then
-#if defined (__SPIN_BALANCED)
-     if ( nspin==2 ) then
-         write(stdout,'(/,/ "     Performing spin-balanced Ecnl stress calculation!")')
-     else if ( nspin > 2 ) then
-         call errore ('stres_vdW_DF','noncollinear vdW stress not implemented',1)
-     end if
-#else
-     if ( nspin>=2 ) then
-        call errore ('stres_vdW_DF',   'vdW stress not implemented for nspin > 1',1)
-     end if
-#endif
      CALL stress_vdW_DF(rho, rho_core, nspin, sigma_nonloc_dft)
   elseif ( inlc == 3 ) then
      if ( nspin>2 ) call errore ('stress_rVV10', 'rVV10 stress not implemented for nspin > 2',1)
