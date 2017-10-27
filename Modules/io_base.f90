@@ -445,8 +445,11 @@ MODULE io_base
 #if defined(__HDF5) 
       IF ( nspin <=2) THEN 
          datasets(1:2) = ["rhotot_g  ", "rhodiff_g "]
-      ELSE 
-         datasets = ["n_11", "n_21", "n_12", "n_22"]
+      ELSE
+         datasets(1) =      "rhotot_g"
+         datasets(2) =      "m_x" 
+         datasets(3) =      "m_y" 
+         datasets(4) =      "m_z"
       END IF  
 #endif
       iun  = 4
@@ -638,7 +641,10 @@ MODULE io_base
       IF (nspin <= 2) THEN 
         datasets(1:2) =["rhotot_g  ", "rhodiff_g "]
       ELSE
-        datasets =["n_11", "n_21", "n_12", "n_22"]
+        datasets(1)  = "rhotot_g"
+        datasets(2)  = "m_x"
+        datasets(3)  = "m_y"
+        datasets(4)  = "m_z"
       END IF 
       filename = TRIM( dirname ) // 'charge-density.hdf5'
 #else 
