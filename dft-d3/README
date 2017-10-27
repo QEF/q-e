@@ -1,17 +1,39 @@
-The subdirectory contains interface library to Grimme DFT-D3 code, as found on:
-   http://www.thch.uni-bonn.de/tc/index.php?section=downloads&subsection=getd3 
-Since quantum-espresso uses some additional subroutines, they are placed in this directory.
+This subdirectory contains Grimme DFT-D3 version 0.9 routines and interfaces.
+The original library can be downloaded at
+http://www.thch.uni-bonn.de/tc/index.php?section=downloads&subsection=getd3 
 
-To compile only the interface library type 'make dftd3'. It is also compiled by 'make pw'.
+-------------------------------------------------------------------------
+CREDITS
+When using the library, please cite:
 
-Orginal file api.f90 has been slightly modified. Changes are
-marked with (QE 2016).
+  S. Grimme, J. Antony, S. Ehrlich and H. Krieg
+  J. Chem. Phys, 132 (2010), 154104.
+
+If BJ-damping is used
+
+  S. Grimme, S. Ehrlich and L. Goerigk
+  J. Comput. Chem, 32 (2011), 1456-1465.
+
+should be cited as well.
+------------------------------------------------------------------------
+
+The files common.f90, pars.f90, api.f90, sizes.f90 and core.f90
+are submited to the GPL version 1. 
+
+-----------------------------------------------------------------------
+
+Additional interface routines, based on Aradi's interfaces (api.f90)
+for quantum-espresso are gathered in the fortran file dftd3_qe.f90. 
+dftd3_qe.f90 is release under GPL. Quantum ESPRESSO group acknowledge
+Bálint Aradi for his help in debugging the calculation of stresses.
+
+Original DFT-D3 version 0.9 file api.f90 has been slightly modified. Changes are
+highlighted with the label (QE 2016).
 
 There is a test program (test.x), which calculates the force and stress as obtained
 directly from dftd3-API code, and compares the results with numerically computed 
 force and stress from the obtained dispersion energy. 
 
 Parameters for dftd3 calculation can be found in ../Modules/input_parameters.f90. The 
-values there correspond to values of PBE functional. Parameter 'version' can take values
-from 2 to 6 (as of the time writing this text), only version=3 has been tested by QE,
-which corresponds to DFT-D3 with zero-damping function. 
+values there correspond to PBE functional. Parameter 'version' can take values
+from 2 to 6, only version=3 (zero-damping) has been tested with pwscf. 
