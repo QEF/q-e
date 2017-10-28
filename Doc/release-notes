@@ -3,7 +3,7 @@ New in development version:
   * Interface with Grimme's DFT-D3, as repackaged by Bálint Aradi
     (Miha Gunde and Layla Martins-Samos)
   
-  * Phonons for two-dimensional systems (Thibaud Sohier et al.)
+  * Phonons for two-dimensional systems (Thibault Sohier et al.)
 
 Incompatible changes in development version:
 
