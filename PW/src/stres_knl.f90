@@ -81,17 +81,26 @@ subroutine stres_knl (sigmanlc, sigmakin)
      !  contribution from the  nonlocal part
      !
      call stres_us (ik, gk, sigmanlc)
-
+     !
   enddo
   !
-  ! add the US term from augmentation charge derivatives
+  deallocate(kfac)
+  deallocate(gk)
   !
-  call addusstress (sigmanlc)
+  ! the kinetic term must be summed over PW's and over k-points
   !
   call mp_sum( sigmakin, intra_bgrp_comm )
-  call mp_sum( sigmanlc, intra_bgrp_comm )
   call mp_sum( sigmakin, inter_pool_comm )
+  !
+  ! the nonlocal term is summed here only over k-points, because we add
+  ! to it the US term from augmentation charge derivatives
+  !
   call mp_sum( sigmanlc, inter_pool_comm )
+  !
+  ! add US term from augmentation charge derivatives, sum result over PW's
+  !
+  call addusstress (sigmanlc)
+  call mp_sum( sigmanlc, intra_bgrp_comm )
   !
   do l = 1, 3
      do m = 1, l - 1
@@ -111,9 +120,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   !
   call symmatrix ( sigmakin )
   call symmatrix ( sigmanlc )
-
-  deallocate(kfac)
-  deallocate(gk)
+  !
   return
 end subroutine stres_knl
 

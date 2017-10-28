@@ -130,8 +130,6 @@ SUBROUTINE sum_band()
   !
   IF( okpaw )  THEN
      rho%bec(:,:,:) = becsum(:,:,:) ! becsum is filled in sum_band_{k|gamma}
-     ! rho%bec has to be recollected and symmetrized, becsum must not, otherwise
-     ! it will break stress routines.
      CALL mp_sum(rho%bec, inter_pool_comm )
      call mp_sum(rho%bec, inter_bgrp_comm )
      CALL PAW_symmetrize(rho%bec)
@@ -157,10 +155,12 @@ SUBROUTINE sum_band()
   CALL addusdens(rho%of_r(:,:)) ! okvan is checked inside the routine
   !
   IF( okvan )  THEN
-     ! bgrp_parallelization is done here but not in subsequent routines
-     ! (in particular stress routines uses becsum). collect it across bgrp
-     call mp_sum(becsum, inter_bgrp_comm )
-     if (tqr) call mp_sum(ebecsum, inter_bgrp_comm )
+     ! becsum is summed over bands (if bgrp_parallelization is done)
+     ! and over k-points (but it is not symmetrized)
+     CALL mp_sum(becsum, inter_bgrp_comm )
+     CALL mp_sum(becsum, inter_pool_comm )
+     IF (tqr) CALL mp_sum(ebecsum, inter_pool_comm )
+     IF (tqr) CALL mp_sum(ebecsum, inter_bgrp_comm )
   ENDIF
   IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
