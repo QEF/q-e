@@ -1,7 +1,9 @@
 New in development version:
 
-  * DFT-D3
-  * 2D cutoff for Coulomb potential 
+  * Interface with Grimme's DFT-D3, as repackaged by Bálint Aradi
+    (Miha Gunde and Layka Martins-Samos)
+  
+  * Phonons for two-dimensional systems
 
 Incompatible changes in development version:
 
