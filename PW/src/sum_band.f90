@@ -69,7 +69,6 @@ SUBROUTINE sum_band()
      rho%kin_r(:,:)      = 0.D0
      rho%kin_g(:,:)      = (0.D0, 0.D0)
   end if
-  eband         = 0.D0
   !
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
   !
@@ -77,18 +76,13 @@ SUBROUTINE sum_band()
   !
   IF (one_atom_occupations) CALL new_evc()
   !
-  IF ( diago_full_acc ) THEN
+  ! ... btype, used in diagonalization, is set here: a band is considered empty
+  ! ... and computed with low accuracy only when its occupation is < 0.01, and
+  ! ... only if option diago_full_acc is false; otherwise, use full accuracy
+  !
+  btype(:,:) = 1
+  IF ( .NOT. diago_full_acc ) THEN
      !
-     ! ... for diagonalization purposes all the bands are considered occupied
-     !
-     btype(:,:) = 1
-     !
-  ELSE
-     !
-     ! ... for diagonalization purposes a band is considered empty when its
-     ! ... occupation is less than 1.0 %
-     !
-     btype(:,:) = 1
      FORALL( ik = 1:nks, wk(ik) > 0.D0 )
         WHERE( wg(:,ik) / wk(ik) < 0.01D0 ) btype(:,ik) = 0
      END FORALL
@@ -105,6 +99,8 @@ SUBROUTINE sum_band()
      ENDIF
   ENDIF
   !
+  ! ... for band parallelization: set band computed by this processor
+  !
   call set_bgrp_indices ( nbnd, ibnd_start, ibnd_end )
   this_bgrp_nbnd = ibnd_end - ibnd_start + 1
   !
@@ -115,6 +111,9 @@ SUBROUTINE sum_band()
   !
   ! ... specialized routines are called to sum at Gamma or for each k point 
   ! ... the contribution of the wavefunctions to the charge
+  ! ... The band energy contribution eband is computed together with the charge
+  !
+  eband         = 0.D0
   !
   IF ( gamma_only ) THEN
      !
@@ -125,16 +124,10 @@ SUBROUTINE sum_band()
      CALL sum_band_k()
      !
   END IF
+  CALL mp_sum( eband, inter_pool_comm )
+  CALL mp_sum( eband, inter_bgrp_comm )
   !
   IF (dft_is_meta() .OR. lxdm) DEALLOCATE (kplusg)
-  !
-  IF( okpaw )  THEN
-     rho%bec(:,:,:) = becsum(:,:,:) ! becsum is filled in sum_band_{k|gamma}
-     CALL mp_sum(rho%bec, inter_pool_comm )
-     call mp_sum(rho%bec, inter_bgrp_comm )
-     CALL PAW_symmetrize(rho%bec)
-  ENDIF
-  !
   IF ( okvan ) CALL deallocate_bec_type ( becp )
   !
   ! ... If a double grid is used, interpolate onto the fine grid
@@ -150,29 +143,42 @@ SUBROUTINE sum_band()
      !
   END IF
   !
-  ! ... Here we add the Ultrasoft contribution to the charge
-  !
-  CALL addusdens(rho%of_r(:,:)) ! okvan is checked inside the routine
-  !
-  IF( okvan )  THEN
-     ! becsum is summed over bands (if bgrp_parallelization is done)
-     ! and over k-points (but it is not symmetrized)
-     CALL mp_sum(becsum, inter_bgrp_comm )
-     CALL mp_sum(becsum, inter_pool_comm )
-     IF (tqr) CALL mp_sum(ebecsum, inter_pool_comm )
-     IF (tqr) CALL mp_sum(ebecsum, inter_bgrp_comm )
-  ENDIF
   IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
-  CALL mp_sum( eband, inter_pool_comm )
-  CALL mp_sum( eband, inter_bgrp_comm )
-  !
-  ! ... reduce charge density across pools
+  ! ... sum charge density over pools (distributed k-points)
   !
   CALL mp_sum( rho%of_r, inter_pool_comm )
+  !
+  IF( okvan )  THEN
+     !
+     ! ... becsum is summed over bands (if bgrp_parallelization is done)
+     ! ... and over k-points (but it is not symmetrized)
+     !
+     CALL mp_sum(becsum, inter_bgrp_comm )
+     CALL mp_sum(becsum, inter_pool_comm )
+     !
+     ! ... same for ebecsum, a correction to becsum (?) in real space
+     !
+     IF (tqr) CALL mp_sum(ebecsum, inter_pool_comm )
+     IF (tqr) CALL mp_sum(ebecsum, inter_bgrp_comm )
+     !
+     ! ... PAW: symmetrize becsum and store it
+     ! ... FIXME: the same should be done for USPP as well
+     !
+     IF ( okpaw ) THEN
+        rho%bec(:,:,:) = becsum(:,:,:)
+        CALL PAW_symmetrize(rho%bec)
+     END IF
+     !
+     ! ... Here we add the (unymmetrized) Ultrasoft contribution to the charge
+     !
+     CALL addusdens(rho%of_r(:,:))
+     !
+  ENDIF
+  !
+  ! ... sum charge density over bands
+  !
   CALL mp_sum( rho%of_r, inter_bgrp_comm )
-  if (dft_is_meta() .OR. lxdm) CALL mp_sum( rho%kin_r, inter_pool_comm )
-  if (dft_is_meta() .OR. lxdm) CALL mp_sum( rho%kin_r, inter_bgrp_comm )
   !
   ! ... bring the (unsymmetrized) rho(r) to G-space (use psic as work array)
   !
@@ -186,41 +192,39 @@ SUBROUTINE sum_band()
   !
   CALL sym_rho ( nspin_mag, rho%of_g )
   !
-  ! ... same for rho_kin(G)
-  !
-  IF ( dft_is_meta() .OR. lxdm) THEN
-     DO is = 1, nspin
-        psic(:) = rho%kin_r(:,is)
-        CALL fwfft ('Dense', psic, dfftp)
-        rho%kin_g(:,is) = psic(nl(:))
-     END DO
-     IF (.NOT. gamma_only) CALL sym_rho( nspin, rho%kin_g )
-  END IF
-  !
   ! ... synchronize rho%of_r to the calculated rho%of_g (use psic as work array)
   !
   DO is = 1, nspin_mag
-     !
      psic(:) = ( 0.D0, 0.D0 )
      psic(nl(:)) = rho%of_g(:,is)
      IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%of_g(:,is) )
      CALL invfft ('Dense', psic, dfftp)
      rho%of_r(:,is) = psic(:)
-     !
   END DO
   !
-  ! ... the same for rho%kin_r and rho%kin_g
+  ! ... rho_kin(r): sum over bands, k-points, bring to G-space, symmetrize,
+  ! ... synchronize with rho_kin(G)
   !
   IF ( dft_is_meta() .OR. lxdm) THEN
+     !
+     CALL mp_sum( rho%kin_r, inter_pool_comm )
+     CALL mp_sum( rho%kin_r, inter_bgrp_comm )
      DO is = 1, nspin
-        !
+        psic(:) = rho%kin_r(:,is)
+        CALL fwfft ('Dense', psic, dfftp)
+        rho%kin_g(:,is) = psic(nl(:))
+     END DO
+     !
+     IF (.NOT. gamma_only) CALL sym_rho( nspin, rho%kin_g )
+     !
+     DO is = 1, nspin
         psic(:) = ( 0.D0, 0.D0 )
         psic(nl(:)) = rho%kin_g(:,is)
         IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%kin_g(:,is) )
         CALL invfft ('Dense', psic, dfftp)
         rho%kin_r(:,is) = psic(:)
-        !
      END DO
+     !
   END IF
   !
   CALL stop_clock( 'sum_band' )
