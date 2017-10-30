@@ -106,15 +106,15 @@ SUBROUTINE force_us( forcenl )
   CALL deallocate_bec_type ( dbecp )   
   CALL deallocate_bec_type ( becp )   
   !
+  ! ... collect contributions across pools from all k-points
+  !
+  CALL mp_sum( forcenl, inter_pool_comm )
+  !
   ! ... The total D matrix depends on the ionic position via the
   ! ... augmentation part \int V_eff Q dr, the term deriving from the 
   ! ... derivative of Q is added in the routine addusforce
   !
   CALL addusforce( forcenl )
-  !
-  ! ... collect contributions across pools from all k-points
-  !
-  CALL mp_sum( forcenl, inter_pool_comm )
   !
   ! ... Since our summation over k points was only on the irreducible 
   ! ... BZ we have to symmetrize the forces.
