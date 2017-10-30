@@ -1,3 +1,11 @@
+Problems fixed by development version:
+
+  * Yet another problem with last scf step in vc-relax, present since v.6.1: 
+    if no atoms of a given kind were present, there was a division by zero
+    and a NaN in starting magnetization (reported by Malte Sachs) (r13971)
+
+  * FFT's for ARM libraries were broken (r13956,13959, courtesy Jason Wood)
+
 New in development version:
 
   * Interface with Grimme's DFT-D3, as repackaged by Bálint Aradi
@@ -10,10 +18,6 @@ Incompatible changes in development version:
   * __OPENMP with two underscores (set by configure) replaced by _OPENMP
     with one underscore (automatically set by all OpenMP-aware compilers)
   * "Old" xml input file deleted
-
-Problems fixed by development version:
-
-  * FFT's for ARM libraries were broken (courtesy Jason Wood)
 
 Known problems in 6.2 version:
 

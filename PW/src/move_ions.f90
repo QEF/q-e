@@ -474,9 +474,11 @@ SUBROUTINE reset_starting_magnetization ( )
            END IF
         END IF
      END DO
-     starting_magnetization(i) = starting_magnetization(i) / REAL(nt)
-     angle1(i) = angle1(i) / REAL(nt)
-     angle2(i) = angle2(i) / REAL(nt)
+     IF ( nt > 0 ) THEN
+        starting_magnetization(i) = starting_magnetization(i) / DBLE(nt)
+        angle1(i) = angle1(i) / DBLE(nt)
+        angle2(i) = angle2(i) / DBLE(nt)
+     END IF
   END DO
   DEALLOCATE ( r_loc, m_loc )
 
