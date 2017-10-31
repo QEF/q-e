@@ -1022,7 +1022,7 @@ CONTAINS
   !
   shortname = 'no shortname'
   if (iexch==1.and.igcx==0.and.igcc==0) then
-     shortname = corr(icorr)
+     shortname = TRIM(exc(iexch))//'-'//TRIM(corr(icorr))
   else if (iexch==1.and.icorr==3.and.igcx==1.and.igcc==3) then
      shortname = 'BLYP'
   else if (iexch==1.and.icorr==1.and.igcx==1.and.igcc==0) then
