@@ -209,8 +209,8 @@ MODULE exx
     USE fft_custom,   ONLY : ggenx, gvec_init, ggent
     USE fft_base,     ONLY : smap
     USE fft_types,    ONLY : fft_type_init
-    USE mp_exx,       ONLY : negrp, intra_egrp_comm
-    USE mp_bands,     ONLY : intra_bgrp_comm, nyfft
+    USE mp_exx,       ONLY : nproc_egrp, negrp, intra_egrp_comm
+    USE mp_bands,     ONLY : nproc_bgrp, intra_bgrp_comm, nyfft
     !
     USE klist,        ONLY : nks, xk
     USE mp_pools,     ONLY : inter_pool_comm
@@ -222,11 +222,7 @@ MODULE exx
     IMPLICIT NONE
     INTEGER :: ngs_, ik
     REAL(dp) :: gkcut
-#if defined (__MPI) && ! defined (__USE_3D_FFT)
-    LOGICAL :: lpara = .true.
-#else
-    LOGICAL :: lpara = .false.
-#endif
+    LOGICAL :: lpara
 
     IF( exx_fft%initialized) RETURN
     !
@@ -267,6 +263,7 @@ MODULE exx
        !
        ! ... no band parallelization: exx grid is a subgrid of general grid
        !
+       lpara = ( nproc_bgrp > 1 )
        CALL fft_type_init( exx_fft%dfftt, smap, "rho", gamma_only, lpara, &
             intra_bgrp_comm, at, bg, exx_fft%gcutmt, exx_fft%gcutmt/gkcut, &
             nyfft=nyfft )
@@ -276,6 +273,7 @@ MODULE exx
        !
        WRITE(6,"(5X,'Exchange parallelized over bands (',i4,' band groups)')")&
             negrp
+       lpara = ( nproc_egrp > 1 )
        CALL fft_type_init( exx_fft%dfftt, smap_exx, "rho", gamma_only, lpara, &
             intra_egrp_comm, at, bg, exx_fft%gcutmt, exx_fft%gcutmt/gkcut,    &
             nyfft=nyfft )
@@ -1415,7 +1413,7 @@ MODULE exx
     USE klist,          ONLY : xk, nks, nkstot, igk_k
     USE fft_interfaces, ONLY : fwfft, invfft
     USE becmod,         ONLY : bec_type
-    USE mp_exx,       ONLY : inter_egrp_comm, intra_egrp_comm, my_egrp_id, negrp, &
+    USE mp_exx,       ONLY : inter_egrp_comm, intra_egrp_comm, my_egrp_id,  &
                              negrp, max_pairs, egrp_pairs, ibands, nibands, &
                              max_ibands, iexx_istart, iexx_iend, jblock
     USE mp,             ONLY : mp_sum, mp_barrier, mp_bcast
@@ -1809,7 +1807,7 @@ MODULE exx
     !
     COMPLEX(DP),ALLOCATABLE :: deexx(:,:)
     COMPLEX(DP),ALLOCATABLE,TARGET :: rhoc(:,:), vc(:,:)
-#if defined(__USE_3D_FFT) & defined(__USE_MANY_FFT)
+#if defined(__USE_MANY_FFT)
     COMPLEX(DP),POINTER :: prhoc(:), pvc(:)
 #endif
 #if defined(__USE_INTEL_HBM_DIRECTIVES)
@@ -1860,7 +1858,7 @@ MODULE exx
     !
     !allocate arrays for rhoc and vc
     ALLOCATE(rhoc(nrxxs,jblock), vc(nrxxs,jblock))
-#if defined(__USE_3D_FFT) & defined(__USE_MANY_FFT)
+#if defined(__USE_MANY_FFT)
     prhoc(1:nrxxs*jblock) => rhoc(:,:)
     pvc(1:nrxxs*jblock) => vc(:,:)
 #endif
@@ -2032,7 +2030,7 @@ MODULE exx
              ENDIF
              !
              !   >>>> brings it to G-space
-#if defined(__USE_3D_FFT) & defined(__USE_MANY_FFT)
+#if defined(__USE_MANY_FFT)
              CALL fwfft ('Custom', prhoc, exx_fft%dfftt, howmany=jcount)
 #else
              DO jbnd=jstart, jend
@@ -2078,7 +2076,7 @@ MODULE exx
              ENDIF
              !
              !brings back v in real space
-#if defined(__USE_3D_FFT) & defined(__USE_MANY_FFT)
+#if defined(__USE_MANY_FFT)
              !fft many
              CALL invfft ('Custom', pvc, exx_fft%dfftt, howmany=jcount)
 #else
@@ -2833,9 +2831,6 @@ MODULE exx
     USE mp_bands,                ONLY : intra_bgrp_comm
     USE mp,                      ONLY : mp_sum
     USE fft_interfaces,          ONLY : fwfft, invfft
-!#if defined(__USE_3D_FFT) & defined(__USE_MANY_FFT)
-!    USE fft_interfaces,          ONLY : fwfftm, invfftm
-!#endif
     USE gvect,                   ONLY : ecutrho
     USE klist,                   ONLY : wk
     USE uspp,                    ONLY : okvan,nkb,vkb
@@ -2855,7 +2850,7 @@ MODULE exx
     COMPLEX(DP), ALLOCATABLE :: temppsic(:,:)
     COMPLEX(DP), ALLOCATABLE :: temppsic_nc(:,:,:)
     COMPLEX(DP), ALLOCATABLE,TARGET :: rhoc(:,:)
-#if defined(__USE_3D_FFT) & defined(__USE_MANY_FFT)
+#if defined(__USE_MANY_FFT)
     COMPLEX(DP), POINTER :: prhoc(:)
 #endif
     REAL(DP),    ALLOCATABLE :: fac(:)
@@ -3009,7 +3004,7 @@ MODULE exx
                 !
                 !allocate arrays
                 ALLOCATE( rhoc(nrxxs,ibnd_inner_count) )
-#if defined(__USE_3D_FFT) & defined(__USE_MANY_FFT)
+#if defined(__USE_MANY_FFT)
                 prhoc(1:nrxxs*ibnd_inner_count) => rhoc
 #endif 
                 !
@@ -3059,7 +3054,7 @@ MODULE exx
                 ENDIF
                 !
                 ! bring rhoc to G-space
-#if defined(__USE_3D_FFT) & defined(__USE_MANY_FFT)
+#if defined(__USE_MANY_FFT)
                 CALL fwfft ('Custom', prhoc, exx_fft%dfftt, howmany=ibnd_inner_count)
 #else
                 DO ibnd=ibnd_inner_start, ibnd_inner_end

@@ -29,13 +29,9 @@ SUBROUTINE data_structure( gamma_only )
   IMPLICIT NONE
   LOGICAL, INTENT(in) :: gamma_only
   INTEGER :: ik, ngm_, ngs_
-#if defined (__MPI) && !defined (__USE_3D_FFT)
-  LOGICAL :: lpara = .true.
-#else
-  LOGICAL :: lpara = .false.
-#endif
-  IF ( .NOT. lpara .AND. nproc_bgrp /= 1 ) CALL errore('data_structure', &
-          'parallel FFT needed: unset __'//'USE_3D_FFT, recompile', nproc_bgrp )
+  LOGICAL :: lpara
+  !
+  lpara =  ( nproc_bgrp > 1 )
   !
   ! ... calculate gkcut = max |k+G|^2, in (2pi/a)^2 units
   !
