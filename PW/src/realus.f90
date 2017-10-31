@@ -1161,7 +1161,6 @@ MODULE realus
       USE uspp_param,       ONLY : upf, nh
       USE noncollin_module, ONLY : noncolin, nspin_mag, nspin_lsda
       USE spin_orb,         ONLY : domag
-      USE mp_pools,         ONLY : inter_pool_comm
       USE mp_bands,         ONLY : intra_bgrp_comm
       USE mp,               ONLY : mp_sum
 
@@ -1208,11 +1207,10 @@ MODULE realus
          !
       ENDDO
       !
-      ! ... check the integral of the total charge
+      ! ... check the total charge (must not be summed on k-points)
       !
        charge = sum( rho_1(:,1:nspin_lsda) )*omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
        CALL mp_sum(  charge , intra_bgrp_comm )
-       CALL mp_sum(  charge , inter_pool_comm )
 #if defined (__DEBUG)
        write (stdout,*) 'charge before rescaling ', charge
 #endif
