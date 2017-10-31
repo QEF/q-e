@@ -349,7 +349,7 @@ MODULE cp_restart
          !
          CALL qexml_write_cell( ibrav, celldm, alat, a1, a2, a3, b1, b2, b3, &
                           "Bohr","Bohr","2 pi / a", &
-                          do_makov_payne, .FALSE., .FALSE. )
+                          do_makov_payne, .FALSE., .FALSE., .FALSE. )
          !
 !-------------------------------------------------------------------------------
 ! ... IONS
