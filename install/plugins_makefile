@@ -15,6 +15,7 @@ include install_utils
 # MAIN target
 EXTLIBS=liblapack libiotk
 
+
 ###########################################################
 # D3Q
 ###########################################################
@@ -33,8 +34,11 @@ d3q_clean:
 	if test -d ../D3Q; then (cd ../D3Q; $(MAKE) clean); fi
 	rm -f ../bin/d3q.x
 	rm -f ../bin/d3_*.x
+	rm -f ../bin/diffd3.x
+	rm -f ../bin/xml2giorgia.x
 
-d3q_veryclean: d3q_distclean
+#d3q_veryclean: d3q_clean
+d3q_veryclean: d3q_clean
 	# delete unpacked directory and its links, keep the archive
 	(cd ..; \
 		i=D3Q; \
@@ -42,7 +46,7 @@ d3q_veryclean: d3q_distclean
 		rm -rf $$i\
 	); \
 
-d3q_distclean: d3q_distclean
+d3q_distclean: d3q_veryclean
 	# also delete the tgz archive
 	rm -f ../archive/$(D3Q); \
 	rm -f make-d3q uncompress-d3q

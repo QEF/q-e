@@ -11,6 +11,7 @@
 ########################################
 #
 URL=http://files.qe-forge.org/index.php?file=
+RELEASE_VERSION := $(shell awk -F\' '/version_number/{print $$2}' ../Modules/version.f90 )
 #
 #
 # Package maintainer: Andrea Ferretti
@@ -44,7 +45,7 @@ PLUMED_URL=$(URL)$(PLUMED).tar.gz
 #
 # Package maintainer: Lorenzo Paulatto
 D3Q=d3q-latest
-D3Q_URL="https://d3q.sourceforge.io/d3q-qe6.1-latest.php?outname=d3q-qe6.1-latest.tgz"
+D3Q_URL=https://d3q.sourceforge.io/d3q-qe$(RELEASE_VERSION)-latest.php?outname=d3q-qe$(RELEASE_VERSION)-latest.tgz
 #
 # Package maintainer: 
 TESTSUITE=qe-6.1-test-suite
