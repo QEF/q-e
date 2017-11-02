@@ -176,7 +176,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
          ! counters
        INTEGER :: nproc, mype, m_loc, m_begin, ibnd_loc, icyc, icur_blk, m_max
          ! data distribution indexes
-       INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
+       INTEGER, EXTERNAL :: ldim_block, gind_block
          ! data distribution functions
        REAL(DP), ALLOCATABLE :: ps(:,:)
          ! the product vkb and psi

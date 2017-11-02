@@ -92,7 +92,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, &
                                         ikb, jkb, ih, jh, ijkb0, ibnd_loc, &
                                         nproc, nbnd_loc, nbnd_begin, icyc
-       INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
        REAL(DP)                 :: fac, xyz(3,3), evps, ddot
        REAL(DP), ALLOCATABLE    :: deff(:,:,:)
        COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)

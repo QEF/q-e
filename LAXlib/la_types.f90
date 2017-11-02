@@ -11,10 +11,8 @@
       IMPLICIT NONE
       SAVE
 
-      INTEGER  ldim_block, ldim_cyclic, ldim_block_cyclic, ldim_block_sca
-      INTEGER  gind_block, gind_cyclic, gind_block_cyclic, gind_block_sca
-      EXTERNAL ldim_block, ldim_cyclic, ldim_block_cyclic, ldim_block_sca
-      EXTERNAL gind_block, gind_cyclic, gind_block_cyclic, gind_block_sca
+      INTEGER, EXTERNAL ::  ldim_block, ldim_cyclic, ldim_block_sca
+      INTEGER, EXTERNAL ::  gind_block, gind_cyclic, gind_block_sca
 
       !  Descriptor for linear algebra data distribution (like in Cannon's algorithm)
       !

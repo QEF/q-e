@@ -72,7 +72,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        USE mp, ONLY: mp_get_comm_null, mp_circular_shift_left
        !
        IMPLICIT NONE
-       INTEGER, EXTERNAL :: ldim_block, lind_block, gind_block
+       INTEGER, EXTERNAL :: ldim_block, gind_block
        REAL(DP), ALLOCATABLE :: ps (:,:)
        INTEGER :: ierr
        INTEGER :: nproc, mype, m_loc, m_begin, ibnd_loc, icyc, icur_blk, m_max
