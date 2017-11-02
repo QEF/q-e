@@ -6410,10 +6410,8 @@ SUBROUTINE esm_force_lc_bc1 ( aux, forcelc )
   enddo
 
   deallocate(for_g)
-
-  call setlocal()
-
   deallocate(rhog3)
+
   return
 END SUBROUTINE esm_force_lc_bc1
 
@@ -6581,10 +6579,8 @@ SUBROUTINE esm_force_lc_bc2 ( aux, forcelc )
   enddo
 
   deallocate(for_g)
-
-  call setlocal()
-
   deallocate(rhog3)
+
   return
 END SUBROUTINE esm_force_lc_bc2
 
@@ -6746,10 +6742,8 @@ SUBROUTINE esm_force_lc_bc3 ( aux, forcelc )
   enddo
 
   deallocate(for_g)
-
-  call setlocal()
-
   deallocate(rhog3)
+
   return
 END SUBROUTINE esm_force_lc_bc3
 
@@ -6964,10 +6958,8 @@ SUBROUTINE esm_force_lc_bc4 ( aux, forcelc )
   enddo
 
   deallocate(for_g)
-
-  call setlocal()
-
   deallocate(rhog3)
+
   return
 END SUBROUTINE esm_force_lc_bc4
 
