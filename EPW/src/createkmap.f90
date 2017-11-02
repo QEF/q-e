@@ -712,14 +712,14 @@ ngms = 0
     j = mill_g(2, ng)
     k = mill_g(3, ng)
 
-#if defined(__MPI)
+IF (dfftp%lpara) THEN
     m1 = MOD (i, dfftp%nr1) + 1
     IF (m1.LT.1) m1 = m1 + dfftp%nr1
     m2 = MOD (j, dfftp%nr2) + 1
     IF (m2.LT.1) m2 = m2 + dfftp%nr2
     mc = m1 + (m2 - 1) * dfftp%nr1x
     IF ( dfftp%isind ( mc ) .EQ.0) GOTO 1
-#endif
+ENDIF
 
     tt = 0.d0
     DO ipol = 1, 3
