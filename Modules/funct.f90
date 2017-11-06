@@ -392,7 +392,9 @@ CONTAINS
     ! special cases : PZ  (LDA is equivalent to PZ)
     IF (('PZ' .EQ. TRIM(dftout) ).OR.('LDA' .EQ. TRIM(dftout) )) THEN
        dft_defined = set_dft_values(1,1,0,0,0,0)
-
+    ! speciale cases : PW ( LDA with PW correlation ) 
+    ELSE IF ( 'PW' .EQ. TRIM(dftout)) THEN 
+      dft_defined = set_dft_values(1,4,0,0,0,0)
     ! special cases : VWN-RPA
     else IF ('VWN-RPA' .EQ. TRIM(dftout) ) THEN
        dft_defined = set_dft_values(1,11,0,0,0,0)
@@ -408,7 +410,9 @@ CONTAINS
     else if ('PBE' .EQ. TRIM(dftout) ) then
     ! special case : PBE
        dft_defined = set_dft_values(1,4,3,4,0,0)
-       
+    !special case : B88
+    else if ('B88' .EQ. TRIM(dftout) ) then 
+       dft_defined = set_dft_values(1,1,1,0,0,0)    
     ! special case : BP = B88 + P86
     else if ('BP'.EQ. TRIM(dftout) ) then
        dft_defined = set_dft_values(1,1,1,1,0,0)
@@ -1022,7 +1026,11 @@ CONTAINS
   !
   shortname = 'no shortname'
   if (iexch==1.and.igcx==0.and.igcc==0) then
-     shortname = TRIM(exc(iexch))//'-'//TRIM(corr(icorr))
+     shortname = TRIM(corr(icorr))
+  else if ( iexch==4.and.icorr==0.and.igcx==0.and.igcc==0) then 
+     shortname = 'OEP'
+  else if (iexch==1.and.icorr==11.and.igcx==0.and.igcc==0) then
+     shortname = 'VWN-RPA'
   else if (iexch==1.and.icorr==3.and.igcx==1.and.igcc==3) then
      shortname = 'BLYP'
   else if (iexch==1.and.icorr==1.and.igcx==1.and.igcc==0) then
@@ -1045,6 +1053,10 @@ CONTAINS
      shortname = 'HSE'
   else if (iexch==1.and.icorr==4.and.igcx==20.and.igcc==4) then
      shortname = 'GAUPBE'
+  else if (iexch==1.and.icorr==4.and.igcx==21.and.igcc==4) then
+     shortname = 'PW86PBE'
+  else if (iexch==1.and.icorr==4.and.igcx==22.and.igcc==4) then 
+     shortname = 'B86BPBE'
   else if (iexch==1.and.icorr==4.and.igcx==11.and.igcc==4) then
      shortname = 'WC'
   else if (iexch==7.and.icorr==12.and.igcx==9.and. igcc==7) then
@@ -1057,10 +1069,14 @@ CONTAINS
      shortname = 'OLYP'
   else if (iexch==1.and.icorr==4.and.igcx==17.and.igcc==4) then
      shortname = 'SOGGA'
+  else if (iexch==1.and.icorr==4.and.igcx==23.and.igcc==1) then
+     shortname = 'OPTBK88'
+  else if (iexch==1.and.icorr==4.and.igcx==24.and.igcc==1) then
+     shortname = 'OPTB86B'  
   else if (iexch==1.and.icorr==4.and.igcx==25.and.igcc==0) then
      shortname = 'EV93'
   else if (iexch==5.and.icorr==0.and.igcx==0.and.igcc==0) then
-     shortname= 'HF'
+     shortname = 'HF'
   end if
 
   if (imeta == 1 ) then
@@ -1070,7 +1086,13 @@ CONTAINS
   else if (imeta == 3) then
      shortname = 'TB09'
   else if (imeta == 4) then
-     shortname = 'META'
+     if ( iexch == 1 .and. icorr == 1) then 
+        shortname = 'PZ+META'
+     else if (iexch==1.and.icorr==4.and.igcx==3.and.igcc==4) then 
+        shortname = 'PBE+META'
+     end if
+  else if (imeta == 5 ) then 
+    shortname = 'SCAN'      
   end if
 
   if ( inlc==1 ) then
