@@ -29,6 +29,9 @@
 #if defined(__PGI)
   INTEGER, EXTERNAL :: getpid
 #endif
+#if defined(__CRAY)
+  INTEGER, EXTERNAL :: getpid
+#endif
   INTEGER :: pid
   LOGICAL :: ifxst
 

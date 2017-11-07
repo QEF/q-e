@@ -23,7 +23,7 @@
   USE start_k,        ONLY : nk1, nk2, nk3
   USE pwcom,          ONLY : nkstot !, npk
   USE epwcom,         ONLY : xk_cryst           
-  USE wannier,        ONLY : mp_grid, n_wannier, kpt_latt
+  USE wannierEPW,     ONLY : mp_grid, n_wannier, kpt_latt
   USE mp,             ONLY : mp_bcast
   USE mp_world,       ONLY : world_comm
   !
@@ -163,7 +163,7 @@
   USE mp,          ONLY : mp_sum
   USE epwcom,      ONLY : DP, dis_win_max, dis_win_min
   USE constants_epw, ONLY : ryd2ev 
-  USE wannier,     ONLY : n_wannier
+  USE wannierEPW,  ONLY : n_wannier
   USE wvfct,       ONLY : nbnd, et
   USE klist,       ONLY : nks, nkstot
   !

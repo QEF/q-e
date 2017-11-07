@@ -26,7 +26,7 @@
   USE io_files,   ONLY : prefix
   USE epwcom,     ONLY : write_wfn
   USE noncollin_module, ONLY : noncolin
-  USE wannier,    ONLY : seedname2, wvfn_formatted, reduce_unk, ispinw, &
+  USE wannierEPW,    ONLY : seedname2, wvfn_formatted, reduce_unk, ispinw, &
                          ikstart, ikstop, iknum
   !
   IMPLICIT NONE
@@ -96,7 +96,7 @@ SUBROUTINE lib_dealloc
   !-----------------------------------------------------------------------
   !! Routine to de-allocate Wannier related matrices. 
   !
-  USE wannier
+  USE wannierEPW
   !
   implicit none
   IF (ALLOCATED(m_mat) )     DEALLOCATE(m_mat)
@@ -136,7 +136,7 @@ SUBROUTINE setup_nnkp (  )
   USE ions_base, ONLY : nat, tau, ityp, atm
   USE mp,        ONLY : mp_bcast
   USE wvfct,     ONLY : nbnd, npwx
-  USE wannier,   ONLY : num_nnmax, mp_grid, atcart, atsym, kpb, g_kpb, &
+  USE wannierEPW,   ONLY : num_nnmax, mp_grid, atcart, atsym, kpb, g_kpb, &
                         center_w, alpha_w, l_w, mr_w, r_w, zaxis,      &
                         xaxis, excluded_band, rlatt, glatt, gf,        &
                         csph, ig_, iknum, seedname2, kpt_latt, nnb,    &
@@ -172,8 +172,8 @@ SUBROUTINE setup_nnkp (  )
      proj_site_loc,proj_l_loc,proj_m_loc,proj_radial_loc,proj_z_loc, &
      proj_x_loc,proj_zona_loc,exclude_bands_loc,proj_s_loc,proj_s_qaxis_loc)
 
-     USE kinds,    ONLY : dp
-     USE wannier,  ONLY : num_nnmax
+     USE kinds,       ONLY : dp
+     USE wannierEPW,  ONLY : num_nnmax
 
      implicit none
 
@@ -495,7 +495,7 @@ SUBROUTINE run_wannier
   USE mp_world,  ONLY : world_comm
   USE cell_base, ONLY : celldm
   USE io_files,  ONLY : prefix
-  USE wannier
+  USE wannierEPW
   USE epwcom,    ONLY : eig_read
   USE wvfct,     ONLY : nbnd
   USE constants_epw, ONLY : czero, bohr
@@ -594,7 +594,7 @@ SUBROUTINE compute_amn_para
   USE cell_base,       ONLY : tpiba2
   USE uspp,            ONLY : nkb, vkb
   USE becmod,          ONLY : becp, calbec, deallocate_bec_type, allocate_bec_type
-  USE wannier,         ONLY : csph, excluded_band, gf, num_bands, &
+  USE wannierEPW,      ONLY : csph, excluded_band, gf, num_bands, &
                               n_wannier, iknum, n_proj, a_mat,  spin_qaxis, &
                               spin_eig
   USE uspp_param,      ONLY : upf
@@ -790,7 +790,7 @@ SUBROUTINE compute_mmn_para
    USE uspp_param,      ONLY : upf, lmaxq, nh
    USE becmod,          ONLY : becp, calbec, allocate_bec_type, deallocate_bec_type
    USE noncollin_module,ONLY : noncolin, npol
-   USE wannier,         ONLY : m_mat, num_bands, nnb, iknum, g_kpb, kpb, ig_, &
+   USE wannierEPW,      ONLY : m_mat, num_bands, nnb, iknum, g_kpb, kpb, ig_, &
                                excluded_band
    USE constants_epw,   ONLY : czero, twopi
 #if defined(__NAG)
@@ -1179,7 +1179,7 @@ SUBROUTINE compute_pmn_para
   USE uspp_param,      ONLY : upf
   USE becmod,          ONLY : becp, deallocate_bec_type, allocate_bec_type
   USE uspp,            ONLY : nkb
-  USE wannier,         ONLY : n_wannier
+  USE wannierEPW,      ONLY : n_wannier
   !
   implicit none
   !  
@@ -1294,7 +1294,7 @@ SUBROUTINE write_filukk
    USE kinds,        ONLY : DP
    USE io_epw,       ONLY : iuukk
    USE wvfct,        ONLY : nbnd
-   USE wannier,      ONLY : n_wannier, iknum, u_mat, u_mat_opt, lwindow
+   USE wannierEPW,   ONLY : n_wannier, iknum, u_mat, u_mat_opt, lwindow
    USE epwcom,       ONLY : filukk
    USE constants_epw,ONLY : czero
    USE io_global,    ONLY : meta_ionode
@@ -1363,7 +1363,7 @@ SUBROUTINE phases_a_m
    USE io_global,       ONLY : meta_ionode
    USE klist,           ONLY : nkstot, xk, nks
    USE wvfct,           ONLY : nbnd
-   USE wannier,         ONLY : a_mat, m_mat, n_wannier, nnb, kpb, iknum
+   USE wannierEPW,      ONLY : a_mat, m_mat, n_wannier, nnb, kpb, iknum
    USE elph2,           ONLY : umat, umat_all
    USE constants_epw,   ONLY : czero, cone
 
@@ -1463,7 +1463,7 @@ SUBROUTINE generate_guiding_functions(ik)
    USE wvfct,          ONLY : npw
    USE gvect,          ONLY : g
    USE cell_base,      ONLY : tpiba
-   USE wannier,        ONLY : n_proj, gf, center_w, csph, alpha_w, &
+   USE wannierEPW,     ONLY : n_proj, gf, center_w, csph, alpha_w, &
                               r_w
    USE klist,          ONLY : xk, igk_k 
 
@@ -1527,7 +1527,7 @@ END SUBROUTINE generate_guiding_functions
 SUBROUTINE write_band
    USE wvfct,         ONLY : nbnd, et
    USE constants_epw, ONLY: ryd2ev
-   USE wannier
+   USE wannierEPW
 
    implicit none
 
@@ -1564,7 +1564,7 @@ SUBROUTINE write_plot
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic
    USE units_ph,        ONLY : lrwfc, iuwfc
-   USE wannier,         ONLY : reduce_unk, wvfn_formatted, ispinw, nexband, &
+   USE wannierEPW,      ONLY : reduce_unk, wvfn_formatted, ispinw, nexband, &
                                excluded_band 
    USE gvecs,           ONLY : nls, nlsm
    USE klist,           ONLY : xk, nks, igk_k
@@ -1712,7 +1712,7 @@ END SUBROUTINE write_plot
 SUBROUTINE ylm_expansion 
    USE kinds,         ONLY : DP
    USE random_numbers,ONLY : randy
-   USE wannier,       ONLY : n_proj , xaxis, zaxis, csph, l_w, mr_w
+   USE wannierEPW,       ONLY : n_proj , xaxis, zaxis, csph, l_w, mr_w
    USE matrix_inversion, ONLY: invmat
    implicit none
    ! local variables

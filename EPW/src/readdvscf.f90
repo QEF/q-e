@@ -12,6 +12,9 @@
   !!
   !!  open dvscf files as direct access, read, ad close again
   !!
+  !! SP - Nov 2017
+  !! Replaced fstat by Fortran instric function inquire. 
+  !! 
   !! RM - Nov/Dec 2014
   !! Imported the noncolinear case implemented by xlzhang
   !!
@@ -30,17 +33,8 @@
   USE epwcom,    ONLY : dvscf_dir
   USE noncollin_module, ONLY : nspin_mag
   USE io_epw,    ONLY : iudvscf
-#if defined(__NAG)
-  USE,INTRINSIC :: f90_unix_file, ONLY:fstat, stat_t
-#endif
   !
   implicit none
-#if defined(__NAG)
-  TYPE(stat_t) :: statb
-#endif
-#if ! defined(__NAG)
-integer :: fstat,statb(13)
-#endif
   ! 
   INTEGER, INTENT (in) :: recn
   !! perturbation number
@@ -53,10 +47,10 @@ integer :: fstat,statb(13)
   !! dVscf potential is read from file
   !
   ! Local variables
-  integer :: unf_recl,ios
-  character (len=256) :: tempfile
-  character (len=3) :: filelab
-  INTEGER(kind=8) :: mult_unit
+  INTEGER :: unf_recl,ios
+  CHARACTER (len=256) :: tempfile
+  CHARACTER (len=3) :: filelab
+  INTEGER(kind=8) :: mult_unit, file_size
   !
   !  the call to set_ndnmbr is just a trick to get quickly
   !  a file label by exploiting an existing subroutine
@@ -83,18 +77,9 @@ integer :: fstat,statb(13)
   IF (ios /= 0) call errore ('readdvscf','error opening ' // tempfile, iudvscf)
   !
   ! check that the binary file is long enough
-  ! this is tricky to track through error dumps
-#if defined(__NAG)
-  CALL fstat( iudvscf, statb, errno=ios)
-  IF (mult_unit .gt. statb%st_size) call errore('readdvscf', &
+  INQUIRE(FILE=tempfile, SIZE=file_size)
+  IF (mult_unit .gt. file_size) call errore('readdvscf', &
        trim(tempfile)//' too short, check ecut', iudvscf)
-#endif
-#if ! defined(__NAG)
-  ios = fstat ( iudvscf, statb)
-  !IF (recn * unf_recl .gt. statb(8)) call errore('readdvscf', &
-  IF (mult_unit .gt. statb(8)) call errore('readdvscf', &
-       trim(tempfile)//' too short, check ecut', iudvscf)
-#endif
   !
   read  (iudvscf, rec = recn) dvscf
   close (iudvscf, status = 'keep')

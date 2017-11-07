@@ -9,7 +9,7 @@
   !
   ! Adapted from QE.
   !
-module wannier
+module wannierEPW
    USE kinds, only : DP
    !integer, allocatable :: nnb(:)       ! #b  (ik)
    integer              :: nnb          ! #b
@@ -54,7 +54,7 @@ module wannier
    real(DP), allocatable    :: wann_centers(:,:),wann_spreads(:)
    real(DP)                 :: spreads(3)
    real(DP), allocatable    :: eigval(:,:)
-end module wannier
+end module wannierEPW
 !
 
 
