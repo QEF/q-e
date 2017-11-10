@@ -180,15 +180,14 @@ CONTAINS
          CALL qes_write_input(qexsd_xf, qexsd_input_obj)
       END IF
       ! 
-      !CALL qes_reset_input(qexsd_input_obj)     
-      write_steps: IF (ALLOCATED(steps) ) THEN 
+      IF (ALLOCATED(steps) ) THEN 
          len_steps= step_counter 
-         IF ( len_steps .LT. 1 ) EXIT write_steps
-         IF (TRIM (steps(1)%tagname ) .NE. 'step') EXIT write_steps
-         DO i_step = 1, len_steps
-            CALL qes_write_step(qexsd_xf, steps(i_step) )
-         END DO 
-      END IF write_steps
+         IF (TRIM (steps(1)%tagname ) .EQ. 'step') THEN
+            DO i_step = 1, len_steps
+               CALL qes_write_step(qexsd_xf, steps(i_step) )
+            END DO 
+         END IF
+      END IF
       ! 
     END SUBROUTINE qexsd_openschema
     !
