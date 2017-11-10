@@ -4,7 +4,7 @@ HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 LATEX   = pdflatex
 LATEX2HTML = latex2html
 
-PDFS = user_guide.pdf developer_man.pdf
+PDFS = user_guide.pdf developer_man.pdf dfpt_tetra.pdf
 AUXS = $(PDFS:.pdf=.aux)
 LOGS = $(PDFS:.pdf=.log)
 OUTS = $(PDFS:.pdf=.out)
