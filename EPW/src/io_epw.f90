@@ -71,9 +71,8 @@
 
   !
   ! Output of quantity for restarting purposes (101-200)
+  ! Note that 100-102 are reserved Cray unit and cannot be used. 
   ! 
-  INTEGER :: epwdata         = 101  ! EPW data [epwdata.fmt] 
-  INTEGER :: iundmedata      = 102  ! Dipole matrix in wannier basis [dmedata.fmt] 
   INTEGER :: iunvmedata      = 103  ! Velocity matrix in wannier basis [vmedata.fmt]
   INTEGER :: iunksdata       = 104  ! Hamiltonian in wannier basis
   INTEGER :: iuepb           = 105  ! Electron-phonon matrix in Bloch 
@@ -98,6 +97,8 @@
   INTEGER :: crystal         = 121  ! Unit for crystal data
   INTEGER :: iunifc          = 122  ! Unit for the IFC produced by q2r.x
   INTEGER :: iunimem         = 123  ! Unit for reading memory information from the system status file
+  INTEGER :: epwdata         = 124  ! EPW data [epwdata.fmt] 
+  INTEGER :: iundmedata      = 125  ! Dipole matrix in wannier basis [dmedata.fmt]
 
   !
   ! Output quantites related to Wannier (201-250)
