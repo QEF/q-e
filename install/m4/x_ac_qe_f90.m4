@@ -107,7 +107,8 @@ crayxt*:cray* )
         try_fflags="-O2"
         #NOTE: add '-rm' to get messages from crayftn about why
         #      optimizations have not been applied
-        try_f90flags="-O3,fp3 -f free"
+        #      -x dir disable directives introduced by !DIR$
+        try_f90flags="-O3,fp3 -f free -x dir"
         try_fflags_noopt="-O0"
         try_ldflags_openmp="-homp"
         try_ldflags="-v"
