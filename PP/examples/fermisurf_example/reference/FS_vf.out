@@ -1,0 +1,48 @@
+
+     Program FERMI_VELOCITY v.6.1 starts on 16Mar2017 at 22:39:17 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+     Reading input from mgb2.scf.in
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PW   PBX  PBC ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file Mg.pbe-n-kjpaw_psl.0.3.0.upf: wavefunction(s)  3S renormalized
+               file B.pbe-n-kjpaw_psl.0.1.upf: wavefunction(s)  2P renormalized
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum        1159     463    151                36773     9263    1619
+
+
+     Check: negative/imaginary core charge=   -0.000006    0.000000
+
+     Number of bands :       8
+     Number of k times spin :     210
+     Number of symmetries :      24
+     Lowest band which contains FS :       3
+     Highest band which contains FS :       5
+     Max :        37.65242572     Min :         0.00000000
+
+     FERMI_VELOCI :     1.98s CPU         3.80s WALL
+
+
+   This run was terminated on:  22:39:21  16Mar2017            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

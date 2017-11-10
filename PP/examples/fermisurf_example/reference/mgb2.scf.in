@@ -1,0 +1,27 @@
+&CONTROL
+ calculation = 'scf',
+  pseudo_dir = '/mnt/c/Users/kawamuura/program/QE/qe_priv/pseudo/',
+      prefix = 'mgb2' ,
+      outdir = '/mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/'
+/
+&SYSTEM
+       ibrav = 4,
+   celldm(1) = 5.808563789,
+   celldm(3) = 1.145173082,
+         nat = 3,
+        ntyp = 2,
+     ecutwfc = 50.0 ,
+     ecutrho = 500.0 ,
+ occupations = 'tetrahedra_opt',
+/
+&ELECTRONS
+/
+ATOMIC_SPECIES
+ Mg    24.3050   Mg.pbe-n-kjpaw_psl.0.3.0.upf
+  B    10.811    B.pbe-n-kjpaw_psl.0.1.upf
+ATOMIC_POSITIONS crystal
+ Mg    0.000000000    0.000000000    0.000000000    
+  B    0.333333333    0.666666667    0.500000000    
+  B    0.666666667    0.333333333    0.500000000    
+K_POINTS automatic 
+ 16 16 12 0 0 0

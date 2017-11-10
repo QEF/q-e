@@ -1,0 +1,169 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to calculate Fermi surfaces colored with the Fermi velocity and projections."
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x fermi_velocity.x projwfc.x fermi_proj.x"
+PSEUDO_LIST="Mg.pbe-n-kjpaw_psl.0.3.0.upf B.pbe-n-kjpaw_psl.0.1.upf"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PROJWFC_COMMAND="$PARA_PREFIX $BIN_DIR/projwfc.x $PARA_POSTFIX"
+FERMI_PROJ_COMMAND="$BIN_DIR/fermi_proj.x "
+FERMI_VELOCITY_COMMAND="$BIN_DIR/fermi_velocity.x "
+$ECHO
+$ECHO "  running pw.x as:             $PW_COMMAND"
+$ECHO "  running projwfc.x as:        $PROJWFC_COMMAND"
+$ECHO "  running fermi_velocity.x as: $FERMI_VELOCITY_COMMAND"
+$ECHO "  running fermi_proj.x as:     $FERMI_PROJ_COMMAND"
+$ECHO
+ 
+# self-consistent calculation
+cat > mgb2.scf.in << EOF
+&CONTROL
+ calculation = 'scf',
+  pseudo_dir = '$PSEUDO_DIR/',
+      prefix = 'mgb2' ,
+      outdir = '$TMP_DIR/'
+/
+&SYSTEM
+       ibrav = 4,
+   celldm(1) = 5.808563789,
+   celldm(3) = 1.145173082,
+         nat = 3,
+        ntyp = 2,
+     ecutwfc = 50.0 ,
+     ecutrho = 500.0 ,
+ occupations = 'tetrahedra_opt',
+/
+&ELECTRONS
+/
+ATOMIC_SPECIES
+ Mg    24.3050   Mg.pbe-n-kjpaw_psl.0.3.0.upf
+  B    10.811    B.pbe-n-kjpaw_psl.0.1.upf
+ATOMIC_POSITIONS crystal
+ Mg    0.000000000    0.000000000    0.000000000    
+  B    0.333333333    0.666666667    0.500000000    
+  B    0.666666667    0.333333333    0.500000000    
+K_POINTS automatic 
+ 16 16 12 0 0 0
+EOF
+$ECHO "  running the scf calculation for MgB2...\c"
+$PW_COMMAND -in mgb2.scf.in > mgb2.scf.out
+check_failure $?
+$ECHO " done"
+
+$ECHO
+$ECHO "  Fermi velocity at the Fermi surface ..."
+
+$FERMI_VELOCITY_COMMAND -in mgb2.scf.in > FS_vf.out
+check_failure $?
+
+$ECHO
+$ECHO "  Calcuration of projections of atomic orbitals ..."
+
+cat > mgb2.proj.in << EOF
+&projwfc
+   outdir = '$TMP_DIR/'
+    prefix='mgb2'
+    Emin=-0.3422, 
+    Emax=10.0578, 
+    DeltaE=0.1
+/
+2
+6 10
+EOF
+$ECHO "  running projection calculation for MgB2...\c"
+$PROJWFC_COMMAND -in mgb2.proj.in > mgb2.proj.out
+check_failure $?
+$ECHO " done"
+
+$ECHO
+$ECHO "  Orbital projections at the Fermi Surface..."
+
+#
+# Step 2b-2. Run proj_fermi.x
+#
+$ECHO ""
+$ECHO "grep state mgb2.proj.out"
+$ECHO ""
+grep state mgb2.proj.out
+#
+$ECHO ""
+$ECHO " Compute B2pz-projected (Wfc6+Wfc10) fermi surfaces."
+$ECHO ""
+$FERMI_PROJ_COMMAND -in mgb2.proj.in > FS_b2pz.out
+check_failure $?
+$ECHO "mv proj.frmsf b2pz.frmsf"
+mv proj.frmsf b2pz.frmsf
+
+$ECHO
+$ECHO "  Use 'fermisurfer results/b2pz.frmsf' to plot the Fermi Surface"
+
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/mgb2.*
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

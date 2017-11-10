@@ -233,9 +233,7 @@ PROGRAM fermi_proj
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
-#if defined(__MPI)
   CALL mp_startup ()
-#endif
   CALL environment_start ('FERMI_PROJ')
   !
   ! ... Read projwfc.x input file and get prefix, outdir, lbinary_data

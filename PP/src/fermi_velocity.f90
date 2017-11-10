@@ -40,9 +40,7 @@ PROGRAM fermi_velocity
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
-#if defined(__MPI)
   CALL mp_startup ()
-#endif
   CALL environment_start ('FERMI_VELOCITY')
   !
   ! ... Read pw.x input file and get prefix and outdir
