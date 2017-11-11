@@ -295,7 +295,7 @@ clean :
 	for dir in \
 		CPV LAXlib FFTXlib UtilXlib Modules PP PW EPW \
                 KS_Solvers/CG KS_Solvers/Davidson KS_Solvers/Davidson_RCI \
-		NEB ACFDT COUPLE GWW XSpectra PWCOND \
+		NEB ACFDT COUPLE GWW XSpectra PWCOND dft_d3 \
 		atomic clib LR_Modules pwtools upftools \
 		dev-tools extlibs Environ TDDFPT PHonon GWW \
 	; do \
