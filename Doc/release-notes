@@ -28,6 +28,8 @@ Known problems in development version:
     calculation with k-points starting from a scf calculation at Gamma
   * Tetrahedra with "old" XML format cannot be used for DOS calculation
     due to double allocation (since v.6.1). Works with new xml format.
+  * NEB with one-k-point per pool requires "wf_collect=.false.", because
+    update_neb is not updated for the new format
 
 New in 6.2 version:
 
