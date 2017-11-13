@@ -385,6 +385,7 @@ lr_read_wf.o : ../../FFTXlib/fft_helper_subroutines.o
 lr_read_wf.o : ../../FFTXlib/fft_interfaces.o
 lr_read_wf.o : ../../LR_Modules/lrcom.o
 lr_read_wf.o : ../../Modules/becmod.o
+lr_read_wf.o : ../../Modules/cell_base.o
 lr_read_wf.o : ../../Modules/control_flags.o
 lr_read_wf.o : ../../Modules/fft_base.o
 lr_read_wf.o : ../../Modules/funct.o
