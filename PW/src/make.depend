@@ -1676,7 +1676,6 @@ realus.o : ../../Modules/io_global.o
 realus.o : ../../Modules/ions_base.o
 realus.o : ../../Modules/kind.o
 realus.o : ../../Modules/mp_bands.o
-realus.o : ../../Modules/mp_pools.o
 realus.o : ../../Modules/noncol.o
 realus.o : ../../Modules/recvec.o
 realus.o : ../../Modules/splinelib.o

@@ -2111,7 +2111,7 @@ MODULE pw_restart
          f_inp( :, :) = 0.0d0
          !
          CALL qexml_read_occ( LGAUSS=lgauss, NGAUSS=ngauss, DEGAUSS=degauss, &
-                               LTETRA=ltetra, NTETRA=ntetra, TETRA=tetra, TETRA_TYPE= tetra_type, TFIXED_OCC=tfixed_occ, &
+                               LTETRA=ltetra, NTETRA=ntetra, TETRA_TYPE= tetra_type, TFIXED_OCC=tfixed_occ, &
                                NSTATES_UP=nupdwn(1), NSTATES_DW=nupdwn(2), INPUT_OCC=f_inp, IERR=ierr )
          !
       ENDIF
