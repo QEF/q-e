@@ -9,17 +9,19 @@
 MODULE read_pseudo_mod
 !=----------------------------------------------------------------------------=!
   !
-  ! read pseudopotential files. Note that all processors read the same file!
+  !! read pseudopotential files and store the data on internal variables of the 
+  !! program. Note that all processors read the same file!
   !
-  ! Required on input:
   USE io_files,     ONLY: pseudo_dir, pseudo_dir_cur, psfile
   USE ions_base,    ONLY: ntyp => nsp
-  ! Modified on output:
+  !! global variables  required on input 
+  !
   USE atom,         ONLY: msh, rgrid
   USE ions_base,    ONLY: zv
   USE uspp_param,   ONLY: upf, newpseudo, oldvan, nvb
   USE uspp,         ONLY: okvan, nlcc_any
-
+  !! global variables modified on output 
+  ! 
   IMPLICIT NONE
   SAVE
   PRIVATE
@@ -32,11 +34,11 @@ MODULE read_pseudo_mod
 SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   !-----------------------------------------------------------------------
   !
-  ! Reads PP files and puts the result into the "upf" structure
-  ! Sets  DFT to input_dft if present, to the value read in PP files otherwise
-  ! Sets  number of valence electrons Zv, control variables okvan and nlcc_any,
-  !       compatibility variables newpseudo, oldvan, nvb
-  ! Optionally returns cutoffs read from PP files into ecutwfc_pp, ecutrho_pp
+  !! Reads PP files and puts the result into the "upf" structure of module uspp_param
+  !! Sets  DFT to input_dft if present, to the value read in PP files otherwise
+  !! Sets  number of valence electrons Zv, control variables okvan and nlcc_any,
+  !! compatibility variables newpseudo, oldvan, nvb
+  !!  Optionally returns cutoffs read from PP files into ecutwfc_pp, ecutrho_pp
   !
   USE kinds,        ONLY: DP
   USE mp,           ONLY: mp_bcast, mp_sum

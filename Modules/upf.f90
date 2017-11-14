@@ -7,8 +7,13 @@
 !=----------------------------------------------------------------------------=!
       MODULE upf_module
 !=----------------------------------------------------------------------------=!
-!  this module handles reading of unified pseudopotential format (UPF)
-!  in either v1 or v2 format
+!! author: Unknown 
+!! this module handles reading of unified pseudopotential format (UPF)
+!! in either v1 or v2 of schema format.
+!! @Note
+!! 14/11/17 Pietro Delugas: new revision passed from iotk to FoX lib, added support 
+!!  new schema for UPF files 
+!
 !
 ! A macro to trim both from left and right
 #define TRIM(a) trim(adjustl(a))
@@ -26,11 +31,15 @@
 !------------------------------------------------+
 SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    !---------------------------------------------+
-   ! Read pseudopotential in UPF format (either v.1 or v.2 or upf_schema)
-   ! ierr = -2 : read upf_schema
-   ! ierr = -1 : read UPF v.1 
-   ! ierr =  0 : read UPF v.2 
-   ! ierr =  1 : not an UPF file, or error while reading
+   !! Reads pseudopotential in UPF format (either v.1 or v.2 or upf_schema).
+   !! Derived type variable *upf* and optionally *grid* store in output the data read
+   !! from file. 
+   !! If the unit number is provided with the *unit* argument  only UPF v1 format 
+   !! is checked, the pseudo file must be opened and closed outside the routine.  
+   !! Otherwise the *filename* argument must be given, file is opened and closed inside 
+   !! the routine   and all formats will be  checked. The logical *xml_only* optional 
+   !! argument may be given with true value to prevent the routine to check v1 format. 
+   !! @Note last revision: 14-11-2017
    !
    USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
    USE read_upf_v1_module,ONLY: read_upf_v1
@@ -45,14 +54,15 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    USE wrappers,     ONLY: f_remove
    IMPLICIT NONE
    INTEGER,INTENT(IN), OPTIONAL            :: unit
-   !! i/o unit: used only to read upf version 1 files !!!!        
+   !! i/o unit:    
    CHARACTER(len=*),INTENT(IN),OPTIONAL    :: filename  
    !! i/o filename
    LOGICAL,INTENT(IN), OPTIONAL            :: xml_only
    !! if present and true the program will parse only xml documents neglecting version 1 upf format
    TYPE(pseudo_upf),INTENT(INOUT) :: upf       
-!! the pseudo data
+   !! the derived type storing the pseudo data
    TYPE(radial_grid_type),OPTIONAL,INTENT(INOUT),TARGET :: grid
+   !! derived type where is possible to store data on the radial mesh
    INTEGER,INTENT(OUT) :: ierr
    !
    LOGICAL            :: xml_only_ = .FALSE. 
