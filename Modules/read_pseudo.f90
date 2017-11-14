@@ -9,17 +9,19 @@
 MODULE read_pseudo_mod
 !=----------------------------------------------------------------------------=!
   !
-  ! read pseudopotential files. Note that all processors read the same file!
+  !! read pseudopotential files and store the data on internal variables of the 
+  !! program. Note that all processors read the same file!
   !
-  ! Required on input:
   USE io_files,     ONLY: pseudo_dir, pseudo_dir_cur, psfile
   USE ions_base,    ONLY: ntyp => nsp
-  ! Modified on output:
+  !! global variables  required on input 
+  !
   USE atom,         ONLY: msh, rgrid
   USE ions_base,    ONLY: zv
   USE uspp_param,   ONLY: upf, newpseudo, oldvan, nvb
   USE uspp,         ONLY: okvan, nlcc_any
-
+  !! global variables modified on output 
+  ! 
   IMPLICIT NONE
   SAVE
   PRIVATE
@@ -32,11 +34,11 @@ MODULE read_pseudo_mod
 SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   !-----------------------------------------------------------------------
   !
-  ! Reads PP files and puts the result into the "upf" structure
-  ! Sets  DFT to input_dft if present, to the value read in PP files otherwise
-  ! Sets  number of valence electrons Zv, control variables okvan and nlcc_any,
-  !       compatibility variables newpseudo, oldvan, nvb
-  ! Optionally returns cutoffs read from PP files into ecutwfc_pp, ecutrho_pp
+  !! Reads PP files and puts the result into the "upf" structure of module uspp_param
+  !! Sets  DFT to input_dft if present, to the value read in PP files otherwise
+  !! Sets  number of valence electrons Zv, control variables okvan and nlcc_any,
+  !! compatibility variables newpseudo, oldvan, nvb
+  !!  Optionally returns cutoffs read from PP files into ecutwfc_pp, ecutrho_pp
   !
   USE kinds,        ONLY: DP
   USE mp,           ONLY: mp_bcast, mp_sum
@@ -61,7 +63,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   REAL(DP), parameter :: rcut = 10.d0 
   !2D Coulomb cutoff: modify this (at your own risks) if problems with cutoff being smaller than pseudo rcut. original value=10.0
   CHARACTER(len=256) :: file_pseudo ! file name complete with path
-  LOGICAL :: printout_ = .FALSE.
+  LOGICAL :: printout_ = .FALSE., exst
   INTEGER :: iunps, isupf, nt, nb, ir, ios
   INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_
   !
@@ -124,8 +126,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      ios = 1
      IF ( pseudo_dir_cur /= ' ' ) THEN
         file_pseudo  = TRIM (pseudo_dir_cur) // TRIM (psfile(nt))
-        OPEN  (unit = iunps, file = file_pseudo, status = 'old', &
-               form = 'formatted', action='read', iostat = ios)
+        INQUIRE(file = file_pseudo, EXIST = exst) 
+        IF (exst) ios = 0
         CALL mp_sum (ios,intra_image_comm)
         IF ( ios /= 0 ) CALL infomsg &
                      ('readpp', 'file '//TRIM(file_pseudo)//' not found')
@@ -139,26 +141,35 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      IF ( ios /= 0 ) THEN
         file_pseudo = TRIM (pseudo_dir) // TRIM (psfile(nt))
-        OPEN  (unit = iunps, file = file_pseudo, status = 'old', &
-               form = 'formatted', action='read', iostat = ios)
+        INQUIRE ( file = file_pseudo, EXIST = exst) 
+        IF (exst) ios = 0
         CALL mp_sum (ios,intra_image_comm)
         CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not found',ABS(ios))
      END IF
      !
      upf(nt)%grid => rgrid(nt)
      !
-     ! start reading - UPF first: the UPF format is detected via the
-     ! presence of the keyword '<PP_HEADER>' at the beginning of the file
-     !
      IF( printout_ ) THEN
         WRITE( stdout, "(/,3X,'Reading pseudopotential for specie # ',I2, &
                        & ' from file :',/,3X,A)") nt, TRIM(file_pseudo)
      END IF
      !
-     call read_upf(upf(nt), rgrid(nt), isupf, unit=iunps)
+     CALL  read_upf(upf(nt), rgrid(nt), isupf, filename = file_pseudo, xml_only = .TRUE. )
      !
+     !! start reading - check  first if files are readable as xml files,
+     !! xml_only set to avoid check on upf v1.  
+     !
+
+     !
+     IF ( isupf .GT. 0 ) THEN
+       !
+       ! If not we try with UPF-v.1 read a common text file 
+       ! 
+       OPEN ( UNIT = iunps, FILE = TRIM(file_pseudo), STATUS = 'old', FORM = 'formatted' ) 
+       CALL read_upf( upf(nt), rgrid(nt), isupf, UNIT = iunps) 
+     END IF  
      upf(nt)%is_gth=.false.
-     if (isupf ==-1 .OR. isupf== 0) then
+     if (isupf == - 2 .OR. isupf ==-1 .OR. isupf== 0) then
         !
         IF( printout_ ) &
            WRITE( stdout, "(3X,'file type is UPF v.',i1)") isupf+2
