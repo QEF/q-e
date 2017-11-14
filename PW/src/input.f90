@@ -1566,6 +1566,23 @@ SUBROUTINE iosys()
   !
   CALL init_dofree ( cell_dofree )
   !
+  !
+  ! ... Initialize temporary directory(-ies)
+  !
+  CALL check_tempdir ( tmp_dir, exst, parallelfs )
+  IF ( .NOT. exst .AND. restart ) THEN
+     CALL infomsg('iosys', 'restart disabled: needed files not found')
+     restart = .false.
+  ELSE IF ( .NOT. exst .AND. (lbands .OR. .NOT. lscf) ) THEN
+     CALL errore('iosys', 'bands or non-scf calculation not possible: ' // &
+                          'needed files are missing', 1)
+  ELSE IF ( exst .AND. .NOT.restart ) THEN
+     CALL clean_tempdir ( tmp_dir )
+  END IF
+  IF ( TRIM(wfc_dir) /= TRIM(tmp_dir) ) &
+     CALL check_tempdir( wfc_dir, exst, parallelfs )
+  !
+
   ! ... read pseudopotentials (also sets DFT and a few more variables)
   ! ... returns values read from PP files into ecutwfc_pp, ecutrho_pp
   !
@@ -1679,21 +1696,6 @@ SUBROUTINE iosys()
   !
   CALL pw_init_qexsd_input(qexsd_input_obj, obj_tagname="input")
   CALL deallocate_input_parameters ()  
-  !
-  ! ... Initialize temporary directory(-ies)
-  !
-  CALL check_tempdir ( tmp_dir, exst, parallelfs )
-  IF ( .NOT. exst .AND. restart ) THEN
-     CALL infomsg('iosys', 'restart disabled: needed files not found')
-     restart = .false.
-  ELSE IF ( .NOT. exst .AND. (lbands .OR. .NOT. lscf) ) THEN
-     CALL errore('iosys', 'bands or non-scf calculation not possible: ' // &
-                          'needed files are missing', 1)
-  ELSE IF ( exst .AND. .NOT.restart ) THEN
-     CALL clean_tempdir ( tmp_dir )
-  END IF
-  IF ( TRIM(wfc_dir) /= TRIM(tmp_dir) ) &
-     CALL check_tempdir( wfc_dir, exst, parallelfs )
   !
   max_seconds_ = max_seconds
   !

@@ -76,6 +76,7 @@ read_ncpp.o \
 read_pseudo.o \
 read_upf_v1.o \
 read_upf_v2.o \
+read_upf_schema.o \
 read_uspp.o \
 recvec.o \
 recvec_subs.o \

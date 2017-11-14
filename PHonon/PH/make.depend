@@ -1267,6 +1267,7 @@ run_nscf.o : ../../Modules/fft_base.o
 run_nscf.o : ../../Modules/io_files.o
 run_nscf.o : ../../Modules/io_global.o
 run_nscf.o : ../../Modules/mp_bands.o
+run_nscf.o : ../../Modules/mp_pools.o
 run_nscf.o : ../../Modules/recvec.o
 run_nscf.o : ../../PW/src/atomic_wfc_mod.o
 run_nscf.o : ../../PW/src/pwcom.o
