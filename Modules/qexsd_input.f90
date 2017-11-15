@@ -144,7 +144,7 @@ MODULE qexsd_input
            smearing_local="gaussian"
        CASE ('methfessel-paxton', 'm-p', 'mp')
            smearing_local="mp"
-       CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv') 
+       CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv','Marzari-Vanderbilt') 
            smearing_local="mv"
        CASE ('fermi-dirac', 'f-d', 'fd') 
            smearing_local="fd"
@@ -748,7 +748,7 @@ MODULE qexsd_input
             smearing_local="gaussian"
         CASE ('methfessel-paxton', 'm-p', 'mp')
             smearing_local="mp"
-        CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv') 
+        CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv', 'Marzari-Vanderbilt') 
             smearing_local="mv"
         CASE ('fermi-dirac', 'f-d', 'fd') 
             smearing_local="fd"
