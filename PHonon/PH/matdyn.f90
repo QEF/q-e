@@ -145,6 +145,7 @@ PROGRAM matdyn
   USE bz_form,    ONLY : transform_label_coord
   USE parser,     ONLY : read_line
   USE ktetra,     ONLY : tetra_dos_t
+  USE rigid,       ONLY: dyndiag, nonanal, nonanal_ifc
 
   USE ifconstants, ONLY : frc, atm, zeu, tau_blk, ityp_blk, m_loc
   !
@@ -159,7 +160,8 @@ PROGRAM matdyn
   INTEGER, PARAMETER:: ntypx=10, nrwsx=200
   REAL(DP), PARAMETER :: eps=1.0d-6
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ibrav
-  CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos, filename, fldyn, fleig
+  CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos, filename, fldyn, &
+                        fleig, fildyn, fildyn_prefix
   CHARACTER(LEN=10)  :: asr
   LOGICAL :: dos, has_zstar, q_in_cryst_coord, eigen_similarity
   COMPLEX(DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:), frc_ifc(:,:,:,:)
@@ -211,8 +213,8 @@ PROGRAM matdyn
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, fleig, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, &
        &           la2F, ndos, DeltaE, q_in_band_form, q_in_cryst_coord, &
-       &           eigen_similarity, fldyn, na_ifc, fd, point_label_type, nosym, &
-       &           loto_2d
+       &           eigen_similarity, fldyn, na_ifc, fd, point_label_type, &
+       &           nosym, loto_2d, fildyn, fildyn_prefix
   !
   CALL mp_startup()
   CALL environment_start('MATDYN')
@@ -238,6 +240,8 @@ PROGRAM matdyn
      fleig=' '
      fldyn=' '
      fltau=' '
+     fildyn = ' '
+     fildyn_prefix = ' '
      amass(:) =0.d0
      amass_blk(:) =0.d0
      at(:,:) = 0.d0
@@ -257,7 +261,7 @@ PROGRAM matdyn
      !
      !
      IF (ionode) READ (5,input,IOSTAT=ios)
-     CALL mp_bcast(ios, ionode_id, world_comm) 
+     CALL mp_bcast(ios, ionode_id, world_comm)
      CALL errore('matdyn', 'reading input namelist', ABS(ios))
      CALL mp_bcast(dos,ionode_id, world_comm)
      CALL mp_bcast(deltae,ionode_id, world_comm)
@@ -274,6 +278,8 @@ PROGRAM matdyn
      CALL mp_bcast(fleig,ionode_id, world_comm)
      CALL mp_bcast(fldyn,ionode_id, world_comm)
      CALL mp_bcast(fltau,ionode_id, world_comm)
+     CALL mp_bcast(fildyn,ionode_id, world_comm)
+     CALL mp_bcast(fildyn_prefix,ionode_id, world_comm)
      CALL mp_bcast(amass,ionode_id, world_comm)
      CALL mp_bcast(amass_blk,ionode_id, world_comm)
      CALL mp_bcast(at,ionode_id, world_comm)
@@ -283,7 +289,7 @@ PROGRAM matdyn
      CALL mp_bcast(l3,ionode_id, world_comm)
      CALL mp_bcast(na_ifc,ionode_id, world_comm)
      CALL mp_bcast(fd,ionode_id, world_comm)
-     CALL mp_bcast(la2f,ionode_id, world_comm)
+     CALL mp_bcast(la2F,ionode_id, world_comm)
      CALL mp_bcast(q_in_band_form,ionode_id, world_comm)
      CALL mp_bcast(eigen_similarity,ionode_id, world_comm)
      CALL mp_bcast(q_in_cryst_coord,ionode_id, world_comm)
@@ -292,6 +298,14 @@ PROGRAM matdyn
 
      !
      ! read force constants
+     !
+     IF ( trim( fildyn ) /= ' ' ) THEN
+        IF (ionode) THEN
+           WRITE(stdout, *)
+           WRITE(stdout, '(4x,a)') ' fildyn has been provided, running q2r...'
+        END IF
+        CALL do_q2r(fildyn, flfrc, fildyn_prefix, asr, la2F, loto_2d)
+     END IF
      !
      ntyp_blk = ntypx ! avoids fake out-of-bound error
      xmlifc=has_xml(flfrc)
@@ -1022,7 +1036,8 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
   !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : tpi
-  USE cell_base, ONLY: celldm
+  USE cell_base,  ONLY : celldm
+  USE rigid,      ONLY : rgd_blk
   !
   IMPLICIT NONE
   !

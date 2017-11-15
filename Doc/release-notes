@@ -1,15 +1,18 @@
 Problems fixed by development version:
 
+  * Tetrahedra with "old" XML format working again (r13993)
+
   * Option "-in file" for fermi_proj.x and fermi_velocity.x was not working
     in serial execution. Also: fermisurfer_example/ was missing (r13986)
+
+  * Inconsistent "short name" for DFT was breaking Perdew-Wang pseudopotentials
+    (r13975)
 
   * Yet another problem with last scf step in vc-relax, present since v.6.1: 
     if no atoms of a given kind were present, there was a division by zero
     and a NaN in starting magnetization (reported by Malte Sachs) (r13971)
 
   * FFT's for ARM libraries were broken (r13956,13959, courtesy Jason Wood)
-
-  * Tetrahedra with "old" XML format working again (r13993)
 
 New in development version:
 

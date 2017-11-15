@@ -5,6 +5,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+MODULE rigid
+  PUBLIC :: rgd_blk, dyndiag, nonanal, nonanal_ifc
+  PRIVATE
+  CONTAINS
+!
 !-----------------------------------------------------------------------
 subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,alat,loto_2d,sign)
   !-----------------------------------------------------------------------
@@ -477,3 +482,5 @@ subroutine cdiagh2 (n,h,ldh,e,v)
   !
   return
 end subroutine cdiagh2
+
+END MODULE rigid
