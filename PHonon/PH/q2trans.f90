@@ -70,7 +70,8 @@ USE kinds,      ONLY : DP
                          read_dyn_mat, read_dyn_mat_tail, &
                          write_dyn_mat_header, write_ifc
   USE environment, ONLY : environment_start, environment_end
-USE constants, ONLY: pi, fpi, e2
+  USE constants, ONLY: pi, fpi, e2
+  USE rigid,      ONLY: rgd_blk
   !
   IMPLICIT NONE
   !
@@ -284,7 +285,7 @@ INTEGER, PARAMETER         ::   &
               nc(m(1),m(2),m(3))=1
               IF (lrigid .and. .not.noNA) THEN
                  CALL rgd_blk (nr1,nr2,nr3,nat,phiq(1,1,1,1,nq),q(1,nq), &
-                  tau,epsil,zeu,bg,omega,-1.d0)
+                  tau,epsil,zeu,bg,omega,celldm(1),.false.,-1.d0)
               ENDIF
               CALL trasl ( phid, phiq, nq, nr1,nr2,nr3, nat, m(1),m(2),m(3))
            ELSE

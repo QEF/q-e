@@ -80,6 +80,7 @@ program dynmat
                          read_dyn_mat, read_dyn_mat_tail
   USE constants,   ONLY : amu_ry
   USE dynamical
+  USE rigid,       ONLY: dyndiag, nonanal
   !
   implicit none
   integer, parameter :: ntypx = 10

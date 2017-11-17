@@ -1765,13 +1765,13 @@ MODULE pw_restart_new
              smearing  = 'gaussian'
            CASE ( 'methfessel-paxton', 'm-p', 'mp', 'Methfessel-Paxton', 'M-P', 'MP' )
              ngauss = 1
-             smearing = 'Methfessel-Paxton'
+             smearing = 'mp'
            CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv', 'Marzari-Vanderbilt', 'M-V', 'MV')
              ngauss = -1
-             smearing  = 'Marzari-Vanderbilt'
+             smearing  = 'mv'
            CASE ( 'fermi-dirac', 'f-d', 'fd', 'Fermi-Dirac', 'F-D', 'FD')
              ngauss = -99
-             smearing = 'Fermi-Dirac'
+             smearing = 'fd'
         END SELECT
       END IF       
      !

@@ -52,6 +52,7 @@ dfile_autoname.o \
 dfile_star.o \
 dielec.o \
 do_phonon.o \
+do_q2r.o \
 drho.o \
 drhodv.o \
 drhodvloc.o \
@@ -116,6 +117,7 @@ q_points_wannier.o \
 q2qstar_ph.o \
 random_matrix.o \
 read_wfc_rspace_and_fwfft.o \
+rigid.o \
 rotate_dvscf_star.o \
 rotate_and_add_dyn.o \
 rotate_pattern_add.o \
@@ -180,7 +182,6 @@ dhdrhopsi.o\
 set_dvscf.o
 
 PHAUXOBJS = \
-rigid.o \
 write_eigenvectors.o
 
 LRMODS = ../../LR_Modules/liblrmod.a

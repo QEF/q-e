@@ -35,6 +35,9 @@ SUBROUTINE read_file()
   USE klist,                ONLY : init_igk
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
+#if defined (__HDF5)
+  USE hdf5_qe
+#endif
   !
   IMPLICIT NONE 
   INTEGER :: ierr
@@ -48,6 +51,9 @@ SUBROUTINE read_file()
   !
   IF ( ionode ) WRITE( stdout, '(/,5x,A,/,5x,A)') &
      'Reading data from directory:', TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+#if defined(__HDF5)
+  CALL initialize_hdf5()
+#endif
   !
   CALL read_xml_file ( )
   !
