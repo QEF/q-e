@@ -36,7 +36,7 @@ Input variables as in the phonon code:
   outdir
   prefix
   fildyn
-  epsil 
+  epsil    Note that effective charges are also computed if epsil=.true.,
   trans
   recover
   tr2_ph   Note that Conjugate-Gradient algorithm stops when 

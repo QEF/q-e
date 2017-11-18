@@ -1,5 +1,8 @@
 Problems fixed by development version:
 
+  * Electron-phonon with ibrav=0 not working due to a mismatch between
+    what is written and what is read in "fildyn" (r13999)
+
   * Tetrahedra with "old" XML format working again (r13993)
 
   * Option "-in file" for fermi_proj.x and fermi_velocity.x was not working
