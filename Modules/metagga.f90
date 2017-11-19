@@ -55,24 +55,22 @@ subroutine tpsscxc( rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
   ! exchange  
   func_id = 202
   call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
-  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, 0.5_dp*tau,&
+  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, tau,&
                                sx, v1x, v2x, vlapl_rho, v3x)  
   call xc_f90_func_end(xc_func)
   
   sx  = sx * rho
   v2x = v2x*2.0_dp
-  v3x = 0.5_dp*v3x
 
   ! correlation
   func_id = 231  ! Perdew, Tao, Staroverov & Scuseria correlation  
   call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)   
-  call xc_f90_mgga_exc_vxc(xc_func,size , rho, grho, lapl_rho, 0.5_dp*tau,&
+  call xc_f90_mgga_exc_vxc(xc_func,size , rho, grho, lapl_rho, tau,&
                                sc, v1c, v2c, vlapl_rho, v3c)  
   call xc_f90_func_end(xc_func)
 
   sc  = sc * rho
   v2c = v2c*2.0_dp
-  v3c = 0.5_dp*v3c       
 
 #else
   real(DP), parameter :: small = 1.E-10_DP
@@ -1413,26 +1411,24 @@ subroutine tb09cxc(rho, grho, tau, sx, sc, v1x, v2x,v3x,v1c, v2c,v3c)
   func_id = 208  !Tran & Blaha correction to Becke & Johnson  -- TB09 
  
   call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
-  call xc_f90_mgga_vxc(xc_func, size, rho, grho, lapl_rho, 0.5_dp*tau, &
+  call xc_f90_mgga_vxc(xc_func, size, rho, grho, lapl_rho, tau, &
       v1x, v2x, vlapl_rho, v3x)  
   call xc_f90_func_end(xc_func)
   
   sx = 0.0d0      
   v2x = v2x*2.0_dp
-  v3x = v3x*0.5_dp
 
   ! ---------------------------- Correlation  
   
   func_id = 231  ! Perdew, Tao, Staroverov & Scuseria correlation  -- TPSS
   
   call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)   
-  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, 0.5_dp*tau, &
+  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, tau, &
      sc, v1c, v2c, vlapl_rho, v3c)  
   call xc_f90_func_end(xc_func)
 
   sc = sc * rho      
   v2c = v2c*2.0_dp
-  v3c = v3c*0.5_dp
 #else
   sx=0.0_dp; sc=0.0_dp; v1x=0.0_dp; v2x=0.0_dp; v3x=0.0_dp; v1c=0.0_dp; v2c=0.0_dp; v3c=0.0_dp
   call errore('tb09','need libxc',1)
@@ -1476,23 +1472,21 @@ subroutine SCANcxc(rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c)
   func_id = 263  ! XC_MGGA_X_SCAN
  
   call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)
-  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, 0.5_dp*tau,&
+  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, tau,&
                            sx, v1x, v2x, vlapl_rho, v3x)  
   call xc_f90_func_end(xc_func)
   sx = 0.0d0
   v2x = v2x*2.0_dp
-  v3x = v3x*0.5_dp
 
   ! correlation  
   func_id = 267  ! XC_MGGA_C_SCAN
   call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)   
-  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, 0.5_dp*tau, &
+  call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, tau, &
                            sc, v1c, v2c, vlapl_rho, v3c)  
   call xc_f90_func_end(xc_func)
 
   sc = sc * rho
   v2c = v2c*2.0_dp
-  v3c = v3c*0.5_dp
 
 #else
   sx=0.0_dp; sc=0.0_dp; v1x=0.0_dp; v2x=0.0_dp; v3x=0.0_dp; v1c=0.0_dp; v2c=0.0_dp; v3c=0.0_dp
