@@ -219,6 +219,11 @@
   ! DBSP
   ! HERE loadkmesh
   IF ( epwread ) THEN
+    !
+    ! Might have been pre-allocate depending of the restart configuration 
+    IF(ALLOCATED(tau))  DEALLOCATE( tau )
+    IF(ALLOCATED(ityp)) DEALLOCATE( ityp )
+    IF(ALLOCATED(w2))   DEALLOCATE( w2 )
     ! 
     ! We need some crystal info
     IF (mpime.eq.ionode_id) THEN
