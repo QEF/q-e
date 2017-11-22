@@ -1415,7 +1415,7 @@ subroutine tb09cxc(rho, grho, tau, sx, sc, v1x, v2x,v3x,v1c, v2c,v3c)
       v1x, v2x, vlapl_rho, v3x)  
   call xc_f90_func_end(xc_func)
   
-  sx = 0.0d0      
+  sx = sx * rho
   v2x = v2x*2.0_dp
 
   ! ---------------------------- Correlation  
@@ -1457,8 +1457,6 @@ subroutine SCANcxc(rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c)
 #if defined(__LIBXC)
   TYPE(xc_f90_pointer_t) :: xc_func
   TYPE(xc_f90_pointer_t) :: xc_info
-  integer, SAVE :: major=0, minor=0, micro=0
-  integer :: size = 1
   integer :: func_id
   real(dp) :: lapl_rho, vlapl_rho ! not used?
 
@@ -1475,7 +1473,8 @@ subroutine SCANcxc(rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c)
   call xc_f90_mgga_exc_vxc(xc_func, size, rho, grho, lapl_rho, tau,&
                            sx, v1x, v2x, vlapl_rho, v3x)  
   call xc_f90_func_end(xc_func)
-  sx = 0.0d0
+
+  sx = sx * rho
   v2x = v2x*2.0_dp
 
   ! correlation  

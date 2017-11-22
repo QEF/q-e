@@ -1,7 +1,7 @@
 Problems fixed by development version:
 
   * NASTY BUG IN META-GGA WITH LIBXC (tpss, tb09, scan): incorrect results
-    thanks to Hsin-Yu Ho and Marcos Calegari Andrade  (r14000)
+    thanks to Hsin-Yu Ho and Marcos Calegari Andrade  (r14000, r14004)
 
   * Electron-phonon with ibrav=0 not working due to a mismatch between
     what is written and what is read in "fildyn" (r13999)
@@ -37,7 +37,7 @@ Known problems in development version:
 
   * New format for charge density no longer allows to perform a non-scf
     calculation with k-points starting from a scf calculation at Gamma
-  * NEB with one-k-point per pool requires "wf_collect=.false.", because
+  * NEB with one k-point per pool requires "wf_collect=.false.", because
     update_neb is not updated for the new format
 
 New in 6.2 version:
