@@ -1457,6 +1457,7 @@ subroutine SCANcxc(rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c)
 #if defined(__LIBXC)
   TYPE(xc_f90_pointer_t) :: xc_func
   TYPE(xc_f90_pointer_t) :: xc_info
+  integer :: size = 1
   integer :: func_id
   real(dp) :: lapl_rho, vlapl_rho ! not used?
 
