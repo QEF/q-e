@@ -13,6 +13,7 @@
 !  Available functionals : 
 !           - TPSS (Tao, Perdew, Staroverov & Scuseria)
 !           - TB09 (via libxc)
+!           - SCAN (via libxc)
 !           - M06L
 !
 !=========================================================================
@@ -1446,7 +1447,6 @@ end subroutine tb09cxc
 subroutine SCANcxc(rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c)
   USE kinds,            ONLY : DP
 #if defined(__LIBXC)
-  USE funct,            ONLY : libxc_major, libxc_minor, libxc_micro, get_libxc_version
   use xc_f90_types_m
   use xc_f90_lib_m
 #endif
@@ -1461,10 +1461,6 @@ subroutine SCANcxc(rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c)
   integer :: func_id
   real(dp) :: lapl_rho, vlapl_rho ! not used?
 
-  if (libxc_major == 0) call get_libxc_version
-  if (libxc_major < 3 .or. (libxc_major == 3 .and. libxc_minor /= -1)) & 
-      call errore('SCAN meta-GGA','please, recompile with LibXC trunk (i.e. >3.0.0))',1)
- 
   lapl_rho = grho
 
   ! exchange
@@ -1489,9 +1485,109 @@ subroutine SCANcxc(rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c)
   v2c = v2c*2.0_dp
 
 #else
-  sx=0.0_dp; sc=0.0_dp; v1x=0.0_dp; v2x=0.0_dp; v3x=0.0_dp; v1c=0.0_dp; v2c=0.0_dp; v3c=0.0_dp
-  call errore('SCAN meta-GGA','please, recompile with LibXC trunk (i.e. >3.0.0))',1)
+  call errore('SCAN meta-GGA','need LibXC v.3.0.1 or later)',1)
 #endif
 
 end subroutine SCANcxc
 
+subroutine scanxc_spin( rhoup, rhodw, grhoup, grhodw, tauup, taudw, &
+                     &  sx, v1xup,v1xdw,v2xup,v2xdw,v3xup,v3xdw,    &
+                     &  sc, v1cup,v1cdw,v2cup,v2cdw,v3cup,v3cdw )
+  !-----------------------------------------------------------------------
+  !     SCAN metaGGA corrections for exchange and correlation - Hartree a.u.
+  !
+  !       input:  rho, grho=|\nabla rho|^2, tau = kinetic energy density
+  !               definition:  E_x = \int E_x(rho,grho) dr
+  !               output: sx = E_x(rho,grho)
+  !                       v1x= D(E_x)/D(rho)
+  !                       v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
+  !                       sc, v1c, v2c as above for correlation
+  !                       v3x= D(E_x)/D(tau)
+  !
+  USE kinds,            ONLY : DP
+#ifdef __LIBXC
+  use xc_f90_types_m
+  use xc_f90_lib_m
+  implicit none  
+  real(DP), intent(in) :: rhoup, rhodw, grhoup(3), grhodw(3), tauup, taudw
+  real(dp), intent(out):: sx, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw, &
+                        & sc, v1cup, v1cdw, v2cup(3), v2cdw(3), v3cup, v3cdw
+  ! 
+  ! Internal Variables
+  !
+  TYPE(xc_f90_pointer_t) :: xc_func
+  TYPE(xc_f90_pointer_t) :: xc_info
+  integer :: size = 1, ipol
+  integer :: func_id
+  ! 
+  ! Format compatible with Libxc
+  !
+  real(dp) :: rho(2), grho2(3), tau(2), v1x(2), v2x(3), v3x(2), &
+           &  v1c(2), v2c(3), v3c(2), lapl_rho(6), vlapl_rho(6) 
+  !
+  rho(1) = rhoup
+  rho(2) = rhodw
+  !
+  ! Contracted gradients of density
+  !
+  grho2 = 0_DP
+  do ipol = 1,3
+  ! 
+    grho2(1) = grho2(1) + grhoup(ipol)**2
+    grho2(2) = grho2(2) + grhoup(ipol) * grhodw(ipol)
+    grho2(3) = grho2(3) + grhodw(ipol)**2
+  !
+  enddo
+  !
+  tau(1) = tauup
+  tau(2) = taudw
+  !
+  ! exchange  
+  !
+  func_id = 263
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_POLARIZED)    
+  call xc_f90_mgga_exc_vxc(xc_func, size, rho(1), grho2(1), lapl_rho(1), tau(1),&
+                               sx, v1x(1), v2x(1), vlapl_rho(1), v3x(1))  
+  call xc_f90_func_end(xc_func)
+  !
+  ! correlation
+  !
+  func_id = 267     
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_POLARIZED)   
+  call xc_f90_mgga_exc_vxc(xc_func,size , rho(1), grho2(1), lapl_rho(1), tau(1),&
+                               sc, v1c(1), v2c(1), vlapl_rho(1), v3c(1))  
+  call xc_f90_func_end(xc_func)
+  !
+  ! from libxc to QE format
+  !
+  sx  = sx * ( rho(1) + rho(2) )
+  v1xup = v1x(1)
+  v2xup = v2x(1) * 2.D0
+  v3xup = v3x(1)
+  v1xdw = v1x(2)
+  v2xdw = v2x(3) * 2.D0
+  v3xdw = v3x(2)
+  !
+  sc  = sc * ( rho(1) + rho(2) )
+  v1cup = v1c(1)
+  v3cup = v3c(1)
+  v1cdw = v1c(2)
+  v3cdw = v3c(2)
+  !
+  ! cross terms of v2c(2). v2x(2) is always zero.
+  !
+  do ipol = 1,3
+     !
+     v2cup(ipol) = v2c(1)*grhoup(ipol) * 2.D0 + v2c(2)*grhodw(ipol) 
+     v2cdw(ipol) = v2c(3)*grhodw(ipol) * 2.D0 + v2c(2)*grhoup(ipol) 
+     !
+  enddo
+  !
+#else
+  !
+  call errore('SCAN meta-GGA','need LibXC v.3.0.1 or later)',1)
+  !
+#endif
+  return  
+  !
+end subroutine scanxc_spin

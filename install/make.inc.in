@@ -34,7 +34,7 @@ TOPDIR = $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
 
 # DFLAGS  = precompilation options (possible arguments to -D and -U)
 #           used by the C compiler and preprocessor
-# FDFLAGS = as DFLAGS, for the f90 compiler
+# To use libxc (v>=3.0.1), add -D__LIBXC to DFLAGS
 # See include/defs.h.README for a list of options and their meaning
 # With the exception of IBM xlf, FDFLAGS = $(DFLAGS)
 # For IBM xlf, FDFLAGS is the same as DFLAGS with separating commas
@@ -48,6 +48,7 @@ FDFLAGS        = @fdflags@
 # IFLAGS = how to locate directories with *.h or *.f90 file to be included
 #          typically -I../include -I/some/other/directory/
 #          the latter contains .e.g. files needed by FFT libraries
+# for libxc add -I/path/to/libxc/include/
 
 IFLAGS         = @iflags@
 
@@ -97,6 +98,7 @@ FFLAGS_NOMAIN   = @fflags_nomain@
 
 # Linker, linker-specific flags (if any)
 # Typically LD coincides with F90 or MPIF90, LD_LIBS is empty
+# for libxc, set LD_LIBS=-L/path/to/libxc/lib/ -lxcf90 -lxc
 
 LD             = @ld@
 LDFLAGS        = @ldflags@

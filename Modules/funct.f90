@@ -272,6 +272,8 @@ module funct
   !              tpss    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria, 
   !                      PRL 91, 146401 (2003)
   !              tb09    F Tran and P Blaha, Phys.Rev.Lett. 102, 226401 (2009) 
+  !              scan    J Sun, A Ruzsinszky and J Perdew, PRL 115, 36402 (2015)
+  !              scan0   K Hui and J-D. Chai, JCP 144, 44114 (2016)
   !              sogga   Y. Zhao and D. G. Truhlar, JCP 128, 184109 (2008)
   !              m06l    Y. Zhao and D. G. Truhlar, JCP 125, 194101 (2006)
   !              gau-pbe J.-W. Song, K. Yamashita, K. Hirao JCP 135, 071103 (2011)
@@ -2747,11 +2749,15 @@ subroutine tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,   &
   v2cup         = zero
   v2cdw         = zero
 
-  do ipol=1,3
-     grhoup2 = grhoup2 + grhoup(ipol)**2
-     grhodw2 = grhodw2 + grhodw(ipol)**2
-  end do
+  ! FIXME: for SCAN, this will be calculated later
+  if (imeta /= 4) then
 
+     do ipol=1,3
+        grhoup2 = grhoup2 + grhoup(ipol)**2
+        grhodw2 = grhodw2 + grhodw(ipol)**2
+     end do
+
+  end if
   
   if (imeta == 1) then
 
@@ -2773,6 +2779,14 @@ subroutine tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,   &
             &            ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
             &            v1cup, v1cdw, v2cup(1), v2cdw(1), v3cup, v3cdw)
      
+  elseif (imeta == 5) then
+
+     ! FIXME: not the most efficient use of libxc 
+
+     call scanxc_spin(rhoup, rhodw, grhoup, grhodw, tauup, taudw,  &
+              &  ex, v1xup,v1xdw,v2xup,v2xdw,v3xup,v3xdw,          &
+              &  ec, v1cup,v1cdw,v2cup,v2cdw,v3cup,v3cdw )
+  
   else
   
      call errore('tau_xc_spin','This case not implemented',imeta)

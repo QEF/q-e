@@ -1,7 +1,9 @@
 Problems fixed by development version:
 
+  * QM-MM interface with LAMMPS was broken in v.6.2 (r14006-14008)
+
   * NASTY BUG IN META-GGA WITH LIBXC (tpss, tb09, scan): incorrect results
-    thanks to Hsin-Yu Ho and Marcos Calegari Andrade  (r14000, r14004)
+    thanks to Hsin-Yu Ho and Marcos Calegari Andrade  (r14000, 14004-14005)
 
   * Electron-phonon with ibrav=0 not working due to a mismatch between
     what is written and what is read in "fildyn" (r13999)
@@ -21,6 +23,9 @@ Problems fixed by development version:
   * FFT's for ARM libraries were broken (r13956,13959, courtesy Jason Wood)
 
 New in development version:
+
+  * Spin-polarized SCAN meta-GGA
+    (Hsin-Yu Ho and Marcos Calegari Andrade)
 
   * Interface with Grimme's DFT-D3, as repackaged by Bálint Aradi
     (Miha Gunde and Layla Martins-Samos)
