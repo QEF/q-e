@@ -46,7 +46,7 @@ MODULE mp_diag
 CONTAINS
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE mp_start_diag( ndiag_, parent_comm, do_distr_diag_inside_bgrp_  )
+  SUBROUTINE mp_start_diag( ndiag_, my_world_comm, parent_comm, do_distr_diag_inside_bgrp_  )
     !---------------------------------------------------------------------------
     !
     ! ... Ortho/diag/linear algebra group initialization
@@ -54,11 +54,11 @@ CONTAINS
     IMPLICIT NONE
     !
     INTEGER, INTENT(INOUT) :: ndiag_  ! (IN) input number of procs in the diag group, (OUT) actual number
+    INTEGER, INTENT(IN) :: my_world_comm ! parallel communicator of the "local" world
     INTEGER, INTENT(IN) :: parent_comm ! parallel communicator inside which the distributed linear algebra group
                                        ! communicators are created
     LOGICAL, INTENT(IN) :: do_distr_diag_inside_bgrp_  ! comme son nom l'indique
     !
-    INTEGER :: world_comm_local = -1  ! internal copy of the world_comm  (-1 is unset, should be set to MPI_COMM_WORLD)
     INTEGER :: mpime      =  0  ! the global MPI task index (used in clocks) can be set with a mp_rank call
     !
     INTEGER :: nproc_ortho_try
@@ -68,9 +68,8 @@ CONTAINS
     INTEGER :: nparent_comm ! mumber of parent communicators
     INTEGER :: ierr = 0
     !
-    world_comm_local   = MPI_COMM_WORLD        ! set the internal copy of the world_comm to be possibly used in other related routines
-    world_nproc  = mp_size( world_comm_local ) ! the global number of processors in world_comm
-    mpime        = mp_rank( world_comm_local ) ! set the global MPI task index  (used in clocks)
+    world_nproc  = mp_size( my_world_comm ) ! the global number of processors in world_comm
+    mpime        = mp_rank( my_world_comm ) ! set the global MPI task index  (used in clocks)
     parent_nproc = mp_size( parent_comm )! the number of processors in the current parent communicator
     my_parent_id = mpime / parent_nproc  ! set the index of the current parent communicator
     nparent_comm = world_nproc/parent_nproc ! number of paren communicators
@@ -80,15 +79,15 @@ CONTAINS
 
     !
 #if defined __SCALAPACK
-    np_blacs     = mp_size( world_comm_local )
-    me_blacs     = mp_rank( world_comm_local )
+    np_blacs     = mp_size( my_world_comm )
+    me_blacs     = mp_rank( my_world_comm )
     !
     ! define a 1D grid containing all MPI tasks of the global communicator
     ! NOTE: world_cntx has the MPI communicator on entry and the BLACS context on exit
     !       BLACS_GRIDINIT() will create a copy of the communicator, which can be
     !       later retrieved using CALL BLACS_GET(world_cntx, 10, comm_copy)
     !
-    world_cntx = world_comm_local 
+    world_cntx = my_world_comm 
     CALL BLACS_GRIDINIT( world_cntx, 'Row', 1, np_blacs )
     !
 #endif
@@ -110,7 +109,7 @@ CONTAINS
     ! the ortho group for parallel linear algebra is a sub-group of the pool,
     ! then there are as many ortho groups as pools.
     !
-    CALL init_ortho_group( nproc_ortho_try, parent_comm, nparent_comm, my_parent_id )
+    CALL init_ortho_group( nproc_ortho_try, my_world_comm, parent_comm, nparent_comm, my_parent_id )
     !
     ! set the number of processors in the diag group to the actual number used
     !
@@ -121,11 +120,12 @@ CONTAINS
   END SUBROUTINE mp_start_diag
   !
   !
-  SUBROUTINE init_ortho_group( nproc_try_in, comm_all, nparent_comm, my_parent_id )
+  SUBROUTINE init_ortho_group( nproc_try_in, my_world_comm, comm_all, nparent_comm, my_parent_id )
     !
     IMPLICIT NONE
 
     INTEGER, INTENT(IN) :: nproc_try_in, comm_all
+    INTEGER, INTENT(IN) :: my_world_comm ! parallel communicator of the "local" world
     INTEGER, INTENT(IN) :: nparent_comm
     INTEGER, INTENT(IN) :: my_parent_id ! id of the parent communicator 
 
@@ -140,8 +140,6 @@ CONTAINS
 #endif
 
 #if defined __MPI
-    INTEGER :: world_comm_local = -1  ! internal copy of the world_comm  (-1 is unset, should be set to MPI_COMM_WORLD)
-    world_comm_local   = MPI_COMM_WORLD        ! set the internal copy of the world_comm to be possibly used in other related routines
 
     me_all    = mp_rank( comm_all )
     !
@@ -251,7 +249,7 @@ CONTAINS
 
          ! All MPI tasks defined in the global communicator take part in the definition of the BLACS grid
 
-         CALL mp_sum( blacsmap, world_comm_local ) 
+         CALL mp_sum( blacsmap, my_world_comm ) 
 
          CALL BLACS_GRIDMAP( ortho_cntx_pe( j ), blacsmap, nprow, nprow, npcol )
 
