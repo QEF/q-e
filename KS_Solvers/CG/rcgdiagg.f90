@@ -18,7 +18,6 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, precondition, &
   ! ... Calls hs_1psi and s_1psi to calculate H|psi> + S|psi> and S|psi>
   ! ... Works for generalized eigenvalue problem (US pseudopotentials) as well
   !
-  USE constants,      ONLY : pi
   USE cg_param,       ONLY : DP
   USE mp_bands_util,  ONLY : intra_bgrp_comm, inter_bgrp_comm, set_bgrp_indices, gstart
   USE mp,             ONLY : mp_sum
@@ -27,6 +26,10 @@ SUBROUTINE rcgdiagg( hs_1psi, s_1psi, precondition, &
 #endif
   !
   IMPLICIT NONE
+  !
+  ! ... Mathematical constants
+  ! 
+  REAL(DP), PARAMETER :: pi     = 3.14159265358979323846_DP
   !
   ! ... I/O variables
   !
