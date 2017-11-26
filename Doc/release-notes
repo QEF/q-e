@@ -24,7 +24,7 @@ Problems fixed by development version:
 
 New in development version:
 
-  * Spin-polarized SCAN meta-GGA
+  * Spin-polarized SCAN meta-GGA; spin-unpolarized stress for meta-GGA
     (Hsin-Yu Ho and Marcos Calegari Andrade)
 
   * Interface with Grimme's DFT-D3, as repackaged by Bálint Aradi
