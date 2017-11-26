@@ -151,7 +151,6 @@ kernel_table.o : kind.o
 kernel_table.o : wrappers.o
 latgen.o : constants.o
 latgen.o : kind.o
-libxc.o : libxc_funcs.o
 linpack.o : kind.o
 lsda_functionals.o : constants.o
 lsda_functionals.o : kind.o
