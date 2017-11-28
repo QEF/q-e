@@ -46,7 +46,7 @@
   USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
                             iunepmatwp, crystal
   USE elph2,         ONLY : nrr_k, nrr_q, cu, cuq, lwin, lwinq, irvec, ndegen_k,&
-                            ndegen_q,  wslen, chw, chw_ks, cvmew, cdmew, rdw,   &
+                            ndegen_q, wslen, chw, chw_ks, cvmew, cdmew, rdw,    &
                             epmatwp, epmatq, wf, etf, etf_k, etf_ks, xqf, xkf,  &
                             wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
@@ -200,7 +200,7 @@
   COMPLEX(kind=DP), ALLOCATABLE :: cfac(:)
   !! Used to store $e^{2\pi r \cdot k}$ exponential 
   COMPLEX(kind=DP), ALLOCATABLE :: cfacq(:)
-  !! Used to store $e^{2\pi r \cdot k+q}$ exponential 
+  !! Used to store $e^{2\pi r \cdot k+q}$ exponential
   ! 
   IF (nbndsub.ne.nbnd) &
        WRITE(stdout, '(/,14x,a,i4)' ) 'band disentanglement is used:  nbndsub = ', nbndsub
@@ -1255,7 +1255,7 @@
   IF ( ALLOCATED(sigmai_all) )    DEALLOCATE( sigmai_all )
   IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
   IF ( ALLOCATED(w2) )            DEALLOCATE( w2 )
-  IF ( ALLOCATED(epf17) )        DEALLOCATE( epf17 )
+  IF ( ALLOCATED(epf17) )         DEALLOCATE( epf17 )
   DEALLOCATE(cfac)
   DEALLOCATE(cfacq)
   DEALLOCATE(rdotk)

@@ -35,7 +35,7 @@
   USE ions_base,     ONLY : nat, nsp, tau, ityp
   USE control_flags, ONLY : iverbosity
   USE io_global,     ONLY : stdout
-  USE io_epw,        ONLY : iuepb 
+  USE io_epw,        ONLY : iuepb, QPeig_read
   USE kinds,         ONLY : DP
   USE pwcom,         ONLY : et, xk, nks, nbnd, nkstot
   USE cell_base,     ONLY : at, bg
@@ -73,6 +73,8 @@
   !! Name of the file
   character (len=3) :: filelab
   !! Append the number of the core that works on that file
+  character(len=80)   :: line
+  !! Use to read external eigenvalues 
   character(len=6), external :: int_to_char
   !! Transfor an int to a character
   logical :: sym(48)
@@ -231,16 +233,16 @@
     WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
          nbnd, ",", nkstot,")"
     tempfile=trim(prefix)//'.eig'
-    OPEN(1, file=tempfile, form='formatted', action='read', iostat=ios)
+    OPEN(QPeig_read, file=tempfile, form='formatted', action='read', iostat=ios)
     IF (ios /= 0) CALL errore ('elphon_shuffle_wrap','error opening' // tempfile, 1)
+    READ (QPeig_read,'(a)') line
     DO ik = 1, nkstot
-      DO ibnd = 1, nbnd
-        READ (1,*) dummy1, dummy2, et_tmp (ibnd,ik)
-        IF (dummy1.ne.ibnd) CALL errore('elphon_shuffle_wrap', "Incorrect eigenvalue file", 1)
-        IF (dummy2.ne.ik)   CALL errore('elphon_shuffle_wrap', "Incorrect eigenvalue file", 1)
-      ENDDO
+      ! We do not save the k-point for the moment ==> should be read and
+      ! tested against the current one  
+      READ (QPeig_read,'(a)') line
+      READ (QPeig_read,*) et_tmp (:,ik)
     ENDDO
-    CLOSE(1)
+    CLOSE(QPeig_read)
     ! from eV to Ryd
     et_tmp = et_tmp / ryd2ev
     ENDIF
@@ -429,9 +431,9 @@
                                invs, s, irt, rtau)
       ENDIF
       CALL mp_bcast (zstar, meta_ionode_id, world_comm)
-      CALL mp_bcast (epsi, meta_ionode_id, world_comm)
-      CALL mp_bcast (dynq, meta_ionode_id, world_comm)
-      CALL mp_bcast (sumr, meta_ionode_id, world_comm)
+      CALL mp_bcast (epsi , meta_ionode_id, world_comm)
+      CALL mp_bcast (dynq , meta_ionode_id, world_comm)
+      CALL mp_bcast (sumr , meta_ionode_id, world_comm)
       !
       ! now dynq is the cartesian dyn mat (NOT divided by the masses)
       !
@@ -804,6 +806,7 @@
   !   This function test if two tridimensional vectors are equal
   !
   USE kinds
+  ! 
   implicit none
   real(kind=DP) :: x (3), y (3)
   ! input: input vector
@@ -829,12 +832,12 @@
   USE io_global,    ONLY : meta_ionode, meta_ionode_id
   USE mp,           ONLY : mp_bcast
   USE mp_global,    ONLY : world_comm
-
+  ! 
   IMPLICIT NONE
-
-  INTEGER,          INTENT(IN) :: current_iq,iunpun
-  INTEGER,          INTENT(OUT) :: ierr
-  INTEGER :: imode0, imode, irr, ipert, iq 
+  !
+  INTEGER, INTENT(IN) :: current_iq,iunpun
+  INTEGER, INTENT(OUT) :: ierr
+  INTEGER              :: imode0, imode, irr, ipert, iq 
   !
   ierr=0
   IF (meta_ionode) THEN
@@ -876,13 +879,13 @@
      !
   ENDIF
 
-  CALL mp_bcast( nirr,  meta_ionode_id, world_comm )
-  CALL mp_bcast( npert,  meta_ionode_id, world_comm )
-  CALL mp_bcast( nsymq,  meta_ionode_id, world_comm )
-  CALL mp_bcast( minus_q,  meta_ionode_id, world_comm )
-  CALL mp_bcast( u,  meta_ionode_id, world_comm )
-  CALL mp_bcast( name_rap_mode,  meta_ionode_id, world_comm )
-  CALL mp_bcast( num_rap_mode,  meta_ionode_id, world_comm )
+  CALL mp_bcast( nirr         , meta_ionode_id, world_comm )
+  CALL mp_bcast( npert        , meta_ionode_id, world_comm )
+  CALL mp_bcast( nsymq        , meta_ionode_id, world_comm )
+  CALL mp_bcast( minus_q      , meta_ionode_id, world_comm )
+  CALL mp_bcast( u            , meta_ionode_id, world_comm )
+  CALL mp_bcast( name_rap_mode, meta_ionode_id, world_comm )
+  CALL mp_bcast( num_rap_mode , meta_ionode_id, world_comm )
 
   RETURN
   END SUBROUTINE read_modes

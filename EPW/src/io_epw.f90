@@ -24,7 +24,7 @@
   PUBLIC :: lambda_phself, linewidth_phself, linewidth_elself, iospectral, &
             iua2ffil, iudosfil, iufillambda, iuqdos, iufe, iufilker, &
             iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS, &
-            iospectral_cum, iuwanep, iuwane, iunukk, iudvscf
+            iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, QPeig_read
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
             iufilfreq, iufilegnv, iufileph, iufilkqmap, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
@@ -35,6 +35,7 @@
   !
   ! Output of physically relevant quantities (60-100)
   !    
+  INTEGER :: QPeig_read      = 59  ! Reading qp eigenenergies from file  
   INTEGER :: lambda_phself   = 60  ! Lambda factor of the phonon self-energy
                                    ! [lambda.phself] 
   INTEGER :: linewidth_phself= 61  ! Imaginary part of the phonon self-energy

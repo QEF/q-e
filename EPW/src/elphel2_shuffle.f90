@@ -149,7 +149,7 @@
   ! SP: Bound for band parallelism
   CALL fkbounds_bnd( nbnd, lower_band, upper_band )
   !
-  IF ( .not. ALLOCATED (aux3) )    ALLOCATE ( aux3( npwx*npol, lower_band:upper_band) )
+  IF ( .not. ALLOCATED (aux3) )     ALLOCATE ( aux3( npwx*npol, lower_band:upper_band) )
   IF ( .not. ALLOCATED (dvpsi) )    ALLOCATE ( dvpsi( npwx*npol, lower_band:upper_band) )
   ! setup for k+q folding
   !

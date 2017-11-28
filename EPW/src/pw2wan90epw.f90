@@ -495,7 +495,12 @@ SUBROUTINE run_wannier
   USE mp_world,  ONLY : world_comm
   USE cell_base, ONLY : celldm
   USE io_files,  ONLY : prefix
-  USE wannierEPW
+  USE io_epw,    ONLY : QPeig_read
+  USE pwcom,     ONLY : nkstot
+  USE wannierEPW,ONLY : u_mat, lwindow, wann_centers, wann_spreads, eigval,  &
+                        n_wannier, spreads, nnb, rlatt, glatt, kpt_latt,     &
+                        iknum, seedname2, num_bands, u_mat_opt, atsym, a_mat,&
+                        atcart, m_mat, mp_grid
   USE epwcom,    ONLY : eig_read
   USE wvfct,     ONLY : nbnd
   USE constants_epw, ONLY : czero, bohr
@@ -504,6 +509,7 @@ SUBROUTINE run_wannier
   ! 
   integer             :: i, ik, ibnd, dummy1, dummy2, ios
   character (len=256) :: tempfile
+  character (len=80)  :: line
   !
   ALLOCATE(u_mat(n_wannier,n_wannier,iknum))
   ALLOCATE(u_mat_opt(num_bands,n_wannier,iknum))
@@ -514,38 +520,35 @@ SUBROUTINE run_wannier
   u_mat_opt = czero
   !
   IF (meta_ionode) THEN
-     ! read in external eigenvalues, e.g.  GW
-     IF (eig_read) then
-        WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading electronic eigenvalues (", &
-             nbnd, ",", iknum,")"
-        tempfile=trim(prefix)//'.eig'
-        OPEN(1, file=tempfile, form='formatted', action='read', iostat=ios)
-        IF (ios /= 0) CALL errore ('run_wannier','error opening' // tempfile, 1)
-        !
-        ! the form should be band, kpt, eigenvalue
-        !
-        DO ik = 1, iknum
-           DO ibnd = 1, nbnd
-              READ (1,*) dummy1, dummy2, eigval (ibnd,ik)
-              IF (dummy1.ne.ibnd) CALL errore('run_wannier', "Incorrect eigenvalue file", 1)
-              IF (dummy2.ne.ik) CALL errore('run_wannier', "Incorrect eigenvalue file", 1)
-           ENDDO
-        ENDDO
-        CLOSE(1)
-     ENDIF
-     !
+    ! read in external eigenvalues, e.g.  GW
+    IF (eig_read) then
+      WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
+           nbnd, ",", nkstot,")"
+      tempfile=trim(prefix)//'.eig'
+      OPEN(QPeig_read, file=tempfile, form='formatted', action='read', iostat=ios)
+      IF (ios /= 0) CALL errore ('run_wannier','error opening' // tempfile, 1)
+      READ (QPeig_read,'(a)') line
+      DO ik = 1, nkstot
+        ! We do not save the k-point for the moment ==> should be read and
+        ! tested against the current one  
+        READ (QPeig_read,'(a)') line
+        READ (QPeig_read,*) eigval (:,ik)
+      ENDDO
+      CLOSE(QPeig_read)
+    ENDIF
+
 ! SP : This file is not used for now. Only required to build the UNK file
 !      tempfile=trim(prefix)//'.mmn'
 !      OPEN(iummn, file=tempfile, iostat=ios, form='unformatted')
 !      WRITE(iummn) m_mat
 !      CLOSE(iummn)
 
-     CALL wannier_run(seedname2, mp_grid, iknum,   &                 ! input
-           rlatt, glatt, kpt_latt, num_bands,       &                 ! input
-           n_wannier, nnb, nat, atsym,              &                 ! input
-           atcart, .false., m_mat, a_mat, eigval,   &                 ! input
-           u_mat, u_mat_opt, lwindow, wann_centers, &                 ! output
-           wann_spreads, spreads)                                     ! output
+    CALL wannier_run(seedname2, mp_grid, iknum,   &                 ! input
+          rlatt, glatt, kpt_latt, num_bands,       &                 ! input
+          n_wannier, nnb, nat, atsym,              &                 ! input
+          atcart, .false., m_mat, a_mat, eigval,   &                 ! input
+          u_mat, u_mat_opt, lwindow, wann_centers, &                 ! output
+          wann_spreads, spreads)                                     ! output
 
   ENDIF
   !
