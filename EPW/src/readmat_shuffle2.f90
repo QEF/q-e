@@ -132,9 +132,6 @@
       END DO
     END IF
     !
-    IF (lpolar .and. .not. lrigid) CALL errore('readmat_shuffle2', &
-       &'You set lpolar = .true. but did not put epsil = true in the PH calculation at Gamma. ',1)
-    !
     IF (lrigid) THEN
       WRITE (6,'(8x,a)') 'Read dielectric tensor and effective charges'
       zstar = zstar_
@@ -183,6 +180,8 @@
       !
       IF ( abs(q(1,iq)).lt.eps .and. abs(q(2,iq)).lt.eps .and. abs(q(3,iq)).lt.eps ) THEN
         WRITE(6,'(8x,a)') 'Imposing acoustic sum rule on the dynamical matrix'
+        IF (lpolar .and. .not. lrigid) CALL errore('readmat_shuffle2', &
+          &'You set lpolar = .true. but did not put epsil = true in the PH calculation at Gamma. ',1)
       ENDIF
       DO na = 1,nat
        DO ipol = 1,3
