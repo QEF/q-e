@@ -214,6 +214,8 @@ module funct
   !              "tb09"   TB09 Meta-GGA                  imeta=3
   !              "+meta"  activate MGGA even without MGGA-XC   imeta=4
   !              "scan"   SCAN Meta-GGA                  imeta=5
+  !              "sca0"   SCAN0  Meta-GGA                imeta=6
+  !              "sc00"   SCAN00 Meta-GGA                imeta=7
   !
   ! Van der Waals functionals (nonlocal term only)
   !              "nonlc"  none                           inlc =0 (default)
@@ -322,7 +324,7 @@ module funct
   real(DP):: finite_size_cell_volume = notset
   logical :: discard_input_dft = .false.
   !
-  integer, parameter:: nxc=8, ncc=10, ngcx=40, ngcc=12, nmeta=5, ncnl=6
+  integer, parameter:: nxc=8, ncc=10, ngcx=40, ngcc=12, nmeta=7, ncnl=6
   character (len=4) :: exc, corr, gradx, gradc, meta, nonlocc
   dimension :: exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0:ngcc), &
                meta(0:nmeta), nonlocc (0:ncnl)
@@ -341,7 +343,7 @@ module funct
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'NONE',&
                'B3LP', 'PSC', 'PBE', 'xxxx', 'xxxx', 'Q2DC' / 
 
-  data meta  / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN' / 
+  data meta  / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN', 'SCA0', 'SC00' / 
 
   data nonlocc/'NONE', 'VDW1', 'VDW2', 'VV10', 'VDWX', 'VDWY', 'VDWZ' / 
 
@@ -575,9 +577,17 @@ CONTAINS
     else IF ('TB09'.EQ. TRIM(dftout) ) THEN
        dft_defined = set_dft_values(0,0,0,0,0,3)
  
-   ! special case : SCAN Meta GGA
+    ! special case : SCAN Meta GGA
     else if ( 'SCAN' .EQ. TRIM(dftout) ) THEN
        dft_defined = set_dft_values(0,0,0,0,0,5)
+
+     ! special case : SCAN0
+    else IF ('SCAN0'.EQ. TRIM(dftout ) ) THEN
+       dft_defined = set_dft_values(0,0,0,0,0,6)
+
+    ! special case : SCAN00
+    else IF ('SCAN00'.EQ. TRIM(dftout ) ) THEN
+       dft_defined = set_dft_values(0,0,0,0,0,7)
 
     ! special case : PZ/LDA + null meta-GGA
     else IF (('PZ+META'.EQ. TRIM(dftout)) .or. ('LDA+META'.EQ. TRIM(dftout)) ) THEN
@@ -1096,6 +1106,10 @@ CONTAINS
      end if
   else if (imeta == 5 ) then 
     shortname = 'SCAN'      
+  else if (imeta == 6 ) then 
+    shortname = 'SCAN0'      
+  else if (imeta == 7 ) then 
+    shortname = 'SCAN00'      
   end if
 
   if ( inlc==1 ) then
