@@ -1485,7 +1485,7 @@ subroutine SCANcxc(rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c)
   v2c = v2c*2.0_dp
 
 #else
-  call errore('SCAN meta-GGA','need LibXC v.3.0.1 or later)',1)
+  call errore('SCAN meta-GGA','need LibXC v.3.0.1 or later',1)
 #endif
 
 end subroutine SCANcxc
@@ -1505,7 +1505,7 @@ subroutine scanxc_spin( rhoup, rhodw, grhoup, grhodw, tauup, taudw, &
   !                       v3x= D(E_x)/D(tau)
   !
   USE kinds,            ONLY : DP
-#ifdef __LIBXC
+#if defined(__LIBXC)
   use xc_f90_types_m
   use xc_f90_lib_m
   implicit none  
@@ -1584,10 +1584,126 @@ subroutine scanxc_spin( rhoup, rhodw, grhoup, grhodw, tauup, taudw, &
   enddo
   !
 #else
-  !
-  call errore('SCAN meta-GGA','need LibXC v.3.0.1 or later)',1)
-  !
+  call errore('SCAN meta-GGA','need LibXC v.3.0.1 or later',1)
 #endif
   return  
   !
 end subroutine scanxc_spin
+
+subroutine scancxc_array(nnr, rho, grho, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
+  !-----------------------------------------------------------------------
+  !     SCAN metaGGA corrections for exchange and correlation - Hartree a.u.
+  !
+  !       input:  rho, grho=|\nabla rho|^2, tau = kinetic energy density
+  !               definition:  E_x = \int E_x(rho,grho) dr
+  !               output: sx = E_x(rho,grho)
+  !                       v1x= D(E_x)/D(rho)
+  !                       v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
+  !                       sc, v1c, v2c as above for correlation
+  !                       v3x= D(E_x)/D(tau)
+  !
+  USE kinds,            ONLY : DP
+#if defined(__LIBXC)
+  use xc_f90_types_m
+  use xc_f90_lib_m
+#endif
+  implicit none  
+  integer,  intent(in) :: nnr
+  real(dp), intent(in) :: rho(nnr), grho(nnr), tau(nnr)
+  real(dp), intent(out):: sx(nnr), sc(nnr), v1x(nnr), v2x(nnr), v3x(nnr)
+  real(dp), intent(out):: v1c(nnr), v2c(nnr), v3c(nnr)
+#if defined(__LIBXC)
+  !
+  TYPE(xc_f90_pointer_t) :: xc_func
+  TYPE(xc_f90_pointer_t) :: xc_info
+  integer :: func_id
+  real(dp) :: lapl_rho(nnr), vlapl_rho(nnr) ! not used in TPSS
+
+  lapl_rho = grho
+
+  ! exchange  
+  func_id = 263
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
+  call xc_f90_mgga_exc_vxc(xc_func, nnr, rho(1), grho(1), lapl_rho(1), tau(1),&
+       sx(1), v1x(1), v2x(1), vlapl_rho(1), v3x(1))  
+  call xc_f90_func_end(xc_func)
+
+  sx  = sx * rho
+  v2x = v2x * 2.D0 ! MCA/HK: for libxc compatibility
+
+  ! correlation
+  func_id = 267
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)   
+  call xc_f90_mgga_exc_vxc(xc_func, nnr, rho(1), grho(1), lapl_rho(1), tau(1),&
+    &                      sc(1), v1c(1), v2c(1), vlapl_rho(1), v3c(1))  
+  call xc_f90_func_end(xc_func)
+ 
+  sc  = sc * rho
+  v2c = v2c * 2.D0
+ 
+#else
+  call errore('SCAN meta-GGA','need LibXC v.3.0.1 or later',1)
+#endif
+  !
+  return  
+end subroutine scancxc_array
+
+subroutine scancxc_array_spin(nnr, rho, grho2, tau, sx, sc, v1x, v2x, v3x, v1c, v2c, v3c )
+  !-----------------------------------------------------------------------
+  !     SCAN metaGGA corrections for exchange and correlation - Hartree a.u.
+  !
+  !       input:  rho, grho=|\nabla rho|^2, tau = kinetic energy density
+  !               definition:  E_x = \int E_x(rho,grho) dr
+  !               output: sx = E_x(rho,grho)
+  !                       v1x= D(E_x)/D(rho)
+  !                       v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
+  !                       sc, v1c, v2c as above for correlation
+  !                       v3x= D(E_x)/D(tau)
+  !
+  USE kinds,            ONLY : DP
+#if defined(__LIBXC)
+  use xc_f90_types_m
+  use xc_f90_lib_m
+#endif
+  implicit none  
+  integer,  intent(in) :: nnr
+  real(dp), intent(in) :: rho(2,nnr), grho2(3,nnr), tau(2,nnr)
+  real(dp), intent(out):: sx(nnr), sc(nnr), v1x(2,nnr), v2x(3,nnr), v3x(2,nnr)
+  real(dp), intent(out):: v1c(2,nnr), v2c(3,nnr), v3c(2,nnr)
+#if defined(__LIBXC)
+  !
+  TYPE(xc_f90_pointer_t) :: xc_func
+  TYPE(xc_f90_pointer_t) :: xc_info
+  integer :: func_id
+  real(dp) :: lapl_rho(nnr,3,2), vlapl_rho(nnr,3,2) ! not used in SCAN
+
+  lapl_rho = 0.D0 ! not used in SCAN
+ 
+  ! exchange  
+  !
+  func_id = 263
+  !
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_POLARIZED)    
+  call xc_f90_mgga_exc_vxc(xc_func, nnr, rho(1,1), grho2(1,1), lapl_rho(1,1,1),&
+       tau(1,1), sx(1), v1x(1,1), v2x(1,1), vlapl_rho(1,1,1), v3x(1,1))  
+  call xc_f90_func_end(xc_func)
+  ! 
+  sx  = sx * ( rho(1,:) + rho(2,:) )
+  v2x = v2x * 2.D0 ! MCA/HK: for libxc compatibility 
+  !
+  ! correlation
+  func_id = 267
+  call xc_f90_func_init(xc_func, xc_info, func_id, XC_POLARIZED)   
+  call xc_f90_mgga_exc_vxc(xc_func, nnr, rho(1,1), grho2(1,1), lapl_rho(1,1,1),&
+       tau(1,1), sc(1), v1c(1,1), v2c(1,1), vlapl_rho(1,1,1), v3c(1,1))  
+  call xc_f90_func_end(xc_func)
+  !
+  sc  = sc * ( rho(1,:) + rho(2,:) )
+  v2c = v2c * 2.D0 ! MCA/HK: for libxc compatibility
+  !
+#else
+  call errore('SCAN meta-GGA','need LibXC v.3.0.1 or later',1)
+#endif
+  !
+  return  
+end subroutine scancxc_array_spin

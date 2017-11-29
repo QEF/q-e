@@ -235,7 +235,7 @@ CONTAINS
       TYPE ( parallel_info_type )           :: obj
       !
       INTEGER                               :: nthreads=1
-#ifdef  __OMP 
+#if defined(__OMP) 
       INTEGER,EXTERNAL                      :: omp_get_max
       !     
       nthreads = omp_get_max()

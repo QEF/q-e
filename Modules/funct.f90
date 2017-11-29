@@ -344,7 +344,7 @@ module funct
 
   data nonlocc/'NONE', 'VDW1', 'VDW2', 'VV10', 'VDWX', 'VDWY', 'VDWZ' / 
 
-#ifdef __LIBXC
+#if defined(__LIBXC)
   integer :: libxc_major=0, libxc_minor=0, libxc_micro=0
   public :: libxc_major, libxc_minor, libxc_micro, get_libxc_version
 #endif
@@ -3407,7 +3407,7 @@ subroutine evxc_t_vec(rho,rhoc,lsd,length,vxc,exc)
 end subroutine evxc_t_vec
 
 
-#ifdef __LIBXC
+#if defined(__LIBXC)
   subroutine get_libxc_version
      implicit none
      interface
