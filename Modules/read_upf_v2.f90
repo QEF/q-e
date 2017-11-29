@@ -36,7 +36,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    INTEGER,OPTIONAL,INTENT(OUT):: ierr      ! /= 0 if something went wrong
    INTEGER :: ierr_
    TYPE(DOMException)   :: ex 
-   TYPE(Node), POINTER  :: tmpNode
+   TYPE(Node), POINTER  :: auxNode
    LOGICAL :: found
    LOGICAL,EXTERNAL :: matches
    CHARACTER(len = 256)  :: root
@@ -93,8 +93,8 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    ! Read non-linear core correction charge
    ALLOCATE( upf%rho_atc(upf%mesh) )
    IF(upf%nlcc) THEN
-      tmpNode => item(getElementsByTagname(u, 'PP_NLCC'), 0)
-      CALL extractDataContent(tmpNode, upf%rho_atc)
+      auxNode => item(getElementsByTagname(u, 'PP_NLCC'), 0)
+      CALL extractDataContent(auxNode, upf%rho_atc)
    ELSE
       ! A null core charge simplifies several functions, mostly in PAW
       upf%rho_atc(1:upf%mesh) = 0._dp
@@ -102,8 +102,8 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    ! Read local potential
    IF(.not. upf%tcoulombp) THEN
       ALLOCATE( upf%vloc(upf%mesh) )
-      tmpNode => item( getElementsByTagname( u, 'PP_LOCAL'), 0)
-      CALL extractDataContent(tmpNode, upf%vloc)
+      auxNode => item( getElementsByTagname( u, 'PP_LOCAL'), 0)
+      CALL extractDataContent(auxNode, upf%vloc)
    ENDIF
    ! Read nonlocal components: projectors, augmentation, hamiltonian elements
    
@@ -118,8 +118,8 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
 
    ! Read valence atomic density (used for initial density)
    ALLOCATE( upf%rho_at(upf%mesh) )
-   tmpNode => item(getElementsByTagname(u, 'PP_RHOATOM'), 0) 
-   CALL extractDataContent(tmpNode, upf%rho_at)
+   auxNode => item(getElementsByTagname(u, 'PP_RHOATOM'), 0) 
+   CALL extractDataContent(auxNode, upf%rho_at)
 
    ! Read additional info for full-relativistic calculation
    CALL read_upf_spin_orb(u, upf)
@@ -306,7 +306,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       TYPE(radial_grid_type),OPTIONAL,INTENT(INOUT),TARGET :: grid
       !
       INTEGER                     :: ierr ! /= 0 if something went wrong
-      TYPE (Node),POINTER         :: mshNode, tmpNode
+      TYPE (Node),POINTER         :: mshNode, locNode
       !
       LOGICAL :: found
       !
@@ -349,11 +349,11 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
          ALLOCATE( upf%r( upf%mesh ), upf%rab( upf%mesh ) )
       ENDIF
       !
-      tmpNode => item( getElementsByTagname( mshNode, 'PP_R'), 0 ) 
-      CALL extractDataContent(tmpNode, upf%r(1:upf%mesh))  
+      locNode => item( getElementsByTagname( mshNode, 'PP_R'), 0 ) 
+      CALL extractDataContent(locNode, upf%r(1:upf%mesh))  
       !
-      tmpNode => item(getElementsByTagname( mshNode, 'PP_RAB'), 0)
-      CALL extractDataContent(tmpNode, upf%rab(1:upf%mesh)) 
+      locNode => item(getElementsByTagname( mshNode, 'PP_RAB'), 0)
+      CALL extractDataContent(locNode, upf%rab(1:upf%mesh)) 
       !
       IF (present(grid)) THEN
          ! Reconstruct additional grids
@@ -373,7 +373,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
       !
       !
-      TYPE (Node),POINTER     :: nlcNode, tmpNode,tmpNode1, tmpNode2, tmpNode3
+      TYPE (Node),POINTER     :: nlcNode, locNode,locNode1, locNode2, locNode3
       TYPE (nodeList),POINTER :: tmpList 
       INTEGER :: nb,mb,ln,lm,l,nmb,ierr=0
       !INTEGER :: nb_=-1,mb_=-1,l_=-1,nmb_=-1
@@ -422,34 +422,34 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
 
       !
       ! Read the projectors:
-      tmpNode2 => getFirstChild(nlcNode) 
+      locNode2 => getFirstChild(nlcNode) 
       nb = 0 
       DO 
-         IF (.NOT. ASSOCIATED( tmpNode2) )  EXIT
-         tmpNode => tmpNode2
-         tmpNode2 => getNextSibling(tmpNode) 
-         IF (getNodeType( tmpNode) .NE. ELEMENT_NODE ) CYCLE
-         IF ( INDEX(getTagName(tmpNode), 'PP_BETA') .LE. 0 ) CYCLE
+         IF (.NOT. ASSOCIATED( locNode2) )  EXIT
+         locNode => locNode2
+         locNode2 => getNextSibling(locNode) 
+         IF (getNodeType( locNode) .NE. ELEMENT_NODE ) CYCLE
+         IF ( INDEX(getTagName(locNode), 'PP_BETA') .LE. 0 ) CYCLE
          nb = nb + 1
-         CALL extractDataContent(tmpNode, upf%beta(:, nb)) 
-         IF ( hasAttribute( tmpNode, 'label') ) THEN 
-            CALL extractDataAttribute(tmpNode, 'label',                  upf%els_beta(nb))
+         CALL extractDataContent(locNode, upf%beta(:, nb)) 
+         IF ( hasAttribute( locNode, 'label') ) THEN 
+            CALL extractDataAttribute(locNode, 'label',                  upf%els_beta(nb))
          ELSE 
             upf%els_beta(nb) ='Xn'
          END IF
-         CALL extractDataAttribute(tmpNode, 'angular_momentum',       upf%lll(nb))
-         IF ( hasAttribute( tmpNode,'cutoff_radius_index' )) THEN 
-            CALL extractDataAttribute(tmpNode, 'cutoff_radius_index',    upf%kbeta(nb)) 
+         CALL extractDataAttribute(locNode, 'angular_momentum',       upf%lll(nb))
+         IF ( hasAttribute( locNode,'cutoff_radius_index' )) THEN 
+            CALL extractDataAttribute(locNode, 'cutoff_radius_index',    upf%kbeta(nb)) 
          ELSE    
            upf%kbeta = upf%mesh
          END IF 
-         IF ( hasAttribute( tmpNode,'cutoff_radius' )) THEN 
-            CALL extractDataAttribute(tmpNode, 'cutoff_radius',          upf%rcut(nb) ) 
+         IF ( hasAttribute( locNode,'cutoff_radius' )) THEN 
+            CALL extractDataAttribute(locNode, 'cutoff_radius',          upf%rcut(nb) ) 
          ELSE  
             upf%rcut(nb) = 0._dp
          END IF
-         IF ( hasAttribute( tmpNode,'ultrasoft_cutoff_radius' )) THEN
-            CALL extractDataAttribute(tmpNode, 'ultrasoft_cutoff_radius', upf%rcutus(nb)) 
+         IF ( hasAttribute( locNode,'ultrasoft_cutoff_radius' )) THEN
+            CALL extractDataAttribute(locNode, 'ultrasoft_cutoff_radius', upf%rcutus(nb)) 
          ELSE    
            upf%rcutus(nb)  = 0._dp
          END IF
@@ -458,8 +458,8 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
 !    To be able to read the old PPs we need the following
 !
          IF ( upf%rcutus(nb)==0._DP) THEN 
-            IF ( hasAttribute( tmpNode,'norm_conserving_radius' )) THEN
-               CALL extractDataAttribute(tmpNode,'norm_conserving_radius',upf%rcutus(nb))  
+            IF ( hasAttribute( locNode,'norm_conserving_radius' )) THEN
+               CALL extractDataAttribute(locNode,'norm_conserving_radius',upf%rcutus(nb))  
             ELSE
                upf%rcutus(nb)  = 0._dp
             END IF
@@ -467,51 +467,51 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       ENDDO 
       !
       ! Read the hamiltonian terms D_ij
-      tmpNode => item( getElementsByTagname(nlcNode, 'PP_DIJ'),0)    
-      CALL extractDataContent(tmpNode, upf%dion)
+      locNode => item( getElementsByTagname(nlcNode, 'PP_DIJ'),0)    
+      CALL extractDataContent(locNode, upf%dion)
       !   CALL iotk_scan_attr(attr, 'non_zero_elements', upf%nd)
       !
       ! Read the augmentation charge section
       augmentation : &
       IF(upf%tvanp .or. upf%tpawp) THEN
       !
-      tmpNode => item(getElementsByTagname(nlcNode, 'PP_AUGMENTATION'),0) 
-         CALL extractDataAttribute(tmpNode, 'q_with_l', upf%q_with_l, IOSTAT = ios )
+      locNode => item(getElementsByTagname(nlcNode, 'PP_AUGMENTATION'),0) 
+         CALL extractDataAttribute(locNode, 'q_with_l', upf%q_with_l, IOSTAT = ios )
          IF ( ios /= 0) THEN 
-            CALL extractDataAttribute(tmpNode, 'q_with_l', attr )
+            CALL extractDataAttribute(locNode, 'q_with_l', attr )
             upf%q_with_l = ( INDEX ( attr, 'T') > 0)
          END IF
-         CALL extractDataAttribute(tmpNode, 'nqf',      upf%nqf)
-         IF (hasAttribute(tmpNode, 'nqlc') ) THEN 
-            CALL extractDataAttribute(tmpNode, 'nqlc',     upf%nqlc) 
+         CALL extractDataAttribute(locNode, 'nqf',      upf%nqf)
+         IF (hasAttribute(locNode, 'nqlc') ) THEN 
+            CALL extractDataAttribute(locNode, 'nqlc',     upf%nqlc) 
          ELSE  
             upf%nqlc =2*upf%lmax+1
          END IF
          IF (upf%tpawp) THEN
-            IF (hasAttribute(tmpNode, 'shape') ) THEN 
-               CALL extractDataAttribute(tmpNode,'shape',          upf%paw%augshape) 
+            IF (hasAttribute(locNode, 'shape') ) THEN 
+               CALL extractDataAttribute(locNode,'shape',          upf%paw%augshape) 
             ELSE 
                upf%paw%augshape ='UNKNOWN'
             END IF
-            IF (hasAttribute(tmpNode, 'cutoff_r') ) THEN
-               CALL extractDataAttribute(tmpNode,'cutoff_r',       upf%paw%raug ) 
+            IF (hasAttribute(locNode, 'cutoff_r') ) THEN
+               CALL extractDataAttribute(locNode,'cutoff_r',       upf%paw%raug ) 
             ELSE 
                upf%paw%raug = 0._dp
             END IF
-            IF (hasAttribute(tmpNode, 'cutoff_r_index') ) THEN
-               CALL extractDataAttribute(tmpNode,'cutoff_r_index', upf%paw%iraug)  
+            IF (hasAttribute(locNode, 'cutoff_r_index') ) THEN
+               CALL extractDataAttribute(locNode,'cutoff_r_index', upf%paw%iraug)  
             ELSE 
               upf%paw%iraug =upf%mesh 
             END IF
-            IF (hasAttribute(tmpNode, 'l_max_aug') ) THEN
-               CALL extractDataAttribute(tmpNode,'l_max_aug',      upf%paw%lmax_aug) 
+            IF (hasAttribute(locNode, 'l_max_aug') ) THEN
+               CALL extractDataAttribute(locNode,'l_max_aug',      upf%paw%lmax_aug) 
             ELSE 
               upf%paw%lmax_aug   =upf%lmax_rho
             END IF
          ENDIF
          ! a negative number means that all qfunc are stored
-         IF (hasAttribute(tmpNode,   'augmentation_epsilon'  ) ) THEN
-            CALL extractDataAttribute(tmpNode,'augmentation_epsilon',upf%qqq_eps) 
+         IF (hasAttribute(locNode,   'augmentation_epsilon'  ) ) THEN
+            CALL extractDataAttribute(locNode,'augmentation_epsilon',upf%qqq_eps) 
          ELSE 
             upf%qqq_eps = -1._dp
          END IF
@@ -526,15 +526,15 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       ENDIF
       !
       ! Read the integrals of the Q functions
-      tmpNode2 => item( getElementsByTagname( tmpNode, 'PP_Q'), 0) 
-      CALL extractDataContent(tmpNode2, upf%qqq )
+      locNode2 => item( getElementsByTagname( locNode, 'PP_Q'), 0) 
+      CALL extractDataContent(locNode2, upf%qqq )
       !
       ! read charge multipoles (only if PAW)
       IF( upf%tpawp ) THEN   
          ALLOCATE(upf%paw%augmom(upf%nbeta,upf%nbeta, 0:2*upf%lmax))
          ALLOCATE( tmp_dbuffer(upf%nbeta*upf%nbeta*(2*upf%lmax+1)) )
-         tmpNode2 => item( getElementsByTagname(tmpNode,'PP_MULTIPOLES'), 0)
-         CALL extractDataContent(tmpNode2, tmp_dbuffer)
+         locNode2 => item( getElementsByTagname(locNode,'PP_MULTIPOLES'), 0)
+         CALL extractDataContent(locNode2, tmp_dbuffer)
          upf%paw%augmom=reshape(tmp_dbuffer, [upf%nbeta,upf%nbeta,2*upf%lmax+1])
          DEALLOCATE (tmp_dbuffer)
       ENDIF
@@ -547,38 +547,38 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       ELSE
          ALLOCATE( upf%qfcoef( MAX( upf%nqf,1 ), upf%nqlc, upf%nbeta, upf%nbeta ) )
          ALLOCATE(tmp_dbuffer(MAX( upf%nqf,1 )*upf%nqlc*upf%nbeta*upf%nbeta))
-         tmpNode2=> item(getElementsByTagname(tmpNode, 'PP_QFCOEFF'),0) 
-         CALL extractDataContent(tmpNode2, tmp_dbuffer)
+         locNode2=> item(getElementsByTagname(locNode, 'PP_QFCOEFF'),0) 
+         CALL extractDataContent(locNode2, tmp_dbuffer)
          upf%qfcoef = reshape(tmp_dbuffer,[size(upf%qfcoef,1),size(upf%qfcoef,2),&
                                            size(upf%qfcoef,3),size(upf%qfcoef,4)])
          DEALLOCATE(tmp_dbuffer)
-         tmpNode2 => item(getElementsByTagname(tmpNode, 'PP_RINNER'),0)
-         CALL extractDataContent(tmpNode2, upf%rinner)
+         locNode2 => item(getElementsByTagname(locNode, 'PP_RINNER'),0)
+         CALL extractDataContent(locNode2, upf%rinner)
       ENDIF
       !
       ! Read augmentation charge Q_ij
       ultrasoft_or_paw : &
       IF( upf%tvanp) THEN
-         tmpNode3 => getFirstChild(tmpNode)
+         locNode3 => getFirstChild(locNode)
          IF (upf%q_with_l) THEN 
             upf%qfuncl = 0._dp
          ELSE 
             upf%qfunc = 0._dp
          END IF
          search_for_qij: DO 
-           IF ( .NOT. ASSOCIATED(tmpNode3) ) EXIT search_for_qij
-           tmpNode2 => tmpNode3
-           tmpNode3 => getNextSibling(tmpNode2)
-           IF (getNodeType(tmpNode2) .NE. ELEMENT_NODE) CYCLE search_for_qij
+           IF ( .NOT. ASSOCIATED(locNode3) ) EXIT search_for_qij
+           locNode2 => locNode3
+           locNode3 => getNextSibling(locNode2)
+           IF (getNodeType(locNode2) .NE. ELEMENT_NODE) CYCLE search_for_qij
            !
-           IF ( INDEX( getTagName(tmpNode2), 'PP_QIJ') .LE. 0) CYCLE search_for_qij
-           CALL extractDataAttribute(tmpNode2, 'composite_index', nmb)
+           IF ( INDEX( getTagName(locNode2), 'PP_QIJ') .LE. 0) CYCLE search_for_qij
+           CALL extractDataAttribute(locNode2, 'composite_index', nmb)
            IF (upf%q_with_l) THEN 
-              CALL extractDataAttribute(tmpNode2, 'angular_momentum', l)
-              CALL extractDataContent( tmpNode2, upf%qfuncl(:, nmb,l))
+              CALL extractDataAttribute(locNode2, 'angular_momentum', l)
+              CALL extractDataContent( locNode2, upf%qfuncl(:, nmb,l))
               IF (upf%tpawp) upf%qfuncl(upf%paw%iraug+1:,nmb,l) = 0._DP
            ELSE
-              CALL extractDataContent ( tmpNode2, upf%qfunc(:,nmb))
+              CALL extractDataContent ( locNode2, upf%qfunc(:,nmb))
            END IF
          END DO search_for_qij     
       !
@@ -604,7 +604,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       !
       !
       INTEGER :: nw
-      TYPE(Node),POINTER                :: pswfcNode, tmpNode, tmpNode2
+      TYPE(Node),POINTER                :: pswfcNode, locNode, locNode2
       !
       pswfcNode  => item(getElementsByTagname(u, 'PP_PSWFC'), 0) 
       !
@@ -618,47 +618,47 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
                 upf%epseu(upf%nwfc) &
               )
       !
-      tmpNode2 => getFirstChild ( pswfcNode ) 
+      locNode2 => getFirstChild ( pswfcNode ) 
       nw = 0 
       DO  
-         IF (.NOT. ASSOCIATED( tmpNode2) ) EXIT
-         tmpNode => tmpNode2 
-         tmpNode2 => getNextSibling(tmpNode) 
-         IF (getNodeType(tmpNode) .NE. ELEMENT_NODE ) CYCLE 
-         IF ( INDEX ( getTagName(tmpNode),'PP_CHI') .LE. 0 ) CYCLE
+         IF (.NOT. ASSOCIATED( locNode2) ) EXIT
+         locNode => locNode2 
+         locNode2 => getNextSibling(locNode) 
+         IF (getNodeType(locNode) .NE. ELEMENT_NODE ) CYCLE 
+         IF ( INDEX ( getTagName(locNode),'PP_CHI') .LE. 0 ) CYCLE
          nw = nw + 1 
          IF ( nw .GT. upf%nwfc ) THEN 
             CALL infomsg('pseudo '//trim(upf%psd), "too many chi found in pswfc" ) 
             EXIT
          END IF
-         IF ( hasAttribute (tmpNode, 'label')) THEN 
-            CALL extractDataAttribute(tmpNode, 'label', upf%els(nw) )
+         IF ( hasAttribute (locNode, 'label')) THEN 
+            CALL extractDataAttribute(locNode, 'label', upf%els(nw) )
          ELSE 
             upf%els(nw) = 'Xn'
          END IF 
-         CALL extractDataAttribute(tmpNode, 'l', upf%lchi(nw)) 
-         CALL extractDataAttribute(tmpNode, 'occupation',    upf%oc(nw))
-         IF ( hasAttribute(tmpNode, 'n')) THEN 
-            CALL extractDataAttribute(tmpNode, 'n',             upf%nchi(nw)) 
+         CALL extractDataAttribute(locNode, 'l', upf%lchi(nw)) 
+         CALL extractDataAttribute(locNode, 'occupation',    upf%oc(nw))
+         IF ( hasAttribute(locNode, 'n')) THEN 
+            CALL extractDataAttribute(locNode, 'n',             upf%nchi(nw)) 
          ELSE 
              upf%nchi = upf%lchi(nw)-1 
          END IF
-         IF ( hasAttribute(tmpNode, 'pseudo_energy') ) THEN 
-            CALL extractDataAttribute(tmpNode, 'pseudo_energy', upf%epseu(nw) ) 
+         IF ( hasAttribute(locNode, 'pseudo_energy') ) THEN 
+            CALL extractDataAttribute(locNode, 'pseudo_energy', upf%epseu(nw) ) 
          ELSE 
             upf%epseu(nw) = 0._dp
          END IF
-         IF ( hasAttribute( tmpNode,'cutoff_radius') ) THEN 
-            CALL extractDataAttribute(tmpNode, 'cutoff_radius', upf%rcut_chi(nw) ) 
+         IF ( hasAttribute( locNode,'cutoff_radius') ) THEN 
+            CALL extractDataAttribute(locNode, 'cutoff_radius', upf%rcut_chi(nw) ) 
          ELSE 
             upf%rcut_chi(nw) =0._dp 
          END IF
-         IF ( hasAttribute(tmpNode, 'ultrasoft_cutoff_radius') ) THEN 
-            CALL extractDataAttribute(tmpNode, 'ultrasoft_cutoff_radius', upf%rcutus_chi(nw)) 
+         IF ( hasAttribute(locNode, 'ultrasoft_cutoff_radius') ) THEN 
+            CALL extractDataAttribute(locNode, 'ultrasoft_cutoff_radius', upf%rcutus_chi(nw)) 
          ELSE 
            upf%rcutus_chi(nw) =0._dp 
          END IF 
-         CALL extractDataContent(tmpNode, upf%chi(:,nw) )
+         CALL extractDataContent(locNode, upf%chi(:,nw) )
       ENDDO
       !
       RETURN
@@ -673,7 +673,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       LOGICAL :: exst
       !
       INTEGER :: nbae, nbae_rel, nbps
-      TYPE(Node),POINTER       :: fllwfNode, tmpNode, tmpNode2
+      TYPE(Node),POINTER       :: fllwfNode, locNode, locNode2
       !
       IF(.not. upf%has_wfc) RETURN
       !
@@ -685,33 +685,33 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
         ALLOCATE( upf%paw%aewfc_rel(upf%mesh, upf%nbeta) )
         upf%paw%aewfc_rel = 0._dp
       END IF 
-      tmpNode2 => getFirstChild(fllwfNode) 
+      locNode2 => getFirstChild(fllwfNode) 
       nbae=0 
       nbae_rel = 0 
       nbps = 0 
       DO 
-         IF ( .NOT. ASSOCIATED ( tmpNode2) ) EXIT 
-         tmpNode => tmpNode2
-         tmpNode2=> getNextSibling(tmpNode) 
-         IF (getNodeType(tmpNode)  .NE. ELEMENT_NODE) CYCLE 
-         IF (INDEX(getTagName(tmpNode), 'PP_AEWFC_REL') .GT. 0 ) THEN 
+         IF ( .NOT. ASSOCIATED ( locNode2) ) EXIT 
+         locNode => locNode2
+         locNode2=> getNextSibling(locNode) 
+         IF (getNodeType(locNode)  .NE. ELEMENT_NODE) CYCLE 
+         IF (INDEX(getTagName(locNode), 'PP_AEWFC_REL') .GT. 0 ) THEN 
             nbae_rel = nbae_rel+1
             IF (nbae_rel .GT. upf%nbeta ) THEN 
                CYCLE
             ELSE
-              CALL extractDataContent(tmpNode, upf%paw%aewfc_rel(:,nbae_rel)) 
+              CALL extractDataContent(locNode, upf%paw%aewfc_rel(:,nbae_rel)) 
             END IF 
-         ELSE IF (INDEX(getTagName(tmpNode),'PP_AEWFC') .GT. 0) THEN 
+         ELSE IF (INDEX(getTagName(locNode),'PP_AEWFC') .GT. 0) THEN 
             nbae  = nbae +1 
             IF (nbae .GT. upf%nbeta) THEN 
                CYCLE
             ELSE 
-               CALL extractDataContent(tmpNode, upf%aewfc(:,nbae)) 
+               CALL extractDataContent(locNode, upf%aewfc(:,nbae)) 
             END IF 
-         ELSE IF (INDEX(getTagName(tmpNode), 'PP_PSWFC') .GT. 0) THEN 
+         ELSE IF (INDEX(getTagName(locNode), 'PP_PSWFC') .GT. 0) THEN 
             nbps = nbps + 1 
             IF ( nbps .LE. upf%nbeta ) THEN 
-               CALL extractDataContent(tmpNode, upf%pswfc(:, nbps) )
+               CALL extractDataContent(locNode, upf%pswfc(:, nbps) )
             END IF 
          END IF 
       ENDDO
@@ -727,7 +727,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       !
       !
       INTEGER :: nw, nb
-      TYPE(Node), POINTER  :: soNode, tmpNode, tmpNode2
+      TYPE(Node), POINTER  :: soNode, locNode, locNode2
       !
       IF (.not. upf%has_so) RETURN
       !
@@ -738,28 +738,28 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       !
       ALLOCATE(upf%jjj(upf%nbeta))
       !
-      tmpNode2=> getFirstChild(soNode)
+      locNode2=> getFirstChild(soNode)
       nw = 0 
       nb = 0
       DO 
-        IF (.NOT. ASSOCIATED(tmpNode2)) EXIT
-           tmpNode => tmpNode2
-           tmpNode2 => getNextSibling(tmpNode) 
-           IF ( getNodeType(tmpNode) .NE. ELEMENT_NODE ) CYCLE
-           select_tag: IF ( INDEX(getTagName(tmpNode),'PP_RELWFC') .GT. 0) THEN 
+        IF (.NOT. ASSOCIATED(locNode2)) EXIT
+           locNode => locNode2
+           locNode2 => getNextSibling(locNode) 
+           IF ( getNodeType(locNode) .NE. ELEMENT_NODE ) CYCLE
+           select_tag: IF ( INDEX(getTagName(locNode),'PP_RELWFC') .GT. 0) THEN 
               nw = nw + 1 
               IF (nw .LE. upf%nwfc ) THEN 
-                 CALL extractDataAttribute (tmpNode, 'nn', upf%nn(nw))   
-                 CALL extractDataAttribute (tmpNode, 'jchi',  upf%jchi(nw))
+                 CALL extractDataAttribute (locNode, 'nn', upf%nn(nw))   
+                 CALL extractDataAttribute (locNode, 'jchi',  upf%jchi(nw))
                  !extraxtDataAttribute(attr, 'els',   upf%els(nw))  ! already read 
                  !extraxtDataAttribute(attr, 'lchi',  upf%lchi(nw)) ! already read
                  !extraxtDataAttribute(attr, 'oc',    upf%oc(nw))   ! already read
               END IF
-           ELSE IF (INDEX(getTagName(tmpNode),'PP_RELBETA') .GT. 0) THEN
+           ELSE IF (INDEX(getTagName(locNode),'PP_RELBETA') .GT. 0) THEN
               nb = nb + 1 
               IF (nb .LE. upf%nbeta ) THEN 
-                 CALL extractDataAttribute(tmpNode, 'lll',   upf%lll(nb))
-                 CALL extractDataAttribute(tmpNode, 'jjj',   upf%jjj(nb))
+                 CALL extractDataAttribute(locNode, 'lll',   upf%lll(nb))
+                 CALL extractDataAttribute(locNode, 'jjj',   upf%jjj(nb))
               END IF 
            END IF select_tag
       ENDDO
@@ -773,7 +773,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       TYPE(pseudo_upf),INTENT(INOUT)  :: upf  ! the pseudo data
       INTEGER :: ierr ! /= 0 if something went wrong
       !
-      TYPE(Node), POINTER      :: pawNode, tmpNode
+      TYPE(Node), POINTER      :: pawNode, locNode
       INTEGER :: nb,nb1
 
       IF (.not. upf%tpawp ) RETURN
@@ -791,20 +791,20 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       !
       ! Full occupation (not only > 0 ones)
       ALLOCATE( upf%paw%oc(upf%nbeta) )
-      tmpNode => item(getElementsByTagname(pawNode, 'PP_OCCUPATIONS'), 0)
-      CALL  extractDataContent(tmpNode, upf%paw%oc)
+      locNode => item(getElementsByTagname(pawNode, 'PP_OCCUPATIONS'), 0)
+      CALL  extractDataContent(locNode, upf%paw%oc)
       
       !
       ! All-electron core charge
       ALLOCATE( upf%paw%ae_rho_atc(upf%mesh) )
-      tmpNode => item(getElementsByTagname(pawNode, 'PP_AE_NLCC'), 0)
-      CALL extractDataContent(tmpNode, upf%paw%ae_rho_atc)
+      locNode => item(getElementsByTagname(pawNode, 'PP_AE_NLCC'), 0)
+      CALL extractDataContent(locNode, upf%paw%ae_rho_atc)
       
       !
       ! All-electron local potential
       ALLOCATE( upf%paw%ae_vloc(upf%mesh) )
-      tmpNode => item(getElementsByTagname( pawNode, 'PP_AE_VLOC'), 0)
-      CALL extractDataContent(tmpNode, upf%paw%ae_vloc)
+      locNode => item(getElementsByTagname( pawNode, 'PP_AE_VLOC'), 0)
+      CALL extractDataContent(locNode, upf%paw%ae_vloc)
 
       !
       ALLOCATE(upf%paw%pfunc(upf%mesh, upf%nbeta,upf%nbeta) )
@@ -861,8 +861,8 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       INTEGER :: ierr ! /= 0 if something went wrong
       !
       INTEGER :: nb
-      TYPE(Node), POINTER   :: gpawNode, tmpNode, tmpNode2
-      TYPE(NodeList), POINTER  :: tmpList
+      TYPE(Node), POINTER   :: gpawNode, locNode, locNode2, locNode3, locNode4
+      TYPE(NodeList), POINTER  :: locList
       IF (.not. upf%has_gipaw ) RETURN
       !
       gpawNode => item(getElementsByTagname(u, 'PP_GIPAW'), 0)
@@ -870,21 +870,28 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       IF(upf%gipaw_data_format /= 2) &
          CALL infomsg('read_upf_v2::gipaw','Unknown format version')
       !
-      tmpNode => item(getElementsByTagname(gpawNode, 'PP_GIPAW_ORBITALS'), 0) 
-         CALL extractDataAttribute(tmpNode, 'number_of_core_orbitals', upf%gipaw_ncore_orbitals)
+      locNode => item(getElementsByTagname(gpawNode, 'PP_GIPAW_CORE_ORBITALS'), 0) 
+         CALL extractDataAttribute(locNode, 'number_of_core_orbitals', upf%gipaw_ncore_orbitals)
       ALLOCATE ( upf%gipaw_core_orbital_n(upf%gipaw_ncore_orbitals) )
       ALLOCATE ( upf%gipaw_core_orbital_el(upf%gipaw_ncore_orbitals) )
       ALLOCATE ( upf%gipaw_core_orbital_l(upf%gipaw_ncore_orbitals) )
       ALLOCATE ( upf%gipaw_core_orbital(upf%mesh,upf%gipaw_ncore_orbitals) )
-      tmpList => getChildNodes(tmpNode)
-      DO nb = 1,upf%gipaw_ncore_orbitals
-         tmpNode => item(tmpList, nb -1)  
-         CALL extractDataContent(tmpNode, upf%gipaw_core_orbital(:,nb) )
-         CALL extractDataAttribute(tmpNode, 'label', upf%gipaw_core_orbital_el(nb))
-         CALL extractDataAttribute(tmpNode, 'n',     upf%gipaw_core_orbital_n(nb))
-         CALL extractDataAttribute(tmpNode, 'l',     upf%gipaw_core_orbital_l(nb))
+      locNode2  => getFirstChild( locNode )  
+      nb = 0 
+      DO 
+        IF ( .NOT. ASSOCIATED(locNode2) ) EXIT
+        IF ( getNodeType( locNode2 )  == ELEMENT_NODE ) THEN 
+           IF ( INDEX(getTagName(locNode2), 'PP_GIPAW_CORE_ORBITAL' ) > 0) THEN 
+              nb = nb + 1 
+              CALL extractDataContent(locNode2, upf%gipaw_core_orbital(:,nb) )
+              CALL extractDataAttribute(locNode2, 'label', upf%gipaw_core_orbital_el(nb))
+              CALL extractDataAttribute(locNode2, 'n',     upf%gipaw_core_orbital_n(nb))
+              CALL extractDataAttribute(locNode2, 'l',     upf%gipaw_core_orbital_l(nb))
+           END IF 
+        END IF 
+        locNode3 => locNode2 
+        locNode2 => getNextSibling(locNode3) 
       ENDDO
-
       !
       ! Read valence all-electron and pseudo orbitals and their labels
       !
@@ -936,44 +943,55 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
             upf%gipaw_wfs_rcutus(nb)=1.0d0
          ENDDO
       ELSE
-         tmpNode => item(getElementsByTagname(gpawNode, 'PP_GIPAW_ORBITALS'), 0)
-         CALL extractDataAttribute(tmpNode, 'number_of_valence_orbitals', upf%gipaw_wfs_nchannels)
+         locNode => item(getElementsByTagname(gpawNode, 'PP_GIPAW_ORBITALS'), 0)
+         CALL extractDataAttribute(locNode, 'number_of_valence_orbitals', upf%gipaw_wfs_nchannels)
+
          ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
          ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )
          ALLOCATE ( upf%gipaw_wfs_rcut(upf%gipaw_wfs_nchannels) )
          ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
          ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
          ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
-         tmpList = getChildNodes(tmpNode) 
-         DO nb = 1,upf%gipaw_wfs_nchannels
-            tmpNode => item(tmpList, nb -1) 
-               CALL extractDataAttribute(tmpNode, 'label', upf%gipaw_wfs_el(nb))
-               CALL extractDataAttribute(tmpNode, 'l',     upf%gipaw_wfs_ll(nb))
-               CALL extractDataAttribute(tmpNode, 'cutoff_radius',           upf%gipaw_wfs_rcut(nb))
-               IF (hasAttribute(tmpNode, 'ultrasoft_cutoff_radius') ) THEN
-                  CALL extractDataAttribute(tmpNode, 'ultrasoft_cutoff_radius', upf%gipaw_wfs_rcutus(nb) )
-               ELSE
-                  upf%gipaw_wfs_rcutus(nb) = upf%gipaw_wfs_rcut(nb) 
-               END IF
-               ! read all-electron orbital
-               tmpNode2 => item( getElementsByTagname(tmpNode, 'PP_GIPAW_WFS_AE'), 0)
-                  CALL extractDataContent(tmpNode2, upf%gipaw_wfs_ae(:,nb))
-               ! read pseudo orbital
-               tmpNode2 => item( getElementsByTagname( tmpNode, 'PP_GIPAW_WFS_PS'), 0)
-                  CALL extractDataContent(tmpNode2, upf%gipaw_wfs_ps(:,nb))
+
+         locNode2 => getFirstChild(locNode) 
+         nb = 0  
+         DO 
+            IF (.NOT. ASSOCIATED( locNode2 ))  EXIT
+            !
+            IF ( getNodeType( locNode2 ) == ELEMENT_NODE)  THEN 
+               IF ( index( getTagName( locNode2 ), "PP_GIPAW_ORBITAL." )> 0) THEN  
+                  nb = nb + 1 
+                  CALL extractDataAttribute(locNode2, 'label', upf%gipaw_wfs_el(nb))
+                  CALL extractDataAttribute(locNode2, 'l',     upf%gipaw_wfs_ll(nb))
+                  CALL extractDataAttribute(locNode2, 'cutoff_radius',           upf%gipaw_wfs_rcut(nb))
+                  IF (hasAttribute(locNode, 'ultrasoft_cutoff_radius') ) THEN
+                     CALL extractDataAttribute(locNode, 'ultrasoft_cutoff_radius', upf%gipaw_wfs_rcutus(nb) )
+                  ELSE
+                     upf%gipaw_wfs_rcutus(nb) = upf%gipaw_wfs_rcut(nb) 
+                  END IF
+                  ! read all-electron orbital
+                  locNode4 => item( getElementsByTagname(locNode2, 'PP_GIPAW_WFS_AE'), 0)
+                  CALL extractDataContent(locNode4, upf%gipaw_wfs_ae(:,nb))
+                  ! read pseudo orbital
+                  locNode4 => item( getElementsByTagname( locNode2, 'PP_GIPAW_WFS_PS'), 0)
+                  CALL extractDataContent(locNode4, upf%gipaw_wfs_ps(:,nb))
+               END IF 
+           END IF 
+           locNode3 => locNode2 
+           locNode2 => getNextSibling(locNode3) 
          !
          ENDDO
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Read all-electron and pseudo local potentials
          ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
          ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
-         tmpNode => item(getElementsByTagname( gpawNode, 'PP_GIPAW_VLOCAL'), 0)
+         locNode => item(getElementsByTagname( gpawNode, 'PP_GIPAW_VLOCAL'), 0)
            !
-           tmpNode2 => item(getElementsBytagname( tmpNode, 'PP_GIPAW_VLOCAL_AE'), 0)
-              CALL extractDataContent (tmpNode2, upf%gipaw_vlocal_ae(:)) 
+           locNode2 => item(getElementsBytagname( locNode, 'PP_GIPAW_VLOCAL_AE'), 0)
+              CALL extractDataContent (locNode2, upf%gipaw_vlocal_ae(:)) 
            !
-           tmpNode2 => item(getElementsByTagname( tmpNode, 'PP_GIPAW_VLOCAL_PS'), 0)
-              CALL extractDataContent(tmpNode2, upf%gipaw_vlocal_ps(:))
+           locNode2 => item(getElementsByTagname( locNode, 'PP_GIPAW_VLOCAL_PS'), 0)
+              CALL extractDataContent(locNode2, upf%gipaw_vlocal_ps(:))
       ENDIF
       RETURN
    END SUBROUTINE read_upf_gipaw
