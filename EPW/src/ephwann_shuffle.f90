@@ -41,10 +41,10 @@
                             plselfen, specfun_pl
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero, twopi, ci, zero
-  USE io_files,      ONLY : prefix, diropn
+  USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
-                            iunepmatwp, crystal
+                            iunepmatwp, crystal, iunepmatwp2
   USE elph2,         ONLY : nrr_k, nrr_q, cu, cuq, lwin, lwinq, irvec, ndegen_k,&
                             ndegen_q, wslen, chw, chw_ks, cvmew, cdmew, rdw,    &
                             epmatwp, epmatq, wf, etf, etf_k, etf_ks, xqf, xkf,  &
@@ -58,7 +58,8 @@
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : inter_pool_comm, intra_pool_comm, root_pool
-  USE mp_world,      ONLY : mpime
+  USE mp_world,      ONLY : mpime, world_comm
+  USE parallel_include, ONLY: MPI_MODE_RDONLY, MPI_INFO_NULL
   !
   implicit none
   !
@@ -131,6 +132,8 @@
   !! Number of real-space Wigner-Seitz
   INTEGER :: valueRSS(2)
   !! Return virtual and resisdent memory from system
+  INTEGER :: ierr
+  !! Error status
   INTEGER, PARAMETER :: nrwsx=200
   !! Maximum number of real-space Wigner-Seitz
   !  
@@ -693,6 +696,18 @@
     CALL wsinit(rws,nrwsx,nrws,atws)
   ENDIF
   !
+  ! Open the ephmatwp file here
+#if defined(__MPI)
+  IF (etf_mem == 1) then
+    ! Check for directory given by "outdir"
+    !      
+    filint = trim(tmp_dir)//trim(prefix)//'.epmatwp1'
+    CALL MPI_FILE_OPEN(world_comm,filint,MPI_MODE_RDONLY,MPI_INFO_NULL,iunepmatwp2,ierr)
+    IF( ierr /= 0 ) CALL errore( 'ephwann_shuffle', 'error in MPI_FILE_OPEN',1 )
+    IF( parallel_q ) CALL errore( 'ephwann_shuffle', 'q-parallel+etf_mem = 1 is not supported',1 )
+  ENDIF
+#endif
+  !
   IF (parallel_k) THEN
     !
     ! get the size of the matrix elements stored in each pool
@@ -1201,6 +1216,14 @@
     ENDDO  ! end loop over k points
     ! 
   ENDIF ! end parallel_q
+  !
+  !  Close th epmatwp file
+#if defined(__MPI)
+  IF (etf_mem == 1) then
+    CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)
+    IF( ierr /= 0 ) CALL errore( 'ephwann_shuffle', 'error in MPI_FILE_CLOSE',1 )
+  ENDIF
+#endif 
   ! 
   ! Check Memory usage
   CALL system_mem_usage(valueRSS)

@@ -28,7 +28,7 @@
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
             iufilfreq, iufilegnv, iufileph, iufilkqmap, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
-            iufileig, iukmap, crystal, iunifc, iunimem
+            iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2
   PUBLIC :: iuwinfil, iun_plot, iuukk, iuprojfil !, iummn
   PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,&
             iufilFi_all, iufilsigma_all, iufiltau_all
@@ -100,6 +100,7 @@
   INTEGER :: iunimem         = 123  ! Unit for reading memory information from the system status file
   INTEGER :: epwdata         = 124  ! EPW data [epwdata.fmt] 
   INTEGER :: iundmedata      = 125  ! Dipole matrix in wannier basis [dmedata.fmt]
+  INTEGER :: iunepmatwp2     = 126  ! Opening the epmatwp file
 
   !
   ! Output quantites related to Wannier (201-250)
