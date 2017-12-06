@@ -695,7 +695,7 @@
       !
       READ(iunifc,'(3i4)') ntyp_ , nat_ , ibrav_
       IF (ibrav_ .eq. 0) then
-         DO i = 1,4
+         DO i = 1,3
             read (iunifc, * ) line
          ENDDO
       ENDIF
