@@ -215,7 +215,6 @@ module funct
   !              "+meta"  activate MGGA even without MGGA-XC   imeta=4
   !              "scan"   SCAN Meta-GGA                  imeta=5
   !              "sca0"   SCAN0  Meta-GGA                imeta=6
-  !              "sc00"   SCAN00 Meta-GGA                imeta=7
   !
   ! Van der Waals functionals (nonlocal term only)
   !              "nonlc"  none                           inlc =0 (default)
@@ -324,7 +323,7 @@ module funct
   real(DP):: finite_size_cell_volume = notset
   logical :: discard_input_dft = .false.
   !
-  integer, parameter:: nxc=8, ncc=10, ngcx=40, ngcc=12, nmeta=7, ncnl=6
+  integer, parameter:: nxc=8, ncc=10, ngcx=40, ngcc=12, nmeta=6, ncnl=6
   character (len=4) :: exc, corr, gradx, gradc, meta, nonlocc
   dimension :: exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0:ngcc), &
                meta(0:nmeta), nonlocc (0:ncnl)
@@ -343,7 +342,7 @@ module funct
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'NONE',&
                'B3LP', 'PSC', 'PBE', 'xxxx', 'xxxx', 'Q2DC' / 
 
-  data meta  / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN', 'SCA0', 'SC00' / 
+  data meta  / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN', 'SCA0' / 
 
   data nonlocc/'NONE', 'VDW1', 'VDW2', 'VV10', 'VDWX', 'VDWY', 'VDWZ' / 
 
@@ -584,10 +583,6 @@ CONTAINS
      ! special case : SCAN0
     else IF ('SCAN0'.EQ. TRIM(dftout ) ) THEN
        dft_defined = set_dft_values(0,0,0,0,0,6)
-
-    ! special case : SCAN00
-    else IF ('SCAN00'.EQ. TRIM(dftout ) ) THEN
-       dft_defined = set_dft_values(0,0,0,0,0,7)
 
     ! special case : PZ/LDA + null meta-GGA
     else IF (('PZ+META'.EQ. TRIM(dftout)) .or. ('LDA+META'.EQ. TRIM(dftout)) ) THEN
@@ -1108,8 +1103,6 @@ CONTAINS
     shortname = 'SCAN'      
   else if (imeta == 6 ) then 
     shortname = 'SCAN0'      
-  else if (imeta == 7 ) then 
-    shortname = 'SCAN00'      
   end if
 
   if ( inlc==1 ) then
@@ -2756,7 +2749,7 @@ subroutine tau_xc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v
   
   if (imeta == 5) then
      call  scancxc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
-  elseif (imeta == 6.or.imeta == 7) then ! HK/MCA: SCAN0 or SCAN00
+  elseif (imeta == 6 ) then ! HK/MCA: SCAN0 
      call  scancxc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
      if (exx_started) then
         ex  = (1.0_DP - exx_fraction) * ex
@@ -2930,7 +2923,7 @@ subroutine tau_xc_array_spin (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, &
 
      end do
   
-  elseif (imeta == 6.or.imeta == 7) then ! HK/MCA: SCAN0 or SCAN00
+  elseif (imeta == 6 ) then ! HK/MCA: SCAN0 
      call  scancxc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
      if (exx_started) then
         ex  = (1.0_DP - exx_fraction) * ex
