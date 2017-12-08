@@ -19,7 +19,7 @@
   USE elph2,         only : epmatwp
   USE constants_epw, ONLY : twopi, ci, czero
   USE io_files,      ONLY : prefix, tmp_dir
-  USE io_epw,        ONLY : iunepmatwp
+  USE io_epw,        ONLY : iunepmatwp, iunepmatwp2
   USE mp_global,     ONLY : mp_sum
   USE mp_world,      ONLY : world_comm
   USE parallel_include
@@ -57,8 +57,6 @@
   !! Starting ir for this cores
   INTEGER :: ir_stop
   !! Ending ir for this pool
-  INTEGER :: iunepmatwp2
-  !! Return the file unit
   INTEGER :: ierr
   !! Return if there is an error
   !integer(kind=8) ::  lrepmatw,  lrepmatw2
