@@ -214,7 +214,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   IF ( done_iq(iq) ) do_band=.FALSE.
   !
   dfpt_tetra_linit = .FALSE.
-  IF(.NOT. setup_pw .AND. ltetra) dfpt_tetra_linit = .TRUE. 
+  IF((.NOT. setup_pw .OR. done_bands(iq)) .AND. ltetra) dfpt_tetra_linit = .TRUE. 
   !
   RETURN
   !

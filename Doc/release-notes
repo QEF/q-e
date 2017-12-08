@@ -1,13 +1,21 @@
-Problems fixed by development version:
+New in 6.2.1 version:
 
-  * Restart in phonon wasn't working any longer (r14022)
-    (FIXME: not yet workingfor USPP/PAW at q != 0)
+  * Spin-polarized SCAN meta-GGA; spin-unpolarized stress for meta-GGA
+    (Hsin-Yu Ho and Marcos Calegari Andrade)
+
+  * Interface with Grimme's DFT-D3, as repackaged by Bálint Aradi
+    (Miha Gunde and Layla Martins-Samos)
+  
+  * Phonons for two-dimensional systems (Thibault Sohier et al.)
+
+Problems fixed in 6.2.1 version:
+
+  * Restart in phonon wasn't working with tetrahedra (r14029)
 
   * QM-MM interface with LAMMPS was broken in v.6.2 (r14006-14008)
-    (FIXME: still is)
 
   * NASTY BUG IN META-GGA WITH LIBXC (tpss, tb09, scan): incorrect results -
-    fixed by Hsin-Yu Ho and Marcos Calegari Andrade (r14000, 14004-5, 14026)
+    fixed by Hsin-Yu Ho and Marcos Calegari Andrade (r14000, 14004-5, 14027)
 
   * Electron-phonon with ibrav=0 not working due to a mismatch between
     what is written and what is read in "fildyn" (r13999)
@@ -26,28 +34,24 @@ Problems fixed by development version:
 
   * FFT's for ARM libraries were broken (r13956,13959, courtesy Jason Wood)
 
-New in development version:
+Known problems in 6.2.1 version:
 
-  * Spin-polarized SCAN meta-GGA; spin-unpolarized stress for meta-GGA
-    (Hsin-Yu Ho and Marcos Calegari Andrade)
+  * QM-MM not yet working
 
-  * Interface with Grimme's DFT-D3, as repackaged by Bálint Aradi
-    (Miha Gunde and Layla Martins-Samos)
-  
-  * Phonons for two-dimensional systems (Thibault Sohier et al.)
-
-Incompatible changes in development version:
-
-  * __OPENMP with two underscores (set by configure) replaced by _OPENMP
-    with one underscore (automatically set by all OpenMP-aware compilers)
-  * "Old" xml input file deleted
-
-Known problems in development version:
+  * Phonon restart not working for USPP/PAW at q != 0
 
   * New format for charge density no longer allows to perform a non-scf
     calculation with k-points starting from a scf calculation at Gamma
+
   * NEB with one k-point per pool requires "wf_collect=.false.", because
     update_neb is not updated for the new format
+
+Incompatible changes in 6.2.1 version:
+
+  * __OPENMP with two underscores (set by configure) replaced by _OPENMP
+    with one underscore (automatically set by all OpenMP-aware compilers)
+
+  * "Old" xml input file deleted
 
 New in 6.2 version:
 
