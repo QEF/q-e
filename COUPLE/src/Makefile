@@ -2,7 +2,7 @@
 include ../../make.inc
 
 # location of required modules and include files
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../CPV/src
+MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../../CPV/src
 IFLAGS=#-DDEBUG_QECOUPLE
 TLDEPS=pw cp
 
@@ -29,12 +29,12 @@ clean :
 # we currently need to specify explicit dependencies here
 libpwscf.o: libpwscf.f90 ../../Modules/environment.o ../../Modules/mp_global.o \
 	../../Modules/read_input.o ../../Modules/command_line_options.o \
-	../../Modules/parallel_include.o
+	../../UtilXlib/parallel_include.o
 
 libcpv.o: libcpv.f90 ../../Modules/environment.o ../../Modules/mp_global.o \
 	../../Modules/read_input.o ../../Modules/command_line_options.o \
 	../../Modules/mp_images.o ../../Modules/check_stop.o \
-	../../Modules/io_global.o ../../Modules/parallel_include.o \
+	../../Modules/io_global.o ../../UtilXlib/parallel_include.o \
 	../../CPV/src/input.o
 
 libqemod.o: libqemod.f90 ../../Modules/qmmm.o
