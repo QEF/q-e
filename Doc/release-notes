@@ -11,6 +11,7 @@ New in 6.2.1 version:
 Problems fixed in 6.2.1 version:
 
   * Restart in phonon wasn't working with tetrahedra (r14029)
+    and for USPP/PAW at q != 0 (r14034)
 
   * QM-MM interface with LAMMPS was broken in v.6.2 (r14006-14008)
 
@@ -25,7 +26,7 @@ Problems fixed in 6.2.1 version:
   * Option "-in file" for fermi_proj.x and fermi_velocity.x was not working
     in serial execution; fermisurfer_example/ was missing (r13986). Also:
     Fermi velocity in vfermi.frmsf was 4*celldm(1) times bigger than in
-    fermisurfer (reported by Victor Chang, fixed by Mitsuaki Kawamura, r14032)
+    fermisurfer (reported by Victor Chang, fixed by Mitsuaki Kawamura, r14033)
 
   * Inconsistent "short name" for DFT was breaking Perdew-Wang pseudopotentials
     (r13975)
@@ -39,8 +40,6 @@ Problems fixed in 6.2.1 version:
 Known problems in 6.2.1 version:
 
   * QM-MM not yet working
-
-  * Phonon restart not working for USPP/PAW at q != 0
 
   * New format for charge density no longer allows to perform a non-scf
     calculation with k-points starting from a scf calculation at Gamma
