@@ -40,6 +40,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE mp_pools,        ONLY : kunit
   USE lr_symm_base,    ONLY : minus_q, nsymq, invsymq
   USE qpoint,          ONLY : xq
+  USE klist,           ONLY : qnorm 
   USE el_phon,         ONLY : elph_mat
   !
   IMPLICIT NONE
@@ -64,6 +65,7 @@ SUBROUTINE run_nscf(do_band, iq)
      ELSE
         kunit = 2
      ENDIF
+     qnorm = SQRT(DOT_PRODUCT(xq,xq))
      CALL read_file()
      IF (.NOT.lgamma_iq(iq).OR.(qplot.AND.iq>1)) CALL &
                                   set_small_group_of_q(nsymq,invsymq,minus_q)
