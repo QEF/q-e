@@ -23,7 +23,9 @@ Problems fixed in 6.2.1 version:
   * Tetrahedra with "old" XML format working again (r13993)
 
   * Option "-in file" for fermi_proj.x and fermi_velocity.x was not working
-    in serial execution. Also: fermisurfer_example/ was missing (r13986)
+    in serial execution; fermisurfer_example/ was missing (r13986). Also:
+    Fermi velocity in vfermi.frmsf was 4*celldm(1) times bigger than in
+    fermisurfer (reported by Victor Chang, fixed by Mitsuaki Kawamura, r14032)
 
   * Inconsistent "short name" for DFT was breaking Perdew-Wang pseudopotentials
     (r13975)

@@ -122,7 +122,7 @@ SUBROUTINE write_fermisurfer(eig, mat, filename)
   ! This routine output a matrix element on the Fermi surface
   !
   USE kinds,     ONLY : DP
-  USE cell_base, ONLY : bg
+  USE cell_base, ONLY : bg, tpiba
   USE start_k,   ONLY : nk1, nk2, nk3, k1, k2, k3
   USE io_global, ONLY : stdout, ionode
   !
@@ -153,9 +153,9 @@ SUBROUTINE write_fermisurfer(eig, mat, filename)
      !
      ! Write with single-precision
      !
-     WRITE(fo,*) REAL(bg(1:3,1))
-     WRITE(fo,*) REAL(bg(1:3,2))
-     WRITE(fo,*) REAL(bg(1:3,3))
+     WRITE(fo,*) REAL(bg(1:3,1)) * tpiba
+     WRITE(fo,*) REAL(bg(1:3,2)) * tpiba
+     WRITE(fo,*) REAL(bg(1:3,3)) * tpiba
      !
      DO ibnd = b_low, b_high
         DO i1 = 1, nk1
