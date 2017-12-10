@@ -76,7 +76,7 @@ PROGRAM pwscf
      !
   ELSE
      !
-     CALL read_input_file ('PW', input_file_ )
+     CALL read_input_file ('PW+iPi', input_file_ )
      CALL run_driver ( srvaddress, exit_status )
      !
   END IF

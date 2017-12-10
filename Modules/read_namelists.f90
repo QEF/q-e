@@ -1804,7 +1804,7 @@ MODULE read_namelists_module
      !=----------------------------------------------------------------------=!
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE read_namelists( prog, unit )
+     SUBROUTINE read_namelists( prog_, unit )
        !-----------------------------------------------------------------------
        !
        !  this routine reads data from standard input and puts them into
@@ -1822,17 +1822,17 @@ MODULE read_namelists_module
        !
        ! ... declare variables
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
-                                  !     prog = 'PW'  pwscf
-                                  !     prog = 'CP'  cpr
-       !
+       CHARACTER(LEN=*) :: prog_  ! specifies the calling program, allowed:
+                                  !     prog = 'PW'     pwscf
+                                  !     prog = 'CP'     cp
+                                  !     prog = 'PW+iPi' pwscf + i-Pi
        !
        INTEGER, INTENT(IN), optional :: unit
        !
        ! ... declare other variables
        !
+       CHARACTER(LEN=2) :: prog
        INTEGER :: ios
-       !
        INTEGER :: unit_loc=5
        !
        ! ... end of declarations
@@ -1841,25 +1841,23 @@ MODULE read_namelists_module
        !
        IF(PRESENT(unit)) unit_loc = unit
        !
+       prog = prog_(1:2) ! Allowed: 'PW' or 'CP'
        IF( prog /= 'PW' .AND. prog /= 'CP' ) &
           CALL errore( ' read_namelists ', ' unknown calling program ', 1 )
        !
        ! ... default settings for all namelists
        !
-       IF( prog == 'PW' .OR. prog == 'CP') THEN
-         CALL control_defaults( prog )
-         CALL system_defaults( prog )
-         CALL electrons_defaults( prog )
-         CALL ions_defaults( prog )
-         CALL cell_defaults( prog )
-       ENDIF
+       CALL control_defaults( prog )
+       CALL system_defaults( prog )
+       CALL electrons_defaults( prog )
+       CALL ions_defaults( prog )
+       CALL cell_defaults( prog )
        !
        ! ... Here start reading standard input file
        !
        !
        ! ... CONTROL namelist
        !
-       IF(prog == 'PW' .OR. prog == 'CP' ) THEN
        ios = 0
        IF( ionode ) THEN
           READ( unit_loc, control, iostat = ios )
@@ -1897,22 +1895,17 @@ MODULE read_namelists_module
        CALL electrons_bcast( )
        CALL electrons_checkin( prog )
        !
-       ! ... IONS namelist
+       ! ... IONS namelist - must be read only if ionic motion is expected,
+       ! ...                 or if code called by i-Pi via run_driver
        !
        ios = 0
        IF ( ionode ) THEN
-          !
-          IF ( TRIM( calculation ) == 'relax'    .OR. &
-               TRIM( calculation ) == 'md'       .OR. &
-               TRIM( calculation ) == 'vc-relax' .OR. &
-               TRIM( calculation ) == 'vc-md'    .OR. &
-               TRIM( calculation ) == 'cp'       .OR. &
-               TRIM( calculation ) == 'vc-cp'    .OR. &
-               TRIM( calculation ) == 'smd'      .OR. &
-               TRIM( calculation ) == 'cp-wf-nscf' .OR. &
-               TRIM( calculation ) == 'vc-cp-wf'   .OR. &
-               TRIM( calculation ) == 'cp-wf' ) READ( unit_loc, ions, iostat = ios )
-  
+          IF ( ( TRIM( calculation ) /= 'scf'   .AND. &
+                 TRIM( calculation ) /= 'nscf'  .AND. &
+                 TRIM( calculation ) /= 'bands' ) .OR. &
+               ( TRIM( prog_ ) == 'PW+iPi' ) ) THEN
+             READ( unit_loc, ions, iostat = ios )
+          END IF
        END IF
        CALL check_namelist_read(ios, unit_loc, "ions")
        !
@@ -1975,8 +1968,6 @@ MODULE read_namelists_module
        !
        CALL wannier_ac_bcast()
        CALL wannier_ac_checkin( prog )
-       !
-       ENDIF
        !
        RETURN
        !

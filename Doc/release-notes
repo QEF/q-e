@@ -10,8 +10,12 @@ New in 6.2.1 version:
 
 Problems fixed in 6.2.1 version:
 
+  * PWscf in "driver" mode with i-Pi wasn't working with k-points and
+    wasn't honoring options for interpolation - fixed by Przemyslaw Juda
+    (r14037)
+
   * Restart in phonon wasn't working with tetrahedra (r14029)
-    and for USPP/PAW at q != 0 (r14034)
+    and for USPP/PAW at q != 0 (r14034-14036)
 
   * QM-MM interface with LAMMPS was broken in v.6.2 (r14006-14008)
 
@@ -39,7 +43,9 @@ Problems fixed in 6.2.1 version:
 
 Known problems in 6.2.1 version:
 
-  * QM-MM not yet working
+  * pw2bgw.x not working
+
+  * QM-MM not yet working; COUPLE interface not aligned with new parallelism
 
   * New format for charge density no longer allows to perform a non-scf
     calculation with k-points starting from a scf calculation at Gamma
