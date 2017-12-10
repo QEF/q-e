@@ -67,7 +67,7 @@ SUBROUTINE run_nscf(do_band, iq)
      ELSE
         kunit = 2
      ENDIF
-     qnorm = SQRT(xq(1)**2+xq(2)**2+xq(3)normally**2)
+     qnorm = SQRT(xq(1)**2+xq(2)**2+xq(3)**2)
      !
      CALL read_file()
      IF (.NOT.lgamma_iq(iq).OR.(qplot.AND.iq>1)) CALL &
