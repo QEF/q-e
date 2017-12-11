@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.2}
+\def\version{6.2.1}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -74,6 +74,8 @@ The \PostProc\ package was originally developed by Stefano Baroni,
 Stefano de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi 
 (Univ. Udine), and many others. We mention in particular: 
 \begin{itemize}
+	\item Olivia Pulci, Adriano Mosca Conte, Davide Grassano (RomaII)
+	for the \texttt{pw2gw} utility;
 \item Andrea Benassi (SISSA) for the \texttt{epsilon} utility,
       Tae Yun Kim and Cheol-Hwan Park (Seoul National University)
       for fixes to it;
@@ -313,8 +315,10 @@ Codes \texttt{pw2bgw.x} and \texttt{bgw2pw.x} convert data files from
 versa. See files \texttt{Doc/INPUT\_pw2bgw.*} and \texttt{Doc/INPUT\_bgw2pw.*}
 for input data documentation.
 
-Undocumented code \texttt{pw2gw.x} converts data files from \pwx\ to
-a format suitable for usage by another GW code.
+Code \texttt{pw2gw.x} converts data files from \pwx\ to a format suitable 
+for usage by another GW code, computes optical properties in single-particle 
+approach (Fermi Golden Rule). See file \texttt{Doc/INPUT\_pw2gw.html}
+for input data documentation.
 
 Code \texttt{pw\_export.x}, not compiled by default, is an interface
 to other codes, documented in \texttt{Doc/INPUT\_pw\_export.*}
