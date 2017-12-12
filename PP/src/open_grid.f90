@@ -107,7 +107,7 @@ PROGRAM open_grid
   !print*, "initial", nks, nkstot
   CALL open_buffer(iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst)
   !
-  twfcollect = .false.
+!  twfcollect = .false.
   !
   WRITE(stdout,*)
   IF ( npool > 1 .and. nspin_mag>1) CALL errore( 'open_grid', &
@@ -170,7 +170,8 @@ PROGRAM open_grid
   !WRITE(stdout,*) ' Nwordwfc:', nwordwfc, nbnd, npwx, npol
   CALL open_buffer(iunwfc, 'wfc', nwordwfc, +1, exst_mem, exst)
   !
-  twfcollect = .false.
+  ! Set the next to true to force non-collected wfcs on output
+!  twfcollect = .false.
   CALL write_scf(rho, nspin)
   !
   ALLOCATE(psic(dffts%nnr), evx(npol*npwx, nbnd))
