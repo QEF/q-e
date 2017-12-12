@@ -52,7 +52,7 @@ module funct
 
   ! additional subroutines/functions for hybrid functionals
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
-  PUBLIC  :: set_exx_fraction
+  PUBLIC  :: set_exx_fraction, dft_force_hybrid
   PUBLIC  :: set_screening_parameter, get_screening_parameter
   PUBLIC  :: set_gau_parameter, get_gau_parameter
 
@@ -846,6 +846,18 @@ CONTAINS
         call errore('stop_exx','dft is not hybrid, wrong call',1)
      exx_started = .false.
   end subroutine stop_exx
+  !-----------------------------------------------------------------------
+  subroutine dft_force_hybrid(request)
+     LOGICAL,OPTIONAL,INTENT(inout) :: request
+     LOGICAL :: aux
+     IF(present(request)) THEN
+       aux = ishybrid
+       ishybrid = request
+       request = aux
+     ELSE 
+       ishybrid= .true.
+     ENDIF
+  end subroutine dft_force_hybrid
   !-----------------------------------------------------------------------
   function exx_is_active ()
      logical exx_is_active
