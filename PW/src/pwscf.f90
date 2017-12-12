@@ -65,16 +65,21 @@ PROGRAM pwscf
   ! ... Perform actual calculation
   !
   IF ( trim(srvaddress) == ' ' ) THEN
-     !
-     CALL read_input_file ('PW', input_file_ )
-     CALL run_pwscf ( exit_status )
-     !
-  ELSE IF ( use_images ) THEN
-     !
-     CALL run_manypw ( )
-     CALL run_pwscf ( exit_status )
-     !
+  ! When running standalone:
+    IF ( use_images ) THEN
+       ! as manypw.x
+       CALL run_manypw ( )
+       CALL run_pwscf ( exit_status )
+       !
+     ELSE
+       ! as pw.x
+       CALL read_input_file ('PW', input_file_ )
+       CALL run_pwscf ( exit_status )
+       !
+       !
+    ENDIF
   ELSE
+  ! When running as library
      !
      CALL read_input_file ('PW+iPi', input_file_ )
      CALL run_driver ( srvaddress, exit_status )
