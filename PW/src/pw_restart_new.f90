@@ -517,7 +517,7 @@ MODULE pw_restart_new
       ! ... the igk_l2g_kdip local-to-global map yields the correspondence
       ! ... between the global order of k+G and the local index for k+G.
       !
-      ALLOCATE ( igk_l2g_kdip( npwx_g ) )
+      ALLOCATE ( igk_l2g_kdip( npwx ) )
       !
       ALLOCATE ( mill_k( 3, npwx ) )
       !
@@ -1919,7 +1919,7 @@ MODULE pw_restart_new
       !
       ! ... the igk_l2g_kdip local-to-global map is needed to read wfcs
       !
-      ALLOCATE ( igk_l2g_kdip( npwx_g ) )
+      ALLOCATE ( igk_l2g_kdip( npwx ) )
       !
       ALLOCATE( mill_k ( 3,npwx ) )
       !
