@@ -906,7 +906,8 @@
          ! within a Fermi shell of size fsthick 
          !
          IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. &
-                ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) .and. .NOT. plselfen) THEN
+              ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) .and. &
+                    (.NOT. plselfen) .and. (.NOT.specfun_pl) ) THEN
            !
            !  fermicount = fermicount + 1
            !

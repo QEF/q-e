@@ -19,7 +19,7 @@ SUBROUTINE loadqmesh_para
   USE mp_world,  ONLY : mpime 
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, &
+  USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, plselfen, specfun_pl, &
                         rand_q, rand_nq, mp_mesh_q, system_2d, lscreen
   USE elph2,     ONLY : xqf, wqf, nqf, nqtotf
   USE cell_base, ONLY : at, bg
@@ -113,11 +113,11 @@ SUBROUTINE loadqmesh_para
           !
           IF ( system_2d ) THEN
              CALL random_number(xqf_(1:2,iq))
-             IF (lscreen) xqf_(1:2,iq) = xqf_(1:2,iq) - 0.5d0
+             IF (lscreen .or. specfun_pl .or. plselfen) xqf_(1:2,iq) = xqf_(1:2,iq) - 0.5d0
              xqf_(3,iq) = 0.d0
           ELSE
              CALL random_number(xqf_(:,iq))
-             IF (lscreen) xqf_(:,iq) = xqf_(:,iq) - 0.5d0
+             IF (lscreen .or. specfun_pl .or. plselfen) xqf_(:,iq) = xqf_(:,iq) - 0.5d0
           ENDIF
           !
        ENDDO
@@ -197,7 +197,8 @@ SUBROUTINE loadqmesh_serial
   USE mp_world,  ONLY : mpime
   USE io_global, ONLY : stdout
   USE epwcom,    ONLY : filqf, nqf1, nqf2, nqf3, &
-                        rand_q, rand_nq, mp_mesh_q, system_2d, lscreen
+                        rand_q, rand_nq, mp_mesh_q, system_2d, lscreen, &
+                        plselfen, specfun_pl
   USE elph2,     ONLY : xqf, wqf, nqtotf, nqf
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
@@ -262,7 +263,10 @@ SUBROUTINE loadqmesh_serial
                 ENDDO
              ENDDO
           ENDDO
-          IF (lscreen) xqf(:,:) = xqf(:,:) - 0.5d0
+          IF (lscreen .or. specfun_pl .or. plselfen) THEN
+            xqf(:,:) = xqf(:,:) - 0.5d0
+            WRITE (stdout, '(a)') '     Shifting q mesh to [-0.5:0.5['
+          ENDIF
           !
           !WRITE(stdout,'(a)') '  '
           !DO iq = 1, nqtotf
@@ -286,16 +290,17 @@ SUBROUTINE loadqmesh_serial
           !
           IF ( system_2d ) THEN
              CALL random_number(xqf(1:2,iq))
-             IF (lscreen) xqf(1:2,iq) = xqf(1:2,iq) - 0.5d0
+             IF (lscreen .or. specfun_pl .or. plselfen) xqf(1:2,iq) = xqf(1:2,iq) - 0.5d0
              xqf(3,iq) = 0.d0
           ELSE
              CALL random_number(xqf(:,iq))
-             IF (lscreen) xqf(:,iq) = xqf(:,iq) - 0.5d0
+             IF (lscreen .or. specfun_pl .or. plselfen) xqf(:,iq) = xqf(:,iq) - 0.5d0
           ENDIF
           !
           !WRITE(stdout,'(4f12.7)') xqf(:,iq), wqf(iq)
           !
        ENDDO
+       IF (lscreen .or. specfun_pl .or. plselfen) WRITE (stdout, '(a)') '    Shifting q mesh to [-0.5:0.5['
        !WRITE(stdout,'(a)') '  '
        !
     ELSE ! don't know how to get grid

@@ -53,7 +53,8 @@
   !
   integer :: nksqtotf, lower_bnd, upper_bnd
   real(kind=DP), allocatable :: xkf_all(:,:) , etf_all(:,:)
-  REAL(kind=DP) :: kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut, qcut2, qsquared, qTF, dipole, rs, ekk1
+  REAL(kind=DP) :: kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut, qcut2, &
+                   qsquared, qTF, dipole, rs, ekk1, degen
   !
   ! loop over temperatures can be introduced
   !
@@ -120,11 +121,12 @@
   !epsiHEG  =  12.d0   ! this should be read from input - # dielectric constant at zero doping  
   !meff     =  0.25    ! this should be read from input - effective mass 
   tpiba_new = 2.0d0 * pi / alat
-  rs       =  (3.d0/(4.d0*pi*nel/omega))**(1./3.)*meff/epsiHEG ! omega is the unit cell volume in Bohr^3
-  kF       =  ( 3.*pi**2*nel/omega )**(1.d0/3.d0) 
-  vF       =  1.d0/meff * (3.*pi**2*nel/omega)**(1./3.) 
-  fermiHEG =  1./(2.*meff) * (3.*pi**2*nel/omega)**(2./3.) * 2.d0 ! [Ryd] multiplication by 2 converts from Ha to Ry
-  qTF      =  (6.d0*pi*nel/omega/(fermiHEG/2.d0))**(1.d0/2.d0)    ! [a.u.]
+  degen    = 1.0d0
+  rs       = (3.d0/(4.d0*pi*nel/omega/degen))**(1.d0/3.d0)*meff*degen ! omega is the unit cell volume in Bohr^3
+  kF       = (3.d0*pi**2*nel/omega/degen )**(1.d0/3.d0)
+  vF       =  1.d0/meff * (3.d0*pi**2*nel/omega/degen)**(1.d0/3.d0)
+  fermiHEG =  1.d0/(2.d0*meff) * (3.d0*pi**2*nel/omega/degen)**(2.d0/3.d0) * 2.d0 ! [Ryd] multiplication by 2 converts from Ha to Ry
+  qTF      =  (6.d0*pi*nel/omega/degen/(fermiHEG/2.d0))**(1.d0/2.d0)    ! [a.u.]
   wpl0     =  sqrt(4.d0*pi*nel/omega/meff/epsiHEG) * 2.d0         ! [Ryd] multiplication by 2 converts from Ha to Ryd
   wq       =  wpl0 ! [Ryd] 
   qsquared =  (xqf(1,iq)**2 + xqf(2,iq)**2 + xqf(3,iq)**2)
@@ -137,7 +139,22 @@
   !call get_eps_mahan (qin,qTF,kF,eps0) ! qin should be in atomic units for Mahan formula
   deltaeps = -(1.d0/(epsiHEG+eps0-1.d0)-1.d0/epsiHEG)
   !
-  IF (sqrt(qsquared) < qcut) then
+  IF (iq .EQ. 1) THEN
+    WRITE(stdout,'(12x," nel       = ", E15.10)') nel
+    WRITE(stdout,'(12x," meff      = ", E15.10)') meff
+    WRITE(stdout,'(12x," rs        = ", E15.10)') rs
+    WRITE(stdout,'(12x," kF        = ", E15.10)') kF
+    WRITE(stdout,'(12x," vF        = ", E15.10)') vF
+    WRITE(stdout,'(12x," fermi_en  = ", E15.10)') fermiHEG
+    WRITE(stdout,'(12x," qTF       = ", E15.10)') qTF
+    WRITE(stdout,'(12x," wpl       = ", E15.10)') wpl0
+    WRITE(stdout,'(12x," qcut      = ", E15.10)') qcut
+    WRITE(stdout,'(12x," eps0      = ", E15.10)') eps0
+    WRITE(stdout,'(12x," epsiHEG   = ", E15.10)') epsiHEG
+    WRITE(stdout,'(12x," deltaeps  = ", E15.10)') deltaeps
+  ENDIF
+  !
+  IF (sqrt(qsquared) < qcut) THEN
     !
     ! loop over all k points of the fine mesh
     !

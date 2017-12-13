@@ -1,3 +1,11 @@
+Problems fixed in development version:
+
+  * PWscf in "manypw" mode wasn't working due to a bad IF (Dec.12, 2017)
+
+Incompatible changes in development version:
+
+  * Development moved to GitLab
+
 New in 6.2.1 version:
 
   * Spin-polarized SCAN meta-GGA; spin-unpolarized stress for meta-GGA
