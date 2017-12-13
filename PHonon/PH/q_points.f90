@@ -77,7 +77,7 @@ SUBROUTINE q_points ( )
   write(stdout, '(//5x,"Dynamical matrices for (", 2(i2,","),i2,") &
            & uniform grid of q-points")') nq1, nq2, nq3
   IF (lshift_q) write(stdout,'(a)') "     With a half shift" 
-  write(stdout, '(5x,"(",i4,"q-points):")') nqs
+  write(stdout, '(5x,"(",i4," q-points):")') nqs
   write(stdout, '(5x,"  N         xq(1)         xq(2)         xq(3) " )')
   do iq = 1, nqs
      write(stdout, '(5x,i3, 3f14.9)') iq, x_q(1,iq), x_q(2,iq), x_q(3,iq)
