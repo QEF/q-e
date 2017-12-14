@@ -740,7 +740,7 @@ SUBROUTINE phq_readin()
   !  .xml or in the noncollinear case.
   !
   xmldyn=has_xml(fildyn)
-  !IF (noncolin) xmldyn=.TRUE.
+  IF (noncolin) xmldyn=.TRUE.
   !
   ! If a band structure calculation needs to be done do not open a file
   ! for k point
