@@ -141,10 +141,12 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
         nrc=paw_recon(xiabs)%aephi(ip)%label%nrc
         ip_l=ip_l+1
         ! here below, recall that psi is r*psi and you have a Jacobian=r^2
-        aux(1:nrc) = rgrid(xiabs)%r(1:nrc) * &
-                     paw_recon(xiabs)%aephi(ip)%psi(1:nrc) * &
-                     core_wfn(1:nrc)
+        DO is = 1,nrc
+        aux(is) = rgrid(xiabs)%r(is) * &
+                     paw_recon(xiabs)%aephi(ip)%psi(is) * &
+                     core_wfn(is)
         ! here we have to integrate only inside the augmentation region.
+        ENDDO
         xanes_dip(ip_l)=para_radin(aux(1:nrc),rgrid(xiabs)%r(1:nrc),nrc)
      ENDIF
   ENDDO

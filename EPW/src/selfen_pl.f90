@@ -68,7 +68,8 @@
                    inv_degaussw, tpiba_new
   REAL(kind=DP), external :: efermig, dos_ef, wgauss, w0gauss
   REAL(kind=DP), ALLOCATABLE :: xkf_all(:,:), etf_all(:,:)
-  REAL(kind=DP) :: kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut, qcut2, qsquared, qTF, dipole, rs, ekk1
+  REAL(kind=DP) :: kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut, qcut2
+  REAL(kind=DP) :: qsquared, qTF, dipole, rs, ekk1, degen
   !REAL(kind=DP) :: Nel, epsiHEG, meff, kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut, qcut2, qsquared, qTF, dipole, rs, ekk1
   ! loop over temperatures can be introduced
   !
@@ -133,23 +134,24 @@
   !meff     =  0.25    ! this should be read from input - effective mass 
   !
   tpiba_new = 2.0d0 * pi / alat
-  rs       = (3.d0/(4.d0*pi*nel/omega))**(1.d0/3.d0)*meff/epsiHEG ! omega is the unit cell volume in Bohr^3
-  kF       = (3.d0*pi**2*nel/omega )**(1.d0/3.d0) 
-  vF       =  1.d0/meff * (3.d0*pi**2*nel/omega)**(1.d0/3.d0) 
-  fermiHEG =  1.d0/(2.d0*meff) * (3.d0*pi**2*nel/omega)**(2.d0/3.d0) * 2.d0 ! [Ryd] multiplication by 2 converts from Ha to Ry
-  qTF      =  (6.d0*pi*nel/omega/(fermiHEG/2.d0))**(1.d0/2.d0)    ! [a.u.]
+  degen    = 1.0d0
+  rs       = (3.d0/(4.d0*pi*nel/omega/degen))**(1.d0/3.d0)*meff*degen ! omega is the unit cell volume in Bohr^3
+  kF       = (3.d0*pi**2*nel/omega/degen )**(1.d0/3.d0) 
+  vF       =  1.d0/meff * (3.d0*pi**2*nel/omega/degen)**(1.d0/3.d0) 
+  fermiHEG =  1.d0/(2.d0*meff) * (3.d0*pi**2*nel/omega/degen)**(2.d0/3.d0) * 2.d0 ! [Ryd] multiplication by 2 converts from Ha to Ry
+  qTF      =  (6.d0*pi*nel/omega/degen/(fermiHEG/2.d0))**(1.d0/2.d0)    ! [a.u.]
   wpl0     =  sqrt(4.d0*pi*nel/omega/meff/epsiHEG) * 2.d0         ! [Ryd] multiplication by 2 converts from Ha to Ryd
   wq       =  wpl0 ! [Ryd] 
   qsquared = (xqf(1,iq)**2 + xqf(2,iq)**2 + xqf(3,iq)**2)
   qin      =  sqrt(qsquared)*tpiba_new
-  qcut = wpl0 / vF  / tpiba_new / 2.d0    ! 1/2 converts from Ryd to Ha
+  qcut     = wpl0 / vF / tpiba_new / 2.d0    ! 1/2 converts from Ryd to Ha
   !
   !if (.true.) qcut = qcut / 2.d0 ! renorm to account for Landau damping 
   !
   CALL get_eps_mahan (qin,rs,kF,eps0) ! qin should be in atomic units for Mahan formula
   deltaeps = -(1.d0/(epsiHEG+eps0-1.d0)-1.d0/epsiHEG)
   !
-  if (iq .eq. 1) then 
+  IF (iq .EQ. 1) THEN 
     WRITE(stdout,'(12x," nel       = ", E15.10)') nel
     WRITE(stdout,'(12x," meff      = ", E15.10)') meff
     WRITE(stdout,'(12x," rs        = ", E15.10)') rs
@@ -162,7 +164,7 @@
     WRITE(stdout,'(12x," eps0      = ", E15.10)') eps0
     WRITE(stdout,'(12x," epsiHEG   = ", E15.10)') epsiHEG
     WRITE(stdout,'(12x," deltaeps  = ", E15.10)') deltaeps
-  endif
+  ENDIF
   !
   !if (sqrt(qsquared) > qcut) wqf(iq) = 0.d0
   IF (sqrt(qsquared) < qcut) THEN
@@ -228,18 +230,18 @@
             ENDIF
             !
             ! this approximates the dipoles as delta_ij
-            if (.false.) then
-              if (ibnd==jbnd .and. sqrt(qsquared) .gt. 1d-8 ) then
-                dipole = 1./(qsquared * tpiba_new * tpiba_new)
-              else 
-                dipole = 0.d0
-              endif
-            endif
-            if (.true.) then
-              if ( abs(dipole * (qsquared * tpiba_new * tpiba_new)) .gt.1 ) then
-                dipole = 1./(qsquared*tpiba_new*tpiba_new)
-              endif
-            endif
+            !if (.false.) then
+            !  if (ibnd==jbnd .and. sqrt(qsquared) .gt. 1d-8 ) then
+            !    dipole = 1./(qsquared * tpiba_new * tpiba_new)
+            !  else 
+            !    dipole = 0.d0
+            !  endif
+            !endif
+            !if (.true.) then
+            IF ( abs(dipole * (qsquared * tpiba_new * tpiba_new)) .gt.1 ) THEN
+              dipole = 1./(qsquared*tpiba_new*tpiba_new)
+            ENDIF
+            !endif
             !
             !if (ik .eq. 1) WRITE(stdout,'(/12x," dipole    =", f12.7)') dipole
             g2 = dipole*4.d0*pi * (wq*deltaeps/2.d0)/omega * 2.d0 ! The q^-2 is cancelled by the q->0 limit of the dipole. See e.g., pg. 258 of Grosso Parravicini. 
