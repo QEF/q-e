@@ -41,12 +41,12 @@
                             plselfen, specfun_pl
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero, twopi, ci, zero
-  USE io_files,      ONLY : prefix, diropn
+  USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
-                            iunepmatwp, crystal
+                            iunepmatwp, crystal, iunepmatwp2
   USE elph2,         ONLY : nrr_k, nrr_q, cu, cuq, lwin, lwinq, irvec, ndegen_k,&
-                            ndegen_q,  wslen, chw, chw_ks, cvmew, cdmew, rdw,   &
+                            ndegen_q, wslen, chw, chw_ks, cvmew, cdmew, rdw,    &
                             epmatwp, epmatq, wf, etf, etf_k, etf_ks, xqf, xkf,  &
                             wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
@@ -58,7 +58,10 @@
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : inter_pool_comm, intra_pool_comm, root_pool
-  USE mp_world,      ONLY : mpime
+  USE mp_world,      ONLY : mpime, world_comm
+#if defined(__MPI)
+  USE parallel_include, ONLY: MPI_MODE_RDONLY, MPI_INFO_NULL
+#endif
   !
   implicit none
   !
@@ -131,6 +134,8 @@
   !! Number of real-space Wigner-Seitz
   INTEGER :: valueRSS(2)
   !! Return virtual and resisdent memory from system
+  INTEGER :: ierr
+  !! Error status
   INTEGER, PARAMETER :: nrwsx=200
   !! Maximum number of real-space Wigner-Seitz
   !  
@@ -200,7 +205,7 @@
   COMPLEX(kind=DP), ALLOCATABLE :: cfac(:)
   !! Used to store $e^{2\pi r \cdot k}$ exponential 
   COMPLEX(kind=DP), ALLOCATABLE :: cfacq(:)
-  !! Used to store $e^{2\pi r \cdot k+q}$ exponential 
+  !! Used to store $e^{2\pi r \cdot k+q}$ exponential
   ! 
   IF (nbndsub.ne.nbnd) &
        WRITE(stdout, '(/,14x,a,i4)' ) 'band disentanglement is used:  nbndsub = ', nbndsub
@@ -219,6 +224,11 @@
   ! DBSP
   ! HERE loadkmesh
   IF ( epwread ) THEN
+    !
+    ! Might have been pre-allocate depending of the restart configuration 
+    IF(ALLOCATED(tau))  DEALLOCATE( tau )
+    IF(ALLOCATED(ityp)) DEALLOCATE( ityp )
+    IF(ALLOCATED(w2))   DEALLOCATE( w2 )
     ! 
     ! We need some crystal info
     IF (mpime.eq.ionode_id) THEN
@@ -688,6 +698,18 @@
     CALL wsinit(rws,nrwsx,nrws,atws)
   ENDIF
   !
+  ! Open the ephmatwp file here
+#if defined(__MPI)
+  IF (etf_mem == 1) then
+    ! Check for directory given by "outdir"
+    !      
+    filint = trim(tmp_dir)//trim(prefix)//'.epmatwp1'
+    CALL MPI_FILE_OPEN(world_comm,filint,MPI_MODE_RDONLY,MPI_INFO_NULL,iunepmatwp2,ierr)
+    IF( ierr /= 0 ) CALL errore( 'ephwann_shuffle', 'error in MPI_FILE_OPEN',1 )
+    IF( parallel_q ) CALL errore( 'ephwann_shuffle', 'q-parallel+etf_mem = 1 is not supported',1 )
+  ENDIF
+#endif
+  !
   IF (parallel_k) THEN
     !
     ! get the size of the matrix elements stored in each pool
@@ -884,7 +906,8 @@
          ! within a Fermi shell of size fsthick 
          !
          IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. &
-                ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) .and. .NOT. plselfen) THEN
+              ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) .and. &
+                    (.NOT. plselfen) .and. (.NOT.specfun_pl) ) THEN
            !
            !  fermicount = fermicount + 1
            !
@@ -1196,6 +1219,14 @@
     ENDDO  ! end loop over k points
     ! 
   ENDIF ! end parallel_q
+  !
+  !  Close th epmatwp file
+#if defined(__MPI)
+  IF (etf_mem == 1) then
+    CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)
+    IF( ierr /= 0 ) CALL errore( 'ephwann_shuffle', 'error in MPI_FILE_CLOSE',1 )
+  ENDIF
+#endif 
   ! 
   ! Check Memory usage
   CALL system_mem_usage(valueRSS)
@@ -1250,7 +1281,7 @@
   IF ( ALLOCATED(sigmai_all) )    DEALLOCATE( sigmai_all )
   IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
   IF ( ALLOCATED(w2) )            DEALLOCATE( w2 )
-  IF ( ALLOCATED(epf17) )        DEALLOCATE( epf17 )
+  IF ( ALLOCATED(epf17) )         DEALLOCATE( epf17 )
   DEALLOCATE(cfac)
   DEALLOCATE(cfacq)
   DEALLOCATE(rdotk)

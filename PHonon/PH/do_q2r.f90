@@ -62,15 +62,16 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
      !
   IF (flfrc == ' ')  CALL errore ('q2r',' bad flfrc',1)
      !
-  xmldyn=has_xml(fildyn)
+  xmldyn=has_xml(fildyn_)
   IF(xmldyn) post='.xml'
 
   IF ( trim( prefix ) /= ' ' ) THEN
      fildyn = trim(prefix) // '.save/' //trim(fildyn_)
+  ELSE
+     fildyn = trim(fildyn_)
   END IF
-
   CALL mp_bcast(fildyn, ionode_id, world_comm)
-
+  
   IF (ionode) THEN
      OPEN (unit=1, file=TRIM(fildyn)//'0'//post, status='old', form='formatted', &
           iostat=ierr)

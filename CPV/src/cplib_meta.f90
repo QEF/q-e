@@ -265,9 +265,9 @@
                 end do
              end do
           end do
-#ifdef PARA
+          !
           call mp_sum( dkedxc, intra_bgrp_comm )
-#endif
+          !
           do j=1,3
              do i=1,3
                 dxc(i,j) = dxc(i,j) + omega/(dffts%nr1*dffts%nr2*dffts%nr3)*dkedxc(i,j)

@@ -6,7 +6,7 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 #
-# Makefile for fundamental math libraries
+# Makefile for fundamental math and utility libraries
 
 include ../make.inc
 include install_utils
@@ -96,7 +96,7 @@ libelpa_enabled:
 	if test ! -d ../ELPA; then \
 	( gzip -dc ../archive/ELPA-0.3.tar.gz |(cd ../; tar -xvf -)); fi
 	cd ../ELPA; $(MAKE)
-	
+
 ###################################
 # cleaning
 ###################################
@@ -113,6 +113,8 @@ elpa_clean:
 	if test -d ../ELPA; then (cd ../ELPA; $(MAKE) clean); fi
 elpa_veryclean:
 	if test -d ../ELPA; then (rm -R -f ../ELPA); fi
+fox_clean:
+	if test -d ../FoX; then (rm -R -f ../FoX); fi
 iotk_clean:
 	if test -d ../S3DE; then (cd ../S3DE; $(MAKE) clean); fi
 	if test -d ../iotk; then (rm -R -f ../iotk); fi
@@ -131,7 +133,5 @@ iotk_veryclean:
 	rm -f ../iotk
 
 # general cleaning
-#clean: blas_clean lapack_clean elpa_clean iotk_clean
-#veryclean: blas_veryclean lapack_veryclean elpa_veryclean iotk_veryclean
-clean: lapack_clean elpa_clean iotk_clean
-veryclean: lapack_veryclean elpa_veryclean iotk_veryclean
+clean: lapack_clean elpa_clean iotk_clean fox_clean
+veryclean: lapack_veryclean elpa_veryclean iotk_veryclean fox_clean

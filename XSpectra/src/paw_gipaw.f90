@@ -166,14 +166,16 @@ CONTAINS
     TYPE ( paw_recon_type ), INTENT ( INOUT ) :: paw_recon_sp
 
     ! Local
-    INTEGER :: j, i, kkphi
+    INTEGER :: j, i, kkphi, ios
 
     ! If the data has already been read from a UPF file
     IF ( paw_recon_sp%gipaw_data_in_upf_file ) RETURN
 
-    OPEN ( 14, FILE = filerec_sp )
+    OPEN ( 14, FILE = filerec_sp, iostat=ios, status='OLD' )
+    IF(ios/=0) CALL errore("paw_gipaw", "could not open "//TRIM(filerec_sp),1)
     CALL scan_begin ( 14, 'PAW', .true. )
-    READ(14,*) paw_recon_sp%paw_nbeta
+    READ(14,*,iostat=ios) paw_recon_sp%paw_nbeta
+    IF(ios/=0) CALL errore("paw_gipaw", "could not read "//TRIM(filerec_sp),1)
     CALL scan_end ( 14, 'PAW' )
     CLOSE ( 14 )
 

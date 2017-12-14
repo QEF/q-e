@@ -19,7 +19,7 @@
   USE elph2,         only : epmatwp
   USE constants_epw, ONLY : twopi, ci, czero
   USE io_files,      ONLY : prefix, tmp_dir
-  USE io_epw,        ONLY : iunepmatwp
+  USE io_epw,        ONLY : iunepmatwp, iunepmatwp2
   USE mp_global,     ONLY : mp_sum
   USE mp_world,      ONLY : world_comm
   USE parallel_include
@@ -57,8 +57,6 @@
   !! Starting ir for this cores
   INTEGER :: ir_stop
   !! Ending ir for this pool
-  INTEGER :: iunepmatwp2
-  !! Return the file unit
   INTEGER :: ierr
   !! Return if there is an error
   !integer(kind=8) ::  lrepmatw,  lrepmatw2
@@ -102,18 +100,6 @@
   ELSE 
      CALL errore ('ephwan2blochp', 'Problem with parallel_k/q scheme', nrr_q)
   ENDIF
-  !
-#if defined(__MPI)
-  IF (etf_mem == 1) then
-    ! Check for directory given by "outdir"
-    !      
-    filint = trim(tmp_dir)//trim(prefix)//'.epmatwp1'
-    CALL MPI_FILE_OPEN(world_comm,filint,MPI_MODE_RDONLY,MPI_INFO_NULL,iunepmatwp2,ierr)
-    IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_OPEN',1 )
-    IF( parallel_q ) CALL errore( 'ephwan2blochp', 'q-parallel+etf_mem = 1 is not supported',1 ) 
-    !CALL MPI_COMM_RANK(world_comm,my_id,ierr)
-  ENDIF
-#endif  
   !
   eptmp = czero
   cfac(:) = czero
@@ -187,10 +173,6 @@
   !
 #if defined(__MPI)
   IF (parallel_k) CALL mp_sum(eptmp, world_comm)
-  IF (etf_mem == 1) then
-    CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)
-    IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_CLOSE',1 )
-  ENDIF  
 #endif  
   !
   !----------------------------------------------------------

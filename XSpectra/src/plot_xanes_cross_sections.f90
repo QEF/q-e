@@ -9,7 +9,7 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry,ispectra)
   USE kinds,      ONLY: DP
   USE constants,  ONLY: rytoev, fpi
   USE xspectra,   ONLY: xang_mom, xemax, xemin, xiabs, xnepoint,n_lanczos, &
-                        xgamma, xonly_plot, xnitermax, xe0_ry,edge, two_edges
+                        xgamma, xonly_plot, xnitermax, xe0_ry,edge, two_edges, xanes_file
   !*apsi  USE uspp_param, ONLY : psd  !psd(ntypx) label for the atoms 
   USE klist,      ONLY: nkstot, & ! total number of k-points
                         nks,    & ! number of k-points per pool
@@ -64,7 +64,7 @@ SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,e1s_ry,ispectra)
 
   IF( ionode ) THEN
      if(.not.two_edges.or.(two_edges.and.ispectra.eq.1)) then
-        OPEN (unit=277,file='xanes.dat',form='formatted',status='unknown')
+        OPEN (unit=277,file=xanes_file,form='formatted',status='unknown')
         REWIND(277) 
         !... writes input parameters in file 277
         WRITE(277,"('# Final state angular momentum:',1x,i3)") xang_mom
@@ -497,7 +497,7 @@ SUBROUTINE plot_xanes_quadrupole(a,b,xnorm,ncalcv,terminator,e1s_ry)
   USE kinds,      ONLY: DP
   USE constants,  ONLY: pi, rytoev
   USE xspectra,   ONLY: xang_mom, xemax, xemin, xiabs, xnepoint, &
-                        xgamma, xonly_plot, xnitermax, xe0_ry
+                        xgamma, xonly_plot, xnitermax, xe0_ry, xanes_file
   !*apsi  USE uspp_param, ONLY : psd  !psd(ntypx) label for the atoms 
   USE klist,      ONLY: nkstot,& ! total number of k-points
                         nks,   & ! number of k-points per pool
@@ -554,7 +554,7 @@ SUBROUTINE plot_xanes_quadrupole(a,b,xnorm,ncalcv,terminator,e1s_ry)
 
   IF( ionode ) THEN
 
-     open (unit=277,file='xanes.dat',form='formatted',status='unknown')
+     open (unit=277,file=xanes_file,form='formatted',status='unknown')
 
      REWIND(277) ! to be at the initial point of file 277
      !... writes input parameters in file 277

@@ -54,8 +54,8 @@
   !
   !  allocate space for the quantities needed in EPW
   !
-  ALLOCATE (evq ( npwx*npol, nbnd))    
-  ALLOCATE (dpsi ( npwx*npol, nbnd))    
+  ALLOCATE (evq ( npwx*npol, nbnd))
+  ALLOCATE (dpsi ( npwx*npol, nbnd))
   ALLOCATE (vlocq ( ngm, ntyp))    
 ! SP: nrxx is not used in QE 5 ==> tg_nnr is the maximum among nnr
 !     This SHOULD have the same dim as nrxx had.

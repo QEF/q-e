@@ -203,6 +203,12 @@ SUBROUTINE readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   IF ( ntyp.NE.ntyp_ .OR. nat.NE.nat_ .OR.ibrav_.NE.ibrav .OR. &
        ABS ( celldm_ (1) - celldm (1) ) > 1.0d-5) &
           CALL errore ('readmat', 'inconsistent data', 1)
+  IF ( ibrav_ == 0 ) THEN
+     READ (iudyn, '(a)') line
+     READ (iudyn, '(a)') line
+     READ (iudyn, '(a)') line
+     READ (iudyn, '(a)') line
+  END IF
   DO nt = 1, ntyp
      READ (iudyn, * ) i, atm, amass_
      IF ( nt.NE.i .OR. ABS (amass_ - amu_ry*amass (nt) ) > 1.0d-5) &

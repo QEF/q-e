@@ -37,7 +37,7 @@ MODULE read_input
      !
      IMPLICIT NONE
      !
-     CHARACTER(LEN=2), INTENT (IN) :: prog
+     CHARACTER(LEN=*), INTENT (IN) :: prog
      CHARACTER(LEN=*), INTENT (IN) :: input_file_
      !
      CHARACTER(LEN=iotk_attlenx) :: attr
@@ -45,7 +45,7 @@ MODULE read_input
      INTEGER :: ierr
      !
      IF ( ionode ) THEN
-        IF ( prog == 'CP' ) CALL xml_input_dump()
+        IF ( prog(1:2) == 'CP' ) CALL xml_input_dump()
         ierr = open_input_file( input_file_, xmlinput, attr) 
      END IF
      !
@@ -67,9 +67,9 @@ MODULE read_input
         !
         CALL read_namelists( prog, qestdin )
         !
-        ! ... Read CARDS 
+        ! ... Read CARDS (requires in input only first two letters of prog)
         !
-        CALL read_cards ( prog, qestdin )
+        CALL read_cards ( prog(1:2), qestdin )
         !
      END IF
      IF ( ionode) ierr = close_input_file( )

@@ -33,7 +33,7 @@ subroutine read_input_and_bcast(filerecon, r_paw)
   REAL(DP) :: r_paw(0:lmaxx)
   CHARACTER (LEN=256) :: input_file
   CHARACTER (LEN=256) :: filerecon(ntypx)
-
+  CHARACTER(LEN=256), EXTERNAL :: trimcheck
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   ! $   Namelists Definition
@@ -77,7 +77,8 @@ subroutine read_input_and_bcast(filerecon, r_paw)
        gamma_mode,&
        gamma_file,&
        gamma_energy,&
-       gamma_value
+       gamma_value, &
+       xanes_file
 
   namelist / pseudos /&
        filerecon,&
@@ -150,7 +151,7 @@ subroutine read_input_and_bcast(filerecon, r_paw)
 500  CALL errore ('cut_occ', 'reading cut_occ namelist', abs (ios) )
 
 
-     tmp_dir = TRIM(outdir)
+     tmp_dir = trimcheck(outdir) !TRIM(outdir)
 
   ENDIF
 
@@ -194,6 +195,7 @@ subroutine read_input_and_bcast(filerecon, r_paw)
   CALL mp_bcast( terminator, ionode_id, world_comm )
   CALL mp_bcast( wf_collect, ionode_id, world_comm )
   CALL mp_bcast( twfcollect, ionode_id, world_comm )
+  CALL mp_bcast( xanes_file,  ionode_id, world_comm )
 
   CALL mp_bcast( U_projection_type, ionode_id, world_comm )
 

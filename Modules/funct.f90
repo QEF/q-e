@@ -52,7 +52,7 @@ module funct
 
   ! additional subroutines/functions for hybrid functionals
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
-  PUBLIC  :: set_exx_fraction
+  PUBLIC  :: set_exx_fraction, dft_force_hybrid
   PUBLIC  :: set_screening_parameter, get_screening_parameter
   PUBLIC  :: set_gau_parameter, get_gau_parameter
 
@@ -64,6 +64,7 @@ module funct
   ! driver subroutines computing XC
   PUBLIC  :: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
   PUBLIC  :: tau_xc , tau_xc_spin, dmxc, dmxc_spin, dmxc_nc
+  PUBLIC  :: tau_xc_array, tau_xc_array_spin
   PUBLIC  :: dgcxc, dgcxc_spin
   PUBLIC  :: d3gcxc       
   PUBLIC  :: nlc
@@ -213,6 +214,7 @@ module funct
   !              "tb09"   TB09 Meta-GGA                  imeta=3
   !              "+meta"  activate MGGA even without MGGA-XC   imeta=4
   !              "scan"   SCAN Meta-GGA                  imeta=5
+  !              "sca0"   SCAN0  Meta-GGA                imeta=6
   !
   ! Van der Waals functionals (nonlocal term only)
   !              "nonlc"  none                           inlc =0 (default)
@@ -272,6 +274,8 @@ module funct
   !              tpss    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria, 
   !                      PRL 91, 146401 (2003)
   !              tb09    F Tran and P Blaha, Phys.Rev.Lett. 102, 226401 (2009) 
+  !              scan    J Sun, A Ruzsinszky and J Perdew, PRL 115, 36402 (2015)
+  !              scan0   K Hui and J-D. Chai, JCP 144, 44114 (2016)
   !              sogga   Y. Zhao and D. G. Truhlar, JCP 128, 184109 (2008)
   !              m06l    Y. Zhao and D. G. Truhlar, JCP 125, 194101 (2006)
   !              gau-pbe J.-W. Song, K. Yamashita, K. Hirao JCP 135, 071103 (2011)
@@ -319,7 +323,7 @@ module funct
   real(DP):: finite_size_cell_volume = notset
   logical :: discard_input_dft = .false.
   !
-  integer, parameter:: nxc=8, ncc=10, ngcx=40, ngcc=12, nmeta=5, ncnl=6
+  integer, parameter:: nxc=8, ncc=10, ngcx=40, ngcc=12, nmeta=6, ncnl=6
   character (len=4) :: exc, corr, gradx, gradc, meta, nonlocc
   dimension :: exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0:ngcc), &
                meta(0:nmeta), nonlocc (0:ncnl)
@@ -338,11 +342,11 @@ module funct
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'NONE',&
                'B3LP', 'PSC', 'PBE', 'xxxx', 'xxxx', 'Q2DC' / 
 
-  data meta  / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN' / 
+  data meta  / 'NONE', 'TPSS', 'M06L', 'TB09', 'META', 'SCAN', 'SCA0' / 
 
   data nonlocc/'NONE', 'VDW1', 'VDW2', 'VV10', 'VDWX', 'VDWY', 'VDWZ' / 
 
-#ifdef __LIBXC
+#if defined(__LIBXC)
   integer :: libxc_major=0, libxc_minor=0, libxc_micro=0
   public :: libxc_major, libxc_minor, libxc_micro, get_libxc_version
 #endif
@@ -572,9 +576,13 @@ CONTAINS
     else IF ('TB09'.EQ. TRIM(dftout) ) THEN
        dft_defined = set_dft_values(0,0,0,0,0,3)
  
-   ! special case : SCAN Meta GGA
+    ! special case : SCAN Meta GGA
     else if ( 'SCAN' .EQ. TRIM(dftout) ) THEN
        dft_defined = set_dft_values(0,0,0,0,0,5)
+
+     ! special case : SCAN0
+    else IF ('SCAN0'.EQ. TRIM(dftout ) ) THEN
+       dft_defined = set_dft_values(0,0,0,0,0,6)
 
     ! special case : PZ/LDA + null meta-GGA
     else IF (('PZ+META'.EQ. TRIM(dftout)) .or. ('LDA+META'.EQ. TRIM(dftout)) ) THEN
@@ -839,6 +847,18 @@ CONTAINS
      exx_started = .false.
   end subroutine stop_exx
   !-----------------------------------------------------------------------
+  subroutine dft_force_hybrid(request)
+     LOGICAL,OPTIONAL,INTENT(inout) :: request
+     LOGICAL :: aux
+     IF(present(request)) THEN
+       aux = ishybrid
+       ishybrid = request
+       request = aux
+     ELSE 
+       ishybrid= .true.
+     ENDIF
+  end subroutine dft_force_hybrid
+  !-----------------------------------------------------------------------
   function exx_is_active ()
      logical exx_is_active
      exx_is_active = exx_started
@@ -1093,6 +1113,8 @@ CONTAINS
      end if
   else if (imeta == 5 ) then 
     shortname = 'SCAN'      
+  else if (imeta == 6 ) then 
+    shortname = 'SCAN0'      
   end if
 
   if ( inlc==1 ) then
@@ -2712,6 +2734,48 @@ subroutine tau_xc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
   
 end subroutine tau_xc
 
+subroutine tau_xc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
+  ! HK/MCA : the xc_func_init is slow and is called too many times
+  ! HK/MCA : we modify this subroutine so that the overhead could be minimized
+  !-----------------------------------------------------------------------
+  !     gradient corrections for exchange and correlation - Hartree a.u.
+  !     See comments at the beginning of module for implemented cases
+  !
+  !     input:  rho, grho=|\nabla rho|^2
+  !
+  !     definition:  E_x = \int e_x(rho,grho) dr
+  !
+  !     output: sx = e_x(rho,grho) = grad corr
+  !             v1x= D(E_x)/D(rho)
+  !             v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
+  !             v3x= D(E_x)/D(tau)
+  !
+  !             sc, v1c, v2c as above for correlation
+  !
+  implicit none
+
+  integer, intent(in) :: nnr
+  real(DP) :: rho(nnr), grho(nnr), tau(nnr), ex(nnr), ec(nnr)
+  real(DP) :: v1x(nnr), v2x(nnr), v3x(nnr), v1c(nnr), v2c(nnr), v3c(nnr)  
+  !_________________________________________________________________________
+  
+  if (imeta == 5) then
+     call  scancxc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
+  elseif (imeta == 6 ) then ! HK/MCA: SCAN0 
+     call  scancxc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
+     if (exx_started) then
+        ex  = (1.0_DP - exx_fraction) * ex
+        v1x = (1.0_DP - exx_fraction) * v1x
+        v2x = (1.0_DP - exx_fraction) * v2x
+        v3x = (1.0_DP - exx_fraction) * v3x
+     end if
+  else
+     call errore('v_xc_meta_array','(CP only) array mode only works for SCAN',1)
+  end if
+  
+  return
+  
+end subroutine tau_xc_array
 !
 !
 !-----------------------------------------------------------------------
@@ -2747,11 +2811,15 @@ subroutine tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,   &
   v2cup         = zero
   v2cdw         = zero
 
-  do ipol=1,3
-     grhoup2 = grhoup2 + grhoup(ipol)**2
-     grhodw2 = grhodw2 + grhodw(ipol)**2
-  end do
+  ! FIXME: for SCAN, this will be calculated later
+  if (imeta /= 4) then
 
+     do ipol=1,3
+        grhoup2 = grhoup2 + grhoup(ipol)**2
+        grhodw2 = grhodw2 + grhodw(ipol)**2
+     end do
+
+  end if
   
   if (imeta == 1) then
 
@@ -2773,6 +2841,14 @@ subroutine tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,   &
             &            ex, ec, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw,  &
             &            v1cup, v1cdw, v2cup(1), v2cdw(1), v3cup, v3cdw)
      
+  elseif (imeta == 5) then
+
+     ! FIXME: not the most efficient use of libxc 
+
+     call scanxc_spin(rhoup, rhodw, grhoup, grhodw, tauup, taudw,  &
+              &  ex, v1xup,v1xdw,v2xup,v2xdw,v3xup,v3xdw,          &
+              &  ec, v1cup,v1cdw,v2cup,v2cdw,v3cup,v3cdw )
+  
   else
   
      call errore('tau_xc_spin','This case not implemented',imeta)
@@ -2781,7 +2857,100 @@ subroutine tau_xc_spin (rhoup, rhodw, grhoup, grhodw, tauup, taudw, ex, ec,   &
   
 end subroutine tau_xc_spin                
                 
+subroutine tau_xc_array_spin (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, & 
+                             & v1c, v2c, v3c)
+  ! HK/MCA : the xc_func_init (LIBXC) is slow and is called too many times
+  ! HK/MCA : we modify this subroutine so that the overhead could be minimized
+  !-----------------------------------------------------------------------
+  !     gradient corrections for exchange and correlation - Hartree a.u.
+  !     See comments at the beginning of module for implemented cases
+  !
+  !     input:  rho,rho, grho=\nabla rho
+  !
+  !     definition:  E_x = \int e_x(rho,grho) dr
+  !
+  !     output: sx = e_x(rho,grho) = grad corr
+  !             v1x= D(E_x)/D(rho)
+  !             v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
+  !             v3x= D(E_x)/D(tau)
+  !
+  !             sc, v1cup, v2cup as above for correlation
+  !
+  implicit none
 
+  integer, intent(in) :: nnr
+  real(DP) :: rho(nnr,2), grho(nnr,3,2), tau(nnr,2), ex(nnr), ec(nnr)
+  real(DP) :: v1x(nnr,2), v2x(nnr,3), v3x(nnr,2), v1c(nnr,2), v2c(nnr,3), v3c(nnr,2)
+
+  !Local variables  
+
+  integer  :: ipol, k, is
+  real(DP) :: grho2(3,nnr) 
+  !MCA: Libxc format
+  real(DP) :: rho_(2,nnr), tau_(2,nnr)
+  real(DP) :: v1x_(2,nnr), v2x_(3,nnr), v3x_(2,nnr), v1c_(2,nnr), v2c_(3,nnr), v3c_(2,nnr)
+  
+  !_________________________________________________________________________
+  
+  grho2 = 0.0
+
+  !MCA/HK: contracted gradient of density, same format as in libxc
+  do k=1,nnr
+
+    do ipol=1,3
+       grho2(1,k) = grho2(1,k) + grho(k,ipol,1)**2
+       grho2(2,k) = grho2(2,k) + grho(k,ipol,1) * grho(k,ipol,2)
+       grho2(3,k) = grho2(3,k) + grho(k,ipol,2)**2
+    end do
+
+   !MCA: transforming to libxc format (DIRTY HACK)
+    do is=1,2
+       rho_(is,k) = rho(k,is)
+       tau_(is,k) = tau(k,is)
+    enddo
+
+  end do
+
+  if (imeta == 5) then
+
+     !MCA/HK: using the arrays in libxc format
+     call  scancxc_array_spin (nnr, rho_, grho2, tau_, ex, ec, & 
+           &                   v1x_, v2x_, v3x_,  &
+           &                   v1c_, v2c_, v3c_ )
+
+     do k=1,nnr
+
+       !MCA: from libxc to QE format (DIRTY HACK)
+       do is=1,2
+          v1x(k,is) = v1x_(is,k)
+          v2x(k,is) = v2x_(is,k) !MCA/HK: v2x(:,2) contains the cross terms
+          v3x(k,is) = v3x_(is,k)
+          v1c(k,is) = v1c_(is,k)
+          v2c(k,is) = v2c_(is,k) !MCA/HK: same as v2x
+          v3c(k,is) = v3c_(is,k)
+       enddo
+
+      v2c(k,3) = v2c_(3,k)
+      v2x(k,3) = v2x_(3,k) 
+
+     end do
+  
+  elseif (imeta == 6 ) then ! HK/MCA: SCAN0 
+     call  scancxc_array (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
+     if (exx_started) then
+        ex  = (1.0_DP - exx_fraction) * ex
+        v1x = (1.0_DP - exx_fraction) * v1x
+        v2x = (1.0_DP - exx_fraction) * v2x
+        v3x = (1.0_DP - exx_fraction) * v3x
+     end if
+  else
+     call errore('v_xc_meta_array','(CP only) array mode only works for SCAN',1)
+  end if
+  
+  return
+  
+end subroutine tau_xc_array_spin
+!
 !-----------------------------------------------------------------------
 !------- DRIVERS FOR DERIVATIVES OF XC POTENTIAL -----------------------
 !-----------------------------------------------------------------------
@@ -3393,7 +3562,7 @@ subroutine evxc_t_vec(rho,rhoc,lsd,length,vxc,exc)
 end subroutine evxc_t_vec
 
 
-#ifdef __LIBXC
+#if defined(__LIBXC)
   subroutine get_libxc_version
      implicit none
      interface

@@ -233,6 +233,7 @@ MODULE realus
       REAL(DP), ALLOCATABLE :: boxdist(:), xyz(:,:)
       REAL(DP)              :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, aux
       REAL(DP)              :: inv_nr1, inv_nr2, inv_nr3, boxradsq_ia, boxrad_ia
+      LOGICAL               :: tprint
       !
       initialisation_level = 3
       IF ( .not. okvan ) RETURN
@@ -385,6 +386,7 @@ MODULE realus
       ! collect the result of the qq_at matrix across processors 
       CALL mp_sum( qq_at, intra_bgrp_comm )
       ! and test that they don't differ too much from the result computed on the atomic grid
+      tprint = .true.
       do ia=1,nat
          nt = ityp(ia)
          ijh = 0
@@ -394,8 +396,13 @@ MODULE realus
                jl = nhtol (jh, nt)
                ijh=ijh+1
                if (abs(qq_at(ih,jh,ia)-qq_nt(ih,jh,nt)) .gt. eps6*10 ) then
-                  write(6,'(i3,4i3,i4,2f12.8)')  ia, ih,jh,il,jl, ijh,qq_at(ih,jh,ia), qq_nt(ih,jh,nt)
-                  call errore('real_space_q','integrated real space q too different from target qq',0)
+                  IF (tprint) THEN
+                     CALL infomsg('real_space_q',&
+                         'integrated real space q too different from target q')
+                     tprint = .false.
+                  END IF
+                  write(6,'(i3,4i3,i4,2f12.8)')  ia, ih,jh,il,jl, ijh, &
+                          qq_at(ih,jh,ia), qq_nt(ih,jh,nt)
                end if
             end do
          end do

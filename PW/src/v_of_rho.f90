@@ -251,7 +251,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
           !
           ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
           !
-          if (get_meta()==1) then  ! tpss functional
+          if (get_meta()==1 .OR.get_meta()==5 ) then  ! tpss, scan
             !
             h(:,k,1) = (v2xup * grhoup(:) + v2cup(:)) * e2
             h(:,k,2) = (v2xdw * grhodw(:) + v2cdw(:)) * e2

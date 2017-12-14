@@ -952,7 +952,7 @@
     REAL(DP), intent(in) :: omega, press
     REAL(DP), intent(in), optional :: wmassIN
     integer        :: i, j
-    REAL(DP) :: wmass
+    REAL(DP) :: wmass, fiso
     IF (.not. present(wmassIN)) THEN
       wmass = 1.0
     ELSE
@@ -971,6 +971,17 @@
     IF( wmass < eps8 ) &
        CALL errore( ' movecell ',' cell mass is less than 0 ! ', 1 )
     fcell = omega * fcell / wmass
+! added this :
+    IF( isotropic ) THEN
+      !
+      ! Isotropic force on the cell
+      !
+      fiso = (fcell(1,1)+fcell(2,2)+fcell(3,3))/3.0_DP
+      do i=1,3
+          fcell(i,i)=fiso
+      end do
+    END IF
+! 
     return
   end subroutine cell_force
 

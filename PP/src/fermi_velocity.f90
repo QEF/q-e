@@ -30,6 +30,7 @@ PROGRAM fermi_velocity
   USE ener,                 ONLY : ef, ef_up, ef_dw
   USE klist,                ONLY : nks, two_fermi_energies
   USE fermisurfer_common,   ONLY : b_low, b_high, rotate_k_fs, write_fermisurfer
+  USE constants,            ONLY : tpi
   !
   IMPLICIT NONE
   !
@@ -118,8 +119,8 @@ PROGRAM fermi_velocity
                     !
                  END DO
                  !
-                 de(1:3) = 2d0 * de(1:3) * REAL((/nk1, nk2, nk3/), DP)
-                 de(1:3) = matmul(at(1:3,1:3), de(1:3)) * alat
+                 de(1:3) = 0.5_dp * de(1:3) * REAL((/nk1, nk2, nk3/), DP)
+                 de(1:3) = matmul(at(1:3,1:3), de(1:3)) * alat / tpi
                  vf(ibnd, i1, i2, i3, ispin) = SQRT(DOT_PRODUCT(de, de))
                  !
               END DO ! ibnd = 1, nbnd

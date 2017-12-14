@@ -65,6 +65,7 @@ link_on_main_doc:
 	ln -fs ../PP/Doc/INPUT_pw_export.html . ; \
 	ln -fs ../PP/Doc/INPUT_pw_export.xml . ; \
 	ln -fs ../PP/Doc/INPUT_pw_export.txt . ; \
+	ln -fs ../PP/Doc/INPUT_pw2gw.html . ;  \
 	ln -fs ../PP/Doc/INPUT_pw2bgw.html . ; \
 	ln -fs ../PP/Doc/INPUT_pw2bgw.xml . ; \
 	ln -fs ../PP/Doc/INPUT_pw2bgw.txt . ; \

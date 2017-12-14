@@ -70,6 +70,7 @@ subroutine set_xspectra_namelists_defaults()
   terminator=.false.
   gamma_mode='constant'
   gamma_file='gamma.dat'
+  xanes_file='xanes.dat'
   
   
   ! ... Namelist pseudos 

@@ -118,6 +118,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE london_module,            ONLY : energy_london, force_london, stres_london
   USE input_parameters,         ONLY : tcpbo
   USE funct,                    ONLY : dft_is_hybrid, start_exx, exx_is_active
+  USE funct,                    ONLY : dft_is_meta
   !
   IMPLICIT NONE
   !
@@ -163,6 +164,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   REAL(DP), ALLOCATABLE :: pmass(:)
   REAL(DP), ALLOCATABLE :: forceh(:,:)
   !
+  REAL(DP) :: exx_start_thr
   CALL start_clock( 'cpr_total' )
   !
   etot_out = 0.D0
@@ -173,6 +175,13 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   tfirst = .TRUE.
   tlast  = .FALSE.
   nacc   = 5
+  !
+  if (dft_is_meta()) then
+    !HK/MCA : for SCAN0 calculation the initial SCAN has to converge better than the PBE -> PBE0 case
+    exx_start_thr = 1.E+1_DP
+  else
+    exx_start_thr = 1.E+2_DP
+  end if ! dft_is_meta
   !
   ALLOCATE ( pmass (nsp) )
   pmass(1:nsp) = amass(1:nsp) * amu_au
@@ -860,7 +869,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF( .NOT.exx_is_active().AND.dft_is_hybrid().AND.tconvthrs%active ) THEN
        !
-       IF(delta_etot.LT.tconvthrs%derho*1.E+2_DP) THEN
+       IF(delta_etot.LT.tconvthrs%derho*exx_start_thr) THEN
          !
          WRITE(stdout,'(/,3X,"Exact Exchange is turned on ...")')
          ! 

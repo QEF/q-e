@@ -40,6 +40,7 @@ SUBROUTINE run_nscf(do_band, iq)
   USE mp_pools,        ONLY : kunit
   USE lr_symm_base,    ONLY : minus_q, nsymq, invsymq
   USE qpoint,          ONLY : xq
+  USE klist,           ONLY : qnorm 
   USE el_phon,         ONLY : elph_mat
   !
   IMPLICIT NONE
@@ -51,6 +52,7 @@ SUBROUTINE run_nscf(do_band, iq)
   !
   CALL start_clock( 'PWSCF' )
   !
+  ! FIXME: following section does not belong to this subroutine
   IF (done_bands(iq)) THEN
      WRITE (stdout,'(/,5x,"Bands found: reading from ",a)') TRIM(tmp_dir_phq)
      CALL clean_pw( .TRUE. )
@@ -59,11 +61,14 @@ SUBROUTINE run_nscf(do_band, iq)
      tmp_dir=tmp_dir_phq
      ! FIXME: kunit is set here: in this case we do not go through setup_nscf
      ! FIXME: and read_file calls divide_et_impera that needs kunit
+     ! FIXME: qnorm (also set in setup_nscf) is needed by allocate_nlpot
      IF ( lgamma_iq(iq) ) THEN
         kunit = 1
      ELSE
         kunit = 2
      ENDIF
+     qnorm = SQRT(xq(1)**2+xq(2)**2+xq(3)**2)
+     !
      CALL read_file()
      IF (.NOT.lgamma_iq(iq).OR.(qplot.AND.iq>1)) CALL &
                                   set_small_group_of_q(nsymq,invsymq,minus_q)

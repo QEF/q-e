@@ -323,6 +323,16 @@
 !$omp end parallel 
       !
       IF(dft_is_meta()) THEN
+         ! HK/MCA : warning on task groups
+         if (nogrp_.gt.1) call errore('forces','metagga force not supporting taskgroup parallelization',1)
+         ! HK/MCA : reset occupation numbers since omp private screws it up... need a better fix FIXME
+         if (tens) then
+            fi = -0.5d0
+            fip = -0.5d0
+         else
+            fi = -0.5d0*f(i)
+            fip = -0.5d0*f(i+1)
+         endif
          CALL dforce_meta(c(1,i),c(1,i+1),df,da,psi,iss1,iss2,fi,fip) !METAGGA
       END IF
 

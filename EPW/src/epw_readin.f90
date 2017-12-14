@@ -104,7 +104,7 @@
        degaussw, fsthick, eptemp,  nsmear, delta_smear,                        &
        dvscf_dir, ngaussw,                                                     &
        wannierize, dis_win_max, dis_win_min, dis_froz_min, dis_froz_max,       &
-       num_iter, proj,  wdata, iprint, write_wfn, wmin, wmax, nw,              &
+       num_iter, proj, wdata, iprint, write_wfn, wmin, wmax, nw,               &
        eps_acustic, a2f, nest_fn, plselfen,                                    & 
        elecselfen, phonselfen, parallel_k, parallel_q,                         &
        rand_q, rand_nq, rand_k, rand_nk, specfun_pl,                           &

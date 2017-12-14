@@ -144,6 +144,7 @@ PROGRAM X_Spectra
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
      i=0
+     IF(xiabs<1 .or. xiabs>ntyp) CALL errore("xspectra","xiabs < 1 or xiabs > ntyp",1)
      DO na=1,nat
         IF(ityp(na).EQ.xiabs) i=i+1
      ENDDO
@@ -382,7 +383,7 @@ PROGRAM X_Spectra
      ENDIF
      !
      WRITE(stdout,'(5x,"Cross-section successfully written in ",a,/)') &
-      'xanes.dat'
+      xanes_file
      IF (.NOT. xonly_plot) WRITE(stdout,'(5x,"... End STEP 2 ...",/)')
 
   ELSEIF(TRIM(calculation).EQ.'rxes') THEN

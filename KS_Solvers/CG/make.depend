@@ -1,13 +1,10 @@
 ccgdiagg.o : ../../UtilXlib/mp.o
 ccgdiagg.o : ../../UtilXlib/mp_bands_util.o
 ccgdiagg.o : cg_param.o
-ccgdiagg.o : constants.o
-constants.o : cg_param.o
 export_gstart_2_cg.o : ../../UtilXlib/mp_bands_util.o
 rcgdiagg.o : ../../UtilXlib/mp.o
 rcgdiagg.o : ../../UtilXlib/mp_bands_util.o
 rcgdiagg.o : cg_param.o
-rcgdiagg.o : constants.o
 rotate_wfc_gamma.o : ../../LAXlib/la_types.o
 rotate_wfc_gamma.o : ../../LAXlib/mp_diag.o
 rotate_wfc_gamma.o : ../../LAXlib/ptoolkit.o

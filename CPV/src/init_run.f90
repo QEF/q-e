@@ -214,6 +214,9 @@ SUBROUTINE init_run()
      ALLOCATE( dkedtaus(  dffts%nnr, 3, 3, nspin ) )
      ALLOCATE( gradwfc(   dffts%nnr, 3 ) )
      !
+     if (nspin.ne.1) &
+       CALL errore( ' init_run ', 'spin-polarized stress not implemented for metaGGA', 1 )
+     !
   END IF
   !
   IF ( lwf ) THEN
