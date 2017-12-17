@@ -45,6 +45,7 @@ SUBROUTINE addusforce_g (forcenl)
   USE uspp,       ONLY : becsum, okvan
   USE uspp_param, ONLY : upf, lmaxq, nh, nhm
   USE mp_bands,   ONLY : intra_bgrp_comm
+  USE mp_pools,   ONLY : inter_pool_comm
   USE mp,         ONLY : mp_sum
   USE control_flags, ONLY : gamma_only
   USE fft_interfaces,ONLY : fwfft
@@ -53,6 +54,8 @@ SUBROUTINE addusforce_g (forcenl)
   !
   REAL(DP), INTENT(INOUT) :: forcenl (3, nat)
   !
+  INTEGER :: ngm_s, ngm_e, ngm_l
+  ! starting/ending indices, local number of G-vectors
   INTEGER :: ig, nt, ih, jh, ijh, nij, ipol, is, na, nb, nab
   REAL(DP) :: fact
   COMPLEX(DP) :: cfac
@@ -86,15 +89,23 @@ SUBROUTINE addusforce_g (forcenl)
   ENDDO
   DEALLOCATE (aux)
   !
-  ALLOCATE (ylmk0(ngm,lmaxq*lmaxq))
-  CALL ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
+  ! With k-point parallelization, distribute G-vectors across processors
+  ! ngm_s = index of first G-vector for this processor
+  ! ngm_e = index of last  G-vector for this processor
+  ! ngm_l = local number of G-vectors 
   !
-  ALLOCATE (qmod( ngm))
-!$omp parallel do default(shared) private(ig)
-  do ig = 1, ngm
-     qmod (ig) = sqrt (gg (ig) )
+  CALL divide (inter_pool_comm, ngm, ngm_s, ngm_e)
+  ngm_l = ngm_e-ngm_s+1
+  ! for the extraordinary unlikely case of more processors than G-vectors
+  IF ( ngm_l <= 0 ) GO TO 10
+  !
+  ALLOCATE (ylmk0(ngm_l,lmaxq*lmaxq))
+  CALL ylmr2 (lmaxq * lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0)
+  !
+  ALLOCATE (qmod(ngm_l))
+  DO ig = 1, ngm_l
+     qmod (ig) = sqrt (gg (ngm_s+ig-1) )
   ENDDO
-!$omp end parallel do
   !
   DO nt = 1, ntyp
      IF ( upf(nt)%tvanp ) THEN
@@ -103,12 +114,12 @@ SUBROUTINE addusforce_g (forcenl)
         ! qgm contains the Q functions in G space
         !
         nij = nh(nt)*(nh(nt)+1)/2
-        ALLOCATE (qgm(ngm,nij))
+        ALLOCATE (qgm(ngm_l,nij))
         ijh = 0
         DO ih = 1, nh (nt)
            DO jh = ih, nh (nt)
               ijh = ijh + 1
-              CALL qvan2 (ngm, ih, jh, nt, qmod, qgm(1,ijh), ylmk0)
+              CALL qvan2 (ngm_l, ih, jh, nt, qmod, qgm(1,ijh), ylmk0)
            ENDDO
         ENDDO
         !
@@ -118,7 +129,7 @@ SUBROUTINE addusforce_g (forcenl)
         DO na = 1, nat
            IF ( ityp(na) == nt ) nab = nab + 1
         ENDDO
-        ALLOCATE ( aux1( ngm, na, 3) )
+        ALLOCATE ( aux1( ngm_l, na, 3) )
         ALLOCATE ( ddeeq(nij, nab, 3, nspin_mag) )
         !
         DO is = 1, nspin_mag
@@ -130,13 +141,14 @@ SUBROUTINE addusforce_g (forcenl)
                  ! aux1 = product of potential, structure factor and iG
                  !
 !$omp parallel do default(shared) private(ig, cfac)
-                 do ig = 1, ngm
-                    cfac = vg (ig, is) * CONJG(eigts1 (mill(1,ig),na) * &
-                                               eigts2 (mill(2,ig),na) * &
-                                               eigts3 (mill(3,ig),na) )
-                    aux1 (ig, nb, 1) = g (1, ig) * cfac
-                    aux1 (ig, nb, 2) = g (2, ig) * cfac
-                    aux1 (ig, nb, 3) = g (3, ig) * cfac
+                 do ig = 1, ngm_l
+                    cfac = vg (ngm_s+ig-1, is) * &
+                         CONJG(eigts1 (mill(1,ngm_s+ig-1),na) * &
+                               eigts2 (mill(2,ngm_s+ig-1),na) * &
+                               eigts3 (mill(3,ngm_s+ig-1),na) )
+                    aux1 (ig, nb, 1) = g (1,ngm_s+ig-1) * cfac
+                    aux1 (ig, nb, 2) = g (2,ngm_s+ig-1) * cfac
+                    aux1 (ig, nb, 3) = g (3,ngm_s+ig-1) * cfac
                  ENDDO
 !$omp end parallel do
                  !
@@ -147,8 +159,8 @@ SUBROUTINE addusforce_g (forcenl)
            !    No need for special treatment of the G=0 term (is zero)
            !
            DO ipol = 1, 3
-              CALL DGEMM( 'C', 'N', nij, nab, 2*ngm, fact, qgm, 2*ngm, &
-                   aux1(1,1,ipol), 2*ngm, 0.0_dp, ddeeq(1,1,ipol,is), nij )
+              CALL DGEMM( 'C', 'N', nij, nab, 2*ngm_l, fact, qgm, 2*ngm_l, &
+                   aux1(1,1,ipol), 2*ngm_l, 0.0_dp, ddeeq(1,1,ipol,is), nij )
            ENDDO
            !
         ENDDO
@@ -174,6 +186,8 @@ SUBROUTINE addusforce_g (forcenl)
      ENDIF
   ENDDO
   !
+  10 CONTINUE
+  CALL mp_sum ( forceq, inter_pool_comm )
   CALL mp_sum ( forceq, intra_bgrp_comm )
   !
   forcenl(:,:) = forcenl(:,:) + forceq(:,:)

@@ -59,11 +59,16 @@ SUBROUTINE addusstress_g (sigmanlc)
   USE uspp_param, ONLY : upf, lmaxq, nh, nhm
   USE control_flags, ONLY : gamma_only
   USE fft_interfaces,ONLY : fwfft
+  USE mp_pools,   ONLY : inter_pool_comm
+  USE mp,         ONLY : mp_sum
   !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(inout) :: sigmanlc (3, 3)
   ! the nonlocal stress
+  !
+  INTEGER :: ngm_s, ngm_e, ngm_l
+  ! starting/ending indices, local number of G-vectors
   INTEGER :: ig, nt, ih, jh, ijh, ipol, jpol, is, na, nij
   ! counters
   COMPLEX(DP), ALLOCATABLE :: aux(:), aux1(:,:), aux2(:,:), vg(:,:), qgm(:,:)
@@ -76,16 +81,6 @@ SUBROUTINE addusstress_g (sigmanlc)
   !
   !
   sus(:,:) = 0.d0
-  !
-  ALLOCATE ( aux1(ngm,3), aux2(ngm,nspin), qmod(ngm) )
-  ALLOCATE ( ylmk0(ngm,lmaxq*lmaxq), dylmk0(ngm,lmaxq*lmaxq) )
-  !
-  CALL ylmr2 (lmaxq * lmaxq, ngm, g, gg, ylmk0)
-!$omp parallel do default(shared) private(ig)
-  DO ig = 1, ngm
-     qmod (ig) = sqrt (gg (ig) )
-  ENDDO
-!$omp end parallel do
   !
   ! fourier transform of the total effective potential
   !
@@ -104,21 +99,40 @@ SUBROUTINE addusstress_g (sigmanlc)
   ENDDO
   DEALLOCATE ( aux )
   !
+  ! With k-point parallelization, distribute G-vectors across processors
+  ! ngm_s = index of first G-vector for this processor
+  ! ngm_e = index of last  G-vector for this processor
+  ! ngm_l = local number of G-vectors 
+  !
+  CALL divide (inter_pool_comm, ngm, ngm_s, ngm_e)
+  ngm_l = ngm_e-ngm_s+1
+  ! for the extraordinary unlikely case of more processors than G-vectors
+  IF ( ngm_l <= 0 ) GO TO 10
+  !
+  ALLOCATE ( aux1(ngm_l,3), aux2(ngm_l,nspin), qmod(ngm_l) )
+  ALLOCATE ( ylmk0(ngm_l,lmaxq*lmaxq), dylmk0(ngm_l,lmaxq*lmaxq) )
+  !
+  CALL ylmr2 (lmaxq * lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0)
+  !
+  DO ig = 1, ngm_l
+     qmod (ig) = sqrt (gg (ngm_s+ig-1) )
+  ENDDO
+  !
   ! here we compute the integral Q*V for each atom,
   !       I = sum_G i G_a exp(-iR.G) Q_nm v^*
   ! (no contribution from G=0)
   !
   DO ipol = 1, 3
-     CALL dylmr2 (lmaxq * lmaxq, ngm, g, gg, dylmk0, ipol)
+     CALL dylmr2 (lmaxq * lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), dylmk0, ipol)
      DO nt = 1, ntyp
         IF ( upf(nt)%tvanp ) THEN
            nij = nh(nt)*(nh(nt)+1)/2
-           ALLOCATE (qgm(ngm,nij), tbecsum(nij,nspin) )
+           ALLOCATE (qgm(ngm_l,nij), tbecsum(nij,nspin) )
            ijh = 0
            DO ih = 1, nh (nt)
               DO jh = ih, nh (nt)
                  ijh = ijh + 1
-                 CALL dqvan2 (ngm, ih, jh, nt, qmod, qgm(1,ijh), ylmk0, &
+                 CALL dqvan2 (ngm_l, ih, jh, nt, qmod, qgm(1,ijh), ylmk0, &
                       dylmk0, ipol)
               ENDDO
            ENDDO
@@ -128,28 +142,28 @@ SUBROUTINE addusstress_g (sigmanlc)
                  !
                  tbecsum(:,:) = becsum(1:nij,na,1:nspin)
                  !
-                 CALL dgemm( 'N', 'N', 2*ngm, nspin, nij, 1.0_dp, &
-                      qgm, 2*ngm, tbecsum, nij, 0.0_dp, aux2, 2*ngm )
+                 CALL dgemm( 'N', 'N', 2*ngm_l, nspin, nij, 1.0_dp, &
+                      qgm, 2*ngm_l, tbecsum, nij, 0.0_dp, aux2, 2*ngm_l )
                  !
 !$omp parallel do default(shared) private(is, ig)
                  DO is = 1, nspin
-                    DO ig = 1, ngm
-                       aux2(ig,is) = aux2(ig,is) * CONJG(vg (ig, is))
+                    DO ig = 1, ngm_l
+                       aux2(ig,is) = aux2(ig,is) * CONJG(vg (ngm_s+ig-1, is))
                     END DO
                  END DO
 !$omp end parallel do
 !$omp parallel do default(shared) private(ig, cfac)
-                 DO ig = 1, ngm
-                    cfac = CONJG( eigts1 (mill (1,ig), na) * &
-                                  eigts2 (mill (2,ig), na) * &
-                                  eigts3 (mill (3,ig), na) )
-                     aux1 (ig,1) = cfac * g (1, ig)
-                     aux1 (ig,2) = cfac * g (2, ig)
-                     aux1 (ig,3) = cfac * g (3, ig)
+                 DO ig = 1, ngm_l
+                    cfac = CONJG( eigts1 (mill (1,ngm_s+ig-1), na) * &
+                                  eigts2 (mill (2,ngm_s+ig-1), na) * &
+                                  eigts3 (mill (3,ngm_s+ig-1), na) )
+                     aux1 (ig,1) = cfac * g (1,ngm_s+ig-1)
+                     aux1 (ig,2) = cfac * g (2,ngm_s+ig-1)
+                     aux1 (ig,3) = cfac * g (3,ngm_s+ig-1)
                 ENDDO
 !$omp end parallel do
-                CALL DGEMM('T','N', 3, nspin, 2*ngm, 1.0_dp, aux1, 2*ngm, &
-                           aux2, 2*ngm, 0.0_dp, fac, 3 )    
+                CALL DGEMM('T','N', 3, nspin, 2*ngm_l, 1.0_dp, aux1, 2*ngm_l, &
+                           aux2, 2*ngm_l, 0.0_dp, fac, 3 )    
                 DO is = 1, nspin
                    DO jpol = 1, 3
                       sus (ipol, jpol) = sus (ipol, jpol) - omega * &
@@ -163,7 +177,8 @@ SUBROUTINE addusstress_g (sigmanlc)
      ENDDO
 
   ENDDO
-
+10 CONTINUE
+  CALL mp_sum(sus,inter_pool_comm)
   IF (gamma_only) THEN
      sigmanlc(:,:) = sigmanlc(:,:) + 2.0_dp*sus(:,:)
   ELSE
