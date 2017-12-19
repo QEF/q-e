@@ -76,7 +76,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    !
    !
    ! Read machine-readable header
-
+   !
    CALL read_upf_header(u, upf)
    IF(upf%tpawp .and. .not. present(grid)) &
       CALL errore('read_upf_v2', 'PAW requires a radial_grid_type.', 1)

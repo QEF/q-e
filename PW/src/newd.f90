@@ -31,6 +31,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   USE spin_orb,             ONLY : lspinorb, domag
   USE noncollin_module,     ONLY : nspin_mag
   USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -41,6 +42,8 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   REAL(kind=dp), intent(out) :: deeq( nhm, nhm, nat, nspin )
   LOGICAL, intent(in) :: skip_vltot !If .false. vltot is added to vr when necessary
   ! INTERNAL
+  INTEGER :: ngm_s, ngm_e, ngm_l
+  ! starting/ending indices, local number of G-vectors
   INTEGER :: ig, nt, ih, jh, na, is, ijh, nij, nb, nab
   ! counters on g vectors, atom type, beta functions x 2,
   !   atoms, spin, aux, aux, beta func x2 (again)
@@ -58,10 +61,23 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   !
   deeq(:,:,:,:) = 0.D0
   !
-  ALLOCATE( vaux(ngm,nspin_mag), qmod( ngm ), ylmk0( ngm, lmaxq*lmaxq ) )
+  ! With k-point parallelization, distribute G-vectors across processors
+  ! ngm_s = index of first G-vector for this processor
+  ! ngm_e = index of last  G-vector for this processor
+  ! ngm_l = local number of G-vectors 
   !
-  CALL ylmr2( lmaxq * lmaxq, ngm, g, gg, ylmk0 )
-  qmod(1:ngm) = SQRT( gg(1:ngm) )
+  CALL divide (inter_pool_comm, ngm, ngm_s, ngm_e)
+  ngm_l = ngm_e-ngm_s+1
+  ! for the extraordinary unlikely case of more processors than G-vectors
+  !
+  IF ( ngm_l > 0 ) THEN
+     ALLOCATE( vaux(ngm_l,nspin_mag), qmod(ngm_l), ylmk0( ngm_l, lmaxq*lmaxq ) )
+     !
+     CALL ylmr2 (lmaxq * lmaxq, ngm_l, g(1,ngm_s), gg(ngm_s), ylmk0)
+     DO ig = 1, ngm_l
+        qmod (ig) = sqrt (gg (ngm_s+ig-1) )
+     ENDDO
+  END IF
   !
   ! ... fourier transform of the total effective potential
   !
@@ -82,8 +98,8 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
      END IF
      CALL fwfft ('Dense', psic, dfftp)
 !$omp parallel do default(shared) private(ig)
-        do ig=1,ngm
-           vaux(ig, is) = psic(nl(ig))
+        do ig=1,ngm_l
+           vaux(ig, is) = psic(nl(ngm_s+ig-1))
         end do
 !$omp end parallel do
      !
@@ -96,7 +112,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
         ! nij = max number of (ih,jh) pairs per atom type nt
         !
         nij = nh(nt)*(nh(nt)+1)/2
-        ALLOCATE ( qgm(ngm,nij) )
+        ALLOCATE ( qgm(ngm_l,nij) )
         !
         ! ... Compute and store Q(G) for this atomic species 
         ! ... (without structure factor)
@@ -105,7 +121,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
         DO ih = 1, nh(nt)
            DO jh = ih, nh(nt)
               ijh = ijh + 1
-              CALL qvan2 ( ngm, ih, jh, nt, qmod, qgm(1,ijh), ylmk0 )
+              CALL qvan2 ( ngm_l, ih, jh, nt, qmod, qgm(1,ijh), ylmk0 )
            END DO
         END DO
         !
@@ -115,7 +131,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
         DO na = 1, nat
            IF ( ityp(na) == nt ) nab = nab + 1
         END DO
-        ALLOCATE ( aux (ngm, nab ), deeaux(nij, nab) )
+        ALLOCATE ( aux (ngm_l, nab ), deeaux(nij, nab) )
         !
         ! ... Compute and store V(G) times the structure factor e^(-iG*tau)
         !
@@ -125,11 +141,11 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
               IF ( ityp(na) == nt ) THEN
                  nb = nb + 1
 !$omp parallel do default(shared) private(ig)
-                 do ig=1,ngm
+                 do ig=1,ngm_l
                     aux(ig, nb) = vaux(ig,is) * CONJG ( &
-                      eigts1(mill(1,ig),na) * &
-                      eigts2(mill(2,ig),na) * &
-                      eigts3(mill(3,ig),na) )
+                      eigts1(mill(1,ngm_s+ig-1),na) * &
+                      eigts2(mill(2,ngm_s+ig-1),na) * &
+                      eigts3(mill(3,ngm_s+ig-1),na) )
                  end do
 !$omp end parallel do
               END IF
@@ -137,10 +153,10 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
            !
            ! ... here we compute the integral Q*V for all atoms of this kind
            !
-           CALL DGEMM( 'C', 'N', nij, nab, 2*ngm, fact, qgm, 2*ngm, aux, &
-                    2*ngm, 0.0_dp, deeaux, nij )
+           CALL DGEMM( 'C', 'N', nij, nab, 2*ngm_l, fact, qgm, 2*ngm_l, aux, &
+                    2*ngm_l, 0.0_dp, deeaux, nij )
            IF ( gamma_only .AND. gstart == 2 ) &
-                CALL DGER(nij, nab,-1.0_dp, qgm, 2*ngm, aux, 2*ngm, deeaux, nij)
+                CALL DGER(nij, nab,-1.0_dp, qgm, 2*ngm_l,aux,2*ngm_l,deeaux,nij)
            !
            nb = 0
            DO na = 1, nat
@@ -166,6 +182,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   END DO
   !
   DEALLOCATE( qmod, ylmk0, vaux )
+  CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), inter_pool_comm )
   CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), intra_bgrp_comm )
   !
 END SUBROUTINE newq
