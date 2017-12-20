@@ -32,7 +32,7 @@ SUBROUTINE read_upf_schema(pseudo, upf, grid, ierr )             !
    !
    USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
    USE radial_grids, ONLY: radial_grid_type, nullify_radial_grid
-   USE FoX_dom  
+   !USE FoX_dom  
    IMPLICIT NONE
    TYPE(Node), POINTER, INTENT(IN)   :: pseudo   ! pointer to root node
    TYPE(pseudo_upf),INTENT(INOUT)    :: upf       ! the pseudo data
@@ -59,18 +59,6 @@ SUBROUTINE read_upf_schema(pseudo, upf, grid, ierr )             !
                    'Unknown UPF format version: '//TRIM(upf%nv),1)
    CALL read_upf_header( header, info, upf)
    pointList => getElementsByTagname(info, "valence_orbital") 
-   !ALLOCATE(upf%els(upf%nwfc), upf%nchi(upf%nwfc), upf%lchi(upf%nwfc), upf%oc(upf%nwfc), &
-   !         upf%rcut_chi(upf%nwfc), upf%rcutus_chi(upf%nwfc), upf%epseu(upf%nwfc))
-   !DO nw = 1, upf%nwfc
-   !   pNode => item( pointList, nw -1 ) 
-   !   CALL extractDataAttribute(pNode, "nl", upf%els(nw))
-   !   CALL extractDataAttribute(pNode, "pn", upf%nchi(nw))
-   !   CALL extractDataAttribute(pNode, "l", upf%lchi(nw)) 
-   !   CALL searchData ('occupation', upf%oc(nw), pNode) 
-   !   CALL searchData('Rcut', upf%rcut_chi(nw), pNode) 
-   !   CALL searchData('RcutUS', upf%rcutus_chi(nw), pNode)
-   !   CALL searchData('Epseu', upf%epseu(nw), pNode )
-   !END DO    
    !! no need to read these data here these field will be filled later in read_pswfc 
    fileRef = TRIM(upf%psd)//'-'//TRIM(upf%typ)
    IF(upf%tpawp .and. .not. present(grid)) &
@@ -137,9 +125,9 @@ SUBROUTINE read_upf_schema(pseudo, upf, grid, ierr )             !
    !
    IF( present(ierr) ) ierr=0
 
-   RETURN
+  RETURN
 
-   END SUBROUTINE read_upf_schema
+  END SUBROUTINE read_upf_schema
    !
    SUBROUTINE read_upf_header(header, info,  upf)
       IMPLICIT NONE
@@ -334,7 +322,7 @@ SUBROUTINE read_upf_schema(pseudo, upf, grid, ierr )             !
       IF ( ierr /= 0 ) CALL errore ('read_upf_schema', 'format error in pp_dij element', ierr ) 
       !
       ! Read the augmentation charge section
-      augmentation : IF(upf%tvanp .or. upf%tpawp) THEN
+      IF(upf%tvanp .or. upf%tpawp) THEN
       !      
          locNode => item ( getElementsByTagname(u,'pp_augmentation'),0 )
          IF (.NOT. ASSOCIATED( locNode) ) CALL errore ('read_upf_schema', &
@@ -421,8 +409,8 @@ SUBROUTINE read_upf_schema(pseudo, upf, grid, ierr )             !
       ENDIF
       !
       ! Read augmentation charge Q_ij
-      ultrasoft_or_paw : IF( upf%tvanp) THEN
-         q_with_l : IF( upf%q_with_l ) THEN
+      IF( upf%tvanp) THEN
+         IF( upf%q_with_l ) THEN
             upf%qfuncl = 0._dp
             qij_list => getElementsByTagname ( locNode, 'pp_qijl')
             DO iItem = 1, getLength(qij_list) 
@@ -432,7 +420,7 @@ SUBROUTINE read_upf_schema(pseudo, upf, grid, ierr )             !
                CALL extractDataContent  (locNode2, upf%qfuncl(:,nmb,l) )
                IF( upf%tpawp) upf%qfuncl(upf%paw%iraug+1:,nmb,l) = 0._dp
             ENDDO
-         ELSE q_with_l
+         ELSE
             upf%qfunc=0._dp
             qij_list =>  getElementsByTagname ( locNode, 'pp_qij' )
             DO iItem  = 1, getLength ( qij_list) 
@@ -440,12 +428,12 @@ SUBROUTINE read_upf_schema(pseudo, upf, grid, ierr )             !
                CALL extractDataAttribute( locNode2, 'composite_index',nmb)    
                CALL extractDataContent(locNode2, upf%qfunc(:,nmb))
             END DO
-         ENDIF q_with_l
+         ENDIF
       !
-      ENDIF ultrasoft_or_paw
+      ENDIF
       !
       !
-      ENDIF augmentation
+      ENDIF 
       !
       ! Maximum radius of beta projector: outer radius to integrate
       upf%kkbeta = MAXVAL(upf%kbeta(1:upf%nbeta))

@@ -377,6 +377,7 @@ tsvdw.o : mp_bands.o
 tsvdw.o : mp_images.o
 tsvdw.o : uspp.o
 upf.o : ../UtilXlib/mp.o
+upf.o : emend_upf.o
 upf.o : io_files.o
 upf.o : io_global.o
 upf.o : kind.o
