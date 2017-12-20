@@ -46,8 +46,9 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    USE read_upf_v2_module,ONLY: read_upf_v2
    USE read_upf_schema_module,ONLY: read_upf_schema
    USE mp,           ONLY: mp_barrier
+   USE mp_images,    ONLY: intra_image_comm, my_image_id
    USE mp_world,     ONLY: world_comm
-   USE io_global,    ONLY: ionode
+   USE io_global,    ONLY: ionode, stdout
    USE io_files,     ONLY: tmp_dir
    USE FoX_DOM,      ONLY: Node, domException, parseFile, getFirstChild, getExceptionCode,&
                               getTagName    
@@ -71,7 +72,7 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
                          iun, ferr  
    TYPE(DOMException) :: ex 
    INTEGER, EXTERNAL  :: find_free_unit
-
+   CHARACTER(LEN=256) :: temp_upf_file
    IF (PRESENT(xml_only) ) xml_only_ = xml_only
    ierr = 0
 
@@ -88,12 +89,16 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
        doc => parseFile(TRIM(filename), EX = ex )
        ierr = getExceptionCode( ex )
        IF ( ierr ==  81 ) THEN 
-          IF ( ionode ) CALL make_emended_upf_copy( TRIM(filename), TRIM(tmp_dir)//'tmp.UPF')     
-          CALL mp_barrier ( world_comm) 
-          doc => parseFile(TRIM(tmp_dir)//'tmp.UPF', EX = ex )
+          WRITE(temp_upf_file, '("tmp_",I0,".UPF")') my_image_id  
+          IF ( ionode ) THEN
+            CALL make_emended_upf_copy( TRIM(filename), TRIM(tmp_dir)//trim(temp_upf_file))  
+          END IF   
+          CALL mp_barrier ( intra_image_comm) 
+          doc => parseFile(TRIM(tmp_dir)//trim(temp_upf_file), EX = ex )
           ierr = getExceptionCode( ex ) 
-          CALL mp_barrier(world_comm) 
-          IF (ionode) ferr = f_remove(TRIM(tmp_dir)//'tmp.UPF')
+          CALL mp_barrier(intra_image_comm) 
+          IF (ionode) ferr = f_remove(TRIM(tmp_dir)//trim(temp_upf_file) )
+          temp_upf_file=""
        END IF 
        IF ( ierr == 0 ) THEN 
            u => getFirstChild(doc) 
