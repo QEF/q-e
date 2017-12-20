@@ -79,10 +79,12 @@ addusdens.o : ../../Modules/control_flags.o
 addusdens.o : ../../Modules/fft_base.o
 addusdens.o : ../../Modules/ions_base.o
 addusdens.o : ../../Modules/kind.o
+addusdens.o : ../../Modules/mp_pools.o
 addusdens.o : ../../Modules/noncol.o
 addusdens.o : ../../Modules/recvec.o
 addusdens.o : ../../Modules/uspp.o
 addusdens.o : ../../Modules/wavefunctions.o
+addusdens.o : ../../UtilXlib/mp.o
 addusdens.o : realus.o
 addusforce.o : ../../FFTXlib/fft_interfaces.o
 addusforce.o : ../../Modules/cell_base.o
@@ -91,6 +93,7 @@ addusforce.o : ../../Modules/fft_base.o
 addusforce.o : ../../Modules/ions_base.o
 addusforce.o : ../../Modules/kind.o
 addusforce.o : ../../Modules/mp_bands.o
+addusforce.o : ../../Modules/mp_pools.o
 addusforce.o : ../../Modules/noncol.o
 addusforce.o : ../../Modules/recvec.o
 addusforce.o : ../../Modules/uspp.o
@@ -103,8 +106,10 @@ addusstress.o : ../../Modules/control_flags.o
 addusstress.o : ../../Modules/fft_base.o
 addusstress.o : ../../Modules/ions_base.o
 addusstress.o : ../../Modules/kind.o
+addusstress.o : ../../Modules/mp_pools.o
 addusstress.o : ../../Modules/recvec.o
 addusstress.o : ../../Modules/uspp.o
+addusstress.o : ../../UtilXlib/mp.o
 addusstress.o : pwcom.o
 addusstress.o : realus.o
 addusstress.o : scf_mod.o
@@ -1061,6 +1066,7 @@ memory_report.o : ../../Modules/ions_base.o
 memory_report.o : ../../Modules/kind.o
 memory_report.o : ../../Modules/mp_bands.o
 memory_report.o : ../../Modules/mp_images.o
+memory_report.o : ../../Modules/mp_pools.o
 memory_report.o : ../../Modules/noncol.o
 memory_report.o : ../../Modules/recvec.o
 memory_report.o : ../../Modules/uspp.o
@@ -1148,6 +1154,7 @@ newd.o : ../../Modules/fft_base.o
 newd.o : ../../Modules/ions_base.o
 newd.o : ../../Modules/kind.o
 newd.o : ../../Modules/mp_bands.o
+newd.o : ../../Modules/mp_pools.o
 newd.o : ../../Modules/noncol.o
 newd.o : ../../Modules/recvec.o
 newd.o : ../../Modules/uspp.o
@@ -1712,6 +1719,7 @@ run_driver.o : ../../Modules/check_stop.o
 run_driver.o : ../../Modules/command_line_options.o
 run_driver.o : ../../Modules/control_flags.o
 run_driver.o : ../../Modules/fsockets.o
+run_driver.o : ../../Modules/io_files.o
 run_driver.o : ../../Modules/io_global.o
 run_driver.o : ../../Modules/ions_base.o
 run_driver.o : ../../Modules/mp_global.o

@@ -86,6 +86,7 @@ setqf.o \
 splinelib.o \
 timestep.o\
 tsvdw.o\
+emend_upf.o \
 upf.o \
 upf_to_internal.o \
 uspp.o \
