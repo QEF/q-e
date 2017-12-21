@@ -5718,8 +5718,12 @@ implicit none
    deallocate( RESULT )
 
    ntot = x_nbnd_occ * (x_nbnd_occ-1)/2 + x_nbnd_occ * (nbnd-x_nbnd_occ)
-   write(stdout,'(7X,2(A,I12),A,f12.2)') '  Pairs(full): ',   ntot,       '   Pairs(included): ',       npairs, '   Pairs(%): ', dble(npairs)/dble(ntot)*100.0d0  
-   write(stdout,'(7X,3(A,f12.6))')       'OvPairs(full): ', ovpairs(2), ' OvPairs(included): ', ovpairs(1), ' OvPairs(%): ', ovpairs(1)/ovpairs(2)*100.0d0
+   write(stdout,'(7X,2(A,I12),A,f12.2)') '  Pairs(full): ',      ntot, &
+           '   Pairs(included): ', npairs, &
+           '   Pairs(%): ', dble(npairs)/dble(ntot)*100.0d0
+   write(stdout,'(7X,3(A,f12.6))')       'OvPairs(full): ', ovpairs(2), &
+           ' OvPairs(included): ', ovpairs(1), &
+           ' OvPairs(%): ', ovpairs(1)/ovpairs(2)*100.0d0
 
   CALL stop_clock('vexxloc')
 
@@ -5817,8 +5821,10 @@ IMPLICIT NONE
   IF(DoPrint) then 
     write(stdout,'(A,2I4)')     'MOs:                  ', ibnd, jbnd
     write(stdout,'(A,10f12.6)') 'Absolute Overlap:     ', Overlap 
-    write(stdout,'(A,10f12.6)') 'Center(PBC)[A]:       ', CenterPBC(1)*bohr_radius_angs, CenterPBC(2)*bohr_radius_angs, CenterPBC(3)*bohr_radius_angs
-    write(stdout,'(A,10f12.6)') 'Spread [A**2]:        ', SpreadPBC(1)*bohr_radius_angs**2, SpreadPBC(2)*bohr_radius_angs**2, SpreadPBC(3)*bohr_radius_angs**2 
+    write(stdout,'(A,10f12.6)') 'Center(PBC)[A]:       ',  CenterPBC(1)*bohr_radius_angs, &
+            CenterPBC(2)*bohr_radius_angs, CenterPBC(3)*bohr_radius_angs
+    write(stdout,'(A,10f12.6)') 'Spread [A**2]:        ', SpreadPBC(1)*bohr_radius_angs**2,&
+            SpreadPBC(2)*bohr_radius_angs**2, SpreadPBC(3)*bohr_radius_angs**2
     write(stdout,'(A,10f12.6)') 'Total Spread [A**2]:  ', TotSpread
   END IF 
 
