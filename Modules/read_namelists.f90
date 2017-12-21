@@ -220,6 +220,7 @@ MODULE read_namelists_module
        ! ... EXX
        !
        ace=.TRUE.
+       n_proj = 0    
        localization_thr = 0.0_dp
        scdm=.FALSE.
        scdmden=0.10d0
@@ -805,6 +806,7 @@ MODULE read_namelists_module
        CALL mp_bcast( scdm,                ionode_id, intra_image_comm )
        CALL mp_bcast( scdmden,             ionode_id, intra_image_comm )
        CALL mp_bcast( scdmgrd,             ionode_id, intra_image_comm )
+       CALL mp_bcast( n_proj,              ionode_id, intra_image_comm )
        CALL mp_bcast( nqx1,                   ionode_id, intra_image_comm )
        CALL mp_bcast( nqx2,                   ionode_id, intra_image_comm )
        CALL mp_bcast( nqx3,                   ionode_id, intra_image_comm )

@@ -89,7 +89,7 @@ SUBROUTINE setup()
   USE qes_libs_module,    ONLY : qes_reset_output, qes_reset_parallel_info, qes_reset_general_info
   USE qes_types_module,   ONLY : output_type, parallel_info_type, general_info_type 
 #endif
-  USE exx,                ONLY : ecutfock, exx_grid_init, exx_mp_init, exx_div_check
+  USE exx,                ONLY : ecutfock, exx_grid_init, exx_mp_init, exx_div_check, nbndproj
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
   USE fcp_variables,      ONLY : lfcpopt, lfcpdyn
@@ -402,6 +402,7 @@ SUBROUTINE setup()
   ! ... set the max number of bands used in iterative diagonalization
   !
   nbndx = nbnd
+  IF(nbndproj.eq.0) nbndproj = nbnd
   IF ( isolve == 0 ) nbndx = david * nbnd
   !
 #if defined(__MPI)

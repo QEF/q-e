@@ -1,4 +1,17 @@
+New in development version:
+
+  * EXX: ACE can be projected on arbitrary number of orbitals
+    Slight change in SCF convergence with ACE (dexx) properly
+    accounting for difference between 2*<new|V(old)|new> 
+    and <new|V(old)|new> + <old|V(new)|old>  (see "fock3" term) 
+    SCDM and localized exchange is now compatible with ecutfock
+    Localized exchange can deal with virtual orbitals (empty bands)
+    (Ivan Carnimeo)
+
 Problems fixed in development version:
+
+  * Phonons with images wasn't working in v.6.2.1 with old PP files
+    containing "&" in the header section (Dec.20, 2017)
 
   * PWscf in "manypw" mode wasn't working due to a bad IF (Dec.12, 2017)
 

@@ -21,86 +21,347 @@ MODULE loc_scdm
   SAVE
   LOGICAL ::  use_scdm=.false. ! if .true. enable Lin Lin's SCDM localization
                                ! currently implemented only within ACE formalism
-  LOGICAL ::  scdm_dipole=.false.
   REAL(DP) :: scdm_den, scdm_grd 
+  REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Three=2.0d0
 
  CONTAINS
   !
   !------------------------------------------------------------------------
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE SCDM_PGG(psi, NQR, nbnd_eff)
+SUBROUTINE localize_orbitals( )
+  !
+  ! Driver for SCDM orbital localization 
+  !
+  USE noncollin_module,  ONLY : npol
+  USE wvfct,             ONLY : nbnd
+  USE control_flags,     ONLY : gamma_only
+  !   
+  implicit none
+  integer :: NGrid
+  character(len=1) :: HowTo
+  
+  if(.not.gamma_only) CALL errore('localize_orbitals', 'k-points NYI.',1)    
+
+  NGrid = exx_fft%dfftt%nnr * npol
+  HowTo = 'G'  ! How to compute the absolute overlap integrals
+
+  locmat = One
+  CALL measure_localization(HowTo,locbuff(1,1,1),NGrid,x_nbnd_occ,nkqs,locmat(1:x_nbnd_occ,1:x_nbnd_occ))
+  CALL SCDM_PGG(locbuff(1,1,1), NGrid, x_nbnd_occ)
+  locmat = One
+  CALL measure_localization(HowTo,locbuff(1,1,1),NGrid,x_nbnd_occ,nkqs,locmat(1:x_nbnd_occ,1:x_nbnd_occ))
+
+END SUBROUTINE localize_orbitals
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE measure_localization(CFlag, orbt, NGrid, NBands, NKK, MatLoc) 
+USE cell_base,         ONLY : alat, omega, at, bg
+USE exx,               ONLY : compute_density
+USE constants,         ONLY : bohr_radius_angs 
+implicit none
+!
+! Analyze various localization criteria for the wavefunctions in orbt
+! Calculation of absolute overlap: 
+!              CFlag = 'R' real space integral (exact but slow) 
+!                      'G' via FFT (fast but less accurate) 
+!
+  INTEGER :: NGrid, NBands, jbnd, kbnd, NKK
+  REAL(DP) :: orbt(NGrid, NBands,NKK)
+  REAL(DP) :: loc_diag, loc_off, tmp, DistMax
+  REAL(DP) :: RDist(3),  SpreadPBC(3), TotSpread
+  REAL(DP), OPTIONAL :: MatLoc(NBands,NBands)
+  REAL(DP), ALLOCATABLE :: CenterPBC(:,:), Mat(:,:)
+  CHARACTER(LEN=1) :: CFlag
+  REAL(DP), PARAMETER :: epss=0.0010d0
+
+  ALLOCATE( Mat(NBands,NBands), CenterPBC(3,NBands) )
+
+  IF(CFlag.eq.'R') then 
+    Call AbsOvR(orbt, NGrid, NBands, NKK, Mat) 
+  ELSEIF(CFlag.eq.'G') then 
+    call AbsOvG(orbt, NGrid, NBands, NKK, Mat) 
+  ELSE
+    call errore('measure_localization','Wrong CFlag',1)
+  END IF 
+
+  loc_diag  = Zero  
+  loc_off   = Zero  
+  TotSpread = Zero  
+  DistMax   = Zero 
+  DO jbnd = 1, NBands
+    loc_diag = loc_diag + Mat(jbnd,jbnd) 
+    call compute_density(.false.,.false.,CenterPBC(1,jbnd), SpreadPBC, tmp, orbt(1,jbnd,1), orbt(1,jbnd,1), NGrid, jbnd, jbnd)
+    TotSpread = TotSpread + SpreadPBC(1) + SpreadPBC(2) + SpreadPBC(3) 
+    DO kbnd = 1, jbnd - 1 
+      loc_off = loc_off + Mat(jbnd,kbnd) 
+      RDist(1) = (CenterPBC(1,jbnd) - CenterPBC(1,kbnd))/alat  
+      RDist(2) = (CenterPBC(2,jbnd) - CenterPBC(2,kbnd))/alat  
+      RDist(3) = (CenterPBC(3,jbnd) - CenterPBC(3,kbnd))/alat  
+      CALL cryst_to_cart( 1, RDist, bg, -1 )
+      RDist(:) = RDist(:) - ANINT( RDist(:) )
+      CALL cryst_to_cart( 1, RDist, at, 1 )
+      tmp = alat *bohr_radius_angs* sqrt( RDist(1)**2 + RDist(2)**2 + RDist(3)**2 )
+      IF(DistMax.lt.tmp) DistMax = tmp  
+    ENDDO
+  ENDDO
+  write(stdout,'(7X,A,f12.6,A)')  'Max Dist [A]      = ', bohr_radius_angs*alat*sqrt(Three)/Two, ' (sqrt(3)*L/2)'
+  write(stdout,'(7X,A,f12.6)')    'Max Dist Found [A] =', DistMax 
+  write(stdout,'(7X,A,f12.6,I3)') 'Total Charge =', loc_diag 
+  write(stdout,'(7X,A,f12.6,I3)') 'Total Abs. Overlap =', loc_off 
+  write(stdout,'(7X,A,f12.6,I3)') 'Total Spread [A**2]   =', TotSpread * bohr_radius_angs**2
+  write(stdout,'(7X,A,f12.6,I3)') 'Aver. Spread [A**2]   =', TotSpread * bohr_radius_angs**2/ dble(NBands) 
+  IF(present(MatLoc)) MAtLoc = Mat
+  DEALLOCATE( CenterPBC, Mat ) 
+
+END SUBROUTINE measure_localization
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE AbsOvG(orbt, NGrid, NBands, NKK, Mat) 
+USE fft_interfaces,    ONLY : fwfft
+USE wvfct,             ONLY : npwx
+implicit none
+!
+! Compute the Absolute Overlap in G-space 
+! (cutoff might not be accurate for the moduli of the wavefunctions)
+!
+  INTEGER :: NGrid, NBands, jbnd, ig, NKK
+  REAL(DP) :: orbt(NGrid, NBands,NKK), Mat(NBands,NBands), tmp
+  COMPLEX(DP), ALLOCATABLE :: buffer(:), Gorbt(:,:)
+
+  call start_clock('measure')
+
+  write(stdout,'(5X,A)') ' ' 
+  write(stdout,'(5X,A)') 'Absolute Overlap calculated in G-space'
+
+! Localized functions to G-space and Overlap matrix onto localized functions
+  allocate( buffer(NGrid), Gorbt(npwx,NBands) )
+
+  Mat = Zero 
+  buffer = (Zero,Zero)
+  Gorbt = (Zero,Zero) 
+  DO jbnd = 1, NBands 
+    buffer(:) = abs(dble(orbt(:,jbnd,NKK))) + (Zero,One)*Zero  
+    CALL fwfft( 'CustomWave' , buffer, exx_fft%dfftt )
+    DO ig = 1, npwx
+      Gorbt(ig,jbnd) = buffer(exx_fft%nlt(ig))
+    ENDDO
+  ENDDO
+  CALL matcalc('Coeff-',.false.,0,npwx,NBands,NBands,Gorbt,Gorbt,Mat,tmp)
+  deallocate ( buffer, Gorbt )
+
+  call stop_clock('measure')
+
+END SUBROUTINE AbsOvG 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE AbsOvR(orbt, NGrid, NBands, NKK, Mat) 
+USE mp,                ONLY : mp_sum
+USE mp_bands,          ONLY : intra_bgrp_comm
+implicit none
+!
+! Compute the Absolute Overlap in R-space 
+! (Exact but slow)
+!
+  INTEGER :: NGrid, NBands, nxxs, ir, jbnd, kbnd, NKK
+  REAL(DP) :: orbt(NGrid, NBands, NKK), Mat(NBands,NBands)
+  REAL(DP) ::  cost, tmp
+
+  call start_clock('measure')
+
+  write(stdout,'(5X,A)') ' ' 
+  write(stdout,'(5X,A)') 'Absolute Overlap calculated in R-space'
+
+  nxxs = exx_fft%dfftt%nr1x *exx_fft%dfftt%nr2x *exx_fft%dfftt%nr3x
+  cost = One/dble(nxxs)
+  Mat = Zero 
+  DO jbnd = 1, NBands
+    Mat(jbnd,jbnd) = Mat(jbnd,jbnd) + cost * sum( abs(orbt(:,jbnd,NKK)) * abs(orbt(:,jbnd,NKK)))
+    DO kbnd = 1, jbnd - 1 
+        tmp = cost * sum( abs(orbt(:,jbnd,NKK)) * abs(orbt(:,kbnd,NKK)) )
+        Mat(jbnd,kbnd) = Mat(jbnd,kbnd) + tmp 
+        Mat(kbnd,jbnd) = Mat(kbnd,jbnd) + tmp
+    ENDDO
+  ENDDO
+  call mp_sum(mat,intra_bgrp_comm)
+
+  call stop_clock('measure')
+
+END SUBROUTINE AbsOvR 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE SCDM_PGG(psi, NGrid, NBands)
+USE mp_bands,          ONLY : nproc_bgrp
+!
+! density matrix localization (I/O in psi)
+!
+IMPLICIT NONE
+  INTEGER,  INTENT(IN)    :: NGrid, NBands
+  REAL(DP), INTENT(INOUT) :: psi(NGrid,NBands)
+
+  REAL(DP), ALLOCATABLE :: QRbuff(:,:), mat(:,:)
+  INTEGER,  ALLOCATABLE :: pivot(:), list(:), cpu_npt(:)
+  REAL(DP), ALLOCATABLE :: den(:), grad_den(:,:)
+  INTEGER  :: nptot
+  REAL(DP) :: ThrDen, ThrGrd
+
+  call start_clock('localization')
+
+  write(stdout,'(5X,A)') ' ' 
+  write(stdout,'(5X,A)') 'SCDM localization with prescreening'
+
+  allocate( den(exx_fft%dfftt%nnr), grad_den(3, exx_fft%dfftt%nnr) )
+
+  Call scdm_thresholds( den, grad_den, ThrDen, ThrGrd )
+
+  allocate( cpu_npt(0:nproc_bgrp-1) )
+
+  Call scdm_points( den, grad_den, ThrDen, ThrGrd, cpu_npt, nptot )
+
+  allocate( list(nptot), pivot(nptot) )
+
+  Call scdm_prescreening( NGrid, NBands, psi, den, grad_den, ThrDen, ThrGrd, &
+                                                     cpu_npt, nptot, list, pivot )
+
+  deallocate( den, grad_den ) 
+
+! Psi(pivot(1:NBands),:) in mat
+  allocate( mat(NBands,NBands) )
+  Call scdm_fill( nptot, NGrid, NBands, cpu_npt, pivot, list, psi, Mat)
+
+! Pc = Psi * Psi(pivot(1:NBands),:)' in QRbuff
+  allocate( QRbuff(NGrid, NBands) )
+  QRbuff = Zero 
+  CALL DGEMM( 'N' , 'N' , NGrid, NBands, NBands, One, psi, NGrid, mat, NBands, Zero, QRbuff, NGrid) 
+
+! Orthonormalization
+
+! Pc(pivot(1:NBands),:) in mat 
+  Call scdm_fill( nptot, NGrid, NBands, cpu_npt, pivot, list, QRBuff, mat)
+  deallocate( cpu_npt )
+
+! Cholesky(psi)^(-1) in mat 
+  CALL invchol(NBands,mat)
+  Call MatSymm('U','L',mat, NBands)
+
+! Phi = Pc * Chol^(-1) = QRbuff * mat
+  psi = Zero
+  CALL DGEMM( 'N' , 'N' , NGrid, NBands, NBands, One, QRbuff, NGrid, mat, NBands, Zero, psi, NGrid) 
+  deallocate( QRbuff, mat, pivot, list )
+  write(stdout,'(7X,A)') 'SCDM-PGG done ' 
+
+  call stop_clock('localization')
+
+END SUBROUTINE SCDM_PGG
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE scdm_thresholds( den, grad_den, ThrDen, ThrGrd )
 USE cell_base,         ONLY : omega
-USE mp,                ONLY : mp_stop, mp_barrier, mp_sum
-USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
-USE vdW_DF,            ONLY : numerical_gradient
 USE fft_base,          ONLY : dfftp
 USE scf,               ONLY : rho
 USE lsda_mod,          ONLY : nspin
-!
-! density matrix decomposition (I/O in psi)
-!
+USE mp,                ONLY : mp_sum
+USE mp_bands,          ONLY : intra_bgrp_comm
 IMPLICIT NONE
-  integer :: NQR, nbnd_eff, lwork, INFO, i, j, n, ir, jbnd, ir_end, nnr
-  real(DP), allocatable :: QRbuff(:,:), tau(:), work(:), mat(:,:),mat2(:,:)
-  integer, allocatable :: pivot(:)
-  real(DP) :: charge, grad, psi(NQR,nbnd_eff)
-  integer :: npt, nptot, icpu, ncpu_start, ncpu_end, nxxs
-  integer, allocatable :: list(:), cpu_npt(:)
-  real(DP), allocatable :: small(:,:)
-  real(DP), allocatable :: den(:), grad_den(:,:)
-! real(DP), parameter :: ThDen = 0.10d0, ThGrad=0.200d0 
+  REAL(DP), INTENT(OUT) :: den(exx_fft%dfftt%nnr), grad_den(3, exx_fft%dfftt%nnr) 
+  REAL(DP), INTENT(OUT) :: ThrDen, ThrGrd 
 
-  call start_clock('localization')
-  write(stdout,'(A)') '--------------------------------'
-  write(stdout,'(A)') 'Gradient-based SCDM localization'
-  write(stdout,'(A)') '--------------------------------'
-  write(stdout,'(2(A,f12.6))') '   scdm_den = ', scdm_den, ' scdm_grd = ',scdm_grd
+  REAL(DP), ALLOCATABLE :: temp(:) 
+  REAL(DP) :: charge, grad, DenAve, GrdAve
+  INTEGER :: ir, ir_end, nxxs, nxtot
 
-  if(exx_fft%dfftt%nnr.ne.dfftp%nnr) then 
-    write(stdout,*) exx_fft%dfftt%nnr, dfftp%nnr
-    call errore( 'SCDM_PGG', 'density and orbital grids not identical',1)
-  end if 
-
-  nnr = dfftp%nnr
+! interpolate density to the exx grid
+  allocate( temp(dfftp%nnr))
+  temp(:) = rho%of_r(:,1)
+  IF ( nspin == 2 ) temp(:) = temp(:) + rho%of_r(:,2) 
+  Call exx_interpolate(temp, den, -1)
+  deallocate( temp ) 
 
 #if defined (__MPI)
-  ir_end = dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
+  ir_end = exx_fft%dfftt%nr1x*exx_fft%dfftt%my_nr2p*exx_fft%dfftt%my_nr3p
 #else
-  ir_end = nnr
+  ir_end = exx_fft%dfftt%nnr
+#endif
+  nxtot = exx_fft%dfftt%nr1x *exx_fft%dfftt%nr2x *exx_fft%dfftt%nr3x
+  nxxs = exx_fft%dfftt%nnr 
+
+  charge = Zero
+  DenAve = Zero
+  do ir = 1, ir_end 
+    charge = charge + den(ir) * omega / dble(nxtot) 
+    DenAve = DenAve + den(ir)
+  end do 
+  call mp_sum(DenAve,intra_bgrp_comm)
+  call mp_sum(charge,intra_bgrp_comm)
+  DenAve = DenAve / dble(nxtot)
+  write(stdout,'(7x,A,f12.6)') 'Charge  = ', charge
+  write(stdout,'(7x,A,f12.6)') 'DenAve  = ', DenAve 
+  ThrDen = scdm_den 
+
+! gradient on the exx grid 
+  Call exx_gradient( nxxs, den , exx_fft%ngmt, exx_fft%gt, exx_fft%nlt, grad_den )
+  charge  = Zero
+  GrdAve = Zero 
+  do ir = 1, ir_end 
+    grad  = sqrt( grad_den(1,ir)**2  +  grad_den(2,ir)**2  +  grad_den(3,ir)**2  )
+    charge = charge + grad * omega / dble(nxtot)
+    GrdAve = GrdAve + grad
+  end do 
+  call mp_sum(GrdAve,intra_bgrp_comm)
+  call mp_sum(charge,intra_bgrp_comm)
+  GrdAve = GrdAve / dble(nxtot)
+  write(stdout,'(7X,A,f12.6)') 'GradTot = ', charge
+  write(stdout,'(7X,A,f12.6)') 'GrdAve  = ', GrdAve 
+  ThrGrd = scdm_grd 
+  write(stdout,'(7x,2(A,f12.6))') 'scdm_den = ', scdm_den, ' scdm_grd = ',scdm_grd
+  write(stdout,'(7x,2(A,f12.6))') 'ThrDen   = ', ThrDen,   ' ThrGrd   = ',ThrGrd  
+
+END SUBROUTINE scdm_thresholds
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE scdm_fill( nptot, NGrid, NBands, CPUPts, Pivot, List, Vect, Mat)
+USE mp,                ONLY : mp_sum
+USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
+!
+! Fill the matrix Mat with the elements of Vect
+! mapped by CPUPts, Pivot and List 
+!
+IMPLICIT NONE
+  INTEGER,  INTENT(IN)  :: NBands, NGrid, nptot
+  INTEGER,  INTENT(IN)  :: CPUPts(0:nproc_bgrp-1), Pivot(nptot), List(nptot)
+  REAL(DP), INTENT(IN)  :: Vect(NGrid, NBands)
+  REAL(DP), INTENT(OUT) :: Mat(NBands,NBands)
+  INTEGER :: i, NStart, NEnd
+
+  Mat = Zero 
+  do i = 1, NBands
+    NStart = sum(CPUPts(0:me_bgrp-1))
+    NEnd   = sum(CPUPts(0:me_bgrp))
+    if(Pivot(i).le.NEnd.and.Pivot(i).ge.NStart+1) Mat(:,i) = Vect(List(pivot(i)),:)
+  end do 
+  call mp_sum(Mat,intra_bgrp_comm)
+
+END SUBROUTINE scdm_fill
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE scdm_points ( den, grad_den, ThrDen, ThrGrd, cpu_npt, nptot  ) 
+USE mp,                ONLY : mp_sum 
+USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
+!
+! find the relevant points for the allocation
+!
+IMPLICIT NONE
+  INTEGER, INTENT(OUT) :: cpu_npt(0:nproc_bgrp-1), nptot
+  REAL(DP), INTENT(IN) :: den(exx_fft%dfftt%nnr), grad_den(3, exx_fft%dfftt%nnr) 
+  REAL(DP), INTENT(IN) :: ThrDen, ThrGrd 
+
+  INTEGER :: npt, ir, ir_end
+  REAL(DP) :: grad
+
+#if defined (__MPI)
+  ir_end = exx_fft%dfftt%nr1x*exx_fft%dfftt%my_nr2p*exx_fft%dfftt%my_nr3p
+#else
+  ir_end = exx_fft%dfftt%nnr
 #endif
 
-  nxxs = exx_fft%dfftt%nr1x *exx_fft%dfftt%nr2x *exx_fft%dfftt%nr3x
-
-  allocate( den(nnr), grad_den(nnr, 3) )
-  charge = 0.0d0
-  den(:) = rho%of_r(:,1)
-  IF ( nspin == 2 ) den(:) = den(:) + rho%of_r(:,2) 
-  do ir = 1, ir_end 
-    charge = charge + den(ir) * omega / dble(nxxs)
-  end do 
-  call mp_sum(charge,intra_bgrp_comm)
-  write(stdout,'(A,f12.6)') '    charge = ', charge
-
-! find numerical gradient of the density
-  call numerical_gradient (den, grad_den)
-
-  charge = 0.0d0
-  do ir = 1, ir_end 
-    grad = sqrt( grad_den(ir,1)**2 +  grad_den(ir,2)**2 +  grad_den(ir,3)**2 )
-    charge = charge + grad * omega / dble(nxxs)
-  end do 
-  call mp_sum(charge,intra_bgrp_comm)
-  write(stdout,'(A,f12.6)') '    grad   = ', charge
-
-! find the relevant point for the allocation
-  allocate( cpu_npt(0:nproc_bgrp-1) )
   npt = 0
   cpu_npt(:) = 0
   do ir = 1, ir_end 
-    grad = 1.0d0
-    if(den(ir).gt.scdm_den) then 
-      grad = sqrt( grad_den(ir,1)**2 +  grad_den(ir,2)**2 +  grad_den(ir,3)**2 ) 
-      if(grad.lt.scdm_grd) then    
+    if(den(ir).gt.ThrDen) then 
+      grad = sqrt( grad_den(1,ir)**2 +  grad_den(2,ir)**2 +  grad_den(3,ir)**2 ) 
+      if(grad.lt.ThrGrd) then    
         npt = npt + 1
       end if 
     end if 
@@ -110,247 +371,69 @@ IMPLICIT NONE
   call mp_sum(nptot,intra_bgrp_comm)
   if(nptot.le.0) call errore('SCDM_PGG', 'No points prescreened. Loose the thresholds', 1) 
   call mp_sum(cpu_npt,intra_bgrp_comm)
-  write(stdout,'(2(A,I8))') '    max npt = ', maxval(cpu_npt(:)), &
-          ' min npt = ', minval(cpu_npt(:))
-  write(stdout,*) '    reduced matrix, allocate: ', nptot
-  ! write(stdout,*) '    cpu_npt = ', cpu_npt(:)
+  write(stdout,'(7X,2(A,I8))')  'Max npt = ', maxval(cpu_npt(:)), ' Min npt = ', minval(cpu_npt(:))
+  write(stdout,'(7X,2(A,I10))') 'Reduced matrix, allocate: ', nptot, ' out of ', exx_fft%dfftt%nnr 
 
+END SUBROUTINE scdm_points
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE scdm_prescreening ( NGrid, NBands, psi, den, grad_den, ThrDen, ThrGrd, cpu_npt, nptot, &
+                                                                                       list, pivot  ) 
+USE mp,                ONLY : mp_sum 
+USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
+!
+!  Get List from ThrDen and ThrGrd, and Pivot from the QRCP of small
+!
+IMPLICIT NONE
+  INTEGER, INTENT(OUT) :: list(nptot), pivot(nptot)
+  INTEGER, INTENT(IN)  :: cpu_npt(0:nproc_bgrp-1), nptot
+  INTEGER, INTENT(IN)  :: NGrid, NBands
+  REAL(DP), INTENT(IN) :: psi(NGrid,NBands) 
+  REAL(DP), INTENT(IN) :: den(exx_fft%dfftt%nnr), grad_den(3, exx_fft%dfftt%nnr) 
+  REAL(DP), INTENT(IN) :: ThrDen, ThrGrd 
 
-! find the map of the index 
-  allocate( small(nbnd_eff,nptot), list(nptot) )
-  small = 0.0d0
+  INTEGER :: ir, ir_end, INFO, lwork
+  integer :: n, npt, ncpu_start
+  REAL(DP) :: grad
+  REAL(DP), ALLOCATABLE :: small(:,:), tau(:), work(:)
+
+#if defined (__MPI)
+  ir_end = exx_fft%dfftt%nr1x*exx_fft%dfftt%my_nr2p*exx_fft%dfftt%my_nr3p
+#else
+  ir_end = exx_fft%dfftt%nnr
+#endif
+
+! find the map of the indeces
+  allocate( small(NBands,nptot) )
+  small = Zero
   list = 0
   n = 0
   do ir = 1, ir_end
-    grad = 1.0d0
-    if(den(ir).gt.scdm_den) then 
-      grad = sqrt( grad_den(ir,1)**2 +  grad_den(ir,2)**2 +  grad_den(ir,3)**2 ) 
-      if(grad.lt.scdm_grd) then    
+    grad = One
+    if(den(ir).gt.ThrDen) then 
+      grad = sqrt( grad_den(1,ir)**2 +  grad_den(2,ir)**2 +  grad_den(3,ir)**2 ) 
+      if(grad.lt.ThrGrd) then    
         n = n + 1
         ncpu_start = sum(cpu_npt(0:me_bgrp-1))
-        icpu = ncpu_start+n
-        small(:,icpu) = psi(ir,:)
-        list(icpu) = ir
+        npt = ncpu_start+n
+        small(:,npt) = psi(ir,:)
+        list(npt) = ir
       end if 
     end if 
   end do 
   call mp_sum(small,intra_bgrp_comm)
   call mp_sum(list,intra_bgrp_comm)
 
+! perform the QRCP on the small matrix and get pivot
   lwork = 4*nptot
-  allocate( pivot(nptot), tau(nptot), work(lwork) )
-  tau = 0.0d0
-  work = 0.0d0  
+  allocate( tau(nptot), work(lwork) )
+  tau = Zero
+  work = Zero  
   pivot = 0
   INFO = -1 
-  CALL DGEQP3( nbnd_eff, nptot, small, nbnd_eff, pivot, tau, work, lwork, INFO )
-  do i = 1, nbnd_eff
-    j = list(pivot(i))
-    grad = sqrt( grad_den(j,1)**2 +  grad_den(j,2)**2 +  grad_den(j,3)**2 )
-    ncpu_start = 0
-    ncpu_end   = 0
-    ncpu_start = sum(cpu_npt(0:me_bgrp-1))
-    ncpu_end   = sum(cpu_npt(0:me_bgrp))
-  end do 
-  deallocate( den, grad_den) 
-  deallocate( tau, work )
-  deallocate( small )
+  CALL DGEQP3( NBands, nptot, small, NBands, pivot, tau, work, lwork, INFO )
+  deallocate( tau, work, small )
 
-! Psi(pivot(1:nbnd_eff),:) in mat
-  lwork = 3*nbnd_eff
-  allocate( mat(nbnd_eff,nbnd_eff), mat2(nbnd_eff,nbnd_eff), tau(nbnd_eff), work(lwork) )
-  mat = 0.0d0
-  do i = 1, nbnd_eff
-    ncpu_start = 0
-    ncpu_end   = 0
-    ncpu_start = sum(cpu_npt(0:me_bgrp-1))
-    ncpu_end   = sum(cpu_npt(0:me_bgrp))
-    if(pivot(i).le.ncpu_end.and.pivot(i).ge.ncpu_start+1) mat(:,i) = psi(list(pivot(i)),:)
-  end do 
-  call mp_sum(mat,intra_bgrp_comm)
-  deallocate( mat2, tau, work )
-
-! Pc = Psi * Psi(pivot(1:nbnd_eff),:)' in QRbuff
-  allocate( QRbuff(NQR, nbnd_eff) )
-  QRbuff = 0.0d0
-  CALL DGEMM( 'N' , 'N' , NQR, nbnd_eff, nbnd_eff, 1.0d0, psi, NQR, mat, nbnd_eff, 0.0d0, QRbuff, NQR) 
-
-! Orthonormalization
-! Pc(pivot(1:nbnd_eff),:) in mat 
-  mat = 0.0d0
-  do i = 1, nbnd_eff
-    ncpu_start = 0
-    ncpu_end   = 0
-    ncpu_start = sum(cpu_npt(0:me_bgrp-1))
-    ncpu_end   = sum(cpu_npt(0:me_bgrp))
-    if(pivot(i).le.ncpu_end.and.pivot(i).ge.ncpu_start+1) mat(i,:) = QRBuff(list(pivot(i)),:) 
-  end do 
-  deallocate( cpu_npt )
-  call mp_sum(mat,intra_bgrp_comm)
-
-! Cholesky(psi)^(-1) in mat 
-  CALL invchol(nbnd_eff,mat)
-  allocate( mat2(nbnd_eff,nbnd_eff) )
-  mat2 = 0.0d0
-  do i = 1, nbnd_eff
-    do j = i, nbnd_eff
-      mat2(i,j) = mat(j,i)
-    end do 
-  end do 
-  deallocate( mat )
-! Phi = Pc * Chol^(-1) = QRbuff * mat
-  psi = 0.0d0
-  CALL DGEMM( 'N' , 'N' , NQR, nbnd_eff, nbnd_eff, 1.0d0, QRbuff, NQR, mat2, nbnd_eff, 0.0d0, psi, NQR) 
-  deallocate( QRbuff, mat2, pivot, list )
-  write(stdout,'(A)') '    SCDM-PGG done ' 
-
-  call stop_clock('localization')
-
-END SUBROUTINE SCDM_PGG
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE localize_orbitals( )
-  !
-  ! Driver for SCDM orbital localization 
-  !
-  USE noncollin_module,  ONLY : npol
-  USE wvfct,             ONLY : nbnd
-  !   
-  implicit none
-  integer :: NQR
-  
-  if( nbnd > x_nbnd_occ) CALL errore('localize_orbitals', 'nbnd > x_nbnd_occ allowed',1)    
-
-  NQR = exx_fft%dfftt%nnr * npol
-
-! CALL measure_localization(locbuff(1,1,1), NQR, x_nbnd_occ, locmat)
-  CALL measure_localization_G(locbuff(1,1,1), NQR, x_nbnd_occ, locmat)
-  CALL SCDM_PGG(locbuff(1,1,1), NQR, x_nbnd_occ)
-! CALL measure_localization(locbuff(1,1,1), NQR, x_nbnd_occ, locmat)
-  CALL measure_localization_G(locbuff(1,1,1), NQR, x_nbnd_occ, locmat)
-
-END SUBROUTINE localize_orbitals
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE measure_localization(orbt, NGrid, NBands, MatLoc) 
-USE kinds,             ONLY : DP
-USE cell_base,         ONLY : omega
-USE ions_base,         ONLY : nat  
-USE mp,                ONLY : mp_sum
-USE mp_bands,          ONLY : intra_bgrp_comm
-implicit none
-  integer :: NGrid, NBands, nxxs, ir, jbnd, kbnd
-  real(DP) :: orbt(NGrid, NBands)
-  real(DP) ::  cost, loc_diag, loc_off, tmp 
-  real(DP), allocatable :: Mat(:,:)
-  real(DP), optional :: MatLoc(NBands,NBands)
-  real(DP), parameter :: epss=0.0010d0
-
-  call start_clock('measure')
-
-  write(stdout,'(A)') '-------------------'
-  write(stdout,'(A)') 'Localization matrix'
-  write(stdout,'(A)') '-------------------'
-
-  nxxs = exx_fft%dfftt%nr1x *exx_fft%dfftt%nr2x *exx_fft%dfftt%nr3x
-  cost = 1.0d0/dble(nxxs)
-  loc_diag = 0.0d0
-  loc_off = 0.0d0  
-
-  allocate( Mat(NBands,NBands) )
-  Mat = 0.0d0
-  DO ir = 1, NGrid 
-    DO jbnd = 1, NBands
-      Mat(jbnd,jbnd) = Mat(jbnd,jbnd) + cost * abs(orbt(ir,jbnd)) * abs(orbt(ir,jbnd))
-      DO kbnd = 1, jbnd - 1 
-        tmp = cost * abs(orbt(ir,jbnd)) * abs(orbt(ir,kbnd))
-        Mat(jbnd,kbnd) = Mat(jbnd,kbnd) + tmp 
-        Mat(kbnd,jbnd) = Mat(kbnd,jbnd) + tmp
-      ENDDO
-    ENDDO
-  ENDDO
-  call mp_sum(mat,intra_bgrp_comm)
-  DO jbnd = 1, NBands
-    loc_diag = loc_diag + Mat(jbnd,jbnd) 
-    DO kbnd = 1, jbnd - 1 
-      loc_off = loc_off + Mat(jbnd,kbnd) 
-    ENDDO
-  ENDDO
-  IF(present(MatLoc)) MAtLoc = Mat
-  deallocate( Mat )
-
-  write(stdout,'(A,f12.6,I3)') '    Total Charge =', loc_diag 
-  write(stdout,'(A,f12.6,I3)') '    Total Localization =', loc_off 
-  tmp = dble(NBands*(NBands-1))/2.0d0  
-  write(stdout,'(A,f12.6,I3)') '    Localization per orbital pair =', loc_off/tmp 
-  write(stdout,'(A,f12.6,I3)') '    Localization per unit vol =', loc_off/omega
-  write(stdout,'(A,f12.6,I3)') '    Localization per atom =', loc_off/dble(nat)
-  if(abs(loc_diag-dble(NBands)).gt.epss) Call errore('measure_localization','Orthonormality broken',1)
-
-  call stop_clock('measure')
-
-END SUBROUTINE measure_localization
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE measure_localization_G(orbt, NGrid, NBands, MatLoc) 
-USE kinds,             ONLY : DP
-USE cell_base,         ONLY : omega
-USE ions_base,         ONLY : nat  
-USE mp,                ONLY : mp_sum
-USE mp_bands,          ONLY : intra_bgrp_comm
-USE fft_interfaces,    ONLY : fwfft, invfft
-USE wvfct,             ONLY : npwx
-implicit none
-  integer :: NGrid, NBands, nxxs, ir, jbnd, kbnd, ig
-  real(DP) :: orbt(NGrid, NBands)
-  real(DP) ::  cost, loc_diag, loc_off, tmp 
-  real(DP), allocatable :: Mat(:,:)
-  complex(DP), allocatable :: buffer(:), Gorbt(:,:)
-  real(DP), optional :: MatLoc(NBands,NBands)
-  real(DP), parameter :: epss=0.000010d0
-
-  call start_clock('measure')
-
-  write(stdout,'(A)') '-----------------------'
-  write(stdout,'(A)') 'Localization matrix (G)'
-  write(stdout,'(A)') '-----------------------'
-
-! Localized functions to G-space and exchange matrix onto localized functions
-  allocate( buffer(NGrid), Gorbt(npwx,NBands) )
-  allocate( Mat(NBands,NBands) )
-  Mat = 0.0d0
-  buffer = (0.0d0,0.0d0)
-  Gorbt = (0.0d0,0.0d0) 
-  DO jbnd = 1, NBands 
-    buffer(:) = abs(dble(orbt(:,jbnd))) + (0.0d0,1.0d0)*0.0d0
-    CALL fwfft( 'CustomWave' , buffer, exx_fft%dfftt )
-    DO ig = 1, npwx
-      Gorbt(ig,jbnd) = buffer(exx_fft%nlt(ig))
-    ENDDO
-  ENDDO
-  deallocate ( buffer )
-  CALL matcalc('Coeff-',.false.,0,npwx,NBands,NBands,Gorbt,Gorbt,Mat,tmp)
-  deallocate ( Gorbt )
-
-  loc_diag = 0.0d0
-  loc_off = 0.0d0
-  DO jbnd = 1, NBands
-    loc_diag = loc_diag + Mat(jbnd,jbnd) 
-    DO kbnd = 1, jbnd - 1 
-      loc_off = loc_off + Mat(jbnd,kbnd) 
-    ENDDO
-  ENDDO
-  IF(present(MatLoc)) MAtLoc = Mat
-  deallocate( Mat )
-
-  write(stdout,'(A,f12.6,I3)') '    Total Charge =', loc_diag 
-  write(stdout,'(A,f12.6,I3)') '    Total Localization =', loc_off 
-  tmp = dble(NBands*(NBands-1))/2.0d0  
-  write(stdout,'(A,f12.6,I3)') '    Localization per orbital pair =', loc_off/tmp 
-  write(stdout,'(A,f12.6,I3)') '    Localization per unit vol =', loc_off/omega
-  write(stdout,'(A,f12.6,I3)') '    Localization per atom =', loc_off/dble(nat)
-! if(abs(loc_diag-dble(NBands)).gt.epss) Call errore('measure_localization','Orthonormality broken',1)
-
-  call stop_clock('measure')
-
-END SUBROUTINE measure_localization_G
+END SUBROUTINE scdm_prescreening
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END MODULE loc_scdm 
 !-----------------------------------------------------------------------

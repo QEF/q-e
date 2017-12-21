@@ -419,6 +419,70 @@ SUBROUTINE gradient( nrxx, a, ngm, g, nl, ga )
   RETURN
   !
 END SUBROUTINE gradient
+!----------------------------------------------------------------------------
+SUBROUTINE exx_gradient( nrxx, a, ngm, g, nl, ga )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Calculates ga = \grad a in R-space (a is also in R-space, exx grid) 
+  !
+  USE constants, ONLY : tpi
+  USE cell_base, ONLY : tpiba
+  USE kinds,     ONLY : DP
+  USE control_flags, ONLY : gamma_only
+  USE exx,           ONLY : exx_fft
+  USE fft_interfaces,ONLY : fwfft, invfft
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN)  :: nrxx
+  INTEGER,  INTENT(IN)  :: ngm, nl(ngm)
+  REAL(DP), INTENT(IN)  :: a(nrxx), g(3,ngm)
+  REAL(DP), INTENT(OUT) :: ga(3,nrxx)
+  !
+  INTEGER                  :: ipol
+  COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
+  !
+  !
+  ALLOCATE(  aux( nrxx ) )
+  ALLOCATE( gaux( nrxx ) )
+  !
+  aux = CMPLX( a(:), 0.D0 ,kind=DP)
+  !
+  ! ... bring a(r) to G-space, a(G) ...
+  !
+  CALL fwfft ('Custom', aux, exx_fft%dfftt)
+  !
+  ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
+  !
+  DO ipol = 1, 3
+     !
+     gaux(:) = CMPLX(0.d0,0.d0, kind=dp)
+     !
+     gaux(nl(:)) = g(ipol,:) * &
+                   CMPLX( -AIMAG( aux(nl(:)) ), REAL( aux(nl(:)) ) ,kind=DP)
+     !
+     IF ( gamma_only ) THEN
+        !
+        gaux(exx_fft%nltm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
+        !
+     END IF
+     !
+     ! ... bring back to R-space, (\grad_ipol a)(r) ...
+     !
+     CALL invfft ('Custom', gaux, exx_fft%dfftt)
+     !
+     ! ...and add the factor 2\pi/a  missing in the definition of G
+     !
+     ga(ipol,:) = tpiba * DBLE( gaux(:) )
+     !
+  END DO
+  !
+  DEALLOCATE( gaux )
+  DEALLOCATE( aux )
+  !
+  RETURN
+  !
+END SUBROUTINE exx_gradient
 !
 !----------------------------------------------------------------------------
 SUBROUTINE grad_dot( nrxx, a, ngm, g, nl, alat, da )

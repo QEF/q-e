@@ -139,7 +139,7 @@ SUBROUTINE iosys()
                             yukawa_           => yukawa, &
                             ecutvcut_         => ecutvcut, &
                             ecutfock_         => ecutfock, &
-                            use_ace, local_thr 
+                            use_ace, nbndproj, local_thr 
   USE loc_scdm,      ONLY : use_scdm, scdm_den, scdm_grd 
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
@@ -245,7 +245,7 @@ SUBROUTINE iosys()
                                exxdiv_treatment, yukawa, ecutvcut,          &
                                exx_fraction, screening_parameter, ecutfock, &
                                gau_parameter, localization_thr, scdm, ace,    &
-                               scdmden, scdmgrd,                              & 
+                               scdmden, scdmgrd, n_proj,                      & 
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
@@ -1601,16 +1601,17 @@ SUBROUTINE iosys()
   yukawa_   = yukawa
   ecutvcut_ = ecutvcut
   use_ace   = ace
+  nbndproj  = n_proj
   local_thr = localization_thr
   use_scdm  = scdm
   scdm_den = scdmden
   scdm_grd = scdmgrd
   IF ( local_thr > 0.0_dp .AND. .NOT. gamma_only) &
-     CALL errore('input','localization for k-points not yet implemented',1)
+     CALL errore('input','localization for k-points not implemented',1)
   IF ( local_thr > 0.0_dp .AND. .NOT. use_ace ) &
-     CALL errore('input','localization without ACE not yet implemented',1)
+     CALL errore('input','localization without ACE not implemented',1)
   IF ( local_thr > 0.0_dp .AND. nspin > 1 ) &
-     CALL errore('input','spin-polarized localization not yet implemented',1)
+     CALL errore('input','spin-polarized localization not implemented',1)
   IF ( use_scdm ) CALL errore('input','use_scdm not yet implemented',1)
   !
   IF(ecutfock <= 0.0_DP) THEN

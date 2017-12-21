@@ -66,6 +66,7 @@ MODULE exx
   LOGICAL :: use_ace        !  true: Use Lin Lin's ACE method
                             !  false: do not use ACE, use old algorithm instead
   COMPLEX(DP), ALLOCATABLE :: xi(:,:,:)  ! ACE projectors
+  COMPLEX(DP), ALLOCATABLE :: evc0(:,:)  ! old wfc (G-space) needed to compute fock3
   INTEGER :: nbndproj
   LOGICAL :: domat
   REAL(DP)::  local_thr        ! threshold for Lin Lin's SCDM localized orbitals:
@@ -133,9 +134,10 @@ MODULE exx
   !
   ! energy related variables
   !
-  REAL(DP) :: fock0 = 0.0_DP, & !   sum <phi|Vx(phi)|phi>
-              fock1 = 0.0_DP, & !   sum <psi|vx(phi)|psi>
-              fock2 = 0.0_DP, & !   sum <psi|vx(psi)|psi>
+  REAL(DP) :: fock0 = 0.0_DP, & !   sum <old|Vx(old)|old>
+              fock1 = 0.0_DP, & !   sum <new|vx(old)|new>
+              fock2 = 0.0_DP, & !   sum <new|vx(new)|new>
+              fock3 = 0.0_DP, & !   sum <old|vx(new)|old>
               dexx  = 0.0_DP    !   fock1  - 0.5*(fock2+fock0)
   !
   ! custom fft grids
@@ -325,6 +327,7 @@ MODULE exx
     IF ( allocated(locbuff) )      DEALLOCATE(locbuff)
     IF ( allocated(locmat) )      DEALLOCATE(locmat)
     IF ( allocated(xi) )      DEALLOCATE(xi)
+    IF ( allocated(evc0) )      DEALLOCATE(evc0)
     !
     IF(allocated(becxx)) THEN
       DO ikq = 1, nkqs
@@ -968,7 +971,7 @@ MODULE exx
     !
     IF( DoLoc) then 
       IF (.not. allocated(locbuff)) ALLOCATE( locbuff(nrxxs*npol, nbnd, nks))
-      IF (.not. allocated(locmat))  ALLOCATE( locmat(x_nbnd_occ, x_nbnd_occ))
+      IF (.not. allocated(locmat))  ALLOCATE( locmat(nbnd, nbnd))
     ELSE
       IF (.not. allocated(exxbuff)) THEN
          IF (gamma_only) THEN
@@ -5287,7 +5290,7 @@ END SUBROUTINE compute_becpsi
   END SUBROUTINE exxbuff_comm_gamma
   !-----------------------------------------------------------------------
 
-SUBROUTINE aceinit( )
+SUBROUTINE aceinit( exex )
   !
   USE wvfct,      ONLY : nbnd, npwx, current_k
   USE klist,      ONLY : nks, xk, ngk, igk_k
@@ -5307,8 +5310,13 @@ SUBROUTINE aceinit( )
   REAL (DP) :: ee, eexx
   INTEGER :: ik, npw
   TYPE(bec_type) :: becpsi
+  REAL (DP), OPTIONAL, INTENT(OUT) :: exex
   !
-  nbndproj = nbnd
+  IF(nbndproj<x_nbnd_occ.or.nbndproj>nbnd) THEN 
+    write(stdout,'(3(A,I4))') ' occ = ', x_nbnd_occ, ' proj = ', nbndproj, ' tot = ', nbnd
+    CALL errore('aceinit','n_proj must be between occ and tot.',1)
+  END IF 
+
   IF (.not. allocated(xi)) ALLOCATE( xi(npwx*npol,nbndproj,nks) )
   IF ( okvan ) CALL allocate_bec_type( nkb, nbnd, becpsi)
   eexx = 0.0d0
@@ -5331,13 +5339,14 @@ SUBROUTINE aceinit( )
   ENDDO
   CALL mp_sum( eexx, inter_pool_comm)
   ! WRITE(stdout,'(/,5X,"ACE energy",f15.8)') eexx
+  IF(present(exex)) exex = eexx
   IF ( okvan ) CALL deallocate_bec_type(becpsi)
   domat = .false.
 END SUBROUTINE aceinit
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE aceinit_gamma(nnpw,nbnd,phi,xitmp,becpsi,exxe)
 USE becmod,         ONLY : bec_type
-USE wvfct,          ONLY : current_k
+USE wvfct,          ONLY : current_k, npwx
 USE mp,             ONLY : mp_stop
 !
 ! compute xi(npw,nbndproj) for the ACE method
@@ -5354,8 +5363,10 @@ IMPLICIT NONE
 
   CALL start_clock( 'aceinit' )
 
-  IF(nbndproj>nbnd) CALL errore('aceinit','nbndproj greater than nbnd.',1)
-  IF(nbndproj<=0) CALL errore('aceinit','nbndproj le 0.',1)
+  IF (.not. allocated(evc0)) then 
+    ALLOCATE( evc0(npwx*npol,nbndproj) )
+    evc0 = (Zero,Zero)
+  END IF
 
   nrxxs= exx_fft%dfftt%nnr * npol
 
@@ -5365,11 +5376,8 @@ IMPLICIT NONE
   !
   IF( local_thr.gt.0.0d0 ) then  
     CALL vexx_loc(nnpw, nbndproj, xitmp, mexx)
+    Call MatSymm('S','L',mexx,nbndproj)
     CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
-    domat0 = domat
-    domat = .true.
-    CALL vexxace_gamma(nnpw,nbndproj,phi,exxe)
-    domat = domat0
   ELSE
 !   |xi> = Vx[phi]|phi>
     CALL vexx(nnpw, nnpw, nbndproj, phi, xitmp, becpsi)
@@ -5379,6 +5387,12 @@ IMPLICIT NONE
     CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
   END IF
   DEALLOCATE( mexx )
+
+  domat0 = domat
+  domat = .true.
+  CALL vexxace_gamma(nnpw,nbndproj,evc0,exxe)
+  evc0 = phi
+  domat = domat0
 
   CALL stop_clock( 'aceinit' )
 
@@ -5590,11 +5604,11 @@ USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
 implicit none
 !
 !  Exact exchange with SCDM orbitals. 
-!    - Vx|phi> =  Vx|psi> <psi|Vx|psi>^(-1) <psi|Vx|phi>
+!    Vx|phi> =  Vx|psi> <psi|Vx|psi>^(-1) <psi|Vx|phi>
 !  locmat contains localization integrals
 !  mexx contains in output the exchange matrix
 !   
-  integer :: npw, nbnd, nrxxs, npairs
+  integer :: npw, nbnd, nrxxs, npairs, ntot
   integer :: ig, ir, ik, ikq, iq, ibnd, jbnd, kbnd, NQR
   INTEGER :: current_ik
   real(DP) :: ovpairs(2), mexx(nbnd,nbnd), exxe
@@ -5605,19 +5619,16 @@ implicit none
   INTEGER, EXTERNAL  :: global_kpoint_index
 
 
-  write(stdout,'(A)') '---------------------------------'
-  write(stdout,'(A)') 'Exact-exchange with SCDM orbitals'
-  write(stdout,'(A)') '---------------------------------'
-
-  if(nbnd.gt.x_nbnd_occ) CALL errore('vexx_loc', 'nbnd > x_nbnd_occ not debugged yet',1)    
+  write(stdout,'(5X,A)') ' ' 
+  write(stdout,'(5X,A)') 'Exact-exchange with localized orbitals'
 
   CALL start_clock('vexxloc')
 
-  write(stdout,'(A,f24.12)') 'local_thr =', local_thr
+  write(stdout,'(7X,A,f24.12)') 'local_thr =', local_thr
   nrxxs= exx_fft%dfftt%nnr
   NQR = nrxxs*npol
 
-! exchange projected onto localized orbitals (nbnd=occ only)
+! exchange projected onto localized orbitals 
   ALLOCATE( fac(exx_fft%ngmt) )
   ALLOCATE( rhoc(nrxxs), vc(NQR) )
   ALLOCATE( RESULT(nrxxs,nbnd) ) 
@@ -5635,25 +5646,28 @@ implicit none
      xkq  = xkq_collect(:,ikq)
      CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xkp, xkq, fac)
      RESULT = (0.0d0, 0.0d0)
-     DO ibnd = 1,x_nbnd_occ
-!      write(*,'(I1,A,2I1,A)') ibnd, '(',ibnd,ibnd,')'
-       DO ir = 1, NQR 
-         rhoc(ir) = locbuff(ir,ibnd,ikq) * locbuff(ir,ibnd,ikq) / omega
-       ENDDO
-       CALL fwfft ('Custom', rhoc, exx_fft%dfftt)
-       vc=(0.0d0, 0.0d0)
-       DO ig = 1, exx_fft%ngmt
-           vc(exx_fft%nlt(ig))  = fac(ig) * rhoc(exx_fft%nlt(ig)) 
-           vc(exx_fft%nltm(ig)) = fac(ig) * rhoc(exx_fft%nltm(ig))
-       ENDDO
-       CALL invfft ('Custom', vc, exx_fft%dfftt)
-       DO ir = 1, NQR 
-         RESULT(ir,ibnd) = RESULT(ir,ibnd) + locbuff(ir,ibnd,nkqs) * vc(ir) 
-       ENDDO
+     DO ibnd = 1, nbnd
+       IF(x_occupation(ibnd,ikq).gt.0.0d0) THEN 
+         DO ir = 1, NQR 
+           rhoc(ir) = locbuff(ir,ibnd,ikq) * locbuff(ir,ibnd,ikq) / omega
+         ENDDO
+         CALL fwfft ('Custom', rhoc, exx_fft%dfftt)
+         vc=(0.0d0, 0.0d0)
+         DO ig = 1, exx_fft%ngmt
+             vc(exx_fft%nlt(ig))  = fac(ig) * rhoc(exx_fft%nlt(ig)) 
+             vc(exx_fft%nltm(ig)) = fac(ig) * rhoc(exx_fft%nltm(ig))
+         ENDDO
+         CALL invfft ('Custom', vc, exx_fft%dfftt)
+         DO ir = 1, NQR 
+           RESULT(ir,ibnd) = RESULT(ir,ibnd) + locbuff(ir,ibnd,nkqs) * vc(ir) 
+         ENDDO
+       END IF 
 
        DO kbnd = 1, ibnd-1
          ovpairs(2) = ovpairs(2) + locmat(ibnd,kbnd) 
-         IF(locmat(ibnd,kbnd).gt.local_thr) then 
+         IF((locmat(ibnd,kbnd).gt.local_thr).and. &
+            ((x_occupation(ibnd,ikq).gt.0.0d0).or.(x_occupation(kbnd,ikq).gt.0.0d0))) then 
+!          write(stdout,'(2I4,3f12.6,A)') ibnd, kbnd, x_occupation(ibnd,ikq), x_occupation(kbnd,ikq), locmat(ibnd,kbnd), ' IN '
            ovpairs(1) = ovpairs(1) + locmat(ibnd,kbnd) 
            DO ir = 1, NQR 
              rhoc(ir) = locbuff(ir,ibnd,ikq) * locbuff(ir,kbnd,ikq) / omega
@@ -5667,13 +5681,14 @@ implicit none
            ENDDO
            CALL invfft ('Custom', vc, exx_fft%dfftt)
            DO ir = 1, NQR 
-             RESULT(ir,kbnd) = RESULT(ir,kbnd) + locbuff(ir,ibnd,nkqs) * vc(ir) 
+             RESULT(ir,kbnd) = RESULT(ir,kbnd) + x_occupation(ibnd,ikq) * locbuff(ir,ibnd,nkqs) * vc(ir) 
            ENDDO
            DO ir = 1, NQR 
-             RESULT(ir,ibnd) = RESULT(ir,ibnd) + locbuff(ir,kbnd,nkqs) * vc(ir) 
+             RESULT(ir,ibnd) = RESULT(ir,ibnd) + x_occupation(kbnd,ikq) * locbuff(ir,kbnd,nkqs) * vc(ir) 
            ENDDO
-!          write(stdout,'(2I4,2f12.6,I10,2f12.6)') ibnd, kbnd, mexx(ibnd,kbnd), ovpairs(1)
-         end if 
+!        ELSE 
+!          write(stdout,'(2I4,3f12.6,A)') ibnd, kbnd, x_occupation(ibnd,ikq), x_occupation(kbnd,ikq), locmat(ibnd,kbnd), '      OUT '
+         END IF 
        ENDDO 
      ENDDO 
 
@@ -5702,14 +5717,114 @@ implicit none
    CALL matcalc('M1-',.true.,0,npw,nbnd,nbnd,RESULT,hpsi,mexx,exxe)
    deallocate( RESULT )
 
-   write(stdout,'(2(A,I12),A,f12.2)') 'Pairs(full): ', (nbnd*nbnd-nbnd)/2, &
-          ' Pairs(red): ', npairs,       ' % ', dble(npairs)/dble((nbnd*nbnd-nbnd)/2 )*100.0d0  
-   write(stdout,'(3(A,f12.6))')       'OvPairs(included): ', ovpairs(1),   &
-          ' OvPairs(tot): ', ovpairs(2), ' OvPairs(%): ', ovpairs(1)/ovpairs(2)*100.0d0
+   ntot = x_nbnd_occ * (x_nbnd_occ-1)/2 + x_nbnd_occ * (nbnd-x_nbnd_occ)
+   write(stdout,'(7X,2(A,I12),A,f12.2)') '  Pairs(full): ',   ntot,       '   Pairs(included): ',       npairs, '   Pairs(%): ', dble(npairs)/dble(ntot)*100.0d0  
+   write(stdout,'(7X,3(A,f12.6))')       'OvPairs(full): ', ovpairs(2), ' OvPairs(included): ', ovpairs(1), ' OvPairs(%): ', ovpairs(1)/ovpairs(2)*100.0d0
 
   CALL stop_clock('vexxloc')
 
 END SUBROUTINE vexx_loc
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE compute_density(DoPrint,Shift,CenterPBC,SpreadPBC,Overlap,PsiI,PsiJ,NQR,ibnd,jbnd,& 
+                             RRhoIJ,CRhoIJ)
+USE constants,            ONLY : pi,  bohr_radius_angs 
+USE cell_base,            ONLY : alat, omega
+USE mp,                   ONLY : mp_sum
+USE mp_bands,             ONLY : intra_bgrp_comm
+! 
+! Manipulate density: get pair density, center, spread, absolute overlap 
+!    DoPrint : ... whether to print or not the quantities
+!    Shift   : ... .false. refer the centers to the cell -L/2 ... +L/2
+!                  .true.  shift the centers to the cell 0 ... L (presumably the one given in input) 
+!
+IMPLICIT NONE
+  INTEGER,  INTENT(IN) :: NQR, ibnd, jbnd
+  REAL(DP), INTENT(IN) :: PsiI(NQR), PsiJ(NQR) 
+  LOGICAL,  INTENT(IN) :: DoPrint
+  LOGICAL,  INTENT(IN) :: Shift ! .false. Centers with respect to the minimum image cell convention
+                                ! .true.  Centers shifted to the input cell
+  REAL(DP),    INTENT(OUT) :: Overlap, CenterPBC(3), SpreadPBC(3)
+  REAL(DP),    INTENT(OUT), OPTIONAL :: RRhoIJ(NQR)
+  COMPLEX(DP), INTENT(OUT), OPTIONAL :: CRhoIJ(NQR)
+
+  REAL(DP) :: lenx, leny, lenz, vol, rbuff, TotSpread
+  INTEGER :: nr1, nr2, nr3
+  INTEGER :: ir, i, j, k , idx, j0, k0
+  COMPLEX(DP) :: cbuff(3)
+  REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0 
+
+  nr1 = exx_fft%dfftt%nr1x 
+  nr2 = exx_fft%dfftt%nr2x
+  nr3 = exx_fft%dfftt%nr3x
+  lenx = alat/dble(nr1) 
+  leny = alat/dble(nr2) 
+  lenz = alat/dble(nr3) 
+  vol = lenx*leny*lenz
+
+  CenterPBC = Zero 
+  SpreadPBC = Zero 
+  Overlap = Zero
+  cbuff = (Zero, Zero) 
+  rbuff = Zero  
+
+  j0 = exx_fft%dfftt%my_i0r2p ; k0 = exx_fft%dfftt%my_i0r3p
+  DO ir = 1, exx_fft%dfftt%nr1x*exx_fft%dfftt%my_nr2p*exx_fft%dfftt%my_nr3p
+     !
+     ! ... three dimensional indexes
+     !
+     idx = ir -1
+     k   = idx / (exx_fft%dfftt%nr1x*exx_fft%dfftt%my_nr2p)
+     idx = idx - (exx_fft%dfftt%nr1x*exx_fft%dfftt%my_nr2p)*k
+     k   = k + k0
+     IF ( k .GE. exx_fft%dfftt%nr3 ) CYCLE
+     j   = idx / exx_fft%dfftt%nr1x
+     idx = idx - exx_fft%dfftt%nr1x * j
+     j   = j + j0
+     IF ( j .GE. exx_fft%dfftt%nr2 ) CYCLE
+     i   = idx
+     IF ( i .GE. exx_fft%dfftt%nr1 ) CYCLE
+     !
+     rbuff = PsiI(ir) * PsiJ(ir) / omega
+     IF(present(RRhoIJ)) RRhoIJ(ir) = rbuff 
+     IF(present(CRhoIJ)) CRhoIJ(ir) = (One,Zero) * rbuff + (Zero, One) * Zero
+     Overlap = Overlap + abs(rbuff)*vol
+     cbuff(1) = cbuff(1) + rbuff*exp((Zero,One)*Two*pi*DBLE(i)/DBLE(nr1))*vol 
+     cbuff(2) = cbuff(2) + rbuff*exp((Zero,One)*Two*pi*DBLE(j)/DBLE(nr2))*vol
+     cbuff(3) = cbuff(3) + rbuff*exp((Zero,One)*Two*pi*DBLE(k)/DBLE(nr3))*vol
+  ENDDO
+
+  call mp_sum(cbuff,intra_bgrp_comm)
+  call mp_sum(Overlap,intra_bgrp_comm)
+
+  CenterPBC(1) =  alat/Two/pi*aimag(log(cbuff(1)))
+  CenterPBC(2) =  alat/Two/pi*aimag(log(cbuff(2)))
+  CenterPBC(3) =  alat/Two/pi*aimag(log(cbuff(3)))
+
+  IF(Shift) then 
+    if(CenterPBC(1).lt.Zero) CenterPBC(1) = CenterPBC(1) + alat
+    if(CenterPBC(2).lt.Zero) CenterPBC(2) = CenterPBC(2) + alat
+    if(CenterPBC(3).lt.Zero) CenterPBC(3) = CenterPBC(3) + alat
+  END IF 
+
+  rbuff = dble(cbuff(1))**2 + aimag(cbuff(1))**2 
+  SpreadPBC(1) = -(alat/Two/pi)**2 * dlog(rbuff) 
+  rbuff = dble(cbuff(2))**2 + aimag(cbuff(2))**2 
+  SpreadPBC(2) = -(alat/Two/pi)**2 * dlog(rbuff) 
+  rbuff = dble(cbuff(3))**2 + aimag(cbuff(3))**2 
+  SpreadPBC(3) = -(alat/Two/pi)**2 * dlog(rbuff) 
+  TotSpread = (SpreadPBC(1) + SpreadPBC(2) + SpreadPBC(3))*bohr_radius_angs**2  
+
+  IF(DoPrint) then 
+    write(stdout,'(A,2I4)')     'MOs:                  ', ibnd, jbnd
+    write(stdout,'(A,10f12.6)') 'Absolute Overlap:     ', Overlap 
+    write(stdout,'(A,10f12.6)') 'Center(PBC)[A]:       ', CenterPBC(1)*bohr_radius_angs, CenterPBC(2)*bohr_radius_angs, CenterPBC(3)*bohr_radius_angs
+    write(stdout,'(A,10f12.6)') 'Spread [A**2]:        ', SpreadPBC(1)*bohr_radius_angs**2, SpreadPBC(2)*bohr_radius_angs**2, SpreadPBC(3)*bohr_radius_angs**2 
+    write(stdout,'(A,10f12.6)') 'Total Spread [A**2]:  ', TotSpread
+  END IF 
+
+  IF(TotSpread.lt.Zero) Call errore('compute_density','Negative spread found',1)
+
+END SUBROUTINE compute_density 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END MODULE exx
 !-----------------------------------------------------------------------

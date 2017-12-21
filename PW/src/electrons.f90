@@ -41,7 +41,7 @@ SUBROUTINE electrons()
                                    lambda, report
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : aceinit,exxinit, exxenergy2, exxenergy, exxbuff, &
-                                   fock0, fock1, fock2, dexx, use_ace, local_thr
+                                   fock0, fock1, fock2, fock3, dexx, use_ace, local_thr
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
   !
@@ -90,6 +90,7 @@ SUBROUTINE electrons()
   IF (dft_is_hybrid() .AND. adapt_thr ) tr2= tr2_init
   fock0 = 0.D0
   fock1 = 0.D0
+  fock3 = 0.D0
   IF (.NOT. exx_is_active () ) fock2 = 0.D0
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -214,7 +215,7 @@ SUBROUTINE electrons()
         !
         CALL exxinit(DoLoc)
         IF( DoLoc ) CALL localize_orbitals( )
-        IF (use_ace) CALL aceinit ( )
+        IF (use_ace) CALL aceinit ( fock3 )
         !
         ! fock2 is the exchange energy calculated for orbitals at step n,
         !       using orbitals at step n in the expression of exchange 
@@ -231,7 +232,11 @@ SUBROUTINE electrons()
         ! there is some numerical problem. One such cause could be that
         ! the treatment of the divergence in exact exchange has failed. 
         !
-        dexx = fock1 - 0.5D0*(fock0+fock2)
+        IF (use_ace) THEN
+          dexx =  0.5D0 * ((fock1-fock0)+(fock3-fock2)) 
+        ELSE
+          dexx = fock1 - 0.5D0*(fock0+fock2)
+        END IF 
         !
         IF ( dexx < 0.0_dp ) THEN
            IF( Doloc ) THEN
