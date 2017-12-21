@@ -13,15 +13,12 @@
 !! @Note
 !! 14/11/17 Pietro Delugas: new revision passed from iotk to FoX lib, added support 
 !!  new schema for UPF files 
-!
-!
-! A macro to trim both from left and right
       !
       USE kinds,        ONLY: DP
       USE pseudo_types, ONLY: pseudo_upf, deallocate_pseudo_upf
       !
       IMPLICIT NONE
-      PUBLIC
+      PUBLIC ! FIXME: why public?
       !PRIVATE
       !PUBLIC :: read_upf, pseudo_upf, deallocate_pseudo_upf
       !
@@ -46,7 +43,6 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    USE read_upf_schema_module ,ONLY: read_upf_schema
    USE mp,           ONLY: mp_barrier
    USE mp_images,    ONLY: intra_image_comm, my_image_id
-   USE mp_world,     ONLY: world_comm
    USE io_global,    ONLY: ionode, stdout
    USE io_files,     ONLY: tmp_dir
    USE FoX_DOM,      ONLY: Node, domException, parseFile, getFirstChild, getExceptionCode,&

@@ -1,10 +1,23 @@
+! Copyright (C) 2017 Quantum ESPRESSO Foundation
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!=----------------------------------------------------------------------------=!
 MODULE emend_upf_module 
+!=----------------------------------------------------------------------------=!
+  !! author: Pietro Delugas
+  !! Contains utility to make the old UPF format readable by FoX
 
 PRIVATE 
 PUBLIC make_emended_upf_copy 
 
 CONTAINS 
 SUBROUTINE make_emended_upf_copy( filename, tempname) 
+  !! author: Pietro Delugas
+  !! Utility to make the old UPF format readable by FoX
+  !! Replaces "&" with "&amp;" in file "filename", writes to file "tempname"
+  !
   IMPLICIT NONE
   CHARACTER(LEN=*),INTENT(IN)      :: filename, tempname
   !
@@ -14,9 +27,11 @@ SUBROUTINE make_emended_upf_copy( filename, tempname)
   CHARACTER(LEN=256)               :: line 
   ! 
   iun_source = find_free_unit()
-  OPEN (UNIT = iun_source, FILE = TRIM(filename), STATUS = 'old', ACTION = 'read', FORM='formatted')
+  OPEN (UNIT = iun_source, FILE = TRIM(filename), STATUS = 'old', &
+       ACTION = 'read', FORM='formatted')
   iun_dest = find_free_unit()
-  OPEN (UNIT = iun_dest, FILE = TRIM(tempname), STATUS = 'unknown', ACTION = 'write', FORM = 'formatted')
+  OPEN (UNIT = iun_dest, FILE = TRIM(tempname), STATUS = 'unknown', &
+       ACTION = 'write', FORM = 'formatted')
   copy_loop: DO
      ! 
      READ(iun_source, "(a256)", IOSTAT = ierr ) line 

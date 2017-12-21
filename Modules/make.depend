@@ -381,7 +381,7 @@ upf.o : emend_upf.o
 upf.o : io_files.o
 upf.o : io_global.o
 upf.o : kind.o
-upf.o : mp_world.o
+upf.o : mp_images.o
 upf.o : pseudo_types.o
 upf.o : radial_grids.o
 upf.o : read_upf_schema.o
