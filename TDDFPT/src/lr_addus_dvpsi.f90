@@ -48,10 +48,10 @@ SUBROUTINE lr_addus_dvpsi ( ik, lda, n, m, psi, dpsi )
   ! counter on beta functions
   ! counter on beta functions
   !
-  REAL(DP) :: qmod                              ! the modulus of q
-  REAL(DP), ALLOCATABLE :: ylmk0(:)             ! the spherical harmonics
-  COMPLEX(DP) :: qgm(1)                         ! FFT of Q(r)
-  COMPLEX(DP), ALLOCATABLE :: ps(:,:), qqc(:,:) ! auxiliary arrays
+  REAL(DP) :: qmod                                         ! the modulus of q
+  REAL(DP), ALLOCATABLE :: ylmk0(:)                        ! the spherical harmonics
+  COMPLEX(DP) :: qgm(1)                                    ! FFT of Q(r)
+  COMPLEX(DP), ALLOCATABLE :: ps(:,:), qqc(:,:),qqc_d(:,:) ! auxiliary arrays
   !
   dpsi = psi
   !
@@ -80,6 +80,7 @@ SUBROUTINE lr_addus_dvpsi ( ik, lda, n, m, psi, dpsi )
       ! Calculate the Fourier transform of the Q functions.
       !
       ALLOCATE (qqc(nh(nt),nh(nt)))
+      ALLOCATE (qqc_d(nh(nt),nh(nt)))
       qqc(:,:) = (0.d0, 0.d0)
       !
       DO ih = 1, nh(nt)
@@ -97,16 +98,17 @@ SUBROUTINE lr_addus_dvpsi ( ik, lda, n, m, psi, dpsi )
       DO na = 1, nat
          IF (ityp (na).eq.nt) THEN
            !
-           qqc = qqc * eigqts(na)
+           qqc_d = qqc * eigqts(na)
            !
            CALL ZGEMM('C','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                    & qqc, nh(nt), becp1(ik)%k(indv_ijkb0(na)+1,1), nkb, &
+                    & qqc_d, nh(nt), becp1(ik)%k(indv_ijkb0(na)+1,1), nkb, &
                     & (0.0_dp,0.0_dp), ps(indv_ijkb0(na)+1,1), nkb )
            !
          ENDIF
       ENDDO
       !
       DEALLOCATE (qqc)
+      DEALLOCATE (qqc_d)
       !
     ENDIF
   ENDDO
