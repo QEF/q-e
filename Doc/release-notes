@@ -10,6 +10,9 @@ New in development version:
 
 Problems fixed in development version:
 
+  * TDDFPT in "lr_addus_dvpsi.f90" had a bug for systems with USPP and more than 2 atoms (Dec.22, 2017)
+    (Oleksandr Motornyi, Michele Raynaud, Iurii Timrov, Nathalie Vast, Andrea Dal Corso)
+
   * Phonons with images wasn't working in v.6.2.1 with old PP files
     containing "&" in the header section (Dec.20, 2017)
 
