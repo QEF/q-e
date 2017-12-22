@@ -231,8 +231,8 @@ SUBROUTINE electrons()
         ! check for convergence. dexx is positive definite: if it isn't,
         ! there is some numerical problem. One such cause could be that
         ! the treatment of the divergence in exact exchange has failed. 
-        !
-        IF (use_ace) THEN
+        ! FIXME: to be properly implemented for all cases
+        IF (use_ace .AND. (nspin == 1) .AND. gamma_only) THEN
           dexx =  0.5D0 * ((fock1-fock0)+(fock3-fock2)) 
         ELSE
           dexx = fock1 - 0.5D0*(fock0+fock2)
