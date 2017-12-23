@@ -15,12 +15,14 @@ MODULE recvec_subs
 
 !  ... Most important dependencies: next three modules
    USE gvect,              ONLY : ig_l2g, g, gg, ngm, ngm_g, gcutm, &
-                                  mill,  nl, gstart
-   USE gvecs,              ONLY : ngms, gcutms, ngms_g, nls
+                                  mill,  gstart
+   USE gvecs,              ONLY : ngms, gcutms, ngms_g
    USE fft_base,           ONLY : dfftp, dffts
 !
    USE kinds,              ONLY : DP
    USE constants,          ONLY : eps8
+
+   USE fft_ggen
 
    PRIVATE
    SAVE
@@ -250,9 +252,30 @@ CONTAINS
    ELSE
       gstart=1
    ENDIF
+
    !
    !     Now set nl and nls with the correct fft correspondence
    !
+   CALL fft_set_nl( dfftp, at, g, mill  )
+   CALL fft_set_nl( dffts, at, g )
+!   IF( SIZE( dfftp%nl ) /= SIZE( nl ) ) &
+!      CALL errore ('ggen', '  inconsisten size for nl ', 1)
+!   nl = dfftp%nl
+!   IF( SIZE( dffts%nl ) /= SIZE( nls ) ) &
+!      CALL errore ('ggen', '  inconsisten size for nls ', 1)
+!   nls = dffts%nl
+   IF( gamma_only ) THEN
+     CALL fft_set_nlm( dfftp, mill  )
+     CALL fft_set_nlm( dffts, mill  )
+!     IF( SIZE( dfftp%nlm ) /= SIZE( nlm ) ) &
+!        CALL errore ('ggen', '  inconsisten size for nlm ', 1)
+!     IF( SIZE( dffts%nlm ) /= SIZE( nlsm ) ) &
+!        CALL errore ('ggen', '  inconsisten size for nlsm ', 1)
+!     nlm  = dfftp%nlm
+!     nlsm = dffts%nlm
+   END IF
+
+#ifdef __PIPPONE
    DO ng = 1, ngm
       n1 = nint (sum(g (:, ng) * at (:, 1))) + 1
       mill (1,ng) = n1 - 1
@@ -286,14 +309,16 @@ CONTAINS
       ENDIF
    ENDDO
    !
-   DEALLOCATE( mill_g )
-
    IF ( gamma_only) CALL index_minusg()
+#endif
+
+   DEALLOCATE( mill_g )
 
    IF( ALLOCATED( ngmpe ) ) DEALLOCATE( ngmpe )
 
    END SUBROUTINE ggen
    !
+#ifdef __PIPPONE
    !-----------------------------------------------------------------------
    SUBROUTINE index_minusg()
    !----------------------------------------------------------------------
@@ -346,6 +371,7 @@ CONTAINS
    ENDDO
 
    END SUBROUTINE index_minusg
+#endif
    !
 !=----------------------------------------------------------------------=
    END MODULE recvec_subs

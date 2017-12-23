@@ -204,7 +204,7 @@ CONTAINS
 
   SUBROUTINE xc_vdW_DF (rho_valence, rho_core, etxc, vtxc, v)
 
-  USE gvect,                 ONLY : ngm, nl, g, nlm
+  USE gvect,                 ONLY : ngm, g
   USE cell_base,             ONLY : omega, tpiba
 
   implicit none
@@ -373,7 +373,7 @@ CONTAINS
 
   SUBROUTINE xc_vdW_DF_spin (rho_valence, rho_core, etxc, vtxc, v)
 
-  USE gvect,                 ONLY : ngm, nl, g, nlm
+  USE gvect,                 ONLY : ngm, g
   USE cell_base,             ONLY : omega, tpiba
 
   implicit none
@@ -972,7 +972,7 @@ CONTAINS
 
   SUBROUTINE vdW_energy (thetas, vdW_xc_energy)
 
-  USE gvect,           ONLY : nl, nlm, gg, ngm, igtongl, gl, ngl, gstart
+  USE gvect,           ONLY : gg, ngm, igtongl, gl, ngl, gstart
   USE cell_base,       ONLY : tpiba, omega
 
   implicit none
@@ -1036,20 +1036,20 @@ CONTAINS
 
      end if
 
-     theta = thetas(nl(g_i),:)
+     theta = thetas(dfftp%nl(g_i),:)
 
      do q2_i = 1, Nqs
         do q1_i = 1, Nqs
-           u_vdW(nl(g_i),q2_i)  = u_vdW(nl(g_i),q2_i) + kernel_of_k(q2_i,q1_i)*theta(q1_i)
+           u_vdW(dfftp%nl(g_i),q2_i)  = u_vdW(dfftp%nl(g_i),q2_i) + kernel_of_k(q2_i,q1_i)*theta(q1_i)
         end do
-        vdW_xc_energy = vdW_xc_energy + G_multiplier * (u_vdW(nl(g_i),q2_i)*conjg(theta(q2_i)))
+        vdW_xc_energy = vdW_xc_energy + G_multiplier * (u_vdW(dfftp%nl(g_i),q2_i)*conjg(theta(q2_i)))
      end do
 
      if (g_i < gstart ) vdW_xc_energy = vdW_xc_energy / G_multiplier
 
   end do
 
-  if (gamma_only) u_vdW(nlm(:),:) = CONJG(u_vdW(nl(:),:))
+  if (gamma_only) u_vdW(dfftp%nlm(:),:) = CONJG(u_vdW(dfftp%nl(:),:))
 
 
   ! --------------------------------------------------------------------
@@ -1094,7 +1094,7 @@ CONTAINS
 
   SUBROUTINE get_potential (q0, dq0_drho, dq0_dgradrho, grad_rho, u_vdW, potential)
 
-  USE gvect,               ONLY : nl, g, nlm
+  USE gvect,               ONLY : g
   USE cell_base,           ONLY : alat, tpiba
 
   implicit none
@@ -1220,8 +1220,8 @@ CONTAINS
      end do
 
      CALL fwfft ('Dense', h, dfftp)
-     h(nl(:)) = CMPLX(0.0_DP,1.0_DP) * tpiba * g(icar,:) * h(nl(:))
-     if (gamma_only) h(nlm(:)) = CONJG(h(nl(:)))
+     h(dfftp%nl(:)) = CMPLX(0.0_DP,1.0_DP) * tpiba * g(icar,:) * h(dfftp%nl(:))
+     if (gamma_only) h(dfftp%nlm(:)) = CONJG(h(dfftp%nl(:)))
      CALL invfft ('Dense', h, dfftp)
      potential(:) = potential(:) - REAL(h(:))
 
@@ -1538,7 +1538,7 @@ CONTAINS
 
   SUBROUTINE stress_vdW_DF (rho_valence, rho_core, nspin, sigma)
 
-  use gvect,           ONLY : ngm, nl, g, nlm
+  use gvect,           ONLY : ngm, g
   USE cell_base,       ONLY : tpiba
 
   implicit none
@@ -1650,7 +1650,7 @@ CONTAINS
   SUBROUTINE stress_vdW_DF_gradient (total_rho, grad_rho, q0, dq0_drho, &
                                      dq0_dgradrho, thetas, sigma)
 
-  USE gvect,                 ONLY : ngm, nl, g, nlm, nl, gg, igtongl, &
+  USE gvect,                 ONLY : ngm, g, gg, igtongl, &
                                     gl, ngl, gstart
   USE cell_base,             ONLY : omega, tpiba, alat, at, tpiba2
 
@@ -1791,7 +1791,7 @@ CONTAINS
 
   SUBROUTINE stress_vdW_DF_kernel (total_rho, q0, thetas, sigma)
 
-  USE gvect,                 ONLY : ngm, nl, g, nl, gg, igtongl, gl, ngl, gstart
+  USE gvect,                 ONLY : ngm, g, gg, igtongl, gl, ngl, gstart
   USE cell_base,             ONLY : omega, tpiba, tpiba2
 
   implicit none
@@ -1840,8 +1840,8 @@ CONTAINS
            do l = 1, 3
               do m = 1, l
 
-              sigma (l, m) = sigma (l, m) - G_multiplier * 0.5 * e2 * thetas(nl(g_i),q1_i) * &
-                             dkernel_of_dk(q1_i,q2_i)*conjg(thetas(nl(g_i),q2_i))* &
+              sigma (l, m) = sigma (l, m) - G_multiplier * 0.5 * e2 * thetas(dfftp%nl(g_i),q1_i) * &
+                             dkernel_of_dk(q1_i,q2_i)*conjg(thetas(dfftp%nl(g_i),q2_i))* &
                              (g (l, g_i) * g (m, g_i) * tpiba2) / g_kernel
               end do
            end do
@@ -1938,7 +1938,7 @@ CONTAINS
 
   SUBROUTINE numerical_gradient (total_rho, grad_rho)
 
-  USE gvect,             ONLY : ngm, nl, g, nlm
+  USE gvect,             ONLY : ngm, g
   USE cell_base,         ONLY : tpiba
 
   implicit none
@@ -1968,8 +1968,8 @@ CONTAINS
      ! Compute gradient in G space.
 
      c_grho(:) =CMPLX(0.0_DP,0.0_DP)
-     c_grho(nl(:)) = CMPLX (0.0_DP,1.0_DP) * tpiba * g(icar,:) * c_rho(nl(:))
-     if (gamma_only) c_grho( nlm(:) ) = CONJG( c_grho( nl(:) ) )
+     c_grho(dfftp%nl(:)) = CMPLX (0.0_DP,1.0_DP) * tpiba * g(icar,:) * c_rho(dfftp%nl(:))
+     if (gamma_only) c_grho( dfftp%nlm(:) ) = CONJG( c_grho( dfftp%nl(:) ) )
 
 
      ! -----------------------------------------------------------------
@@ -1999,7 +1999,7 @@ CONTAINS
 
   SUBROUTINE thetas_to_uk (thetas, u_vdW)
 
-  USE gvect,           ONLY : nl, nlm, gg, ngm, igtongl, gl, ngl, gstart
+  USE gvect,           ONLY : gg, ngm, igtongl, gl, ngl, gstart
   USE cell_base,       ONLY : tpiba, omega
 
   implicit none
@@ -2038,17 +2038,17 @@ CONTAINS
 
      end if
 
-     theta = thetas(nl(g_i),:)
+     theta = thetas(dfftp%nl(g_i),:)
 
      do q2_i = 1, Nqs
         do q1_i = 1, Nqs
-           u_vdW(nl(g_i),q2_i) = u_vdW(nl(g_i),q2_i) + kernel_of_k(q2_i,q1_i)*theta(q1_i)
+           u_vdW(dfftp%nl(g_i),q2_i) = u_vdW(dfftp%nl(g_i),q2_i) + kernel_of_k(q2_i,q1_i)*theta(q1_i)
         end do
      end do
 
   end do
 
-  if (gamma_only) u_vdW(nlm(:),:) = CONJG(u_vdW(nl(:),:))
+  if (gamma_only) u_vdW(dfftp%nlm(:),:) = CONJG(u_vdW(dfftp%nl(:),:))
 
   deallocate( kernel_of_k )
 
