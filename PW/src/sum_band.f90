@@ -145,9 +145,10 @@ SUBROUTINE sum_band()
   !
   IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
-  ! ... sum charge density over pools (distributed k-points)
+  ! ... sum charge density over pools (distributed k-points) and bands
   !
   CALL mp_sum( rho%of_r, inter_pool_comm )
+  CALL mp_sum( rho%of_r, inter_bgrp_comm )
   !
   IF( okvan )  THEN
      !
@@ -175,10 +176,6 @@ SUBROUTINE sum_band()
      CALL addusdens(rho%of_r(:,:))
      !
   ENDIF
-  !
-  ! ... sum charge density over bands
-  !
-  CALL mp_sum( rho%of_r, inter_bgrp_comm )
   !
   ! ... bring the (unsymmetrized) rho(r) to G-space (use psic as work array)
   !
