@@ -14,7 +14,7 @@
 !          contribution from metaGGA
       use kinds, only: dp
       use gvect,     only : g
-      use gvecs,                  only : ngms, nlsm, nls
+      use gvecs,                  only : ngms
       use gvecw,                  only : ngw
       use cell_base,              only : tpiba2
       USE metagga,                ONLY : kedtaus
@@ -36,8 +36,8 @@
          do ipol = 1, 3
             psi(:)=(0.d0,0.d0)
             do ig=1,ngw
-               psi(nls(ig))=g(ipol,ig)* (ci*c(ig) - ca(ig))
-               psi(nlsm(ig))=g(ipol,ig)* (CONJG(ci*c(ig) + ca(ig)))
+               psi(dffts%nl(ig))=g(ipol,ig)* (ci*c(ig) - ca(ig))
+               psi(dffts%nlm(ig))=g(ipol,ig)* (CONJG(ci*c(ig) + ca(ig)))
             end do
             call invfft('Wave',psi,dffts )
 !           on smooth grids--> grids for charge density
@@ -47,8 +47,8 @@
             end do
             call fwfft('Wave',psi, dffts )
             do ig=1,ngw
-               fp= (psi(nls(ig)) + psi(nlsm(ig)))
-               fm= (psi(nls(ig)) - psi(nlsm(ig)))
+               fp= (psi(dffts%nl(ig)) + psi(dffts%nlm(ig)))
+               fm= (psi(dffts%nl(ig)) - psi(dffts%nlm(ig)))
                df(ig)= df(ig) - ci*fi*tpiba2*g(ipol,ig) * &
                        CMPLX(DBLE(fp), AIMAG(fm),kind=DP)
                da(ig)= da(ig) - ci*fip*tpiba2*g(ipol,ig)* &
@@ -124,8 +124,8 @@
          do ipol = 1, 3
             psis( : ) = (0.d0,0.d0)
             do ig=1,ngw
-               psis(nls(ig))=tpiba*g(ipol,ig)* (ci*c(ig,i) - c(ig,i+1))
-               psis(nlsm(ig))=tpiba*g(ipol,ig)*CONJG(ci*c(ig,i)+c(ig,i+1))
+               psis(dffts%nl(ig))=tpiba*g(ipol,ig)* (ci*c(ig,i) - c(ig,i+1))
+               psis(dffts%nlm(ig))=tpiba*g(ipol,ig)*CONJG(ci*c(ig,i)+c(ig,i+1))
             end do
                   ! gradient of wfc in real space
             call invfft('Wave',psis, dffts )

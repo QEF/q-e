@@ -13,8 +13,8 @@
     SUBROUTINE c2psi( psi, nnr, c, ca, ng, iflg )
 !-----------------------------------------------------------------------
        !
-       use gvecs, only: nlsm, nls
        use kinds, only: DP
+       use fft_base, only: dffts
 
        implicit none
 
@@ -43,21 +43,21 @@
            CASE ( 0 )
              !
              do ig = 1, ng
-               psi( nls( ig ) ) = c( ig )
+               psi( dffts%nl( ig ) ) = c( ig )
              end do
              !
            CASE ( 1 )
              !
              do ig = 1, ng
-               psi( nlsm( ig ) ) = CONJG( c( ig ) )
-               psi( nls( ig ) ) = c( ig )
+               psi( dffts%nlm( ig ) ) = CONJG( c( ig ) )
+               psi( dffts%nl( ig ) ) = c( ig )
              end do
              !
            CASE ( 2 )
              !
              do ig = 1, ng
-               psi( nlsm( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ) )
-               psi( nls( ig ) ) = c( ig ) + ci * ca( ig )
+               psi( dffts%nlm( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ) )
+               psi( dffts%nl( ig ) ) = c( ig ) + ci * ca( ig )
              end do
 
            CASE DEFAULT

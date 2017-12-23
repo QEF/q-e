@@ -14,7 +14,6 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
     USE cell_base,               ONLY  : omega
     USE parallel_include
     USE mp,                      ONLY  : mp_barrier
-    USE gvecs,                   ONLY  : nlsm, nls
     USE mp_wave,                 ONLY  : redistwfr
     USE io_global,               ONLY  : stdout         !print/write argument for standard output (to output file)
     USE fft_helper_subroutines
@@ -149,8 +148,8 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
           IF ( idx + i - 1 < nbsp ) THEN
             !$omp parallel do 
             DO ig=1,ngw
-              psis(nlsm(ig)+igoff) = CONJG( c(ig,idx+i-1) ) + ci * CONJG( c(ig,idx+i) )
-              psis(nls(ig) +igoff) =        c(ig,idx+i-1)   + ci * c(ig,idx+i)
+              psis(dffts%nlm(ig)+igoff) = CONJG( c(ig,idx+i-1) ) + ci * CONJG( c(ig,idx+i) )
+              psis(dffts%nl(ig) +igoff) =        c(ig,idx+i-1)   + ci * c(ig,idx+i)
             END DO
             !$omp end parallel do 
           END IF
@@ -159,8 +158,8 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
           IF ( idx + i - 1 == nbsp ) THEN
             !$omp parallel do 
             DO ig=1,ngw
-              psis(nlsm(ig)+igoff) = CONJG( c(ig,idx+i-1) ) 
-              psis(nls(ig) +igoff) =        c(ig,idx+i-1) 
+              psis(dffts%nlm(ig)+igoff) = CONJG( c(ig,idx+i-1) ) 
+              psis(dffts%nl(ig) +igoff) =        c(ig,idx+i-1) 
             END DO
             !$omp end parallel do 
           END IF

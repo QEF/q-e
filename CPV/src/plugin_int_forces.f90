@@ -16,7 +16,7 @@ USE cell_base,         ONLY : omega
 USE fft_base,          ONLY : dfftp
 USE fft_interfaces,    ONLY : fwfft
 USE electrons_base,    ONLY : nspin
-USE gvect,             ONLY : ngm, nl, eigts1, eigts2, eigts3 
+USE gvect,             ONLY : ngm, eigts1, eigts2, eigts3 
 !
 USE plugin_flags
 !

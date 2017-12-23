@@ -23,7 +23,6 @@
       USE parallel_include
       USE kinds,                  ONLY: dp
       USE control_flags,          ONLY: iprint
-      USE gvecs,                  ONLY: nlsm, nls
       USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq
       USE uspp_param,             ONLY: nhm, nh, ish
       USE constants,              ONLY: pi, fpi
@@ -96,7 +95,7 @@
 !$omp task default(none) &
 !$omp          firstprivate( idx, i, n, ngw, ci, nogrp_ ) &
 !$omp          private( igoff, ig ) &
-!$omp          shared( c, dffts, psi, nlsm, nls )
+!$omp          shared( c, dffts, psi )
          !
          !  This loop is executed only ONCE when NOGRP=1.
          !  Equivalent to the case with no task-groups
@@ -116,8 +115,8 @@
 
          IF( idx + i - 1 <= n ) THEN
             DO ig=1,ngw
-               psi(nlsm(ig)+igoff) = conjg( c(ig,idx+i-1) - ci * c(ig,idx+i) )
-               psi(nls(ig)+igoff) =         c(ig,idx+i-1) + ci * c(ig,idx+i)
+               psi(dffts%nlm(ig)+igoff) = conjg( c(ig,idx+i-1) - ci * c(ig,idx+i) )
+               psi(dffts%nl(ig)+igoff) =         c(ig,idx+i-1) + ci * c(ig,idx+i)
             END DO
          END IF
 !$omp end task
@@ -133,8 +132,8 @@
 
       psi = 0.0d0
       DO ig=1,ngw
-         psi(nlsm(ig)) = conjg( c(ig,i) - ci * c(ig,i+1) )
-         psi(nls(ig)) =  c(ig,i) + ci * c(ig,i+1)
+         psi(dffts%nlm(ig)) = conjg( c(ig,i) - ci * c(ig,i+1) )
+         psi(dffts%nl(ig)) =  c(ig,i) + ci * c(ig,i+1)
       END DO
       CALL invfft( 'Wave', psi, dffts )
 
@@ -282,7 +281,7 @@
 !$omp task default(none)  &
 !$omp          private( fi, fip, fp, fm, ig ) &
 !$omp          firstprivate( eig_offset, igno, idx, nogrp_, ngw, tpiba2, me_bgrp, i, n, tens ) &
-!$omp          shared( f, psi, df, da, c, dffts, g2kin, nls, nlsm )
+!$omp          shared( f, psi, df, da, c, dffts, g2kin  )
 
          IF( idx + i - 1 <= n ) THEN
             if (tens) then
@@ -294,8 +293,8 @@
             endif
             IF( dffts%have_task_groups ) THEN
                DO ig=1,ngw
-                  fp= psi(nls(ig)+eig_offset) +  psi(nlsm(ig)+eig_offset)
-                  fm= psi(nls(ig)+eig_offset) -  psi(nlsm(ig)+eig_offset)
+                  fp= psi(dffts%nl(ig)+eig_offset) +  psi(dffts%nlm(ig)+eig_offset)
+                  fm= psi(dffts%nl(ig)+eig_offset) -  psi(dffts%nlm(ig)+eig_offset)
                   df(ig+igno-1)= fi *(tpiba2 * g2kin(ig) * c(ig,idx+i-1) + &
                                  CMPLX(real (fp), aimag(fm), kind=dp ))
                   da(ig+igno-1)= fip*(tpiba2 * g2kin(ig) * c(ig,idx+i  ) + &
@@ -303,8 +302,8 @@
                END DO
             ELSE
                DO ig=1,ngw
-                  fp= psi(nls(ig)) + psi(nlsm(ig))
-                  fm= psi(nls(ig)) - psi(nlsm(ig))
+                  fp= psi(dffts%nl(ig)) + psi(dffts%nlm(ig))
+                  fm= psi(dffts%nl(ig)) - psi(dffts%nlm(ig))
                   df(ig)= fi*(tpiba2*g2kin(ig)* c(ig,idx+i-1)+CMPLX(DBLE(fp), AIMAG(fm),kind=DP))
                   da(ig)=fip*(tpiba2*g2kin(ig)* c(ig,idx+i  )+CMPLX(AIMAG(fp),-DBLE(fm),kind=DP))
                END DO

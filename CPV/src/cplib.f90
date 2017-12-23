@@ -1463,7 +1463,7 @@ END SUBROUTINE print_lambda_x
       USE ions_base,          ONLY: nsp
       USE gvect, ONLY: gstart, g, gg
       USE gvecs,              ONLY: ngms
-      USE gvect,              ONLY: ngm, nl
+      USE gvect,              ONLY: ngm
       USE cell_base,          ONLY: omega, ainv, tpiba2
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
@@ -1509,7 +1509,7 @@ END SUBROUTINE print_lambda_x
                DO is = 1, nsp
                  IF( upf(is)%nlcc ) srhoc = srhoc + sfac( ig, is ) * drhocg( ig, is )
                ENDDO
-               vxcc = DBLE( CONJG( vxc( nl( ig ) ) ) * srhoc ) / SQRT( gg(ig) * tpiba2 )
+               vxcc = DBLE( CONJG( vxc( dfftp%nl( ig ) ) ) * srhoc ) / SQRT( gg(ig) * tpiba2 )
                dcc(i,j) = dcc(i,j) + vxcc * &
      &                      2.d0 * tpiba2 * g(i,ig) *                  &
      &                    (g(1,ig)*ainv(j,1) +                         &
