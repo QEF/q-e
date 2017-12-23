@@ -355,7 +355,6 @@ data_structure.o : ../../UtilXlib/mp.o
 data_structure.o : pwcom.o
 deriv_drhoc.o : ../../Modules/constants.o
 deriv_drhoc.o : ../../Modules/kind.o
-divide.o : ../../UtilXlib/mp.o
 divide_class.o : ../../Modules/constants.o
 divide_class.o : ../../Modules/kind.o
 divide_class_so.o : ../../Modules/constants.o
@@ -717,6 +716,7 @@ gradcorr.o : ../../Modules/kind.o
 gradcorr.o : ../../Modules/noncol.o
 gradcorr.o : ../../Modules/recvec.o
 gradcorr.o : ../../Modules/wavefunctions.o
+gradcorr.o : exx.o
 gradcorr.o : pwcom.o
 gweights.o : ../../Modules/kind.o
 h_1psi.o : ../../Modules/control_flags.o
@@ -965,6 +965,7 @@ interpolate.o : ../../Modules/control_flags.o
 interpolate.o : ../../Modules/fft_base.o
 interpolate.o : ../../Modules/kind.o
 interpolate.o : ../../Modules/recvec.o
+interpolate.o : exx.o
 io_rho_xml.o : ../../Modules/cell_base.o
 io_rho_xml.o : ../../Modules/control_flags.o
 io_rho_xml.o : ../../Modules/funct.o
@@ -1000,13 +1001,13 @@ ldaU.o : ../../Modules/parameters.o
 ldaU.o : atomic_wfc_mod.o
 loc_scdm.o : ../../FFTXlib/fft_interfaces.o
 loc_scdm.o : ../../Modules/cell_base.o
+loc_scdm.o : ../../Modules/constants.o
+loc_scdm.o : ../../Modules/control_flags.o
 loc_scdm.o : ../../Modules/fft_base.o
 loc_scdm.o : ../../Modules/io_global.o
-loc_scdm.o : ../../Modules/ions_base.o
 loc_scdm.o : ../../Modules/kind.o
 loc_scdm.o : ../../Modules/mp_bands.o
 loc_scdm.o : ../../Modules/noncol.o
-loc_scdm.o : ../../Modules/xc_vdW_DF.o
 loc_scdm.o : ../../UtilXlib/mp.o
 loc_scdm.o : exx.o
 loc_scdm.o : pwcom.o

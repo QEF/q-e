@@ -58,7 +58,6 @@ data_structure.o \
 deriv_drhoc.o \
 divide_class.o \
 divide_class_so.o \
-divide.o \
 divide_et_impera.o \
 dqvan2.o \
 drhoc.o \
