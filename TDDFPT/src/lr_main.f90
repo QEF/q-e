@@ -38,7 +38,7 @@ PROGRAM lr_main
                                   & resonance_condition, lr_dump_rho, lr_calc_project
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY : environment_start
-  USE mp_global,             ONLY : nimage, mp_startup, set_bgrp_indices, &
+  USE mp_global,             ONLY : nimage, mp_startup, inter_bgrp_comm, &
                                     ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions_module,  ONLY : psic
@@ -119,7 +119,7 @@ PROGRAM lr_main
   !
   ! Band groups parallelization (if activated)
   !
-  CALL set_bgrp_indices(nbnd,ibnd_start,ibnd_end)
+  CALL divide(inter_bgrp_comm,nbnd,ibnd_start,ibnd_end)
   !
   ! Set up initial response orbitals (starting Lanczos vectors)
   !

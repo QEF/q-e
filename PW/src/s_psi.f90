@@ -33,7 +33,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : npol
   USE funct,            ONLY : exx_is_active
-  USE mp_bands,         ONLY : use_bgrp_in_hpsi, set_bgrp_indices, inter_bgrp_comm
+  USE mp_bands,         ONLY : use_bgrp_in_hpsi, inter_bgrp_comm
   USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -49,7 +49,8 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   IF (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) THEN
      ! use band parallelization here
      spsi(:,:) = (0.d0,0.d0)
-     CALL set_bgrp_indices(m,m_start,m_end) ; !write(6,*) m, m_start,m_end
+     CALL divide(inter_bgrp_comm,m,m_start,m_end)
+     !write(6,*) m, m_start,m_end
      ! Check if there at least one band in this band group
      IF (m_end >= m_start) &
         CALL s_psi_( lda, n, m_end-m_start+1, psi(1,m_start), spsi(1,m_start) )
