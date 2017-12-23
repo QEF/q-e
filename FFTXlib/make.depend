@@ -56,3 +56,5 @@ tg_gather.o : fft_types.o
 fft_stick.o : fftw.c
 fftw.o : 
 fftw.o : 
+fft_ggen.o : fft_param.o
+fft_ggen.o : fft_types.o
