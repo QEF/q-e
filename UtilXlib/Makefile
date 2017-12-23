@@ -6,6 +6,7 @@ include ../make.inc
 MODFLAGS=$(MOD_FLAG).
 
 UTIL = clocks_handler.o \
+       divide.o \
 error_handler.o \
 find_free_unit.o \
 fletcher32_mod.o \
