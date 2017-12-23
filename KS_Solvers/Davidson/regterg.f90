@@ -24,8 +24,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   ! ... (real wavefunctions with only half plane waves stored)
   
   USE david_param,   ONLY : DP, stdout
-  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
-                            set_bgrp_indices    
+  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
+          nbgrp, my_bgrp_id
   USE mp_bands_util, ONLY : gstart
   USE mp,            ONLY : mp_sum, mp_bcast
   !
@@ -163,7 +163,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   sr(:,:) = 0.D0
   vr(:,:) = 0.D0
   !
-  CALL set_bgrp_indices(nbase,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
+  CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
+  my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   if (n_start .le. n_end) &
   CALL DGEMM( 'T','N', nbase, my_n, npw2, 2.D0 , psi, npwx2, hpsi(1,n_start), npwx2, 0.D0, hr(1,n_start), nvecx )
   IF ( gstart == 2 ) CALL DGER( nbase, my_n, -1.D0, psi, npwx2, hpsi(1,n_start), npwx2, hr(1,n_start), nvecx )
@@ -252,7 +253,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      ! ... expand the basis set with new basis vectors ( H - e*S )|psi> ...
      !
-     CALL set_bgrp_indices(nbase,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
+     CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
+     my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
      psi(:,nb1:nbase+notcnv)=ZERO
      IF ( uspp ) THEN
         !
@@ -319,7 +321,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      CALL start_clock( 'regterg:overlap' )
      !
      hr( :, nb1:nb1+notcnv-1 )=0.d0
-     CALL set_bgrp_indices(nbase+notcnv,n_start,n_end);  my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
+     CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
+     my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      CALL DGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, hpsi(1,nb1), npwx2, 0.D0, hr(n_start,nb1), nvecx )
      IF ( gstart == 2 ) CALL DGER( my_n, notcnv, -1.D0, psi(1,n_start), npwx2, hpsi(1,nb1), npwx2, hr(n_start,nb1), nvecx )
      CALL mp_sum( hr( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
@@ -327,7 +330,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      CALL mp_sum( hr( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
      !
      sr( :, nb1:nb1+notcnv-1 )=0.d0
-     CALL set_bgrp_indices(nbase+notcnv,n_start,n_end);  my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
+     CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
+     my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
         CALL DGEMM( 'T','N', my_n, notcnv, npw2, 2.D0, psi(1,n_start), npwx2, spsi(1,nb1), npwx2, 0.D0, sr(n_start,nb1), nvecx )
@@ -400,7 +404,8 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
         CALL start_clock( 'regterg:last' )
         !
         evc = ZERO
-        CALL set_bgrp_indices(nbase,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
+        CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
+        my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
         CALL DGEMM( 'N','N', npw2, nvec, my_n, 1.D0, psi(1,n_start), npwx2, vr(n_start,1), nvecx, 0.D0, evc, npwx2 )
         CALL mp_sum( evc, inter_bgrp_comm )
         !

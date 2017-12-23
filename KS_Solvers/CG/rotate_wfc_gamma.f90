@@ -16,8 +16,8 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
   USE cg_param,      ONLY : DP
-  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
-                            set_bgrp_indices
+  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
+          nbgrp, my_bgrp_id
   USE mp_bands_util, ONLY : gstart ! index of the first nonzero G 
   USE mp,            ONLY : mp_sum 
   !
@@ -80,7 +80,8 @@ SUBROUTINE rotate_wfc_gamma( h_psi, s_psi, overlap, &
   !
   call start_clock('rotwfcg:hc'); !write(*,*) 'start rotwfcg:hc' ; FLUSH(6)
   hr=0.D0
-  CALL set_bgrp_indices(nstart,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
+  CALL divide(inter_bgrp_comm,nstart,n_start,n_end)
+  my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
   CALL DGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi, npwx2, aux(1,n_start), npwx2, 0.D0, hr(1,n_start), nstart )
   IF ( gstart == 2 ) call DGER( nstart, my_n, -1.D0, psi, npwx2, aux(1,n_start), npwx2, hr(1,n_start), nstart )
@@ -156,8 +157,8 @@ SUBROUTINE protate_wfc_gamma( h_psi, s_psi, overlap, &
   ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
   USE cg_param,         ONLY : DP, gamma_only
-  USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
-                               set_bgrp_indices
+  USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
+          nbgrp, my_bgrp_id
   USE mp_bands_util,    ONLY : gstart ! index of the first nonzero G 
   USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
                                ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
