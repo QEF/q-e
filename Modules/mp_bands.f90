@@ -113,42 +113,6 @@ CONTAINS
     !
   END SUBROUTINE mp_start_bands
   !
-  INTEGER FUNCTION bgrp_start(nbnd)
-    !
-    IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nbnd
-
-    INTEGER :: rest, nbnd_per_bgrp
-
-    rest = mod ( nbnd, nbgrp )
-    nbnd_per_bgrp = int( nbnd / nbgrp ) 
-
-    IF (rest > my_bgrp_id) THEN 
-       bgrp_start =  my_bgrp_id    * (nbnd_per_bgrp+1) + 1
-    ELSE
-       bgrp_start =  my_bgrp_id    * nbnd_per_bgrp + rest + 1
-    ENDIF
-
-  END FUNCTION bgrp_start
-
-  INTEGER FUNCTION bgrp_end(nbnd)
-    !
-    IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nbnd
-
-    INTEGER :: rest, nbnd_per_bgrp
-
-    rest = mod ( nbnd, nbgrp )
-    nbnd_per_bgrp = int( nbnd / nbgrp ) 
-
-    IF (rest > my_bgrp_id) THEN 
-       bgrp_end   = (my_bgrp_id+1) * (nbnd_per_bgrp+1) 
-    ELSE
-       bgrp_end   = (my_bgrp_id+1) * nbnd_per_bgrp + rest 
-    ENDIF
-
-  END FUNCTION bgrp_end
-
 END MODULE mp_bands
 !
 !     
