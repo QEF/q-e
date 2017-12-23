@@ -43,28 +43,4 @@ MODULE mp_bands_util
   INTEGER :: gstart =  2  ! appropriate value for serial execution
 #endif
 
-CONTAINS
-  !
-  SUBROUTINE set_bgrp_indices(nbnd, ib_start, ib_end)
-    !
-    IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nbnd
-    INTEGER, INTENT(OUT) :: ib_start, ib_end
-
-    INTEGER :: rest, nbnd_per_bgrp
-
-    rest = mod ( nbnd, nbgrp )
-    nbnd_per_bgrp = int( nbnd / nbgrp ) 
-
-    IF (rest > my_bgrp_id) THEN 
-       ib_start =  my_bgrp_id    * (nbnd_per_bgrp+1) + 1
-       ib_end   = (my_bgrp_id+1) * (nbnd_per_bgrp+1) 
-    ELSE
-       ib_start =  my_bgrp_id    * nbnd_per_bgrp + rest + 1
-       ib_end   = (my_bgrp_id+1) * nbnd_per_bgrp + rest 
-    ENDIF
-
-  END SUBROUTINE set_bgrp_indices
-
-
 END MODULE mp_bands_util
