@@ -24,7 +24,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE noncollin_module,     ONLY : noncolin, npol
   USE eqv,                  ONLY : evq
   USE qpoint,               ONLY : ikqs
-  USE mp_bands,             ONLY : use_bgrp_in_hpsi, set_bgrp_indices, intra_bgrp_comm
+  USE mp_bands,             ONLY : use_bgrp_in_hpsi, inter_bgrp_comm, intra_bgrp_comm
   USE funct,                ONLY : exx_is_active
   USE mp,                   ONLY : mp_sum
   USE control_lr,           ONLY : alpha_pv, nbnd_occ, lgamma
@@ -154,7 +154,7 @@ CONTAINS
     !    And apply S again
     !
     if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
-       call set_bgrp_indices( m, m_start, m_end)
+       call divide (inter_bgrp_comm, m, m_start, m_end)
        if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
     else
        CALL calbec (n, vkb, hpsi, becp, m)
@@ -220,7 +220,7 @@ CONTAINS
        ENDDO
     ELSE
        if (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) then
-          call set_bgrp_indices( m, m_start, m_end)
+          call divide( inter_bgrp_comm, m, m_start, m_end)
           if (m_end >= m_start) CALL calbec (n, vkb, hpsi(:,m_start:m_end), becp, m_end- m_start + 1)
        else
           CALL calbec (n, vkb, hpsi, becp, m)

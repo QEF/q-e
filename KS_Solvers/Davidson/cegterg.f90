@@ -22,8 +22,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   ! ... S is an overlap matrix, evc is a complex vector
   !
   USE david_param,   ONLY : DP
-  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
-                            set_bgrp_indices
+  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
+          nbgrp, my_bgrp_id
   USE mp,            ONLY : mp_sum, mp_bcast
   !
   IMPLICIT NONE
@@ -168,7 +168,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   sc(:,:) = ZERO
   vc(:,:) = ZERO
   !
-  CALL set_bgrp_indices(nbase,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
+  CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
+  my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   if (n_start .le. n_end) &
   CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
   CALL mp_sum( hc( :, 1:nbase ), inter_bgrp_comm )
@@ -257,7 +258,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      ! ... expand the basis set with new basis vectors ( H - e*S )|psi> ...
      !
-     CALL set_bgrp_indices(nbase,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
+     CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
+     my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
      psi(:,:,nb1:nbase+notcnv)=ZERO
      IF ( uspp ) THEN
         !
@@ -333,7 +335,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      CALL start_clock( 'cegterg:overlap' )
      !
      hc( :, nb1:nb1+notcnv-1 )=ZERO
-     CALL set_bgrp_indices(nbase+notcnv,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
+     CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
+     my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      CALL ZGEMM( 'C','N', my_n, notcnv, kdim, ONE, psi(1,1,n_start), kdmx, hpsi(1,1,nb1), kdmx, &
                  ZERO, hc(n_start,nb1), nvecx )
      CALL mp_sum( hc( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
@@ -341,7 +344,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      CALL mp_sum( hc( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
      !
      sc( :, nb1:nb1+notcnv-1 )=ZERO
-     CALL set_bgrp_indices(nbase+notcnv,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
+     CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
+     my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
         CALL ZGEMM( 'C','N', my_n, notcnv, kdim, ONE, psi(1,1,n_start), kdmx, spsi(1,1,nb1), kdmx, &
@@ -419,7 +423,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         CALL start_clock( 'cegterg:last' )
         !
         evc = ZERO
-        CALL set_bgrp_indices(nbase,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
+        CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
+        my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
         CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, evc, kdmx )
         CALL mp_sum( evc, inter_bgrp_comm )

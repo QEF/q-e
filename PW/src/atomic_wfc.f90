@@ -26,7 +26,7 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
   USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
   USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef, lmaxx, domag, &
                          starting_spin_angle
-  USE mp_bands,   ONLY : inter_bgrp_comm, set_bgrp_indices
+  USE mp_bands,   ONLY : inter_bgrp_comm
   USE mp,         ONLY : mp_sum
   !
   implicit none
@@ -69,7 +69,7 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
   call ylmr2 ((lmax_wfc+1)**2, npw, gk, qg, ylm)
 
   ! from now to the end of the routine the ig loops are distributed across bgrp
-  call set_bgrp_indices(npw,ig_start,ig_end)
+  call divide(inter_bgrp_comm,npw,ig_start,ig_end)
   !
   ! set now q=|k+G| in atomic units
   !

@@ -37,7 +37,7 @@ SUBROUTINE sum_band()
   USE spin_orb,             ONLY : lspinorb, domag, fcoef
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
   USE mp_pools,             ONLY : inter_pool_comm
-  USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, set_bgrp_indices, nbgrp
+  USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
   USE mp,                   ONLY : mp_sum
   USE funct,                ONLY : dft_is_meta
   USE paw_symmetry,         ONLY : PAW_symmetrize
@@ -101,7 +101,7 @@ SUBROUTINE sum_band()
   !
   ! ... for band parallelization: set band computed by this processor
   !
-  call set_bgrp_indices ( nbnd, ibnd_start, ibnd_end )
+  call divide ( inter_bgrp_comm, nbnd, ibnd_start, ibnd_end )
   this_bgrp_nbnd = ibnd_end - ibnd_start + 1
   !
   ! ... Allocate (and later deallocate) arrays needed in specific cases

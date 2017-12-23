@@ -26,7 +26,7 @@ SUBROUTINE compute_becsum ( iflag )
   USE noncollin_module,     ONLY : noncolin
   USE wvfct,                ONLY : nbnd, npwx, wg
   USE mp_pools,             ONLY : inter_pool_comm
-  USE mp_bands,             ONLY : intra_bgrp_comm, set_bgrp_indices, inter_bgrp_comm 
+  USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm 
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
   USE paw_symmetry,         ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
@@ -51,7 +51,7 @@ SUBROUTINE compute_becsum ( iflag )
   !
   becsum(:,:,:) = 0.D0
   CALL allocate_bec_type (nkb,nbnd, becp,intra_bgrp_comm)
-  call set_bgrp_indices ( nbnd, ibnd_start, ibnd_end )
+  call divide (inter_bgrp_comm, nbnd, ibnd_start, ibnd_end )
   this_bgrp_nbnd = ibnd_end - ibnd_start + 1
   !
   k_loop: DO ik = 1, nks

@@ -170,7 +170,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                                    allocate_bec_type, deallocate_bec_type
   USE klist,                ONLY : nks, ngk
   USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, &
-                                   set_bgrp_indices, my_bgrp_id, nbgrp
+                                   my_bgrp_id, nbgrp
   USE mp,                   ONLY : mp_sum, mp_bcast
   !
   IMPLICIT NONE
