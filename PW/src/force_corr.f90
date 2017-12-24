@@ -25,7 +25,7 @@ subroutine force_corr (forcescc)
   USE cell_base,            ONLY : tpiba
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, gstart, nl, g, ngl, gl, igtongl
+  USE gvect,                ONLY : ngm, gstart, g, ngl, gl, igtongl
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vnew
   USE control_flags,        ONLY : gamma_only
@@ -91,7 +91,7 @@ subroutine force_corr (forcescc)
               do ipol = 1, 3
                  forcescc (ipol, na) = forcescc (ipol, na) + fact * &
                       rhocgnt (igtongl(ig) ) * CMPLX(sin(arg),cos(arg),kind=DP) * &
-                      g(ipol,ig) * tpiba * CONJG(psic(nl(ig)))
+                      g(ipol,ig) * tpiba * CONJG(psic(dfftp%nl(ig)))
               enddo
            enddo
         endif

@@ -27,7 +27,7 @@ SUBROUTINE setlocal
   USE vlocal,    ONLY : strf, vloc
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces,ONLY : invfft
-  USE gvect,     ONLY : nl, nlm, ngm
+  USE gvect,     ONLY : ngm
   USE control_flags, ONLY : gamma_only
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
@@ -49,18 +49,18 @@ SUBROUTINE setlocal
   IF (do_comp_mt) THEN
       ALLOCATE(v_corr(ngm))
       CALL wg_corr_loc(omega,ntyp,ngm,zv,strf,v_corr)
-      aux(nl(:)) = v_corr(:)
+      aux(dfftp%nl(:)) = v_corr(:)
       DEALLOCATE(v_corr)
   END IF
   !
   DO nt = 1, ntyp
       DO ng = 1, ngm
-          aux (nl(ng))=aux(nl(ng)) + vloc (igtongl (ng), nt) * strf (ng, nt)
+          aux (dfftp%nl(ng))=aux(dfftp%nl(ng)) + vloc (igtongl (ng), nt) * strf (ng, nt)
       END DO
   END DO
   IF (gamma_only) THEN
       DO ng = 1, ngm
-          aux (nlm(ng)) = CONJG(aux (nl(ng)))
+          aux (dfftp%nlm(ng)) = CONJG(aux (dfftp%nl(ng)))
       END DO
   END IF
   !
@@ -82,7 +82,7 @@ SUBROUTINE setlocal
   ! ... v_of_0 is (Vloc)(G=0)
   !
   v_of_0=0.0_DP
-  IF (gg(1) < eps8) v_of_0 = DBLE ( aux (nl(1)) )
+  IF (gg(1) < eps8) v_of_0 = DBLE ( aux (dfftp%nl(1)) )
   !
   CALL mp_sum( v_of_0, intra_bgrp_comm )
   !

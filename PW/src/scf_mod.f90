@@ -198,7 +198,6 @@ CONTAINS
  subroutine assign_mix_to_scf_type(rho_m, rho_s)
    USE wavefunctions_module, ONLY : psic
    USE control_flags,        ONLY : gamma_only
-   USE gvect,                ONLY : nl, nlm
    IMPLICIT NONE
    TYPE (mix_type), INTENT(IN) :: rho_m
    TYPE (scf_type), INTENT(INOUT) :: rho_s
@@ -209,8 +208,8 @@ CONTAINS
 
    DO is = 1, nspin
       psic(:) = ( 0.D0, 0.D0 )
-      psic(nl(:)) = rho_s%of_g(:,is)
-      IF ( gamma_only ) psic(nlm(:)) = CONJG( rho_s%of_g(:,is) )
+      psic(dfftp%nl(:)) = rho_s%of_g(:,is)
+      IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rho_s%of_g(:,is) )
       CALL invfft ('Dense', psic, dfftp)
       rho_s%of_r(:,is) = psic(:)
    END DO
@@ -220,8 +219,8 @@ CONTAINS
       ! define rho_s%kin_r 
       DO is = 1, nspin
          psic(:) = ( 0.D0, 0.D0 )
-         psic(nl(:)) = rho_s%kin_g(:,is)
-         IF ( gamma_only ) psic(nlm(:)) = CONJG( rho_s%kin_g(:,is) )
+         psic(dfftp%nl(:)) = rho_s%kin_g(:,is)
+         IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rho_s%kin_g(:,is) )
          CALL invfft ('Dense', psic, dfftp)
          rho_s%kin_r(:,is) = psic(:)
       END DO
@@ -315,7 +314,6 @@ CONTAINS
  subroutine high_frequency_mixing ( rhoin, input_rhout, alphamix )
    USE wavefunctions_module, ONLY : psic
    USE control_flags,        ONLY : gamma_only
-   USE gvect,                ONLY : nl, nlm
  IMPLICIT NONE
    TYPE (scf_type), INTENT(INOUT)     :: rhoin
    TYPE (scf_type), INTENT(IN)  :: input_rhout
@@ -327,8 +325,8 @@ CONTAINS
       ! define rho_s%of_r 
       DO is = 1, nspin
          psic(:) = ( 0.D0, 0.D0 )
-         psic(nl(:)) = rhoin%of_g(:,is)
-         IF ( gamma_only ) psic(nlm(:)) = CONJG( rhoin%of_g(:,is) )
+         psic(dfftp%nl(:)) = rhoin%of_g(:,is)
+         IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rhoin%of_g(:,is) )
          CALL invfft ('Dense', psic, dfftp)
          rhoin%of_r(:,is) = psic(:)
       END DO
@@ -339,8 +337,8 @@ CONTAINS
          ! define rho_s%of_r 
          DO is = 1, nspin
             psic(:) = ( 0.D0, 0.D0 )
-            psic(nl(:)) = rhoin%kin_g(:,is)
-            IF ( gamma_only ) psic(nlm(:)) = CONJG( rhoin%kin_g(:,is) )
+            psic(dfftp%nl(:)) = rhoin%kin_g(:,is)
+            IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rhoin%kin_g(:,is) )
             CALL invfft ('Dense', psic, dfftp)
             rhoin%kin_r(:,is) = psic(:)
          END DO

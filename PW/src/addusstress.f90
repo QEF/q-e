@@ -52,7 +52,7 @@ SUBROUTINE addusstress_g (sigmanlc)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
   USE cell_base,  ONLY : omega, tpiba
   USE fft_base,   ONLY : dfftp
-  USE gvect,      ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, eigts3, mill
+  USE gvect,      ONLY : ngm, gg, g, eigts1, eigts2, eigts3, mill
   USE lsda_mod,   ONLY : nspin
   USE scf,        ONLY : v, vltot
   USE uspp,       ONLY : becsum, okvan
@@ -94,7 +94,7 @@ SUBROUTINE addusstress_g (sigmanlc)
      ENDIF
      CALL fwfft ('Dense', aux, dfftp)
      DO ig = 1, ngm
-        vg (ig, is) = aux (nl (ig) )
+        vg (ig, is) = aux (dfftp%nl (ig) )
      ENDDO
   ENDDO
   DEALLOCATE ( aux )

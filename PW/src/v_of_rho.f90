@@ -109,7 +109,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE constants,        ONLY : e2, eps8
   USE io_global,        ONLY : stdout
   USE fft_base,         ONLY : dfftp
-  USE gvect,            ONLY : g, nl,ngm
+  USE gvect,            ONLY : g, ngm
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat
   USE spin_orb,         ONLY : domag
@@ -178,7 +178,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
      rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
      rhogsum(:,is) = fac * rhog_core(:) + rhogsum(:,is)
      !
-     CALL gradrho( dfftp%nnr, rhogsum(1,is), ngm, g, nl, grho(1,1,is) )
+     CALL gradrho( dfftp%nnr, rhogsum(1,is), ngm, g, dfftp%nl, grho(1,1,is) )
      !
   END DO
   !
@@ -292,7 +292,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   DO is = 1, nspin
      !
-     CALL grad_dot( dfftp%nnr, h(1,1,is), ngm, g, nl, alat, dh )
+     CALL grad_dot( dfftp%nnr, h(1,1,is), ngm, g, dfftp%nl, alat, dh )
      !
      v(:,is) = v(:,is) - dh(:)
      !
@@ -536,7 +536,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   USE kinds,     ONLY : DP
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces,ONLY : invfft
-  USE gvect,     ONLY : nl, nlm, ngm, gg, gstart
+  USE gvect,     ONLY : ngm, gg, gstart
   USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : omega, tpiba2
   USE control_flags, ONLY : gamma_only
@@ -645,11 +645,11 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      ! 
      aux(:) = 0.D0
      !
-     aux(nl(1:ngm)) = CMPLX ( aux1(1,1:ngm), aux1(2,1:ngm), KIND=dp )
+     aux(dfftp%nl(1:ngm)) = CMPLX ( aux1(1,1:ngm), aux1(2,1:ngm), KIND=dp )
      !
      IF ( gamma_only ) THEN
         !
-        aux(nlm(1:ngm)) = CMPLX ( aux1(1,1:ngm), -aux1(2,1:ngm), KIND=dp )
+        aux(dfftp%nlm(1:ngm)) = CMPLX ( aux1(1,1:ngm), -aux1(2,1:ngm), KIND=dp )
         !
      END IF
   END IF
@@ -1069,7 +1069,6 @@ SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
   USE kinds,           ONLY : DP
   USE fft_base,        ONLY : dfftp
   USE fft_interfaces,  ONLY : fwfft
-  USE gvect,           ONLY : nl, ngm
   USE lsda_mod,        ONLY : nspin
   !
   IMPLICIT NONE
@@ -1088,12 +1087,12 @@ SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
   !
   ! ... bring the (unsymmetrized) rho(r) to G-space (use aux as work array)
   !
-  ALLOCATE( rhog( ngm, nspin ) )
+  ALLOCATE( rhog( dfftp%ngm, nspin ) )
   ALLOCATE( aux( dfftp%nnr ) )
   DO is = 1, nspin
      aux(:) = CMPLX(rhor( : , is ),0.D0,kind=dp) 
      CALL fwfft ('Dense', aux, dfftp)
-     rhog(:,is) = aux(nl(:))
+     rhog(:,is) = aux(dfftp%nl(:))
   END DO
   DEALLOCATE( aux )
   !
@@ -1118,7 +1117,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
   USE constants,       ONLY : fpi, e2
   USE control_flags,   ONLY : gamma_only
   USE cell_base,       ONLY : tpiba, omega
-  USE gvect,           ONLY : nl, ngm, nlm, gg, gstart, g
+  USE gvect,           ONLY : ngm, gg, gstart, g
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
   !
   IMPLICIT NONE
@@ -1154,7 +1153,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
     DO ig = gstart, ngm
       !
       fac = g(ipol,ig) / gg(ig)
-      gaux(nl(ig)) = CMPLX(-AIMAG(rhoaux(nl(ig))),REAL(rhoaux(nl(ig))),kind=dp) * fac 
+      gaux(dfftp%nl(ig)) = CMPLX(-AIMAG(rhoaux(dfftp%nl(ig))),REAL(rhoaux(dfftp%nl(ig))),kind=dp) * fac 
       !
     END DO
     !
@@ -1168,19 +1167,19 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
     ! 
     if (do_comp_mt) then
        ALLOCATE( vaux( ngm ), rgtot(ngm) )
-       rgtot(1:ngm) = rhoaux(nl(1:ngm))
+       rgtot(1:ngm) = rhoaux(dfftp%nl(1:ngm))
        CALL wg_corr_h (omega, ngm, rgtot, vaux, eh_corr)
        DO ig = gstart, ngm
          fac = g(ipol,ig) * tpiba
-         gaux(nl(ig)) = gaux(nl(ig)) + CMPLX(-AIMAG(vaux(ig)),REAL(vaux(ig)),kind=dp)*fac 
+         gaux(dfftp%nl(ig)) = gaux(dfftp%nl(ig)) + CMPLX(-AIMAG(vaux(ig)),REAL(vaux(ig)),kind=dp)*fac 
        END DO
        DEALLOCATE( rgtot, vaux )
     end if
     !
     IF ( gamma_only ) THEN
       !
-      gaux(nlm(:)) = &
-        CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
+      gaux(dfftp%nlm(:)) = &
+        CMPLX( REAL( gaux(dfftp%nl(:)) ), -AIMAG( gaux(dfftp%nl(:)) ) ,kind=DP)
        !
     END IF
     !

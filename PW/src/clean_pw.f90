@@ -24,9 +24,8 @@ SUBROUTINE clean_pw( lflag )
   USE basis,                ONLY : swfcatom
   USE cellmd,               ONLY : lmovecell
   USE ions_base,            ONLY : deallocate_ions_base
-  USE gvect,                ONLY : g, gg, gl, nl, nlm, igtongl, mill, &
+  USE gvect,                ONLY : g, gg, gl, igtongl, mill, &
                                    eigts1, eigts2, eigts3
-  USE gvecs,                ONLY : nls, nlsm
   USE fixed_occ,            ONLY : f_inp
   USE ktetra,               ONLY : deallocate_tetra
   USE klist,                ONLY : deallocate_igk
@@ -120,8 +119,6 @@ SUBROUTINE clean_pw( lflag )
   !
   IF ( ALLOCATED( g ) )          DEALLOCATE( g )
   IF ( ALLOCATED( gg ) )         DEALLOCATE( gg )
-  IF ( ALLOCATED( nl ) )         DEALLOCATE( nl )  
-  IF ( ALLOCATED( nlm ) )        DEALLOCATE( nlm )
   IF ( ALLOCATED( igtongl ) )    DEALLOCATE( igtongl )  
   IF ( ALLOCATED( mill ) )       DEALLOCATE( mill )
   call destroy_scf_type(rho)
@@ -137,8 +134,6 @@ SUBROUTINE clean_pw( lflag )
   if (spline_ps) then
     IF ( ALLOCATED( tab_d2y) )     DEALLOCATE( tab_d2y )
   endif
-  IF ( ALLOCATED( nls ) )     DEALLOCATE( nls )
-  IF ( ALLOCATED( nlsm ) )   DEALLOCATE( nlsm )
   !
   ! ... arrays allocated in allocate_locpot.f90 ( and never deallocated )
   !

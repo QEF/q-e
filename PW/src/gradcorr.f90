@@ -12,7 +12,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   USE constants,            ONLY : e2
   USE kinds,                ONLY : DP
-  USE gvect,                ONLY : nl, ngm, g
+  USE gvect,                ONLY : ngm, g
   USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : omega, alat
   USE funct,                ONLY : gcxc, gcx_spin, gcc_spin, igcc_is_lyp, &
@@ -85,7 +85,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
         !
         CALL fwfft ('Dense', psic, dfftp)
         !
-        rhogsum(:,is) = psic(nl(:))
+        rhogsum(:,is) = psic(dfftp%nl(:))
         !
      END DO
   ELSE
@@ -99,7 +99,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
      rhogsum(:,is) = fac * rhog_core(:) + rhogsum(:,is)
      !
-     CALL gradrho( dfftp%nnr, rhogsum(1,is), ngm, g, nl, grho(1,1,is) )
+     CALL gradrho( dfftp%nnr, rhogsum(1,is), ngm, g, dfftp%nl, grho(1,1,is) )
      !
   END DO
   !
@@ -253,7 +253,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   DO is = 1, nspin0
      !
-     CALL grad_dot( dfftp%nnr, h(1,1,is), ngm, g, nl, alat, dh )
+     CALL grad_dot( dfftp%nnr, h(1,1,is), ngm, g, dfftp%nl, alat, dh )
      !
      v(:,is) = v(:,is) - dh(:)
      !
@@ -302,7 +302,6 @@ SUBROUTINE gradrho( nrxx, a, ngm, g, nl, ga )
   USE kinds,     ONLY : DP
   USE constants, ONLY : tpi
   USE cell_base, ONLY : tpiba
-  USE gvect,     ONLY : nlm
   USE control_flags, ONLY : gamma_only
   USE fft_base,      ONLY : dfftp
   USE fft_interfaces,ONLY : invfft
@@ -334,7 +333,7 @@ SUBROUTINE gradrho( nrxx, a, ngm, g, nl, ga )
      !
      IF ( gamma_only ) THEN
         !
-        gaux(nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
+        gaux(dfftp%nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
         !
      END IF
      !
@@ -363,7 +362,6 @@ SUBROUTINE gradient( nrxx, a, ngm, g, nl, ga )
   USE constants, ONLY : tpi
   USE cell_base, ONLY : tpiba
   USE kinds,     ONLY : DP
-  USE gvect,     ONLY : nlm
   USE control_flags, ONLY : gamma_only
   USE fft_base,      ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
@@ -399,7 +397,7 @@ SUBROUTINE gradient( nrxx, a, ngm, g, nl, ga )
      !
      IF ( gamma_only ) THEN
         !
-        gaux(nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
+        gaux(dfftp%nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
         !
      END IF
      !
@@ -493,7 +491,6 @@ SUBROUTINE grad_dot( nrxx, a, ngm, g, nl, alat, da )
   USE constants, ONLY : tpi
   USE cell_base, ONLY : tpiba
   USE kinds,     ONLY : DP
-  USE gvect,     ONLY : nlm
   USE control_flags, ONLY : gamma_only
   USE fft_base,      ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
@@ -533,7 +530,7 @@ SUBROUTINE grad_dot( nrxx, a, ngm, g, nl, alat, da )
      !
      DO n = 1, ngm
         !
-        gaux(nlm(n)) = CONJG( gaux(nl(n)) )
+        gaux(dfftp%nlm(n)) = CONJG( gaux(nl(n)) )
         !
      END DO
      !
@@ -562,7 +559,6 @@ SUBROUTINE hessian( nrxx, a, ngm, g, nl, ga, ha )
   USE constants, ONLY : tpi
   USE cell_base, ONLY : tpiba
   USE kinds,     ONLY : DP
-  USE gvect,     ONLY : nlm
   USE control_flags, ONLY : gamma_only
   USE fft_base,      ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
@@ -600,7 +596,7 @@ SUBROUTINE hessian( nrxx, a, ngm, g, nl, ga, ha )
      !
      IF ( gamma_only ) THEN
         !
-        gaux(nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
+        gaux(dfftp%nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
         !
      END IF
      !
@@ -623,7 +619,7 @@ SUBROUTINE hessian( nrxx, a, ngm, g, nl, ga, ha )
         !
         IF ( gamma_only ) THEN
            !
-           haux(nlm(:)) = CMPLX( REAL( haux(nl(:)) ), -AIMAG( haux(nl(:)) ) ,kind=DP)
+           haux(dfftp%nlm(:)) = CMPLX( REAL( haux(nl(:)) ), -AIMAG( haux(nl(:)) ) ,kind=DP)
            !
         END IF
         !
@@ -658,7 +654,7 @@ SUBROUTINE laplacian( nrxx, a, ngm, gg, nl, lapla )
   USE constants, ONLY : tpi
   USE cell_base, ONLY : tpiba2
   USE kinds,     ONLY : DP
-  USE gvect,     ONLY : nlm, gstart
+  USE gvect,     ONLY : gstart
   USE control_flags, ONLY : gamma_only
   USE fft_base,      ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
@@ -695,7 +691,7 @@ SUBROUTINE laplacian( nrxx, a, ngm, gg, nl, lapla )
   !
   IF ( gamma_only ) THEN
      !
-     laux(nlm(:)) = CMPLX( REAL(laux(nl(:)) ), -AIMAG(laux(nl(:)) ) ,kind=DP)
+     laux(dfftp%nlm(:)) = CMPLX( REAL(laux(nl(:)) ), -AIMAG(laux(nl(:)) ) ,kind=DP)
      !
   ENDIF
   !
@@ -723,7 +719,7 @@ SUBROUTINE external_gradient( a, grada )
   !
   USE kinds,            ONLY : DP
   USE fft_base,         ONLY : dfftp
-  USE gvect,            ONLY : ngm, nl, g
+  USE gvect,            ONLY : ngm, g
   !
   IMPLICIT NONE
   !
@@ -731,7 +727,7 @@ SUBROUTINE external_gradient( a, grada )
   REAL( DP ), INTENT(OUT)  :: grada( 3, dfftp%nnr )
 
 ! A in real space, grad(A) in real space
-  CALL gradient( dfftp%nnr, a, ngm, g, nl, grada )
+  CALL gradient( dfftp%nnr, a, ngm, g, dfftp%nl, grada )
 
   RETURN
 
@@ -746,7 +742,7 @@ SUBROUTINE external_hessian( a, grada, hessa )
   !
   USE kinds,            ONLY : DP
   USE fft_base,         ONLY : dfftp
-  USE gvect,            ONLY : ngm, nl, g
+  USE gvect,            ONLY : ngm, g
   !
   IMPLICIT NONE
   !
@@ -755,7 +751,7 @@ SUBROUTINE external_hessian( a, grada, hessa )
   REAL( DP ), INTENT(OUT)  :: hessa( 3, 3, dfftp%nnr )
 
 ! A in real space, grad(A) and hess(A) in real space
-  CALL hessian( dfftp%nnr, a, ngm, g, nl, grada, hessa )
+  CALL hessian( dfftp%nnr, a, ngm, g, dfftp%nl, grada, hessa )
 
   RETURN
 
@@ -770,7 +766,7 @@ SUBROUTINE external_laplacian( a, lapla )
   !
   USE kinds,            ONLY : DP
   USE fft_base,         ONLY : dfftp
-  USE gvect,            ONLY : ngm, nl, gg
+  USE gvect,            ONLY : ngm, gg
   !
   IMPLICIT NONE
   !
@@ -778,7 +774,7 @@ SUBROUTINE external_laplacian( a, lapla )
   REAL( DP ), INTENT(OUT)  :: lapla( dfftp%nnr )
 
 ! A in real space, lapl(A) in real space
-  CALL laplacian( dfftp%nnr, a, ngm, gg, nl, lapla )
+  CALL laplacian( dfftp%nnr, a, ngm, gg, dfftp%nl, lapla )
 
   RETURN
 

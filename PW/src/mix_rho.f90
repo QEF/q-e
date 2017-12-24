@@ -326,7 +326,7 @@ SUBROUTINE approx_screening( drho )
   USE kinds,         ONLY : DP
   USE constants,     ONLY : e2, pi, fpi
   USE cell_base,     ONLY : omega, tpiba2
-  USE gvect,         ONLY : gg, ngm, nl, nlm
+  USE gvect,         ONLY : gg, ngm
   USE klist,         ONLY : nelec
   USE lsda_mod,      ONLY : nspin
   USE control_flags, ONLY : ngm0
@@ -375,8 +375,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE kinds,                ONLY : DP
   USE constants,            ONLY : e2, pi, tpi, fpi, eps8, eps32
   USE cell_base,            ONLY : omega, tpiba2
-  USE gvecs,                ONLY : nls, nlsm
-  USE gvect,                ONLY : gg, ngm, nl, nlm
+  USE gvect,                ONLY : gg, ngm
   USE wavefunctions_module, ONLY : psic
   USE klist,                ONLY : nelec
   USE lsda_mod,             ONLY : nspin
@@ -448,15 +447,15 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   IF ( nspin == 2 ) THEN
      !
-     psic(nls(:ngm0)) = ( rhobest%of_g(:ngm0,1) + rhobest%of_g(:ngm0,2) )
+     psic(dffts%nl(:ngm0)) = ( rhobest%of_g(:ngm0,1) + rhobest%of_g(:ngm0,2) )
      !
   ELSE
      !
-     psic(nls(:ngm0)) = rhobest%of_g(:ngm0,1)
+     psic(dffts%nl(:ngm0)) = rhobest%of_g(:ngm0,1)
      !
   END IF
   !
-  IF ( gamma_only ) psic(nlsm(:ngm0)) = CONJG( psic(nls(:ngm0)) )
+  IF ( gamma_only ) psic(dffts%nlm(:ngm0)) = CONJG( psic(dffts%nl(:ngm0)) )
   !
   CALL invfft ('Smooth', psic, dffts)
   !
@@ -489,9 +488,9 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   psic(:) = ZERO
   !
-  psic(nls(:ngm0)) = drho%of_g(:ngm0,1)
+  psic(dffts%nl(:ngm0)) = drho%of_g(:ngm0,1)
   !
-  IF ( gamma_only ) psic(nlsm(:ngm0)) = CONJG( psic(nls(:ngm0)) )
+  IF ( gamma_only ) psic(dffts%nlm(:ngm0)) = CONJG( psic(dffts%nl(:ngm0)) )
   !
   CALL invfft ('Smooth', psic, dffts)
   !
@@ -499,8 +498,8 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   CALL fwfft ('Smooth', psic, dffts)
   !
-  dv(:) = psic(nls(:ngm0)) * gg(:ngm0) * tpiba2
-  v(:,1)= psic(nls(:ngm0)) * gg(:ngm0) / ( gg(:ngm0) + agg0 )
+  dv(:) = psic(dffts%nl(:ngm0)) * gg(:ngm0) * tpiba2
+  v(:,1)= psic(dffts%nl(:ngm0)) * gg(:ngm0) / ( gg(:ngm0) + agg0 )
   !
   m       = 1
   aa(:,:) = 0.D0
@@ -514,9 +513,9 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      psic(:) = ZERO
      !
-     psic(nls(:ngm0)) = v(:,m)
+     psic(dffts%nl(:ngm0)) = v(:,m)
      !
-     IF ( gamma_only ) psic(nlsm(:ngm0)) = CONJG( psic(nls(:ngm0)) )
+     IF ( gamma_only ) psic(dffts%nlm(:ngm0)) = CONJG( psic(dffts%nl(:ngm0)) )
      !
      CALL invfft ('Smooth', psic, dffts)
      !
@@ -524,7 +523,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      CALL fwfft ('Smooth', psic, dffts)
      !
-     w(:,m) = w(:,m) + gg(:ngm0) * tpiba2 * psic(nls(:ngm0))
+     w(:,m) = w(:,m) + gg(:ngm0) * tpiba2 * psic(dffts%nl(:ngm0))
      !
      ! ... build the linear system
      !

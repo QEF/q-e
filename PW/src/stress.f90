@@ -16,7 +16,7 @@ subroutine stress ( sigma )
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE constants,     ONLY : ry_kbar
   USE ener,          ONLY : etxc, vtxc
-  USE gvect,         ONLY : ngm, gstart, nl, g, gg, gcutm
+  USE gvect,         ONLY : ngm, gstart, g, gg, gcutm
   USE fft_base,      ONLY : dfftp
   USE ldaU,          ONLY : lda_plus_u, U_projection
   USE lsda_mod,      ONLY : nspin
@@ -95,7 +95,7 @@ subroutine stress ( sigma )
   !  xc contribution: add gradient corrections (non diagonal)
   !
   call stres_gradcorr ( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, nspin, &
-                        dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nnr, nl, &
+                        dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nnr, dfftp%nl, &
                         ngm, g, alat, omega, sigmaxc)
   !
   !  add meta-GGA contribution 

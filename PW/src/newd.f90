@@ -22,7 +22,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : g, gg, ngm, gstart, mill, &
-                                   eigts1, eigts2, eigts3, nl
+                                   eigts1, eigts2, eigts3
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vltot
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
@@ -99,7 +99,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
      CALL fwfft ('Dense', psic, dfftp)
 !$omp parallel do default(shared) private(ig)
         do ig=1,ngm_l
-           vaux(ig, is) = psic(nl(ngm_s+ig-1))
+           vaux(ig, is) = psic(dfftp%nl(ngm_s+ig-1))
         end do
 !$omp end parallel do
      !

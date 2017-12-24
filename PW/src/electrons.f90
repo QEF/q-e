@@ -343,7 +343,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE basis,                ONLY : starting_pot
   USE bp,                   ONLY : lelfield
   USE fft_base,             ONLY : dfftp
-  USE gvect,                ONLY : ngm, gstart, nl, nlm, g, gg, gcutm
+  USE gvect,                ONLY : ngm, gstart, g, gg, gcutm
   USE gvecs,                ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss, &
                                    two_fermi_energies, tot_charge

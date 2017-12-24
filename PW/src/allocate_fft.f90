@@ -16,8 +16,8 @@ SUBROUTINE allocate_fft
   !     these dimensions
   !
   USE io_global, ONLY : stdout
-  USE gvect,     ONLY : ngm, g, gg, nl, nlm, mill, igtongl
-  USE gvecs,   ONLY : ngms, nls, nlsm
+  USE gvect,     ONLY : ngm, g, gg, mill, igtongl
+  USE gvecs,   ONLY : ngms
   USE fft_base,   ONLY : dfftp, dffts
   USE ions_base, ONLY : nat
   USE lsda_mod,  ONLY : nspin

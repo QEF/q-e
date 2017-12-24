@@ -39,7 +39,7 @@ SUBROUTINE addusforce_g (forcenl)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
   USE cell_base,  ONLY : omega, tpiba
   USE fft_base,   ONLY : dfftp
-  USE gvect,      ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, eigts3, mill
+  USE gvect,      ONLY : ngm, gg, g, eigts1, eigts2, eigts3, mill
   USE noncollin_module,   ONLY : nspin_mag
   USE scf,        ONLY : v, vltot
   USE uspp,       ONLY : becsum, okvan
@@ -85,7 +85,7 @@ SUBROUTINE addusforce_g (forcenl)
      ENDIF
      CALL fwfft ('Dense', aux, dfftp)
      ! Note the factors -i and 2pi/a *units of G) here in V(G) !
-     vg (:, is) = aux(nl (:) ) * tpiba * (0.d0, -1.d0)
+     vg (:, is) = aux(dfftp%nl (:) ) * tpiba * (0.d0, -1.d0)
   ENDDO
   DEALLOCATE (aux)
   !

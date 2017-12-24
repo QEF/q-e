@@ -384,7 +384,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
   USE ions_base,            ONLY : nat, tau, nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : ngm, g, gg, gstart, nl, eigts1, eigts2, eigts3
+  USE gvect,                ONLY : ngm, g, gg, gstart, eigts1, eigts2, eigts3
   USE lsda_mod,             ONLY : lsda, nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE ldaU,                 ONLY : eth
@@ -590,7 +590,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      !
      CALL fwfft ('Dense', psic, dfftp)
      !
-     rho%of_g(:,is) = psic(nl(:))
+     rho%of_g(:,is) = psic(dfftp%nl(:))
      !
   END DO
   !

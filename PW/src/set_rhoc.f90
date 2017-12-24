@@ -22,7 +22,7 @@ subroutine set_rhoc
   USE ener,      ONLY : etxcc
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces,ONLY : invfft
-  USE gvect,     ONLY : ngm, nl, nlm, ngl, gl, igtongl
+  USE gvect,     ONLY : ngm, ngl, gl, igtongl
   USE scf,       ONLY : rho_core, rhog_core, scf_type
   USE lsda_mod,  ONLY : nspin
   USE vlocal,    ONLY : strf
@@ -76,17 +76,17 @@ subroutine set_rhoc
         !     multiply by the structure factor and sum
         !
         do ng = 1, ngm
-           aux(nl(ng)) = aux(nl(ng)) + strf(ng,nt) * rhocg(igtongl(ng))
+           aux(dfftp%nl(ng)) = aux(dfftp%nl(ng)) + strf(ng,nt) * rhocg(igtongl(ng))
         enddo
      endif
   enddo
   if (gamma_only) then
      do ng = 1, ngm
-        aux(nlm(ng)) = CONJG(aux(nl (ng)))
+        aux(dfftp%nlm(ng)) = CONJG(aux(dfftp%nl (ng)))
      end do
   end if
   !
-  rhog_core(:) = aux(nl(:))
+  rhog_core(:) = aux(dfftp%nl(:))
   !
   !   the core charge in real space
   !

@@ -16,8 +16,7 @@ SUBROUTINE stres_mgga( sigmaxc )
   USE control_flags,          ONLY : gamma_only
   USE noncollin_module,       ONLY : noncolin
   USE cell_base,              ONLY : alat, at, bg, omega, tpiba
-  USE gvect,                  ONLY : g, nl, nlm
-  USE gvecs,                  ONLY : nls, nlsm
+  USE gvect,                  ONLY : g
   USE scf,                    ONLY : rho, v
   USE wavefunctions_module,   ONLY : evc, psic
   USE funct,                  ONLY : dft_is_meta
@@ -192,7 +191,6 @@ SUBROUTINE wfc_gradient ( ibnd, ik, npw, gradpsi )
   USE cell_base,              ONLY : omega, tpiba
   USE klist,                  ONLY : xk, igk_k
   USE gvect,                  ONLY : g
-  USE gvecs,                  ONLY : nls, nlsm
   USE fft_base,               ONLY : dffts
   USE fft_interfaces,         ONLY : invfft
   !
@@ -220,20 +218,20 @@ SUBROUTINE wfc_gradient ( ibnd, ik, npw, gradpsi )
            !
            ! ... two ffts at the same time
            !
-           psic(nls(1:npw)) = CMPLX(0d0, kplusg(1:npw),kind=DP)* &
+           psic(dffts%nl(1:npw)) = CMPLX(0d0, kplusg(1:npw),kind=DP)* &
                                    ( evc(1:npw,ibnd) + &
                                    ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
            !
-           psic(nlsm(1:npw)) = CMPLX(0d0,-kplusg(1:npw),kind=DP) * &
+           psic(dffts%nlm(1:npw)) = CMPLX(0d0,-kplusg(1:npw),kind=DP) * &
                                     CONJG( evc(1:npw,ibnd) - &
                                     ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
            !
         ELSE
            !
-           psic(nls(1:npw)) = CMPLX(0d0, kplusg(1:npw),kind=DP)* &
+           psic(dffts%nl(1:npw)) = CMPLX(0d0, kplusg(1:npw),kind=DP)* &
                                    evc(1:npw,ibnd)
            !
-           psic(nlsm(1:npw)) = CMPLX(0d0,-kplusg(1:npw),kind=DP) * &
+           psic(dffts%nlm(1:npw)) = CMPLX(0d0,-kplusg(1:npw),kind=DP) * &
                                     CONJG( evc(1:npw,ibnd) )
            !
         END IF
@@ -253,7 +251,7 @@ SUBROUTINE wfc_gradient ( ibnd, ik, npw, gradpsi )
          psic(:) = ( 0.D0, 0.D0 )
          !
          kplusg (1:npw) = (xk(ipol,ik)+g(ipol,igk_k(1:npw,ik))) * tpiba
-         psic(nls(igk_k(1:npw,ik))) = CMPLX(0d0, kplusg(1:npw),kind=DP)* &
+         psic(dffts%nl(igk_k(1:npw,ik))) = CMPLX(0d0, kplusg(1:npw),kind=DP)* &
                                  evc(1:npw,ibnd)
          !
          ! Gradient of the wavefunction in real space
