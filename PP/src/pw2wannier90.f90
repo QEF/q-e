@@ -1176,7 +1176,6 @@ SUBROUTINE compute_dmn
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
-   USE gvecs,         ONLY : nls, nlsm
    USE klist,           ONLY : nkstot, xk, igk_k, ngk
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
@@ -1693,12 +1692,12 @@ SUBROUTINE compute_dmn
          ! compute the phase
          phase(:) = (0.d0,0.d0)
          ! missing phase G of above is given here and below.
-         IF(iks2g(ik,isym) >= 0) phase(nls(iks2g(ik,isym)))=(1d0,0d0) 
+         IF(iks2g(ik,isym) >= 0) phase(dffts%nl(iks2g(ik,isym)))=(1d0,0d0) 
          CALL invfft ('Wave', phase, dffts)
          do n=1,nbnd
             if(excluded_band(n)) cycle
             psic(:) = (0.d0, 0.d0)
-            psic(nls(igk_k(1:npwq,ikp))) = evcq(1:npwq,n)
+            psic(dffts%nl(igk_k(1:npwq,ikp))) = evcq(1:npwq,n)
             ! go to real space
             CALL invfft ('Wave', psic, dffts)
             ! gather among all the CPUs
@@ -1712,7 +1711,7 @@ SUBROUTINE compute_dmn
             psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
             ! go back to G space
             CALL fwfft ('Wave', psic, dffts)
-            evcq(1:npw,n)  = psic(nls (igk_k(1:npw,ik) ) )
+            evcq(1:npw,n)  = psic(dffts%nl (igk_k(1:npw,ik) ) )
          end do
          !
          !  USPP
@@ -1855,7 +1854,6 @@ SUBROUTINE compute_mmn
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
-   USE gvecs,         ONLY : nls, nlsm
    USE klist,           ONLY : nkstot, xk, igk_k, ngk
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
@@ -2025,7 +2023,7 @@ SUBROUTINE compute_mmn
 !         end if
 ! compute the phase
          phase(:) = (0.d0,0.d0)
-         IF ( ig_(ik,ib)>0) phase( nls(ig_(ik,ib)) ) = (1.d0,0.d0)
+         IF ( ig_(ik,ib)>0) phase( dffts%nl(ig_(ik,ib)) ) = (1.d0,0.d0)
          CALL invfft ('Wave', phase, dffts)
          !
          !  USPP
@@ -2131,25 +2129,25 @@ SUBROUTINE compute_mmn
                DO ipol=1,2!npol
                   istart=(ipol-1)*npwx+1
                   iend=istart+npw-1
-                  psic_nc(nls (igk_k(1:npw,ik) ),ipol ) = evc(istart:iend, m)
+                  psic_nc(dffts%nl (igk_k(1:npw,ik) ),ipol ) = evc(istart:iend, m)
                   CALL invfft ('Wave', psic_nc(:,ipol), dffts)
                   psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * &
                                                  phase(1:dffts%nnr)
                   CALL fwfft ('Wave', psic_nc(:,ipol), dffts)
-                  aux_nc(1:npwq,ipol) = psic_nc(nls (igk_k(1:npwq,ikp)),ipol )
+                  aux_nc(1:npwq,ipol) = psic_nc(dffts%nl (igk_k(1:npwq,ikp)),ipol )
                ENDDO
             ELSE
                psic(:) = (0.d0, 0.d0)
-               psic(nls (igk_k (1:npw,ik) ) ) = evc (1:npw, m)
-               IF(gamma_only) psic(nlsm(igk_k(1:npw,ik) ) ) = conjg(evc (1:npw, m))
+               psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw, m)
+               IF(gamma_only) psic(dffts%nlm(igk_k(1:npw,ik) ) ) = conjg(evc (1:npw, m))
                CALL invfft ('Wave', psic, dffts)
                psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
                CALL fwfft ('Wave', psic, dffts)
-               aux(1:npwq)  = psic(nls (igk_k(1:npwq,ikp) ) )
+               aux(1:npwq)  = psic(dffts%nl (igk_k(1:npwq,ikp) ) )
             ENDIF
             IF(gamma_only) THEN
-               IF (gstart==2) psic(nlsm(1)) = (0.d0,0.d0)
-               aux2(1:npwq) = conjg(psic(nlsm(igk_k(1:npwq,ikp) ) ) )
+               IF (gstart==2) psic(dffts%nlm(1)) = (0.d0,0.d0)
+               aux2(1:npwq) = conjg(psic(dffts%nlm(igk_k(1:npwq,ikp) ) ) )
             ENDIF
             !
             !  Mkb(m,n) = Mkb(m,n) + \sum_{ijI} qb_{ij}^I * e^-i(b*tau_I)
@@ -2251,7 +2249,6 @@ SUBROUTINE compute_spin
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
-   USE gvecs,         ONLY : nls, nlsm
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
@@ -2494,7 +2491,6 @@ SUBROUTINE compute_orb
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
-   USE gvecs,         ONLY : nls, nlsm
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
@@ -2677,7 +2673,7 @@ SUBROUTINE compute_orb
            !
            ! compute the phase
            phase(:) = ( 0.0D0, 0.0D0 )
-           if (ig_(ik,i_b2)>0) phase( nls(ig_(ik,i_b2)) ) = ( 1.0D0, 0.0D0 )
+           if (ig_(ik,i_b2)>0) phase( dffts%nl(ig_(ik,i_b2)) ) = ( 1.0D0, 0.0D0 )
            call invfft('Wave', phase, dffts)
            !
            ! loop on bands
@@ -2692,7 +2688,7 @@ SUBROUTINE compute_orb
 !                    psic_nc = ( 0.0D0, 0.0D0 ) !ivo
                     istart=(ipol-1)*npwx+1
                     iend=istart+npw_b2-1 !ivo npw_b1 --> npw_b2
-                    psic_nc(nls (igk_k(1:npw_b2,ikp_b2) ),ipol ) = &
+                    psic_nc(dffts%nl (igk_k(1:npw_b2,ikp_b2) ),ipol ) = &
                          evc_b2(istart:iend, n)
                     ! ivo igk_b1, npw_b1 --> igk_b2, npw_b2
                     ! multiply by phase in real space - '1' unless neighbor is in a bordering BZ
@@ -2701,16 +2697,16 @@ SUBROUTINE compute_orb
                     call fwfft ('Wave', psic_nc(:,ipol), dffts)
                     ! save the result
                     iend=istart+npw-1
-                    evc_aux(istart:iend,n) = psic_nc(nls (igk_k(1:npw,ik) ),ipol ) 
+                    evc_aux(istart:iend,n) = psic_nc(dffts%nl (igk_k(1:npw,ik) ),ipol ) 
                  end do
               else ! this is modeled after the pre-existing code at 1162
                  psic = ( 0.0D0, 0.0D0 )
                  ! Graham, changed npw --> npw_b2 on RHS. Do you agree?!
-                 psic(nls (igk_k(1:npw_b2,ikp_b2) ) ) = evc_b2(1:npw_b2, n) 
+                 psic(dffts%nl (igk_k(1:npw_b2,ikp_b2) ) ) = evc_b2(1:npw_b2, n) 
                  call invfft ('Wave', psic, dffts)
                  psic(1:dffts%nnr) = psic(1:dffts%nnr) * conjg(phase(1:dffts%nnr)) 
                  call fwfft ('Wave', psic, dffts)
-                 evc_aux(1:npw,n) = psic(nls (igk_k(1:npw,ik) ) ) 
+                 evc_aux(1:npw,n) = psic(dffts%nl (igk_k(1:npw,ik) ) ) 
               end if
            end do !n
 
@@ -2738,7 +2734,7 @@ SUBROUTINE compute_orb
               !
               ! compute the phase
               phase(:) = ( 0.0D0, 0.0D0 )
-              if (ig_(ik,i_b1)>0) phase( nls(ig_(ik,i_b1)) ) = ( 1.0D0, 0.0D0 )
+              if (ig_(ik,i_b1)>0) phase( dffts%nl(ig_(ik,i_b1)) ) = ( 1.0D0, 0.0D0 )
               !call cft3s (phase, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
               call invfft('Wave', phase, dffts)
               !
@@ -2752,25 +2748,25 @@ SUBROUTINE compute_orb
 !                      psic_nc = ( 0.0D0, 0.0D0 ) !ivo
                        istart=(ipol-1)*npwx+1
                        iend=istart+npw_b1-1  !ivo npw_b2 --> npw_b1
-                       psic_nc(nls (igk_b1(1:npw_b1) ),ipol ) = evc_b1(istart:iend, m) !ivo igk_b2,npw_b2 --> igk_b1,npw_b1 
+                       psic_nc(dffts%nl (igk_b1(1:npw_b1) ),ipol ) = evc_b1(istart:iend, m) !ivo igk_b2,npw_b2 --> igk_b1,npw_b1 
                        ! multiply by phase in real space - '1' unless neighbor is in a different BZ
                        call invfft ('Wave', psic_nc(:,ipol), dffts)
                        !psic_nc(1:nrxxs,ipol) = psic_nc(1:nrxxs,ipol) * conjg(phase(1:nrxxs))
                        psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * conjg(phase(1:dffts%nnr))
                        call fwfft ('Wave', psic_nc(:,ipol), dffts)
                        ! save the result
-                       aux_nc(1:npw,ipol) = psic_nc(nls (igk_k(1:npw,ik) ),ipol ) 
+                       aux_nc(1:npw,ipol) = psic_nc(dffts%nl (igk_k(1:npw,ik) ),ipol ) 
                     end do
                  else ! this is modeled after the pre-existing code at 1162
                     aux  = ( 0.0D0 )
                     psic = ( 0.0D0, 0.0D0 )
                     ! Graham, changed npw --> npw_b1 on RHS. Do you agree?!
-                    psic(nls (igk_b1(1:npw_b1) ) ) = evc_b1(1:npw_b1, m) !ivo igk_b2 --> igk_b1 
+                    psic(dffts%nl (igk_b1(1:npw_b1) ) ) = evc_b1(1:npw_b1, m) !ivo igk_b2 --> igk_b1 
                     call invfft ('Wave', psic, dffts)
                     !psic(1:nrxxs) = psic(1:nrxxs) * conjg(phase(1:nrxxs)) 
                     psic(1:dffts%nnr) = psic(1:dffts%nnr) * conjg(phase(1:dffts%nnr)) 
                     call fwfft ('Wave', psic, dffts)
-                    aux(1:npw) = psic(nls (igk_k(1:npw,ik) ) ) 
+                    aux(1:npw) = psic(dffts%nl (igk_k(1:npw,ik) ) ) 
                  end if
 
                 !
@@ -3360,7 +3356,6 @@ SUBROUTINE write_plot
    USE wavefunctions_module, ONLY : evc, psic
    USE io_files, ONLY : nwordwfc, iunwfc
    USE wannier
-   USE gvecs,         ONLY : nls, nlsm
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
    USE gvect,           ONLY : g, ngm
    USE fft_base,        ONLY : dffts
@@ -3444,8 +3439,8 @@ SUBROUTINE write_plot
          IF (excluded_band(ibnd)) CYCLE
          ibnd1=ibnd1 + 1
          psic(:) = (0.d0, 0.d0)
-         psic(nls (igk_k (1:npw,ik) ) ) = evc (1:npw, ibnd)
-         IF (gamma_only)  psic(nlsm(igk_k(1:npw,ik))) = conjg(evc (1:npw, ibnd))
+         psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw, ibnd)
+         IF (gamma_only)  psic(dffts%nlm(igk_k(1:npw,ik))) = conjg(evc (1:npw, ibnd))
          CALL invfft ('Wave', psic, dffts)
          IF (reduce_unk) pos=0
 #if defined(__MPI)
@@ -3938,7 +3933,6 @@ SUBROUTINE wan2sic
   USE kinds, ONLY : DP
   USE io_files, ONLY : iunwfc, nwordwfc, nwordwann
   USE gvect, ONLY : g, ngm
-  USE gvecs, ONLY: nls
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct, ONLY : nbnd, npwx
   USE gvecw, ONLY : gcutw

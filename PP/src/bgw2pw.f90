@@ -655,7 +655,7 @@ SUBROUTINE write_cd ( input_file_name, real_or_complex, output_dir_name )
   USE constants, ONLY : eps6
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : invfft
-  USE gvect, ONLY : ngm, ngm_g, ig_l2g, nl, mill
+  USE gvect, ONLY : ngm, ngm_g, ig_l2g, mill
   USE io_global, ONLY : ionode, ionode_id
   USE ions_base, ONLY : nat
   USE xml_io_base, ONLY : write_rho
@@ -864,7 +864,7 @@ SUBROUTINE write_cd ( input_file_name, real_or_complex, output_dir_name )
 
   DO is = 1, ns
     DO ig = 1, ngm
-      psic ( nl ( ig ) ) = rho%of_g ( ig, is )
+      psic ( dfftp%nl ( ig ) ) = rho%of_g ( ig, is )
     ENDDO
     CALL invfft ( 'Dense', psic, dfftp )
     DO ir = 1, dfftp%nnr

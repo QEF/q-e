@@ -20,7 +20,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE fft_interfaces,       ONLY : invfft
   USE gvect,                ONLY : ngm, g
   USE fft_base,             ONLY : dfftp
-  USE gvecs,                ONLY : nls, doublegrid
+  USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, xk, ngk, igk_k, nkstot
   USE scf,                  ONLY : rho
   USE io_files,             ONLY : iunwfc, nwordwfc
@@ -87,8 +87,8 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
         !
         psic_nc = (0.D0,0.D0)
         DO ig = 1, npw
-           psic_nc(nls(igk_k(ig,ik)),1)=evc(ig     ,ibnd)
-           psic_nc(nls(igk_k(ig,ik)),2)=evc(ig+npwx,ibnd)
+           psic_nc(dffts%nl(igk_k(ig,ik)),1)=evc(ig     ,ibnd)
+           psic_nc(dffts%nl(igk_k(ig,ik)),2)=evc(ig+npwx,ibnd)
         ENDDO
         DO ipol=1,npol
            CALL invfft ('Wave', psic_nc(:,ipol), dffts)

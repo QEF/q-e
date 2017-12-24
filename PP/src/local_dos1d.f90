@@ -18,7 +18,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   USE ions_base, ONLY: nat, ntyp=>nsp, ityp
   USE fft_base,  ONLY: dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvecs,   ONLY : nls, doublegrid
+  USE gvecs,   ONLY : doublegrid
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum, indv, nhtol, nhtoj
   USE uspp_param, ONLY: upf, nh, nhm
@@ -88,8 +88,8 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   IF (noncolin) THEN
      psic_nc = (0.d0,0.d0)
      DO ig = 1, npw
-        psic_nc (nls (igk_k (ig,ik) ), 1 ) = evc (ig     , kband)
-        psic_nc (nls (igk_k (ig,ik) ), 2 ) = evc (ig+npwx, kband)
+        psic_nc (dffts%nl (igk_k (ig,ik) ), 1 ) = evc (ig     , kband)
+        psic_nc (dffts%nl (igk_k (ig,ik) ), 2 ) = evc (ig+npwx, kband)
      ENDDO
      DO ipol=1,npol
         CALL invfft ('Wave', psic_nc(:,ipol), dffts)
@@ -105,7 +105,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   ELSE
      psic(1:dffts%nnr) = (0.d0,0.d0)
      DO ig = 1, npw
-        psic (nls (igk_k (ig,ik) ) ) = evc (ig, kband)
+        psic (dffts%nl (igk_k (ig,ik) ) ) = evc (ig, kband)
      ENDDO
      CALL invfft ('Wave', psic, dffts)
 

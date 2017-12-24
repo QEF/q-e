@@ -139,7 +139,7 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
   USE wvfct,     ONLY : npwx, nbnd, wg, et
   USE gvecw,     ONLY : gcutw
   USE control_flags, ONLY : gamma_only
-  USE gvect,         ONLY : ngm, g, gg, ig_l2g, nl
+  USE gvect,         ONLY : ngm, g, gg, ig_l2g
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
   USE klist ,        ONLY : nks, xk, wk, ngk, igk_k
@@ -797,7 +797,7 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
         DO iband1 = 1, nbnd
            psic(:) = (0.d0, 0.d0)
            DO ig = 1, npw
-              psic(nl(igk_k(ig,ik)))  = evc(ig,iband1)
+              psic(dfftp%nl(igk_k(ig,ik)))  = evc(ig,iband1)
            ENDDO
 
            CALL invfft ('Dense', psic, dfftp)

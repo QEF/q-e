@@ -28,7 +28,6 @@ PROGRAM wfck2r
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE gvect, ONLY : ngm, g 
-  USE gvecs, ONLY : nls
   USE noncollin_module, ONLY : npol, noncolin
   USE environment,ONLY : environment_start, environment_end
   USE fft_base,  only : dffts
@@ -119,12 +118,12 @@ PROGRAM wfck2r
         !
         evc_r = (0.d0, 0.d0)     
         do ig = 1, npw
-           evc_r (nls (igk_k(ig,ik) ),1 ) = evc (ig,ibnd)
+           evc_r (dffts%nl (igk_k(ig,ik) ),1 ) = evc (ig,ibnd)
         enddo
         CALL invfft ('Wave', evc_r(:,1), dffts)
         IF (noncolin) THEN
            DO ig = 1, npw
-              evc_r (nls(igk_k(ig,ik)),2) = evc (ig+npwx, ibnd)
+              evc_r (dffts%nl(igk_k(ig,ik)),2) = evc (ig+npwx, ibnd)
            ENDDO
            CALL invfft ('Wave', evc_r(:,2), dffts)
         ENDIF
