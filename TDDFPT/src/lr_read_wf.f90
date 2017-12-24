@@ -29,7 +29,6 @@ SUBROUTINE lr_read_wf()
                                  & lr_verbosity, lr_exx, davidson, eels
   USE wvfct,                ONLY : nbnd, npwx
   USE control_flags,        ONLY : gamma_only,io_level
-  USE gvecs,                ONLY : nls, nlsm
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
   USE uspp,                 ONLY : vkb, nkb, okvan
@@ -264,7 +263,7 @@ SUBROUTINE normal_read()
         DO ibnd = 1, nbnd
            DO ig = 1, ngk(ik)
                !
-               revc0(nls(igk_k(ig,ik)),ibnd,ik) = evc0(ig,ibnd,ik)
+               revc0(dffts%nl(igk_k(ig,ik)),ibnd,ik) = evc0(ig,ibnd,ik)
                !
            ENDDO
            !
@@ -451,9 +450,9 @@ SUBROUTINE virt_read()
         IF (ibnd<nbnd) THEN
            DO ig=1,ngk(1)
               !
-              revc_all(nls(igk_k(ig,1)),ibnd,1) = evc_all(ig,ibnd,1)&
+              revc_all(dffts%nl(igk_k(ig,1)),ibnd,1) = evc_all(ig,ibnd,1)&
                                     &+(0.0d0,1.0d0)*evc_all(ig,ibnd+1,1)
-              revc_all(nlsm(igk_k(ig,1)),ibnd,1) = &
+              revc_all(dffts%nlm(igk_k(ig,1)),ibnd,1) = &
                                     &CONJG(evc_all(ig,ibnd,1)&
                                     &-(0.0d0,1.0d0)*evc_all(ig,ibnd+1,1))
               !
@@ -461,8 +460,8 @@ SUBROUTINE virt_read()
         ELSE
            DO ig=1,ngk(1)
               !
-              revc_all(nls(igk_k(ig,1)),ibnd,1) = evc_all(ig,ibnd,1)
-              revc_all(nlsm(igk_k(ig,1)),ibnd,1) = CONJG(evc_all(ig,ibnd,1))
+              revc_all(dffts%nl(igk_k(ig,1)),ibnd,1) = evc_all(ig,ibnd,1)
+              revc_all(dffts%nlm(igk_k(ig,1)),ibnd,1) = CONJG(evc_all(ig,ibnd,1))
               !
            ENDDO
         ENDIF
@@ -479,7 +478,7 @@ SUBROUTINE virt_read()
         DO ibnd=1,nbnd
            DO ig=1,ngk(ik)
               !
-              revc_all(nls(igk_k(ig,ik)),ibnd,ik) = evc_all(ig,ibnd,ik)
+              revc_all(dffts%nl(igk_k(ig,ik)),ibnd,ik) = evc_all(ig,ibnd,ik)
               !
            ENDDO
            !

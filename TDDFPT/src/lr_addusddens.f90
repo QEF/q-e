@@ -21,7 +21,7 @@ SUBROUTINE lr_addusddens (drhoscf, dbecsum)
   USE ions_base,            ONLY : nat, ityp, tau, ntyp => nsp
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : invfft
-  USE gvect,                ONLY : gg, ngm, nl, g, eigts1, eigts2, eigts3, mill
+  USE gvect,                ONLY : gg, ngm, g, eigts1, eigts2, eigts3, mill
   USE uspp,                 ONLY : okvan
   USE wavefunctions_module, ONLY : psic
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
@@ -127,7 +127,7 @@ SUBROUTINE lr_addusddens (drhoscf, dbecsum)
       psic(:) = (0.d0, 0.d0)
       !
       DO ig = 1, ngm
-         psic(nl(ig)) = aux(ig,is)
+         psic(dfftp%nl(ig)) = aux(ig,is)
       ENDDO
       !
       CALL invfft ('Dense', psic, dfftp)

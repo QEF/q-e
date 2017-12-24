@@ -1866,7 +1866,7 @@ contains
     use mp,                   only : mp_bcast,mp_barrier                  
     use mp_world,             only : world_comm
     USE cell_base,  ONLY : bg, ibrav, celldm
-    USE gvect,      ONLY : gcutm, ngm, nl, nlm
+    USE gvect,      ONLY : gcutm, ngm
     USE gvecw,      ONLY : ecutwfc
     USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
     USE io_global,  ONLY : stdout, ionode,ionode_id

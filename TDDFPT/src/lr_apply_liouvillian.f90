@@ -34,8 +34,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE fft_helper_subroutines
-  USE gvecs,                ONLY : nls, nlsm
-  USE gvect,                ONLY : nl, ngm, gstart, g, gg
+  USE gvect,                ONLY : ngm, gstart, g, gg
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE lr_variables,         ONLY : evc0, sevc0, revc0, rho_1, rho_1c, &
@@ -642,7 +641,7 @@ SUBROUTINE lr_apply_liouvillian_k()
              !
              DO ig = 1,ngk(ik)
                 !
-                evc1_new(ig,ibnd,ik) = psic(nls(igk_k(ig,ik)))
+                evc1_new(ig,ibnd,ik) = psic(dffts%nl(igk_k(ig,ik)))
                 !
              ENDDO
              !
