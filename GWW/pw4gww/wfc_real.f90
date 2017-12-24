@@ -18,7 +18,7 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
 
   USE kinds,                ONLY : DP
   USE gvect,                ONLY : gstart
-  USE gvecs,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : doublegrid
    USE io_files,             ONLY : iunwfc, nwordwfc, diropn
   USE wvfct,                ONLY : nbnd, npwx, npw, wg, et
   USE mp,                   ONLY : mp_bcast
@@ -96,15 +96,15 @@ SUBROUTINE wfc_gamma_real(itask,ispin)
                 !
                 ! ... two ffts at the same time
                 !
-        psic(nls(igk_k(1:npw,1)))  = evc(1:npw,ibnd) + &
+        psic(dffts%nl(igk_k(1:npw,1)))  = evc(1:npw,ibnd) + &
              ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1)
-        psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,ibnd) - &
+        psic(dffts%nlm(igk_k(1:npw,1))) = CONJG( evc(1:npw,ibnd) - &
              ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
                 !
      ELSE
         !
-        psic(nls(igk_k(1:npw,1)))  = evc(1:npw,ibnd)
-        psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,ibnd) )
+        psic(dffts%nl(igk_k(1:npw,1)))  = evc(1:npw,ibnd)
+        psic(dffts%nlm(igk_k(1:npw,1))) = CONJG( evc(1:npw,ibnd) )
            !
      END IF
              !

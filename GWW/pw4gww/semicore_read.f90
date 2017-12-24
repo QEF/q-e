@@ -17,8 +17,7 @@
      use pwcom
      USE wavefunctions_module,  ONLY : evc
      USE kinds,                 ONLY : DP
-     USE gvect,                 ONLY : g, ig_l2g, nl, nlm, gstart
-     USE gvecs,                 ONLY : nls, nlsm
+     USE gvect,                 ONLY : g, ig_l2g, gstart
      USE mp,           ONLY : mp_sum, mp_barrier, mp_bcast
      USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
      USE mp_wave, ONLY : mergewf,splitwf
@@ -137,8 +136,8 @@
 !trasform them to R grid
 
           psic(:)=(0.d0,0.d0)
-          psic(nls(igk_k(1:npw,1)))  = tmp_wfc(1:npw)
-          psic(nlsm(igk_k(1:npw,1))) = CONJG( tmp_wfc(1:npw) )
+          psic(dffts%nl(igk_k(1:npw,1)))  = tmp_wfc(1:npw)
+          psic(dffts%nlm(igk_k(1:npw,1))) = CONJG( tmp_wfc(1:npw) )
           CALL invfft ('Wave', psic, dffts)
           
           if(ii<num_nbnds)  pp_sc(1:dfftp%nnr,iv,ii)=dble(psic(1:dfftp%nnr))
@@ -235,8 +234,8 @@
 !trasform to r-space 
        psic(:)=(0.d0,0.d0)
        do ig=1,max_ngm
-          psic(nl(ig))=tmp_g(ig)*fac(ig)
-          psic(nlm(ig))=CONJG(tmp_g(ig))*fac(ig)
+          psic(dfftp%nl(ig))=tmp_g(ig)*fac(ig)
+          psic(dfftp%nlm(ig))=CONJG(tmp_g(ig))*fac(ig)
        enddo
        CALL invfft ('Dense', psic, dfftp)
        tmp_r(1:dfftp%nnr)=dble(psic(1:dfftp%nnr))

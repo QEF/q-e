@@ -30,7 +30,7 @@ subroutine pola_partial(numpw,ispin)
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : mpime,nproc, world_comm
    USE mp_pools, ONLY : intra_pool_comm
-   USE gvecs,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : doublegrid
    USE fft_custom_gwl
    USE mp_wave, ONLY : mergewf,splitwf
    USE fft_base,             ONLY : dfftp, dffts

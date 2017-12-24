@@ -28,7 +28,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
    USE mp_pools, ONLY : intra_pool_comm
-   USE gvecs,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : doublegrid
    USE fft_custom_gwl
    USE mp_wave, ONLY : mergewf,splitwf
    USE fft_base,             ONLY : dfftp, dffts
@@ -185,8 +185,8 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
          !trasform to r-space
          psic(:)=(0.d0,0.d0)
          do ig=1,max_ngm
-            psic(nl(ig))=tmp_g(ig)*fac(ig)
-            psic(nlm(ig))=CONJG(tmp_g(ig))*fac(ig)
+            psic(dfftp%nl(ig))=tmp_g(ig)*fac(ig)
+            psic(dfftp%nlm(ig))=CONJG(tmp_g(ig))*fac(ig)
          enddo
          CALL invfft ('Dense', psic, dfftp)
          tmp_r(:)=dble(psic(:))
@@ -567,7 +567,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
   USE mp_world, ONLY : world_comm, mpime,nproc
   USE wavefunctions_module, ONLY : evc, psic
   USE gvect
-  USE gvecs,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : doublegrid
   USE klist,    ONLY : igk_k
   USE constants, ONLY : e2, pi, tpi, fpi
   USE cell_base, ONLY : at, alat, tpiba, omega, tpiba2
@@ -988,11 +988,11 @@ endif
           psic(1:dffts%nnr)=(0.d0,0.d0)
           do ig=1,npw
              if(ii<nglobal) then
-                psic(nls(ig))=old_basis(ig,ii)+(0.d0,1.d0)*old_basis(ig,ii+1)
-                psic(nlsm(ig))=conjg(old_basis(ig,ii))+(0.d0,1.d0)*conjg(old_basis(ig,ii+1))
+                psic(dffts%nl(ig))=old_basis(ig,ii)+(0.d0,1.d0)*old_basis(ig,ii+1)
+                psic(dffts%nlm(ig))=conjg(old_basis(ig,ii))+(0.d0,1.d0)*conjg(old_basis(ig,ii+1))
              else
-                psic(nls(ig))=old_basis(ig,ii)
-                psic(nlsm(ig))=conjg(old_basis(ig,ii))
+                psic(dffts%nl(ig))=old_basis(ig,ii)
+                psic(dffts%nlm(ig))=conjg(old_basis(ig,ii))
              endif
           enddo
           CALL invfft ('Wave', psic, dffts)
@@ -1095,8 +1095,8 @@ endif
      do iv=1,num_nbnds-1
 !put iv on real space
         psic(:)=(0.d0,0.d0)
-        psic(nls (igk_k(1:npw,1)))  = evc(1:npw,iv)
-        psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) )
+        psic(dffts%nl (igk_k(1:npw,1)))  = evc(1:npw,iv)
+        psic(dffts%nlm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) )
         CALL invfft ('Wave', psic, dffts)
         wv_real(:)= DBLE(psic(:))
         
@@ -1107,15 +1107,15 @@ endif
            !trasform to r-space
            psic(:)=(0.d0,0.d0)
            do ig=1,max_ngm
-              psic(nl(ig))=tmp_g(ig)*fac(ig)
-              psic(nlm(ig))=CONJG(tmp_g(ig))*fac(ig)
+              psic(dfftp%nl(ig))=tmp_g(ig)*fac(ig)
+              psic(dfftp%nlm(ig))=CONJG(tmp_g(ig))*fac(ig)
            enddo
            CALL invfft ('Dense', psic, dfftp)
            tmp_r(:)=dble(psic(:))
 !!form products with w_v and trasfrom in G space
            psic(:)=cmplx(tmp_r(:)*wv_real(:),0.d0)
            CALL fwfft ('Wave', psic, dffts)
-           wp_prod(1:npw) = psic(nls(igk_k(1:npw,1)))
+           wp_prod(1:npw) = psic(dffts%nl(igk_k(1:npw,1)))
 
 !!do scalar product
            call dgemm('T','N',nglobal,1,2*npw,2.d0,old_basis,2*npw,wp_prod,2*npw,0.d0,t_mat,nglobal)
@@ -1180,7 +1180,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
    USE mp_pools, ONLY : intra_pool_comm
-   USE gvecs,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : doublegrid
    !USE exx, ONLY : exx_divergence_new, yukawa
    USE fft_custom_gwl
    USE mp_wave, ONLY : mergewf,splitwf

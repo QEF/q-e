@@ -25,7 +25,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
   USE wannier_gw
   USE gvect
-  USE gvecs,              ONLY : nls, nlsm, doublegrid
+  USE gvecs,              ONLY : doublegrid
   USE uspp
   USE uspp_param,           ONLY : lmaxq,upf,nh, nhm
   USE wavefunctions_module, ONLY : psic
@@ -122,13 +122,13 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
             psic(:)=(0.d0,0.d0)
             psic(:)=(0.d0,0.d0)
             IF ( hw < min(iiv*n_set,nbnd_v(isv))) then
-               psic(nls(1:npw0))  = ks_wfcs(1:npw0,hw,isv) + &
+               psic(dffts%nl(1:npw0))  = ks_wfcs(1:npw0,hw,isv) + &
                     ( 0.D0, 1.D0 ) * ks_wfcs(1:npw0,hw+1,isv)
-               psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw,hw,isv) - &
+               psic(dffts%nlm(1:npw0)) = CONJG( ks_wfcs(1:npw,hw,isv) - &
                     ( 0.D0, 1.D0 ) * ks_wfcs(1:npw0,hw+1,isv) )
             ELSE
-               psic(nls(1:npw0))  = ks_wfcs(1:npw0,hw,isv)
-               psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw0,hw,isv) )
+               psic(dffts%nl(1:npw0))  = ks_wfcs(1:npw0,hw,isv)
+               psic(dffts%nlm(1:npw0)) = CONJG( ks_wfcs(1:npw0,hw,isv) )
             END IF
          
             CALL invfft ('Wave', psic, dffts)
@@ -157,13 +157,13 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
                psic(:)=(0.d0,0.d0)
                psic(:)=(0.d0,0.d0)
                IF ( hw < min(jjs*n_set,nbnd_s)) then
-                  psic(nls(1:npw0))  = ks_wfcs(1:npw0,hw,isv) + &
+                  psic(dffts%nl(1:npw0))  = ks_wfcs(1:npw0,hw,isv) + &
                        ( 0.D0, 1.D0 ) * ks_wfcs(1:npw0,hw+1,isv)
-                  psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw,hw,isv) - &
+                  psic(dffts%nlm(1:npw0)) = CONJG( ks_wfcs(1:npw,hw,isv) - &
                        ( 0.D0, 1.D0 ) * ks_wfcs(1:npw0,hw+1,isv) )
                ELSE
-                  psic(nls(1:npw0))  = ks_wfcs(1:npw0,hw,isv)
-                  psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw0,hw,isv) )
+                  psic(dffts%nl(1:npw0))  = ks_wfcs(1:npw0,hw,isv)
+                  psic(dffts%nlm(1:npw0)) = CONJG( ks_wfcs(1:npw0,hw,isv) )
                END IF
                   
                CALL invfft ('Wave', psic, dffts)
@@ -196,13 +196,13 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
 !NOT_TO_BE_INCLUDED_START
                   do ks=1,nbnd_s,1
                      psic(:)=(0.d0,0.d0)
-                     psic(nls(1:npw0))  = ks_wfcs(1:npw0,ks,isv)
-                     psic(nlsm(1:npw0)) = CONJG( ks_wfcs(1:npw0,ks,isv) )
+                     psic(dffts%nl(1:npw0))  = ks_wfcs(1:npw0,ks,isv)
+                     psic(dffts%nlm(1:npw0)) = CONJG( ks_wfcs(1:npw0,ks,isv) )
                      CALL invfft ('Wave', psic, dffts)
                      prod_c(1:dfftp%nnr)=dcmplx(dble(psic(1:dfftp%nnr))*tmpreal_v(1:dfftp%nnr,iv-(iiv-1)*n_set)&
                           &  ,0.d0)
                      CALL fwfft ('Dense', prod_c, dfftp)
-                     prod_g2(1:ngm,ks)=prod_c(nl(1:ngm))
+                     prod_g2(1:ngm,ks)=prod_c(dfftp%nl(1:ngm))
                   enddo
 !NOT_TO_BE_INCLUDED_END
                endif
@@ -216,7 +216,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
                   prod_c(:)=dcmplx(prod_r(:),0.d0)
                   CALL fwfft ('Dense', prod_c, dfftp)
                      !go to g_space
-                  prod_g(1:ngm)=prod_c(nl(1:ngm))
+                  prod_g(1:ngm)=prod_c(dfftp%nl(1:ngm))
                   !calculated exchange
                   exc=0.d0
                   do ig=1,ngm
@@ -322,7 +322,7 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : ngm, nl, nlm, gg, g, eigts1, eigts2, &
+  USE gvect,                ONLY : ngm, gg, g, eigts1, eigts2, &
                                    eigts3, mill
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho
@@ -441,8 +441,8 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
   !
   do is = 1, nspin!SPIN TO BE IMPLEMENTED YET
      psic(:) = (0.d0, 0.d0)
-     psic( nl(:) ) = aux(:,is)
-     if (gamma_only) psic( nlm(:) ) = CONJG(aux(:,is))
+     psic( dfftp%nl(:) ) = aux(:,is)
+     if (gamma_only) psic( dfftp%nlm(:) ) = CONJG(aux(:,is))
      CALL invfft ('Dense', psic, dfftp)
      r_ij(:)=r_ij(:)+psic(:)
   enddo
