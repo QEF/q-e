@@ -18,7 +18,6 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : invfft
-  USE gvecs,                ONLY : nls
   USE lsda_mod,             ONLY : nspin
   USE spin_orb,             ONLY : domag
   USE noncollin_module,     ONLY : npol, nspin_mag
@@ -107,12 +106,12 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
            IF( idx + ibnd - 1 <= nbnd_occ(ikk) ) THEN
               !
               DO ig = 1, npw
-                 tg_psi( nls( igk_k( ig,ikk ) ) + ioff, 1 ) = evc( ig, idx+ibnd-1 )
-                 tg_psi( nls( igk_k( ig,ikk ) ) + ioff, 2 ) = evc( npwx+ig, idx+ibnd-1 )
+                 tg_psi( dffts%nl( igk_k( ig,ikk ) ) + ioff, 1 ) = evc( ig, idx+ibnd-1 )
+                 tg_psi( dffts%nl( igk_k( ig,ikk ) ) + ioff, 2 ) = evc( npwx+ig, idx+ibnd-1 )
               END DO
               DO ig = 1, npwq
-                 tg_dpsi( nls( igk_k( ig,ikq ) ) + ioff, 1 ) = dpsi( ig, idx+ibnd-1 )
-                 tg_dpsi( nls( igk_k( ig,ikq ) ) + ioff, 2 ) = dpsi( npwx+ig, idx+ibnd-1 )
+                 tg_dpsi( dffts%nl( igk_k( ig,ikq ) ) + ioff, 1 ) = dpsi( ig, idx+ibnd-1 )
+                 tg_dpsi( dffts%nl( igk_k( ig,ikq ) ) + ioff, 2 ) = dpsi( npwx+ig, idx+ibnd-1 )
               END DO
               !
            END IF
@@ -153,8 +152,8 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
         !
         psi = (0.d0, 0.d0)
         do ig = 1, npw
-           psi (nls (igk_k(ig,ikk) ), 1) = evc (ig, ibnd)
-           psi (nls (igk_k(ig,ikk) ), 2) = evc (ig+npwx, ibnd)
+           psi (dffts%nl (igk_k(ig,ikk) ), 1) = evc (ig, ibnd)
+           psi (dffts%nl (igk_k(ig,ikk) ), 2) = evc (ig+npwx, ibnd)
         enddo
         CALL invfft ('Wave', psi(:,1), dffts)
         CALL invfft ('Wave', psi(:,2), dffts)
@@ -163,8 +162,8 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
         !
         dpsic = (0.d0, 0.d0)
         do ig = 1, npwq
-           dpsic (nls (igk_k(ig,ikq)), 1 ) = dpsi (ig, ibnd)
-           dpsic (nls (igk_k(ig,ikq)), 2 ) = dpsi (ig+npwx, ibnd)
+           dpsic (dffts%nl (igk_k(ig,ikq)), 1 ) = dpsi (ig, ibnd)
+           dpsic (dffts%nl (igk_k(ig,ikq)), 2 ) = dpsi (ig+npwx, ibnd)
         enddo
         CALL invfft ('Wave', dpsic(:,1), dffts)
         CALL invfft ('Wave', dpsic(:,2), dffts)

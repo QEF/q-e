@@ -249,7 +249,6 @@ subroutine qgradient (xq, nrxx, a, ngm, g, nl, alat, ga)
   USE control_flags,  ONLY : gamma_only
   USE fft_base,       ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect,          ONLY : nlm
   
   implicit none
   integer :: nrxx, ngm, nl (ngm)
@@ -272,7 +271,7 @@ subroutine qgradient (xq, nrxx, a, ngm, g, nl, alat, ga)
      gaux (:) = (0.d0, 0.d0)
      do n = 1, ngm
         gaux(nl(n)) = CMPLX(0.d0, xq (ipol) + g (ipol, n),kind=DP) * aux (nl(n))
-        if (gamma_only) gaux( nlm(n) ) = conjg( gaux( nl(n) ) )
+        if (gamma_only) gaux( dfftp%nlm(n) ) = conjg( gaux( nl(n) ) )
      enddo
      ! bring back to R-space, (\grad_ipol a)(r) ...
 
@@ -300,7 +299,6 @@ subroutine qgrad_dot (xq, nrxx, a, ngm, g, nl, alat, da)
   USE control_flags,  ONLY : gamma_only
   USE fft_base,       ONLY : dfftp
   USE fft_interfaces, ONLY: fwfft, invfft
-  USE gvect,          ONLY : nlm
   
   implicit none
   integer ::  nrxx, ngm, nl (ngm)
@@ -331,7 +329,7 @@ subroutine qgrad_dot (xq, nrxx, a, ngm, g, nl, alat, da)
      !
      do n = 1, ngm
         !
-        da( nlm(n) ) = conjg( da( nl(n) ) )
+        da( dfftp%nlm(n) ) = conjg( da( nl(n) ) )
         !
      end do
      !

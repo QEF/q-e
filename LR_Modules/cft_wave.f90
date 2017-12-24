@@ -61,7 +61,6 @@ END SUBROUTINE cft_wave
 SUBROUTINE fwfft_wave (npwq, igkq, evc_g, evc_r )
   USE kinds,    ONLY : DP
   USE wvfct,    ONLY : npwx
-  USE gvecs,    ONLY : nls
   USE fft_base, ONLY : dffts
   USE fft_interfaces,   ONLY: fwfft
   USE noncollin_module, ONLY : noncolin, npol
@@ -74,12 +73,12 @@ SUBROUTINE fwfft_wave (npwq, igkq, evc_g, evc_r )
 
   CALL fwfft ('Wave', evc_r(:,1), dffts)
   DO ig = 1, npwq
-     evc_g (ig) = evc_g (ig) + evc_r (nls (igkq(ig) ), 1 )
+     evc_g (ig) = evc_g (ig) + evc_r (dffts%nl (igkq(ig) ), 1 )
   ENDDO
   IF (noncolin) THEN
      CALL fwfft ('Wave', evc_r(:,2), dffts)
      DO ig = 1, npwq
-        evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (nls(igkq(ig)),2)
+        evc_g (ig+npwx) = evc_g (ig+npwx) + evc_r (dffts%nl(igkq(ig)),2)
      ENDDO
   ENDIF
 END SUBROUTINE fwfft_wave
@@ -87,7 +86,6 @@ END SUBROUTINE fwfft_wave
 SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
   USE kinds,    ONLY : DP
   USE wvfct,    ONLY : npwx
-  USE gvecs,    ONLY : nls
   USE fft_base, ONLY : dffts
   USE fft_interfaces,   ONLY: invfft
   USE noncollin_module, ONLY : noncolin, npol
@@ -101,12 +99,12 @@ SUBROUTINE invfft_wave (npw, igk, evc_g, evc_r )
   
   evc_r = (0.0_dp, 0.0_dp)
   DO ig = 1, npw
-     evc_r (nls (igk(ig) ),1 ) = evc_g (ig)
+     evc_r (dffts%nl (igk(ig) ),1 ) = evc_g (ig)
   ENDDO
   CALL invfft ('Wave', evc_r(:,1), dffts)
   IF (noncolin) THEN
      DO ig = 1, npw
-        evc_r (nls(igk(ig)),2) = evc_g (ig+npwx)
+        evc_r (dffts%nl(igk(ig)),2) = evc_g (ig+npwx)
      ENDDO
      CALL invfft ('Wave', evc_r(:,2), dffts)
   ENDIF
@@ -139,7 +137,6 @@ SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
   USE kinds,    ONLY : DP
   USE wvfct,    ONLY : npwx
   USE fft_base, ONLY : dffts
-  USE gvecs,    ONLY : nls
   USE qpoint,   ONLY : ikks, ikqs
   USE klist,    ONLY : ngk, igk_k
   USE mp_bands, ONLY : me_bgrp
@@ -167,11 +164,11 @@ SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
         !
         IF( idx + ibnd - 1 <= nbnd_occ ) THEN
            DO ig = 1, npw
-              evc_r(nls (igk_k(ig,ikk))+ioff,1) =  evc_g(ig,idx+ibnd-1)
+              evc_r(dffts%nl (igk_k(ig,ikk))+ioff,1) =  evc_g(ig,idx+ibnd-1)
            ENDDO
            IF (noncolin) THEN
               DO ig = 1, npw
-                 evc_r(nls (igk_k(ig,ikk))+ioff,2) =  evc_g(npwx+ig,idx+ibnd-1)
+                 evc_r(dffts%nl (igk_k(ig,ikk))+ioff,2) =  evc_g(npwx+ig,idx+ibnd-1)
               ENDDO
            ENDIF
         ENDIF
@@ -196,13 +193,13 @@ SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
            !
            DO ig = 1, npwq
               evc_g(ig, ibnd+idx-1) = evc_g(ig, ibnd+idx-1) +  &
-                        evc_r( nls(igk_k(ig,ikq)) + ioff, 1 )
+                        evc_r( dffts%nl(igk_k(ig,ikq)) + ioff, 1 )
            ENDDO
            !
            IF (noncolin) THEN
               DO ig = 1, npwq
                  evc_g (ig+npwx, ibnd+idx-1) = evc_g (ig+npwx, ibnd+idx-1) &
-                      + evc_r (nls(igk_k(ig,ikq))+ ioff,2)
+                      + evc_r (dffts%nl(igk_k(ig,ikq))+ ioff,2)
               ENDDO
            ENDIF
            !

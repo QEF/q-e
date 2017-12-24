@@ -21,7 +21,7 @@ subroutine newdq (dvscf, npe)
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : g, gg, ngm, mill, eigts1, eigts2, eigts3, nl
+  USE gvect,                ONLY : g, gg, ngm, mill, eigts1, eigts2, eigts3
   USE uspp,                 ONLY : okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE paw_variables,        ONLY : okpaw
@@ -99,7 +99,7 @@ subroutine newdq (dvscf, npe)
         enddo
         CALL fwfft ('Dense', veff, dfftp)
         do ig = 1, ngm
-           aux2 (ig, is) = veff (nl (ig) )
+           aux2 (ig, is) = veff (dfftp%nl (ig) )
         enddo
      enddo
 

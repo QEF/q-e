@@ -12,7 +12,7 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   !
   USE constants,            ONLY : e2
   USE kinds,                ONLY : DP
-  USE gvect,                ONLY : nl, ngm, g
+  USE gvect,                ONLY : ngm, g
   USE cell_base,            ONLY : alat
   USE noncollin_module,     ONLY : noncolin, nspin_gga
   USE funct,                ONLY : gcxc, gcx_spin, gcc_spin, &
@@ -154,7 +154,7 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   !
   DO is = 1, nspin_gga
      !
-     CALL grad_dot( dfftp%nnr, h(1,1,is), ngm, g, nl, alat, dh )
+     CALL grad_dot( dfftp%nnr, h(1,1,is), ngm, g, dfftp%nl, alat, dh )
      !
      vaux(:,is) = vaux(:,is) - dh(:)
      !
