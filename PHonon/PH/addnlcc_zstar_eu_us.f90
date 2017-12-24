@@ -14,7 +14,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   USE funct, only : dft_is_gradient, dft_is_nonlocc
   USE scf, only : rho, rho_core
   USE cell_base, ONLY : omega, alat
-  USE gvect, ONLY : ngm, nl, g
+  USE gvect, ONLY : ngm, g
   USE fft_base, ONLY : dfftp
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
   USE efield_mod, ONLY : zstareu0
@@ -80,7 +80,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            IF ( dft_is_gradient() ) &
                 CALL dgradcorr (rho%of_r, grho, &
                     dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf (1,1,ipol),&
-                    dfftp%nnr, nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
+                    dfftp%nnr, nspin_mag, nspin_gga, dfftp%nl, ngm, g, alat, dvaux)
            if (dft_is_nonlocc()) &
                 call dnonloccorr(rho%of_r, drhoscf (1, 1, ipol), xq, dvaux)
 

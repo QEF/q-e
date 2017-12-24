@@ -27,7 +27,7 @@ subroutine dvanqq
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE fft_base,   ONLY: dfftp
   USE fft_interfaces, ONLY: fwfft
-  use gvect, only : ngm, gg, nl, g, mill, eigts1, eigts2, eigts3
+  use gvect, only : ngm, gg, g, mill, eigts1, eigts2, eigts3
   use spin_orb, only : lspinorb
   use scf, only : v, vltot
   use noncollin_module, ONLY : noncolin, nspin_mag
@@ -207,7 +207,7 @@ subroutine dvanqq
                     do is = 1, nspin_mag
                        do ipol = 1, 3
                           do ig = 1, ngm
-                             aux2 (ig) = veff (nl (ig), is) * g (ipol, ig)
+                             aux2 (ig) = veff (dfftp%nl (ig), is) * g (ipol, ig)
                           enddo
                           int1 (ih, jh, ipol, nb, is) = - fact1 * &
                                zdotc (ngm, aux1, 1, aux2, 1)

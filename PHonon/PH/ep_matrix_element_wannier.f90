@@ -346,7 +346,6 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   USE mp,        ONLY: mp_sum
   USE ions_base, ONLY : nat
   USE io_global, ONLY : stdout
-  USE gvecs, ONLY : nls
 
   USE eqv,        ONLY : dvpsi!, evq
   USE qpoint,     ONLY : nksq, ikks, ikqs
@@ -620,7 +619,6 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   USE fft_interfaces,  ONLY : fwfft, invfft
   USE wvfct, ONLY: nbnd, npwx
   USE gvect, ONLY : ngm, g
-  USE gvecs, ONLY : nls
   USE gvecw, ONLY : gcutw
   USE cell_base, ONLY : bg
   USE qpoint, ONLY : nksq
@@ -672,7 +670,7 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   phase(:) = (0.d0,0.d0)
 
   if ( igqg(ik)>0) then
-     phase( nls(igqg(ik)) ) = (1.d0,0.d0)
+     phase( dffts%nl(igqg(ik)) ) = (1.d0,0.d0)
   endif
 
 
@@ -685,28 +683,28 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   
   do m=1,nbnd
      psi_scratch = (0.d0, 0.d0)
-     psi_scratch(nls (igk_ (1:npw_) ) ) = evq (1:npw_, m)
-!     psi_scratch(nls (igk_ (1:npw) ) ) = evq (1:npw, m)
+     psi_scratch(dffts%nl (igk_ (1:npw_) ) ) = evq (1:npw_, m)
+!     psi_scratch(dffts%nl (igk_ (1:npw) ) ) = evq (1:npw, m)
      CALL invfft ('Wave', psi_scratch, dffts)
      !     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
      psi_scratch(1:dffts%nnr) = psi_scratch(1:dffts%nnr) * phase(1:dffts%nnr)
      !     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
      CALL fwfft ('Wave', psi_scratch, dffts)
-     evq(1:npwq_refolded,m) = psi_scratch(nls (igkq_(1:npwq_refolded) ) )
+     evq(1:npwq_refolded,m) = psi_scratch(dffts%nl (igkq_(1:npwq_refolded) ) )
   enddo
 
   if(noncolin) then
      do m=1,nbnd
         psi_scratch = (0.d0, 0.d0)
-        psi_scratch(nls (igk_ (1:npw_) ) ) = evq (npwx+1:npwx+npw_, m)
-        !       psi_scratch(nls (igk_ (1:npw) ) ) = evq (1:npw, m)
+        psi_scratch(dffts%nl (igk_ (1:npw_) ) ) = evq (npwx+1:npwx+npw_, m)
+        !       psi_scratch(dffts%nl (igk_ (1:npw) ) ) = evq (1:npw, m)
         CALL invfft ('Wave', psi_scratch, dffts)
         !     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
         psi_scratch(1:dffts%nnr) = psi_scratch(1:dffts%nnr) * phase(1:dffts%nnr)
         !     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
         CALL fwfft ('Wave', psi_scratch, dffts)
-        !       evq(npwx+1:npwx+npwq_refolded,m) = psi_scratch(nls (igkq_(1:npwq_refolded) ) )
-        evq((npwx+1):(npwx+npwq_refolded),m) = psi_scratch(nls (igkq_(1:npwq_refolded) ) )
+        !       evq(npwx+1:npwx+npwq_refolded,m) = psi_scratch(dffts%nl (igkq_(1:npwq_refolded) ) )
+        evq((npwx+1):(npwx+npwq_refolded),m) = psi_scratch(dffts%nl (igkq_(1:npwq_refolded) ) )
      enddo
   endif
  

@@ -20,7 +20,6 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
   USE fft_base,  ONLY : dffts, dfftp
   USE fft_interfaces, ONLY: invfft
-  USE gvecs,     ONLY : nls
   USE lsda_mod,  ONLY : nspin
   USE spin_orb,  ONLY : lspinorb, domag
   USE noncollin_module, ONLY : npol, nspin_mag
@@ -146,8 +145,8 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
      enddo
      dpsir = (0.d0, 0.d0)
      do ig = 1, npwq
-        dpsir(nls(igk_k(ig,ikq)),1) = dpsi (ig, ibnd)
-        dpsir(nls(igk_k(ig,ikq)),2) = dpsi (ig+npwx, ibnd)
+        dpsir(dffts%nl(igk_k(ig,ikq)),1) = dpsi (ig, ibnd)
+        dpsir(dffts%nl(igk_k(ig,ikq)),2) = dpsi (ig+npwx, ibnd)
      enddo
      CALL invfft ('Wave', dpsir(:,1), dffts)
      CALL invfft ('Wave', dpsir(:,2), dffts)

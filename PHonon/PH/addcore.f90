@@ -18,7 +18,7 @@ subroutine addcore (mode, drhoc)
   use cell_base,  only : tpiba
   use fft_base,   only : dfftp
   use fft_interfaces, only: invfft
-  use gvect,   only : ngm, nl, mill, eigts1, eigts2, eigts3, g
+  use gvect,   only : ngm, mill, eigts1, eigts2, eigts3, g
   use modes,   only : u
   use qpoint,  only : eigqts, xq
   use nlcc_ph, only : drc
@@ -61,7 +61,7 @@ subroutine addcore (mode, drhoc)
                    * eigts3 (mill (3,ig), na)
               gu = gu0 + g (1, ig) * u1 + g (2, ig) * u2 + g (3, ig) &
                    * u3
-              drhoc (nl (ig) ) = drhoc (nl (ig) ) + drc (ig, nt) * gu * &
+              drhoc (dfftp%nl (ig) ) = drhoc (dfftp%nl (ig) ) + drc (ig, nt) * gu * &
                    fact * gtau
            enddo
         endif

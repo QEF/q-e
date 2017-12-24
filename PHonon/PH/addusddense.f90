@@ -23,7 +23,7 @@ subroutine addusddense (drhoscf, dbecsum)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use fft_base,  only: dfftp
   use fft_interfaces, only: invfft
-  USE gvect, ONLY : nl, g, gg, ngm, eigts1, eigts2, eigts3, mill
+  USE gvect, ONLY : g, gg, ngm, eigts1, eigts2, eigts3, mill
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   USE noncollin_module, ONLY : nspin_mag
@@ -114,7 +114,7 @@ subroutine addusddense (drhoscf, dbecsum)
   do is=1,nspin_mag
      do ipert = 1, 3
         qg (:) = (0.d0, 0.d0)
-        qg (nl (:) ) = aux (:, is, ipert)
+        qg (dfftp%nl (:) ) = aux (:, is, ipert)
         CALL invfft ('Dense', qg, dfftp)
         drhoscf(:,is,ipert) = drhoscf(:,is,ipert) + 2.d0*qg(:)
      enddo

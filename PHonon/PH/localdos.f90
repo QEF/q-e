@@ -24,7 +24,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE fft_base,  ONLY : dffts, dfftp
   USE fft_interfaces, ONLY: invfft
   USE buffers,   ONLY : get_buffer
-  USE gvecs,     ONLY : doublegrid, nls
+  USE gvecs,     ONLY : doublegrid
   USE klist,     ONLY : xk, wk, ngk, igk_k, degauss, ngauss, ltetra
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
@@ -111,8 +111,8 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
         IF (noncolin) THEN
            psic_nc = (0.d0, 0.d0)
            do ig = 1, npw
-              psic_nc (nls (igk_k(ig,ik)), 1 ) = evc (ig, ibnd)
-              psic_nc (nls (igk_k(ig,ik)), 2 ) = evc (ig+npwx, ibnd)
+              psic_nc (dffts%nl (igk_k(ig,ik)), 1 ) = evc (ig, ibnd)
+              psic_nc (dffts%nl (igk_k(ig,ik)), 2 ) = evc (ig+npwx, ibnd)
            enddo
            CALL invfft ('Smooth', psic_nc(:,1), dffts)
            CALL invfft ('Smooth', psic_nc(:,2), dffts)
@@ -141,7 +141,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
         ELSE
            psic (:) = (0.d0, 0.d0)
            do ig = 1, npw
-              psic (nls (igk_k(ig,ik) ) ) = evc (ig, ibnd)
+              psic (dffts%nl (igk_k(ig,ik) ) ) = evc (ig, ibnd)
            enddo
            CALL invfft ('Smooth', psic, dffts)
            do j = 1, dffts%nnr

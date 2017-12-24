@@ -12,7 +12,6 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , npw , igmap )
   USE fft_base,            ONLY : dffts
   USE scatter_mod,            ONLY : scatter_grid
   USE fft_interfaces,      ONLY : fwfft
-  USE gvecs,                ONLY : nls
   USE io_global,             ONLY : ionode_id, ionode
   USE mp_pools,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_bcast
@@ -64,13 +63,13 @@ subroutine read_wfc_rspace_and_fwfft( evc , ik , lrec ,  iunit , npw , igmap )
      
      call fwfft('Wave',evc_r(:,1),dffts)
      do ig = 1, npw
-        evc (ig,ibnd) = evc_r (nls (igmap (ig) ), 1 )
+        evc (ig,ibnd) = evc_r (dffts%nl (igmap (ig) ), 1 )
      enddo
      
      IF (noncolin) THEN
         CALL fwfft ('Wave', evc_r(:,2), dffts)
         DO ig = 1, npw
-           evc (ig+npwx,ibnd) = evc_r (nls(igmap(ig)),2)
+           evc (ig+npwx,ibnd) = evc_r (dffts%nl(igmap(ig)),2)
         ENDDO
      ENDIF
      

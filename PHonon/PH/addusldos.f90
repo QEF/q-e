@@ -18,7 +18,7 @@ subroutine addusldos (ldos, becsum1)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use fft_base,  only: dfftp
   use fft_interfaces, only: invfft
-  USE gvect, ONLY : nl, eigts1, eigts2, eigts3, mill, gg, g, ngm
+  USE gvect, ONLY : eigts1, eigts2, eigts3, mill, gg, g, ngm
   USE wavefunctions_module,  ONLY: psic
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
@@ -87,7 +87,7 @@ subroutine addusldos (ldos, becsum1)
      do is = 1, nspin_mag
         psic (:) = (0.d0,0.d0)
         do ig = 1, ngm
-           psic (nl (ig) ) = aux (ig, is)
+           psic (dfftp%nl (ig) ) = aux (ig, is)
         enddo
         CALL invfft ('Dense', psic, dfftp)
         call daxpy (dfftp%nnr, 1.d0, psic, 2, ldos(1,is), 2 )
