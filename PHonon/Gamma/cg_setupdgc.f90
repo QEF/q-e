@@ -16,7 +16,7 @@ SUBROUTINE cg_setupdgc
   USE scf,   ONLY: rho, rho_core, rhog_core
   USE funct, ONLY: gcxc, gcx_spin, gcc_spin, dgcxc, dgcxc_spin, dft_is_gradient
   USE fft_base, ONLY: dfftp
-  USE gvect,    ONLY: nl, ngm, g
+  USE gvect,    ONLY: ngm, g
   USE lsda_mod, ONLY: nspin
   USE uspp,     ONLY: nlcc_any
   USE cgcom
@@ -54,7 +54,7 @@ SUBROUTINE cg_setupdgc
      ENDDO
   ENDIF
   DO is=1,nspin
-     CALL gradrho (dfftp%nnr, rho%of_g(1,is), ngm, g, nl, grho(1,1,is))
+     CALL gradrho (dfftp%nnr, rho%of_g(1,is), ngm, g, dfftp%nl, grho(1,1,is))
   ENDDO
   !
   IF (nspin==1) THEN
