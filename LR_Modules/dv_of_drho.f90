@@ -22,7 +22,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   USE constants,         ONLY : e2, fpi
   USE fft_base,          ONLY : dfftp
   USE fft_interfaces,    ONLY : fwfft, invfft
-  USE gvect,             ONLY : nl, ngm, g,nlm, gstart
+  USE gvect,             ONLY : ngm, g, gstart
   USE cell_base,         ONLY : alat, tpiba2, omega
   USE noncollin_module,  ONLY : nspin_lsda, nspin_mag, nspin_gga
   USE funct,             ONLY : dft_is_gradient, dft_is_nonlocc
@@ -98,7 +98,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   !
   if ( dft_is_gradient() ) call dgradcorr &
        (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-       dvscf, dfftp%nnr, nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
+       dvscf, dfftp%nnr, nspin_mag, nspin_gga, dfftp%nl, ngm, g, alat, dvaux)
   !
   if (dft_is_nonlocc()) then
      call dnonloccorr(rho%of_r, dvscf, xq, dvaux)
@@ -133,7 +133,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
       do is = 1, nspin_lsda
         do ig = gstart, ngm
           qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-          dvhart(nl(ig),is) = e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
+          dvhart(dfftp%nl(ig),is) = e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
         enddo
       enddo 
       !
@@ -144,7 +144,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
       ! Total response density
       !
       do ig = 1, ngm
-         rgtot(ig) = dvscf(nl(ig),1)
+         rgtot(ig) = dvscf(dfftp%nl(ig),1)
       enddo
       !
       CALL wg_corr_h (omega, ngm, rgtot, dvaux_mt, eh_corr)
@@ -152,11 +152,11 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
       do is = 1, nspin_lsda
         !
         do ig = 1, ngm
-           dvhart(nl(ig),is)  = dvhart(nl(ig),is)  + dvaux_mt(ig)
+           dvhart(dfftp%nl(ig),is)  = dvhart(dfftp%nl(ig),is)  + dvaux_mt(ig)
         enddo
         if (gamma_only) then
            do ig = 1, ngm
-              dvhart(nlm(ig),is) = conjg(dvhart(nl(ig),is))
+              dvhart(dfftp%nlm(ig),is) = conjg(dvhart(dfftp%nl(ig),is))
            enddo
         endif
         !
@@ -188,8 +188,8 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
         do ig = 1, ngm
            qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
            if (qg2 > 1.d-8) then
-              dvhart(nl(ig),is) = e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
-              dvhart(nlm(ig),is)=conjg(dvhart(nl(ig),is))
+              dvhart(dfftp%nl(ig),is) = e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
+              dvhart(dfftp%nlm(ig),is)=conjg(dvhart(dfftp%nl(ig),is))
            endif
         enddo
         !
@@ -217,8 +217,8 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
             do ig = 1, ngm
                qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
                if (qg2 > 1.d-8) then
-                  dvaux(nl(ig),is) = dvaux(nl(ig),is) + &
-                                 & e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
+                  dvaux(dfftp%nl(ig),is) = dvaux(dfftp%nl(ig),is) + &
+                                 & e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
                endif
             enddo
          ENDIF

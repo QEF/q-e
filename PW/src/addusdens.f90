@@ -42,7 +42,7 @@ SUBROUTINE addusdens_g(rho)
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : invfft
-  USE gvect,                ONLY : ngm, nl, nlm, gg, g, &
+  USE gvect,                ONLY : ngm, gg, g, &
                                    eigts1, eigts2, eigts3, mill
   USE noncollin_module,     ONLY : noncolin, nspin_mag
   USE uspp,                 ONLY : becsum, okvan
@@ -164,8 +164,8 @@ SUBROUTINE addusdens_g(rho)
 #endif
   DO is = 1, nspin_mag
      psic(:) = (0.d0, 0.d0)
-     psic( nl(:) ) = aux(:,is)
-     IF (gamma_only) psic( nlm(:) ) = CONJG (aux(:,is))
+     psic( dfftp%nl(:) ) = aux(:,is)
+     IF (gamma_only) psic( dfftp%nlm(:) ) = CONJG (aux(:,is))
      CALL invfft ('Dense', psic, dfftp)
      rho(:, is) = rho(:, is) +  DBLE (psic (:) )
   ENDDO

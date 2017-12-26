@@ -20,7 +20,7 @@ subroutine compute_dvloc (mode, dvlocin)
   USE fft_base,  ONLY : dffts
   USE fft_interfaces, ONLY: invfft
   USE gvect,     ONLY : eigts1, eigts2, eigts3, mill, g
-  USE gvecs,   ONLY : ngms, nls
+  USE gvecs,   ONLY : ngms
   USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp
   USE modes,     ONLY : u
@@ -62,7 +62,7 @@ subroutine compute_dvloc (mode, dvlocin)
            gtau = eigts1 (mill(1,ig), na) * eigts2 (mill(2,ig), na) * &
                   eigts3 (mill(3,ig), na)
            gu = gu0 + g (1, ig) * u1 + g (2, ig) * u2 + g (3, ig) * u3
-           dvlocin (nls (ig) ) = dvlocin (nls (ig) ) + vlocq (ig, nt) &
+           dvlocin (dffts%nl (ig) ) = dvlocin (dffts%nl (ig) ) + vlocq (ig, nt) &
                 * gu * fact * gtau
         enddo
         IF (do_cutoff_2D) then

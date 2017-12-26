@@ -22,7 +22,6 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   USE fft_interfaces,        ONLY : fwfft, invfft
   USE buffers,               ONLY : get_buffer
   USE gvect,                 ONLY : g
-  USE gvecs,                 ONLY : nls
   USE wvfct,                 ONLY : et
   USE wavefunctions_module,  ONLY : evc
   USE eqv,                   ONLY : dpsi, dvpsi
@@ -71,7 +70,7 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   do ibnd = 1, nbnd_occ (ik)
      auxr (:) = (0.d0, 0.d0)
      do ig = 1, npw
-        auxr (nls (igk_k (ig,ik))) = evc (ig, ibnd)
+        auxr (dffts%nl (igk_k (ig,ik))) = evc (ig, ibnd)
      end do
      CALL invfft ('Wave', auxr, dffts)
      do ir = 1, dffts%nnr
@@ -80,7 +79,7 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
      CALL fwfft ('Wave', auxr, dffts)
      do ig = 1, npwq
         ! note: q=0
-        dvpsi (ig, ibnd) = dvpsi(ig, ibnd) + auxr(nls (igk_k (ig,ik)))
+        dvpsi (ig, ibnd) = dvpsi(ig, ibnd) + auxr(dffts%nl (igk_k (ig,ik)))
      enddo
   enddo
   !

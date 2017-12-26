@@ -131,7 +131,7 @@ CONTAINS
   USE fft_base,      ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
   USE control_flags, ONLY : gamma_only_ => gamma_only
-  USE gvect,         ONLY : ngm, gg, gstart_ => gstart, nl, nlm, ecutrho
+  USE gvect,         ONLY : ngm, gg, gstart_ => gstart, ecutrho
   USE cell_base,     ONLY : at, alat, tpiba2, omega
 
   INTEGER :: idx, ir, i,j,k, j0, k0, ig, nt
@@ -205,7 +205,7 @@ CONTAINS
   CALL fwfft ('Dense', aux, dfftp)
 
   do ig =1, ngm
-     wg_corr(ig) = omega * REAL(aux(nl(ig))) - smooth_coulomb_g( tpiba2*gg(ig))
+     wg_corr(ig) = omega * REAL(aux(dfftp%nl(ig))) - smooth_coulomb_g( tpiba2*gg(ig))
   end do
   wg_corr(:) =  wg_corr(:) * exp(-tpiba2*gg(:)*beta/4._dp)**2
   !
@@ -225,9 +225,9 @@ CONTAINS
      filplot = 'wg_corr_g'
      aux(:) = (0._dp,0._dp)
      do ig =1, ngm
-        aux(nl(ig))  = smooth_coulomb_g( tpiba2*gg(ig))/omega
+        aux(dfftp%nl(ig))  = smooth_coulomb_g( tpiba2*gg(ig))/omega
      end do
-     if (gamma_only) aux(nlm(1:ngm)) = CONJG( aux(nl(1:ngm)) )
+     if (gamma_only) aux(dfftp%nlm(1:ngm)) = CONJG( aux(dfftp%nl(1:ngm)) )
 
      CALL invfft ('Dense', aux, dfftp)
      plot(:) = REAL(aux(:))
@@ -235,10 +235,10 @@ CONTAINS
 
      filplot = 'wg_corr_diff'
      aux(:) = (0._dp,0._dp)
-     aux(nl(1:ngm)) = wg_corr(1:ngm) / omega
+     aux(dfftp%nl(1:ngm)) = wg_corr(1:ngm) / omega
      if (gamma_only) then
         aux(:) = 0.5_dp * aux(:) 
-        aux(nlm(1:ngm)) = aux(nlm(1:ngm)) + CONJG( aux(nl(1:ngm)) )
+        aux(dfftp%nlm(1:ngm)) = aux(dfftp%nlm(1:ngm)) + CONJG( aux(dfftp%nl(1:ngm)) )
      end if
      CALL invfft ('Dense', aux, dfftp)
      plot(:) = REAL(aux(:))

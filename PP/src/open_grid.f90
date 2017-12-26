@@ -21,7 +21,6 @@ PROGRAM open_grid
                                  index_xk, exx_fft, exx_grid_init 
   USE gvecw,              ONLY: ecutwfc, gcutw
   USE gvect,              ONLY : g, ngm
-  USE gvecs,              ONLY : nls
   USE funct,              ONLY : dft_force_hybrid
   USE wvfct,              ONLY : nbnd, npwx, g2kin, et, wg
   USE wavefunctions_module, ONLY : evc
@@ -191,13 +190,13 @@ PROGRAM open_grid
     DO ibnd = 1, nbnd
       psic(1:dffts%nnr) = exxbuff(1:dffts%nnr,ibnd,ik_idx_exx)
       CALL fwfft('Wave', psic, dffts)
-      evx(1:ngk(ik_idx_kpt),ibnd) = psic(nls(igk_k(1:ngk(ik_idx_kpt),ik_idx_kpt)))
+      evx(1:ngk(ik_idx_kpt),ibnd) = psic(dffts%nl(igk_k(1:ngk(ik_idx_kpt),ik_idx_kpt)))
       !
       IF(noncolin)THEN
         psic(1:dffts%nnr) = exxbuff(dffts%nnr+1:2*dffts%nnr,ibnd,ik_idx_exx)
         CALL fwfft('Wave', psic, dffts)
         evx(npwx+1:npwx+ngk(ik_idx_kpt),ibnd) = &
-                                  psic(nls(igk_k(1:ngk(ik_idx_kpt),ik_idx_kpt)))
+                                  psic(dffts%nl(igk_k(1:ngk(ik_idx_kpt),ik_idx_kpt)))
       ENDIF
       !
     ENDDO

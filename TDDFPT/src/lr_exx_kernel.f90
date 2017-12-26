@@ -31,7 +31,6 @@ MODULE lr_exx_kernel
   USE fft_interfaces,         ONLY : invfft, fwfft
   USE lsda_mod,               ONLY : nspin
   USE wvfct,                  ONLY : nbnd, npwx, wg
-  USE gvecs,                  ONLY : nls, nlsm
   USE gvect,                  ONLY : g, ngm
   USE klist,                  ONLY : xk, wk, nks
   USE lr_variables,           ONLY : gamma_only, lr_verbosity
@@ -178,9 +177,9 @@ SUBROUTINE lr_exx_apply_revc_int(psi, ibnd, nbnd, ik)
            temppsic( j, 2) = CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
         ENDDO
 
-        psi_t(nls(1:npw))= temppsic(1:npw,1)+ (0.0_dp,1.0_dp)&
+        psi_t(dffts%nl(1:npw))= temppsic(1:npw,1)+ (0.0_dp,1.0_dp)&
              &*temppsic(1:npw,2) 
-        psi_t(nlsm(1:npw))= CONJG(temppsic(1:npw,1)- (0.0_dp,1.0_dp)&
+        psi_t(dffts%nlm(1:npw))= CONJG(temppsic(1:npw,1)- (0.0_dp,1.0_dp)&
              &*temppsic(1:npw,2))
      ELSE
         tempphic(1:nrxxs,1) = 0.5d0 * CMPLX( revc_int(1:nrxxs,ibnd),&
@@ -193,8 +192,8 @@ SUBROUTINE lr_exx_apply_revc_int(psi, ibnd, nbnd, ik)
         ! Correct the nl mapping for the two grids.
         !
         temppsic(1:npw,1)=tempphic(exx_fft%nlt(1:npw),1)
-        psi_t(nls(1:npw))=temppsic(1:npw,1)
-        psi_t(nlsm(1:npw))=CONJG(temppsic(1:npw,1))
+        psi_t(dffts%nl(1:npw))=temppsic(1:npw,1)
+        psi_t(dffts%nlm(1:npw))=CONJG(temppsic(1:npw,1))
         !
      ENDIF
      !
@@ -883,7 +882,7 @@ FUNCTION k1d_term_k(w1, psi, fac_in, ibnd, ik,ikq) RESULT (psi_int)
      !
      DO is = 1, nspin
         !
-        vhart(nls(1:ngm),is) = w1*pseudo_dens_c(nls(1:ngm)) *&
+        vhart(dffts%nl(1:ngm),is) = w1*pseudo_dens_c(dffts%nl(1:ngm)) *&
              & fac_in(1:ngm) 
         !
         !  and transformed back to real space
@@ -1023,7 +1022,7 @@ FUNCTION k2d_term_k(w1, psi, fac_in, ibnd, ik, ikq) RESULT (psi_int)
      !
      DO is = 1, nspin
         !
-        vhart(nls(1:ngm),is) = w1*pseudo_dens_c(nls(1:ngm)) *&
+        vhart(dffts%nl(1:ngm),is) = w1*pseudo_dens_c(dffts%nl(1:ngm)) *&
              & fac_in(1:ngm) 
         !
         !  and transformed back to real space

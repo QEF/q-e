@@ -7,34 +7,32 @@
 !
 !
 !=----------------------------------------------------------------------=
-MODULE recvec_subs
+MODULE fft_ggen
 !=----------------------------------------------------------------------=
 
 !  ... subroutines generating G-vectors and variables nl* needed to map
 !  ... G-vector components onto the FFT grid(s) in reciprocal space
 
 !  ... Most important dependencies: next three modules
-   USE gvect,              ONLY : ig_l2g, g, gg, ngm, ngm_g, gcutm, &
-                                  mill,  gstart
-   USE gvecs,              ONLY : ngms, gcutms, ngms_g
-   USE fft_base,           ONLY : dfftp, dffts
+   !USE gvect,              ONLY : ig_l2g, g, gg, ngm_g, gcutm, mill,  nl, gstart
+   !USE gvecs,              ONLY : ngms, gcutms, ngms_g, nls
 !
-   USE kinds,              ONLY : DP
-   USE constants,          ONLY : eps8
-
-   USE fft_ggen
+   USE fft_param
 
    PRIVATE
    SAVE
 
-   PUBLIC :: ggen
+   PUBLIC :: fft_set_nl, fft_set_nlm
 
 !=----------------------------------------------------------------------=
 CONTAINS
 !=----------------------------------------------------------------------=
 !
+
+#ifdef __PIPPONE
+
    !-----------------------------------------------------------------------
-   SUBROUTINE ggen ( gamma_only, at, bg, comm, no_global_sort )
+   SUBROUTINE fft_ggen ( dfft, gamma_only, at, bg, comm, no_global_sort )
    !----------------------------------------------------------------------
    !
    !     This routine generates all the reciprocal lattice vectors
@@ -42,10 +40,11 @@ CONTAINS
    !     computes the indices nl which give the correspondence
    !     between the fft mesh points and the array of g vectors.
    !
-   USE mp, ONLY: mp_rank, mp_size, mp_sum
+   USE fft_types,  ONLY : fft_type_descriptor
    !
    IMPLICIT NONE
    !
+   TYPE (fft_type_descriptor), INTENT(in) :: dfft
    LOGICAL,  INTENT(IN) :: gamma_only
    REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
    INTEGER,  OPTIONAL, INTENT(IN) :: comm
@@ -69,15 +68,15 @@ CONTAINS
    !
    INTEGER :: m1, m2, mc
    INTEGER :: ni, nj, nk, i, j, k, ipol, ng, igl, indsw
-   INTEGER :: mype, npe
+   INTEGER :: mype, npe, ierr
    LOGICAL :: global_sort
    INTEGER, ALLOCATABLE :: ngmpe(:)
    !
    IF( PRESENT( no_global_sort ) .AND. .NOT. PRESENT( comm ) ) THEN
-      CALL errore ('ggen', ' wrong subroutine arguments, communicator is missing ', 1)
+      CALL fftx_error__ ('ggen', ' wrong subroutine arguments, communicator is missing ', 1)
    END IF
    IF( .NOT. PRESENT( no_global_sort ) .AND. PRESENT( comm ) ) THEN
-      CALL errore ('ggen', ' wrong subroutine arguments, parameter no_global_sort is missing ', 1)
+      CALL fftx_error__ ('ggen', ' wrong subroutine arguments, parameter no_global_sort is missing ', 1)
    END IF
    !
    global_sort = .TRUE.
@@ -87,24 +86,17 @@ CONTAINS
    END IF
    !
    IF( .NOT. global_sort ) THEN
-      mype = mp_rank( comm )
-      npe  = mp_size( comm )
+      mype = dfft%mype
+      npe  = dttf%nproc
       ALLOCATE( ngmpe( npe ) )
       ngmpe = 0
-      ngm_max = ngm
-      ngms_max = ngms
+      ngm_max = dfft%ngm
    ELSE
-      ngm_max = ngm_g
-      ngms_max = ngms_g
+      ngm_max = dfft%ngm
+      CALL MPI_ALLREDUCE( MPI_IN_PLACE, ngm_max, 1, MPI_INTEGER, MPI_SUM, dfft%comm, ierr )
    END IF
    !
-   ! save current value of ngm and ngms
-   !
-   ngm_save  = ngm
-   ngms_save = ngms
-   !
    ngm = 0
-   ngms = 0
    !
    ! counters
    !
@@ -124,11 +116,10 @@ CONTAINS
    !
    ! max miller indices (same convention as in module stick_set)
    !
-   ni = (dfftp%nr1-1)/2
-   nj = (dfftp%nr2-1)/2
-   nk = (dfftp%nr3-1)/2
+   ni = (dfft%nr1-1)/2
+   nj = (dfft%nr2-1)/2
+   nk = (dfft%nr3-1)/2
    !
-   !write (6,*) ' ni,nj,nk ', ni, nj, nk
    iloop: DO i = -ni, ni
       !
       ! gamma-only: exclude space with x < 0
@@ -141,12 +132,12 @@ CONTAINS
          IF ( gamma_only .and. i == 0 .and. j < 0) CYCLE jloop
 
          IF( .NOT. global_sort ) THEN
-            m1 = mod (i, dfftp%nr1) + 1
-            IF (m1 < 1) m1 = m1 + dfftp%nr1
-            m2 = mod (j, dfftp%nr2) + 1
-            IF (m2 < 1) m2 = m2 + dfftp%nr2
-            mc = m1 + (m2 - 1) * dfftp%nr1x
-            IF ( dfftp%isind ( mc ) == 0) CYCLE jloop
+            m1 = mod (i, dfft%nr1) + 1
+            IF (m1 < 1) m1 = m1 + dfft%nr1
+            m2 = mod (j, dfft%nr2) + 1
+            IF (m2 < 1) m2 = m2 + dfft%nr2
+            mc = m1 + (m2 - 1) * dfft%nr1x
+            IF ( dfft%isind ( mc ) == 0) CYCLE jloop
          END IF
 
          kloop: DO k = -nk, nk
@@ -155,7 +146,6 @@ CONTAINS
             !
             IF ( gamma_only .and. i == 0 .and. j == 0 .and. k < 0) CYCLE kloop
             t(:) = i * bg (:,1) + j * bg (:,2) + k * bg (:,3)
-            !tt = sum(t(:)**2)
             tt = t(1)**2+t(2)**2+t(3)**2
             IF (tt <= gcutm) THEN
                ngm = ngm + 1
@@ -175,12 +165,11 @@ CONTAINS
    IF( .NOT. global_sort ) THEN
       ngmpe( mype + 1 ) = ngm
       CALL mp_sum( ngmpe, comm )
+      CALL MPI_ALLREDUCE( MPI_IN_PLACE, ngmpe, SIZE(ngmpe), MPI_INTEGER, MPI_SUM, dfft%comm, ierr )
    END IF
    !write (6,*) ' ngm, ngms', ngm,ngm_max, ngms, ngms_max
    IF (ngm  /= ngm_max) &
          CALL errore ('ggen', 'g-vectors missing !', abs(ngm - ngm_max))
-   IF (ngms /= ngms_max) &
-         CALL errore ('ggen', 'smooth g-vectors missing !', abs(ngms - ngms_max))
 
    igsrt(1) = 0
    IF( .NOT. global_sort ) THEN
@@ -204,7 +193,6 @@ CONTAINS
    END IF
 
    ngm = 0
-   ngms = 0
    !
    ngloop: DO ng = 1, ngm_max
 
@@ -212,13 +200,13 @@ CONTAINS
       j = mill_g(2, ng)
       k = mill_g(3, ng)
 
-      IF( dfftp%lpara .AND. global_sort ) THEN
-         m1 = mod (i, dfftp%nr1) + 1
-         IF (m1 < 1) m1 = m1 + dfftp%nr1
-         m2 = mod (j, dfftp%nr2) + 1
-         IF (m2 < 1) m2 = m2 + dfftp%nr2
-         mc = m1 + (m2 - 1) * dfftp%nr1x
-         IF ( dfftp%isind ( mc ) == 0) CYCLE ngloop
+      IF( dfft%lpara .AND. global_sort ) THEN
+         m1 = mod (i, dfft%nr1) + 1
+         IF (m1 < 1) m1 = m1 + dfft%nr1
+         m2 = mod (j, dfft%nr2) + 1
+         IF (m2 < 1) m2 = m2 + dfft%nr2
+         mc = m1 + (m2 - 1) * dfft%nr1x
+         IF ( dfft%isind ( mc ) == 0) CYCLE ngloop
       END IF
 
       ngm = ngm + 1
@@ -235,15 +223,11 @@ CONTAINS
       g (1:3, ngm) = i * bg (:, 1) + j * bg (:, 2) + k * bg (:, 3)
       gg (ngm) = sum(g (1:3, ngm)**2)
 
-      IF (gg (ngm) <= gcutms) ngms = ngms + 1
       IF (ngm > ngm_save) CALL errore ('ggen 2', 'too many g-vectors', ngm)
    ENDDO ngloop
 
-   !write (6,*) ' ngm, ngms', ngm,ngm_save, ngms, ngms_save
    IF (ngm /= ngm_save) &
       CALL errore ('ggen', 'g-vectors (ngm) missing !', abs(ngm - ngm_save))
-   IF (ngms /= ngms_save) &
-      CALL errore ('ggen', 'g-vectors (ngms) missing !', abs(ngm - ngms_save))
    !
    !     determine first nonzero g vector
    !
@@ -252,130 +236,136 @@ CONTAINS
    ELSE
       gstart=1
    ENDIF
-
    !
    !     Now set nl and nls with the correct fft correspondence
    !
-   CALL fft_set_nl( dfftp, at, g, mill  )
-   CALL fft_set_nl( dffts, at, g )
-!   IF( SIZE( dfftp%nl ) /= SIZE( nl ) ) &
-!      CALL errore ('ggen', '  inconsisten size for nl ', 1)
-!   nl = dfftp%nl
-!   IF( SIZE( dffts%nl ) /= SIZE( nls ) ) &
-!      CALL errore ('ggen', '  inconsisten size for nls ', 1)
-!   nls = dffts%nl
-   IF( gamma_only ) THEN
-     CALL fft_set_nlm( dfftp, mill  )
-     CALL fft_set_nlm( dffts, mill  )
-!     IF( SIZE( dfftp%nlm ) /= SIZE( nlm ) ) &
-!        CALL errore ('ggen', '  inconsisten size for nlm ', 1)
-!     IF( SIZE( dffts%nlm ) /= SIZE( nlsm ) ) &
-!        CALL errore ('ggen', '  inconsisten size for nlsm ', 1)
-!     nlm  = dfftp%nlm
-!     nlsm = dffts%nlm
-   END IF
-
-#ifdef __PIPPONE
    DO ng = 1, ngm
       n1 = nint (sum(g (:, ng) * at (:, 1))) + 1
       mill (1,ng) = n1 - 1
-      n1s = n1
-      IF (n1<1) n1 = n1 + dfftp%nr1
-      IF (n1s<1) n1s = n1s + dffts%nr1
+      IF (n1<1) n1 = n1 + dfft%nr1
 
       n2 = nint (sum(g (:, ng) * at (:, 2))) + 1
       mill (2,ng) = n2 - 1
-      n2s = n2
-      IF (n2<1) n2 = n2 + dfftp%nr2
-      IF (n2s<1) n2s = n2s + dffts%nr2
+      IF (n2<1) n2 = n2 + dfft%nr2
 
       n3 = nint (sum(g (:, ng) * at (:, 3))) + 1
       mill (3,ng) = n3 - 1
-      n3s = n3
-      IF (n3<1) n3 = n3 + dfftp%nr3
-      IF (n3s<1) n3s = n3s + dffts%nr3
+      IF (n3<1) n3 = n3 + dfft%nr3
 
-      IF (n1>dfftp%nr1 .or. n2>dfftp%nr2 .or. n3>dfftp%nr3) &
+      IF (n1>dfft%nr1 .or. n2>dfft%nr2 .or. n3>dfft%nr3) &
          CALL errore('ggen','Mesh too small?',ng)
 
-      IF ( dfftp%lpara) THEN
-         nl (ng) = n3 + ( dfftp%isind ( n1+(n2-1)*dfftp%nr1x) - 1) * dfftp%nr3x
-         IF (ng <= ngms) &
-         nls (ng)= n3s+ ( dffts%isind (n1s+(n2s-1)*dffts%nr1x) -1) * dffts%nr3x
+      IF ( dfft%lpara) THEN
+         nl (ng) = n3 + ( dfft%isind ( n1+(n2-1)*dfft%nr1x) - 1) * dfft%nr3x
       ELSE
          nl (ng) = n1 + (n2-1) * dfftp%nr1x + (n3-1) * dfftp%nr1x * dfftp%nr2x
-         IF (ng <= ngms) &
-         nls (ng)= n1s+ (n2s-1)* dffts%nr1x + (n3s-1)* dffts%nr1x * dffts%nr2x
       ENDIF
    ENDDO
    !
-   IF ( gamma_only) CALL index_minusg()
-#endif
-
    DEALLOCATE( mill_g )
+
+   IF ( gamma_only) CALL index_minusg()
 
    IF( ALLOCATED( ngmpe ) ) DEALLOCATE( ngmpe )
 
-   END SUBROUTINE ggen
+   END SUBROUTINE fft_ggen
    !
-#ifdef __PIPPONE
-   !-----------------------------------------------------------------------
-   SUBROUTINE index_minusg()
-   !----------------------------------------------------------------------
+#endif
+
+
+!-----------------------------------------------------------------------
+   SUBROUTINE fft_set_nl ( dfft, at, g, mill  )
+!----------------------------------------------------------------------
    !
-   !     compute indices nlm and nlms giving the correspondence
-   !     between the fft mesh points and -G (for gamma-only calculations)
+   !     Now set nl 
    !
-   USE gvect,    ONLY : ngm, nlm, mill
-   USE gvecs,    ONLY : nlsm, ngms
-   USE fft_base, ONLY : dfftp, dffts
+   USE fft_types,  ONLY : fft_type_descriptor
    !
    IMPLICIT NONE
    !
-   INTEGER :: n1, n2, n3, n1s, n2s, n3s, ng
+   TYPE (fft_type_descriptor), INTENT(inout) :: dfft
+   REAL(DP), INTENT(IN) :: g(:,:)
+   REAL(DP), INTENT(IN) :: at(:,:)
+   INTEGER, OPTIONAL, INTENT(OUT) :: mill(:,:)
+   INTEGER :: ng, n1, n2, n3
    !
-   DO ng = 1, ngm
-      n1 = -mill (1,ng) + 1
-      n1s = n1
-      IF (n1 < 1) THEN
-         n1 = n1 + dfftp%nr1
-         n1s = n1s + dffts%nr1
-      END IF
+   IF( ALLOCATED( dfft%nl ) ) DEALLOCATE( dfft%nl )
+   ALLOCATE( dfft%nl( dfft%ngm ) )
+   !
+   DO ng = 1, dfft%ngm
+      n1 = nint (sum(g (:, ng) * at (:, 1))) + 1
+      IF(PRESENT(mill)) mill (1,ng) = n1 - 1
+      IF (n1<1) n1 = n1 + dfft%nr1
 
+      n2 = nint (sum(g (:, ng) * at (:, 2))) + 1
+      IF(PRESENT(mill)) mill (2,ng) = n2 - 1
+      IF (n2<1) n2 = n2 + dfft%nr2
+
+      n3 = nint (sum(g (:, ng) * at (:, 3))) + 1
+      IF(PRESENT(mill)) mill (3,ng) = n3 - 1
+      IF (n3<1) n3 = n3 + dfft%nr3
+
+      IF (n1>dfft%nr1 .or. n2>dfft%nr2 .or. n3>dfft%nr3) &
+         CALL fftx_error__('ggen','Mesh too small?',ng)
+
+      IF ( dfft%lpara) THEN
+         dfft%nl (ng) = n3 + ( dfft%isind ( n1+(n2-1)*dfft%nr1x) - 1) * dfft%nr3x
+      ELSE
+         dfft%nl (ng) = n1 + (n2-1) * dfft%nr1x + (n3-1) * dfft%nr1x * dfft%nr2x
+      ENDIF
+   ENDDO
+   !
+
+   END SUBROUTINE fft_set_nl 
+   !
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE fft_set_nlm( dfft, mill )
+   !----------------------------------------------------------------------
+   !
+   !     compute indices nlm giving the correspondence
+   !     between the G and -G (for gamma-only calculations)
+   !
+   USE fft_types,  ONLY : fft_type_descriptor
+   !
+   IMPLICIT NONE
+   !
+   TYPE (fft_type_descriptor), INTENT(inout) :: dfft
+   INTEGER, INTENT(IN) :: mill(:,:)
+   !
+   INTEGER :: n1, n2, n3, ng
+   !
+   IF( ALLOCATED( dfft%nlm ) ) DEALLOCATE( dfft%nlm )
+   ALLOCATE( dfft%nlm( dfft%ngm ) )
+   !
+   DO ng = 1, dfft%ngm
+      n1 = -mill (1,ng) + 1
+      IF (n1 < 1) THEN
+         n1 = n1 + dfft%nr1
+      END IF
       n2 = -mill (2,ng) + 1
-      n2s = n2
       IF (n2 < 1) THEN
-         n2 = n2 + dfftp%nr2
-         n2s = n2s + dffts%nr2
+         n2 = n2 + dfft%nr2
       END IF
       n3 = -mill (3,ng) + 1
-      n3s = n3
       IF (n3 < 1) THEN
-         n3 = n3 + dfftp%nr3
-         n3s = n3s + dffts%nr3
+         n3 = n3 + dfft%nr3
       END IF
 
-      IF (n1>dfftp%nr1 .or. n2>dfftp%nr2 .or. n3>dfftp%nr3) THEN
-         CALL errore('index_minusg','Mesh too small?',ng)
+      IF (n1>dfft%nr1 .or. n2>dfft%nr2 .or. n3>dfft%nr3) THEN
+         CALL fftx_error__('index_minusg','Mesh too small?',ng)
       ENDIF
 
-      IF ( dfftp%lpara ) THEN
-         nlm(ng) = n3 + (dfftp%isind (n1 + (n2-1)*dfftp%nr1x) - 1) * dfftp%nr3x
-         IF (ng<=ngms) &
-         nlsm(ng) = n3s + (dffts%isind (n1s+(n2s-1)*dffts%nr1x)-1) * dffts%nr3x
+      IF ( dfft%lpara ) THEN
+         dfft%nlm(ng) = n3 + (dfft%isind (n1 + (n2-1)*dfft%nr1x) - 1) * dfft%nr3x
       ELSE
-         nlm(ng) = n1 + (n2-1) * dfftp%nr1x + (n3-1) * dfftp%nr1x * dfftp%nr2x
-         IF (ng<=ngms) &
-         nlsm(ng)= n1s+ (n2s-1)* dffts%nr1x + (n3s-1)* dffts%nr1x * dffts%nr2x
+         dfft%nlm(ng) = n1 + (n2-1) * dfft%nr1x + (n3-1) * dfft%nr1x * dfft%nr2x
       ENDIF
    ENDDO
 
-   END SUBROUTINE index_minusg
-#endif
+   END SUBROUTINE fft_set_nlm
    !
-!=----------------------------------------------------------------------=
-   END MODULE recvec_subs
-!=----------------------------------------------------------------------=
+#ifdef __PIPPONE
 !
 !-----------------------------------------------------------------------
 SUBROUTINE gshells ( vc )
@@ -431,3 +421,9 @@ SUBROUTINE gshells ( vc )
    ENDIF
 
    END SUBROUTINE gshells
+
+#endif
+
+!=----------------------------------------------------------------------=
+   END MODULE fft_ggen
+!=----------------------------------------------------------------------=

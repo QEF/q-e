@@ -16,7 +16,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
    USE fft_base,  ONLY: dfftp
    USE fft_interfaces, ONLY : fwfft
-   USE gvect, ONLY: ngm, gstart, g, gg, gcutm, nl, nlm, igtongl
+   USE gvect, ONLY: ngm, gstart, g, gg, gcutm, igtongl
    USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss, igk_k, ngk
    USE lsda_mod, ONLY: lsda, nspin
    USE scf, ONLY: rho, rho_core, rhog_core, v
@@ -352,7 +352,7 @@ CONTAINS
          DO nt=1,ntyp
             DO ig = 1, ngm
                elocg = vloc(igtongl(ig),nt) * &
-                       dble ( strf(ig,nt) * conjg(aux(nl(ig))) )
+                       dble ( strf(ig,nt) * conjg(aux(dfftp%nl(ig))) )
                eloc = eloc + elocg
                IF( gamma_only .and. ig>=gstart) eloc = eloc + elocg
             ENDDO

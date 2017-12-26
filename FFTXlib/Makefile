@@ -7,6 +7,7 @@ include ../make.inc
 
 FFTX = \
 scatter_mod.o  \
+fft_ggen.o  \
 fft_fwinv.o  \
 fft_scalar.o  \
 fft_scalar.ARM_LIB.o  \

@@ -40,7 +40,7 @@ SUBROUTINE chdens (plot_files,plot_num)
   USE scatter_mod,   ONLY : scatter_grid
   USE fft_interfaces,  ONLY : fwfft
   USE fft_types,  ONLY : fft_type_allocate
-  USE gvect,      ONLY : ngm, nl, g, gcutm
+  USE gvect,      ONLY : ngm, g, gcutm
   USE gvecs,      ONLY : gcutms, doublegrid, dual, ecuts 
   USE recvec_subs,ONLY: ggen 
   USE gvecw,      ONLY: ecutwfc
@@ -490,7 +490,7 @@ SUBROUTINE chdens (plot_files,plot_num)
        !    we store the fourier components in the array rhog
        !
        ALLOCATE (rhog( ngm))
-       rhog (:) = psic (nl (:) )
+       rhog (:) = psic (dfftp%nl (:) )
        !
     ENDIF
     !

@@ -15,7 +15,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE cell_base,            ONLY : at, bg, ibrav
   USE constants,            ONLY : rytoev
   USE fft_base,             ONLY : dfftp
-  USE gvect,                ONLY : ngm, nl, g
+  USE gvect,                ONLY : ngm, g
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : et, nbnd, npwx
   USE klist,                ONLY : xk, nks, nkstot, ngk, igk_k
@@ -323,7 +323,7 @@ SUBROUTINE find_band_sym (ik,evc,et,nsym,s,ftau,gk,invs,rap_et,times,ngroup,&
   USE constants,       ONLY : rytoev
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
        char_mat, name_rap, name_class, gname
-  USE gvect,           ONLY : ngm, nl
+  USE gvect,           ONLY : ngm
   USE wvfct,           ONLY : nbnd, npwx
   USE klist,           ONLY : ngk, igk_k
   USE uspp,            ONLY : vkb, nkb, okvan
@@ -400,7 +400,7 @@ SUBROUTINE find_band_sym (ik,evc,et,nsym,s,ftau,gk,invs,rap_et,times,ngroup,&
   npw = ngk(ik)
   psic=(0.0_DP,0.0_DP)
   DO ibnd=1,nbnd
-     psic(nl(igk_k(1:npw,ik)),ibnd) = evc(1:npw,ibnd)
+     psic(dfftp%nl(igk_k(1:npw,ik)),ibnd) = evc(1:npw,ibnd)
      CALL invfft ('Dense', psic(:,ibnd), dfftp)
   ENDDO
   !
@@ -520,7 +520,7 @@ SUBROUTINE rotate_all_psi(ik,psic,evcr,s,ftau,gk)
 
   USE kinds,     ONLY : DP
   USE constants, ONLY : tpi
-  USE gvect,     ONLY : ngm, nl
+  USE gvect,     ONLY : ngm
   USE wvfct,     ONLY : nbnd, npwx
   USE klist,     ONLY : ngk, igk_k
   USE fft_base,  ONLY : dfftp
@@ -620,7 +620,7 @@ SUBROUTINE rotate_all_psi(ik,psic,evcr,s,ftau,gk)
      !
      CALL fwfft ('Dense', psir, dfftp)
      !
-     evcr(1:npw,ibnd) = psir(nl(igk_k(1:npw,ik)))
+     evcr(1:npw,ibnd) = psir(dfftp%nl(igk_k(1:npw,ik)))
   END DO
   DEALLOCATE (psic_collect)
   DEALLOCATE (psir_collect)
@@ -656,7 +656,7 @@ SUBROUTINE rotate_all_psi(ik,psic,evcr,s,ftau,gk)
      ENDIF
      CALL fwfft ('Dense', psir, dfftp)
      !
-     evcr(1:npw,ibnd) = psir(nl(igk_k(1:npw,ik)))
+     evcr(1:npw,ibnd) = psir(dfftp%nl(igk_k(1:npw,ik)))
   ENDDO
   !
 #endif
@@ -685,7 +685,7 @@ SUBROUTINE find_band_sym_so (ik,evc,et,nsym,s,ftau,d_spin,gk, &
        char_mat_so, name_rap_so, name_class_so,      &
        name_class_so1
   USE rap_point_group_is, ONLY : gname_is
-  USE gvect,              ONLY : ngm, nl
+  USE gvect,              ONLY : ngm
   USE wvfct,              ONLY : nbnd, npwx
   USE klist,              ONLY : ngk
   USE spin_orb,           ONLY : domag
@@ -881,7 +881,7 @@ SUBROUTINE rotate_all_psi_so(ik,evc_nc,evcr,s,ftau,d_spin,has_e,gk)
   USE fft_base,  ONLY : dfftp
   USE scatter_mod,  ONLY : cgather_sym_many, cscatter_sym_many
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect,     ONLY : ngm, nl
+  USE gvect,     ONLY : ngm
   USE wvfct,     ONLY : nbnd, npwx
   USE klist,     ONLY : ngk, igk_k
   USE noncollin_module, ONLY : npol
@@ -945,7 +945,7 @@ SUBROUTINE rotate_all_psi_so(ik,evc_nc,evcr,s,ftau,d_spin,has_e,gk)
      psir = ( 0.D0, 0.D0 )
      !
      DO ibnd=1,nbnd
-        psic(nl(igk_k(1:npw,ik)),ibnd) = evc_nc(1:npw,ipol,ibnd)
+        psic(dfftp%nl(igk_k(1:npw,ik)),ibnd) = evc_nc(1:npw,ipol,ibnd)
         CALL invfft ('Dense', psic(:,ibnd), dfftp)
      ENDDO
      !
@@ -992,7 +992,7 @@ SUBROUTINE rotate_all_psi_so(ik,evc_nc,evcr,s,ftau,d_spin,has_e,gk)
                                start_band_proc)
         CALL fwfft ('Dense', psir, dfftp)
         !
-        evcr_save(1:npw,ipol,ibnd) = psir(nl(igk_k(1:npw,ik)))
+        evcr_save(1:npw,ipol,ibnd) = psir(dfftp%nl(igk_k(1:npw,ik)))
      ENDDO
      !
 #else
@@ -1025,7 +1025,7 @@ SUBROUTINE rotate_all_psi_so(ik,evc_nc,evcr,s,ftau,d_spin,has_e,gk)
         ENDIF
         CALL fwfft ('Dense', psir(:), dfftp)
         !
-        evcr_save(1:npw,ipol,ibnd) = psir(nl(igk_k(1:npw,ik)))
+        evcr_save(1:npw,ipol,ibnd) = psir(dfftp%nl(igk_k(1:npw,ik)))
      ENDDO
      !
 #endif

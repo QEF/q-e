@@ -17,7 +17,7 @@ SUBROUTINE rhod2vkb(dyn0)
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp
   USE cell_base, ONLY : tpiba2, tpiba, omega
   USE lsda_mod,  ONLY : current_spin
-  USE gvect,  ONLY : ngm, g, igtongl, nl
+  USE gvect,  ONLY : ngm, g, igtongl
   USE gvecw,  ONLY: gcutw
   USE wvfct,  ONLY: nbnd, npwx
   USE klist,  ONLY : wk, ngk
@@ -69,8 +69,8 @@ SUBROUTINE rhod2vkb(dyn0)
                              g(2,ng)*tau(2,na) + &
                              g(3,ng)*tau(3,na)   )
               fac = omega * vloc(igtongl(ng),ityp(na)) * tpiba2 *   &
-                        (  dble(psic(nl(ng)))*cos(gtau) -  &
-                          aimag(psic(nl(ng)))*sin(gtau)   )
+                        (  dble(psic(dfftp%nl(ng)))*cos(gtau) -  &
+                          aimag(psic(dfftp%nl(ng)))*sin(gtau)   )
               dynloc(nu_i,nu_j) = dynloc(nu_i,nu_j) + fac *         &
                    ( g(1,ng) * u(mu_i+1,nu_i) +                     &
                      g(2,ng) * u(mu_i+2,nu_i) +                     &

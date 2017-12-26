@@ -25,9 +25,9 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   USE cell_base, ONLY : tpiba, alat
   USE fft_base,  ONLY : dfftp, dffts
   USE fft_interfaces, ONLY: fwfft, invfft
-  USE gvect,     ONLY : eigts1, eigts2, eigts3, mill, g, nl, &
+  USE gvect,     ONLY : eigts1, eigts2, eigts3, mill, g, &
                         ngm
-  USE gvecs,     ONLY : ngms, doublegrid, nls
+  USE gvecs,     ONLY : ngms, doublegrid
   USE lsda_mod,  ONLY : lsda, isk
   USE scf,       ONLY : rho, rho_core
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag, npol
@@ -102,7 +102,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
            gtau = eigts1 (mill(1,ig), na) * eigts2 (mill(2,ig), na) * &
                   eigts3 (mill(3,ig), na)
            gu = gu0 + g (1, ig) * u1 + g (2, ig) * u2 + g (3, ig) * u3
-           aux1 (nls (ig) ) = aux1 (nls (ig) ) + vlocq (ig, nt) * gu * &
+           aux1 (dffts%nl (ig) ) = aux1 (dffts%nl (ig) ) + vlocq (ig, nt) * gu * &
                 fact * gtau
         enddo
         IF (do_cutoff_2D) then  
@@ -132,7 +132,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
                          eigts2(mill(2,ig),na)*   &
                          eigts3(mill(3,ig),na)
                   gu = gu0+g(1,ig)*u1+g(2,ig)*u2+g(3,ig)*u3
-                  drhoc(nl(ig))=drhoc(nl(ig))+drc(ig,nt)*gu*fact*gtau
+                  drhoc(dfftp%nl(ig))=drhoc(dfftp%nl(ig))+drc(ig,nt)*gu*fact*gtau
                enddo
             endif
          endif
@@ -158,7 +158,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
       IF ( dft_is_gradient() ) &
          CALL dgradcorr (rho%of_r, grho, &
                dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, drhoc,&
-               dfftp%nnr, 1, nspin_gga, nl, ngm, g, alat, aux)
+               dfftp%nnr, 1, nspin_gga, dfftp%nl, ngm, g, alat, aux)
 
       IF (dft_is_nonlocc()) &
          CALL dnonloccorr(rho%of_r, drhoc, xq, aux)
@@ -174,7 +174,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
 !
       auxs(:) = (0.d0, 0.d0)
       do ig=1,ngms
-         auxs(nls(ig)) = aux(nl(ig))
+         auxs(dffts%nl(ig)) = aux(dfftp%nl(ig))
       enddo
       aux1(:) = aux1(:) + auxs(:)
    endif
@@ -191,11 +191,11 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
         aux2(:) = (0.d0, 0.d0)
         if (ip==1) then
            do ig = 1, npw
-              aux2 (nls (igk_k (ig,ikk) ) ) = evc (ig, ibnd)
+              aux2 (dffts%nl (igk_k (ig,ikk) ) ) = evc (ig, ibnd)
            enddo
         else
            do ig = 1, npw
-              aux2 (nls (igk_k (ig,ikk) ) ) = evc (ig+npwx, ibnd)
+              aux2 (dffts%nl (igk_k (ig,ikk) ) ) = evc (ig+npwx, ibnd)
            enddo
         end if
         !
@@ -211,11 +211,11 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
         CALL fwfft ('Wave', aux2, dffts)
         if (ip==1) then
            do ig = 1, npwq
-              dvpsi (ig, ibnd) = aux2 (nls (igk_k (ig,ikq) ) )
+              dvpsi (ig, ibnd) = aux2 (dffts%nl (igk_k (ig,ikq) ) )
            enddo
         else
            do ig = 1, npwq
-              dvpsi (ig+npwx, ibnd) = aux2 (nls (igk_k (ig,ikq) ) )
+              dvpsi (ig+npwx, ibnd) = aux2 (dffts%nl (igk_k (ig,ikq) ) )
            enddo
         end if
      enddo

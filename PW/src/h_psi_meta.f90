@@ -17,7 +17,6 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
   USE cell_base, ONLY : tpiba
   USE lsda_mod,  ONLY : nspin, current_spin
   USE wvfct,     ONLY : current_k
-  USE gvecs,     ONLY : nls, nlsm
   USE gvect,     ONLY : g
   USE scf,       ONLY : kedtau
   USE klist,     ONLY : xk, igk_k
@@ -48,13 +47,13 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
            !
            kplusg (1:np) = (xk(j,current_k)+g(j,1:np)) * tpiba
            if (im < mp ) then
-              psic(nls (1:np)) =  ci * kplusg(1:np) * &
+              psic(dffts%nl (1:np)) =  ci * kplusg(1:np) * &
                               ( psip (1:np,im) + ci * psip(1:np,im+1) )
-              psic(nlsm(1:np)) = -ci * kplusg(1:np) * &
+              psic(dffts%nlm(1:np)) = -ci * kplusg(1:np) * &
                         CONJG ( psip (1:np,im) - ci * psip(1:np,im+1) )
            else
-              psic(nls (1:np)) =  ci * kplusg(1:np) *       psip(1:np,im) 
-              psic(nlsm(1:np)) = -ci * kplusg(1:np) * CONJG(psip(1:np,im))
+              psic(dffts%nl (1:np)) =  ci * kplusg(1:np) *       psip(1:np,im) 
+              psic(dffts%nlm(1:np)) = -ci * kplusg(1:np) * CONJG(psip(1:np,im))
            end if
            !
            CALL invfft ('Wave', psic, dffts)
@@ -65,12 +64,12 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
            !
            if ( im < mp ) then
               hpsi(1:np,im)  = hpsi(1:np,im)   - ci * kplusg(1:np) * 0.5d0 * &
-                       ( psic(nls(1:np)) + CONJG(psic(nlsm(1:np))) )
+                       ( psic(dffts%nl(1:np)) + CONJG(psic(dffts%nlm(1:np))) )
               hpsi(1:np,im+1)= hpsi(1:np,im+1) - kplusg(1:np) * 0.5d0 * &
-                       ( psic(nls(1:np)) - CONJG(psic(nlsm(1:np))) )
+                       ( psic(dffts%nl(1:np)) - CONJG(psic(dffts%nlm(1:np))) )
            else
               hpsi(1:np,im) = hpsi(1:np,im) - ci * kplusg(1:np) * &
-                                              psic(nls(1:np))
+                                              psic(dffts%nl(1:np))
            end if
         end do
      end do
@@ -83,7 +82,7 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
            psic(1:nrxxs) = ( 0.D0, 0.D0 )
            !
            kplusg (1:np) = (xk(j,current_k)+g(j,igk_k(1:np,current_k)))*tpiba
-           psic(nls(igk_k(1:np,current_k))) = CMPLX(0d0, kplusg(1:np),kind=DP)&
+           psic(dffts%nl(igk_k(1:np,current_k))) = CMPLX(0d0, kplusg(1:np),kind=DP)&
                                             * psip (1:np,im)
            !
            CALL invfft ('Wave', psic, dffts)
@@ -93,7 +92,7 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
            CALL fwfft ('Wave', psic, dffts)
            !
            hpsi(1:np,im) = hpsi(1:np,im) - CMPLX(0d0, kplusg(1:np),kind=DP) &
-                                         * psic(nls(igk_k(1:np,current_k)))
+                                         * psic(dffts%nl(igk_k(1:np,current_k)))
         end do
      end do
   end if

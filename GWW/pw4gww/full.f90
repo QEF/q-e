@@ -22,7 +22,7 @@
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_pools, ONLY : intra_pool_comm
    USE mp_world, ONLY : mpime,nproc
-   USE gvecs,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : doublegrid
    USE mp_wave, ONLY : mergewf,splitwf
    USE fft_base,             ONLY : dfftp, dffts
    USE fft_interfaces,       ONLY : fwfft, invfft
@@ -94,11 +94,11 @@
     do iw=1,numpw,2
        psic=0.d0!(1:dfftp%nnr)=(0.d0,0.d0)
        if(iw<numpw) then
-          psic(nls(1:npw))  = p_basis(1:npw,iw) + ( 0.D0, 1.D0 ) * p_basis(1:npw,iw+1)
-          psic(nlsm(1:npw))  = conjg(p_basis(1:npw,iw) - ( 0.D0, 1.D0 ) * p_basis(1:npw,iw+1))
+          psic(dffts%nl(1:npw))  = p_basis(1:npw,iw) + ( 0.D0, 1.D0 ) * p_basis(1:npw,iw+1)
+          psic(dffts%nlm(1:npw))  = conjg(p_basis(1:npw,iw) - ( 0.D0, 1.D0 ) * p_basis(1:npw,iw+1))
        else
-          psic(nls(1:npw))  = p_basis(1:npw,iw) 
-          psic(nlsm(1:npw))  = conjg(p_basis(1:npw,iw))
+          psic(dffts%nl(1:npw))  = p_basis(1:npw,iw) 
+          psic(dffts%nlm(1:npw))  = conjg(p_basis(1:npw,iw))
        endif
        CALL invfft ('Wave', psic, dffts)
        p_basis_r(1:dfftp%nnr,1)=dble(psic(1:dfftp%nnr))

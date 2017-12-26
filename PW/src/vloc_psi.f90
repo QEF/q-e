@@ -14,7 +14,6 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gvecs, ONLY : nls, nlsm
   USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
@@ -71,15 +70,15 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         DO idx = 1, 2*fftx_ntgrp(dffts), 2
            IF( idx + ibnd - 1 < m ) THEN
               DO j = 1, n
-                 tg_psic(nls (j)+ioff) =        psi(j,idx+ibnd-1) + &
+                 tg_psic(dffts%nl (j)+ioff) =        psi(j,idx+ibnd-1) + &
                                       (0.0d0,1.d0) * psi(j,idx+ibnd)
-                 tg_psic(nlsm(j)+ioff) = conjg( psi(j,idx+ibnd-1) - &
+                 tg_psic(dffts%nlm(j)+ioff) = conjg( psi(j,idx+ibnd-1) - &
                                       (0.0d0,1.d0) * psi(j,idx+ibnd) )
               ENDDO
            ELSEIF( idx + ibnd - 1 == m ) THEN
               DO j = 1, n
-                 tg_psic(nls (j)+ioff) =        psi(j,idx+ibnd-1)
-                 tg_psic(nlsm(j)+ioff) = conjg( psi(j,idx+ibnd-1) )
+                 tg_psic(dffts%nl (j)+ioff) =        psi(j,idx+ibnd-1)
+                 tg_psic(dffts%nlm(j)+ioff) = conjg( psi(j,idx+ibnd-1) )
               ENDDO
            ENDIF
 
@@ -93,13 +92,13 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         IF (ibnd < m) THEN
            ! two ffts at the same time
            DO j = 1, n
-              psic(nls (j))=      psi(j,ibnd) + (0.0d0,1.d0)*psi(j,ibnd+1)
-              psic(nlsm(j))=conjg(psi(j,ibnd) - (0.0d0,1.d0)*psi(j,ibnd+1))
+              psic(dffts%nl (j))=      psi(j,ibnd) + (0.0d0,1.d0)*psi(j,ibnd+1)
+              psic(dffts%nlm(j))=conjg(psi(j,ibnd) - (0.0d0,1.d0)*psi(j,ibnd+1))
            ENDDO
         ELSE
            DO j = 1, n
-              psic (nls (j)) =       psi(j, ibnd)
-              psic (nlsm(j)) = conjg(psi(j, ibnd))
+              psic (dffts%nl (j)) =       psi(j, ibnd)
+              psic (dffts%nlm(j)) = conjg(psi(j, ibnd))
            ENDDO
         ENDIF
         !
@@ -145,10 +144,10 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
            !
            IF( idx + ibnd - 1 < m ) THEN
               DO j = 1, n
-                 fp= ( tg_psic( nls(j) + ioff ) +  &
-                       tg_psic( nlsm(j) + ioff ) ) * 0.5d0
-                 fm= ( tg_psic( nls(j) + ioff ) -  &
-                       tg_psic( nlsm(j) + ioff ) ) * 0.5d0
+                 fp= ( tg_psic( dffts%nl(j) + ioff ) +  &
+                       tg_psic( dffts%nlm(j) + ioff ) ) * 0.5d0
+                 fm= ( tg_psic( dffts%nl(j) + ioff ) -  &
+                       tg_psic( dffts%nlm(j) + ioff ) ) * 0.5d0
                  hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
                                         cmplx( dble(fp), aimag(fm),kind=DP)
                  hpsi (j, ibnd+idx  ) = hpsi (j, ibnd+idx  ) + &
@@ -157,7 +156,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
            ELSEIF( idx + ibnd - 1 == m ) THEN
               DO j = 1, n
                  hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
-                                         tg_psic( nls(j) + ioff )
+                                         tg_psic( dffts%nl(j) + ioff )
               ENDDO
            ENDIF
            !
@@ -169,8 +168,8 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         IF (ibnd < m) THEN
            ! two ffts at the same time
            DO j = 1, n
-              fp = (psic (nls(j)) + psic (nlsm(j)))*0.5d0
-              fm = (psic (nls(j)) - psic (nlsm(j)))*0.5d0
+              fp = (psic (dffts%nl(j)) + psic (dffts%nlm(j)))*0.5d0
+              fm = (psic (dffts%nl(j)) - psic (dffts%nlm(j)))*0.5d0
               hpsi (j, ibnd)   = hpsi (j, ibnd)   + &
                                  cmplx( dble(fp), aimag(fm),kind=DP)
               hpsi (j, ibnd+1) = hpsi (j, ibnd+1) + &
@@ -178,7 +177,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
            ENDDO
         ELSE
            DO j = 1, n
-              hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (nls(j))
+              hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (dffts%nl(j))
            ENDDO
         ENDIF
      ENDIF
@@ -209,7 +208,6 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds, ONLY : DP
-  USE gvecs, ONLY : nls, nlsm
   USE wvfct, ONLY : current_k
   USE klist, ONLY : igk_k
   USE mp_bands,      ONLY : me_bgrp
@@ -264,7 +262,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
            IF( idx + ibnd - 1 <= m ) THEN
 !$omp parallel do
               DO j = 1, n
-                 tg_psic(nls (igk_k(j,current_k))+ioff) =  psi(j,idx+ibnd-1)
+                 tg_psic(dffts%nl (igk_k(j,current_k))+ioff) =  psi(j,idx+ibnd-1)
               ENDDO
 !$omp end parallel do
            ENDIF
@@ -303,7 +301,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
 !$omp parallel do
               DO j = 1, n
                  hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
-                    tg_psic( nls(igk_k(j,current_k)) + ioff )
+                    tg_psic( dffts%nl(igk_k(j,current_k)) + ioff )
               ENDDO
 !$omp end parallel do
            ENDIF
@@ -320,7 +318,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
      DO ibnd = 1, m
         !
         psic(:) = (0.d0, 0.d0)
-        psic (nls (igk_k(1:n,current_k))) = psi(1:n, ibnd)
+        psic (dffts%nl (igk_k(1:n,current_k))) = psi(1:n, ibnd)
         !write (6,*) 'wfc G ', ibnd
         !write (6,99) (psic(i), i=1,400)
         !
@@ -342,7 +340,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
         !
 !$omp parallel do
         DO j = 1, n
-           hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (nls(igk_k(j,current_k)))
+           hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (dffts%nl(igk_k(j,current_k)))
         ENDDO
 !$omp end parallel do
         !write (6,*) 'v psi G ', ibnd
@@ -372,7 +370,6 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
-  USE gvecs, ONLY : nls, nlsm
   USE wvfct, ONLY : current_k
   USE klist, ONLY : igk_k
   USE mp_bands,      ONLY : me_bgrp
@@ -442,7 +439,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
               !
               IF( idx + ibnd - 1 <= m ) THEN
                  DO j = 1, n
-                    tg_psic( nls( igk_k(j,current_k) ) + ioff, ipol ) = &
+                    tg_psic( dffts%nl( igk_k(j,current_k) ) + ioff, ipol ) = &
                        psi( j +(ipol-1)*lda, idx+ibnd-1 )
                  ENDDO
               ENDIF
@@ -459,7 +456,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
         psic_nc = (0.d0,0.d0)
         DO ipol=1,npol
            DO j = 1, n
-              psic_nc(nls(igk_k(j,current_k)),ipol) = psi(j+(ipol-1)*lda,ibnd)
+              psic_nc(dffts%nl(igk_k(j,current_k)),ipol) = psi(j+(ipol-1)*lda,ibnd)
            ENDDO
            CALL invfft ('Wave', psic_nc(:,ipol), dffts)
         ENDDO
@@ -518,7 +515,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
               IF( idx + ibnd - 1 <= m ) THEN
                  DO j = 1, n
                     hpsi (j, ipol, ibnd+idx-1) = hpsi (j, ipol, ibnd+idx-1) + &
-                                 tg_psic( nls(igk_k(j,current_k)) + ioff, ipol )
+                                 tg_psic( dffts%nl(igk_k(j,current_k)) + ioff, ipol )
                  ENDDO
               ENDIF
               !
@@ -539,7 +536,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
         DO ipol=1,npol
            DO j = 1, n
               hpsi(j,ipol,ibnd) = hpsi(j,ipol,ibnd) + &
-                                  psic_nc(nls(igk_k(j,current_k)),ipol)
+                                  psic_nc(dffts%nl(igk_k(j,current_k)),ipol)
            ENDDO
         ENDDO
 

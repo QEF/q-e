@@ -490,7 +490,7 @@ END SUBROUTINE esm_hartree_pbc
 SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
 
   USE constants,        ONLY : tpi, fpi, e2
-  USE gvect,            ONLY : nl, nlm, ngm, mill
+  USE gvect,            ONLY : ngm, mill
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
@@ -689,9 +689,9 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng) + 1
      if (n3<1) n3 = n3 + dfftp%nr3
-     aux(nl(ng))= aux(nl(ng)) + vg3(n3,ng_2d)
+     aux(dfftp%nl(ng))= aux(dfftp%nl(ng)) + vg3(n3,ng_2d)
      if (gamma_only) then
-        aux(nlm(ng))=CONJG(aux(nl(ng)))
+        aux(dfftp%nlm(ng))=CONJG(aux(dfftp%nl(ng)))
      endif
   enddo
 
@@ -703,7 +703,7 @@ END SUBROUTINE esm_hartree_bc1
 SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
 
   USE constants,        ONLY : tpi, fpi, e2
-  USE gvect,            ONLY : nl, nlm, ngm, mill
+  USE gvect,            ONLY : ngm, mill
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
@@ -914,9 +914,9 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng) + 1
      if (n3<1) n3 = n3 + dfftp%nr3
-     aux(nl(ng))= aux(nl(ng)) + vg3(n3,ng_2d)
+     aux(dfftp%nl(ng))= aux(dfftp%nl(ng)) + vg3(n3,ng_2d)
      if (gamma_only) then
-        aux(nlm(ng))=CONJG(aux(nl(ng)))
+        aux(dfftp%nlm(ng))=CONJG(aux(dfftp%nl(ng)))
      endif
   enddo
 
@@ -928,7 +928,7 @@ END SUBROUTINE esm_hartree_bc2
 SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
 
   USE constants,        ONLY : tpi, fpi, e2
-  USE gvect,            ONLY : nl, nlm, ngm, mill
+  USE gvect,            ONLY : ngm, mill
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
@@ -1129,9 +1129,9 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng) + 1
      if (n3<1) n3 = n3 + dfftp%nr3
-     aux(nl(ng))= aux(nl(ng)) + vg3(n3,ng_2d)
+     aux(dfftp%nl(ng))= aux(dfftp%nl(ng)) + vg3(n3,ng_2d)
      if (gamma_only) then
-        aux(nlm(ng))=CONJG(aux(nl(ng)))
+        aux(dfftp%nlm(ng))=CONJG(aux(dfftp%nl(ng)))
      endif
   enddo
 
@@ -1143,7 +1143,7 @@ END SUBROUTINE esm_hartree_bc3
 SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
 
   USE constants,        ONLY : pi, tpi, fpi, e2
-  USE gvect,            ONLY : nl, nlm, ngm, mill
+  USE gvect,            ONLY : ngm, mill
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
@@ -1428,9 +1428,9 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng) + 1
      if (n3<1) n3 = n3 + dfftp%nr3
-     aux(nl(ng))= aux(nl(ng)) + vg3(n3,ng_2d)
+     aux(dfftp%nl(ng))= aux(dfftp%nl(ng)) + vg3(n3,ng_2d)
      if (gamma_only) then
-        aux(nlm(ng))=CONJG(aux(nl(ng)))
+        aux(dfftp%nlm(ng))=CONJG(aux(dfftp%nl(ng)))
      endif
   enddo
 
@@ -3783,7 +3783,7 @@ END SUBROUTINE esm_local_pbc
 SUBROUTINE esm_local_bc1 (aux)
 
   USE constants,        ONLY : pi, tpi, fpi, e2
-  USE gvect,            ONLY : ngm, nl, nlm, mill
+  USE gvect,            ONLY : ngm, mill
   USE control_flags,    ONLY : gamma_only
   USE cell_base,        ONLY : at, bg, alat, tpiba2, omega
   USE ions_base,        ONLY : zv, nat, tau, ityp
@@ -3921,9 +3921,9 @@ SUBROUTINE esm_local_bc1 (aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng) + 1 
      IF (n3<1) n3 = n3 + dfftp%nr3
-     aux(nl(ng))= aux(nl(ng)) + vloc3(n3,ng_2d)
+     aux(dfftp%nl(ng))= aux(dfftp%nl(ng)) + vloc3(n3,ng_2d)
      if (gamma_only) then
-        aux (nlm(ng))=CONJG(aux(nl(ng)))
+        aux (dfftp%nlm(ng))=CONJG(aux(dfftp%nl(ng)))
      endif
   enddo
 
@@ -3935,7 +3935,7 @@ END SUBROUTINE esm_local_bc1
 SUBROUTINE esm_local_bc2 (aux)
 
   USE constants,        ONLY : pi, tpi, fpi, e2
-  USE gvect,            ONLY : ngm, nl, nlm, mill
+  USE gvect,            ONLY : ngm, mill
   USE control_flags,    ONLY : gamma_only
   USE cell_base,        ONLY : at, bg, alat, tpiba2, omega
   USE ions_base,        ONLY : zv, nat, tau, ityp
@@ -4100,9 +4100,9 @@ SUBROUTINE esm_local_bc2 (aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng) + 1 
      IF (n3<1) n3 = n3 + dfftp%nr3
-     aux(nl(ng))= aux(nl(ng)) + vloc3(n3,ng_2d)
+     aux(dfftp%nl(ng))= aux(dfftp%nl(ng)) + vloc3(n3,ng_2d)
      if (gamma_only) then
-        aux (nlm(ng))=CONJG(aux(nl(ng)))
+        aux (dfftp%nlm(ng))=CONJG(aux(dfftp%nl(ng)))
      endif
   enddo
 
@@ -4114,7 +4114,7 @@ END SUBROUTINE esm_local_bc2
 SUBROUTINE esm_local_bc3 (aux)
 
   USE constants,        ONLY : pi, tpi, fpi, e2
-  USE gvect,            ONLY : ngm, nl, nlm, mill
+  USE gvect,            ONLY : ngm, mill
   USE control_flags,    ONLY : gamma_only
   USE cell_base,        ONLY : at, bg, alat, tpiba2, omega
   USE ions_base,        ONLY : zv, nat, tau, ityp
@@ -4261,9 +4261,9 @@ SUBROUTINE esm_local_bc3 (aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng) + 1 
      IF (n3<1) n3 = n3 + dfftp%nr3
-     aux(nl(ng))= aux(nl(ng)) + vloc3(n3,ng_2d)
+     aux(dfftp%nl(ng))= aux(dfftp%nl(ng)) + vloc3(n3,ng_2d)
      if (gamma_only) then
-        aux (nlm(ng))=CONJG(aux(nl(ng)))
+        aux (dfftp%nlm(ng))=CONJG(aux(dfftp%nl(ng)))
      endif
   enddo
 
@@ -4275,7 +4275,7 @@ END SUBROUTINE esm_local_bc3
 SUBROUTINE esm_local_bc4 (aux)
 
   USE constants,        ONLY : pi, tpi, fpi, e2
-  USE gvect,            ONLY : ngm, nl, nlm, mill
+  USE gvect,            ONLY : ngm, mill
   USE control_flags,    ONLY : gamma_only
   USE cell_base,        ONLY : at, bg, alat, tpiba2, omega
   USE ions_base,        ONLY : zv, nat, tau, ityp
@@ -4486,9 +4486,9 @@ SUBROUTINE esm_local_bc4 (aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng) + 1 
      IF (n3<1) n3 = n3 + dfftp%nr3
-     aux(nl(ng))= aux(nl(ng)) + vloc3(n3,ng_2d)
+     aux(dfftp%nl(ng))= aux(dfftp%nl(ng)) + vloc3(n3,ng_2d)
      if (gamma_only) then
-        aux (nlm(ng))=CONJG(aux(nl(ng)))
+        aux (dfftp%nlm(ng))=CONJG(aux(dfftp%nl(ng)))
      endif
   enddo
 
@@ -6258,7 +6258,7 @@ END SUBROUTINE esm_force_lc_pbc
 SUBROUTINE esm_force_lc_bc1 ( aux, forcelc )
 
   USE constants,        ONLY : tpi, fpi, e2
-  USE gvect,            ONLY : ngm, nl, nlm, mill
+  USE gvect,            ONLY : ngm, mill
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
   USE ions_base,        ONLY : zv, nat, tau, ityp
@@ -6288,11 +6288,11 @@ SUBROUTINE esm_force_lc_bc1 ( aux, forcelc )
       ng_2d = imill_2d(n1,n2)
       n3 = mill(3,ng) + 1
       IF (n3<1) n3 = n3 + dfftp%nr3
-      rhog3(n3,ng_2d)=aux(nl(ng))
+      rhog3(n3,ng_2d)=aux(dfftp%nl(ng))
       if (gamma_only .and. n1==0 .and. n2==0) then
          n3 = -mill(3,ng)+1
          IF(n3<1)n3=n3+dfftp%nr3
-         rhog3(n3,ng_2d)=aux(nlm(ng))
+         rhog3(n3,ng_2d)=aux(dfftp%nlm(ng))
       endif  
   enddo
 
@@ -6418,7 +6418,7 @@ END SUBROUTINE esm_force_lc_bc1
 SUBROUTINE esm_force_lc_bc2 ( aux, forcelc )
 
   USE constants,        ONLY : tpi, fpi, e2
-  USE gvect,            ONLY : ngm, nl, nlm, mill
+  USE gvect,            ONLY : ngm, mill
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
   USE ions_base,        ONLY : zv, nat, tau, ityp
@@ -6449,11 +6449,11 @@ SUBROUTINE esm_force_lc_bc2 ( aux, forcelc )
       ng_2d = imill_2d(n1,n2)
       n3 = mill(3,ng) + 1
       IF (n3<1) n3 = n3 + dfftp%nr3
-      rhog3(n3,ng_2d)=aux(nl(ng))
+      rhog3(n3,ng_2d)=aux(dfftp%nl(ng))
       if (gamma_only .and. n1==0 .and. n2==0) then
          n3 = -mill(3,ng)+1
          IF(n3<1)n3=n3+dfftp%nr3
-         rhog3(n3,ng_2d)=aux(nlm(ng))
+         rhog3(n3,ng_2d)=aux(dfftp%nlm(ng))
       endif  
   enddo
 
@@ -6587,7 +6587,7 @@ END SUBROUTINE esm_force_lc_bc2
 SUBROUTINE esm_force_lc_bc3 ( aux, forcelc )
 
   USE constants,        ONLY : tpi, fpi, e2
-  USE gvect,            ONLY : ngm, nl, nlm, mill
+  USE gvect,            ONLY : ngm, mill
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
   USE ions_base,        ONLY : zv, nat, tau, ityp
@@ -6617,11 +6617,11 @@ SUBROUTINE esm_force_lc_bc3 ( aux, forcelc )
       ng_2d = imill_2d(n1,n2)
       n3 = mill(3,ng) + 1
       IF (n3<1) n3 = n3 + dfftp%nr3
-      rhog3(n3,ng_2d)=aux(nl(ng))
+      rhog3(n3,ng_2d)=aux(dfftp%nl(ng))
       if (gamma_only .and. n1==0 .and. n2==0) then
          n3 = -mill(3,ng)+1
          IF(n3<1)n3=n3+dfftp%nr3
-         rhog3(n3,ng_2d)=aux(nlm(ng))
+         rhog3(n3,ng_2d)=aux(dfftp%nlm(ng))
       endif  
   enddo
 
@@ -6750,7 +6750,7 @@ END SUBROUTINE esm_force_lc_bc3
 SUBROUTINE esm_force_lc_bc4 ( aux, forcelc )
 
   USE constants,        ONLY : tpi, fpi, e2
-  USE gvect,            ONLY : ngm, nl, nlm, mill
+  USE gvect,            ONLY : ngm, mill
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
   USE ions_base,        ONLY : zv, nat, tau, ityp
@@ -6784,11 +6784,11 @@ SUBROUTINE esm_force_lc_bc4 ( aux, forcelc )
       ng_2d = imill_2d(n1,n2)
       n3 = mill(3,ng) + 1
       IF (n3<1) n3 = n3 + dfftp%nr3
-      rhog3(n3,ng_2d)=aux(nl(ng))
+      rhog3(n3,ng_2d)=aux(dfftp%nl(ng))
       if (gamma_only .and. n1==0 .and. n2==0) then
          n3 = -mill(3,ng)+1
          IF(n3<1)n3=n3+dfftp%nr3
-         rhog3(n3,ng_2d)=aux(nlm(ng))
+         rhog3(n3,ng_2d)=aux(dfftp%nlm(ng))
       endif  
   enddo
 

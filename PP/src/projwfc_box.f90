@@ -234,8 +234,8 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
            !
            psic_nc = (0.d0,0.d0)
            DO ig = 1, npw
-              psic_nc(nl(igk_k(ig,ik)),1)=evc(ig     ,ibnd)
-              psic_nc(nl(igk_k(ig,ik)),2)=evc(ig+npwx,ibnd)
+              psic_nc(dfftp%nl(igk_k(ig,ik)),1)=evc(ig     ,ibnd)
+              psic_nc(dfftp%nl(igk_k(ig,ik)),2)=evc(ig+npwx,ibnd)
            ENDDO
            raux=0._DP
            DO ipol=1,npol
@@ -248,11 +248,11 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
            !
            caux(1:dfftp%nnr) = (0._DP,0._DP)
            DO ig = 1, npw
-              caux (nl (igk_k (ig,ik) ) ) = evc (ig, ibnd)
+              caux (dfftp%nl (igk_k (ig,ik) ) ) = evc (ig, ibnd)
            ENDDO
            IF (gamma_only) THEN
               DO ig = 1, npw
-                 caux (nlm(igk_k (ig,ik) ) ) = conjg(evc (ig, ibnd))
+                 caux (dfftp%nlm(igk_k (ig,ik) ) ) = conjg(evc (ig, ibnd))
               ENDDO
            ENDIF
            CALL invfft ('Dense', caux, dfftp)

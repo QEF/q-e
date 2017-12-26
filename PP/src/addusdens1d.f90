@@ -19,7 +19,7 @@ SUBROUTINE addusdens1d (plan, prho)
   USE cell_base, ONLY: alat, omega, celldm
   USE ions_base, ONLY: nat, ntyp => nsp, ityp
   USE fft_base,  ONLY: dfftp
-  USE gvect, ONLY: nl, eigts1, eigts2, eigts3, mill
+  USE gvect, ONLY: eigts1, eigts2, eigts3, mill
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum
   USE uspp_param, ONLY: upf, lmaxq, nh
@@ -103,7 +103,7 @@ SUBROUTINE addusdens1d (plan, prho)
      !
      qg(:) = (0.d0, 0.d0)
      DO ig = 1, ngm1d
-        qg (nl1d (ig) ) = aux (ig) + prho (nl (ig1dto3d (ig) ) )
+        qg (nl1d (ig) ) = aux (ig) + prho (dfftp%nl (ig1dto3d (ig) ) )
      ENDDO
   ELSE
      qg(:) = (0.d0, 0.d0)

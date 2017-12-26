@@ -26,7 +26,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : gg, nl
+  USE gvect,                ONLY : gg
   USE buffers,              ONLY : get_buffer, save_buffer
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : npwx, et
@@ -92,7 +92,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
         delta_n = (0.d0, 0.d0)
         do is = 1, nspin_lsda
            CALL fwfft ('Dense', drhoscf(:,is,ipert), dfftp)
-           if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(nl(1),is,ipert)
+           if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(dfftp%nl(1),is,ipert)
            CALL invfft ('Dense', drhoscf(:,is,ipert), dfftp)
         enddo
         call mp_sum ( delta_n, intra_bgrp_comm )
@@ -176,7 +176,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   USE buffers,              ONLY : get_buffer, save_buffer
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : gg, nl
+  USE gvect,                ONLY : gg
   USE lsda_mod,             ONLY : nspin
   USE uspp_param,           ONLY : nhm
   USE wvfct,                ONLY : npwx, et
@@ -244,7 +244,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
         delta_n = (0.d0, 0.d0)
         do is = 1, nspin_lsda
            CALL fwfft ('Dense', drhoscf(:,is,ipert), dfftp)
-           if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(nl(1),is,ipert)
+           if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(dfftp%nl(1),is,ipert)
            CALL invfft ('Dense', drhoscf(:,is,ipert), dfftp)
         enddo
         call mp_sum ( delta_n, intra_bgrp_comm )

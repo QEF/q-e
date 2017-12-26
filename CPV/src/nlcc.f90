@@ -104,7 +104,7 @@
       ! this isn't really needed, but if I remove it, ifc 7.1
       ! gives an "internal compiler error"
       use gvect, only: gstart
-      use gvect,              only: ngm, nl
+      use gvect,              only: ngm
       USE fft_interfaces,     ONLY: fwfft
       USE fft_base,           ONLY: dfftp
 !
@@ -150,12 +150,12 @@
       !
       if (nspin.eq.1) then
          do ig=1,ngm
-            rhog(ig,iss)=rhog(ig,iss)+wrk1(nl(ig))
+            rhog(ig,iss)=rhog(ig,iss)+wrk1(dfftp%nl(ig))
          end do
       else
          do ig=1,ngm
-            rhog(ig,isup)=rhog(ig,isup)+0.5d0*wrk1(nl(ig))
-            rhog(ig,isdw)=rhog(ig,isdw)+0.5d0*wrk1(nl(ig))
+            rhog(ig,isup)=rhog(ig,isup)+0.5d0*wrk1(dfftp%nl(ig))
+            rhog(ig,isdw)=rhog(ig,isdw)+0.5d0*wrk1(dfftp%nl(ig))
          end do
       end if
 

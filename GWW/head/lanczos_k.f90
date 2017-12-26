@@ -23,7 +23,7 @@ subroutine lanczos_state_k(ik,nstates, nsteps,in_states,d,f,omat,dpsi_ipol, t_ou
   USE wavefunctions_module, ONLY : evc, psic
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world, ONLY : mpime, world_comm
-  USE gvecs,                ONLY : nls, nlsm, doublegrid
+  USE gvecs,                ONLY : doublegrid
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE klist,                ONLY : xk,igk_k, ngk

@@ -1422,7 +1422,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   USE cell_base, ONLY : omega, tpiba2
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect, ONLY : ngm, g, nl
+  USE gvect, ONLY : ngm, g
   USE io_files, ONLY : nwordwfc, iunwfc
   USE klist, ONLY : xk, nkstot, ngk, nks, igk_k
   USE lsda_mod, ONLY : nspin, isk
@@ -1457,7 +1457,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
     DO ib = rhog_nvmin, rhog_nvmax
       psic (:) = (0.0D0, 0.0D0)
       DO ig = 1, npw
-        psic (nl (igk_k (ig, ik-iks+1))) = evc (ig, ib)
+        psic (dfftp%nl (igk_k (ig, ik-iks+1))) = evc (ig, ib)
       ENDDO
       CALL invfft ('Dense', psic, dfftp)
       DO ir = 1, dfftp%nnr
@@ -1473,7 +1473,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
     psic (:) = (0.0D0, 0.0D0)
     psic (:) = rho%of_r (:, is)
     CALL fwfft ('Dense', psic, dfftp)
-    rho%of_g (:, is) = psic (nl (:))
+    rho%of_g (:, is) = psic (dfftp%nl (:))
   ENDDO
 
   ! symmetrize rho (didn`t make a difference)
@@ -1494,7 +1494,7 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   USE ener, ONLY : etxc, vtxc
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE gvect, ONLY : ngm, ngm_g, ig_l2g, nl, mill, ecutrho
+  USE gvect, ONLY : ngm, ngm_g, ig_l2g, mill, ecutrho
   USE io_global, ONLY : ionode
   USE ions_base, ONLY : nat, atm, ityp, tau 
   USE kinds, ONLY : DP
@@ -1656,7 +1656,7 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
     ENDDO
     CALL fwfft ( 'Dense', psic, dfftp )
     DO ig = 1, ng_l
-      vxcg_g ( ig_l2g ( ig ), is ) = psic ( nl ( ig ) )
+      vxcg_g ( ig_l2g ( ig ), is ) = psic ( dfftp%nl ( ig ) )
     ENDDO
   ENDDO
 
@@ -1707,7 +1707,7 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core )
   USE ener, ONLY : etxc, vtxc
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE gvect, ONLY : ngm, nl, mill
+  USE gvect, ONLY : ngm, mill
   USE io_global, ONLY : ionode
   USE kinds, ONLY : DP
   USE lsda_mod, ONLY : nspin
@@ -1754,7 +1754,7 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core )
     CALL fwfft ( 'Dense', psic, dfftp )
     DO ig = 1, ng_l
       IF ( mill ( 1, ig ) .EQ. 0 .AND. mill ( 2, ig ) .EQ. 0 .AND. &
-        mill ( 3, ig ) .EQ. 0 ) vxc0_g ( is ) = psic ( nl ( ig ) )
+        mill ( 3, ig ) .EQ. 0 ) vxc0_g ( is ) = psic ( dfftp%nl ( ig ) )
     ENDDO
   ENDDO
 
@@ -1799,7 +1799,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   USE ener, ONLY : etxc, vtxc
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : invfft
-  USE gvect, ONLY : ngm, g, nl
+  USE gvect, ONLY : ngm, g
   USE io_files, ONLY : nwordwfc, iunwfc
   USE io_global, ONLY : ionode
   USE klist, ONLY : xk, nkstot, nks, ngk, igk_k
@@ -1881,7 +1881,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
       DO ib = diag_nmin, diag_nmax
         psic (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
-          psic (nl (igk_k (ig,ik-iks+1))) = evc (ig, ib)
+          psic (dfftp%nl (igk_k (ig,ik-iks+1))) = evc (ig, ib)
         ENDDO
         CALL invfft ('Dense', psic, dfftp)
         dummyr = 0.0D0
@@ -1898,13 +1898,13 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
       DO ib = offdiag_nmin, offdiag_nmax
         psic (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
-          psic (nl (igk_k (ig,ik-iks+1))) = evc (ig, ib)
+          psic (dfftp%nl (igk_k (ig,ik-iks+1))) = evc (ig, ib)
         ENDDO
         CALL invfft ('Dense', psic, dfftp)
         DO ib2 = offdiag_nmin, offdiag_nmax
           psic2 (:) = (0.0D0, 0.0D0)
           DO ig = 1, npw
-            psic2 (nl (igk_k (ig,ik-iks+1))) = evc (ig, ib2)
+            psic2 (dfftp%nl (igk_k (ig,ik-iks+1))) = evc (ig, ib2)
           ENDDO
           CALL invfft ('Dense', psic2, dfftp)
           dummyc = (0.0D0, 0.0D0)
@@ -1984,7 +1984,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
   USE funct, ONLY : exx_is_active
-  USE gvect, ONLY : ngm, g, nl
+  USE gvect, ONLY : ngm, g
   USE io_files, ONLY : nwordwfc, iunwfc
   USE io_global, ONLY : ionode
   USE kinds, ONLY : DP
@@ -2069,7 +2069,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
       DO ib = diag_nmin, diag_nmax
         psic (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
-          psic (nl (igk_k(ig,ikk))) = evc (ig, ib)
+          psic (dfftp%nl (igk_k(ig,ikk))) = evc (ig, ib)
         ENDDO
         CALL invfft ('Dense', psic, dfftp)
         DO ir = 1, dfftp%nnr
@@ -2078,7 +2078,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
         CALL fwfft ('Dense', psic, dfftp)
         hpsi (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
-          hpsi (ig) = psic (nl (igk_k(ig,ikk)))
+          hpsi (ig) = psic (dfftp%nl (igk_k(ig,ikk)))
         ENDDO
         psic (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
@@ -2099,7 +2099,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
       DO ib = offdiag_nmin, offdiag_nmax
         psic (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
-          psic (nl (igk_k(ig,ikk))) = evc (ig, ib)
+          psic (dfftp%nl (igk_k(ig,ikk))) = evc (ig, ib)
         ENDDO
         CALL invfft ('Dense', psic, dfftp)
         DO ir = 1, dfftp%nnr
@@ -2108,7 +2108,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
         CALL fwfft ('Dense', psic, dfftp)
         hpsi (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
-          hpsi (ig) = psic (nl (igk_k (ig,ikk)))
+          hpsi (ig) = psic (dfftp%nl (igk_k (ig,ikk)))
         ENDDO
         psic (:) = (0.0D0, 0.0D0)
         DO ig = 1, npw
@@ -2191,7 +2191,7 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
   USE constants, ONLY : pi, tpi, eps6
   USE fft_base, ONLY : dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE gvect, ONLY : ngm, ngm_g, ig_l2g, nl, mill, ecutrho
+  USE gvect, ONLY : ngm, ngm_g, ig_l2g, mill, ecutrho
   USE io_global, ONLY : ionode
   USE ions_base, ONLY : nat, atm, ityp, tau 
   USE kinds, ONLY : DP
@@ -2349,7 +2349,7 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
     ENDDO
     CALL fwfft ( 'Dense', psic, dfftp )
     DO ig = 1, ng_l
-      vscg_g ( ig_l2g ( ig ), is ) = psic ( nl ( ig ) )
+      vscg_g ( ig_l2g ( ig ), is ) = psic ( dfftp%nl ( ig ) )
     ENDDO
   ENDDO
 

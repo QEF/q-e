@@ -28,8 +28,8 @@ SUBROUTINE do_elf (elf)
   USE cell_base, ONLY: omega, tpiba
   USE fft_base,  ONLY: dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect, ONLY: gcutm, g, ngm, nl, nlm
-  USE gvecs, ONLY : nls, nlsm, ngms, doublegrid, dual
+  USE gvect, ONLY: gcutm, g, ngm
+  USE gvecs, ONLY : ngms, doublegrid, dual
   USE io_files, ONLY: iunwfc, nwordwfc
   USE klist, ONLY: nks, xk, ngk, igk_k
   USE lsda_mod, ONLY: nspin
@@ -74,9 +74,9 @@ SUBROUTINE do_elf (elf)
            w1 = wg (ibnd, ik) / omega
            DO i = 1, ngk(ik)
               gv (j) = (xk (j, ik) + g (j, igk_k (i,ik) ) ) * tpiba
-              aux (nls(igk_k(i,ik) ) ) = cmplx(0d0, gv (j) ,kind=DP) * evc(i,ibnd)
+              aux (dffts%nl(igk_k(i,ik) ) ) = cmplx(0d0, gv (j) ,kind=DP) * evc(i,ibnd)
               IF (gamma_only) THEN
-                 aux (nlsm(igk_k(i,ik) ) ) = cmplx(0d0, -gv (j) ,kind=DP) * &
+                 aux (dffts%nlm(igk_k(i,ik) ) ) = cmplx(0d0, -gv (j) ,kind=DP) * &
                       conjg ( evc (i, ibnd) )
               ENDIF
            ENDDO
@@ -116,14 +116,14 @@ SUBROUTINE do_elf (elf)
      aux(:) =  cmplx ( kkin (:), 0.0_dp, kind=dp)
      CALL fwfft ('Smooth', aux, dffts)
      ALLOCATE (aux2(ngm))
-     aux2(:) = aux(nl(:))
+     aux2(:) = aux(dfftp%nl(:))
      !
      ! aux2 contains the local kinetic energy in G-space to be symmetrized
      !
      CALL sym_rho ( 1, aux2 )
      !
      aux(:) = (0.0_dp, 0.0_dp)
-     aux(nl(:)) = aux2(:)
+     aux(dfftp%nl(:)) = aux2(:)
      DEALLOCATE (aux2)
      CALL invfft ('Dense', aux, dfftp)
      kkin (:) = dble(aux(:))
@@ -149,11 +149,11 @@ SUBROUTINE do_elf (elf)
   DO j = 1, 3
      aux2(:) = (0.d0,0.d0)
      DO i = 1, ngm
-        aux2(nl(i)) = aux(nl(i)) * cmplx(0.0d0, g(j,i)*tpiba,kind=DP)
+        aux2(dfftp%nl(i)) = aux(dfftp%nl(i)) * cmplx(0.0d0, g(j,i)*tpiba,kind=DP)
      ENDDO
      IF (gamma_only) THEN
         DO i = 1, ngm
-           aux2(nlm(i)) = aux(nlm(i)) * cmplx(0.0d0,-g(j,i)*tpiba,kind=DP)
+           aux2(dfftp%nlm(i)) = aux(dfftp%nlm(i)) * cmplx(0.0d0,-g(j,i)*tpiba,kind=DP)
         ENDDO
      ENDIF
 
@@ -190,7 +190,7 @@ SUBROUTINE do_rdg (rdg)
   USE constants,            ONLY: pi
   USE fft_base,             ONLY: dfftp
   USE scf,                  ONLY: rho
-  USE gvect,                ONLY: g, ngm, nl
+  USE gvect,                ONLY: g, ngm
   USE lsda_mod,             ONLY: nspin
   IMPLICIT NONE
   REAL(DP), INTENT(OUT) :: rdg (dfftp%nnr)
@@ -210,7 +210,7 @@ SUBROUTINE do_rdg (rdg)
   ENDDO
 
   ! gradient of rho
-  CALL gradrho(dfftp%nnr, rho%of_g(1,1), ngm, g, nl, grho)
+  CALL gradrho(dfftp%nnr, rho%of_g(1,1), ngm, g, dfftp%nl, grho)
 
   ! calculate rdg
   DO i = 1, dfftp%nnr
@@ -240,7 +240,7 @@ SUBROUTINE do_sl2rho (sl2rho)
   USE constants,            ONLY: pi
   USE fft_base,             ONLY: dfftp
   USE scf,                  ONLY: rho
-  USE gvect,                ONLY: g, ngm, nl
+  USE gvect,                ONLY: g, ngm
   USE lsda_mod,             ONLY: nspin
   IMPLICIT NONE
   REAL(DP), INTENT(OUT) :: sl2rho (dfftp%nnr)
@@ -262,7 +262,7 @@ SUBROUTINE do_sl2rho (sl2rho)
   ENDDO
 
   ! calculate hessian of rho (gradient is discarded)
-  CALL hessian( dfftp%nnr, rho%of_r(:,1), ngm, g, nl, grho, hrho )
+  CALL hessian( dfftp%nnr, rho%of_r(:,1), ngm, g, dfftp%nl, grho, hrho )
 
   ! find eigenvalues of the hessian
   DO i = 1, dfftp%nnr

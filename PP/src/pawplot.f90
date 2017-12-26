@@ -185,7 +185,7 @@ PROGRAM PAWplot
   USE environment,ONLY : environment_start, environment_end
   USE lsda_mod,   ONLY : nspin, current_spin
   USE cell_base,  ONLY : bg
-  USE gvect,      ONLY : ngm, nl
+  USE gvect,      ONLY : ngm
   USE scf,        ONLY : rho
   USE io_files,   ONLY : tmp_dir, prefix
   USE noncollin_module, ONLY : noncolin

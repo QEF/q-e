@@ -25,7 +25,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE ions_base,              ONLY : ityp, nat, ntyp=>nsp
   USE cell_base,              ONLY : omega
   USE ener,                   ONLY : ef
-  USE gvecs,                  ONLY : nls, nlsm, doublegrid
+  USE gvecs,                  ONLY : doublegrid
   USE fft_base,               ONLY : dffts, dfftp
   USE fft_interfaces,         ONLY : invfft
   USE io_global,              ONLY : stdout
@@ -570,7 +570,7 @@ CONTAINS
           psic(:) = (0.0d0,0.0d0)
           !
           DO ig = 1, ngk(ik)
-             psic(nls(igk_k(ig,ik)))=evc1(ig,ibnd,ik)
+             psic(dffts%nl(igk_k(ig,ik)))=evc1(ig,ibnd,ik)
           ENDDO
           !
           CALL invfft ('Wave', psic, dffts)

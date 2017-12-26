@@ -151,7 +151,7 @@ SUBROUTINE plot_wannier(nc,n0)
      psic(1:dffts%nnr) = ZERO
      rho = ZERO
      DO j = 1, npw
-        psic (nls (igk_k(j,ik) ) ) = wan_func (j, plot_wan_num)
+        psic (dffts%nl (igk_k(j,ik) ) ) = wan_func (j, plot_wan_num)
      ENDDO
 
      CALL invfft ('Wave', psic, dffts)

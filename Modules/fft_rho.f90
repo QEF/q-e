@@ -26,7 +26,7 @@ MODULE fft_rho
 CONTAINS
   !
   SUBROUTINE rho_r2g ( rhor, rhog, v )
-    USE gvect,          ONLY: ngm,  nl, nlm
+    USE gvect,          ONLY: ngm
     USE fft_base,       ONLY: dfftp
     !
     REAL(dp),    INTENT(in) :: rhor(:,:)
@@ -54,7 +54,7 @@ CONTAINS
        END IF
        CALL fwfft('Dense', psi, dfftp )
        DO ig=1,ngm
-          rhog(ig,iss)=psi(nl(ig))
+          rhog(ig,iss)=psi(dfftp%nl(ig))
        END DO
     ELSE
        isup=1
@@ -70,8 +70,8 @@ CONTAINS
        END IF
        CALL fwfft('Dense', psi, dfftp )
        DO ig=1,ngm
-          fp=psi(nl(ig))+psi(nlm(ig))
-          fm=psi(nl(ig))-psi(nlm(ig))
+          fp=psi(dfftp%nl(ig))+psi(dfftp%nlm(ig))
+          fm=psi(dfftp%nl(ig))-psi(dfftp%nlm(ig))
           rhog(ig,isup)=0.5_dp*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
           rhog(ig,isdw)=0.5_dp*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
        END DO
@@ -82,7 +82,7 @@ CONTAINS
   END SUBROUTINE rho_r2g
   !
   SUBROUTINE smooth_rho_r2g ( rhor, rhog, v )
-    USE gvecs,          ONLY: ngms,  nls, nlsm
+    USE gvecs,          ONLY: ngms
     USE fft_base,       ONLY: dffts
     !
     REAL(dp),    INTENT(in) :: rhor(:,:)
@@ -110,7 +110,7 @@ CONTAINS
        END IF
        CALL fwfft('Smooth', psi, dffts )
        DO ig=1,ngms
-          rhog(ig,iss)=psi(nls(ig))
+          rhog(ig,iss)=psi(dffts%nl(ig))
        END DO
     ELSE
        isup=1
@@ -126,8 +126,8 @@ CONTAINS
        END IF
        CALL fwfft('Smooth', psi, dffts )
        DO ig=1,ngms
-          fp=psi(nls(ig))+psi(nlsm(ig))
-          fm=psi(nls(ig))-psi(nlsm(ig))
+          fp=psi(dffts%nl(ig))+psi(dffts%nlm(ig))
+          fm=psi(dffts%nl(ig))-psi(dffts%nlm(ig))
           rhog(ig,isup)=0.5_dp*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
           rhog(ig,isdw)=0.5_dp*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
        END DO
@@ -138,7 +138,7 @@ CONTAINS
   END SUBROUTINE smooth_rho_r2g
   !
   SUBROUTINE rho_g2r_x ( rhog, rhor )
-    USE gvect,          ONLY: ngm,  nl, nlm
+    USE gvect,          ONLY: ngm
     USE fft_base,       ONLY: dfftp
     !
     COMPLEX(dp), INTENT(in ):: rhog(:,:)
@@ -158,8 +158,8 @@ CONTAINS
           psi (:) = (0.0_dp, 0.0_dp)
 !$omp parallel do
           DO ig=1,ngm
-             psi(nlm(ig))=CONJG(rhog(ig,iss))
-             psi(nl (ig))=      rhog(ig,iss)
+             psi(dfftp%nlm(ig))=CONJG(rhog(ig,iss))
+             psi(dfftp%nl (ig))=      rhog(ig,iss)
           END DO
 !$omp end parallel do
           CALL invfft('Dense',psi, dfftp )
@@ -174,8 +174,8 @@ CONTAINS
           psi (:) = (0.0_dp, 0.0_dp)
 !$omp parallel do
           DO ig=1,ngm
-             psi(nlm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
-             psi(nl(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
+             psi(dfftp%nlm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
+             psi(dfftp%nl(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
           END DO
 !$omp end parallel do
           CALL invfft('Dense',psi, dfftp )
@@ -193,7 +193,7 @@ CONTAINS
           psi (:) = (0.0_dp, 0.0_dp)
 !$omp parallel do
           DO ig=1,ngm
-             psi(nl (ig))=      rhog(ig,iss)
+             psi(dfftp%nl (ig))=      rhog(ig,iss)
           END DO
 !$omp end parallel do
           CALL invfft('Dense',psi, dfftp )
@@ -210,7 +210,7 @@ CONTAINS
   END SUBROUTINE rho_g2r_x
   !
   SUBROUTINE rho_g2r_sum_components ( rhog, rhor )
-    USE gvect,          ONLY: ngm,  nl, nlm
+    USE gvect,          ONLY: ngm
     USE fft_base,       ONLY: dfftp
     !
     COMPLEX(dp), INTENT(in ):: rhog(:,:)
@@ -230,8 +230,8 @@ CONTAINS
           psi (:) = (0.0_dp, 0.0_dp)
 !$omp parallel do
           DO ig=1,ngm
-             psi(nlm(ig))=CONJG(rhog(ig,iss))
-             psi(nl (ig))=      rhog(ig,iss)
+             psi(dfftp%nlm(ig))=CONJG(rhog(ig,iss))
+             psi(dfftp%nl (ig))=      rhog(ig,iss)
           END DO
 !$omp end parallel do
           CALL invfft('Dense',psi, dfftp )
@@ -246,8 +246,8 @@ CONTAINS
           psi (:) = (0.0_dp, 0.0_dp)
 !$omp parallel do
           DO ig=1,ngm
-             psi(nlm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
-             psi(nl(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
+             psi(dfftp%nlm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
+             psi(dfftp%nl(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
           END DO
 !$omp end parallel do
           CALL invfft('Dense',psi, dfftp )
@@ -264,7 +264,7 @@ CONTAINS
           psi (:) = (0.0_dp, 0.0_dp)
 !$omp parallel do
           DO ig=1,ngm
-             psi(nl (ig))=      rhog(ig,iss)
+             psi(dfftp%nl (ig))=      rhog(ig,iss)
           END DO
 !$omp end parallel do
           CALL invfft('Dense',psi, dfftp )
@@ -289,7 +289,7 @@ CONTAINS
   END SUBROUTINE rho_g2r_sum_components
 
   SUBROUTINE smooth_rho_g2r ( rhog, rhor )
-    USE gvecs,          ONLY: ngms,  nls, nlsm
+    USE gvecs,          ONLY: ngms
     USE fft_base,       ONLY: dffts
     !
     COMPLEX(dp), INTENT(in ):: rhog(:,:)
@@ -309,8 +309,8 @@ CONTAINS
           psi (:) = (0.0_dp, 0.0_dp)
 !$omp parallel do
           DO ig=1,ngms
-             psi(nlsm(ig))=CONJG(rhog(ig,iss))
-             psi(nls (ig))=      rhog(ig,iss)
+             psi(dffts%nlm(ig))=CONJG(rhog(ig,iss))
+             psi(dffts%nl (ig))=      rhog(ig,iss)
           END DO
 !$omp end parallel do
           CALL invfft('Smooth',psi, dffts )
@@ -325,8 +325,8 @@ CONTAINS
           psi (:) = (0.0_dp, 0.0_dp)
 !$omp parallel do
           DO ig=1,ngms
-             psi(nlsm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
-             psi(nls(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
+             psi(dffts%nlm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
+             psi(dffts%nl(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
           END DO
 !$omp end parallel do
           CALL invfft('Smooth',psi, dffts )
@@ -344,7 +344,7 @@ CONTAINS
           psi (:) = (0.0_dp, 0.0_dp)
 !$omp parallel do
           DO ig=1,ngms
-             psi(nls (ig))=      rhog(ig,iss)
+             psi(dffts%nl (ig))=      rhog(ig,iss)
           END DO
 !$omp end parallel do
           CALL invfft('Smooth',psi, dffts )

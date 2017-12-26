@@ -136,7 +136,7 @@ subroutine cutoff_local ( aux )
   !
   USE kinds
   USE fft_base,   ONLY : dfftp
-  USE gvect,      ONLY : ngm, nl
+  USE gvect,      ONLY : ngm
   USE vlocal,     ONLY : strf
   USE ions_base,  ONLY : nsp
   implicit none
@@ -149,7 +149,7 @@ subroutine cutoff_local ( aux )
   !
   DO nt = 1, nsp
      DO ng = 1, ngm
-        aux (nl(ng))=aux(nl(ng)) + lr_Vloc(ng, nt) * strf (ng, nt)
+        aux (dfftp%nl(ng))=aux(dfftp%nl(ng)) + lr_Vloc(ng, nt) * strf (ng, nt)
      END DO
   END DO
   !
@@ -306,7 +306,7 @@ subroutine cutoff_force_lc ( aux, forcelc )
   ! See Eq. (54) of PRB 96, 075448.
   !
   USE kinds
-  USE gvect,      ONLY : ngm, gg, g , gstart, nl
+  USE gvect,      ONLY : ngm, gg, g , gstart
   USE constants,   ONLY : fpi, e2, eps8, tpi
   USE uspp_param, ONLY : upf 
   USE cell_base,  ONLY : tpiba2, alat, omega
@@ -329,7 +329,7 @@ subroutine cutoff_force_lc ( aux, forcelc )
         do ipol = 1, 3
            forcelc (ipol, na) = forcelc (ipol, na) + tpi / alat * &
                  g (ipol, ig) * lr_Vloc(ig, ityp(na)) * omega* &
-                (sin(arg)*DBLE(aux(nl(ig))) + cos(arg)*AIMAG(aux(nl(ig))) )
+                (sin(arg)*DBLE(aux(dfftp%nl(ig))) + cos(arg)*AIMAG(aux(dfftp%nl(ig))) )
         enddo
      enddo 
   enddo
@@ -352,7 +352,7 @@ subroutine cutoff_stres_evloc ( psic_G, evloc )
   USE kinds
   USE ions_base,  ONLY : ntyp => nsp
   USE vlocal,     ONLY : strf
-  USE gvect,      ONLY : ngm , gstart, nl
+  USE gvect,      ONLY : ngm , gstart
   USE io_global,  ONLY : stdout
   USE fft_base,   ONLY : dfftp
   implicit none
@@ -366,7 +366,7 @@ subroutine cutoff_stres_evloc ( psic_G, evloc )
   ! So we start at gstart.
   do nt = 1, ntyp
      do ng = gstart, ngm
-        evloc = evloc +  DBLE (CONJG(psic_G (nl (ng) ) ) * strf (ng, nt) ) &
+        evloc = evloc +  DBLE (CONJG(psic_G (dfftp%nl (ng) ) ) * strf (ng, nt) ) &
            * lr_Vloc (ng, nt) 
      enddo
   enddo
@@ -386,7 +386,7 @@ subroutine cutoff_stres_sigmaloc (psic_G, sigmaloc )
   USE ions_base,  ONLY : ntyp => nsp
   USE vlocal,     ONLY : strf
   USE constants,   ONLY :  eps8
-  USE gvect,      ONLY : ngm ,g, gg, gstart, nl
+  USE gvect,      ONLY : ngm ,g, gg, gstart
   USE cell_base,  ONLY :tpiba, tpiba2, alat, omega
   USE io_global,  ONLY : stdout
   USE fft_base,   ONLY : dfftp
@@ -422,7 +422,7 @@ subroutine cutoff_stres_sigmaloc (psic_G, sigmaloc )
                                * (1.0d0- beta + gg(ng)*tpiba2/4.0d0)
            endif
            do m = 1, l
-              sigmaloc(l, m) = sigmaloc(l, m) +  DBLE( CONJG( psic_G(nl(ng) ) ) &
+              sigmaloc(l, m) = sigmaloc(l, m) +  DBLE( CONJG( psic_G(dfftp%nl(ng) ) ) &
                    * strf (ng, nt) ) * 2.0d0 * dlr_Vloc  &
                        * tpiba2 * g (l, ng) * g (m, ng) 
            enddo
@@ -441,7 +441,7 @@ subroutine cutoff_stres_sigmahar (psic_G, sigmahar )
   ! See Eq. (62) of PRB 96, 075448.
   !
   USE kinds
-  USE gvect,      ONLY : ngm ,g, gg, gstart, nl
+  USE gvect,      ONLY : ngm ,g, gg, gstart
   USE constants,   ONLY :  eps8
   USE cell_base,  ONLY : tpiba2, alat, tpiba
   USE io_global,  ONLY : stdout
@@ -465,7 +465,7 @@ subroutine cutoff_stres_sigmahar (psic_G, sigmahar )
         beta=G2lzo2Gp*(1.0d0-cutoff_2D(ng))/cutoff_2D(ng)
      ENDIF
      g2 = gg (ng) * tpiba2
-     shart = psic_G (nl (ng) ) * CONJG(psic_G (nl (ng) ) ) / g2 * cutoff_2D(ng)
+     shart = psic_G (dfftp%nl (ng) ) * CONJG(psic_G (dfftp%nl (ng) ) ) / g2 * cutoff_2D(ng)
      do l = 1, 3
         if (l.eq.3) then
            fact=1.0d0
@@ -492,7 +492,7 @@ subroutine cutoff_stres_sigmaewa (alpha, sdewald, sigmaewa )
   USE kinds
   USE ions_base,  ONLY : nat, zv, tau, ityp
   USE constants,   ONLY : e2, eps8
-  USE gvect,      ONLY : ngm ,g, gg, gstart, nl
+  USE gvect,      ONLY : ngm ,g, gg, gstart
   USE cell_base,  ONLY : tpiba2, alat, omega, tpiba
   USE io_global,  ONLY : stdout
   implicit none

@@ -125,7 +125,7 @@ subroutine cutoff_localq (dvlocin, fact,  u1, u2, u3, gu0, nt, na)
   USE kinds
   USE fft_base,  ONLY : dffts
   USE gvect,     ONLY : eigts1, eigts2, eigts3, mill, g
-  USE gvecs,   ONLY : ngms, nls
+  USE gvecs,   ONLY : ngms
   implicit none
   !
   complex(DP), INTENT(INOUT) :: dvlocin (dffts%nnr)
@@ -142,7 +142,7 @@ subroutine cutoff_localq (dvlocin, fact,  u1, u2, u3, gu0, nt, na)
      gtau = eigts1 (mill(1,ig), na) * eigts2 (mill(2,ig), na) * &
               eigts3 (mill(3,ig), na)
      gu = gu0 + g (1, ig) * u1 + g (2, ig) * u2 + g (3, ig) * u3
-     dvlocin (nls (ig) ) = dvlocin (nls (ig) ) + lr_Vlocq (ig, nt) &
+     dvlocin (dffts%nl (ig) ) = dvlocin (dffts%nl (ig) ) + lr_Vlocq (ig, nt) &
               * gu * fact * gtau
   enddo  
   return
@@ -161,7 +161,7 @@ subroutine cutoff_dv_of_drho (dvaux, is, dvscf)
   USE cell_base,        ONLY : tpiba2
   USE fft_base,         ONLY: dfftp
   USE noncollin_module, ONLY : nspin_mag
-  USE gvect,            ONLY : g, ngm, nl
+  USE gvect,            ONLY : g, ngm
   USE qpoint,           ONLY : xq 
   implicit none
   !
@@ -179,8 +179,8 @@ subroutine cutoff_dv_of_drho (dvaux, is, dvscf)
   do ig = 1, ngm
      qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
      if (qg2 > 1.d-8) then
-        dvaux(nl(ig),is) = dvaux(nl(ig),is) + cutoff_2D_qg(ig)*&
-                           e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
+        dvaux(dfftp%nl(ig),is) = dvaux(dfftp%nl(ig),is) + cutoff_2D_qg(ig)*&
+                           e2 * fpi * dvscf(dfftp%nl(ig),1) / (tpiba2 * qg2)
      endif
   enddo
   return
@@ -197,7 +197,7 @@ subroutine cutoff_dynmat0 (dynwrk, rhog)
   USE constants,   ONLY : tpi, eps8
   USE cell_base,   ONLY : omega, tpiba2
   USE fft_base,    ONLY: dfftp
-  USE gvect,       ONLY : g, ngm, nl, gg
+  USE gvect,       ONLY : g, ngm, gg
   USE Coul_cut_2D, ONLY : lr_Vloc
   USE ions_base,   ONLY : nat, ityp, ntyp => nsp, tau
   implicit none
@@ -218,8 +218,8 @@ subroutine cutoff_dynmat0 (dynwrk, rhog)
                             g (2, ng) * tau (2, na) + &
                             g (3, ng) * tau (3, na) )
               fac = omega * lr_Vloc ( ng , ityp (na) ) * tpiba2 * &
-                   ( DBLE (rhog (nl (ng) ) ) * COS (gtau) - &
-                    AIMAG (rhog (nl (ng) ) ) * SIN (gtau) )
+                   ( DBLE (rhog (dfftp%nl (ng) ) ) * COS (gtau) - &
+                    AIMAG (rhog (dfftp%nl (ng) ) ) * SIN (gtau) )
                   dynwrk (na_icart, na_jcart) = dynwrk (na_icart, na_jcart) - &
                    fac * g (icart, ng) * g (jcart, ng)
            ENDDO

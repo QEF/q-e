@@ -101,7 +101,7 @@
       USE control_flags,      ONLY: iprint, iverbosity, thdyn, tpre, trhor, ndr
       USE ions_base,          ONLY: nat
       USE gvect,              ONLY: ngm,  gstart, ig_l2g
-      USE gvecs,              ONLY: ngms, nls, nlsm
+      USE gvecs,              ONLY: ngms
       USE smallbox_gvec,      ONLY: ngb
       USE gvecw,              ONLY: ngw
       USE uspp,               ONLY: nkb
@@ -291,8 +291,8 @@
             !
             psis = 0.D0
             DO ig=1,ngw
-               psis(nlsm(ig))=CONJG(c_bgrp(ig,i))
-               psis(nls(ig))=c_bgrp(ig,i)
+               psis(dffts%nlm(ig))=CONJG(c_bgrp(ig,i))
+               psis(dffts%nl(ig))=c_bgrp(ig,i)
             END DO
             !
             CALL invfft('Wave',psis, dffts )
@@ -574,7 +574,7 @@
       !     in: charge density on G-space    out: gradient in R-space
       !
       USE kinds,              ONLY: DP
-      use gvect,              ONLY: g, ngm, nl, nlm
+      use gvect,              ONLY: g, ngm
       use cell_base,          ONLY: tpiba
       USE fft_interfaces,     ONLY: invfft
       USE fft_base,           ONLY: dfftp
@@ -607,8 +607,8 @@
          end do
 !$omp do
          do ig=1,ngm
-            v(nl (ig))=      ci*tpiba*g(1,ig)*rhog(ig,iss)
-            v(nlm(ig))=CONJG(ci*tpiba*g(1,ig)*rhog(ig,iss))
+            v(dfftp%nl (ig))=      ci*tpiba*g(1,ig)*rhog(ig,iss)
+            v(dfftp%nlm(ig))=CONJG(ci*tpiba*g(1,ig)*rhog(ig,iss))
          end do
 !$omp end parallel
          !
@@ -625,9 +625,9 @@
          end do
 !$omp do
          do ig=1,ngm
-            v(nl(ig))= tpiba*(      ci*g(2,ig)*rhog(ig,iss)-           &
+            v(dfftp%nl(ig))= tpiba*(      ci*g(2,ig)*rhog(ig,iss)-           &
      &                                 g(3,ig)*rhog(ig,iss) )
-            v(nlm(ig))=tpiba*(CONJG(ci*g(2,ig)*rhog(ig,iss)+           &
+            v(dfftp%nlm(ig))=tpiba*(CONJG(ci*g(2,ig)*rhog(ig,iss)+           &
      &                                 g(3,ig)*rhog(ig,iss)))
          end do
 !$omp end parallel
@@ -702,7 +702,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE uspp_param,               ONLY: nhm, nh, nvb
       USE electrons_base,           ONLY: nspin
       USE smallbox_gvec,            ONLY: ngb, npb, nmb
-      USE gvect,                    ONLY: ngm, nlm, nl
+      USE gvect,                    ONLY: ngm
       USE cell_base,                ONLY: ainv
       USE qgb_mod,                  ONLY: qgb, dqgb
       USE fft_interfaces,           ONLY: fwfft, invfft
@@ -893,7 +893,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                CALL fwfft( 'Dense', v, dfftp )
 !
                DO ig=1,ngm
-                  drhog(ig,iss,i,j) = drhog(ig,iss,i,j) + v(nl(ig))
+                  drhog(ig,iss,i,j) = drhog(ig,iss,i,j) + v(dfftp%nl(ig))
                END DO
 !
             ENDDO
@@ -972,8 +972,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                CALL fwfft('Dense', v, dfftp )
 
                DO ig=1,ngm
-                  fp=v(nl(ig))+v(nlm(ig))
-                  fm=v(nl(ig))-v(nlm(ig))
+                  fp=v(dfftp%nl(ig))+v(dfftp%nlm(ig))
+                  fm=v(dfftp%nl(ig))-v(dfftp%nlm(ig))
                   drhog(ig,isup,i,j) = drhog(ig,isup,i,j) +             &
      &                 0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
                   drhog(ig,isdw,i,j) = drhog(ig,isdw,i,j) +             &
@@ -1008,7 +1008,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE uspp,                     ONLY: deeq
       USE electrons_base,           ONLY: nspin
       USE smallbox_gvec,                    ONLY: npb, nmb, ngb
-      USE gvect,                    ONLY: ngm, nl, nlm
+      USE gvect,                    ONLY: ngm
       USE cell_base,                ONLY: omega
       USE small_box,                ONLY: omegab
       USE control_flags,            ONLY: iprint, iverbosity, tpre
@@ -1212,7 +1212,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          !  rhog(g) = total (smooth + US) charge density in G-space
          !
          DO ig = 1, ngm
-            rhog(ig,iss)=rhog(ig,iss)+v(nl(ig))
+            rhog(ig,iss)=rhog(ig,iss)+v(dfftp%nl(ig))
          END DO
 
 !
@@ -1311,8 +1311,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          ENDIF
 !
          DO ig=1,ngm
-            fp=  v(nl(ig)) + v(nlm(ig))
-            fm=  v(nl(ig)) - v(nlm(ig))
+            fp=  v(dfftp%nl(ig)) + v(dfftp%nlm(ig))
+            fm=  v(dfftp%nl(ig)) - v(dfftp%nlm(ig))
             rhog(ig,isup)=rhog(ig,isup) + 0.5d0*CMPLX(DBLE(fp),AIMAG(fm),kind=DP)
             rhog(ig,isdw)=rhog(ig,isdw) + 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
          END DO

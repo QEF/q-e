@@ -16,7 +16,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
 !     in: charge density on G-space    out: gradient in R-space
 !
       use cell_base
-      use gvect, only: ngm, nl, nlm, g
+      use gvect, only: ngm, g
       USE fft_interfaces, ONLY: invfft
       USE fft_base,       ONLY: dfftp
 !
@@ -53,10 +53,10 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             w(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
-            v(nl(ig)) =      ci*tpiba*g(1,ig)*rhog(ig,iss)
-            v(nlm(ig))=conjg(ci*tpiba*g(1,ig)*rhog(ig,iss))
-            w(nl(ig)) =      -1.d0*tpiba**2*g(1,ig)**2*rhog(ig,iss)
-            w(nlm(ig))=conjg(-1.d0*tpiba**2*g(1,ig)**2*rhog(ig,iss))
+            v(dfftp%nl(ig)) =      ci*tpiba*g(1,ig)*rhog(ig,iss)
+            v(dfftp%nlm(ig))=conjg(ci*tpiba*g(1,ig)*rhog(ig,iss))
+            w(dfftp%nl(ig)) =      -1.d0*tpiba**2*g(1,ig)**2*rhog(ig,iss)
+            w(dfftp%nlm(ig))=conjg(-1.d0*tpiba**2*g(1,ig)**2*rhog(ig,iss))
          end do
          call invfft('Dense',v, dfftp )
          call invfft('Dense',w, dfftp )
@@ -70,13 +70,13 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             w(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
-            v(nl(ig))= tpiba*(      ci*g(2,ig)*rhog(ig,iss)-           &
+            v(dfftp%nl(ig))= tpiba*(      ci*g(2,ig)*rhog(ig,iss)-           &
      &                                 g(3,ig)*rhog(ig,iss) )
-            v(nlm(ig))=tpiba*(conjg(ci*g(2,ig)*rhog(ig,iss))+          &
+            v(dfftp%nlm(ig))=tpiba*(conjg(ci*g(2,ig)*rhog(ig,iss))+          &
      &                              ci*conjg(ci*g(3,ig)*rhog(ig,iss)))
-            w(nl(ig))= -1.d0*tpiba**2*(      g(2,ig)**2*rhog(ig,iss) + &
+            w(dfftp%nl(ig))= -1.d0*tpiba**2*(      g(2,ig)**2*rhog(ig,iss) + &
      &                                 ci*g(3,ig)**2*rhog(ig,iss) )
-            w(nlm(ig))=-1.d0*tpiba**2*(conjg(g(2,ig)**2*rhog(ig,iss))+ &
+            w(dfftp%nlm(ig))=-1.d0*tpiba**2*(conjg(g(2,ig)**2*rhog(ig,iss))+ &
      &                           ci*conjg(g(3,ig)**2*rhog(ig,iss)))
          end do
          call invfft('Dense',v, dfftp )
@@ -92,8 +92,8 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             v(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
-            v(nl(ig)) = -1.d0*tpiba**2*g(1,ig)*g(2,ig)*rhog(ig,iss)
-            v(nlm(ig))=conjg(v(nl(ig)))
+            v(dfftp%nl(ig)) = -1.d0*tpiba**2*g(1,ig)*g(2,ig)*rhog(ig,iss)
+            v(dfftp%nlm(ig))=conjg(v(dfftp%nl(ig)))
          end do
          call invfft('Dense',v, dfftp )
          do ir=1,dfftp%nnr
@@ -104,9 +104,9 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             v(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
-            v(nl(ig))= -1.d0*tpiba**2*(g(1,ig)*g(3,ig)*rhog(ig,iss) + &
+            v(dfftp%nl(ig))= -1.d0*tpiba**2*(g(1,ig)*g(3,ig)*rhog(ig,iss) + &
      &                              ci*g(2,ig)*g(3,ig)*rhog(ig,iss) )
-            v(nlm(ig))=-1.d0*tpiba**2*                                  &
+            v(dfftp%nlm(ig))=-1.d0*tpiba**2*                                  &
      &                          (conjg(g(1,ig)*g(3,ig)*rhog(ig,iss))+ &
      &                        ci*conjg(g(2,ig)*g(3,ig)*rhog(ig,iss)))
          end do

@@ -17,8 +17,7 @@
      use pwcom
      USE wavefunctions_module,  ONLY : evc
      USE kinds,                 ONLY : DP
-     USE gvect,        ONLY : ngm_g, ig_l2g, nl, nlm, gstart
-     USE gvecs,        ONLY : nls, nlsm
+     USE gvect,        ONLY : ngm_g, ig_l2g, gstart
      USE mp,           ONLY : mp_sum, mp_barrier, mp_bcast
      USE mp_wave,      ONLY : mergewf,splitwf
      USE mp_pools,     ONLY : intra_pool_comm, inter_pool_comm, intra_pool_comm
@@ -48,14 +47,14 @@
     do iv=1,n_semicore,2
        psic(:)=(0.d0,0.d0)
        if(iv<n_semicore) then
-          psic(nls(igk_k(1:npw,1)))  = evc(1:npw,iv) + &
+          psic(dffts%nl(igk_k(1:npw,1)))  = evc(1:npw,iv) + &
                ( 0.D0, 1.D0 ) * evc(1:npw,iv+1)
-          psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) - &
+          psic(dffts%nlm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) - &
                     ( 0.D0, 1.D0 ) * evc(1:npw,iv+1) )
 
        else
-          psic(nls(igk_k(1:npw,1)))  = evc(1:npw,iv)
-          psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) )
+          psic(dffts%nl(igk_k(1:npw,1)))  = evc(1:npw,iv)
+          psic(dffts%nlm(igk_k(1:npw,1))) = CONJG( evc(1:npw,iv) )
        endif
        CALL invfft ('Wave', psic, dffts)
        psi_sc(1:dfftp%nnr,iv)=dble(psic(1:dfftp%nnr))
@@ -89,8 +88,8 @@
 !fft
 
        psic(:)=(0.d0,0.d0)
-       psic(nls(igk_k(1:npw,1)))  = evc(1:npw,ii)
-       psic(nlsm(igk_k(1:npw,1))) = CONJG( evc(1:npw,ii) )
+       psic(dffts%nl(igk_k(1:npw,1)))  = evc(1:npw,ii)
+       psic(dffts%nlm(igk_k(1:npw,1))) = CONJG( evc(1:npw,ii) )
 
        CALL invfft ('Wave', psic, dffts)
 
@@ -107,14 +106,14 @@
 
           CALL fwfft ('Dense', prod, dfftp)
           if(iv==n_semicore) then
-             prod_g(1:npw,1)=prod(nl(1:npw))
+             prod_g(1:npw,1)=prod(dfftp%nl(1:npw))
              if(gstart==2) then
                 write(stdout,*) 'Putting to zero:', iv,ii, prod_g(1,1)
                 prod_g(1,1)=(0.d0,0.d0)
              endif
           else
-             prod_g(1:npw, 1)= 0.5d0*(prod(nl(1:npw))+conjg( prod(nlm(1:npw))))
-             prod_g(1:npw, 2)= (0.d0,-0.5d0)*(prod(nl(1:npw)) - conjg(prod(nlm(1:npw))))
+             prod_g(1:npw, 1)= 0.5d0*(prod(dfftp%nl(1:npw))+conjg( prod(dfftp%nlm(1:npw))))
+             prod_g(1:npw, 2)= (0.d0,-0.5d0)*(prod(dfftp%nl(1:npw)) - conjg(prod(dfftp%nlm(1:npw))))
              if(gstart==2) then
                 write(stdout,*)'Putting to zero:', iv,ii, prod_g(1,1)
                 write(stdout,*)'Putting to zero:', iv+1,ii, prod_g(1,2)

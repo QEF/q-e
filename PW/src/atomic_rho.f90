@@ -31,7 +31,7 @@ subroutine atomic_rho (rhoa, nspina)
   USE atom,                 ONLY : rgrid, msh
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : tpiba, omega
-  USE gvect,                ONLY : ngm, ngl, gstart, nl, nlm, gl, igtongl
+  USE gvect,                ONLY : ngm, ngl, gstart, gl, igtongl
   USE lsda_mod,             ONLY : starting_magnetization, lsda
   USE vlocal,               ONLY : starting_charge, strf
   USE control_flags,        ONLY : gamma_only
@@ -152,8 +152,8 @@ subroutine atomic_rho (rhoa, nspina)
      ! and we return to real space
      !
      psic(:) = (0.d0,0.d0)
-     psic (nl (:) ) = rhocg (:, is)
-     if (gamma_only) psic ( nlm(:) ) = CONJG( rhocg (:, is) )
+     psic (dfftp%nl (:) ) = rhocg (:, is)
+     if (gamma_only) psic ( dfftp%nlm(:) ) = CONJG( rhocg (:, is) )
      CALL invfft ('Dense', psic, dfftp)
      !
      ! we check that everything is correct

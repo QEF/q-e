@@ -90,6 +90,16 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: ngl(:) ! per proc. no. of non zero charge density/potential components
     INTEGER, ALLOCATABLE :: nwl(:) ! per proc. no. of non zero wave function plane components
 
+    INTEGER :: ngm  ! my no. of non zero charge density/potential components
+                    !    ngm = dfftp%ngl( dfftp%mype + 1 )
+                    ! with gamma sym.   
+                    !    ngm = ( dfftp%ngl( dfftp%mype + 1 ) + 1 ) / 2
+
+    INTEGER :: ngw  ! my no. of non zero wave function plane components
+                    !    ngw = dffts%nwl( dffts%mype + 1 )
+                    ! with gamma sym.   
+                    !    ngw = ( dffts%nwl( dffts%mype + 1 ) + 1 ) / 2
+
     INTEGER, ALLOCATABLE :: iplp(:) ! if > 0 is the iproc2 processor owning the active "X" value ( potential )
     INTEGER, ALLOCATABLE :: iplw(:) ! if > 0 is the iproc2 processor owning the active "X" value ( wave func )
 
@@ -102,6 +112,8 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: iss(:)   ! index of the first rho stick on each proc
     INTEGER, ALLOCATABLE :: isind(:) ! for each position in the plane indicate the stick index
     INTEGER, ALLOCATABLE :: ismap(:) ! for each stick in the plane indicate the position
+    INTEGER, ALLOCATABLE :: nl(:)    ! position of the G vec in the FFT grid
+    INTEGER, ALLOCATABLE :: nlm(:)   ! with gamma sym. position of -G vec in the FFT grid
     !
     ! task group ALLTOALL communication layout
     INTEGER, ALLOCATABLE :: tg_snd(:) ! number of elements to be sent in task group redistribution
@@ -287,6 +299,9 @@ CONTAINS
     IF ( ALLOCATED( desc%tg_rcv ) ) DEALLOCATE( desc%tg_rcv )
     IF ( ALLOCATED( desc%tg_sdsp ) )DEALLOCATE( desc%tg_sdsp )
     IF ( ALLOCATED( desc%tg_rdsp ) )DEALLOCATE( desc%tg_rdsp )
+
+    IF ( ALLOCATED( desc%nl ) )  DEALLOCATE( desc%nl )
+    IF ( ALLOCATED( desc%nlm ) ) DEALLOCATE( desc%nlm )
 
     desc%comm  = MPI_COMM_NULL 
 #if defined(__MPI)
@@ -779,6 +794,21 @@ CONTAINS
 
      CALL fft_type_set( dfft, .not.smap%lgamma, lpara, nst, smap%ub, smap%lb, smap%idx, &
                              smap%ist(:,1), smap%ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+
+     dfft%ngw = dfft%nwl( dfft%mype + 1 )
+     dfft%ngm = dfft%ngl( dfft%mype + 1 )
+     IF( lgamma ) THEN
+        dfft%ngw = (dfft%ngw + 1)/2
+        dfft%ngm = (dfft%ngm + 1)/2
+     END IF
+
+     IF( dfft%ngw /= ngw ) THEN
+        CALL fftx_error__(' fft_type_init ', ' wrong ngw ', 1 )
+     END IF
+     IF( dfft%ngm /= ngm ) THEN
+        CALL fftx_error__(' fft_type_init ', ' wrong ngm ', 1 )
+     END IF
+
 
      DEALLOCATE( st )
      DEALLOCATE( stw )

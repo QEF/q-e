@@ -25,7 +25,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
   USE fft_base,  ONLY: dfftp
   USE scatter_mod,  ONLY: gather_grid
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect, ONLY: ngm, g, nl, nlm
+  USE gvect, ONLY: ngm, g
   USE klist, ONLY: xk, lgauss, degauss, ngauss, wk, nks, nelec, ngk, igk_k
   USE ener, ONLY: ef
   USE symme, ONLY : sym_rho, sym_rho_init
@@ -172,15 +172,15 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
            psic(:) = (0.d0, 0.d0)
            IF ( ibnd < last_band ) THEN
               DO ig = 1, npw
-                 psic(nl(igk_k(ig,ik)))  = &
+                 psic(dfftp%nl(igk_k(ig,ik)))  = &
                              evc(ig,ibnd) + (0.D0,1.D0) * evc(ig,ibnd+1)
-                 psic(nlm(igk_k(ig,ik))) = &
+                 psic(dfftp%nlm(igk_k(ig,ik))) = &
                       conjg( evc(ig,ibnd) - (0.D0,1.D0) * evc(ig,ibnd+1) )
               ENDDO
            ELSE
               DO ig = 1, npw
-                 psic(nl (igk_k(ig,ik))) =        evc(ig,ibnd)
-                 psic(nlm(igk_k(ig,ik))) = conjg( evc(ig,ibnd) )
+                 psic(dfftp%nl (igk_k(ig,ik))) =        evc(ig,ibnd)
+                 psic(dfftp%nlm(igk_k(ig,ik))) = conjg( evc(ig,ibnd) )
               ENDDO
            ENDIF
 
@@ -203,7 +203,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
            !
            psic(:) = (0.d0, 0.d0)
            DO ig = 1, npw
-              psic(nl(igk_k(ig,ik)))  = evc(ig,ibnd)
+              psic(dfftp%nl(igk_k(ig,ik)))  = evc(ig,ibnd)
            ENDDO
 
            CALL invfft ('Dense', psic, dfftp)
@@ -226,10 +226,10 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
      !
      psic(:) = cmplx ( rho%of_r(:,1), 0.0_dp, kind=dp)
      CALL fwfft ('Dense', psic, dfftp)
-     rho%of_g(:,1) = psic(nl(:))
+     rho%of_g(:,1) = psic(dfftp%nl(:))
      CALL sym_rho (1, rho%of_g)
      psic(:) = (0.0_dp, 0.0_dp)
-     psic(nl(:)) = rho%of_g(:,1)
+     psic(dfftp%nl(:)) = rho%of_g(:,1)
      CALL invfft ('Dense', psic, dfftp)
      rho%of_r(:,1) = dble(psic(:))
   ENDIF

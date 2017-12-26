@@ -2002,7 +2002,7 @@ MODULE realus
   !
     USE wavefunctions_module, &
                        ONLY : psic
-    USE gvecs,         ONLY : nls,nlsm,doublegrid
+    USE gvecs,         ONLY : doublegrid
     USE klist,         ONLY : ngk, igk_k
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
@@ -2039,15 +2039,15 @@ MODULE realus
 
            IF( idx + ibnd - 1 < last ) THEN
               DO j = 1, ngk(1)
-                 tg_psic(nls (igk_k(j,1))+ioff) =      orbital(j,idx+ibnd-1) +&
+                 tg_psic(dffts%nl (igk_k(j,1))+ioff) =      orbital(j,idx+ibnd-1) +&
                       (0.0d0,1.d0) * orbital(j,idx+ibnd)
-                 tg_psic(nlsm(igk_k(j,1))+ioff) =conjg(orbital(j,idx+ibnd-1) -&
+                 tg_psic(dffts%nlm(igk_k(j,1))+ioff) =conjg(orbital(j,idx+ibnd-1) -&
                       (0.0d0,1.d0) * orbital(j,idx+ibnd) )
               ENDDO
            ELSEIF( idx + ibnd - 1 == last ) THEN
               DO j = 1, ngk(1)
-                 tg_psic(nls (igk_k(j,1))+ioff) =        orbital(j,idx+ibnd-1)
-                 tg_psic(nlsm(igk_k(j,1))+ioff) = conjg( orbital(j,idx+ibnd-1))
+                 tg_psic(dffts%nl (igk_k(j,1))+ioff) =        orbital(j,idx+ibnd-1)
+                 tg_psic(dffts%nlm(igk_k(j,1))+ioff) = conjg( orbital(j,idx+ibnd-1))
               ENDDO
            ENDIF
 
@@ -2073,13 +2073,13 @@ MODULE realus
         IF (ibnd < last) THEN
            ! two ffts at the same time
            DO j = 1, ngk(1)
-              psic (nls (igk_k(j,1))) =       orbital(j, ibnd) + (0.0d0,1.d0)*orbital(j, ibnd+1)
-              psic (nlsm(igk_k(j,1))) = conjg(orbital(j, ibnd) - (0.0d0,1.d0)*orbital(j, ibnd+1))
+              psic (dffts%nl (igk_k(j,1))) =       orbital(j, ibnd) + (0.0d0,1.d0)*orbital(j, ibnd+1)
+              psic (dffts%nlm(igk_k(j,1))) = conjg(orbital(j, ibnd) - (0.0d0,1.d0)*orbital(j, ibnd+1))
            ENDDO
         ELSE
            DO j = 1, ngk(1)
-              psic (nls (igk_k(j,1))) =       orbital(j, ibnd)
-              psic (nlsm(igk_k(j,1))) = conjg(orbital(j, ibnd))
+              psic (dffts%nl (igk_k(j,1))) =       orbital(j, ibnd)
+              psic (dffts%nlm(igk_k(j,1))) = conjg(orbital(j, ibnd))
            ENDDO
         ENDIF
         !
@@ -2118,7 +2118,7 @@ MODULE realus
     USE wavefunctions_module, &
                        ONLY : psic
     USE klist,         ONLY : ngk, igk_k
-    USE gvecs,         ONLY : nls,nlsm,doublegrid
+    USE gvecs,         ONLY : doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE fft_interfaces,ONLY : fwfft
@@ -2155,16 +2155,16 @@ MODULE realus
            !
            IF( idx + ibnd - 1 < last ) THEN
               DO j = 1, ngk(1)
-                 fp= ( tg_psic( nls(igk_k(j,1)) + ioff ) +  &
-                      tg_psic( nlsm(igk_k(j,1)) + ioff ) ) * 0.5d0
-                 fm= ( tg_psic( nls(igk_k(j,1)) + ioff ) -  &
-                      tg_psic( nlsm(igk_k(j,1)) + ioff ) ) * 0.5d0
+                 fp= ( tg_psic( dffts%nl(igk_k(j,1)) + ioff ) +  &
+                      tg_psic( dffts%nlm(igk_k(j,1)) + ioff ) ) * 0.5d0
+                 fm= ( tg_psic( dffts%nl(igk_k(j,1)) + ioff ) -  &
+                      tg_psic( dffts%nlm(igk_k(j,1)) + ioff ) ) * 0.5d0
                  orbital (j, ibnd+idx-1) =  cmplx( dble(fp), aimag(fm),kind=DP)
                  orbital (j, ibnd+idx  ) =  cmplx(aimag(fp),- dble(fm),kind=DP)
               ENDDO
            ELSEIF( idx + ibnd - 1 == last ) THEN
               DO j = 1, ngk(1)
-                 orbital (j, ibnd+idx-1) =  tg_psic( nls(igk_k(j,1)) + ioff )
+                 orbital (j, ibnd+idx-1) =  tg_psic( dffts%nl(igk_k(j,1)) + ioff )
               ENDDO
            ENDIF
            !
@@ -2187,14 +2187,14 @@ MODULE realus
 
            ! two ffts at the same time
            DO j = 1, ngk(1)
-              fp = (psic (nls(igk_k(j,1))) + psic (nlsm(igk_k(j,1))))*0.5d0
-              fm = (psic (nls(igk_k(j,1))) - psic (nlsm(igk_k(j,1))))*0.5d0
+              fp = (psic (dffts%nl(igk_k(j,1))) + psic (dffts%nlm(igk_k(j,1))))*0.5d0
+              fm = (psic (dffts%nl(igk_k(j,1))) - psic (dffts%nlm(igk_k(j,1))))*0.5d0
               orbital( j, ibnd)   = cmplx( dble(fp), aimag(fm),kind=DP)
               orbital( j, ibnd+1) = cmplx(aimag(fp),- dble(fm),kind=DP)
            ENDDO
         ELSE
            DO j = 1, ngk(1)
-              orbital(j, ibnd)   =  psic (nls(igk_k(j,1)))
+              orbital(j, ibnd)   =  psic (dffts%nl(igk_k(j,1)))
            ENDDO
         ENDIF
         IF (present(conserved)) THEN
@@ -2228,7 +2228,7 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
     USE wvfct,                    ONLY : current_k
-    USE gvecs,                    ONLY : nls, nlsm, doublegrid
+    USE gvecs,                    ONLY : doublegrid
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : invfft
     USE fft_helper_subroutines
@@ -2261,7 +2261,7 @@ MODULE realus
           !
           IF( idx + ibnd - 1 <= last ) THEN
              !DO j = 1, size(orbital,1)
-             tg_psic( nls( igk_k(:, ik_) ) + ioff ) = orbital(:,idx+ibnd-1)
+             tg_psic( dffts%nl( igk_k(:, ik_) ) + ioff ) = orbital(:,idx+ibnd-1)
              !END DO
           ENDIF
 
@@ -2282,7 +2282,7 @@ MODULE realus
        !
        psic(1:dffts%nnr) = ( 0.D0, 0.D0 )
        !
-       psic(nls(igk_k(1:ngk(ik_), ik_))) = orbital(1:ngk(ik_),ibnd)
+       psic(dffts%nl(igk_k(1:ngk(ik_), ik_))) = orbital(1:ngk(ik_),ibnd)
        !
        CALL invfft ('Wave', psic, dffts)
        IF (present(conserved)) THEN
@@ -2314,7 +2314,7 @@ MODULE realus
     USE wavefunctions_module,     ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
     USE wvfct,                    ONLY : current_k
-    USE gvecs,                    ONLY : nls, nlsm, doublegrid
+    USE gvecs,                    ONLY : doublegrid
     USE kinds,                    ONLY : DP
     USE fft_base,                 ONLY : dffts
     USE fft_interfaces,           ONLY : fwfft
@@ -2349,7 +2349,7 @@ MODULE realus
        DO idx = 1, ntgrp
           !
           IF( idx + ibnd - 1 <= last ) THEN
-             orbital (:, ibnd+idx-1) = tg_psic( nls(igk_k(:,ik_)) + ioff )
+             orbital (:, ibnd+idx-1) = tg_psic( dffts%nl(igk_k(:,ik_)) + ioff )
 
           ENDIF
           !
@@ -2366,7 +2366,7 @@ MODULE realus
        !
        CALL fwfft ('Wave', psic, dffts)
        !
-       orbital(1:ngk(ik_),ibnd) = psic(nls(igk_k(1:ngk(ik_),ik_)))
+       orbital(1:ngk(ik_),ibnd) = psic(dffts%nl(igk_k(1:ngk(ik_),ik_)))
        !
        IF (present(conserved)) THEN
           IF (conserved .eqv. .true.) THEN
@@ -2387,7 +2387,7 @@ MODULE realus
     !
     USE wavefunctions_module, &
                        ONLY : psic
-    USE gvecs,         ONLY : nls,nlsm,doublegrid
+    USE gvecs,         ONLY : doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE mp_bands,      ONLY : me_bgrp
@@ -2435,7 +2435,7 @@ MODULE realus
     !
     USE wavefunctions_module, &
                        ONLY : psic
-    USE gvecs,         ONLY : nls,nlsm,doublegrid
+    USE gvecs,         ONLY : doublegrid
     USE kinds,         ONLY : DP
     USE fft_base,      ONLY : dffts
     USE mp_bands,      ONLY : me_bgrp

@@ -40,7 +40,7 @@ CONTAINS
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_pools, ONLY : intra_pool_comm
    USE mp_world, ONLY: world_comm, mpime, nproc
-   USE gvecs,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : doublegrid
 
    USE kinds, ONLY : DP
    USE io_files, ONLY : prefix, tmp_dir, diropn
@@ -1423,7 +1423,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
    USE mp_pools, ONLY : intra_pool_comm
-   USE gvecs,              ONLY : nls, nlsm,  doublegrid
+   USE gvecs,              ONLY : doublegrid
    USE kinds, ONLY : DP
    USE io_files, ONLY : prefix, tmp_dir, diropn
    USE g_psi_mod,            ONLY : h_diag, s_diag
@@ -2171,7 +2171,7 @@ end subroutine fake_conduction_wannier_real
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
    USE mp_pools, ONLY : intra_pool_comm
-   USE gvecs,              ONLY : nls, nlsm, doublegrid
+   USE gvecs,              ONLY : doublegrid
 
    USE kinds, ONLY : DP
    USE io_files, ONLY : prefix, tmp_dir, diropn

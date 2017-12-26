@@ -18,7 +18,6 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   USE ions_base,            ONLY : nat
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : invfft
-  USE gvecs,                ONLY : nls
   USE wvfct,                ONLY : npwx, nbnd
   USE uspp_param,           ONLY : nhm
   USE wavefunctions_module, ONLY : evc
@@ -103,10 +102,10 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
            IF( idx + ibnd - 1 <= nbnd_occ(ikk) ) THEN
               !
               DO ig = 1, npw
-                 tg_psi( nls( igk_k( ig,ikk ) ) + ioff ) = evc( ig, idx+ibnd-1 )
+                 tg_psi( dffts%nl( igk_k( ig,ikk ) ) + ioff ) = evc( ig, idx+ibnd-1 )
               END DO
               DO ig = 1, npwq
-                 tg_dpsi( nls( igk_k( ig,ikq ) ) + ioff ) = dpsi( ig, idx+ibnd-1 )
+                 tg_dpsi( dffts%nl( igk_k( ig,ikq ) ) + ioff ) = dpsi( ig, idx+ibnd-1 )
               END DO
               !
            END IF
@@ -134,7 +133,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
         !
         psi (:) = (0.d0, 0.d0)
         do ig = 1, npw
-           psi (nls (igk_k(ig,ikk) ) ) = evc (ig, ibnd)
+           psi (dffts%nl (igk_k(ig,ikk) ) ) = evc (ig, ibnd)
         enddo
         CALL invfft ('Wave', psi, dffts)
         !
@@ -142,7 +141,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
         !
         dpsic(:) = (0.d0, 0.d0)
         do ig = 1, npwq
-           dpsic (nls (igk_k(ig,ikq) ) ) = dpsi (ig, ibnd)
+           dpsic (dffts%nl (igk_k(ig,ikq) ) ) = dpsi (ig, ibnd)
         enddo
         CALL invfft ('Wave', dpsic, dffts)
         !

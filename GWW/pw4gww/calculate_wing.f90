@@ -211,7 +211,7 @@ end subroutine calculate_wing
    !     between the fft mesh points and the array of g vectors.
    !
    USE gvect,              ONLY : ig_l2g, g, gg, ngm, ngm_g, gcutm, &
-                                  mill,  nl, gstart
+                                  mill, gstart
    USE fft_base,           ONLY : dfftp, dffts
 !                                                                                                                                                           
    USE kinds,              ONLY : DP

@@ -17,7 +17,7 @@
   USE realus,               ONLY : tabp
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp
-  USE gvect,                ONLY : ngm, nl, nlm, gg, g
+  USE gvect,                ONLY : ngm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb, ijtoh, indv_ijkb0
   USE uspp_param,           ONLY : upf, lmaxq, nh
@@ -115,7 +115,7 @@
   USE realus,               ONLY : tabp
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp
-  USE gvect,                ONLY : ngm, nl, nlm, gg, g
+  USE gvect,                ONLY : ngm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb, ijtoh, indv_ijkb0
   USE uspp_param,           ONLY : upf, lmaxq, nh
@@ -197,7 +197,7 @@
   USE kinds,                ONLY : DP
   USE realus,               ONLY : tabp
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : ngm, nl, nlm, gg, g
+  USE gvect,                ONLY : ngm, gg, g
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE uspp,                 ONLY : okvan, becsum, nkb, indv_ijkb0
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm

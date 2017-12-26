@@ -141,15 +141,9 @@
       !        for a left-handed triplet, ainv is minus the inverse of a)
       !
       CALL fft_base_info( ionode, stdout )
-      !!CALL fft_extra_info()
-      ngw_ = dffts%nwl( dffts%mype + 1 )
-      ngs_ = dffts%ngl( dffts%mype + 1 )
-      ngm_ = dfftp%ngl( dfftp%mype + 1 )
-      IF( gamma_only ) THEN
-         ngw_ = (ngw_ + 1)/2
-         ngs_ = (ngs_ + 1)/2
-         ngm_ = (ngm_ + 1)/2
-      END IF
+      ngw_ = dffts%ngw
+      ngs_ = dffts%ngm
+      ngm_ = dfftp%ngm
 
       !
       ! ... Initialize reciprocal space local and global dimensions

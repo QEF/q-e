@@ -18,7 +18,7 @@ subroutine setup_dgc
   USE constants,            ONLY : e2
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, g, nl
+  USE gvect,                ONLY : ngm, g
   USE spin_orb,             ONLY : domag
   USE scf,                  ONLY : rho, rho_core, rhog_core
   USE noncollin_module,     ONLY : noncolin, ux, nspin_gga, nspin_mag
@@ -77,10 +77,10 @@ subroutine setup_dgc
         !
         CALL fwfft ('Dense', psic, dfftp)
         !
-        rhogout(:,is) = psic(nl(:))
+        rhogout(:,is) = psic(dfftp%nl(:))
         !
         !
-        CALL gradrho(dfftp%nnr, rhogout(1,is), ngm, g, nl, grho(1,1,is) )
+        CALL gradrho(dfftp%nnr, rhogout(1,is), ngm, g, dfftp%nl, grho(1,1,is) )
         !
      END DO
      DEALLOCATE(rhogout)
@@ -95,7 +95,7 @@ subroutine setup_dgc
         enddo
      endif
      do is = 1, nspin_gga
-        call gradrho (dfftp%nnr, rho%of_g (1, is), ngm, g, nl, grho (1, 1, is) )
+        call gradrho (dfftp%nnr, rho%of_g (1, is), ngm, g, dfftp%nl, grho (1, 1, is) )
      enddo
   END IF
 

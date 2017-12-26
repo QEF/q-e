@@ -32,7 +32,7 @@ SUBROUTINE potinit()
   USE lsda_mod,             ONLY : lsda, nspin
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE gvect,                ONLY : ngm, gstart, nl, g, gg, ig_l2g
+  USE gvect,                ONLY : ngm, gstart, g, gg, ig_l2g
   USE gvecs,                ONLY : doublegrid
   USE control_flags,        ONLY : lscf, gamma_only
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
@@ -213,7 +213,7 @@ SUBROUTINE potinit()
      !
      CALL fwfft ('Dense', psic, dfftp)
      !
-     rho%of_g(:,is) = psic(nl(:))
+     rho%of_g(:,is) = psic(dfftp%nl(:))
      !
   END DO
   !
@@ -229,7 +229,7 @@ SUBROUTINE potinit()
         if (starting_pot /= 'file') rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
         psic(:) = rho%kin_r(:,is)
         CALL fwfft ('Dense', psic, dfftp)
-        rho%kin_g(:,is) = psic(nl(:))
+        rho%kin_g(:,is) = psic(dfftp%nl(:))
      END DO
      !
   end if

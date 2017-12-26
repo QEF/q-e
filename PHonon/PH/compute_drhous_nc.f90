@@ -22,7 +22,6 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   USE buffers,    ONLY : get_buffer
   USE fft_base,   ONLY : dffts, dfftp
   USE fft_interfaces, ONLY : invfft
-  USE gvecs,    ONLY : nls
   USE wvfct,      ONLY : npwx, nbnd
   USE noncollin_module, ONLY : npol, nspin_mag
   USE wavefunctions_module,  ONLY: evc
@@ -97,8 +96,8 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
      evcr = (0.d0, 0.d0)
      do ibnd = 1, nbnd
         do ig = 1, npw
-           evcr (nls (igk_k(ig,ikk) ), 1, ibnd) = evc (ig, ibnd)
-           evcr (nls (igk_k(ig,ikk) ), 2, ibnd) = evc (ig+npwx, ibnd)
+           evcr (dffts%nl (igk_k(ig,ikk) ), 1, ibnd) = evc (ig, ibnd)
+           evcr (dffts%nl (igk_k(ig,ikk) ), 2, ibnd) = evc (ig+npwx, ibnd)
         enddo
         CALL invfft ('Wave', evcr (:, 1, ibnd), dffts)
         CALL invfft ('Wave', evcr (:, 2, ibnd), dffts)

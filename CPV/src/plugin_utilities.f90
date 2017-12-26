@@ -17,7 +17,7 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       USE constants,          ONLY: fpi
       USE io_global,          ONLY: stdout
       USE cell_base,          ONLY: tpiba2, tpiba, omega
-      USE gvect,              ONLY: gstart, ngm, gg, nl, nlm
+      USE gvect,              ONLY: gstart, ngm, gg
       USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
       USE fft_base,           ONLY: dfftp
@@ -66,8 +66,8 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       !
       ALLOCATE(aux(dfftp%nnr))
       aux=0.D0
-      aux(nl(1:ngm)) = CMPLX ( aux1(1,1:ngm), aux1(2,1:ngm), KIND=dp )
-      aux(nlm(1:ngm)) = CMPLX ( aux1(1,1:ngm), -aux1(2,1:ngm), KIND=dp )
+      aux(dfftp%nl(1:ngm)) = CMPLX ( aux1(1,1:ngm), aux1(2,1:ngm), KIND=dp )
+      aux(dfftp%nlm(1:ngm)) = CMPLX ( aux1(1,1:ngm), -aux1(2,1:ngm), KIND=dp )
       DEALLOCATE(aux1)
       CALL invfft ('Dense', aux, dfftp)
       !
@@ -108,7 +108,7 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       !  if Gamma symmetry Fact = 1 else Fact = 1/2
       !
       USE kinds,              ONLY: DP
-      USE gvect,              ONLY: ngm, nl
+      USE gvect,              ONLY: ngm
       USE fft_base,           ONLY: dfftp
       USE fft_interfaces,     ONLY: fwfft, invfft
       USE electrons_base,     ONLY: nspin
@@ -134,7 +134,7 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       DO is = 1, nspin
         aux(:) = CMPLX(rhor( : , is ),0.D0,kind=dp) 
         CALL fwfft ('Dense', aux, dfftp)
-        rhog(:,is) = aux(nl(:))
+        rhog(:,is) = aux(dfftp%nl(:))
       END DO
       DEALLOCATE( aux )
       !
@@ -258,7 +258,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       USE constants,          ONLY: fpi
       USE io_global,          ONLY: stdout
       USE cell_base,          ONLY: tpiba, omega
-      USE gvect,              ONLY: gstart, ngm, gg, g, nl, nlm
+      USE gvect,              ONLY: gstart, ngm, gg, g
       USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
       USE fft_base,           ONLY: dfftp
@@ -295,11 +295,11 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
          !
          DO ig = gstart, ngm 
            fac = fpi * g(ipol,ig) / ( gg(ig) * tpiba )
-           gaux(nl(ig)) = CMPLX(-AIMAG(rhoaux(nl(ig))),REAL(rhoaux(nl(ig))),kind=dp) * fac 
+           gaux(dfftp%nl(ig)) = CMPLX(-AIMAG(rhoaux(dfftp%nl(ig))),REAL(rhoaux(dfftp%nl(ig))),kind=dp) * fac 
          ENDDO
          !
-         gaux(nlm(:)) = &
-           CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
+         gaux(dfftp%nlm(:)) = &
+           CMPLX( REAL( gaux(dfftp%nl(:)) ), -AIMAG( gaux(dfftp%nl(:)) ) ,kind=DP)
          !
          ! ... bring back to R-space, (\grad_ipol a)(r) ...
          !
@@ -327,7 +327,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       !
       USE kinds,            ONLY : DP
       USE fft_base,         ONLY : dfftp
-      USE gvect,            ONLY : ngm, nl, g
+      USE gvect,            ONLY : ngm, g
       USE fft_interfaces,   ONLY : fwfft, invfft
       !
       IMPLICIT NONE
@@ -347,7 +347,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       ALLOCATE( auxr( dfftp%nnr ) )
       auxr(:) = CMPLX(a( : ),0.D0,kind=dp) 
       CALL fwfft ('Dense', auxr, dfftp)
-      auxg(:) = auxr(nl(:))
+      auxg(:) = auxr(dfftp%nl(:))
       DEALLOCATE( auxr )
       ! from G-space A compute R-space grad(A) 
 !      CALL fillgrad_x( 1, auxg, grada )
@@ -373,7 +373,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       !
       USE kinds,            ONLY : DP
       USE fft_base,         ONLY : dfftp
-      USE gvect,            ONLY : ngm, nl, g
+      USE gvect,            ONLY : ngm, g
       USE fft_interfaces,   ONLY : fwfft, invfft
       !
       IMPLICIT NONE
@@ -394,7 +394,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       ALLOCATE( auxr( dfftp%nnr ) )
       auxr(:) = CMPLX(a( : ),0.D0,kind=dp) 
       CALL fwfft ('Dense', auxr, dfftp)
-      auxg(:) = auxr(nl(:))
+      auxg(:) = auxr(dfftp%nl(:))
       DEALLOCATE( auxr )
       !
       ALLOCATE( d2rho(3,dfftp%nnr) )

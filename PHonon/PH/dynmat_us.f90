@@ -22,7 +22,7 @@ SUBROUTINE dynmat_us()
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE buffers,              ONLY : get_buffer
-  USE gvect,                ONLY : g, ngm, nl, igtongl
+  USE gvect,                ONLY : g, ngm, igtongl
   USE wvfct,                ONLY : npwx, nbnd, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE vlocal,               ONLY : vloc
@@ -115,8 +115,8 @@ SUBROUTINE dynmat_us()
                             g (2, ng) * tau (2, na) + &
                             g (3, ng) * tau (3, na) )
               fac = omega * vloc (igtongl (ng), ityp (na) ) * tpiba2 * &
-                   ( DBLE (rhog (nl (ng) ) ) * COS (gtau) - &
-                    AIMAG (rhog (nl (ng) ) ) * SIN (gtau) )
+                   ( DBLE (rhog (dfftp%nl (ng) ) ) * COS (gtau) - &
+                    AIMAG (rhog (dfftp%nl (ng) ) ) * SIN (gtau) )
               dynwrk (na_icart, na_jcart) = dynwrk (na_icart, na_jcart) - &
                    fac * g (icart, ng) * g (jcart, ng)
            ENDDO
