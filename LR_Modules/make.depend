@@ -49,7 +49,6 @@ cft_wave.o : ../Modules/fft_base.o
 cft_wave.o : ../Modules/kind.o
 cft_wave.o : ../Modules/mp_bands.o
 cft_wave.o : ../Modules/noncol.o
-cft_wave.o : ../Modules/recvec.o
 cft_wave.o : ../PW/src/pwcom.o
 cft_wave.o : lrcom.o
 cg_psi.o : ../Modules/kind.o
@@ -110,7 +109,6 @@ dgradcorr.o : ../Modules/control_flags.o
 dgradcorr.o : ../Modules/fft_base.o
 dgradcorr.o : ../Modules/kind.o
 dgradcorr.o : ../Modules/noncol.o
-dgradcorr.o : ../Modules/recvec.o
 dgradcorr.o : ../PW/src/pwcom.o
 dgradcorr.o : lrcom.o
 dnonloccorr.o : ../Modules/fft_base.o
@@ -177,7 +175,6 @@ incdrhoscf.o : ../Modules/fft_base.o
 incdrhoscf.o : ../Modules/ions_base.o
 incdrhoscf.o : ../Modules/kind.o
 incdrhoscf.o : ../Modules/mp_bands.o
-incdrhoscf.o : ../Modules/recvec.o
 incdrhoscf.o : ../Modules/uspp.o
 incdrhoscf.o : ../Modules/wavefunctions.o
 incdrhoscf.o : ../PW/src/pwcom.o
@@ -191,7 +188,6 @@ incdrhoscf_nc.o : ../Modules/ions_base.o
 incdrhoscf_nc.o : ../Modules/kind.o
 incdrhoscf_nc.o : ../Modules/mp_bands.o
 incdrhoscf_nc.o : ../Modules/noncol.o
-incdrhoscf_nc.o : ../Modules/recvec.o
 incdrhoscf_nc.o : ../Modules/uspp.o
 incdrhoscf_nc.o : ../Modules/wavefunctions.o
 incdrhoscf_nc.o : ../PW/src/pwcom.o

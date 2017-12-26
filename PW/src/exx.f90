@@ -4644,8 +4644,7 @@ END SUBROUTINE compute_becpsi
     USE wvfct,          ONLY : npwx
     USE gvect,          ONLY : gcutm, ig_l2g, g, gg, ngm, ngm_g, mill, &
                                gstart, gvect_init, deallocate_gvect_exx
-    USE gvecs,          ONLY : gcutms, ngms, ngms_g, gvecs_init, &
-                               deallocate_gvecs
+    USE gvecs,          ONLY : gcutms, ngms, ngms_g, gvecs_init
     USE gvecw,          ONLY : gkcut, ecutwfc, gcutw
     USE klist,          ONLY : xk, nks, ngk
     USE mp_bands,       ONLY : intra_bgrp_comm, ntask_groups, nyfft
@@ -4726,7 +4725,6 @@ END SUBROUTINE compute_becpsi
           ngms = ngms_exx
        END IF
        call deallocate_gvect_exx()
-       call deallocate_gvecs()
        call gvect_init( ngm , intra_egrp_comm )
        call gvecs_init( ngms , intra_egrp_comm )
     ELSE
@@ -4736,7 +4734,6 @@ END SUBROUTINE compute_becpsi
        ngm = ngm_loc
        ngms = ngms_loc
        call deallocate_gvect_exx()
-       call deallocate_gvecs()
        call gvect_init( ngm , intra_bgrp_comm )
        call gvecs_init( ngms , intra_bgrp_comm )
        exx_mode = 0

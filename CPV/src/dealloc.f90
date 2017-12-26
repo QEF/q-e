@@ -20,7 +20,6 @@ SUBROUTINE deallocate_modules_var()
   USE ensemble_dft,         ONLY : deallocate_ensemble_dft
   USE cg_module,            ONLY : deallocate_cg
   USE gvect,                ONLY : deallocate_gvect
-  USE gvecs,                ONLY : deallocate_gvecs
   USE gvecw,                ONLY : deallocate_gvecw
   USE smallbox_gvec,        ONLY : deallocate_smallbox_gvec
   USE local_pseudo,         ONLY : deallocate_local_pseudo
@@ -61,7 +60,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_core()
   CALL deallocate_uspp()
   CALL deallocate_gvect()
-  CALL deallocate_gvecs()
   CALL deallocate_gvecw()
   CALL deallocate_smallbox_gvec( )
   CALL deallocate_local_pseudo()

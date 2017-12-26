@@ -13,8 +13,8 @@ SUBROUTINE divide (comm, ntodiv, startn, lastn)
   ! Given "ntodiv" objects, distribute index across a group of processors
   ! belonging to communicator "comm"
   ! Each processor gets index from "startn" to "lastn"
-  ! If there re more processors than objects, the last nproc-ntodiv processors
-  ! return startn = ntodiv+1 > lastn = ntodiv
+  ! If the number of processors nproc exceeds the number of objects,
+  ! the last nproc-ntodiv processors return startn = ntodiv+1 > lastn = ntodiv
   !
   USE mp, ONLY : mp_size, mp_rank
   IMPLICIT NONE

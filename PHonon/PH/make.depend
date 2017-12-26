@@ -246,7 +246,6 @@ compute_drhous.o : ../../Modules/becmod.o
 compute_drhous.o : ../../Modules/fft_base.o
 compute_drhous.o : ../../Modules/ions_base.o
 compute_drhous.o : ../../Modules/kind.o
-compute_drhous.o : ../../Modules/recvec.o
 compute_drhous.o : ../../Modules/uspp.o
 compute_drhous.o : ../../Modules/wavefunctions.o
 compute_drhous.o : ../../PW/src/buffers.o
@@ -259,7 +258,6 @@ compute_drhous_nc.o : ../../Modules/fft_base.o
 compute_drhous_nc.o : ../../Modules/ions_base.o
 compute_drhous_nc.o : ../../Modules/kind.o
 compute_drhous_nc.o : ../../Modules/noncol.o
-compute_drhous_nc.o : ../../Modules/recvec.o
 compute_drhous_nc.o : ../../Modules/uspp.o
 compute_drhous_nc.o : ../../Modules/wavefunctions.o
 compute_drhous_nc.o : ../../PW/src/buffers.o
@@ -777,7 +775,6 @@ incdrhous.o : ../../Modules/ions_base.o
 incdrhous.o : ../../Modules/kind.o
 incdrhous.o : ../../Modules/mp_bands.o
 incdrhous.o : ../../Modules/noncol.o
-incdrhous.o : ../../Modules/recvec.o
 incdrhous.o : ../../Modules/uspp.o
 incdrhous.o : ../../PW/src/pwcom.o
 incdrhous.o : ../../UtilXlib/mp.o
@@ -791,7 +788,6 @@ incdrhous_nc.o : ../../Modules/ions_base.o
 incdrhous_nc.o : ../../Modules/kind.o
 incdrhous_nc.o : ../../Modules/mp_bands.o
 incdrhous_nc.o : ../../Modules/noncol.o
-incdrhous_nc.o : ../../Modules/recvec.o
 incdrhous_nc.o : ../../Modules/uspp.o
 incdrhous_nc.o : ../../PW/src/pwcom.o
 incdrhous_nc.o : ../../UtilXlib/mp.o
@@ -1253,7 +1249,6 @@ read_wfc_rspace_and_fwfft.o : ../../Modules/io_global.o
 read_wfc_rspace_and_fwfft.o : ../../Modules/kind.o
 read_wfc_rspace_and_fwfft.o : ../../Modules/mp_pools.o
 read_wfc_rspace_and_fwfft.o : ../../Modules/noncol.o
-read_wfc_rspace_and_fwfft.o : ../../Modules/recvec.o
 read_wfc_rspace_and_fwfft.o : ../../PW/src/pwcom.o
 read_wfc_rspace_and_fwfft.o : ../../UtilXlib/mp.o
 rigid.o : ../../Modules/constants.o

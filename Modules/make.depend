@@ -342,6 +342,7 @@ read_uspp.o : uspp.o
 recips.o : kind.o
 recvec.o : ../UtilXlib/mp.o
 recvec.o : kind.o
+recvec_subs.o : ../FFTXlib/fft_ggen.o
 recvec_subs.o : ../UtilXlib/mp.o
 recvec_subs.o : constants.o
 recvec_subs.o : fft_base.o

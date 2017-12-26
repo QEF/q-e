@@ -5,6 +5,8 @@ fft_fwinv.o : fft_scalar.o
 fft_fwinv.o : fft_smallbox.o
 fft_fwinv.o : fft_smallbox_type.o
 fft_fwinv.o : fft_types.o
+fft_ggen.o : fft_param.o
+fft_ggen.o : fft_types.o
 fft_helper_subroutines.o : fft_param.o
 fft_helper_subroutines.o : fft_types.o
 fft_interfaces.o : fft_param.o
@@ -56,5 +58,3 @@ tg_gather.o : fft_types.o
 fft_stick.o : fftw.c
 fftw.o : 
 fftw.o : 
-fft_ggen.o : fft_param.o
-fft_ggen.o : fft_types.o

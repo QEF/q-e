@@ -24,6 +24,9 @@ Problems fixed in development version:
 
 Incompatible changes in development version:
 
+  * FFT indices nl, nlm, nls, nlsm, moved from their previous location
+    (gvect, gvecs) into dfftp, dffts structures
+
   * Development moved to GitLab
 
 New in 6.2.1 version:

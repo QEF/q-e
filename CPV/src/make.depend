@@ -452,7 +452,6 @@ exx_psi.o : ../../Modules/io_global.o
 exx_psi.o : ../../Modules/kind.o
 exx_psi.o : ../../Modules/mp_global.o
 exx_psi.o : ../../Modules/mp_wave.o
-exx_psi.o : ../../Modules/recvec.o
 exx_psi.o : ../../UtilXlib/mp.o
 exx_psi.o : ../../UtilXlib/parallel_include.o
 exx_vofr.o : ../../Modules/constants.o
@@ -464,7 +463,6 @@ exx_vofr.o : exx_module.o
 fft.o : ../../Modules/fft_base.o
 fft.o : ../../Modules/kind.o
 fft.o : ../../Modules/mp_global.o
-fft.o : ../../Modules/recvec.o
 forces.o : ../../FFTXlib/fft_helper_subroutines.o
 forces.o : ../../FFTXlib/fft_interfaces.o
 forces.o : ../../Modules/cell_base.o
@@ -476,7 +474,6 @@ forces.o : ../../Modules/gvecw.o
 forces.o : ../../Modules/ions_base.o
 forces.o : ../../Modules/kind.o
 forces.o : ../../Modules/mp_global.o
-forces.o : ../../Modules/recvec.o
 forces.o : ../../Modules/uspp.o
 forces.o : ../../UtilXlib/parallel_include.o
 forces.o : ensemble_dft.o

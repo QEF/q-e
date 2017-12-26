@@ -2225,7 +2225,6 @@ vloc_psi.o : ../../Modules/fft_base.o
 vloc_psi.o : ../../Modules/kind.o
 vloc_psi.o : ../../Modules/mp_bands.o
 vloc_psi.o : ../../Modules/noncol.o
-vloc_psi.o : ../../Modules/recvec.o
 vloc_psi.o : ../../Modules/wavefunctions.o
 vloc_psi.o : ../../UtilXlib/parallel_include.o
 vloc_psi.o : pwcom.o
