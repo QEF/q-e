@@ -8,7 +8,6 @@ MODULE fft_helper_subroutines
 &                    tg_reduce_rho_5
   END INTERFACE
 
-
 CONTAINS
 
   SUBROUTINE tg_reduce_rho_1( rhos, tg_rho_nc, tg_rho, ispin, noncolin, domag, desc )
@@ -270,5 +269,73 @@ CONTAINS
      END IF
   END SUBROUTINE
 
+
+  SUBROUTINE c2psi_gamma( desc, psi, c, ca )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), INTENT(OUT) :: psi(:)
+     complex(DP), INTENT(IN) :: c(:)
+     complex(DP), OPTIONAL, INTENT(IN) :: ca(:)
+     complex(DP), parameter :: ci=(0.0d0,1.0d0)
+     integer :: ig
+     psi = 0.0d0
+     IF( PRESENT(ca) ) THEN
+        do ig = 1, desc%ngw
+           psi( desc%nlm( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ))
+           psi( desc%nl( ig ) ) = c( ig ) + ci * ca( ig )
+        end do
+     ELSE
+        do ig = 1, desc%ngw
+           psi( desc%nlm( ig ) ) = CONJG( c( ig ) )
+           psi( desc%nl( ig ) ) = c( ig )
+        end do
+     END IF
+  END SUBROUTINE
+
+  SUBROUTINE c2psi_gamma_tg(desc, psis, c_bgrp, i, nbsp_bgrp )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), INTENT(OUT) :: psis(:)
+     complex(DP), INTENT(IN) :: c_bgrp(:,:)
+     INTEGER, INTENT(IN) :: i, nbsp_bgrp
+     INTEGER :: eig_offset, eig_index, right_nnr
+     !
+     !  Loop for all local g-vectors (ngw)
+     !  ci_bgrp: stores the Fourier expansion coefficients
+     !     the i-th column of c_bgrp corresponds to the i-th state (in
+     !     this band group)
+     !  nlsm and nls matrices: hold conversion indices form 3D to
+     !     1-D vectors. Columns along the z-direction are stored
+     !     contigiously
+     !
+     !  The outer loop goes through i : i + 2*NOGRP to cover
+     !  2*NOGRP eigenstates at each iteration
+     !
+     eig_offset = 0
+
+     CALL tg_get_nnr( desc, right_nnr )
+
+     do eig_index = 1, 2 * fftx_ntgrp(desc), 2
+        !
+        !  here we pack 2*nogrp electronic states in the psis array
+        !  note that if nogrp == nproc_bgrp each proc perform a full 3D
+        !  fft and the scatter phase is local (without communication)
+        !
+        IF ( ( i + eig_index - 1 ) <= nbsp_bgrp ) THEN
+           !
+           !  The  eig_index loop is executed only ONCE when NOGRP=1.
+           !
+           CALL c2psi_gamma( desc, psis( eig_offset * right_nnr + 1 : eig_offset * right_nnr + right_nnr ), &
+                       c_bgrp( :, i+eig_index-1 ), c_bgrp( :, i+eig_index ) )
+           !
+        ENDIF
+        !
+        eig_offset = eig_offset + 1
+        !
+     end do
+
+  END SUBROUTINE
 
 END MODULE fft_helper_subroutines

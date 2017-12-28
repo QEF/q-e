@@ -141,6 +141,7 @@ CONTAINS
         USE io_global, ONLY: stdout
         USE gvecw, ONLY: ngw
         USE fft_base, ONLY: dfftp, dffts, dfftp
+        USE fft_helper_subroutines, ONLY: c2psi_gamma
         USE fft_interfaces, ONLY: invfft
         USE xml_io_base, ONLY: write_rho
         USE mp_global,       ONLY: intra_bgrp_comm, inter_bgrp_comm
@@ -157,7 +158,7 @@ CONTAINS
         ALLOCATE( psi( dfftp%nnr ) )
         ALLOCATE( rpsi2( dfftp%nnr ) )
 
-        CALL c2psi( psi, dffts%nnr, c, c, ngw, 1 )
+        CALL c2psi_gamma( dffts, psi, c )
         CALL invfft( 'Wave', psi, dffts )
 
         DO i = 1, dfftp%nnr

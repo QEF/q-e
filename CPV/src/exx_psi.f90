@@ -73,9 +73,9 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       DO i = 1, nbsp, 2
         !
         IF ( (MOD(nbsp, 2) .NE. 0) .AND. (i .EQ. nbsp ) ) THEN     
-          CALL c2psi( psis(1:sizefft), sizefft, c(1,i), ca(1), ngw, 2)
+          CALL c2psi_gamma( dffts, psis(1:sizefft), c(:,i), ca(:))
         ELSE
-          CALL c2psi( psis(1:sizefft), sizefft, c(1,i), c(1, i+1), ngw, 2)
+          CALL c2psi_gamma( dffts, psis(1:sizefft), c(:,i), c(:, i+1))
         END IF 
         !
         CALL invfft( 'Wave', psis(1:sizefft), dffts )
