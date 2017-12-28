@@ -207,11 +207,11 @@ subroutine exx_interpolate (v, vs, iflag)
      CALL fwfft ('Dense', aux, dfftp)
      auxs (:) = (0.d0, 0.d0)
      do ig = 1, exx_fft%ngmt
-        auxs (exx_fft%nlt(ig)) = aux(dfftp%nl(ig))
+        auxs (exx_fft%dfftt%nl(ig)) = aux(dfftp%nl(ig))
      enddo
      if (gamma_only) then
         do ig = 1, exx_fft%ngmt
-           auxs(exx_fft%nltm(ig) ) = aux (dfftp%nlm(ig) )
+           auxs(exx_fft%dfftt%nlm(ig) ) = aux (dfftp%nlm(ig) )
         enddo
      end if
      CALL invfft ('Custom', auxs, exx_fft%dfftt)
@@ -228,11 +228,11 @@ subroutine exx_interpolate (v, vs, iflag)
      CALL fwfft ('Custom', auxs, exx_fft%dfftt)
      aux (:) = (0.d0, 0.d0)
      do ig = 1, exx_fft%ngmt 
-        aux (dfftp%nl (ig) ) = auxs (exx_fft%nlt (ig) )
+        aux (dfftp%nl (ig) ) = auxs (exx_fft%dfftt%nl (ig) )
      enddo
      if (gamma_only) then
         do ig = 1, exx_fft%ngmt 
-           aux (dfftp%nlm(ig) ) = auxs (exx_fft%nltm(ig) )
+           aux (dfftp%nlm(ig) ) = auxs (exx_fft%dfftt%nlm(ig) )
         enddo
      end if
      CALL invfft ('Dense', aux, dfftp)

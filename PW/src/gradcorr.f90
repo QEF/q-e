@@ -461,7 +461,7 @@ SUBROUTINE exx_gradient( nrxx, a, ngm, g, nl, ga )
      !
      IF ( gamma_only ) THEN
         !
-        gaux(exx_fft%nltm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
+        gaux(exx_fft%dfftt%nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
         !
      END IF
      !

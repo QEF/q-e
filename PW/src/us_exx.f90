@@ -251,23 +251,23 @@ MODULE us_exx
 !$omp end parallel do
                 IF ( add_complex ) THEN
                    DO ig = 1, ngms
-                      rhoc(exx_fft%nlt(ig)) = rhoc(exx_fft%nlt(ig)) + aux2(ig)
+                      rhoc(exx_fft%dfftt%nl(ig)) = rhoc(exx_fft%dfftt%nl(ig)) + aux2(ig)
                    END DO
                 ELSE IF ( add_real ) THEN
                    DO ig = 1, ngms
-                      rhoc(exx_fft%nlt(ig)) = rhoc(exx_fft%nlt(ig)) + aux2(ig)
+                      rhoc(exx_fft%dfftt%nl(ig)) = rhoc(exx_fft%dfftt%nl(ig)) + aux2(ig)
                    ENDDO
                    DO ig = gstart, ngms
-                      rhoc(exx_fft%nltm(ig)) = rhoc(exx_fft%nltm(ig)) &
+                      rhoc(exx_fft%dfftt%nlm(ig)) = rhoc(exx_fft%dfftt%nlm(ig)) &
                                                + CONJG(aux2(ig))
                    ENDDO
                 ELSE IF ( add_imaginary ) THEN
                    DO ig = 1, ngms
-                      rhoc(exx_fft%nlt(ig)) = rhoc(exx_fft%nlt(ig)) &
+                      rhoc(exx_fft%dfftt%nl(ig)) = rhoc(exx_fft%dfftt%nl(ig)) &
                                               + (0.0_dp,1.0_dp) * aux2(ig)
                    ENDDO
                    DO ig = gstart, ngms
-                      rhoc(exx_fft%nltm(ig)) = rhoc(exx_fft%nltm(ig)) &
+                      rhoc(exx_fft%dfftt%nlm(ig)) = rhoc(exx_fft%dfftt%nlm(ig)) &
                                              + (0.0_dp,1.0_dp)* CONJG(aux2(ig))
                    ENDDO
                 ENDIF
@@ -370,19 +370,19 @@ MODULE us_exx
     !
     auxvc = (0._dp, 0._dp)
     IF ( add_complex ) THEN
-       auxvc(1:ngms) = vc(exx_fft%nlt(1:ngms) )
+       auxvc(1:ngms) = vc(exx_fft%dfftt%nl(1:ngms) )
        fact=omega
     ELSE IF ( add_real ) THEN
        DO ig = 1, ngms
-          fp = (vc(exx_fft%nlt(ig)) + vc(exx_fft%nltm(ig)))/2.0_dp
-          fm = (vc(exx_fft%nlt(ig)) - vc(exx_fft%nltm(ig)))/2.0_dp
+          fp = (vc(exx_fft%dfftt%nl(ig)) + vc(exx_fft%dfftt%nlm(ig)))/2.0_dp
+          fm = (vc(exx_fft%dfftt%nl(ig)) - vc(exx_fft%dfftt%nlm(ig)))/2.0_dp
           auxvc(ig) = CMPLX( DBLE(fp), AIMAG(fm), KIND=dp)
        END DO
        fact=2.0_dp*omega
     ELSE IF ( add_imaginary ) THEN
        DO ig = 1, ngms
-          fp = (vc(exx_fft%nlt(ig)) + vc(exx_fft%nltm(ig)))/2.0_dp
-          fm = (vc(exx_fft%nlt(ig)) - vc(exx_fft%nltm(ig)))/2.0_dp
+          fp = (vc(exx_fft%dfftt%nl(ig)) + vc(exx_fft%dfftt%nlm(ig)))/2.0_dp
+          fm = (vc(exx_fft%dfftt%nl(ig)) - vc(exx_fft%dfftt%nlm(ig)))/2.0_dp
           auxvc(ig) = CMPLX( AIMAG(fp), -DBLE(fm), KIND=dp)
        END DO
        fact=2.0_dp*omega
@@ -1040,14 +1040,14 @@ MODULE us_exx
             IF (ibnd < ibnd_end) THEN
                ! two ffts at the same time
                DO j = 1, ngkq(ikq)
-                  fp = (phi (exx_fft%nlt(j)) + phi (exx_fft%nltm(j)))*0.5d0
-                  fm = (phi (exx_fft%nlt(j)) - phi (exx_fft%nltm(j)))*0.5d0
+                  fp = (phi (exx_fft%dfftt%nl(j)) + phi (exx_fft%dfftt%nlm(j)))*0.5d0
+                  fm = (phi (exx_fft%dfftt%nl(j)) - phi (exx_fft%dfftt%nlm(j)))*0.5d0
                   evcq( j, ibnd)   = cmplx( dble(fp), aimag(fm),kind=DP)
                   evcq( j, ibnd+1) = cmplx(aimag(fp),- dble(fm),kind=DP)
                ENDDO
             ELSE
                DO j = 1, ngkq(ikq)
-                  evcq(j, ibnd)   =  phi(exx_fft%nlt(j))
+                  evcq(j, ibnd)   =  phi(exx_fft%dfftt%nl(j))
                ENDDO
             ENDIF
          ENDDO
@@ -1056,7 +1056,7 @@ MODULE us_exx
             phi(:) = exxbuff(:,ibnd,ikq)
             CALL fwfft ('CustomWave', phi, exx_fft%dfftt)
             DO j = 1, ngkq(ikq)
-               evcq(j, ibnd)   =  phi(exx_fft%nlt(igkq(j)))
+               evcq(j, ibnd)   =  phi(exx_fft%dfftt%nl(igkq(j)))
             ENDDO
          ENDDO
       ENDIF

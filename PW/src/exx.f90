@@ -1039,22 +1039,22 @@ MODULE exx
              IF ( ibnd < iexx_end ) THEN
                 IF ( ibnd == ibnd_loop_start .and. MOD(iexx_start,2) == 0 ) THEN
                    DO ig=1,exx_fft%npwt
-                      psic_exx(exx_fft%nlt(ig))  = ( 0._dp, 1._dp )*evc_exx(ig,1)
-                      psic_exx(exx_fft%nltm(ig)) = ( 0._dp, 1._dp )*conjg(evc_exx(ig,1))
+                      psic_exx(exx_fft%dfftt%nl(ig))  = ( 0._dp, 1._dp )*evc_exx(ig,1)
+                      psic_exx(exx_fft%dfftt%nlm(ig)) = ( 0._dp, 1._dp )*conjg(evc_exx(ig,1))
                    ENDDO
                    evc_offset = -1
                 ELSE
                    DO ig=1,exx_fft%npwt
-                      psic_exx(exx_fft%nlt(ig))  = evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+1)  &
+                      psic_exx(exx_fft%dfftt%nl(ig))  = evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+1)  &
                            + ( 0._dp, 1._dp ) * evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+2)
-                      psic_exx(exx_fft%nltm(ig)) = conjg( evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+1) ) &
+                      psic_exx(exx_fft%dfftt%nlm(ig)) = conjg( evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+1) ) &
                            + ( 0._dp, 1._dp ) * conjg( evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+2) )
                    ENDDO
                 END IF
              ELSE
                 DO ig=1,exx_fft%npwt
-                   psic_exx(exx_fft%nlt (ig)) = evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+1)
-                   psic_exx(exx_fft%nltm(ig)) = conjg( evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+1) )
+                   psic_exx(exx_fft%dfftt%nl (ig)) = evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+1)
+                   psic_exx(exx_fft%dfftt%nlm(ig)) = conjg( evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+1) )
                 ENDDO
              ENDIF
 
@@ -1084,13 +1084,13 @@ MODULE exx
                 ENDDO
 !$omp parallel do default(shared) private(ig) firstprivate(npw,ik,ibnd_exx)
                 DO ig=1,npw
-                   temppsic_nc(exx_fft%nlt(igk_exx(ig,ik)),1) = evc_exx(ig,ibnd-iexx_start+1)
+                   temppsic_nc(exx_fft%dfftt%nl(igk_exx(ig,ik)),1) = evc_exx(ig,ibnd-iexx_start+1)
                 ENDDO
 !$omp end parallel do
                 CALL invfft ('CustomWave', temppsic_nc(:,1), exx_fft%dfftt)
 !$omp parallel do default(shared) private(ig) firstprivate(npw,ik,ibnd_exx,npwx)
                 DO ig=1,npw
-                   temppsic_nc(exx_fft%nlt(igk_exx(ig,ik)),2) = evc_exx(ig+npwx,ibnd-iexx_start+1)
+                   temppsic_nc(exx_fft%dfftt%nl(igk_exx(ig,ik)),2) = evc_exx(ig+npwx,ibnd-iexx_start+1)
                 ENDDO
 !$omp end parallel do
                 CALL invfft ('CustomWave', temppsic_nc(:,2), exx_fft%dfftt)
@@ -1101,7 +1101,7 @@ MODULE exx
                 ENDDO
 !$omp parallel do default(shared) private(ig) firstprivate(npw,ik,ibnd_exx)
                 DO ig=1,npw
-                   temppsic(exx_fft%nlt(igk_exx(ig,ik))) = evc_exx(ig,ibnd-iexx_start+1)
+                   temppsic(exx_fft%dfftt%nl(igk_exx(ig,ik))) = evc_exx(ig,ibnd-iexx_start+1)
                 ENDDO
 !$omp end parallel do
                 CALL invfft ('CustomWave', temppsic, exx_fft%dfftt)
@@ -1534,8 +1534,8 @@ MODULE exx
              IF( l_fft_doubleband ) THEN
 !$omp parallel do  default(shared), private(ig)
                 DO ig = 1, exx_fft%npwt
-                   psiwork( exx_fft%nlt(ig) )  =       psi(ig, ii) + (0._DP,1._DP) * psi(ig, ii+1)
-                   psiwork( exx_fft%nltm(ig) ) = conjg(psi(ig, ii) - (0._DP,1._DP) * psi(ig, ii+1))
+                   psiwork( exx_fft%dfftt%nl(ig) )  =       psi(ig, ii) + (0._DP,1._DP) * psi(ig, ii+1)
+                   psiwork( exx_fft%dfftt%nlm(ig) ) = conjg(psi(ig, ii) - (0._DP,1._DP) * psi(ig, ii+1))
                 ENDDO
 !$omp end parallel do
              ENDIF
@@ -1543,8 +1543,8 @@ MODULE exx
              IF( l_fft_singleband ) THEN
 !$omp parallel do  default(shared), private(ig)
                 DO ig = 1, exx_fft%npwt
-                   psiwork( exx_fft%nlt(ig) )  =       psi(ig,ii) 
-                   psiwork( exx_fft%nltm(ig) ) = conjg(psi(ig,ii))
+                   psiwork( exx_fft%dfftt%nl(ig) )  =       psi(ig,ii) 
+                   psiwork( exx_fft%dfftt%nlm(ig) ) = conjg(psi(ig,ii))
                 ENDDO
 !$omp end parallel do
              ENDIF
@@ -1655,8 +1655,8 @@ MODULE exx
 !$omp parallel do default(shared), private(ig)
                 DO ig = 1, exx_fft%ngmt
                    !
-                   vc(exx_fft%nlt(ig),ii)  = coulomb_fac(ig,iq,current_k) * rhoc(exx_fft%nlt(ig),ii)
-                   vc(exx_fft%nltm(ig),ii) = coulomb_fac(ig,iq,current_k) * rhoc(exx_fft%nltm(ig),ii)
+                   vc(exx_fft%dfftt%nl(ig),ii)  = coulomb_fac(ig,iq,current_k) * rhoc(exx_fft%dfftt%nl(ig),ii)
+                   vc(exx_fft%dfftt%nlm(ig),ii) = coulomb_fac(ig,iq,current_k) * rhoc(exx_fft%dfftt%nlm(ig),ii)
                    !
                 ENDDO
 !$omp end parallel do
@@ -1727,7 +1727,7 @@ MODULE exx
        CALL fwfft( 'CustomWave' , result(:,ii), exx_fft%dfftt )
        !communicate result
        DO ig = 1, n
-          big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result(exx_fft%nlt(igk_exx(ig,current_k)),ii)
+          big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result(exx_fft%dfftt%nl(igk_exx(ig,current_k)),ii)
        END DO
        !
        ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
@@ -1887,8 +1887,8 @@ MODULE exx
           !
 !$omp parallel do  default(shared), private(ig)
           DO ig = 1, n
-             temppsic_nc(exx_fft%nlt(igk_exx(ig,current_k)),1,ii) = psi(ig,ii)
-             temppsic_nc(exx_fft%nlt(igk_exx(ig,current_k)),2,ii) = psi(npwx+ig,ii)
+             temppsic_nc(exx_fft%dfftt%nl(igk_exx(ig,current_k)),1,ii) = psi(ig,ii)
+             temppsic_nc(exx_fft%dfftt%nl(igk_exx(ig,current_k)),2,ii) = psi(npwx+ig,ii)
           ENDDO
 !$omp end parallel do
           !
@@ -1899,7 +1899,7 @@ MODULE exx
           !
 !$omp parallel do  default(shared), private(ig)
           DO ig = 1, n
-             temppsic( exx_fft%nlt(igk_exx(ig,current_k)), ii ) = psi(ig,ii)
+             temppsic( exx_fft%dfftt%nl(igk_exx(ig,current_k)), ii ) = psi(ig,ii)
           ENDDO
 !$omp end parallel do
           !
@@ -1949,7 +1949,7 @@ MODULE exx
 ! JRD - below not threaded
        facb = 0D0
        DO ig = 1, exx_fft%ngmt
-          facb(exx_fft%nlt(ig)) = coulomb_fac(ig,iq,current_k)
+          facb(exx_fft%dfftt%nl(ig)) = coulomb_fac(ig,iq,current_k)
        ENDDO
        !
        IF ( okvan .and..not.tqr ) CALL qvan_init (exx_fft%ngmt, xkq, xkp)
@@ -2160,14 +2160,14 @@ MODULE exx
           CALL fwfft ('CustomWave', result_nc(:,1,ii), exx_fft%dfftt)
           CALL fwfft ('CustomWave', result_nc(:,2,ii), exx_fft%dfftt)
           DO ig = 1, n
-             big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result_nc(exx_fft%nlt(igk_exx(ig,current_k)),1,ii)
-             big_result(n+ig,ibnd) = big_result(n+ig,ibnd) - exxalfa*result_nc(exx_fft%nlt(igk_exx(ig,current_k)),2,ii)
+             big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result_nc(exx_fft%dfftt%nl(igk_exx(ig,current_k)),1,ii)
+             big_result(n+ig,ibnd) = big_result(n+ig,ibnd) - exxalfa*result_nc(exx_fft%dfftt%nl(igk_exx(ig,current_k)),2,ii)
           ENDDO
        ELSE
           !
           CALL fwfft ('CustomWave', result(:,ii), exx_fft%dfftt)
           DO ig = 1, n
-             big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result(exx_fft%nlt(igk_exx(ig,current_k)),ii)
+             big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result(exx_fft%dfftt%nl(igk_exx(ig,current_k)),ii)
           ENDDO
        ENDIF
        !
@@ -2643,9 +2643,9 @@ MODULE exx
                 IF( l_fft_doubleband ) THEN
 !$omp parallel do  default(shared), private(ig)
                    DO ig = 1, exx_fft%npwt
-                      temppsic( exx_fft%nlt(ig) )  = &
+                      temppsic( exx_fft%dfftt%nl(ig) )  = &
                            evc_exx(ig,ii) + (0._DP,1._DP) * evc_exx(ig,ii+1)
-                      temppsic( exx_fft%nltm(ig) ) = &
+                      temppsic( exx_fft%dfftt%nlm(ig) ) = &
                            conjg(evc_exx(ig,ii) - (0._DP,1._DP) * evc_exx(ig,ii+1))
                    ENDDO
 !$omp end parallel do
@@ -2654,8 +2654,8 @@ MODULE exx
                 IF( l_fft_singleband ) THEN
 !$omp parallel do  default(shared), private(ig)
                    DO ig = 1, exx_fft%npwt
-                      temppsic( exx_fft%nlt(ig) )  =       evc_exx(ig,ii)
-                      temppsic( exx_fft%nltm(ig) ) = conjg(evc_exx(ig,ii))
+                      temppsic( exx_fft%dfftt%nl(ig) )  =       evc_exx(ig,ii)
+                      temppsic( exx_fft%dfftt%nlm(ig) ) = conjg(evc_exx(ig,ii))
                    ENDDO
 !$omp end parallel do
                 ENDIF
@@ -2763,9 +2763,9 @@ MODULE exx
                       ! The imaginary part    contains the contribution from band ibnd+1
                       !
                       vc = vc + fac(ig) * ( x1 * &
-                           abs( rhoc(exx_fft%nlt(ig)) + conjg(rhoc(exx_fft%nltm(ig))) )**2 &
+                           abs( rhoc(exx_fft%dfftt%nl(ig)) + conjg(rhoc(exx_fft%dfftt%nlm(ig))) )**2 &
                                  +x2 * &
-                           abs( rhoc(exx_fft%nlt(ig)) - conjg(rhoc(exx_fft%nltm(ig))) )**2 )
+                           abs( rhoc(exx_fft%dfftt%nl(ig)) - conjg(rhoc(exx_fft%dfftt%nlm(ig))) )**2 )
                    ENDDO
 !$omp end parallel do
                    !
@@ -2934,8 +2934,8 @@ MODULE exx
              !
 !$omp parallel do default(shared), private(ig)
              DO ig = 1, npw
-                temppsic_nc(exx_fft%nlt(igk_exx(ig,ikk)),1,ii) = evc_exx(ig,ii)
-                temppsic_nc(exx_fft%nlt(igk_exx(ig,ikk)),2,ii) = evc_exx(npwx+ig,ii)
+                temppsic_nc(exx_fft%dfftt%nl(igk_exx(ig,ikk)),1,ii) = evc_exx(ig,ii)
+                temppsic_nc(exx_fft%dfftt%nl(igk_exx(ig,ikk)),2,ii) = evc_exx(npwx+ig,ii)
              ENDDO
 !$omp end parallel do
              !
@@ -2945,7 +2945,7 @@ MODULE exx
           ELSE
 !$omp parallel do default(shared), private(ig)
              DO ig = 1, npw
-                temppsic(exx_fft%nlt(igk_exx(ig,ikk)),ii) = evc_exx(ig,ii)
+                temppsic(exx_fft%dfftt%nl(igk_exx(ig,ikk)),ii) = evc_exx(ig,ii)
              ENDDO
 !$omp end parallel do
              !
@@ -3080,8 +3080,8 @@ MODULE exx
                    vc=0.0_DP
                    DO ig=1,exx_fft%ngmt
                       vc = vc + coulomb_fac(ig,iq,ikk) * &
-                          dble(rhoc(exx_fft%nlt(ig),ibnd-ibnd_inner_start+1) *&
-                          conjg(rhoc(exx_fft%nlt(ig),ibnd-ibnd_inner_start+1)))
+                          dble(rhoc(exx_fft%dfftt%nl(ig),ibnd-ibnd_inner_start+1) *&
+                          conjg(rhoc(exx_fft%dfftt%nl(ig),ibnd-ibnd_inner_start+1)))
                    ENDDO
                    vc = vc * omega * x_occupation(ibnd,ik) / nqs
                    energy = energy - exxalfa * vc * wg(jbnd,ikk)
@@ -3479,14 +3479,14 @@ MODULE exx
             temppsic(:) = ( 0._dp, 0._dp )
 !$omp parallel do default(shared), private(ig)
             DO ig = 1, npw
-                temppsic(exx_fft%nlt(igk_exx(ig,ikk))) = evc_exx(ig,ii)
+                temppsic(exx_fft%dfftt%nl(igk_exx(ig,ikk))) = evc_exx(ig,ii)
             ENDDO
 !$omp end parallel do
             !
             IF(gamma_only) THEN
 !$omp parallel do default(shared), private(ig)
                 DO ig = 1, npw
-                    temppsic(exx_fft%nltm(igk_exx(ig,ikk))) = &
+                    temppsic(exx_fft%dfftt%nlm(igk_exx(ig,ikk))) = &
                          conjg(evc_exx(ig,ii))
                 ENDDO
 !$omp end parallel do
@@ -3541,12 +3541,12 @@ MODULE exx
                         DO ig = 1, ngm
                             !
                             vc(:,:) = vc(:,:) + fac(ig) * x1 * &
-                                      abs( rhoc(exx_fft%nlt(ig)) + &
-                                      conjg(rhoc(exx_fft%nltm(ig))))**2 * &
+                                      abs( rhoc(exx_fft%dfftt%nl(ig)) + &
+                                      conjg(rhoc(exx_fft%dfftt%nlm(ig))))**2 * &
                                       (fac_tens(:,:,ig)*fac_stress(ig)/2.d0 - delta(:,:)*fac(ig))
                             vc(:,:) = vc(:,:) + fac(ig) * x2 * &
-                                      abs( rhoc(exx_fft%nlt(ig)) - &
-                                      conjg(rhoc(exx_fft%nltm(ig))))**2 * &
+                                      abs( rhoc(exx_fft%dfftt%nl(ig)) - &
+                                      conjg(rhoc(exx_fft%dfftt%nlm(ig))))**2 * &
                                       (fac_tens(:,:,ig)*fac_stress(ig)/2.d0 - delta(:,:)*fac(ig))
                         ENDDO
 !$omp end parallel do
@@ -3574,8 +3574,8 @@ MODULE exx
                       vc = 0._dp
 !$omp parallel do default(shared), private(ig), reduction(+:vc)
                       DO ig = 1, ngm
-                          vc(:,:) = vc(:,:) + rhoc(exx_fft%nlt(ig))  * &
-                                        conjg(rhoc(exx_fft%nlt(ig)))* &
+                          vc(:,:) = vc(:,:) + rhoc(exx_fft%dfftt%nl(ig))  * &
+                                        conjg(rhoc(exx_fft%dfftt%nl(ig)))* &
                                     (fac_tens(:,:,ig)*fac_stress(ig)/2.d0 - delta(:,:)*fac(ig))
                       ENDDO
 !$omp end parallel do
@@ -5651,8 +5651,8 @@ implicit none
          CALL fwfft ('Custom', rhoc, exx_fft%dfftt)
          vc=(0.0d0, 0.0d0)
          DO ig = 1, exx_fft%ngmt
-             vc(exx_fft%nlt(ig))  = fac(ig) * rhoc(exx_fft%nlt(ig)) 
-             vc(exx_fft%nltm(ig)) = fac(ig) * rhoc(exx_fft%nltm(ig))
+             vc(exx_fft%dfftt%nl(ig))  = fac(ig) * rhoc(exx_fft%dfftt%nl(ig)) 
+             vc(exx_fft%dfftt%nlm(ig)) = fac(ig) * rhoc(exx_fft%dfftt%nlm(ig))
          ENDDO
          CALL invfft ('Custom', vc, exx_fft%dfftt)
          DO ir = 1, NQR 
@@ -5673,8 +5673,8 @@ implicit none
            CALL fwfft ('Custom', rhoc, exx_fft%dfftt)
            vc=(0.0d0, 0.0d0)
            DO ig = 1, exx_fft%ngmt
-               vc(exx_fft%nlt(ig))  = fac(ig) * rhoc(exx_fft%nlt(ig)) 
-               vc(exx_fft%nltm(ig)) = fac(ig) * rhoc(exx_fft%nltm(ig))
+               vc(exx_fft%dfftt%nl(ig))  = fac(ig) * rhoc(exx_fft%dfftt%nl(ig)) 
+               vc(exx_fft%dfftt%nlm(ig)) = fac(ig) * rhoc(exx_fft%dfftt%nlm(ig))
            ENDDO
            CALL invfft ('Custom', vc, exx_fft%dfftt)
            DO ir = 1, NQR 
@@ -5692,7 +5692,7 @@ implicit none
      DO jbnd = 1, nbnd
        CALL fwfft( 'CustomWave' , RESULT(:,jbnd), exx_fft%dfftt )
        DO ig = 1, npw
-          hpsi(ig,jbnd) = hpsi(ig,jbnd) - exxalfa*RESULT(exx_fft%nlt(ig),jbnd) 
+          hpsi(ig,jbnd) = hpsi(ig,jbnd) - exxalfa*RESULT(exx_fft%dfftt%nl(ig),jbnd) 
        ENDDO
      ENDDO
 
@@ -5707,7 +5707,7 @@ implicit none
      rhoc(:) = dble(locbuff(:,jbnd,nkqs)) + (0.0d0,1.0d0)*0.0d0
      CALL fwfft( 'CustomWave' , rhoc, exx_fft%dfftt )
      DO ig = 1, npw
-       RESULT(ig,jbnd) = rhoc(exx_fft%nlt(ig))
+       RESULT(ig,jbnd) = rhoc(exx_fft%dfftt%nl(ig))
      ENDDO
    ENDDO
    deallocate ( rhoc )

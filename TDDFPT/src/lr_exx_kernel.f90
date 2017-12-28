@@ -169,10 +169,10 @@ SUBROUTINE lr_exx_apply_revc_int(psi, ibnd, nbnd, ik)
         ! Now separate the two bands and apply the correct nl mapping
         !
         DO j = 1, npw
-           fp = (tempphic(exx_fft%nlt(j),1) + &
-                 tempphic(exx_fft%nltm(j),1))*0.5d0 
-           fm = (tempphic(exx_fft%nlt(j),1) - &
-                 tempphic(exx_fft%nltm(j),1))*0.5d0 
+           fp = (tempphic(exx_fft%dfftt%nl(j),1) + &
+                 tempphic(exx_fft%dfftt%nlm(j),1))*0.5d0 
+           fm = (tempphic(exx_fft%dfftt%nl(j),1) - &
+                 tempphic(exx_fft%dfftt%nlm(j),1))*0.5d0 
            temppsic( j, 1) = CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
            temppsic( j, 2) = CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
         ENDDO
@@ -191,7 +191,7 @@ SUBROUTINE lr_exx_apply_revc_int(psi, ibnd, nbnd, ik)
         !
         ! Correct the nl mapping for the two grids.
         !
-        temppsic(1:npw,1)=tempphic(exx_fft%nlt(1:npw),1)
+        temppsic(1:npw,1)=tempphic(exx_fft%dfftt%nl(1:npw),1)
         psi_t(dffts%nl(1:npw))=temppsic(1:npw,1)
         psi_t(dffts%nlm(1:npw))=CONJG(temppsic(1:npw,1))
         !
@@ -812,11 +812,11 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
      !
      DO is = 1, nspin
         !
-        vhart(exx_fft%nlt(1:ngm_),is) =&
-             & pseudo_dens_c(exx_fft%nlt(1:ngm_)) *&
+        vhart(exx_fft%dfftt%nl(1:ngm_),is) =&
+             & pseudo_dens_c(exx_fft%dfftt%nl(1:ngm_)) *&
              & fac_in(1:ngm_) 
-        IF (gamma_only) vhart(exx_fft%nltm(1:ngm_),is) = &
-             & pseudo_dens_c(exx_fft%nltm(1:ngm_)) *&
+        IF (gamma_only) vhart(exx_fft%dfftt%nlm(1:ngm_),is) = &
+             & pseudo_dens_c(exx_fft%dfftt%nlm(1:ngm_)) *&
              & fac_in(1:ngm_) 
         !
         !  and transformed back to real space
@@ -957,10 +957,10 @@ FUNCTION k2d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
      !
      DO is = 1, nspin
         !
-        vhart(exx_fft%nlt(1:ngm_),is) = pseudo_dens_c(exx_fft&
-             &%nlt(1:ngm_)) * fac_in(1:ngm_)
-        IF (gamma_only) vhart(exx_fft%nltm(1:ngm_),is) = &
-             & pseudo_dens_c(exx_fft%nltm(1:ngm_)) *&
+        vhart(exx_fft%dfftt%nl(1:ngm_),is) = pseudo_dens_c(exx_fft&
+             &%dfftt%nl(1:ngm_)) * fac_in(1:ngm_)
+        IF (gamma_only) vhart(exx_fft%dfftt%nlm(1:ngm_),is) = &
+             & pseudo_dens_c(exx_fft%dfftt%nlm(1:ngm_)) *&
              & fac_in(1:ngm_)
         !
         !  and transformed back to real space
@@ -1064,15 +1064,15 @@ SUBROUTINE invfft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r)
   !
   IF (ibnd < nbnd) THEN
      !
-     psic(g2r%nlt(1:g2r%npwt)) = orbital(1:g2r%npwt,ibnd) + &
+     psic(g2r%dfftt%nl(1:g2r%npwt)) = orbital(1:g2r%npwt,ibnd) + &
           &(0.0_dp, 1.0_dp) * orbital(1:g2r%npwt,ibnd+1) 
-     psic(g2r%nltm(1:g2r%npwt)) = CONJG(orbital(1:g2r%npwt,ibnd) - &   
+     psic(g2r%dfftt%nlm(1:g2r%npwt)) = CONJG(orbital(1:g2r%npwt,ibnd) - &   
           &(0.0_dp, 1.0_dp) * orbital(1:g2r%npwt,ibnd+1))
      !
   ELSE
      !
-     psic(g2r%nlt(1:g2r%npwt))  = orbital(1:g2r%npwt,ibnd)
-     psic(g2r%nltm(1:g2r%npwt)) =CONJG(orbital(1:g2r%npwt,ibnd))
+     psic(g2r%dfftt%nl(1:g2r%npwt))  = orbital(1:g2r%npwt,ibnd)
+     psic(g2r%dfftt%nlm(1:g2r%npwt)) =CONJG(orbital(1:g2r%npwt,ibnd))
      !
   ENDIF
   !
@@ -1104,15 +1104,15 @@ SUBROUTINE fwfft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r)
      !
      ! two ffts at the same time
      DO j = 1, g2r%npwt
-        fp = (psic(g2r%nlt(j)) + psic(g2r%nltm(j)))*0.5d0
-        fm = (psic(g2r%nlt(j)) - psic(g2r%nltm(j)))*0.5d0
+        fp = (psic(g2r%dfftt%nl(j)) + psic(g2r%dfftt%nlm(j)))*0.5d0
+        fm = (psic(g2r%dfftt%nl(j)) - psic(g2r%dfftt%nlm(j)))*0.5d0
         orbital( j, ibnd)   = CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
         orbital( j, ibnd+1) = CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
      ENDDO
      !
   ELSE
      !
-     orbital(1:g2r%npwt,ibnd)=psic(g2r%nlt(1:g2r%npwt))
+     orbital(1:g2r%npwt,ibnd)=psic(g2r%dfftt%nl(1:g2r%npwt))
      !
   ENDIF
   !

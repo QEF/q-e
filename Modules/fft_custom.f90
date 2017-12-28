@@ -36,7 +36,6 @@ MODULE fft_custom
      INTEGER :: nrx1t,nrx2t,nrx3t
      INTEGER :: nrxxt
      INTEGER :: ngmt,ngmt_l,ngmt_g
-     INTEGER, DIMENSION(:), POINTER :: nlt,nltm
      REAL(kind=DP), DIMENSION(:), POINTER :: ggt
      REAL(kind=DP), DIMENSION(:,:),POINTER :: gt
      INTEGER, DIMENSION(:), POINTER :: ig_l2gt 
@@ -100,8 +99,6 @@ CONTAINS
     !
     ALLOCATE( fc%ggt(fc%ngmt) )
     ALLOCATE( fc%gt (3, fc%ngmt) )
-    ALLOCATE( fc%nlt (fc%ngmt) )
-    ALLOCATE( fc%nltm(fc%ngmt) )
     ALLOCATE( fc%ig1t(fc%ngmt) )
     ALLOCATE( fc%ig2t(fc%ngmt) )
     ALLOCATE( fc%ig3t(fc%ngmt) )
@@ -110,6 +107,7 @@ CONTAINS
     !
     fc%npwt=0
     !
+    ALLOCATE ( fc%dfftt%nl (fc%ngmt) )
     DO i = 1, fc%ngmt
        !
        fc%gt(:,i) = g(:,i)
@@ -152,10 +150,10 @@ CONTAINS
        !     now find the position in FFT grid of G-vector i
        !
        IF ( fc%dfftt%lpara ) THEN
-          fc%nlt (i) = n3 + ( fc%dfftt%isind (n1 + (n2-1)*fc%dfftt%nr1x) -1 ) &
+          fc%dfftt%nl (i) = n3 + (fc%dfftt%isind (n1+(n2-1)*fc%dfftt%nr1x)-1) &
                * fc%dfftt%nr3x
        ELSE
-          fc%nlt (i) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * &
+          fc%dfftt%nl (i) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * &
                & fc%dfftt%nr1x * fc%dfftt%nr2x 
        END IF
        !
@@ -171,7 +169,10 @@ CONTAINS
     !
     !     compute indices for -G (gamma-only case) - needs ig1t, ig2t, ig3t
     !
-    IF ( gamma_only) CALL index_minusg_custom(fc)
+    IF ( gamma_only) THEN
+       ALLOCATE ( fc%dfftt%nlm(fc%ngmt) )
+       CALL index_minusg_custom(fc)
+    END IF
     !
     !     ig1t, ig2t, ig3t are no longer needed
     !
@@ -207,8 +208,6 @@ CONTAINS
        !
        ALLOCATE( fc%ggt(fc%ngmt) )
        ALLOCATE( fc%gt (3, fc%ngmt) )
-       ALLOCATE( fc%nlt (fc%ngmt) )
-       ALLOCATE( fc%nltm(fc%ngmt) )
        ALLOCATE( fc%ig_l2gt(fc%ngmt) )
        !
        RETURN 
@@ -422,6 +421,8 @@ CONTAINS
        IF (fc%ngmt > ngmx) CALL errore ('ggent', 'too many g-vectors', fc%ngmt)
     ENDDO ngloop
 
+    DEALLOCATE( mill_g )
+
     IF (fc%ngmt /= ngmx) &
          CALL errore ('ggent', 'g-vectors missing !', ABS(fc%ngmt - ngmx))
     !
@@ -435,11 +436,11 @@ CONTAINS
     !
     !     Now set nl and nls with the correct fft correspondence
     !
+    ALLOCATE ( fc%dfftt%nl (fc%ngmt) )
     DO ng = 1, fc%ngmt
        n1 = NINT (SUM(fc%gt (:, ng) * at (:, 1))) + 1
        fc%ig1t (ng) = n1 - 1
        IF (n1<1) n1 = n1 + fc%dfftt%nr1
-       
        
        n2 = NINT (SUM(fc%gt (:, ng) * at (:, 2))) + 1
        fc%ig2t (ng) = n2 - 1
@@ -455,23 +456,23 @@ CONTAINS
             CALL errore('ggent','Mesh too small?',ng)
        
        IF ( fc%dfftt%lpara ) THEN
-          fc%nlt (ng) = n3 + ( fc%dfftt%isind (n1 + (n2 - 1) * fc%dfftt%nr1x)&
-            & - 1) * fc%dfftt%nr3x
+          fc%dfftt%nl (ng) = n3 + ( fc%dfftt%isind (n1+(n2-1) * &
+               fc%dfftt%nr1x)-1) * fc%dfftt%nr3x
        ELSE
-          fc%nlt (ng) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * &
-            & fc%dfftt%nr1x * fc%dfftt%nr2x 
+          fc%dfftt%nl (ng) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * &
+               fc%dfftt%nr1x * fc%dfftt%nr2x 
        END IF
     ENDDO
     !
-    DEALLOCATE( mill_g )
-    !
     ! calculate number of G shells: ngl
     
-    IF ( gamma_only) CALL index_minusg_custom(fc)
-       
-    !set npwt,npwxt
-    !This should eventually be calculated somewhere else with 
-    !n_plane_waves() but it is good enough for gamma_only
+    IF ( gamma_only) THEN
+       ALLOCATE ( fc%dfftt%nlm(fc%ngmt) )
+       CALL index_minusg_custom(fc)
+    END IF
+    ! set npwt,npwxt
+    ! This should eventually be calculated somewhere else with 
+    ! n_plane_waves() but it is good enough for gamma_only
 
     IF(gamma_only) THEN
        fc%npwt=0
@@ -489,8 +490,6 @@ CONTAINS
        ENDDO
        fc%npwxt=fc%npwt
     ENDIF
-
-!    IF( ALLOCATED( ngmpe ) ) DEALLOCATE( ngmpe )
 
     RETURN
     !    
@@ -525,10 +524,10 @@ CONTAINS
        ENDIF
        
        IF ( fc%dfftt%lpara ) THEN
-          fc%nltm(ng) = n3 + (fc%dfftt%isind (n1 + (n2 - 1) * fc&
+          fc%dfftt%nlm(ng) = n3 + (fc%dfftt%isind (n1 + (n2 - 1) * fc&
             &%dfftt%nr1x) - 1) * fc%dfftt%nr3x
        ELSE
-          fc%nltm(ng) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * fc&
+          fc%dfftt%nlm(ng) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * fc&
             &%dfftt%nr1x * fc%dfftt%nr2x
        ENDIF
 
@@ -549,8 +548,6 @@ CONTAINS
     CALL fft_type_deallocate(fc%dfftt)
     IF ( ASSOCIATED (fc%gt)  )  DEALLOCATE(fc%gt)
     IF ( ASSOCIATED (fc%ggt) )  DEALLOCATE(fc%ggt)
-    IF ( ASSOCIATED (fc%nlt) )  DEALLOCATE(fc%nlt)
-    IF ( ASSOCIATED (fc%nltm))  DEALLOCATE(fc%nltm)
     IF ( ASSOCIATED (fc%ig1t) ) DEALLOCATE(fc%ig1t)
     IF ( ASSOCIATED (fc%ig2t) ) DEALLOCATE(fc%ig2t)
     IF ( ASSOCIATED (fc%ig3t) ) DEALLOCATE(fc%ig3t)
