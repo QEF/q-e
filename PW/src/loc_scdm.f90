@@ -141,7 +141,7 @@ implicit none
     buffer(:) = abs(dble(orbt(:,jbnd,NKK))) + (Zero,One)*Zero  
     CALL fwfft( 'CustomWave' , buffer, exx_fft%dfftt )
     DO ig = 1, npwx
-      Gorbt(ig,jbnd) = buffer(exx_fft%nlt(ig))
+      Gorbt(ig,jbnd) = buffer(exx_fft%dfftt%nl(ig))
     ENDDO
   ENDDO
   CALL matcalc('Coeff-',.false.,0,npwx,NBands,NBands,Gorbt,Gorbt,Mat,tmp)
@@ -293,7 +293,7 @@ IMPLICIT NONE
   ThrDen = scdm_den 
 
 ! gradient on the exx grid 
-  Call exx_gradient( nxxs, den , exx_fft%ngmt, exx_fft%gt, exx_fft%nlt, grad_den )
+  Call exx_gradient( nxxs, den , exx_fft%ngmt, exx_fft%gt, exx_fft%dfftt%nl, grad_den )
   charge  = Zero
   GrdAve = Zero 
   do ir = 1, ir_end 
