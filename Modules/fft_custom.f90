@@ -40,12 +40,13 @@ MODULE fft_custom
      REAL(kind=DP), DIMENSION(:,:),POINTER :: gt
      INTEGER, DIMENSION(:), POINTER :: ig_l2gt 
      INTEGER :: gstart_t
-     INTEGER,  DIMENSION(:), POINTER :: ig1t,ig2t,ig3t
      INTEGER :: nlgt
      INTEGER :: npwt,npwxt
      LOGICAL :: initialized = .FALSE.
      
   END TYPE fft_cus
+
+  INTEGER,  DIMENSION(:), ALLOCATABLE :: mill(:,:)
 
 
 !--------------------------------------------------------------------
@@ -99,9 +100,7 @@ CONTAINS
     !
     ALLOCATE( fc%ggt(fc%ngmt) )
     ALLOCATE( fc%gt (3, fc%ngmt) )
-    ALLOCATE( fc%ig1t(fc%ngmt) )
-    ALLOCATE( fc%ig2t(fc%ngmt) )
-    ALLOCATE( fc%ig3t(fc%ngmt) )
+    ALLOCATE( mill(3,fc%ngmt) )
     !  
     ! fc%npwt = number of PW in sphere of radius ecutwfc (useful for Gamma)
     !
@@ -123,9 +122,9 @@ CONTAINS
        !
        n1 = NINT (SUM(fc%gt (:, i) * at (:, 1)))
        !
-       !     Miller index n1 is stored in ig1t for later usage
+       !     Miller index n1 is stored for later usage
        !
-       fc%ig1t(i) = n1
+       mill(1,i) = n1
        !
        !     negative n1 are refolded so that 1 <= n1 <= nr1
        !
@@ -135,12 +134,12 @@ CONTAINS
        !     Same for n2 and n3
        !
        n2 = NINT (SUM(fc%gt (:, i) * at (:, 2))) 
-       fc%ig2t(i) = n2
+       mill(2,i) = n2
        n2 = n2 + 1
        IF (n2<1) n2 = n2 + fc%dfftt%nr2 
        
        n3 = NINT (SUM(fc%gt (:, i) * at (:, 3)))
-       fc%ig3t(i) = n3
+       mill(3,i) = n3
        n3 = n3 + 1
        IF (n3<1) n3 = n3 + fc%dfftt%nr3 
        
@@ -167,18 +166,16 @@ CONTAINS
        fc%gstart_t=1
     ENDIF
     !
-    !     compute indices for -G (gamma-only case) - needs ig1t, ig2t, ig3t
+    !     compute indices for -G (gamma-only case) - needs mill
     !
     IF ( gamma_only) THEN
        ALLOCATE ( fc%dfftt%nlm(fc%ngmt) )
        CALL index_minusg_custom(fc)
     END IF
     !
-    !     ig1t, ig2t, ig3t are no longer needed
+    !     Miller indices no longer needed
     !
-    DEALLOCATE ( fc%ig3t )
-    DEALLOCATE ( fc%ig2t )
-    DEALLOCATE ( fc%ig1t )
+    DEALLOCATE ( mill )
     !
   END SUBROUTINE ggenx
   !
@@ -335,7 +332,7 @@ CONTAINS
     ALLOCATE( mill_g( 3, fc%ngmt_g ), mill_unsorted( 3, fc%ngmt_g ) )
     ALLOCATE( igsrt( fc%ngmt_g ) )
     ALLOCATE( g2sort_g( fc%ngmt_g ) )
-    ALLOCATE( fc%ig1t(fc%ngmt), fc%ig2t(fc%ngmt), fc%ig3t(fc%ngmt) )
+    ALLOCATE( mill(3,fc%ngmt) )
    
     g2sort_g(:) = 1.0d20
     !
@@ -439,16 +436,16 @@ CONTAINS
     ALLOCATE ( fc%dfftt%nl (fc%ngmt) )
     DO ng = 1, fc%ngmt
        n1 = NINT (SUM(fc%gt (:, ng) * at (:, 1))) + 1
-       fc%ig1t (ng) = n1 - 1
+       mill(1,ng) = n1 - 1
        IF (n1<1) n1 = n1 + fc%dfftt%nr1
        
        n2 = NINT (SUM(fc%gt (:, ng) * at (:, 2))) + 1
-       fc%ig2t (ng) = n2 - 1
+       mill(2,ng) = n2 - 1
        IF (n2<1) n2 = n2 + fc%dfftt%nr2
        
        
        n3 = NINT (SUM(fc%gt (:, ng) * at (:, 3))) + 1
-       fc%ig3t (ng) = n3 - 1
+       mill(3,ng) = n3 - 1
        IF (n3<1) n3 = n3 + fc%dfftt%nr3
        
        
@@ -464,12 +461,14 @@ CONTAINS
        END IF
     ENDDO
     !
-    ! calculate number of G shells: ngl
-    
+    ! calculate indices of -G
+    !
     IF ( gamma_only) THEN
        ALLOCATE ( fc%dfftt%nlm(fc%ngmt) )
        CALL index_minusg_custom(fc)
     END IF
+    DEALLOCATE(mill)
+    !
     ! set npwt,npwxt
     ! This should eventually be calculated somewhere else with 
     ! n_plane_waves() but it is good enough for gamma_only
@@ -510,13 +509,13 @@ CONTAINS
     INTEGER :: n1, n2, n3, n1s, n2s, n3s, ng
     !
     DO ng = 1, fc%ngmt
-       n1 = -fc%ig1t (ng) + 1
+       n1 = -mill(1,ng) + 1
        IF (n1 < 1) n1 = n1 + fc%dfftt%nr1
        
-       n2 = -fc%ig2t (ng) + 1
+       n2 = -mill(2,ng) + 1
        IF (n2 < 1) n2 = n2 + fc%dfftt%nr2
        
-       n3 = -fc%ig3t (ng) + 1
+       n3 = -mill(3,ng) + 1
        IF (n3 < 1) n3 = n3 + fc%dfftt%nr3
        
        IF (n1>fc%dfftt%nr1 .OR. n2>fc%dfftt%nr2 .OR. n3>fc%dfftt%nr3) THEN
@@ -548,9 +547,6 @@ CONTAINS
     CALL fft_type_deallocate(fc%dfftt)
     IF ( ASSOCIATED (fc%gt)  )  DEALLOCATE(fc%gt)
     IF ( ASSOCIATED (fc%ggt) )  DEALLOCATE(fc%ggt)
-    IF ( ASSOCIATED (fc%ig1t) ) DEALLOCATE(fc%ig1t)
-    IF ( ASSOCIATED (fc%ig2t) ) DEALLOCATE(fc%ig2t)
-    IF ( ASSOCIATED (fc%ig3t) ) DEALLOCATE(fc%ig3t)
     IF ( ASSOCIATED (fc%ig_l2gt) ) DEALLOCATE(fc%ig_l2gt)
     fc%initialized=.FALSE.
 
