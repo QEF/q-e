@@ -22,7 +22,7 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
     !
     INTEGER,     INTENT(IN)    :: nnrtot, nbsp
     INTEGER,     INTENT(IN)    :: my_nbsp(nproc_image), my_nxyz(nproc_image)
-    COMPLEX(DP), INTENT(IN)    :: c(ngw,nbsp)
+    COMPLEX(DP), INTENT(INOUT) :: c(ngw,nbsp)
     REAL(DP),    INTENT(INOUT) :: psitot2(nnrtot, my_nbsp(me_image+1) )
     !
     INTEGER i, j, ir,proc, me, ierr, ig, irank, iobtl
@@ -135,38 +135,10 @@ SUBROUTINE exx_psi(c, psitot2,nnrtot,my_nbsp, my_nxyz, nbsp)
       nnr2 = dffts%nnr/2
       !
       !**** nbsp has to be divisible by (2*nogrp) ***
+      !
       DO i = 1, nbsp, 2*nogrp
         !
-        psis (:) = (0.d0, 0.d0)
-        !
-        igoff = 0
-        !
-        DO idx = 1, 2*nogrp , 2
-          !
-          !  important: if n is odd => c(*,n+1)=0.
-          !
-          IF ( idx + i - 1 < nbsp ) THEN
-            !$omp parallel do 
-            DO ig=1,ngw
-              psis(dffts%nlm(ig)+igoff) = CONJG( c(ig,idx+i-1) ) + ci * CONJG( c(ig,idx+i) )
-              psis(dffts%nl(ig) +igoff) =        c(ig,idx+i-1)   + ci * c(ig,idx+i)
-            END DO
-            !$omp end parallel do 
-          END IF
-          !
-          ! BS: for odd number of bands ... need to be tested ..
-          IF ( idx + i - 1 == nbsp ) THEN
-            !$omp parallel do 
-            DO ig=1,ngw
-              psis(dffts%nlm(ig)+igoff) = CONJG( c(ig,idx+i-1) ) 
-              psis(dffts%nl(ig) +igoff) =        c(ig,idx+i-1) 
-            END DO
-            !$omp end parallel do 
-          END IF
-          !
-          igoff = igoff + dffts%nnr
-          !
-        END DO
+        CALL c2psi_gamma_tg( dffts, psis, c, i, nbsp )
         !
         CALL invfft( 'tgWave', psis, dffts )
         !

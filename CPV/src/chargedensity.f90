@@ -131,6 +131,7 @@
 #endif      
       USE io_files,           ONLY: tmp_dir, prefix
       USE fft_rho
+      USE fft_helper_subroutines, ONLY: c2psi_gamma
       !
       IMPLICIT NONE
       INTEGER nfi
@@ -289,11 +290,7 @@
             !
             i = iwf
             !
-            psis = 0.D0
-            DO ig=1,ngw
-               psis(dffts%nlm(ig))=CONJG(c_bgrp(ig,i))
-               psis(dffts%nl(ig))=c_bgrp(ig,i)
-            END DO
+            CALL c2psi_gamma( dffts, psis, c_bgrp(:,i) )
             !
             CALL invfft('Wave',psis, dffts )
             !
