@@ -82,59 +82,16 @@
       nogrp_ = fftx_ntgrp(dffts)
       ALLOCATE( psi( dffts%nnr_tg ) )
       !
-      ci = ( 0.0d0, 1.0d0 )
-      !
 #if defined(__MPI)
 
-
-!$omp  parallel
-!$omp  single
-
-      DO idx = 1, 2*nogrp_ , 2
-
-!$omp task default(none) &
-!$omp          firstprivate( idx, i, n, ngw, ci, nogrp_ ) &
-!$omp          private( igoff, ig ) &
-!$omp          shared( c, dffts, psi )
-         !
-         !  This loop is executed only ONCE when NOGRP=1.
-         !  Equivalent to the case with no task-groups
-         !  dfft%nsw(me) holds the number of z-sticks for the current processor per wave-function
-         !  We can either send these in the group with an mpi_allgather...or put the
-         !  in the PSIS vector (in special positions) and send them with them.
-         !  Otherwise we can do this once at the beginning, before the loop.
-         !  we choose to do the latter one.
-         !
-         !  important: if n is odd => c(*,n+1)=0.
-         ! 
-         IF ( ( idx + i - 1 ) == n ) c( : , idx + i ) = 0.0d0
-
-         igoff = ( idx - 1 )/2 * dffts%nnr 
-
-         psi( igoff + 1 : igoff + dffts%nnr ) = (0.d0, 0.d0)
-
-         IF( idx + i - 1 <= n ) THEN
-            DO ig=1,ngw
-               psi(dffts%nlm(ig)+igoff) = conjg( c(ig,idx+i-1) - ci * c(ig,idx+i) )
-               psi(dffts%nl(ig)+igoff) =         c(ig,idx+i-1) + ci * c(ig,idx+i)
-            END DO
-         END IF
-!$omp end task
-
-      END DO
-
-!$omp  end single
-!$omp  end parallel
+      CALL c2psi_gamma_tg( dffts, psi, c, i, n )
 
       CALL invfft('tgWave', psi, dffts)
 
 #else
 
-      psi = 0.0d0
-      DO ig=1,ngw
-         psi(dffts%nlm(ig)) = conjg( c(ig,i) - ci * c(ig,i+1) )
-         psi(dffts%nl(ig)) =  c(ig,i) + ci * c(ig,i+1)
-      END DO
+      CALL c2psi_gamma( dffts, psi, c(:,i), c(:,i+1) )
+      !
       CALL invfft( 'Wave', psi, dffts )
 
 #endif

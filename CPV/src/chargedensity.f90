@@ -421,7 +421,7 @@
          !
          IMPLICIT NONE
          !
-         INTEGER :: from, i, eig_index, eig_offset, ii, right_nnr, tg_nr3
+         INTEGER :: from, i, eig_index, eig_offset, ii, tg_nr3
          !
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER  >= 1300
@@ -438,15 +438,7 @@
          !
          tmp_rhos = 0_DP
 
-         CALL tg_get_nnr( dffts, right_nnr )
-
          do i = 1, nbsp_bgrp, 2 * fftx_ntgrp(dffts)
-
-            !
-            !  Initialize wave-functions in Fourier space (to be FFTed)
-            !  The size of psis is nnr: which is equal to the total number
-            !  of local fourier coefficients.
-            !
 
 #if defined(__MPI)
             !
