@@ -658,6 +658,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE fft_base,                 ONLY: dfftb, dfftp
       USE mp_global,                ONLY: my_bgrp_id, nbgrp, inter_bgrp_comm
       USE mp,                       ONLY: mp_sum
+      USE fft_helper_subroutines,   ONLY: fftx_add_threed2oned_gamma
 
       IMPLICIT NONE
 ! input
@@ -840,10 +841,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                END DO
 !
                CALL fwfft( 'Dense', v, dfftp )
-!
-               DO ig=1,ngm
-                  drhog(ig,iss,i,j) = drhog(ig,iss,i,j) + v(dfftp%nl(ig))
-               END DO
+               CALL fftx_add_threed2oned_gamma( dfftp, v, drhog(:,iss,i,j) )
 !
             ENDDO
          ENDDO
@@ -916,19 +914,10 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                   drhor(ir,isup,i,j) = drhor(ir,isup,i,j) + DBLE(v(ir))
                   drhor(ir,isdw,i,j) = drhor(ir,isdw,i,j) +AIMAG(v(ir))
                ENDDO
-
 !
                CALL fwfft('Dense', v, dfftp )
+               CALL fftx_add_threed2oned_gamma( dfftp, v, drhog(:,isup,i,j), drhog(:,isdw,i,j) )
 
-               DO ig=1,ngm
-                  fp=v(dfftp%nl(ig))+v(dfftp%nlm(ig))
-                  fm=v(dfftp%nl(ig))-v(dfftp%nlm(ig))
-                  drhog(ig,isup,i,j) = drhog(ig,isup,i,j) +             &
-     &                 0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
-                  drhog(ig,isdw,i,j) = drhog(ig,isdw,i,j) +             &
-     &                 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-               END DO
-!
             END DO
          END DO
       ENDIF
@@ -964,6 +953,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE qgb_mod,                  ONLY: qgb
       USE fft_interfaces,           ONLY: fwfft, invfft
       USE fft_base,                 ONLY: dfftb, dfftp, dfftb
+      USE fft_helper_subroutines,   ONLY: fftx_add_threed2oned_gamma
 !
       IMPLICIT NONE
       !
@@ -1160,11 +1150,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          !
          !  rhog(g) = total (smooth + US) charge density in G-space
          !
-         DO ig = 1, ngm
-            rhog(ig,iss)=rhog(ig,iss)+v(dfftp%nl(ig))
-         END DO
+         CALL fftx_add_threed2oned_gamma( dfftp, v, rhog(:,iss) )
 
-!
          IF( iverbosity > 1 ) WRITE( stdout,'(a,2f12.8)')                          &
      &        ' rhov: n_v(g=0) = ',omega*DBLE(rhog(1,iss))
 !
@@ -1259,13 +1246,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
      &           omega*(rhog(1,isdw)+AIMAG(v(1)))
          ENDIF
 !
-         DO ig=1,ngm
-            fp=  v(dfftp%nl(ig)) + v(dfftp%nlm(ig))
-            fm=  v(dfftp%nl(ig)) - v(dfftp%nlm(ig))
-            rhog(ig,isup)=rhog(ig,isup) + 0.5d0*CMPLX(DBLE(fp),AIMAG(fm),kind=DP)
-            rhog(ig,isdw)=rhog(ig,isdw) + 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
-         END DO
-
+         CALL fftx_add_threed2oned_gamma( dfftp, v, rhog(:,isup), rhog(:,isdw) )
 !
          IF( iverbosity > 1 ) THEN
             WRITE( stdout,'(a,2f12.8,/,a,2f12.8)')                 &

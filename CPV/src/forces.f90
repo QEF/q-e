@@ -226,19 +226,11 @@
       !   Each processor will treat its own part of the eigenstate
       !   assigned to its ORBITAL group
       !
-!$omp  parallel
-!$omp  single
-
       eig_offset = 0
       CALL tg_get_recip_inc( dffts, inc )
       igno = 1
 
       DO idx = 1, 2*nogrp_ , 2
-
-!$omp task default(none)  &
-!$omp          private( fi, fip, fp, fm, ig ) &
-!$omp          firstprivate( eig_offset, igno, idx, nogrp_, ngw, tpiba2, me_bgrp, i, n, tens ) &
-!$omp          shared( f, psi, df, da, c, dffts, g2kin  )
 
          IF( idx + i - 1 <= n ) THEN
             if (tens) then
@@ -248,25 +240,19 @@
                fi = -0.5d0*f(i+idx-1)
                fip = -0.5d0*f(i+idx)
             endif
+            CALL fftx_psi2c_gamma( dffts, psi(eig_offset+1:eig_offset+inc), df(igno:igno+ngw), da(igno:igno+ngw))
             IF( dffts%have_task_groups ) THEN
                DO ig=1,ngw
-                  fp= psi(dffts%nl(ig)+eig_offset) +  psi(dffts%nlm(ig)+eig_offset)
-                  fm= psi(dffts%nl(ig)+eig_offset) -  psi(dffts%nlm(ig)+eig_offset)
-                  df(ig+igno-1)= fi *(tpiba2 * g2kin(ig) * c(ig,idx+i-1) + &
-                                 CMPLX(real (fp), aimag(fm), kind=dp ))
-                  da(ig+igno-1)= fip*(tpiba2 * g2kin(ig) * c(ig,idx+i  ) + &
-                                 CMPLX(aimag(fp),-real (fm), kind=dp ))
+                  df(ig+igno-1)= fi *(tpiba2 * g2kin(ig) * c(ig,idx+i-1) + df(ig+igno-1))
+                  da(ig+igno-1)= fip*(tpiba2 * g2kin(ig) * c(ig,idx+i  ) + da(ig+igno-1))
                END DO
             ELSE
                DO ig=1,ngw
-                  fp= psi(dffts%nl(ig)) + psi(dffts%nlm(ig))
-                  fm= psi(dffts%nl(ig)) - psi(dffts%nlm(ig))
-                  df(ig)= fi*(tpiba2*g2kin(ig)* c(ig,idx+i-1)+CMPLX(DBLE(fp), AIMAG(fm),kind=DP))
-                  da(ig)=fip*(tpiba2*g2kin(ig)* c(ig,idx+i  )+CMPLX(AIMAG(fp),-DBLE(fm),kind=DP))
+                  df(ig)= fi*(tpiba2*g2kin(ig)* c(ig,idx+i-1)+df(ig))
+                  da(ig)=fip*(tpiba2*g2kin(ig)* c(ig,idx+i  )+da(ig))
                END DO
             END IF
          END IF
-!$omp end task
 
          igno = igno + ngw
          eig_offset = eig_offset + inc
@@ -275,8 +261,6 @@
 
       ENDDO
 
-!$omp end single
-!$omp end parallel 
       !
       IF(dft_is_meta()) THEN
          ! HK/MCA : warning on task groups

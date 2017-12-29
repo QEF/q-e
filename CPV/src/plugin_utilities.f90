@@ -110,6 +110,7 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       USE fft_base,           ONLY: dfftp
       USE fft_interfaces,     ONLY: fwfft, invfft
       USE electrons_base,     ONLY: nspin
+      USE fft_helper_subroutines, ONLY: fftx_threed2oned_gamma
 
       IMPLICIT NONE
 
@@ -132,13 +133,13 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       DO is = 1, nspin
         aux(:) = CMPLX(rhor( : , is ),0.D0,kind=dp) 
         CALL fwfft ('Dense', aux, dfftp)
-        rhog(:,is) = aux(dfftp%nl(:))
+        CALL fftx_threed2oned_gamma( dfftp, aux, rhog(:,is) )
       END DO
-      DEALLOCATE( aux )
       !
       ! ... compute VH(r) from rho(G) 
       !
       CALL v_h_of_rho_g( rhog, ehart, charge, v )
+      DEALLOCATE( aux )
       DEALLOCATE( rhog )
       !
       RETURN
@@ -261,7 +262,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       USE mp,                 ONLY: mp_sum
       USE fft_base,           ONLY: dfftp
       USE fft_interfaces,     ONLY: fwfft, invfft
-      USE fft_helper_subroutines, ONLY: fftx_oned2threed_gamma
+      USE fft_helper_subroutines, ONLY: fftx_oned2threed_gamma, fftx_threed2oned_gamma
 
       IMPLICIT NONE
 
@@ -286,10 +287,8 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       rhoaux( : ) = CMPLX( rho( : ), 0.D0, KIND=dp ) 
       !
       CALL fwfft('Dense', rhoaux, dfftp)
+      CALL fftx_threed2oned_gamma( dfftp, rhoaux, rhog )
       !
-      DO ig = 1, ngm 
-         rhog( ig ) = rhoaux( dfftp%nl(ig) )
-      END DO
       !
       ! ... compute gradient of potential in G space ...
       !
@@ -330,6 +329,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       USE fft_base,         ONLY : dfftp
       USE gvect,            ONLY : ngm, g
       USE fft_interfaces,   ONLY : fwfft, invfft
+      USE fft_helper_subroutines, ONLY: fftx_threed2oned_gamma
       !
       IMPLICIT NONE
       !
@@ -346,18 +346,19 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       !
       ALLOCATE( auxg( ngm ) )
       ALLOCATE( auxr( dfftp%nnr ) )
-      auxr(:) = CMPLX(a( : ),0.D0,kind=dp) 
-      CALL fwfft ('Dense', auxr, dfftp)
-      auxg(:) = auxr(dfftp%nl(:))
-      DEALLOCATE( auxr )
-      ! from G-space A compute R-space grad(A) 
-!      CALL fillgrad_x( 1, auxg, grada )
       ALLOCATE( d2rho(3,dfftp%nnr) )
       ALLOCATE( dxdyrho(dfftp%nnr) )
       ALLOCATE( dxdzrho(dfftp%nnr) ) 
       ALLOCATE( dydzrho(dfftp%nnr) )
+
+      auxr(:) = CMPLX(a( : ),0.D0,kind=dp) 
+      CALL fwfft ('Dense', auxr, dfftp)
+      CALL fftx_threed2oned_gamma( dfftp, auxr, auxg )
+      ! from G-space A compute R-space grad(A) 
       CALL gradrho(1,auxg,grada,d2rho,dxdyrho,dxdzrho,dydzrho)
+
       DEALLOCATE( d2rho, dxdyrho, dxdzrho, dydzrho )
+      DEALLOCATE( auxr )
       DEALLOCATE( auxg )
       !
       RETURN
@@ -376,6 +377,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       USE fft_base,         ONLY : dfftp
       USE gvect,            ONLY : ngm, g
       USE fft_interfaces,   ONLY : fwfft, invfft
+      USE fft_helper_subroutines, ONLY: fftx_threed2oned_gamma
       !
       IMPLICIT NONE
       !
@@ -393,18 +395,17 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       !
       ALLOCATE( auxg( ngm ) )
       ALLOCATE( auxr( dfftp%nnr ) )
-      auxr(:) = CMPLX(a( : ),0.D0,kind=dp) 
-      CALL fwfft ('Dense', auxr, dfftp)
-      auxg(:) = auxr(dfftp%nl(:))
-      DEALLOCATE( auxr )
-      !
       ALLOCATE( d2rho(3,dfftp%nnr) )
       ALLOCATE( dxdyrho(dfftp%nnr) )
       ALLOCATE( dxdzrho(dfftp%nnr) ) 
       ALLOCATE( dydzrho(dfftp%nnr) )
+
+      auxr(:) = CMPLX(a( : ),0.D0,kind=dp) 
+      CALL fwfft ('Dense', auxr, dfftp)
+      CALL fftx_threed2oned_gamma( dfftp, auxr, auxg )
+      !
       ! from G-space A compute R-space grad(A) and second derivatives
       CALL gradrho(1,auxg,grada,d2rho,dxdyrho,dxdzrho,dydzrho)
-      DEALLOCATE( auxg )
       ! reorder second derivatives
       hessa(1,1,:) = d2rho(1,:)
       hessa(2,2,:) = d2rho(2,:)
@@ -415,7 +416,10 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       hessa(3,1,:) = dxdzrho(:)
       hessa(2,3,:) = dydzrho(:)
       hessa(3,2,:) = dydzrho(:)
+
       DEALLOCATE( d2rho, dxdyrho, dxdzrho, dydzrho )
+      DEALLOCATE( auxr )
+      DEALLOCATE( auxg )
 
   RETURN
 

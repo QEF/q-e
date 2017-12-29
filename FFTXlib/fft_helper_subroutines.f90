@@ -337,6 +337,76 @@ CONTAINS
      END IF
   END SUBROUTINE
 
+  SUBROUTINE fftx_add_threed2oned_gamma( desc, vin, vout1, vout2 )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), INTENT(OUT) :: vout1(:)
+     complex(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
+     complex(DP), INTENT(IN) :: vin(:)
+     COMPLEX(DP) :: fp, fm
+     INTEGER :: ig
+     IF( PRESENT( vout2 ) ) THEN
+        DO ig=1,desc%ngm
+           fp=vin(desc%nl(ig))+vin(desc%nlm(ig))
+           fm=vin(desc%nl(ig))-vin(desc%nlm(ig))
+           vout1(ig) = vout1(ig) + 0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+           vout2(ig) = vout2(ig) + 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
+        END DO
+     ELSE
+        DO ig=1,desc%ngm
+           vout1(ig) = vout1(ig) + vin(desc%nl(ig))
+        END DO
+     END IF
+  END SUBROUTINE
+
+  SUBROUTINE fftx_threed2oned_gamma( desc, vin, vout1, vout2 )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), INTENT(OUT) :: vout1(:)
+     complex(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
+     complex(DP), INTENT(IN) :: vin(:)
+     COMPLEX(DP) :: fp, fm
+     INTEGER :: ig
+     IF( PRESENT( vout2 ) ) THEN
+        DO ig=1,desc%ngm
+           fp=vin(desc%nl(ig))+vin(desc%nlm(ig))
+           fm=vin(desc%nl(ig))-vin(desc%nlm(ig))
+           vout1(ig) = 0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+           vout2(ig) = 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
+        END DO
+     ELSE
+        DO ig=1,desc%ngm
+           vout1(ig) = vin(desc%nl(ig))
+        END DO
+     END IF
+  END SUBROUTINE
+
+
+  SUBROUTINE fftx_psi2c_gamma( desc, vin, vout1, vout2 )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), INTENT(OUT) :: vout1(:)
+     complex(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
+     complex(DP), INTENT(IN) :: vin(:)
+     COMPLEX(DP) :: fp, fm
+     INTEGER :: ig
+     IF( PRESENT( vout2 ) ) THEN
+        DO ig=1,desc%ngw
+           fp=vin(desc%nl(ig))+vin(desc%nlm(ig))
+           fm=vin(desc%nl(ig))-vin(desc%nlm(ig))
+           vout1(ig) = CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+           vout2(ig) = CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
+        END DO
+     ELSE
+        DO ig=1,desc%ngw
+           vout1(ig) = vin(desc%nl(ig))
+        END DO
+     END IF
+  END SUBROUTINE
+
 
   SUBROUTINE c2psi_gamma_tg(desc, psis, c_bgrp, i, nbsp_bgrp )
      !

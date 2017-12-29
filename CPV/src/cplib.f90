@@ -1470,6 +1470,7 @@ END SUBROUTINE print_lambda_x
       USE uspp_param,         ONLY: upf
       USE fft_interfaces,     ONLY: fwfft
       USE fft_base,           ONLY: dfftp
+      USE fft_helper_subroutines, ONLY: fftx_threed2oned_gamma
 
       IMPLICIT NONE
 
@@ -1490,17 +1491,19 @@ END SUBROUTINE print_lambda_x
       COMPLEX(DP) :: srhoc
       REAL(DP)    :: vxcc
       !
-      COMPLEX(DP), ALLOCATABLE :: vxc( : )
+      COMPLEX(DP), ALLOCATABLE :: vxc( : ), vxg(:)
 !
       dcc = 0.0d0
       !
       ALLOCATE( vxc( nnr ) )
+      ALLOCATE( vxg( dfftp%ngm ) )
       !
       vxc(:) = vxcr(:,1)
       !
       IF( nspin > 1 ) vxc(:) = vxc(:) + vxcr(:,2)
       !
       CALL fwfft( 'Dense', vxc, dfftp )
+      CALL fftx_threed2oned_gamma( dfftp, vxc, vxg )
       !
       DO i=1,3
          DO j=1,3
@@ -1509,7 +1512,7 @@ END SUBROUTINE print_lambda_x
                DO is = 1, nsp
                  IF( upf(is)%nlcc ) srhoc = srhoc + sfac( ig, is ) * drhocg( ig, is )
                ENDDO
-               vxcc = DBLE( CONJG( vxc( dfftp%nl( ig ) ) ) * srhoc ) / SQRT( gg(ig) * tpiba2 )
+               vxcc = DBLE( CONJG( vxg( ig ) ) * srhoc ) / SQRT( gg(ig) * tpiba2 )
                dcc(i,j) = dcc(i,j) + vxcc * &
      &                      2.d0 * tpiba2 * g(i,ig) *                  &
      &                    (g(1,ig)*ainv(j,1) +                         &
@@ -1519,6 +1522,7 @@ END SUBROUTINE print_lambda_x
          ENDDO
       ENDDO
 
+      DEALLOCATE( vxg )
       DEALLOCATE( vxc )
 
       dcc = dcc * omega

@@ -20,7 +20,7 @@
       USE metagga,                ONLY : kedtaus
       USE fft_interfaces,         ONLY : fwfft, invfft
       USE fft_base,               ONLY : dffts
-      USE fft_helper_subroutines, ONLY : c2psi_gamma
+      USE fft_helper_subroutines, ONLY : c2psi_gamma, fftx_psi2c_gamma
 !
       implicit none
 !
@@ -51,13 +51,10 @@
                                 kedtaus(ir,iss2)*AIMAG(psi(ir)),kind=DP)
             end do
             call fwfft('Wave',psi, dffts )
+            CALL fftx_psi2c_gamma( dffts, psi, dc, dca )
             do ig=1,ngw
-               fp= (psi(dffts%nl(ig)) + psi(dffts%nlm(ig)))
-               fm= (psi(dffts%nl(ig)) - psi(dffts%nlm(ig)))
-               df(ig)= df(ig) - ci*fi*tpiba2*g(ipol,ig) * &
-                       CMPLX(DBLE(fp), AIMAG(fm),kind=DP)
-               da(ig)= da(ig) - ci*fip*tpiba2*g(ipol,ig)* &
-                       CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
+               df(ig)= df(ig) - ci*fi *tpiba2*g(ipol,ig) * dc(ig)
+               da(ig)= da(ig) - ci*fip*tpiba2*g(ipol,ig) * dca(ig) 
             end do
          end do
 
