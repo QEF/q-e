@@ -303,6 +303,41 @@ CONTAINS
      END IF
   END SUBROUTINE
 
+  SUBROUTINE fftx_oned2threed_gamma( desc, psi, c, ca )
+     !
+     !  Copy charge density from 1D array (c) to 3D array (psi) in Fourier
+     !  space
+     !
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), INTENT(OUT) :: psi(:)
+     complex(DP), INTENT(IN) :: c(:)
+     complex(DP), OPTIONAL, INTENT(IN) :: ca(:)
+     complex(DP), parameter :: ci=(0.0d0,1.0d0)
+     integer :: ig
+     !
+     psi = 0.0d0
+     !
+     !  nlm and nl array: hold conversion indices form 3D to
+     !     1-D vectors. Columns along the z-direction are stored
+     !     contigiously
+     !  c array: stores the Fourier expansion coefficients
+     !     Loop for all local g-vectors (ngw)
+     IF( PRESENT(ca) ) THEN
+        do ig = 1, desc%ngm
+           psi( desc%nlm( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ))
+           psi( desc%nl( ig ) ) = c( ig ) + ci * ca( ig )
+        end do
+     ELSE
+        do ig = 1, desc%ngm
+           psi( desc%nlm( ig ) ) = CONJG( c( ig ) )
+           psi( desc%nl( ig ) ) = c( ig )
+        end do
+     END IF
+  END SUBROUTINE
+
+
   SUBROUTINE c2psi_gamma_tg(desc, psis, c_bgrp, i, nbsp_bgrp )
      !
      !  Copy all wave-functions of an orbital group 
