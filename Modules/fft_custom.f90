@@ -15,6 +15,7 @@ MODULE fft_custom
   USE parallel_include
   
   USE fft_types, ONLY: fft_type_descriptor
+  USE fft_ggen, ONLY: fft_set_nl, fft_set_nlm
   
   IMPLICIT NONE
 
@@ -60,7 +61,7 @@ CONTAINS
     ! Initialize g-vectors for custom grid, in exactly the same ordering
     ! as for the dense and smooth grids
     !
-    ! FIXME: Quick-and-dirty solution
+    ! FIXME: Should be merged with similar case for dfftp/dffts
     !
     !--------------------------------------------------------------------
     !
@@ -100,7 +101,6 @@ CONTAINS
     !
     ALLOCATE( fc%ggt(fc%ngmt) )
     ALLOCATE( fc%gt (3, fc%ngmt) )
-    ALLOCATE( mill(3,fc%ngmt) )
     !  
     ! fc%npwt = number of PW in sphere of radius ecutwfc (useful for Gamma)
     !
@@ -116,46 +116,6 @@ CONTAINS
        fc%ggt(i) = SUM(fc%gt (1:3,i)**2)
        IF ( fc%ggt(i) <= fc%ecutt / tpiba2) fc%npwt = fc%npwt + 1
        !
-       !     Now set nl and nls with the correct fft correspondence
-       !
-       !     n1, n2, n3 are Miller indices: G= n1*b1+n2*b2+n3*b3
-       !
-       n1 = NINT (SUM(fc%gt (:, i) * at (:, 1)))
-       !
-       !     Miller index n1 is stored for later usage
-       !
-       mill(1,i) = n1
-       !
-       !     negative n1 are refolded so that 1 <= n1 <= nr1
-       !
-       n1 = n1 + 1
-       IF (n1<1) n1 = n1 + fc%dfftt%nr1
-       !
-       !     Same for n2 and n3
-       !
-       n2 = NINT (SUM(fc%gt (:, i) * at (:, 2))) 
-       mill(2,i) = n2
-       n2 = n2 + 1
-       IF (n2<1) n2 = n2 + fc%dfftt%nr2 
-       
-       n3 = NINT (SUM(fc%gt (:, i) * at (:, 3)))
-       mill(3,i) = n3
-       n3 = n3 + 1
-       IF (n3<1) n3 = n3 + fc%dfftt%nr3 
-       
-       IF ( n1>fc%dfftt%nr1 .OR. n2>fc%dfftt%nr2 .OR. n3>fc%dfftt%nr3) &
-            CALL errore('ggenx','Mesh too small?',i)
-       !
-       !     now find the position in FFT grid of G-vector i
-       !
-       IF ( fc%dfftt%lpara ) THEN
-          fc%dfftt%nl (i) = n3 + (fc%dfftt%isind (n1+(n2-1)*fc%dfftt%nr1x)-1) &
-               * fc%dfftt%nr3x
-       ELSE
-          fc%dfftt%nl (i) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * &
-               & fc%dfftt%nr1x * fc%dfftt%nr2x 
-       END IF
-       !
     END DO
     !
     !     determine first nonzero g vector
@@ -166,12 +126,10 @@ CONTAINS
        fc%gstart_t=1
     ENDIF
     !
-    !     compute indices for -G (gamma-only case) - needs mill
+    ALLOCATE( mill(3,fc%ngmt) )
     !
-    IF ( gamma_only) THEN
-       ALLOCATE ( fc%dfftt%nlm(fc%ngmt) )
-       CALL index_minusg_custom(fc)
-    END IF
+    CALL fft_set_nl ( fc%dfftt, at, g, mill  )
+    IF ( gamma_only) CALL fft_set_nlm (fc%dfftt, mill)
     !
     !     Miller indices no longer needed
     !
@@ -210,99 +168,14 @@ CONTAINS
        RETURN 
        !
      END SUBROUTINE gvec_init
-
-
-
-  !
-  !--------------------------------------------------------------------
-  SUBROUTINE set_custom_grid(fc)
-    !-----------------------------------------------------------------------
-    !     This routine computes the dimensions of the minimum FFT grid
-    !     compatible with the input cut-off
-    !
-    !     NB: The values of nr1, nr2, nr3 are computed only if they are not
-    !     given as input parameters. Input values are kept otherwise.
-    !
-    USE cell_base,   ONLY : at, tpiba2
-    USE fft_support, ONLY : allowed
-    
-    IMPLICIT NONE
-    
-    TYPE(fft_cus) :: fc
-    
-    INTEGER, PARAMETER :: nmax = 5000
-    ! an unreasonably big number for a FFT grid
-    !
-    ! the values of nr1, nr2, nr3 are computed only if they are not given
-    ! as input parameters
-    !
-
-    fc%nr1t=0
-    fc%nr2t=0
-    fc%nr3t=0
-    
-    IF (fc%nr1t == 0) THEN
-       !
-       ! estimate nr1 and check if it is an allowed value for FFT
-       !
-       fc%nr1t = INT(2 * SQRT(fc%gcutmt) * SQRT(at(1, 1)**2 + &
-            &at(2, 1)**2 + at(3, 1)**2) ) + 1  
-10     CONTINUE
-       IF (fc%nr1t > nmax) &
-            CALL errore ('set_custom_grid', 'nr1 is unreasonably large', fc%nr1t)
-       IF (allowed (fc%nr1t) ) GOTO 15
-       fc%nr1t = fc%nr1t + 1
-       GOTO 10
-    ELSE
-       IF (.NOT.allowed (fc%nr1t) ) CALL errore ('set_custom_grid', &
-            'input nr1t value not allowed', 1)
-    ENDIF
-15  CONTINUE
-    !
-    IF (fc%nr2t == 0) THEN
-       !
-       ! estimate nr1 and check if it is an allowed value for FFT
-       !
-       fc%nr2t = INT(2 * SQRT(fc%gcutmt) * SQRT(at(1, 2)**2 + &
-            &at(2, 2)**2 + at(3, 2)**2) ) + 1 
-20     CONTINUE
-       IF (fc%nr2t > nmax) &
-            CALL errore ('set_custom_grid', 'nr2t is unreasonably large', fc%nr2t)
-       IF (allowed (fc%nr2t) ) GOTO 25
-       fc%nr2t = fc%nr2t + 1
-       GOTO 20
-    ELSE
-       IF (.NOT.allowed (fc%nr2t) ) CALL errore ('set_fft_dim', &
-            'input nr2t value not allowed', 2)
-    ENDIF
-25  CONTINUE
-    !
-    IF (fc%nr3t == 0) THEN
-       !
-       ! estimate nr3 and check if it is an allowed value for FFT
-       !
-       fc%nr3t = INT(2 * SQRT(fc%gcutmt) * SQRT(at(1, 3) **2 + &
-            &at(2, 3)**2 + at(3, 3) **2) ) + 1
-30     CONTINUE
-       IF (fc%nr3t > nmax) &
-            CALL errore ('set_custom_grid', 'nr3 is unreasonably large', fc%nr3t)
-       IF (allowed (fc%nr3t) ) GOTO 35
-       fc%nr3t = fc%nr3t + 1
-       GOTO 30
-    ELSE
-       IF (.NOT.allowed (fc%nr3t) ) CALL errore ('set_custom_grid', &
-            'input nr3t value not allowed', 3)
-    ENDIF
-35  CONTINUE
-    !
-    !    here we compute nr3s if it is not in input
-    !
-    RETURN
-  END SUBROUTINE set_custom_grid
   !
   !--------------------------------------------------------------------
   SUBROUTINE ggent(fc)
     !--------------------------------------------------------------------
+    !
+    ! Initialize g-vectors for custom grid
+    !
+    ! FIXME: Should be merged with ggen
     !
     USE kinds,              ONLY : DP
     USE cell_base,          ONLY : at, bg, tpiba2
@@ -311,8 +184,7 @@ CONTAINS
     
     IMPLICIT NONE
     
-    TYPE(fft_cus) :: fc
-    
+    TYPE(fft_cus) :: fc    
     !
     REAL(DP) ::  t (3), tt, swap
     !
@@ -332,7 +204,6 @@ CONTAINS
     ALLOCATE( mill_g( 3, fc%ngmt_g ), mill_unsorted( 3, fc%ngmt_g ) )
     ALLOCATE( igsrt( fc%ngmt_g ) )
     ALLOCATE( g2sort_g( fc%ngmt_g ) )
-    ALLOCATE( mill(3,fc%ngmt) )
    
     g2sort_g(:) = 1.0d20
     !
@@ -433,41 +304,14 @@ CONTAINS
     !
     !     Now set nl and nls with the correct fft correspondence
     !
-    ALLOCATE ( fc%dfftt%nl (fc%ngmt) )
-    DO ng = 1, fc%ngmt
-       n1 = NINT (SUM(fc%gt (:, ng) * at (:, 1))) + 1
-       mill(1,ng) = n1 - 1
-       IF (n1<1) n1 = n1 + fc%dfftt%nr1
-       
-       n2 = NINT (SUM(fc%gt (:, ng) * at (:, 2))) + 1
-       mill(2,ng) = n2 - 1
-       IF (n2<1) n2 = n2 + fc%dfftt%nr2
-       
-       
-       n3 = NINT (SUM(fc%gt (:, ng) * at (:, 3))) + 1
-       mill(3,ng) = n3 - 1
-       IF (n3<1) n3 = n3 + fc%dfftt%nr3
-       
-       
-       IF (n1>fc%dfftt%nr1 .OR. n2>fc%dfftt%nr2 .OR. n3>fc%dfftt%nr3) &
-            CALL errore('ggent','Mesh too small?',ng)
-       
-       IF ( fc%dfftt%lpara ) THEN
-          fc%dfftt%nl (ng) = n3 + ( fc%dfftt%isind (n1+(n2-1) * &
-               fc%dfftt%nr1x)-1) * fc%dfftt%nr3x
-       ELSE
-          fc%dfftt%nl (ng) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * &
-               fc%dfftt%nr1x * fc%dfftt%nr2x 
-       END IF
-    ENDDO
+    ALLOCATE( mill(3,fc%ngmt) )
     !
-    ! calculate indices of -G
+    CALL fft_set_nl ( fc%dfftt, at, fc%gt, mill  )
+    IF ( gamma_only) CALL fft_set_nlm (fc%dfftt, mill)
     !
-    IF ( gamma_only) THEN
-       ALLOCATE ( fc%dfftt%nlm(fc%ngmt) )
-       CALL index_minusg_custom(fc)
-    END IF
-    DEALLOCATE(mill)
+    !     Miller indices no longer needed
+    !
+    DEALLOCATE ( mill )
     !
     ! set npwt,npwxt
     ! This should eventually be calculated somewhere else with 
@@ -493,46 +337,6 @@ CONTAINS
     RETURN
     !    
   END SUBROUTINE ggent
-
-  !-----------------------------------------------------------------------
-  SUBROUTINE index_minusg_custom(fc)
-    !----------------------------------------------------------------------
-    !
-    !     compute indices nlm and nlms giving the correspondence
-    !     between the fft mesh points and -G (for gamma-only calculations)
-    !
-    !
-    IMPLICIT NONE
-    !
-    TYPE(fft_cus), INTENT(INOUT) :: fc
-    !
-    INTEGER :: n1, n2, n3, n1s, n2s, n3s, ng
-    !
-    DO ng = 1, fc%ngmt
-       n1 = -mill(1,ng) + 1
-       IF (n1 < 1) n1 = n1 + fc%dfftt%nr1
-       
-       n2 = -mill(2,ng) + 1
-       IF (n2 < 1) n2 = n2 + fc%dfftt%nr2
-       
-       n3 = -mill(3,ng) + 1
-       IF (n3 < 1) n3 = n3 + fc%dfftt%nr3
-       
-       IF (n1>fc%dfftt%nr1 .OR. n2>fc%dfftt%nr2 .OR. n3>fc%dfftt%nr3) THEN
-          CALL errore('index_minusg_custom','Mesh too small?',ng)
-       ENDIF
-       
-       IF ( fc%dfftt%lpara ) THEN
-          fc%dfftt%nlm(ng) = n3 + (fc%dfftt%isind (n1 + (n2 - 1) * fc&
-            &%dfftt%nr1x) - 1) * fc%dfftt%nr3x
-       ELSE
-          fc%dfftt%nlm(ng) = n1 + (n2 - 1) * fc%dfftt%nr1x + (n3 - 1) * fc&
-            &%dfftt%nr1x * fc%dfftt%nr2x
-       ENDIF
-
-    ENDDO
-    
-  END SUBROUTINE index_minusg_custom
   
   SUBROUTINE deallocate_fft_custom(fc)
     !this subroutine deallocates all the fft custom stuff

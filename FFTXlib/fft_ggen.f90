@@ -10,9 +10,9 @@
 MODULE fft_ggen
 !=----------------------------------------------------------------------=
 
-!  ... subroutines generating G-vectors and variables nl* needed to map
-!  ... G-vector components onto the FFT grid(s) in reciprocal space
-!
+  !  ... subroutines generating variables nl* needed to map G-vector
+  !  ... components onto the FFT grid(s) in reciprocal space
+  !
    USE fft_param
 
    PRIVATE
@@ -28,8 +28,11 @@ CONTAINS
    SUBROUTINE fft_set_nl ( dfft, at, g, mill  )
 !----------------------------------------------------------------------
    !
-   !     Now set nl 
-   !
+   ! Input:  FFT descriptor dfft, lattice vectors at, list of G-vectors g
+   ! Output: indices nl such that G_fft(nl(i)) = G(i)
+   !         optionally, Miller indices: if bg = reciprocal lattice vectors,
+   ! G(:,i) = mill(1,i)*bg(:,1) + mill(2,i)*bg(:,2) + mill(3,i)*bg(:,3)
+   !  
    USE fft_types,  ONLY : fft_type_descriptor
    !
    IMPLICIT NONE
@@ -74,8 +77,8 @@ CONTAINS
    SUBROUTINE fft_set_nlm( dfft, mill )
    !----------------------------------------------------------------------
    !
-   !     compute indices nlm giving the correspondence
-   !     between the G and -G (for gamma-only calculations)
+   ! Input:  FFT descriptor dfft, miller indices
+   ! Output: indices nlm such that G_fft(nlm(i)) = -G(i)
    !
    USE fft_types,  ONLY : fft_type_descriptor
    !
