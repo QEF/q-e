@@ -23,6 +23,7 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       USE fft_base,           ONLY: dfftp
       USE fft_interfaces,     ONLY: fwfft, invfft
       USE electrons_base,     ONLY: nspin
+      USE fft_helper_subroutines, ONLY: fftx_oned2threed_gamma
 
       IMPLICIT NONE
 
@@ -36,14 +37,15 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
 
       INTEGER :: ig
       REAL(DP) :: rhog_re, rhog_im, fpibg
-      REAL(DP),    ALLOCATABLE   :: aux1(:,:)
+      COMPLEX(DP),    ALLOCATABLE   :: aux1(:)
       COMPLEX(DP), ALLOCATABLE   :: aux(:)
       !
       ! ... compute potential in G space ...
       !
       ehart = 0.0d0
-      ALLOCATE(aux1(2,ngm))
-      aux1 = 0.D0
+      ALLOCATE(aux1(ngm))
+      ALLOCATE(aux(dfftp%nnr))
+      aux1(1) = 0.D0
       DO ig = gstart, ngm 
         rhog_re  = REAL(rhog( ig, 1 ))
         rhog_im  = AIMAG(rhog( ig, 1 ))
@@ -52,8 +54,7 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
           rhog_im = rhog_im + AIMAG(rhog( ig, 2 ))
         ENDIF
         fpibg = fpi / ( gg(ig) * tpiba2 )
-        aux1(1,ig) = aux1(1,ig) + fpibg * rhog_re 
-        aux1(2,ig) = aux1(2,ig) + fpibg * rhog_im 
+        aux1(ig) = CMPLX( fpibg * rhog_re , fpibg * rhog_im, kind=DP )
         ehart = ehart + fpibg * ( rhog_re**2 + rhog_im**2 )
       END DO
       !
@@ -64,11 +65,7 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       !
       ! ... transform hartree potential to real space
       !
-      ALLOCATE(aux(dfftp%nnr))
-      aux=0.D0
-      aux(dfftp%nl(1:ngm)) = CMPLX ( aux1(1,1:ngm), aux1(2,1:ngm), KIND=dp )
-      aux(dfftp%nlm(1:ngm)) = CMPLX ( aux1(1,1:ngm), -aux1(2,1:ngm), KIND=dp )
-      DEALLOCATE(aux1)
+      CALL fftx_oned2threed_gamma( dfftp, aux, aux1 )
       CALL invfft ('Dense', aux, dfftp)
       !
       ! ... add hartree potential to the input potential
@@ -85,6 +82,7 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       END IF
       CALL mp_sum(charge, intra_bgrp_comm)
       !
+      DEALLOCATE(aux1)
       DEALLOCATE(aux)
       !
       RETURN
@@ -263,6 +261,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       USE mp,                 ONLY: mp_sum
       USE fft_base,           ONLY: dfftp
       USE fft_interfaces,     ONLY: fwfft, invfft
+      USE fft_helper_subroutines, ONLY: fftx_oned2threed_gamma
 
       IMPLICIT NONE
 
@@ -274,43 +273,45 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       ! ... Locals
       
       INTEGER :: ipol, ig
-      REAL(DP) :: fac
       COMPLEX(DP), ALLOCATABLE   :: rhoaux(:)
       COMPLEX(DP), ALLOCATABLE   :: gaux(:)
+      COMPLEX(DP), ALLOCATABLE   :: rhog(:)
       !
       ! ... Bring rho to G space
       !
       ALLOCATE( rhoaux( dfftp%nnr ) )
+      ALLOCATE( gaux(ngm) )
+      ALLOCATE( rhog(ngm) )
+      !
       rhoaux( : ) = CMPLX( rho( : ), 0.D0, KIND=dp ) 
       !
       CALL fwfft('Dense', rhoaux, dfftp)
       !
-      ! ... compute gradient of potential in G space ...
+      DO ig = 1, ngm 
+         rhog( ig ) = rhoaux( dfftp%nl(ig) )
+      END DO
       !
-      ALLOCATE(gaux(dfftp%nnr))
+      ! ... compute gradient of potential in G space ...
       !
       DO ipol = 1, 3
          !
-         gaux(:) = (0.d0,0.d0)
+         gaux(1) = (0.d0,0.d0)
          !
          DO ig = gstart, ngm 
-           fac = fpi * g(ipol,ig) / ( gg(ig) * tpiba )
-           gaux(dfftp%nl(ig)) = CMPLX(-AIMAG(rhoaux(dfftp%nl(ig))),REAL(rhoaux(dfftp%nl(ig))),kind=dp) * fac 
+           gaux(ig) = CMPLX(0.0d0,1.0d0,kind=DP) * fpi * g(ipol,ig) / ( gg(ig) * tpiba ) * rhog( ig )
          ENDDO
-         !
-         gaux(dfftp%nlm(:)) = &
-           CMPLX( REAL( gaux(dfftp%nl(:)) ), -AIMAG( gaux(dfftp%nl(:)) ) ,kind=DP)
          !
          ! ... bring back to R-space, (\grad_ipol a)(r) ...
          !
-         CALL invfft ('Dense', gaux, dfftp)
+         CALL fftx_oned2threed_gamma( dfftp, rhoaux, gaux )
+         CALL invfft ('Dense', rhoaux, dfftp)
          !
-         gradv(ipol,:) = REAL( gaux(:) )
+         gradv(ipol,:) = REAL( rhoaux(:) )
          !
       END DO
       !
+      DEALLOCATE(rhog)
       DEALLOCATE(gaux)
-      !
       DEALLOCATE(rhoaux)
       !
       RETURN
