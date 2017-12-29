@@ -274,6 +274,7 @@
       use cp_main_variables, only: drhog
       USE fft_interfaces, ONLY: fwfft, invfft
       USE fft_base,       ONLY: dfftp
+      USE fft_helper_subroutines, ONLY: fftx_oned2threed_gamma
 !                 
       implicit none  
 ! input                   
@@ -354,13 +355,7 @@
 !     _________________________________________________________________
 !     second part xc-potential: 1 inverse fft
 !
-         do ig=1,dfftp%nnr
-            v(ig)=(0.0d0,0.0d0)
-         end do
-         do ig=1,ngm
-            v(dfftp%nl(ig))=x(ig)
-            v(dfftp%nlm(ig))=CONJG(x(ig))
-         end do
+         CALL fftx_oned2threed_gamma( dfftp, v, x )
          call invfft('Dense',v, dfftp )
          do ir=1,dfftp%nnr
             rhor(ir,iss)=rhor(ir,iss)-DBLE(v(ir))
