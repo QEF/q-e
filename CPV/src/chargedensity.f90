@@ -533,6 +533,7 @@
       use cell_base,          ONLY: tpiba
       USE fft_interfaces,     ONLY: invfft
       USE fft_base,           ONLY: dfftp
+      USE fft_helper_subroutines, ONLY: fftx_oned2threed_gamma
 !
       implicit none
 ! input
@@ -547,25 +548,26 @@
 #endif
 #endif
       complex(DP), allocatable :: v(:)
+      complex(DP), allocatable :: drho(:,:)
       complex(DP) :: ci
       integer     :: iss, ig, ir
 !
 !
       allocate( v( dfftp%nnr ) ) 
+      allocate( drho( ngm, 3 ) ) 
       !
       ci = ( 0.0d0, 1.0d0 )
       do iss = 1, nspin
+
 !$omp parallel default(shared), private(ig)
 !$omp do
-         do ig = 1, dfftp%nnr
-            v( ig ) = ( 0.0d0, 0.0d0 )
-         end do
-!$omp do
          do ig=1,ngm
-            v(dfftp%nl (ig))=      ci*tpiba*g(1,ig)*rhog(ig,iss)
-            v(dfftp%nlm(ig))=CONJG(ci*tpiba*g(1,ig)*rhog(ig,iss))
+            drho(ig,1) = ci*tpiba*g(1,ig)*rhog(ig,iss)
+            drho(ig,2) = ci*tpiba*g(2,ig)*rhog(ig,iss)
+            drho(ig,3) = ci*tpiba*g(3,ig)*rhog(ig,iss)
          end do
 !$omp end parallel
+         CALL fftx_oned2threed_gamma( dfftp, v, drho(:,1) )
          !
          call invfft( 'Dense', v, dfftp )
          !
@@ -574,18 +576,9 @@
          do ir=1,dfftp%nnr
             gradr(ir,1,iss)=DBLE(v(ir))
          end do
-!$omp do
-         do ig=1,dfftp%nnr
-            v(ig)=(0.0d0,0.0d0)
-         end do
-!$omp do
-         do ig=1,ngm
-            v(dfftp%nl(ig))= tpiba*(      ci*g(2,ig)*rhog(ig,iss)-           &
-     &                                 g(3,ig)*rhog(ig,iss) )
-            v(dfftp%nlm(ig))=tpiba*(CONJG(ci*g(2,ig)*rhog(ig,iss)+           &
-     &                                 g(3,ig)*rhog(ig,iss)))
-         end do
 !$omp end parallel
+
+         CALL fftx_oned2threed_gamma( dfftp, v, drho(:,2), drho(:,3) )
          !
          call invfft( 'Dense', v, dfftp )
          !
@@ -596,6 +589,7 @@
          end do
       end do
       !
+      deallocate( drho )
       deallocate( v )
 !
       RETURN
