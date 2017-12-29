@@ -131,6 +131,7 @@
 #endif      
       USE io_files,           ONLY: tmp_dir, prefix
       USE fft_rho
+      USE fft_helper_subroutines, ONLY: c2psi_gamma
       !
       IMPLICIT NONE
       INTEGER nfi
@@ -289,11 +290,7 @@
             !
             i = iwf
             !
-            psis = 0.D0
-            DO ig=1,ngw
-               psis(dffts%nlm(ig))=CONJG(c_bgrp(ig,i))
-               psis(dffts%nl(ig))=c_bgrp(ig,i)
-            END DO
+            CALL c2psi_gamma( dffts, psis, c_bgrp(:,i) )
             !
             CALL invfft('Wave',psis, dffts )
             !
@@ -421,7 +418,7 @@
          !
          IMPLICIT NONE
          !
-         INTEGER :: from, i, eig_index, eig_offset, ii, right_nnr, tg_nr3
+         INTEGER :: from, i, eig_index, eig_offset, ii, tg_nr3
          !
 #if defined(__INTEL_COMPILER)
 #if __INTEL_COMPILER  >= 1300
@@ -438,57 +435,15 @@
          !
          tmp_rhos = 0_DP
 
-         CALL tg_get_nnr( dffts, right_nnr )
-
          do i = 1, nbsp_bgrp, 2 * fftx_ntgrp(dffts)
-
-            !
-            !  Initialize wave-functions in Fourier space (to be FFTed)
-            !  The size of psis is nnr: which is equal to the total number
-            !  of local fourier coefficients.
-            !
 
 #if defined(__MPI)
             !
-            !  Loop for all local g-vectors (ngw)
-            !  ci_bgrp: stores the Fourier expansion coefficients
-            !     the i-th column of c_bgrp corresponds to the i-th state (in
-            !     this band group)
-            !  nlsm and nls matrices: hold conversion indices form 3D to
-            !     1-D vectors. Columns along the z-direction are stored contigiously
-            !
-            !  The outer loop goes through i : i + 2*NOGRP to cover
-            !  2*NOGRP eigenstates at each iteration
-            !
-            eig_offset = 0
-
-            do eig_index = 1, 2 * fftx_ntgrp(dffts), 2   
-               !
-               !  here we pack 2*nogrp electronic states in the psis array
-               !  note that if nogrp == nproc_bgrp each proc perform a full 3D
-               !  fft and the scatter phase is local (without communication)
-               !
-               IF ( ( i + eig_index - 1 ) <= nbsp_bgrp ) THEN
-                  !
-                  !  The  eig_index loop is executed only ONCE when NOGRP=1.
-                  !
-                  CALL c2psi( psis( eig_offset * right_nnr + 1 ), right_nnr, &
-                       c_bgrp( 1, i+eig_index-1 ), c_bgrp( 1, i+eig_index ), ngw, 2 )
-                  !
-               ENDIF
-               !
-               eig_offset = eig_offset + 1
-               !
-            end do
-
-            !
-            !  2*NOGRP bands are transformed at the same time
-            !
+            CALL c2psi_gamma_tg(dffts, psis, c_bgrp, i, nbsp_bgrp )
 
             CALL invfft ('tgWave', psis, dffts )
 #else
-
-            CALL c2psi( psis, dffts%nnr, c_bgrp( 1, i ), c_bgrp( 1, i+1 ), ngw, 2 )
+            CALL c2psi_gamma( psis, c_bgrp( 1, i ), c_bgrp( 1, i+1 ), dffts )
 
             CALL invfft('Wave', psis, dffts )
 
