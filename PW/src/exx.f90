@@ -4677,16 +4677,20 @@ END SUBROUTINE compute_becpsi
        allocate( ig_l2g_loc(ngm), g_loc(3,ngm), gg_loc(ngm) )
        allocate( mill_loc(3,ngm), nl_loc(ngm) )
        allocate( nls_loc(size(dffts%nl)) )
-       allocate( nlm_loc(size(dfftp%nlm)) )
-       allocate( nlsm_loc(size(dffts%nlm)) )
+       IF ( gamma_only) THEN
+          allocate( nlm_loc(size(dfftp%nlm)) )
+          allocate( nlsm_loc(size(dffts%nlm)) )
+       END IF
        ig_l2g_loc = ig_l2g
        g_loc = g
        gg_loc = gg
        mill_loc = mill
        nl_loc = dfftp%nl
        nls_loc = dffts%nl
-       nlm_loc = dfftp%nlm
-       nlsm_loc = dffts%nlm
+       IF ( gamma_only) THEN
+          nlm_loc = dfftp%nlm
+          nlsm_loc = dffts%nlm
+       END IF
        ngm_loc = ngm
        ngm_g_loc = ngm_g
        gstart_loc = gstart
@@ -4752,8 +4756,10 @@ END SUBROUTINE compute_becpsi
        mill_exx = mill
        nl_exx = dfftp%nl
        nls_exx = dffts%nl
-       nlm_exx = dfftp%nlm
-       nlsm_exx = dffts%nlm
+       IF( gamma_only ) THEN
+          nlm_exx = dfftp%nlm
+          nlsm_exx = dffts%nlm
+       END IF
        ngm_exx = ngm
        ngm_g_exx = ngm_g
        gstart_exx = gstart
@@ -4764,10 +4770,19 @@ END SUBROUTINE compute_becpsi
        g = g_exx
        gg = gg_exx
        mill = mill_exx
+       ! workaround: here dfft?%nl* are unallocated
+       ! some compilers go on and allocate, some others crash
+       IF ( .NOT. ALLOCATED(dfftp%nl) ) ALLOCATE (dfftp%nl(size(nl_exx)))
+       IF ( .NOT. ALLOCATED(dffts%nl) ) ALLOCATE (dffts%nl(size(nls_exx)))
+       IF ( gamma_only .AND. .NOT.ALLOCATED(dfftp%nlm) ) ALLOCATE (dfftp%nlm(size(nlm_exx)))
+       IF ( gamma_only .AND. .NOT.ALLOCATED(dffts%nlm) ) ALLOCATE (dffts%nlm(size(nlsm_exx)))
+       ! end workaround. FIXME: this part of code must disappear ASAP
        dfftp%nl = nl_exx
        dffts%nl = nls_exx
-       dfftp%nlm = nlm_exx
-       dffts%nlm = nlsm_exx
+       IF( gamma_only ) THEN
+          dfftp%nlm = nlm_exx
+          dffts%nlm = nlsm_exx
+       ENDIF
        ngm = ngm_exx
        ngm_g = ngm_g_exx
        gstart = gstart_exx
@@ -4780,8 +4795,10 @@ END SUBROUTINE compute_becpsi
        mill = mill_loc
        dfftp%nl = nl_loc
        dffts%nl = nls_loc
-       dfftp%nlm = nlm_loc
-       dffts%nlm = nlsm_loc
+       IF( gamma_only ) THEN
+          dfftp%nlm = nlm_loc
+          dffts%nlm = nlsm_loc
+       END IF
        ngm = ngm_loc
        ngm_g = ngm_g_loc
        gstart = gstart_loc
