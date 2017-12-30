@@ -277,7 +277,7 @@ SUBROUTINE gshells ( vc )
    !----------------------------------------------------------------------
    !
    ! calculate number of G shells: ngl, and the index ng = igtongl(ig)
-   ! that gives the shell index ng for (lacal) G-vector of index ig
+   ! that gives the shell index ng for (local) G-vector of index ig
    !
    USE kinds,              ONLY : DP
    USE gvect,              ONLY : gg, ngm, gl, ngl, igtongl

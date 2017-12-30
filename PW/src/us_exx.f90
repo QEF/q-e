@@ -129,7 +129,8 @@ MODULE us_exx
   END SUBROUTINE qvan_clean
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE addusxx_g(exx_fft, rhoc, xkq, xk, flag, becphi_c, becpsi_c, becphi_r, becpsi_r )
+  SUBROUTINE addusxx_g(dfftt, ngms, rhoc, xkq, xk, flag, becphi_c, becpsi_c,&
+                  becphi_r, becpsi_r )
     !-----------------------------------------------------------------------
     ! 
     ! Add US contribution to rhoc for hybrid functionals
@@ -146,13 +147,14 @@ MODULE us_exx
     USE gvect,               ONLY : g, eigts1, eigts2, eigts3, mill, gstart
     USE cell_base,           ONLY : tpiba
     USE control_flags,       ONLY : gamma_only
-    USE fft_custom,          ONLY : fft_cus
+    USE fft_types,           ONLY : fft_type_descriptor
     IMPLICIT NONE
     !
-    TYPE(fft_cus), INTENT(inout):: exx_fft
+    TYPE ( fft_type_descriptor ), INTENT(IN) :: dfftt 
     ! In input I get a slice of <beta|left> and <beta|right>
     ! only for this kpoint and this band
-    COMPLEX(DP),INTENT(inout) :: rhoc(exx_fft%dfftt%nnr)
+    INTEGER, INTENT(IN) :: ngms
+    COMPLEX(DP),INTENT(inout) :: rhoc(dfftt%nnr)
     COMPLEX(DP),INTENT(in), OPTIONAL  :: becphi_c(nkb), becpsi_c(nkb)
     REAL(DP),   INTENT(in), OPTIONAL  :: becphi_r(nkb), becpsi_r(nkb)
     REAL(DP),   INTENT(in)    :: xkq(3), xk(3)
@@ -161,7 +163,7 @@ MODULE us_exx
     ! ... local variables
     !
     COMPLEX(DP),ALLOCATABLE :: aux1(:), aux2(:), eigqts(:)
-    INTEGER :: ngms, ikb, jkb, ijkb0, ih, jh, na, nt, ig, nij, ijh
+    INTEGER :: ikb, jkb, ijkb0, ih, jh, na, nt, ig, nij, ijh
     COMPLEX(DP) :: becfac_c
     REAL(DP) :: arg, becfac_r
     LOGICAL :: add_complex, add_real, add_imaginary
@@ -183,7 +185,6 @@ MODULE us_exx
          ( add_imaginary.AND.(.NOT. PRESENT(becphi_r) .OR. .NOT. PRESENT(becpsi_r) ) ) )    &
        CALL errore('addusxx_g', 'called with incorrect arguments', 2 )
     !
-    ngms = exx_fft%ngmt
     ALLOCATE( aux1(ngms), aux2(ngms) )
     ALLOCATE(eigqts(nat))
     !
@@ -251,23 +252,23 @@ MODULE us_exx
 !$omp end parallel do
                 IF ( add_complex ) THEN
                    DO ig = 1, ngms
-                      rhoc(exx_fft%dfftt%nl(ig)) = rhoc(exx_fft%dfftt%nl(ig)) + aux2(ig)
+                      rhoc(dfftt%nl(ig)) = rhoc(dfftt%nl(ig)) + aux2(ig)
                    END DO
                 ELSE IF ( add_real ) THEN
                    DO ig = 1, ngms
-                      rhoc(exx_fft%dfftt%nl(ig)) = rhoc(exx_fft%dfftt%nl(ig)) + aux2(ig)
+                      rhoc(dfftt%nl(ig)) = rhoc(dfftt%nl(ig)) + aux2(ig)
                    ENDDO
                    DO ig = gstart, ngms
-                      rhoc(exx_fft%dfftt%nlm(ig)) = rhoc(exx_fft%dfftt%nlm(ig)) &
+                      rhoc(dfftt%nlm(ig)) = rhoc(dfftt%nlm(ig)) &
                                                + CONJG(aux2(ig))
                    ENDDO
                 ELSE IF ( add_imaginary ) THEN
                    DO ig = 1, ngms
-                      rhoc(exx_fft%dfftt%nl(ig)) = rhoc(exx_fft%dfftt%nl(ig)) &
+                      rhoc(dfftt%nl(ig)) = rhoc(dfftt%nl(ig)) &
                                               + (0.0_dp,1.0_dp) * aux2(ig)
                    ENDDO
                    DO ig = gstart, ngms
-                      rhoc(exx_fft%dfftt%nlm(ig)) = rhoc(exx_fft%dfftt%nlm(ig)) &
+                      rhoc(dfftt%nlm(ig)) = rhoc(dfftt%nlm(ig)) &
                                              + (0.0_dp,1.0_dp)* CONJG(aux2(ig))
                    ENDDO
                 ENDIF
@@ -291,7 +292,7 @@ MODULE us_exx
   !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE newdxx_g(exx_fft, vc, xkq, xk, flag, deexx, becphi_r, becphi_c)
+  SUBROUTINE newdxx_g(dfftt, ngms, vc, xkq, xk, flag, deexx, becphi_r, becphi_c)
     !-----------------------------------------------------------------------
     !
     ! This subroutine computes some sort of EXX contribution to the non-local 
@@ -311,12 +312,13 @@ MODULE us_exx
     USE gvect,          ONLY : gg, g, gstart, eigts1, eigts2, eigts3, mill
     USE cell_base,      ONLY : tpiba, omega
     USE control_flags,  ONLY : gamma_only
-    USE fft_custom,     ONLY : fft_cus
+    USE fft_types,      ONLY : fft_type_descriptor
     !
     IMPLICIT NONE
     !
-    TYPE(fft_cus), INTENT(inout):: exx_fft
-    COMPLEX(DP),INTENT(in)    :: vc(exx_fft%dfftt%nnr)
+    TYPE ( fft_type_descriptor ), INTENT(IN) :: dfftt 
+    INTEGER, INTENT(IN) :: ngms
+    COMPLEX(DP),INTENT(in)    :: vc(dfftt%nnr)
     ! In input I get a slice of <beta|left> and <beta|right> 
     ! only for this kpoint and this band
     COMPLEX(DP),INTENT(in), OPTIONAL :: becphi_c(nkb)
@@ -324,7 +326,6 @@ MODULE us_exx
     COMPLEX(DP),INTENT(inout) :: deexx(nkb)
     REAL(DP),INTENT(in)       :: xk(3), xkq(3)
     CHARACTER(LEN=1), INTENT(IN) :: flag
-    INTEGER:: ngms
     !
     ! ... local variables
     INTEGER :: ig, ikb, jkb, ijkb0, ih, jh, na, nt, nij
@@ -355,7 +356,6 @@ MODULE us_exx
     !
     CALL start_clock( 'newdxx' )
     !
-    ngms = exx_fft%ngmt
     ALLOCATE(aux1(ngms), aux2(ngms), auxvc( ngms))
     ALLOCATE(eigqts(nat))
     !
@@ -370,19 +370,19 @@ MODULE us_exx
     !
     auxvc = (0._dp, 0._dp)
     IF ( add_complex ) THEN
-       auxvc(1:ngms) = vc(exx_fft%dfftt%nl(1:ngms) )
+       auxvc(1:ngms) = vc(dfftt%nl(1:ngms) )
        fact=omega
     ELSE IF ( add_real ) THEN
        DO ig = 1, ngms
-          fp = (vc(exx_fft%dfftt%nl(ig)) + vc(exx_fft%dfftt%nlm(ig)))/2.0_dp
-          fm = (vc(exx_fft%dfftt%nl(ig)) - vc(exx_fft%dfftt%nlm(ig)))/2.0_dp
+          fp = (vc(dfftt%nl(ig)) + vc(dfftt%nlm(ig)))/2.0_dp
+          fm = (vc(dfftt%nl(ig)) - vc(dfftt%nlm(ig)))/2.0_dp
           auxvc(ig) = CMPLX( DBLE(fp), AIMAG(fm), KIND=dp)
        END DO
        fact=2.0_dp*omega
     ELSE IF ( add_imaginary ) THEN
        DO ig = 1, ngms
-          fp = (vc(exx_fft%dfftt%nl(ig)) + vc(exx_fft%dfftt%nlm(ig)))/2.0_dp
-          fm = (vc(exx_fft%dfftt%nl(ig)) - vc(exx_fft%dfftt%nlm(ig)))/2.0_dp
+          fp = (vc(dfftt%nl(ig)) + vc(dfftt%nlm(ig)))/2.0_dp
+          fm = (vc(dfftt%nl(ig)) - vc(dfftt%nlm(ig)))/2.0_dp
           auxvc(ig) = CMPLX( AIMAG(fp), -DBLE(fm), KIND=dp)
        END DO
        fact=2.0_dp*omega
@@ -532,7 +532,7 @@ MODULE us_exx
   !-----------------------------------------------------------------------
   !
   !------------------------------------------------------------------------
-  SUBROUTINE addusxx_r(exx_fft, rho,becphi,becpsi)
+  SUBROUTINE addusxx_r(rho,becphi,becpsi)
     !------------------------------------------------------------------------
     ! This routine adds to the two wavefunctions density (in real space) 
     ! the part which is due to the US augmentation.
@@ -549,12 +549,10 @@ MODULE us_exx
     USE spin_orb,         ONLY : domag
     !
     USE realus,           ONLY : tabxx
-    USE fft_custom,       ONLY : fft_cus
     !
     IMPLICIT NONE
     !
-    TYPE(fft_cus), INTENT(in):: exx_fft    !
-    COMPLEX(DP),INTENT(inout) :: rho(exx_fft%dfftt%nnr)
+    COMPLEX(DP),INTENT(inout) :: rho(:)
     COMPLEX(DP),INTENT(in)    :: becphi(nkb)
     COMPLEX(DP),INTENT(in)    :: becpsi(nkb)
     !
@@ -593,7 +591,7 @@ MODULE us_exx
   !-----------------------------------------------------------------------
   !
   !------------------------------------------------------------------------
-  SUBROUTINE newdxx_r(exx_fft,vr,becphi,deexx)
+  SUBROUTINE newdxx_r(dfftt,vr,becphi,deexx)
     !------------------------------------------------------------------------
     !   This routine computes the integral of the perturbed potential with
     !   the Q function in real space
@@ -602,14 +600,15 @@ MODULE us_exx
     USE uspp_param,       ONLY : upf, nh, nhm
     USE uspp,             ONLY : nkb, ijtoh, indv_ijkb0
     USE noncollin_module, ONLY : nspin_mag
-    USE fft_custom,       ONLY : fft_cus
-
-    USE realus, ONLY : tabxx
-
+    USE fft_types,        ONLY : fft_type_descriptor
+    USE realus,           ONLY : tabxx
+    !
     IMPLICIT NONE
+    !
+    TYPE ( fft_type_descriptor ), INTENT(IN) :: dfftt 
+    ! In input I get a slice of <beta|left> and <beta|right>
     ! Input: potential , output: contribution to integral
-    TYPE(fft_cus),INTENT(in)  :: exx_fft
-    COMPLEX(DP),INTENT(in)    :: vr(exx_fft%dfftt%nnr)
+    COMPLEX(DP),INTENT(in)    :: vr(:)
     COMPLEX(DP),INTENT(in)    :: becphi(nkb)
     COMPLEX(DP),INTENT(inout) :: deexx(nkb)
     !Internal
@@ -620,7 +619,7 @@ MODULE us_exx
     COMPLEX(DP) :: aux
     !
     CALL start_clock( 'newdxx' )
-    domega = omega/(exx_fft%dfftt%nr1 *exx_fft%dfftt%nr2 *exx_fft%dfftt%nr3)
+    domega = omega/(dfftt%nr1 *dfftt%nr2 *dfftt%nr3)
     !
     DO ia = 1, nat
       !
@@ -1011,7 +1010,7 @@ MODULE us_exx
     ALLOCATE(gk(npwq), igkq(npwq))
     ALLOCATE(vkbq(npwq,nkb))
     ALLOCATE(evcq(npwq,nbnd))
-    ALLOCATE(phi(exx_fft%dfftt%nnr))
+    ALLOCATE(phi(dfftt%nnr))
     !
 !     WRITE(100002, *) "---------------------------------"
     DO ikq = 1,nkqs
@@ -1036,27 +1035,27 @@ MODULE us_exx
          DO ibnd = ibnd_loop_start,ibnd_end,2
             h_ibnd = h_ibnd + 1
             phi(:) = exxbuff(:,h_ibnd,ikq)
-            CALL fwfft ('CustomWave', phi, exx_fft%dfftt)
+            CALL fwfft ('CustomWave', phi, dfftt)
             IF (ibnd < ibnd_end) THEN
                ! two ffts at the same time
                DO j = 1, ngkq(ikq)
-                  fp = (phi (exx_fft%dfftt%nl(j)) + phi (exx_fft%dfftt%nlm(j)))*0.5d0
-                  fm = (phi (exx_fft%dfftt%nl(j)) - phi (exx_fft%dfftt%nlm(j)))*0.5d0
+                  fp = (phi (dfftt%nl(j)) + phi (dfftt%nlm(j)))*0.5d0
+                  fm = (phi (dfftt%nl(j)) - phi (dfftt%nlm(j)))*0.5d0
                   evcq( j, ibnd)   = cmplx( dble(fp), aimag(fm),kind=DP)
                   evcq( j, ibnd+1) = cmplx(aimag(fp),- dble(fm),kind=DP)
                ENDDO
             ELSE
                DO j = 1, ngkq(ikq)
-                  evcq(j, ibnd)   =  phi(exx_fft%dfftt%nl(j))
+                  evcq(j, ibnd)   =  phi(dfftt%nl(j))
                ENDDO
             ENDIF
          ENDDO
       ELSE
          DO ibnd = ibnd_start,ibnd_end
             phi(:) = exxbuff(:,ibnd,ikq)
-            CALL fwfft ('CustomWave', phi, exx_fft%dfftt)
+            CALL fwfft ('CustomWave', phi, dfftt)
             DO j = 1, ngkq(ikq)
-               evcq(j, ibnd)   =  phi(exx_fft%dfftt%nl(igkq(j)))
+               evcq(j, ibnd)   =  phi(dfftt%nl(igkq(j)))
             ENDDO
          ENDDO
       ENDIF

@@ -178,11 +178,12 @@ subroutine exx_interpolate (v, vs, iflag)
   USE gvect,         ONLY: g
   USE control_flags, ONLY: gamma_only
   USE fft_base,      ONLY : dfftp
+  USE exx,           ONLY : dfftt
   USE exx,           ONLY : exx_fft
   USE fft_interfaces,ONLY : fwfft, invfft
   !
   implicit none
-  real(DP) :: v (dfftp%nnr), vs (exx_fft%dfftt%nnr)
+  real(DP) :: v (dfftp%nnr), vs (dfftt%nnr)
   ! function on density mesh
   ! function on exx mesh
 
@@ -202,19 +203,19 @@ subroutine exx_interpolate (v, vs, iflag)
      !    from density to exx
      !
      allocate (aux( dfftp%nnr))    
-     allocate (auxs(exx_fft%dfftt%nnr))    
+     allocate (auxs(dfftt%nnr))    
      aux (:) = (1.0d0,0.0d0) * v (:)
      CALL fwfft ('Dense', aux, dfftp)
      auxs (:) = (0.d0, 0.d0)
      do ig = 1, exx_fft%ngmt
-        auxs (exx_fft%dfftt%nl(ig)) = aux(dfftp%nl(ig))
+        auxs (dfftt%nl(ig)) = aux(dfftp%nl(ig))
      enddo
      if (gamma_only) then
         do ig = 1, exx_fft%ngmt
-           auxs(exx_fft%dfftt%nlm(ig) ) = aux (dfftp%nlm(ig) )
+           auxs(dfftt%nlm(ig) ) = aux (dfftp%nlm(ig) )
         enddo
      end if
-     CALL invfft ('Custom', auxs, exx_fft%dfftt)
+     CALL invfft ('Custom', auxs, dfftt)
      vs (:) = real(auxs (:))
      deallocate (auxs)
      deallocate (aux)
@@ -223,16 +224,16 @@ subroutine exx_interpolate (v, vs, iflag)
      !   from exx to density 
      !
      allocate (aux( dfftp%nnr))    
-     allocate (auxs(exx_fft%dfftt%nnr))    
+     allocate (auxs(dfftt%nnr))    
      auxs (:) = vs (:)
-     CALL fwfft ('Custom', auxs, exx_fft%dfftt)
+     CALL fwfft ('Custom', auxs, dfftt)
      aux (:) = (0.d0, 0.d0)
      do ig = 1, exx_fft%ngmt 
-        aux (dfftp%nl (ig) ) = auxs (exx_fft%dfftt%nl (ig) )
+        aux (dfftp%nl (ig) ) = auxs (dfftt%nl (ig) )
      enddo
      if (gamma_only) then
         do ig = 1, exx_fft%ngmt 
-           aux (dfftp%nlm(ig) ) = auxs (exx_fft%dfftt%nlm(ig) )
+           aux (dfftp%nlm(ig) ) = auxs (dfftt%nlm(ig) )
         enddo
      end if
      CALL invfft ('Dense', aux, dfftp)

@@ -21,41 +21,27 @@ MODULE fft_custom
 
   TYPE fft_cus
   
-     ! ... data structure containing all information
-     ! ... about fft data distribution for a given
-     ! ... potential grid, and its wave functions sub-grid.
-
-     TYPE ( fft_type_descriptor ) :: dfftt 
-     ! descriptor for the custom grid
+     ! ... data structure containing information about "custom" fft grid:
+     ! ... G-vectors and the like - FIXME: to be aligned with QE style
 
      REAL(kind=DP) :: ecutt
      ! Custom cutoff (rydberg)
-     REAL(kind=DP) :: dual_t
-     ! Dual factor
      REAL(kind=DP) :: gcutmt
-     INTEGER :: nr1t,nr2t,nr3t
-     INTEGER :: nrx1t,nrx2t,nrx3t
-     INTEGER :: nrxxt
-     INTEGER :: ngmt,ngmt_l,ngmt_g
+     INTEGER :: ngmt,ngmt_g
      REAL(kind=DP), DIMENSION(:), POINTER :: ggt
      REAL(kind=DP), DIMENSION(:,:),POINTER :: gt
-     INTEGER, DIMENSION(:), POINTER :: ig_l2gt 
      INTEGER :: gstart_t
-     INTEGER :: nlgt
-     INTEGER :: npwt,npwxt
+     INTEGER :: npwt
      LOGICAL :: initialized = .FALSE.
      
   END TYPE fft_cus
-
-  INTEGER,  DIMENSION(:), ALLOCATABLE :: mill(:,:)
-
 
 !--------------------------------------------------------------------
 CONTAINS
 !=----------------------------------------------------------------------------=!
 
   !-----------------------------------------------------------------------
-  SUBROUTINE ggenx( ngm, g, comm, fc )
+  SUBROUTINE ggenx( ngm, g, comm, dfftt, fc )
   !-----------------------------------------------------------------------
     !
     ! Initialize g-vectors for custom grid, in exactly the same ordering
@@ -78,19 +64,16 @@ CONTAINS
     REAL(dp), INTENT(IN) :: g(3,ngm)
     ! communicator of the group on which g-vecs are distributed
     INTEGER, INTENT(IN) :: comm
+    TYPE (fft_type_descriptor), INTENT(INOUT) :: dfftt 
     TYPE(fft_cus), INTENT(INOUT) :: fc
     !
+    INTEGER,  DIMENSION(:), ALLOCATABLE :: mill(:,:)
     INTEGER :: n1, n2, n3, i
     !
     ! fc%ngmt is the local number of G-vectors
     !
-    fc%ngmt = fc%dfftt%ngl( fc%dfftt%mype + 1 )
+    fc%ngmt = dfftt%ngl( dfftt%mype + 1 )
     IF( gamma_only ) fc%ngmt = (fc%ngmt + 1)/2
-    !
-    !  calculate fc%ngmt_l, maximum over all processors
-    !
-    fc%ngmt_l = fc%ngmt
-    CALL mp_max( fc%ngmt_l, comm )
     !
     !  calculate fc%ngmt_g, sum over all processors
     !
@@ -106,7 +89,6 @@ CONTAINS
     !
     fc%npwt=0
     !
-    ALLOCATE ( fc%dfftt%nl (fc%ngmt) )
     DO i = 1, fc%ngmt
        !
        fc%gt(:,i) = g(:,i)
@@ -128,8 +110,8 @@ CONTAINS
     !
     ALLOCATE( mill(3,fc%ngmt) )
     !
-    CALL fft_set_nl ( fc%dfftt, at, g, mill  )
-    IF ( gamma_only) CALL fft_set_nlm (fc%dfftt, mill)
+    CALL fft_set_nl ( dfftt, at, g, mill  )
+    IF ( gamma_only) CALL fft_set_nlm (dfftt, mill)
     !
     !     Miller indices no longer needed
     !
@@ -139,7 +121,7 @@ CONTAINS
   !
   !
   !--------------------------------------------------------------------
-  SUBROUTINE ggent(ngm_, comm, fc)
+  SUBROUTINE ggent(ngm_, comm, dfftt, fc)
     !--------------------------------------------------------------------
     !
     ! Initialize g-vectors for custom grid
@@ -154,13 +136,15 @@ CONTAINS
     
     IMPLICIT NONE
     
+    TYPE (fft_type_descriptor), INTENT(INOUT) :: dfftt 
     TYPE(fft_cus), INTENT(INOUT) :: fc
     INTEGER, INTENT(IN) :: ngm_
     INTEGER, INTENT(IN) :: comm  ! communicator of the group over which
                                  ! g-vectors are distributed
-    REAL(DP) ::  t (3), tt, swap
     !
+    INTEGER,  DIMENSION(:), ALLOCATABLE :: mill(:,:)
     INTEGER :: ngmx, n1, n2, n3, n1s, n2s, n3s
+    REAL(DP) ::  t (3), tt, swap
     !
     REAL(DP), ALLOCATABLE :: g2sort_g(:)
     ! array containing all g vectors, on all processors: replicated data
@@ -174,11 +158,6 @@ CONTAINS
     !    
     fc%ngmt = ngm_
     !
-    !  calculate maximum over all processors
-    !
-    fc%ngmt_l = ngm_
-    CALL mp_max( fc%ngmt_l, comm )
-    !
     !  calculate sum over all processors
     !
     fc%ngmt_g = ngm_
@@ -188,7 +167,6 @@ CONTAINS
     !
     ALLOCATE( fc%ggt(fc%ngmt) )
     ALLOCATE( fc%gt (3, fc%ngmt) )
-    ALLOCATE( fc%ig_l2gt(fc%ngmt) )
     !
     ALLOCATE( mill_g( 3, fc%ngmt_g ), mill_unsorted( 3, fc%ngmt_g ) )
     ALLOCATE( igsrt( fc%ngmt_g ) )
@@ -204,9 +182,9 @@ CONTAINS
     !
     ! max miller indices (same convention as in module stick_set)
     !
-    ni = (fc%dfftt%nr1-1)/2
-    nj = (fc%dfftt%nr2-1)/2
-    nk = (fc%dfftt%nr3-1)/2
+    ni = (dfftt%nr1-1)/2
+    nj = (dfftt%nr2-1)/2
+    nk = (dfftt%nr3-1)/2
     !
     iloop: DO i = -ni, ni
        !
@@ -256,21 +234,21 @@ CONTAINS
        j = mill_g(2, ng)
        k = mill_g(3, ng)
        
-       IF ( fc%dfftt%lpara ) THEN
-          m1 = MOD (i, fc%dfftt%nr1) + 1
-          IF (m1 < 1) m1 = m1 + fc%dfftt%nr1
-          m2 = MOD (j, fc%dfftt%nr2) + 1
-          IF (m2 < 1) m2 = m2 + fc%dfftt%nr2
-          mc = m1 + (m2 - 1) * fc%dfftt%nr1x
-          IF ( fc%dfftt%isind ( mc ) == 0) CYCLE ngloop
+       IF ( dfftt%lpara ) THEN
+          m1 = MOD (i, dfftt%nr1) + 1
+          IF (m1 < 1) m1 = m1 + dfftt%nr1
+          m2 = MOD (j, dfftt%nr2) + 1
+          IF (m2 < 1) m2 = m2 + dfftt%nr2
+          mc = m1 + (m2 - 1) * dfftt%nr1x
+          IF ( dfftt%isind ( mc ) == 0) CYCLE ngloop
        END IF
        
        fc%ngmt = fc%ngmt + 1
        
-       !  Here map local and global g index !!!
-       !  N.B. the global G vectors arrangement depends on the number of processors
+       !  To map local (fc%ngmt) and global (ng) G-vector index: 
+       !     fc%ig_l2gt( fc%ngmt ) = ng
+       !  The global G-vector arrangement depends on the number of processors
        !
-       fc%ig_l2gt( fc%ngmt ) = ng
        
        fc%gt (1:3, fc%ngmt) = i * bg (:, 1) + j * bg (:, 2) + k * bg (:, 3)
        fc%ggt (fc%ngmt) = SUM(fc%gt (1:3, fc%ngmt)**2)
@@ -295,20 +273,18 @@ CONTAINS
     !
     ALLOCATE( mill(3,fc%ngmt) )
     !
-    CALL fft_set_nl ( fc%dfftt, at, fc%gt, mill  )
-    IF ( gamma_only) CALL fft_set_nlm (fc%dfftt, mill)
+    CALL fft_set_nl ( dfftt, at, fc%gt, mill  )
+    IF ( gamma_only) CALL fft_set_nlm (dfftt, mill)
     !
     !     Miller indices no longer needed
     !
     DEALLOCATE ( mill )
     !
-    ! set npwt,npwxt
-    ! This should eventually be calculated somewhere else with 
-    ! n_plane_waves() but it is good enough for gamma_only
+    ! set npwt - it should eventually be calculated somewhere else with 
+    ! n_plane_waves() but it is good enough for gamma_only case
 
     IF(gamma_only) THEN
        fc%npwt=0
-       fc%npwxt=0
        DO ng = 1, fc%ngmt
           tt = (fc%gt (1, ng) ) **2 + (fc%gt (2, ng) ) **2 + (fc%gt&
                & (3, ng) ) **2
@@ -320,7 +296,6 @@ CONTAINS
              fc%npwt = fc%npwt + 1
           ENDIF
        ENDDO
-       fc%npwxt=fc%npwt
     ENDIF
 
     RETURN
@@ -337,10 +312,8 @@ CONTAINS
 
     IF(.NOT. fc%initialized) RETURN
 
-    CALL fft_type_deallocate(fc%dfftt)
     IF ( ASSOCIATED (fc%gt)  )  DEALLOCATE(fc%gt)
     IF ( ASSOCIATED (fc%ggt) )  DEALLOCATE(fc%ggt)
-    IF ( ASSOCIATED (fc%ig_l2gt) ) DEALLOCATE(fc%ig_l2gt)
     fc%initialized=.FALSE.
 
     RETURN

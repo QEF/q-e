@@ -279,6 +279,7 @@ lr_eels_main.o : ../../PW/src/pwcom.o
 lr_eels_main.o : lr_lanczos.o
 lr_eels_main.o : lr_variables.o
 lr_exx_kernel.o : ../../FFTXlib/fft_interfaces.o
+lr_exx_kernel.o : ../../FFTXlib/fft_types.o
 lr_exx_kernel.o : ../../FFTXlib/scatter_mod.o
 lr_exx_kernel.o : ../../Modules/cell_base.o
 lr_exx_kernel.o : ../../Modules/fft_base.o

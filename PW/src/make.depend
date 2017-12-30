@@ -2143,6 +2143,7 @@ update_pot.o : paw_onecenter.o
 update_pot.o : pwcom.o
 update_pot.o : scf_mod.o
 us_exx.o : ../../FFTXlib/fft_interfaces.o
+us_exx.o : ../../FFTXlib/fft_types.o
 us_exx.o : ../../Modules/becmod.o
 us_exx.o : ../../Modules/cell_base.o
 us_exx.o : ../../Modules/constants.o

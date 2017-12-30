@@ -15,7 +15,8 @@ MODULE loc_scdm
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE exx,                  ONLY : exx_fft, x_nbnd_occ, locbuff, locmat, nkqs
+  USE exx,                  ONLY : dfftt, x_nbnd_occ, locbuff, locmat, nkqs
+  USE exx,                  ONLY : exx_fft
 
   IMPLICIT NONE
   SAVE
@@ -42,7 +43,7 @@ SUBROUTINE localize_orbitals( )
   
   if(.not.gamma_only) CALL errore('localize_orbitals', 'k-points NYI.',1)    
 
-  NGrid = exx_fft%dfftt%nnr * npol
+  NGrid = dfftt%nnr * npol
   HowTo = 'G'  ! How to compute the absolute overlap integrals
 
   locmat = One
@@ -139,9 +140,9 @@ implicit none
   Gorbt = (Zero,Zero) 
   DO jbnd = 1, NBands 
     buffer(:) = abs(dble(orbt(:,jbnd,NKK))) + (Zero,One)*Zero  
-    CALL fwfft( 'CustomWave' , buffer, exx_fft%dfftt )
+    CALL fwfft( 'CustomWave' , buffer, dfftt )
     DO ig = 1, npwx
-      Gorbt(ig,jbnd) = buffer(exx_fft%dfftt%nl(ig))
+      Gorbt(ig,jbnd) = buffer(dfftt%nl(ig))
     ENDDO
   ENDDO
   CALL matcalc('Coeff-',.false.,0,npwx,NBands,NBands,Gorbt,Gorbt,Mat,tmp)
@@ -168,7 +169,7 @@ implicit none
   write(stdout,'(5X,A)') ' ' 
   write(stdout,'(5X,A)') 'Absolute Overlap calculated in R-space'
 
-  nxxs = exx_fft%dfftt%nr1x *exx_fft%dfftt%nr2x *exx_fft%dfftt%nr3x
+  nxxs = dfftt%nr1x *dfftt%nr2x *dfftt%nr3x
   cost = One/dble(nxxs)
   Mat = Zero 
   DO jbnd = 1, NBands
@@ -205,7 +206,7 @@ IMPLICIT NONE
   write(stdout,'(5X,A)') ' ' 
   write(stdout,'(5X,A)') 'SCDM localization with prescreening'
 
-  allocate( den(exx_fft%dfftt%nnr), grad_den(3, exx_fft%dfftt%nnr) )
+  allocate( den(dfftt%nnr), grad_den(3, dfftt%nnr) )
 
   Call scdm_thresholds( den, grad_den, ThrDen, ThrGrd )
 
@@ -257,7 +258,7 @@ USE lsda_mod,          ONLY : nspin
 USE mp,                ONLY : mp_sum
 USE mp_bands,          ONLY : intra_bgrp_comm
 IMPLICIT NONE
-  REAL(DP), INTENT(OUT) :: den(exx_fft%dfftt%nnr), grad_den(3, exx_fft%dfftt%nnr) 
+  REAL(DP), INTENT(OUT) :: den(dfftt%nnr), grad_den(3, dfftt%nnr) 
   REAL(DP), INTENT(OUT) :: ThrDen, ThrGrd 
 
   REAL(DP), ALLOCATABLE :: temp(:) 
@@ -272,12 +273,12 @@ IMPLICIT NONE
   deallocate( temp ) 
 
 #if defined (__MPI)
-  ir_end = exx_fft%dfftt%nr1x*exx_fft%dfftt%my_nr2p*exx_fft%dfftt%my_nr3p
+  ir_end = dfftt%nr1x*dfftt%my_nr2p*dfftt%my_nr3p
 #else
-  ir_end = exx_fft%dfftt%nnr
+  ir_end = dfftt%nnr
 #endif
-  nxtot = exx_fft%dfftt%nr1x *exx_fft%dfftt%nr2x *exx_fft%dfftt%nr3x
-  nxxs = exx_fft%dfftt%nnr 
+  nxtot = dfftt%nr1x *dfftt%nr2x *dfftt%nr3x
+  nxxs = dfftt%nnr 
 
   charge = Zero
   DenAve = Zero
@@ -293,7 +294,7 @@ IMPLICIT NONE
   ThrDen = scdm_den 
 
 ! gradient on the exx grid 
-  Call exx_gradient( nxxs, den , exx_fft%ngmt, exx_fft%gt, exx_fft%dfftt%nl, grad_den )
+  Call exx_gradient( nxxs, den , exx_fft%ngmt, exx_fft%gt, dfftt%nl, grad_den )
   charge  = Zero
   GrdAve = Zero 
   do ir = 1, ir_end 
@@ -344,16 +345,16 @@ USE mp_bands,          ONLY : intra_bgrp_comm, me_bgrp, nproc_bgrp
 !
 IMPLICIT NONE
   INTEGER, INTENT(OUT) :: cpu_npt(0:nproc_bgrp-1), nptot
-  REAL(DP), INTENT(IN) :: den(exx_fft%dfftt%nnr), grad_den(3, exx_fft%dfftt%nnr) 
+  REAL(DP), INTENT(IN) :: den(dfftt%nnr), grad_den(3, dfftt%nnr) 
   REAL(DP), INTENT(IN) :: ThrDen, ThrGrd 
 
   INTEGER :: npt, ir, ir_end
   REAL(DP) :: grad
 
 #if defined (__MPI)
-  ir_end = exx_fft%dfftt%nr1x*exx_fft%dfftt%my_nr2p*exx_fft%dfftt%my_nr3p
+  ir_end = dfftt%nr1x*dfftt%my_nr2p*dfftt%my_nr3p
 #else
-  ir_end = exx_fft%dfftt%nnr
+  ir_end = dfftt%nnr
 #endif
 
   npt = 0
@@ -372,7 +373,7 @@ IMPLICIT NONE
   if(nptot.le.0) call errore('SCDM_PGG', 'No points prescreened. Loose the thresholds', 1) 
   call mp_sum(cpu_npt,intra_bgrp_comm)
   write(stdout,'(7X,2(A,I8))')  'Max npt = ', maxval(cpu_npt(:)), ' Min npt = ', minval(cpu_npt(:))
-  write(stdout,'(7X,2(A,I10))') 'Reduced matrix, allocate: ', nptot, ' out of ', exx_fft%dfftt%nnr 
+  write(stdout,'(7X,2(A,I10))') 'Reduced matrix, allocate: ', nptot, ' out of ', dfftt%nnr 
 
 END SUBROUTINE scdm_points
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -388,7 +389,7 @@ IMPLICIT NONE
   INTEGER, INTENT(IN)  :: cpu_npt(0:nproc_bgrp-1), nptot
   INTEGER, INTENT(IN)  :: NGrid, NBands
   REAL(DP), INTENT(IN) :: psi(NGrid,NBands) 
-  REAL(DP), INTENT(IN) :: den(exx_fft%dfftt%nnr), grad_den(3, exx_fft%dfftt%nnr) 
+  REAL(DP), INTENT(IN) :: den(dfftt%nnr), grad_den(3, dfftt%nnr) 
   REAL(DP), INTENT(IN) :: ThrDen, ThrGrd 
 
   INTEGER :: ir, ir_end, INFO, lwork
@@ -397,9 +398,9 @@ IMPLICIT NONE
   REAL(DP), ALLOCATABLE :: small(:,:), tau(:), work(:)
 
 #if defined (__MPI)
-  ir_end = exx_fft%dfftt%nr1x*exx_fft%dfftt%my_nr2p*exx_fft%dfftt%my_nr3p
+  ir_end = dfftt%nr1x*dfftt%my_nr2p*dfftt%my_nr3p
 #else
-  ir_end = exx_fft%dfftt%nnr
+  ir_end = dfftt%nnr
 #endif
 
 ! find the map of the indeces

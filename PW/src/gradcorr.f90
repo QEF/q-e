@@ -427,7 +427,7 @@ SUBROUTINE exx_gradient( nrxx, a, ngm, g, nl, ga )
   USE cell_base, ONLY : tpiba
   USE kinds,     ONLY : DP
   USE control_flags, ONLY : gamma_only
-  USE exx,           ONLY : exx_fft
+  USE exx,           ONLY : dfftt
   USE fft_interfaces,ONLY : fwfft, invfft
   !
   IMPLICIT NONE
@@ -448,7 +448,7 @@ SUBROUTINE exx_gradient( nrxx, a, ngm, g, nl, ga )
   !
   ! ... bring a(r) to G-space, a(G) ...
   !
-  CALL fwfft ('Custom', aux, exx_fft%dfftt)
+  CALL fwfft ('Custom', aux, dfftt)
   !
   ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
   !
@@ -461,13 +461,13 @@ SUBROUTINE exx_gradient( nrxx, a, ngm, g, nl, ga )
      !
      IF ( gamma_only ) THEN
         !
-        gaux(exx_fft%dfftt%nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
+        gaux(dfftt%nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
         !
      END IF
      !
      ! ... bring back to R-space, (\grad_ipol a)(r) ...
      !
-     CALL invfft ('Custom', gaux, exx_fft%dfftt)
+     CALL invfft ('Custom', gaux, dfftt)
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
