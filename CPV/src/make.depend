@@ -188,6 +188,7 @@ cp_restart_new.o : energies.o
 cp_restart_new.o : ldaU_cp.o
 cp_restart_new.o : mainvar.o
 cp_restart_new.o : modules.o
+cplib.o : ../../FFTXlib/fft_helper_subroutines.o
 cplib.o : ../../FFTXlib/fft_interfaces.o
 cplib.o : ../../LAXlib/la_types.o
 cplib.o : ../../Modules/atom.o
@@ -215,6 +216,7 @@ cplib.o : pseudo_base.o
 cplib.o : pseudopot.o
 cplib.o : smallbox_gvec.o
 cplib.o : spline.o
+cplib_meta.o : ../../FFTXlib/fft_helper_subroutines.o
 cplib_meta.o : ../../FFTXlib/fft_interfaces.o
 cplib_meta.o : ../../Modules/cell_base.o
 cplib_meta.o : ../../Modules/constants.o
@@ -361,6 +363,7 @@ ensemble_dft.o : ../../LAXlib/la_types.o
 ensemble_dft.o : ../../Modules/io_global.o
 ensemble_dft.o : ../../Modules/kind.o
 entropy.o : ../../Modules/kind.o
+exch_corr.o : ../../FFTXlib/fft_helper_subroutines.o
 exch_corr.o : ../../FFTXlib/fft_interfaces.o
 exch_corr.o : ../../Modules/cell_base.o
 exch_corr.o : ../../Modules/constants.o
@@ -515,6 +518,7 @@ fromscra.o : mainvar.o
 fromscra.o : modules.o
 fromscra.o : ortho_base.o
 fromscra.o : printout_base.o
+gradrho.o : ../../FFTXlib/fft_helper_subroutines.o
 gradrho.o : ../../FFTXlib/fft_interfaces.o
 gradrho.o : ../../Modules/cell_base.o
 gradrho.o : ../../Modules/fft_base.o
@@ -674,6 +678,7 @@ ions_nose.o : ../../Modules/io_global.o
 ions_nose.o : ../../Modules/ions_base.o
 ions_nose.o : ../../Modules/kind.o
 ions_positions.o : ../../Modules/kind.o
+ksstates.o : ../../FFTXlib/fft_helper_subroutines.o
 ksstates.o : ../../FFTXlib/fft_interfaces.o
 ksstates.o : ../../Modules/electrons_base.o
 ksstates.o : ../../Modules/fft_base.o
@@ -912,6 +917,7 @@ plugin_print_energies.o : ../../Modules/plugin_flags.o
 plugin_print_info.o : ../../Modules/plugin_flags.o
 plugin_read_input.o : ../../Modules/input_parameters.o
 plugin_read_input.o : ../../Modules/plugin_flags.o
+plugin_utilities.o : ../../FFTXlib/fft_helper_subroutines.o
 plugin_utilities.o : ../../FFTXlib/fft_interfaces.o
 plugin_utilities.o : ../../Modules/cell_base.o
 plugin_utilities.o : ../../Modules/constants.o

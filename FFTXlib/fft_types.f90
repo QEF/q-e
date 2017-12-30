@@ -134,29 +134,10 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_type_setdim( desc, nr1, nr2, nr3 )
-     TYPE (fft_type_descriptor) :: desc
-     INTEGER, INTENT(IN) :: nr1, nr2, nr3
-     !write (6,*) ' inside fft_type_setdim' ; FLUSH(6)
-     IF (desc%nr1 /= 0 .OR. desc%nr1 /= 0 .OR. desc%nr1 /= 0 ) &
-        CALL fftx_error__(' fft_type_setdim ', ' fft dimensions already set ', 1 )
-     desc%nr1 = nr1
-     desc%nr2 = nr2
-     desc%nr3 = nr3
-     desc%nr1 = good_fft_order( desc%nr1 )
-     desc%nr2 = good_fft_order( desc%nr2 )
-     desc%nr3 = good_fft_order( desc%nr3 )
-     desc%nr1x  = good_fft_dimension( desc%nr1 )
-     desc%nr2x  = desc%nr2 ! good_fft_dimension( desc%nr2 )
-     desc%nr3x  = good_fft_dimension( desc%nr3 )
-  END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
-
   SUBROUTINE fft_type_allocate( desc, at, bg, gcutm, comm, fft_fact, nyfft  )
   !
   ! routine that allocate arrays of fft_type_descriptor
-  ! must be called before fft_type_set
+  ! must be called before fft_type_init
   !
     TYPE (fft_type_descriptor) :: desc
     REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)

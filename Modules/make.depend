@@ -86,14 +86,13 @@ fft_base.o : ../FFTXlib/fft_smallbox_type.o
 fft_base.o : ../FFTXlib/fft_types.o
 fft_base.o : ../FFTXlib/stick_base.o
 fft_base.o : ../UtilXlib/parallel_include.o
-fft_custom.o : ../FFTXlib/fft_support.o
+fft_custom.o : ../FFTXlib/fft_ggen.o
 fft_custom.o : ../FFTXlib/fft_types.o
 fft_custom.o : ../UtilXlib/mp.o
 fft_custom.o : ../UtilXlib/parallel_include.o
 fft_custom.o : cell_base.o
 fft_custom.o : constants.o
 fft_custom.o : control_flags.o
-fft_custom.o : io_global.o
 fft_custom.o : kind.o
 fft_rho.o : ../FFTXlib/fft_interfaces.o
 fft_rho.o : control_flags.o

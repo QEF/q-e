@@ -208,7 +208,7 @@ MODULE exx
     USE gvecw,        ONLY : ecutwfc
     USE gvect,        ONLY : ecutrho, ngm, g
     USE cell_base,    ONLY : at, bg, tpiba2
-    USE fft_custom,   ONLY : ggenx, gvec_init, ggent
+    USE fft_custom,   ONLY : ggenx, ggent
     USE fft_base,     ONLY : smap
     USE fft_types,    ONLY : fft_type_init
     USE mp_exx,       ONLY : nproc_egrp, negrp, intra_egrp_comm
@@ -281,8 +281,7 @@ MODULE exx
             nyfft=nyfft )
        ngs_ = exx_fft%dfftt%ngl( exx_fft%dfftt%mype + 1 )
        IF( gamma_only ) ngs_ = (ngs_ + 1)/2
-       CALL gvec_init (exx_fft, ngs_ , intra_egrp_comm )
-       CALL ggent(exx_fft)
+       CALL ggent( ngs_, intra_egrp_comm, exx_fft )
        !
     END IF
     !

@@ -137,40 +137,9 @@ CONTAINS
     !
   END SUBROUTINE ggenx
   !
-  SUBROUTINE gvec_init( fc, ngm_, comm )
-       !
-       ! Set local and global dimensions, allocate arrays
-       !
-       USE mp, ONLY: mp_max, mp_sum
-       IMPLICIT NONE
-       INTEGER, INTENT(IN) :: ngm_
-       INTEGER, INTENT(IN) :: comm  ! communicator of the group on which g-vecs are distributed
-       TYPE(fft_cus), INTENT(INOUT) :: fc
-       !
-       fc%ngmt = ngm_
-       !
-       !  calculate maximum over all processors
-       !
-       fc%ngmt_l = ngm_
-       CALL mp_max( fc%ngmt_l, comm )
-       !
-       !  calculate sum over all processors
-       !
-       fc%ngmt_g = ngm_
-       CALL mp_sum( fc%ngmt_g, comm )
-       !
-       !  allocate arrays - only those that are always kept until the end
-       !
-       ALLOCATE( fc%ggt(fc%ngmt) )
-       ALLOCATE( fc%gt (3, fc%ngmt) )
-       ALLOCATE( fc%ig_l2gt(fc%ngmt) )
-       !
-       RETURN 
-       !
-     END SUBROUTINE gvec_init
   !
   !--------------------------------------------------------------------
-  SUBROUTINE ggent(fc)
+  SUBROUTINE ggent(ngm_, comm, fc)
     !--------------------------------------------------------------------
     !
     ! Initialize g-vectors for custom grid
@@ -181,11 +150,14 @@ CONTAINS
     USE cell_base,          ONLY : at, bg, tpiba2
     USE control_flags,      ONLY : gamma_only
     USE constants,          ONLY : eps8
+    USE mp,                 ONLY: mp_max, mp_sum
     
     IMPLICIT NONE
     
-    TYPE(fft_cus) :: fc    
-    !
+    TYPE(fft_cus), INTENT(INOUT) :: fc
+    INTEGER, INTENT(IN) :: ngm_
+    INTEGER, INTENT(IN) :: comm  ! communicator of the group over which
+                                 ! g-vectors are distributed
     REAL(DP) ::  t (3), tt, swap
     !
     INTEGER :: ngmx, n1, n2, n3, n1s, n2s, n3s
@@ -199,8 +171,25 @@ CONTAINS
     !
     INTEGER :: m1, m2, mc
     INTEGER :: i, j, k, ipol, ng, igl, iswap, indsw, ni, nj, nk
-    
-    
+    !    
+    fc%ngmt = ngm_
+    !
+    !  calculate maximum over all processors
+    !
+    fc%ngmt_l = ngm_
+    CALL mp_max( fc%ngmt_l, comm )
+    !
+    !  calculate sum over all processors
+    !
+    fc%ngmt_g = ngm_
+    CALL mp_sum( fc%ngmt_g, comm )
+    !
+    !  allocate arrays - only those that are always kept until the end
+    !
+    ALLOCATE( fc%ggt(fc%ngmt) )
+    ALLOCATE( fc%gt (3, fc%ngmt) )
+    ALLOCATE( fc%ig_l2gt(fc%ngmt) )
+    !
     ALLOCATE( mill_g( 3, fc%ngmt_g ), mill_unsorted( 3, fc%ngmt_g ) )
     ALLOCATE( igsrt( fc%ngmt_g ) )
     ALLOCATE( g2sort_g( fc%ngmt_g ) )
@@ -357,163 +346,5 @@ CONTAINS
     RETURN
 
   END SUBROUTINE deallocate_fft_custom
-  !
-  !----------------------------------------------------------------------------
-  SUBROUTINE reorderwfp_col ( nbands, npw1, npw2, pw1, pw2, ngwl1, ngwl2,&
-       & ig_l2g1, ig_l2g2, n_g, mpime, nproc, comm )  
-    !--------------------------------------------------------------------------
-    !
-    ! A routine using collective mpi calls that reorders the
-    ! wavefunction in pw1 on a grid specified by ig_l2g1 and puts it
-    ! in pw2 in the order required by ig_l2g2.
-    !
-    ! Can transform multiple bands at once, as specifed by the nbands  
-    ! option.
-    !
-    ! This operation could previously be performed by calls to
-    ! mergewf and splitwf however that scales very badly with number
-    ! of procs.
-    !
-    ! Written by P. Umari, documentation added by S. Binnie
-    !
-    
-    USE kinds
-    USE parallel_include
-    USE io_global, ONLY : stdout
-
-    IMPLICIT NONE
-
-    INTEGER, INTENT(in)         :: npw1, npw2
-    INTEGER, INTENT(IN)         :: nbands ! Number of bands to be transformed
-
-    COMPLEX(DP), INTENT(IN)     :: pw1(npw1,nbands) ! Input wavefunction
-    COMPLEX(DP), INTENT(INOUT)  :: pw2(npw2,nbands) ! Output
-
-    INTEGER, INTENT(IN) :: mpime ! index of calling proc (starts at 0)
-    INTEGER, INTENT(IN) :: nproc ! number of procs in the communicator
-    INTEGER, INTENT(IN) :: comm  ! communicator
-
-    INTEGER, INTENT(IN) :: ngwl1,ngwl2
-    INTEGER, INTENT(IN) :: ig_l2g1(ngwl1),ig_l2g2(ngwl2)
-    ! Global maximum number of G vectors for both grids
-    INTEGER, INTENT(in) :: n_g
-
-    
-    ! Local variables
-    INTEGER :: ngwl1_max, ngwl2_max, npw1_max, npw2_max, ngwl_min
-    INTEGER :: gid,ierr
-    INTEGER, ALLOCATABLE :: npw1_loc(:),npw2_loc(:)
-    INTEGER, ALLOCATABLE :: ig_l2g1_tot(:,:),ig_l2g2_tot(:,:), itmp(:)
-
-    INTEGER :: ii,ip,ilast,iband
-    COMPLEX(kind=DP), ALLOCATABLE :: pw1_tot(:,:),pw2_tot(:,:)
-    COMPLEX(kind=DP), ALLOCATABLE :: pw1_tmp(:),pw2_tmp(:), pw_global(:)
-
-
-#if defined(__MPI)
-
-    gid=comm
-
-    ALLOCATE(npw1_loc(nproc),npw2_loc(nproc))
-    !
-    ! Calculate the size of the global correspondance arrays
-    !
-    CALL MPI_ALLREDUCE( ngwl1, ngwl1_max, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
-    CALL MPI_ALLREDUCE( ngwl2, ngwl2_max, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
-    CALL MPI_ALLREDUCE( npw1, npw1_max, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
-    CALL MPI_ALLREDUCE( npw2, npw2_max, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
-    CALL MPI_ALLGATHER( npw1, 1, MPI_INTEGER, npw1_loc, 1,&
-         & MPI_INTEGER, gid, IERR )
-    CALL MPI_ALLGATHER( npw2, 1, MPI_INTEGER, npw2_loc, 1,&
-         & MPI_INTEGER, gid, IERR )
-    !
-    ALLOCATE(ig_l2g1_tot(ngwl1_max,nproc),ig_l2g2_tot(ngwl2_max&
-         &,nproc))
-    !
-    ! All procs gather correspondance arrays
-    !
-    ALLOCATE(itmp(ngwl1_max))
-    itmp(1:ngwl1)=ig_l2g1(1:ngwl1)
-    CALL MPI_ALLGATHER( itmp, ngwl1_max, MPI_INTEGER, ig_l2g1_tot,&
-         & ngwl1_max, MPI_INTEGER, gid, IERR )
-    DEALLOCATE(itmp)
-    !
-    ALLOCATE(itmp(ngwl2_max))
-    itmp(1:ngwl2)=ig_l2g2(1:ngwl2)
-    CALL MPI_ALLGATHER( itmp, ngwl2_max, MPI_INTEGER, ig_l2g2_tot,&
-         & ngwl2_max, MPI_INTEGER, gid, IERR)
-    DEALLOCATE(itmp)
-    !
-    !
-    ALLOCATE( pw1_tot(npw1_max,nproc), pw2_tot(npw2_max,nproc) )
-    ALLOCATE( pw1_tmp(npw1_max), pw2_tmp(npw2_max) )
-    ALLOCATE( pw_global(n_g) )
-    !
-    DO ii=1, nbands, nproc
-       !
-       ilast=MIN(nbands,ii+nproc-1)
-       !
-       ! Gather the input wavefunction.
-       !
-       DO iband=ii, ilast
-          !
-          ip = MOD(iband,nproc)      ! ip starts from 1 to nproc-1
-          pw1_tmp(1:npw1)=pw1(1:npw1,iband)
-          CALL MPI_GATHER( pw1_tmp, npw1_max, MPI_DOUBLE_COMPLEX,&
-               & pw1_tot, npw1_max, MPI_DOUBLE_COMPLEX, ip, gid, ierr )
-          !
-       ENDDO
-       !
-       pw_global = ( 0.d0, 0.d0 )
-       !
-       ! Put the gathered wavefunction into the standard order.
-       !
-       DO ip=1,nproc
-          !
-          pw_global( ig_l2g1_tot(1:npw1_loc(ip), ip) ) = &
-               & pw1_tot( 1:npw1_loc(ip), ip )
-          !
-       ENDDO
-       !
-       ! Now put this into the correct order for output.
-       !
-       DO ip=1,nproc
-          !
-          pw2_tot( 1:npw2_loc(ip), ip ) = &
-               & pw_global ( ig_l2g2_tot(1:npw2_loc(ip),ip) )
-          !
-       ENDDO
-       !
-       ! Scatter the output wavefunction across the processors.
-       !
-       DO iband=ii,ilast
-          !
-          ip=MOD(iband,nproc)
-          CALL MPI_SCATTER( pw2_tot, npw2_max, MPI_DOUBLE_COMPLEX,&
-               & pw2_tmp, npw2_max, MPI_DOUBLE_COMPLEX, ip, gid, ierr )
-          pw2(1:npw2,iband)=pw2_tmp(1:npw2)
-          !
-       ENDDO
-       !
-    ENDDO
-    !    
-    DEALLOCATE(npw1_loc,npw2_loc)
-    DEALLOCATE(ig_l2g1_tot,ig_l2g2_tot)
-    DEALLOCATE(pw1_tot,pw2_tot)
-    DEALLOCATE(pw1_tmp,pw2_tmp)
-    DEALLOCATE(pw_global)
-    !
-#else
-    !
-    ngwl_min = MIN( ngwl1, ngwl2 )
-    !
-    pw2(:, 1:nbands) = ( 0.0d0, 0.0d0 )    
-    pw2( ig_l2g2(1:ngwl_min), 1:nbands ) = pw1( ig_l2g1(1:ngwl_min), 1:nbands ) 
-    !
-#endif
-    !
-    RETURN
-    !
-  END SUBROUTINE reorderwfp_col
   !----------------------------------------------------------------------------  
 END MODULE fft_custom
