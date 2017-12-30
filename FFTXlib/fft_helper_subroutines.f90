@@ -303,7 +303,7 @@ CONTAINS
      END IF
   END SUBROUTINE
 
-  SUBROUTINE fftx_oned2threed_gamma( desc, psi, c, ca )
+  SUBROUTINE fftx_oned2threed( desc, psi, c, ca )
      !
      !  Copy charge density from 1D array (c) to 3D array (psi) in Fourier
      !  space
@@ -330,10 +330,17 @@ CONTAINS
            psi( desc%nl( ig ) ) = c( ig ) + ci * ca( ig )
         end do
      ELSE
-        do ig = 1, desc%ngm
-           psi( desc%nlm( ig ) ) = CONJG( c( ig ) )
-           psi( desc%nl( ig ) ) = c( ig )
-        end do
+        IF( desc%ngm == desc%ngl( desc%mype + 1 ) ) THEN
+           DO ig = 1, desc%ngm
+              psi( desc%nl( ig ) ) = c( ig )
+           END DO
+        ELSE
+           !  Gamma symmetry
+           do ig = 1, desc%ngm
+              psi( desc%nlm( ig ) ) = CONJG( c( ig ) )
+              psi( desc%nl( ig ) ) = c( ig )
+           end do
+        END IF
      END IF
   END SUBROUTINE
 
@@ -360,7 +367,7 @@ CONTAINS
      END IF
   END SUBROUTINE
 
-  SUBROUTINE fftx_threed2oned_gamma( desc, vin, vout1, vout2 )
+  SUBROUTINE fftx_threed2oned( desc, vin, vout1, vout2 )
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
      TYPE(fft_type_descriptor), INTENT(in) :: desc

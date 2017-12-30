@@ -274,7 +274,7 @@
       use cp_main_variables, only: drhog
       USE fft_interfaces, ONLY: fwfft, invfft
       USE fft_base,       ONLY: dfftp
-      USE fft_helper_subroutines, ONLY: fftx_threed2oned_gamma, fftx_oned2threed_gamma
+      USE fft_helper_subroutines, ONLY: fftx_threed2oned, fftx_oned2threed
 !                 
       implicit none  
 ! input                   
@@ -305,7 +305,7 @@
             v(ir)=CMPLX(gradr(ir,1,iss),0.d0,kind=DP)
          end do
          call fwfft('Dense',v, dfftp )
-         CALL fftx_threed2oned_gamma( dfftp, v, vp )
+         CALL fftx_threed2oned( dfftp, v, vp )
          do ig=1,ngm
             x(ig)=ci*tpiba*g(1,ig)*vp(ig)
          end do
@@ -327,7 +327,7 @@
             v(ir)=CMPLX(gradr(ir,2,iss),gradr(ir,3,iss),kind=DP)
          end do
          call fwfft('Dense',v, dfftp )
-         CALL fftx_threed2oned_gamma( dfftp, v, vp, vm )
+         CALL fftx_threed2oned( dfftp, v, vp, vm )
 !
          do ig=1,ngm
             x(ig) = x(ig) + ci*tpiba*g(2,ig)*vp(ig)
@@ -349,7 +349,7 @@
 !     _________________________________________________________________
 !     second part xc-potential: 1 inverse fft
 !
-         CALL fftx_oned2threed_gamma( dfftp, v, x )
+         CALL fftx_oned2threed( dfftp, v, x )
          call invfft('Dense',v, dfftp )
          do ir=1,dfftp%nnr
             rhor(ir,iss)=rhor(ir,iss)-DBLE(v(ir))

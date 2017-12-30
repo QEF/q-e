@@ -19,7 +19,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
       use gvect, only: ngm, g
       USE fft_interfaces, ONLY: invfft
       USE fft_base,       ONLY: dfftp
-      USE fft_helper_subroutines, ONLY: fftx_oned2threed_gamma
+      USE fft_helper_subroutines, ONLY: fftx_oned2threed
 
 !
       implicit none
@@ -53,12 +53,12 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             drhog(ig,2) = ci*tpiba*g(2,ig)*rhog(ig,iss)
             drhog(ig,3) = ci*tpiba*g(3,ig)*rhog(ig,iss)
          enddo
-         CALL fftx_oned2threed_gamma(dfftp, v, drhog(:,1) )
+         CALL fftx_oned2threed(dfftp, v, drhog(:,1) )
          call invfft('Dense',v, dfftp )
          do ir=1,dfftp%nnr
             drho(1,ir)=drho(1,ir)+real(v(ir))
          end do
-         CALL fftx_oned2threed_gamma(dfftp, v, drhog(:,2), drhog(:,3) )
+         CALL fftx_oned2threed(dfftp, v, drhog(:,2), drhog(:,3) )
          call invfft('Dense',v, dfftp )
          do ir=1,dfftp%nnr
             drho(2,ir)=drho(2,ir)+real(v(ir))
@@ -70,12 +70,12 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             drhog(ig,2) = -1.d0*tpiba**2*g(2,ig)**2*rhog(ig,iss)
             drhog(ig,3) = -1.d0*tpiba**2*g(3,ig)**2*rhog(ig,iss)
          enddo
-         CALL fftx_oned2threed_gamma(dfftp, v, drhog(:,1) )
+         CALL fftx_oned2threed(dfftp, v, drhog(:,1) )
          call invfft('Dense',v, dfftp )
          do ir=1,dfftp%nnr
             d2rho(1,ir)=d2rho(1,ir)+real(v(ir))
          end do
-         CALL fftx_oned2threed_gamma(dfftp, v, drhog(:,2), drhog(:,3) )
+         CALL fftx_oned2threed(dfftp, v, drhog(:,2), drhog(:,3) )
          call invfft('Dense',v, dfftp )
          do ir=1,dfftp%nnr
             d2rho(2,ir)=d2rho(2,ir)+real(v(ir))
@@ -87,12 +87,12 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             drhog(ig,2) = -1.d0*tpiba**2*g(1,ig)*g(3,ig)*rhog(ig,iss)
             drhog(ig,3) = -1.d0*tpiba**2*g(2,ig)*g(3,ig)*rhog(ig,iss)
          enddo
-         CALL fftx_oned2threed_gamma(dfftp, v, drhog(:,1) )
+         CALL fftx_oned2threed(dfftp, v, drhog(:,1) )
          CALL invfft('Dense',v, dfftp )
          do ir=1,dfftp%nnr
             dxdyrho(ir)=dxdyrho(ir)+real(v(ir))
          end do
-         CALL fftx_oned2threed_gamma(dfftp, v, drhog(:,2), drhog(:,3) )
+         CALL fftx_oned2threed(dfftp, v, drhog(:,2), drhog(:,3) )
          call invfft('Dense',v, dfftp )
          do ir=1,dfftp%nnr
             dxdzrho(ir)=dxdzrho(ir)+real(v(ir))

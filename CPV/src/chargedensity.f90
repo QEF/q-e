@@ -533,7 +533,7 @@
       use cell_base,          ONLY: tpiba
       USE fft_interfaces,     ONLY: invfft
       USE fft_base,           ONLY: dfftp
-      USE fft_helper_subroutines, ONLY: fftx_oned2threed_gamma
+      USE fft_helper_subroutines, ONLY: fftx_oned2threed
 !
       implicit none
 ! input
@@ -567,7 +567,7 @@
             drho(ig,3) = ci*tpiba*g(3,ig)*rhog(ig,iss)
          end do
 !$omp end parallel
-         CALL fftx_oned2threed_gamma( dfftp, v, drho(:,1) )
+         CALL fftx_oned2threed( dfftp, v, drho(:,1) )
          !
          call invfft( 'Dense', v, dfftp )
          !
@@ -578,7 +578,7 @@
          end do
 !$omp end parallel
 
-         CALL fftx_oned2threed_gamma( dfftp, v, drho(:,2), drho(:,3) )
+         CALL fftx_oned2threed( dfftp, v, drho(:,2), drho(:,3) )
          !
          call invfft( 'Dense', v, dfftp )
          !
