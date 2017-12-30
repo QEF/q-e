@@ -1470,7 +1470,7 @@ END SUBROUTINE print_lambda_x
       USE uspp_param,         ONLY: upf
       USE fft_interfaces,     ONLY: fwfft
       USE fft_base,           ONLY: dfftp
-      USE fft_helper_subroutines, ONLY: fftx_threed2oned_gamma
+      USE fft_helper_subroutines, ONLY: fftx_threed2oned
 
       IMPLICIT NONE
 
@@ -1503,7 +1503,7 @@ END SUBROUTINE print_lambda_x
       IF( nspin > 1 ) vxc(:) = vxc(:) + vxcr(:,2)
       !
       CALL fwfft( 'Dense', vxc, dfftp )
-      CALL fftx_threed2oned_gamma( dfftp, vxc, vxg )
+      CALL fftx_threed2oned( dfftp, vxc, vxg )
       !
       DO i=1,3
          DO j=1,3
