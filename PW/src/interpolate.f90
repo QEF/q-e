@@ -179,7 +179,6 @@ subroutine exx_interpolate (v, vs, iflag)
   USE control_flags, ONLY: gamma_only
   USE fft_base,      ONLY : dfftp
   USE exx,           ONLY : dfftt
-  USE exx,           ONLY : exx_fft
   USE fft_interfaces,ONLY : fwfft, invfft
   !
   implicit none
@@ -207,11 +206,11 @@ subroutine exx_interpolate (v, vs, iflag)
      aux (:) = (1.0d0,0.0d0) * v (:)
      CALL fwfft ('Dense', aux, dfftp)
      auxs (:) = (0.d0, 0.d0)
-     do ig = 1, exx_fft%ngmt
+     do ig = 1, dfftt%ngm
         auxs (dfftt%nl(ig)) = aux(dfftp%nl(ig))
      enddo
      if (gamma_only) then
-        do ig = 1, exx_fft%ngmt
+        do ig = 1, dfftt%ngm
            auxs(dfftt%nlm(ig) ) = aux (dfftp%nlm(ig) )
         enddo
      end if
@@ -228,11 +227,11 @@ subroutine exx_interpolate (v, vs, iflag)
      auxs (:) = vs (:)
      CALL fwfft ('Custom', auxs, dfftt)
      aux (:) = (0.d0, 0.d0)
-     do ig = 1, exx_fft%ngmt 
+     do ig = 1, dfftt%ngm
         aux (dfftp%nl (ig) ) = auxs (dfftt%nl (ig) )
      enddo
      if (gamma_only) then
-        do ig = 1, exx_fft%ngmt 
+        do ig = 1, dfftt%ngm
            aux (dfftp%nlm(ig) ) = auxs (dfftt%nlm(ig) )
         enddo
      end if

@@ -129,7 +129,7 @@ MODULE us_exx
   END SUBROUTINE qvan_clean
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE addusxx_g(dfftt, ngms, rhoc, xkq, xk, flag, becphi_c, becpsi_c,&
+  SUBROUTINE addusxx_g(dfftt, rhoc, xkq, xk, flag, becphi_c, becpsi_c,&
                   becphi_r, becpsi_r )
     !-----------------------------------------------------------------------
     ! 
@@ -153,7 +153,6 @@ MODULE us_exx
     TYPE ( fft_type_descriptor ), INTENT(IN) :: dfftt 
     ! In input I get a slice of <beta|left> and <beta|right>
     ! only for this kpoint and this band
-    INTEGER, INTENT(IN) :: ngms
     COMPLEX(DP),INTENT(inout) :: rhoc(dfftt%nnr)
     COMPLEX(DP),INTENT(in), OPTIONAL  :: becphi_c(nkb), becpsi_c(nkb)
     REAL(DP),   INTENT(in), OPTIONAL  :: becphi_r(nkb), becpsi_r(nkb)
@@ -163,7 +162,7 @@ MODULE us_exx
     ! ... local variables
     !
     COMPLEX(DP),ALLOCATABLE :: aux1(:), aux2(:), eigqts(:)
-    INTEGER :: ikb, jkb, ijkb0, ih, jh, na, nt, ig, nij, ijh
+    INTEGER :: ngms, ikb, jkb, ijkb0, ih, jh, na, nt, ig, nij, ijh
     COMPLEX(DP) :: becfac_c
     REAL(DP) :: arg, becfac_r
     LOGICAL :: add_complex, add_real, add_imaginary
@@ -171,6 +170,7 @@ MODULE us_exx
     IF(.not.okvan) RETURN
     CALL start_clock( 'addusxx' )
     !
+    ngms = dfftt%ngm
     add_complex = ( flag=='c' .OR. flag=='C' )
     add_real    = ( flag=='r' .OR. flag=='R' )
     add_imaginary=( flag=='i' .OR. flag=='I' )
@@ -292,7 +292,7 @@ MODULE us_exx
   !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE newdxx_g(dfftt, ngms, vc, xkq, xk, flag, deexx, becphi_r, becphi_c)
+  SUBROUTINE newdxx_g(dfftt, vc, xkq, xk, flag, deexx, becphi_r, becphi_c)
     !-----------------------------------------------------------------------
     !
     ! This subroutine computes some sort of EXX contribution to the non-local 
@@ -317,7 +317,6 @@ MODULE us_exx
     IMPLICIT NONE
     !
     TYPE ( fft_type_descriptor ), INTENT(IN) :: dfftt 
-    INTEGER, INTENT(IN) :: ngms
     COMPLEX(DP),INTENT(in)    :: vc(dfftt%nnr)
     ! In input I get a slice of <beta|left> and <beta|right> 
     ! only for this kpoint and this band
@@ -328,7 +327,7 @@ MODULE us_exx
     CHARACTER(LEN=1), INTENT(IN) :: flag
     !
     ! ... local variables
-    INTEGER :: ig, ikb, jkb, ijkb0, ih, jh, na, nt, nij
+    INTEGER :: ngms, ig, ikb, jkb, ijkb0, ih, jh, na, nt, nij
     REAL(DP) :: fact
     COMPLEX(DP), EXTERNAL :: zdotc
     !
@@ -340,6 +339,7 @@ MODULE us_exx
     !
     IF(.not.okvan) RETURN
     !
+    ngms = dfftt%ngm
     add_complex = ( flag=='c' .OR. flag=='C' )
     add_real    = ( flag=='r' .OR. flag=='R' )
     add_imaginary=( flag=='i' .OR. flag=='I' )

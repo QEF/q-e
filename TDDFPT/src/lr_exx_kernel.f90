@@ -359,7 +359,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
   !
   ! Setup the variables that describe the FFT grid in use.
   IF(gamma_only) THEN
-     ALLOCATE( fac(exx_fft%ngmt) )
+     ALLOCATE( fac(dfftt%ngm) )
      nrxxs= dfftt%nnr
   ELSE
      ALLOCATE( fac(ngm) )
@@ -382,8 +382,7 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
      ! Put the appropriate interaction in fac(). Note g2_convolution respects
      ! the choice of divergence treatment etc set in the initial PWscf run.
      !
-     CALL g2_convolution(exx_fft%ngmt, exx_fft%gt, xk(:,1),&
-          & xk(:,1), fac)
+     CALL g2_convolution(dfftt%ngm, exx_fft%gt, xk(:,1), xk(:,1), fac)
      !
      ALLOCATE(revc_int(nrxxs,nbnd))
      !
@@ -610,7 +609,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
   IF (lr_verbosity > 5 ) WRITE(stdout,'("<lr_exx_kernel_int>")')
 
   IF(gamma_only) THEN
-     ALLOCATE( fac(exx_fft%ngmt) )
+     ALLOCATE( fac(dfftt%ngm) )
      nrxxs= dfftt%nnr
   ELSE
      ALLOCATE( fac(ngm) )
@@ -639,8 +638,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
         w2=0.0d0
      ENDIF
      !
-     CALL g2_convolution(exx_fft%ngmt, exx_fft%gt,&
-          & xk(:,1), xk(:,1), fac)
+     CALL g2_convolution(dfftt%ngm, exx_fft%gt,xk(:,1), xk(:,1), fac)
      !
      IF (.NOT.ltammd) THEN
         revc_int(1:dfftt%nnr,:)= revc_int(1:dfftt%nnr,:)&
@@ -774,7 +772,7 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
   INTEGER                  :: ibnd2, is, npw_, ngm_, nnr_
   !
   npw_=exx_fft%npwt
-  ngm_=exx_fft%ngmt
+  ngm_=dfftt%ngm
   nnr_=dfftt%nnr
   !  
   ALLOCATE(psi_int(nnr_, nbnd))
@@ -922,8 +920,8 @@ FUNCTION k2d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
   INTEGER                  :: ibnd2, is, npw_,ngm_, nnr_
   !
   nnr_ = dfftt%nnr
+  ngm_ = dfftt%ngm
   npw_ = exx_fft%npwt
-  ngm_ = exx_fft%ngmt
   !
   ALLOCATE(psi_int(nnr_, nbnd))
   psi_int = 0.d0

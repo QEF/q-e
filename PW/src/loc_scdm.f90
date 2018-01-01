@@ -294,7 +294,7 @@ IMPLICIT NONE
   ThrDen = scdm_den 
 
 ! gradient on the exx grid 
-  Call exx_gradient( nxxs, den , exx_fft%ngmt, exx_fft%gt, dfftt%nl, grad_den )
+  Call exx_gradient( nxxs, den , dfftt%ngm, exx_fft%gt, dfftt%nl, grad_den )
   charge  = Zero
   GrdAve = Zero 
   do ir = 1, ir_end 

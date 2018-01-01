@@ -27,7 +27,7 @@ MODULE fft_custom
      REAL(kind=DP) :: ecutt
      ! Custom cutoff (rydberg)
      REAL(kind=DP) :: gcutmt
-     INTEGER :: ngmt,ngmt_g
+     INTEGER :: ngmt_g
      REAL(kind=DP), DIMENSION(:), POINTER :: ggt
      REAL(kind=DP), DIMENSION(:,:),POINTER :: gt
      INTEGER :: gstart_t
@@ -68,28 +68,25 @@ CONTAINS
     TYPE(fft_cus), INTENT(INOUT) :: fc
     !
     INTEGER,  DIMENSION(:), ALLOCATABLE :: mill(:,:)
-    INTEGER :: n1, n2, n3, i
+    INTEGER :: ngmt, n1, n2, n3, i
     !
-    ! fc%ngmt is the local number of G-vectors
-    !
-    fc%ngmt = dfftt%ngl( dfftt%mype + 1 )
-    IF( gamma_only ) fc%ngmt = (fc%ngmt + 1)/2
+    ngmt = dfftt%ngm
     !
     !  calculate fc%ngmt_g, sum over all processors
     !
-    fc%ngmt_g = fc%ngmt
+    fc%ngmt_g = ngmt
     CALL mp_sum( fc%ngmt_g, comm )
     !
     !  allocate arrays
     !
-    ALLOCATE( fc%ggt(fc%ngmt) )
-    ALLOCATE( fc%gt (3, fc%ngmt) )
+    ALLOCATE( fc%ggt(ngmt) )
+    ALLOCATE( fc%gt (3, ngmt) )
     !  
     ! fc%npwt = number of PW in sphere of radius ecutwfc (useful for Gamma)
     !
     fc%npwt=0
     !
-    DO i = 1, fc%ngmt
+    DO i = 1, ngmt
        !
        fc%gt(:,i) = g(:,i)
        !
@@ -108,7 +105,7 @@ CONTAINS
        fc%gstart_t=1
     ENDIF
     !
-    ALLOCATE( mill(3,fc%ngmt) )
+    ALLOCATE( mill(3,ngmt) )
     !
     CALL fft_set_nl ( dfftt, at, g, mill  )
     IF ( gamma_only) CALL fft_set_nlm (dfftt, mill)
@@ -143,7 +140,7 @@ CONTAINS
                                  ! g-vectors are distributed
     !
     INTEGER,  DIMENSION(:), ALLOCATABLE :: mill(:,:)
-    INTEGER :: ngmx, n1, n2, n3, n1s, n2s, n3s
+    INTEGER :: ngmt, ngmx, n1, n2, n3, n1s, n2s, n3s
     REAL(DP) ::  t (3), tt, swap
     !
     REAL(DP), ALLOCATABLE :: g2sort_g(:)
@@ -156,7 +153,7 @@ CONTAINS
     INTEGER :: m1, m2, mc
     INTEGER :: i, j, k, ipol, ng, igl, iswap, indsw, ni, nj, nk
     !    
-    fc%ngmt = ngm_
+    ngmt = ngm_
     !
     !  calculate sum over all processors
     !
@@ -165,10 +162,11 @@ CONTAINS
     !
     !  allocate arrays - only those that are always kept until the end
     !
-    ALLOCATE( fc%ggt(fc%ngmt) )
-    ALLOCATE( fc%gt (3, fc%ngmt) )
+    ALLOCATE( fc%ggt(ngmt) )
+    ALLOCATE( fc%gt (3, ngmt) )
     !
-    ALLOCATE( mill_g( 3, fc%ngmt_g ), mill_unsorted( 3, fc%ngmt_g ) )
+    ALLOCATE( mill_g( 3, fc%ngmt_g ) )
+    ALLOCATE( mill_unsorted( 3, fc%ngmt_g ) )
     ALLOCATE( igsrt( fc%ngmt_g ) )
     ALLOCATE( g2sort_g( fc%ngmt_g ) )
    
@@ -176,9 +174,9 @@ CONTAINS
     !
     ! save present value of ngm in ngmx variable
     !
-    ngmx = fc%ngmt
+    ngmx = ngmt
     !
-    fc%ngmt = 0
+    ngmt = 0
     !
     ! max miller indices (same convention as in module stick_set)
     !
@@ -204,21 +202,21 @@ CONTAINS
              t(:) = i * bg (:,1) + j * bg (:,2) + k * bg (:,3)
              tt = SUM(t(:)**2)
              IF (tt <= fc%gcutmt) THEN
-                fc%ngmt = fc%ngmt + 1
-                IF (fc%ngmt > fc%ngmt_g) CALL errore ('ggent', 'too many g-vectors', fc%ngmt)
-                mill_unsorted( :, fc%ngmt ) = (/ i,j,k /)
+                ngmt = ngmt + 1
+                IF (ngmt > fc%ngmt_g) CALL errore ('ggent', 'too many g-vectors', ngmt)
+                mill_unsorted( :, ngmt ) = (/ i,j,k /)
                 IF ( tt > eps8 ) THEN
-                   g2sort_g(fc%ngmt) = tt
+                   g2sort_g(ngmt) = tt
                 ELSE
-                   g2sort_g(fc%ngmt) = 0.d0
+                   g2sort_g(ngmt) = 0.d0
                 ENDIF
              ENDIF
           ENDDO kloop
        ENDDO jloop
     ENDDO iloop
     
-    IF (fc%ngmt  /= fc%ngmt_g ) &
-         CALL errore ('ggent', 'g-vectors missing !', ABS(fc%ngmt - fc%ngmt_g))
+    IF (ngmt  /= fc%ngmt_g ) &
+         CALL errore ('ggent', 'g-vectors missing !', ABS(ngmt - fc%ngmt_g))
 
     igsrt(1) = 0
     CALL hpsort_eps( fc%ngmt_g, g2sort_g, igsrt, eps8 )
@@ -226,7 +224,7 @@ CONTAINS
     mill_g(2,:) = mill_unsorted(2,igsrt(:))
     mill_g(3,:) = mill_unsorted(3,igsrt(:))
     DEALLOCATE( g2sort_g, igsrt, mill_unsorted )
-    fc%ngmt = 0
+    ngmt = 0
     
     ngloop: DO ng = 1, fc%ngmt_g
 
@@ -243,23 +241,23 @@ CONTAINS
           IF ( dfftt%isind ( mc ) == 0) CYCLE ngloop
        END IF
        
-       fc%ngmt = fc%ngmt + 1
+       ngmt = ngmt + 1
        
-       !  To map local (fc%ngmt) and global (ng) G-vector index: 
-       !     fc%ig_l2gt( fc%ngmt ) = ng
+       !  To map local (ngmt) and global (ng) G-vector index: 
+       !     fc%ig_l2gt( ngmt ) = ng
        !  The global G-vector arrangement depends on the number of processors
        !
        
-       fc%gt (1:3, fc%ngmt) = i * bg (:, 1) + j * bg (:, 2) + k * bg (:, 3)
-       fc%ggt (fc%ngmt) = SUM(fc%gt (1:3, fc%ngmt)**2)
+       fc%gt (1:3, ngmt) = i * bg (:, 1) + j * bg (:, 2) + k * bg (:, 3)
+       fc%ggt (ngmt) = SUM(fc%gt (1:3, ngmt)**2)
        
-       IF (fc%ngmt > ngmx) CALL errore ('ggent', 'too many g-vectors', fc%ngmt)
+       IF (ngmt > ngmx) CALL errore ('ggent', 'too many g-vectors', ngmt)
     ENDDO ngloop
 
     DEALLOCATE( mill_g )
 
-    IF (fc%ngmt /= ngmx) &
-         CALL errore ('ggent', 'g-vectors missing !', ABS(fc%ngmt - ngmx))
+    IF (ngmt /= ngmx) &
+         CALL errore ('ggent', 'g-vectors missing !', ABS(ngmt - ngmx))
     !
     !     determine first nonzero g vector
     !
@@ -271,7 +269,7 @@ CONTAINS
     !
     !     Now set nl and nls with the correct fft correspondence
     !
-    ALLOCATE( mill(3,fc%ngmt) )
+    ALLOCATE( mill(3,ngmt) )
     !
     CALL fft_set_nl ( dfftt, at, fc%gt, mill  )
     IF ( gamma_only) CALL fft_set_nlm (dfftt, mill)
@@ -285,7 +283,7 @@ CONTAINS
 
     IF(gamma_only) THEN
        fc%npwt=0
-       DO ng = 1, fc%ngmt
+       DO ng = 1, ngmt
           tt = (fc%gt (1, ng) ) **2 + (fc%gt (2, ng) ) **2 + (fc%gt&
                & (3, ng) ) **2
           IF (tt <= fc%ecutt / tpiba2) THEN
