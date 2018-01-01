@@ -144,6 +144,7 @@ MODULE exx
   !
   TYPE ( fft_type_descriptor ) :: dfftt 
   TYPE(fft_cus) :: exx_fft
+  INTEGER :: ngmt_g
   REAL(DP)  :: ecutfock         ! energy cutoff for custom grid
   !
   ! mapping for the data structure conversion
@@ -223,7 +224,7 @@ MODULE exx
     USE realus,       ONLY : qpointlist, tabxx, tabp
 
     IMPLICIT NONE
-    INTEGER :: ngs_, ik
+    INTEGER :: ik
     REAL(dp) :: gkcut
     LOGICAL :: lpara
 
@@ -270,7 +271,7 @@ MODULE exx
        CALL fft_type_init( dfftt, smap, "rho", gamma_only, lpara, &
             intra_bgrp_comm, at, bg, exx_fft%gcutmt, exx_fft%gcutmt/gkcut, &
             nyfft=nyfft )
-       CALL ggenx(ngm, g, intra_bgrp_comm, dfftt, exx_fft)
+       CALL ggenx( g, intra_bgrp_comm, dfftt, ngmt_g, exx_fft )
        !
     ELSE
        !
@@ -280,14 +281,12 @@ MODULE exx
        CALL fft_type_init( dfftt, smap_exx, "rho", gamma_only, lpara, &
             intra_egrp_comm, at, bg, exx_fft%gcutmt, exx_fft%gcutmt/gkcut,    &
             nyfft=nyfft )
-       ngs_ = dfftt%ngl( dfftt%mype + 1 )
-       IF( gamma_only ) ngs_ = (ngs_ + 1)/2
-       CALL ggent( ngs_, intra_egrp_comm, dfftt, exx_fft )
+       CALL ggent( intra_egrp_comm, dfftt, ngmt_g, exx_fft )
        !
     END IF
     !
     WRITE( stdout, '(/5x,"EXX grid: ",i8," G-vectors", 5x, &
-         &   "FFT dimensions: (",i4,",",i4,",",i4,")")') exx_fft%ngmt_g, &
+         &   "FFT dimensions: (",i4,",",i4,",",i4,")")') ngmt_g, &
          &   dfftt%nr1, dfftt%nr2, dfftt%nr3
     exx_fft%initialized = .true.
     !

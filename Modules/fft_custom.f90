@@ -22,12 +22,11 @@ MODULE fft_custom
   TYPE fft_cus
   
      ! ... data structure containing information about "custom" fft grid:
-     ! ... G-vectors and the like - FIXME: to be aligned with QE style
+     ! ... G-vectors and the like - FIXME: to be deleted
 
      REAL(kind=DP) :: ecutt
      ! Custom cutoff (rydberg)
      REAL(kind=DP) :: gcutmt
-     INTEGER :: ngmt_g
      REAL(kind=DP), DIMENSION(:), POINTER :: ggt
      REAL(kind=DP), DIMENSION(:,:),POINTER :: gt
      INTEGER :: gstart_t
@@ -41,7 +40,7 @@ CONTAINS
 !=----------------------------------------------------------------------------=!
 
   !-----------------------------------------------------------------------
-  SUBROUTINE ggenx( ngm, g, comm, dfftt, fc )
+  SUBROUTINE ggenx( g, comm, dfftt, ngmt_g, fc )
   !-----------------------------------------------------------------------
     !
     ! Initialize g-vectors for custom grid, in exactly the same ordering
@@ -58,12 +57,13 @@ CONTAINS
     USE mp,                 ONLY : mp_max, mp_sum
     
     IMPLICIT NONE
-    ! number of input G-vectors
-    INTEGER, INTENT(IN) :: ngm
     ! G-vectors in FFT grid
-    REAL(dp), INTENT(IN) :: g(3,ngm)
+    REAL(dp), INTENT(IN) :: g(:,:)
     ! communicator of the group on which g-vecs are distributed
     INTEGER, INTENT(IN) :: comm
+    ! Total number of G-vectors in custom grid
+    INTEGER, INTENT(OUT):: ngmt_g
+    ! G-vectors in FFT grid
     TYPE (fft_type_descriptor), INTENT(INOUT) :: dfftt 
     TYPE(fft_cus), INTENT(INOUT) :: fc
     !
@@ -71,11 +71,8 @@ CONTAINS
     INTEGER :: ngmt, n1, n2, n3, i
     !
     ngmt = dfftt%ngm
-    !
-    !  calculate fc%ngmt_g, sum over all processors
-    !
-    fc%ngmt_g = ngmt
-    CALL mp_sum( fc%ngmt_g, comm )
+    ngmt_g = ngmt
+    CALL mp_sum( ngmt_g, comm )
     !
     !  allocate arrays
     !
@@ -118,7 +115,7 @@ CONTAINS
   !
   !
   !--------------------------------------------------------------------
-  SUBROUTINE ggent(ngm_, comm, dfftt, fc)
+  SUBROUTINE ggent(comm, dfftt, ngmt_g, fc)
     !--------------------------------------------------------------------
     !
     ! Initialize g-vectors for custom grid
@@ -135,9 +132,10 @@ CONTAINS
     
     TYPE (fft_type_descriptor), INTENT(INOUT) :: dfftt 
     TYPE(fft_cus), INTENT(INOUT) :: fc
-    INTEGER, INTENT(IN) :: ngm_
     INTEGER, INTENT(IN) :: comm  ! communicator of the group over which
                                  ! g-vectors are distributed
+    ! Total number of G-vectors in custom grid
+    INTEGER, INTENT(OUT):: ngmt_g
     !
     INTEGER,  DIMENSION(:), ALLOCATABLE :: mill(:,:)
     INTEGER :: ngmt, ngmx, n1, n2, n3, n1s, n2s, n3s
@@ -153,22 +151,22 @@ CONTAINS
     INTEGER :: m1, m2, mc
     INTEGER :: i, j, k, ipol, ng, igl, iswap, indsw, ni, nj, nk
     !    
-    ngmt = ngm_
+    ngmt = dfftt%ngm
     !
     !  calculate sum over all processors
     !
-    fc%ngmt_g = ngm_
-    CALL mp_sum( fc%ngmt_g, comm )
+    ngmt_g = ngmt
+    CALL mp_sum( ngmt_g, comm )
     !
     !  allocate arrays - only those that are always kept until the end
     !
     ALLOCATE( fc%ggt(ngmt) )
     ALLOCATE( fc%gt (3, ngmt) )
     !
-    ALLOCATE( mill_g( 3, fc%ngmt_g ) )
-    ALLOCATE( mill_unsorted( 3, fc%ngmt_g ) )
-    ALLOCATE( igsrt( fc%ngmt_g ) )
-    ALLOCATE( g2sort_g( fc%ngmt_g ) )
+    ALLOCATE( mill_g( 3, ngmt_g ) )
+    ALLOCATE( mill_unsorted( 3, ngmt_g ) )
+    ALLOCATE( igsrt( ngmt_g ) )
+    ALLOCATE( g2sort_g( ngmt_g ) )
    
     g2sort_g(:) = 1.0d20
     !
@@ -203,7 +201,7 @@ CONTAINS
              tt = SUM(t(:)**2)
              IF (tt <= fc%gcutmt) THEN
                 ngmt = ngmt + 1
-                IF (ngmt > fc%ngmt_g) CALL errore ('ggent', 'too many g-vectors', ngmt)
+                IF (ngmt > ngmt_g) CALL errore ('ggent', 'too many g-vectors', ngmt)
                 mill_unsorted( :, ngmt ) = (/ i,j,k /)
                 IF ( tt > eps8 ) THEN
                    g2sort_g(ngmt) = tt
@@ -215,18 +213,18 @@ CONTAINS
        ENDDO jloop
     ENDDO iloop
     
-    IF (ngmt  /= fc%ngmt_g ) &
-         CALL errore ('ggent', 'g-vectors missing !', ABS(ngmt - fc%ngmt_g))
+    IF (ngmt  /= ngmt_g ) &
+         CALL errore ('ggent', 'g-vectors missing !', ABS(ngmt - ngmt_g))
 
     igsrt(1) = 0
-    CALL hpsort_eps( fc%ngmt_g, g2sort_g, igsrt, eps8 )
+    CALL hpsort_eps( ngmt_g, g2sort_g, igsrt, eps8 )
     mill_g(1,:) = mill_unsorted(1,igsrt(:))
     mill_g(2,:) = mill_unsorted(2,igsrt(:))
     mill_g(3,:) = mill_unsorted(3,igsrt(:))
     DEALLOCATE( g2sort_g, igsrt, mill_unsorted )
     ngmt = 0
     
-    ngloop: DO ng = 1, fc%ngmt_g
+    ngloop: DO ng = 1, ngmt_g
 
        i = mill_g(1, ng)
        j = mill_g(2, ng)
