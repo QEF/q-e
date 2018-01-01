@@ -24,13 +24,10 @@ MODULE fft_custom
      ! ... data structure containing information about "custom" fft grid:
      ! ... G-vectors and the like - FIXME: to be deleted
 
-     REAL(kind=DP) :: ecutt
-     ! Custom cutoff (rydberg)
      REAL(kind=DP), DIMENSION(:), POINTER :: ggt
      REAL(kind=DP), DIMENSION(:,:),POINTER :: gt
      INTEGER :: gstart_t
      INTEGER :: npwt
-     LOGICAL :: initialized = .FALSE.
      
   END TYPE fft_cus
 
@@ -299,22 +296,5 @@ CONTAINS
     !    
   END SUBROUTINE ggent
   
-  SUBROUTINE deallocate_fft_custom(fc)
-    !this subroutine deallocates all the fft custom stuff
-    USE fft_types, ONLY : fft_type_deallocate
-    
-    IMPLICIT NONE
-
-    TYPE(fft_cus) :: fc
-
-    IF(.NOT. fc%initialized) RETURN
-
-    IF ( ASSOCIATED (fc%gt)  )  DEALLOCATE(fc%gt)
-    IF ( ASSOCIATED (fc%ggt) )  DEALLOCATE(fc%ggt)
-    fc%initialized=.FALSE.
-
-    RETURN
-
-  END SUBROUTINE deallocate_fft_custom
   !----------------------------------------------------------------------------  
 END MODULE fft_custom

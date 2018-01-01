@@ -248,8 +248,8 @@ SUBROUTINE lr_exx_revc0_init(orbital, ik)
      !
      DO ibnd=1,nbnd,2
         !
-        CALL invfft_orbital_custom_gamma(orbital(:,:,1), ibnd, nbnd,&
-             & exx_fft, dfftt)
+        CALL invfft_orbital_custom_gamma(orbital(:,:,1), ibnd, nbnd, &
+             exx_fft%npwt, dfftt)
         red_revc0(1:nnr_,ibnd,1)=psic(1:nnr_)
         !
      ENDDO
@@ -399,8 +399,8 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
      !
      DO ibnd=ibnd_start_gamma,ibnd_end_gamma,2
         !
-        CALL invfft_orbital_custom_gamma(evc(:,:,1), ibnd, nbnd,&
-             & exx_fft, dfftt)
+        CALL invfft_orbital_custom_gamma(evc(:,:,1), ibnd, nbnd, &
+             exx_fft%npwt, dfftt)
         !
         w1=wg(ibnd,1)/omega
         !
@@ -430,8 +430,8 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
         IF (ibnd==nbnd) psic(1:nrxxs)=CMPLX(revc_int(1:nrxxs,ibnd)&
              &,0.d0,dp)
         !
-        CALL fwfft_orbital_custom_gamma (int_vect(:,:,1), ibnd, nbnd,&
-             & exx_fft,dfftt) 
+        CALL fwfft_orbital_custom_gamma (int_vect(:,:,1), ibnd, nbnd, &
+             exx_fft%npwt, dfftt) 
         !
      ENDDO
      !
@@ -628,7 +628,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
   !
   IF( gamma_only ) THEN
      !
-     CALL invfft_orbital_custom_gamma( orbital, ibnd, nbnd, exx_fft, dfftt )
+     CALL invfft_orbital_custom_gamma( orbital, ibnd, nbnd, exx_fft%npwt, dfftt )
      !
      w1=wg(ibnd,1)/omega
      !
@@ -1045,32 +1045,30 @@ END FUNCTION k2d_term_k
 !! moved somewhere else but for now they live here.
 !!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE invfft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r, dfftt)
+SUBROUTINE invfft_orbital_custom_gamma(orbital, ibnd, nbnd, npwt, dfftt)
 
   USE kinds,        ONLY : DP
-  USE fft_custom,   ONLY : fft_cus
   USE fft_types,    ONLY : fft_type_descriptor
 
   IMPLICIT NONE
 
   COMPLEX(DP), INTENT(IN)    :: orbital(:,:)
-  INTEGER, INTENT(IN)        :: ibnd, nbnd
-  TYPE(fft_cus), INTENT(IN)  :: g2r
+  INTEGER, INTENT(IN)        :: ibnd, nbnd, npwt
   TYPE(fft_type_descriptor), INTENT(IN)  :: dfftt
   !
   psic=(0.0_dp, 0.0_dp)
   !
   IF (ibnd < nbnd) THEN
      !
-     psic(dfftt%nl(1:g2r%npwt)) = orbital(1:g2r%npwt,ibnd) + &
-          &(0.0_dp, 1.0_dp) * orbital(1:g2r%npwt,ibnd+1) 
-     psic(dfftt%nlm(1:g2r%npwt)) = CONJG(orbital(1:g2r%npwt,ibnd) - &   
-          &(0.0_dp, 1.0_dp) * orbital(1:g2r%npwt,ibnd+1))
+     psic(dfftt%nl(1:npwt)) = orbital(1:npwt,ibnd) + &
+          &(0.0_dp, 1.0_dp) * orbital(1:npwt,ibnd+1) 
+     psic(dfftt%nlm(1:npwt)) = CONJG(orbital(1:npwt,ibnd) - &   
+          &(0.0_dp, 1.0_dp) * orbital(1:npwt,ibnd+1))
      !
   ELSE
      !
-     psic(dfftt%nl(1:g2r%npwt))  = orbital(1:g2r%npwt,ibnd)
-     psic(dfftt%nlm(1:g2r%npwt)) =CONJG(orbital(1:g2r%npwt,ibnd))
+     psic(dfftt%nl(1:npwt))  = orbital(1:npwt,ibnd)
+     psic(dfftt%nlm(1:npwt)) =CONJG(orbital(1:npwt,ibnd))
      !
   ENDIF
   !
@@ -1080,17 +1078,15 @@ SUBROUTINE invfft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r, dfftt)
   !
 END SUBROUTINE invfft_orbital_custom_gamma
 
-SUBROUTINE fwfft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r, dfftt)
+SUBROUTINE fwfft_orbital_custom_gamma(orbital, ibnd, nbnd, npwt, dfftt)
 
   USE kinds,        ONLY : DP
-  USE fft_custom,   ONLY : fft_cus
   USE fft_types,    ONLY : fft_type_descriptor
 
   IMPLICIT NONE
 
   COMPLEX(DP), INTENT(INOUT)    :: orbital(:,:)
-  INTEGER, INTENT(IN)        :: ibnd, nbnd
-  TYPE(fft_cus), INTENT(IN)  :: g2r
+  INTEGER, INTENT(IN)        :: ibnd, nbnd, npwt
   TYPE(fft_type_descriptor), INTENT(IN)  :: dfftt
 
   ! Workspaces
@@ -1103,7 +1099,7 @@ SUBROUTINE fwfft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r, dfftt)
   IF (ibnd < nbnd) THEN
      !
      ! two ffts at the same time
-     DO j = 1, g2r%npwt
+     DO j = 1, npwt
         fp = (psic(dfftt%nl(j)) + psic(dfftt%nlm(j)))*0.5d0
         fm = (psic(dfftt%nl(j)) - psic(dfftt%nlm(j)))*0.5d0
         orbital( j, ibnd)   = CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
@@ -1112,7 +1108,7 @@ SUBROUTINE fwfft_orbital_custom_gamma(orbital, ibnd, nbnd, g2r, dfftt)
      !
   ELSE
      !
-     orbital(1:g2r%npwt,ibnd)=psic(dfftt%nl(1:g2r%npwt))
+     orbital(1:npwt,ibnd)=psic(dfftt%nl(1:npwt))
      !
   ENDIF
   !

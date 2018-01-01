@@ -144,6 +144,7 @@ MODULE exx
   !
   TYPE ( fft_type_descriptor ) :: dfftt 
   TYPE(fft_cus) :: exx_fft
+  LOGICAL :: exx_fft_initialized = .FALSE.
   INTEGER :: ngmt_g
   REAL(DP)  :: ecutfock         ! energy cutoff for custom grid
   !
@@ -228,12 +229,10 @@ MODULE exx
     REAL(dp) :: gkcut, gcutmt
     LOGICAL :: lpara
 
-    IF( exx_fft%initialized) RETURN
+    IF( exx_fft_initialized) RETURN
     !
     ! Initialise the custom grid that allows us to put the wavefunction
     ! onto the new (smaller) grid for \rho=\psi_{k+q}\psi^*_k and vice versa
-    !
-    exx_fft%ecutt=ecutwfc
     !
     ! gkcut is such that all |k+G|^2 < gkcut (in units of (2pi/a)^2)
     ! Note that with k-points, gkcut > ecutwfc/(2pi/a)^2
@@ -286,7 +285,7 @@ MODULE exx
     WRITE( stdout, '(/5x,"EXX grid: ",i8," G-vectors", 5x, &
          &   "FFT dimensions: (",i4,",",i4,",",i4,")")') ngmt_g, &
          &   dfftt%nr1, dfftt%nr2, dfftt%nr3
-    exx_fft%initialized = .true.
+    exx_fft_initialized = .true.
     !
     IF(tqr) THEN
        IF(ecutfock==ecutrho) THEN
@@ -309,11 +308,11 @@ MODULE exx
     !
     USE becmod, ONLY : deallocate_bec_type, is_allocated_bec_type, bec_type
     USE us_exx, ONLY : becxx
-    USE fft_custom,  ONLY : deallocate_fft_custom
     !
     IMPLICIT NONE
     INTEGER :: ikq
     !
+    exx_grid_initialized = .false.
     IF ( allocated(index_xkq) ) DEALLOCATE(index_xkq)
     IF ( allocated(index_xk ) ) DEALLOCATE(index_xk )
     IF ( allocated(index_sym) ) DEALLOCATE(index_sym)
@@ -334,8 +333,10 @@ MODULE exx
     ENDIF
     !
     IF ( allocated(working_pool) )  DEALLOCATE(working_pool)
-    CALL deallocate_fft_custom(exx_fft)
-    exx_grid_initialized = .false.
+    !
+    exx_fft_initialized = .false.
+    IF ( ASSOCIATED (exx_fft%gt)  )  DEALLOCATE(exx_fft%gt)
+    IF ( ASSOCIATED (exx_fft%ggt) )  DEALLOCATE(exx_fft%ggt)
     !
     !------------------------------------------------------------------------
   END SUBROUTINE deallocate_exx
