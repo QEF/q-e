@@ -26,7 +26,6 @@ MODULE fft_custom
 
      REAL(kind=DP) :: ecutt
      ! Custom cutoff (rydberg)
-     REAL(kind=DP) :: gcutmt
      REAL(kind=DP), DIMENSION(:), POINTER :: ggt
      REAL(kind=DP), DIMENSION(:,:),POINTER :: gt
      INTEGER :: gstart_t
@@ -40,7 +39,7 @@ CONTAINS
 !=----------------------------------------------------------------------------=!
 
   !-----------------------------------------------------------------------
-  SUBROUTINE ggenx( g, comm, dfftt, ngmt_g, fc )
+  SUBROUTINE ggenx( g, comm, dfftt, gcutmt, gcutt, ngmt_g, fc )
   !-----------------------------------------------------------------------
     !
     ! Initialize g-vectors for custom grid, in exactly the same ordering
@@ -51,7 +50,7 @@ CONTAINS
     !--------------------------------------------------------------------
     !
     USE kinds,              ONLY : DP
-    USE cell_base,          ONLY : at, tpiba2
+    USE cell_base,          ONLY : at
     USE control_flags,      ONLY : gamma_only
     USE constants,          ONLY : eps8
     USE mp,                 ONLY : mp_max, mp_sum
@@ -61,6 +60,7 @@ CONTAINS
     REAL(dp), INTENT(IN) :: g(:,:)
     ! communicator of the group on which g-vecs are distributed
     INTEGER, INTENT(IN) :: comm
+    REAL(DP), INTENT(IN):: gcutmt, gcutt
     ! Total number of G-vectors in custom grid
     INTEGER, INTENT(OUT):: ngmt_g
     ! G-vectors in FFT grid
@@ -90,7 +90,7 @@ CONTAINS
        ! compute fc%npwt
        !
        fc%ggt(i) = SUM(fc%gt (1:3,i)**2)
-       IF ( fc%ggt(i) <= fc%ecutt / tpiba2) fc%npwt = fc%npwt + 1
+       IF ( fc%ggt(i) <= gcutt ) fc%npwt = fc%npwt + 1
        !
     END DO
     !
@@ -115,7 +115,7 @@ CONTAINS
   !
   !
   !--------------------------------------------------------------------
-  SUBROUTINE ggent(comm, dfftt, ngmt_g, fc)
+  SUBROUTINE ggent(comm, dfftt, gcutmt, gcutt, ngmt_g, fc)
     !--------------------------------------------------------------------
     !
     ! Initialize g-vectors for custom grid
@@ -123,7 +123,7 @@ CONTAINS
     ! FIXME: Should be merged with ggen
     !
     USE kinds,              ONLY : DP
-    USE cell_base,          ONLY : at, bg, tpiba2
+    USE cell_base,          ONLY : at, bg
     USE control_flags,      ONLY : gamma_only
     USE constants,          ONLY : eps8
     USE mp,                 ONLY: mp_max, mp_sum
@@ -134,12 +134,13 @@ CONTAINS
     TYPE(fft_cus), INTENT(INOUT) :: fc
     INTEGER, INTENT(IN) :: comm  ! communicator of the group over which
                                  ! g-vectors are distributed
+    REAL(DP), INTENT(IN):: gcutmt, gcutt
     ! Total number of G-vectors in custom grid
     INTEGER, INTENT(OUT):: ngmt_g
     !
     INTEGER,  DIMENSION(:), ALLOCATABLE :: mill(:,:)
     INTEGER :: ngmt, ngmx, n1, n2, n3, n1s, n2s, n3s
-    REAL(DP) ::  t (3), tt, swap
+    REAL(DP):: t (3), tt, swap
     !
     REAL(DP), ALLOCATABLE :: g2sort_g(:)
     ! array containing all g vectors, on all processors: replicated data
@@ -199,7 +200,7 @@ CONTAINS
              IF ( gamma_only .AND. i == 0 .AND. j == 0 .AND. k < 0) CYCLE kloop
              t(:) = i * bg (:,1) + j * bg (:,2) + k * bg (:,3)
              tt = SUM(t(:)**2)
-             IF (tt <= fc%gcutmt) THEN
+             IF (tt <= gcutmt) THEN
                 ngmt = ngmt + 1
                 IF (ngmt > ngmt_g) CALL errore ('ggent', 'too many g-vectors', ngmt)
                 mill_unsorted( :, ngmt ) = (/ i,j,k /)
@@ -284,7 +285,7 @@ CONTAINS
        DO ng = 1, ngmt
           tt = (fc%gt (1, ng) ) **2 + (fc%gt (2, ng) ) **2 + (fc%gt&
                & (3, ng) ) **2
-          IF (tt <= fc%ecutt / tpiba2) THEN
+          IF (tt <= gcutt) THEN
              !
              ! here if |k+G|^2 <= Ecut increase the number of G
              !  inside the sphere

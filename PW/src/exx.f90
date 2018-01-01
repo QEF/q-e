@@ -225,7 +225,7 @@ MODULE exx
 
     IMPLICIT NONE
     INTEGER :: ik
-    REAL(dp) :: gkcut
+    REAL(dp) :: gkcut, gcutmt
     LOGICAL :: lpara
 
     IF( exx_fft%initialized) RETURN
@@ -241,7 +241,7 @@ MODULE exx
     !
     IF ( gamma_only ) THEN       
        gkcut = ecutwfc/tpiba2
-       exx_fft%gcutmt = ecutfock / tpiba2
+       gcutmt = ecutfock / tpiba2
     ELSE
        !
        gkcut = 0.0_dp
@@ -257,7 +257,7 @@ MODULE exx
        ! The following instruction may be needed if ecutfock \simeq ecutwfc
        ! and guarantees that all k+G are included
        !
-       exx_fft%gcutmt = max(ecutfock/tpiba2,gkcut)
+       gcutmt = max(ecutfock/tpiba2,gkcut)
        !
     ENDIF
     !
@@ -269,9 +269,8 @@ MODULE exx
        !
        lpara = ( nproc_bgrp > 1 )
        CALL fft_type_init( dfftt, smap, "rho", gamma_only, lpara, &
-            intra_bgrp_comm, at, bg, exx_fft%gcutmt, exx_fft%gcutmt/gkcut, &
-            nyfft=nyfft )
-       CALL ggenx( g, intra_bgrp_comm, dfftt, ngmt_g, exx_fft )
+            intra_bgrp_comm, at, bg, gcutmt, gcutmt/gkcut, nyfft=nyfft )
+       CALL ggenx( g, intra_bgrp_comm, dfftt, gcutmt, ecutwfc/tpiba2, ngmt_g, exx_fft )
        !
     ELSE
        !
@@ -279,9 +278,8 @@ MODULE exx
             negrp
        lpara = ( nproc_egrp > 1 )
        CALL fft_type_init( dfftt, smap_exx, "rho", gamma_only, lpara, &
-            intra_egrp_comm, at, bg, exx_fft%gcutmt, exx_fft%gcutmt/gkcut,    &
-            nyfft=nyfft )
-       CALL ggent( intra_egrp_comm, dfftt, ngmt_g, exx_fft )
+            intra_egrp_comm, at, bg, gcutmt, gcutmt/gkcut, nyfft=nyfft )
+       CALL ggent( intra_egrp_comm, dfftt, gcutmt, ecutwfc/tpiba2, ngmt_g, exx_fft )
        !
     END IF
     !
