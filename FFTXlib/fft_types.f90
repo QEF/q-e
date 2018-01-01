@@ -129,6 +129,7 @@ MODULE fft_types
 
   PUBLIC :: fft_type_descriptor, fft_type_init
   PUBLIC :: fft_type_allocate, fft_type_deallocate
+  PUBLIC :: fft_stick_index
 
 CONTAINS
 
@@ -928,6 +929,21 @@ CONTAINS
       RETURN
    
    END SUBROUTINE grid_set
+
+
+   PURE FUNCTION fft_stick_index( desc, i, j )
+      IMPLICIT NONE
+      TYPE(fft_type_descriptor), INTENT(IN) :: desc
+      INTEGER :: fft_stick_index
+      INTEGER, INTENT(IN) :: i, j
+      INTEGER :: mc, m1, m2
+      m1 = mod (i, desc%nr1) + 1
+      IF (m1 < 1) m1 = m1 + desc%nr1
+      m2 = mod (j, desc%nr2) + 1
+      IF (m2 < 1) m2 = m2 + desc%nr2
+      mc = m1 + (m2 - 1) * desc%nr1x
+      fft_stick_index = desc%isind ( mc ) 
+   END FUNCTION
 
 !=----------------------------------------------------------------------------=!
 END MODULE fft_types

@@ -761,8 +761,6 @@ end subroutine
    !
    IMPLICIT NONE
    !
-   REAL(DP), PARAMETER :: eps8  = 1.0E-8_DP
-   !
    LOGICAL,  INTENT(IN) :: gamma_only
    REAL(DP), INTENT(IN) :: at(3,3), bg(3,3), gcutm, gcutms
    LOGICAL,  INTENT(IN) :: no_global_sort

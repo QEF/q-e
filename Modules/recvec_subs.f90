@@ -43,6 +43,7 @@ CONTAINS
    !     between the fft mesh points and the array of g vectors.
    !
    USE mp, ONLY: mp_rank, mp_size, mp_sum
+   USE fft_types, ONLY: fft_stick_index
    !
    IMPLICIT NONE
    !
@@ -67,7 +68,6 @@ CONTAINS
    ! when no_global_sort is present (and it is true) only g vectors for the current processor are stored
    INTEGER, ALLOCATABLE :: igsrt(:)
    !
-   INTEGER :: m1, m2, mc
    INTEGER :: ni, nj, nk, i, j, k, ipol, ng, igl, indsw
    INTEGER :: mype, npe
    LOGICAL :: global_sort
@@ -141,12 +141,7 @@ CONTAINS
          IF ( gamma_only .and. i == 0 .and. j < 0) CYCLE jloop
 
          IF( .NOT. global_sort ) THEN
-            m1 = mod (i, dfftp%nr1) + 1
-            IF (m1 < 1) m1 = m1 + dfftp%nr1
-            m2 = mod (j, dfftp%nr2) + 1
-            IF (m2 < 1) m2 = m2 + dfftp%nr2
-            mc = m1 + (m2 - 1) * dfftp%nr1x
-            IF ( dfftp%isind ( mc ) == 0) CYCLE jloop
+            IF ( fft_stick_index( dfftp, i, j ) == 0) CYCLE jloop
          END IF
 
          kloop: DO k = -nk, nk
@@ -215,12 +210,7 @@ CONTAINS
       k = mill_g(3, ng)
 
       IF( dfftp%lpara .AND. global_sort ) THEN
-         m1 = mod (i, dfftp%nr1) + 1
-         IF (m1 < 1) m1 = m1 + dfftp%nr1
-         m2 = mod (j, dfftp%nr2) + 1
-         IF (m2 < 1) m2 = m2 + dfftp%nr2
-         mc = m1 + (m2 - 1) * dfftp%nr1x
-         IF ( dfftp%isind ( mc ) == 0) CYCLE ngloop
+         IF ( fft_stick_index( dfftp, i, j ) == 0) CYCLE ngloop
       END IF
 
       ngm = ngm + 1
