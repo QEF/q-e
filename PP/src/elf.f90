@@ -104,7 +104,7 @@ SUBROUTINE do_elf (elf)
   IF (doublegrid) THEN
      DEALLOCATE (aux)
      ALLOCATE(aux(dfftp%nnr))
-     CALL interpolate (kkin, kkin, 1)
+     CALL fft_interpolate_real (kkin, dffts, kkin, dfftp)
   ENDIF
   !
   ! symmetrize the local kinetic energy if needed

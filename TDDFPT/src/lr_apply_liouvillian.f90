@@ -139,7 +139,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
         !
         IF (gamma_only) THEN
            dvrs(:,1) = 0.0d0
-           CALL interpolate (dvrs(:,1),dvrss,-1)
+           CALL fft_interpolate_real(dvrs(:,1), dfftp, dvrss, dffts)
         ELSE
            dvrsc(:,1) = 0.0d0
            CALL cinterpolate (dvrsc(:,1),dvrssc,-1)
@@ -222,7 +222,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
         ! Put the interaction on the smooth grid.
         !
         IF (gamma_only) THEN
-           CALL interpolate (dvrs(:,1),dvrss,-1)
+           CALL fft_interpolate_real (dvrs(:,1), dfftp, dvrss, dffts)
         ELSE
            CALL cinterpolate (dvrsc(:,1),dvrssc,-1)
         ENDIF

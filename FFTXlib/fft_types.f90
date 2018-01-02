@@ -126,9 +126,12 @@ MODULE fft_types
     CHARACTER(len=12):: rho_clock_label  = ' '
     CHARACTER(len=12):: wave_clock_label = ' '
 
+    INTEGER :: grid_id
+
   END TYPE
 
   REAL(DP) :: fft_dual = 4.0d0
+  INTEGER  :: incremental_grid_identifier = 0
 
   PUBLIC :: fft_type_descriptor, fft_type_init
   PUBLIC :: fft_type_allocate, fft_type_deallocate
@@ -248,6 +251,9 @@ CONTAINS
     ALLOCATE( desc%tg_sdsp( desc%nproc2) ) ; desc%tg_sdsp = 0
     ALLOCATE( desc%tg_rdsp( desc%nproc2) ) ; desc%tg_rdsp = 0
 
+    incremental_grid_identifier = incremental_grid_identifier + 1
+    desc%grid_id = incremental_grid_identifier
+
   END SUBROUTINE fft_type_allocate
 
   SUBROUTINE fft_type_deallocate( desc )
@@ -299,6 +305,8 @@ CONTAINS
 
     desc%nr1    = 0 ; desc%nr2    = 0 ; desc%nr3    = 0  
     desc%nr1x   = 0 ; desc%nr2x   = 0 ; desc%nr3x   = 0  
+
+    desc%grid_id = 0
 
   END SUBROUTINE fft_type_deallocate
 

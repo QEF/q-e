@@ -211,7 +211,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   !    Interpolate on the thick mesh and pass to reciprocal space
   !
   IF (doublegrid) THEN
-     CALL interpolate (aux, aux, 1)
+     CALL fft_interpolate_real (aux, dffts, aux, dfftp)
   ENDIF
   DO ir = 1, dfftp%nnr
      prho (ir) = cmplx(aux (ir), 0.d0,kind=DP)

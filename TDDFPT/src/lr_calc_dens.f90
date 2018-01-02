@@ -104,7 +104,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      !
      ! If a double grid is used, interpolate onto the fine grid
      !
-     IF ( doublegrid ) CALL interpolate(rho_1,rho_1,1)
+     IF ( doublegrid ) CALL fft_interpolate_real(rho_1, dffts, rho_1, dfftp)
      !
 #if defined(__MPI)
      CALL mp_sum(rho_1, inter_bgrp_comm)

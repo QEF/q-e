@@ -136,8 +136,8 @@ SUBROUTINE sum_band()
      !
      DO is = 1, nspin
         !
-        CALL interpolate( rho%of_r(1,is), rho%of_r(1,is), 1 )
-        if (dft_is_meta() .OR. lxdm) CALL interpolate(rho%kin_r(1,is),rho%kin_r(1,is),1)
+        CALL fft_interpolate_real( rho%of_r(1,is), dffts, rho%of_r(1,is), dfftp )
+        if (dft_is_meta() .OR. lxdm) CALL fft_interpolate_real(rho%kin_r(1,is),dffts,rho%kin_r(1,is),dfftp)
         !
      END DO
      !

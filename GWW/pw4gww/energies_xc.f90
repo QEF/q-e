@@ -120,7 +120,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
        do is=1,nspin
           vrs(:,is)=vr(:,is)
-          if(doublegrid) call interpolate(vrs(1,is),vrs(1,is),-1)
+          if(doublegrid) call fft_interpolate_real(vrs(1,is),dfftp,vrs(1,is),dffts) ! interpolate from dense to smooth
        enddo
        !
        DO ibnd = 1, m
@@ -162,7 +162,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        call  v_h(rho%of_g , ehart, charge, vr )
        do is=1,nspin
           vrs(:,is)=vr(:,is)
-          if(doublegrid) call interpolate(vrs(1,is),vrs(1,is),-1)
+          if(doublegrid) call fft_interpolate_real(vrs(1,is), dfftp, vrs(1,is), dffts) ! interpolate from dense to smooth
        enddo
 
 
@@ -408,7 +408,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 !read from disk wfc on coarse grid
          CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd+(ispin-1)*nbnd,-1)
          if(doublegrid) then
-           call interpolate(psi_r,psi_rs,1)
+           call fft_interpolate_real(psi_rs, dffts, psi_r, dfftp) ! interpolate from smooth to dense
          else
            psi_r(:)=psi_rs(:)
          endif
@@ -458,7 +458,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 !read from disk wfc on coarse grid
            CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd+(ispin-1)*nbnd,-1)
            if(doublegrid) then
-              call interpolate(psi_r,psi_rs,1)
+              call fft_interpolate_real(psi_rs, dffts, psi_r, dfftp) ! interpolate from smooth to dense
            else
               psi_r(:)=psi_rs(:)
            endif
