@@ -32,7 +32,6 @@ SUBROUTINE from_scratch( )
     USE io_global,            ONLY : stdout, ionode
     USE core,                 ONLY : rhoc
     USE gvecw,                ONLY : ngw
-    USE gvecs,                ONLY : ngms
     USE gvect,                ONLY : ngm, gg
     USE gvect,                ONLY : gstart, mill, eigts1, eigts2, eigts3
     USE uspp_param,           ONLY : nvb
@@ -50,7 +49,7 @@ SUBROUTINE from_scratch( )
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
     USE wave_base,            ONLY : wave_steepest
     USE wavefunctions_module, ONLY : c0_bgrp, cm_bgrp, phi_bgrp
-    USE fft_base,             ONLY : dfftp
+    USE fft_base,             ONLY : dfftp, dffts
     USE time_step,            ONLY : delt
     USE cp_main_variables,    ONLY : descla, bephi, becp_bgrp, nfi, &
                                      sfac, eigr, taub, irb, eigrb, bec_bgrp, &
@@ -111,7 +110,7 @@ SUBROUTINE from_scratch( )
     !
     CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, taus, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat )
     !
-    CALL strucf( sfac, eigts1, eigts2, eigts3, mill, ngms )
+    CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
     !     
     IF ( okvan .OR. nlcc_any ) THEN
        CALL initbox ( tau0, alat, at, ainv, taub, irb )

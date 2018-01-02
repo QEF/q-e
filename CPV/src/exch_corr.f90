@@ -15,9 +15,7 @@
 ! of e(xc) with respect to to cell parameter h(i,j)
 !     
       use funct,           only : dft_is_gradient, dft_is_meta
-      use gvect,           only : ngm
-      use gvecs,           only : ngms
-      use fft_base,        only : dfftp
+      use fft_base,        only : dfftp, dffts
       use cell_base,       only : ainv, omega, h
       use ions_base,       only : nsp
       use control_flags,   only : tpre, iverbosity
@@ -42,8 +40,8 @@
       ! rhog contains the charge density in G space
       ! rhor contains the charge density in R space
       !
-      complex(DP) :: rhog( ngm, nspin )
-      complex(DP) :: sfac( ngms, nsp )
+      complex(DP) :: rhog( dfftp%ngm, nspin )
+      complex(DP) :: sfac( dffts%ngm, nsp )
       !
       ! output
       ! rhor contains the exchange-correlation potential
@@ -90,7 +88,7 @@
          !  allocate the sic_arrays
          !
          ALLOCATE( self_rho( dfftp%nnr, nspin ) )
-         ALLOCATE( self_rhog(ngm, nspin ) )
+         ALLOCATE( self_rhog(dfftp%ngm, nspin ) )
          IF( dft_is_gradient() ) ALLOCATE( self_gradr( dfftp%nnr, 3, nspin ) )
 
          self_rho(:, 1) = rhor( :, 2)
@@ -269,7 +267,6 @@
       USE kinds,              ONLY: DP
       use control_flags, only: iprint, tpre
       use gvect, only: g
-      use gvect, only: ngm
       use cell_base, only: ainv, tpiba, omega
       use cp_main_variables, only: drhog
       USE fft_interfaces, ONLY: fwfft, invfft
@@ -280,7 +277,7 @@
 ! input                   
       integer nspin
       real(DP)    :: gradr( dfftp%nnr, 3, nspin ), rhor( dfftp%nnr, nspin ), dexc( 3, 3 )
-      complex(DP) :: rhog( ngm, nspin )
+      complex(DP) :: rhog( dfftp%ngm, nspin )
 !
       complex(DP), allocatable:: v(:), vp(:), vm(:)
       complex(DP), allocatable:: x(:), vtemp(:)
@@ -288,10 +285,10 @@
       integer :: iss, ig, ir, i,j
 !
       allocate(v(dfftp%nnr))
-      allocate(x(ngm))
-      allocate(vp(ngm))
-      allocate(vm(ngm))
-      allocate(vtemp(ngm))
+      allocate(x(dfftp%ngm))
+      allocate(vp(dfftp%ngm))
+      allocate(vm(dfftp%ngm))
+      allocate(vtemp(dfftp%ngm))
       !
       ci=(0.0d0,1.0d0)
       !
@@ -306,14 +303,14 @@
          end do
          call fwfft('Rho',v, dfftp )
          CALL fftx_threed2oned( dfftp, v, vp )
-         do ig=1,ngm
+         do ig=1,dfftp%ngm
             x(ig)=ci*tpiba*g(1,ig)*vp(ig)
          end do
 !
          if(tpre) then
             do i=1,3
                do j=1,3
-                  do ig=1,ngm
+                  do ig=1,dfftp%ngm
                      vtemp(ig) = omega*ci*CONJG(vp(ig))*             &
      &                    tpiba*(-rhog(ig,iss)*g(i,ig)*ainv(j,1)+      &
      &                    g(1,ig)*drhog(ig,iss,i,j))
@@ -329,7 +326,7 @@
          call fwfft('Rho',v, dfftp )
          CALL fftx_threed2oned( dfftp, v, vp, vm )
 !
-         do ig=1,ngm
+         do ig=1,dfftp%ngm
             x(ig) = x(ig) + ci*tpiba*g(2,ig)*vp(ig)
             x(ig) = x(ig) + ci*tpiba*g(3,ig)*vm(ig)
          end do
@@ -337,7 +334,7 @@
          if(tpre) then
             do i=1,3
                do j=1,3
-                  do ig=1,ngm
+                  do ig=1,dfftp%ngm
                      vtemp(ig) = omega*ci*( &
      &                    CONJG(vp(ig))*tpiba*(-rhog(ig,iss)*g(i,ig)*ainv(j,2)+g(2,ig)*drhog(ig,iss,i,j))+ &
      &                    CONJG(vm(ig))*tpiba*(-rhog(ig,iss)*g(i,ig)*ainv(j,3)+g(3,ig)*drhog(ig,iss,i,j))  )

@@ -373,8 +373,8 @@ CONTAINS
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
      TYPE(fft_type_descriptor), INTENT(in) :: desc
-     complex(DP), INTENT(OUT) :: vout1(:)
-     complex(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
+     complex(DP), INTENT(INOUT) :: vout1(:)
+     complex(DP), OPTIONAL, INTENT(INOUT) :: vout2(:)
      complex(DP), INTENT(IN) :: vin(:)
      COMPLEX(DP) :: fp, fm
      INTEGER :: ig

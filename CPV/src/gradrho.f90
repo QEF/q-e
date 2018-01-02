@@ -16,7 +16,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
 !     in: charge density on G-space    out: gradient in R-space
 !
       use cell_base
-      use gvect, only: ngm, g
+      use gvect, only: g
       USE fft_interfaces, ONLY: invfft
       USE fft_base,       ONLY: dfftp
       USE fft_helper_subroutines, ONLY: fftx_oned2threed
@@ -25,7 +25,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
       implicit none
 ! input
       integer nspin
-      complex(kind=8) rhog(ngm,nspin)
+      complex(kind=8) rhog(dfftp%ngm,nspin)
 ! output
       real(kind=8)    drho(3,dfftp%nnr), d2rho(3,dfftp%nnr),     &
      &                dxdyrho(dfftp%nnr), dxdzrho(dfftp%nnr),    &
@@ -48,7 +48,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
       dydzrho = 0.d0
 
       do iss=1,nspin
-         do ig=1,ngm
+         do ig=1,dfftp%ngm
             drhog(ig,1) = ci*tpiba*g(1,ig)*rhog(ig,iss)
             drhog(ig,2) = ci*tpiba*g(2,ig)*rhog(ig,iss)
             drhog(ig,3) = ci*tpiba*g(3,ig)*rhog(ig,iss)
@@ -65,7 +65,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             drho(3,ir)=drho(3,ir)+aimag(v(ir))
          end do
 
-         do ig=1,ngm
+         do ig=1,dfftp%ngm
             drhog(ig,1) = -1.d0*tpiba**2*g(1,ig)**2*rhog(ig,iss)
             drhog(ig,2) = -1.d0*tpiba**2*g(2,ig)**2*rhog(ig,iss)
             drhog(ig,3) = -1.d0*tpiba**2*g(3,ig)**2*rhog(ig,iss)
@@ -82,7 +82,7 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
             d2rho(3,ir)=d2rho(3,ir)+aimag(v(ir))
          end do
 
-         do ig=1,ngm
+         do ig=1,dfftp%ngm
             drhog(ig,1) = -1.d0*tpiba**2*g(1,ig)*g(2,ig)*rhog(ig,iss)
             drhog(ig,2) = -1.d0*tpiba**2*g(1,ig)*g(3,ig)*rhog(ig,iss)
             drhog(ig,3) = -1.d0*tpiba**2*g(2,ig)*g(3,ig)*rhog(ig,iss)

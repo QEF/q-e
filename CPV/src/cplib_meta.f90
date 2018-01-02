@@ -14,7 +14,6 @@
 !          contribution from metaGGA
       use kinds, only: dp
       use gvect,     only : g
-      use gvecs,                  only : ngms
       use gvecw,                  only : ngw
       use cell_base,              only : tpiba2
       USE metagga,                ONLY : kedtaus
@@ -71,7 +70,6 @@
 !
       use kinds, only: dp
       use control_flags, only: tpre
-      use gvecs
       use gvecw, only: ngw
       use gvect, only: g
       use cell_base, only : omega, tpiba, ainv
@@ -192,7 +190,7 @@
 
       CALL smooth_rho_r2g( kedtaus, kedtaug )
 !
-      kedtaug(ngms+1:,:) = 0.0d0
+      kedtaug(dffts%ngm+1:,:) = 0.0d0
 
       CALL rho_g2r( kedtaug, kedtaur )
 !

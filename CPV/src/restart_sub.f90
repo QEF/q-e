@@ -25,7 +25,6 @@ SUBROUTINE from_restart( )
    USE ions_nose,             ONLY : xnhp0, xnhpm
    USE gvect,    ONLY : mill, eigts1, eigts2, eigts3 
    USE printout_base,         ONLY : printout_pos
-   USE gvecs,                 ONLY : ngms
    USE gvecw,                 ONLY : ngw
    USE cp_interfaces,         ONLY : phfacs, strucf, prefor, calbec_bgrp, caldbec_bgrp
    USE energies,              ONLY : eself, dft_energy_type
@@ -36,7 +35,7 @@ SUBROUTINE from_restart( )
    USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, eigr, &
                                      sfac, taub, irb, eigrb, edft, bec_bgrp, dbec, descla
    USE time_step,             ONLY : delt
-   USE fft_base,              ONLY : dfftp
+   USE fft_base,              ONLY : dfftp, dffts
    USE matrix_inversion
    !
    IMPLICIT NONE
@@ -126,7 +125,7 @@ SUBROUTINE from_restart( )
    !
    CALL phfacs( eigts1, eigts2, eigts3, eigr, mill, taus, dfftp%nr1, dfftp%nr2, dfftp%nr3, nat )
    !
-   CALL strucf( sfac, eigts1, eigts2, eigts3, mill, ngms )
+   CALL strucf( sfac, eigts1, eigts2, eigts3, mill, dffts%ngm )
    !
    CALL prefor( eigr, vkb )
    !
