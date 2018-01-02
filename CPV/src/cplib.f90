@@ -1502,7 +1502,7 @@ END SUBROUTINE print_lambda_x
       !
       IF( nspin > 1 ) vxc(:) = vxc(:) + vxcr(:,2)
       !
-      CALL fwfft( 'Dense', vxc, dfftp )
+      CALL fwfft( 'Rho', vxc, dfftp )
       CALL fftx_threed2oned( dfftp, vxc, vxg )
       !
       DO i=1,3

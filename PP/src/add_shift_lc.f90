@@ -66,7 +66,7 @@ SUBROUTINE add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   ELSE
      aux(:) = CMPLX ( rho(:,1), 0.0_dp, KIND=dp )
   END IF
-  CALL fwfft ('Dense', aux, dfftp)
+  CALL fwfft ('Rho', aux, dfftp)
   !
   !    aux contains now  n(G)
   !

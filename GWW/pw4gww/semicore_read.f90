@@ -237,7 +237,7 @@
           psic(dfftp%nl(ig))=tmp_g(ig)*fac(ig)
           psic(dfftp%nlm(ig))=CONJG(tmp_g(ig))*fac(ig)
        enddo
-       CALL invfft ('Dense', psic, dfftp)
+       CALL invfft ('Rho', psic, dfftp)
        tmp_r(1:dfftp%nnr)=dble(psic(1:dfftp%nnr))
 
        do ii=1,num_nbnds

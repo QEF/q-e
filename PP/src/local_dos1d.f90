@@ -216,7 +216,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   DO ir = 1, dfftp%nnr
      prho (ir) = cmplx(aux (ir), 0.d0,kind=DP)
   ENDDO
-  CALL fwfft ('Dense', prho, dfftp)
+  CALL fwfft ('Rho', prho, dfftp)
   !
   !    Here we add the US contribution to the charge for the atoms which n
   !    it. Or compute the planar average in the NC case.

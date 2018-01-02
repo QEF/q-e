@@ -119,7 +119,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
      dvscf(:,1) = dvscf(:,1) + dvscf(:,2)
   end if
   !
-  CALL fwfft ('Dense', dvscf(:,1), dfftp)
+  CALL fwfft ('Rho', dvscf(:,1), dfftp)
   !
   ! 2) Hartree contribution is computed in reciprocal space
   !
@@ -162,7 +162,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
         !
         ! Transform response Hartree potential to real space
         !
-        CALL invfft ('Dense', dvhart (:,is), dfftp)
+        CALL invfft ('Rho', dvhart (:,is), dfftp)
         !
       enddo
       !
@@ -195,7 +195,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
         !
         ! Transformed back to real space
         !
-        CALL invfft ('Dense', dvhart (:, is), dfftp)
+        CALL invfft ('Rho', dvhart (:, is), dfftp)
         !
       enddo
       !
@@ -210,7 +210,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
       ! General k points implementation
       !
       do is = 1, nspin_lsda
-         CALL fwfft ('Dense', dvaux (:, is), dfftp)
+         CALL fwfft ('Rho', dvaux (:, is), dfftp)
          IF (do_cutoff_2D) THEN 
             call cutoff_dv_of_drho(dvaux, is, dvscf)
          ELSE
@@ -225,7 +225,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
          !
          ! Transformed back to real space
          !
-         CALL invfft ('Dense', dvaux (:, is), dfftp)
+         CALL invfft ('Rho', dvaux (:, is), dfftp)
          !
       enddo
       !

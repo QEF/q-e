@@ -183,7 +183,7 @@ SUBROUTINE gradient1( nrxx, a, ngm, g, nl, nlm, alat, ga)
      ENDDO
      ! bring back to R-space, (\grad_ipol a)(r) ...
 
-     CALL invfft ('Dense', gaux, dfftp )
+     CALL invfft ('Rho', gaux, dfftp )
      ! ...and add the factor 2\pi/a  missing in the definition of q+G
      DO n = 1, nrxx
         ga (ipol  , n) =  dble(gaux (n)) * tpiba
@@ -199,7 +199,7 @@ SUBROUTINE gradient1( nrxx, a, ngm, g, nl, nlm, alat, ga)
         gaux(nlm(n)) = conjg(gaux(nl(n)))
      ENDDO
      ! bring back to R-space, (\grad_ipol a)(r) ...
-     CALL invfft ('Dense', gaux, dfftp )
+     CALL invfft ('Rho', gaux, dfftp )
      ! ...and add the factor 2\pi/a  missing in the definition of q+G
      DO n = 1, nrxx
         ga (ipol, n) =  dble(gaux (n)) * tpiba
@@ -241,7 +241,7 @@ SUBROUTINE grad_dot1 ( nrxx, a, ngm, g, nl, nlm, alat, da)
         aux (n) = cmplx( dble(a(ipol, n)), dble(a(ipol+1, n)),kind=DP)
      ENDDO
      ! bring a(ipol,r) to G-space, a(G) ...
-     CALL fwfft ('Dense', aux, dfftp)
+     CALL fwfft ('Rho', aux, dfftp)
      ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
      DO n = 1, ngm
         fp = (aux(nl (n)) + aux (nlm(n)))*0.5d0
@@ -258,7 +258,7 @@ SUBROUTINE grad_dot1 ( nrxx, a, ngm, g, nl, nlm, alat, da)
         aux (n) = a(ipol, n)
      ENDDO
      ! bring a(ipol,r) to G-space, a(G) ...
-     CALL fwfft ('Dense', aux, dfftp)
+     CALL fwfft ('Rho', aux, dfftp)
      ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
      DO n = 1, ngm
         da (nl(n)) = da (nl(n)) + cmplx(0.d0, g(ipol, n),kind=DP) * aux(nl(n))
@@ -268,7 +268,7 @@ SUBROUTINE grad_dot1 ( nrxx, a, ngm, g, nl, nlm, alat, da)
      da(nlm(n)) = conjg(da(nl(n)))
   ENDDO
   !  bring back to R-space, (\grad_ipol a)(r) ...
-  CALL invfft ('Dense', da, dfftp )
+  CALL invfft ('Rho', da, dfftp )
   ! ...add the factor 2\pi/a  missing in the definition of q+G and sum
   DO n = 1, nrxx
      da (n) = da (n) * tpiba

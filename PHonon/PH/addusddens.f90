@@ -190,7 +190,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
         do ig = 1, ngm
            psic (dfftp%nl (ig) ) = aux (ig, is, ipert)
         enddo
-        CALL invfft ('Dense', psic, dfftp)
+        CALL invfft ('Rho', psic, dfftp)
         call daxpy (2*dfftp%nnr, 1.0_DP, psic, 1, drhoscf(1,is,ipert), 1)
      enddo
   enddo

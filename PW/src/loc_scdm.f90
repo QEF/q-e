@@ -140,7 +140,7 @@ implicit none
   Gorbt = (Zero,Zero) 
   DO jbnd = 1, NBands 
     buffer(:) = abs(dble(orbt(:,jbnd,NKK))) + (Zero,One)*Zero  
-    CALL fwfft( 'CustomWave' , buffer, dfftt )
+    CALL fwfft( 'Wave' , buffer, dfftt )
     DO ig = 1, npwx
       Gorbt(ig,jbnd) = buffer(dfftt%nl(ig))
     ENDDO

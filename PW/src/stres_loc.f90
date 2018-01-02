@@ -47,7 +47,7 @@ subroutine stres_loc (sigmaloc)
      call daxpy (dfftp%nnr, 1.d0, rho%of_r (1, is), 1, psic, 2)
   enddo
 
-  CALL fwfft ('Dense', psic, dfftp)
+  CALL fwfft ('Rho', psic, dfftp)
   ! psic contains now the charge density in G space
   if (gamma_only) then
      fact = 2.d0

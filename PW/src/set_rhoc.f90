@@ -90,7 +90,7 @@ subroutine set_rhoc
   !
   !   the core charge in real space
   !
-  CALL invfft ('Dense', aux, dfftp)
+  CALL invfft ('Rho', aux, dfftp)
   !
   !    test on the charge and computation of the core energy
   !

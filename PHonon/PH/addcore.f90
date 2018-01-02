@@ -70,7 +70,7 @@ subroutine addcore (mode, drhoc)
   !
   !   transform to real space
   !
-  CALL invfft ('Dense', drhoc, dfftp)
+  CALL invfft ('Rho', drhoc, dfftp)
   !
   return
 

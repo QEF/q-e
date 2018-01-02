@@ -122,6 +122,9 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: tg_rdsp(:)! receive displacement for task group A2A communicattion
     !
     LOGICAL :: have_task_groups = .FALSE.
+    !
+    CHARACTER(len=12):: rho_clock_label  = ' '
+    CHARACTER(len=12):: wave_clock_label = ' '
 
   END TYPE
 

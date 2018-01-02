@@ -83,7 +83,7 @@ SUBROUTINE addusforce_g (forcenl)
      ELSE
         aux(:) = vltot (:) + v%of_r (:, is)
      ENDIF
-     CALL fwfft ('Dense', aux, dfftp)
+     CALL fwfft ('Rho', aux, dfftp)
      ! Note the factors -i and 2pi/a *units of G) here in V(G) !
      vg (:, is) = aux(dfftp%nl (:) ) * tpiba * (0.d0, -1.d0)
   ENDDO

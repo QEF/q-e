@@ -66,7 +66,7 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       ! ... transform hartree potential to real space
       !
       CALL fftx_oned2threed( dfftp, aux, aux1 )
-      CALL invfft ('Dense', aux, dfftp)
+      CALL invfft ('Rho', aux, dfftp)
       !
       ! ... add hartree potential to the input potential
       !
@@ -132,7 +132,7 @@ SUBROUTINE v_h_of_rho_g( rhog, ehart, charge, v )
       ALLOCATE( aux( dfftp%nnr ) )
       DO is = 1, nspin
         aux(:) = CMPLX(rhor( : , is ),0.D0,kind=dp) 
-        CALL fwfft ('Dense', aux, dfftp)
+        CALL fwfft ('Rho', aux, dfftp)
         CALL fftx_threed2oned( dfftp, aux, rhog(:,is) )
       END DO
       !
@@ -286,7 +286,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       !
       rhoaux( : ) = CMPLX( rho( : ), 0.D0, KIND=dp ) 
       !
-      CALL fwfft('Dense', rhoaux, dfftp)
+      CALL fwfft('Rho', rhoaux, dfftp)
       CALL fftx_threed2oned( dfftp, rhoaux, rhog )
       !
       !
@@ -303,7 +303,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
          ! ... bring back to R-space, (\grad_ipol a)(r) ...
          !
          CALL fftx_oned2threed( dfftp, rhoaux, gaux )
-         CALL invfft ('Dense', rhoaux, dfftp)
+         CALL invfft ('Rho', rhoaux, dfftp)
          !
          gradv(ipol,:) = REAL( rhoaux(:) )
          !
@@ -352,7 +352,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       ALLOCATE( dydzrho(dfftp%nnr) )
 
       auxr(:) = CMPLX(a( : ),0.D0,kind=dp) 
-      CALL fwfft ('Dense', auxr, dfftp)
+      CALL fwfft ('Rho', auxr, dfftp)
       CALL fftx_threed2oned( dfftp, auxr, auxg )
       ! from G-space A compute R-space grad(A) 
       CALL gradrho(1,auxg,grada,d2rho,dxdyrho,dxdzrho,dydzrho)
@@ -401,7 +401,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
       ALLOCATE( dydzrho(dfftp%nnr) )
 
       auxr(:) = CMPLX(a( : ),0.D0,kind=dp) 
-      CALL fwfft ('Dense', auxr, dfftp)
+      CALL fwfft ('Rho', auxr, dfftp)
       CALL fftx_threed2oned( dfftp, auxr, auxg )
       !
       ! from G-space A compute R-space grad(A) and second derivatives

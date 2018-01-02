@@ -154,7 +154,7 @@ subroutine atomic_rho (rhoa, nspina)
      psic(:) = (0.d0,0.d0)
      psic (dfftp%nl (:) ) = rhocg (:, is)
      if (gamma_only) psic ( dfftp%nlm(:) ) = CONJG( rhocg (:, is) )
-     CALL invfft ('Dense', psic, dfftp)
+     CALL invfft ('Rho', psic, dfftp)
      !
      ! we check that everything is correct
      !

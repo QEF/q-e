@@ -74,7 +74,7 @@ subroutine compute_dvloc (mode, dvlocin)
   ! Now we compute dV_loc/dtau in real space
   !
 
-  CALL invfft ('Smooth', dvlocin, dffts)
+  CALL invfft ('Rho', dvlocin, dffts)
 
   call stop_clock ('com_dvloc')
   return

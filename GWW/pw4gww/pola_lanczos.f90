@@ -123,7 +123,7 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
             psic(dfftp%nl(ig))=tmp_g(ig)
             psic(dfftp%nlm(ig))=CONJG(tmp_g(ig))
          enddo
-         CALL invfft ('Dense', psic, dfftp)
+         CALL invfft ('Rho', psic, dfftp)
          tmp_r(:)=dble(psic(:))
          call davcio(tmp_r,dfftp%nnr,iunrprod,iw,1)
       enddo
@@ -1545,7 +1545,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
               psic(dfftp%nl(ig))=tmp_g(ig)
               psic(dfftp%nlm(ig))=CONJG(tmp_g(ig))
            enddo
-           CALL invfft ('Dense', psic, dfftp)
+           CALL invfft ('Rho', psic, dfftp)
            tmp_r(:)=dble(psic(:))
 !!form products with w_v and trasfrom in G space
            psic(:)=cmplx(tmp_r(:)*wv_real(:),0.d0)

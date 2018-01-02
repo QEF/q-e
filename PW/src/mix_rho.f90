@@ -457,7 +457,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   IF ( gamma_only ) psic(dffts%nlm(:ngm0)) = CONJG( psic(dffts%nl(:ngm0)) )
   !
-  CALL invfft ('Smooth', psic, dffts)
+  CALL invfft ('Rho', psic, dffts)
   !
   alpha(:) = REAL( psic(1:dffts%nnr) )
   !
@@ -492,11 +492,11 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   IF ( gamma_only ) psic(dffts%nlm(:ngm0)) = CONJG( psic(dffts%nl(:ngm0)) )
   !
-  CALL invfft ('Smooth', psic, dffts)
+  CALL invfft ('Rho', psic, dffts)
   !
   psic(:dffts%nnr) = psic(:dffts%nnr) * alpha(:)
   !
-  CALL fwfft ('Smooth', psic, dffts)
+  CALL fwfft ('Rho', psic, dffts)
   !
   dv(:) = psic(dffts%nl(:ngm0)) * gg(:ngm0) * tpiba2
   v(:,1)= psic(dffts%nl(:ngm0)) * gg(:ngm0) / ( gg(:ngm0) + agg0 )
@@ -517,11 +517,11 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      IF ( gamma_only ) psic(dffts%nlm(:ngm0)) = CONJG( psic(dffts%nl(:ngm0)) )
      !
-     CALL invfft ('Smooth', psic, dffts)
+     CALL invfft ('Rho', psic, dffts)
      !
      psic(:dffts%nnr) = psic(:dffts%nnr) * alpha(:)
      !
-     CALL fwfft ('Smooth', psic, dffts)
+     CALL fwfft ('Rho', psic, dffts)
      !
      w(:,m) = w(:,m) + gg(:ngm0) * tpiba2 * psic(dffts%nl(:ngm0))
      !

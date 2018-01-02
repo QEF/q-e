@@ -52,7 +52,7 @@ CONTAINS
              psi(ir)=CMPLX(rhor(ir,iss),0.0_dp,kind=dp)
           END DO
        END IF
-       CALL fwfft('Dense', psi, dfftp )
+       CALL fwfft('Rho', psi, dfftp )
        CALL fftx_threed2oned( dfftp, psi, rhog(:,iss) )
     ELSE
        isup=1
@@ -66,7 +66,7 @@ CONTAINS
              psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
           END DO
        END IF
-       CALL fwfft('Dense', psi, dfftp )
+       CALL fwfft('Rho', psi, dfftp )
        CALL fftx_threed2oned( dfftp, psi, rhog(:,isup), rhog(:,isdw) )
     ENDIF
     
@@ -101,7 +101,7 @@ CONTAINS
              psi(ir)=CMPLX(rhor(ir,iss),0.0_dp,kind=dp)
           END DO
        END IF
-       CALL fwfft('Smooth', psi, dffts )
+       CALL fwfft('Rho', psi, dffts )
        CALL fftx_threed2oned( dffts, psi, rhog(:,iss) )
     ELSE
        isup=1
@@ -115,7 +115,7 @@ CONTAINS
              psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
           END DO
        END IF
-       CALL fwfft('Smooth', psi, dffts )
+       CALL fwfft('Rho', psi, dffts )
        CALL fftx_threed2oned( dffts, psi, rhog(:,isup), rhog(:,isdw) )
     ENDIF
     
@@ -142,7 +142,7 @@ CONTAINS
        IF( nspin == 1 ) THEN
           iss=1
           CALL fftx_oned2threed( dfftp, psi, rhog(:,iss) )
-          CALL invfft('Dense',psi, dfftp )
+          CALL invfft('Rho',psi, dfftp )
 !$omp parallel do
           DO ir=1,dfftp%nnr
              rhor(ir,iss)=DBLE(psi(ir))
@@ -152,7 +152,7 @@ CONTAINS
           isup=1
           isdw=2
           CALL fftx_oned2threed( dfftp, psi, rhog(:,isup), rhog(:,isdw) )
-          CALL invfft('Dense',psi, dfftp )
+          CALL invfft('Rho',psi, dfftp )
 !$omp parallel do
           DO ir=1,dfftp%nnr
              rhor(ir,isup)= DBLE(psi(ir))
@@ -165,7 +165,7 @@ CONTAINS
        !
        DO iss=1, nspin
           CALL fftx_oned2threed( dfftp, psi, rhog(:,iss) )
-          CALL invfft('Dense',psi, dfftp )
+          CALL invfft('Rho',psi, dfftp )
 !$omp parallel do
           DO ir=1,dfftp%nnr
              rhor(ir,iss)=DBLE(psi(ir))
@@ -197,7 +197,7 @@ CONTAINS
        IF( nspin == 1 ) THEN
           iss=1
           CALL fftx_oned2threed( dfftp, psi, rhog(:,iss) )
-          CALL invfft('Dense',psi, dfftp )
+          CALL invfft('Rho',psi, dfftp )
 !$omp parallel do
           DO ir=1,dfftp%nnr
              rhor(ir)=DBLE(psi(ir))
@@ -207,7 +207,7 @@ CONTAINS
           isup=1
           isdw=2
           CALL fftx_oned2threed( dfftp, psi, rhog(:,isup), rhog(:,isdw) )
-          CALL invfft('Dense',psi, dfftp )
+          CALL invfft('Rho',psi, dfftp )
 !$omp parallel do
           DO ir=1,dfftp%nnr
              rhor(ir)= DBLE(psi(ir))+AIMAG(psi(ir))
@@ -219,7 +219,7 @@ CONTAINS
        !
        DO iss=1, nspin
           CALL fftx_oned2threed( dfftp, psi, rhog(:,iss) )
-          CALL invfft('Dense',psi, dfftp )
+          CALL invfft('Rho',psi, dfftp )
           IF( iss == 1 ) THEN
 !$omp parallel do
              DO ir=1,dfftp%nnr
@@ -259,7 +259,7 @@ CONTAINS
        IF( nspin == 1 ) THEN
           iss=1
           CALL fftx_oned2threed( dffts, psi, rhog(:,iss) )
-          CALL invfft('Smooth',psi, dffts )
+          CALL invfft('Rho',psi, dffts )
 !$omp parallel do
           DO ir=1,dffts%nnr
              rhor(ir,iss)=DBLE(psi(ir))
@@ -269,7 +269,7 @@ CONTAINS
           isup=1
           isdw=2
           CALL fftx_oned2threed( dffts, psi, rhog(:,isup), rhog(:,isdw) )
-          CALL invfft('Smooth',psi, dffts )
+          CALL invfft('Rho',psi, dffts )
 !$omp parallel do
           DO ir=1,dffts%nnr
              rhor(ir,isup)= DBLE(psi(ir))
@@ -282,7 +282,7 @@ CONTAINS
        !
        DO iss=1, nspin
           CALL fftx_oned2threed( dffts, psi, rhog(:,iss) )
-          CALL invfft('Smooth',psi, dffts )
+          CALL invfft('Rho',psi, dffts )
 !$omp parallel do
           DO ir=1,dffts%nnr
              rhor(ir,iss)=DBLE(psi(ir))

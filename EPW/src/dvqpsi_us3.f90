@@ -144,7 +144,7 @@
             ENDIF
          ENDIF
       ENDDO
-      CALL invfft ('Dense', aux, dfftp)
+      CALL invfft ('Rho', aux, dfftp)
       IF (.not.lsda) THEN
          DO ir=1,dfftp%nnr
             aux(ir) = aux(ir) * dmuxc(ir,1,1)
@@ -158,7 +158,7 @@
                  (dmuxc(ir,is,1)+dmuxc(ir,is,2))
          ENDDO
       ENDIF
-      CALL fwfft ('Dense', aux, dfftp)
+      CALL fwfft ('Rho', aux, dfftp)
       IF (doublegrid) THEN
          auxs(:) = (0.d0, 0.d0)
          DO ig=1,ngms
@@ -170,7 +170,7 @@
   !
   ! Now we compute dV_loc/dtau in real space
   !
-  CALL invfft ('Smooth', aux1, dffts)
+  CALL invfft ('Rho', aux1, dffts)
   DO ibnd = lower_band, upper_band
      DO ip = 1, npol
         aux2(:) = (0.d0, 0.d0)

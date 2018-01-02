@@ -114,8 +114,8 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
               psic_nc (dffts%nl (igk_k(ig,ik)), 1 ) = evc (ig, ibnd)
               psic_nc (dffts%nl (igk_k(ig,ik)), 2 ) = evc (ig+npwx, ibnd)
            enddo
-           CALL invfft ('Smooth', psic_nc(:,1), dffts)
-           CALL invfft ('Smooth', psic_nc(:,2), dffts)
+           CALL invfft ('Rho', psic_nc(:,1), dffts)
+           CALL invfft ('Rho', psic_nc(:,2), dffts)
            do j = 1, dffts%nnr
               ldoss (j, 1) = ldoss (j, 1) + &
                     w1 * ( DBLE(psic_nc(j,1))**2+AIMAG(psic_nc(j,1))**2 + &
@@ -143,7 +143,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
            do ig = 1, npw
               psic (dffts%nl (igk_k(ig,ik) ) ) = evc (ig, ibnd)
            enddo
-           CALL invfft ('Smooth', psic, dffts)
+           CALL invfft ('Rho', psic, dffts)
            do j = 1, dffts%nnr
               ldoss (j, current_spin) = ldoss (j, current_spin) + &
                     w1 * ( DBLE ( psic (j) ) **2 + AIMAG (psic (j) ) **2)
@@ -243,9 +243,9 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   !check
   !      check =0.d0
   !      do is=1,nspin_mag
-  !         call fwfft('Dense',ldos(:,is),dfftp)
+  !         call fwfft('Rho',ldos(:,is),dfftp)
   !         check = check + omega* DBLE(ldos(nl(1),is))
-  !         call invfft('Dense',ldos(:,is),dfftp)
+  !         call invfft('Rho',ldos(:,is),dfftp)
   !      end do
   !      WRITE( stdout,*) ' check ', check, dos_ef
   !check

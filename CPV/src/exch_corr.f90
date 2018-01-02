@@ -304,7 +304,7 @@
          do ir=1,dfftp%nnr
             v(ir)=CMPLX(gradr(ir,1,iss),0.d0,kind=DP)
          end do
-         call fwfft('Dense',v, dfftp )
+         call fwfft('Rho',v, dfftp )
          CALL fftx_threed2oned( dfftp, v, vp )
          do ig=1,ngm
             x(ig)=ci*tpiba*g(1,ig)*vp(ig)
@@ -326,7 +326,7 @@
          do ir=1,dfftp%nnr
             v(ir)=CMPLX(gradr(ir,2,iss),gradr(ir,3,iss),kind=DP)
          end do
-         call fwfft('Dense',v, dfftp )
+         call fwfft('Rho',v, dfftp )
          CALL fftx_threed2oned( dfftp, v, vp, vm )
 !
          do ig=1,ngm
@@ -350,7 +350,7 @@
 !     second part xc-potential: 1 inverse fft
 !
          CALL fftx_oned2threed( dfftp, v, x )
-         call invfft('Dense',v, dfftp )
+         call invfft('Rho',v, dfftp )
          do ir=1,dfftp%nnr
             rhor(ir,iss)=rhor(ir,iss)-DBLE(v(ir))
          end do

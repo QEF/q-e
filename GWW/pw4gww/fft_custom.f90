@@ -219,6 +219,8 @@ CONTAINS
   CALL calculate_gkcut()
   CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .true., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt,fc%dual_t, &
                       nyfft=nyfft)
+  ! define the clock labels ( this enables the corresponding fft too ! )
+  fc%dfftt%rho_clock_label = 'fftc' ; fc%dfftt%wave_clock_label = 'fftcw'
   !CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .true., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt/gkcut )
   !
   ! set the values of fft arrays
@@ -276,6 +278,7 @@ CONTAINS
 
   CALL fft_type_init( fc%dfftt, fc%smapt, "rho", .not. tk, .false., intra_pool_comm, fc%at_t, fc%bg_t, fc%gcutmt/gkcut, &
                       nyfft=nyfft )
+  fc%dfftt%rho_clock_label = 'fftc' ; fc%dfftt%wave_clock_label = 'fftcw'
 
   fc%nrx1t  = fc%dfftt%nr1x
   fc%nrx2t  = fc%dfftt%nr2x

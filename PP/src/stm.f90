@@ -184,7 +184,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
               ENDDO
            ENDIF
 
-           CALL invfft ('Dense', psic, dfftp)
+           CALL invfft ('Rho', psic, dfftp)
            DO ir = 1, dfftp%nnr
               rho%of_r (ir, 1) = rho%of_r (ir, 1) + w1* dble( psic(ir) )**2 + &
                                                     w2*aimag( psic(ir) )**2
@@ -206,7 +206,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
               psic(dfftp%nl(igk_k(ig,ik)))  = evc(ig,ibnd)
            ENDDO
 
-           CALL invfft ('Dense', psic, dfftp)
+           CALL invfft ('Rho', psic, dfftp)
            DO ir = 1, dfftp%nnr
               rho%of_r (ir, 1) = rho%of_r (ir, 1) + w1 * &
                                 ( dble(psic (ir) ) **2 + aimag(psic (ir) ) **2)
@@ -225,12 +225,12 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
      CALL sym_rho_init (gamma_only)
      !
      psic(:) = cmplx ( rho%of_r(:,1), 0.0_dp, kind=dp)
-     CALL fwfft ('Dense', psic, dfftp)
+     CALL fwfft ('Rho', psic, dfftp)
      rho%of_g(:,1) = psic(dfftp%nl(:))
      CALL sym_rho (1, rho%of_g)
      psic(:) = (0.0_dp, 0.0_dp)
      psic(dfftp%nl(:)) = rho%of_g(:,1)
-     CALL invfft ('Dense', psic, dfftp)
+     CALL invfft ('Rho', psic, dfftp)
      rho%of_r(:,1) = dble(psic(:))
   ENDIF
 #if defined(__MPI)

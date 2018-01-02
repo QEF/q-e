@@ -569,7 +569,7 @@
 !$omp end parallel
          CALL fftx_oned2threed( dfftp, v, drho(:,1) )
          !
-         call invfft( 'Dense', v, dfftp )
+         call invfft( 'Rho', v, dfftp )
          !
 !$omp parallel default(shared), private(ig,ir)
 !$omp do
@@ -580,7 +580,7 @@
 
          CALL fftx_oned2threed( dfftp, v, drho(:,2), drho(:,3) )
          !
-         call invfft( 'Dense', v, dfftp )
+         call invfft( 'Rho', v, dfftp )
          !
 !$omp parallel do default(shared)
          do ir=1,dfftp%nnr
@@ -840,7 +840,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                   drhor(ir,iss,i,j) = drhor(ir,iss,i,j) + DBLE(v(ir))
                END DO
 !
-               CALL fwfft( 'Dense', v, dfftp )
+               CALL fwfft( 'Rho', v, dfftp )
                CALL fftx_add_threed2oned_gamma( dfftp, v, drhog(:,iss,i,j) )
 !
             ENDDO
@@ -915,7 +915,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                   drhor(ir,isdw,i,j) = drhor(ir,isdw,i,j) +AIMAG(v(ir))
                ENDDO
 !
-               CALL fwfft('Dense', v, dfftp )
+               CALL fwfft('Rho', v, dfftp )
                CALL fftx_add_threed2oned_gamma( dfftp, v, drhog(:,isup,i,j), drhog(:,isdw,i,j) )
 
             END DO
@@ -1140,7 +1140,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
      &           ' rhov: int  n_v(r)  dr = ',omega*ca/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
          ENDIF
 !
-         CALL fwfft('Dense',v, dfftp )
+         CALL fwfft('Rho',v, dfftp )
 !
          IF( iverbosity > 1 ) THEN
             WRITE( stdout,*) ' rhov: smooth ',omega*rhog(1,iss)
@@ -1233,7 +1233,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
             WRITE( stdout,'(a,2f12.8)') 'rhov:in n_v  ',omega*ca/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
          ENDIF
 !
-         CALL fwfft('Dense',v, dfftp )
+         CALL fwfft('Rho',v, dfftp )
 !
          IF( iverbosity > 1 ) THEN
             WRITE( stdout,*) 'rhov: smooth up',omega*rhog(1,isup)

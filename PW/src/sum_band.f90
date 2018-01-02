@@ -181,7 +181,7 @@ SUBROUTINE sum_band()
   !
   DO is = 1, nspin
      psic(:) = rho%of_r(:,is)
-     CALL fwfft ('Dense', psic, dfftp)
+     CALL fwfft ('Rho', psic, dfftp)
      rho%of_g(:,is) = psic(dfftp%nl(:))
   END DO
   !
@@ -195,7 +195,7 @@ SUBROUTINE sum_band()
      psic(:) = ( 0.D0, 0.D0 )
      psic(dfftp%nl(:)) = rho%of_g(:,is)
      IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rho%of_g(:,is) )
-     CALL invfft ('Dense', psic, dfftp)
+     CALL invfft ('Rho', psic, dfftp)
      rho%of_r(:,is) = psic(:)
   END DO
   !
@@ -208,7 +208,7 @@ SUBROUTINE sum_band()
      CALL mp_sum( rho%kin_r, inter_bgrp_comm )
      DO is = 1, nspin
         psic(:) = rho%kin_r(:,is)
-        CALL fwfft ('Dense', psic, dfftp)
+        CALL fwfft ('Rho', psic, dfftp)
         rho%kin_g(:,is) = psic(dfftp%nl(:))
      END DO
      !
@@ -218,7 +218,7 @@ SUBROUTINE sum_band()
         psic(:) = ( 0.D0, 0.D0 )
         psic(dfftp%nl(:)) = rho%kin_g(:,is)
         IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rho%kin_g(:,is) )
-        CALL invfft ('Dense', psic, dfftp)
+        CALL invfft ('Rho', psic, dfftp)
         rho%kin_r(:,is) = psic(:)
      END DO
      !

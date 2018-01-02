@@ -112,6 +112,9 @@
         CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, at, bg,  gcutm, nyfft=nyfft_ )
         !
       END IF
+      ! define the clock labels ( this enables the corresponding fft too ! )
+      dffts%rho_clock_label = 'ffts' ; dffts%wave_clock_label = 'fftw'
+      dfftp%rho_clock_label = 'fft' 
       !
       !
       CALL smallbox_grid_init( dfftp, dfftb )

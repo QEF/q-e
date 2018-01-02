@@ -51,7 +51,7 @@ SUBROUTINE dynmatcc(dyncc)
   !
   CALL v_xc  (rho, rho_core, rhog_core, etxc, vtxc, vxc)
   !
-  CALL fwfft ( 'Dense', vxc, dfftp )
+  CALL fwfft ( 'Rho', vxc, dfftp )
   !
   dyncc1(:,:,:,:) = 0.d0
   ! temporary

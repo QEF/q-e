@@ -800,7 +800,7 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
               psic(dfftp%nl(igk_k(ig,ik)))  = evc(ig,iband1)
            ENDDO
 
-           CALL invfft ('Dense', psic, dfftp)
+           CALL invfft ('Rho', psic, dfftp)
            vxcdiag = 0.0d0
            !norma = 0.0d0
            DO ir = 1, dfftp%nnr

@@ -485,7 +485,7 @@ SUBROUTINE chdens (plot_files,plot_num)
 #else
        psic(:) = cmplx(rhor(:), 0.d0,kind=DP)
 #endif
-       CALL fwfft ('Dense', psic, dfftp)
+       CALL fwfft ('Rho', psic, dfftp)
        !
        !    we store the fourier components in the array rhog
        !

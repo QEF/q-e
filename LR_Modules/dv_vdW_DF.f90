@@ -299,14 +299,14 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     do icar = 1,3
        delta_h(:) = (h1t(:) * gradient_rho(:,icar)+ h2t(:) * gradient_drho(:,icar))
 
-       CALL fwfft ('Dense', delta_h, dfftp) 
+       CALL fwfft ('Rho', delta_h, dfftp) 
 
        delta_h_aux(:) = (0.0_DP, 0.0_DP)
        delta_h_aux(dfftp%nl(:)) = CMPLX(0.0_DP,(g(icar,:)+q_point(icar)),kind=DP ) * delta_h(dfftp%nl(:))
        
        if (gamma_only) delta_h_aux(dfftp%nlm(:)) = CONJG(delta_h_aux(dfftp%nl(:)))
 
-       CALL invfft ('Dense', delta_h_aux, dfftp) 
+       CALL invfft ('Rho', delta_h_aux, dfftp) 
 
        delta_h_aux(:) = delta_h_aux(:)*tpiba
 
@@ -611,8 +611,8 @@ subroutine get_u_delta_u(u, delta_u, q_point)
   !!
   call start_clock( 'vdW_ffts')
   do q1_i = 1, Nqs
-     CALL fwfft ('Dense', u(:,q1_i), dfftp)
-     CALL fwfft ('Dense', delta_u(:,q1_i), dfftp)
+     CALL fwfft ('Rho', u(:,q1_i), dfftp)
+     CALL fwfft ('Rho', delta_u(:,q1_i), dfftp)
   end do
   call stop_clock( 'vdW_ffts')
   
@@ -658,8 +658,8 @@ subroutine get_u_delta_u(u, delta_u, q_point)
   !!
   call start_clock( 'vdW_ffts')
   do q1_i = 1, Nqs
-     CALL invfft ('Dense', temp_u(:,q1_i), dfftp)
-     CALL invfft ('Dense', temp_delta_u(:,q1_i), dfftp)
+     CALL invfft ('Rho', temp_u(:,q1_i), dfftp)
+     CALL invfft ('Rho', temp_delta_u(:,q1_i), dfftp)
   end do
   call stop_clock( 'vdW_ffts')
 
@@ -703,7 +703,7 @@ subroutine qgradient (xq, nrxx, a, ngm, g, nl, alat, ga)
   ! bring a(r) to G-space, a(G) ...
   aux (:) = a(:)
 
-  CALL fwfft ('Dense', aux, dfftp)
+  CALL fwfft ('Rho', aux, dfftp)
   ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
   do ipol = 1, 3
      gaux (:) = (0.d0, 0.d0)
@@ -713,7 +713,7 @@ subroutine qgradient (xq, nrxx, a, ngm, g, nl, alat, ga)
      enddo
      ! bring back to R-space, (\grad_ipol a)(r) ...
 
-     CALL invfft ('Dense', gaux, dfftp)
+     CALL invfft ('Rho', gaux, dfftp)
      ! ...and add the factor 2\pi/a  missing in the definition of q+G
      do n = 1, nrxx
         ga (n, ipol) = gaux (n) * tpiba

@@ -407,14 +407,14 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   CALL sym_rho_init (gamma_only )
   !
   psic(:) = cmplx ( dos(:), 0.0_dp, kind=dp)
-  CALL fwfft ('Dense', psic, dfftp)
+  CALL fwfft ('Rho', psic, dfftp)
   rho%of_g(:,1) = psic(dfftp%nl(:))
   !
   CALL sym_rho (1, rho%of_g)
   !
   psic(:) = (0.0_dp, 0.0_dp)
   psic(dfftp%nl(:)) = rho%of_g(:,1)
-  CALL invfft ('Dense', psic, dfftp)
+  CALL invfft ('Rho', psic, dfftp)
   dos(:) = dble(psic(:))
   !
   CALL sym_rho_deallocate()

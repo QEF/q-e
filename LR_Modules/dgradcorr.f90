@@ -265,7 +265,7 @@ subroutine qgradient (xq, nrxx, a, ngm, g, nl, alat, ga)
   ! bring a(r) to G-space, a(G) ...
   aux (:) = a(:)
 
-  CALL fwfft ('Dense', aux, dfftp)
+  CALL fwfft ('Rho', aux, dfftp)
   ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
   do ipol = 1, 3
      gaux (:) = (0.d0, 0.d0)
@@ -275,7 +275,7 @@ subroutine qgradient (xq, nrxx, a, ngm, g, nl, alat, ga)
      enddo
      ! bring back to R-space, (\grad_ipol a)(r) ...
 
-     CALL invfft ('Dense', gaux, dfftp)
+     CALL invfft ('Rho', gaux, dfftp)
      ! ...and add the factor 2\pi/a  missing in the definition of q+G
      do n = 1, nrxx
         ga (ipol, n) = gaux (n) * tpiba
@@ -318,7 +318,7 @@ subroutine qgrad_dot (xq, nrxx, a, ngm, g, nl, alat, da)
         aux (n) = a (ipol, n)
      enddo
      ! bring a(ipol,r) to G-space, a(G) ...
-     CALL fwfft ('Dense', aux, dfftp)
+     CALL fwfft ('Rho', aux, dfftp)
      ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
      do n = 1, ngm
         da (nl(n)) = da (nl(n)) + &
@@ -336,7 +336,7 @@ subroutine qgrad_dot (xq, nrxx, a, ngm, g, nl, alat, da)
   end if
 
   !  bring back to R-space, (\grad_ipol a)(r) ...
-  CALL invfft ('Dense', da, dfftp)
+  CALL invfft ('Rho', da, dfftp)
   ! ...add the factor 2\pi/a  missing in the definition of q+G and sum
   da (:) = da (:) * tpiba
   deallocate (aux)

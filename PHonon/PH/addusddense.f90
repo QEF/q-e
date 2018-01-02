@@ -115,7 +115,7 @@ subroutine addusddense (drhoscf, dbecsum)
      do ipert = 1, 3
         qg (:) = (0.d0, 0.d0)
         qg (dfftp%nl (:) ) = aux (:, is, ipert)
-        CALL invfft ('Dense', qg, dfftp)
+        CALL invfft ('Rho', qg, dfftp)
         drhoscf(:,is,ipert) = drhoscf(:,is,ipert) + 2.d0*qg(:)
      enddo
   enddo

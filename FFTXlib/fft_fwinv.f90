@@ -6,6 +6,174 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#define NEW_FFT_INTERFACE
+#if defined( NEW_FFT_INTERFACE )
+!=---------------------------------------------------------------------------=!
+SUBROUTINE invfft_y( grid_type, f, dfft, howmany )
+  !! Compute G-space to R-space for a specific grid type
+  !! 
+  !! **grid_type = 'Rho'** : 
+  !!   inverse fourier transform of potentials and charge density f
+  !!   On output, f is overwritten
+  !! 
+  !! **grid_type = 'Wave'** :
+  !!   inverse fourier transform of  wave functions f
+  !!   On output, f is overwritten
+  !!
+  !! **grid_type = 'tgWave'** :
+  !!   inverse fourier transform of  wave functions f with task group
+  !!   On output, f is overwritten
+  !!
+  !! **dfft = FFT descriptor**, IMPORTANT NOTICE: grid is specified only by dfft.
+  !!   No check is performed on the correspondence between dfft and grid_type.
+  !!   from all other cases
+  
+  USE fft_scalar,    ONLY: cfft3d, cfft3ds
+  USE fft_smallbox,  ONLY: cft_b, cft_b_omp
+  USE fft_parallel,  ONLY: tg_cft3s
+  USE fft_types,     ONLY: fft_type_descriptor
+  USE fft_param,     ONLY: DP
+
+  IMPLICIT NONE
+
+  TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+  CHARACTER(LEN=*), INTENT(IN) :: grid_type
+  COMPLEX(DP) :: f(:)
+  INTEGER, OPTIONAL, INTENT(IN) :: howmany
+  INTEGER :: howmany_ = 1
+  CHARACTER(LEN=12) :: clock_label
+
+  IF(PRESENT(howmany) ) THEN
+     howmany_ = howmany
+  END IF
+  !
+  IF( grid_type == 'Rho' ) THEN
+     clock_label = dfft%rho_clock_label
+  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'tgWave' ) THEN
+     clock_label = dfft%wave_clock_label
+  ELSE
+     CALL fftx_error__( ' invfft ', ' unknown grid: '//grid_type , 1 )
+  END IF
+  IF (clock_label == ' ') CALL fftx_error__( ' invfft ', ' uninitialized fft type : '//grid_type , 1 )
+
+  CALL start_clock(clock_label)
+
+  IF( dfft%lpara ) THEN
+
+     IF( howmany_ /= 1 ) THEN
+        CALL fftx_error__( ' invfft ', ' howmany not yet implemented for parallel driver ', 1 )
+     END IF
+     
+     IF( grid_type == 'Rho' ) THEN
+        CALL tg_cft3s( f, dfft, 1 )
+     ELSE IF( grid_type == 'Wave' ) THEN
+        CALL tg_cft3s( f, dfft, 2 )
+     ELSE IF( grid_type == 'tgWave' ) THEN
+        CALL tg_cft3s( f, dfft, 3 )
+     END IF
+
+  ELSE
+
+     IF( grid_type == 'Rho' ) THEN
+        CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+                        dfft%nr1x, dfft%nr2x, dfft%nr3x, howmany_ , 1)
+     ELSE 
+        CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+                        dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1, &
+                        dfft%isind, dfft%iplw )
+     END IF
+
+  END IF
+
+  CALL stop_clock( clock_label )
+
+  RETURN
+
+END SUBROUTINE invfft_y
+!
+!=---------------------------------------------------------------------------=!
+!
+SUBROUTINE fwfft_y( grid_type, f, dfft, howmany )
+  !! Compute R-space to G-space for a specific grid type
+  !! 
+  !! **grid_type = 'Rho'**
+  !!   forward fourier transform of potentials and charge density f
+  !!   On output, f is overwritten
+  !! 
+  !! **grid_type = 'Wave'**
+  !!   forward fourier transform of  wave functions f
+  !!   On output, f is overwritten
+  !!
+  !! **grid_type = 'tgWave'**
+  !!   forward fourier transform of wave functions f with task group
+  !!   On output, f is overwritten
+  !! 
+  
+  USE fft_scalar,    ONLY: cfft3d, cfft3ds
+  USE fft_parallel,  ONLY: tg_cft3s
+  USE fft_types,     ONLY: fft_type_descriptor
+  USE fft_param,     ONLY: DP
+
+  IMPLICIT NONE
+
+  TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+  CHARACTER(LEN=*), INTENT(IN) :: grid_type
+  COMPLEX(DP) :: f(:)
+  INTEGER, OPTIONAL, INTENT(IN) :: howmany
+  INTEGER :: howmany_ = 1
+  CHARACTER(LEN=12) :: clock_label
+
+  IF(PRESENT(howmany) ) THEN
+     howmany_ = howmany
+  END IF
+
+  IF( grid_type == 'Rho' ) THEN
+     clock_label = dfft%rho_clock_label
+  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'tgWave' ) THEN
+     clock_label = dfft%wave_clock_label
+  ELSE
+     CALL fftx_error__( ' fwfft ', ' unknown grid: '//grid_type , 1 )
+  END IF
+  IF (clock_label == ' ') CALL fftx_error__( ' fwfft ', ' uninitialized fft type : '//grid_type , 1 )
+
+  CALL start_clock(clock_label)
+
+  IF( dfft%lpara ) THEN
+
+     IF( howmany_ /= 1 ) THEN
+        CALL fftx_error__( ' fwfft ', ' howmany not yet implemented for parallel driver ', 1 )
+     END IF
+     
+     IF( grid_type == 'Rho' ) THEN
+        CALL tg_cft3s(f,dfft,-1)
+     ELSE IF( grid_type == 'Wave' ) THEN
+        CALL tg_cft3s(f,dfft,-2 )
+     ELSE IF( grid_type == 'tgWave' ) THEN
+        CALL tg_cft3s(f,dfft,-3 )
+     END IF
+
+  ELSE
+
+     IF( grid_type == 'Rho' ) THEN
+        CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+                        dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1)
+     ELSE 
+        CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
+                         dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1, &
+                         dfft%isind, dfft%iplw )
+     END IF
+
+  END IF
+
+  CALL stop_clock( clock_label )
+  
+  RETURN
+  !
+END SUBROUTINE fwfft_y
+!=---------------------------------------------------------------------------=!
+
+#else
+
 !=---------------------------------------------------------------------------=!
 SUBROUTINE invfft_x( grid_type, f, dfft, howmany )
   !! Compute G-space to R-space for a specific grid type
@@ -115,7 +283,6 @@ SUBROUTINE invfft_x( grid_type, f, dfft, howmany )
   RETURN
 
 END SUBROUTINE invfft_x
-!=---------------------------------------------------------------------------=!
 !
 !=---------------------------------------------------------------------------=!
 SUBROUTINE fwfft_x( grid_type, f, dfft, howmany )
@@ -225,7 +392,9 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, howmany )
   RETURN
   !
 END SUBROUTINE fwfft_x
-!=---------------------------------------------------------------------------=!
+
+#endif
+
 !
 !=---------------------------------------------------------------------------=!
 SUBROUTINE invfft_b( f, dfft, ia )

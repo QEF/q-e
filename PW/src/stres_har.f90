@@ -39,7 +39,7 @@ subroutine stres_har (sigmahar)
      call daxpy (dfftp%nnr, 1.d0, rho%of_r (1, is), 1, psic, 2)
   enddo
 
-  CALL fwfft ('Dense', psic, dfftp)
+  CALL fwfft ('Rho', psic, dfftp)
   ! psic contains now the charge density in G space
   ! the  G=0 component is not computed
   IF (do_cutoff_2D) THEN  

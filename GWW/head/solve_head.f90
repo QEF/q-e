@@ -474,7 +474,7 @@ subroutine solve_head
 #endif
      
         do ipol=1,3
-           CALL fwfft ('Dense',  pola_charge(1:dfftp%nnr,1,ipol,i), dfftp)
+           CALL fwfft ('Rho',  pola_charge(1:dfftp%nnr,1,ipol,i), dfftp)
            tmp_g(:)=(0.d0,0.d0)
            tmp_g(gstart:ngm)=pola_charge(dfftp%nl(gstart:ngm),1,ipol,i) 
           

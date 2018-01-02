@@ -588,7 +588,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      !
      psic(:) = rho%of_r(:,is)
      !
-     CALL fwfft ('Dense', psic, dfftp)
+     CALL fwfft ('Rho', psic, dfftp)
      !
      rho%of_g(:,is) = psic(dfftp%nl(:))
      !

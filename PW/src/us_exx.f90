@@ -1035,7 +1035,7 @@ MODULE us_exx
          DO ibnd = ibnd_loop_start,ibnd_end,2
             h_ibnd = h_ibnd + 1
             phi(:) = exxbuff(:,h_ibnd,ikq)
-            CALL fwfft ('CustomWave', phi, dfftt)
+            CALL fwfft ('Wave', phi, dfftt)
             IF (ibnd < ibnd_end) THEN
                ! two ffts at the same time
                DO j = 1, ngkq(ikq)
@@ -1053,7 +1053,7 @@ MODULE us_exx
       ELSE
          DO ibnd = ibnd_start,ibnd_end
             phi(:) = exxbuff(:,ibnd,ikq)
-            CALL fwfft ('CustomWave', phi, dfftt)
+            CALL fwfft ('Wave', phi, dfftt)
             DO j = 1, ngkq(ikq)
                evcq(j, ibnd)   =  phi(dfftt%nl(igkq(j)))
             ENDDO

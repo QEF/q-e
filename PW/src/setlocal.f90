@@ -88,7 +88,7 @@ SUBROUTINE setlocal
   !
   ! ... aux = potential in G-space . FFT to real space
   !
-  CALL invfft ('Dense', aux, dfftp)
+  CALL invfft ('Rho', aux, dfftp)
   !
   vltot (:) =  DBLE (aux (:) )
   !

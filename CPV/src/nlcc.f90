@@ -144,7 +144,7 @@
 
       wrk1(:) = rhoc(:)
 
-      call fwfft('Dense',wrk1, dfftp )
+      call fwfft('Rho',wrk1, dfftp )
       !
       ! In g-space:
       !

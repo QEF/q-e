@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 subroutine interpolate (v, vs, iflag)
   !
   !     This subroutine interpolates :
@@ -44,7 +43,7 @@ subroutine interpolate (v, vs, iflag)
         allocate (aux( dfftp%nnr))    
         allocate (auxs(dffts%nnr))    
         aux (:) = v (:)
-        CALL fwfft ('Dense', aux, dfftp)
+        CALL fwfft ('Rho', aux, dfftp)
         auxs (:) = (0.d0, 0.d0)
         do ig = 1, ngms
            auxs (dffts%nl (ig) ) = aux (dfftp%nl (ig) )
@@ -54,7 +53,7 @@ subroutine interpolate (v, vs, iflag)
               auxs (dffts%nlm(ig) ) = aux (dfftp%nlm(ig) )
            enddo
         end if
-        CALL invfft ('Smooth', auxs, dffts)
+        CALL invfft ('Rho', auxs, dffts)
         vs (:) = auxs (:)
         deallocate (auxs)
         deallocate (aux)
@@ -71,7 +70,7 @@ subroutine interpolate (v, vs, iflag)
         allocate (aux( dfftp%nnr))    
         allocate (auxs(dffts%nnr))    
         auxs (:) = vs (:)
-        CALL fwfft ('Smooth', auxs, dffts)
+        CALL fwfft ('Rho', auxs, dffts)
         aux (:) = (0.d0, 0.d0)
         do ig = 1, ngms
            aux (dfftp%nl (ig) ) = auxs (dffts%nl (ig) )
@@ -81,7 +80,7 @@ subroutine interpolate (v, vs, iflag)
               aux (dfftp%nlm(ig) ) = auxs (dffts%nlm(ig) )
            enddo
         end if
-        CALL invfft ('Dense', aux, dfftp)
+        CALL invfft ('Rho', aux, dfftp)
         v (:) = aux (:)
         deallocate (auxs)
         deallocate (aux)
@@ -133,12 +132,12 @@ subroutine cinterpolate (v, vs, iflag)
      if (doublegrid) then
         allocate (aux ( dfftp%nnr))    
         aux (:) = v(:) 
-        CALL fwfft ('Dense', aux, dfftp)
+        CALL fwfft ('Rho', aux, dfftp)
         vs (:) = (0.d0, 0.d0)
         do ig = 1, ngms
            vs (dffts%nl (ig) ) = aux (dfftp%nl (ig) )
         enddo
-        CALL invfft ('Smooth', vs, dffts)
+        CALL invfft ('Rho', vs, dffts)
         deallocate (aux)
      else
         call zcopy (dfftp%nnr, v, 1, vs, 1)
@@ -150,12 +149,12 @@ subroutine cinterpolate (v, vs, iflag)
      if (doublegrid) then
         allocate (auxs (dffts%nnr))    
         auxs (:) = vs(:)
-        CALL fwfft ('Smooth', auxs, dffts)
+        CALL fwfft ('Rho', auxs, dffts)
         v (:) = (0.d0, 0.d0)
         do ig = 1, ngms
            v (dfftp%nl (ig) ) = auxs (dffts%nl (ig) )
         enddo
-        CALL invfft ('Dense', v, dfftp)
+        CALL invfft ('Rho', v, dfftp)
         deallocate (auxs)
      else
         call zcopy (dfftp%nnr, vs, 1, v, 1)
@@ -204,7 +203,7 @@ subroutine exx_interpolate (v, vs, iflag)
      allocate (aux( dfftp%nnr))    
      allocate (auxs(dfftt%nnr))    
      aux (:) = (1.0d0,0.0d0) * v (:)
-     CALL fwfft ('Dense', aux, dfftp)
+     CALL fwfft ('Rho', aux, dfftp)
      auxs (:) = (0.d0, 0.d0)
      do ig = 1, dfftt%ngm
         auxs (dfftt%nl(ig)) = aux(dfftp%nl(ig))
@@ -214,7 +213,7 @@ subroutine exx_interpolate (v, vs, iflag)
            auxs(dfftt%nlm(ig) ) = aux (dfftp%nlm(ig) )
         enddo
      end if
-     CALL invfft ('Custom', auxs, dfftt)
+     CALL invfft ('Rho', auxs, dfftt)
      vs (:) = real(auxs (:))
      deallocate (auxs)
      deallocate (aux)
@@ -225,7 +224,7 @@ subroutine exx_interpolate (v, vs, iflag)
      allocate (aux( dfftp%nnr))    
      allocate (auxs(dfftt%nnr))    
      auxs (:) = vs (:)
-     CALL fwfft ('Custom', auxs, dfftt)
+     CALL fwfft ('Rho', auxs, dfftt)
      aux (:) = (0.d0, 0.d0)
      do ig = 1, dfftt%ngm
         aux (dfftp%nl (ig) ) = auxs (dfftt%nl (ig) )
@@ -235,7 +234,7 @@ subroutine exx_interpolate (v, vs, iflag)
            aux (dfftp%nlm(ig) ) = auxs (dfftt%nlm(ig) )
         enddo
      end if
-     CALL invfft ('Dense', aux, dfftp)
+     CALL invfft ('Rho', aux, dfftp)
      v (:) = aux (:)
      deallocate (auxs)
      deallocate (aux)

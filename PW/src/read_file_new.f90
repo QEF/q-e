@@ -326,7 +326,7 @@ SUBROUTINE read_xml_file ( )
   DO is = 1, nspin
      !
      psic(:) = rho%of_r(:,is)
-     CALL fwfft ('Dense', psic, dfftp)
+     CALL fwfft ('Rho', psic, dfftp)
      rho%of_g(:,is) = psic(dfftp%nl(:))
      !
   END DO
