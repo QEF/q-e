@@ -701,7 +701,7 @@ subroutine formf( tfirst, eself )
   use control_flags,   ONLY : iprint, tpre, iverbosity
   use io_global,       ONLY : stdout
   use mp_global,       ONLY : intra_bgrp_comm
-  use gvecs,           ONLY : ngms
+  USE fft_base,        ONLY : dffts
   use cell_base,       ONLY : omega, tpiba2, tpiba
   use ions_base,       ONLY : rcmax, zv, nsp, na
   use local_pseudo,    ONLY : vps, vps0, rhops, dvps, drhops
@@ -751,7 +751,7 @@ subroutine formf( tfirst, eself )
            dvps(1,is) = dvps_sp(is)%y(1) * cost1
         END IF
         !
-        DO ig = gstart, ngms
+        DO ig = gstart, dffts%ngm
            xg = SQRT( gg(ig) ) * tpiba
            vps (ig,is) = spline(  vps_sp(is), xg ) * cost1
            dvps(ig,is) = spline( dvps_sp(is), xg ) * cost1
@@ -761,24 +761,24 @@ subroutine formf( tfirst, eself )
 
         call formfn( rgrid(is)%r, rgrid(is)%rab, &
                      upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), gg, &
-                     omega, tpiba2, rgrid(is)%mesh, ngms, oldvan(is), tpre, &
+                     omega, tpiba2, rgrid(is)%mesh, dffts%ngm, oldvan(is), tpre, &
                      vps(:,is), vps0(is), dvps(:,is) )
 
 ! obsolete BHS form
 ! call formfa( vps(:,is), dvps(:,is), rc1(is), rc2(is), wrc1(is), wrc2(is), &
 !              rcl(:,is,lloc(is)), al(:,is,lloc(is)), bl(:,is,lloc(is)),    &
-!              zv(is), rcmax(is), g, omega, tpiba2, ngms, gstart, tpre )
+!              zv(is), rcmax(is), g, omega, tpiba2, dffts%ngm, gstart, tpre )
 
      END IF
      !
      !     fourier transform of local pp and gaussian nuclear charge
      !
      call compute_rhops( rhops(:,is), drhops(:,is), zv(is), rcmax(is), gg, &
-                         omega, tpiba2, ngms, tpre )
+                         omega, tpiba2, dffts%ngm, tpre )
 
      if( tfirst .or. ( iverbosity > 2 ) )then
-        vpsum = SUM( vps( 1:ngms, is ) )
-        rhopsum = SUM( rhops( 1:ngms, is ) )
+        vpsum = SUM( vps( 1:dffts%ngm, is ) )
+        rhopsum = SUM( rhops( 1:dffts%ngm, is ) )
         call mp_sum( vpsum, intra_bgrp_comm )
         call mp_sum( rhopsum, intra_bgrp_comm )
         WRITE( stdout,1250) (vps(ig,is),rhops(ig,is),ig=1,5)
@@ -1462,14 +1462,13 @@ END SUBROUTINE print_lambda_x
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
       USE gvect, ONLY: gstart, g, gg
-      USE gvecs,              ONLY: ngms
       USE gvect,              ONLY: ngm
       USE cell_base,          ONLY: omega, ainv, tpiba2
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
       USE uspp_param,         ONLY: upf
       USE fft_interfaces,     ONLY: fwfft
-      USE fft_base,           ONLY: dfftp
+      USE fft_base,           ONLY: dfftp, dffts
       USE fft_helper_subroutines, ONLY: fftx_threed2oned
 
       IMPLICIT NONE
@@ -1507,7 +1506,7 @@ END SUBROUTINE print_lambda_x
       !
       DO i=1,3
          DO j=1,3
-            DO ig = gstart, ngms
+            DO ig = gstart, dffts%ngm
                srhoc = 0.0d0
                DO is = 1, nsp
                  IF( upf(is)%nlcc ) srhoc = srhoc + sfac( ig, is ) * drhocg( ig, is )

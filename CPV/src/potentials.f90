@@ -35,16 +35,15 @@
       USE mp_global,       ONLY: me_bgrp
       USE fft_base,        ONLY: dfftp
       USE fft_interfaces,  ONLY: fwfft
-      USE gvect,           ONLY: ngm
       USE constants,       ONLY: gsmall, pi
       USE cell_base,       ONLY: tpiba2, s_to_r, alat
       USE fft_rho
 
       IMPLICIT NONE
       
-      REAL(DP), INTENT(IN) :: hg( ngm )
+      REAL(DP), INTENT(IN) :: hg( dfftp%ngm )
       REAL(DP), INTENT(IN) :: omega, hmat( 3, 3 )
-      COMPLEX(DP) :: screen_coul( ngm )
+      COMPLEX(DP) :: screen_coul( dfftp%ngm )
 
       REAL(DP), EXTERNAL :: qe_erf
 
@@ -130,10 +129,10 @@
       USE kinds,              ONLY: DP
       USE io_global,          ONLY: stdout
       USE ions_base,          ONLY: nsp
-      USE gvect,              ONLY: ngm
-      USE gvect, ONLY: gstart
+      USE gvect,              ONLY: gstart
       USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
+      USE fft_base,           ONLY: dfftp
 
       IMPLICIT NONE
 
@@ -155,7 +154,7 @@
       !
       eps   = (0.D0,0.D0)
       !
-      DO ig = gstart, ngm 
+      DO ig = gstart, dfftp%ngm 
 
         vp   = (0.D0,0.D0)
         DO is = 1, nsp
@@ -209,11 +208,11 @@
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2, tpiba
       USE io_global,          ONLY: stdout
-      USE gvect, ONLY: gstart, gg
+      USE gvect,              ONLY: gstart, gg
       USE ions_base,          ONLY: nsp
-      USE gvect,              ONLY: ngm
       USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
+      USE fft_base,           ONLY: dfftp
 
       IMPLICIT NONE
 
@@ -242,7 +241,7 @@
       ehti  = 0.0d0
 
 !$omp parallel do default(shared), private(rp,is,rhet,rhog,fpibg), reduction(+:eh,ehte,ehti)
-      DO ig = gstart, ngm 
+      DO ig = gstart, dfftp%ngm 
 
         rp   = (0.D0,0.D0)
         DO is = 1, nsp
@@ -322,9 +321,7 @@
       USE io_global,          ONLY: stdout
       USE gvect, ONLY: mill, gstart, g, gg
       USE ions_base,          ONLY: nat, nsp, na
-      USE gvect,              ONLY: ngm
-      USE gvecs,              ONLY: ngms
-      USE fft_base,           ONLY: dfftp
+      USE fft_base,           ONLY: dfftp, dffts
 
       IMPLICIT NONE
 
@@ -355,7 +352,7 @@
       
       ftmp = 0.0d0
 
-      DO ig = gstart, ngms 
+      DO ig = gstart, dffts%ngm
 
         RP   = (0.D0,0.D0)
         DO IS = 1, nsp
@@ -640,11 +637,11 @@
       USE constants,          ONLY: fpi
       USE control_flags,      ONLY: gamma_only
       USE cell_base,          ONLY: tpiba2
-      USE gvect,              ONLY: ngm
-      USE gvect, ONLY: gstart, gg
+      USE gvect,              ONLY: gstart, gg
       USE sic_module,         ONLY: sic_epsilon, sic_alpha
       USE mp_global,          ONLY: intra_bgrp_comm
       USE mp,                 ONLY: mp_sum
+      USE fft_base,           ONLY: dfftp
 
       IMPLICIT NONE
 
@@ -668,7 +665,7 @@
       ! ... Subroutine body ...
 
       IF( tscreen ) THEN
-        ALLOCATE( screen_coul( ngm ) )
+        ALLOCATE( screen_coul( dfftp%ngm ) )
         CALL cluster_bc( screen_coul, gg, omega, hmat )
       END IF
 
@@ -676,7 +673,7 @@
 
       ehte = 0.D0
 
-      DO IG = gstart, ngm
+      DO IG = gstart, dfftp%ngm
 
         rhog  = rhoeg(ig,1) - rhoeg(ig,2)
 

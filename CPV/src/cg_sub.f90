@@ -24,8 +24,6 @@
       use ensemble_dft, only: tens,   ef,  z0t, c0diag,  &
                       becdiag, fmat0, e0,  id_matrix_init
 !---
-      use gvect, only: ngm
-      use gvecs, only: ngms
       use smallbox_gvec, only: ngb
       use gvecw, only: ngw
       use gvect, only: gstart
@@ -77,13 +75,13 @@
       complex(dp) :: eigrb(ngb,nat)
       real(dp) :: rhor(dfftp%nnr,nspin)
       real(dp) :: vpot(dfftp%nnr,nspin)
-      complex(dp) :: rhog(ngm,nspin)
+      complex(dp) :: rhog(dfftp%ngm,nspin)
       real(dp) :: rhos(dffts%nnr,nspin)
       real(dp) :: rhoc(dfftp%nnr)
       complex(dp) :: ei1(-dfftp%nr1:dfftp%nr1,nat)
       complex(dp) :: ei2(-dfftp%nr2:dfftp%nr2,nat)
       complex(dp) :: ei3(-dfftp%nr3:dfftp%nr3,nat)
-      complex(dp) :: sfac( ngms, nsp )
+      complex(dp) :: sfac( dffts%ngm, nsp )
       real(dp) :: fion(3,nat)
       real(dp) :: ema0bg(ngw)
       real(dp) :: lambdap(nlam,nlam,nspin)

@@ -23,7 +23,6 @@ SUBROUTINE init_run()
                                        vels, velsm, velsp, fion, fionm
   USE gvecw,                    ONLY : ngw, ngw_g, g2kin, g2kin_init
   USE smallbox_gvec,            ONLY : ngb
-  USE gvecs,                    ONLY : ngms
   USE gvect,                    ONLY : ngm, gstart, gg
   USE fft_base,                 ONLY : dfftp, dffts
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
@@ -138,7 +137,7 @@ SUBROUTINE init_run()
   !     allocate and initialize local and nonlocal potentials
   !=======================================================================
   !
-  CALL allocate_local_pseudo( ngms, nsp )
+  CALL allocate_local_pseudo( dffts%ngm, nsp )
   !
   CALL nlinit()
   !
@@ -146,7 +145,7 @@ SUBROUTINE init_run()
   !     allocation of all arrays not already allocated in init and nlinit
   !=======================================================================
   !
-  CALL allocate_mainvar( ngw, ngw_g, ngb, ngms, ngm, dfftp%nr1,dfftp%nr2,dfftp%nr3, dfftp%nr1x, &
+  CALL allocate_mainvar( ngw, ngw_g, ngb, dffts%ngm, ngm, dfftp%nr1,dfftp%nr2,dfftp%nr3, dfftp%nr1x, &
                          dfftp%nr2x, dfftp%my_nr3p, dfftp%nnr, dffts%nnr, nat, nax, nsp,   &
                          nspin, nbsp, nbspx, nupdwn, nkb, gstart, nudx, &
                          tpre, nbspx_bgrp )

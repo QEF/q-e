@@ -25,9 +25,9 @@
      use pseudopotential,    ONLY : tpstab, rhoc1_sp, rhocp_sp
      use cell_base,          ONLY : omega, tpiba2, tpiba
      USE splines,            ONLY : spline
-     use gvect,              ONLY : ngm
      use gvect,              ONLY : gg, gstart
      USE core,               ONLY : rhocb, rhocg, drhocg
+     USE fft_base,           ONLY: dfftp
      !
      IMPLICIT NONE
      !
@@ -72,7 +72,7 @@
 
                  CALL compute_rhocg( rhocg(:,is), drhocg(:,is), rgrid(is)%r, &
                                      rgrid(is)%rab, upf(is)%rho_atc(:), gg, &
-                                     omega, tpiba2, rgrid(is)%mesh, ngm, 1 )
+                                     omega, tpiba2, rgrid(is)%mesh, dfftp%ngm, 1 )
 
               END IF
               !
@@ -104,15 +104,15 @@
       ! this isn't really needed, but if I remove it, ifc 7.1
       ! gives an "internal compiler error"
       use gvect, only: gstart
-      use gvect,              only: ngm
       USE fft_interfaces,     ONLY: fwfft
       USE fft_base,           ONLY: dfftp
+      USE fft_helper_subroutines, ONLY: fftx_add_threed2oned_gamma
 !
       implicit none
       !
       REAL(DP),    INTENT(IN)   :: rhoc( dfftp%nnr )
       REAL(DP),    INTENT(INOUT):: rhor( dfftp%nnr, nspin )
-      COMPLEX(DP), INTENT(INOUT):: rhog( ngm,  nspin )
+      COMPLEX(DP), INTENT(INOUT):: rhog( dfftp%ngm,  nspin )
       !
       COMPLEX(DP), ALLOCATABLE :: wrk1( : )
 !
@@ -149,14 +149,11 @@
       ! In g-space:
       !
       if (nspin.eq.1) then
-         do ig=1,ngm
-            rhog(ig,iss)=rhog(ig,iss)+wrk1(dfftp%nl(ig))
-         end do
+         CALL fftx_add_threed2oned_gamma( dfftp, wrk1, rhog(:,iss) )
       else
-         do ig=1,ngm
-            rhog(ig,isup)=rhog(ig,isup)+0.5d0*wrk1(dfftp%nl(ig))
-            rhog(ig,isdw)=rhog(ig,isdw)+0.5d0*wrk1(dfftp%nl(ig))
-         end do
+         wrk1 = wrk1 * 0.5d0
+         CALL fftx_add_threed2oned_gamma( dfftp, wrk1, rhog(:,isup) )
+         CALL fftx_add_threed2oned_gamma( dfftp, wrk1, rhog(:,isdw) )
       end if
 
       deallocate( wrk1 )

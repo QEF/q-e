@@ -45,10 +45,10 @@
       !
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
-      USE gvecs,              ONLY: ngms
       USE electrons_base,     ONLY: nspin
       USE stress_param,       ONLY: dalbe
       USE cp_interfaces,      ONLY: stress_local
+      USE fft_base,           ONLY: dffts
 
       IMPLICIT NONE
 
@@ -65,13 +65,13 @@
       COMPLEX(DP), ALLOCATABLE :: rhoe( : )
       COMPLEX(DP), ALLOCATABLE :: drhoe( :, : )
       !
-      ALLOCATE( drhoe( ngms, 6 ), rhoe( ngms ) )
+      ALLOCATE( drhoe( dffts%ngm, 6 ), rhoe( dffts%ngm ) )
 
-      rhoe( 1:ngms ) = rhoeg( 1:ngms, 1 )
-      IF( nspin > 1 ) rhoe( 1:ngms ) = rhoe( 1:ngms ) + rhoeg( 1:ngms, 2 )
+      rhoe( 1:dffts%ngm ) = rhoeg( 1:dffts%ngm, 1 )
+      IF( nspin > 1 ) rhoe( 1:dffts%ngm ) = rhoe( 1:dffts%ngm ) + rhoeg( 1:dffts%ngm, 2 )
 
       DO k = 1, 6
-         drhoe( 1:ngms, k ) = - rhoe( 1:ngms ) * dalbe( k )
+         drhoe( 1:dffts%ngm, k ) = - rhoe( 1:dffts%ngm ) * dalbe( k )
       END DO
 
       CALL stress_local( deps, epseu, gagb, sfac, rhoe, drhoe, omega )
@@ -89,10 +89,10 @@
       !
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
-      USE gvect, ONLY: gstart
-      USE gvecs,              ONLY: ngms
+      USE gvect,              ONLY: gstart
       USE electrons_base,     ONLY: nspin
       USE local_pseudo,       ONLY: vps, dvps
+      USE fft_base,           ONLY: dffts
 
       IMPLICIT NONE
 
@@ -112,7 +112,7 @@
 
       wz = 2.0d0
 
-      DO ig = gstart, ngms
+      DO ig = gstart, dffts%ngm
          svp = 0.0d0
          DO is = 1, nsp
             svp = svp + sfac( ig, is ) * vps( ig, is )
@@ -127,7 +127,7 @@
          depst = depst + CONJG( drhoe( 1, : ) ) * svp
       END IF
 
-      DO ig = gstart, ngms
+      DO ig = gstart, dffts%ngm
          dsvp = 0.0d0
          DO is = 1, nsp
             dsvp = dsvp + sfac( ig, is ) * dvps( ig, is )
@@ -159,7 +159,7 @@
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: q2sigma, ecfixed, qcutz, ngw
       USE constants,          ONLY: pi
-      USE gvect, ONLY: gstart, gg, g
+      USE gvect,              ONLY: gstart, gg, g
       USE cell_base,          ONLY: tpiba2
       USE electrons_base,     ONLY: nspin, iupdwn_bgrp, nupdwn_bgrp
       USE stress_param,       ONLY: alpha, beta
@@ -222,10 +222,10 @@
 !------------------------------------------------------------------------------!
       !
       USE kinds,        ONLY: DP
-      USE gvecs,        ONLY: ngms
       USE ions_base,    ONLY: nsp, rcmax
       USE local_pseudo, ONLY: rhops
       USE stress_param, ONLY: dalbe
+      USE fft_base,     ONLY: dffts
       !
       IMPLICIT NONE
       !
@@ -239,13 +239,13 @@
       DO ij = 1, 6
          IF( dalbe( ij ) > 0.0d0 ) THEN
             DO is = 1, nsp
-               DO ig = 1, ngms
+               DO ig = 1, dffts%ngm
                   drhot(ig,ij) = drhot(ig,ij) - sfac(ig,is)*rhops(ig,is)
                ENDDO
             END DO
          END IF
       END DO
-      DO ig = 1, ngms
+      DO ig = 1, dffts%ngm
          drhop = 0.0d0
          DO is = 1, nsp
            drhop = drhop - sfac( ig, is ) * rhops(ig,is) * rcmax(is)**2 * 0.5D0
@@ -269,13 +269,12 @@
       use mp_global,          ONLY: me_bgrp, root_bgrp
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
-      USE gvect, ONLY: gstart
-      USE gvecs,              ONLY: ngms
-      USE gvect,              ONLY: ngm
+      USE gvect,              ONLY: gstart
       USE local_pseudo,       ONLY: rhops
       USE electrons_base,     ONLY: nspin
       USE stress_param,       ONLY: dalbe
       USE cp_interfaces,      ONLY: add_drhoph, stress_hartree
+      USE fft_base,           ONLY: dffts, dfftp
 
       IMPLICIT NONE
 
@@ -294,22 +293,18 @@
       INTEGER       ig, is, k, ispin
 
 
-      ALLOCATE( rhot( ngm ) )
-      ALLOCATE( drhot( ngm, 6 ) )
+      ALLOCATE( rhot( dfftp%ngm ) )
+      ALLOCATE( drhot( dfftp%ngm, 6 ) )
 
       ! sum up spin components
       !
-      DO ig = gstart, ngm
-         rhot( ig ) = rhoeg( ig, 1 )
-         IF( nspin > 1 ) rhot( ig ) = rhot( ig ) + rhoeg( ig, 2 )
-      END DO
+      rhot( gstart:dfftp%ngm ) = rhoeg( gstart:dfftp%ngm, 1 )
+      IF( nspin > 1 ) rhot( gstart:dfftp%ngm ) = rhot( gstart:dfftp%ngm ) + rhoeg( gstart:dfftp%ngm, 2 )
       !
       ! add Ionic pseudo charges  rho_I
       !
       DO is = 1, nsp
-         DO ig = gstart, ngms
-            rhot( ig ) = rhot( ig ) + sfac( ig, is ) * rhops( ig, is )
-         END DO
+         rhot( gstart:dffts%ngm ) = rhot( gstart:dffts%ngm ) + sfac( gstart:dffts%ngm, is ) * rhops( gstart:dffts%ngm, is )
       END DO
 
       ! add drho_e / dh
@@ -354,12 +349,11 @@
       use mp_global,          ONLY: me_bgrp, root_bgrp
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
-      USE gvect, ONLY: gstart, gg
-      USE gvecs,              ONLY: ngms
-      USE gvect,              ONLY: ngm
+      USE gvect,              ONLY: gstart, gg
       USE local_pseudo,       ONLY: rhops
       USE electrons_base,     ONLY: nspin
       USE stress_param,       ONLY: dalbe
+      USE fft_base,           ONLY: dfftp
 
       IMPLICIT NONE
 
@@ -381,23 +375,23 @@
 
       wz = 2.0d0
 
-      ALLOCATE( hgm1( ngm ) )
+      ALLOCATE( hgm1( dfftp%ngm ) )
 
       hgm1( 1 ) = 0.0d0
-      DO ig = gstart, ngm
+      DO ig = gstart, dfftp%ngm
          hgm1( ig ) = 1.D0 / gg(ig) / tpiba2
       END DO
 
       ! Add term  rho_t * CONJG( rho_t ) / G^2 * G_alpha * G_beta / G^2
 
-      DO ig = gstart, ngm
+      DO ig = gstart, dfftp%ngm
          cfact = rhot( ig ) * CONJG( rhot( ig ) ) * hgm1( ig ) ** 2 
          dehc = dehc + cfact * gagb(:,ig)
       END DO
 
       ! Add term  2 * Re{ CONJG( rho_t ) * drho_t / G^2 }
 
-      DO ig = gstart, ngm
+      DO ig = gstart, dfftp%ngm
          DO k = 1, 6
             dehc( k ) = dehc( k ) +  rhot( ig ) * CONJG( drhot( ig, k ) ) * hgm1( ig )
          END DO

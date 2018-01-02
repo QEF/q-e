@@ -33,7 +33,6 @@
    PUBLIC :: rhoofr
    PUBLIC :: fillgrad
    PUBLIC :: checkrho
-   PUBLIC :: dft_total_charge
 
    PUBLIC :: writefile
    PUBLIC :: readfile
@@ -226,18 +225,6 @@
    END INTERFACE
 
 
-   INTERFACE dft_total_charge
-      FUNCTION dft_total_charge_x( c, ngw, fi, n )
-         USE kinds,      ONLY: DP         
-         IMPLICIT NONE
-         INTEGER,     INTENT(IN) :: ngw, n
-         COMPLEX(DP), INTENT(IN) :: c(:,:)
-         REAL (DP),   INTENT(IN) :: fi(:)
-         REAL(DP) dft_total_charge_x
-      END FUNCTION
-   END INTERFACE
-
-  
    INTERFACE rhoofr
       SUBROUTINE rhoofr_cp &
          ( nfi, c_bgrp, irb, eigrb, bec, dbec, rhovan, rhor, drhor, rhog, drhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )

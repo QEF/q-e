@@ -8,7 +8,7 @@
 
 
 !----------------------------------------------------------------------
-SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
+SUBROUTINE vol_clu(rho_real,rho_g,flag)
 !----------------------------------------------------------------------
 ! it computes the volume of the cluster (cluster calculations) starting
 ! from the measure of the region of space occupied by the electronic density
@@ -22,7 +22,6 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       USE ions_base,      ONLY: na, nsp, amass
       USE ions_positions, ONLY: tau0
       USE gvect,          ONLY: g, gg, ngm
-      USE gvecs,          ONLY: ngms
       USE cp_main_variables, only: drhor
       USE control_flags,  ONLY: tpre
       USE fft_base,       ONLY: dfftp
@@ -59,7 +58,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
       real(kind=8), allocatable:: dydzrho(:)
       real(kind=8), allocatable:: tauv(:,:,:)
 
-      complex(kind=8) s_fac(ngms,nsp), ci
+      complex(kind=8) ci
       complex(kind=8) sum_sf, aux, auxx, fact, rho_g(ngm,nspin) 
       complex(kind=8), allocatable :: rhofill(:), rhotmp(:,:)
 

@@ -29,7 +29,6 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
 
   use kinds, only : DP
-  use  gvecs
   use gvecw, only: ngw
   use  parameters
   use electrons_base, only: nx => nbspx, n => nbsp, nspin, f

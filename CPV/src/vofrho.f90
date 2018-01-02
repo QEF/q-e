@@ -26,8 +26,6 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       USE io_global,        ONLY: stdout
       USE ions_base,        ONLY: nsp, na, nat, rcmax, compute_eextfor
       USE ions_base,        ONLY: ind_srt, ind_bck
-      USE gvecs
-      USE gvect,            ONLY: ngm
       USE cell_base,        ONLY: omega, r_to_s
       USE cell_base,        ONLY: alat, at, tpiba2, h, ainv
       USE cell_base,        ONLY: ibrav, isotropic  !True if volume option is chosen for cell_dofree
@@ -133,18 +131,18 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       ht = TRANSPOSE( h )
       !
-      ALLOCATE( vtemp( ngm ) )
-      ALLOCATE( rhotmp( ngm ) )
+      ALLOCATE( vtemp( dfftp%ngm ) )
+      ALLOCATE( rhotmp( dfftp%ngm ) )
       !
       IF ( tpre ) THEN
-         ALLOCATE( drhot( ngm, 6 ) )
-         ALLOCATE( gagb( 6, ngm ) )
-         CALL compute_gagb( gagb, g, ngm, tpiba2 )
+         ALLOCATE( drhot( dfftp%ngm, 6 ) )
+         ALLOCATE( gagb( 6, dfftp%ngm ) )
+         CALL compute_gagb( gagb, g, dfftp%ngm, tpiba2 )
       END IF
 !
 !     ab-initio pressure and surface tension contributions to the potential
 !
-      if (abivol.or.abisur) call vol_clu(rhor,rhog,sfac,nfi)
+      if (abivol.or.abisur) call vol_clu(rhor,rhog,nfi)
       !
       !     compute plugin contributions to the potential, add it later
       !
@@ -158,7 +156,7 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       !
       ttsic = ( ABS( self_interaction ) /= 0 )
       !
-      IF( ttsic ) ALLOCATE( self_vloc( ngm ) )
+      IF( ttsic ) ALLOCATE( self_vloc( dfftp%ngm ) )
       !
       !     first routine in which fion is calculated: annihilation
       !
@@ -182,11 +180,11 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 !
 !$omp parallel default(shared), private(ig,is,ij,i,j,k)
 !$omp workshare
-      rhotmp( 1:ngm ) = rhog( 1:ngm, 1 )
+      rhotmp( 1:dfftp%ngm ) = rhog( 1:dfftp%ngm, 1 )
 !$omp end workshare
       IF( nspin == 2 ) THEN
 !$omp workshare
-         rhotmp( 1:ngm ) = rhotmp( 1:ngm ) + rhog( 1:ngm, 2 )
+         rhotmp( 1:dfftp%ngm ) = rhotmp( 1:dfftp%ngm ) + rhog( 1:dfftp%ngm, 2 )
 !$omp end workshare
       END IF
       !
@@ -226,12 +224,12 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       END DO
       DO is=1,nsp
 !$omp do
-         DO ig=1,ngms
+         DO ig=1,dffts%ngm
             vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
          END DO
       END DO
 !$omp do reduction(+:zpseu)
-      DO ig=1,ngms
+      DO ig=1,dffts%ngm
          zpseu = zpseu + vtemp(ig)
       END DO
 !$omp end parallel
@@ -263,18 +261,18 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 
       DO is=1,nsp
 !$omp do
-         DO ig=1,ngms
+         DO ig=1,dffts%ngm
             rhotmp(ig)=rhotmp(ig)+sfac(ig,is)*rhops(ig,is)
          END DO
       END DO
       !
 !$omp do
-      DO ig = gstart, ngm
+      DO ig = gstart, dfftp%ngm
          vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / gg( ig )
       END DO
 
 !$omp do reduction(+:zh)
-      DO ig = gstart, ngm
+      DO ig = gstart, dfftp%ngm
          zh = zh + vtemp(ig)
       END DO
 
@@ -309,9 +307,9 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       fion1 = 0.d0
       !
       IF( tprnfor .OR. tfor .OR. tpre) THEN
-          vtemp( 1:ngm ) = rhog( 1:ngm, 1 )
+          vtemp( 1:dfftp%ngm ) = rhog( 1:dfftp%ngm, 1 )
           IF( nspin == 2 ) THEN
-             vtemp( 1:ngm ) = vtemp(1:ngm) + rhog( 1:ngm, 2 )
+             vtemp( 1:dfftp%ngm ) = vtemp(1:dfftp%ngm) + rhog( 1:dfftp%ngm, 2 )
           END IF
           CALL force_loc( .false., vtemp, fion1, rhops, vps, ei1, ei2, ei3, sfac, omega, screen_coul )
       END IF
@@ -323,13 +321,13 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 
 !$omp parallel default(shared), private(ig,is)
 !$omp do
-      DO ig=gstart,ngm
+      DO ig=gstart,dfftp%ngm
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*gg(ig))
       END DO
       !
       DO is=1,nsp
 !$omp do
-         DO ig=1,ngms
+         DO ig=1,dffts%ngm
             vtemp(ig)=vtemp(ig)+sfac(ig,is)*vps(ig,is)
          END DO
       END DO
@@ -428,15 +426,15 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
       END IF
        
       IF( nspin == 1 ) THEN
-         rhog( 1:ngm, 1 ) = rhog( 1:ngm, 1 ) + vtemp(1:ngm) 
+         rhog( 1:dfftp%ngm, 1 ) = rhog( 1:dfftp%ngm, 1 ) + vtemp(1:dfftp%ngm) 
       ELSE
          isup=1
          isdw=2
-         rhog( 1:ngm, isup ) = rhog( 1:ngm, isup ) + vtemp(1:ngm) 
-         rhog( 1:ngm, isdw ) = rhog( 1:ngm, isdw ) + vtemp(1:ngm) 
+         rhog( 1:dfftp%ngm, isup ) = rhog( 1:dfftp%ngm, isup ) + vtemp(1:dfftp%ngm) 
+         rhog( 1:dfftp%ngm, isdw ) = rhog( 1:dfftp%ngm, isdw ) + vtemp(1:dfftp%ngm) 
          IF( ttsic ) THEN
-            rhog( 1:ngm, isup ) = rhog( 1:ngm, isup ) - self_vloc(1:ngm) 
-            rhog( 1:ngm, isdw ) = rhog( 1:ngm, isdw ) - self_vloc(1:ngm) 
+            rhog( 1:dfftp%ngm, isup ) = rhog( 1:dfftp%ngm, isup ) - self_vloc(1:dfftp%ngm) 
+            rhog( 1:dfftp%ngm, isdw ) = rhog( 1:dfftp%ngm, isdw ) - self_vloc(1:dfftp%ngm) 
          END IF
       END IF
 
