@@ -118,7 +118,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      !
      ! If a double grid is used, interpolate onto the fine grid
      !
-     IF ( doublegrid ) CALL cinterpolate(rho_1c,rho_1c,1)
+     IF ( doublegrid ) CALL fft_interpolate_complex(dffts, rho_1c, dfftp, rho_1c)
      !
   ENDIF
   !

@@ -210,7 +210,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   enddo
   if (doublegrid) then
      do is = 1, nspin_mag
-        call cinterpolate (ldos (1, is), ldoss (1, is), 1)
+        call fft_interpolate_complex (dffts, ldoss (1, is), dfftp, ldos (1, is))
      enddo
   else
      ldos (:,:) = ldoss (:,:)

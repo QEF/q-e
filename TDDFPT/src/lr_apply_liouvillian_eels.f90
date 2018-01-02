@@ -125,7 +125,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ! dvrsc -> dvrssc
      !
      DO is = 1, nspin_mag
-        CALL cinterpolate (dvrsc(1,is), dvrssc(1,is), -1)
+        CALL fft_interpolate_complex (dfftp, dvrsc(1,is), dffts, dvrssc(1,is))
      ENDDO
      !
   ENDIF

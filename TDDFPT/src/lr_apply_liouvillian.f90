@@ -142,7 +142,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
            CALL fft_interpolate_real(dvrs(:,1), dfftp, dvrss, dffts)
         ELSE
            dvrsc(:,1) = 0.0d0
-           CALL cinterpolate (dvrsc(:,1),dvrssc,-1)
+           CALL fft_interpolate_complex (dfftp, dvrsc(:,1), dffts, dvrssc)
         ENDIF
         !
      ELSE
@@ -224,7 +224,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
         IF (gamma_only) THEN
            CALL fft_interpolate_real (dvrs(:,1), dfftp, dvrss, dffts)
         ELSE
-           CALL cinterpolate (dvrsc(:,1),dvrssc,-1)
+           CALL fft_interpolate_complex (dfftp, dvrsc(:,1), dffts, dvrssc)
         ENDIF
         !
      ENDIF

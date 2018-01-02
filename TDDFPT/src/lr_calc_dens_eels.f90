@@ -91,7 +91,7 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   ! to a thicker mesh (if doublegrid=.true.)
   ! drhoscfh -> drhoscf
   !
-  CALL cinterpolate(drhoscf, drhoscfh, 1)
+  CALL fft_interpolate_complex(dffts, drhoscfh, dfftp, drhoscf)
   !
   IF (okvan) THEN
      !

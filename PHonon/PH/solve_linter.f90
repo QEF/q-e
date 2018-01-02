@@ -401,7 +401,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      if (doublegrid) then
         do is = 1, nspin_mag
            do ipert = 1, npe
-              call cinterpolate (drhoscfh(1,is,ipert), drhoscf(1,is,ipert), 1)
+              call fft_interpolate_complex (dffts, drhoscf(1,is,ipert), dfftp, drhoscfh(1,is,ipert))
            enddo
         enddo
      else
@@ -506,7 +506,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      if (doublegrid) then
         do ipert = 1, npe
            do is = 1, nspin_mag
-              call cinterpolate (dvscfin(1,is,ipert), dvscfins(1,is,ipert), -1)
+              call fft_interpolate_complex (dfftp, dvscfin(1,is,ipert), dffts, dvscfins(1,is,ipert))
            enddo
         enddo
      endif

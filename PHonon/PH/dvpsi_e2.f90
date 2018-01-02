@@ -142,7 +142,7 @@ subroutine dvpsi_e2
         do ir = 1, dffts%nnr
            auxs1 (ir) = CMPLX(raux6 (ir, ipa), 0.d0,kind=DP)
         enddo
-        call cinterpolate (aux6 (1, ipa), auxs1, +1)
+        call fft_interpolate_complex (dffts, auxs1, dfftp, aux6 (1, ipa))
      else
         do ir = 1, dffts%nnr
            aux6 (ir, ipa) = CMPLX(raux6 (ir, ipa), 0.d0,kind=DP)
@@ -193,7 +193,7 @@ subroutine dvpsi_e2
   if (doublegrid) then
      allocate (aux6s  (dffts%nnr,6))
      do ipa = 1, 6
-        call cinterpolate (aux6 (1, ipa), aux6s (1, ipa), -1)
+        call fft_interpolate_complex (dfftp, aux6 (1, ipa), dffts, aux6s (1, ipa))
      enddo
      deallocate (aux6)
   endif

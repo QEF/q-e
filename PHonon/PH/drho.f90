@@ -205,7 +205,7 @@ subroutine drho
      if (doublegrid) then
         do is = 1, nspin_mag
            do iper = 1, npe
-              call cinterpolate (drhoust(1,is,iper), drhous(1,is,mode+iper), 1)
+              call fft_interpolate_complex (dffts, drhous(1,is,mode+iper), dfftp, drhoust(1,is,iper))
            enddo
         enddo
      else

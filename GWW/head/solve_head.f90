@@ -407,9 +407,7 @@ subroutine solve_head
 
 !      product dpsi * psi_v
                     prod(1:dffts%nnr)=conjg(prod(1:dffts%nnr))*psi_v(1:dffts%nnr,iv)
-                    if(doublegrid) then
-                       call cinterpolate(prod,prod,1)
-                    endif
+                    if(doublegrid) call fft_interpolate_complex(dffts, prod, dfftp, prod,1)
 
 !US part STLL TO BE ADDED!!
                     pola_charge(1:dffts%nnr,1,ipol,i)=pola_charge(1:dffts%nnr,1,ipol,i)-prod(1:dffts%nnr)*ww
