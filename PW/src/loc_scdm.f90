@@ -16,7 +16,7 @@ MODULE loc_scdm
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
   USE exx,                  ONLY : dfftt, x_nbnd_occ, locbuff, locmat, nkqs
-  USE exx,                  ONLY : exx_fft
+  USE exx,                  ONLY : gt
 
   IMPLICIT NONE
   SAVE
@@ -294,7 +294,7 @@ IMPLICIT NONE
   ThrDen = scdm_den 
 
 ! gradient on the exx grid 
-  Call exx_gradient( nxxs, den , dfftt%ngm, exx_fft%gt, dfftt%nl, grad_den )
+  Call exx_gradient( nxxs, den , dfftt%ngm, gt, dfftt%nl, grad_den )
   charge  = Zero
   GrdAve = Zero 
   do ir = 1, ir_end 

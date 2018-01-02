@@ -19,7 +19,6 @@ MODULE exx
                                    vcut_get,  vcut_spheric_get
   USE noncollin_module,     ONLY : noncolin, npol
   USE io_global,            ONLY : ionode
-  USE fft_custom,           ONLY : fft_cus
   !
   USE control_flags,        ONLY : gamma_only, tqr
   USE fft_types,            ONLY : fft_type_descriptor
@@ -143,10 +142,19 @@ MODULE exx
   ! custom fft grid and related G-vectors
   !
   TYPE ( fft_type_descriptor ) :: dfftt 
-  TYPE(fft_cus) :: exx_fft
   LOGICAL :: exx_fft_initialized = .FALSE.
+  ! G^2 in custom grid
+  REAL(kind=DP), DIMENSION(:), POINTER :: ggt
+  ! G-vectors in custom grid
+  REAL(kind=DP), DIMENSION(:,:),POINTER :: gt
+  ! gstart_t=2 if ggt(1)=0, =1 otherwise
+  INTEGER :: gstart_t
+  ! number of plane waves in custom grid (Gamma-only)
+  INTEGER :: npwt
+  ! Total number of G-vectors in custom grid
   INTEGER :: ngmt_g
-  REAL(DP)  :: ecutfock         ! energy cutoff for custom grid
+  ! energy cutoff for custom grid
+  REAL(DP)  :: ecutfock
   !
   ! mapping for the data structure conversion
   !
@@ -269,7 +277,8 @@ MODULE exx
        lpara = ( nproc_bgrp > 1 )
        CALL fft_type_init( dfftt, smap, "rho", gamma_only, lpara, &
             intra_bgrp_comm, at, bg, gcutmt, gcutmt/gkcut, nyfft=nyfft )
-       CALL ggenx( g, intra_bgrp_comm, dfftt, gcutmt, ecutwfc/tpiba2, ngmt_g, exx_fft )
+       CALL ggenx( g, dfftt, gcutmt, ecutwfc/tpiba2, &
+            ngmt_g, gt, ggt, gstart_t, npwt )
        !
     ELSE
        !
@@ -278,7 +287,7 @@ MODULE exx
        lpara = ( nproc_egrp > 1 )
        CALL fft_type_init( dfftt, smap_exx, "rho", gamma_only, lpara, &
             intra_egrp_comm, at, bg, gcutmt, gcutmt/gkcut, nyfft=nyfft )
-       CALL ggent( intra_egrp_comm, dfftt, gcutmt, ecutwfc/tpiba2, ngmt_g, exx_fft )
+       CALL ggent( dfftt, gcutmt, ecutwfc/tpiba2, ngmt_g, gt, ggt, gstart_t, npwt )
        !
     END IF
     !
@@ -335,8 +344,8 @@ MODULE exx
     IF ( allocated(working_pool) )  DEALLOCATE(working_pool)
     !
     exx_fft_initialized = .false.
-    IF ( ASSOCIATED (exx_fft%gt)  )  DEALLOCATE(exx_fft%gt)
-    IF ( ASSOCIATED (exx_fft%ggt) )  DEALLOCATE(exx_fft%ggt)
+    IF ( ASSOCIATED (gt)  )  DEALLOCATE(gt)
+    IF ( ASSOCIATED (ggt) )  DEALLOCATE(ggt)
     !
     !------------------------------------------------------------------------
   END SUBROUTINE deallocate_exx
@@ -362,14 +371,14 @@ MODULE exx
     !
     ! ... scale g-vectors
     !
-    CALL cryst_to_cart(dfftt%ngm, exx_fft%gt, at_old, -1)
-    CALL cryst_to_cart(dfftt%ngm, exx_fft%gt, bg,     +1)
+    CALL cryst_to_cart(dfftt%ngm, gt, at_old, -1)
+    CALL cryst_to_cart(dfftt%ngm, gt, bg,     +1)
     !
     DO ig = 1, dfftt%ngm
-       gx = exx_fft%gt(1, ig)
-       gy = exx_fft%gt(2, ig)
-       gz = exx_fft%gt(3, ig)
-       exx_fft%ggt(ig) = gx * gx + gy * gy + gz * gz
+       gx = gt(1, ig)
+       gy = gt(2, ig)
+       gz = gt(3, ig)
+       ggt(ig) = gx * gx + gy * gy + gz * gz
     END DO
     !
   END SUBROUTINE exx_grid_reinit
@@ -1036,13 +1045,13 @@ MODULE exx
              !
              IF ( ibnd < iexx_end ) THEN
                 IF ( ibnd == ibnd_loop_start .and. MOD(iexx_start,2) == 0 ) THEN
-                   DO ig=1,exx_fft%npwt
+                   DO ig=1,npwt
                       psic_exx(dfftt%nl(ig))  = ( 0._dp, 1._dp )*evc_exx(ig,1)
                       psic_exx(dfftt%nlm(ig)) = ( 0._dp, 1._dp )*conjg(evc_exx(ig,1))
                    ENDDO
                    evc_offset = -1
                 ELSE
-                   DO ig=1,exx_fft%npwt
+                   DO ig=1,npwt
                       psic_exx(dfftt%nl(ig))  = evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+1)  &
                            + ( 0._dp, 1._dp ) * evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+2)
                       psic_exx(dfftt%nlm(ig)) = conjg( evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+1) ) &
@@ -1050,7 +1059,7 @@ MODULE exx
                    ENDDO
                 END IF
              ELSE
-                DO ig=1,exx_fft%npwt
+                DO ig=1,npwt
                    psic_exx(dfftt%nl (ig)) = evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+1)
                    psic_exx(dfftt%nlm(ig)) = conjg( evc_exx(ig,ibnd-ibnd_loop_start+evc_offset+1) )
                 ENDDO
@@ -1264,7 +1273,6 @@ MODULE exx
     !
     ! Uses nkqs and index_sym from module exx, computes rir
     !
-    USE fft_custom,           ONLY : fft_cus
     USE symm_base,            ONLY : nsym, s, sr, ft
     !
     IMPLICIT NONE
@@ -1497,7 +1505,7 @@ MODULE exx
        xkq  = xkq_collect(:,ikq)
        !
        ! calculate the 1/|r-r'| (actually, k+q+g) factor and place it in fac
-       CALL g2_convolution_all(dfftt%ngm, exx_fft%gt, xkp, xkq, iq, current_k)
+       CALL g2_convolution_all(dfftt%ngm, gt, xkp, xkq, iq, current_k)
        IF ( okvan .and..not.tqr ) CALL qvan_init (dfftt%ngm, xkq, xkp)
        !
        njt = nbnd / (2*jblock)
@@ -1531,7 +1539,7 @@ MODULE exx
              !
              IF( l_fft_doubleband ) THEN
 !$omp parallel do  default(shared), private(ig)
-                DO ig = 1, exx_fft%npwt
+                DO ig = 1, npwt
                    psiwork( dfftt%nl(ig) )  =       psi(ig, ii) + (0._DP,1._DP) * psi(ig, ii+1)
                    psiwork( dfftt%nlm(ig) ) = conjg(psi(ig, ii) - (0._DP,1._DP) * psi(ig, ii+1))
                 ENDDO
@@ -1540,7 +1548,7 @@ MODULE exx
              !
              IF( l_fft_singleband ) THEN
 !$omp parallel do  default(shared), private(ig)
-                DO ig = 1, exx_fft%npwt
+                DO ig = 1, npwt
                    psiwork( dfftt%nl(ig) )  =       psi(ig,ii) 
                    psiwork( dfftt%nlm(ig) ) = conjg(psi(ig,ii))
                 ENDDO
@@ -1942,7 +1950,7 @@ MODULE exx
        xkq  = xkq_collect(:,ikq)
        !
        ! calculate the 1/|r-r'| (actually, k+q+g) factor and place it in fac
-       CALL g2_convolution_all(dfftt%ngm, exx_fft%gt, xkp, xkq, iq, current_k)
+       CALL g2_convolution_all(dfftt%ngm, gt, xkp, xkq, iq, current_k)
        !
 ! JRD - below not threaded
        facb = 0D0
@@ -2596,10 +2604,10 @@ MODULE exx
           !
           xkq = xkq_collect(:,ikq)
           !
-          CALL g2_convolution_all(dfftt%ngm, exx_fft%gt, xkp, xkq, iq, &
+          CALL g2_convolution_all(dfftt%ngm, gt, xkp, xkq, iq, &
                current_ik)
           fac = coulomb_fac(:,iq,current_ik)
-          fac(exx_fft%gstart_t:) = 2 * coulomb_fac(exx_fft%gstart_t:,iq,current_ik)
+          fac(gstart_t:) = 2 * coulomb_fac(gstart_t:,iq,current_ik)
           IF ( okvan .and..not.tqr ) CALL qvan_init (dfftt%ngm, xkq, xkp)
           !
           jmax = nbnd
@@ -2640,7 +2648,7 @@ MODULE exx
                 !
                 IF( l_fft_doubleband ) THEN
 !$omp parallel do  default(shared), private(ig)
-                   DO ig = 1, exx_fft%npwt
+                   DO ig = 1, npwt
                       temppsic( dfftt%nl(ig) )  = &
                            evc_exx(ig,ii) + (0._DP,1._DP) * evc_exx(ig,ii+1)
                       temppsic( dfftt%nlm(ig) ) = &
@@ -2651,7 +2659,7 @@ MODULE exx
                 !
                 IF( l_fft_singleband ) THEN
 !$omp parallel do  default(shared), private(ig)
-                   DO ig = 1, exx_fft%npwt
+                   DO ig = 1, npwt
                       temppsic( dfftt%nl(ig) )  =       evc_exx(ig,ii)
                       temppsic( dfftt%nlm(ig) ) = conjg(evc_exx(ig,ii))
                    ENDDO
@@ -2960,7 +2968,7 @@ MODULE exx
           !
           xkq = xkq_collect(:,ikq)
           !
-          CALL g2_convolution_all(dfftt%ngm, exx_fft%gt, xkp, xkq, iq, ikk)
+          CALL g2_convolution_all(dfftt%ngm, gt, xkp, xkq, iq, ikk)
           IF ( okvan .and..not.tqr ) CALL qvan_init (dfftt%ngm, xkq, xkp)
           !
           njt = nbnd / jblock
@@ -5656,7 +5664,7 @@ implicit none
      ikq  = index_xkq(current_ik,iq)
      ik   = index_xk(ikq)
      xkq  = xkq_collect(:,ikq)
-     CALL g2_convolution(dfftt%ngm, exx_fft%gt, xkp, xkq, fac)
+     CALL g2_convolution(dfftt%ngm, gt, xkp, xkq, fac)
      RESULT = (0.0d0, 0.0d0)
      DO ibnd = 1, nbnd
        IF(x_occupation(ibnd,ikq).gt.0.0d0) THEN 

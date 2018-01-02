@@ -18,7 +18,7 @@ PROGRAM open_grid
   USE parameters,         ONLY : npk
   USE exx,                ONLY : nq1,nq2,nq3, ecutfock, igk_exx, xkq_collect, &
                                  nkqs, exxinit, exx_mp_init, use_ace, exxbuff,&
-                                 index_xk, exx_fft, exx_grid_init 
+                                 index_xk, exx_grid_init 
   USE gvecw,              ONLY: ecutwfc, gcutw
   USE gvect,              ONLY : g, ngm
   USE funct,              ONLY : dft_force_hybrid
@@ -186,7 +186,7 @@ PROGRAM open_grid
     CALL gk_sort (xk(:,ik_idx_kpt), ngm, g, ecutwfc / tpiba2, &
                   ngk(ik_idx_kpt), igk_k(:,ik_idx_kpt), g2kin)
 !     print*, size(exxbuff,1), size(exxbuff,2), nwordwfc, npwx, &
-!             dffts%nnr, exx_fft%dfftt%nnr
+!             dffts%nnr
     DO ibnd = 1, nbnd
       psic(1:dffts%nnr) = exxbuff(1:dffts%nnr,ibnd,ik_idx_exx)
       CALL fwfft('Wave', psic, dffts)

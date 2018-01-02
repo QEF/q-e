@@ -19,24 +19,12 @@ MODULE fft_custom
   
   IMPLICIT NONE
 
-  TYPE fft_cus
-  
-     ! ... data structure containing information about "custom" fft grid:
-     ! ... G-vectors and the like - FIXME: to be deleted
-
-     REAL(kind=DP), DIMENSION(:), POINTER :: ggt
-     REAL(kind=DP), DIMENSION(:,:),POINTER :: gt
-     INTEGER :: gstart_t
-     INTEGER :: npwt
-     
-  END TYPE fft_cus
-
 !--------------------------------------------------------------------
 CONTAINS
 !=----------------------------------------------------------------------------=!
 
   !-----------------------------------------------------------------------
-  SUBROUTINE ggenx( g, comm, dfftt, gcutmt, gcutt, ngmt_g, fc )
+  SUBROUTINE ggenx( g, dfftt, gcutmt, gcutt, ngmt_g, gt, ggt, gstart_t, npwt )
   !-----------------------------------------------------------------------
     !
     ! Initialize g-vectors for custom grid, in exactly the same ordering
@@ -55,48 +43,52 @@ CONTAINS
     IMPLICIT NONE
     ! G-vectors in FFT grid
     REAL(dp), INTENT(IN) :: g(:,:)
-    ! communicator of the group on which g-vecs are distributed
-    INTEGER, INTENT(IN) :: comm
+    ! cutoffs for custom G-grids (psi^2, psi)
     REAL(DP), INTENT(IN):: gcutmt, gcutt
     ! Total number of G-vectors in custom grid
     INTEGER, INTENT(OUT):: ngmt_g
-    ! G-vectors in FFT grid
+    ! FFT grid descriptor
     TYPE (fft_type_descriptor), INTENT(INOUT) :: dfftt 
-    TYPE(fft_cus), INTENT(INOUT) :: fc
+    ! G^2 in custom grid
+    REAL(kind=DP), INTENT(OUT), DIMENSION(:), POINTER :: ggt
+    ! G in custom grid
+    REAL(kind=DP), INTENT(OUT), DIMENSION(:,:),POINTER :: gt
+    ! G=0, number of G in wfc grid 
+    INTEGER, INTENT(OUT):: gstart_t, npwt
     !
     INTEGER,  DIMENSION(:), ALLOCATABLE :: mill(:,:)
     INTEGER :: ngmt, n1, n2, n3, i
     !
     ngmt = dfftt%ngm
     ngmt_g = ngmt
-    CALL mp_sum( ngmt_g, comm )
+    CALL mp_sum( ngmt_g, dfftt%comm )
     !
     !  allocate arrays
     !
-    ALLOCATE( fc%ggt(ngmt) )
-    ALLOCATE( fc%gt (3, ngmt) )
+    ALLOCATE( ggt(ngmt) )
+    ALLOCATE( gt (3, ngmt) )
     !  
-    ! fc%npwt = number of PW in sphere of radius ecutwfc (useful for Gamma)
+    ! npwt = number of PW in sphere of radius ecutwfc (useful for Gamma)
     !
-    fc%npwt=0
+    npwt=0
     !
     DO i = 1, ngmt
        !
-       fc%gt(:,i) = g(:,i)
+       gt(:,i) = g(:,i)
        !
        ! compute fc%npwt
        !
-       fc%ggt(i) = SUM(fc%gt (1:3,i)**2)
-       IF ( fc%ggt(i) <= gcutt ) fc%npwt = fc%npwt + 1
+       ggt(i) = SUM(gt(1:3,i)**2)
+       IF ( ggt(i) <= gcutt ) npwt = npwt + 1
        !
     END DO
     !
     !     determine first nonzero g vector
     !
-    IF (fc%ggt(1).LE.eps8) THEN
-       fc%gstart_t=2
+    IF (ggt(1).LE.eps8) THEN
+       gstart_t=2
     ELSE
-       fc%gstart_t=1
+       gstart_t=1
     ENDIF
     !
     ALLOCATE( mill(3,ngmt) )
@@ -110,9 +102,8 @@ CONTAINS
     !
   END SUBROUTINE ggenx
   !
-  !
   !--------------------------------------------------------------------
-  SUBROUTINE ggent(comm, dfftt, gcutmt, gcutt, ngmt_g, fc)
+  SUBROUTINE ggent(dfftt, gcutmt, gcutt, ngmt_g, gt, ggt, gstart_t, npwt )
     !--------------------------------------------------------------------
     !
     ! Initialize g-vectors for custom grid
@@ -128,12 +119,12 @@ CONTAINS
     IMPLICIT NONE
     
     TYPE (fft_type_descriptor), INTENT(INOUT) :: dfftt 
-    TYPE(fft_cus), INTENT(INOUT) :: fc
-    INTEGER, INTENT(IN) :: comm  ! communicator of the group over which
-                                 ! g-vectors are distributed
     REAL(DP), INTENT(IN):: gcutmt, gcutt
     ! Total number of G-vectors in custom grid
     INTEGER, INTENT(OUT):: ngmt_g
+    REAL(kind=DP), INTENT(OUT), DIMENSION(:), POINTER :: ggt
+    REAL(kind=DP), INTENT(OUT), DIMENSION(:,:),POINTER :: gt
+    INTEGER, INTENT(OUT):: gstart_t, npwt
     !
     INTEGER,  DIMENSION(:), ALLOCATABLE :: mill(:,:)
     INTEGER :: ngmt, ngmx, n1, n2, n3, n1s, n2s, n3s
@@ -154,12 +145,12 @@ CONTAINS
     !  calculate sum over all processors
     !
     ngmt_g = ngmt
-    CALL mp_sum( ngmt_g, comm )
+    CALL mp_sum( ngmt_g, dfftt%comm )
     !
     !  allocate arrays - only those that are always kept until the end
     !
-    ALLOCATE( fc%ggt(ngmt) )
-    ALLOCATE( fc%gt (3, ngmt) )
+    ALLOCATE( ggt(ngmt) )
+    ALLOCATE( gt (3, ngmt) )
     !
     ALLOCATE( mill_g( 3, ngmt_g ) )
     ALLOCATE( mill_unsorted( 3, ngmt_g ) )
@@ -240,12 +231,12 @@ CONTAINS
        ngmt = ngmt + 1
        
        !  To map local (ngmt) and global (ng) G-vector index: 
-       !     fc%ig_l2gt( ngmt ) = ng
+       !     ig_l2gt( ngmt ) = ng
        !  The global G-vector arrangement depends on the number of processors
        !
        
-       fc%gt (1:3, ngmt) = i * bg (:, 1) + j * bg (:, 2) + k * bg (:, 3)
-       fc%ggt (ngmt) = SUM(fc%gt (1:3, ngmt)**2)
+       gt (1:3, ngmt) = i * bg (:, 1) + j * bg (:, 2) + k * bg (:, 3)
+       ggt (ngmt) = SUM( gt(1:3, ngmt)**2 )
        
        IF (ngmt > ngmx) CALL errore ('ggent', 'too many g-vectors', ngmt)
     ENDDO ngloop
@@ -257,17 +248,17 @@ CONTAINS
     !
     !     determine first nonzero g vector
     !
-    IF (fc%ggt(1).LE.eps8) THEN
-       fc%gstart_t=2
+    IF (ggt(1).LE.eps8) THEN
+       gstart_t=2
     ELSE
-       fc%gstart_t=1
+       gstart_t=1
     ENDIF
     !
     !     Now set nl and nls with the correct fft correspondence
     !
     ALLOCATE( mill(3,ngmt) )
     !
-    CALL fft_set_nl ( dfftt, at, fc%gt, mill  )
+    CALL fft_set_nl ( dfftt, at, gt, mill  )
     IF ( gamma_only) CALL fft_set_nlm (dfftt, mill)
     !
     !     Miller indices no longer needed
@@ -278,16 +269,11 @@ CONTAINS
     ! n_plane_waves() but it is good enough for gamma_only case
 
     IF(gamma_only) THEN
-       fc%npwt=0
+       npwt=0
        DO ng = 1, ngmt
-          tt = (fc%gt (1, ng) ) **2 + (fc%gt (2, ng) ) **2 + (fc%gt&
-               & (3, ng) ) **2
+          tt = gt(1,ng)**2 + gt(2,ng)**2 + gt(3, ng)**2
           IF (tt <= gcutt) THEN
-             !
-             ! here if |k+G|^2 <= Ecut increase the number of G
-             !  inside the sphere
-             !
-             fc%npwt = fc%npwt + 1
+             npwt = npwt + 1
           ENDIF
        ENDDO
     ENDIF
