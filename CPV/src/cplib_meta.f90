@@ -192,7 +192,7 @@
 !
       kedtaug(dffts%ngm+1:,:) = 0.0d0
 
-      CALL rho_g2r( kedtaug, kedtaur )
+      CALL rho_g2r( dfftp, kedtaug, kedtaur )
 !
       return
     end subroutine kedtauofr_meta
@@ -258,7 +258,7 @@
 !
       CALL rho_r2g( dfftp, kedtaur, kedtaug )
 !
-      CALL smooth_rho_g2r ( kedtaug, kedtaus )
+      CALL rho_g2r ( dffts, kedtaug, kedtaus )
 
       !calculate dkedxc in real space on smooth grids  !metagga
       if(tpre) then

@@ -244,7 +244,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
       if (abisur)                                                       &
      &   call gradrho(nspin,rhotmp,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
 
-      CALL rho_g2r( rhotmp, rho_gaus )
+      CALL rho_g2r( dfftp, rhotmp, rho_gaus )
       deallocate(rhotmp)
 
       e_j = 0.d0

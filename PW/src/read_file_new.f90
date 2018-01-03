@@ -305,7 +305,7 @@ SUBROUTINE read_xml_file ( )
 #if ! defined (__OLDXML)
   ! FIXME: for compatibility. rho was previously read and written in real space
   ! FIXME: now it is in G space - to be removed together with old format
-  CALL rho_g2r ( rho%of_g, rho%of_r )
+  CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
 #endif
   !
   ! ... re-calculate the local part of the pseudopotential vltot

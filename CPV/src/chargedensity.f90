@@ -195,7 +195,7 @@
                  TRIM(tmp_dir), TRIM(prefix), ndr
             CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
                  ig_l2g, nspin, rhog )
-            CALL rho_g2r ( rhog, rhor )
+            CALL rho_g2r ( dfftp, rhog, rhor )
 #endif
             rhopr = rhor
             first = .FALSE.
@@ -255,7 +255,7 @@
          !
          rhog(dffts%ngm+1:,:) = 0.0d0
          !
-         CALL rho_g2r( rhog, rhor )
+         CALL rho_g2r( dfftp, rhog, rhor )
          !
          IF ( dft_is_meta() ) THEN
             CALL kedtauofr_meta( c_bgrp ) ! METAGGA

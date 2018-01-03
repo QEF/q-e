@@ -17,7 +17,7 @@ MODULE fft_rho
   !
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: rho_r2g, rho_g2r, smooth_rho_g2r
+  PUBLIC :: rho_r2g, rho_g2r
   !
   INTERFACE rho_g2r
     MODULE PROCEDURE rho_g2r_x, rho_g2r_sum_components
@@ -75,10 +75,11 @@ CONTAINS
 
   END SUBROUTINE rho_r2g
   !
-  SUBROUTINE rho_g2r_x ( rhog, rhor )
-    USE fft_base,       ONLY: dfftp
+  SUBROUTINE rho_g2r_x ( desc, rhog, rhor )
+    USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_threed2oned, fftx_oned2threed
     !
+    TYPE(fft_type_descriptor), INTENT(in) :: desc
     COMPLEX(dp), INTENT(in ):: rhog(:,:)
     REAL(dp),    INTENT(out):: rhor(:,:)
     !
@@ -89,24 +90,24 @@ CONTAINS
 
     nspin= SIZE (rhog, 2)
 
-    ALLOCATE( psi( dfftp%nnr ) )
+    ALLOCATE( psi( desc%nnr ) )
     IF ( gamma_only ) THEN
        IF( nspin == 1 ) THEN
           iss=1
-          CALL fftx_oned2threed( dfftp, psi, rhog(:,iss) )
-          CALL invfft('Rho',psi, dfftp )
+          CALL fftx_oned2threed( desc, psi, rhog(:,iss) )
+          CALL invfft('Rho',psi, desc )
 !$omp parallel do
-          DO ir=1,dfftp%nnr
+          DO ir=1,desc%nnr
              rhor(ir,iss)=DBLE(psi(ir))
           END DO
 !$omp end parallel do
        ELSE
           isup=1
           isdw=2
-          CALL fftx_oned2threed( dfftp, psi, rhog(:,isup), rhog(:,isdw) )
-          CALL invfft('Rho',psi, dfftp )
+          CALL fftx_oned2threed( desc, psi, rhog(:,isup), rhog(:,isdw) )
+          CALL invfft('Rho',psi, desc )
 !$omp parallel do
-          DO ir=1,dfftp%nnr
+          DO ir=1,desc%nnr
              rhor(ir,isup)= DBLE(psi(ir))
              rhor(ir,isdw)=AIMAG(psi(ir))
           END DO
@@ -116,10 +117,10 @@ CONTAINS
     ELSE
        !
        DO iss=1, nspin
-          CALL fftx_oned2threed( dfftp, psi, rhog(:,iss) )
-          CALL invfft('Rho',psi, dfftp )
+          CALL fftx_oned2threed( desc, psi, rhog(:,iss) )
+          CALL invfft('Rho',psi, desc )
 !$omp parallel do
-          DO ir=1,dfftp%nnr
+          DO ir=1,desc%nnr
              rhor(ir,iss)=DBLE(psi(ir))
           END DO
 !$omp end parallel do
@@ -130,10 +131,11 @@ CONTAINS
 
   END SUBROUTINE rho_g2r_x
   !
-  SUBROUTINE rho_g2r_sum_components ( rhog, rhor )
-    USE fft_base,       ONLY: dfftp
+  SUBROUTINE rho_g2r_sum_components ( desc, rhog, rhor )
+    USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_threed2oned, fftx_oned2threed
     !
+    TYPE(fft_type_descriptor), INTENT(in) :: desc
     COMPLEX(dp), INTENT(in ):: rhog(:,:)
     REAL(dp),    INTENT(out):: rhor(:)
     !
@@ -144,24 +146,24 @@ CONTAINS
 
     nspin= SIZE (rhog, 2)
 
-    ALLOCATE( psi( dfftp%nnr ) )
+    ALLOCATE( psi( desc%nnr ) )
     IF ( gamma_only ) THEN
        IF( nspin == 1 ) THEN
           iss=1
-          CALL fftx_oned2threed( dfftp, psi, rhog(:,iss) )
-          CALL invfft('Rho',psi, dfftp )
+          CALL fftx_oned2threed( desc, psi, rhog(:,iss) )
+          CALL invfft('Rho',psi, desc )
 !$omp parallel do
-          DO ir=1,dfftp%nnr
+          DO ir=1,desc%nnr
              rhor(ir)=DBLE(psi(ir))
           END DO
 !$omp end parallel do
        ELSE
           isup=1
           isdw=2
-          CALL fftx_oned2threed( dfftp, psi, rhog(:,isup), rhog(:,isdw) )
-          CALL invfft('Rho',psi, dfftp )
+          CALL fftx_oned2threed( desc, psi, rhog(:,isup), rhog(:,isdw) )
+          CALL invfft('Rho',psi, desc )
 !$omp parallel do
-          DO ir=1,dfftp%nnr
+          DO ir=1,desc%nnr
              rhor(ir)= DBLE(psi(ir))+AIMAG(psi(ir))
           END DO
 !$omp end parallel do
@@ -170,17 +172,17 @@ CONTAINS
     ELSE
        !
        DO iss=1, nspin
-          CALL fftx_oned2threed( dfftp, psi, rhog(:,iss) )
-          CALL invfft('Rho',psi, dfftp )
+          CALL fftx_oned2threed( desc, psi, rhog(:,iss) )
+          CALL invfft('Rho',psi, desc )
           IF( iss == 1 ) THEN
 !$omp parallel do
-             DO ir=1,dfftp%nnr
+             DO ir=1,desc%nnr
                 rhor(ir)=DBLE(psi(ir))
              END DO
 !$omp end parallel do
           ELSE
 !$omp parallel do
-             DO ir=1,dfftp%nnr
+             DO ir=1,desc%nnr
                 rhor(ir)=rhor(ir) + DBLE(psi(ir))
              END DO
 !$omp end parallel do
@@ -191,61 +193,5 @@ CONTAINS
     DEALLOCATE( psi )
 
   END SUBROUTINE rho_g2r_sum_components
-
-  SUBROUTINE smooth_rho_g2r ( rhog, rhor )
-    USE fft_base,       ONLY: dffts
-    USE fft_helper_subroutines, ONLY: fftx_threed2oned, fftx_oned2threed
-    !
-    COMPLEX(dp), INTENT(in ):: rhog(:,:)
-    REAL(dp),    INTENT(out):: rhor(:,:)
-    !
-    INTEGER :: ir, ig, iss, isup, isdw
-    INTEGER :: nspin
-    COMPLEX(dp), PARAMETER :: ci=(0.0_dp, 1.0_dp)
-    COMPLEX(dp), ALLOCATABLE :: psi(:)
-
-    nspin= SIZE (rhog, 2)
-
-    ALLOCATE( psi( dffts%nnr ) )
-    IF ( gamma_only ) THEN
-       IF( nspin == 1 ) THEN
-          iss=1
-          CALL fftx_oned2threed( dffts, psi, rhog(:,iss) )
-          CALL invfft('Rho',psi, dffts )
-!$omp parallel do
-          DO ir=1,dffts%nnr
-             rhor(ir,iss)=DBLE(psi(ir))
-          END DO
-!$omp end parallel do
-       ELSE
-          isup=1
-          isdw=2
-          CALL fftx_oned2threed( dffts, psi, rhog(:,isup), rhog(:,isdw) )
-          CALL invfft('Rho',psi, dffts )
-!$omp parallel do
-          DO ir=1,dffts%nnr
-             rhor(ir,isup)= DBLE(psi(ir))
-             rhor(ir,isdw)=AIMAG(psi(ir))
-          END DO
-!$omp end parallel do
-       ENDIF
-       !
-    ELSE
-       !
-       DO iss=1, nspin
-          CALL fftx_oned2threed( dffts, psi, rhog(:,iss) )
-          CALL invfft('Rho',psi, dffts )
-!$omp parallel do
-          DO ir=1,dffts%nnr
-             rhor(ir,iss)=DBLE(psi(ir))
-          END DO
-!$omp end parallel do
-       END DO
-    END IF
-    
-    DEALLOCATE( psi )
-
-  END SUBROUTINE smooth_rho_g2r
-
 
 END MODULE fft_rho
