@@ -103,8 +103,8 @@ subroutine interpolate_vrs ( nrxx, nspin, doublegrid, kedtau, kedtaur, vrs )
   !
   if (doublegrid) then 
      do is = 1, nspin
-        call fft_interpolate_real(vrs (1, is), dfftp, vrs (1, is), dffts)
-        if (dft_is_meta()) call fft_interpolate_real(kedtaur(1,is),dfftp, kedtau(1,is), dffts)
+        call fft_interpolate_real(dfftp, vrs (1, is), dffts, vrs (1, is))
+        if (dft_is_meta()) call fft_interpolate_real(dfftp, kedtaur(1,is),dffts, kedtau(1,is))
      enddo
   endif
   return

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-subroutine fft_interpolate_real (v_in, dfft_in, v_out, dfft_out )
+subroutine fft_interpolate_real (dfft_in, v_in, dfft_out, v_out )
   !
   !   This subroutine interpolates an array  v_in   defined on fft grit  dfft_in
   !                           to   an array  v_out  defined on fft grid  dfft_out

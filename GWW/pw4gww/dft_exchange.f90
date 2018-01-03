@@ -134,14 +134,14 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
             CALL invfft ('Wave', psic, dffts)
             tmpreal1(1:dfftp%nnr)=dble(psic(1:dfftp%nnr))
             if(doublegrid) then
-               call fft_interpolate_real(tmpreal1, dffts, tmpreal_v(:,hw-(iiv-1)*n_set), dfftp) ! interpolate smooth -> dense
+               call fft_interpolate_real(dffts,tmpreal1, dfftp, tmpreal_v(:,hw-(iiv-1)*n_set)) ! interpolate smooth -> dense
             else
                tmpreal_v(:,hw-(iiv-1)*n_set)=tmpreal1(:)
             endif
             if ( hw < min(iiv*n_set,nbnd_v(isv))) then
                tmpreal1(1:dfftp%nnr)=aimag(psic(1:dfftp%nnr))
                if(doublegrid) then
-                  call fft_interpolate_real(tmpreal1, dffts, tmpreal_v(:,hw-(iiv-1)*n_set+1), dfftp) ! interpolate smooth -> dense
+                  call fft_interpolate_real(dffts,tmpreal1, dfftp, tmpreal_v(:,hw-(iiv-1)*n_set+1)) ! interpolate smooth -> dense
                else
                   tmpreal_v(:,hw-(iiv-1)*n_set+1)=tmpreal1(:)
                endif
@@ -169,14 +169,14 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
                CALL invfft ('Wave', psic, dffts)
                tmpreal1(1:dfftp%nnr)=dble(psic(1:dfftp%nnr))
                if(doublegrid) then
-                  call fft_interpolate_real(tmpreal1, dffts, tmpreal_s(:,hw-(jjs-1)*n_set), dfftp) ! interpolate smooth -> dense
+                  call fft_interpolate_real(dffts,tmpreal1, dfftp, tmpreal_s(:,hw-(jjs-1)*n_set)) ! interpolate smooth -> dense
                else
                   tmpreal_s(:,hw-(jjs-1)*n_set)=tmpreal1(:)
                endif
                if ( hw < min(jjs*n_set,nbnd_s)) then
                   tmpreal1(1:dfftp%nnr)=aimag(psic(1:dfftp%nnr))
                   if(doublegrid) then
-                     call fft_interpolate_real(tmpreal1, dffts, tmpreal_s(:,hw-(jjs-1)*n_set+1), dfftp) ! interp. smooth -> dense
+                     call fft_interpolate_real(dffts,tmpreal1, dfftp, tmpreal_s(:,hw-(jjs-1)*n_set+1)) ! interp. smooth -> dense
                   else
                      tmpreal_s(:,hw-(jjs-1)*n_set+1)=tmpreal1(:)
                   endif

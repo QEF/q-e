@@ -269,7 +269,7 @@ IMPLICIT NONE
   allocate( temp(dfftp%nnr))
   temp(:) = rho%of_r(:,1)
   IF ( nspin == 2 ) temp(:) = temp(:) + rho%of_r(:,2) 
-  Call fft_interpolate_real(temp, dfftp, den, dfftt)
+  Call fft_interpolate_real(dfftp, temp, dfftt, den)
   deallocate( temp ) 
 
 #if defined (__MPI)

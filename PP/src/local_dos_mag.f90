@@ -257,7 +257,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   !
      IF ( doublegrid ) THEN
        is=spin_component+1
-       CALL fft_interpolate_real( rho%of_r(1,is), dffts, rho%of_r(1,is), dfftp )
+       CALL fft_interpolate_real( dffts, rho%of_r(1,is), dfftp, rho%of_r(1,is) )
      ENDIF
   !
   ! ... Here we add the Ultrasoft contribution to the charge and magnetization
