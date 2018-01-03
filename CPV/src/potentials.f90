@@ -95,7 +95,7 @@
 
       ! grg = FFT( grr )
 
-      CALL rho_r2g( grr, grg )
+      CALL rho_r2g( dfftp, grr, grg )
 
       DO ig = 1, SIZE( screen_coul )
         IF( hg(ig) < gsmall ) THEN

@@ -460,7 +460,7 @@ MODULE cp_restart_new
         ! Workaround: input rho in real space, bring it to reciprocal space
         ! To be reconsidered once the old I/O is gone
         ALLOCATE ( rhog(ngm, nspin) )
-        CALL rho_r2g (rho, rhog)
+        CALL rho_r2g (dfftp,rho, rhog)
         ! Only the first band group collects and writes
         IF ( my_bgrp_id == root_bgrp_id ) CALL write_rhog &
                 ( dirname, root_bgrp, intra_bgrp_comm, &

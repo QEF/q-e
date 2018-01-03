@@ -203,7 +203,7 @@
             rhor = rhopr
          END IF
 
-         CALL rho_r2g( rhor, rhog )
+         CALL rho_r2g( dfftp, rhor, rhog )
 
       ELSE
          !
@@ -251,7 +251,7 @@
          !
          !     smooth charge in g-space is put into rhog(ig)
          !
-         CALL smooth_rho_r2g( rhos, rhog )
+         CALL rho_r2g( dffts, rhos, rhog )
          !
          rhog(dffts%ngm+1:,:) = 0.0d0
          !

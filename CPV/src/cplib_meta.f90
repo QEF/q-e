@@ -188,7 +188,7 @@
 
 !     kinetic energy density (kedtau) in g-space (kedtaug)
 
-      CALL smooth_rho_r2g( kedtaus, kedtaug )
+      CALL rho_r2g( dffts, kedtaus, kedtaug )
 !
       kedtaug(dffts%ngm+1:,:) = 0.0d0
 
@@ -256,7 +256,7 @@
 !     fourier transform of xc potential to g-space (dense grid)
 !     -------------------------------------------------------------------
 !
-      CALL rho_r2g( kedtaur, kedtaug )
+      CALL rho_r2g( dfftp, kedtaur, kedtaug )
 !
       CALL smooth_rho_g2r ( kedtaug, kedtaus )
 

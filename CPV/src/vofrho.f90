@@ -420,9 +420,9 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
 !     -------------------------------------------------------------------
 !
       IF( abivol .or. abisur ) THEN
-         CALL rho_r2g ( rhor, rhog, v_vol )
+         CALL rho_r2g ( dfftp, rhor, rhog, v_vol )
       ELSE
-         CALL rho_r2g ( rhor, rhog )
+         CALL rho_r2g ( dfftp, rhor, rhog )
       END IF
        
       IF( nspin == 1 ) THEN

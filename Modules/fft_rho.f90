@@ -17,7 +17,7 @@ MODULE fft_rho
   !
   IMPLICIT NONE
   PRIVATE
-  PUBLIC :: rho_r2g, rho_g2r, smooth_rho_g2r, smooth_rho_r2g
+  PUBLIC :: rho_r2g, rho_g2r, smooth_rho_g2r
   !
   INTERFACE rho_g2r
     MODULE PROCEDURE rho_g2r_x, rho_g2r_sum_components
@@ -25,10 +25,11 @@ MODULE fft_rho
   !
 CONTAINS
   !
-  SUBROUTINE rho_r2g ( rhor, rhog, v )
-    USE fft_base,       ONLY: dfftp
+  SUBROUTINE rho_r2g ( desc, rhor, rhog, v )
+    USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_threed2oned
     !
+    TYPE(fft_type_descriptor), INTENT(in) :: desc
     REAL(dp),    INTENT(in) :: rhor(:,:)
     COMPLEX(dp), INTENT(OUT):: rhog(:,:)
     REAL(dp),    OPTIONAL, INTENT(in) :: v(:)
@@ -40,88 +41,39 @@ CONTAINS
 
     nspin= SIZE (rhor, 2)
 
-    ALLOCATE( psi( dfftp%nnr ) )
+    ALLOCATE( psi( desc%nnr ) )
     IF( nspin == 1 ) THEN
        iss=1
        IF( PRESENT( v ) ) THEN
-          DO ir=1,dfftp%nnr
+          DO ir=1,desc%nnr
              psi(ir)=CMPLX(rhor(ir,iss)+v(ir),0.0_dp,kind=dp)
           END DO
        ELSE
-          DO ir=1,dfftp%nnr
+          DO ir=1,desc%nnr
              psi(ir)=CMPLX(rhor(ir,iss),0.0_dp,kind=dp)
           END DO
        END IF
-       CALL fwfft('Rho', psi, dfftp )
-       CALL fftx_threed2oned( dfftp, psi, rhog(:,iss) )
+       CALL fwfft('Rho', psi, desc )
+       CALL fftx_threed2oned( desc, psi, rhog(:,iss) )
     ELSE
        isup=1
        isdw=2
        IF( PRESENT( v ) ) THEN
-          DO ir=1,dfftp%nnr
+          DO ir=1,desc%nnr
              psi(ir)=CMPLX(rhor(ir,isup)+v(ir),rhor(ir,isdw)+v(ir),kind=dp)
           END DO
        ELSE
-          DO ir=1,dfftp%nnr
+          DO ir=1,desc%nnr
              psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
           END DO
        END IF
-       CALL fwfft('Rho', psi, dfftp )
-       CALL fftx_threed2oned( dfftp, psi, rhog(:,isup), rhog(:,isdw) )
+       CALL fwfft('Rho', psi, desc )
+       CALL fftx_threed2oned( desc, psi, rhog(:,isup), rhog(:,isdw) )
     ENDIF
     
     DEALLOCATE( psi )
 
   END SUBROUTINE rho_r2g
-  !
-  SUBROUTINE smooth_rho_r2g ( rhor, rhog, v )
-    USE fft_base,       ONLY: dffts
-    USE fft_helper_subroutines, ONLY: fftx_threed2oned
-    !
-    REAL(dp),    INTENT(in) :: rhor(:,:)
-    COMPLEX(dp), INTENT(OUT):: rhog(:,:)
-    REAL(dp),    OPTIONAL, INTENT(in) :: v(:)
-    !
-    INTEGER :: ir, ig, iss, isup, isdw
-    INTEGER :: nspin
-    COMPLEX(dp):: fp, fm
-    COMPLEX(dp), ALLOCATABLE :: psi(:)
-
-    nspin= SIZE (rhor, 2)
-
-    ALLOCATE( psi( dffts%nnr ) )
-    IF( nspin == 1 ) THEN
-       iss=1
-       IF( PRESENT( v ) ) THEN
-          DO ir=1,dffts%nnr
-             psi(ir)=CMPLX(rhor(ir,iss)+v(ir),0.0_dp,kind=dp)
-          END DO
-       ELSE
-          DO ir=1,dffts%nnr
-             psi(ir)=CMPLX(rhor(ir,iss),0.0_dp,kind=dp)
-          END DO
-       END IF
-       CALL fwfft('Rho', psi, dffts )
-       CALL fftx_threed2oned( dffts, psi, rhog(:,iss) )
-    ELSE
-       isup=1
-       isdw=2
-       IF( PRESENT( v ) ) THEN
-          DO ir=1,dffts%nnr
-             psi(ir)=CMPLX(rhor(ir,isup)+v(ir),rhor(ir,isdw)+v(ir),kind=dp)
-          END DO
-       ELSE
-          DO ir=1,dffts%nnr
-             psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
-          END DO
-       END IF
-       CALL fwfft('Rho', psi, dffts )
-       CALL fftx_threed2oned( dffts, psi, rhog(:,isup), rhog(:,isdw) )
-    ENDIF
-    
-    DEALLOCATE( psi )
-
-  END SUBROUTINE smooth_rho_r2g
   !
   SUBROUTINE rho_g2r_x ( rhog, rhor )
     USE fft_base,       ONLY: dfftp
