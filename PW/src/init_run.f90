@@ -23,7 +23,7 @@ SUBROUTINE init_run()
   USE paw_init,           ONLY : paw_post_init
 #endif
   USE bp,                 ONLY : allocate_bp_efield, bp_global_map
-  USE fft_base,           ONLY : dffts
+  USE fft_base,           ONLY : dfftp, dffts
   USE funct,              ONLY : dft_is_hybrid
   USE recvec_subs,        ONLY : ggen
   USE wannier_new,        ONLY : use_wannier    
@@ -63,9 +63,9 @@ SUBROUTINE init_run()
   ! ... generate reciprocal-lattice vectors and fft indices
   !
   IF( smallmem ) THEN
-     CALL ggen( gamma_only, at, bg, intra_bgrp_comm, no_global_sort = .TRUE. )
+     CALL ggen( dfftp, dffts, gamma_only, at, bg, no_global_sort = .TRUE. )
   ELSE
-     CALL ggen( gamma_only, at, bg )
+     CALL ggen( dfftp, dffts, gamma_only, at, bg )
   END IF
   if (gamma_only) THEN
      ! ... Solvers need to know gstart

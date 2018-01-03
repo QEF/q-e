@@ -4752,7 +4752,7 @@ END SUBROUTINE compute_becpsi
     END IF
     !
     IF (first_data_structure_change) THEN
-       CALL ggen( gamma_only, at, bg, intra_egrp_comm, no_global_sort = .FALSE. )
+       CALL ggen( dfftp, dffts, gamma_only, at, bg )
        allocate( ig_l2g_exx(ngm), g_exx(3,ngm), gg_exx(ngm) )
        allocate( mill_exx(3,ngm), nl_exx(ngm) )
        allocate( nls_exx(size(dffts%nl)) )

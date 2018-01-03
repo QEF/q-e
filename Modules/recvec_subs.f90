@@ -13,16 +13,13 @@ MODULE recvec_subs
 !  ... subroutines generating G-vectors and variables nl* needed to map
 !  ... G-vector components onto the FFT grid(s) in reciprocal space
 
-!  ... Most important dependencies: next three modules
+!  ... Most important dependencies: next two modules
    USE gvect,              ONLY : ig_l2g, g, gg, ngm, ngm_g, gcutm, &
                                   mill,  gstart
    USE gvecs,              ONLY : ngms, gcutms, ngms_g
-   USE fft_base,           ONLY : dfftp, dffts
 !
    USE kinds,              ONLY : DP
    USE constants,          ONLY : eps8
-
-   USE fft_ggen
 
    PRIVATE
    SAVE
@@ -34,7 +31,7 @@ CONTAINS
 !=----------------------------------------------------------------------=
 !
    !-----------------------------------------------------------------------
-   SUBROUTINE ggen ( gamma_only, at, bg, comm, no_global_sort )
+   SUBROUTINE ggen ( dfftp, dffts, gamma_only, at, bg, no_global_sort )
    !----------------------------------------------------------------------
    !
    !     This routine generates all the reciprocal lattice vectors
@@ -43,13 +40,14 @@ CONTAINS
    !     between the fft mesh points and the array of g vectors.
    !
    USE mp, ONLY: mp_rank, mp_size, mp_sum
-   USE fft_types, ONLY: fft_stick_index
+   USE fft_types, ONLY: fft_stick_index, fft_type_descriptor
+   USE fft_ggen
    !
    IMPLICIT NONE
    !
+   TYPE(fft_type_descriptor),INTENT(INOUT) :: dfftp, dffts
    LOGICAL,  INTENT(IN) :: gamma_only
    REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
-   INTEGER,  OPTIONAL, INTENT(IN) :: comm
    LOGICAL,  OPTIONAL, INTENT(IN) :: no_global_sort
    !  if no_global_sort is present (and it is true) G vectors are sorted only
    !  locally and not globally. In this case no global array needs to be
@@ -73,24 +71,12 @@ CONTAINS
    LOGICAL :: global_sort
    INTEGER, ALLOCATABLE :: ngmpe(:)
    !
-   IF( PRESENT( no_global_sort ) .AND. .NOT. PRESENT( comm ) ) THEN
-      CALL errore ('ggen', ' wrong subroutine arguments, communicator is missing ', 1)
-   END IF
-   IF( .NOT. PRESENT( no_global_sort ) .AND. PRESENT( comm ) ) THEN
-      CALL errore ('ggen', ' wrong subroutine arguments, parameter no_global_sort is missing ', 1)
-   END IF
-   !
    global_sort = .TRUE.
-   !
    IF( PRESENT( no_global_sort ) ) THEN
       global_sort = .NOT. no_global_sort
    END IF
    !
    IF( .NOT. global_sort ) THEN
-      mype = mp_rank( comm )
-      npe  = mp_size( comm )
-      ALLOCATE( ngmpe( npe ) )
-      ngmpe = 0
       ngm_max = ngm
       ngms_max = ngms
    ELSE
@@ -167,10 +153,6 @@ CONTAINS
       ENDDO jloop
    ENDDO iloop
 
-   IF( .NOT. global_sort ) THEN
-      ngmpe( mype + 1 ) = ngm
-      CALL mp_sum( ngmpe, comm )
-   END IF
    !write (6,*) ' ngm, ngms', ngm,ngm_max, ngms, ngms_max
    IF (ngm  /= ngm_max) &
          CALL errore ('ggen', 'g-vectors missing !', abs(ngm - ngm_max))
@@ -189,9 +171,16 @@ CONTAINS
    DEALLOCATE( g2sort_g, igsrt, mill_unsorted )
 
    IF( .NOT. global_sort ) THEN
+      !
       ! compute adeguate offsets in order to avoid overlap between
       ! g vectors once they are gathered on a single (global) array
       !
+      mype = mp_rank( dfftp%comm )
+      npe  = mp_size( dfftp%comm )
+      ALLOCATE( ngmpe( npe ) )
+      ngmpe = 0
+      ngmpe( mype + 1 ) = ngm
+      CALL mp_sum( ngmpe, dfftp%comm )
       ngm_offset = 0
       DO ng = 1, mype
          ngm_offset = ngm_offset + ngmpe( ng )
@@ -249,11 +238,11 @@ CONTAINS
    !
    !     Now set nl and nls with the correct fft correspondence
    !
-   CALL fft_set_nl( dfftp, at, g, mill  )
+   CALL fft_set_nl( dfftp, at, g, mill )
    CALL fft_set_nl( dffts, at, g )
    IF( gamma_only ) THEN
-     CALL fft_set_nlm( dfftp, mill  )
-     CALL fft_set_nlm( dffts, mill  )
+      CALL fft_set_nlm( dfftp, mill )
+      CALL fft_set_nlm( dffts, mill )
    END IF
 
    END SUBROUTINE ggen

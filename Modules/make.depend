@@ -96,6 +96,7 @@ fft_custom.o : control_flags.o
 fft_custom.o : kind.o
 fft_rho.o : ../FFTXlib/fft_helper_subroutines.o
 fft_rho.o : ../FFTXlib/fft_interfaces.o
+fft_rho.o : ../FFTXlib/fft_types.o
 fft_rho.o : control_flags.o
 fft_rho.o : fft_base.o
 fft_rho.o : kind.o
@@ -345,7 +346,6 @@ recvec_subs.o : ../FFTXlib/fft_ggen.o
 recvec_subs.o : ../FFTXlib/fft_types.o
 recvec_subs.o : ../UtilXlib/mp.o
 recvec_subs.o : constants.o
-recvec_subs.o : fft_base.o
 recvec_subs.o : kind.o
 recvec_subs.o : recvec.o
 remove_tot_torque.o : kind.o

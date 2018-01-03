@@ -296,7 +296,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   CALL pre_init()
   CALL data_structure ( gamma_only )
   CALL allocate_fft()
-  CALL ggen ( gamma_only, at, bg ) 
+  CALL ggen ( dfftp, dffts, gamma_only, at, bg ) 
   IF (do_comp_esm) THEN
     CALL pw_readfile( 'esm', ierr )
     CALL esm_init()

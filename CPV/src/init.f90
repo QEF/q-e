@@ -170,17 +170,17 @@
         WRITE( stdout,'(3X,"Reference Cell alat  =",F14.8,1X,"A.U.")' ) ref_alat
         !
         IF( smallmem ) THEN
-           CALL ggen( gamma_only, ref_at, ref_bg, intra_bgrp_comm, no_global_sort = .TRUE. )
+           CALL ggen( dfftp, dffts, gamma_only, ref_at, ref_bg, no_global_sort = .TRUE. )
         ELSE
-           CALL ggen( gamma_only, ref_at, ref_bg )
+           CALL ggen( dfftp, dffts, gamma_only, ref_at, ref_bg )
         END IF
         !
       ELSE
         !
         IF( smallmem ) THEN
-           CALL ggen( gamma_only, at, bg, intra_bgrp_comm, no_global_sort = .TRUE. )
+           CALL ggen( dfftp, dffts, gamma_only, at, bg, no_global_sort = .TRUE. )
         ELSE
-           CALL ggen( gamma_only, at, bg )
+           CALL ggen( dfftp, dffts, gamma_only, at, bg )
         END IF
         !
       END IF

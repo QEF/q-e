@@ -462,7 +462,7 @@ SUBROUTINE chdens (plot_files,plot_num)
           !
           !    and rebuild G-vectors in reciprocal space
           !
-          CALL ggen ( gamma_only, at, bg )
+          CALL ggen ( dfftp, dffts, gamma_only, at, bg )
           !
           !    here we compute the fourier components of the quantity to plot
           !
