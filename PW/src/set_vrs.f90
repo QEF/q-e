@@ -101,12 +101,11 @@ subroutine interpolate_vrs ( nrxx, nspin, doublegrid, kedtau, kedtaur, vrs )
   !
   ! ... interpolate it on the smooth mesh if necessary
   !
-  if (doublegrid) then 
-     do is = 1, nspin
-        call fft_interpolate_real(dfftp, vrs (1, is), dffts, vrs (1, is))
-        if (dft_is_meta()) call fft_interpolate_real(dfftp, kedtaur(1,is),dffts, kedtau(1,is))
-     enddo
-  endif
+  do is = 1, nspin
+     if (doublegrid) call fft_interpolate_real(dfftp, vrs (1, is), dffts, vrs (1, is))
+     if (dft_is_meta()) call fft_interpolate_real(dfftp, kedtaur(1,is),dffts, kedtau(1,is))
+  enddo
+
   return
 
 end subroutine interpolate_vrs
