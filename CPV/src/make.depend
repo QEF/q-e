@@ -68,7 +68,6 @@ chargedensity.o : ../../Modules/electrons_base.o
 chargedensity.o : ../../Modules/fft_base.o
 chargedensity.o : ../../Modules/fft_rho.o
 chargedensity.o : ../../Modules/funct.o
-chargedensity.o : ../../Modules/gvecw.o
 chargedensity.o : ../../Modules/input_parameters.o
 chargedensity.o : ../../Modules/io_base.o
 chargedensity.o : ../../Modules/io_files.o
@@ -321,7 +320,6 @@ dforceb.o : ../../Modules/ions_base.o
 dforceb.o : ../../Modules/kind.o
 dforceb.o : ../../Modules/mp_global.o
 dforceb.o : ../../Modules/parameters.o
-dforceb.o : ../../Modules/recvec.o
 dforceb.o : ../../Modules/uspp.o
 dforceb.o : ../../UtilXlib/mp.o
 dforceb.o : ../../UtilXlib/parallel_include.o
@@ -802,6 +800,7 @@ nl_base.o : ../../Modules/recvec.o
 nl_base.o : ../../Modules/uspp.o
 nl_base.o : ../../UtilXlib/mp.o
 nl_base.o : cp_interfaces.o
+nlcc.o : ../../FFTXlib/fft_helper_subroutines.o
 nlcc.o : ../../FFTXlib/fft_interfaces.o
 nlcc.o : ../../Modules/atom.o
 nlcc.o : ../../Modules/cell_base.o
@@ -1133,6 +1132,7 @@ stop_run.o : ../../Modules/mp_global.o
 stress.o : ../../Modules/cell_base.o
 stress.o : ../../Modules/constants.o
 stress.o : ../../Modules/electrons_base.o
+stress.o : ../../Modules/fft_base.o
 stress.o : ../../Modules/gvecw.o
 stress.o : ../../Modules/io_global.o
 stress.o : ../../Modules/ions_base.o

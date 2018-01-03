@@ -961,11 +961,9 @@ input.o : tetra.o
 input.o : update_pot.o
 input.o : xdm_dispersion.o
 interpolate.o : ../../FFTXlib/fft_interfaces.o
+interpolate.o : ../../FFTXlib/fft_types.o
 interpolate.o : ../../Modules/control_flags.o
-interpolate.o : ../../Modules/fft_base.o
 interpolate.o : ../../Modules/kind.o
-interpolate.o : ../../Modules/recvec.o
-interpolate.o : exx.o
 io_rho_xml.o : ../../Modules/cell_base.o
 io_rho_xml.o : ../../Modules/control_flags.o
 io_rho_xml.o : ../../Modules/funct.o

@@ -8,7 +8,7 @@
 !
 subroutine fft_interpolate_real (dfft_in, v_in, dfft_out, v_out )
   !
-  !   This subroutine interpolates an array  v_in   defined on fft grit  dfft_in
+  !   This subroutine interpolates an array  v_in   defined on fft grid  dfft_in
   !                           to   an array  v_out  defined on fft grid  dfft_out
   !   v_in and v_out are assumed to be real arrays and may concide
   !
@@ -61,7 +61,7 @@ end subroutine fft_interpolate_real
 !
 subroutine fft_interpolate_complex (dfft_in, v_in, dfft_out, v_out )
   !
-  !   This subroutine interpolates an array  v_in   defined on fft grit  dfft_in
+  !   This subroutine interpolates an array  v_in   defined on fft grid  dfft_in
   !                           to   an array  v_out  defined on fft grid  dfft_out
   !   v_in and v_out are assumed to be complex arrays and may concide
   !

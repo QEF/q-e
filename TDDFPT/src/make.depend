@@ -283,7 +283,6 @@ lr_exx_kernel.o : ../../FFTXlib/fft_types.o
 lr_exx_kernel.o : ../../FFTXlib/scatter_mod.o
 lr_exx_kernel.o : ../../Modules/cell_base.o
 lr_exx_kernel.o : ../../Modules/fft_base.o
-lr_exx_kernel.o : ../../Modules/fft_custom.o
 lr_exx_kernel.o : ../../Modules/funct.o
 lr_exx_kernel.o : ../../Modules/io_global.o
 lr_exx_kernel.o : ../../Modules/kind.o

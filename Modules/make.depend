@@ -94,11 +94,11 @@ fft_custom.o : cell_base.o
 fft_custom.o : constants.o
 fft_custom.o : control_flags.o
 fft_custom.o : kind.o
+fft_rho.o : ../FFTXlib/fft_helper_subroutines.o
 fft_rho.o : ../FFTXlib/fft_interfaces.o
 fft_rho.o : control_flags.o
 fft_rho.o : fft_base.o
 fft_rho.o : kind.o
-fft_rho.o : recvec.o
 funct.o : io_global.o
 funct.o : kind.o
 funct.o : xc_rVV10.o
@@ -342,6 +342,7 @@ recips.o : kind.o
 recvec.o : ../UtilXlib/mp.o
 recvec.o : kind.o
 recvec_subs.o : ../FFTXlib/fft_ggen.o
+recvec_subs.o : ../FFTXlib/fft_types.o
 recvec_subs.o : ../UtilXlib/mp.o
 recvec_subs.o : constants.o
 recvec_subs.o : fft_base.o
