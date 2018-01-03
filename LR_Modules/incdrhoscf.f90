@@ -67,7 +67,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   npwq= ngk(ikq)
   incr = 1
   !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      !
      v_siz = dffts%nnr_tg
      !
@@ -84,7 +84,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   !
   do ibnd = 1, nbnd_occ(ikk), incr
      !
-     IF ( dffts%have_task_groups ) THEN
+     IF ( dffts%has_task_groups ) THEN
         !
         tg_drho=(0.0_DP, 0.0_DP)
         tg_psi=(0.0_DP, 0.0_DP)
@@ -163,7 +163,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   DEALLOCATE(psi)
   DEALLOCATE(dpsic)
   !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      DEALLOCATE(tg_psi)
      DEALLOCATE(tg_dpsi)
      DEALLOCATE(tg_drho)

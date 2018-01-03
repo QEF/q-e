@@ -97,7 +97,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   ! drhoscfh -> drhoscf
   !
   DO is = 1, nspin_mag
-     CALL cinterpolate(drhoscf(1,is), drhoscfh(1,is), 1)
+     CALL fft_interpolate_complex(dffts, drhoscfh(1,is), dfftp, drhoscf(1,is) )
   ENDDO
   !
   IF (okvan) THEN

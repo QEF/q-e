@@ -83,7 +83,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
         !
         psic(:) = rhoout(:,is)
         !
-        CALL fwfft ('Dense', psic, dfftp)
+        CALL fwfft ('Rho', psic, dfftp)
         !
         rhogsum(:,is) = psic(dfftp%nl(:))
         !
@@ -339,7 +339,7 @@ SUBROUTINE gradrho( nrxx, a, ngm, g, nl, ga )
      !
      ! ... bring back to R-space, (\grad_ipol a)(r) ...
      !
-     CALL invfft ('Dense', gaux, dfftp)
+     CALL invfft ('Rho', gaux, dfftp)
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
@@ -384,7 +384,7 @@ SUBROUTINE gradient( nrxx, a, ngm, g, nl, ga )
   !
   ! ... bring a(r) to G-space, a(G) ...
   !
-  CALL fwfft ('Dense', aux, dfftp)
+  CALL fwfft ('Rho', aux, dfftp)
   !
   ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
   !
@@ -403,7 +403,7 @@ SUBROUTINE gradient( nrxx, a, ngm, g, nl, ga )
      !
      ! ... bring back to R-space, (\grad_ipol a)(r) ...
      !
-     CALL invfft ('Dense', gaux, dfftp)
+     CALL invfft ('Rho', gaux, dfftp)
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
@@ -448,7 +448,7 @@ SUBROUTINE exx_gradient( nrxx, a, ngm, g, nl, ga )
   !
   ! ... bring a(r) to G-space, a(G) ...
   !
-  CALL fwfft ('Custom', aux, dfftt)
+  CALL fwfft ('Rho', aux, dfftt)
   !
   ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
   !
@@ -467,7 +467,7 @@ SUBROUTINE exx_gradient( nrxx, a, ngm, g, nl, ga )
      !
      ! ... bring back to R-space, (\grad_ipol a)(r) ...
      !
-     CALL invfft ('Custom', gaux, dfftt)
+     CALL invfft ('Rho', gaux, dfftt)
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
@@ -515,7 +515,7 @@ SUBROUTINE grad_dot( nrxx, a, ngm, g, nl, alat, da )
      !
      ! ... bring a(ipol,r) to G-space, a(G) ...
      !
-     CALL fwfft ('Dense', aux, dfftp)
+     CALL fwfft ('Rho', aux, dfftp)
      !
      DO n = 1, ngm
         !
@@ -538,7 +538,7 @@ SUBROUTINE grad_dot( nrxx, a, ngm, g, nl, alat, da )
   !
   ! ... bring back to R-space, (\grad_ipol a)(r) ...
   !
-  CALL invfft ('Dense', gaux, dfftp)
+  CALL invfft ('Rho', gaux, dfftp)
   !
   ! ... add the factor 2\pi/a  missing in the definition of G and sum
   !
@@ -583,7 +583,7 @@ SUBROUTINE hessian( nrxx, a, ngm, g, nl, ga, ha )
   !
   ! ... bring a(r) to G-space, a(G) ...
   !
-  CALL fwfft ('Dense', aux, dfftp)
+  CALL fwfft ('Rho', aux, dfftp)
   !
   ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
   !
@@ -602,7 +602,7 @@ SUBROUTINE hessian( nrxx, a, ngm, g, nl, ga, ha )
      !
      ! ... bring back to R-space, (\grad_ipol a)(r) ...
      !
-     CALL invfft ('Dense', gaux, dfftp)
+     CALL invfft ('Rho', gaux, dfftp)
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
@@ -625,7 +625,7 @@ SUBROUTINE hessian( nrxx, a, ngm, g, nl, ga, ha )
         !
         ! ... bring back to R-space, (\grad_ipol a)(r) ...
         !
-        CALL invfft ('Dense', haux, dfftp)
+        CALL invfft ('Rho', haux, dfftp)
         !
         ! ...and add the factor 2\pi/a  missing in the definition of G
         !
@@ -677,7 +677,7 @@ SUBROUTINE laplacian( nrxx, a, ngm, gg, nl, lapla )
   !
   ! ... bring a(r) to G-space, a(G) ...
   !
-  CALL fwfft ('Dense', aux, dfftp)
+  CALL fwfft ('Rho', aux, dfftp)
   !
   ! ... Compute the laplacian
   !
@@ -697,7 +697,7 @@ SUBROUTINE laplacian( nrxx, a, ngm, gg, nl, lapla )
   !
   ! ... bring back to R-space, (\lapl a)(r) ...
   !
-  CALL invfft ('Dense', laux, dfftp)
+  CALL invfft ('Rho', laux, dfftp)
   !
   ! ... add the missing factor (2\pi/a)^2 in G
   !

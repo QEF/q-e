@@ -173,8 +173,7 @@ subroutine solve_e2
      if (doublegrid) then
         do is = 1, nspin
            do ipol = 1, 6
-              call cinterpolate (dvscfout (1, is, ipol),     &
-                                 dvscfout (1, is, ipol), 1)
+              call fft_interpolate_complex (dffts, dvscfout (1, is, ipol), dfftp, dvscfout (1, is, ipol))
            enddo
         enddo
      endif
@@ -198,8 +197,7 @@ subroutine solve_e2
      if (doublegrid) then
         do is = 1, nspin
            do ipol = 1, 6
-              call cinterpolate (dvscfin (1, is, ipol), &
-                                 dvscfins (1, is, ipol), -1)
+              call fft_interpolate_complex (dfftp,dvscfin (1, is, ipol), dffts, dvscfins (1, is, ipol))
            enddo
         enddo
      end if

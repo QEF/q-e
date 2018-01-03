@@ -124,7 +124,7 @@ subroutine dvanqq
            veff (ir, is) = CMPLX(v%of_r (ir, is), 0.d0,kind=DP)
         enddo
      endif
-     CALL fwfft ('Dense', veff (:, is), dfftp)
+     CALL fwfft ('Rho', veff (:, is), dfftp)
   enddo
   !
   !     We compute here four of the five integrals needed in the phonon

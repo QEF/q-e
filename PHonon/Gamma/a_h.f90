@@ -101,7 +101,7 @@ SUBROUTINE A_h(npw,e,h,ah)
   DO j = 1,dfftp%nnr
      drhoc(j) = cmplx(drho(j),0.d0,kind=DP)
   ENDDO
-  CALL fwfft ('Dense', drhoc, dfftp)
+  CALL fwfft ('Rho', drhoc, dfftp)
   !
   ! drho is deltarho(r), drhoc is deltarho(g)
   !
@@ -131,7 +131,7 @@ SUBROUTINE A_h(npw,e,h,ah)
      drhoc(dfftp%nl (j)) = e2*fpi*drhoc(dfftp%nl(j))/ (tpiba2*gg(j))
      drhoc(dfftp%nlm(j)) = conjg(drhoc(dfftp%nl (j)))
   ENDDO
-  CALL invfft ('Dense', drhoc, dfftp)
+  CALL invfft ('Rho', drhoc, dfftp)
   !
   ! drhoc now contains deltaV_hartree
   !

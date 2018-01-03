@@ -127,7 +127,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
                 (REAL(psic_nc(ir,1))*REAL(psic_nc(ir,2)) + &
                 aimag(psic_nc(ir,1))*aimag(psic_nc(ir,2)))
         ENDDO
-        IF (doublegrid) CALL interpolate( rho%of_r(1,2), rho%of_r(1,2), 1 )
+        IF (doublegrid) CALL fft_interpolate_real( dffts, rho%of_r(1,2), dfftp, rho%of_r(1,2) )
      ENDIF
      IF (lsigma(2)) THEN
         DO ir = 1,dffts%nnr
@@ -135,7 +135,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
                 (REAL(psic_nc(ir,1))*aimag(psic_nc(ir,2)) - &
                 REAL(psic_nc(ir,2))*aimag(psic_nc(ir,1)))
         ENDDO
-        IF (doublegrid) CALL interpolate( rho%of_r(1,3), rho%of_r(1,3), 1 )
+        IF (doublegrid) CALL fft_interpolate_real( dffts, rho%of_r(1,3), dfftp, rho%of_r(1,3) )
      ENDIF
      IF (lsigma(3)) THEN
         DO ir = 1,dffts%nnr
@@ -143,7 +143,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
                 (REAL(psic_nc(ir,1))**2+aimag(psic_nc(ir,1))**2 &
                 -REAL(psic_nc(ir,2))**2-aimag(psic_nc(ir,2))**2)
         ENDDO
-        IF (doublegrid) CALL interpolate( rho%of_r(1,4), rho%of_r(1,4), 1 )
+        IF (doublegrid) CALL fft_interpolate_real( dffts, rho%of_r(1,4), dfftp, rho%of_r(1,4) )
      ENDIF
 
      IF (lsigma(4)) THEN

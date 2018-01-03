@@ -137,7 +137,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
             endif
          endif
       enddo
-      CALL invfft ('Dense', drhoc, dfftp)
+      CALL invfft ('Rho', drhoc, dfftp)
       if (.not.lsda) then
          do ir=1,dfftp%nnr
             aux(ir) = drhoc(ir) * dmuxc(ir,1,1)
@@ -167,7 +167,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
          rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core
       END DO
 
-      CALL fwfft ('Dense', aux, dfftp)
+      CALL fwfft ('Rho', aux, dfftp)
 ! 
 !   This is needed also when the smooth and the thick grids coincide to
 !   cut the potential at the cut-off
@@ -185,7 +185,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   ikq = ikqs(ik)
   npw = ngk(ikk)
   npwq= ngk(ikq)
-  CALL invfft ('Smooth', aux1, dffts)
+  CALL invfft ('Rho', aux1, dffts)
   do ibnd = 1, nbnd
      do ip=1,npol
         aux2(:) = (0.d0, 0.d0)

@@ -104,7 +104,7 @@
           endif
 !fft back
 
-          CALL fwfft ('Dense', prod, dfftp)
+          CALL fwfft ('Rho', prod, dfftp)
           if(iv==n_semicore) then
              prod_g(1:npw,1)=prod(dfftp%nl(1:npw))
              if(gstart==2) then

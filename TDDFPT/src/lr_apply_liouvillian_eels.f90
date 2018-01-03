@@ -75,7 +75,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   !
   incr = 1
   !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      !
      v_siz =  dffts%nnr_tg 
      !
@@ -125,7 +125,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ! dvrsc -> dvrssc
      !
      DO is = 1, nspin_mag
-        CALL cinterpolate (dvrsc(1,is), dvrssc(1,is), -1)
+        CALL fft_interpolate_complex (dfftp, dvrsc(1,is), dffts, dvrssc(1,is))
      ENDDO
      !
   ENDIF
@@ -169,7 +169,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         ! We need to redistribute it so that it is completely contained in the
         ! processors of an orbital TASK-GROUP.
         !
-        IF ( dffts%have_task_groups ) THEN
+        IF ( dffts%has_task_groups ) THEN
            !
            IF (noncolin) THEN
               !
@@ -191,7 +191,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         !
         DO ibnd = 1, nbnd_occ(ikk), incr
            !
-           IF ( dffts%have_task_groups ) THEN
+           IF ( dffts%has_task_groups ) THEN
               !
               ! FFT to R-space
               !
@@ -308,7 +308,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   DEALLOCATE (sevc1_new)
   IF (ALLOCATED(psic)) DEALLOCATE(psic)
   !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      DEALLOCATE( tg_dvrssc )
      DEALLOCATE( tg_psic )
   ENDIF

@@ -140,7 +140,7 @@ implicit none
   Gorbt = (Zero,Zero) 
   DO jbnd = 1, NBands 
     buffer(:) = abs(dble(orbt(:,jbnd,NKK))) + (Zero,One)*Zero  
-    CALL fwfft( 'CustomWave' , buffer, dfftt )
+    CALL fwfft( 'Wave' , buffer, dfftt )
     DO ig = 1, npwx
       Gorbt(ig,jbnd) = buffer(dfftt%nl(ig))
     ENDDO
@@ -269,7 +269,7 @@ IMPLICIT NONE
   allocate( temp(dfftp%nnr))
   temp(:) = rho%of_r(:,1)
   IF ( nspin == 2 ) temp(:) = temp(:) + rho%of_r(:,2) 
-  Call exx_interpolate(temp, den, -1)
+  Call fft_interpolate_real(dfftp, temp, dfftt, den)
   deallocate( temp ) 
 
 #if defined (__MPI)

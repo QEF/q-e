@@ -74,7 +74,7 @@ SUBROUTINE dvpsi_kb(ik,nu)
   !
   !   dVloc/dtau in real space
   !
-  CALL invfft ('Dense', dvloc, dfftp)
+  CALL invfft ('Rho', dvloc, dfftp)
   DO ir = 1,dfftp%nnr
      dv(ir) =  dble(dvloc(ir))
   ENDDO
@@ -82,7 +82,7 @@ SUBROUTINE dvpsi_kb(ik,nu)
      DO ng = gstart,ngm
         dvb_cc (dfftp%nlm(ng))=conjg(dvb_cc(dfftp%nl(ng)))
      ENDDO
-     CALL invfft ('Dense', dvb_cc, dfftp)
+     CALL invfft ('Rho', dvb_cc, dfftp)
      DO ir = 1,dfftp%nnr
         dv(ir) = dv(ir) +  dble(dvb_cc(ir)) * dmuxc(ir)
      ENDDO

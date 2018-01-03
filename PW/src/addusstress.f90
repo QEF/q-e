@@ -92,7 +92,7 @@ SUBROUTINE addusstress_g (sigmanlc)
      ELSE
         aux(:) = vltot(:) + v%of_r(:,is)
      ENDIF
-     CALL fwfft ('Dense', aux, dfftp)
+     CALL fwfft ('Rho', aux, dfftp)
      DO ig = 1, ngm
         vg (ig, is) = aux (dfftp%nl (ig) )
      ENDDO

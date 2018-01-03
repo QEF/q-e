@@ -110,7 +110,7 @@
         ALLOCATE (dvscfins ( dffts%nnr , nspin_mag , npert(irr)) )
         DO is = 1, nspin_mag
            DO ipert = 1, npert(irr)
-              CALL cinterpolate (dvscfin(1,is,ipert),dvscfins(1,is,ipert),-1)
+              CALL fft_interpolate_complex (dfftp, dvscfin(1,is,ipert), dffts, dvscfins(1,is,ipert))
            ENDDO 
         ENDDO
      ELSE

@@ -139,10 +139,10 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
         !
         IF (gamma_only) THEN
            dvrs(:,1) = 0.0d0
-           CALL interpolate (dvrs(:,1),dvrss,-1)
+           CALL fft_interpolate_real (dfftp, dvrs(:,1), dffts, dvrss)
         ELSE
            dvrsc(:,1) = 0.0d0
-           CALL cinterpolate (dvrsc(:,1),dvrssc,-1)
+           CALL fft_interpolate_complex (dfftp, dvrsc(:,1), dffts, dvrssc)
         ENDIF
         !
      ELSE
@@ -222,9 +222,9 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
         ! Put the interaction on the smooth grid.
         !
         IF (gamma_only) THEN
-           CALL interpolate (dvrs(:,1),dvrss,-1)
+           CALL fft_interpolate_real (dfftp, dvrs(:,1), dffts, dvrss)
         ELSE
-           CALL cinterpolate (dvrsc(:,1),dvrssc,-1)
+           CALL fft_interpolate_complex (dfftp, dvrsc(:,1), dffts, dvrssc)
         ENDIF
         !
      ENDIF
@@ -417,7 +417,7 @@ CONTAINS
           !end: calculation of becp2
        ENDIF
 
-      IF ( dffts%have_task_groups ) THEN
+      IF ( dffts%has_task_groups ) THEN
          !
          v_siz =  dffts%nnr_tg
          !
@@ -446,7 +446,7 @@ CONTAINS
           ! Product with the potential vrs = (vltot+vr)
           ! revc0 is on smooth grid. psic is used up to smooth grid
           !
-          IF (dffts%have_task_groups) THEN
+          IF (dffts%has_task_groups) THEN
              !
              DO ir=1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
                 !
@@ -539,7 +539,7 @@ CONTAINS
 #if defined(__MPI)
        CALL mp_sum( evc1_new(:,:,1), inter_bgrp_comm )
 #endif
-       IF (dffts%have_task_groups) DEALLOCATE (tg_dvrss)
+       IF (dffts%has_task_groups) DEALLOCATE (tg_dvrss)
        !
        IF( nkb > 0 .and. okvan .and. real_space_debug <= 7) THEN
           !The non real_space part

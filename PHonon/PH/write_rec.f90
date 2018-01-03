@@ -137,7 +137,7 @@ CONTAINS
     IF (doublegrid) THEN
        DO is=1,nspin_mag
           DO ipol=1,npe
-             CALL cinterpolate (dvscfin(1,is,ipol), dvscfins(1,is,ipol), -1)
+             CALL fft_interpolate_complex (dfftp, dvscfin(1,is,ipol), dffts, dvscfins(1,is,ipol))
           END DO
        END DO
     END IF

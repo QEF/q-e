@@ -188,7 +188,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
             psic(dfftp%nl(ig))=tmp_g(ig)*fac(ig)
             psic(dfftp%nlm(ig))=CONJG(tmp_g(ig))*fac(ig)
          enddo
-         CALL invfft ('Dense', psic, dfftp)
+         CALL invfft ('Rho', psic, dfftp)
          tmp_r(:)=dble(psic(:))
          call davcio(tmp_r,dfftp%nnr,iunrprod,iw,1)
       enddo
@@ -1110,7 +1110,7 @@ endif
               psic(dfftp%nl(ig))=tmp_g(ig)*fac(ig)
               psic(dfftp%nlm(ig))=CONJG(tmp_g(ig))*fac(ig)
            enddo
-           CALL invfft ('Dense', psic, dfftp)
+           CALL invfft ('Rho', psic, dfftp)
            tmp_r(:)=dble(psic(:))
 !!form products with w_v and trasfrom in G space
            psic(:)=cmplx(tmp_r(:)*wv_real(:),0.d0)

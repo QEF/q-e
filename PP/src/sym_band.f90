@@ -401,7 +401,7 @@ SUBROUTINE find_band_sym (ik,evc,et,nsym,s,ftau,gk,invs,rap_et,times,ngroup,&
   psic=(0.0_DP,0.0_DP)
   DO ibnd=1,nbnd
      psic(dfftp%nl(igk_k(1:npw,ik)),ibnd) = evc(1:npw,ibnd)
-     CALL invfft ('Dense', psic(:,ibnd), dfftp)
+     CALL invfft ('Rho', psic(:,ibnd), dfftp)
   ENDDO
   !
   !  Find the character of one symmetry operation per class
@@ -618,7 +618,7 @@ SUBROUTINE rotate_all_psi(ik,psic,evcr,s,ftau,gk)
      CALL cscatter_sym_many( dfftp, psic_collect, psir, ibnd, nbnd, &
                                                  nbnd_proc, start_band_proc )
      !
-     CALL fwfft ('Dense', psir, dfftp)
+     CALL fwfft ('Rho', psir, dfftp)
      !
      evcr(1:npw,ibnd) = psir(dfftp%nl(igk_k(1:npw,ik)))
   END DO
@@ -654,7 +654,7 @@ SUBROUTINE rotate_all_psi(ik,psic,evcr,s,ftau,gk)
            ENDDO
         ENDDO
      ENDIF
-     CALL fwfft ('Dense', psir, dfftp)
+     CALL fwfft ('Rho', psir, dfftp)
      !
      evcr(1:npw,ibnd) = psir(dfftp%nl(igk_k(1:npw,ik)))
   ENDDO
@@ -946,7 +946,7 @@ SUBROUTINE rotate_all_psi_so(ik,evc_nc,evcr,s,ftau,d_spin,has_e,gk)
      !
      DO ibnd=1,nbnd
         psic(dfftp%nl(igk_k(1:npw,ik)),ibnd) = evc_nc(1:npw,ipol,ibnd)
-        CALL invfft ('Dense', psic(:,ibnd), dfftp)
+        CALL invfft ('Rho', psic(:,ibnd), dfftp)
      ENDDO
      !
 #if defined  (__MPI)
@@ -990,7 +990,7 @@ SUBROUTINE rotate_all_psi_so(ik,evc_nc,evcr,s,ftau,d_spin,has_e,gk)
         !
         CALL cscatter_sym_many(dfftp, psic_collect, psir, ibnd, nbnd, nbnd_proc, &
                                start_band_proc)
-        CALL fwfft ('Dense', psir, dfftp)
+        CALL fwfft ('Rho', psir, dfftp)
         !
         evcr_save(1:npw,ipol,ibnd) = psir(dfftp%nl(igk_k(1:npw,ik)))
      ENDDO
@@ -1023,7 +1023,7 @@ SUBROUTINE rotate_all_psi_so(ik,evc_nc,evcr,s,ftau,d_spin,has_e,gk)
               ENDDO
            ENDDO
         ENDIF
-        CALL fwfft ('Dense', psir(:), dfftp)
+        CALL fwfft ('Rho', psir(:), dfftp)
         !
         evcr_save(1:npw,ipol,ibnd) = psir(dfftp%nl(igk_k(1:npw,ik)))
      ENDDO

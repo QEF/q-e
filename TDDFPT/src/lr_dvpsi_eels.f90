@@ -65,7 +65,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   !
   incr = 1
   !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      !
      v_siz =  dffts%nnr_tg
      !
@@ -91,7 +91,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   !
   DO ibnd = 1, nbnd_occ(ikk), incr
      !
-     IF ( dffts%have_task_groups ) THEN
+     IF ( dffts%has_task_groups ) THEN
         !
         ! FFT to R-space
         CALL cft_wave_tg(ik, evc, tg_psic, 1, v_siz, ibnd, nbnd_occ(ikk) )
@@ -147,7 +147,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   !
   DEALLOCATE (revc)
   !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      DEALLOCATE( tg_psic )
   ENDIF
   !

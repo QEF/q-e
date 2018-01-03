@@ -104,7 +104,7 @@ SUBROUTINE do_elf (elf)
   IF (doublegrid) THEN
      DEALLOCATE (aux)
      ALLOCATE(aux(dfftp%nnr))
-     CALL interpolate (kkin, kkin, 1)
+     CALL fft_interpolate_real (dffts, kkin, dfftp, kkin)
   ENDIF
   !
   ! symmetrize the local kinetic energy if needed
@@ -114,7 +114,7 @@ SUBROUTINE do_elf (elf)
      CALL sym_rho_init ( gamma_only )
      !
      aux(:) =  cmplx ( kkin (:), 0.0_dp, kind=dp)
-     CALL fwfft ('Smooth', aux, dffts)
+     CALL fwfft ('Rho', aux, dffts)
      ALLOCATE (aux2(ngm))
      aux2(:) = aux(dfftp%nl(:))
      !
@@ -125,7 +125,7 @@ SUBROUTINE do_elf (elf)
      aux(:) = (0.0_dp, 0.0_dp)
      aux(dfftp%nl(:)) = aux2(:)
      DEALLOCATE (aux2)
-     CALL invfft ('Dense', aux, dfftp)
+     CALL invfft ('Rho', aux, dfftp)
      kkin (:) = dble(aux(:))
      !
   ENDIF
@@ -144,7 +144,7 @@ SUBROUTINE do_elf (elf)
   ENDDO
   !
   aux(:) = cmplx( rho%of_r(:, 1), 0.d0 ,kind=DP)
-  CALL fwfft ('Dense', aux, dfftp)
+  CALL fwfft ('Rho', aux, dfftp)
   !
   DO j = 1, 3
      aux2(:) = (0.d0,0.d0)
@@ -157,7 +157,7 @@ SUBROUTINE do_elf (elf)
         ENDDO
      ENDIF
 
-     CALL invfft ('Dense', aux2, dffts)
+     CALL invfft ('Rho', aux2, dffts)
      DO i = 1, dfftp%nnr
         tbos (i) = tbos (i) + dble(aux2(i))**2
      ENDDO

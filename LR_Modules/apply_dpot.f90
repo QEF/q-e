@@ -28,7 +28,7 @@ SUBROUTINE apply_dpot(nrxxs, aux1, dv, current_spin)
 !
 !    Noncollinear part with task groups
 !
-     IF( dffts%have_task_groups ) THEN
+     IF( dffts%has_task_groups ) THEN
         IF (domag) THEN
            DO ir=1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
               sup = aux1(ir,1) * (dv(ir,1)+dv(ir,4)) + &
@@ -66,7 +66,7 @@ SUBROUTINE apply_dpot(nrxxs, aux1, dv, current_spin)
 !
 !  collinear part with Task Groups
 !
-     IF( dffts%have_task_groups ) THEN
+     IF( dffts%has_task_groups ) THEN
         !
         DO ir = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
            aux1 (ir,1) = aux1 (ir,1) * dv(ir,1)

@@ -75,7 +75,7 @@ SUBROUTINE add_shift_cc (shift_cc)
      ENDDO
   ENDIF
   DEALLOCATE (vxc)
-  CALL fwfft ('Dense', psic, dfftp)
+  CALL fwfft ('Rho', psic, dfftp)
   !
   ! psic contains now Vxc(G)
   !

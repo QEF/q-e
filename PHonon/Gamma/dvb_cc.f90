@@ -31,11 +31,11 @@ SUBROUTINE dvb_cc (nlcc,npseu,ngm,nrxx,  &
   DO ng=1,ngm
      aux(nl(ng)) = ga(ng) * rho_core(igtongl(ng))
   ENDDO
-  CALL invfft ('Dense', aux, dfftp)
+  CALL invfft ('Rho', aux, dfftp)
   !
   aux(:) = aux(:) * dmuxc(:)
   !
-  CALL fwfft ('Dense', aux, dfftp)
+  CALL fwfft ('Rho', aux, dfftp)
   DO ng=1,ngm
      dvb_nlcc(ng) = aux(nl(ng))
   ENDDO

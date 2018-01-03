@@ -79,7 +79,7 @@
        IF( restart ) iflag = 2
      END IF
 
-     IF( dffts%have_task_groups ) THEN
+     IF( dffts%has_task_groups ) THEN
         tg_rhos_siz = dffts%nnr_tg
         c2_siz      = dffts%nnr_tg
      ELSE
@@ -122,7 +122,7 @@
         c2      = 0D0
         c3      = 0D0
 
-        IF( dffts%have_task_groups ) THEN
+        IF( dffts%has_task_groups ) THEN
            !
            !  The potential in rhos is distributed across all processors
            !  We need to redistribute it so that it is completely contained in the
@@ -142,7 +142,7 @@
 
         DO i = 1, nbsp_bgrp, incr
 
-           IF( dffts%have_task_groups ) THEN
+           IF( dffts%has_task_groups ) THEN
               !
               !The input coefficients to dforce cover eigenstates i:i+2*NOGRP-1
               !Thus, in dforce the dummy arguments for c0_bgrp(1,i) and
@@ -353,7 +353,7 @@
                            'Electric field and sic are not implemented',2)
        IF( nspin == 1 ) CALL errore(' runcp_force_pairing ',' inconsistent nspin ', 1)
 
-       IF( dffts%have_task_groups ) CALL errore(' runcp_force_pairing ',' task_groups not implemented ', 1)
+       IF( dffts%has_task_groups ) CALL errore(' runcp_force_pairing ',' task_groups not implemented ', 1)
 !       
        ALLOCATE( emadt2( ngw ) )
        ALLOCATE( emaver( ngw ) )      

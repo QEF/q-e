@@ -202,7 +202,7 @@ CONTAINS
 
   END DO
 
-  CALL fwfft ('Dense', aux, dfftp)
+  CALL fwfft ('Rho', aux, dfftp)
 
   do ig =1, ngm
      wg_corr(ig) = omega * REAL(aux(dfftp%nl(ig))) - smooth_coulomb_g( tpiba2*gg(ig))
@@ -218,7 +218,7 @@ CONTAINS
      ALLOCATE(plot(dfftp%nnr))
 
      filplot = 'wg_corr_r'
-     CALL invfft ('Dense', aux, dfftp)
+     CALL invfft ('Rho', aux, dfftp)
      plot(:) = REAL(aux(:))
      call  write_wg_on_file(filplot, plot)
 
@@ -229,7 +229,7 @@ CONTAINS
      end do
      if (gamma_only) aux(dfftp%nlm(1:ngm)) = CONJG( aux(dfftp%nl(1:ngm)) )
 
-     CALL invfft ('Dense', aux, dfftp)
+     CALL invfft ('Rho', aux, dfftp)
      plot(:) = REAL(aux(:))
      call  write_wg_on_file(filplot, plot)
 
@@ -240,7 +240,7 @@ CONTAINS
         aux(:) = 0.5_dp * aux(:) 
         aux(dfftp%nlm(1:ngm)) = aux(dfftp%nlm(1:ngm)) + CONJG( aux(dfftp%nl(1:ngm)) )
      end if
-     CALL invfft ('Dense', aux, dfftp)
+     CALL invfft ('Rho', aux, dfftp)
      plot(:) = REAL(aux(:))
      call  write_wg_on_file(filplot, plot)
 

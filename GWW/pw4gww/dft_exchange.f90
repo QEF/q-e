@@ -134,14 +134,14 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
             CALL invfft ('Wave', psic, dffts)
             tmpreal1(1:dfftp%nnr)=dble(psic(1:dfftp%nnr))
             if(doublegrid) then
-               call interpolate(tmpreal_v(:,hw-(iiv-1)*n_set),tmpreal1,1)
+               call fft_interpolate_real(dffts,tmpreal1, dfftp, tmpreal_v(:,hw-(iiv-1)*n_set)) ! interpolate smooth -> dense
             else
                tmpreal_v(:,hw-(iiv-1)*n_set)=tmpreal1(:)
             endif
             if ( hw < min(iiv*n_set,nbnd_v(isv))) then
                tmpreal1(1:dfftp%nnr)=aimag(psic(1:dfftp%nnr))
                if(doublegrid) then
-                  call interpolate(tmpreal_v(:,hw-(iiv-1)*n_set+1),tmpreal1,1)
+                  call fft_interpolate_real(dffts,tmpreal1, dfftp, tmpreal_v(:,hw-(iiv-1)*n_set+1)) ! interpolate smooth -> dense
                else
                   tmpreal_v(:,hw-(iiv-1)*n_set+1)=tmpreal1(:)
                endif
@@ -169,14 +169,14 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
                CALL invfft ('Wave', psic, dffts)
                tmpreal1(1:dfftp%nnr)=dble(psic(1:dfftp%nnr))
                if(doublegrid) then
-                  call interpolate(tmpreal_s(:,hw-(jjs-1)*n_set),tmpreal1,1)
+                  call fft_interpolate_real(dffts,tmpreal1, dfftp, tmpreal_s(:,hw-(jjs-1)*n_set)) ! interpolate smooth -> dense
                else
                   tmpreal_s(:,hw-(jjs-1)*n_set)=tmpreal1(:)
                endif
                if ( hw < min(jjs*n_set,nbnd_s)) then
                   tmpreal1(1:dfftp%nnr)=aimag(psic(1:dfftp%nnr))
                   if(doublegrid) then
-                     call interpolate(tmpreal_s(:,hw-(jjs-1)*n_set+1),tmpreal1,1)
+                     call fft_interpolate_real(dffts,tmpreal1, dfftp, tmpreal_s(:,hw-(jjs-1)*n_set+1)) ! interp. smooth -> dense
                   else
                      tmpreal_s(:,hw-(jjs-1)*n_set+1)=tmpreal1(:)
                   endif
@@ -201,7 +201,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
                      CALL invfft ('Wave', psic, dffts)
                      prod_c(1:dfftp%nnr)=dcmplx(dble(psic(1:dfftp%nnr))*tmpreal_v(1:dfftp%nnr,iv-(iiv-1)*n_set)&
                           &  ,0.d0)
-                     CALL fwfft ('Dense', prod_c, dfftp)
+                     CALL fwfft ('Rho', prod_c, dfftp)
                      prod_g2(1:ngm,ks)=prod_c(dfftp%nl(1:ngm))
                   enddo
 !NOT_TO_BE_INCLUDED_END
@@ -214,7 +214,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
                      ! (iv,js, prod_r(:),1,becpr(:,iv),becpr(:,js))
 
                   prod_c(:)=dcmplx(prod_r(:),0.d0)
-                  CALL fwfft ('Dense', prod_c, dfftp)
+                  CALL fwfft ('Rho', prod_c, dfftp)
                      !go to g_space
                   prod_g(1:ngm)=prod_c(dfftp%nl(1:ngm))
                   !calculated exchange
@@ -443,7 +443,7 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
      psic(:) = (0.d0, 0.d0)
      psic( dfftp%nl(:) ) = aux(:,is)
      if (gamma_only) psic( dfftp%nlm(:) ) = CONJG(aux(:,is))
-     CALL invfft ('Dense', psic, dfftp)
+     CALL invfft ('Rho', psic, dfftp)
      r_ij(:)=r_ij(:)+psic(:)
   enddo
   deallocate (aux)

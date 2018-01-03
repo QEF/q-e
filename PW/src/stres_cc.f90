@@ -58,7 +58,7 @@ subroutine stres_cc (sigmaxcc)
      enddo
   endif
   deallocate (vxc)
-  CALL fwfft ('Dense', psic, dfftp)
+  CALL fwfft ('Rho', psic, dfftp)
   !
   ! psic contains now Vxc(G)
   !

@@ -59,7 +59,7 @@ subroutine force_corr (forcescc)
 
   forcescc(:,:) = 0.d0
 
-  CALL fwfft ('Dense', psic, dfftp)
+  CALL fwfft ('Rho', psic, dfftp)
 
   if (gamma_only) then
      fact = 2.d0

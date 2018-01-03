@@ -336,7 +336,7 @@ CONTAINS
   ! FFTing the u_i(k) to get the u_i(r) of SOLER equation 11.
 
   do theta_i = 1, Nqs
-     CALL invfft('Dense', thetas(:,theta_i), dfftp)
+     CALL invfft('Rho', thetas(:,theta_i), dfftp)
   end do
 
   call get_potential (q0, dq0_drho, dq0_dgradrho, grad_rho, thetas, potential)
@@ -535,7 +535,7 @@ CONTAINS
   ! FFTing the u_i(k) to get the u_i(r) of SOLER equation 11.
 
   do theta_i = 1, Nqs
-     CALL invfft('Dense', thetas(:,theta_i), dfftp)
+     CALL invfft('Rho', thetas(:,theta_i), dfftp)
   end do
 
   call get_potential (q0, dq0_drho_up  , dq0_dgradrho_up  , grad_rho_up  , thetas, potential_up  )
@@ -702,7 +702,7 @@ CONTAINS
   end do
 
   do idx = 1, Nqs
-     CALL fwfft ('Dense', thetas(:,idx), dfftp)
+     CALL fwfft ('Rho', thetas(:,idx), dfftp)
   end do
 
   END SUBROUTINE get_q0_on_grid
@@ -900,7 +900,7 @@ CONTAINS
   end do
 
   do idx = 1, Nqs
-     CALL fwfft ('Dense', thetas(:,idx), dfftp)
+     CALL fwfft ('Rho', thetas(:,idx), dfftp)
   end do
 
   END SUBROUTINE get_q0_on_grid_spin
@@ -1219,10 +1219,10 @@ CONTAINS
         if ( gradient2 > 0.0D0 ) h(i_grid) = h(i_grid) / SQRT( gradient2 )
      end do
 
-     CALL fwfft ('Dense', h, dfftp)
+     CALL fwfft ('Rho', h, dfftp)
      h(dfftp%nl(:)) = CMPLX(0.0_DP,1.0_DP) * tpiba * g(icar,:) * h(dfftp%nl(:))
      if (gamma_only) h(dfftp%nlm(:)) = CONJG(h(dfftp%nl(:)))
-     CALL invfft ('Dense', h, dfftp)
+     CALL invfft ('Rho', h, dfftp)
      potential(:) = potential(:) - REAL(h(:))
 
   end do
@@ -1701,7 +1701,7 @@ CONTAINS
   ! Get u in real space.
 
   do theta_i = 1, Nqs
-     CALL invfft('Dense', u_vdW(:,theta_i), dfftp)
+     CALL invfft('Rho', u_vdW(:,theta_i), dfftp)
   end do
 
 
@@ -1960,7 +1960,7 @@ CONTAINS
 
   allocate ( c_rho(dfftp%nnr), c_grho(dfftp%nnr) )
   c_rho(1:dfftp%nnr) = CMPLX(total_rho(1:dfftp%nnr),0.0_DP)
-  CALL fwfft ('Dense', c_rho, dfftp)
+  CALL fwfft ('Rho', c_rho, dfftp)
 
   do icar=1,3
 
@@ -1975,7 +1975,7 @@ CONTAINS
      ! -----------------------------------------------------------------
      ! Back in real space.
 
-     CALL invfft ('Dense', c_grho, dfftp)
+     CALL invfft ('Rho', c_grho, dfftp)
      grad_rho(:,icar) = REAL( c_grho(:) )
 
   end do

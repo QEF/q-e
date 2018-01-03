@@ -136,8 +136,8 @@ SUBROUTINE sum_band()
      !
      DO is = 1, nspin
         !
-        CALL interpolate( rho%of_r(1,is), rho%of_r(1,is), 1 )
-        if (dft_is_meta() .OR. lxdm) CALL interpolate(rho%kin_r(1,is),rho%kin_r(1,is),1)
+        CALL fft_interpolate_real( dffts, rho%of_r(1,is), dfftp, rho%of_r(1,is) )
+        if (dft_is_meta() .OR. lxdm) CALL fft_interpolate_real(dffts,rho%kin_r(1,is),dfftp,rho%kin_r(1,is))
         !
      END DO
      !
@@ -181,7 +181,7 @@ SUBROUTINE sum_band()
   !
   DO is = 1, nspin
      psic(:) = rho%of_r(:,is)
-     CALL fwfft ('Dense', psic, dfftp)
+     CALL fwfft ('Rho', psic, dfftp)
      rho%of_g(:,is) = psic(dfftp%nl(:))
   END DO
   !
@@ -195,7 +195,7 @@ SUBROUTINE sum_band()
      psic(:) = ( 0.D0, 0.D0 )
      psic(dfftp%nl(:)) = rho%of_g(:,is)
      IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rho%of_g(:,is) )
-     CALL invfft ('Dense', psic, dfftp)
+     CALL invfft ('Rho', psic, dfftp)
      rho%of_r(:,is) = psic(:)
   END DO
   !
@@ -208,7 +208,7 @@ SUBROUTINE sum_band()
      CALL mp_sum( rho%kin_r, inter_bgrp_comm )
      DO is = 1, nspin
         psic(:) = rho%kin_r(:,is)
-        CALL fwfft ('Dense', psic, dfftp)
+        CALL fwfft ('Rho', psic, dfftp)
         rho%kin_g(:,is) = psic(dfftp%nl(:))
      END DO
      !
@@ -218,7 +218,7 @@ SUBROUTINE sum_band()
         psic(:) = ( 0.D0, 0.D0 )
         psic(dfftp%nl(:)) = rho%kin_g(:,is)
         IF ( gamma_only ) psic(dfftp%nlm(:)) = CONJG( rho%kin_g(:,is) )
-        CALL invfft ('Dense', psic, dfftp)
+        CALL invfft ('Rho', psic, dfftp)
         rho%kin_r(:,is) = psic(:)
      END DO
      !
@@ -259,7 +259,7 @@ SUBROUTINE sum_band()
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       use_tg = ( dffts%have_task_groups ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
+       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
        !
        incr = 2
 
@@ -498,7 +498,7 @@ SUBROUTINE sum_band()
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       use_tg = ( dffts%have_task_groups ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
+       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
        !
        incr = 1
        !

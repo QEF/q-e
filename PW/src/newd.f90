@@ -96,7 +96,7 @@ SUBROUTINE newq(vr,deeq,skip_vltot)
         end do
 !$omp end parallel do
      END IF
-     CALL fwfft ('Dense', psic, dfftp)
+     CALL fwfft ('Rho', psic, dfftp)
 !$omp parallel do default(shared) private(ig)
         do ig=1,ngm_l
            vaux(ig, is) = psic(dfftp%nl(ngm_s+ig-1))

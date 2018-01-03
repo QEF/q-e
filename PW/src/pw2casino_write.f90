@@ -347,7 +347,7 @@ CONTAINS
          !      bring rho to G-space
          !
          aux(:) = cmplx( rho%of_r(:,ispin), 0.d0,kind=DP)
-         CALL fwfft ('Dense', aux, dfftp)
+         CALL fwfft ('Rho', aux, dfftp)
          !
          DO nt=1,ntyp
             DO ig = 1, ngm

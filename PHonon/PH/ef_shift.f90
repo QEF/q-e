@@ -91,9 +91,9 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
      do ipert = 1, npert (irr)
         delta_n = (0.d0, 0.d0)
         do is = 1, nspin_lsda
-           CALL fwfft ('Dense', drhoscf(:,is,ipert), dfftp)
+           CALL fwfft ('Rho', drhoscf(:,is,ipert), dfftp)
            if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(dfftp%nl(1),is,ipert)
-           CALL invfft ('Dense', drhoscf(:,is,ipert), dfftp)
+           CALL invfft ('Rho', drhoscf(:,is,ipert), dfftp)
         enddo
         call mp_sum ( delta_n, intra_bgrp_comm )
         def (ipert) = - delta_n / dos_ef
@@ -243,9 +243,9 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
      do ipert = 1, npert (irr)
         delta_n = (0.d0, 0.d0)
         do is = 1, nspin_lsda
-           CALL fwfft ('Dense', drhoscf(:,is,ipert), dfftp)
+           CALL fwfft ('Rho', drhoscf(:,is,ipert), dfftp)
            if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(dfftp%nl(1),is,ipert)
-           CALL invfft ('Dense', drhoscf(:,is,ipert), dfftp)
+           CALL invfft ('Rho', drhoscf(:,is,ipert), dfftp)
         enddo
         call mp_sum ( delta_n, intra_bgrp_comm )
         def (ipert) = - delta_n / dos_ef

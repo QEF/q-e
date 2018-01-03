@@ -113,7 +113,7 @@
            veff (ir, is) = CMPLX (v%of_r (ir, is), 0.d0, kind=DP)
         ENDDO
      ENDIF
-     CALL fwfft ('Dense', veff(:,is), dfftp)
+     CALL fwfft ('Rho', veff(:,is), dfftp)
   ENDDO
   !
   !     We compute here two of the three integrals needed in the phonon

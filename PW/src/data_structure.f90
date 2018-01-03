@@ -22,7 +22,7 @@ SUBROUTINE data_structure( gamma_only )
   USE cell_base,  ONLY : at, bg, tpiba
   USE klist,      ONLY : xk, nks
   USE gvect,      ONLY : gcutm, gvect_init
-  USE gvecs,      ONLY : gcutms, gvecs_init
+  USE gvecs,      ONLY : gcutms, gvecs_init, doublegrid
   USE gvecw,      ONLY : gcutw, gkcut
   USE io_global,  ONLY : stdout, ionode
   !
@@ -58,11 +58,14 @@ SUBROUTINE data_structure( gamma_only )
   !
   ! ... set up fft descriptors, including parallel stuff: sticks, planes, etc.
   !
-  dffts%have_task_groups = (ntask_groups >1)
-  CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm,&
-          at, bg, gkcut, gcutms/gkcut, nyfft=nyfft )
-  CALL fft_type_init( dfftp, smap, "rho" , gamma_only, lpara, intra_bgrp_comm,&
-          at, bg,  gcutm , 4.d0, nyfft=nyfft )
+  dffts%has_task_groups = (ntask_groups >1)
+  CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, at, bg, gkcut, gcutms/gkcut, nyfft=nyfft )
+  CALL fft_type_init( dfftp, smap, "rho" , gamma_only, lpara, intra_bgrp_comm, at, bg, gcutm , 4.d0, nyfft=nyfft )
+  ! define the clock labels ( this enables the corresponding fft too ! )
+  dffts%rho_clock_label='ffts' ; dffts%wave_clock_label='fftw'
+  dfftp%rho_clock_label='fft'
+  if (.not.doublegrid) dfftp%grid_id = dffts%grid_id  ! this makes so that interpolation is just a copy.
+
   CALL fft_base_info( ionode, stdout )
   ngs_ = dffts%ngl( dffts%mype + 1 )
   ngm_ = dfftp%ngl( dfftp%mype + 1 )

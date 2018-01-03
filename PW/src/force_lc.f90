@@ -65,7 +65,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   else
       aux(:) = CMPLX( rho(:,1), 0.0_dp, kind=dp )
   end if
-  CALL fwfft ('Dense', aux, dfftp)
+  CALL fwfft ('Rho', aux, dfftp)
   !
   !    aux contains now  n(G)
   !

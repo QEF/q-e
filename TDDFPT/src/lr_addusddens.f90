@@ -130,7 +130,7 @@ SUBROUTINE lr_addusddens (drhoscf, dbecsum)
          psic(dfftp%nl(ig)) = aux(ig,is)
       ENDDO
       !
-      CALL invfft ('Dense', psic, dfftp)
+      CALL invfft ('Rho', psic, dfftp)
       !
       DO ir = 1, dfftp%nnr
          drhoscf(ir,is) = drhoscf(ir,is) + psic(ir) 

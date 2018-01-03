@@ -164,7 +164,7 @@ SUBROUTINE lr_exx_apply_revc_int(psi, ibnd, nbnd, ik)
         !
         ! To g-space
         !
-        CALL fwfft ('CustomWave', tempphic(:,1), dfftt)
+        CALL fwfft ('Wave', tempphic(:,1), dfftt)
         !
         ! Now separate the two bands and apply the correct nl mapping
         !
@@ -187,7 +187,7 @@ SUBROUTINE lr_exx_apply_revc_int(psi, ibnd, nbnd, ik)
         !
         ! To g-space
         !
-        CALL fwfft ('CustomWave', tempphic(:,1), dfftt)
+        CALL fwfft ('Wave', tempphic(:,1), dfftt)
         !
         ! Correct the nl mapping for the two grids.
         !
@@ -803,7 +803,7 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
              &AIMAG(red_revc0(1:nnr_,ibnd2-1,1)), kind=DP )
      ENDIF
      !
-     CALL fwfft ('Custom', pseudo_dens_c, dfftt)
+     CALL fwfft ('Rho', pseudo_dens_c, dfftt)
      !
      ! hartree contribution is computed in reciprocal space
      !
@@ -818,7 +818,7 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
         !
         !  and transformed back to real space
         !
-        CALL invfft ('Custom', vhart (:, is), dfftt)
+        CALL invfft ('Rho', vhart (:, is), dfftt)
         !
      ENDDO
      !
@@ -873,7 +873,7 @@ FUNCTION k1d_term_k(w1, psi, fac_in, ibnd, ik,ikq) RESULT (psi_int)
      pseudo_dens_c(:) = CONJG(red_revc0(:,ibnd,ikq))*&
           &red_revc0(:,ibnd2,k2q(ik))/omega
      !
-     CALL fwfft ('Smooth', pseudo_dens_c, dffts)
+     CALL fwfft ('Rho', pseudo_dens_c, dffts)
      !
      ! hartree contribution is computed in reciprocal space
      !
@@ -884,7 +884,7 @@ FUNCTION k1d_term_k(w1, psi, fac_in, ibnd, ik,ikq) RESULT (psi_int)
         !
         !  and transformed back to real space
         !
-        CALL invfft ('Smooth', vhart (:, is), dffts)
+        CALL invfft ('Rho', vhart (:, is), dffts)
         !
      ENDDO
      !
@@ -948,7 +948,7 @@ FUNCTION k2d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
              & w2*AIMAG(psi(1:nnr_))*AIMAG(red_revc0(1:nnr_,ibnd2-1,1)), kind=DP )
      ENDIF
      !
-     CALL fwfft ('Custom', pseudo_dens_c, dfftt)
+     CALL fwfft ('Rho', pseudo_dens_c, dfftt)
      !
      ! hartree contribution is computed in reciprocal space
      !
@@ -961,7 +961,7 @@ FUNCTION k2d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
         !
         !  and transformed back to real space
         !
-        CALL invfft ('Custom', vhart (:, is), dfftt)
+        CALL invfft ('Rho', vhart (:, is), dfftt)
         !
      ENDDO
      !
@@ -1012,7 +1012,7 @@ FUNCTION k2d_term_k(w1, psi, fac_in, ibnd, ik, ikq) RESULT (psi_int)
      !
      pseudo_dens_c(:) =  CONJG(psi(:))*red_revc0(:,ibnd2,k2q(ik))/omega
      !
-     CALL fwfft ('Smooth', pseudo_dens_c, dffts)
+     CALL fwfft ('Rho', pseudo_dens_c, dffts)
      !
      ! hartree contribution is computed in reciprocal space
      !
@@ -1023,7 +1023,7 @@ FUNCTION k2d_term_k(w1, psi, fac_in, ibnd, ik, ikq) RESULT (psi_int)
         !
         !  and transformed back to real space
         !
-        CALL invfft ('Smooth', vhart (:, is), dffts)
+        CALL invfft ('Rho', vhart (:, is), dffts)
         !
      ENDDO
      !
@@ -1072,7 +1072,7 @@ SUBROUTINE invfft_orbital_custom_gamma(orbital, ibnd, nbnd, npwt, dfftt)
      !
   ENDIF
   !
-  CALL invfft ('CustomWave', psic, dfftt)
+  CALL invfft ('Wave', psic, dfftt)
   !
   RETURN
   !
@@ -1094,7 +1094,7 @@ SUBROUTINE fwfft_orbital_custom_gamma(orbital, ibnd, nbnd, npwt, dfftt)
   ! Counters
   INTEGER :: j
   !
-  CALL fwfft ('CustomWave', psic(:), dfftt)
+  CALL fwfft ('Wave', psic(:), dfftt)
   !
   IF (ibnd < nbnd) THEN
      !

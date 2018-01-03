@@ -75,7 +75,7 @@ subroutine setup_dgc
 
         psic(:) = rhoout(:,is)
         !
-        CALL fwfft ('Dense', psic, dfftp)
+        CALL fwfft ('Rho', psic, dfftp)
         !
         rhogout(:,is) = psic(dfftp%nl(:))
         !

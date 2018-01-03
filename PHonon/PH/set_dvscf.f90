@@ -42,7 +42,7 @@
      call dv_of_drho (derho (1, 1), .false.)
      !
      if (doublegrid) then
-        call cinterpolate (derho (1, 1), dvscfs (1, ipl), -1)
+        call fft_interpolate_complex(dfftp, derho (1, 1), dffts, dvscfs (1, ipl) )
      else
         call zcopy (dfftp%nnr, derho (1, 1), 1, dvscfs (1, ipl), 1)
      endif

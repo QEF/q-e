@@ -89,8 +89,8 @@
 
       ! ... Initialize FFT real-space grids and small box grid
       nyfft_ = ntask_groups
-      dffts%have_task_groups = (ntask_groups >1)
-      dfftp%have_task_groups = .FALSE.
+      dffts%has_task_groups = (ntask_groups >1)
+      dfftp%has_task_groups = .FALSE.
       lpara = ( nproc_bgrp > 1 )
       !
       IF ( ref_cell ) THEN
@@ -112,6 +112,9 @@
         CALL fft_type_init( dfftp, smap, "rho", gamma_only, lpara, intra_bgrp_comm, at, bg,  gcutm, nyfft=nyfft_ )
         !
       END IF
+      ! define the clock labels ( this enables the corresponding fft too ! )
+      dffts%rho_clock_label = 'ffts' ; dffts%wave_clock_label = 'fftw'
+      dfftp%rho_clock_label = 'fft' 
       !
       !
       CALL smallbox_grid_init( dfftp, dfftb )

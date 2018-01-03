@@ -239,7 +239,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
            ENDDO
            raux=0._DP
            DO ipol=1,npol
-              CALL invfft ('Dense', psic_nc(:,ipol), dfftp)
+              CALL invfft ('Rho', psic_nc(:,ipol), dfftp)
               raux(:) = raux(:)+dble( psic_nc(:,ipol) )**2 &
                              + aimag( psic_nc(:,ipol) )**2
            ENDDO
@@ -255,7 +255,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
                  caux (dfftp%nlm(igk_k (ig,ik) ) ) = conjg(evc (ig, ibnd))
               ENDDO
            ENDIF
-           CALL invfft ('Dense', caux, dfftp)
+           CALL invfft ('Rho', caux, dfftp)
            !
            raux(:) = dble( caux(:) )**2 + aimag( caux(:) )**2
            !

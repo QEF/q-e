@@ -89,7 +89,7 @@ subroutine addusldos (ldos, becsum1)
         do ig = 1, ngm
            psic (dfftp%nl (ig) ) = aux (ig, is)
         enddo
-        CALL invfft ('Dense', psic, dfftp)
+        CALL invfft ('Rho', psic, dfftp)
         call daxpy (dfftp%nnr, 1.d0, psic, 2, ldos(1,is), 2 )
      enddo
   endif

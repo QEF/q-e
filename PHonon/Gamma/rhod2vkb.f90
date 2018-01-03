@@ -52,7 +52,7 @@ SUBROUTINE rhod2vkb(dyn0)
   DO ir = 1,dfftp%nnr
      psic(ir) = rho%of_r(ir,current_spin)
   ENDDO
-  CALL fwfft ('Dense', psic, dfftp)
+  CALL fwfft ('Rho', psic, dfftp)
   DO nu_i = 1,nmodes
      IF (has_equivalent( (nu_i-1)/3+1)==1 ) GOTO 10
      DO na = 1, nat

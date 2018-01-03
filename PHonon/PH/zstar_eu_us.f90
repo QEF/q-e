@@ -118,7 +118,7 @@ subroutine zstar_eu_us
   if (doublegrid) then
      do is = 1, nspin_mag
         do ipol = 1, 3
-           call cinterpolate(dvscf(1,is,ipol),dvscf(1,is,ipol), 1)
+           call fft_interpolate_complex(dffts, dvscf(1,is,ipol), dfftp, dvscf(1,is,ipol))
         end do
      end do
   end if

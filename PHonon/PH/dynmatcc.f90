@@ -66,7 +66,7 @@ subroutine dynmatcc
   end if
   deallocate (v)
   !
-  CALL fwfft ('Dense', vxc, dfftp)
+  CALL fwfft ('Rho', vxc, dfftp)
   !
   ! vxc is the spin-averaged XC potential (in G-space)
   !

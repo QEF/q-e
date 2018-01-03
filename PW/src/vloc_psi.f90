@@ -39,7 +39,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   CALL start_clock ('vloc_psi')
   incr = 2
   !
-  use_tg = dffts%have_task_groups 
+  use_tg = dffts%has_task_groups 
   !
   IF( use_tg ) THEN
      !
@@ -233,7 +233,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   INTEGER :: v_siz, idx, ioff
   !
   CALL start_clock ('vloc_psi')
-  use_tg = dffts%have_task_groups 
+  use_tg = dffts%has_task_groups 
   !
   IF( use_tg ) THEN
      !
@@ -402,7 +402,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   !
   incr = 1
   !
-  use_tg = dffts%have_task_groups 
+  use_tg = dffts%has_task_groups 
   !
   IF( use_tg ) THEN
      CALL start_clock ('vloc_psi:tg_gather')

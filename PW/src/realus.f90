@@ -130,7 +130,7 @@ MODULE realus
 
      !real space, allocation for task group fft work arrays
 
-     IF( dffts%have_task_groups ) THEN
+     IF( dffts%has_task_groups ) THEN
         !
         IF (allocated( tg_psic ) ) DEALLOCATE( tg_psic )
         !
@@ -1471,7 +1471,7 @@ MODULE realus
     !
     CALL start_clock( 'calbec_rs' )
     !
-    IF( dffts%have_task_groups ) THEN
+    IF( dffts%has_task_groups ) THEN
 
      CALL errore( 'calbec_rs_gamma', 'task_groups not implemented', 1 )
 
@@ -1579,7 +1579,7 @@ MODULE realus
     !
     CALL start_clock( 'calbec_rs' )
     !
-    IF( dffts%have_task_groups ) CALL errore( 'calbec_rs_k', 'task_groups not implemented', 1 )
+    IF( dffts%has_task_groups ) CALL errore( 'calbec_rs_k', 'task_groups not implemented', 1 )
 
     call set_xkphase(current_k)
 
@@ -1656,7 +1656,7 @@ MODULE realus
       !
       CALL start_clock( 's_psir' )
 
-      IF( dffts%have_task_groups ) CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
+      IF( dffts%has_task_groups ) CALL errore( 's_psir_gamma', 'task_groups not implemented', 1 )
 
       !
       fac = sqrt(omega)
@@ -1740,7 +1740,7 @@ MODULE realus
 
       CALL start_clock( 's_psir' )
    
-      IF( dffts%have_task_groups ) CALL errore( 's_psir_k', 'task_groups not implemented', 1 )
+      IF( dffts%has_task_groups ) CALL errore( 's_psir_k', 'task_groups not implemented', 1 )
 
       call set_xkphase(current_k)
 
@@ -1827,7 +1827,7 @@ MODULE realus
   !
   CALL start_clock( 'add_vuspsir' )
 
-  IF( dffts%have_task_groups ) THEN
+  IF( dffts%has_task_groups ) THEN
 
     CALL errore( 'add_vuspsir_gamma', 'task_groups not implemented', 1 )
 
@@ -1930,7 +1930,7 @@ MODULE realus
   !
   CALL start_clock( 'add_vuspsir' )
 
-  IF( dffts%have_task_groups ) CALL errore( 'add_vuspsir_k', 'task_groups not implemented', 1 )
+  IF( dffts%has_task_groups ) CALL errore( 'add_vuspsir_k', 'task_groups not implemented', 1 )
 
   call set_xkphase(current_k)
    !
@@ -2027,7 +2027,7 @@ MODULE realus
     !print *, "->Real space"
     CALL start_clock( 'invfft_orbital' )
     !
-    IF( dffts%have_task_groups ) THEN
+    IF( dffts%has_task_groups ) THEN
         !
 
         tg_psic = (0.d0, 0.d0)
@@ -2143,7 +2143,7 @@ MODULE realus
     !print *, "->fourier space"
     CALL start_clock( 'fwfft_orbital' )
     !New task_groups versions
-    IF( dffts%have_task_groups ) THEN
+    IF( dffts%has_task_groups ) THEN
        !
         CALL fwfft ('tgWave', tg_psic, dffts )
         !
@@ -2250,7 +2250,7 @@ MODULE realus
 
     ik_ = current_k ; if (present(ik)) ik_ = ik
 
-    IF( dffts%have_task_groups ) THEN
+    IF( dffts%has_task_groups ) THEN
        !
        tg_psic = ( 0.D0, 0.D0 )
        ioff   = 0
@@ -2338,7 +2338,7 @@ MODULE realus
 
     ik_ = current_k ; if (present(ik)) ik_ = ik
 
-    IF( dffts%have_task_groups ) THEN
+    IF( dffts%has_task_groups ) THEN
        !
        CALL fwfft ('tgWave', tg_psic, dffts)
        !
@@ -2404,7 +2404,7 @@ MODULE realus
     REAL(DP),    ALLOCATABLE :: tg_v(:)
     CALL start_clock( 'v_loc_psir' )
 
-    IF( dffts%have_task_groups ) THEN
+    IF( dffts%has_task_groups ) THEN
         IF (ibnd == 1 ) THEN
           CALL tg_gather( dffts, vrs(:,current_spin), tg_v )
           !if ibnd==1 this is a new calculation, and tg_v should be distributed.
@@ -2452,7 +2452,7 @@ MODULE realus
     REAL(DP),    ALLOCATABLE :: tg_v(:)
     CALL start_clock( 'v_loc_psir' )
 
-    IF( dffts%have_task_groups ) THEN
+    IF( dffts%has_task_groups ) THEN
         IF (ibnd == 1 ) THEN
           CALL tg_gather( dffts, vrs(:,current_spin), tg_v )
           !if ibnd==1 this is a new calculation, and tg_v should be distributed.

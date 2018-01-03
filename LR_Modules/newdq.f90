@@ -97,7 +97,7 @@ subroutine newdq (dvscf, npe)
         do ir = 1, dfftp%nnr
            veff (ir) = dvscf (ir, is, ipert)
         enddo
-        CALL fwfft ('Dense', veff, dfftp)
+        CALL fwfft ('Rho', veff, dfftp)
         do ig = 1, ngm
            aux2 (ig, is) = veff (dfftp%nl (ig) )
         enddo

@@ -87,7 +87,7 @@ SUBROUTINE elphon()
         ALLOCATE (dvscfins (dffts%nnr, nspin_mag , npert(irr)) )
         DO is = 1, nspin_mag
            DO ipert = 1, npe
-              CALL cinterpolate (dvscfin(1,is,ipert),dvscfins(1,is,ipert),-1)
+              CALL fft_interpolate_complex (dfftp, dvscfin(1,is,ipert), dffts, dvscfins(1,is,ipert))
            ENDDO
         ENDDO
      ELSE
@@ -333,7 +333,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   el_ph_mat_rec=(0.0_DP,0.0_DP)
   ALLOCATE (aux2(npwx*npol, nbnd))
   incr=1
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      !
      v_siz =  dffts%nnr_tg
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
@@ -385,7 +385,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         !
         ! calculate dvscf_q*psi_k
         !
-        IF ( dffts%have_task_groups ) THEN
+        IF ( dffts%has_task_groups ) THEN
            IF (noncolin) THEN
               CALL tg_cgather( dffts, dvscfins(:,1,ipert), tg_dv(:,1))
               IF (domag) THEN
@@ -399,7 +399,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
         ENDIF
         aux2=(0.0_DP,0.0_DP)
         DO ibnd = ibnd_fst, ibnd_lst, incr
-           IF ( dffts%have_task_groups ) THEN
+           IF ( dffts%has_task_groups ) THEN
               CALL cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, nbnd )
               CALL apply_dpot(v_siz, tg_psic, tg_dv, 1)
               CALL cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, nbnd)
@@ -456,7 +456,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   DEALLOCATE (elphmat)
   DEALLOCATE (aux1)
   DEALLOCATE (aux2)
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      DEALLOCATE( tg_dv )
      DEALLOCATE( tg_psic )
   ENDIF

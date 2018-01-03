@@ -176,7 +176,7 @@ CONTAINS
     call start_clock( 'rVV10_ffts')
     
     do theta_i = 1, Nqs
-       CALL invfft('Dense', thetas(:,theta_i), dfftp) 
+       CALL invfft('Rho', thetas(:,theta_i), dfftp) 
     end do
 
     call stop_clock( 'rVV10_ffts')
@@ -391,7 +391,7 @@ CONTAINS
       call start_clock( 'rVV10_ffts')
 
       do theta_i = 1, Nqs
-         CALL invfft('Dense', u_vdW(:,theta_i), dfftp) 
+         CALL invfft('Rho', u_vdW(:,theta_i), dfftp) 
       end do
 
       call stop_clock( 'rVV10_ffts')
@@ -682,7 +682,7 @@ CONTAINS
 
     do theta_i = 1, Nqs
 
-     CALL fwfft ('Dense', thetas(:,theta_i), dfftp)
+     CALL fwfft ('Rho', thetas(:,theta_i), dfftp)
     end do
 
     call stop_clock( 'rVV10_ffts')
@@ -1044,7 +1044,7 @@ subroutine numerical_gradient(total_rho, gradient_rho)
    ! rho in G space
    allocate ( c_rho(dfftp%nnr), c_grho(dfftp%nnr) )
    c_rho(1:dfftp%nnr) = CMPLX(total_rho(1:dfftp%nnr),0.0_DP)
-   CALL fwfft ('Dense', c_rho, dfftp) 
+   CALL fwfft ('Rho', c_rho, dfftp) 
  
    do icar=1,3
       ! compute gradient in G space
@@ -1053,7 +1053,7 @@ subroutine numerical_gradient(total_rho, gradient_rho)
       if (gamma_only) c_grho( dfftp%nlm(:) ) = CONJG( c_grho( dfftp%nl(:) ) )
  
       ! back in real space
-      CALL invfft ('Dense', c_grho, dfftp) 
+      CALL invfft ('Rho', c_grho, dfftp) 
       gradient_rho(:,icar) = REAL( c_grho(:) )
    end do
    deallocate ( c_rho, c_grho )
@@ -1312,10 +1312,10 @@ end subroutine vdW_energy
 
     do icar = 1,3
       h(:) = CMPLX(h_prefactor(:) * gradient_rho(:,icar),0.0_DP)
-      CALL fwfft ('Dense', h, dfftp) 
+      CALL fwfft ('Rho', h, dfftp) 
       h(dfftp%nl(:)) = CMPLX(0.0_DP,1.0_DP) * tpiba * g(icar,:) * h(dfftp%nl(:))
       if (gamma_only) h(dfftp%nlm(:)) = CONJG(h(dfftp%nl(:)))
-      CALL invfft ('Dense', h, dfftp) 
+      CALL invfft ('Rho', h, dfftp) 
       potential(:) = potential(:) - REAL(h(:))
     end do
 

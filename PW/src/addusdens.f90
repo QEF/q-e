@@ -166,7 +166,7 @@ SUBROUTINE addusdens_g(rho)
      psic(:) = (0.d0, 0.d0)
      psic( dfftp%nl(:) ) = aux(:,is)
      IF (gamma_only) psic( dfftp%nlm(:) ) = CONJG (aux(:,is))
-     CALL invfft ('Dense', psic, dfftp)
+     CALL invfft ('Rho', psic, dfftp)
      rho(:, is) = rho(:, is) +  DBLE (psic (:) )
   ENDDO
 #ifdef DEBUG_ADDUSDENS

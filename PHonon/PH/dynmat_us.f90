@@ -101,7 +101,7 @@ SUBROUTINE dynmat_us()
      rhog (:) = rhog (:) + CMPLX(rho%of_r(:, is), 0.d0,kind=DP)
   ENDDO
 
-  CALL fwfft ('Dense', rhog, dfftp)
+  CALL fwfft ('Rho', rhog, dfftp)
   !
   ! there is a delta ss'
   !

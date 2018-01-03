@@ -656,7 +656,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !
   ! ... transform hartree potential to real space
   !
-  CALL invfft ('Dense', aux, dfftp)
+  CALL invfft ('Rho', aux, dfftp)
   !
   ! ... add hartree potential to the xc potential
   !
@@ -1091,7 +1091,7 @@ SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
   ALLOCATE( aux( dfftp%nnr ) )
   DO is = 1, nspin
      aux(:) = CMPLX(rhor( : , is ),0.D0,kind=dp) 
-     CALL fwfft ('Dense', aux, dfftp)
+     CALL fwfft ('Rho', aux, dfftp)
      rhog(:,is) = aux(dfftp%nl(:))
   END DO
   DEALLOCATE( aux )
@@ -1140,7 +1140,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
   ALLOCATE( rhoaux( dfftp%nnr ) )
   rhoaux( : ) = CMPLX( rho( : ), 0.D0, KIND=dp ) 
   !
-  CALL fwfft('Dense', rhoaux, dfftp)
+  CALL fwfft('Rho', rhoaux, dfftp)
   !
   ! ... Compute total potential in G space
   !
@@ -1185,7 +1185,7 @@ SUBROUTINE gradv_h_of_rho_r( rho, gradv )
     !
     ! ... bring back to R-space, (\grad_ipol a)(r) ...
     !
-    CALL invfft ('Dense', gaux, dfftp)
+    CALL invfft ('Rho', gaux, dfftp)
     !
     gradv(ipol,:) = REAL( gaux(:) )
     !
