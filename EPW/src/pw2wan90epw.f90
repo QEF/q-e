@@ -782,7 +782,6 @@ SUBROUTINE compute_mmn_para
    USE control_flags,   ONLY : gamma_only
    USE wavefunctions_module, ONLY : evc, psic, psic_nc
    USE units_ph,        ONLY : lrwfc, iuwfc
-   USE gvecs,           ONLY : nls, nlsm
    USE fft_base,        ONLY : dffts
    USE fft_interfaces,  ONLY : fwfft, invfft
    USE klist,           ONLY : nkstot, xk, nks, igk_k
@@ -963,7 +962,7 @@ SUBROUTINE compute_mmn_para
         ! compute the phase
         !
         phase(:) = (0.d0,0.d0)
-        IF ( ig_(ik_g,ib)>0) phase( nls(ig_(ik_g,ib)) ) = (1.d0,0.d0)
+        IF ( ig_(ik_g,ib)>0) phase(dffts%nl(ig_(ik_g,ib)) ) = (1.d0,0.d0)
         CALL invfft ('Wave', phase, dffts)
         !
         !  USPP
@@ -1037,25 +1036,25 @@ SUBROUTINE compute_mmn_para
               DO ipol=1,2!npol
                  istart=(ipol-1)*npwx+1
                  iend=istart+npw-1
-                 psic_nc(nls (igk_k (1:npw,ik) ),ipol ) = evc(istart:iend, m)
+                 psic_nc(dffts%nl(igk_k (1:npw,ik) ),ipol ) = evc(istart:iend, m)
                  CALL invfft ('Wave', psic_nc(:,ipol), dffts)
                  psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * &
                                                phase(1:dffts%nnr)
                  CALL fwfft ('Wave', psic_nc(:,ipol), dffts)
-                 aux_nc(1:npwq,ipol) = psic_nc(nls (igkq(1:npwq) ),ipol )
+                 aux_nc(1:npwq,ipol) = psic_nc(dffts%nl(igkq(1:npwq) ),ipol )
               ENDDO
            ELSE
               psic(:) = (0.d0, 0.d0)
-              psic(nls (igk_k (1:npw,ik) ) ) = evc (1:npw, m)
-              IF(gamma_only) psic(nlsm(igk_k (1:npw,ik) ) ) = conjg(evc (1:npw, m))
+              psic(dffts%nl(igk_k (1:npw,ik) ) ) = evc (1:npw, m)
+              IF(gamma_only) psic(dffts%nlm(igk_k (1:npw,ik) ) ) = conjg(evc (1:npw, m))
               CALL invfft ('Wave', psic, dffts)
               psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
               CALL fwfft ('Wave', psic, dffts)
-              aux(1:npwq)  = psic(nls (igkq(1:npwq) ) )
+              aux(1:npwq)  = psic(dffts%nl(igkq(1:npwq) ) )
            ENDIF
            IF(gamma_only) THEN
-              IF (gstart==2) psic(nlsm(1)) = (0.d0,0.d0)
-              aux2(1:npwq) = conjg(psic(nlsm(igkq(1:npwq) ) ) )
+              IF (gstart==2) psic(dffts%nlm(1)) = (0.d0,0.d0)
+              aux2(1:npwq) = conjg(psic(dffts%nlm(igkq(1:npwq) ) ) )
            ENDIF
          !  aa = 0.d0
            !
@@ -1569,7 +1568,6 @@ SUBROUTINE write_plot
    USE units_ph,        ONLY : lrwfc, iuwfc
    USE wannierEPW,      ONLY : reduce_unk, wvfn_formatted, ispinw, nexband, &
                                excluded_band 
-   USE gvecs,           ONLY : nls, nlsm
    USE klist,           ONLY : xk, nks, igk_k
    USE gvect,           ONLY : g, ngm 
    USE cell_base,       ONLY : tpiba2
@@ -1639,8 +1637,8 @@ SUBROUTINE write_plot
          IF (excluded_band(ibnd)) CYCLE
          ibnd1=ibnd1 + 1
          psic(:) = (0.d0, 0.d0)
-         psic(nls (igk_k (1:npw,ik) ) ) = evc (1:npw, ibnd)
-         IF (gamma_only)  psic(nlsm(igk_k (1:npw,ik) ) ) = conjg(evc (1:npw, ibnd))
+         psic(dffts%nl(igk_k (1:npw,ik) ) ) = evc (1:npw, ibnd)
+         IF (gamma_only)  psic(dffts%nlm(igk_k (1:npw,ik) ) ) = conjg(evc (1:npw, ibnd))
          CALL invfft ('Wave', psic, dffts)
          IF (reduce_unk) pos=0
 #if defined(__MPI)

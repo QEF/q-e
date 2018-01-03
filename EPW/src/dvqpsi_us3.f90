@@ -26,9 +26,8 @@
   USE cell_base,             ONLY : tpiba
   USE fft_base,              ONLY : dfftp, dffts
   USE fft_interfaces,        ONLY : fwfft, invfft
-  USE gvect,                 ONLY : eigts1, eigts2, eigts3, mill, g, nl, &
-                                    ngm
-  USE gvecs,                 ONLY : ngms, doublegrid, nls
+  USE gvect,                 ONLY : eigts1, eigts2, eigts3, mill, g, ngm
+  USE gvecs,                 ONLY : ngms, doublegrid
   USE lsda_mod,              ONLY : lsda, isk
   USE noncollin_module,      ONLY : npol
   use uspp_param,            ONLY : upf
@@ -113,7 +112,7 @@
            gtau = eigts1 (mill(1,ig), na) * eigts2 (mill(2,ig), na) * eigts3 ( &
                 mill(3,ig), na)
            gu = gu0 + g (1, ig) * u1 + g (2, ig) * u2 + g (3, ig) * u3
-           aux1 (nls (ig) ) = aux1 (nls (ig) ) + vlocq (ig, nt) * gu * &
+           aux1 (dffts%nl(ig) ) = aux1(dffts%nl(ig) ) + vlocq (ig, nt) * gu * &
                 fact * gtau
         ENDDO
      ENDIF
@@ -139,7 +138,7 @@
                          eigts2(mill(2,ig),na)*   &
                          eigts3(mill(3,ig),na)
                   gu = gu0+g(1,ig)*u1+g(2,ig)*u2+g(3,ig)*u3
-                  aux(nl(ig))=aux(nl(ig))+drc(ig,nt)*gu*fact*gtau
+                  aux(dfftp%nl(ig))=aux(dfftp%nl(ig))+drc(ig,nt)*gu*fact*gtau
                ENDDO
             ENDIF
          ENDIF
@@ -162,7 +161,7 @@
       IF (doublegrid) THEN
          auxs(:) = (0.d0, 0.d0)
          DO ig=1,ngms
-            auxs(nls(ig)) = aux(nl(ig))
+            auxs(dffts%nl(ig)) = aux(dfftp%nl(ig))
          ENDDO
       ENDIF
       aux1(:) = aux1(:) + auxs(:)
@@ -176,11 +175,11 @@
         aux2(:) = (0.d0, 0.d0)
         IF ( ip == 1 ) THEN
            DO ig = 1, npw
-              aux2 (nls (igk (ig) ) ) = evc (ig, ibnd)
+              aux2 (dffts%nl(igk (ig) ) ) = evc (ig, ibnd)
            ENDDO
         ELSE
            DO ig = 1, npw
-              aux2 (nls (igk (ig) ) ) = evc (ig+npwx, ibnd)
+              aux2 (dffts%nl(igk (ig) ) ) = evc (ig+npwx, ibnd)
            ENDDO
         ENDIF
         !
@@ -196,11 +195,11 @@
         CALL fwfft ('Wave', aux2, dffts)
         IF ( ip == 1 ) THEN
            DO ig = 1, npwq
-              dvpsi (ig, ibnd) = aux2 (nls (igkq (ig) ) )
+              dvpsi (ig, ibnd) = aux2 (dffts%nl(igkq (ig) ) )
            ENDDO
         ELSE
            DO ig = 1, npwq
-              dvpsi (ig+npwx, ibnd) = aux2 (nls (igkq (ig) ) )
+              dvpsi (ig+npwx, ibnd) = aux2 (dffts%nl(igkq (ig) ) )
            ENDDO
         ENDIF
      ENDDO

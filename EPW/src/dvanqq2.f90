@@ -28,7 +28,7 @@
   USE io_global,        ONLY : stdout
   USE pwcom,            ONLY : lspinorb, nspin, domag
   USE cell_base,        ONLY : tpiba2, omega, tpiba
-  USE gvect,            ONLY : ngm, gg, nl, g, eigts1, eigts2, eigts3, mill
+  USE gvect,            ONLY : ngm, gg, g, eigts1, eigts2, eigts3, mill
   USE scf,              ONLY : v, vltot
   USE noncollin_module, ONLY : noncolin
   USE kinds,            ONLY : DP
@@ -183,7 +183,7 @@
                     DO is = 1, nspin0
                        DO ipol = 1, 3
                           DO ig = 1, ngm
-                             aux2 (ig) = veff (nl (ig), is) * g (ipol, ig)
+                             aux2 (ig) = veff (dfftp%nl(ig),is) * g (ipol, ig)
                           ENDDO
                           int1 (ih, jh, ipol, nb, is) = - fact1 * &
                                ZDOTC (ngm, aux1, 1, aux2, 1)

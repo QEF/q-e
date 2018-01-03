@@ -423,8 +423,7 @@
   USE io_global,     ONLY : stdout, meta_ionode
   USE io_files,      ONLY : prefix
   USE gvecs,         ONLY : ngms, gcutms, ngms_g
-  USE gvect,         ONLY : gg, ngm, ngm_g, gcutm,&
-                            ig_l2g ,nl
+  USE gvect,         ONLY : gg, ngm, ngm_g, gcutm,ig_l2g
   USE control_flags, ONLY : gamma_only
   USE constants,     ONLY : eps8
   USE fft_base,      ONLY : dfftp
@@ -608,7 +607,7 @@ CALL mp_barrier(inter_image_comm)
 
 
 !gg(:) =gcutm +1.d0
-nl_2(:)=nl(:)
+nl_2(:)=dfftp%nl(:)
 gg_2(:)=gg(:)
 gg_2(:) = gcutm + 1.d0
 
