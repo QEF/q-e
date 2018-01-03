@@ -259,7 +259,7 @@ SUBROUTINE sum_band()
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       use_tg = ( dffts%have_task_groups ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
+       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
        !
        incr = 2
 
@@ -498,7 +498,7 @@ SUBROUTINE sum_band()
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-       use_tg = ( dffts%have_task_groups ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
+       use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
        !
        incr = 1
        !

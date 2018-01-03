@@ -220,7 +220,7 @@ SUBROUTINE normal_read()
   ! Calculation of the unperturbed wavefunctions in R-space revc0.
   ! Inverse Fourier transform of evc0.
   !
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
        !
        v_siz =  dffts%nnr_tg
        incr = 2 * fftx_ntgrp(dffts)
@@ -238,7 +238,7 @@ SUBROUTINE normal_read()
         !
         CALL invfft_orbital_gamma ( evc0(:,:,1), ibnd, nbnd)
         !
-        IF (dffts%have_task_groups) THEN               
+        IF (dffts%has_task_groups) THEN               
            !
            DO j = 1, dffts%nr1x*dffts%nr2x*dffts%my_nr3p
                !
@@ -302,7 +302,7 @@ SUBROUTINE virt_read()
   !
   WRITE( stdout, '(/5x,"Virt read")' )
   !  
-  IF (dffts%have_task_groups) CALL errore ( 'virt_read', 'Task &
+  IF (dffts%has_task_groups) CALL errore ( 'virt_read', 'Task &
      & groups not supported when there are virtual states in the &
      & input.', 1 )
   !

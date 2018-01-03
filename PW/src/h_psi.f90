@@ -125,7 +125,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
         !
-        IF ( dffts%have_task_groups ) then 
+        IF ( dffts%has_task_groups ) then 
            incr = 2 * fftx_ntgrp(dffts)
         ELSE
            incr = 2
@@ -162,7 +162,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
         !
-        IF ( dffts%have_task_groups ) then 
+        IF ( dffts%has_task_groups ) then 
            incr = fftx_ntgrp(dffts)
         ELSE
            incr = 1

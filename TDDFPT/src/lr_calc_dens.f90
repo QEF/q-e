@@ -338,7 +338,7 @@ CONTAINS
     !
     incr = 2
     !
-    IF ( dffts%have_task_groups ) THEN
+    IF ( dffts%has_task_groups ) THEN
        !
        v_siz =  dffts%nnr_tg
        !
@@ -355,7 +355,7 @@ CONTAINS
        !
        CALL invfft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
        !
-       IF (dffts%have_task_groups) THEN
+       IF (dffts%has_task_groups) THEN
           !
           ! Now the first proc of the group holds the first two bands
           ! of the 2*ntgrp bands that we are processing at the same time,
@@ -440,7 +440,7 @@ CONTAINS
        !
     ENDDO
     !
-    IF (dffts%have_task_groups) THEN
+    IF (dffts%has_task_groups) THEN
        !
        ! reduce the group charge
        !
@@ -543,7 +543,7 @@ CONTAINS
        !
     ENDIF
     !
-    IF ( dffts%have_task_groups ) THEN
+    IF ( dffts%has_task_groups ) THEN
        DEALLOCATE( tg_rho )
     END IF
     !   

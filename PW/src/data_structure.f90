@@ -58,7 +58,7 @@ SUBROUTINE data_structure( gamma_only )
   !
   ! ... set up fft descriptors, including parallel stuff: sticks, planes, etc.
   !
-  dffts%have_task_groups = (ntask_groups >1)
+  dffts%has_task_groups = (ntask_groups >1)
   CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm, at, bg, gkcut, gcutms/gkcut, nyfft=nyfft )
   CALL fft_type_init( dfftp, smap, "rho" , gamma_only, lpara, intra_bgrp_comm, at, bg, gcutm , 4.d0, nyfft=nyfft )
   ! define the clock labels ( this enables the corresponding fft too ! )

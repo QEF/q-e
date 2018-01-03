@@ -139,7 +139,7 @@ subroutine solve_e
      iter0 = 0
   endif
   incr=1
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      !
      v_siz =  dffts%nnr_tg
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
@@ -207,7 +207,7 @@ subroutine solve_e
               ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
               ! dvscf_q from previous iteration (mix_potential)
               !
-              IF( dffts%have_task_groups ) THEN
+              IF( dffts%has_task_groups ) THEN
                  IF (noncolin) THEN
                     CALL tg_cgather( dffts, dvscfins(:,1,ipol), tg_dv(:,1))
                     IF (domag) THEN
@@ -221,7 +221,7 @@ subroutine solve_e
               ENDIF
               aux2=(0.0_DP,0.0_DP)
               do ibnd = 1, nbnd_occ (ik), incr
-                 IF ( dffts%have_task_groups ) THEN
+                 IF ( dffts%has_task_groups ) THEN
                     call cft_wave_tg (ik, evc, tg_psic, 1, v_siz, ibnd, nbnd_occ (ik) )
                     call apply_dpot(v_siz, tg_psic, tg_dv, 1)
                     call cft_wave_tg (ik, aux2, tg_psic, -1, v_siz, ibnd, nbnd_occ (ik))
@@ -421,7 +421,7 @@ subroutine solve_e
   deallocate (dvscfin)
   if (noncolin) deallocate(dbecsum_nc)
   deallocate(aux2)
-  IF ( dffts%have_task_groups ) THEN
+  IF ( dffts%has_task_groups ) THEN
      !
      DEALLOCATE( tg_dv  )
      DEALLOCATE( tg_psic)

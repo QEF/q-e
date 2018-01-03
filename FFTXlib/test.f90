@@ -263,8 +263,8 @@ program test
   end if
   !
   IF (gamma_only) incr = 2
-  dffts%have_task_groups = (ntgs > 1)
-  use_tg = dffts%have_task_groups
+  dffts%has_task_groups = (ntgs > 1)
+  use_tg = dffts%has_task_groups
   !
   dffts%rho_clock_label='ffts' ; dffts%wave_clock_label='fftw'
   CALL fft_type_init(dffts, smap, "wave", gamma_only, .true., comm, at, bg, gkcut, gcutms/gkcut, nyfft=ntgs)

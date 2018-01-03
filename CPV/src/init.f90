@@ -89,8 +89,8 @@
 
       ! ... Initialize FFT real-space grids and small box grid
       nyfft_ = ntask_groups
-      dffts%have_task_groups = (ntask_groups >1)
-      dfftp%have_task_groups = .FALSE.
+      dffts%has_task_groups = (ntask_groups >1)
+      dfftp%has_task_groups = .FALSE.
       lpara = ( nproc_bgrp > 1 )
       !
       IF ( ref_cell ) THEN

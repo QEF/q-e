@@ -106,7 +106,7 @@
          iss2 = iss1
       END IF
       !
-      IF( dffts%have_task_groups ) THEN
+      IF( dffts%has_task_groups ) THEN
          !
          CALL tg_get_group_nr3( dffts, tg_nr3 )
          !
@@ -241,7 +241,7 @@
                fip = -0.5d0*f(i+idx)
             endif
             CALL fftx_psi2c_gamma( dffts, psi(eig_offset+1:eig_offset+inc), df(igno:igno+ngw), da(igno:igno+ngw))
-            IF( dffts%have_task_groups ) THEN
+            IF( dffts%has_task_groups ) THEN
                DO ig=1,ngw
                   df(ig+igno-1)= fi *(tpiba2 * g2kin(ig) * c(ig,idx+i-1) + df(ig+igno-1))
                   da(ig+igno-1)= fip*(tpiba2 * g2kin(ig) * c(ig,idx+i  ) + da(ig+igno-1))
