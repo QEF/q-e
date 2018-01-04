@@ -89,7 +89,7 @@ SUBROUTINE potinit()
      IF ( .NOT.lforcet ) THEN
         CALL read_scf ( rho, nspin, gamma_only )
 #if !defined (__OLDXML)
-        CALL rho_g2r ( rho%of_g, rho%of_r )
+        CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
 #endif
      ELSE
         !
@@ -101,7 +101,7 @@ SUBROUTINE potinit()
 #else
         CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, rho%of_g, gamma_only )
-        CALL rho_g2r ( rho%of_g, rho%of_r )
+        CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
 #endif
         CALL nc_magnetization_from_lsda ( dfftp%nnr, nspin, rho%of_r )
      END IF
@@ -157,7 +157,7 @@ SUBROUTINE potinit()
 #else
         CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, v%of_g, gamma_only )
-        CALL rho_g2r ( v%of_g, v%of_r )
+        CALL rho_g2r ( dfftp, v%of_g, v%of_r )
 #endif
         !
         WRITE( UNIT = stdout, &
