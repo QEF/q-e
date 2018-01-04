@@ -28,10 +28,10 @@
       use smallbox_grid_dim,    only: smallbox_grid_init,smallbox_grid_info
       USE fft_types,            ONLY: fft_type_init
       use ions_base,            only: nat
-      USE recvec_subs,          ONLY: ggen
-      USE gvect,                ONLY: mill_g, eigts1,eigts2,eigts3, gg, &
-                                      ecutrho, gcutm, gvect_init
-      use gvecs,                only: gcutms, gvecs_init
+      USE recvec_subs,          ONLY: ggen, ggens
+      USE gvect,                ONLY: mill_g, eigts1,eigts2,eigts3, g, gg, &
+                                      ecutrho, gcutm, gvect_init, mill
+      use gvecs,                only: gcutms, gvecs_init, ngms
       use gvecw,                only: gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY: ggenb
       USE fft_base,             ONLY: dfftp, dffts, dfftb, fft_base_info
@@ -170,18 +170,20 @@
         WRITE( stdout,'(3X,"Reference Cell alat  =",F14.8,1X,"A.U.")' ) ref_alat
         !
         IF( smallmem ) THEN
-           CALL ggen( dfftp, dffts, gamma_only, ref_at, ref_bg, no_global_sort = .TRUE. )
+           CALL ggen( dfftp, gamma_only, ref_at, ref_bg, no_global_sort = .TRUE. )
         ELSE
-           CALL ggen( dfftp, dffts, gamma_only, ref_at, ref_bg )
+           CALL ggen( dfftp, gamma_only, ref_at, ref_bg )
         END IF
+        CALL ggens( dffts, gamma_only, ref_at, g, gg, mill, gcutms, ngms )
         !
       ELSE
         !
         IF( smallmem ) THEN
-           CALL ggen( dfftp, dffts, gamma_only, at, bg, no_global_sort = .TRUE. )
+           CALL ggen( dfftp, gamma_only, at, bg, no_global_sort = .TRUE. )
         ELSE
-           CALL ggen( dfftp, dffts, gamma_only, at, bg )
+           CALL ggen( dfftp, gamma_only, at, bg )
         END IF
+        CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
         !
       END IF
 

@@ -24,12 +24,15 @@ Problems fixed in development version:
 
 Incompatible changes in development version:
 
+  * subroutine "ggen" split into two subroutines: "ggen" takes care of
+    G-vectors for the FFT grid only, "ggens" for the subgrid only
+
   * FFT interfaces fwfft, invfft now accept only 'Rho', 'Wave', 'tgWave'.
     Together with FFT descriptor, these options cover all cases.
 
   * Structure for 'custom' FFT (exx_fft) deleted from exact exchange code,
-    FFT descriptor dfftt and a few variabes used instead
-    (a different one is still present in GWW)
+    FFT descriptor dfftt and a few variables used instead
+    (a different exx_fft structure is still present in GWW)
 
   * FFT indices nl, nlm, nls, nlsm, moved from their previous location
     (gvect, gvecs) into FFT descriptors (dfft* structures)
