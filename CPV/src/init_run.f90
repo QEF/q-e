@@ -23,7 +23,7 @@ SUBROUTINE init_run()
                                        vels, velsm, velsp, fion, fionm
   USE gvecw,                    ONLY : ngw, ngw_g, g2kin, g2kin_init
   USE smallbox_gvec,            ONLY : ngb
-  USE gvect,                    ONLY : ngm, gstart, gg
+  USE gvect,                    ONLY : gstart, gg
   USE fft_base,                 ONLY : dfftp, dffts
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
@@ -145,7 +145,7 @@ SUBROUTINE init_run()
   !     allocation of all arrays not already allocated in init and nlinit
   !=======================================================================
   !
-  CALL allocate_mainvar( ngw, ngw_g, ngb, dffts%ngm, ngm, dfftp%nr1,dfftp%nr2,dfftp%nr3, dfftp%nr1x, &
+  CALL allocate_mainvar( ngw, ngw_g, ngb, dffts%ngm, dfftp%ngm, dfftp%nr1,dfftp%nr2,dfftp%nr3, dfftp%nr1x, &
                          dfftp%nr2x, dfftp%my_nr3p, dfftp%nnr, dffts%nnr, nat, nax, nsp,   &
                          nspin, nbsp, nbspx, nupdwn, nkb, gstart, nudx, &
                          tpre, nbspx_bgrp )
@@ -221,7 +221,7 @@ SUBROUTINE init_run()
   IF ( lwf ) THEN
      IF( nbgrp > 1 ) &
         CALL errore( ' init_run ', ' wannier with band parallelization not implemented ', 1 )
-     CALL allocate_wannier( nbsp, dffts%nnr, nspin, ngm )
+     CALL allocate_wannier( nbsp, dffts%nnr, nspin, dfftp%ngm )
   END IF
   !
   IF ( tens .OR. tcg ) THEN

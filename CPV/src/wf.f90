@@ -2027,7 +2027,6 @@ SUBROUTINE write_rho_g( rhog )
   !
   USE kinds,              ONLY : DP
   USE io_global,          ONLY : stdout
-  USE gvect,              ONLY : ngm
   USE gvect, ONLY : g
   USE electrons_base,     ONLY : nspin
   USE fft_base,           ONLY : dfftp
@@ -2037,10 +2036,10 @@ SUBROUTINE write_rho_g( rhog )
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP) ,INTENT(IN) :: rhog(ngm,nspin) 
+  COMPLEX(DP) ,INTENT(IN) :: rhog(dfftp%ngm,nspin) 
   REAL(DP),   ALLOCATABLE:: gnx(:,:), bigg(:,:)
   COMPLEX(DP),ALLOCATABLE :: bigrho(:)
-  COMPLEX(DP) :: rhotmp_g(ngm)
+  COMPLEX(DP) :: rhotmp_g(dfftp%ngm)
   INTEGER           :: ntot, i, j, me
 #if defined(__MPI)
   INTEGER proc, ierr, ngdens(nproc_bgrp), displs(nproc_bgrp)
@@ -2050,9 +2049,9 @@ SUBROUTINE write_rho_g( rhog )
 
   me = me_bgrp + 1
 
-  ALLOCATE(gnx(3,ngm))
+  ALLOCATE(gnx(3,dfftp%ngm))
 
-  DO i=1,ngm
+  DO i=1,dfftp%ngm
      gnx(1,i)=g(1,i)
      gnx(2,i)=g(2,i)
      gnx(3,i)=g(3,i)
@@ -2076,7 +2075,7 @@ SUBROUTINE write_rho_g( rhog )
 
   DO i=1,nspin
 
-     rhotmp_g(1:ngm)=rhog(1:ngm,i)
+     rhotmp_g(1:dfftp%ngm)=rhog(1:dfftp%ngm,i)
 
      IF(me.EQ.1) THEN 
         ALLOCATE (bigrho(ntot))
@@ -2112,12 +2111,12 @@ SUBROUTINE write_rho_g( rhog )
   END IF
   WRITE( stdout, * ) "G-vectors written to G_PARA"
 #else
-  ntot=ngm
+  ntot=dfftp%ngm
   ALLOCATE(bigg(3,ntot))
-  bigg(1:3,1:ntot)=gnx(1:3,1:ngm)
+  bigg(1:3,1:ntot)=gnx(1:3,1:dfftp%ngm)
   DO i=1,nspin
      ALLOCATE(bigrho(ntot))
-     bigrho(1:ngm)=rhog(1:ngm,i)
+     bigrho(1:dfftp%ngm)=rhog(1:dfftp%ngm,i)
 
      IF(i.EQ.1) name2="CH_DEN_G_SERL.1"
      IF(i.EQ.2) name2="CH_DEN_G_SERL.2"
@@ -2155,7 +2154,6 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !
   USE kinds,              ONLY : DP
   USE gvect, ONLY : g
-  USE gvect,              ONLY : ngm
   USE electrons_base,     ONLY : nspin
   USE tune,               ONLY : npts, xdir, ydir, zdir, B, &
                                  shift, start, av0, av1
@@ -2170,7 +2168,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   IMPLICIT NONE
   !
   REAL(DP), ALLOCATABLE:: gnx(:,:), bigg(:,:)
-  COMPLEX(DP) ,INTENT(in) :: rhog(ngm,nspin)
+  COMPLEX(DP) ,INTENT(in) :: rhog(dfftp%ngm,nspin)
   COMPLEX(DP),ALLOCATABLE :: bigrho(:)
   COMPLEX(DP), ALLOCATABLE :: rhotmp_g(:)
   INTEGER ntot, i, j, ngz, l, isa
@@ -2188,9 +2186,9 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
 
   me = me_bgrp + 1
 
-  ALLOCATE(gnx(3,ngm))
+  ALLOCATE(gnx(3,dfftp%ngm))
 
-  DO i=1,ngm
+  DO i=1,dfftp%ngm
      gnx(1,i)=g(1,i)
      gnx(2,i)=g(2,i)
      gnx(3,i)=g(3,i)
@@ -2206,7 +2204,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
 
 #else
 
-  ntot=ngm
+  ntot=dfftp%ngm
 
 #endif
 
@@ -2221,9 +2219,9 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !
   CALL mp_bcast( bigg, root_bgrp, intra_bgrp_comm )
   !
-  ALLOCATE( rhotmp_g( ngm ) )
+  ALLOCATE( rhotmp_g( dfftp%ngm ) )
 
-  rhotmp_g(1:ngm)=rhog(1:ngm,1)
+  rhotmp_g(1:dfftp%ngm)=rhog(1:dfftp%ngm,1)
 
   CALL mp_barrier( intra_bgrp_comm )
   !
@@ -2235,8 +2233,8 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !
 #else
   !
-  bigg(1:3,1:ntot)=gnx(1:3,1:ngm)
-  bigrho(1:ngm)=rhog(1:ngm,1)
+  bigg(1:3,1:ntot)=gnx(1:3,1:dfftp%ngm)
+  bigrho(1:dfftp%ngm)=rhog(1:dfftp%ngm,1)
   !
 #endif
 
