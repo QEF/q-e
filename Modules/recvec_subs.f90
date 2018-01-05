@@ -65,7 +65,7 @@ CONTAINS
     ! the current processor are stored
     INTEGER, ALLOCATABLE :: mill_g(:,:), mill_unsorted(:,:)
     ! array containing all g vectors generators, on all processors
-    ! (replicated data9. When no_global_sort is present and .true.,
+    ! (replicated data). When no_global_sort is present and .true.,
     ! only g-vectors for the current processor are stored
     INTEGER, ALLOCATABLE :: igsrt(:)
     !

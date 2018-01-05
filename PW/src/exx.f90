@@ -219,8 +219,7 @@ MODULE exx
     USE gvecw,        ONLY : ecutwfc
     USE gvect,        ONLY : ecutrho, ngm, g, gg, gstart, mill
     USE cell_base,    ONLY : at, bg, tpiba2
-    USE fft_custom,   ONLY : ggent
-    USE recvec_subs,  ONLY : ggens
+    USE recvec_subs,  ONLY : ggen, ggens
     USE fft_base,     ONLY : smap
     USE fft_types,    ONLY : fft_type_init
     USE mp_exx,       ONLY : nproc_egrp, negrp, intra_egrp_comm
@@ -234,7 +233,8 @@ MODULE exx
     USE realus,       ONLY : qpointlist, tabxx, tabp
 
     IMPLICIT NONE
-    INTEGER :: ik
+    INTEGER :: ik, ngmt
+    INTEGER, ALLOCATABLE :: ig_l2gt(:), millt(:,:)
     INTEGER, EXTERNAL :: n_plane_waves
     REAL(dp) :: gkcut, gcutmt
     LOGICAL :: lpara
@@ -279,9 +279,10 @@ MODULE exx
        lpara = ( nproc_bgrp > 1 )
        CALL fft_type_init( dfftt, smap, "rho", gamma_only, lpara, &
             intra_bgrp_comm, at, bg, gcutmt, gcutmt/gkcut, nyfft=nyfft )
-       CALL ggens( dfftt, gamma_only, at, g, gg, mill, gcutmt, ngmt_g, gt, ggt )
+       CALL ggens( dfftt, gamma_only, at, g, gg, mill, gcutmt, ngmt, gt, ggt )
        gstart_t = gstart
-       npwt = n_plane_waves (ecutwfc/tpiba2, nks, xk, gt, ngmt_g)
+       npwt = n_plane_waves (ecutwfc/tpiba2, nks, xk, gt, ngmt)
+       ngmt_g = ngmt
        CALL mp_sum (ngmt_g, intra_bgrp_comm )
        !
     ELSE
@@ -291,7 +292,18 @@ MODULE exx
        lpara = ( nproc_egrp > 1 )
        CALL fft_type_init( dfftt, smap_exx, "rho", gamma_only, lpara, &
             intra_egrp_comm, at, bg, gcutmt, gcutmt/gkcut, nyfft=nyfft )
-       CALL ggent( dfftt, gcutmt, ecutwfc/tpiba2, ngmt_g, gt, ggt, gstart_t, npwt )
+       ngmt = dfftt%ngm
+       ngmt_g = ngmt
+       CALL mp_sum( ngmt_g, intra_egrp_comm )
+       ALLOCATE ( gt(3,dfftt%ngm) )
+       ALLOCATE ( ggt(dfftt%ngm) )
+       ALLOCATE ( millt(3,dfftt%ngm) )
+       ALLOCATE ( ig_l2gt(dfftt%ngm) )
+       CALL ggen( dfftt, gamma_only, at, bg, gcutmt, ngmt_g, ngmt, &
+            gt, ggt, millt, ig_l2gt, gstart_t )
+       DEALLOCATE ( ig_l2gt )
+       DEALLOCATE ( millt )
+       npwt = n_plane_waves (ecutwfc/tpiba2, nks, xk, gt, ngmt)
        !
     END IF
     ! define clock labels (this enables the corresponding fft too)
