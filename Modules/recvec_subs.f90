@@ -226,7 +226,8 @@ CONTAINS
   END SUBROUTINE ggen
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
+  SUBROUTINE ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms, &
+       gs, ggs )
     !-----------------------------------------------------------------------
     !
     ! Initialize number and indices of  g-vectors for a subgrid,
@@ -248,6 +249,8 @@ CONTAINS
     REAL(DP), INTENT(IN):: gcutms
     ! Local number of G-vectors in subgrid
     INTEGER, INTENT(OUT):: ngms
+    ! Optionally: G-vectors and modules
+    REAL(DP), INTENT(OUT), POINTER, OPTIONAL:: gs(:,:), ggs(:)
     !
     INTEGER :: i, ng, ngm
     !
@@ -255,9 +258,13 @@ CONTAINS
     ngms = dffts%ngm
     IF ( ngms > ngm  ) CALL errore ('ggens','wrong  number of G-vectors',1)
     !
+    IF ( PRESENT(gs) ) ALLOCATE ( gs(3,ngms) )
+    IF ( PRESENT(ggs)) ALLOCATE ( ggs(ngms) )
     ng = 0
     DO i = 1, ngm
        IF ( gg(i) > gcutms ) exit
+       IF ( PRESENT(gs) ) gs (:,i) = g(:,i)
+       IF ( PRESENT(ggs)) ggs(i) = gg(i)
        ng = i
     END DO
     IF ( ng /= ngms ) CALL errore ('ggens','mismatch in number of G-vectors',2)

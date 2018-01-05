@@ -217,9 +217,10 @@ MODULE exx
   SUBROUTINE exx_fft_create ()
 
     USE gvecw,        ONLY : ecutwfc
-    USE gvect,        ONLY : ecutrho, ngm, g
+    USE gvect,        ONLY : ecutrho, ngm, g, gg, gstart, mill
     USE cell_base,    ONLY : at, bg, tpiba2
-    USE fft_custom,   ONLY : ggenx, ggent
+    USE fft_custom,   ONLY : ggent
+    USE recvec_subs,  ONLY : ggens
     USE fft_base,     ONLY : smap
     USE fft_types,    ONLY : fft_type_init
     USE mp_exx,       ONLY : nproc_egrp, negrp, intra_egrp_comm
@@ -227,13 +228,14 @@ MODULE exx
     !
     USE klist,        ONLY : nks, xk
     USE mp_pools,     ONLY : inter_pool_comm
-    USE mp,           ONLY : mp_max
+    USE mp,           ONLY : mp_max, mp_sum
     !
     USE control_flags,ONLY : tqr
     USE realus,       ONLY : qpointlist, tabxx, tabp
 
     IMPLICIT NONE
     INTEGER :: ik
+    INTEGER, EXTERNAL :: n_plane_waves
     REAL(dp) :: gkcut, gcutmt
     LOGICAL :: lpara
 
@@ -277,8 +279,10 @@ MODULE exx
        lpara = ( nproc_bgrp > 1 )
        CALL fft_type_init( dfftt, smap, "rho", gamma_only, lpara, &
             intra_bgrp_comm, at, bg, gcutmt, gcutmt/gkcut, nyfft=nyfft )
-       CALL ggenx( g, dfftt, gcutmt, ecutwfc/tpiba2, &
-            ngmt_g, gt, ggt, gstart_t, npwt )
+       CALL ggens( dfftt, gamma_only, at, g, gg, mill, gcutmt, ngmt_g, gt, ggt )
+       gstart_t = gstart
+       npwt = n_plane_waves (ecutwfc/tpiba2, nks, xk, gt, ngmt_g)
+       CALL mp_sum (ngmt_g, intra_bgrp_comm )
        !
     ELSE
        !
