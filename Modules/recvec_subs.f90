@@ -12,9 +12,6 @@ MODULE recvec_subs
 
   !  ... subroutines generating G-vectors and variables nl* needed to map
   !  ... G-vector components onto the FFT grid(s) in reciprocal space
-
-  !  ... Most important dependencies in next module (FIXME: to be removed)
-  USE gvect, ONLY : ig_l2g, g, gg, ngm, ngm_g, gcutm, mill,  gstart
   !
   USE kinds, ONLY : dp
   USE fft_types, ONLY: fft_stick_index, fft_type_descriptor
@@ -30,7 +27,8 @@ CONTAINS
   !=----------------------------------------------------------------------=
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE ggen ( dfftp, gamma_only, at, bg, no_global_sort )
+  SUBROUTINE ggen ( dfftp, gamma_only, at, bg,  gcutm, ngm_g, ngm, &
+       g, gg, mill, ig_l2g, gstart, no_global_sort )
     !----------------------------------------------------------------------
     !
     !     This routine generates all the reciprocal lattice vectors
@@ -45,11 +43,16 @@ CONTAINS
     !
     TYPE(fft_type_descriptor),INTENT(INOUT) :: dfftp
     LOGICAL,  INTENT(IN) :: gamma_only
-    REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
-    LOGICAL,  OPTIONAL, INTENT(IN) :: no_global_sort
+    REAL(DP), INTENT(IN) :: at(3,3), bg(3,3), gcutm
+    INTEGER, INTENT(IN) :: ngm_g
+    INTEGER, INTENT(INOUT) :: ngm
+    REAL(DP), INTENT(OUT) :: g(:,:), gg(:)
+    INTEGER, INTENT(OUT) :: mill(:,:), ig_l2g(:), gstart
     !  if no_global_sort is present (and it is true) G vectors are sorted only
     !  locally and not globally. In this case no global array needs to be
     !  allocated and sorted: saves memory and a lot of time for large systems.
+    !
+    LOGICAL,  OPTIONAL, INTENT(IN) :: no_global_sort
     !
     !     here a few local variables
     !

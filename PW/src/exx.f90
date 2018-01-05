@@ -4756,7 +4756,8 @@ END SUBROUTINE compute_becpsi
     END IF
     !
     IF (first_data_structure_change) THEN
-       CALL ggen ( dfftp, gamma_only, at, bg )
+       CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+            g, gg, mill, ig_l2g, gstart )
        CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
        allocate( ig_l2g_exx(ngm), g_exx(3,ngm), gg_exx(ngm) )
        allocate( mill_exx(3,ngm), nl_exx(ngm) )

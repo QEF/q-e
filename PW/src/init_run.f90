@@ -13,7 +13,7 @@ SUBROUTINE init_run()
   USE symme,              ONLY : sym_rho_init
   USE wvfct,              ONLY : nbnd, et, wg, btype
   USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw
-  USE gvect,              ONLY : g, gg, mill, &
+  USE gvect,              ONLY : g, gg, mill, gcutm, ig_l2g, ngm, ngm_g, &
        gstart ! to be comunicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms
   USE cell_base,          ONLY : at, bg, set_h_ainv
@@ -65,9 +65,11 @@ SUBROUTINE init_run()
   ! ... generate reciprocal-lattice vectors and fft indices
   !
   IF( smallmem ) THEN
-     CALL ggen( dfftp, gamma_only, at, bg, no_global_sort = .TRUE. )
+     CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+          g, gg, mill, ig_l2g, gstart, no_global_sort = .TRUE. )
   ELSE
-     CALL ggen( dfftp, gamma_only, at, bg )
+     CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+       g, gg, mill, ig_l2g, gstart )
   END IF
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
   if (gamma_only) THEN

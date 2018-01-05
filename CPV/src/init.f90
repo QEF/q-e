@@ -30,7 +30,8 @@
       use ions_base,            only: nat
       USE recvec_subs,          ONLY: ggen, ggens
       USE gvect,                ONLY: mill_g, eigts1,eigts2,eigts3, g, gg, &
-                                      ecutrho, gcutm, gvect_init, mill
+                                      ecutrho, gcutm, gvect_init, mill, &
+                                      ig_l2g, gstart, ngm, ngm_g
       use gvecs,                only: gcutms, gvecs_init, ngms
       use gvecw,                only: gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY: ggenb
@@ -170,18 +171,22 @@
         WRITE( stdout,'(3X,"Reference Cell alat  =",F14.8,1X,"A.U.")' ) ref_alat
         !
         IF( smallmem ) THEN
-           CALL ggen( dfftp, gamma_only, ref_at, ref_bg, no_global_sort = .TRUE. )
+           CALL ggen( dfftp, gamma_only, ref_at, ref_bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart, no_global_sort = .TRUE. )
         ELSE
-           CALL ggen( dfftp, gamma_only, ref_at, ref_bg )
+           CALL ggen( dfftp, gamma_only, ref_at, ref_bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart )
         END IF
         CALL ggens( dffts, gamma_only, ref_at, g, gg, mill, gcutms, ngms )
         !
       ELSE
         !
         IF( smallmem ) THEN
-           CALL ggen( dfftp, gamma_only, at, bg, no_global_sort = .TRUE. )
+           CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart, no_global_sort = .TRUE. )
         ELSE
-           CALL ggen( dfftp, gamma_only, at, bg )
+           CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart )
         END IF
         CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
         !

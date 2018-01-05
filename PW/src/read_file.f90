@@ -129,7 +129,7 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE fft_interfaces,       ONLY : fwfft
   USE fft_types,            ONLY : fft_type_allocate
   USE recvec_subs,          ONLY : ggen, ggens
-  USE gvect,                ONLY : gg, ngm, g, gcutm, mill, &
+  USE gvect,                ONLY : gg, ngm, g, gcutm, mill, ngm_g, ig_l2g, &
                                    eigts1, eigts2, eigts3, nl, gstart
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact
   USE fft_base,             ONLY : dfftp, dffts
@@ -296,7 +296,8 @@ SUBROUTINE read_xml_file_internal(withbs)
   CALL pre_init()
   CALL data_structure ( gamma_only )
   CALL allocate_fft()
-  CALL ggen ( dfftp, gamma_only, at, bg ) 
+  CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+       g, gg, mill, ig_l2g, gstart ) 
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
   IF (do_comp_esm) THEN
     CALL pw_readfile( 'esm', ierr )
