@@ -476,7 +476,6 @@ exx.o : ../../Modules/constants.o
 exx.o : ../../Modules/control_flags.o
 exx.o : ../../Modules/coulomb_vcut.o
 exx.o : ../../Modules/fft_base.o
-exx.o : ../../Modules/fft_custom.o
 exx.o : ../../Modules/funct.o
 exx.o : ../../Modules/gth.o
 exx.o : ../../Modules/gvecw.o
@@ -2146,7 +2145,6 @@ us_exx.o : ../../Modules/becmod.o
 us_exx.o : ../../Modules/cell_base.o
 us_exx.o : ../../Modules/constants.o
 us_exx.o : ../../Modules/control_flags.o
-us_exx.o : ../../Modules/fft_custom.o
 us_exx.o : ../../Modules/funct.o
 us_exx.o : ../../Modules/gvecw.o
 us_exx.o : ../../Modules/io_global.o

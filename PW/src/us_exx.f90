@@ -972,7 +972,6 @@ MODULE us_exx
     USE becmod,               ONLY : calbec
     USE fft_interfaces,       ONLY : fwfft
     USE control_flags,        ONLY : gamma_only
-    USE fft_custom,           ONLY : fft_cus
     USE fft_interfaces, ONLY : fwfft, invfft
     USE us_exx,               ONLY : becxx
     IMPLICIT NONE
