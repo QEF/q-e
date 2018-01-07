@@ -1224,6 +1224,7 @@ MODULE realus
          CALL fwfft ('Rho', psic, dfftp)
          rho(:,is) = rho(:,is) + psic(dfftp%nl(:))
       END DO
+      DEALLOCATE ( rho_1 )
       !
       ! ... check the total charge (must not be summed on k-points)
       !
