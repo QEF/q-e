@@ -130,26 +130,22 @@ SUBROUTINE sum_band()
   IF (dft_is_meta() .OR. lxdm) DEALLOCATE (kplusg)
   IF ( okvan ) CALL deallocate_bec_type ( becp )
   !
-  ! ... If a double grid is used, interpolate onto the fine grid
-  !
-  IF ( doublegrid ) THEN
-     !
-     DO is = 1, nspin
-        !
-        CALL fft_interpolate_real( dffts, rho%of_r(1,is), dfftp, rho%of_r(1,is) )
-        if (dft_is_meta() .OR. lxdm) CALL fft_interpolate_real(dffts,rho%kin_r(1,is),dfftp,rho%kin_r(1,is))
-        !
-     END DO
-     !
-  END IF
-  !
-  IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
-  !
   ! ... sum charge density over pools (distributed k-points) and bands
   !
   CALL mp_sum( rho%of_r, inter_pool_comm )
   CALL mp_sum( rho%of_r, inter_bgrp_comm )
+  IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
+  ! ... bring the unsymmetrized rho(r) to G-space (use psic as work array)
+  !
+  DO is = 1, nspin
+     psic(1:dffts%nnr) = rho%of_r(1:dffts%nnr,is)
+     psic(dffts%nnr+1:) = 0.0_dp
+     CALL fwfft ('Rho', psic, dffts)
+     rho%of_g(1:dffts%ngm,is) = psic(dffts%nl(1:dffts%ngm))
+     rho%of_g(dffts%ngm+1:,is) = (0.0_dp,0.0_dp)
+  END DO
+
   IF( okvan )  THEN
      !
      ! ... becsum is summed over bands (if bgrp_parallelization is done)
@@ -171,19 +167,11 @@ SUBROUTINE sum_band()
         CALL PAW_symmetrize(rho%bec)
      END IF
      !
-     ! ... Here we add the (unymmetrized) Ultrasoft contribution to the charge
+     ! ... Here we add the (unsymmetrized) Ultrasoft contribution to the charge
      !
-     CALL addusdens(rho%of_r(:,:))
+     CALL addusdens(rho%of_g(:,:))
      !
   ENDIF
-  !
-  ! ... bring the (unsymmetrized) rho(r) to G-space (use psic as work array)
-  !
-  DO is = 1, nspin
-     psic(:) = rho%of_r(:,is)
-     CALL fwfft ('Rho', psic, dfftp)
-     rho%of_g(:,is) = psic(dfftp%nl(:))
-  END DO
   !
   ! ... symmetrize rho(G) 
   !
@@ -207,9 +195,11 @@ SUBROUTINE sum_band()
      CALL mp_sum( rho%kin_r, inter_pool_comm )
      CALL mp_sum( rho%kin_r, inter_bgrp_comm )
      DO is = 1, nspin
-        psic(:) = rho%kin_r(:,is)
-        CALL fwfft ('Rho', psic, dfftp)
-        rho%kin_g(:,is) = psic(dfftp%nl(:))
+        psic(1:dffts%nnr) = rho%kin_r(1:dffts%nnr,is)
+        psic(dffts%nnr+1:) = 0.0_dp
+        CALL fwfft ('Rho', psic, dffts)
+        rho%kin_g(1:dffts%ngm,is) = psic(dffts%nl(1:dffts%ngm))
+        rho%of_g(dffts%ngm+1:,is) = (0.0_dp,0.0_dp)
      END DO
      !
      IF (.NOT. gamma_only) CALL sym_rho( nspin, rho%kin_g )

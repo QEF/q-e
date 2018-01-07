@@ -10,6 +10,8 @@
 SUBROUTINE addusdens(rho)
   !----------------------------------------------------------------------
   !
+  ! ... Add US contribution to the charge density to rho(G)
+  !
   USE realus,               ONLY : addusdens_r
   USE control_flags,        ONLY : tqr
   USE noncollin_module,     ONLY : nspin_mag
@@ -19,7 +21,7 @@ SUBROUTINE addusdens(rho)
   IMPLICIT NONE
   !
   !
-  REAL(kind=dp), INTENT(inout) :: rho(dfftp%nnr,nspin_mag)
+  COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
   !
   IF ( tqr ) THEN
      CALL addusdens_r(rho)
@@ -35,8 +37,8 @@ END SUBROUTINE addusdens
 SUBROUTINE addusdens_g(rho)
   !----------------------------------------------------------------------
   !
-  !  This routine adds to the charge density the part which is due to
-  !  the US augmentation.
+  !  This routine adds to the charge density rho(G) in reciprocal space
+  !  the part which is due to the US augmentation.
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
@@ -48,13 +50,12 @@ SUBROUTINE addusdens_g(rho)
   USE uspp,                 ONLY : becsum, okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : psic
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
   !
-  REAL(kind=dp), INTENT(inout) :: rho(dfftp%nnr,nspin_mag)
+  COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
   !
   !     here the local variables
   !
@@ -154,26 +155,14 @@ SUBROUTINE addusdens_g(rho)
   DEALLOCATE (qgm, qmod)
   !
   10 CONTINUE
-  !
-  !     convert aux to real space and add to the charge density
-  !
   CALL mp_sum( aux, inter_pool_comm )
   !
-#ifdef DEBUG_ADDUSDENS
-  CALL start_clock ('addus:fft')
-#endif
-  DO is = 1, nspin_mag
-     psic(:) = (0.d0, 0.d0)
-     psic( dfftp%nl(:) ) = aux(:,is)
-     IF (gamma_only) psic( dfftp%nlm(:) ) = CONJG (aux(:,is))
-     CALL invfft ('Rho', psic, dfftp)
-     rho(:, is) = rho(:, is) +  DBLE (psic (:) )
-  ENDDO
-#ifdef DEBUG_ADDUSDENS
-  CALL stop_clock ('addus:fft')
-#endif
+  !     add aux to the charge density in reciprocal space
+  !
+  rho(:,:) = rho(:,:) + aux (:,:)
+  !
   DEALLOCATE (aux)
-
+  !
   CALL stop_clock ('addusdens')
   RETURN
 END SUBROUTINE addusdens_g

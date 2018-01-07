@@ -83,7 +83,6 @@ addusdens.o : ../../Modules/mp_pools.o
 addusdens.o : ../../Modules/noncol.o
 addusdens.o : ../../Modules/recvec.o
 addusdens.o : ../../Modules/uspp.o
-addusdens.o : ../../Modules/wavefunctions.o
 addusdens.o : ../../UtilXlib/mp.o
 addusdens.o : realus.o
 addusforce.o : ../../FFTXlib/fft_interfaces.o
