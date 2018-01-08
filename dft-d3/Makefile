@@ -3,10 +3,9 @@
 include ../make.inc
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../ELPA/src $(MOD_FLAG)../FFTXlib $(MOD_FLAG)../LAXlib $(MOD_FLAG)../UtilXlib \
-          $(MOD_FLAG)../KS_Solvers/CG $(IFLAGS) $(MOD_FLAG)../Modules $(MOD_FLAG).
-# list of modules
+MODFLAGS= $(BASEMOD_FLAGS)
 
+# list of modules
 
 TESTOBJ = \
 test_code.o
@@ -38,7 +37,6 @@ libdftd3qe.a: $(DFTD3OBJ)
 test.x : $(TESTOBJ) $(TESTMODS) $(QEMODS)
 	$(LD) $(LDFLAGS) $(MODFLAGS) -o $@ \
         $(TESTOBJ) $(TESTMODS) $(QEMODS) $(LIBS)	
-      
 
 tldeps :
 	if test -n "$(TLDEPS)" ; then \

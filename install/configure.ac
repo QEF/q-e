@@ -28,7 +28,7 @@ X_AC_QE_ARCH()
 try_dflags=""
 
 # "-I../include" is required by IOTK ...
-try_iflags="-I\$(TOPDIR)/include -I\$(TOPDIR)/FoX/finclude -I../include/"
+try_iflags="-I\$(TOPDIR)/include -I\$(TOPDIR)/FoX/finclude -I\$(TOPDIR)/S3
 
 # Checking archiver...
 X_AC_QE_AR()
