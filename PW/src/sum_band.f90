@@ -19,7 +19,7 @@ SUBROUTINE sum_band()
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE fft_interfaces,       ONLY : fwfft, invfft, fft_interpolate
   USE gvect,                ONLY : ngm, g
   USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k
@@ -136,8 +136,8 @@ SUBROUTINE sum_band()
      !
      DO is = 1, nspin
         !
-        CALL fft_interpolate_real( dffts, rho%of_r(1,is), dfftp, rho%of_r(1,is) )
-        if (dft_is_meta() .OR. lxdm) CALL fft_interpolate_real(dffts,rho%kin_r(1,is),dfftp,rho%kin_r(1,is))
+        CALL fft_interpolate( dffts, rho%of_r(:,is), dfftp, rho%of_r(:,is) )
+        if (dft_is_meta() .OR. lxdm) CALL fft_interpolate(dffts,rho%kin_r(:,is),dfftp,rho%kin_r(:,is))
         !
      END DO
      !

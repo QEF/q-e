@@ -393,6 +393,7 @@ do_q2r.o : ../../UtilXlib/mp.o
 do_q2r.o : io_dyn_mat.o
 do_q2r.o : io_dyn_mat_old.o
 do_q2r.o : rigid.o
+drho.o : ../../FFTXlib/fft_interfaces.o
 drho.o : ../../LR_Modules/lrcom.o
 drho.o : ../../Modules/becmod.o
 drho.o : ../../Modules/cell_base.o
@@ -495,6 +496,7 @@ dvpsi_e.o : ../../PW/src/buffers.o
 dvpsi_e.o : ../../PW/src/pwcom.o
 dvpsi_e.o : phcom.o
 dvpsi_e.o : ramanm.o
+dvpsi_e2.o : ../../FFTXlib/fft_interfaces.o
 dvpsi_e2.o : ../../LR_Modules/dv_of_drho.o
 dvpsi_e2.o : ../../LR_Modules/lrcom.o
 dvpsi_e2.o : ../../Modules/cell_base.o
@@ -685,6 +687,7 @@ elph_tetra_mod.o : ../../UtilXlib/mp.o
 elph_tetra_mod.o : elph.o
 elph_tetra_mod.o : phcom.o
 elphon.o : ../../FFTXlib/fft_helper_subroutines.o
+elphon.o : ../../FFTXlib/fft_interfaces.o
 elphon.o : ../../LR_Modules/lrcom.o
 elphon.o : ../../Modules/cell_base.o
 elphon.o : ../../Modules/constants.o
@@ -1293,6 +1296,7 @@ set_drhoc.o : ../../Modules/ions_base.o
 set_drhoc.o : ../../Modules/kind.o
 set_drhoc.o : ../../Modules/recvec.o
 set_drhoc.o : ../../Modules/uspp.o
+set_dvscf.o : ../../FFTXlib/fft_interfaces.o
 set_dvscf.o : ../../LR_Modules/dv_of_drho.o
 set_dvscf.o : ../../Modules/fft_base.o
 set_dvscf.o : ../../Modules/kind.o
@@ -1343,6 +1347,7 @@ setlocq.o : ../../Modules/kind.o
 setlocq.o : ../../PW/src/Coul_cut_2D.o
 sgam_ph.o : ../../Modules/kind.o
 solve_e.o : ../../FFTXlib/fft_helper_subroutines.o
+solve_e.o : ../../FFTXlib/fft_interfaces.o
 solve_e.o : ../../LR_Modules/dv_of_drho.o
 solve_e.o : ../../LR_Modules/lrcom.o
 solve_e.o : ../../Modules/cell_base.o
@@ -1367,6 +1372,7 @@ solve_e.o : ../../PW/src/scf_mod.o
 solve_e.o : ../../UtilXlib/mp.o
 solve_e.o : phcom.o
 solve_e.o : write_rec.o
+solve_e2.o : ../../FFTXlib/fft_interfaces.o
 solve_e2.o : ../../LR_Modules/dv_of_drho.o
 solve_e2.o : ../../LR_Modules/lrcom.o
 solve_e2.o : ../../Modules/cell_base.o
@@ -1417,6 +1423,7 @@ solve_e_nscf.o : ../../PW/src/buffers.o
 solve_e_nscf.o : ../../PW/src/pwcom.o
 solve_e_nscf.o : phcom.o
 solve_linter.o : ../../FFTXlib/fft_helper_subroutines.o
+solve_linter.o : ../../FFTXlib/fft_interfaces.o
 solve_linter.o : ../../LR_Modules/dv_of_drho.o
 solve_linter.o : ../../LR_Modules/lrcom.o
 solve_linter.o : ../../Modules/cell_base.o
@@ -1566,6 +1573,7 @@ write_ramtns.o : ../../Modules/constants.o
 write_ramtns.o : ../../Modules/ions_base.o
 write_ramtns.o : ../../Modules/kind.o
 write_ramtns.o : phcom.o
+write_rec.o : ../../FFTXlib/fft_interfaces.o
 write_rec.o : ../../LR_Modules/lrcom.o
 write_rec.o : ../../Modules/fft_base.o
 write_rec.o : ../../Modules/io_files.o
@@ -1603,6 +1611,7 @@ zstar_eu.o : ../../PW/src/symme.o
 zstar_eu.o : ../../UtilXlib/mp.o
 zstar_eu.o : ph_restart.o
 zstar_eu.o : phcom.o
+zstar_eu_us.o : ../../FFTXlib/fft_interfaces.o
 zstar_eu_us.o : ../../LR_Modules/dv_of_drho.o
 zstar_eu_us.o : ../../LR_Modules/lrcom.o
 zstar_eu_us.o : ../../Modules/cell_base.o

@@ -41,7 +41,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
   USE control_flags,        ONLY : gamma_only
   USE funct,            ONLY : dft_is_meta
   USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE fft_interfaces,       ONLY : fwfft, invfft, fft_interpolate
 
   USE exx,      ONLY : vexx !Suriano
   USE funct,    ONLY : exx_is_active,dft_is_hybrid
@@ -120,7 +120,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 
        do is=1,nspin
           vrs(:,is)=vr(:,is)
-          if(doublegrid) call fft_interpolate_real(dfftp, vrs(1,is),dffts,vrs(1,is)) ! interpolate from dense to smooth
+          if(doublegrid) call fft_interpolate(dfftp, vrs(:,is),dffts,vrs(:,is)) ! interpolate from dense to smooth
        enddo
        !
        DO ibnd = 1, m
@@ -162,7 +162,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        call  v_h(rho%of_g , ehart, charge, vr )
        do is=1,nspin
           vrs(:,is)=vr(:,is)
-          if(doublegrid) call fft_interpolate_real(dfftp, vrs(1,is), dffts, vrs(1,is)) ! interpolate from dense to smooth
+          if(doublegrid) call fft_interpolate(dfftp, vrs(:,is), dffts, vrs(:,is)) ! interpolate from dense to smooth
        enddo
 
 
@@ -408,7 +408,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 !read from disk wfc on coarse grid
          CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd+(ispin-1)*nbnd,-1)
          if(doublegrid) then
-           call fft_interpolate_real(dffts, psi_rs, dfftp, psi_r) ! interpolate from smooth to dense
+           call fft_interpolate(dffts, psi_rs, dfftp, psi_r) ! interpolate from smooth to dense
          else
            psi_r(:)=psi_rs(:)
          endif
@@ -458,7 +458,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
 !read from disk wfc on coarse grid
            CALL davcio( psi_rs,dffts%nnr,iunwfcreal,ibnd+(ispin-1)*nbnd,-1)
            if(doublegrid) then
-              call fft_interpolate_real(dffts, psi_rs, dfftp, psi_r) ! interpolate from smooth to dense
+              call fft_interpolate(dffts, psi_rs, dfftp, psi_r) ! interpolate from smooth to dense
            else
               psi_r(:)=psi_rs(:)
            endif

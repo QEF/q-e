@@ -43,6 +43,7 @@ MODULE fft_types
     ! communicators and processor coordinates
     !
     LOGICAL :: lpara  = .FALSE. ! .TRUE. if parallel FFT is active
+    LOGICAL :: lgamma = .FALSE. ! .TRUE. if the grid has Gamma symmetry
     INTEGER :: root   = 0 ! root processor
     INTEGER :: comm   = MPI_COMM_NULL ! communicator for the main fft group 
     INTEGER :: comm2  = MPI_COMM_NULL ! communicator for the fft group along the second direction
@@ -312,12 +313,10 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_type_set( desc, tk, lpara, nst, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
+  SUBROUTINE fft_type_set( desc, nst, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
 
     TYPE (fft_type_descriptor) :: desc
 
-    LOGICAL, INTENT(in) :: tk               ! gamma/not-gamma logical
-    LOGICAL, INTENT(in) :: lpara            ! set array for parallel or serial FFT drivers
     INTEGER, INTENT(in) :: nst              ! total number of stiks 
     INTEGER, INTENT(in) :: ub(3), lb(3)     ! upper and lower bound of real space indices
     INTEGER, INTENT(in) :: idx(:)           ! sorting index of the sticks
@@ -444,7 +443,7 @@ CONTAINS
           desc%isind( m1 + ( m2 - 1 ) * nr1x ) = -st( i1, i2 )
         ENDIF
         desc%iplp( m1 ) = desc%iproc2(st(i1,i2))
-        IF( .not. tk ) THEN
+        IF( desc%lgamma ) THEN
           IF( i1 /= 0 .OR. i2 /= 0 ) desc%nst = desc%nst + 1
           m1 = -i1 + 1; IF ( m1 < 1 ) m1 = m1 + nr1
           m2 = -i2 + 1; IF ( m2 < 1 ) m2 = m2 + nr2
@@ -583,7 +582,7 @@ CONTAINS
 
     desc%nsp( 1:desc%nproc ) = nsp( 1:desc%nproc ) ! -- number of rho sticks per processor
 
-    IF( .NOT. lpara ) THEN
+    IF( .NOT. desc%lpara ) THEN
 
        desc%isind = 0
        desc%iplw  = 0
@@ -767,11 +766,14 @@ CONTAINS
         END IF
      END IF
 
+
      dfft%lpara = lpara  !  this descriptor can be either a descriptor for a
                          !  parallel FFT or a serial FFT even in parallel build
 
      CALL sticks_map_allocate( smap, lgamma, dfft%lpara, dfft%nproc2, dfft%iproc, dfft%iproc2, &
                                              dfft%nr1, dfft%nr2, dfft%nr3, bg, dfft%comm )
+
+     dfft%lgamma = smap%lgamma ! .TRUE. if the grid has Gamma symmetry
 
      ALLOCATE( stw ( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) )
      ALLOCATE( st  ( smap%lb(1):smap%ub(1), smap%lb(2):smap%ub(2) ) )
@@ -785,12 +787,12 @@ CONTAINS
      !write(*,*) 'calling get_sticks with gcut =',gcut
      CALL get_sticks(  smap, gcut,  nstp, sstp, st, nst, ngm )
 
-     CALL fft_type_set( dfft, .not.smap%lgamma, lpara, nst, smap%ub, smap%lb, smap%idx, &
+     CALL fft_type_set( dfft, nst, smap%ub, smap%lb, smap%idx, &
                              smap%ist(:,1), smap%ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
 
      dfft%ngw = dfft%nwl( dfft%mype + 1 )
      dfft%ngm = dfft%ngl( dfft%mype + 1 )
-     IF( lgamma ) THEN
+     IF( dfft%lgamma ) THEN
         dfft%ngw = (dfft%ngw + 1)/2
         dfft%ngm = (dfft%ngm + 1)/2
      END IF

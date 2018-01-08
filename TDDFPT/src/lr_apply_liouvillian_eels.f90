@@ -35,6 +35,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE control_lr,           ONLY : nbnd_occ
   USE dv_of_drho_lr
   USE fft_helper_subroutines
+  USE fft_interfaces,       ONLY : fft_interpolate
  
   IMPLICIT NONE
   !
@@ -125,7 +126,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ! dvrsc -> dvrssc
      !
      DO is = 1, nspin_mag
-        CALL fft_interpolate_complex (dfftp, dvrsc(1,is), dffts, dvrssc(1,is))
+        CALL fft_interpolate (dfftp, dvrsc(:,is), dffts, dvrssc(:,is))
      ENDDO
      !
   ENDIF

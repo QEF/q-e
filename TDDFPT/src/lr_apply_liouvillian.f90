@@ -32,7 +32,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE ions_base,            ONLY : ityp, nat, ntyp=>nsp
   USE cell_base,            ONLY : tpiba2
   USE fft_base,             ONLY : dffts, dfftp
-  USE fft_interfaces,       ONLY : fwfft
+  USE fft_interfaces,       ONLY : fwfft, fft_interpolate
   USE fft_helper_subroutines
   USE gvect,                ONLY : ngm, gstart, g, gg
   USE io_global,            ONLY : stdout
@@ -139,10 +139,10 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
         !
         IF (gamma_only) THEN
            dvrs(:,1) = 0.0d0
-           CALL fft_interpolate_real (dfftp, dvrs(:,1), dffts, dvrss)
+           CALL fft_interpolate (dfftp, dvrs(:,1), dffts, dvrss)
         ELSE
            dvrsc(:,1) = 0.0d0
-           CALL fft_interpolate_complex (dfftp, dvrsc(:,1), dffts, dvrssc)
+           CALL fft_interpolate (dfftp, dvrsc(:,1), dffts, dvrssc)
         ENDIF
         !
      ELSE
@@ -222,9 +222,9 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
         ! Put the interaction on the smooth grid.
         !
         IF (gamma_only) THEN
-           CALL fft_interpolate_real (dfftp, dvrs(:,1), dffts, dvrss)
+           CALL fft_interpolate (dfftp, dvrs(:,1), dffts, dvrss)
         ELSE
-           CALL fft_interpolate_complex (dfftp, dvrsc(:,1), dffts, dvrssc)
+           CALL fft_interpolate (dfftp, dvrsc(:,1), dffts, dvrssc)
         ENDIF
         !
      ENDIF

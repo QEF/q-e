@@ -12,6 +12,9 @@ fft_helper_subroutines.o : fft_types.o
 fft_interfaces.o : fft_param.o
 fft_interfaces.o : fft_smallbox_type.o
 fft_interfaces.o : fft_types.o
+fft_interpolate.o : fft_interfaces.o
+fft_interpolate.o : fft_param.o
+fft_interpolate.o : fft_types.o
 fft_parallel.o : fft_param.o
 fft_parallel.o : fft_scalar.o
 fft_parallel.o : fft_types.o

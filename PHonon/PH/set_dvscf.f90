@@ -16,6 +16,7 @@
   use kinds, only : DP
   USE gvecs, ONLY : doublegrid
   USE fft_base, ONLY : dfftp, dffts
+  USE fft_interfaces, ONLY : fft_interpolate
   USE lsda_mod,ONLY : nspin
   USE units_ph, ONLY : iudrho, lrdrho
   USE output,   ONLY : fildrho
@@ -42,7 +43,7 @@
      call dv_of_drho (derho (1, 1), .false.)
      !
      if (doublegrid) then
-        call fft_interpolate_complex(dfftp, derho (1, 1), dffts, dvscfs (1, ipl) )
+        call fft_interpolate(dfftp, derho (:, 1), dffts, dvscfs (:, ipl) )
      else
         call zcopy (dfftp%nnr, derho (1, 1), 1, dvscfs (1, ipl), 1)
      endif

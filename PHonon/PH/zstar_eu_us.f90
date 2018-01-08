@@ -23,6 +23,7 @@ subroutine zstar_eu_us
   USE klist,     ONLY : xk, wk, ngk, igk_k
   USE gvecs,     ONLY : doublegrid
   USE fft_base,  ONLY : dfftp, dffts
+  USE fft_interfaces, ONLY : fft_interpolate
   USE lsda_mod,  ONLY : nspin, current_spin, isk, lsda
   USE uspp,      ONLY : okvan, nkb, vkb, nlcc_any
   USE wvfct,     ONLY : nbnd, npwx
@@ -118,7 +119,7 @@ subroutine zstar_eu_us
   if (doublegrid) then
      do is = 1, nspin_mag
         do ipol = 1, 3
-           call fft_interpolate_complex(dffts, dvscf(1,is,ipol), dfftp, dvscf(1,is,ipol))
+           call fft_interpolate(dffts, dvscf(:,is,ipol), dfftp, dvscf(:,is,ipol))
         end do
      end do
   end if

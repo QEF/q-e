@@ -36,6 +36,7 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   USE mp,                    ONLY : mp_sum
   USE io_files,              ONLY : iunwfc, nwordwfc
   USE buffers,               ONLY : get_buffer
+  USE fft_interfaces,        ONLY : fft_interpolate
   !
   IMPLICIT NONE
   !
@@ -91,7 +92,7 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   ! to a thicker mesh (if doublegrid=.true.)
   ! drhoscfh -> drhoscf
   !
-  CALL fft_interpolate_complex(dffts, drhoscfh, dfftp, drhoscf)
+  CALL fft_interpolate(dffts, drhoscfh, dfftp, drhoscf)
   !
   IF (okvan) THEN
      !

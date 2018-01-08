@@ -30,7 +30,7 @@ subroutine solve_e_fpol ( iw )
   USE klist,                 ONLY : ltetra, lgauss, nkstot, wk, xk, ngk, igk_k
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE fft_base,              ONLY : dffts, dfftp
-  USE fft_interfaces,        ONLY : fwfft, invfft
+  USE fft_interfaces,        ONLY : fwfft, invfft, fft_interpolate
   USE gvect,                 ONLY : g
   USE gvecs,                 ONLY : doublegrid
   USE becmod,                ONLY : becp, calbec
@@ -120,7 +120,7 @@ subroutine solve_e_fpol ( iw )
      !if (doublegrid) then
      !   do is=1,nspin
      !      do ipol=1,3
-     !         call fft_interpolate_complex (dfftp, dvscfin(1,is,ipol), dffts, dvscfins(1,is,ipol))
+     !         call fft_interpolate (dfftp, dvscfin(:,is,ipol), dffts, dvscfins(:,is,ipol))
      !      enddo
      !   enddo
      !endif
@@ -298,7 +298,7 @@ subroutine solve_e_fpol ( iw )
      if (doublegrid) then
         do is=1,nspin
            do ipol=1,3
-              call fft_interpolate_complex (dffts, dvscfout(1,is,ipol), dfftp, dvscfout(1,is,ipol))
+              call fft_interpolate (dffts, dvscfout(:,is,ipol), dfftp, dvscfout(:,is,ipol))
            enddo
         enddo
      endif
@@ -327,7 +327,7 @@ subroutine solve_e_fpol ( iw )
      if (doublegrid) then
         do is=1,nspin
            do ipol = 1, 3
-              call fft_interpolate_complex (dfftp,dvscfin(1,is,ipol),dffts,dvscfins(1,is,ipol))
+              call fft_interpolate (dfftp,dvscfin(:,is,ipol),dffts,dvscfins(:,is,ipol))
            enddo
         enddo
      endif

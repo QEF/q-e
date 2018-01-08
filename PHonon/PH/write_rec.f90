@@ -93,6 +93,7 @@ CONTAINS
     USE uspp_param, ONLY : nhm
     USE gvecs, ONLY : doublegrid
     USE fft_base, ONLY : dfftp, dffts
+    USE fft_interfaces, ONLY : fft_interpolate
     USE uspp,  ONLY : okvan, nlcc_any
     USE lsda_mod, ONLY : nspin
     USE noncollin_module, ONLY : noncolin, nspin_mag
@@ -137,7 +138,7 @@ CONTAINS
     IF (doublegrid) THEN
        DO is=1,nspin_mag
           DO ipol=1,npe
-             CALL fft_interpolate_complex (dfftp, dvscfin(1,is,ipol), dffts, dvscfins(1,is,ipol))
+             CALL fft_interpolate (dfftp, dvscfin(:,is,ipol), dffts, dvscfins(:,is,ipol))
           END DO
        END DO
     END IF

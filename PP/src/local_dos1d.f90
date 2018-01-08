@@ -17,7 +17,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   USE cell_base, ONLY: omega
   USE ions_base, ONLY: nat, ntyp=>nsp, ityp
   USE fft_base,  ONLY: dffts, dfftp
-  USE fft_interfaces, ONLY : fwfft, invfft
+  USE fft_interfaces, ONLY : fwfft, invfft, fft_interpolate
   USE gvecs,   ONLY : doublegrid
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum, indv, nhtol, nhtoj
@@ -211,7 +211,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   !    Interpolate on the thick mesh and pass to reciprocal space
   !
   IF (doublegrid) THEN
-     CALL fft_interpolate_real (dffts, aux, dfftp, aux)
+     CALL fft_interpolate (dffts, aux, dfftp, aux)
   ENDIF
   DO ir = 1, dfftp%nnr
      prho (ir) = cmplx(aux (ir), 0.d0,kind=DP)
