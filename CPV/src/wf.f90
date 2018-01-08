@@ -27,7 +27,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE uspp_param,               ONLY : nvb, ish
   USE cell_base,                ONLY : omega, at, alat, h, ainv
   USE electrons_base,           ONLY : nbspx, nbsp, nupdwn, iupdwn, nspin
-  USE smallbox_gvec,                    ONLY : npb, nmb, ngb
+  USE smallbox_gvec,            ONLY : ngb
+  USE smallbox_subs,            ONLY : fft_oned2box
   USE gvecw,                    ONLY : ngw
   USE gvect,       ONLY : gstart
   USE control_flags,            ONLY : iverbosity,conv_elec
@@ -70,7 +71,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   REAL(DP),    ALLOCATABLE :: Uspin(:,:)
   COMPLEX(DP), ALLOCATABLE :: X(:,:), Xsp(:,:), X2(:,:), X3(:,:)
   COMPLEX(DP), ALLOCATABLE :: O(:,:,:), Ospin(:,:,:), Oa(:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: qv(:)
+  COMPLEX(DP), ALLOCATABLE :: qv(:), fg1(:)
   REAL(DP),    ALLOCATABLE :: gr(:,:), mt(:), mt0(:), wr(:), W(:,:), EW(:,:)
   INTEGER,     ALLOCATABLE :: f3(:), f4(:)
   COMPLEX(DP), ALLOCATABLE :: U2(:,:)
@@ -311,6 +312,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      ! ... Augmentation Part first
      !
      ALLOCATE( qv( dfftb%nnr ) )
+     ALLOCATE( fg1( ngb ) )
      !
      X = ZERO
      !
@@ -321,11 +323,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
               inl = ish(is) + (iv-1)*na(is) + ia
               jv = iv 
               ijv=(jv-1)*jv/2 + iv
-              qv( 1 : dfftb%nnr ) = 0.D0 
-              DO ig=1,ngb
-                 qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
-                 qv(nmb(ig))=CONJG(eigrb(ig,isa)*qgb(ig,ijv,is))
-              END DO
+              fg1 = eigrb(1:ngb,isa)*qgb(1:ngb,ijv,is)
+              CALL fft_oned2box( qv, fg1 )
 #if defined(__MPI)
               irb3=irb(3,isa)
 #endif
@@ -365,11 +364,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
               DO jv = iv+1, nh(is)
                  jnl = ish(is) + (jv-1)*na(is) + ia
                  ijv = (jv-1)*jv/2 + iv
-                 qv( 1:dfftb%nnr ) = 0.D0
-                 DO ig=1,ngb
-                    qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
-                    qv(nmb(ig))=CONJG(eigrb(ig,isa)*qgb(ig,ijv,is))
-                 END DO
+                 fg1 = eigrb(1:ngb,isa)*qgb(1:ngb,ijv,is)
+                 CALL fft_oned2box( qv, fg1 )
                  CALL invfft(qv,dfftb,isa)
                  iqv=1
                  qvt=0.D0
@@ -426,6 +422,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      END IF
 
      DEALLOCATE( qv )
+     DEALLOCATE( fg1 )
 
 
      !   Then Soft Part

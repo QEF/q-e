@@ -21,7 +21,8 @@
       USE uspp,             ONLY: deeq
       USE ions_base,        ONLY: nat, nsp, na
       USE constants,        ONLY: pi, fpi
-      USE smallbox_gvec,            ONLY: ngb, npb, nmb, gxb
+      USE smallbox_gvec,    ONLY: ngb, gxb
+      USE smallbox_subs,    ONLY: fft_oned2box, fft_add_oned2box
       USE small_box,        ONLY: omegab, tpibab
       USE qgb_mod,          ONLY: qgb
       USE electrons_base,   ONLY: nspin
@@ -44,7 +45,7 @@
       INTEGER isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
       REAL(DP)  fvan(3,nat,nvb), fac, fac1, fac2, boxdotgrid, res
       COMPLEX(DP) ci, facg1, facg2
-      COMPLEX(DP), ALLOCATABLE :: qv(:)
+      COMPLEX(DP), ALLOCATABLE :: qv(:), fg1(:), fg2(:)
       INTEGER :: na_bgrp, ia_bgrp
       EXTERNAL boxdotgrid
 
@@ -63,9 +64,9 @@
 
 
 !$omp parallel default(none) &
-!$omp          shared(nvb, na, ngb, nh, qgb, eigrb, dfftb, irb, vr, nmb, npb, ci, deeq, &
+!$omp          shared(nvb, na, ngb, nh, qgb, eigrb, dfftb, irb, vr, ci, deeq, &
 !$omp                 fac, nspin, my_bgrp_id, nbgrp ) &
-!$omp          private(mytid, ntids, is, ia, nfft, iv, jv, ijv, ig, isa, qv, itid, res, iss )
+!$omp          private(mytid, ntids, is, ia, nfft, iv, jv, ijv, ig, isa, qv, fg1, fg2, itid, res, iss )
 
       isa = 1
 
@@ -77,6 +78,8 @@
 
 
       ALLOCATE( qv( dfftb%nnr ) )
+      ALLOCATE( fg1( ngb ) )
+      ALLOCATE( fg2( ngb ) )
 !
 ! calculation of deeq_i,lm = \int V_eff(r) q_i,lm(r) dr
 !
@@ -113,22 +116,13 @@
             DO iv=1,nh(is)
                DO jv=iv,nh(is)
                   ijv = (jv-1)*jv/2 + iv
-                  qv(:) = (0.d0, 0.d0)
                   IF (nfft.EQ.2) THEN
-                     DO ig=1,ngb
-                        qv(npb(ig))= eigrb(ig,isa  )*qgb(ig,ijv,is)   &
-     &                          + ci*eigrb(ig,isa+1)*qgb(ig,ijv,is)
-                        qv(nmb(ig))= CONJG(                             &
-     &                               eigrb(ig,isa  )*qgb(ig,ijv,is))  &
-     &                          + ci*CONJG(                             &
-     &                               eigrb(ig,isa+1)*qgb(ig,ijv,is))
-                     END DO
+                     fg1 = eigrb(1:ngb,isa  )*qgb(1:ngb,ijv,is)
+                     fg2 = eigrb(1:ngb,isa+1)*qgb(1:ngb,ijv,is)
+                     CALL fft_oned2box( qv, fg1, fg2 )
                   ELSE
-                     DO ig=1,ngb
-                        qv(npb(ig)) = eigrb(ig,isa)*qgb(ig,ijv,is)
-                        qv(nmb(ig)) = CONJG(                            &
-     &                                eigrb(ig,isa)*qgb(ig,ijv,is))
-                     END DO
+                     fg1 = eigrb(1:ngb,isa  )*qgb(1:ngb,ijv,is)
+                     CALL fft_oned2box( qv, fg1 )
                   END IF
 !
                   CALL invfft( qv, dfftb, isa )
@@ -152,6 +146,8 @@
       END DO
 
       DEALLOCATE( qv )
+      DEALLOCATE( fg1 )
+      DEALLOCATE( fg2 )
 
 !$omp end parallel
 
@@ -170,13 +166,15 @@
          !     -----------------------------------------------------------------
 
 !$omp parallel default(none) &
-!$omp          shared(nvb, na, ngb, nh, qgb, eigrb, dfftb, irb, vr, nmb, npb, ci, deeq, &
+!$omp          shared(nvb, na, ngb, nh, qgb, eigrb, dfftb, irb, vr, ci, deeq, &
 !$omp                 fac, nspin, rhovan, tpibab, gxb, fvan, my_bgrp_id, nbgrp ) &
 !$omp          private(mytid, ntids, is, ia, ik, nfft, iv, jv, ijv, ig, isa, qv, itid, res, iss, &
-!$omp                  fac1, fac2, facg1, facg2 )
+!$omp                  fac1, fac2, facg1, facg2, fg1, fg2 )
 
 
          ALLOCATE( qv( dfftb%nnr ) )
+         ALLOCATE( fg1( ngb ) )
+         ALLOCATE( fg2( ngb ) )
 
          iss=1
          isa=1
@@ -227,26 +225,18 @@
                         ENDIF
                         IF (nfft.EQ.2) THEN
                            DO ig=1,ngb
-                              facg1 = CMPLX(0.d0,-gxb(ik,ig),kind=DP) * &
-     &                                   qgb(ig,ijv,is) * fac1
-                              facg2 = CMPLX(0.d0,-gxb(ik,ig),kind=DP) * &
-     &                                   qgb(ig,ijv,is) * fac2
-                              qv(npb(ig)) = qv(npb(ig))                 &
-     &                                    +    eigrb(ig,isa  )*facg1    &
-     &                                    + ci*eigrb(ig,isa+1)*facg2
-                              qv(nmb(ig)) = qv(nmb(ig))                 &
-     &                                +   CONJG(eigrb(ig,isa  )*facg1)&
-     &                                +ci*CONJG(eigrb(ig,isa+1)*facg2)
+                              facg1 = CMPLX(0.d0,-gxb(ik,ig),kind=DP) * qgb(ig,ijv,is) * fac1
+                              facg2 = CMPLX(0.d0,-gxb(ik,ig),kind=DP) * qgb(ig,ijv,is) * fac2
+                              fg1(ig) = eigrb(ig,isa  )*facg1
+                              fg2(ig) = eigrb(ig,isa+1)*facg2
                            END DO
+                           CALL fft_add_oned2box( qv, fg1, fg2 )
                         ELSE
                            DO ig=1,ngb
-                              facg1 = CMPLX(0.d0,-gxb(ik,ig),kind=DP) * &
-     &                                   qgb(ig,ijv,is)*fac1
-                              qv(npb(ig)) = qv(npb(ig))                 &
-     &                                    +    eigrb(ig,isa)*facg1
-                              qv(nmb(ig)) = qv(nmb(ig))                 &
-     &                               +  CONJG( eigrb(ig,isa)*facg1)
+                              facg1 = CMPLX(0.d0,-gxb(ik,ig),kind=DP) * qgb(ig,ijv,is)*fac1
+                              fg1(ig) = eigrb(ig,isa  )*facg1
                            END DO
+                           CALL fft_add_oned2box( qv, fg1 )
                         END IF
                      END DO
                   END DO
@@ -266,6 +256,8 @@
          END DO
 
          DEALLOCATE( qv )
+         DEALLOCATE( fg1 )
+         DEALLOCATE( fg2 )
 
 !$omp end parallel
 
@@ -276,6 +268,8 @@
          !     -----------------------------------------------------------------
 
          ALLOCATE( qv( dfftb%nnr ) )
+         ALLOCATE( fg1( ngb ) )
+         ALLOCATE( fg2( ngb ) )
          isup=1
          isdw=2
          isa=1
@@ -298,15 +292,12 @@
                            fac2=     fac*tpibab*rhovan(ijv,isa,isdw)
                         END IF
                         DO ig=1,ngb
-                           facg1 = fac1 * CMPLX(0.d0,-gxb(ik,ig),kind=DP) * &
+                           fg1(ig) = fac1 * CMPLX(0.d0,-gxb(ik,ig),kind=DP) * &
      &                                qgb(ig,ijv,is) * eigrb(ig,isa)
-                           facg2 = fac2 * CMPLX(0.d0,-gxb(ik,ig),kind=DP) * &
+                           fg2(ig) = fac2 * CMPLX(0.d0,-gxb(ik,ig),kind=DP) * &
      &                                qgb(ig,ijv,is) * eigrb(ig,isa)
-                           qv(npb(ig)) = qv(npb(ig))                    &
-     &                                    + facg1 + ci*facg2
-                           qv(nmb(ig)) = qv(nmb(ig))                    &
-     &                                    +CONJG(facg1)+ci*CONJG(facg2)
                         END DO
+                        CALL fft_add_oned2box( qv, fg1, fg2 )
                      END DO
                   END DO
 !
@@ -321,6 +312,8 @@
          END DO
 
          DEALLOCATE( qv )
+         DEALLOCATE( fg1 )
+         DEALLOCATE( fg2 )
 
       END IF
 

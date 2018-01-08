@@ -21,7 +21,7 @@ MODULE smallbox_subs
    PRIVATE
    SAVE
 
-   PUBLIC :: ggenb, gcalb
+   PUBLIC :: ggenb, gcalb, fft_oned2box, fft_add_oned2box
 
 !=----------------------------------------------------------------------=
 CONTAINS
@@ -287,6 +287,57 @@ CONTAINS
     !
     RETURN
   END SUBROUTINE gcalb
+  !
+  SUBROUTINE fft_oned2box( qv, fg1, fg2 )
+    USE kinds, ONLY: DP
+    IMPLICIT NONE
+    COMPLEX(DP), INTENT(OUT) :: qv(:)
+    COMPLEX(DP), INTENT(IN) :: fg1(:)
+    COMPLEX(DP), OPTIONAL, INTENT(IN) :: fg2(:)
+    INTEGER :: ig
+    COMPLEX(DP) :: ci
+    ci = ( 0.0d0, 1.0d0 )
+    !
+    qv = ( 0.0d0, 0.0d0 )
+    IF( PRESENT( fg2 ) ) THEN
+       DO ig=1,ngb
+          qv(npb(ig)) = fg1(ig) + ci * fg2(ig)
+          qv(nmb(ig))=  CONJG(fg1(ig)) + ci * CONJG(fg2(ig))
+       END DO
+    ELSE
+       DO ig=1,ngb
+          qv(npb(ig)) =       fg1(ig)
+          qv(nmb(ig)) = CONJG(fg1(ig))
+       END DO
+    END IF
+    RETURN
+  END SUBROUTINE fft_oned2box
+
+  SUBROUTINE fft_add_oned2box( qv, fg1, fg2 )
+    USE kinds, ONLY: DP
+    IMPLICIT NONE
+    COMPLEX(DP), INTENT(INOUT) :: qv(:)
+    COMPLEX(DP), INTENT(IN) :: fg1(:)
+    COMPLEX(DP), OPTIONAL, INTENT(IN) :: fg2(:)
+    INTEGER :: ig
+    COMPLEX(DP) :: ci
+    ci = ( 0.0d0, 1.0d0 )
+    !
+    IF( PRESENT( fg2 ) ) THEN
+       DO ig=1,ngb
+          qv(npb(ig)) = qv(npb(ig)) + fg1(ig) + ci * fg2(ig)
+          qv(nmb(ig)) = qv(nmb(ig)) + CONJG(fg1(ig)) + ci * CONJG(fg2(ig))
+       END DO
+    ELSE
+       DO ig=1,ngb
+          qv(npb(ig)) = qv(npb(ig)) +       fg1(ig)
+          qv(nmb(ig)) = qv(nmb(ig)) + CONJG(fg1(ig))
+       END DO
+    END IF
+    RETURN
+  END SUBROUTINE fft_add_oned2box
+
+
 !
 !=----------------------------------------------------------------------=
 END MODULE smallbox_subs

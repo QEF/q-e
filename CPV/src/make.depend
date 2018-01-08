@@ -87,6 +87,7 @@ chargedensity.o : mainvar.o
 chargedensity.o : modules.o
 chargedensity.o : smallbox.o
 chargedensity.o : smallbox_gvec.o
+chargedensity.o : smallbox_subs.o
 chargedensity.o : wannier_base.o
 cp_autopilot.o : ../../Modules/autopilot.o
 cp_autopilot.o : ../../Modules/control_flags.o
@@ -786,6 +787,7 @@ newd.o : ../../UtilXlib/mp.o
 newd.o : modules.o
 newd.o : smallbox.o
 newd.o : smallbox_gvec.o
+newd.o : smallbox_subs.o
 nl_base.o : ../../LAXlib/la_types.o
 nl_base.o : ../../Modules/cell_base.o
 nl_base.o : ../../Modules/constants.o
@@ -819,6 +821,7 @@ nlcc.o : pseudo_base.o
 nlcc.o : pseudopot.o
 nlcc.o : smallbox.o
 nlcc.o : smallbox_gvec.o
+nlcc.o : smallbox_subs.o
 nlcc.o : spline.o
 ortho.o : ../../LAXlib/dspev_drv.o
 ortho.o : ../../LAXlib/la_types.o
@@ -1242,6 +1245,7 @@ wf.o : mainvar.o
 wf.o : modules.o
 wf.o : printout_base.o
 wf.o : smallbox_gvec.o
+wf.o : smallbox_subs.o
 wf.o : wannier.o
 wf.o : wannier_base.o
 wfdd.o : ../../Modules/constants.o
