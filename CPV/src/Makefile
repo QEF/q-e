@@ -4,7 +4,6 @@ include	../../make.inc
 
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS) \
-          $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../KS_Solvers/Davidson
 

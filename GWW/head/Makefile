@@ -8,10 +8,12 @@ include ../../make.inc
 IFLAGS=-I../../include
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../PHonon/PH $(MOD_FLAG)../../LR_Modules $(MOD_FLAG)../../PW/src \
-          $(MOD_FLAG)../../KS_Solvers/CG $(MOD_FLAG)../../KS_Solvers/Davidson \
-	  $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../UtilXlib $(MOD_FLAG).
+MODFLAGS= $(BASEMOD_FLAGS) \
+	  $(MOD_FLAG)../../PW/src \
+          $(MOD_FLAG)../../KS_Solvers/CGq\
+	  $(MOD_FLAG)../../KS_Solvers/Davidson \
+	  $(MOD_FLAG)../../LR_Modules \
+          $(MOD_FLAG)../../PHonon/PH
 
 HEADOBJS = \
 bcast_ph_input.o \
