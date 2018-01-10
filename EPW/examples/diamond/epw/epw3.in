@@ -7,11 +7,12 @@
   iverbosity  = 0
 
   elph        = .true.
-  epbwrite    = .false. !.true.
-  epbread     = .true. ! .false.
+  kmaps       = .true.
+  epbwrite    = .false.
+  epbread     = .true.
 
-  epwwrite    =  .false. ! .true.
-  epwread     =  .true. ! .false.
+  epwwrite    =  .false.
+  epwread     =  .true.
 
   efermi_read = .true. 
   fermi_energy = 13.209862
@@ -19,7 +20,7 @@
   nbndsub     =  4
   nbndskip    =  0
 
-  wannierize  = .false. ! .true.
+  wannierize  = .false.
   num_iter    = 300
   iprint      = 2
   dis_win_max = 12
@@ -30,7 +31,7 @@
   phonselfen  = .false. 
   a2f         = .false.
 
-  specfun      = .true. 
+  specfun_el   = .true. 
   wmin_specfun = -4
   wmax_specfun = 1
   nw_specfun   = 500
@@ -44,7 +45,7 @@
 
   dvscf_dir   = '../phonons/save'
   filukk      = './diam.ukk'
-  filkf       = 'meshes/path2.dat'
+  filkf       = 'meshes/path.dat'
   nqf1        = 50
   nqf2        = 50
   nqf3        = 50
