@@ -869,14 +869,15 @@
       USE cell_base,          ONLY : tpiba2
       USE small_box,          ONLY : tpibab
       USE smallbox_gvec,      ONLY : gb, ngb
-      USE gvect, ONLY : gg, ngm
+      USE gvect,              ONLY : gg
+      USE fft_base,           ONLY : dfftp
       !
       IMPLICIT NONE
       !
       REAL(DP), INTENT(OUT) :: gmax
       REAL(DP) :: g2, g2b
       !
-      g2  = MAXVAL( gg( 1:ngm ) )
+      g2  = MAXVAL( gg( 1:dfftp%ngm ) )
       !
       g2  = g2 * tpiba2 / refg
       !

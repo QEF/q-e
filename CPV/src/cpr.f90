@@ -37,9 +37,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        berry_energy2, pberryel2, pberryion2
   USE ensemble_dft,             ONLY : tens, z0t, gibbsfe
   USE cg_module,                ONLY : tcg,  cg_update, c0old
-  USE gvect,                    ONLY : ngm, ngm_g
-  USE smallbox_gvec,                    ONLY : ngb
-  USE gvecw,                    ONLY : ngw, ngw_g
+  USE smallbox_gvec,            ONLY : ngb
+  USE gvecw,                    ONLY : ngw
   USE gvect,       ONLY : gstart, mill, eigts1, eigts2, eigts3
   USE ions_base,                ONLY : na, nat, amass, nax, nsp, rcmax
   USE ions_base,                ONLY : ind_srt, ions_cofmass, ions_kinene, &

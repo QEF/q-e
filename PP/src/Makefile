@@ -3,8 +3,11 @@
 include ../../make.inc
 
 # location of needed modules and included files (if any)
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../FoX/finclude $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../../PW/src $(MOD_FLAG).
+MODFLAGS= $(BASEMOD_FLAGS) \
+          $(MOD_FLAG)../../PW/src \
+          $(MOD_FLAG)../../KS_Solvers/Davidson \
+          $(MOD_FLAG)../../KS_Solvers/CG \
+          $(MOD_FLAG)../../dft-d3/
 IFLAGS=
 
 PPOBJS = \

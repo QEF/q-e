@@ -7,9 +7,10 @@ include ../../make.inc
 IFLAGS=
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../../KS_Solvers/CG $(MOD_FLAG)../../KS_Solvers/Davidson \
-          $(MOD_FLAG)../../FFTXlib $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../pw4gww $(MOD_FLAG).
+MODFLAGS= $(BASEMOD_FLAGS) \
+          $(MOD_FLAG)../../KS_Solvers/CG \
+	  $(MOD_FLAG)../../KS_Solvers/Davidson \
+          $(MOD_FLAG)../pw4gww
 
 GWWOBJS = \
 basic_structures.o \

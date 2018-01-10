@@ -173,7 +173,8 @@
 !
       USE kinds,             ONLY: DP
       use electrons_base,    only: nspin
-      use smallbox_gvec,     only: gxb, ngb, npb, nmb
+      use smallbox_gvec,     only: gxb, ngb
+      use smallbox_subs,     only: fft_oned2box
       use cell_base,         only: omega
       use ions_base,         only: nsp, na, nat
       use small_box,         only: tpibab
@@ -195,7 +196,7 @@
       integer :: iss, ix, ig, is, ia, nfft, isa
       real(dp) :: fac, res, boxdotgrid
       complex(dp) ci, facg
-      complex(dp), allocatable :: qv(:)
+      complex(dp), allocatable :: qv(:), fg1(:), fg2(:)
       real(dp), allocatable :: fcc(:,:)
       external  boxdotgrid
 
@@ -210,13 +211,15 @@
       fac = omega/DBLE(dfftp%nr1*dfftp%nr2*dfftp%nr3*nspin)
 
 !$omp parallel default(none) &      
-!$omp          shared(nsp, na, ngb, eigrb, dfftb, irb, nmb, npb, ci, rhocb, &
+!$omp          shared(nsp, na, ngb, eigrb, dfftb, irb, ci, rhocb, &
 !$omp                 gxb, nat, fac, upf, vxc, nspin, tpibab, fion1 ) &
-!$omp          private(mytid, ntids, is, ia, nfft, ig, isa, qv, itid, res, ix, fcc, facg, iss )
+!$omp          private(mytid, ntids, is, ia, nfft, ig, isa, qv, fg1, fg2, itid, res, ix, fcc, facg, iss )
 
 
       allocate( fcc( 3, nat ) )
       allocate( qv( dfftb%nnr ) )
+      allocate( fg1( ngb ) )
+      allocate( fg2( ngb ) )
 
       fcc(:,:) = 0.d0
 
@@ -259,21 +262,19 @@
 #endif
 
             do ix=1,3
-               qv(:) = (0.d0, 0.d0)
                if (nfft.eq.2) then
                   do ig=1,ngb
                      facg = tpibab*CMPLX(0.d0,gxb(ix,ig),kind=DP)*rhocb(ig,is)
-                     qv(npb(ig)) = eigrb(ig,ia+isa  )*facg                 &
-     &                      + ci * eigrb(ig,ia+isa+1)*facg
-                     qv(nmb(ig)) = CONJG(eigrb(ig,ia+isa  )*facg)          &
-     &                      + ci * CONJG(eigrb(ig,ia+isa+1)*facg)
+                     fg1(ig) = eigrb(ig,ia+isa  )*facg
+                     fg2(ig) = eigrb(ig,ia+isa+1)*facg
                   end do
+                  CALL fft_oned2box( qv, fg1, fg2 )
                else
                   do ig=1,ngb
                      facg = tpibab*CMPLX(0.d0,gxb(ix,ig),kind=DP)*rhocb(ig,is)
-                     qv(npb(ig)) = eigrb(ig,ia+isa)*facg
-                     qv(nmb(ig)) = CONJG(eigrb(ig,ia+isa)*facg)
+                     fg1(ig) = eigrb(ig,ia+isa)*facg
                   end do
+                  CALL fft_oned2box( qv, fg1 )
                end if
 !
                call invfft( qv, dfftb, ia+isa )
@@ -303,6 +304,8 @@
 !$omp end critical
 
       deallocate( qv )
+      deallocate( fg1 )
+      deallocate( fg2 )
       deallocate( fcc )
 
 !$omp end parallel
@@ -324,7 +327,8 @@
       use kinds, only: dp
       use ions_base,         only: nsp, na, nat
       use uspp_param,        only: upf
-      use smallbox_gvec,     only: ngb, npb, nmb
+      use smallbox_gvec,     only: ngb
+      use smallbox_subs,     only: fft_oned2box
       use control_flags,     only: iprint
       use core,              only: rhocb
       use fft_interfaces,    only: invfft
@@ -340,7 +344,7 @@
       integer nfft, ig, is, ia, isa
       complex(dp) ci
       complex(dp), allocatable :: wrk1(:)
-      complex(dp), allocatable :: qv(:)
+      complex(dp), allocatable :: qv(:), fg1(:), fg2(:)
 
 #if defined(_OPENMP)
       INTEGER :: itid, mytid, ntids, omp_get_thread_num, omp_get_num_threads
@@ -354,11 +358,13 @@
       wrk1 (:) = (0.d0, 0.d0)
 !
 !$omp parallel default(none) &      
-!$omp          shared(nsp, na, ngb, eigrb, dfftb, irb, nmb, npb, ci, rhocb, &
+!$omp          shared(nsp, na, ngb, eigrb, dfftb, irb, ci, rhocb, &
 !$omp                 nat, upf, wrk1 ) &
-!$omp          private(mytid, ntids, is, ia, nfft, ig, isa, qv, itid )
+!$omp          private(mytid, ntids, is, ia, nfft, ig, isa, qv, fg1, fg2, itid )
 
       allocate( qv ( dfftb%nnr ) )
+      allocate( fg1 ( ngb ) )
+      allocate( fg2 ( ngb ) )
 !
       isa = 0
 
@@ -397,19 +403,13 @@
             END IF
 #endif
 
-            qv(:) = (0.d0, 0.d0)
             if(nfft.eq.2)then
-               do ig=1,ngb
-                  qv(npb(ig))= eigrb(ig,ia  +isa)*rhocb(ig,is)          &
-     &                    + ci*eigrb(ig,ia+1+isa)*rhocb(ig,is)
-                  qv(nmb(ig))= CONJG(eigrb(ig,ia  +isa)*rhocb(ig,is))   &
-     &                    + ci*CONJG(eigrb(ig,ia+1+isa)*rhocb(ig,is))
-               end do
+               fg1 = eigrb(1:ngb,ia  +isa)*rhocb(1:ngb,is)
+               fg2 = eigrb(1:ngb,ia+1+isa)*rhocb(1:ngb,is)
+               CALL fft_oned2box( qv, fg1, fg2 )
             else
-               do ig=1,ngb
-                  qv(npb(ig)) = eigrb(ig,ia+isa)*rhocb(ig,is)
-                  qv(nmb(ig)) = CONJG(eigrb(ig,ia+isa)*rhocb(ig,is))
-               end do
+               fg1 = eigrb(1:ngb,ia  +isa)*rhocb(1:ngb,is)
+               CALL fft_oned2box( qv, fg1 )
             endif
 !
             call invfft( qv, dfftb, isa+ia )
@@ -422,6 +422,8 @@
       end do
 !
       deallocate( qv  )
+      deallocate( fg1  )
+      deallocate( fg2  )
 
 !$omp end parallel
 

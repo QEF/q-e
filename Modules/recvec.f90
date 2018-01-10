@@ -60,10 +60,6 @@
      !
      INTEGER, ALLOCATABLE, TARGET :: ig_l2g(:)
      !
-     !     sortedig_l2g = array obtained by sorting ig_l2g
-     !
-     INTEGER, ALLOCATABLE, TARGET :: sortedig_l2g(:)
-     !
      !     mill_g  = miller index of all G vectors
      !
      INTEGER, ALLOCATABLE, TARGET :: mill_g(:,:)
@@ -114,7 +110,6 @@
        IF( ALLOCATED( mill ) ) DEALLOCATE( mill )
        IF( ALLOCATED( igtongl ) ) DEALLOCATE( igtongl )
        IF( ALLOCATED( ig_l2g ) ) DEALLOCATE( ig_l2g )
-       IF( ALLOCATED( sortedig_l2g ) ) DEALLOCATE( sortedig_l2g )
        IF( ALLOCATED( eigts1 ) ) DEALLOCATE( eigts1 )
        IF( ALLOCATED( eigts2 ) ) DEALLOCATE( eigts2 )
        IF( ALLOCATED( eigts3 ) ) DEALLOCATE( eigts3 )

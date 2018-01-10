@@ -40,9 +40,9 @@ SUBROUTINE chdens (plot_files,plot_num)
   USE scatter_mod,   ONLY : scatter_grid
   USE fft_interfaces,  ONLY : fwfft
   USE fft_types,  ONLY : fft_type_allocate
-  USE gvect,      ONLY : ngm, g, gcutm
-  USE gvecs,      ONLY : gcutms, doublegrid, dual, ecuts 
-  USE recvec_subs,ONLY: ggen 
+  USE gvect,      ONLY : ngm, g, gcutm, gg, mill, ig_l2g, ngm_g, gstart
+  USE gvecs,      ONLY : gcutms, doublegrid, dual, ecuts, ngms
+  USE recvec_subs,ONLY: ggen, ggens 
   USE gvecw,      ONLY: ecutwfc
   USE run_info,   ONLY: title
   USE control_flags, ONLY: gamma_only
@@ -462,7 +462,9 @@ SUBROUTINE chdens (plot_files,plot_num)
           !
           !    and rebuild G-vectors in reciprocal space
           !
-          CALL ggen ( gamma_only, at, bg )
+          CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+               g, gg, mill, ig_l2g, gstart )
+          CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
           !
           !    here we compute the fourier components of the quantity to plot
           !

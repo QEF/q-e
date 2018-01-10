@@ -28,10 +28,11 @@
       use smallbox_grid_dim,    only: smallbox_grid_init,smallbox_grid_info
       USE fft_types,            ONLY: fft_type_init
       use ions_base,            only: nat
-      USE recvec_subs,          ONLY: ggen
-      USE gvect,                ONLY: mill_g, eigts1,eigts2,eigts3, gg, &
-                                      ecutrho, gcutm, gvect_init
-      use gvecs,                only: gcutms, gvecs_init
+      USE recvec_subs,          ONLY: ggen, ggens
+      USE gvect,                ONLY: mill_g, eigts1,eigts2,eigts3, g, gg, &
+                                      ecutrho, gcutm, gvect_init, mill, &
+                                      ig_l2g, gstart, ngm, ngm_g
+      use gvecs,                only: gcutms, gvecs_init, ngms
       use gvecw,                only: gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY: ggenb
       USE fft_base,             ONLY: dfftp, dffts, dfftb, fft_base_info
@@ -170,18 +171,24 @@
         WRITE( stdout,'(3X,"Reference Cell alat  =",F14.8,1X,"A.U.")' ) ref_alat
         !
         IF( smallmem ) THEN
-           CALL ggen( gamma_only, ref_at, ref_bg, intra_bgrp_comm, no_global_sort = .TRUE. )
+           CALL ggen( dfftp, gamma_only, ref_at, ref_bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart, no_global_sort = .TRUE. )
         ELSE
-           CALL ggen( gamma_only, ref_at, ref_bg )
+           CALL ggen( dfftp, gamma_only, ref_at, ref_bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart )
         END IF
+        CALL ggens( dffts, gamma_only, ref_at, g, gg, mill, gcutms, ngms )
         !
       ELSE
         !
         IF( smallmem ) THEN
-           CALL ggen( gamma_only, at, bg, intra_bgrp_comm, no_global_sort = .TRUE. )
+           CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart, no_global_sort = .TRUE. )
         ELSE
-           CALL ggen( gamma_only, at, bg )
+           CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+                g, gg, mill, ig_l2g, gstart )
         END IF
+        CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
         !
       END IF
 
@@ -368,12 +375,8 @@
         ! geometry is set to the cell parameters read from stdin
         !
         WRITE(stdout, '(3X,"ibrav = ",i4,"       cell parameters read from input file")') ibrav
-        do i = 1, 3
-            h(i,1) = at(i,1)*alat
-            h(i,2) = at(i,2)*alat
-            h(i,3) = at(i,3)*alat
-        enddo
 
+        h    = at * alat
         hold = h
 
       end if
@@ -417,7 +420,7 @@
       INTEGER,  INTENT(IN) :: iverbosity
       !
       REAL(DP) :: rat1, rat2, rat3
-      INTEGER :: ig, i1, i2, i3
+      INTEGER :: ig
       !
       !WRITE( stdout, "(4x,'h from newinit')" )
       !do i=1,3
@@ -430,11 +433,8 @@
       !
       !  re-calculate G-vectors and kinetic energy
       !
-      do ig=1,ngm
-         i1=mill(1,ig)
-         i2=mill(2,ig)
-         i3=mill(3,ig)
-         g(:,ig)=i1*bg(:,1)+i2*bg(:,2)+i3*bg(:,3)
+      do ig = 1, dfftp%ngm
+         g(:,ig)= mill(1,ig)*bg(:,1) + mill(2,ig)*bg(:,2) + mill(3,ig)*bg(:,3)
          gg(ig)=g(1,ig)**2 + g(2,ig)**2 + g(3,ig)**2
       enddo
       !

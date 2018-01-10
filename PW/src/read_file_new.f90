@@ -119,8 +119,8 @@ SUBROUTINE read_xml_file ( )
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE fft_types,            ONLY : fft_type_allocate
-  USE recvec_subs,          ONLY : ggen
-  USE gvect,                ONLY : gg, ngm, g, gcutm, &
+  USE recvec_subs,          ONLY : ggen, ggens
+  USE gvect,                ONLY : gg, ngm, g, gcutm, mill, ngm_g, ig_l2g, &
                                    eigts1, eigts2, eigts3, gstart
   USE fft_base,             ONLY : dfftp, dffts
   USE gvecs,                ONLY : ngms, gcutms 
@@ -276,7 +276,9 @@ SUBROUTINE read_xml_file ( )
   CALL pre_init()
   CALL data_structure ( gamma_only )
   CALL allocate_fft()
-  CALL ggen ( gamma_only, at, bg ) 
+  CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+       g, gg, mill, ig_l2g, gstart ) 
+  CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
   IF (do_comp_esm) THEN
      CALL init_vars_from_schema ( 'esm', ierr, output_obj, parinfo_obj, geninfo_obj ) 
      CALL esm_init()

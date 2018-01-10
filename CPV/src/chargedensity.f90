@@ -229,17 +229,11 @@
             !
             ALLOCATE( psis( dffts%nnr ) ) 
             !
-            i = iwf
-            !
-            CALL c2psi_gamma( dffts, psis, c_bgrp(:,i) )
+            CALL c2psi_gamma( dffts, psis, c_bgrp(:,iwf) )
             !
             CALL invfft('Wave',psis, dffts )
             !
-            iss1=1
-            sa1=f_bgrp(i)/omega
-            DO ir=1,dffts%nnr
-               rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
-            END DO
+            rhos(1:dffts%nnr,1) = rhos(1:dffts%nnr,1) + f_bgrp(iwf) * ( DBLE(psis(:)))**2 / omega
             !
             DEALLOCATE( psis )
             !
@@ -384,7 +378,7 @@
 
             CALL invfft ('tgWave', psis, dffts )
 #else
-            CALL c2psi_gamma( dffts, psis, c_bgrp( 1, i ), c_bgrp( 1, i+1 ) )
+            CALL c2psi_gamma( dffts, psis, c_bgrp(:,i), c_bgrp(:,i+1) )
 
             CALL invfft('Wave', psis, dffts )
 
@@ -591,7 +585,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       USE ions_base,                ONLY: na, nsp, nat
       USE uspp_param,               ONLY: nhm, nh, nvb
       USE electrons_base,           ONLY: nspin
-      USE smallbox_gvec,            ONLY: ngb, npb, nmb
+      USE smallbox_gvec,            ONLY: ngb
+      USE smallbox_subs,            ONLY: fft_oned2box
       USE cell_base,                ONLY: ainv
       USE qgb_mod,                  ONLY: qgb, dqgb
       USE fft_interfaces,           ONLY: fwfft, invfft
@@ -623,6 +618,7 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
       COMPLEX(DP), ALLOCATABLE :: v(:)
       COMPLEX(DP), ALLOCATABLE:: dqgbt(:,:)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
+      COMPLEX(DP), ALLOCATABLE :: fg1(:), fg2(:)
 !
       INTEGER  :: itid, mytid, ntids
 #if defined(_OPENMP)
@@ -673,12 +669,14 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 
 !$omp parallel default(none) &
 !$omp          shared(nvb, na, ngb, nh, eigrb, dfftb, irb, v, &
-!$omp                 nmb, ci, npb, i, j, dqgb, qgb, nhm, rhovan, drhovan ) &
+!$omp                 ci, i, j, dqgb, qgb, nhm, rhovan, drhovan ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, ig, iss, isa, &
-!$omp                  qv, itid, dqgbt, dsumt, asumt )
+!$omp                  qv, fg1, fg2, itid, dqgbt, dsumt, asumt )
 
                ALLOCATE( qv( dfftb%nnr ) )
                ALLOCATE( dqgbt( ngb, 2 ) )
+               ALLOCATE( fg1( ngb ) )
+               ALLOCATE( fg2( ngb ) )
 
 #if defined(_OPENMP)
                mytid = omp_get_thread_num()  ! take the thread ID
@@ -717,7 +715,6 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 #endif
 
                      dqgbt(:,:) = (0.d0, 0.d0) 
-                     qv(:) = (0.d0, 0.d0)
                      DO ifft=1,nfft
                         DO iv=1,nh(is)
                            DO jv=iv,nh(is)
@@ -740,17 +737,12 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                      ! add structure factor
                      !
                      IF(nfft.EQ.2) THEN
-                        DO ig=1,ngb
-                           qv(npb(ig)) = eigrb(ig,isa   )*dqgbt(ig,1)  &
-     &                        + ci*      eigrb(ig,isa+1 )*dqgbt(ig,2)
-                           qv(nmb(ig))=  CONJG(eigrb(ig,isa  )*dqgbt(ig,1)) &
-     &                        + ci*      CONJG(eigrb(ig,isa+1)*dqgbt(ig,2))
-                        END DO
+                        fg1 = eigrb(1:ngb,isa   )*dqgbt(1:ngb,1)
+                        fg2 = eigrb(1:ngb,isa+1 )*dqgbt(1:ngb,2)
+                        CALL fft_oned2box( qv, fg1, fg2 )
                      ELSE
-                        DO ig=1,ngb
-                           qv(npb(ig)) =       eigrb(ig,isa)*dqgbt(ig,1)
-                           qv(nmb(ig)) = CONJG(eigrb(ig,isa)*dqgbt(ig,1))
-                        END DO
+                        fg1 = eigrb(1:ngb,isa   )*dqgbt(1:ngb,1)
+                        CALL fft_oned2box( qv, fg1 )
                      ENDIF
                      !
                      CALL invfft( qv, dfftb, isa )
@@ -768,6 +760,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                   END DO
                END DO
 
+               DEALLOCATE( fg1 )
+               DEALLOCATE( fg2 )
                DEALLOCATE( dqgbt )
                DEALLOCATE( qv )
 !
@@ -797,6 +791,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                v(:) = (0.d0, 0.d0)
                ALLOCATE( qv( dfftb%nnr ) )
                ALLOCATE( dqgbt( ngb, 2 ) )
+               ALLOCATE( fg1( ngb ) )
+               ALLOCATE( fg2( ngb ) )
                isa=1
                DO is=1,nvb
                   DO ia=1,na(is)
@@ -825,13 +821,9 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
                      !     
                      ! add structure factor
                      !
-                     qv(:) = (0.d0, 0.d0)
-                     DO ig=1,ngb
-                        qv(npb(ig))= eigrb(ig,isa)*dqgbt(ig,1)        &
-     &                    + ci*      eigrb(ig,isa)*dqgbt(ig,2)
-                        qv(nmb(ig))= CONJG(eigrb(ig,isa)*dqgbt(ig,1)) &
-     &                    +       ci*CONJG(eigrb(ig,isa)*dqgbt(ig,2))
-                     END DO
+                     fg1 = eigrb(1:ngb,isa)*dqgbt(1:ngb,1)
+                     fg2 = eigrb(1:ngb,isa)*dqgbt(1:ngb,2)
+                     CALL fft_oned2box( qv, fg1, fg2 )
 
                      CALL invfft(qv, dfftb, isa )
                      !
@@ -849,6 +841,8 @@ SUBROUTINE drhov(irb,eigrb,rhovan,drhovan,rhog,rhor,drhog,drhor)
 
                DEALLOCATE( dqgbt )
                DEALLOCATE( qv )
+               DEALLOCATE( fg1 )
+               DEALLOCATE( fg2 )
 !
                DO ir=1,dfftp%nnr
                   drhor(ir,isup,i,j) = drhor(ir,isup,i,j) + DBLE(v(ir))
@@ -885,7 +879,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       USE uspp_param,               ONLY: nh, nhm, nvb
       USE uspp,                     ONLY: deeq
       USE electrons_base,           ONLY: nspin
-      USE smallbox_gvec,                    ONLY: npb, nmb, ngb
+      USE smallbox_gvec,            ONLY: ngb
+      USE smallbox_subs,            ONLY: fft_oned2box
       USE cell_base,                ONLY: omega
       USE small_box,                ONLY: omegab
       USE control_flags,            ONLY: iprint, iverbosity, tpre
@@ -914,6 +909,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
       COMPLEX(DP), ALLOCATABLE :: qgbt(:,:)
       COMPLEX(DP), ALLOCATABLE :: v(:)
       COMPLEX(DP), ALLOCATABLE :: qv(:)
+      COMPLEX(DP), ALLOCATABLE :: fg1(:), fg2(:)
 
 #if defined(_OPENMP)
       INTEGER  :: itid, mytid, ntids
@@ -949,9 +945,9 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
 !$omp parallel default(none) &
 !$omp          shared(nvb, na, ngb, nh, rhovan, qgb, eigrb, dfftb, iverbosity, omegab, irb, v, &
-!$omp                 nmb, stdout, ci, npb, rhor, dfftp ) &
+!$omp                 stdout, ci, rhor, dfftp ) &
 !$omp          private(mytid, ntids, is, ia, nfft, ifft, iv, jv, ijv, sumrho, qgbt, ig, iss, isa, ca, &
-!$omp                  qv, itid, ir )
+!$omp                  qv, fg1, fg2, itid, ir )
 
          iss=1
          isa=1
@@ -968,6 +964,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
          ALLOCATE( qgbt( ngb, 2 ) )
          ALLOCATE( qv( dfftb%nnr ) )
+         ALLOCATE( fg1( ngb ) )
+         ALLOCATE( fg2( ngb ) )
 
 
          DO is = 1, nvb
@@ -1013,21 +1011,14 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
                !
                ! add structure factor
                !
-               qv(:) = (0.d0, 0.d0)
                IF(nfft.EQ.2)THEN
-                  DO ig=1,ngb
-                     qv(npb(ig))=      eigrb(ig,isa  )*qgbt(ig,1)  &
-                                + ci * eigrb(ig,isa+1)*qgbt(ig,2)
-                     qv(nmb(ig))=      CONJG(eigrb(ig,isa  )*qgbt(ig,1)) &
-                                + ci * CONJG(eigrb(ig,isa+1)*qgbt(ig,2))
-                  END DO
+                  fg1 = eigrb(1:ngb,isa   )*qgbt(1:ngb,1)
+                  fg2 = eigrb(1:ngb,isa+1 )*qgbt(1:ngb,2)
+                  CALL fft_oned2box( qv, fg1, fg2 )
                ELSE
-                  DO ig=1,ngb
-                     qv(npb(ig)) = eigrb(ig,isa)*qgbt(ig,1)
-                     qv(nmb(ig)) = CONJG(eigrb(ig,isa)*qgbt(ig,1))
-                  END DO
+                  fg1 = eigrb(1:ngb,isa   )*qgbt(1:ngb,1)
+                  CALL fft_oned2box( qv, fg1 )
                ENDIF
-
 
                CALL invfft( qv, dfftb, isa )
                !
@@ -1056,6 +1047,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
             END DO
          END DO
 
+         DEALLOCATE( fg1 )
+         DEALLOCATE( fg2 )
          DEALLOCATE(qv)
          DEALLOCATE(qgbt)
          !
@@ -1105,6 +1098,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 
          ALLOCATE( qgbt( ngb, 2 ) )
          ALLOCATE( qv( dfftb%nnr ) )
+         ALLOCATE( fg1( ngb ) )
+         ALLOCATE( fg2( ngb ) )
 
          isa=1
          DO is=1,nvb
@@ -1128,13 +1123,9 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 !     
 ! add structure factor
 !
-               qv(:) = (0.d0, 0.d0)
-               DO ig=1,ngb
-                  qv(npb(ig)) =    eigrb(ig,isa)*qgbt(ig,1)           &
-     &                  + ci*      eigrb(ig,isa)*qgbt(ig,2)
-                  qv(nmb(ig)) = CONJG(eigrb(ig,isa)*qgbt(ig,1))       &
-     &                  + ci*   CONJG(eigrb(ig,isa)*qgbt(ig,2))
-               END DO
+               fg1 = eigrb(1:ngb,isa)*qgbt(1:ngb,1)
+               fg2 = eigrb(1:ngb,isa)*qgbt(1:ngb,2)
+               CALL fft_oned2box( qv, fg1, fg2 )
 !
                CALL invfft( qv,dfftb,isa)
 !
@@ -1194,6 +1185,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          END IF
          DEALLOCATE(qgbt)
          DEALLOCATE( qv )
+         DEALLOCATE( fg1 )
+         DEALLOCATE( fg2 )
 !
       ENDIF
 

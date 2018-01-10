@@ -30,7 +30,6 @@
                                 e0, psihpsi, compute_entropy2, &
                                 compute_entropy_der, compute_entropy, &
                                 niter_cold_restart, lambda_cold
-      USE gvect,          ONLY: ngm
       USE smallbox_gvec,  ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE gvect,          ONLY: gstart
@@ -74,7 +73,7 @@
       COMPLEX (kind=DP)           :: eigrb( ngb, nat )
       REAL(kind=DP)               :: rhor( dfftp%nnr, nspin )
       REAL(kind=DP)               :: vpot( dfftp%nnr, nspin )
-      COMPLEX(kind=DP)            :: rhog( ngm, nspin )
+      COMPLEX(kind=DP)            :: rhog( dfftp%ngm, nspin )
       REAL(kind=DP)               :: rhos( dffts%nnr, nspin )
       REAL(kind=DP)               :: rhoc( dfftp%nnr )
       COMPLEX(kind=DP)            :: ei1( dfftp%nr1:dfftp%nr1, nat )
@@ -328,7 +327,6 @@
 
       USE ensemble_dft,   ONLY: tens,  ninner, ismear, etemp, &
                                  c0diag, becdiag, z0t, nrcx, nrlx
-      USE gvect,          ONLY: ngm
       USE smallbox_gvec,  ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE gvect,          ONLY: gstart
@@ -365,7 +363,7 @@
       COMPLEX (kind=DP)           :: eigrb( ngb, nat )
       REAL(kind=DP)               :: rhor( dfftp%nnr, nspin )
       REAL(kind=DP)               :: vpot( dfftp%nnr, nspin )
-      COMPLEX(kind=DP)            :: rhog( ngm, nspin )
+      COMPLEX(kind=DP)            :: rhog( dfftp%ngm, nspin )
       REAL(kind=DP)               :: rhos( dffts%nnr, nspin )
       REAL(kind=DP)               :: rhoc( dfftp%nnr )
       COMPLEX(kind=DP)            :: ei1( dfftp%nr1:dfftp%nr1, nat )
@@ -511,7 +509,6 @@
                                 compute_entropy2, nrlx, nrcx, &
                                 compute_entropy_der, compute_entropy, &
                                 niter_cold_restart, lambda_cold
-      USE gvect,          ONLY: ngm
       USE smallbox_gvec,          ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE gvect, &

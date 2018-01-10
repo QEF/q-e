@@ -1151,7 +1151,7 @@ MODULE realus
     END SUBROUTINE newq_r
     !
     !------------------------------------------------------------------------
-    SUBROUTINE addusdens_r(rho_1)
+    SUBROUTINE addusdens_r(rho)
       !------------------------------------------------------------------------
       !
       ! ... This routine adds to the charge density the part which is due to
@@ -1161,7 +1161,6 @@ MODULE realus
       USE ions_base,        ONLY : nat, ityp
       USE cell_base,        ONLY : omega
       USE lsda_mod,         ONLY : nspin
-      !USE scf,              ONLY : rho
       USE klist,            ONLY : nelec
       USE fft_base,         ONLY : dfftp
       USE uspp,             ONLY : okvan, becsum
@@ -1170,15 +1169,19 @@ MODULE realus
       USE spin_orb,         ONLY : domag
       USE mp_bands,         ONLY : intra_bgrp_comm
       USE mp,               ONLY : mp_sum
-
+      USE gvect,            ONLY : gstart
+      USE fft_base,         ONLY : dfftp
+      USE fft_interfaces,   ONLY : fwfft
+      USE wavefunctions_module,  ONLY : psic
       !
       IMPLICIT NONE
-      ! The charge density to be augmented
-      REAL(kind=dp), INTENT(inout) :: rho_1(dfftp%nnr,nspin_mag) 
+      ! The charge density to be augmented (in G-space)
+      COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag) 
       ! If this is the ground charge density, enable rescaling
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia
       CHARACTER(len=80) :: msg
+      REAL(kind=dp), ALLOCATABLE :: rho_1(:,:) 
       REAL(DP) :: charge
       REAL(DP) :: tolerance
       !
@@ -1190,6 +1193,8 @@ MODULE realus
       !
       CALL start_clock( 'addusdens' )
       !
+      ALLOCATE ( rho_1(dfftp%nnr,nspin_mag) )
+      rho_1(:,:) = 0.0_dp
       DO is = 1, nspin_mag
          !
          DO ia = 1, nat
@@ -1214,10 +1219,22 @@ MODULE realus
          !
       ENDDO
       !
+      DO is = 1, nspin_mag
+         psic(:) = rho_1(:,is)
+         CALL fwfft ('Rho', psic, dfftp)
+         rho(:,is) = rho(:,is) + psic(dfftp%nl(:))
+      END DO
+      DEALLOCATE ( rho_1 )
+      !
       ! ... check the total charge (must not be summed on k-points)
       !
-       charge = sum( rho_1(:,1:nspin_lsda) )*omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
-       CALL mp_sum(  charge , intra_bgrp_comm )
+      !charge = sum( rho_1(:,1:nspin_lsda) )*omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
+      IF ( gstart == 2) THEN
+         charge = SUM(rho(1,1:nspin_lsda) )*omega
+      ELSE
+         charge = 0.0_dp
+      ENDIF
+      CALL mp_sum(  charge , intra_bgrp_comm )
 #if defined (__DEBUG)
        write (stdout,*) 'charge before rescaling ', charge
 #endif

@@ -27,7 +27,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE uspp_param,               ONLY : nvb, ish
   USE cell_base,                ONLY : omega, at, alat, h, ainv
   USE electrons_base,           ONLY : nbspx, nbsp, nupdwn, iupdwn, nspin
-  USE smallbox_gvec,                    ONLY : npb, nmb, ngb
+  USE smallbox_gvec,            ONLY : ngb
+  USE smallbox_subs,            ONLY : fft_oned2box
   USE gvecw,                    ONLY : ngw
   USE gvect,       ONLY : gstart
   USE control_flags,            ONLY : iverbosity,conv_elec
@@ -70,7 +71,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   REAL(DP),    ALLOCATABLE :: Uspin(:,:)
   COMPLEX(DP), ALLOCATABLE :: X(:,:), Xsp(:,:), X2(:,:), X3(:,:)
   COMPLEX(DP), ALLOCATABLE :: O(:,:,:), Ospin(:,:,:), Oa(:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: qv(:)
+  COMPLEX(DP), ALLOCATABLE :: qv(:), fg1(:)
   REAL(DP),    ALLOCATABLE :: gr(:,:), mt(:), mt0(:), wr(:), W(:,:), EW(:,:)
   INTEGER,     ALLOCATABLE :: f3(:), f4(:)
   COMPLEX(DP), ALLOCATABLE :: U2(:,:)
@@ -311,6 +312,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      ! ... Augmentation Part first
      !
      ALLOCATE( qv( dfftb%nnr ) )
+     ALLOCATE( fg1( ngb ) )
      !
      X = ZERO
      !
@@ -321,11 +323,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
               inl = ish(is) + (iv-1)*na(is) + ia
               jv = iv 
               ijv=(jv-1)*jv/2 + iv
-              qv( 1 : dfftb%nnr ) = 0.D0 
-              DO ig=1,ngb
-                 qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
-                 qv(nmb(ig))=CONJG(eigrb(ig,isa)*qgb(ig,ijv,is))
-              END DO
+              fg1 = eigrb(1:ngb,isa)*qgb(1:ngb,ijv,is)
+              CALL fft_oned2box( qv, fg1 )
 #if defined(__MPI)
               irb3=irb(3,isa)
 #endif
@@ -365,11 +364,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
               DO jv = iv+1, nh(is)
                  jnl = ish(is) + (jv-1)*na(is) + ia
                  ijv = (jv-1)*jv/2 + iv
-                 qv( 1:dfftb%nnr ) = 0.D0
-                 DO ig=1,ngb
-                    qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
-                    qv(nmb(ig))=CONJG(eigrb(ig,isa)*qgb(ig,ijv,is))
-                 END DO
+                 fg1 = eigrb(1:ngb,isa)*qgb(1:ngb,ijv,is)
+                 CALL fft_oned2box( qv, fg1 )
                  CALL invfft(qv,dfftb,isa)
                  iqv=1
                  qvt=0.D0
@@ -426,6 +422,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      END IF
 
      DEALLOCATE( qv )
+     DEALLOCATE( fg1 )
 
 
      !   Then Soft Part
@@ -2027,7 +2024,6 @@ SUBROUTINE write_rho_g( rhog )
   !
   USE kinds,              ONLY : DP
   USE io_global,          ONLY : stdout
-  USE gvect,              ONLY : ngm
   USE gvect, ONLY : g
   USE electrons_base,     ONLY : nspin
   USE fft_base,           ONLY : dfftp
@@ -2037,10 +2033,10 @@ SUBROUTINE write_rho_g( rhog )
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP) ,INTENT(IN) :: rhog(ngm,nspin) 
+  COMPLEX(DP) ,INTENT(IN) :: rhog(dfftp%ngm,nspin) 
   REAL(DP),   ALLOCATABLE:: gnx(:,:), bigg(:,:)
   COMPLEX(DP),ALLOCATABLE :: bigrho(:)
-  COMPLEX(DP) :: rhotmp_g(ngm)
+  COMPLEX(DP) :: rhotmp_g(dfftp%ngm)
   INTEGER           :: ntot, i, j, me
 #if defined(__MPI)
   INTEGER proc, ierr, ngdens(nproc_bgrp), displs(nproc_bgrp)
@@ -2050,9 +2046,9 @@ SUBROUTINE write_rho_g( rhog )
 
   me = me_bgrp + 1
 
-  ALLOCATE(gnx(3,ngm))
+  ALLOCATE(gnx(3,dfftp%ngm))
 
-  DO i=1,ngm
+  DO i=1,dfftp%ngm
      gnx(1,i)=g(1,i)
      gnx(2,i)=g(2,i)
      gnx(3,i)=g(3,i)
@@ -2076,7 +2072,7 @@ SUBROUTINE write_rho_g( rhog )
 
   DO i=1,nspin
 
-     rhotmp_g(1:ngm)=rhog(1:ngm,i)
+     rhotmp_g(1:dfftp%ngm)=rhog(1:dfftp%ngm,i)
 
      IF(me.EQ.1) THEN 
         ALLOCATE (bigrho(ntot))
@@ -2112,12 +2108,12 @@ SUBROUTINE write_rho_g( rhog )
   END IF
   WRITE( stdout, * ) "G-vectors written to G_PARA"
 #else
-  ntot=ngm
+  ntot=dfftp%ngm
   ALLOCATE(bigg(3,ntot))
-  bigg(1:3,1:ntot)=gnx(1:3,1:ngm)
+  bigg(1:3,1:ntot)=gnx(1:3,1:dfftp%ngm)
   DO i=1,nspin
      ALLOCATE(bigrho(ntot))
-     bigrho(1:ngm)=rhog(1:ngm,i)
+     bigrho(1:dfftp%ngm)=rhog(1:dfftp%ngm,i)
 
      IF(i.EQ.1) name2="CH_DEN_G_SERL.1"
      IF(i.EQ.2) name2="CH_DEN_G_SERL.2"
@@ -2155,7 +2151,6 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !
   USE kinds,              ONLY : DP
   USE gvect, ONLY : g
-  USE gvect,              ONLY : ngm
   USE electrons_base,     ONLY : nspin
   USE tune,               ONLY : npts, xdir, ydir, zdir, B, &
                                  shift, start, av0, av1
@@ -2170,7 +2165,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   IMPLICIT NONE
   !
   REAL(DP), ALLOCATABLE:: gnx(:,:), bigg(:,:)
-  COMPLEX(DP) ,INTENT(in) :: rhog(ngm,nspin)
+  COMPLEX(DP) ,INTENT(in) :: rhog(dfftp%ngm,nspin)
   COMPLEX(DP),ALLOCATABLE :: bigrho(:)
   COMPLEX(DP), ALLOCATABLE :: rhotmp_g(:)
   INTEGER ntot, i, j, ngz, l, isa
@@ -2188,9 +2183,9 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
 
   me = me_bgrp + 1
 
-  ALLOCATE(gnx(3,ngm))
+  ALLOCATE(gnx(3,dfftp%ngm))
 
-  DO i=1,ngm
+  DO i=1,dfftp%ngm
      gnx(1,i)=g(1,i)
      gnx(2,i)=g(2,i)
      gnx(3,i)=g(3,i)
@@ -2206,7 +2201,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
 
 #else
 
-  ntot=ngm
+  ntot=dfftp%ngm
 
 #endif
 
@@ -2221,9 +2216,9 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !
   CALL mp_bcast( bigg, root_bgrp, intra_bgrp_comm )
   !
-  ALLOCATE( rhotmp_g( ngm ) )
+  ALLOCATE( rhotmp_g( dfftp%ngm ) )
 
-  rhotmp_g(1:ngm)=rhog(1:ngm,1)
+  rhotmp_g(1:dfftp%ngm)=rhog(1:dfftp%ngm,1)
 
   CALL mp_barrier( intra_bgrp_comm )
   !
@@ -2235,8 +2230,8 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !
 #else
   !
-  bigg(1:3,1:ntot)=gnx(1:3,1:ngm)
-  bigrho(1:ngm)=rhog(1:ngm,1)
+  bigg(1:3,1:ntot)=gnx(1:3,1:dfftp%ngm)
+  bigrho(1:dfftp%ngm)=rhog(1:dfftp%ngm,1)
   !
 #endif
 

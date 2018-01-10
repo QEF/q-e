@@ -514,12 +514,23 @@ SUBROUTINE gmeshinfo( )
    USE gvecw,     only: ngw_g, ngw, ngwx
    USE gvecs,     only: ngms_g, ngms, ngsx
    USE gvect,     only: ngm, ngm_g, ngmx
+   USE fft_base,  ONLY: dfftp, dffts
 
    IMPLICIT NONE
 
    INTEGER :: ip, ng_snd(3), ng_rcv( 3, nproc_bgrp )
    INTEGER :: ierr, min_val, max_val, i
    REAL(DP) :: avg_val
+
+   IF( ngm /= dfftp%ngm ) THEN
+      CALL errore( " gmeshinfo ", " number of G-vectors in module gvect not consistent with FFT descriptor ", 1 )
+   END IF
+   IF( ngms /= dffts%ngm ) THEN
+      CALL errore( " gmeshinfo ", " number of G-vectors in module gvecs not consistent with FFT descriptor ", 2 )
+   END IF
+   IF( ngw /= dffts%ngw ) THEN
+      CALL errore( " gmeshinfo ", " number of G-vectors in module gvecw not consistent with FFT descriptor ", 2 )
+   END IF
 
    IF(ionode) THEN
       WRITE( stdout,*)
@@ -1084,7 +1095,6 @@ subroutine nlinit
       use atom,            ONLY : rgrid
       use qgb_mod,         ONLY : qgb, dqgb
       use smallbox_gvec,   ONLY : ngb
-      use gvect,           ONLY : ngm
       use cp_interfaces,   ONLY : pseudopotential_indexes, compute_dvan, &
                                   compute_betagx, compute_qradx, build_pstab, build_cctab
       USE fft_base,        ONLY : dfftp
@@ -1120,7 +1130,7 @@ subroutine nlinit
       !
       call aainit( lmaxkb + 1 )
       !
-      CALL allocate_core( dfftp%nnr, ngm, ngb, nsp )
+      CALL allocate_core( dfftp%nnr, dfftp%ngm, ngb, nsp )
       !
       !
       allocate( beta( ngw, nhm, nsp ) )
@@ -1462,7 +1472,6 @@ END SUBROUTINE print_lambda_x
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
       USE gvect, ONLY: gstart, g, gg
-      USE gvect,              ONLY: ngm
       USE cell_base,          ONLY: omega, ainv, tpiba2
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_bgrp_comm
