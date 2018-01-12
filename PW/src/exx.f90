@@ -59,13 +59,13 @@ MODULE exx
                                          ! temporary (complex) buffer for wfc storage
   REAL(DP), ALLOCATABLE    :: locbuff(:,:,:)
                                          ! temporary (real) buffer for wfc storage
-  REAL(DP), ALLOCATABLE    :: locmat(:,:)
+  REAL(DP), ALLOCATABLE    :: locmat(:,:,:)
                                          ! buffer for matrix of localization integrals
   !
   LOGICAL :: use_ace        !  true: Use Lin Lin's ACE method
                             !  false: do not use ACE, use old algorithm instead
   COMPLEX(DP), ALLOCATABLE :: xi(:,:,:)  ! ACE projectors
-  COMPLEX(DP), ALLOCATABLE :: evc0(:,:)  ! old wfc (G-space) needed to compute fock3
+  COMPLEX(DP), ALLOCATABLE :: evc0(:,:,:)! old wfc (G-space) needed to compute fock3
   INTEGER :: nbndproj
   LOGICAL :: domat
   REAL(DP)::  local_thr        ! threshold for Lin Lin's SCDM localized orbitals:
@@ -996,7 +996,11 @@ MODULE exx
     !
     IF( DoLoc) then 
       IF (.not. allocated(locbuff)) ALLOCATE( locbuff(nrxxs*npol, nbnd, nks))
-      IF (.not. allocated(locmat))  ALLOCATE( locmat(nbnd, nbnd))
+      IF (.not. allocated(locmat))  ALLOCATE( locmat(nbnd, nbnd, nks))
+      IF (.not. allocated(evc0)) then 
+        ALLOCATE( evc0(npwx*npol,nbndproj,nks) )
+        evc0 = (0.0d0,0.0d0)
+      END IF
     ELSE
       IF (.not. allocated(exxbuff)) THEN
          IF (gamma_only) THEN
@@ -5386,7 +5390,7 @@ END SUBROUTINE aceinit
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE aceinit_gamma(nnpw,nbnd,phi,xitmp,becpsi,exxe)
 USE becmod,         ONLY : bec_type
-USE wvfct,          ONLY : current_k, npwx
+USE lsda_mod,       ONLY : current_spin
 USE mp,             ONLY : mp_stop
 !
 ! compute xi(npw,nbndproj) for the ACE method
@@ -5402,11 +5406,6 @@ IMPLICIT NONE
   logical :: domat0
 
   CALL start_clock( 'aceinit' )
-
-  IF (.not. allocated(evc0)) then 
-    ALLOCATE( evc0(npwx*npol,nbndproj) )
-    evc0 = (Zero,Zero)
-  END IF
 
   nrxxs= dfftt%nnr * npol
 
@@ -5428,11 +5427,13 @@ IMPLICIT NONE
   END IF
   DEALLOCATE( mexx )
 
-  domat0 = domat
-  domat = .true.
-  CALL vexxace_gamma(nnpw,nbndproj,evc0,exxe)
-  evc0 = phi
-  domat = domat0
+  IF( local_thr.gt.0.0d0 ) then  
+    domat0 = domat
+    domat = .true.
+    CALL vexxace_gamma(nnpw,nbndproj,evc0(1,1,current_spin),exxe)
+    evc0(:,:,current_spin) = phi(:,:)
+    domat = domat0
+  END IF 
 
   CALL stop_clock( 'aceinit' )
 
@@ -5648,7 +5649,7 @@ implicit none
 !  locmat contains localization integrals
 !  mexx contains in output the exchange matrix
 !   
-  integer :: npw, nbnd, nrxxs, npairs, ntot
+  integer :: npw, nbnd, nrxxs, npairs, ntot, NBands 
   integer :: ig, ir, ik, ikq, iq, ibnd, jbnd, kbnd, NQR
   INTEGER :: current_ik
   real(DP) :: ovpairs(2), mexx(nbnd,nbnd), exxe
@@ -5699,16 +5700,16 @@ implicit none
          ENDDO
          CALL invfft ('Rho', vc, dfftt)
          DO ir = 1, NQR 
-           RESULT(ir,ibnd) = RESULT(ir,ibnd) + locbuff(ir,ibnd,nkqs) * vc(ir) 
+           RESULT(ir,ibnd) = RESULT(ir,ibnd) + locbuff(ir,ibnd,ikq) * vc(ir) 
          ENDDO
        END IF 
 
        DO kbnd = 1, ibnd-1
-         ovpairs(2) = ovpairs(2) + locmat(ibnd,kbnd) 
-         IF((locmat(ibnd,kbnd).gt.local_thr).and. &
+         IF((locmat(ibnd,kbnd,ikq).gt.local_thr).and. &
             ((x_occupation(ibnd,ikq).gt.0.0d0).or.(x_occupation(kbnd,ikq).gt.0.0d0))) then 
-!          write(stdout,'(2I4,3f12.6,A)') ibnd, kbnd, x_occupation(ibnd,ikq), x_occupation(kbnd,ikq), locmat(ibnd,kbnd), ' IN '
-           ovpairs(1) = ovpairs(1) + locmat(ibnd,kbnd) 
+           IF((x_occupation(ibnd,ikq).gt.0.0d0).or.(x_occupation(kbnd,ikq).gt.0.0d0)) ovpairs(2) = ovpairs(2) + locmat(ibnd,kbnd,ikq) 
+!          write(stdout,'(3I4,3f12.6,A)') ikq, ibnd, kbnd, x_occupation(ibnd,ikq), x_occupation(kbnd,ikq), locmat(ibnd,kbnd,ikq), ' IN '
+           ovpairs(1) = ovpairs(1) + locmat(ibnd,kbnd,ikq) 
            DO ir = 1, NQR 
              rhoc(ir) = locbuff(ir,ibnd,ikq) * locbuff(ir,kbnd,ikq) / omega
            ENDDO
@@ -5721,13 +5722,13 @@ implicit none
            ENDDO
            CALL invfft ('Rho', vc, dfftt)
            DO ir = 1, NQR 
-             RESULT(ir,kbnd) = RESULT(ir,kbnd) + x_occupation(ibnd,ikq) * locbuff(ir,ibnd,nkqs) * vc(ir) 
+             RESULT(ir,kbnd) = RESULT(ir,kbnd) + x_occupation(ibnd,ikq) * locbuff(ir,ibnd,ikq) * vc(ir) 
            ENDDO
            DO ir = 1, NQR 
-             RESULT(ir,ibnd) = RESULT(ir,ibnd) + x_occupation(kbnd,ikq) * locbuff(ir,kbnd,nkqs) * vc(ir) 
+             RESULT(ir,ibnd) = RESULT(ir,ibnd) + x_occupation(kbnd,ikq) * locbuff(ir,kbnd,ikq) * vc(ir) 
            ENDDO
 !        ELSE 
-!          write(stdout,'(2I4,3f12.6,A)') ibnd, kbnd, x_occupation(ibnd,ikq), x_occupation(kbnd,ikq), locmat(ibnd,kbnd), '      OUT '
+!          write(stdout,'(3I4,3f12.6,A)') ikq, ibnd, kbnd, x_occupation(ibnd,ikq), x_occupation(kbnd,ikq), locmat(ibnd,kbnd,ikq), '      OUT '
          END IF 
        ENDDO 
      ENDDO 
@@ -5747,7 +5748,7 @@ implicit none
    allocate( RESULT(npw,nbnd) )
    RESULT = (0.0d0,0.0d0)
    DO jbnd = 1, nbnd
-     rhoc(:) = dble(locbuff(:,jbnd,nkqs)) + (0.0d0,1.0d0)*0.0d0
+     rhoc(:) = dble(locbuff(:,jbnd,ikq)) + (0.0d0,1.0d0)*0.0d0
      CALL fwfft( 'Wave' , rhoc, dfftt )
      DO ig = 1, npw
        RESULT(ig,jbnd) = rhoc(dfftt%nl(ig))
@@ -5757,7 +5758,8 @@ implicit none
    CALL matcalc('M1-',.true.,0,npw,nbnd,nbnd,RESULT,hpsi,mexx,exxe)
    deallocate( RESULT )
 
-   ntot = x_nbnd_occ * (x_nbnd_occ-1)/2 + x_nbnd_occ * (nbnd-x_nbnd_occ)
+   NBands = int(sum(x_occupation(:,ikq)))
+   ntot = NBands * (NBands-1)/2 + NBands * (nbnd-NBands)
    write(stdout,'(7X,2(A,I12),A,f12.2)') '  Pairs(full): ',      ntot, &
            '   Pairs(included): ', npairs, &
            '   Pairs(%): ', dble(npairs)/dble(ntot)*100.0d0

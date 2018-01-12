@@ -1610,8 +1610,8 @@ SUBROUTINE iosys()
      CALL errore('input','localization for k-points not implemented',1)
   IF ( local_thr > 0.0_dp .AND. .NOT. use_ace ) &
      CALL errore('input','localization without ACE not implemented',1)
-  IF ( local_thr > 0.0_dp .AND. nspin > 1 ) &
-     CALL errore('input','spin-polarized localization not implemented',1)
+! IF ( local_thr > 0.0_dp .AND. nspin > 1 ) &
+!    CALL errore('input','spin-polarized localization not implemented',1)
   IF ( use_scdm ) CALL errore('input','use_scdm not yet implemented',1)
   !
   IF(ecutfock <= 0.0_DP) THEN
