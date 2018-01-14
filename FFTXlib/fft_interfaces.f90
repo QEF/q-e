@@ -13,7 +13,7 @@ MODULE fft_interfaces
   PRIVATE
 
 
-  PUBLIC :: fwfft, invfft
+  PUBLIC :: fwfft, invfft, fft_interpolate
 
   
   INTERFACE invfft
@@ -52,6 +52,30 @@ MODULE fft_interfaces
        COMPLEX(DP) :: f(:)
      END SUBROUTINE fwfft_y
   END INTERFACE
+
+  INTERFACE fft_interpolate
+     !! fft_interpolate  is the interface to utility that fourier interpolate
+     !! real/complex arrays between two grids
+
+     SUBROUTINE fft_interpolate_real( dfft_in, v_in, dfft_out, v_out )
+       USE fft_param,  ONLY :DP
+       USE fft_types,  ONLY: fft_type_descriptor
+       IMPLICIT NONE
+       TYPE(fft_type_descriptor), INTENT(IN) :: dfft_in, dfft_out
+       REAL(DP), INTENT(IN)  :: v_in(:)
+       REAL(DP), INTENT(OUT) :: v_out(:)
+     END SUBROUTINE fft_interpolate_real
+     !
+     SUBROUTINE fft_interpolate_complex( dfft_in, v_in, dfft_out, v_out )
+       USE fft_param,  ONLY :DP
+       USE fft_types,  ONLY: fft_type_descriptor
+       IMPLICIT NONE
+       TYPE(fft_type_descriptor), INTENT(IN) :: dfft_in, dfft_out
+       COMPLEX(DP), INTENT(IN)  :: v_in(:)
+       COMPLEX(DP), INTENT(OUT) :: v_out(:)
+     END SUBROUTINE fft_interpolate_complex
+  END INTERFACE
+
 
 END MODULE fft_interfaces
 !=---------------------------------------------------------------------------=!
