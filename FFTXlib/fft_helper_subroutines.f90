@@ -529,8 +529,6 @@ CONTAINS
      RETURN
   END SUBROUTINE
 
-  END SUBROUTINE
-
   SUBROUTINE fft_dist_info( desc, unit )
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
