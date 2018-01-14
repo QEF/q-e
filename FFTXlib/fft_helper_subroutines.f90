@@ -524,9 +524,10 @@ CONTAINS
 !$omp end task
         !
      end do
-
 !$omp  end single
 !$omp  end parallel
+     RETURN
+  END SUBROUTINE
 
   END SUBROUTINE
 
