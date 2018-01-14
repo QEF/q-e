@@ -262,7 +262,7 @@ SUBROUTINE do_sl2rho (sl2rho)
   ENDDO
 
   ! calculate hessian of rho (gradient is discarded)
-  CALL hessian( dfftp%nnr, rho%of_r(:,1), ngm, g, dfftp%nl, grho, hrho )
+  CALL fft_hessian( dfftp, rho%of_r(:,1), g, grho, hrho )
 
   ! find eigenvalues of the hessian
   DO i = 1, dfftp%nnr

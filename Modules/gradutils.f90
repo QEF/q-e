@@ -59,7 +59,7 @@ SUBROUTINE fft_gradient( dfft, a, g, ga )
   ALLOCATE(  aux( dfft%nnr ) )
   ALLOCATE( gaux( dfft%nnr ) )
   !
-  aux = CMPLX( a(:), 0.0_dp ,kind=DP)
+  aux = CMPLX( a(:), 0.0_dp, kind=DP)
   !
   ! ... bring a(r) to G-space, a(G) ...
   !
@@ -69,15 +69,15 @@ SUBROUTINE fft_gradient( dfft, a, g, ga )
   !
   DO ipol = 1, 3
      !
-     gaux(:) = CMPLX(0.0_dp, 0.0_dp)
+     gaux(:) = (0.0_dp, 0.0_dp)
      !
      gaux(dfft%nl(:)) = g(ipol,:) * CMPLX( -AIMAG( aux(dfft%nl(:)) ), &
-                                             REAL( aux(dfft%nl(:)) ) ,kind=DP)
+                                             REAL( aux(dfft%nl(:)) ), kind=DP)
      !
      IF ( gamma_only ) THEN
         !
         gaux(dfft%nlm(:)) = CMPLX(  REAL( gaux(dfft%nl(:)) ), &
-                                  -AIMAG( gaux(dfft%nl(:)) ) ,kind=DP)
+                                  -AIMAG( gaux(dfft%nl(:)) ), kind=DP)
         !
      END IF
      !
@@ -155,7 +155,7 @@ SUBROUTINE fft_laplacian( dfft, a, gg, lapla )
   ALLOCATE(  aux( dfft%nnr ) )
   ALLOCATE( laux( dfft%nnr ) )
   !
-  aux = CMPLX( a(:), 0.0_dp ,kind=DP)
+  aux = CMPLX( a(:), 0.0_dp, kind=DP)
   !
   ! ... bring a(r) to G-space, a(G) ...
   !
@@ -163,7 +163,7 @@ SUBROUTINE fft_laplacian( dfft, a, gg, lapla )
   !
   ! ... Compute the laplacian
   !
-  laux(:) = CMPLX(0.0_dp, 0.0_dp)
+  laux(:) = (0.0_dp, 0.0_dp)
   !
   DO ig = 1, dfft%ngm
      !
@@ -174,7 +174,7 @@ SUBROUTINE fft_laplacian( dfft, a, gg, lapla )
   IF ( gamma_only ) THEN
      !
      laux(dfft%nlm(:)) = CMPLX( REAL(laux(dfft%nl(:)) ), &
-                              -AIMAG(laux(dfft%nl(:)) ) ,kind=DP)
+                              -AIMAG(laux(dfft%nl(:)) ), kind=DP)
      !
   ENDIF
   !
@@ -192,3 +192,133 @@ SUBROUTINE fft_laplacian( dfft, a, gg, lapla )
   RETURN
   !
 END SUBROUTINE fft_laplacian
+!
+!--------------------------------------------------------------------
+! Routines computing hessian via FFT
+!--------------------------------------------------------------------
+!
+!--------------------------------------------------------------------
+SUBROUTINE fft_hessian( dfft, a, g, ga, ha )
+!--------------------------------------------------------------------
+  !
+  ! ... Calculates ga = \grad a and ha = hessian(a)
+  ! ... input : dfft     FFT descriptor
+  ! ...         a(:)     a real function on the real-space FFT grid
+  ! ...         g(3,:)   G-vectors, in (2pi/a)^2 units
+  ! ... output: ga(3,:)  \grad a, real, on the real-space FFT grid
+  ! ...         ha(3,3,:)  hessian(a), real, on the real-space FFT grid
+  !
+  USE kinds,     ONLY : DP
+  USE cell_base, ONLY : tpiba
+  USE control_flags, ONLY : gamma_only
+  USE fft_types, ONLY : fft_type_descriptor
+  USE fft_interfaces,ONLY : fwfft, invfft
+  !
+  IMPLICIT NONE
+  !
+  TYPE(fft_type_descriptor),INTENT(IN) :: dfft
+  REAL(DP), INTENT(IN)  :: a(dfft%nnr), g(3,dfft%ngm)
+  REAL(DP), INTENT(OUT) :: ga( 3, dfft%nnr )
+  REAL(DP), INTENT(OUT) :: ha( 3, 3, dfft%nnr )
+  !
+  INTEGER                  :: ipol, jpol
+  COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:), haux(:)
+  !
+  !
+  ALLOCATE(  aux( dfft%nnr ) )
+  ALLOCATE( gaux( dfft%nnr ) )
+  ALLOCATE( haux( dfft%nnr ) )
+  !
+  aux = CMPLX( a(:), 0.0_dp, kind=DP)
+  !
+  ! ... bring a(r) to G-space, a(G) ...
+  !
+  CALL fwfft ('Rho', aux, dfft)
+  !
+  ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
+  !
+  DO ipol = 1, 3
+     !
+     gaux(:) = (0.0_dp,0.0_dp)
+     !
+     gaux(dfft%nl(:)) = g(ipol,:) * CMPLX( -AIMAG( aux(dfft%nl(:)) ), &
+                                             REAL( aux(dfft%nl(:)) ), kind=DP )
+     !
+     IF ( gamma_only ) THEN
+        !
+        gaux(dfft%nlm(:)) = CMPLX(  REAL( gaux(dfft%nl(:)) ), &
+                                  -AIMAG( gaux(dfft%nl(:)) ), kind=DP)
+        !
+     END IF
+     !
+     ! ... bring back to R-space, (\grad_ipol a)(r) ...
+     !
+     CALL invfft ('Rho', gaux, dfft)
+     !
+     ! ...and add the factor 2\pi/a  missing in the definition of G
+     !
+     ga(ipol,:) = tpiba * DBLE( gaux(:) )
+     !
+     ! ... compute the second derivatives
+     !
+     DO jpol = 1, ipol
+        !
+        haux(:) = (0.0_dp,0.0_dp)
+        !
+        haux(dfft%nl(:)) = - g(ipol,:) * g(jpol,:) * &
+             CMPLX( REAL( aux(dfft%nl(:)) ), &
+                   AIMAG( aux(dfft%nl(:)) ), kind=DP)
+        !
+        IF ( gamma_only ) THEN
+           !
+           haux(dfft%nlm(:)) = CMPLX(  REAL( haux(dfft%nl(:)) ), &
+                                     -AIMAG( haux(dfft%nl(:)) ), kind=DP)
+           !
+        END IF
+        !
+        ! ... bring back to R-space, (\grad_ipol a)(r) ...
+        !
+        CALL invfft ('Rho', haux, dfft)
+        !
+        ! ...and add the factor 2\pi/a  missing in the definition of G
+        !
+        ha(ipol, jpol, :) = tpiba * tpiba * DBLE( haux(:) )
+        !
+        ha(jpol, ipol, :) = ha(ipol, jpol, :) 
+        !
+     END DO
+     !
+  END DO
+  !
+  DEALLOCATE( haux )
+  DEALLOCATE( gaux )
+  DEALLOCATE( aux )
+  !
+  RETURN
+  !
+END SUBROUTINE fft_hessian
+!--------------------------------------------------------------------
+SUBROUTINE external_hessian( a, grada, hessa )
+!--------------------------------------------------------------------
+  ! 
+  ! Interface for computing hessian in real space, to be called by
+  ! an external module
+  !
+  USE kinds,            ONLY : DP
+  USE fft_base,         ONLY : dfftp
+  USE gvect,            ONLY : g
+  !
+  IMPLICIT NONE
+  !
+  REAL( DP ), INTENT(IN)   :: a( dfftp%nnr )
+  REAL( DP ), INTENT(OUT)  :: grada( 3, dfftp%nnr )
+  REAL( DP ), INTENT(OUT)  :: hessa( 3, 3, dfftp%nnr )
+
+! A in real space, grad(A) and hess(A) in real space
+  CALL fft_hessian( dfftp, a, g, grada, hessa )
+
+  RETURN
+
+END SUBROUTINE external_hessian
+
+!--------------------------------------------------------------------
