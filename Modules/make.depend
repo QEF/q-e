@@ -106,6 +106,13 @@ generate_function.o : io_global.o
 generate_function.o : kind.o
 generate_function.o : mp_bands.o
 generate_k_along_lines.o : kind.o
+gradutils.o : ../FFTXlib/fft_interfaces.o
+gradutils.o : ../FFTXlib/fft_types.o
+gradutils.o : cell_base.o
+gradutils.o : control_flags.o
+gradutils.o : fft_base.o
+gradutils.o : kind.o
+gradutils.o : recvec.o
 gth.o : cell_base.o
 gth.o : constants.o
 gth.o : funct.o
