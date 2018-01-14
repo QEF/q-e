@@ -18,118 +18,108 @@ MODULE fft_types
   PRIVATE
   SAVE
 
-  ! 
-  !  Data type for FFT descriptor. 
-  !
   TYPE fft_type_descriptor
-    !
-    ! FFT dimensions
-    !
+
+    INTEGER :: nst      ! total number of sticks
+    INTEGER, ALLOCATABLE :: nsp(:)   ! number of sticks per processor ( potential )
+                                 ! using proc index starting from 1 !!
+                                 ! on proc mpime -> nsp( mpime + 1 )
+    INTEGER, ALLOCATABLE :: nsw(:)   ! number of sticks per processor ( wave func )
+                                 ! using proc index as above
     INTEGER :: nr1    = 0  !
     INTEGER :: nr2    = 0  ! effective FFT dimensions of the 3D grid (global)
     INTEGER :: nr3    = 0  ! 
     INTEGER :: nr1x   = 0  ! FFT grids leading dimensions
     INTEGER :: nr2x   = 0  ! dimensions of the arrays for the 3D grid (global)
     INTEGER :: nr3x   = 0  ! may differ from nr1 ,nr2 ,nr3 in order to boost performances
-    !
-    !  Parallel layout: in reciprocal space data are organized in columns (sticks) along
-    !                   the third direction and distributed across nproc processors.
-    !                   In real space data are distributed in blocks comprising sections
-    !                   of the Y and Z directions and complete rows in the X direction in 
-    !                   a matrix of  nproc2 x nproc3  processors.
-    !                   nproc = nproc2 x nproc3 and additional communicators are introduced
-    !                   for data redistribution across matrix columns and rows.
-    !
-    ! communicators and processor coordinates
-    !
-    LOGICAL :: lpara  = .FALSE. ! .TRUE. if parallel FFT is active
-    LOGICAL :: lgamma = .FALSE. ! .TRUE. if the grid has Gamma symmetry
-    INTEGER :: root   = 0 ! root processor
-    INTEGER :: comm   = MPI_COMM_NULL ! communicator for the main fft group 
-    INTEGER :: comm2  = MPI_COMM_NULL ! communicator for the fft group along the second direction
-    INTEGER :: comm3  = MPI_COMM_NULL ! communicator for the fft group along the third direction 
-    INTEGER :: nproc  = 1 ! number of processor in the main fft group
-    INTEGER :: nproc2 = 1 ! number of processor in the fft group along the second direction
-    INTEGER :: nproc3 = 1 ! number of processor in the fft group along the third direction
-    INTEGER :: mype   = 0 ! my processor id (starting from 0) in the fft main communicator
-    INTEGER :: mype2  = 0 ! my processor id (starting from 0) in the fft communicator along the second direction (nproc2)
-    INTEGER :: mype3  = 0 ! my processor id (starting from 0) in the fft communicator along the third direction (nproc3)
 
-    INTEGER, ALLOCATABLE :: iproc(:,:) , iproc2(:), iproc3(:) ! subcommunicators proc mapping (starting from 1)
-    !
-    ! FFT distributed data dimensions and indices
-    !
     INTEGER :: my_nr3p = 0 ! size of the "Z" section for this processor = nr3p( mype3 + 1 )    ~ nr3/nproc3
     INTEGER :: my_nr2p = 0 ! size of the "Y" section for this processor = nr2p( mype2 + 1 )    ~ nr2/nproc2
 
     INTEGER :: my_i0r3p = 0 ! offset of the first "Z" element of this proc in the nproc3 group = i0r3p( mype3 + 1 )
     INTEGER :: my_i0r2p = 0 ! offset of the first "Y" element of this proc in the nproc2 group = i0r2p( mype2 + 1 )
 
-    INTEGER, ALLOCATABLE :: nr3p(:)  ! size of the "Z" section of each processor in the nproc3 group along Z
-    INTEGER, ALLOCATABLE :: nr2p(:)  ! size of the "Y" section of each processor in the nproc2 group along Y
-    INTEGER, ALLOCATABLE :: nr1p(:)  ! number of active "X" values ( potential ) for a given proc in the nproc2 group 
-    INTEGER, ALLOCATABLE :: nr1w(:)  ! number of active "X" values ( wave func ) for a given proc in the nproc2 group
-    INTEGER              :: nr1w_tg  ! total number of active "X" values ( wave func ). used in task group ffts
-
     INTEGER, ALLOCATABLE :: i0r3p(:) ! offset of the first "Z" element of each proc in the nproc3 group (starting from 0)
-    INTEGER, ALLOCATABLE :: i0r2p(:) ! offset of the first "Y" element of each proc in the nproc2 group (starting from 0)
+    INTEGER, ALLOCATABLE :: nr3p(:)  ! size of the "Z" section of each processor in the nproc3 group along Z
 
-    INTEGER, ALLOCATABLE :: ir1p(:)  ! if >0 ir1p(m1) is the incremental index of the active ( potential ) X value of this proc
-    INTEGER, ALLOCATABLE :: indp(:,:)! is the inverse of ir1p
-    INTEGER, ALLOCATABLE :: ir1w(:)  ! if >0 ir1w(m1) is the incremental index of the active ( wave func ) X value of this proc
-    INTEGER, ALLOCATABLE :: indw(:,:)! is the inverse of ir1w
-    INTEGER, ALLOCATABLE :: ir1w_tg(:)! if >0 ir1w_tg(m1) is the incremental index of the active ( wfc ) X value in task group
-    INTEGER, ALLOCATABLE :: indw_tg(:)! is the inverse of ir1w_tg
-
-    INTEGER :: nst      ! total number of sticks ( potential )
-
-    INTEGER, ALLOCATABLE :: nsp(:)   ! number of sticks per processor ( potential ) using proc index starting from 1 
-                                     !                                              ... that is on proc mype -> nsp( mype + 1 )
-    INTEGER, ALLOCATABLE :: nsw(:)   ! number of sticks per processor ( wave func ) using proc index as above
-    INTEGER, ALLOCATABLE :: nsw_tg(:)! number of sticks per processor ( wave func ) using proc index as above. task group version
-
-    INTEGER, ALLOCATABLE :: ngl(:) ! per proc. no. of non zero charge density/potential components
-    INTEGER, ALLOCATABLE :: nwl(:) ! per proc. no. of non zero wave function plane components
-
-    INTEGER :: ngm  ! my no. of non zero charge density/potential components
-                    !    ngm = dfftp%ngl( dfftp%mype + 1 )
-                    ! with gamma sym.   
-                    !    ngm = ( dfftp%ngl( dfftp%mype + 1 ) + 1 ) / 2
-
-    INTEGER :: ngw  ! my no. of non zero wave function plane components
-                    !    ngw = dffts%nwl( dffts%mype + 1 )
-                    ! with gamma sym.   
-                    !    ngw = ( dffts%nwl( dffts%mype + 1 ) + 1 ) / 2
-
-    INTEGER, ALLOCATABLE :: iplp(:) ! if > 0 is the iproc2 processor owning the active "X" value ( potential )
-    INTEGER, ALLOCATABLE :: iplw(:) ! if > 0 is the iproc2 processor owning the active "X" value ( wave func )
-
+    INTEGER :: npl    = 0  ! number of "Z" planes for this processor = npp( mpime + 1 )
     INTEGER :: nnp    = 0  ! number of 0 and non 0 sticks in a plane ( ~nr1*nr2/nproc )
-    INTEGER :: nnr    = 0  ! local number of FFT grid elements  ( ~nr1*nr2*nr3/nproc )
+    INTEGER :: nnr    = 0  ! local number of FFT grid elements  ( ~nr1*nr2*nr3/proc )
                            ! size of the arrays allocated for the FFT, local to each processor:
                            ! in parallel execution may differ from nr1x*nr2x*nr3x
                            ! Not to be confused either with nr1*nr2*nr3 
-    INTEGER :: nnr_tg = 0  ! local number of grid elements for task group FFT ( ~nr1*nr2*nr3/proc3 )
+    INTEGER, ALLOCATABLE :: ngl(:)   ! per proc. no. of non zero charge density/potential components
+    INTEGER, ALLOCATABLE :: nwl(:)   ! per proc. no. of non zero wave function plane components
+    INTEGER :: ngm  ! my no. of non zero charge density/potential components
+                    !    ngm = dfftp%ngl( dfftp%mype + 1 )
+                    ! with gamma sym.
+                    !    ngm = ( dfftp%ngl( dfftp%mype + 1 ) + 1 ) / 2
+    INTEGER :: ngw  ! my no. of non zero wave function plane components
+                    !    ngw = dffts%nwl( dffts%mype + 1 )
+                    ! with gamma sym.
+                    !    ngw = ( dffts%nwl( dffts%mype + 1 ) + 1 ) / 2
+    INTEGER, ALLOCATABLE :: npp(:)   ! number of "Z" planes per processor
+    INTEGER, ALLOCATABLE :: ipp(:)   ! offset of the first "Z" plane on each proc ( 0 on the first proc!!!)
     INTEGER, ALLOCATABLE :: iss(:)   ! index of the first rho stick on each proc
     INTEGER, ALLOCATABLE :: isind(:) ! for each position in the plane indicate the stick index
     INTEGER, ALLOCATABLE :: ismap(:) ! for each stick in the plane indicate the position
+    INTEGER, ALLOCATABLE :: iplp(:)  ! indicate which "Y" plane should be FFTed ( potential )
+    INTEGER, ALLOCATABLE :: iplw(:)  ! indicate which "Y" plane should be FFTed ( wave func )
     INTEGER, ALLOCATABLE :: nl(:)    ! position of the G vec in the FFT grid
     INTEGER, ALLOCATABLE :: nlm(:)   ! with gamma sym. position of -G vec in the FFT grid
     !
-    ! task group ALLTOALL communication layout
-    INTEGER, ALLOCATABLE :: tg_snd(:) ! number of elements to be sent in task group redistribution
-    INTEGER, ALLOCATABLE :: tg_rcv(:) ! number of elements to be received in task group redistribution
-    INTEGER, ALLOCATABLE :: tg_sdsp(:)! send displacement for task group A2A communication
-    INTEGER, ALLOCATABLE :: tg_rdsp(:)! receive displacement for task group A2A communicattion
+    !  fft parallelization
     !
-    LOGICAL :: has_task_groups = .FALSE.
+    INTEGER :: mype     = 0          ! my processor id (starting from 0) in the fft group
+    INTEGER :: mype2  = 0 ! my processor id (starting from 0) in the fft communicator along the second direction (nproc2)
+    INTEGER :: mype3  = 0 ! my processor id (starting from 0) in the fft communicator along the third direction (nproc3)
+
+#if defined(__MPI)
+    INTEGER :: comm     = MPI_COMM_NULL
+    INTEGER :: comm2     = MPI_COMM_NULL
+    INTEGER :: comm3     = MPI_COMM_NULL
+#else
+    INTEGER :: comm     = 0          ! communicator of the fft gruop 
+    INTEGER :: comm2    = 0          ! communicator of task group
+    INTEGER :: comm3    = 0          ! communicator of the fft gruop 
+#endif
+    INTEGER :: nproc    = 1          ! number of processor in the fft group
+    INTEGER :: nproc2    = 1         ! number of task group
+    INTEGER :: nproc3    = 1         ! number of processor in the fft group
+    INTEGER :: root     = 0          ! root processor
+    LOGICAL :: lpara    = .FALSE.
+    LOGICAL :: lgamma = .FALSE. ! .TRUE. if the grid has Gamma symmetry
     !
     CHARACTER(len=12):: rho_clock_label  = ' '
     CHARACTER(len=12):: wave_clock_label = ' '
 
-    INTEGER :: grid_id
-
+        !  task groups
+        !
+        LOGICAL :: has_task_groups = .FALSE.
+        !
+        INTEGER :: me_pgrp   = 0          ! task id for plane wave task group
+        INTEGER :: nogrp     = 1          ! number of proc. in an orbital "task group"
+        INTEGER :: npgrp     = 1          ! number of proc. in a plane-wave "task group"
+        INTEGER :: ogrp_comm = 0          ! orbital group communicator
+        INTEGER :: pgrp_comm = 0          ! plane-wave group communicator
+        INTEGER, ALLOCATABLE :: nolist(:) ! list of pes in orbital group
+        INTEGER, ALLOCATABLE :: nplist(:) ! list of pes in pw group
+        !
+        INTEGER :: tg_nnr = 0            ! maximum among nnr
+        INTEGER :: nnr_tg = 0            
+        INTEGER, ALLOCATABLE :: tg_nsw(:) ! number of sticks per task group ( wave func )
+        INTEGER, ALLOCATABLE :: tg_npp(:) ! number of "Z" planes per task group
+        INTEGER, ALLOCATABLE :: tg_snd(:) ! number of element to be sent in group redist
+        INTEGER, ALLOCATABLE :: tg_rcv(:) ! number of element to be received in group redist
+        INTEGER, ALLOCATABLE :: tg_psdsp(:)! send displacement for all to all (pack)
+        INTEGER, ALLOCATABLE :: tg_usdsp(:)! send displacement for all to all (unpack)
+        INTEGER, ALLOCATABLE :: tg_rdsp(:)! receive displacement for all to all
+        INTEGER :: tg_nppx = 0  ! max of tg_npp
+        INTEGER :: tg_ncpx = 0  ! max of tg_ncpx
+        !
+     INTEGER :: grid_id
   END TYPE
+
 
   REAL(DP) :: fft_dual = 4.0d0
   INTEGER  :: incremental_grid_identifier = 0
@@ -142,10 +132,28 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
+  SUBROUTINE fft_type_setdim( desc, nr1, nr2, nr3 )
+     TYPE (fft_type_descriptor) :: desc
+     INTEGER, INTENT(IN) :: nr1, nr2, nr3
+     IF (desc%nr1 /= 0 .OR. desc%nr1 /= 0 .OR. desc%nr1 /= 0 ) &
+        CALL fftx_error__(' fft_type_setdim ', ' fft dimensions already set ', 1 )
+     desc%nr1 = nr1
+     desc%nr2 = nr2
+     desc%nr3 = nr3
+     desc%nr1 = good_fft_order( desc%nr1 )
+     desc%nr2 = good_fft_order( desc%nr2 )
+     desc%nr3 = good_fft_order( desc%nr3 )
+     desc%nr1x  = good_fft_dimension( desc%nr1 )
+     desc%nr2x  = desc%nr2
+     desc%nr3x  = good_fft_dimension( desc%nr3 )
+  END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
   SUBROUTINE fft_type_allocate( desc, at, bg, gcutm, comm, fft_fact, nyfft  )
   !
   ! routine that allocate arrays of fft_type_descriptor
-  ! must be called before fft_type_init
+  ! must be called before fft_type_set
   !
     TYPE (fft_type_descriptor) :: desc
     REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
@@ -153,104 +161,79 @@ CONTAINS
     INTEGER, INTENT(IN), OPTIONAL :: fft_fact(3)
     INTEGER, INTENT(IN), OPTIONAL :: nyfft
     INTEGER, INTENT(in) :: comm ! mype starting from 0
-    INTEGER :: nx, ny, ierr, nzfft
-    INTEGER :: mype, root, nproc, nproc2, nproc3, iproc, iproc2, iproc3 ! mype starting from 0
-    INTEGER :: color, key, comm2, comm3
-     !write (6,*) ' inside fft_type_allocate' ; FLUSH(6)
+    INTEGER :: nx, ny, ierr
+    INTEGER :: mype, root, nproc ! mype starting from 0
 
     IF ( ALLOCATED( desc%nsp ) ) &
         CALL fftx_error__(' fft_type_allocate ', ' fft arrays already allocated ', 1 )
 
     desc%comm = comm 
+
 #if defined(__MPI)
     IF( desc%comm == MPI_COMM_NULL ) THEN
-       CALL fftx_error__( ' fft_type_allocate ', ' fft communicator is null ', 1 )
+       CALL fftx_error__( ' realspace_grid_init ', ' fft communicator is null ', 1 )
     END IF
 #endif
+
     !
-    root = 0 ; mype = 0 ; nproc = 1
+    mype = 0
+    nproc = 1
+    root = 0
 #if defined(__MPI)
     CALL MPI_COMM_RANK( comm, mype, ierr )
     CALL MPI_COMM_SIZE( comm, nproc, ierr )
 #endif
-    desc%root = root ; desc%mype = mype ; desc%nproc   = nproc
 
-    IF ( present(nyfft) ) THEN
-      ! check on yfft group dimension
-      CALL fftx_error__( ' fft_type_allocate ', ' MOD(nproc,nyfft) .ne. 0 ', MOD(nproc,nyfft) )
-
-!#define ZCOMPACT
-#if defined(__MPI)
-#if defined(ZCOMPACT)
-      !write (6,*) ' FFT IS ZCOMPACT '
-      nzfft = nproc / nyfft
-      color = mype / nzfft       ;      key   = MOD( mype, nzfft )
-#else
-      !write (6,*) ' FFT IS YCOMPACT '
-      color = MOD( mype, nyfft ) ;      key   = mype / nyfft
-#endif
-
-      ! processes with the same key are in the same group along Y
-      CALL MPI_COMM_SPLIT( comm, key, color, desc%comm2, ierr )
-      CALL MPI_COMM_RANK( desc%comm2, desc%mype2, ierr )
-      CALL MPI_COMM_SIZE( desc%comm2, desc%nproc2, ierr )
-
-      ! processes with the same color are in the same group along Z
-      CALL MPI_COMM_SPLIT( comm, color, key, desc%comm3, ierr )
-      CALL MPI_COMM_RANK( desc%comm3, desc%mype3, ierr )
-      CALL MPI_COMM_SIZE( desc%comm3, desc%nproc3, ierr )
-#else
-      desc%comm2 = desc%comm ; desc%mype2 = desc%mype ; desc%nproc2 = desc%nproc
-      desc%comm3 = desc%comm ; desc%mype3 = desc%mype ; desc%nproc3 = desc%nproc
-#endif
-
-    ENDIF
-    !write (6,*) '  nproc and  mype  '
-    !write (6,*) desc%nproc, desc%nproc2, desc%nproc3
-    !write (6,*) desc%mype, desc%mype2, desc%mype3
-
-    ALLOCATE ( desc%iproc(desc%nproc2,desc%nproc3), desc%iproc2(desc%nproc), desc%iproc3(desc%nproc) )
-    do iproc = 1, desc%nproc
-#if defined(ZCOMPACT)
-       iproc3 = MOD(iproc-1, desc%nproc3) + 1 ; iproc2 = (iproc-1)/desc%nproc3 + 1 
-#else
-       iproc2 = MOD(iproc-1, desc%nproc2) + 1 ; iproc3 = (iproc-1)/desc%nproc2 + 1
-#endif
-       desc%iproc2(iproc) = iproc2 ; desc%iproc3(iproc) = iproc3
-       desc%iproc(iproc2,iproc3) = iproc
-    end do
 
     CALL realspace_grid_init( desc, at, bg, gcutm, fft_fact )
-
-    ALLOCATE( desc%nr2p ( desc%nproc2 ), desc%i0r2p( desc%nproc2 ) ) ; desc%nr2p = 0 ; desc%i0r2p = 0
-    ALLOCATE( desc%nr3p ( desc%nproc3 ), desc%i0r3p( desc%nproc3 ) ) ; desc%nr3p = 0 ; desc%i0r3p = 0
 
     nx = desc%nr1x 
     ny = desc%nr2x
 
-    ALLOCATE( desc%nsp( desc%nproc ) ) ; desc%nsp   = 0
-    ALLOCATE( desc%nsw( desc%nproc ) ) ; desc%nsw   = 0
-    ALLOCATE( desc%nsw_tg( desc%nproc ) ) ; desc%nsw_tg   = 0
-    ALLOCATE( desc%ngl( desc%nproc ) ) ; desc%ngl   = 0
-    ALLOCATE( desc%nwl( desc%nproc ) ) ; desc%nwl   = 0
-    ALLOCATE( desc%iss( desc%nproc ) ) ; desc%iss   = 0
-    ALLOCATE( desc%isind( nx * ny ) ) ; desc%isind = 0
-    ALLOCATE( desc%ismap( nx * ny ) ) ; desc%ismap = 0
-    ALLOCATE( desc%nr1p( desc%nproc2 ) ) ; desc%nr1p  = 0
-    ALLOCATE( desc%nr1w( desc%nproc2 ) ) ; desc%nr1w  = 0
-    ALLOCATE( desc%ir1p( desc%nr1x ) ) ; desc%ir1p  = 0
-    ALLOCATE( desc%indp( desc%nr1x,desc%nproc2 ) ) ; desc%indp  = 0
-    ALLOCATE( desc%ir1w( desc%nr1x ) ) ; desc%ir1w  = 0
-    ALLOCATE( desc%ir1w_tg( desc%nr1x ) ) ; desc%ir1w_tg  = 0
-    ALLOCATE( desc%indw( desc%nr1x, desc%nproc2 ) ) ; desc%indw  = 0
-    ALLOCATE( desc%indw_tg( desc%nr1x ) ) ; desc%indw_tg  = 0
-    ALLOCATE( desc%iplp( nx ) ) ; desc%iplp  = 0
-    ALLOCATE( desc%iplw( nx ) ) ; desc%iplw  = 0
+    ALLOCATE( desc%nsp( nproc ) )
+    ALLOCATE( desc%nsw( nproc ) )
+    ALLOCATE( desc%ngl( nproc ) )
+    ALLOCATE( desc%nwl( nproc ) )
+    ALLOCATE( desc%npp( nproc ) )
+    ALLOCATE( desc%ipp( nproc ) )
+    ALLOCATE( desc%iss( nproc ) )
+    ALLOCATE( desc%isind( nx * ny ) )
+    ALLOCATE( desc%ismap( nx * ny ) )
+    ALLOCATE( desc%iplp( nx ) )
+    ALLOCATE( desc%iplw( nx ) )
 
-    ALLOCATE( desc%tg_snd( desc%nproc2) ) ; desc%tg_snd = 0
-    ALLOCATE( desc%tg_rcv( desc%nproc2) ) ; desc%tg_rcv = 0
-    ALLOCATE( desc%tg_sdsp( desc%nproc2) ) ; desc%tg_sdsp = 0
-    ALLOCATE( desc%tg_rdsp( desc%nproc2) ) ; desc%tg_rdsp = 0
+    ALLOCATE( desc%i0r3p( nproc ) )
+    ALLOCATE( desc%nr3p( nproc ) )
+
+    desc%nsp   = 0
+    desc%nsw   = 0
+    desc%ngl   = 0
+    desc%nwl   = 0
+    desc%npp   = 0
+    desc%ipp   = 0
+    desc%iss   = 0
+    desc%isind = 0
+    desc%ismap = 0
+    desc%iplp  = 0
+    desc%iplw  = 0
+
+    desc%i0r3p = 0
+    desc%nr3p = 0
+
+    desc%mype  = mype
+    desc%comm  = comm
+    desc%nproc = nproc
+    desc%root  = root
+
+    desc%comm2 = desc%comm ; desc%mype2 = 0         ; desc%nproc2 = 1
+    desc%comm3 = desc%comm ; desc%mype3 = desc%mype ; desc%nproc3 = desc%nproc
+
+    IF ( present(nyfft) ) THEN
+      ! check on yfft group dimension
+      CALL fftx_error__( ' fft_type_allocate ', ' MOD(nproc,nyfft) .ne. 0 ', MOD(nproc,nyfft) )
+    END IF
+
+    CALL task_groups_init_first( desc, nyfft )
 
     incremental_grid_identifier = incremental_grid_identifier + 1
     desc%grid_id = incremental_grid_identifier
@@ -259,64 +242,50 @@ CONTAINS
 
   SUBROUTINE fft_type_deallocate( desc )
     TYPE (fft_type_descriptor) :: desc
-    INTEGER :: ierr
-     !write (6,*) ' inside fft_type_deallocate' ; FLUSH(6)
-    IF ( ALLOCATED( desc%nr2p ) )   DEALLOCATE( desc%nr2p )
-    IF ( ALLOCATED( desc%i0r2p ) )  DEALLOCATE( desc%i0r2p )
-    IF ( ALLOCATED( desc%nr3p ) )   DEALLOCATE( desc%nr3p )
-    IF ( ALLOCATED( desc%i0r3p ) )  DEALLOCATE( desc%i0r3p )
     IF ( ALLOCATED( desc%nsp ) )    DEALLOCATE( desc%nsp )
     IF ( ALLOCATED( desc%nsw ) )    DEALLOCATE( desc%nsw )
-    IF ( ALLOCATED( desc%nsw_tg ) ) DEALLOCATE( desc%nsw_tg )
     IF ( ALLOCATED( desc%ngl ) )    DEALLOCATE( desc%ngl )
     IF ( ALLOCATED( desc%nwl ) )    DEALLOCATE( desc%nwl )
+    IF ( ALLOCATED( desc%npp ) )    DEALLOCATE( desc%npp )
+    IF ( ALLOCATED( desc%ipp ) )    DEALLOCATE( desc%ipp )
     IF ( ALLOCATED( desc%iss ) )    DEALLOCATE( desc%iss )
     IF ( ALLOCATED( desc%isind ) )  DEALLOCATE( desc%isind )
     IF ( ALLOCATED( desc%ismap ) )  DEALLOCATE( desc%ismap )
-    IF ( ALLOCATED( desc%nr1p ) )   DEALLOCATE( desc%nr1p )
-    IF ( ALLOCATED( desc%nr1w ) )   DEALLOCATE( desc%nr1w )
-    IF ( ALLOCATED( desc%ir1p ) )   DEALLOCATE( desc%ir1p )
-    IF ( ALLOCATED( desc%indp ) )   DEALLOCATE( desc%indp )
-    IF ( ALLOCATED( desc%ir1w ) )   DEALLOCATE( desc%ir1w )
-    IF ( ALLOCATED( desc%ir1w_tg ) )DEALLOCATE( desc%ir1w_tg )
-    IF ( ALLOCATED( desc%indw ) )   DEALLOCATE( desc%indw )
-    IF ( ALLOCATED( desc%indw_tg ) )DEALLOCATE( desc%indw_tg )
     IF ( ALLOCATED( desc%iplp ) )   DEALLOCATE( desc%iplp )
     IF ( ALLOCATED( desc%iplw ) )   DEALLOCATE( desc%iplw )
-    IF ( ALLOCATED( desc%iproc ) )  DEALLOCATE( desc%iproc )
-    IF ( ALLOCATED( desc%iproc2 ) ) DEALLOCATE( desc%iproc2 )
-    IF ( ALLOCATED( desc%iproc3 ) ) DEALLOCATE( desc%iproc3 )
-
-    IF ( ALLOCATED( desc%tg_snd ) ) DEALLOCATE( desc%tg_snd )
-    IF ( ALLOCATED( desc%tg_rcv ) ) DEALLOCATE( desc%tg_rcv )
-    IF ( ALLOCATED( desc%tg_sdsp ) )DEALLOCATE( desc%tg_sdsp )
-    IF ( ALLOCATED( desc%tg_rdsp ) )DEALLOCATE( desc%tg_rdsp )
-
+    IF ( ALLOCATED( desc%i0r3p ) )  DEALLOCATE( desc%i0r3p )
+    IF ( ALLOCATED( desc%nr3p ) )  DEALLOCATE( desc%nr3p )
     IF ( ALLOCATED( desc%nl ) )  DEALLOCATE( desc%nl )
     IF ( ALLOCATED( desc%nlm ) ) DEALLOCATE( desc%nlm )
-
-    desc%comm  = MPI_COMM_NULL 
 #if defined(__MPI)
-    IF (desc%comm2 /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm2, ierr )
-    IF (desc%comm3 /= MPI_COMM_NULL) CALL MPI_COMM_FREE( desc%comm3, ierr )
-#else
-    desc%comm2 = MPI_COMM_NULL 
-    desc%comm3 = MPI_COMM_NULL 
+    desc%comm = MPI_COMM_NULL 
 #endif
-
-    desc%nr1    = 0 ; desc%nr2    = 0 ; desc%nr3    = 0  
-    desc%nr1x   = 0 ; desc%nr2x   = 0 ; desc%nr3x   = 0  
-
+    desc%nr1    = 0 
+    desc%nr2    = 0  
+    desc%nr3    = 0  
+    desc%nr1x   = 0  
+    desc%nr2x   = 0  
+    desc%nr3x   = 0  
+    IF ( ALLOCATED( desc%nolist ) )   DEALLOCATE( desc%nolist )
+    IF ( ALLOCATED( desc%nplist ) )   DEALLOCATE( desc%nplist )
+    IF ( ALLOCATED( desc%tg_nsw ) )   DEALLOCATE( desc%tg_nsw )
+    IF ( ALLOCATED( desc%tg_npp ) )   DEALLOCATE( desc%tg_npp )
+    IF ( ALLOCATED( desc%tg_snd ) )   DEALLOCATE( desc%tg_snd )
+    IF ( ALLOCATED( desc%tg_rcv ) )   DEALLOCATE( desc%tg_rcv )
+    IF ( ALLOCATED( desc%tg_psdsp ) )   DEALLOCATE( desc%tg_psdsp )
+    IF ( ALLOCATED( desc%tg_usdsp ) )   DEALLOCATE( desc%tg_usdsp )
+    IF ( ALLOCATED( desc%tg_rdsp ) )   DEALLOCATE( desc%tg_rdsp )
+    desc%has_task_groups = .FALSE.
     desc%grid_id = 0
-
   END SUBROUTINE fft_type_deallocate
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_type_set( desc, nst, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
+  SUBROUTINE fft_type_set( desc, ntg, nst, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
 
     TYPE (fft_type_descriptor) :: desc
 
+    INTEGER, INTENT(in) :: ntg              ! number of task groups (optimal spacing for residual-plane distribution)
     INTEGER, INTENT(in) :: nst              ! total number of stiks 
     INTEGER, INTENT(in) :: ub(3), lb(3)     ! upper and lower bound of real space indices
     INTEGER, INTENT(in) :: idx(:)           ! sorting index of the sticks
@@ -329,30 +298,32 @@ CONTAINS
     INTEGER, INTENT(in) :: st( lb(1) : ub(1), lb(2) : ub(2) )   ! stick owner of a given rho stick
     INTEGER, INTENT(in) :: stw( lb(1) : ub(1), lb(2) : ub(2) )  ! stick owner of a given wave stick
 
-    INTEGER :: nsp( desc%nproc ), nsw_tg, nr1w_tg
-    INTEGER :: np, nq, i, is, iss, itg, i1, i2, m1, m2, ip
-    INTEGER :: ncpx, nr1px, nr2px, nr3px
+    INTEGER :: npp( desc%nproc ), n3( desc%nproc ), nsp( desc%nproc )
+    INTEGER :: np, nq, i, is, iss, itg, i1, i2, m1, m2, n1, n2, ip
+    INTEGER :: ncpx, nppx
     INTEGER :: nr1, nr2, nr3    ! size of real space grid 
     INTEGER :: nr1x, nr2x, nr3x ! padded size of real space grid
-     !write (6,*) ' inside fft_type_set' ; FLUSH(6)
     !
     IF (.NOT. ALLOCATED( desc%nsp ) ) &
-        CALL fftx_error__(' fft_type_set ', ' fft arrays not yet allocated ', 1 )
+        CALL fftx_error__(' fft_type_allocate ', ' fft arrays not yet allocated ', 1 )
 
     IF ( desc%nr1 == 0 .OR. desc%nr2 == 0 .OR. desc%nr3 == 0 ) &
         CALL fftx_error__(' fft_type_set ', ' fft dimensions not yet set ', 1 )
 
     !  Set fft actual and leading dimensions to be used internally
 
-    nr1  = desc%nr1  ; nr2  = desc%nr2  ; nr3  = desc%nr3
-    nr1x = desc%nr1x ; nr2x = desc%nr2x ; nr3x = desc%nr3x
+    nr1  = desc%nr1
+    nr2  = desc%nr2
+    nr3  = desc%nr3
+    nr1x = desc%nr1x
+    nr2x = desc%nr2x
+    nr3x = desc%nr3x
 
     IF( ( nr1 > nr1x ) .or. ( nr2 > nr2x ) .or. ( nr3 > nr3x ) ) &
       CALL fftx_error__( ' fft_type_set ', ' wrong fft dimensions ', 1 )
 
-    IF( ( size( desc%ngl ) < desc%nproc ) .or.  ( size( desc%iss ) < desc%nproc ) .or. &
-        ( size( desc%nr2p ) < desc%nproc2 ) .or. ( size( desc%i0r2p ) < desc%nproc2 ) .or. &
-        ( size( desc%nr3p ) < desc%nproc3 ) .or. ( size( desc%i0r3p ) < desc%nproc3 ) ) &
+    IF( ( size( desc%ngl ) < desc%nproc ) .or. ( size( desc%npp ) < desc%nproc ) .or.  &
+        ( size( desc%ipp ) < desc%nproc ) .or. ( size( desc%iss ) < desc%nproc ) )     &
       CALL fftx_error__( ' fft_type_set ', ' wrong descriptor dimensions ', 2 )
 
     IF( ( size( idx ) < nst ) .or. ( size( in1 ) < nst ) .or. ( size( in2 ) < nst ) ) &
@@ -361,47 +332,69 @@ CONTAINS
     IF( ( size( ncp ) < desc%nproc ) .or. ( size( ngp ) < desc%nproc ) ) &
       CALL fftx_error__( ' fft_type_set ', ' wrong stick dimensions ', 4 )
 
-    !  Set the number of "Y" values for each processor in the nproc2 group
-    np = nr2 / desc%nproc2
-    nq = nr2 - np * desc%nproc2
-    desc%nr2p(1:desc%nproc2) = np    ! assign a base value to all processors of the nproc2 group
-    DO i =1, nq ! assign an extra unit to the first nq processors of the nproc2 group
-       desc%nr2p(i) = np + 1
-    ENDDO
-    !-- my_nr2p is the number of planes per processor of this processor   in the Y group
-    desc%my_nr2p = desc%nr2p( desc%mype2 + 1 )    
+    !  Set the number of "xy" planes for each processor
+    !  in other word do a slab partition along the z axis
+
+    npp = 0
+    IF ( desc%nproc == 1 ) THEN   ! sigle processor: npp(1)=nr3
+      npp(1) = nr3
+    ELSE
+      np = nr3 / desc%nproc
+      nq = nr3 - np * desc%nproc
+      npp(1:desc%nproc) = np      ! assign a base value to all processors
+      IF( np == 0 ) THEN
+        DO i = 1, desc%nproc
+         IF ( i <= nq ) npp(i) = 1
+        ENDDO
+      ELSE
+        reminder_loop : &           ! assign an extra plane to processors so that they are spaced by ntg
+        DO itg = 1, ntg  
+          DO i = itg, desc%nproc, ntg
+             IF (nq==0) EXIT reminder_loop
+             nq = nq - 1
+             npp(i) = np + 1
+          ENDDO
+        ENDDO reminder_loop
+      END IF
+    ENDIF
+
+    !-- npp(1:nproc) is the number of planes per processor
+    !-- npl is the number of planes per processor of this processor
+
+    desc%npp( 1:desc%nproc )  = npp    
+    desc%npl = npp( desc%mype + 1 )    
 
     !  Find out the index of the starting plane on each proc
-    desc%i0r2p = 0
-    DO i = 2, desc%nproc2
-       desc%i0r2p(i) = desc%i0r2p(i-1) + desc%nr2p(i-1)
-    ENDDO
-    !-- my_i0r2p is the index-offset of the starting plane of this processor  in the Y group
-    desc%my_i0r2p = desc%i0r2p( desc%mype2 + 1 ) 
 
-    !  Set the number of "Z" values for each processor in the nproc3 group
-    np = nr3 / desc%nproc3
-    nq = nr3 - np * desc%nproc3
-    desc%nr3p(1:desc%nproc3) = np    ! assign a base value to all processors
-    DO i =1, nq ! assign an extra unit to the first nq processors of the nproc3 group
-       desc%nr3p(i) = np + 1
-    END DO
-    !-- my_nr3p is the number of planes per processor of this processor   in the Z group
-    desc%my_nr3p = desc%nr3p( desc%mype3 + 1 ) 
-
-    !  Find out the index of the starting plane on each proc
-    desc%i0r3p  = 0
-    DO i = 2, desc%nproc3
-       desc%i0r3p( i )  = desc%i0r3p( i-1 ) + desc%nr3p ( i-1 )  
+    n3 = 0
+    DO i = 2, desc%nproc
+      n3(i) = n3(i-1) + npp(i-1)
     ENDDO
-    !-- my_i0r3p is the index-offset of the starting plane of this processor  in the Z group
-    desc%my_i0r3p = desc%i0r3p( desc%mype3 + 1 ) 
+
+    !-- ipp(1:proc) is the index-offset of the starting plane of each processor 
+
+    desc%ipp( 1:desc%nproc )  = n3
 
     ! dimension of the xy plane. see ncplane
 
     desc%nnp  = nr1x * nr2x  
 
-!!!!!!!
+    !  Set fft local workspace dimension
+
+    nppx = 0
+    ncpx = 0
+    DO i = 1, desc%nproc
+       nppx = MAX( nppx, npp( i ) )  ! maximum number of planes per processor
+       ncpx = MAX( ncpx, ncp( i ) )  ! maximum number of columns per processor 
+    END DO
+
+    IF ( desc%nproc == 1 ) THEN
+      desc%nnr  = nr1x * nr2x * nr3x
+    ELSE
+      desc%nnr  = max( nr3x * ncpx, nr1x * nr2x * nppx )  ! this is required to contain the local data in R and G space
+      desc%nnr  = max( desc%nnr, ncpx * nppx * desc%nproc )  ! this is required to use ALLTOALL instead of ALLTOALLV
+      desc%nnr  = max( 1, desc%nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
+    ENDIF
 
     desc%ngl( 1:desc%nproc )  = ngp( 1:desc%nproc )  ! local number of g vectors (rho) per processor
     desc%nwl( 1:desc%nproc )  = ngpw( 1:desc%nproc ) ! local number of g vectors (wave) per processor
@@ -412,6 +405,14 @@ CONTAINS
     IF( size( desc%iplp ) < ( nr1x ) .or. size( desc%iplw ) < ( nr1x ) ) &
       CALL fftx_error__( ' fft_type_set ', ' wrong descriptor dimensions, ipl ', 5 )
 
+    desc%my_nr3p = desc%npl ! size of the "Z" section for this processor = nr3p( mype3 + 1 )    ~ nr3/nproc3
+    desc%my_nr2p = desc%nr2
+
+    desc%my_i0r3p = desc%ipp( desc%mype + 1 ) ! offset of the first "Z" element of this proc in the nproc3 group = i0r3p( mype3 + 1 )
+    desc%my_i0r2p = 0 ! offset of the first "Y" element of this proc in the nproc2 group = i0r2p( mype2 + 1 )
+    desc%i0r3p = desc%ipp
+    desc%nr3p = desc%npp
+
     !
     !  1. Temporarily store in the array "desc%isind" the index of the processor
     !     that own the corresponding stick (index of proc starting from 1)
@@ -420,12 +421,12 @@ CONTAINS
     !     this are used in the FFT transform along Y
     !
 
-    desc%isind = 0  ! will contain the +ve or -ve of the processor number, if any, that owns the stick
-    desc%iplp  = 0  ! if > 0 is the nporc2 processor owning this ( potential ) X active plane
-    desc%iplw  = 0  ! if > 0 is the nproc2 processor owning this ( wave func ) X active value 
+    desc%isind = 0    ! will contain the +ve or -ve of the processor number, if any, that owns the stick
+    desc%iplp  = 0    ! 1 if the given x-plane location is active in rho  y-fft
+    desc%iplw  = 0    ! 1 if the given x-plane location is active in wave y-fft
 
-    !  Set nst to the proper number of sticks (the total number of 1d fft along z to be done)
-    
+    !  Set nst the proper number of sticks (the total number of 1d fft along z to be done)
+    !
     desc%nst = 0
     DO iss = 1, SIZE( idx )
       is = idx( iss )
@@ -438,71 +439,33 @@ CONTAINS
         m2 = i2 + 1; IF ( m2 < 1 ) m2 = m2 + nr2
         IF( stw( i1, i2 ) > 0 ) THEN
           desc%isind( m1 + ( m2 - 1 ) * nr1x ) =  st( i1, i2 )
-          desc%iplw( m1 ) = desc%iproc2(st(i1,i2))
+          desc%iplw( m1 ) = 1
         ELSE
           desc%isind( m1 + ( m2 - 1 ) * nr1x ) = -st( i1, i2 )
         ENDIF
-        desc%iplp( m1 ) = desc%iproc2(st(i1,i2))
+        desc%iplp( m1 ) = 1
         IF( desc%lgamma ) THEN
           IF( i1 /= 0 .OR. i2 /= 0 ) desc%nst = desc%nst + 1
-          m1 = -i1 + 1; IF ( m1 < 1 ) m1 = m1 + nr1
-          m2 = -i2 + 1; IF ( m2 < 1 ) m2 = m2 + nr2
+          n1 = -i1 + 1; IF ( n1 < 1 ) n1 = n1 + nr1
+          n2 = -i2 + 1; IF ( n2 < 1 ) n2 = n2 + nr2
           IF( stw( -i1, -i2 ) > 0 ) THEN
-            desc%isind( m1 + ( m2 - 1 ) * nr1x ) =  st( -i1, -i2 )
-            desc%iplw( m1 ) = desc%iproc2(st(-i1,-i2))
+            desc%isind( n1 + ( n2 - 1 ) * nr1x ) =  st( -i1, -i2 )
+            desc%iplw( n1 ) = 1
           ELSE
-            desc%isind( m1 + ( m2 - 1 ) * nr1x ) = -st( -i1, -i2 )
+            desc%isind( n1 + ( n2 - 1 ) * nr1x ) = -st( -i1, -i2 )
           ENDIF
-          desc%iplp( m1 ) = desc%iproc2(st(-i1,-i2))
+          desc%iplp( n1 ) = 1
         ENDIF
       ENDIF
     ENDDO
-    do m1=1,desc%nr1x
-       if (desc%iplw(m1)>0) then
-          if (desc%iplp(m1) /= desc%iplw(m1) )  then
-             write (6,*) 'WRONG iplp/iplw arrays'
-             write (6,*) desc%iplp
-             write (6,*) desc%iplw
-             CALL fftx_error__( ' fft_type_set ', ' iplp is wrong ', m1 )
-          end if
-       end if
-    end do
-    ! count how many active X values per each nproc2 processor and set the incremental index of this one
-
-    ! wave func X values first
-    desc%nr1w = 0 ; desc%ir1w = 0 ; desc%indw = 0 
-    nr1w_tg = 0 ; desc%ir1w_tg = 0 ; desc%indw_tg = 0 
-    do i1 = 1, nr1
-       if (desc%iplw(i1) > 0 ) then
-          desc%nr1w(desc%iplw(i1)) =  desc%nr1w(desc%iplw(i1)) + 1 
-          desc%indw(desc%nr1w(desc%iplw(i1)),desc%iplw(i1)) = i1
-          nr1w_tg = nr1w_tg + 1 ; desc%ir1w_tg(i1) = nr1w_tg ; desc%indw_tg(nr1w_tg) = i1
-       end if
-       if (desc%iplw(i1) == desc%mype2 +1) desc%ir1w(i1) = desc%nr1w(desc%iplw(i1)) 
-    end do
-    desc%nr1w_tg = nr1w_tg ! this is useful in task group ffts
-
-    ! then potential X values 
-    desc%nr1p = desc%nr1w ; desc%ir1p=desc%ir1w ; desc%indp = desc%indw
-    do i1 = 1, nr1
-       if ( (desc%iplw(i1) > 0) .and. (desc%iplp(i1) == 0) ) &
-             CALL fftx_error__( ' fft_type_set ', ' bad distribution of X values ', i1 )
-       if ( (desc%iplw(i1) > 0) ) cycle ! this X value has already been taken care of
-
-       if (desc%iplp(i1) > 0 ) then
-          desc%nr1p(desc%iplp(i1)) =  desc%nr1p(desc%iplp(i1)) + 1 
-          desc%indp(desc%nr1p(desc%iplp(i1)),desc%iplp(i1)) = i1
-       end if
-       if (desc%iplp(i1) == desc%mype2+1) desc%ir1p(i1) = desc%nr1p(desc%iplp(i1)) 
-    end do
 
     !
     !  Compute for each proc the global index ( starting from 0 ) of the first
     !  local stick ( desc%iss )
     !
 
-    DO i = 1, desc%nproc 
-      IF( i == 1 ) THEN 
+    DO i = 1, desc%nproc
+      IF( i == 1 ) THEN
         desc%iss( i ) = 0
       ELSE
         desc%iss( i ) = desc%iss( i - 1 ) + ncp( i - 1 )
@@ -538,7 +501,7 @@ CONTAINS
       ENDIF
     ENDDO
 
-    !  check number of sticks against the input value
+    !  check number of stick against the input value
 
     IF( any( nsp( 1:desc%nproc ) /= ncpw( 1:desc%nproc ) ) ) THEN
       DO ip = 1, desc%nproc
@@ -547,14 +510,7 @@ CONTAINS
       CALL fftx_error__( ' fft_type_set ', ' inconsistent number of sticks ', 7 )
     ENDIF
 
-    desc%nsw( 1:desc%nproc ) = nsp( 1:desc%nproc )  ! -- number of wave sticks per processor
-
-    ! -- number of wave sticks per processor for task group ffts
-    desc%nsw_tg( 1:desc%nproc ) = 0
-    do ip =1, desc%nproc3
-       nsw_tg = sum(desc%nsw(desc%iproc(1:desc%nproc2,ip)))
-       desc%nsw_tg(desc%iproc(1:desc%nproc2,ip)) = nsw_tg 
-    end do
+    desc%nsw( 1:desc%nproc ) = nsp( 1:desc%nproc )  ! -- number of wave sticks per porcessor
 
     !  then add pseudopotential stick
 
@@ -571,7 +527,7 @@ CONTAINS
       ENDIF
     ENDDO
 
-    !  check number of sticks against the input value
+    !  check number of stick against the input value
 
     IF( any( nsp( 1:desc%nproc ) /= ncp( 1:desc%nproc ) ) ) THEN
       DO ip = 1, desc%nproc
@@ -588,8 +544,9 @@ CONTAINS
        desc%iplw  = 0
        desc%iplp  = 1
 
-       ! here we are setting parameter as if we were in a serial code, 
-       ! sticks are along X dimension and not along Z
+       ! here we are setting parameter as if we were
+       ! in a serial code, sticks are along X dimension
+       ! and not along Z
        desc%nsp(1) = 0
        desc%nsw(1) = 0
        DO i1 = lb( 1 ), ub( 1 )
@@ -610,92 +567,20 @@ CONTAINS
        ! if we are in a parallel run, but would like to use serial FFT, all
        ! tasks must have the same parameters as if serial run.
        !
-       desc%nnr  = nr1x * nr2x * nr3x
-       desc%nnp  = nr1x * nr2x
-       desc%my_nr2p = nr2 ;  desc%nr2p = nr2 ;  desc%i0r2p = 0
-       desc%my_nr3p = nr3 ;  desc%nr3p = nr3 ;  desc%i0r3p = 0
        desc%nsw = desc%nsw(1)
        desc%nsp = desc%nsp(1)
+       desc%nnr  = nr1x * nr2x * nr3x
+       desc%npl  = nr3
+       desc%nnp  = nr1x * nr2x
+       desc%npp  = nr3
+       desc%ipp  = 0
        desc%ngl  = SUM(ngp)  
        desc%nwl  = SUM(ngpw) 
        !
     END IF
 
-    !write (6,*) 'fft_type_set SUMMARY'
-    !write (6,*) 'desc%mype ', desc%mype
-    !write (6,*) 'desc%mype2', desc%mype2
-    !write (6,*) 'desc%mype3', desc%mype3
-    !write (6,*) 'nr1  nr2  nr3  dimensions : ', desc%nr1, desc%nr2, desc%nr3
-    !write (6,*) 'nr1x nr2x nr3x dimensions : ', desc%nr1x, desc%nr2x, desc%nr3x
-    !write (6,*) 'nr3p arrays'
-    !write (6,*) desc%nr3p
-    !write (6,*) 'i0r3p arrays'
-    !write (6,*) desc%i0r3p
-    !write (6,*) 'nr2p arrays'
-    !write (6,*) desc%nr2p
-    !write (6,*) 'i0r2p arrays'
-    !write (6,*) desc%i0r2p
-    !write (6,*) 'nsp/nsw arrays'
-    !write (6,*) desc%nsp
-    !write (6,*) desc%nsw
-    !write (6,*) 'nr1p/nr1w arrays'
-    !write (6,*) desc%nr1p
-    !write (6,*) desc%nr1w
-    !write (6,*) 'ir1p/ir1w arrays'
-    !write (6,*) desc%ir1p
-    !write (6,*) desc%ir1w
-    !write (6,*) 'indp/indw arrays'
-    !write (6,*) desc%indp
-    !write (6,*) desc%indw
-    !write (6,*) 'iplp/iplw arrays'
-    !write (6,*) desc%iplp
-    !write (6,*) desc%iplw
-
-    !  Finally set fft local workspace dimension
-
-    nr1px = MAXVAL( desc%nr1p( 1:desc%nproc2 ) )  ! maximum number of X values per processor in the nproc2 group
-    nr2px = MAXVAL( desc%nr2p( 1:desc%nproc2 ) )  ! maximum number of planes per processor in the nproc2 group
-    nr3px = MAXVAL( desc%nr3p( 1:desc%nproc3 ) )  ! maximum number of planes per processor in the nproc3 group
-    ncpx  = MAXVAL( ncp( 1:desc%nproc ) ) ! maximum number of columns per processor (use potential sticks to be safe)
-
-    IF ( desc%nproc == 1 ) THEN
-      desc%nnr  = nr1x * nr2x * nr3x
-      desc%nnr_tg = desc%nnr * desc%nproc2 
-    ELSE
-      desc%nnr  = max( ncpx * nr3x, nr1x * nr2px * nr3px )  ! this is required to contain the local data in R and G space
-      desc%nnr  = max( desc%nnr, ncpx*nr3px*desc%nproc3, nr1px*nr2px*nr3px*desc%nproc2)  ! this is required to use ALLTOALL instead of ALLTOALLV
-      desc%nnr  = max( 1, desc%nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
-      desc%nnr_tg = desc%nnr * desc%nproc2 
-    ENDIF
-
-    !write (6,*) ' nnr bounds'
-    !write (6,*) ' nr1x ',nr1x,' nr2x ', nr2x, ' nr3x ', nr3x
-    !write (6,*) ' nr1x * nr2x * nr3x',nr1x * nr2x * nr3x
-    !write (6,*) ' ncpx ',ncpx,' nr3px ', nr3px, ' desc%nproc3 ', desc%nproc3
-    !write (6,*) ' ncpx * nr3x ',ncpx * nr3x 
-    !write (6,*) ' ncpx * nr3px * desc%nproc3 ',ncpx*nr3px*desc%nproc3
-    !write (6,*) ' nr1px ', nr1px,' nr2px ',nr2px,' desc%nproc2 ', desc%nproc2
-    !write (6,*) ' nr1x * nr2px * nr3px ',nr1x * nr2px * nr3px 
-    !write (6,*) ' nr1px * nr2px *nr3px * desc%nproc2 ',nr1px*nr2px*nr3px*desc%nproc2
-    !write (6,*) ' desc%nnr ', desc%nnr
-
-    IF( desc%nr3x * desc%nsw( desc%mype + 1 ) > desc%nnr ) &
-        CALL fftx_error__( ' task_groups_init ', ' inconsistent desc%nnr ', 1 )
-    desc%tg_snd(1)  = desc%nr3x * desc%nsw( desc%mype + 1 )
-    desc%tg_rcv(1)  = desc%nr3x * desc%nsw( desc%iproc(1,desc%mype3+1) )
-    desc%tg_sdsp(1) = 0
-    desc%tg_rdsp(1) = 0
-    DO i = 2, desc%nproc2
-       desc%tg_snd(i)  = desc%nr3x * desc%nsw( desc%mype + 1 )
-       desc%tg_rcv(i)  = desc%nr3x * desc%nsw( desc%iproc(i,desc%mype3+1) )
-       desc%tg_sdsp(i) = desc%tg_sdsp(i-1) + desc%nnr
-       desc%tg_rdsp(i) = desc%tg_rdsp(i-1) + desc%tg_rcv(i-1)
-    ENDDO
-
     RETURN
-
   END SUBROUTINE fft_type_set
-
 !=----------------------------------------------------------------------------=!
 
   SUBROUTINE fft_type_init( dfft, smap, pers, lgamma, lpara, comm, at, bg, gcut_in, dual_in, nyfft )
@@ -712,7 +597,7 @@ CONTAINS
      REAL(DP), INTENT(IN) :: bg(3,3)
      REAL(DP), INTENT(IN) :: at(3,3)
      REAL(DP), OPTIONAL, INTENT(IN) :: dual_in
-     INTEGER, INTENT(IN) :: nyfft
+     INTEGER,  OPTIONAL, INTENT(IN) :: nyfft !  number of task group
 !
 !    Potential or dual
 !
@@ -739,13 +624,18 @@ CONTAINS
 ! ...   sticks length for processor ip = number of G-vectors owned by the processor ip
      INTEGER :: nstw
 ! ...   nstw     local number of sticks (wave functions)
+     INTEGER :: ntg
+! ...   ntg       number of task groups (assigned from input if any)
+
 
      REAL(DP) :: gcut, gkcut, dual
      INTEGER  :: ngm, ngw
-     !write (6,*) ' inside fft_type_init' ; FLUSH(6)
 
+     ntg = 1
+     IF( PRESENT( nyfft ) ) ntg = nyfft
      dual = fft_dual
      IF( PRESENT( dual_in ) ) dual = dual_in
+     dfft%nogrp = ntg
 
      IF( pers == 'rho' ) THEN
         gcut = gcut_in
@@ -756,7 +646,6 @@ CONTAINS
      ELSE
         CALL fftx_error__(' fft_type_init ', ' unknown FFT personality ', 1 )
      END IF
-     !write (*,*) 'FFT_TYPE_INIT pers, gkcut,gcut', pers, gkcut, gcut
 
      IF( .NOT. ALLOCATED( dfft%nsp ) ) THEN
         CALL fft_type_allocate( dfft, at, bg, gcut, comm, nyfft=nyfft )
@@ -766,12 +655,10 @@ CONTAINS
         END IF
      END IF
 
-
      dfft%lpara = lpara  !  this descriptor can be either a descriptor for a
                          !  parallel FFT or a serial FFT even in parallel build
 
-     CALL sticks_map_allocate( smap, lgamma, dfft%lpara, dfft%nproc2, dfft%iproc, dfft%iproc2, &
-                                             dfft%nr1, dfft%nr2, dfft%nr3, bg, dfft%comm )
+     CALL sticks_map_allocate( smap, lgamma, lpara, dfft%nr1, dfft%nr2, dfft%nr3, bg, dfft%comm )
 
      dfft%lgamma = smap%lgamma ! .TRUE. if the grid has Gamma symmetry
 
@@ -782,13 +669,13 @@ CONTAINS
      ALLOCATE( nstpw(smap%nproc) )
      ALLOCATE( sstpw(smap%nproc) )
 
-     !write(*,*) 'calling get_sticks with gkcut =',gkcut
      CALL get_sticks(  smap, gkcut, nstpw, sstpw, stw, nstw, ngw )
-     !write(*,*) 'calling get_sticks with gcut =',gcut
      CALL get_sticks(  smap, gcut,  nstp, sstp, st, nst, ngm )
 
-     CALL fft_type_set( dfft, nst, smap%ub, smap%lb, smap%idx, &
+     CALL fft_type_set( dfft, ntg, nst, smap%ub, smap%lb, smap%idx, &
                              smap%ist(:,1), smap%ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+
+     CALL task_groups_init( dfft, nyfft )
 
      dfft%ngw = dfft%nwl( dfft%mype + 1 )
      dfft%ngm = dfft%ngl( dfft%mype + 1 )
@@ -804,7 +691,6 @@ CONTAINS
         CALL fftx_error__(' fft_type_init ', ' wrong ngm ', 1 )
      END IF
 
-
      DEALLOCATE( st )
      DEALLOCATE( stw )
      DEALLOCATE( nstp )
@@ -812,9 +698,13 @@ CONTAINS
      DEALLOCATE( nstpw )
      DEALLOCATE( sstpw )
 
+
   END SUBROUTINE fft_type_init
 
 !=----------------------------------------------------------------------------=!
+!=----------------------------------------------------------------------------=!
+
+
 
      SUBROUTINE realspace_grid_init( dfft, at, bg, gcutm, fft_fact )
        !
@@ -829,7 +719,6 @@ CONTAINS
        REAL(DP), INTENT(IN) :: gcutm
        INTEGER, INTENT(IN), OPTIONAL :: fft_fact(3)
        TYPE(fft_type_descriptor), INTENT(INOUT) :: dfft
-     !write (6,*) ' inside realspace_grid_init' ; FLUSH(6)
        !
        IF( dfft%nr1 == 0 .OR. dfft%nr2 == 0 .OR. dfft%nr3 == 0 ) THEN
          !
@@ -838,20 +727,17 @@ CONTAINS
          ! ... of n_i indices in:   G = i*b_1 + j*b_2 + k*b_3
          ! ... We use G*a_i = n_i => n_i .le. |Gmax||a_i|
          !
-         dfft%nr1 = int ( sqrt (gcutm) * sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
-         dfft%nr2 = int ( sqrt (gcutm) * sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
-         dfft%nr3 = int ( sqrt (gcutm) * sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
-
-         !write (6,*) sqrt(gcutm)*sqrt(at(1,1)**2 + at(2,1)**2 + at(3,1)**2) , dfft%nr1
-         !write (6,*) sqrt(gcutm)*sqrt(at(1,2)**2 + at(2,2)**2 + at(3,2)**2) , dfft%nr2
-         !write (6,*) sqrt(gcutm)*sqrt(at(1,3)**2 + at(2,3)**2 + at(3,3)**2) , dfft%nr3
+         dfft%nr1 = int ( sqrt (gcutm) * &
+               sqrt (at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2) ) + 1
+         dfft%nr2 = int ( sqrt (gcutm) * &
+               sqrt (at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2) ) + 1
+         dfft%nr3 = int ( sqrt (gcutm) * &
+               sqrt (at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2) ) + 1
          !
          CALL grid_set( dfft, bg, gcutm, dfft%nr1, dfft%nr2, dfft%nr3 )
          !
-#if defined (__DEBUG)
        ELSE
           WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
-#endif
        END IF
 
        IF (PRESENT(fft_fact)) THEN
@@ -890,7 +776,6 @@ CONTAINS
 ! ... declare other variables
       INTEGER :: i, j, k, nr, nb(3)
       REAL(DP) :: gsq, g(3)
-     !write (6,*) ' inside grid_set' ; FLUSH(6)
 
 !  ----------------------------------------------
 
@@ -943,7 +828,6 @@ CONTAINS
    
    END SUBROUTINE grid_set
 
-
    PURE FUNCTION fft_stick_index( desc, i, j )
       IMPLICIT NONE
       TYPE(fft_type_descriptor), INTENT(IN) :: desc
@@ -955,9 +839,229 @@ CONTAINS
       m2 = mod (j, desc%nr2) + 1
       IF (m2 < 1) m2 = m2 + desc%nr2
       mc = m1 + (m2 - 1) * desc%nr1x
-      fft_stick_index = desc%isind ( mc ) 
+      fft_stick_index = desc%isind ( mc )
    END FUNCTION
 
-!=----------------------------------------------------------------------------=!
+!
+
+!-----------------------------------------
+! Task groups Contributed by C. Bekas, October 2005
+! Revised by C. Cavazzoni
+!--------------------------------------------
+
+SUBROUTINE task_groups_init( desc, nyfft )
+   !
+   USE fft_param
+
+   ! T.G.
+   ! NPGRP:      Number of processors per group
+   ! NOGRP:      Number of processors per orbital task group
+
+   IMPLICIT NONE
+
+   TYPE(fft_type_descriptor), INTENT(inout) :: desc
+   INTEGER, OPTIONAL, INTENT(in) :: nyfft   ! number of task groups
+
+   !----------------------------------
+   !Local Variables declaration
+   !----------------------------------
+
+   INTEGER  :: I
+   INTEGER  :: IERR
+   INTEGER  :: num_planes, num_sticks
+   INTEGER  :: nnrsx_vec ( desc%nproc )
+   INTEGER  :: pgroup( desc%nproc )
+   INTEGER  :: strd
+   INTEGER :: nppx, ncpx, nogrp
+   !
+   !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
+
+   nogrp = 1
+   IF( PRESENT( nyfft ) ) nogrp = nyfft
+
+#if defined(__MPI)
+   CALL MPI_Allgather( desc%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, desc%comm, IERR)
+   strd = maxval( nnrsx_vec( 1:desc%nproc ) )
+#else
+   strd = desc%nnr
+#endif
+
+    nppx = 0
+    ncpx = 0
+    DO i = 1, desc%nproc
+       nppx = MAX( nppx, desc%npp( i ) )  ! maximum number of planes per processor
+       ncpx = MAX( ncpx, desc%nsp( i ) )  ! maximum number of columns per processor
+    END DO
+
+    IF ( desc%nproc == 1 ) THEN
+      desc%tg_nnr = desc%nnr
+      desc%nnr_tg = desc%nnr
+    ELSE
+      desc%tg_nnr = desc%nnr
+      ! this is required to contain the local data in G space (should be already granted!)
+      desc%tg_nnr = max( desc%tg_nnr, desc%nr3x * ncpx ) 
+      ! this is required to contain the local data in R space (should be already granted!)
+      desc%tg_nnr = max( desc%tg_nnr, desc%nr1x * desc%nr2x * nppx ) 
+      desc%tg_nnr = max( 1, desc%tg_nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
+      desc%nnr_tg = desc%tg_nnr * desc%nogrp
+    ENDIF
+
+   IF( strd /= desc%tg_nnr ) CALL fftx_error__( ' task_groups_init ', ' inconsistent nnr ', 1 )
+
+   !-------------------------------------------------------------------------------------
+   !C. Bekas...TASK GROUP RELATED. FFT DATA STRUCTURES ARE ALREADY DEFINED ABOVE
+   !-------------------------------------------------------------------------------------
+   !dfft%nsw(me) holds the number of z-sticks for the current processor per wave-function
+   !We can either send these in the group with an mpi_allgather...or put them
+   !in the PSIS vector (in special positions) and send them with them.
+   !Otherwise we can do this once at the beginning, before the loop.
+   !we choose to do the latter one.
+   !-------------------------------------------------------------------------------------
+   !
+   !
+   ALLOCATE( desc%tg_nsw(desc%nproc))
+   ALLOCATE( desc%tg_npp(desc%nproc))
+
+   num_sticks = 0
+   num_planes = 0
+   DO i = 1, desc%nogrp
+      num_sticks = num_sticks + desc%nsw( desc%nolist(i) + 1 )
+      num_planes = num_planes + desc%npp( desc%nolist(i) + 1 )
+   ENDDO
+
+#if defined(__MPI)
+   CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, desc%tg_nsw(1), 1, MPI_INTEGER, desc%comm, IERR)
+   CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, desc%tg_npp(1), 1, MPI_INTEGER, desc%comm, IERR)
+#else
+   desc%tg_nsw(1) = num_sticks
+   desc%tg_npp(1) = num_planes
+#endif
+
+#if defined(__TASK_PRINTOUT)
+   write (6,*) 'TASK GROUP stick AND plane DISTRIBUTION '
+   do i=1,desc%nproc
+      write (6,*) i, desc%tg_nsw(i), desc%tg_npp(i)
+   end do
+#endif
+
+   ALLOCATE( desc%tg_snd( desc%nogrp ) )
+   ALLOCATE( desc%tg_rcv( desc%nogrp ) )
+   ALLOCATE( desc%tg_psdsp( desc%nogrp ) )
+   ALLOCATE( desc%tg_usdsp( desc%nogrp ) )
+   ALLOCATE( desc%tg_rdsp( desc%nogrp ) )
+
+   desc%tg_snd(1)   = desc%nr3x * desc%nsw( desc%mype + 1 )
+   IF( desc%nr3x * desc%nsw( desc%mype + 1 ) > desc%tg_nnr ) THEN
+      CALL fftx_error__( ' task_groups_init ', ' inconsistent desc%tg_nnr ', 1 )
+   ENDIF
+   desc%tg_psdsp(1) = 0
+   desc%tg_usdsp(1) = 0
+   desc%tg_rcv(1)  = desc%nr3x * desc%nsw( desc%nolist(1) + 1 )
+   desc%tg_rdsp(1) = 0
+   DO i = 2, desc%nogrp
+      desc%tg_snd(i)  = desc%nr3x * desc%nsw( desc%mype + 1 )
+      desc%tg_psdsp(i) = desc%tg_psdsp(i-1) + desc%tg_nnr
+      desc%tg_usdsp(i) = desc%tg_usdsp(i-1) + desc%tg_snd(i-1)
+      desc%tg_rcv(i)  = desc%nr3x * desc%nsw( desc%nolist(i) + 1 )
+      desc%tg_rdsp(i) = desc%tg_rdsp(i-1) + desc%tg_rcv(i-1)
+   ENDDO
+
+   desc%tg_ncpx = 0
+   desc%tg_nppx = 0
+   DO i = 1, desc%npgrp
+      desc%tg_ncpx = max( desc%tg_ncpx, desc%tg_nsw ( desc%nplist(i) + 1 ) )
+      desc%tg_nppx = max( desc%tg_nppx, desc%tg_npp ( desc%nplist(i) + 1 ) )
+   ENDDO
+
+   RETURN
+
+END SUBROUTINE task_groups_init
+
+
+  !
+SUBROUTINE task_groups_init_first( desc, nyfft )
+   !
+   USE fft_param
+   !
+   IMPLICIT NONE
+   !
+   TYPE(fft_type_descriptor), INTENT(inout) :: desc
+
+   INTEGER, OPTIONAL, INTENT(in) :: nyfft   ! number of task groups
+    !
+   INTEGER :: nogrp
+    INTEGER :: i, nlen, n1, ipos, color, key, ierr, itsk, ntsk
+    !
+    !SUBDIVIDE THE PROCESSORS IN GROUPS
+    !
+    ! should be initialized outside, before calling fft_type_init
+    ! desc%has_task_groups = ( nogrp > 1 )
+    !
+    desc%me_pgrp = 0
+
+   nogrp = 1
+   IF( PRESENT( nyfft ) ) nogrp = nyfft
+
+    IF( MOD( desc%nproc, MAX( 1, nogrp ) ) /= 0 ) &
+       CALL fftx_error__("task_groups_init_first","the number of task groups should be a divisor of the number of MPI task",1)
+    IF( nogrp > desc%nproc ) &
+       CALL fftx_error__( "task_groups_init_first","the number of task groups should be less than the number of MPI task",1)
+
+    desc%nogrp = MAX( 1, nogrp )
+    desc%npgrp = desc%nproc / MAX( 1, nogrp )
+    desc%ogrp_comm = 0
+    desc%pgrp_comm = 0
+    ALLOCATE( desc%nolist( desc%nogrp ) )
+    ALLOCATE( desc%nplist( desc%npgrp ) )
+    desc%nolist = 0
+    desc%nplist = 0
+
+    !
+    !SET UP THE GROUPS
+    !
+    !CREATE ORBITAL GROUPS
+    !LIST OF PROCESSORS IN MY ORBITAL GROUP 
+    !     (processors dealing with my same pw's of different orbitals)
+    !
+#if defined(__MPI)
+    ! processes with the same color are in the same new communicator
+
+    color = desc%mype / desc%nogrp
+    key   = MOD( desc%mype , desc%nogrp )
+
+    CALL MPI_COMM_SPLIT( desc%comm, color, key, desc%ogrp_comm, ierr )
+    if( ierr /= 0 ) &
+         CALL fftx_error__( ' task_groups_init_first ', ' creating ogrp_comm ', ABS(ierr) )
+    CALL MPI_COMM_RANK( desc%ogrp_comm, itsk, IERR )
+    CALL MPI_COMM_SIZE( desc%ogrp_comm, ntsk, IERR )
+    IF( desc%nogrp /= ntsk ) CALL fftx_error__( ' task_groups_init_first ', ' ogrp_comm size ', ntsk )
+    desc%nolist = 0
+    desc%nolist( itsk + 1 ) = desc%mype
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE, desc%nolist, desc%nogrp, MPI_INTEGER, MPI_SUM, desc%ogrp_comm, ierr)
+
+#endif
+    !
+    !CREATE PLANEWAVE GROUPS
+    !LIST OF PROCESSORS IN MY PLANE WAVE GROUP
+    !     (processors dealing with different pw's of my same orbital)
+    !
+    !
+#if defined(__MPI)
+    ! processes with the same color are in the same new communicator
+
+    CALL MPI_COMM_SPLIT( desc%comm, key, color, desc%pgrp_comm, ierr )
+    if( ierr /= 0 ) &
+         CALL fftx_error__( ' task_groups_init_first ', ' creating pgrp_comm ', ABS(ierr) )
+    CALL MPI_COMM_RANK( desc%pgrp_comm, itsk, IERR )
+    CALL MPI_COMM_SIZE( desc%pgrp_comm, ntsk, IERR )
+    IF( desc%npgrp /= ntsk ) CALL fftx_error__( ' task_groups_init_first ', ' pgrp_comm size ', ntsk )
+    desc%nplist = 0
+    desc%nplist( itsk + 1 ) = desc%mype
+    CALL MPI_ALLREDUCE(MPI_IN_PLACE, desc%nplist, desc%npgrp, MPI_INTEGER, MPI_SUM, desc%pgrp_comm, ierr)
+    desc%me_pgrp = itsk
+#endif
+
+    RETURN
+  END SUBROUTINE task_groups_init_first
+
 END MODULE fft_types
-!=----------------------------------------------------------------------------=!

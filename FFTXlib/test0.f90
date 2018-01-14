@@ -255,7 +255,7 @@ program test
   CALL MPI_BARRIER( MPI_COMM_WORLD, ierr)
 #endif
 
-  call invfft ('Rho',aux,dffts)
+  call invfft ('Dense',aux,dffts)
 
   if( mype == 0 ) write (*,*) 'function in Real space (i,j,k)'
   do k =1, 5
@@ -268,7 +268,7 @@ program test
      end do
   end do
 
-  call fwfft  ('Rho',aux,dffts)
+  call fwfft  ('Dense',aux,dffts)
 
   if( mype == 0 ) write (*,*) 'function in Reciprocal space '
   do k =1, 5

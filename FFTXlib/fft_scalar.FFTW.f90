@@ -13,10 +13,10 @@
        USE fft_param
 !! iso_c_binding provides C_PTR, C_NULL_PTR, C_ASSOCIATED
        USE iso_c_binding
-       USE fftw_interfaces
        
        IMPLICIT NONE
        SAVE
+
        PRIVATE
        PUBLIC :: cft_1z, cft_2xy, cfft3d, cfft3ds
 

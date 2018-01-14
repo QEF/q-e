@@ -69,7 +69,7 @@ SUBROUTINE invfft_y( grid_type, f, dfft, howmany )
      ELSE IF( grid_type == 'Wave' ) THEN
         CALL tg_cft3s( f, dfft, 2 )
      ELSE IF( grid_type == 'tgWave' ) THEN
-        CALL tg_cft3s( f, dfft, 3 )
+        CALL tg_cft3s( f, dfft, 2 )
      END IF
 
   ELSE
@@ -149,7 +149,7 @@ SUBROUTINE fwfft_y( grid_type, f, dfft, howmany )
      ELSE IF( grid_type == 'Wave' ) THEN
         CALL tg_cft3s(f,dfft,-2 )
      ELSE IF( grid_type == 'tgWave' ) THEN
-        CALL tg_cft3s(f,dfft,-3 )
+        CALL tg_cft3s(f,dfft,-2 )
      END IF
 
   ELSE
@@ -251,7 +251,7 @@ SUBROUTINE invfft_x( grid_type, f, dfft, howmany )
      ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
         CALL tg_cft3s( f, dfft, 2 )
      ELSE IF( grid_type == 'tgWave' ) THEN
-        CALL tg_cft3s( f, dfft, 3 )
+        CALL tg_cft3s( f, dfft, 2 )
      END IF
 
   ELSE
@@ -360,7 +360,7 @@ SUBROUTINE fwfft_x( grid_type, f, dfft, howmany )
      ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
         CALL tg_cft3s(f,dfft,-2 )
      ELSE IF( grid_type == 'tgWave' ) THEN
-        CALL tg_cft3s(f,dfft,-3 )
+        CALL tg_cft3s(f,dfft,-2 )
      END IF
 
   ELSE
@@ -404,10 +404,9 @@ SUBROUTINE invfft_b( f, dfft, ia )
   !! The array f (overwritten on output) is NOT distributed:
   !! a copy is present on each processor.
   !! The fft along z  is done on the entire grid.
-  !! The fft along y  is done ONLY on planes that have components on the dense 
-  !! dense grid for each processor. In addition the fft along x is done ONLY on
-  !! the y-sections that have components on the dense grid for each processor. 
-  !! Note that the final array will no longer be the same on all processors.
+  !! The fft along xy is done ONLY on planes that have components on the
+  !! dense grid for each processor. Note that the final array will no
+  !! longer be the same on all processors.
   !! 
   !! **grid_type** = 'Box' (only allowed value!)
   !! 
@@ -433,7 +432,7 @@ SUBROUTINE invfft_b( f, dfft, ia )
   INTEGER, INTENT(IN) :: ia
   COMPLEX(DP) :: f(:)
   !
-!  INTEGER :: imin2, imax2, np2, imin3, imax2, np2, imax3, np3
+  INTEGER :: imin3, imax3, np3
 
   ! clocks called inside a parallel region do not work properly!
   ! in the future we probably need a thread safe version of the clock
@@ -444,19 +443,17 @@ SUBROUTINE invfft_b( f, dfft, ia )
 
 #if defined(__MPI) && !defined(__USE_3D_FFT)
      
-  IF( (dfft%np3( ia ) > 0) .AND. (dfft%np2( ia ) > 0) ) THEN
+  IF( dfft%np3( ia ) > 0 ) THEN
 
-#if defined(_OPENMP)
+#if defined(__OPENMP)
 
      CALL cft_b_omp( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                         dfft%nr1x,dfft%nr2x,dfft%nr3x, &
-                        dfft%imin2( ia ), dfft%imax2( ia ), &
                         dfft%imin3( ia ), dfft%imax3( ia ), 1 )
 
 #else
      CALL cft_b( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                     dfft%nr1x,dfft%nr2x,dfft%nr3x, &
-                    dfft%imin2( ia ), dfft%imax2( ia ), &
                     dfft%imin3( ia ), dfft%imax3( ia ), 1 )
 #endif
 
@@ -464,10 +461,9 @@ SUBROUTINE invfft_b( f, dfft, ia )
 
 #else
 
-#if defined(_OPENMP)
+#if defined(__OPENMP)
   CALL cft_b_omp( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                      dfft%nr1x,dfft%nr2x,dfft%nr3x, &
-                     dfft%imin2( ia ), dfft%imax2( ia ), &
                      dfft%imin3( ia ), dfft%imax3( ia ), 1 )
 #else
   CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &

@@ -6,15 +6,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!--------------------------------------------------------------------------!
-! FFT scalar drivers Module - contains machine-dependent routines for      !
-! FFTW, FFTW3, ESSL (both 3d for serial execution and 1d+2d FFTs for       !
-! parallel execution; NEC ASL libraries (3d only, no parallel execution)   !
-! Written by Carlo Cavazzoni, modified by P. Giannozzi, contributions      !
-! by Martin Hilgemans, Guido Roma, Pascal Thibaudeau, Stephane Lefranc,    !
-! Nicolas Lacorne, Filippo Spiga, Nicola Varini - Last update Jul 2015     !
-! stick and plane revision - Stefano de Gironcoli - September 2016
-!--------------------------------------------------------------------------!
 
 !=----------------------------------------------------------------------=!
    MODULE fft_scalar_fftw3
@@ -22,6 +13,7 @@
 !! iso_c_binding provides C_PTR, C_NULL_PTR, C_ASSOCIATED
        USE, intrinsic :: iso_c_binding
        USE fft_param
+       
        IMPLICIT NONE
        SAVE
 #if defined(__FFTW3)
@@ -165,6 +157,7 @@
    END SUBROUTINE cft_1z
 
 !
+!
 !=----------------------------------------------------------------------=!
 !
 !
@@ -175,6 +168,8 @@
 !
 !=----------------------------------------------------------------------=!
 !
+!
+
    SUBROUTINE cft_2xy(r, nzl, nx, ny, ldx, ldy, isign, pl2ix)
 
 !     driver routine for nzl 2d complex fft's of lengths nx and ny
@@ -350,6 +345,7 @@
      END SUBROUTINE init_plan
 
    END SUBROUTINE cft_2xy
+
 
 !
 !=----------------------------------------------------------------------=!

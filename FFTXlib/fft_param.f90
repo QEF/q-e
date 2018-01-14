@@ -14,8 +14,6 @@ MODULE fft_param
 #else
   INCLUDE 'mpif.h'
 #endif
-#else
-  INTEGER, PARAMETER :: MPI_COMM_NULL=0
 #endif
   
   INTEGER, PARAMETER :: ndims = 10
@@ -27,7 +25,5 @@ MODULE fft_param
 
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
   INTEGER, PARAMETER :: stdout = 6    ! unit connected to standard output
-
-  REAL(DP), PARAMETER :: eps8  = 1.0E-8_DP
 
 END MODULE fft_param

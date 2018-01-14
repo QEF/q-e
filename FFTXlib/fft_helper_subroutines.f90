@@ -10,6 +10,7 @@ MODULE fft_helper_subroutines
 
 CONTAINS
 
+
   SUBROUTINE tg_reduce_rho_1( rhos, tg_rho_nc, tg_rho, ispin, noncolin, domag, desc )
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
@@ -21,42 +22,53 @@ CONTAINS
      REAL(DP), INTENT(INOUT)  :: tg_rho_nc(:,:)
      REAL(DP), INTENT(OUT) :: rhos(:,:)
 
-     INTEGER :: ierr, ioff, idx, ir3, ir, ipol, ioff_tg, nxyp, npol_
-!     write (*,*) ' enter tg_reduce_rho_1'
+     INTEGER :: ierr, ioff, idx, ir, ipol
 
-#if defined(__MPI)
-     IF( noncolin) THEN
-        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tg_rho_nc, SIZE(tg_rho_nc), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
-     ELSE
-        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tg_rho, SIZE(tg_rho), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
-     END IF
+     IF ( desc%nogrp > 1 ) THEN
+#ifdef __MPI
+        IF( noncolin) THEN
+           CALL MPI_ALLREDUCE( MPI_IN_PLACE, tg_rho_nc, SIZE(tg_rho_nc), MPI_DOUBLE_PRECISION, MPI_SUM, desc%ogrp_comm, ierr )
+        ELSE
+           CALL MPI_ALLREDUCE( MPI_IN_PLACE, tg_rho, SIZE(tg_rho), MPI_DOUBLE_PRECISION, MPI_SUM, desc%ogrp_comm, ierr )
+        END IF
 #endif
+     ENDIF
      !
-     ! copy the charge back to the proper processor location
+     !BRING CHARGE DENSITY BACK TO ITS ORIGINAL POSITION
      !
-     nxyp = desc%nr1x * desc%my_nr2p
+     !If the current processor is not the "first" processor in its
+     !orbital group then does a local copy (reshuffling) of its data
+     !
+     ioff = 0
+     DO idx = 1, desc%nogrp
+        IF( desc%mype == desc%nolist( idx ) ) EXIT
+        ioff = ioff + desc%nr1x * desc%nr2x * desc%npp( desc%nolist( idx ) + 1 )
+     END DO
+     !
+     ! copy the charge back to the processor location
+     !
      IF (noncolin) THEN
-         npol_ = 1 ; if (domag) npol_ = 4
-     endif
-     DO ir3=1,desc%my_nr3p
-        ioff    = desc%nr1x * desc%my_nr2p * (ir3-1)
-        ioff_tg = desc%nr1x * desc%nr2x    * (ir3-1) + desc%nr1x * desc%my_i0r2p
-        IF (noncolin) THEN
 !$omp parallel do
-           DO ipol=1, npol_
-              DO ir = 1, nxyp
-                 rhos(ir+ioff,ipol) = rhos(ir+ioff,ipol) + tg_rho_nc(ir+ioff_tg,ipol)
+        DO ir = 1, desc%nnr
+           rhos(ir,1) = rhos(ir,1) + tg_rho_nc(ir+ioff,1)
+        END DO
+!$omp end parallel do
+        IF (domag) THEN
+!$omp parallel do
+           DO ipol=2,4
+              DO ir = 1, desc%nnr
+                 rhos(ir,ipol) = rhos(ir,ipol) + tg_rho_nc(ir+ioff,ipol)
               END DO
            END DO
 !$omp end parallel do
-        ELSE
+        ENDIF
+     ELSE
 !$omp parallel do
-           DO ir = 1, nxyp
-              rhos(ir+ioff,ispin) = rhos(ir+ioff,ispin) + tg_rho(ir+ioff_tg)
-           END DO
+        DO ir = 1, desc%nnr
+           rhos(ir,ispin) = rhos(ir,ispin) + tg_rho(ir+ioff)
+        END DO
 !$omp end parallel do
-        END IF
-     END DO
+     END IF
 
   END SUBROUTINE
 
@@ -71,25 +83,33 @@ CONTAINS
      REAL(DP), INTENT(INOUT)  :: tmp_rhos(:)
      REAL(DP), INTENT(OUT) :: rhos(:,:)
 
-     INTEGER :: ierr, ioff, idx, ir3, nxyp, ioff_tg
-!     write (*,*) ' enter tg_reduce_rho_2'
+     INTEGER :: ierr, ioff, idx, ir
 
-     IF ( desc%nproc2 > 1 ) THEN
-#if defined(__MPI)
-        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+     IF ( desc%nogrp > 1 ) THEN
+#ifdef __MPI
+        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%ogrp_comm, ierr )
 #endif
      ENDIF
      !
      !BRING CHARGE DENSITY BACK TO ITS ORIGINAL POSITION
      !
-     nxyp = desc%nr1x * desc%my_nr2p
-     DO ir3 = 1, desc%my_nr3p
-        ioff    = desc%nr1x * desc%my_nr2p * (ir3-1)
-        ioff_tg = desc%nr1x * desc%nr2x    * (ir3-1) + desc%nr1x * desc%my_i0r2p
-        rhos(ioff+1:ioff+nxyp,ispin) = rhos(ioff+1:ioff+nxyp,ispin) + tmp_rhos(ioff_tg+1:ioff_tg+nxyp)
+     !If the current processor is not the "first" processor in its
+     !orbital group then does a local copy (reshuffling) of its data
+     !
+     ioff = 0
+     DO idx = 1, desc%nogrp
+        IF( desc%mype == desc%nolist( idx ) ) EXIT
+        ioff = ioff + desc%nr1x * desc%nr2x * desc%npp( desc%nolist( idx ) + 1 )
      END DO
- 
+     !
+     ! copy the charge back to the processor location
+     !
+     DO ir = 1, desc%nnr
+        rhos(ir,ispin) = rhos(ir,ispin) + tmp_rhos(ir+ioff)
+     END DO
+
   END SUBROUTINE
+
 
   SUBROUTINE tg_reduce_rho_3( rhos, tmp_rhos, desc )
      USE fft_param
@@ -99,12 +119,11 @@ CONTAINS
      REAL(DP), INTENT(INOUT)  :: tmp_rhos(:,:)
      REAL(DP), INTENT(OUT) :: rhos(:,:)
 
-     INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
-!     write (*,*) ' enter tg_reduce_rho_3'
+     INTEGER :: ierr, from, ii, ir
 
-     IF ( desc%nproc2 > 1 ) THEN
-#if defined(__MPI)
-        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+     IF ( desc%nogrp > 1 ) THEN
+#ifdef __MPI
+        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%ogrp_comm, ierr )
 #endif
      ENDIF
      !
@@ -113,14 +132,17 @@ CONTAINS
      !If the current processor is not the "first" processor in its
      !orbital group then does a local copy (reshuffling) of its data
      !
-     nxyp = desc%nr1x * desc%my_nr2p
-     DO ir3 = 1, desc%my_nr3p
-        ioff    = desc%nr1x * desc%my_nr2p * (ir3-1)
-        ioff_tg = desc%nr1x * desc%nr2x    * (ir3-1) + desc%nr1x * desc%my_i0r2p
-        rhos(ioff+1:ioff+nxyp,:) = rhos(ioff+1:ioff+nxyp,:) + tmp_rhos(ioff_tg+1:ioff_tg+nxyp,:)
-     END DO
-  END SUBROUTINE
 
+     from = 1
+     DO ii = 1, desc%nogrp
+        IF ( desc%nolist( ii ) == desc%mype ) EXIT !Exit the loop
+        from = from +  desc%nr1x*desc%nr2x*desc%npp( desc%nolist( ii ) + 1 )! From where to copy initially
+     ENDDO
+     !
+     DO ir = 1, SIZE(rhos,2)
+         CALL dcopy( desc%nr1x*desc%nr2x*desc%npp(desc%mype+1), tmp_rhos(from,ir), 1, rhos(1,ir), 1)
+     ENDDO
+  END SUBROUTINE
 
   SUBROUTINE tg_reduce_rho_4( rhos, tmp_rhos, desc )
      USE fft_param
@@ -130,12 +152,11 @@ CONTAINS
      COMPLEX(DP), INTENT(INOUT)  :: tmp_rhos(:)
      COMPLEX(DP), INTENT(OUT) :: rhos(:)
 
-     INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
-!     write (*,*) ' enter tg_reduce_rho_4'
+     INTEGER :: ierr, from, ii, ir
 
-     IF ( desc%nproc2 > 1 ) THEN
-#if defined(__MPI)
-        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, 2*SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+     IF ( desc%nogrp > 1 ) THEN
+#ifdef __MPI
+        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%ogrp_comm, ierr )
 #endif
      ENDIF
      !
@@ -144,12 +165,14 @@ CONTAINS
      !If the current processor is not the "first" processor in its
      !orbital group then does a local copy (reshuffling) of its data
      !
-     nxyp = desc%nr1x * desc%my_nr2p
-     DO ir3 = 1, desc%my_nr3p
-        ioff    = desc%nr1x * desc%my_nr2p * (ir3-1)
-        ioff_tg = desc%nr1x * desc%nr2x    * (ir3-1) + desc%nr1x * desc%my_i0r2p
-        rhos(ioff+1:ioff+nxyp) = rhos(ioff+1:ioff+nxyp) + tmp_rhos(ioff_tg+1:ioff_tg+nxyp)
-     END DO
+
+     from = 1
+     DO ii = 1, desc%nogrp
+        IF ( desc%nolist( ii ) == desc%mype ) EXIT !Exit the loop
+        from = from +  desc%nr1x*desc%nr2x*desc%npp( desc%nolist( ii ) + 1 )! From where to copy initially
+     ENDDO
+     !
+     CALL dcopy( desc%nr1x*desc%nr2x*desc%npp(desc%mype+1), tmp_rhos(from), 1, rhos(1), 1)
   END SUBROUTINE
 
 
@@ -161,12 +184,11 @@ CONTAINS
      COMPLEX(DP), INTENT(INOUT)  :: tmp_rhos(:,:)
      COMPLEX(DP), INTENT(OUT) :: rhos(:,:)
 
-     INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
-!     write (*,*) ' enter tg_reduce_rho_5'
+     INTEGER :: ierr, from, ii, ir
 
-     IF ( desc%nproc2 > 1 ) THEN
-#if defined(__MPI)
-        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, 2*SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+     IF ( desc%nogrp > 1 ) THEN
+#ifdef __MPI
+        CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%ogrp_comm, ierr )
 #endif
      ENDIF
      !
@@ -175,30 +197,33 @@ CONTAINS
      !If the current processor is not the "first" processor in its
      !orbital group then does a local copy (reshuffling) of its data
      !
-     nxyp = desc%nr1x * desc%my_nr2p
-     DO ir3 = 1, desc%my_nr3p
-        ioff    = desc%nr1x * desc%my_nr2p * (ir3-1)
-        ioff_tg = desc%nr1x * desc%nr2x    * (ir3-1) + desc%nr1x * desc%my_i0r2p
-        rhos(ioff+1:ioff+nxyp,:) = rhos(ioff+1:ioff+nxyp,:) + tmp_rhos(ioff_tg+1:ioff_tg+nxyp,:)
-     END DO
+
+     from = 1
+     DO ii = 1, desc%nogrp
+        IF ( desc%nolist( ii ) == desc%mype ) EXIT !Exit the loop
+        from = from +  desc%nr1x*desc%nr2x*desc%npp( desc%nolist( ii ) + 1 )! From where to copy initially
+     ENDDO
+     !
+     DO ir = 1, SIZE(rhos,2)
+         CALL dcopy( desc%nr1x*desc%nr2x*desc%npp(desc%mype+1), tmp_rhos(from,ir), 1, rhos(1,ir), 1)
+     ENDDO
   END SUBROUTINE
-
-
 
   SUBROUTINE tg_get_nnr( desc, right_nnr )
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      INTEGER, INTENT(OUT) :: right_nnr
-     right_nnr = desc%nnr
+     right_nnr = desc%tg_nnr
   END SUBROUTINE
+
 
   SUBROUTINE tg_get_local_nr3( desc, val )
      USE fft_param
      USE fft_types,      ONLY : fft_type_descriptor
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      INTEGER, INTENT(OUT) :: val
-     val = desc%my_nr3p
+     val = desc%npl
   END SUBROUTINE
 
   SUBROUTINE tg_get_group_nr3( desc, val )
@@ -206,7 +231,11 @@ CONTAINS
      USE fft_types,      ONLY : fft_type_descriptor
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      INTEGER, INTENT(OUT) :: val
-     val = desc%my_nr3p
+     IF( desc%nogrp > 1 ) THEN
+        val = desc%tg_npp( desc%mype + 1 )
+     ELSE
+        val = desc%my_nr3p
+     END IF
   END SUBROUTINE
 
   SUBROUTINE tg_get_recip_inc( desc, val )
@@ -214,7 +243,7 @@ CONTAINS
      USE fft_types,      ONLY : fft_type_descriptor
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      INTEGER, INTENT(OUT) :: val
-     val = desc%nnr
+     val = desc%nr3x * desc%nsw(desc%mype+1)
   END SUBROUTINE
 
   PURE FUNCTION fftx_ntgrp( desc )
@@ -222,7 +251,7 @@ CONTAINS
      USE fft_types,      ONLY : fft_type_descriptor
      INTEGER :: fftx_ntgrp
      TYPE(fft_type_descriptor), INTENT(in) :: desc
-     fftx_ntgrp = desc%nproc2
+     fftx_ntgrp = desc%nogrp
   END FUNCTION
 
   PURE FUNCTION fftx_tgpe( desc )
@@ -230,7 +259,11 @@ CONTAINS
      USE fft_types,      ONLY : fft_type_descriptor
      INTEGER :: fftx_tgpe
      TYPE(fft_type_descriptor), INTENT(in) :: desc
-     fftx_tgpe = desc%mype2
+     INTEGER :: idx
+     DO idx = 1, desc%nogrp
+        IF( desc%nolist( idx ) == desc%mype ) EXIT
+     END DO
+     fftx_tgpe = idx - 1
   END FUNCTION
 
   PURE FUNCTION fftx_tgcomm( desc )
@@ -238,7 +271,7 @@ CONTAINS
      USE fft_types,      ONLY : fft_type_descriptor
      INTEGER :: fftx_tgcomm
      TYPE(fft_type_descriptor), INTENT(in) :: desc
-     fftx_tgcomm = desc%comm2
+     fftx_tgcomm = desc%ogrp_comm
   END FUNCTION
 
   SUBROUTINE fftx_add_field( r, f, desc )
@@ -495,7 +528,28 @@ CONTAINS
 !$omp  end single
 !$omp  end parallel
 
-
   END SUBROUTINE
+
+  SUBROUTINE fft_dist_info( desc, unit )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     INTEGER, INTENT(IN) :: unit
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     INTEGER :: i, j, nr3l
+     CALL tg_get_local_nr3( desc, nr3l )
+     WRITE( stdout,1000) desc%nr1, desc%nr2, desc%nr3, &
+                         desc%nr1, desc%my_nr2p, desc%my_nr3p, &
+                         1, desc%nproc2, desc%nproc3
+     WRITE( stdout,1010) desc%nr1x, desc%nr2x, desc%nr3x
+     WRITE( stdout,1020) desc%nnr
+1000  FORMAT(3X, &
+         'Global Dimensions   Local  Dimensions   Processor Grid',/,3X, &
+         '.X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.',/, &
+         3(1X,I5),2X,3(1X,I5),2X,3(1X,I5) )
+1010  FORMAT(3X, 'Array leading dimensions ( nr1x, nr2x, nr3x )   = ', 3(1X,I5))
+1020  FORMAT(3X, 'Local number of cell to store the grid ( nrxx ) = ', 1X, I9 )
+     RETURN
+  END SUBROUTINE
+
 
 END MODULE fft_helper_subroutines

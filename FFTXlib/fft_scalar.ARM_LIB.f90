@@ -12,7 +12,6 @@
 
        USE iso_c_binding
        USE fft_param
-       USE fftw_interfaces
 
        IMPLICIT NONE
        SAVE
@@ -438,8 +437,8 @@ END IF
          CALL ZFFT3DY (0,1.0_DP,.TRUE.,  nx,ny,nz,f(1),1,ldx,ldx*ldy,f(1),1,ldx, ldx*ldy, bw_table(1, icurrent),ltabl,INFO)
 #else
          ! FFTW
-         IF( C_ASSOCIATED(fw_plan(icurrent)) ) CALL DESTROY_PLAN_3D( fw_plan(icurrent) )
-         IF( C_ASSOCIATED(bw_plan(icurrent)) ) CALL DESTROY_PLAN_3D( bw_plan(icurrent) )
+         IF( fw_plan(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( fw_plan(icurrent) )
+         IF( bw_plan(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( bw_plan(icurrent) )
          idir = -1; CALL CREATE_PLAN_3D( fw_plan(icurrent), nx, ny, nz, idir)
          idir =  1; CALL CREATE_PLAN_3D( bw_plan(icurrent), nx, ny, nz, idir)
 #endif
