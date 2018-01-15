@@ -80,7 +80,7 @@ subroutine setup_dgc
         rhogout(:,is) = psic(dfftp%nl(:))
         !
         !
-        CALL gradrho(dfftp%nnr, rhogout(1,is), ngm, g, dfftp%nl, grho(1,1,is) )
+        CALL gradrho(dfftp, rhogout(1,is), g, grho(1,1,is) )
         !
      END DO
      DEALLOCATE(rhogout)
@@ -95,7 +95,7 @@ subroutine setup_dgc
         enddo
      endif
      do is = 1, nspin_gga
-        call gradrho (dfftp%nnr, rho%of_g (1, is), ngm, g, dfftp%nl, grho (1, 1, is) )
+        call gradrho (dfftp, rho%of_g (1, is), g, grho (1, 1, is) )
      enddo
   END IF
 

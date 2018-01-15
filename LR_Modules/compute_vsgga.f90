@@ -154,7 +154,7 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   !
   DO is = 1, nspin_gga
      !
-     CALL grad_dot( dfftp%nnr, h(1,1,is), ngm, g, dfftp%nl, alat, dh )
+     CALL grad_dot( dfftp, h(1,1,is), g, alat, dh )
      !
      vaux(:,is) = vaux(:,is) - dh(:)
      !

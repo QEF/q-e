@@ -94,9 +94,8 @@ subroutine stress ( sigma )
   !
   !  xc contribution: add gradient corrections (non diagonal)
   !
-  call stres_gradcorr ( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, nspin, &
-                        dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nnr, dfftp%nl, &
-                        ngm, g, alat, omega, sigmaxc)
+  call stres_gradcorr ( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, &
+       nspin, dfftp, g, alat, omega, sigmaxc)
   !
   !  add meta-GGA contribution 
   !

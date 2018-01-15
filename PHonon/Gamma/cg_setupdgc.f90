@@ -54,7 +54,7 @@ SUBROUTINE cg_setupdgc
      ENDDO
   ENDIF
   DO is=1,nspin
-     CALL gradrho (dfftp%nnr, rho%of_g(1,is), ngm, g, dfftp%nl, grho(1,1,is))
+     CALL gradrho (dfftp, rho%of_g(1,is), g, grho(1,1,is))
   ENDDO
   !
   IF (nspin==1) THEN

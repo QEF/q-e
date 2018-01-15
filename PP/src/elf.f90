@@ -210,7 +210,7 @@ SUBROUTINE do_rdg (rdg)
   ENDDO
 
   ! gradient of rho
-  CALL gradrho(dfftp%nnr, rho%of_g(1,1), ngm, g, dfftp%nl, grho)
+  CALL gradrho(dfftp, rho%of_g(1,1), g, grho)
 
   ! calculate rdg
   DO i = 1, dfftp%nnr

@@ -99,7 +99,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
      rhogsum(:,is) = fac * rhog_core(:) + rhogsum(:,is)
      !
-     CALL gradrho( dfftp%nnr, rhogsum(1,is), ngm, g, dfftp%nl, grho(1,1,is) )
+     CALL gradrho( dfftp, rhogsum(1,is), g, grho(1,1,is) )
      !
   END DO
   !
@@ -253,7 +253,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   DO is = 1, nspin0
      !
-     CALL grad_dot( dfftp%nnr, h(1,1,is), ngm, g, dfftp%nl, alat, dh )
+     CALL grad_dot( dfftp, h(1,1,is), g, alat, dh )
      !
      v(:,is) = v(:,is) - dh(:)
      !
@@ -294,32 +294,29 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
 END SUBROUTINE gradcorr
 !
 !----------------------------------------------------------------------------
-SUBROUTINE gradrho( nrxx, a, ngm, g, nl, ga )
+SUBROUTINE gradrho( dfft, a, g, ga )
   !----------------------------------------------------------------------------
   !
   ! ... Calculates ga = \grad a in R-space (a is in G-space)
   !
-  USE kinds,     ONLY : DP
-  USE constants, ONLY : tpi
   USE cell_base, ONLY : tpiba
+  USE kinds,     ONLY : DP
   USE control_flags, ONLY : gamma_only
-  USE fft_base,      ONLY : dfftp
   USE fft_interfaces,ONLY : invfft
-
+  USE fft_types, ONLY : fft_type_descriptor
   !
   IMPLICIT NONE
   !
-  INTEGER,     INTENT(IN)  :: nrxx
-  INTEGER,     INTENT(IN)  :: ngm, nl(ngm)
-  COMPLEX(DP), INTENT(IN)  :: a(ngm)
-  REAL(DP),    INTENT(IN)  :: g(3,ngm)
-  REAL(DP),    INTENT(OUT) :: ga(3,nrxx)
+  TYPE(fft_type_descriptor),INTENT(IN) :: dfft
+  COMPLEX(DP), INTENT(IN)  :: a(dfft%ngm)
+  REAL(DP),    INTENT(IN)  :: g(3,dfft%ngm)
+  REAL(DP),    INTENT(OUT) :: ga(3,dfft%nnr)
   !
   INTEGER                  :: ipol
   COMPLEX(DP), ALLOCATABLE :: gaux(:)
   !
   !
-  ALLOCATE( gaux( nrxx ) )
+  ALLOCATE( gaux( dfft%nnr ) )
   !
   ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
   !
@@ -327,19 +324,20 @@ SUBROUTINE gradrho( nrxx, a, ngm, g, nl, ga )
   !
   DO ipol = 1, 3
      !
-     gaux(:) = CMPLX(0.d0,0.d0,kind=dp)
+     gaux(:) = (0.0_dp,0.0_dp)
      !
-     gaux(nl(:)) = g(ipol,:) * CMPLX( -AIMAG( a(:) ), REAL( a(:) ) ,kind=DP)
+     gaux(dfft%nl(:)) = g(ipol,:) * CMPLX( -AIMAG(a(:)), REAL(a(:)), kind=DP)
      !
      IF ( gamma_only ) THEN
         !
-        gaux(dfftp%nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
+        gaux(dfft%nlm(:)) = CMPLX(  REAL( gaux(dfft%nl(:)) ), &
+                                  -AIMAG( gaux(dfft%nl(:)) ), kind=DP)
         !
      END IF
      !
      ! ... bring back to R-space, (\grad_ipol a)(r) ...
      !
-     CALL invfft ('Rho', gaux, dfftp)
+     CALL invfft ('Rho', gaux, dfft)
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
@@ -353,44 +351,44 @@ SUBROUTINE gradrho( nrxx, a, ngm, g, nl, ga )
   !
 END SUBROUTINE gradrho
 !----------------------------------------------------------------------------
-SUBROUTINE grad_dot( nrxx, a, ngm, g, nl, alat, da )
+SUBROUTINE grad_dot( dfft, a, g, alat, da )
   !----------------------------------------------------------------------------
   !
   ! ... Calculates da = \sum_i \grad_i a_i in R-space
   !
-  USE constants, ONLY : tpi
   USE cell_base, ONLY : tpiba
   USE kinds,     ONLY : DP
   USE control_flags, ONLY : gamma_only
-  USE fft_base,      ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
+  USE fft_types, ONLY : fft_type_descriptor
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(IN)     :: nrxx, ngm, nl(ngm)
-  REAL(DP), INTENT(IN)     :: a(3,nrxx), g(3,ngm), alat
-  REAL(DP), INTENT(OUT)    :: da(nrxx)
+  TYPE(fft_type_descriptor),INTENT(IN) :: dfft
+  REAL(DP), INTENT(IN)     :: a(3,dfft%nnr), g(3,dfft%ngm), alat
+  REAL(DP), INTENT(OUT)    :: da(dfft%nnr)
   !
   INTEGER                  :: n, ipol
   COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
   !
   !
-  ALLOCATE( aux( nrxx ), gaux( nrxx ) )
+  ALLOCATE( aux(dfft%nnr), gaux(dfft%nnr) )
   !
-  gaux(:) = CMPLX(0.d0,0.d0, kind=dp)
+  gaux(:) = (0.0_dp,0.0_dp)
   !
   DO ipol = 1, 3
      !
-     aux = CMPLX( a(ipol,:), 0.D0 ,kind=DP)
+     aux = CMPLX( a(ipol,:), 0.0_dp, kind=DP)
      !
      ! ... bring a(ipol,r) to G-space, a(G) ...
      !
-     CALL fwfft ('Rho', aux, dfftp)
+     CALL fwfft ('Rho', aux, dfft)
      !
-     DO n = 1, ngm
+     DO n = 1, dfft%ngm
         !
-        gaux(nl(n)) = gaux(nl(n)) + g(ipol,n) * &
-                      CMPLX( -AIMAG( aux(nl(n)) ), REAL( aux(nl(n)) ) ,kind=DP)
+        gaux(dfft%nl(n)) = gaux(dfft%nl(n)) + g(ipol,n) * &
+             CMPLX( -AIMAG( aux(dfft%nl(n)) ), &
+                      REAL( aux(dfft%nl(n)) ), kind=DP)
         !
      END DO
     !
@@ -398,9 +396,9 @@ SUBROUTINE grad_dot( nrxx, a, ngm, g, nl, alat, da )
   !
   IF ( gamma_only ) THEN
      !
-     DO n = 1, ngm
+     DO n = 1, dfft%ngm
         !
-        gaux(dfftp%nlm(n)) = CONJG( gaux(nl(n)) )
+        gaux(dfft%nlm(n)) = CONJG( gaux(dfft%nl(n)) )
         !
      END DO
      !
@@ -408,7 +406,7 @@ SUBROUTINE grad_dot( nrxx, a, ngm, g, nl, alat, da )
   !
   ! ... bring back to R-space, (\grad_ipol a)(r) ...
   !
-  CALL invfft ('Rho', gaux, dfftp)
+  CALL invfft ('Rho', gaux, dfft)
   !
   ! ... add the factor 2\pi/a  missing in the definition of G and sum
   !

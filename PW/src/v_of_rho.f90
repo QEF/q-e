@@ -178,7 +178,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
      rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
      rhogsum(:,is) = fac * rhog_core(:) + rhogsum(:,is)
      !
-     CALL gradrho( dfftp%nnr, rhogsum(1,is), ngm, g, dfftp%nl, grho(1,1,is) )
+     CALL gradrho( dfftp, rhogsum(1,is), g, grho(1,1,is) )
      !
   END DO
   !
@@ -292,7 +292,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   DO is = 1, nspin
      !
-     CALL grad_dot( dfftp%nnr, h(1,1,is), ngm, g, dfftp%nl, alat, dh )
+     CALL grad_dot( dfftp, h(1,1,is), g, alat, dh )
      !
      v(:,is) = v(:,is) - dh(:)
      !
