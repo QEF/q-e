@@ -258,7 +258,7 @@ USE cell_base,         ONLY : omega
 USE fft_base,          ONLY : dfftp
 USE scf,               ONLY : rho
 USE lsda_mod,          ONLY : nspin
-USE mp,                ONLY : mp_sum
+USE mp,                ONLY : mp_sum, mp_max
 USE mp_bands,          ONLY : intra_bgrp_comm
 USE exx,               ONLY : gt
 IMPLICIT NONE
@@ -266,7 +266,7 @@ IMPLICIT NONE
   REAL(DP), INTENT(OUT) :: ThrDen, ThrGrd 
 
   REAL(DP), ALLOCATABLE :: temp(:) 
-  REAL(DP) :: charge, grad, DenAve, GrdAve
+  REAL(DP) :: charge, grad, DenAve, GrdAve, DenMax, GrdMax
   INTEGER :: ir, ir_end, nxxs, nxtot
 
 ! interpolate density to the exx grid
@@ -286,32 +286,41 @@ IMPLICIT NONE
 
   charge = Zero
   DenAve = Zero
+  DenMax = Zero
   do ir = 1, ir_end 
     charge = charge + den(ir) * omega / dble(nxtot) 
     DenAve = DenAve + den(ir)
+    IF(DenMax.lt.den(ir)) DenMax=den(ir)
   end do 
   call mp_sum(DenAve,intra_bgrp_comm)
   call mp_sum(charge,intra_bgrp_comm)
+  call mp_max(DenMax,intra_bgrp_comm)
   DenAve = DenAve / dble(nxtot)
   write(stdout,'(7x,A,f12.6)') 'Charge  = ', charge
   write(stdout,'(7x,A,f12.6)') 'DenAve  = ', DenAve 
-  ThrDen = scdm_den 
+  write(stdout,'(7x,A,f12.6)') 'DenMax  = ', DenMax 
 
 ! gradient on the exx grid 
   Call exx_gradient( nxxs, den , dfftt%ngm, gt, dfftt%nl, grad_den )
   charge  = Zero
   GrdAve = Zero 
+  GrdMax = Zero 
   do ir = 1, ir_end 
     grad  = sqrt( grad_den(1,ir)**2  +  grad_den(2,ir)**2  +  grad_den(3,ir)**2  )
     charge = charge + grad * omega / dble(nxtot)
     GrdAve = GrdAve + grad
+    IF(GrdMax.lt.grad) GrdMax=grad
   end do 
   call mp_sum(GrdAve,intra_bgrp_comm)
   call mp_sum(charge,intra_bgrp_comm)
+  call mp_max(GrdMax,intra_bgrp_comm)
   GrdAve = GrdAve / dble(nxtot)
   write(stdout,'(7X,A,f12.6)') 'GradTot = ', charge
   write(stdout,'(7X,A,f12.6)') 'GrdAve  = ', GrdAve 
-  ThrGrd = scdm_grd 
+  write(stdout,'(7X,A,f12.6)') 'GrdMax  = ', GrdMax 
+
+  ThrDen = scdm_den * DenAve  
+  ThrGrd = scdm_grd * GrdAve  
   write(stdout,'(7x,2(A,f12.6))') 'scdm_den = ', scdm_den, ' scdm_grd = ',scdm_grd
   write(stdout,'(7x,2(A,f12.6))') 'ThrDen   = ', ThrDen,   ' ThrGrd   = ',ThrGrd  
 
@@ -377,7 +386,7 @@ IMPLICIT NONE
   if(nptot.le.0) call errore('SCDM_PGG', 'No points prescreened. Loose the thresholds', 1) 
   call mp_sum(cpu_npt,intra_bgrp_comm)
   write(stdout,'(7X,2(A,I8))')  'Max npt = ', maxval(cpu_npt(:)), ' Min npt = ', minval(cpu_npt(:))
-  write(stdout,'(7X,2(A,I10))') 'Reduced matrix, allocate: ', nptot, ' out of ', dfftt%nnr 
+  write(stdout,'(7X,2(A,I10))') 'Reduced matrix, allocate: ', nptot, ' out of ', dfftt%nr1x *dfftt%nr2x *dfftt%nr3x
 
 END SUBROUTINE scdm_points
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
