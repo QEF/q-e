@@ -5707,7 +5707,9 @@ implicit none
        DO kbnd = 1, ibnd-1
          IF((locmat(ibnd,kbnd,ikq).gt.local_thr).and. &
             ((x_occupation(ibnd,ikq).gt.0.0d0).or.(x_occupation(kbnd,ikq).gt.0.0d0))) then 
-           IF((x_occupation(ibnd,ikq).gt.0.0d0).or.(x_occupation(kbnd,ikq).gt.0.0d0)) ovpairs(2) = ovpairs(2) + locmat(ibnd,kbnd,ikq) 
+           IF((x_occupation(ibnd,ikq).gt.0.0d0).or. &
+              (x_occupation(kbnd,ikq).gt.0.0d0) ) &
+              ovpairs(2) = ovpairs(2) + locmat(ibnd,kbnd,ikq) 
 !          write(stdout,'(3I4,3f12.6,A)') ikq, ibnd, kbnd, x_occupation(ibnd,ikq), x_occupation(kbnd,ikq), locmat(ibnd,kbnd,ikq), ' IN '
            ovpairs(1) = ovpairs(1) + locmat(ibnd,kbnd,ikq) 
            DO ir = 1, NQR 

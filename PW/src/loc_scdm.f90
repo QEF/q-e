@@ -92,7 +92,9 @@ implicit none
   DistMax   = Zero 
   DO jbnd = 1, NBands
     loc_diag = loc_diag + Mat(jbnd,jbnd) 
-    call compute_density(.false.,.false.,CenterPBC(1,jbnd), SpreadPBC, tmp, locbuff(1,jbnd,IKK), locbuff(1,jbnd,IKK), dfftt%nnr*npol, jbnd, jbnd)
+    call compute_density(.false.,.false.,CenterPBC(1,jbnd), SpreadPBC, tmp, &
+                         locbuff(1,jbnd,IKK), locbuff(1,jbnd,IKK), &
+                         dfftt%nnr*npol, jbnd, jbnd)
     TotSpread = TotSpread + SpreadPBC(1) + SpreadPBC(2) + SpreadPBC(3) 
     DO kbnd = 1, jbnd - 1 
       loc_off = loc_off + Mat(jbnd,kbnd) 
