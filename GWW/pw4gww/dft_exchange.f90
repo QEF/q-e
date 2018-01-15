@@ -36,7 +36,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
   USE control_flags,        ONLY : gamma_only
   !USE exx, ONLY : exx_divergence_new, exx_grid_init, yukawa,exx_divergence_old
   USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE fft_interfaces,       ONLY : fwfft, invfft, fft_interpolate
   USE fft_base,             ONLY : dfftp
   USE io_global, ONLY : ionode
   USE lsda_mod,  ONLY : nspin
@@ -134,14 +134,14 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
             CALL invfft ('Wave', psic, dffts)
             tmpreal1(1:dfftp%nnr)=dble(psic(1:dfftp%nnr))
             if(doublegrid) then
-               call fft_interpolate_real(dffts,tmpreal1, dfftp, tmpreal_v(:,hw-(iiv-1)*n_set)) ! interpolate smooth -> dense
+               call fft_interpolate(dffts,tmpreal1, dfftp, tmpreal_v(:,hw-(iiv-1)*n_set)) ! interpolate smooth -> dense
             else
                tmpreal_v(:,hw-(iiv-1)*n_set)=tmpreal1(:)
             endif
             if ( hw < min(iiv*n_set,nbnd_v(isv))) then
                tmpreal1(1:dfftp%nnr)=aimag(psic(1:dfftp%nnr))
                if(doublegrid) then
-                  call fft_interpolate_real(dffts,tmpreal1, dfftp, tmpreal_v(:,hw-(iiv-1)*n_set+1)) ! interpolate smooth -> dense
+                  call fft_interpolate(dffts,tmpreal1, dfftp, tmpreal_v(:,hw-(iiv-1)*n_set+1)) ! interpolate smooth -> dense
                else
                   tmpreal_v(:,hw-(iiv-1)*n_set+1)=tmpreal1(:)
                endif
@@ -169,14 +169,14 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
                CALL invfft ('Wave', psic, dffts)
                tmpreal1(1:dfftp%nnr)=dble(psic(1:dfftp%nnr))
                if(doublegrid) then
-                  call fft_interpolate_real(dffts,tmpreal1, dfftp, tmpreal_s(:,hw-(jjs-1)*n_set)) ! interpolate smooth -> dense
+                  call fft_interpolate(dffts,tmpreal1, dfftp, tmpreal_s(:,hw-(jjs-1)*n_set)) ! interpolate smooth -> dense
                else
                   tmpreal_s(:,hw-(jjs-1)*n_set)=tmpreal1(:)
                endif
                if ( hw < min(jjs*n_set,nbnd_s)) then
                   tmpreal1(1:dfftp%nnr)=aimag(psic(1:dfftp%nnr))
                   if(doublegrid) then
-                     call fft_interpolate_real(dffts,tmpreal1, dfftp, tmpreal_s(:,hw-(jjs-1)*n_set+1)) ! interp. smooth -> dense
+                     call fft_interpolate(dffts,tmpreal1, dfftp, tmpreal_s(:,hw-(jjs-1)*n_set+1)) ! interp. smooth -> dense
                   else
                      tmpreal_s(:,hw-(jjs-1)*n_set+1)=tmpreal1(:)
                   endif

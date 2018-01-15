@@ -464,53 +464,22 @@
 
       USE fft_types, ONLY: fft_type_descriptor
       use io_global, only: stdout, ionode
-      USE fft_helper_subroutines
+      USE fft_helper_subroutines, ONLY: fft_dist_info
 
       IMPLICIT NONE
 
-
       TYPE(fft_type_descriptor), INTENT(IN) :: dfftp, dffts
 
-      INTEGER :: i, j, nr3l
-
       IF(ionode) THEN
-
-        CALL tg_get_local_nr3( dfftp, nr3l )
-
         WRITE( stdout,*)
         WRITE( stdout,*) '  Real Mesh'
         WRITE( stdout,*) '  ---------'
-        WRITE( stdout,1000) dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-                            dfftp%nr1, dfftp%my_nr2p, dfftp%my_nr3p, &
-                            1, dfftp%nproc2, dfftp%nproc3
-        WRITE( stdout,1010) dfftp%nr1x, dfftp%nr2x, dfftp%nr3x
-        WRITE( stdout,1020) dfftp%nnr
-        WRITE( stdout,*) '  Number of x-y planes for each processors: '
-        WRITE( stdout, fmt = '( 5("  |",I4,",",I4) )' ) ( ( dfftp%nr2p(j), &
-                dfftp%nr3p(i), i = 1, dfftp%nproc3 ), j=1,dfftp%nproc2 )
-
-        CALL tg_get_local_nr3( dffts, nr3l )
-
+        CALL fft_dist_info( dfftp, stdout )
         WRITE( stdout,*)
         WRITE( stdout,*) '  Smooth Real Mesh'
         WRITE( stdout,*) '  ----------------'
-        WRITE( stdout,1000) dffts%nr1, dffts%nr2, dffts%nr3, &
-                            dffts%nr1, dffts%my_nr2p, dffts%my_nr3p, &
-                            1, dffts%nproc2, dffts%nproc3
-        WRITE( stdout,1010) dffts%nr1x, dffts%nr2x, dffts%nr3x
-        WRITE( stdout,1020) dffts%nnr
-        WRITE( stdout,*) '  Number of x-y planes for each processors: '
-        WRITE( stdout, fmt = '( 5("  |",I4,",",I4) )' ) ( ( dffts%nr2p(j), &
-                dffts%nr3p(i), i = 1, dffts%nproc3 ), j=1,dffts%nproc2 )
-
+        CALL fft_dist_info( dffts, stdout )
       END IF
-
-1000  FORMAT(3X, &
-         'Global Dimensions   Local  Dimensions   Processor Grid',/,3X, &
-         '.X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.',/, &
-         3(1X,I5),2X,3(1X,I5),2X,3(1X,I5) )
-1010  FORMAT(3X, 'Array leading dimensions ( nr1x, nr2x, nr3x )   = ', 3(1X,I5))
-1020  FORMAT(3X, 'Local number of cell to store the grid ( nrxx ) = ', 1X, I9 )
 
       RETURN
       END SUBROUTINE realspace_grids_info

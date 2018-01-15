@@ -33,6 +33,7 @@
   USE elph2,     ONLY : epmatq, el_ph_mat
   USE constants_epw, ONLY : czero, cone
   USE fft_base,  ONLY : dfftp, dffts
+  USE fft_interfaces, ONLY : fft_interpolate
   USE noncollin_module,     ONLY : nspin_mag
 !  USE noncollin_module,     ONLY : noncolin
   !
@@ -110,7 +111,7 @@
         ALLOCATE (dvscfins ( dffts%nnr , nspin_mag , npert(irr)) )
         DO is = 1, nspin_mag
            DO ipert = 1, npert(irr)
-              CALL fft_interpolate_complex (dfftp, dvscfin(1,is,ipert), dffts, dvscfins(1,is,ipert))
+              CALL fft_interpolate (dfftp, dvscfin(:,is,ipert), dffts, dvscfins(:,is,ipert))
            ENDDO 
         ENDDO
      ELSE

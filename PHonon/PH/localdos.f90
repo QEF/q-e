@@ -22,7 +22,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE ener,      ONLY : ef
   USE fft_base,  ONLY : dffts, dfftp
-  USE fft_interfaces, ONLY: invfft
+  USE fft_interfaces, ONLY: invfft, fft_interpolate
   USE buffers,   ONLY : get_buffer
   USE gvecs,     ONLY : doublegrid
   USE klist,     ONLY : xk, wk, ngk, igk_k, degauss, ngauss, ltetra
@@ -210,7 +210,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   enddo
   if (doublegrid) then
      do is = 1, nspin_mag
-        call fft_interpolate_complex (dffts, ldoss (1, is), dfftp, ldos (1, is))
+        call fft_interpolate (dffts, ldoss (:, is), dfftp, ldos (:, is))
      enddo
   else
      ldos (:,:) = ldoss (:,:)

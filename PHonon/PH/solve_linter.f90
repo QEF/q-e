@@ -74,6 +74,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE control_lr,   ONLY : alpha_pv, nbnd_occ, lgamma
   USE dv_of_drho_lr
   USE fft_helper_subroutines
+  USE fft_interfaces, ONLY : fft_interpolate
 
   implicit none
 
@@ -401,7 +402,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      if (doublegrid) then
         do is = 1, nspin_mag
            do ipert = 1, npe
-              call fft_interpolate_complex (dffts, drhoscf(1,is,ipert), dfftp, drhoscfh(1,is,ipert))
+              call fft_interpolate (dffts, drhoscf(:,is,ipert), dfftp, drhoscfh(:,is,ipert))
            enddo
         enddo
      else
@@ -506,7 +507,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      if (doublegrid) then
         do ipert = 1, npe
            do is = 1, nspin_mag
-              call fft_interpolate_complex (dfftp, dvscfin(1,is,ipert), dffts, dvscfins(1,is,ipert))
+              call fft_interpolate (dfftp, dvscfin(:,is,ipert), dffts, dvscfins(:,is,ipert))
            enddo
         enddo
      endif

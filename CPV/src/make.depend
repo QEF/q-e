@@ -996,6 +996,7 @@ pseudopot_sub.o : ../../Modules/atom.o
 pseudopot_sub.o : ../../Modules/cell_base.o
 pseudopot_sub.o : ../../Modules/constants.o
 pseudopot_sub.o : ../../Modules/control_flags.o
+pseudopot_sub.o : ../../Modules/fft_base.o
 pseudopot_sub.o : ../../Modules/gvecw.o
 pseudopot_sub.o : ../../Modules/io_global.o
 pseudopot_sub.o : ../../Modules/ions_base.o

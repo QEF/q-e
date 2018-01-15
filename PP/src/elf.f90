@@ -27,7 +27,7 @@ SUBROUTINE do_elf (elf)
   USE constants, ONLY: pi
   USE cell_base, ONLY: omega, tpiba
   USE fft_base,  ONLY: dffts, dfftp
-  USE fft_interfaces, ONLY : fwfft, invfft
+  USE fft_interfaces, ONLY : fwfft, invfft, fft_interpolate
   USE gvect, ONLY: gcutm, g, ngm
   USE gvecs, ONLY : ngms, doublegrid, dual
   USE io_files, ONLY: iunwfc, nwordwfc
@@ -104,7 +104,7 @@ SUBROUTINE do_elf (elf)
   IF (doublegrid) THEN
      DEALLOCATE (aux)
      ALLOCATE(aux(dfftp%nnr))
-     CALL fft_interpolate_real (dffts, kkin, dfftp, kkin)
+     CALL fft_interpolate (dffts, kkin, dfftp, kkin)
   ENDIF
   !
   ! symmetrize the local kinetic energy if needed

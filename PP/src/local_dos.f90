@@ -28,7 +28,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE ener,                 ONLY : ef
   USE fft_base,             ONLY : dffts, dfftp
-  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE fft_interfaces,       ONLY : fwfft, invfft, fft_interpolate
   USE gvect,                ONLY : ngm, g
   USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, &
@@ -226,7 +226,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
 #endif
                     segno(1:dffts%nnr) = dble( psic(1:dffts%nnr)*conjg(phase) )
                  ENDIF
-                 IF (doublegrid) CALL fft_interpolate_real (dffts, segno, dfftp, segno)
+                 IF (doublegrid) CALL fft_interpolate (dffts, segno, dfftp, segno)
                  segno(:) = sign( 1.d0, segno(:) )
               ENDIF
               !
@@ -368,10 +368,10 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   ENDIF
   IF (doublegrid) THEN
      IF (noncolin) THEN
-       CALL fft_interpolate_real(dffts, rho%of_r, dfftp, rho%of_r )
+       CALL fft_interpolate(dffts, rho%of_r(:,1), dfftp, rho%of_r(:,1) )
      ELSE
        DO is = 1, nspin
-         CALL fft_interpolate_real(dffts, rho%of_r(1, is), dfftp, rho%of_r(1, is))
+         CALL fft_interpolate(dffts, rho%of_r(:, is), dfftp, rho%of_r(:, is))
        ENDDO
      ENDIF
   ENDIF

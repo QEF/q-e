@@ -256,6 +256,7 @@ END SUBROUTINE SCDM_PGG
 SUBROUTINE scdm_thresholds( den, grad_den, ThrDen, ThrGrd )
 USE cell_base,         ONLY : omega
 USE fft_base,          ONLY : dfftp
+USE fft_interfaces,    ONLY : fft_interpolate
 USE scf,               ONLY : rho
 USE lsda_mod,          ONLY : nspin
 USE mp,                ONLY : mp_sum, mp_max
@@ -273,7 +274,7 @@ IMPLICIT NONE
   allocate( temp(dfftp%nnr))
   temp(:) = rho%of_r(:,1)
   IF ( nspin == 2 ) temp(:) = temp(:) + rho%of_r(:,2) 
-  Call fft_interpolate_real(dfftp, temp, dfftt, den)
+  Call fft_interpolate(dfftp, temp, dfftt, den)
   deallocate( temp ) 
 
 #if defined (__MPI)

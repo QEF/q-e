@@ -491,11 +491,34 @@ CONTAINS
 !$omp end task
         !
      end do
-
 !$omp  end single
 !$omp  end parallel
+     RETURN
+  END SUBROUTINE
 
 
+  SUBROUTINE fft_dist_info( desc, unit )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     INTEGER, INTENT(IN) :: unit
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     INTEGER :: i, j, nr3l
+     CALL tg_get_local_nr3( desc, nr3l )
+     WRITE( stdout,1000) desc%nr1, desc%nr2, desc%nr3, &
+                         desc%nr1, desc%my_nr2p, desc%my_nr3p, &
+                         1, desc%nproc2, desc%nproc3
+     WRITE( stdout,1010) desc%nr1x, desc%nr2x, desc%nr3x
+     WRITE( stdout,1020) desc%nnr
+     WRITE( stdout,*) '  Number of x-y planes for each processors: '
+     WRITE( stdout, fmt = '( 5("  |",I4,",",I4) )' ) ( ( desc%nr2p(j), &
+             desc%nr3p(i), i = 1, desc%nproc3 ), j=1,desc%nproc2 )
+1000  FORMAT(3X, &
+         'Global Dimensions   Local  Dimensions   Processor Grid',/,3X, &
+         '.X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.',/, &
+         3(1X,I5),2X,3(1X,I5),2X,3(1X,I5) )
+1010  FORMAT(3X, 'Array leading dimensions ( nr1x, nr2x, nr3x )   = ', 3(1X,I5))
+1020  FORMAT(3X, 'Local number of cell to store the grid ( nrxx ) = ', 1X, I9 )
+     RETURN
   END SUBROUTINE
 
 END MODULE fft_helper_subroutines

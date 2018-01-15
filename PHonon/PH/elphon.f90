@@ -18,6 +18,7 @@ SUBROUTINE elphon()
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
   USE gvecs, ONLY: doublegrid
   USE fft_base, ONLY : dfftp, dffts
+  USE fft_interfaces, ONLY : fft_interpolate
   USE noncollin_module, ONLY : nspin_mag, noncolin, m_loc
   USE lsda_mod, ONLY : nspin
   USE uspp,  ONLY: okvan
@@ -87,7 +88,7 @@ SUBROUTINE elphon()
         ALLOCATE (dvscfins (dffts%nnr, nspin_mag , npert(irr)) )
         DO is = 1, nspin_mag
            DO ipert = 1, npe
-              CALL fft_interpolate_complex (dfftp, dvscfin(1,is,ipert), dffts, dvscfins(1,is,ipert))
+              CALL fft_interpolate (dfftp, dvscfin(:,is,ipert), dffts, dvscfins(:,is,ipert))
            ENDDO
         ENDDO
      ELSE

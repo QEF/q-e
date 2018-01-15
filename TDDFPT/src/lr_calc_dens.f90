@@ -27,7 +27,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   USE ener,                   ONLY : ef
   USE gvecs,                  ONLY : doublegrid
   USE fft_base,               ONLY : dffts, dfftp
-  USE fft_interfaces,         ONLY : invfft
+  USE fft_interfaces,         ONLY : invfft, fft_interpolate
   USE io_global,              ONLY : stdout
   USE kinds,                  ONLY : dp
   USE klist,                  ONLY : nks, xk, wk, ngk, igk_k
@@ -104,7 +104,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      !
      ! If a double grid is used, interpolate onto the fine grid
      !
-     IF ( doublegrid ) CALL fft_interpolate_real(dffts, rho_1, dfftp, rho_1)
+     IF ( doublegrid ) CALL fft_interpolate(dffts, rho_1(:,1), dfftp, rho_1(:,1))
      !
 #if defined(__MPI)
      CALL mp_sum(rho_1, inter_bgrp_comm)
@@ -118,7 +118,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      !
      ! If a double grid is used, interpolate onto the fine grid
      !
-     IF ( doublegrid ) CALL fft_interpolate_complex(dffts, rho_1c, dfftp, rho_1c)
+     IF ( doublegrid ) CALL fft_interpolate(dffts, rho_1c(:,1), dfftp, rho_1c(:,1))
      !
   ENDIF
   !

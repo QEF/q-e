@@ -38,7 +38,7 @@ subroutine solve_head
   USE symme, only : crys_to_cart, symmatrix
   USE mp_wave, ONLY : mergewf,splitwf
   USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : fwfft, invfft
+  USE fft_interfaces,       ONLY : fwfft, invfft, fft_interpolate
   USE buffers,              ONLY : get_buffer
   USE constants,            ONLY : rytoev, fpi
 
@@ -407,7 +407,7 @@ subroutine solve_head
 
 !      product dpsi * psi_v
                     prod(1:dffts%nnr)=conjg(prod(1:dffts%nnr))*psi_v(1:dffts%nnr,iv)
-                    if(doublegrid) call fft_interpolate_complex(dffts, prod, dfftp, prod,1)
+                    if(doublegrid) call fft_interpolate(dffts, prod, dfftp, prod)
 
 !US part STLL TO BE ADDED!!
                     pola_charge(1:dffts%nnr,1,ipol,i)=pola_charge(1:dffts%nnr,1,ipol,i)-prod(1:dffts%nnr)*ww

@@ -21,6 +21,7 @@ subroutine solve_e2
   USE gvect,                 ONLY : g
   USE gvecs,                 ONLY : doublegrid
   USE fft_base,              ONLY : dfftp, dffts
+  USE fft_interfaces,        ONLY : fft_interpolate
   USE wvfct,                 ONLY : npwx, nbnd, et
   USE buffers,   ONLY: get_buffer
   USE ions_base, ONLY: nat
@@ -173,7 +174,7 @@ subroutine solve_e2
      if (doublegrid) then
         do is = 1, nspin
            do ipol = 1, 6
-              call fft_interpolate_complex (dffts, dvscfout (1, is, ipol), dfftp, dvscfout (1, is, ipol))
+              call fft_interpolate (dffts, dvscfout (:, is, ipol), dfftp, dvscfout (:, is, ipol))
            enddo
         enddo
      endif
@@ -197,7 +198,7 @@ subroutine solve_e2
      if (doublegrid) then
         do is = 1, nspin
            do ipol = 1, 6
-              call fft_interpolate_complex (dfftp,dvscfin (1, is, ipol), dffts, dvscfins (1, is, ipol))
+              call fft_interpolate (dfftp,dvscfin (:, is, ipol), dffts, dvscfins (:, is, ipol))
            enddo
         enddo
      end if

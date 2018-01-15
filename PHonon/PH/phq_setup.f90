@@ -135,6 +135,7 @@ subroutine phq_setup
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!
+!  write(*,*) " acfdt_is_active ",acfdt_is_active, " acfdt_num_der ", acfdt_num_der
   IF (acfdt_is_active) THEN
      ! discard set_vrs for numerical derivatives
      if (.not.acfdt_num_der) then 

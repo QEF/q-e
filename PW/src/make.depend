@@ -958,10 +958,6 @@ input.o : symm_base.o
 input.o : tetra.o
 input.o : update_pot.o
 input.o : xdm_dispersion.o
-interpolate.o : ../../FFTXlib/fft_interfaces.o
-interpolate.o : ../../FFTXlib/fft_types.o
-interpolate.o : ../../Modules/control_flags.o
-interpolate.o : ../../Modules/kind.o
 io_rho_xml.o : ../../Modules/cell_base.o
 io_rho_xml.o : ../../Modules/control_flags.o
 io_rho_xml.o : ../../Modules/funct.o
@@ -1810,6 +1806,7 @@ set_rhoc.o : ../../Modules/uspp.o
 set_rhoc.o : ../../UtilXlib/mp.o
 set_rhoc.o : pwcom.o
 set_rhoc.o : scf_mod.o
+set_vrs.o : ../../FFTXlib/fft_interfaces.o
 set_vrs.o : ../../Modules/fft_base.o
 set_vrs.o : ../../Modules/funct.o
 set_vrs.o : ../../Modules/kind.o

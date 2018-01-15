@@ -61,6 +61,7 @@ subroutine solve_e
   USE control_lr,            ONLY : nbnd_occ, lgamma
   USE dv_of_drho_lr
   USE fft_helper_subroutines
+  USE fft_interfaces,        ONLY : fft_interpolate
 
   implicit none
 
@@ -309,7 +310,7 @@ subroutine solve_e
      if (doublegrid) then
         do is=1,nspin_mag
            do ipol=1,3
-              call fft_interpolate_complex (dffts, dvscfout(1,is,ipol), dfftp, dvscfout(1,is,ipol))
+              call fft_interpolate (dffts, dvscfout(:,is,ipol), dfftp, dvscfout(:,is,ipol))
            enddo
         enddo
      endif
@@ -361,7 +362,7 @@ subroutine solve_e
      if (doublegrid) then
         do is=1,nspin_mag
            do ipol = 1, 3
-              call fft_interpolate_complex (dfftp, dvscfin(1,is,ipol), dffts, dvscfins(1,is,ipol))
+              call fft_interpolate (dfftp, dvscfin(:,is,ipol), dffts, dvscfins(:,is,ipol))
            enddo
         enddo
      endif
