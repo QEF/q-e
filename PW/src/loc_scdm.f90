@@ -304,7 +304,7 @@ IMPLICIT NONE
   write(stdout,'(7x,A,f12.6)') 'DenMax  = ', DenMax 
 
 ! gradient on the exx grid 
-  call fft_gradient( dfftt, den, gt, grad_den )
+  call fft_gradient_r2r ( dfftt, den, gt, grad_den )
   charge  = Zero
   GrdAve = Zero 
   GrdMax = Zero 
