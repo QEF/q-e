@@ -10,6 +10,8 @@ New in development version:
 
 Problems fixed in development version:
 
+  * pw2bgw.x fixed, courtesy G. Samsonidze (Jan.16, 2018)
+
   * Band parallelization was broken in one of the last commits
     just before v.6.2.1 (Dec.23, 2017)
 

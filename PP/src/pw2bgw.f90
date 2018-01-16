@@ -420,9 +420,11 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   USE klist, ONLY : xk, wk, ngk, nks, nkstot, igk_k
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum, mp_max, mp_get, mp_bcast, mp_barrier
-  USE mp_pools, ONLY : me_pool, root_pool, npool, nproc_pool, intra_pool_comm
+  USE mp_pools, ONLY : me_pool, root_pool, npool, nproc_pool, &
+    intra_pool_comm, inter_pool_comm
   USE mp_wave, ONLY : mergewf
   USE mp_world, ONLY : mpime, nproc, world_comm
+  USE mp_bands, ONLY : intra_bgrp_comm, nbgrp
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions_module, ONLY : evc
@@ -697,7 +699,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
     g_g ( 2, ig_l2g ( ig ) ) = mill ( 2, ig )
     g_g ( 3, ig_l2g ( ig ) ) = mill ( 3, ig )
   ENDDO
-  CALL mp_sum ( g_g, intra_pool_comm )
+  CALL mp_sum ( g_g, intra_bgrp_comm )
 
   ALLOCATE ( igk_l2g ( npwx, nk_l ) )
 
@@ -719,10 +721,12 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   DO ik = 1, nk_l
     ngk_g ( ik + iks - 1 ) = ngk ( ik )
   ENDDO
-  CALL mp_sum ( ngk_g, world_comm )
+  CALL mp_sum( ngk_g, inter_pool_comm )
+  CALL mp_sum( ngk_g, intra_pool_comm )
+  ngk_g = ngk_g / nbgrp
 
   npw_g = MAXVAL ( igk_l2g ( :, : ) )
-  CALL mp_max ( npw_g, world_comm )
+  CALL mp_max( npw_g, intra_pool_comm )
 
   npwx_g = MAXVAL ( ngk_g ( : ) )
 
@@ -804,7 +808,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
         itmp ( igk_l2g ( ig, ik - iks + 1 ) ) = igk_l2g ( ig, ik - iks + 1 )
       ENDDO
     ENDIF
-    CALL mp_sum ( itmp, world_comm )
+    CALL mp_sum( itmp, intra_bgrp_comm )
     ngg = 0
     DO ig = 1, npw_g
       IF ( itmp ( ig ) .EQ. ig ) THEN
@@ -1217,8 +1221,7 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type, &
   USE kinds, ONLY : DP
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_sum
-  USE mp_world, ONLY : world_comm
-  USE mp_pools, ONLY : intra_pool_comm
+  USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho
   USE symm_base, ONLY : s, ftau, nsym
   USE matrix_inversion
@@ -1368,8 +1371,8 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type, &
     ENDDO
   ENDDO
 
-  CALL mp_sum ( g_g, intra_pool_comm )
-  CALL mp_sum ( rhog_g, intra_pool_comm )
+  CALL mp_sum ( g_g, intra_bgrp_comm )
+  CALL mp_sum ( rhog_g, intra_bgrp_comm )
 
   DO is = 1, ns
     DO ig = 1, ng_g
@@ -1427,8 +1430,8 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   USE klist, ONLY : xk, nkstot, ngk, nks, igk_k
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
-  USE mp_world, ONLY : world_comm
   USE mp_pools, ONLY : inter_pool_comm
+  USE mp_bands, ONLY : nbgrp, inter_bgrp_comm
   USE noncollin_module, ONLY : nspin_mag
   USE scf, ONLY : rho
   USE symme, ONLY : sym_rho, sym_rho_init
@@ -1467,6 +1470,8 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
     ENDDO
   ENDDO
   CALL mp_sum (rho%of_r, inter_pool_comm)
+  CALL mp_sum (rho%of_r, inter_bgrp_comm)
+  rho%of_r = rho%of_r / nbgrp
 
   ! take rho to G-space
   DO is = 1, nspin
@@ -1500,7 +1505,7 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   USE kinds, ONLY : DP
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_sum
-  USE mp_pools, ONLY : intra_pool_comm
+  USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions_module, ONLY : psic
@@ -1660,8 +1665,8 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
     ENDDO
   ENDDO
 
-  CALL mp_sum ( g_g, intra_pool_comm )
-  CALL mp_sum ( vxcg_g, intra_pool_comm )
+  CALL mp_sum ( g_g, intra_bgrp_comm )
+  CALL mp_sum ( vxcg_g, intra_bgrp_comm )
 
   IF ( ionode ) THEN
     OPEN ( unit = unit, file = TRIM ( output_file_name ), &
@@ -1712,7 +1717,7 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core )
   USE kinds, ONLY : DP
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_sum
-  USE mp_pools, ONLY : intra_pool_comm
+  USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : psic
 
@@ -1758,7 +1763,7 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core )
     ENDDO
   ENDDO
 
-  CALL mp_sum ( vxc0_g, intra_pool_comm )
+  CALL mp_sum ( vxc0_g, intra_bgrp_comm )
 
   DO is = 1, ns
     vxc0_g ( is ) = vxc0_g ( is ) * CMPLX ( RYTOEV, 0.0D0, KIND=dp )
@@ -1805,7 +1810,8 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   USE klist, ONLY : xk, nkstot, nks, ngk, igk_k
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
-  USE mp_pools, ONLY : intra_pool_comm, inter_pool_comm
+  USE mp_pools, ONLY : inter_pool_comm
+  USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct, ONLY : nbnd
@@ -1890,7 +1896,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
             * (dble (psic (ir)) **2 + aimag (psic (ir)) **2)
         ENDDO
         dummyr = dummyr * rytoev / dble (dfftp%nr1x * dfftp%nr2x * dfftp%nr3x)
-        CALL mp_sum (dummyr, intra_pool_comm)
+        CALL mp_sum (dummyr, intra_bgrp_comm)
         mtxeld (ib - diag_nmin + 1, ik) = dummyr
       ENDDO
     ENDIF
@@ -1915,7 +1921,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
           dummyc = dummyc &
                * CMPLX (rytoev / dble (dfftp%nr1x * dfftp%nr2x * dfftp%nr3x), &
                         0.0D0, KIND=dp)
-          CALL mp_sum (dummyc, intra_pool_comm)
+          CALL mp_sum (dummyc, intra_bgrp_comm)
           mtxelo (ib2 - offdiag_nmin + 1, ib - offdiag_nmin &
             + 1, ik) = dummyc
         ENDDO
@@ -1991,7 +1997,8 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   USE klist, ONLY : xk, nkstot, nks, ngk, igk_k
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum
-  USE mp_pools, ONLY : intra_pool_comm, inter_pool_comm
+  USE mp_pools, ONLY : inter_pool_comm
+  USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct, ONLY : npwx, nbnd
@@ -2091,7 +2098,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
           dummy = dummy + conjg (psic (ig)) * hpsi (ig)
         ENDDO
         dummy = dummy * CMPLX (rytoev, 0.0D0, KIND=dp)
-        CALL mp_sum (dummy, intra_pool_comm)
+        CALL mp_sum (dummy, intra_bgrp_comm)
         mtxeld (ib - diag_nmin + 1, ik) = dummy
       ENDDO
     ENDIF
@@ -2126,7 +2133,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
             dummy = dummy + conjg (psic2 (ig)) * hpsi (ig)
           ENDDO
           dummy = dummy * CMPLX (rytoev, 0.0D0, KIND=dp)
-          CALL mp_sum (dummy, intra_pool_comm)
+          CALL mp_sum (dummy, intra_bgrp_comm)
           mtxelo (ib2 - offdiag_nmin + 1, ib - offdiag_nmin &
             + 1, ik) = dummy
         ENDDO
@@ -2197,7 +2204,7 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
   USE kinds, ONLY : DP
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_sum
-  USE mp_pools, ONLY : intra_pool_comm
+  USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : vltot, v
   USE symm_base, ONLY : s, ftau, nsym
   USE wavefunctions_module, ONLY : psic
@@ -2353,8 +2360,8 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
     ENDDO
   ENDDO
 
-  CALL mp_sum ( g_g, intra_pool_comm )
-  CALL mp_sum ( vscg_g, intra_pool_comm )
+  CALL mp_sum ( g_g, intra_bgrp_comm )
+  CALL mp_sum ( vscg_g, intra_bgrp_comm )
 
   IF ( ionode ) THEN
     OPEN ( unit = unit, file = TRIM ( output_file_name ), &
@@ -2408,7 +2415,9 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   USE lsda_mod, ONLY : nspin, isk
   USE mp, ONLY : mp_sum, mp_max, mp_get, mp_barrier
   USE mp_world, ONLY : mpime, nproc, world_comm
-  USE mp_pools, ONLY : me_pool, root_pool, npool, nproc_pool, intra_pool_comm
+  USE mp_bands, ONLY : intra_bgrp_comm, nbgrp
+  USE mp_pools, ONLY : me_pool, root_pool, npool, nproc_pool, &
+    intra_pool_comm, inter_pool_comm
   USE mp_wave, ONLY : mergewf
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base, ONLY : s, ftau, nsym
@@ -2571,7 +2580,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
     gvec ( 2, ig_l2g ( ig ) ) = mill ( 2, ig )
     gvec ( 3, ig_l2g ( ig ) ) = mill ( 3, ig )
   ENDDO
-  CALL mp_sum ( gvec, intra_pool_comm )
+  CALL mp_sum ( gvec, intra_bgrp_comm )
 
   ALLOCATE ( ngk_g ( nkstot ) )
   ALLOCATE ( igk_l2g ( npwx, nks ) )
@@ -2586,9 +2595,11 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
   DO ik = 1, nks
     ngk_g ( ik + iks - 1 ) = ngk ( ik )
   ENDDO
-  CALL mp_sum ( ngk_g, world_comm )
+  CALL mp_sum ( ngk_g, inter_pool_comm )
+  CALL mp_sum ( ngk_g, intra_pool_comm )
+  ngk_g = ngk_g / nbgrp
   npw_g = MAXVAL ( igk_l2g ( :, : ) )
-  CALL mp_max ( npw_g, world_comm )
+  CALL mp_max ( npw_g, intra_pool_comm )
   npwx_g = MAXVAL ( ngk_g ( : ) )
 
   CALL cryst_to_cart (nkstot, xk, at, -1)
@@ -2643,7 +2654,7 @@ SUBROUTINE write_vkbg (output_file_name, symm_type, wfng_kgrid, &
         itmp ( igk_l2g ( ig, ik - iks + 1 ) ) = igk_l2g ( ig, ik - iks + 1 )
       ENDDO
     ENDIF
-    CALL mp_sum ( itmp, world_comm )
+    CALL mp_sum ( itmp, intra_bgrp_comm )
     ngg = 0
     DO ig = 1, npw_g
       IF ( itmp ( ig ) .EQ. ig ) THEN
