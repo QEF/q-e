@@ -125,13 +125,13 @@ PROGRAM wfck2r
   IF (lmatlab .and. ionode) then
      open(unit=iuwfcr+1, file='wfck2r.mat', status='unknown', form='formatted')
      write(iuwfcr+1,'(A)') '# created by wfck2r.x of Quantum-Espresso'
-     write(iuwfcr+1,'(''# name: '',A,/,''# type: scalar'',/,I,//)') 'nkpoints', (last_k-first_k+1)
-     write(iuwfcr+1,'(''# name: '',A,/,''# type: scalar'',/,I,//)') 'nbands', (last_band-first_band+1)
-     write(iuwfcr+1,'(''# name: '',A,/,''# type: scalar'',/,I,//)') 'nr1x', dffts%nr1x
-     write(iuwfcr+1,'(''# name: '',A,/,''# type: scalar'',/,I,//)') 'nr2x', dffts%nr2x
-     write(iuwfcr+1,'(''# name: '',A,/,''# type: scalar'',/,I,//)') 'nr3x', dffts%nr3x
-     write(iuwfcr+1,'(''# name: '',A,/,''# type: complex matrix'')') 'unkr'
-     write(iuwfcr+1,'(''# ndims: 5'')')
+     write(iuwfcr+1,'("# name: ",A,/,"# type: scalar",/,I4,//)') 'nkpoints', (last_k-first_k+1)
+     write(iuwfcr+1,'("# name: ",A,/,"# type: scalar",/,I4,//)') 'nbands', (last_band-first_band+1)
+     write(iuwfcr+1,'("# name: ",A,/,"# type: scalar",/,I3,//)') 'nr1x', dffts%nr1x
+     write(iuwfcr+1,'("# name: ",A,/,"# type: scalar",/,I3,//)') 'nr2x', dffts%nr2x
+     write(iuwfcr+1,'("# name: ",A,/,"# type: scalar",/,I3,//)') 'nr3x', dffts%nr3x
+     write(iuwfcr+1,'("# name: ",A,/,"# type: complex matrix")') 'unkr'
+     write(iuwfcr+1,'("# ndims: 5")')
      write(iuwfcr+1,'(5I10)') dffts%nr1x, dffts%nr2x, dffts%nr3x, last_band-first_band+1, last_k-first_k+1
   endif
 
