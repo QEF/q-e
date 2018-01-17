@@ -33,11 +33,10 @@ SUBROUTINE setup()
   ! ...    electric-field, LDA+U calculations, and for parallelism
   !
   USE kinds,              ONLY : DP
-  USE constants,          ONLY : eps8, rytoev, fpi
+  USE constants,          ONLY : eps8, rytoev, fpi, pi, degspin
   USE parameters,         ONLY : npk
   USE io_global,          ONLY : stdout
   USE io_files,           ONLY : tmp_dir, prefix, xmlpun, delete_if_present
-  USE constants,          ONLY : pi, degspin
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, omega
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : starting_pot, natomwfc
@@ -418,7 +417,7 @@ SUBROUTINE setup()
   !
   ! ... Compute the cut-off of the G vectors
   !
-  doublegrid = ( dual > 4.D0 )
+  doublegrid = ( dual > 4.0_dp + eps8 )
   IF ( doublegrid .AND. ( .NOT.okvan .AND. .NOT.okpaw .AND. &
                           .NOT. ANY (upf(1:ntyp)%nlcc)      ) ) &
        CALL infomsg ( 'setup', 'no reason to have ecutrho>4*ecutwfc' )

@@ -39,7 +39,7 @@
              !
           END IF
 
-          doublegrid = ( dual > 4.D0 )
+          doublegrid = ( dual > 4.0_dp + eps8 )
           IF ( doublegrid .AND. .NOT. okvan ) &
              CALL errore( 'setup', 'No USPP: set ecutrho=4*ecutwfc', 1 )
           ecutrho = dual * ecutwfc

@@ -351,7 +351,7 @@ SUBROUTINE read_xml_file ( )
     SUBROUTINE set_dimensions()
       !------------------------------------------------------------------------
       !
-      USE constants, ONLY : pi
+      USE constants, ONLY : pi, eps8
       USE cell_base, ONLY : alat, tpiba, tpiba2
       USE gvect,     ONLY : ecutrho, gcutm
       USE gvecs,     ONLY : gcutms, dual, doublegrid
@@ -369,7 +369,7 @@ SUBROUTINE read_xml_file ( )
       gcutm = dual * ecutwfc / tpiba2
       ecutrho=dual * ecutwfc
       !
-      doublegrid = ( dual > 4.D0 )
+      doublegrid = ( dual > 4.0_dp + eps8 )
       IF ( doublegrid ) THEN
          gcutms = 4.D0 * ecutwfc / tpiba2
       ELSE
