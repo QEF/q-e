@@ -1,0 +1,77 @@
+
+     Program PW2BGW v.6.2 (svn rev. 14038) starts on 17Jan2018 at  7:49:49 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI & OpenMP), running on       4 processor cores
+     Number of MPI processes:                 4
+     Threads/MPI process:                     1
+
+     MPI processes distributed on     1 nodes
+     K-points division:     npool     =       2
+     band groups division:  nbgrp     =       2
+
+     Reading data from directory:
+     ./si.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PZ ( 1  1  0  0 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         649     649    199                11017    11017    1917
+ 
+
+     NLCC is absent
+
+     call write_wfng
+     done write_wfng
+
+     call write_vxcg
+     done write_vxcg
+
+     call write_vxc0
+     done write_vxc0
+
+     call write_vxc_g
+     done write_vxc_g
+
+     call write_vscg
+     done write_vscg
+
+     call write_vkbg
+     done write_vkbg
+
+     call write_rhog
+     done write_rhog
+
+ 
+     write_wfng   :      0.13s CPU      0.16s WALL (       1 calls)
+     write_rhog   :      0.00s CPU      0.00s WALL (       1 calls)
+     write_vxcg   :      0.00s CPU      0.00s WALL (       1 calls)
+     write_vxc0   :      0.00s CPU      0.00s WALL (       1 calls)
+     write_vxc_g  :      0.55s CPU      0.56s WALL (       1 calls)
+     write_vscg   :      0.00s CPU      0.00s WALL (       1 calls)
+     write_vkbg   :      0.03s CPU      0.09s WALL (       1 calls)
+
+     Called by write_wfng:
+     real_wfng    :      0.02s CPU      0.02s WALL (      29 calls)
+ 
+     PW2BGW       :     0.83s CPU         1.35s WALL
+
+ 
+   This run was terminated on:   7:49:50  17Jan2018            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

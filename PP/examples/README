@@ -133,3 +133,8 @@ fermisurf_example:
     This example generate input files for FermiSurfer 
     (http://osdn.jp/projects/fermisurfer/) to display Fermi surfaces with 
     color plots of the magnitude of the Fermi velocity and orbital characters.
+
+BGW_example:
+    This example generates output files for BerkeleyGW using the pw2bgw.x
+    utility
+   
