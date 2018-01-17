@@ -5773,8 +5773,7 @@ implicit none
 
 END SUBROUTINE vexx_loc
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE compute_density(DoPrint,Shift,CenterPBC,SpreadPBC,Overlap,PsiI,PsiJ,NQR,ibnd,jbnd,& 
-                             RRhoIJ,CRhoIJ)
+SUBROUTINE compute_density(DoPrint,Shift,CenterPBC,SpreadPBC,Overlap,PsiI,PsiJ,NQR,ibnd,jbnd)
 USE constants,            ONLY : pi,  bohr_radius_angs 
 USE cell_base,            ONLY : alat, omega
 USE mp,                   ONLY : mp_sum
@@ -5792,22 +5791,13 @@ IMPLICIT NONE
   LOGICAL,  INTENT(IN) :: Shift ! .false. Centers with respect to the minimum image cell convention
                                 ! .true.  Centers shifted to the input cell
   REAL(DP),    INTENT(OUT) :: Overlap, CenterPBC(3), SpreadPBC(3)
-  REAL(DP),    INTENT(OUT), OPTIONAL :: RRhoIJ(NQR)
-  COMPLEX(DP), INTENT(OUT), OPTIONAL :: CRhoIJ(NQR)
 
-  REAL(DP) :: lenx, leny, lenz, vol, rbuff, TotSpread
-  INTEGER :: nr1, nr2, nr3
+  REAL(DP) :: vol, rbuff, TotSpread
   INTEGER :: ir, i, j, k , idx, j0, k0
   COMPLEX(DP) :: cbuff(3)
   REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0 
 
-  nr1 = dfftt%nr1x 
-  nr2 = dfftt%nr2x
-  nr3 = dfftt%nr3x
-  lenx = alat/dble(nr1) 
-  leny = alat/dble(nr2) 
-  lenz = alat/dble(nr3) 
-  vol = lenx*leny*lenz
+  vol = omega / dble(dfftt%nr1x * dfftt%nr2x * dfftt%nr3x)
 
   CenterPBC = Zero 
   SpreadPBC = Zero 
@@ -5833,12 +5823,10 @@ IMPLICIT NONE
      IF ( i .GE. dfftt%nr1 ) CYCLE
      !
      rbuff = PsiI(ir) * PsiJ(ir) / omega
-     IF(present(RRhoIJ)) RRhoIJ(ir) = rbuff 
-     IF(present(CRhoIJ)) CRhoIJ(ir) = (One,Zero) * rbuff + (Zero, One) * Zero
      Overlap = Overlap + abs(rbuff)*vol
-     cbuff(1) = cbuff(1) + rbuff*exp((Zero,One)*Two*pi*DBLE(i)/DBLE(nr1))*vol 
-     cbuff(2) = cbuff(2) + rbuff*exp((Zero,One)*Two*pi*DBLE(j)/DBLE(nr2))*vol
-     cbuff(3) = cbuff(3) + rbuff*exp((Zero,One)*Two*pi*DBLE(k)/DBLE(nr3))*vol
+     cbuff(1) = cbuff(1) + rbuff*exp((Zero,One)*Two*pi*DBLE(i)/DBLE(dfftt%nr1x))*vol 
+     cbuff(2) = cbuff(2) + rbuff*exp((Zero,One)*Two*pi*DBLE(j)/DBLE(dfftt%nr2x))*vol
+     cbuff(3) = cbuff(3) + rbuff*exp((Zero,One)*Two*pi*DBLE(k)/DBLE(dfftt%nr3x))*vol
   ENDDO
 
   call mp_sum(cbuff,intra_bgrp_comm)
