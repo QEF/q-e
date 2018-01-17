@@ -79,8 +79,7 @@ subroutine setup_dgc
         !
         rhogout(:,is) = psic(dfftp%nl(:))
         !
-        !
-        CALL gradrho(dfftp, rhogout(1,is), g, grho(1,1,is) )
+        CALL fft_gradient_g2r(dfftp, rhogout(1,is), g, grho(1,1,is) )
         !
      END DO
      DEALLOCATE(rhogout)
@@ -95,7 +94,7 @@ subroutine setup_dgc
         enddo
      endif
      do is = 1, nspin_gga
-        call gradrho (dfftp, rho%of_g (1, is), g, grho (1, 1, is) )
+        call fft_gradient_g2r (dfftp, rho%of_g (1, is), g, grho (1, 1, is) )
      enddo
   END IF
 

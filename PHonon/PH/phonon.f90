@@ -36,7 +36,7 @@ PROGRAM phonon
   ! Not implemented in ph.x:
   ! [6] [5] + constraints on the magnetization
   ! [7] Hubbard U
-  ! [8] Hybrid functionals
+  ! [8] Hybrid and meta-GGA functionals
   ! [9] External Electric field
   ! [10] nonperiodic boundary conditions.
 

@@ -73,7 +73,7 @@ subroutine stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
      rho(:,is)  = fac * rho_core(:)  + rho(:,is)
      rhog(:,is) = fac * rhog_core(:) + rhog(:,is)
      !
-     CALL gradrho( dfft, rhog(1,is), g, grho(1,1,is) )
+     CALL fft_gradient_g2r( dfft, rhog(1,is), g, grho(1,1,is) )
      !
   END DO
   !

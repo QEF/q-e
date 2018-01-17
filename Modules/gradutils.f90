@@ -26,13 +26,13 @@ SUBROUTINE external_gradient( a, grada )
   REAL( DP ), INTENT(OUT)  :: grada( 3, dfftp%nnr )
 
 ! A in real space, grad(A) in real space
-  CALL ffT_gradient( dfftp, a, g, grada )
+  CALL fft_gradient_r2r( dfftp, a, g, grada )
 
   RETURN
 
 END SUBROUTINE external_gradient
 !----------------------------------------------------------------------------
-SUBROUTINE fft_gradient( dfft, a, g, ga )
+SUBROUTINE fft_gradient_r2r( dfft, a, g, ga )
   !----------------------------------------------------------------------------
   !
   ! ... Calculates ga = \grad a
@@ -96,8 +96,142 @@ SUBROUTINE fft_gradient( dfft, a, g, ga )
   !
   RETURN
   !
-END SUBROUTINE fft_gradient
+END SUBROUTINE fft_gradient_r2r
 !--------------------------------------------------------------------
+!
+!----------------------------------------------------------------------------
+SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Calculates ga = \grad a - like fft_gradient with a(G) instead of a(r)
+  ! ... input : dfft     FFT descriptor
+  ! ...         a(:)     a(G), a complex function in G-space
+  ! ...         g(3,:)   G-vectors, in 2pi/a units
+  ! ... output: ga(3,:)  \grad a, real, on the real-space FFT grid
+  !
+  USE cell_base, ONLY : tpiba
+  USE kinds,     ONLY : DP
+  USE control_flags, ONLY : gamma_only
+  USE fft_interfaces,ONLY : invfft
+  USE fft_types, ONLY : fft_type_descriptor
+  !
+  IMPLICIT NONE
+  !
+  TYPE(fft_type_descriptor),INTENT(IN) :: dfft
+  COMPLEX(DP), INTENT(IN)  :: a(dfft%ngm)
+  REAL(DP),    INTENT(IN)  :: g(3,dfft%ngm)
+  REAL(DP),    INTENT(OUT) :: ga(3,dfft%nnr)
+  !
+  INTEGER                  :: ipol
+  COMPLEX(DP), ALLOCATABLE :: gaux(:)
+  !
+  !
+  ALLOCATE( gaux( dfft%nnr ) )
+  !
+  ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
+  !
+  ga(:,:) = 0.D0
+  !
+  DO ipol = 1, 3
+     !
+     gaux(:) = (0.0_dp,0.0_dp)
+     !
+     gaux(dfft%nl(:)) = g(ipol,:) * CMPLX( -AIMAG(a(:)), REAL(a(:)), kind=DP)
+     !
+     IF ( gamma_only ) THEN
+        !
+        gaux(dfft%nlm(:)) = CMPLX(  REAL( gaux(dfft%nl(:)) ), &
+                                  -AIMAG( gaux(dfft%nl(:)) ), kind=DP)
+        !
+     END IF
+     !
+     ! ... bring back to R-space, (\grad_ipol a)(r) ...
+     !
+     CALL invfft ('Rho', gaux, dfft)
+     !
+     ! ...and add the factor 2\pi/a  missing in the definition of G
+     !
+     ga(ipol,:) = ga(ipol,:) + tpiba * REAL( gaux(:) )
+     !
+  END DO
+  !
+  DEALLOCATE( gaux )
+  !
+  RETURN
+  !
+END SUBROUTINE fft_gradient_g2r
+
+!----------------------------------------------------------------------------
+SUBROUTINE fft_graddot( dfft, a, g, da )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Calculates da = \sum_i \grad_i a_i in R-space
+  ! ... input : dfft     FFT descriptor
+  ! ...         a(3,:)   a real function on the real-space FFT grid
+  ! ...         g(3,:)   G-vectors, in 2pi/a units
+  ! ... output: ga(:)    \sum_i \grad_i a_i, real, on the real-space FFT grid
+  !
+  USE cell_base, ONLY : tpiba
+  USE kinds,     ONLY : DP
+  USE control_flags, ONLY : gamma_only
+  USE fft_interfaces,ONLY : fwfft, invfft
+  USE fft_types, ONLY : fft_type_descriptor
+  !
+  IMPLICIT NONE
+  !
+  TYPE(fft_type_descriptor),INTENT(IN) :: dfft
+  REAL(DP), INTENT(IN)     :: a(3,dfft%nnr), g(3,dfft%ngm)
+  REAL(DP), INTENT(OUT)    :: da(dfft%nnr)
+  !
+  INTEGER                  :: n, ipol
+  COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
+  !
+  !
+  ALLOCATE( aux(dfft%nnr), gaux(dfft%nnr) )
+  !
+  gaux(:) = (0.0_dp,0.0_dp)
+  !
+  DO ipol = 1, 3
+     !
+     aux = CMPLX( a(ipol,:), 0.0_dp, kind=DP)
+     !
+     ! ... bring a(ipol,r) to G-space, a(G) ...
+     !
+     CALL fwfft ('Rho', aux, dfft)
+     !
+     DO n = 1, dfft%ngm
+        !
+        gaux(dfft%nl(n)) = gaux(dfft%nl(n)) + g(ipol,n) * &
+             CMPLX( -AIMAG( aux(dfft%nl(n)) ), &
+                      REAL( aux(dfft%nl(n)) ), kind=DP)
+        !
+     END DO
+    !
+  END DO
+  !
+  IF ( gamma_only ) THEN
+     !
+     DO n = 1, dfft%ngm
+        !
+        gaux(dfft%nlm(n)) = CONJG( gaux(dfft%nl(n)) )
+        !
+     END DO
+     !
+  END IF
+  !
+  ! ... bring back to R-space, (\grad_ipol a)(r) ...
+  !
+  CALL invfft ('Rho', gaux, dfft)
+  !
+  ! ... add the factor 2\pi/a  missing in the definition of G and sum
+  !
+  da(:) = tpiba * REAL( gaux(:) )
+  !
+  DEALLOCATE( aux, gaux )
+  !
+  RETURN
+  !
+END SUBROUTINE fft_graddot
 
 !--------------------------------------------------------------------
 ! Routines computing laplacian via FFT
