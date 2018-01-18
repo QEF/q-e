@@ -38,7 +38,7 @@ SUBROUTINE fft_gradient_r2r( dfft, a, g, ga )
   ! ... Calculates ga = \grad a
   ! ... input : dfft     FFT descriptor
   ! ...         a(:)     a real function on the real-space FFT grid
-  ! ...         g(3,:)   G-vectors, in 2pi/a units
+  ! ...         g(3,:)   G-vectors, in 2\pi/a units
   ! ... output: ga(3,:)  \grad a, real, on the real-space FFT grid
   !
   USE kinds,     ONLY : DP
@@ -97,7 +97,63 @@ SUBROUTINE fft_gradient_r2r( dfft, a, g, ga )
   RETURN
   !
 END SUBROUTINE fft_gradient_r2r
+!
 !--------------------------------------------------------------------
+SUBROUTINE fft_qgradient (dfft, a, xq, g, ga)
+  !--------------------------------------------------------------------
+  !
+  ! Like fft_gradient_r2r, for complex arrays having a e^{iqr} behavior
+  ! ... input : dfft     FFT descriptor
+  ! ...         a(:)     a complex function on the real-space FFT grid
+  ! ...         xq(3)    q-vector, in 2\pi/a units
+  ! ...         g(3,:)   G-vectors, in 2\pi/a units
+  ! ... output: ga(3,:)  \grad a, complex, on the real-space FFT grid
+  !
+  USE kinds,     ONLY: dp
+  USE cell_base, ONLY: tpiba
+  USE fft_types, ONLY : fft_type_descriptor
+  USE fft_interfaces, ONLY: fwfft, invfft
+  !
+  IMPLICIT NONE
+  !
+  TYPE(fft_type_descriptor),INTENT(IN) :: dfft
+  !
+  COMPLEX(DP), INTENT(IN)  :: a(dfft%nnr)
+  REAL(DP), INTENT(IN):: xq(3), g(3,dfft%ngm)
+  COMPLEX(DP), INTENT(OUT) :: ga(3,dfft%nnr)
+
+  INTEGER  :: n, ipol
+  COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
+
+  ALLOCATE (gaux(dfft%nnr))
+  ALLOCATE (aux (dfft%nnr))
+
+  ! bring a(r) to G-space, a(G) ...
+  aux (:) = a(:)
+
+  CALL fwfft ('Rho', aux, dfft)
+  ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
+  DO ipol = 1, 3
+     gaux (:) = (0.0_dp, 0.0_dp)
+     DO n = 1, dfft%ngm
+        gaux(dfft%nl(n)) = CMPLX( 0.0_dp, xq (ipol) + g(ipol,n), kind=DP ) * &
+             aux (dfft%nl(n))
+     END DO
+     ! bring back to R-space, (\grad_ipol a)(r) ...
+
+     CALL invfft ('Rho', gaux, dfft)
+     ! ...and add the factor 2\pi/a  missing in the definition of q+G
+     DO n = 1, dfft%nnr
+        ga (ipol,n) = gaux (n) * tpiba
+     END DO
+  END DO
+
+  DEALLOCATE (aux)
+  DEALLOCATE (gaux)
+
+  RETURN
+
+END SUBROUTINE fft_qgradient
 !
 !----------------------------------------------------------------------------
 SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
@@ -106,7 +162,7 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
   ! ... Calculates ga = \grad a - like fft_gradient with a(G) instead of a(r)
   ! ... input : dfft     FFT descriptor
   ! ...         a(:)     a(G), a complex function in G-space
-  ! ...         g(3,:)   G-vectors, in 2pi/a units
+  ! ...         g(3,:)   G-vectors, in 2\pi/a units
   ! ... output: ga(3,:)  \grad a, real, on the real-space FFT grid
   !
   USE cell_base, ONLY : tpiba
@@ -168,7 +224,7 @@ SUBROUTINE fft_graddot( dfft, a, g, da )
   ! ... Calculates da = \sum_i \grad_i a_i in R-space
   ! ... input : dfft     FFT descriptor
   ! ...         a(3,:)   a real function on the real-space FFT grid
-  ! ...         g(3,:)   G-vectors, in 2pi/a units
+  ! ...         g(3,:)   G-vectors, in 2\pi/a units
   ! ... output: ga(:)    \sum_i \grad_i a_i, real, on the real-space FFT grid
   !
   USE cell_base, ONLY : tpiba
@@ -234,6 +290,59 @@ SUBROUTINE fft_graddot( dfft, a, g, da )
 END SUBROUTINE fft_graddot
 
 !--------------------------------------------------------------------
+SUBROUTINE fft_qgraddot ( dfft, a, xq, g, da)
+  !--------------------------------------------------------------------
+  !
+  ! Like fft_graddot, for complex arrays having a e^{iqr} dependency
+  ! ... input : dfft     FFT descriptor
+  ! ...         a(3,:)   a complex function on the real-space FFT grid
+  ! ...         xq(3)    q-vector, in 2\pi/a units
+  ! ...         g(3,:)   G-vectors, in 2\pi/a units
+  ! ... output: ga(:)    \sum_i \grad_i a_i, complex, on the real-space FFT grid
+  !
+  USE kinds,          ONLY : DP
+  USE control_flags,  ONLY : gamma_only
+  USE cell_base,      ONLY : tpiba
+  USE fft_interfaces, ONLY : fwfft, invfft
+  USE fft_types, ONLY : fft_type_descriptor
+  !
+  IMPLICIT NONE
+  !
+  TYPE(fft_type_descriptor),INTENT(IN) :: dfft
+  COMPLEX(DP), INTENT(IN)  :: a(3,dfft%nnr)
+  REAL(DP), INTENT(IN)     :: xq(3), g(3,dfft%ngm)
+  COMPLEX(DP), INTENT(OUT) :: da(dfft%nnr)
+  
+  INTEGER :: n, ipol
+  COMPLEX(DP), allocatable :: aux (:)
+
+  ALLOCATE (aux (dfft%nnr))
+  da(:) = (0.0_dp, 0.0_dp)
+  DO ipol = 1, 3
+     ! copy a(ipol,r) to a complex array...
+     DO n = 1, dfft%nnr
+        aux (n) = a (ipol, n)
+     END DO
+     ! bring a(ipol,r) to G-space, a(G) ...
+     CALL fwfft ('Rho', aux, dfft)
+     ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
+     DO n = 1, dfft%ngm
+        da (dfft%nl(n)) = da (dfft%nl(n)) + &
+             CMPLX(0.0_dp, xq (ipol) + g (ipol, n),kind=DP) * aux(dfft%nl(n))
+     END DO
+  END DO
+  !  bring back to R-space, (\grad_ipol a)(r) ...
+  CALL invfft ('Rho', da, dfft)
+  ! ...add the factor 2\pi/a  missing in the definition of q+G
+  da (:) = da (:) * tpiba
+
+  DEALLOCATE(aux)
+
+  RETURN
+ 
+END SUBROUTINE fft_qgraddot
+
+!--------------------------------------------------------------------
 ! Routines computing laplacian via FFT
 !--------------------------------------------------------------------
 
@@ -267,7 +376,7 @@ SUBROUTINE fft_laplacian( dfft, a, gg, lapla )
   ! ... Calculates lapla = laplacian(a)
   ! ... input : dfft     FFT descriptor
   ! ...         a(:)     a real function on the real-space FFT grid
-  ! ...         gg(:)    square modules of G-vectors, in (2pi/a)^2 units
+  ! ...         gg(:)    square modules of G-vectors, in (2\pi/a)^2 units
   ! ... output: lapla(:) \nabla^2 a, real, on the real-space FFT grid
   !
   USE kinds,     ONLY : DP
@@ -338,7 +447,7 @@ SUBROUTINE fft_hessian( dfft, a, g, ga, ha )
   ! ... Calculates ga = \grad a and ha = hessian(a)
   ! ... input : dfft     FFT descriptor
   ! ...         a(:)     a real function on the real-space FFT grid
-  ! ...         g(3,:)   G-vectors, in (2pi/a)^2 units
+  ! ...         g(3,:)   G-vectors, in (2\pi/a)^2 units
   ! ... output: ga(3,:)  \grad a, real, on the real-space FFT grid
   ! ...         ha(3,3,:)  hessian(a), real, on the real-space FFT grid
   !
