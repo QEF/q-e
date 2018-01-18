@@ -5797,7 +5797,7 @@ IMPLICIT NONE
   COMPLEX(DP) :: cbuff(3)
   REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0 
 
-  vol = omega / dble(dfftt%nr1x * dfftt%nr2x * dfftt%nr3x)
+  vol = omega / dble(dfftt%nr1 * dfftt%nr2 * dfftt%nr3)
 
   CenterPBC = Zero 
   SpreadPBC = Zero 
@@ -5824,9 +5824,9 @@ IMPLICIT NONE
      !
      rbuff = PsiI(ir) * PsiJ(ir) / omega
      Overlap = Overlap + abs(rbuff)*vol
-     cbuff(1) = cbuff(1) + rbuff*exp((Zero,One)*Two*pi*DBLE(i)/DBLE(dfftt%nr1x))*vol 
-     cbuff(2) = cbuff(2) + rbuff*exp((Zero,One)*Two*pi*DBLE(j)/DBLE(dfftt%nr2x))*vol
-     cbuff(3) = cbuff(3) + rbuff*exp((Zero,One)*Two*pi*DBLE(k)/DBLE(dfftt%nr3x))*vol
+     cbuff(1) = cbuff(1) + rbuff*exp((Zero,One)*Two*pi*DBLE(i)/DBLE(dfftt%nr1))*vol 
+     cbuff(2) = cbuff(2) + rbuff*exp((Zero,One)*Two*pi*DBLE(j)/DBLE(dfftt%nr2))*vol
+     cbuff(3) = cbuff(3) + rbuff*exp((Zero,One)*Two*pi*DBLE(k)/DBLE(dfftt%nr3))*vol
   ENDDO
 
   call mp_sum(cbuff,intra_bgrp_comm)
