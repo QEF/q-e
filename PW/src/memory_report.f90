@@ -386,10 +386,10 @@ SUBROUTINE memory_report()
   maxram = ram + ram_
   !
   ! arrays used for global sorting in ggen:
-  !    mill_g, mill_unsorted, igsrt, g2sort_g, total dimensions:
+  !    igsrt, g2l, g2sort_g, total dimensions:
   !
   IF ( .NOT. smallmem ) maxram = MAX ( maxram, &
-       int_size * 7 * ngm_g + real_size * ngm_g )
+       int_size * 2 * ngm_g + real_size * ngm_g )
   !
   totram = maxram * nproc_image
   IF ( iverbosity > 0 ) THEN
