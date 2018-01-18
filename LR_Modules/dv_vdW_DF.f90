@@ -20,7 +20,7 @@ MODULE ph_vdW_DF
   USE control_flags,     ONLY : iverbosity, gamma_only
   USE io_global,         ONLY : stdout
   USE vdW_DF,            ONLY : vdw_type, initialize_spline_interpolation, &
-                                numerical_gradient, interpolate_kernel
+                                interpolate_kernel
   USE gc_lr,             ONLY : grho
   
 
@@ -145,8 +145,8 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
 
     !! Global variables
     allocate(total_rho(dfftp%nnr) )
-    allocate(gradient_rho(dfftp%nnr, 3))
-    allocate(gradient_drho(dfftp%nnr, 3))
+    allocate(gradient_rho(3,dfftp%nnr))
+    allocate(gradient_drho(dfftp%nnr,3))
     allocate(q0(dfftp%nnr), q(dfftp%nnr))    
     allocate(dq0_dq(dfftp%nnr), d2q0_dq2(dfftp%nnr))
     allocate(dq_dn_n(dfftp%nnr), dn_dq_dn_n_n(dfftp%nnr), dq_dgradn_n_gmod(dfftp%nnr))
@@ -179,7 +179,7 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     !! -------------------------------------------------------------------------     
 
     total_rho(:) = rho(:,1)
-    call numerical_gradient(total_rho,gradient_rho)
+    call fft_gradient_r2r(dfftp,total_rho,g,gradient_rho)
     CALL qgradient (q_point, dfftp%nnr, drho(:,1), ngm, g, dfftp%nl, alat, gradient_drho)
 
     !! -------------------------------------------------------------------------
@@ -297,7 +297,7 @@ subroutine get_delta_v(rho, drho, nspin, q_point, delta_v)
     allocate(delta_h_aux(dfftp%nnr))
 
     do icar = 1,3
-       delta_h(:) = (h1t(:) * gradient_rho(:,icar)+ h2t(:) * gradient_drho(:,icar))
+       delta_h(:) = (h1t(:) * gradient_rho(icar,:)+ h2t(:) * gradient_drho(:,icar))
 
        CALL fwfft ('Rho', delta_h, dfftp) 
 
@@ -423,10 +423,10 @@ end subroutine get_delta_v
     !!
     !! Fractions
     !!
-    gmod = sqrt(gradient_rho(i_grid,1)**2+gradient_rho(i_grid,2)**2+gradient_rho(i_grid,3)**2)
-    gradn_graddeltan = gradient_rho(i_grid,1)*gradient_drho(i_grid,1) + &
-                       gradient_rho(i_grid,2)*gradient_drho(i_grid,2) + &
-                       gradient_rho(i_grid,3)*gradient_drho(i_grid,3)
+    gmod = sqrt(gradient_rho(1,i_grid)**2+gradient_rho(2,i_grid)**2+gradient_rho(3,i_grid)**2)
+    gradn_graddeltan = gradient_rho(1,i_grid)*gradient_drho(i_grid,1) + &
+                       gradient_rho(2,i_grid)*gradient_drho(i_grid,2) + &
+                       gradient_rho(3,i_grid)*gradient_drho(i_grid,3)
 
   END SUBROUTINE get_thetas_exentended
 
@@ -503,9 +503,9 @@ end subroutine get_delta_v
      sqrt_r_s = sqrt(r_s)
      
      gc = -Z_ab/(36.0D0*kF*total_rho(i_grid)**2) &
-          * (gradient_rho(i_grid,1)**2+gradient_rho(i_grid,2)**2+gradient_rho(i_grid,3)**2)
+          * (gradient_rho(1,i_grid)**2+gradient_rho(2,i_grid)**2+gradient_rho(3,i_grid)**2)
      
-     gmod = sqrt(gradient_rho(i_grid,1)**2+gradient_rho(i_grid,2)**2+gradient_rho(i_grid,3)**2) 
+     gmod = sqrt(gradient_rho(1,i_grid)**2+gradient_rho(2,i_grid)**2+gradient_rho(3,i_grid)**2) 
      
      LDA_1 =  8.0D0*pi/3.0D0*(LDA_A*(1.0D0+LDA_a1*r_s))
      LDA_2 =  2.0D0*LDA_A * (LDA_b1*sqrt_r_s + LDA_b2*r_s + LDA_b3*r_s*sqrt_r_s + LDA_b4*r_s*r_s)
@@ -725,5 +725,9 @@ subroutine qgradient (xq, nrxx, a, ngm, g, nl, alat, ga)
 
 end subroutine qgradient
 
+
+   ! ####################################################################
+   !                          |              |
+   !                          | thetas_to_uk |
 END MODULE ph_vdW_DF 
 

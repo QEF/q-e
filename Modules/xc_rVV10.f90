@@ -31,7 +31,6 @@ MODULE rVV10
   public :: xc_rVV10,  &
             interpolate_kernel, &
             initialize_spline_interpolation, &
-            numerical_gradient, &
             stress_rVV10, b_value
 
 CONTAINS
@@ -120,7 +119,7 @@ CONTAINS
     !! ---------------------------------------------------------------------------------------
 
     allocate( q0(dfftp%nnr) )
-    allocate( gradient_rho(dfftp%nnr, 3) )
+    allocate( gradient_rho(3,dfftp%nnr) )
     allocate( dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
     allocate( total_rho(dfftp%nnr) )
    
@@ -137,7 +136,7 @@ CONTAINS
     !! -------------------------------------------------------------------------
     !! Here we calculate the gradient in reciprocal space using FFT
     !! -------------------------------------------------------------------------
-    call numerical_gradient(total_rho,gradient_rho)
+    call fft_gradient_r2r( dfftp, total_rho, g, gradient_rho)
 
     !! -------------------------------------------------------------------------
     !! Get Q and all the derivatives
@@ -271,7 +270,7 @@ CONTAINS
       !! Allocations
       !! ---------------------------------------------------------------------------------------
 
-      allocate( gradient_rho(dfftp%nnr, 3) )
+      allocate( gradient_rho(3,dfftp%nnr) )
       allocate( total_rho(dfftp%nnr) )
       allocate( q0(dfftp%nnr) )
       allocate( dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
@@ -291,7 +290,7 @@ CONTAINS
       !! -------------------------------------------------------------------------
       !! Here we calculate the gradient in reciprocal space using FFT
       !! -------------------------------------------------------------------------
-      call numerical_gradient(total_rho,gradient_rho)
+      call fft_gradient_r2r( dfftp, total_rho, g, gradient_rho)
       
       !! -------------------------------------------------------------------------------------------------------------
       !! Get q0.
@@ -460,7 +459,7 @@ CONTAINS
                           do m = 1, l
                                         
                               sigma (l, m) = sigma (l, m) -  prefactor * &
-                                             (gradient_rho(i_grid,l) * gradient_rho(i_grid,m))
+                                             (gradient_rho(l,i_grid) * gradient_rho(m,i_grid))
                            enddo
                         enddo
                      endif
@@ -586,9 +585,9 @@ CONTAINS
           
      if (total_rho(i_grid) > epsr) then
 
-      gmod2 = gradient_rho(i_grid,1)**2 + &
-              gradient_rho(i_grid,2)**2 + &
-              gradient_rho(i_grid,3)**2
+      gmod2 = gradient_rho(1,i_grid)**2 + &
+              gradient_rho(2,i_grid)**2 + &
+              gradient_rho(3,i_grid)**2
  
        !! Calculate some intermediate values needed to find q
        !! ------------------------------------------------------------------------------------
@@ -1011,59 +1010,6 @@ subroutine interpolate_Dkernel_Dk(k, dkernel_of_dk)
   
 end subroutine interpolate_Dkernel_Dk 
 
-
-
-!! ###############################################################################################################
-!!                                       |                       |
-!!                                       |   NUMERICAL_GRADIENT  |
-!!                                       |_______________________|
-
-
-!! Calculates the gradient of the charge density numerically on the grid.  We use
-!! the PWSCF gradient style.
-
-subroutine numerical_gradient(total_rho, gradient_rho)
-
-   use gvect,             ONLY : ngm, g
-   USE cell_base,         ONLY : tpiba
-   USE fft_base,          ONLY : dfftp
-   USE fft_interfaces,    ONLY : fwfft, invfft 
-   !
-   ! I/O variables
-   !
-   real(dp), intent(in) :: total_rho(:)        !! Input array holding total charge density.
- 
-   real(dp), intent(out) :: gradient_rho(:,:) !! Output array that will holds the gradient
-   !                                          !! of the charge density.
-   ! local variables
-   !
-   integer :: icar                            !! counter on cartesian components
-   complex(dp), allocatable :: c_rho(:)       !! auxiliary complex array for rho
-   complex(dp), allocatable :: c_grho(:)      !! auxiliary complex array for grad rho
- 
-   ! rho in G space
-   allocate ( c_rho(dfftp%nnr), c_grho(dfftp%nnr) )
-   c_rho(1:dfftp%nnr) = CMPLX(total_rho(1:dfftp%nnr),0.0_DP)
-   CALL fwfft ('Rho', c_rho, dfftp) 
- 
-   do icar=1,3
-      ! compute gradient in G space
-      c_grho(:) =CMPLX(0.0_DP,0.0_DP)
-      c_grho(dfftp%nl(:)) = CMPLX (0.0_DP,1.0_DP) * tpiba * g(icar,:) * c_rho(dfftp%nl(:))
-      if (gamma_only) c_grho( dfftp%nlm(:) ) = CONJG( c_grho( dfftp%nl(:) ) )
- 
-      ! back in real space
-      CALL invfft ('Rho', c_grho, dfftp) 
-      gradient_rho(:,icar) = REAL( c_grho(:) )
-   end do
-   deallocate ( c_rho, c_grho )
-
-   !gradient_rho = 0.0D0
-   return
-
-end subroutine numerical_gradient
-
-
 !! #################################################################################################
 !!                                          |              |
 !!                                          | thetas_to_uk |
@@ -1311,7 +1257,7 @@ end subroutine vdW_energy
     end do
 
     do icar = 1,3
-      h(:) = CMPLX(h_prefactor(:) * gradient_rho(:,icar),0.0_DP)
+      h(:) = CMPLX(h_prefactor(:) * gradient_rho(icar,:),0.0_DP)
       CALL fwfft ('Rho', h, dfftp) 
       h(dfftp%nl(:)) = CMPLX(0.0_DP,1.0_DP) * tpiba * g(icar,:) * h(dfftp%nl(:))
       if (gamma_only) h(dfftp%nlm(:)) = CONJG(h(dfftp%nl(:)))

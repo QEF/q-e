@@ -70,7 +70,7 @@ integer :: vdw_type = 1
 
 private
 public  :: xc_vdW_DF, xc_vdW_DF_spin, stress_vdW_DF, interpolate_kernel, &
-           vdw_type, numerical_gradient, initialize_spline_interpolation
+           vdw_type, initialize_spline_interpolation
 
 CONTAINS
 
@@ -228,7 +228,7 @@ CONTAINS
 
   real(dp), allocatable :: grad_rho(:,:)         ! The gradient of the charge density. The
                                                  ! format is as follows:
-                                                 ! grad_rho(grid_point, cartesian_component).
+                                                 ! grad_rho(cartesian_component,grid_point).
 
   real(dp), allocatable :: potential(:)          ! The vdW contribution to the potential
 
@@ -278,7 +278,8 @@ CONTAINS
   ! Allocate arrays. nnr is a PWSCF variable that holds the number of
   ! points assigned to a given processor.
 
-  allocate( q0(dfftp%nnr), dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr), grad_rho(dfftp%nnr, 3) )
+  allocate( q0(dfftp%nnr), dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr), &
+       grad_rho(3,dfftp%nnr) )
   allocate( total_rho(dfftp%nnr), potential(dfftp%nnr), thetas(dfftp%nnr, Nqs) )
 
 
@@ -294,7 +295,7 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Here we calculate the gradient in reciprocal space using FFT.
 
-  call numerical_gradient (total_rho, grad_rho)
+  call fft_gradient_r2r (dfftp, total_rho, g, grad_rho)
 
 
   ! --------------------------------------------------------------------
@@ -398,13 +399,11 @@ CONTAINS
 
   real(dp), allocatable :: grad_rho(:,:)        ! The gradient of the charge density. The
                                                 ! format is as follows:
-                                                ! grad_rho(grid_point, cartesian_component)
-  real(dp), allocatable :: grad_rho_up(:,:)     ! The gradient of the up charge density. The
-                                                ! format is as follows:
-                                                ! grad_rho(grid_point, cartesian_component)
-  real(dp), allocatable :: grad_rho_down(:,:)   ! The gradient of the down charge density. The
-                                                ! format is as follows:
-                                                ! grad_rho(grid_point, cartesian_component)
+                                                ! grad_rho(cartesian_component,grid_point)
+  real(dp), allocatable :: grad_rho_up(:,:)     ! The gradient of the up charge density.
+                                                ! Same format as grad_rho
+  real(dp), allocatable :: grad_rho_down(:,:)   ! The gradient of the down charge density.
+                                                ! Same format as grad_rho
 
   real(dp), allocatable :: potential_up(:)      ! The vdW contribution to the potential.
   real(dp), allocatable :: potential_down(:)    ! The vdW contribution to the potential.
@@ -461,11 +460,11 @@ CONTAINS
   ! Allocate arrays. nnr is a PWSCF variable that holds the number of
   ! points assigned to a given processor.
 
-  allocate( q0(dfftp%nnr), total_rho(dfftp%nnr), grad_rho(dfftp%nnr, 3) )
+  allocate( q0(dfftp%nnr), total_rho(dfftp%nnr), grad_rho(3,dfftp%nnr) )
   allocate( rho_up(dfftp%nnr), rho_down(dfftp%nnr) )
   allocate( dq0_drho_up (dfftp%nnr), dq0_dgradrho_up  (dfftp%nnr) )
   allocate( dq0_drho_down(dfftp%nnr), dq0_dgradrho_down(dfftp%nnr) )
-  allocate( grad_rho_up(dfftp%nnr, 3), grad_rho_down(dfftp%nnr, 3) )
+  allocate( grad_rho_up(3,dfftp%nnr), grad_rho_down(3,dfftp%nnr) )
   allocate( potential_up(dfftp%nnr), potential_down(dfftp%nnr) )
   allocate( thetas(dfftp%nnr, Nqs) )
 
@@ -489,10 +488,9 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Here we calculate the gradient in reciprocal space using FFT.
 
-  call numerical_gradient ( total_rho, grad_rho      )
-  call numerical_gradient ( rho_up,    grad_rho_up   )
-  call numerical_gradient ( rho_down,  grad_rho_down )
-
+  call fft_gradient_r2r (dfftp, total_rho, g, grad_rho)
+  call fft_gradient_r2r (dfftp, rho_up,    g, grad_rho_up)
+  call fft_gradient_r2r (dfftp, rho_down,  g, grad_rho_down)
 
   ! --------------------------------------------------------------------
   ! Find the value of q0 for all assigned grid points. q is defined in
@@ -634,7 +632,7 @@ CONTAINS
 
      r_s = ( 3.0D0 / (4.0D0*pi*rho) )**(1.0D0/3.0D0)
 
-     s   = sqrt( grad_rho(i_grid,1)**2 + grad_rho(i_grid,2)**2 + grad_rho(i_grid,3)**2 ) &
+     s   = sqrt( grad_rho(1,i_grid)**2 + grad_rho(2,i_grid)**2 + grad_rho(3,i_grid)**2 ) &
          / (2.0D0 * kF(rho) * rho )
 
 
@@ -799,15 +797,15 @@ CONTAINS
 
 
      if (calc_qx_up) then
-        s_up    = sqrt( grad_rho_up(i_grid,1)**2 + grad_rho_up(i_grid,2)**2 + &
-                  grad_rho_up(i_grid,3)**2 ) / (2.0D0 * kF(up) * up)
+        s_up    = sqrt( grad_rho_up(1,i_grid)**2 + grad_rho_up(2,i_grid)**2 + &
+                  grad_rho_up(3,i_grid)**2 ) / (2.0D0 * kF(up) * up)
         qx_up   = kF(2.0D0*up) * Fs(fac*s_up)
         CALL saturate_q (qx_up, 4.0D0*q_cut, q0x_up, dq0x_up_dq)
      end if
 
      if (calc_qx_down) then
-        s_down  = sqrt( grad_rho_down(i_grid,1)**2 + grad_rho_down(i_grid,2)**2 + &
-                  grad_rho_down(i_grid,3)**2) / (2.0D0 * kF(down) * down)
+        s_down  = sqrt( grad_rho_down(1,i_grid)**2 + grad_rho_down(2,i_grid)**2 + &
+                  grad_rho_down(3,i_grid)**2) / (2.0D0 * kF(down) * down)
         qx_down = kF(2.0D0*down) * Fs(fac*s_down)
         CALL saturate_q (qx_down, 4.0D0*q_cut, q0x_down, dq0x_down_dq)
      end if
@@ -1212,10 +1210,10 @@ CONTAINS
 
   do icar = 1,3
 
-     h(:) = CMPLX( h_prefactor(:) * grad_rho(:,icar), 0.0_DP )
+     h(:) = CMPLX( h_prefactor(:) * grad_rho(icar,:), 0.0_DP )
 
      do i_grid = 1, dfftp%nnr
-        gradient2 = grad_rho(i_grid,1)**2 + grad_rho(i_grid,2)**2 + grad_rho(i_grid,3)**2
+        gradient2 = grad_rho(1,i_grid)**2 + grad_rho(2,i_grid)**2 + grad_rho(3,i_grid)**2
         if ( gradient2 > 0.0D0 ) h(i_grid) = h(i_grid) / SQRT( gradient2 )
      end do
 
@@ -1587,7 +1585,7 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Allocations
 
-  allocate( grad_rho(dfftp%nnr, 3) )
+  allocate( grad_rho(3,dfftp%nnr) )
   allocate( total_rho(dfftp%nnr) )
   allocate( q0(dfftp%nnr) )
   allocate( dq0_drho(dfftp%nnr), dq0_dgradrho(dfftp%nnr) )
@@ -1608,8 +1606,7 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Here we calculate the gradient in reciprocal space using FFT.
 
-  call numerical_gradient (total_rho, grad_rho)
-
+  call fft_gradient_r2r (dfftp, total_rho,  g, grad_rho)
 
   ! --------------------------------------------------------------------
   ! Get q0.
@@ -1720,7 +1717,7 @@ CONTAINS
 
      q_low = 1
      q_hi  = Nqs
-     grad2 = sqrt( grad_rho(i_grid,1)**2 + grad_rho(i_grid,2)**2 + grad_rho(i_grid,3)**2 )
+     grad2 = sqrt( grad_rho(1,i_grid)**2 + grad_rho(2,i_grid)**2 + grad_rho(3,i_grid)**2 )
 
      if ( grad2 == 0.0_dp ) cycle
      ! -----------------------------------------------------------------
@@ -1762,7 +1759,7 @@ CONTAINS
             do m = 1, l
 
                 sigma (l, m) = sigma (l, m) -  e2 * prefactor * &
-                               (grad_rho(i_grid,l) * grad_rho(i_grid,m))
+                               (grad_rho(l,i_grid) * grad_rho(m,i_grid))
             end do
         end do
 
@@ -1920,75 +1917,6 @@ CONTAINS
   end do
 
   END SUBROUTINE interpolate_Dkernel_Dk
-
-
-
-
-
-
-
-
-  ! ####################################################################
-  !                       |                       |
-  !                       |   NUMERICAL_GRADIENT  |
-  !                       |_______________________|
-  !
-  ! Calculates the gradient of the charge density numerically on the
-  ! grid.  We use the PWSCF gradient style.
-
-  SUBROUTINE numerical_gradient (total_rho, grad_rho)
-
-  USE gvect,             ONLY : ngm, g
-  USE cell_base,         ONLY : tpiba
-
-  implicit none
-
-  real(dp), intent(in) :: total_rho(:)    ! Input array holding total charge density.
-
-  real(dp), intent(out) :: grad_rho(:,:)  ! Output array that will holds the gradient
-                                          ! of the charge density.
-
-  integer :: icar                         ! Counter on cartesian components.
-  complex(dp), allocatable :: c_rho(:)    ! auxiliary complex array for rho.
-  complex(dp), allocatable :: c_grho(:)   ! auxiliary complex array for grad rho.
-
-
-
-
-  ! --------------------------------------------------------------------
-  ! Rho in G space.
-
-  allocate ( c_rho(dfftp%nnr), c_grho(dfftp%nnr) )
-  c_rho(1:dfftp%nnr) = CMPLX(total_rho(1:dfftp%nnr),0.0_DP)
-  CALL fwfft ('Rho', c_rho, dfftp)
-
-  do icar=1,3
-
-     ! -----------------------------------------------------------------
-     ! Compute gradient in G space.
-
-     c_grho(:) =CMPLX(0.0_DP,0.0_DP)
-     c_grho(dfftp%nl(:)) = CMPLX (0.0_DP,1.0_DP) * tpiba * g(icar,:) * c_rho(dfftp%nl(:))
-     if (gamma_only) c_grho( dfftp%nlm(:) ) = CONJG( c_grho( dfftp%nl(:) ) )
-
-
-     ! -----------------------------------------------------------------
-     ! Back in real space.
-
-     CALL invfft ('Rho', c_grho, dfftp)
-     grad_rho(:,icar) = REAL( c_grho(:) )
-
-  end do
-
-  deallocate ( c_rho, c_grho )
-
-  END SUBROUTINE numerical_gradient
-
-
-
-
-
-
 
 
   ! ####################################################################
