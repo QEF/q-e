@@ -707,14 +707,12 @@ gk_sort.o : pwcom.o
 gradcorr.o : ../../FFTXlib/fft_interfaces.o
 gradcorr.o : ../../Modules/cell_base.o
 gradcorr.o : ../../Modules/constants.o
-gradcorr.o : ../../Modules/control_flags.o
 gradcorr.o : ../../Modules/fft_base.o
 gradcorr.o : ../../Modules/funct.o
 gradcorr.o : ../../Modules/kind.o
 gradcorr.o : ../../Modules/noncol.o
 gradcorr.o : ../../Modules/recvec.o
 gradcorr.o : ../../Modules/wavefunctions.o
-gradcorr.o : exx.o
 gradcorr.o : pwcom.o
 gweights.o : ../../Modules/kind.o
 h_1psi.o : ../../Modules/control_flags.o
@@ -1889,6 +1887,7 @@ stres_ewa.o : ../../Modules/kind.o
 stres_ewa.o : ../../Modules/mp_bands.o
 stres_ewa.o : ../../UtilXlib/mp.o
 stres_ewa.o : Coul_cut_2D.o
+stres_gradcorr.o : ../../FFTXlib/fft_types.o
 stres_gradcorr.o : ../../Modules/funct.o
 stres_gradcorr.o : ../../Modules/kind.o
 stres_gradcorr.o : ../../Modules/mp_bands.o
