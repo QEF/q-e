@@ -84,6 +84,8 @@
             Hubbard_l(is) = set_hubbard_l( upf(is)%psd )
             Hubbard_lmax = max(Hubbard_lmax,Hubbard_l(is))
             write (6,*) ' HUBBARD L FOR TYPE ',atm(is),' IS ', Hubbard_l(is)
+         else
+            Hubbard_l(is) = -1
          end if
       end do
       write (6,*) ' MAXIMUM HUBBARD L IS ', Hubbard_lmax
