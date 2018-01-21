@@ -60,8 +60,8 @@ d2ion.o : ../../Modules/kind.o
 d2ion.o : ../../Modules/mp_global.o
 d2ion.o : ../../UtilXlib/mp.o
 dgradcorr.o : ../../FFTXlib/fft_interfaces.o
-dgradcorr.o : ../../Modules/constants.o
-dgradcorr.o : ../../Modules/fft_base.o
+dgradcorr.o : ../../FFTXlib/fft_types.o
+dgradcorr.o : ../../Modules/cell_base.o
 dgradcorr.o : ../../Modules/kind.o
 dielec.o : ../../Modules/cell_base.o
 dielec.o : ../../Modules/constants.o
