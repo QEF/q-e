@@ -47,25 +47,25 @@ CONTAINS
    ALLOCATE( dfft%nl( dfft%ngm ) )
    !
    DO ng = 1, dfft%ngm
-      n1 = nint (sum(g (:, ng) * at (:, 1))) + 1
-      IF(PRESENT(mill)) mill (1,ng) = n1 - 1
-      IF (n1<1) n1 = n1 + dfft%nr1
+      n1 = nint (sum(g (:, ng) * at (:, 1)))
+      IF(PRESENT(mill)) mill (1,ng) = n1
+      IF (n1<0) n1 = n1 + dfft%nr1
 
-      n2 = nint (sum(g (:, ng) * at (:, 2))) + 1
-      IF(PRESENT(mill)) mill (2,ng) = n2 - 1
-      IF (n2<1) n2 = n2 + dfft%nr2
+      n2 = nint (sum(g (:, ng) * at (:, 2)))
+      IF(PRESENT(mill)) mill (2,ng) = n2
+      IF (n2<0) n2 = n2 + dfft%nr2
 
-      n3 = nint (sum(g (:, ng) * at (:, 3))) + 1
-      IF(PRESENT(mill)) mill (3,ng) = n3 - 1
-      IF (n3<1) n3 = n3 + dfft%nr3
+      n3 = nint (sum(g (:, ng) * at (:, 3)))
+      IF(PRESENT(mill)) mill (3,ng) = n3
+      IF (n3<0) n3 = n3 + dfft%nr3
 
-      IF (n1>dfft%nr1 .or. n2>dfft%nr2 .or. n3>dfft%nr3) &
+      IF (n1>=dfft%nr1 .or. n2>=dfft%nr2 .or. n3>=dfft%nr3) &
          CALL fftx_error__('ggen','Mesh too small?',ng)
 
       IF ( dfft%lpara) THEN
-         dfft%nl (ng) = n3 + ( dfft%isind ( n1+(n2-1)*dfft%nr1x) - 1) * dfft%nr3x
+         dfft%nl (ng) = 1 + n3 + ( dfft%isind ( 1 + n1 + n2*dfft%nr1x) - 1) * dfft%nr3x
       ELSE
-         dfft%nl (ng) = n1 + (n2-1) * dfft%nr1x + (n3-1) * dfft%nr1x * dfft%nr2x
+         dfft%nl (ng) = 1 + n1 + n2 * dfft%nr1x + n3 * dfft%nr1x * dfft%nr2x
       ENDIF
    ENDDO
    !
@@ -93,27 +93,27 @@ CONTAINS
    ALLOCATE( dfft%nlm( dfft%ngm ) )
    !
    DO ng = 1, dfft%ngm
-      n1 = -mill (1,ng) + 1
-      IF (n1 < 1) THEN
+      n1 = -mill (1,ng)
+      IF (n1 < 0) THEN
          n1 = n1 + dfft%nr1
       END IF
-      n2 = -mill (2,ng) + 1
-      IF (n2 < 1) THEN
+      n2 = -mill (2,ng)
+      IF (n2 < 0) THEN
          n2 = n2 + dfft%nr2
       END IF
-      n3 = -mill (3,ng) + 1
-      IF (n3 < 1) THEN
+      n3 = -mill (3,ng)
+      IF (n3 < 0) THEN
          n3 = n3 + dfft%nr3
       END IF
 
-      IF (n1>dfft%nr1 .or. n2>dfft%nr2 .or. n3>dfft%nr3) THEN
+      IF (n1>=dfft%nr1 .or. n2>=dfft%nr2 .or. n3>=dfft%nr3) THEN
          CALL fftx_error__('index_minusg','Mesh too small?',ng)
       ENDIF
 
       IF ( dfft%lpara ) THEN
-         dfft%nlm(ng) = n3 + (dfft%isind (n1 + (n2-1)*dfft%nr1x) - 1) * dfft%nr3x
+         dfft%nlm(ng) = 1 + n3 + ( dfft%isind ( 1 + n1 + n2*dfft%nr1x) - 1) * dfft%nr3x
       ELSE
-         dfft%nlm(ng) = n1 + (n2-1) * dfft%nr1x + (n3-1) * dfft%nr1x * dfft%nr2x
+         dfft%nlm(ng) = 1 + n1 + n2 * dfft%nr1x + n3 * dfft%nr1x * dfft%nr2x
       ENDIF
    ENDDO
 
