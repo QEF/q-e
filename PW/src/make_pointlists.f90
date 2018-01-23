@@ -93,7 +93,7 @@ SUBROUTINE make_pointlists
   INTEGER idx,indproc,iat,ir,iat1
   INTEGER i,j,k,i0,j0,k0,jj0,kk0,ipol,nt,nt1
 
-  REAL(DP) :: posi(3)
+  REAL(DP) :: posi(3), WS_radius, dist
   REAL(DP), ALLOCATABLE :: tau0(:,:), tau_SoA(:,:), distmin(:), distances(:)
 
   WRITE( stdout,'(5x,"Generating pointlists ...")')
@@ -111,8 +111,21 @@ SUBROUTINE make_pointlists
   ENDDO
 
   ! Check the minimum distance between two atoms in the system
+  WS_radius = 1.d100
+  DO i = -1,1
+    DO j = -1,1
+      DO k = -1,1
+        IF ( i==0 .AND. j==0 .AND. k==0 ) CYCLE
+        dist = ( DBLE(i)*at(1,1) + DBLE(j)*at(1,2) + DBLE(k)*at(1,3) )**2 &
+             + ( DBLE(i)*at(2,1) + DBLE(j)*at(2,2) + DBLE(k)*at(2,3) )**2 &
+             + ( DBLE(i)*at(3,1) + DBLE(j)*at(3,2) + DBLE(k)*at(3,3) )**2
+        IF (dist<WS_radius) WS_radius = dist
+      ENDDO
+    ENDDO
+  ENDDO
+  WS_radius = SQRT(WS_radius)
 
-  distmin(:) = 1.d0
+  distmin(:) = WS_radius
 
   DO iat = 1,nat
      nt = ityp(iat)
