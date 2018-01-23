@@ -39,7 +39,7 @@ SUBROUTINE move_ions ( idone )
   USE force_mod,              ONLY : force, sigma
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, &
                                      lconstrain, conv_ions, lmd, tr2
-  USE basis,                  ONLY : starting_wfc
+  USE basis,                  ONLY : starting_wfc, starting_pot
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE mp_images,              ONLY : intra_image_comm
@@ -329,6 +329,7 @@ SUBROUTINE move_ions ( idone )
      !
      WRITE( UNIT = stdout, FMT = 9110 )
      WRITE( UNIT = stdout, FMT = 9120 )
+     starting_pot='atomic'
      !
      ! ... prepare for a new run, restarted from scratch, not from previous
      ! ... data (dimensions and file lengths will be different in general)
