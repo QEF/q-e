@@ -15,7 +15,7 @@ MODULE recvec_subs
   !
   USE kinds, ONLY : dp
   USE fft_types, ONLY: fft_stick_index, fft_type_descriptor
-  USE fft_ggen, ONLY : fft_set_nl, fft_set_nlm
+  USE fft_ggen, ONLY : fft_set_nl
   !  
   PRIVATE
   SAVE
@@ -224,7 +224,6 @@ CONTAINS
     !     Now set nl and nls with the correct fft correspondence
     !
     CALL fft_set_nl( dfftp, at, g, mill )
-    IF( gamma_only ) CALL fft_set_nlm( dfftp, mill )
     !
   END SUBROUTINE ggen
   !
@@ -273,7 +272,6 @@ CONTAINS
     IF ( ng /= ngms ) CALL errore ('ggens','mismatch in number of G-vectors',2)
     !
     CALL fft_set_nl ( dffts, at, g )
-    IF ( gamma_only) CALL fft_set_nlm ( dffts, mill )
     !
   END SUBROUTINE ggens
   !
