@@ -2315,6 +2315,7 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
     ! else increment color counter and reset key counter
     c = c + 1; k = 0
     color_list(i+1) = c
+    key_list(i+1)   = k
     !
     ! store current name in 'current_name' from 'all_node_names'
     s = max_nodename_len*i+1
@@ -2338,7 +2339,7 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
       END IF
     END DO
   END DO
-  ! Safety check
+  ! Safety checks
   IF ( MINVAL(color_list) < 0 ) CALL mp_stop( 8107 )
   IF ( MINVAL(key_list) < 0 )   CALL mp_stop( 8108 )
   !
