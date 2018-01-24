@@ -49,7 +49,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: my_world_comm
 #if defined(__MPI)
-    INTEGER :: ierr
+    INTEGER :: ierr, ncolor, nkey
 #endif
 #if defined(_OPENMP)
     INTEGER :: PROVIDED
@@ -74,7 +74,7 @@ CONTAINS
     !
     CALL mp_start( nproc, mpime, world_comm )
 #if !defined(__GFORTRAN__) || ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
-    CALL mp_count_nodes ( nnode, world_comm )
+    CALL mp_count_nodes ( nnode, ncolor, nkey, world_comm )
 #endif
     !
     ! ... meta_ionode is true if this processor is the root processor

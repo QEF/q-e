@@ -2241,25 +2241,31 @@ END SUBROUTINE mp_circular_shift_left_c2d
 #if !defined(__GFORTRAN__) ||  ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
 !------------------------------------------------------------------------------!
 !..mp_count_nodes
-SUBROUTINE mp_count_nodes(num_nodes, group)
+SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
 
 ! ...
   IMPLICIT NONE
   INTEGER, INTENT (OUT) :: num_nodes
+  INTEGER, INTENT (OUT) :: color
+  INTEGER, INTENT (OUT) :: key
   INTEGER, INTENT (IN)  :: group
 #if defined (__MPI)
   CHARACTER(len=MPI_MAX_PROCESSOR_NAME) :: nodename
 #endif
   CHARACTER(len=:), ALLOCATABLE :: all_node_names
   CHARACTER(len=:), ALLOCATABLE :: current_name
-  INTEGER, ALLOCATABLE   :: node_counter(:)
+  LOGICAL, ALLOCATABLE   :: node_found(:)
+  INTEGER, ALLOCATABLE   :: color_list(:)
+  INTEGER, ALLOCATABLE   :: key_list(:)
   !
-  INTEGER :: nodename_len, max_nodename_len, numtask, ierr
+  INTEGER :: nodename_len, max_nodename_len, numtask, me, ierr
   ! Loops variables
-  INTEGER :: i, j, e, s
+  INTEGER :: i, j, e, s, c, k
   ! ...
   ierr      = 0
   num_nodes = 1
+  color     = 1
+  key       = 0
   !
 #if defined(__MPI)
   ! fill with * to allow comparison of names with different length
@@ -2271,12 +2277,14 @@ SUBROUTINE mp_count_nodes(num_nodes, group)
   CALL MPI_ALLREDUCE(nodename_len, max_nodename_len, 1, &
                       MPI_INTEGER, MPI_MAX, group, ierr)
   IF (ierr/=0) CALL mp_stop( 8104 )
-  ! find total number of ranks in communicator
+  ! find total number of ranks and my rank in communicator
   CALL mpi_comm_size(group,numtask,ierr)
   IF (ierr/=0) CALL mp_stop( 8105 )
+  CALL mpi_comm_rank(group,me,ierr)
+  IF (ierr/=0) CALL mp_stop( 8106 )
   !
   ! Sanity check to avoid accidental insane allocations, should never happen
-  IF (max_nodename_len > MPI_MAX_PROCESSOR_NAME) CALL mp_stop( 8106 )
+  IF (max_nodename_len > MPI_MAX_PROCESSOR_NAME) CALL mp_stop( 8107 )
   !
   ! Allocate data and store all names in a single variable
   ! with a collective MPI communication on all nodes.
@@ -2284,22 +2292,29 @@ SUBROUTINE mp_count_nodes(num_nodes, group)
   CALL MPI_ALLGATHER(nodename, max_nodename_len, MPI_CHARACTER, &
                       all_node_names, max_nodename_len, MPI_CHARACTER, &
                       group, ierr)
-  IF (ierr/=0) CALL mp_stop( 8107 )
+  IF (ierr/=0) CALL mp_stop( 8108 )
   !
   ! Simple algorithm to count unique entries:
-  ! node_counter is a list of numtask integers set to 1.
+  ! node_found is a list of numtask logicals set to false.
   ! Starting from the first entry in all_node_names,
   ! we loop on the following elements and check if the same
   ! value is found. If it has already been found the value is already 
-  ! set to 0 and nothing is done, otherwise the corresponding value in 
-  ! node_counter is set to 0.
+  ! set to .true. and nothing is done, otherwise the corresponding value in 
+  ! node_counter is set to .true.
   ALLOCATE(character(len=max_nodename_len) :: current_name)
-  ALLOCATE(node_counter(numtask))
-  node_counter(:)=1
+  ALLOCATE(node_found(numtask),color_list(numtask),key_list(numtask))
+  node_found(:)  = .false.
+  color_list(:) = -1
+  key_list(:)   = -1
+  !
+  c = 0
   DO i=0,numtask-1
-    ! if node_counter == 0, this element has already been found,
+    ! if node_counter == .true., this element has already been found,
     ! so skip it.
-    IF (node_counter(i+1) == 0) CYCLE
+    IF (node_found(i+1)) CYCLE
+    ! else increment color counter and reset key counter
+    c = c + 1; k = 0
+    color_list(i+1) = c
     !
     ! store current name in 'current_name' from 'all_node_names'
     s = max_nodename_len*i+1
@@ -2313,15 +2328,24 @@ SUBROUTINE mp_count_nodes(num_nodes, group)
       s = max_nodename_len*j+1
       e = max_nodename_len*(j+1)
       IF (current_name .eq. all_node_names(s:e)) THEN
+        ! increment the key, element zero is the one we are comparing to
+        k = k + 1
         ! if j == 1 we are actually considering the second element
         ! (the j+1 element in general) so set it to zero.
-        IF (node_counter(j+1) == 1) node_counter(j+1) = 0
+        IF ( .not. node_found(j+1) ) node_found(j+1) = .true.
+        color_list(j+1) = c
+        key_list(j+1)   = k
       END IF
     END DO
   END DO
+  ! Safety check
+  IF ( MINVAL(color_list) < 0 ) CALL mp_stop( 8107 )
+  IF ( MINVAL(key_list) < 0 )   CALL mp_stop( 8108 )
   !
-  num_nodes = SUM(node_counter)
-  DEALLOCATE(current_name,all_node_names,node_counter)
+  color     = color_list(me+1)
+  key       = key_list(me+1)
+  num_nodes = MAXVAL(color_list)
+  DEALLOCATE(current_name,all_node_names,node_found,color_list,key_list)
 !
 #endif
   RETURN
