@@ -39,9 +39,9 @@ pseudo :
 
 run-tests : run-tests-serial
 
-run-tests-serial : run-tests-cp-serial run-tests-pw-serial
+run-tests-serial : run-tests-pw-serial run-tests-cp-serial 
 
-run-tests-parallel : run-tests-cp-parallel run-tests-pw-parallel
+run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel
 
 
 run-tests-cp-serial : prolog pseudo 
