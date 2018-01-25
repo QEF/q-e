@@ -81,6 +81,15 @@ F90           = @f90@
 CC             = @cc@
 F77            = @f77@
 
+# GPU architecture (Kepler: 35, Pascal: 60, Volta: 70 )
+GPU_ARCH=@gpu_arch@
+
+# CUDA runtime (Pascal: 8.0, Volta: 9.0)
+CUDA_RUNTIME=@gpu_runtime@
+
+# CUDA F90 Flags
+CUDA_F90FLAGS=@cuda_fflags@
+
 # C preprocessor and preprocessing flags - for explicit preprocessing,
 # if needed (see the compilation rules above)
 # preprocessing flags must include DFLAGS and IFLAGS
@@ -93,7 +102,7 @@ CPPFLAGS       = @cppflags@ $(DFLAGS) $(IFLAGS)
 # F90 flags must include MODFLAGS, IFLAGS, and FDFLAGS with appropriate syntax
 
 CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS)
-F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS) $(IFLAGS) $(MODFLAGS)
+F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS) $(CUDA_F90FLAGS) $(IFLAGS) $(MODFLAGS)
 FFLAGS         = @fflags@
 
 # compiler flags without optimization for fortran-77
@@ -153,6 +162,9 @@ MPI_LIBS       = @mpi_libs@
 
 MASS_LIBS      = @mass_libs@
 
+# CUDA libraries
+CUDA_LIBS=@pgi_cuda_libs@
+
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 
 AR             = @ar@
@@ -168,7 +180,7 @@ RANLIB         = @ranlib@
 FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a  $(TOPDIR)/iotk/src/libiotk.a
-LIBS           = $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIB)  $(LD_LIBS)
+LIBS           = $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIB) $(CUDA_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
 WGET = @wget@
