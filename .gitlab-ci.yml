@@ -70,6 +70,6 @@ build:cudafortran:
     - make pw cp
     - cd test-suite
     - mkdir -p /tmp/save
-    - make run-tests-pw-parallel
-    - make run-tests-cp-parallel
+    - make run-tests-pw-serial
+    - make run-tests-cp-serial
     - rm -r /tmp/save

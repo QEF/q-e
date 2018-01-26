@@ -8,7 +8,7 @@
 
 AC_INIT(ESPRESSO, 6.1, , espresso)
 
-AC_PREREQ(2.60)
+AC_PREREQ(2.64)
 AC_CONFIG_MACRO_DIR([m4/])
 
 # Initialize variables, filling with one comes from the environment...
