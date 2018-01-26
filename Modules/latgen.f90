@@ -571,7 +571,7 @@ SUBROUTINE abc2celldm ( ibrav, a,b,c,cosab,cosac,cosbc, celldm )
      celldm(5) = cosac
      celldm(6) = cosab
      !
-  ELSE IF ( ibrav ==-12 ) THEN
+  ELSE IF ( ibrav ==-12 .OR. ibrav ==-13 ) THEN
      !
      ! ... monoclinic P lattice, unique axis b
      !
