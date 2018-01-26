@@ -142,7 +142,7 @@ normal modes for sih4
  /
  0.0 0.0 0.0
 EOF
-$ECHO "  running normal mode calculation for SiH4...\c"
+$ECHO "  running normal mode calculation for SiH4 (LDA) ...\c"
 $PHCG_COMMAND < sih4.nm.in > sih4.nm.out
 check_failure $?
 $ECHO " done"
@@ -152,7 +152,7 @@ cat > sih4.dyn.in << EOF
  &input fildyn='sih4.dyn', asr='zero-dim' /
 EOF
 
-$ECHO "  running IR cross section calculation for SiH4...\c"
+$ECHO "  running IR cross section calculation for SiH4 (LDA) ...\c"
 $DYNMAT_COMMAND < sih4.dyn.in > sih4.dyn.out
 check_failure $?
 $ECHO " done"
@@ -208,7 +208,7 @@ vibrations of SiH4
  /
 0.0 0.0 0.0
 EOF
-$ECHO "  running normal mode calculation for CH4...\c"
+$ECHO "  running normal mode calculation for SiH4 (GGA) ...\c"
 $PHCG_COMMAND < sih4.nm.in > sih4-gga.nm.out
 check_failure $?
 $ECHO " done"
@@ -218,7 +218,7 @@ cat > sih4.dyn.in << EOF
  &input fildyn='sih4.dyn', asr='zero-dim' /
 EOF
 
-$ECHO "  running IR cross section calculation for CH4...\c"
+$ECHO "  running IR cross section calculation for SiH4 (GGA) ...\c"
 $DYNMAT_COMMAND < sih4.dyn.in > sih4-gga.dyn.out
 check_failure $?
 $ECHO " done"

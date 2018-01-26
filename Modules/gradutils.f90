@@ -6,9 +6,10 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------
-! Routines computing gradient via FFT
+! Various routines computing gradient and similar quantities via FFT
 !--------------------------------------------------------------------
-!
+! FIXME: there is a dependency upon "cell_base" via variable tpiba
+!        (2\pi/a) that maybe should be taken out from here?
 !--------------------------------------------------------------------
 SUBROUTINE external_gradient( a, grada )
 !--------------------------------------------------------------------
@@ -43,7 +44,6 @@ SUBROUTINE fft_gradient_r2r( dfft, a, g, ga )
   !
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : tpiba
-  USE control_flags, ONLY : gamma_only
   USE fft_interfaces,ONLY : fwfft, invfft 
   USE fft_types, ONLY : fft_type_descriptor
   !
@@ -74,7 +74,7 @@ SUBROUTINE fft_gradient_r2r( dfft, a, g, ga )
      gaux(dfft%nl(:)) = g(ipol,:) * CMPLX( -AIMAG( aux(dfft%nl(:)) ), &
                                              REAL( aux(dfft%nl(:)) ), kind=DP)
      !
-     IF ( gamma_only ) THEN
+     IF ( dfft%lgamma ) THEN
         !
         gaux(dfft%nlm(:)) = CMPLX(  REAL( gaux(dfft%nl(:)) ), &
                                   -AIMAG( gaux(dfft%nl(:)) ), kind=DP)
@@ -125,6 +125,8 @@ SUBROUTINE fft_qgradient (dfft, a, xq, g, ga)
   INTEGER  :: n, ipol
   COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
 
+  IF ( dfft%lgamma ) CALL errore( 'fft_qgradient', &
+       'not to be called with Gamma tricks', 1 )
   ALLOCATE (gaux(dfft%nnr))
   ALLOCATE (aux (dfft%nnr))
 
@@ -167,7 +169,6 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
   !
   USE cell_base, ONLY : tpiba
   USE kinds,     ONLY : DP
-  USE control_flags, ONLY : gamma_only
   USE fft_interfaces,ONLY : invfft
   USE fft_types, ONLY : fft_type_descriptor
   !
@@ -178,28 +179,48 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
   REAL(DP),    INTENT(IN)  :: g(3,dfft%ngm)
   REAL(DP),    INTENT(OUT) :: ga(3,dfft%nnr)
   !
-  INTEGER                  :: ipol
+  INTEGER                  :: ipol, n
   COMPLEX(DP), ALLOCATABLE :: gaux(:)
   !
   !
   ALLOCATE( gaux( dfft%nnr ) )
-  !
-  ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
-  !
   ga(:,:) = 0.D0
   !
-  DO ipol = 1, 3
+  IF ( dfft%lgamma) THEN
      !
+     ! ... Gamma tricks: perform 2 FFT's in a single shot
+     ! x and y
+     ipol = 1
      gaux(:) = (0.0_dp,0.0_dp)
      !
-     gaux(dfft%nl(:)) = g(ipol,:) * CMPLX( -AIMAG(a(:)), REAL(a(:)), kind=DP)
+     ! ... multiply a(G) by iG to get the gradient in real space
      !
-     IF ( gamma_only ) THEN
-        !
-        gaux(dfft%nlm(:)) = CMPLX(  REAL( gaux(dfft%nl(:)) ), &
-                                  -AIMAG( gaux(dfft%nl(:)) ), kind=DP)
-        !
-     END IF
+     DO n = 1, dfft%ngm
+        gaux(dfft%nl (n)) = CMPLX( 0.0_dp, g(ipol,  n), kind=DP )* a(n) - &
+                                           g(ipol+1,n) * a(n)
+        gaux(dfft%nlm(n)) = CMPLX( 0.0_dp,-g(ipol,  n), kind=DP )*CONJG(a(n)) +&
+                                            g(ipol+1,n) * CONJG(a(n))
+     ENDDO
+     !
+     ! ... bring back to R-space, (\grad_ipol a)(r) ...
+     !
+     CALL invfft ('Rho', gaux, dfft)
+     !
+     ! ... bring back to R-space, (\grad_ipol a)(r)
+     ! ... add the factor 2\pi/a  missing in the definition of q+G
+     !
+     DO n = 1, dfft%nnr
+        ga (ipol  , n) =  REAL( gaux(n) ) * tpiba
+        ga (ipol+1, n) = AIMAG( gaux(n) ) * tpiba
+     ENDDO
+     ! z
+     ipol = 3
+     gaux(:) = (0.0_dp,0.0_dp)
+     !
+     ! ... multiply a(G) by iG to get the gradient in real space
+     !
+     gaux(dfft%nl (:)) = g(ipol,:) * CMPLX( -AIMAG(a(:)), REAL(a(:)), kind=DP)
+     gaux(dfft%nlm(:)) = CONJG( gaux(dfft%nl(:)) )
      !
      ! ... bring back to R-space, (\grad_ipol a)(r) ...
      !
@@ -207,9 +228,29 @@ SUBROUTINE fft_gradient_g2r( dfft, a, g, ga )
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
-     ga(ipol,:) = ga(ipol,:) + tpiba * REAL( gaux(:) )
+     ga(ipol,:) = tpiba * REAL( gaux(:) )
      !
-  END DO
+  ELSE
+     !
+     DO ipol = 1, 3
+        !
+        gaux(:) = (0.0_dp,0.0_dp)
+        !
+        ! ... multiply a(G) by iG to get the gradient in real space
+        !
+        gaux(dfft%nl(:)) = g(ipol,:) * CMPLX( -AIMAG(a(:)), REAL(a(:)), kind=DP)
+        !
+        ! ... bring back to R-space, (\grad_ipol a)(r) ...
+        !
+        CALL invfft ('Rho', gaux, dfft)
+        !
+        ! ...and add the factor 2\pi/a  missing in the definition of G
+        !
+        ga(ipol,:) = tpiba * REAL( gaux(:) )
+        !
+     END DO
+     !
+  END IF
   !
   DEALLOCATE( gaux )
   !
@@ -229,7 +270,6 @@ SUBROUTINE fft_graddot( dfft, a, g, da )
   !
   USE cell_base, ONLY : tpiba
   USE kinds,     ONLY : DP
-  USE control_flags, ONLY : gamma_only
   USE fft_interfaces,ONLY : fwfft, invfft
   USE fft_types, ONLY : fft_type_descriptor
   !
@@ -241,35 +281,71 @@ SUBROUTINE fft_graddot( dfft, a, g, da )
   !
   INTEGER                  :: n, ipol
   COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
+  COMPLEX(DP) :: fp, fm, aux1, aux2
   !
-  !
-  ALLOCATE( aux(dfft%nnr), gaux(dfft%nnr) )
+  ALLOCATE( aux(dfft%nnr) )
+  ALLOCATE( gaux(dfft%nnr) )
   !
   gaux(:) = (0.0_dp,0.0_dp)
   !
-  DO ipol = 1, 3
+  IF ( dfft%lgamma ) THEN
      !
-     aux = CMPLX( a(ipol,:), 0.0_dp, kind=DP)
+     ! Gamma tricks: perform 2 FFT's in a single shot
+     ! x and y
+     ipol = 1
+     aux(:) = CMPLX( a(ipol,:), a(ipol+1,:), kind=DP)
      !
      ! ... bring a(ipol,r) to G-space, a(G) ...
      !
      CALL fwfft ('Rho', aux, dfft)
      !
-     DO n = 1, dfft%ngm
-        !
-        gaux(dfft%nl(n)) = gaux(dfft%nl(n)) + g(ipol,n) * &
-             CMPLX( -AIMAG( aux(dfft%nl(n)) ), &
-                      REAL( aux(dfft%nl(n)) ), kind=DP)
-        !
-     END DO
-    !
-  END DO
-  !
-  IF ( gamma_only ) THEN
+     ! ... multiply by iG to get the gradient in G-space
      !
      DO n = 1, dfft%ngm
         !
+        fp = (aux(dfft%nl(n)) + aux (dfft%nlm(n)))*0.5_dp
+        fm = (aux(dfft%nl(n)) - aux (dfft%nlm(n)))*0.5_dp
+        aux1 = CMPLX( REAL(fp), AIMAG(fm), kind=DP)
+        aux2 = CMPLX(AIMAG(fp), -REAL(fm), kind=DP)
+        gaux (dfft%nl(n)) = &
+             CMPLX(0.0_dp, g(ipol  ,n),kind=DP) * aux1 + &
+             CMPLX(0.0_dp, g(ipol+1,n),kind=DP) * aux2
+     ENDDO
+     ! z
+     ipol = 3
+     aux(:) = CMPLX( a(ipol,:), 0.0_dp, kind=DP)
+     !
+     ! ... bring a(ipol,r) to G-space, a(G) ...
+     !
+     CALL fwfft ('Rho', aux, dfft)
+     !
+     ! ... multiply by iG to get the gradient in G-space
+     ! ... fill both gaux(G) and gaux(-G) = gaux*(G)
+     !
+     DO n = 1, dfft%ngm
+        gaux(dfft%nl(n)) = gaux(dfft%nl(n)) + g(ipol,n) * &
+             CMPLX( -AIMAG( aux(dfft%nl(n)) ), &
+                      REAL( aux(dfft%nl(n)) ), kind=DP)
         gaux(dfft%nlm(n)) = CONJG( gaux(dfft%nl(n)) )
+     END DO
+     !
+  ELSE
+     !
+     DO ipol = 1, 3
+        !
+        aux = CMPLX( a(ipol,:), 0.0_dp, kind=DP)
+        !
+        ! ... bring a(ipol,r) to G-space, a(G) ...
+        !
+        CALL fwfft ('Rho', aux, dfft)
+        !
+        ! ... multiply by iG to get the gradient in G-space
+        !
+        DO n = 1, dfft%ngm
+           gaux(dfft%nl(n)) = gaux(dfft%nl(n)) + g(ipol,n) * &
+                CMPLX( -AIMAG( aux(dfft%nl(n)) ), &
+                         REAL( aux(dfft%nl(n)) ), kind=DP)
+        END DO
         !
      END DO
      !
@@ -301,7 +377,6 @@ SUBROUTINE fft_qgraddot ( dfft, a, xq, g, da)
   ! ... output: ga(:)    \sum_i \grad_i a_i, complex, on the real-space FFT grid
   !
   USE kinds,          ONLY : DP
-  USE control_flags,  ONLY : gamma_only
   USE cell_base,      ONLY : tpiba
   USE fft_interfaces, ONLY : fwfft, invfft
   USE fft_types, ONLY : fft_type_descriptor
@@ -316,6 +391,8 @@ SUBROUTINE fft_qgraddot ( dfft, a, xq, g, da)
   INTEGER :: n, ipol
   COMPLEX(DP), allocatable :: aux (:)
 
+  IF ( dfft%lgamma ) CALL errore( 'fft_qgraddot', &
+       'not to be called with Gamma tricks', 1 )
   ALLOCATE (aux (dfft%nnr))
   da(:) = (0.0_dp, 0.0_dp)
   DO ipol = 1, 3
@@ -381,7 +458,6 @@ SUBROUTINE fft_laplacian( dfft, a, gg, lapla )
   !
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : tpiba2
-  USE control_flags, ONLY : gamma_only
   USE fft_types, ONLY : fft_type_descriptor
   USE fft_interfaces,ONLY : fwfft, invfft
   !
@@ -414,7 +490,7 @@ SUBROUTINE fft_laplacian( dfft, a, gg, lapla )
      !
   END DO
   !
-  IF ( gamma_only ) THEN
+  IF ( dfft%lgamma ) THEN
      !
      laux(dfft%nlm(:)) = CMPLX( REAL(laux(dfft%nl(:)) ), &
                               -AIMAG(laux(dfft%nl(:)) ), kind=DP)
@@ -427,7 +503,7 @@ SUBROUTINE fft_laplacian( dfft, a, gg, lapla )
   !
   ! ... add the missing factor (2\pi/a)^2 in G
   !
-  lapla = tpiba2 * DBLE( laux )
+  lapla = tpiba2 * REAL( laux )
   !
   DEALLOCATE( laux )
   DEALLOCATE( aux )
@@ -453,7 +529,6 @@ SUBROUTINE fft_hessian( dfft, a, g, ga, ha )
   !
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : tpiba
-  USE control_flags, ONLY : gamma_only
   USE fft_types, ONLY : fft_type_descriptor
   USE fft_interfaces,ONLY : fwfft, invfft
   !
@@ -487,7 +562,7 @@ SUBROUTINE fft_hessian( dfft, a, g, ga, ha )
      gaux(dfft%nl(:)) = g(ipol,:) * CMPLX( -AIMAG( aux(dfft%nl(:)) ), &
                                              REAL( aux(dfft%nl(:)) ), kind=DP )
      !
-     IF ( gamma_only ) THEN
+     IF ( dfft%lgamma ) THEN
         !
         gaux(dfft%nlm(:)) = CMPLX(  REAL( gaux(dfft%nl(:)) ), &
                                   -AIMAG( gaux(dfft%nl(:)) ), kind=DP)
@@ -500,7 +575,7 @@ SUBROUTINE fft_hessian( dfft, a, g, ga, ha )
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
-     ga(ipol,:) = tpiba * DBLE( gaux(:) )
+     ga(ipol,:) = tpiba * REAL( gaux(:) )
      !
      ! ... compute the second derivatives
      !
@@ -512,7 +587,7 @@ SUBROUTINE fft_hessian( dfft, a, g, ga, ha )
              CMPLX( REAL( aux(dfft%nl(:)) ), &
                    AIMAG( aux(dfft%nl(:)) ), kind=DP)
         !
-        IF ( gamma_only ) THEN
+        IF ( dfft%lgamma ) THEN
            !
            haux(dfft%nlm(:)) = CMPLX(  REAL( haux(dfft%nl(:)) ), &
                                      -AIMAG( haux(dfft%nl(:)) ), kind=DP)
@@ -525,7 +600,7 @@ SUBROUTINE fft_hessian( dfft, a, g, ga, ha )
         !
         ! ...and add the factor 2\pi/a  missing in the definition of G
         !
-        ha(ipol, jpol, :) = tpiba * tpiba * DBLE( haux(:) )
+        ha(ipol, jpol, :) = tpiba * tpiba * REAL( haux(:) )
         !
         ha(jpol, ipol, :) = ha(ipol, jpol, :) 
         !
