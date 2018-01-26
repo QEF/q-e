@@ -159,7 +159,7 @@ EOF
    ldflags="$ldflags -Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    gpu_runtime="$with_cuda_runtime"
-   pgi_cuda_libs="-Mcudalib=cufft,cublas,cusolver \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
+   pgi_cuda_libs="-Mcudalib=cufft,cublas,cusolver"
 fi
 
 # Announcing the new variables
