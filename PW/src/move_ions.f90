@@ -329,7 +329,6 @@ SUBROUTINE move_ions ( idone )
      !
      WRITE( UNIT = stdout, FMT = 9110 )
      WRITE( UNIT = stdout, FMT = 9120 )
-     starting_pot='atomic'
      !
      ! ... prepare for a new run, restarted from scratch, not from previous
      ! ... data (dimensions and file lengths will be different in general)
@@ -348,6 +347,7 @@ SUBROUTINE move_ions ( idone )
      lcheck_mag = .FALSE.
      restart_with_starting_magnetiz = .FALSE.
      if (trim(starting_wfc) == 'file') starting_wfc = 'atomic+random'
+     starting_pot='atomic'
      ! ... conv_ions is set to .FALSE. to perform a final scf cycle
      conv_ions = .FALSE.
      !

@@ -4,6 +4,16 @@
 *.mod
 *.o
 *.x
+*.pyc
+*.orig
+*.swp
+*.UPF
+*.log
+*.pdf
+*.dvi
+*.toc
+*.aux
+
 bin/*
 FoX
 iotk
@@ -16,5 +26,6 @@ install/configure.msg
 Modules/version.f90
 test-suite/*/test.err.*
 test-suite/*/test.out.*
+*/results
 S3DE
 
