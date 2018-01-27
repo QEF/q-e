@@ -14,12 +14,13 @@
 !! 14/11/17 Pietro Delugas: new revision passed from iotk to FoX lib, added support 
 !!  new schema for UPF files 
       !
-      USE kinds,        ONLY: DP
-      USE pseudo_types, ONLY: pseudo_upf, deallocate_pseudo_upf
+      USE kinds,               ONLY: DP
+      USE pseudo_types,        ONLY: pseudo_upf, deallocate_pseudo_upf
+      USE read_upf_v1_module,  ONLY: scan_begin, scan_end
       !
       IMPLICIT NONE
       PRIVATE
-      PUBLIC :: read_upf
+      PUBLIC :: read_upf, scan_begin, scan_end
       !
       CONTAINS
 
