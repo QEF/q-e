@@ -14,13 +14,13 @@
 !! 14/11/17 Pietro Delugas: new revision passed from iotk to FoX lib, added support 
 !!  new schema for UPF files 
       !
-      USE kinds,        ONLY: DP
-      USE pseudo_types, ONLY: pseudo_upf, deallocate_pseudo_upf
+      USE kinds,               ONLY: DP
+      USE pseudo_types,        ONLY: pseudo_upf, deallocate_pseudo_upf
+      USE read_upf_v1_module,  ONLY: scan_begin, scan_end
       !
       IMPLICIT NONE
-      PUBLIC ! FIXME: why public?
-      !PRIVATE
-      !PUBLIC :: read_upf, pseudo_upf, deallocate_pseudo_upf
+      PRIVATE
+      PUBLIC :: read_upf, scan_begin, scan_end
       !
       CONTAINS
 
@@ -101,13 +101,12 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
            SELECT CASE (TRIM(getTagname(u))) 
               CASE ('UPF') 
                  CALL read_upf_v2( u, upf, grid, ierr )
-              CASE ('pseudo') 
+              CASE ('qe_pp:pseudo') 
                  CALL read_upf_schema( u, upf, grid, ierr)
-                 !CALL errore('read_upf', 'pseudo format reader under maintence' ,ierr)
                  IF ( ierr == 0 ) ierr = -2
               CASE default 
                  ierr = 1
-                 CALL errore('read_upf', 'unrecognized xml format '//TRIM(getTagName(u)),ierr) 
+                 CALL errore('read_upf', 'xml format '//TRIM(getTagName(u))//' not implemented', ierr) 
            END SELECT 
            IF ( ierr > 0 ) CALL errore( 'read_upf', 'File is Incomplete or wrong: '//TRIM(filename), ierr)
            !
@@ -117,7 +116,8 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
           ! 
           IF ( .NOT. xml_only ) THEN 
              u_temp = find_free_unit()
-             open (unit = u_temp, file = TRIM(filename), status = 'old', form = 'formatted', iostat = ierr)
+             OPEN (UNIT = u_temp, FILE = TRIM(filename), STATUS = 'old', FORM = 'formatted', IOSTAT = ierr)
+             CALL errore ("upf_module:read_upf", "error while opening file " // TRIM(filename), ierr) 
              CALL deallocate_pseudo_upf( upf )
              CALL deallocate_radial_grid( grid )
              CALL read_upf_v1( u_temp, upf, grid, ierr )
