@@ -7,6 +7,64 @@
 !
 !
 !--------------------------------------------------------------------------
+SUBROUTINE compute_distances_SoA(pos, N, RSoA, Distances)
+  !--------------------------------------------------------------------------
+  !
+  ! This routine computes the distance between pos and all the centers in RSoA
+  ! All the positions are in crystal coordinates
+  !
+  USE kinds,      ONLY : dp
+  USE cell_base,  ONLY : at
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP),INTENT(in)    :: pos(3)        ! reference position
+  INTEGER,INTENT(in)     :: N             ! number of elements in RSoA
+  REAL(DP),INTENT(in)    :: RSoA(N,3)     ! positions in SoA layout
+  REAL(DP),INTENT(out)   :: Distances(N)  ! minimal distances
+  !
+  REAL(DP) :: corners(3,8)
+  REAL(DP) :: dx, dy, dz, dx_c, dy_c, dz_c
+  REAL(DP) :: dist, dist_min
+  INTEGER :: ix, iy, iz, ic, iat
+
+  ic = 0
+  DO ix = 0,1
+    dx = DBLE(-ix)
+    DO iy = 0,1
+      dy = DBLE(-iy)
+      DO iz = 0,1
+        dz = DBLE(-iz)
+        ic = ic + 1
+        corners(1,ic) = dx*at(1,1) + dy*at(1,2) + dz*at(1,3)
+        corners(2,ic) = dx*at(2,1) + dy*at(2,2) + dz*at(2,3)
+        corners(3,ic) = dx*at(3,1) + dy*at(3,2) + dz*at(3,3)
+      ENDDO
+    ENDDO
+  ENDDO
+
+  DO iat = 1,N
+    dx = RSoA(iat,1) - pos(1)
+    dx = dx - FLOOR(dx)
+    dy = RSoA(iat,2) - pos(2)
+    dy = dy - FLOOR(dy)
+    dz = RSoA(iat,3) - pos(3)
+    dz = dz - FLOOR(dz)
+    dx_c = dx*at(1,1) + dy*at(1,2) + dz*at(1,3)
+    dy_c = dx*at(2,1) + dy*at(2,2) + dz*at(2,3)
+    dz_c = dx*at(3,1) + dy*at(3,2) + dz*at(3,3)
+    dist_min = dx_c*dx_c + dy_c*dy_c + dz_c*dz_c;
+    DO ic = 2,8
+      dx = dx_c + corners(1,ic)
+      dy = dy_c + corners(2,ic)
+      dz = dz_c + corners(3,ic)
+      dist = dx*dx + dy*dy + dz*dz
+      IF (dist<dist_min) dist_min = dist
+    ENDDO
+    Distances(iat) = SQRT(dist_min)
+  ENDDO
+END SUBROUTINE compute_distances_SoA
+
 SUBROUTINE make_pointlists
   !--------------------------------------------------------------------------
   !
@@ -35,11 +93,11 @@ SUBROUTINE make_pointlists
   INTEGER idx,indproc,iat,ir,iat1
   INTEGER i,j,k,i0,j0,k0,jj0,kk0,ipol,nt,nt1
 
-  REAL(DP) :: posi(3), distance
-  REAL(DP), ALLOCATABLE :: tau0(:,:), distmin(:)
+  REAL(DP) :: posi(3), WS_radius, dist
+  REAL(DP), ALLOCATABLE :: tau0(:,:), tau_SoA(:,:), distmin(:), distances(:)
 
   WRITE( stdout,'(5x,"Generating pointlists ...")')
-  ALLOCATE(tau0(3,nat))
+  ALLOCATE(tau0(3,nat), tau_SoA(nat,3), distances(nat))
   ALLOCATE( distmin(ntyp) )
 
   ! Bring all the atomic positions on the first unit cell
@@ -48,43 +106,35 @@ SUBROUTINE make_pointlists
   CALL cryst_to_cart(nat,tau0,bg,-1)
   DO iat=1,nat
      DO ipol=1,3
-        tau0(ipol,iat)=tau0(ipol,iat)-NINT(tau0(ipol,iat))
+        tau_SoA(iat,ipol)=tau0(ipol,iat)
      ENDDO
   ENDDO
-  CALL cryst_to_cart(nat,tau0,at,1)
 
   ! Check the minimum distance between two atoms in the system
+  WS_radius = 1.d100
+  DO i = -1,1
+    DO j = -1,1
+      DO k = -1,1
+        IF ( i==0 .AND. j==0 .AND. k==0 ) CYCLE
+        dist = ( DBLE(i)*at(1,1) + DBLE(j)*at(1,2) + DBLE(k)*at(1,3) )**2 &
+             + ( DBLE(i)*at(2,1) + DBLE(j)*at(2,2) + DBLE(k)*at(2,3) )**2 &
+             + ( DBLE(i)*at(3,1) + DBLE(j)*at(3,2) + DBLE(k)*at(3,3) )**2
+        IF (dist<WS_radius) WS_radius = dist
+      ENDDO
+    ENDDO
+  ENDDO
+  WS_radius = SQRT(WS_radius)
 
-  distmin(:) = 1.d0
+  distmin(:) = WS_radius
 
   DO iat = 1,nat
      nt = ityp(iat)
+     call compute_distances_SoA(tau0(1:3,iat), nat, tau_SoA, distances)
      DO iat1 = 1,nat
+        IF (iat.eq.iat1) CYCLE
         nt1 = ityp(iat1)
-
-        ! posi is the position of a second atom
-        DO i = -1,1
-           DO j = -1,1
-              DO k = -1,1
-
-                 distance = 0.d0
-                 DO ipol = 1,3
-                    posi(ipol) = tau0(ipol,iat1) + DBLE(i)*at(ipol,1) &
-                                                 + DBLE(j)*at(ipol,2) &
-                                                 + DBLE(k)*at(ipol,3)
-                    distance = distance + (posi(ipol)-tau0(ipol,iat))**2
-                 ENDDO
-
-                 distance = SQRT(distance)
-                 IF ((distance.LT.distmin(nt)).AND.(distance.GT.1.d-8)) &
-                      &                    distmin(nt) = distance
-                 IF ((distance.LT.distmin(nt1)).AND.(distance.GT.1.d-8)) &
-                      &                    distmin(nt1) = distance
-
-              ENDDO ! k
-           ENDDO ! j
-        ENDDO ! i
-
+        IF (distances(iat1).LT.distmin(nt)) distmin(nt) = distances(iat1)
+        IF (distances(iat1).LT.distmin(nt1)) distmin(nt1) = distances(iat1)
      ENDDO                  ! iat1
   ENDDO                     ! iat
 
@@ -111,6 +161,9 @@ SUBROUTINE make_pointlists
   factlist(:) = 0.d0
   jj0 = dfftp%my_i0r2p ; kk0 = dfftp%my_i0r3p
   DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
+     ! ... check result vector boundary
+     IF( ir .GT. SIZE( factlist ) .OR. ir .GT. SIZE( pointlist ))  &
+       CALL errore( ' make_pointlists ', ' inconsistent sizes ', 1 )
      !
      ! ... three dimensional indexes
      !
@@ -124,45 +177,27 @@ SUBROUTINE make_pointlists
      i0  = idx
 
      ! ... do not include points outside the physical range
-
      IF ( i0 >= dfftp%nr1 .OR. j0 >= dfftp%nr2 .OR. k0 >= dfftp%nr3 ) CYCLE
 
-     DO i = i0-dfftp%nr1,i0+dfftp%nr1, dfftp%nr1
-        DO j = j0-dfftp%nr2, j0+dfftp%nr2, dfftp%nr2
-           DO k = k0-dfftp%nr3, k0+dfftp%nr3, dfftp%nr3
-              DO ipol=1,3
-                 posi(ipol) =  DBLE(i)/DBLE(dfftp%nr1) * at(ipol,1) &
-                             + DBLE(j)/DBLE(dfftp%nr2) * at(ipol,2) &
-                             + DBLE(k)/DBLE(dfftp%nr3) * at(ipol,3)
-              ENDDO
+     posi(1) = DBLE(i0)/DBLE(dfftp%nr1)
+     posi(2) = DBLE(j0)/DBLE(dfftp%nr2)
+     posi(3) = DBLE(k0)/DBLE(dfftp%nr3)
+     call compute_distances_SoA(posi, nat, tau_SoA, distances)
 
-              DO iat = 1,nat
-                 nt=ityp(iat)
-                 distance = SQRT( (posi(1)-tau0(1,iat))**2 + &
-                                  (posi(2)-tau0(2,iat))**2 + &
-                                  (posi(3)-tau0(3,iat))**2)
-
-                 IF (distance.LE.r_m(nt)) THEN
-                    IF( ir .GT. SIZE( factlist ) .OR. ir .GT. SIZE( pointlist ))  &
-                      CALL errore( ' make_pointlists ', ' inconsistent sizes ', 1 )
-                    factlist(ir) = 1.d0
-                    pointlist(ir) = iat
-                    GO TO 10
-                 ELSE IF (distance.LE.1.2*r_m(nt)) THEN
-                    IF( ir .GT. SIZE( factlist ) .OR. ir .GT. SIZE( pointlist ))  &
-                      CALL errore( ' make_pointlists ', ' inconsistent sizes ', 1 )
-                    factlist(ir) = 1.d0 - (distance -r_m(nt))/(0.2d0*r_m(nt))
-                    pointlist(ir) = iat
-                    GO TO 10
-                 ENDIF
-              ENDDO
-
-           ENDDO         ! k
-        ENDDO            ! j
-     ENDDO               ! i
-  10 CONTINUE
+     DO iat = 1,nat
+        nt=ityp(iat)
+        IF (distances(iat).LE.r_m(nt)) THEN
+           factlist(ir) = 1.d0
+           pointlist(ir) = iat
+           EXIT
+        ELSE IF (distances(iat).LE.1.2*r_m(nt)) THEN
+           factlist(ir) = 1.d0 - (distances(iat) -r_m(nt))/(0.2d0*r_m(nt))
+           pointlist(ir) = iat
+           EXIT
+        ENDIF
+     ENDDO
   ENDDO                  ! ir
-  DEALLOCATE(tau0)
+  DEALLOCATE(tau0, tau_SoA, distances)
  
 END SUBROUTINE make_pointlists
 
