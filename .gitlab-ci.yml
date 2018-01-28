@@ -40,3 +40,19 @@ build:cp:
 #    - mkdir /tmp/save
 #    - make run-tests-serial
 #    - rm -r /tmp/save
+
+
+#### BUILDS ON GALILEO ####
+
+build:intel:
+  tags: [galileo]
+  script:
+    - module load intel/pe-xe-2017--binary intelmpi/2017--binary mkl/2017--binary
+    - ./configure --enable-openmp
+    - make pw cp
+    - export OMP_NUM_THREADS=2
+    - cd test-suite
+    - mkdir -p /tmp/save
+    - make run-tests-pw-parallel
+    - make run-tests-cp-parallel
+    - rm -r /tmp/save
