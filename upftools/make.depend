@@ -3,8 +3,8 @@ casino2upf.o : ../Modules/write_upf_v2.o
 casino2upf.o : casino_pp.o
 casino_pp.o : ../Modules/funct.o
 casino_pp.o : ../Modules/kind.o
+casino_pp.o : ../Modules/pseudo_types.o
 casino_pp.o : ../Modules/radial_grids.o
-casino_pp.o : ../Modules/upf.o
 cpmd2upf.o : ../Modules/constants.o
 cpmd2upf.o : ../Modules/pseudo_types.o
 cpmd2upf.o : ../Modules/write_upf_v2.o
