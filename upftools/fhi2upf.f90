@@ -18,9 +18,11 @@ PROGRAM fhi2upf
   USE pseudo_types, ONLY : pseudo_upf, nullify_pseudo_upf, &
                            deallocate_pseudo_upf
   USE write_upf_v2_module, ONLY :  write_upf_v2
+  USE FoX_wxml,            ONLY : xml_Openfile, xml_Close, xmlf_t 
   !
   IMPLICIT NONE
   TYPE(pseudo_upf) :: upf
+  TYPE (xmlf_t)    :: pp_desc
   CHARACTER(len=256) filein, fileout
   INTEGER :: ios
   !
@@ -45,11 +47,14 @@ PROGRAM fhi2upf
   !
   fileout=trim(filein)//'.UPF'
   PRINT '(''Output PP file in UPF format :  '',a)', fileout
-  OPEN(unit=2,file=fileout,status='unknown',form='formatted')
+  CALL  xml_OpenFile (filename = TRIM(fileout), XF = pp_desc, UNIT = 2, PRETTY_PRINT =.true., &
+                                 REPLACE = .true., NAMESPACE = .true. )
+
+  CALL write_upf_v2(pp_desc,UPF=upf)
+
   !
-  CALL write_upf_v2 (2, upf )
-  !
-  CLOSE (unit=2)
+  CALL xml_Close (pp_desc)
+
   CALL deallocate_pseudo_upf ( upf )
   !     ----------------------------------------------------------
   WRITE (6,"('Pseudopotential successfully written')")

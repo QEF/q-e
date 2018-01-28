@@ -17,7 +17,7 @@ PROGRAM upf2casino
   USE upf_module
   USE radial_grids, ONLY : radial_grid_type, deallocate_radial_grid, &
        & nullify_radial_grid
-  USE pseudo_types, ONLY : nullify_pseudo_upf
+  USE pseudo_types, ONLY : pseudo_upf, nullify_pseudo_upf, deallocate_pseudo_upf
   USE casino_pp
 
   IMPLICIT NONE
