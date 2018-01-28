@@ -1,14 +1,26 @@
-This is the distribution of the Quantum ESPRESSO suite of codes (ESPRESSO: 
-opEn-Source Package for Research in Electronic Structure, Simulation, and
-Optimization).
+![q-e-logo](logo.jpg)
+
+> This is the distribution of the Quantum ESPRESSO suite of codes (ESPRESSO:
+> opEn-Source Package for Research in Electronic Structure, Simulation, and
+> Optimization).
+
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+
+## USAGE
 
 Quick installation instructions for the impatient:
-   ./configure [options]
-   make all
+
+```
+./configure [options]
+make all
+```
+
 ("make" alone prints a list of acceptable targets). Binaries go in bin/.
-For more information, see the general documentation in directory Doc/, 
-package-specific documentation in */Doc/, and the web site
+For more information, see the general documentation in directory Doc/,
+package-specific documentation in \*/Doc/, and the web site
 http://www.quantum-espresso.org/
+
+## LICENSE
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU
@@ -23,5 +35,3 @@ for more details.
 You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 675 Mass Ave, Cambridge, MA 02139, USA.
-
-
