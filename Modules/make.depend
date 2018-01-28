@@ -91,6 +91,7 @@ fft_rho.o : ../FFTXlib/fft_interfaces.o
 fft_rho.o : ../FFTXlib/fft_types.o
 fft_rho.o : control_flags.o
 fft_rho.o : kind.o
+fox_as_iotk.o : kind.o
 funct.o : io_global.o
 funct.o : kind.o
 funct.o : xc_rVV10.o
@@ -413,7 +414,12 @@ wgauss.o : constants.o
 wgauss.o : kind.o
 wrappers.o : io_global.o
 wrappers.o : kind.o
-write_upf_v2.o : ../iotk/src/iotk_module.o
+write_upf.o : write_upf_schema.o
+write_upf.o : write_upf_v2.o
+write_upf_schema.o : kind.o
+write_upf_schema.o : pseudo_types.o
+write_upf_schema.o : radial_grids.o
+write_upf_schema.o : version.o
 write_upf_v2.o : kind.o
 write_upf_v2.o : pseudo_types.o
 write_upf_v2.o : radial_grids.o

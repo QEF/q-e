@@ -96,7 +96,9 @@ wannier_new.o \
 wave_base.o \
 wavefunctions.o \
 wrappers.o\
+write_upf.o \
 write_upf_v2.o \
+write_upf_schema.o \
 ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
