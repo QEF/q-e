@@ -1,7 +1,7 @@
 # Copyright (C) 2001-2016 Quantum ESPRESSO Foundation
 
 AC_DEFUN([X_AC_QE_MPIF90], [
-
+AC_REQUIRE([AC_PROG_FC])
 AC_ARG_ENABLE(parallel,
    [AS_HELP_STRING([--enable-parallel],
        [compile for parallel execution if possible (default: yes)])],

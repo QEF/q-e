@@ -1,0 +1,149 @@
+
+     Program PHCG v.6.2 starts on 23Jan2018 at 10:43:21 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+
+     Reading data from directory:
+     /home/giannozz/q-e/tempdir/sih4.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file H.pz-vbc.UPF: wavefunction(s)  1S renormalized
+
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          78      78     20                  927      927     113
+     Max          79      79     22                  932      932     116
+     Sum         313     313     85                 3719     3719     459
+
+
+ ***  Starting Conjugate Gradient minimization         ***
+ ***  pol. #   1 :  14 iterations
+ ***  pol. #   2 :  14 iterations
+ ***  pol. #   3 :  14 iterations
+
+ATOMIC_POSITIONS
+Si       0.000000000   0.000000000   0.000000000
+H        0.128530744   0.128530744   0.128530744
+H       -0.128530744  -0.128530744   0.128530744
+H       -0.128530744   0.128530744  -0.128530744
+H        0.128530744  -0.128530744  -0.128530744
+
+
+
+     dielectric constant                    polarizability (A^3)
+  4.277817 -0.000007  0.000003       0.797948E+01 -0.339353E-04  0.146027E-04
+ -0.000007  4.277816 -0.000004      -0.339353E-04  0.797948E+01 -0.207437E-04
+  0.000003 -0.000004  4.277813       0.146027E-04 -0.207437E-04  0.797948E+01
+
+     z*( 1)   -0.2516    0.0000   -0.0000
+               0.0000   -0.2516    0.0000
+              -0.0000    0.0000   -0.2516
+
+     z*( 2)   -1.0434   -0.4975   -0.4975
+              -0.4975   -1.0434   -0.4975
+              -0.4975   -0.4975   -1.0434
+
+     z*( 3)   -1.0434   -0.4975    0.4975
+              -0.4975   -1.0434    0.4975
+               0.4975    0.4975   -1.0434
+
+     z*( 4)   -1.0434    0.4975   -0.4975
+               0.4975   -1.0434    0.4975
+              -0.4975    0.4975   -1.0434
+
+     z*( 5)   -1.0434    0.4975    0.4975
+               0.4975   -1.0434   -0.4975
+               0.4975   -0.4975   -1.0434
+
+ ***  Starting Conjugate Gradient minimization         ***
+     d2ion: alpha =   0.50
+ ***  mode #   1 :  13 iterations
+ ***  mode #   2 :  13 iterations
+ ***  mode #   3 :  13 iterations
+ ***  mode #   4 :  14 iterations
+ ***  mode #   5 :  14 iterations
+ ***  mode #   6 :  14 iterations
+ ***  mode #   7 : using symmetry
+ ***  mode #   8 : using symmetry
+ ***  mode #   9 : using symmetry
+ ***  mode #  10 : using symmetry
+ ***  mode #  11 : using symmetry
+ ***  mode #  12 : using symmetry
+ ***  mode #  13 : using symmetry
+ ***  mode #  14 : using symmetry
+ ***  mode #  15 : using symmetry
+  Symmetry violation  sum_ij |D_ij-D_ji| :       0.000004
+  ASR violation  sum_i |D_ij| :       0.000710
+     diagonalizing the dynamical matrix ...
+
+
+ **************************************************************************
+     omega(  1) =-14.582472 [THz] =-486.418912 [cm-1]
+     omega(  2) =-14.582430 [THz] =-486.417514 [cm-1]
+     omega(  3) =-14.582424 [THz] =-486.417304 [cm-1]
+     omega(  4) = -0.000000 [THz] =  -0.000013 [cm-1]
+     omega(  5) = -0.000000 [THz] =  -0.000010 [cm-1]
+     omega(  6) =  0.000007 [THz] =   0.000248 [cm-1]
+     omega(  7) = 24.565243 [THz] = 819.408299 [cm-1]
+     omega(  8) = 24.565307 [THz] = 819.410436 [cm-1]
+     omega(  9) = 28.956579 [THz] = 965.887492 [cm-1]
+     omega( 10) = 28.956590 [THz] = 965.887865 [cm-1]
+     omega( 11) = 28.956613 [THz] = 965.888630 [cm-1]
+     omega( 12) = 74.936149 [THz] =2499.600876 [cm-1]
+     omega( 13) = 74.936153 [THz] =2499.601010 [cm-1]
+     omega( 14) = 74.936171 [THz] =2499.601594 [cm-1]
+     omega( 15) = 82.078670 [THz] =2737.849717 [cm-1]
+ **************************************************************************
+
+     PHCG         :     0.52s CPU         0.55s WALL
+
+     cg_readin    :      0.11s CPU      0.11s WALL (       1 calls)
+     fft          :      0.14s CPU      0.16s WALL (    1224 calls)
+     fft_scatt_yz :      0.08s CPU      0.09s WALL (    3030 calls)
+     fft_scatt_xy :      0.03s CPU      0.03s WALL (    3030 calls)
+     init_vloc    :      0.00s CPU      0.00s WALL (       2 calls)
+     v_of_rho     :      0.00s CPU      0.00s WALL (       1 calls)
+     v_xc         :      0.00s CPU      0.00s WALL (       1 calls)
+     v_h          :      0.00s CPU      0.00s WALL (       1 calls)
+     davcio       :      0.00s CPU      0.00s WALL (       2 calls)
+     init_us_1    :      0.00s CPU      0.01s WALL (       2 calls)
+     cg_setup     :      0.02s CPU      0.02s WALL (       1 calls)
+     setup_dgc    :      0.01s CPU      0.01s WALL (       1 calls)
+     init_us_2    :      0.00s CPU      0.00s WALL (       1 calls)
+     dvpsi_e      :      0.02s CPU      0.02s WALL (       3 calls)
+     stres_us31   :      0.00s CPU      0.00s WALL (       3 calls)
+     stres_us32   :      0.00s CPU      0.00s WALL (       3 calls)
+     stres_us33   :      0.00s CPU      0.00s WALL (       3 calls)
+     stres_us34   :      0.00s CPU      0.00s WALL (       3 calls)
+     calbec       :      0.01s CPU      0.01s WALL (     411 calls)
+     cgsolve      :      0.32s CPU      0.35s WALL (      12 calls)
+     h_h          :      0.01s CPU      0.01s WALL (      42 calls)
+     vloc_psi     :      0.08s CPU      0.09s WALL (     267 calls)
+     fftw         :      0.10s CPU      0.13s WALL (    1806 calls)
+     add_vuspsi   :      0.00s CPU      0.00s WALL (     165 calls)
+     solve_e      :      0.11s CPU      0.11s WALL (       1 calls)
+     a_h          :      0.30s CPU      0.32s WALL (     123 calls)
+     dgradcorr    :      0.15s CPU      0.16s WALL (     123 calls)
+     dielec       :      0.00s CPU      0.00s WALL (       1 calls)
+     dvpsi_kb     :      0.05s CPU      0.05s WALL (     102 calls)
+     solve_ph     :      0.26s CPU      0.28s WALL (       1 calls)
+     dynmat_init  :      0.00s CPU      0.00s WALL (       1 calls)
+     rhod2vkb     :      0.00s CPU      0.00s WALL (       1 calls)
+     drhodv       :      0.05s CPU      0.05s WALL (       6 calls)
+     rdiaghg      :      0.00s CPU      0.00s WALL (       1 calls)

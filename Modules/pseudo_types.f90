@@ -169,6 +169,18 @@ MODULE pseudo_types
 
   END TYPE pseudo_upf
 
+  TYPE pseudo_config
+     INTEGER :: nwfs
+     CHARACTER(len=32)        :: pseud
+     CHARACTER(len=2),POINTER :: els(:)    !=> null()    ! label
+     INTEGER,POINTER          :: nns(:)    !=> null()    ! n
+     INTEGER,POINTER          :: lls(:)    !=> null()    ! l
+     REAL(DP),POINTER         :: ocs(:)    !=> null()    ! occupation
+     REAL(DP),POINTER         :: rcut(:)   !=> null()    ! NC cutoff radius
+     REAL(DP),POINTER         :: rcutus(:) !=> null()    ! US cutoff radius
+     REAL(DP),POINTER         :: enls(:)   !=> null()    ! energy
+  END TYPE pseudo_config
+
 CONTAINS
 
   SUBROUTINE nullify_paw_in_upf( paw )
@@ -200,6 +212,18 @@ CONTAINS
     IF( ASSOCIATED( paw%oc ) )         DEALLOCATE ( paw%oc )
   END SUBROUTINE deallocate_paw_in_upf
   !
+   SUBROUTINE deallocate_pseudo_config(conf)
+      TYPE(pseudo_config),INTENT(INOUT) :: conf
+      if (associated(conf%els)   ) deallocate(conf%els)
+      if (associated(conf%nns)   ) deallocate(conf%nns)
+      if (associated(conf%lls)   ) deallocate(conf%lls)
+      if (associated(conf%ocs)   ) deallocate(conf%ocs)
+      if (associated(conf%rcut)  ) deallocate(conf%rcut)
+      if (associated(conf%rcutus)) deallocate(conf%rcutus)
+      if (associated(conf%enls)  ) deallocate(conf%enls)
+   END SUBROUTINE deallocate_pseudo_config
+
+
   !
   SUBROUTINE nullify_pseudo_upf( upf )
     TYPE( pseudo_upf ), INTENT(INOUT) :: upf

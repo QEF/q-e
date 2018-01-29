@@ -84,7 +84,6 @@ commutator_Hx_psi.o : ../Modules/recvec.o
 commutator_Hx_psi.o : ../Modules/uspp.o
 commutator_Hx_psi.o : ../Modules/wavefunctions.o
 commutator_Hx_psi.o : ../PW/src/pwcom.o
-compute_vsgga.o : ../Modules/cell_base.o
 compute_vsgga.o : ../Modules/constants.o
 compute_vsgga.o : ../Modules/fft_base.o
 compute_vsgga.o : ../Modules/funct.o
@@ -103,10 +102,7 @@ dfpt_tetra_mod.o : ../PW/src/symm_base.o
 dfpt_tetra_mod.o : ../PW/src/tetra.o
 dfpt_tetra_mod.o : ../UtilXlib/mp.o
 dfpt_tetra_mod.o : lrcom.o
-dgradcorr.o : ../FFTXlib/fft_interfaces.o
-dgradcorr.o : ../Modules/constants.o
-dgradcorr.o : ../Modules/control_flags.o
-dgradcorr.o : ../Modules/fft_base.o
+dgradcorr.o : ../FFTXlib/fft_types.o
 dgradcorr.o : ../Modules/kind.o
 dgradcorr.o : ../Modules/noncol.o
 dgradcorr.o : ../PW/src/pwcom.o

@@ -31,6 +31,7 @@ subroutine ld1_readin(input_file)
                          nnl, jjts, zval, title, write_coulomb, &
                          nlc, rm, rho0, lloc, rcore, rcloc, nlcc, & 
                          file_pseudo, file_pseudopw, &
+                         use_xsd, &  
                          file_potscf, file_screen, file_qvan, file_recon, &
                          file_wfcaegen, file_wfcncgen, file_wfcusgen, &
                          file_core, file_beta, file_chi, file_charge, author, &
@@ -136,6 +137,7 @@ subroutine ld1_readin(input_file)
        rmatch_augfun_nc, & ! if true the norm conserving core radii are
                            ! used to smooth the Q functions
        file_pseudopw, & ! output file where the pseudopotential is written
+       use_xsd,       & ! output xml schema used for upf file 
        file_screen,   & ! output file for the screening potential
        file_core,     & ! output file for total and core charge
        file_beta,     & ! output file for the beta functions
@@ -168,6 +170,7 @@ subroutine ld1_readin(input_file)
   file_wfcaegen = ' '
   file_wfcncgen = ' '
   file_wfcusgen = ' '
+  !
   !
   ! nullify grid object before it is used
   !

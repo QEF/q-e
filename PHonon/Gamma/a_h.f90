@@ -18,7 +18,7 @@ SUBROUTINE A_h(npw,e,h,ah)
   USE scf,      ONLY : vrs, rho
   USE fft_base, ONLY : dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
-  USE gvect,    ONLY : gstart, ngm, g, gg
+  USE gvect,    ONLY : gstart, g, gg
   USE constants,  ONLY: degspin, e2, fpi
   USE becmod, ONLY: bec_type, becp, calbec
   USE cgcom
@@ -30,8 +30,9 @@ SUBROUTINE A_h(npw,e,h,ah)
   COMPLEX(DP) :: h(npwx,nbnd), ah(npwx,nbnd)
   !
   COMPLEX(DP) :: fp, fm
-  COMPLEX(DP), POINTER :: dpsic(:), drhoc(:), dvxc(:)
-  real(DP), POINTER  :: dv(:), drho(:)
+  COMPLEX(DP), POINTER :: dpsic(:), drhoc(:)
+  REAL(dp), allocatable :: dv(:)
+  real(DP), POINTER  :: drho(:)
   !
   CALL start_clock('a_h')
   !
@@ -93,7 +94,6 @@ SUBROUTINE A_h(npw,e,h,ah)
      ENDIF
   ENDDO
   !
-  NULLIFY(dpsic)
   ! V_NL psi
   CALL calbec ( npw, vkb, h, becp)
   IF (nkb > 0) CALL add_vuspsi (npwx, npw, nbnd, ah)
@@ -102,23 +102,29 @@ SUBROUTINE A_h(npw,e,h,ah)
      drhoc(j) = cmplx(drho(j),0.d0,kind=DP)
   ENDDO
   CALL fwfft ('Rho', drhoc, dfftp)
+  DO j = 1,dfftp%ngm
+     dpsic(j) = drhoc(dfftp%nl(j))
+  ENDDO
   !
-  ! drho is deltarho(r), drhoc is deltarho(g)
+  ! drho is deltarho(r)
+  ! drhoc is deltarho(g) on the FFT grid
+  ! dpsic is deltarho(g) on the G-vector grid
   !
   !  mu'(n(r)) psi(r) delta psi(r)
   !
-  dvxc  => aux2
+  ALLOCATE (dv(dfftp%nnr))
   DO j = 1,dfftp%nnr
-     dvxc(j) = drho(j)*dmuxc(j)
+     dv(j) = drho(j)*dmuxc(j)
   ENDDO
   !
   !  add gradient correction contribution (if any)
   !
   CALL start_clock('dgradcorr')
   IF (dft_is_gradient() ) CALL dgradcor1  &
-       (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,            &
-        drho, drhoc, dfftp%nnr, nspin, dfftp%nl, dfftp%nlm, ngm, g, alat, omega, dvxc)
+       (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,            &
+        drho, dpsic, nspin, g, dv)
   CALL stop_clock('dgradcorr')
+  NULLIFY(dpsic)
   NULLIFY (drho)
   !
   !  1/|r-r'| * psi(r') delta psi(r')
@@ -127,7 +133,7 @@ SUBROUTINE A_h(npw,e,h,ah)
   !
   IF (gstart==2) drhoc(dfftp%nl(1)) = 0.d0
   !
-  DO j = gstart,ngm
+  DO j = gstart,dfftp%ngm
      drhoc(dfftp%nl (j)) = e2*fpi*drhoc(dfftp%nl(j))/ (tpiba2*gg(j))
      drhoc(dfftp%nlm(j)) = conjg(drhoc(dfftp%nl (j)))
   ENDDO
@@ -135,12 +141,14 @@ SUBROUTINE A_h(npw,e,h,ah)
   !
   ! drhoc now contains deltaV_hartree
   !
-  dv => auxr
   DO j = 1,dfftp%nnr
-     dv(j) = -  dble(dvxc(j)) - dble(drhoc(j))
+     dv(j) = - dv(j) - dble(drhoc(j))
   ENDDO
   !
   CALL vloc_psi_gamma(npwx, npw, nbnd, evc, dv, ah)
+  !
+  NULLIFY(drhoc)
+  DEALLOCATE (dv)
   !
   ! set to zero the imaginary part of ah at G=0
   ! needed for numerical stability

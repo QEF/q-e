@@ -552,12 +552,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     where beta is the angle between axis a and c
 
                13          Monoclinic base-centered        celldm(2)=b/a
-                                                           celldm(3)=c/a,
+                           (unique axis c)                 celldm(3)=c/a,
                                                            celldm(4)=cos(ab)
-                    v1 = (  a/2,         0,                -c/2),
-                    v2 = (b*cos(gamma), b*sin(gamma), 0),
-                    v3 = (  a/2,         0,                  c/2),
+                    v1 = (  a/2,         0,          -c/2),
+                    v2 = (b*cos(gamma), b*sin(gamma), 0  ),
+                    v3 = (  a/2,         0,           c/2),
                     where gamma is the angle between axis a and b
+
+              -13          Monoclinic base-centered        celldm(2)=b/a
+                           (unique axis b)                 celldm(3)=c/a,
+                                                           celldm(5)=cos(ac)
+                    v1 = (  a/2,         0,          -c/2),
+                    v2 = (  a/2,         0,           c/2),
+                    v3 = (b*cos(beta),   0,   b*sin(beta)),
+                    where beta is the angle between axis a and c
+ 
 
                14          Triclinic                       celldm(2)= b/a,
                                                            celldm(3)= c/a,
@@ -1669,7 +1678,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                  This allows to give in input only the inequivalent atomic 
                  positions. The positions of all the symmetry equivalent atoms
                  are calculated by the code. Used only when the atomic positions
-                 are of type crystal_sg. 
+                 are of type crystal_sg. See also @ref uniqueb,
+                 @ref origin_choice, @ref rhombohedral
              }
          }
 
@@ -2583,7 +2593,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     in relative coordinates of the primitive lattice.
                     This option differs from the previous one because
                     in this case only the symmetry inequivalent atoms
-                    are given. The variable space_group must indicate
+                    are given. The variable @ref space_group must indicate
                     the space group number used to find the symmetry
                     equivalent atoms. The other variables that control 
                     this option are uniqueb, origin_choice, and 

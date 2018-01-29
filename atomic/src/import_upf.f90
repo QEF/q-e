@@ -44,11 +44,7 @@ subroutine import_upf ( )
   !
   ! upf%grid => rgrid  is be associated in read_upf
   !
-  iunps=2
-  open(unit=iunps,file=file_pseudo,status='old',form='formatted', &
-       err=100, iostat=ios)
-100   call errore('import_upf','open error on file '//file_pseudo,ios)
-  call read_upf(upf, rgrid, ierr, unit=iunps)
+  call read_upf(upf, rgrid, ierr, filename = file_pseudo)
   !
   if (ierr>0) &
      call errore('import_upf','reading pseudo upf',abs(ierr))

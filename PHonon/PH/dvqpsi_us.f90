@@ -22,7 +22,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   USE kinds, only : DP
   USE funct,     ONLY : dft_is_gradient, dft_is_nonlocc
   USE ions_base, ONLY : nat, ityp
-  USE cell_base, ONLY : tpiba, alat
+  USE cell_base, ONLY : tpiba
   USE fft_base,  ONLY : dfftp, dffts
   USE fft_interfaces, ONLY: fwfft, invfft
   USE gvect,     ONLY : eigts1, eigts2, eigts3, mill, g, &
@@ -156,9 +156,9 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
       END DO
 
       IF ( dft_is_gradient() ) &
-         CALL dgradcorr (rho%of_r, grho, &
+         CALL dgradcorr (dfftp, rho%of_r, grho, &
                dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, drhoc,&
-               dfftp%nnr, 1, nspin_gga, dfftp%nl, ngm, g, alat, aux)
+               1, nspin_gga, g, aux)
 
       IF (dft_is_nonlocc()) &
          CALL dnonloccorr(rho%of_r, drhoc, xq, aux)

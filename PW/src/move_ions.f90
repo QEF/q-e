@@ -39,7 +39,7 @@ SUBROUTINE move_ions ( idone )
   USE force_mod,              ONLY : force, sigma
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, &
                                      lconstrain, conv_ions, lmd, tr2
-  USE basis,                  ONLY : starting_wfc
+  USE basis,                  ONLY : starting_wfc, starting_pot
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE mp_images,              ONLY : intra_image_comm
@@ -347,6 +347,7 @@ SUBROUTINE move_ions ( idone )
      lcheck_mag = .FALSE.
      restart_with_starting_magnetiz = .FALSE.
      if (trim(starting_wfc) == 'file') starting_wfc = 'atomic+random'
+     starting_pot='atomic'
      ! ... conv_ions is set to .FALSE. to perform a final scf cycle
      conv_ions = .FALSE.
      !

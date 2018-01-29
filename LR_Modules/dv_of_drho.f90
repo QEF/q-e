@@ -23,7 +23,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   USE fft_base,          ONLY : dfftp
   USE fft_interfaces,    ONLY : fwfft, invfft
   USE gvect,             ONLY : ngm, g, gstart
-  USE cell_base,         ONLY : alat, tpiba2, omega
+  USE cell_base,         ONLY : tpiba2, omega
   USE noncollin_module,  ONLY : nspin_lsda, nspin_mag, nspin_gga
   USE funct,             ONLY : dft_is_gradient, dft_is_nonlocc
   USE scf,               ONLY : rho, rho_core
@@ -97,8 +97,8 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   ! grho contains already the core charge
   !
   if ( dft_is_gradient() ) call dgradcorr &
-       (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-       dvscf, dfftp%nnr, nspin_mag, nspin_gga, dfftp%nl, ngm, g, alat, dvaux)
+       (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
+       dvscf, nspin_mag, nspin_gga, g, dvaux)
   !
   if (dft_is_nonlocc()) then
      call dnonloccorr(rho%of_r, dvscf, xq, dvaux)

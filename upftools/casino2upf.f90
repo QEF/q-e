@@ -17,6 +17,7 @@ PROGRAM casino2upf
   USE write_upf_v2_module, ONLY :  write_upf_v2
   USE pseudo_types, ONLY : nullify_pseudo_upf, deallocate_pseudo_upf, &
                            pseudo_upf
+  USE FoX_wxml,     ONLY : xml_OpenFile, xml_Close, xmlf_t 
   IMPLICIT NONE
   !
   INTEGER, EXTERNAL :: find_free_unit
@@ -27,6 +28,7 @@ PROGRAM casino2upf
   INTEGER, ALLOCATABLE :: waveunit(:)
   INTEGER nofiles, i, ios, pp_unit
   TYPE(pseudo_upf)      :: upf_out
+  TYPE(xmlf_t)          :: pp_desc
 
   NAMELIST / inputpp / &
        pp_data,        &         !CASINO pp filename
@@ -82,11 +84,12 @@ PROGRAM casino2upf
   CALL convert_casino(upf_out)
 
   PRINT '(''Output PP file in UPF format :  '',a)', upf_file
-  OPEN(unit=2,file=upf_file,status='unknown',form='formatted')
- 
-  CALL write_upf_v2(u=2,upf=upf_out)
+  CALL  xml_OpenFile (filename = TRIM(upf_file), XF = pp_desc, UNIT = 2, PRETTY_PRINT =.true., &
+                                 REPLACE = .true., NAMESPACE = .true. )
 
-  CLOSE(unit=2,status='keep')
+  CALL write_upf_v2(pp_desc,upf=upf_out)
+
+  CALL xml_Close(pp_desc)
   CALL  deallocate_pseudo_upf( upf_out )
 
   STOP
