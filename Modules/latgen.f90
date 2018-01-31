@@ -573,7 +573,7 @@ SUBROUTINE abc2celldm ( ibrav, a,b,c,cosab,cosac,cosbc, celldm )
      !
   ELSE IF ( ibrav ==-12 .OR. ibrav ==-13 ) THEN
      !
-     ! ... monoclinic P lattice, unique axis b
+     ! ... monoclinic P or base centered lattice, unique axis b
      !
      celldm(5) = cosac
      !

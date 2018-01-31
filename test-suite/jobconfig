@@ -4,7 +4,7 @@ inputs_args = ('atom.in', ''), ('atom-lsda.in',''), ('atom-occ1.in',''), ('atom-
 
 [pw_b3lyp/]
 program = PW
-inputs_args = ('b3lyp-O.in', ''), ('b3lyp-h2o.in','')
+inputs_args = ('b3lyp-O.in', ''), ('b3lyp-h2o.in',''), ('x3lyp-O.in', ''), ('x3lyp-h2o.in','')
 
 [pw_berry/]
 program = PW

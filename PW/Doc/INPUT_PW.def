@@ -470,8 +470,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var ibrav -type INTEGER {
             status { REQUIRED }
             info {
-                Bravais-lattice index. If ibrav /= 0, specify EITHER
-                [ @ref celldm(1)-@ref celldm(6) ] OR [ @ref A, @ref B, @ref C, @ref cosAB, @ref cosAC, @ref cosBC ]
+                Bravais-lattice index. Optional only if space_group is set.
+                If ibrav /= 0, specify EITHER [ @ref celldm(1)-@ref celldm(6) ]
+                OR [ @ref A, @ref B, @ref C, @ref cosAB, @ref cosAC, @ref cosBC ]
                 but NOT both. The lattice parameter "alat" is set to
                 alat = celldm(1) (in a.u.) or alat = A (in Angstrom);
                 see below for the other parameters.
