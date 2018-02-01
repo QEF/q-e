@@ -19,7 +19,7 @@
        x_gamma_extrapolation = .TRUE.
  /
  &ELECTRONS
-                    conv_thr = 0.5d-3
+                    conv_thr = 0.5d-5
  /
 ATOMIC_SPECIES
   O 16.0  O.blyp-mt.UPF
