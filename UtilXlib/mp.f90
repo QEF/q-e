@@ -2242,7 +2242,21 @@ END SUBROUTINE mp_circular_shift_left_c2d
 !------------------------------------------------------------------------------!
 !..mp_count_nodes
 SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
-
+  !
+  ! ... This routine counts the number of nodes using
+  ! ...  MPI_GET_PROCESSOR_NAME in the group specified by `group`.
+  ! ...  It returns colors and keys to be used in MPI_COMM_SPLIT.
+  ! ...  When running in parallel, the evaluation of color and key
+  ! ...  is done by all processors.
+  ! ...
+  ! ...
+  ! ... input:
+  ! ...    num_nodes   number of nodes included in the comunicator
+  ! ...    color       Integer used for subset assignment (nonnegative integer).
+  ! ...    key         Integer used for rank assignment (integer).
+  !
+  ! ... output:
+  ! ...    group  Communicator (handle).
 ! ...
   IMPLICIT NONE
   INTEGER, INTENT (OUT) :: num_nodes
@@ -2288,6 +2302,7 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
   !
   ! Allocate data and store all names in a single variable
   ! with a collective MPI communication on all nodes.
+  ! Names shorter than max_nodename_len are filled with * characters
   ALLOCATE(character(len=numtask*max_nodename_len) :: all_node_names)
   CALL MPI_ALLGATHER(nodename, max_nodename_len, MPI_CHARACTER, &
                       all_node_names, max_nodename_len, MPI_CHARACTER, &
@@ -2298,14 +2313,18 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
   ! node_found is a list of numtask logicals set to false.
   ! Starting from the first entry in all_node_names,
   ! we loop on the following elements and check if the same
-  ! value is found. If it has already been found the value is already 
-  ! set to .true. and nothing is done, otherwise the corresponding value in 
-  ! node_counter is set to .true.
+  ! value is found. During the outermost iteration, if the node name
+  ! has already been found the value is already set to .true. and nothing is done,
+  ! otherwise the corresponding value in  node_counter is set to .true.
+  !
   ALLOCATE(character(len=max_nodename_len) :: current_name)
   ALLOCATE(node_found(numtask),color_list(numtask),key_list(numtask))
   node_found(:)  = .false.
   color_list(:) = -1
   key_list(:)   = -1
+  !
+  ! c is the counter for colors
+  ! k is the counter for keys
   !
   c = 0
   DO i=0,numtask-1
@@ -2341,7 +2360,7 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
   END DO
   ! Safety checks
   IF ( MINVAL(color_list) < 0 ) CALL mp_stop( 8107 )
-  IF ( MINVAL(key_list) < 0 )   CALL mp_stop( 8108 )
+  IF ( MINVAL(key_list)   < 0 ) CALL mp_stop( 8108 )
   !
   color     = color_list(me+1)
   key       = key_list(me+1)
