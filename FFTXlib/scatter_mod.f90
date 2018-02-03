@@ -88,7 +88,7 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
 #if defined(__MPI)
   !
   INTEGER :: ierr, me2, nproc2, iproc2, ncpx, my_nr2p, nr2px, ip, ip0
-  INTEGER :: i, it, j, k, kfrom, kdest, offset, ioff, mc, m1, m3, i1, icompact, sendsize
+  INTEGER :: i, it, j, k, kfrom, kdest, mc, m1, m3, i1, icompact, sendsize
   INTEGER, ALLOCATABLE :: ncp_(:), nr1p_(:), indx(:,:)
   !
 #if defined(__NON_BLOCKING_SCATTER)
@@ -139,24 +139,24 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
      !
      ! step one: store contiguously the slices
      !
-     offset = 0
+!$omp parallel do collapse(2) private(kdest,kfrom)
      DO iproc2 = 1, nproc2
-        kdest = ( iproc2 - 1 ) * sendsize
-        kfrom = offset
-        DO k = 1, ncp_(me2)
+        DO k = 0, ncp_(me2)-1
+           kdest = ( iproc2 - 1 ) * sendsize + nr2px * k
+           kfrom = desc%nr2p_offset(iproc2) + desc%nr2x *k
            DO i = 1, desc%nr2p( iproc2 )
               f_aux ( kdest + i ) =  f_in ( kfrom + i )
            ENDDO
-           kdest = kdest + nr2px
-           kfrom = kfrom + desc%nr2x
         ENDDO
-        offset = offset + desc%nr2p( iproc2 )
+     ENDDO
+!$omp end parallel do
 #if defined(__NON_BLOCKING_SCATTER)
+     DO iproc2 = 1, nproc2
         CALL mpi_isend( f_aux( (iproc2-1)*sendsize + 1 ), sendsize, &
                         MPI_DOUBLE_COMPLEX, iproc2-1, me2, desc%comm2, &
                         sh( iproc2 ), ierr )
-#endif
      ENDDO
+#endif
      !
      ! step two: communication  across the    nproc3    group
      !
@@ -188,42 +188,52 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
      if (nproc2 > 1) call mpi_waitall( nproc2, rh, MPI_STATUSES_IGNORE, ierr )
 #endif
      !
+!$omp parallel do collapse(2) private(it,m3,i1,m1,icompact)
      DO iproc2 = 1, nproc2
-        it = ( iproc2 - 1 ) * sendsize
-        DO i = 1, ncp_( iproc2 )
-           m3 = (i-1)/nr1p_(iproc2)+1 ; i1  = mod(i-1,nr1p_(iproc2))+1 ;  m1 = indx(i1,iproc2)
+        DO i = 0, ncpx-1
+           IF(i>=ncp_(iproc2)) CYCLE ! control i from 0 to ncp_(iproc2)-1
+           it = ( iproc2 - 1 ) * sendsize + nr2px * i
+           m3 = i/nr1p_(iproc2)+1
+           i1 = mod(i,nr1p_(iproc2))+1
+           m1 = indx(i1,iproc2)
            icompact = m1 + (m3-1)*desc%nr1x*my_nr2p
            DO j = 1, my_nr2p
               !f_aux( m1 + (j-1)*desc%nr1x + (m3-1)*desc%nr1x*my_nr2p ) = f_in( j + it )
               f_aux( icompact ) = f_in( j + it )
               icompact = icompact + desc%nr1x
            ENDDO
-           it = it + nr2px
         ENDDO
      ENDDO
+!$omp end parallel do
 
   ELSE
      !
      !  "backward" scatter from planes to columns
      !
+!$omp parallel do collapse(2) private(it,m3,i1,m1,icompact)
      DO iproc2 = 1, nproc2
-        it = ( iproc2 - 1 ) * sendsize
-        DO i = 1, ncp_( iproc2 )
-           m3 = (i-1)/nr1p_(iproc2)+1 ; i1  = mod(i-1,nr1p_(iproc2))+1 ;  m1 = indx(i1,iproc2)
+        DO i = 0, ncpx-1
+           IF(i>=ncp_(iproc2)) CYCLE ! control i from 0 to ncp_(iproc2)-1
+           it = ( iproc2 - 1 ) * sendsize + nr2px * i
+           m3 = i/nr1p_(iproc2)+1
+           i1 = mod(i,nr1p_(iproc2))+1
+           m1 = indx(i1,iproc2)
            icompact = m1 + (m3-1)*desc%nr1x*my_nr2p
            DO j = 1, my_nr2p
               !f_in( j + it ) = f_aux( m1 + (j-1)*desc%nr1x + (m3-1)*desc%nr1x*my_nr2p )
               f_in( j + it ) = f_aux( icompact )
               icompact = icompact + desc%nr1x
            ENDDO
-           it = it + nr2px
         ENDDO
+     ENDDO
+!$omp end parallel do
 #if defined(__NON_BLOCKING_SCATTER)
+     DO iproc2 = 1, nproc2
         IF( nproc2 > 1 ) CALL mpi_isend( f_in( ( iproc2 - 1 ) * sendsize + 1 ), &
                               sendsize, MPI_DOUBLE_COMPLEX, iproc2-1, me2, &
                               desc%comm2, sh( iproc2 ), ierr )
-#endif
      ENDDO
+#endif
      IF (nproc2==1) GO TO 20
 
      !
@@ -252,19 +262,17 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
      ! not useless ... clean the array to be returned from the garbage of previous A2A step
      f_in = (0.0_DP, 0.0_DP) !
      !
-     offset = 0
+!$omp parallel do collapse(2) private(kdest,kfrom)
      DO iproc2 = 1, nproc2
-        kdest = ( iproc2 - 1 ) * sendsize
-        kfrom = offset 
-        DO k = 1, ncp_(me2)
+        DO k = 0, ncp_(me2)-1
+           kdest = ( iproc2 - 1 ) * sendsize + nr2px * k
+           kfrom = desc%nr2p_offset(iproc2) + desc%nr2x * k
            DO i = 1, desc%nr2p( iproc2 )
               f_in ( kfrom + i ) = f_aux ( kdest + i )
            ENDDO
-           kdest = kdest + nr2px
-           kfrom = kfrom + desc%nr2x
         ENDDO
-        offset = offset + desc%nr2p( iproc2 )
      ENDDO
+!$omp end parallel do
 
 20   CONTINUE
 
