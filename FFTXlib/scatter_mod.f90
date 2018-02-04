@@ -334,8 +334,8 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 #if defined(__MPI)
   !
   INTEGER :: ierr, me, me2, me2_start, me2_end, me3, nproc3, iproc3, ncpx, nr3px, ip, ip0
-  INTEGER :: i, it, k, kfrom, kdest, offset, ioff, mc, m1, m2, i1,  sendsize
-  INTEGER, ALLOCATABLE :: ncp_(:), ir1p_(:)
+  INTEGER :: i, it, k, kfrom, kdest, mc, m1, m2, i1,  sendsize
+  INTEGER, ALLOCATABLE :: ncp_(:), ir1p_(:), me2_offset(:), me2_iproc3_offset(:,:)
   INTEGER :: my_nr1p_
   !
 #if defined(__NON_BLOCKING_SCATTER)
@@ -370,12 +370,21 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
   !
   nr3px = MAXVAL ( desc%nr3p )  ! maximum number of Z values to be exchanged
   ncpx  = MAXVAL ( ncp_ )       ! maximum number of Z columns to be exchanged
-  if (abs(isgn)==3) then
-     ncpx = ncpx * desc%nproc2  ! if it's a task group FFT groups of columns are exchanged
-  end if
-  
   sendsize = ncpx * nr3px       ! dimension of the scattered chunks
-
+  if (abs(isgn)==3) then
+     sendsize = sendsize * desc%nproc2  ! if it's a task group FFT groups of columns are exchanged
+  end if
+  !
+  ALLOCATE ( me2_offset( me2_end - me2_start + 1 ) )
+  ALLOCATE ( me2_iproc3_offset( me2_end - me2_start + 1, nproc3 ) )
+  !
+  me2_offset(1) = 0
+  me2_iproc3_offset(1,1:nproc3) = 0
+  DO me2 = me2_start, me2_end-1
+    me2_offset(me2+1) = me2_offset(me2) + ncp_(desc%iproc(me2,me3))
+    me2_iproc3_offset(me2+1,1:nproc3) = me2_iproc3_offset(me2,1:nproc3) + ncp_(desc%iproc(me2,1:nproc3))
+  ENDDO
+  !
   ierr = 0
   IF (isgn.gt.0) THEN
 
@@ -385,27 +394,27 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      !
      ! step one: store contiguously the slices
      !
-     offset = 0
+!$omp parallel do collapse(3) private(kdest,kfrom)
      DO iproc3 = 1, nproc3
-        kdest = ( iproc3 - 1 ) * sendsize
-        kfrom = offset
         DO me2 = me2_start, me2_end
-           ip = desc%iproc(me2,me3)
-           DO k = 1, ncp_ (ip)   ! was ncp_(me3)
+           DO k = 0, ncpx-1   ! was ncp_(me3)
+              IF (k>=ncp_(desc%iproc(me2,me3))) CYCLE ! control k from 0 to ncp_(desc%iproc(me2,me3))-1
+              kdest = ( iproc3 - 1 ) * sendsize + nr3px * ( me2_offset( me2 - me2_start + 1 ) + k )
+              kfrom = desc%nr3p_offset(iproc3) + desc%nr3x * ( me2_offset( me2 - me2_start + 1 ) + k )
               DO i = 1, desc%nr3p( iproc3 )
                  f_aux ( kdest + i ) =  f_in ( kfrom + i )
               ENDDO
-              kdest = kdest + nr3px
-              kfrom = kfrom + desc%nr3x
            ENDDO
         ENDDO
-        offset = offset + desc%nr3p( iproc3 )
+     ENDDO
+!$omp end parallel do
 #if defined(__NON_BLOCKING_SCATTER)
+     DO iproc3 = 1, nproc3
         CALL mpi_isend( f_aux( ( iproc3 - 1 ) * sendsize + 1 ), sendsize, &
                         MPI_DOUBLE_COMPLEX, iproc3-1, me3, desc%comm3, &
                         sh( iproc3 ), ierr )
-#endif
      ENDDO
+#endif
      !
      ! ensures that no garbage is present in the output 
      ! useless; the later accessed elements are overwritten by the A2A step
@@ -441,50 +450,56 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      if (nproc3 > 1) call mpi_waitall( nproc3, rh, MPI_STATUSES_IGNORE, ierr )
 #endif
      !
+!$omp parallel do collapse(3) private(ip,it,mc,m1,m2,i1)
      DO iproc3 = 1, desc%nproc3
-        it = ( iproc3 - 1 ) * sendsize
         DO me2 = me2_start, me2_end
-           ip = desc%iproc( me2, iproc3)
-           ioff = desc%iss(ip)
-           DO i = 1, ncp_( ip ) ! was ncp_(iproc3)
-              mc = desc%ismap( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
-              m1 = mod (mc-1,desc%nr1x) + 1 ; m2 = (mc-1)/desc%nr1x + 1 
-              i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x 
+           DO i = 1, ncpx ! was ncp_(iproc3)
+              ip = desc%iproc( me2, iproc3)
+              IF ( i>ncp_(ip) ) CYCLE
+              it = ( iproc3 - 1 ) * sendsize + nr3px * ( me2_iproc3_offset( me2 - me2_start + 1, iproc3 ) + i - 1 )
+              mc = desc%ismap( i + desc%iss(ip) ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
+              m1 = mod (mc-1,desc%nr1x) + 1
+              m2 = (mc-1)/desc%nr1x + 1
+              i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x
               DO k = 1, desc%my_nr3p
                  f_aux( i1 ) = f_in( k + it )
                  i1 = i1 + desc%nr2x*my_nr1p_
               ENDDO
-              it = it + nr3px
            ENDDO
         ENDDO
      ENDDO
+!$omp end parallel do
 
   ELSE
      !
      !  "backward" scatter from planes to columns
      !
+!$omp parallel do collapse(3) private(ip,it,mc,m1,m2,i1)
      DO iproc3 = 1, desc%nproc3
-        it = ( iproc3 - 1 ) * sendsize
         DO me2 = me2_start, me2_end
-           ip = desc%iproc(me2, iproc3)
-           ioff = desc%iss(ip)
-           DO i = 1, ncp_( ip )
-              mc = desc%ismap( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
-              m1 = mod (mc-1,desc%nr1x) + 1 ; m2 = (mc-1)/desc%nr1x + 1 
-              i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x 
+           DO i = 1, ncpx
+              ip = desc%iproc( me2, iproc3)
+              IF ( i>ncp_(ip) ) CYCLE
+              it = ( iproc3 - 1 ) * sendsize + nr3px * ( me2_iproc3_offset( me2 - me2_start + 1, iproc3 ) + i - 1 )
+              mc = desc%ismap( i + desc%iss(ip) ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
+              m1 = mod (mc-1,desc%nr1x) + 1
+              m2 = (mc-1)/desc%nr1x + 1
+              i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x
               DO k = 1, desc%my_nr3p
                  f_in( k + it ) = f_aux( i1 )
                  i1 = i1 + desc%nr2x * my_nr1p_
               ENDDO
-              it = it + nr3px
            ENDDO
         ENDDO
+     ENDDO
+!$omp end parallel do
 #if defined(__NON_BLOCKING_SCATTER)
+     DO iproc3 = 1, desc%nproc3
         IF( nproc3 > 1 ) CALL mpi_isend( f_in( ( iproc3 - 1 ) * sendsize + 1 ), &
                                         sendsize, MPI_DOUBLE_COMPLEX, iproc3-1, &
                                         me3, desc%comm3, sh( iproc3 ), ierr )
-#endif
      ENDDO
+#endif
      
      IF( nproc3 == 1 ) GO TO 20
      !
@@ -509,22 +524,20 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      !
      !  step one: store contiguously the columns
      !
-     offset = 0
+!$omp parallel do collapse(3) private(kdest,kfrom)
      DO iproc3 = 1, nproc3
-        kdest = ( iproc3 - 1 ) * sendsize
-        kfrom = offset 
         DO me2 = me2_start, me2_end
-           ip = desc%iproc(me2,me3)
-           DO k = 1, ncp_ (ip) 
+           DO k = 0, ncpx-1   ! was ncp_(me3)
+              IF (k>=ncp_(desc%iproc(me2,me3))) CYCLE ! control k from 0 to ncp_(desc%iproc(me2,me3))-1
+              kdest = ( iproc3 - 1 ) * sendsize + nr3px * ( me2_offset( me2 - me2_start + 1 ) + k )
+              kfrom = desc%nr3p_offset(iproc3) + desc%nr3x * ( me2_offset( me2 - me2_start + 1 ) + k )
               DO i = 1, desc%nr3p( iproc3 )
                  f_in ( kfrom + i ) = f_aux ( kdest + i )
               ENDDO
-              kdest = kdest + nr3px
-              kfrom = kfrom + desc%nr3x
            ENDDO
         ENDDO
-        offset = offset + desc%nr3p( iproc3 )
      ENDDO
+!$omp end parallel do
 
      ! clean extra array elements in each stick
 
@@ -541,7 +554,7 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 
   ENDIF
 
-  DEALLOCATE ( ncp_ , ir1p_ )
+  DEALLOCATE ( ncp_ , ir1p_ , me2_offset , me2_iproc3_offset )
   CALL stop_clock ('fft_scatt_yz')
 
 #endif
