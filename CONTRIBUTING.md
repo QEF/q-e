@@ -7,17 +7,22 @@ You can contribute to this project in many ways:
 * [preparing new tests for the test suite](#adding tests)
 
 ## Development 
-If you want to contribute serious and non-trivial stuff ( or even simple and trivial  stuff ) you just have  to *fork* this repository; keep it updated; when your contribution is ready submit a merge request to this repository. At the moment the merge requests has to  be addressed to the master branch; this shall  change in the next future. 
-     A basic guide on how to work with `git` can be found [here](https://docs.gitlab.com/ce/gitlab-basics/README.html). A  more thorough introduction to `git` is provided by [proGit](https://git-scm.com/book/en/v2) online e-book 
+If you want to contribute serious and non-trivial stuff ( or even simple and trivial  stuff ) you just have  to *fork* this repository; keep it updated;
+when your contribution is ready,  submit a merge request to the development branch  of this repository. 
+After some basic tests ran by gitlab CI and approval your changes will be merged in develop.    
+When  the whole  test-suite has been tested your contribution  will be merged  to the master branch. 
+    
+A basic guide on how to work with `git` can be found [here](https://docs.gitlab.com/ce/gitlab-basics/README.html). A  more thorough introduction to `git` is provided by [proGit](https://git-scm.com/book/en/v2) online e-book 
 
 #### Proposed workflow 
 
    - register on [gitlab](https://gitlab.com/users/sign_in); 
-   - fork the QEF/q-e project [?](https://docs.gitlab.com/ce/gitlab-basics/fork-project.html);
-   - create a local copy of __your__ repository on your workstation(s). [?](https://docs.gitlab.com/ce/gitlab-basics/command-line-commands.html#clone-your-project);
-   - once your contribution is ready push it into __your__ repository [?](https://docs.gitlab.com/ce/gitlab-basics/start-using-git.html#send-changes-to-gitlab-com); 
-   - create a  merge request to the `develop` branch of QEF/q-e[?](https://docs.gitlab.com/ce/gitlab-basics/add-merge-request.html#how-to-create-a-merge-request)
+   - [fork the QEF/q-e project](https://docs.gitlab.com/ce/gitlab-basics/fork-project.html);
+   - [create a local copy of __your__ repository on your workstation(s)](https://docs.gitlab.com/ce/gitlab-basics/command-line-commands.html#clone-your-project);
+   - [once your contribution is ready push it into __your__ repository](https://docs.gitlab.com/ce/gitlab-basics/start-using-git.html#send-changes-to-gitlab-com); 
+   - [create a  merge request to the `develop` branch of QEF/q-e](https://docs.gitlab.com/ce/gitlab-basics/add-merge-request.html#how-to-create-a-merge-request)
    
+
 
     
 ## Creating  Issues
