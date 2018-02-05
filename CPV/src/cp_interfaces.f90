@@ -31,7 +31,6 @@
    PUBLIC :: compute_xgtab
 
    PUBLIC :: rhoofr
-   PUBLIC :: fillgrad
    PUBLIC :: checkrho
 
    PUBLIC :: writefile
@@ -248,20 +247,6 @@
          INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
       END SUBROUTINE rhoofr_cp
    END INTERFACE
-
-
-   INTERFACE fillgrad
-      SUBROUTINE fillgrad_x( nspin, rhog, gradr )
-         USE kinds,           ONLY: DP         
-         USE gvect,           ONLY: ngm
-         USE fft_base,        ONLY: dfftp
-         IMPLICIT NONE
-         INTEGER, INTENT(IN) :: nspin
-         complex(DP) :: rhog( ngm, nspin )
-         real(DP)    :: gradr( dfftp%nnr, 3, nspin )
-      END SUBROUTINE fillgrad_x
-   END INTERFACE
-
 
    INTERFACE checkrho
       SUBROUTINE checkrho_x(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)

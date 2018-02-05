@@ -2940,7 +2940,7 @@ subroutine tau_xc_array_spin (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, &
   implicit none
 
   integer, intent(in) :: nnr
-  real(DP) :: rho(nnr,2), grho(nnr,3,2), tau(nnr,2), ex(nnr), ec(nnr)
+  real(DP) :: rho(nnr,2), grho(3,nnr,2), tau(nnr,2), ex(nnr), ec(nnr)
   real(DP) :: v1x(nnr,2), v2x(nnr,3), v3x(nnr,2), v1c(nnr,2), v2c(nnr,3), v3c(nnr,2)
 
   !Local variables  
@@ -2959,9 +2959,9 @@ subroutine tau_xc_array_spin (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, &
   do k=1,nnr
 
     do ipol=1,3
-       grho2(1,k) = grho2(1,k) + grho(k,ipol,1)**2
-       grho2(2,k) = grho2(2,k) + grho(k,ipol,1) * grho(k,ipol,2)
-       grho2(3,k) = grho2(3,k) + grho(k,ipol,2)**2
+       grho2(1,k) = grho2(1,k) + grho(ipol,k,1)**2
+       grho2(2,k) = grho2(2,k) + grho(ipol,k,1) * grho(ipol,k,2)
+       grho2(3,k) = grho2(3,k) + grho(ipol,k,2)**2
     end do
 
    !MCA: transforming to libxc format (DIRTY HACK)
