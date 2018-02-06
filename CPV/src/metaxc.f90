@@ -16,7 +16,7 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   !
   ! input
   integer nspin , nnr
-  real(dp)  grho(nnr,3,nspin), rho(nnr,nspin),kedtau(nnr,nspin)
+  real(dp)  grho(3,nnr,nspin), rho(nnr,nspin),kedtau(nnr,nspin)
   ! output: excrho: exc * rho ;  E_xc = \int excrho(r) d_r
   ! output: rhor:   contains the exchange-correlation potential
   real(dp)  etxc
@@ -37,7 +37,7 @@ contains
 
   subroutine  exch_corr_meta_array_mode()
     implicit none
-    real(dp)  :: grho_(nnr,3,nspin) !MCA/HK : store grho only in nspin=2
+    real(dp)  :: grho_(3,nnr,nspin) !MCA/HK : store grho only in nspin=2
     REAL(dp)  :: arho(nnr), segno(nnr), grho2 (nnr),                 &
       & sx(nnr), sc(nnr),                                   &
       & v1x(nnr,nspin), v2x(nnr,nspin*2-1), v3x(nnr,nspin), & !MCA/HK
@@ -47,7 +47,7 @@ contains
       !$omp parallel do
       do k = 1, nnr
         !
-        grho2(k) = grho(k,1,1)**2 + grho(k,2,1)**2 + grho(k,3,1)**2
+        grho2(k) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
         arho(k)  = ABS (rho (k,1) )
         segno(k) = SIGN (1.d0, rho (k,1) )
         !
@@ -64,7 +64,7 @@ contains
       ! v2 contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
       !
       DO ipol = 1, 3  
-        grho(:,ipol,1) =  ( v2x(:,1) + v2c(:,1) )*grho (:,ipol,1) 
+        grho(ipol,:,1) =  ( v2x(:,1) + v2c(:,1) )*grho (ipol,:,1) 
       ENDDO
       !
     ELSE
@@ -82,8 +82,8 @@ contains
         rho(:, is) =  v1x(:,is) + v1c(:,is)
         !
         DO ipol = 1, 3  !MCA/HK: second line is the cross term
-          grho(:,ipol,is) = ( v2x(:,2*is-1) + v2c(:,2*is-1) ) * grho(:,ipol,is) &
-            & + 0.5_dp * ( v2x(:,2) + v2c(:,2) ) * grho_(:,ipol,MOD(is,2)+1) 
+          grho(ipol,:,is) = ( v2x(:,2*is-1) + v2c(:,2*is-1) ) * grho(ipol,:,is) &
+            & + 0.5_dp * ( v2x(:,2) + v2c(:,2) ) * grho_(ipol,:,MOD(is,2)+1) 
         ENDDO
         !
         kedtau(:,is)=  ( v3x(:,is) + v3c(:,is) ) *0.5d0
@@ -112,7 +112,7 @@ contains
       v3xup, v3xdw,grhoup(3),grhodw(3),v3cup, v3cdw, segno, arho, atau
     DO k = 1, nnr
       DO is = 1, nspin
-        grho2 (is) = grho(k,1, is)**2 + grho(k,2,is)**2 + grho(k,3, is)**2
+        grho2 (is) = grho(1,k, is)**2 + grho(2,k,is)**2 + grho(3,k,is)**2
       ENDDO
       IF (nspin == 1) THEN
         !
@@ -128,12 +128,12 @@ contains
           kedtau(k,1)=  (v3x + v3c) *0.5d0
           ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
           DO ipol = 1, 3  
-            grho(k,ipol,1) =  (v2x + v2c)*grho (k,ipol,1) 
+            grho(ipol,k,1) =  (v2x + v2c)*grho (ipol,k,1) 
           ENDDO
           etxc = etxc +  (sx + sc) * segno 
         ELSE  
           DO ipol = 1, 3  
-            grho (k, ipol, 1) = 0.d0  
+            grho (ipol,k,1) = 0.d0  
           ENDDO
           kedtau(k,1)=0.d0
         ENDIF
@@ -148,8 +148,8 @@ contains
         IF (rh.GT.epsr) THEN
           !zeta = (rho (k, 1) - rho (k, 2) ) / rh
           DO ipol=1,3
-            grhoup(ipol)=grho(k,ipol,1)
-            grhodw(ipol)=grho(k,ipol,2)
+            grhoup(ipol)=grho(ipol,k,1)
+            grhodw(ipol)=grho(ipol,k,2)
           END DO
           ! atau=kedtau(k,1)+kedtau(k,2)
           call tau_xc_spin (rho(k,1), rho(k,2), grhoup, grhodw, &
@@ -184,8 +184,8 @@ contains
         ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
         !
         DO ipol = 1, 3  
-          grho(k,ipol,1) = (v2xup*grho(k,ipol,1) + v2cup(ipol))
-          grho(k,ipol,2) = (v2xdw*grho(k,ipol,2) + v2cdw(ipol)) 
+          grho(ipol,k,1) = (v2xup*grho(ipol,k,1) + v2cup(ipol))
+          grho(ipol,k,2) = (v2xdw*grho(ipol,k,2) + v2cdw(ipol)) 
         ENDDO
         kedtau(k,1)=  (v3xup + v3cup) *0.5d0
         kedtau(k,2)=  (v3xdw + v3cdw) *0.5d0
