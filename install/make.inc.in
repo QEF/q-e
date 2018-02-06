@@ -65,7 +65,8 @@ BASEMOD_FLAGS= $(MOD_FLAG)/$(TOPDIR)/iotk/src \
                $(MOD_FLAG)/$(TOPDIR)/FFTXlib \
 	       $(MOD_FLAG)/$(TOPDIR)/LAXlib \
 	       $(MOD_FLAG)/$(TOPDIR)/UtilXlib \
-	       $(MOD_FLAG)/$(TOPDIR)/FoX/finclude
+	       $(MOD_FLAG)/$(TOPDIR)/FoX/finclude \
+		   $(MOD_FLAG)/$(TOPDIR)/EIGENSOLVER_GPU
 
 # Compilers: fortran-90, fortran-77, C
 # If a parallel compilation is desired, MPIF90 should be a fortran-90
