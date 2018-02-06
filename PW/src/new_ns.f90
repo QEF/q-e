@@ -333,10 +333,10 @@ SUBROUTINE new_ns_nc(ns)
   DO ik = 1, nks
 
      npw = ngk (ik)
-     IF (nks > 1) &
+     IF (nks > 1) THEN
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
- 
-     CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
+        CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
+     END IF
      !
      ! make the projection - FIXME: use ZGEMM or calbec instead
      !
