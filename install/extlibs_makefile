@@ -32,7 +32,7 @@ EIGENSOLVER_GPU_URL=https://github.com/NVIDIA/Eigensolver_gpu/archive/${EIGENSOL
 # MAIN target
 #
 all:
-ifdef EIGENSOLVER_VERSION
+ifdef GPU_ARCH
 	$(MAKE) libeigensolver_gpu
 endif 
 	$(MAKE) libblas_$(BLAS_LIBS_SWITCH) 
@@ -107,11 +107,11 @@ libelpa_enabled:
 	cd ../ELPA; $(MAKE)
 
 libeigensolver_gpu:
-ifdef EIGENSOLVER_VERSION
+ifdef GPU_ARCH
 	$(call download_and_unpack,$(EIGENSOLVER_GPU_NAME),$(EIGENSOLVER_GPU_URL),EIGENSOLVER_GPU,EIGENSOLVER_GPU)
 	if test ! -e ../EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a ; then \
-    (cp Makefile.lib_eigsolve ../EIGENSOLVER_GPU/lib_eigsolve/Makefile; \
-    cd ../EIGENSOLVER_GPU/lib_eigsolve/; $(MAKE) ); else \
+    # (cp Makefile.lib_eigsolve ../EIGENSOLVER_GPU/lib_eigsolve/Makefile; \
+    (cd ../EIGENSOLVER_GPU/lib_eigsolve/; $(MAKE) ); else \
 	(echo "No configuration file found for GPU custom eigensolver"; exit); fi
 endif
 
