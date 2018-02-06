@@ -5,7 +5,7 @@ FLAGS2 = -O3 -mp -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo,nol
 FLAGS3 = -O3 -mp -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo,maxregcount:64,nollvm -Mlarge_arrays
 
 # Use this FLAGS2 if compiling on Power system
-#FLAGS2 = -O1 -mp -pgf90libs -Mcuda=cc(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo,maxregcount:64,nollvm -Mlarge_arrays
+#FLAGS2 = -O1 -mp -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo,maxregcount:64,nollvm -Mlarge_arrays
 
 # Uncomment to enable NVTX markers
 #OPTFLAGS = -DUSE_NVTX
