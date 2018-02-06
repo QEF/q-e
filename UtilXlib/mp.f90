@@ -2313,9 +2313,10 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
   ! node_found is a list of numtask logicals set to false.
   ! Starting from the first entry in all_node_names,
   ! we loop on the following elements and check if the same
-  ! value is found. During the outermost iteration, if the node name
-  ! has already been found the value is already set to .true. and nothing is done,
-  ! otherwise the corresponding value in  node_counter is set to .true.
+  ! value is found. In the outer loop, if the node name
+  ! has already been found, node_found is set to .true. and nothing is done,
+  ! otherwise all the entries in all_node_names will be checked and keys
+  ! and colors incremented accordingly.
   !
   ALLOCATE(character(len=max_nodename_len) :: current_name)
   ALLOCATE(node_found(numtask),color_list(numtask),key_list(numtask))
