@@ -2257,7 +2257,7 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
   !
   ! ... output:
   ! ...    group  Communicator (handle).
-! ...
+  ! ...
   IMPLICIT NONE
   INTEGER, INTENT (OUT) :: num_nodes
   INTEGER, INTENT (OUT) :: color
@@ -2359,8 +2359,8 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
     END DO
   END DO
   ! Safety checks
-  IF ( MINVAL(color_list) < 0 ) CALL mp_stop( 8107 )
-  IF ( MINVAL(key_list)   < 0 ) CALL mp_stop( 8108 )
+  IF ( MINVAL(color_list) < 0 ) CALL mp_stop( 8109 )
+  IF ( MINVAL(key_list)   < 0 ) CALL mp_stop( 8110 )
   !
   color     = color_list(me+1)
   key       = key_list(me+1)
