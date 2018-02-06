@@ -22,10 +22,19 @@ LAPACK_NETLIB=lapack-3.6.1.tgz
 LAPACK_NETLIB_NAME=lapack-3.6.1
 LAPACK_NETLIB_URL=http://www.netlib.org/lapack/${LAPACK_NETLIB}
 
+# NVIDIA Eigensolver targets
+EIGENSOLVER_VERSION=0.3
+EIGENSOLVER_GPU=v${EIGENSOLVER_VERSION}.tar.gz
+EIGENSOLVER_GPU_NAME=Eigensolver_gpu-${EIGENSOLVER_VERSION}
+EIGENSOLVER_GPU_URL=https://github.com/NVIDIA/Eigensolver_gpu/archive/${EIGENSOLVER_GPU}
+
 #
 # MAIN target
 #
-all: 
+all:
+ifdef EIGENSOLVER_VERSION
+	$(MAKE) libeigensolver_gpu
+endif 
 	$(MAKE) libblas_$(BLAS_LIBS_SWITCH) 
 	$(MAKE) liblapack_$(LAPACK_LIBS_SWITCH) 
 	$(MAKE) libelpa_internal 
@@ -97,6 +106,15 @@ libelpa_enabled:
 	( gzip -dc ../archive/ELPA-0.3.tar.gz |(cd ../; tar -xvf -)); fi
 	cd ../ELPA; $(MAKE)
 
+libeigensolver_gpu:
+ifdef EIGENSOLVER_VERSION
+	$(call download_and_unpack,$(EIGENSOLVER_GPU_NAME),$(EIGENSOLVER_GPU_URL),EIGENSOLVER_GPU,EIGENSOLVER_GPU)
+	if test ! -e ../EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a ; then \
+    (cp Makefile.lib_eigsolve ../EIGENSOLVER_GPU/lib_eigsolve/Makefile; \
+    cd ../EIGENSOLVER_GPU/lib_eigsolve/; $(MAKE) ); else \
+	(echo "No configuration file found for GPU custom eigensolver"; exit); fi
+endif
+
 ###################################
 # cleaning
 ###################################
@@ -131,7 +149,10 @@ iotk_veryclean:
 	rm -f ../bin/iotk.x; \
 	rm -f ../bin/iotk_print_kinds.x; \
 	rm -f ../iotk
-
+libeigensolver_gpu_clean:
+	if test -d ../EIGENSOLVER_GPU; then (cd ../EIGENSOLVER_GPU/lib_eigsolve ; $(MAKE) clean); fi
+libeigensolver_gpu_veryclean:
+	if test -d ../EIGENSOLVER_GPU; then (rm -R -f ../EIGENSOLVER_GPU ../${EIGENSOLVER_GPU_NAME}); fi
 # general cleaning
-clean: lapack_clean elpa_clean iotk_clean fox_clean
-veryclean: lapack_veryclean elpa_veryclean iotk_veryclean fox_clean
+clean: lapack_clean elpa_clean iotk_clean fox_clean libeigensolver_gpu_clean
+veryclean: lapack_veryclean elpa_veryclean iotk_veryclean fox_clean libeigensolver_gpu_veryclean
