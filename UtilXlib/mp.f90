@@ -2265,7 +2265,7 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
   INTEGER, INTENT (IN)  :: group
 #if defined (__MPI)
   CHARACTER(len=MPI_MAX_PROCESSOR_NAME) :: hostname
-  CHARACTER(len=MPI_MAX_PROCESSOR_NAME), ALLOCATABLE :: all_hostname(:)
+  CHARACTER(len=MPI_MAX_PROCESSOR_NAME), ALLOCATABLE :: all_hosts(:)
 #endif
   
   LOGICAL, ALLOCATABLE   :: node_found(:)
@@ -2295,15 +2295,13 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
   ! Allocate data and store all names in a single variable
   ! with a collective MPI communication on all nodes.
   ! Names shorter than max_hostname_len are filled with * characters
-  ALLOCATE(all_hostname(0:numtask-1))
+  ALLOCATE(all_hosts(0:numtask-1))
   
-  ! this seems useless...
-  all_hostname(me) = REPEAT('*',MPI_MAX_PROCESSOR_NAME)
-  all_hostname(me) = hostname(1:hostname_len)
+  all_hosts(me) = hostname(1:hostname_len)
 
   DO i=0,numtask-1
-     CALL MPI_BCAST(all_hostname(i),MPI_MAX_PROCESSOR_NAME,MPI_CHARACTER,i, &
-                      group,ierr)
+     CALL MPI_BCAST(all_hosts(i), MPI_MAX_PROCESSOR_NAME, MPI_CHARACTER,&
+                      i, group, ierr)
      IF (ierr/=0) CALL mp_stop( 8106 )
   END DO
   !
@@ -2329,8 +2327,8 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
     ! this second loop always start from the element following
     ! the one considered in the above loop.
     DO j=i+1,numtask-1
-
-      IF (all_hostname(i) .eq. all_hostname(j)) THEN
+      !
+      IF (lle(all_hosts(i),all_hosts(j)).and.lge(all_hosts(i),all_hosts(j))) THEN
         ! increment the key, element zero is the one we are comparing to
         k = k + 1
         ! if j == 1 we are actually considering the second element
@@ -2348,7 +2346,7 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
   color     = color_list(me)
   key       = key_list(me)
   num_nodes = MAXVAL(color_list)
-  DEALLOCATE(all_hostname,node_found,color_list,key_list)
+  DEALLOCATE(all_hosts,node_found,color_list,key_list)
 !
 #endif
   RETURN
