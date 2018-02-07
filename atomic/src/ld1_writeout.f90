@@ -54,10 +54,7 @@ subroutine ld1_writeout
 
   iunps=28
   if (ionode)  then 
-      if ( .not. oldformat ) then 
-         call xml_OpenFile (filename = trim(file_pseudopw), xf = xml_desc, unit = iunps, pretty_print =.true., &
-                           replace = .true., namespace = .true., iostat = ios)
-      else
+      if ( oldformat ) then 
          open(unit=iunps, file=trim(file_pseudopw), status='unknown',  form='formatted', err=50, iostat=ios)
       end if
    end if
@@ -95,7 +92,7 @@ subroutine ld1_writeout
         close (iunps)
      else
         !
-        call export_upf(xml_desc, qestdin)
+        call export_upf(TRIM(file_pseudopw), qestdin)
         !
         if(lpaw) call deallocate_pseudo_paw( pawsetup )
         !
