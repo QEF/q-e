@@ -414,6 +414,7 @@ wgauss.o : constants.o
 wgauss.o : kind.o
 wrappers.o : io_global.o
 wrappers.o : kind.o
+write_upf.o : pseudo_types.o
 write_upf.o : write_upf_schema.o
 write_upf.o : write_upf_v2.o
 write_upf_schema.o : kind.o

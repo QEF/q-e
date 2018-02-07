@@ -10,7 +10,7 @@ MODULE emend_upf_module
   !! Contains utility to make the old UPF format readable by FoX
 
 PRIVATE 
-PUBLIC make_emended_upf_copy 
+PUBLIC make_emended_upf_copy, check_upf_file 
 
 CONTAINS 
 SUBROUTINE make_emended_upf_copy( filename, tempname) 
@@ -49,6 +49,34 @@ SUBROUTINE make_emended_upf_copy( filename, tempname)
   CLOSE ( iun_dest )   
 END SUBROUTINE  make_emended_upf_copy 
 !
+FUNCTION check_upf_file(filename, errcode) RESULT(ok)
+   !! checks whether the upf file filename is complian to xml syntax
+   !! the errorcode returned by the checking routine may optionally be 
+   !! written in the errorcode argument
+   USE FoX_dom,   ONLY: Node, DOMException, parseFile, getExceptionCode                  
+   IMPLICIT NONE
+   CHARACTER(LEN=*),INTENT(IN)   :: filename
+   !! name of the upf file being checked 
+   INTEGER,OPTIONAL,INTENT(OUT)  :: errcode
+   !! if present contains the error code returnd by the upf check
+   LOGICAL                       :: ok 
+   !!  if true the upf file is compliant to xml syntax
+   !
+   TYPE(Node),POINTER    :: doc 
+   TYPE(DOMException)    :: dom_ex
+   INTEGER               :: ierr 
+   doc => parseFile(TRIM(filename), EX = dom_ex) 
+   ierr = getExceptionCode(dom_ex) 
+   IF (PRESENT(errcode)) errcode=ierr 
+   IF (ierr /= 0 ) THEN
+      ok = .FALSE.
+   ELSE
+      ok =.TRUE.
+   ENDIF 
+   !
+END FUNCTION check_upf_file
+
+
 FUNCTION check(in) RESULT (out) 
       CHARACTER (LEN = *)     :: in
 #if defined(__PGI)
