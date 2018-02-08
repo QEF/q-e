@@ -21,11 +21,11 @@ MODULE fft_interfaces
      !! and to the "box-grid" version **invfft_b**, used only in CP 
      !! (the latter has an additional argument)
      
-     SUBROUTINE invfft_y( grid_type, f, dfft, howmany )
+     SUBROUTINE invfft_y( fft_kind, f, dfft, howmany )
        USE fft_types,  ONLY: fft_type_descriptor
        USE fft_param,  ONLY :DP
        IMPLICIT NONE
-       CHARACTER(LEN=*),  INTENT(IN) :: grid_type
+       CHARACTER(LEN=*),  INTENT(IN) :: fft_kind
        TYPE(fft_type_descriptor), INTENT(IN) :: dfft
        INTEGER, OPTIONAL, INTENT(IN) :: howmany
        COMPLEX(DP) :: f(:)
@@ -42,11 +42,11 @@ MODULE fft_interfaces
   END INTERFACE
 
   INTERFACE fwfft
-     SUBROUTINE fwfft_y( grid_type, f, dfft, howmany )
+     SUBROUTINE fwfft_y( fft_kind, f, dfft, howmany )
        USE fft_types,  ONLY: fft_type_descriptor
        USE fft_param,  ONLY :DP
        IMPLICIT NONE
-       CHARACTER(LEN=*), INTENT(IN) :: grid_type
+       CHARACTER(LEN=*), INTENT(IN) :: fft_kind
        TYPE(fft_type_descriptor), INTENT(IN) :: dfft
        INTEGER, OPTIONAL, INTENT(IN) :: howmany
        COMPLEX(DP) :: f(:)
