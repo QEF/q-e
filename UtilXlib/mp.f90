@@ -2332,7 +2332,7 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
            LGE(host_list(i),host_list(j))        ) THEN
         ! increment the key, key=0 is the one we are comparing to
         k = k + 1
-        ! element should be already found
+        ! element should not be already found
         IF ( found_list(j) ) CALL mp_stop( 8107 )
         found_list(j) = .true.
         color_list(j) = c
