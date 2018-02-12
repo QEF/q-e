@@ -858,7 +858,7 @@ MODULE exx
     USE klist,                ONLY : ngk, nks, nkstot, xk, wk, igk_k
     USE symm_base,            ONLY : nsym, s, sr
     USE mp_pools,             ONLY : npool, nproc_pool, me_pool, inter_pool_comm
-    USE mp_exx,               ONLY : me_egrp, set_egrp_indices, negrp, &
+    USE mp_exx,               ONLY : me_egrp, negrp, &
                                      init_index_over_band, my_egrp_id,  &
                                      inter_egrp_comm, intra_egrp_comm, &
                                      iexx_start, iexx_end
@@ -976,7 +976,7 @@ MODULE exx
        ENDDO
     ENDDO
 
-    CALL set_egrp_indices(x_nbnd_occ,ibnd_start,ibnd_end)
+    CALL divide ( inter_egrp_comm, x_nbnd_occ, ibnd_start, ibnd_end )
     CALL init_index_over_band(inter_egrp_comm,nbnd,nbnd)
 
     !this will cause exxbuff to be calculated for every band
