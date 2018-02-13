@@ -2237,96 +2237,120 @@ SUBROUTINE mp_circular_shift_left_c2d( buf, itag, gid )
    RETURN
 END SUBROUTINE mp_circular_shift_left_c2d
 !
-
-#if !defined(__GFORTRAN__) ||  ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
+!
 !------------------------------------------------------------------------------!
 !..mp_count_nodes
-SUBROUTINE mp_count_nodes(num_nodes, group)
-
-! ...
+SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
+  !
+  ! ... This routine counts the number of nodes using
+  ! ...  MPI_GET_PROCESSOR_NAME in the group specified by `group`.
+  ! ...  It returns colors and keys to be used in MPI_COMM_SPLIT.
+  ! ...  When running in parallel, the evaluation of color and key
+  ! ...  is done by all processors.
+  ! ...
+  ! ...
+  ! ... input:
+  ! ...    group      Communicator used to count nodes.
+  !
+  ! ... output:
+  ! ...    num_nodes  Number of unique nodes in the communicator
+  ! ...    color      Integer (positive), same for all processes residing on a node.
+  ! ...    key        Integer, unique number identifying each process on the same node.
+  ! ...
   IMPLICIT NONE
   INTEGER, INTENT (OUT) :: num_nodes
+  INTEGER, INTENT (OUT) :: color
+  INTEGER, INTENT (OUT) :: key
   INTEGER, INTENT (IN)  :: group
 #if defined (__MPI)
-  CHARACTER(len=MPI_MAX_PROCESSOR_NAME) :: nodename
+  CHARACTER(len=MPI_MAX_PROCESSOR_NAME) :: hostname
+  CHARACTER(len=MPI_MAX_PROCESSOR_NAME), ALLOCATABLE :: host_list(:)
 #endif
-  CHARACTER(len=:), ALLOCATABLE :: all_node_names
-  CHARACTER(len=:), ALLOCATABLE :: current_name
-  INTEGER, ALLOCATABLE   :: node_counter(:)
+  
+  LOGICAL, ALLOCATABLE   :: found_list(:)
+  INTEGER, ALLOCATABLE   :: color_list(:)
+  INTEGER, ALLOCATABLE   :: key_list(:)
   !
-  INTEGER :: nodename_len, max_nodename_len, numtask, ierr
+  INTEGER :: hostname_len, max_hostname_len, numtask, me, ierr
+  !
   ! Loops variables
-  INTEGER :: i, j, e, s
+  INTEGER :: i, j, e, s, c, k
   ! ...
   ierr      = 0
   num_nodes = 1
+  color     = 1
+  key       = 0
   !
 #if defined(__MPI)
-  ! fill with * to allow comparison of names with different length
-  nodename  = REPEAT('*',MPI_MAX_PROCESSOR_NAME)
-  ! get node id (the name is misleading)
-  CALL MPI_GET_PROCESSOR_NAME(nodename,nodename_len,ierr)
+  !
+  CALL MPI_GET_PROCESSOR_NAME(hostname, hostname_len, ierr)
   IF (ierr/=0)  CALL mp_stop( 8103 )
-  ! find the longest node name in the communicator
-  CALL MPI_ALLREDUCE(nodename_len, max_nodename_len, 1, &
-                      MPI_INTEGER, MPI_MAX, group, ierr)
+
+  ! find total number of ranks and my rank in communicator
+  CALL MPI_COMM_SIZE(group, numtask, ierr)
   IF (ierr/=0) CALL mp_stop( 8104 )
-  ! find total number of ranks in communicator
-  CALL mpi_comm_size(group,numtask,ierr)
+  !
+  CALL MPI_COMM_RANK(group, me, ierr)
   IF (ierr/=0) CALL mp_stop( 8105 )
   !
-  ! Sanity check to avoid accidental insane allocations, should never happen
-  IF (max_nodename_len > MPI_MAX_PROCESSOR_NAME) CALL mp_stop( 8106 )
+  ALLOCATE(host_list(0:numtask-1))
   !
-  ! Allocate data and store all names in a single variable
-  ! with a collective MPI communication on all nodes.
-  ALLOCATE(character(len=numtask*max_nodename_len) :: all_node_names)
-  CALL MPI_ALLGATHER(nodename, max_nodename_len, MPI_CHARACTER, &
-                      all_node_names, max_nodename_len, MPI_CHARACTER, &
-                      group, ierr)
-  IF (ierr/=0) CALL mp_stop( 8107 )
+  host_list(me) = hostname(1:hostname_len)
   !
-  ! Simple algorithm to count unique entries:
-  ! node_counter is a list of numtask integers set to 1.
-  ! Starting from the first entry in all_node_names,
-  ! we loop on the following elements and check if the same
-  ! value is found. If it has already been found the value is already 
-  ! set to 0 and nothing is done, otherwise the corresponding value in 
-  ! node_counter is set to 0.
-  ALLOCATE(character(len=max_nodename_len) :: current_name)
-  ALLOCATE(node_counter(numtask))
-  node_counter(:)=1
+  ! Each process broadcast its name to the others
   DO i=0,numtask-1
-    ! if node_counter == 0, this element has already been found,
+    CALL MPI_BCAST(host_list(i), MPI_MAX_PROCESSOR_NAME, MPI_CHARACTER,&
+                     i, group, ierr)
+    IF (ierr/=0) CALL mp_stop( 8106 )
+  END DO
+  !
+  ! Simple algorithm to count unique entries.
+  !
+  ALLOCATE(found_list(0:numtask-1),color_list(0:numtask-1))
+  ALLOCATE(key_list(0:numtask-1))
+  found_list(:) = .false.
+  color_list(:) = -1
+  key_list(:)   = -1
+  !
+  ! c is the counter for colors
+  ! k is the counter for keys
+  !
+  c = 0
+  DO i=0,numtask-1
+    ! if node_counter == .true., this element has already been found,
     ! so skip it.
-    IF (node_counter(i+1) == 0) CYCLE
+    IF (found_list(i)) CYCLE
+    ! else increment color counter and reset key counter
+    c = c + 1; k = 0
+    color_list(i) = c
+    key_list(i)   = k
     !
-    ! store current name in 'current_name' from 'all_node_names'
-    s = max_nodename_len*i+1
-    e = max_nodename_len*(i+1)
-    current_name = all_node_names(s:e)
-    ! this second loop always start from the element following
-    ! the one considered in the above loop.
-    DO j=(i+1),numtask-1
-      ! j is still zero based so 's' and 'e' select the 2nd element
-      ! if i=0.
-      s = max_nodename_len*j+1
-      e = max_nodename_len*(j+1)
-      IF (current_name .eq. all_node_names(s:e)) THEN
-        ! if j == 1 we are actually considering the second element
-        ! (the j+1 element in general) so set it to zero.
-        IF (node_counter(j+1) == 1) node_counter(j+1) = 0
+    DO j=i+1,numtask-1
+      !
+      IF ( LLE(host_list(i),host_list(j)) .and. &
+           LGE(host_list(i),host_list(j))        ) THEN
+        ! increment the key, key=0 is the one we are comparing to
+        k = k + 1
+        ! element should not be already found
+        IF ( found_list(j) ) CALL mp_stop( 8107 )
+        found_list(j) = .true.
+        color_list(j) = c
+        key_list(j)   = k
       END IF
     END DO
   END DO
+  ! Sanity checks
+  IF ( MINVAL(color_list) < 0 ) CALL mp_stop( 8108 )
+  IF ( MINVAL(key_list)   < 0 ) CALL mp_stop( 8109 )
   !
-  num_nodes = SUM(node_counter)
-  DEALLOCATE(current_name,all_node_names,node_counter)
+  color     = color_list(me)
+  key       = key_list(me)
+  num_nodes = MAXVAL(color_list)
+  DEALLOCATE(host_list,found_list,color_list,key_list)
 !
 #endif
   RETURN
 END SUBROUTINE mp_count_nodes
-#endif 
 !
 FUNCTION mp_get_comm_null( )
   IMPLICIT NONE

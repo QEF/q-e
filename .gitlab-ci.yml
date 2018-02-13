@@ -1,4 +1,5 @@
 build:pw:
+  tags: [docker]
   image: ubuntu:latest
   script:
     - apt-get update
@@ -14,6 +15,7 @@ build:pw:
 #    - rm -r /tmp/save
 
 build:cp:
+  tags: [docker]
   image: ubuntu:latest
   script:
     - apt-get update
