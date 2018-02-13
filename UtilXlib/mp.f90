@@ -23,10 +23,7 @@
         mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, &
         mp_group_create, mp_comm_split, mp_set_displs, &
         mp_circular_shift_left, &
-        mp_get_comm_null, mp_get_comm_self 
-#if !defined(__GFORTRAN__) || ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
-      PUBLIC :: mp_count_nodes
-#endif
+        mp_get_comm_null, mp_get_comm_self, mp_count_nodes
 
 !
       INTERFACE mp_bcast
