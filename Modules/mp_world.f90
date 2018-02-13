@@ -74,9 +74,9 @@ CONTAINS
 #endif
     !
     CALL mp_start( nproc, mpime, world_comm )
-#if !defined(__GFORTRAN__) || ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
+    !
     CALL mp_count_nodes ( nnode, color, key, world_comm )
-#endif
+    !
     !
     ! ... meta_ionode is true if this processor is the root processor
     ! ... of the world group - "ionode_world" would be a better name

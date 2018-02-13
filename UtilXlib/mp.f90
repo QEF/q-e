@@ -2237,8 +2237,7 @@ SUBROUTINE mp_circular_shift_left_c2d( buf, itag, gid )
    RETURN
 END SUBROUTINE mp_circular_shift_left_c2d
 !
-
-#if !defined(__GFORTRAN__) ||  ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
+!
 !------------------------------------------------------------------------------!
 !..mp_count_nodes
 SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
@@ -2352,7 +2351,6 @@ SUBROUTINE mp_count_nodes(num_nodes, color, key, group)
 #endif
   RETURN
 END SUBROUTINE mp_count_nodes
-#endif 
 !
 FUNCTION mp_get_comm_null( )
   IMPLICIT NONE
