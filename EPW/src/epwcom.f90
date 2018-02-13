@@ -266,6 +266,8 @@
   !! if .true. scattering rates are calculated
   LOGICAL :: scattering_serta
   !! if .true. scattering rates are calculated using self-energy relaxation-time-approx
+  LOGICAL :: scatread
+  !! if .true. the scattering rates are read from file.
   LOGICAL :: scattering_0rta
   !! if .true. scattering rates are calculated using 0th order relaxation-time-approx
   LOGICAL :: int_mob
@@ -343,6 +345,8 @@ MODULE output_epw
   !! output file for the deltavscf used as a fake perturbation to set phases
   CHARACTER (LEN=80) :: fila2f
   !! input file containing eliashberg spectral function
+  CHARACTER (LEN=80) :: restart_filq
+  !! input  file to restart from an exisiting q-file
   !
 END MODULE output_epw
 !

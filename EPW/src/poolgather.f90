@@ -113,6 +113,65 @@
   !
   end subroutine poolgather2
   !
+  !
+  !--------------------------------------------------------------------
+  subroutine poolgatherc4 (nsize1, nsize2, nsize3, nkstot, nks, f_in, f_out)
+  !--------------------------------------------------------------------
+  !!
+  !!  gather the kpoints and the electronic eigenvalues
+  !!  across the pools 
+  !!  works with the double grid (k and k+q)
+  !!  define rest and nbase as in loadkmesh_para subroutine
+  !!
+  !--------------------------------------------------------------------
+  USE kinds,     ONLY : DP
+  USE mp_global, ONLY : my_pool_id, inter_pool_comm, npool
+  USE mp,        ONLY : mp_barrier, mp_bcast,mp_sum
+  USE mp_world,  ONLY : mpime
+  implicit none
+  !
+  INTEGER, INTENT (in) :: nsize1
+  !! first dimension of vectors f_in and f_out
+  INTEGER, INTENT (in) :: nsize2
+  !! second dimension of vectors f_in and f_out
+  INTEGER, INTENT (in) :: nsize3
+  !! third dimension of vectors f_in and f_out
+  INTEGER, INTENT (in) :: nks
+  !! number of k-points per pool
+  INTEGER, INTENT (in) :: nkstot
+  !! total number of k-points  
+  COMPLEX (KIND=DP), INTENT (in) :: f_in(nsize1,nsize2,nsize3,nks)
+  ! input ( only for k-points of mypool )
+  COMPLEX (KIND=DP), INTENT (out)  :: f_out(nsize1,nsize2,nsize3,nkstot)
+  ! output  ( contains values for all k-point )
+  !
+#ifdef __MPI
+  INTEGER :: rest, nbase, nkst
+  ! the rest of the integer division nkstot / npo
+  ! the position in the original list
+  !
+  nkst = 2 * ( nkstot / 2 / npool )
+  rest = ( nkstot - nkst * npool ) / 2
+  IF (my_pool_id < rest ) THEN
+     nkst = nkst + 2
+     nbase = my_pool_id*nkst
+  ELSE
+     nbase = rest*(nkst+2)+(my_pool_id-rest)*nkst
+  ENDIF
+  f_out = 0.d0
+  f_out(:,:,:,(nbase+1):(nbase+nks)) = f_in(:,:,:,1:nks)
+  !
+  ! ... reduce across the pools
+  ! 
+  CALL mp_sum(f_out,inter_pool_comm)
+  !
+#else
+  f_out(:,:,:,:) = f_in(:,:,:,:)
+  !
+#endif
+  !
+  end subroutine poolgatherc4
+  !
   !----------------                                                         
   subroutine poolgather_int1 ( nkstot, nks, f_in, f_out)
   !--------------------------------------------------------------------

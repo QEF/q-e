@@ -31,6 +31,8 @@
   !! createkmap for the g0vec shift, and also there I have fixed it
   !! by extending the replicas to -2:2 instead of -1:1. FG May 07
   !!
+  !! 02/2017, SP: I modified the routine to be closer to the current
+  !!              Wannier90 routine hamiltonian.F90
   !-----------------------------------------------------------------
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : at
@@ -82,70 +84,84 @@
   ! primitive supercell. In the end nrr contains the total number of grids 
   ! points that have been found in the Wigner-Seitz cell
   !
+  ! SP: I modified the routine to be closer to Wannier90. 
+  !     If problem happens, try reverting to old (more time consuming but could
+  !     be more accurate in weird shaped primitive cells)
   nrr = 0
+  !DO n1 = -nk1, nk1 
+  !  DO n2 = -nk2, nk2 
+  !    DO n3 = -nk3, nk3 
   DO n1 = 0, 4*nk1 
-  DO n2 = 0, 4*nk2 
-  DO n3 = 0, 4*nk3 
-    !
-    ! Loop over the 5^3 = 125 points R. R=0 corresponds to i1=i2=i3=2, or icnt=63
-    !
-    i = 0
-    DO i1 = 0, 4
-    DO i2 = 0, 4
-    DO i3 = 0, 4
-      i = i + 1
-      !
-      ! Calculate distance squared |r-R|^2 
-      !
-      ndiff(1) = n1-i1*nk1
-      ndiff(2) = n2-i2*nk2
-      ndiff(3) = n3-i3*nk3
-      dist(i) = 0.d0
-      DO ipol = 1, 3
-       DO jpol = 1, 3
-          dist(i) = dist(i) + dble(ndiff(ipol))*adot(ipol,jpol)*dble(ndiff(jpol))
-       ENDDO
-      ENDDO
-      !  
-    ENDDO 
-    ENDDO 
-    ENDDO
-    !
-    ! Sort the 125 vectors R by increasing value of |r-R|^2
-    !
-    ! NOTA BENE: hpsort really sorts the dist vector
-    ! while the original subroutine by MVS did not. Therefore,
-    ! dist(ind(i)) of the original version is here replacerd by
-    ! dist(i), while ind(i) is kept.
-    !
-    ind(1) = 0 ! required for hpsort_eps (see the subroutine)
-    CALL hpsort_eps_epw( 125, dist, ind, eps)
-
-    !
-    ! Find all the vectors R with the (same) smallest |r-R|^2;
-    ! if R=0 is one of them, then the current point r belongs to 
-    ! Wignez-Seitz cell => set found to true
-    !
-    found = .false.
-    i = 1
-    mindist = dist(1) 
-    DO while ( abs(dist(i)-mindist).le.eps .and. i.lt.125 ) 
-      IF (ind(i).eq.63) found = .true. 
-      i = i + 1
-    ENDDO
-!@
-    IF (i .eq. 126) i = 125
-!@
-    IF (found) then
-      nrr = nrr + 1
-      ndegen (nrr) = i - 1
-      irvec (1, nrr) = n1 - 2*nk1
-      irvec (2, nrr) = n2 - 2*nk2
-      irvec (3, nrr) = n3 - 2*nk3
-    ENDIF
-    !
-  ENDDO   
-  ENDDO  
+    DO n2 = 0, 4*nk2 
+      DO n3 = 0, 4*nk3 
+        !
+        ! Loop over the 5^3 = 125 points R. R=0 corresponds to i1=i2=i3=2, or icnt=63
+        !
+        i = 0
+        !DO i1 = -2, 2
+        !  DO i2 = -2, 2
+        !    DO i3 = -2, 2
+        DO i1 = 0, 4
+          DO i2 = 0, 4
+            DO i3 = 0, 4
+              i = i + 1
+              !
+              ! Calculate distance squared |r-R|^2 
+              !
+              ndiff(1) = n1 - i1*nk1
+              ndiff(2) = n2 - i2*nk2
+              ndiff(3) = n3 - i3*nk3
+              dist(i) = 0.d0
+              DO ipol = 1, 3
+               DO jpol = 1, 3
+                  !dist(i) = dist(i) + real(ndiff(ipol),kind=DP)*adot(ipol,jpol)*real(ndiff(jpol),kind=DP)
+                  dist(i) = dist(i) + dble(ndiff(ipol))*adot(ipol,jpol)*dble(ndiff(jpol))
+               ENDDO
+              ENDDO
+              !  
+            ENDDO 
+          ENDDO 
+        ENDDO
+        !
+        ! Sort the 125 vectors R by increasing value of |r-R|^2
+        ind(1) = 0 ! required for hpsort_eps (see the subroutine)
+        CALL hpsort_eps_epw( 125, dist, ind, eps)
+        !
+        ! Find all the vectors R with the (same) smallest |r-R|^2;
+        ! if R=0 is one of them, then the current point r belongs to 
+        ! Wignez-Seitz cell => set found to true
+        !
+        found = .false.
+        i = 1
+        mindist = dist(1) 
+        DO while ( abs(dist(i)-mindist).le.eps .and. i.lt.125 ) 
+          IF (ind(i).eq.63) found = .true. 
+          i = i + 1
+        ENDDO
+        !
+        IF (found) then
+          nrr = nrr + 1
+          ndegen (nrr) = i - 1
+          irvec (1, nrr) = n1 - 2*nk1
+          irvec (2, nrr) = n2 - 2*nk2
+          irvec (3, nrr) = n3 - 2*nk3
+        ENDIF
+        !
+        !mindist=minval(dist)
+        !if (abs(dist(63) - mindist ) .lt. eps ) then
+        !   nrr = nrr + 1
+        !   ndegen(nrr)=0
+        !   do i=1,125
+        !      if (abs (dist (i) - mindist) .lt. eps ) ndegen(nrr)=ndegen(nrr)+1
+        !   end do
+        !   irvec(1, nrr) = n1
+        !   irvec(2, nrr) = n2
+        !   irvec(3, nrr) = n3
+        !   !
+        !end if
+        !
+      ENDDO   
+    ENDDO  
   ENDDO 
   !
   ! Check the "sum rule"

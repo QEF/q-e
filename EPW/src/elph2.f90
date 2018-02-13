@@ -60,6 +60,9 @@
        sigmar_all(:,:),        &!  To store sigmar, sigmai and zi globally
        sigmai_all(:,:),        &!
        sigmai_mode(:,:,:),     &! 
+       Fi_all(:,:,:),          &! 
+       F_current(:,:,:),       &! 
+       F_SERTA(:,:,:),         &! 
        zi_all(:,:),            &!
        esigmar_all(:,:,:),     &!
        esigmai_all(:,:,:),     &!   
@@ -71,6 +74,9 @@
        zstar(:,:,:),           &!  Born effective charges
        epsi(:,:),              &!  dielectric tensor
        inv_tau_all(:,:,:),     &!  scattering rate
+       inv_tau_allcb(:,:,:),   &!  Second scattering rate (for both)
+       zi_allvb(:,:,:),        &!  Z-factor in scattering rate  
+       zi_allcb(:,:,:),        &!  Second Z-factor in scattering rate (for both VB and CB calculations) 
        ifc(:,:,:,:,:,:,:)       !  Interatomic force constant in real space
   REAL(KIND=DP) ::             &!
        efnew                    !  SP: Fermi level on the fine grid. Added globaly for efficiency reason 
