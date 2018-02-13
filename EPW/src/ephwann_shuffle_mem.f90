@@ -351,7 +351,7 @@
      !
   ELSE !if not epwread (i.e. need to calculate fmt file)
      ! 
-     IF ((etf_mem == 1) .AND. (ionode)) THEN
+     IF (ionode) THEN
        lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
        filint    = trim(prefix)//'.epmatwe'
        CALL diropn (iunepmatwe, 'epmatwe', lrepmatw, exst)
