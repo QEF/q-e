@@ -38,6 +38,7 @@
   USE modes,             ONLY : t, npert, u, name_rap_mode, num_rap_mode
   USE qpoint,            ONLY : eigqts, igkq 
   USE klist,             ONLY : nks
+  USE transportcom,      ONLY : transp_temp
   !
   IMPLICIT NONE
   INTEGER :: ik, ipol
@@ -59,6 +60,7 @@
     IF(ALLOCATED(xk_all))    DEALLOCATE (xk_all)
     IF(ALLOCATED(et_all))    DEALLOCATE (et_all)
     IF(ALLOCATED(wslen))     DEALLOCATE (wslen)
+    IF(ALLOCATED(eps_rpa))   DEALLOCATE (eps_rpa)
     IF(ALLOCATED(eps_rpa))   DEALLOCATE (eps_rpa) 
     ! 
   ELSE

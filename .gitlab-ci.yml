@@ -1,4 +1,5 @@
 build:pw:
+  tags: [docker]
   image: ubuntu:latest
   script:
     - apt-get update
@@ -14,6 +15,7 @@ build:pw:
 #    - rm -r /tmp/save
 
 build:cp:
+  tags: [docker]
   image: ubuntu:latest
   script:
     - apt-get update
@@ -26,6 +28,22 @@ build:cp:
 #    - cd test-suite
 #    - mkdir /tmp/save
 #    - make run-tests-cp-serial
+#    - rm -r /tmp/save
+
+build:ph:
+  tags: [docker]
+  image: ubuntu:latest
+  script:
+    - apt-get update
+    - apt-get install --yes build-essential gfortran wget python
+    - apt-get install --yes libopenmpi-dev openmpi-bin
+    - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
+    - ./configure
+    - make ph
+#    - export OMP_NUM_THREADS=1
+#    - cd test-suite
+#    - mkdir /tmp/save
+#    - make run-tests-ph-serial
 #    - rm -r /tmp/save
 
 #build:centos:

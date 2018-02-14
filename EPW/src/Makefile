@@ -19,7 +19,7 @@ MODFLAGS = -I../../iotk/src -I../../UtilXlib/ -I../../Modules -I../../KS_Solvers
 
 EPWOBJS = \
 transportcom.o \
-io_epw.o\
+io_epw.o \
 elph2.o \
 a2f.o \
 allocate_epwq.o \
@@ -77,6 +77,7 @@ kernels_iso_iaxis.o \
 kernels_raxis.o \
 kfold.o \
 kpointdivision.o \
+kpoint_grid_epw.o \
 ktokpmq.o \
 loadkmesh.o \
 loadqmesh.o \
@@ -112,12 +113,15 @@ star_q2.o \
 stop_epw.o \
 vmebloch2wan.o \
 vmewan2bloch.o \
-wannier.o \
+wannierEPW.o \
 wannierize.o \
 pw2wan90epw.o \
 wigner_seitz2.o \
 wigner_seitz.o \
 write_ephmat.o \
+iterativebte.o \
+transport_coeffs.o \
+scattering_rate.o \
 io_scattering.o \
 system_mem_usage.o
 

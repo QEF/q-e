@@ -241,9 +241,13 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
          deallocate(rhofill)
       end if
 
-      if (abisur)                                                       &
-     &   call gradrho(nspin,rhotmp,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
-
+      IF (abisur) THEN
+         DO iss = 1, nspin
+            CALL fft_gradient_g2r ( dfftp, rhotmp(1,iss), g, drho(1,iss) )
+         END DO
+         CALL gradrho( nspin, rhotmp, d2rho, dxdyrho, dxdzrho, dydzrho )
+      END IF
+ 
       CALL rho_g2r( dfftp, rhotmp, rho_gaus )
       deallocate(rhotmp)
 
