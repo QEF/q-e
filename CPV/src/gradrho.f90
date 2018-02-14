@@ -5,11 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-                                                                                
 
-!
 !----------------------------------------------------------------------
-SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
+SUBROUTINE gradrho( nspin, rhog, d2rho, dxdyrho, dxdzrho, dydzrho )
 !----------------------------------------------------------------------
 !
 !     calculates gradient of charge density for gradient corrections
@@ -27,9 +25,8 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
       integer nspin
       complex(kind=8) rhog(dfftp%ngm,nspin)
 ! output
-      real(kind=8)    drho(3,dfftp%nnr), d2rho(3,dfftp%nnr),     &
-     &                dxdyrho(dfftp%nnr), dxdzrho(dfftp%nnr),    &
-     &                dydzrho(dfftp%nnr)
+      real(kind=8)::  d2rho(3,dfftp%nnr), dxdyrho(dfftp%nnr), &
+                      dxdzrho(dfftp%nnr), dydzrho(dfftp%nnr)
 ! local
       complex(kind=8), allocatable:: v(:), drhog(:,:)
       complex(kind=8) ci
@@ -41,30 +38,12 @@ SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
 
       ci=(0.0d0,1.0d0)
 
-      drho = 0.d0
       d2rho = 0.d0
       dxdyrho = 0.d0
       dxdzrho = 0.d0
       dydzrho = 0.d0
 
       do iss=1,nspin
-         do ig=1,dfftp%ngm
-            drhog(ig,1) = ci*tpiba*g(1,ig)*rhog(ig,iss)
-            drhog(ig,2) = ci*tpiba*g(2,ig)*rhog(ig,iss)
-            drhog(ig,3) = ci*tpiba*g(3,ig)*rhog(ig,iss)
-         enddo
-         CALL fftx_oned2threed(dfftp, v, drhog(:,1) )
-         call invfft('Rho',v, dfftp )
-         do ir=1,dfftp%nnr
-            drho(1,ir)=drho(1,ir)+real(v(ir))
-         end do
-         CALL fftx_oned2threed(dfftp, v, drhog(:,2), drhog(:,3) )
-         call invfft('Rho',v, dfftp )
-         do ir=1,dfftp%nnr
-            drho(2,ir)=drho(2,ir)+real(v(ir))
-            drho(3,ir)=drho(3,ir)+aimag(v(ir))
-         end do
-
          do ig=1,dfftp%ngm
             drhog(ig,1) = -1.d0*tpiba**2*g(1,ig)**2*rhog(ig,iss)
             drhog(ig,2) = -1.d0*tpiba**2*g(2,ig)**2*rhog(ig,iss)
