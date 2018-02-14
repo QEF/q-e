@@ -35,7 +35,7 @@
   USE phcom,         ONLY : nq1, nq2, nq3, nmodes
   USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread, longrange,     &
                             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
-                            nbndskip, parallel_k, parallel_q, etf_mem, scr_typ, &
+                            nbndskip, parallel_k, parallel_q, scr_typ, &
                             elecselfen, phonselfen, nest_fn, a2f, specfun_ph,   &
                             vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          & 
                             efermi_read, fermi_energy, specfun_el, band_plot,   &
@@ -332,7 +332,7 @@
   !
 #ifndef __MPI  
   ! Open like this only in sequential. Otherwize open with MPI-open
-  IF ((etf_mem == 1) .AND. (ionode)) THEN
+  IF (ionode) THEN
     ! open the .epmatwe file with the proper record length
     lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
     filint    = trim(prefix)//'.epmatwp'
@@ -355,10 +355,8 @@
        lrepmatw   = 2 * nbndsub * nbndsub * nrr_k * nmodes
        filint    = trim(prefix)//'.epmatwe'
        CALL diropn (iunepmatwe, 'epmatwe', lrepmatw, exst)
-#ifdef __MPI       
        filint    = trim(prefix)//'.epmatwp'
        CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
-#endif
      ENDIF
      !
      xxq = 0.d0 
@@ -426,7 +424,7 @@
          !
        ENDDO
        ! Only the master node writes 
-       IF ((etf_mem == 1) .AND. (ionode)) THEN
+       IF (ionode) THEN
          ! direct write of epmatwe for this iq 
          CALL rwepmatw ( epmatwe_mem, nbndsub, nrr_k, nmodes, iq, iunepmatwe, +1)       
          !   
@@ -459,9 +457,7 @@
   IF ( ALLOCATED (lwin) )    DEALLOCATE (lwin)
   IF ( ALLOCATED (lwinq) )   DEALLOCATE (lwinq)
   CLOSE(iunepmatwe)
-#ifdef __MPI
   CLOSE(iunepmatwp)
-#endif
   ! 
   ! Check Memory usage
   CALL system_mem_usage(valueRSS)
@@ -479,17 +475,9 @@
   !  need to add some sort of parallelization (on g-vectors?)  what
   !  else can be done when we don't ever see the wfcs??
   !
-  ! SP: k-point parallelization should always be efficient here
-  IF (parallel_k) THEN
-     CALL loadqmesh_serial
-     CALL loadkmesh_para
-  ELSEIF(parallel_q) THEN
-     CALL loadkmesh_serial
-     CALL loadqmesh_para
-     ALLOCATE(etf_k ( nbndsub, nkqf))
-  ELSE
-     CALL errore('ephwann_shuffle', "parallel k and q not (yet) implemented",1)
-  ENDIF
+  ! SP: Only k-para
+  CALL loadqmesh_serial
+  CALL loadkmesh_para
   !
   ALLOCATE ( epmatwef( nbndsub, nbndsub, nrr_k),             &
        wf ( nmodes,  nqf ), etf ( nbndsub, nkqf),                   &
@@ -604,16 +592,7 @@
      !
   ENDDO
   !
-  ! 27/06/2012 RM
-  ! in the case when a random or uniform fine k-mesh is used
-  ! calculate the Fermi level corresponding to the fine k-mesh 
-  ! this Fermi level is then used as a reference in fermiwindow 
-  ! 06/05/2014 CV
-  ! calculate the Fermi level corresponding to the fine k-mesh
-  ! or read it from input (Fermi level from the coarse grid 
-  ! may be wrong or inaccurate)
-  !
-  WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
+  WRITE(6,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
   !
   IF( efermi_read ) THEN
      !
@@ -717,14 +696,12 @@
   !
   ! Open the ephmatwp file here
 #if defined(__MPI)
-  IF (etf_mem == 1) then
-    ! Check for directory given by "outdir"
-    !      
-    filint = trim(tmp_dir)//trim(prefix)//'.epmatwp1'
-    CALL MPI_FILE_OPEN(world_comm,filint,MPI_MODE_RDONLY,MPI_INFO_NULL,iunepmatwp2,ierr)
-    IF( ierr /= 0 ) CALL errore( 'ephwann_shuffle', 'error in MPI_FILE_OPEN',1 )
-    IF( parallel_q ) CALL errore( 'ephwann_shuffle', 'q-parallel+etf_mem = 1 is not supported',1 )
-  ENDIF
+  ! Check for directory given by "outdir"
+  !      
+  filint = trim(tmp_dir)//trim(prefix)//'.epmatwp1'
+  CALL MPI_FILE_OPEN(world_comm,filint,MPI_MODE_RDONLY,MPI_INFO_NULL,iunepmatwp2,ierr)
+  IF( ierr /= 0 ) CALL errore( 'ephwann_shuffle', 'error in MPI_FILE_OPEN',1 )
+  IF( parallel_q ) CALL errore( 'ephwann_shuffle', 'q-parallel+etf_mem = 1 is not supported',1 )
 #endif
   !
   IF (parallel_k) THEN
@@ -742,9 +719,7 @@
     ALLOCATE ( zi_allvb (nstemp, ibndmax-ibndmin+1, nkqtotf/2) )
     zi_allvb(:,:,:) = zero
     ALLOCATE ( epmatlrT (nbndsub, nbndsub, nmodes, nkf) )
-    epmatlrT(:,:,:,:) = czero
     ALLOCATE ( eptmp (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf) )
-    eptmp(:,:,:,:) = czero
     ! 
     IF (int_mob .AND. carrier) THEN
       ALLOCATE ( inv_tau_allcb (nstemp, ibndmax-ibndmin+1, nkqtotf/2) )
@@ -916,6 +891,11 @@
          ! epmat : Wannier el and Wannier ph -> Wannier el and Bloch ph
          ! --------------------------------------------------------------
          !
+         epf17(:,:,:,:) = czero
+         eptmp(:,:,:,:) = czero
+         epmatlrT(:,:,:,:) = czero
+         cufkk(:,:) = czero
+         cufkq(:,:) = czero
          DO imode = 1, nmodes 
            epmatwef(:,:,:) = czero
            !DBSP              
@@ -1280,10 +1260,8 @@
   ! 
   !  Close th epmatwp file
 #if defined(__MPI)
-  IF (etf_mem == 1) then
-    CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)
-    IF( ierr /= 0 ) CALL errore( 'ephwann_shuffle', 'error in MPI_FILE_CLOSE',1 )
-  ENDIF
+  CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)
+  IF( ierr /= 0 ) CALL errore( 'ephwann_shuffle', 'error in MPI_FILE_CLOSE',1 )
 #endif 
   ! 
   ! Check Memory usage
