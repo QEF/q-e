@@ -958,7 +958,7 @@
            ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
            ! + optimize the 2\pi r\cdot k with Blas
            IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
-              (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k ) THEN
+              (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen ) THEN
              ! We need to use NINT (nearest integer to x) rather than INT
              xkk1 = NINT(xkk(1)*(nkf1)) + 1
              xkk2 = NINT(xkk(2)*(nkf2)) + 1
@@ -1033,71 +1033,71 @@
            ENDIF
            !
            IF (.NOT. scatread) THEN
-           ! interpolate ONLY when (k,k+q) both have at least one band 
-           ! within a Fermi shell of size fsthick 
-           !
-           IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) ) THEN
+             ! interpolate ONLY when (k,k+q) both have at least one band 
+             ! within a Fermi shell of size fsthick 
              !
-             !  fermicount = fermicount + 1
-             !
-             ! --------------------------------------------------------------
-             ! epmat : Wannier el and Bloch ph -> Bloch el and Bloch ph
-             ! --------------------------------------------------------------
-             !
-             !
-             ! SP: Note: In case of polar materials, computing the long-range and short-range term 
-             !     separately might help speed up the convergence. Indeed the long-range term should be 
-             !     much faster to compute. Note however that the short-range term still contains a linear
-             !     long-range part and therefore could still be a bit more difficult to converge than 
-             !     non-polar materials. 
-             ! 
-             IF (longrange) THEN
-               !      
-               epmatf = czero
+             IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) ) THEN
                !
-             ELSE
+               !  fermicount = fermicount + 1
                !
-               CALL ephwan2bloch &
-                 ( nbndsub, nrr_k, irvec, ndegen_k, epmatwef, xkk, cufkk, cufkq, epmatf, nmodes )
+               ! --------------------------------------------------------------
+               ! epmat : Wannier el and Bloch ph -> Bloch el and Bloch ph
+               ! --------------------------------------------------------------
                !
-             ENDIF
-             !
-             IF (lpolar) THEN
                !
-               CALL compute_umn_f( nbndsub, cufkk, cufkq, bmatf )
-               !
-               IF ( (abs(xxq(1)) > eps) .or. (abs(xxq(2)) > eps) .or. (abs(xxq(3)) > eps) ) THEN
+               ! SP: Note: In case of polar materials, computing the long-range and short-range term 
+               !     separately might help speed up the convergence. Indeed the long-range term should be 
+               !     much faster to compute. Note however that the short-range term still contains a linear
+               !     long-range part and therefore could still be a bit more difficult to converge than 
+               !     non-polar materials. 
+               ! 
+               IF (longrange) THEN
                  !      
-                 CALL cryst_to_cart (1, xxq, bg, 1)
-                 CALL rgd_blk_epw_fine(nq1, nq2, nq3, xxq, uf, epmatf, &
-                                       nmodes, epsi, zstar, bmatf, +1.d0)
-                 CALL cryst_to_cart (1, xxq, at, -1)
+                 epmatf = czero
+                 !
+               ELSE
+                 !
+                 CALL ephwan2bloch &
+                   ( nbndsub, nrr_k, irvec, ndegen_k, epmatwef, xkk, cufkk, cufkq, epmatf, nmodes )
                  !
                ENDIF
                !
-             ENDIF
-             ! 
-             ! Store epmatf in memory
-             !
-             DO jbnd = ibndmin, ibndmax
-               DO ibnd = ibndmin, ibndmax
-                 ! 
-                 IF (lscreen) THEN
-                    epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:) / eps_rpa(:)
-                 ELSE
-                    epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:)
+               IF (lpolar) THEN
+                 !
+                 CALL compute_umn_f( nbndsub, cufkk, cufkq, bmatf )
+                 !
+                 IF ( (abs(xxq(1)) > eps) .or. (abs(xxq(2)) > eps) .or. (abs(xxq(3)) > eps) ) THEN
+                   !      
+                   CALL cryst_to_cart (1, xxq, bg, 1)
+                   CALL rgd_blk_epw_fine(nq1, nq2, nq3, xxq, uf, epmatf, &
+                                         nmodes, epsi, zstar, bmatf, +1.d0)
+                   CALL cryst_to_cart (1, xxq, at, -1)
+                   !
                  ENDIF
                  !
+               ENDIF
+               ! 
+               ! Store epmatf in memory
+               !
+               DO jbnd = ibndmin, ibndmax
+                 DO ibnd = ibndmin, ibndmax
+                   ! 
+                   IF (lscreen) THEN
+                      epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:) / eps_rpa(:)
+                   ELSE
+                      epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:)
+                   ENDIF
+                   !
+                 ENDDO
                ENDDO
-             ENDDO
-             !
-             !if (ik==2) then
-             !  do imode = 1, nmodes
-             !    write(*,*) 'epmatf ',SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
-             !  enddo
-             !endif
-             !
-           ENDIF
+               !
+               !if (ik==2) then
+               !  do imode = 1, nmodes
+               !    write(*,*) 'epmatf ',SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
+               !  enddo
+               !endif
+               !
+             ENDIF
            ENDIF ! scatread 
            !
          ENDDO  ! end loop over k points

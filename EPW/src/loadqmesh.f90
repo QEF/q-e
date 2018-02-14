@@ -93,7 +93,7 @@ SUBROUTINE loadqmesh_para
                 ENDDO
              ENDDO
           ENDDO
-          IF (lscreen) xqf_(:,:) = xqf_(:,:) - 0.5d0
+          IF (lscreen .or. specfun_pl .or. plselfen) xqf_(:,:) = xqf_(:,:) - 0.5d0
           !
        ENDIF
        !
