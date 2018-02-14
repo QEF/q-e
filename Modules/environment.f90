@@ -177,7 +177,10 @@ CONTAINS
          &/9X," URL http://www.quantum-espresso.org"", ", &
          &/5X,"in publications or presentations arising from this work. More details at",&
          &/5x,"http://www.quantum-espresso.org/quote")' )
-
+#if defined (__OLDXML)
+    WRITE( stdout, '(/," *** WARNING: using old-style file format, will ",&
+         &             "disappear from next version ***")')
+#endif
     RETURN
   END SUBROUTINE opening_message
 
