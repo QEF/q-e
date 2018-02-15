@@ -976,6 +976,8 @@ MODULE exx
        ENDDO
     ENDDO
 
+    IF(nbndproj.eq.0) nbndproj = x_nbnd_occ  
+
     CALL divide ( inter_egrp_comm, x_nbnd_occ, ibnd_start, ibnd_end )
     CALL init_index_over_band(inter_egrp_comm,nbnd,nbnd)
 

@@ -401,7 +401,6 @@ SUBROUTINE setup()
   ! ... set the max number of bands used in iterative diagonalization
   !
   nbndx = nbnd
-  IF(nbndproj.eq.0) nbndproj = nbnd
   IF ( isolve == 0 ) nbndx = david * nbnd
   !
 #if defined(__MPI)
