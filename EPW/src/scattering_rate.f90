@@ -214,17 +214,19 @@
             !
             ! the phonon frequency and bose occupation
             wq = wf (imode, iq)
-            wgq = wgauss( -wq*inv_etemp, -99)
-            wgq = wgq / ( one - two * wgq )
             !
-            ! SP : Define the inverse for efficiency
-            inv_wq =  1.0/(two * wq)
             ! SP : Avoid if statement in inner loops
             ! the coupling from Gamma acoustic phonons is negligible
             IF ( wq .gt. eps_acustic ) THEN
               g2_tmp = 1.0
+              wgq = wgauss( -wq*inv_etemp, -99)
+              wgq = wgq / ( one - two * wgq )
+              ! SP : Define the inverse for efficiency
+              inv_wq =  1.0/(two * wq) 
             ELSE
               g2_tmp = 0.0
+              wgq = 0.0
+              inv_wq = 0.0
             ENDIF
             !
             DO ibnd = 1, ibndmax-ibndmin+1
@@ -268,10 +270,17 @@
                 trans_prob = pi * wqf(iq) * g2 * & 
                              ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
                 !
-               ! if ((ik .eq. 27) .and. (ibnd > 4) .and. trans_prob > 1E-7) then
-               !    print*,'trans_prob ', trans_prob
-               !    print*,'inv_tau',SUM(inv_tau(1,5:8,27))
-               ! end if
+                !if ((ik == 6) .and. (ibnd == 4) .and. jbnd==1 .and. imode==3) then
+                !  print*,'wqf(iq) ',wqf(iq)
+                !  print*,'wq ',wq
+                !  print*,'inv_etemp ',inv_etemp
+                !  print*,'g2 ',g2
+                !  print*,'fmkq ',fmkq
+                !  print*,'wgq ',wgq
+                !  print*,'w0g1 ',w0g1
+                !  print*,'trans_prob ik, ibnd, jbnd, imode ', trans_prob, ik, ibnd, jbnd, imode
+                !  print*,'inv_tau',SUM(inv_tau_all(1,5:8,27))
+                !end if
                 !  
                 IF ( scattering_serta ) THEN 
                   ! energy relaxation time approximation 
@@ -381,14 +390,17 @@
         CALL mp_sum( inv_tau_all, world_comm )
         CALL mp_sum( zi_allvb,    world_comm )
         !
-        CALL tau_write(iq,nqtotf,nkqtotf/2,.FALSE.)
-        ! 
         IF ( ABS(efcb(1)) > eps ) THEN
           ! 
           CALL mp_sum( inv_tau_allcb, world_comm ) 
           CALL mp_sum( zi_allcb,      world_comm ) 
           ! 
-          CALL tau_write(iq,nqtotf,nkqtotf/2,.TRUE.) 
+        ENDIF
+        ! 
+        IF ( ABS(efcb(1)) > eps ) THEN
+          CALL tau_write(iq,nqtotf,nkqtotf/2,.TRUE.)
+        ELSE
+          CALL tau_write(iq,nqtotf,nkqtotf/2,.FALSE.)
         ENDIF
         ! 
         ! Now show intermediate mobility with that amount of q-points
@@ -524,7 +536,8 @@
   ENDIF
   ! DBSP
   !write(stdout,*),'iq ',iq
-  !write(stdout,*),'inv_tau_all(1,5:8,21) ',SUM(inv_tau_all(3,5:8,21))
+  !print*,shape(inv_tau_all)
+  !write(stdout,*),'inv_tau_all(1,5:8,21) ',SUM(inv_tau_all(3,5:8,1))
   !write(stdout,*),'inv_tau_all(1,5:8,:) ',SUM(inv_tau_all(3,5:8,:))
   !write(stdout,*),'SUM(inv_tau_all) ',SUM(inv_tau_all(3,:,:))
   !write(stdout,*),'first_cycle ',first_cycle

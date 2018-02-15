@@ -384,8 +384,6 @@
   ! 
   WRITE(stdout,'(/5x,"Reading scattering rate from file"/)')
   !
-  ! DBSP
-  !print*,'ionode_id ',ionode_id
   IF (mpime.eq.ionode_id) THEN
     ! Write to file
     temp = etemp * ryd2ev / kelvin2eV
@@ -949,6 +947,7 @@
     CALL mp_bcast (inv_tau_all, meta_ionode_id, world_comm)
     CALL mp_bcast (zi_allvb,    meta_ionode_id, world_comm)
     IF (second) CALL mp_bcast (inv_tau_allcb, meta_ionode_id, world_comm)
+    IF (second) CALL mp_bcast (zi_allcb, meta_ionode_id, world_comm)
     ! 
     ! Make everythin 0 except the range of k-points we are working on
     IF (lower_bnd > 1 )      inv_tau_all(:,:,1:lower_bnd-1) = zero
@@ -1037,13 +1036,11 @@
       !
       ltau_all = nstemp * (ibndmax-ibndmin+1) * nktotf +2
       !CALL diropn (iufiltau_all, 'tau_restart', ltau_all, exst)
-
-
+      ! 
       unf_recl = DIRECT_IO_FACTOR * int(ltau_all, kind=kind(unf_recl))
       open (unit = iufiltau_all, file = restart_filq, iostat = ios, form ='unformatted', &
        status = 'unknown', access = 'direct', recl = unf_recl)
-      print*,''
-
+      !  
       CALL davcio ( aux, ltau_all, iufiltau_all, 1, -1 )
       !
       ! First element is the iteration number
