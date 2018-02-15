@@ -13,6 +13,10 @@
 !------------------------------------------------------------------------------!
       USE util_param,     ONLY : DP, stdout
       USE parallel_include
+#if defined(__CUDA)
+      USE cudafor,        ONLY: cudamemcpy, cudamemcpy2d, &
+                                & cudamemcpydevicetodevice
+#endif
       !
       IMPLICIT NONE
       PRIVATE
@@ -33,6 +37,15 @@
           mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_i4d, mp_bcast_rt, mp_bcast_lv, &
           mp_bcast_lm, mp_bcast_r4d, mp_bcast_r5d, mp_bcast_ct,  mp_bcast_c4d,&
           mp_bcast_c5d
+#if defined(__CUDA)
+        ! this code duplication can be done with regex: rexp = re.compile(r"(\b\w+\b)") ; rexp.sub(r'\1_gpu',code_here)
+        MODULE PROCEDURE mp_bcast_i1_gpu, mp_bcast_r1_gpu, mp_bcast_c1_gpu, &
+          !mp_bcast_z_gpu, mp_bcast_zv_gpu, &
+          mp_bcast_iv_gpu, mp_bcast_rv_gpu, mp_bcast_cv_gpu, mp_bcast_l_gpu, mp_bcast_rm_gpu, &
+          mp_bcast_cm_gpu, mp_bcast_im_gpu, mp_bcast_it_gpu, mp_bcast_i4d_gpu, mp_bcast_rt_gpu, mp_bcast_lv_gpu, &
+          mp_bcast_lm_gpu, mp_bcast_r4d_gpu, mp_bcast_r5d_gpu, mp_bcast_ct_gpu,  mp_bcast_c4d_gpu,&
+          mp_bcast_c5d_gpu
+#endif
       END INTERFACE
 
       INTERFACE mp_sum
@@ -40,34 +53,64 @@
           mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rt, mp_sum_r4d, &
           mp_sum_c1, mp_sum_cv, mp_sum_cm, mp_sum_ct, mp_sum_c4d, &
           mp_sum_c5d, mp_sum_c6d, mp_sum_rmm, mp_sum_cmm, mp_sum_r5d
+#if defined(__CUDA)
+        MODULE PROCEDURE  mp_sum_i1_gpu, mp_sum_iv_gpu, mp_sum_im_gpu, mp_sum_it_gpu, &
+          mp_sum_r1_gpu, mp_sum_rv_gpu, mp_sum_rm_gpu, mp_sum_rt_gpu, mp_sum_r4d_gpu, &
+          mp_sum_c1_gpu, mp_sum_cv_gpu, mp_sum_cm_gpu, mp_sum_ct_gpu, mp_sum_c4d_gpu, &
+          mp_sum_c5d_gpu, mp_sum_c6d_gpu, mp_sum_rmm_gpu, mp_sum_cmm_gpu, mp_sum_r5d_gpu
+#endif
       END INTERFACE
 
       INTERFACE mp_root_sum
         MODULE PROCEDURE mp_root_sum_rm, mp_root_sum_cm
+#if defined(__CUDA)
+        MODULE PROCEDURE mp_root_sum_rm_gpu, mp_root_sum_cm_gpu
+#endif
       END INTERFACE
 
       INTERFACE mp_get
         MODULE PROCEDURE mp_get_r1, mp_get_rv, mp_get_cv, mp_get_i1, mp_get_iv, &
           mp_get_rm, mp_get_cm
+#if defined(__CUDA)
+        MODULE PROCEDURE mp_get_r1_gpu, mp_get_rv_gpu, mp_get_cv_gpu, mp_get_i1_gpu, mp_get_iv_gpu, &
+          mp_get_rm_gpu, mp_get_cm_gpu
+#endif
       END INTERFACE
 
       INTERFACE mp_put
         MODULE PROCEDURE mp_put_rv, mp_put_cv, mp_put_i1, mp_put_iv, &
           mp_put_rm
+#if defined(__CUDA)
+        MODULE PROCEDURE mp_put_rv_gpu, mp_put_cv_gpu, mp_put_i1_gpu, mp_put_iv_gpu, &
+          mp_put_rm_gpu
+#endif
       END INTERFACE
 
       INTERFACE mp_max
         MODULE PROCEDURE mp_max_i, mp_max_r, mp_max_rv, mp_max_iv
+#if defined(__CUDA)
+        MODULE PROCEDURE mp_max_i_gpu, mp_max_r_gpu, mp_max_rv_gpu, mp_max_iv_gpu
+#endif
       END INTERFACE
       INTERFACE mp_min
         MODULE PROCEDURE mp_min_i, mp_min_r, mp_min_rv, mp_min_iv
+#if defined(__CUDA)
+        MODULE PROCEDURE mp_min_i_gpu, mp_min_r_gpu, mp_min_rv_gpu, mp_min_iv_gpu
+#endif
       END INTERFACE
       INTERFACE mp_gather
         MODULE PROCEDURE mp_gather_i1, mp_gather_iv, mp_gatherv_rv, mp_gatherv_iv, &
           mp_gatherv_rm, mp_gatherv_im, mp_gatherv_cv
+#if defined(__CUDA)
+        MODULE PROCEDURE mp_gather_i1_gpu, mp_gather_iv_gpu, mp_gatherv_rv_gpu, mp_gatherv_iv_gpu, &
+          mp_gatherv_rm_gpu, mp_gatherv_im_gpu, mp_gatherv_cv_gpu
+#endif
       END INTERFACE
       INTERFACE mp_alltoall
         MODULE PROCEDURE mp_alltoall_c3d, mp_alltoall_i3d
+#if defined(__CUDA)
+        MODULE PROCEDURE mp_alltoall_c3d_gpu, mp_alltoall_i3d_gpu
+#endif
       END INTERFACE
       INTERFACE mp_circular_shift_left
         MODULE PROCEDURE mp_circular_shift_left_i0, &
@@ -75,6 +118,13 @@
           mp_circular_shift_left_i2, &
           mp_circular_shift_left_r2d, &
           mp_circular_shift_left_c2d
+#if defined(__CUDA)
+        MODULE PROCEDURE mp_circular_shift_left_i0_gpu, &
+          mp_circular_shift_left_i1_gpu, &
+          mp_circular_shift_left_i2_gpu, &
+          mp_circular_shift_left_r2d_gpu, &
+          mp_circular_shift_left_c2d_gpu
+#endif
       END INTERFACE
 
 !------------------------------------------------------------------------------!
@@ -151,8 +201,12 @@
         IF (ierr/=0) CALL mp_stop( 8005 )
         CALL mpi_comm_size(group,numtask,ierr)
         IF (ierr/=0) CALL mp_stop( 8006 )
-#  endif
-
+! ...
+        CALL allocate_buffers()
+#if defined(__CUDA)
+        CALL allocate_buffers_gpu()
+#endif
+#endif
         RETURN
       END SUBROUTINE mp_start
 !
@@ -164,6 +218,10 @@
         INTEGER :: ierr
         INTEGER, INTENT(IN):: errorcode, gid
 #if defined(__MPI)
+        CALL deallocate_buffers()
+#if defined(__CUDA)
+        CALL deallocate_buffers_gpu()
+#endif
         CALL mpi_abort(gid, errorcode, ierr)
 #endif
       END SUBROUTINE mp_abort
@@ -181,6 +239,10 @@
 
 #if defined(__MPI)
         CALL mpi_comm_rank( groupid, taskid, ierr)
+        CALL deallocate_buffers()
+#if defined(__CUDA)
+        CALL deallocate_buffers_gpu()
+#endif
 #endif
         RETURN
       END SUBROUTINE mp_end
@@ -2362,6 +2424,2544 @@ FUNCTION mp_get_comm_self( )
 END FUNCTION mp_get_comm_self
 
 !------------------------------------------------------------------------------!
+!  GPU Subroutines (Pietro Bonfa')
+!------------------------------------------------------------------------------!
+#ifdef __CUDA
+
+!------------------------------------------------------------------------------!
+!..mp_bcast
+
+      SUBROUTINE mp_bcast_i1_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        INTEGER, DEVICE :: msg_d
+        INTEGER :: msg_h
+        INTEGER :: source
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: msglen
+
+#if defined(__MPI)
+        msglen = 1
+        group = gid
+#if defined(__GPU_MPI)
+        CALL bcast_integer_gpu( msg_d, msglen, source, group )
+#else
+        msg_h = msg_d
+        CALL bcast_integer( msg_h, msglen, source, group )
+        msg_d = msg_h
+#endif
+        
+#endif
+      END SUBROUTINE mp_bcast_i1_gpu
+!
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_bcast_iv_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        INTEGER, DEVICE :: msg_d(:)
+        INTEGER, ALLOCATABLE :: msg_h(:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg_d)
+#if defined(__GPU_MPI)
+        CALL bcast_integer_gpu( msg_d, msglen, source, gid )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        CALL bcast_integer( msg_h, msglen, source, gid )
+        msg_d = msg_h; DEALLOCATE( msg_h )
+#endif
+#endif
+      END SUBROUTINE mp_bcast_iv_gpu
+!
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_bcast_im_gpu( msg_d, source, gid )
+        IMPLICIT NONE
+        INTEGER, DEVICE :: msg_d(:,:)
+        INTEGER, ALLOCATABLE :: msg_h(:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg_d)
+#if defined(__GPU_MPI)
+        CALL bcast_integer_gpu( msg_d, msglen, source, gid )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        CALL bcast_integer( msg_h, msglen, source, gid )
+        msg_d = msg_h; DEALLOCATE( msg_h )
+#endif
+#endif
+      END SUBROUTINE mp_bcast_im_gpu
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_bcast_it_gpu( msg_d, source, gid )
+        IMPLICIT NONE
+        INTEGER, DEVICE :: msg_d(:,:,:)
+
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL bcast_integer_gpu( msg_d, msglen, source, gid )
+#else
+        INTEGER, ALLOCATABLE :: msg_h(:,:,:)
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL bcast_integer( msg_h, msglen, source, gid )
+        msg_d = msg_h; DEALLOCATE( msg_h )
+#endif
+#endif
+      END SUBROUTINE mp_bcast_it_gpu
+!
+!------------------------------------------------------------------------------!
+!
+! Samuel Ponce
+!
+      SUBROUTINE mp_bcast_i4d_gpu(msg_d, source, gid)
+        IMPLICIT NONE
+        INTEGER, DEVICE :: msg_d(:,:,:,:)
+        INTEGER, ALLOCATABLE :: msg_h(:,:,:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg_d)
+#if defined(__GPU_MPI)
+        CALL bcast_integer_gpu( msg_d, msglen, source, gid )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        CALL bcast_integer( msg_h, msglen, source, gid )
+        msg_d = msg_h; DEALLOCATE( msg_h )
+#endif
+#endif
+      END SUBROUTINE mp_bcast_i4d_gpu
+!
+!------------------------------------------------------------------------------!
+!
+      SUBROUTINE mp_bcast_r1_gpu( msg_d, source, gid )
+        IMPLICIT NONE
+        REAL (DP), DEVICE :: msg_d
+        REAL (DP) :: msg_h
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = 1
+#if defined(__GPU_MPI)
+        CALL bcast_real_gpu( msg_d, msglen, source, gid )
+#else
+        msg_h=msg_d
+        CALL bcast_real( msg_h, msglen, source, gid )
+        msg_d = msg_h
+#endif
+#endif
+      END SUBROUTINE mp_bcast_r1_gpu
+!
+!------------------------------------------------------------------------------!
+!
+      SUBROUTINE mp_bcast_rv_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        REAL (DP), DEVICE :: msg_d(:)
+        REAL (DP), ALLOCATABLE :: msg_h(:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg_d)
+#if defined(__GPU_MPI)
+        CALL bcast_real_gpu( msg_d, msglen, source, gid )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        CALL bcast_real( msg_h, msglen, source, gid )
+        msg_d = msg_h ; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_bcast_rv_gpu
+!
+!------------------------------------------------------------------------------!
+!
+      SUBROUTINE mp_bcast_rm_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        REAL (DP), DEVICE :: msg_d(:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        
+#if defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL bcast_real_gpu( msg_d, msglen, source, gid )
+#else
+        REAL (DP), ALLOCATABLE :: msg_h(:,:)
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL bcast_real( msg_h, msglen, source, gid )
+        msg_d = msg_h ; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_bcast_rm_gpu
+!
+!------------------------------------------------------------------------------!
+!
+! Pietro Bonfa'
+!
+      SUBROUTINE mp_bcast_rt_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        REAL (DP), DEVICE :: msg_d(:,:,:)
+        REAL (DP), ALLOCATABLE :: msg_h(:,:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg_d)
+#if defined(__GPU_MPI)
+        CALL bcast_real_gpu( msg_d, msglen, source, gid )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        CALL bcast_real( msg_h, msglen, source, gid )
+        msg_d = msg_h ; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_bcast_rt_gpu
+!
+!------------------------------------------------------------------------------!
+!
+! Pietro Bonfa'
+!
+      SUBROUTINE mp_bcast_r4d_gpu(msg_d, source, gid)
+        IMPLICIT NONE
+        REAL (DP), DEVICE :: msg_d(:,:,:,:)
+        REAL (DP), ALLOCATABLE :: msg_h(:,:,:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg_d)
+#if defined(__GPU_MPI)
+        CALL bcast_real_gpu( msg_d, msglen, source, gid )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        CALL bcast_real( msg_h, msglen, source, gid )
+        msg_d = msg_h ; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_bcast_r4d_gpu
+
+!
+!------------------------------------------------------------------------------!
+!
+! Pietro Bonfa'
+!
+      SUBROUTINE mp_bcast_r5d_gpu(msg_d, source, gid)
+        IMPLICIT NONE
+        REAL (DP), DEVICE :: msg_d(:,:,:,:,:)
+        REAL (DP), ALLOCATABLE :: msg_h(:,:,:,:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg_d)
+#if defined(__GPU_MPI)
+        CALL bcast_real_gpu( msg_d, msglen, source, gid )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        CALL bcast_real( msg_h, msglen, source, gid )
+        msg_d = msg_h ; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_bcast_r5d_gpu
+
+!------------------------------------------------------------------------------!
+!
+      SUBROUTINE mp_bcast_c1_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), DEVICE :: msg_d
+        COMPLEX (DP) :: msg_h
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = 1
+#if defined(__GPU_MPI)
+        CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
+#else
+        msg_h=msg_d
+        CALL bcast_real( msg_h, 2 * msglen, source, gid )
+        msg_d = msg_h
+#endif
+#endif
+      END SUBROUTINE mp_bcast_c1_gpu
+!
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_bcast_cv_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), DEVICE :: msg_d(:)
+        COMPLEX (DP), ALLOCATABLE :: msg_h(:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg_d)
+#if defined(__GPU_MPI)
+        CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        CALL bcast_real( msg_h, 2 * msglen, source, gid )
+        msg_d = msg_h ; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_bcast_cv_gpu
+!
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_bcast_cm_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), DEVICE :: msg_d(:,:)
+        COMPLEX (DP), ALLOCATABLE :: msg_h(:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg_d)
+#if defined(__GPU_MPI)
+        CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        CALL bcast_real( msg_h, 2 * msglen, source, gid )
+        msg_d = msg_h ; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_bcast_cm_gpu
+!
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_bcast_ct_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), DEVICE :: msg_d(:,:,:)
+        COMPLEX (DP), ALLOCATABLE :: msg_h(:,:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg_d)
+#if defined(__GPU_MPI)
+        CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        CALL bcast_real( msg_h, 2 * msglen, source, gid )
+        msg_d = msg_h ; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_bcast_ct_gpu
+
+!
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_bcast_c4d_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), DEVICE :: msg_d(:,:,:,:)
+        COMPLEX (DP), ALLOCATABLE :: msg_h(:,:,:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg_d)
+#if defined(__GPU_MPI)
+        CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        CALL bcast_real( msg_h, 2 * msglen, source, gid )
+        msg_d = msg_h ; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_bcast_c4d_gpu
+
+      SUBROUTINE mp_bcast_c5d_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), DEVICE :: msg_d(:,:,:,:,:)
+        COMPLEX (DP), ALLOCATABLE :: msg_h(:,:,:,:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg_d)
+#if defined(__GPU_MPI)
+        CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        CALL bcast_real( msg_h, 2 * msglen, source, gid )
+        msg_d = msg_h ; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_bcast_c5d_gpu
+
+!
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_bcast_l_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        LOGICAL, DEVICE :: msg_d
+        LOGICAL         :: msg_h
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = 1
+#if defined(__GPU_MPI)
+        CALL bcast_logical_gpu( msg_d, msglen, source, gid )
+#else
+        msg_h = msg_d
+        CALL bcast_logical( msg_h, msglen, source, gid )
+        msg_d = msg_h
+#endif
+#endif
+      END SUBROUTINE mp_bcast_l_gpu
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_bcast_lv_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        LOGICAL, DEVICE :: msg_d(:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL bcast_logical_gpu( msg_d, msglen, source, gid )
+#else
+        LOGICAL, ALLOCATABLE :: msg_h(:)
+        ALLOCATE(msg_h, source=msg_d)
+        msglen = size(msg_h)
+        CALL bcast_logical( msg_h, msglen, source, gid )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_bcast_lv_gpu
+
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_bcast_lm_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        LOGICAL, DEVICE :: msg_d(:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL bcast_logical_gpu( msg_d, msglen, source, gid )
+#else
+        LOGICAL, ALLOCATABLE :: msg_h(:,:)
+        ALLOCATE(msg_h, source=msg_d)
+        msglen = size(msg_h)
+        CALL bcast_logical( msg_h, msglen, source, gid )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_bcast_lm_gpu
+
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_get_i1_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        INTEGER, DEVICE :: msg_dest_d, msg_sour_d
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+        INTEGER :: ierr, nrcv
+        INTEGER :: msglen = 1
+
+#if ! defined(__GPU_MPI)
+        ! Call CPU implementation
+        INTEGER :: msg_dest_h, msg_sour_h
+        !
+        msg_dest_h = msg_dest_d; msg_sour_h = msg_sour_d
+        CALL mp_get_i1(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+#else
+
+#if defined(__MPI)
+        group = gid
+#endif
+
+        ! processors not taking part in the communication have 0 length message
+
+        msglen = 0
+
+        IF(dest .NE. sour) THEN
+#if defined(__MPI)
+           IF(mpime .EQ. sour) THEN
+             msglen=1
+             CALL MPI_SEND( msg_sour_d, msglen, MPI_INTEGER, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( -8001 )
+           ELSE IF(mpime .EQ. dest) THEN
+             msglen=1
+             CALL MPI_RECV( msg_dest_d, msglen, MPI_INTEGER, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( -8002 )
+             CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( -8003 )
+           END IF
+#endif
+        ELSEIF(mpime .EQ. sour)THEN
+          msg_dest_d = msg_sour_d
+          msglen = 1
+        END IF
+
+#if defined(__MPI)
+        CALL MPI_BARRIER(group, IERR)
+        IF (ierr/=0) CALL mp_stop( -8004 )
+#endif
+
+#endif
+        RETURN
+      END SUBROUTINE mp_get_i1_gpu
+
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_get_iv_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        INTEGER, DEVICE :: msg_dest_d(:), msg_sour_d(:)
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+        INTEGER :: ierr, nrcv
+        INTEGER :: msglen
+        ! 
+#if ! defined(__GPU_MPI)
+        INTEGER, ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
+        !
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        CALL mp_get_iv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        DEALLOCATE(msg_dest_h, msg_sour_h)
+#else
+
+#if defined(__MPI)
+        group = gid
+#endif
+
+        ! processors not taking part in the communication have 0 length message
+
+        msglen = 0
+
+        IF(sour .NE. dest) THEN
+#if defined(__MPI)
+           IF(mpime .EQ. sour) THEN
+             msglen = SIZE(msg_sour_d)
+             CALL MPI_SEND( msg_sour_d, SIZE(msg_sour_d), MPI_INTEGER, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 9001 )
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest_d, SIZE(msg_dest_d), MPI_INTEGER, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 9002 )
+             CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 9003 )
+             msglen = nrcv
+           END IF
+#endif
+        ELSEIF(mpime .EQ. sour)THEN
+          !msg_dest_d(1:SIZE(msg_sour_d)) = msg_sour_d(:)
+          ierr = cudaMemcpy(msg_dest_d(1) , msg_sour_d(1), SIZE(msg_sour_d), cudaMemcpyDeviceToDevice )
+          msglen = SIZE(msg_sour_d)
+        END IF
+#if defined(__MPI)
+        CALL MPI_BARRIER(group, IERR)
+        IF (ierr/=0) CALL mp_stop( 9004 )
+#endif
+#endif
+        RETURN
+      END SUBROUTINE mp_get_iv_gpu
+
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_get_r1_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        REAL (DP), DEVICE :: msg_dest_d, msg_sour_d
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+        INTEGER :: ierr, nrcv
+        INTEGER :: msglen
+#if ! defined(__GPU_MPI)
+        REAL(DP) :: msg_dest_h, msg_sour_h
+        !
+        msg_dest_h=msg_dest_d; msg_sour_h=msg_sour_d
+        CALL mp_get_r1(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+#else
+#if defined(__MPI)
+        group = gid
+#endif
+
+        ! processors not taking part in the communication have 0 length message
+
+        msglen = 0
+
+        IF(sour .NE. dest) THEN
+#if defined(__MPI)
+           IF(mpime .EQ. sour) THEN
+             msglen = 1
+             CALL MPI_SEND( msg_sour_d, msglen, MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 9005 )
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest_d, msglen, MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 9006 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 9007 )
+             msglen = nrcv
+           END IF
+#endif
+        ELSEIF(mpime .EQ. sour)THEN
+          msg_dest_d = msg_sour_d
+          msglen = 1
+        END IF
+#if defined(__MPI)
+        CALL MPI_BARRIER(group, IERR)
+        IF (ierr/=0) CALL mp_stop( 9008 )
+#endif
+#endif
+        RETURN
+      END SUBROUTINE mp_get_r1_gpu
+
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_get_rv_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        REAL (DP), DEVICE :: msg_dest_d(:), msg_sour_d(:)
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+        INTEGER :: ierr, nrcv
+        INTEGER :: msglen
+        ! 
+#if ! defined(__GPU_MPI)
+        REAL (DP), ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
+        !
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        CALL mp_get_rv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        DEALLOCATE(msg_dest_h, msg_sour_h)
+#else
+        !
+#if defined(__MPI)
+        group = gid
+#endif
+
+        ! processors not taking part in the communication have 0 length message
+
+        msglen = 0
+
+        IF(sour .NE. dest) THEN
+#if defined(__MPI)
+           IF(mpime .EQ. sour) THEN
+             msglen = SIZE(msg_sour_d)
+             CALL MPI_SEND( msg_sour_d, SIZE(msg_sour_d), MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 9009 )
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest_d, SIZE(msg_dest_d), MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 9010 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 9011 )
+             msglen = nrcv
+           END IF
+#endif
+        ELSEIF(mpime .EQ. sour)THEN
+          !msg_dest_d(1:SIZE(msg_sour_d)) = msg_sour_d(:)
+          ierr = cudaMemcpy(msg_dest_d(1) , msg_sour_d(1), SIZE(msg_sour_d), cudaMemcpyDeviceToDevice )
+          msglen = SIZE(msg_sour_d)
+        END IF
+#if defined(__MPI)
+        CALL MPI_BARRIER(group, IERR)
+        IF (ierr/=0) CALL mp_stop( 9012 )
+#endif
+#endif
+        RETURN
+      END SUBROUTINE mp_get_rv_gpu
+
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_get_rm_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        REAL (DP), DEVICE :: msg_dest_d(:,:), msg_sour_d(:,:)
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+        INTEGER :: ierr, nrcv
+        INTEGER :: msglen
+        ! 
+#if ! defined(__GPU_MPI)
+        REAL (DP), ALLOCATABLE :: msg_dest_h(:,:), msg_sour_h(:,:)
+        !
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        CALL mp_get_rm(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        DEALLOCATE(msg_dest_h, msg_sour_h)
+        RETURN
+#else
+
+#if defined(__MPI)
+        group = gid
+#endif
+
+        ! processors not taking part in the communication have 0 length message
+
+        msglen = 0
+
+        IF(sour .NE. dest) THEN
+#if defined(__MPI)
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour_d, SIZE(msg_sour_d), MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 9013 )
+             msglen = SIZE(msg_sour_d)
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest_d, SIZE(msg_dest_d), MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 9014 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 9015 )
+             msglen = nrcv
+           END IF
+#endif
+        ELSEIF(mpime .EQ. sour)THEN
+          !msg_dest_d(1:SIZE(msg_sour_d,1), 1:SIZE(msg_sour_d,2)) = msg_sour_d(:,:)
+          ! function cudaMemcpy2D(dst, dpitch, src, spitch, width, height, kdir)
+          ierr = cudaMemcpy2D(msg_dest_d, SIZE(msg_dest_d,1),&
+                              msg_sour_d, SIZE(msg_sour_d,1),&
+                              SIZE(msg_sour_d,1), SIZE(msg_sour_d,2), &
+                              cudaMemcpyDeviceToDevice )
+          msglen = SIZE( msg_sour_d )
+        END IF
+#if defined(__MPI)
+        CALL MPI_BARRIER(group, IERR)
+        IF (ierr/=0) CALL mp_stop( 9016 )
+#endif
+#endif
+        RETURN
+      END SUBROUTINE mp_get_rm_gpu
+
+
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_get_cv_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        COMPLEX (DP), DEVICE :: msg_dest_d(:), msg_sour_d(:)
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+        INTEGER :: ierr, nrcv
+        INTEGER :: msglen
+        ! 
+#if ! defined(__GPU_MPI)
+        COMPLEX (DP), ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
+        !
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        CALL mp_get_cv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        DEALLOCATE(msg_dest_h, msg_sour_h)
+#else
+        !
+#if defined(__MPI)
+        group = gid
+#endif
+
+        ! processors not taking part in the communication have 0 length message
+
+        msglen = 0
+
+        IF( dest .NE. sour ) THEN
+#if defined(__MPI)
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour_d, SIZE(msg_sour_d), MPI_DOUBLE_COMPLEX, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 9017 )
+             msglen = SIZE(msg_sour_d)
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest_d, SIZE(msg_dest_d), MPI_DOUBLE_COMPLEX, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 9018 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_COMPLEX, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 9019 )
+             msglen = nrcv
+           END IF
+#endif
+        ELSEIF(mpime .EQ. sour)THEN
+          !msg_dest_d(1:SIZE(msg_sour_d)) = msg_sour_d(:)
+          ierr = cudaMemcpy(msg_dest_d(1) , msg_sour_d(1), SIZE(msg_sour_d), cudaMemcpyDeviceToDevice )
+          msglen = SIZE(msg_sour_d)
+        END IF
+#if defined(__MPI)
+        CALL MPI_BARRIER(group, IERR)
+        IF (ierr/=0) CALL mp_stop( 9020 )
+#endif
+#endif
+        RETURN
+      END SUBROUTINE mp_get_cv_gpu
+
+
+
+!------------------------------------------------------------------------------!
+!
+! Pietro Bonfa'
+!
+      SUBROUTINE mp_get_cm_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
+        COMPLEX (DP), DEVICE :: msg_dest_d(:,:), msg_sour_d(:,:)
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+        INTEGER :: ierr, nrcv
+        INTEGER :: msglen
+        ! 
+#if ! defined(__GPU_MPI)
+        COMPLEX (DP), ALLOCATABLE :: msg_dest_h(:,:), msg_sour_h(:,:)
+        !
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        CALL mp_get_cm(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        DEALLOCATE(msg_dest_h, msg_sour_h)
+#else
+        !
+#if defined(__MPI)
+        group = gid
+#endif
+
+        ! processors not taking part in the communication have 0 length message
+
+        msglen = 0
+
+        IF(sour .NE. dest) THEN
+#if defined(__MPI)
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour_d, SIZE(msg_sour_d), MPI_DOUBLE_COMPLEX, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 9021 )
+             msglen = SIZE(msg_sour_d)
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest_d, SIZE(msg_dest_d), MPI_DOUBLE_COMPLEX, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 9022 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_COMPLEX, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 9023 )
+             msglen = nrcv
+           END IF
+#endif
+        ELSEIF(mpime .EQ. sour)THEN
+          !msg_dest_d(1:SIZE(msg_sour_d,1), 1:SIZE(msg_sour_d,2)) = msg_sour_d(:,:)
+          ierr = cudaMemcpy2D(msg_dest_d, SIZE(msg_dest_d,1),&
+                              msg_sour_d, SIZE(msg_sour_d,1),&
+                              SIZE(msg_sour_d,1), SIZE(msg_sour_d,2), &
+                              cudaMemcpyDeviceToDevice )
+          msglen = SIZE( msg_sour_d )
+        END IF
+#if defined(__MPI)
+        CALL MPI_BARRIER(group, IERR)
+        IF (ierr/=0) CALL mp_stop( 9024 )
+#endif
+#endif
+        RETURN
+      END SUBROUTINE mp_get_cm_gpu
+!------------------------------------------------------------------------------!
+!
+!
+!------------------------------------------------------------------------------!
+
+
+      SUBROUTINE mp_put_i1_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
+        INTEGER, DEVICE :: msg_dest_d, msg_sour_d
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+        INTEGER :: ierr, nrcv
+        INTEGER :: msglen
+        ! 
+#if ! defined(__GPU_MPI)
+        INTEGER :: msg_dest_h, msg_sour_h
+        !
+        msg_dest_h=msg_dest_d ; msg_sour_h=msg_sour_d 
+        CALL mp_put_i1(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        RETURN
+#else
+
+#if defined(__MPI)
+        group = gid
+#endif
+
+        ! processors not taking part in the communication have 0 length message
+
+        msglen = 0
+
+        IF(dest .NE. sour) THEN
+#if defined(__MPI)
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour_d, 1, MPI_INTEGER, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 9025 )
+             msglen = 1
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest_d, 1, MPI_INTEGER, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 9026 )
+             CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 9027 )
+             msglen = 1
+           END IF
+#endif
+        ELSEIF(mpime .EQ. sour)THEN
+          msg_dest_d = msg_sour_d
+          msglen = 1
+        END IF
+#if defined(__MPI)
+        CALL MPI_BARRIER(group, IERR)
+        IF (ierr/=0) CALL mp_stop( 9028 )
+#endif
+#endif
+        RETURN
+      END SUBROUTINE mp_put_i1_gpu
+
+!------------------------------------------------------------------------------!
+!
+!
+      SUBROUTINE mp_put_iv_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
+        INTEGER, DEVICE :: msg_dest_d(:), msg_sour_d(:)
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+        INTEGER :: ierr, nrcv
+        INTEGER :: msglen
+        !
+#if ! defined(__GPU_MPI)
+        INTEGER, ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
+        !
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        CALL mp_put_iv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        DEALLOCATE(msg_dest_h, msg_sour_h)
+        RETURN
+#else
+        !
+#if defined(__MPI)
+        group = gid
+#endif
+        ! processors not taking part in the communication have 0 length message
+
+        msglen = 0
+
+        IF(sour .NE. dest) THEN
+#if defined(__MPI)
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour_d, SIZE(msg_sour_d), MPI_INTEGER, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 9029 )
+             msglen = SIZE(msg_sour_d)
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest_d, SIZE(msg_dest_d), MPI_INTEGER, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 9030 )
+             CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 9031 )
+             msglen = nrcv
+           END IF
+#endif
+        ELSEIF(mpime .EQ. sour)THEN
+          !msg_dest_d(1:SIZE(msg_sour_d)) = msg_sour_d(:)
+          ierr = cudaMemcpy(msg_dest_d(1) , msg_sour_d(1), SIZE(msg_sour_d), cudaMemcpyDeviceToDevice )
+          msglen = SIZE(msg_sour_d)
+        END IF
+#if defined(__MPI)
+        CALL MPI_BARRIER(group, IERR)
+        IF (ierr/=0) CALL mp_stop( 9032 )
+#endif
+#endif
+        RETURN
+      END SUBROUTINE mp_put_iv_gpu
+
+!------------------------------------------------------------------------------!
+!
+!
+      SUBROUTINE mp_put_rv_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
+        REAL (DP), DEVICE :: msg_dest_d(:), msg_sour_d(:)
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+        INTEGER :: ierr, nrcv
+        INTEGER :: msglen
+        ! 
+#if ! defined(__GPU_MPI)
+        REAL (DP), ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
+        !
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        CALL mp_put_rv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        DEALLOCATE(msg_dest_h, msg_sour_h)
+#else
+        !
+#if defined(__MPI)
+        group = gid
+#endif
+        ! processors not taking part in the communication have 0 length message
+
+        msglen = 0
+
+        IF(sour .NE. dest) THEN
+#if defined(__MPI)
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour_d, SIZE(msg_sour_d), MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 9033 )
+             msglen = SIZE(msg_sour_d)
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest_d, SIZE(msg_dest_d), MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 9034 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 9035 )
+             msglen = nrcv
+           END IF
+#endif
+        ELSEIF(mpime .EQ. sour)THEN
+          !msg_dest_d(1:SIZE(msg_sour_d)) = msg_sour_d(:)
+          ierr = cudaMemcpy(msg_dest_d(1) , msg_sour_d(1), SIZE(msg_sour_d), cudaMemcpyDeviceToDevice )
+          msglen = SIZE(msg_sour_d)
+        END IF
+#if defined(__MPI)
+        CALL MPI_BARRIER(group, IERR)
+        IF (ierr/=0) CALL mp_stop( 9036 )
+#endif
+#endif
+        RETURN
+      END SUBROUTINE mp_put_rv_gpu
+
+!------------------------------------------------------------------------------!
+!
+!
+      SUBROUTINE mp_put_rm_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
+        REAL (DP), DEVICE :: msg_dest_d(:,:), msg_sour_d(:,:)
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+        INTEGER :: ierr, nrcv
+        INTEGER :: msglen
+        ! 
+#if ! defined(__GPU_MPI)
+        REAL (DP), ALLOCATABLE :: msg_dest_h(:,:), msg_sour_h(:,:)
+        !
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        CALL mp_put_rm(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        DEALLOCATE(msg_dest_h, msg_sour_h)
+#else
+        !
+#if defined(__MPI)
+        group = gid
+#endif
+        ! processors not taking part in the communication have 0 length message
+
+        msglen = 0
+
+        IF(sour .NE. dest) THEN
+#if defined(__MPI)
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour_d, SIZE(msg_sour_d), MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 9037 )
+             msglen = SIZE(msg_sour_d)
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest_d, SIZE(msg_dest_d), MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 9038 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 9039 )
+             msglen = nrcv
+           END IF
+#endif
+        ELSEIF(mpime .EQ. sour)THEN
+          !msg_dest_d(1:SIZE(msg_sour_d,1),1:SIZE(msg_sour_d,2)) = msg_sour_d(:,:)
+          ierr = cudaMemcpy2D(msg_dest_d, SIZE(msg_dest_d,1),&
+                              msg_sour_d, SIZE(msg_sour_d,1),&
+                              SIZE(msg_sour_d,1), SIZE(msg_sour_d,2), &
+                              cudaMemcpyDeviceToDevice )
+          msglen = SIZE(msg_sour_d)
+        END IF
+#if defined(__MPI)
+        CALL MPI_BARRIER(group, IERR)
+        IF (ierr/=0) CALL mp_stop( 9040 )
+#endif
+#endif
+        RETURN
+      END SUBROUTINE mp_put_rm_gpu
+
+
+!------------------------------------------------------------------------------!
+!
+!
+      SUBROUTINE mp_put_cv_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
+        COMPLEX (DP), DEVICE :: msg_dest_d(:), msg_sour_d(:)
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+        INTEGER :: ierr, nrcv
+        INTEGER :: msglen
+        ! 
+#if ! defined(__GPU_MPI)
+        COMPLEX (DP), ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
+        !
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        CALL mp_put_cv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        DEALLOCATE(msg_dest_h, msg_sour_h)
+#else
+        !
+#if defined(__MPI)
+        group = gid
+#endif
+        ! processors not taking part in the communication have 0 length message
+
+        msglen = 0
+
+        IF( dest .NE. sour ) THEN
+#if defined(__MPI)
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour_d, SIZE(msg_sour_d), MPI_DOUBLE_COMPLEX, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 9041 )
+             msglen = SIZE(msg_sour_d)
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest_d, SIZE(msg_dest_d), MPI_DOUBLE_COMPLEX, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 9042 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_COMPLEX, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 9043 )
+             msglen = nrcv
+           END IF
+#endif
+        ELSEIF(mpime .EQ. sour)THEN
+          !msg_dest_d(1:SIZE(msg_sour_d)) = msg_sour_d(:)
+          ierr = cudaMemcpy(msg_dest_d(1) , msg_sour_d(1), SIZE(msg_sour_d), cudaMemcpyDeviceToDevice )
+          msglen = SIZE(msg_sour_d)
+        END IF
+#if defined(__MPI)
+        CALL MPI_BARRIER(group, IERR)
+        IF (ierr/=0) CALL mp_stop( 9044 )
+#endif
+#endif
+        RETURN
+      END SUBROUTINE mp_put_cv_gpu
+
+!------------------------------------------------------------------------------!
+!
+!..mp_sum
+      SUBROUTINE mp_sum_i1_gpu(msg_d,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT), DEVICE :: msg_d
+        INTEGER, msg_h
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        
+        msglen = 1
+#if defined(__GPU_MPI)
+        CALL reduce_base_integer_gpu( msglen, msg_d, gid, -1 )
+#else
+        !
+        msg_h = msg_d
+        CALL reduce_base_integer( msglen, msg_h, gid, -1 )
+        msg_d = msg_h
+        RETURN
+#endif
+#endif
+      END SUBROUTINE mp_sum_i1_gpu
+!
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_sum_iv_gpu(msg_d,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT), DEVICE :: msg_d(:)
+        INTEGER, ALLOCATABLE :: msg_h(:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        !
+        INTEGER :: msglen
+#if defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_integer_gpu( msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_integer( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_iv_gpu
+!
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_im_gpu(msg_d,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT), DEVICE :: msg_d(:,:)
+        INTEGER, ALLOCATABLE :: msg_h(:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        !
+        INTEGER :: msglen
+#if defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_integer_gpu( msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_integer( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_im_gpu
+!
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_it_gpu(msg_d,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT), DEVICE :: msg_d(:,:,:)
+        INTEGER, ALLOCATABLE :: msg_h(:,:,:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        !
+        INTEGER :: msglen
+#if defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_integer_gpu( msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_integer( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_it_gpu
+
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_r1_gpu(msg_d,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT), DEVICE :: msg_d
+        REAL(DP) :: msg_h
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+
+        msglen = 1
+#if defined(__GPU_MPI)
+        CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
+#else
+        msg_h=msg_d 
+        CALL reduce_base_real( msglen, msg_h, gid, -1 )
+        msg_d = msg_h
+#endif
+        
+#endif
+      END SUBROUTINE mp_sum_r1_gpu
+
+!
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_rv_gpu(msg_d,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:)
+        REAL(DP), ALLOCATABLE :: msg_h(:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+
+#if defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_real_gpu( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_rv_gpu
+!
+!------------------------------------------------------------------------------!
+
+
+      SUBROUTINE mp_sum_rm_gpu(msg_d, gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:,:)
+        REAL (DP), ALLOCATABLE :: msg_h(:,:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+
+#if defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_real( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_rm_gpu
+
+
+      SUBROUTINE mp_root_sum_rm_gpu( msg_d, res_d, root, gid )
+        IMPLICIT NONE
+        REAL (DP), INTENT (IN) , DEVICE :: msg_d(:,:)
+        REAL (DP), INTENT (OUT), DEVICE :: res_d(:,:)
+        REAL (DP), ALLOCATABLE :: res_h(:,:), msg_h(:,:)
+        INTEGER,   INTENT (IN) :: root
+        INTEGER,   INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen, ierr, taskid
+
+        !
+        
+
+        CALL mpi_comm_rank( gid, taskid, ierr)
+        IF( ierr /= 0 ) CALL mp_stop( 9045 )
+        !
+        msglen = size(msg_d)
+        IF( taskid == root ) THEN
+           IF( msglen > size(res_d) ) CALL mp_stop( 9046 )
+        END IF
+#if  defined(__GPU_MPI)
+        CALL reduce_base_real_to_gpu( msglen, msg_d, res_d, gid, root )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( res_h(lbound(msg_h,1):ubound(msg_h,1), lbound(msg_h,2):ubound(msg_h,2)));
+        CALL reduce_base_real_to( msglen, msg_h, res_h, gid, root )
+        res_d = res_h; DEALLOCATE(msg_h, res_h)
+#endif
+
+#else
+        
+        res_d = msg_d
+
+#endif
+
+      END SUBROUTINE mp_root_sum_rm_gpu
+
+
+      SUBROUTINE mp_root_sum_cm_gpu( msg_d, res_d, root, gid )
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (IN) , DEVICE :: msg_d(:,:)
+        COMPLEX (DP), INTENT (OUT), DEVICE :: res_d(:,:)
+        COMPLEX (DP), ALLOCATABLE          :: res_h(:,:), msg_h(:,:)
+        INTEGER,   INTENT (IN)  :: root
+        INTEGER,  INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen, ierr, taskid
+
+        msglen = size(msg_d)
+
+        CALL mpi_comm_rank( gid, taskid, ierr)
+        IF( ierr /= 0 ) CALL mp_stop( 9047 )
+
+        IF( taskid == root ) THEN
+           IF( msglen > size(res_d) ) CALL mp_stop( 9048 )
+        END IF
+#if  defined(__GPU_MPI)
+        CALL reduce_base_real_to_gpu( 2 * msglen, msg_d, res_d, gid, root )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( res_h(lbound(msg_h,1):ubound(msg_h,1), lbound(msg_h,2):ubound(msg_h,2)));
+        CALL reduce_base_real_to( 2 * msglen, msg_h, res_h, gid, root )
+        res_d = res_h; DEALLOCATE(msg_h, res_h)
+#endif
+#else
+
+        res_d = msg_d
+
+#endif
+
+      END SUBROUTINE mp_root_sum_cm_gpu
+
+!
+!------------------------------------------------------------------------------!
+
+
+!------------------------------------------------------------------------------!
+!
+
+      SUBROUTINE mp_sum_rmm_gpu( msg_d, res_d, root, gid )
+        IMPLICIT NONE
+        REAL (DP), INTENT (IN), DEVICE :: msg_d(:,:)
+        REAL (DP), INTENT (OUT),DEVICE :: res_d(:,:)
+        REAL (DP), ALLOCATABLE         :: res_h(:,:), msg_h(:,:)
+        INTEGER, INTENT (IN) :: root
+        INTEGER, INTENT (IN) :: gid
+        INTEGER :: group
+        INTEGER :: msglen
+        INTEGER :: taskid, ierr
+
+
+
+#if defined(__MPI)
+
+        msglen = size(msg_d)
+        !
+        group = gid
+        !
+        CALL mpi_comm_rank( group, taskid, ierr)
+        IF( ierr /= 0 ) CALL mp_stop( 9049 )
+
+        IF( taskid == root ) THEN
+           IF( msglen > size(res_d) ) CALL mp_stop( 9050 )
+        END IF
+        !
+#if  defined(__GPU_MPI)
+        CALL reduce_base_real_to_gpu( msglen, msg_d, res_d, group, root )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( res_h(lbound(msg_h,1):ubound(msg_h,1), lbound(msg_h,2):ubound(msg_h,2)));
+        CALL reduce_base_real_to( msglen, msg_h, res_h, gid, root )
+        res_d = res_h; DEALLOCATE(msg_h, res_h)
+#endif
+        !
+
+#else
+        res_d = msg_d
+#endif
+
+      END SUBROUTINE mp_sum_rmm_gpu
+
+
+!
+!------------------------------------------------------------------------------!
+
+
+      SUBROUTINE mp_sum_rt_gpu( msg_d, gid )
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:)
+        REAL (DP), ALLOCATABLE :: msg_h(:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+
+#if  defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_real_gpu( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_rt_gpu
+
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_sum_r4d_gpu(msg_d,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:,:)
+        REAL (DP), ALLOCATABLE :: msg_h(:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if  defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_real( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_r4d_gpu
+
+
+
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_c1_gpu(msg_d,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d
+        COMPLEX (DP) :: msg_h
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = 1
+#if  defined(__GPU_MPI)
+        CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+#else
+        msg_h=msg_d
+        CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
+        msg_d = msg_h
+#endif
+#endif
+      END SUBROUTINE mp_sum_c1_gpu
+!
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_cv_gpu(msg_d,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:)
+        COMPLEX (DP), ALLOCATABLE :: msg_h(:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if  defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_real( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_cv_gpu
+!
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_cm_gpu(msg_d, gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:,:)
+        COMPLEX (DP), ALLOCATABLE :: msg_h(:,:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if  defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_cm_gpu
+!
+!------------------------------------------------------------------------------!
+
+
+      SUBROUTINE mp_sum_cmm_gpu(msg_d, res_d, gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (IN), DEVICE :: msg_d(:,:)
+        COMPLEX (DP), INTENT (OUT), DEVICE :: res_d(:,:)
+        COMPLEX (DP), ALLOCATABLE :: msg_h(:,:), res_h(:,:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if  defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_real_to_gpu( 2 * msglen, msg_d, res_h, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        ALLOCATE( res_h(lbound(msg_h,1):ubound(msg_h,1), lbound(msg_h,2):ubound(msg_h,2)));
+        CALL reduce_base_real_to( 2 * msglen, msg_h, res_h, gid, -1 )
+        res_d = res_h; DEALLOCATE(msg_h, res_h)
+#endif
+#else
+        res_d = msg_d
+#endif
+      END SUBROUTINE mp_sum_cmm_gpu
+
+
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_sum_ct_gpu(msg_d,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:)
+        COMPLEX (DP), ALLOCATABLE :: msg_h(:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        
+#if  defined(__GPU_MPI)
+        msglen = SIZE(msg_d)
+        CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_ct_gpu
+
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_sum_c4d_gpu(msg_d,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:,:)
+        COMPLEX (DP),ALLOCATABLE :: msg_h(:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if  defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_c4d_gpu
+!
+!------------------------------------------------------------------------------!
+!
+! Pietro Bonfa'
+!
+      SUBROUTINE mp_sum_c5d_gpu(msg_d,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:,:,:)
+        COMPLEX (DP), ALLOCATABLE :: msg_h(:,:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if  defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_c5d_gpu
+
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_sum_r5d_gpu(msg_d,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:,:,:)
+        REAL (DP), ALLOCATABLE :: msg_h(:,:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if  defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_real( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_r5d_gpu
+
+
+
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_sum_c6d_gpu(msg_d,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:,:,:,:)
+        COMPLEX (DP), ALLOCATABLE :: msg_h(:,:,:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if  defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_sum_c6d_gpu
+
+
+
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_max_i_gpu(msg_d,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT), DEVICE :: msg_d
+        INTEGER :: msg_h
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = 1
+#if  defined(__GPU_MPI)
+        CALL parallel_max_integer_gpu( msglen, msg_d, gid, -1 )
+#else
+        msg_h = msg_d
+        CALL parallel_max_integer_gpu( msglen, msg_h, gid, -1 )
+        msg_d = msg_h
+#endif
+#endif
+      END SUBROUTINE mp_max_i_gpu
+!
+!------------------------------------------------------------------------------!
+!
+!..mp_max_iv
+!..Carlo Cavazzoni
+!
+      SUBROUTINE mp_max_iv_gpu(msg_d,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT), DEVICE :: msg_d(:)
+        INTEGER, ALLOCATABLE :: msg_h(:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if  defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL parallel_max_integer_gpu( msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL parallel_max_integer( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_max_iv_gpu
+!
+!----------------------------------------------------------------------
+
+      SUBROUTINE mp_max_r_gpu(msg_d,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT), DEVICE :: msg_d
+        REAL (DP) :: msg_h
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = 1
+#if defined(__GPU_MPI)
+        CALL parallel_max_real_gpu( msglen, msg_d, gid, -1 )
+#else
+        msg_h = msg_d
+        CALL parallel_max_real( msglen, msg_h, gid, -1 )
+        msg_d = msg_h
+#endif
+#endif
+      END SUBROUTINE mp_max_r_gpu
+!
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_max_rv_gpu(msg_d,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:)
+        REAL (DP), ALLOCATABLE :: msg_h(:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if  defined(__GPU_MPI)
+        msglen = size(msg_d)
+        CALL parallel_max_real_gpu( msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL parallel_max_real( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_max_rv_gpu
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_min_i_gpu(msg_d,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT), DEVICE :: msg_d
+        INTEGER  :: msg_h
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = 1
+#if  defined(__GPU_MPI)
+        CALL parallel_min_integer_gpu( msglen, msg_d, gid, -1 )
+#else
+        msg_h = msg_d
+        CALL parallel_min_integer( msglen, msg_h, gid, -1 )
+        msg_d = msg_h
+#endif
+#endif
+      END SUBROUTINE mp_min_i_gpu
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_min_iv_gpu(msg_d,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT), DEVICE :: msg_d(:)
+        INTEGER, ALLOCATABLE :: msg_h(:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if  defined(__GPU_MPI)
+        msglen = SIZE(msg_d)
+        CALL parallel_min_integer_gpu( msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL parallel_min_integer( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_min_iv_gpu
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_min_r_gpu(msg_d,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT), DEVICE :: msg_d
+        REAL (DP) :: msg_h
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = 1
+#if  defined(__GPU_MPI)        
+        CALL parallel_min_real_gpu( msglen, msg_d, gid, -1 )
+#else
+        msg_h = msg_d
+        CALL parallel_min_real( msglen, msg_h, gid, -1 )
+        msg_d = msg_h
+#endif
+#endif
+      END SUBROUTINE mp_min_r_gpu
+!
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_min_rv_gpu(msg_d,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:)
+        REAL (DP), ALLOCATABLE :: msg_h(:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+#if  defined(__GPU_MPI)   
+        msglen = size(msg_d)
+        CALL parallel_min_real_gpu( msglen, msg_d, gid, -1 )
+#else
+        ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
+        CALL parallel_min_real( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+#endif
+#endif
+      END SUBROUTINE mp_min_rv_gpu
+
+
+
+!------------------------------------------------------------------------------!
+!..mp_gather_i1
+      SUBROUTINE mp_gather_i1_gpu(mydata_d, alldata_d, root, gid)
+        IMPLICIT NONE
+        INTEGER, DEVICE :: mydata_d
+        INTEGER, INTENT(IN) :: gid, root
+        INTEGER :: group
+        INTEGER, INTENT(OUT), DEVICE :: alldata_d(:)
+        INTEGER :: ierr
+
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+        INTEGER :: mydata_h
+        INTEGER, ALLOCATABLE :: alldata_h(:)
+        ALLOCATE( alldata_h, source=alldata_d )
+        mydata_h = mydata_d
+        CALL mp_gather_i1(mydata_h, alldata_h, root, gid)
+        mydata_d = mydata_h; alldata_d = alldata_h
+        DEALLOCATE(alldata_h)
+#else
+        group = gid
+        CALL MPI_GATHER(mydata_d, 1, MPI_INTEGER, alldata_d, 1, MPI_INTEGER, root, group, IERR)
+        IF (ierr/=0) CALL mp_stop( 9051 )
+#endif
+#else
+        !alldata_d(1) = mydata_d
+        ierr = cudaMemcpy( alldata_d(1), mydata_d, 1, &
+                                            & cudaMemcpyDeviceToDevice )
+        IF (ierr/=0) CALL mp_stop( 9052 )
+#endif
+        RETURN
+      END SUBROUTINE mp_gather_i1_gpu
+
+!------------------------------------------------------------------------------!
+!..mp_gather_iv
+!..Carlo Cavazzoni
+      SUBROUTINE mp_gather_iv_gpu(mydata_d, alldata_d, root, gid)
+        IMPLICIT NONE
+        INTEGER, DEVICE :: mydata_d(:)
+        INTEGER, INTENT(IN) :: gid, root
+        INTEGER :: group
+        INTEGER, INTENT(OUT), DEVICE :: alldata_d(:,:)
+        INTEGER :: msglen, ierr, i
+
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+        INTEGER, ALLOCATABLE :: mydata_h(:)
+        INTEGER, ALLOCATABLE :: alldata_h(:,:)
+        ALLOCATE( mydata_h, source=mydata_d )
+        ALLOCATE( alldata_h, source=alldata_d )
+        
+        CALL mp_gather_iv(mydata_h, alldata_h, root, gid)
+        mydata_d = mydata_h; alldata_d = alldata_h
+        DEALLOCATE(alldata_h, mydata_h)
+#else
+        msglen = SIZE(mydata_d)
+        IF( msglen .NE. SIZE(alldata_d, 1) ) CALL mp_stop( 9053 )
+        group = gid
+        CALL MPI_GATHER(mydata_d, msglen, MPI_INTEGER, alldata_d, msglen, MPI_INTEGER, root, group, IERR)
+        IF (ierr/=0) CALL mp_stop( 9054 )
+#endif
+#else
+        msglen = SIZE(mydata_d)
+        IF( msglen .NE. SIZE(alldata_d, 1) ) CALL mp_stop( 9055 )
+        !alldata_d(:,1) = mydata_d(:)
+        ierr = cudaMemcpy(alldata_d(:,1) , mydata_d(1), msglen, cudaMemcpyDeviceToDevice )
+        IF (ierr/=0) CALL mp_stop( 9056 )
+#endif
+        RETURN
+      END SUBROUTINE mp_gather_iv_gpu
+
+!------------------------------------------------------------------------------!
+!..mp_gatherv_rv
+!..Pietro Bonfa'
+
+      SUBROUTINE mp_gatherv_rv_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
+        IMPLICIT NONE
+        REAL(DP), DEVICE :: mydata_d(:)
+        REAL(DP), DEVICE :: alldata_d(:)
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: ierr, npe, myid
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+        REAL(DP), ALLOCATABLE :: mydata_h(:)
+        REAL(DP), ALLOCATABLE :: alldata_h(:)
+        
+        ALLOCATE(mydata_h, source=mydata_d)
+        ALLOCATE(alldata_h, source=alldata_d)
+        CALL mp_gatherv_rv( mydata_h, alldata_h, recvcount, displs, root, gid)
+        alldata_d = alldata_h ; mydata_d = mydata_h
+        DEALLOCATE(alldata_h , mydata_h)
+        RETURN
+#else
+
+        group = gid
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 9057 )
+        CALL mpi_comm_rank( group, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 9058 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9059 )
+        IF ( myid == root ) THEN
+           IF ( SIZE( alldata_d ) < displs( npe ) + recvcount( npe ) ) CALL mp_stop( 9060 )
+        END IF
+        IF ( SIZE( mydata_d ) < recvcount( myid + 1 ) ) CALL mp_stop( 9061 )
+        !
+        CALL MPI_GATHERV( mydata_d, recvcount( myid + 1 ), MPI_DOUBLE_PRECISION, &
+                         alldata_d, recvcount, displs, MPI_DOUBLE_PRECISION, root, group, ierr )
+        IF (ierr/=0) CALL mp_stop( 9062 )
+#endif
+#else
+        IF ( SIZE( alldata_d ) < recvcount( 1 ) ) CALL mp_stop( 9063 )
+        IF ( SIZE( mydata_d  ) < recvcount( 1 ) ) CALL mp_stop( 9064 )
+        !
+        !alldata_d( 1:recvcount( 1 ) ) = mydata_d( 1:recvcount( 1 ) )
+        ierr = cudaMemcpy(alldata_d(1) , mydata_d(1), recvcount( 1 ), cudaMemcpyDeviceToDevice )
+        IF (ierr/=0) CALL mp_stop( 9065 )
+#endif
+        RETURN
+      END SUBROUTINE mp_gatherv_rv_gpu
+
+!------------------------------------------------------------------------------!
+!..mp_gatherv_cv
+!..Carlo Cavazzoni
+
+      SUBROUTINE mp_gatherv_cv_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
+        IMPLICIT NONE
+        COMPLEX(DP), DEVICE :: mydata_d(:)
+        COMPLEX(DP), DEVICE :: alldata_d(:)
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: ierr, npe, myid
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+        COMPLEX(DP), ALLOCATABLE :: mydata_h(:)
+        COMPLEX(DP), ALLOCATABLE :: alldata_h(:)
+        
+        ALLOCATE(mydata_h, source=mydata_d)
+        ALLOCATE(alldata_h, source=alldata_d)
+        CALL mp_gatherv_cv( mydata_h, alldata_h, recvcount, displs, root, gid)
+        alldata_d = alldata_h ; mydata_d = mydata_h
+        DEALLOCATE(alldata_h , mydata_h)
+        RETURN
+#else
+        group = gid
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 9066 )
+        CALL mpi_comm_rank( group, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 9067 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9068 )
+        IF ( myid == root ) THEN
+           IF ( SIZE( alldata_d ) < displs( npe ) + recvcount( npe ) ) CALL mp_stop( 9069 )
+        END IF
+        IF ( SIZE( mydata_d ) < recvcount( myid + 1 ) ) CALL mp_stop( 9070 )
+        !
+        CALL MPI_GATHERV( mydata_d, recvcount( myid + 1 ), MPI_DOUBLE_COMPLEX, &
+                         alldata_d, recvcount, displs, MPI_DOUBLE_COMPLEX, root, group, ierr )
+        IF (ierr/=0) CALL mp_stop( 9071 )
+#endif
+#else
+        IF ( SIZE( alldata_d ) < recvcount( 1 ) ) CALL mp_stop( 9072 )
+        IF ( SIZE( mydata_d  ) < recvcount( 1 ) ) CALL mp_stop( 9073 )
+        !
+        !alldata( 1:recvcount( 1 ) ) = mydata( 1:recvcount( 1 ) )
+        ierr = cudaMemcpy(alldata_d(1) , mydata_d(1), recvcount( 1 ), cudaMemcpyDeviceToDevice )
+#endif
+        RETURN
+      END SUBROUTINE mp_gatherv_cv_gpu
+
+!------------------------------------------------------------------------------!
+!..mp_gatherv_rv
+!..Carlo Cavazzoni
+
+      SUBROUTINE mp_gatherv_iv_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
+        IMPLICIT NONE
+        INTEGER, DEVICE :: mydata_d(:)
+        INTEGER, DEVICE :: alldata_d(:)
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: ierr, npe, myid
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+        INTEGER, ALLOCATABLE :: mydata_h(:)
+        INTEGER, ALLOCATABLE :: alldata_h(:)
+        
+        ALLOCATE(mydata_h, source=mydata_d)
+        ALLOCATE(alldata_h, source=alldata_d)
+        CALL mp_gatherv_iv( mydata_h, alldata_h, recvcount, displs, root, gid)
+        alldata_d = alldata_h ; mydata_d = mydata_h
+        DEALLOCATE(alldata_h , mydata_h)
+#else
+        group = gid
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 9074 )
+        CALL mpi_comm_rank( group, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 9075 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9076 )
+        IF ( myid == root ) THEN
+           IF ( SIZE( alldata_d ) < displs( npe ) + recvcount( npe ) ) CALL mp_stop( 9077 )
+        END IF
+        IF ( SIZE( mydata_d ) < recvcount( myid + 1 ) ) CALL mp_stop( 9078 )
+        !
+        CALL MPI_GATHERV( mydata_d, recvcount( myid + 1 ), MPI_INTEGER, &
+                         alldata_d, recvcount, displs, MPI_INTEGER, root, group, ierr )
+        IF (ierr/=0) CALL mp_stop( 9079 )
+#endif
+#else
+        IF ( SIZE( alldata_d ) < recvcount( 1 ) ) CALL mp_stop( 9080 )
+        IF ( SIZE( mydata_d  ) < recvcount( 1 ) ) CALL mp_stop( 9081 )
+        !
+        !alldata( 1:recvcount( 1 ) ) = mydata( 1:recvcount( 1 ) )
+        ierr = cudaMemcpy(alldata_d(1) , mydata_d(1), recvcount( 1 ), cudaMemcpyDeviceToDevice )
+#endif
+        RETURN
+      END SUBROUTINE mp_gatherv_iv_gpu
+
+
+!------------------------------------------------------------------------------!
+!..mp_gatherv_rm
+!..Carlo Cavazzoni
+
+      SUBROUTINE mp_gatherv_rm_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
+        IMPLICIT NONE
+        REAL(DP), DEVICE :: mydata_d(:,:)  ! Warning first dimension is supposed constant!
+        REAL(DP), DEVICE :: alldata_d(:,:)
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: ierr, npe, myid, nsiz
+        INTEGER, ALLOCATABLE :: nrecv(:), ndisp(:)
+
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+        REAL(DP), ALLOCATABLE :: mydata_h(:,:)
+        REAL(DP), ALLOCATABLE :: alldata_h(:,:)
+        
+        ALLOCATE(mydata_h, source=mydata_d)
+        ALLOCATE(alldata_h, source=alldata_d)
+        CALL mp_gatherv_rm( mydata_h, alldata_h, recvcount, displs, root, gid)
+        alldata_d = alldata_h ; mydata_d = mydata_h
+        DEALLOCATE(alldata_h , mydata_h)
+#else
+        group = gid
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 9082 )
+        CALL mpi_comm_rank( group, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 9083 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9084 )
+        IF ( myid == root ) THEN
+           IF ( SIZE( alldata_d, 2 ) < displs( npe ) + recvcount( npe ) ) CALL mp_stop( 9085 )
+           IF ( SIZE( alldata_d, 1 ) /= SIZE( mydata_d, 1 ) ) CALL mp_stop( 9086 )
+        END IF
+        IF ( SIZE( mydata_d, 2 ) < recvcount( myid + 1 ) ) CALL mp_stop( 9087 )
+        !
+        ALLOCATE( nrecv( npe ), ndisp( npe ) )
+        !
+        nrecv( 1:npe ) = recvcount( 1:npe ) * SIZE( mydata_d, 1 )
+        ndisp( 1:npe ) = displs( 1:npe ) * SIZE( mydata_d, 1 )
+        !
+        CALL MPI_GATHERV( mydata_d, nrecv( myid + 1 ), MPI_DOUBLE_PRECISION, &
+                         alldata_d, nrecv, ndisp, MPI_DOUBLE_PRECISION, root, group, ierr )
+        IF (ierr/=0) CALL mp_stop( 9088 )
+        !
+        DEALLOCATE( nrecv, ndisp )
+        !
+#endif
+#else
+        IF ( SIZE( alldata_d, 1 ) /= SIZE( mydata_d, 1 ) ) CALL mp_stop( 9089 )
+        IF ( SIZE( alldata_d, 2 ) < recvcount( 1 ) ) CALL mp_stop( 9090 )
+        IF ( SIZE( mydata_d, 2  ) < recvcount( 1 ) ) CALL mp_stop( 9091 )
+        !
+        !alldata( :, 1:recvcount( 1 ) ) = mydata( :, 1:recvcount( 1 ) )
+        
+        ierr = cudaMemcpy2D(alldata_d, SIZE(alldata_d,1),&
+                              mydata_d, SIZE(mydata_d,1),&
+                              SIZE(mydata_d,1), recvcount( 1 ), &
+                              cudaMemcpyDeviceToDevice )
+
+        IF (ierr/=0) CALL mp_stop( 9092 )
+#endif
+        RETURN
+      END SUBROUTINE mp_gatherv_rm_gpu
+
+!------------------------------------------------------------------------------!
+!..mp_gatherv_im
+!..Carlo Cavazzoni
+
+      SUBROUTINE mp_gatherv_im_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
+        IMPLICIT NONE
+        INTEGER, DEVICE :: mydata_d(:,:)  ! Warning first dimension is supposed constant!
+        INTEGER, DEVICE :: alldata_d(:,:)
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: ierr, npe, myid, nsiz
+        INTEGER, ALLOCATABLE :: nrecv(:), ndisp(:)
+
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+        INTEGER, ALLOCATABLE :: mydata_h(:,:)
+        INTEGER, ALLOCATABLE :: alldata_h(:,:)
+        
+        ALLOCATE(mydata_h, source=mydata_d)
+        ALLOCATE(alldata_h, source=alldata_d)
+        CALL mp_gatherv_im( mydata_h, alldata_h, recvcount, displs, root, gid)
+        alldata_d = alldata_h ; mydata_d = mydata_h
+        DEALLOCATE(alldata_h , mydata_h)
+        RETURN
+#else
+        group = gid
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 9093 )
+        CALL mpi_comm_rank( group, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 9094 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9095 )
+        IF ( myid == root ) THEN
+           IF ( SIZE( alldata_d, 2 ) < displs( npe ) + recvcount( npe ) ) CALL mp_stop( 9096 )
+           IF ( SIZE( alldata_d, 1 ) /= SIZE( mydata_d, 1 ) ) CALL mp_stop( 9097 )
+        END IF
+        IF ( SIZE( mydata_d, 2 ) < recvcount( myid + 1 ) ) CALL mp_stop( 9098 )
+        !
+        ALLOCATE( nrecv( npe ), ndisp( npe ) )
+        !
+        nrecv( 1:npe ) = recvcount( 1:npe ) * SIZE( mydata_d, 1 )
+        ndisp( 1:npe ) = displs( 1:npe ) * SIZE( mydata_d, 1 )
+        !
+        CALL MPI_GATHERV( mydata_d, nrecv( myid + 1 ), MPI_INTEGER, &
+                         alldata_d, nrecv, ndisp, MPI_INTEGER, root, group, ierr )
+        IF (ierr/=0) CALL mp_stop( 9099 )
+        !
+        DEALLOCATE( nrecv, ndisp )
+        !
+#endif
+#else
+        IF ( SIZE( alldata_d, 1 ) /= SIZE( mydata_d, 1 ) ) CALL mp_stop( 9100 )
+        IF ( SIZE( alldata_d, 2 ) < recvcount( 1 ) ) CALL mp_stop( 9101 )
+        IF ( SIZE( mydata_d, 2  ) < recvcount( 1 ) ) CALL mp_stop( 9102 )
+        !
+        !alldata( :, 1:recvcount( 1 ) ) = mydata( :, 1:recvcount( 1 ) )
+        
+        ierr = cudaMemcpy2D(alldata_d, SIZE(alldata_d,1),&
+                              mydata_d, SIZE(mydata_d,1),&
+                              SIZE(mydata_d,1), recvcount( 1 ), &
+                              cudaMemcpyDeviceToDevice )
+        
+        IF (ierr/=0) CALL mp_stop( 9103 )
+#endif
+        RETURN
+      END SUBROUTINE mp_gatherv_im_gpu
+
+
+
+!------------------------------------------------------------------------------!
+
+
+SUBROUTINE mp_alltoall_c3d_gpu( sndbuf_d, rcvbuf_d, gid )
+   IMPLICIT NONE
+   COMPLEX(DP), DEVICE :: sndbuf_d( :, :, : )
+   COMPLEX(DP), DEVICE :: rcvbuf_d( :, :, : )
+   INTEGER, INTENT(IN) :: gid
+   INTEGER :: nsiz, group, ierr, npe
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+   COMPLEX(DP), ALLOCATABLE :: sndbuf_h(:,:,:)
+   COMPLEX(DP), ALLOCATABLE :: rcvbuf_h(:,:,:)
+   
+   ALLOCATE(sndbuf_h, source=sndbuf_d)
+   ALLOCATE(rcvbuf_h, source=rcvbuf_d)
+   CALL mp_alltoall_c3d( sndbuf_h, rcvbuf_h, gid )
+   sndbuf_d = sndbuf_h ; rcvbuf_d = rcvbuf_h
+   DEALLOCATE(sndbuf_h , rcvbuf_h)
+   RETURN
+#else
+   group = gid
+
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 9104 )
+
+   IF ( SIZE( sndbuf_d, 3 ) < npe ) CALL mp_stop( 9105 )
+   IF ( SIZE( rcvbuf_d, 3 ) < npe ) CALL mp_stop( 9106 )
+
+   nsiz = SIZE( sndbuf_d, 1 ) * SIZE( sndbuf_d, 2 )
+
+   CALL MPI_ALLTOALL( sndbuf_d, nsiz, MPI_DOUBLE_COMPLEX, &
+                      rcvbuf_d, nsiz, MPI_DOUBLE_COMPLEX, group, ierr )
+
+   IF (ierr/=0) CALL mp_stop( 9107 )
+#endif
+#else
+
+   rcvbuf_d = sndbuf_d
+
+#endif
+
+   RETURN
+END SUBROUTINE mp_alltoall_c3d_gpu
+
+
+!------------------------------------------------------------------------------!
+
+SUBROUTINE mp_alltoall_i3d_gpu( sndbuf_d, rcvbuf_d, gid )
+   IMPLICIT NONE
+   INTEGER, DEVICE :: sndbuf_d( :, :, : )
+   INTEGER, DEVICE :: rcvbuf_d( :, :, : )
+   INTEGER, INTENT(IN) :: gid
+   INTEGER :: nsiz, group, ierr, npe
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+   INTEGER, ALLOCATABLE :: sndbuf_h(:,:,:)
+   INTEGER, ALLOCATABLE :: rcvbuf_h(:,:,:)
+   
+   ALLOCATE(sndbuf_h, source=sndbuf_d)
+   ALLOCATE(rcvbuf_h, source=rcvbuf_d)
+   CALL mp_alltoall_i3d( sndbuf_h, rcvbuf_h, gid )
+   sndbuf_d = sndbuf_h ; rcvbuf_d = rcvbuf_h
+   DEALLOCATE(sndbuf_h , rcvbuf_h)
+   RETURN
+#else
+   group = gid
+
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 9108 )
+
+   IF ( SIZE( sndbuf_d, 3 ) < npe ) CALL mp_stop( 9109 )
+   IF ( SIZE( rcvbuf_d, 3 ) < npe ) CALL mp_stop( 9110 )
+
+   nsiz = SIZE( sndbuf_d, 1 ) * SIZE( sndbuf_d, 2 )
+
+   CALL MPI_ALLTOALL( sndbuf_d, nsiz, MPI_INTEGER, &
+                      rcvbuf_d, nsiz, MPI_INTEGER, group, ierr )
+
+   IF (ierr/=0) CALL mp_stop( 9111 )
+#endif
+#else
+
+   rcvbuf_d = sndbuf_d
+
+#endif
+
+   RETURN
+END SUBROUTINE mp_alltoall_i3d_gpu
+
+SUBROUTINE mp_circular_shift_left_i0_gpu( buf_d, itag, gid )
+   IMPLICIT NONE
+   INTEGER, DEVICE :: buf_d
+   INTEGER, INTENT(IN) :: itag
+   INTEGER, INTENT(IN) :: gid
+   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+   INTEGER :: buf_h
+   buf_h = buf_d
+   CALL mp_circular_shift_left_i0( buf_h, itag, gid )
+   buf_d = buf_h
+#else
+   INTEGER :: istatus( mpi_status_size )
+   !
+   group = gid
+   !
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 9112 )
+   CALL mpi_comm_rank( group, mype, ierr )
+   IF (ierr/=0) CALL mp_stop( 9113 )
+   !
+   sour = mype + 1
+   IF( sour == npe ) sour = 0
+   dest = mype - 1
+   IF( dest == -1 ) dest = npe - 1
+   !
+   CALL MPI_Sendrecv_replace( buf_d, 1, MPI_INTEGER, &
+        dest, itag, sour, itag, group, istatus, ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 9114 )
+   !
+#endif
+#else
+   ! do nothing
+#endif
+   RETURN
+END SUBROUTINE mp_circular_shift_left_i0_gpu
+
+
+SUBROUTINE mp_circular_shift_left_i1_gpu( buf_d, itag, gid )
+   IMPLICIT NONE
+   INTEGER, DEVICE :: buf_d(:)
+   INTEGER, INTENT(IN) :: itag
+   INTEGER, INTENT(IN) :: gid
+   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+   INTEGER, ALLOCATABLE :: buf_h(:)
+   ALLOCATE(buf_h, source=buf_d)
+   buf_h = buf_d
+   CALL mp_circular_shift_left_i1( buf_h, itag, gid )
+   buf_d = buf_h; DEALLOCATE(buf_h)
+#else
+   INTEGER :: istatus( mpi_status_size )
+   !
+   group = gid
+   !
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 9115 )
+   CALL mpi_comm_rank( group, mype, ierr )
+   IF (ierr/=0) CALL mp_stop( 9116 )
+   !
+   sour = mype + 1
+   IF( sour == npe ) sour = 0
+   dest = mype - 1
+   IF( dest == -1 ) dest = npe - 1
+   !
+   CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_INTEGER, &
+        dest, itag, sour, itag, group, istatus, ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 9117 )
+   !
+#endif
+#else
+   ! do nothing
+#endif
+   RETURN
+END SUBROUTINE mp_circular_shift_left_i1_gpu
+
+
+SUBROUTINE mp_circular_shift_left_i2_gpu( buf_d, itag, gid )
+   IMPLICIT NONE
+   INTEGER, DEVICE :: buf_d(:,:)
+   INTEGER, INTENT(IN) :: itag
+   INTEGER, INTENT(IN) :: gid
+   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+   INTEGER, ALLOCATABLE :: buf_h(:,:)
+   ALLOCATE(buf_h, source=buf_d)
+   buf_h = buf_d
+   CALL mp_circular_shift_left_i2( buf_h, itag, gid )
+   buf_d = buf_h; DEALLOCATE(buf_h)
+#else
+   INTEGER :: istatus( mpi_status_size )
+   !
+   group = gid
+   !
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 9118 )
+   CALL mpi_comm_rank( group, mype, ierr )
+   IF (ierr/=0) CALL mp_stop( 9119 )
+   !
+   sour = mype + 1
+   IF( sour == npe ) sour = 0
+   dest = mype - 1
+   IF( dest == -1 ) dest = npe - 1
+   !
+   CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_INTEGER, &
+        dest, itag, sour, itag, group, istatus, ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 9120 )
+   !
+#endif
+#else
+   ! do nothing
+#endif
+   RETURN
+END SUBROUTINE mp_circular_shift_left_i2_gpu
+
+
+SUBROUTINE mp_circular_shift_left_r2d_gpu( buf_d, itag, gid )
+   IMPLICIT NONE
+   REAL(DP), DEVICE :: buf_d( :, : )
+   INTEGER, INTENT(IN) :: itag
+   INTEGER, INTENT(IN) :: gid
+   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+   REAL(DP), ALLOCATABLE :: buf_h(:, :)
+   ALLOCATE(buf_h, source=buf_d)
+   buf_h = buf_d
+   CALL mp_circular_shift_left_r2d( buf_h, itag, gid )
+   buf_d = buf_h; DEALLOCATE(buf_h)
+#else
+   INTEGER :: istatus( mpi_status_size )
+   !
+   group = gid
+   !
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 9121 )
+   CALL mpi_comm_rank( group, mype, ierr )
+   IF (ierr/=0) CALL mp_stop( 9122 )
+   !
+   sour = mype + 1
+   IF( sour == npe ) sour = 0
+   dest = mype - 1
+   IF( dest == -1 ) dest = npe - 1
+   !
+   CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_DOUBLE_PRECISION, &
+        dest, itag, sour, itag, group, istatus, ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 9123 )
+   !
+#endif
+#else
+   ! do nothing
+#endif
+   RETURN
+END SUBROUTINE mp_circular_shift_left_r2d_gpu
+
+SUBROUTINE mp_circular_shift_left_c2d_gpu( buf_d, itag, gid )
+   IMPLICIT NONE
+   COMPLEX(DP), DEVICE :: buf_d( :, : )
+   INTEGER, INTENT(IN) :: itag
+   INTEGER, INTENT(IN) :: gid
+   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+   COMPLEX(DP), ALLOCATABLE :: buf_h(:, :)
+   ALLOCATE(buf_h, source=buf_d)
+   buf_h = buf_d
+   CALL mp_circular_shift_left_c2d( buf_h, itag, gid )
+   buf_d = buf_h; DEALLOCATE(buf_h)
+#else
+   INTEGER :: istatus( mpi_status_size )
+   !
+   group = gid
+   !
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 9124 )
+   CALL mpi_comm_rank( group, mype, ierr )
+   IF (ierr/=0) CALL mp_stop( 9125 )
+   !
+   sour = mype + 1
+   IF( sour == npe ) sour = 0
+   dest = mype - 1
+   IF( dest == -1 ) dest = npe - 1
+   !
+   CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_DOUBLE_COMPLEX, &
+        dest, itag, sour, itag, group, istatus, ierr)
+   !
+   IF (ierr/=0) CALL mp_stop( 9126 )
+   !
+#endif
+#else
+   ! do nothing
+#endif
+   RETURN
+END SUBROUTINE mp_circular_shift_left_c2d_gpu
+#endif
+!------------------------------------------------------------------------------!
     END MODULE mp
 !------------------------------------------------------------------------------!
 
+! Script to generate stop messages:
+!   # coding: utf-8
+!   import re
+!   import sys
+!   i = 8000
+!   def replace(match):
+!       global i
+!       i += 1
+!       return 'mp_stop( {0} )'.format(i)
+!   
+!   with open(sys.argv[1],'r') as f:
+!       data = re.sub(r"mp_stop\(\s?\d+\s?\)", replace, f.read())
+!       with open(sys.argv[1]+'.new','w') as fo:
+!           fo.write(data)

@@ -5,6 +5,9 @@ include ../make.inc
 # location of needed modules and included files (if any)
 MODFLAGS=$(MOD_FLAG).
 
+DFLAGS=$$DFLAGMATRIX
+
+
 UTIL = clocks_handler.o \
        divide.o \
 data_buffer.o \

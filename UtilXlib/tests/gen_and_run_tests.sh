@@ -1,0 +1,93 @@
+#!/bin/bash
+
+
+
+MPIEXEC="mpirun -np 3 "
+
+declare -a flags=()
+
+add_cuda=""
+add_cudampi=""
+
+while getopts ":smcnh" opt; do
+  case $opt in
+    s)
+      echo "Serial build scheduled!" >&2
+      flags+=("")
+      ;;
+    m)
+      echo "MPI build scheduled!" >&2
+      flags+=(" -D__MPI")
+      ;;
+    c)
+      echo "CUDA build scheduled!" >&2
+      add_cuda=(" -D__CUDA")
+      ;;
+    n)
+      echo "CUDA+MPI build scheduled!" >&2
+      add_cudampi=("-D__GPU_MPI")
+      ;;
+    h)
+      echo "-s : serial build" >&2
+      echo "-m : mpi build" >&2
+      echo "-c : cuda build" >&2
+      echo "-n : gpu+mpi (nvlink) build" >&2
+      echo "-h : this help" >&2
+      echo "" >&2
+      echo "Note: always use -c and -n with -s and/or -m" >&2
+      exit
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit
+      ;;
+  esac
+done
+if [ "$add_cuda" != "" ]; then
+  for flag in "${flags[@]}"
+  do
+    flags+=(" $flag -D__CUDA")
+  done
+fi
+if [ "$add_cudampi" != "" ]; then
+  flags+=(" -D__MPI -D__CUDA -D__GPU_MPI")
+fi
+
+# Manula version
+#declare -a    flags=("" "-D__CUDA" "-D__MPI" "-D__MPI -D__CUDA" "-D__MPI -D__CUDA -D__GPU_MPI")
+#declare -a    flags=("" "-D__MPI")
+
+
+# FUN
+red=`tput setaf 1`
+green=`tput setaf 2`
+reset=`tput sgr0`
+
+for flag in "${flags[@]}"
+do
+  export DFLAGMATRIX="$flag"
+  echo "Building with: $DFLAGMATRIX"
+  cd ..
+  make clean && make -f Makefile.test 1>/dev/null
+  cd tests
+  make clean && make 1>/dev/null
+  for file in *.x
+  do
+    success=0
+    if [[ $flag = *"MPI"* ]]; then
+      echo "Running $MPIEXEC ./$file"
+      $MPIEXEC ./$file
+      success=$?
+    else
+      echo "Running ./$file"
+      ./$file
+      success=$?
+    fi
+    if [ $success -ne 0 ]; then
+      echo "${red} Flags '$flag' FAILED ${reset}"
+    else
+      echo "${green} Flags '$flag' PASSED ${reset}"
+    fi  
+  done
+done
+

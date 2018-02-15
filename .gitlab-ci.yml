@@ -1,60 +1,31 @@
-build:pw:
-  tags: [docker]
-  image: ubuntu:latest
+build:cudaopenmp:
+  tags: [galileo]
   script:
-    - apt-get update
-    - apt-get install --yes build-essential gfortran wget python
-    - apt-get install --yes libopenmpi-dev openmpi-bin
-    - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
-    - ./configure
-    - make pw
-#    - export OMP_NUM_THREADS=1
-#    - cd test-suite
-#    - mkdir /tmp/save
-#    - make run-tests-pw-serial
-#    - rm -r /tmp/save
+    - module load profile/advanced pgi/17.10 cuda/8.0.61
+    - ./configure --enable-openmp
+    - cd UtilXlib/tests
+    - bash gen_and_run_tests.sh -smcn
 
-build:cp:
-  tags: [docker]
-  image: ubuntu:latest
+build:intelopenmp:
+  tags: [galileo]
   script:
-    - apt-get update
-    - apt-get install --yes build-essential gfortran wget python
-    - apt-get install --yes libopenmpi-dev openmpi-bin
-    - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
+    - module load profile/advanced intel
+    - ./configure --enable-openmp
+    - cd UtilXlib/tests
+    - bash gen_and_run_tests.sh -sm
+
+build:cuda:
+  tags: [galileo]
+  script:
+    - module load profile/advanced pgi/17.10 cuda/8.0.61
     - ./configure
-    - make cp
-#    - export OMP_NUM_THREADS=1
-#    - cd test-suite
-#    - mkdir /tmp/save
-#    - make run-tests-cp-serial
-#    - rm -r /tmp/save
+    - cd UtilXlib/tests
+    - bash gen_and_run_tests.sh -smcn
 
-#build:centos:
-#  image: centos:latest
-#  script:
-#    - yum -y groupinstall "Development Tools" 
-#    - yum -y install wget which python27
-#    - ./configure
-#    - make all
-#    - export OMP_NUM_THREADS=1
-#    - cd test-suite
-#    - mkdir /tmp/save
-#    - make run-tests-serial
-#    - rm -r /tmp/save
-
-
-#### BUILDS ON GALILEO ####
-
-#build:intel:
-#  tags: [galileo]
-#  script:
-#    - module load intel/pe-xe-2017--binary intelmpi/2017--binary mkl/2017--binary
-#    - ./configure --enable-openmp
-#    - make pw cp
-#    - export OMP_NUM_THREADS=2
-#    - cd test-suite
-#    - mkdir -p /tmp/save
-#    - make run-tests-pw-parallel
-#    - make run-tests-cp-parallel
-#    - rm -r /tmp/save
+build:intel:
+  tags: [galileo]
+  script:
+    - module load profile/advanced intel
+    - ./configure
+    - cd UtilXlib/tests
+    - bash gen_and_run_tests.sh -sm
