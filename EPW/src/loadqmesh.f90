@@ -39,7 +39,7 @@ SUBROUTINE loadqmesh_para
   IF (mpime .eq. ionode_id) THEN
     IF (filqf .ne. '') THEN ! load from file (crystal coordinates)
        !
-       WRITE(stdout, *) '     Using q-mesh file: ', trim(filqf)
+       WRITE(stdout, *) '    Using q-mesh file: ', trim(filqf)
        IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.true., q-mesh needs to be [-0.5:0.5] (crystal)' 
        OPEN( unit = iunqf, file = filqf, status = 'old', form = 'formatted',err=100, iostat=ios)
 100    CALL errore('loadkmesh_para','opening file '//filqf,abs(ios))
@@ -212,7 +212,7 @@ SUBROUTINE loadqmesh_serial
        !
        ! Each pool gets its own copy from the action=read statement
        !
-       WRITE (stdout, *) '     Using q-mesh file: ', trim(filqf)
+       WRITE (stdout, *) '    Using q-mesh file: ', trim(filqf)
        IF (lscreen) WRITE(stdout, *) '     WARNING: if lscreen=.true., q-mesh needs to be [-0.5:0.5] (crystal)'
        OPEN ( unit = iunqf, file = filqf, status = 'old', form = 'formatted', err=100, iostat=ios)
 100    CALL errore('loadqmesh_serial','opening file '//filqf,abs(ios))

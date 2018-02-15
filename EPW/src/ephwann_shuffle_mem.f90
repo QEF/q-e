@@ -456,7 +456,7 @@
   IF ( ALLOCATED (cuq) )     DEALLOCATE (cuq)
   IF ( ALLOCATED (lwin) )    DEALLOCATE (lwin)
   IF ( ALLOCATED (lwinq) )   DEALLOCATE (lwinq)
-  CLOSE(iunepmatwe)
+  CLOSE(iunepmatwe, status = 'delete')
   CLOSE(iunepmatwp)
   ! 
   ! Check Memory usage

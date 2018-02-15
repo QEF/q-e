@@ -472,7 +472,11 @@
   IF ( ALLOCATED (cuq) )     DEALLOCATE (cuq)
   IF ( ALLOCATED (lwin) )    DEALLOCATE (lwin)
   IF ( ALLOCATED (lwinq) )   DEALLOCATE (lwinq)
-  CLOSE(iunepmatwe)
+  IF (etf_mem == 1) THEN
+    CLOSE(iunepmatwe, status = 'delete')
+  ELSE
+    CLOSE(iunepmatwe)
+  ENDIF
 #ifdef __MPI
   CLOSE(iunepmatwp)
 #endif

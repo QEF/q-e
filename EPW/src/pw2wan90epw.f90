@@ -410,7 +410,7 @@ SUBROUTINE setup_nnkp (  )
   !
   ! Read data about neighbours
   WRITE(stdout,*)
-  WRITE(stdout,*) ' Reading data about k-point neighbours '
+  WRITE(stdout,*) '    Reading data about k-point neighbours '
   WRITE(stdout,*)
   IF (meta_ionode) THEN
     DO ik=1, iknum
