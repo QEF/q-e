@@ -5416,15 +5416,16 @@ IMPLICIT NONE
   IF( local_thr.gt.0.0d0 ) then  
     CALL vexx_loc(nnpw, nbndproj, xitmp, mexx)
     Call MatSymm('S','L',mexx,nbndproj)
-    CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
   ELSE
 !   |xi> = Vx[phi]|phi>
     CALL vexx(nnpw, nnpw, nbndproj, phi, xitmp, becpsi)
 !   mexx = <phi|Vx[phi]|phi>
     CALL matcalc('exact',.true.,0,nnpw,nbndproj,nbndproj,phi,xitmp,mexx,exxe)
 !   |xi> = -One * Vx[phi]|phi> * rmexx^T
-    CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
   END IF
+
+  CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
+
   DEALLOCATE( mexx )
 
   IF( local_thr.gt.0.0d0 ) then  
@@ -5497,18 +5498,24 @@ IMPLICIT NONE
 END SUBROUTINE vexxace_gamma
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE aceupdate(nbndproj,nnpw,xitmp,rmexx)
+!
+!  Build the ACE operator from the potential amd matrix
+!  (rmexx is assumed symmetric and only the Lower Triangular part is considered)
+!
 IMPLICIT NONE
   INTEGER :: nbndproj,nnpw
-  real(DP) :: rmexx(nbndproj,nbndproj)
+  REAL(DP) :: rmexx(nbndproj,nbndproj)
   COMPLEX(DP),ALLOCATABLE :: cmexx(:,:)
   COMPLEX(DP) ::  xitmp(nnpw,nbndproj)
-  real(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
+  REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
 
   CALL start_clock('aceupdate')
 
 ! rmexx = -(Cholesky(rmexx))^-1
   rmexx = -rmexx
-  CALL invchol( nbndproj, rmexx )
+! CALL invchol( nbndproj, rmexx )
+  CALL MatChol( nbndproj, rmexx )
+  CALL MatInv( 'L',nbndproj, rmexx )
 
 ! |xi> = -One * Vx[phi]|phi> * rmexx^T
   ALLOCATE( cmexx(nbndproj,nbndproj) )
@@ -5797,7 +5804,7 @@ IMPLICIT NONE
   COMPLEX(DP) :: cbuff(3)
   REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0 
 
-  vol = omega / dble(dfftt%nr1x * dfftt%nr2x * dfftt%nr3x)
+  vol = omega / dble(dfftt%nr1 * dfftt%nr2 * dfftt%nr3)
 
   CenterPBC = Zero 
   SpreadPBC = Zero 
@@ -5824,9 +5831,9 @@ IMPLICIT NONE
      !
      rbuff = PsiI(ir) * PsiJ(ir) / omega
      Overlap = Overlap + abs(rbuff)*vol
-     cbuff(1) = cbuff(1) + rbuff*exp((Zero,One)*Two*pi*DBLE(i)/DBLE(dfftt%nr1x))*vol 
-     cbuff(2) = cbuff(2) + rbuff*exp((Zero,One)*Two*pi*DBLE(j)/DBLE(dfftt%nr2x))*vol
-     cbuff(3) = cbuff(3) + rbuff*exp((Zero,One)*Two*pi*DBLE(k)/DBLE(dfftt%nr3x))*vol
+     cbuff(1) = cbuff(1) + rbuff*exp((Zero,One)*Two*pi*DBLE(i)/DBLE(dfftt%nr1))*vol 
+     cbuff(2) = cbuff(2) + rbuff*exp((Zero,One)*Two*pi*DBLE(j)/DBLE(dfftt%nr2))*vol
+     cbuff(3) = cbuff(3) + rbuff*exp((Zero,One)*Two*pi*DBLE(k)/DBLE(dfftt%nr3))*vol
   ENDDO
 
   call mp_sum(cbuff,intra_bgrp_comm)

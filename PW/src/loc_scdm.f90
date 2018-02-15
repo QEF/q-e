@@ -242,7 +242,9 @@ IMPLICIT NONE
   deallocate( cpu_npt )
 
 ! Cholesky(psi)^(-1) in mat 
-  CALL invchol(NBands,mat)
+! CALL invchol(NBands,mat)
+  CALL MatChol(NBands,mat)
+  CALL MatInv('L',NBands,mat)
   Call MatSymm('U','L',mat, NBands)
 
 ! Phi = Pc * Chol^(-1) = QRbuff * mat
