@@ -145,6 +145,60 @@ SUBROUTINE matprt_k(label,n,m,A)
   ENDDO
 END SUBROUTINE matprt_k
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MatInv(MShape,n,A)
+  USE kinds, ONLY : dp
+  IMPLICIT NONE
+!
+! given a real square matrix A, returns the inverse in A
+! in the same shape as the input matrix, as indicated by MShape
+!    MShape = 'L' ... A is Lower Triangular (allocated in square shape)
+!             'U' ... A is Upper Triangular (allocated in square shape)
+!             'G' ... A is a general matrix
+!
+  INTEGER, INTENT(IN) :: n
+  REAL(dp), INTENT(INOUT):: A(n,n)
+  CHARACTER (LEN=1) :: MShape
+  INTEGER :: INFO, LWORK
+  INTEGER, ALLOCATABLE :: IPIV(:)
+  REAL(DP), ALLOCATABLE :: WORK(:)
+
+  IF(MShape.eq.'L'.or.MShape.eq.'U') then 
+    INFO = -1
+    CALL DTRTRI( MShape, 'N', n, A, n, INFO )
+    CALL errinfo('DTRTRI','inversion failed in MatInv.',INFO)
+  ELSEIF(MShape.eq.'G') then 
+    LWORK = 3*n
+    ALLOCATE( IPIV(n), WORK(LWORK) ) 
+    INFO = -1
+    CALL DGETRF( n, n, A, n, IPIV, INFO )
+    CALL errinfo('DGETRF','LU decomposition failed in MatInv.',INFO)
+    INFO = -1
+    CALL DGETRI( n, A, n, IPIV, WORK, LWORK, INFO )
+    CALL errinfo('DGETRI','inversion failed in MatInv.',INFO)
+    DEALLOCATE( IPIV, WORK ) 
+  ELSE
+    call errore('MatInv', 'Wrong MShape.', 1) 
+  END IF 
+
+END SUBROUTINE MatInv 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MatChol(n,A)
+  USE kinds, ONLY : dp
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: n
+  REAL(dp), INTENT(INOUT):: A(n,n)
+!
+! given a (real, positive definite) matrix A, returns the Cholesky factor in A
+! (only the Lower Triangular part of the input matrix is considered)
+!
+  integer :: INFO
+
+  INFO = -1
+  CALL DPOTRF( 'L', n, A, n, INFO )
+  CALL errinfo('DPOTRF','Cholesky failed in MatChol.',INFO)
+
+END SUBROUTINE MatChol
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE invchol(n,A)
   USE kinds, ONLY : dp
   IMPLICIT NONE
@@ -200,7 +254,6 @@ END SUBROUTINE
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE MatSymm( MShape, How, Mat, n )
 USE kinds, ONLY : dp
-USE io_global,ONLY : stdout
 !
 ! Symmetrize the (square) matrix Mat
 !       How    = 'U'  ... copying the upper block into the lower block
@@ -272,4 +325,25 @@ IMPLICIT NONE
   DEALLOCATE( MatT )
 
 END SUBROUTINE MatSymm  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MatTrp( Mat, n )
+USE kinds, ONLY : dp
+!
+! Transpose the (square) matrix Mat
+!
+IMPLICIT NONE
+  INTEGER :: n, i, j 
+  REAL(DP) ::  IJth, JIth
+  REAL(DP), INTENT(INOUT) ::  Mat(n,n)
+
+  do i = 1, n
+    do j = i+1, n 
+      IJth = Mat(i,j)
+      JIth = Mat(j,i)
+      Mat(i,j) = JIth 
+      Mat(j,i) = IJth 
+    end do        
+  end do        
+
+END SUBROUTINE MatTrp  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
