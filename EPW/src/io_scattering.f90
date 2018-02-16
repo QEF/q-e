@@ -933,9 +933,9 @@
           ENDDO
         ENDDO
         CLOSE(iufiltau_all)
+        WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from tau_CB: ',iq,'/',nqtotf 
       ENDIF
       ! 
-    WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from tau_CB: ',iq,'/',nqtotf 
     ENDIF ! second
     !
   ENDIF

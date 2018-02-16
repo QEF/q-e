@@ -270,7 +270,7 @@
                 trans_prob = pi * wqf(iq) * g2 * & 
                              ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
                 !
-                !if ((ik == 6) .and. (ibnd == 4) .and. jbnd==1 .and. imode==3) then
+                !if ((ik == 6) .and. (ibnd == 4) .and. jbnd==1 .and. imode==6) then
                 !  print*,'wqf(iq) ',wqf(iq)
                 !  print*,'wq ',wq
                 !  print*,'inv_etemp ',inv_etemp
