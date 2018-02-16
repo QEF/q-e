@@ -720,7 +720,7 @@
   !
   IF (mpime .eq. meta_ionode_id) THEN
     !
-    ltau_all = nstemp * (ibndmax-ibndmin+1) * nktotf +2
+    ltau_all = 2 * nstemp * (ibndmax-ibndmin+1) * nktotf +2
     ! First element is the iteration number
     aux(1) = iq -1   ! -1 because we will start at the next one. 
     aux(2) = nqtotf
