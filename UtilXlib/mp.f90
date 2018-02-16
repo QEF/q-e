@@ -2531,11 +2531,12 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-        msglen = size(msg_d)
 #if defined(__GPU_MPI)
+        msglen = size(msg_d)
         CALL bcast_integer_gpu( msg_d, msglen, source, gid )
 #else
         ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
         CALL bcast_integer( msg_h, msglen, source, gid )
         msg_d = msg_h; DEALLOCATE( msg_h )
 #endif
@@ -2573,11 +2574,12 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-        msglen = size(msg_d)
 #if defined(__GPU_MPI)
+        msglen = size(msg_d)
         CALL bcast_real_gpu( msg_d, msglen, source, gid )
 #else
         ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
         CALL bcast_real( msg_h, msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
@@ -2593,7 +2595,6 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-        
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
         CALL bcast_real_gpu( msg_d, msglen, source, gid )
@@ -2619,11 +2620,12 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-        msglen = size(msg_d)
 #if defined(__GPU_MPI)
+        msglen = size(msg_d)
         CALL bcast_real_gpu( msg_d, msglen, source, gid )
 #else
         ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
         CALL bcast_real( msg_h, msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
@@ -2642,11 +2644,12 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-        msglen = size(msg_d)
 #if defined(__GPU_MPI)
+        msglen = size(msg_d)
         CALL bcast_real_gpu( msg_d, msglen, source, gid )
 #else
         ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
         CALL bcast_real( msg_h, msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
@@ -2666,11 +2669,12 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-        msglen = size(msg_d)
 #if defined(__GPU_MPI)
+        msglen = size(msg_d)
         CALL bcast_real_gpu( msg_d, msglen, source, gid )
 #else
         ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
         CALL bcast_real( msg_h, msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
@@ -2707,11 +2711,12 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-        msglen = size(msg_d)
 #if defined(__GPU_MPI)
+        msglen = size(msg_d)
         CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
 #else
         ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
         CALL bcast_real( msg_h, 2 * msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
@@ -2727,11 +2732,12 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-        msglen = size(msg_d)
 #if defined(__GPU_MPI)
+        msglen = size(msg_d)
         CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
 #else
         ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
         CALL bcast_real( msg_h, 2 * msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
@@ -2747,11 +2753,12 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-        msglen = size(msg_d)
 #if defined(__GPU_MPI)
+        msglen = size(msg_d)
         CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
 #else
         ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
         CALL bcast_real( msg_h, 2 * msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
@@ -2768,11 +2775,12 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-        msglen = size(msg_d)
 #if defined(__GPU_MPI)
+        msglen = size(msg_d)
         CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
 #else
         ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
         CALL bcast_real( msg_h, 2 * msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
@@ -2787,11 +2795,12 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-        msglen = size(msg_d)
 #if defined(__GPU_MPI)
+        msglen = size(msg_d)
         CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
 #else
         ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
         CALL bcast_real( msg_h, 2 * msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
@@ -3945,7 +3954,7 @@ END FUNCTION mp_get_comm_self
 #else
         ALLOCATE( msg_h, source=msg_d )
         msglen = size(msg_h)
-        CALL reduce_base_real( msglen, msg_h, gid, -1 )
+        CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
