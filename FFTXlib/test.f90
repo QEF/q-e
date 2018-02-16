@@ -116,9 +116,8 @@ program test
   REAL(DP), ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: hpsi(:, :)
   !! array representing the potential
-  !INTEGER, ALLOCATABLE :: nls(:), nlsm(:)
   INTEGER :: ngms, ngsx, ngms_g
-  INTEGER, ALLOCATABLE :: mill(:, :), ig_l2g(:) !, nl(:), nlm(:)
+  INTEGER, ALLOCATABLE :: mill(:, :), ig_l2g(:)
   REAL(DP), ALLOCATABLE :: g(:, :), gg(:)
   INTEGER :: ngm, ngmx, ngm_g, gstart
   !
@@ -299,10 +298,6 @@ program test
   ALLOCATE (psi(ngms, nbnd))
   ALLOCATE (hpsi(ngms, nbnd))
   ALLOCATE (v(dffts%nnr))
-  !ALLOCATE (nls(ngms))
-  !ALLOCATE (nlsm(ngms))
-  !ALLOCATE (nl(ngm))
-  !ALLOCATE (nlm(ngm))
   ALLOCATE (mill(3, ngm))
   ALLOCATE (g(3, ngm))
   ALLOCATE (gg(ngm))
@@ -310,9 +305,7 @@ program test
   !
   ! --------  GENERATE G-VECTORS
   !
-  !call ggen(gamma_only, at, bg, .true., ngm, ngms, ngm_g, ngms_g, mill, &
-!&                    nl, nls, nlm, nlsm, gg, g, ig_l2g, gstart, gcutm, gcutms, dfftp, dffts)
-  ! smallmem
+  ! smallmem = .flase.
   IF( .false. ) THEN
      CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
           g, gg, mill, ig_l2g, gstart, .TRUE. )
