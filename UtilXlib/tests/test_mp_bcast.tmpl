@@ -14,6 +14,7 @@ PROGRAM test_mp_bcast_{vname}
     !
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
+    INTEGER, PARAMETER :: datasize = {datasize}
     ! test variable
     {type} :: {vname}{size}
     
@@ -28,12 +29,12 @@ PROGRAM test_mp_bcast_{vname}
     {vname}{all} = mpime
     CALL mp_bcast({vname}, root, world_comm)
     !
-    CALL test%assert_equal({allf}({vname} .eq. 0) , .true. , fail=.true.)
+    CALL test%assert_equal({allf}({vname} .eq. 0) , .true. )
     !
     {vname}{all} = mpime
     CALL mp_bcast({vname}, nproc-1, world_comm)
     !
-    CALL test%assert_equal({allf}({vname} .eq. nproc-1) , .true. , fail=.true.)
+    CALL test%assert_equal({allf}({vname} .eq. nproc-1) , .true. )
     !
     CALL print_results(test)
     !

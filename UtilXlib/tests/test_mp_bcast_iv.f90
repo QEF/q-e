@@ -28,12 +28,12 @@ PROGRAM test_mp_bcast_iv
     iv(:) = mpime
     CALL mp_bcast(iv, root, world_comm)
     !
-    CALL test%assert_equal(ALL(iv .eq. 0) , .true. , fail=.true.)
+    CALL test%assert_equal(ALL(iv .eq. 0) , .true. )
     !
     iv(:) = mpime
     CALL mp_bcast(iv, nproc-1, world_comm)
     !
-    CALL test%assert_equal(ALL(iv .eq. nproc-1) , .true. , fail=.true.)
+    CALL test%assert_equal(ALL(iv .eq. nproc-1) , .true. )
     !
     CALL print_results(test)
     !

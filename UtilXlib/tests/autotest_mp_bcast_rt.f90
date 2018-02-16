@@ -14,8 +14,9 @@ PROGRAM test_mp_bcast_rt
     !
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
+    INTEGER, PARAMETER :: datasize = 10
     ! test variable
-    REAL(8) :: rt(10,10,10)
+    REAL(8) :: rt(datasize,datasize,datasize)
     
     !    
     CALL test%init()
@@ -28,12 +29,12 @@ PROGRAM test_mp_bcast_rt
     rt(:,:,:) = mpime
     CALL mp_bcast(rt, root, world_comm)
     !
-    CALL test%assert_equal(ALL(rt .eq. 0) , .true. , fail=.true.)
+    CALL test%assert_equal(ALL(rt .eq. 0) , .true. )
     !
     rt(:,:,:) = mpime
     CALL mp_bcast(rt, nproc-1, world_comm)
     !
-    CALL test%assert_equal(ALL(rt .eq. nproc-1) , .true. , fail=.true.)
+    CALL test%assert_equal(ALL(rt .eq. nproc-1) , .true. )
     !
     CALL print_results(test)
     !

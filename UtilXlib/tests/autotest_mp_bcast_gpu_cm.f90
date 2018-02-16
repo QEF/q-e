@@ -15,30 +15,55 @@ PROGRAM test_mp_bcast_cm_gpu
     !
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
+    INTEGER, PARAMETER :: datasize = 10
+    !
+    ! Stuff for Ranum data
+    integer, allocatable :: seed(:)
+    integer :: i, n
+    REAL :: rnd(datasize,datasize)
+    !
     ! test variable
-    COMPLEX(8), DEVICE :: cm_d(10,10)
-    COMPLEX(8) :: cm_h(10,10)
+    COMPLEX(8), DEVICE :: cm_d(datasize,datasize)
+    COMPLEX(8) :: cm_h(datasize,datasize)
+    COMPLEX(8) :: aux_h(datasize,datasize)
     
-    !    
+    !
     CALL test%init()
     
 #if defined(__MPI)    
     world_group = MPI_COMM_WORLD
 #endif
     CALL mp_world_start(world_group)
-    cm_h(10,10) = mpime
-    cm_d(10,10) = cm_h(10,10)
+    cm_h = mpime + 1
+    cm_d = cm_h
     CALL mp_bcast(cm_d, root, world_comm)
-    cm_h(10,10) = cm_d(10,10)
+    cm_h = cm_d
     !
-    CALL test%assert_equal(ALL(cm_h .eq. 0) , .true. , fail=.true.)
+    CALL test%assert_equal(ALL(cm_h .eq. 1) , .true. )
     !
-    cm_h(10,10) = mpime
-    cm_d(10,10) = cm_h(10,10)
+    cm_h = mpime
+    cm_d = cm_h
     CALL mp_bcast(cm_d, nproc-1, world_comm)
-    cm_h(10,10) = cm_d(10,10)
+    cm_h = cm_d
     !
-    CALL test%assert_equal(ALL(cm_h .eq. nproc-1) , .true. , fail=.true.)
+    CALL test%assert_equal(ALL(cm_h .eq. nproc-1) , .true. )
+    !
+    ! Test against CPU implementation
+    CALL random_seed(size = n)
+    ALLOCATE(seed(n))
+    CALL random_seed(get=seed)
+    WRITE (*, *) "Random seed: ", seed
+    DEALLOCATE(seed)
+    !
+    DO i = 0, nproc-1
+      CALL RANDOM_NUMBER(rnd)
+      cm_h = DCMPLX ( 10.0 * rnd )
+      cm_d = cm_h
+      CALL mp_bcast(cm_d, i , world_comm)
+      CALL mp_bcast(cm_h, i , world_comm)
+      aux_h = cm_d
+      CALL test%assert_equal(SUM(cm_h) , SUM(aux_h) )
+    END DO
     !
     CALL print_results(test)
     !

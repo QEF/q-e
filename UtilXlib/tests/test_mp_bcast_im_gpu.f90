@@ -31,14 +31,14 @@ PROGRAM test_mp_bcast_im_gpu
     CALL mp_bcast(im_d, root, world_comm)
     im_h(:, :) = im_d(:, :)
     !
-    CALL test%assert_equal(ALL(im_h .eq. 0) , .true. , fail=.true.)
+    CALL test%assert_equal(ALL(im_h .eq. 0) , .true. )
     !
     im_h(:, :) = mpime
     im_d(:, :) = im_h(:, :)
     CALL mp_bcast(im_d, nproc-1, world_comm)
     im_h(:, :) = im_d(:, :)
     !
-    CALL test%assert_equal(ALL(im_h .eq. nproc-1) , .true. , fail=.true.)
+    CALL test%assert_equal(ALL(im_h .eq. nproc-1) , .true. )
     !
     CALL print_results(test)
     !

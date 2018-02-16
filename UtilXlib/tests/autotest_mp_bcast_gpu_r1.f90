@@ -15,30 +15,55 @@ PROGRAM test_mp_bcast_r1_gpu
     !
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
+    INTEGER, PARAMETER :: datasize = 10
+    !
+    ! Stuff for Ranum data
+    integer, allocatable :: seed(:)
+    integer :: i, n
+    REAL :: rnd
+    !
     ! test variable
     REAL(8), DEVICE :: r1_d
     REAL(8) :: r1_h
+    REAL(8) :: aux_h
     
-    !    
+    !
     CALL test%init()
     
 #if defined(__MPI)    
     world_group = MPI_COMM_WORLD
 #endif
     CALL mp_world_start(world_group)
-    r1_h = mpime
+    r1_h = mpime + 1
     r1_d = r1_h
     CALL mp_bcast(r1_d, root, world_comm)
     r1_h = r1_d
     !
-    CALL test%assert_equal((r1_h .eq. 0) , .true. , fail=.true.)
+    CALL test%assert_equal((r1_h .eq. 1) , .true. )
     !
     r1_h = mpime
     r1_d = r1_h
     CALL mp_bcast(r1_d, nproc-1, world_comm)
     r1_h = r1_d
     !
-    CALL test%assert_equal((r1_h .eq. nproc-1) , .true. , fail=.true.)
+    CALL test%assert_equal((r1_h .eq. nproc-1) , .true. )
+    !
+    ! Test against CPU implementation
+    CALL random_seed(size = n)
+    ALLOCATE(seed(n))
+    CALL random_seed(get=seed)
+    WRITE (*, *) "Random seed: ", seed
+    DEALLOCATE(seed)
+    !
+    DO i = 0, nproc-1
+      CALL RANDOM_NUMBER(rnd)
+      r1_h = DBLE ( 10.0 * rnd )
+      r1_d = r1_h
+      CALL mp_bcast(r1_d, i , world_comm)
+      CALL mp_bcast(r1_h, i , world_comm)
+      aux_h = r1_d
+      CALL test%assert_equal((r1_h) , (aux_h) )
+    END DO
     !
     CALL print_results(test)
     !

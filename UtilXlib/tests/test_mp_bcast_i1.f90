@@ -26,7 +26,7 @@ PROGRAM test_mp_bcast_i1
 
     i = mpime
     CALL mp_bcast(i, root, world_comm)
-    CALL test%assert_equal(i, 0, fail=.true.)
+    CALL test%assert_equal(i, 0 )
     !
     CALL print_results(test)
     !

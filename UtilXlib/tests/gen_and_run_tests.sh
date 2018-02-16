@@ -57,6 +57,17 @@ fi
 #declare -a    flags=("" "-D__CUDA" "-D__MPI" "-D__MPI -D__CUDA" "-D__MPI -D__CUDA -D__GPU_MPI")
 #declare -a    flags=("" "-D__MPI")
 
+# END OF CONFIGURATIONS
+
+function succ {
+  local success=$1
+  if [ $success -ne 0 ]; then
+    echo "${red} Flags '$flag' FAILED ${reset}"
+    exit $success
+  else
+    echo "${green} Flags '$flag' PASSED ${reset}"
+  fi
+}
 
 # FUN
 red=`tput setaf 1`
@@ -69,26 +80,21 @@ do
   echo "Building with: $DFLAGMATRIX"
   cd ..
   make clean && make -f Makefile.test 1>/dev/null
+  succ $?
   cd tests
   make clean && make 1>/dev/null
+  succ $?
   for file in *.x
   do
-    success=0
     if [[ $flag = *"MPI"* ]]; then
       echo "Running $MPIEXEC ./$file"
       $MPIEXEC ./$file
-      success=$?
+      succ $?
     else
       echo "Running ./$file"
       ./$file
-      success=$?
+      succ $?
     fi
-    if [ $success -ne 0 ]; then
-      echo "${red} Flags '$flag' FAILED ${reset}"
-      exit $success
-    else
-      echo "${green} Flags '$flag' PASSED ${reset}"
-    fi  
   done
 done
 

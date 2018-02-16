@@ -14,8 +14,9 @@ PROGRAM test_mp_bcast_cm
     !
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
+    INTEGER, PARAMETER :: datasize = 10
     ! test variable
-    COMPLEX(8) :: cm(10,10)
+    COMPLEX(8) :: cm(datasize,datasize)
     
     !    
     CALL test%init()
@@ -28,12 +29,12 @@ PROGRAM test_mp_bcast_cm
     cm(:,:) = mpime
     CALL mp_bcast(cm, root, world_comm)
     !
-    CALL test%assert_equal(ALL(cm .eq. 0) , .true. , fail=.true.)
+    CALL test%assert_equal(ALL(cm .eq. 0) , .true. )
     !
     cm(:,:) = mpime
     CALL mp_bcast(cm, nproc-1, world_comm)
     !
-    CALL test%assert_equal(ALL(cm .eq. nproc-1) , .true. , fail=.true.)
+    CALL test%assert_equal(ALL(cm .eq. nproc-1) , .true. )
     !
     CALL print_results(test)
     !

@@ -17,46 +17,66 @@ SRCS = test_mp_count_nodes.f90 \
        test_mp_bcast_im_gpu.f90 \
        test_mp_bcast_it.f90 \
        test_mp_bcast_it_gpu.f90 \
-        autotest_mp_bcast_i1.f90\
-        autotest_mp_bcast_iv.f90\
-        autotest_mp_bcast_im.f90\
-        autotest_mp_bcast_it.f90\
-        autotest_mp_bcast_r1.f90\
-        autotest_mp_bcast_rv.f90\
-        autotest_mp_bcast_rm.f90\
-        autotest_mp_bcast_rt.f90\
-        autotest_mp_bcast_r1.f90\
-        autotest_mp_bcast_rv.f90\
-        autotest_mp_bcast_rm.f90\
-        autotest_mp_bcast_rt.f90\
-        autotest_mp_bcast_c1.f90\
-        autotest_mp_bcast_cv.f90\
-        autotest_mp_bcast_cm.f90\
-        autotest_mp_bcast_ct.f90\
-        autotest_mp_bcast_c1.f90\
-        autotest_mp_bcast_cv.f90\
-        autotest_mp_bcast_cm.f90\
-        autotest_mp_bcast_ct.f90\
-        autotest_mp_bcast_gpu_i1.f90\
-        autotest_mp_bcast_gpu_iv.f90\
-        autotest_mp_bcast_gpu_im.f90\
-        autotest_mp_bcast_gpu_it.f90\
-        autotest_mp_bcast_gpu_r1.f90\
-        autotest_mp_bcast_gpu_rv.f90\
-        autotest_mp_bcast_gpu_rm.f90\
-        autotest_mp_bcast_gpu_rt.f90\
-        autotest_mp_bcast_gpu_r1.f90\
-        autotest_mp_bcast_gpu_rv.f90\
-        autotest_mp_bcast_gpu_rm.f90\
-        autotest_mp_bcast_gpu_rt.f90\
-        autotest_mp_bcast_gpu_c1.f90\
-        autotest_mp_bcast_gpu_cv.f90\
-        autotest_mp_bcast_gpu_cm.f90\
-        autotest_mp_bcast_gpu_ct.f90\
-        autotest_mp_bcast_gpu_c1.f90\
-        autotest_mp_bcast_gpu_cv.f90\
-        autotest_mp_bcast_gpu_cm.f90\
-        autotest_mp_bcast_gpu_ct.f90\
+autotest_mp_sum_gpu_i1.f90\
+autotest_mp_sum_gpu_iv.f90\
+autotest_mp_sum_gpu_im.f90\
+autotest_mp_sum_gpu_it.f90\
+autotest_mp_sum_gpu_r1.f90\
+autotest_mp_sum_gpu_rv.f90\
+autotest_mp_sum_gpu_rm.f90\
+autotest_mp_sum_gpu_rt.f90\
+autotest_mp_sum_gpu_r1.f90\
+autotest_mp_sum_gpu_rv.f90\
+autotest_mp_sum_gpu_rm.f90\
+autotest_mp_sum_gpu_rt.f90\
+autotest_mp_sum_gpu_c1.f90\
+autotest_mp_sum_gpu_cv.f90\
+autotest_mp_sum_gpu_cm.f90\
+autotest_mp_sum_gpu_ct.f90\
+autotest_mp_sum_gpu_c1.f90\
+autotest_mp_sum_gpu_cv.f90\
+autotest_mp_sum_gpu_cm.f90\
+autotest_mp_sum_gpu_ct.f90\
+autotest_mp_bcast_i1.f90\
+autotest_mp_bcast_iv.f90\
+autotest_mp_bcast_im.f90\
+autotest_mp_bcast_it.f90\
+autotest_mp_bcast_r1.f90\
+autotest_mp_bcast_rv.f90\
+autotest_mp_bcast_rm.f90\
+autotest_mp_bcast_rt.f90\
+autotest_mp_bcast_r1.f90\
+autotest_mp_bcast_rv.f90\
+autotest_mp_bcast_rm.f90\
+autotest_mp_bcast_rt.f90\
+autotest_mp_bcast_c1.f90\
+autotest_mp_bcast_cv.f90\
+autotest_mp_bcast_cm.f90\
+autotest_mp_bcast_ct.f90\
+autotest_mp_bcast_c1.f90\
+autotest_mp_bcast_cv.f90\
+autotest_mp_bcast_cm.f90\
+autotest_mp_bcast_ct.f90\
+autotest_mp_bcast_gpu_i1.f90\
+autotest_mp_bcast_gpu_iv.f90\
+autotest_mp_bcast_gpu_im.f90\
+autotest_mp_bcast_gpu_it.f90\
+autotest_mp_bcast_gpu_r1.f90\
+autotest_mp_bcast_gpu_rv.f90\
+autotest_mp_bcast_gpu_rm.f90\
+autotest_mp_bcast_gpu_rt.f90\
+autotest_mp_bcast_gpu_r1.f90\
+autotest_mp_bcast_gpu_rv.f90\
+autotest_mp_bcast_gpu_rm.f90\
+autotest_mp_bcast_gpu_rt.f90\
+autotest_mp_bcast_gpu_c1.f90\
+autotest_mp_bcast_gpu_cv.f90\
+autotest_mp_bcast_gpu_cm.f90\
+autotest_mp_bcast_gpu_ct.f90\
+autotest_mp_bcast_gpu_c1.f90\
+autotest_mp_bcast_gpu_cv.f90\
+autotest_mp_bcast_gpu_cm.f90\
+autotest_mp_bcast_gpu_ct.f90
 
 EXECS = $(SRCS:.f90=.x)
 

@@ -49,13 +49,13 @@ PROGRAM test_mp_count_nodes
     ! try to split using colors and keys
     CALL MPI_Comm_split(MPI_COMM_WORLD, color, key, shmcomm, ierr);
     ! Check split went fine
-    CALL test%assert_equal(ierr, 0, fail=.true.)
+    CALL test%assert_equal(ierr, 0)
     !
     CALL MPI_COMM_FREE(shmcomm, ierr)
 #endif
 
-    CALL test%assert_equal(valid_n_nodes, num_nodes, fail=.true.)
-    CALL test%assert_equal(valid_rank, key, fail=.true.)
+    CALL test%assert_equal(valid_n_nodes, num_nodes )
+    CALL test%assert_equal(valid_rank, key )
     !
     CALL print_results(test)
     !
