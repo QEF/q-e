@@ -6,6 +6,7 @@ include ../../make.inc
 MODFLAGS=$(MOD_FLAG). $(MOD_FLAG)../
 
 DFLAGS=$$DFLAGMATRIX
+LDFLAGS:=$(LDFLAGS) $(DFLAGS)
 
 SRCS = test_mp_count_nodes.f90 \
        test_mp_bcast_i1.f90 \

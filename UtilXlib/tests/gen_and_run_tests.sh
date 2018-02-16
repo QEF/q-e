@@ -1,8 +1,8 @@
 #!/bin/bash
 
-
-
 MPIEXEC="mpirun -np 3 "
+GPU_ARCH=35
+CUDA_RUNTIME=8.0
 
 declare -a flags=()
 
@@ -21,11 +21,11 @@ while getopts ":smcnh" opt; do
       ;;
     c)
       echo "CUDA build scheduled!" >&2
-      add_cuda=(" -D__CUDA")
+      add_cuda="yes"
       ;;
     n)
       echo "CUDA+MPI build scheduled!" >&2
-      add_cudampi=("-D__GPU_MPI")
+      add_cudampi="yes"
       ;;
     h)
       echo "-s : serial build" >&2
@@ -46,11 +46,11 @@ done
 if [ "$add_cuda" != "" ]; then
   for flag in "${flags[@]}"
   do
-    flags+=(" $flag -D__CUDA")
+    flags+=(" $flag -Mcuda=cc${GPU_ARCH},cuda${CUDA_RUNTIME} -D__CUDA")
   done
 fi
 if [ "$add_cudampi" != "" ]; then
-  flags+=(" -D__MPI -D__CUDA -D__GPU_MPI")
+  flags+=(" -Mcuda=cc${GPU_ARCH},cuda${CUDA_RUNTIME} -D__MPI -D__CUDA -D__GPU_MPI")
 fi
 
 # Manula version
@@ -85,6 +85,7 @@ do
     fi
     if [ $success -ne 0 ]; then
       echo "${red} Flags '$flag' FAILED ${reset}"
+      exit $success
     else
       echo "${green} Flags '$flag' PASSED ${reset}"
     fi  
