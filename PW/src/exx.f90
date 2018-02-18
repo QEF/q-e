@@ -1464,7 +1464,7 @@ MODULE exx
     TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
     !
     ! local variables
-    COMPLEX(DP),ALLOCATABLE :: result(:,:), result_g(:)
+    COMPLEX(DP),ALLOCATABLE :: result(:,:)
     REAL(DP),ALLOCATABLE :: temppsic_dble (:)
     REAL(DP),ALLOCATABLE :: temppsic_aimag(:)
     !
@@ -1498,7 +1498,6 @@ MODULE exx
     !ALLOCATE( result(nrxxs), temppsic_dble(nrxxs), temppsic_aimag(nrxxs) )
     ALLOCATE( result(nrxxs,ialloc), temppsic_dble(nrxxs) )
     ALLOCATE( temppsic_aimag(nrxxs) )
-    ALLOCATE( result_g(n) )
     ALLOCATE( psiwork(nrxxs) )
     !
     ALLOCATE( exxtemp(nrxxs*npol, jblock) )
@@ -1779,13 +1778,10 @@ MODULE exx
         END DO
      END IF
     !
-    !
+    DEALLOCATE(big_result)
     DEALLOCATE( result, temppsic_dble, temppsic_aimag)
-    !
     DEALLOCATE(rhoc, vc, fac )
-    !
     DEALLOCATE(exxtemp)
-    !
     IF(okvan) DEALLOCATE( deexx )
     !
     !-----------------------------------------------------------------------
@@ -4912,58 +4908,6 @@ END SUBROUTINE compute_becpsi
     !
     !-----------------------------------------------------------------------
   END SUBROUTINE update_igk
-  !-----------------------------------------------------------------------
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE communicate_exxbuff (ipair, request_send, request_recv)
-  !-----------------------------------------------------------------------
-    USE mp_exx,       ONLY : iexx_start, iexx_end, inter_egrp_comm, &
-                               intra_egrp_comm, my_egrp_id, negrp, &
-                               max_pairs, egrp_pairs
-    USE parallel_include
-    USE io_global,      ONLY : stdout
-    INTEGER, intent(in)      :: ipair
-    INTEGER                  :: nrxxs
-    INTEGER                  :: request_send, request_recv
-    INTEGER                  :: dest, sender, ierr, jnext, jnext_dest
-#if defined(__MPI)
-    INTEGER :: istatus(MPI_STATUS_SIZE)
-#endif
-    !
-    nrxxs= dfftt%nnr
-    !
-    IF (ipair.lt.max_pairs) THEN
-       !
-       IF (ipair.gt.1) THEN
-#if defined(__MPI)
-          CALL MPI_WAIT(request_send, istatus, ierr)
-          CALL MPI_WAIT(request_recv, istatus, ierr)
-#endif
-       END IF
-       !
-       sender = my_egrp_id + 1
-       IF (sender.ge.negrp) sender = 0
-       jnext = egrp_pairs(2,ipair+1,sender+1)
-       !
-       dest = my_egrp_id - 1
-       IF (dest.lt.0) dest = negrp - 1
-       jnext_dest = egrp_pairs(2,ipair+1,dest+1)
-       !
-#if defined(__MPI)
-       CALL MPI_ISEND( exxbuff(:,:,jnext_dest), nrxxs*npol*nqs, &
-            MPI_DOUBLE_COMPLEX, dest, 101, inter_egrp_comm, request_send, ierr )
-#endif
-       !
-#if defined(__MPI)
-       CALL MPI_IRECV( exxbuff(:,:,jnext), nrxxs*npol*nqs, &
-            MPI_DOUBLE_COMPLEX, sender, 101, inter_egrp_comm, &
-            request_recv, ierr )
-#endif
-       !
-    END IF
-    !
-    !-----------------------------------------------------------------------
-  END SUBROUTINE communicate_exxbuff
   !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
