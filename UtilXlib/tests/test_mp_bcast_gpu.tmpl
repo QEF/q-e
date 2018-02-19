@@ -1,3 +1,5 @@
+! Implemented: *
+
 #if defined(__CUDA)
 PROGRAM test_mp_bcast_{vname}_gpu
 !
@@ -17,7 +19,7 @@ PROGRAM test_mp_bcast_{vname}_gpu
     INTEGER :: world_group = 0
     INTEGER, PARAMETER :: datasize = {datasize}
     !
-    ! Stuff for Ranum data
+    ! Stuff for comparing with CPU implementation
     integer, allocatable :: seed(:)
     integer :: i, n
     REAL :: rnd{size}

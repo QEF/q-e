@@ -1,7 +1,11 @@
+! Implemented: *
+
 #if defined(__CUDA)
 PROGRAM test_mp_sum_{vname}_gpu
 !
-! Simple program to check the functionalities of test_mp_sum_i1.
+! Simple program to check the functionalities of mp_sum.
+!
+! NB: mp_sum is allreduce
 !
     USE cudafor
 #if defined(__MPI)
@@ -16,11 +20,15 @@ PROGRAM test_mp_sum_{vname}_gpu
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0, valid_sum, rnk
     INTEGER, PARAMETER :: datasize = {datasize}
+    ! for comparing with CPU implementation
+    INTEGER, ALLOCATABLE :: seed(:)
+    INTEGER :: i, n
+    REAL :: rnd{size}
     ! test variable
     {type}, DEVICE :: {vname}_d{size}
     {type} :: {vname}_h{size}
     {type} :: aux_h{size}
-    !    
+    !
     CALL test%init()
     
 #if defined(__MPI)    
@@ -43,7 +51,20 @@ PROGRAM test_mp_sum_{vname}_gpu
     CALL test%assert_equal(INT({sumf}({vname}_h )) , valid_sum )
     !
     ! Validate against CPU implementation
-    
+    ! 
+    CALL random_seed(size = n)
+    ALLOCATE(seed(n))
+    CALL random_seed(get=seed)
+    WRITE (*, *) "Random seed: ", seed
+    DEALLOCATE(seed)
+    !
+    CALL RANDOM_NUMBER(rnd)
+    {vname}_h = {typeconv} ( 10.0 * rnd )
+    {vname}_d = {vname}_h
+    CALL mp_sum({vname}_d, world_comm)
+    CALL mp_sum({vname}_h, world_comm)
+    aux_h = {vname}_d
+    CALL test%assert_equal( {sumf}({vname}_h) , {sumf}(aux_h) )
     !
     CALL print_results(test)
     !
