@@ -6,18 +6,29 @@ SUBROUTINE print_results(test)
     IMPLICIT NONE
     !
     TYPE(tester_t) :: test
-    INTEGER :: itoterr, ierr, me
+    INTEGER :: itottests, itoterr, ierr, me
     !
 #if defined(__MPI)
     !
     CALL MPI_REDUCE(test%n_errors, itoterr, 1, MPI_INTEGER, MPI_SUM, &
                         0, MPI_COMM_WORLD, ierr)
-    CALL test%assert_equal(0, ierr, fail=.true.)
-    CALL test%assert_equal(0, itoterr, fail=.true.)
-    
+    ! Fail in case MPI fails...
+    IF (ierr /= 0) CALL test%assert_equal(0, ierr)
+    !
+    CALL MPI_REDUCE(test%n_tests, itottests, 1, MPI_INTEGER, MPI_SUM, &
+                        0, MPI_COMM_WORLD, ierr)
+    ! Fail in case MPI fails...
+    IF (ierr /= 0) CALL test%assert_equal(0, ierr)
+    !
+    test%n_tests  = itottests
+    test%n_errors = itoterr
+    !
+    IF (ierr /= 0) CALL test%assert_equal(0, ierr)
+    !
     CALL MPI_Comm_rank(MPI_COMM_WORLD, me, ierr);
-    CALL test%assert_equal(0, ierr, fail=.true.)
-    
+    !
+    IF (ierr /= 0) CALL test%assert_equal(0, ierr)
+    !
     IF (me .eq. 0) CALL test%print()
 #else
     CALL test%print()
