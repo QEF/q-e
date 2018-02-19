@@ -702,7 +702,8 @@
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_i1(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
-        INTEGER :: msg_dest, msg_sour
+        INTEGER :: msg_dest
+        INTEGER, INTENT(IN) :: msg_sour
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -732,6 +733,7 @@
              IF (ierr/=0) CALL mp_stop( 8020 )
              CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
              IF (ierr/=0) CALL mp_stop( 8021 )
+             msglen = nrcv
            END IF
 #endif
         ELSEIF(mpime .EQ. sour)THEN
@@ -753,7 +755,8 @@
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_iv(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
-        INTEGER :: msg_dest(:), msg_sour(:)
+        INTEGER :: msg_dest(:)
+        INTEGER, INTENT(IN) :: msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -799,7 +802,8 @@
 !------------------------------------------------------------------------------!
 
       SUBROUTINE mp_get_r1(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
-        REAL (DP) :: msg_dest, msg_sour
+        REAL (DP)             :: msg_dest
+        REAL (DP), INTENT(IN) :: msg_sour
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -824,6 +828,7 @@
              CALL MPI_SEND( msg_sour, msglen, MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
              IF (ierr/=0) CALL mp_stop( 8027 )
            ELSE IF(mpime .EQ. dest) THEN
+             msglen=1
              CALL MPI_RECV( msg_dest, msglen, MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
              IF (ierr/=0) CALL mp_stop( 8028 )
              CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
@@ -847,7 +852,8 @@
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_rv(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
-        REAL (DP) :: msg_dest(:), msg_sour(:)
+        REAL (DP)             :: msg_dest(:)
+        REAL (DP), INTENT(IN) :: msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -895,7 +901,8 @@
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_rm(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
-        REAL (DP) :: msg_dest(:,:), msg_sour(:,:)
+        REAL (DP) :: msg_dest(:,:)
+        REAL (DP), INTENT(IN) :: msg_sour(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -944,7 +951,8 @@
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_cv(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
-        COMPLEX (DP) :: msg_dest(:), msg_sour(:)
+        COMPLEX (DP)             :: msg_dest(:)
+        COMPLEX (DP), INTENT(IN) :: msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -994,7 +1002,8 @@
 ! Marco Govoni
 !
       SUBROUTINE mp_get_cm(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
-        COMPLEX (DP) :: msg_dest(:,:), msg_sour(:,:)
+        COMPLEX (DP)              :: msg_dest(:,:)
+        COMPLEX (DP), INTENT(IN)  :: msg_sour(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -1043,7 +1052,8 @@
 
 
       SUBROUTINE mp_put_i1(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
-        INTEGER :: msg_dest, msg_sour
+        INTEGER :: msg_dest
+        INTEGER, INTENT(IN) :: msg_sour
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -1090,7 +1100,8 @@
 !
 !
       SUBROUTINE mp_put_iv(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
-        INTEGER :: msg_dest(:), msg_sour(:)
+        INTEGER             :: msg_dest(:)
+        INTEGER, INTENT(IN) :: msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -1135,7 +1146,8 @@
 !
 !
       SUBROUTINE mp_put_rv(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
-        REAL (DP) :: msg_dest(:), msg_sour(:)
+        REAL (DP)             :: msg_dest(:)
+        REAL (DP), INTENT(IN) :: msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -1180,7 +1192,8 @@
 !
 !
       SUBROUTINE mp_put_rm(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
-        REAL (DP) :: msg_dest(:,:), msg_sour(:,:)
+        REAL (DP)             :: msg_dest(:,:)
+        REAL (DP), INTENT(IN) :: msg_sour(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -1226,7 +1239,8 @@
 !
 !
       SUBROUTINE mp_put_cv(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
-        COMPLEX (DP) :: msg_dest(:), msg_sour(:)
+        COMPLEX (DP)             :: msg_dest(:)
+        COMPLEX (DP), INTENT(IN) :: msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -2883,7 +2897,8 @@ END FUNCTION mp_get_comm_self
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_i1_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
-        INTEGER, DEVICE :: msg_dest_d, msg_sour_d
+        INTEGER, DEVICE             :: msg_dest_d
+        INTEGER, INTENT(IN), DEVICE :: msg_sour_d
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -2899,7 +2914,7 @@ END FUNCTION mp_get_comm_self
         !
         msg_dest_h = msg_dest_d; msg_sour_h = msg_sour_d
         CALL mp_get_i1(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
-        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        msg_dest_d = msg_dest_h
 #else
 
 #if defined(__MPI)
@@ -2943,7 +2958,8 @@ END FUNCTION mp_get_comm_self
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_iv_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
-        INTEGER, DEVICE :: msg_dest_d(:), msg_sour_d(:)
+        INTEGER, DEVICE             :: msg_dest_d(:)
+        INTEGER, INTENT(IN), DEVICE :: msg_sour_d(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -2958,7 +2974,7 @@ END FUNCTION mp_get_comm_self
         !
         ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
         CALL mp_get_iv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
-        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
 #else
 
@@ -3000,7 +3016,8 @@ END FUNCTION mp_get_comm_self
 !------------------------------------------------------------------------------!
 
       SUBROUTINE mp_get_r1_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
-        REAL (DP), DEVICE :: msg_dest_d, msg_sour_d
+        REAL (DP), DEVICE             :: msg_dest_d
+        REAL (DP), INTENT(IN), DEVICE :: msg_sour_d
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -3014,7 +3031,7 @@ END FUNCTION mp_get_comm_self
         !
         msg_dest_h=msg_dest_d; msg_sour_h=msg_sour_d
         CALL mp_get_r1(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
-        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        msg_dest_d = msg_dest_h
 #else
 #if defined(__MPI)
         group = gid
@@ -3031,6 +3048,7 @@ END FUNCTION mp_get_comm_self
              CALL MPI_SEND( msg_sour_d, msglen, MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
              IF (ierr/=0) CALL mp_stop( 9005 )
            ELSE IF(mpime .EQ. dest) THEN
+             msglen = 1
              CALL MPI_RECV( msg_dest_d, msglen, MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
              IF (ierr/=0) CALL mp_stop( 9006 )
              CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
@@ -3052,10 +3070,11 @@ END FUNCTION mp_get_comm_self
 
 !------------------------------------------------------------------------------!
 !
-! Carlo Cavazzoni
+! Pietro Bonfa'
 !
       SUBROUTINE mp_get_rv_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
-        REAL (DP), DEVICE :: msg_dest_d(:), msg_sour_d(:)
+        REAL (DP), DEVICE             :: msg_dest_d(:)
+        REAL (DP), INTENT(IN), DEVICE :: msg_sour_d(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -3070,7 +3089,7 @@ END FUNCTION mp_get_comm_self
         !
         ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
         CALL mp_get_rv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
-        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
 #else
         !
@@ -3114,7 +3133,8 @@ END FUNCTION mp_get_comm_self
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_rm_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
-        REAL (DP), DEVICE :: msg_dest_d(:,:), msg_sour_d(:,:)
+        REAL (DP), DEVICE             :: msg_dest_d(:,:)
+        REAL (DP), INTENT(IN), DEVICE :: msg_sour_d(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -3129,7 +3149,7 @@ END FUNCTION mp_get_comm_self
         !
         ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
         CALL mp_get_rm(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
-        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
         RETURN
 #else
@@ -3176,10 +3196,11 @@ END FUNCTION mp_get_comm_self
 
 !------------------------------------------------------------------------------!
 !
-! Carlo Cavazzoni
+! Pietro Bonfa'
 !
       SUBROUTINE mp_get_cv_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
-        COMPLEX (DP), DEVICE :: msg_dest_d(:), msg_sour_d(:)
+        COMPLEX (DP), DEVICE             :: msg_dest_d(:)
+        COMPLEX (DP), INTENT(IN), DEVICE :: msg_sour_d(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -3194,7 +3215,7 @@ END FUNCTION mp_get_comm_self
         !
         ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
         CALL mp_get_cv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
-        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        msg_dest_d = msg_dest_h;
         DEALLOCATE(msg_dest_h, msg_sour_h)
 #else
         !
@@ -3240,7 +3261,8 @@ END FUNCTION mp_get_comm_self
 ! Pietro Bonfa'
 !
       SUBROUTINE mp_get_cm_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
-        COMPLEX (DP), DEVICE :: msg_dest_d(:,:), msg_sour_d(:,:)
+        COMPLEX (DP), INTENT(IN), DEVICE :: msg_sour_d(:,:)
+        COMPLEX (DP), DEVICE             :: msg_dest_d(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -3255,7 +3277,7 @@ END FUNCTION mp_get_comm_self
         !
         ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
         CALL mp_get_cm(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
-        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        msg_dest_d = msg_dest_h;
         DEALLOCATE(msg_dest_h, msg_sour_h)
 #else
         !
@@ -3303,7 +3325,8 @@ END FUNCTION mp_get_comm_self
 
 
       SUBROUTINE mp_put_i1_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
-        INTEGER, DEVICE :: msg_dest_d, msg_sour_d
+        INTEGER, DEVICE             :: msg_dest_d
+        INTEGER, INTENT(IN), DEVICE :: msg_sour_d
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -3318,7 +3341,7 @@ END FUNCTION mp_get_comm_self
         !
         msg_dest_h=msg_dest_d ; msg_sour_h=msg_sour_d 
         CALL mp_put_i1(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
-        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        msg_dest_d = msg_dest_h
         RETURN
 #else
 
@@ -3360,7 +3383,8 @@ END FUNCTION mp_get_comm_self
 !
 !
       SUBROUTINE mp_put_iv_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
-        INTEGER, DEVICE :: msg_dest_d(:), msg_sour_d(:)
+        INTEGER, DEVICE             :: msg_dest_d(:)
+        INTEGER, INTENT(IN), DEVICE :: msg_sour_d(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -3375,7 +3399,7 @@ END FUNCTION mp_get_comm_self
         !
         ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
         CALL mp_put_iv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
-        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
         RETURN
 #else
@@ -3418,7 +3442,8 @@ END FUNCTION mp_get_comm_self
 !
 !
       SUBROUTINE mp_put_rv_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
-        REAL (DP), DEVICE :: msg_dest_d(:), msg_sour_d(:)
+        REAL (DP), DEVICE             :: msg_dest_d(:)
+        REAL (DP), INTENT(IN), DEVICE :: msg_sour_d(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -3433,7 +3458,7 @@ END FUNCTION mp_get_comm_self
         !
         ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
         CALL mp_put_rv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
-        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
 #else
         !
@@ -3475,7 +3500,8 @@ END FUNCTION mp_get_comm_self
 !
 !
       SUBROUTINE mp_put_rm_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
-        REAL (DP), DEVICE :: msg_dest_d(:,:), msg_sour_d(:,:)
+        REAL (DP), DEVICE             :: msg_dest_d(:,:)
+        REAL (DP), INTENT(IN), DEVICE :: msg_sour_d(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -3490,7 +3516,7 @@ END FUNCTION mp_get_comm_self
         !
         ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
         CALL mp_put_rm(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
-        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
 #else
         !
@@ -3536,7 +3562,8 @@ END FUNCTION mp_get_comm_self
 !
 !
       SUBROUTINE mp_put_cv_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
-        COMPLEX (DP), DEVICE :: msg_dest_d(:), msg_sour_d(:)
+        COMPLEX (DP),             DEVICE :: msg_dest_d(:)
+        COMPLEX (DP), INTENT(IN), DEVICE :: msg_sour_d(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
@@ -3551,7 +3578,7 @@ END FUNCTION mp_get_comm_self
         !
         ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
         CALL mp_put_cv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
-        msg_dest_d = msg_dest_h; msg_sour_d = msg_sour_h
+        msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
 #else
         !
