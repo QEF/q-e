@@ -430,15 +430,24 @@ program test
   !
   wall = MPI_WTIME() - wall
 
+  ! --------  DEALLOCATE
+  !
   DEALLOCATE (psic)
+  DEALLOCATE (psi)
   DEALLOCATE (hpsi)
+  DEALLOCATE (v)
+  DEALLOCATE (mill)
+  DEALLOCATE (g)
+  DEALLOCATE (gg)
+  DEALLOCATE (ig_l2g)
   IF (use_tg) THEN
     !
     DEALLOCATE (tg_psic)
     DEALLOCATE (tg_v)
     !
   ENDIF
-
+  ! --------------------
+  !
 #if defined(__MPI)
   CALL MPI_ALLREDUCE(my_time, time_min, 10, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr)
   CALL MPI_ALLREDUCE(my_time, time_max, 10, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr)
