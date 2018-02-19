@@ -74,6 +74,9 @@ red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 
+# Generate autotest source files
+make generate
+
 for flag in "${flags[@]}"
 do
   export DFLAGMATRIX="$flag"
