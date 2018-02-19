@@ -1,4 +1,4 @@
-build:cudaopenmp:
+build:cudampiomp:
   tags: [galileo]
   script:
     - module load profile/advanced pgi/17.10 cuda/8.0.61
@@ -6,15 +6,15 @@ build:cudaopenmp:
     - cd UtilXlib/tests
     - bash gen_and_run_tests.sh -smcn
 
-build:intelopenmp:
+build:intelmpiomp:
   tags: [galileo]
   script:
-    - module load profile/advanced intel
+    - module load profile/advanced intel intelmpi
     - ./configure --enable-openmp
     - cd UtilXlib/tests
     - bash gen_and_run_tests.sh -sm
 
-build:cuda:
+build:cudampi:
   tags: [galileo]
   script:
     - module load profile/advanced pgi/17.10 cuda/8.0.61
@@ -22,7 +22,7 @@ build:cuda:
     - cd UtilXlib/tests
     - bash gen_and_run_tests.sh -smcn
 
-build:intel:
+build:intelmpiomp:
   tags: [galileo]
   script:
     - module load profile/advanced intel intelmpi

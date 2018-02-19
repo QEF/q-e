@@ -3717,7 +3717,7 @@ END FUNCTION mp_get_comm_self
 #else
         ALLOCATE( msg_h, source=msg_d )
         msglen = size(msg_h)
-        CALL reduce_base_real_gpu( msglen, msg_h, gid, -1 )
+        CALL reduce_base_real( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
@@ -3880,14 +3880,13 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-
 #if  defined(__GPU_MPI)
         msglen = size(msg_d)
         CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
 #else
         ALLOCATE( msg_h, source=msg_d )
         msglen = size(msg_h)
-        CALL reduce_base_real_gpu( msglen, msg_h, gid, -1 )
+        CALL reduce_base_real( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
@@ -4144,7 +4143,7 @@ END FUNCTION mp_get_comm_self
         CALL parallel_max_integer_gpu( msglen, msg_d, gid, -1 )
 #else
         msg_h = msg_d
-        CALL parallel_max_integer_gpu( msglen, msg_h, gid, -1 )
+        CALL parallel_max_integer( msglen, msg_h, gid, -1 )
         msg_d = msg_h
 #endif
 #endif
@@ -4153,7 +4152,7 @@ END FUNCTION mp_get_comm_self
 !------------------------------------------------------------------------------!
 !
 !..mp_max_iv
-!..Carlo Cavazzoni
+!..Pietro Bonfa'
 !
       SUBROUTINE mp_max_iv_gpu(msg_d,gid)
         IMPLICIT NONE
