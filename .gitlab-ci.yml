@@ -22,7 +22,7 @@ build:cudampi:
     - cd UtilXlib/tests
     - bash gen_and_run_tests.sh -smcn
 
-build:intelmpiomp:
+build:intelmpi:
   tags: [galileo]
   script:
     - module load profile/advanced intel intelmpi
