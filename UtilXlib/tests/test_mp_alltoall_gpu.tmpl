@@ -54,7 +54,7 @@ PROGRAM test_mp_alltoall_{vname}_gpu
     rcv_{vname}_h = rcv_{vname}_d
     !
     DO i = 1, nproc
-        CALL test%assert_equal(SUM(rcv_{vname}_h(:,:,i)) , i*(datasize**2))
+        CALL test%assert_equal(SUM(rcv_{vname}_h(:,:,i)) , {typeconv} (i*(datasize**2)))
     END DO
 
     !

@@ -1,6 +1,6 @@
 PROGRAM test_mp_bcast_iv
 !
-! Simple program to check the functionalities of test_mp_bcast_i1.
+! Simple program to check the functionalities of test_mp_bcast_iv.
 !
 
 #if defined(__MPI)
