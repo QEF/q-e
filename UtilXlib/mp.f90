@@ -2438,7 +2438,7 @@ FUNCTION mp_get_comm_self( )
 END FUNCTION mp_get_comm_self
 
 !------------------------------------------------------------------------------!
-!  GPU Subroutines (Pietro Bonfa')
+!  GPU specific subroutines (Pietro Bonfa')
 !------------------------------------------------------------------------------!
 #ifdef __CUDA
 
@@ -2469,6 +2469,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_bcast_i1_gpu
 !
 !------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_bcast_iv_gpu(msg_d,source,gid)
         IMPLICIT NONE
         INTEGER, DEVICE :: msg_d(:)
@@ -2477,11 +2478,12 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-        msglen = size(msg_d)
 #if defined(__GPU_MPI)
+        msglen = size(msg_d)
         CALL bcast_integer_gpu( msg_d, msglen, source, gid )
 #else
         ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
         CALL bcast_integer( msg_h, msglen, source, gid )
         msg_d = msg_h; DEALLOCATE( msg_h )
 #endif
@@ -2489,6 +2491,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_bcast_iv_gpu
 !
 !------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_bcast_im_gpu( msg_d, source, gid )
         IMPLICIT NONE
         INTEGER, DEVICE :: msg_d(:,:)
@@ -2497,11 +2500,12 @@ END FUNCTION mp_get_comm_self
         INTEGER, INTENT(IN) :: gid
 #if defined(__MPI)
         INTEGER :: msglen
-        msglen = size(msg_d)
 #if defined(__GPU_MPI)
+        msglen = size(msg_d)
         CALL bcast_integer_gpu( msg_d, msglen, source, gid )
 #else
         ALLOCATE( msg_h, source=msg_d )
+        msglen = size(msg_h)
         CALL bcast_integer( msg_h, msglen, source, gid )
         msg_d = msg_h; DEALLOCATE( msg_h )
 #endif
@@ -2509,8 +2513,6 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_bcast_im_gpu
 !
 !------------------------------------------------------------------------------!
-!
-! Carlo Cavazzoni
 !
       SUBROUTINE mp_bcast_it_gpu( msg_d, source, gid )
         IMPLICIT NONE
@@ -2534,8 +2536,6 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_bcast_it_gpu
 !
 !------------------------------------------------------------------------------!
-!
-! Samuel Ponce
 !
       SUBROUTINE mp_bcast_i4d_gpu(msg_d, source, gid)
         IMPLICIT NONE
@@ -2624,8 +2624,6 @@ END FUNCTION mp_get_comm_self
 !
 !------------------------------------------------------------------------------!
 !
-! Pietro Bonfa'
-!
       SUBROUTINE mp_bcast_rt_gpu(msg_d,source,gid)
         IMPLICIT NONE
         REAL (DP), DEVICE :: msg_d(:,:,:)
@@ -2648,8 +2646,6 @@ END FUNCTION mp_get_comm_self
 !
 !------------------------------------------------------------------------------!
 !
-! Pietro Bonfa'
-!
       SUBROUTINE mp_bcast_r4d_gpu(msg_d, source, gid)
         IMPLICIT NONE
         REAL (DP), DEVICE :: msg_d(:,:,:,:)
@@ -2669,11 +2665,8 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_bcast_r4d_gpu
-
 !
 !------------------------------------------------------------------------------!
-!
-! Pietro Bonfa'
 !
       SUBROUTINE mp_bcast_r5d_gpu(msg_d, source, gid)
         IMPLICIT NONE
@@ -2694,7 +2687,7 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_bcast_r5d_gpu
-
+!
 !------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_bcast_c1_gpu(msg_d,source,gid)
@@ -2717,6 +2710,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_bcast_c1_gpu
 !
 !------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_bcast_cv_gpu(msg_d,source,gid)
         IMPLICIT NONE
         COMPLEX (DP), DEVICE :: msg_d(:)
@@ -2738,6 +2732,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_bcast_cv_gpu
 !
 !------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_bcast_cm_gpu(msg_d,source,gid)
         IMPLICIT NONE
         COMPLEX (DP), DEVICE :: msg_d(:,:)
@@ -2759,6 +2754,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_bcast_cm_gpu
 !
 !------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_bcast_ct_gpu(msg_d,source,gid)
         IMPLICIT NONE
         COMPLEX (DP), DEVICE :: msg_d(:,:,:)
@@ -2778,9 +2774,9 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_bcast_ct_gpu
-
 !
 !------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_bcast_c4d_gpu(msg_d,source,gid)
         IMPLICIT NONE
         COMPLEX (DP), DEVICE :: msg_d(:,:,:,:)
@@ -2800,7 +2796,9 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_bcast_c4d_gpu
-
+!
+!------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_bcast_c5d_gpu(msg_d,source,gid)
         IMPLICIT NONE
         COMPLEX (DP), DEVICE :: msg_d(:,:,:,:,:)
@@ -2820,10 +2818,9 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_bcast_c5d_gpu
-
 !
 !------------------------------------------------------------------------------!
-
+!
       SUBROUTINE mp_bcast_l_gpu(msg_d,source,gid)
         IMPLICIT NONE
         LOGICAL, DEVICE :: msg_d
@@ -2845,8 +2842,6 @@ END FUNCTION mp_get_comm_self
 !
 !------------------------------------------------------------------------------!
 !
-! Carlo Cavazzoni
-!
       SUBROUTINE mp_bcast_lv_gpu(msg_d,source,gid)
         IMPLICIT NONE
         LOGICAL, DEVICE :: msg_d(:)
@@ -2866,10 +2861,8 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_bcast_lv_gpu
-
-!------------------------------------------------------------------------------!
 !
-! Carlo Cavazzoni
+!------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_bcast_lm_gpu(msg_d,source,gid)
         IMPLICIT NONE
@@ -2890,11 +2883,8 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_bcast_lm_gpu
-
 !
 !------------------------------------------------------------------------------!
-!
-! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_i1_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
         INTEGER, DEVICE             :: msg_dest_d
@@ -2952,10 +2942,8 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_get_i1_gpu
-
-!------------------------------------------------------------------------------!
 !
-! Carlo Cavazzoni
+!------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_get_iv_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
         INTEGER, DEVICE             :: msg_dest_d(:)
@@ -3012,9 +3000,9 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_get_iv_gpu
-
+!
 !------------------------------------------------------------------------------!
-
+!
       SUBROUTINE mp_get_r1_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
         REAL (DP), DEVICE             :: msg_dest_d
         REAL (DP), INTENT(IN), DEVICE :: msg_sour_d
@@ -3067,10 +3055,8 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_get_r1_gpu
-
-!------------------------------------------------------------------------------!
 !
-! Pietro Bonfa'
+!------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_get_rv_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
         REAL (DP), DEVICE             :: msg_dest_d(:)
@@ -3127,10 +3113,8 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_get_rv_gpu
-
-!------------------------------------------------------------------------------!
 !
-! Carlo Cavazzoni
+!------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_get_rm_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
         REAL (DP), DEVICE             :: msg_dest_d(:,:)
@@ -3192,11 +3176,8 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_get_rm_gpu
-
-
-!------------------------------------------------------------------------------!
 !
-! Pietro Bonfa'
+!------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_get_cv_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
         COMPLEX (DP), DEVICE             :: msg_dest_d(:)
@@ -3253,12 +3234,8 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_get_cv_gpu
-
-
-
-!------------------------------------------------------------------------------!
 !
-! Pietro Bonfa'
+!------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_get_cm_gpu(msg_dest_d, msg_sour_d, mpime, dest, sour, ip, gid)
         COMPLEX (DP), INTENT(IN), DEVICE :: msg_sour_d(:,:)
@@ -3318,12 +3295,9 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_get_cm_gpu
-!------------------------------------------------------------------------------!
-!
 !
 !------------------------------------------------------------------------------!
-
-
+!
       SUBROUTINE mp_put_i1_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
         INTEGER, DEVICE             :: msg_dest_d
         INTEGER, INTENT(IN), DEVICE :: msg_sour_d
@@ -3378,9 +3352,8 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_put_i1_gpu
-
-!------------------------------------------------------------------------------!
 !
+!------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_put_iv_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
         INTEGER, DEVICE             :: msg_dest_d(:)
@@ -3437,9 +3410,8 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_put_iv_gpu
-
-!------------------------------------------------------------------------------!
 !
+!------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_put_rv_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
         REAL (DP), DEVICE             :: msg_dest_d(:)
@@ -3495,9 +3467,8 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_put_rv_gpu
-
-!------------------------------------------------------------------------------!
 !
+!------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_put_rm_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
         REAL (DP), DEVICE             :: msg_dest_d(:,:)
@@ -3556,10 +3527,8 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_put_rm_gpu
-
-
-!------------------------------------------------------------------------------!
 !
+!------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_put_cv_gpu(msg_dest_d, msg_sour_d, mpime, sour, dest, ip, gid)
         COMPLEX (DP),             DEVICE :: msg_dest_d(:)
@@ -3615,7 +3584,7 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_put_cv_gpu
-
+!
 !------------------------------------------------------------------------------!
 !
 !..mp_sum
@@ -3641,6 +3610,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_sum_i1_gpu
 !
 !------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_sum_iv_gpu(msg_d,gid)
         IMPLICIT NONE
         INTEGER, INTENT (INOUT), DEVICE :: msg_d(:)
@@ -3662,7 +3632,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_sum_iv_gpu
 !
 !------------------------------------------------------------------------------!
-
+!
       SUBROUTINE mp_sum_im_gpu(msg_d,gid)
         IMPLICIT NONE
         INTEGER, INTENT (INOUT), DEVICE :: msg_d(:,:)
@@ -3684,7 +3654,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_sum_im_gpu
 !
 !------------------------------------------------------------------------------!
-
+!
       SUBROUTINE mp_sum_it_gpu(msg_d,gid)
         IMPLICIT NONE
         INTEGER, INTENT (INOUT), DEVICE :: msg_d(:,:,:)
@@ -3704,9 +3674,9 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_sum_it_gpu
-
+!
 !------------------------------------------------------------------------------!
-
+!
       SUBROUTINE mp_sum_r1_gpu(msg_d,gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d
@@ -3726,10 +3696,9 @@ END FUNCTION mp_get_comm_self
         
 #endif
       END SUBROUTINE mp_sum_r1_gpu
-
 !
 !------------------------------------------------------------------------------!
-
+!
       SUBROUTINE mp_sum_rv_gpu(msg_d,gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:)
@@ -3751,8 +3720,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_sum_rv_gpu
 !
 !------------------------------------------------------------------------------!
-
-
+!
       SUBROUTINE mp_sum_rm_gpu(msg_d, gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:,:)
@@ -3772,8 +3740,9 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_sum_rm_gpu
-
-
+!
+!------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_root_sum_rm_gpu( msg_d, res_d, root, gid )
         IMPLICIT NONE
         REAL (DP), INTENT (IN) , DEVICE :: msg_d(:,:)
@@ -3810,8 +3779,9 @@ END FUNCTION mp_get_comm_self
 #endif
 
       END SUBROUTINE mp_root_sum_rm_gpu
-
-
+!
+!------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_root_sum_cm_gpu( msg_d, res_d, root, gid )
         IMPLICIT NONE
         COMPLEX (DP), INTENT (IN) , DEVICE :: msg_d(:,:)
@@ -3845,14 +3815,9 @@ END FUNCTION mp_get_comm_self
 #endif
 
       END SUBROUTINE mp_root_sum_cm_gpu
-
 !
 !------------------------------------------------------------------------------!
-
-
-!------------------------------------------------------------------------------!
 !
-
       SUBROUTINE mp_sum_rmm_gpu( msg_d, res_d, root, gid )
         IMPLICIT NONE
         REAL (DP), INTENT (IN), DEVICE :: msg_d(:,:)
@@ -3894,12 +3859,9 @@ END FUNCTION mp_get_comm_self
 #endif
 
       END SUBROUTINE mp_sum_rmm_gpu
-
-
 !
 !------------------------------------------------------------------------------!
-
-
+!
       SUBROUTINE mp_sum_rt_gpu( msg_d, gid )
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:)
@@ -3918,11 +3880,8 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_sum_rt_gpu
-
 !
 !------------------------------------------------------------------------------!
-!
-! Carlo Cavazzoni
 !
       SUBROUTINE mp_sum_r4d_gpu(msg_d,gid)
         IMPLICIT NONE
@@ -3942,11 +3901,9 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_sum_r4d_gpu
-
-
-
+!
 !------------------------------------------------------------------------------!
-
+!
       SUBROUTINE mp_sum_c1_gpu(msg_d,gid)
         IMPLICIT NONE
         COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d
@@ -3966,7 +3923,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_sum_c1_gpu
 !
 !------------------------------------------------------------------------------!
-
+!
       SUBROUTINE mp_sum_cv_gpu(msg_d,gid)
         IMPLICIT NONE
         COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:)
@@ -3987,7 +3944,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_sum_cv_gpu
 !
 !------------------------------------------------------------------------------!
-
+!
       SUBROUTINE mp_sum_cm_gpu(msg_d, gid)
         IMPLICIT NONE
         COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:,:)
@@ -4008,8 +3965,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_sum_cm_gpu
 !
 !------------------------------------------------------------------------------!
-
-
+!
       SUBROUTINE mp_sum_cmm_gpu(msg_d, res_d, gid)
         IMPLICIT NONE
         COMPLEX (DP), INTENT (IN), DEVICE :: msg_d(:,:)
@@ -4032,12 +3988,8 @@ END FUNCTION mp_get_comm_self
         res_d = msg_d
 #endif
       END SUBROUTINE mp_sum_cmm_gpu
-
-
 !
 !------------------------------------------------------------------------------!
-!
-! Carlo Cavazzoni
 !
       SUBROUTINE mp_sum_ct_gpu(msg_d,gid)
         IMPLICIT NONE
@@ -4058,11 +4010,8 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_sum_ct_gpu
-
 !
 !------------------------------------------------------------------------------!
-!
-! Carlo Cavazzoni
 !
       SUBROUTINE mp_sum_c4d_gpu(msg_d,gid)
         IMPLICIT NONE
@@ -4085,8 +4034,6 @@ END FUNCTION mp_get_comm_self
 !
 !------------------------------------------------------------------------------!
 !
-! Pietro Bonfa'
-!
       SUBROUTINE mp_sum_c5d_gpu(msg_d,gid)
         IMPLICIT NONE
         COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:,:,:)
@@ -4105,10 +4052,8 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_sum_c5d_gpu
-
-!------------------------------------------------------------------------------!
 !
-! Carlo Cavazzoni
+!------------------------------------------------------------------------------!
 !
       SUBROUTINE mp_sum_r5d_gpu(msg_d,gid)
         IMPLICIT NONE
@@ -4128,13 +4073,8 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_sum_r5d_gpu
-
-
-
 !
 !------------------------------------------------------------------------------!
-!
-! Carlo Cavazzoni
 !
       SUBROUTINE mp_sum_c6d_gpu(msg_d,gid)
         IMPLICIT NONE
@@ -4154,10 +4094,9 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_sum_c6d_gpu
-
-
-
+!
 !------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_max_i_gpu(msg_d,gid)
         IMPLICIT NONE
         INTEGER, INTENT (INOUT), DEVICE :: msg_d
@@ -4177,9 +4116,6 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_max_i_gpu
 !
 !------------------------------------------------------------------------------!
-!
-!..mp_max_iv
-!..Pietro Bonfa'
 !
       SUBROUTINE mp_max_iv_gpu(msg_d,gid)
         IMPLICIT NONE
@@ -4201,7 +4137,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_max_iv_gpu
 !
 !----------------------------------------------------------------------
-
+!
       SUBROUTINE mp_max_r_gpu(msg_d,gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d
@@ -4221,6 +4157,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_max_r_gpu
 !
 !------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_max_rv_gpu(msg_d,gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:)
@@ -4239,7 +4176,9 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_max_rv_gpu
+!
 !------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_min_i_gpu(msg_d,gid)
         IMPLICIT NONE
         INTEGER, INTENT (INOUT), DEVICE :: msg_d
@@ -4257,7 +4196,9 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_min_i_gpu
+!
 !------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_min_iv_gpu(msg_d,gid)
         IMPLICIT NONE
         INTEGER, INTENT (INOUT), DEVICE :: msg_d(:)
@@ -4276,7 +4217,9 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_min_iv_gpu
+!
 !------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_min_r_gpu(msg_d,gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d
@@ -4296,6 +4239,7 @@ END FUNCTION mp_get_comm_self
       END SUBROUTINE mp_min_r_gpu
 !
 !------------------------------------------------------------------------------!
+!
       SUBROUTINE mp_min_rv_gpu(msg_d,gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:)
@@ -4314,11 +4258,10 @@ END FUNCTION mp_get_comm_self
 #endif
 #endif
       END SUBROUTINE mp_min_rv_gpu
-
-
-
+!
 !------------------------------------------------------------------------------!
-!..mp_gather_i1
+!..mp_gather
+
       SUBROUTINE mp_gather_i1_gpu(mydata_d, alldata_d, root, gid)
         IMPLICIT NONE
         INTEGER, DEVICE :: mydata_d
@@ -4350,10 +4293,9 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_gather_i1_gpu
-
+!
 !------------------------------------------------------------------------------!
-!..mp_gather_iv
-!..Carlo Cavazzoni
+!
       SUBROUTINE mp_gather_iv_gpu(mydata_d, alldata_d, root, gid)
         IMPLICIT NONE
         INTEGER, DEVICE :: mydata_d(:)
@@ -4389,11 +4331,10 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_gather_iv_gpu
-
+!
 !------------------------------------------------------------------------------!
 !..mp_gatherv_rv
-!..Pietro Bonfa'
-
+!
       SUBROUTINE mp_gatherv_rv_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
         IMPLICIT NONE
         REAL(DP), DEVICE :: mydata_d(:)
@@ -4441,11 +4382,10 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_gatherv_rv_gpu
-
+!
 !------------------------------------------------------------------------------!
 !..mp_gatherv_cv
-!..Carlo Cavazzoni
-
+!
       SUBROUTINE mp_gatherv_cv_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
         IMPLICIT NONE
         COMPLEX(DP), DEVICE :: mydata_d(:)
@@ -4492,10 +4432,10 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_gatherv_cv_gpu
-
+!
 !------------------------------------------------------------------------------!
-!..mp_gatherv_rv
-!..Carlo Cavazzoni
+!..mp_gatherv_rv_gpu
+!
 
       SUBROUTINE mp_gatherv_iv_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
         IMPLICIT NONE
@@ -4542,11 +4482,10 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_gatherv_iv_gpu
-
-
+!
 !------------------------------------------------------------------------------!
 !..mp_gatherv_rm
-!..Carlo Cavazzoni
+!
 
       SUBROUTINE mp_gatherv_rm_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
         IMPLICIT NONE
@@ -4611,11 +4550,10 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_gatherv_rm_gpu
-
+!
 !------------------------------------------------------------------------------!
 !..mp_gatherv_im
-!..Carlo Cavazzoni
-
+!
       SUBROUTINE mp_gatherv_im_gpu( mydata_d, alldata_d, recvcount, displs, root, gid)
         IMPLICIT NONE
         INTEGER, DEVICE :: mydata_d(:,:)  ! Warning first dimension is supposed constant!
@@ -4680,12 +4618,9 @@ END FUNCTION mp_get_comm_self
 #endif
         RETURN
       END SUBROUTINE mp_gatherv_im_gpu
-
-
-
+!
 !------------------------------------------------------------------------------!
-
-
+!
 SUBROUTINE mp_alltoall_c3d_gpu( sndbuf_d, rcvbuf_d, gid )
    IMPLICIT NONE
    COMPLEX(DP), DEVICE :: sndbuf_d( :, :, : )
@@ -4728,10 +4663,9 @@ SUBROUTINE mp_alltoall_c3d_gpu( sndbuf_d, rcvbuf_d, gid )
 
    RETURN
 END SUBROUTINE mp_alltoall_c3d_gpu
-
-
+!
 !------------------------------------------------------------------------------!
-
+!
 SUBROUTINE mp_alltoall_i3d_gpu( sndbuf_d, rcvbuf_d, gid )
    IMPLICIT NONE
    INTEGER, DEVICE :: sndbuf_d( :, :, : )
@@ -4774,7 +4708,9 @@ SUBROUTINE mp_alltoall_i3d_gpu( sndbuf_d, rcvbuf_d, gid )
 
    RETURN
 END SUBROUTINE mp_alltoall_i3d_gpu
-
+!
+!------------------------------------------------------------------------------!
+!
 SUBROUTINE mp_circular_shift_left_i0_gpu( buf_d, itag, gid )
    IMPLICIT NONE
    INTEGER, DEVICE :: buf_d
@@ -4814,8 +4750,9 @@ SUBROUTINE mp_circular_shift_left_i0_gpu( buf_d, itag, gid )
 #endif
    RETURN
 END SUBROUTINE mp_circular_shift_left_i0_gpu
-
-
+!
+!------------------------------------------------------------------------------!
+!
 SUBROUTINE mp_circular_shift_left_i1_gpu( buf_d, itag, gid )
    IMPLICIT NONE
    INTEGER, DEVICE :: buf_d(:)
@@ -4856,8 +4793,9 @@ SUBROUTINE mp_circular_shift_left_i1_gpu( buf_d, itag, gid )
 #endif
    RETURN
 END SUBROUTINE mp_circular_shift_left_i1_gpu
-
-
+!
+!------------------------------------------------------------------------------!
+!
 SUBROUTINE mp_circular_shift_left_i2_gpu( buf_d, itag, gid )
    IMPLICIT NONE
    INTEGER, DEVICE :: buf_d(:,:)
@@ -4898,8 +4836,9 @@ SUBROUTINE mp_circular_shift_left_i2_gpu( buf_d, itag, gid )
 #endif
    RETURN
 END SUBROUTINE mp_circular_shift_left_i2_gpu
-
-
+!
+!------------------------------------------------------------------------------!
+!
 SUBROUTINE mp_circular_shift_left_r2d_gpu( buf_d, itag, gid )
    IMPLICIT NONE
    REAL(DP), DEVICE :: buf_d( :, : )
@@ -4940,7 +4879,9 @@ SUBROUTINE mp_circular_shift_left_r2d_gpu( buf_d, itag, gid )
 #endif
    RETURN
 END SUBROUTINE mp_circular_shift_left_r2d_gpu
-
+!
+!------------------------------------------------------------------------------!
+!
 SUBROUTINE mp_circular_shift_left_c2d_gpu( buf_d, itag, gid )
    IMPLICIT NONE
    COMPLEX(DP), DEVICE :: buf_d( :, : )
