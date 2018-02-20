@@ -222,7 +222,7 @@ SUBROUTINE reduce_base_real_gpu( dim, ps_d, comm, root )
   INTEGER            :: info
   !
 #if defined __TRACE
-  write(*,*) 'reduce_base_real IN'
+  write(*,*) 'reduce_base_real_gpu IN'
 #endif
   !
   IF ( dim <= 0 ) GO TO 1  ! go to the end of the subroutine
@@ -244,7 +244,7 @@ SUBROUTINE reduce_base_real_gpu( dim, ps_d, comm, root )
 1 CONTINUE
   !
 #if defined __TRACE
-  write(*,*) 'reduce_base_real OUT'
+  write(*,*) 'reduce_base_real_gpu OUT'
 #endif
   !
 #endif
@@ -281,7 +281,7 @@ SUBROUTINE reduce_base_real_gpu( dim, ps_d, comm, root )
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
   !
 #if defined __TRACE
-  write(*,*) 'reduce_base_real IN'
+  write(*,*) 'reduce_base_real_gpu IN'
 #endif
 
   CALL mpi_comm_size( comm, nproc, info )
@@ -349,7 +349,7 @@ SUBROUTINE reduce_base_real_gpu( dim, ps_d, comm, root )
 1 CONTINUE
   !
 #if defined __TRACE
-  write(*,*) 'reduce_base_real OUT'
+  write(*,*) 'reduce_base_real_gpu OUT'
 #endif
   !
 #endif
@@ -730,7 +730,7 @@ SUBROUTINE parallel_min_integer_gpu( dim, ps_d, comm, root )
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
   !
 #if defined __TRACE
-  write(*,*) 'parallel_min_integer IN'
+  write(*,*) 'parallel_min_integer_gpu IN'
 #endif
   !
   CALL mpi_comm_size( comm, nproc, info )
@@ -901,7 +901,7 @@ SUBROUTINE parallel_max_integer_gpu( dim, ps_d, comm, root )
 1 CONTINUE
   !
 #if defined __TRACE
-  write(*,*) 'parallel_max_integer OUT'
+  write(*,*) 'parallel_max_integer_gpu OUT'
 #endif
 #endif
   !
