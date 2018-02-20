@@ -1,5 +1,5 @@
-# real and complex never tested! Only 8 lengh 
-types=['INTEGER', 'REAL', 'REAL(8)', 'COMPLEX', 'COMPLEX(8)']
+
+types=['INTEGER', 'REAL(8)', 'COMPLEX(8)'] # WARNING, only double real and complex are tested
 typeconv={'INTEGER': 'INT', 'REAL': 'REAL', 'REAL(8)': 'DBLE', 'COMPLEX': 'CMPLX', 'COMPLEX(8)': 'DCMPLX'}
 
 datasize='10'
