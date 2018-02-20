@@ -54,7 +54,7 @@ PROGRAM test_mp_bcast_{vname}_gpu
     CALL random_seed(size = n)
     ALLOCATE(seed(n))
     CALL random_seed(get=seed)
-    WRITE (*, *) "Random seed: ", seed
+    WRITE (*, *) "Random seed at proc ", mpime ,": ", seed
     DEALLOCATE(seed)
     !
     DO i = 0, nproc-1

@@ -19,7 +19,7 @@ SRCS = test_mp_count_nodes.f90 \
        test_mp_bcast_it_gpu.f90
 
 # include auto generate source files. This will only work with GNU Make!
-include ./autotest.inc
+sinclude ./autotest.inc
 
 EXECS = $(SRCS:.f90=.x)
 

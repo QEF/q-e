@@ -44,13 +44,6 @@ for file in os.listdir("."):
                                     type=t, size=s, \
                                     all=s.replace('datasize',':'), \
                                     sizep1=ranks.get(nextr[k],'invalid'), \
+                                    allp1=ranks.get(nextr[k],'invalid').replace('datasize',':'), \
                                     allf=allf, sumf=sumf, typeconv=typeconv[t]))
           mkfile.write(ofile + '\\\n')
-
-
-def implemented(v, lst):
-    if '*' in lst:
-        return True
-    else:
-        return (v in lst)
-    

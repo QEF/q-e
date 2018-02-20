@@ -1,7 +1,7 @@
 ! Implemented: i1, iv
 
 #if defined(__CUDA)
-
+#define {vname}
 PROGRAM test_mp_gather_{vname}_gpu
 !
 ! Simple program to check the functionalities of mp_gather.
@@ -28,10 +28,10 @@ PROGRAM test_mp_gather_{vname}_gpu
     !
     ! test variable
     {type}, DEVICE :: {vname}_d{size}
-    {type}, DEVICE :: all_{vname}_d{sizep1}
+    {type}, ALLOCATABLE, DEVICE :: all_{vname}_d{allp1}
     {type} :: {vname}_h{size}
-    {type} :: all_{vname}_h{sizep1}
-    {type} :: aux_h{sizep1}
+    {type}, ALLOCATABLE :: all_{vname}_h{allp1}
+    {type}, ALLOCATABLE :: aux_h{allp1}
     
     !
     CALL test%init()
@@ -40,6 +40,14 @@ PROGRAM test_mp_gather_{vname}_gpu
     world_group = MPI_COMM_WORLD
 #endif
     CALL mp_world_start(world_group)
+    !
+    ! pretty ugly hack for a small test case
+#if defined(i1)
+    ALLOCATE(all_{vname}_h(nproc), all_{vname}_d(nproc), aux_h(nproc))
+#else
+    ALLOCATE(all_{vname}_h(datasize, nproc), all_{vname}_d(datasize, nproc))
+    ALLOCATE(aux_h(datasize, nproc))
+#endif
     !
     ! The sum of n ints with rank=1 is (zero based)
     !  sum = (n-1)*n*0.5
@@ -56,8 +64,6 @@ PROGRAM test_mp_gather_{vname}_gpu
       CALL mp_gather({vname}_d, all_{vname}_d, i , world_comm)
       all_{vname}_h = all_{vname}_d
       !
-  
-      !
       IF (mpime == i) CALL test%assert_equal(SUM(all_{vname}_h) , valid_sum )
     END DO
     !
@@ -66,7 +72,7 @@ PROGRAM test_mp_gather_{vname}_gpu
     CALL random_seed(size = n)
     ALLOCATE(seed(n))
     CALL random_seed(get=seed)
-    WRITE (*, *) "Random seed: ", seed
+    WRITE (*, *) "Random seed at proc ", mpime ,": ", seed
     DEALLOCATE(seed)
     !
     DO i = 0, nproc-1
@@ -78,6 +84,8 @@ PROGRAM test_mp_gather_{vname}_gpu
       aux_h = all_{vname}_d
       CALL test%assert_equal(SUM(all_{vname}_h) , SUM(aux_h) )
     END DO
+    !
+    DEALLOCATE(all_{vname}_h, all_{vname}_d)
     !
     CALL print_results(test)
     !
