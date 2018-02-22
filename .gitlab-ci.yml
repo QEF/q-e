@@ -4,7 +4,7 @@ build:cudampiomp:
     - module load profile/advanced pgi/17.10 cuda/8.0.61
     - ./configure --enable-openmp
     - cd UtilXlib/tests
-    - bash gen_and_run_tests.sh -smcn
+    - bash compile_and_run_tests.sh -smcn
 
 build:intelmpiomp:
   tags: [galileo]
@@ -12,7 +12,7 @@ build:intelmpiomp:
     - module load profile/advanced intel intelmpi
     - ./configure --enable-openmp
     - cd UtilXlib/tests
-    - bash gen_and_run_tests.sh -sm
+    - bash compile_and_run_tests.sh -sm
 
 build:cudampi:
   tags: [galileo]
@@ -20,7 +20,7 @@ build:cudampi:
     - module load profile/advanced pgi/17.10 cuda/8.0.61
     - ./configure
     - cd UtilXlib/tests
-    - bash gen_and_run_tests.sh -smcn
+    - bash compile_and_run_tests.sh -smcn
 
 build:intelmpi:
   tags: [galileo]
@@ -28,4 +28,4 @@ build:intelmpi:
     - module load profile/advanced intel intelmpi
     - ./configure
     - cd UtilXlib/tests
-    - bash gen_and_run_tests.sh -sm
+    - bash compile_and_run_tests.sh -sm
