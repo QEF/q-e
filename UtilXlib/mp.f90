@@ -4638,7 +4638,6 @@ SUBROUTINE mp_alltoall_c3d_gpu( sndbuf_d, rcvbuf_d, gid )
    CALL mp_alltoall_c3d( sndbuf_h, rcvbuf_h, gid )
    sndbuf_d = sndbuf_h ; rcvbuf_d = rcvbuf_h
    DEALLOCATE(sndbuf_h , rcvbuf_h)
-   RETURN
 #else
    group = gid
 
