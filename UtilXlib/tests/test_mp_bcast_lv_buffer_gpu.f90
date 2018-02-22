@@ -45,9 +45,11 @@ PROGRAM test_mp_bcast_lv_buffer_gpu
     valid = MOD(nproc-1, 2) == 1
     CALL test%assert_equal(ALL(lv_h) , valid)
     !
-    CALL print_results(test)
+    CALL collect_results(test)
     !
     CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
     !
 END PROGRAM test_mp_bcast_lv_buffer_gpu
 #else

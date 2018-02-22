@@ -5,6 +5,7 @@ typeconv={'INTEGER': 'INT', 'REAL': 'REAL', 'REAL(8)': 'DBLE', 'COMPLEX': 'CMPLX
 datasize='10'
 ranks  ={'1': '', 'v': '(datasize)', 'm': '(datasize,datasize)', 't': '(datasize,datasize,datasize)'}
 nextr={'1': 'v', 'v': 'm', 'm': 't', 't': ''}
+compare={'INTEGER': 'equal', 'REAL': 'close', 'REAL(8)': 'close', 'COMPLEX': 'close', 'COMPLEX(8)': 'close'}
 
 import os, re
 
@@ -45,5 +46,6 @@ for file in os.listdir("."):
                                     all=s.replace('datasize',':'), \
                                     sizep1=ranks.get(nextr[k],'invalid'), \
                                     allp1=ranks.get(nextr[k],'invalid').replace('datasize',':'), \
-                                    allf=allf, sumf=sumf, typeconv=typeconv[t]))
+                                    allf=allf, sumf=sumf, typeconv=typeconv[t],
+                                    compare=compare[t]))
           mkfile.write(ofile + '\\\n')

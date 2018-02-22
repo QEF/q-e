@@ -1,4 +1,4 @@
-SUBROUTINE print_results(test)
+SUBROUTINE collect_results(test)
 #if defined(__MPI)
     USE mpi
 #endif
@@ -29,11 +29,8 @@ SUBROUTINE print_results(test)
     !
     IF (ierr /= 0) CALL test%assert_equal(0, ierr)
     !
-    IF (me .eq. 0) CALL test%print()
-#else
-    CALL test%print()
 #endif
-END SUBROUTINE print_results
+END SUBROUTINE collect_results
 
 
 SUBROUTINE no_test
@@ -42,14 +39,14 @@ SUBROUTINE no_test
 #endif
     USE tester
     IMPLICIT NONE
-    TYPE(tester_t) :: test
+    !TYPE(tester_t) :: test
     INTEGER :: ierr
     !    
 #if defined(__MPI)
     CALL MPI_Init(ierr)
 #endif
-    CALL test%init()
-    CALL print_results(test)
+    !CALL test%init()
+    !CALL print_results(test)
 #if defined(__MPI)
     CALL mpi_finalize(ierr)
 #endif

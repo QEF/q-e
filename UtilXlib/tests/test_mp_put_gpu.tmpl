@@ -1,17 +1,16 @@
-! Implemented: i1, r1, rv, iv
+! Implemented: i1, iv, rv, rm, cv
 
-#if defined(__CUDA) 
+#if defined(__CUDA)
 
-PROGRAM test_mp_max_{vname}_gpu
+PROGRAM test_mp_put_{vname}_gpu
 !
-! Simple program to check the functionalities of test_mp_max.
-!  N.B : mp_max is doing a allreduce!
+! Simple program to check the functionalities of test_mp_put.
 !
     USE cudafor
 #if defined(__MPI)
     USE MPI
 #endif
-    USE mp, ONLY : mp_max
+    USE mp, ONLY : mp_put
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
                           root, nproc, world_comm
     USE tester
@@ -40,11 +39,12 @@ PROGRAM test_mp_max_{vname}_gpu
     CALL mp_world_start(world_group)
     {vname}_h = mpime + 1
     {vname}_d = {vname}_h
-    !mp_max    (msg_dest,  msg_sour, mpime, dest, sour, ip, gid)
-    CALL mp_max({vname}_d, world_comm)
+    !mp_put    (msg_dest,  msg_sour, mpime, sour, dest, ip, gid)
+    CALL mp_put({vname}_d, {vname}_d, mpime, 0, nproc-1, 0, world_comm)
     {vname}_h = {vname}_d
     !
-    CALL test%assert_{compare}({allf}({vname}_h .eq. nproc) , .true. )
+    IF (mpime == 0) CALL test%assert_equal({allf}({vname}_h .eq. nproc) , .true. )
+    IF (mpime /= 0) CALL test%assert_equal({allf}({vname}_h .eq. mpime+1) , .true. )
     !
     !
     ! Test against CPU implementation
@@ -58,10 +58,20 @@ PROGRAM test_mp_max_{vname}_gpu
       CALL RANDOM_NUMBER(rnd)
       {vname}_h = {typeconv} ( 10.0 * rnd )
       {vname}_d = {vname}_h
-      CALL mp_max({vname}_d, world_comm)
-      CALL mp_max({vname}_h, world_comm)
+      CALL mp_put({vname}_d, {vname}_d, mpime, 0, i, 0, world_comm)
+      CALL mp_put({vname}_h, {vname}_h, mpime, 0, i, 0, world_comm)
       aux_h = {vname}_d
-      CALL test%assert_{compare}({sumf}({vname}_h) , {sumf}(aux_h) )
+      CALL test%assert_equal({sumf}({vname}_h) , {sumf}(aux_h) )
+    END DO
+    !
+    DO i = 0, nproc-1
+      CALL RANDOM_NUMBER(rnd)
+      {vname}_h = {typeconv} ( 10.0 * rnd )
+      {vname}_d = {vname}_h
+      CALL mp_put({vname}_d, {vname}_d, mpime, i, 0, 0, world_comm)
+      CALL mp_put({vname}_h, {vname}_h, mpime, i, 0, 0, world_comm)
+      aux_h = {vname}_d
+      CALL test%assert_equal({sumf}({vname}_h) , {sumf}(aux_h) )
     END DO
     !
     CALL collect_results(test)
@@ -70,9 +80,9 @@ PROGRAM test_mp_max_{vname}_gpu
     !
     IF (mpime .eq. 0) CALL test%print()
     !
-END PROGRAM test_mp_max_{vname}_gpu
+END PROGRAM test_mp_put_{vname}_gpu
 #else
-PROGRAM test_mp_max_{vname}_gpu
+PROGRAM test_mp_put_{vname}_gpu
     CALL no_test()
-END PROGRAM test_mp_max_{vname}_gpu
+END PROGRAM test_mp_put_{vname}_gpu
 #endif

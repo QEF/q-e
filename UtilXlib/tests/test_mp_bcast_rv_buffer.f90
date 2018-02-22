@@ -36,8 +36,10 @@ PROGRAM test_mp_bcast_rv_buffer
     !
     CALL test%assert_equal(ALL(rv .eq. nproc-0.5) , .true. )
     !
-    CALL print_results(test)
+    CALL collect_results(test)
     !
     CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
     !
 END PROGRAM test_mp_bcast_rv_buffer

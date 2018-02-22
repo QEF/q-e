@@ -36,8 +36,10 @@ PROGRAM test_mp_bcast_iv_buffer
     !
     CALL test%assert_equal(ALL(iv .eq. nproc-1) , .true. )
     !
-    CALL print_results(test)
+    CALL collect_results(test)
     !
     CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
     !
 END PROGRAM test_mp_bcast_iv_buffer

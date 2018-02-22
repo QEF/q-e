@@ -31,8 +31,10 @@ PROGRAM test_mp_max_iv_buffer
     !
     CALL test%assert_equal(ALL (iv == nproc), .true. )
     !
-    CALL print_results(test)
+    CALL collect_results(test)
     !
     CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
     !
 END PROGRAM test_mp_max_iv_buffer

@@ -32,8 +32,10 @@ PROGRAM test_mp_min_rv_buffer
     valid(:) = DBLE(1)
     CALL test%assert_equal( rv, valid )
     !
-    CALL print_results(test)
+    CALL collect_results(test)
     !
     CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
     !
 END PROGRAM test_mp_min_rv_buffer

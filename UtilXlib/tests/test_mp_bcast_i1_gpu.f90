@@ -40,9 +40,11 @@ PROGRAM test_mp_bcast_i1_gpu
     !
     CALL test%assert_equal(i_h, nproc-1 )
     !
-    CALL print_results(test)
+    CALL collect_results(test)
     !
     CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
     !
 END PROGRAM test_mp_bcast_i1_gpu
 #else

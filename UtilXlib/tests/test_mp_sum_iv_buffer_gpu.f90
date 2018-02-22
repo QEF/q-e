@@ -37,9 +37,11 @@ PROGRAM test_mp_sum_iv_buffer_gpu
     valid(:) = 0.5*nproc*(nproc+1)
     CALL test%assert_equal(iv_h, valid )
     !
-    CALL print_results(test)
+    CALL collect_results(test)
     !
     CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
     !
 END PROGRAM test_mp_sum_iv_buffer_gpu
 #else

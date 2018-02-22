@@ -37,8 +37,10 @@ PROGRAM test_mp_bcast_lv_buffer
     valid = MOD(nproc-1, 2) == 1
     CALL test%assert_equal(ALL(lv) , valid )
     !
-    CALL print_results(test)
+    CALL collect_results(test)
     !
     CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
     !
 END PROGRAM test_mp_bcast_lv_buffer

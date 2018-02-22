@@ -28,8 +28,10 @@ PROGRAM test_mp_bcast_i1
     CALL mp_bcast(i, root, world_comm)
     CALL test%assert_equal(i, 0 )
     !
-    CALL print_results(test)
+    CALL collect_results(test)
     !
     CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
     !
 END PROGRAM test_mp_bcast_i1

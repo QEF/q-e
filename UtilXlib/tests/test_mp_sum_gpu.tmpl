@@ -23,7 +23,7 @@ PROGRAM test_mp_sum_{vname}_gpu
     ! for comparing with CPU implementation
     INTEGER, ALLOCATABLE :: seed(:)
     INTEGER :: i, n
-    REAL :: rnd{size}
+    REAL(8) :: rnd{size}
     ! test variable
     {type}, DEVICE :: {vname}_d{size}
     {type} :: {vname}_h{size}
@@ -66,9 +66,11 @@ PROGRAM test_mp_sum_{vname}_gpu
     aux_h = {vname}_d
     CALL test%assert_equal( {sumf}({vname}_h) , {sumf}(aux_h) )
     !
-    CALL print_results(test)
+    CALL collect_results(test)
     !
     CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
     !
 END PROGRAM test_mp_sum_{vname}_gpu
 #else

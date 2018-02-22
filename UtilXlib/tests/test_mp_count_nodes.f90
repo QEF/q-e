@@ -16,6 +16,7 @@ PROGRAM test_mp_count_nodes
     INTEGER :: me, num_nodes, color, key, group, ierr, itoterr
     ! These are validated variables
     INTEGER :: shmcomm, valid_rank, valid_count, valid_n_nodes , is_rank0
+    INTEGER :: mpime
     group = 0
     valid_n_nodes = 1
     
@@ -57,9 +58,13 @@ PROGRAM test_mp_count_nodes
     CALL test%assert_equal(valid_n_nodes, num_nodes )
     CALL test%assert_equal(valid_rank, key )
     !
-    CALL print_results(test)
+    CALL collect_results(test)
     !
 #if defined(__MPI)
+    CALL MPI_Comm_rank(MPI_COMM_WORLD, mpime, ierr);
     CALL MPI_Finalize(ierr)
 #endif
+    !
+    IF (mpime .eq. 0) CALL test%print()
+    !
 END PROGRAM test_mp_count_nodes

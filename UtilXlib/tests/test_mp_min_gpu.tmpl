@@ -24,7 +24,7 @@ PROGRAM test_mp_min_{vname}_gpu
     ! Stuff for comparing with CPU implementation
     integer, allocatable :: seed(:)
     integer :: i, n
-    REAL :: rnd{size}
+    REAL(8) :: rnd{size}
     !
     ! test variable
     {type}, DEVICE :: {vname}_d{size}
@@ -64,9 +64,11 @@ PROGRAM test_mp_min_{vname}_gpu
       CALL test%assert_equal({sumf}({vname}_h) , {sumf}(aux_h) )
     END DO
     !
-    CALL print_results(test)
+    CALL collect_results(test)
     !
     CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
     !
 END PROGRAM test_mp_min_{vname}_gpu
 #else

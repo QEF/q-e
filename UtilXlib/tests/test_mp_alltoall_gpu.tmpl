@@ -23,12 +23,11 @@ PROGRAM test_mp_alltoall_{vname}_gpu
     ! Stuff for comparing with CPU implementation
     integer, allocatable :: seed(:)
     integer :: i, n
-    REAL :: rnd{size}
+    REAL(8), ALLOCATABLE :: rnd{all}
     !
     ! test variable
     {type}, ALLOCATABLE, DEVICE :: snd_{vname}_d{all}
     {type}, ALLOCATABLE, DEVICE :: rcv_{vname}_d{all}
-    {type} :: {vname}_h{size}
     {type}, ALLOCATABLE :: snd_{vname}_h{all}
     {type}, ALLOCATABLE :: rcv_{vname}_h{all}
     {type}, ALLOCATABLE :: aux_h{all}
@@ -41,6 +40,7 @@ PROGRAM test_mp_alltoall_{vname}_gpu
 #endif
     CALL mp_world_start(world_group)
     !
+    ALLOCATE(rnd(datasize, datasize, nproc))
     ALLOCATE(snd_{vname}_d(datasize, datasize, nproc))
     ALLOCATE(rcv_{vname}_d(datasize, datasize, nproc))
     ALLOCATE(snd_{vname}_h(datasize, datasize, nproc))
@@ -75,9 +75,14 @@ PROGRAM test_mp_alltoall_{vname}_gpu
     !
     CALL test%assert_equal( SUM(rcv_{vname}_h) , SUM(aux_h) )
     !
-    CALL print_results(test)
+    DEALLOCATE(rnd, snd_{vname}_d, snd_{vname}_h)
+    DEALLOCATE(rcv_{vname}_d, rcv_{vname}_h)
+    !
+    CALL collect_results(test)
     !
     CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
     !
 END PROGRAM test_mp_alltoall_{vname}_gpu
 #else
