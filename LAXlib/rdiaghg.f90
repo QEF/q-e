@@ -6,6 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+
+
 !----------------------------------------------------------------------------
 SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !----------------------------------------------------------------------------
@@ -14,10 +16,6 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... LAPACK version - uses both DSYGV and DSYGVX
   !
-#if defined (__CUDA)
-  USE cudafor
-  USE dsygvdx_gpu
-#endif
   USE la_param,          ONLY : DP
   USE mp,                ONLY : mp_bcast
   USE mp_bands_util,     ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
@@ -47,25 +45,12 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   LOGICAL               :: all_eigenvalues
   INTEGER,  EXTERNAL    :: ILAENV
     ! ILAENV returns optimal block size "nb"
-#if defined (__CUDA)
-  ATTRIBUTES( PINNED )          :: work, iwork
-  REAL(DP), ALLOCATABLE, PINNED :: v_h(:,:)
-  REAL(DP), ALLOCATABLE, PINNED :: e_h(:)
-  !
-  REAL(DP), ALLOCATABLE, DEVICE :: v_d(:,:), h_d(:,:), s_d(:,:)
-  REAL(DP), ALLOCATABLE, DEVICE :: e_d(:)
-  !
-  INTEGER                       :: lwork_d, liwork
-  REAL(DP), ALLOCATABLE, DEVICE :: work_d(:)
-  !  
-#endif
   !
   CALL start_clock( 'rdiaghg' )
   !
   ! ... only the first processor diagonalize the matrix
   !
   IF ( me_bgrp == root_bgrp ) THEN
-#if ! defined (__CUDA)
      !
      ! ... save the diagonal of input S (it will be overwritten)
      !
@@ -173,34 +158,6 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
      DEALLOCATE( sdiag )
      !
-#else
-     ALLOCATE(s_d, source=s); ALLOCATE(h_d, source=h)
-     ALLOCATE(e_h(n), e_d(n), v_h(ldh,n), v_d(ldh,n))
-     !
-     lwork  = 1 + 6*n + 2*n*n
-     liwork = 3 + 5*n
-     ALLOCATE(work(lwork), iwork(liwork))
-     !
-     print *, n
-     !
-     lwork_d = 2*64*64 + 66*n
-     ALLOCATE(work_d(1*lwork_d), STAT = info)
-     IF( info /= 0 ) CALL errore( ' rdiaghg ', ' allocate work_d ', ABS( info ) )
-     !
-     CALL dsygvdx_gpu(n, h_d, ldh, s_d, ldh, v_d, ldh, 1, m, e_d, work_d, &
-                      lwork_d, work, lwork, iwork, liwork, v_h, size(v_h, 1), &
-                      e_h, info, .TRUE.)
-                      
-     e = e_d
-     info = cudaMemcpy2D(v, ldh, v_d, size(v,1), n, m, cudaMemcpyDeviceToHost)
-     IF( info /= 0 ) CALL errore( ' rdiaghg ', ' copy failed ', ABS( info ) )
-     !
-     DEALLOCATE(work, iwork)
-     DEALLOCATE(work_d)
-     
-     DEALLOCATE(v_h, e_h, v_d, h_d, s_d, e_d)
-     IF( info /= 0 ) CALL errore( ' rdiaghg ', ' dsygvdx_gpu failed ', ABS( info ) )
-#endif     
   END IF
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors
@@ -213,6 +170,104 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   RETURN
   !
 END SUBROUTINE rdiaghg
+
+
+#if defined __CUDA
+!----------------------------------------------------------------------------
+SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
+  !----------------------------------------------------------------------------
+  ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
+  ! ... On output both matrix are unchanged
+  !
+  USE cudafor
+  USE dsygvdx_gpu
+  USE la_param,          ONLY : DP
+  USE mp,                ONLY : mp_bcast
+  USE mp_bands_util,     ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: n, m, ldh
+    ! dimension of the matrix to be diagonalized
+    ! number of eigenstates to be calculated
+    ! leading dimension of h, as declared in the calling pgm unit
+  REAL(DP), DEVICE, INTENT(INOUT) :: h_d(ldh,n), s_d(ldh,n)
+    ! matrix to be diagonalized, allocated on the device
+    ! overlap matrix, allocated on the device
+  !
+  REAL(DP), DEVICE, INTENT(OUT) :: e_d(n)
+    ! eigenvalues, allocated on the device
+  REAL(DP), DEVICE, INTENT(OUT) :: v_d(ldh, n)
+    ! eigenvectors (column-wise), allocated on the device
+  !
+  INTEGER               :: lwork, nb, mm, info, i, j
+    ! mm = number of calculated eigenvectors
+  REAL(DP)              :: abstol
+  REAL(DP), PARAMETER   :: one = 1_DP
+  REAL(DP), PARAMETER   :: zero = 0_DP
+  INTEGER,  ALLOCATABLE :: iwork(:), ifail(:)
+  REAL(DP), ALLOCATABLE :: work(:), sdiag(:), hdiag(:)
+
+  ATTRIBUTES( PINNED )          :: work, iwork
+  REAL(DP), ALLOCATABLE, PINNED :: v_h(:,:)
+  REAL(DP), ALLOCATABLE, PINNED :: e_h(:)
+  !
+  INTEGER                       :: lwork_d, liwork
+  REAL(DP), ALLOCATABLE, DEVICE :: work_d(:)
+  !  
+  ! Temp arrays to save H and S. Replace this with better algorithm
+  REAL(DP), ALLOCATABLE, DEVICE :: h_tmp_d(:,:), s_tmp_d(:,:)
+  !
+  CALL start_clock( 'rdiaghg_gpu' )
+  !
+  ! ... only the first processor diagonalize the matrix
+  !
+  IF ( me_bgrp == root_bgrp ) THEN
+     !
+     ALLOCATE(e_h(n), v_h(ldh,n))
+     !
+     ! FIXME
+     ALLOCATE(h_tmp_d(ldh,n), s_tmp_d(ldh,n))
+     h_tmp_d =  h_d
+     s_tmp_d =  s_d
+     ! 
+     lwork  = 1 + 6*n + 2*n*n
+     liwork = 3 + 5*n
+     ALLOCATE(work(lwork), iwork(liwork))
+     !
+     lwork_d = 2*64*64 + 66*n
+     ALLOCATE(work_d(1*lwork_d), STAT = info)
+     IF( info /= 0 ) CALL errore( ' rdiaghg_gpu ', ' allocate work_d ', ABS( info ) )
+     !
+     CALL dsygvdx_gpu(n, h_d, ldh, s_d, ldh, v_d, ldh, 1, m, e_d, work_d, &
+                      lwork_d, work, lwork, iwork, liwork, v_h, size(v_h, 1), &
+                      e_h, info, .TRUE.)
+     !
+     IF( info /= 0 ) CALL errore( ' rdiaghg_gpu ', ' copy failed ', ABS( info ) )
+     !
+     ! FIXME
+     h_d = h_tmp_d
+     s_d = s_tmp_d
+     DEALLOCATE(h_tmp_d,s_tmp_d)
+     ! 
+     DEALLOCATE(work, iwork)
+     DEALLOCATE(work_d)
+     
+     DEALLOCATE(v_h, e_h)
+     IF( info /= 0 ) CALL errore( ' rdiaghg_gpu ', ' dsygvdx_gpu failed ', ABS( info ) )
+  END IF
+  !
+  ! ... broadcast eigenvectors and eigenvalues to all other processors
+  !
+  CALL mp_bcast( e_d, root_bgrp, intra_bgrp_comm )
+  CALL mp_bcast( v_d, root_bgrp, intra_bgrp_comm )
+  !
+  CALL stop_clock( 'rdiaghg_gpu' )
+  !
+  RETURN
+  !
+END SUBROUTINE rdiaghg_gpu
+#endif
 !
 !----------------------------------------------------------------------------
 SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )

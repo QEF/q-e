@@ -6,6 +6,7 @@ MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../ELPA/src  $(MOD_FLAG) .
 
 LAX = la_types.o \
 la_error.o \
+la_module.o \
 cdiaghg.o \
 rdiaghg.o \
 dspev_drv.o \
