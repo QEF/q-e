@@ -968,7 +968,7 @@ SUBROUTINE compute_mmn_para
         !  USPP
         !
         IF(any_uspp) THEN
-           CALL init_us_2 (npwq, igkq, xk(1,ikp), vkb)
+           CALL init_us_2 (npwq, igkq, xktot(1,ikp), vkb)
            ! below we compute the product of beta functions with |psi>
            IF (gamma_only) THEN
               CALL calbec ( npwq, vkb, evcq, rbecp2 )
