@@ -1,6 +1,7 @@
 ! This file is part of fortran_tester
 ! Copyright 2015 Pierre de Buyl and Peter Colberg
 !           2016 Pierre de Buyl and Stefano Szaghi
+!           2018 Pierre de Buyl and Pietro Bonfa
 ! License: BSD
 
 !> Routines to test Fortran programs
@@ -43,15 +44,15 @@ module tester
                         assert_equal_r64_1, &
                         assert_equal_c32_1, &
                         assert_equal_c64_1, &
-                        assert_equal_l_1         !< Check if two values (integer, real or logical) are equal.
+                        assert_equal_l_1         !< Check if two values (integer, real, complex or logical) are equal.
      procedure, private :: assert_equal_i8       !< Check if two integers (8  bits) are equal.
      procedure, private :: assert_equal_i16      !< Check if two integers (16 bits) are equal.
      procedure, private :: assert_equal_i32      !< Check if two integers (32 bits) are equal.
      procedure, private :: assert_equal_i64      !< Check if two integers (64 bits) are equal.
      procedure, private :: assert_equal_r32      !< Check if two reals (32 bits) are equal.
      procedure, private :: assert_equal_r64      !< Check if two reals (64 bits) are equal.
-     procedure, private :: assert_equal_c32      !< Check if two complex (32 bits) are equal.
-     procedure, private :: assert_equal_c64      !< Check if two complex (64 bits) are equal.
+     procedure, private :: assert_equal_c32      !< Check if two complex numbers (32 bits) are equal.
+     procedure, private :: assert_equal_c64      !< Check if two complex numbers (64 bits) are equal.
      procedure, private :: assert_equal_l        !< Check if two logicals are equal.
      procedure, private :: assert_equal_i8_1     !< Check if two integer (8  bits) arrays (rank 1) are equal.
      procedure, private :: assert_equal_i16_1    !< Check if two integer (16 bits) arrays (rank 1) are equal.
@@ -90,12 +91,20 @@ module tester
      generic, public :: assert_close =>     &
                         assert_close_r32,   &
                         assert_close_r64,   &
+                        assert_close_c32,   &
+                        assert_close_c64,   &
                         assert_close_r32_1, &
-                        assert_close_r64_1       !< Check if two reals are close with respect a tolerance.
+                        assert_close_r64_1, &
+                        assert_close_c32_1, &
+                        assert_close_c64_1       !< Check if two values (real or complex) are close with respect a tolerance.
      procedure, private :: assert_close_r32      !< Check if two reals (32 bits) are close with respect a tolerance.
      procedure, private :: assert_close_r64      !< Check if two reals (64 bits) are close with respect a tolerance.
+     procedure, private :: assert_close_c32      !< Check if two complex numbers (32 bits) are close with respect a tolerance.
+     procedure, private :: assert_close_c64      !< Check if two complex numbers (64 bits) are close with respect a tolerance.
      procedure, private :: assert_close_r32_1    !< Check if two real (32 bits) arrays (rank 1) are close with respect a tolerance.
      procedure, private :: assert_close_r64_1    !< Check if two real (64 bits) arrays (rank 1) are close with respect a tolerance.
+     procedure, private :: assert_close_c32_1    !< Check if two complex (32 bits) arrays (rank 1) are close with respect a tolerance.
+     procedure, private :: assert_close_c64_1    !< Check if two complex (64 bits) arrays (rank 1) are close with respect a tolerance.
   end type tester_t
 
 contains
@@ -141,11 +150,7 @@ contains
        write(*,*) 'fortran_tester: all tests succeeded'
     else
        if (do_errorstop) then
-#if ! defined(__PGI)       
-          error stop 'fortran_tester: tests failed'
-#else
-          stop 'fortran_tester: tests failed'
-#endif
+          stop 1
        else
           write(*,*) 'fortran_tester: tests failed'
        end if
@@ -249,26 +254,15 @@ contains
 
   end subroutine assert_equal_r64
 
-  !> Check if two complex (32 bits) are equal.
+  !> Check if two complex numbers (32 bits) are equal.
   subroutine assert_equal_c32(this, c1, c2, fail)
     class(tester_t), intent(inout)           :: this !< The tester.
     complex(real32),    intent(in)           :: c1   !< Value to compare.
     complex(real32),    intent(in)           :: c2   !< Value to compare.
     logical,            intent(in), optional :: fail !< Fail flag.
-    !
-    logical :: real_failed = .false.
-    !
+
     this% n_tests = this% n_tests + 1
-    if (REAL(c1) .ne. REAL(c2)) then
-       if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
-          this% n_errors = this% n_errors + 1
-          real_failed = .true.
-       end if
-    end if
-    !
-    if (real_failed) return
-    !
-    if (AIMAG(c1) .ne. AIMAG(c2)) then
+    if (c1 .ne. c2) then
        if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
           this% n_errors = this% n_errors + 1
        end if
@@ -276,26 +270,15 @@ contains
 
   end subroutine assert_equal_c32
 
-  !> Check if two reals (64 bits) are equal.
+  !> Check if two complex numbers (64 bits) are equal.
   subroutine assert_equal_c64(this, c1, c2, fail)
     class(tester_t), intent(inout)           :: this !< The tester.
     complex(real64),    intent(in)           :: c1   !< Value to compare.
     complex(real64),    intent(in)           :: c2   !< Value to compare.
     logical,            intent(in), optional :: fail !< Fail flag.
-    !
-    logical :: real_failed = .false.
 
     this% n_tests = this% n_tests + 1
-    if (DBLE(c1) .ne. DBLE(c2)) then
-       if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
-          this% n_errors = this% n_errors + 1
-          real_failed = .true.
-       end if
-    end if
-    !
-    if (real_failed) return
-    !
-    if (DIMAG(c1) .ne. DIMAG(c2)) then
+    if (c1 .ne. c2) then
        if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
           this% n_errors = this% n_errors + 1
        end if
@@ -463,8 +446,6 @@ contains
     complex(real32), dimension(:), intent(in)           :: c1   !< Value to compare.
     complex(real32), dimension(:), intent(in)           :: c2   !< Value to compare.
     logical,                       intent(in), optional :: fail !< Fail flag.
-    !
-    logical :: real_failed = .false.
 
     this% n_tests = this% n_tests + 1
 
@@ -473,14 +454,7 @@ contains
           this% n_errors = this% n_errors + 1
        end if
     else
-       if ( maxval(abs(DBLE(c1)-DBLE(c2))) > 0 ) then
-          if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
-             this% n_errors = this% n_errors + 1
-             real_failed = .true.
-          end if
-       end if
-       if (real_failed) RETURN
-       if ( maxval(abs(AIMAG(c1)-AIMAG(c2))) > 0 ) then
+       if ( maxval(abs(c1-c2)) > 0 ) then
           if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
              this% n_errors = this% n_errors + 1
           end if
@@ -495,8 +469,6 @@ contains
     complex(real64), dimension(:), intent(in)           :: c1   !< Value to compare.
     complex(real64), dimension(:), intent(in)           :: c2   !< Value to compare.
     logical,                       intent(in), optional :: fail !< Fail flag.
-    !
-    logical :: real_failed =.false.
 
     this% n_tests = this% n_tests + 1
 
@@ -505,14 +477,7 @@ contains
           this% n_errors = this% n_errors + 1
        end if
     else
-       if ( maxval(abs(DBLE(c1)-DBLE(c2))) > 0 ) then
-          if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
-             this% n_errors = this% n_errors + 1
-             real_failed = .true.
-          end if
-       end if
-       if (real_failed) RETURN
-       if ( maxval(abs(AIMAG(c1)-AIMAG(c2))) > 0 ) then
+       if ( maxval(abs(c1-c2)) > 0 ) then
           if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
              this% n_errors = this% n_errors + 1
           end if
@@ -814,5 +779,85 @@ contains
     end if
 
   end subroutine assert_close_r64_1
+  
+  !> Check if two complex numbers (32 bits) are close with respect a tolerance.
+  subroutine assert_close_c32(this, c1, c2, fail)
+    class(tester_t), intent(inout)        :: this !< The tester.
+    complex(real32), intent(in)           :: c1   !< Value to compare.
+    complex(real32), intent(in)           :: c2   !< Value to compare.
+    logical,         intent(in), optional :: fail !< Fail flag.
+
+    this% n_tests = this% n_tests + 1
+
+    if ( abs(c1-c2) > this% tolerance32 ) then
+       if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
+          this% n_errors = this% n_errors + 1
+       end if
+    end if
+
+  end subroutine assert_close_c32
+
+  !> Check if two complex numbers (64 bits) are close with respect a tolerance.
+  subroutine assert_close_c64(this, r1, c2, fail)
+    class(tester_t),  intent(inout)        :: this !< The tester.
+    complex(real64),  intent(in)           :: r1   !< Value to compare.
+    complex(real64),  intent(in)           :: c2   !< Value to compare.
+    logical,          intent(in), optional :: fail !< Fail flag.
+
+    this% n_tests = this% n_tests + 1
+
+    if ( abs(r1-c2) > this% tolerance64 ) then
+       if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
+          this% n_errors = this% n_errors + 1
+       end if
+    end if
+
+  end subroutine assert_close_c64
+
+  !> Check if two complex (32 bits) arrays (rank 1) are close with respect a tolerance.
+  subroutine assert_close_c32_1(this, c1, c2, fail)
+    class(tester_t), intent(inout)            :: this !< The tester.
+    complex(real32), intent(in), dimension(:) :: c1   !< Value to compare.
+    complex(real32), intent(in), dimension(:) :: c2   !< Value to compare.
+    logical,         intent(in), optional     :: fail !< Fail flag.
+
+    this% n_tests = this% n_tests + 1
+
+    if ( size(c1) .ne. size(c2) ) then
+       if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
+          this% n_errors = this% n_errors + 1
+       end if
+    else
+       if ( maxval(abs(c1-c2)) > this% tolerance32 ) then
+          if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
+             this% n_errors = this% n_errors + 1
+          end if
+       end if
+    end if
+
+  end subroutine assert_close_c32_1
+
+  !> Check if two real (64 bits) arrays (rank 1) are close with respect a tolerance.
+  subroutine assert_close_c64_1(this, c1, c2, fail)
+    class(tester_t), intent(inout)            :: this !< The tester.
+    complex(real64), intent(in), dimension(:) :: c1   !< Value to compare.
+    complex(real64), intent(in), dimension(:) :: c2   !< Value to compare.
+    logical,         intent(in), optional     :: fail !< Fail flag.
+
+    this% n_tests = this% n_tests + 1
+
+    if ( size(c1) .ne. size(c2) ) then
+       if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
+          this% n_errors = this% n_errors + 1
+       end if
+    else
+       if ( maxval(abs(c1-c2)) > this% tolerance64 ) then
+          if (.not. present(fail) .or. (present(fail) .and. fail .eqv. .false.)) then
+             this% n_errors = this% n_errors + 1
+          end if
+       end if
+    end if
+
+  end subroutine assert_close_c64_1
 
 end module tester
