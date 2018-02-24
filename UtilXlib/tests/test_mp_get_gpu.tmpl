@@ -43,8 +43,8 @@ PROGRAM test_mp_get_{vname}_gpu
     CALL mp_get({vname}_d, {vname}_d, mpime, 0, nproc-1, 0, world_comm)
     {vname}_h = {vname}_d
     !
-    IF (mpime == 0) CALL test%assert_{compare}({allf}({vname}_h .eq. nproc) , .true. )
-    IF (mpime /= 0) CALL test%assert_{compare}({allf}({vname}_h .eq. mpime+1) , .true. )
+    IF (mpime == 0) CALL test%assert_equal({allf}({vname}_h .eq. nproc) , .true. )
+    IF (mpime /= 0) CALL test%assert_equal({allf}({vname}_h .eq. mpime+1) , .true. )
     !
     !
     ! Test against CPU implementation

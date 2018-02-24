@@ -44,7 +44,7 @@ PROGRAM test_mp_max_{vname}_gpu
     CALL mp_max({vname}_d, world_comm)
     {vname}_h = {vname}_d
     !
-    CALL test%assert_{compare}({allf}({vname}_h .eq. nproc) , .true. )
+    CALL test%assert_equal({allf}({vname}_h .eq. nproc) , .true. )
     !
     !
     ! Test against CPU implementation
