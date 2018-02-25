@@ -230,10 +230,9 @@ MODULE realus
       INTEGER               :: ir, i, j, k, ipol, ijv
       INTEGER               :: imin, imax, ii, jmin, jmax, jj, kmin, kmax, kk
       REAL(DP)              :: distsq, posi(3)
-      REAL(DP), ALLOCATABLE :: boxdist(:), xyz(:,:)
+      REAL(DP), ALLOCATABLE :: boxdist(:), xyz(:,:), diff(:)
       REAL(DP)              :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, aux
       REAL(DP)              :: inv_nr1, inv_nr2, inv_nr3, boxradsq_ia, boxrad_ia
-      LOGICAL               :: tprint
       !
       initialisation_level = 3
       IF ( .not. okvan ) RETURN
@@ -386,7 +385,8 @@ MODULE realus
       ! collect the result of the qq_at matrix across processors 
       CALL mp_sum( qq_at, intra_bgrp_comm )
       ! and test that they don't differ too much from the result computed on the atomic grid
-      tprint = .true.
+      ALLOCATE (diff(nsp))
+      diff(:)=0.0_dp
       do ia=1,nat
          nt = ityp(ia)
          ijh = 0
@@ -396,17 +396,19 @@ MODULE realus
                jl = nhtol (jh, nt)
                ijh=ijh+1
                if (abs(qq_at(ih,jh,ia)-qq_nt(ih,jh,nt)) .gt. eps6*10 ) then
-                  IF (tprint) THEN
-                     CALL infomsg('real_space_q',&
-                         'integrated real space q too different from target q')
-                     tprint = .false.
-                  END IF
-                  write(6,'(i3,4i3,i4,2f12.8)')  ia, ih,jh,il,jl, ijh, &
-                          qq_at(ih,jh,ia), qq_nt(ih,jh,nt)
+                  diff(nt) = MAX(diff(nt), abs(qq_at(ih,jh,ia)-qq_nt(ih,jh,nt)))
                end if
             end do
          end do
       end do
+      IF ( ANY( diff(:) > 0.0_dp ) ) THEN
+         CALL infomsg('real_space_q', &
+                      'integrated real space q too different from target q')
+         WRITE(stdout, &
+         '(5X,"Largest difference: ",f10.6," for atom type #",i2)') &
+            MAXVAL(diff), MAXLOC(diff(:))
+      END IF
+      DEALLOCATE (diff)
       !
       DEALLOCATE( xyz )
       DEALLOCATE( boxdist )
@@ -446,7 +448,7 @@ MODULE realus
       CALL start_clock( 'realus:tabp' )
 
       if (mbia.ne.tab(ia)%maxbox) then
-         write (6,*) 'real space q: ia,nt,mbia,tab(ia)%maxbox ', ia, nt, mbia, tab(ia)%maxbox
+         write (stdout,*) 'real space q: ia,nt,mbia,tab(ia)%maxbox ', ia, nt, mbia, tab(ia)%maxbox
          call errore('real_space_q','inconsistent tab(ia)%maxbox dimension',ia)
       end if
       !
@@ -609,7 +611,7 @@ MODULE realus
       !
       CALL start_clock( 'realus:tabp' )
       if (mbia.ne.tabp(ia)%maxbox) then
-         write (6,*) 'real space dq: ia,nt,mbia,tabp(ia)%maxbox ', ia, nt, mbia, tabp(ia)%maxbox
+         write (stdout,*) 'real space dq: ia,nt,mbia,tabp(ia)%maxbox ', ia, nt, mbia, tabp(ia)%maxbox
          call errore('real_space_dq','inconsistent tab(ia)%maxbox dimension',ia)
       end if
       !
@@ -668,7 +670,7 @@ MODULE realus
                          qtot(1) = qtot(2)
                          qtot(1) = qtot(3)
 #if defined(__DEBUG)
-                         write (6,*) qtot(2),qtot(3)
+                         write (stdout,*) qtot(2),qtot(3)
 #endif
 !                      else
 !                         qtot(1) = 0.d0
@@ -783,7 +785,6 @@ MODULE realus
       USE fft_base,   ONLY : dffts
       USE mp_bands,   ONLY : me_bgrp
       USE splinelib,  ONLY : spline, splint
-      USE ions_base,  ONLY : ntyp => nsp
       !
       IMPLICIT NONE
       LOGICAL, PARAMETER    :: tprint = .false.  ! whether to print info on betapointlist
@@ -1266,7 +1267,7 @@ MODULE realus
       !
       USE kinds,      ONLY : DP
       USE cell_base,  ONLY : omega
-      USE ions_base,  ONLY : nat, ntyp => nsp, ityp
+      USE ions_base,  ONLY : nat, ityp
       USE fft_base,   ONLY : dfftp
       USE noncollin_module,   ONLY : nspin_mag
       USE scf,        ONLY : v, vltot
@@ -1296,7 +1297,7 @@ MODULE realus
          !
          mbia = tabp(na)%maxbox
          IF ( mbia == 0 ) CYCLE
-!         write (6,*) ' inside addusforce na, mbia ', na,mbia
+!         write (stdout,*) ' inside addusforce na, mbia ', na,mbia
          nfuncs = nh(nt)*(nh(nt)+1)/2
          ALLOCATE ( dqr(mbia,nfuncs,3) )
          CALL real_space_dq( nt, na, mbia, nfuncs, dqr )
@@ -1345,7 +1346,7 @@ MODULE realus
       !
       USE kinds,      ONLY : DP
       USE cell_base,  ONLY : omega
-      USE ions_base,  ONLY : nat, ntyp => nsp, ityp
+      USE ions_base,  ONLY : nat, ityp
       USE fft_base,   ONLY : dfftp
       USE noncollin_module,  ONLY : nspin_mag
       USE scf,        ONLY : v, vltot
@@ -1371,7 +1372,7 @@ MODULE realus
          IF ( .NOT. upf(nt)%tvanp ) CYCLE
          !
          mbia = tabp(na)%maxbox
-!         write (6,*) ' inside addusstress na, mbia ', na,mbia
+!         write (stdout,*) ' inside addusstress na, mbia ', na,mbia
          nfuncs = nh(nt)*(nh(nt)+1)/2
          ALLOCATE ( dqr(mbia,nfuncs,3) )
          CALL real_space_dq( nt, na, mbia, nfuncs, dqr )
@@ -1468,7 +1469,7 @@ MODULE realus
     USE kinds,                 ONLY : DP
     USE cell_base,             ONLY : omega
     USE wavefunctions_module,  ONLY : psic
-    USE ions_base,             ONLY : nat, ntyp => nsp, ityp
+    USE ions_base,             ONLY : nat, nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
     USE fft_base,              ONLY : dffts
     USE mp_bands,              ONLY : intra_bgrp_comm
@@ -1504,7 +1505,7 @@ MODULE realus
        !
        ikb = 0
        !
-       DO nt = 1, ntyp
+       DO nt = 1, nsp
           !
            DO ia = 1, nat
              !
@@ -1574,7 +1575,7 @@ MODULE realus
     USE wvfct,                 ONLY : current_k
     USE cell_base,             ONLY : omega
     USE wavefunctions_module,  ONLY : psic
-    USE ions_base,             ONLY : nat, ntyp => nsp, ityp
+    USE ions_base,             ONLY : nat, nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
     USE fft_base,              ONLY : dffts
@@ -1605,7 +1606,7 @@ MODULE realus
     becp%k(:,ibnd)=0.d0
        ikb = 0
        !
-       DO nt = 1, ntyp
+       DO nt = 1, nsp
           !
            DO ia = 1, nat
              !
@@ -1654,7 +1655,7 @@ MODULE realus
       USE kinds,                  ONLY : DP
       USE cell_base,              ONLY : omega
       USE wavefunctions_module,   ONLY : psic
-      USE ions_base,              ONLY : nat, ntyp => nsp, ityp
+      USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq_at
@@ -1680,7 +1681,7 @@ MODULE realus
       !
       ikb = 0
       !
-      DO nt = 1, ntyp
+      DO nt = 1, nsp
          !
          DO ia = 1, nat
             !
@@ -1737,7 +1738,7 @@ MODULE realus
       USE wvfct,                  ONLY : current_k
       USE cell_base,              ONLY : omega
       USE wavefunctions_module,   ONLY : psic
-      USE ions_base,              ONLY : nat, ntyp => nsp, ityp
+      USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq_at
@@ -1766,7 +1767,7 @@ MODULE realus
       !
       ikb = 0
       !
-      DO nt = 1, ntyp
+      DO nt = 1, nsp
          !
          DO ia = 1, nat
             !
@@ -1825,7 +1826,7 @@ MODULE realus
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : omega
   USE wavefunctions_module,   ONLY : psic
-  USE ions_base,              ONLY : nat, ntyp => nsp, ityp
+  USE ions_base,              ONLY : nat, nsp, ityp
   USE uspp_param,             ONLY : nh
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
@@ -1855,7 +1856,7 @@ MODULE realus
    !
    ikb = 0
    !
-   DO nt = 1, ntyp
+   DO nt = 1, nsp
       !
       DO ia = 1, nat
          !
@@ -1927,7 +1928,7 @@ MODULE realus
   USE wvfct,                  ONLY : current_k
   USE cell_base,              ONLY : omega
   USE wavefunctions_module,   ONLY : psic
-  USE ions_base,              ONLY : nat, ntyp => nsp, ityp
+  USE ions_base,              ONLY : nat, nsp, ityp
   USE uspp_param,             ONLY : nh
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
@@ -1955,7 +1956,7 @@ MODULE realus
    !
    ikb = 0
    !
-   DO nt = 1, ntyp
+   DO nt = 1, nsp
       !
       DO ia = 1, nat
          !
