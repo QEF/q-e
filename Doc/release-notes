@@ -12,6 +12,9 @@ New in development version:
 
 Problems fixed in development version:
 
+  * LDA+U for spin-orbit (kind=1) was crashing for one k-point, trying to read
+    data not previously saved (noticed by Christof Wolf, Feb 8, 2018)
+
   * ibrav =-13 wasn't documented and did not recognize the correct parameter
     cosBC (noticed by Jose' Conesa, Jan 26, 2018)
 

@@ -30,6 +30,7 @@
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
+  USE constants_epw, ONLY : zero
   USE noncollin_module,     ONLY : noncolin, m_loc, angle1, angle2, ux
   USE wvfct,         ONLY : nbnd, et
   USE output,        ONLY : fildrho
@@ -42,8 +43,7 @@
   USE control_lr,    ONLY : alpha_pv, nbnd_occ
   USE gamma_gamma,   ONLY : has_equivalent, asr, nasr, n_diff_sites, &
                             equiv_atoms, n_equiv_atoms, with_symmetry
-  USE partial,       ONLY :  &
-                            done_irr
+  USE partial,       ONLY : done_irr
   USE modes,         ONLY : u, npertx, npert, nirr, nmodes, num_rap_mode
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, nsymq, invsymq, rtau
   USE qpoint,        ONLY : xq
@@ -53,10 +53,12 @@
   USE mp,            ONLY : mp_bcast
   USE mp,            ONLY : mp_max, mp_min
   USE mp_pools,      ONLY : inter_pool_comm
-  USE epwcom,        ONLY : xk_cryst
+  USE epwcom,        ONLY : xk_cryst,scattering, nstemp, tempsmin, tempsmax, &
+                            temps
   USE fft_base,      ONLY : dfftp
   USE gvecs,         ONLY : doublegrid
   USE start_k,       ONLY : nk1, nk2, nk3
+  USE transportcom,  ONLY : transp_temp
   !
   implicit none
   ! 
@@ -91,6 +93,8 @@
   INTEGER :: js
   !! counter on atomic type
   INTEGER :: last_irr_eff
+  !! Last effective irr
+  INTEGER :: itemp
   !!  
   REAL(kind=DP) :: rhotot
   !! total charge
@@ -392,7 +396,27 @@
   DO irr = 1, nirr
      npertx = max (npertx, npert (irr) )
   ENDDO
-
+  ! 
+  transp_temp(:) = zero
+  ! In case of scattering calculation
+  IF ( scattering ) THEN
+    ! 
+    IF ( maxval(temps(:)) > zero ) THEN
+      transp_temp(:) = temps(:)
+    ELSE
+      IF ( nstemp .eq. 1 ) THEN
+        transp_temp(1) = tempsmin
+      ELSE
+        DO itemp = 1, nstemp
+          transp_temp(itemp) = tempsmin + dble(itemp-1) * &
+                              ( tempsmax - tempsmin ) / dble(nstemp-1)
+        ENDDO
+      ENDIF
+    ENDIF
+  ENDIF
+  ! We have to bcast here because before it has not been allocated
+  CALL mp_bcast (transp_temp, ionode_id, world_comm)    !  
+  ! 
   CALL stop_clock ('epw_setup')
   RETURN
   !
@@ -448,6 +472,3 @@
   !-----------------------------------------------------------------------
   END SUBROUTINE epw_setup_restart
   !-----------------------------------------------------------------------
-
-
-

@@ -50,6 +50,17 @@ then
   then
     cat $3
   fi
+elif [[ "$1" == "4" ]]
+then
+  echo "Running Q2R ..."
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/q2r.x < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/q2r.x < $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+  echo "Gather results in save" 
+  python pp.py < pp.in
 fi
 
 #rm -f input_tmp.in

@@ -54,8 +54,6 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
       real(kind=8) gxl, xyr, xzr, yzr
       real(kind=8), allocatable:: vec(:,:,:), aiuto(:,:,:)
       real(kind=8), allocatable:: drho(:,:), d2rho(:,:)
-      real(kind=8), allocatable:: dxdyrho(:), dxdzrho(:)
-      real(kind=8), allocatable:: dydzrho(:)
       real(kind=8), allocatable:: tauv(:,:,:)
 
       complex(kind=8) ci
@@ -71,10 +69,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
       integer displs(nproc), ip, me
 #endif
       if (abisur) allocate(drho(3,dfftp%nnr))
-      if (abisur) allocate(d2rho(3,dfftp%nnr))
-      if (abisur) allocate(dxdyrho(dfftp%nnr))
-      if (abisur) allocate(dxdzrho(dfftp%nnr))
-      if (abisur) allocate(dydzrho(dfftp%nnr))
+      if (abisur) allocate(d2rho(6,dfftp%nnr))
 
       call start_clock( 'vol_clu' )
 
@@ -241,9 +236,13 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
          deallocate(rhofill)
       end if
 
-      if (abisur)                                                       &
-     &   call gradrho(nspin,rhotmp,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
-
+      IF (abisur) THEN
+         DO iss = 1, nspin
+            CALL fft_gradient_g2r( dfftp, rhotmp(1,iss), g, drho(1,iss) )
+            CALL fft_hessian_g2r ( dfftp, rhotmp, g, d2rho(1,iss)  )
+         END DO
+      END IF
+ 
       CALL rho_g2r( dfftp, rhotmp, rho_gaus )
       deallocate(rhotmp)
 
@@ -345,17 +344,15 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
          end if
 
          if (abisur) then
-            modr = 0.d0
-            lap = 0.d0
-            gxl = 0.d0
-            do j = 1,3
-               modr = modr + drho(j,ir)**2
-               lap = lap + d2rho(j,ir)
-               gxl = gxl + drho(j,ir)**2*d2rho(j,ir)
-            end do
-            xyr = 2.d0*dxdyrho(ir)*drho(1,ir)*drho(2,ir)
-            xzr = 2.d0*dxdzrho(ir)*drho(1,ir)*drho(3,ir)
-            yzr = 2.d0*dydzrho(ir)*drho(2,ir)*drho(3,ir)
+            ! for d2rho: 1=xx, 2=xy, 3=yy, 4=xz, 5=yz, 6=zz
+            modr = drho(1,ir)**2 + drho(2,ir)**2 + drho(3,ir)**2
+            lap = d2rho(1,ir) + d2rho(3,ir) + d2rho(6,ir)
+            gxl = drho(1,ir)**2*d2rho(1,ir) + &
+                  drho(2,ir)**2*d2rho(3,ir) + &
+                  drho(3,ir)**2*d2rho(6,ir)
+            xyr = 2.d0*d2rho(2,ir)*drho(1,ir)*drho(2,ir)
+            xzr = 2.d0*d2rho(4,ir)*drho(1,ir)*drho(3,ir)
+            yzr = 2.d0*d2rho(5,ir)*drho(2,ir)*drho(3,ir)
             modr = dsqrt(modr)
             surfclu = surfclu + (wpiu-wmeno)*modr
             v_vol(ir) = v_vol(ir) -1.d0*Surf_t/dthr * (wpiu-wmeno) *    &
@@ -383,9 +380,6 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
       deallocate( tauv )
       if ( abisur ) deallocate( drho )
       if ( abisur ) deallocate( d2rho )
-      if ( abisur ) deallocate( dxdyrho )
-      if ( abisur ) deallocate( dxdzrho )
-      if ( abisur ) deallocate( dydzrho )
 
       call stop_clock( 'vol_clu' )
 

@@ -123,6 +123,7 @@
   tpiba_new = 2.0d0 * pi / alat
   degen    = 1.0d0
   rs       = (3.d0/(4.d0*pi*nel/omega/degen))**(1.d0/3.d0)*meff*degen ! omega is the unit cell volume in Bohr^3
+!  rs       = (3.d0/(4.d0*pi*nel/omega/degen))**(1.d0/3.d0)*meff*degen/epsiHEG ! omega is the unit cell volume in Bohr^3
   kF       = (3.d0*pi**2*nel/omega/degen )**(1.d0/3.d0)
   vF       =  1.d0/meff * (3.d0*pi**2*nel/omega/degen)**(1.d0/3.d0)
   fermiHEG =  1.d0/(2.d0*meff) * (3.d0*pi**2*nel/omega/degen)**(2.d0/3.d0) * 2.d0 ! [Ryd] multiplication by 2 converts from Ha to Ry

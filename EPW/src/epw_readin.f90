@@ -55,9 +55,9 @@
                             pwc, nswc, nswfc, nswi, filukq, filukk, &
                             nbndsub, nbndskip, system_2d, delta_approx, &
                             title, int_mob, scissor, iterative_bte, scattering, &
-                            ncarrier, carrier, scattering_serta, &
-                            scattering_0rta, longrange, shortrange,restart, &
-                            restart_freq, prtgkk, nel, meff, epsiHEG
+                            ncarrier, carrier, scattering_serta, restart, restart_freq, &
+                            scattering_0rta, longrange, shortrange, scatread, &
+                            restart_filq, prtgkk, nel, meff, epsiHEG
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV
@@ -121,7 +121,7 @@
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         & 
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
-       restart, restart_freq, prtgkk, nel, meff, epsiHEG
+       scatread, restart, restart_freq, restart_filq, prtgkk, nel, meff, epsiHEG
 
   ! tphases, fildvscf0
   !
@@ -252,8 +252,10 @@
   ! specfun_pl      : if .TRUE. calculate plason spectral function 
   ! restart         : if .true. a run can be restarted from the interpolation level
   ! restart_freq    : Create a restart point every restart_freq q/k-points
+  ! restart_filq    : Use to merge different q-grid scattering rates (name of the file)
   ! scattering      : if .true. scattering rates are calculated
   ! scattering_serta: if .true. scattering rates are calculated using self-energy relaxation-time-approx
+  ! scatread        : if .true. the current scattering rate file is read from file. 
   ! scattering_0rta : if .true. scattering rates are calculated using 0th order relaxation-time-approx
   ! int_mob         : if .true. computes the intrinsic mobilities. This means that the
   !                   electron and hole carrier density is equal. 
@@ -362,6 +364,7 @@
   dvscf_dir    = '.'
   prefix       = 'pwscf'
   filqf        = ' '
+  restart_filq = ' '
   filkf        = ' '
   fildrho      = ' '
   fildvscf     = ' '
@@ -449,6 +452,7 @@
   system_2d = .false.
   scattering = .false.
   scattering_serta = .false.
+  scatread = .false.
   scattering_0rta = .false.
   int_mob    = .false.
   iterative_bte = .false.
@@ -570,12 +574,14 @@
        CALL errore('epw_init', 'tempsmax should be greater than tempsmin',1)
   IF ( int_mob .AND. efermi_read)  CALL errore('epw_init', &
        'Fermi level can not be set (efermi_read) when computing intrinsic mobilities',1)
-  IF ( int_mob .AND. (ABS(ncarrier) > 1E+5) )  CALL errore('epw_init', &
-       'You cannot compute intrinsic mobilities and doped mobilities at the same time',1)
+!  IF ( int_mob .AND. (ABS(ncarrier) > 1E+5) )  CALL errore('epw_init', &
+!       'You cannot compute intrinsic mobilities and doped mobilities at the same time',1)
+  IF ( (ABS(ncarrier) > 1E+5) .and. .not. carrier ) CALL errore('epw_init', &
+       'carrier must be .true. if you specify ncarrier.',1)
   IF ( carrier .AND. (ABS(ncarrier) < 1E+5) )  CALL errore('epw_init', &
        'The absolute value of the doping carrier concentration must be larger than 1E5 cm^-3',1)
-  IF ( (iterative_bte .AND. scattering_serta) .OR. (iterative_bte .AND.scattering_0rta)  ) CALL errore('epw_init', &
-       'You should first do a run in the SRTA to get the initial scattering_rate files.',1)
+!  IF ( (iterative_bte .AND. scattering_serta) .OR. (iterative_bte .AND.scattering_0rta)  ) CALL errore('epw_init', &
+!       'You should first do a run in the SRTA to get the initial scattering_rate files.',1)
   IF ( (longrange .OR. shortrange) .AND. (.not. lpolar)) CALL errore('epw_init',&
        &'Error: longrange or shortrange can only be true if lpolar is true as well.',1)
   IF ( longrange .AND. shortrange) CALL errore('epw_init',&

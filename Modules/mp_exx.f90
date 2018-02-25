@@ -337,63 +337,6 @@ CONTAINS
     !
   END SUBROUTINE init_index_over_band
   !
-  SUBROUTINE set_egrp_indices(nbnd, ib_start, ib_end)
-    !
-    IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nbnd
-    INTEGER, INTENT(OUT) :: ib_start, ib_end
-
-    INTEGER :: rest, nbnd_per_bgrp
-
-    rest = mod ( nbnd, negrp )
-    nbnd_per_bgrp = int( nbnd / negrp ) 
-
-    IF (rest > my_egrp_id) THEN 
-       ib_start =  my_egrp_id    * (nbnd_per_bgrp+1) + 1
-       ib_end   = (my_egrp_id+1) * (nbnd_per_bgrp+1) 
-    ELSE
-       ib_start =  my_egrp_id    * nbnd_per_bgrp + rest + 1
-       ib_end   = (my_egrp_id+1) * nbnd_per_bgrp + rest 
-    ENDIF
-
-  END SUBROUTINE set_egrp_indices
-
-  INTEGER FUNCTION egrp_start(nbnd)
-    !
-    IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nbnd
-
-    INTEGER :: rest, nbnd_per_bgrp
-
-    rest = mod ( nbnd, negrp )
-    nbnd_per_bgrp = int( nbnd / negrp ) 
-
-    IF (rest > my_egrp_id) THEN 
-       egrp_start =  my_egrp_id    * (nbnd_per_bgrp+1) + 1
-    ELSE
-       egrp_start =  my_egrp_id    * nbnd_per_bgrp + rest + 1
-    ENDIF
-
-  END FUNCTION egrp_start
-
-  INTEGER FUNCTION egrp_end(nbnd)
-    !
-    IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nbnd
-
-    INTEGER :: rest, nbnd_per_bgrp
-
-    rest = mod ( nbnd, negrp )
-    nbnd_per_bgrp = int( nbnd / negrp ) 
-
-    IF (rest > my_egrp_id) THEN 
-       egrp_end   = (my_egrp_id+1) * (nbnd_per_bgrp+1) 
-    ELSE
-       egrp_end   = (my_egrp_id+1) * nbnd_per_bgrp + rest 
-    ENDIF
-
-  END FUNCTION egrp_end
-
 END MODULE mp_exx
 !
 !     

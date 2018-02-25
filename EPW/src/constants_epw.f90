@@ -52,6 +52,7 @@
   !
   ! ... zero up to a given accuracy
   !
+  REAL(DP), PARAMETER :: eps2  = 1.0E-2_DP
   REAL(DP), PARAMETER :: eps4  = 1.0E-4_DP
   REAL(DP), PARAMETER :: eps6  = 1.0E-6_DP
   REAL(DP), PARAMETER :: eps8  = 1.0E-8_DP

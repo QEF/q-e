@@ -1482,7 +1482,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
             }
         }
 
-	var abivol -type LOGICAL { 
+	var abisur -type LOGICAL { 
             default { .false. }
             info { 
                .true. for finite surface tension calculations
