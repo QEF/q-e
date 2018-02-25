@@ -161,16 +161,208 @@
   !
   nkq_abs = n
   !
-  end subroutine ktokpmq
+  !--------------------------------------------------------
+  END SUBROUTINE ktokpmq
+  !--------------------------------------------------------
+  ! 
+  !--------------------------------------------------------
+  SUBROUTINE ktokpmq_fine (xkf_cryst, xk, xq, sign, ipool, nkq, nkq_abs)
+  !--------------------------------------------------------
+  !!
+  !!   For a given k point in cart coord, find the index 
+  !!   of the corresponding (k + sign*q) point on the fine
+  !!   homogeneous grid
+  !!
+  !!   In the parallel case, determine also the pool number
+  !!   nkq is the in-pool index, nkq_abs is the absolute
+  !!   index
+  !!
+  !--------------------------------------------------------
+  !
+  USE kinds,          ONLY : DP
+  USE cell_base,      ONLY : at
+  USE epwcom,         ONLY : nkf1, nkf2, nkf3
+  USE elph2,          ONLY : nkqtotf
+  USE mp_global,      ONLY : nproc_pool, npool
+  USE mp_images,      ONLY : nproc_image
+  USE mp,             ONLY : mp_barrier, mp_bcast
+  ! 
+  USE mp_world,  ONLY : mpime
+  ! m
+  implicit none
+  !
+  INTEGER, INTENT (in) :: sign
+  !! +1 for searching k+q, -1 for k-q
+  INTEGER, INTENT (out) :: nkq
+  !! in the parallel case, the pool hosting the k+-q point    
+  INTEGER, INTENT (out) :: nkq_abs
+  !! the index of k+sign*q
+  INTEGER, INTENT (out) :: ipool
+  !! Index of the pool where the point is
+  ! 
+  REAL(kind=DP), INTENT (in) :: xkf_cryst(3,nkqtotf/2)
+  !! coordinates of k points and q point
+  REAL(kind=DP), INTENT (in) :: xk(3)
+  !! coordinates of k points and q points
+  REAL(kind=DP), INTENT (in) :: xq(3)
+  !! Coordinates of k+q point
+  !
+  ! work variables
+  !
+  INTEGER :: kunit
+  !! the absolute index of k+sign*q (in the full k grid)
+  real(kind=DP) :: xxk (3), xxq (3)
+  integer ::  n,  ik
+  real(kind=DP) :: xx, yy, zz, xx_c, yy_c, zz_c, eps
+  logical :: in_the_list, found
+  !
+  integer :: iks, nkl, nkr, jpool
+  !
+  kunit =1 
+  ! loosy tolerance, no problem since we use integer comparisons
+  eps = 1.d-5
+  IF (abs(sign).ne.1) call errore('ktokpmq_fine','sign must be +1 or -1',1)
+  !
+  ! bring k and q in crystal coordinates
+  !
+  xxk = xk
+  xxq = xq
+  !
+  CALL cryst_to_cart (1, xxk, at, -1)
+  CALL cryst_to_cart (1, xxq, at, -1)
+  !
+  !  check that k is actually on a uniform mesh centered at gamma
+  !
+  !print*,'xxk ',xxk(:)
+  !IF (mpime == 0) THEN
+  !  write(910,*)'xxk ',xxk
+  !  write(910,*)'xxq ',xxq
+  !  write(910,*)'nkf1 ',nkf1
+  !ENDIf
+  !print*,'xxk ',xxk(:)
+  !IF (mpime == 1) THEN
+  !  write(911,*)'xxk ',xxk
+  !  write(911,*)'xxq ',xxq
+  !  write(911,*)'nkf1 ',nkf1
+  !  write(911,*)'xkf_cryst ',xkf_cryst(:,1)
+  !  write(911,*)'xkf_cryst ',xkf_cryst(:,2)
+  !  write(911,*)'xkf_cryst ',xkf_cryst(:,3)
+  !  write(911,*)'xkf_cryst ',xkf_cryst(:,4)
+  !ENDIF
 
-!---------------------------------
-subroutine ckbounds(lower, upper)
-!---------------------------------
-!!
-!!   Subroutine finds the lower and upper
-!!   bounds of the coarse k-grid in parallel
-!!
-!---------------------------------
+  xx = xxk(1)*nkf1
+  yy = xxk(2)*nkf2
+  zz = xxk(3)*nkf3
+  in_the_list = abs(xx-nint(xx)).le.eps .and. &
+                abs(yy-nint(yy)).le.eps .and. &
+                abs(zz-nint(zz)).le.eps
+  IF (.not.in_the_list) call errore('ktokpmq_fine','is this a uniform k-mesh?',1)
+  !
+  IF ( xx .lt. -eps .or. yy .lt. -eps .or. zz .lt. -eps ) &
+     call errore('ktokpmq_fine','coarse k-mesh needs to be strictly positive in 1st BZ',1)
+  !
+  !  now add the phonon wavevector and check that k+q falls again on the k grid
+  !
+  xxk = xxk + dble(sign) * xxq
+  !
+  xx = xxk(1)*nkf1
+  yy = xxk(2)*nkf2
+  zz = xxk(3)*nkf3
+  in_the_list = abs(xx-nint(xx)).le.eps .and. &
+                abs(yy-nint(yy)).le.eps .and. &
+                abs(zz-nint(zz)).le.eps
+  IF (.not.in_the_list) call errore('ktokpmq_fine','k+q does not fall on k-grid',1)
+  !
+  !  find the index of this k+q in the k-grid
+  !
+  !  make sure xx, yy and zz are in 1st BZ
+  !
+  CALL backtoBZ( xx, yy, zz, nkf1, nkf2, nkf3 )
+  !
+  n = 0
+  found = .false.
+  DO ik = 1, nkqtotf/2
+     xx_c = xkf_cryst(1,ik)*nkf1
+     yy_c = xkf_cryst(2,ik)*nkf2
+     zz_c = xkf_cryst(3,ik)*nkf3
+     ! 
+    ! IF (mpime == 1) THEN
+    !   write(911,*)'ik ',ik
+    !   write(911,*)'xx_c ',xx_c
+    !   write(911,*)'yy_c ',yy_c
+    !   write(911,*)'zz_c ',zz_c
+    ! ENDIF
+     !
+     ! check that the k-mesh was defined in the positive region of 1st BZ
+     !
+     IF ( xx_c .lt. -eps .or. yy_c .lt. -eps .or. zz_c .lt. -eps ) &
+        call errore('ktokpmq_fine','coarse k-mesh needs to be strictly positive in 1st BZ',1)
+     !
+     found = nint(xx_c) .eq. nint(xx) .and. &
+             nint(yy_c) .eq. nint(yy) .and. &
+             nint(zz_c) .eq. nint(zz)
+     IF (found) THEN  
+        n = ik
+        EXIT
+     ENDIF
+  ENDDO
+  !
+  !  26/06/2012 RM
+  !  since coarse k- and q- meshes are commensurate, one can easily find n
+  !
+!  n = nint(xx) * nk2 * nk3 + nint(yy) * nk3 + nint(zz) + 1
+  !
+  IF (n .eq. 0) call errore('ktokpmq_fine','problem indexing k+q',1)
+  !
+  !  Now n represents the index of k+sign*q in the original k grid.
+  !  In the parallel case we have to find the corresponding pool 
+  !  and index in the pool
+  !
+#ifdef __MPI
+  !
+  npool = nproc_image/nproc_pool
+  !
+  DO jpool = 0, npool-1
+    !
+    nkl   = kunit * ( nkqtotf / npool )
+    nkr   = ( nkqtotf - nkl * npool ) / kunit
+    !
+    !  the reminder goes to the first nkr pools (0...nkr-1)
+    !
+    IF ( jpool < nkr ) nkl = nkl + kunit
+    !
+    !  the index of the first k point in this pool
+    !
+    iks = nkl * jpool + 1
+    IF ( jpool >= nkr ) iks = iks + nkr * kunit
+    !
+    IF (n.ge.iks) then
+      ipool = jpool+1
+      nkq = n - iks + 1
+    ENDIF
+    !
+  ENDDO
+  !
+#else
+  !
+  nkq = n
+  !
+#endif
+  !
+  nkq_abs = n
+  !
+  !--------------------------------------------------------------
+  END SUBROUTINE ktokpmq_fine
+  !--------------------------------------------------------------
+  ! 
+  !---------------------------------
+  SUBROUTINE ckbounds(lower, upper)
+  !---------------------------------
+  !!
+  !!   Subroutine finds the lower and upper
+  !!   bounds of the coarse k-grid in parallel
+  !!
+  !---------------------------------
   !
   use pwcom,         ONLY : nkstot
   use mp_global,     ONLY : my_pool_id, npool
@@ -198,23 +390,30 @@ subroutine ckbounds(lower, upper)
   lower = 1
   upper = nkstot
 #endif
-
-end subroutine
-
-!---------------------------------
-subroutine para_bounds(lower, upper, total)
-!---------------------------------
-!!
-!!   Subroutine finds the lower and upper
-!!   bounds if we split some quantity over pools
-!!
-!---------------------------------
   !
-  use mp_global,   ONLY : my_pool_id, npool 
+  !------------------------------------- 
+  END SUBROUTINE ckbounds
+  !-------------------------------------- 
+  !
+  !---------------------------------
+  SUBROUTINE para_bounds(lower, upper, total)
+  !---------------------------------
+  !!
+  !!   Subroutine finds the lower and upper
+  !!   bounds if we split some quantity over pools
+  !!
+  !---------------------------------
+  !
+  USE mp_global,   ONLY : my_pool_id, npool 
   !
   implicit none
-  integer, intent(out):: lower, upper
-  integer, intent(in):: total
+  ! 
+  INTEGER, INTENT (out) :: lower
+  !! Lower bound
+  INTEGER, INTENT (out) :: upper
+  !! Upper bound
+  INTEGER, INTENT (in)  :: total
+  !! Total quantity
   !
 #if defined(__MPI)
   !  
@@ -244,11 +443,14 @@ subroutine para_bounds(lower, upper, total)
   lower = 1
   upper = total
 #endif
-end subroutine
-
-!---------------------------------
-subroutine backtoBZ ( xx, yy, zz, n1, n2, n3 )
-!---------------------------------
+  !
+  ! -----------------------------------------
+  END SUBROUTINE para_bounds
+  !--------------------------------------------
+  ! 
+  !---------------------------------
+  SUBROUTINE backtoBZ ( xx, yy, zz, n1, n2, n3 )
+  !---------------------------------
   !!
   !!  Brings xx, yy, and zz  into first BZ 
   !!
@@ -257,7 +459,8 @@ subroutine backtoBZ ( xx, yy, zz, n1, n2, n3 )
   USE kinds,  ONLY : DP
   !
   implicit none
-  integer, intent(in) :: n1, n2, n3
+  ! 
+  INTEGER, INTENT(in) :: n1, n2, n3
   real(DP), intent(inout) :: xx, yy, zz
   integer :: ib
   !
@@ -275,5 +478,7 @@ subroutine backtoBZ ( xx, yy, zz, n1, n2, n3 )
      IF (nint(zz) .ge. ib*n3) zz = zz - ib*n3
   ENDDO
   !
-end subroutine
+  !-------------------------------------------
+  END SUBROUTINE backtoBZ
+  !-------------------------------------------
 

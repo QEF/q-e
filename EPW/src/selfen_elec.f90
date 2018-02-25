@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE selfen_elec_q ( iq )
+  SUBROUTINE selfen_elec_q ( iq, first_cycle )
   !-----------------------------------------------------------------------
   !! 
   !!  Compute the imaginary part of the electron self energy due to electron-
@@ -41,6 +41,7 @@
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
                             nkf, epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew
+  USE transportcom,  ONLY : lower_bnd, upper_bnd
   USE control_flags, ONLY : iverbosity
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
   USE mp,            ONLY : mp_barrier, mp_sum
@@ -50,8 +51,10 @@
   !
   implicit none
   !
-  INTEGER, INTENT (in) :: iq
-  !! Current q-point index 
+  LOGICAL, INTENT (INOUT) :: first_cycle
+  !! Use to determine weather this is the first cycle after restart 
+  INTEGER, INTENT(IN) :: iq
+  !! Q-point inde
   !
   ! Local variables 
   CHARACTER (len=256) :: nameF
@@ -82,10 +85,6 @@
   !! Number of states on the Fermi surface
   INTEGER :: nksqtotf
   !! Total number of k+q points 
-  INTEGER :: lower_bnd
-  !! Lower bounds index after k or q paral
-  INTEGER :: upper_bnd
-  !! Upper bounds index after k or q paral
   INTEGER :: i
   !! Index for reading files
   ! 
@@ -192,9 +191,6 @@
   !
   nksqtotf = nkqtotf/2 ! odd-even for k,k+q
   !
-  ! find the bounds of k-dependent arrays in the parallel case in each pool
-  CALL fkbounds( nksqtotf, lower_bnd, upper_bnd )
-  ! 
   IF (restart) THEN
     ! Make everythin 0 except the range of k-points we are working on
     sigmar_all(:,1:lower_bnd-1) = zero
@@ -203,6 +199,7 @@
     sigmai_all(:,lower_bnd+nkf:nkqtotf/2) = zero
     zi_all(:,1:lower_bnd-1) = zero
     zi_all(:,lower_bnd+nkf:nkqtotf/2) = zero
+    ! 
   ENDIF
   !
   IF ( iq .eq. 1 ) THEN 
@@ -218,127 +215,133 @@
      zi_all(:,:) = zero
   ENDIF
   !
-  ! loop over all k points of the fine mesh
-  !
-  fermicount = 0 
-  DO ik = 1, nkf
-     !
-     ikk = 2 * ik - 1
-     ikq = ikk + 1
-     !
-     ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
-     ! (but in this case they are the same)
-     !
-     IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
-          ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+  ! In the case of a restart do not add the first step
+  IF (first_cycle) THEN
+    first_cycle = .FALSE.
+  ELSE
+    !
+    ! loop over all k points of the fine mesh
+    !
+    fermicount = 0 
+    DO ik = 1, nkf
+       !
+       ikk = 2 * ik - 1
+       ikq = ikk + 1
+       !
+       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
+       ! (but in this case they are the same)
+       !
+       IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
+            ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+          !
+          fermicount = fermicount + 1
+          DO imode = 1, nmodes
+             !
+             ! the phonon frequency and Bose occupation
+             wq = wf (imode, iq)
+             ! SP: Define the inverse for efficiency
+             inv_wq = 1.0/( two * wq )
+             wgq = wgauss( -wq*inv_eptemp0, -99)
+             wgq = wgq / ( one - two * wgq )
+             !
+             ! SP: Avoid if statement in inner loops
+             IF (wq .gt. eps_acustic) THEN
+               g2_tmp = 1.0
+             ELSE
+               g2_tmp = 0.0
+             ENDIF
+             !
+             DO ibnd = 1, ibndmax-ibndmin+1
+                !
+                !  the energy of the electron at k (relative to Ef)
+                ekk = etf (ibndmin-1+ibnd, ikk) - ef0
+                !
+                DO jbnd = 1, ibndmax-ibndmin+1
+                   !
+                   !  the fermi occupation for k+q
+                   ekq = etf (ibndmin-1+jbnd, ikq) - ef0
+                   wgkq = wgauss( -ekq*inv_eptemp0, -99)  
+                   !
+                   ! here we take into account the zero-point sqrt(hbar/2M\omega)
+                   ! with hbar = 1 and M already contained in the eigenmodes
+                   ! g2 is Ry^2, wkf must already account for the spin factor
+                   !
+                   IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
+                      .OR. abs(xqf (3, iq))> eps2 )) THEN                         
+                     ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
+                     !     number, in which case its square will be a negative number. 
+                     g2 = (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp
+                   ELSE
+                     g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
+                   ENDIF        
+                   !
+                   ! There is a sign error for wq in Eq. 9 of Comp. Phys. Comm. 181, 2140 (2010). - RM
+                   ! The sign was corrected according to Eq. (7.282) page 489 from Mahan's book 
+                   ! (Many-Particle Physics, 3rd edition)
+                   ! 
+                   weight = wqf(iq) * real (                                                   &
+                           ( (       wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
+                             ( one - wgkq + wgq ) / ( ekk - ( ekq + wq ) - ci * degaussw ) ) )
+!                     ecutse needs to be defined if it's used 
+!@                    if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
+                   !
+                   sigmar_all(ibnd,ik+lower_bnd-1) = sigmar_all(ibnd,ik+lower_bnd-1) + g2 * weight
+                   !
+                   ! Logical implementation
+!                   weight = wqf(iq) * aimag (                                                  &
+!                           ( (       wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
+!                             ( one - wgkq + wgq ) / ( ekk - ( ekq + wq ) - ci * degaussw ) ) ) 
+!@                   if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
+                   !
+                   ! Delta implementation 
+                   w0g1=w0gauss( (ekk-ekq+wq)/degaussw, 0) /degaussw
+                   w0g2=w0gauss( (ekk-ekq-wq)/degaussw, 0) /degaussw
+                   weight = pi * wqf(iq) * ( (wgkq+wgq)*w0g1 + (one-wgkq+wgq)*w0g2 )
+                   !
+                   sigmai_all(ibnd,ik+lower_bnd-1) = sigmai_all(ibnd,ik+lower_bnd-1) + g2 * weight
+                   !
+                   ! Mode-resolved
+                   IF (iverbosity == 3) THEN
+                     sigmai_mode(ibnd,imode,ik+lower_bnd-1) = sigmai_mode(ibnd,imode,ik+lower_bnd-1) + g2 * weight
+                   ENDIF
+                   !
+                   ! Z FACTOR: -\frac{\partial\Re\Sigma}{\partial\omega}
+                   !
+                   weight = wqf(iq) * &
+                           ( (       wgkq + wgq ) * ( (ekk - ( ekq - wq ))**two - degaussw**two ) /       &
+                                                    ( (ekk - ( ekq - wq ))**two + degaussw**two )**two +  &
+                             ( one - wgkq + wgq ) * ( (ekk - ( ekq + wq ))**two - degaussw**two ) /       &
+                                                    ( (ekk - ( ekq + wq ))**two + degaussw**two )**two )  
+!@                   if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
+                   !
+                   zi_all(ibnd,ik+lower_bnd-1) = zi_all(ibnd,ik+lower_bnd-1) + g2 * weight
+                   ! 
+                ENDDO !jbnd
+                !
+             ENDDO !ibnd
+             !
+          ENDDO !imode
+          !
+       ENDIF ! endif  fsthick
+       !
+    ENDDO ! end loop on k
+    !
+    ! Creation of a restart point
+    IF (restart) THEN
+      IF (MOD(iq,restart_freq) == 0) THEN
+        WRITE(stdout, '(a)' ) '     Creation of a restart point'
+        ! 
+        CALL mp_sum( sigmar_all, inter_pool_comm )
+        CALL mp_sum( sigmai_all, inter_pool_comm )
+        CALL mp_sum( zi_all, inter_pool_comm )
+        CALL mp_sum(fermicount, inter_pool_comm)
+        CALL mp_barrier(inter_pool_comm)
         !
-        fermicount = fermicount + 1
-        DO imode = 1, nmodes
-           !
-           ! the phonon frequency and Bose occupation
-           wq = wf (imode, iq)
-           ! SP: Define the inverse for efficiency
-           inv_wq = 1.0/( two * wq )
-           wgq = wgauss( -wq*inv_eptemp0, -99)
-           wgq = wgq / ( one - two * wgq )
-           !
-           ! SP: Avoid if statement in inner loops
-           IF (wq .gt. eps_acustic) THEN
-             g2_tmp = 1.0
-           ELSE
-             g2_tmp = 0.0
-           ENDIF
-           !
-           DO ibnd = 1, ibndmax-ibndmin+1
-              !
-              !  the energy of the electron at k (relative to Ef)
-              ekk = etf (ibndmin-1+ibnd, ikk) - ef0
-              !
-              DO jbnd = 1, ibndmax-ibndmin+1
-                 !
-                 !  the fermi occupation for k+q
-                 ekq = etf (ibndmin-1+jbnd, ikq) - ef0
-                 wgkq = wgauss( -ekq*inv_eptemp0, -99)  
-                 !
-                 ! here we take into account the zero-point sqrt(hbar/2M\omega)
-                 ! with hbar = 1 and M already contained in the eigenmodes
-                 ! g2 is Ry^2, wkf must already account for the spin factor
-                 !
-                 IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
-                    .OR. abs(xqf (3, iq))> eps2 )) THEN                         
-                   ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
-                   !     number, in which case its square will be a negative number. 
-                   g2 = (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp
-                 ELSE
-                   g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
-                 ENDIF        
-                 !
-                 ! There is a sign error for wq in Eq. 9 of Comp. Phys. Comm. 181, 2140 (2010). - RM
-                 ! The sign was corrected according to Eq. (7.282) page 489 from Mahan's book 
-                 ! (Many-Particle Physics, 3rd edition)
-                 ! 
-                 weight = wqf(iq) * real (                                                   &
-                         ( (       wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
-                           ( one - wgkq + wgq ) / ( ekk - ( ekq + wq ) - ci * degaussw ) ) )
-!                   ecutse needs to be defined if it's used 
-!@                  if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
-                 !
-                 sigmar_all(ibnd,ik+lower_bnd-1) = sigmar_all(ibnd,ik+lower_bnd-1) + g2 * weight
-                 !
-                 ! Logical implementation
-!                 weight = wqf(iq) * aimag (                                                  &
-!                         ( (       wgkq + wgq ) / ( ekk - ( ekq - wq ) - ci * degaussw )  +  &
-!                           ( one - wgkq + wgq ) / ( ekk - ( ekq + wq ) - ci * degaussw ) ) ) 
-!@                 if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
-                 !
-                 ! Delta implementation 
-                 w0g1=w0gauss( (ekk-ekq+wq)/degaussw, 0) /degaussw
-                 w0g2=w0gauss( (ekk-ekq-wq)/degaussw, 0) /degaussw
-                 weight = pi * wqf(iq) * ( (wgkq+wgq)*w0g1 + (one-wgkq+wgq)*w0g2 )
-                 !
-                 sigmai_all(ibnd,ik+lower_bnd-1) = sigmai_all(ibnd,ik+lower_bnd-1) + g2 * weight
-                 !
-                 ! Mode-resolved
-                 IF (iverbosity == 3) THEN
-                   sigmai_mode(ibnd,imode,ik+lower_bnd-1) = sigmai_mode(ibnd,imode,ik+lower_bnd-1) + g2 * weight
-                 ENDIF
-                 !
-                 ! Z FACTOR: -\frac{\partial\Re\Sigma}{\partial\omega}
-                 !
-                 weight = wqf(iq) * &
-                         ( (       wgkq + wgq ) * ( (ekk - ( ekq - wq ))**two - degaussw**two ) /       &
-                                                  ( (ekk - ( ekq - wq ))**two + degaussw**two )**two +  &
-                           ( one - wgkq + wgq ) * ( (ekk - ( ekq + wq ))**two - degaussw**two ) /       &
-                                                  ( (ekk - ( ekq + wq ))**two + degaussw**two )**two )  
-!@                 if ( abs(ekq-ekk) .gt. ecutse ) weight = 0.d0
-                 !
-                 zi_all(ibnd,ik+lower_bnd-1) = zi_all(ibnd,ik+lower_bnd-1) + g2 * weight
-                 ! 
-              ENDDO !jbnd
-              !
-           ENDDO !ibnd
-           !
-        ENDDO !imode
-        !
-     ENDIF ! endif  fsthick
-     !
-  ENDDO ! end loop on k
-  !
-  ! Creation of a restart point
-  IF (restart) THEN
-    IF (MOD(iq,restart_freq) == 0) THEN
-      WRITE(stdout, '(a)' ) '     Creation of a restart point'
-      ! 
-      CALL mp_sum( sigmar_all, inter_pool_comm )
-      CALL mp_sum( sigmai_all, inter_pool_comm )
-      CALL mp_sum( zi_all, inter_pool_comm )
-      CALL mp_sum(fermicount, inter_pool_comm)
-      CALL mp_barrier(inter_pool_comm)
-      !
-      CALL electron_write(iq,nqtotf,nksqtotf,sigmar_all,sigmai_all,zi_all)
-      ! 
-    ENDIF
-  ENDIF 
+        CALL electron_write(iq,nqtotf,nksqtotf,sigmar_all,sigmai_all,zi_all)
+        ! 
+      ENDIF
+    ENDIF 
+  ENDIF ! in case of restart, do not do the first one
   !
   ! The k points are distributed among pools: here we collect them
   !
@@ -612,7 +615,7 @@
        ELSE
          WRITE(linewidth_elself, '(a)') '#      ik       ibnd                 E(ibnd)      Im(Sgima)(meV)'
        ENDIF
-     endif
+     ENDIF
      !
   ENDIF
   !
@@ -816,7 +819,6 @@
                        ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik), one/zi_all(ibnd,ik)-one
 !    WRITE(stdout, 103) ik, ryd2ev * ekk, ryd2mev * sigmar_all (ibnd,ik), &
 !                       ryd2mev * sigmai_all (ibnd,ik), zi_all (ibnd,ik)
-
     IF (mpime.eq.ionode_id) THEN
       IF ( iverbosity == 3 ) THEN
         DO imode=1, nmodes

@@ -163,13 +163,12 @@ END SUBROUTINE finalize_hdf5
        CASE default 
          ierr =1 
     END SELECT
-    IF ( ierr /=0 ) THEN 
-       IF (present (error)) then
-          error = ierr
-       ELSE 
-          CALL H5Eprint_f( jerr ) 
-          stop
-       END IF
+    IF (present (error)) then
+       ! success=0, fail=-1. QE error handling needs a positive error code.
+       error = abs(ierr)
+    ELSE IF ( ierr /=0 ) THEN
+       CALL H5Eprint_f( jerr )
+       stop
     END IF
     ! //' with action '// trim(action), 1 )  
   END SUBROUTINE  qeh5_openfile  

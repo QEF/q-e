@@ -858,7 +858,7 @@ MODULE exx
     USE klist,                ONLY : ngk, nks, nkstot, xk, wk, igk_k
     USE symm_base,            ONLY : nsym, s, sr
     USE mp_pools,             ONLY : npool, nproc_pool, me_pool, inter_pool_comm
-    USE mp_exx,               ONLY : me_egrp, set_egrp_indices, negrp, &
+    USE mp_exx,               ONLY : me_egrp, negrp, &
                                      init_index_over_band, my_egrp_id,  &
                                      inter_egrp_comm, intra_egrp_comm, &
                                      iexx_start, iexx_end
@@ -976,7 +976,7 @@ MODULE exx
        ENDDO
     ENDDO
 
-    CALL set_egrp_indices(x_nbnd_occ,ibnd_start,ibnd_end)
+    CALL divide ( inter_egrp_comm, x_nbnd_occ, ibnd_start, ibnd_end )
     CALL init_index_over_band(inter_egrp_comm,nbnd,nbnd)
 
     !this will cause exxbuff to be calculated for every band
@@ -1464,7 +1464,7 @@ MODULE exx
     TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
     !
     ! local variables
-    COMPLEX(DP),ALLOCATABLE :: result(:,:), result_g(:)
+    COMPLEX(DP),ALLOCATABLE :: result(:,:)
     REAL(DP),ALLOCATABLE :: temppsic_dble (:)
     REAL(DP),ALLOCATABLE :: temppsic_aimag(:)
     !
@@ -1498,7 +1498,6 @@ MODULE exx
     !ALLOCATE( result(nrxxs), temppsic_dble(nrxxs), temppsic_aimag(nrxxs) )
     ALLOCATE( result(nrxxs,ialloc), temppsic_dble(nrxxs) )
     ALLOCATE( temppsic_aimag(nrxxs) )
-    ALLOCATE( result_g(n) )
     ALLOCATE( psiwork(nrxxs) )
     !
     ALLOCATE( exxtemp(nrxxs*npol, jblock) )
@@ -1779,13 +1778,10 @@ MODULE exx
         END DO
      END IF
     !
-    !
+    DEALLOCATE(big_result)
     DEALLOCATE( result, temppsic_dble, temppsic_aimag)
-    !
     DEALLOCATE(rhoc, vc, fac )
-    !
     DEALLOCATE(exxtemp)
-    !
     IF(okvan) DEALLOCATE( deexx )
     !
     !-----------------------------------------------------------------------
@@ -4915,58 +4911,6 @@ END SUBROUTINE compute_becpsi
   !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE communicate_exxbuff (ipair, request_send, request_recv)
-  !-----------------------------------------------------------------------
-    USE mp_exx,       ONLY : iexx_start, iexx_end, inter_egrp_comm, &
-                               intra_egrp_comm, my_egrp_id, negrp, &
-                               max_pairs, egrp_pairs
-    USE parallel_include
-    USE io_global,      ONLY : stdout
-    INTEGER, intent(in)      :: ipair
-    INTEGER                  :: nrxxs
-    INTEGER                  :: request_send, request_recv
-    INTEGER                  :: dest, sender, ierr, jnext, jnext_dest
-#if defined(__MPI)
-    INTEGER :: istatus(MPI_STATUS_SIZE)
-#endif
-    !
-    nrxxs= dfftt%nnr
-    !
-    IF (ipair.lt.max_pairs) THEN
-       !
-       IF (ipair.gt.1) THEN
-#if defined(__MPI)
-          CALL MPI_WAIT(request_send, istatus, ierr)
-          CALL MPI_WAIT(request_recv, istatus, ierr)
-#endif
-       END IF
-       !
-       sender = my_egrp_id + 1
-       IF (sender.ge.negrp) sender = 0
-       jnext = egrp_pairs(2,ipair+1,sender+1)
-       !
-       dest = my_egrp_id - 1
-       IF (dest.lt.0) dest = negrp - 1
-       jnext_dest = egrp_pairs(2,ipair+1,dest+1)
-       !
-#if defined(__MPI)
-       CALL MPI_ISEND( exxbuff(:,:,jnext_dest), nrxxs*npol*nqs, &
-            MPI_DOUBLE_COMPLEX, dest, 101, inter_egrp_comm, request_send, ierr )
-#endif
-       !
-#if defined(__MPI)
-       CALL MPI_IRECV( exxbuff(:,:,jnext), nrxxs*npol*nqs, &
-            MPI_DOUBLE_COMPLEX, sender, 101, inter_egrp_comm, &
-            request_recv, ierr )
-#endif
-       !
-    END IF
-    !
-    !-----------------------------------------------------------------------
-  END SUBROUTINE communicate_exxbuff
-  !-----------------------------------------------------------------------
-  !
-  !-----------------------------------------------------------------------
   SUBROUTINE result_sum (n, m, data)
   !-----------------------------------------------------------------------
     USE parallel_include
@@ -5416,15 +5360,16 @@ IMPLICIT NONE
   IF( local_thr.gt.0.0d0 ) then  
     CALL vexx_loc(nnpw, nbndproj, xitmp, mexx)
     Call MatSymm('S','L',mexx,nbndproj)
-    CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
   ELSE
 !   |xi> = Vx[phi]|phi>
     CALL vexx(nnpw, nnpw, nbndproj, phi, xitmp, becpsi)
 !   mexx = <phi|Vx[phi]|phi>
     CALL matcalc('exact',.true.,0,nnpw,nbndproj,nbndproj,phi,xitmp,mexx,exxe)
 !   |xi> = -One * Vx[phi]|phi> * rmexx^T
-    CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
   END IF
+
+  CALL aceupdate(nbndproj,nnpw,xitmp,mexx)
+
   DEALLOCATE( mexx )
 
   IF( local_thr.gt.0.0d0 ) then  
@@ -5497,18 +5442,24 @@ IMPLICIT NONE
 END SUBROUTINE vexxace_gamma
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE aceupdate(nbndproj,nnpw,xitmp,rmexx)
+!
+!  Build the ACE operator from the potential amd matrix
+!  (rmexx is assumed symmetric and only the Lower Triangular part is considered)
+!
 IMPLICIT NONE
   INTEGER :: nbndproj,nnpw
-  real(DP) :: rmexx(nbndproj,nbndproj)
+  REAL(DP) :: rmexx(nbndproj,nbndproj)
   COMPLEX(DP),ALLOCATABLE :: cmexx(:,:)
   COMPLEX(DP) ::  xitmp(nnpw,nbndproj)
-  real(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
+  REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
 
   CALL start_clock('aceupdate')
 
 ! rmexx = -(Cholesky(rmexx))^-1
   rmexx = -rmexx
-  CALL invchol( nbndproj, rmexx )
+! CALL invchol( nbndproj, rmexx )
+  CALL MatChol( nbndproj, rmexx )
+  CALL MatInv( 'L',nbndproj, rmexx )
 
 ! |xi> = -One * Vx[phi]|phi> * rmexx^T
   ALLOCATE( cmexx(nbndproj,nbndproj) )
@@ -5797,7 +5748,7 @@ IMPLICIT NONE
   COMPLEX(DP) :: cbuff(3)
   REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0 
 
-  vol = omega / dble(dfftt%nr1x * dfftt%nr2x * dfftt%nr3x)
+  vol = omega / dble(dfftt%nr1 * dfftt%nr2 * dfftt%nr3)
 
   CenterPBC = Zero 
   SpreadPBC = Zero 
@@ -5824,9 +5775,9 @@ IMPLICIT NONE
      !
      rbuff = PsiI(ir) * PsiJ(ir) / omega
      Overlap = Overlap + abs(rbuff)*vol
-     cbuff(1) = cbuff(1) + rbuff*exp((Zero,One)*Two*pi*DBLE(i)/DBLE(dfftt%nr1x))*vol 
-     cbuff(2) = cbuff(2) + rbuff*exp((Zero,One)*Two*pi*DBLE(j)/DBLE(dfftt%nr2x))*vol
-     cbuff(3) = cbuff(3) + rbuff*exp((Zero,One)*Two*pi*DBLE(k)/DBLE(dfftt%nr3x))*vol
+     cbuff(1) = cbuff(1) + rbuff*exp((Zero,One)*Two*pi*DBLE(i)/DBLE(dfftt%nr1))*vol 
+     cbuff(2) = cbuff(2) + rbuff*exp((Zero,One)*Two*pi*DBLE(j)/DBLE(dfftt%nr2))*vol
+     cbuff(3) = cbuff(3) + rbuff*exp((Zero,One)*Two*pi*DBLE(k)/DBLE(dfftt%nr3))*vol
   ENDDO
 
   call mp_sum(cbuff,intra_bgrp_comm)

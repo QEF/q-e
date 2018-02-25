@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-SUBROUTINE export_upf(xmlf_desc, unit_loc)
+SUBROUTINE export_upf(filename, unit_loc)
   !---------------------------------------------------------------------
   !
   use constants, only : fpi
@@ -29,14 +29,12 @@ SUBROUTINE export_upf(xmlf_desc, unit_loc)
   use global_version, only: version_number, svn_revision
   !
   use pseudo_types
-  use FoX_wxml, only: xmlf_t
-  use write_upf_module, only: write_upf_v2, write_upf_schema
+  use write_upf_module, only: write_upf
   !
   implicit none
   !
-  !CHARACTER(len=*),INTENT(IN) :: filename
+  CHARACTER(len=*),INTENT(IN) :: filename
   INTEGER,INTENT(IN):: unit_loc
-  TYPE(xmlf_t),INTENT(INOUT)  :: xmlf_desc
   !
   integer :: ibeta, jbeta, kbeta, l, ind, l1, l2
   !
@@ -269,9 +267,9 @@ SUBROUTINE export_upf(xmlf_desc, unit_loc)
   if (upf%has_wfc)   CALL export_upf_wfc()
   !
   if (use_xsd) then 
-     CALL write_upf_schema(xmlf_desc, upf, at_conf, unit_loc)
+     CALL write_upf( FILENAME = TRIM(filename) , UPF=upf, SCHEMA = 'qe_pp', CONF = at_conf, U_INPUT = unit_loc)
   else
-     CALL write_upf_v2(xmlf_desc, upf, at_conf, unit_loc)
+     CALL write_upf( FILENAME = TRIM(filename), UPF= upf, SCHEMA = 'v2', CONF = at_conf, U_INPUT = unit_loc)
   endif
   !
   CALL deallocate_pseudo_upf( upf )

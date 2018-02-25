@@ -81,7 +81,7 @@
          dcurr = dprev + dist
          dprev = dcurr
          WRITE(iufilfreq,'(10x,3f10.6)') xqf(:,iq)
-         WRITE(iufilfreq,'(1000f10.4)') (wf(imode,iq)*ryd2mev, imode=1,nmodes)
+         WRITE(iufilfreq,'(1000f14.4)') (wf(imode,iq)*ryd2mev, imode=1,nmodes)
          !WRITE(iufilfreq,'(1000f10.6)') dcurr, (wf(imode,iq)*ryd2mev, imode=1,nmodes)
          !
       ENDDO
@@ -142,7 +142,7 @@
          dcurr = dprev + dist
          dprev = dcurr
          WRITE(iufileig,'(10x,3f10.6)') xkf_all(:,ikk)
-         WRITE(iufileig,'(1000f10.4)') (etf_all(ibnd,ikk)*ryd2ev, ibnd=1,nbndsub)
+         WRITE(iufileig,'(1000f14.8)') (etf_all(ibnd,ikk)*ryd2ev, ibnd=1,nbndsub)
          !WRITE(iufileig,'(1000f10.6)') dcurr, (etf_all(ibnd,ikk)*ryd2ev, ibnd=1,nbndsub)
          !
       ENDDO

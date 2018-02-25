@@ -23,7 +23,7 @@ MODULE mp_world
   ! ... World group - all QE routines using mp_world_start to start MPI
   ! ... will work in the communicator passed as input to mp_world_start
   !
-  INTEGER :: nnode = 1 ! number of nodes
+  INTEGER :: nnode = 1  ! number of nodes
   INTEGER :: nproc = 1  ! number of processors
   INTEGER :: mpime = 0  ! processor index (starts from 0 to nproc-1)
   INTEGER :: root  = 0  ! index of the root processor
@@ -48,6 +48,7 @@ CONTAINS
     !
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: my_world_comm
+    INTEGER :: color, key
 #if defined(__MPI)
     INTEGER :: ierr
 #endif
@@ -73,9 +74,9 @@ CONTAINS
 #endif
     !
     CALL mp_start( nproc, mpime, world_comm )
-#if !defined(__GFORTRAN__) || ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
-    CALL mp_count_nodes ( nnode, world_comm )
-#endif
+    !
+    CALL mp_count_nodes ( nnode, color, key, world_comm )
+    !
     !
     ! ... meta_ionode is true if this processor is the root processor
     ! ... of the world group - "ionode_world" would be a better name
