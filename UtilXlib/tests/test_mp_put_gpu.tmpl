@@ -61,7 +61,7 @@ PROGRAM test_mp_put_{vname}_gpu
       CALL mp_put({vname}_d, {vname}_d, mpime, 0, i, 0, world_comm)
       CALL mp_put({vname}_h, {vname}_h, mpime, 0, i, 0, world_comm)
       aux_h = {vname}_d
-      CALL test%assert_equal({sumf}({vname}_h) , {sumf}(aux_h) )
+      CALL test%assert_{compare}({sumf}({vname}_h) , {sumf}(aux_h) )
     END DO
     !
     DO i = 0, nproc-1
@@ -71,7 +71,7 @@ PROGRAM test_mp_put_{vname}_gpu
       CALL mp_put({vname}_d, {vname}_d, mpime, i, 0, 0, world_comm)
       CALL mp_put({vname}_h, {vname}_h, mpime, i, 0, 0, world_comm)
       aux_h = {vname}_d
-      CALL test%assert_equal({sumf}({vname}_h) , {sumf}(aux_h) )
+      CALL test%assert_{compare}({sumf}({vname}_h) , {sumf}(aux_h) )
     END DO
     !
     CALL collect_results(test)
