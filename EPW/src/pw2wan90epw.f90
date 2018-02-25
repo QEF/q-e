@@ -410,7 +410,7 @@ SUBROUTINE setup_nnkp (  )
   !
   ! Read data about neighbours
   WRITE(stdout,*)
-  WRITE(stdout,*) ' Reading data about k-point neighbours '
+  WRITE(stdout,*) '    Reading data about k-point neighbours '
   WRITE(stdout,*)
   IF (meta_ionode) THEN
     DO ik=1, iknum
@@ -962,13 +962,13 @@ SUBROUTINE compute_mmn_para
         ! compute the phase
         !
         phase(:) = (0.d0,0.d0)
-        IF ( ig_(ik_g,ib)>0) phase(dffts%nl(ig_(ik_g,ib)) ) = (1.d0,0.d0)
+        IF ( ig_(ik_g,ib)>0) phase( dffts%nl(ig_(ik_g,ib)) ) = (1.d0,0.d0)
         CALL invfft ('Wave', phase, dffts)
         !
         !  USPP
         !
         IF(any_uspp) THEN
-           CALL init_us_2 (npwq, igkq, xk(1,ikp), vkb)
+           CALL init_us_2 (npwq, igkq, xktot(1,ikp), vkb)
            ! below we compute the product of beta functions with |psi>
            IF (gamma_only) THEN
               CALL calbec ( npwq, vkb, evcq, rbecp2 )
@@ -1036,16 +1036,16 @@ SUBROUTINE compute_mmn_para
               DO ipol=1,2!npol
                  istart=(ipol-1)*npwx+1
                  iend=istart+npw-1
-                 psic_nc(dffts%nl(igk_k (1:npw,ik) ),ipol ) = evc(istart:iend, m)
+                 psic_nc(dffts%nl (igk_k (1:npw,ik) ),ipol ) = evc(istart:iend, m)
                  CALL invfft ('Wave', psic_nc(:,ipol), dffts)
                  psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * &
                                                phase(1:dffts%nnr)
                  CALL fwfft ('Wave', psic_nc(:,ipol), dffts)
-                 aux_nc(1:npwq,ipol) = psic_nc(dffts%nl(igkq(1:npwq) ),ipol )
+                 aux_nc(1:npwq,ipol) = psic_nc(dffts%nl (igkq(1:npwq) ),ipol )
               ENDDO
            ELSE
               psic(:) = (0.d0, 0.d0)
-              psic(dffts%nl(igk_k (1:npw,ik) ) ) = evc (1:npw, m)
+              psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw, m)
               IF(gamma_only) psic(dffts%nlm(igk_k (1:npw,ik) ) ) = conjg(evc (1:npw, m))
               CALL invfft ('Wave', psic, dffts)
               psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
@@ -1637,7 +1637,7 @@ SUBROUTINE write_plot
          IF (excluded_band(ibnd)) CYCLE
          ibnd1=ibnd1 + 1
          psic(:) = (0.d0, 0.d0)
-         psic(dffts%nl(igk_k (1:npw,ik) ) ) = evc (1:npw, ibnd)
+         psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw, ibnd)
          IF (gamma_only)  psic(dffts%nlm(igk_k (1:npw,ik) ) ) = conjg(evc (1:npw, ibnd))
          CALL invfft ('Wave', psic, dffts)
          IF (reduce_unk) pos=0

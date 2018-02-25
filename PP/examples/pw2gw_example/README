@@ -1,0 +1,38 @@
+EXAMPLE: 2dimensional BN
+
+This example shows how to use pw2gw.x post processing code to produce the following outputs
+-The optical matrix elements in the dipole approximation , Fermi golden Rule
+(file matrixelements)
+-The imaginary part of the dielectric function for light polarized along the x,y,z directions  
+ (files epsX.dat, epsY.dat, epsZ.dat) and an average of the three (file epsTOT.dat)
+-The file used as an interface for the dpforexc manybody code (QPLDA)
+ (this file is quite big. Set the qplda input parameter to .true. in the pw2gw
+ input only if this is needed)
+
+
+
+---------------------------------------------------------------------------------------------
+Note: The convergency of the dielectric function with the kinetic cutoff is much faster,
+hence this example will use a reduced cutoff parameter
+Optical properties converge slowly with k-points mesh. Convergence tests with
+the number of kpoints and with the number of empty states have to be carefully
+performed.
+---------------------------------------------------------------------------------------------
+
+1) run a self-consistent calculation (input=bn.scf.in,output=bn.scf.out)
+
+2) run a non self-consistent calculation including several empty bands and more k-points
+   (input=bn.nscf.in,output=bn.nscf.out)
+
+3) run pw2gw.x (input=bn.pw2gw.in,output=bn.pw2gw.out) that reads the wavefunction from the *.save folder
+   and uses them to calculate the aforementioned results
+
+4) Repeat step 2 and 3 increasing the density of the k-mesh and the empty bands in order to study the
+   convergence of the optical properties
+
+
+
+
+
+
+
