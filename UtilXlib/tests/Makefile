@@ -53,7 +53,7 @@ common: tester.o mp_world.o utils.o
 
 
 clean :
-	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x
+	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x rnd_seed_*
 
 # .PHONY forces execution of a rule irrespective of the presence of an
 # updated file with the same name of the rule. In this way, the script 

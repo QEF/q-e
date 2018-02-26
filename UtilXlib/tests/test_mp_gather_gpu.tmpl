@@ -22,8 +22,7 @@ PROGRAM test_mp_gather_{vname}_gpu
     INTEGER, PARAMETER :: datasize = {datasize}
     !
     ! Stuff for comparing with CPU implementation
-    integer, allocatable :: seed(:)
-    integer :: i, n
+    integer :: i
     REAL(8) :: rnd{size}
     !
     ! test variable
@@ -69,11 +68,7 @@ PROGRAM test_mp_gather_{vname}_gpu
     !
     !
     ! Test against CPU implementation
-    CALL random_seed(size = n)
-    ALLOCATE(seed(n))
-    CALL random_seed(get=seed)
-    WRITE (*, *) "Random seed at proc ", mpime ,": ", seed
-    DEALLOCATE(seed)
+    CALL save_random_seed("test_mp_gather_{vname}_gpu", mpime)
     !
     DO i = 0, nproc-1
       CALL RANDOM_NUMBER(rnd)

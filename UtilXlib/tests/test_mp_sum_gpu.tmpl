@@ -21,8 +21,7 @@ PROGRAM test_mp_sum_{vname}_gpu
     INTEGER :: world_group = 0, valid_sum, rnk
     INTEGER, PARAMETER :: datasize = {datasize}
     ! for comparing with CPU implementation
-    INTEGER, ALLOCATABLE :: seed(:)
-    INTEGER :: i, n
+    INTEGER :: i
     REAL(8) :: rnd{size}
     ! test variable
     {type}, DEVICE :: {vname}_d{size}
@@ -52,11 +51,7 @@ PROGRAM test_mp_sum_{vname}_gpu
     !
     ! Validate against CPU implementation
     ! 
-    CALL random_seed(size = n)
-    ALLOCATE(seed(n))
-    CALL random_seed(get=seed)
-    WRITE (*, *) "Random seed at proc ", mpime ,": ", seed
-    DEALLOCATE(seed)
+    CALL save_random_seed("test_mp_sum_{vname}_gpu", mpime)
     !
     CALL RANDOM_NUMBER(rnd)
     {vname}_h = {typeconv} ( 10.0 * rnd )

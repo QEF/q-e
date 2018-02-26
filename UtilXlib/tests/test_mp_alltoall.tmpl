@@ -18,9 +18,7 @@ PROGRAM test_mp_alltoall_{vname}
     INTEGER, PARAMETER :: datasize = {datasize}
     !
     ! Stuff for comparing with CPU implementation
-    integer, allocatable :: seed(:)
-    integer :: i, n
-    REAL(8) :: rnd{size}
+    integer :: i
     !
     ! test variable
     {type}, ALLOCATABLE :: snd_{vname}_h{all}

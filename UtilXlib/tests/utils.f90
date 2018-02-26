@@ -32,6 +32,32 @@ SUBROUTINE collect_results(test)
 #endif
 END SUBROUTINE collect_results
 
+SUBROUTINE save_random_seed(test_name, mpime)
+    IMPLICIT NONE
+    CHARACTER(len=*), INTENT(IN) :: test_name
+    INTEGER, INTENT(IN) :: mpime
+    !
+    INTEGER, PARAMETER :: out_unit=20
+    CHARACTER(len=40) :: fname
+    INTEGER :: n
+    INTEGER, ALLOCATABLE :: seed(:)
+    !
+    CALL random_seed(size = n)
+    ALLOCATE(seed(n))
+    CALL random_seed(get=seed)
+    !
+    WRITE(fname, '("rnd_seed_",A,I4.4)') TRIM(test_name), mpime
+    fname = TRIM(fname)
+    !
+    OPEN (UNIT=out_unit,FILE=fname,ACTION="write",STATUS="replace")
+    !
+    WRITE (out_unit,*) n
+    WRITE (out_unit,*) seed
+    CLOSE (out_unit)
+    DEALLOCATE(seed)
+    !
+END SUBROUTINE save_random_seed
+
 
 SUBROUTINE no_test
 #if defined(__MPI)
