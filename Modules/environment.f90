@@ -22,6 +22,7 @@ MODULE environment
   USE mp_pools,  ONLY: npool
   USE mp_bands,  ONLY: ntask_groups, nproc_bgrp, nbgrp, nyfft
   USE global_version, ONLY: version_number, svn_revision
+  USE fox_init_module, ONLY: fox_init
 #if defined(__HDF5)
   USE qeh5_base_module,   ONLY: initialize_hdf5, finalize_hdf5
 #endif
@@ -124,6 +125,9 @@ CONTAINS
     CALL parallel_info ( code )
 #else
     CALL serial_info()
+#endif
+#if !defined(__OLDXML)
+    CALL fox_init()
 #endif
 #if defined(__HDF5) & !defined(__OLDXML)
   CALL initialize_hdf5()
