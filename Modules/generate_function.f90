@@ -57,7 +57,7 @@ CONTAINS
       END IF
       !
       j0 = dfftp%my_i0r2p ; k0 = dfftp%my_i0r3p
-      DO ir = 1, dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p
+      DO ir = 1, ir_end
          !
          ! ... find the index along the selected axis
          !
