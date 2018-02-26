@@ -5690,7 +5690,8 @@ SUBROUTINE qes_reset_BerryPhaseOutput(obj)
    DO i = 1, SIZE(obj%electronicPolarization)
       CALL qes_reset_electronicPolarization(obj%electronicPolarization(i))
    ENDDO
-   IF (ALLOCATED(obj%electronicPolarization)) DEALLOCATE(obj%electronicPolarization)
+   IF (ALLOCATED(obj%electronicPolarization)) &
+       DEALLOCATE(obj%electronicPolarization)
 
 END SUBROUTINE qes_reset_BerryPhaseOutput
 

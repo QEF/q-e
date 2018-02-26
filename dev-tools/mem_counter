@@ -16,9 +16,9 @@ case $1 in
 esac
 
 if [[ $# == 0 ]] ; then
-    fnames=$(for suffix in f90 ; do find -type f -name "*.$suffix" ; done)
+    fnames=$(find -type f -name "*.f90" )
 else
-    fnames=$*/*.f90
+    for dir in $@ ; do fnames="$fnames $dir/*.f90"; done
 fi
 
 if [[ $revert == 0 ]] ; then
@@ -48,8 +48,10 @@ else
            # if there is a *.f90.bkp file, restore it ...
 	   mv $f.bkp $f
            # ... and delete file *.o if ptesent
-	   obj=`basename $f .f90`.o
-	   if [[ -f $obj ]] ; then /bin/rm $obj; fi
+	   fil=$(basename $f .f90)
+	   dir=$(dirname $f)
+	   obj="$dir/$fil".o
+	   if [[ -f $obj ]] ; then echo /bin/rm $obj; fi
 	fi
     done
 fi

@@ -114,7 +114,7 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
            !  
        ELSE IF ( ierr > 0 ) THEN
           ! 
-          IF ( .NOT. xml_only ) THEN 
+          IF ( .NOT. xml_only_ ) THEN
              u_temp = find_free_unit()
              OPEN (UNIT = u_temp, FILE = TRIM(filename), STATUS = 'old', FORM = 'formatted', IOSTAT = ierr)
              CALL errore ("upf_module:read_upf", "error while opening file " // TRIM(filename), ierr) 

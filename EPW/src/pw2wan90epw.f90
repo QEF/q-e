@@ -410,7 +410,7 @@ SUBROUTINE setup_nnkp (  )
   !
   ! Read data about neighbours
   WRITE(stdout,*)
-  WRITE(stdout,*) ' Reading data about k-point neighbours '
+  WRITE(stdout,*) '    Reading data about k-point neighbours '
   WRITE(stdout,*)
   IF (meta_ionode) THEN
     DO ik=1, iknum
@@ -968,7 +968,7 @@ SUBROUTINE compute_mmn_para
         !  USPP
         !
         IF(any_uspp) THEN
-           CALL init_us_2 (npwq, igkq, xk(1,ikp), vkb)
+           CALL init_us_2 (npwq, igkq, xktot(1,ikp), vkb)
            ! below we compute the product of beta functions with |psi>
            IF (gamma_only) THEN
               CALL calbec ( npwq, vkb, evcq, rbecp2 )

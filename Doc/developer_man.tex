@@ -1,7 +1,6 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.2.1}
+\def\version{6.2.1+}
 \def\qe{{\sc Quantum ESPRESSO}}
-\def\qeforge{\texttt{qe-forge.org}}
 \textwidth = 17cm
 \textheight = 25cm
 \topmargin =-1 cm
@@ -80,8 +79,11 @@ You can contribute to a better \qe, even as an ordinary user, by:
   for reporting bugs".
 \item Improving the documentation (generic complaints or suggestions
   that "there should be this and that" do not qualify as improvements).
-\item Suggesting changes: contact developers at
-  \texttt{q-e-developers[.at.]qe-forge[.dot.]org} mailing list,
+\item Suggesting changes: contact developers submitting an ''Issue'' on
+  GitLab:\\
+		\texttt{GitLab.com/QEF/q-e/Issues}, or posting to the 
+  developers mailing list:\\
+		\texttt{developers@lists.quantum-espresso.org} mailing list.
   Unless there are technical reasons not to follow your suggestion,
   we will try to make you happy. Note however that suggestions requiring
   a significant amount of work are welcome only if accompanied by
@@ -99,8 +101,7 @@ You can contribute to a better \qe, even as an ordinary user, by:
 \qe\ is not organized as a monolithic code, but rather as a
 {\em distribution} (integrated suite) of ``packages'', with
 varying degrees of integration, that can be installed on demand,
-or sometimes independently. There is a ``shell'' structure,
-with at the center the {\em core} distribution, including
+or sometimes independently. The core distribution includes:
 \begin{itemize}
 \item scripts, installation tools, libraries, common source files;
 \item basic packages
@@ -110,11 +111,8 @@ molecular dynamics on the ground state;
 \item \texttt{CP}: Car-Parrinello molecular dynamics;
 \item \texttt{PostProc}: data analysis and plotting (requires \texttt{PWscf}).
 \end{itemize}
-\end{itemize}
-Note that some libraries are downloaded on demand from the web
-during the installation of the core distribution. Then comes a
-shell of {\em additional} packages, that can be downloaded and
-installed from the core distribution using \texttt{make}:
+\item additional packages, using routines from the basic packages,
+      developed and packaged together with the core distribution: 
 \begin{itemize}
 \item \texttt{atomic}: pseudopotential generation
 \item \texttt{PHonon}: Density-Functional Perturbation Theory
@@ -122,22 +120,25 @@ installed from the core distribution using \texttt{make}:
 \item \texttt{PWCOND}: ballistic conductance
 \item \texttt{XSPECTRA}: calculation of X-Ray spectra
 \item \texttt{TDDFPT}: Time-dependent DFPT
-\item \texttt{EPW}: electron-phonon
-\item \texttt{GIPAW}: NMR coefficients and chemical shifts
+\item \texttt{EPW}: electron-phonon coupling coefficients
 \item \texttt{GWL}: GW and BSE using Lanczos chains
-\item \texttt{West}: Many-body perturbation corrections to DFT.
 \end{itemize}
-All these packages use routines from the core distribution. Note that
-\begin{itemize}
-\item \texttt{EPW} and \texttt{GWL} require \texttt{PHonon};
-\item \texttt{GWL} is not automatically downloaded in the released version;
-\item \texttt{GIPAW} and \texttt{West} are stored in separate SVN repositories.
 \end{itemize}
 
-There is then a shell of {\em external} packages, which typically
-read data produced by \qe\ but do not need it to work. Some of them
-(notably Yambo, Wannier90, WanT) can be automatically downloaded and
-installed from the core distribution using \texttt{make}.
+There are also external (separately developed) packages that make usage 
+of \qe\ routines:
+\begin{itemize}
+\item \texttt{GIPAW}: NMR coefficients and chemical shifts, 
+\item \texttt{West}: Many-body perturbation corrections to DFT.
+\end{itemize}
+or that just read data produced by \qe\ but do not need it to work:
+\begin{itemize}
+\item \texttt{Yambo}: Many-body perturbation Theory
+\item \texttt{Wannier90}: Wannier Functions utilities
+\item \texttt{WanT}: Transport with Wannier Functions
+\end{itemize}
+Most of them can be automatically downloaded and installed from the core
+distribution using \texttt{make}.
 
 Finally there are {\em plugins}: these modify \qe\ packages, adding
 new functionalities. Currently the following plugins are available:
@@ -151,90 +152,18 @@ new functionalities. Currently the following plugins are available:
 
 If you want to get involved as a developer and contribute serious
 or nontrivial stuff (or even simple and trivial stuff), you should
-first of all register on \qeforge, following the instructions.
+first of all register on GitLab, following the instructions.
 
-\subsection{About \qeforge}
-\label{SubSec:qeforge}
-
-{\em Important notice: \qeforge\ will be upgraded in the next months
-with new hardware and software. Some of the following pieces of
-information may become obsolete.}
-
-\qeforge\ is the portal for \qe\ developers, contributors,
-and for anybody else wanting to develop a project in the
-field of atomistic simulations. \qeforge\ provides for
-each project a repository, mailing lists, a wiki, upload
-space, a bug tracking facility, various other tools that
-are useful for developers.
-
-Once you have obtained an account ({\em please} follow the
-instructions and introduce yourself when you register: the
-site administrator has to be sure that you are a real person!)
-you may open your own project, retaining all rights on it
-(including the right not to release anything): at the end of
-the "projects" page, click on the link "add new project", fill
-the form (note that the Unix name given to the project cannot
-be modified). You have the choice between a repository using
-CVS, SVN, \texttt{git}, others. Please don't even think using CVS
-(obsolete), prefer \texttt{git} (it is easier to move the
-repository).
-
-You may as well register as a developer
-in an existing project: go to the project page, click on
-button ''Request to become a developer'' under the ''Activity''
-graph on the top of the column at the right, to obtain the permission
-from the administrator of the project (please contact the
-project administratior by mail!).
-
-You need to register your SSH keys in order to have read-write
-access the repository (if you have such permissions). Generate
-keys on your work machine if you haven't already, using command
-\texttt{ssh-keygen -t rsa}. The keys are typically found
- in file \texttt{.ssh/id-rsa.public}. Then
-\begin{enumerate}
-\item login to your \qeforge\ account
-\item click on My stuff (menu on top line)
-\item click on My account (menu on the left)
-\item click on Edit SSH Keys, add your keys (be careful not to add blanks,
-breaks, etc.).
-\end{enumerate}
-
-\subsection{\qe\ on \qeforge}
-
-Currently \qe\ uses the following development tools:
-\begin{itemize}
-\item SVN server (with web interface to browse the repository)
-\item Bug Tracking facility
-\item Upload space (with download counter)
-\item Mailing lists, currently
-\begin{itemize}
-\item \texttt{pw\_forum} (high traffic): for ordinary users,
-requests for help, problems, discussions, etc.. Only
-registered users can post.
-\item \texttt{q-e-developers} (low traffic):
-for communications among developers and people interested
-in the development of \qe. Only registered users can post
-but messages from unregistered users are monitored and
-approved if relevant.
-\item \texttt{q-e-commits} (medium traffic): for automatic
-commit messages. Note that replies to commit messages go
-to the mailing list: in case of doubts or questions or
-remarks over a specific commit, feel free to reply.
-\end{itemize}
-\end{itemize}
-Everybody is encouraged to explore other capabilities of \qeforge.
+{\bf Important notice: qe-forge.org will be phased out end of February 2018.}
 
 All \qe\ developer are {\em strongly} invited to subscribe to the
-two mailing lists \texttt{q-e-developers} and \texttt{q-e-commits}.
+developers' mailing list,
+\texttt{developers@lists.quantum-espresso.org}.
+Subscribe using the links
+in \texttt{https://lists.quantum-espresso.org/mailman/listinfo/developers}.
 Those who don't, lose i) the opportunity to follow what is going on,
 ii) the right to complain if something has gone into a direction
-they don't like. Note that subscription to mailing lists is not
-automatic when you register: you should subscribe using the links
-in \texttt{http://www.qe-forge.org/gf/project/q-e/mailman/}.
-Please also consider subscribing to the bug tracker: select the
-"Tracker" item on the left, then select "Bugs", then click on
-"Start monitoring". You will receive an e-mail every time a
-bug is filed.
+they don't like. 
 
 \subsection{Contributing new developments}
 \label{SubSec:Contrib}
@@ -270,52 +199,24 @@ from the rest of \qe. In that case, you can just send a patch or the
 modified routine(s) to an expert developer who will review it and
 take the appropriate steps.
 
-{\em Notice:} the development model of \qe\ has undergone
-significant changes between releases 5.3 and 5.4. Since v.5.4, only
-package maintainers and a few expert developers are allowed to commit
-into the main ("trunk") SVN repository. Only ``safe'' changes can be
-committed: the repository should always be at or close to production
-status. SVN branches are discouraged: experience shows that too many
-branches are never merged.
-
-Due to various \qeforge limitations and a change in access policy, 
-anonymous SVN access is also disabled. People who need to regularly access 
-to a development version may use the link to the "Daily Snapshot" 
-on the www.quantum-espresso.org web site.
-
-People who need to stay aligned to the development of \qe but they do not 
-contribute directly into the code can use a mirrored version of the repository 
-done using \texttt{git}, available on \qeforge. Please apply for an account on 
-the portal if you haven't one (see Sect.\ref{SubSec:qeforge} for details) then 
-contact support[.at.]qe-forge.org for authorization (remember to explain  what 
-you need and why). Once the access is set, tadd a public SSH key on QE-FORGE and 
-then check out the repository using this command:
+{\bf Notice:} the development model of \qe\ has undergone
+significant changes after release 6.2.1. The development has moved to 
+GitLab. There is also a GitHub mirror, that you can access via e.g.:
 \begin{verbatim}
-   git clone ssh://username@qeforge.qe-forge.org/gitroot/q-e-private
+   git clone https://GitLab.com/QEF/q-e.git
 \end{verbatim}
 
-This repository is only for pull operation and it is "one-way" repository,
-meaning it is kept automatically aligned by a script with the SVN repository.
-Committing into this GIT mirror does not produce a commit in the SVN. See 
-Sect.\ref{Sec:git}, ``Using git'', for more instructions on how to 
-use \texttt{git}.\\
+This repository is "one-way", only for pull operation: it is automatically
+kept aligned with the official GitLab repository. Commits in this GIT 
+repository will be overwritten. See Sect.\ref{Sec:git}, ``Using git'', 
+for more instructions on how to use \texttt{git}.\\
 
-If your project involves a major new addition (e.g. a new package), 
-consider registering it as a new \qeforge project, with a separate 
-SVN or (better) \texttt{git} repository. It is possible to keep the 
-project private, or to restrict access to selected \qe developers.\\
-
-% or to have two repositories, one public and one private.
-% It is also possible to have the public repository automatically
-% downloaded into the SVN copy of \qe\ (see Sect.\ref{SubSec:propedit}).
-
-{\em Important:} if you closely develop to \qe then keep your copy of the 
-distribution aligned to the SVN. Don't work for years, or even for months, 
-without keeping an eye to what is going on in the SVN or in the mirrored GIT 
-repository. This is especially true for projects that are ``tightly bound'' 
-to \qe, that is, use \qe\ code and routines. Frequently update your copy 
-(using command \texttt{svn update} or \texttt{git pull}), verify if changes 
-made meanwhile by other developers conflict with your changes.
+{\em Important:} keep your modified copy of the distribution aligned to GIT. 
+Don't work for years, or even for months, without keeping an eye to what is 
+going on in the GIT repository. This is especially true for projects that 
+are ``tightly bound'' to \qe, that is, use \qe\ code and routines. Frequently 
+update your copy (using command \texttt{git pull}), verify if changes made 
+meanwhile by other developers conflict with your changes.
 Conflicts are in most cases easy to solve: see Sect. \ref{SubSec:Conflicts} 
 for hints on how to remove conflicts and on how to figure out what went wrong.
 
@@ -331,7 +232,7 @@ working. though.
 \item Before doing anything, inquire whether it is already there,
 or under development. In particular, check (and update) the "Road Map"
 page \texttt{www.quantum-espresso.org/road-map}, send a message to
-\texttt{q-e-developers}.
+\texttt{developers@lists.quantum-espresso.org}.
 \item Before starting writing code, inquire whether you can reuse
 code that is already available in the distribution. Avoid redundancy:
 {\em the only bug-free software line is the one that doesn't exist}
@@ -389,9 +290,8 @@ if modified they should be committed.
 verify if it is reproducible on different machines/architectures/phases
 of the moon: erratic or irreproducible problems, especially in parallel
 execution, are often an indication of buggy compilers or libraries
-\item Bug reports should preferably be filed using the bug tracking
-facility at \qeforge:\\
-\texttt{http://qe-forge.org/gf/project/q-e/tracker}
+\item Bug reports should preferably be filed as "Issues" on GitLab,
+	or reported to the developers' mailing list
 \item Bug reports should include enough information to be reproduced:
 the error message alone is seldom a sufficient piece of information.
 Typically, one should report
@@ -411,7 +311,7 @@ The provided input should be simple and quick to execute.
 \end{itemize}
 
 \section{Stable releases and development cycle}
-Stable releases (until v.5.4) are labelled as $N.M.p$, where $N$=major,
+Stable releases are labelled as $N.M.p$, where $N$=major,
 $M$=minor, $p$=bugfix. The logic goes more or less as follows:
 \begin{itemize}
 \item {\em Major}: when something really important changes, e.g.
@@ -421,6 +321,7 @@ $M$=minor, $p$=bugfix. The logic goes more or less as follows:
 \item[v.3] Merge with the CP and FPMD codes (beginning of \qe)
 \item[v.4] New XML-based data file format
 \item[v.5] Major package and directory reorganization
+\item[v.6] New I/O once again
 \end{enumerate}
 (the above numbers are a slightly idealized versions of how things have
 gone until now)
@@ -428,34 +329,14 @@ gone until now)
 \item {\em Bugfix}: only bug fixes; occasionally, minor new functionalities
 that don't break any existing ones are allowed to sneak into a bugfix release.
 \end{itemize}
-It may be convenient to make a SVN branch at release $N.M.0$: this allows
-to go on with the development while keeping track of bug fixes.
 
-Since release 5.2 (June 20, 2015), stable release are packaged at
-fixed dates. The initial schedule is a release every three to four months.
-Since v.5.4 bugfix releases are no longer packaged.
-
-Releases are stored to \qeforge. Given the size of the complete distribution,
-the release is split into a ``core'' distribution and ``add-ons'',
-additional packages, that can be downloaded and installed on demand
-from the core distribution. ``External'' packages can be independently
-released, as long as there is no compatibility problem.
+Since Release 6.2.1, releases are distributed on GitLab. This is also
+the last release distributed on qe-forge.org.
 
 The automatic downloading of packages is implemented in file
 \texttt{install/plugins\_makefile} and configured in file
 \texttt{install/plugins\_list}. For independently released packages,
-it is sufficient to update links. For add-ons packages, not contained
-in the core distribution, there is however a catch-22:
-the core distribution must know the link to all packages it downloads,
-but these are known only {\em after} such packages are uploaded to
-\qeforge\ (and the only way to discover the exact link is to go over
-the released package with the mouse).
-The workaround is that the core distribution looks for generic names,
-written in file \texttt{install/plugins\_list}. These names are translated
-by \qeforge\ into specific names. After all packages have been uploaded,
-file \texttt{/var/lib/gforge/archives/index.php}, residing on \qeforge,
-must be edited and links updated. This requires system privileges on
-the machine hosting \qeforge.
+it is sufficient to update links.
 
 \paragraph{Preparing a release}
 When the release date approaches, development of new stuff is temporarily
@@ -463,10 +344,8 @@ stopped: nothing new or potentially ''dangerous'' is added, and all
 attention is dedicated to fix bugs and to stabilize the distribution.
 This manual and the user manual have to be updated.
 
-Edit the script \texttt{dev-tools/release.sh} to make tarballs.
-
-\paragraph{Updating web site} After the release is uploaded to
-\qeforge, the online documentation must be copied to directory
+\paragraph{Updating web site} After the release is uploaded,
+the online documentation must be copied to directory
 \texttt{/var/www/quantum\_wp\_db/wordpress-3.1.4/wp-content/uploads/Doc}
 on the web site (this requires system privileges on the machine hosting
 the web server).
@@ -813,14 +692,12 @@ The \configure\ script is generated from its source file
 (\texttt{http://www.gnu.org/software/autoconf/}).  Don't edit \configure\
 directly: whenever it gets regenerated, your changes will be lost.
 Instead, go to the \texttt{install/} directory, edit \configurac\ and/or
-files \texttt{install/mt/*.m4}, then run \autoconf\ to regenerate \configure.
+files \texttt{install/m4/*.m4}, then run \autoconf\ to regenerate \configure.
 If you want to keep the old \configure, make a copy first.
 
 GNU \autoconf\ is installed by default on most Unix/Linux systems.  If
 you don't have it on your system, you'll have to install it. You will
-need a recent version (e.g. v.2.65) of \autoconf, because our
-\configurac\
-file uses recent syntax.
+need \autoconf\ v.2.69 or later.
 
 \configurac\ is a regular Bourne shell script (i.e., "sh" -- not csh!),
 except that:
@@ -1121,27 +998,13 @@ prerequisites (for example, Lapack requires BLAS).
 \subsection{Libraries}
 
 Subdirectory \texttt{clib/} contains libraries written in C
-(\texttt{*.c}). There are currently two different ways to
-ensure that fortran can call C routines. The new and recommanded
-way uses the fortran-95 intrinsic \texttt{iso\_c\_binding} module.
+(\texttt{*.c}). To ensure that fortran can call C routines,
+use the fortran-95 intrinsic \texttt{iso\_c\_binding} module.
 See \texttt{Modules/wrappers.f90} for inspiration and examples.
 Reference documentation can be found for instance here:\\
 {\tt
 https://gcc.gnu.org/onlinedocs/gfortran/Interoperable-Subroutines-and-Functions.html}
 
-The old way uses macros in C routines:
-\begin{enumerate}
-\item \texttt{F77\_FUNC (func,FUNC)} for function \texttt{func}, not
-  containing underscore(s) in name
-\item \texttt{F77\_FUNC\_(f\_nc,F\_NC)} for function \texttt{f\_nc},
-  containing underscore(s) in name
-\end{enumerate}
-These macros are defined in file \texttt{include/c\_defs.h},
-included by all \texttt{*.c} files, and are automagically
-generated by \configure. The goal of these macros is to
-choose the correct case (lowercase or uppercase, the latter
-probably obsolete) and the correct number of underscores.
-See file \texttt{include/defs.h.README} for more info.
 
 % \subsection{Adding new directories or routines}
 
@@ -2111,85 +1974,8 @@ read\_namelists.f90 )
 
 \section{Using SVN}
 \label{Sec:SVN}
-\qe is maintained in a Subversion (SVN) repository. Developers can have
-read-write access when needed, read-only otherwise. Note that the latest
-(development) version may occasionally not work properly: carefully
-verify the results before using it in production work.
-
-Subversion, also known as SVN, is a software that allows many
-developers to work and maintain a single copy of a software in a
-central location (repository).
-It is installed by default on many Unix machines, or otherwise
-it can be very easily installed.
-For the end user, SVN is rather similar to CVS:
-if no advanced features are used, the basic commands are the same.
-More information on SVN can be found here:
-\texttt{http://subversion.apache.org/}.
-
-Current organization:
-\begin{itemize}
-\item {\em trunk}: development goes on here
-\item {\em branches}: major new developments, disruptive changes, very
-experimental features, things that have a long time before being released
-(if ever) ...
-\item {\em external}: packages that are be developed in a separate SVN trunk
-can be downloaded into the main QE trunk -- access may be restricted to
-specific (usually expert) developers.
-\end{itemize}
-
-Follow the instructions in
-\texttt{http://qe-forge.org/gf/project/q-e/scmsvn},
-under `Access Info'',
-to check out (i.e.  download) the SVN repository.
-The distribution will appear in directory \texttt{trunk/espresso/}.
-Branches (i.e. sub-versions) will appear as separate directories.
-
-{\em Important notice: since v.5.3 the SVN repository is no longer accessible
-read-only to everybody.}
-
-\subsection{SVN operations}
-
-To update the code to the current version:
-\begin{verbatim}
-  svn update
-\end{verbatim}
-in the directory containing the distribution.
-To see the difference between the current version and your modified
-copy:
-\begin{verbatim}
-  svn diff
-\end{verbatim}
-To save your modified version into the repository:
-(read-write access only):
-\begin{verbatim}
-  svn commit
-\end{verbatim}
-Please explain in a few words what your commit is about! Use option
-\texttt{-m"comment"} or the editor of your choice (set it using the
-\texttt{SVN\_EDITOR} environment variable).
-If you want to add a new file, or a new directory, before commiting
-give command
-\begin{verbatim}
-  svn add
-\end{verbatim}
-To remove a file/directory (if empty):
-\begin{verbatim}
-  svn delete
-\end{verbatim}
-You can move a file (a directory, a group of files, ...) into a different
-directory using command
-\begin{verbatim}
-  svn mv dir1/file1 [dir1/file2 ...] dir2/
-\end{verbatim}
-or, if you prefer to make a copy of the file, retaining the history:
-\begin{verbatim}
-svn cp svn+ssh://myusername@qeforge.qe-forge.org/svnroot/q-e/trunk/espresso/DIR1/file.1 svn+ssh://myusername@qeforge.qe-forge.org/svnroot/q-e/trunk/espresso/DIR2/file2
-\end{verbatim}
-then run \texttt{svn update} to have it applied locally.
-After such operations are done, run the \texttt{install/makedeps.sh} script
-or type \texttt{make depend} to update files \texttt{make.depend} in the
-various subdirectories. It is preferrable to commit the moved files/modified
-directories and the affected Makefiles/make.depend in a single command.
+{\bf Notice}: since February 2018, \qe is maintained on GIT and no
+longer on SVN.
 
 \subsection{Removing conflicts}
 \label{SubSec:Conflicts}
@@ -2225,70 +2011,10 @@ were modifying has been moved to another place, or a variable has meanwhilke
 changed name, for instance). Edit \texttt{conflicting-file}, remove all other
 copies of \texttt{conflicting-file.*}, commit.
 
-Sometimes, the conflict is not so easy to solve. In this case, you
-can selectively update your repository at a given date, or at a given
-revision number, using command (XXXXX=revision number)
-\begin{verbatim}
-  svn update -r XXXXX
-\end{verbatim}
-You can also select a date, using \{"date"\} instead of the revision number.
-In this way you can locate which change(s) is (are) the culprit(s).
-The web-SVN interface:
-\begin{verbatim}
-   http://qe-forge.org/gf/project/q-e/scmsvn
-\end{verbatim}
-will also be very helpful in locating the problem.
-Of course, communication with other developers will also help.
-The above paragraph applies as well to case 2. os conflicts, in
-presence or in absence of explicit SVN conflicts. If the reason for
-malfunctioning is not evident, you have to figure out when the
-problem started. Once this is done, itis usually straightforward
-to figure out why.
-
-\subsection{Merging branch and trunk}
-\label{SubSec:Merge}
-Let us assume that you have created a branch and that you are working
-in the directory of your branch. The simplest way to keep it aligned
-with the trunk is the following command:
-\begin{verbatim}
-  svn merge ^/trunk/espresso
-\end{verbatim}
-The caret (\texttt{\^}) syntax is a shorthand for the entire URL of the trunk.
-Then you have to remove conflicts that can arise from incompatible changes
-made in the trunk. Then you can commit your "aligned" branch (beware:
-the commit message is very large in size if you haven't merged recently;
-if so, it may never reach the \texttt{q-e-commits} mailing list).
-
-In order to merge a branch back into the trunk, the simplest procedure is
-to align first the branch with the trunk and commit it, as above; then,
-in a clean, not locally modified, trunk:
-\begin{verbatim}
-  svn merge --reintegrate ^/branches/my-espresso-branch
-\end{verbatim}
-then, commit.
-
-Note the following very useful property: SVN can merge anything with anything!
-The following web page may be useful:
-\texttt{http://www.math-linux.com/spip.php?article118}
-
-\subsection{Including a repository into the trunk}
-\label{SubSec:propedit}
-It is possible to download other repositories into the main \qe\ repository.
-Currently, this possibility works for GIPAW and West (for authorized users).
-From the trunk/ subdirectory (the one containing espresso/), type
-``svn propedit svn:externals espresso''.
-An editor will open. Type the name of the subdirectory of ``espresso/''
-where you want the repository to be downloaded, followed by the address of
-the repository, exit (not quit!) the editor. Currently:
-\begin{verbatim}
-West  http://qeforge.qe-forge.org/svn/west/trunk
-GIPAW http://qeforge.qe-forge.org/svn/qe-gipaw/trunk
-\end{verbatim}
-
 \section{Using git}
 \label{Sec:git}
 
-Git is a very populare versioning control system for collaborative development 
+GIT is a very populare versioning control system for collaborative development 
 nowadays. The web is full of tutorials and guide about how to use it, covering 
 simple novice concepts to master the most sophisticated functionalities. The 
 following links contain an introduction to \texttt{git}:
@@ -2347,12 +2073,8 @@ The stash can be cleared using \texttt{git clear}. A few useful commands:
 The \qe\, test-suite is used to ensure continuous integration and long-term numerical stability of the code.
 The test-suite is also used by different Buildbot test-farm to automatically test the code nightly after a commit to the SVN qe-forge repository has been detected. 
 
-Two currently (2017) active test-farm can be accessed:
-\begin{itemize}
-\item \href{http://qe-forge.org:8010/waterfall}{Qe-forge test-farm}
-\item \href{http://129.67.86.21:8010/}{Oxford test-farm}
-\end{itemize}
-
+Two currently active test-farm can be accessed at 
+\href{http://130.186.13.198:8010/#/}{CINECA}
 
 \subsection{How to add tests for a new executable}
 

@@ -133,7 +133,7 @@
     END IF
     !
     IF (lrigid) THEN
-      WRITE (6,'(8x,a)') 'Read dielectric tensor and effective charges'
+      WRITE (stdout,'(5x,a)') 'Read dielectric tensor and effective charges'
       zstar = zstar_
       epsi = epsi_
       !ASR on effective charges
@@ -179,7 +179,7 @@
       ! [Gonze and Lee, PRB 55, 10361 (1998), Eq. (45) and (81)]
       !
       IF ( abs(q(1,iq)).lt.eps .and. abs(q(2,iq)).lt.eps .and. abs(q(3,iq)).lt.eps ) THEN
-        WRITE(6,'(8x,a)') 'Imposing acoustic sum rule on the dynamical matrix'
+        WRITE(stdout,'(5x,a)') 'Imposing acoustic sum rule on the dynamical matrix'
         IF (lpolar .and. .not. lrigid) CALL errore('readmat_shuffle2', &
           &'You set lpolar = .true. but did not put epsil = true in the PH calculation at Gamma. ',1)
       ENDIF
@@ -302,7 +302,7 @@
       ! [Gonze and Lee, PRB 55, 10361 (1998), Eq. (45) and (81)]
       !
       IF ( abs(q(1,iq)).lt.eps .and. abs(q(2,iq)).lt.eps .and. abs(q(3,iq)).lt.eps ) then
-        WRITE(6,'(8x,a)') 'Imposing acoustic sum rule on the dynamical matrix'
+        WRITE(stdout,'(5x,a)') 'Imposing acoustic sum rule on the dynamical matrix'
       ENDIF
       DO na = 1,nat
        DO ipol = 1,3
@@ -360,7 +360,7 @@
              read (iudyn,'(a)') line
              read (iudyn,*) ((zstar(i,j,na), j=1,3), i=1,3)
           ENDDO
-          WRITE (stdout,'(8x,a)') 'Read dielectric tensor and effective charges'
+          WRITE (stdout,'(5x,a)') 'Read dielectric tensor and effective charges'
           !
           !ASR on effective charges
           DO i=1,3
@@ -437,7 +437,7 @@
      CALL wsinit(rws,nrwsx,nrws,atws)
      CALL dynifc2blochc (nmodes, rws, nrws, q(:,1), dynq_tmp)
      dynq(:,:,iq_first)=dynq_tmp
-     write(stdout,*) " Dyn mat calculated from ifcs"
+     WRITE (stdout,'(5x,a)') "Dyn mat calculated from ifcs"
      !
   ENDIF
   !
@@ -760,7 +760,7 @@
   CALL mp_bcast (ibrav_, root_pool, intra_pool_comm)
 
   !
-  write(stdout,*) ' IFC last ', ifc(nq1,nq2,nq3,3,3,nat,nat)
+  WRITE(stdout,'(5x,"IFC last ", 1f12.7)') ifc(nq1,nq2,nq3,3,3,nat,nat)
   !
   CALL set_asr2 (asr_typ, nq1, nq2, nq3, ifc, zstar, &
              nat, ibrav_, tau_)
@@ -771,7 +771,6 @@
   ENDIF
   !
   WRITE(stdout,'(/5x,"Finished reading ifcs"/)')
- write(stdout,*) " IFC ", ifc(1,1,1,1,1,1,1), ifc(nq1,nq2,nq3,3,3,nat,nat)
   !
   END SUBROUTINE read_ifc
 !-------------------------------------------------------------------------------
@@ -877,7 +876,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
             end do
          end do
       end do
-    write(stdout,*) " Imposed simple ASR"
+      WRITE (stdout,'(5x,a)') " Imposed simple ASR"
       !
       return
       !
@@ -1006,8 +1005,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !
   zeu_new(:,:,:)=zeu_new(:,:,:) - zeu_w(:,:,:)
   call sp_zeu(zeu_w,zeu_w,nat,norm2)
-  write(stdout,'("Norm of the difference between old and new effective ", &
-       & "charges: ",F25.20)') SQRT(norm2)
+  WRITE(stdout,'(5x,"Norm of the difference between old and new effective charges: ", 1f12.7)') SQRT(norm2)
   !
   ! Check projection
   !
@@ -1247,8 +1245,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !
   frc_new(:,:,:,:,:,:,:)=frc_new(:,:,:,:,:,:,:) - w(:,:,:,:,:,:,:)
   call sp1(w,w,nr1,nr2,nr3,nat,norm2)
-  write(stdout,'("Norm of the difference between old and new force-constants:",&
-       &     F25.20)') SQRT(norm2)
+  WRITE(stdout,'(5x,"Norm of the difference between old and new force-constants: ", 1f12.7)') SQRT(norm2)
   !
   ! Check projection
   !
@@ -1284,7 +1281,7 @@ SUBROUTINE set_asr2 (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   deallocate (x, w)
   deallocate (v, ind_v)
   deallocate (frc_new)
-   write(stdout,*) " Imposed crystal ASR"
+  WRITE (stdout,'(5x,a)') "Imposed crystal ASR"
   !
   return
 end subroutine set_asr2

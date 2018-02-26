@@ -237,9 +237,19 @@ SUBROUTINE read_upf_mesh(u, upf, grid)
       ! Reconstruct additional grids
       upf%grid%r2 =  upf%r**2
       upf%grid%sqr = sqrt(upf%r)
-      upf%grid%rm1 = upf%r**(-1)
-      upf%grid%rm2 = upf%r**(-2)
-      upf%grid%rm3 = upf%r**(-3)
+      ! Prevent FP error if r(1) = 0 
+      IF ( upf%r(1) > 1.0D-16 ) THEN
+         upf%grid%rm1 = upf%r**(-1)
+         upf%grid%rm2 = upf%r**(-2)
+         upf%grid%rm3 = upf%r**(-3)
+      ELSE
+         upf%grid%rm1(1) =0.0_dp
+         upf%grid%rm2(1) =0.0_dp
+         upf%grid%rm3(1) =0.0_dp
+         upf%grid%rm1(2:)= upf%r(2:)**(-1)
+         upf%grid%rm2(2:)= upf%r(2:)**(-2)
+         upf%grid%rm3(2:)= upf%r(2:)**(-3)
+      END IF
    ENDIF
    !
    RETURN

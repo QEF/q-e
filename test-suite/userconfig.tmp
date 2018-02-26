@@ -61,6 +61,7 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0e-2, 1.0e-5, 'eh1'),
               (1.0e-2, 1.0e-5, 'el1'),
               (1.0e-2, 1.0e-5, 'tf1'),
+              (1.0e-4, 1.0e-5, 'qdir'),
               (5.0e-2, 5.0e-3, 'diel'),
               (5.0e-2, 5.0e-3, 'born'),
               (2.0e+0, 6.0e-2, 'phfreq'),
@@ -85,7 +86,11 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (5.0e-4, 5.0e-4, 'elph'),
               (2.0e-2, 5.0e-4, 'allDyn'),
               (2.0e-3, 5.0e-4, 'pi'),
-              (1.0e-4, 5.0e-4, 'bcsgap'))
+              (1.0e-4, 5.0e-4, 'bcsgap'),
+              (1.0e-4, 5.0e-4, 'mobvb'),
+              (1.0e-2, 1.0e-2, 'mobx'),
+              (1.0e-2, 1.0e-2, 'mobxZ'))
+
 skip_program = grep
 skip_args = 'not present in this version'
 

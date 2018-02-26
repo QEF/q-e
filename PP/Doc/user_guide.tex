@@ -167,7 +167,7 @@ Code \texttt{average.x} calculates planar averages of quantities calculated
 by \texttt{pp.x} (e.g. potentials, charge, magnetization densities).
 Note that \texttt{average.x} reads the intermediate file produced
 by \texttt{pp.x}, not data files produced by \pwx. Examples of usage 
-of \texttt{average.x} can be found in \texttt{examples/WorcFct\_example/} 
+of \texttt{average.x} can be found in \texttt{examples/WorkFct\_example/} 
 and in \texttt{examples/dipole\_example/}.
 
 \paragraph{All-electron charge}
@@ -231,7 +231,9 @@ Data produced by code \texttt{projwfc.x} can be further
 analysed using auxiliary codes \texttt{sumpdos.x} (sums selected PDOS
 by specifying the names of files containing the desired PDOS: type 
 \texttt{sumpdos.x -h} or look into the source code for more details) 
-and \texttt{plotproj.x} . 
+and \texttt{plotproj.x} . A more sophisticated tools is the script
+\texttt{tools/sum\_states.py}, by Julen Larrucea: documentation in
+\texttt{http://larrucea.eu/sum\_states-py-2/}.
 
 The total electronic DOS can also be calculated by code \texttt{dos.x},
 whose complete input documentation is in \texttt{Doc/INPUT\_DOS.*}
@@ -318,7 +320,8 @@ for input data documentation.
 Code \texttt{pw2gw.x} converts data files from \pwx\ to a format suitable 
 for usage by another GW code, computes optical properties in single-particle 
 approach (Fermi Golden Rule). See file \texttt{Doc/INPUT\_pw2gw.html}
-for input data documentation.
+for input data documentation, directory \texttt{examples/pw2gw\_example/}
+for an example of usage.
 
 Code \texttt{pw\_export.x}, not compiled by default, is an interface
 to other codes, documented in \texttt{Doc/INPUT\_pw\_export.*}
