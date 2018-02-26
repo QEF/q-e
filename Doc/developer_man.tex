@@ -81,9 +81,9 @@ You can contribute to a better \qe, even as an ordinary user, by:
   that "there should be this and that" do not qualify as improvements).
 \item Suggesting changes: contact developers submitting an ''Issue'' on
   GitLab:\\
-		\texttt{GitLab.com/QEF/q-e/Issues}, or posting to the 
+		\texttt{git.quantum-espresso.org}, or posting to the 
   developers mailing list:\\
-		\texttt{developers@lists.quantum-espresso.org} mailing list.
+		\texttt{developers@lists.quantum-espresso.org}.
   Unless there are technical reasons not to follow your suggestion,
   we will try to make you happy. Note however that suggestions requiring
   a significant amount of work are welcome only if accompanied by
@@ -98,7 +98,7 @@ You can contribute to a better \qe, even as an ordinary user, by:
 
 \section{\qe\ as a distribution}
 
-\qe\ is not organized as a monolithic code, but rather as a
+\qe\ is not organized as a monolithic code, but as a
 {\em distribution} (integrated suite) of ``packages'', with
 varying degrees of integration, that can be installed on demand,
 or sometimes independently. The core distribution includes:
@@ -124,7 +124,6 @@ molecular dynamics on the ground state;
 \item \texttt{GWL}: GW and BSE using Lanczos chains
 \end{itemize}
 \end{itemize}
-
 There are also external (separately developed) packages that make usage 
 of \qe\ routines:
 \begin{itemize}
@@ -152,23 +151,36 @@ new functionalities. Currently the following plugins are available:
 
 If you want to get involved as a developer and contribute serious
 or nontrivial stuff (or even simple and trivial stuff), you should
-first of all register on GitLab, following the instructions.
+first of all register on GitLab.com, following the instructions.
 
-{\bf Important notice: qe-forge.org will be phased out end of February 2018.}
-
-All \qe\ developer are {\em strongly} invited to subscribe to the
+All \qe\ developers are {\em strongly} invited to subscribe to the
 developers' mailing list,
 \texttt{developers@lists.quantum-espresso.org}.
-Subscribe using the links
+Subscribe using the link
 in \texttt{https://lists.quantum-espresso.org/mailman/listinfo/developers}.
 Those who don't, lose i) the opportunity to follow what is going on,
 ii) the right to complain if something has gone into a direction
 they don't like. 
 
+{\bf Important notice:} the development model of \qe\ has undergone
+significant changes after release 6.2.1. The development has moved to 
+GitLab. the official GIT repository is visible at
+\texttt{git.quantum-espresso.org} and can be downloaded as follows:
+\begin{verbatim}
+   git clone https://gitlab.com/QEF/q-e.git
+\end{verbatim}
+
+There is also a GitHub mirror \texttt{github.com/QEF/q-e}, only for
+``pull'' (i.e., read) operations, automatically kept aligned with
+the official GitLab repository. The GitHub repository can be downloaded
+as above, with the replacement \texttt{gitlab}$\rightarrow$\texttt{github}.
+
+See Sect.\ref{Sec:git}, ``Using git'',  and file \texttt{CONTRIBUTING.md},
+for instructions on how to use \texttt{git}.
+
 \subsection{Contributing new developments}
 \label{SubSec:Contrib}
 
-Various procedures can be followed to contribute new developments.
 It is possible to contribute:
 \begin{itemize}
 \item a small, or large, piece of code to an existing package; or
@@ -195,35 +207,21 @@ major stumbling block is the alignment to the newer \qe\ distribution.
 
 The sole exception is when your changes are either relatively small, or
 localized to a small part of \qe, or they are quite independent anyway
-from the rest of \qe. In that case, you can just send a patch or the
+from the rest of \qe. In that case, you may just send a patch or the
 modified routine(s) to an expert developer who will review it and
-take the appropriate steps.
-
-{\bf Notice:} the development model of \qe\ has undergone
-significant changes after release 6.2.1. The development has moved to 
-GitLab. There is also a GitHub mirror, that you can access via e.g.:
-\begin{verbatim}
-   git clone https://GitLab.com/QEF/q-e.git
-\end{verbatim}
-
-This repository is "one-way", only for pull operation: it is automatically
-kept aligned with the official GitLab repository. Commits in this GIT 
-repository will be overwritten. See Sect.\ref{Sec:git}, ``Using git'', 
-for more instructions on how to use \texttt{git}.\\
+take the appropriate steps. The preferred path is however a ``merge request''
+on GitLab.
 
 {\em Important:} keep your modified copy of the distribution aligned to GIT. 
 Don't work for years, or even for months, without keeping an eye to what is 
 going on in the GIT repository. This is especially true for projects that 
-are ``tightly bound'' to \qe, that is, use \qe\ code and routines. Frequently 
-update your copy (using command \texttt{git pull}), verify if changes made 
-meanwhile by other developers conflict with your changes.
-Conflicts are in most cases easy to solve: see Sect. \ref{SubSec:Conflicts} 
+modify or use \qe\ code and routines. Update your copy frequently (using
+command \texttt{git pull}), verify if changes made meanwhile by other
+developers conflict with your changes. See Sect. \ref{SubSec:Conflicts} 
 for hints on how to remove conflicts and on how to figure out what went wrong.
-
-If instead your project is ``loosely coupled'', that is, it just uses the
-\qe\ installation procedure and/or data files, it is less likely to run
-into problems, since major incompatible changes are quite rare.
-You may still need to verify from time to time that everything keeps
+If your project just uses the \qe\ installation procedure and/or data files,
+it is less likely to run into problems, since major incompatible changes are
+quite rare. You may still need to verify from time to time that everything keeps
 working. though.
 
 \subsection{Hints, Caveats, Do's and Dont's for developers}
@@ -264,8 +262,7 @@ incompatibilities with previous versions (e.g. old data file
 no longer readable, old input no longer valid), {\em please}
 report it in file \texttt{Doc/release-notes}.
 \item If you add/modify/remove input variables, document
-it in the appropriate
-\texttt{INPUT\_*.def} file; if
+it in the appropriate \texttt{INPUT\_*.def} file; if
 you remove an input variable, update tests and examples
 accordingly.
 \item All newly introduced features or variables must be
@@ -278,7 +275,7 @@ tabulators \^{}I.
 \item When you modify the program sources, run the
 \texttt{install/makedeps.sh}  script  or type \texttt{make depend}
 to update files \texttt{make.depend} in the various
-subdirectories. These files are under SVN as well;
+subdirectories. These files are under GIT as well;
 if modified they should be committed.
 \end{itemize}
 
@@ -290,8 +287,10 @@ if modified they should be committed.
 verify if it is reproducible on different machines/architectures/phases
 of the moon: erratic or irreproducible problems, especially in parallel
 execution, are often an indication of buggy compilers or libraries
-\item Bug reports should preferably be filed as "Issues" on GitLab,
-	or reported to the developers' mailing list
+\item Bug reports should preferably be filed as "Issues" on GitLab:
+  \texttt{GitLab.com/QEF/q-e/Issues},
+	or reported to the developers' mailing list:
+		\texttt{developers@lists.quantum-espresso.org}.
 \item Bug reports should include enough information to be reproduced:
 the error message alone is seldom a sufficient piece of information.
 Typically, one should report
@@ -352,13 +351,14 @@ the web server).
 
 \section{Structure of the distribution}
 
-Since v.5, the directory structure of \qe\ reflects its organization
+The directory structure of \qe\ reflects its organization
 into packages. Each package is stored into a specific subdirectory.
 In addition, there is a set of directories, common to all packages,
 containing common code,
 libraries, installation utilities, general documentation.
 
-Common files and directories in the \texttt{espresso/} directory are:
+The most important fiels and directories in the root (\texttt{q-e/})
+directory are:
 \begin{verbatim}
    install/                 configure
    include/                 make.inc
@@ -369,6 +369,7 @@ Common files and directories in the \texttt{espresso/} directory are:
    clib/                    bin/
    Modules/                 LR_Modules/
    COUPLE/                  upftools/
+   FFTXlib/                 LAXlib/           UtilXlib
 \end{verbatim}
 Apart from  \texttt{License} and \texttt{README} whose meaning is
 obvious, the other files and directories are related to
@@ -378,13 +379,15 @@ obvious, the other files and directories are related to
 \configure, \make.inc
 \item  {\em Testing} (running tests and examples):\\
 \texttt{pseudo/}, \texttt{environment\_variables}
-\item  {\em General documentation} (not package-specific):
+\item  {\em General documentation} (not package-specific):\\
 \texttt{Doc/}
-\item {\em  C and Fortran Libraries, modules}:
+\item {\em  FFT, Linear Algebra, Utility Libraries}:\\
+\texttt{FFTXlib/}, \texttt{LAXlib/}, \texttt{UtilXlib/}
+\item {\em  C and Fortran Libraries, modules}:\\
 \texttt{clib/}, \texttt{Modules/}, \texttt{COUPLE/}
 (the latter contains code and documentation useful to call \qe\ programs
  from external codes)
-\item {\em  Linear-response specific modules}:
+\item {\em  Linear-response specific modules}:\\
 \texttt{LR\_Modules/}.
 \end{itemize}
 
@@ -2073,8 +2076,9 @@ The stash can be cleared using \texttt{git clear}. A few useful commands:
 The \qe\, test-suite is used to ensure continuous integration and long-term numerical stability of the code.
 The test-suite is also used by different Buildbot test-farm to automatically test the code nightly after a commit to the SVN qe-forge repository has been detected. 
 
-Two currently active test-farm can be accessed at 
-\href{http://130.186.13.198:8010/#/}{CINECA}
+The currently active test-farm machine can be accessed at 
+\texttt{test-farm.quantum-espresso.org} (points to a machine at CINECA:
+\verb|{http://130.186.13.198:8010/#/}|
 
 \subsection{How to add tests for a new executable}
 
