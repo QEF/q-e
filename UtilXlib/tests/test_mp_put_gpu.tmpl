@@ -40,7 +40,7 @@ PROGRAM test_mp_put_{vname}_gpu
     {vname}_h = mpime + 1
     {vname}_d = {vname}_h
     !mp_put    (msg_dest,  msg_sour, mpime, sour, dest, ip, gid)
-    CALL mp_put({vname}_d, {vname}_d, mpime, 0, nproc-1, 0, world_comm)
+    CALL mp_put({vname}_d, {vname}_d, mpime, nproc-1, 0, 0, world_comm)
     {vname}_h = {vname}_d
     !
     IF (mpime == 0) CALL test%assert_equal({allf}({vname}_h .eq. nproc) , .true. )

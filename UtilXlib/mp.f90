@@ -3314,7 +3314,7 @@ END FUNCTION mp_get_comm_self
         INTEGER :: msg_dest_h, msg_sour_h
         !
         msg_dest_h=msg_dest_d ; msg_sour_h=msg_sour_d 
-        CALL mp_put_i1(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        CALL mp_put_i1(msg_dest_h, msg_sour_h, mpime, sour, dest, ip, gid)
         msg_dest_d = msg_dest_h
         RETURN
 #else
@@ -3371,7 +3371,7 @@ END FUNCTION mp_get_comm_self
         INTEGER, ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
         !
         ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
-        CALL mp_put_iv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        CALL mp_put_iv(msg_dest_h, msg_sour_h, mpime, sour, dest, ip, gid)
         msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
         RETURN
@@ -3429,7 +3429,7 @@ END FUNCTION mp_get_comm_self
         REAL (DP), ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
         !
         ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
-        CALL mp_put_rv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        CALL mp_put_rv(msg_dest_h, msg_sour_h, mpime, sour, dest, ip, gid)
         msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
 #else
@@ -3486,7 +3486,7 @@ END FUNCTION mp_get_comm_self
         REAL (DP), ALLOCATABLE :: msg_dest_h(:,:), msg_sour_h(:,:)
         !
         ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
-        CALL mp_put_rm(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        CALL mp_put_rm(msg_dest_h, msg_sour_h, mpime, sour, dest, ip, gid)
         msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
 #else
@@ -3546,7 +3546,7 @@ END FUNCTION mp_get_comm_self
         COMPLEX (DP), ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
         !
         ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
-        CALL mp_put_cv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
+        CALL mp_put_cv(msg_dest_h, msg_sour_h, mpime, sour, dest, ip, gid)
         msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
 #else
