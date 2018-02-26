@@ -8,6 +8,9 @@
 !
 MODULE data_buffer
     USE util_param,  ONLY : DP
+#ifdef __CUDA
+    USE cudafor
+#endif
     !
     IMPLICIT NONE
     !
