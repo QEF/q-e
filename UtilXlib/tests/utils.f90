@@ -38,7 +38,7 @@ SUBROUTINE save_random_seed(test_name, mpime)
     INTEGER, INTENT(IN) :: mpime
     !
     INTEGER, PARAMETER :: out_unit=20
-    CHARACTER(len=40) :: fname
+    CHARACTER(len=60) :: fname
     INTEGER :: n
     INTEGER, ALLOCATABLE :: seed(:)
     !
