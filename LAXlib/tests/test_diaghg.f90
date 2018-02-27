@@ -32,14 +32,15 @@ program test_diaghg
   !
   SUBROUTINE real_1(test)
     USE LAXlib
+    USE la_param, ONLY : DP
     implicit none
     !
     TYPE(tester_t) :: test
     ! real variables
-    real(8) :: h(2,2)
-    real(8) :: s(2,2)
-    real(8) :: e(2)
-    real(8) :: v(2,2)
+    real(DP) :: h(2,2)
+    real(DP) :: s(2,2)
+    real(DP) :: e(2)
+    real(DP) :: v(2,2)
     
     h = 0.d0
     h(1,1) = 1.d0
@@ -70,16 +71,17 @@ program test_diaghg
   !
   SUBROUTINE complex_1(test)
     USE LAXlib
+    USE la_param, ONLY : DP
     implicit none
     !
     TYPE(tester_t) :: test
     ! real variables
-    complex(8) :: h(2,2)
-    complex(8) :: h_save(2,2)
-    complex(8) :: s(2,2)
-    complex(8) :: s_save(2,2)
-    real(8) :: e(2)
-    complex(8) :: v(2,2)
+    complex(DP) :: h(2,2)
+    complex(DP) :: h_save(2,2)
+    complex(DP) :: s(2,2)
+    complex(DP) :: s_save(2,2)
+    real(DP) :: e(2)
+    complex(DP) :: v(2,2)
     !
     h = 0.d0
     h(1,1) = (1.d0,  0.d0)

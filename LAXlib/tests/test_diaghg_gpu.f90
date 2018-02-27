@@ -33,20 +33,21 @@ program test_diaghg_gpu
   !
   SUBROUTINE real_1(test)
     USE LAXlib
+    USE la_param, ONLY : DP
     USE cudafor
     implicit none
     !
     TYPE(tester_t) :: test
     ! variables on device
-    real(8), device :: h_d(2,2)
-    real(8), device :: s_d(2,2)
-    real(8), device :: e_d(2)
-    real(8), device :: v_d(2,2)
+    real(DP), device :: h_d(2,2)
+    real(DP), device :: s_d(2,2)
+    real(DP), device :: e_d(2)
+    real(DP), device :: v_d(2,2)
     ! variables on host
-    real(8) :: h_h(2,2)
-    real(8) :: s_h(2,2)
-    real(8) :: e_h(2)
-    real(8) :: v_h(2,2)
+    real(DP) :: h_h(2,2)
+    real(DP) :: s_h(2,2)
+    real(DP) :: e_h(2)
+    real(DP) :: v_h(2,2)
     
     h_h = 0.d0
     h_h(1,1) = 1.d0
@@ -88,23 +89,25 @@ program test_diaghg_gpu
   !
   SUBROUTINE complex_1(test)
     USE LAXlib
+    USE la_param, ONLY : DP
+    USE cudafor
     implicit none
     !
     TYPE(tester_t) :: test
     ! variables on device
-    complex(8), device :: h_d(2,2)
-    complex(8), device :: s_d(2,2)
-    complex(8), device :: v_d(2,2)
-    real(8),    device :: e_d(2)
+    complex(DP), device :: h_d(2,2)
+    complex(DP), device :: s_d(2,2)
+    complex(DP), device :: v_d(2,2)
+    real(DP),    device :: e_d(2)
     ! variables on host
-    complex(8) :: h_h(2,2)
-    complex(8) :: s_h(2,2)
-    complex(8) :: v_h(2,2)
-    real(8)    :: e_h(2)
+    complex(DP) :: h_h(2,2)
+    complex(DP) :: s_h(2,2)
+    complex(DP) :: v_h(2,2)
+    real(DP)    :: e_h(2)
 
 
-    complex(8) :: s_save(2,2)
-    complex(8) :: h_save(2,2)
+    complex(DP) :: s_save(2,2)
+    complex(DP) :: h_save(2,2)
 
 
     !
