@@ -1,3 +1,4 @@
+import os, re, sys
 
 types=['INTEGER', 'REAL(8)', 'COMPLEX(8)'] # WARNING, only double real and complex are tested
 typeconv={'INTEGER': 'INT', 'REAL': 'REAL', 'REAL(8)': 'DBLE', 'COMPLEX': 'CMPLX', 'COMPLEX(8)': 'DCMPLX'}
@@ -7,13 +8,18 @@ ranks  ={'1': '', 'v': '(datasize)', 'm': '(datasize,datasize)', 't': '(datasize
 nextr={'1': 'v', 'v': 'm', 'm': 't', 't': ''}
 compare={'INTEGER': 'equal', 'REAL': 'close', 'REAL(8)': 'close', 'COMPLEX': 'close', 'COMPLEX(8)': 'close'}
 
-import os, re
+input_file_names = sys.argv[1:]
+input_file_names = [os.path.basename(x) for x in input_file_names]
 
 mkfile = open('./autotest.inc', 'w')
 mkfile.write('override SRCS += ')
 
 for file in os.listdir("."):
   if file.endswith(".tmpl"):
+    
+    if input_file_names:
+      if not (os.path.basename(file) in input_file_names):
+        continue
     
     with open(file,'r') as f:
       data = f.read()
