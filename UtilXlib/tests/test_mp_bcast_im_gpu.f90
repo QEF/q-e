@@ -1,7 +1,7 @@
 #if defined(__CUDA)
 PROGRAM test_mp_bcast_im_gpu
 !
-! Simple program to check the functionalities of test_mp_bcast_i1.
+! Simple program to check the functionalities of test_mp_bcast_im.
 !
     USE cudafor
 #if defined(__MPI)
