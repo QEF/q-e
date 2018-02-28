@@ -4,8 +4,10 @@ include ../../make.inc
 
 MODFLAGS= $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../../ELPA/src  $(MOD_FLAG) ..
 
-SRCS = test_diaghg.f90 \
-			 test_diaghg_gpu.f90
+SRCS = test_diaghg_1.f90 \
+       test_diaghg_2.f90 \
+       test_diaghg_gpu_1.f90 \
+       test_diaghg_gpu_2.f90
 
 EXECS = $(SRCS:.f90=.x)
 
