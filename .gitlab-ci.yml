@@ -1,32 +1,32 @@
-# build:pw:
-#   image: ubuntu:latest
-#   script:
-#     - apt-get update
-#     - apt-get install --yes build-essential gfortran wget python
-#     - apt-get install --yes libopenmpi-dev openmpi-bin
-#     - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
-#     - ./configure
-#     - make pw
-#    - export OMP_NUM_THREADS=1
-#    - cd test-suite
-#    - mkdir /tmp/save
-#    - make run-tests-pw-serial
-#    - rm -r /tmp/save
+build:pw:
+  image: ubuntu:latest
+  script:
+    - apt-get update
+    - apt-get install --yes build-essential gfortran wget python
+    - apt-get install --yes libopenmpi-dev openmpi-bin
+    - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
+    - ./configure
+    - make pw
+   - export OMP_NUM_THREADS=1
+   - cd test-suite
+   - mkdir /tmp/save
+   - make run-tests-pw-serial
+   - rm -r /tmp/save
 
-# build:cp:
-#   image: ubuntu:latest
-#   script:
-#     - apt-get update
-#     - apt-get install --yes build-essential gfortran wget python
-#     - apt-get install --yes libopenmpi-dev openmpi-bin
-#     - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
-#     - ./configure
-#     - make cp
-#    - export OMP_NUM_THREADS=1
-#    - cd test-suite
-#    - mkdir /tmp/save
-#    - make run-tests-cp-serial
-#    - rm -r /tmp/save
+build:cp:
+  image: ubuntu:latest
+  script:
+    - apt-get update
+    - apt-get install --yes build-essential gfortran wget python
+    - apt-get install --yes libopenmpi-dev openmpi-bin
+    - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
+    - ./configure
+    - make cp
+   - export OMP_NUM_THREADS=1
+   - cd test-suite
+   - mkdir /tmp/save
+   - make run-tests-cp-serial
+   - rm -r /tmp/save
 
 #build:centos:
 #  image: centos:latest
@@ -44,18 +44,18 @@
 
 #### BUILDS ON GALILEO ####
 
-# build:intel:
-#   tags: [galileo]
-#   script:
-#     - module load intel/pe-xe-2017--binary intelmpi/2017--binary mkl/2017--binary
-#     - ./configure --enable-openmp
-#     - make pw cp
-#     - export OMP_NUM_THREADS=2
-#     - cd test-suite
-#     - mkdir -p /tmp/save
-#     - make run-tests-pw-parallel
-#     - make run-tests-cp-parallel
-#     - rm -r /tmp/save
+build:intel:
+  tags: [galileo]
+  script:
+    - module load intel/pe-xe-2017--binary intelmpi/2017--binary mkl/2017--binary
+    - ./configure --enable-openmp
+    - make pw cp
+    - export OMP_NUM_THREADS=2
+    - cd test-suite
+    - mkdir -p /tmp/save
+    - make run-tests-pw-parallel
+    - make run-tests-cp-parallel
+    - rm -r /tmp/save
 
 
 # build:cudafortran:
@@ -82,14 +82,14 @@ build:cudafortran:
     - git merge -X ours --no-edit origin/configcuda
     - git merge -X theirs --no-edit origin/mpicuda
     - git merge -X theirs --no-edit origin/cudadiag
-    # - ./configure --enable-openmp --with-cuda=$CUDA_HOME
-    # - make pw cp
-    # - make clean
+    - ./configure --enable-openmp --with-cuda=$CUDA_HOME
+    - make pw cp
+    - make clean
     - ./configure --disable-parallel --with-cuda=$CUDA_HOME
     - export OMP_NUM_THREADS=1
-    - make pw #cp
+    - make pw cp
     - cd test-suite
     - mkdir -p /tmp/save
     - make run-tests-pw-serial
-    # - make run-tests-cp-serial
+    - make run-tests-cp-serial
     - rm -r /tmp/save
