@@ -10,6 +10,7 @@ PROGRAM test_mp_alltoall_{vname}_gpu
 #if defined(__MPI)
     USE MPI
 #endif
+    USE util_param, ONLY : DP
     USE mp, ONLY : mp_alltoall
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
                           root, nproc, world_comm
@@ -22,7 +23,7 @@ PROGRAM test_mp_alltoall_{vname}_gpu
     !
     ! Stuff for comparing with CPU implementation
     integer :: i
-    REAL(8), ALLOCATABLE :: rnd{all}
+    REAL(DP), ALLOCATABLE :: rnd{all}
     !
     ! test variable
     {type}, ALLOCATABLE, DEVICE :: snd_{vname}_d{all}

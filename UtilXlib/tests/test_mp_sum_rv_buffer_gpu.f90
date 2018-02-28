@@ -9,6 +9,7 @@ PROGRAM test_mp_sum_rv_buffer_gpu
     USE MPI
 #endif
     USE cudafor
+    USE util_param, ONLY : DP
     USE mp, ONLY : mp_sum
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
                           root, nproc, world_comm
@@ -19,8 +20,8 @@ PROGRAM test_mp_sum_rv_buffer_gpu
     INTEGER :: world_group = 0
     ! test variable
     INTEGER, DEVICE :: rv_d(200001)
-    REAL(8) :: rv_h(200001)
-    REAL(8) :: valid(200001)
+    REAL(DP) :: rv_h(200001)
+    REAL(DP) :: valid(200001)
     !
     CALL test%init()
     

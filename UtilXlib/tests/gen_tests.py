@@ -1,12 +1,12 @@
 import os, re, sys
 
-types=['INTEGER', 'REAL(8)', 'COMPLEX(8)'] # WARNING, only double real and complex are tested
-typeconv={'INTEGER': 'INT', 'REAL': 'REAL', 'REAL(8)': 'DBLE', 'COMPLEX': 'CMPLX', 'COMPLEX(8)': 'DCMPLX'}
+types=['INTEGER', 'REAL(DP)', 'COMPLEX(DP)'] # WARNING, only double real and complex are tested
+typeconv={'INTEGER': 'INT', 'REAL': 'REAL', 'REAL(DP)': 'DBLE', 'COMPLEX': 'CMPLX', 'COMPLEX(DP)': 'DCMPLX'}
 
 datasize='10'
 ranks  ={'1': '', 'v': '(datasize)', 'm': '(datasize,datasize)', 't': '(datasize,datasize,datasize)'}
 nextr={'1': 'v', 'v': 'm', 'm': 't', 't': ''}
-compare={'INTEGER': 'equal', 'REAL': 'close', 'REAL(8)': 'close', 'COMPLEX': 'close', 'COMPLEX(8)': 'close'}
+compare={'INTEGER': 'equal', 'REAL': 'close', 'REAL(DP)': 'close', 'COMPLEX': 'close', 'COMPLEX(DP)': 'close'}
 
 input_file_names = sys.argv[1:]
 input_file_names = [os.path.basename(x) for x in input_file_names]

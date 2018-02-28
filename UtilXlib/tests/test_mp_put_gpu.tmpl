@@ -10,6 +10,7 @@ PROGRAM test_mp_put_{vname}_gpu
 #if defined(__MPI)
     USE MPI
 #endif
+    USE util_param, ONLY : DP
     USE mp, ONLY : mp_put
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
                           root, nproc, world_comm
@@ -22,7 +23,7 @@ PROGRAM test_mp_put_{vname}_gpu
     !
     ! Stuff for comparing with CPU implementation
     integer :: i
-    REAL(8) :: rnd{size}
+    REAL(DP) :: rnd{size}
     !
     ! test variable
     {type}, DEVICE :: {vname}_d{size}

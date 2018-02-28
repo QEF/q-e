@@ -7,6 +7,7 @@ PROGRAM test_mp_alltoall_{vname}
 #if defined(__MPI)
     USE MPI
 #endif
+    USE util_param, ONLY : DP
     USE mp, ONLY : mp_alltoall
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
                           root, nproc, world_comm

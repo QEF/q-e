@@ -9,6 +9,7 @@ PROGRAM test_mp_max_iv_buffer_gpu
     USE MPI
 #endif
     USE cudafor
+    USE util_param, ONLY : DP
     USE mp, ONLY : mp_max
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
                           root, nproc, world_comm
@@ -18,8 +19,8 @@ PROGRAM test_mp_max_iv_buffer_gpu
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
     ! test variable
-    REAL(8), DEVICE :: iv_d(200001)
-    REAL(8) :: iv_h(200001)
+    REAL(DP), DEVICE :: iv_d(200001)
+    REAL(DP) :: iv_h(200001)
     !
     CALL test%init()
     

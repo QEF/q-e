@@ -7,6 +7,7 @@ PROGRAM test_mp_bcast_r5d_gpu
 #if defined(__MPI)
     USE MPI
 #endif
+    USE util_param, ONLY : DP
     USE mp, ONLY : mp_bcast
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
                           root, nproc, world_comm
@@ -16,8 +17,8 @@ PROGRAM test_mp_bcast_r5d_gpu
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
     ! test variable
-    REAL(8), DEVICE :: im_d(10, 10, 10, 10, 10)
-    REAL(8)         :: im_h(10, 10, 10, 10, 10)
+    REAL(DP), DEVICE :: im_d(10, 10, 10, 10, 10)
+    REAL(DP)         :: im_h(10, 10, 10, 10, 10)
     
     !    
     CALL test%init()

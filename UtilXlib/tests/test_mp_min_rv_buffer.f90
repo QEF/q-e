@@ -7,6 +7,7 @@ PROGRAM test_mp_min_rv_buffer
 #if defined(__MPI)
     USE MPI
 #endif
+    USE util_param, ONLY : DP
     USE mp, ONLY : mp_min
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
                           root, nproc, world_comm
@@ -16,8 +17,8 @@ PROGRAM test_mp_min_rv_buffer
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
     ! test variable
-    REAL(8) :: rv(200001)
-    REAL(8) :: valid(200001)
+    REAL(DP) :: rv(200001)
+    REAL(DP) :: valid(200001)
     !
     CALL test%init()
     

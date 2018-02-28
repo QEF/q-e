@@ -9,6 +9,7 @@ PROGRAM test_mp_root_sum_{vname}_gpu
 #if defined(__MPI)
     USE MPI
 #endif
+    USE util_param, ONLY : DP
     USE mp, ONLY : mp_root_sum
     USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
                           root, nproc, world_comm
@@ -20,7 +21,7 @@ PROGRAM test_mp_root_sum_{vname}_gpu
     INTEGER, PARAMETER :: datasize = {datasize}
     ! for comparing with CPU implementation
     INTEGER :: i
-    REAL(8) :: rnd{size}
+    REAL(DP) :: rnd{size}
     ! test variable
     {type}, DEVICE :: {vname}_d{size}, root_{vname}_d{size}
     {type} :: {vname}_h{size}, root_{vname}_h{size}
