@@ -7,11 +7,11 @@ build:pw:
     - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
     - ./configure
     - make pw
-   - export OMP_NUM_THREADS=1
-   - cd test-suite
-   - mkdir /tmp/save
-   - make run-tests-pw-serial
-   - rm -r /tmp/save
+  #  - export OMP_NUM_THREADS=1
+  #  - cd test-suite
+  #  - mkdir /tmp/save
+  #  - make run-tests-pw-serial
+  #  - rm -r /tmp/save
 
 build:cp:
   image: ubuntu:latest
@@ -22,11 +22,11 @@ build:cp:
     - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
     - ./configure
     - make cp
-   - export OMP_NUM_THREADS=1
-   - cd test-suite
-   - mkdir /tmp/save
-   - make run-tests-cp-serial
-   - rm -r /tmp/save
+  #  - export OMP_NUM_THREADS=1
+  #  - cd test-suite
+  #  - mkdir /tmp/save
+  #  - make run-tests-cp-serial
+  #  - rm -r /tmp/save
 
 #build:centos:
 #  image: centos:latest
