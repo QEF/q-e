@@ -3,6 +3,9 @@
 include ../make.inc
 
 MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../ELPA/src  $(MOD_FLAG) .
+ifdef GPU_ARCH
+	MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../ELPA/src  $(MOD_FLAG)../EIGENSOLVER_GPU/lib_eigsolve $(MOD_FLAG) .
+endif
 
 LAX = la_types.o \
 la_error.o \
