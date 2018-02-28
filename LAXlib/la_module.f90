@@ -70,7 +70,7 @@ MODULE LAXlib
       CALL cdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d)
       !
       e = e_d
-      info = cudaMemcpy2D(v, ldh, v_d, size(v,1), n, m, cudaMemcpyDeviceToHost)
+      v(1:ldh,1:m) = v_d(1:ldh,1:m)
       !
       DEALLOCATE(h_d, s_d, e_d, v_d)
   #endif
@@ -108,7 +108,7 @@ MODULE LAXlib
       ! overlap matrix
     REAL(DP), DEVICE, INTENT(OUT) :: e_d(n)
       ! eigenvalues
-    COMPLEX(DP), DEVICE, INTENT(OUT) :: v_d(ldh,m)
+    COMPLEX(DP), DEVICE, INTENT(OUT) :: v_d(ldh,n)
       ! eigenvectors (column-wise)
     LOGICAL, OPTIONAL ::  onhost
       ! optionally evaluate offload on GPU 
@@ -127,12 +127,12 @@ MODULE LAXlib
     IF ( lonhost ) THEN
       !
       ALLOCATE(s, source=s_d); ALLOCATE(h, source=h_d)
-      ALLOCATE(e(n), v(ldh,n))
+      ALLOCATE(e(n), v(ldh,m))
       !
       CALL cdiaghg(n, m, h, s, ldh, e, v)
       !
       e_d = e
-      info = cudaMemcpy2D(v_d, ldh, v, size(v,1), n, m, cudaMemcpyHostToDevice)
+      v_d(1:ldh,1:m) = v(1:ldh,1:m)
       !
       DEALLOCATE(h, s, e, v)
     ELSE
@@ -197,7 +197,7 @@ MODULE LAXlib
       CALL rdiaghg_gpu(n, m, h_d, s_d, ldh, e_d, v_d)
       !
       e = e_d
-      info = cudaMemcpy2D(v, ldh, v_d, size(v,1), n, m, cudaMemcpyDeviceToHost)
+      v(1:ldh,1:m) = v_d(1:ldh,1:m)
       !
       DEALLOCATE(h_d, s_d, e_d, v_d)
   #endif
@@ -231,7 +231,7 @@ MODULE LAXlib
       ! overlap matrix
     REAL(DP), DEVICE, INTENT(OUT) :: e_d(n)
       ! eigenvalues
-    REAL(DP), DEVICE, INTENT(OUT) :: v_d(ldh,m)
+    REAL(DP), DEVICE, INTENT(OUT) :: v_d(ldh,n)
       ! eigenvectors (column-wise)
     LOGICAL, OPTIONAL ::  onhost
       ! optionally evaluate offload on GPU 
@@ -250,12 +250,12 @@ MODULE LAXlib
     IF ( lonhost ) THEN
       !
       ALLOCATE(s, source=s_d); ALLOCATE(h, source=h_d)
-      ALLOCATE(e(n), v(ldh,n))
+      ALLOCATE(e(n), v(ldh,m))
       !
       CALL rdiaghg(n, m, h, s, ldh, e, v)
       !
       e_d = e
-      info = cudaMemcpy2D(v_d, ldh, v, size(v,1), n, m, cudaMemcpyHostToDevice)
+      v_d(1:ldh,1:m) = v(1:ldh,1:m)
       !
       DEALLOCATE(h, s, e, v)
     ELSE

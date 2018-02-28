@@ -276,7 +276,7 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
                        iwork, liwork, v_h, SIZE(v_h, 1), e_h, info, .TRUE.)
       !
 
-      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' copy failed ', ABS( info ) )
+      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' zhegvdx_gpu failed ', ABS( info ) )
       !
       ! FIXME
       h_d = h_tmp_d
@@ -286,7 +286,6 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
       DEALLOCATE(work, rwork, iwork)
       DEALLOCATE(work_d, rwork_d)
       DEALLOCATE(v_h, e_h)
-      IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' zhegvdx_gpu failed ', ABS( info ) )
      !
   END IF
   !
