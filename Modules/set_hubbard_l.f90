@@ -42,11 +42,11 @@ FUNCTION set_hubbard_l( psd ) RESULT( hubbard_l )
         !
         hubbard_l =  0
         !
-     CASE( 'C', 'N', 'O' )
+     CASE( 'C', 'N', 'O', 'As' )
         !
         hubbard_l =  1
         !
-     CASE( 'As', 'Ga', 'In' )
+     CASE( 'Ga', 'In' )
         !
         hubbard_l =  2
         !
