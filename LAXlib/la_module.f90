@@ -24,9 +24,9 @@ MODULE LAXlib
     ! ... LAPACK version - uses both ZHEGV and ZHEGVX
     !
     USE la_param,          ONLY : DP
-  #if defined (__CUDA)
+#if defined (__CUDA)
     USE cudafor
-  #endif
+#endif
     !
     IMPLICIT NONE
     !
@@ -46,23 +46,23 @@ MODULE LAXlib
       ! optionally evaluate offload on GPU 
     LOGICAL :: loffload
       !
-  #if defined __CUDA
+#if defined(__CUDA)
     COMPLEX(DP), ALLOCATABLE, DEVICE :: v_d(:,:), h_d(:,:), s_d(:,:)
     REAL(DP),    ALLOCATABLE, DEVICE :: e_d(:)
     INTEGER :: info
-  #endif
+#endif
     !
     loffload = .false.
     !
     ! the following ifdef ensures no offload if not compiling from GPU 
-  #if defined __CUDA
+#if defined(__CUDA)
     IF (PRESENT(offload)) loffload = offload
-  #endif
+#endif
     !
     ! ... always false on CPU cude
     !
     IF ( loffload ) THEN
-  #if defined __CUDA
+#if defined(__CUDA)
       !
       ALLOCATE(s_d, source=s); ALLOCATE(h_d, source=h)
       ALLOCATE(e_d(n), v_d(ldh,n))
@@ -73,7 +73,7 @@ MODULE LAXlib
       v(1:ldh,1:m) = v_d(1:ldh,1:m)
       !
       DEALLOCATE(h_d, s_d, e_d, v_d)
-  #endif
+#endif
     ELSE
       CALL cdiaghg(n, m, h, s, ldh, e, v)
     END IF
@@ -82,7 +82,7 @@ MODULE LAXlib
     !
   END SUBROUTINE cdiaghg_cpu_
   !
-  #if defined (__CUDA)
+#if defined(__CUDA)
   !----------------------------------------------------------------------------
   SUBROUTINE cdiaghg_gpu_( n, m, h_d, s_d, ldh, e_d, v_d, onhost )
     !----------------------------------------------------------------------------
@@ -142,7 +142,7 @@ MODULE LAXlib
     RETURN
     !
   END SUBROUTINE cdiaghg_gpu_
-  #endif
+#endif
   !
   !----------------------------------------------------------------------------
   SUBROUTINE rdiaghg_cpu_( n, m, h, s, ldh, e, v, offload )
@@ -151,9 +151,9 @@ MODULE LAXlib
     ! ... general interface for rdiaghg
     !
     USE la_param,          ONLY : DP
-  #if defined (__CUDA)
+#if defined(__CUDA)
     USE cudafor
-  #endif
+#endif
     !
     IMPLICIT NONE
     !
@@ -173,23 +173,23 @@ MODULE LAXlib
       ! optionally evaluate offload on GPU 
     LOGICAL :: loffload
       !
-  #if defined __CUDA
+#if defined(__CUDA)
     REAL(DP), ALLOCATABLE, DEVICE :: v_d(:,:), h_d(:,:), s_d(:,:)
     REAL(DP), ALLOCATABLE, DEVICE :: e_d(:)
     INTEGER :: info
-  #endif
+#endif
     !
     loffload = .false.
     !
     ! the following ifdef ensures no offload if not compiling from GPU 
-  #if defined __CUDA
+#if defined(__CUDA)
     IF (PRESENT(offload)) loffload = offload
-  #endif
+#endif
     !
     ! ... always false on CPU cude
     !
     IF ( loffload ) THEN
-  #if defined __CUDA
+#if defined(__CUDA)
       !
       ALLOCATE(s_d, source=s); ALLOCATE(h_d, source=h)
       ALLOCATE(e_d(n), v_d(ldh,n))
@@ -200,7 +200,7 @@ MODULE LAXlib
       v(1:ldh,1:m) = v_d(1:ldh,1:m)
       !
       DEALLOCATE(h_d, s_d, e_d, v_d)
-  #endif
+#endif
     ELSE
       CALL rdiaghg(n, m, h, s, ldh, e, v)
     END IF
@@ -209,7 +209,7 @@ MODULE LAXlib
     !
   END SUBROUTINE rdiaghg_cpu_
   !
-  #if defined (__CUDA)
+#if defined(__CUDA)
   !----------------------------------------------------------------------------
   SUBROUTINE rdiaghg_gpu_( n, m, h_d, s_d, ldh, e_d, v_d, onhost )
     !----------------------------------------------------------------------------
@@ -265,5 +265,5 @@ MODULE LAXlib
     RETURN
     !
   END SUBROUTINE rdiaghg_gpu_
-  #endif
+#endif
 END MODULE LAXlib

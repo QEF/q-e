@@ -189,7 +189,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
 END SUBROUTINE cdiaghg
 !
-#if defined (__CUDA)
+#if defined(__CUDA)
 !----------------------------------------------------------------------------
 SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
   !----------------------------------------------------------------------------

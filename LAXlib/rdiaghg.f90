@@ -172,7 +172,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
 END SUBROUTINE rdiaghg
 
 
-#if defined __CUDA
+#if defined(__CUDA)
 !----------------------------------------------------------------------------
 SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
   !----------------------------------------------------------------------------
