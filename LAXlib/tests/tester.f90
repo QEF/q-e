@@ -149,14 +149,9 @@ contains
     if (this% n_errors == 0) then
        write(*,*) 'fortran_tester: all tests succeeded'
     else
+       write(*,*) 'fortran_tester: tests failed'
        if (do_errorstop) then
-#if ! defined(__PGI)
-          error stop 'fortran_tester: tests failed'
-#else
           stop 1
-#endif
-       else
-          write(*,*) 'fortran_tester: tests failed'
        end if
     end if
 

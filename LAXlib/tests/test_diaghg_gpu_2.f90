@@ -131,4 +131,7 @@ program test_diaghg_gpu_2
   END SUBROUTINE hermitian
   
 end program test_diaghg_gpu_2
+#else
+program test_diaghg_gpu_2
+end program test_diaghg_gpu_2
 #endif

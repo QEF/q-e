@@ -2,21 +2,23 @@
 
 include ../../make.inc
 
-MODFLAGS= $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../../ELPA/src  $(MOD_FLAG) ..
+MODFLAGS= $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../../ELPA/src  $(MOD_FLAG).. $(MOD_FLAG).
 
 SRCS = test_diaghg_1.f90 \
        test_diaghg_2.f90 \
+       test_diaghg_3.f90 \
        test_diaghg_gpu_1.f90 \
-       test_diaghg_gpu_2.f90
+       test_diaghg_gpu_2.f90 \
+       test_diaghg_gpu_3.f90
 
 EXECS = $(SRCS:.f90=.x)
 
 all: common $(EXECS)
 
-common: tester.o mp_world.o utils.o
+common: tester.o mp_world.o utils.o test_io.o
 
 %.x: %.o
-	$(LD) $(LDFLAGS) $< tester.o mp_world.o utils.o -o $@ ../libqela.a \
+	$(LD) $(LDFLAGS) $< tester.o mp_world.o utils.o test_io.o -o $@ ../libqela.a \
 	../../UtilXlib/libutil.a $(LIBOBJS) $(LIBS)
 
 clean :
