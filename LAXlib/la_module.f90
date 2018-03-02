@@ -11,6 +11,13 @@ MODULE LAXlib
 #endif
   END INTERFACE
   !
+  INTERFACE pdiaghg
+     MODULE PROCEDURE pcdiaghg_, prdiaghg_
+#ifdef __CUDA
+     MODULE PROCEDURE pcdiaghg__gpu, prdiaghg__gpu
+#endif
+  END INTERFACE
+  !
   CONTAINS
   !
   !----------------------------------------------------------------------------
@@ -265,5 +272,167 @@ MODULE LAXlib
     RETURN
     !
   END SUBROUTINE rdiaghg_gpu_
+#endif
+  !
+  !  === Parallel diagonalization interface subroutines
+  !
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE prdiaghg_( n, h, s, ldh, e, v, desc, offload )
+    !----------------------------------------------------------------------------
+    !
+    ! ... calculates eigenvalues and eigenvectors of the generalized problem
+    ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
+    ! ... On output both matrix are unchanged
+    !
+    ! ... Parallel version with full data distribution
+    !
+    USE la_param,    ONLY : DP
+    USE descriptors, ONLY : la_descriptor
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: n, ldh
+      ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
+      ! leading dimension of h, as declared in the calling pgm unit
+    REAL(DP), INTENT(INOUT) :: h(ldh,ldh), s(ldh,ldh)
+      ! matrix to be diagonalized
+      ! overlap matrix
+    !
+    REAL(DP), INTENT(OUT) :: e(n)
+      ! eigenvalues
+    REAL(DP), INTENT(OUT) :: v(ldh,ldh)
+      ! eigenvectors (column-wise)
+    TYPE(la_descriptor), INTENT(IN) :: desc
+      !
+    LOGICAL, OPTIONAL ::  offload
+      ! optionally evaluate offload on GPU 
+    LOGICAL :: loffload
+
+    CALL prdiaghg( n, h, s, ldh, e, v, desc)
+      
+  END SUBROUTINE
+  !----------------------------------------------------------------------------
+  SUBROUTINE pcdiaghg_( n, h, s, ldh, e, v, desc, offload )
+    !----------------------------------------------------------------------------
+    !
+    ! ... calculates eigenvalues and eigenvectors of the generalized problem
+    ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
+    ! ... On output both matrix are unchanged
+    !
+    ! ... Parallel version with full data distribution
+    !
+    USE la_param,    ONLY : DP
+    USE descriptors, ONLY : la_descriptor
+    !
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: n, ldh
+      ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
+      ! leading dimension of h, as declared in the calling pgm unit
+    COMPLEX(DP), INTENT(INOUT) :: h(ldh,ldh), s(ldh,ldh)
+      ! matrix to be diagonalized
+      ! overlap matrix
+    !
+    REAL(DP), INTENT(OUT) :: e(n)
+      ! eigenvalues
+    COMPLEX(DP), INTENT(OUT) :: v(ldh,ldh)
+      ! eigenvectors (column-wise)
+    TYPE(la_descriptor), INTENT(IN) :: desc
+      !
+    LOGICAL, OPTIONAL ::  offload
+      ! optionally evaluate offload on GPU 
+    LOGICAL :: loffload
+
+    CALL pcdiaghg( n, h, s, ldh, e, v, desc)
+      
+  END SUBROUTINE
+  !
+#if defined(__CUDA)
+  !----------------------------------------------------------------------------
+  SUBROUTINE prdiaghg__gpu( n, h_d, s_d, ldh, e_d, v_d, desc, onhost )
+    !----------------------------------------------------------------------------
+    !
+    ! ... calculates eigenvalues and eigenvectors of the generalized problem
+    ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
+    ! ... On output both matrix are unchanged
+    !
+    ! ... Parallel version with full data distribution
+    !
+    USE la_param,    ONLY : DP
+    USE descriptors, ONLY : la_descriptor    !
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: n, ldh
+      ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
+      ! leading dimension of h, as declared in the calling pgm unit
+    REAL(DP), INTENT(INOUT), DEVICE :: h_d(ldh,ldh), s_d(ldh,ldh)
+      ! matrix to be diagonalized
+      ! overlap matrix
+    !
+    REAL(DP), INTENT(OUT), DEVICE :: e_d(n)
+      ! eigenvalues
+    REAL(DP), INTENT(OUT), DEVICE :: v_d(ldh,ldh)
+      ! eigenvectors (column-wise)
+    TYPE(la_descriptor), INTENT(IN) :: desc
+      !
+    LOGICAL, OPTIONAL ::  onhost
+      ! optionally evaluate offload on CPU, mandatory now 
+    LOGICAL :: lonhost
+      !
+    REAL(DP), ALLOCATABLE :: v(:,:), h(:,:), s(:,:)
+    REAL(DP), ALLOCATABLE :: e(:)
+    
+    ALLOCATE(h(ldh,ldh), s(ldh,ldh), e(n), v(ldh,ldh))
+    h = h_d; s = s_d;
+    CALL prdiaghg( n, h, s, ldh, e, v, desc)
+    e_d = e; v_d = v
+    DEALLOCATE(h,s,v,e)
+    ! 
+  END SUBROUTINE
+  !----------------------------------------------------------------------------
+  SUBROUTINE pcdiaghg__gpu( n, h_d, s_d, ldh, e_d, v_d, desc, onhost )
+    !----------------------------------------------------------------------------
+    !
+    ! ... calculates eigenvalues and eigenvectors of the generalized problem
+    ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
+    ! ... On output both matrix are unchanged
+    !
+    ! ... Parallel version with full data distribution
+    !
+    USE la_param,    ONLY : DP
+    USE descriptors, ONLY : la_descriptor    !
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: n, ldh
+      ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
+      ! leading dimension of h, as declared in the calling pgm unit
+    COMPLEX(DP), INTENT(INOUT), DEVICE :: h_d(ldh,ldh), s_d(ldh,ldh)
+      ! matrix to be diagonalized
+      ! overlap matrix
+    !
+    REAL(DP), INTENT(OUT), DEVICE :: e_d(n)
+      ! eigenvalues
+    COMPLEX(DP), INTENT(OUT), DEVICE :: v_d(ldh,ldh)
+      ! eigenvectors (column-wise)
+    TYPE(la_descriptor), INTENT(IN) :: desc
+      !
+    LOGICAL, OPTIONAL ::  onhost
+      ! optionally evaluate offload on CPU, mandatory now
+    LOGICAL :: lonhost
+      !
+    COMPLEX(DP), ALLOCATABLE :: v(:,:), h(:,:), s(:,:)
+    REAL(DP), ALLOCATABLE :: e(:)
+    
+    ALLOCATE(h(ldh,ldh), s(ldh,ldh), e(n), v(ldh,ldh))
+    h = h_d; s = s_d;
+    CALL pcdiaghg( n, h, s, ldh, e, v, desc)
+    e_d = e; v_d = v
+    DEALLOCATE(h,s,v,e)
+    !
+  END SUBROUTINE
 #endif
 END MODULE LAXlib
