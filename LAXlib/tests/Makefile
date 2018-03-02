@@ -7,6 +7,7 @@ MODFLAGS= $(MOD_FLAG)../../UtilXlib $(MOD_FLAG)../../ELPA/src  $(MOD_FLAG).. $(M
 SRCS = test_diaghg_1.f90 \
        test_diaghg_2.f90 \
        test_diaghg_3.f90 \
+       test_diaghg_4.f90 \
        test_diaghg_gpu_1.f90 \
        test_diaghg_gpu_2.f90 \
        test_diaghg_gpu_3.f90
