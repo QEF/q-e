@@ -19,7 +19,6 @@ SUBROUTINE phq_readin()
   !
   !
   USE kinds,         ONLY : DP
-  USE parameters,    ONLY : nsx
   USE ions_base,     ONLY : nat, ntyp => nsp
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast,mp_barrier
@@ -84,7 +83,7 @@ SUBROUTINE phq_readin()
     ! counter on iterations
     ! counter on atoms
     ! counter on types
-  REAL(DP) :: amass_input(nsx)
+  REAL(DP), ALLOCATABLE :: amass_input(:)
     ! save masses read from input here
   CHARACTER (LEN=256) :: outdir
   !
@@ -435,6 +434,7 @@ SUBROUTINE phq_readin()
   !   amass will also be read from file:
   !   save its content in auxiliary variables
   !
+  ALLOCATE ( amass_input( SIZE(amass) ) )
   amass_input(:)= amass(:)
   !
   tmp_dir_save=tmp_dir
@@ -565,6 +565,7 @@ SUBROUTINE phq_readin()
      IF (amass_input(it) > 0.D0) amass(it) = amass_input(it)
      IF (amass(it) <= 0.D0) CALL errore ('phq_readin', 'Wrong masses', it)
   ENDDO
+  DEALLOCATE (amass_input)
   lgamma_gamma=.FALSE.
   IF (.NOT.ldisp) THEN
      IF (nkstot==1.OR.(nkstot==2.AND.nspin==2)) THEN
