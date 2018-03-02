@@ -33,6 +33,7 @@ program test_diaghg_gpu_3
   CONTAINS
   !
   SUBROUTINE real_1(test)
+    USE mp_world, ONLY : mpime
     USE LAXlib
     USE la_param, ONLY : DP
     USE test_io
@@ -52,18 +53,23 @@ program test_diaghg_gpu_3
     ! device copies
     real(DP), allocatable, device :: h_d(:,:)
     real(DP), allocatable, device :: s_d(:,:)
-    real(DP), allocatable, device    :: e_d(:)
+    real(DP), allocatable, device :: e_d(:)
     real(DP), allocatable, device :: v_d(:,:)
     !
     !
     character(len=20) :: inputs(2)
-    integer :: i, j
+    integer :: i, j, info
     !
     inputs = ["ZnOG1.bin", "ZnOG2.bin"]
     !
     DO i=1, SIZE(inputs)
         !
-        CALL read_problem(inputs(i), ldh, n, m, h, s, e, v)
+        CALL read_problem(inputs(i), ldh, n, m, h, s, e, v, info)
+        !
+        IF (info /= 0) THEN
+            IF (mpime == 0) print *, "Test with ", inputs(i), " skipped. Input not found."
+            CYCLE
+        END IF
         !
         ALLOCATE(h_save, SOURCE=h)
         ALLOCATE(s_save, SOURCE=s)
@@ -132,6 +138,7 @@ program test_diaghg_gpu_3
   END SUBROUTINE real_1
   !
   SUBROUTINE complex_1(test)
+    USE mp_world, ONLY : mpime
     USE LAXlib
     USE la_param, ONLY : DP
     USE test_io
@@ -155,14 +162,22 @@ program test_diaghg_gpu_3
     complex(DP), allocatable, device :: v_d(:,:)
     !
     !
-    character(len=20)        :: inputs(2)
-    integer :: i, j
+    character(len=20)        :: inputs(4)
+    integer :: i, j, info
     !
-    inputs = ["ZnOK1.bin", "ZnOK2.bin"]
+    inputs = ["ZnOK1.bin ", &
+              "ZnOK2.bin ", &
+              "SiGeK1.bin", &
+              "SiGeK2.bin"]
     !
     DO i=1, SIZE(inputs)
         !
-        CALL read_problem(inputs(i), ldh, n, m, h, s, e, v)
+        CALL read_problem(inputs(i), ldh, n, m, h, s, e, v, info)
+        !
+        IF (info /= 0) THEN
+            IF (mpime == 0) print *, "Test with ", inputs(i), " skipped. Input not found."
+            CYCLE
+        END IF
         !
         ALLOCATE(h_save, SOURCE=h)
         ALLOCATE(s_save, SOURCE=s)
