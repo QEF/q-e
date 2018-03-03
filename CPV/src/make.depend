@@ -1181,7 +1181,6 @@ vol_clu.o : ../../Modules/ions_base.o
 vol_clu.o : ../../Modules/kind.o
 vol_clu.o : ../../Modules/mp_bands.o
 vol_clu.o : ../../Modules/mp_world.o
-vol_clu.o : ../../Modules/parameters.o
 vol_clu.o : ../../Modules/recvec.o
 vol_clu.o : ../../UtilXlib/mp.o
 vol_clu.o : ions_positions.o

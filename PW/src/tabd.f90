@@ -100,7 +100,7 @@ FUNCTION hubbard_occ ( psd )
      CASE( 'C'  )
         hubbard_occ = 2.d0
      !
-     CASE( 'N'  )
+     CASE( 'N', 'As' )
         hubbard_occ = 3.d0
      !
      CASE( 'O'  )

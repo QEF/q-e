@@ -529,11 +529,12 @@
         mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm  )**2)  /( carrier_density * hbarJ)
         mobility = (mobility_xx+mobility_yy+mobility_zz)/3
         ! carrier_density in cm^-1
-        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev /kelvin2eV, &
-                ef0(itemp)*ryd2ev, carrier_density_prt, mobility_xx, '  x-axis [Z]'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis [Z]'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis [Z]'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg [Z]'
+! DBSP - Z-factor
+!        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev /kelvin2eV, &
+!                ef0(itemp)*ryd2ev, carrier_density_prt, mobility_xx, '  x-axis [Z]'
+!        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis [Z]'
+!        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis [Z]'
+!        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg [Z]'
 
         ! 
       ENDDO ! nstemp
@@ -733,16 +734,17 @@
         mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm  )**2)  / ( carrier_density * hbarJ)
         mobility = (mobility_xx+mobility_yy+mobility_zz)/3
         !
-        IF ( ABS(efcb(itemp)) < eps ) THEN
-          WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV,&
-                                                   ef0(itemp)*ryd2ev, carrier_density_prt, mobility_xx, '  x-axis [Z]'
-        ELSE
-          WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV,&
-                                                   efcb(itemp)*ryd2ev, carrier_density_prt, mobility_xx, '  x-axis [Z]'
-        ENDIF
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis [Z]'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis [Z]'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg [Z]'
+! DBSP - Z-factor
+!        IF ( ABS(efcb(itemp)) < eps ) THEN
+!          WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV,&
+!                                                   ef0(itemp)*ryd2ev, carrier_density_prt, mobility_xx, '  x-axis [Z]'
+!        ELSE
+!          WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV,&
+!                                                   efcb(itemp)*ryd2ev, carrier_density_prt, mobility_xx, '  x-axis [Z]'
+!        ENDIF
+!        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis [Z]'
+!        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis [Z]'
+!        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg [Z]'
 
         ! 
       ENDDO ! nstemp

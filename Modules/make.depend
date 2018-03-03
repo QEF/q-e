@@ -64,6 +64,7 @@ dylmr2.o : kind.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
+environment.o : fox_init_module.o
 environment.o : io_files.o
 environment.o : io_global.o
 environment.o : kind.o
@@ -91,6 +92,9 @@ fft_rho.o : ../FFTXlib/fft_interfaces.o
 fft_rho.o : ../FFTXlib/fft_types.o
 fft_rho.o : control_flags.o
 fft_rho.o : kind.o
+fox_init_module.o : ../UtilXlib/mp.o
+fox_init_module.o : io_global.o
+fox_init_module.o : mp_images.o
 funct.o : io_global.o
 funct.o : kind.o
 funct.o : xc_rVV10.o
