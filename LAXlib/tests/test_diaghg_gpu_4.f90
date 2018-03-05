@@ -1,5 +1,5 @@
 ! This test uses the internal parallel diagonalization algorithm of LAXlib
-! to solve the problems stored in binary files:
+! (GPU interface) to solve the problems stored in binary files:
 !
 !  - ZnOG1.bin
 !  - ZnOG2.bin
@@ -10,8 +10,8 @@
 !
 ! If the scalacpak or ELPA driver is used, the test is skipped.
 !
-#if ! defined(__SCALAPACK)
-program test_diaghg_4
+#if ( ! defined(__SCALAPACK) ) && defined(__CUDA) 
+program test_diaghg_gpu_4
 #if defined(__MPI)
     USE MPI
 #endif
@@ -45,6 +45,7 @@ program test_diaghg_4
   CONTAINS
   !
   SUBROUTINE parallel_real_1(test)
+    USE cudafor
     USE mp_world,    ONLY : mpime
     USE LAXlib
     USE descriptors, ONLY : la_descriptor, descla_init, descla_local_dims
@@ -56,14 +57,18 @@ program test_diaghg_4
     !
     TYPE(la_descriptor) :: desc
     integer :: ldh, n, m
-    real(DP), allocatable :: h(:,:), hdst(:,:) !< full and distributed Hpsi
-    real(DP), allocatable :: h_save(:,:)       !< full Hpsi, used to check consistence across calls
-    real(DP), allocatable :: s(:,:), sdst(:,:) !< full and distributed Spsi
-    real(DP), allocatable :: s_save(:,:)       !< full Spsi, used to check consistence across calls
-    real(DP), allocatable    :: e(:)           !< full set of eigenvalues
-    real(DP), allocatable :: v(:,:), vdst(:,:) !< full and distributed eigenvectors
-    real(DP), allocatable    :: e_save(:)      !< full set of eigenvalues, used for checks
-    real(DP), allocatable :: v_save(:,:)       !< full set of eigenvectors, used for checks
+    real(DP), allocatable         :: h(:,:), hdst(:,:)   !< full and distributed Hpsi
+    real(DP), allocatable, device :: hdst_d(:,:)         !< distributed Hpsi on device
+    real(DP), allocatable         :: h_save(:,:)         !< full Hpsi, used to check consistence across calls
+    real(DP), allocatable         :: s(:,:), sdst(:,:)   !< full and distributed Spsi
+    real(DP), allocatable, device :: sdst_d(:,:)         !< distributed Spsi on device
+    real(DP), allocatable         :: s_save(:,:)         !< full Spsi, used to check consistence across calls
+    real(DP), allocatable         :: e(:)                !< full set of eigenvalues
+    real(DP), allocatable, device :: e_d(:)              !< full set of eigenvalues
+    real(DP), allocatable         :: v(:,:), vdst(:,:)   !< full and distributed eigenvectors
+    real(DP), allocatable, device :: vdst_d(:,:)         !< full and distributed eigenvectors
+    real(DP), allocatable         :: e_save(:)           !< full set of eigenvalues, used for checks
+    real(DP), allocatable         :: v_save(:,:)         !< full set of eigenvectors, used for checks
     !
     character(len=20)        :: inputs(2)
     integer                  :: l, i, j, ii, jj, info, nrdst
@@ -73,6 +78,8 @@ program test_diaghg_4
     !
     DO l=1, SIZE(inputs)
         !
+        ! Read the problem from specified input file.
+        !  this will also allocate(h, s, e, v)
         CALL read_problem(inputs(l), ldh, n, m, h, s, e, v, info)
         !
         IF (info /= 0) THEN
@@ -90,9 +97,9 @@ program test_diaghg_4
         !
         CALL init_parallel_diag(desc, n)
         !
-        IF( desc%active_node > 0 ) la_proc = .TRUE.
-        nrdst = desc%nrcx
-        IF (.not. la_proc) nrdst = 1
+        IF( desc%active_node > 0 ) la_proc = .TRUE.  ! selects processors involved in diagonalization
+        nrdst = desc%nrcx                            ! stores square distributed matrix sizes
+        IF (.not. la_proc) nrdst = 1                 ! dummy value to avoid 0 allocations
         !
         v = (0.d0, 0.d0)
         e = 0.d0
@@ -112,7 +119,15 @@ program test_diaghg_4
             END DO
         END IF
         !
-        CALL pdiaghg( n, hdst, sdst, nrdst, e, vdst, desc, .false. )
+        ALLOCATE(hdst_d, SOURCE=hdst)
+        ALLOCATE(sdst_d, SOURCE=sdst)
+        ALLOCATE(vdst_d( nrdst , nrdst ), e_d(n))
+        e(1:n)   = 0.d0
+        e_d(1:n) = 0.d0
+        !
+        CALL pdiaghg( n, hdst_d, sdst_d, nrdst, e_d, vdst_d, desc, .false. )
+        !
+        e(1:n) = e_d
         !
         DO j = 1, m
             !CALL test%assert_close( v(1:n, j), v_save(1:n, j))
@@ -120,9 +135,12 @@ program test_diaghg_4
         CALL test%assert_close( e(1:m), e_save(1:m) )
         !
         !
-        v = (0.d0, 0.d0)
-        e = 0.d0
-        CALL pdiaghg( n, hdst, sdst, nrdst, e, vdst, desc, .true. )
+        e(1:n) = 0.d0
+        e_d(1:n) = 0.d0
+        !
+        CALL pdiaghg( n, hdst_d, sdst_d, nrdst, e_d, vdst_d, desc, .true. )
+        !
+        e(1:n) = e_d
         !
         DO j = 1, m
             !CALL test%assert_close( v(1:n, j), v_save(1:n, j))
@@ -130,11 +148,13 @@ program test_diaghg_4
         CALL test%assert_close( e(1:m), e_save(1:m))
         !
         DEALLOCATE(h,s,e,v,h_save,s_save,e_save,v_save, hdst, sdst, vdst)
+        DEALLOCATE(e_d, hdst_d, sdst_d, vdst_d)
     END DO
     !
   END SUBROUTINE parallel_real_1
   !
   SUBROUTINE parallel_complex_1(test)
+    USE cudafor
     USE mp_world, ONLY : mpime
     USE descriptors, ONLY : la_descriptor, descla_init, descla_local_dims
     USE LAXlib
@@ -145,15 +165,19 @@ program test_diaghg_4
     TYPE(tester_t) :: test
     ! 
     integer :: ldh, n, m
-    complex(DP), allocatable :: h(:,:), hdst(:,:) !< full and distributed Hpsi
-    complex(DP), allocatable :: h_save(:,:)       !< full Hpsi, used to check consistence across calls
-    complex(DP), allocatable :: s(:,:), sdst(:,:) !< full and distributed Spsi
-    complex(DP), allocatable :: s_save(:,:)       !< full Spsi, used to check consistence across calls
-    real(DP), allocatable    :: e(:)              !< full set of eigenvalues
-    complex(DP), allocatable :: v(:,:), vdst(:,:) !< full and distributed eigenvectors
-    real(DP), allocatable    :: e_save(:)         !< full set of eigenvalues, used for checks
-    complex(DP), allocatable :: v_save(:,:)       !< full set of eigenvectors, used for checks
-    TYPE(la_descriptor)      :: desc
+    complex(DP), allocatable         :: h(:,:), hdst(:,:)   !< full and distributed Hpsi
+    complex(DP), allocatable, device :: hdst_d(:,:)         !< distributed Hpsi on device
+    complex(DP), allocatable         :: h_save(:,:)         !< full Hpsi, used to check consistence across calls
+    complex(DP), allocatable         :: s(:,:), sdst(:,:)   !< full and distributed Spsi
+    complex(DP), allocatable, device :: sdst_d(:,:)         !< distributed Spsi on device
+    complex(DP), allocatable         :: s_save(:,:)         !< full Spsi, used to check consistence across calls
+    real(DP), allocatable            :: e(:)                !< full set of eigenvalues
+    real(DP), allocatable, device    :: e_d(:)              !< full set of eigenvalues
+    complex(DP), allocatable         :: v(:,:), vdst(:,:)   !< full and distributed eigenvectors
+    complex(DP), allocatable, device :: vdst_d(:,:)         !< full and distributed eigenvectors
+    real(DP), allocatable            :: e_save(:)           !< full set of eigenvalues, used for checks
+    complex(DP), allocatable         :: v_save(:,:)         !< full set of eigenvectors, used for checks
+    TYPE(la_descriptor)              :: desc
     !
     character(len=20)        :: inputs(4)
     integer                  :: l, i, j, ii, jj, info, nrdst
@@ -166,6 +190,8 @@ program test_diaghg_4
     !
     DO l=1, SIZE(inputs)
         !
+        ! Read the problem from specified input file.
+        !  this will also allocate(h, s, e, v)
         CALL read_problem(inputs(l), ldh, n, m, h, s, e, v, info)
         !
         IF (info /= 0) THEN
@@ -189,7 +215,7 @@ program test_diaghg_4
         !
         v = (0.d0, 0.d0)
         e = 0.d0
-        print *, nrdst, n, m
+        !
         ALLOCATE( hdst( nrdst , nrdst ), STAT=info )
         ALLOCATE( sdst( nrdst , nrdst ), STAT=info )
         ALLOCATE( vdst( nrdst , nrdst ), STAT=info )
@@ -205,7 +231,13 @@ program test_diaghg_4
             END DO
         END IF
         !
-        CALL pdiaghg( n, hdst, sdst, nrdst, e, vdst, desc, .false. )
+        ALLOCATE(hdst_d, SOURCE=hdst)
+        ALLOCATE(sdst_d, SOURCE=sdst)
+        ALLOCATE(vdst_d( nrdst , nrdst ), e_d(n))
+        !
+        e_d(1:n) = 0.d0
+        CALL pdiaghg( n, hdst_d, sdst_d, nrdst, e_d, vdst_d, desc, .false. )
+        e = e_d
         !
         DO j = 1, m
             !CALL test%assert_close( v(1:n, j), v_save(1:n, j))
@@ -213,16 +245,17 @@ program test_diaghg_4
         CALL test%assert_close( e(1:m), e_save(1:m) )
         !
         !
-        v = (0.d0, 0.d0)
-        e = 0.d0
-        CALL pdiaghg( n, hdst, sdst, nrdst, e, vdst, desc, .true. )
+        e_d(1:n) = 0.d0
+        CALL pdiaghg( n, hdst_d, sdst_d, nrdst, e_d, vdst_d, desc, .true. )
         !
+        e = e_d
         DO j = 1, m
             !CALL test%assert_close( v(1:n, j), v_save(1:n, j))
         END DO
         CALL test%assert_close( e(1:m), e_save(1:m))
         !
         DEALLOCATE(h,s,e,v,h_save,s_save,e_save,v_save, hdst, sdst, vdst)
+        DEALLOCATE(e_d, hdst_d, sdst_d, vdst_d)
     END DO
     !
   END SUBROUTINE parallel_complex_1
@@ -302,8 +335,8 @@ program test_diaghg_4
       
   END SUBROUTINE init_parallel_diag
   
-end program test_diaghg_4
+end program test_diaghg_gpu_4
 #else
-program test_diaghg_4
-end program test_diaghg_4
+program test_diaghg_gpu_4
+end program test_diaghg_gpu_4
 #endif
