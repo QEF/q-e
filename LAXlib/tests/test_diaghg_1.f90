@@ -2,9 +2,10 @@ program test_diaghg
 #if defined(__MPI)
     USE MPI
 #endif
-    USE mp, ONLY : mp_bcast
-    USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
-                          root, nproc, world_comm
+    USE mp,            ONLY : mp_bcast
+    USE mp_world,      ONLY : mp_world_start, mp_world_end, mpime, &
+                              root, nproc, world_comm
+    USE mp_bands_util, ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE tester
     IMPLICIT NONE
     !
@@ -17,6 +18,8 @@ program test_diaghg
     world_group = MPI_COMM_WORLD
 #endif
     CALL mp_world_start(world_group)
+    !
+    me_bgrp = mpime; root_bgrp=root; intra_bgrp_comm=world_comm
     !
     CALL real_1(test)
     !
