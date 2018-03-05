@@ -7,27 +7,23 @@ This directory contains several tools that may be useful for developers
 - `src-normal`. A script that "normalizes" the fortran syntax to QE style.
    Calls python script `src-normal.py`, written by Norbert Nemec.
    Usage: `src-normal file1.f90 [file2.f90 ...]` or `src-normal`
-
+- `calltree.pl`
+   A perl script, to be run from the root QE directory, producing in the
+   standard output the tree of called routines 
+- `callhtml.pl`
+   As above, producing a html page with the tree of called routines 
+- `release.sh`
+   Script for packaging releases - obsolete, to be adapted to git
 - utilities for PWgui:
   * `check_gui` (called via `Makefile`)
   * `diff_gui_help`
   * `guihelp.xsl`
   * `update_gui_help`
-
 - utilities for helpdoc (see `README.helpdoc`):
-  - `helpdoc`
-  - `helpdoc.d`
-  - `helpdoc.schema`
-  - `input_xx.xsl`
-  
-* utilities for emacs_mode:
-  - `gen-emacs-mode`
-  - `gen-emacs-mode.tcl`
-
-Obsolete
---------
-* release.sh
-  Script for packaging releases - to be adapted to git
-
-* callhtml.pl, calltree.pl
-  Perl scripts, should produce a list of called routines
+  * `helpdoc`
+  * `helpdoc.d`
+  * `helpdoc.schema`
+  * `input_xx.xsl`
+- utilities for emacs_mode:
+  * `gen-emacs-mode`
+  * `gen-emacs-mode.tcl`
