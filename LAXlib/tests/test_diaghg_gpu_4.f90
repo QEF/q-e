@@ -86,7 +86,7 @@ program test_diaghg_gpu_4
         CALL read_problem(inputs(l), ldh, n, m, h, s, e, v, info)
         !
         IF (info /= 0) THEN
-            IF (mpime == 0) print *, "Test with ", inputs(i), " skipped. Input not found."
+            IF (mpime == 0) print *, "Test with ", inputs(l), " skipped. Input not found."
             CYCLE
         END IF
         !
@@ -198,7 +198,7 @@ program test_diaghg_gpu_4
         CALL read_problem(inputs(l), ldh, n, m, h, s, e, v, info)
         !
         IF (info /= 0) THEN
-            IF (mpime == 0) print *, "Test with ", inputs(i), " skipped. Input not found."
+            IF (mpime == 0) print *, "Test with ", inputs(l), " skipped. Input not found."
             CYCLE
         END IF
         !
