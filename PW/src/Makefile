@@ -72,6 +72,7 @@ esm.o \
 ewald.o \
 ewald_dipole.o \
 extfield.o \
+exx_base.o \
 exx.o \
 fcp.o \
 find_group.o \
