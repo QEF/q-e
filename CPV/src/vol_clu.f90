@@ -16,7 +16,6 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
 
       USE kinds,          ONLY: dp
       USE constants,      ONLY: pi
-      USE parameters,     ONLY: nsx
       USE cell_base,      ONLY: alat, at, h, omega, tpiba, tpiba2
       USE electrons_base, ONLY: nspin
       USE ions_base,      ONLY: na, nsp, amass
@@ -44,7 +43,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
       real(kind=8) weight0, wpiu, wmeno, maxr, minr
       real(kind=8) tau00(3), dist
       real(kind=8) rho_real(dfftp%nnr,nspin), rhoc
-      real(kind=8) alfa(nsx), alfa0, sigma, hgt 
+      real(kind=8) alfa0, sigma, hgt 
       real(kind=8) pos_cry(3), pos_car(3), pos_aux(3)
       real(kind=8) pos_cry0(3), dpvdh(3,3)
       real(kind=8) v_d(3)
@@ -136,7 +135,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
       allocate ( tauv(3,n_at,nsp) )
       n_at = 0
       do is = 1,nsp
-         alfa(is) = step_rad(is)/2.d0
+         ! alfa(is) = step_rad(is)/2.d0 (not used)
          do ia = 1,na(is)
             n_at = n_at + 1
             do k = 1,3

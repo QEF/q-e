@@ -15,7 +15,6 @@
 
   USE io_global,  ONLY : stdout
   USE kinds
-  USE parameters, ONLY: nsx
 
   IMPLICIT NONE
   SAVE

@@ -113,6 +113,7 @@ qexsd.o   \
 qexsd_input.o \
 hdf5_qe.o\
 qeh5_module.o\
+fox_init_module.o \
 xsf.o \
 wyckoff.o \
 wypos.o \

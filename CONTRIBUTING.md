@@ -2,7 +2,7 @@
 You can contribute to this project in many ways: 
 
 * [contributing new features or improving existing ones;](#development)  
-* [subscribing and partecipating the pw-forum mailing list;](http://www.qe-forge.org/mailman/listinfo/pw_forum) 
+* [subscribing and partecipating to the users mailing list;](https://lists.quantum-espresso.org/mailman/listinfo/users) 
 * [reporting bugs and proposing changes in the Issue section of the gitlab repository;](#creating-issues)
 * [preparing new tests for the test suite](#adding tests)
 

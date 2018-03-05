@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.2.1}
+\def\version{6.2.1+}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -206,16 +206,15 @@ and let us apologize to everybody we have forgotten.
 The web site for \qe\ is \texttt{http://www.quantum-espresso.org/}.
 Releases and patches can be downloaded from this
 site or following the links contained in it. The main entry point for
-developers is the QE-FORGE web site:
-\texttt{http://qe-forge.org/}, and in particular the page dedicated to
-the \qe\ project: \texttt{qe-forge.org/gf/project/q-e/}.
+developers is the GitLab web site:
+\texttt{https://gitlab.com/QEF/q-e}.
 
 The recommended place where to ask questions about installation
-and usage of \qe, and to report problems, is the \texttt{pw\_forum}
-mailing list: \texttt{pw\_forum@pwscf.org}.
+and usage of \qe, and to report problems, is the users'
+mailing list: \texttt{users@lists.quantum-espresso.org}.
 Here you can obtain help from the developers and from
-knowledgeable users. You have to be subscribed (see ``Contacts''
-section of the web site) in order to post to the  \texttt{pw\_forum}
+knowledgeable users. You have to be subscribed (see Contacts''
+section of the web site) in order to post to the  users'
 list. Please read the guidelines for posting, section \ref{SubSec:Guidelines}!
 NOTA BENE: only messages that appear to come from the
 registered user's e-mail address, in its {\em exact form}, will be
@@ -226,12 +225,12 @@ e-mail is the correct one (i.e. the one you used to subscribe).
 
 If you need to contact the developers for {\em specific} questions
 about coding, proposals, offers of help, etc., please send a message
-to the developers' mailing list: \texttt{q-e-developers@qe-forge.org}.
+to the developers' mailing list: \texttt{developers@lists.quantum-espresso.org}.
 Do not post general questions: they will be ignored.
 
 \subsection{Guidelines for posting to the mailing list}
 \label{SubSec:Guidelines}
-Life for subscribers of \texttt{pw\_forum} will be easier if everybody
+Life for mailing list subscribers will be easier if everybody
 complies with the following guidelines:
 \begin{itemize}
 \item Before posting, {\em please}: browse or search the archives --
@@ -314,9 +313,6 @@ If you run into trouble, manually download each required package
 into subdirectory \texttt{archive/}, {\em not unpacking or
 uncompressing it}:
 command \texttt{make} will take care of this during installation.
-
-Package \texttt{GWL} needs a manual download and installation:
-please follow the instructions given at \texttt{gww.qe-forge.org}.
 
 % Occasionally, patches for the current version, fixing some errors and bugs,
 % may be distributed as a "diff" file. In order to install a patch (for
@@ -685,25 +681,20 @@ At your choice, you may compile the complete \qe\ suite of programs
 \begin{itemize}
 \item \texttt{make pw}  compiles the self-consistent-field package \PWscf
 \item \texttt{make cp}  compiles the Car-Parrinello package \CP
-\item \texttt{make neb} downloads \NEB\ package from \texttt{qe-forge}
-			unpacks it and compiles it. All executables are linked
+\item \texttt{make neb} compiles the \NEB\ package. All executables are linked
 			in main \texttt{bin} directory
-\item \texttt{make ph}  downloads \PHonon\ package from \texttt{qe-forge}
-			unpacks it and compiles it. All executables are linked
+\item \texttt{make ph}  compiles the \PHonon\ package. All executables are linked
 			in main \texttt{bin} directory
 \item \texttt{make pp}  compiles the postprocessing package \PostProc
-\item \texttt{make pwcond} downloads the balistic conductance package \texttt{PWcond}
-			from \texttt{QE-FORGE}
-			unpacks it and compiles it. All executables are linked
+\item \texttt{make pwcond} compiles the balistic conductance package 
+	                \texttt{PWcond}. All executables are linked
 			in main \texttt{bin} directory
 \item \texttt{make pwall} produces all of the above.
-\item \texttt{make ld1}  downloads the pseudopotential generator package \texttt{atomic}
-			from \texttt{QE-FORGE}
-			unpacks it and compiles it. All executables are linked
+\item \texttt{make ld1}  compiles the pseudopotential generator package 
+	                 \texttt{atomic}. All executables are linked
 			in main \texttt{bin} directory
-\item \texttt{make xspectra} downloads the package \texttt{XSpectra}
-			from \texttt{QE-FORGE}
-			unpacks it and compiles it. All executables are linked
+\item \texttt{make xspectra} compiles the package \texttt{XSpectra}.
+			All executables are linked
 			in main \texttt{bin} directory
 \item \texttt{make upf} produces utilities for pseudopotential conversion in
                         directory \texttt{upftools/}
@@ -715,15 +706,15 @@ At your choice, you may compile the complete \qe\ suite of programs
 \item \texttt{make w90} downloads \texttt{wannier90}, unpacks it, copies an appropriate
                        \texttt{make.inc} file,  produces all executables
                        in \texttt{W90/wannier90.x} and in \texttt{bin/}
-\item \texttt{make want} downloads \texttt{WanT} from \texttt{QE-FORGE},
-			 unpacks it, runs its \configure,
+\item \texttt{make want} downloads \texttt{WanT}, unpacks it, runs its 
+	                 \configure,
                          produces all executables for \texttt{WanT} in
                          \texttt{WANT/bin}.
-\item \texttt{make yambo} downloads \texttt{yambo} from \texttt{QE-FORGE},
+\item \texttt{make yambo} downloads \texttt{yambo},
 			  unpacks it, runs its \configure,
                           produces all \texttt{yambo} executables in
                           \texttt{YAMBO/bin}
-\item \texttt{make gipaw} downloads \texttt{GIPAW} from \texttt{QE-FORGE},
+\item \texttt{make gipaw} downloads \texttt{GIPAW},
                           unpacks it, runs its \configure,
                           produces all \texttt{GIPAW} executables in
                           \texttt{GIPAW/bin} and in main \texttt{bin} directory.
