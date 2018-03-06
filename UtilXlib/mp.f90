@@ -828,8 +828,7 @@
              CALL MPI_SEND( msg_sour, msglen, MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
              IF (ierr/=0) CALL mp_stop( 8027 )
            ELSE IF(mpime .EQ. dest) THEN
-             msglen=1
-             CALL MPI_RECV( msg_dest, msglen, MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
+             CALL MPI_RECV( msg_dest, 1, MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
              IF (ierr/=0) CALL mp_stop( 8028 )
              CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
              IF (ierr/=0) CALL mp_stop( 8029 )
