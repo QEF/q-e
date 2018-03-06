@@ -65,6 +65,7 @@ PROGRAM test_mp_alltoall_{vname}_gpu
     CALL RANDOM_NUMBER(rnd)
     snd_{vname}_h = {typeconv} ( 10.0 * rnd )
     snd_{vname}_d = snd_{vname}_h
+    aux_h = 0
     CALL mp_alltoall(snd_{vname}_d, rcv_{vname}_d, world_comm)
     CALL mp_alltoall(snd_{vname}_h, rcv_{vname}_h, world_comm)
     aux_h = rcv_{vname}_d

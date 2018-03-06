@@ -64,6 +64,7 @@ PROGRAM test_mp_get_{vname}_gpu
       CALL RANDOM_NUMBER(rnd)
       {vname}_h = {typeconv} ( 10.0 * rnd )
       {vname}_d = {vname}_h
+      aux_h = 0
       CALL mp_get({vname}_d, {vname}_d, mpime, i, 0, 0, world_comm)
       CALL mp_get({vname}_h, {vname}_h, mpime, i, 0, 0, world_comm)
       aux_h = {vname}_d

@@ -54,6 +54,7 @@ PROGRAM test_mp_put_{vname}_gpu
       CALL RANDOM_NUMBER(rnd)
       {vname}_h = {typeconv} ( 10.0 * rnd )
       {vname}_d = {vname}_h
+      aux_h = 0
       CALL mp_put({vname}_d, {vname}_d, mpime, 0, i, 0, world_comm)
       CALL mp_put({vname}_h, {vname}_h, mpime, 0, i, 0, world_comm)
       aux_h = {vname}_d
@@ -64,6 +65,7 @@ PROGRAM test_mp_put_{vname}_gpu
       CALL RANDOM_NUMBER(rnd)
       {vname}_h = {typeconv} ( 10.0 * rnd )
       {vname}_d = {vname}_h
+      aux_h = 0
       CALL mp_put({vname}_d, {vname}_d, mpime, i, 0, 0, world_comm)
       CALL mp_put({vname}_h, {vname}_h, mpime, i, 0, 0, world_comm)
       aux_h = {vname}_d

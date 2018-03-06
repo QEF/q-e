@@ -57,6 +57,7 @@ PROGRAM test_mp_sum_{vname}_gpu
     CALL RANDOM_NUMBER(rnd)
     {vname}_h = {typeconv} ( 10.0 * rnd )
     {vname}_d = {vname}_h
+    aux_h = 0
     CALL mp_sum({vname}_d, world_comm)
     CALL mp_sum({vname}_h, world_comm)
     aux_h = {vname}_d

@@ -57,6 +57,7 @@ PROGRAM test_mp_bcast_{vname}_gpu
       CALL RANDOM_NUMBER(rnd)
       {vname}_h = {typeconv} ( 10.0 * rnd )
       {vname}_d = {vname}_h
+      aux_h = 0
       CALL mp_bcast({vname}_d, i , world_comm)
       CALL mp_bcast({vname}_h, i , world_comm)
       aux_h = {vname}_d

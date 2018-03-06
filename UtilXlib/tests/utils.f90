@@ -37,14 +37,28 @@ SUBROUTINE save_random_seed(test_name, mpime)
     CHARACTER(len=*), INTENT(IN) :: test_name
     INTEGER, INTENT(IN) :: mpime
     !
-    INTEGER, PARAMETER :: out_unit=20
-    CHARACTER(len=60) :: fname
-    INTEGER :: n
+    INTEGER, PARAMETER :: in_unit=20, out_unit=21
+    CHARACTER(len=80) :: fname
+    INTEGER :: n, istat
     INTEGER, ALLOCATABLE :: seed(:)
     !
     CALL random_seed(size = n)
     ALLOCATE(seed(n))
-    CALL random_seed(get=seed)
+
+   ! First try if the OS provides a random number generator
+    OPEN(UNIT=in_unit, file="/dev/urandom", access="stream", &
+        form="unformatted", action="read", status="old", iostat=istat)
+    
+    IF (istat == 0) THEN
+        READ(in_unit) seed
+        CLOSE(in_unit)
+    ELSE
+        ! Fallback to stupid algorithm. Actually we do not really need
+        !  high-quality random numbers
+        CALL random_seed(get=seed)
+        seed = seed + mpime
+        CALL random_seed(put=seed)
+    END IF
     !
     WRITE(fname, '("rnd_seed_",A,I4.4)') TRIM(test_name), mpime
     fname = TRIM(fname)

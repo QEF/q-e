@@ -56,6 +56,7 @@ PROGRAM test_mp_root_sum_{vname}_gpu
       CALL RANDOM_NUMBER(rnd)
       {vname}_h = {typeconv} ( 10.0 * rnd )
       {vname}_d = {vname}_h
+      aux_h = 0
       CALL mp_root_sum({vname}_d, root_{vname}_d, i , world_comm)
       CALL mp_root_sum({vname}_h, root_{vname}_h, i , world_comm)
       IF (mpime == i) THEN

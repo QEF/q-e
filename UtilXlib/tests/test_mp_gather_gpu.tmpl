@@ -75,6 +75,7 @@ PROGRAM test_mp_gather_{vname}_gpu
       CALL RANDOM_NUMBER(rnd)
       {vname}_h = {typeconv} ( 10.0 * rnd )
       {vname}_d = {vname}_h
+      aux_h = 0
       CALL mp_gather({vname}_d, all_{vname}_d, i , world_comm)
       CALL mp_gather({vname}_h, all_{vname}_h, i , world_comm)
       aux_h = all_{vname}_d

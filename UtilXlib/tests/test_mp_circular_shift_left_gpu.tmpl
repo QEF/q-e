@@ -54,6 +54,7 @@ PROGRAM test_mp_circular_shift_left_{vname}_gpu
       CALL RANDOM_NUMBER(rnd)
       {vname}_h = {typeconv} ( 10.0 * rnd )
       {vname}_d = {vname}_h
+      aux_h = 0
       CALL mp_circular_shift_left({vname}_d, 0, world_comm)
       CALL mp_circular_shift_left({vname}_h, 0, world_comm)
       aux_h = {vname}_d
