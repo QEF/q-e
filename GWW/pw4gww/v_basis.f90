@@ -24,7 +24,7 @@ SUBROUTINE v_basis(numpw,o_basis,cutoff)
   USE mp_world,             ONLY : world_comm
   USE klist,                ONLY : xk
   USE wannier_gw,           ONLY : l_truncated_coulomb,truncation_radius
-  USE exx,                  ONLY : exx_divergence, exx_grid_init, yukawa
+  USE exx_base,             ONLY : exx_divergence, exx_grid_init, yukawa
   USE constants,            ONLY : e2,fpi
 
   implicit none

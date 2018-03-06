@@ -38,7 +38,8 @@ MODULE lr_exx_kernel
                                    & invfft_orbital_k, fwfft_orbital_k
   USE wavefunctions_module,   ONLY : psic
   USE cell_base,              ONLY : omega
-  USE exx,                    ONLY : exxalfa, g2_convolution, npwt, gt, dfftt
+  USE exx_base,               ONLY : g2_convolution
+  USE exx,                    ONLY : exxalfa, npwt, gt, dfftt
 
 
   REAL(kind=dp),    PUBLIC, ALLOCATABLE :: revc_int(:,:)
@@ -60,9 +61,48 @@ MODULE lr_exx_kernel
   INTEGER, PRIVATE, ALLOCATABLE :: k2q(:)
 
 CONTAINS
-SUBROUTINE lr_exx_alloc()
+  !------------------------------------------------------------------------
+  SUBROUTINE lr_exx_restart( set_ace )
+     !------------------------------------------------------------------------
+     !This SUBROUTINE is called when restarting an exx calculation
+     USE funct,     ONLY : get_exx_fraction, start_exx, &
+                           exx_is_active, get_screening_parameter
+     USE cell_base, ONLY : at
+     USE exx_base,  ONLY : exxdiv, erfc_scrlen, exx_divergence, exx_grid_init,&
+                           exx_div_check
+     ! FIXME: are these variable useful?
+     USE exx,       ONLY : fock0, exxenergy2, local_thr, use_ace
+     USE exx,       ONLY : exxinit, aceinit, exx_gvec_reinit
 
-  USE exx,         ONLY : nkqs
+     IMPLICIT NONE
+     LOGICAL, INTENT(in) :: set_ace
+     !
+     CALL exx_grid_init( reinit=.true. )
+     CALL exx_gvec_reinit( at )
+     CALL exx_div_check()
+     !
+     use_ace = set_ace
+     erfc_scrlen = get_screening_parameter()
+     
+     exxdiv = exx_divergence()
+     exxalfa = get_exx_fraction()
+     CALL start_exx()
+     CALL weights()
+     ! FIXME: is this useful ?
+     IF(local_thr.gt.0.0d0) Call errore('exx_restart','SCDM with restart NYI',1)
+     CALL exxinit(.false.)
+     IF (use_ace) CALL aceinit ( )
+     ! FIXME: are these variable useful?
+     fock0 = exxenergy2()
+     !
+     RETURN
+     !------------------------------------------------------------------------
+   END SUBROUTINE lr_exx_restart
+  !------------------------------------------------------------------------
+
+  SUBROUTINE lr_exx_alloc()
+
+  USE exx_base,    ONLY : nkqs
   USE klist,       ONLY : nks
   
   IMPLICIT NONE
@@ -230,7 +270,7 @@ SUBROUTINE lr_exx_revc0_init(orbital, ik)
   !
   
   USE mp_global,    ONLY : me_bgrp
-  USE exx,          ONLY : rir, nkqs, index_sym, index_xk
+  USE exx_base,     ONLY : rir, nkqs, index_sym, index_xk
   USE scatter_mod,  ONLY : gather_grid, scatter_grid
   USE symm_base,    ONLY : sname
 
@@ -315,8 +355,9 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
 
   USE kinds,                  ONLY : DP
   USE lr_variables,           ONLY : gamma_only, lr_verbosity
-  USE exx,                    ONLY : exxalfa, g2_convolution, nqs,&
-                                   & index_sym, index_xkq, index_xk, rir, nkqs
+  USE exx_base,               ONLY : g2_convolution, nqs, index_sym, &
+                                     index_xkq, index_xk, rir, nkqs
+  USE exx,                    ONLY : exxalfa
   USE symm_base,              ONLY : s
   USE cell_base,              ONLY : bg, at
   USE funct,                  ONLY : exx_is_active
@@ -572,8 +613,9 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
   USE kinds,                  ONLY : DP
   USE klist,                  ONLY : xk
   USE io_global,              ONLY : stdout  
-  USE exx,                    ONLY : exxalfa, g2_convolution, nqs,&
-                                   & index_sym, index_xkq, index_xk, rir, nkqs
+  USE exx,                    ONLY : exxalfa
+  USE exx_base,               ONLY : g2_convolution, nqs, index_sym, &
+                                     index_xkq, index_xk, rir, nkqs
   USE symm_base,              ONLY : s
   USE cell_base,              ONLY : bg, at
   USE funct,                  ONLY : exx_is_active
