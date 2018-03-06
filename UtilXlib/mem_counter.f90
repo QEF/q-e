@@ -9,9 +9,18 @@ SUBROUTINE mem_counter(valore, sumsign, label)
     INTEGER, SAVE :: last_print_val = 0
     INTEGER, PARAMETER :: MB = 1024*1024
     !
+#if defined (__DEBUG)
+    if ( sumsign == 1) then
+       WRITE(*, '("  allocating ", I6, " kB, variable: ",a)') &
+       valore/1024, trim(label)
+    else
+       WRITE(*, '("deallocating ", I6, " kB, variable: ",a)') &
+       valore/1024, trim(label)
+    end if
+#endif
     current_memory = current_memory + valore*sumsign
     IF ( ( current_memory - last_print_val ) > 2*MB) THEN
-      WRITE(*, '("Max allocated memory: ", I6, " MB, variable name: ",a)') &
+      WRITE(*, '("Max allocated memory: ", I6, " MB, variable: ",a)') &
               current_memory/MB, trim(label)
       last_print_val = current_memory
     END IF
