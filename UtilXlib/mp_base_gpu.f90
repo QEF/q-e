@@ -376,7 +376,7 @@ SUBROUTINE reduce_base_integer_gpu( dim, ps_d, comm, root )
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN)    :: dim     ! size of the array
-  INTEGER, DEVICE         :: ps_d(dim) ! array whose elements have to be reduced
+  INTEGER,  DEVICE        :: ps_d(dim) ! array whose elements have to be reduced
   INTEGER,  INTENT(IN)    :: comm    ! communicator
   INTEGER,  INTENT(IN)    :: root    ! if root <  0 perform a reduction to all procs
                                      ! if root >= 0 perform a reduce only to root proc.

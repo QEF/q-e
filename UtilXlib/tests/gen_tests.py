@@ -4,8 +4,13 @@ types=['INTEGER', 'REAL(DP)', 'COMPLEX(DP)'] # WARNING, only double real and com
 typeconv={'INTEGER': 'INT', 'REAL': 'REAL', 'REAL(DP)': 'DBLE', 'COMPLEX': 'CMPLX', 'COMPLEX(DP)': 'DCMPLX'}
 
 datasize='10'
-ranks  ={'1': '', 'v': '(datasize)', 'm': '(datasize,datasize)', 't': '(datasize,datasize,datasize)'}
-nextr={'1': 'v', 'v': 'm', 'm': 't', 't': ''}
+ranks   =   {'1': '', \
+             'v': '(datasize)', \
+             'm': '(datasize,datasize)', \
+             't': '(datasize,datasize,datasize)', \
+             '4': '(datasize,datasize,datasize,datasize)', \
+             '5': '(datasize,datasize,datasize,datasize,datasize)'}
+nextr={'1': 'v', 'v': 'm', 'm': 't', 't': '4', '4': '5', '5': ''}
 compare={'INTEGER': 'equal', 'REAL': 'close', 'REAL(DP)': 'close', 'COMPLEX': 'close', 'COMPLEX(DP)': 'close'}
 
 input_file_names = sys.argv[1:]
