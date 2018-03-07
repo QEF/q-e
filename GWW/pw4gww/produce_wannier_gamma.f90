@@ -20,7 +20,8 @@
        USE wvfct,                ONLY : nbnd, et, npwx
        USE io_global,            ONLY : stdout, ionode
        USE wavefunctions_module, ONLY : evc
-       USE exx,      ONLY : ecutfock,vexx,exx_div_check,exx_grid_init,exx_grid_check,exxinit,x_occupation
+       USE exx,      ONLY : ecutfock,vexx, exxinit
+       USE exx_base, ONLY : exx_div_check, exx_grid_init, exx_grid_check
        USE funct,    ONLY : exx_is_active, dft_is_hybrid,start_exx,stop_exx
        USE wvfct,    ONLY : current_k, et
        USE gvecw,    ONLY : ecutwfc

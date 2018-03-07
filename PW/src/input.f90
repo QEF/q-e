@@ -131,14 +131,14 @@ SUBROUTINE iosys()
   !
   USE a2F,           ONLY : la2F_ => la2F
   !
-  USE exx,           ONLY : x_gamma_extrapolation_ => x_gamma_extrapolation, &
+  USE exx_base,      ONLY : x_gamma_extrapolation_ => x_gamma_extrapolation, &
                             nqx1_ => nq1, &
                             nqx2_ => nq2, &
                             nqx3_ => nq3, &
                             exxdiv_treatment_ => exxdiv_treatment, &
                             yukawa_           => yukawa, &
-                            ecutvcut_         => ecutvcut, &
-                            ecutfock_         => ecutfock, &
+                            ecutvcut_         => ecutvcut
+  USE exx,          ONLY:   ecutfock_         => ecutfock, &
                             use_ace, nbndproj, local_thr 
   USE loc_scdm,      ONLY : use_scdm, scdm_den, scdm_grd 
   !

@@ -4,8 +4,22 @@ use strict;
 
 {
     my $maxdepth = 2; # default
-    if ($#ARGV > 0 && $ARGV[0] eq "-d")
+
+    if ($#ARGV > -1 && $ARGV[0] eq "-h") {
+       print STDERR "usage: $0 [-d maxdepth] [target subroutine(s)]\n";
+       print STDERR "       builds the dependency tree of f90 files - run from the QE root directory\n";
+       print STDERR "       defaults: maxdepth=2, targets=all f90 files under the current directory\n";
+       exit 0;
+    }
+
+    if ($#ARGV > -1 && $ARGV[0] eq "-d")
     {
+        if ($#ARGV < 1)
+	{
+	    print STDERR "error: maxdepth missing\n";
+	    print STDERR "usage: $0 [-d maxdepth] [targets]\n";
+	    exit 1;
+	}
 	$maxdepth = $ARGV[1];
 	if ($maxdepth !~ /^\d+$/)
 	{
@@ -17,10 +31,12 @@ use strict;
 	shift @ARGV;
     }
 
-    # $basedir is directory where this script is
     my $basedir = $0;
-    $basedir =~ s/(.*)\/.*/$1/;
-    my @sources = split(/ /, `echo $basedir/*/*.f90`);
+    # Orig: the following is the directory where this script is
+    # $basedir =~ s/(.*)\/.*/$1/;
+    # the following works only if we run the script from QE root
+    $basedir = "./";
+    my @sources = split(/ /, `echo $basedir/*/*.f90 $basedir/*/*/*.f90`);
 
     # grab program, function and subroutine declarations
     my (%place, %fname, %pname);

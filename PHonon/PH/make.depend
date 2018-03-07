@@ -995,7 +995,6 @@ phq_readin.o : ../../Modules/mp_images.o
 phq_readin.o : ../../Modules/mp_pools.o
 phq_readin.o : ../../Modules/mp_world.o
 phq_readin.o : ../../Modules/noncol.o
-phq_readin.o : ../../Modules/parameters.o
 phq_readin.o : ../../Modules/paw_variables.o
 phq_readin.o : ../../Modules/run_info.o
 phq_readin.o : ../../Modules/uspp.o
