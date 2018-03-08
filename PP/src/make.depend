@@ -380,6 +380,7 @@ open_grid.o : ../../Modules/recvec.o
 open_grid.o : ../../Modules/wavefunctions.o
 open_grid.o : ../../PW/src/buffers.o
 open_grid.o : ../../PW/src/exx.o
+open_grid.o : ../../PW/src/exx_base.o
 open_grid.o : ../../PW/src/io_rho_xml.o
 open_grid.o : ../../PW/src/pwcom.o
 open_grid.o : ../../PW/src/scf_mod.o
