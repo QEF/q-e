@@ -11,8 +11,8 @@
 
 module timers
   save
-  LOGICAL :: ignore_time = .true.
-  REAL*8  :: times(20) = 0.d0
+  LOGICAL :: ignore_time = .true.  ! This is used to avoid collection of initialization times
+  REAL*8  :: times(20) = 0.d0      ! Array hosting various timers
 end module
 
 program test
@@ -139,6 +139,20 @@ program test
   ntgs    = 1
   nbnd    = 1
   !
+  at(1, :) = (/0.5d0, 1.0d0, 0.0d0/)
+  at(2, :) = (/0.5d0, 0.0d0, 0.5d0/)
+  at(3, :) = (/0.0d0, 0.5d0, 1.5d0/)
+  !
+  DO i = 1, iargc()
+    CALL getarg(i, arg)
+    IF ((trim(arg) == "-h") .or. (trim(arg) == "--help")) THEN
+      print *, "Example usage:  mpirun -np 4 ./fft_test.x -ecutwfc 80 -alat 20  -nbnd 128 -ntg 4 -gamma .true."
+      print *, ""
+      print *, "For detailed information see test.f90"
+      STOP
+    END IF
+  END DO
+ 
   nargs = command_argument_count()
   do i = 1, nargs - 1
     CALL get_command_argument(i, arg)
@@ -153,6 +167,33 @@ program test
     IF (TRIM(arg) == '-alat') THEN
       CALL get_command_argument(i + 1, arg)
       READ (arg, *) alat_in
+    END IF
+    IF (TRIM(arg) == '-av1') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) at(1, 1)
+      CALL get_command_argument(i + 2, arg)
+      READ (arg, *) at(2, 1)
+      CALL get_command_argument(i + 3, arg)
+      READ (arg, *) at(3, 1)
+      alat_in = 1.0
+    END IF
+    IF (TRIM(arg) == '-av2') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) at(1, 2)
+      CALL get_command_argument(i + 2, arg)
+      READ (arg, *) at(2, 2)
+      CALL get_command_argument(i + 3, arg)
+      READ (arg, *) at(3, 2)
+      alat_in = 1.0
+    END IF
+    IF (TRIM(arg) == '-av3') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) at(1, 3)
+      CALL get_command_argument(i + 2, arg)
+      READ (arg, *) at(2, 3)
+      CALL get_command_argument(i + 3, arg)
+      READ (arg, *) at(3, 3)
+      alat_in = 1.0
     END IF
     IF (TRIM(arg) == '-ntg') THEN
       CALL get_command_argument(i + 1, arg)
@@ -214,13 +255,11 @@ program test
   ecutm  = ecutrho
   ecutms = ecutrho
   !
-  at(1, :) = (/0.5d0, 1.0d0, 0.0d0/)
-  at(2, :) = (/0.5d0, 0.0d0, 0.5d0/)
-  at(3, :) = (/0.0d0, 0.5d0, 1.5d0/)
-  !
   at = at*alat_in
   !
-  alat = SQRT(at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2)
+  alat = SQRT ( at(1,1)**2+at(2,1)**2+at(3,1)**2 )
+  !
+  at(:,:) = at(:,:) / alat
   !
   tpiba = 2.0d0*pi/alat
   !
@@ -249,13 +288,12 @@ program test
     write (*, *) 'Gamma trick    = ', gamma_only
   end if
   !
-  at = at/alat
-  !
   call recips(at(1, 1), at(1, 2), at(1, 3), bg(1, 1), bg(1, 2), bg(1, 3))
   !
   nx = 2*int(sqrt(gcutm)*sqrt(at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2)) + 1
   ny = 2*int(sqrt(gcutm)*sqrt(at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2)) + 1
   nz = 2*int(sqrt(gcutm)*sqrt(at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2)) + 1
+  !
   !
   if (mype == 0) then
     write (*, *) 'nx = ', nx, ' ny = ', ny, ' nz = ', nz
@@ -270,6 +308,7 @@ program test
   dfftp%rho_clock_label='fft' 
   CALL fft_type_init(dfftp, smap, "rho", gamma_only, .true., comm, at, bg, gcutm, 4.d0, nyfft=ntgs)
   !
+  CALL fft_base_info(mype == 0, dffts, dfftp)
   if (mype == 0) then
     write (*, *) 'dffts:  nr1 = ', dffts%nr1, ' nr2 = ', dffts%nr2, ' nr3 = ', dffts%nr3
     write (*, *) '        nr1x= ', dffts%nr1x, ' nr2x= ', dffts%nr2x, ' nr3x= ', dffts%nr3x
@@ -636,10 +675,9 @@ end subroutine recips
     LOGICAL :: global_sort, is_local
     INTEGER, ALLOCATABLE :: ngmpe(:)
     !
-    global_sort = .TRUE.
-    !IF( PRESENT( no_global_sort ) ) THEN
-       global_sort = .NOT. no_global_sort
-    !END IF
+    ! The 'no_global_sort' is not optional in this case.
+    ! This differs from the version present in QE distribution.
+    global_sort = .NOT. no_global_sort
     !
     IF( .NOT. global_sort ) THEN
        ngm_max = ngm
@@ -883,7 +921,42 @@ end subroutine recips
     CALL fft_set_nl ( dffts, at, g )
     !
   END SUBROUTINE ggens
-
+  !
+  SUBROUTINE fft_base_info( ionode, dffts, dfftp )
+     USE fft_types, ONLY: fft_type_descriptor
+     implicit none
+     LOGICAL, INTENT(IN) :: ionode
+     TYPE(fft_type_descriptor), INTENT(IN) :: dfftp, dffts
+     !
+     !  Display fft basic information
+     !
+     IF (ionode) THEN
+        WRITE( *,*)
+        IF ( dfftp%nproc > 1 ) THEN
+           WRITE( stdout, '(5X,"Parallelization info")')
+        ELSE
+           WRITE( stdout, '(5X,"G-vector sticks info")')
+        ENDIF
+        WRITE( *, '(5X,"--------------------")')
+        WRITE( *, '(5X,"sticks:   dense  smooth     PW", &
+                       & 5X,"G-vecs:    dense   smooth      PW")') 
+        IF ( dfftp%nproc > 1 ) THEN
+           WRITE( *,'(5X,"Min",4X,2I8,I7,12X,2I9,I8)') &
+              minval(dfftp%nsp), minval(dffts%nsp), minval(dffts%nsw), &
+              minval(dfftp%ngl), minval(dffts%ngl), minval(dffts%nwl)
+           WRITE( *,'(5X,"Max",4X,2I8,I7,12X,2I9,I8)') &
+              maxval(dfftp%nsp), maxval(dffts%nsp), maxval(dffts%nsw), &
+              maxval(dfftp%ngl), maxval(dffts%ngl), maxval(dffts%nwl)
+        END IF
+        WRITE( *,'(5X,"Sum",4X,2I8,I7,12X,2I9,I8)') &
+           sum(dfftp%nsp), sum(dffts%nsp), sum(dffts%nsw), &
+           sum(dfftp%ngl), sum(dffts%ngl), sum(dffts%nwl)
+     ENDIF
+     
+     IF(ionode) WRITE( *,*)
+     
+     RETURN
+  END SUBROUTINE fft_base_info
 end program test
 
 subroutine start_clock(label)
