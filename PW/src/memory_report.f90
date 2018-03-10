@@ -31,7 +31,8 @@ SUBROUTINE memory_report()
   USE wvfct,     ONLY : nbnd, nbndx
   USE basis,     ONLY : natomwfc, starting_wfc
   USE cell_base, ONLY : omega, bg, alat
-  USE exx,       ONLY : ecutfock, nkqs, use_ace
+  USE exx,       ONLY : ecutfock, use_ace
+  USE exx_base,  ONLY : nkqs
   USE fft_base,  ONLY : dffts, dfftp
   USE gvect,     ONLY : ngm, ngl, ngm_g, g, gcutm
   USE gvecs,     ONLY : ngms, doublegrid

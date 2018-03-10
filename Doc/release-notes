@@ -8,7 +8,7 @@ New in development version:
     Localized exchange can deal with virtual orbitals (empty bands)
     (Ivan Carnimeo)
 
-  * Spin-polarized B3LYP (experimental)
+  * Spin-polarized X3LYP (experimental)
 
 Problems fixed in development version:
 

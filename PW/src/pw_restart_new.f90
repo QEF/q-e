@@ -26,7 +26,6 @@ MODULE pw_restart_new
                           qexsd_init_outputElectricField,                              &
                           qexsd_input_obj, qexsd_occ_obj, qexsd_smear_obj,             &
                           qexsd_init_outputPBC
-  USE iotk_module
   USE io_global, ONLY : ionode, ionode_id
   USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir
   !
@@ -101,8 +100,9 @@ MODULE pw_restart_new
       USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
                                        get_gau_parameter, &
                                        get_screening_parameter, exx_is_active
-      USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
-                                       exxdiv_treatment, yukawa, ecutvcut, ecutfock
+      USE exx_base,             ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
+                                       exxdiv_treatment, yukawa, ecutvcut
+      USE exx,                  ONLY : ecutfock
       USE london_module,        ONLY : scal6, lon_rcut, in_c6
       USE xdm_module,           ONLY : xdm_a1=>a1i, xdm_a2=>a2i
       USE tsvdw_module,         ONLY : vdw_isolated, vdw_econv_thr
@@ -128,7 +128,6 @@ MODULE pw_restart_new
       INTEGER               :: npwx_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       LOGICAL               :: lwfc, lrho, lxsd, occupations_are_fixed
-      CHARACTER(iotk_attlenx)  :: attr
       INTEGER                  :: iclass, isym, ielem
       CHARACTER(LEN=15)        :: symop_2_class(48)
       LOGICAL                  :: opt_conv_ispresent
@@ -487,7 +486,6 @@ MODULE pw_restart_new
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
-      CHARACTER(iotk_attlenx)  :: attr
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
@@ -675,7 +673,8 @@ MODULE pw_restart_new
     END SUBROUTINE gk_l2gmap_kdip
 
     !------------------------------------------------------------------------
-    SUBROUTINE pw_readschema_file(ierr, restart_output, restart_parallel_info, restart_general_info)
+    SUBROUTINE pw_readschema_file(ierr, restart_output, restart_parallel_info, restart_general_info, &
+                                  prev_input)
       !------------------------------------------------------------------------
       USE qes_types_module,     ONLY : input_type, output_type, general_info_type, parallel_info_type    
       !
@@ -689,6 +688,7 @@ MODULE pw_restart_new
       TYPE( output_type ),OPTIONAL,        INTENT(OUT)   :: restart_output
       TYPE(parallel_info_type),OPTIONAL,   INTENT(OUT)   :: restart_parallel_info
       TYPE(general_info_type ),OPTIONAL,   INTENT(OUT)   :: restart_general_info
+      TYPE(input_type),OPTIONAL,           INTENT(OUT)   :: prev_input
       ! 
       TYPE(Node), POINTER     :: root, nodePointer
       TYPE(nodeList),POINTER  :: listPointer
@@ -749,6 +749,20 @@ MODULE pw_restart_new
          !CALL qes_write_output ( 82, restart_output ) 
       END IF 
       !
+      IF (PRESENT (prev_input)) THEN
+         nodePointer => item( getElementsByTagname(root, "input"),0)
+         IF ( ASSOCIATED(nodePointer) ) THEN
+            CALL qes_read (nodePointer, prev_input, ierr ) 
+         ELSE 
+            ierr = 5
+         END IF
+         IF (ierr /= 0 ) THEN
+             CALL infomsg ('pw_readschema_file',& 
+                            'failed retrieving input info from xml file, check it !!!')
+             IF ( TRIM(prev_input%tagname) == 'input' )  CALL qes_reset_input(prev_input) 
+             ierr = 0 
+         END IF
+      END IF
       ! 
       CALL destroy(root)       
 
@@ -757,7 +771,7 @@ MODULE pw_restart_new
     END SUBROUTINE pw_readschema_file
     !  
     !------------------------------------------------------------------------
-    SUBROUTINE init_vars_from_schema( what, ierr, output_obj, par_info, gen_info )
+    SUBROUTINE init_vars_from_schema( what, ierr, output_obj, par_info, gen_info, input_obj )
       !------------------------------------------------------------------------
       !
       USE control_flags,        ONLY : twfcollect
@@ -773,13 +787,14 @@ MODULE pw_restart_new
       TYPE ( output_type), INTENT(IN)        :: output_obj
       TYPE ( parallel_info_type), INTENT(IN) :: par_info
       TYPE ( general_info_type ), INTENT(IN) :: gen_info
+      TYPE ( input_type), OPTIONAL, INTENT(IN)         :: input_obj
       INTEGER,INTENT (OUT)                   :: ierr 
       !
       CHARACTER(LEN=256) :: dirname
       LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
                             lxc, locc, lbz, lbs, lwfc, lheader,          &
                             lsymm, lrho, lefield, ldim, &
-                            lef, lexx, lesm, lpbc
+                            lef, lexx, lesm, lpbc, lvalid_input
       !
       LOGICAL            :: need_qexml, found, electric_field_ispresent
       INTEGER            :: tmp, iotk_err 
@@ -790,6 +805,11 @@ MODULE pw_restart_new
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
       !
+      IF ( PRESENT (input_obj) ) THEN 
+         lvalid_input = (TRIM(input_obj%tagname) == "input")
+      ELSE
+         lvalid_input = .FALSE. 
+      ENDIF
       !
       !
       ldim    = .FALSE.
@@ -958,8 +978,13 @@ MODULE pw_restart_new
          IF (output_obj%band_structure%wf_collected)  CALL read_collected_to_evc(dirname ) 
       END IF
       IF ( lsymm ) THEN
-         CALL readschema_symmetry ( output_obj%symmetries, output_obj%basis_set )
-      END IF
+         IF ( lvalid_input ) THEN 
+            CALL readschema_symmetry (  output_obj%symmetries, output_obj%basis_set, input_obj%symmetry_flags )
+         ELSE 
+            CALL readschema_symmetry( output_obj%symmetries,output_obj%basis_set) 
+         ENDIF
+      ENDIF
+      !
       IF ( lrho ) THEN
          !
          ! ... to read the charge-density we use the routine from io_rho_xml 
@@ -976,6 +1001,8 @@ MODULE pw_restart_new
       IF ( lpbc ) THEN
          CALL readschema_outputPBC ( output_obj%boundary_conditions)
       END IF
+      !
+      IF ( lefield .AND. lvalid_input ) CALL readschema_efield ( input_obj%electric_field) 
       !
       IF ( lexx .AND. output_obj%dft%hybrid_ispresent  ) CALL readschema_exx ( output_obj%dft%hybrid )
       !
@@ -1181,7 +1208,7 @@ MODULE pw_restart_new
     END SUBROUTINE readschema_ions
     !  
     !------------------------------------------------------------------------
-    SUBROUTINE readschema_symmetry ( symms_obj, basis_obj  ) 
+    SUBROUTINE readschema_symmetry ( symms_obj, basis_obj, flags_obj  ) 
     !------------------------------------------------------------------------
       ! 
       USE symm_base,       ONLY : nrot, nsym, invsym, s, ft,ftau, irt, t_rev, &
@@ -1195,8 +1222,14 @@ MODULE pw_restart_new
       ! 
       TYPE ( symmetries_type )               :: symms_obj 
       TYPE ( basis_set_type )                :: basis_obj
+      TYPE ( symmetry_flags_type),OPTIONAL   :: flags_obj
       INTEGER                                :: isym 
       ! 
+      IF ( PRESENT(flags_obj) ) THEN 
+         noinv = flags_obj%noinv
+         no_t_rev = flags_obj%no_t_rev
+      ENDIF
+      !
       nrot = symms_obj%nrot 
       nsym = symms_obj%nsym
       ! 
@@ -1254,9 +1287,9 @@ MODULE pw_restart_new
             edir = 3 
          END IF
          IF ( efield_obj%potential_max_position_ispresent ) THEN 
-            edir = efield_obj%electric_field_direction
+            emaxpos = efield_obj%potential_max_position
          ELSE 
-            emaxpos = 3 
+            emaxpos = 5d-1
          END IF 
          IF ( efield_obj%potential_decrease_width_ispresent ) THEN 
             eopreg = efield_obj%potential_decrease_width
@@ -2016,8 +2049,9 @@ MODULE pw_restart_new
       USE constants,            ONLY : e2
       USE funct,                ONLY : set_exx_fraction, set_screening_parameter, &
                                       set_gau_parameter, enforce_input_dft, start_exx
-      USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
-                                       exxdiv_treatment, yukawa, ecutvcut, ecutfock
+      USE exx_base,             ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
+                                       exxdiv_treatment, yukawa, ecutvcut
+      USE exx,                  ONLY : ecutfock
       ! 
       USE  qes_types_module,   ONLY : hybrid_type 
       IMPLICIT NONE
@@ -2074,7 +2108,7 @@ MODULE pw_restart_new
       CONTINUE 
    END SUBROUTINE read_collected_to_evc
    !
-   SUBROUTINE init_vars_from_schema( what, ierr, output_obj, input_obj, par_info, gen_info )
+   SUBROUTINE init_vars_from_schema( what, ierr, output_obj, par_info, gen_info, input_obj )
       !------------------------------------------------------------------------
       !
       USE qes_types_module,     ONLY : input_type, output_type, &
@@ -2084,10 +2118,10 @@ MODULE pw_restart_new
 !      !
       CHARACTER(LEN=*), INTENT(IN)           :: what
       TYPE ( output_type), INTENT(IN)        :: output_obj
-      TYPE ( input_type ), INTENT(IN)        :: input_obj
       TYPE ( parallel_info_type), INTENT(IN) :: par_info
       TYPE ( general_info_type ), INTENT(IN) :: gen_info
       INTEGER,INTENT (OUT)                   :: ierr 
+      TYPE ( input_type ), OPTIONAL, INTENT(IN)        :: input_obj
       !
       CONTINUE
     END SUBROUTINE init_vars_from_schema

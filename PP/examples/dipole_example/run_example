@@ -183,7 +183,7 @@ $ECHO "  running average.x to obtain the potential along Z...\c"
 $AVERAGE_COMMAND < ni+co.avg.in > ni+co.vpot-z
 check_failure $?
 $ECHO " done"
-
+mv avg.dat ni+co.vpot-z 
 
 #
 # If gnuplot is present plot the potential. In the graph it's clear where
@@ -339,6 +339,8 @@ $ECHO "  running average.x to obtain the potential along Z...\c"
 $AVERAGE_COMMAND < water.avg.in > water.vpot-z
 check_failure $?
 $ECHO " done"
+mv avg.dat water.vpot-z
+
 
 if [ "$GP_COMMAND" = "" ]; then
     break

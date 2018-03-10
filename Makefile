@@ -378,10 +378,6 @@ doc_clean :
 	( if test -f $$dir/Makefile ; then \
 	( cd $$dir; $(MAKE) TLDEPS= clean ) ; fi ) ;  done
 
-depend: libiotk version
+depend: libiotk
 	@echo 'Checking dependencies...'
 	- ( if test -x install/makedeps.sh ; then install/makedeps.sh ; fi)
-# update file containing version number before looking for dependencies
-
-version:
-	- ( cd Modules; make version )
