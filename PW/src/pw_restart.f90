@@ -148,8 +148,9 @@ MODULE pw_restart
       USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
                                        get_gau_parameter, &
                                        get_screening_parameter, exx_is_active
-      USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
-                                       exxdiv_treatment, yukawa, ecutvcut, ecutfock
+      USE exx_base,             ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
+                                       exxdiv_treatment, yukawa, ecutvcut 
+      USE exx,                   ONLY:  ecutfock
       USE cellmd,               ONLY : lmovecell, cell_factor 
       USE martyna_tuckerman,    ONLY : do_comp_mt
       USE esm,                  ONLY : do_comp_esm, esm_nfit, esm_efield, esm_w, &
@@ -2654,8 +2655,9 @@ MODULE pw_restart
       !
       USE funct,                ONLY : set_exx_fraction, set_screening_parameter, &
                                        set_gau_parameter, enforce_input_dft, start_exx
-      USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
-                                       exxdiv_treatment, yukawa, ecutvcut, ecutfock
+      USE exx_base,             ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
+                                       exxdiv_treatment, yukawa, ecutvcut 
+      USE exx,                  ONLY : ecutfock
       IMPLICIT NONE
       !
       INTEGER,          INTENT(OUT) :: ierr
