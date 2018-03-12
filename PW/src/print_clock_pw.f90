@@ -45,6 +45,7 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'realus:spher' )
       CALL print_clock( 'realus:tabp' )
    END IF
+   CALL print_clock( 'hinit0' )
    !
    WRITE( stdout, '(/5x,"Called by electrons:")' )
    CALL print_clock( 'c_bands' )
