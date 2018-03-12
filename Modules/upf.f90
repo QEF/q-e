@@ -41,9 +41,9 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    USE read_upf_v1_module,ONLY: read_upf_v1
    USE read_upf_v2_module,ONLY: read_upf_v2
    USE read_upf_schema_module ,ONLY: read_upf_schema
-   USE mp,           ONLY: mp_barrier
+   USE mp,           ONLY: mp_barrier, mp_sum
    USE mp_images,    ONLY: intra_image_comm, my_image_id
-   USE io_global,    ONLY: ionode, stdout
+   USE io_global,    ONLY: ionode, ionode_id, stdout
    USE io_files,     ONLY: tmp_dir
    USE FoX_DOM,      ONLY: Node, domException, parseFile, getFirstChild, getExceptionCode,&
                               getTagName    
@@ -69,6 +69,7 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    TYPE(DOMException) :: ex 
    INTEGER, EXTERNAL  :: find_free_unit
    CHARACTER(LEN=256) :: temp_upf_file
+   CHARACTER(LEN=1024) :: msg
    IF (PRESENT(xml_only) ) xml_only_ = xml_only
    ierr = 0
 
@@ -90,10 +91,23 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
             CALL make_emended_upf_copy( TRIM(filename), TRIM(tmp_dir)//trim(temp_upf_file))  
           END IF   
           CALL mp_barrier ( intra_image_comm) 
-          doc => parseFile(TRIM(tmp_dir)//trim(temp_upf_file), EX = ex )
+          doc => parseFile(TRIM(tmp_dir)//trim(temp_upf_file), EX = ex, IOSTAT = ferr )
           ierr = getExceptionCode( ex ) 
-          CALL mp_barrier(intra_image_comm) 
-          IF (ionode) ferr = f_remove(TRIM(tmp_dir)//trim(temp_upf_file) )
+          CALL mp_sum(ferr,intra_image_comm) 
+          IF ( ferr /= 0 ) THEN 
+             WRITE (msg, '(A)')  'Failure while trying to fix '//trim(filename) // '.'// new_line('a') // &
+                                 'For fixing manually UPF files see: '// new_line('a') // &
+                                 'https://gitlab.com/QEF/q-e/tree/master/upftools/how_to_fix_upf.md'
+             CALL errore('read_upf: ', TRIM(msg), ferr ) 
+          ELSE 
+             WRITE ( msg, '(A)') 'Pseudo file '// trim(filename) // ' has been successfully fixed on the fly.' &
+                              // new_line('a') // 'To avoid this message in the future you can permanently fix ' &
+                              // new_line('a') // ' your pseudo files following instructions given in: ' &
+                              // new_line('a') // 'https://gitlab.com/QEF/q-e/tree/master/upftools/how_to_fix_upf.md'
+             CALL infomsg('read_upf:', trim(msg) )    
+          END IF
+          ! 
+          IF (ionode) ferr = f_remove(TRIM(tmp_dir)//TRIM(temp_upf_file) )
           temp_upf_file=""
        END IF 
        IF ( ierr == 0 ) THEN 
