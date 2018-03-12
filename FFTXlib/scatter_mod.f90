@@ -258,10 +258,6 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
      !
      !  step one: store contiguously the columns
      !
-     ! ensures that no garbage is present in the output 
-     ! not useless ... clean the array to be returned from the garbage of previous A2A step
-     f_in = (0.0_DP, 0.0_DP) !
-     !
 !$omp parallel do collapse(2) private(kdest,kfrom)
      DO iproc2 = 1, nproc2
         DO k = 0, ncp_(me2)-1
@@ -273,6 +269,14 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
         ENDDO
      ENDDO
 !$omp end parallel do
+     !
+     ! clean extra array elements in each stick
+     !
+     IF( desc%nr2x /= desc%nr2 ) THEN
+        DO k = 1, ncp_(me2)
+           f_in(desc%nr2x*(k-1)+desc%nr2+1:desc%nr2x*k) = (0.0_DP, 0.0_DP)
+        ENDDO
+     ENDIF
 
 20   CONTINUE
 
@@ -416,9 +420,6 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      ENDDO
 #endif
      !
-     ! ensures that no garbage is present in the output 
-     ! useless; the later accessed elements are overwritten by the A2A step
-     !
      ! step two: communication  across the    nproc3    group
      !
 #if defined(__NON_BLOCKING_SCATTER)
@@ -444,6 +445,9 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 #endif     
      !
 10   CONTINUE
+     !
+     ! ensures that no garbage is present in the output
+     ! useless; the later accessed elements are overwritten by the A2A step
      !
      f_aux = (0.0_DP, 0.0_DP) !
 #if defined(__NON_BLOCKING_SCATTER)
@@ -542,13 +546,10 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      ! clean extra array elements in each stick
 
      IF( desc%nr3x /= desc%nr3 ) THEN
-       DO k = 1, ncp_ ( desc%mype+1 ) 
-          DO i = desc%nr3, desc%nr3x
-             f_in( (k-1)*desc%nr3x + i ) = 0.0d0 
-          END DO
-       END DO
+        DO k = 1, ncp_(desc%mype+1)
+           f_in(desc%nr3x*(k-1)+desc%nr3+1:desc%nr3x*k) = (0.0_DP, 0.0_DP)
+        END DO
      END IF
-
 
 20   CONTINUE
 
