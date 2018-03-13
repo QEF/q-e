@@ -15,7 +15,6 @@ To fix your UPF  files you can:
  ```
  <PP_INPUTFILE>  ---> <PP_INPUTFILE><![CDATA[
  ```
-
  and
  ```
  </PP_INPUTFILE>  ---> ]]></PP_INPUTFILE>
