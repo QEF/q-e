@@ -42,6 +42,8 @@ program test
   !!
   !!-ecutwfc  Plane wave energy cut off
   !!
+  !!-ecutrho  Potential energy cut off (not used)
+  !!
   !!-alat     Lattice parameter
   !!
   !!-nbnd     Number of bands (fft cycles)
@@ -49,6 +51,14 @@ program test
   !!-ntg      Number of task groups
   !!
   !!-gamma    Enables gamma point trick. Should be about 2 times faster.
+  !!
+  !!-av1  x y z    First lattice vector, in atomic units. N.B.: when using -av1, -alat is ignored!
+  !!
+  !!-av2  x y z    Second lattice vector, in atomic units. N.B.: when using -av2, -alat is ignored!
+  !!
+  !!-av3  x y z    Third lattice vector, in atomic units. N.B.: when using -av3, -alat is ignored!
+  !!
+  !!-kmax kx ky kz    Reciprocal lattice vector inside the BZ with maximum norm. Used to calculate max(|G+K|). (2pi/a)^2 units.
   !!
   !! Timings of different stages of execution are provided at the end of the
   !! run.
@@ -88,7 +98,7 @@ program test
   INTEGER :: ngw_, ngm_, ngs_
   REAL*8  :: gcutm, gkcut, gcutms
   REAL*8  :: ecutm, ecutw, ecutms
-  REAL*8  :: ecutrho
+  REAL*8  :: ecutrho, dual, kmax(3)
   !! cut-off for density
   REAL*8  :: ecutwfc
   !! cut-off for the wave-function
@@ -133,6 +143,7 @@ program test
   !
   !   default parameter (32 water molecules)
   !
+  kmax    = HUGE(0.d0)   !not set
   ecutwfc = 80.0d0
   ecutrho = 0.d0
   alat_in = 18.65
@@ -193,6 +204,15 @@ program test
       READ (arg, *) at(2, 3)
       CALL get_command_argument(i + 3, arg)
       READ (arg, *) at(3, 3)
+      alat_in = 1.0
+    END IF
+    IF (TRIM(arg) == '-kmax') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) kmax(1)
+      CALL get_command_argument(i + 2, arg)
+      READ (arg, *) kmax(2)
+      CALL get_command_argument(i + 3, arg)
+      READ (arg, *) kmax(3)
       alat_in = 1.0
     END IF
     IF (TRIM(arg) == '-ntg') THEN
@@ -262,10 +282,30 @@ program test
   at(:,:) = at(:,:) / alat
   !
   tpiba = 2.0d0*pi/alat
+  ! 
+  call recips(at(1, 1), at(1, 2), at(1, 3), bg(1, 1), bg(1, 2), bg(1, 3))
   !
-  gcutm = ecutm    / tpiba**2  ! potential cut-off
-  gcutms= ecutms   / tpiba**2  ! smooth mesh cut-off
-  gkcut = ecutw    / tpiba**2  ! wave function cut-off
+  
+  if (ALL(kmax < HUGE(0.d0))) THEN
+     gkcut = sqrt ( sum(kmax(1:3)**2) ) + sqrt (ecutw/ tpiba**2)
+  ELSE
+     ! use max(bg)/2 as an estimate of the largest k-point
+     gkcut = 0.5d0 * max ( &
+        sqrt (sum(bg (1:3, 1)**2) ), &
+        sqrt (sum(bg (1:3, 2)**2) ), &
+        sqrt (sum(bg (1:3, 3)**2) ) ) + sqrt (ecutw/ tpiba**2)
+  END IF
+  !
+  gkcut = gkcut**2  ! wave function cut-off
+  !
+  dual = ecutrho / ecutwfc 
+  gcutm = dual * ecutwfc / tpiba**2  ! potential cut-off
+  !
+  IF ( dual > 4.000000001_dp ) THEN
+     gcutms = 4.D0 * ecutwfc / tpiba**2 ! smooth mesh cut-off
+  ELSE
+     gcutms = gcutm                     ! smooth mesh cut-off
+  END IF
   !
   if( mype == 0 ) then
 
@@ -287,8 +327,6 @@ program test
     write (*, *) 'Num Task Group = ', ntgs
     write (*, *) 'Gamma trick    = ', gamma_only
   end if
-  !
-  call recips(at(1, 1), at(1, 2), at(1, 3), bg(1, 1), bg(1, 2), bg(1, 3))
   !
   nx = 2*int(sqrt(gcutm)*sqrt(at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2)) + 1
   ny = 2*int(sqrt(gcutm)*sqrt(at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2)) + 1
@@ -537,6 +575,7 @@ program test
   CALL fft_type_deallocate(dffts)
   CALL fft_type_deallocate(dfftp)
   CALL fft_type_deallocate(dfft3d)
+  CALL sticks_map_deallocate( smap )
 
 #if defined(__MPI)
   CALL mpi_finalize(ierr)
