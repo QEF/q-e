@@ -39,6 +39,17 @@ MODULE fft_interfaces
        TYPE(fft_box_descriptor), INTENT(IN) :: dfft
        COMPLEX(DP) :: f(:)
      END SUBROUTINE invfft_b
+#if defined(__CUDA)
+     SUBROUTINE invfft_y_gpu( grid_type, f, dfft, howmany )
+       USE fft_types,  ONLY: fft_type_descriptor
+       USE fft_param,  ONLY :DP
+       IMPLICIT NONE
+       CHARACTER(LEN=*),  INTENT(IN) :: grid_type
+       TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+       INTEGER, OPTIONAL, INTENT(IN) :: howmany
+       COMPLEX(DP), DEVICE :: f(:)
+     END SUBROUTINE invfft_y_gpu
+#endif
   END INTERFACE
 
   INTERFACE fwfft
@@ -51,6 +62,17 @@ MODULE fft_interfaces
        INTEGER, OPTIONAL, INTENT(IN) :: howmany
        COMPLEX(DP) :: f(:)
      END SUBROUTINE fwfft_y
+#if defined(__CUDA)
+     SUBROUTINE fwfft_y_gpu( grid_type, f, dfft, howmany )
+       USE fft_types,  ONLY: fft_type_descriptor
+       USE fft_param,  ONLY :DP
+       IMPLICIT NONE
+       CHARACTER(LEN=*), INTENT(IN) :: grid_type
+       TYPE(fft_type_descriptor), INTENT(IN) :: dfft
+       INTEGER, OPTIONAL, INTENT(IN) :: howmany
+       COMPLEX(DP), DEVICE :: f(:)
+     END SUBROUTINE fwfft_y_gpu
+#endif
   END INTERFACE
 
   INTERFACE fft_interpolate
