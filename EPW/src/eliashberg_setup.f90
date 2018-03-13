@@ -441,7 +441,7 @@
     ENDIF
     !
     OPEN(unit = iufillambda, file = TRIM(prefix)//".lambda_k_pairs", form = 'formatted')
-    WRITE(iufillambda,'(a12,a30)') '# lambda_nk','  \rho(lambda_nk) scaled to 1.'
+    WRITE(iufillambda,'(a12,a30)') '# lambda_nk','  \rho(lambda_nk) scaled to 1'
     DO ibin = 1, nbink
       WRITE(iufillambda,'(2f21.7)') dbink*dble(ibin), lambda_k_bin(ibin)/maxval(lambda_k_bin(:))
     ENDDO
@@ -450,6 +450,7 @@
     ! SP: Produced if user really wants it 
     IF ( iverbosity == 2 ) THEN  
       OPEN( unit = iufillambda, file = TRIM(prefix)//".lambda_pairs", form = 'formatted')
+    WRITE(iufillambda,'(a12,a30)') "# lambda_nk,n'k'", "  \rho(lambda_nk,n'k') scaled to 1"
       DO ibin = 1, nbin
         WRITE(iufillambda,'(2f21.7)') dbin*dble(ibin), lambda_pairs(ibin)/maxval(lambda_pairs(:))
       ENDDO
