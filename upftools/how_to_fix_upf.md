@@ -1,21 +1,22 @@
 # How to fix UPF files v2.01
 
-Many upf files written with the atomic codes contain
- `&` charactets  which are reserved in XML syntax and need to be fixed.
+Many upf files written with by previous version of  `ld1.x` contain
+ `&` characters.  This  is a reserved symbol in XML syntax and needs to be 
+    escaped.
 
-To fix these files you can:
+To fix your UPF  files you can:
  * use the `fix_upf.x` executable present in this directory ;
 
- *   replace with an editor the 2 or 3 occurrences of `&` with
+ *   replace using an editor the 2 or 3 occurrences of `&` with
  the corresponding escape code `&amp;`;
 
- * Mark  all the text contained in the  `<PP_INPUT>`  element
- as non _parsable_;  to do this replace
+ * Mark  all the text contained in the  `<PP_INPUTFILE>`  element
+ as non parsable text,   to do this make these replacements:
  ```
- <PP_INPUT>  ----> <PP_INPUT><![CDATA[
+ <PP_INPUTFILE>  ---> <PP_INPUTFILE><![CDATA[
  ```
 
  and
  ```
- </PP_INPUT>  ---> ]]></PP_INPUT>
+ </PP_INPUTFILE>  ---> ]]></PP_INPUTFILE>
  ```
