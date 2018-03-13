@@ -126,7 +126,8 @@
            WRITE(name1,'(a,a1,a4,a7,f6.2)') TRIM(prefix), '.', cname, '_aniso_', temp
         ENDIF
         OPEN(iufilgap, file=name1, form='formatted')
-        WRITE(iufilgap,'(6a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
+        WRITE(iufilgap,'(6a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]',&
+                                                          'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
      ENDIF
      !
      DO ik = 1, nkfs
