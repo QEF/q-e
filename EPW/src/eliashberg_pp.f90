@@ -53,6 +53,7 @@
   dos_qp(:) = 0.d0          
   !
   IF ( laniso ) THEN
+     WRITE(iuqdos,'(5a20)') 'w [eV]', 'N_S/N_F'
      DO iw = 1, nsw 
         omega = ws(iw) + ci*degaussw0
         DO ik = 1, nkfs
@@ -67,6 +68,7 @@
         WRITE(iuqdos,'(2ES20.10)') ws(iw), dos_qp(iw)
      ENDDO
   ELSEIF ( liso ) THEN 
+     WRITE(iuqdos,'(5a20)') 'w [eV]', 'N_S/N_F'
      DO iw = 1, nsw
         omega = ws(iw) + ci*degaussw0
         dos_qp(iw) = dos_qp(iw) + real( omega / sqrt( omega*omega - Delta(iw)*Delta(iw) ) ) 
