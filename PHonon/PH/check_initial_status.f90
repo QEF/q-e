@@ -91,9 +91,8 @@ SUBROUTINE check_initial_status(auxdyn)
   USE io_rho_xml,      ONLY : write_scf
   USE mp_images,       ONLY : nimage, intra_image_comm
   USE io_global,       ONLY : ionode, ionode_id
-  USE io_files,        ONLY : prefix
+  USE io_files,        ONLY : prefix , create_directory
   USE mp,              ONLY : mp_bcast
-  USE xml_io_base,     ONLY : create_directory
   USE mp_global,       ONLY : mp_global_end
   USE el_phon,         ONLY : elph_mat
   ! YAMBO >

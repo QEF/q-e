@@ -11,7 +11,8 @@ MODULE io_rho_xml
   !----------------------------------------------------------------------------
   !
   USE kinds,       ONLY : DP
-  USE xml_io_base, ONLY : create_directory, write_rho, read_rho
+  USE io_files,    ONLY : create_directory
+  USE xml_io_base, ONLY : write_rho, read_rho
 #if !defined (__OLDXML)
   USE io_base,     ONLY : write_rhog, read_rhog
 #endif

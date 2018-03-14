@@ -55,7 +55,7 @@ SUBROUTINE elph_tetra_lambda()
   USE lsda_mod,   ONLY : nspin
   USE ktetra,     ONLY : ntetra, tetra, opt_tetra_dos_t
   USE output, ONLY : fildyn
-  USE xml_io_base, ONLY : create_directory
+  USE io_files, ONLY : create_directory
   !
   IMPLICIT NONE
   !
@@ -518,7 +518,7 @@ SUBROUTINE elph_tetra_gamma()
   USE ktetra,     ONLY : ntetra, tetra, opt_tetra_dos_t
   USE mp_images, ONLY : me_image, nproc_image, intra_image_comm
   USE output, ONLY : fildyn
-  USE xml_io_base, ONLY : create_directory
+  USE io_files, ONLY : create_directory
   USE ions_base, ONLY : ityp, amass
   !
   IMPLICIT NONE

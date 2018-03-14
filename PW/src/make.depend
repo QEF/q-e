@@ -960,7 +960,6 @@ input.o : ../../Modules/ions_base.o
 input.o : ../../Modules/kernel_table.o
 input.o : ../../Modules/kind.o
 input.o : ../../Modules/mm_dispersion.o
-input.o : ../../Modules/mp_images.o
 input.o : ../../Modules/mp_pools.o
 input.o : ../../Modules/noncol.o
 input.o : ../../Modules/qes_types.o
@@ -972,9 +971,7 @@ input.o : ../../Modules/recvec.o
 input.o : ../../Modules/run_info.o
 input.o : ../../Modules/tsvdw.o
 input.o : ../../Modules/wannier_new.o
-input.o : ../../Modules/wrappers.o
 input.o : ../../Modules/wyckoff.o
-input.o : ../../UtilXlib/mp.o
 input.o : ../../dft-d3/api.o
 input.o : ../../dft-d3/dftd3_qe.o
 input.o : Coul_cut_2D.o
@@ -1451,7 +1448,6 @@ punch.o : ../../Modules/ions_base.o
 punch.o : ../../Modules/kernel_table.o
 punch.o : ../../Modules/wavefunctions.o
 punch.o : ../../Modules/wrappers.o
-punch.o : ../../Modules/xml_io_base.o
 punch.o : a2fmod.o
 punch.o : io_rho_xml.o
 punch.o : pw_restart.o
@@ -1551,6 +1547,7 @@ pw_restart.o : buffers.o
 pw_restart.o : esm.o
 pw_restart.o : extfield.o
 pw_restart.o : exx.o
+pw_restart.o : exx_base.o
 pw_restart.o : io_rho_xml.o
 pw_restart.o : ldaU.o
 pw_restart.o : martyna_tuckerman.o
@@ -1593,7 +1590,6 @@ pw_restart_new.o : ../../Modules/uspp.o
 pw_restart_new.o : ../../Modules/version.o
 pw_restart_new.o : ../../Modules/wavefunctions.o
 pw_restart_new.o : ../../UtilXlib/mp.o
-pw_restart_new.o : ../../iotk/src/iotk_module.o
 pw_restart_new.o : Coul_cut_2D.o
 pw_restart_new.o : atomic_wfc_mod.o
 pw_restart_new.o : bp_mod.o

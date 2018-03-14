@@ -10,6 +10,7 @@ MODULE io_files
 !=----------------------------------------------------------------------------=!
   !
   USE parameters, ONLY: ntypx
+  USE io_global,  ONLY: ionode, ionode_id, stdout
   !
   ! ... I/O related variables: file names, units, utilities
   ! ... IMPORTANT: when directory names are set, they must always end with "/"
@@ -17,6 +18,9 @@ MODULE io_files
   IMPLICIT NONE
   !
   SAVE
+  PUBLIC :: create_directory, check_tempdir, clean_tempdir, check_file_exist, &
+       delete_if_present, check_writable
+  !
   ! ... directory for all temporary files
   CHARACTER(len=256) :: tmp_dir = './'
   ! ... directory for large files on each node. Default: same as tmp_dir
@@ -46,9 +50,7 @@ MODULE io_files
   !
   CHARACTER (LEN=13), PARAMETER :: xmlpun      = 'data-file.xml'
   !
-!
   CHARACTER (LEN=20), PARAMETER :: xmlpun_schema = 'data-file-schema.xml'
-!
   !
   ! ... The units where various variables are saved
   ! ... Only units that are kept open during the run should be listed here
@@ -65,6 +67,7 @@ MODULE io_files
   !
   INTEGER :: iunexit     = 26 ! unit for a soft exit  
   INTEGER :: iunupdate   = 27 ! unit for saving old positions (extrapolation)
+  ! NEB
   INTEGER :: iunnewimage = 28 ! unit for parallelization among images
   INTEGER :: iunlock     = 29 ! as above (locking file)
   !
@@ -95,11 +98,138 @@ MODULE io_files
   !
 CONTAINS
   !
+  !------------------------------------------------------------------------
+  SUBROUTINE create_directory( dirname )
+    !------------------------------------------------------------------------
+    !
+    USE wrappers,  ONLY : f_mkdir_safe
+    USE mp,        ONLY : mp_barrier, mp_bcast
+    USE mp_images, ONLY : me_image, intra_image_comm
+    !
+    CHARACTER(LEN=*), INTENT(IN) :: dirname
+    !
+    INTEGER                    :: ierr
+    !
+    CHARACTER(LEN=6), EXTERNAL :: int_to_char
+    !
+    IF ( ionode ) ierr = f_mkdir_safe( TRIM( dirname ) )
+    CALL mp_bcast ( ierr, ionode_id, intra_image_comm )
+    !
+    CALL errore( 'create_directory', &
+         'unable to create directory ' // TRIM( dirname ), ierr )
+    !
+    ! ... syncronize all jobs (not sure it is really useful)
+    !
+    CALL mp_barrier( intra_image_comm )
+    !
+    ! ... check whether the scratch directory is writable
+    !
+    IF ( ionode ) ierr = check_writable ( dirname, me_image )
+    CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+    !
+    CALL errore( 'create_directory:', &
+         TRIM( dirname ) // ' non existent or non writable', ierr )
+    !
+    RETURN
+    !
+  END SUBROUTINE create_directory
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE check_tempdir ( tmp_dir, exst, pfs )
+    !-----------------------------------------------------------------------
+    !
+    ! ... Verify if tmp_dir exists, creates it if not
+    ! ... On output:
+    ! ...    exst= .t. if tmp_dir exists
+    ! ...    pfs = .t. if tmp_dir visible from all procs of an image
+    !
+    USE wrappers,      ONLY : f_mkdir_safe
+    USE mp_images,     ONLY : intra_image_comm, nproc_image, me_image
+    USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(len=*), INTENT(in) :: tmp_dir
+    LOGICAL, INTENT(out)         :: exst, pfs
+    !
+    INTEGER             :: ios, image, proc, nofi
+    CHARACTER (len=256) :: file_path, filename
+    CHARACTER(len=6), EXTERNAL :: int_to_char
+    !
+    ! ... create tmp_dir on ionode
+    ! ... f_mkdir_safe returns -1 if tmp_dir already exists
+    ! ...                       0 if         created
+    ! ...                       1 if         cannot be created
+    !
+    IF ( ionode ) ios = f_mkdir_safe( TRIM(tmp_dir) )
+    CALL mp_bcast ( ios, ionode_id, intra_image_comm )
+    exst = ( ios == -1 )
+    IF ( ios > 0 ) CALL errore ('check_tempdir','tmp_dir cannot be opened',1)
+    !
+    ! ... let us check now if tmp_dir is visible on all nodes
+    ! ... if not, a local tmp_dir is created on each node
+    !
+    ios = f_mkdir_safe( TRIM(tmp_dir) )
+    CALL mp_sum ( ios, intra_image_comm )
+    pfs = ( ios == -nproc_image ) ! actually this is true only if .not.exst 
+    !
+    RETURN
+    !
+  END SUBROUTINE check_tempdir
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE clean_tempdir( tmp_dir )
+    !-----------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(len=*), INTENT(in) :: tmp_dir
+    !
+    CHARACTER (len=256) :: file_path, filename
+    !
+    ! ... remove temporary files from tmp_dir ( only by the master node )
+    !
+    file_path = trim( tmp_dir ) // trim( prefix )
+    IF ( ionode ) THEN
+       CALL delete_if_present( trim( file_path ) // '.update' )
+       CALL delete_if_present( trim( file_path ) // '.md' )
+       CALL delete_if_present( trim( file_path ) // '.bfgs' )
+    ENDIF
+    !
+    RETURN
+    !
+  END SUBROUTINE clean_tempdir
+  !
+  !------------------------------------------------------------------------
+  FUNCTION check_file_exist( filename )
+    !------------------------------------------------------------------------
+    !
+    USE mp,        ONLY : mp_bcast
+    USE mp_images, ONLY : intra_image_comm
+    !
+    IMPLICIT NONE
+    !
+    LOGICAL          :: check_file_exist
+    CHARACTER(LEN=*) :: filename
+    !
+    LOGICAL :: lexists
+    !
+    IF ( ionode ) THEN 
+       !
+       INQUIRE( FILE = TRIM( filename ), EXIST = lexists )
+       !
+    ENDIF
+    !
+    CALL mp_bcast ( lexists, ionode_id, intra_image_comm )
+    !
+    check_file_exist = lexists
+    RETURN
+    !
+  END FUNCTION check_file_exist
+  !
   !--------------------------------------------------------------------------
   SUBROUTINE delete_if_present( filename, in_warning )
     !--------------------------------------------------------------------------
-    !
-    USE io_global, ONLY : ionode, stdout
     !
     IMPLICIT NONE
     !
@@ -189,7 +319,6 @@ subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   ! the  record length in direct-access I/O is given by the number of
   ! real*8 words times DIRECT_IO_FACTOR (may depend on the compiler)
   !
-  USE kinds
   implicit none
   !
   !    first the input variables
@@ -340,7 +469,7 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
   ! ... direct-access vector input/output
   ! ... read/write nword words starting from the address specified by vect
   !
-  USE kinds,     ONLY : DP
+  USE kinds ,     ONLY : DP
   !
   IMPLICIT NONE
   !

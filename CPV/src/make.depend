@@ -179,7 +179,6 @@ cp_restart_new.o : ../../Modules/run_info.o
 cp_restart_new.o : ../../Modules/tsvdw.o
 cp_restart_new.o : ../../Modules/uspp.o
 cp_restart_new.o : ../../Modules/wrappers.o
-cp_restart_new.o : ../../Modules/xml_io_base.o
 cp_restart_new.o : ../../UtilXlib/mp.o
 cp_restart_new.o : ../../iotk/src/iotk_module.o
 cp_restart_new.o : cp_interfaces.o
