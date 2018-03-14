@@ -65,8 +65,7 @@ BASEMOD_FLAGS= $(MOD_FLAG)/$(TOPDIR)/iotk/src \
                $(MOD_FLAG)/$(TOPDIR)/FFTXlib \
 	       $(MOD_FLAG)/$(TOPDIR)/LAXlib \
 	       $(MOD_FLAG)/$(TOPDIR)/UtilXlib \
-	       $(MOD_FLAG)/$(TOPDIR)/FoX/finclude \
-		   $(MOD_FLAG)/$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve
+	       $(MOD_FLAG)/$(TOPDIR)/FoX/finclude
 
 # Compilers: fortran-90, fortran-77, C
 # If a parallel compilation is desired, MPIF90 should be a fortran-90
@@ -181,7 +180,7 @@ RANLIB         = @ranlib@
 FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a  $(TOPDIR)/iotk/src/libiotk.a
-LIBS           = $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIB) $(CUDA_LIBS) $(LD_LIBS)
+LIBS           = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIB) $(LD_LIBS)
 
 # wget or curl - useful to download from network
 WGET = @wget@

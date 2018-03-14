@@ -155,11 +155,11 @@ EOF
 
    AC_DEFINE(HAVE_CUDA,1,[Define if we have CUDA])
    try_dflags="$try_dflags -D__CUDA"
-   cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
    ldflags="$ldflags -Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    gpu_runtime="$with_cuda_runtime"
-   pgi_cuda_libs="-Mcudalib=cufft,cublas,cusolver"
+   pgi_cuda_libs="-Mcudalib=cufft,cublas,cusolver \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
 fi
 
 # Announcing the new variables
