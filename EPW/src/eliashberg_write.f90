@@ -47,7 +47,7 @@
         WRITE(name1,'(a,a1,a4,a7,f6.2)') TRIM(prefix), '.', cname, '_aniso_',temp
      ENDIF     
      OPEN(iufilgap, file=name1, form='formatted')
-     WRITE(iufilgap,'(5a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Znorm(w) [eV]', 'Delta(w) [eV]', 'NZnorm(w) [eV]'
+     WRITE(iufilgap,'(5a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Znorm(w)', 'Delta(w) [eV]', 'NZnorm(w)'
      DO iw = 1, nsiw(itemp) ! loop over omega
         DO ik = 1, nkfs
            DO ibnd = 1, nbndfs
@@ -78,7 +78,7 @@
         WRITE(name1,'(a,a1,a4,a5,f6.2)') TRIM(prefix), '.', cname, '_iso_', temp
      ENDIF
      OPEN(iufilgap, file=name1, form='formatted')
-     WRITE(iufilgap,'(4a24)') 'w', 'Znorm(w)', 'Delta(w)', 'NZnorm(w)'
+     WRITE(iufilgap,'(4a20)') 'w [eV]', 'Znorm(w)', 'Delta(w) [eV]', 'NZnorm(w)'
      DO iw = 1, nsiw(itemp) ! loop over omega
         WRITE(iufilgap,'(4ES20.10)') wsi(iw), Znormi(iw), Deltai(iw), NZnormi(iw)
      ENDDO
@@ -126,7 +126,8 @@
            WRITE(name1,'(a,a1,a4,a7,f6.2)') TRIM(prefix), '.', cname, '_aniso_', temp
         ENDIF
         OPEN(iufilgap, file=name1, form='formatted')
-        WRITE(iufilgap,'(6a24)') 'w', 'Enk-Ef', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)]', 'Im[Delta(w)]'
+        WRITE(iufilgap,'(6a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]',&
+                                                          'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
      ENDIF
      !
      DO ik = 1, nkfs
@@ -171,7 +172,7 @@
         WRITE(name1,'(a,a1,a4,a5,f6.2)') TRIM(prefix), '.', cname, '_iso_', temp
      ENDIF
      OPEN(iufilgap, file=name1, form='formatted')
-     WRITE(iufilgap,'(5a18)') 'w', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)]', 'Im[Delta(w)]'
+     WRITE(iufilgap,'(5a20)') 'w [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
      lgap = .true.
      ! DO iw = 1, nsw
      DO iw = 1, nsw-1   ! this change is to prevent segfault in Delta(iw+1) and ws(iw+1)

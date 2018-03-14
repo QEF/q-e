@@ -97,13 +97,13 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
           IF ( ferr /= 0 ) THEN 
              WRITE (msg, '(A)')  'Failure while trying to fix '//trim(filename) // '.'// new_line('a') // &
                                  'For fixing manually UPF files see: '// new_line('a') // &
-                                 'https://gitlab.com/QEF/q-e/tree/master/upftools/how_to_fix_upf.md'
+                                 'https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
              CALL errore('read_upf: ', TRIM(msg), ferr ) 
           ELSE 
              WRITE ( msg, '(A)') 'Pseudo file '// trim(filename) // ' has been successfully fixed on the fly.' &
                               // new_line('a') // 'To avoid this message in the future you can permanently fix ' &
                               // new_line('a') // ' your pseudo files following instructions given in: ' &
-                              // new_line('a') // 'https://gitlab.com/QEF/q-e/tree/master/upftools/how_to_fix_upf.md'
+                              // new_line('a') // 'https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
              CALL infomsg('read_upf:', trim(msg) )    
           END IF
           ! 
