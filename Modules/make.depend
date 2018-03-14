@@ -6,6 +6,10 @@ autopilot.o : kind.o
 autopilot.o : mp_world.o
 autopilot.o : parser.o
 basic_algebra_routines.o : kind.o
+bcast_qes_module.o : ../UtilXlib/mp.o
+bcast_qes_module.o : io_global.o
+bcast_qes_module.o : kind.o
+bcast_qes_module.o : qes_types.o
 becmod.o : ../UtilXlib/mp.o
 becmod.o : control_flags.o
 becmod.o : kind.o
@@ -169,6 +173,8 @@ mm_dispersion.o : ions_base.o
 mm_dispersion.o : kind.o
 mm_dispersion.o : mp_images.o
 mm_dispersion.o : parameters.o
+mod_qes_input_reader.o : ../UtilXlib/mp.o
+mod_qes_input_reader.o : qes_module.o
 more_functionals.o : constants.o
 more_functionals.o : kind.o
 mp_bands.o : ../UtilXlib/mp.o

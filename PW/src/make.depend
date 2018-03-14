@@ -1551,6 +1551,7 @@ pw_restart.o : buffers.o
 pw_restart.o : esm.o
 pw_restart.o : extfield.o
 pw_restart.o : exx.o
+pw_restart.o : exx_base.o
 pw_restart.o : io_rho_xml.o
 pw_restart.o : ldaU.o
 pw_restart.o : martyna_tuckerman.o
@@ -1593,7 +1594,6 @@ pw_restart_new.o : ../../Modules/uspp.o
 pw_restart_new.o : ../../Modules/version.o
 pw_restart_new.o : ../../Modules/wavefunctions.o
 pw_restart_new.o : ../../UtilXlib/mp.o
-pw_restart_new.o : ../../iotk/src/iotk_module.o
 pw_restart_new.o : Coul_cut_2D.o
 pw_restart_new.o : atomic_wfc_mod.o
 pw_restart_new.o : bp_mod.o
@@ -1667,6 +1667,7 @@ read_file.o : scf_mod.o
 read_file.o : symm_base.o
 read_file_new.o : ../../FFTXlib/fft_interfaces.o
 read_file_new.o : ../../FFTXlib/fft_types.o
+read_file_new.o : ../../Modules/bcast_qes_module.o
 read_file_new.o : ../../Modules/cell_base.o
 read_file_new.o : ../../Modules/constants.o
 read_file_new.o : ../../Modules/control_flags.o
@@ -1680,6 +1681,7 @@ read_file_new.o : ../../Modules/ions_base.o
 read_file_new.o : ../../Modules/kernel_table.o
 read_file_new.o : ../../Modules/kind.o
 read_file_new.o : ../../Modules/mp_bands.o
+read_file_new.o : ../../Modules/mp_images.o
 read_file_new.o : ../../Modules/noncol.o
 read_file_new.o : ../../Modules/paw_variables.o
 read_file_new.o : ../../Modules/qes_libs.o
