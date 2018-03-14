@@ -31,7 +31,7 @@ def hasSOC(prefix):
 
   xmldoc = minidom.parse(fname)
   item = xmldoc.getElementsByTagName('spinorbit')[0]
-  lSOC = bool(item.childNodes[0])
+  lSOC = item.childNodes[0].data
   
   return lSOC
 
@@ -40,6 +40,7 @@ user_input = raw_input('Enter the prefix used for PH calculations (e.g. diam)\n'
 prefix = str(user_input)
 
 SOC = hasSOC(prefix)
+
 
 if True: # this gets the nqpt from the outputfiles
   nqpt =  get_nqpt(prefix)
@@ -59,7 +60,7 @@ for iqpt in np.arange(1,nqpt+1):
   label = str(iqpt)
 
   # Case with SOC
-  if SOC:
+  if SOC == 'true':
     os.system('cp '+prefix+'.dyn0 '+prefix+'.dyn0.xml')
     os.system('cp '+prefix+'.dyn'+str(iqpt)+'.xml save/'+prefix+'.dyn_q'+label+'.xml')
     if (iqpt == 1):
@@ -70,7 +71,7 @@ for iqpt in np.arange(1,nqpt+1):
       os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix+'.dvscf* save/'+prefix+'.dvscf_q'+label)
       os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*' )
   # Case without SOC
-  else:
+  if SOC == 'false':
     os.system('cp '+prefix+'.dyn'+str(iqpt)+' save/'+prefix+'.dyn_q'+label)
     if (iqpt == 1):
       os.system('cp _ph0/'+prefix+'.dvscf1 save/'+prefix+'.dvscf_q'+label)
