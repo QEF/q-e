@@ -285,8 +285,10 @@ program test
   ! 
   call recips(at(1, 1), at(1, 2), at(1, 3), bg(1, 1), bg(1, 2), bg(1, 3))
   !
-  
-  if (ALL(kmax < HUGE(0.d0))) THEN
+  !
+  IF (gamma_only) kmax = 0.d0
+  !
+  IF (ALL(kmax < HUGE(0.d0))) THEN
      gkcut = sqrt ( sum(kmax(1:3)**2) ) + sqrt (ecutw/ tpiba**2)
   ELSE
      ! use max(bg)/2 as an estimate of the largest k-point
