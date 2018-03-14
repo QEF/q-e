@@ -173,8 +173,6 @@ mm_dispersion.o : ions_base.o
 mm_dispersion.o : kind.o
 mm_dispersion.o : mp_images.o
 mm_dispersion.o : parameters.o
-mod_qes_input_reader.o : ../UtilXlib/mp.o
-mod_qes_input_reader.o : qes_module.o
 more_functionals.o : constants.o
 more_functionals.o : kind.o
 mp_bands.o : ../UtilXlib/mp.o
