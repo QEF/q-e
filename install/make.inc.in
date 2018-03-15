@@ -163,7 +163,8 @@ MPI_LIBS       = @mpi_libs@
 MASS_LIBS      = @mass_libs@
 
 # CUDA libraries
-CUDA_LIBS=@pgi_cuda_libs@
+CUDA_LIBS=@cuda_libs@
+CUDA_EXTLIBS = @cuda_extlibs@
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 

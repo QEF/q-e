@@ -169,7 +169,7 @@ libdavid : touch-dummy libla clib libutil
 libcg : touch-dummy libla clib libutil
 	( cd KS_Solvers/CG ; $(MAKE) TLDEPS= all || exit 1 )
 
-libla : touch-dummy liblapack libutil libeigensolver_gpu
+libla : touch-dummy liblapack libutil libcuda
 	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libfft : touch-dummy
@@ -208,7 +208,7 @@ libiotk: touch-dummy
 libfox: touch-dummy
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
-libeigensolver_gpu: touch-dummy
+libcuda: touch-dummy
 	cd install ; $(MAKE) -f extlibs_makefile $@
 # In case of trouble with iotk and compilers, add
 # FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)

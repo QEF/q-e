@@ -34,6 +34,8 @@ NVCC=no
 CUDA_CFLAGS=
 CUDA_LDLIBS=
 cuda_fflags=
+cuda_libs=
+cuda_extlibs=
 
 # Provide your CUDA path with this
 AC_ARG_WITH([cuda],
@@ -159,7 +161,8 @@ EOF
    ldflags="$ldflags -Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    gpu_runtime="$with_cuda_runtime"
-   pgi_cuda_libs="-Mcudalib=cufft,cublas,cusolver \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
+   cuda_libs="-Mcudalib=cufft,cublas,cusolver \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
+   cuda_extlibs="eigensolver"
 fi
 
 # Announcing the new variables
@@ -172,5 +175,6 @@ AC_SUBST([CUDA_LDLIBS])
 AC_SUBST(gpu_arch)
 AC_SUBST(gpu_runtime)
 AC_SUBST(cuda_fflags)
-AC_SUBST(pgi_cuda_libs)
+AC_SUBST(cuda_libs)
+AC_SUBST(cuda_extlibs)
 ])
