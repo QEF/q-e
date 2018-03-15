@@ -77,19 +77,18 @@ build:intel:
 build:cudafortran:
   tags: [galileo]
   script:
-    - module load profile/advanced pgi/17.10 cuda/8.0.61
-    - git checkout develop
-    - git merge -X ours --no-edit origin/configcuda
-    - git merge -X theirs --no-edit origin/mpicuda
-    - git merge -X theirs --no-edit origin/cudadiag
+    - module load profile/global pgi/17.10 cuda/8.0.61
+    #- git checkout develop
+    #- git merge -X ours --no-edit origin/configcuda
+    #- git merge -X theirs --no-edit origin/mpicuda
+    #- git merge -X theirs --no-edit origin/cudadiag
     - ./configure --enable-openmp --with-cuda=$CUDA_HOME
     - make pw cp
     - make clean
     - ./configure --disable-parallel --with-cuda=$CUDA_HOME
-    - export OMP_NUM_THREADS=1
     - make pw cp
-    - cd test-suite
-    - mkdir -p /tmp/save
-    - make run-tests-pw-serial
-    - make run-tests-cp-serial
-    - rm -r /tmp/save
+    #- cd test-suite
+    #- mkdir -p /tmp/save
+    #- make run-tests-pw-serial
+    #- make run-tests-cp-serial
+    #- rm -r /tmp/save
