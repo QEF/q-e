@@ -11,8 +11,8 @@
 
 module timers
   save
-  LOGICAL :: ignore_time = .true.
-  REAL*8  :: times(20) = 0.d0
+  LOGICAL :: ignore_time = .true.  ! This is used to avoid collection of initialization times
+  REAL*8  :: times(20) = 0.d0      ! Array hosting various timers
 end module
 
 program test
@@ -42,6 +42,8 @@ program test
   !!
   !!-ecutwfc  Plane wave energy cut off
   !!
+  !!-ecutrho  Potential energy cut off (not used)
+  !!
   !!-alat     Lattice parameter
   !!
   !!-nbnd     Number of bands (fft cycles)
@@ -49,6 +51,14 @@ program test
   !!-ntg      Number of task groups
   !!
   !!-gamma    Enables gamma point trick. Should be about 2 times faster.
+  !!
+  !!-av1  x y z    First lattice vector, in atomic units. N.B.: when using -av1, -alat is ignored!
+  !!
+  !!-av2  x y z    Second lattice vector, in atomic units. N.B.: when using -av2, -alat is ignored!
+  !!
+  !!-av3  x y z    Third lattice vector, in atomic units. N.B.: when using -av3, -alat is ignored!
+  !!
+  !!-kmax kx ky kz    Reciprocal lattice vector inside the BZ with maximum norm. Used to calculate max(|G+K|). (2pi/a)^2 units.
   !!
   !! Timings of different stages of execution are provided at the end of the
   !! run.
@@ -88,7 +98,7 @@ program test
   INTEGER :: ngw_, ngm_, ngs_
   REAL*8  :: gcutm, gkcut, gcutms
   REAL*8  :: ecutm, ecutw, ecutms
-  REAL*8  :: ecutrho
+  REAL*8  :: ecutrho, dual, kmax(3)
   !! cut-off for density
   REAL*8  :: ecutwfc
   !! cut-off for the wave-function
@@ -116,9 +126,8 @@ program test
   REAL(DP), ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: hpsi(:, :)
   !! array representing the potential
-  INTEGER, ALLOCATABLE :: nls(:), nlsm(:)
   INTEGER :: ngms, ngsx, ngms_g
-  INTEGER, ALLOCATABLE :: mill(:, :), nl(:), nlm(:), ig_l2g(:)
+  INTEGER, ALLOCATABLE :: mill(:, :), ig_l2g(:)
   REAL(DP), ALLOCATABLE :: g(:, :), gg(:)
   INTEGER :: ngm, ngmx, ngm_g, gstart
   !
@@ -134,12 +143,27 @@ program test
   !
   !   default parameter (32 water molecules)
   !
+  kmax    = HUGE(0.d0)   !not set
   ecutwfc = 80.0d0
   ecutrho = 0.d0
   alat_in = 18.65
   ntgs    = 1
   nbnd    = 1
   !
+  at(1, :) = (/0.5d0, 1.0d0, 0.0d0/)
+  at(2, :) = (/0.5d0, 0.0d0, 0.5d0/)
+  at(3, :) = (/0.0d0, 0.5d0, 1.5d0/)
+  !
+  DO i = 1, iargc()
+    CALL getarg(i, arg)
+    IF ((trim(arg) == "-h") .or. (trim(arg) == "--help")) THEN
+      print *, "Example usage:  mpirun -np 4 ./fft_test.x -ecutwfc 80 -alat 20  -nbnd 128 -ntg 4 -gamma .true."
+      print *, ""
+      print *, "For detailed information see test.f90"
+      STOP
+    END IF
+  END DO
+ 
   nargs = command_argument_count()
   do i = 1, nargs - 1
     CALL get_command_argument(i, arg)
@@ -154,6 +178,42 @@ program test
     IF (TRIM(arg) == '-alat') THEN
       CALL get_command_argument(i + 1, arg)
       READ (arg, *) alat_in
+    END IF
+    IF (TRIM(arg) == '-av1') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) at(1, 1)
+      CALL get_command_argument(i + 2, arg)
+      READ (arg, *) at(2, 1)
+      CALL get_command_argument(i + 3, arg)
+      READ (arg, *) at(3, 1)
+      alat_in = 1.0
+    END IF
+    IF (TRIM(arg) == '-av2') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) at(1, 2)
+      CALL get_command_argument(i + 2, arg)
+      READ (arg, *) at(2, 2)
+      CALL get_command_argument(i + 3, arg)
+      READ (arg, *) at(3, 2)
+      alat_in = 1.0
+    END IF
+    IF (TRIM(arg) == '-av3') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) at(1, 3)
+      CALL get_command_argument(i + 2, arg)
+      READ (arg, *) at(2, 3)
+      CALL get_command_argument(i + 3, arg)
+      READ (arg, *) at(3, 3)
+      alat_in = 1.0
+    END IF
+    IF (TRIM(arg) == '-kmax') THEN
+      CALL get_command_argument(i + 1, arg)
+      READ (arg, *) kmax(1)
+      CALL get_command_argument(i + 2, arg)
+      READ (arg, *) kmax(2)
+      CALL get_command_argument(i + 3, arg)
+      READ (arg, *) kmax(3)
+      alat_in = 1.0
     END IF
     IF (TRIM(arg) == '-ntg') THEN
       CALL get_command_argument(i + 1, arg)
@@ -215,19 +275,39 @@ program test
   ecutm  = ecutrho
   ecutms = ecutrho
   !
-  at(1, :) = (/0.5d0, 1.0d0, 0.0d0/)
-  at(2, :) = (/0.5d0, 0.0d0, 0.5d0/)
-  at(3, :) = (/0.0d0, 0.5d0, 1.5d0/)
-  !
   at = at*alat_in
   !
-  alat = SQRT(at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2)
+  alat = SQRT ( at(1,1)**2+at(2,1)**2+at(3,1)**2 )
+  !
+  at(:,:) = at(:,:) / alat
   !
   tpiba = 2.0d0*pi/alat
+  ! 
+  call recips(at(1, 1), at(1, 2), at(1, 3), bg(1, 1), bg(1, 2), bg(1, 3))
   !
-  gcutm = ecutm    / tpiba**2  ! potential cut-off
-  gcutms= ecutms   / tpiba**2  ! smooth mesh cut-off
-  gkcut = ecutw    / tpiba**2  ! wave function cut-off
+  !
+  IF (gamma_only) kmax = 0.d0
+  !
+  IF (ALL(kmax < HUGE(0.d0))) THEN
+     gkcut = sqrt ( sum(kmax(1:3)**2) ) + sqrt (ecutw/ tpiba**2)
+  ELSE
+     ! use max(bg)/2 as an estimate of the largest k-point
+     gkcut = 0.5d0 * max ( &
+        sqrt (sum(bg (1:3, 1)**2) ), &
+        sqrt (sum(bg (1:3, 2)**2) ), &
+        sqrt (sum(bg (1:3, 3)**2) ) ) + sqrt (ecutw/ tpiba**2)
+  END IF
+  !
+  gkcut = gkcut**2  ! wave function cut-off
+  !
+  dual = ecutrho / ecutwfc 
+  gcutm = dual * ecutwfc / tpiba**2  ! potential cut-off
+  !
+  IF ( dual > 4.000000001_dp ) THEN
+     gcutms = 4.D0 * ecutwfc / tpiba**2 ! smooth mesh cut-off
+  ELSE
+     gcutms = gcutm                     ! smooth mesh cut-off
+  END IF
   !
   if( mype == 0 ) then
 
@@ -250,13 +330,10 @@ program test
     write (*, *) 'Gamma trick    = ', gamma_only
   end if
   !
-  at = at/alat
-  !
-  call recips(at(1, 1), at(1, 2), at(1, 3), bg(1, 1), bg(1, 2), bg(1, 3))
-  !
   nx = 2*int(sqrt(gcutm)*sqrt(at(1, 1)**2 + at(2, 1)**2 + at(3, 1)**2)) + 1
   ny = 2*int(sqrt(gcutm)*sqrt(at(1, 2)**2 + at(2, 2)**2 + at(3, 2)**2)) + 1
   nz = 2*int(sqrt(gcutm)*sqrt(at(1, 3)**2 + at(2, 3)**2 + at(3, 3)**2)) + 1
+  !
   !
   if (mype == 0) then
     write (*, *) 'nx = ', nx, ' ny = ', ny, ' nz = ', nz
@@ -271,6 +348,7 @@ program test
   dfftp%rho_clock_label='fft' 
   CALL fft_type_init(dfftp, smap, "rho", gamma_only, .true., comm, at, bg, gcutm, 4.d0, nyfft=ntgs)
   !
+  CALL fft_base_info(mype == 0, dffts, dfftp)
   if (mype == 0) then
     write (*, *) 'dffts:  nr1 = ', dffts%nr1, ' nr2 = ', dffts%nr2, ' nr3 = ', dffts%nr3
     write (*, *) '        nr1x= ', dffts%nr1x, ' nr2x= ', dffts%nr2x, ' nr3x= ', dffts%nr3x
@@ -299,10 +377,6 @@ program test
   ALLOCATE (psi(ngms, nbnd))
   ALLOCATE (hpsi(ngms, nbnd))
   ALLOCATE (v(dffts%nnr))
-  ALLOCATE (nls(ngms))
-  ALLOCATE (nlsm(ngms))
-  ALLOCATE (nl(ngm))
-  ALLOCATE (nlm(ngm))
   ALLOCATE (mill(3, ngm))
   ALLOCATE (g(3, ngm))
   ALLOCATE (gg(ngm))
@@ -310,8 +384,15 @@ program test
   !
   ! --------  GENERATE G-VECTORS
   !
-  call ggen(gamma_only, at, bg, .true., ngm, ngms, ngm_g, ngms_g, mill, &
-&                    nl, nls, nlm, nlsm, gg, g, ig_l2g, gstart, gcutm, gcutms, dfftp, dffts)
+  ! smallmem = .flase.
+  IF( .false. ) THEN
+     CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+          g, gg, mill, ig_l2g, gstart, .TRUE. )
+  ELSE
+     CALL ggen( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
+       g, gg, mill, ig_l2g, gstart, .FALSE.  )
+  END IF
+  CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
   !
   ! --------  RESET TIMERS
   !
@@ -379,7 +460,7 @@ program test
     !
     IF (use_tg) THEN
       !
-      call prepare_psi_tg(ib, nbnd, ngms, psi, tg_psic, nls, nlsm, dffts, gamma_only)
+      call prepare_psi_tg(ib, nbnd, ngms, psi, tg_psic, dffts, gamma_only)
       time(2) = MPI_WTIME()
       !
       CALL invfft('tgWave', tg_psic, dffts); 
@@ -396,11 +477,11 @@ program test
       CALL fwfft('tgWave', tg_psic, dffts); 
       time(5) = MPI_WTIME()
       !
-      CALL accumulate_hpsi_tg(ib, nbnd, ngms, hpsi, tg_psic, nls, nlsm, dffts, gamma_only)
+      CALL accumulate_hpsi_tg(ib, nbnd, ngms, hpsi, tg_psic, dffts, gamma_only)
       time(6) = MPI_WTIME()
     ELSE
       !
-      call prepare_psi(ib, nbnd, ngms, psi, psic, nls, nlsm, dffts, gamma_only)
+      call prepare_psi(ib, nbnd, ngms, psi, psic, dffts, gamma_only)
       time(2) = MPI_WTIME()
       !
       CALL invfft('Wave', psic, dffts); time(3) = MPI_WTIME()
@@ -413,7 +494,7 @@ program test
       CALL fwfft('Wave', psic, dffts); 
       time(5) = MPI_WTIME()
       !
-      CALL accumulate_hpsi(ib, nbnd, ngms, hpsi, psic, nls, nlsm, dffts, gamma_only)
+      CALL accumulate_hpsi(ib, nbnd, ngms, hpsi, psic, dffts, gamma_only)
       time(6) = MPI_WTIME()
       !
     ENDIF
@@ -428,15 +509,24 @@ program test
   !
   wall = MPI_WTIME() - wall
 
+  ! --------  DEALLOCATE
+  !
   DEALLOCATE (psic)
+  DEALLOCATE (psi)
   DEALLOCATE (hpsi)
+  DEALLOCATE (v)
+  DEALLOCATE (mill)
+  DEALLOCATE (g)
+  DEALLOCATE (gg)
+  DEALLOCATE (ig_l2g)
   IF (use_tg) THEN
     !
     DEALLOCATE (tg_psic)
     DEALLOCATE (tg_v)
     !
   ENDIF
-
+  ! --------------------
+  !
 #if defined(__MPI)
   CALL MPI_ALLREDUCE(my_time, time_min, 10, MPI_DOUBLE_PRECISION, MPI_MIN, MPI_COMM_WORLD, ierr)
   CALL MPI_ALLREDUCE(my_time, time_max, 10, MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr)
@@ -487,6 +577,7 @@ program test
   CALL fft_type_deallocate(dffts)
   CALL fft_type_deallocate(dfftp)
   CALL fft_type_deallocate(dfft3d)
+  CALL sticks_map_deallocate( smap )
 
 #if defined(__MPI)
   CALL mpi_finalize(ierr)
@@ -575,6 +666,338 @@ subroutine recips (a1, a2, a3, b1, b2, b3)
 end subroutine recips
 
 
+  SUBROUTINE ggen ( dfftp, gamma_only, at, bg,  gcutm, ngm_g, ngm, &
+       g, gg, mill, ig_l2g, gstart, no_global_sort )
+    !----------------------------------------------------------------------
+    !
+    !     This routine generates all the reciprocal lattice vectors
+    !     contained in the sphere of radius gcutm. Furthermore it
+    !     computes the indices nl which give the correspondence
+    !     between the fft mesh points and the array of g vectors.
+    !
+    USE fft_types, ONLY: fft_stick_index, fft_type_descriptor
+    USE fft_ggen, ONLY : fft_set_nl
+    USE fft_param
+    !USE mp, ONLY: mp_rank, mp_size, mp_sum
+    !USE constants, ONLY : eps8
+    !
+    IMPLICIT NONE
+    !
+    TYPE(fft_type_descriptor),INTENT(INOUT) :: dfftp
+    LOGICAL,  INTENT(IN) :: gamma_only
+    REAL(DP), INTENT(IN) :: at(3,3), bg(3,3), gcutm
+    INTEGER, INTENT(IN) :: ngm_g
+    INTEGER, INTENT(INOUT) :: ngm
+    REAL(DP), INTENT(OUT) :: g(:,:), gg(:)
+    INTEGER, INTENT(OUT) :: mill(:,:), ig_l2g(:), gstart
+    !  if no_global_sort is present (and it is true) G vectors are sorted only
+    !  locally and not globally. In this case no global array needs to be
+    !  allocated and sorted: saves memory and a lot of time for large systems.
+    !
+    LOGICAL, INTENT(IN) :: no_global_sort
+    !
+    !     here a few local variables
+    !
+    REAL(DP) :: tx(3), ty(3), t(3)
+    REAL(DP), ALLOCATABLE :: tt(:)
+    INTEGER :: ngm_save, n1, n2, n3, ngm_offset, ngm_max, ngm_local
+    !
+    REAL(DP), ALLOCATABLE :: g2sort_g(:)
+    ! array containing only g vectors for the current processor
+    INTEGER, ALLOCATABLE :: mill_unsorted(:,:)
+    ! array containing all g vectors generators, on all processors
+    ! (replicated data). When no_global_sort is present and .true.,
+    ! only g-vectors for the current processor are stored
+    INTEGER, ALLOCATABLE :: igsrt(:), g2l(:)
+    !
+    INTEGER :: ni, nj, nk, i, j, k, ipol, ng, igl, indsw, ierr
+    INTEGER :: istart, jstart, kstart
+    INTEGER :: mype, npe
+    LOGICAL :: global_sort, is_local
+    INTEGER, ALLOCATABLE :: ngmpe(:)
+    !
+    ! The 'no_global_sort' is not optional in this case.
+    ! This differs from the version present in QE distribution.
+    global_sort = .NOT. no_global_sort
+    !
+    IF( .NOT. global_sort ) THEN
+       ngm_max = ngm
+    ELSE
+       ngm_max = ngm_g
+    END IF
+    !
+    ! save current value of ngm
+    !
+    ngm_save  = ngm
+    !
+    ngm = 0
+    ngm_local = 0
+    !
+    !    set the total number of fft mesh points and and initial value of gg
+    !    The choice of gcutm is due to the fact that we have to order the
+    !    vectors after computing them.
+    !
+    gg(:) = gcutm + 1.d0
+    !
+    !    and computes all the g vectors inside a sphere
+    !
+    ALLOCATE( mill_unsorted( 3, ngm_save ) )
+    ALLOCATE( igsrt( ngm_max ) )
+    ALLOCATE( g2l( ngm_max ) )
+    ALLOCATE( g2sort_g( ngm_max ) )
+    !
+    g2sort_g(:) = 1.0d20
+    !
+    ! allocate temporal array
+    !
+    ALLOCATE( tt( dfftp%nr3 ) )
+    !
+    ! max miller indices (same convention as in module stick_set)
+    !
+    ni = (dfftp%nr1-1)/2
+    nj = (dfftp%nr2-1)/2
+    nk = (dfftp%nr3-1)/2
+    !
+    ! gamma-only: exclude space with x < 0
+    !
+    IF ( gamma_only ) THEN
+       istart = 0
+    ELSE
+       istart = -ni
+    ENDIF
+    !
+    iloop: DO i = istart, ni
+       !
+       ! gamma-only: exclude plane with x = 0, y < 0
+       !
+       IF ( gamma_only .and. i == 0 ) THEN
+          jstart = 0
+       ELSE
+          jstart = -nj
+       ENDIF
+       !
+       tx(1:3) = i * bg(1:3,1)
+       !
+       jloop: DO j = jstart, nj
+          !
+          IF ( .NOT. global_sort ) THEN
+             IF ( fft_stick_index( dfftp, i, j ) == 0 ) CYCLE jloop
+             is_local = .TRUE.
+          ELSE
+             IF ( dfftp%lpara .AND. fft_stick_index( dfftp, i, j ) == 0) THEN
+                is_local = .FALSE.
+             ELSE
+                is_local = .TRUE.
+             END IF
+          END IF
+          !
+          ! gamma-only: exclude line with x = 0, y = 0, z < 0
+          !
+          IF ( gamma_only .and. i == 0 .and. j == 0 ) THEN
+             kstart = 0
+          ELSE
+             kstart = -nk
+          ENDIF
+          !
+          ty(1:3) = tx(1:3) + j * bg(1:3,2)
+          !
+          !  compute all the norm square
+          !
+          DO k = kstart, nk
+             !
+             t(1) = ty(1) + k * bg(1,3)
+             t(2) = ty(2) + k * bg(2,3)
+             t(3) = ty(3) + k * bg(3,3)
+             tt(k-kstart+1) = t(1)**2 + t(2)**2 + t(3)**2
+          ENDDO
+          !
+          !  save all the norm square within cutoff
+          !
+          DO k = kstart, nk
+             IF (tt(k-kstart+1) <= gcutm) THEN
+                ngm = ngm + 1
+                IF (ngm > ngm_max) CALL fftx_error__ ('ggen 1', 'too many g-vectors', ngm)
+                IF ( tt(k-kstart+1) > eps8 ) THEN
+                   g2sort_g(ngm) = tt(k-kstart+1)
+                ELSE
+                   g2sort_g(ngm) = 0.d0
+                ENDIF
+                IF (is_local) THEN
+                  ngm_local = ngm_local + 1
+                  mill_unsorted( :, ngm_local ) = (/ i,j,k /)
+                  g2l(ngm) = ngm_local
+                ELSE
+                  g2l(ngm) = 0
+                ENDIF
+             ENDIF
+          ENDDO
+       ENDDO jloop
+    ENDDO iloop
+    IF (ngm  /= ngm_max) &
+         CALL fftx_error__ ('ggen', 'g-vectors missing !', abs(ngm - ngm_max))
+    !
+    igsrt(1) = 0
+    IF( .NOT. global_sort ) THEN
+       CALL hpsort_eps( ngm, g2sort_g, igsrt, eps8 )
+    ELSE
+       CALL hpsort_eps( ngm_g, g2sort_g, igsrt, eps8 )
+    END IF
+    DEALLOCATE( g2sort_g, tt )
+    
+    IF( .NOT. global_sort ) THEN
+       !
+       ! compute adeguate offsets in order to avoid overlap between
+       ! g vectors once they are gathered on a single (global) array
+       !
+       !mype = mp_rank( dfftp%comm )
+       !npe  = mp_size( dfftp%comm )
+       CALL MPI_COMM_RANK(dfftp%comm, mype, ierr)
+       CALL MPI_COMM_SIZE(dfftp%comm, npe, ierr)
+       ALLOCATE( ngmpe( npe ) )
+       ngmpe = 0
+       ngmpe( mype + 1 ) = ngm
+       !CALL mp_sum( ngmpe, dfftp%comm )
+       CALL MPI_ALLREDUCE( MPI_IN_PLACE, ngmpe, 1, MPI_INTEGER, MPI_SUM, dfftp%comm, ierr )
+       ngm_offset = 0
+       DO ng = 1, mype
+          ngm_offset = ngm_offset + ngmpe( ng )
+       END DO
+       DEALLOCATE( ngmpe )
+       !
+    END IF
+    
+    ngm = 0
+    !
+    ngloop: DO ng = 1, ngm_max
+       !
+       IF (g2l(igsrt(ng))>0) THEN
+          ! fetch the indices
+          i = mill_unsorted(1, g2l(igsrt(ng)))
+          j = mill_unsorted(2, g2l(igsrt(ng)))
+          k = mill_unsorted(3, g2l(igsrt(ng)))
+          !
+          ngm = ngm + 1
+          !
+          !  Here map local and global g index !!! N.B: :
+          !  the global G vectors arrangement depends on the number of processors
+          !
+          IF( .NOT. global_sort ) THEN
+             ig_l2g( ngm ) = ng + ngm_offset
+          ELSE
+             ig_l2g( ngm ) = ng
+          END IF
+       
+          g(1:3, ngm) = i * bg (:, 1) + j * bg (:, 2) + k * bg (:, 3)
+          gg(ngm) = sum(g(1:3, ngm)**2)
+       ENDIF
+    ENDDO ngloop
+
+    DEALLOCATE( igsrt, g2l )
+
+    IF (ngm /= ngm_save) &
+         CALL fftx_error__ ('ggen', 'g-vectors (ngm) missing !', abs(ngm - ngm_save))
+    !
+    !     determine first nonzero g vector
+    !
+    IF (gg(1).le.eps8) THEN
+       gstart=2
+    ELSE
+       gstart=1
+    ENDIF
+    !
+    !     Now set nl and nls with the correct fft correspondence
+    !
+    CALL fft_set_nl( dfftp, at, g, mill )
+    !
+  END SUBROUTINE ggen
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms, &
+       gs, ggs )
+    !-----------------------------------------------------------------------
+    !
+    ! Initialize number and indices of  g-vectors for a subgrid,
+    ! for exactly the same ordering as for the original FFT grid
+    !
+    !--------------------------------------------------------------------
+    !
+    USE fft_types, ONLY: fft_stick_index, fft_type_descriptor
+    USE fft_ggen, ONLY : fft_set_nl
+    USE fft_param
+    !
+    IMPLICIT NONE
+    !
+    LOGICAL, INTENT(IN) :: gamma_only
+    TYPE (fft_type_descriptor), INTENT(INOUT) :: dffts
+    ! primitive lattice vectors
+    REAL(dp), INTENT(IN) :: at(3,3)
+    ! G-vectors in FFT grid
+    REAL(dp), INTENT(IN) :: g(:,:), gg(:)    
+    ! Miller indices for G-vectors of FFT grid
+    INTEGER, INTENT(IN) :: mill(:,:)
+    ! cutoff for subgrid
+    REAL(DP), INTENT(IN):: gcutms
+    ! Local number of G-vectors in subgrid
+    INTEGER, INTENT(OUT):: ngms
+    ! Optionally: G-vectors and modules
+    REAL(DP), INTENT(OUT), POINTER, OPTIONAL:: gs(:,:), ggs(:)
+    !
+    INTEGER :: i, ng, ngm
+    !
+    ngm  = SIZE(gg)
+    ngms = dffts%ngm
+    IF ( ngms > ngm  ) CALL fftx_error__ ('ggens','wrong  number of G-vectors',1)
+    !
+    IF ( PRESENT(gs) ) ALLOCATE ( gs(3,ngms) )
+    IF ( PRESENT(ggs)) ALLOCATE ( ggs(ngms) )
+    ng = 0
+    DO i = 1, ngm
+       IF ( gg(i) > gcutms ) exit
+       IF ( PRESENT(gs) ) gs (:,i) = g(:,i)
+       IF ( PRESENT(ggs)) ggs(i) = gg(i)
+       ng = i
+    END DO
+    IF ( ng /= ngms ) CALL fftx_error__ ('ggens','mismatch in number of G-vectors',2)
+    !
+    CALL fft_set_nl ( dffts, at, g )
+    !
+  END SUBROUTINE ggens
+  !
+  SUBROUTINE fft_base_info( ionode, dffts, dfftp )
+     USE fft_types, ONLY: fft_type_descriptor
+     implicit none
+     LOGICAL, INTENT(IN) :: ionode
+     TYPE(fft_type_descriptor), INTENT(IN) :: dfftp, dffts
+     !
+     !  Display fft basic information
+     !
+     IF (ionode) THEN
+        WRITE( *,*)
+        IF ( dfftp%nproc > 1 ) THEN
+           WRITE( stdout, '(5X,"Parallelization info")')
+        ELSE
+           WRITE( stdout, '(5X,"G-vector sticks info")')
+        ENDIF
+        WRITE( *, '(5X,"--------------------")')
+        WRITE( *, '(5X,"sticks:   dense  smooth     PW", &
+                       & 5X,"G-vecs:    dense   smooth      PW")') 
+        IF ( dfftp%nproc > 1 ) THEN
+           WRITE( *,'(5X,"Min",4X,2I8,I7,12X,2I9,I8)') &
+              minval(dfftp%nsp), minval(dffts%nsp), minval(dffts%nsw), &
+              minval(dfftp%ngl), minval(dffts%ngl), minval(dffts%nwl)
+           WRITE( *,'(5X,"Max",4X,2I8,I7,12X,2I9,I8)') &
+              maxval(dfftp%nsp), maxval(dffts%nsp), maxval(dffts%nsw), &
+              maxval(dfftp%ngl), maxval(dffts%ngl), maxval(dffts%nwl)
+        END IF
+        WRITE( *,'(5X,"Sum",4X,2I8,I7,12X,2I9,I8)') &
+           sum(dfftp%nsp), sum(dffts%nsp), sum(dffts%nsw), &
+           sum(dfftp%ngl), sum(dffts%ngl), sum(dffts%nwl)
+     ENDIF
+     
+     IF(ionode) WRITE( *,*)
+     
+     RETURN
+  END SUBROUTINE fft_base_info
 end program test
 
 subroutine start_clock(label)
@@ -746,323 +1169,7 @@ subroutine print_clock(mype, npes, ncount)
 1020  FORMAT(' |ALLTOALL            | ',    D14.5, ' | ',   D14.3,  '  | ', D14.3 ,  ' |')
  
 end subroutine
-!
-!-----------------------------------------------------------------------
-   !-----------------------------------------------------------------------
-   SUBROUTINE ggen ( gamma_only, at, bg, no_global_sort, ngm, ngms, ngm_g, ngms_g, mill, &
-&                    nl, nls, nlm, nlsm, gg, g, ig_l2g, gstart, gcutm, gcutms, dfftp, dffts )
-   !----------------------------------------------------------------------
-   !
-   !     This routine generates all the reciprocal lattice vectors
-   !     contained in the sphere of radius gcutm. Furthermore it
-   !     computes the indices nl which give the correspondence
-   !     between the fft mesh points and the array of g vectors.
-   !
-   USE fft_types
-   USE fft_param
-   !
-   IMPLICIT NONE
-   !
-   LOGICAL,  INTENT(IN) :: gamma_only
-   REAL(DP), INTENT(IN) :: at(3,3), bg(3,3), gcutm, gcutms
-   LOGICAL,  INTENT(IN) :: no_global_sort
-   !  if no_global_sort is present (and it is true) G vectors are sorted only
-   !  locally and not globally. In this case no global array needs to be
-   !  allocated and sorted: saves memory and a lot of time for large systems.
-   INTEGER :: ngm, ngms, ngm_g, ngms_g, gstart
-   INTEGER :: mill(3,ngm), nlm(ngm), nlsm(ngms), ig_l2g(ngm_g)
-   INTEGER :: nl(ngm), nls(ngms)
-   REAL(DP) :: gg(ngm), g(3,ngm)
-   TYPE(fft_type_descriptor) :: dfftp, dffts
-   !
-   !     here a few local variables
-   !
-   REAL(DP) ::  t (3), tt
-   INTEGER :: ngm_save, ngms_save, n1, n2, n3, n1s, n2s, n3s, ngm_offset, ngm_max, ngms_max
-   INTEGER :: ierr
-   !
-   REAL(DP), ALLOCATABLE :: g2sort_g(:)
-   ! array containing all g vectors, on all processors: replicated data
-   ! when no_global_sort is present (and it is true) only g vectors for the current processor are stored
-   INTEGER, ALLOCATABLE :: mill_g(:,:), mill_unsorted(:,:)
-   ! array containing all g vectors generators, on all processors: replicated data
-   ! when no_global_sort is present (and it is true) only g vectors for the current processor are stored
-   INTEGER, ALLOCATABLE :: igsrt(:)
-   !
-   INTEGER :: m1, m2, mc
-   INTEGER :: ni, nj, nk, i, j, k, ng
-   INTEGER :: mype, npe, comm
-   LOGICAL :: global_sort
-   INTEGER, ALLOCATABLE :: ngmpe(:)
-   !
-   global_sort = .NOT. no_global_sort
-   !
-   comm = dfftp%comm
-   mype = dfftp%mype
-   npe = dfftp%nproc
-   !
-   IF( .NOT. global_sort ) THEN
-      ALLOCATE( ngmpe( npe ) )
-      ngmpe = 0
-      ngm_max = ngm
-      ngms_max = ngms
-   ELSE
-      ngm_max = ngm_g
-      ngms_max = ngms_g
-   END IF
-   !
-   ! save current value of ngm and ngms
-   !
-   ngm_save  = ngm
-   ngms_save = ngms
-   !
-   ngm = 0
-   ngms = 0
-   !
-   ! counters
-   !
-   !    set the total number of fft mesh points and and initial value of gg
-   !    The choice of gcutm is due to the fact that we have to order the
-   !    vectors after computing them.
-   !
-   gg(:) = gcutm + 1.d0
-   !
-   !    and computes all the g vectors inside a sphere
-   !
-   ALLOCATE( mill_g( 3, ngm_max ),mill_unsorted( 3, ngm_max ) )
-   ALLOCATE( igsrt( ngm_max ) )
-   ALLOCATE( g2sort_g( ngm_max ) )
-   !
-   g2sort_g(:) = 1.0d20
-   !
-   ! max miller indices (same convention as in module stick_set)
-   !
-   ni = (dfftp%nr1-1)/2
-   nj = (dfftp%nr2-1)/2
-   nk = (dfftp%nr3-1)/2
-   !
-   iloop: DO i = -ni, ni
-      !
-      ! gamma-only: exclude space with x < 0
-      !
-      IF ( gamma_only .and. i < 0) CYCLE iloop
-      jloop: DO j = -nj, nj
-         !
-         ! gamma-only: exclude plane with x = 0, y < 0
-         !
-         IF ( gamma_only .and. i == 0 .and. j < 0) CYCLE jloop
 
-         IF( .NOT. global_sort ) THEN
-            m1 = mod (i, dfftp%nr1) + 1
-            IF (m1 < 1) m1 = m1 + dfftp%nr1
-            m2 = mod (j, dfftp%nr2) + 1
-            IF (m2 < 1) m2 = m2 + dfftp%nr2
-            mc = m1 + (m2 - 1) * dfftp%nr1x
-            IF ( dfftp%isind ( mc ) == 0) CYCLE jloop
-         END IF
-
-         kloop: DO k = -nk, nk
-            !
-            ! gamma-only: exclude line with x = 0, y = 0, z < 0
-            !
-            IF ( gamma_only .and. i == 0 .and. j == 0 .and. k < 0) CYCLE kloop
-            t(:) = i * bg (:,1) + j * bg (:,2) + k * bg (:,3)
-            !tt = sum(t(:)**2)
-            tt = t(1)**2+t(2)**2+t(3)**2
-            IF (tt <= gcutm) THEN
-               ngm = ngm + 1
-               IF (tt <= gcutms) ngms = ngms + 1
-               IF (ngm > ngm_max) CALL fftx_error__ ('ggen 1', 'too many g-vectors', ngm)
-               mill_unsorted( :, ngm ) = (/ i,j,k /)
-               IF ( tt > eps8 ) THEN
-                  g2sort_g(ngm) = tt
-               ELSE
-                  g2sort_g(ngm) = 0.d0
-               ENDIF
-            ENDIF
-         ENDDO kloop
-      ENDDO jloop
-   ENDDO iloop
-
-   IF( .NOT. global_sort ) THEN
-      ngmpe( mype + 1 ) = ngm
-      CALL MPI_ALLREDUCE( MPI_IN_PLACE, ngmpe, 1, MPI_INTEGER, MPI_SUM, comm, ierr )
-   END IF
-   IF (ngm  /= ngm_max) &
-         CALL fftx_error__ ('ggen', 'g-vectors missing !', abs(ngm - ngm_max))
-   IF (ngms /= ngms_max) &
-         CALL fftx_error__ ('ggen', 'smooth g-vectors missing !', abs(ngms - ngms_max))
-
-   igsrt(1) = 0
-   IF( .NOT. global_sort ) THEN
-      CALL hpsort_eps( ngm, g2sort_g, igsrt, eps8 )
-   ELSE
-      CALL hpsort_eps( ngm_g, g2sort_g, igsrt, eps8 )
-   END IF
-   mill_g(1,:) = mill_unsorted(1,igsrt(:))
-   mill_g(2,:) = mill_unsorted(2,igsrt(:))
-   mill_g(3,:) = mill_unsorted(3,igsrt(:))
-   DEALLOCATE( g2sort_g, igsrt, mill_unsorted )
-
-   IF( .NOT. global_sort ) THEN
-      ! compute adeguate offsets in order to avoid overlap between
-      ! g vectors once they are gathered on a single (global) array
-      !
-      ngm_offset = 0
-      DO ng = 1, mype
-         ngm_offset = ngm_offset + ngmpe( ng )
-      END DO
-   END IF
-
-   ngm = 0
-   ngms = 0
-   !
-   ngloop: DO ng = 1, ngm_max
-
-      i = mill_g(1, ng)
-      j = mill_g(2, ng)
-      k = mill_g(3, ng)
-
-#if defined(__MPI)
-      IF( global_sort ) THEN
-         m1 = mod (i, dfftp%nr1) + 1
-         IF (m1 < 1) m1 = m1 + dfftp%nr1
-         m2 = mod (j, dfftp%nr2) + 1
-         IF (m2 < 1) m2 = m2 + dfftp%nr2
-         mc = m1 + (m2 - 1) * dfftp%nr1x
-         IF ( dfftp%isind ( mc ) == 0) CYCLE ngloop
-      END IF
-#endif
-
-      ngm = ngm + 1
-
-      !  Here map local and global g index !!!
-      !  N.B. the global G vectors arrangement depends on the number of processors
-      !
-      IF( .NOT. global_sort ) THEN
-         ig_l2g( ngm ) = ng + ngm_offset
-      ELSE
-         ig_l2g( ngm ) = ng
-      END IF
-
-      g (1:3, ngm) = i * bg (:, 1) + j * bg (:, 2) + k * bg (:, 3)
-      gg (ngm) = sum(g (1:3, ngm)**2)
-
-      IF (gg (ngm) <= gcutms) ngms = ngms + 1
-      IF (ngm > ngm_save) CALL fftx_error__ ('ggen 2', 'too many g-vectors', ngm)
-   ENDDO ngloop
-
-   IF (ngm /= ngm_save) &
-      CALL fftx_error__ ('ggen', 'g-vectors (ngm) missing !', abs(ngm - ngm_save))
-   IF (ngms /= ngms_save) &
-      CALL fftx_error__ ('ggen', 'g-vectors (ngms) missing !', abs(ngm - ngms_save))
-   !
-   !     determine first nonzero g vector
-   !
-   IF (gg(1).le.eps8) THEN
-      gstart=2
-   ELSE
-      gstart=1
-   ENDIF
-   !
-   !     Now set nl and nls with the correct fft correspondence
-   !
-   DO ng = 1, ngm
-      n1 = nint (sum(g (:, ng) * at (:, 1))) + 1
-      mill (1,ng) = n1 - 1
-      n1s = n1
-      IF (n1<1) n1 = n1 + dfftp%nr1
-      IF (n1s<1) n1s = n1s + dffts%nr1
-
-      n2 = nint (sum(g (:, ng) * at (:, 2))) + 1
-      mill (2,ng) = n2 - 1
-      n2s = n2
-      IF (n2<1) n2 = n2 + dfftp%nr2
-      IF (n2s<1) n2s = n2s + dffts%nr2
-
-      n3 = nint (sum(g (:, ng) * at (:, 3))) + 1
-      mill (3,ng) = n3 - 1
-      n3s = n3
-      IF (n3<1) n3 = n3 + dfftp%nr3
-      IF (n3s<1) n3s = n3s + dffts%nr3
-
-      IF (n1>dfftp%nr1 .or. n2>dfftp%nr2 .or. n3>dfftp%nr3) &
-         CALL fftx_error__('ggen','Mesh too small?',ng)
-
-#if defined (__MPI) && !defined (__USE_3D_FFT)
-      nl (ng) = n3 + ( dfftp%isind (n1 + (n2 - 1) * dfftp%nr1x) - 1) * dfftp%nr3x
-      IF (ng <= ngms) &
-         nls (ng) = n3s + ( dffts%isind (n1s+(n2s-1)*dffts%nr1x) - 1 ) * dffts%nr3x
-#else
-      nl (ng) = n1 + (n2 - 1) * dfftp%nr1x + (n3 - 1) * dfftp%nr1x * dfftp%nr2x
-      IF (ng <= ngms) &
-         nls (ng) = n1s + (n2s - 1) * dffts%nr1x + (n3s - 1) * dffts%nr1x * dffts%nr2x
-#endif
-   ENDDO
-   !
-   DEALLOCATE( mill_g )
-
-   IF ( gamma_only) CALL index_minusg( ngm, ngms, nlm, nlsm, mill, dfftp, dffts )
-
-   IF( ALLOCATED( ngmpe ) ) DEALLOCATE( ngmpe )
-
-   END SUBROUTINE ggen
-
-!
-!-----------------------------------------------------------------------
-SUBROUTINE index_minusg(ngm, ngms, nlm, nlsm, mill, dfftp, dffts)
-  !----------------------------------------------------------------------
-  !
-  !     compute indices nlm and nlms giving the correspondence
-  !     between the fft mesh points and -G (for gamma-only calculations)
-  !
-  USE fft_types
-  !
-  IMPLICIT NONE
-  !
-  TYPE(fft_type_descriptor) :: dfftp, dffts
-  INTEGER :: ngm, ngms
-  INTEGER :: mill(3, ngm), nlm(ngm), nlsm(ngms)
-  !
-  INTEGER :: n1, n2, n3, n1s, n2s, n3s, ng
-  !
-  DO ng = 1, ngm
-    n1 = -mill(1, ng) + 1
-    n1s = n1
-    IF (n1 < 1) THEN
-      n1 = n1 + dfftp%nr1
-      n1s = n1s+dffts%nr1
-    END IF
-
-    n2 = -mill(2, ng) + 1
-    n2s = n2
-    IF (n2 < 1) THEN
-      n2 = n2 + dfftp%nr2
-      n2s = n2s+dffts%nr2
-    END IF
-    n3 = -mill(3, ng) + 1
-    n3s = n3
-    IF (n3 < 1) THEN
-      n3 = n3 + dfftp%nr3
-      n3s = n3s+dffts%nr3
-    END IF
-
-    IF (n1 > dfftp%nr1 .or. n2 > dfftp%nr2 .or. n3 > dfftp%nr3) THEN
-      CALL fftx_error__('index_minusg', 'Mesh too small?', ng)
-    ENDIF
-
-#if defined (__MPI) && !defined (__USE_3D_FFT)
-    nlm(ng) = n3 + (dfftp%isind(n1 + (n2 - 1)*dfftp%nr1x) - 1)*dfftp%nr3x
-    IF (ng <= ngms) &
-      nlsm(ng) = n3s+(dffts%isind(n1s+(n2s-1)*dffts%nr1x) - 1)*dffts%nr3x
-#else
-    nlm(ng) = n1 + (n2 - 1)*dfftp%nr1x+(n3 - 1)*dfftp%nr1x*dfftp%nr2x
-    IF (ng <= ngms) &
-      nlsm(ng) = n1s+(n2s-1)*dffts%nr1x+(n3s-1)*dffts%nr1x*dffts%nr2x
-#endif
-  ENDDO
-
-END SUBROUTINE index_minusg
 !
 ! Copyright (C) 2001 PWSCF group
 ! This file is distributed under the terms of the
@@ -1189,7 +1296,7 @@ subroutine hpsort_eps(n, ra, ind, eps)
   !
 end subroutine hpsort_eps
 
-subroutine prepare_psi_tg(ibnd, nbnd, ngms, psi, tg_psi, nls, nlsm, dffts, gamma_only)
+subroutine prepare_psi_tg(ibnd, nbnd, ngms, psi, tg_psi, dffts, gamma_only)
   USE fft_param
   USE fft_types
   USE fft_helper_subroutines
@@ -1198,7 +1305,6 @@ subroutine prepare_psi_tg(ibnd, nbnd, ngms, psi, tg_psi, nls, nlsm, dffts, gamma
   TYPE(fft_type_descriptor), intent(in) :: dffts
   complex(DP) :: tg_psi(dffts%nnr_tg)
   complex(DP) :: psi(ngms, nbnd)
-  integer, intent(in) :: nls(ngms), nlsm(ngms)
   logical, intent(in) :: gamma_only
   integer ioff, idx, j, ntgrp, right_nnr
 !
@@ -1215,15 +1321,15 @@ subroutine prepare_psi_tg(ibnd, nbnd, ngms, psi, tg_psi, nls, nlsm, dffts, gamma
          !
          IF( idx + ibnd - 1 < nbnd ) THEN
             DO j = 1, ngms
-               tg_psi(nls (j)+ioff)=     psi(j,idx+ibnd-1)+&
+               tg_psi(dffts%nl (j)+ioff)=     psi(j,idx+ibnd-1)+&
                     (0.0d0,1.d0) * psi(j,idx+ibnd)
-               tg_psi(nlsm(j)+ioff)=CONJG(psi(j,idx+ibnd-1) -&
+               tg_psi(dffts%nlm(j)+ioff)=CONJG(psi(j,idx+ibnd-1) -&
                     (0.0d0,1.d0) * psi(j,idx+ibnd) )
             END DO
          ELSE IF( idx + ibnd - 1 == nbnd ) THEN
             DO j = 1, ngms
-               tg_psi(nls (j)+ioff)=       psi(j,idx+ibnd-1)
-               tg_psi(nlsm(j)+ioff)=CONJG( psi(j,idx+ibnd-1) )
+               tg_psi(dffts%nl (j)+ioff)=       psi(j,idx+ibnd-1)
+               tg_psi(dffts%nlm(j)+ioff)=CONJG( psi(j,idx+ibnd-1) )
             END DO
          END IF
       
@@ -1237,7 +1343,7 @@ subroutine prepare_psi_tg(ibnd, nbnd, ngms, psi, tg_psi, nls, nlsm, dffts, gamma
 !$omp parallel do
             DO j = 1, ngms
                           ! here we forget about igk
-               tg_psi(nls (j+ioff)) =  psi(j,idx+ibnd-1)
+               tg_psi(dffts%nl(j) +ioff) =  psi(j,idx+ibnd-1)
             ENDDO
 !$omp end parallel do
          ENDIF
@@ -1246,7 +1352,7 @@ subroutine prepare_psi_tg(ibnd, nbnd, ngms, psi, tg_psi, nls, nlsm, dffts, gamma
    END IF
 end subroutine prepare_psi_tg
 
-subroutine prepare_psi( ibnd, nbnd, ngms, psi, psic, nls, nlsm, dffts, gamma_only)
+subroutine prepare_psi( ibnd, nbnd, ngms, psi, psic, dffts, gamma_only)
    USE fft_param
    USE fft_types
    USE fft_helper_subroutines
@@ -1255,7 +1361,6 @@ subroutine prepare_psi( ibnd, nbnd, ngms, psi, psic, nls, nlsm, dffts, gamma_onl
    TYPE(fft_type_descriptor), intent(in) :: dffts
    complex(DP) :: psic( dffts%nnr )
    complex(DP) :: psi( ngms, nbnd )
-   integer, intent(in) :: nls(ngms), nlsm(ngms)
    logical, intent(in) :: gamma_only
    integer :: j
    psic(:) = (0.d0, 0.d0)
@@ -1263,31 +1368,30 @@ subroutine prepare_psi( ibnd, nbnd, ngms, psi, psic, nls, nlsm, dffts, gamma_onl
      IF (ibnd < nbnd) THEN
          ! two ffts at the same time
          DO j = 1, ngms
-           psic(nls (j))=      psi(j,ibnd) + (0.0d0,1.d0)*psi(j,ibnd+1)
-           psic(nlsm(j))=conjg(psi(j,ibnd) - (0.0d0,1.d0)*psi(j,ibnd+1))
+           psic(dffts%nl (j))=      psi(j,ibnd) + (0.0d0,1.d0)*psi(j,ibnd+1)
+           psic(dffts%nlm(j))=conjg(psi(j,ibnd) - (0.0d0,1.d0)*psi(j,ibnd+1))
          ENDDO
      ELSE
          DO j = 1, ngms
-           psic (nls (j)) =       psi(j, ibnd)
-           psic (nlsm(j)) = conjg(psi(j, ibnd))
+           psic (dffts%nl (j)) =       psi(j, ibnd)
+           psic (dffts%nlm(j)) = conjg(psi(j, ibnd))
          ENDDO
      ENDIF
    ELSE
       DO j = 1, ngms
               ! here we forget about igk
-         psic (nls (j)) = psi(j, ibnd)
+         psic (dffts%nl (j)) = psi(j, ibnd)
       END DO
    END IF
 end subroutine prepare_psi
 
 
-subroutine accumulate_hpsi( ibnd, nbnd, ngms, hpsi, psic, nls, nlsm, dffts, gamma_only)
+subroutine accumulate_hpsi( ibnd, nbnd, ngms, hpsi, psic, dffts, gamma_only)
    USE fft_types
    USE fft_param
    USE fft_helper_subroutines
    implicit none
    integer, intent(in) :: ibnd, nbnd, ngms
-   integer, intent(in) :: nls(ngms), nlsm(ngms)
    TYPE(fft_type_descriptor) :: dffts
    complex(DP) :: psic( dffts%nnr )
    complex(DP) :: hpsi( ngms, nbnd )
@@ -1302,8 +1406,8 @@ subroutine accumulate_hpsi( ibnd, nbnd, ngms, hpsi, psic, nls, nlsm, dffts, gamm
       IF (ibnd < nbnd) THEN
           ! two ffts at the same time
           DO j = 1, ngms
-            fp = (psic (nls(j)) + psic (nlsm(j)))*0.5d0
-            fm = (psic (nls(j)) - psic (nlsm(j)))*0.5d0
+            fp = (psic (dffts%nl(j)) + psic (dffts%nlm(j)))*0.5d0
+            fm = (psic (dffts%nl(j)) - psic (dffts%nlm(j)))*0.5d0
             hpsi (j, ibnd)   = hpsi (j, ibnd)   + &
                                 cmplx( dble(fp), aimag(fm),kind=DP)
             hpsi (j, ibnd+1) = hpsi (j, ibnd+1) + &
@@ -1311,23 +1415,22 @@ subroutine accumulate_hpsi( ibnd, nbnd, ngms, hpsi, psic, nls, nlsm, dffts, gamm
           ENDDO
       ELSE
           DO j = 1, ngms
-            hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (nls(j))
+            hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (dffts%nl(j))
           ENDDO
       ENDIF
     ELSE
        DO j = 1, ngms                                ! here we forget about igk_k
-          hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (nls(j))
+          hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (dffts%nl(j))
        ENDDO
     END IF
     !
 end subroutine accumulate_hpsi
-subroutine accumulate_hpsi_tg( ibnd, nbnd, ngms, hpsi, tg_psic, nls, nlsm, dffts, gamma_only)
+subroutine accumulate_hpsi_tg( ibnd, nbnd, ngms, hpsi, tg_psic, dffts, gamma_only)
    USE fft_types
    USE fft_param
    USE fft_helper_subroutines
    implicit none
    integer, intent(in) :: ibnd, nbnd, ngms
-   integer, intent(in) :: nls(ngms), nlsm(ngms)
    TYPE(fft_type_descriptor) :: dffts
    complex(DP) :: tg_psic( dffts%nnr_tg  )
    complex(DP) :: hpsi( ngms, nbnd )
@@ -1346,10 +1449,10 @@ subroutine accumulate_hpsi_tg( ibnd, nbnd, ngms, hpsi, tg_psic, nls, nlsm, dffts
          !
          IF( idx + ibnd - 1 < nbnd ) THEN
             DO j = 1, ngms
-               fp= ( tg_psic( nls(j) + ioff ) +  &
-                     tg_psic( nlsm(j) + ioff ) ) * 0.5d0
-               fm= ( tg_psic( nls(j) + ioff ) -  &
-                     tg_psic( nlsm(j) + ioff ) ) * 0.5d0
+               fp= ( tg_psic( dffts%nl(j) + ioff ) +  &
+                     tg_psic( dffts%nlm(j) + ioff ) ) * 0.5d0
+               fm= ( tg_psic( dffts%nl(j) + ioff ) -  &
+                     tg_psic( dffts%nlm(j) + ioff ) ) * 0.5d0
                hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
                                       cmplx( dble(fp), aimag(fm),kind=DP)
                hpsi (j, ibnd+idx  ) = hpsi (j, ibnd+idx  ) + &
@@ -1358,7 +1461,7 @@ subroutine accumulate_hpsi_tg( ibnd, nbnd, ngms, hpsi, tg_psic, nls, nlsm, dffts
          ELSEIF( idx + ibnd - 1 == nbnd ) THEN
             DO j = 1, ngms
                hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
-                                       tg_psic( nls(j) + ioff )
+                                       tg_psic( dffts%nl(j) + ioff )
             ENDDO
          ENDIF
          !
@@ -1372,7 +1475,7 @@ subroutine accumulate_hpsi_tg( ibnd, nbnd, ngms, hpsi, tg_psic, nls, nlsm, dffts
 !$omp parallel do
             DO j = 1, ngms
                hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
-                  tg_psic( nls(j) + ioff )
+                  tg_psic( dffts%nl(j) + ioff )
                   ! we forgot about igk above
             ENDDO
 !$omp end parallel do

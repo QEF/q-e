@@ -27,25 +27,30 @@
   !
   USE kinds,     ONLY : DP
   USE phcom,     ONLY : nmodes
+  USE cell_base, ONLY : omega
   USE epwcom,    ONLY : degaussq, delta_qsmear, nqsmear, nqstep, nsmear, eps_acustic, & 
                         delta_smear, degaussw, fsthick
   USE elph2,     ONLY : nqtotf, wf, wqf, lambda_all, lambda_v_all
-  USE constants_epw, ONLY : ryd2mev, ryd2ev, kelvin2eV, two, zero
+  USE constants_epw, ONLY : ryd2mev, ryd2ev, kelvin2eV, two, zero, kelvin2Ry, pi
   USE mp,        ONLY : mp_barrier, mp_sum
   USE mp_world,  ONLY : mpime, world_comm
   USE io_global, ONLY : ionode_id
   USE io_global, ONLY : stdout
-  USE io_epw,    ONLY : iua2ffil, iudosfil, iua2ftrfil
+  USE io_epw,    ONLY : iua2ffil, iudosfil, iua2ftrfil, iures
   USE io_files,  ONLY : prefix
   implicit none
   !
-  integer       :: imode, iq, iw, ismear, isig, i
+  integer       :: imode, iq, iw, ismear, isig, i, itemp
   real(kind=DP) :: weight
+  REAL(KIND=DP) :: temp
+  REAL(KIND=DP) :: n
+  REAL(KIND=DP) :: be
+  REAL(KIND=DP) :: prefact
   real(kind=DP) :: lambda_tot, lambda_tr_tot
   real(kind=DP) :: iomega, sigma, a2F_tmp, a2F_tr_tmp, om_max, dw, w0, l, l_tr, tc, mu
-  real(kind=DP), allocatable :: a2F(:,:), a2F_tr(:,:), l_a2F(:), l_a2F_tr(:), dosph(:,:), logavg(:)
+  real(kind=DP), allocatable :: a2F(:,:), a2F_tr(:,:), l_a2F(:), l_a2F_tr(:), dosph(:,:), logavg(:), rho(:,:)
   real(kind=DP), external :: w0gauss
-  CHARACTER (len=256) :: fila2f_suffix, fila2ftr, fildos
+  CHARACTER (len=256) :: fila2f_suffix, fila2ftr, fildos, filres
   !
   !
   CALL start_clock('a2F')
@@ -68,6 +73,13 @@
     OPEN (unit = iua2ftrfil, file = fila2ftr, form = 'formatted')
     !
     IF ( isig .lt. 10 ) THEN
+       WRITE(filres,'(a,a6,i1)') TRIM(prefix),'.res.0', isig
+    ELSE
+       WRITE(filres,'(a,a5,i2)') TRIM(prefix),'.res.', isig
+    ENDIF
+    OPEN (unit = iures, file = filres, form = 'formatted')
+    !
+    IF ( isig .lt. 10 ) THEN
        WRITE(fildos,'(a,a8,i1)') TRIM(prefix),'.phdos.0', isig
     ELSE
        WRITE(fildos,'(a,a7,i2)') TRIM(prefix),'.phdos.', isig
@@ -84,6 +96,10 @@
     IF ( .not. ALLOCATED(l_a2F) )  ALLOCATE( l_a2F(nqsmear) )
     IF ( .not. ALLOCATED(l_a2F_tr) )  ALLOCATE( l_a2F_tr(nqsmear) )
     IF ( .not. ALLOCATED(logavg) ) ALLOCATE( logavg(nqsmear) )
+    ! 
+    ! The resitivity is computed for temperature between 0K-1000K by step of 10
+    ! This is hardcoded and needs to be changed here if one wants to modify it
+    IF ( .not. ALLOCATED(rho) ) ALLOCATE( rho(100, nqsmear) )
     !
     !om_max = ( MAXVAL( wf(:,:) ) - MINVAL( wf(:,:) ) ) + 5.d0/ryd2mev
     !om_max = MAXVAL( wf(:,:) ) + 1.d0 / ryd2mev
@@ -190,6 +206,40 @@
        ENDIF 
        !
     ENDDO
+    ! 
+    rho(:,:) = zero
+    ! Now compute the Resistivity of Metal using the Ziman formula
+    ! rho(T,smearing) = 4 * pi * me/(n * e**2 * kb * T) int dw hbar w a2F_tr(w,smearing) n(w,T)(1+n(w,T))
+    ! n is the number of electron per unit volume and n(w,T) is the Bose-Einstein distribution
+    ! Usually this means "the number of electrons that contribute to the mobility" and so it is typically 8 (full shell)
+    ! but not always. You might want to check this. 
+    ! 
+    n = 8.0 / omega
+    print*,'omega ',omega
+    WRITE (iures, '(a)') '# Temperature [K]                Resistivity [micro Ohm cm] for different Phonon smearing (meV)        '  
+    WRITE (iures, '("#     ", 15f12.7)') ( (degaussq+(ismear-1)*delta_qsmear)*ryd2mev,ismear=1,nqsmear )
+    DO ismear = 1, nqsmear
+      DO itemp = 1, 100 ! Per step of 10K
+        temp = itemp * 10 * kelvin2Ry
+        ! omega is the volume of the primitive cell in a.u.  
+        ! 
+        prefact = 4.0 * pi / ( temp * n )
+        DO iw = 1, nqstep  ! loop over points on the a2F(w)
+          ! 
+          iomega = dble(iw) * dw
+          be = 1.0/(exp(iomega/temp)-1); 
+          ! Perform the integral with rectangle. 
+          rho(itemp,ismear) = rho(itemp,ismear) + prefact * iomega * a2F_tr(iw,ismear) * be * (1.0 + be) * dw  
+          ! 
+        ENDDO
+        ! From a.u. to micro Ohm cm
+        ! Conductivity 1 a.u. = 2.2999241E6 S/m
+        ! Now to go from Ohm*m to micro Ohm cm we need to multiply by 1E8 
+        rho(itemp,ismear) = rho(itemp,ismear) * 1E8 / 2.2999241E6
+        IF (ismear .eq. nqsmear) WRITE (iures, '(i8, 15f12.7)') itemp * 10, rho(itemp,:)
+      ENDDO
+    ENDDO 
+    CLOSE(iures)
     !
     WRITE(iua2ffil,*) "Integrated el-ph coupling"
     WRITE(iua2ffil,'("  #         ", 15f12.7)') l_a2F(:)
@@ -215,6 +265,7 @@
     IF ( ALLOCATED(l_a2F_tr) )  DEALLOCATE(l_a2F_tr)
     IF ( ALLOCATED(a2F) )       DEALLOCATE(a2F)
     IF ( ALLOCATED(a2F_tr) )    DEALLOCATE(a2F_tr)
+    IF ( ALLOCATED(rho) )    DEALLOCATE(rho)
     IF ( ALLOCATED(dosph) )     DEALLOCATE(dosph)
     IF ( ALLOCATED(logavg) )    DEALLOCATE(logavg)
     !
