@@ -1019,7 +1019,7 @@
   !! Length of the vector
   INTEGER :: nqtotf_read
   !! Total number of q-point read
-  INTEGER*8 :: unf_recl
+  INTEGER(kind=8) :: unf_recl
   !! 
   REAL(KIND=DP) :: aux ( nstemp * (ibndmax-ibndmin+1) * nktotf + 2 )
   !! Vector to store the array 
