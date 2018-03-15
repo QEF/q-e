@@ -89,7 +89,7 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
   !
   INTEGER :: ierr, me2, nproc2, iproc2, ncpx, my_nr2p, nr2px, ip, ip0
   INTEGER :: i, it, j, k, kfrom, kdest, mc, m1, m3, i1, icompact, sendsize
-  INTEGER, ALLOCATABLE :: ncp_(:), nr1p_(:), indx(:,:)
+  INTEGER, ALLOCATABLE :: ncp_(:), nr1p_(:), indx(:,:), iplx(:)
   !
 #if defined(__NON_BLOCKING_SCATTER)
   INTEGER :: sh(desc%nproc2), rh(desc%nproc2)
@@ -98,21 +98,24 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
   nproc2 = desc%nproc2 ; if ( abs(isgn) == 3 ) nproc2 = 1 
 
   ! allocate auxiliary array for columns distribution
-  ALLOCATE ( ncp_(nproc2), nr1p_(nproc2), indx(desc%nr1x,nproc2) )
+  ALLOCATE ( ncp_(nproc2), nr1p_(nproc2), indx(desc%nr1x,nproc2), iplx(desc%nr1x) )
   if ( abs (isgn) == 1 ) then          ! It's a potential FFT
      ncp_ = desc%nr1p * desc%my_nr3p
      nr1p_= desc%nr1p
      indx = desc%indp
+     iplx = desc%iplp
      my_nr2p=desc%my_nr2p
   else if ( abs (isgn) == 2 ) then     ! It's a wavefunction FFT
      ncp_ = desc%nr1w * desc%my_nr3p
      nr1p_= desc%nr1w
      indx = desc%indw
+     iplx = desc%iplw
      my_nr2p=desc%my_nr2p
   else if ( abs (isgn) == 3 ) then     ! It's a wavefunction FFT with task group
      ncp_ = desc%nr1w_tg * desc%my_nr3p! 
      nr1p_= desc%nr1w_tg               !
      indx(:,1) = desc%indw_tg          ! 
+     iplx = desc%iplw
      my_nr2p=desc%nr2x                 ! in task group FFTs whole Y colums are distributed
   end if
   !
@@ -182,13 +185,12 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
      !
 10   CONTINUE
      !
-     f_aux = (0.0_DP, 0.0_DP)
-     !
 #if defined(__NON_BLOCKING_SCATTER)
      if (nproc2 > 1) call mpi_waitall( nproc2, rh, MPI_STATUSES_IGNORE, ierr )
 #endif
      !
-!$omp parallel do collapse(2) private(it,m3,i1,m1,icompact)
+!$omp parallel
+!$omp do collapse(2) private(it,m3,i1,m1,icompact)
      DO iproc2 = 1, nproc2
         DO i = 0, ncpx-1
            IF(i>=ncp_(iproc2)) CYCLE ! control i from 0 to ncp_(iproc2)-1
@@ -204,8 +206,19 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
            ENDDO
         ENDDO
      ENDDO
-!$omp end parallel do
-
+!$omp end do nowait
+     !
+     ! clean extra array elements in each stick
+     !
+!$omp do
+     DO k = 1, my_nr2p*desc%my_nr3p
+        DO i1 = 1, desc%nr1x
+           IF(iplx(i1)==0) f_aux(desc%nr1x*(k-1)+i1) = (0.0_DP, 0.0_DP)
+        ENDDO
+     ENDDO
+!$omp end do nowait
+!$omp end parallel
+     !
   ELSE
      !
      !  "backward" scatter from planes to columns
@@ -283,7 +296,7 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
 
   ENDIF
 
-  DEALLOCATE ( ncp_ , nr1p_, indx )
+  DEALLOCATE ( ncp_ , nr1p_, indx, iplx )
   CALL stop_clock ('fft_scatt_xy')
 
 #endif
