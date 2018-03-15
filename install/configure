@@ -670,7 +670,8 @@ cflags
 cc
 mpif90
 f90
-pgi_cuda_libs
+cuda_extlibs
+cuda_libs
 cuda_fflags
 gpu_runtime
 gpu_arch
@@ -3493,6 +3494,8 @@ NVCC=no
 CUDA_CFLAGS=
 CUDA_LDLIBS=
 cuda_fflags=
+cuda_libs=
+cuda_extlibs=
 
 # Provide your CUDA path with this
 
@@ -4011,11 +4014,12 @@ fi
 $as_echo "#define HAVE_CUDA 1" >>confdefs.h
 
    try_dflags="$try_dflags -D__CUDA"
-   cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
+   cuda_fflags="-Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime \$(MOD_FLAG)\$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve"
    ldflags="$ldflags -Mcuda=cc$with_cuda_cc,cuda$with_cuda_runtime"
    gpu_arch="$with_cuda_cc"
    gpu_runtime="$with_cuda_runtime"
-   pgi_cuda_libs="-Mcudalib=cufft,cublas,cusolver"
+   cuda_libs="-Mcudalib=cufft,cublas,cusolver \$(TOPDIR)/EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a"
+   cuda_extlibs="eigensolver"
 fi
 
 # Announcing the new variables
@@ -4025,6 +4029,7 @@ fi
 
 
 # And for Fortran
+
 
 
 
