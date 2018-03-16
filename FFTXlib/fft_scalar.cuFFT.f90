@@ -659,7 +659,9 @@
        CALL fftx_error__(' cfft3ds ', ' wrong dimensions: ny /= ldy ', 1 )
      IF( howmany < 1 ) &
        CALL fftx_error__(' cfft3ds ', ' howmany less than one ', 1 )
-     
+     IF( howmany /= 1 ) &
+       CALL fftx_error__(' cfft3ds ', ' howmany different from 1, not yet implemented for cuFFT ', 1 )
+
      CALL lookup()
      
      IF( ip == -1 ) THEN
@@ -685,7 +687,7 @@
               ii = i + ldx * (j-1)
               if ( do_fft_z(ii) > 0) then
                  ! call dfftw_execute_dft( bw_plan( 3, ip), f_d( ii:), f_d( ii:) )
-                 istat = cufftExecZ2Z( cufft_plan_1d(3, ip), f_d( ii:), f_d( ii:), CUFFT_FORWARD )
+                 istat = cufftExecZ2Z( cufft_plan_1d(3, ip), f_d( ii:), f_d( ii:), CUFFT_INVERSE )
               end if
            end do
         end do
@@ -699,7 +701,7 @@
         do i = 1, nx
            if ( do_fft_y( i ) == 1 ) then
              !call dfftw_execute_dft( bw_plan( 2, ip), f_d( i: ), f_d( i: ) )
-             istat = cufftExecZ2Z( cufft_plan_1d(2, ip), f_d(i:), f_d( i:), CUFFT_FORWARD )
+             istat = cufftExecZ2Z( cufft_plan_1d(2, ip), f_d(i:), f_d( i:), CUFFT_INVERSE )
            endif
         enddo
      
@@ -710,7 +712,7 @@
         !incx1 = 1;  incx2 = ldx;  m = ldy*nz
      
         !call dfftw_execute_dft( bw_plan( 1, ip), f_d( 1: ), f_d( 1: ) )
-        istat = cufftExecZ2Z( cufft_plan_1d(1, ip), f_d( 1:), f_d( 1:), CUFFT_FORWARD )
+        istat = cufftExecZ2Z( cufft_plan_1d(1, ip), f_d( 1:), f_d( 1:), CUFFT_INVERSE )
      
      ELSE
      
@@ -721,7 +723,7 @@
         !incx1 = 1;  incx2 = ldx;  m = ldy*nz
      
         !call dfftw_execute_dft( fw_plan( 1, ip), f_d( 1: ), f_d( 1: ) )
-        istat = cufftExecZ2Z( cufft_plan_1d(1, ip), f_d( 1:), f_d( 1:), CUFFT_INVERSE )
+        istat = cufftExecZ2Z( cufft_plan_1d(1, ip), f_d( 1:), f_d( 1:), CUFFT_FORWARD )
      
         !
         !  ... j-direction ...
@@ -732,7 +734,7 @@
         do i = 1, nx
            if ( do_fft_y ( i ) == 1 ) then
              !call dfftw_execute_dft( fw_plan( 2, ip), f_d( i: ), f_d( i: ) )
-             istat = cufftExecZ2Z( cufft_plan_1d(2, ip), f_d( i:), f_d( i:), CUFFT_INVERSE )
+             istat = cufftExecZ2Z( cufft_plan_1d(2, ip), f_d( i:), f_d( i:), CUFFT_FORWARD )
            endif
         enddo
      
@@ -747,7 +749,7 @@
               ii = i + ldx * (j-1)
               if ( do_fft_z ( ii) > 0) then
                  !call dfftw_execute_dft( fw_plan( 3, ip), f_d(ii:), f_d(ii:) )
-                 istat = cufftExecZ2Z( cufft_plan_1d(3, ip), f_d( ii:), f_d( ii:), CUFFT_INVERSE )
+                 istat = cufftExecZ2Z( cufft_plan_1d(3, ip), f_d( ii:), f_d( ii:), CUFFT_FORWARD )
               end if
            end do
         end do
