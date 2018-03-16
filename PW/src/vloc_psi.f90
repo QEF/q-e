@@ -254,15 +254,21 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
 
      DO ibnd = 1, m, fftx_ntgrp(dffts)
         !
-        tg_psic = (0.d0, 0.d0)
+!$omp parallel
+        !$omp do
+        DO j = 1, fftx_ntgrp(dffts) * right_nnr
+           tg_psic(j) = (0.d0, 0.d0)
+        ENDDO
+        !$omp end do
         !
-!$omp parallel do collapse(2)
+        !$omp do collapse(2)
         DO idx = 1, MIN(fftx_ntgrp(dffts), m+1-ibnd)
            DO j = 1, n
               tg_psic(dffts%nl (igk_k(j,current_k))+right_nnr*(idx-1)) =  psi(j,idx+ibnd-1)
            ENDDO
         ENDDO
-!$omp end parallel do
+        !$omp end do nowait
+!$omp end parallel
         !
         CALL  invfft ('tgWave', tg_psic, dffts )
         !write (6,*) 'wfc R ' 
@@ -297,8 +303,18 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   ELSE
      DO ibnd = 1, m
         !
-        psic(:) = (0.d0, 0.d0)
-        psic (dffts%nl (igk_k(1:n,current_k))) = psi(1:n, ibnd)
+!$omp parallel
+        !$omp do
+        DO j = 1, dffts%nnr
+           psic(j) = (0.d0, 0.d0)
+        ENDDO
+        !$omp end do
+        !$omp do
+        DO j = 1, n
+           psic (dffts%nl (igk_k(j,current_k))) = psi(j, ibnd)
+        ENDDO
+        !$omp end do nowait
+!$omp end parallel
         !write (6,*) 'wfc G ', ibnd
         !write (6,99) (psic(i), i=1,400)
         !
