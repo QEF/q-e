@@ -459,15 +459,19 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
      !
 10   CONTINUE
      !
-     ! ensures that no garbage is present in the output
-     ! useless; the later accessed elements are overwritten by the A2A step
-     !
-     f_aux = (0.0_DP, 0.0_DP) !
 #if defined(__NON_BLOCKING_SCATTER)
      if (nproc3 > 1) call mpi_waitall( nproc3, rh, MPI_STATUSES_IGNORE, ierr )
 #endif
      !
-!$omp parallel do collapse(3) private(ip,it,mc,m1,m2,i1)
+!$omp parallel
+!$omp do
+     ! ensures that no garbage is present in the output
+     !
+     DO k = 1, my_nr1p_*desc%my_nr3p*desc%nr2x
+        f_aux(k) = (0.0_DP, 0.0_DP)
+     ENDDO
+!$omp end do
+!$omp do collapse(3) private(ip,it,mc,m1,m2,i1)
      DO iproc3 = 1, desc%nproc3
         DO me2 = me2_start, me2_end
            DO i = 1, ncpx ! was ncp_(iproc3)
@@ -485,8 +489,9 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
            ENDDO
         ENDDO
      ENDDO
-!$omp end parallel do
-
+!$omp end do nowait
+!$omp end parallel
+     !
   ELSE
      !
      !  "backward" scatter from planes to columns
