@@ -57,8 +57,9 @@ SUBROUTINE save_random_seed(test_name, mpime)
         !  high-quality random numbers
         CALL random_seed(get=seed)
         seed = seed + mpime
-        CALL random_seed(put=seed)
     END IF
+    !
+    CALL random_seed(put=seed)
     !
     WRITE(fname, '("rnd_seed_",A,I4.4)') TRIM(test_name), mpime
     fname = TRIM(fname)
