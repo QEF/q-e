@@ -1,7 +1,8 @@
 build:cudampiomp:
   tags: [galileo]
   script:
-    - module load profile/advanced pgi/17.10 cuda/8.0.61
+    - module purge
+    - module load profile/global pgi/17.10 cuda/8.0.61
     - ./configure --enable-openmp
     - cd UtilXlib/tests
     - bash compile_and_run_tests.sh -smcn
@@ -9,7 +10,8 @@ build:cudampiomp:
 build:intelmpiomp:
   tags: [galileo]
   script:
-    - module load profile/advanced intel intelmpi
+    - module purge
+    - module load profile/advanced intel/pe-xe-2017--binary intelmpi/2017--binary
     - ./configure --enable-openmp
     - cd UtilXlib/tests
     - bash compile_and_run_tests.sh -sm
@@ -17,7 +19,8 @@ build:intelmpiomp:
 build:cudampi:
   tags: [galileo]
   script:
-    - module load profile/advanced pgi/17.10 cuda/8.0.61
+    - module purge
+    - module load profile/global pgi/17.10 cuda/8.0.61
     - ./configure
     - cd UtilXlib/tests
     - bash compile_and_run_tests.sh -smcn
@@ -25,7 +28,8 @@ build:cudampi:
 build:intelmpi:
   tags: [galileo]
   script:
-    - module load profile/advanced intel intelmpi
+    - module purge
+    - module load profile/advanced intel/pe-xe-2017--binary intelmpi/2017--binary
     - ./configure
     - cd UtilXlib/tests
     - bash compile_and_run_tests.sh -sm
