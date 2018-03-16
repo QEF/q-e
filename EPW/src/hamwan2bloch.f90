@@ -28,7 +28,7 @@
   !--------------------------------------------------------------------------
   !
   USE kinds,         ONLY : DP
-  USE constants_epw, ONLY : twopi, ci, czero, cone
+  USE constants_epw, ONLY : czero, cone
   !
   implicit none
   !

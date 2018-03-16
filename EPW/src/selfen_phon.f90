@@ -29,7 +29,7 @@
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   use phcom,      ONLY : nmodes
-  use epwcom,     ONLY : nbndsub, lrepmatf, fsthick, &
+  use epwcom,     ONLY : nbndsub, fsthick, &
                          eptemp, ngaussw, degaussw, shortrange, &
                          nsmear, delta_smear, eps_acustic, specfun_ph, &
                          efermi_read, fermi_energy, delta_approx
@@ -41,7 +41,7 @@
                          dmef, gamma_all,gamma_v_all, efnew
   USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi
   use mp,         ONLY : mp_barrier, mp_sum
-  use mp_global,  ONLY : me_pool, inter_pool_comm
+  use mp_global,  ONLY : inter_pool_comm
   !
   implicit none
   !
@@ -49,14 +49,7 @@
   !! Current q-point index
   ! 
   ! Local variables 
-  CHARACTER (len=256) :: nameF
-  !! Name of the file
   !
-  LOGICAL :: opnd
-  !! Check whether the file is open. 
-  ! 
-  INTEGER :: ios
-  !! integer variable for I/O control  
   INTEGER :: ik
   !! Counter on the k-point index 
   INTEGER :: ikk
@@ -69,8 +62,6 @@
   !! Counter on bands
   INTEGER :: imode
   !! Counter on mode
-  INTEGER :: nrec
-  !! Record index for reading the e-f matrix
   INTEGER :: fermicount
   !! Number of states on the Fermi surface
   INTEGER :: ismear
@@ -203,6 +194,8 @@
     CALL start_clock('PH SELF-ENERGY')
     !
     fermicount = 0
+    wgkk = 0.0_DP
+    w0g1 = 0.0_DP
     gamma(:)   = zero
     gamma_v(:) = zero
     !
@@ -281,7 +274,7 @@
                  .OR. abs(xqf (3, iq))> eps2 )) THEN              
                 ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                 !     number, in which case its square will be a negative number. 
-                g2 = (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp
+                g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp ) 
               ELSE
                 g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
               ENDIF
@@ -402,7 +395,7 @@ END SUBROUTINE selfen_phon_q
   USE io_global,  ONLY : stdout
   USE io_epw,     ONLY : lambda_phself, linewidth_phself
   use phcom,      ONLY : nmodes
-  use epwcom,     ONLY : nbndsub, lrepmatf, fsthick, &
+  use epwcom,     ONLY : nbndsub, fsthick, &
                          eptemp, ngaussw, degaussw, shortrange, &
                          nsmear, delta_smear, eps_acustic, &
                          efermi_read, fermi_energy, delta_approx
@@ -424,16 +417,9 @@ END SUBROUTINE selfen_phon_q
   !! Current q-point index
   ! 
   ! Local variables 
-  CHARACTER (len=256) :: nameF
-  !! Name of the file
   CHARACTER (len=30)  :: myfmt
   !! Format
   !
-  LOGICAL :: opnd
-  !! Check whether the file is open. 
-  ! 
-  INTEGER :: ios
-  !! integer variable for I/O control  
   INTEGER :: iq
   !! Counter on the q-point index 
   INTEGER :: ikk
@@ -446,8 +432,6 @@ END SUBROUTINE selfen_phon_q
   !! Counter on bands
   INTEGER :: imode
   !! Counter on mode
-  INTEGER :: nrec
-  !! Record index for reading the e-f matrix
   INTEGER :: fermicount
   !! Number of states on the Fermi surface
   INTEGER :: ismear
@@ -486,8 +470,6 @@ END SUBROUTINE selfen_phon_q
   !! Inverse of temperature define for efficiency reasons
   REAL(kind=DP) :: g2_tmp
   !! If the phonon frequency is too small discart g
-  REAL(kind=DP) :: gamma(nmodes)
-  !! Gamma is the imaginary part of the phonon self-energy 
   REAL(kind=DP) :: gamma_v(nmodes)
   !! Gamma is the imaginary part of the phonon self-energy multiplied by (1-coskkq)
   REAL(kind=DP) :: coskkq(ibndmax-ibndmin+1, ibndmax-ibndmin+1)
@@ -603,6 +585,8 @@ END SUBROUTINE selfen_phon_q
     CALL start_clock('PH SELF-ENERGY')
     !
     fermicount = 0
+    wgkk = 0.0_DP
+    w0g1 = 0.0_DP
     !
     DO iq = 1, nqf
       !
@@ -673,7 +657,7 @@ END SUBROUTINE selfen_phon_q
                  .OR. abs(xqf (3, iq))> eps2 )) THEN        
                 ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                 !     number, in which case its square will be a negative number. 
-                g2 = (epf17 (jbnd, ibnd, imode, iq)**two)*inv_wq*g2_tmp
+                g2 = REAL( (epf17 (jbnd, ibnd, imode, iq)**two)*inv_wq*g2_tmp )
               ELSE
                 g2 = (abs(epf17 (jbnd, ibnd, imode, iq))**two)*inv_wq*g2_tmp
               ENDIF

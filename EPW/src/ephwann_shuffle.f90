@@ -31,7 +31,7 @@
   USE start_k,       ONLY : nk1, nk2, nk3
   USE ions_base,     ONLY : nat, amass, ityp, tau
   USE phcom,         ONLY : nq1, nq2, nq3, nmodes
-  USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread, longrange,     &
+  USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange,     &
                             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
                             nbndskip, parallel_k, parallel_q, etf_mem, scr_typ, &
                             elecselfen, phonselfen, nest_fn, a2f, specfun_ph,   &
@@ -42,7 +42,7 @@
                             nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
                             specfun_pl
   USE noncollin_module, ONLY : noncolin
-  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, eps2, eps4, zero, czero, &
+  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, eps2, zero, czero, &
                             twopi, ci, kelvin2eV
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
@@ -54,7 +54,7 @@
                             wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
-                            efnew, ifc, sigmar_all, zi_all, nkqtotf, eps_rpa,   &
+                            efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,   &
                             nkqtotf, sigmar_all, zi_allvb, inv_tau_all, Fi_all, &
                             F_current, F_SERTA, inv_tau_allcb, zi_allcb
   USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
@@ -83,8 +83,6 @@
   !! Skipping band during the Wannierization
   LOGICAL :: exst
   !! If the file exist
-  LOGICAL :: opnd
-  !! Check whether the file is open.
   LOGICAL :: first_cycle
   !! Check wheter this is the first cycle after a restart. 
   LOGICAL :: first_time
@@ -92,8 +90,6 @@
   !
   CHARACTER (len=256) :: filint
   !! Name of the file to write/read 
-  CHARACTER (len=256) :: nameF
-  !! Name of the file
   CHARACTER (len=30)  :: myfmt
   !! Variable used for formatting output
   ! 
@@ -129,12 +125,8 @@
   !! counter on mode
   INTEGER :: fermicount
   !! Number of states at the Fermi level
-  INTEGER :: nrec
-  !! record index when reading file
   INTEGER :: lrepmatw
   !! record length while reading file
-  INTEGER :: i 
-  !! Index when writing to file
   INTEGER :: ikx
   !! Counter on the coase k-grid
   INTEGER :: ikfx 
@@ -397,6 +389,7 @@
        ALLOCATE (epmatwp ( nbndsub, nbndsub, nrr_k, nmodes, nrr_q))
      ELSE
        ALLOCATE(epmatwe_mem ( nbndsub, nbndsub, nrr_k, nmodes))
+       epmatwe_mem(:,:,:,:) = czero
      ENDIF
      !
      ! Hamiltonian
@@ -856,13 +849,13 @@
         IF (int_mob .OR. (ncarrier < 1E5)) THEN
           IF ( error_h < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
           IF ( error_h < eps2 ) &
-            WRITE( stdout,'(5x,"IBTE is converged with value for hole mobility of",1E18.6," "/)'), mobilityh_save
+            WRITE( stdout,'(5x,"IBTE is converged with value for hole mobility of",1E18.6," "/)') mobilityh_save
           IF ( error_h < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
         ENDIF
         IF (int_mob .OR. (ncarrier > 1E5)) THEN
           IF ( error_el < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
           IF ( error_el < eps2 ) &
-            WRITE( stdout,'(5x,"IBTE is converged with value for electron mobility of",1E18.6," "/)'), mobilityel_save
+            WRITE( stdout,'(5x,"IBTE is converged with value for electron mobility of",1E18.6," "/)') mobilityel_save
           IF ( error_el < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
         ENDIF
         !
@@ -887,7 +880,7 @@
           WRITE(stdout,'(5x,"Start solving iterative Boltzmann Transport Equation")')
           WRITE(stdout,'(5x,a/)') repeat('=',67)
         ENDIF
-        WRITE(stdout,'(/5x,"Iteration number:", i10," "/)'), iter
+        WRITE(stdout,'(/5x,"Iteration number:", i10," "/)') iter
         ! 
         IF (nstemp > 1) CALL errore('ephwann_shuffle', &
             'Iterative BTE can only be done at 1 temperature, nstemp = 1.',1)  
@@ -1538,8 +1531,6 @@
   !
   IF (a2f) CALL eliashberg_a2f
   ! 
-  ! If scattering_read continue here
-700 continue  
   ! if scattering is read then Fermi level and scissor have not been computed.
   IF (scatread) THEN
     IF (ABS(scissor) > 0.000001) THEN
@@ -1595,7 +1586,6 @@
   SUBROUTINE epw_write
   !-------------------------------------------
   !
-  USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
   USE pwcom,     ONLY : ef, nelec, isk
   USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, cdmew, cvmew, chw_ks, &
@@ -1614,7 +1604,7 @@
   !
   implicit none
   LOGICAL             :: exst
-  INTEGER             :: ibnd, jbnd, jmode, imode, irk, irq, ipol, i, lrepmatw
+  INTEGER             :: ibnd, jbnd, jmode, imode, irk, irq, ipol, lrepmatw
   CHARACTER (len=256) :: filint
   !
   WRITE(6,'(/5x,"Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file"/)')
@@ -1694,10 +1684,9 @@
   !---------------------------------
   SUBROUTINE epw_read()
   !---------------------------------
-  USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc
   USE pwcom,     ONLY : ef
-  USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, ifc, epmatwp, &
+  USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, epmatwp, &
                         cdmew, cvmew, chw_ks, zstar, epsi
   USE ions_base, ONLY : nat
   USE phcom,     ONLY : nmodes  
@@ -1718,7 +1707,7 @@
   LOGICAL             :: exst
   CHARACTER (len=256) :: filint
   INTEGER             :: ibnd, jbnd, jmode, imode, irk, irq, &
-                         ipol, ios, i, lrepmatw
+                         ipol, ios, lrepmatw
   !
   WRITE(stdout,'(/5x,"Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file"/)')
   call flush(6)
@@ -2128,16 +2117,14 @@
   USE cell_base, ONLY : omega, alat, at
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE elph2,     ONLY : ibndmax, ibndmin, etf, nkf, wkf
+  USE elph2,     ONLY : etf, nkf, wkf
   USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm
   USE noncollin_module, ONLY : noncolin
   USE pwcom,     ONLY : nelec
-  USE epwcom,    ONLY : int_mob, nbndsub, nbndskip, scissor, ncarrier, &
+  USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, &
                         system_2d, carrier
   USE mp,        ONLY : mp_barrier, mp_sum, mp_max, mp_min
   USE mp_global, ONLY : inter_pool_comm
-  USE mp_world,  ONLY : mpime
-  USE io_global, ONLY : ionode_id
   !
   IMPLICIT NONE
   !
@@ -2192,6 +2179,8 @@
   !! Maximum value for the argument of the exponential
   REAL(DP), PARAMETER :: eps= 1.0d-5
   !! Tolerence to be converged [relative]
+  ! 
+  Ef = 0.0d0
   ! 
   inv_cell = 1.0d0/omega
   ! for 2d system need to divide by area (vacuum in z-direction)

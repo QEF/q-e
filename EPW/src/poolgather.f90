@@ -127,7 +127,6 @@
   USE kinds,     ONLY : DP
   USE mp_global, ONLY : my_pool_id, inter_pool_comm, npool
   USE mp,        ONLY : mp_barrier, mp_bcast,mp_sum
-  USE mp_world,  ONLY : mpime
   implicit none
   !
   INTEGER, INTENT (in) :: nsize1
@@ -182,7 +181,6 @@
   !!  define rest and nbase as in loadkmesh_para subroutine
   !!
   !--------------------------------------------------------------------
-  USE kinds,     ONLY : DP
   USE mp_global, ONLY : my_pool_id,  &
                         inter_pool_comm, kunit,npool, my_pool_id
   USE mp,        ONLY : mp_barrier, mp_bcast,mp_sum
@@ -231,7 +229,6 @@
   !!  define rest and nbase as in loadkmesh_para subroutine
   !!
   !--------------------------------------------------------------------
-  USE kinds,     ONLY : DP
   USE mp_global, ONLY : my_pool_id,  &
                         inter_pool_comm, kunit,npool, my_pool_id
   USE mp,        ONLY : mp_barrier, mp_bcast,mp_sum

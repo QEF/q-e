@@ -82,7 +82,7 @@
     !
     ar = real(a(p))
     ai = aimag(a(p))
-    if ( ( ar .ne. ar ) .or. ( ai .ne. ai ) ) then
+    if ( ISNAN(ar) .or. ISNAN(ai) ) then
 !       write(6,*) (z(i),i=1,N)
 !       write(6,*) (u(i),i=1,N)
 !       write(6,*) (a(i),i=1,N)

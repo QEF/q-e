@@ -27,7 +27,6 @@
   USE io_global, ONLY : ionode_id, meta_ionode
   USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_sum, mp_barrier, mp_bcast
-  USE mp_world,  ONLY : mpime
   implicit none
   ! 
   INTEGER, INTENT (in) :: nbnd

@@ -43,7 +43,6 @@
   USE control_lr,    ONLY : alpha_pv, nbnd_occ
   USE gamma_gamma,   ONLY : has_equivalent, asr, nasr, n_diff_sites, &
                             equiv_atoms, n_equiv_atoms, with_symmetry
-  USE partial,       ONLY : done_irr
   USE modes,         ONLY : u, npertx, npert, nirr, nmodes, num_rap_mode
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, nsymq, invsymq, rtau
   USE qpoint,        ONLY : xq
@@ -78,12 +77,8 @@
   !! counter on k points
   INTEGER :: ipol
   !! counter on bands
-  INTEGER :: mu
-  !! counter on polarizations
   INTEGER :: irr
   !! the starting mode
-  INTEGER :: ipert
-  !! counter on representation and perturbat
   INTEGER :: na
   !! counter on atoms
   INTEGER :: it
@@ -429,7 +424,6 @@
   !! Setup in the case of a restart
   !! 
   ! ----------------------------------------------------------------------
-  USE kinds,         ONLY : DP
   USE constants_epw, ONLY : zero
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : world_comm
