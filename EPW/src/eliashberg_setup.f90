@@ -86,9 +86,9 @@
        'eliashberg requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3 when fila2f is not used',1)
   !
   DO itemp = 1, ntempxx
-     IF (temps(itemp) .gt. 0.d0) THEN
-        nstemp = itemp
-     ENDIF
+    IF (temps(itemp) .gt. 0.d0) THEN
+      nstemp = itemp
+    ENDIF
   ENDDO
   !
   IF ( .not. ALLOCATED(estemp) ) ALLOCATE( estemp(nstemp) )
@@ -96,57 +96,59 @@
   !
   ! go from K to eV
   IF ( maxval(temps(:)) .gt. 0.d0 ) THEN
-     estemp(:) = temps(:) * kelvin2eV
+    DO itemp= 1, nstemp 
+      estemp(itemp) = temps(itemp) * kelvin2eV
+    ENDDO
   ELSE
-     IF ( nstemp .eq. 1 ) THEN
-        estemp(1) = tempsmin * kelvin2eV
-     ELSE
-        dtemp = ( tempsmax - tempsmin ) * kelvin2eV / dble(nstemp-1)
-        DO itemp = 1, nstemp
-           estemp(itemp) = tempsmin * kelvin2eV + dble(itemp-1) * dtemp
-        ENDDO
-     ENDIF
+    IF ( nstemp .eq. 1 ) THEN
+      estemp(1) = tempsmin * kelvin2eV
+    ELSE
+      dtemp = ( tempsmax - tempsmin ) * kelvin2eV / dble(nstemp-1)
+      DO itemp = 1, nstemp
+        estemp(itemp) = tempsmin * kelvin2eV + dble(itemp-1) * dtemp
+      ENDDO
+    ENDIF
   ENDIF
   !
   IF ( lreal ) THEN
-     !
-     IF ( ABS(wsfc) < eps .OR. ABS(wscut) < eps .OR. nswfc .eq. 0 .OR. nswc .eq. 0 ) THEN 
-        wsfc  =  5.d0 * wsphmax
-        wscut = 15.d0 * wsphmax
-        nswfc = 5 * nqstep
-        nswc  = 2 * nqstep
-     ENDIF
-     nsw = nswfc + nswc  
-     WRITE(stdout,'(5x,a7,f12.6,a11,f12.6)') 'wsfc = ', wsfc, '   wscut = ', wscut
-     WRITE(stdout,'(5x,a8,i8,a10,i8,a9,i8)') 'nswfc = ', nswfc, '   nswc = ', nswc, & 
-                                              '   nsw = ', nsw 
-     IF ( nsw .eq. 0 ) CALL errore('eliashberg_setup','wrong number of nsw',1)
-     !
+    !
+    IF ( ABS(wsfc) < eps .OR. ABS(wscut) < eps .OR. nswfc .eq. 0 .OR. nswc .eq. 0 ) THEN 
+      wsfc  =  5.d0 * wsphmax
+      wscut = 15.d0 * wsphmax
+      nswfc = 5 * nqstep
+      nswc  = 2 * nqstep
+    ENDIF
+    nsw = nswfc + nswc  
+    WRITE(stdout,'(5x,a7,f12.6,a11,f12.6)') 'wsfc = ', wsfc, '   wscut = ', wscut
+    WRITE(stdout,'(5x,a8,i8,a10,i8,a9,i8)') 'nswfc = ', nswfc, '   nswc = ', nswc, & 
+                                             '   nsw = ', nsw 
+    IF ( nsw .eq. 0 ) CALL errore('eliashberg_setup','wrong number of nsw',1)
+    !
   ELSEIF ( limag ) THEN
-     !
-     IF ( .not. ALLOCATED(nsiw) ) ALLOCATE( nsiw(nstemp) )
-     nsiw(:) = 0
-     !
-     IF ( nswi .gt. 0 ) THEN
-        nsiw(:) = nswi
-     ELSEIF ( wscut .gt. 0.d0 ) THEN
-        DO itemp = 1, nstemp
-           nsiw(itemp) = int(0.5d0 * ( wscut / pi / estemp(itemp) - 1.d0 )) + 1
-        ENDDO
-     ELSEIF ( nswi .gt. 0 .AND. wscut .gt. 0.d0 ) THEN
-        nsiw(:) = nswi
-        WRITE(stdout,'(5x,a)') 'when nswi .gt. 0, wscut is not used for limag=.true.'
-     ENDIF
-     !
-     IF ( ABS(wscut) < eps ) THEN 
-        wscut = 10.d0 * wsphmax
-     ENDIF
-     ! 
-     IF ( lpade .OR. lacon ) THEN 
-        nsw = nqstep * nint(wscut/wsphmax)
-        IF ( nsw .eq. 0 ) CALL errore('eliashberg_setup','wrong number of nsw',1)
-     ENDIF
-     !
+    !
+    IF ( .not. ALLOCATED(nsiw) ) ALLOCATE( nsiw(nstemp) )
+    nsiw(:) = 0
+    !
+    IF ( nswi .gt. 0 ) THEN
+      nsiw(:) = nswi
+    ELSEIF ( wscut .gt. 0.d0 ) THEN
+      DO itemp = 1, nstemp
+         nsiw(itemp) = int(0.5d0 * ( wscut / pi / estemp(itemp) - 1.d0 )) + 1
+      ENDDO
+    ELSEIF ( nswi .gt. 0 .AND. wscut .gt. 0.d0 ) THEN
+      nsiw(:) = nswi
+      WRITE(stdout,'(5x,a)') 'when nswi .gt. 0, wscut is not used for limag=.true.'
+    ENDIF
+    !
+    IF ( ABS(wscut) < eps ) THEN 
+      wscut = 10.d0 * wsphmax
+    ENDIF
+    ! 
+    IF ( lpade .OR. lacon ) THEN 
+      nsw = nqstep * nint(wscut/wsphmax)
+      IF ( nsw .eq. 0 ) CALL errore('eliashberg_setup','wrong number of nsw',1)
+    ENDIF
+    !
   ENDIF
   !
   ! create phonon grid 
@@ -156,8 +158,8 @@
   IF ( .not. ALLOCATED(wsph) ) ALLOCATE( wsph(nqstep) )
   wsph(:) = 0.d0
   DO iwph = 1, nqstep
-     !wsph(iwph) = dble(iwph-1) * dwsph
-     wsph(iwph) = dble(iwph) * dwsph
+    !wsph(iwph) = dble(iwph-1) * dwsph
+    wsph(iwph) = dble(iwph) * dwsph
   ENDDO
   !
   ! memory allocated for wsph, estemp
