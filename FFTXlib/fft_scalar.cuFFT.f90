@@ -27,13 +27,13 @@
 !=----------------------------------------------------------------------=!
 
 
-   SUBROUTINE cft_1z_gpu(c, nsl, nz, ldz, isign, cout, stream_in)
+   SUBROUTINE cft_1z_gpu(c_d, nsl, nz, ldz, isign, cout_d, stream_in)
 
 !     driver routine for nsl 1d complex fft's of length nz
 !     ldz >= nz is the distance between sequences to be transformed
 !     (ldz>nz is used on some architectures to reduce memory conflicts)
-!     input  :  c(ldz*nsl)   (complex)
-!     ### GPU VERION IN PLACE!!! #### output : cout(ldz*nsl) (complex - NOTA BENE: transform is not in-place!)
+!     input  :  c_d(ldz*nsl)   (complex)
+!     ### GPU VERION IN PLACE!!! #### output : cout_d(ldz*nsl) (complex - NOTA BENE: transform is not in-place!)
 !     isign > 0 : forward (f(G)=>f(R)), isign <0 backward (f(R) => f(G))
 !     Up to "ndims" initializations (for different combinations of input
 !     parameters nz, nsl, ldz) are stored and re-used if available
@@ -47,7 +47,7 @@
      INTEGER(kind = cuda_stream_kind), INTENT(IN), optional :: stream_in
      INTEGER(kind = cuda_stream_kind) :: stream
 
-     COMPLEX (DP), DEVICE :: c(:), cout(:)
+     COMPLEX (DP), DEVICE :: c_d(:), cout_d(:)
 
      REAL (DP)  :: tscale
      INTEGER    :: i, err, idir, ip, void, istat
@@ -105,16 +105,16 @@
      IF (isign < 0) THEN
         !print *,"exec cufft FWD",nz,ldz,nsl
         !call flush(6)
-        istat = cufftExecZ2Z( cufft_planz( ip), c(1), c(1), CUFFT_FORWARD )
+        istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), c_d(1), CUFFT_FORWARD )
         tscale = 1.0_DP / nz
 !$cuf kernel do(1) <<<*,*,0,stream>>>
         DO i=1, ldz * nsl
-           cout( i ) = c( i ) * tscale
+           cout_d( i ) = c_d( i ) * tscale
         END DO
      ELSE IF (isign > 0) THEN
         !print *,"exec cufft INV",nz,ldz,nsl
         !call flush(6)
-        istat = cufftExecZ2Z( cufft_planz( ip), c(1), cout(1), CUFFT_INVERSE ) !CUFFT_FORWARD )
+        istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), cout_d(1), CUFFT_INVERSE ) !CUFFT_FORWARD )
      END IF
 
 #if defined(__FFT_CLOCKS)
@@ -172,10 +172,10 @@
 
    END SUBROUTINE cft_1z_gpu
 
-   SUBROUTINE cft_2xy_gpu(r, temp, nzl, nx, ny, ldx, ldy, isign, pl2ix, stream_in)
+   SUBROUTINE cft_2xy_gpu(r_d, temp_d, nzl, nx, ny, ldx, ldy, isign, pl2ix, stream_in)
 
 !     driver routine for nzl 2d complex fft's of lengths nx and ny
-!     input : r(ldx*ldy)  complex, transform is in-place
+!     input : r_d(ldx*ldy)  complex, transform is in-place
 !     ldx >= nx, ldy >= ny are the physical dimensions of the equivalent
 !     2d array: r2d(ldx, ldy) (x first dimension, y second dimension)
 !     (ldx>nx, ldy>ny used on some architectures to reduce memory conflicts)
@@ -192,8 +192,8 @@
      INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
      INTEGER(kind = cuda_stream_kind), INTENT(IN), optional :: stream_in
      INTEGER(kind = cuda_stream_kind) :: stream
-!pgi$ ignore_tkr r, temp
-     COMPLEX (DP), DEVICE :: r(ldx,ldy,nzl), temp(ldy,nzl,ldx)
+!pgi$ ignore_tkr r_d, temp_d
+     COMPLEX (DP), DEVICE :: r_d(ldx,ldy,nzl), temp_d(ldy,nzl,ldx)
      INTEGER :: i, k, j, err, idir, ip, kk, void, istat
      REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
@@ -284,31 +284,31 @@
 
      IF( isign < 0 ) THEN
         !
-        !tscale = 1.0_DP / ( nx * ny ) 
+        tscale = 1.0_DP / ( nx * ny )
         !
 #if defined(__FFTW_ALL_XY_PLANES)
-        istat = cufftExecZ2Z( cufft_plan_2d(ip), r(1,1,1), r(1,1,1), CUFFT_FORWARD )
+        istat = cufftExecZ2Z( cufft_plan_2d(ip), r_d(1,1,1), r_d(1,1,1), CUFFT_FORWARD )
 #else
-        istat = cufftExecZ2Z( cufft_plan_x(ip), r(1,1,1), r(1,1,1), CUFFT_FORWARD )
+        istat = cufftExecZ2Z( cufft_plan_x(ip), r_d(1,1,1), r_d(1,1,1), CUFFT_FORWARD )
         if(istat) print *,"error in fftxy fftx istat = ",istat
 
 !$cuf kernel do(3) <<<*,(16,16,1), 0, stream>>>
         DO k=1, nzl
            DO i=1, ldx 
               DO j=1, ldy
-                temp(j,k,i) = r(i,j,k)                
+                temp_d(j,k,i) = r_d(i,j,k)
               END DO
            END DO
         END DO
         
         
         if(batch_1>0) then
-           istat = cufftExecZ2Z( cufft_plan_y(1,ip), temp(1,1,1), temp(1,1,1), CUFFT_FORWARD )
+           istat = cufftExecZ2Z( cufft_plan_y(1,ip), temp_d(1,1,1), temp_d(1,1,1), CUFFT_FORWARD )
            if(istat) print *,"error in fftxy ffty batch_1 istat = ",istat
         end if
 
         if(batch_2>0) then     
-           istat = cufftExecZ2Z( cufft_plan_y(2,ip), temp(1,1,nx-batch_2+1), temp(1,1,nx-batch_2+1), CUFFT_FORWARD )
+           istat = cufftExecZ2Z( cufft_plan_y(2,ip), temp_d(1,1,nx-batch_2+1), temp_d(1,1,nx-batch_2+1), CUFFT_FORWARD )
            if(istat) print *,"error in fftxy ffty batch_2 istat = ",istat
         end if
 
@@ -316,36 +316,36 @@
         DO k=1, nzl
            DO j=1, ldy
              DO i=1, ldx
-                r(i,j,k) = temp(j,k,i)
+                r_d(i,j,k) = temp_d(j,k,i) * tscale
               END DO
            END DO
         END DO
 #endif
 
-        !CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
+        !CALL ZDSCAL( ldx * ldy * nzl, tscale, r_d(1), 1)
         !
      ELSE IF( isign > 0 ) THEN
         !
         !print *,"exec cufft INV",nx,ny,ldx,ldy,nzl
 #if defined(__FFTW_ALL_XY_PLANES)
-        istat = cufftExecZ2Z( cufft_plan_2d(ip), r(1,1,1), r(1,1,1), CUFFT_INVERSE )
+        istat = cufftExecZ2Z( cufft_plan_2d(ip), r_d(1,1,1), r_d(1,1,1), CUFFT_INVERSE )
 #else
 !$cuf kernel do(3) <<<*,(16,16,1), 0, stream>>>
         DO k=1, nzl
            DO i=1, ldx
               DO j=1, ldy
-                temp(j,k,i) = r(i,j,k)
+                temp_d(j,k,i) = r_d(i,j,k)
               END DO
            END DO
         END DO
 
         if(batch_1>0) then
-           istat = cufftExecZ2Z( cufft_plan_y(1,ip), temp(1,1,1), temp(1,1,1), CUFFT_INVERSE )
+           istat = cufftExecZ2Z( cufft_plan_y(1,ip), temp_d(1,1,1), temp_d(1,1,1), CUFFT_INVERSE )
            if(istat) print *,"error in fftxy ffty batch_1 istat = ",istat
         end if
 
         if(batch_2>0) then
-           istat = cufftExecZ2Z( cufft_plan_y(2,ip), temp(1,1,nx-batch_2+1), temp(1,1,nx-batch_2+1), CUFFT_INVERSE )
+           istat = cufftExecZ2Z( cufft_plan_y(2,ip), temp_d(1,1,nx-batch_2+1), temp_d(1,1,nx-batch_2+1), CUFFT_INVERSE )
            if(istat) print *,"error in fftxy ffty batch_2 istat = ",istat
         end if
 
@@ -353,19 +353,19 @@
         DO k=1, nzl
            DO j=1, ldy
              DO i=1, ldx
-                r(i,j,k) = temp(j,k,i)
+                r_d(i,j,k) = temp_d(j,k,i)
               END DO
            END DO
         END DO
 
 !        do i = 1, nx
 !           IF( dofft( i ) ) THEN
-!             istat = cufftExecZ2Z( cufft_plan_y(ip), r(i), r(i), CUFFT_INVERSE )
+!             istat = cufftExecZ2Z( cufft_plan_y(ip), r_d(i), r_d(i), CUFFT_INVERSE )
 !             if(istat) print *,"error in fftxy ffty istat = ",istat,i
 !           END IF
 !        end do
 
-        istat = cufftExecZ2Z( cufft_plan_x(ip), r(1,1,1), r(1,1,1), CUFFT_INVERSE )
+        istat = cufftExecZ2Z( cufft_plan_x(ip), r_d(1,1,1), r_d(1,1,1), CUFFT_INVERSE )
         if(istat) print *,"error in fftxy fftx istat = ",istat
 
 #endif
@@ -494,10 +494,10 @@
 !
 
 
-   SUBROUTINE cfft3d_gpu( f, nx, ny, nz, ldx, ldy, ldz, howmany, isign )
+   SUBROUTINE cfft3d_gpu( f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign )
 
   !     driver routine for 3d complex fft of lengths nx, ny, nz
-  !     input  :  f(ldx*ldy*ldz)  complex, transform is in-place
+  !     input  :  f_d(ldx*ldy*ldz)  complex, transform is in-place
   !     ldx >= nx, ldy >= ny, ldz >= nz are the physical dimensions
   !     of the equivalent 3d array: f3d(ldx,ldy,ldz)
   !     (ldx>nx, ldy>ny, ldz>nz may be used on some architectures
@@ -510,7 +510,7 @@
      IMPLICIT NONE
 
      INTEGER, INTENT(IN) :: nx, ny, nz, ldx, ldy, ldz, howmany, isign
-     COMPLEX (DP), device :: f(:)
+     COMPLEX (DP), device :: f_d(:)
      INTEGER :: i, k, j, err, idir, ip, istat
      REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
@@ -548,19 +548,19 @@
 
      IF( isign < 0 ) THEN
 
-        istat = cufftExecZ2Z( cufft_plan_3d(ip), f(1), f(1), CUFFT_FORWARD )
+        istat = cufftExecZ2Z( cufft_plan_3d(ip), f_d(1), f_d(1), CUFFT_FORWARD )
 
        tscale = 1.0_DP / DBLE( nx * ny * nz )
 !$cuf kernel do(1) <<<*,*>>>
         DO i=1, nx*ny*nz
-           f( i ) = f( i ) * tscale
+           f_d( i ) = f_d( i ) * tscale
         END DO
-!       call ZDSCAL( nx * ny * nz, tscale, f(1), 1)
+!       call ZDSCAL( nx * ny * nz, tscale, f_d(1), 1)
 
      ELSE IF( isign > 0 ) THEN
 
-!       call FFTW_INPLACE_DRV_3D( bw_plan(ip), 1, f(1), 1, 1 )
-        istat = cufftExecZ2Z( cufft_plan_3d(ip), f(1), f(1), CUFFT_INVERSE )
+!       call FFTW_INPLACE_DRV_3D( bw_plan(ip), 1, f_d(1), 1, 1 )
+        istat = cufftExecZ2Z( cufft_plan_3d(ip), f_d(1), f_d(1), CUFFT_INVERSE )
 
      END IF
 
@@ -617,7 +617,7 @@
 
    END SUBROUTINE cfft3d_gpu
    
-   SUBROUTINE cfft3ds_gpu (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
+   SUBROUTINE cfft3ds_gpu (f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
      do_fft_z, do_fft_y)
      !
      !     driver routine for 3d complex "reduced" fft - see cfft3d
@@ -636,10 +636,10 @@
      integer :: nx, ny, nz, ldx, ldy, ldz, howmany, isign
      !
      !   logical dimensions of the fft
-     !   physical dimensions of the f array
+     !   physical dimensions of the f_d array
      !   sign of the transformation
      
-     complex(DP),device :: f ( ldx * ldy * ldz )
+     complex(DP),device :: f_d ( ldx * ldy * ldz )
      integer :: do_fft_y(:), do_fft_z(:)
      !
      integer :: m, incx1, incx2
@@ -651,7 +651,7 @@
      !TYPE(C_PTR), SAVE :: fw_plan ( 3, ndims ) = C_NULL_PTR
      !TYPE(C_PTR), SAVE :: bw_plan ( 3, ndims ) = C_NULL_PTR
      INTEGER, SAVE :: cufft_plan_1d( 3, ndims ) = 0
-     !CALL cfft3d_gpu (f, nx, ny, nz, ldx, ldy, ldz, howmany, isign)
+     !CALL cfft3d_gpu (f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign)
      !return
      tscale = 1.0_DP
      
@@ -684,8 +684,8 @@
            do j =1, ny
               ii = i + ldx * (j-1)
               if ( do_fft_z(ii) > 0) then
-                 ! call dfftw_execute_dft( bw_plan( 3, ip), f( ii:), f( ii:) )
-                 istat = cufftExecZ2Z( cufft_plan_1d(3, ip), f( ii:), f( ii:), CUFFT_FORWARD )
+                 ! call dfftw_execute_dft( bw_plan( 3, ip), f_d( ii:), f_d( ii:) )
+                 istat = cufftExecZ2Z( cufft_plan_1d(3, ip), f_d( ii:), f_d( ii:), CUFFT_FORWARD )
               end if
            end do
         end do
@@ -698,8 +698,8 @@
      
         do i = 1, nx
            if ( do_fft_y( i ) == 1 ) then
-             !call dfftw_execute_dft( bw_plan( 2, ip), f( i: ), f( i: ) )
-             istat = cufftExecZ2Z( cufft_plan_1d(2, ip), f(i:), f( i:), CUFFT_FORWARD )
+             !call dfftw_execute_dft( bw_plan( 2, ip), f_d( i: ), f_d( i: ) )
+             istat = cufftExecZ2Z( cufft_plan_1d(2, ip), f_d(i:), f_d( i:), CUFFT_FORWARD )
            endif
         enddo
      
@@ -709,8 +709,8 @@
      
         !incx1 = 1;  incx2 = ldx;  m = ldy*nz
      
-        !call dfftw_execute_dft( bw_plan( 1, ip), f( 1: ), f( 1: ) )
-        istat = cufftExecZ2Z( cufft_plan_1d(1, ip), f( 1:), f( 1:), CUFFT_FORWARD )
+        !call dfftw_execute_dft( bw_plan( 1, ip), f_d( 1: ), f_d( 1: ) )
+        istat = cufftExecZ2Z( cufft_plan_1d(1, ip), f_d( 1:), f_d( 1:), CUFFT_FORWARD )
      
      ELSE
      
@@ -720,8 +720,8 @@
      
         !incx1 = 1;  incx2 = ldx;  m = ldy*nz
      
-        !call dfftw_execute_dft( fw_plan( 1, ip), f( 1: ), f( 1: ) )
-        istat = cufftExecZ2Z( cufft_plan_1d(1, ip), f( 1:), f( 1:), CUFFT_INVERSE )
+        !call dfftw_execute_dft( fw_plan( 1, ip), f_d( 1: ), f_d( 1: ) )
+        istat = cufftExecZ2Z( cufft_plan_1d(1, ip), f_d( 1:), f_d( 1:), CUFFT_INVERSE )
      
         !
         !  ... j-direction ...
@@ -731,8 +731,8 @@
      
         do i = 1, nx
            if ( do_fft_y ( i ) == 1 ) then
-             !call dfftw_execute_dft( fw_plan( 2, ip), f( i: ), f( i: ) )
-             istat = cufftExecZ2Z( cufft_plan_1d(2, ip), f( i:), f( i:), CUFFT_INVERSE )
+             !call dfftw_execute_dft( fw_plan( 2, ip), f_d( i: ), f_d( i: ) )
+             istat = cufftExecZ2Z( cufft_plan_1d(2, ip), f_d( i:), f_d( i:), CUFFT_INVERSE )
            endif
         enddo
      
@@ -746,17 +746,17 @@
            do j = 1, ny
               ii = i + ldx * (j-1)
               if ( do_fft_z ( ii) > 0) then
-                 !call dfftw_execute_dft( fw_plan( 3, ip), f(ii:), f(ii:) )
-                 istat = cufftExecZ2Z( cufft_plan_1d(3, ip), f( ii:), f( ii:), CUFFT_INVERSE )
+                 !call dfftw_execute_dft( fw_plan( 3, ip), f_d(ii:), f_d(ii:) )
+                 istat = cufftExecZ2Z( cufft_plan_1d(3, ip), f_d( ii:), f_d( ii:), CUFFT_INVERSE )
               end if
            end do
         end do
      
-        !call DSCAL (2 * ldx * ldy * nz, 1.0_DP/(nx * ny * nz), f(1), 1)
+        !call DSCAL (2 * ldx * ldy * nz, 1.0_DP/(nx * ny * nz), f_d(1), 1)
         tscale = 1.0_DP / DBLE( nx * ny * nz )
         !$cuf kernel do(1) <<<*,*>>>
         DO i=1, nx*ny*nz
-           f( i ) = f( i ) * tscale
+           f_d( i ) = f_d( i ) * tscale
         END DO
      
      END IF
