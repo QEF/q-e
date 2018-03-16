@@ -464,10 +464,10 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 #endif
      !
 !$omp parallel
-!$omp do
      ! ensures that no garbage is present in the output
      !
-     DO k = 1, my_nr1p_*desc%my_nr3p*desc%nr2x
+!$omp do
+     DO k = 1, desc%my_nr3p*my_nr1p_*desc%nr2x
         f_aux(k) = (0.0_DP, 0.0_DP)
      ENDDO
 !$omp end do
