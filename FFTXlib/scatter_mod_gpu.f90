@@ -84,7 +84,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   INTEGER :: ierr, me2, nproc2, iproc2, ncpx, my_nr2p, nr2px, ip, ip0
   INTEGER :: i, it, j, k, kfrom, kdest, offset, ioff, mc, m1, m3, i1, icompact, sendsize
   INTEGER, ALLOCATABLE :: ncp_(:)
-  INTEGER, ALLOCATABLE, DEVICE :: nr1p_(:), indx(:,:)
+  INTEGER, ALLOCATABLE, DEVICE :: nr1p__d(:), indx_d(:,:)
   !
 #if defined(__NON_BLOCKING_SCATTER)
   INTEGER :: sh(desc%nproc2), rh(desc%nproc2)
@@ -93,21 +93,21 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   nproc2 = desc%nproc2 ; if ( abs(isgn) == 3 ) nproc2 = 1 
 
   ! allocate auxiliary array for columns distribution
-  ALLOCATE ( ncp_(nproc2), nr1p_(nproc2), indx(desc%nr1x,nproc2) )
+  ALLOCATE ( ncp_(nproc2), nr1p__d(nproc2), indx_d(desc%nr1x,nproc2) )
   if ( abs (isgn) == 1 ) then          ! It's a potential FFT
      ncp_ = desc%nr1p * desc%my_nr3p
-     nr1p_= desc%nr1p
-     indx = desc%indp
+     nr1p__d= desc%nr1p
+     indx_d = desc%indp
      my_nr2p=desc%my_nr2p
   else if ( abs (isgn) == 2 ) then     ! It's a wavefunction FFT
      ncp_ = desc%nr1w * desc%my_nr3p
-     nr1p_= desc%nr1w
-     indx = desc%indw
+     nr1p__d= desc%nr1w
+     indx_d = desc%indw
      my_nr2p=desc%my_nr2p
   else if ( abs (isgn) == 3 ) then     ! It's a wavefunction FFT with task group
      ncp_ = desc%nr1w_tg * desc%my_nr3p! 
-     nr1p_= desc%nr1w_tg               !
-     indx(1:desc%nr1x,1) = desc%indw_tg(1:desc%nr1x)          ! 
+     nr1p__d= desc%nr1w_tg               !
+     indx_d(1:desc%nr1x,1) = desc%indw_tg(1:desc%nr1x)          ! 
      my_nr2p=desc%nr2x                 ! in task group FFTs whole Y colums are distributed
   end if
   !
@@ -199,9 +199,9 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
         DO i = 1, ncp_( iproc2 )
            DO j = 1, my_nr2p
               it = ( iproc2 - 1 ) * sendsize + (i-1)*nr2px
-              m3 = (i-1)/nr1p_(iproc2)+1
-              i1 = mod(i-1,nr1p_(iproc2))+1
-              m1 = indx(i1,iproc2)
+              m3 = (i-1)/nr1p__d(iproc2)+1
+              i1 = mod(i-1,nr1p__d(iproc2))+1
+              m1 = indx_d(i1,iproc2)
               icompact = m1 + (m3-1)*desc%nr1x*my_nr2p + (j-1)*desc%nr1x
            ! old do loop started here
               !f_aux( m1 + (j-1)*desc%nr1x + (m3-1)*desc%nr1x*my_nr2p ) = f_in( j + it )
@@ -222,7 +222,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
         DO i = 1, ncp_( iproc2 )
            DO j = 1, my_nr2p
               it = ( iproc2 - 1 ) * sendsize + (i-1)*nr2px
-              m3 = (i-1)/nr1p_(iproc2)+1 ; i1  = mod(i-1,nr1p_(iproc2))+1 ;  m1 = indx(i1,iproc2)
+              m3 = (i-1)/nr1p__d(iproc2)+1 ; i1  = mod(i-1,nr1p__d(iproc2))+1 ;  m1 = indx_d(i1,iproc2)
               icompact = m1 + (m3-1)*desc%nr1x*my_nr2p + (j-1)*desc%nr1x
            !DO j = 1, my_nr2p
               !f_in( j + it ) = f_aux( m1 + (j-1)*desc%nr1x + (m3-1)*desc%nr1x*my_nr2p )
@@ -292,7 +292,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 
   ENDIF
 
-  DEALLOCATE ( ncp_ , nr1p_, indx , f_in, f_aux)
+  DEALLOCATE ( ncp_ , nr1p__d, indx_d , f_in, f_aux)
   CALL stop_clock ('fft_scatt_xy')
 
 #endif
@@ -347,12 +347,12 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 
 #if defined(__MPI)
   COMPLEX (DP),    ALLOCATABLE :: f_in(:), f_aux(:)
-  INTEGER, DEVICE, ALLOCATABLE :: desc_ismap(:)
+  INTEGER, DEVICE, ALLOCATABLE :: desc_ismap_d(:)
   !
   INTEGER :: ierr, me, me2, me2_start, me2_end, me3, nproc3, iproc3, ncpx, nr3px, ip, ip0
   INTEGER :: i, it, it0, k, kfrom, kdest, offset, ioff, mc, m1, m2, i1,  sendsize
   INTEGER, ALLOCATABLE :: ncp_(:)
-  INTEGER, ALLOCATABLE, DEVICE :: ir1p_(:)
+  INTEGER, ALLOCATABLE, DEVICE :: ir1p__d(:)
   INTEGER :: my_nr1p_
   !
 #if defined(__NON_BLOCKING_SCATTER)
@@ -365,21 +365,21 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   nproc3 = desc%nproc3
 
   ! allocate auxiliary array for columns distribution
-  ALLOCATE ( ncp_( desc%nproc), ir1p_(desc%nr1x) )
+  ALLOCATE ( ncp_( desc%nproc), ir1p__d(desc%nr1x) )
 
   me2_start = me2 ; me2_end = me2
   if ( abs (isgn) == 1 ) then      ! It's a potential FFT
      ncp_ = desc%nsp 
      my_nr1p_ = count (desc%ir1p   > 0)
-     ir1p_= desc%ir1p
+     ir1p__d= desc%ir1p
   else if ( abs (isgn) == 2 ) then ! It's a wavefunction FFT
      ncp_ = desc%nsw
      my_nr1p_ = count (desc%ir1w   > 0)
-     ir1p_= desc%ir1w  
+     ir1p__d= desc%ir1w  
   else if ( abs (isgn) == 3 ) then ! It's a wavefunction FFT with task group
      ncp_ = desc%nsw
      my_nr1p_ = count (desc%ir1w_tg > 0)
-     ir1p_= desc%ir1w_tg
+     ir1p__d= desc%ir1w_tg
      me2_start = 1 ; me2_end = desc%nproc2
   end if
   !
@@ -396,7 +396,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   sendsize = ncpx * nr3px       ! dimension of the scattered chunks
   
   ALLOCATE(f_in(nxx_), f_aux(nxx_))         ! allocate host copy of f_in and f_aux
-  ALLOCATE(desc_ismap, source=desc%ismap)
+  ALLOCATE(desc_ismap_d, source=desc%ismap)
 
   ierr = 0
   IF (isgn.gt.0) THEN
@@ -484,9 +484,9 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
            DO i = 1, ncp_( ip ) ! was ncp_(iproc3)
               DO k = 1, desc%my_nr3p
                  it = it0 + (i-1)*nr3px
-                 mc = desc_ismap( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
+                 mc = desc_ismap_d( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
                  m1 = mod (mc-1,desc%nr1x) + 1 ; m2 = (mc-1)/desc%nr1x + 1 
-                 i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x + (k-1)*desc%nr2x*my_nr1p_
+                 i1 = m2 + ( ir1p__d(m1) - 1 ) * desc%nr2x + (k-1)*desc%nr2x*my_nr1p_
               
                  f_aux_d( i1 ) = f_in_d( k + it )
                  !i1 = i1 + desc%nr2x*my_nr1p_
@@ -509,9 +509,9 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
            DO i = 1, ncp_( ip )
               DO k = 1, desc%my_nr3p
                  it = it0 + (i-1)*nr3px
-                 mc = desc_ismap( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
+                 mc = desc_ismap_d( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
                  m1 = mod (mc-1,desc%nr1x) + 1 ; m2 = (mc-1)/desc%nr1x + 1 
-                 i1 = m2 + ( ir1p_(m1) - 1 ) * desc%nr2x + (k-1)*(desc%nr2x * my_nr1p_)
+                 i1 = m2 + ( ir1p__d(m1) - 1 ) * desc%nr2x + (k-1)*(desc%nr2x * my_nr1p_)
               
                  f_in_d( k + it ) = f_aux_d( i1 )
                  !i1 = i1 + desc%nr2x * my_nr1p_
@@ -589,7 +589,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 
   ENDIF
 
-  DEALLOCATE ( ncp_ , ir1p_ , f_aux, f_in, desc_ismap)
+  DEALLOCATE ( ncp_ , ir1p__d , f_aux, f_in, desc_ismap_d)
   CALL stop_clock ('fft_scatt_yz')
 
 #endif
