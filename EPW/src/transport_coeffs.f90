@@ -15,23 +15,20 @@
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout, meta_ionode_id
   USE cell_base, ONLY : alat, at, omega
-  USE io_files,  ONLY : prefix, tmp_dir
-  USE io_epw,    ONLY : iufilsigma, iufilseebeck, &
-                        iufilkappael, iufilkappa
-  USE phcom,     ONLY : nmodes
-  USE epwcom,    ONLY : nbndsub, fsthick, etf_mem, efermi_read, lrepmatf, & 
-                        fermi_energy, ngaussw, degaussw, system_2d, nstemp, &
-                        scissor, nbndskip, int_mob, ncarrier, scatread, &
+  USE io_files,  ONLY : prefix 
+  USE io_epw,    ONLY : iufilsigma 
+  USE epwcom,    ONLY : nbndsub, fsthick, & 
+                        system_2d, nstemp, &
+                        int_mob, ncarrier, scatread, &
                         iterative_bte
-  USE pwcom,     ONLY : ef, nelec, isk
-  USE elph2,     ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, xkf, & 
-                        efnew, inv_tau_all, nkqtotf, Fi_all, inv_tau_allcb, &
+  USE pwcom,     ONLY : ef 
+  USE elph2,     ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, & 
+                        inv_tau_all, nkqtotf, Fi_all, inv_tau_allcb, &
                         zi_allvb, zi_allcb
-  USE transportcom,  ONLY : transp_temp, SigmaS, SigmaS2, &
+  USE transportcom,  ONLY : transp_temp, &
                            Seebeck, Kappael, Kappa
-  USE constants_epw, ONLY : zero, one, two, bohr2ang, ryd2ev, electron_SI, &
-                            kelvin2eV, hbar, Ang2m, kb, hbarJ, ang2cm, czero, &
-                            ryd2mev, meV2invps
+  USE constants_epw, ONLY : zero, one, bohr2ang, ryd2ev, electron_SI, &
+                            kelvin2eV, hbar, Ang2m, hbarJ, ang2cm, czero
   USE mp,        ONLY : mp_sum
   USE mp_global, ONLY : world_comm
   USE mp_world,  ONLY : mpime
@@ -107,10 +104,6 @@
   !! Eigenvalues from the diagonalized conductivity matrix
   REAL(KIND=DP) :: sigma_vect(3,3)
   !! Eigenvectors from the diagonalized conductivity matrix
-  REAL(KIND=DP) :: Sigma_diag
-  !! Trace of the conductivity matrix
-  REAL(KIND=DP) :: Sigma_offdiag
-  !! Off diagonal elements of the conductivity matrix
   REAL(KIND=DP) :: Znk
   !! Real Znk from \lambda_nk (called zi_allvb or zi_allcb)
   REAL(KIND=DP) :: tdf_sigma(9)

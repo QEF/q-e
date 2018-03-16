@@ -343,7 +343,7 @@ SUBROUTINE rgd_blk_epw_fine(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
   USE kinds,         ONLY : dp
   USE cell_base,     ONLY : bg, omega, alat
   USE ions_base,     ONLY : tau, nat
-  USE constants_epw, ONLY : twopi, fpi, e2, ci, czero
+  USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12
   USE epwcom,        ONLY : shortrange, nbndsub
   !
   implicit none

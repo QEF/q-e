@@ -25,26 +25,25 @@
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iospectral_sup, iospectral
-  USE phcom,         ONLY : nmodes
-  USE epwcom,        ONLY : nbndsub, lrepmatf, eps_acustic, &
+  USE epwcom,        ONLY : nbndsub, &
                             fsthick, eptemp, ngaussw, degaussw, wmin_specfun,&
                             wmax_specfun, nw_specfun, &
                             efermi_read, fermi_energy,&
                             nel, meff, epsiHEG 
   USE pwcom,         ONLY : nelec, ef, isk
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, &
-                            wkf, nkf, nqtotf, wf, wqf, xkf, nkqtotf,&
+                            wkf, nkf, nqtotf, wqf, xkf, nkqtotf,&
                             esigmar_all, esigmai_all, a_all,&
                             xqf, dmef  
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci
   USE mp,            ONLY : mp_barrier, mp_sum
-  USE mp_global,     ONLY : me_pool, inter_pool_comm, my_pool_id
+  USE mp_global,     ONLY : me_pool, inter_pool_comm 
   USE cell_base,     ONLY : omega, alat
   ! 
   implicit none
   !
   real(kind=DP), external :: efermig, dos_ef, wgauss
-  integer :: iw, ik, ikk, ikq, ibnd, jbnd, imode, nrec, iq, fermicount
+  integer :: iw, ik, ikk, ikq, ibnd, jbnd, iq, fermicount
   real(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, ww, dw, weight
   real(kind=DP) :: specfun_sum, esigmar0, tpiba_new
   real(kind=DP) :: fermi(nw_specfun)
@@ -53,7 +52,7 @@
   !
   integer :: nksqtotf, lower_bnd, upper_bnd
   real(kind=DP), allocatable :: xkf_all(:,:) , etf_all(:,:)
-  REAL(kind=DP) :: kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut, qcut2, &
+  REAL(kind=DP) :: kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut, &
                    qsquared, qTF, dipole, rs, ekk1, degen
   !
   ! loop over temperatures can be introduced
@@ -198,8 +197,8 @@
               endif
             else
               if (abs(ekq-ekk1) > 1d-6) then
-                dipole = dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk) * &
-                             conjg(dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk))/((ekk1-ekk)**2 + degaussw**2)
+                dipole = REAL( dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk) * &
+                             conjg(dmef(1,ibndmin-1+jbnd,ibndmin-1+ibnd,ikk))/((ekk1-ekk)**2 + degaussw**2) )
               else 
                 dipole = 0.d0
               endif
@@ -392,7 +391,6 @@
   ENDIF
   !
   100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)
-  101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
   103 FORMAT(5x,'ik = ',i7,'  w = ',f9.4,' eV   A(k,w) = ',e12.5,' meV^-1')
   !
   RETURN

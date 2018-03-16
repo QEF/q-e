@@ -22,12 +22,12 @@
   USE io_epw,     ONLY : iufilfreq, iufilegnv, iufileph
   USE io_files,   ONLY : prefix, tmp_dir
   USE phcom,      ONLY : nmodes
-  USE epwcom,     ONLY : nbndsub, lrepmatf, fsthick, ngaussw, degaussw, & 
+  USE epwcom,     ONLY : nbndsub, fsthick, ngaussw, degaussw, & 
                          nkf1, nkf2, nkf3, &
                          efermi_read, fermi_energy
-  USE pwcom,      ONLY : nelec, ef, isk
+  USE pwcom,      ONLY : ef 
   USE elph2,      ONLY : etf, ibndmin, ibndmax, nkqf, epf17, wkf, nkf, &
-                         nqtotf, wf, xqf, nkqtotf, efnew, etf_k
+                         nqtotf, wf, xqf, nkqtotf, efnew 
   USE eliashbergcom, ONLY : equivk, nkfs, ekfs, wkfs, xkfs, dosef, ixkf, ixkqf, nbndfs
   USE constants_epw, ONLY : ryd2ev, two
   USE mp_global,  ONLY :  my_pool_id
@@ -40,14 +40,7 @@
   !! Current q-points
   !
   ! Local variables
-  CHARACTER (len=256) :: nameF
-  !! Name of the file
   !
-  LOGICAL :: opnd
-  !! Check whether the file is open. 
-  ! 
-  INTEGER :: ios
-  !! integer variable for I/O control
   INTEGER :: ik
   !! Counter on the k-point index 
   INTEGER :: ikk
@@ -60,8 +53,6 @@
   !! Counter on bands
   INTEGER :: imode
   !! Counter on mode
-  INTEGER :: nrec
-  !! Record index for reading the e-f matrix
   INTEGER :: fermicount
   !! Number of states on the Fermi surface
   INTEGER :: nkftot
