@@ -902,7 +902,7 @@
            !CALL start_clock ( 'cl2' )
            IF (.NOT. longrange) THEN
              CALL ephwan2blochp_mem &
-                 (imode, nmodes, xxq, irvec, ndegen_q, nrr_q, uf, epmatwef, nbndsub, nrr_k )
+                 (imode, nmodes, xxq, irvec, ndegen_q, nrr_q, epmatwef, nbndsub, nrr_k )
            ENDIF
            !CALL stop_clock ( 'cl2' )
            !
@@ -982,9 +982,9 @@
              ! ------------------------------------------------------        
              !
              CALL dmewan2bloch &
-                  ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
+                  ( nbndsub, nrr_k, xkk, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
              CALL dmewan2bloch &
-                 ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfacq)
+                 ( nbndsub, nrr_k, xkq, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfacq)
              ! 
              ! ------------------------------------------------------        
              !  velocity: Wannier -> Bloch
@@ -1030,7 +1030,7 @@
                  ELSE
                    !
                    CALL ephwan2bloch_mem &
-                     ( imode, nbndsub, nrr_k, irvec, ndegen_k, epmatwef, xkk, cufkk, cufkq, epmatf, nmodes )
+                     ( nbndsub, nrr_k, irvec, ndegen_k, epmatwef, xkk, cufkk, cufkq, epmatf )
                    !
                  ENDIF
                  !

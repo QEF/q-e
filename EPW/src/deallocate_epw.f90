@@ -35,10 +35,9 @@
                                 etq, et_all, wf, wkf, wqf, wslen,&
                                 xkq, xk_all, zstar, xkf, xqf, epmatwp, eps_rpa
   USE epwcom,            ONLY : epbread, epwread
-  USE modes,             ONLY : t, npert, u, name_rap_mode, num_rap_mode
+  USE modes,             ONLY : npert, u, name_rap_mode, num_rap_mode
   USE qpoint,            ONLY : eigqts, igkq 
   USE klist,             ONLY : nks
-  USE transportcom,      ONLY : transp_temp
   !
   IMPLICIT NONE
   INTEGER :: ik, ipol
@@ -80,7 +79,6 @@
     if(allocated(name_rap_mode)) deallocate (name_rap_mode)
     if(allocated(num_rap_mode)) deallocate (num_rap_mode)
     IF(ALLOCATED(dyn)) DEALLOCATE (dyn)
-    !IF(ASSOCIATED(t)) DEALLOCATE (t)
     IF(ALLOCATED(epsi)) DEALLOCATE (epsi)
     IF(ALLOCATED(zstar)) DEALLOCATE (zstar)
     !

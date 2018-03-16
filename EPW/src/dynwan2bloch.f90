@@ -155,7 +155,7 @@
   USE ions_base, ONLY : amass, tau, nat, ityp
   USE elph2,     ONLY : ifc, epsi, zstar
   USE epwcom,    ONLY : lpolar
-  USE constants_epw, ONLY : twopi, ci, czero
+  USE constants_epw, ONLY : twopi, czero
   USE io_global, ONLY : stdout
   !
   implicit none
@@ -181,15 +181,13 @@
   COMPLEX(kind=DP) :: cwork( 2*nmodes ), cz( nmodes, nmodes)
   !
   LOGICAL,SAVE :: first=.true.
-  INTEGER :: imode, jmode, ir, na, nb, n1,n2,n3, m1,m2,m3, ipol,jpol, i
+  INTEGER :: imode, jmode, na, nb, n1,n2,n3, m1,m2,m3, ipol,jpol, i
   REAL(kind=DP) :: xq (3)
-  REAL(kind=DP) :: rdotk, massfac
+  REAL(kind=DP) :: massfac
   REAL(kind=DP), EXTERNAL :: wsweight
   REAL(kind=DP),SAVE,ALLOCATABLE :: wscache(:,:,:,:,:)
   REAL(kind=DP) total_weight, weight, arg, r(3), r_ws(3)
   COMPLEX(kind=DP) :: chf(nmodes, nmodes), dyn(3,3,nat,nat)
-  ! Dyn mat in Bloch basis, fine mesh
-  COMPLEX(kind=DP) :: cfac
   !
   xq = xxq
   ! bring xq in cart. coordinates
@@ -344,12 +342,12 @@
   !--------------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
-  USE cell_base, ONLY : at, bg
+  USE cell_base, ONLY : at 
   USE phcom,     ONLY : nq1, nq2, nq3
-  USE ions_base, ONLY : amass, tau, nat, ityp
+  USE ions_base, ONLY : tau, nat
   USE elph2,     ONLY : ifc, epsi, zstar
   USE epwcom,    ONLY : lpolar
-  USE constants_epw, ONLY : twopi, ci, czero
+  USE constants_epw, ONLY : twopi, czero
   USE io_global, ONLY : stdout
   !
   implicit none
@@ -369,12 +367,10 @@
   !
   ! Dyn mat in Bloch basis, fine mesh
   LOGICAL,SAVE :: first=.true.
-  INTEGER :: imode, jmode, ir, na, nb, n1,n2,n3, m1,m2,m3, ipol,jpol, i
-  REAL(kind=DP) :: rdotk, massfac
+  INTEGER :: na, nb, n1,n2,n3, m1,m2,m3, ipol,jpol, i
   REAL(kind=DP), EXTERNAL :: wsweight
   REAL(kind=DP),SAVE,ALLOCATABLE :: wscache(:,:,:,:,:)
   REAL(kind=DP) total_weight, weight, arg, r(3), r_ws(3)  
-  COMPLEX(kind=DP) :: cfac
   COMPLEX(kind=DP) :: dyn(3,3,nat,nat)
   !
   ! bring xq in cart. coordinates

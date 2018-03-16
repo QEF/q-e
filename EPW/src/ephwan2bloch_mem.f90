@@ -8,8 +8,8 @@
   !                                                                            
   ! 
   !---------------------------------------------------------------------------
-  SUBROUTINE ephwan2bloch_mem ( imode, nbnd, nrr, irvec, ndegen, epmatw, &
-         xk, cufkk, cufkq, epmatf, nmodes)
+  SUBROUTINE ephwan2bloch_mem ( nbnd, nrr, irvec, ndegen, epmatw, &
+         xk, cufkk, cufkq, epmatf )
   !---------------------------------------------------------------------------
   !!
   !! Interpolation from Wannier to the fine Bloch grid of the electron-phonon 
@@ -27,8 +27,6 @@
   !! Coordinates of WS points
   INTEGER, INTENT (in) :: ndegen (nrr)
   !! Degeneracy of WS points
-  INTEGER, INTENT (in) :: nmodes
-  !! number of phonon modes
   !
   REAL(kind=DP), INTENT (in) :: xk(3)
   !! kpoint for the interpolation (WARNING: this must be in crystal coord!)
@@ -43,7 +41,7 @@
   !! e-p matrix in Bloch representation, fine grid
   !
   ! work variables 
-  integer :: ir, imode
+  integer :: ir 
   real(kind=DP) :: rdotk
   complex(kind=DP) :: cfac, eptmp( nbnd, nbnd)
   !

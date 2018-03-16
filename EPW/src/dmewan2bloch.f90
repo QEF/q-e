@@ -2,7 +2,7 @@
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino  
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE dmewan2bloch ( nbnd, nrr, irvec, ndegen, xk, cuf, dmef, etf, etf_ks, cfac)
+  SUBROUTINE dmewan2bloch ( nbnd, nrr, cuf, dmef, etf, etf_ks, cfac)
   !--------------------------------------------------------------------------
   !!
   !!  From the Dipole in Wannier representation, find the corresponding
@@ -11,7 +11,6 @@
   !!  input  : number of bands nbnd
   !!           number of WS vectors, coordinates and degeneracy 
   !!           Dipole in Wannier representation  cdmew(3,nbnd,nbnd,nrr)
-  !!           kpoint coordinate xk(3)
   !!
   !!  output : interpolated dipole matrix elements (dmef)
   !!
@@ -23,7 +22,7 @@
   USE kinds,         ONLY : DP
   USE elph2,         ONLY : cdmew
   USE epwcom,        ONLY : eig_read
-  USE constants_epw, ONLY : twopi, ci, cone, czero
+  USE constants_epw, ONLY : cone, czero
   !
   implicit none
   !
@@ -31,13 +30,7 @@
   !! number of bands (possibly of the optimal subspace)
   INTEGER, INTENT (in) :: nrr 
   !! kpoint number for the interpolation
-  INTEGER, DIMENSION( 1:3, 1:nrr ), INTENT (in) :: irvec
-  !! record length and unit for direct write of rotation matrix
-  INTEGER, DIMENSION( 1:nrr      ), INTENT (in) :: ndegen
-  !! Number of degeneracies
   !
-  REAL(kind=DP), INTENT (in) :: xk (3)
-  !!  kpoint coordinates for the interpolation
   REAL(kind=DP), INTENT (in) :: etf (nbnd)
   !! Eigenenergies on the fine grid
   REAL(kind=DP), INTENT (in) :: etf_ks (nbnd) 
@@ -50,8 +43,7 @@
   ! 
   ! local variables
   !
-  INTEGER :: ir, ibnd, jbnd, j 
-  REAL   ( kind=DP ) :: rdotk
+  INTEGER :: ibnd, jbnd, j 
   COMPLEX( kind=DP ) :: congj_cuf (nbnd, nbnd)
   COMPLEX( kind=DP ) :: cdmef (3, nbnd, nbnd)
   COMPLEX( kind=DP ) :: cdmef_tmp (3, nbnd, nbnd)

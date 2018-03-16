@@ -25,9 +25,8 @@
 ! SP: iverbosity cannot be tested here. Generates Tb of data ...  
 !  USE control_flags, ONLY : iverbosity 
   USE io_global,     ONLY : meta_ionode
-  USE mp_global,     ONLY : inter_pool_comm
   USE mp,            ONLY : mp_barrier
-  USE mp_world,      ONLY : mpime, world_comm
+  USE mp_world,      ONLY : world_comm
   USE elph2,         ONLY : xkq
   implicit none
   !
@@ -433,7 +432,6 @@
 #endif
   USE mp_global,     ONLY : inter_pool_comm, inter_image_comm
   USE mp,            ONLY : mp_barrier
-  USE mp_world,      ONLY : mpime, world_comm
   !
   IMPLICIT NONE
   !
@@ -465,7 +463,6 @@
   INTEGER :: nl_2(ngm)
   INTEGER :: m1,m2,mc
   ! 
-  !IF (mpime==0) THEN
   IF (meta_ionode) THEN
     eps = 1.d-5
     !

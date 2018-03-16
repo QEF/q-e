@@ -21,7 +21,7 @@
   USE eliashbergcom, ONLY : nsiw, estemp, Agap, wsi, & 
                             NAZnormi, AZnormi, ADeltai, NZnormi, Znormi, & 
                             Deltai, nkfs, nbndfs, ef0, ekfs
-  USE constants_epw, ONLY : pi, kelvin2eV 
+  USE constants_epw, ONLY : kelvin2eV 
   ! 
   IMPLICIT NONE
   !
@@ -269,7 +269,7 @@
   USE control_flags, ONLY : iverbosity
   USE epwcom,        ONLY : fsthick, nkf1, nkf2, nkf3
   USE eliashbergcom, ONLY : estemp, Agap, nkfs, nbndfs, ef0, ekfs, ixkff
-  USE constants_epw, ONLY : pi, kelvin2eV
+  USE constants_epw, ONLY : kelvin2eV
   !
   IMPLICIT NONE
   !

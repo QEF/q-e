@@ -18,77 +18,7 @@
   USE io_global,    ONLY : ionode_id
   USE elph2,        ONLY : F_current, ibndmax, ibndmin
   USE transportcom, ONLY : lower_bnd, upper_bnd, mobilityh_save, mobilityel_save
-  USE constants_epw, ONLY : zero
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: iter
-  !! Iteration number
-  INTEGER, INTENT(INOUT) :: iq
-  !! Current q-point
-  INTEGER, INTENT(IN) :: nqtotf
-  !! Total number of q-points
-  INTEGER, INTENT(IN) :: nktotf
-  !! Total number of k-points
-  REAL(kind=DP), INTENT(IN) :: error_h
-  !! Error in the hole mobility
-  REAL(kind=DP), INTENT(IN) :: error_el
-  !! Error in the electron mobility
-  ! 
-  ! Local variable
-  LOGICAL :: exst
-  !! 
-  INTEGER :: i
-  !! Running index for the vector
-  INTEGER :: lfi_all
-  !! Length of the vector
-  INTEGER :: ik
-  !! k-point index
-  INTEGER :: ibnd
-  !! band index
-  INTEGER :: idir
-  !! Direction index
-  ! 
-  REAL(KIND=DP) :: aux ( 3 * (ibndmax-ibndmin+1) * nktotf + 7 )
-  !! Vector to store the array
-  !
-  !WRITE(stdout,'(/5x,"Writing F_current to F_restart file"/)')
-  !
-  IF (mpime.eq.ionode_id) THEN
-    !
-    lfi_all = 3* (ibndmax-ibndmin+1) * nktotf +3
-    ! First element is the iteration number
-    aux(1) = iter
-    ! Current q-point number 
-    aux(2) = iq -1   ! -1 because we will start at the next one.
-    ! Total number of q-points
-    aux(3) = nqtotf
-    ! Value of the previous h mobility (used for error evaluation)
-    aux(4) = mobilityh_save
-    ! Value of the previous el mobility (used for error evaluation)
-    aux(5) = mobilityel_save
-    ! Error in the hole mobility
-    aux(6) = error_h
-    ! Error in the electron mobility
-    aux(7) = error_el
-    !
-    i = 7
-    DO ik=1, nktotf
-      DO ibnd=1, (ibndmax-ibndmin+1)
-        DO idir=1,3
-          i = i +1
-          aux(i) = F_current(idir,ibnd, ik)
-        ENDDO
-      ENDDO
-    ENDDO
-    CALL diropn (iufilFi_all, 'F_restart', lfi_all, exst)
-    CALL davcio ( aux, lfi_all, iufilFi_all, 1, +1 )
-    CLOSE(iufilFi_all)
-  ENDIF
-  !
-  ! Make everythin 0 except the range of k-points we are working on
-  IF (lower_bnd > 1 ) F_current(:,:,1:lower_bnd-1) = zero
-  IF (upper_bnd < nktotf ) F_current(:,:,upper_bnd+1:nktotf) = zero
+  USE constants_epw, ONLY : upper_bnd < nktotf ) F_current(:,:,upper_bnd+1:nktotf) = zero
   ! 
   !----------------------------------------------------------------------------
   END SUBROUTINE F_write
@@ -350,7 +280,7 @@
   !! Temperature in Ry (this includes division by kb)
   REAL(KIND=DP), INTENT(IN) :: ef0
   !! Fermi level for the temperature itemp
-  REAL(KIND=DP), INTENT(out) :: etf_all(nbndsub, nkqtotf/2)
+  REAL(KIND=DP), INTENT(out) :: etf_all(bndsub, nkqtotf/2)
   !! Eigen-energies on the fine grid collected from all pools in parallel case
 !  REAL(KIND=DP), INTENT(out) :: inv_tau_all(nstemp,ibndmax-ibndmin+1, nkqtotf/2)
   !! Total scattering rate on all k-points collected from all pools in parallel case
@@ -452,8 +382,8 @@
   USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all
   USE io_epw,    ONLY : iufilsigma_all
   USE io_files,  ONLY : diropn
-  USE epwcom,    ONLY : nbndsub, nstemp
-  USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
+  USE epwcom,    ONLY : nstemp
+  USE constants_epw, ONLY : kelvin2eV, &
                             meV2invps, eps4, zero
   USE transportcom, ONLY : lower_bnd, upper_bnd
   USE mp,        ONLY : mp_barrier
@@ -551,8 +481,8 @@
   USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all
   USE io_epw,    ONLY : iufilsigma_all
   USE io_files,  ONLY : prefix, tmp_dir, diropn
-  USE epwcom,    ONLY : nbndsub, nstemp
-  USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
+  USE epwcom,    ONLY : nstemp
+  USE constants_epw, ONLY : kelvin2eV, &
                             meV2invps, eps4, zero
   USE transportcom, ONLY : lower_bnd, upper_bnd
   USE mp,        ONLY : mp_barrier, mp_bcast
@@ -806,8 +736,8 @@
   USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all, inv_tau_allcb, zi_allvb, zi_allcb
   USE io_epw,    ONLY : iufiltau_all
   USE io_files,  ONLY : prefix, tmp_dir, diropn
-  USE epwcom,    ONLY : nbndsub, nstemp
-  USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
+  USE epwcom,    ONLY : nstemp
+  USE constants_epw, ONLY : kelvin2eV, &
                             meV2invps, eps4, zero
   USE transportcom, ONLY : lower_bnd, upper_bnd
   USE mp,        ONLY : mp_barrier, mp_bcast
@@ -984,11 +914,10 @@
   USE io_epw,    ONLY : iufilscatt_rate
   USE elph2,     ONLY : ibndmax, ibndmin
   USE io_epw,    ONLY : iufiltau_all
-  USE io_files,  ONLY : prefix, tmp_dir, diropn
-  USE epwcom,    ONLY : nbndsub, nstemp, restart_filq
-  USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
-                            meV2invps, eps4, zero
-  USE transportcom, ONLY : lower_bnd, upper_bnd
+  USE io_files,  ONLY : tmp_dir, diropn
+  USE epwcom,    ONLY : nstemp, restart_filq
+  USE constants_epw, ONLY : kelvin2eV, &
+                            meV2invps, eps4
   USE mp,        ONLY : mp_barrier, mp_bcast
   USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, root_pool
   USE mp_world,  ONLY : mpime
@@ -1017,8 +946,6 @@
   !! Local band index
   INTEGER :: ltau_all
   !! Length of the vector
-  INTEGER :: nqtotf_read
-  !! Total number of q-point read
   INTEGER(kind=8) :: unf_recl
   !! 
   REAL(KIND=DP) :: aux ( nstemp * (ibndmax-ibndmin+1) * nktotf + 2 )
