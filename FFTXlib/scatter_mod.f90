@@ -336,47 +336,47 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 
 #if defined(__MPI)
   !
-  INTEGER :: ierr, me, me2, me2_start, me2_end, me3, nproc3, iproc3, ncpx, nr3px, ip, ip0
-  INTEGER :: i, it, k, kfrom, kdest, mc, m1, m2, i1,  sendsize
-  INTEGER, ALLOCATABLE :: ncp_(:), ir1p_(:), me2_offset(:), me2_iproc3_offset(:,:)
+  CALL start_clock ('fft_scatt_yz')
+
+  if ( abs (isgn) == 1 ) then      ! It's a potential FFT
+     CALL impl_yz(desc%mype2+1, desc%mype2+1, desc%nsp, desc%ir1p)
+  else if ( abs (isgn) == 2 ) then ! It's a wavefunction FFT
+     CALL impl_yz(desc%mype2+1, desc%mype2+1, desc%nsw, desc%ir1w)
+  else if ( abs (isgn) == 3 ) then ! It's a wavefunction FFT with task group
+     CALL impl_yz(1, desc%nproc2, desc%nsw, desc%ir1w_tg)
+  end if
+
+  CALL stop_clock ('fft_scatt_yz')
+
+  RETURN
+
+  CONTAINS
+
+  SUBROUTINE impl_yz(me2_start, me2_end, ncp_, ir1p_)
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in) :: me2_start, me2_end
+  INTEGER, INTENT(in) :: ncp_(desc%nproc), ir1p_(desc%nr1x)
+  !
+  INTEGER :: ierr, me2, me3, nproc3, iproc3, ncpx, nr3px, ip
+  INTEGER :: i, it, k, kfrom, kdest, mc, m1, m2, i1, sendsize
+  INTEGER, ALLOCATABLE :: me2_offset(:), me2_iproc3_offset(:,:)
   INTEGER :: my_nr1p_
   !
 #if defined(__NON_BLOCKING_SCATTER)
   INTEGER :: sh(desc%nproc3), rh(desc%nproc3)
 #endif
   !
-  me     = desc%mype  + 1
-  me2    = desc%mype2 + 1
   me3    = desc%mype3 + 1
   nproc3 = desc%nproc3
-
-  ! allocate auxiliary array for columns distribution
-  ALLOCATE ( ncp_( desc%nproc), ir1p_(desc%nr1x) )
-
-  me2_start = me2 ; me2_end = me2
-  if ( abs (isgn) == 1 ) then      ! It's a potential FFT
-     ncp_ = desc%nsp 
-     ir1p_= desc%ir1p
-  else if ( abs (isgn) == 2 ) then ! It's a wavefunction FFT
-     ncp_ = desc%nsw
-     ir1p_= desc%ir1w  
-  else if ( abs (isgn) == 3 ) then ! It's a wavefunction FFT with task group
-     ncp_ = desc%nsw
-     ir1p_= desc%ir1w_tg
-     me2_start = 1 ; me2_end = desc%nproc2
-  end if
-  my_nr1p_ = count (ir1p_ > 0)
   !
-  CALL start_clock ('fft_scatt_yz')
+  my_nr1p_ = count (ir1p_ > 0)
   !
   ! calculate the message size
   !
   nr3px = MAXVAL ( desc%nr3p )  ! maximum number of Z values to be exchanged
   ncpx  = MAXVAL ( ncp_ )       ! maximum number of Z columns to be exchanged
-  sendsize = ncpx * nr3px       ! dimension of the scattered chunks
-  if (abs(isgn)==3) then
-     sendsize = sendsize * desc%nproc2  ! if it's a task group FFT groups of columns are exchanged
-  end if
+  sendsize = ncpx * nr3px * ( me2_end - me2_start + 1 )  ! dimension of the scattered chunks
   !
   ALLOCATE ( me2_offset( me2_end - me2_start + 1 ) )
   ALLOCATE ( me2_iproc3_offset( me2_end - me2_start + 1, nproc3 ) )
@@ -389,18 +389,6 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
   ENDDO
   !
   ierr = 0
-  CALL impl_yz()
-
-  DEALLOCATE ( ncp_ , ir1p_ , me2_offset , me2_iproc3_offset )
-  CALL stop_clock ('fft_scatt_yz')
-
-  RETURN
-
-  CONTAINS
-
-  SUBROUTINE impl_yz()
-  IMPLICIT NONE
-
   IF (isgn.gt.0) THEN
      !
      IF (nproc3==1) GO TO 10
@@ -570,6 +558,9 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 20   CONTINUE
 
   ENDIF
+  !
+  DEALLOCATE ( me2_offset , me2_iproc3_offset )
+
   END SUBROUTINE impl_yz
 
 #endif
