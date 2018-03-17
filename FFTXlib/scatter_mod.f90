@@ -402,8 +402,8 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
         DO me2 = me2_start, me2_end
            DO k = 0, ncpx-1   ! was ncp_(me3)
               IF (k>=ncp_(desc%iproc(me2,me3))) CYCLE ! control k from 0 to ncp_(desc%iproc(me2,me3))-1
-              kdest = ( iproc3 - 1 ) * sendsize + nr3px * ( me2_offset( me2 - me2_start + 1 ) + k )
-              kfrom = desc%nr3p_offset(iproc3) + desc%nr3x * ( me2_offset( me2 - me2_start + 1 ) + k )
+              kdest = ( iproc3 - 1 ) * sendsize + nr3px * ( me2_iproc3_offset( me2 - me2_start + 1, me3 ) + k )
+              kfrom = desc%nr3p_offset(iproc3) + desc%nr3x * ( me2_iproc3_offset( me2 - me2_start + 1, me3 ) + k )
               DO i = 1, desc%nr3p( iproc3 )
                  f_aux ( kdest + i ) =  f_in ( kfrom + i )
               ENDDO
@@ -537,8 +537,8 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
         DO me2 = me2_start, me2_end
            DO k = 0, ncpx-1   ! was ncp_(me3)
               IF (k>=ncp_(desc%iproc(me2,me3))) CYCLE ! control k from 0 to ncp_(desc%iproc(me2,me3))-1
-              kdest = ( iproc3 - 1 ) * sendsize + nr3px * ( me2_offset( me2 - me2_start + 1 ) + k )
-              kfrom = desc%nr3p_offset(iproc3) + desc%nr3x * ( me2_offset( me2 - me2_start + 1 ) + k )
+              kdest = ( iproc3 - 1 ) * sendsize + nr3px * ( me2_iproc3_offset( me2 - me2_start + 1, me3 ) + k )
+              kfrom = desc%nr3p_offset(iproc3) + desc%nr3x * ( me2_iproc3_offset( me2 - me2_start + 1, me3 ) + k )
               DO i = 1, desc%nr3p( iproc3 )
                  f_in ( kfrom + i ) = f_aux ( kdest + i )
               ENDDO
