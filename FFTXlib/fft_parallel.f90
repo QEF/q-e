@@ -103,7 +103,12 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
      if (isgn==+3) then 
         call fft_scatter_tg_opt ( dfft, f, aux, nnr_, isgn)
      else
-        aux(1:nnr_)=f(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f)>size(aux)
+        !aux(1:nnr_)=f(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f)>size(aux)
+!$omp parallel do
+        do i=1, nsticks_z*nx3
+           aux(i) = f(i)
+        enddo
+!$omp end parallel do
      endif
      ! Gz, Gy, Gx
      CALL cft_1z( aux, nsticks_z, n3, nx3, isgn, f )
@@ -137,7 +142,12 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
      if (isgn==-3) then 
         call fft_scatter_tg_opt ( dfft, aux, f, nnr_, isgn)
      else
-        f(1:nnr_)=aux(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f)>size(aux)
+        !f(1:nnr_)=aux(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f)>size(aux)
+!$omp parallel do
+        do i=1, nnr_
+           f(i) = aux(i)
+        enddo
+!$omp end parallel do
      endif
   ENDIF
   !write (6,99) f(1:400); write(6,*); FLUSH(6)
