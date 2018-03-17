@@ -135,6 +135,20 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
 
   ierr = 0
   IF (isgn.gt.0) THEN
+     CALL forward_xy()
+  ELSE
+     CALL backward_xy()
+  ENDIF
+
+  DEALLOCATE ( ncp_ , nr1p_, indx, iplx )
+  CALL stop_clock ('fft_scatt_xy')
+
+  RETURN
+
+  CONTAINS
+
+  SUBROUTINE forward_xy()
+     IMPLICIT NONE
 
      IF (nproc2==1) GO TO 10
      !
@@ -219,7 +233,9 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
 !$omp end do nowait
 !$omp end parallel
      !
-  ELSE
+  END SUBROUTINE forward_xy
+
+  SUBROUTINE backward_xy()
      !
      !  "backward" scatter from planes to columns
      !
@@ -293,16 +309,9 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
 
 20   CONTINUE
 
-
-  ENDIF
-
-  DEALLOCATE ( ncp_ , nr1p_, indx, iplx )
-  CALL stop_clock ('fft_scatt_xy')
+  END SUBROUTINE backward_xy
 
 #endif
-
-  RETURN
-99 format ( 20 ('(',2f12.9,')') )
 
 END SUBROUTINE fft_scatter_xy
 !
@@ -404,6 +413,20 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
   !
   ierr = 0
   IF (isgn.gt.0) THEN
+     CALL forward_yz()
+  ELSE
+     CALL backward_yz()
+  ENDIF
+
+  DEALLOCATE ( ncp_ , ir1p_ , me2_offset , me2_iproc3_offset )
+  CALL stop_clock ('fft_scatt_yz')
+
+  RETURN
+
+  CONTAINS
+
+  SUBROUTINE forward_yz()
+     IMPLICIT NONE
 
      IF (nproc3==1) GO TO 10
      !
@@ -492,7 +515,9 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 !$omp end do nowait
 !$omp end parallel
      !
-  ELSE
+  END SUBROUTINE forward_yz
+
+  SUBROUTINE backward_yz()
      !
      !  "backward" scatter from planes to columns
      !
@@ -571,16 +596,9 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 
 20   CONTINUE
 
-  ENDIF
-
-  DEALLOCATE ( ncp_ , ir1p_ , me2_offset , me2_iproc3_offset )
-  CALL stop_clock ('fft_scatt_yz')
+  END SUBROUTINE backward_yz
 
 #endif
-
-  RETURN
-98 format ( 10 ('(',2f12.9,')') )
-99 format ( 20 ('(',2f12.9,')') )
 
 END SUBROUTINE fft_scatter_yz
 !
@@ -630,7 +648,6 @@ SUBROUTINE fft_scatter_tg ( desc, f_in, f_aux, nxx_, isgn )
   CALL stop_clock ('fft_scatt_tg')
 
   RETURN
-99 format ( 20 ('(',2f12.9,')') )
 
 END SUBROUTINE fft_scatter_tg
 !
@@ -679,7 +696,6 @@ SUBROUTINE fft_scatter_tg_opt ( desc, f_in, f_out, nxx_, isgn )
   CALL stop_clock ('fft_scatt_tg')
 
   RETURN
-99 format ( 20 ('(',2f12.9,')') )
 
 END SUBROUTINE fft_scatter_tg_opt
 !
