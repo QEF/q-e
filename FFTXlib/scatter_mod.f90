@@ -134,11 +134,8 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
   sendsize = ncpx * nr2px       ! dimension of the scattered chunks (safe value)
 
   ierr = 0
-  IF (isgn.gt.0) THEN
-     CALL forward_xy()
-  ELSE
-     CALL backward_xy()
-  ENDIF
+
+  CALL impl_xy()
 
   DEALLOCATE ( ncp_ , nr1p_, indx, iplx )
   CALL stop_clock ('fft_scatt_xy')
@@ -147,9 +144,11 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
 
   CONTAINS
 
-  SUBROUTINE forward_xy()
-     IMPLICIT NONE
+  SUBROUTINE impl_xy()
+  IMPLICIT NONE
 
+  IF (isgn.gt.0) THEN
+     !
      IF (nproc2==1) GO TO 10
      !
      ! "forward" scatter from columns to planes
@@ -233,9 +232,7 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
 !$omp end do nowait
 !$omp end parallel
      !
-  END SUBROUTINE forward_xy
-
-  SUBROUTINE backward_xy()
+  ELSE
      !
      !  "backward" scatter from planes to columns
      !
@@ -309,7 +306,9 @@ SUBROUTINE fft_scatter_xy ( desc, f_in, f_aux, nxx_, isgn )
 
 20   CONTINUE
 
-  END SUBROUTINE backward_xy
+  ENDIF
+
+  END SUBROUTINE impl_xy
 
 #endif
 
@@ -412,11 +411,7 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
   ENDDO
   !
   ierr = 0
-  IF (isgn.gt.0) THEN
-     CALL forward_yz()
-  ELSE
-     CALL backward_yz()
-  ENDIF
+  CALL impl_yz()
 
   DEALLOCATE ( ncp_ , ir1p_ , me2_offset , me2_iproc3_offset )
   CALL stop_clock ('fft_scatt_yz')
@@ -425,9 +420,11 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 
   CONTAINS
 
-  SUBROUTINE forward_yz()
-     IMPLICIT NONE
+  SUBROUTINE impl_yz()
+  IMPLICIT NONE
 
+  IF (isgn.gt.0) THEN
+     !
      IF (nproc3==1) GO TO 10
      !
      ! "forward" scatter from columns to planes
@@ -515,9 +512,7 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 !$omp end do nowait
 !$omp end parallel
      !
-  END SUBROUTINE forward_yz
-
-  SUBROUTINE backward_yz()
+  ELSE
      !
      !  "backward" scatter from planes to columns
      !
@@ -596,7 +591,8 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 
 20   CONTINUE
 
-  END SUBROUTINE backward_yz
+  ENDIF
+  END SUBROUTINE impl_yz
 
 #endif
 
