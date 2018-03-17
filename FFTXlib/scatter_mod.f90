@@ -339,11 +339,11 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
   CALL start_clock ('fft_scatt_yz')
 
   if ( abs (isgn) == 1 ) then      ! It's a potential FFT
-     CALL impl_yz(desc%mype2+1, desc%mype2+1, desc%nsp, desc%ir1p)
+     CALL impl_yz(desc%mype2+1, desc%mype2+1, desc%nsp, desc%ir1p, desc%nsp_offset)
   else if ( abs (isgn) == 2 ) then ! It's a wavefunction FFT
-     CALL impl_yz(desc%mype2+1, desc%mype2+1, desc%nsw, desc%ir1w)
+     CALL impl_yz(desc%mype2+1, desc%mype2+1, desc%nsw, desc%ir1w, desc%nsw_offset)
   else if ( abs (isgn) == 3 ) then ! It's a wavefunction FFT with task group
-     CALL impl_yz(1, desc%nproc2, desc%nsw, desc%ir1w_tg)
+     CALL impl_yz(1, desc%nproc2, desc%nsw, desc%ir1w_tg, desc%nsw_offset)
   end if
 
   CALL stop_clock ('fft_scatt_yz')
@@ -352,15 +352,14 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 
   CONTAINS
 
-  SUBROUTINE impl_yz(me2_start, me2_end, ncp_, ir1p_)
+  SUBROUTINE impl_yz(me2_start, me2_end, ncp_, ir1p_, me2_iproc3_offset)
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: me2_start, me2_end
-  INTEGER, INTENT(in) :: ncp_(desc%nproc), ir1p_(desc%nr1x)
+  INTEGER, INTENT(in) :: ncp_(desc%nproc), ir1p_(desc%nr1x), me2_iproc3_offset(desc%nproc2, desc%nproc3)
   !
   INTEGER :: ierr, me2, me3, nproc3, iproc3, ncpx, nr3px, ip
   INTEGER :: i, it, k, kfrom, kdest, mc, m1, m2, i1, sendsize
-  INTEGER, ALLOCATABLE :: me2_offset(:), me2_iproc3_offset(:,:)
   INTEGER :: my_nr1p_
   !
 #if defined(__NON_BLOCKING_SCATTER)
@@ -377,16 +376,6 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
   nr3px = MAXVAL ( desc%nr3p )  ! maximum number of Z values to be exchanged
   ncpx  = MAXVAL ( ncp_ )       ! maximum number of Z columns to be exchanged
   sendsize = ncpx * nr3px * ( me2_end - me2_start + 1 )  ! dimension of the scattered chunks
-  !
-  ALLOCATE ( me2_offset( me2_end - me2_start + 1 ) )
-  ALLOCATE ( me2_iproc3_offset( me2_end - me2_start + 1, nproc3 ) )
-  !
-  me2_offset(1) = 0
-  me2_iproc3_offset(1,1:nproc3) = 0
-  DO me2 = me2_start, me2_end-1
-    me2_offset(me2+1) = me2_offset(me2) + ncp_(desc%iproc(me2,me3))
-    me2_iproc3_offset(me2+1,1:nproc3) = me2_iproc3_offset(me2,1:nproc3) + ncp_(desc%iproc(me2,1:nproc3))
-  ENDDO
   !
   ierr = 0
   IF (isgn.gt.0) THEN
@@ -558,8 +547,6 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 20   CONTINUE
 
   ENDIF
-  !
-  DEALLOCATE ( me2_offset , me2_iproc3_offset )
 
   END SUBROUTINE impl_yz
 

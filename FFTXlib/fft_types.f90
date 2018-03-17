@@ -87,7 +87,9 @@ MODULE fft_types
 
     INTEGER, ALLOCATABLE :: nsp(:)   ! number of sticks per processor ( potential ) using proc index starting from 1 
                                      !                                              ... that is on proc mype -> nsp( mype + 1 )
+    INTEGER, ALLOCATABLE :: nsp_offset(:,:)   ! offset of sticks per processor ( potential )
     INTEGER, ALLOCATABLE :: nsw(:)   ! number of sticks per processor ( wave func ) using proc index as above
+    INTEGER, ALLOCATABLE :: nsw_offset(:,:)   ! offset of sticks per processor ( wave func )
     INTEGER, ALLOCATABLE :: nsw_tg(:)! number of sticks per processor ( wave func ) using proc index as above. task group version
 
     INTEGER, ALLOCATABLE :: ngl(:) ! per proc. no. of non zero charge density/potential components
@@ -233,7 +235,9 @@ CONTAINS
     ny = desc%nr2x
 
     ALLOCATE( desc%nsp( desc%nproc ) ) ; desc%nsp   = 0
+    ALLOCATE( desc%nsp_offset( desc%nproc2, desc%nproc3 ) ) ; desc%nsp_offset = 0
     ALLOCATE( desc%nsw( desc%nproc ) ) ; desc%nsw   = 0
+    ALLOCATE( desc%nsw_offset( desc%nproc2, desc%nproc3 ) ) ; desc%nsw_offset = 0
     ALLOCATE( desc%nsw_tg( desc%nproc ) ) ; desc%nsw_tg   = 0
     ALLOCATE( desc%ngl( desc%nproc ) ) ; desc%ngl   = 0
     ALLOCATE( desc%nwl( desc%nproc ) ) ; desc%nwl   = 0
@@ -272,7 +276,9 @@ CONTAINS
     IF ( ALLOCATED( desc%nr3p ) )   DEALLOCATE( desc%nr3p )
     IF ( ALLOCATED( desc%i0r3p ) )  DEALLOCATE( desc%i0r3p )
     IF ( ALLOCATED( desc%nsp ) )    DEALLOCATE( desc%nsp )
+    IF ( ALLOCATED( desc%nsp_offset ) )    DEALLOCATE( desc%nsp_offset )
     IF ( ALLOCATED( desc%nsw ) )    DEALLOCATE( desc%nsw )
+    IF ( ALLOCATED( desc%nsw_offset ) )    DEALLOCATE( desc%nsw_offset )
     IF ( ALLOCATED( desc%nsw_tg ) ) DEALLOCATE( desc%nsw_tg )
     IF ( ALLOCATED( desc%ngl ) )    DEALLOCATE( desc%ngl )
     IF ( ALLOCATED( desc%nwl ) )    DEALLOCATE( desc%nwl )
@@ -564,6 +570,12 @@ CONTAINS
     ENDIF
 
     desc%nsw( 1:desc%nproc ) = nsp( 1:desc%nproc )  ! -- number of wave sticks per processor
+    DO ip=1, desc%nproc3
+       desc%nsw_offset(1,ip) = 0
+       DO i=1, desc%nproc2-1
+          desc%nsw_offset(i+1,ip) = desc%nsw_offset(i,ip) + desc%nsw(desc%iproc(i,ip))
+       ENDDO
+    ENDDO
 
     ! -- number of wave sticks per processor for task group ffts
     desc%nsw_tg( 1:desc%nproc ) = 0
@@ -597,6 +609,12 @@ CONTAINS
     ENDIF
 
     desc%nsp( 1:desc%nproc ) = nsp( 1:desc%nproc ) ! -- number of rho sticks per processor
+    DO ip=1, desc%nproc3
+       desc%nsp_offset(1,ip) = 0
+       DO i=1, desc%nproc2-1
+          desc%nsp_offset(i+1,ip) = desc%nsp_offset(i,ip) + desc%nsp(desc%iproc(i,ip))
+       ENDDO
+    ENDDO
 
     IF( .NOT. desc%lpara ) THEN
 
