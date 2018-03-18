@@ -8,6 +8,50 @@
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
+SUBROUTINE threaded_fill_array_nowait(array, length, array_in)
+  !
+  USE david_param,   ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(OUT) :: array(length)
+  INTEGER, INTENT(IN) :: length
+  COMPLEX(DP), INTENT(IN) :: array_in(length)
+  !
+  INTEGER :: i
+  !
+  IF (length<=0) RETURN
+  !
+  !$omp do
+  DO i=1, length
+     array(i) = array_in(i)
+  ENDDO
+  !$omp end do nowait
+  !
+END SUBROUTINE threaded_fill_array_nowait
+!
+SUBROUTINE threaded_fill_value_nowait(array, length, val)
+  !
+  USE david_param,   ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(OUT) :: array(length)
+  INTEGER, INTENT(IN) :: length
+  COMPLEX(DP), INTENT(IN) :: val
+  !
+  INTEGER :: i
+  !
+  IF (length<=0) RETURN
+  !
+  !$omp do
+  DO i=1, length
+     array(i) = val
+  ENDDO
+  !$omp end do nowait
+  !
+END SUBROUTINE threaded_fill_value_nowait
+!
 !----------------------------------------------------------------------------
 SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
                     npw, npwx, nvec, nvecx, npol, evc, ethr, &
@@ -146,11 +190,12 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   nbase  = nvec
   conv   = .FALSE.
   !
-  IF ( uspp ) spsi = ZERO
-  !
-  hpsi = ZERO
-  psi  = ZERO
-  psi(:,:,1:nvec) = evc(:,:,1:nvec)
+!$omp parallel
+  IF ( uspp ) CALL threaded_fill_value_nowait(spsi, nvecx*npol*npwx, ZERO)
+  CALL threaded_fill_value_nowait(hpsi, nvecx*npol*npwx, ZERO)
+  CALL threaded_fill_array_nowait(psi, nvec*npol*npwx, evc)
+  CALL threaded_fill_value_nowait(psi(1,1,nvec+1), (nvecx-nvec)*npol*npwx, ZERO)
+!$omp end parallel
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -723,11 +768,12 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   nbase  = nvec
   conv   = .FALSE.
   !
-  IF ( uspp ) spsi = ZERO
-  !
-  hpsi = ZERO
-  psi  = ZERO
-  psi(:,:,1:nvec) = evc(:,:,1:nvec)
+!$omp parallel
+  IF ( uspp ) CALL threaded_fill_value_nowait(spsi, nvecx*npol*npwx, ZERO)
+  CALL threaded_fill_value_nowait(hpsi, nvecx*npol*npwx, ZERO)
+  CALL threaded_fill_array_nowait(psi, nvec*npol*npwx, evc)
+  CALL threaded_fill_value_nowait(psi(1,1,nvec+1), (nvecx-nvec)*npol*npwx, ZERO)
+!$omp end parallel
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -1145,7 +1191,7 @@ CONTAINS
   SUBROUTINE hpsi_dot_v()
      !
      INTEGER :: ipc, ipr
-     INTEGER :: nr, ir, ic, notcl, root, np
+     INTEGER :: nr, ir, ic, notcl, root, np, ipol, ig
      COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
      COMPLEX(DP), ALLOCATABLE :: ptmp( :, :, : )
      COMPLEX(DP) :: beta
@@ -1160,7 +1206,6 @@ CONTAINS
            notcl = notcnv_ip( ipc )
            ic    = ic_notcnv( ipc ) 
 
-           ptmp = ZERO
            beta = ZERO
 
            DO ipr = 1, desc%npr
@@ -1189,17 +1234,23 @@ CONTAINS
               END IF
               !
               CALL ZGEMM( 'N', 'N', kdim, notcl, nr, ONE, &
-                      hpsi( 1, 1, ir ), kdmx, vtmp, nx, ONE, ptmp, kdmx )
+                      hpsi( 1, 1, ir ), kdmx, vtmp, nx, beta, ptmp, kdmx )
 
               beta = ONE
 
            END DO
 
+!$omp parallel do collapse(3)
            DO np = 1, notcl
-              !
-              psi(:,:,nbase+np+ic-1) = ptmp(:,:,np) - ew(nbase+np+ic-1) * psi(:,:,nbase+np+ic-1)
-              !
+              DO ipol = 1, npol
+                 DO ig = 1, npwx
+                    !
+                    psi(ig,ipol,nbase+np+ic-1) = ptmp(ig,ipol,np) - ew(nbase+np+ic-1) * psi(ig,ipol,nbase+np+ic-1)
+                    !
+                 END DO
+              END DO
            END DO
+!$omp end parallel do
            !
         END IF
         !
