@@ -634,33 +634,26 @@ SUBROUTINE sum_band()
                 !
                 IF( use_tg ) THEN
                    !
-!$omp parallel default(shared), private(j,ioff,idx)
-!$omp do
-                   DO j = 1, SIZE( tg_psi )
-                      tg_psi(j) = ( 0.D0, 0.D0 )
-                   END DO
-!$omp end do
-                   !
-                   ioff   = 0
-                   !
                    CALL tg_get_nnr( dffts, right_nnr )
+                   !
                    ntgrp = fftx_ntgrp( dffts )
                    !
-                   DO idx = 1, ntgrp
-                      !
-                      ! ... ntgrp ffts at the same time
-                      !
-                      IF( idx + ibnd - 1 <= ibnd_end ) THEN
-!$omp do
-                         DO j = 1, npw
-                            tg_psi( dffts%nl(igk_k(j,ik))+ioff ) = evc(j,idx+ibnd-1)
-                         END DO
-!$omp end do
-                      END IF
-
-                      ioff = ioff + right_nnr
-
+!$omp parallel
+                   !$omp do
+                   DO j = 1, ntgrp*right_nnr
+                      tg_psi(j) = ( 0.D0, 0.D0 )
                    END DO
+                   !$omp end do
+                   !
+                   ! ... ntgrp ffts at the same time
+                   !
+                   !$omp do collapse(2)
+                   DO idx = 1, MIN(ntgrp, ibnd_end+1-ibnd)
+                      DO j = 1, npw
+                         tg_psi( dffts%nl(igk_k(j,ik))+right_nnr*(idx-1) ) = evc(j,idx+ibnd-1)
+                      END DO
+                   END DO
+                   !$omp end do nowait
 !$omp end parallel
                    !
                    CALL invfft ('tgWave', tg_psi, dffts)
@@ -690,9 +683,19 @@ SUBROUTINE sum_band()
                    !
                 ELSE
                    !
-                   psic(:) = ( 0.D0, 0.D0 )
+!$omp parallel
+                   !$omp do
+                   DO j = 1, dffts%nnr
+                      psic(j) = ( 0.D0, 0.D0 )
+                   ENDDO
+                   !$omp enddo
                    !
-                   psic(dffts%nl(igk_k(1:npw,ik))) = evc(1:npw,ibnd)
+                   !$omp do
+                   DO j = 1, npw
+                      psic(dffts%nl(igk_k(j,ik))) = evc(j,ibnd)
+                   ENDDO
+                   !$omp end do nowait
+!$omp end parallel
                    !
                    CALL invfft ('Wave', psic, dffts)
                    !
