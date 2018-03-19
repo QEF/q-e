@@ -85,6 +85,7 @@ SUBROUTINE tg_cgather( dffts, v, tg_v )
   RETURN
 END SUBROUTINE tg_cgather
 
+#if defined(__CUDA)
 ! === GPU CODE ===
 !----------------------------------------------------------------------------------------------------------------
 !-real version 
@@ -190,3 +191,4 @@ SUBROUTINE tg_cgather_gpu( dffts, v_d, tg_v_d )
   !write (6,'(20f12.7)') (tg_v(i+dffts%nr1x*(i-1)), i=1,dffts%nr1x)
   RETURN
 END SUBROUTINE tg_cgather_gpu
+#endif

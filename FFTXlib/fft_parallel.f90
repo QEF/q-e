@@ -254,9 +254,9 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   !if (.true.) stop
   RETURN
 99 format ( 20 ('(',2f12.9,')') )
-#endif
   !
 END SUBROUTINE tg_cft3s_gpu
+#endif
 !--------------------------------------------------------------------------------
 !   Auxiliary routines to read/write from/to a distributed array
 !   NOT optimized for efficiency .... just to show how one can access the data

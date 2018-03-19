@@ -9,13 +9,13 @@
 !----------------------------------------------------------------------
 ! FFT base Module.
 ! Written by Carlo Cavazzoni, modified by Paolo Giannozzi
-! Rewritten by Stefano de Gironcoli
+! Rewritten by Stefano de Gironcoli, ported to GPU by Pietro Bonfa'
 !----------------------------------------------------------------------
 !
 !=----------------------------------------------------------------------=!
    MODULE scatter_mod_gpu
 !=----------------------------------------------------------------------=!
-
+#if defined(__CUDA)
         USE fft_types, ONLY: fft_type_descriptor
         USE fft_param
 
@@ -707,8 +707,7 @@ SUBROUTINE fft_scatter_tg_opt_gpu ( desc, f_in_d, f_out_d, nxx_, isgn )
 
 END SUBROUTINE fft_scatter_tg_opt_gpu
 
-
+#endif
 !=----------------------------------------------------------------------=!
 END MODULE scatter_mod_gpu
 !=----------------------------------------------------------------------=!
-
