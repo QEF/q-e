@@ -233,7 +233,7 @@ SUBROUTINE rgd_blk_epw(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
   integer :: na, ipol, m1,m2,m3!, nrx1,nrx2,nrx3
   complex(dp) :: fac, facqd, facq, epmatl(nmodes)
   !
-  IF ( ( abs(signe) - 1.0 ) < eps12 ) &
+  IF ( abs ( abs(signe) - 1.0 ) > eps12 ) &
        CALL errore ('rgd_blk',' wrong value for signe ',1)
   !
   gmax= 14.d0
@@ -381,7 +381,7 @@ SUBROUTINE rgd_blk_epw_fine(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
   COMPLEX(kind=DP) :: fac, facqd, facq
   COMPLEX(kind=DP) :: epmatl(nbndsub,nbndsub,nmodes)
   !
-  IF ( ( abs(signe) - 1.0 ) < eps12 ) &
+  IF ( abs ( abs(signe) - 1.0 ) > eps12 ) &
        CALL errore ('rgd_blk',' wrong value for signe ',1)
   !
   gmax= 14.d0
