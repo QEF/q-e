@@ -204,11 +204,16 @@ SUBROUTINE read_upf_mesh(u, upf, grid)
    INTEGER                         :: ierr ! /= 0 if something went wrong
    LOGICAL :: found
    !
-   CALL extractDataAttribute(u, 'dx',   upf%dx)
-   CALL extractDataAttribute(u, 'mesh', upf%mesh)
-   CALL extractDataAttribute(u, 'xmin', upf%xmin)
-   CALL extractDataAttribute(u, 'rmax', upf%rmax)
-   CALL extractDataAttribute(u, 'zmesh',upf%zmesh)
+   IF ( hasAttribute(u, 'dx' ))& 
+      CALL extractDataAttribute(u, 'dx',   upf%dx)
+   IF ( hasAttribute(u, 'mesh')) &
+      CALL extractDataAttribute(u, 'mesh', upf%mesh)
+   IF ( hasAttribute(u, 'xmin')) &
+      CALL extractDataAttribute(u, 'xmin', upf%xmin)
+   IF (hasAttribute(u, 'rmax')) &
+      CALL extractDataAttribute(u, 'rmax', upf%rmax)
+   IF (hasAttribute(u,'zmesh')) &
+      CALL extractDataAttribute(u, 'zmesh',upf%zmesh)
    IF (present(grid)) THEN
       CALL allocate_radial_grid(grid, upf%mesh)
       !

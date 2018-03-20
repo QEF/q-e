@@ -60,9 +60,11 @@ PROGRAM upf2upf2
   upf%rcutus_chi=upf%rcutus(1:upf%nwfc)
   !
   upf%rmax = upf%r(upf%mesh)
-  upf%dx = log(upf%rmax/upf%r(1))/(upf%mesh-1)
   upf%zmesh = atomic_number( upf%psd )
-  upf%xmin = log(upf%r(1)*upf%zmesh )
+  IF (upf%r(1) .GT. 1.d-16) THEN 
+     upf%dx = log(upf%rmax/upf%r(1))/(upf%mesh-1)
+     upf%xmin = log(upf%r(1)*upf%zmesh )
+  END IF
   IF ( upf%has_so) THEN
      upf%rel="full"
   ELSEIF ( upf%zmesh > 18 ) THEN

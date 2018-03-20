@@ -304,11 +304,11 @@ CONTAINS
 
       !
       CALL xml_newElement(u, 'PP_MESH')
-      CALL xml_addAttribute(u, 'dx',   upf%dx )
-      CALL xml_addAttribute(u, 'mesh', upf%mesh)
-      CALL xml_addAttribute(u, 'xmin', upf%xmin)
-      CALL xml_addAttribute(u, 'rmax', upf%rmax)
-      CALL xml_addAttribute(u, 'zmesh',upf%zmesh)
+      IF (upf%dx    .GT. 0.d0)  CALL xml_addAttribute(u, 'dx',   upf%dx )
+      IF (upf%mesh  .GT. 0 )    CALL xml_addAttribute(u, 'mesh', upf%mesh)
+      IF (upf%dx    .GT. 0.d0)  CALL xml_addAttribute(u, 'xmin', upf%xmin)
+      IF (upf%rmax  .GT. 0.d0)  CALL xml_addAttribute(u, 'rmax', upf%rmax)
+      IF (upf%zmesh .GT. 0.d0)  CALL xml_addAttribute(u, 'zmesh',upf%zmesh)
       !
       CALL xml_newElement(u, 'PP_R') 
          CALL write_data(u, upf%r, tag = 'PP_R')
