@@ -41,14 +41,14 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    USE read_upf_v1_module,ONLY: read_upf_v1
    USE read_upf_v2_module,ONLY: read_upf_v2
    USE read_upf_schema_module ,ONLY: read_upf_schema
-   USE mp,           ONLY: mp_barrier, mp_sum
+   USE mp,           ONLY: mp_bcast, mp_sum
    USE mp_images,    ONLY: intra_image_comm, my_image_id
    USE io_global,    ONLY: ionode, ionode_id, stdout
    USE io_files,     ONLY: tmp_dir
    USE FoX_DOM,      ONLY: Node, domException, parseFile, getFirstChild, getExceptionCode,&
                               getTagName    
    USE wrappers,     ONLY: f_remove
-   USE emend_upf_module, ONLY: make_emended_upf_copy 
+   USE emend_upf_module, ONLY: make_emended_upf_copy
    IMPLICIT NONE
    INTEGER,INTENT(IN), OPTIONAL            :: unit
    !! i/o unit:    
@@ -70,6 +70,7 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    INTEGER, EXTERNAL  :: find_free_unit
    CHARACTER(LEN=256) :: temp_upf_file
    CHARACTER(LEN=1024) :: msg
+   LOGICAL             :: should_be_xml
    IF (PRESENT(xml_only) ) xml_only_ = xml_only
    ierr = 0
 
@@ -83,63 +84,64 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
       RETURN
       ! 
    ELSE IF (PRESENT(filename) ) THEN
-       doc => parseFile(TRIM(filename), EX = ex )
-       ierr = getExceptionCode( ex )
-       IF ( ierr ==  81 ) THEN 
-          WRITE(temp_upf_file, '("tmp_",I0,".UPF")') my_image_id  
-          IF ( ionode ) THEN
-            CALL make_emended_upf_copy( TRIM(filename), TRIM(tmp_dir)//trim(temp_upf_file))  
-          END IF   
-          CALL mp_barrier ( intra_image_comm) 
-          doc => parseFile(TRIM(tmp_dir)//trim(temp_upf_file), EX = ex, IOSTAT = ferr )
-          ierr = getExceptionCode( ex ) 
-          CALL mp_sum(ferr,intra_image_comm) 
-          IF ( ferr /= 0 ) THEN 
-             WRITE (msg, '(A)')  'Failure while trying to fix '//trim(filename) // '.'// new_line('a') // &
-                                 'For fixing manually UPF files see: '// new_line('a') // &
-                                 'https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
-             CALL errore('read_upf: ', TRIM(msg), ferr ) 
-          ELSE 
-             WRITE ( msg, '(A)') 'Pseudo file '// trim(filename) // ' has been successfully fixed on the fly.' &
+      doc => parseFile(TRIM(filename), EX = ex )
+      ierr = getExceptionCode( ex )
+      IF ( ierr ==  81 ) THEN 
+         WRITE(temp_upf_file, '("tmp_",I0,".UPF")') my_image_id  
+         IF ( ionode ) THEN
+            CALL make_emended_upf_copy( TRIM(filename), TRIM(tmp_dir)//trim(temp_upf_file), should_be_xml)  
+         END IF   
+         CALL mp_bcast ( should_be_xml, ionode_id, intra_image_comm)     
+         IF ( should_be_xml) THEN 
+            doc => parseFile(TRIM(tmp_dir)//trim(temp_upf_file), EX = ex, IOSTAT = ferr )
+            ierr = getExceptionCode( ex ) 
+            CALL mp_sum(ferr,intra_image_comm) 
+            IF ( ferr /= 0 ) THEN 
+               WRITE (msg, '(A)')  'Failure while trying to fix '//trim(filename) // '.'// new_line('a') // &
+                                    'For fixing manually UPF files see: '// new_line('a') // &
+                                    'https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
+               CALL errore('read_upf: ', TRIM(msg), ferr ) 
+            ELSE 
+               WRITE ( msg, '(A)') 'Pseudo file '// trim(filename) // ' has been successfully fixed on the fly.' &
                               // new_line('a') // 'To avoid this message in the future you can permanently fix ' &
                               // new_line('a') // ' your pseudo files following instructions given in: ' &
                               // new_line('a') // 'https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
-             CALL infomsg('read_upf:', trim(msg) )    
-          END IF
-          ! 
-          IF (ionode) ferr = f_remove(TRIM(tmp_dir)//TRIM(temp_upf_file) )
-          temp_upf_file=""
-       END IF 
-       IF ( ierr == 0 ) THEN 
-           u => getFirstChild(doc) 
-           SELECT CASE (TRIM(getTagname(u))) 
-              CASE ('UPF') 
-                 CALL read_upf_v2( u, upf, grid, ierr )
-              CASE ('qe_pp:pseudo') 
-                 CALL read_upf_schema( u, upf, grid, ierr)
-                 IF ( ierr == 0 ) ierr = -2
-              CASE default 
-                 ierr = 1
-                 CALL errore('read_upf', 'xml format '//TRIM(getTagName(u))//' not implemented', ierr) 
-           END SELECT 
-           IF ( ierr > 0 ) CALL errore( 'read_upf', 'File is Incomplete or wrong: '//TRIM(filename), ierr)
-           !
-           RETURN
-           !  
-       ELSE IF ( ierr > 0 ) THEN
-          ! 
-          IF ( .NOT. xml_only_ ) THEN
-             u_temp = find_free_unit()
-             OPEN (UNIT = u_temp, FILE = TRIM(filename), STATUS = 'old', FORM = 'formatted', IOSTAT = ierr)
-             CALL errore ("upf_module:read_upf", "error while opening file " // TRIM(filename), ierr) 
-             CALL deallocate_pseudo_upf( upf )
-             CALL deallocate_radial_grid( grid )
-             CALL read_upf_v1( u_temp, upf, grid, ierr )
-             IF ( ierr == 0 ) ierr = -1
-             CLOSE ( u_temp)  
-          END IF
+               CALL infomsg('read_upf:', trim(msg) )    
+            END IF
+         END IF
+            ! 
+            IF (ionode) ferr = f_remove(TRIM(tmp_dir)//TRIM(temp_upf_file) )
+            temp_upf_file=""
+         END IF 
+         IF ( ierr == 0 ) THEN 
+            u => getFirstChild(doc) 
+            SELECT CASE (TRIM(getTagname(u))) 
+               CASE ('UPF') 
+                  CALL read_upf_v2( u, upf, grid, ierr )
+               CASE ('qe_pp:pseudo') 
+                  CALL read_upf_schema( u, upf, grid, ierr)
+                  IF ( ierr == 0 ) ierr = -2
+               CASE default 
+                  ierr = 1
+                  CALL errore('read_upf', 'xml format '//TRIM(getTagName(u))//' not implemented', ierr) 
+               END SELECT 
+            IF ( ierr > 0 ) CALL errore( 'read_upf', 'File is Incomplete or wrong: '//TRIM(filename), ierr)
+            RETURN
+            !  
+         ELSE IF ( ierr > 0 ) THEN
+         ! 
+         IF ( .NOT. xml_only_ ) THEN
+            u_temp = find_free_unit()
+            OPEN (UNIT = u_temp, FILE = TRIM(filename), STATUS = 'old', FORM = 'formatted', IOSTAT = ierr)
+            CALL errore ("upf_module:read_upf", "error while opening file " // TRIM(filename), ierr) 
+            CALL deallocate_pseudo_upf( upf )
+            CALL deallocate_radial_grid( grid )
+            CALL read_upf_v1( u_temp, upf, grid, ierr )
+            IF ( ierr == 0 ) ierr = -1
+            CLOSE ( u_temp)  
+         END IF
           !
-          RETURN
+         RETURN
           !
        END IF
    ELSE 
