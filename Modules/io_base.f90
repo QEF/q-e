@@ -263,7 +263,7 @@ MODULE io_base
          IF ( ierr /= 0 ) RETURN
       ELSE
          CALL errore( 'read_wfc ', &
-              'cannot open restart file for reading', ierr_ )
+              'cannot open restart file ' // TRIM(filename) //' for reading', ierr_ )
       END IF
       !
       IF ( ionode_in_group ) THEN
