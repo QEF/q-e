@@ -16,7 +16,7 @@ PROGRAM upf2upf2
                            deallocate_pseudo_upf
   USE radial_grids, ONLY: radial_grid_type, nullify_radial_grid
   USE read_upf_v1_module, ONLY : read_upf_v1
-  USE write_upf_v2_module, ONLY: write_upf_v2
+  USE write_upf_module,          ONLY: write_upf
   !
   IMPLICIT NONE
   TYPE(pseudo_upf) :: upf
@@ -75,9 +75,9 @@ PROGRAM upf2upf2
   !
   fileout=trim(filein)//'.UPF'
   PRINT '(''Output PP file in UPF format :  '',a)', fileout
-  OPEN(unit=2,file=fileout,status='unknown',form='formatted')
+  !OPEN(unit=2,file=fileout,status='unknown',form='formatted')
   !
-  CALL write_upf_v2 (2, upf )
+  CALL write_upf (FILENAME = fileout, UPF = upf, SCHEMA = 'v2')
   !
   CLOSE (unit=2)
   CALL deallocate_pseudo_upf ( upf )
