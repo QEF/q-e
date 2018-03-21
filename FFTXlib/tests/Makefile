@@ -5,7 +5,8 @@ include ../../make.inc
 MODFLAGS= $(MOD_FLAG).. $(MOD_FLAG).
 
 SRCS = test_fft_scalar_gpu.f90 \
-				test_fft_scatter_mod_gpu.f90
+				test_fft_scatter_mod_gpu.f90 \
+				test_fwinv_gpu.f90
 
 EXECS = $(SRCS:.f90=.x)
 

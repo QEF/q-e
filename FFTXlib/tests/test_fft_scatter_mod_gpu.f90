@@ -62,8 +62,8 @@ program test_fft_scatter_mod_gpu
 #endif
   END SUBROUTINE mpi_data_init
   SUBROUTINE fft_desc_init(dfft, smap, flavor, gamma_only, parallel, comm, nyfft)
-    USE stick_base
-    USE fft_types
+    USE fft_types,       ONLY : fft_type_descriptor, fft_type_init
+    USE stick_base,      ONLY : sticks_map
     USE fft_param, ONLY : DP
     implicit none
     TYPE(fft_type_descriptor) :: dfft
@@ -85,8 +85,8 @@ program test_fft_scatter_mod_gpu
   END SUBROUTINE fft_desc_init
   
   SUBROUTINE fft_desc_finalize(dfft, smap)
-    USE stick_base
-    USE fft_types
+    USE fft_types,       ONLY : fft_type_descriptor, fft_type_deallocate
+    USE stick_base,      ONLY : sticks_map, sticks_map_deallocate
     implicit none
     TYPE(fft_type_descriptor) :: dfft
     TYPE(sticks_map) :: smap
@@ -114,11 +114,11 @@ program test_fft_scatter_mod_gpu
   !
   SUBROUTINE test_fft_scatter_xy_gpu_1(mp, test, gamma_only, ny)
     USE cudafor
-    USE fft_param, ONLY : DP
-    USE fft_types
-    USE stick_base
-    USE scatter_mod
-    USE scatter_mod_gpu
+    USE fft_param,       ONLY : DP
+    USE fft_types,       ONLY : fft_type_descriptor
+    USE stick_base,      ONLY : sticks_map
+    USE scatter_mod,     ONLY : fft_scatter_xy
+    USE scatter_mod_gpu, ONLY : fft_scatter_xy_gpu
     implicit none
     TYPE(mpi_t) :: mp
     TYPE(tester_t) :: test
@@ -168,11 +168,11 @@ program test_fft_scatter_mod_gpu
     !  called with more than 1 MPI.
     !
     USE cudafor
-    USE fft_param, ONLY : DP
-    USE fft_types
-    USE stick_base
-    USE scatter_mod
-    USE scatter_mod_gpu
+    USE fft_param,       ONLY : DP
+    USE fft_types,       ONLY : fft_type_descriptor
+    USE stick_base,      ONLY : sticks_map
+    USE scatter_mod,     ONLY : fft_scatter_yz
+    USE scatter_mod_gpu, ONLY : fft_scatter_yz_gpu
     implicit none
     TYPE(mpi_t) :: mp
     TYPE(tester_t) :: test
