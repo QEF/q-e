@@ -60,14 +60,8 @@
 
      INTEGER :: tid
 
-     !   Pointers to the "C" structures containing FFT factors ( PLAN )
-     !   C_POINTER is defined in include/fft_defs.h
-     !   for 32bit executables, C_POINTER is integer(4)
-     !   for 64bit executables, C_POINTER is integer(8)
-
+     ! Contains FFT factors ( PLAN )
      INTEGER, SAVE :: cufft_planz( ndims ) = 0
-     !C_POINTER, SAVE :: fw_planz( ndims ) = 0
-     !C_POINTER, SAVE :: bw_planz( ndims ) = 0
 
      IF( nsl < 0 ) THEN
        CALL fftx_error__(" fft_scalar: cft_1z ", " nsl out of range ", nsl)
