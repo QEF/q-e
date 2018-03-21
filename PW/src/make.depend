@@ -1663,6 +1663,7 @@ read_file.o : scf_mod.o
 read_file.o : symm_base.o
 read_file_new.o : ../../FFTXlib/fft_interfaces.o
 read_file_new.o : ../../FFTXlib/fft_types.o
+read_file_new.o : ../../Modules/bcast_qes_module.o
 read_file_new.o : ../../Modules/cell_base.o
 read_file_new.o : ../../Modules/constants.o
 read_file_new.o : ../../Modules/control_flags.o
@@ -1676,6 +1677,7 @@ read_file_new.o : ../../Modules/ions_base.o
 read_file_new.o : ../../Modules/kernel_table.o
 read_file_new.o : ../../Modules/kind.o
 read_file_new.o : ../../Modules/mp_bands.o
+read_file_new.o : ../../Modules/mp_images.o
 read_file_new.o : ../../Modules/noncol.o
 read_file_new.o : ../../Modules/paw_variables.o
 read_file_new.o : ../../Modules/qes_libs.o

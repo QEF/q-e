@@ -6,6 +6,10 @@ autopilot.o : kind.o
 autopilot.o : mp_world.o
 autopilot.o : parser.o
 basic_algebra_routines.o : kind.o
+bcast_qes_module.o : ../UtilXlib/mp.o
+bcast_qes_module.o : io_global.o
+bcast_qes_module.o : kind.o
+bcast_qes_module.o : qes_types.o
 becmod.o : ../UtilXlib/mp.o
 becmod.o : control_flags.o
 becmod.o : kind.o
