@@ -62,16 +62,15 @@ build:ph:
 
 #### BUILDS ON GALILEO ####
 
-build:laxlib-unittest:
-  tags: [galileo]
-  script:
-    - module load profile/advanced pgi/17.10 cuda/8.0.61
-    - ./configure && make pw
-    - cd LAXlib/tests
-    - make clean && make
-    - for file in ./*.x; do mpirun -np 4 ./$file; done
-    - cd ../../
-    - ./configure --disable-parallel && make clean && make pw
-    - cd LAXlib/tests
-    - make clean && make
-    - for file in ./*.x; do ./$file; done
+#build:intel:
+#  tags: [galileo]
+#  script:
+#    - module load intel/pe-xe-2017--binary intelmpi/2017--binary mkl/2017--binary
+#    - ./configure --enable-openmp
+#    - make pw cp
+#    - export OMP_NUM_THREADS=2
+#    - cd test-suite
+#    - mkdir -p /tmp/save
+#    - make run-tests-pw-parallel
+#    - make run-tests-cp-parallel
+#    - rm -r /tmp/save
