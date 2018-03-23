@@ -48,7 +48,7 @@ program test_diaghg_gpu_2
     complex(DP) :: s(m_size,m_size)
     complex(DP), DEVICE :: s_d(m_size,m_size)
     complex(DP) :: s_save(m_size,m_size)
-    real(DP) :: e(m_size)
+    real(DP) :: e(m_size), e_(m_size)
     real(DP), DEVICE :: e_d(m_size)
     complex(DP) :: v(m_size,m_size)
     complex(DP), DEVICE :: v_d(m_size,m_size)
@@ -60,9 +60,8 @@ program test_diaghg_gpu_2
     !
     h_save = h
     s_save = s
-    h_d = h
-    s_d = s
-
+    h_d = h     ! copy H and S to device
+    s_d = s     ! <----------|
     !
     v = (0.d0, 0.d0)
     e = 0.d0
@@ -70,7 +69,7 @@ program test_diaghg_gpu_2
     e_d = 0.d0
     !
     ! Compare same algorithm starting from data on device ...
-    CALL diaghg(  m_size, m_size-1, h_d, s_d, m_size, e_d, v_d)
+    CALL diaghg(  m_size, m_size-1, h_d, s_d, m_size, e_d, v_d )
     e_save = e_d
     v_save = v_d
     ! ... and on the host
@@ -89,15 +88,16 @@ program test_diaghg_gpu_2
     s = s_save
     v = (0.d0, 0.d0)
     e = 0.d0
-    CALL diaghg(  m_size, m_size-1, h, s, m_size, e, v)
+    CALL diaghg( m_size, m_size-1, h, s, m_size, e, v )
+    h = h_save; s = s_save
+    CALL solve_with_zhegvd(m_size, h, s, m_size, e_)
     !
-    !CALL test%assert_close( RESHAPE(h, [m_size*m_size]), RESHAPE(h_save, [m_size*m_size]))
-    !CALL test%assert_close( RESHAPE(s, [m_size*m_size]), RESHAPE(s_save, [m_size*m_size]))
     test%tolerance32=1.d-5
     test%tolerance64=1.d-10
     DO i=1, m_size-1
-        !CALL test%assert_close( v(1:m_size,i), v_save(1:m_size,i))
+        CALL test%assert_close( v_save(1:m_size,i), h(1:m_size,i) )
         CALL test%assert_close( e(i), e_save(i) )
+        CALL test%assert_close( e_(i), e_save(i) )
     END DO
     !
   END SUBROUTINE complex_1
@@ -132,6 +132,44 @@ program test_diaghg_gpu_2
     END DO
     !
   END SUBROUTINE hermitian
+  !
+  SUBROUTINE solve_with_zhegvd(n, v, s, ldh, e)
+    USE la_param, ONLY : DP
+    IMPLICIT NONE
+    !
+    complex(DP) :: v(ldh,n)
+    complex(DP) :: s(ldh,n)
+    real(DP) :: e(n)
+    INTEGER                  :: n
+    !
+    INTEGER                  :: lwork, lrwork, liwork, info, ldh
+    !
+    REAL(DP)                 :: abstol
+    INTEGER,     ALLOCATABLE :: iwork(:), ifail(:)
+    REAL(DP),    ALLOCATABLE :: rwork(:)
+    COMPLEX(DP), ALLOCATABLE :: work(:)
+    ! various work space
+
+    !
+    ALLOCATE(work(1), rwork(1), iwork(1))
+    CALL ZHEGVD( 1, 'V', 'U', n, v, ldh, &
+                s, ldh, e, work, -1, rwork, -1, iwork, -1, info )
+    
+    IF (info /= 0) print *, "Workspace not computed!"
+    
+    lwork = work(1)
+    lrwork = rwork(1)
+    liwork = iwork(1)
+    
+    DEALLOCATE(work, rwork, iwork)
+    ALLOCATE(work(lwork), rwork(lrwork), iwork(liwork))
+    
+    CALL ZHEGVD( 1, 'V', 'U', n, v, ldh, &
+                s, ldh, e, work, lwork, rwork, lrwork, iwork, liwork, info )
+    
+    DEALLOCATE(work, rwork, iwork)
+    !
+  END SUBROUTINE solve_with_zhegvd
   
 end program test_diaghg_gpu_2
 #else
