@@ -29,9 +29,12 @@ SUBROUTINE make_emended_upf_copy( filename, tempname, xml_check)
   ! 
   iun_source = find_free_unit()
   OPEN (UNIT = iun_source, FILE = TRIM(filename), STATUS = 'old', &
-       ACTION = 'read', FORM='formatted')
+       ACTION = 'read', FORM='formatted', iostat=ierr)
+  IF ( ierr /= 0 ) CALL errore ("make_emended_upf", &
+          "error opening file " // TRIM (filename),abs(ierr))
   READ ( iun_source, "(a256)", IOSTAT = ierr ) line
-     IF ( ierr < 0 ) CALL errore ("read_pseudo: ", TRIM (filename) // " is empty",abs(ierr))
+     IF ( ierr < 0 ) CALL errore ("make_emended_upf", &
+             TRIM (filename) // " is empty",abs(ierr))
      IF (INDEX(line, '<?xml') == 0 .AND. INDEX(line,'<UPF') == 0) THEN
         xml_check = .FALSE. 
         CLOSE ( iun_source )
