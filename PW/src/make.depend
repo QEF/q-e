@@ -872,17 +872,13 @@ init_run.o : ../../Modules/cell_base.o
 init_run.o : ../../Modules/control_flags.o
 init_run.o : ../../Modules/fft_base.o
 init_run.o : ../../Modules/funct.o
-init_run.o : ../../Modules/hdf5_qe.o
 init_run.o : ../../Modules/ions_base.o
-init_run.o : ../../Modules/mp_bands.o
 init_run.o : ../../Modules/paw_variables.o
 init_run.o : ../../Modules/recvec.o
 init_run.o : ../../Modules/recvec_subs.o
 init_run.o : ../../Modules/tsvdw.o
 init_run.o : ../../Modules/uspp.o
 init_run.o : ../../Modules/wannier_new.o
-init_run.o : ../../Modules/wavefunctions.o
-init_run.o : ../../UtilXlib/mp.o
 init_run.o : Coul_cut_2D.o
 init_run.o : bp_mod.o
 init_run.o : dynamics_module.o
@@ -1215,6 +1211,7 @@ offset_atom_wfc.o : ../../Modules/noncol.o
 offset_atom_wfc.o : ../../Modules/uspp.o
 offset_atom_wfc.o : ldaU.o
 openfil.o : ../../Modules/control_flags.o
+openfil.o : ../../Modules/hdf5_qe.o
 openfil.o : ../../Modules/io_files.o
 openfil.o : ../../Modules/kind.o
 openfil.o : ../../Modules/noncol.o

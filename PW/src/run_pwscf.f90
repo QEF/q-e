@@ -94,10 +94,21 @@ SUBROUTINE run_pwscf ( exit_status )
   !
   CALL qmmm_update_positions()
   !
-  CALL init_run()
-  !
   ! ... dry run: code will stop here if called with exit file present
   ! ... useful for a quick and automated way to check input data
+  !
+  IF ( check_stop_now() ) THEN
+     CALL pre_init()
+     CALL data_structure( gamma_only )
+     CALL summary()
+     CALL memory_report()
+     CALL qexsd_set_status(255)
+     CALL punch( 'config' )
+     exit_status = 255
+     RETURN
+  ENDIF
+  !
+  CALL init_run()
   !
   IF ( check_stop_now() ) THEN
      CALL qexsd_set_status(255)

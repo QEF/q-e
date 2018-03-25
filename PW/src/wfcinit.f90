@@ -33,11 +33,9 @@ SUBROUTINE wfcinit()
   USE pw_restart,           ONLY : pw_readfile
 #else
   USE pw_restart_new,       ONLY : pw_readschema_file, read_collected_to_evc 
+  USE qes_types_module,     ONLY : output_type
+  USE qes_libs_module,      ONLY : qes_reset_output
 #endif
-  USE mp_bands,             ONLY : nbgrp, root_bgrp,inter_bgrp_comm
-  USE mp,                   ONLY : mp_bcast
-  USE qes_types_module,            ONLY : output_type
-  USE qes_libs_module,             ONLY : qes_reset_output
   !
   IMPLICIT NONE
   !
@@ -206,8 +204,9 @@ SUBROUTINE init_wfc ( ik )
   USE noncollin_module,     ONLY : npol
   USE wavefunctions_module, ONLY : evc
   USE random_numbers,       ONLY : randy
-  USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id
-  USE mp,                   ONLY : mp_sum
+  USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, &
+                                   nbgrp, root_bgrp_id
+  USE mp,                   ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
@@ -304,9 +303,9 @@ SUBROUTINE init_wfc ( ik )
   
   ! when band parallelization is active, the first band group distributes
   ! the wfcs to the others making sure all bgrp have the same starting wfc
-
-  if (my_bgrp_id > 0) wfcatom(:,:,:) = (0.d0,0.d0)
-  call mp_sum(wfcatom,inter_bgrp_comm)
+  ! FIXME: maybe this should be done once evc are computed, not here?
+  !
+  IF( nbgrp > 1 ) CALL mp_bcast( wfcatom, root_bgrp_id, inter_bgrp_comm )
   !
   ! ... Diagonalize the Hamiltonian on the basis of atomic wfcs
   !
