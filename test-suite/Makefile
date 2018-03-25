@@ -36,7 +36,6 @@ pseudo :
 	@./check_pseudo.sh pw_
 	@./check_pseudo.sh cp_
 
-
 run-tests : run-tests-serial
 
 run-tests-serial : run-tests-pw-serial run-tests-cp-serial 
@@ -44,10 +43,12 @@ run-tests-serial : run-tests-pw-serial run-tests-cp-serial
 run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel
 
 
-run-tests-cp-serial : prolog pseudo 
+run-tests-cp-serial : prolog pseudo
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); done 
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
 run-tests-cp-parallel : prolog pseudo
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); done 
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
 run-tests-pw-serial : prolog pseudo
@@ -89,7 +90,8 @@ run-tests-xsd-pw-serial : prolog pseudo
 		python ../validate_xsd_pw.py $$file; \
     done ; cd ..
 
-create-reference-cp : pseudo prolog 
+create-reference-cp : pseudo prolog
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); done 
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=cp_all make-benchmarks
 
 create-reference-pw : pseudo prolog
