@@ -1077,12 +1077,12 @@ SUBROUTINE scan_file_to (keyword,found)
 END SUBROUTINE scan_file_to
 !
 !-----------------------------------------------------------------------
-SUBROUTINE pw2wan_set_symm (sr, tvec)
+SUBROUTINE pw2wan_set_symm (nsym, sr, tvec)
    !-----------------------------------------------------------------------
    !
    ! Uses nkqs and index_sym from module pw2wan, computes rir
    !
-   USE symm_base,            ONLY : nsym, s, ftau, allfrac
+   USE symm_base,       ONLY : s, ftau, allfrac
    USE fft_base,        ONLY : dffts
    USE cell_base,       ONLY : at, bg
    USE wannier,         ONLY : rir, read_sym
@@ -1091,7 +1091,8 @@ SUBROUTINE pw2wan_set_symm (sr, tvec)
    !
    IMPLICIT NONE
    !
-   REAL(DP) :: sr(3,3,nsym), tvec(3,nsym)
+   INTEGER  , intent(in) :: nsym
+   REAL(DP) , intent(in) :: sr(3,3,nsym), tvec(3,nsym)
    REAL(DP) :: st(3,3), v(3)
    INTEGER, allocatable :: s_in(:,:,:), ftau_in(:,:)
    !REAL(DP), allocatable:: ftau_in(:,:)
@@ -1334,7 +1335,7 @@ SUBROUTINE compute_dmn
       end if
    end do
 
-   CALL pw2wan_set_symm ( sr, tvec )
+   CALL pw2wan_set_symm ( nsym, sr, tvec )
 
    any_uspp = any(upf(1:ntyp)%tvanp)
 
