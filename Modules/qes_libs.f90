@@ -18,7 +18,7 @@ MODULE qes_libs_module
    INTEGER, PARAMETER      :: max_real_per_line=5
    CHARACTER(32)           :: fmtstr
    !
-   PRIVATE :: attr, fmtstr
+   PRIVATE :: fmtstr
 !
 INTERFACE qes_init_matrix
    MODULE PROCEDURE  qes_init_matrix_1, qes_init_matrix_2, qes_init_matrix_3

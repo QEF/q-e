@@ -1379,9 +1379,9 @@
         ! ------------------------------------------------------        
         !
         CALL dmewan2bloch &
-             ( nbndsub, nrr_k, irvec_k, ndegen_kk, xkk, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
+             ( nbndsub, nrr_k, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
         CALL dmewan2bloch &
-             ( nbndsub, nrr_k, irvec_k, ndegen_kk, xkq, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfac)
+             ( nbndsub, nrr_k, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfac)
         !
         ! ------------------------------------------------------        
         !  velocity: Wannier -> Bloch
