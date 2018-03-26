@@ -3174,6 +3174,8 @@ SUBROUTINE compute_amn
    WRITE(stdout,'(/)')
    WRITE(stdout,*) ' AMN calculated'
 
+   ! vv: This should be here and not in write_band
+   CALL stop_clock( 'compute_amn' )
    RETURN
 END SUBROUTINE compute_amn
 
@@ -3347,7 +3349,9 @@ SUBROUTINE write_band
       ENDDO
    ENDDO
 
-   CALL stop_clock( 'compute_amn' )
+   IF (wan_mode=='standalone') THEN
+       IF (ionode) CLOSE (unit=iun_band)
+   ENDIF
 
    RETURN
 END SUBROUTINE write_band
