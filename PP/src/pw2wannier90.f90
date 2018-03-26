@@ -1700,6 +1700,7 @@ SUBROUTINE compute_dmn
             psic(dffts%nl(igk_k(1:npwq,ikp))) = evcq(1:npwq,n)
             ! go to real space
             CALL invfft ('Wave', psic, dffts)
+#if defined(__MPI)
             ! gather among all the CPUs
             CALL gather_grid(dffts, psic, temppsic_all)
             ! apply rotation
@@ -1707,6 +1708,9 @@ SUBROUTINE compute_dmn
             psic_all(rir(1:nxxs,isym)) = temppsic_all(1:nxxs)
             ! scatter back a piece to each CPU
             CALL scatter_grid(dffts, psic_all, psic)
+#else
+            psic(rir(1:nxxs, isym)) = psic(1:nxxs)
+#endif
             ! apply phase k -> k+G
             psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
             ! go back to G space
@@ -3350,10 +3354,10 @@ END SUBROUTINE write_band
 
 SUBROUTINE write_plot
    USE io_global,  ONLY : stdout, ionode
-   USE wvfct, ONLY : nbnd
+   USE wvfct, ONLY : nbnd, npwx
    USE gvecw, ONLY : gcutw
    USE control_flags, ONLY : gamma_only
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions_module, ONLY : evc, psic, psic_nc
    USE io_files, ONLY : nwordwfc, iunwfc
    USE wannier
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
@@ -3361,7 +3365,7 @@ SUBROUTINE write_plot
    USE fft_base,        ONLY : dffts
    USE scatter_mod,     ONLY : gather_grid
    USE fft_interfaces,  ONLY : invfft
-   USE noncollin_module,ONLY : noncolin
+   USE noncollin_module,ONLY : noncolin, npol
 
    IMPLICIT NONE
    !
@@ -3372,20 +3376,23 @@ SUBROUTINE write_plot
 
    ! aam: 1/5/06: for writing smaller unk files
    INTEGER :: n1by2,n2by2,n3by2,i,k,idx,pos
-   COMPLEX(DP),ALLOCATABLE :: psic_small(:)
+   COMPLEX(DP),ALLOCATABLE :: psic_small(:), psic_nc_small(:,:)
+
+   INTEGER ipol
    !-------------------------------------------!
 
 #if defined(__MPI)
    INTEGER nxxs
-   COMPLEX(DP),ALLOCATABLE :: psic_all(:)
+   COMPLEX(DP),ALLOCATABLE :: psic_all(:), psic_nc_all(:,:)
    nxxs = dffts%nr1x * dffts%nr2x * dffts%nr3x
-   ALLOCATE(psic_all(nxxs) )
+   IF (.NOT.noncolin) THEN
+      ALLOCATE(psic_all(nxxs) )
+   ELSE
+      ALLOCATE(psic_nc_all(nxxs,npol) )
+   ENDIF
 #endif
 
    CALL start_clock( 'write_unk' )
-
-   IF(noncolin) CALL errore('pw2wannier90',&
-       'write_unk not implemented with ncls',1)
 
    IF (reduce_unk) THEN
       WRITE(stdout,'(3(a,i5))') 'nr1s =',dffts%nr1,'nr2s=',dffts%nr2,'nr3s=',dffts%nr3
@@ -3393,7 +3400,13 @@ SUBROUTINE write_plot
       n2by2=(dffts%nr2+1)/2
       n3by2=(dffts%nr3+1)/2
       WRITE(stdout,'(3(a,i5))') 'n1by2=',n1by2,'n2by2=',n2by2,'n3by2=',n3by2
-      ALLOCATE(psic_small(n1by2*n2by2*n3by2))
+      IF (.NOT.noncolin) THEN
+         ALLOCATE(psic_small(n1by2*n2by2*n3by2))
+         psic_small = (0.0_DP, 0.0_DP)
+      ELSE
+         ALLOCATE(psic_nc_small(n1by2*n2by2*n3by2,npol)) 
+         psic_nc_small = (0.0_DP, 0.0_DP)
+      ENDIF
    ENDIF
 
    WRITE(stdout,'(a,i8)') ' UNK: iknum = ',iknum
@@ -3410,7 +3423,12 @@ SUBROUTINE write_plot
       !write(wfnname,200) p,spin
       spin=ispinw
       IF(ispinw==0) spin=1
-      WRITE(wfnname,200) ikevc, spin
+      IF (.NOT.noncolin) THEN
+         WRITE(wfnname,200) ikevc, spin
+      ELSE
+         WRITE(wfnname,201) ikevc
+      ENDIF
+201   FORMAT ('UNK',i5.5,'.','NC')
 200   FORMAT ('UNK',i5.5,'.',i1)
 
    IF (ionode) THEN
@@ -3438,20 +3456,40 @@ SUBROUTINE write_plot
       DO ibnd=1,nbnd
          IF (excluded_band(ibnd)) CYCLE
          ibnd1=ibnd1 + 1
-         psic(:) = (0.d0, 0.d0)
-         psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw, ibnd)
-         IF (gamma_only)  psic(dffts%nlm(igk_k(1:npw,ik))) = conjg(evc (1:npw, ibnd))
-         CALL invfft ('Wave', psic, dffts)
+         IF (.NOT.noncolin) THEN
+            psic(:) = (0.d0, 0.d0)
+            psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw, ibnd)
+            IF (gamma_only)  psic(dffts%nlm(igk_k(1:npw,ik))) = conjg(evc (1:npw, ibnd))
+            CALL invfft ('Wave', psic, dffts)
+         ELSE
+            psic_nc(:,:) = (0.d0, 0.d0)
+            DO ipol = 1, npol
+               psic_nc(dffts%nl (igk_k (1:npw,ik) ), ipol) = evc (1+npwx*(ipol-1):npw+npwx*(ipol-1), ibnd)
+               CALL invfft ('Wave', psic_nc(:,ipol), dffts)
+            ENDDO
+         ENDIF
          IF (reduce_unk) pos=0
 #if defined(__MPI)
-         CALL gather_grid(dffts,psic,psic_all)
+         IF (.NOT.noncolin) THEN
+            CALL gather_grid(dffts,psic,psic_all)
+         ELSE
+            DO ipol = 1, npol
+               CALL gather_grid(dffts,psic_nc(:,ipol),psic_nc_all(:,ipol))
+            ENDDO
+         ENDIF
          IF (reduce_unk) THEN
             DO k=1,dffts%nr3,2
                DO j=1,dffts%nr2,2
                   DO i=1,dffts%nr1,2
                      idx = (k-1)*dffts%nr2*dffts%nr1 + (j-1)*dffts%nr1 + i
                      pos=pos+1
-                     psic_small(pos) = psic_all(idx)
+                     IF (.NOT.noncolin) THEN
+                        psic_small(pos) = psic_all(idx)
+                     ELSE
+                        DO ipol = 1, npol
+                           psic_nc_small(pos,ipol) = psic_nc_all(idx,ipol)
+                        ENDDO
+                     ENDIF
                   ENDDO
                ENDDO
             ENDDO
@@ -3459,15 +3497,39 @@ SUBROUTINE write_plot
       IF (ionode) THEN
          IF(wvfn_formatted) THEN
             IF (reduce_unk) THEN
-               WRITE (iun_plot,'(2ES20.10)') (psic_small(j),j=1,n1by2*n2by2*n3by2)
+               IF (.NOT.noncolin) THEN
+                  WRITE (iun_plot,'(2ES20.10)') (psic_small(j),j=1,n1by2*n2by2*n3by2)
+               ELSE
+                  DO ipol = 1, npol
+                     WRITE (iun_plot,'(2ES20.10)') (psic_nc_small(j,ipol),j=1,n1by2*n2by2*n3by2)
+                  ENDDO
+               ENDIF
             ELSE
-               WRITE (iun_plot,'(2ES20.10)') (psic_all(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+               IF (.NOT.noncolin) THEN
+                  WRITE (iun_plot,'(2ES20.10)') (psic_all(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+               ELSE
+                  DO ipol = 1, npol
+                     WRITE (iun_plot,'(2ES20.10)') (psic_nc_all(j,ipol),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+                  ENDDO
+               ENDIF
             ENDIF
          ELSE
             IF (reduce_unk) THEN
-               WRITE (iun_plot) (psic_small(j),j=1,n1by2*n2by2*n3by2)
+               IF (.NOT.noncolin) THEN
+                  WRITE (iun_plot) (psic_small(j),j=1,n1by2*n2by2*n3by2)
+               ELSE
+                  DO ipol = 1, npol
+                     WRITE (iun_plot) (psic_nc_small(j,ipol),j=1,n1by2*n2by2*n3by2)
+                  ENDDO
+               ENDIF
             ELSE
-               WRITE (iun_plot) (psic_all(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+               IF (.NOT.noncolin) THEN
+                  WRITE (iun_plot) (psic_all(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+               ELSE
+                  DO ipol = 1, npol
+                     WRITE (iun_plot) (psic_nc_all(j,ipol),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+                  ENDDO
+               ENDIF
             ENDIF
          ENDIF
       ENDIF
@@ -3478,22 +3540,48 @@ SUBROUTINE write_plot
                   DO i=1,dffts%nr1,2
                      idx = (k-1)*dffts%nr2*dffts%nr1 + (j-1)*dffts%nr1 + i
                      pos=pos+1
-                     psic_small(pos) = psic(idx)
+                     IF (.NOT.noncolin) THEN
+                        psic_small(pos) = psic(idx)
+                     ELSE
+                        DO ipol = 1, npol
+                           psic_nc_small(pos,ipol) = psic_nc(idx,ipol)
+                        ENDDO
+                     ENDIF
                   ENDDO
                ENDDO
             ENDDO
          ENDIF
          IF(wvfn_formatted) THEN
-            IF (reduce_unk) THEN
-               WRITE (iun_plot,'(2ES20.10)') (psic_small(j),j=1,n1by2*n2by2*n3by2)
+            IF (.NOT.noncolin) THEN
+               IF (reduce_unk) THEN
+                  WRITE (iun_plot,'(2ES20.10)') (psic_small(j),j=1,n1by2*n2by2*n3by2)
+               ELSE
+                  WRITE (iun_plot,'(2ES20.10)') (psic(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+               ENDIF
             ELSE
-               WRITE (iun_plot,*) (psic(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+               DO ipol = 1, npol
+                  IF (reduce_unk) THEN
+                     WRITE (iun_plot,'(2ES20.10)') (psic_nc_small(j,ipol),j=1,n1by2*n2by2*n3by2)
+                  ELSE
+                     WRITE (iun_plot,'(2ES20.10)') (psic_nc(j,ipol),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+                  ENDIF
+               ENDDO
             ENDIF
          ELSE
-            IF (reduce_unk) THEN
-               WRITE (iun_plot) (psic_small(j),j=1,n1by2*n2by2*n3by2)
+            IF (.NOT.noncolin) THEN
+               IF (reduce_unk) THEN
+                  WRITE (iun_plot) (psic_small(j),j=1,n1by2*n2by2*n3by2)
+               ELSE
+                  WRITE (iun_plot) (psic(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+               ENDIF
             ELSE
-               WRITE (iun_plot) (psic(j),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+               DO ipol = 1, npol
+                  IF (reduce_unk) THEN
+                     WRITE (iun_plot) (psic_nc_small(j,ipol),j=1,n1by2*n2by2*n3by2)
+                  ELSE
+                     WRITE (iun_plot) (psic_nc(j,ipol),j=1,dffts%nr1*dffts%nr2*dffts%nr3)
+                  ENDIF
+               ENDDO
             ENDIF
          ENDIF
 #endif
@@ -3503,10 +3591,20 @@ SUBROUTINE write_plot
 
    ENDDO  !ik
 
-   IF (reduce_unk) DEALLOCATE(psic_small)
+   IF (reduce_unk) THEN
+      IF (.NOT.noncolin) THEN
+         DEALLOCATE(psic_small)
+      ELSE
+         DEALLOCATE(psic_nc_small)
+      ENDIF
+   ENDIF
 
 #if defined(__MPI)
-   DEALLOCATE( psic_all )
+   IF (.NOT.noncolin) THEN
+      DEALLOCATE( psic_all )
+   ELSE
+      DEALLOCATE( psic_nc_all )
+   ENDIF
 #endif
 
    WRITE(stdout,'(/)')
