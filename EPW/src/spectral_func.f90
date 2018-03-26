@@ -26,7 +26,7 @@
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iospectral_sup ,iospectral
   USE phcom,         ONLY : nmodes
-  USE epwcom,        ONLY : nbndsub, lrepmatf, eps_acustic, &
+  USE epwcom,        ONLY : nbndsub, eps_acustic, &
                             fsthick, eptemp, ngaussw, degaussw, wmin_specfun,&
                             wmax_specfun, nw_specfun, shortrange, &
                             efermi_read, fermi_energy
@@ -44,14 +44,7 @@
   !! Current q-point index  
   ! 
   ! Local variables
-  CHARACTER (len=256) :: nameF
-  !! Name of the file
   !
-  LOGICAL :: opnd
-  !! Check whether the file is open. 
-  ! 
-  INTEGER :: ios
-  !! integer variable for I/O control
   INTEGER :: iw
   !! Counter on the frequency
   INTEGER :: ik
@@ -66,8 +59,6 @@
   !! Counter on bands
   INTEGER :: imode
   !! Counter on mode
-  INTEGER :: nrec
-  !! Record index for reading the e-f matrix
   INTEGER :: fermicount
   !! Number of states on the Fermi surface
   INTEGER :: nksqtotf
@@ -231,7 +222,7 @@
                .OR. abs(xqf (3, iq))> eps2 )) THEN
               ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
               !     number, in which case its square will be a negative number. 
-              g2 = (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp
+              g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp )
             ELSE
               g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
             ENDIF
@@ -420,7 +411,6 @@
   ENDIF
   !
   100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)
-  101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
   103 FORMAT(5x,'ik = ',i7,'  w = ',f9.4,' eV   A(k,w) = ',e12.5,' meV^-1')
   !
   RETURN
@@ -447,19 +437,17 @@
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iospectral_sup, iospectral
   USE phcom,         ONLY : nmodes
-  USE epwcom,        ONLY : nbndsub, lrepmatf, eps_acustic, &
+  USE epwcom,        ONLY : eps_acustic, &
                             fsthick, eptemp, ngaussw, degaussw, wmin_specfun,&
                             wmax_specfun, nw_specfun, shortrange, &
                             efermi_read, fermi_energy
   USE pwcom,         ONLY : ef
-  USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, nqf, etf_k, xqf, &
-                            epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf,&
+  USE elph2,         ONLY : etf, ibndmin, ibndmax, nqf, etf_k, xqf, &
+                            epf17, nqtotf, wf, wqf, xkf, nkqtotf,&
                             esigmar_all, esigmai_all, a_all, efnew
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci
   USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
   USE mp_global,     ONLY : me_pool, inter_pool_comm
-  USE mp_world,      ONLY : mpime
-  USE io_global,     ONLY : ionode_id  
   ! 
   implicit none
   !
@@ -467,14 +455,7 @@
   !! Current k-point
   !
   ! Local variables
-  CHARACTER (len=256) :: nameF
-  !! Name of the file
-  !
-  LOGICAL :: opnd
-  !! Check whether the file is open. 
   ! 
-  INTEGER :: ios
-  !! integer variable for I/O control
   INTEGER :: iw
   !! Counter on the frequency
   INTEGER :: iq
@@ -489,8 +470,6 @@
   !! Counter on bands
   INTEGER :: imode
   !! Counter on mode
-  INTEGER :: nrec
-  !! Record index for reading the e-f matrix
   INTEGER :: fermicount
   !! Number of states on the Fermi surface
   ! 
@@ -622,7 +601,7 @@
                .OR. abs(xqf (3, iq))> eps2 )) THEN
               ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
               !     number, in which case its square will be a negative number. 
-              g2 = (epf17 (jbnd, ibnd, imode, iq)**two)*inv_wq*g2_tmp
+              g2 = REAL( (epf17 (jbnd, ibnd, imode, iq)**two)*inv_wq*g2_tmp )
             ELSE
               g2 = (abs(epf17 (jbnd, ibnd, imode, iq))**two)*inv_wq*g2_tmp
             ENDIF
@@ -778,7 +757,6 @@
   ENDIF
   !
   100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)
-  101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
   103 FORMAT(5x,'ik = ',i7,'  w = ',f9.4,' eV   A(k,w) = ',e12.5,' meV^-1')
   !
   RETURN

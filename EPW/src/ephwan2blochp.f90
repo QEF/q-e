@@ -18,7 +18,6 @@
   USE epwcom,        only : parallel_k, parallel_q, etf_mem
   USE elph2,         only : epmatwp
   USE constants_epw, ONLY : twopi, ci, czero
-  USE io_files,      ONLY : prefix, tmp_dir
   USE io_epw,        ONLY : iunepmatwp, iunepmatwp2
   USE mp_global,     ONLY : mp_sum
   USE mp_world,      ONLY : world_comm
@@ -47,9 +46,6 @@
   !! e-p matrix in Bloch representation, fine grid
   ! 
   ! Local variables 
-  !
-  CHARACTER (len=256) :: filint
-  !! File name
   !
   INTEGER :: ir
   !! Real space WS index

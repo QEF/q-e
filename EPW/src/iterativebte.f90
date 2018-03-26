@@ -17,27 +17,23 @@
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : alat, at, omega, bg
-  USE io_epw,        ONLY : iufilscatt_rate
   USE phcom,         ONLY : nmodes
-  USE epwcom,        ONLY : nbndsub, fsthick, etf_mem, efermi_read, lrepmatf, & 
-                            eps_acustic, fermi_energy, ngaussw, degaussw, & 
-                            nstemp, scattering_serta, scattering_0rta, &
+  USE epwcom,        ONLY : fsthick, & 
+                            eps_acustic, degaussw, & 
                             system_2d, int_mob, ncarrier, restart, restart_freq,&
                             mp_mesh_k, nkf1, nkf2, nkf3
-  USE pwcom,         ONLY : ef, nelec, isk
+  USE pwcom,         ONLY : ef 
   USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, wf, wqf, xkf, & 
-                            epf17, efnew, nqtotf, nkqtotf, inv_tau_all, xqf, F_current, &
+                            epf17, nqtotf, nkqtotf, inv_tau_all, xqf, F_current, &
                             Fi_all, F_SERTA
   USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
-                            upper_bnd, ixkqf_tr, s_BZtoIBZ_full
-  USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, & 
-                            meV2invps, electron_SI, bohr2ang, ang2cm, hbarJ
-  USE klist,         ONLY : nkstot
+                            ixkqf_tr, s_BZtoIBZ_full
+  USE constants_epw, ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, & 
+                            electron_SI, bohr2ang, ang2cm, hbarJ
   USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
   USE mp_global,     ONLY : inter_pool_comm
   USE mp_world,      ONLY : mpime
   USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : my_pool_id
   USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
   !
   IMPLICIT NONE
@@ -61,8 +57,6 @@
   !! Cartesian direction index 
   INTEGER :: j
   !! Cartesian direction index 
-  INTEGER :: ij
-  !! Cartesian coupled index for matrix. 
   INTEGER :: ik
   !! K-point index
   INTEGER :: ikk
@@ -75,12 +69,8 @@
   !! Local band index
   INTEGER :: imode
   !! Local mode index
-  INTEGER :: icbm
-  !! Index of the CBM
 !  INTEGER :: itemp
   !! Temperature index
-  INTEGER :: nrec
-  !! Record index
   INTEGER :: ipool
   !! Index of the pool
   INTEGER :: nkq
@@ -111,8 +101,6 @@
   !! Inverse phonon frequency. Defined for efficiency reasons.
   REAL(KIND=DP) :: inv_etemp
   !! Invese temperature inv_etemp = 1/etemp. Defined for efficiency reasons.
-  REAL(KIND=DP) :: temp
-  !! Temporary file name used to write scattering rate to file. 
   REAL(KIND=DP) :: g2_tmp 
   !! Used to set component to 0 if the phonon freq. is too low. This is defined
   !! for efficiency reasons as if statement should be avoided in inner-most loops.
@@ -128,10 +116,6 @@
   !! Transition probability function
   REAL(KIND=DP) :: vkk(3,ibndmax-ibndmin+1)
   !! Electronic velocity $$v_{n\mathbf{k}}$$
-  REAL(KIND=DP) :: vkq(3,ibndmax-ibndmin+1)
-  !! Electronic velocity $$v_{m\mathbf{k+q}}$$
-  REAL(KIND=DP) :: vel_factor(ibndmax-ibndmin+1,ibndmax-ibndmin+1)
-  !! Velocity factor  $$ 1 - \frac{(v_{nk} \cdot v_{mk+q})}{ |v_{nk}|^2} $$
   REAL(KIND=DP) :: tdf_sigma(3,3)
   !! Transport distribution function
   REAL(KIND=DP) :: tdf_factor(3,3)
@@ -168,8 +152,6 @@
   !! Current k-point on the fine grid
   REAL(kind=DP) :: Fi_rot(3)
   !! Rotated Fi_all by the symmetry operation
-  REAL(kind=DP) :: Fi_all_crys(3)
-  !! Rotated Fi_all by the symmetry operation
   !
   !
   REAL(KIND=DP), EXTERNAL :: DDOT
@@ -180,16 +162,11 @@
   !! Compute the approximate theta function. Here computes Fermi-Dirac 
   REAL(KIND=DP), EXTERNAL :: w0gauss
   !! The derivative of wgauss:  an approximation to the delta function  
-  REAL(kind=DP), PARAMETER :: eps = 1.d-4
-  !! Tolerence parameter for the velocity
   REAL(kind=DP) :: xkf_tmp (3, nkqtotf)
   !! Temporary k-point coordinate (dummy variable)
   REAL(kind=DP) :: wkf_tmp(nkqtotf)
   !! Temporary k-weights (dummy variable)
   ! 
-  CHARACTER (len=256) :: name1
-  !! Name used to write scattering rates to file. 
-  !
   inv_cell = 1.0d0/omega
   ! for 2d system need to divide by area (vacuum in z-direction)
   IF ( system_2d ) &

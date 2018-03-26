@@ -68,7 +68,7 @@
   USE partial,       ONLY : atomo, nat_todo
   USE constants,     ONLY : AMU_RY
   USE mp_global,     ONLY : my_pool_id, me_pool
-  USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode, ionode_id, stdout
+  USE io_global,     ONLY : meta_ionode, meta_ionode_id
 #if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
@@ -279,9 +279,6 @@
   ! meff            : Density of state effective mass (in unit of the electron mass)
   ! epsiHEG         : Dielectric constant at zero doping
   !  
-  CHARACTER (LEN=80)  :: input_file
-  INTEGER             :: nargs, iiarg, ierr
-  !
   nk1tmp = 0
   nk2tmp = 0
   nk3tmp = 0
@@ -727,7 +724,6 @@
   IF (nat_todo.NE.0) THEN
      IF (meta_ionode)read (5, *, iostat = ios) (atomo (na), na = 1, nat_todo)
      CALL mp_bcast(ios, meta_ionode_id, world_comm  )
-700  CALL errore ('epw_readin', 'reading atomo', abs (ios) )
      CALL mp_bcast(atomo, meta_ionode_id, world_comm )
   ENDIF
 800 continue

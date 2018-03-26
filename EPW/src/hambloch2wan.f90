@@ -27,15 +27,16 @@
   !
   implicit none
   !
-  LOGICAL, INTENT (in) :: lwin( nbnd, nks )
-  !! identify bands within outer energy window (for disentanglement)
-  !
   INTEGER, INTENT (in) :: nbnd
   !! number of bands 
-  INTEGER, INTENT (in) :: nbndsub
-  !! number of bands in the optimal subspace 
   INTEGER, INTENT (in) :: nks
   !! number of kpoints
+  ! 
+  LOGICAL, INTENT (in) :: lwin( nbnd, nks )
+  !! identify bands within outer energy window (for disentanglement)
+  ! 
+  INTEGER, INTENT (in) :: nbndsub
+  !! number of bands in the optimal subspace 
   INTEGER, INTENT (in) :: nkstot
   !! number of kpoint blocks, in the pool
   INTEGER, INTENT (in) ::  nrr

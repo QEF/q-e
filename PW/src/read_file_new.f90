@@ -147,6 +147,11 @@ SUBROUTINE read_xml_file ( )
   USE esm,                  ONLY : do_comp_esm, esm_init
   USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
+#if defined(__BEOWULF)
+  USE io_global,             ONLY : ionode, ionode_id
+  USE bcast_qes_types_module,ONLY : qes_bcast 
+  USE mp_images,             ONLY : intra_image_comm
+#endif
   !
   IMPLICIT NONE
 
@@ -160,8 +165,19 @@ SUBROUTINE read_xml_file ( )
   TYPE (input_type)                     :: input_obj
   !
   !
+#if defined(__BEOWULF)
+   IF (ionode) THEN
+      CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
+      IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
+   END IF
+   CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
+   CALL qes_bcast(parinfo_obj, ionode_id, intra_image_comm)
+   CALL qes_bcast(geninfo_obj, ionode_id, intra_image_comm) 
+   CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
+#else
   CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
+#endif
   ! ... first we get the version of the qexml file
   !     if not already read
   !

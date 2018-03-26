@@ -25,7 +25,6 @@
   USE constants,            ONLY : tpi
   USE cell_base,            ONLY : tpiba2, tpiba, bg, omega
   USE klist,                ONLY : ngk, igk_k, nkstot
-  USE constants_epw,        ONLY : zero
   USE gvecw,                ONLY : ecutwfc
   USE gvect,                ONLY : eigts1, eigts2, eigts3, g, ngm
   USE atom,                 ONLY : msh, rgrid

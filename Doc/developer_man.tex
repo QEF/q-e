@@ -628,11 +628,11 @@ Handle with care: what works for you may break other cases.
 \subsubsection{Preprocessing}
 
 \label{SubSec:CPP}
-Fortran-95 source code contains preprocessing option with
+Fortran source code contains preprocessing option with
 the same syntax used by the C preprocessor \texttt{cpp}.
-Most F95 compilers understand preprocessing options \texttt{-D ...}
+Most Fortran compilers understand preprocessing options \texttt{-D ...}
 or some similar form. Some compilers however do not support
-or do not implement properly preprocessing. In this case the
+or do not properly implement preprocessing. In this case the
 preprocessing is done using \texttt{cpp}.
 Normally, \configure\ takes care of this, by selecting the
 appropriate rule \texttt{@f90rule@} below, in this section
@@ -899,7 +899,7 @@ option specific to your compiler (for instance, -D\_\_INTEL for Intel
 compilers).  Define it as "\$try\_dflags -D..." so that pre-existing
 flags, if any, are preserved.
 
-- if the Fortran 90 compiler is not able to invoke the C preprocessor
+- if the Fortran compiler is not able to invoke the C preprocessor
 automatically before compiling, set "have\_cpp=0" (the opposite case
 is the default). The appropriate compilation rules will be generated
 accordingly. If the compiler requires that any flags be specified in
@@ -1875,15 +1875,19 @@ the code. Remember that what is obvious to you may not be obvious to other
 people. It is especially important to document what a routine does, what
 it needs on input, what it produces on output. A few words of comment
 may save hours of searching into the code for a piece of missing information.
-\item do not use machine-dependent extensions or sloppy syntax. An example:
-Standard f90
-requires that a \& is needed both at end of line AND at the beginning of
-continuation line if there is a character variable (inside ' ' or " ")
-spanning two lines. Some compilers do not complain if the latter \& is
-missing, others do. Another example: empty strings are nonstandard, use
-\texttt{empty='~'}, not \texttt{empty=''}.
-\item use "dp" (defined in module ''kinds'') to define the type of real and complex variables
-\item all constants should be defined to be of kind "dp".  Preferred syntax: 0.0\_dp.
+\item do not use non-standard machine-dependent extensions or sloppy syntax.
+  An example: Standard Fortran requires that a \& is needed both at end of
+  line AND at the beginning of continuation line if there is a character
+  variable (inside ' ' or " ") spanning two lines. Some compilers do not
+  complain if the latter \& is missing, others do.
+% Another example: empty strings are nonstandard,
+% use \texttt{empty='~'}, not \texttt{empty=''}.
+\item do not (yet) use F2008 syntax. Stick to F2003 at most (for now).
+  \qe\ must work even if you do not have the latest and the greatest compiler.
+\item use "dp" (defined in module ''kinds'') to define the type of real and
+  complex variables
+\item all constants should be defined to be of kind "dp".  Preferred syntax:
+  0.0\_dp.
 \item use "generic" intrinsic functions: SIN, COS, etc.
 \item conversions should be explicitely indicated. For conversions to real,
 use DBLE, or else REAL(...,KIND=dp). For conversions to complex, use
@@ -1903,7 +1907,7 @@ status.
 but they also have the potential to make a code unreadable, or inefficient,
 or unusable with some compilers. Avoid nested structures unless you have a
 valid reason to use them.
-\item Be careful with F90 array syntax and in particular with
+\item Be careful with array syntax and in particular with
 array sections. Passing an array section to a routine may look elegant
 but it may turn out to be inefficient: a copy will be silently done
 if the section is not contiguous in memory (or if the compiler

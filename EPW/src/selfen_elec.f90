@@ -33,15 +33,15 @@
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : linewidth_elself
   USE phcom,         ONLY : nmodes
-  USE epwcom,        ONLY : nbndsub, lrepmatf, shortrange, &
+  USE epwcom,        ONLY : nbndsub, shortrange, &
                             fsthick, eptemp, ngaussw, degaussw, &
                             eps_acustic, efermi_read, fermi_energy,&
                             restart, restart_freq
   USE pwcom,         ONLY : ef !, nelec, isk
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
-                            nkf, epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
+                            nkf, epf17, nqtotf, wf, wqf, xkf, nkqtotf, &
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew
-  USE transportcom,  ONLY : lower_bnd, upper_bnd
+  USE transportcom,  ONLY : lower_bnd
   USE control_flags, ONLY : iverbosity
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
   USE mp,            ONLY : mp_barrier, mp_sum
@@ -57,14 +57,7 @@
   !! Q-point inde
   !
   ! Local variables 
-  CHARACTER (len=256) :: nameF
-  !! Name of the file
   !
-  LOGICAL :: opnd
-  !! Check whether the file is open. 
-  ! 
-  INTEGER :: ios
-  !! integer variable for I/O control
   INTEGER :: n
   !! Integer for the degenerate average over eigenstates
   INTEGER :: ik
@@ -79,14 +72,10 @@
   !! Counter on bands
   INTEGER :: imode
   !! Counter on mode
-  INTEGER :: nrec
-  !! Record index for reading the e-f matrix
   INTEGER :: fermicount
   !! Number of states on the Fermi surface
   INTEGER :: nksqtotf
   !! Total number of k+q points 
-  INTEGER :: i
-  !! Index for reading files
   ! 
   REAL(kind=DP) :: tmp
   !! Temporary variable to store real part of Sigma for the degenerate average
@@ -270,7 +259,7 @@
                       .OR. abs(xqf (3, iq))> eps2 )) THEN                         
                      ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                      !     number, in which case its square will be a negative number. 
-                     g2 = (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp
+                     g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp  )
                    ELSE
                      g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
                    ENDIF        
@@ -496,7 +485,6 @@
   ENDIF 
   !
   100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)
-  101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
   102 FORMAT(5x,'E( ',i3,' )=',f9.4,' eV   Re[Sigma]=',f15.6,' meV Im[Sigma]=',f15.6,' meV     Z=',f15.6,' lam=',f15.6)
   !
   RETURN
@@ -521,12 +509,12 @@
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : linewidth_elself
   USE phcom,         ONLY : nmodes
-  USE epwcom,        ONLY : nbndsub, lrepmatf, shortrange, &
+  USE epwcom,        ONLY : shortrange, &
                             fsthick, eptemp, ngaussw, degaussw, &
                             eps_acustic, efermi_read, fermi_energy
   USE pwcom,         ONLY : ef !, nelec, isk
-  USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, etf_k, xqf, &
-                            epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
+  USE elph2,         ONLY : etf, ibndmin, ibndmax, etf_k, xqf, &
+                            epf17, nqtotf, wf, wqf, xkf, nkqtotf, &
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, nqf
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
   USE control_flags, ONLY : iverbosity
@@ -537,14 +525,6 @@
   !
   implicit none
   !
-  CHARACTER (len=256) :: nameF
-  !! Name of the file
-  !
-  LOGICAL :: opnd
-  !! Check whether the file is open. 
-  ! 
-  INTEGER :: ios
-  !! integer variable for I/O control
   INTEGER :: n
   !! Integer for the degenerate average over eigenstates
   INTEGER :: ik
@@ -561,8 +541,6 @@
   !! Counter on bands
   INTEGER :: imode
   !! Counter on mode
-  INTEGER :: nrec
-  !! Record index for reading the e-f matrix
   INTEGER :: fermicount
   !! Number of states on the Fermi surface
   INTEGER :: nksqtotf
@@ -706,7 +684,7 @@
                     .OR. abs(xqf (3, iq))> eps2 )) THEN
                    ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                    !     number, in which case its square will be a negative number. 
-                   g2 = (epf17 (jbnd, ibnd, imode, iq)**two)*inv_wq*g2_tmp
+                   g2 = REAL( (epf17 (jbnd, ibnd, imode, iq)**two)*inv_wq*g2_tmp ) 
                  ELSE
                    g2 = (abs(epf17 (jbnd, ibnd, imode, iq))**two)*inv_wq*g2_tmp
                  ENDIF
@@ -849,7 +827,6 @@
   !
   !
   100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)
-  101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
   102 FORMAT(5x,'E( ',i3,' )=',f9.4,' eV   Re[Sigma]=',f15.6,' meV Im[Sigma]=',f15.6,' meV     Z=',f15.6,' lam=',f15.6)
   !
   RETURN

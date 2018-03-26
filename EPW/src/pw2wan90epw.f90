@@ -26,7 +26,7 @@
   USE io_files,   ONLY : prefix
   USE epwcom,     ONLY : write_wfn
   USE noncollin_module, ONLY : noncolin
-  USE wannierEPW,    ONLY : seedname2, wvfn_formatted, reduce_unk, ispinw, &
+  USE wannierEPW, ONLY : seedname2, wvfn_formatted, reduce_unk, ispinw, &
                          ikstart, ikstop, iknum
   !
   IMPLICIT NONE
@@ -144,9 +144,8 @@ SUBROUTINE setup_nnkp (  )
                         spin_eig, spin_qaxis
   USE noncollin_module, ONLY : noncolin
   USE constants_epw,    ONLY : bohr
-!  USE w90_parameters,   ONLY : postproc_setup
   USE mp_global,        ONLY : intra_pool_comm, mp_sum
-  USE w90_parameters,   ONLY : postproc_setup
+!  USE w90_parameters,   ONLY : postproc_setup
   USE w90_io,           ONLY : post_proc_flag
   ! 
   implicit none
@@ -507,7 +506,7 @@ SUBROUTINE run_wannier
   !
   implicit none
   ! 
-  integer             :: i, ik, ibnd, dummy1, dummy2, ios
+  integer             :: i, ik, ios
   character (len=256) :: tempfile
   character (len=80)  :: line
   !
@@ -1169,12 +1168,11 @@ SUBROUTINE compute_pmn_para
   USE mp,              ONLY : mp_sum
   USE kinds,           ONLY : DP
   USE klist,           ONLY : xk, nks, igk_k
-  USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
-  USE gvecw,           ONLY : ecutwfc
+  USE wvfct,           ONLY : nbnd, npw, npwx
   USE wavefunctions_module,  ONLY : evc
   USE units_ph,        ONLY : lrwfc, iuwfc
-  USE gvect,           ONLY : g, ngm
-  USE cell_base,       ONLY : tpiba2, tpiba
+  USE gvect,           ONLY : g
+  USE cell_base,       ONLY : tpiba
   USE noncollin_module,ONLY : noncolin
   USE elph2,           ONLY : dmec
   USE constants_epw,   ONLY : czero

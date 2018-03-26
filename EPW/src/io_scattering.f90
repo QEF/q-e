@@ -452,8 +452,8 @@
   USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all
   USE io_epw,    ONLY : iufilsigma_all
   USE io_files,  ONLY : diropn
-  USE epwcom,    ONLY : nbndsub, nstemp
-  USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
+  USE epwcom,    ONLY : nstemp
+  USE constants_epw, ONLY : kelvin2eV, &
                             meV2invps, eps4, zero
   USE transportcom, ONLY : lower_bnd, upper_bnd
   USE mp,        ONLY : mp_barrier
@@ -551,8 +551,8 @@
   USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all
   USE io_epw,    ONLY : iufilsigma_all
   USE io_files,  ONLY : prefix, tmp_dir, diropn
-  USE epwcom,    ONLY : nbndsub, nstemp
-  USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
+  USE epwcom,    ONLY : nstemp
+  USE constants_epw, ONLY : kelvin2eV, &
                             meV2invps, eps4, zero
   USE transportcom, ONLY : lower_bnd, upper_bnd
   USE mp,        ONLY : mp_barrier, mp_bcast
@@ -806,8 +806,8 @@
   USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all, inv_tau_allcb, zi_allvb, zi_allcb
   USE io_epw,    ONLY : iufiltau_all
   USE io_files,  ONLY : prefix, tmp_dir, diropn
-  USE epwcom,    ONLY : nbndsub, nstemp
-  USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
+  USE epwcom,    ONLY : nstemp
+  USE constants_epw, ONLY : kelvin2eV, &
                             meV2invps, eps4, zero
   USE transportcom, ONLY : lower_bnd, upper_bnd
   USE mp,        ONLY : mp_barrier, mp_bcast
@@ -984,11 +984,10 @@
   USE io_epw,    ONLY : iufilscatt_rate
   USE elph2,     ONLY : ibndmax, ibndmin
   USE io_epw,    ONLY : iufiltau_all
-  USE io_files,  ONLY : prefix, tmp_dir, diropn
-  USE epwcom,    ONLY : nbndsub, nstemp, restart_filq
-  USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
-                            meV2invps, eps4, zero
-  USE transportcom, ONLY : lower_bnd, upper_bnd
+  USE io_files,  ONLY : tmp_dir, diropn
+  USE epwcom,    ONLY : nstemp, restart_filq
+  USE constants_epw, ONLY : kelvin2eV, &
+                            meV2invps, eps4
   USE mp,        ONLY : mp_barrier, mp_bcast
   USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, root_pool
   USE mp_world,  ONLY : mpime
@@ -1017,9 +1016,7 @@
   !! Local band index
   INTEGER :: ltau_all
   !! Length of the vector
-  INTEGER :: nqtotf_read
-  !! Total number of q-point read
-  INTEGER*8 :: unf_recl
+  INTEGER(kind=8) :: unf_recl
   !! 
   REAL(KIND=DP) :: aux ( nstemp * (ibndmax-ibndmin+1) * nktotf + 2 )
   !! Vector to store the array 

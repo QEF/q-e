@@ -72,7 +72,7 @@ SUBROUTINE impexp ()
   !-----------------------------------------------------------------------
 
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : tmp_dir, prefix, psfile, pseudo_dir, xmlpun
+  USE io_files,  ONLY : tmp_dir, prefix, psfile, pseudo_dir, xmlpun, create_directory
   USE ions_base, ONLY : nsp
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast
@@ -80,7 +80,7 @@ SUBROUTINE impexp ()
   USE io_rho_xml,    ONLY : write_scf
   USE scf,           ONLY : rho
   USE lsda_mod,      ONLY : nspin
-  USE xml_io_base,   ONLY : rho_binary, create_directory
+  USE xml_io_base,   ONLY : rho_binary
   USE wrappers, ONLY: f_copy
 
 

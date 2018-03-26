@@ -13,13 +13,14 @@ PRIVATE
 PUBLIC make_emended_upf_copy, check_upf_file 
 
 CONTAINS 
-SUBROUTINE make_emended_upf_copy( filename, tempname) 
+SUBROUTINE make_emended_upf_copy( filename, tempname, xml_check) 
   !! author: Pietro Delugas
   !! Utility to make the old UPF format readable by FoX
   !! Replaces "&" with "&amp;" in file "filename", writes to file "tempname"
   !
   IMPLICIT NONE
   CHARACTER(LEN=*),INTENT(IN)      :: filename, tempname
+  LOGICAL,INTENT(OUT)              :: xml_check
   !
   INTEGER                          :: iun_source, iun_dest, ierr 
   INTEGER,EXTERNAL                 :: find_free_unit 
@@ -29,6 +30,16 @@ SUBROUTINE make_emended_upf_copy( filename, tempname)
   iun_source = find_free_unit()
   OPEN (UNIT = iun_source, FILE = TRIM(filename), STATUS = 'old', &
        ACTION = 'read', FORM='formatted')
+  READ ( iun_source, "(a256)", IOSTAT = ierr ) line
+     IF ( ierr < 0 ) CALL errore ("read_pseudo: ", TRIM (filename) // " is empty",abs(ierr))
+     IF (INDEX(line, '<?xml') == 0 .AND. INDEX(line,'<UPF') == 0) THEN
+        xml_check = .FALSE. 
+        CLOSE ( iun_source )
+        RETURN 
+     ELSE 
+        xml_check = .TRUE. 
+        REWIND( iun_source )
+     END IF
   iun_dest = find_free_unit()
   OPEN (UNIT = iun_dest, FILE = TRIM(tempname), STATUS = 'unknown', &
        ACTION = 'write', FORM = 'formatted')

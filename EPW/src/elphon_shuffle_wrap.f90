@@ -19,11 +19,10 @@
   !!
   !-----------------------------------------------------------------------
   !
-  USE mp_global,     ONLY : my_pool_id, inter_pool_comm, root_pool, &
-                            intra_pool_comm,npool, inter_image_comm,&
+  USE mp_global,     ONLY : my_pool_id, inter_pool_comm, &
+                            npool, inter_image_comm,&
                             world_comm
   USE mp_images,     ONLY : my_image_id, nimage
-  USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_barrier, mp_bcast
   USE io_global,     ONLY : meta_ionode, meta_ionode_id
   USE us,            ONLY : nqxq, dq, qrad
@@ -100,16 +99,10 @@
   !! Temporary integer for max value
   integer :: nqxq_tmp
   !! Maximum G+q length ? 
-  integer :: ibnd
-  !! Band index
   integer :: ik
   !! Total k-point index
   integer :: ios
   !! Contains the state of the opened file 
-  integer :: dummy1
-  !! Dummy variable
-  integer :: dummy2
-  !! Dummy variable
   integer :: ik_start
   !! Lower bound for the k-point of the coarse grid in parallel 
   integer :: ik_stop

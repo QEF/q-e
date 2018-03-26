@@ -10,7 +10,7 @@ IFLAGS=-I../../include
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
 	  $(MOD_FLAG)../../PW/src \
-          $(MOD_FLAG)../../KS_Solvers/CGq\
+          $(MOD_FLAG)../../KS_Solvers/CG \
 	  $(MOD_FLAG)../../KS_Solvers/Davidson \
 	  $(MOD_FLAG)../../LR_Modules \
           $(MOD_FLAG)../../PHonon/PH

@@ -14,12 +14,11 @@ SUBROUTINE punch( what )
   !
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunpun, iunwfc, nwordwfc, diropn, &
-       tmp_dir, prefix
+       tmp_dir, prefix, create_directory
   USE control_flags,        ONLY : io_level, twfcollect, io_level, lscf
   USE klist,                ONLY : nks
   USE io_files,             ONLY : xmlpun_schema, psfile, pseudo_dir
   USE wrappers,             ONLY : f_copy
-  USE xml_io_base,          ONLY : create_directory
   USE spin_orb,             ONLY : lforcet
   USE scf,                  ONLY : rho
   USE lsda_mod,             ONLY : nspin

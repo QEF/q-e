@@ -54,9 +54,9 @@
         iter = 1
         conv = .false.
         DO WHILE ( .not. conv .AND. iter .le. nsiter )
-           CALL sum_eliashberg_iso_iaxis( itemp, iter, conv )
-           CALL mix_broyden( nsiw(itemp), Deltai, Deltaip, broyden_beta, iter, broyden_ndim, conv )
-           iter = iter + 1
+          CALL sum_eliashberg_iso_iaxis( itemp, iter, conv )
+          CALL mix_broyden( nsiw(itemp), Deltai, Deltaip, broyden_beta, iter, broyden_ndim, conv )
+          iter = iter + 1
         ENDDO ! iter
         !
         IF ( conv ) THEN
@@ -173,7 +173,7 @@
   USE io_global,     ONLY : stdout
   USE epwcom,        ONLY : nsiter, nstemp, muc, conv_thr_iaxis
   USE eliashbergcom, ONLY : nsiw, estemp, gap0, gap, wsi, NZnormi, Znormi, Deltai, Deltaip, Keri
-  USE constants_epw, ONLY : pi, kelvin2eV
+  USE constants_epw, ONLY : pi
   ! 
   IMPLICIT NONE
   !
@@ -245,22 +245,22 @@
   !
   IF ( errdelta .lt. conv_thr_iaxis ) conv = .true.
   IF ( errdelta .lt. conv_thr_iaxis .OR. iter .eq. nsiter ) THEN
-     gap(itemp) = Deltai(1)
-     gap0 = gap(itemp)
-     CALL eliashberg_write_iaxis( itemp )
+    gap(itemp) = Deltai(1)
+    gap0 = gap(itemp)
+    CALL eliashberg_write_iaxis( itemp )
   ENDIF
   !
   IF( ALLOCATED(wesqrt) ) DEALLOCATE(wesqrt)
   IF( ALLOCATED(desqrt) ) DEALLOCATE(desqrt)
   !
   IF ( conv .OR. iter .eq. nsiter ) THEN
-     IF( ALLOCATED(Deltaold) ) DEALLOCATE(Deltaold)
-     WRITE(stdout,'(5x,a,i6)') 'Convergence was reached in nsiter = ', iter
+    IF( ALLOCATED(Deltaold) ) DEALLOCATE(Deltaold)
+    WRITE(stdout,'(5x,a,i6)') 'Convergence was reached in nsiter = ', iter
   ENDIF
   IF ( .not. conv .AND. iter .eq. nsiter ) THEN
-     WRITE(stdout,'(5x,a,i6)') 'Convergence was not reached in nsiter = ', iter
-     CALL errore('sum_eliashberg_iso_iaxis','increase nsiter or reduce conv_thr_iaxis',-1)
-     CALL deallocate_eliashberg
+    WRITE(stdout,'(5x,a,i6)') 'Convergence was not reached in nsiter = ', iter
+    CALL errore('sum_eliashberg_iso_iaxis','increase nsiter or reduce conv_thr_iaxis',1)
+    !CALL deallocate_eliashberg
   ENDIF
   !
   RETURN

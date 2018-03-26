@@ -187,7 +187,6 @@
   USE mp_images,      ONLY : nproc_image
   USE mp,             ONLY : mp_barrier, mp_bcast
   ! 
-  USE mp_world,  ONLY : mpime
   ! m
   implicit none
   !

@@ -8,18 +8,15 @@
   !                                                                            
   ! 
   !---------------------------------------------------------------------------
-  subroutine ephwan2blochp_mem (imode, nmodes, xxq, irvec, ndegen, nrr_q, cuf, epmatf, nbnd, nrr_k )
+  subroutine ephwan2blochp_mem (imode, nmodes, xxq, irvec, ndegen, nrr_q, epmatf, nbnd, nrr_k )
   !---------------------------------------------------------------------------
   !!
   !! Even though this is for phonons, I use the same notations
   !! adopted for the electronic case (nmodes->nmodes etc)
   !!
   USE kinds,         only : DP
-  USE epwcom,        only : parallel_k, parallel_q, etf_mem
-  USE elph2,         only : epmatwp
   USE constants_epw, ONLY : twopi, ci, czero
   USE io_files,      ONLY : prefix, tmp_dir
-  USE io_epw,        ONLY : iunepmatwp
   USE mp_global,     ONLY : mp_sum
   USE mp_world,      ONLY : world_comm
   USE parallel_include
@@ -43,8 +40,6 @@
   !! Number of electronic WS points
   REAL(kind=DP) :: xxq(3)
   !! Kpoint for the interpolation (WARNING: this must be in crystal coord!)
-  COMPLEX(kind=DP), INTENT (in) :: cuf (nmodes, nmodes)
-  !! e-p matrix in Wanner representation
   COMPLEX(kind=DP), INTENT (out) :: epmatf (nbnd, nbnd, nrr_k)
   !! e-p matrix in Bloch representation, fine grid
   ! 

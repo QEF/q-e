@@ -24,10 +24,9 @@
   !!
   !
   USE kinds,         ONLY : DP
-  USE cell_base,     ONLY : at, bg, celldm, omega
+  USE cell_base,     ONLY : at, bg, celldm
   USE ions_base,     ONLY : nat, tau
   USE phcom,         ONLY : nq1, nq2, nq3
-  USE control_flags, ONLY : iverbosity
   USE elph2,         ONLY : rdw, epsi, zstar
   USE epwcom,        ONLY : lpolar
   USE constants_epw, ONLY : bohr2ang, twopi, ci

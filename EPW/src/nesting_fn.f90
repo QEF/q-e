@@ -28,7 +28,7 @@
   USE elph2,     ONLY : ibndmax, ibndmin, etf, &
                         wkf, xqf, wqf, nkqf, &
                         nkf, nkqtotf, xqf
-  USE constants_epw, ONLY : ryd2ev, two, pi
+  USE constants_epw, ONLY : ryd2ev, two
 #if defined(__NAG)
   USE f90_unix_io,  ONLY : flush
 #endif
@@ -50,10 +50,6 @@
   !! Counter on bands
   INTEGER :: jbnd
   !! Counter on bands
-  INTEGER :: imode
-  !! Counter on mode
-  INTEGER :: nrec
-  !! Record index for reading the e-f matrix
   INTEGER :: fermicount
   !! Number of states on the Fermi surface
   INTEGER :: ismear
@@ -209,7 +205,7 @@
   USE elph2,     ONLY : ibndmax, ibndmin, etf, etf_k, &
                         wkf, xqf, wqf, nkqf, nqf, nqtotf, &
                         nkqtotf, xqf, gamma_nest
-  USE constants_epw, ONLY : ryd2ev, two, pi, zero
+  USE constants_epw, ONLY : ryd2ev, two, zero
 #if defined(__NAG)
   USE f90_unix_io,  ONLY : flush
 #endif
@@ -234,8 +230,6 @@
   !! Counter on bands
   INTEGER :: jbnd
   !! Counter on bands
-  INTEGER :: imode
-  !! Counter on mode
   INTEGER :: fermicount
   !! Number of states on the Fermi surface
   INTEGER :: ismear
