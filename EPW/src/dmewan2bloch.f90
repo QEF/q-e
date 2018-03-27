@@ -23,6 +23,7 @@
   USE elph2,         ONLY : cdmew
   USE epwcom,        ONLY : eig_read
   USE constants_epw, ONLY : cone, czero
+  USE mp_world,      ONLY : mpime
   !
   implicit none
   !

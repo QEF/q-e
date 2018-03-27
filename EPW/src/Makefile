@@ -33,7 +33,6 @@ deallocate_epw.o \
 deallocate_eliashberg.o \
 distribution.o \
 dmebloch2wan.o \
-dmewan2bloch.o \
 dvanqq2.o \
 dvqpsi_us3.o \
 dvqpsi_us_only3.o \
@@ -116,6 +115,7 @@ vmewan2bloch.o \
 wannierEPW.o \
 wannierize.o \
 pw2wan90epw.o \
+wan2bloch.o \
 wigner_seitz2.o \
 wigner_seitz.o \
 write_ephmat.o \
