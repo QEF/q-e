@@ -446,7 +446,7 @@
          !
          CALL ephbloch2wane &
            ( nbnd, nbndsub, nks, nkstot, xk, cu, cuq, &
-           epmatq (:,:,:,imode,iq), nrr_k, irvec, wslen, epmatwe_mem(:,:,:,imode) )
+           epmatq (:,:,:,imode,iq), nrr_k, irvec_kk, wslen, epmatwe_mem(:,:,:,imode) )
          !
        ENDDO
        ! Only the master node writes 
@@ -463,7 +463,7 @@
      ! Only master perform this task. Need to be parallelize in the future (SP)
      IF (ionode) THEN
        CALL ephbloch2wanp_mem &
-        ( nbndsub, nmodes, xqc, nqc, irvec, nrr_k, nrr_q, epmatwe_mem )
+        ( nbndsub, nmodes, xqc, nqc, irvec_kk, nrr_k, nrr_q, epmatwe_mem )
      ENDIF
      !
      CALL mp_barrier(inter_pool_comm)
@@ -974,9 +974,9 @@
                !DBSP
                !IF ( (iq == 1) .and. (ik ==12)) THEN
                !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-               !  cfac1(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+               !  cfac1(:) = exp( ci*rdotk(:) ) / ndegen_kk(:)
                !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
-               !  cfacq1(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+               !  cfacq1(:) = exp( ci*rdotk(:) ) / ndegen_kk(:)
                !ENDIF
              ELSE
                CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )

@@ -20,8 +20,8 @@
   ncarrier    = 1E13
 
   scissor     =  0.7
-  nstemp      =   3
-  tempsmin    = 400
+  nstemp      =   5
+  tempsmin    = 300
   tempsmax    = 500
 
   restart    = .true.
@@ -62,9 +62,9 @@
   parallel_k  = .true.
   parallel_q  = .false.
 
-  fsthick     = 1.1 ! eV 
+  fsthick     = 1.2 ! eV 
   eptemp      = 1 ! K 
-  degaussw    = 0.1 ! eV
+  degaussw    = 0.05 ! eV
 
   dvscf_dir   = './save/'
   

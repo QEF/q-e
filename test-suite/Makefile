@@ -146,7 +146,9 @@ clean:
 		epw_*/*.epmatwp epw_*/*.phdos epw_*/*.epwane epw_*/*.ephmat \
 		epw_*/*.fmt epw_*/*.H epw_*/*.epb* epw_*/*self epw_*/*.a2f epw_*/*.01 \
 		epw_*/*.kpt epw_*/*.gnu epw_*/*.eig epw_*/*.lambda_FS epw_*/*.sigma_restart1 \
-		epw_*/specfun.phon epw_*/specfun_sup.phon
+		epw_*/specfun.phon epw_*/specfun_sup.phon epw_*/*.tau_restart* \
+                epw_*/*_elcond_* epw_*/fort.* epw_*/decay.* epw_*/scattering_rate* \
+                epw_*/*.fc.* epw_*/*_band.dat 
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save
 
