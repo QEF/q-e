@@ -24,6 +24,7 @@ elph2.o \
 a2f.o \
 allocate_epwq.o \
 bcast_epw_input.o \
+bloch2wan.o \
 broyden.o \
 close_epw.o \
 constants_epw.o \
@@ -32,12 +33,9 @@ createkmap.o \
 deallocate_epw.o \
 deallocate_eliashberg.o \
 distribution.o \
-dmebloch2wan.o \
 dvanqq2.o \
 dvqpsi_us3.o \
 dvqpsi_us_only3.o \
-dynbloch2wan.o \
-dynwan2bloch.o \
 eliashberg.o \
 eliashbergcom.o \
 eliashberg_aniso_cont_raxis.o \
@@ -52,12 +50,6 @@ eliashberg_write.o \
 elphel2_shuffle.o \
 elphon_shuffle.o \
 elphon_shuffle_wrap.o \
-ephbloch2wane.o \
-ephbloch2wanp.o \
-ephwan2bloch.o \
-ephwan2bloch_mem.o \
-ephwan2blochp.o \
-ephwan2blochp_mem.o \
 ephwann_shuffle.o \
 ephwann_shuffle_mem.o \
 epwcom.o \
@@ -68,8 +60,6 @@ epw_summary.o \
 fermiwindow.o \
 gen_freqgrid.o \
 gmap_sym.o \
-hambloch2wan.o \
-hamwan2bloch.o \
 io_dyn_mat2.o \
 kernels_aniso_iaxis.o \
 kernels_iso_iaxis.o \
@@ -110,8 +100,6 @@ spectral_func_ph.o \
 spectral_func_pl.o \
 star_q2.o \
 stop_epw.o \
-vmebloch2wan.o \
-vmewan2bloch.o \
 wannierEPW.o \
 wannierize.o \
 pw2wan90epw.o \

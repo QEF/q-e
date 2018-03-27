@@ -105,6 +105,7 @@ ephwann_shuffle.o : epwcom.o
 ephwann_shuffle.o : io_epw.o
 ephwann_shuffle.o : transportcom.o
 ephwann_shuffle.o : wan2bloch.o
+ephwann_shuffle.o : bloch2wan.o
 ephwann_shuffle_mem-save.o : constants_epw.o
 ephwann_shuffle_mem-save.o : elph2.o
 ephwann_shuffle_mem-save.o : epwcom.o
@@ -115,6 +116,7 @@ ephwann_shuffle_mem.o : epwcom.o
 ephwann_shuffle_mem.o : io_epw.o
 ephwann_shuffle_mem.o : transportcom.o
 ephwann_shuffle_mem.o : wan2bloch.o
+ephwann_shuffle_mem.o : bloch2wan.o
 epw.o : elph2.o
 epw.o : epwcom.o
 epw_init.o : constants_epw.o

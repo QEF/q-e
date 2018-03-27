@@ -31,6 +31,7 @@
   USE io_global,        ONLY : ionode, stdout
   USE constants_epw,    ONLY : cone, czero, twopi, rydcm1
   USE io_epw,           ONLY : iudyn
+  USE wan2bloch,        ONLY : dynifc2blochc
   !
   implicit none
   !

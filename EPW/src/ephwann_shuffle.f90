@@ -60,7 +60,11 @@
   USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                             upper_bnd, ixkqf_tr,  s_BZtoIBZ_full
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch, &
-                            ephwan2blochp, ephwan2bloch, vmewan2bloch
+                            ephwan2blochp, ephwan2bloch, vmewan2bloch, &
+                            dynifc2blochf, dynifc2blochc 
+  USE bloch2wan,     ONLY : hambloch2wan, dmebloch2wan, dynbloch2wan, &
+                            vmebloch2wan, ephbloch2wane, ephbloch2wanp, &
+                            ephbloch2wanp_mem
 #ifdef __NAG
   USE f90_unix_io,   ONLY : flush
 #endif

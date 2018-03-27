@@ -61,7 +61,13 @@
                             F_current, F_SERTA, inv_tau_allcb, zi_allcb
   USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                             upper_bnd, ixkqf_tr,  s_BZtoIBZ_full
-  USE wan2bloch,     ONLY : dmewan2bloch
+  USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch, &
+                            ephwan2blochp, ephwan2bloch, vmewan2bloch, &
+                            dynifc2blochf, dynifc2blochc, ephwan2blochp_mem, &
+                            ephwan2bloch_mem
+  USE bloch2wan,     ONLY : hambloch2wan, dmebloch2wan, dynbloch2wan, &
+                            vmebloch2wan, ephbloch2wane, ephbloch2wanp, &
+                            ephbloch2wanp_mem
 #ifdef __NAG
   USE f90_unix_io,   ONLY : flush
 #endif
@@ -984,12 +990,12 @@
              ! ------------------------------------------------------
              !
              ! Kohn-Sham first, then get the rotation matricies for following interp.
-        !     IF (eig_read) THEN
-        !        CALL hamwan2bloch &
-        !          ( nbndsub, nrr_k, cufkk, etf_ks (:, ikk), chw_ks, cfac)
-        !        CALL hamwan2bloch &
-        !          ( nbndsub, nrr_k, cufkq, etf_ks (:, ikq), chw_ks, cfacq)
-        !     ENDIF
+             IF (eig_read) THEN
+                CALL hamwan2bloch &
+                  ( nbndsub, nrr_k, cufkk, etf_ks (:, ikk), chw_ks, cfac)
+                CALL hamwan2bloch &
+                  ( nbndsub, nrr_k, cufkq, etf_ks (:, ikq), chw_ks, cfacq)
+             ENDIF
              !
              CALL hamwan2bloch &
                   ( nbndsub, nrr_k, cufkk, etf (:, ikk), chw, cfac)
@@ -1004,96 +1010,96 @@
                   ( nbndsub, nrr_k, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
              CALL dmewan2bloch &
                  ( nbndsub, nrr_k, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfacq)
-            ! 
-             ! ------------------------------------------------------        
-             !  velocity: Wannier -> Bloch
-             ! ------------------------------------------------------        
+             ! 
+             !  ------------------------------------------------------        
+             !   velocity: Wannier -> Bloch
+             !  ------------------------------------------------------        
+             ! 
+             IF (vme) THEN
+                IF (eig_read) THEN
+                   CALL vmewan2bloch &
+                        ( nbndsub, nrr_k, irvec_kk, ndegen_kk, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks)
+                   CALL vmewan2bloch &
+                        ( nbndsub, nrr_k, irvec_kk, ndegen_kk, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks)
+                ELSE
+                   CALL vmewan2bloch &
+                        ( nbndsub, nrr_k, irvec_kk, ndegen_kk, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw)
+                   CALL vmewan2bloch &
+                        ( nbndsub, nrr_k, irvec_kk, ndegen_kk, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw)
+                ENDIF
+             ENDIF
              !
-             !IF (vme) THEN
-             !   IF (eig_read) THEN
-             !      CALL vmewan2bloch &
-             !           ( nbndsub, nrr_k, irvec_kk, ndegen_kk, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks)
-             !      CALL vmewan2bloch &
-             !           ( nbndsub, nrr_k, irvec_kk, ndegen_kk, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks)
-             !   ELSE
-             !      CALL vmewan2bloch &
-             !           ( nbndsub, nrr_k, irvec_kk, ndegen_kk, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw)
-             !      CALL vmewan2bloch &
-             !           ( nbndsub, nrr_k, irvec_kk, ndegen_kk, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw)
-             !   ENDIF
-             !ENDIF
-             !!
-             !IF (.NOT. scatread) THEN
-             !  ! interpolate ONLY when (k,k+q) both have at least one band 
-             !  ! within a Fermi shell of size fsthick 
-             !  !
-             !  IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) ) THEN
-             !    !
-             !    !  fermicount = fermicount + 1
-             !    !
-             !    ! --------------------------------------------------------------
-             !    ! epmat : Wannier el and Bloch ph -> Bloch el and Bloch ph
-             !    ! --------------------------------------------------------------
-             !    !
-             !    !
-             !    ! SP: Note: In case of polar materials, computing the long-range and short-range term 
-             !    !     separately might help speed up the convergence. Indeed the long-range term should be 
-             !    !     much faster to compute. Note however that the short-range term still contains a linear
-             !    !     long-range part and therefore could still be a bit more difficult to converge than 
-             !    !     non-polar materials. 
-             !    ! 
-             !    IF (longrange) THEN
-             !      !      
-             !      epmatf = czero
-             !      !
-             !    ELSE
-             !      !
-             !      CALL ephwan2bloch_mem &
-             !        ( nbndsub, nrr_k, irvec_kk, ndegen_kk, epmatwef, xkk, cufkk, cufkq, epmatf )
-             !      !
-             !    ENDIF
-             !    !
-             !    IF (lpolar) THEN
-             !      !
-             !      CALL compute_umn_f( nbndsub, cufkk, cufkq, bmatf )
-             !      !
-             !      IF ( (abs(xxq(1)) > eps) .or. (abs(xxq(2)) > eps) .or. (abs(xxq(3)) > eps) ) THEN
-             !        !      
-             !        CALL cryst_to_cart (1, xxq, bg, 1)
-             !        CALL rgd_blk_epw_fine_mem(imode, nq1, nq2, nq3, xxq, uf, epmatlrT(:,:,imode,ik), &
-             !                              nmodes, epsi, zstar, bmatf, +1.d0)
-             !        CALL cryst_to_cart (1, xxq, at, -1)
-             !        !
-             !      ENDIF
-             !      !
-             !    ENDIF
-             !    ! 
-             !    ! Store epmatf in memory
-             !    !
-             !    DO jbnd = ibndmin, ibndmax
-             !      DO ibnd = ibndmin, ibndmax
-             !        ! 
-             !        IF (lscreen) THEN
-             !          eptmp(ibnd-ibndmin+1,jbnd-ibndmin+1,imode,ik) = epmatf(ibnd,jbnd) / eps_rpa(imode)
-             !        ELSE 
-             !          eptmp(ibnd-ibndmin+1,jbnd-ibndmin+1,imode,ik) = epmatf(ibnd,jbnd)
-             !        ENDIF
-             !        !
-             !      ENDDO
-             !    ENDDO
-             !    !if (ik==1) then
-             !    !  print*,'imode eptmp',imode, SUM((REAL(REAL(eptmp(:,:,imode,ik))))**2)+SUM((REAL(AIMAG(eptmp(:,:,imode,ik))))**2)
-             !    !  print*,'epmatwef ',SUM(epmatwef)
-             !    !endif 
-             !    !if (ik==2) then
-             !    !  do imode = 1, nmodes
-             !    !    write(*,*) 'epmatf ',SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
-             !    !  enddo
-             !    !endif
-             !    !
-             !  ENDIF
-             !ENDIF ! scatread 
-             !
+             IF (.NOT. scatread) THEN
+               ! interpolate ONLY when (k,k+q) both have at least one band 
+               ! within a Fermi shell of size fsthick 
+               !
+               IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) ) THEN
+                 !
+                 !  fermicount = fermicount + 1
+                 !
+                 ! --------------------------------------------------------------
+                 ! epmat : Wannier el and Bloch ph -> Bloch el and Bloch ph
+                 ! --------------------------------------------------------------
+                 !
+                 !
+                 ! SP: Note: In case of polar materials, computing the long-range and short-range term 
+                 !     separately might help speed up the convergence. Indeed the long-range term should be 
+                 !     much faster to compute. Note however that the short-range term still contains a linear
+                 !     long-range part and therefore could still be a bit more difficult to converge than 
+                 !     non-polar materials. 
+                 ! 
+                 IF (longrange) THEN
+                   !      
+                   epmatf = czero
+                   !
+                 ELSE
+                   !
+                   CALL ephwan2bloch_mem &
+                     ( nbndsub, nrr_k, irvec_kk, ndegen_kk, epmatwef, xkk, cufkk, cufkq, epmatf )
+                   !
+                 ENDIF
+                 !
+                 IF (lpolar) THEN
+                   !
+                   CALL compute_umn_f( nbndsub, cufkk, cufkq, bmatf )
+                   !
+                   IF ( (abs(xxq(1)) > eps) .or. (abs(xxq(2)) > eps) .or. (abs(xxq(3)) > eps) ) THEN
+                     !      
+                     CALL cryst_to_cart (1, xxq, bg, 1)
+                     CALL rgd_blk_epw_fine_mem(imode, nq1, nq2, nq3, xxq, uf, epmatlrT(:,:,imode,ik), &
+                                           nmodes, epsi, zstar, bmatf, +1.d0)
+                     CALL cryst_to_cart (1, xxq, at, -1)
+                     !
+                   ENDIF
+                   !
+                 ENDIF
+                 ! 
+                 ! Store epmatf in memory
+                 !
+                 DO jbnd = ibndmin, ibndmax
+                   DO ibnd = ibndmin, ibndmax
+                     ! 
+                     IF (lscreen) THEN
+                       eptmp(ibnd-ibndmin+1,jbnd-ibndmin+1,imode,ik) = epmatf(ibnd,jbnd) / eps_rpa(imode)
+                     ELSE 
+                       eptmp(ibnd-ibndmin+1,jbnd-ibndmin+1,imode,ik) = epmatf(ibnd,jbnd)
+                     ENDIF
+                     !
+                   ENDDO
+                 ENDDO
+                 !if (ik==1) then
+                 !  print*,'imode eptmp',imode, SUM((REAL(REAL(eptmp(:,:,imode,ik))))**2)+SUM((REAL(AIMAG(eptmp(:,:,imode,ik))))**2)
+                 !  print*,'epmatwef ',SUM(epmatwef)
+                 !endif 
+                 !if (ik==2) then
+                 !  do imode = 1, nmodes
+                 !    write(*,*) 'epmatf ',SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
+                 !  enddo
+                 !endif
+                 !
+               ENDIF
+             ENDIF ! scatread 
+             
            ENDDO  ! end loop over k points
          ENDDO ! modes 
          !
