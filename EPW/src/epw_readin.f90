@@ -57,7 +57,7 @@
                             title, int_mob, scissor, iterative_bte, scattering, &
                             ncarrier, carrier, scattering_serta, restart, restart_freq, &
                             scattering_0rta, longrange, shortrange, scatread, &
-                            restart_filq, prtgkk, nel, meff, epsiHEG
+                            restart_filq, prtgkk, nel, meff, epsiHEG, lphase
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV
@@ -121,7 +121,8 @@
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         & 
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
-       scatread, restart, restart_freq, restart_filq, prtgkk, nel, meff, epsiHEG
+       scatread, restart, restart_freq, restart_filq, prtgkk, nel, meff,       &
+       epsiHEG, lphase
 
   ! tphases, fildvscf0
   !
@@ -278,6 +279,7 @@
   ! nel             : Fractional number of electrons in the unit cell
   ! meff            : Density of state effective mass (in unit of the electron mass)
   ! epsiHEG         : Dielectric constant at zero doping
+  ! lphase          : If .true., fix the gauge on the phonon eigenvectors and electronic eigenvectors - DS 
   !  
   nk1tmp = 0
   nk2tmp = 0
@@ -461,7 +463,8 @@
   prtgkk     = .false.
   nel        = 0.0d0
   meff       = 1.d0
-  epsiHEG    = 1.d0
+  epsiHEG    = 1.d0 
+  lphase     = .false. 
   !
   !     reading the namelist inputepw
   !

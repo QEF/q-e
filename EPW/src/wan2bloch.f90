@@ -38,7 +38,8 @@
     !--------------------------------------------------------------------------
     !
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : czero, cone
+    USE constants_epw, ONLY : czero, cone, eps12
+    USE epwcom,        ONLY : lphase
     !
     implicit none
     !
@@ -72,6 +73,8 @@
     !
     INTEGER :: ibnd, jbnd
     COMPLEX(kind=DP) :: chf(nbnd, nbnd) 
+    COMPLEX(KIND=DP) :: zdotu
+    !! Dot product between the two phonon eigenvectors.
     !
     CALL start_clock('HamW2B')
     !----------------------------------------------------------
@@ -117,7 +120,26 @@
     CALL zhpevx ('V', 'A', 'U', nbnd, champ , 0.0, 0.0, &
                  0, 0,-1.0, neig, w, cz, nbnd, cwork, &
                  rwork, iwork, ifail, info)
-    !
+    ! clean noise
+    DO jbnd = 1, nbnd
+      DO ibnd = 1, nbnd
+        IF ( ABS( cz(ibnd,jbnd) ) < eps12 ) cz(ibnd,jbnd) = cmplx(0.d0,0.d0, kind=DP)
+      ENDDO
+    ENDDO
+    !  
+    ! DS - Impose phase 
+    IF (lphase) THEN
+      DO jbnd = 1, nbnd
+        INNER : DO ibnd = 1, nbnd
+          IF ( ABS(cz(ibnd, jbnd)) > eps12 ) THEN
+            cz(:, jbnd) = cz(:, jbnd) * conjg( cz(ibnd,jbnd) )
+            cz(:, jbnd) = cz(:, jbnd)/sqrt(zdotu(nbnd,conjg(cz(:,jbnd)),1,cz(:, jbnd),1) )
+            EXIT INNER
+          ENDIF
+        END DO INNER
+      ENDDO
+    ENDIF
+    ! 
     ! rotation matrix and Ham eigenvalues 
     ! [in Ry, mind when comparing with wannier code]
     ! 
@@ -151,8 +173,8 @@
     USE phcom,     ONLY : nq1, nq2, nq3
     USE ions_base, ONLY : amass, tau, nat, ityp
     USE elph2,     ONLY : rdw, epsi, zstar
-    USE epwcom,    ONLY : lpolar
-    USE constants_epw, ONLY : twopi, ci, czero
+    USE epwcom,    ONLY : lpolar, lphase
+    USE constants_epw, ONLY : twopi, ci, czero, eps12
     !
     implicit none
     !
@@ -175,16 +197,19 @@
     ! work variables
     ! variables for lapack ZHPEVX
     integer :: neig, info, ifail( nmodes ), iwork( 5*nmodes )
+    integer :: imode, jmode, ir, na, nb
     real(kind=DP) :: w( nmodes ), rwork( 7*nmodes )
-    complex(kind=DP) :: champ( nmodes*(nmodes+1)/2 ), &
-      cwork( 2*nmodes ), cz( nmodes, nmodes)
     !
     real(kind=DP) :: xq (3)
-    complex(kind=DP) :: chf(nmodes, nmodes)
-    ! Hamiltonian in Bloch basis, fine mesh
-    integer :: imode, jmode, ir, na, nb
     real(kind=DP) :: rdotk, massfac
-    complex(kind=DP) :: cfac
+    COMPLEX(kind=DP) :: chf(nmodes, nmodes)
+    ! Hamiltonian in Bloch basis, fine mesh
+    COMPLEX(kind=DP) :: champ( nmodes*(nmodes+1)/2 ), &
+      cwork( 2*nmodes ), cz( nmodes, nmodes)
+    COMPLEX(kind=DP) :: cfac
+    !! Complex prefactor for Fourier transform. 
+    COMPLEX(KIND=DP) :: zdotu
+    !! Dot product between the two phonon eigenvectors. 
     !
     CALL start_clock ( 'DynW2B' )
     !----------------------------------------------------------
@@ -242,15 +267,35 @@
     !
     DO jmode = 1, nmodes
      DO imode = 1, jmode
-        champ (imode + (jmode - 1) * jmode/2 ) = &
-        ( chf ( imode, jmode) + conjg ( chf ( jmode, imode) ) ) / 2.d0
+       champ (imode + (jmode - 1) * jmode/2 ) = &
+       ( chf ( imode, jmode) + conjg ( chf ( jmode, imode) ) ) / 2.d0
      ENDDO
     ENDDO
     !
     CALL zhpevx ('V', 'A', 'U', nmodes, champ , 0.0, 0.0, &
                  0, 0,-1.0, neig, w, cz, nmodes, cwork, &
                  rwork, iwork, ifail, info)
-    !
+    ! 
+    ! clean noise
+    DO jmode=1,nmodes
+      DO imode=1,nmodes
+        IF ( ABS( cz(imode,jmode) ) < eps12 ) cz(imode,jmode) = cmplx(0.d0,0.d0, kind=DP)
+      ENDDO
+    ENDDO
+    ! 
+    ! DS - Impose phase 
+    IF (lphase) THEN
+      DO jmode = 1,nmodes
+        INNER : DO imode = 1,nmodes
+          IF ( ABS(cz(imode, jmode)) > eps12 ) THEN
+            cz(:, jmode) = cz(:, jmode) * conjg( cz(imode,jmode) )
+            cz(:, jmode) = cz(:, jmode)/sqrt( zdotu(nmodes,conjg(cz(:, jmode)),1,cz(:, jmode),1) )
+            EXIT INNER
+          ENDIF
+        END DO INNER
+      ENDDO
+    ENDIF
+    ! 
     ! rotation matrix and Ham eigenvalues
     ! [in Ry, mind when comparing with wannier code]
     !
