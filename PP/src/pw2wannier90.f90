@@ -4434,7 +4434,9 @@ SUBROUTINE wan2sic
   USE klist, ONLY : nkstot, xk, wk, ngk
   USE wannier
 
-  INTEGER :: i, j, nn, ik, ibnd, iw, ikevc
+  IMPLICIT NONE
+
+  INTEGER :: i, j, nn, ik, ibnd, iw, ikevc, npw
   COMPLEX(DP), ALLOCATABLE :: orbital(:,:), u_matrix(:,:,:)
   INTEGER :: iunatsicwfc = 31 ! unit for sic wfc
 
