@@ -25,8 +25,7 @@
   USE elph2,     ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, & 
                         inv_tau_all, nkqtotf, Fi_all, inv_tau_allcb, &
                         zi_allvb, zi_allcb
-  USE transportcom,  ONLY : transp_temp, &
-                           Seebeck, Kappael, Kappa
+  USE transportcom,  ONLY : transp_temp
   USE constants_epw, ONLY : zero, one, bohr2ang, ryd2ev, electron_SI, &
                             kelvin2eV, hbar, Ang2m, hbarJ, ang2cm, czero
   USE mp,        ONLY : mp_sum

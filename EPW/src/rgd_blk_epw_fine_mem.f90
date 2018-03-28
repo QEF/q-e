@@ -35,7 +35,7 @@ SUBROUTINE rgd_blk_epw_fine_mem(imode,nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bm
   USE kinds,         ONLY : dp
   USE cell_base,     ONLY : bg, omega, alat
   USE ions_base,     ONLY : tau, nat
-  USE constants_epw, ONLY : twopi, fpi, e2, ci, czero
+  USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12
   USE epwcom,        ONLY : shortrange, nbndsub
   !
   implicit none
@@ -73,7 +73,7 @@ SUBROUTINE rgd_blk_epw_fine_mem(imode,nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bm
   COMPLEX(kind=DP) :: fac, facqd, facq
   COMPLEX(kind=DP) :: epmatl(nbndsub,nbndsub)
   !
-  IF (abs(signe) /= 1.0) &
+  IF ( abs ( abs(signe) - 1.0 ) > eps12 ) &
        CALL errore ('rgd_blk',' wrong value for signe ',1)
   !
   gmax= 14.d0

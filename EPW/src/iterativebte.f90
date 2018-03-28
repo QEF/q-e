@@ -34,7 +34,8 @@
   USE mp_global,     ONLY : inter_pool_comm
   USE mp_world,      ONLY : mpime
   USE io_global,     ONLY : ionode_id
-  USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
+  USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
+  USE superconductivity, ONLY : kpmq_map
   !
   IMPLICIT NONE
   !

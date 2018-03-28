@@ -9,11 +9,9 @@
   SUBROUTINE F_write(iter, iq, nqtotf, nktotf, error_h, error_el)
   !----------------------------------------------------------------------------
   USE kinds,        ONLY : DP
-  USE io_global,    ONLY : stdout
   USE io_epw,       ONLY : iufilFi_all
   USE io_files,     ONLY : diropn
   USE mp,           ONLY : mp_barrier
-  USE mp_global,    ONLY : inter_pool_comm
   USE mp_world,     ONLY : mpime
   USE io_global,    ONLY : ionode_id
   USE elph2,        ONLY : F_current, ibndmax, ibndmin
@@ -52,7 +50,6 @@
   REAL(KIND=DP) :: aux ( 3 * (ibndmax-ibndmin+1) * nktotf + 7 )
   !! Vector to store the array
   !
-  !WRITE(stdout,'(/5x,"Writing F_current to F_restart file"/)')
   !
   IF (mpime.eq.ionode_id) THEN
     !
@@ -163,12 +160,12 @@
       CALL davcio ( aux, lfi_all, iufilFi_all, 1, -1 )
       !
       ! First element is the iteration number
-      iter = aux(1)
+      iter = INT( aux(1) ) 
       ! Current iteration number
-      iq = aux(2)
+      iq = INT( aux(2) )
       iq = iq + 1 ! we need to start at the next q
       ! Total number of q-points
-      nqtotf_read = aux(3)
+      nqtotf_read = INT( aux(3) )
       ! Last value of hole mobility
       mobilityh_save = aux(4) 
       ! Last value of electron mobility
@@ -261,8 +258,6 @@
   !! Fermi level for the temperature itemp
   REAL(KIND=DP), INTENT(IN) :: etf_all(nbndsub, nkqtotf)
   !! Eigen-energies on the fine grid collected from all pools in parallel case
-!!  REAL(KIND=DP), INTENT(IN) :: inv_tau_all(nstemp,ibndmax-ibndmin+1, nkqtotf/2)
-  !! Total scattering rate on all k-points collected from all pools in parallel case
   ! 
   ! Local variables
   INTEGER :: ik
@@ -273,8 +268,6 @@
   !! Even k+q index to read etf
   INTEGER :: ibnd
   !! Local band index
-  INTEGER :: nrec
-  !! Record index
   REAL(KIND=DP) :: ekk
   !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
   REAL(KIND=DP) :: temp
@@ -313,7 +306,6 @@
         WRITE(iufilscatt_rate,'(i9,2x)',advance='no') ik
         WRITE(iufilscatt_rate,'(i9,2x)',advance='no') ibndmin-1+ibnd
         WRITE(iufilscatt_rate,'(E22.14)',advance='no') ryd2ev * ekk
-        !WRITE(iufilscatt_rate,'(E24.14)') ryd2mev * meV2invps * inv_tau_all(itemp,ibnd,ik)
         WRITE(iufilscatt_rate,'(E26.16E3)') ryd2mev * meV2invps * inv_tau_all(itemp,ibnd,ik)
         !
       ENDDO
@@ -336,9 +328,9 @@
   USE io_global, ONLY : stdout
   USE io_epw,    ONLY : iufilscatt_rate
   USE elph2,     ONLY : ibndmax, ibndmin, nkqtotf, inv_tau_all
-  USE epwcom,    ONLY : nbndsub, nstemp
+  USE epwcom,    ONLY : nbndsub
   USE constants_epw, ONLY : ryd2mev, kelvin2eV, ryd2ev, &
-                            meV2invps, eps4, zero
+                            meV2invps, eps4
   USE mp,        ONLY : mp_barrier, mp_bcast
   USE mp_global, ONLY : inter_pool_comm, root_pool, intra_pool_comm
   USE mp_world,  ONLY : mpime
@@ -352,28 +344,18 @@
   !! Fermi level for the temperature itemp
   REAL(KIND=DP), INTENT(out) :: etf_all(nbndsub, nkqtotf/2)
   !! Eigen-energies on the fine grid collected from all pools in parallel case
-!  REAL(KIND=DP), INTENT(out) :: inv_tau_all(nstemp,ibndmax-ibndmin+1, nkqtotf/2)
-  !! Total scattering rate on all k-points collected from all pools in parallel case
   ! 
   ! Local variables
   INTEGER :: ik
   !! K-point index
   INTEGER :: ik_tmp
   !! K-point index read from file
-  INTEGER :: ikk
-  !! Odd index to read etf
-  INTEGER :: ikq
-  !! Even k+q index to read etf
   INTEGER :: ibnd
   !! Local band index
   INTEGER :: ibnd_tmp
   !! Local band index read from file
-  INTEGER :: nrec
-  !! Record index
   INTEGER :: ios
   !! Status of reading file
-  REAL(KIND=DP) :: ekk
-  !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
   REAL(KIND=DP) :: temp
   !! Temporary file name used to write scattering rate to file. 
   !
@@ -395,7 +377,7 @@
       WRITE(name1,'(a16,f6.2)') 'scattering_rate_', temp
     ENDIF
     OPEN(iufilscatt_rate,file=name1, status='old',iostat=ios)
-    WRITE(stdout,'(a16,a22)'),'     Open file: ',name1   
+    WRITE(stdout,'(a16,a22)') '     Open file: ',name1   
     ! There are two comment line at the beginning of the file
     READ(iufilscatt_rate,*) dummy1
     READ(iufilscatt_rate,*) dummy1
@@ -447,17 +429,12 @@
   !----------------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
-  USE io_global, ONLY : stdout
-  USE io_epw,    ONLY : iufilscatt_rate
-  USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all
+  USE elph2,     ONLY : ibndmax, ibndmin
   USE io_epw,    ONLY : iufilsigma_all
   USE io_files,  ONLY : diropn
-  USE epwcom,    ONLY : nstemp
-  USE constants_epw, ONLY : kelvin2eV, &
-                            meV2invps, eps4, zero
-  USE transportcom, ONLY : lower_bnd, upper_bnd
+  USE constants_epw, ONLY : zero
+  USE transportcom,  ONLY : lower_bnd, upper_bnd
   USE mp,        ONLY : mp_barrier
-  USE mp_global, ONLY : inter_pool_comm
   USE mp_world,  ONLY : mpime
   USE io_global, ONLY : ionode_id
   !
@@ -495,9 +472,9 @@
     !
     lsigma_all = 3 * (ibndmax-ibndmin+1) * nktotf +2
     ! First element is the current q-point
-    aux(1) = iq -1 ! we need to start at the next q
+    aux(1) = REAL( iq -1, KIND=DP) ! we need to start at the next q
     ! Second element is the total number of q-points
-    aux(2) = nqtotf
+    aux(2) = REAL( nqtotf, KIND=DP)
     !
     i = 2
     ! 
@@ -535,7 +512,6 @@
     sigmai_all(:,upper_bnd+1:nktotf) = zero
     zi_all(:,upper_bnd+1:nktotf) = zero
   ENDIF
-  !CALL mp_barrier(inter_pool_comm)
   ! 
   !----------------------------------------------------------------------------
   END SUBROUTINE electron_write
@@ -547,14 +523,11 @@
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE io_epw,    ONLY : iufilscatt_rate
-  USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all
+  USE elph2,     ONLY : ibndmax, ibndmin
   USE io_epw,    ONLY : iufilsigma_all
   USE io_files,  ONLY : prefix, tmp_dir, diropn
-  USE epwcom,    ONLY : nstemp
-  USE constants_epw, ONLY : kelvin2eV, &
-                            meV2invps, eps4, zero
-  USE transportcom, ONLY : lower_bnd, upper_bnd
+  USE constants_epw, ONLY :  zero
+  USE transportcom,  ONLY : lower_bnd, upper_bnd
   USE mp,        ONLY : mp_barrier, mp_bcast
   USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, root_pool
   USE mp_world,  ONLY : mpime
@@ -611,9 +584,9 @@
       CALL davcio ( aux, lsigma_all, iufilsigma_all, 1, -1 )
       !
       ! First element is the iteration number
-      iq = aux(1)
+      iq = INT( aux(1) )
       iq = iq + 1 ! we need to start at the next q
-      nqtotf_read = aux(2)
+      nqtotf_read = INT( aux(2) )
       !print*, 'iq',iq
       !print*, 'nqtotf_read ',nqtotf_read
       IF ( nqtotf_read /= nqtotf) CALL errore('io_scattering',&
@@ -679,7 +652,7 @@
   !----------------------------------------------------------------------------
   USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nstemp
-  USE io_global, ONLY : stdout, meta_ionode_id
+  USE io_global, ONLY : meta_ionode_id
   USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all, inv_tau_allcb, zi_allvb, zi_allcb
   USE io_epw,    ONLY : iufiltau_all
   USE io_files,  ONLY : diropn
@@ -712,8 +685,6 @@
   !! k-point index
   INTEGER :: ibnd
   !! band index
-  INTEGER :: idir
-  !! Direction index
   ! 
   REAL(KIND=DP) :: aux ( 2 * nstemp * (ibndmax-ibndmin+1) * nktotf +2 )
   !! Vector to store the array inv_tau_all and zi_all
@@ -722,8 +693,8 @@
     !
     ltau_all = 2 * nstemp * (ibndmax-ibndmin+1) * nktotf +2
     ! First element is the iteration number
-    aux(1) = iq -1   ! -1 because we will start at the next one. 
-    aux(2) = nqtotf
+    aux(1) = REAL( iq -1, KIND=DP)   ! -1 because we will start at the next one. 
+    aux(2) = REAL( nqtotf, KIND=DP)
     i = 2
     ! 
     DO itemp=1, nstemp
@@ -802,14 +773,12 @@
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout, meta_ionode_id
-  USE io_epw,    ONLY : iufilscatt_rate
   USE elph2,     ONLY : ibndmax, ibndmin, inv_tau_all, inv_tau_allcb, zi_allvb, zi_allcb
   USE io_epw,    ONLY : iufiltau_all
   USE io_files,  ONLY : prefix, tmp_dir, diropn
   USE epwcom,    ONLY : nstemp
-  USE constants_epw, ONLY : kelvin2eV, &
-                            meV2invps, eps4, zero
-  USE transportcom, ONLY : lower_bnd, upper_bnd
+  USE constants_epw, ONLY : zero
+  USE transportcom,  ONLY : lower_bnd, upper_bnd
   USE mp,        ONLY : mp_barrier, mp_bcast
   USE mp_global, ONLY : world_comm
   USE mp_world,  ONLY : mpime
@@ -863,9 +832,9 @@
       CALL davcio ( aux, ltau_all, iufiltau_all, 1, -1 )
       !
       ! First element is the iteration number
-      iq = aux(1)
+      iq = INT( aux(1) )
       iq = iq + 1 ! we need to start at the next q
-      nqtotf_read = aux(2)
+      nqtotf_read = INT( aux(2) )
       !print*, 'iq',iq
       !print*, 'nqtotf_read ',nqtotf_read
       IF ( nqtotf_read /= nqtotf) CALL errore('io_scattering',&
@@ -908,9 +877,9 @@
         CALL davcio ( aux, ltau_all, iufiltau_all, 1, -1 )
         !
         ! First element is the iteration number
-        iq = aux(1)
+        iq = INT( aux(1) )
         iq = iq + 1 ! we need to start at the next q
-        nqtotf_read = aux(2)
+        nqtotf_read = INT( aux(2) )
         IF ( nqtotf_read /= nqtotf) CALL errore('io_scattering',&
           &'Error: The current total number of q-point is not the same as the read one. ',1)
         ! 
@@ -981,13 +950,10 @@
   ! 
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE io_epw,    ONLY : iufilscatt_rate
   USE elph2,     ONLY : ibndmax, ibndmin
   USE io_epw,    ONLY : iufiltau_all
   USE io_files,  ONLY : tmp_dir, diropn
   USE epwcom,    ONLY : nstemp, restart_filq
-  USE constants_epw, ONLY : kelvin2eV, &
-                            meV2invps, eps4
   USE mp,        ONLY : mp_barrier, mp_bcast
   USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, root_pool
   USE mp_world,  ONLY : mpime
@@ -1041,9 +1007,9 @@
       CALL davcio ( aux, ltau_all, iufiltau_all, 1, -1 )
       !
       ! First element is the iteration number
-      iq = aux(1)
+      iq = INT( aux(1) )
       iq = iq + 1 ! we need to start at the next q
-      nqtotf_new = aux(2)
+      nqtotf_new = INT( aux(2) )
       ! 
       i = 2
       DO itemp=1, nstemp

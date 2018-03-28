@@ -1,6 +1,5 @@
   !
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  ! Copyright (C) 2007-2009 Roxana Margine
   !
   ! This file is distributed under the terms of the GNU General Public         
   ! License. See the file `LICENSE' in the root directory of the               
@@ -14,23 +13,20 @@
   !!
   !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
-  USE io_global,     ONLY : stdout, meta_ionode_id
-  USE io_epw,        ONLY : iufilscatt_rate
+  USE io_global,     ONLY : stdout
   USE phcom,         ONLY : nmodes
-  USE epwcom,        ONLY : nbndsub, fsthick, etf_mem, efermi_read, lrepmatf, & 
-                            eps_acustic, fermi_energy, ngaussw, degaussw, & 
+  USE epwcom,        ONLY : nbndsub, fsthick, eps_acustic, degaussw, & 
                             nstemp, scattering_serta, scattering_0rta, shortrange,&
                             restart, restart_freq, restart_filq
-  USE pwcom,         ONLY : ef, nelec, isk
-  USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, wf, wqf, xkf, & 
-                            epf17, efnew, nqtotf, nkqtotf, inv_tau_all, inv_tau_allcb, &
+  USE pwcom,         ONLY : ef
+  USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, dmef, wf, wqf, & 
+                            epf17, nqtotf, nkqtotf, inv_tau_all, inv_tau_allcb, &
                             xqf, zi_allvb, zi_allcb
-  USE transportcom,  ONLY : transp_temp, lower_bnd, upper_bnd
+  USE transportcom,  ONLY : transp_temp, lower_bnd
   USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, & 
-                            meV2invps, eps6
+                            eps6
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : world_comm
-  USE mp_world,      ONLY : mpime
   !
   IMPLICIT NONE
   !
@@ -46,12 +42,6 @@
   ! Local variables
   INTEGER :: n
   !! Integer for the degenerate average over eigenstates  
-  INTEGER :: i
-  !! Cartesian direction index 
-  INTEGER :: j
-  !! Cartesian direction index 
-  INTEGER :: ij
-  !! Cartesian coupled index for matrix. 
   INTEGER :: ik
   !! K-point index
   INTEGER :: ikk
@@ -64,10 +54,6 @@
   !! Local band index
   INTEGER :: imode
   !! Local mode index
-  INTEGER :: icbm
-  !! Index of the CBM
-  INTEGER :: nrec
-  !! Record index
   INTEGER :: itemp
   !! Index over temperature range
   INTEGER :: nqtotf_new
@@ -95,8 +81,6 @@
   !! Inverse phonon frequency. Defined for efficiency reasons.
   REAL(KIND=DP) :: inv_etemp
   !! Invese temperature inv_etemp = 1/etemp. Defined for efficiency reasons.
-  REAL(KIND=DP) :: temp
-  !! Temporary file name used to write scattering rate to file. 
   REAL(KIND=DP) :: g2_tmp 
   !! Used to set component to 0 if the phonon freq. is too low. This is defined
   !! for efficiency reasons as if statement should be avoided in inner-most loops.
@@ -140,9 +124,6 @@
   REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
   !! Tolerence
   ! 
-  CHARACTER (len=256) :: name1
-  !! Name used to write scattering rates to file. 
-  !
   IF ( iq .eq. 1 ) THEN
     !
     WRITE(stdout,'(/5x,a)') repeat('=',67)
@@ -250,7 +231,7 @@
                    .OR. abs(xqf (3, iq))> eps2 )) THEN
                   ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                   !     number, in which case its square will be a negative number. 
-                  g2 = (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp
+                  g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND=DP )
                 ELSE
                   g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
                 ENDIF
@@ -331,7 +312,7 @@
                      .OR. abs(xqf (3, iq))> eps2 )) THEN
                     ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                     !     number, in which case its square will be a negative number. 
-                    g2 = (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp
+                    g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND=DP)
                   ELSE
                     g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp
                   ENDIF

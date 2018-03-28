@@ -65,6 +65,8 @@
   USE bloch2wan,     ONLY : hambloch2wan, dmebloch2wan, dynbloch2wan, &
                             vmebloch2wan, ephbloch2wane, ephbloch2wanp, &
                             ephbloch2wanp_mem
+  USE superconductivity, ONLY : write_ephmat, count_kpoints, kmesh_fine, &
+                            kqmap_fine
 #ifdef __NAG
   USE f90_unix_io,   ONLY : flush
 #endif

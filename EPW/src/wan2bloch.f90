@@ -8,10 +8,10 @@
   !----------------------------------------------------------------------
   MODULE wan2bloch
   !----------------------------------------------------------------------
-  !! Contains all the routines that transforms quantities from Wannier 
+  !! 
+  !! Modules that contains all the routines that transforms quantities from Wannier 
   !! space to Bloch space. 
   !! 
-  !!  
   IMPLICIT NONE
   ! 
   CONTAINS

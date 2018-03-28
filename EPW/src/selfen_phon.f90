@@ -470,8 +470,6 @@ END SUBROUTINE selfen_phon_q
   !! Inverse of temperature define for efficiency reasons
   REAL(kind=DP) :: g2_tmp
   !! If the phonon frequency is too small discart g
-  REAL(kind=DP) :: gamma_v(nmodes)
-  !! Gamma is the imaginary part of the phonon self-energy multiplied by (1-coskkq)
   REAL(kind=DP) :: coskkq(ibndmax-ibndmin+1, ibndmax-ibndmin+1)
   !! $$(v_k \cdot v_{k+q}) / |v_k|^2$$
   REAL(kind=DP) :: DDOT
