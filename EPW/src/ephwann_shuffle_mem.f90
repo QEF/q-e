@@ -70,6 +70,7 @@
                             ephbloch2wanp_mem
   USE superconductivity, ONLY : write_ephmat, count_kpoints, kmesh_fine, &
                             kqmap_fine
+  USE transport,     ONLY : transport_coeffs, iterativebte, scattering_rate_q
 #ifdef __NAG
   USE f90_unix_io,   ONLY : flush
 #endif

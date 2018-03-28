@@ -20,11 +20,12 @@ MODFLAGS = -I../../iotk/src -I../../UtilXlib/ -I../../Modules -I../../KS_Solvers
 EPWOBJS = \
 epwcom.o \
 constants_epw.o \
-transportcom.o \
 io_epw.o \
 elph2.o \
 eliashbergcom.o \
 superconductivity.o \
+transportcom.o \
+transport.o \
 a2f.o \
 allocate_epwq.o \
 bcast_epw_input.o \
@@ -33,7 +34,6 @@ broyden.o \
 close_epw.o \
 createkmap.o \
 deallocate_epw.o \
-distribution.o \
 dvanqq2.o \
 dvqpsi_us3.o \
 dvqpsi_us_only3.o \
@@ -91,9 +91,6 @@ pw2wan90epw.o \
 wan2bloch.o \
 wigner_seitz2.o \
 wigner_seitz.o \
-iterativebte.o \
-transport_coeffs.o \
-scattering_rate.o \
 io_scattering.o \
 system_mem_usage.o
 
