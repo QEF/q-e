@@ -5,13 +5,15 @@ include ../make.inc
 # location of needed modules and included files (if any)
 MODFLAGS=$(MOD_FLAG).
 
+DFLAGS=$$DFLAGMATRIX
+
+
 UTIL = clocks_handler.o \
        divide.o \
 data_buffer.o \
 error_handler.o \
 find_free_unit.o \
 fletcher32_mod.o \
-mem_counter.o \
 mp.o \
 mp_base.o \
 mp_base_gpu.o \

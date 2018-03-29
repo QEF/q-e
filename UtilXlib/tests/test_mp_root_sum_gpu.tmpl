@@ -1,0 +1,79 @@
+! Implemented: rm, cm
+
+#if defined(__CUDA)
+PROGRAM test_mp_root_sum_{vname}_gpu
+!
+! Simple program to check the functionalities of test_mp_root_sum_i1.
+!
+    USE cudafor
+#if defined(__MPI)
+    USE MPI
+#endif
+    USE util_param, ONLY : DP
+    USE mp, ONLY : mp_root_sum
+    USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
+                          root, nproc, world_comm
+    USE tester
+    IMPLICIT NONE
+    !
+    TYPE(tester_t) :: test
+    INTEGER :: world_group = 0, valid_sum, rnk
+    INTEGER, PARAMETER :: datasize = {datasize}
+    ! for comparing with CPU implementation
+    INTEGER :: i
+    REAL(DP) :: rnd{size}
+    ! test variable
+    {type}, DEVICE :: {vname}_d{size}, root_{vname}_d{size}
+    {type} :: {vname}_h{size}, root_{vname}_h{size}
+    {type} :: aux_h{size}
+    !    
+    CALL test%init()
+    
+#if defined(__MPI)    
+    world_group = MPI_COMM_WORLD
+#endif
+    CALL mp_world_start(world_group)
+    {vname}_h = mpime
+    {vname}_d = {vname}_h
+    CALL mp_root_sum({vname}_d, root_{vname}_d , root,  world_comm)
+    root_{vname}_h = root_{vname}_d
+    !
+    ! The sum of n rank is (zero based)
+    !  sum = (n-1)*n*0.5
+    !
+    ! For a rank N matrix is 2^N * sum
+    !
+    rnk = SIZE(SHAPE({vname}_h))
+    valid_sum = ({datasize}**rnk) * (nproc-1)*nproc/2
+    !
+    IF (mpime == root) CALL test%assert_equal(INT({sumf}(root_{vname}_h )) , valid_sum )
+    !
+    ! Validate against CPU implementation
+    !
+    CALL save_random_seed("test_mp_root_sum_{vname}_gpu", mpime)
+    !
+    DO i = 0, nproc-1
+      CALL RANDOM_NUMBER(rnd)
+      {vname}_h = {typeconv} ( 10.0 * rnd )
+      {vname}_d = {vname}_h
+      aux_h = 0
+      CALL mp_root_sum({vname}_d, root_{vname}_d, i , world_comm)
+      CALL mp_root_sum({vname}_h, root_{vname}_h, i , world_comm)
+      IF (mpime == i) THEN
+          aux_h = root_{vname}_d
+          CALL test%assert_equal({sumf}(root_{vname}_h) , {sumf}(aux_h) )
+      END IF
+    END DO
+    !
+    CALL collect_results(test)
+    !
+    CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
+    !
+END PROGRAM test_mp_root_sum_{vname}_gpu
+#else
+PROGRAM test_mp_root_sum_{vname}_gpu
+    CALL no_test()
+END PROGRAM test_mp_root_sum_{vname}_gpu
+#endif

@@ -1,0 +1,78 @@
+! Implemented: i1, r1, c1, i1, rv, cv, rm, cm, im, it, i4, rt, r4, r5, ct, c4, c5
+
+#if defined(__CUDA)
+PROGRAM test_mp_bcast_{vname}_gpu
+!
+! Simple program to check the functionalities of test_mp_bcast_i1.
+!
+    USE cudafor
+#if defined(__MPI)
+    USE MPI
+#endif
+    USE util_param, ONLY : DP
+    USE mp, ONLY : mp_bcast
+    USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
+                          root, nproc, world_comm
+    USE tester
+    IMPLICIT NONE
+    !
+    TYPE(tester_t) :: test
+    INTEGER :: world_group = 0
+    INTEGER, PARAMETER :: datasize = {datasize}
+    !
+    ! Stuff for comparing with CPU implementation
+    integer :: i
+    REAL(DP) :: rnd{size}
+    !
+    ! test variable
+    {type}, DEVICE :: {vname}_d{size}
+    {type} :: {vname}_h{size}
+    {type} :: aux_h{size}
+    
+    !
+    CALL test%init()
+    
+#if defined(__MPI)    
+    world_group = MPI_COMM_WORLD
+#endif
+    CALL mp_world_start(world_group)
+    {vname}_h = mpime + 1
+    {vname}_d = {vname}_h
+    CALL mp_bcast({vname}_d, root, world_comm)
+    {vname}_h = {vname}_d
+    !
+    CALL test%assert_equal({allf}({vname}_h .eq. 1) , .true. )
+    !
+    {vname}_h = mpime
+    {vname}_d = {vname}_h
+    CALL mp_bcast({vname}_d, nproc-1, world_comm)
+    {vname}_h = {vname}_d
+    !
+    CALL test%assert_equal({allf}({vname}_h .eq. nproc-1) , .true. )
+    !
+    ! Test against CPU implementation
+    CALL save_random_seed("test_mp_bcast_{vname}_gpu", mpime)
+    !
+    DO i = 0, nproc-1
+      CALL RANDOM_NUMBER(rnd)
+      {vname}_h = {typeconv} ( 10.0 * rnd )
+      {vname}_d = {vname}_h
+      aux_h = 0
+      CALL mp_bcast({vname}_d, i , world_comm)
+      CALL mp_bcast({vname}_h, i , world_comm)
+      aux_h = {vname}_d
+      CALL test%assert_equal({sumf}({vname}_h) , {sumf}(aux_h) )
+    END DO
+    !
+    CALL collect_results(test)
+    !
+    CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
+    !
+END PROGRAM test_mp_bcast_{vname}_gpu
+#else
+PROGRAM test_mp_bcast_{vname}_gpu
+    CALL no_test()
+END PROGRAM test_mp_bcast_{vname}_gpu
+#endif

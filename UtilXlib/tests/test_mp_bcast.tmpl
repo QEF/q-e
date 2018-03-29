@@ -1,0 +1,48 @@
+! Implemented: i1, r1, c1, i1, rv, cv, rm, cm, im, it, i4, rt, r4, r5, ct, c4, c5
+
+PROGRAM test_mp_bcast_{vname}
+!
+! Simple program to check the functionalities of test_mp_bcast_i1.
+!
+
+#if defined(__MPI)
+    USE MPI
+#endif
+    USE util_param, ONLY : DP
+    USE mp, ONLY : mp_bcast
+    USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
+                          root, nproc, world_comm
+    USE tester
+    IMPLICIT NONE
+    !
+    TYPE(tester_t) :: test
+    INTEGER :: world_group = 0
+    INTEGER, PARAMETER :: datasize = {datasize}
+    ! test variable
+    {type} :: {vname}{size}
+    
+    !    
+    CALL test%init()
+    
+#if defined(__MPI)    
+    world_group = MPI_COMM_WORLD
+#endif
+    CALL mp_world_start(world_group)
+
+    {vname}{all} = mpime
+    CALL mp_bcast({vname}, root, world_comm)
+    !
+    CALL test%assert_equal({allf}({vname} .eq. 0) , .true. )
+    !
+    {vname}{all} = mpime
+    CALL mp_bcast({vname}, nproc-1, world_comm)
+    !
+    CALL test%assert_equal({allf}({vname} .eq. nproc-1) , .true. )
+    !
+    CALL collect_results(test)
+    !
+    CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
+    !
+END PROGRAM test_mp_bcast_{vname}

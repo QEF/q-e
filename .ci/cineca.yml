@@ -96,3 +96,36 @@ build:cudafortran:
     #- make run-tests-pw-serial
     #- make run-tests-cp-serial
     #- rm -r /tmp/save
+
+# UtilXlib UnitTesting 
+build:cudampiomp:
+  tags: [galileo]
+  script:
+    - module load profile/advanced pgi/17.10 cuda/8.0.61
+    - ./configure --enable-openmp
+    - cd UtilXlib/tests
+    - bash compile_and_run_tests.sh -smcn
+
+build:intelmpiomp:
+  tags: [galileo]
+  script:
+    - module load profile/advanced intel intelmpi
+    - ./configure --enable-openmp
+    - cd UtilXlib/tests
+    - bash compile_and_run_tests.sh -sm
+
+build:cudampi:
+  tags: [galileo]
+  script:
+    - module load profile/advanced pgi/17.10 cuda/8.0.61
+    - ./configure
+    - cd UtilXlib/tests
+    - bash compile_and_run_tests.sh -smcn
+
+build:intelmpi:
+  tags: [galileo]
+  script:
+    - module load profile/advanced intel intelmpi
+    - ./configure
+    - cd UtilXlib/tests
+    - bash compile_and_run_tests.sh -sm
