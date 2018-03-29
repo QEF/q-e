@@ -79,9 +79,11 @@ program test_diaghg_3
         e = 0.d0
         CALL diaghg(  n, m, h, s, ldh, e, v, .false. )
         !
+        test%tolerance64=1.d-6 ! check this
         DO j = 1, m
-            !CALL test%assert_close( v(1:n, j), v_save(1:n, j))
+            CALL test%assert_close( v(1:n, j), v_save(1:n, j))
         END DO
+        test%tolerance64=1.d-8 ! check this
         CALL test%assert_close( e(1:m), e_save(1:m) )
         !
         !
@@ -149,7 +151,7 @@ program test_diaghg_3
         CALL diaghg(  n, m, h, s, ldh, e, v, .false. )
         !
         DO j = 1, m
-            !CALL test%assert_close( v(1:n, j), v_save(1:n, j))
+            CALL test%assert_close( v(1:n, j), v_save(1:n, j))
         END DO
         CALL test%assert_close( e(1:m), e_save(1:m) )
         !

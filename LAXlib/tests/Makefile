@@ -15,12 +15,14 @@ SRCS = test_diaghg_1.f90 \
 
 EXECS = $(SRCS:.f90=.x)
 
+UTILS = tester.o mp_world.o utils.o test_io.o test_helpers.o
+
 all: common $(EXECS)
 
-common: tester.o mp_world.o utils.o test_io.o
+common: $(UTILS)
 
 %.x: %.o
-	$(LD) $(LDFLAGS) $< tester.o mp_world.o utils.o test_io.o -o $@ ../libqela.a \
+	$(LD) $(LDFLAGS) $< $(UTILS) -o $@ ../libqela.a \
 	../../UtilXlib/libutil.a $(LIBOBJS) $(LIBS)
 
 clean :
