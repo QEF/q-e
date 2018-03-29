@@ -39,14 +39,15 @@ MODULE pw_restart
                           qexml_read_bands_info, qexml_read_bands_pw, qexml_read_symmetry, &
                           qexml_read_efield, qexml_read_para, qexml_read_exx, qexml_read_esm
   !
-  USE xml_io_base, ONLY : rho_binary,read_wfc, write_wfc, create_directory
+  USE xml_io_base, ONLY : rho_binary,read_wfc, write_wfc
   !
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : e2, PI
   !
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
-                        qexml_version, qexml_version_init, pseudo_dir
+                        qexml_version, qexml_version_init, pseudo_dir,      &
+                        create_directory
   !
   USE io_global, ONLY : ionode, ionode_id
   USE mp_images, ONLY : intra_image_comm
