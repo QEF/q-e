@@ -11,6 +11,7 @@
 !       =========================================================
 !
         IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+        INTEGER N, I,j,k,n0,NR
         DIMENSION X(N),W(N)
         N0=(N+1)/2
         DO 45 NR=1,N0

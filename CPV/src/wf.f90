@@ -3370,7 +3370,7 @@ END SUBROUTINE jacobi_rotation
 
       SUBROUTINE para_range(n1, n2, nprocs, ista, iend)
       INTEGER n1,n2,nprocs,ista(0:nprocs-1),iend(0:nprocs-1)
-      INTEGER iwork1,iwork2
+      INTEGER iwork1,iwork2,irank
 
       iwork1 = (n2 - n1 + 1) / nprocs
       iwork2 = MOD(n2 - n1 + 1, nprocs)
