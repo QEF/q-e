@@ -20,12 +20,14 @@ variables see the bottom of this file)
    computed as half the number of electrons in the unit cell
    (4 in this case).
 
-2) make a non-self-consistent calculation for diamond 
-   (input=diamond.nscf.in, output=diamond.nscf.out).
-   The variable nbnd is explicitly set to 4 so that just the 4 valence 
-   bands are calculated. The list of k-points given in input is the 
-   list of points where the bands are computed. The k-points must form 
-   a uniform Monkhorst-Pack mesh.
+2) call open_grid to use symmetry to obtain the full grid of k-points
+   from the reduced one. The same outdir is used, but the prefix is changed
+   adding "_open" at the end. Note that you cannot chaneg the number of bands
+   with this procedure. The code also print on output a list of the k-points
+   in the opened grid, copy this list to the input file of wannier90, in the
+   appropriate place
+
+-- From here on, the calculation continues exactly like in the wannier90 example
 
 3) STAND-ALONE MODE
 
