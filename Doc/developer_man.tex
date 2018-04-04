@@ -2011,11 +2011,9 @@ Development can proceed in different ways:
 \item Via ``merge'' requests from a branch
 \item Directly into the ``develop'' branch
 \end{enumerate}
-The first option is the recommended one.
-
-\subsection{Merge requests from private repository}
-You need to be registered on GitLab but you do not need to have write access
-to the repository. You need the following steps:
+The first option is the recommended one. You need to be registered on GitLab 
+but you do not need to have write access to the repository. You need the 
+following initialization steps:
 \begin{itemize}
 \item  {\em fork} the QEF/q-e project, using the ``fork'' button
   on \verb|https://gitlab.com/QEF/q-e|
@@ -2025,33 +2023,35 @@ to the repository. You need the following steps:
    (not strictly needed, just to keep the symmetry):
    \verb|git checkout --track origin/develop|
 \end{itemize}
-Once you have done changes in your local copy of the repository,
-you have to {\em commit} (save) them:
+% The following times, you will likely need to align your local repository
+% to the ``develop'' branch, then align your remote repository as well:
+% \begin{verbatim}
+%    git pull git@gitlab.com:QEF/q-e.git develop
+%    git push
+% \end{verbatim}
+Once you have changed your local copy of the repository,
+you have to {\em commit} (save) those changes:
 \begin{quote}
   \verb|git add list-of-changed-or-added-files|\\
   \verb|git commit |
 \end{quote}
 then you can align the repository to the ``develop'' branch:
 \begin{quote}
-  \verb|git merge  git@gitlab.com:QEF/q-e.git develop| 
+  \verb|git pull  git@gitlab.com:QEF/q-e.git develop| 
 \end{quote}
-To align the repository without committing, you may use
-\begin{verbatim}
-   git pull git@gitlab.com:QEF/q-e.git develop
-\end{verbatim}
-but if a file is modified both locally and in the repository, a conflict
+If a file is modified both locally and in the repository, a conflict
 will arise. You can use the \texttt{stash} to resolve the conflict:
 \begin{quote}
-  \verb|git stash save |     (save and remove modified files)\\
-  \verb|git pull       |     (update files)\\
-  \verb|git stash apply|     (overwrite with locally modified files)
+  \verb|git stash save | (save and remove modified files)\\
+  \verb| git pull ...  | (update files)\\
+  \verb|git stash apply| (overwrite with locally modified files)
 \end{quote}
 Beware! you may need to manually merge files that have been modified both 
 by you and in the repository.
 The stash can be cleared using \texttt{git stash clear}.
 
-Note: it is good practice to use \verb|git fetch| before a pull or a merge,
-as in eg-:\\
+Note: it is good practice to use \verb|git fetch| before a pull,
+as in, e.g.:
 \begin{quote}
   \verb|git fetch  git@gitlab.com:QEF/q-e.git develop|
 \end{quote}
@@ -2068,28 +2068,28 @@ branch of the official repository. You can use the GitLab web interface to
 do a ``merge request'', that some other developer will review and approve
 (or not).
 
-\subsection{Merge requests from a branch}
-This case requires write access to the QEF/q-e project. Set up your branch
-as follows:
-\begin{itemize}
-\item \verb|git clone git@gitlab.com:QEF/q-e.git| if not already done
-\item Make a new branch of the ``develop'' branch. On your copy:\\
-  \verb|git checkout -b my-branch QEF/q-e develop|
-\item Switch to the new branch:
-  \verb|git checkout my-branch|
-\end{itemize}
-Then work on it as in the previous subsection,
-request a merge of ``my-branch'' into ``develop''.
+%\subsection{Merge requests from a branch}
+%This case requires write access to the QEF/q-e project. Set up your branch
+%as follows:
+%\begin{itemize}
+%\item \verb|git clone git@gitlab.com:QEF/q-e.git| if not already done
+%\item Make a new branch of the ``develop'' branch. On your copy:\\
+%  \verb|git checkout -b my-branch QEF/q-e develop|
+%\item Switch to the new branch:
+%  \verb|git checkout my-branch|
+%\end{itemize}
+%Then work on it as in the previous subsection,
+%request a merge of ``my-branch'' into ``develop''.
 
-\subsection{Directly into the develop branch}
+\subsection{Working directly into the develop branch}
 Only for people knowing what thay are doing (or ready to fix the mess in case
 they didn't know what they were doing):
 \begin{itemize}
+\item \verb|git clone git@gitlab.com:QEF/q-e.git| if not already done
 \item Ensure you switch to the ``develop'' branch:
   \verb|git checkout --track origin/develop|
-\item Work on it as in the previous subsections
-\item When you are ready, \verb|git push|, or, in case of doubt,
-  \verb|git push origin develop|.
+\item Work on it as in the previous subsection
+\item When you are ready, \verb|git push|
 \end{itemize}
 
 \subsection{A few useful commands}
