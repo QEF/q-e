@@ -1,0 +1,24 @@
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='di',
+    pseudo_dir='/home/arash/PW-pseudo',
+    outdir='/home/arash/tmp'
+ /
+ &system    
+    ibrav=  2, celldm(1) =6.1, nat=  2, ntyp= 1,
+    ecutwfc =40.0, 
+ /
+ &electrons
+    diagonalization='david'
+    mixing_mode = 'plain'
+    mixing_beta = 0.7 
+    conv_thr =  1.0d-13
+ /
+ATOMIC_SPECIES
+ C  12.0  C.pz-vbc.UPF
+ATOMIC_POSITIONS {crystal}
+C  -0.125 -0.125 -0.125
+C   0.125  0.125  0.125
+K_POINTS {automatic}
+ 12 12 12 0 0 0

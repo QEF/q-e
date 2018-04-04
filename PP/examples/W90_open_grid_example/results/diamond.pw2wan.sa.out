@@ -1,0 +1,129 @@
+
+     Program PW2WANNIER v.6.2 starts on 16Feb2018 at 11:25:38 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+ 
+  Reading nscf_save data
+
+     Reading data from directory:
+     /home/paulatto/espresso/tempdir/di_open.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PZ ( 1  1  0  0 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min          49      49     18                  477      477     102
+     Max          50      50     19                  481      481     104
+     Sum         199     199     73                 1917     1917     411
+ 
+ 
+  Spin CASE ( default = unpolarized )
+ 
+  Wannier mode is: standalone     
+ 
+  -----------------
+  *** Reading nnkp 
+  -----------------
+ 
+  Checking info from wannier.nnkp file
+ 
+  - Real lattice is ok
+  - Reciprocal lattice is ok
+  - K-points are ok
+  - Number of wannier functions is ok (  4)
+  - All guiding functions are given 
+ 
+ Projections:
+    0.000000    0.000000    0.000000  0  1  1    1.000000
+   -0.250000    0.250000    0.000000  0  1  1    1.000000
+    0.000000    0.250000    0.250000  0  1  1    1.000000
+   -0.250000    0.000000    0.250000  0  1  1    1.000000
+ 
+  Reading data about k-point neighbours 
+ 
+  All neighbours are found 
+ 
+  Opening pp-files 
+ 
+ 
+  ---------------
+  *** Compute  A 
+  ---------------
+ 
+  AMN: iknum =       64
+       1       2       3       4       5       6       7       8       9      10
+      11      12      13      14      15      16      17      18      19      20
+      21      22      23      24      25      26      27      28      29      30
+      31      32      33      34      35      36      37      38      39      40
+      41      42      43      44      45      46      47      48      49      50
+      51      52      53      54      55      56      57      58      59      60
+      61      62      63      64
+
+  AMN calculated
+ 
+  ---------------
+  *** Compute  M 
+  ---------------
+ 
+  MMN: iknum =       64
+       1       2       3       4       5       6       7       8       9      10
+      11      12      13      14      15      16      17      18      19      20
+      21      22      23      24      25      26      27      28      29      30
+      31      32      33      34      35      36      37      38      39      40
+      41      42      43      44      45      46      47      48      49      50
+      51      52      53      54      55      56      57      58      59      60
+      61      62      63      64
+
+  MMN calculated
+ 
+  -----------------------------------
+  *** Orbital terms are not computed 
+  -----------------------------------
+ 
+  ----------------
+  *** Write bands 
+  ----------------
+ 
+ 
+  -----------------------------
+  *** Plot info is not printed 
+  -----------------------------
+ 
+  -----------------------------
+  *** Parity info is not printed 
+  -----------------------------
+ 
+  ------------
+  *** Stop pp 
+  ------------
+ 
+ 
+     init_pw2wan  :      0.06s CPU      0.07s WALL (       1 calls)
+     compute_amn  :      0.37s CPU      0.43s WALL (       1 calls)
+     compute_mmn  :      0.11s CPU      0.16s WALL (       1 calls)
+ 
+     PW2WANNIER   :     0.43s CPU         0.50s WALL
+
+ 
+   This run was terminated on:  11:25:39  16Feb2018            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
+ 

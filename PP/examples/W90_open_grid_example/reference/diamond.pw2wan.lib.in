@@ -1,0 +1,10 @@
+&inputpp 
+   outdir = '/home/arash/tmp/'
+   prefix = 'di'
+   seedname = 'diamond.lib'
+   spin_component = 'none'
+   write_mmn = .true.
+   write_amn = .true.
+   write_unk = .false.
+   wan_mode = 'library'
+/

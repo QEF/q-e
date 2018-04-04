@@ -1,0 +1,99 @@
+
+This example shows how to use pw2wannier90.x in conjunction with 
+Wannier90 (http://www.wannier.org) to obtain maximally-localised
+Wannier functions (MLWFs) for the valence bands of diamond. 
+Wannier90 may be run in two modes, 'library' and 'standalone',
+and both of these are demonstrated.
+
+The Wannier90 code and library (available for download from 
+http://www.wannier.org under the GNU General Public License) are required. 
+For operation in library mode, the pw2wannier90 post-processing code must 
+be linked at compile time to the Wannier90 library. Instructions for 
+compilation of Wannier90 can be found in the documentation that comes with 
+the distribution. 
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the bottom of this file)
+
+1) make a self-consistent calculation for diamond (input=diamond.scf.in,
+   output=diamond.scf.out). The number of computed bands is internally
+   computed as half the number of electrons in the unit cell
+   (4 in this case).
+
+2) make a non-self-consistent calculation for diamond 
+   (input=diamond.nscf.in, output=diamond.nscf.out).
+   The variable nbnd is explicitly set to 4 so that just the 4 valence 
+   bands are calculated. The list of k-points given in input is the 
+   list of points where the bands are computed. The k-points must form 
+   a uniform Monkhorst-Pack mesh.
+
+3) STAND-ALONE MODE
+
+   (3a) run Wannier90 (input=wannier.sa.win, output=wannier.sa.wout) to 
+        generate a list of the required overlap elements between states at 
+        different k-points. This information is written to a file called 
+        diamond.sa.nnkp
+
+   (3b) run pw2wannier90 (input=diamond.pw2wan.sa.in, 
+        output=diamond.pw2wan.sa.out) to compute the overlap between Bloch 
+        states, the projections for the starting guess and the eigenvalue 
+        of each Bloch eigenstate (written to the diamond.sa.mmn, 
+        diamond.sa.amn and diamond.sa.eig files, respectively).
+
+   (3c) run Wannier90 (input=wannier.sa.win, output=wannier.sa.wout) to 
+        obtain the MLWF centres and spreads.
+
+4) LIBRARY MODE 
+
+!! pw2wannier90.x has to be compiled with the -D__WANLIB and
+!! libwannier.a has to be linked
+
+   (4a) run pw2wannier90 in library mode to obtain the MLWF centres 
+        and spreads (input=diamond.lib.win, diamond.pw2wan.lib.in, 
+        output=diamond.lib.wout, diamond.pw2wan.lib.out). 
+
+N.B.
+
+  (i) The WAN_DIR variable in the run_example script must be set to the 
+      directory of the wannier90 executable. 
+
+ (ii) Multiple CPUs: distribution of k-points (the -npool command line option)
+      is not yet supported, only G-vectors.
+
+ (iii) To run in library mode, pw2wannier90 must be linked to the wannier
+       library. To do so, compile the Wannier90 library, libwannier.a, 
+       following the instructions in the Wannier90 documentation (for the 
+       impatient, type 'make lib' in the Wannier90 root directory). Then make 
+       the following changes to the espresso make.sys file, and recompile 
+       pw2wannier90:
+
+         + Add -D__WANLIB to the DFLAGS variable
+           DFLAGS = -D__WANLIB ...
+
+         + Add a new variable WANLIB to specify location of Wannier library
+           WANLIB = -L/path/of/wannier/library -lwannier
+
+         + Add $(WANLIB) to the LIBS variable
+           LIBS   = $(WANLIB) $(LAPACK_LIBS) $(BLAS_LIBS) ...
+
+Input variables for pw2wannier90:
+
+outdir         : location of temporary output files
+prefix         : pwscf filename prefix
+seedname       : wannier90 input/output filename prefix
+wan_mode       : 'standalone' or 'library' [1]
+write_mmn      : (logical) compute M_mn matrix [1]
+write_amn      : (logical) compute A_mn matrix [1]
+write_unk      : (logical) write wavefunctions to file [1]
+wvfn_formatted : (logical) formatted or unformatted output for wavefunctions
+reduce_unk     : (logical) output wavefunctions on a coarse grid to save memory
+spin_component : 'none', 'up' or 'down'
+
+
+Please report problems and suggestions to Stefano de Gironcoli
+(degironc@sissa.it), Arash Mostofi (mostofi@mit.edu) and 
+Jonathan Yates (jry20@cam.ac.uk).
+
+
+[1] For more details see Wannier90 documentation at http://www.wannier.org
+ 
