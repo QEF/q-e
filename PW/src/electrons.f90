@@ -72,7 +72,7 @@ SUBROUTINE electrons()
   LOGICAL :: first, exst
   REAL(DP) :: etot_cmp_paw(nat,2,2)
   LOGICAL :: DoLoc
-  ! test
+  !
   !
   DoLoc = local_thr.gt.0.0d0
   exxen = 0.0d0
