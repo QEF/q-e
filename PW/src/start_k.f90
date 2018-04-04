@@ -81,6 +81,8 @@ MODULE start_k
        !
        ! reset the automatic grid to new values if these are > 0
        !
+       INTEGER, INTENT (IN) :: nk1_, nk2_, nk3_, k1_, k2_, k3_
+       !
        reset_grid = (nk1_*nk2_*nk3_ > 0)
        IF ( .NOT. reset_grid ) RETURN
        nk1 = nk1_

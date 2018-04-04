@@ -16,7 +16,7 @@ SUBROUTINE lr_readin
   USE lr_variables
   USE lr_dav_variables
   USE kinds,               ONLY : DP
-  USE io_files,            ONLY : tmp_dir, prefix, wfc_dir
+  USE io_files,            ONLY : tmp_dir, prefix, wfc_dir, create_directory
   USE lsda_mod,            ONLY : current_spin, nspin, isk, lsda
   USE control_flags,       ONLY : twfcollect,use_para_diag, &
                                   & tqr, lkpoint_dir, gamma_only, &
@@ -52,7 +52,6 @@ SUBROUTINE lr_readin
   USE martyna_tuckerman,   ONLY : do_comp_mt
   USE esm,                 ONLY : do_comp_esm
   USE qpoint,              ONLY : xq
-  USE xml_io_base,         ONLY : create_directory
   USE io_rho_xml,          ONLY : write_scf
   USE noncollin_module,    ONLY : noncolin
   USE mp_bands,            ONLY : ntask_groups

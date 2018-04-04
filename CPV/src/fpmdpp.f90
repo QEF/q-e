@@ -485,7 +485,8 @@ SUBROUTINE read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
 
   USE kinds,      ONLY: DP
   USE constants,  ONLY: bohr => BOHR_RADIUS_ANGS
-  USE xml_io_base
+  USE io_files,   ONLY: check_file_exist
+  USE xml_io_base,ONLY: restart_dir
   USE iotk_module
 
   IMPLICIT NONE
@@ -545,11 +546,11 @@ SUBROUTINE read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
      END IF
      !
      !
-     IF ( check_file_exst ( TRIM(filename)//'.dat' ) ) THEN
+     IF ( check_file_exist ( TRIM(filename)//'.dat' ) ) THEN
         !
         CALL read_density( TRIM(filename)//'.dat', dunit, nr1, nr2, nr3, rho, lbinary )
         !
-     ELSEIF ( check_file_exst ( TRIM(filename)//'.xml' ) ) THEN
+     ELSEIF ( check_file_exist ( TRIM(filename)//'.xml' ) ) THEN
         !
         CALL read_density( TRIM(filename)//'.xml', dunit, nr1, nr2, nr3, rho, lbinary )
         !

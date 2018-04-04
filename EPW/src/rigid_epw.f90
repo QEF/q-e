@@ -195,7 +195,7 @@ SUBROUTINE rgd_blk_epw(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
   USE kinds,         ONLY : dp
   USE cell_base,     ONLY : bg, omega, alat
   USE ions_base,     ONLY : tau, nat
-  USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, cone, two, ryd2mev
+  USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12
   USE epwcom,        ONLY : shortrange
   !
   implicit none
@@ -230,10 +230,10 @@ SUBROUTINE rgd_blk_epw(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
   real(DP) :: qeq,     &! <q+G| epsil | q+G>
        arg, zaq,       &
        g1, g2, g3, gmax, alph, geg
-  integer :: na, ipol, im, m1,m2,m3!, nrx1,nrx2,nrx3
-  complex(dp) :: fac, facqd, facq, epmatl(nmodes), matsq
+  integer :: na, ipol, m1,m2,m3!, nrx1,nrx2,nrx3
+  complex(dp) :: fac, facqd, facq, epmatl(nmodes)
   !
-  IF (abs(signe) /= 1.0) &
+  IF ( abs ( abs(signe) - 1.0 ) > eps12 ) &
        CALL errore ('rgd_blk',' wrong value for signe ',1)
   !
   gmax= 14.d0
@@ -343,7 +343,7 @@ SUBROUTINE rgd_blk_epw_fine(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
   USE kinds,         ONLY : dp
   USE cell_base,     ONLY : bg, omega, alat
   USE ions_base,     ONLY : tau, nat
-  USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, cone, two, ryd2mev
+  USE constants_epw, ONLY : twopi, fpi, e2, ci, czero, eps12
   USE epwcom,        ONLY : shortrange, nbndsub
   !
   implicit none
@@ -377,11 +377,11 @@ SUBROUTINE rgd_blk_epw_fine(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
   !
   REAL(kind=DP) :: qeq,     &! <q+G| epsil | q+G>
        arg, zaq, g1, g2, g3, gmax, alph, geg
-  INTEGER :: na, ipol, im, m1,m2,m3, nrx1,nrx2,nrx3, imode
-  COMPLEX(kind=DP) :: fac, facqd, facq,  matsq
+  INTEGER :: na, ipol, m1,m2,m3, imode
+  COMPLEX(kind=DP) :: fac, facqd, facq
   COMPLEX(kind=DP) :: epmatl(nbndsub,nbndsub,nmodes)
   !
-  IF (abs(signe) /= 1.0) &
+  IF ( abs ( abs(signe) - 1.0 ) > eps12 ) &
        CALL errore ('rgd_blk',' wrong value for signe ',1)
   !
   gmax= 14.d0
@@ -579,7 +579,7 @@ SUBROUTINE tf_epsilon (q, nmodes, epsil, eps_tf)
   USE kinds,         ONLY : dp
   USE cell_base,     ONLY : at, bg, omega, alat
   USE constants_epw, ONLY : pi, twopi, ha2ev, cone
-  USE epwcom,        ONLY : meff, fermi_diff, nel
+  USE epwcom,        ONLY : fermi_diff, nel
   USE io_global,     ONLY : stdout
   !
   implicit none
@@ -653,7 +653,7 @@ SUBROUTINE compute_umn_f (nbnd, cufkk, cufkq, bmatf)
   !! on the fine grids.
   !!
   USE kinds,         ONLY : DP
-  USE constants_epw, ONLY : twopi, ci, czero, cone
+  USE constants_epw, ONLY : czero, cone
   !!
   implicit none
   !
@@ -691,7 +691,7 @@ SUBROUTINE compute_umn_c (nbnd, nbndsub, nks, cuk, cukq, bmat)
   !! on the coarse grids. 
   !!
   USE kinds,         ONLY : DP
-  USE constants_epw, ONLY : twopi, ci, czero, cone
+  USE constants_epw, ONLY : czero, cone
   ! 
   implicit none
   !

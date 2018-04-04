@@ -62,11 +62,11 @@ SUBROUTINE init_run()
   USE efield_module,            ONLY : allocate_efield, allocate_efield2
   USE cg_module,                ONLY : allocate_cg
   USE wannier_module,           ONLY : allocate_wannier  
-  USE io_files,                 ONLY : tmp_dir, prefix
+  USE io_files,                 ONLY : tmp_dir, prefix, create_directory
   USE io_global,                ONLY : ionode, stdout
   USE printout_base,            ONLY : printout_base_init
   USE wave_types,               ONLY : wave_descriptor_info
-  USE xml_io_base,              ONLY : restart_dir, create_directory
+  USE xml_io_base,              ONLY : restart_dir
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
   USE ions_base,                ONLY : ions_reference_positions, cdmi
   USE mp_bands,                 ONLY : nbgrp

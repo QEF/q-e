@@ -20,7 +20,7 @@ PROGRAM upf_fixer
    IMPLICIT NONE
    CHARACTER(LEN=256)   :: filein, fileout, line 
    INTEGER              :: ios, argc, prefix_len, iarg
-   LOGICAL              :: exst, sano, inplace = .FALSE.
+   LOGICAL              :: exst, sano, is_xml, inplace = .FALSE.
    argc = command_argument_count() 
    IF ( .NOT. argc > 0 ) THEN 
       PRINT *, 'usage: fix_upf [--inplace ] filename' 
@@ -72,7 +72,11 @@ PROGRAM upf_fixer
    ENDIF
    sano =  check_upf_file(TRIM(filein)) 
    IF (.NOT. sano ) THEN 
-      CALL make_emended_upf_copy( filein, './temp.UPF') 
+      CALL make_emended_upf_copy( filein, './temp.UPF', is_xml)
+      IF ( .NOT. is_xml ) THEN 
+         PRINT *, "This file is not in xml format !!!! Stopping"
+         STOP
+      END IF
       ios = f_copy('./temp.UPF', TRIM(fileout)) 
       IF ( ios /= 0 ) THEN 
          PRINT '("error while writing the emended copy of ",A)', TRIM(filein) 

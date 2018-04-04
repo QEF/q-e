@@ -234,6 +234,8 @@
   !! if .true. the system is 2 dimensional (vaccum is in z-direction)
   LOGICAL :: prtgkk
   !! if .true. print the |g| vertex in [meV].
+  LOGICAL :: lphase
+  !! if .true. then fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian. 
   !
   ! Superconductivity
   LOGICAL :: ephwrite

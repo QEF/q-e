@@ -34,6 +34,8 @@ SUBROUTINE hinit0()
   INTEGER :: ik                 ! counter on k points
   REAL(dp), ALLOCATABLE :: gk(:) ! work space
   !
+  CALL start_clock( 'hinit0' )
+  !
   ! ... calculate the Fourier coefficients of the local part of the PP
   !
   CALL init_vloc()
@@ -94,6 +96,8 @@ SUBROUTINE hinit0()
    call init_realspace_vars()
    write(stdout,'(5X,"Real space initialisation completed")')    
   endif
+  !
+  CALL stop_clock( 'hinit0' )
   !
   RETURN
   !

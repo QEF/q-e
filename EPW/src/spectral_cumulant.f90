@@ -23,7 +23,6 @@
   USE constants_epw, ONLY : pi, two, zero, ryd2ev
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iospectral_sup, iospectral_cum
-  USE io_files,      ONLY : prefix, tmp_dir, diropn
   USE epwcom,        ONLY : degaussw, eptemp, wmin_specfun, wmax_specfun, nw_specfun, &
                             bnd_cum
   USE elph2,         ONLY : ibndmin, ibndmax
@@ -114,6 +113,8 @@
   degaussw = degaussw * ryd2ev
   degaussw = 0.005 !as FC
   eta = 0.0001 !as FC (for denominator)
+  iks = 0
+  i0 = 0
   !
   WRITE(stdout,'(/5x,a)') repeat('=',100)
   WRITE(stdout,'(5x,a)') 'Performing the CUMULANT EXPANSION to obtain the electron spectral function'

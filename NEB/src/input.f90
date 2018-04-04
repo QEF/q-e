@@ -18,7 +18,7 @@ SUBROUTINE ioneb()
   USE kinds,         ONLY : DP
   USE constants,     ONLY : autoev, eV_to_kelvin
   USE io_global,     ONLY : stdout
-  USE io_files,      ONLY : tmp_dir 
+  USE io_files,      ONLY : tmp_dir
   USE path_variables, ONLY : lsteep_des, lquick_min, &
                              lbroyden, lbroyden2, llangevin, &
                              lneb, lsmd, restart
@@ -210,7 +210,7 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
   !
   USE wrappers,         ONLY : f_mkdir
   USE path_input_parameters_module, ONLY : restart_mode
-  USE io_files,         ONLY : prefix, xmlpun,  delete_if_present
+  USE io_files,         ONLY : prefix, xmlpun, check_tempdir, delete_if_present
   USE path_variables,   ONLY : num_of_images
   USE mp_world,         ONLY : world_comm, mpime, nproc
   USE io_global,        ONLY : meta_ionode

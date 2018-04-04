@@ -380,6 +380,7 @@ open_grid.o : ../../Modules/recvec.o
 open_grid.o : ../../Modules/wavefunctions.o
 open_grid.o : ../../PW/src/buffers.o
 open_grid.o : ../../PW/src/exx.o
+open_grid.o : ../../PW/src/exx_base.o
 open_grid.o : ../../PW/src/io_rho_xml.o
 open_grid.o : ../../PW/src/pwcom.o
 open_grid.o : ../../PW/src/scf_mod.o
@@ -665,7 +666,6 @@ pw_export.o : ../../Modules/mp_global.o
 pw_export.o : ../../Modules/mp_pools.o
 pw_export.o : ../../Modules/mp_wave.o
 pw_export.o : ../../Modules/mp_world.o
-pw_export.o : ../../Modules/parameters.o
 pw_export.o : ../../Modules/recvec.o
 pw_export.o : ../../Modules/uspp.o
 pw_export.o : ../../Modules/version.o

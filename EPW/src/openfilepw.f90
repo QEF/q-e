@@ -18,7 +18,6 @@
   !! Imported the noncolinear case implemented by xlzhang
   !!
   !-----------------------------------------------------------------------
-  use mp_global,        ONLY : me_pool
   use io_files,         ONLY : prefix, diropn, seqopn
   use units_ph,         ONLY : iuwfc
   ! nwordwfc is the record length for the direct-access file containing

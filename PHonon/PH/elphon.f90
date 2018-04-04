@@ -489,14 +489,13 @@ SUBROUTINE elphsum ( )
   USE modes,       ONLY : u, nirr
   USE dynmat,      ONLY : dyn, w2
   USE io_global,   ONLY : stdout, ionode, ionode_id
-  USE xml_io_base, ONLY : create_directory
   USE mp_pools,    ONLY : my_pool_id, npool, kunit
   USE mp_images,   ONLY : intra_image_comm
   USE mp,          ONLY : mp_bcast
   USE control_ph,  ONLY : tmp_dir_phq, xmldyn, current_iq
   USE save_ph,     ONLY : tmp_dir_save
-  USE io_files,    ONLY : prefix, tmp_dir, seqopn
-  
+  USE io_files,    ONLY : prefix, tmp_dir, seqopn, create_directory
+  !
   USE lr_symm_base, ONLY : minus_q, nsymq, rtau
   USE qpoint,       ONLY : xq, nksq
   USE control_lr,   ONLY : lgamma

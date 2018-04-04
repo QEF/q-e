@@ -55,7 +55,7 @@ CONTAINS
      fill_vac = fill_vac_
      scale_at = scale_at_
      t_gauss  = t_gauss_ 
-     cntr_(:) = cntr_(:)
+     cntr(:) = cntr_(:)
      jellium = .false.  ! provvisorio
      rho_thr = rho_thr_
      step_rad(:) = step_rad_(:)

@@ -57,7 +57,7 @@
                             title, int_mob, scissor, iterative_bte, scattering, &
                             ncarrier, carrier, scattering_serta, restart, restart_freq, &
                             scattering_0rta, longrange, shortrange, scatread, &
-                            restart_filq, prtgkk, nel, meff, epsiHEG
+                            restart_filq, prtgkk, nel, meff, epsiHEG, lphase
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV
@@ -68,7 +68,7 @@
   USE partial,       ONLY : atomo, nat_todo
   USE constants,     ONLY : AMU_RY
   USE mp_global,     ONLY : my_pool_id, me_pool
-  USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode, ionode_id, stdout
+  USE io_global,     ONLY : meta_ionode, meta_ionode_id
 #if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
@@ -121,7 +121,8 @@
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         & 
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
-       scatread, restart, restart_freq, restart_filq, prtgkk, nel, meff, epsiHEG
+       scatread, restart, restart_freq, restart_filq, prtgkk, nel, meff,       &
+       epsiHEG, lphase
 
   ! tphases, fildvscf0
   !
@@ -278,10 +279,8 @@
   ! nel             : Fractional number of electrons in the unit cell
   ! meff            : Density of state effective mass (in unit of the electron mass)
   ! epsiHEG         : Dielectric constant at zero doping
+  ! lphase          : If .true., fix the gauge on the phonon eigenvectors and electronic eigenvectors - DS 
   !  
-  CHARACTER (LEN=80)  :: input_file
-  INTEGER             :: nargs, iiarg, ierr
-  !
   nk1tmp = 0
   nk2tmp = 0
   nk3tmp = 0
@@ -464,7 +463,8 @@
   prtgkk     = .false.
   nel        = 0.0d0
   meff       = 1.d0
-  epsiHEG    = 1.d0
+  epsiHEG    = 1.d0 
+  lphase     = .false. 
   !
   !     reading the namelist inputepw
   !
@@ -727,7 +727,6 @@
   IF (nat_todo.NE.0) THEN
      IF (meta_ionode)read (5, *, iostat = ios) (atomo (na), na = 1, nat_todo)
      CALL mp_bcast(ios, meta_ionode_id, world_comm  )
-700  CALL errore ('epw_readin', 'reading atomo', abs (ios) )
      CALL mp_bcast(atomo, meta_ionode_id, world_comm )
   ENDIF
 800 continue

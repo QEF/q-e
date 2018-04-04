@@ -441,7 +441,7 @@ MODULE input_parameters
         REAL(DP) :: conv_thr_multi = 0.1_DP
         REAL(DP) :: ecutfock = -1.d0
           ! variables used in Lin Lin's ACE and SCDM
-        REAL(DP) :: localization_thr = 0.0_dp, scdmden=0.10d0, scdmgrd=0.20d0
+        REAL(DP) :: localization_thr = 0.0_dp, scdmden=1.0d0, scdmgrd=1.0d0
         INTEGER  :: n_proj  = 0
         LOGICAL  :: scdm=.FALSE.
         LOGICAL  :: ace=.TRUE.

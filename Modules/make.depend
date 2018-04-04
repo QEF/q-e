@@ -6,6 +6,10 @@ autopilot.o : kind.o
 autopilot.o : mp_world.o
 autopilot.o : parser.o
 basic_algebra_routines.o : kind.o
+bcast_qes_module.o : ../UtilXlib/mp.o
+bcast_qes_module.o : io_global.o
+bcast_qes_module.o : kind.o
+bcast_qes_module.o : qes_types.o
 becmod.o : ../UtilXlib/mp.o
 becmod.o : control_flags.o
 becmod.o : kind.o
@@ -64,6 +68,7 @@ dylmr2.o : kind.o
 electrons_base.o : constants.o
 electrons_base.o : io_global.o
 electrons_base.o : kind.o
+environment.o : fox_init_module.o
 environment.o : io_files.o
 environment.o : io_global.o
 environment.o : kind.o
@@ -91,7 +96,9 @@ fft_rho.o : ../FFTXlib/fft_interfaces.o
 fft_rho.o : ../FFTXlib/fft_types.o
 fft_rho.o : control_flags.o
 fft_rho.o : kind.o
-fox_as_iotk.o : kind.o
+fox_init_module.o : ../UtilXlib/mp.o
+fox_init_module.o : io_global.o
+fox_init_module.o : mp_images.o
 funct.o : io_global.o
 funct.o : kind.o
 funct.o : xc_rVV10.o
@@ -107,6 +114,7 @@ generate_function.o : io_global.o
 generate_function.o : kind.o
 generate_function.o : mp_bands.o
 generate_k_along_lines.o : kind.o
+gradutils.o : ../FFTXlib/fft_helper_subroutines.o
 gradutils.o : ../FFTXlib/fft_interfaces.o
 gradutils.o : ../FFTXlib/fft_types.o
 gradutils.o : cell_base.o
@@ -134,9 +142,12 @@ io_base.o : ../UtilXlib/mp.o
 io_base.o : kind.o
 io_base.o : mp_wave.o
 io_base.o : qeh5_module.o
+io_files.o : ../UtilXlib/mp.o
 io_files.o : io_global.o
 io_files.o : kind.o
+io_files.o : mp_images.o
 io_files.o : parameters.o
+io_files.o : wrappers.o
 ions_base.o : cell_base.o
 ions_base.o : constants.o
 ions_base.o : io_global.o
@@ -473,7 +484,6 @@ xml_io_base.o : mp_global.o
 xml_io_base.o : mp_images.o
 xml_io_base.o : mp_wave.o
 xml_io_base.o : parser.o
-xml_io_base.o : wrappers.o
 xsf.o : constants.o
 xsf.o : kind.o
 ylmr2.o : constants.o

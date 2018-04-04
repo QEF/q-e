@@ -18,7 +18,7 @@ MODULE qes_libs_module
    INTEGER, PARAMETER      :: max_real_per_line=5
    CHARACTER(32)           :: fmtstr
    !
-   PRIVATE :: attr, fmtstr
+   PRIVATE :: fmtstr
 !
 INTERFACE qes_init_matrix
    MODULE PROCEDURE  qes_init_matrix_1, qes_init_matrix_2, qes_init_matrix_3
@@ -5690,7 +5690,8 @@ SUBROUTINE qes_reset_BerryPhaseOutput(obj)
    DO i = 1, SIZE(obj%electronicPolarization)
       CALL qes_reset_electronicPolarization(obj%electronicPolarization(i))
    ENDDO
-   IF (ALLOCATED(obj%electronicPolarization)) DEALLOCATE(obj%electronicPolarization)
+   IF (ALLOCATED(obj%electronicPolarization)) &
+       DEALLOCATE(obj%electronicPolarization)
 
 END SUBROUTINE qes_reset_BerryPhaseOutput
 

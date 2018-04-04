@@ -320,28 +320,12 @@ SUBROUTINE read_upf_header(u, upf)
       LOGICAL :: found
       !
       mshNode => item( getElementsByTagname(u, 'PP_MESH'),0 )
-      IF ( hasAttribute(mshNode, 'dx')) THEN 
-         CALL extractDataAttribute(mshNode, 'dx',   upf%dx ) 
-      ELSE 
-        upf%dx  = 0._dp
-      END IF
+      IF ( hasAttribute(mshNode, 'dx')) CALL extractDataAttribute(mshNode, 'dx',   upf%dx ) 
       IF ( hasAttribute (mshNode, 'mesh')) &
              CALL extractDataAttribute(mshNode, 'mesh', upf%mesh )
-      IF ( hasAttribute ( mshNode, 'mesh') ) THEN 
-         CALL extractDataAttribute(mshNode, 'xmin', upf%xmin ) 
-      ELSE 
-          upf%xmin = 0._dp
-      END IF
-      IF ( hasAttribute ( mshNode, 'rmax') ) THEN
-          CALL extractDataAttribute(mshNode, 'rmax', upf%rmax )
-      ELSE
-          upf%rmax = 0._dp 
-      END IF
-      IF ( hasAttribute ( mshNode, 'zmesh') ) THEN
-          CALL extractDataAttribute(mshNode, 'zmesh',upf%zmesh ) 
-      ELSE 
-          upf%zmesh = 0._dp 
-      END IF
+      IF ( hasAttribute ( mshNode, 'xmin') )  CALL extractDataAttribute(mshNode, 'xmin', upf%xmin ) 
+      IF ( hasAttribute ( mshNode, 'rmax') ) CALL extractDataAttribute(mshNode, 'rmax', upf%rmax )
+      IF ( hasAttribute ( mshNode, 'zmesh') ) CALL extractDataAttribute(mshNode, 'zmesh',upf%zmesh ) 
       IF (present(grid)) THEN
          CALL allocate_radial_grid(grid, upf%mesh)
          !
@@ -368,9 +352,19 @@ SUBROUTINE read_upf_header(u, upf)
          ! Reconstruct additional grids
          upf%grid%r2 =  upf%r**2
          upf%grid%sqr = sqrt(upf%r)
-         upf%grid%rm1 = upf%r**(-1)
-         upf%grid%rm2 = upf%r**(-2)
-         upf%grid%rm3 = upf%r**(-3)
+         ! Prevent FP error if r(1) = 0 
+         IF ( upf%r(1) > 1.0D-16) THEN
+            upf%grid%rm1 = upf%r**(-1)
+            upf%grid%rm2 = upf%r**(-2)
+            upf%grid%rm3 = upf%r**(-3)
+         ELSE
+            upf%grid%rm1(1) =0.0_dp
+            upf%grid%rm2(1) =0.0_dp
+            upf%grid%rm3(1) =0.0_dp
+            upf%grid%rm1(2:) = upf%r(2:)**(-1)
+            upf%grid%rm2(2:) = upf%r(2:)**(-2)
+            upf%grid%rm3(2:) = upf%r(2:)**(-3)
+         END IF
       ENDIF
       !
       RETURN
@@ -556,7 +550,7 @@ SUBROUTINE read_upf_header(u, upf)
          ELSE
             ALLOCATE( upf%qfcoef( MAX( upf%nqf,1 ), upf%nqlc, upf%nbeta, upf%nbeta ) )
             ALLOCATE(tmp_dbuffer(MAX( upf%nqf,1 )*upf%nqlc*upf%nbeta*upf%nbeta))
-            locNode2=> item(getElementsByTagname(locNode, 'PP_QFCOEFF'),0) 
+            locNode2=> item(getElementsByTagname(locNode, 'PP_QFCOEF'),0) 
             CALL extractDataContent(locNode2, tmp_dbuffer)
             upf%qfcoef = reshape(tmp_dbuffer,[size(upf%qfcoef,1),size(upf%qfcoef,2),&
                                            size(upf%qfcoef,3),size(upf%qfcoef,4)])

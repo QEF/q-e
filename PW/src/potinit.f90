@@ -43,13 +43,12 @@ SUBROUTINE potinit()
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns
   USE noncollin_module,     ONLY : noncolin, report
-  USE io_files,             ONLY : tmp_dir, prefix, input_drho
+  USE io_files,             ONLY : tmp_dir, prefix, input_drho, check_file_exist
   USE spin_orb,             ONLY : domag, lforcet
   USE mp,                   ONLY : mp_sum
   USE mp_bands ,            ONLY : intra_bgrp_comm, root_bgrp
   USE io_global,            ONLY : ionode, ionode_id
   USE io_rho_xml,           ONLY : read_scf
-  USE xml_io_base,          ONLY : check_file_exst
 #if defined __OLDXML
   USE xml_io_base,          ONLY : read_rho
 #else
@@ -79,7 +78,7 @@ SUBROUTINE potinit()
 #else 
   filename = TRIM(dirname) // 'charge-density.dat'
 #endif
-  exst     =  check_file_exst( TRIM(filename) )
+  exst     =  check_file_exist( TRIM(filename) )
   !
   IF ( starting_pot == 'file' .AND. exst ) THEN
      !

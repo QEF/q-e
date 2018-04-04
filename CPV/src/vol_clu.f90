@@ -16,7 +16,6 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
 
       USE kinds,          ONLY: dp
       USE constants,      ONLY: pi
-      USE parameters,     ONLY: nsx
       USE cell_base,      ONLY: alat, at, h, omega, tpiba, tpiba2
       USE electrons_base, ONLY: nspin
       USE ions_base,      ONLY: na, nsp, amass
@@ -44,7 +43,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
       real(kind=8) weight0, wpiu, wmeno, maxr, minr
       real(kind=8) tau00(3), dist
       real(kind=8) rho_real(dfftp%nnr,nspin), rhoc
-      real(kind=8) alfa(nsx), alfa0, sigma, hgt 
+      real(kind=8) alfa0, sigma, hgt 
       real(kind=8) pos_cry(3), pos_car(3), pos_aux(3)
       real(kind=8) pos_cry0(3), dpvdh(3,3)
       real(kind=8) v_d(3)
@@ -54,8 +53,6 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
       real(kind=8) gxl, xyr, xzr, yzr
       real(kind=8), allocatable:: vec(:,:,:), aiuto(:,:,:)
       real(kind=8), allocatable:: drho(:,:), d2rho(:,:)
-      real(kind=8), allocatable:: dxdyrho(:), dxdzrho(:)
-      real(kind=8), allocatable:: dydzrho(:)
       real(kind=8), allocatable:: tauv(:,:,:)
 
       complex(kind=8) ci
@@ -71,10 +68,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
       integer displs(nproc), ip, me
 #endif
       if (abisur) allocate(drho(3,dfftp%nnr))
-      if (abisur) allocate(d2rho(3,dfftp%nnr))
-      if (abisur) allocate(dxdyrho(dfftp%nnr))
-      if (abisur) allocate(dxdzrho(dfftp%nnr))
-      if (abisur) allocate(dydzrho(dfftp%nnr))
+      if (abisur) allocate(d2rho(6,dfftp%nnr))
 
       call start_clock( 'vol_clu' )
 
@@ -141,7 +135,7 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
       allocate ( tauv(3,n_at,nsp) )
       n_at = 0
       do is = 1,nsp
-         alfa(is) = step_rad(is)/2.d0
+         ! alfa(is) = step_rad(is)/2.d0 (not used)
          do ia = 1,na(is)
             n_at = n_at + 1
             do k = 1,3
@@ -243,9 +237,9 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
 
       IF (abisur) THEN
          DO iss = 1, nspin
-            CALL fft_gradient_g2r ( dfftp, rhotmp(1,iss), g, drho(1,iss) )
+            CALL fft_gradient_g2r( dfftp, rhotmp(1,iss), g, drho(1,iss) )
+            CALL fft_hessian_g2r ( dfftp, rhotmp, g, d2rho(1,iss)  )
          END DO
-         CALL gradrho( nspin, rhotmp, d2rho, dxdyrho, dxdzrho, dydzrho )
       END IF
  
       CALL rho_g2r( dfftp, rhotmp, rho_gaus )
@@ -349,17 +343,15 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
          end if
 
          if (abisur) then
-            modr = 0.d0
-            lap = 0.d0
-            gxl = 0.d0
-            do j = 1,3
-               modr = modr + drho(j,ir)**2
-               lap = lap + d2rho(j,ir)
-               gxl = gxl + drho(j,ir)**2*d2rho(j,ir)
-            end do
-            xyr = 2.d0*dxdyrho(ir)*drho(1,ir)*drho(2,ir)
-            xzr = 2.d0*dxdzrho(ir)*drho(1,ir)*drho(3,ir)
-            yzr = 2.d0*dydzrho(ir)*drho(2,ir)*drho(3,ir)
+            ! for d2rho: 1=xx, 2=xy, 3=yy, 4=xz, 5=yz, 6=zz
+            modr = drho(1,ir)**2 + drho(2,ir)**2 + drho(3,ir)**2
+            lap = d2rho(1,ir) + d2rho(3,ir) + d2rho(6,ir)
+            gxl = drho(1,ir)**2*d2rho(1,ir) + &
+                  drho(2,ir)**2*d2rho(3,ir) + &
+                  drho(3,ir)**2*d2rho(6,ir)
+            xyr = 2.d0*d2rho(2,ir)*drho(1,ir)*drho(2,ir)
+            xzr = 2.d0*d2rho(4,ir)*drho(1,ir)*drho(3,ir)
+            yzr = 2.d0*d2rho(5,ir)*drho(2,ir)*drho(3,ir)
             modr = dsqrt(modr)
             surfclu = surfclu + (wpiu-wmeno)*modr
             v_vol(ir) = v_vol(ir) -1.d0*Surf_t/dthr * (wpiu-wmeno) *    &
@@ -387,9 +379,6 @@ SUBROUTINE vol_clu(rho_real,rho_g,flag)
       deallocate( tauv )
       if ( abisur ) deallocate( drho )
       if ( abisur ) deallocate( d2rho )
-      if ( abisur ) deallocate( dxdyrho )
-      if ( abisur ) deallocate( dxdzrho )
-      if ( abisur ) deallocate( dydzrho )
 
       call stop_clock( 'vol_clu' )
 

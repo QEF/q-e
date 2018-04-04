@@ -119,6 +119,7 @@ program dynmat
   q(:)=0.0d0
   lperm=.false.
   lplasma=.false.
+  loto_2d=.false.
   !
   IF (ionode) read (5,input, iostat=ios)
   CALL mp_bcast(ios, ionode_id, world_comm)

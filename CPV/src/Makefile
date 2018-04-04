@@ -45,7 +45,6 @@ exx_vofr.o \
 fft.o \
 forces.o \
 fromscra.o \
-gradrho.o \
 gram.o \
 gtable.o \
 init.o \

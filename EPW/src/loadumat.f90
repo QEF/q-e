@@ -27,14 +27,8 @@
   USE io_global, ONLY : ionode_id, meta_ionode
   USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_sum, mp_barrier, mp_bcast
-  USE mp_world,  ONLY : mpime
   implicit none
   ! 
-  LOGICAL, INTENT (out) :: lwin( nbnd, nks )
-  !! Band windows at k
-  LOGICAL, INTENT (out) :: lwinq( nbnd, nks )
-  !! Band windows at k+q
-  !
   INTEGER, INTENT (in) :: nbnd
   !! Number of bands
   INTEGER, INTENT (in) :: nbndsub
@@ -43,6 +37,11 @@
   !! number of kpoints 
   INTEGER, INTENT (in) :: nkstot
   !! total number of kpoints across pools
+  ! 
+  LOGICAL, INTENT (out) :: lwin( nbnd, nks )
+  !! Band windows at k
+  LOGICAL, INTENT (out) :: lwinq( nbnd, nks )
+  !! Band windows at k+q
   ! 
   REAL(kind=DP), INTENT (in) :: xxq(3)
   !! the qpoint for folding of U

@@ -24,7 +24,7 @@ contains
     DIMENSION Q(100,100)
     DOUBLE PRECISION CG
     DOUBLE PRECISION AJ,BJ,CJ,AM,BM,CM
-    INTEGER ZZ
+    INTEGER ZZ,I,I2,IP,JA,JA2,JB,JB2,JC,JC2,K,K0,K1,LA,LB,LC,LD,LT,MA,MB,MC
     ZZ=MAX(2*AJ+1,2*BJ+1,2*CJ+1,AJ+BJ+CJ,AJ+AM,BJ+BM,CJ+CM)+2
     DO 2 I=1,ZZ
         Q(I,1)=1.D0
@@ -92,9 +92,10 @@ contains
       real(kind=DP) function cgc(l1,l2,l3,m1,m2)
 
       implicit real(kind=dp) (a-h,o-z)
-
+      integer :: l1,l2,l3,m1,m2
+      integer :: m3,i,nff,nmin,i1,id,inum,j,j0,jm,n,n1,nfac,nmax,ntemp,nu
+      real(dp) :: ff
       integer, dimension(5):: nd, num
-
       cgc = 0.d0
 
       m3 = m1 + m2

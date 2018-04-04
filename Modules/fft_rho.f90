@@ -85,7 +85,6 @@ CONTAINS
     !
     INTEGER :: ir, ig, iss, isup, isdw
     INTEGER :: nspin
-    COMPLEX(dp), PARAMETER :: ci=(0.0_dp, 1.0_dp)
     COMPLEX(dp), ALLOCATABLE :: psi(:)
 
     nspin= SIZE (rhog, 2)
@@ -141,7 +140,6 @@ CONTAINS
     !
     INTEGER :: ir, ig, iss, isup, isdw
     INTEGER :: nspin
-    COMPLEX(dp), PARAMETER :: ci=(0.0_dp, 1.0_dp)
     COMPLEX(dp), ALLOCATABLE :: psi(:)
 
     nspin= SIZE (rhog, 2)

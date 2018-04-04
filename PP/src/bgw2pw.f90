@@ -68,7 +68,7 @@
 PROGRAM bgw2pw
 
   USE environment, ONLY : environment_start, environment_end
-  USE io_files, ONLY : prefix, tmp_dir
+  USE io_files, ONLY : prefix, tmp_dir, create_directory
   USE io_global, ONLY : ionode, ionode_id
   USE kinds, ONLY : DP
   USE mp, ONLY : mp_bcast
@@ -193,7 +193,6 @@ SUBROUTINE write_evc ( input_file_name, real_or_complex, &
   USE mp_world, ONLY : world_comm, nproc
   USE mp_pools, ONLY : kunit, npool, my_pool_id, intra_pool_comm
   USE symm_base, ONLY : s, nsym
-  USE xml_io_base, ONLY : create_directory
 #if defined (__OLDXML)
   USE qexml_module, ONLY : qexml_kpoint_dirname, qexml_wfc_filename
 #endif
@@ -670,7 +669,6 @@ SUBROUTINE write_cd ( input_file_name, real_or_complex, output_dir_name )
   USE scf, ONLY : rho
   USE symm_base, ONLY : s, nsym
   USE wavefunctions_module, ONLY : psic
-  USE xml_io_base, ONLY : create_directory
 
   IMPLICIT NONE
 

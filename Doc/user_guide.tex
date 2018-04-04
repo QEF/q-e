@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.2.1}
+\def\version{6.2.1+}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -72,6 +72,10 @@ more specialized calculations:
   \item \texttt{TD-DFPT}:
         spectra from Time-Dependent
         Density-Functional Perturbation Theory.
+  \item \texttt{GWL}: electronic excitations within the GW approximation
+        and with the Bethe-Salpeter Equation      
+  \item \texttt{EPW}: calculation of the electron-phonon coefficients
+        and related quantities.
 \end{itemize}
 The following auxiliary packages are included as well:
 \begin{itemize}
@@ -80,17 +84,18 @@ The following auxiliary packages are included as well:
       \PWscf\ and some \PostProc\ codes.
 \item \texttt{atomic}:
       atomic calculations and pseudopotential generation.
-\item \texttt{QHA}:
-      utilities for the calculation of projected density of states (PDOS)
-      and of the free energy in the Quasi-Harmonic Approximation (to be
-      used in conjunction with \PHonon).
-\item \texttt{PlotPhon}:
-      phonon dispersion plotting utility (to be
-      used in conjunction with \PHonon).
+%\item \texttt{QHA}:
+%      utilities for the calculation of projected density of states (PDOS)
+%      and of the free energy in the Quasi-Harmonic Approximation (to be
+%      used in conjunction with \PHonon).
+%\item \texttt{PlotPhon}:
+%      phonon dispersion plotting utility (to be
+%      used in conjunction with \PHonon).
 \end{itemize}
 A copy of required external libraries is also included.
 Finally, several additional packages that exploit data produced by \qe\
-or patch some \qe\ routines can be installed as {\em plug-ins}:
+or patch some \qe\ routines can be automatically installed using
+\texttt{make}:
 \begin{itemize}
 \item \texttt{Wannier90}:
       maximally localized Wannier functions.
@@ -103,8 +108,7 @@ or patch some \qe\ routines can be installed as {\em plug-ins}:
       calculation of free-energy surface through metadynamics.
 \item \texttt{GIPAW} (Gauge-Independent Projector Augmented Waves):
       NMR chemical shifts and EPR g-tensor.
-\item \texttt{GWL}: electronic excitations within GW Approximation.
-\item \texttt{WEST}: Many-body perturbation corrections for standard DFT.
+%\item \texttt{WEST}: Many-body perturbation corrections for standard DFT.
 \end{itemize}
 Documentation on single packages can be found in the \texttt{Doc/} or
 \texttt{doc/} directory of each package. A detailed description of input
@@ -206,16 +210,15 @@ and let us apologize to everybody we have forgotten.
 The web site for \qe\ is \texttt{http://www.quantum-espresso.org/}.
 Releases and patches can be downloaded from this
 site or following the links contained in it. The main entry point for
-developers is the QE-FORGE web site:
-\texttt{http://qe-forge.org/}, and in particular the page dedicated to
-the \qe\ project: \texttt{qe-forge.org/gf/project/q-e/}.
+developers is the GitLab web site:
+\texttt{https://gitlab.com/QEF/q-e}.
 
 The recommended place where to ask questions about installation
-and usage of \qe, and to report problems, is the \texttt{pw\_forum}
-mailing list: \texttt{pw\_forum@pwscf.org}.
+and usage of \qe, and to report problems, is the 
+mailing list \texttt{users@lists.quantum-espresso.org}.
 Here you can obtain help from the developers and from
-knowledgeable users. You have to be subscribed (see ``Contacts''
-section of the web site) in order to post to the  \texttt{pw\_forum}
+knowledgeable users. You have to be subscribed (see the ``Contacts''
+section of the web site) in order to post to the  users'
 list. Please read the guidelines for posting, section \ref{SubSec:Guidelines}!
 NOTA BENE: only messages that appear to come from the
 registered user's e-mail address, in its {\em exact form}, will be
@@ -225,13 +228,14 @@ much spam). In case of trouble, carefully check that your return
 e-mail is the correct one (i.e. the one you used to subscribe).
 
 If you need to contact the developers for {\em specific} questions
-about coding, proposals, offers of help, etc., please send a message
-to the developers' mailing list: \texttt{q-e-developers@qe-forge.org}.
-Do not post general questions: they will be ignored.
+about coding, proposals, offers of help, etc., you may either post
+an ``Issue'' to GitLab, or send a message
+to the developers' mailing list \texttt{developers@lists.quantum-espresso.org}.
+Please do not post general questions there: they will be ignored.
 
 \subsection{Guidelines for posting to the mailing list}
 \label{SubSec:Guidelines}
-Life for subscribers of \texttt{pw\_forum} will be easier if everybody
+Life for mailing list subscribers will be easier if everybody
 complies with the following guidelines:
 \begin{itemize}
 \item Before posting, {\em please}: browse or search the archives --
@@ -241,20 +245,19 @@ complies with the following guidelines:
   available documentation, notably the FAQs and the User Guide(s).
   The answer to most questions is already there.
 \item Reply to both the mailing list and the author or the post, using
-  ``Reply to all'' (not ``Reply'': the Reply-To: field no longer points
-   to the mailing list).
+  ``Reply to all''.
 \item Sign your post with your name and affiliation.
 \item Choose a meaningful subject. Do not use "reply" to start a new
   thread:
   it will confuse the ordering of messages into threads that most mailers
-  can do. In particular, do not use "reply" to a Digest!!!
+  can do. In particular, do not use "Reply" to a Digest!!!
 \item Be short: no need to send 128 copies of the same error message just
   because this is what came out of your 128-processor run. No need to
   send the entire compilation log for a single error appearing at the end.
 \item Do not post large attachments: point a linker to a place where the
   attachment(s) can be downloaded from, such as e.g. DropBox, Google Docs, 
   or one of the various web temporary storage spaces (e.g.: 
-  ExpireBox,File.Town, Uguu.se.
+  ExpireBox, File.Town, Uguu.se).
 \item Avoid excessive or irrelevant quoting of previous messages. Your
   message must be immediately visible and easily readable, not hidden
   into a sea of quoted text.
@@ -315,9 +318,6 @@ into subdirectory \texttt{archive/}, {\em not unpacking or
 uncompressing it}:
 command \texttt{make} will take care of this during installation.
 
-Package \texttt{GWL} needs a manual download and installation:
-please follow the instructions given at \texttt{gww.qe-forge.org}.
-
 % Occasionally, patches for the current version, fixing some errors and bugs,
 % may be distributed as a "diff" file. In order to install a patch (for
 % instance):
@@ -342,22 +342,24 @@ The \qe\ distribution contains several directories. Some of them are
 common to all packages:
 
 \begin{tabular}{ll}
-\texttt{Modules/} &  fortran modules and utilities used by all programs\\
+\texttt{Modules/} &  Fortran modules and utilities used by all programs\\
 \texttt{include/} &  files *.h included by fortran and C source files\\
 \texttt{clib/}    &  external libraries written in C\\
 \texttt{FFTXlib/} &  FFT libraries\\
-\texttt{LAXlib/}  &  Linear Algenra (parallel) libraries\\
+\texttt{LAXlib/}  &  Linear Algebra (parallel) libraries\\
+\texttt{UtilXlib/}&  Misc timing, error handling, MPI utilites\\
 \texttt{install/} &  installation scripts and utilities\\
 \texttt{pseudo}/  &  pseudopotential files used by examples\\
 \texttt{upftools/}&  converters to unified pseudopotential format (UPF)\\
 \texttt{Doc/}     &  general documentation\\
-\texttt{archive/} &  contains plug-ins in .tar.gz form\\
+\texttt{archive/} &  external libraries in .tar.gz form\\
 \end{tabular}
 \\
 while others are specific to a single package:
 
 \begin{tabular}{ll}
 \texttt{PW/}      & \PWscf\ package\\
+\texttt{EPW/}     & \texttt{EPW} package\\
 \texttt{NEB/}     & \NEB\ package\\
 \texttt{PP/}      & \PostProc\ package\\
 \texttt{PHonon/}  & \PHonon\ package\\
@@ -386,7 +388,8 @@ may break them. Use \texttt{export LC\_ALL=C} (sh/bash) or
 \texttt{setenv LC\_ALL C} (csh/tcsh) to prevent any problem
 when running scripts (including installation scripts).
 
-Second, you need C and Fortran-90 (or later) compilers. For parallel
+Second, you need C and Fortran compilers, compliant with C89 and
+F2003 standards. For parallel
 execution, you will also need MPI libraries and a parallel
 (i.e. MPI-aware) compiler. For massively parallel machines, or
 for simple multicore parallelization, an OpenMP-aware compiler
@@ -477,19 +480,20 @@ Some environment variables that are relevant to \configure\ are:
 
 \begin{tabular}{ll}
 \texttt{ARCH}& label identifying the machine type (see below)\\
-\texttt{F90, F77, CC} &names of Fortran 90, Fortran 77, and C compilers\\
+\texttt{F90, F77, CC} &names of Fortran, Fortran-77, and C compilers\\
 \texttt{MPIF90} &       name of parallel Fortran 90 compiler (using MPI)\\
 \texttt{CPP} &          source file preprocessor (defaults to \$CC -E)\\
 \texttt{LD} &           linker (defaults to \$MPIF90)\\
 \texttt{(C,F,F90,CPP,LD)FLAGS}& compilation/preprocessor/loader flags\\
 \texttt{LIBDIRS}&     extra directories where to search for libraries\\
 \end{tabular}\\
+(note that ``F90'' is an historical name: we actually use F2003)
 For example, the following command line:
 \begin{verbatim}
      ./configure MPIF90=mpif90 FFLAGS="-O2 -assume byterecl" \
                   CC=gcc CFLAGS=-O3 LDFLAGS=-static
 \end{verbatim}
-instructs \configure\ to use \texttt{mpif90} as Fortran 90 compiler
+instructs \configure\ to use \texttt{mpif90} as Fortran compiler
 with flags \texttt{-O2 -assume byterecl}, \texttt{gcc} as C compiler with
 flags \texttt{-O3}, and to link with flag \texttt{-static}.
 Note that the value of \texttt{FFLAGS} must be quoted, because it contains
@@ -624,7 +628,7 @@ if none is found, it will fall back to the internal  copy of FFTW.
 \item \texttt{-D\_\_ARM\_LIB} for ARM Performance library,
 \item \texttt{-D\_\_DFTI}  for DFTI (Intel MKL library),
 \item \texttt{-D\_\_FFTW3} for FFTW3 (external),
-\item \texttt{-D\_\_FFTW}) for FFTW (internal library),
+\item \texttt{-D\_\_FFTW}  for FFTW (internal library),
 \end{itemize}
 to \texttt{DFLAGS} in the \texttt{make.inc} file.
 If you edit \texttt{make.inc} manually, please note that one and
@@ -685,29 +689,25 @@ At your choice, you may compile the complete \qe\ suite of programs
 \begin{itemize}
 \item \texttt{make pw}  compiles the self-consistent-field package \PWscf
 \item \texttt{make cp}  compiles the Car-Parrinello package \CP
-\item \texttt{make neb} downloads \NEB\ package from \texttt{qe-forge}
-			unpacks it and compiles it. All executables are linked
+\item \texttt{make neb} compiles the \NEB\ package. All executables are linked
 			in main \texttt{bin} directory
-\item \texttt{make ph}  downloads \PHonon\ package from \texttt{qe-forge}
-			unpacks it and compiles it. All executables are linked
+\item \texttt{make ph}  compiles the \PHonon\ package. All executables are linked
 			in main \texttt{bin} directory
 \item \texttt{make pp}  compiles the postprocessing package \PostProc
-\item \texttt{make pwcond} downloads the balistic conductance package \texttt{PWcond}
-			from \texttt{QE-FORGE}
-			unpacks it and compiles it. All executables are linked
+\item \texttt{make pwcond} compiles the balistic conductance package 
+	                \texttt{PWcond}. All executables are linked
 			in main \texttt{bin} directory
 \item \texttt{make pwall} produces all of the above.
-\item \texttt{make ld1}  downloads the pseudopotential generator package \texttt{atomic}
-			from \texttt{QE-FORGE}
-			unpacks it and compiles it. All executables are linked
+\item \texttt{make ld1}  compiles the pseudopotential generator package 
+	                 \texttt{atomic}. All executables are linked
 			in main \texttt{bin} directory
-\item \texttt{make xspectra} downloads the package \texttt{XSpectra}
-			from \texttt{QE-FORGE}
-			unpacks it and compiles it. All executables are linked
+\item \texttt{make xspectra} compiles the package \texttt{XSpectra}.
+			All executables are linked
 			in main \texttt{bin} directory
 \item \texttt{make upf} produces utilities for pseudopotential conversion in
                         directory \texttt{upftools/}
 \item \texttt{make all} produces all of the above
+\item \texttt{make epw} compiles package \texttt{EPW}
 \item \texttt{make plumed} unpacks \texttt{PLUMED}, patches several routines
                            in \texttt{PW/}, \texttt{CPV/} and \texttt{clib/},
                            recompiles \PWscf\ and \CP\ with \texttt{PLUMED}
@@ -715,15 +715,15 @@ At your choice, you may compile the complete \qe\ suite of programs
 \item \texttt{make w90} downloads \texttt{wannier90}, unpacks it, copies an appropriate
                        \texttt{make.inc} file,  produces all executables
                        in \texttt{W90/wannier90.x} and in \texttt{bin/}
-\item \texttt{make want} downloads \texttt{WanT} from \texttt{QE-FORGE},
-			 unpacks it, runs its \configure,
+\item \texttt{make want} downloads \texttt{WanT}, unpacks it, runs its 
+	                 \configure,
                          produces all executables for \texttt{WanT} in
                          \texttt{WANT/bin}.
-\item \texttt{make yambo} downloads \texttt{yambo} from \texttt{QE-FORGE},
+\item \texttt{make yambo} downloads \texttt{yambo},
 			  unpacks it, runs its \configure,
                           produces all \texttt{yambo} executables in
                           \texttt{YAMBO/bin}
-\item \texttt{make gipaw} downloads \texttt{GIPAW} from \texttt{QE-FORGE},
+\item \texttt{make gipaw} downloads \texttt{GIPAW},
                           unpacks it, runs its \configure,
                           produces all \texttt{GIPAW} executables in
                           \texttt{GIPAW/bin} and in main \texttt{bin} directory.
@@ -738,7 +738,7 @@ the \texttt{GUI/README} file instead.
 
 If \texttt{make} refuses for some reason to download additional
 packages, manually download them into subdirectory
-\texttt{archive/}, {\em not unpacking or or uncompressing them},
+\texttt{archive/}, {\em not unpacking or uncompressing them},
 and try \texttt{make} again. Also see Sec.(\ref{SubSec:Download}).
 
 \subsection{Running tests and examples}
@@ -832,15 +832,9 @@ the last written output file to understand why.
 \subsubsection{All architectures}
 \begin{itemize}
 \item
-Working Fortran and C compilers are needed in order
-to compile \qe. Most recent Fortran compiles will do
-the job, but earlier Fortran-90 compilers that do not
-support allocatable arrays in derived types (e.g. old
-gfortran versions) are no longer supported since v.5.1.2.
-Also, compilers that do not support intrinsic calls
-\texttt{flush}, \texttt{get\_environment\_variable},
-\texttt{get\_command\_argument}, \texttt{command\_argument\_count}
-are no longer supported since v.5.2.1.
+Working Fortran and C compilers, compliant with F2003 and C89 standards
+respectively, are needed in order to compile \qe. Most recent Fortran
+compilers will do the job.
 
 C and Fortran compilers must be in your PATH.
 If \configure\ says that you have no working compiler, well,
@@ -964,7 +958,7 @@ any advantage anyway.
 
 Currently, \configure\ supports Intel (ifort), NAG (nagfor), PGI (pgf90)
 and gfortran compilers. Pathscale, Sun Studio, AMD Open64, are no
-longaer supported after v.6.2: g95, since v.6.1.
+longer supported after v.6.2: g95, since v.6.1.
 
 Both Intel MKL and AMD acml mathematical libraries are supported, the
 former much better than the latter.

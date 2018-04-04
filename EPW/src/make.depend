@@ -1,12 +1,10 @@
-#
-# To create this file:
-# cd EPW/src ; . ../../install/moduledep.sh | grep -v @ > make.depend
-#
 a2f.o : constants_epw.o
 a2f.o : elph2.o
 a2f.o : epwcom.o
 a2f.o : io_epw.o
 allocate_epwq.o : elph2.o
+allocate_epwq.o : epwcom.o
+allocate_epwq.o : transportcom.o
 bcast_epw_input.o : elph2.o
 bcast_epw_input.o : epwcom.o
 broyden.o : eliashbergcom.o
@@ -25,6 +23,7 @@ deallocate_eliashberg.o : elph2.o
 deallocate_eliashberg.o : epwcom.o
 deallocate_epw.o : elph2.o
 deallocate_epw.o : epwcom.o
+deallocate_epw.o : transportcom.o
 dmebloch2wan.o : constants_epw.o
 dmebloch2wan.o : elph2.o
 dmewan2bloch.o : constants_epw.o
@@ -104,10 +103,20 @@ ephwann_shuffle.o : constants_epw.o
 ephwann_shuffle.o : elph2.o
 ephwann_shuffle.o : epwcom.o
 ephwann_shuffle.o : io_epw.o
+ephwann_shuffle.o : transportcom.o
+ephwann_shuffle.o : wan2bloch.o
+ephwann_shuffle.o : bloch2wan.o
+ephwann_shuffle_mem-save.o : constants_epw.o
+ephwann_shuffle_mem-save.o : elph2.o
+ephwann_shuffle_mem-save.o : epwcom.o
+ephwann_shuffle_mem-save.o : io_epw.o
 ephwann_shuffle_mem.o : constants_epw.o
 ephwann_shuffle_mem.o : elph2.o
 ephwann_shuffle_mem.o : epwcom.o
 ephwann_shuffle_mem.o : io_epw.o
+ephwann_shuffle_mem.o : transportcom.o
+ephwann_shuffle_mem.o : wan2bloch.o
+ephwann_shuffle_mem.o : bloch2wan.o
 epw.o : elph2.o
 epw.o : epwcom.o
 epw_init.o : constants_epw.o
@@ -130,6 +139,12 @@ io_scattering.o : constants_epw.o
 io_scattering.o : elph2.o
 io_scattering.o : epwcom.o
 io_scattering.o : io_epw.o
+io_scattering.o : transportcom.o
+iterativebte.o : constants_epw.o
+iterativebte.o : elph2.o
+iterativebte.o : epwcom.o
+iterativebte.o : io_epw.o
+iterativebte.o : transportcom.o
 kernels_aniso_iaxis.o : constants_epw.o
 kernels_aniso_iaxis.o : eliashbergcom.o
 kernels_aniso_iaxis.o : elph2.o
@@ -140,6 +155,7 @@ kernels_iso_iaxis.o : epwcom.o
 kernels_raxis.o : constants_epw.o
 kernels_raxis.o : eliashbergcom.o
 kernels_raxis.o : epwcom.o
+ktokpmq.o : elph2.o
 ktokpmq.o : epwcom.o
 loadkmesh.o : elph2.o
 loadkmesh.o : epwcom.o
@@ -164,7 +180,7 @@ pw2wan90epw.o : constants_epw.o
 pw2wan90epw.o : elph2.o
 pw2wan90epw.o : epwcom.o
 pw2wan90epw.o : io_epw.o
-pw2wan90epw.o : wannier.o
+pw2wan90epw.o : wannierEPW.o
 readdvscf.o : epwcom.o
 readdvscf.o : io_epw.o
 readgmap.o : elph2.o
@@ -185,10 +201,16 @@ rotate_eigenm.o : elph2.o
 rotate_epmat.o : constants_epw.o
 rotate_epmat.o : elph2.o
 rotate_epmat.o : epwcom.o
+scattering_rate.o : constants_epw.o
+scattering_rate.o : elph2.o
+scattering_rate.o : epwcom.o
+scattering_rate.o : io_epw.o
+scattering_rate.o : transportcom.o
 selfen_elec.o : constants_epw.o
 selfen_elec.o : elph2.o
 selfen_elec.o : epwcom.o
 selfen_elec.o : io_epw.o
+selfen_elec.o : transportcom.o
 selfen_phon.o : constants_epw.o
 selfen_phon.o : elph2.o
 selfen_phon.o : epwcom.o
@@ -216,6 +238,11 @@ spectral_func_pl.o : elph2.o
 spectral_func_pl.o : epwcom.o
 spectral_func_pl.o : io_epw.o
 system_mem_usage.o : io_epw.o
+transport_coeffs.o : constants_epw.o
+transport_coeffs.o : elph2.o
+transport_coeffs.o : epwcom.o
+transport_coeffs.o : io_epw.o
+transport_coeffs.o : transportcom.o
 vmebloch2wan.o : constants_epw.o
 vmebloch2wan.o : elph2.o
 vmewan2bloch.o : constants_epw.o
@@ -224,7 +251,7 @@ vmewan2bloch.o : epwcom.o
 wannierize.o : constants_epw.o
 wannierize.o : epwcom.o
 wannierize.o : io_epw.o
-wannierize.o : wannier.o
+wannierize.o : wannierEPW.o
 write_ephmat.o : constants_epw.o
 write_ephmat.o : eliashbergcom.o
 write_ephmat.o : elph2.o
