@@ -1,5 +1,5 @@
 &inputpp 
-   outdir = '/home/arash/tmp/'
+   outdir = '/home/paulatto/espresso/tempdir/'
    prefix = 'di'
    seedname = 'diamond.lib'
    spin_component = 'none'

@@ -1,6 +1,6 @@
 &inputpp 
-   outdir = '/home/arash/tmp/'
-   prefix = 'di'
+   outdir = '/home/paulatto/espresso/tempdir/'
+   prefix = 'di_open'
    seedname = 'diamond.sa'
    spin_component = 'none'
    write_mmn = .true.

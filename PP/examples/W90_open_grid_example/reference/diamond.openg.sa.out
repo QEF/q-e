@@ -1,5 +1,5 @@
 
-     Program OPEN_GRID v.6.2 starts on 16Feb2018 at 11:25:37 
+     Program OPEN_GRID v.6.2 starts on  4Apr2018 at 13: 9:12 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -172,15 +172,15 @@
    -0.250000000000000   -0.250000000000000   -0.500000000000000    0.0156250000
    -0.250000000000000   -0.250000000000000   -0.250000000000000    0.0156250000
  
-     OPEN_GRID    :     0.10s CPU         0.12s WALL
+     OPEN_GRID    :     0.11s CPU         0.12s WALL
 
  
-   This run was terminated on:  11:25:37  16Feb2018            
+   This run was terminated on:  13: 9:12   4Apr2018            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
 =------------------------------------------------------------------------------=
  
 --------------------------------------------------------------------------
-mpirun noticed that process rank 0 with PID 20327 on node naquite exited on signal 6 (Aborted).
+mpirun noticed that process rank 3 with PID 13341 on node naquite exited on signal 6 (Aborted).
 --------------------------------------------------------------------------
