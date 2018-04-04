@@ -26,7 +26,6 @@ install/configure.msg
 install/make-*
 install/configure-*
 install/uncompress-*
-Modules/version.f90
 test-suite/*/test.err.*
 test-suite/*/test.out.*
 */results
