@@ -8,10 +8,11 @@ include make.libs
 #
 
 IFLAGS   = -I../../include  -I../../UtilXlib/ 
-MODFLAGS = -I../../iotk/src -I../../UtilXlib/ -I../../Modules -I../../KS_Solvers/CG -I../../KS_Solvers/Davidson \
-           -I../../LAXlib -I../../FFTXlib  -I../../PW/src -I../../LR_Modules -I../../PHonon/PH \
-	   -I../../PP/src/ -I. -I../../wannier90-2.1.0/src/obj/
-
+MODFLAGS= $(BASEMOD_FLAGS) \
+          $(MOD_FLAG)../../PW/src \
+          $(MOD_FLAG)../../PHonon/PH \
+          $(MOD_FLAG)../../LR_Modules \
+          $(MOD_FLAG)../../wannier90-2.1.0/src/obj
 
 #
 # The above is in alphabetical order except when order matter during compilation
