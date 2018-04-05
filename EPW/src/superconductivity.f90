@@ -24,15 +24,15 @@
     ! This routine initializes the control variables needed to solve the eliashberg 
     ! equations
     !
-    USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
-    USE epwcom,        ONLY : eliashberg, nkf1, nkf2, nkf3, nsiter, nqstep, &
-                              nqf1, nqf2, nqf3, ntempxx, nswi, nswfc, nswc, &
-                              nstemp, muc, lreal, lpade, liso, limag, laniso, &
-                              lacon, kerwrite, kerread, imag_read, fila2f, temps, &
-                              wsfc, wscut, tempsmin, tempsmax, rand_q, rand_k
-    USE constants_epw, ONLY : pi, kelvin2eV
-    USE eliashbergcom, ONLY : estemp, nsw, nsiw, dwsph, wsphmax, wsph
+    USE kinds,           ONLY : DP
+    USE io_global,       ONLY : stdout
+    USE epwcom,          ONLY : eliashberg, nkf1, nkf2, nkf3, nsiter, nqstep, &
+                                nqf1, nqf2, nqf3, ntempxx, nswi, nswfc, nswc, &
+                                nstemp, muc, lreal, lpade, liso, limag, laniso, &
+                                lacon, kerwrite, kerread, imag_read, fila2f, temps, &
+                                wsfc, wscut, tempsmin, tempsmax, rand_q, rand_k
+    USE constants_epw,   ONLY : pi, kelvin2eV
+    USE eliashbergcom,   ONLY : estemp, nsw, nsiw, dwsph, wsphmax, wsph
     !
     IMPLICIT NONE
     !
@@ -3662,15 +3662,20 @@
     !-----------------------------------------------------------
     !
     USE kinds, ONLY : DP
+    USE, INTRINSIC :: IEEE_ARITHMETIC
     !
     implicit none
-    integer :: N
-    complex(DP) :: z(N), u(N)
-    complex(DP) :: g(N,N), a(N)
+    INTEGER :: N
+    INTEGER :: i 
+    INTEGER :: p
+    REAL(kind=DP) :: ar
+    !! Real part
+    REAL(kind=DP) :: ai
+    !! Complex part
+    COMPLEX(kind=DP) :: z(N), u(N)
+    COMPLEX(kind=DP) :: g(N,N), a(N)
     ! g(p,i) = g_p (z_i) in the notation of Vidberg and Serene
-    integer :: i, p
-    real(DP) :: ar, ai
-    complex(DP) :: tmp1, tmp2
+    COMPLEX(kind=DP) :: tmp1, tmp2
     !
     do p = 1, N
       if (p.eq.1) then
@@ -3704,13 +3709,13 @@
       !
       ar = real(a(p))
       ai = aimag(a(p))
-      if ( ISNAN(ar) .or. ISNAN(ai) ) then
-  !       write(6,*) (z(i),i=1,N)
-  !       write(6,*) (u(i),i=1,N)
-  !       write(6,*) (a(i),i=1,N)
-          write(6,*) 'one or more coefficients are NaN'
-  !      call errore('pade_coeff','one or more coefficients are NaN',1)
-      endif
+      IF ( IEEE_IS_NAN(ar) .or. IEEE_IS_NAN(ai) ) THEN
+  !     write(6,*) (z(i),i=1,N)
+  !     write(6,*) (u(i),i=1,N)
+  !     write(6,*) (a(i),i=1,N)
+        write(6,*) 'one or more coefficients are NaN'
+  !     call errore('pade_coeff','one or more coefficients are NaN',1)
+      ENDIF
       !
     enddo
     !
