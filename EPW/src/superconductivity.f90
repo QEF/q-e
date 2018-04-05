@@ -3662,6 +3662,7 @@
     !-----------------------------------------------------------
     !
     USE kinds, ONLY : DP
+    USE ieee_arithmetic
     !
     implicit none
     integer :: N
@@ -3704,7 +3705,7 @@
       !
       ar = real(a(p))
       ai = aimag(a(p))
-      if ( ISNAN(ar) .or. ISNAN(ai) ) then
+      if ( ieee_is_nan(ar) .or. ieee_is_nan(ai) ) then
   !       write(6,*) (z(i),i=1,N)
   !       write(6,*) (u(i),i=1,N)
   !       write(6,*) (a(i),i=1,N)
