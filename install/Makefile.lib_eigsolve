@@ -1,8 +1,8 @@
 include ../../make.inc
 
-FLAGS = -O3 -mp -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo -Mlarge_arrays
-FLAGS2 = -O3 -mp -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo,nollvm -Mlarge_arrays
-FLAGS3 = -O3 -mp -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo,maxregcount:64,nollvm -Mlarge_arrays
+FLAGS =  -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo $(F90FLAGS)
+FLAGS2 = -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo,nollvm $(F90FLAGS)
+FLAGS3 = -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo,maxregcount:64,nollvm $(F90FLAGS)
 
 # Use this FLAGS2 if compiling on Power system
 #FLAGS2 = -O1 -mp -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo,maxregcount:64,nollvm -Mlarge_arrays
