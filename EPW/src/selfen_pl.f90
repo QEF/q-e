@@ -39,7 +39,7 @@
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : inter_pool_comm 
-  use cell_base,     ONLY : omega, alat
+  use cell_base,     ONLY : omega, alat, bg
   ! 
   implicit none
   !
@@ -68,6 +68,8 @@
   REAL(kind=DP), ALLOCATABLE :: xkf_all(:,:), etf_all(:,:)
   REAL(kind=DP) :: kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut
   REAL(kind=DP) :: qsquared, qTF, dipole, rs, ekk1, degen
+  REAL(kind=DP) :: q(3)
+  !! The q-point in cartesian unit.
   !REAL(kind=DP) :: Nel, epsiHEG, meff, kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut, qcut2, qsquared, qTF, dipole, rs, ekk1
   ! loop over temperatures can be introduced
   !
@@ -141,7 +143,9 @@
   qTF      =  (6.d0*pi*nel/omega/degen/(fermiHEG/2.d0))**(1.d0/2.d0)    ! [a.u.]
   wpl0     =  sqrt(4.d0*pi*nel/omega/meff/epsiHEG) * 2.d0         ! [Ryd] multiplication by 2 converts from Ha to Ryd
   wq       =  wpl0 ! [Ryd] 
-  qsquared = (xqf(1,iq)**2 + xqf(2,iq)**2 + xqf(3,iq)**2)
+  q(:)     =  xqf(:,iq)
+  CALL cryst_to_cart (1, q, bg, 1)
+  qsquared =  (q(1)**2 + q(2)**2 + q(3)**2)
   qin      =  sqrt(qsquared)*tpiba_new
   qcut     = wpl0 / vF / tpiba_new / 2.d0    ! 1/2 converts from Ryd to Ha
   !
