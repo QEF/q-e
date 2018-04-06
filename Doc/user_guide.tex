@@ -541,13 +541,38 @@ Finally, \configure\ recognizes the following command-line options:\\
 \texttt{--disable-wrappers}&    disable C to fortran wrapper check (default: enabled)\\
 \texttt{--enable-signals}&      enable signal trapping (default: disabled)\\
 \end{tabular}\\
-and the following optional packages:\\
+\\
+the following optional packages:\\
 \begin{tabular}{ll}
 \texttt{--with-internal-blas}&    compile with internal BLAS (default: no)\\
 \texttt{--with-internal-lapack}&  compile with internal LAPACK (default: no)\\
 \texttt{--with-scalapack=no}&     do not use ScaLAPACK (default: yes)\\
 \texttt{--with-scalapack=intel}&  use ScaLAPACK for Intel MPI (default:OpenMPI)\\
 \end{tabular}\\
+\\
+and the following options targeting the CUDA Fortan accelerated version:\\
+\begin{tabular}{ll}
+\texttt{--with-cuda=value}&         enables CUDA Fortran accelerated subroutines. \\
+                          &         \texttt{value} should point the path where \\
+                          &         the CUDA Runtime is installed (default: no)\\
+\texttt{--with-cuda-cc=value}&      sets the compute capabilities for the compilation\\
+                             &      of the accelerated subroutines. \\
+                             &      \texttt{value} should be consistent with the \\
+                             &      hardware and the NVidia driver installed on the workstation \\
+                             &      or the compute nodes of the HPC facility  (default: 35)\\
+\texttt{--with-cuda-runtime=value}& sets the version of the CUDA runtime used \\
+                                  & for the compilation of the accelerated code.\\
+                                  & \texttt{value} should be consistent with the\\
+                                  & CUDA Toolkit installed on the workstation \\
+                                  & or available on compute nodes of the HPC facility.\\
+                                  & PGI compilers currently accept 7.5, 8.0 or 9.0.  (default: 8.0)\\
+\end{tabular}\\
+
+Please note that in order to compile the CUDA Fortran code you need a
+recent version of the PGI Fortran compiler, you need to enable OpenMP,
+and you may want to use a CUDA-aware MPI distribution to optimize the data
+transfer between the processes. 
+
 If you want to modify the \configure\ script (advanced users only!),
 see the Developer Manual.
 
