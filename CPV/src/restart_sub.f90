@@ -135,7 +135,12 @@ SUBROUTINE from_restart( )
       !
       WRITE( stdout, 515 ) ampre
       !
-515   FORMAT(   3X,'Initial random displacement of el. coordinates',/ &
+515   FORMAT(   3X,'',/ &
+                3X,'!======================================!',/ &
+                3X,'!======RANDOMIZING WAVE FUNCTIONS======!',/ &
+                3X,'!======================================!',/ &
+                3X,'',/ &
+                3X,'Initial random displacement of el. coordinates',/ &
                 3X,'Amplitude = ',F10.6 )
       !
       CALL rande_base( c0_bgrp, ampre )
