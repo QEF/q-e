@@ -614,10 +614,8 @@ PROGRAM matdyn
         !
         END IF 
 
-        if(iout_dyn.ne.0) then
-          call write_dyn_on_file(q(1,n),dyn,nat, iout_dyn)
-          if(sum(abs(q(:,n)))==0._dp) call  write_epsilon_and_zeu (zeu, epsil, nat, iout_dyn)
-        endif
+        if(iout_dyn.ne.0) call write_dyn_on_file(q(1,n),dyn,nat, iout_dyn)
+        
 
         CALL dyndiag(nat,ntyp,amass,ityp,dyn,w2(1,n),z)
         ! Atom projection of dynamical matrix
