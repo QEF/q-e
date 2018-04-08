@@ -1102,8 +1102,8 @@ CONTAINS
     !
     ! 
     !---------------------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_total_energy(obj,etot,eband,ehart,vtxc,etxc,ewald,degauss,demet,electric_field_corr,&
-                                       potentiostat_contr)
+    SUBROUTINE qexsd_init_total_energy(obj, etot, eband, ehart, vtxc, etxc, &
+         ewald, degauss, demet, electric_field_corr, potentiostat_contr)
     !----------------------------------------------------------------------------------------
     !
     ! 
@@ -1117,41 +1117,34 @@ CONTAINS
     !
     LOGICAL                         :: demet_ispresent
     CHARACTER(LEN=*),PARAMETER      :: TAGNAME="total_energy"
-    REAL(DP)                        :: etot_har,eband_har,vtxc_har,etxc_har,ewald_har,&
-                                       demet_har,ehart_har,efield_corr, potst_contribution_har
+    REAL(DP) :: demet_har, efield_corr_har, potentiostat_contr_har
 
-    etot_har  = etot/e2
-    eband_har = etot/e2
-    vtxc_har  = vtxc/e2
-    etxc_har  = etxc/e2
-    ewald_har = ewald/e2
-    ehart_har = ehart/e2
     IF (PRESENT(electric_field_corr)) THEN
-       efield_corr=electric_field_corr/e2
+       efield_corr_har=electric_field_corr
     ELSE
-       efield_corr=0.d0
+       efield_corr_har=0.d0
     END IF
-    IF (PRESENT ( potentiostat_contr ) ) THEN
-       potst_contribution_har = potentiostat_contr/e2
-    ELSE 
-       potst_contribution_har = 0.d0
+    IF (PRESENT ( potentiostat_contr )) THEN
+       potentiostat_contr_har = potentiostat_contr
+    ELSE
+       potentiostat_contr_har = 0.d0
     END IF 
 
     IF (degauss .GT. 0.D0) THEN 
        demet_ispresent=.TRUE.
-       demet_har=demet/e2
+       demet_har=demet
     ELSE 
        demet_ispresent=.FALSE.
        demet_har=0.d0
     ENDIF
     
-    CALL  qes_init_total_energy(obj,TAGNAME,etot_har,eband_ispresent=.TRUE.,eband=eband_har,&
-                               ehart_ispresent=.TRUE., ehart=ehart_har,vtxc_ispresent=.TRUE.,& 
-                               vtxc=vtxc_har,etxc_ispresent=.TRUE., etxc=etxc_har,ewald_ispresent=.TRUE.,&
-                               ewald=ewald_har, demet_ispresent=demet_ispresent,demet=demet_har, &
-                               efieldcorr_ispresent=PRESENT(electric_field_corr), efieldcorr=efield_corr,&
+    CALL  qes_init_total_energy(obj,TAGNAME,etot,eband_ispresent=.TRUE.,eband=eband,&
+                               ehart_ispresent=.TRUE., ehart=ehart, vtxc_ispresent=.TRUE.,& 
+                               vtxc=vtxc,etxc_ispresent=.TRUE., etxc=etxc, ewald_ispresent=.TRUE.,&
+                               ewald=ewald, demet_ispresent=demet_ispresent,demet=demet_har, &
+                               efieldcorr_ispresent=PRESENT(electric_field_corr), efieldcorr=efield_corr_har,&
                                POTENTIOSTAT_CONTR_ISPRESENT = PRESENT(potentiostat_contr), & 
-                               POTENTIOSTAT_CONTR = potst_contribution_har)
+                               POTENTIOSTAT_CONTR = potentiostat_contr_har)
 
     END SUBROUTINE qexsd_init_total_energy
     ! 
@@ -1335,8 +1328,8 @@ CONTAINS
     step_obj%atomic_structure=atomic_struct_obj
     CALL qes_reset_atomic_structure( atomic_struct_obj )
     ! 
-    CALL qexsd_init_total_energy ( tot_en_obj, etot/e2, eband/e2, ehart/e2, vtxc/e2, etxc/e2, ewald/e2, degauss/e2, &
-                                   demet/e2 )
+    CALL qexsd_init_total_energy ( tot_en_obj, etot/e2, eband/e2, ehart/e2, &
+         vtxc/e2, etxc/e2, ewald/e2, degauss/e2, demet/e2 )
     IF ( PRESENT ( potstat_contr )) THEN  
        tot_en_obj%potentiostat_contr_ispresent = .TRUE. 
        tot_en_obj%potentiostat_contr = potstat_contr/e2 
