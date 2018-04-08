@@ -71,7 +71,7 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0   , 2.0e-1, 'rsig'), # epw_base3 on desktop 0.054364
               (1.5   , 5.0e-1, 'isig'),
               (5.0e-1, 1.0e-1, 'z1'),  # epw_soc on desktop
-              (1.0e-2, 5.0e-1, 'lam'), # epw_base3 on desktop 7e-06
+              (1.0e-2, None  , 'lam'), # epw_base3 on desktop 7e-06
               (1.0e-5, 1.0e-5, 'lambda'),
               (6.0e-1, None  , 'lambda_tr'),  #epw_trev on desktop -0.004794
               (1.0e-2, None  , 'gamma'),
