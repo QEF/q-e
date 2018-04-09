@@ -474,7 +474,8 @@
   lphase     = .false. 
   omegamin   = 0.d0  ! eV
   omegamax   = 10.d0 ! eV
-  n_r        = 1.0
+  omegastep  = 1.d0  ! eV
+  n_r        = 1.d0
   lindabs    = .false.
   !
   !     reading the namelist inputepw
