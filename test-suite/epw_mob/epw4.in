@@ -64,12 +64,12 @@
 
   dvscf_dir   = './save/'
   
-  nkf1        = 12
-  nkf2        = 12
-  nkf3        = 12
-  nqf1        = 6
-  nqf2        = 6
-  nqf3        = 6
+  nkf1        = 8
+  nkf2        = 8
+  nkf3        = 8
+  nqf1        = 4
+  nqf2        = 4
+  nqf3        = 4
 
   nk1         = 4 
   nk2         = 4
