@@ -373,7 +373,7 @@ MODULE pw_restart_new
          !
          IF (tefield) THEN
             CALL qexsd_init_total_energy(output%total_energy,etot/e2, eband/e2,&
-                 ehart/e2, vtxc/e2, etxc/e2, ewld/e2, degauss/e2, demet/2, &
+                 ehart/e2, vtxc/e2, etxc/e2, ewld/e2, degauss/e2, demet/e2, &
                  etotefield/e2 )
          ELSE 
             CALL qexsd_init_total_energy(output%total_energy,etot/e2, eband/e2,&
