@@ -40,7 +40,7 @@
                             scattering, nstemp, int_mob, scissor, carrier,      &
                             iterative_bte, longrange, scatread, nqf1, prtgkk,   &
                             nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
-                            specfun_pl
+                            specfun_pl, lindabs
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, eps2, zero, czero, &
                             twopi, ci, kelvin2eV
@@ -1151,13 +1151,14 @@
             CALL count_kpoints(iq)
          ENDIF
          ! 
-         ! Conductivity ---------------------------------------------------------
-         !IF (scattering) CALL scattering_rate_q( iq )
          IF (.NOT. scatread) THEN
-         IF (scattering) THEN
+           ! 
+           ! Indirect absorption ---------------------------------------------------------
+           ! If Indirect absortpion, keep unshifted values:
+           IF ( lindabs .AND. .NOT. scattering ) etf_ks(:,:) = etf(:,:)
+           ! 
            ! Apply a scissor shift to CBM if required by user
            ! The shift is apply to k and k+q
-           !IF (scissor > 0.000001) THEN
            IF (ABS(scissor) > 0.000001) THEN
              IF ( noncolin ) THEN
                icbm = FLOOR(nelec/1.0d0) +1
@@ -1169,6 +1170,7 @@
                ikk = 2 * ik - 1
                ikq = ikk + 1
                DO ibnd = icbm, nbndsub
+                 ! 
                  etf (ibnd, ikk) = etf (ibnd, ikk) + scissor
                  etf (ibnd, ikq) = etf (ibnd, ikq) + scissor
                ENDDO
@@ -1177,105 +1179,111 @@
                WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
              ENDIF
            ENDIF
-           !   
-           ! If we want to compute intrinsic mobilities, call fermicarrier to 
-           ! correctly positionned the ef0 level.
-           ! This is only done once for iq = 0 
-           IF ( iq == iq_restart ) THEN
-             ! 
-             DO itemp = 1, nstemp
+           !  
+           ! Indirect absorption
+           IF ( lindabs .AND. .NOT. scattering )  CALL indabs(iq)  
+           ! 
+           ! Conductivity ---------------------------------------------------------
+           IF (scattering) THEN
+             !   
+             ! If we want to compute intrinsic mobilities, call fermicarrier to 
+             ! correctly positionned the ef0 level.
+             ! This is only done once for iq = 0 
+             IF ( iq == iq_restart ) THEN
                ! 
-               etemp = transp_temp(itemp) 
-               WRITE(stdout, '(/5x,"Temperature ",f8.3," K")' ) etemp * ryd2ev / kelvin2eV
-               ! 
-               ! Small gap semiconductor. Computes intrinsic mobility by placing 
-               ! the Fermi level such that carrier density is equal for electron and holes
-               IF (int_mob .AND. .NOT. carrier) THEN               
-                 !
-                 ef0(itemp) = fermicarrier( etemp )
-                 WRITE(stdout, '(5x,"Mobility Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev  
-                 ! We only compute 1 Fermi level so we do not need the other
-                 efcb(itemp) = 0
-                 !   
-               ENDIF
-               ! 
-               ! Large bandgap semiconductor. Place the gap at the value ncarrier.
-               ! The user want both VB and CB mobilities. 
-               IF (int_mob .AND. carrier) THEN
+               DO itemp = 1, nstemp
                  ! 
-                 ncarrier = - ABS(ncarrier) 
-                 ef0(itemp) = fermicarrier( etemp )
-                 WRITE(stdout, '(5x,"Mobility VB Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev 
+                 etemp = transp_temp(itemp) 
+                 WRITE(stdout, '(/5x,"Temperature ",f8.3," K")' ) etemp * ryd2ev / kelvin2eV
                  ! 
-                 ncarrier = ABS(ncarrier) 
-                 efcb(itemp) = fermicarrier( etemp )
-                 WRITE(stdout, '(5x,"Mobility CB Fermi level ",f10.6," eV")' )  efcb(itemp) * ryd2ev
-                 !  
-               ENDIF   
-               ! 
-               ! User decide the carrier concentration and choose to only look at VB or CB  
-               IF (.NOT. int_mob .AND. carrier) THEN
-                 ! SP: Determination of the Fermi level for intrinsic or doped carrier 
-                 !     One also need to apply scissor before calling it.
-                 ! 
-                 ef0(itemp) = fermicarrier( etemp )               
-                 WRITE(stdout, '(5x,"Mobility Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev
-                 ! We only compute 1 Fermi level so we do not need the other
-                 efcb(itemp) = 0
-                 ! 
-               ENDIF
-               ! 
-               IF (.NOT. int_mob .AND. .NOT. carrier ) THEN
-                 IF ( efermi_read ) THEN
+                 ! Small gap semiconductor. Computes intrinsic mobility by placing 
+                 ! the Fermi level such that carrier density is equal for electron and holes
+                 IF (int_mob .AND. .NOT. carrier) THEN               
                    !
-                   ef0(itemp) = fermi_energy
-                   !
-                 ELSE !SP: This is added for efficiency reason because the efermig routine is slow
-                   ef0(itemp) = efnew
+                   ef0(itemp) = fermicarrier( etemp )
+                   WRITE(stdout, '(5x,"Mobility Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev  
+                   ! We only compute 1 Fermi level so we do not need the other
+                   efcb(itemp) = 0
+                   !   
                  ENDIF
-                 ! We only compute 1 Fermi level so we do not need the other
-                 efcb(itemp) = 0
-                 !  
-               ENDIF
+                 ! 
+                 ! Large bandgap semiconductor. Place the gap at the value ncarrier.
+                 ! The user want both VB and CB mobilities. 
+                 IF (int_mob .AND. carrier) THEN
+                   ! 
+                   ncarrier = - ABS(ncarrier) 
+                   ef0(itemp) = fermicarrier( etemp )
+                   WRITE(stdout, '(5x,"Mobility VB Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev 
+                   ! 
+                   ncarrier = ABS(ncarrier) 
+                   efcb(itemp) = fermicarrier( etemp )
+                   WRITE(stdout, '(5x,"Mobility CB Fermi level ",f10.6," eV")' )  efcb(itemp) * ryd2ev
+                   !  
+                 ENDIF   
+                 ! 
+                 ! User decide the carrier concentration and choose to only look at VB or CB  
+                 IF (.NOT. int_mob .AND. carrier) THEN
+                   ! SP: Determination of the Fermi level for intrinsic or doped carrier 
+                   !     One also need to apply scissor before calling it.
+                   ! 
+                   ef0(itemp) = fermicarrier( etemp )               
+                   WRITE(stdout, '(5x,"Mobility Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev
+                   ! We only compute 1 Fermi level so we do not need the other
+                   efcb(itemp) = 0
+                   ! 
+                 ENDIF
+                 ! 
+                 IF (.NOT. int_mob .AND. .NOT. carrier ) THEN
+                   IF ( efermi_read ) THEN
+                     !
+                     ef0(itemp) = fermi_energy
+                     !
+                   ELSE !SP: This is added for efficiency reason because the efermig routine is slow
+                     ef0(itemp) = efnew
+                   ENDIF
+                   ! We only compute 1 Fermi level so we do not need the other
+                   efcb(itemp) = 0
+                   !  
+                 ENDIF
+                 ! 
+               ENDDO
+               !
                ! 
-             ENDDO
-             !
-             ! 
-           ENDIF ! iq=0
-           !   
-           IF ( iterative_bte) THEN
-             ! First iteration is just SERTA
-             IF (iter == 1) THEN 
+             ENDIF ! iq=0
+             !   
+             IF ( iterative_bte) THEN
+               ! First iteration is just SERTA
+               IF (iter == 1) THEN 
+                 !
+                 CALL scattering_rate_q( iq, ef0, efcb, first_cycle )
+                 !print*,'SUM(inv_tau_all) after ',SUM(inv_tau_all)
+                 !
+                 ! Compute the SERTA mobility for the first iteration
+                 IF (iq == nqf) CALL transport_coeffs (ef0,efcb)
+                 IF (iq == nqf) iter = iter + 1 
+                 ! 
+               ELSE
+                 ! 
+                 IF (int_mob .AND. carrier) THEN
+                   call errore('ephwann_shuffle','The iterative solution cannot be solved with int_mob AND carrier at the moment',1)
+                 ELSE
+                   CALL iterativebte(iter, iq, ef0(1), error_h, error_el, first_cycle, first_time)
+                 ENDIF   
+                 !
+                 IF (iq == nqf) iter = iter + 1 
+               ENDIF
+               !
+             ELSE
                !
                CALL scattering_rate_q( iq, ef0, efcb, first_cycle )
-               !print*,'SUM(inv_tau_all) after ',SUM(inv_tau_all)
-               !
-               ! Compute the SERTA mobility for the first iteration
-               IF (iq == nqf) CALL transport_coeffs (ef0,efcb)
-               IF (iq == nqf) iter = iter + 1 
                ! 
-             ELSE
-               ! 
-               IF (int_mob .AND. carrier) THEN
-                 call errore('ephwann_shuffle','The iterative solution cannot be solved with int_mob AND carrier at the moment',1)
-               ELSE
-                 CALL iterativebte(iter, iq, ef0(1), error_h, error_el, first_cycle, first_time)
-               ENDIF   
-               !
-               IF (iq == nqf) iter = iter + 1 
              ENDIF
-             !
-           ELSE
-             !
-             CALL scattering_rate_q( iq, ef0, efcb, first_cycle )
              ! 
-           ENDIF
-           ! 
-         ENDIF ! scattering
-         ! --------------------------------------       
-         !
-         CALL stop_clock ( 'ep-interp' )
-         !
+           ENDIF ! scattering
+           ! --------------------------------------       
+           !
+           CALL stop_clock ( 'ep-interp' )
+           !
          ENDIF ! scatread
       ENDDO  ! end loop over q points
       !

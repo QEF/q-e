@@ -50,6 +50,7 @@ epw_setup.o \
 epw_summary.o \
 fermiwindow.o \
 gmap_sym.o \
+indabs.o \
 io_dyn_mat2.o \
 kfold.o \
 kpointdivision.o \
