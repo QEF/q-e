@@ -38,22 +38,23 @@
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : me_pool, inter_pool_comm 
-  USE cell_base,     ONLY : omega, alat
+  USE cell_base,     ONLY : omega, alat, bg
   ! 
   implicit none
   !
-  real(kind=DP), external :: efermig, dos_ef, wgauss
-  integer :: iw, ik, ikk, ikq, ibnd, jbnd, iq, fermicount
-  real(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, ww, dw, weight
-  real(kind=DP) :: specfun_sum, esigmar0, tpiba_new
-  real(kind=DP) :: fermi(nw_specfun)
-  !
   ! variables for collecting data from all pools in parallel case 
   !
+  integer :: iw, ik, ikk, ikq, ibnd, jbnd, iq, fermicount
   integer :: nksqtotf, lower_bnd, upper_bnd
-  real(kind=DP), allocatable :: xkf_all(:,:) , etf_all(:,:)
+  REAL(kind=DP), external :: efermig, dos_ef, wgauss
+  REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, ww, dw, weight
+  REAL(kind=DP) :: specfun_sum, esigmar0, tpiba_new
+  REAL(kind=DP) :: fermi(nw_specfun)
+  REAL(kind=DP), allocatable :: xkf_all(:,:) , etf_all(:,:)
   REAL(kind=DP) :: kF, vF, fermiHEG, qin, wpl0, eps0, deltaeps, qcut, &
                    qsquared, qTF, dipole, rs, ekk1, degen
+  REAL(kind=DP) :: q(3)
+  !! The q-point in cartesian unit. 
   !
   ! loop over temperatures can be introduced
   !
@@ -119,19 +120,21 @@
   !nel      =  0.01    ! this should be read from input - # of doping electrons 
   !epsiHEG  =  12.d0   ! this should be read from input - # dielectric constant at zero doping  
   !meff     =  0.25    ! this should be read from input - effective mass 
-  tpiba_new = 2.0d0 * pi / alat
-  degen    = 1.0d0
-  rs       = (3.d0/(4.d0*pi*nel/omega/degen))**(1.d0/3.d0)*meff*degen ! omega is the unit cell volume in Bohr^3
+  tpiba_new=  2.0d0 * pi / alat
+  degen    =  1.0d0
+  rs       =  (3.d0/(4.d0*pi*nel/omega/degen))**(1.d0/3.d0)*meff*degen ! omega is the unit cell volume in Bohr^3
 !  rs       = (3.d0/(4.d0*pi*nel/omega/degen))**(1.d0/3.d0)*meff*degen/epsiHEG ! omega is the unit cell volume in Bohr^3
-  kF       = (3.d0*pi**2*nel/omega/degen )**(1.d0/3.d0)
+  kF       =  (3.d0*pi**2*nel/omega/degen )**(1.d0/3.d0)
   vF       =  1.d0/meff * (3.d0*pi**2*nel/omega/degen)**(1.d0/3.d0)
   fermiHEG =  1.d0/(2.d0*meff) * (3.d0*pi**2*nel/omega/degen)**(2.d0/3.d0) * 2.d0 ! [Ryd] multiplication by 2 converts from Ha to Ry
   qTF      =  (6.d0*pi*nel/omega/degen/(fermiHEG/2.d0))**(1.d0/2.d0)    ! [a.u.]
   wpl0     =  sqrt(4.d0*pi*nel/omega/meff/epsiHEG) * 2.d0         ! [Ryd] multiplication by 2 converts from Ha to Ryd
   wq       =  wpl0 ! [Ryd] 
-  qsquared =  (xqf(1,iq)**2 + xqf(2,iq)**2 + xqf(3,iq)**2)
+  q(:)     =  xqf(:,iq) 
+  CALL cryst_to_cart (1, q, bg, 1)
+  qsquared =  (q(1)**2 + q(2)**2 + q(3)**2)
   qin      =  sqrt(qsquared)*tpiba_new
-  qcut     = wpl0 / vF  / tpiba_new / 2.d0 ! 1/2 converts from Ryd to Ha
+  qcut     =  wpl0 / vF  / tpiba_new / 2.d0 ! 1/2 converts from Ryd to Ha
   !qcut = qcut / 2.d0 ! phenomenological Landau damping
   ! 
   ! qcut2  = kF * ( sqrt( 1.d0 + wpl0 / fermiHEG) - 1.d0 ) / tpiba_new

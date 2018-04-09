@@ -63,7 +63,8 @@ MODULE io_base
       INTEGER                  :: igwx, npwx, npol, j
       INTEGER                  :: me_in_group, nproc_in_group, my_group
       INTEGER, ALLOCATABLE     :: itmp(:,:)
-      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
+      COMPLEX(DP), ALLOCATABLE, TARGET :: wtmp(:)
+      COMPLEX(DP), POINTER             :: wtmp2(:)
       !
 #if defined(__HDF5) 
       TYPE (qeh5_file)         :: h5file
@@ -136,8 +137,10 @@ MODULE io_base
       !
       IF ( ionode_in_group ) THEN
          ALLOCATE( wtmp( MAX( npol*igwx, 1 ) ) )
+         IF ( npol == 2 ) wtmp2 => wtmp( igwx+1:2*igwx )
       ELSE
          ALLOCATE( wtmp( 1 ) )
+         IF ( npol == 2 ) wtmp2 => wtmp( 1:1 )
       ENDIF
       wtmp = 0.0_DP
       !
@@ -156,10 +159,16 @@ MODULE io_base
          IF ( npol == 2 ) THEN
             !
             ! Quick-and-dirty noncolinear case - mergewf should be modified
+            ! Collect into wtmp(1:igwx) the first set of plane waves components
             !
-            CALL mergewf( wfc(1:npwx,       j), wtmp(1:igwx),       ngwl, igl,&
+            CALL mergewf( wfc(1:npwx,       j), wtmp , ngwl, igl,&
                  me_in_group, nproc_in_group, root_in_group, intra_group_comm )
-            CALL mergewf( wfc(npwx+1:2*npwx,j), wtmp(igwx+1:2*igwx), ngwl, igl,&
+            !
+            ! Collect into wtmp(igwx+1:2*igwx) the second set of plane waves
+            ! components - pointer wtmp2 is used instead of wtmp(igwx+1:2*igwx)
+            ! in order to avoid a bogus out-of-bound error
+            !
+            CALL mergewf( wfc(npwx+1:2*npwx,j), wtmp2, ngwl, igl,&
                  me_in_group, nproc_in_group, root_in_group, intra_group_comm )
             !
          ELSE
@@ -188,6 +197,7 @@ MODULE io_base
 #endif
       END IF
       !
+      IF ( npol == 2 ) NULLIFY ( wtmp2 )
       DEALLOCATE( wtmp )
       !
       RETURN
@@ -230,8 +240,9 @@ MODULE io_base
       INTEGER, OPTIONAL,  INTENT(OUT)   :: ierr
       !
       INTEGER                           :: j
-      COMPLEX(DP), ALLOCATABLE          :: wtmp(:)
       INTEGER, ALLOCATABLE              :: itmp(:,:)
+      COMPLEX(DP), ALLOCATABLE, TARGET  :: wtmp(:)
+      COMPLEX(DP), POINTER              :: wtmp2(:)
       INTEGER                           :: ierr_
       INTEGER                           :: igwx, igwx_, npwx, ik_, nbnd_
       INTEGER                           :: me_in_group, nproc_in_group
@@ -323,12 +334,14 @@ MODULE io_base
       !
       IF ( ionode_in_group ) THEN 
          ALLOCATE( wtmp( npol*MAX( igwx_, igwx ) ) )
+         IF ( npol == 2 ) wtmp2 => wtmp(igwx_+1:2*igwx_)
 #if defined (__HDF5) 
          CALL qeh5_open_dataset( h5file, h5dset_wfc, ACTION = 'read', NAME = 'evc')
          CALL qeh5_set_space ( h5dset_wfc, wtmp(1), RANK = 1, DIMENSIONS = [npol*igwx_], MODE = 'm') 
 #endif
       ELSE
          ALLOCATE( wtmp(1) )
+         IF ( npol == 2 ) wtmp2 => wtmp( 1:1 )
       ENDIF
       nbnd = nbnd_ 
       DO j = 1, nbnd_ 
@@ -348,10 +361,19 @@ MODULE io_base
             END IF
             !
             IF ( npol == 2 ) THEN
-               CALL splitwf( wfc(1:npwx,       j), wtmp(1:igwx_       ),   &
+               !
+               ! Quick-and-dirty noncolinear case - mergewf should be modified
+               ! Collect into wtmp(1:igwx_) first set of plane wave components
+               !
+               CALL splitwf( wfc(1:npwx,       j), wtmp ,   &
                     ngwl, igl, me_in_group, nproc_in_group, root_in_group, &
                     intra_group_comm )
-               CALL splitwf( wfc(npwx+1:2*npwx,j), wtmp(igwx_+1:2*igwx_),  &
+               !
+               ! Collect into wtmp(igwx_+1:2*igwx_) the second set of plane wave
+               ! components - instead of wtmp(igwx_+1:2*igwx_), pointer wtmp2
+               ! is used, in order to prevent a bogus out-of-bound error
+               !
+               CALL splitwf( wfc(npwx+1:2*npwx,j), wtmp2,  &
                     ngwl, igl, me_in_group, nproc_in_group, root_in_group, &
                     intra_group_comm )
             ELSE
@@ -372,6 +394,7 @@ MODULE io_base
 #endif
       END IF
       !
+      IF ( npol == 2 ) NULLIFY ( wtmp2 )
       DEALLOCATE( wtmp )
       !
       RETURN

@@ -1984,21 +1984,28 @@ MODULE read_namelists_module
        INTEGER,INTENT(in) :: ios, unit_loc
        CHARACTER(LEN=*) :: nl_name
        CHARACTER(len=512) :: line
+       INTEGER :: ios2
        !
        IF( ionode ) THEN
-         !READ( unit_loc, control, iostat = ios )
+         ios2=0
          IF (ios /=0) THEN
            BACKSPACE(unit_loc)
-           READ(unit_loc,'(A512)') line
-          END IF
+           READ(unit_loc,'(A512)', iostat=ios2) line
+         END IF
        END IF
+
+       CALL mp_bcast( ios2, ionode_id, intra_image_comm )
+       IF( ios2 /= 0 ) THEN
+          CALL errore( ' read_namelists ', ' could not find namelist &'//TRIM(nl_name), 2)
+       ENDIF
+       !
        CALL mp_bcast( ios, ionode_id, intra_image_comm )
        CALL mp_bcast( line, ionode_id, intra_image_comm )
        IF( ios /= 0 ) THEN
           CALL errore( ' read_namelists ', &
                        ' bad line in namelist &'//TRIM(nl_name)//&
                        ': "'//TRIM(line)//'" (error could be in the previous line)',&
-                       ABS(ios) )
+                       1 )
        END IF
        !
      END SUBROUTINE check_namelist_read
