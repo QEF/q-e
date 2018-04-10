@@ -9,9 +9,9 @@
 MODULE mp_world
   !----------------------------------------------------------------------------
   !
-  USE mp, ONLY : mp_barrier, mp_start, mp_end, mp_stop 
-#if !defined(__GFORTRAN__) || ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
-  USE mp, ONLY : mp_count_nodes
+  USE mp, ONLY : mp_barrier, mp_start, mp_end, mp_stop, mp_count_nodes
+#if defined(__CUDA)
+  use cudafor, ONLY : cudaSetDevice, cudaGetDeviceCount
 #endif
   USE io_global, ONLY : meta_ionode_id, meta_ionode
   !
@@ -48,7 +48,7 @@ CONTAINS
     !
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: my_world_comm
-    INTEGER :: color, key
+    INTEGER :: color, key, ndev
 #if defined(__MPI)
     INTEGER :: ierr
 #endif
@@ -76,6 +76,12 @@ CONTAINS
     CALL mp_start( nproc, mpime, world_comm )
     !
     CALL mp_count_nodes ( nnode, color, key, world_comm )
+
+#if defined(__CUDA)
+    ierr = cudaGetDeviceCount( ndev )
+    ierr = cudaSetDevice(mod(key, ndev))
+    print *, "MPI ", key, " on node ", color, " is using GPU: ", mod(key, ndev)
+#endif
     !
     !
     ! ... meta_ionode is true if this processor is the root processor
