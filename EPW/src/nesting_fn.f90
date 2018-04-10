@@ -170,7 +170,7 @@
        ! 
     WRITE(stdout, 102)  gamma
     WRITE(stdout,'(5x,a/)') repeat('-',67)
-    CALL FLUSH()
+    !CALL FLUSH()
     !
     WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
       'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nkqtotf/2

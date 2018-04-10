@@ -60,7 +60,7 @@
 
   fsthick     = 4.0 ! eV 
   eptemp      = 300 ! K 
-  degaussw    = 0.05 ! eV
+  degaussw    = 0.5 ! eV
 
   dvscf_dir   = './save/'
   

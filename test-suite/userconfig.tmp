@@ -42,7 +42,7 @@ tolerance = ( (5.0e-5, 5.0e-3, 'e1'),
               (5.0e-2, 5.0e-3, 'born'),
               (5.0e-4, 5.0e-4, 'dos'),
               (1.5e-0, 5.0e-1, 'lambda'),
-              (9.0e-2, 5.0e-3, 'lambda2'),
+              (9.5e-2, 5.0e-3, 'lambda2'),
               (1.0e-6, 1.0e-6, 'qpt'),
               (2.0e+0, 2.0e-1, 'phfreq'))
 skip_program = grep
@@ -93,7 +93,7 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0   , 1.0e-2, 'mobav'),
               (1.0e+10, 1.0e+2, 'density'),
               (1.0   , 1.0e-2, 'mobxZ'),
-              (1.0e-2, None  , 'indabs'))
+              (250.0 , None  , 'indabs'))
 
 skip_program = grep
 skip_args = 'not present in this version'
