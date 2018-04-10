@@ -14,6 +14,7 @@ MODULE qes_libs_module
 
    USE qes_types_module
    USE FoX_wxml
+   IMPLICIT NONE
    !
    INTEGER, PARAMETER      :: max_real_per_line=5
    CHARACTER(32)           :: fmtstr
@@ -3819,6 +3820,88 @@ SUBROUTINE qes_reset_spin_constraints(obj)
 
 END SUBROUTINE qes_reset_spin_constraints
 
+SUBROUTINE qes_write_gate_settings(xp, obj)
+   IMPLICIT NONE
+   TYPE(xmlf_t)      :: xp
+   TYPE(gate_settings_type)  :: obj 
+   !
+   IF ( .NOT. obj%lwrite ) RETURN 
+   CALL  xml_NewElement(xp,TRIM(obj%tagname)) 
+      CALL  xml_NewElement(xp,"use_gate")
+         CALL xml_addCharacters(xp, obj%use_gate)
+      CALL xml_endElement(xp,"use_gate")
+      IF ( obj%zgate_ispresent ) THEN 
+         CALL xml_NewElement(xp, "zgate") 
+            CALL xml_addCharacters(xp, obj%zgate)
+         CALL xml_EndElement(xp,"zgate") 
+      END IF
+      IF ( obj%relaxz_ispresent) THEN 
+         CALL xml_NewElement(xp,"relaxz")
+            CALL xml_addCharacters(xp, obj%relaxz)
+         CALL xml_EndElement(xp, "relaxz")
+      ENDIF
+      IF ( obj%block_ispresent) THEN 
+         CALL xml_NewElement(xp,"block")
+         CALL xml_addCharacters(xp, obj%block)
+         CALL xml_EndElement(xp, "block")
+      ENDIF
+      IF ( obj%block_1_ispresent) THEN 
+         CALL xml_NewElement(xp,"block_1")
+         CALL xml_addCharacters(xp, obj%block_1)
+         CALL xml_EndElement(xp, "block_1")
+      ENDIF
+      IF ( obj%block_2_ispresent) THEN 
+         CALL xml_NewElement(xp,"block_2")
+         CALL xml_addCharacters(xp, obj%block_2)
+         CALL xml_EndElement(xp, "block_2")
+      ENDIF
+      IF ( obj%block_height_ispresent) THEN 
+         CALL xml_NewElement(xp,"block_height")
+         CALL xml_addCharacters(xp, obj%block_height)
+         CALL xml_EndElement(xp, "block_height")
+      ENDIF
+   CALL xml_endElement(xp, TRIM(obj%tagname)) 
+END SUBROUTINE qes_write_gate_settings
+
+SUBROUTINE qes_init_gate_settings( obj, tagname, use_gate, zgate, relaxz, block, block_1, block_2, block_height )
+   IMPLICIT NONE
+   TYPE(gate_settings_type)    :: obj
+   CHARACTER(LEN=*)            :: tagname
+   LOGICAL                     :: use_gate
+   REAL(DP),OPTIONAL           :: zgate(1)
+   LOGICAL,OPTIONAL            :: relaxz(1)
+   LOGICAL,OPTIONAL            :: block(1)
+   REAL(DP),OPTIONAL           :: block_1(1)
+   REAL(DP),OPTIONAL           :: block_2(1)
+   REAL(DP),OPTIONAL           :: block_height(1)
+   !
+   obj%tagname = TRIM(tagname)
+   obj%use_gate = use_gate
+   obj%relaxz_ispresent = PRESENT(relaxz)
+   IF( obj%relaxz_ispresent ) obj%relaxz = relaxz(1)
+   obj%zgate_ispresent = PRESENT(zgate)
+   IF (obj%zgate_ispresent) obj%zgate = zgate(1)
+   obj%block_ispresent = PRESENT(block)
+   IF( obj%block_ispresent) obj%block = block(1)
+   obj%block_1_ispresent = PRESENT(block_1)
+   IF (obj%block_1_ispresent) obj%block_1 = block_1(1)
+   obj%block_2_ispresent = PRESENT(block_2)
+   IF (obj%block_2_ispresent) obj%block_2 = block_2(1)
+   obj%block_height_ispresent = PRESENT(block_height)
+   IF (obj%block_height_ispresent) obj%block_height = block_height(1)
+   ! 
+   obj%lwrite = .TRUE.
+   obj%lread =.TRUE.
+END SUBROUTINE qes_init_gate_settings
+
+SUBROUTINE qes_reset_gate_settings(obj)
+   IMPLICIT NONE
+   TYPE(gate_settings_type)  :: obj
+   obj%tagname = ""
+   obj%lwrite = .FALSE.
+   obj%lread  = .FALSE.
+END SUBROUTINE qes_reset_gate_settings
+
 
 SUBROUTINE qes_write_electric_field(xp, obj)
    IMPLICIT NONE
@@ -3883,6 +3966,7 @@ SUBROUTINE qes_write_electric_field(xp, obj)
             CALL xml_addCharacters(xp, obj%n_berry_cycles)
          CALL xml_EndElement(xp, 'n_berry_cycles')
       ENDIF
+      IF ( obj%gate_correction_ispresent) CALL qes_write_gate_settings(xp, obj%gate_correction) 
       !
    CALL xml_EndElement(xp, TRIM(obj%tagname))
    !
@@ -3896,7 +3980,7 @@ SUBROUTINE qes_init_electric_field(obj, tagname, electric_potential, &
                               electric_field_amplitude_ispresent, electric_field_amplitude, &
                               electric_field_vector_ispresent, electric_field_vector, &
                               nk_per_string_ispresent, nk_per_string, &
-                              n_berry_cycles_ispresent, n_berry_cycles)
+                              n_berry_cycles_ispresent, n_berry_cycles, gate_settings)
    IMPLICIT NONE
 
    TYPE(electric_field_type) :: obj
@@ -3919,6 +4003,7 @@ SUBROUTINE qes_init_electric_field(obj, tagname, electric_potential, &
    INTEGER  :: nk_per_string
    LOGICAL  :: n_berry_cycles_ispresent
    INTEGER  :: n_berry_cycles
+   TYPE(gate_settings_type), OPTIONAL  :: gate_settings(1)
 
    obj%tagname = TRIM(tagname)
    obj%lwrite   = .TRUE.
@@ -3956,7 +4041,8 @@ SUBROUTINE qes_init_electric_field(obj, tagname, electric_potential, &
    IF(obj%n_berry_cycles_ispresent) THEN
       obj%n_berry_cycles = n_berry_cycles
    ENDIF
-
+   obj%gate_correction_ispresent = PRESENT( gate_settings) 
+   IF ( obj%gate_correction_ispresent ) obj%gate_correction = gate_settings(1) 
 END SUBROUTINE qes_init_electric_field
 
 SUBROUTINE qes_reset_electric_field(obj)
@@ -3991,7 +4077,10 @@ SUBROUTINE qes_reset_electric_field(obj)
    IF(obj%n_berry_cycles_ispresent) THEN
       obj%n_berry_cycles_ispresent = .FALSE.
    ENDIF
-
+   IF (obj%gate_correction_ispresent) THEN
+      obj%gate_correction_ispresent = .FALSE.
+      CALL qes_reset_gate_settings(obj%gate_correction) 
+   END IF
 END SUBROUTINE qes_reset_electric_field
 
 
@@ -4745,75 +4834,73 @@ SUBROUTINE qes_write_total_energy(xp, obj)
          CALL xml_EndElement(xp, 'potentiostat_contr')
       ENDIF
       !
+      IF (obj%gatefield_contr_ispresent) THEN 
+         CALL xml_NewElement(xp, 'gatefield_contr') 
+            CALL xml_addCharacters(xp, obj%gatefield_contr, fmt = 's16') 
+         CALL xml_EndElement(xp, 'gatefield_contr') 
+      END IF
+      !
    CALL xml_EndElement(xp, TRIM(obj%tagname))
    !
 END SUBROUTINE qes_write_total_energy
 
-SUBROUTINE qes_init_total_energy(obj, tagname, etot, eband_ispresent, eband, &
-                              ehart_ispresent, ehart, vtxc_ispresent, vtxc, etxc_ispresent, &
-                              etxc, ewald_ispresent, ewald, demet_ispresent, demet, &
-                              efieldcorr_ispresent, efieldcorr, &
-                              potentiostat_contr_ispresent, potentiostat_contr)
+SUBROUTINE qes_init_total_energy(obj, tagname, etot, eband, ehart, vtxc, etxc, ewald, demet, &
+                                 efieldcorr, potentiostat_contr, gate_contribution)
    IMPLICIT NONE
 
    TYPE(total_energy_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
    REAL(DP) :: etot
-   LOGICAL  :: eband_ispresent
-   REAL(DP) :: eband
-   LOGICAL  :: ehart_ispresent
-   REAL(DP) :: ehart
-   LOGICAL  :: vtxc_ispresent
-   REAL(DP) :: vtxc
-   LOGICAL  :: etxc_ispresent
-   REAL(DP) :: etxc
-   LOGICAL  :: ewald_ispresent
-   REAL(DP) :: ewald
-   LOGICAL  :: demet_ispresent
-   REAL(DP) :: demet
-   LOGICAL  :: efieldcorr_ispresent
-   REAL(DP) :: efieldcorr
-   LOGICAL  :: potentiostat_contr_ispresent
-   REAL(DP) :: potentiostat_contr
-
+   REAL(DP),OPTIONAL :: eband(1)
+   REAL(DP),OPTIONAL :: ehart(1)
+   REAL(DP),OPTIONAL :: vtxc(1)
+   REAL(DP),OPTIONAL :: etxc(1)
+   REAL(DP),OPTIONAL :: ewald(1)
+   REAL(DP),OPTIONAL :: demet(1)
+   REAL(DP),OPTIONAL :: efieldcorr(1)
+   REAL(DP),OPTIONAL :: potentiostat_contr(1)
+   REAL(DP),OPTIONAL :: gate_contribution(1)
+   ! 
+   !
    obj%tagname = TRIM(tagname)
    obj%lwrite   = .TRUE.
    obj%lread    = .TRUE.
    obj%etot = etot
-   obj%eband_ispresent = eband_ispresent
+   obj%eband_ispresent = PRESENT(eband)
    IF(obj%eband_ispresent) THEN
-      obj%eband = eband
+      obj%eband = eband(1)
    ENDIF
-   obj%ehart_ispresent = ehart_ispresent
+   obj%ehart_ispresent = PRESENT(ehart)
    IF(obj%ehart_ispresent) THEN
-      obj%ehart = ehart
+      obj%ehart = ehart(1)
    ENDIF
-   obj%vtxc_ispresent = vtxc_ispresent
+   obj%vtxc_ispresent = PRESENT(vtxc)
    IF(obj%vtxc_ispresent) THEN
-      obj%vtxc = vtxc
+      obj%vtxc = vtxc(1)
    ENDIF
-   obj%etxc_ispresent = etxc_ispresent
+   obj%etxc_ispresent = PRESENT(etxc)
    IF(obj%etxc_ispresent) THEN
-      obj%etxc = etxc
+      obj%etxc = etxc(1)
    ENDIF
-   obj%ewald_ispresent = ewald_ispresent
+   obj%ewald_ispresent = PRESENT(ewald)
    IF(obj%ewald_ispresent) THEN
-      obj%ewald = ewald
+      obj%ewald = ewald(1)
    ENDIF
-   obj%demet_ispresent = demet_ispresent
+   obj%demet_ispresent = PRESENT(demet)
    IF(obj%demet_ispresent) THEN
-      obj%demet = demet
+      obj%demet = demet(1)
    ENDIF
-   obj%efieldcorr_ispresent = efieldcorr_ispresent
+   obj%efieldcorr_ispresent = PRESENT(efieldcorr)
    IF(obj%efieldcorr_ispresent) THEN
-      obj%efieldcorr = efieldcorr
+      obj%efieldcorr = efieldcorr(1)
    ENDIF
-   obj%potentiostat_contr_ispresent = potentiostat_contr_ispresent
+   obj%potentiostat_contr_ispresent = PRESENT(potentiostat_contr) 
    IF(obj%potentiostat_contr_ispresent) THEN
-      obj%potentiostat_contr = potentiostat_contr
+      obj%potentiostat_contr = potentiostat_contr(1)
    ENDIF
-
+   obj%gatefield_contr_ispresent = PRESENT(gate_contribution)
+   IF (obj%gatefield_contr_ispresent) obj%gatefield_contr=gate_contribution(1) 
 END SUBROUTINE qes_init_total_energy
 
 SUBROUTINE qes_reset_total_energy(obj)
@@ -6403,6 +6490,65 @@ SUBROUTINE qes_reset_step(obj)
 
 END SUBROUTINE qes_reset_step
 
+SUBROUTINE qes_write_gateInfo(xp, obj) 
+   IMPLICIT NONE
+
+   TYPE(xmlf_t)  :: xp
+   TYPE (gateInfo_type) :: obj 
+   ! 
+   INTEGER :: i
+   ! 
+   IF ( .NOT. obj%lwrite ) RETURN
+   ! 
+   CALL xml_NewElement( xp, TRIM(obj%tagname) ) 
+   !
+   CALL xml_NewElement( xp, "pot_prefactor") 
+   CALL xml_addCharacters( xp, obj%pot_prefactor, fmt='s16') 
+   CALL xml_endElement(xp, TRIM(obj%tagname)) 
+   ! 
+   CALL xml_NewElement( xp, "gate_zpos") 
+   CALL xml_addCharacters( xp, obj%gate_zpos, fmt = 's16') 
+   CALL xml_EndElement(xp, "gate_zpos") 
+   ! 
+   CALL xml_NewElement(xp, "gate_gate_term" )
+   CALL xml_AddCharacters(xp, obj%gate_gate_term, fmt = 's16')
+   CALL xml_endElement(xp, "gate_gate_term") 
+   ! 
+   CALL xml_NewElement(xp, "gatefieldEnergy" )
+   CALL xml_AddCharacters(xp, obj%gatefieldEnergy, fmt = 's16')
+   CALL xml_endElement(xp, "gatefieldEnergy") 
+   ! 
+   CALL xml_EndElement(xp, TRIM(obj%tagname))
+END SUBROUTINE qes_write_gateInfo 
+
+
+SUBROUTINE qes_init_gateInfo(obj, tagname, pot_prefactor, gate_zpos, gate_gate_term, gatefieldEnergy)
+   IMPLICIT NONE
+   TYPE(gateInfo_type),INTENT(INOUT)    :: obj
+   CHARACTER(LEN=*),INTENT(IN)          :: tagname
+   REAL(DP),INTENT(IN)                  :: pot_prefactor
+   REAL(DP),INTENT(IN)                  :: gate_zpos
+   REAL(DP),INTENT(IN)                  :: gate_gate_term
+   REAL(DP),INTENT(IN)                  :: gatefieldEnergy
+   !
+   obj%tagname = TRIM(tagname)
+   obj%lwrite = .TRUE.
+   obj%lread  = .TRUE.
+   obj%pot_prefactor = pot_prefactor 
+   obj%gate_zpos     = gate_zpos
+   obj%gate_gate_term = gate_gate_term
+   obj%gatefieldEnergy = gatefieldEnergy
+END SUBROUTINE qes_init_gateInfo
+
+
+SUBROUTINE qes_reset_gateInfo(obj) 
+   IMPLICIT NONE
+   TYPE(gateInfo_type),INTENT(OUT) :: obj
+   obj%tagname= ""
+   obj%lwrite = .FALSE.
+   obj%lread  = .FALSE.
+END SUBROUTINE qes_reset_gateInfo
+
 
 SUBROUTINE qes_write_outputElectricField(xp, obj)
    IMPLICIT NONE
@@ -6438,7 +6584,7 @@ END SUBROUTINE qes_write_outputElectricField
 
 SUBROUTINE qes_init_outputElectricField(obj, tagname, BerryPhase_ispresent, BerryPhase, &
                               finiteElectricFieldInfo_ispresent, finiteElectricFieldInfo, &
-                              dipoleInfo_ispresent, dipoleInfo)
+                              dipoleInfo_ispresent, dipoleInfo, gateInfo)
    IMPLICIT NONE
 
    TYPE(outputElectricField_type) :: obj
@@ -6450,6 +6596,7 @@ SUBROUTINE qes_init_outputElectricField(obj, tagname, BerryPhase_ispresent, Berr
    TYPE(finiteFieldOut_type) :: finiteElectricFieldInfo
    LOGICAL  :: dipoleInfo_ispresent
    TYPE(dipoleOutput_type) :: dipoleInfo
+   TYPE(gateInfo_type),OPTIONAL      :: gateInfo(1)
 
    obj%tagname = TRIM(tagname)
    obj%lwrite   = .TRUE.
@@ -6466,7 +6613,8 @@ SUBROUTINE qes_init_outputElectricField(obj, tagname, BerryPhase_ispresent, Berr
    IF(obj%dipoleInfo_ispresent) THEN
       obj%dipoleInfo = dipoleInfo
    ENDIF
-
+   obj%gateInfo_ispresent = PRESENT(gateInfo) 
+   IF ( obj%gateInfo_ispresent) obj%gateInfo = gateInfo(1)
 END SUBROUTINE qes_init_outputElectricField
 
 SUBROUTINE qes_reset_outputElectricField(obj)

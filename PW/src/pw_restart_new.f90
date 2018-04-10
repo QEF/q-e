@@ -25,7 +25,7 @@ MODULE pw_restart_new
                           qexsd_init_forces,qexsd_init_stress, qexsd_xf,               &
                           qexsd_init_outputElectricField,                              &
                           qexsd_input_obj, qexsd_occ_obj, qexsd_smear_obj,             &
-                          qexsd_init_outputPBC
+                          qexsd_init_outputPBC, qexsd_init_gate_info  
   USE io_global, ONLY : ionode, ionode_id
   USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir
   !
@@ -55,7 +55,7 @@ MODULE pw_restart_new
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, ibrav
       USE gvect,                ONLY : ig_l2g
-      USE ions_base,            ONLY : nsp, ityp, atm, nat, tau
+      USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, zv
       USE noncollin_module,     ONLY : noncolin, npol
       USE io_files,             ONLY : nwordwfc, iunwfc, psfile
       USE buffers,              ONLY : get_buffer
@@ -94,7 +94,7 @@ MODULE pw_restart_new
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
                                        emaxpos, eopreg, eamp, el_dipole, ion_dipole,&
                                        gate, zgate, relaxz, block, block_1,&
-                                       block_2, block_height ! TB
+                                       block_2, block_height, etotgatefield ! TB
       USE mp,                   ONLY : mp_sum
       USE mp_bands,             ONLY : intra_bgrp_comm
       USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
@@ -133,9 +133,11 @@ MODULE pw_restart_new
       LOGICAL                  :: opt_conv_ispresent
       INTEGER                  :: n_opt_steps, n_scf_steps_, h_band
       REAL(DP)                 :: h_energy
+      TYPE(gateInfo_type),ALLOCATABLE      :: gate_info_obj(:)
       !
       TYPE(output_type) :: output
-      
+      REAL(DP),ALLOCATABLE    :: degauss_(:), demet_(:), efield_corr(:), potstat_corr(:), &
+                                 gatefield_corr(:) 
       !
       ! PW dimensions need to be properly computed 
       ! reducing across MPI tasks
@@ -371,22 +373,37 @@ MODULE pw_restart_new
 ! ... TOTAL ENERGY
 !-------------------------------------------------------------------------------------------
          !
-         IF (tefield) THEN
-            CALL qexsd_init_total_energy(output%total_energy,etot/e2, eband/e2,&
-                 ehart/e2, vtxc/e2, etxc/e2, ewld/e2, degauss/e2, demet/e2, &
-                 etotefield/e2 )
-         ELSE 
-            CALL qexsd_init_total_energy(output%total_energy,etot/e2, eband/e2,&
-                 ehart/e2, vtxc/e2, etxc/e2, ewld/e2, degauss/e2, demet/e2)
+         IF ( degauss > 0.0d0 ) THEN 
+            ALLOCATE (degauss_(1), demet_(1)) 
+            degauss_ = degauss/e2
+            demet_   = demet/e2
+         END IF
+         IF ( tefield ) THEN 
+            ALLOCATE(efield_corr(1) ) 
+            efield_corr = etotefield/e2
          END IF
          IF (lfcpopt .OR. lfcpdyn ) THEN 
-            output%total_energy%potentiostat_contr_ispresent = .TRUE.
-            output%total_energy%potentiostat_contr = ef * tot_charge/e2
+            ALLOCATE ( potstat_corr(1)) 
+            potstat_corr = ef * tot_charge/e2
             output%FCP_tot_charge_ispresent = .TRUE.
             output%FCP_tot_charge = tot_charge
             output%FCP_force_ispresent = .TRUE.
+            !FIXME ( decide what units to use here ) 
             output%FCP_force = fcp_mu - ef 
          END IF 
+         IF ( gate) THEN
+            ALLOCATE( gatefield_corr(1)) 
+            gatefield_corr = etotgatefield/e2 
+         END IF
+         CALL  qexsd_init_total_energy(output%total_energy, etot/e2, [eband/e2], ehart/e2, vtxc/e2, &
+                                       etxc/e2, [ewld/e2], degauss_, demet_, efield_corr, potstat_corr,&
+                                       gatefield_corr) 
+         !
+         IF (ALLOCATED (degauss_))       DEALLOCATE(degauss_)
+         IF (ALLOCATED (demet_))         DEALLOCATE(demet_)
+         IF (ALLOCATED (efield_corr))    DEALLOCATE(efield_corr)
+         IF (ALLOCATED (potstat_corr))   DEALLOCATE(potstat_corr)
+         IF (ALLOCATED (gatefield_corr)) DEALLOCATE(gatefield_corr)
          !
 !---------------------------------------------------------------------------------------------
 ! ... FORCES
@@ -416,11 +433,11 @@ MODULE pw_restart_new
          IF ( lelfield ) THEN
             output%electric_field_ispresent = .TRUE. 
             CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
-                 lberry, el_pol = bp_mod_el_pol, ion_pol = bp_mod_ion_pol) 
+                 lberry, el_pol = bp_mod_el_pol, ion_pol = bp_mod_ion_pol, GATEINFO = gate_info_obj) 
          ELSE IF ( lberry ) THEN 
             output%electric_field_ispresent = .TRUE.
             CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, & 
-                 lberry, bp_obj=qexsd_bp_obj) 
+                 lberry, bp_obj=qexsd_bp_obj, GATEINFO = gate_info_obj) 
          ELSE IF ( tefield .AND. dipfield  ) THEN 
             output%electric_field_ispresent = .TRUE.
             CALL qexsd_init_dipole_info(qexsd_dipol_obj, el_dipole, ion_dipole, edir, eamp, &
@@ -428,10 +445,13 @@ MODULE pw_restart_new
            qexsd_dipol_obj%tagname = "dipoleInfo"
 
             CALL  qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
-                 lberry, dipole_obj = qexsd_dipol_obj )                     
+                 lberry, dipole_obj = qexsd_dipol_obj , GATEINFO = gate_info_obj)                     
+            CALL qes_reset_dipoleOutput(qexsd_dipol_obj) 
          ELSE 
             output%electric_field_ispresent = .FALSE.
          ENDIF
+
+
 !------------------------------------------------------------------------------------------------
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
