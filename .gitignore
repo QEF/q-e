@@ -17,4 +17,4 @@ Modules/version.f90
 test-suite/*/test.err.*
 test-suite/*/test.out.*
 S3DE
-
+install/configure

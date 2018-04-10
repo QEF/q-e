@@ -42,6 +42,12 @@ auxdir=`echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 if [ "$auxdir" != "configure" ] ; then cd $auxdir ; fi
 
 #
+# check install/configure exists or make it
+#
+
+test -e ./install/configure || cd install && ./refresh-configure.sh && cd ..
+
+#
 # detect the simplest cases 
 #
 case $1 in 
