@@ -26,7 +26,6 @@ MODULE qexsd_input
   !
   USE iotk_base,        ONLY : iotk_indent, iotk_maxindent
   USE constants,        ONLY : e2,bohr_radius_angs
-  USE iotk_module
   USE qes_module
   !
   IMPLICIT NONE
@@ -604,7 +603,7 @@ MODULE qexsd_input
    ! 
    !-------------------------------------------------------------------------------------------------
    SUBROUTINE qexsd_init_electric_field_input (obj,tefield,dipfield,lelfield,lberry,edir,gdir,emaxpos,eopreg,eamp,    &
-                                               efield,efield_cart,nberrycyc,nppstr)
+         efield,efield_cart,nberrycyc,nppstr, gate, zgate, relaxz, block, block_1, block_2, block_height )
    !---------------------------------------------------------------------------------------------------
    ! 
    IMPLICIT NONE
@@ -615,6 +614,8 @@ MODULE qexsd_input
    REAL(DP),INTENT(IN),OPTIONAL                 :: emaxpos,eopreg,eamp
    REAL(DP),INTENT(IN),OPTIONAL                 :: efield
    REAL(DP),INTENT(IN),OPTIONAL,DIMENSION(3)    :: efield_cart
+   LOGICAL,INTENT(IN),OPTIONAL                  :: gate(1), block(1),relaxz(1) 
+   REAL(DP),INTENT(IN),OPTIONAL                 :: zgate(1),block_1(1), block_2(1), block_height(1)
    ! 
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="electric_field",&
                                                    SAWTOOTH="sawtooth_potential",&
@@ -627,6 +628,9 @@ MODULE qexsd_input
    LOGICAL                                      :: dir_ispresent=.FALSE., amp_ispresent= .FALSE.,&
                                                    nberrycyc_ispresent=.FALSE.,nppstr_ispresent=.FALSE., &
                                                    electric_field_ispresent = .FALSE.
+   LOGICAL                                      :: gate_, block_
+   REAL(DP)                                     :: block_1_, block_2_, block_3_
+   TYPE(gate_settings_type),ALLOCATABLE         :: gata_settings_obj(:)
    ! 
    IF (tefield) THEN  
       electric_potential=SAWTOOTH
@@ -664,7 +668,11 @@ MODULE qexsd_input
          electric_field_direction = gdir
       END IF
    END IF  
-      
+   IF (PRESENT (gate)) THEN 
+      ALLOCATE(gata_settings_obj(1)) 
+      CALL qes_init_gate_settings(gata_settings_obj(1), "gate_settings", gate(1), zgate, relaxz,&
+         block, block_1, block_2, block_height ) 
+   END IF 
    CALL  qes_init_electric_field( obj, TAGNAME, electric_potential=electric_potential,        &
                                 dipole_correction_ispresent=dipfield, dipole_correction = dipfield, &
                                 electric_field_direction_ispresent= dir_ispresent, &
@@ -676,7 +684,12 @@ MODULE qexsd_input
                                 electric_field_vector = efield_cart_loc,                                     &
                                 electric_field_vector_ispresent= electric_field_ispresent, &
                                 n_berry_cycles_ispresent=nberrycyc_ispresent,n_berry_cycles=nberrycyc_loc,&
-                                nk_per_string_ispresent=nppstr_ispresent,nk_per_string=nppstr_loc  )
+                                nk_per_string_ispresent=nppstr_ispresent,nk_per_string=nppstr_loc, &
+                                gate_settings = gata_settings_obj)
+   IF (ALLOCATED(gata_settings_obj)) THEN 
+      CALL qes_reset_gate_settings(gata_settings_obj(1))
+      DEALLOCATE ( gata_settings_obj) 
+   END IF
    END SUBROUTINE qexsd_init_electric_field_input
    !
    !----------------------------------------------------------------------------------------------------------
