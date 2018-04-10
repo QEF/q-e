@@ -60,18 +60,18 @@ MODULE qexsd_module
   LOGICAL          :: qexsd_use_large_indent = .FALSE.
   !
   ! 
-  TYPE (input_type)                :: qexsd_input_obj
-  TYPE (general_info_type)         :: general_info
-  TYPE (parallel_info_type)        :: parallel_info
-  TYPE (berryPhaseOutput_type)     :: qexsd_bp_obj
-  TYPE (dipoleOutput_type )        :: qexsd_dipol_obj
-  TYPE (k_points_IBZ_type)         :: qexsd_start_k_obj 
-  TYPE (occupations_type)          :: qexsd_occ_obj
-  TYPE (smearing_type)             :: qexsd_smear_obj
-  TYPE ( step_type),ALLOCATABLE    :: steps(:)
-  INTEGER                          :: exit_status
-  TYPE ( closed_type )             :: qexsd_closed_element
-  INTEGER                          :: step_counter
+  TYPE (input_type)                            :: qexsd_input_obj
+  TYPE (general_info_type)                     :: general_info
+  TYPE (parallel_info_type)                    :: parallel_info
+  TYPE (berryPhaseOutput_type),ALLOCATABLE     :: qexsd_bp_obj(:)
+  TYPE (dipoleOutput_type ),ALLOCATABLE        :: qexsd_dipol_obj(:)
+  TYPE (k_points_IBZ_type)                     :: qexsd_start_k_obj 
+  TYPE (occupations_type)                      :: qexsd_occ_obj
+  TYPE (smearing_type)                         :: qexsd_smear_obj
+  TYPE ( step_type),ALLOCATABLE                :: steps(:)
+  INTEGER                                      :: exit_status
+  TYPE ( closed_type )                         :: qexsd_closed_element
+  INTEGER                                      :: step_counter
   !
   ! end of declarations
   !
@@ -1205,6 +1205,9 @@ CONTAINS
        ! 
        dipole_info%idir = edir  
        fac=omega/fpi
+       dipole_info%tagname = "dipoleInfo"
+       dipole_info%lwrite  = .TRUE.
+       dipole_info%lread   = .TRUE.
        CALL qes_init_scalarQuantity(dipole_info%ion_dipole,"ion_dipole" , units="Atomic Units", &
                                     scalarQuantity= ion_dipole*fac)
        CALL qes_init_scalarQuantity(dipole_info%elec_dipole,"elec_dipole" , units="Atomic Units",&
@@ -1220,7 +1223,7 @@ CONTAINS
        CALL qes_init_scalarQuantity(dipole_info%potentialAmp,"potentialAmp" , units="Atomic Units",&
                                      scalarQuantity= vamp)
        CALL qes_init_scalarQuantity(dipole_info%totalLength, "totalLength", units = "Bohr",&
-                                     scalarQuantity = length ) 
+                                     scalarQuantity = length )
   
     END SUBROUTINE qexsd_init_dipole_info
     !---------------------------------------------------------------------------------------------
@@ -1234,8 +1237,8 @@ CONTAINS
     ! 
     LOGICAL,INTENT(IN)                                :: lberry, lelfield, tefield, ldipole
     REAL(DP),OPTIONAL,DIMENSION(3),INTENT(IN)         :: el_pol, ion_pol
-    TYPE(berryPhaseOutput_type),OPTIONAL,INTENT(IN)   :: bp_obj
-    TYPE ( dipoleOutput_type ),OPTIONAL, INTENT(IN)   :: dipole_obj 
+    TYPE(berryPhaseOutput_type),OPTIONAL,INTENT(IN)   :: bp_obj(1)
+    TYPE ( dipoleOutput_type ),OPTIONAL, INTENT(IN)   :: dipole_obj(1) 
     TYPE ( gateInfo_type),OPTIONAL,INTENT(IN)         :: gateInfo(1)
     ! 
     CHARACTER(LEN=*),PARAMETER                        :: TAGNAME="electric_field" 
@@ -1249,7 +1252,7 @@ CONTAINS
 
     IF (lberry .AND. PRESENT ( bp_obj))  THEN
        bp_is = .TRUE. 
-       bp_loc_obj = bp_obj
+       bp_loc_obj = bp_obj(1)
     END IF 
     IF ( lelfield .AND. PRESENT(el_pol) .AND. PRESENT (ion_pol ) ) THEN 
        finfield_is=.TRUE.
@@ -1257,7 +1260,7 @@ CONTAINS
     END IF 
     IF ( ldipole .AND. PRESENT( dipole_obj ) ) THEN
        dipo_is = .TRUE.
-       dip_loc_obj=dipole_obj
+       dip_loc_obj=dipole_obj(1)
     END IF 
     CALL  qes_init_outputElectricField(obj, TAGNAME, BerryPhase_ispresent = bp_is, &
                                        BerryPhase = bp_loc_obj, &

@@ -6504,7 +6504,7 @@ SUBROUTINE qes_write_gateInfo(xp, obj)
    !
    CALL xml_NewElement( xp, "pot_prefactor") 
    CALL xml_addCharacters( xp, obj%pot_prefactor, fmt='s16') 
-   CALL xml_endElement(xp, TRIM(obj%tagname)) 
+   CALL xml_endElement(xp, "pot_prefactor") 
    ! 
    CALL xml_NewElement( xp, "gate_zpos") 
    CALL xml_addCharacters( xp, obj%gate_zpos, fmt = 's16') 
@@ -6563,20 +6563,16 @@ SUBROUTINE qes_write_outputElectricField(xp, obj)
 
    CALL xml_NewElement(xp, TRIM(obj%tagname))
       !
-      IF(obj%BerryPhase_ispresent) THEN
-         CALL qes_write_BerryPhaseOutput(xp, obj%BerryPhase)
-         !
-      ENDIF
+      IF(obj%BerryPhase_ispresent) CALL qes_write_BerryPhaseOutput(xp, obj%BerryPhase)
       !
-      IF(obj%finiteElectricFieldInfo_ispresent) THEN
+      IF(obj%finiteElectricFieldInfo_ispresent) &
          CALL qes_write_finiteFieldOut(xp, obj%finiteElectricFieldInfo)
-         !
-      ENDIF
       !
-      IF(obj%dipoleInfo_ispresent) THEN
-         CALL qes_write_dipoleOutput(xp, obj%dipoleInfo)
-         !
-      ENDIF
+      IF(obj%dipoleInfo_ispresent) CALL qes_write_dipoleOutput(xp, obj%dipoleInfo)
+         
+      ! 
+      IF (obj%gateInfo_ispresent) CALL qes_write_gateInfo(xp, obj%gateInfo) 
+      
       !
    CALL xml_EndElement(xp, TRIM(obj%tagname))
    !

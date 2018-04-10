@@ -109,7 +109,7 @@ MODULE pw_restart_new
       USE input_parameters,     ONLY : verbosity, calculation, ion_dynamics, starting_ns_eigenvalue, &
                                        vdw_corr, london, k_points, assume_isolated, &  
                                        input_parameters_occupations => occupations                                        
-      USE bp,                   ONLY : lelfield, lberry, bp_mod_el_pol => el_pol, bp_mod_ion_pol => ion_pol
+      USE bp,                   ONLY : lelfield, lberry, el_pol, ion_pol
       !
       USE rap_point_group,      ONLY : elem, nelem, name_class
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
@@ -137,7 +137,7 @@ MODULE pw_restart_new
       !
       TYPE(output_type) :: output
       REAL(DP),ALLOCATABLE    :: degauss_(:), demet_(:), efield_corr(:), potstat_corr(:), &
-                                 gatefield_corr(:) 
+                                 gatefield_corr(:), bp_el_pol(:), bp_ion_pol(:) 
       !
       ! PW dimensions need to be properly computed 
       ! reducing across MPI tasks
@@ -430,27 +430,37 @@ MODULE pw_restart_new
 !-------------------------------------------------------------------------------------------------
 ! ... ELECTRIC FIELD
 !-------------------------------------------------------------------------------------------------
+         output%electric_field_ispresent = ( gate .OR. lelfield .OR. lberry .OR. tefield ) 
+         IF ( gate ) THEN
+            ALLOCATE(gate_info_obj(1)) 
+            CALL qexsd_init_gate_info(gate_info_obj(1),"gateInfo", etotgatefield/e2, zgate, nelec, &
+                   alat, at, bg, zv, ityp) 
+         END IF             
          IF ( lelfield ) THEN
-            output%electric_field_ispresent = .TRUE. 
-            CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
-                 lberry, el_pol = bp_mod_el_pol, ion_pol = bp_mod_ion_pol, GATEINFO = gate_info_obj) 
-         ELSE IF ( lberry ) THEN 
-            output%electric_field_ispresent = .TRUE.
-            CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, & 
-                 lberry, bp_obj=qexsd_bp_obj, GATEINFO = gate_info_obj) 
-         ELSE IF ( tefield .AND. dipfield  ) THEN 
-            output%electric_field_ispresent = .TRUE.
-            CALL qexsd_init_dipole_info(qexsd_dipol_obj, el_dipole, ion_dipole, edir, eamp, &
+            ALLOCATE(bp_el_pol(3), bp_ion_pol(3))
+            bp_el_pol(1:3) = el_pol(1:3)
+            bp_ion_pol(1:3) = ion_pol(1:3)
+         END IF
+         IF ( tefield .AND. dipfield) THEN 
+            ALLOCATE (qexsd_dipol_obj(1))
+            CALL qexsd_init_dipole_info(qexsd_dipol_obj(1), el_dipole, ion_dipole, edir, eamp, &
                                   emaxpos, eopreg )  
-           qexsd_dipol_obj%tagname = "dipoleInfo"
-
-            CALL  qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
-                 lberry, dipole_obj = qexsd_dipol_obj , GATEINFO = gate_info_obj)                     
-            CALL qes_reset_dipoleOutput(qexsd_dipol_obj) 
-         ELSE 
-            output%electric_field_ispresent = .FALSE.
-         ENDIF
-
+         END IF
+         CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
+                 lberry, BP_OBJ = qexsd_bp_obj, EL_POL = bp_el_pol, ION_POL = bp_ion_pol,          &
+                 GATEINFO = gate_info_obj, DIPOLE_OBJ =  qexsd_dipol_obj) 
+         !
+         IF (ALLOCATED(gate_info_obj)) DEALLOCATE(gate_info_obj)
+         IF (ALLOCATED(bp_ion_pol))    DEALLOCATE (bp_ion_pol)
+         IF (ALLOCATED(bp_el_pol))     DEALLOCATE (bp_el_pol)
+         IF (ALLOCATED(qexsd_dipol_obj)) THEN 
+            CALL qes_reset_dipoleOutput(qexsd_dipol_obj(1)) 
+            DEALLOCATE (qexsd_dipol_obj)
+         END IF
+         IF (ALLOCATED(qexsd_bp_obj)) THEN
+            CALL qes_reset_berryPhaseOutput(qexsd_bp_obj(1))
+            DEALLOCATE(qexsd_bp_obj)
+         END IF
 
 !------------------------------------------------------------------------------------------------
 ! ... ACTUAL WRITING
