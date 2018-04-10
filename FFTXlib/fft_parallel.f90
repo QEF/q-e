@@ -138,7 +138,125 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
 
   !
 END SUBROUTINE tg_cft3s
-
+#if defined(__CUDA)
+!
+!  General purpose driver, GPU version
+!
+!----------------------------------------------------------------------------
+SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
+  !----------------------------------------------------------------------------
+  !
+  !! ... isgn = +-1 : parallel 3d fft for rho and for the potential
+  !
+  !! ... isgn = +-2 : parallel 3d fft for wavefunctions
+  !
+  !! ... isgn = +-3 : parallel 3d fft for wavefunctions with task group
+  !
+  !! ... isgn = +   : G-space to R-space, output = \sum_G f(G)exp(+iG*R)
+  !! ...              fft along z using pencils        (cft_1z)
+  !! ...              transpose across nodes           (fft_scatter_yz)
+  !! ...              fft along y using pencils        (cft_1y)
+  !! ...              transpose across nodes           (fft_scatter_xy)
+  !! ...              fft along x using pencils        (cft_1x)
+  !
+  !! ... isgn = -   : R-space to G-space, output = \int_R f(R)exp(-iG*R)/Omega
+  !! ...              fft along x using pencils        (cft_1x)
+  !! ...              transpose across nodes           (fft_scatter_xy)
+  !! ...              fft along y using pencils        (cft_1y)
+  !! ...              transpose across nodes           (fft_scatter_yz)
+  !! ...              fft along z using pencils        (cft_1z)
+  !
+  ! If task_group_fft_is_active the FFT acts on a number of wfcs equal to 
+  ! dfft%nproc2, the number of Y-sections in which a plane is divided. 
+  ! Data are reshuffled by the fft_scatter_tg routine so that each of the 
+  ! dfft%nproc2 subgroups (made by dfft%nproc3 procs) deals with whole planes 
+  ! of a single wavefunciton.
+  !
+  ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
+  !
+  USE cudafor
+  USE fft_scalar, ONLY : cft_1z_gpu
+  USE scatter_mod_gpu,ONLY : fft_scatter_xy_gpu, fft_scatter_yz_gpu, fft_scatter_tg_gpu
+  USE scatter_mod_gpu,ONLY : fft_scatter_tg_opt_gpu
+  USE fft_types,  ONLY : fft_type_descriptor
+  !
+  IMPLICIT NONE
+  !
+  TYPE (fft_type_descriptor), INTENT(in) :: dfft   ! descriptor of fft data layout
+  COMPLEX(DP), DEVICE, INTENT(inout)     :: f_d( : ) ! array containing data to be transformed
+  INTEGER, INTENT(in)                    :: isgn   ! fft direction (potential: +/-1, wave: +/-2, wave_tg: +/-3)
+  !
+  INTEGER                          :: n1, n2, n3, nx1, nx2, nx3
+  INTEGER                          :: nnr_
+  INTEGER                          :: nsticks_x, nsticks_y, nsticks_z
+  COMPLEX(DP), ALLOCATABLE, DEVICE :: aux_d (:)
+  INTEGER                          :: i
+  !
+  !write (6,*) 'enter tg_cft3s ',isgn ; write(6,*) ; FLUSH(6)
+  n1  = dfft%nr1  ; n2  = dfft%nr2  ; n3  = dfft%nr3
+  nx1 = dfft%nr1x ; nx2 = dfft%nr2x ; nx3 = dfft%nr3x
+  !
+  if (abs(isgn) == 1 ) then       ! potential fft
+     nnr_ = dfft%nnr
+     nsticks_x = dfft%my_nr2p * dfft%my_nr3p
+     nsticks_y = dfft%nr1p(dfft%mype2+1) * dfft%my_nr3p
+     nsticks_z = dfft%nsp(dfft%mype+1)
+  else if (abs(isgn) == 2 ) then  ! wave func fft
+     nnr_ = dfft%nnr
+     nsticks_x = dfft%my_nr2p * dfft%my_nr3p
+     nsticks_y = dfft%nr1w(dfft%mype2+1) * dfft%my_nr3p
+     nsticks_z = dfft%nsw(dfft%mype+1)
+  else if (abs(isgn) == 3 ) then  ! wave func fft with task groups
+     nnr_ = dfft%nnr_tg
+     nsticks_x = dfft%nr2 * dfft%my_nr3p
+     nsticks_y = dfft%nr1w_tg * dfft%my_nr3p
+     nsticks_z = dfft%nsw_tg(dfft%mype+1)
+  else
+     CALL fftx_error__( ' tg_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
+  end if
+  ALLOCATE( aux_d( nnr_ ) ) 
+  !
+  IF ( isgn > 0 ) THEN  ! G -> R
+     if (isgn==+3) then 
+        call fft_scatter_tg_opt_gpu ( dfft, f_d, aux_d, nnr_, isgn)
+     else
+        !aux_d(1:nnr_)=f_d(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f_d)>size(aux_d)
+        i = cudaMemcpy( aux_d(1), f_d(1), nnr_, cudaMemcpyDeviceToDevice )
+     endif
+     CALL cft_1z_gpu( aux_d, nsticks_z, n3, nx3, isgn, f_d )
+     CALL fft_scatter_yz_gpu ( dfft, f_d, aux_d, nnr_, isgn )
+     CALL cft_1z_gpu( aux_d, nsticks_y, n2, nx2, isgn, f_d )
+     CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn )
+     CALL cft_1z_gpu( aux_d, nsticks_x, n1, nx1, isgn, f_d )
+     ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
+     if (nsticks_x*nx1 < nnr_) f_d(nsticks_x*nx1+1:nnr_) = (0.0_DP,0.0_DP)
+     !
+  ELSE                  ! R -> G
+     !
+     CALL cft_1z_gpu( f_d, nsticks_x, n1, nx1, isgn, aux_d )
+     CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn )
+     CALL cft_1z_gpu( f_d, nsticks_y, n2, nx2, isgn, aux_d )
+     CALL fft_scatter_yz_gpu ( dfft, f_d, aux_d, nnr_, isgn )
+     CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d )
+     ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
+     if (nsticks_z*nx3 < nnr_) aux_d(nsticks_z*nx3+1:nnr_) = (0.0_DP,0.0_DP)
+     if (isgn==-3) then 
+        call fft_scatter_tg_opt_gpu ( dfft, aux_d, f_d, nnr_, isgn)
+     else
+        !f_d(1:nnr_)=aux_d(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f_d)>size(aux_d)
+        i = cudaMemcpy( f_d(1), aux_d(1), nnr_, cudaMemcpyDeviceToDevice )
+     endif
+  ENDIF
+  !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
+  !
+  DEALLOCATE( aux_d )
+  !
+  !if (.true.) stop
+  RETURN
+99 format ( 20 ('(',2f12.9,')') )
+  !
+END SUBROUTINE tg_cft3s_gpu
+#endif
 !--------------------------------------------------------------------------------
 !   Auxiliary routines to read/write from/to a distributed array
 !   NOT optimized for efficiency .... just to show how one can access the data
