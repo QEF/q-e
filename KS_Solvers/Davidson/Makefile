@@ -12,6 +12,8 @@ export_gstart_2_davidson.o \
 set_mpi_comm_4_davidson.o \
 david_param.o
 
+-include make.gpu
+
 all : libdavid.a
 
 

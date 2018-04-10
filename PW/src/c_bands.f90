@@ -192,6 +192,11 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
 ! Davidson diagonalization uses these external routines on groups of nvec bands
   external h_psi, s_psi, g_psi
+#if defined(__CUDA)
+  external h_psi_gpu, s_psi_gpu, g_psi_gpu
+  COMPLEX(DP), ALLOCATABLE, DEVICE :: evc_d(:,:)
+  REAL(DP), ALLOCATABLE, DEVICE :: et_d(:)
+#endif
 ! subroutine h_psi(npwx,npw,nvec,psi,hpsi)  computes H*psi
 ! subroutine s_psi(npwx,npw,nvec,psi,spsi)  computes S*psi (if needed)
 ! subroutine g_psi(npwx,npw,nvec,psi,eig)   computes G*psi -> psi
@@ -322,16 +327,38 @@ CONTAINS
           !
           IF ( use_para_diag ) then
              !
+#if ! defined(__CUDA)
 !             ! make sure that all processors have the same wfc
              CALL pregterg( h_psi, s_psi, okvan, g_psi, &
                          npw, npwx, nbnd, nbndx, evc, ethr, &
                          et(1,ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call 
+#else
+             ALLOCATE( evc_d( npwx*npol, nbnd ), et_d(nbnd))
+             evc_d = evc
+             CALL pregterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+                         npw, npwx, nbnd, nbndx, evc_d, ethr, &
+                         et_d(1), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call 
+             evc = evc_d
+             et(:,ik) = et_d
+             DEALLOCATE(evc_d, et_d)
+#endif
              !
           ELSE
              !
+#if ! defined(__CUDA)
              CALL regterg (  h_psi, s_psi, okvan, g_psi, &
                          npw, npwx, nbnd, nbndx, evc, ethr, &
                          et(1,ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
+#else
+             ALLOCATE( evc_d( npwx*npol, nbnd ), et_d(nbnd))
+             evc_d = evc
+             CALL regterg_gpu (  h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+                         npw, npwx, nbnd, nbndx, evc_d, ethr, &
+                         et_d(1), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
+             evc = evc_d
+             et(:,ik) = et_d
+             DEALLOCATE(evc_d, et_d)
+#endif
           END IF
           !
           avg_iter = avg_iter + dav_iter
@@ -464,15 +491,37 @@ CONTAINS
           !
           IF ( use_para_diag ) then
              !
+#if ! defined(__CUDA)
              CALL pcegterg( h_psi, s_psi, okvan, g_psi, &
                             npw, npwx, nbnd, nbndx, npol, evc, ethr, &
                             et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
+#else
+             ALLOCATE( evc_d( npwx*npol, nbnd ), et_d(nbnd))
+             evc_d = evc
+             CALL pcegterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+                            npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
+                            et_d(1), btype(1,ik), notconv, lrot, dav_iter )
+             evc = evc_d
+             et(:,ik) = et_d
+             DEALLOCATE(evc_d, et_d)
+#endif
              !
           ELSE
              !
+#if ! defined(__CUDA)
              CALL cegterg ( h_psi, s_psi, okvan, g_psi, &
                             npw, npwx, nbnd, nbndx, npol, evc, ethr, &
                             et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
+#else
+             ALLOCATE( evc_d( npwx*npol, nbnd ), et_d(nbnd))
+             evc_d = evc
+             CALL cegterg_gpu ( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+                            npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
+                            et_d(1), btype(1,ik), notconv, lrot, dav_iter )
+             evc = evc_d
+             et(:,ik) = et_d
+             DEALLOCATE(evc_d, et_d)
+#endif
           END IF
           !
           avg_iter = avg_iter + dav_iter

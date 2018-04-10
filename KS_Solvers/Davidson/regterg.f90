@@ -22,7 +22,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
   ! ... where H is an hermitean operator, e is a real scalar,
   ! ... S is an uspp matrix, evc is a complex vector
   ! ... (real wavefunctions with only half plane waves stored)
-  
+  USE LAXlib,        ONLY : diaghg
   USE david_param,   ONLY : DP, stdout
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &
           nbgrp, my_bgrp_id
@@ -205,7 +205,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      CALL start_clock( 'regterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
+        CALL diaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
      END IF
      IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )
@@ -366,7 +366,7 @@ SUBROUTINE regterg(  h_psi, s_psi, uspp, g_psi, &
      !
      CALL start_clock( 'regterg:diag' )
      IF( my_bgrp_id == root_bgrp_id ) THEN
-        CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
+        CALL diaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
      END IF
      IF( nbgrp > 1 ) THEN
         CALL mp_bcast( vr, root_bgrp_id, inter_bgrp_comm )

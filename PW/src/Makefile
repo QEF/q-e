@@ -245,6 +245,8 @@ wannier_clean.o \
 wannier_occ.o \
 wannier_enrg.o
 
+-include make.gpu
+
 QEMODS=../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a ../../KS_Solvers/CG/libcg.a \
        ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 

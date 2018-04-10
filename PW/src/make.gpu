@@ -1,0 +1,4 @@
+PWLIBS += \
+  g_psi_gpu.o \
+  h_psi_gpu.o \
+  s_psi_gpu.o

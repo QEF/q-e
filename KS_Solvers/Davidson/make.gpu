@@ -1,0 +1,7 @@
+# Makefile for DAVID
+
+DAVID += \
+fbuf.o \
+david_buffer.o \
+cegterg_gpu.o \
+regterg_gpu.o
