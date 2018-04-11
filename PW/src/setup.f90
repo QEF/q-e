@@ -102,13 +102,13 @@ SUBROUTINE setup()
   REAL(DP) :: iocc, ionic_charge, one
   !
   LOGICAL, EXTERNAL  :: check_para_diag
-!
+  !
 #if !defined(__OLDXML)
   TYPE(output_type)                         :: output_obj 
   TYPE(parallel_info_type)                  :: parinfo_obj
   TYPE(general_info_type)                   :: geninfo_obj
 #endif
-!  
+  !  
 #if defined(__MPI)
   LOGICAL :: lpara = .true.
 #else
@@ -404,11 +404,7 @@ SUBROUTINE setup()
   nbndx = nbnd
   IF ( isolve == 0 ) nbndx = david * nbnd
   !
-#if defined(__MPI)
   use_para_diag = check_para_diag( nbnd )
-#else
-  use_para_diag = .FALSE.
-#endif
   !
   ! ... Set the units in real and reciprocal space
   !
@@ -684,10 +680,11 @@ LOGICAL FUNCTION check_para_diag( nbnd )
   LOGICAL, SAVE :: first = .TRUE.
   LOGICAL, SAVE :: saved_value = .FALSE.
 
-  IF( .NOT. first ) then
+#if defined(__MPI)
+  IF( .NOT. first ) THEN
       check_para_diag = saved_value
       RETURN
-  end if
+  END IF
   first = .FALSE.
   !
   IF( np_ortho(1) > nbnd ) &
@@ -727,5 +724,8 @@ LOGICAL FUNCTION check_para_diag( nbnd )
      !
   END IF
   !
+#else
+  use_para_diag = .FALSE.
+#endif
   RETURN
 END FUNCTION check_para_diag
