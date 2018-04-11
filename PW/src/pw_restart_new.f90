@@ -1033,7 +1033,7 @@ MODULE pw_restart_new
          CALL readschema_outputPBC ( output_obj%boundary_conditions)
       END IF
       !
-      IF ( lefield .AND. lvalid_input ) CALL readschema_efield ( input_obj%electric_field) 
+      IF ( lefield .AND. lvalid_input ) CALL readschema_efield ( input_obj%electric_field ) 
       !
       IF ( lexx .AND. output_obj%dft%hybrid_ispresent  ) CALL readschema_exx ( output_obj%dft%hybrid )
       !
@@ -1295,7 +1295,8 @@ MODULE pw_restart_new
     SUBROUTINE readschema_efield( efield_obj  ) 
     !---------------------------------------------------------------------------
       !       
-      USE extfield, ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp
+      USE extfield, ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp, gate, zgate, &
+                           block, block_1, block_2, block_height, relaxz
       ! 
       IMPLICIT NONE 
       ! 
@@ -1332,6 +1333,16 @@ MODULE pw_restart_new
          ELSE 
             eamp = 1.d-3
          END IF
+         IF (efield_obj%gate_correction_ispresent) THEN 
+            gate = efield_obj%gate_correction%use_gate
+            IF (efield_obj%gate_correction%zgate_ispresent) zgate     = efield_obj%gate_correction%zgate
+            IF (efield_obj%gate_correction%relaxz_ispresent) relaxz   = efield_obj%gate_correction%relaxz
+            IF (efield_obj%gate_correction%block_ispresent) block     = efield_obj%gate_correction%block
+            IF (efield_obj%gate_correction%block_1_ispresent) block_1 = efield_obj%gate_correction%block_1
+            IF (efield_obj%gate_correction%block_2_ispresent) block_2 = efield_obj%gate_correction%block_2
+            IF (efield_obj%gate_correction%block_height_ispresent) &
+                                                         block_height = efield_obj%gate_correction%block_height
+         END IF 
       END IF 
       !
   END SUBROUTINE readschema_efield  
