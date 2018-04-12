@@ -725,7 +725,7 @@ LOGICAL FUNCTION check_para_diag( nbnd )
   END IF
   !
 #else
-  use_para_diag = .FALSE.
+  check_para_diag = .FALSE.
 #endif
   RETURN
 END FUNCTION check_para_diag
