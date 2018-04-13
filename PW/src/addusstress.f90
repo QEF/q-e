@@ -132,8 +132,8 @@ SUBROUTINE addusstress_g (sigmanlc)
            DO ih = 1, nh (nt)
               DO jh = ih, nh (nt)
                  ijh = ijh + 1
-                 CALL dqvan2 (ngm_l, ih, jh, nt, qmod, qgm(1,ijh), ylmk0, &
-                      dylmk0, ipol)
+                 CALL dqvan2 (ih, jh, nt, ipol, ngm_l, g(1,ngm_s), qmod, &
+                      ylmk0, dylmk0, qgm(1,ijh))
               ENDDO
            ENDDO
            !
