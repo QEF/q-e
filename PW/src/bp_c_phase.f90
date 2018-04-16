@@ -960,12 +960,8 @@ SUBROUTINE c_phase
 ! Here we write all output information in a berry_phase_type variable to print
 ! them in the XML output  P.D. april 2016
 !------------------------------------------------------------------------------
-  IF (ALLOCATED(qexsd_bp_obj)) THEN
-     CALL qes_reset_berryPhaseOutput(qexsd_bp_obj(1)) 
-     DEALLOCATE(qexsd_bp_obj) 
-  END IF 
-  ALLOCATE( qexsd_bp_obj(1)) 
-  CALL qexsd_init_berryPhaseOutput(qexsd_bp_obj(1), gpar, gvec, nppstr, nkort, xk, pdl_ion, mod_ion,  &
+  CALL qes_reset_berryPhaseOutput(qexsd_bp_obj )   
+  CALL qexsd_init_berryPhaseOutput(qexsd_bp_obj, gpar, gvec, nppstr, nkort, xk, pdl_ion, mod_ion,  &
                                   pdl_ion_tot, mod_ion_tot, nstring, pdl_elec , mod_elec, wstring, &
                                   pdl_elec_up, mod_elec_up, pdl_elec_dw, mod_elec_dw, pdl_elec_tot,&
                                   mod_elec_tot, pdl_tot, mod_tot, upol, rmod)

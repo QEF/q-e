@@ -49,44 +49,46 @@ INTEGER,INTENT(IN)        ::   i_step
 !-------------------------------------------------------------------------------
 !                    END_INPUT_VARIABLES
 !-------------------------------------------------------------------------------- 
-!            
-REAL(DP),ALLOCATABLE            :: potstat_contr_(:), fcp_force_(:), fcp_tot_charge_(:),&
-                                   demet_(:), degauss_(:), gatefield_en_(:), efield_corr_(:) 
+!
+REAL(DP),TARGET             :: potstat_contr_tgt, fcp_force_tgt, fcp_tot_charge_tgt,&
+                               demet_tgt, degauss_tgt, gatefield_en_tgt, efield_corr_tgt
+
+REAL(DP),POINTER            :: potstat_contr_ptr, fcp_force_ptr, fcp_tot_charge_ptr,&
+                                   demet_ptr, degauss_ptr, gatefield_en_ptr, efield_corr_ptr 
+!
+NULLIFY(potstat_contr_ptr, fcp_force_ptr, fcp_tot_charge_ptr, demet_ptr, degauss_ptr, &
+        gatefield_en_ptr, efield_corr_ptr)
 !
 IF ( degauss > 0.0d0 ) THEN 
-   ALLOCATE ( degauss_(1), demet_(1)) 
-   degauss_ = degauss/e2
-   demet_   = demet/e2
+   degauss_tgt = degauss/e2
+   demet_tgt = demet/e2
+   degauss_ptr => degauss_tgt
+   demet_ptr    => demet_tgt
 END IF    
-IF ( lfcpopt .OR. lfcpdyn ) THEN 
-   ALLOCATE ( potstat_contr_(1), fcp_force_(1), fcp_tot_charge_(1)) 
-   potstat_contr_ = ef * tot_charge / e2 
-   !FIXME ( again shouldn't we use Hartree units for this ? ) 
-   fcp_force_  = fcp_mu - ef 
+IF ( lfcpopt .OR. lfcpdyn ) THEN  
+   potstat_contr_tgt = ef * tot_charge / e2
+   potstat_contr_ptr => potstat_contr_tgt
+   !FIXME ( again shouldn't we use Hartree units for this ? )
+   fcp_force_tgt = fcp_mu - ef
+   fcp_force_ptr  => fcp_force_tgt
    !
-   fcp_tot_charge_ = tot_charge 
+   fcp_tot_charge_tgt = tot_charge
+   fcp_tot_charge_ptr =>  fcp_tot_charge_tgt
+   ! 
 END IF
 IF ( gate ) THEN 
-   ALLOCATE (gatefield_en_(1)) 
-   gatefield_en_ = etotgatefield/e2 
+   gatefield_en_tgt = etotgatefield/e2
+   gatefield_en_ptr => gatefield_en_tgt
 END IF
 IF (tefield) THEN 
-   ALLOCATE ( efield_corr_(1))
-   efield_corr_(1) = etotefield/e2 
+   efield_corr_tgt = etotefield/e2 
+   efield_corr_ptr => efield_corr_tgt
 END IF
 CALL qexsd_step_addstep ( i_step, nstep, nsp, atm, ityp, nat, alat*tau, alat, alat*at(:,1),   &
-                          alat*at(:,2), alat*at(:,3), etot, eband/e2, ehart/e2, vtxc/e2, etxc/e2, &
-                          ewld/e2, degauss_, demet_, force/e2, sigma/e2, n_scf_steps, scf_error, &
-                          EFIELDCORR = efield_corr_, POTSTAT_CONTR = potstat_contr_,            &
-                          FCP_FORCE  = fcp_force_ , FCP_TOT_CHARGE = fcp_tot_charge_,            &
-                          GATEFIELD_EN = gatefield_en_) 
+                          alat*at(:,2), alat*at(:,3), etot/e2, eband/e2, ehart/e2, vtxc/e2, etxc/e2, &
+                          ewld/e2, degauss_ptr, demet_ptr, force/e2, sigma/e2, n_scf_steps, scf_error, &
+                          FCP_FORCE  = fcp_force_ptr , FCP_TOT_CHARGE = fcp_tot_charge_ptr,&
+                          GATEFIELD_EN = gatefield_en_ptr) 
 #endif    
 !
-IF (ALLOCATED(potstat_contr_)) DEALLOCATE(potstat_contr_)
-IF (ALLOCATED(fcp_force_))  DEALLOCATE(fcp_force_)
-IF (ALLOCATED(fcp_tot_charge_)) DEALLOCATE ( fcp_tot_charge_)
-IF (ALLOCATED(demet_)) DEALLOCATE (demet_)
-IF (ALLOCATED(degauss_)) DEALLOCATE(degauss_) 
-IF (ALLOCATED(gatefield_en_)) DEALLOCATE(gatefield_en_)
-IF (ALLOCATED(efield_corr_)) DEALLOCATE(efield_corr_) 
 END SUBROUTINE  add_qexsd_step

@@ -614,8 +614,8 @@ MODULE qexsd_input
    REAL(DP),INTENT(IN),OPTIONAL                 :: emaxpos,eopreg,eamp
    REAL(DP),INTENT(IN),OPTIONAL                 :: efield
    REAL(DP),INTENT(IN),OPTIONAL,DIMENSION(3)    :: efield_cart
-   LOGICAL,INTENT(IN),OPTIONAL                  :: gate(1), block(1),relaxz(1) 
-   REAL(DP),INTENT(IN),OPTIONAL                 :: zgate(1),block_1(1), block_2(1), block_height(1)
+   LOGICAL,INTENT(IN),OPTIONAL                  :: gate, block,relaxz 
+   REAL(DP),INTENT(IN),OPTIONAL                 :: zgate,block_1, block_2, block_height
    ! 
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="electric_field",&
                                                    SAWTOOTH="sawtooth_potential",&
@@ -630,8 +630,10 @@ MODULE qexsd_input
                                                    electric_field_ispresent = .FALSE.
    LOGICAL                                      :: gate_, block_
    REAL(DP)                                     :: block_1_, block_2_, block_3_
-   TYPE(gate_settings_type),ALLOCATABLE         :: gata_settings_obj(:)
+   TYPE(gate_settings_type),TARGET              :: gata_settings_obj
+   TYPE(gate_settings_type),POINTER             :: gata_settings_ptr
    ! 
+   electric_potential = "none"
    IF (tefield) THEN  
       electric_potential=SAWTOOTH
       emaxpos_loc=emaxpos
@@ -669,8 +671,8 @@ MODULE qexsd_input
       END IF
    END IF  
    IF (PRESENT (gate)) THEN 
-      ALLOCATE(gata_settings_obj(1)) 
-      CALL qes_init_gate_settings(gata_settings_obj(1), "gate_settings", gate(1), zgate, relaxz,&
+      gata_settings_ptr => gata_settings_obj 
+      CALL qes_init_gate_settings(gata_settings_obj, "gate_settings", gate, zgate, relaxz,&
          block, block_1, block_2, block_height ) 
    END IF 
    CALL  qes_init_electric_field( obj, TAGNAME, electric_potential=electric_potential,        &
@@ -686,10 +688,6 @@ MODULE qexsd_input
                                 n_berry_cycles_ispresent=nberrycyc_ispresent,n_berry_cycles=nberrycyc_loc,&
                                 nk_per_string_ispresent=nppstr_ispresent,nk_per_string=nppstr_loc, &
                                 gate_settings = gata_settings_obj)
-   IF (ALLOCATED(gata_settings_obj)) THEN 
-      CALL qes_reset_gate_settings(gata_settings_obj(1))
-      DEALLOCATE ( gata_settings_obj) 
-   END IF
    END SUBROUTINE qexsd_init_electric_field_input
    !
    !----------------------------------------------------------------------------------------------------------

@@ -15,7 +15,8 @@ MODULE pw_restart_new
   ! ... the wavefunction files are written / read by one processor per pool,
   ! ... collected on / distributed to all other processors in pool
   !
-  USE qes_module
+  USE KINDS,        ONLY: DP
+  USE qes_module 
   USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
                           qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
                           qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
@@ -114,7 +115,7 @@ MODULE pw_restart_new
       USE rap_point_group,      ONLY : elem, nelem, name_class
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
       USE bfgs_module,          ONLY : bfgs_get_n_iter
-      USE qexsd_module,         ONLY : qexsd_dipol_obj, qexsd_bp_obj, qexsd_start_k_obj
+      USE qexsd_module,         ONLY : qexsd_bp_obj, qexsd_start_k_obj
       USE qexsd_input,          ONLY : qexsd_init_k_points_ibz, qexsd_init_occupations, qexsd_init_smearing
       USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
       USE io_files,             ONLY : pseudo_dir
@@ -133,11 +134,20 @@ MODULE pw_restart_new
       LOGICAL                  :: opt_conv_ispresent
       INTEGER                  :: n_opt_steps, n_scf_steps_, h_band
       REAL(DP)                 :: h_energy
-      TYPE(gateInfo_type),ALLOCATABLE      :: gate_info_obj(:)
+      TYPE(gateInfo_type),TARGET      :: gate_info_temp
+      TYPE(gateInfo_type),POINTER     :: gate_info_ptr => NULL()
+      TYPE(dipoleOutput_type),TARGET  :: dipol_obj 
+      TYPE(dipoleOutput_type),POINTER :: dipol_ptr  => NULL()
+      TYPE(BerryPhaseOutput_type),  POINTER :: bp_obj_ptr => NULL()
+      !
+      !
       !
       TYPE(output_type) :: output
-      REAL(DP),ALLOCATABLE    :: degauss_(:), demet_(:), efield_corr(:), potstat_corr(:), &
-                                 gatefield_corr(:), bp_el_pol(:), bp_ion_pol(:) 
+      REAL(DP),POINTER    :: degauss_, demet_, efield_corr, potstat_corr, &
+                                 gatefield_corr, bp_el_pol(:), bp_ion_pol(:) 
+      REAL(DP),TARGET     :: temp(20)
+      INTEGER             :: itemp = 1
+      NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr, bp_el_pol, bp_ion_pol)
       !
       ! PW dimensions need to be properly computed 
       ! reducing across MPI tasks
@@ -373,18 +383,25 @@ MODULE pw_restart_new
 ! ... TOTAL ENERGY
 !-------------------------------------------------------------------------------------------
          !
-         IF ( degauss > 0.0d0 ) THEN 
-            ALLOCATE (degauss_(1), demet_(1)) 
-            degauss_ = degauss/e2
-            demet_   = demet/e2
+         IF ( degauss > 0.0d0 ) THEN
+            !
+            itemp = itemp + 1 
+            temp(itemp)  = degauss/e2
+            degauss_ => temp(itemp)
+            !
+            itemp = itemp+1
+            temp(itemp)   = demet/e2
+            demet_ => temp(itemp) 
          END IF
          IF ( tefield ) THEN 
-            ALLOCATE(efield_corr(1) ) 
-            efield_corr = etotefield/e2
+            itemp = itemp+1 
+            temp(itemp) = etotefield/e2
+            efield_corr => temp(itemp) 
          END IF
          IF (lfcpopt .OR. lfcpdyn ) THEN 
-            ALLOCATE ( potstat_corr(1)) 
-            potstat_corr = ef * tot_charge/e2
+            itemp = itemp +1 
+            temp(itemp) = ef * tot_charge/e2
+            potstat_corr => temp(itemp) 
             output%FCP_tot_charge_ispresent = .TRUE.
             output%FCP_tot_charge = tot_charge
             output%FCP_force_ispresent = .TRUE.
@@ -392,19 +409,17 @@ MODULE pw_restart_new
             output%FCP_force = fcp_mu - ef 
          END IF 
          IF ( gate) THEN
-            ALLOCATE( gatefield_corr(1)) 
-            gatefield_corr = etotgatefield/e2 
+            itemp = itemp + 1 
+            temp(itemp) = etotgatefield/e2
+            gatefield_corr => temp(itemp)  
          END IF
-         CALL  qexsd_init_total_energy(output%total_energy, etot/e2, [eband/e2], ehart/e2, vtxc/e2, &
-                                       etxc/e2, [ewld/e2], degauss_, demet_, efield_corr, potstat_corr,&
+         CALL  qexsd_init_total_energy(output%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
+                                       etxc/e2, ewld/e2, degauss_, demet_, efield_corr, potstat_corr,&
                                        gatefield_corr) 
          !
-         IF (ALLOCATED (degauss_))       DEALLOCATE(degauss_)
-         IF (ALLOCATED (demet_))         DEALLOCATE(demet_)
-         IF (ALLOCATED (efield_corr))    DEALLOCATE(efield_corr)
-         IF (ALLOCATED (potstat_corr))   DEALLOCATE(potstat_corr)
-         IF (ALLOCATED (gatefield_corr)) DEALLOCATE(gatefield_corr)
-         !
+         NULLIFY(degauss_, demet_, efield_corr, potstat_corr, gatefield_corr)
+         itemp = 0
+          !
 !---------------------------------------------------------------------------------------------
 ! ... FORCES
 !----------------------------------------------------------------------------------------------
@@ -431,36 +446,42 @@ MODULE pw_restart_new
 ! ... ELECTRIC FIELD
 !-------------------------------------------------------------------------------------------------
          output%electric_field_ispresent = ( gate .OR. lelfield .OR. lberry .OR. tefield ) 
-         IF ( gate ) THEN
-            ALLOCATE(gate_info_obj(1)) 
-            CALL qexsd_init_gate_info(gate_info_obj(1),"gateInfo", etotgatefield/e2, zgate, nelec, &
+
+         IF ( gate ) THEN 
+            CALL qexsd_init_gate_info(gate_info_temp,"gateInfo", etotgatefield/e2, zgate, nelec, &
                    alat, at, bg, zv, ityp) 
+            gate_info_ptr => gate_info_temp    
          END IF             
          IF ( lelfield ) THEN
-            ALLOCATE(bp_el_pol(3), bp_ion_pol(3))
-            bp_el_pol(1:3) = el_pol(1:3)
-            bp_ion_pol(1:3) = ion_pol(1:3)
+            itemp=itemp+1
+            temp(itemp:itemp+2) = el_pol
+            bp_el_pol => temp(itemp:itemp+2) 
+            itemp = (itemp + 2) + 1
+            temp(itemp:itemp+2)  = ion_pol(1:3)
+            bp_ion_pol => temp(itemp:itemp+2) 
+            itemp = itemp + 2 
          END IF
          IF ( tefield .AND. dipfield) THEN 
-            ALLOCATE (qexsd_dipol_obj(1))
-            CALL qexsd_init_dipole_info(qexsd_dipol_obj(1), el_dipole, ion_dipole, edir, eamp, &
+            CALL qexsd_init_dipole_info(dipol_obj, el_dipole, ion_dipole, edir, eamp, &
                                   emaxpos, eopreg )  
+            dipol_ptr => dipol_obj
          END IF
+         IF ( lberry ) bp_obj_ptr => bp_obj_ptr
          CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
-                 lberry, BP_OBJ = qexsd_bp_obj, EL_POL = bp_el_pol, ION_POL = bp_ion_pol,          &
-                 GATEINFO = gate_info_obj, DIPOLE_OBJ =  qexsd_dipol_obj) 
+                 lberry, BP_OBJ = bp_obj_ptr, EL_POL = bp_el_pol, ION_POL = bp_ion_pol,          &
+                 GATEINFO = gate_info_ptr, DIPOLE_OBJ =  dipol_ptr) 
          !
-         IF (ALLOCATED(gate_info_obj)) DEALLOCATE(gate_info_obj)
-         IF (ALLOCATED(bp_ion_pol))    DEALLOCATE (bp_ion_pol)
-         IF (ALLOCATED(bp_el_pol))     DEALLOCATE (bp_el_pol)
-         IF (ALLOCATED(qexsd_dipol_obj)) THEN 
-            CALL qes_reset_dipoleOutput(qexsd_dipol_obj(1)) 
-            DEALLOCATE (qexsd_dipol_obj)
-         END IF
-         IF (ALLOCATED(qexsd_bp_obj)) THEN
-            CALL qes_reset_berryPhaseOutput(qexsd_bp_obj(1))
-            DEALLOCATE(qexsd_bp_obj)
-         END IF
+         temp = 0 
+         IF (ASSOCIATED(gate_info_ptr)) THEN 
+            CALL qes_reset_gateInfo(gate_info_ptr)
+            NULLIFY(gate_info_ptr)
+         ENDIF
+         NULLIFY( bp_el_pol, bp_ion_pol)
+         IF (ASSOCIATED (dipol_ptr) ) THEN
+            CALL qes_reset_dipoleOutput(dipol_ptr)
+            NULLIFY(dipol_ptr)
+         ENDIF
+         NULLIFY ( bp_obj_ptr) 
 
 !------------------------------------------------------------------------------------------------
 ! ... ACTUAL WRITING

@@ -63,8 +63,7 @@ MODULE qexsd_module
   TYPE (input_type)                            :: qexsd_input_obj
   TYPE (general_info_type)                     :: general_info
   TYPE (parallel_info_type)                    :: parallel_info
-  TYPE (berryPhaseOutput_type),ALLOCATABLE     :: qexsd_bp_obj(:)
-  TYPE (dipoleOutput_type ),ALLOCATABLE        :: qexsd_dipol_obj(:)
+  TYPE (berryPhaseOutput_type),TARGET          :: qexsd_bp_obj
   TYPE (k_points_IBZ_type)                     :: qexsd_start_k_obj 
   TYPE (occupations_type)                      :: qexsd_occ_obj
   TYPE (smearing_type)                         :: qexsd_smear_obj
@@ -93,7 +92,7 @@ MODULE qexsd_module
   !
   PUBLIC :: qexsd_step_addstep, qexsd_set_status    
   ! 
-  PUBLIC :: qexsd_init_berryPhaseOutput, qexsd_bp_obj, qexsd_dipol_obj
+  PUBLIC :: qexsd_init_berryPhaseOutput, qexsd_bp_obj
 CONTAINS
 !
 !-------------------------------------------
@@ -1111,16 +1110,16 @@ CONTAINS
     ! 
     TYPE (total_energy_type)        :: obj
     REAL(DP),INTENT(IN)             :: etot, ehart,vtxc,etxc
-    REAL(DP),OPTIONAL,INTENT(IN)           :: ewald(1),demet(1), eband(1), degauss(1) 
-    REAL(DP),OPTIONAL               :: electric_field_corr(1)
-    REAL(DP),OPTIONAL               :: potentiostat_contr(1)
-    REAL(DP),OPTIONAL               :: gate_contribution(1)
+    REAL(DP),OPTIONAL,INTENT(IN)    :: ewald,demet, eband, degauss 
+    REAL(DP),OPTIONAL               :: electric_field_corr
+    REAL(DP),OPTIONAL               :: potentiostat_contr
+    REAL(DP),OPTIONAL               :: gate_contribution
     !
     LOGICAL                         :: demet_ispresent
     CHARACTER(LEN=*),PARAMETER      :: TAGNAME="total_energy"
     ! 
-    CALL  qes_init_total_energy(obj,TAGNAME,etot, EBAND = eband , EHART = [ehart], VTXC = [vtxc],& 
-                               ETXC = [etxc] , EWALD = ewald, DEMET = demet, &
+    CALL  qes_init_total_energy(obj,TAGNAME,etot, EBAND = eband , EHART = ehart, VTXC = vtxc,& 
+                               ETXC = etxc , EWALD = ewald, DEMET = demet, &
                                EFIELDCORR=electric_field_corr, POTENTIOSTAT_CONTR = potentiostat_contr,  & 
                                GATE_CONTRIBUTION = gate_contribution )
 
@@ -1237,9 +1236,9 @@ CONTAINS
     ! 
     LOGICAL,INTENT(IN)                                :: lberry, lelfield, tefield, ldipole
     REAL(DP),OPTIONAL,DIMENSION(3),INTENT(IN)         :: el_pol, ion_pol
-    TYPE(berryPhaseOutput_type),OPTIONAL,INTENT(IN)   :: bp_obj(1)
-    TYPE ( dipoleOutput_type ),OPTIONAL, INTENT(IN)   :: dipole_obj(1) 
-    TYPE ( gateInfo_type),OPTIONAL,INTENT(IN)         :: gateInfo(1)
+    TYPE(berryPhaseOutput_type),OPTIONAL,INTENT(IN)   :: bp_obj
+    TYPE ( dipoleOutput_type ),OPTIONAL, INTENT(IN)   :: dipole_obj 
+    TYPE ( gateInfo_type),OPTIONAL,INTENT(IN)         :: gateInfo
     ! 
     CHARACTER(LEN=*),PARAMETER                        :: TAGNAME="electric_field" 
     TYPE ( berryPhaseOutput_type )                    :: bp_loc_obj
@@ -1249,10 +1248,9 @@ CONTAINS
                                                          dipo_is = .FALSE.
     ! 
     
-
     IF (lberry .AND. PRESENT ( bp_obj))  THEN
        bp_is = .TRUE. 
-       bp_loc_obj = bp_obj(1)
+       bp_loc_obj = bp_obj
     END IF 
     IF ( lelfield .AND. PRESENT(el_pol) .AND. PRESENT (ion_pol ) ) THEN 
        finfield_is=.TRUE.
@@ -1260,16 +1258,13 @@ CONTAINS
     END IF 
     IF ( ldipole .AND. PRESENT( dipole_obj ) ) THEN
        dipo_is = .TRUE.
-       dip_loc_obj=dipole_obj(1)
+       dip_loc_obj=dipole_obj
     END IF 
-    CALL  qes_init_outputElectricField(obj, TAGNAME, BerryPhase_ispresent = bp_is, &
-                                       BerryPhase = bp_loc_obj, &
-                                       finiteElectricFieldInfo_ispresent = finfield_is, & 
-                                       finiteElectricFieldInfo = finiteField_obj, &
-                                        dipoleInfo_ispresent = dipo_is, dipoleInfo = dip_loc_obj,& 
-                                        GATEINFO =  gateInfo)
-    IF (dipo_is) CALL qes_reset_dipoleOutput( dip_loc_obj )
-    IF ( bp_is ) CALL qes_reset_berryPhaseOutput( bp_loc_obj ) 
+    CALL  qes_init_outputElectricField(obj, TAGNAME, BerryPhase = bp_obj, &
+                                    finiteElectricFieldInfo  = finiteField_obj, &
+                                    dipoleInfo = dipole_obj, &
+                                    GATEINFO =  gateInfo   )
+    IF ( finfield_is) CALL qes_reset_finiteFieldOut( finiteField_obj) 
     !
     END SUBROUTINE qexsd_init_outputElectricField
     ! 
@@ -1288,8 +1283,8 @@ CONTAINS
     INTEGER ,INTENT(IN)             :: i_step, max_steps, ntyp, nat, n_scf_steps, ityp(:)
     REAL(DP),INTENT(IN)             :: tau(3,nat), alat, a1(3), a2(3), a3(3), etot, eband, ehart, vtxc, &
                                        etxc, ewald, scf_error, forces(3,nat), stress(3,3) 
-    REAL(DP),OPTIONAL,INTENT(IN)    :: degauss(1), demet(1), gatefield_en(1), efieldcorr(1)
-    REAL(DP),OPTIONAL,INTENT (IN)   :: potstat_contr(1), fcp_force(1), fcp_tot_charge(1)         
+    REAL(DP),OPTIONAL,INTENT(IN)    :: degauss, demet, gatefield_en, efieldcorr
+    REAL(DP),OPTIONAL,INTENT (IN)   :: potstat_contr, fcp_force, fcp_tot_charge       
     CHARACTER(LEN=*),INTENT(IN)     :: atm(:)
     TYPE (step_type)                :: step_obj
     TYPE ( scf_conv_type )          :: scf_conv_obj
@@ -1316,8 +1311,8 @@ CONTAINS
     step_obj%atomic_structure=atomic_struct_obj
     CALL qes_reset_atomic_structure( atomic_struct_obj )
     ! 
-    CALL qexsd_init_total_energy (tot_en_obj, etot, [eband], ehart, &
-          vtxc, etxc, [ewald], degauss, demet, efieldcorr, potstat_contr, gatefield_en)  
+    CALL qexsd_init_total_energy (tot_en_obj, etot, eband, ehart, &
+          vtxc, etxc, ewald, degauss, demet, efieldcorr, potstat_contr, gatefield_en)  
     step_obj%total_energy=tot_en_obj
     CALL qes_reset_total_energy( tot_en_obj )
     ! 
@@ -1329,11 +1324,11 @@ CONTAINS
     step_obj%stress = mat_stress
     CALL qes_reset_matrix ( mat_stress ) 
     IF ( PRESENT ( fcp_force ) ) THEN 
-       step_obj%FCP_force = fcp_force(1)
+       step_obj%FCP_force = fcp_force
        step_obj%FCP_force_ispresent = .TRUE.
     END IF 
     IF (PRESENT( fcp_tot_charge)) THEN 
-       step_obj%FCP_tot_charge = fcp_tot_charge(1)
+       step_obj%FCP_tot_charge = fcp_tot_charge
        step_obj%FCP_tot_charge_ispresent = .TRUE. 
     END IF 
     !  

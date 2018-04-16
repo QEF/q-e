@@ -92,10 +92,13 @@
   CHARACTER(len=20)                        ::   dft_shortname
   CHARACTER(len=25)                        ::   dft_longname
   CHARACTER(LEN=80)                        ::  vdw_corr_  
-  LOGICAL,ALLOCATABLE                      ::  gate_(:), block_(:), relaxz_(:)
-  REAL(DP),ALLOCATABLE                     ::  block_1_(:), block_2_(:), block_height_(:), zgate_(:)
+  LOGICAL,TARGET                           ::  gate_tgt, block_tgt, relaxz_tgt
+  LOGICAL,POINTER                          ::  gate_ptr, block_ptr, relaxz_ptr
+  REAL(DP),TARGET                          ::  block_1_tgt, block_2_tgt, block_height_tgt, zgate_tgt
+  REAL(DP),POINTER                         ::  block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr
   !
   ! 
+  NULLIFY (gate_ptr, block_ptr, relaxz_ptr, block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr)
 #if !defined(__OLDXML)
   obj%tagname=TRIM(obj_tagname)
   IF ( ABS(ip_ibrav)  .GT. 0 ) THEN  
@@ -338,20 +341,25 @@
   IF (tefield .OR. lelfield .OR. lberry .or. gate ) THEN 
      obj%electric_field_ispresent=.TRUE.
      IF ( gate ) THEN 
-         ALLOCATE(gate_(1), zgate_(1), block_(1), block_1_(1), block_2_(1), block_height_(1), relaxz_(1))
-         gate_(1) = gate
-         zgate_(1) = zgate
-         block_(1) = block
-         block_1_(1) = block_1
-         block_2_(1) = block_2
-         block_height_(1) = block_height
-         relaxz_(1) = relaxz 
+         gate_tgt = gate
+         gate_ptr => gate_tgt
+         zgate_tgt = zgate
+         zgate_ptr => zgate_tgt
+         block_tgt = block
+         block_ptr => block_tgt
+         block_1_tgt = block_1
+         block_1_ptr => block_1_tgt
+         block_2_tgt = block_2
+         block_2_ptr => block_2_tgt
+         block_height_tgt = block_height
+         block_height_ptr => block_height_tgt
+         relaxz_tgt = relaxz 
+         relaxz_ptr => relaxz_tgt
      END IF
-     CALL qexsd_init_electric_field_input(obj%electric_field, tefield, dipfield, lelfield, lberry, edir, gdir,        &
-                                                  emaxpos, eopreg, eamp, efield, efield_cart, nberrycyc, nppstr,      &
-                                                  GATE = gate_, ZGATE = zgate_, RELAXZ = relaxz_, BLOCK = block_,     &
-                                                  BLOCK_1 = block_1_, BLOCK_2 = block_2_, BLOCK_HEIGHT = block_height_ )
-     IF ( gate) DEALLOCATE ( gate_, zgate_, block_, block_1_, block_2_, block_height_, relaxz_)
+     CALL qexsd_init_electric_field_input(obj%electric_field, tefield, dipfield, lelfield, lberry,       &
+                              edir, gdir, emaxpos, eopreg, eamp, efield, efield_cart, nberrycyc, nppstr, &
+                              GATE = gate_ptr, ZGATE = zgate_ptr, RELAXZ = relaxz_ptr, BLOCK = block_ptr,&
+                              BLOCK_1 = block_1_ptr, BLOCK_2 = block_2_ptr, BLOCK_HEIGHT = block_height_ptr)
   ELSE
      obj%electric_field_ispresent=.FALSE.
   END IF
