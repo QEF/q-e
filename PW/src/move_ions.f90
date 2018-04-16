@@ -163,8 +163,20 @@ LOGICAL FUNCTION move_ions ( idone )
                  !
               ELSE
                  !
+                 ! ... Fixed-cell relaxation converged, prepare to exit
+                 !
                  status = 0
                  !
+              END IF
+              !
+           ELSE IF ( status == 2 ) THEN
+              !
+              ! ... check with nonzero magnetization succeeded, see above
+              !
+              IF ( lmovecell ) THEN
+                 status = -1
+              ELSE
+                 status = 0
               END IF
               !
            END IF
