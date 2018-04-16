@@ -61,11 +61,11 @@ LOGICAL FUNCTION move_ions ( idone )
   !
   INTEGER,  INTENT(IN) :: idone
   !
-  INTEGER, SAVE :: status = 1
-  !    status =  1  not yet converged
-  !    status =  0  converged, exiting
-  !    status = -1  converged, final step with current cell needed
+  INTEGER, SAVE :: status = 3
+  !    status =  3  not yet converged
   !    status =  2  converged, restart with nonzero magnetization
+  !    status =  1  converged, final step with current cell needed
+  !    status =  0  converged, exiting
   REAL(DP)              :: energy_error, gradient_error, cell_error
   LOGICAL               :: step_accepted, exst
   REAL(DP), ALLOCATABLE :: pos(:), grad(:)
@@ -145,7 +145,7 @@ LOGICAL FUNCTION move_ions ( idone )
         !
         IF ( conv_ions ) THEN
            !
-           IF ( status == 1 ) THEN
+           IF ( status == 3 ) THEN
               !
               IF ( lsda .AND. absmag < eps6 ) THEN
                  !
@@ -159,7 +159,7 @@ LOGICAL FUNCTION move_ions ( idone )
                  ! ... Variable-cell relaxation converged with starting cell
                  ! ... Do final calculation with G-vectors for relaxed cell
                  !
-                 status = -1
+                 status = 1
                  !
               ELSE
                  !
@@ -174,14 +174,14 @@ LOGICAL FUNCTION move_ions ( idone )
               ! ... check with nonzero magnetization succeeded, see above
               !
               IF ( lmovecell ) THEN
-                 status = -1
+                 status = 1
               ELSE
                  status = 0
               END IF
               !
            END IF
            !
-           IF ( status < 1 ) THEN
+           IF ( status < 2 ) THEN
               !
               CALL terminate_bfgs ( etot, epse, epsf, epsp, lmovecell, &
                                     stdout, tmp_dir )
@@ -229,7 +229,7 @@ LOGICAL FUNCTION move_ions ( idone )
         !
         ! FIXME: needed to do at least one more step
         !
-        IF ( status == 2 .OR. status == -1 ) conv_ions = .FALSE.
+        IF ( status == 2 .OR. status == 1 ) conv_ions = .FALSE.
         !
      END IF bfgs_minimization
      !
@@ -332,7 +332,7 @@ LOGICAL FUNCTION move_ions ( idone )
   CALL mp_bcast( status, ionode_id, intra_image_comm )
   IF ( lfcpopt .or. lfcpdyn ) CALL mp_bcast(nelec,ionode_id,intra_image_comm)
   !
-  IF ( status == -1 ) THEN
+  IF ( status == 1 ) THEN
      ! 
      ! ... Variable-cell optimization: once convergence is achieved, 
      ! ... make a final calculation with G-vectors and plane waves
