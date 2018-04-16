@@ -3,7 +3,7 @@ build:pw:
   image: ubuntu:latest
   script:
     - apt-get update
-    - apt-get install --yes build-essential autoconf automake gfortran wget python
+    - apt-get install --yes build-essential gfortran wget python
     - apt-get install --yes libopenmpi-dev openmpi-bin
     - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
     - ./configure
@@ -19,7 +19,7 @@ build:cp:
   image: ubuntu:latest
   script:
     - apt-get update
-    - apt-get install --yes build-essential autoconf automake gfortran wget python
+    - apt-get install --yes build-essential gfortran wget python
     - apt-get install --yes libopenmpi-dev openmpi-bin
     - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
     - ./configure
@@ -35,7 +35,7 @@ build:ph:
   image: ubuntu:latest
   script:
     - apt-get update
-    - apt-get install --yes build-essential autoconf automake gfortran wget python
+    - apt-get install --yes build-essential gfortran wget python
     - apt-get install --yes libopenmpi-dev openmpi-bin
     - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
     - ./configure
