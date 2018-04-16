@@ -61,10 +61,11 @@ SUBROUTINE move_ions ( idone )
   !
   INTEGER,  INTENT(IN) :: idone
   !
-  LOGICAL, SAVE         :: lcheck_mag = .TRUE., &
-                           restart_with_starting_magnetiz = .FALSE., &
-                           lcheck_cell= .TRUE., &
-                           final_cell_calculation=.FALSE.
+  INTEGER, SAVE :: status = 1
+  !    status =  1  not yet converged
+  !    status =  0  converged, exiting
+  !    status = -1  converged, final step with current cell needed
+  !    status =  2  converged, restart with nonzero magnetization
   REAL(DP)              :: energy_error, gradient_error, cell_error
   LOGICAL               :: step_accepted, exst
   REAL(DP), ALLOCATABLE :: pos(:), grad(:)
@@ -76,7 +77,7 @@ SUBROUTINE move_ions ( idone )
   !
   IF ( ionode ) THEN
      !
-     conv_ions = .FALSE.
+     conv_ions = ( status /= -1 )
      !
      ! ... do the minimization / dynamics step
      !
@@ -90,13 +91,11 @@ SUBROUTINE move_ions ( idone )
         !
      END IF
      !
-     ! ... BFGS algorithm is used to minimize ionic configuration
-     !
      bfgs_minimization : &
      IF ( lbfgs ) THEN
         !
-        ! ... the bfgs procedure is used
-        !  
+        ! ... BFGS algorithm is used to minimize ionic configuration
+        !
         ALLOCATE( pos( 3*nat ), grad( 3*nat ), fixion( 3*nat ) )
         !
         h = at * alat
@@ -148,24 +147,31 @@ SUBROUTINE move_ions ( idone )
         !
         IF ( conv_ions ) THEN
            !
-           IF ( ( lsda .AND. ( absmag < eps6 ) .AND. lcheck_mag ) ) THEN
+           IF ( status == 1 ) THEN
               !
-              ! ... lsda relaxation :  a final configuration with zero 
-              ! ...                    absolute magnetization has been found.
-              !                        A check on this configuration is needed
-              restart_with_starting_magnetiz = .true.
-              ! 
-           ELSE IF (lmovecell.and.lcheck_cell) THEN
+              IF ( lsda .AND. absmag < eps6 ) THEN
+                 !
+                 ! ... a final configuration with zero absolute magnetization
+                 ! ... has been found - do check with nonzero magnetization
+                 !
+                 status = 2
+                 !
+              ELSE IF ( lmovecell ) THEN
+                 !
+                 ! ... Variable-cell relaxation converged with starting cell
+                 ! ... Do final calculation with G-vectors for relaxed cell
+                 !
+                 status = -1
+                 !
+              ELSE
+                 !
+                 status = 0
+                 !
+              END IF
               !
-              !  After the cell relaxation we make a final calculation
-              !  with the correct g vectors corresponding to the relaxed
-              !  cell.
-              !
-              final_cell_calculation=.TRUE.
-              CALL terminate_bfgs ( etot, epse, epsf, epsp, lmovecell, &
-                                    stdout, tmp_dir )
-              !
-           ELSE
+           END IF
+           !
+           IF ( status < 1 ) THEN
               !
               CALL terminate_bfgs ( etot, epse, epsf, epsp, lmovecell, &
                                     stdout, tmp_dir )
@@ -205,13 +211,6 @@ SUBROUTINE move_ions ( idone )
                      '(5X,"new conv_thr",T30,"= ",1PE18.1 ," Ry",/)' ) tr2
            END IF
            !
-           ! ... the logical flag lcheck_mag is set again to .TRUE. (needed if 
-           ! ... a new configuration with zero absolute magnetization is 
-           ! ... identified in the following steps of the relaxation)
-           !
-           lcheck_mag = .TRUE.
-           IF (lmovecell) lcheck_cell = .TRUE.
-           !
         END IF
         !
         CALL output_tau( lmovecell, conv_ions )
@@ -219,8 +218,6 @@ SUBROUTINE move_ions ( idone )
         DEALLOCATE( pos, grad, fixion )
         !
      END IF bfgs_minimization
-     !
-     ! ... molecular dynamics schemes are used
      !
      IF ( lmd ) THEN
         !
@@ -315,12 +312,11 @@ SUBROUTINE move_ions ( idone )
      CALL checkallsym( nat, tau, ityp)
      !
   END IF
-
-  CALL mp_bcast(restart_with_starting_magnetiz,ionode_id,intra_image_comm)
-  CALL mp_bcast(final_cell_calculation,ionode_id,intra_image_comm)
+  !
+  CALL mp_bcast( status, ionode_id, intra_image_comm )
   IF ( lfcpopt .or. lfcpdyn ) CALL mp_bcast(nelec,ionode_id,intra_image_comm)
   !
-  IF ( final_cell_calculation ) THEN
+  IF ( status == -1 ) THEN
      ! 
      ! ... Variable-cell optimization: once convergence is achieved, 
      ! ... make a final calculation with G-vectors and plane waves
@@ -330,7 +326,7 @@ SUBROUTINE move_ions ( idone )
      WRITE( UNIT = stdout, FMT = 9110 )
      WRITE( UNIT = stdout, FMT = 9120 )
      !
-     ! ... prepare for a new run, restarted from scratch, not from previous
+     ! ... prepare for a new scf, restarted from scratch, not from previous
      ! ... data (dimensions and file lengths will be different in general)
      !
      ! ... get magnetic moments from previous run before charge is deleted
@@ -340,12 +336,8 @@ SUBROUTINE move_ions ( idone )
      CALL clean_pw( .FALSE. )
      CALL close_files(.TRUE.)
      lmovecell=.FALSE.
-     lcheck_cell=.FALSE.
-     final_cell_calculation=.FALSE.
      lbfgs=.FALSE.
      lmd=.FALSE.
-     lcheck_mag = .FALSE.
-     restart_with_starting_magnetiz = .FALSE.
      if (trim(starting_wfc) == 'file') starting_wfc = 'atomic+random'
      starting_pot='atomic'
      ! ... conv_ions is set to .FALSE. to perform a final scf cycle
@@ -360,7 +352,7 @@ SUBROUTINE move_ions ( idone )
      !
      CALL init_run()
      !
-  ELSE IF (restart_with_starting_magnetiz) THEN
+  ELSE IF ( status == 2 ) THEN
      !
      ! ... lsda optimization :  a final configuration with zero 
      ! ... absolute magnetization has been found and we check 
@@ -370,8 +362,6 @@ SUBROUTINE move_ions ( idone )
      WRITE( UNIT = stdout, FMT = 9010 )
      WRITE( UNIT = stdout, FMT = 9020 )
      !
-     lcheck_mag = .FALSE.
-     restart_with_starting_magnetiz = .FALSE.
      ! ... conv_ions is set to .FALSE. to perform a final scf cycle
      conv_ions = .FALSE.
      !
@@ -379,7 +369,6 @@ SUBROUTINE move_ions ( idone )
      !
      CALL potinit()
      CALL newd()
-     !!! CALL wfcinit()
      !
   END IF
   !

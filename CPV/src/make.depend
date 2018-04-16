@@ -90,7 +90,11 @@ chargedensity.o : smallbox_gvec.o
 chargedensity.o : smallbox_subs.o
 chargedensity.o : wannier_base.o
 cp_autopilot.o : ../../Modules/autopilot.o
+cp_autopilot.o : ../../Modules/cell_base.o
 cp_autopilot.o : ../../Modules/control_flags.o
+cp_autopilot.o : ../../Modules/electrons_base.o
+cp_autopilot.o : ../../Modules/fft_base.o
+cp_autopilot.o : ../../Modules/gvecw.o
 cp_autopilot.o : ../../Modules/input_parameters.o
 cp_autopilot.o : ../../Modules/io_global.o
 cp_autopilot.o : ../../Modules/ions_base.o
@@ -98,10 +102,15 @@ cp_autopilot.o : ../../Modules/kind.o
 cp_autopilot.o : ../../Modules/mp_world.o
 cp_autopilot.o : ../../Modules/parser.o
 cp_autopilot.o : ../../Modules/timestep.o
+cp_autopilot.o : ../../Modules/uspp.o
 cp_autopilot.o : ../../Modules/wave_base.o
+cp_autopilot.o : ../../Modules/wavefunctions.o
 cp_autopilot.o : ../../UtilXlib/mp.o
+cp_autopilot.o : cg.o
 cp_autopilot.o : cp_emass.o
+cp_autopilot.o : ensemble_dft.o
 cp_autopilot.o : ions_nose.o
+cp_autopilot.o : mainvar.o
 cp_emass.o : ../../Modules/control_flags.o
 cp_emass.o : ../../Modules/kind.o
 cp_interfaces.o : ../../LAXlib/la_types.o

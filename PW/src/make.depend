@@ -364,7 +364,6 @@ divide_class_so.o : pwcom.o
 divide_et_impera.o : ../../Modules/kind.o
 divide_et_impera.o : ../../Modules/mp_pools.o
 dqvan2.o : ../../Modules/kind.o
-dqvan2.o : ../../Modules/recvec.o
 dqvan2.o : ../../Modules/uspp.o
 dqvan2.o : pwcom.o
 drhoc.o : ../../Modules/constants.o
