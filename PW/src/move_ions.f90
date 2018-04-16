@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE move_ions ( idone )
+LOGICAL FUNCTION move_ions ( idone )
   !----------------------------------------------------------------------------
   !
   ! ... Perform an ionic step, according to the requested scheme:
@@ -38,7 +38,7 @@ SUBROUTINE move_ions ( idone )
   USE ener,                   ONLY : etot, ef
   USE force_mod,              ONLY : force, sigma
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, &
-                                     lconstrain, conv_ions, lmd, tr2
+                                     lconstrain, lmd, tr2
   USE basis,                  ONLY : starting_wfc, starting_pot
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
@@ -71,13 +71,11 @@ SUBROUTINE move_ions ( idone )
   REAL(DP), ALLOCATABLE :: pos(:), grad(:)
   REAL(DP)              :: h(3,3), fcell(3,3)=0.d0, epsp1
   INTEGER,  ALLOCATABLE :: fixion(:)
-  LOGICAL               :: conv_fcp
+  LOGICAL               :: conv_fcp, conv_ions
   !
   ! ... only one node does the calculation in the parallel case
   !
   IF ( ionode ) THEN
-     !
-     conv_ions = ( status /= -1 )
      !
      ! ... do the minimization / dynamics step
      !
@@ -217,9 +215,15 @@ SUBROUTINE move_ions ( idone )
         !
         DEALLOCATE( pos, grad, fixion )
         !
+        ! FIXME: needed to do at least one more step
+        !
+        IF ( status == 2 .OR. status == -1 ) conv_ions = .FALSE.
+        !
      END IF bfgs_minimization
      !
      IF ( lmd ) THEN
+        !
+        conv_ions = .FALSE.
         !
         ! ... fixed-cell molecular dynamics algorithms first:
         ! ... projected Verlet, Langevin, Verlet
@@ -340,8 +344,6 @@ SUBROUTINE move_ions ( idone )
      lmd=.FALSE.
      if (trim(starting_wfc) == 'file') starting_wfc = 'atomic+random'
      starting_pot='atomic'
-     ! ... conv_ions is set to .FALSE. to perform a final scf cycle
-     conv_ions = .FALSE.
      !
      ! ... re-set and re-calculate FFT grid 
      !
@@ -361,9 +363,6 @@ SUBROUTINE move_ions ( idone )
      !
      WRITE( UNIT = stdout, FMT = 9010 )
      WRITE( UNIT = stdout, FMT = 9020 )
-     !
-     ! ... conv_ions is set to .FALSE. to perform a final scf cycle
-     conv_ions = .FALSE.
      !
      ! ... re-initialize the potential (no need to re-initialize wavefunctions)
      !
@@ -390,6 +389,8 @@ SUBROUTINE move_ions ( idone )
      !
   END IF
   !
+  move_ions = conv_ions
+  !
   RETURN
 
 9010 FORMAT( /5X,'lsda relaxation :  a final configuration with zero', &
@@ -403,7 +404,7 @@ SUBROUTINE move_ions ( idone )
 9120 FORMAT(  5X,'The G-vectors are recalculated for the final unit cell'/ &
               5X,'Results may differ from those at the preceding step.' )
   !
-END SUBROUTINE move_ions
+END FUNCTION move_ions
 !
 SUBROUTINE reset_starting_magnetization ( ) 
   !
