@@ -53,8 +53,6 @@ SUBROUTINE run_pwscf ( exit_status )
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
   !! Gives the exit status at the end
-  LOGICAL, external :: move_ions
-  !! perform ion MD or optimization, return convergence status
   LOGICAL, external :: matches
   !! checks if first string is contained in the second
   INTEGER :: idone 
@@ -184,7 +182,8 @@ SUBROUTINE run_pwscf ( exit_status )
         !
         ! ... ionic step (for molecular dynamics or optimization)
         !
-        conv_ions = move_ions ( idone, ions_status )
+        CALL move_ions ( idone, ions_status )
+        conv_ions = ( ions_status == 0 )
         !
         ! ... then we save restart information for the new configuration
         !

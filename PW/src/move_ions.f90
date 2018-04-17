@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-LOGICAL FUNCTION move_ions ( idone, ions_status )
+SUBROUTINE move_ions ( idone, ions_status )
   !----------------------------------------------------------------------------
   !
   ! ... Perform an ionic step, according to the requested scheme:
@@ -169,6 +169,10 @@ LOGICAL FUNCTION move_ions ( idone, ions_status )
                  ions_status = 0
               END IF
               !
+           ELSE IF ( ions_status == 1 ) THEN
+              !
+              ions_status = 0
+              !
            END IF
            !
            IF ( ions_status < 2 ) THEN
@@ -216,10 +220,6 @@ LOGICAL FUNCTION move_ions ( idone, ions_status )
         CALL output_tau( lmovecell, conv_ions )
         !
         DEALLOCATE( pos, grad, fixion )
-        !
-        ! FIXME: needed to do at least one more step
-        !
-        IF ( ions_status == 2 .OR. ions_status == 1 ) conv_ions = .FALSE.
         !
      END IF bfgs_minimization
      !
@@ -310,6 +310,8 @@ LOGICAL FUNCTION move_ions ( idone, ions_status )
            !
         END IF
         !
+        IF ( conv_ions ) ions_status  = 0
+        !
      END IF
      !
      ! ... before leaving check that the new positions still transform
@@ -319,6 +321,7 @@ LOGICAL FUNCTION move_ions ( idone, ions_status )
      !
   END IF
   !
+  
   CALL mp_bcast( ions_status, ionode_id, intra_image_comm )
   IF ( lfcpopt .or. lfcpdyn ) CALL mp_bcast(nelec,ionode_id,intra_image_comm)
   !
@@ -329,7 +332,6 @@ LOGICAL FUNCTION move_ions ( idone, ions_status )
   CALL mp_bcast( tau,       ionode_id, intra_image_comm )
   CALL mp_bcast( force,     ionode_id, intra_image_comm )
   CALL mp_bcast( tr2,       ionode_id, intra_image_comm )
-  CALL mp_bcast( conv_ions, ionode_id, intra_image_comm )
   !
   IF ( lmovecell ) THEN
      !
@@ -341,8 +343,6 @@ LOGICAL FUNCTION move_ions ( idone, ions_status )
      !
   END IF
   !
-  move_ions = conv_ions
-  !
   RETURN
   !
-END FUNCTION move_ions
+END SUBROUTINE move_ions
