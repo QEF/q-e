@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE qes_module
-
    USE iotk_module
    USE qes_types_module
    USE qes_libs_module

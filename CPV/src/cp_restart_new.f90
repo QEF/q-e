@@ -333,8 +333,8 @@ MODULE cp_restart_new
 !-------------------------------------------------------------------------------
 ! ... BAND STRUCTURE
 !-------------------------------------------------------------------------------
-         CALL  qexsd_init_total_energy(output_obj%total_energy,enthal, 0.0_dp, eht,&
-              vave, exc, 0.0_dp, 0.0_dp, 0.0_dp)
+         CALL  qexsd_init_total_energy(output_obj%total_energy, ETOT = enthal , &
+                              EHART = eht, VTXC = vave, ETXC = exc )
 !-------------------------------------------------------------------------------
 ! ... BAND STRUCTURE
 !-------------------------------------------------------------------------------
