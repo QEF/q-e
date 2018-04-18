@@ -2042,10 +2042,13 @@ SUBROUTINE qes_reset_atomic_positions(obj)
 
    obj%tagname = ""
    obj%lwrite  = .FALSE.
-   DO i = 1, SIZE(obj%atom)
-      CALL qes_reset_atom(obj%atom(i))
-   ENDDO
-   IF (ALLOCATED(obj%atom)) DEALLOCATE(obj%atom)
+   IF (ALLOCATED (obj%atom)) THEN 
+      DO i = 1, SIZE(obj%atom)
+         CALL qes_reset_atom(obj%atom(i))
+      ENDDO
+      DEALLOCATE(obj%atom)
+   END IF
+
 
 END SUBROUTINE qes_reset_atomic_positions
 
@@ -2116,11 +2119,12 @@ SUBROUTINE qes_reset_wyckoff_positions(obj)
 
    obj%tagname = ""
    obj%lwrite  = .FALSE.
-   DO i = 1, SIZE(obj%atom)
-      CALL qes_reset_atom(obj%atom(i))
-   ENDDO
-   IF (ALLOCATED(obj%atom)) DEALLOCATE(obj%atom)
-
+   IF (ALLOCATED(obj%atom)) THEN 
+      DO i = 1, SIZE(obj%atom)
+         CALL qes_reset_atom(obj%atom(i))
+      ENDDO
+      DEALLOCATE(obj%atom)
+   END IF
 END SUBROUTINE qes_reset_wyckoff_positions
 
 
@@ -2457,52 +2461,66 @@ SUBROUTINE qes_reset_dftU(obj)
       obj%lda_plus_u_kind_ispresent = .FALSE.
    ENDIF
    IF(obj%Hubbard_U_ispresent) THEN
-      DO i = 1, SIZE(obj%Hubbard_U)
-         CALL qes_reset_HubbardCommon(obj%Hubbard_U(i))
-      ENDDO
-      IF (ALLOCATED(obj%Hubbard_U)) DEALLOCATE(obj%Hubbard_U)
+      IF (ALLOCATED(obj%Hubbard_U)) THEN 
+         DO i = 1, SIZE(obj%Hubbard_U)
+            CALL qes_reset_HubbardCommon(obj%Hubbard_U(i))
+         ENDDO
+         DEALLOCATE(obj%Hubbard_U)
+      END IF
       obj%Hubbard_U_ispresent = .FALSE.
    ENDIF
    IF(obj%Hubbard_J0_ispresent) THEN
-      DO i = 1, SIZE(obj%Hubbard_J0)
-         CALL qes_reset_HubbardCommon(obj%Hubbard_J0(i))
-      ENDDO
-      IF (ALLOCATED(obj%Hubbard_J0)) DEALLOCATE(obj%Hubbard_J0)
+      IF (ALLOCATED(obj%Hubbard_J0)) THEN 
+         DO i = 1, SIZE(obj%Hubbard_J0)
+            CALL qes_reset_HubbardCommon(obj%Hubbard_J0(i))
+         ENDDO
+         DEALLOCATE(obj%Hubbard_J0)
+      END IF
       obj%Hubbard_J0_ispresent = .FALSE.
    ENDIF
    IF(obj%Hubbard_alpha_ispresent) THEN
-      DO i = 1, SIZE(obj%Hubbard_alpha)
-         CALL qes_reset_HubbardCommon(obj%Hubbard_alpha(i))
-      ENDDO
-      IF (ALLOCATED(obj%Hubbard_alpha)) DEALLOCATE(obj%Hubbard_alpha)
+      IF (ALLOCATED(obj%Hubbard_alpha)) THEN
+         DO i = 1, SIZE(obj%Hubbard_alpha)
+            CALL qes_reset_HubbardCommon(obj%Hubbard_alpha(i))
+         ENDDO
+         DEALLOCATE(obj%Hubbard_alpha)
+      END IF
       obj%Hubbard_alpha_ispresent = .FALSE.
    ENDIF
    IF(obj%Hubbard_beta_ispresent) THEN
-      DO i = 1, SIZE(obj%Hubbard_beta)
-         CALL qes_reset_HubbardCommon(obj%Hubbard_beta(i))
-      ENDDO
-      IF (ALLOCATED(obj%Hubbard_beta)) DEALLOCATE(obj%Hubbard_beta)
+      IF (ALLOCATED(obj%Hubbard_beta)) THEN
+         DO i = 1, SIZE(obj%Hubbard_beta)
+            CALL qes_reset_HubbardCommon(obj%Hubbard_beta(i))
+         ENDDO
+         DEALLOCATE(obj%Hubbard_beta)
+      END IF
       obj%Hubbard_beta_ispresent = .FALSE.
    ENDIF
    IF(obj%Hubbard_J_ispresent) THEN
-      DO i = 1, SIZE(obj%Hubbard_J)
-         CALL qes_reset_HubbardJ(obj%Hubbard_J(i))
-      ENDDO
-      IF (ALLOCATED(obj%Hubbard_J)) DEALLOCATE(obj%Hubbard_J)
+      IF (ALLOCATED(obj%Hubbard_J)) THEN 
+         DO i = 1, SIZE(obj%Hubbard_J)
+            CALL qes_reset_HubbardJ(obj%Hubbard_J(i))
+         ENDDO
+         DEALLOCATE(obj%Hubbard_J)
+      END IF
       obj%Hubbard_J_ispresent = .FALSE.
    ENDIF
    IF(obj%starting_ns_ispresent) THEN
-      DO i = 1, SIZE(obj%starting_ns)
-         CALL qes_reset_starting_ns(obj%starting_ns(i))
-      ENDDO
-      IF (ALLOCATED(obj%starting_ns)) DEALLOCATE(obj%starting_ns)
+      IF (ALLOCATED(obj%starting_ns)) THEN
+         DO i = 1, SIZE(obj%starting_ns)
+            CALL qes_reset_starting_ns(obj%starting_ns(i))
+         ENDDO
+         DEALLOCATE(obj%starting_ns)
+      END IF
       obj%starting_ns_ispresent = .FALSE.
    ENDIF
    IF(obj%Hubbard_ns_ispresent) THEN
-      DO i = 1, SIZE(obj%Hubbard_ns)
-         CALL qes_reset_Hubbard_ns(obj%Hubbard_ns(i))
-      ENDDO
-      IF (ALLOCATED(obj%Hubbard_ns)) DEALLOCATE(obj%Hubbard_ns)
+      IF (ALLOCATED(obj%Hubbard_ns)) THEN 
+         DO i = 1, SIZE(obj%Hubbard_ns)
+            CALL qes_reset_Hubbard_ns(obj%Hubbard_ns(i))
+         ENDDO
+         DEALLOCATE(obj%Hubbard_ns)
+      END IF
       obj%Hubbard_ns_ispresent = .FALSE.
    ENDIF
    IF(obj%U_projection_type_ispresent) THEN
@@ -2684,10 +2702,12 @@ SUBROUTINE qes_reset_vdW(obj)
       obj%xdm_a2_ispresent = .FALSE.
    ENDIF
    IF(obj%london_c6_ispresent) THEN
-      DO i = 1, SIZE(obj%london_c6)
-         CALL qes_reset_HubbardCommon(obj%london_c6(i))
-      ENDDO
-      IF (ALLOCATED(obj%london_c6)) DEALLOCATE(obj%london_c6)
+      IF (ALLOCATED(obj%london_c6)) THEN 
+         DO i = 1, SIZE(obj%london_c6)
+            CALL qes_reset_HubbardCommon(obj%london_c6(i))
+         ENDDO
+         DEALLOCATE(obj%london_c6)
+      END IF
       obj%london_c6_ispresent = .FALSE.
    ENDIF
 
@@ -2875,10 +2895,12 @@ SUBROUTINE qes_reset_bands(obj)
    ENDIF
    CALL qes_reset_occupations(obj%occupations)
    IF(obj%inputOccupations_ispresent) THEN
-      DO i = 1, SIZE(obj%inputOccupations)
-         CALL qes_reset_inputOccupations(obj%inputOccupations(i))
-      ENDDO
-      IF (ALLOCATED(obj%inputOccupations)) DEALLOCATE(obj%inputOccupations)
+      IF (ALLOCATED(obj%inputOccupations)) THEN 
+         DO i = 1, SIZE(obj%inputOccupations)
+            CALL qes_reset_inputOccupations(obj%inputOccupations(i))
+         ENDDO
+         DEALLOCATE(obj%inputOccupations)
+      END IF
       obj%inputOccupations_ispresent = .FALSE.
    ENDIF
 
@@ -3258,10 +3280,12 @@ SUBROUTINE qes_reset_k_points_IBZ(obj)
       obj%nk_ispresent = .FALSE.
    ENDIF
    IF(obj%k_point_ispresent) THEN
-      DO i = 1, SIZE(obj%k_point)
-         CALL qes_reset_k_point(obj%k_point(i))
-      ENDDO
-      IF (ALLOCATED(obj%k_point)) DEALLOCATE(obj%k_point)
+      IF (ALLOCATED(obj%k_point)) THEN  
+         DO i = 1, SIZE(obj%k_point)
+            CALL qes_reset_k_point(obj%k_point(i))
+         ENDDO
+         DEALLOCATE(obj%k_point)
+      END IF
       obj%k_point_ispresent = .FALSE.
    ENDIF
 
@@ -5060,11 +5084,12 @@ SUBROUTINE qes_reset_atomic_species(obj)
 
    obj%tagname = ""
    obj%lwrite  =.FALSE.
-
-   DO i = 1, SIZE(obj%species)
-      CALL qes_reset_species(obj%species(i))
-   ENDDO
-   IF (ALLOCATED(obj%species)) DEALLOCATE(obj%species)
+   IF (ALLOCATED(obj%species)) THEN
+      DO i = 1, SIZE(obj%species)
+         CALL qes_reset_species(obj%species(i))
+      ENDDO
+      DEALLOCATE(obj%species)
+   END IF
 
 END SUBROUTINE qes_reset_atomic_species
 
@@ -5692,11 +5717,12 @@ SUBROUTINE qes_reset_atomic_constraints(obj)
 
    obj%tagname = ""
    obj%lwrite  = .FALSE.
-
-   DO i = 1, SIZE(obj%atomic_constraint)
-      CALL qes_reset_atomic_constraint(obj%atomic_constraint(i))
-   ENDDO
-   IF (ALLOCATED(obj%atomic_constraint)) DEALLOCATE(obj%atomic_constraint)
+   IF (ALLOCATED(obj%atomic_constraint)) THEN
+      DO i = 1, SIZE(obj%atomic_constraint)
+         CALL qes_reset_atomic_constraint(obj%atomic_constraint(i))
+      ENDDO
+      DEALLOCATE(obj%atomic_constraint)
+   END IF
 
 END SUBROUTINE qes_reset_atomic_constraints
 
@@ -5773,15 +5799,19 @@ SUBROUTINE qes_reset_BerryPhaseOutput(obj)
 
    CALL qes_reset_polarization(obj%totalPolarization)
    CALL qes_reset_phase(obj%totalPhase)
-   DO i = 1, SIZE(obj%ionicPolarization)
-      CALL qes_reset_ionicPolarization(obj%ionicPolarization(i))
-   ENDDO
-   IF (ALLOCATED(obj%ionicPolarization)) DEALLOCATE(obj%ionicPolarization)
-   DO i = 1, SIZE(obj%electronicPolarization)
-      CALL qes_reset_electronicPolarization(obj%electronicPolarization(i))
-   ENDDO
-   IF (ALLOCATED(obj%electronicPolarization)) &
-       DEALLOCATE(obj%electronicPolarization)
+   IF (ALLOCATED(obj%ionicPolarization)) THEN 
+      DO i = 1, SIZE(obj%ionicPolarization)
+         CALL qes_reset_ionicPolarization(obj%ionicPolarization(i))
+      ENDDO
+      DEALLOCATE(obj%ionicPolarization)
+   END IF
+   
+   IF (ALLOCATED(obj%electronicPolarization)) THEN
+      DO i = 1, SIZE(obj%electronicPolarization)
+         CALL qes_reset_electronicPolarization(obj%electronicPolarization(i))
+      ENDDO
+      DEALLOCATE(obj%electronicPolarization)
+   END IF
 
 END SUBROUTINE qes_reset_BerryPhaseOutput
 
@@ -5912,11 +5942,12 @@ SUBROUTINE qes_reset_symmetries(obj)
 
    obj%tagname = ""
    obj%lwrite  = .FALSE.
-
-   DO i = 1, SIZE(obj%symmetry)
-      CALL qes_reset_symmetry(obj%symmetry(i))
-   ENDDO
-   IF (ALLOCATED(obj%symmetry)) DEALLOCATE(obj%symmetry)
+   IF (ALLOCATED(obj%symmetry)) THEN 
+      DO i = 1, SIZE(obj%symmetry)
+         CALL qes_reset_symmetry(obj%symmetry(i))
+      ENDDO
+      DEALLOCATE(obj%symmetry)
+   END IF
 
 END SUBROUTINE qes_reset_symmetries
 
@@ -6128,10 +6159,12 @@ SUBROUTINE qes_reset_band_structure(obj)
       CALL qes_reset_smearing(obj%smearing)
       obj%smearing_ispresent = .FALSE.
    ENDIF
-   DO i = 1, SIZE(obj%ks_energies)
-      CALL qes_reset_ks_energies(obj%ks_energies(i))
-   ENDDO
-   IF (ALLOCATED(obj%ks_energies)) DEALLOCATE(obj%ks_energies)
+   IF (ALLOCATED(obj%ks_energies)) THEN 
+      DO i = 1, SIZE(obj%ks_energies)
+         CALL qes_reset_ks_energies(obj%ks_energies(i))
+      ENDDO
+      DEALLOCATE(obj%ks_energies)
+   END IF
 
 END SUBROUTINE qes_reset_band_structure
 
