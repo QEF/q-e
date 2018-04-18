@@ -81,6 +81,10 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: ir1w_tg(:)! if >0 ir1w_tg(m1) is the incremental index of the active ( wfc ) X value in task group
     INTEGER, ALLOCATABLE :: indw_tg(:)! is the inverse of ir1w_tg
 
+#if defined(__CUDA)
+    INTEGER, POINTER, CONTIGUOUS, DEVICE :: ir1p_d(:), ir1w_d(:), ir1w_tg_d(:)
+#endif
+
     INTEGER :: nst      ! total number of sticks ( potential )
 
     INTEGER, ALLOCATABLE :: nsp(:)   ! number of sticks per processor ( potential ) using proc index starting from 1 
@@ -113,6 +117,9 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: iss(:)   ! index of the first rho stick on each proc
     INTEGER, ALLOCATABLE :: isind(:) ! for each position in the plane indicate the stick index
     INTEGER, ALLOCATABLE :: ismap(:) ! for each stick in the plane indicate the position
+#if defined(__CUDA)
+    INTEGER, POINTER, CONTIGUOUS, DEVICE :: ismap_d(:)
+#endif
     INTEGER, ALLOCATABLE :: nl(:)    ! position of the G vec in the FFT grid
     INTEGER, ALLOCATABLE :: nlm(:)   ! with gamma sym. position of -G vec in the FFT grid
     !
@@ -252,6 +259,13 @@ CONTAINS
     ALLOCATE( desc%tg_sdsp( desc%nproc2) ) ; desc%tg_sdsp = 0
     ALLOCATE( desc%tg_rdsp( desc%nproc2) ) ; desc%tg_rdsp = 0
 
+#if defined(__CUDA)
+    ALLOCATE( desc%ir1p_d( desc%nr1x ) ) ; desc%ir1p_d  = 0
+    ALLOCATE( desc%ir1w_d( desc%nr1x ) ) ; desc%ir1w_d  = 0
+    ALLOCATE( desc%ir1w_tg_d( desc%nr1x ) ) ; desc%ir1w_tg_d  = 0
+    ALLOCATE( desc%ismap_d( nx * ny ) ) ; desc%ismap_d = 0
+#endif
+
     incremental_grid_identifier = incremental_grid_identifier + 1
     desc%grid_id = incremental_grid_identifier
 
@@ -294,6 +308,13 @@ CONTAINS
 
     IF ( ALLOCATED( desc%nl ) )  DEALLOCATE( desc%nl )
     IF ( ALLOCATED( desc%nlm ) ) DEALLOCATE( desc%nlm )
+
+#if defined(__CUDA)
+    IF ( ALLOCATED( desc%ismap_d ) )   DEALLOCATE( desc%ismap_d )
+    IF ( ALLOCATED( desc%ir1p_d ) )    DEALLOCATE( desc%ir1p_d )
+    IF ( ALLOCATED( desc%ir1w_d ) )    DEALLOCATE( desc%ir1w_d )
+    IF ( ALLOCATED( desc%ir1w_tg_d ) ) DEALLOCATE( desc%ir1w_tg_d )
+#endif
 
     desc%comm  = MPI_COMM_NULL 
 #if defined(__MPI)
@@ -691,6 +712,13 @@ CONTAINS
        desc%tg_sdsp(i) = desc%tg_sdsp(i-1) + desc%nnr
        desc%tg_rdsp(i) = desc%tg_rdsp(i-1) + desc%tg_rcv(i-1)
     ENDDO
+
+#if defined(__CUDA)
+    desc%ismap_d = desc%ismap
+    desc%ir1p_d = desc%ir1p
+    desc%ir1w_d  = desc%ir1w
+    desc%ir1w_tg_d = desc%ir1w_tg
+#endif
 
     RETURN
 
