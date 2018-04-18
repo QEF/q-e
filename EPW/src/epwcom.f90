@@ -158,6 +158,16 @@
   !! difference between Fermi energy and band edge (in eV)
   REAL (KIND=DP) :: smear_rpa
   !! smearing for the calculation of the Lindhard function (in eV)
+  ! 
+  ! Phonon-assisted absorption
+  REAL (KIND=DP) :: omegamin
+  !! Photon energy minimum (in eV)
+  REAL (KIND=DP) :: omegamax
+  !! Photon energy maximum (in eV)
+  REAL (KIND=DP) :: omegastep
+  !! Photon energy step (in eV)
+  REAL (KIND=DP) :: n_r
+  !! Refractive index
   !
   !LOGICAL :: tphases
   !! tphases:  if .TRUE. set absolute reference for unitary gauge of the eigenvectors
@@ -236,6 +246,8 @@
   !! if .true. print the |g| vertex in [meV].
   LOGICAL :: lphase
   !! if .true. then fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian. 
+  LOGICAL :: lindabs
+  !! if .true., perform phonon-assisted absorption calculations
   !
   ! Superconductivity
   LOGICAL :: ephwrite

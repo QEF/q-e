@@ -75,15 +75,15 @@
   !
   !
   IF (iq.eq.1) then 
-     WRITE(stdout,'(/5x,a)') repeat('=',67)
-     WRITE(stdout,'(5x,"Nesting Function in the double delta approx")')
-     WRITE(stdout,'(5x,a/)') repeat('=',67)
-     !
-     IF ( fsthick.lt.1.d3 ) &
-          WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-          'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
-     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
-          'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
+    WRITE(stdout,'(/5x,a)') repeat('=',67)
+    WRITE(stdout,'(5x,"Nesting Function in the double delta approx")')
+    WRITE(stdout,'(5x,a/)') repeat('=',67)
+    !
+    IF ( fsthick.lt.1.d3 ) &
+      WRITE(stdout, '(/5x,a,f10.6,a)' ) &
+      'Fermi Surface thickness = ', fsthick * ryd2ev, ' eV'
+    WRITE(stdout, '(/5x,a,f10.6,a)' ) &
+      'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
   ENDIF
   !
   ! SP: The Gamma function needs to be put to 0 for each q
@@ -150,7 +150,7 @@
             !
             weight = wkf (ikk) * w0g1 * w0g2
             !
-            gamma  =   gamma  + weight  
+            gamma  = gamma  + weight  
             !
           ENDDO ! jbnd
         ENDDO   ! ibnd
@@ -170,7 +170,7 @@
        ! 
     WRITE(stdout, 102)  gamma
     WRITE(stdout,'(5x,a/)') repeat('-',67)
-    CALL flush(6)
+    !CALL FLUSH()
     !
     WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
       'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nkqtotf/2

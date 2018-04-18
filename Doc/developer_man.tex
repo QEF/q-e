@@ -164,7 +164,7 @@ they don't like.
 
 {\bf Important notice:} the development model of \qe\ has undergone
 significant changes after release 6.2.1. The development has moved to 
-GitLab. the official GIT repository is visible at
+GitLab. The official git repository is visible at
 \texttt{git.quantum-espresso.org} and can be downloaded as follows:
 \begin{verbatim}
    git clone https://gitlab.com/QEF/q-e.git
@@ -210,19 +210,18 @@ localized to a small part of \qe, or they are quite independent anyway
 from the rest of \qe. In that case, you may just send a patch or the
 modified routine(s) to an expert developer who will review it and
 take the appropriate steps. The preferred path is however a ``merge request''
-on GitLab.
+on GitLab (see Sect.\ref{Sec:git}),
 
-{\em Important:} keep your modified copy of the distribution aligned to GIT. 
-Don't work for years, or even for months, without keeping an eye to what is 
-going on in the GIT repository. This is especially true for projects that 
-modify or use \qe\ code and routines. Update your copy frequently (using
-command \texttt{git pull}), verify if changes made meanwhile by other
-developers conflict with your changes. See Sect. \ref{SubSec:Conflicts} 
-for hints on how to remove conflicts and on how to figure out what went wrong.
+{\em Important:} keep your modified copy of the distribution aligned to the
+repository. Don't work for years, or even for months, without keeping an eye
+to what is going on in the repository. This is especially true for projects
+that modify or use \qe\ code and routines. Update your copy frequently,
+verify if changes made meanwhile by other developers conflict with your
+changes. 
 If your project just uses the \qe\ installation procedure and/or data files,
 it is less likely to run into problems, since major incompatible changes are
 quite rare. You may still need to verify from time to time that everything keeps
-working. though.
+working, though.
 
 \subsection{Hints, Caveats, Do's and Dont's for developers}
 
@@ -275,7 +274,7 @@ tabulators \^{}I.
 \item When you modify the program sources, run the
 \texttt{install/makedeps.sh}  script  or type \texttt{make depend}
 to update files \texttt{make.depend} in the various
-subdirectories. These files are under GIT as well;
+subdirectories. These files are under git as well;
 if modified they should be committed.
 \end{itemize}
 
@@ -1979,61 +1978,105 @@ read\_namelists.f90 )
 \end{verbatim}
 \end{enumerate}
 
-\section{Using SVN}
-\label{Sec:SVN}
-{\bf Notice}: since February 2018, \qe is maintained on GIT and no
-longer on SVN.
-
-\subsection{Removing conflicts}
-\label{SubSec:Conflicts}
-When you update your working copy of the repository,
-you may encounter two types of conflicts:
-\begin{enumerate}
-\item Somebody else has changed the same lines that you have
-      modified.
-\item Somebody else has changed something that has broken one
-      or more functionalities of your modified version.
-\end{enumerate}
-Here we are concerned with kind 1. of conflicts, those that
-are noticed by SVN and produce, in addition to a message with
-a "C" in the first column before the conflicting file name:
-\begin{itemize}
-\item \texttt{conflicting-file} containing an attempted merge
-of your version with the SVN version, with conflicting sections
-indicated by
-\begin{verbatim}
-   <<<<<<<
-     (your version)
-   =======
-     (SVN version)
-   >>>>>>>
-\end{verbatim}
-\item \texttt{conflicting-file.mine} containing your version
-\item two \texttt{conflicting-file.rXXXXX} containing the two most
-recent versions (\texttt{XXXXX} is the revision number) in SVN.
-\end{itemize}
-Look into the conflicting section(s): in most cases, conflicts are trivial
-(format changes, white spaces) or easily solved (the part of the code you
-were modifying has been moved to another place, or a variable has meanwhilke
-changed name, for instance). Edit \texttt{conflicting-file}, remove all other
-copies of \texttt{conflicting-file.*}, commit.
 
 \section{Using git}
 \label{Sec:git}
 
-GIT is a very populare versioning control system for collaborative development 
-nowadays. The web is full of tutorials and guide about how to use it, covering 
-simple novice concepts to master the most sophisticated functionalities. The 
-following links contain an introduction to \texttt{git}:
-\begin{verbatim}
-https://git-scm.com/book/en/v2/Getting-Started-Git-Basics
-https://git-scm.com/course/svn.html
-\end{verbatim}
-Very quick guide to \texttt{git} commands for the impatient:
+The following notes cover the \qe-specific work organization, plus the
+essential git commands. Those interested in mastering git may consult 
+one of the many available on-line guides and tutorials, e.g.,
+\verb|git-scm.com/book/en/v2|.
+
+The git repository is hosted on GitLab: \verb|https://gitlab.com/QEF/q-e|.
+A mirror, automatically aligned every week, is available
+on GitHub: \verb|https://github.com/QEF/q-e|. To download the repository:
+\begin{quote}
+   \verb|git clone https://gitlab.com/QEF/q-e.git|  or\\
+   \verb|git clone git@gitlab.com:QEF/q-e.git|
+\end{quote}
+Registration on GitLab is not needed, just useful. GitLab accepts a number
+of other accounts (Google, GitHub, ...) to sign in.
+
+The repository contains a ``master''(default) and a ``develop'' branch,
+plus other branches for specific goals. The ``develop'' branch is
+where development goes on. The ``master'' branch is aligned to the
+``develop'' branch from time to time, when ``develop'' looks stable
+enough. No other changes are allowed in ``master'' except for serious
+bugs.
+
+\subsection{Developing with git}
+
+Development can proceed in different ways:
+\begin{enumerate}
+\item Via ``merge'' requests from a private repository
+\item Via ``merge'' requests from a branch
+\item Directly into the ``develop'' branch
+\end{enumerate}
+The first option is the recommended one. Register on GitLab and {\em save
+your public ssh keys} on your GitLab account. Then:
 \begin{itemize}
-\item
-  \texttt{clone}: Initial download, makes a local copy of a (typically
-  remote repository)
+\item  {\em fork} the QEF/q-e project: point your browser to
+	 \verb|https://gitlab.com/QEF/q-e|, use the ``fork'' button
+\item {\em clone} your GitLab fork on your workstation, e.g.:\\
+   \verb|git clone git@gitlab.com:<your-username>/q-e.git|
+\item {\em switch} to the ``develop'' branch of your fork
+   (not strictly needed, just to keep the symmetry):
+   \verb|git checkout --track origin/develop|
+\end{itemize}
+Once you have changed your local copy of the repository,
+you have to {\em commit} (save) those changes:
+\begin{quote}
+  \verb|git add list-of-changed-or-added-files|\\
+  \verb|git commit |
+\end{quote}
+then you can align the repository to the ``develop'' branch:
+\begin{quote}
+  \verb|git pull  git@gitlab.com:QEF/q-e.git develop| 
+\end{quote}
+If a file is modified both locally and in the repository, a conflict
+will arise. You can use the \texttt{stash} to resolve the conflict:
+\begin{quote}
+  \verb|git stash save | (save and remove modified files)\\
+  \verb|git pull  ...  | (update files)\\
+  \verb|git stash apply| (overwrite with locally modified files)
+\end{quote}
+Beware! you may need to manually merge files that have been modified both 
+by you and in the repository.
+The stash can be cleared using \texttt{git stash clear}.
+
+Note: it is good practice to use \verb|git fetch| before a pull,
+as in, e.g.:
+\begin{quote}
+  \verb|git fetch  git@gitlab.com:QEF/q-e.git develop|
+\end{quote}
+
+You may repeat the procedure above, adding more commits to your local copy.
+Unlike in svn, you need to explicitly {\em push} (publish) them to the remote
+repository with
+\begin{verbatim}
+   git push
+\end{verbatim}
+Your repository (more exactly, the ``develop'' branch of your repository)
+should now contain only the differences you want to apply to the ``develop''
+branch of the official repository. You can use the GitLab web interface to
+do a ``merge request'', that some other developer will review and approve
+(or not).
+
+\subsection{Working directly into the develop branch}
+Only for people knowing what thay are doing (or ready to fix the mess in case
+they didn't know what they were doing):
+\begin{itemize}
+\item \verb|git clone git@gitlab.com:QEF/q-e.git| if not already done
+\item Ensure you switch to the ``develop'' branch:
+  \verb|git checkout --track origin/develop|
+\item Work on it as in the previous subsection
+\item When you are ready, \verb|git push|
+\end{itemize}
+
+\subsection{A few useful commands}
+\begin{itemize}
+\item \texttt{status}: information on the current state of the repository 
+\item \texttt{diff}: difference between the local copy and the repository
 \item  \texttt{fetch}:
   looks at the remote repository, signals if new files or conflicts are present
   in case the local copy is updated
@@ -2049,30 +2092,8 @@ Very quick guide to \texttt{git} commands for the impatient:
   to one or more remote repositories
 \item \texttt{merge} merges two branches (typically the local one and
   the remote one). A merge may be easy or complex, depending upon the type of
-  conflicts. See:
-  \texttt{https://help.github.com/articles/resolving-a-merge-conflict-from-the-command-line/}
+  conflicts.
 \end{itemize}
-In order to align the local repository to the svn mirror (equivalent to
-\texttt{svn update}), it is a good idea to use \texttt{fetch} before
-\texttt{pull}. Then:
-\begin{quote}
-  \texttt{git add}
-  \texttt{git commit}
-  \texttt{git merge}
-\end{quote}
-In order to save incomplete work and avoid local conflicts, one can use
-\texttt{stash}:
-\begin{quote}
-  \texttt{git stash save}     (save and remove modified files)\\
-  \texttt{git pull}           (update files)\\
-  \texttt{git stash apply}    (overwrite with locally modified files)
-\end{quote}
-The stash can be cleared using \texttt{git clear}. A few useful commands:
-\begin{quote}
-  \texttt{git status}\\
-  \texttt{git diff}
-\end{quote}
-
 
 \section{The \qe \, test-suite}
 \label{Sec:testfarm}

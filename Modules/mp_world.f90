@@ -9,11 +9,11 @@
 MODULE mp_world
   !----------------------------------------------------------------------------
   !
-  USE mp, ONLY : mp_barrier, mp_start, mp_end, mp_stop, mp_count_nodes
+  USE mp, ONLY : mp_barrier, mp_start, mp_end, mp_stop, mp_count_nodes 
+  USE io_global, ONLY : meta_ionode_id, meta_ionode
 #if defined(__CUDA)
   use cudafor, ONLY : cudaSetDevice, cudaGetDeviceCount
 #endif
-  USE io_global, ONLY : meta_ionode_id, meta_ionode
   !
   USE parallel_include
   !
