@@ -347,12 +347,12 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 
 #if defined(__MPI)
   COMPLEX (DP),    ALLOCATABLE :: f_in(:), f_aux(:)
-  INTEGER, DEVICE, ALLOCATABLE :: desc_ismap_d(:)
+  INTEGER, DEVICE, POINTER, CONTIGUOUS :: desc_ismap_d(:)
   !
   INTEGER :: ierr, me, me2, me2_start, me2_end, me3, nproc3, iproc3, ncpx, nr3px, ip, ip0
   INTEGER :: i, it, it0, k, kfrom, kdest, offset, ioff, mc, m1, m2, i1,  sendsize
   INTEGER, ALLOCATABLE :: ncp_(:)
-  INTEGER, ALLOCATABLE, DEVICE :: ir1p__d(:)
+  INTEGER, DEVICE, POINTER, CONTIGUOUS :: ir1p__d(:)
   INTEGER :: my_nr1p_
   !
 #if defined(__NON_BLOCKING_SCATTER)
@@ -365,21 +365,21 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   nproc3 = desc%nproc3
 
   ! allocate auxiliary array for columns distribution
-  ALLOCATE ( ncp_( desc%nproc), ir1p__d(desc%nr1x) )
+  ALLOCATE ( ncp_( desc%nproc) )
 
   me2_start = me2 ; me2_end = me2
   if ( abs (isgn) == 1 ) then      ! It's a potential FFT
      ncp_ = desc%nsp 
      my_nr1p_ = count (desc%ir1p   > 0)
-     ir1p__d= desc%ir1p
+     ir1p__d => desc%ir1p_d
   else if ( abs (isgn) == 2 ) then ! It's a wavefunction FFT
      ncp_ = desc%nsw
      my_nr1p_ = count (desc%ir1w   > 0)
-     ir1p__d= desc%ir1w  
+     ir1p__d => desc%ir1w_d
   else if ( abs (isgn) == 3 ) then ! It's a wavefunction FFT with task group
      ncp_ = desc%nsw
      my_nr1p_ = count (desc%ir1w_tg > 0)
-     ir1p__d= desc%ir1w_tg
+     ir1p__d => desc%ir1w_tg_d
      me2_start = 1 ; me2_end = desc%nproc2
   end if
   !
@@ -396,7 +396,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   sendsize = ncpx * nr3px       ! dimension of the scattered chunks
   
   ALLOCATE(f_in(nxx_), f_aux(nxx_))         ! allocate host copy of f_in and f_aux
-  ALLOCATE(desc_ismap_d, source=desc%ismap)
+  desc_ismap_d => desc%ismap_d
 
   ierr = 0
   IF (isgn.gt.0) THEN
@@ -589,7 +589,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 
   ENDIF
 
-  DEALLOCATE ( ncp_ , ir1p__d , f_aux, f_in, desc_ismap_d)
+  DEALLOCATE ( ncp_ , f_aux, f_in)
   CALL stop_clock ('fft_scatt_yz')
 
 #endif
