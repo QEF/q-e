@@ -133,8 +133,8 @@ crayxt*:pgf* )
 # see comment above for pgf*
 	    try_fflags_nomain="-Mnomain"
         try_fflags_openmp="-mp"
-        try_fflags="-O3 -r8"
-        try_f90flags="-fast -Mcache_align -r8 -Mpreprocess"
+        try_fflags="-O3"
+        try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
         try_fflags_noopt="-O0"
         try_ldflags_openmp="-mp"
         try_ldflags="-v"
