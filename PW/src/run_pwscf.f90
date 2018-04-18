@@ -56,7 +56,12 @@ SUBROUTINE run_pwscf ( exit_status )
   LOGICAL, external :: matches
   !! checks if first string is contained in the second
   INTEGER :: idone 
-  ! counter of electronic + ionic steps done in this run
+  !! counter of electronic + ionic steps done in this run
+  INTEGER :: ions_status = 3
+  !!    ions_status =  3  not yet converged
+  !!    ions_status =  2  converged, restart with nonzero magnetization
+  !!    ions_status =  1  converged, final step with current cell needed
+  !!    ions_status =  0  converged, exiting
   !
   exit_status = 0
   IF ( ionode ) WRITE( unit = stdout, FMT = 9010 ) ntypx, npk, lmaxx
@@ -177,7 +182,8 @@ SUBROUTINE run_pwscf ( exit_status )
         !
         ! ... ionic step (for molecular dynamics or optimization)
         !
-        CALL move_ions ( idone )
+        CALL move_ions ( idone, ions_status )
+        conv_ions = ( ions_status == 0 )
         !
         ! ... then we save restart information for the new configuration
         !
@@ -206,14 +212,31 @@ SUBROUTINE run_pwscf ( exit_status )
      !
      IF ( lmd .OR. lbfgs ) THEN
         !
-        ! ... update the wavefunctions, charge density, potential
-        ! ... update_pot initializes structure factor array as well
+        IF ( ions_status == 1 ) THEN
+           !
+           ! ... final scf calculation with G-vectors for final cell
+           !
+           CALL reset_gvectors ( )
+           !
+        ELSE IF ( ions_status == 2 ) THEN
+           !
+           ! ... check whether nonzero magnetization is real
+           !
+           CALL reset_magn ( )
+           !
+        ELSE
+           !
+           ! ... update the wavefunctions, charge density, potential
+           ! ... update_pot initializes structure factor array as well
+           !
+           CALL update_pot()
+           !
+           ! ... re-initialize atomic position-dependent quantities
+           !
+           CALL hinit1()
+           !
+        END IF
         !
-        CALL update_pot()
-        !
-        ! ... re-initialize atomic position-dependent quantities
-        !
-        CALL hinit1()
         !
      END IF
      ! ... Reset convergence threshold of iterative diagonalization for
@@ -239,3 +262,153 @@ SUBROUTINE run_pwscf ( exit_status )
            & /,5X,'Max angular momentum in pseudopotentials (lmaxx) = ',i2)
   !
 END SUBROUTINE run_pwscf
+
+SUBROUTINE reset_gvectors ( )
+  !
+  ! ... Variable-cell optimization: once convergence is achieved, 
+  ! ... make a final calculation with G-vectors and plane waves
+  ! ... calculated for the final cell (may differ from the current
+  ! ... result, using G_vectors and PWs for the starting cell)
+  !
+  USE io_global,  ONLY : stdout
+  USE cellmd,     ONLY : lmovecell
+  USE basis,      ONLY : starting_wfc, starting_pot
+  USE cell_base,  ONLY : at, bg
+  USE fft_base,   ONLY : dfftp
+  USE fft_base,   ONLY : dffts
+  USE fft_types,  ONLY : fft_type_allocate
+  USE gvect,      ONLY : gcutm
+  USE gvecs,      ONLY : gcutms
+  USE mp_bands,   ONLY : intra_bgrp_comm, nyfft
+  USE control_flags, ONLY : lbfgs, lmd
+  IMPLICIT NONE
+  !
+  WRITE( UNIT = stdout, FMT = 9110 )
+  WRITE( UNIT = stdout, FMT = 9120 )
+  !
+  ! ... prepare for a new scf, restarted from scratch, not from previous
+  ! ... data (dimensions and file lengths will be different in general)
+  !
+  ! ... get magnetic moments from previous run before charge is deleted
+  !
+  CALL reset_starting_magnetization ( )
+  !
+  CALL clean_pw( .FALSE. )
+  CALL close_files(.TRUE.)
+  lmovecell=.FALSE.
+  lbfgs=.FALSE.
+  lmd=.FALSE.
+  if (trim(starting_wfc) == 'file') starting_wfc = 'atomic+random'
+  starting_pot='atomic'
+  !
+  ! ... re-set and re-calculate FFT grid 
+  !
+  dfftp%nr1=0; dfftp%nr2=0; dfftp%nr3=0
+  CALL fft_type_allocate (dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft)
+  dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
+  CALL fft_type_allocate (dffts, at, bg, gcutms,intra_bgrp_comm, nyfft=nyfft)
+  !
+  CALL init_run()
+  !
+9110 FORMAT( /5X,'A final scf calculation at the relaxed structure.' )
+9120 FORMAT(  5X,'The G-vectors are recalculated for the final unit cell'/ &
+              5X,'Results may differ from those at the preceding step.' )
+  !
+END SUBROUTINE reset_gvectors
+
+SUBROUTINE reset_magn ( )
+  !
+  ! ... lsda optimization :  a final configuration with zero 
+  ! ... absolute magnetization has been found and we check 
+  ! ... if it is really the minimum energy structure by 
+  ! ... performing a new scf iteration without any "electronic" history
+  !
+  USE io_global,  ONLY : stdout
+  USE dfunct,     ONLY : newd
+  IMPLICIT NONE
+  !
+  WRITE( UNIT = stdout, FMT = 9010 )
+  WRITE( UNIT = stdout, FMT = 9020 )
+  !
+  ! ... re-initialize the potential (no need to re-initialize wavefunctions)
+  !
+  CALL potinit()
+  CALL newd()
+
+9010 FORMAT( /5X,'lsda relaxation :  a final configuration with zero', &
+           & /5X,'                   absolute magnetization has been found' )
+9020 FORMAT( /5X,'the program is checking if it is really ', &
+           &     'the minimum energy structure',             &
+           & /5X,'by performing a new scf iteration ',       & 
+           &     'without any "electronic" history' )               
+  !
+END SUBROUTINE reset_magn
+!
+SUBROUTINE reset_starting_magnetization ( ) 
+  !
+  ! On input,  the scf charge density is needed
+  ! On output, new values for starting_magnetization, angle1, angle2
+  ! estimated from atomic magnetic moments - to be used in last step
+  !
+  USE kinds,     ONLY : dp
+  USE constants, ONLY : pi
+  USE ions_base, ONLY : nsp, ityp, nat
+  USE lsda_mod,  ONLY : nspin, starting_magnetization
+  USE scf,       ONLY : rho
+  USE spin_orb,  ONLY : domag
+  USE noncollin_module, ONLY : noncolin, angle1, angle2
+  !
+  IMPLICIT NONE
+  INTEGER :: i, nt, iat
+  REAL(dp):: norm_tot, norm_xy, theta, phi
+  REAL (DP), ALLOCATABLE :: r_loc(:), m_loc(:,:)
+  !
+  IF ( (noncolin .AND. domag) .OR. nspin==2) THEN
+     ALLOCATE ( r_loc(nat), m_loc(nspin-1,nat) )
+     CALL get_locals(r_loc,m_loc,rho%of_r)
+  ELSE
+     RETURN
+  END IF
+  DO i = 1, nsp
+     !
+     starting_magnetization(i) = 0.0_DP
+     angle1(i) = 0.0_DP
+     angle2(i) = 0.0_DP
+     nt = 0
+     DO iat = 1, nat
+        IF (ityp(iat) == i) THEN
+           nt = nt + 1
+           IF (noncolin) THEN
+              norm_tot= sqrt(m_loc(1,iat)**2+m_loc(2,iat)**2+m_loc(3,iat)**2)
+              norm_xy = sqrt(m_loc(1,iat)**2+m_loc(2,iat)**2)
+              IF (norm_tot > 1.d-10) THEN
+                 theta = acos(m_loc(3,iat)/norm_tot)
+                 IF (norm_xy > 1.d-10) THEN
+                    phi = acos(m_loc(1,iat)/norm_xy)
+                    IF (m_loc(2,iat).lt.0.d0) phi = - phi
+                 ELSE
+                    phi = 2.d0*pi
+                 END IF
+              ELSE
+                 theta = 2.d0*pi
+                 phi = 2.d0*pi
+              END IF
+              angle1(i) = angle1(i) + theta
+              angle2(i) = angle2(i) + phi
+              starting_magnetization(i) = starting_magnetization(i) + &
+                   norm_tot/r_loc(iat)
+           ELSE
+              starting_magnetization(i) = starting_magnetization(i) + &
+                   m_loc(1,iat)/r_loc(iat)
+           END IF
+        END IF
+     END DO
+     IF ( nt > 0 ) THEN
+        starting_magnetization(i) = starting_magnetization(i) / DBLE(nt)
+        angle1(i) = angle1(i) / DBLE(nt)
+        angle2(i) = angle2(i) / DBLE(nt)
+     END IF
+  END DO
+  DEALLOCATE ( r_loc, m_loc )
+
+END SUBROUTINE reset_starting_magnetization
