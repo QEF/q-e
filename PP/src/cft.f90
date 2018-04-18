@@ -64,10 +64,12 @@ SUBROUTINE cft (a, b, ntot, n, nspan, isn)
   !
   USE kinds
   IMPLICIT real(DP)(a - h, o - z)
-  DIMENSION a ( * ), b ( * )
-  DIMENSION nfac (11), np (209)
+  real(dp):: a ( * ), b ( * )
+  integer :: nfac (11), np (209)
   !     array storage for maximum prime factor of 23
-  DIMENSION at (23), ck (23), bt (23), sk (23)
+  real(dp):: at (23), ck (23), bt (23), sk (23), s1
+  integer :: n,ntot, nspan, isn
+  integer :: i,ii,j,jc,jf,jj,k,k1,k2,k3,k4,kk,kt,m,maxf,maxp,inc,ks,kspan,kspnn,nni,nt,nn
   EQUIVALENCE (i, ii)
   !     the following two constants should agree with the array dimension
   maxf = 23

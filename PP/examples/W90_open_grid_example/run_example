@@ -1,0 +1,339 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# Path for Wannier90
+WAN_DIR=../../../wannier90-1.2
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw2wannier90.x in conjunction with" 
+$ECHO "Wannier90 (http://www.wannier.org) to obtain maximally-localised"
+$ECHO "Wannier functions (MLWFs) for the valence bands of diamond."
+$ECHO "Wannier90 may be run in two modes, 'library' and 'standalone',"
+$ECHO "and both of these are demonstrated."
+$ECHO "for library mode pw2wannier90 has to be compile with -D__WANLIB flag,"
+$ECHO "libwannier.a has to be linked. Uncomment related lines below."
+
+# set the needed environment variables 
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x pw2wannier90.x open_grid.x wannier90.x"
+PSEUDO_LIST="C.pz-vbc.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then 
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+WAN_COMMAND="$BIN_DIR/wannier90.x"
+PW2WAN_COMMAND="$PARA_PREFIX $BIN_DIR/pw2wannier90.x $PARA_POSTFIX"
+OG_COMMAND="$PARA_PREFIX $BIN_DIR/open_grid.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as          : $PW_COMMAND"
+$ECHO "  running wannier90.x as   : $WAN_COMMAND"
+$ECHO "  running pw2wannier90.x as: $PW2WAN_COMMAND"
+$ECHO "  running open_grid.x as:    $OG_COMMAND"
+$ECHO
+
+# self-consistent calculation for diamond
+cat > diamond.scf.in << EOF
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='di',
+    pseudo_dir='$PSEUDO_DIR',
+    outdir='$TMP_DIR'
+ /
+ &system    
+    ibrav=  2, celldm(1) =6.1, nat=  2, ntyp= 1,
+    ecutwfc =40.0, 
+ /
+ &electrons
+    diagonalization='david'
+    mixing_mode = 'plain'
+    mixing_beta = 0.7 
+    conv_thr =  1.0d-13
+ /
+ATOMIC_SPECIES
+ C  12.0  C.pz-vbc.UPF
+ATOMIC_POSITIONS {crystal}
+C  -0.25 -0.25 -0.25
+C   0.0  0.0  0.0
+K_POINTS {automatic}
+  4  4  4   0 0 0
+EOF
+$ECHO "  running the scf calculation for diamond...\c"
+$PW_COMMAND < diamond.scf.in > diamond.scf.out
+$ECHO " done"
+
+# non-self-consistent calculation for diamond
+#cat > diamond.nscf.in << EOF
+# &control
+#    calculation='nscf'
+#    pseudo_dir='$PSEUDO_DIR',
+#    outdir='$TMP_DIR',
+#    prefix='di'
+# /
+# &system    
+#    ibrav=  2, celldm(1) =6.1, nat=  2, ntyp= 1,
+#    ecutwfc =40.0, nbnd = 4,
+# /
+# &electrons
+#    conv_thr =  1.0d-11
+# /
+#ATOMIC_SPECIES
+# C  12.0  C.pz-vbc.UPF
+#ATOMIC_POSITIONS {crystal}
+#C -0.25 -0.25 -0.25
+#C  0.0  0.0  0.0
+#K_POINTS {crystal}
+# 64 
+#0.0000  0.0000   0.0000   0.0156250
+#0.0000  0.2500   0.0000   0.0156250
+#0.0000  0.5000   0.0000   0.0156250
+#0.0000  0.7500   0.0000   0.0156250
+#0.2500  0.0000   0.0000   0.0156250
+#0.2500  0.2500   0.0000   0.0156250
+#0.2500  0.5000   0.0000   0.0156250
+#0.2500  0.7500   0.0000   0.0156250
+#0.5000  0.0000   0.0000   0.0156250
+#0.5000  0.2500   0.0000   0.0156250
+#0.5000  0.5000   0.0000   0.0156250
+#0.5000  0.7500   0.0000   0.0156250
+#0.7500  0.0000   0.0000   0.0156250
+#0.7500  0.2500   0.0000   0.0156250
+#0.7500  0.5000   0.0000   0.0156250
+#0.7500  0.7500   0.0000   0.0156250
+#0.0000  0.0000   0.2500   0.0156250
+#0.0000  0.2500   0.2500   0.0156250
+#0.0000  0.5000   0.2500   0.0156250
+#0.0000  0.7500   0.2500   0.0156250
+#0.2500  0.0000   0.2500   0.0156250
+#0.2500  0.2500   0.2500   0.0156250
+#0.2500  0.5000   0.2500   0.0156250
+#0.2500  0.7500   0.2500   0.0156250
+#0.5000  0.0000   0.2500   0.0156250
+#0.5000  0.2500   0.2500   0.0156250
+#0.5000  0.5000   0.2500   0.0156250
+#0.5000  0.7500   0.2500   0.0156250
+#0.7500  0.0000   0.2500   0.0156250
+#0.7500  0.2500   0.2500   0.0156250
+#0.7500  0.5000   0.2500   0.0156250
+#0.7500  0.7500   0.2500   0.0156250
+#0.0000  0.0000   0.5000   0.0156250
+#0.0000  0.2500   0.5000   0.0156250
+#0.0000  0.5000   0.5000   0.0156250
+#0.0000  0.7500   0.5000   0.0156250
+#0.2500  0.0000   0.5000   0.0156250
+#0.2500  0.2500   0.5000   0.0156250
+#0.2500  0.5000   0.5000   0.0156250
+#0.2500  0.7500   0.5000   0.0156250
+#0.5000  0.0000   0.5000   0.0156250
+#0.5000  0.2500   0.5000   0.0156250
+#0.5000  0.5000   0.5000   0.0156250
+#0.5000  0.7500   0.5000   0.0156250
+#0.7500  0.0000   0.5000   0.0156250
+#0.7500  0.2500   0.5000   0.0156250
+#0.7500  0.5000   0.5000   0.0156250
+#0.7500  0.7500   0.5000   0.0156250
+#0.0000  0.0000   0.7500   0.0156250
+#0.0000  0.2500   0.7500   0.0156250
+#0.0000  0.5000   0.7500   0.0156250
+#0.0000  0.7500   0.7500   0.0156250
+#0.2500  0.0000   0.7500   0.0156250
+#0.2500  0.2500   0.7500   0.0156250
+#0.2500  0.5000   0.7500   0.0156250
+#0.2500  0.7500   0.7500   0.0156250
+#0.5000  0.0000   0.7500   0.0156250
+#0.5000  0.2500   0.7500   0.0156250
+#0.5000  0.5000   0.7500   0.0156250
+#0.5000  0.7500   0.7500   0.0156250
+#0.7500  0.0000   0.7500   0.0156250
+#0.7500  0.2500   0.7500   0.0156250
+#0.7500  0.5000   0.7500   0.0156250
+#0.7500  0.7500   0.7500   0.0156250
+#EOF
+#$ECHO "  running the nscf calculation for diamond...\c"
+#$PW_COMMAND < diamond.nscf.in > diamond.nscf.out
+#$ECHO " done"
+
+
+# run pw2wannier90 to get overlap matrices
+cat > diamond.openg.sa.in << EOF
+&inputpp 
+   outdir = '$TMP_DIR/'
+   prefix = 'di'
+/
+EOF
+$ECHO "  running open_grid for diamond...\c"
+$OG_COMMAND < diamond.openg.sa.in > diamond.openg.sa.out
+$ECHO " done"
+
+$ECHO "  getting list of k-points from open_grid output...\c"
+grep -A64 List diamond.openg.sa.out|grep -v List > k_points.txt
+
+
+# Wannier90 to get nnkp
+cat > diamond.win << EOF
+num_wann        =  4 
+num_iter        = 20
+
+begin atoms_frac
+C   -0.2500  -0.250    -0.25000
+C    0.00000   0.0000     0.000000
+end atoms_frac
+
+begin projections
+f=0.0,0.0,0.0:s
+f=0.0,0.0,0.5:s
+f=0.0,0.5,0.0:s
+f=0.5,0.0,0.0:s
+end projections
+
+#begin unit_cell_cart
+#-1.613990   0.000000   1.613990
+# 0.000000   1.613990   1.613990
+#-1.613990   1.613990   0.000000
+#end unit_cell_cart
+
+begin unit_cell_cart
+bohr
+-3.050   0.000   3.050
+ 0.000   3.050   3.050
+-3.050   3.050   0.000 
+end_unit_cell_cart
+
+mp_grid : 4 4 4
+
+begin kpoints
+$(cat k_points.txt)
+end kpoints
+EOF
+
+# STANDALONE MODE
+$ECHO
+$ECHO "  <== Stand-alone Mode ==>\c"
+$ECHO
+
+mv diamond.win diamond.sa.win
+
+# run wannier90 to get nnkp file
+$ECHO "  running wannier90 -pp for diamond...\c"
+$WAN_COMMAND -pp diamond.sa
+$ECHO " done"
+
+# run pw2wannier90 to get overlap matrices
+cat > diamond.pw2wan.sa.in << EOF
+&inputpp 
+   outdir = '$TMP_DIR/'
+   prefix = 'di_open'
+   seedname = 'diamond.sa'
+   spin_component = 'none'
+   write_mmn = .true.
+   write_amn = .true.
+   write_unk = .false.
+   wan_mode = 'standalone'
+/
+EOF
+$ECHO "  running pw2wannier90 in stand-alone mode for diamond...\c"
+$PW2WAN_COMMAND < diamond.pw2wan.sa.in > diamond.pw2wan.sa.out
+$ECHO " done"
+
+# clean TMP_DIR
+#$ECHO "  cleaning $TMP_DIR...\c"
+#rm -rf $TMP_DIR/pwscf*
+#$ECHO " done"
+
+# run Wannier90 to obtain MLWFs
+$ECHO "  running wannier90 for diamond...\c"
+$WAN_COMMAND diamond.sa
+$ECHO " done"
+
+#########################################################
+# LIBRARY MODE
+########################################################
+#$ECHO
+#$ECHO "  <== Library Mode ==> \c"
+#$ECHO
+
+cp diamond.sa.win diamond.lib.win
+
+# run pw2wannier90 to get overlap matrices
+cat > diamond.pw2wan.lib.in << EOF
+&inputpp 
+   outdir = '$TMP_DIR/'
+   prefix = 'di'
+   seedname = 'diamond.lib'
+   spin_component = 'none'
+   write_mmn = .true.
+   write_amn = .true.
+   write_unk = .false.
+   wan_mode = 'library'
+/
+EOF
+#$ECHO "  running pw2wannier90 in library mode for diamond...\c"
+#$PW2WAN_COMMAND < diamond.pw2wan.lib.in > diamond.pw2wan.lib.out
+#$ECHO " done"
+
+############################################################
+
+#clean TMP_DIR
+$ECHO
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/di.*
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"
+$ECHO

@@ -1595,7 +1595,7 @@ CONTAINS
       LOGICAL, EXTERNAL  :: matches
       !
       INTEGER                    :: i, ib
-      CHARACTER(len=5)           :: i_char
+      CHARACTER(len=6)           :: i_char
       CHARACTER(len=6), EXTERNAL :: int_to_char
       !
       !

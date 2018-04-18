@@ -8,73 +8,50 @@ include make.libs
 #
 
 IFLAGS   = -I../../include  -I../../UtilXlib/ 
-MODFLAGS = -I../../iotk/src -I../../UtilXlib/ -I../../Modules -I../../KS_Solvers/CG -I../../KS_Solvers/Davidson \
-           -I../../LAXlib -I../../FFTXlib  -I../../PW/src -I../../LR_Modules -I../../PHonon/PH \
-	   -I../../PP/src/ -I. -I../../wannier90-2.1.0/src/obj/
-
+MODFLAGS= $(BASEMOD_FLAGS) \
+          $(MOD_FLAG)../../PW/src \
+          $(MOD_FLAG)../../PHonon/PH \
+          $(MOD_FLAG)../../LR_Modules \
+          $(MOD_FLAG)../../wannier90-2.1.0/src/obj
 
 #
 # The above is in alphabetical order except when order matter during compilation
 #
 
 EPWOBJS = \
-transportcom.o \
+epwcom.o \
+constants_epw.o \
 io_epw.o \
 elph2.o \
+eliashbergcom.o \
+superconductivity.o \
+transportcom.o \
+transport.o \
 a2f.o \
 allocate_epwq.o \
 bcast_epw_input.o \
+bloch2wan.o \
 broyden.o \
 close_epw.o \
-constants_epw.o \
-create_mesh.o \
 createkmap.o \
 deallocate_epw.o \
-deallocate_eliashberg.o \
-distribution.o \
-dmebloch2wan.o \
-dmewan2bloch.o \
 dvanqq2.o \
 dvqpsi_us3.o \
 dvqpsi_us_only3.o \
-dynbloch2wan.o \
-dynwan2bloch.o \
 eliashberg.o \
-eliashbergcom.o \
-eliashberg_aniso_cont_raxis.o \
-eliashberg_aniso_iaxis.o \
-eliashberg_iso_cont_raxis.o \
-eliashberg_iso_iaxis.o \
-eliashberg_iso_raxis.o \
-eliashberg_pp.o \
-eliashberg_readfiles.o \
-eliashberg_setup.o \
-eliashberg_write.o \
 elphel2_shuffle.o \
 elphon_shuffle.o \
 elphon_shuffle_wrap.o \
-ephbloch2wane.o \
-ephbloch2wanp.o \
-ephwan2bloch.o \
-ephwan2bloch_mem.o \
-ephwan2blochp.o \
-ephwan2blochp_mem.o \
 ephwann_shuffle.o \
 ephwann_shuffle_mem.o \
-epwcom.o \
 epw_init.o \
 epw_readin.o \
 epw_setup.o \
 epw_summary.o \
 fermiwindow.o \
-gen_freqgrid.o \
 gmap_sym.o \
-hambloch2wan.o \
-hamwan2bloch.o \
+indabs.o \
 io_dyn_mat2.o \
-kernels_aniso_iaxis.o \
-kernels_iso_iaxis.o \
-kernels_raxis.o \
 kfold.o \
 kpointdivision.o \
 kpoint_grid_epw.o \
@@ -85,7 +62,6 @@ loadumat.o \
 nesting_fn.o \
 openfilepw.o \
 rgd_blk_epw_fine_mem.o \
-pade.o \
 plot_band.o \
 poolgather.o \
 print_clock_epw.o \
@@ -111,17 +87,12 @@ spectral_func_ph.o \
 spectral_func_pl.o \
 star_q2.o \
 stop_epw.o \
-vmebloch2wan.o \
-vmewan2bloch.o \
 wannierEPW.o \
 wannierize.o \
 pw2wan90epw.o \
+wan2bloch.o \
 wigner_seitz2.o \
 wigner_seitz.o \
-write_ephmat.o \
-iterativebte.o \
-transport_coeffs.o \
-scattering_rate.o \
 io_scattering.o \
 system_mem_usage.o
 

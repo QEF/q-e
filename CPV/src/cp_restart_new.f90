@@ -31,9 +31,8 @@ MODULE cp_restart_new
                           qexsd_init_forces,qexsd_init_stress, qexsd_xf,               &
                           qexsd_init_outputElectricField, input_obj => qexsd_input_obj
   USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, qexsd_fmt,&
-       qexsd_version
+       qexsd_version, create_directory
   USE io_base,   ONLY : write_wfc, read_wfc, write_rhog
-  USE xml_io_base,ONLY: create_directory
   !
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
@@ -334,8 +333,8 @@ MODULE cp_restart_new
 !-------------------------------------------------------------------------------
 ! ... BAND STRUCTURE
 !-------------------------------------------------------------------------------
-         CALL  qexsd_init_total_energy(output_obj%total_energy,enthal, 0.0_dp, eht,&
-              vave, exc, 0.0_dp, 0.0_dp, 0.0_dp)
+         CALL  qexsd_init_total_energy(output_obj%total_energy, ETOT = enthal , &
+                              EHART = eht, VTXC = vave, ETXC = exc )
 !-------------------------------------------------------------------------------
 ! ... BAND STRUCTURE
 !-------------------------------------------------------------------------------

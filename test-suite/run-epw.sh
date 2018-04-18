@@ -40,7 +40,7 @@ then
     cat $3
   fi
   echo "Gather results in save" 
-  python pp.py < pp.in
+  python ../../EPW/bin/pp.py < pp.in
 elif [[ "$1" == "3" ]]
 then
   echo "Running EPW ..."
@@ -60,7 +60,7 @@ then
     cat $3
   fi
   echo "Gather results in save" 
-  python pp.py < pp.in
+  python ../../EPW/bin/pp.py < pp.in
 fi
 
 #rm -f input_tmp.in

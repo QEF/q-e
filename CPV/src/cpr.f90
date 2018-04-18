@@ -18,7 +18,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        ndr, ndw, nomore, tsde, textfor,        &
                                        tortho, tnosee, tnosep, trane, tranp,   &
                                        tsdp, tcp, tcap, ampre, amprp, tnoseh,  &
-                                       tolp, ortho_eps, ortho_max
+                                       tolp, ortho_eps, ortho_max,             &
+                                       tfirst, tlast !moved here to make
+                                                     !autopilot work
   USE core,                     ONLY : rhoc
   USE uspp_param,               ONLY : nhm, nh, nvb, ish
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan, nlcc_any
@@ -106,7 +108,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE cp_autopilot,             ONLY : pilot
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
   USE orthogonalize_base,       ONLY : updatc
-  USE control_flags,            ONLY : force_pairing
+  USE control_flags,            ONLY : force_pairing, tprint
   USE mp,                       ONLY : mp_bcast, mp_sum
   USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, np_ortho, &
                                        me_ortho, ortho_comm, &
@@ -128,8 +130,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   ! ... control variables
   !
-  LOGICAL :: tfirst, tlast, tstop, tconv
-  LOGICAL :: tprint, tfile, tstdout
+  LOGICAL :: tstop, tconv
+  LOGICAL :: tfile, tstdout
     !  logical variable used to control printout
   !
   ! ... forces on ions
@@ -169,9 +171,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   enow     = 1.D9
   stress   = 0.0D0
   thstress   = 0.0D0
-  !
-  tfirst = .TRUE.
-  tlast  = .FALSE.
+  !  moved to control_flags.f90 (Modules)
+  !  tfirst = .TRUE.
+  !  tlast  = .FALSE.
   nacc   = 5
   !
   if (dft_is_meta()) then
@@ -213,7 +215,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      dt2bye   = dt2 / emass
      nfi     = nfi + 1
      tlast   = ( nfi == nomore ) .OR. tlast
-     tprint  = ( MOD( nfi, iprint ) == 0 ) .OR. tlast 
+     tprint  = ( MOD( nfi, iprint ) == 0 ) .OR. tlast !this can be set to .true. also by cp_autopilot in 'call pilot(nfi)', to compute velocities of the wfc in the last step of CG
      tfile   = ( MOD( nfi, iprint ) == 0 )
      tstdout = ( MOD( nfi, iprint_stdout ) == 0 ) .OR. tlast
      !
@@ -823,6 +825,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      END IF
      !
      ! ... now:  cm=c(t) c0=c(t+dt)
+     ! ... and, if tcg == .true.  :
+     ! ...    c0old=c(t),c0=c(t+dt)
      !
      tfirst = .FALSE.
      !

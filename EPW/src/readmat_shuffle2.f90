@@ -31,6 +31,7 @@
   USE io_global,        ONLY : ionode, stdout
   USE constants_epw,    ONLY : cone, czero, twopi, rydcm1
   USE io_epw,           ONLY : iudyn
+  USE wan2bloch,        ONLY : dynifc2blochc
   !
   implicit none
   !
@@ -633,7 +634,6 @@
   USE phcom,     ONLY : nq1, nq2, nq3
   USE io_global, ONLY : stdout
   USE io_epw,    ONLY : iunifc
-  USE constants_epw, ONLY :  czero
   USE noncollin_module, ONLY : noncolin, nspin_mag
   USE io_dyn_mat2,      ONLY : read_dyn_mat_param, read_dyn_mat_header,&
                                read_dyn_mat, read_ifc_xml, read_ifc_param
@@ -647,18 +647,16 @@
   !
   implicit none
   !
-  LOGICAL             :: exst, lpolar_, has_zstar
+  LOGICAL             :: lpolar_, has_zstar
   CHARACTER (len=80)  :: line
   CHARACTER(len=256)  :: tempfile
-  INTEGER             :: ipol, ios, i, j, m1,m2,m3, na,nb, &
+  INTEGER             :: ios, i, j, m1,m2,m3, na,nb, &
                          idum, ibid, jbid, nabid, nbbid, m1bid, m2bid, m3bid, &
                          ntyp_, nat_, ibrav_, ityp_(nat), nqs
   INTEGER, parameter  :: ntypx = 10
   REAL(kind=DP)       :: tau_(3,nat), alat, amass2(ntypx)
   CHARACTER(LEN=3), ALLOCATABLE :: atm(:)
   REAL(DP), ALLOCATABLE :: m_loc(:,:)
-  !! he magnetic moments of each atom
-  COMPLEX(kind=DP)    :: sumasr
   !
   WRITE(stdout,'(/5x,"Reading interatomic force constants"/)')
   CALL FLUSH(6)

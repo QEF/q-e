@@ -27,7 +27,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE ener,             ONLY : etot, ef
   USE force_mod,        ONLY : force
   USE io_files,         ONLY : prefix, tmp_dir, wfc_dir,  iunupdate, seqopn, &
-                               exit_file, iunexit, delete_if_present
+                               exit_file, delete_if_present
   USE path_io_units_module, ONLY : iunpath
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
   USE path_variables,   ONLY : pos, pes, grad_pes, dim1, pending_image, &

@@ -26,21 +26,20 @@
   USE io_global, ONLY : stdout
   USE io_epw,    ONLY : iospectral_sup, iospectral
   USE phcom,     ONLY : nmodes
-  USE epwcom,    ONLY : nbndsub, lrepmatf, fsthick, &
+  USE epwcom,    ONLY : nbndsub, fsthick, &
                         eptemp, ngaussw, degaussw, &
                         shortrange, nsmear, delta_smear, eps_acustic, &
                         efermi_read, fermi_energy, wmin_specfun,&
                         wmax_specfun, nw_specfun
   USE pwcom,     ONLY : nelec, ef, isk
-  USE cell_base, ONLY : tpiba2
   USE elph2,     ONLY : epf17, ibndmax, ibndmin, etf, &
-                        wkf, xqf, wqf, nkqf, nqtotf,   &
+                        wkf, xqf, nkqf, nqtotf,   &
                         nkf, wf, a_all, &
-                        dmef, gammai_all,gammar_all, efnew
+                        gammai_all,gammar_all, efnew
   USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, cone, ci
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_barrier, mp_sum
-  USE mp_global,     ONLY : me_pool, inter_pool_comm, ionode_id
+  USE mp_global,     ONLY : inter_pool_comm, ionode_id
   !
   implicit none
   !
@@ -59,8 +58,6 @@
   !! Counter on bands  
   INTEGER :: imode
   !! Counter on mode
-  INTEGER :: nrec
-  !! Record index for reading the e-f matrix
   INTEGER :: fermicount
   !! Number of states on the Fermi surface
   INTEGER :: ismear
@@ -76,8 +73,6 @@
   !! Phonon frequency on the fine grid
   REAL(kind=DP) :: ef0
   !! Fermi energy level
-  REAL(kind=DP) :: wgq
-  !! Bose occupation factor $n_{q\nu}(T)$
   REAL(kind=DP) :: wgkk
   !! Fermi-Dirac occupation factor $f_{nk}(T)$
   REAL(kind=DP) :: wgkq
@@ -94,10 +89,6 @@
   !! Temperature
   REAL(kind=DP) :: inv_eptemp0
   !! Inverse temperature
-  REAL(kind=DP) :: lambda_tot
-  !! El-ph coupling strength
-  REAL(kind=DP) :: lambda_tr_tot
-  !! Transport el-ph coupling strength
   REAL(kind=DP) :: inv_wq
   !! $frac{1}{2\omega_{q\nu}}$ defined for efficiency reasons  
   REAL(kind=DP) :: g2
@@ -110,16 +101,6 @@
   !! Current frequency
   REAL(kind=DP) :: dw
   !! Frequency intervals 
-  REAL(kind=DP) :: qsquared
-  !! q-point squared
-  REAL(kind=DP) :: eps0
-  !! Dielectric function \varepsilon_\inf
-  REAL(kind=DP) :: RTF
-  !! Resta Thomas-Fermi
-  REAL(kind=DP) :: qTF
-  !! q Thomas-Fermi
-  REAL(kind=DP) :: epsTF
-  !! Thomas-Fermi dielectric function
   REAL(kind=DP), EXTERNAL :: efermig
   !! Function to compute the Fermi energy 
   REAL(kind=DP), external :: dos_ef
@@ -248,7 +229,7 @@
                   .OR. abs(xqf (3, iq))> eps2 )) THEN
                  ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                  !     number, in which case its square will be a negative number. 
-                 g2 = (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp !* epsTF
+                 g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp ) !* epsTF
                ELSE
                  g2 = (abs(epf17 (jbnd, ibnd, imode, ik))**two)*inv_wq*g2_tmp !* epsTF
                ENDIF
@@ -383,8 +364,6 @@
   !
 100 FORMAT(5x,'Gaussian Broadening: ',f10.6,' eV, ngauss=',i4)
 101 FORMAT(5x,'DOS =',f10.6,' states/spin/eV/Unit Cell at Ef=',f10.6,' eV')
-103 FORMAT(5x,'iq = ',i7,'  w = ',f9.4,' eV   A(k,w) = ',e12.5,' meV^-1')
-104 FORMAT(5x,'E( ',i3,' )=',f12.4,' meV   Re[Pi]=',f12.4,' - ', f12.4, ' meV Im[Pi]=',f12.4,' meV Im[Pi-o]=',f12.4,' meV ')
 105 FORMAT(5x,'Omega( ',i3,' )=',f9.4,' eV   Re[Pi]=',f15.6,' meV Im[Pi]=',f15.6,' meV')
   !
   RETURN

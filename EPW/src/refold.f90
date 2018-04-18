@@ -33,12 +33,11 @@
 ! SP: Sucidal. Produce too much data. Only use for debugging. 
 !  USE control_flags, ONLY : iverbosity
   USE kfold
-  USE mp_global,     ONLY : my_pool_id,me_pool 
   !
   implicit none
-  integer :: ngm_g, mill_g( 3, ngm_g ), ig0, ig1, ig2, ig2_guess, i, j, k, &
+  INTEGER :: ngm_g, mill_g( 3, ngm_g ), ig0, ig1, ig2, ig2_guess, i, j, k, &
              notfound, indold, indnew, guess_skip,itoj(ngm_g),jtoi(ngm_g),ig1_use,ig2_use
-  logical :: tfound
+  LOGICAL :: tfound
   !
 !  IF (iverbosity.eq.1) then 
 !    WRITE(stdout,*) '  There are ',ng0vec,'inequivalent folding G_0 vectors'

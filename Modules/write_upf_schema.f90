@@ -357,11 +357,11 @@ CONTAINS
       !
       !
       CALL xml_NewElement(u, 'pp_mesh')
-      CALL xml_addAttribute(u, name='dx',   value = upf%dx )
-      CALL xml_addAttribute(u, name='mesh', value = upf%mesh)
-      CALL xml_addAttribute(u, name='xmin', value = upf%xmin,  fmt = 's16')
-      CALL xml_addAttribute(u, name='rmax', value = upf%rmax,  fmt = 's16')
-      CALL xml_addAttribute(u, name='zmesh',value = upf%zmesh, fmt = 's16')
+      IF ( upf%dx .GT. 0.d0)   CALL xml_addAttribute(u, name='dx', value = upf%dx , fmt = 's16')
+      IF ( upf%mesh .GT. 0 )   CALL xml_addAttribute(u, name='mesh', value = upf%mesh)
+      IF (upf%dx  .GT. 0.d0) CALL xml_addAttribute(u, name='xmin', value = upf%xmin,  fmt = 's16')
+      IF (upf%rmax  .GT. 0.d0) CALL xml_addAttribute(u, name='rmax', value = upf%rmax,  fmt = 's16')
+      IF (upf%zmesh .GT.0.d0 )CALL xml_addAttribute(u, name='zmesh',value = upf%zmesh, fmt = 's16')
 
       CALL xml_NewElement(u, 'pp_r' ) 
          DO irow =1, upf%mesh, 4

@@ -57,7 +57,8 @@
                             title, int_mob, scissor, iterative_bte, scattering, &
                             ncarrier, carrier, scattering_serta, restart, restart_freq, &
                             scattering_0rta, longrange, shortrange, scatread, &
-                            restart_filq, prtgkk, nel, meff, epsiHEG
+                            restart_filq, prtgkk, nel, meff, epsiHEG, lphase, &
+                            omegamin, omegamax, omegastep, n_r, lindabs
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV
@@ -68,7 +69,7 @@
   USE partial,       ONLY : atomo, nat_todo
   USE constants,     ONLY : AMU_RY
   USE mp_global,     ONLY : my_pool_id, me_pool
-  USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode, ionode_id, stdout
+  USE io_global,     ONLY : meta_ionode, meta_ionode_id
 #if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
@@ -121,7 +122,8 @@
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         & 
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
-       scatread, restart, restart_freq, restart_filq, prtgkk, nel, meff, epsiHEG
+       scatread, restart, restart_freq, restart_filq, prtgkk, nel, meff,       &
+       epsiHEG, lphase, omegamin, omegamax, omegastep, n_r, lindabs
 
   ! tphases, fildvscf0
   !
@@ -278,10 +280,14 @@
   ! nel             : Fractional number of electrons in the unit cell
   ! meff            : Density of state effective mass (in unit of the electron mass)
   ! epsiHEG         : Dielectric constant at zero doping
+  ! lphase          : If .true., fix the gauge on the phonon eigenvectors and electronic eigenvectors - DS 
   !  
-  CHARACTER (LEN=80)  :: input_file
-  INTEGER             :: nargs, iiarg, ierr
-  !
+  ! Added by Manos Kioupakis
+  ! omegamin  : Photon energy minimum
+  ! omegamax  : Photon energy maximum
+  ! omegastep : Photon energy step in evaluating phonon-assisted absorption spectra (in eV)
+  ! n_r       :  constant refractive index
+  ! lindabs   : do phonon-assisted absorption
   nk1tmp = 0
   nk2tmp = 0
   nk3tmp = 0
@@ -464,7 +470,13 @@
   prtgkk     = .false.
   nel        = 0.0d0
   meff       = 1.d0
-  epsiHEG    = 1.d0
+  epsiHEG    = 1.d0 
+  lphase     = .false. 
+  omegamin   = 0.d0  ! eV
+  omegamax   = 10.d0 ! eV
+  omegastep  = 1.d0  ! eV
+  n_r        = 1.d0
+  lindabs    = .false.
   !
   !     reading the namelist inputepw
   !
@@ -647,6 +659,11 @@
   ! scissor going from eV to Ryd
   scissor = scissor / ryd2ev
   ! 
+  ! Photon energies for indirect absorption from eV to Ryd
+  omegamin = omegamin / ryd2ev
+  omegamax = omegamax / ryd2ev
+  omegastep = omegastep / ryd2ev
+  
   IF ( scattering ) THEN
     DO i = 1, ntempxx
       IF (temps(i) .gt. 0.d0) THEN
@@ -727,7 +744,6 @@
   IF (nat_todo.NE.0) THEN
      IF (meta_ionode)read (5, *, iostat = ios) (atomo (na), na = 1, nat_todo)
      CALL mp_bcast(ios, meta_ionode_id, world_comm  )
-700  CALL errore ('epw_readin', 'reading atomo', abs (ios) )
      CALL mp_bcast(atomo, meta_ionode_id, world_comm )
   ENDIF
 800 continue
