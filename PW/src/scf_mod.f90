@@ -72,6 +72,9 @@ MODULE scf
        vrs(:,:),       &! the total pot. in real space (smooth grid)
        rho_core(:),    &! the core charge in real space
        kedtau(:,:)      ! position dependent kinetic energy enhancement factor
+#if defined(__CUDA)
+       attributes(pinned) :: vrs
+#endif
   COMPLEX(DP), ALLOCATABLE :: &
        rhog_core(:)     ! the core charge in reciprocal space
 

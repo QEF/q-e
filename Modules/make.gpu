@@ -1,0 +1,4 @@
+MODULES += \
+  fbuf.o \
+  buffers_module.o \
+  wavefunctions_gpu.o

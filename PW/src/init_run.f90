@@ -33,8 +33,10 @@ SUBROUTINE init_run()
   USE esm,                ONLY : do_comp_esm, esm_init
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
+  USE buffers_module,     ONLY : buffer
   !
   IMPLICIT NONE
+  INTEGER :: ierr
   !
   CALL start_clock( 'init_run' )
   !
@@ -50,6 +52,10 @@ SUBROUTINE init_run()
   !
   CALL summary()
   CALL memory_report()
+  !
+  ! ... allocate GPU buffers
+  !
+  CALL buffer%init(10, ierr)
   !
   ! ... allocate memory for G- and R-space fft arrays
   !

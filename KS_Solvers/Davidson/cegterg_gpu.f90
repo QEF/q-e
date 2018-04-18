@@ -281,7 +281,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !END DO
      ! ========= TO HERE, REPLACED BY =======
 
-     CALL reorder_evals_evecs(nbase, nvec, nvecx, conv, e_d, ew_d, vc_d)
+     CALL reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew_d, vc_d)
      !
      nb1 = nbase + 1
      !
@@ -608,62 +608,62 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   RETURN
   !
-  CONTAINS
-     SUBROUTINE reorder_evals_evecs(nbase, nvec, nvecx, conv, e_d, ew_d, v_d)
-       USE david_param,   ONLY : DP
-       USE david_buffer,  ONLY : buffer
-       implicit none
-       INTEGER, INTENT(IN) :: nbase, nvec, nvecx
-       LOGICAL, INTENT(IN) :: conv(nvec)
-       REAL(DP), DEVICE :: e_d(nvecx), ew_d(nvecx)
-       COMPLEX(DP), DEVICE :: v_d(nvecx,nvecx)
-       !
-       INTEGER :: n, np, info
-       INTEGER, ALLOCATABLE :: conv_idx(:)
-       INTEGER, DEVICE, POINTER :: conv_idx_d(:)
-       COMPLEX(DP), DEVICE, POINTER :: vtmp_d(:,:)
-       !
-       np = 0
-       ALLOCATE(conv_idx(nvec))
-       DO n = 1, nvec
-          conv_idx(n) = -1
-          IF ( .NOT. conv(n) ) THEN
-             np = np + 1
-             conv_idx(n) = np
-          END IF
-       END DO
-
-       IF (.not. buffer%is_initialized) CALL buffer%init(3, info)
-
-       CALL buffer%lock_buffer(conv_idx_d, nvec, info)
-       CALL buffer%lock_buffer(vtmp_d, (/nvecx, nvecx/), info)
-
-       conv_idx_d(1:nvec) = conv_idx(1:nvec)
-
-!$cuf kernel do(2) <<<*,*>>>
-       DO j=1,nvec
-          DO k=1,nvecx
-             vtmp_d(k,j) = v_d(k,j)
-          END DO
-       END DO
-
-!$cuf kernel do(2) <<<*,*>>>
-       DO j=1,nvec
-          DO k=1,nvecx
-             IF(conv_idx_d(j) /= -1) THEN
-               v_d(k,conv_idx_d(j)) = vtmp_d(k,j)
-               IF(k==1) ew_d(nbase+conv_idx_d(j)) = e_d(j)
-             END IF
-          END DO
-       END DO
-       !
-       CALL buffer%release_buffer(conv_idx_d, info)
-       CALL buffer%release_buffer(vtmp_d, info)
-       !
-       DEALLOCATE(conv_idx)
-    END SUBROUTINE
-
 END SUBROUTINE cegterg_gpu
+
+SUBROUTINE reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew_d, v_d)
+   USE david_param,   ONLY : DP
+   USE david_buffer,  ONLY : buffer
+   implicit none
+   INTEGER, INTENT(IN) :: nbase, nvec, nvecx
+   LOGICAL, INTENT(IN) :: conv(nvec)
+   REAL(DP), DEVICE :: e_d(nvecx), ew_d(nvecx)
+   COMPLEX(DP), DEVICE :: v_d(nvecx,nvecx)
+   !
+   INTEGER :: j, k, n, np, info
+   INTEGER, ALLOCATABLE :: conv_idx(:)
+   INTEGER, DEVICE, POINTER :: conv_idx_d(:)
+   COMPLEX(DP), DEVICE, POINTER :: vtmp_d(:,:)
+   !
+   np = 0
+   ALLOCATE(conv_idx(nvec))
+   DO n = 1, nvec
+      conv_idx(n) = -1
+      IF ( .NOT. conv(n) ) THEN
+         np = np + 1
+         conv_idx(n) = np
+      END IF
+   END DO
+
+   IF (.not. buffer%is_initialized) CALL buffer%init(3, info)
+
+   CALL buffer%lock_buffer(conv_idx_d, nvec, info)
+   CALL buffer%lock_buffer(vtmp_d, (/nvecx, nvecx/), info)
+
+   conv_idx_d(1:nvec) = conv_idx(1:nvec)
+
+!$cuf kernel do(2) <<<*,*>>>
+   DO j=1,nvec
+      DO k=1,nvecx
+         vtmp_d(k,j) = v_d(k,j)
+      END DO
+   END DO
+
+!$cuf kernel do(2) <<<*,*>>>
+   DO j=1,nvec
+      DO k=1,nvecx
+         IF(conv_idx_d(j) /= -1) THEN
+           v_d(k,conv_idx_d(j)) = vtmp_d(k,j)
+           IF(k==1) ew_d(nbase+conv_idx_d(j)) = e_d(j)
+         END IF
+      END DO
+   END DO
+   !
+   CALL buffer%release_buffer(conv_idx_d, info)
+   CALL buffer%release_buffer(vtmp_d, info)
+   !
+   DEALLOCATE(conv_idx)
+END SUBROUTINE reorder_evals_cevecs
+
 !
 !  Wrapper for subroutine with distributed matrixes (written by Carlo Cavazzoni)
 !

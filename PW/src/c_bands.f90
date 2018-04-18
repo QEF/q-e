@@ -163,6 +163,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag
+  USE g_psi_mod_gpum,       ONLY : using_h_diag, using_s_diag
   USE scf,                  ONLY : v_of_0
   USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel,&
                                    gdir, l3dstring, efield, efield_cry
@@ -208,6 +209,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 ! In addition to the above ithe initial wfc rotation uses h_psi, and s_psi
 
   ALLOCATE( h_diag( npwx, npol ), STAT=ierr )
+  call using_h_diag(.true.); call using_s_diag(.true.)
   IF( ierr /= 0 ) &
      CALL errore( ' diag_bands ', ' cannot allocate h_diag ', ABS(ierr) )
   !
@@ -240,6 +242,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   CALL deallocate_bec_type ( becp )
   DEALLOCATE( s_diag )
   DEALLOCATE( h_diag )
+  call using_h_diag(.true.); call using_s_diag(.true.)
   !
   IF ( notconv > MAX( 5, nbnd / 4 ) ) THEN
      !
@@ -278,6 +281,7 @@ CONTAINS
           h_diag(ig,1) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
           !
        END FORALL
+       call using_h_diag(.true.)
        !
        ntry = 0
        !
@@ -318,6 +322,7 @@ CONTAINS
        h_diag(1:npw, 1) = g2kin(1:npw) + v_of_0
        !
        CALL usnldiag( npw, h_diag, s_diag )
+       call using_h_diag(.true.); call using_s_diag(.true.);
        !
        ntry = 0
        !
@@ -438,6 +443,7 @@ CONTAINS
           h_diag(ig,:) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
           !
        END FORALL
+       call using_h_diag(.true.);
        !
        ntry = 0
        !
@@ -482,6 +488,7 @@ CONTAINS
        END DO
        !
        CALL usnldiag( npw, h_diag, s_diag )
+       call using_h_diag(.true.); call using_s_diag(.true.);
        !
        ntry = 0
        !

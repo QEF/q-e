@@ -212,6 +212,9 @@ MODULE wvfct
        et(:,:),          &! eigenvalues of the hamiltonian
        wg(:,:),          &! the weight of each k point and band
        g2kin(:)           ! kinetic energy
+#if defined(__CUDA)
+       attributes(pinned) :: g2kin
+#endif
   INTEGER, ALLOCATABLE :: &
        btype(:,:)         ! one if the corresponding state has to be
                           ! converged to full accuracy, zero otherwise

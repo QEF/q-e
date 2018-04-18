@@ -16,6 +16,7 @@ subroutine g_psi (lda, n, m, npol, psi, e)
   !
   USE kinds
   USE g_psi_mod
+  USE g_psi_mod_gpum, ONLY : using_h_diag, using_s_diag
   implicit none
   integer :: lda, n, m, npol, ipol
   ! input: the leading dimension of psi
@@ -37,6 +38,7 @@ subroutine g_psi (lda, n, m, npol, psi, e)
   ! counter on psi functions
   ! counter on G vectors
   !
+  call using_h_diag(.false.); call using_s_diag(.false.)
   call start_clock ('g_psi')
   !
 #ifdef TEST_NEW_PRECONDITIONING

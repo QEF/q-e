@@ -162,6 +162,8 @@ w0gauss.o \
 w1gauss.o \
 deviatoric.o
 
+-include make.gpu
+
 TLDEPS=libfft
 
 all : libqemod.a
