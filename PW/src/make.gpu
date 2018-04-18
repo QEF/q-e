@@ -5,4 +5,5 @@ PWLIBS += \
   s_psi_gpu.o \
   vloc_psi_gpu.o
 
+g_psi_mod_gpu.o : g_psi_mod.o
 c_bands.o : g_psi_mod_gpu.o
