@@ -229,6 +229,7 @@ pw_dot.o : kind.o
 pw_dot.o : mp_global.o
 pw_dot.o : recvec.o
 qeh5_module.o : kind.o
+qes_libs.o : kind.o
 qes_libs.o : qes_types.o
 qes_module.o : ../iotk/src/iotk_module.o
 qes_module.o : qes_libs.o
@@ -260,7 +261,6 @@ qexsd.o : qes_module.o
 qexsd.o : qes_types.o
 qexsd.o : version.o
 qexsd_input.o : ../iotk/src/iotk_base.o
-qexsd_input.o : ../iotk/src/iotk_module.o
 qexsd_input.o : constants.o
 qexsd_input.o : input_parameters.o
 qexsd_input.o : kind.o
