@@ -275,9 +275,9 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL buffer%lock_buffer( tg_v_d,    v_siz, ierr )
      CALL buffer%lock_buffer( tg_psic_d, v_siz, ierr )
      !
-     CALL tg_gather( dffts, v_d, tg_v_d )
+     CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock ('vloc_psi:tg_gather')
-
+     !
   ENDIF
   CALL buffer%lock_buffer( dffts_nl_d, size(dffts%nl) , ierr )
   CALL buffer%lock_buffer( igk_k_d, n, ierr )
@@ -461,11 +461,11 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
      IF (domag) THEN
         ALLOCATE( tg_v_d( v_siz, 4 ) )
         DO is=1,nspin
-           CALL tg_gather( dffts, v_d(:,is), tg_v_d(:,is) )
+           CALL tg_gather_gpu( dffts, v_d(:,is), tg_v_d(:,is) )
         ENDDO
      ELSE
         ALLOCATE( tg_v_d( v_siz, 1 ) )
-        CALL tg_gather( dffts, v_d(:,1), tg_v_d(:,1) )
+        CALL tg_gather_gpu( dffts, v_d(:,1), tg_v_d(:,1) )
      ENDIF
      ALLOCATE( tg_psic_d( v_siz, npol ) )
      CALL stop_clock ('vloc_psi:tg_gather')
