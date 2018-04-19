@@ -6430,24 +6430,24 @@ MODULE qes_read_module
        obj%dipole_correction_ispresent = .FALSE.
     END IF
     !
-    tmp_node_list => getElementsByTagname(xml_node, "gate_correction")
+    tmp_node_list => getElementsByTagname(xml_node, "gate_settings")
     tmp_node_list_size = getLength(tmp_node_list)
     !
     IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:electric_fieldType","gate_correction: too many occurrences")
+           CALL infomsg("qes_read:electric_fieldType","gate_settings: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:electric_fieldType","gate_correction: too many occurrences",10)
+           CALL errore("qes_read:electric_fieldType","gate_settings: too many occurrences",10)
         END IF
     END IF
     !
     IF (tmp_node_list_size>0) THEN
-      obj%gate_correction_ispresent = .TRUE.
+      obj%gate_settings_ispresent = .TRUE.
       tmp_node => item(tmp_node_list, 0)
-      CALL qes_read_gate_settings(tmp_node, obj%gate_correction, ierr )
+      CALL qes_read_gate_settings(tmp_node, obj%gate_settings, ierr )
     ELSE
-       obj%gate_correction_ispresent = .FALSE.
+       obj%gate_settings_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "electric_field_direction")

@@ -1,6 +1,5 @@
 &control
    calculation = 'vc-relax'
-   prefix='graphite',
    tstress = .true.
    tprnfor = .true.
    forc_conv_thr = 1.0D-3

@@ -1103,8 +1103,8 @@ MODULE qes_types_module
     CHARACTER(len=256) :: electric_potential
     LOGICAL  :: dipole_correction_ispresent = .FALSE.
     LOGICAL :: dipole_correction
-    LOGICAL  :: gate_correction_ispresent = .FALSE.
-    TYPE(gate_settings_type) :: gate_correction
+    LOGICAL  :: gate_settings_ispresent = .FALSE.
+    TYPE(gate_settings_type) :: gate_settings
     LOGICAL  :: electric_field_direction_ispresent = .FALSE.
     INTEGER :: electric_field_direction
     LOGICAL  :: potential_max_position_ispresent = .FALSE.

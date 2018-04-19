@@ -3993,7 +3993,7 @@ SUBROUTINE qes_write_electric_field(xp, obj)
             CALL xml_addCharacters(xp, obj%n_berry_cycles)
          CALL xml_EndElement(xp, 'n_berry_cycles')
       ENDIF
-      IF ( obj%gate_correction_ispresent) CALL qes_write_gate_settings(xp, obj%gate_correction) 
+      IF ( obj%gate_settings_ispresent) CALL qes_write_gate_settings(xp, obj%gate_settings) 
       !
    CALL xml_EndElement(xp, TRIM(obj%tagname))
    !
@@ -4068,8 +4068,8 @@ SUBROUTINE qes_init_electric_field(obj, tagname, electric_potential, &
    IF(obj%n_berry_cycles_ispresent) THEN
       obj%n_berry_cycles = n_berry_cycles
    ENDIF
-   obj%gate_correction_ispresent = PRESENT( gate_settings) 
-   IF ( obj%gate_correction_ispresent ) obj%gate_correction = gate_settings 
+   obj%gate_settings_ispresent = PRESENT( gate_settings) 
+   IF ( obj%gate_settings_ispresent ) obj%gate_settings = gate_settings 
 END SUBROUTINE qes_init_electric_field
 
 SUBROUTINE qes_reset_electric_field(obj)
@@ -4104,9 +4104,9 @@ SUBROUTINE qes_reset_electric_field(obj)
    IF(obj%n_berry_cycles_ispresent) THEN
       obj%n_berry_cycles_ispresent = .FALSE.
    ENDIF
-   IF (obj%gate_correction_ispresent) THEN
-      obj%gate_correction_ispresent = .FALSE.
-      CALL qes_reset_gate_settings(obj%gate_correction) 
+   IF (obj%gate_settings_ispresent) THEN
+      obj%gate_settings_ispresent = .FALSE.
+      CALL qes_reset_gate_settings(obj%gate_settings) 
    END IF
 END SUBROUTINE qes_reset_electric_field
 
