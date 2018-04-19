@@ -1235,7 +1235,7 @@ CONTAINS
     TYPE(outputElectricField_type)                    :: obj 
     ! 
     LOGICAL,INTENT(IN)                                :: lberry, lelfield, tefield, ldipole
-    REAL(DP),OPTIONAL,DIMENSION(3),INTENT(IN)         :: el_pol, ion_pol
+    REAL(DP),OPTIONAL,INTENT(IN)                      :: el_pol(:), ion_pol(:)
     TYPE(berryPhaseOutput_type),OPTIONAL,INTENT(IN)   :: bp_obj
     TYPE ( dipoleOutput_type ),OPTIONAL, INTENT(IN)   :: dipole_obj 
     TYPE ( gateInfo_type),OPTIONAL,INTENT(IN)         :: gateInfo
