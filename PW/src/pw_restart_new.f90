@@ -467,7 +467,8 @@ MODULE pw_restart_new
             dipol_ptr => dipol_obj
          END IF
          IF ( lberry ) bp_obj_ptr => bp_obj_ptr
-         CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
+         IF (output%electric_field_ispresent) &
+            CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
                  lberry, BP_OBJ = bp_obj_ptr, EL_POL = bp_el_pol, ION_POL = bp_ion_pol,          &
                  GATEINFO = gate_info_ptr, DIPOLE_OBJ =  dipol_ptr) 
          !
