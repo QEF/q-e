@@ -1354,15 +1354,15 @@ MODULE pw_restart_new
          ELSE 
             eamp = 1.d-3
          END IF
-         IF (efield_obj%gate_correction_ispresent) THEN 
-            gate = efield_obj%gate_correction%use_gate
-            IF (efield_obj%gate_correction%zgate_ispresent) zgate     = efield_obj%gate_correction%zgate
-            IF (efield_obj%gate_correction%relaxz_ispresent) relaxz   = efield_obj%gate_correction%relaxz
-            IF (efield_obj%gate_correction%block_ispresent) block     = efield_obj%gate_correction%block
-            IF (efield_obj%gate_correction%block_1_ispresent) block_1 = efield_obj%gate_correction%block_1
-            IF (efield_obj%gate_correction%block_2_ispresent) block_2 = efield_obj%gate_correction%block_2
-            IF (efield_obj%gate_correction%block_height_ispresent) &
-                                                         block_height = efield_obj%gate_correction%block_height
+         IF (efield_obj%gate_settings_ispresent) THEN 
+            gate = efield_obj%gate_settings%use_gate
+            IF (efield_obj%gate_settings%zgate_ispresent) zgate     = efield_obj%gate_settings%zgate
+            IF (efield_obj%gate_settings%relaxz_ispresent) relaxz   = efield_obj%gate_settings%relaxz
+            IF (efield_obj%gate_settings%block_ispresent) block     = efield_obj%gate_settings%block
+            IF (efield_obj%gate_settings%block_1_ispresent) block_1 = efield_obj%gate_settings%block_1
+            IF (efield_obj%gate_settings%block_2_ispresent) block_2 = efield_obj%gate_settings%block_2
+            IF (efield_obj%gate_settings%block_height_ispresent) &
+                                                         block_height = efield_obj%gate_settings%block_height
          END IF 
       END IF 
       !
