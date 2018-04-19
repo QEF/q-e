@@ -252,7 +252,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
              END DO
           END IF
        END DO
-       ps_d = ps
+       ps_d ( 1:nkb, 1:m_max ) = ps( 1:nkb, 1:m_max )
        vkb_d(1:lda, 1:nkb) = vkb(1:lda,1:nkb)
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
@@ -345,7 +345,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
              DEALLOCATE (qqc)
           END IF
        END DO
-       ps_d = ps
+       ps_d(1:nkb, 1:m )   = ps(1:nkb, 1:m )
        vkb_d(1:lda, 1:nkb) = vkb(1:lda,1:nkb)
        !
        IF ( m == 1 ) THEN
@@ -430,7 +430,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        CALL buffer%lock_buffer(ps_d, (/ nkb,npol,m /), ierr)
        CALL buffer%lock_buffer(vkb_d, (/ lda, nkb /), ierr)
        
-       ps_d = ps
+       ps_d(1:nkb,1:npol,1:m) = ps(1:nkb,1:npol,1:m)
        vkb_d(1:lda, 1:nkb) = vkb(1:lda,1:nkb)
        
        
