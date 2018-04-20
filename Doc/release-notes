@@ -12,6 +12,14 @@ New in development version:
 
 Problems fixed in development version:
 
+  * Reading of starting wavefunctions from file, including restart case,
+    wasn't always working as expected. This might be at the origin of
+    mysterious "davcio errors" (April 18, 2018)
+
+  * Parameters for electric fields were not saved to the new XML file, tus
+    breaking some forms of postprocessing (noticed by Thomas Brumme and 
+    Giovanni Cantele, fixed April 18, 2018)
+
   * LDA+U for spin-orbit (kind=1) was crashing for one k-point, trying to read
     data not previously saved (noticed by Christof Wolf, Feb 8, 2018)
 

@@ -60,27 +60,19 @@ SUBROUTINE wfcinit()
   !
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
   !
+  IF ( TRIM(starting_wfc) == 'file') THEN
+#if defined(__OLDXML)
   ! ... now the various possible wavefunction initializations
   ! ... first a check: is "tmp_dir"/"prefix".wfc found on disk?
   !
-  IF ( TRIM(starting_wfc) == 'file' .AND. .NOT. exst_file) THEN
+  IF ( .NOT. exst_file) THEN
      !
      ! ... "tmp_dir"/"prefix".wfc not found on disk: try to read
      ! ... wavefunctions in "collected" format from "prefix".save/, 
      ! ... rewrite them (in pw_readfile) using the internal format
      !
      ierr = 1
-#if defined(__OLDXML)
      CALL pw_readfile( 'wave', ierr )
-#else
-     CALL pw_readschema_file(IERR = ierr, RESTART_OUTPUT = output_obj )
-     IF ( ierr == 0 ) THEN 
-        twfcollect_file = output_obj%band_structure%wf_collected   
-        dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/' 
-        IF ( twfcollect_file ) CALL read_collected_to_evc(dirname )
-     END IF 
-     CALL qes_reset_output ( output_obj ) 
-#endif
      IF ( ierr > 0 ) THEN
         WRITE( stdout, '(5X,"Cannot read wfc : file not found")' )
         starting_wfc = 'atomic+random'
@@ -91,7 +83,7 @@ SUBROUTINE wfcinit()
      !
      IF ( nks == 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, 1 )
      !
-  ELSE IF ( TRIM(starting_wfc) == 'file' .AND. exst_file) THEN
+  ELSE
      !
      ! ... wavefunctions are read from file (or buffer) in routine 
      ! ... c_bands, but not if there is a single k-point. In such
@@ -106,35 +98,63 @@ SUBROUTINE wfcinit()
      END IF
      !
   END IF
+#else
+  CALL pw_readschema_file(IERR = ierr, RESTART_OUTPUT = output_obj )
+  IF ( ierr == 0 ) THEN 
+     twfcollect_file = output_obj%band_structure%wf_collected   
+     dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/' 
+     IF ( twfcollect_file ) THEN
+        CALL read_collected_to_evc(dirname )
+     ELSE IF ( .NOT. exst_file) THEN
+        WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
+        starting_wfc = 'atomic+random'
+     ELSE
+        !
+        ! ... wavefunctions are read from file (or buffer) not here but
+        !  ...in routine c_bands. If however there is a single k-point,
+        ! ... c_bands doesn't read wavefunctions, so we read them here
+        ! ... (directly from file to avoid a useless buffer allocation)
+        !
+        IF ( nks == 1 ) THEN
+           inquire (unit = iunwfc, opened = opnd_file)
+           if (.not.opnd_file) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+           CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
+           if(.not.opnd_file) CLOSE ( UNIT=iunwfc, STATUS='keep' )
+        END IF
+     END IF
+  END IF 
+  CALL qes_reset_output ( output_obj ) 
+#endif
+  END IF
   !
   ! ... state what will happen
   !
   IF ( TRIM(starting_wfc) == 'file' ) THEN
      !
-     WRITE( stdout, '(5X,"Starting wfc from file")' )
+     WRITE( stdout, '(5X,"Starting wfcs from file")' )
      !
   ELSE IF ( starting_wfc == 'atomic' ) THEN
      !
      IF ( natomwfc >= nbnd ) THEN
-        WRITE( stdout, '(5X,"Starting wfc are ",I4," atomic wfcs")' ) natomwfc
+        WRITE( stdout, '(5X,"Starting wfcs are ",I4," atomic wfcs")' ) natomwfc
      ELSE
-        WRITE( stdout, '(5X,"Starting wfc are ",I4," atomic + ", &
-             &           I4," random wfc")' ) natomwfc, nbnd-natomwfc
+        WRITE( stdout, '(5X,"Starting wfcs are ",I4," atomic + ", &
+             &           I4," random wfcs")' ) natomwfc, nbnd-natomwfc
      END IF
      !
   ELSE IF ( TRIM(starting_wfc) == 'atomic+random' .AND. natomwfc > 0) THEN
      !
      IF ( natomwfc >= nbnd ) THEN
-        WRITE( stdout, '(5X,"Starting wfc are ",I4," randomized atomic wfcs")')&
+        WRITE( stdout, '(5X,"Starting wfcs are ",I4," randomized atomic wfcs")')&
              natomwfc
      ELSE
-        WRITE( stdout, '(5X,"Starting wfc are ",I4," randomized atomic wfcs + "&
-             &          ,I4," random wfc")' ) natomwfc, nbnd-natomwfc
+        WRITE( stdout, '(5X,"Starting wfcs are ",I4," randomized atomic wfcs + "&
+             &          ,I4," random wfcs")' ) natomwfc, nbnd-natomwfc
      END IF
      !
   ELSE
      !
-     WRITE( stdout, '(5X,"Starting wfc are random")' )
+     WRITE( stdout, '(5X,"Starting wfcs are random")' )
      !
   END IF
   !
@@ -149,7 +169,7 @@ SUBROUTINE wfcinit()
      !
   END IF
   !
-  ! ... calculate and write all starting wavefunctions to file
+  ! ... calculate and write all starting wavefunctions to buffer
   !
   DO ik = 1, nks
      !
