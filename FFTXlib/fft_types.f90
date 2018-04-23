@@ -13,7 +13,9 @@ MODULE fft_types
 
   USE fft_support, ONLY : good_fft_order, good_fft_dimension
   USE fft_param
-
+#if defined(__CUDA)
+  USE fftx_buffers, ONLY : cpu_buffer, gpu_buffer
+#endif
   IMPLICIT NONE
   PRIVATE
   SAVE

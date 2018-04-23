@@ -41,6 +41,7 @@ fft_support.o : fft_param.o
 fft_types.o : fft_param.o
 fft_types.o : fft_support.o
 fft_types.o : stick_base.o
+fft_types.o : fbuf2.o
 scatter_mod.o : fft_param.o
 scatter_mod.o : fft_types.o
 stick_base.o : fft_param.o
