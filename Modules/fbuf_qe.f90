@@ -14,7 +14,7 @@ module fbuf_qe
 
 
   private
-  public :: buf_t
+  public :: bufqe_t
 
   !
   integer, device, allocatable, target  :: data_iv0_d(:)
@@ -388,7 +388,7 @@ module fbuf_qe
 
 
 !> The main **fbuf** class.
-  type :: buf_t
+  type :: bufqe_t
      logical :: is_initialized = .false.             !< Logical, tells if initialization has been done
      integer :: nbufs = 10
      logical :: verbose = .false.
@@ -446,7 +446,7 @@ contains
   !> Initialize the class selecting the device type.
   subroutine init(this, n, info, verbose)
     implicit none
-    class(buf_t),  intent(inout) :: this     !< The class.
+    class(bufqe_t),  intent(inout) :: this     !< The class.
     integer,       intent(in)  :: n       !< Wether device can be the host itself
     integer,       intent(out) :: info    !< Error reporting.
                                           !<  0: ok
@@ -570,7 +570,7 @@ contains
   end subroutine init
   subroutine clean(this)
     implicit none
-    type(buf_t) :: this     !< The class.
+    type(bufqe_t) :: this     !< The class.
     integer :: i
     if (this%verbose) write (*, '("Cleaning ", I2, " buffers")') this%nbufs
       if (allocated( data_iv0_d ) ) deallocate( data_iv0_d )
@@ -772,7 +772,7 @@ contains
   subroutine lock_buffer_iv(this, p, vsize, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     integer, device, pointer, intent(out) :: p(:)   !< Pointer possibly set to access buffer
     integer,       intent(in) :: vsize    !< vector dimension
     integer,       intent(out) :: info    !<  0: ok
@@ -1094,7 +1094,7 @@ contains
   subroutine lock_buffer_im(this, p, msize, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     integer, device, pointer, intent(out) :: p(:,:)   !< Pointer possibly set to access buffer
     integer,       intent(in) :: msize(2)    !< matrix dimension
     integer,       intent(out) :: info    !<  0: ok
@@ -1436,7 +1436,7 @@ contains
   subroutine lock_buffer_it(this, p, tsize, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     integer, device, pointer, intent(out) :: p(:,:,:)   !< Pointer possibly set to access buffer
     integer,       intent(in) :: tsize(3)    !< tensor dimension
     integer,       intent(out) :: info    !<  0: ok
@@ -1798,7 +1798,7 @@ contains
   subroutine lock_buffer_rv(this, p, vsize, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     real(DP), device, pointer, intent(out) :: p(:)   !< Pointer possibly set to access buffer
     integer,       intent(in) :: vsize    !< vector dimension
     integer,       intent(out) :: info    !<  0: ok
@@ -2120,7 +2120,7 @@ contains
   subroutine lock_buffer_rm(this, p, msize, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     real(DP), device, pointer, intent(out) :: p(:,:)   !< Pointer possibly set to access buffer
     integer,       intent(in) :: msize(2)    !< matrix dimension
     integer,       intent(out) :: info    !<  0: ok
@@ -2462,7 +2462,7 @@ contains
   subroutine lock_buffer_rt(this, p, tsize, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     real(DP), device, pointer, intent(out) :: p(:,:,:)   !< Pointer possibly set to access buffer
     integer,       intent(in) :: tsize(3)    !< tensor dimension
     integer,       intent(out) :: info    !<  0: ok
@@ -2824,7 +2824,7 @@ contains
   subroutine lock_buffer_cv(this, p, vsize, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     complex(DP), device, pointer, intent(out) :: p(:)   !< Pointer possibly set to access buffer
     integer,       intent(in) :: vsize    !< vector dimension
     integer,       intent(out) :: info    !<  0: ok
@@ -3146,7 +3146,7 @@ contains
   subroutine lock_buffer_cm(this, p, msize, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     complex(DP), device, pointer, intent(out) :: p(:,:)   !< Pointer possibly set to access buffer
     integer,       intent(in) :: msize(2)    !< matrix dimension
     integer,       intent(out) :: info    !<  0: ok
@@ -3488,7 +3488,7 @@ contains
   subroutine lock_buffer_ct(this, p, tsize, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     complex(DP), device, pointer, intent(out) :: p(:,:,:)   !< Pointer possibly set to access buffer
     integer,       intent(in) :: tsize(3)    !< tensor dimension
     integer,       intent(out) :: info    !<  0: ok
@@ -3852,7 +3852,7 @@ contains
   subroutine release_buffer_iv(this, p, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     integer, device, pointer, intent(inout) :: p(:)   !< Pointer possibly pointing to buffer space
     integer, intent(out)            :: info
     integer :: i
@@ -3961,7 +3961,7 @@ contains
   subroutine release_buffer_im(this, p, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     integer, device, pointer, intent(inout) :: p(:,:)   !< Pointer possibly pointing to buffer space
     integer, intent(out)            :: info
     integer :: i
@@ -4070,7 +4070,7 @@ contains
   subroutine release_buffer_it(this, p, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     integer, device, pointer, intent(inout) :: p(:,:,:)   !< Pointer possibly pointing to buffer space
     integer, intent(out)            :: info
     integer :: i
@@ -4179,7 +4179,7 @@ contains
   subroutine release_buffer_rv(this, p, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     real(DP), device, pointer, intent(inout) :: p(:)   !< Pointer possibly pointing to buffer space
     integer, intent(out)            :: info
     integer :: i
@@ -4288,7 +4288,7 @@ contains
   subroutine release_buffer_rm(this, p, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     real(DP), device, pointer, intent(inout) :: p(:,:)   !< Pointer possibly pointing to buffer space
     integer, intent(out)            :: info
     integer :: i
@@ -4397,7 +4397,7 @@ contains
   subroutine release_buffer_rt(this, p, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     real(DP), device, pointer, intent(inout) :: p(:,:,:)   !< Pointer possibly pointing to buffer space
     integer, intent(out)            :: info
     integer :: i
@@ -4506,7 +4506,7 @@ contains
   subroutine release_buffer_cv(this, p, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     complex(DP), device, pointer, intent(inout) :: p(:)   !< Pointer possibly pointing to buffer space
     integer, intent(out)            :: info
     integer :: i
@@ -4615,7 +4615,7 @@ contains
   subroutine release_buffer_cm(this, p, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     complex(DP), device, pointer, intent(inout) :: p(:,:)   !< Pointer possibly pointing to buffer space
     integer, intent(out)            :: info
     integer :: i
@@ -4724,7 +4724,7 @@ contains
   subroutine release_buffer_ct(this, p, info)
     use cudafor
     implicit none
-    class(buf_t), intent(inout)  :: this     !< The class.
+    class(bufqe_t), intent(inout)  :: this     !< The class.
     complex(DP), device, pointer, intent(inout) :: p(:,:,:)   !< Pointer possibly pointing to buffer space
     integer, intent(out)            :: info
     integer :: i

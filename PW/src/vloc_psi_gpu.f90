@@ -20,7 +20,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE wavefunctions_module,       ONLY: psic_h => psic
   USE wavefunctions_module_gpum,       ONLY: psic_d
   USE fft_helper_subroutines
-  USE buffers_module,       ONLY : buffer
+  USE qe_buffers,    ONLY : qe_buffer
   !
   IMPLICIT NONE
   !
@@ -52,8 +52,8 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL start_clock ('vloc_psi:tg_gather')
      v_siz =  dffts%nnr_tg
      !
-     CALL buffer%lock_buffer( tg_v_d, v_siz, ierr )
-     CALL buffer%lock_buffer( tg_psic_d, v_siz, ierr )
+     CALL qe_buffer%lock_buffer( tg_v_d, v_siz, ierr )
+     CALL qe_buffer%lock_buffer( tg_psic_d, v_siz, ierr )
      !
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock ('vloc_psi:tg_gather')
@@ -62,8 +62,8 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      !
   ENDIF
   ! Sync fft data
-  CALL buffer%lock_buffer( dffts_nl_d, size(dffts%nl), ierr )
-  CALL buffer%lock_buffer( dffts_nlm_d, size(dffts%nlm), ierr )
+  CALL qe_buffer%lock_buffer( dffts_nl_d, size(dffts%nl), ierr )
+  CALL qe_buffer%lock_buffer( dffts_nlm_d, size(dffts%nlm), ierr )
   dffts_nl_d(1:n) = dffts%nl(1:n)
   dffts_nlm_d(1:n) = dffts%nlm(1:n)
   ! End Sync
@@ -209,12 +209,12 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   !
   IF( use_tg ) THEN
      !
-     CALL buffer%release_buffer( tg_psic_d, ierr )
-     CALL buffer%release_buffer( tg_v_d, ierr )
+     CALL qe_buffer%release_buffer( tg_psic_d, ierr )
+     CALL qe_buffer%release_buffer( tg_v_d, ierr )
      !
   ENDIF
-  CALL buffer%release_buffer( dffts_nl_d, ierr )
-  CALL buffer%release_buffer( dffts_nlm_d, ierr )
+  CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
+  CALL qe_buffer%release_buffer( dffts_nlm_d, ierr )
   CALL stop_clock ('vloc_psi')
   !
   RETURN
@@ -242,7 +242,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE fft_helper_subroutines
   USE wavefunctions_module, ONLY: psic_h => psic
   USE wavefunctions_module_gpum, ONLY: psic_d
-  USE buffers_module,       ONLY : buffer
+  USE qe_buffers,    ONLY : qe_buffer
   !
   IMPLICIT NONE
   !
@@ -272,15 +272,15 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL start_clock ('vloc_psi:tg_gather')
      v_siz =  dffts%nnr_tg
      !
-     CALL buffer%lock_buffer( tg_v_d,    v_siz, ierr )
-     CALL buffer%lock_buffer( tg_psic_d, v_siz, ierr )
+     CALL qe_buffer%lock_buffer( tg_v_d,    v_siz, ierr )
+     CALL qe_buffer%lock_buffer( tg_psic_d, v_siz, ierr )
      !
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock ('vloc_psi:tg_gather')
      !
   ENDIF
-  CALL buffer%lock_buffer( dffts_nl_d, size(dffts%nl) , ierr )
-  CALL buffer%lock_buffer( igk_k_d, n, ierr )
+  CALL qe_buffer%lock_buffer( dffts_nl_d, size(dffts%nl) , ierr )
+  CALL qe_buffer%lock_buffer( igk_k_d, n, ierr )
   !
   dffts_nl_d = dffts%nl
   igk_k_d(1:n) = igk_k_host(1:n, current_k)
@@ -393,12 +393,12 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   !
   IF( use_tg ) THEN
      !
-     CALL buffer%release_buffer( tg_psic_d, ierr )
-     CALL buffer%release_buffer( tg_v_d, ierr )
+     CALL qe_buffer%release_buffer( tg_psic_d, ierr )
+     CALL qe_buffer%release_buffer( tg_v_d, ierr )
      !
   ENDIF
-  CALL buffer%release_buffer( dffts_nl_d, ierr )
-  CALL buffer%release_buffer( igk_k_d, ierr )
+  CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
+  CALL qe_buffer%release_buffer( igk_k_d, ierr )
   CALL stop_clock ('vloc_psi')
   !
 99 format ( 20 ('(',2f12.9,')') )
@@ -426,7 +426,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   USE wavefunctions_module,       ONLY: psic_nc_h => psic_nc
   USE wavefunctions_module_gpum,  ONLY: psic_nc_d
   USE fft_helper_subroutines
-  USE buffers_module,       ONLY : buffer
+  USE qe_buffers,    ONLY : qe_buffer
   !
   IMPLICIT NONE
   !
@@ -472,8 +472,8 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
 
      incr = fftx_ntgrp(dffts)
   ENDIF
-  CALL buffer%lock_buffer( dffts_nl_d, size(dffts%nl), ierr )
-  CALL buffer%lock_buffer( igk_k_d, n, ierr )
+  CALL qe_buffer%lock_buffer( dffts_nl_d, size(dffts%nl), ierr )
+  CALL qe_buffer%lock_buffer( igk_k_d, n, ierr )
   dffts_nl_d = dffts%nl
   igk_k_d(1:n) = igk_k_host(1:n, current_k)
   !
@@ -613,8 +613,8 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
      DEALLOCATE(tg_v_d, tg_psic_d)
      !
   ENDIF
-  CALL buffer%release_buffer( dffts_nl_d, ierr )
-  CALL buffer%release_buffer( igk_k_d, ierr )
+  CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
+  CALL qe_buffer%release_buffer( igk_k_d, ierr )
   CALL stop_clock ('vloc_psi')
   !
   RETURN

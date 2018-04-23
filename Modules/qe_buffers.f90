@@ -6,12 +6,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-MODULE buffers_module
+MODULE qe_buffers
 #if defined(__CUDA)
-  USE fbuf_qe, ONLY : buf_t
+  USE fbuf_qe, ONLY : bufqe_t
   !
   IMPLICIT NONE
   !
-  TYPE(buf_t) :: buffer
+  TYPE(bufqe_t) :: qe_buffer
 #endif
-END MODULE buffers_module
+END MODULE qe_buffers

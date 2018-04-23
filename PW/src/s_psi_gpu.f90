@@ -33,6 +33,7 @@ SUBROUTINE s_psi_gpu( lda, n, m, psi_d, spsi_d )
   ! --- if suitable and required, calls old S\psi routine s_psi_
   ! --- See comments in h_psi.f90 about band parallelization
   !
+  USE cudafor
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : npol
   USE funct,            ONLY : exx_is_active
@@ -90,7 +91,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   !
   USE cudafor
   USE cublas
-  USE buffers_module, ONLY : buffer
   USE kinds,      ONLY : DP
   USE becmod,     ONLY : becp
   USE uspp,       ONLY : vkb, nkb, okvan, qq_at, qq_so, indv_ijkb0
@@ -188,6 +188,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        ! ... gamma version
        !
        USE mp, ONLY: mp_get_comm_null, mp_circular_shift_left
+       USE qe_buffers, ONLY : qe_buffer
+
        !
        IMPLICIT NONE  
        !
@@ -224,8 +226,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        END IF
        !
        ALLOCATE( ps( nkb, m_max ), STAT=ierr )
-       CALL buffer%lock_buffer(ps_d, (/ nkb, m_max /), ierr)
-       CALL buffer%lock_buffer(vkb_d, (/ lda, nkb /), ierr)
+       CALL qe_buffer%lock_buffer(ps_d, (/ nkb, m_max /), ierr)
+       CALL qe_buffer%lock_buffer(vkb_d, (/ lda, nkb /), ierr)
        
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_gamma ', ' cannot allocate memory (ps) ', ABS(ierr) )
@@ -293,8 +295,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        END IF
        !
        DEALLOCATE( ps ) 
-       CALL buffer%release_buffer(ps_d, ierr)
-       CALL buffer%release_buffer(vkb_d, ierr)
+       CALL qe_buffer%release_buffer(ps_d, ierr)
+       CALL qe_buffer%release_buffer(vkb_d, ierr)
        !
        RETURN
        !
@@ -306,6 +308,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        ! ... k-points version
        !
+       USE qe_buffers, ONLY : qe_buffer
+
        IMPLICIT NONE
        !
        ! ... local variables
@@ -321,8 +325,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_k ', ' cannot allocate memory (ps) ', ABS(ierr) )
-       CALL buffer%lock_buffer(ps_d, (/ nkb, m /), ierr)
-       CALL buffer%lock_buffer(vkb_d, (/ lda, nkb /), ierr)
+       CALL qe_buffer%lock_buffer(ps_d, (/ nkb, m /), ierr)
+       CALL qe_buffer%lock_buffer(vkb_d, (/ lda, nkb /), ierr)
        !ALLOCATE(vkb_d, SOURCE=vkb)
 
        !
@@ -361,8 +365,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        END IF
        !
        DEALLOCATE( ps )
-       CALL buffer%release_buffer(ps_d, ierr)
-       CALL buffer%release_buffer(vkb_d, ierr)
+       CALL qe_buffer%release_buffer(ps_d, ierr)
+       CALL qe_buffer%release_buffer(vkb_d, ierr)
        !DEALLOCATE(vkb_d)
        !
        RETURN
@@ -376,6 +380,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        ! ... k-points noncolinear/spinorbit version
        !
+       USE qe_buffers, ONLY : qe_buffer
+
        IMPLICIT NONE
        !
        !    here the local variables
@@ -427,8 +433,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
              END DO
           END IF
        END DO
-       CALL buffer%lock_buffer(ps_d, (/ nkb,npol,m /), ierr)
-       CALL buffer%lock_buffer(vkb_d, (/ lda, nkb /), ierr)
+       CALL qe_buffer%lock_buffer(ps_d, (/ nkb,npol,m /), ierr)
+       CALL qe_buffer%lock_buffer(vkb_d, (/ lda, nkb /), ierr)
        
        ps_d(1:nkb,1:npol,1:m) = ps(1:nkb,1:npol,1:m)
        vkb_d(1:lda, 1:nkb) = vkb(1:lda,1:nkb)
@@ -438,8 +444,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           lda, ps_d, nkb, (1.d0, 0.d0) , spsi_d(1,1), lda)
 
        DEALLOCATE(ps)
-       CALL buffer%release_buffer(ps_d, ierr)
-       CALL buffer%release_buffer(vkb_d, ierr)
+       CALL qe_buffer%release_buffer(ps_d, ierr)
+       CALL qe_buffer%release_buffer(vkb_d, ierr)
 
        RETURN
 
