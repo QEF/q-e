@@ -1,7 +1,7 @@
 # Makefile for DAVID
 
 DAVID += \
-fbuf.o \
+fbuf_david.o \
 david_buffer.o \
 cegterg_gpu.o \
 regterg_gpu.o

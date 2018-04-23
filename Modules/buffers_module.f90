@@ -8,7 +8,7 @@
 !
 MODULE buffers_module
 #if defined(__CUDA)
-  USE fbuf, ONLY : buf_t
+  USE fbuf_qe, ONLY : buf_t
   !
   IMPLICIT NONE
   !

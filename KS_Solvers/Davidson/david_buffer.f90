@@ -8,7 +8,7 @@
 !
 MODULE david_buffer
 #if defined(__CUDA)
-  USE fbuf, ONLY : buf_t
+  USE fbuf_david, ONLY : buf_t
   !
   IMPLICIT NONE
   !

@@ -200,8 +200,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        INTEGER, EXTERNAL :: ldim_block, gind_block
          ! data distribution functions
        REAL(DP), ALLOCATABLE :: ps(:,:)
-       REAL(DP), POINTER, CONTIGUOUS, DEVICE :: ps_d(:,:)
-       COMPLEX(DP), POINTER, CONTIGUOUS, DEVICE :: vkb_d(:,:)
+       REAL(DP),    DEVICE, POINTER :: ps_d(:,:)
+       COMPLEX(DP), DEVICE, POINTER :: vkb_d(:,:)
          ! the product vkb and psi
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
@@ -313,8 +313,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        INTEGER :: ikb, jkb, ih, jh, na, nt, ibnd, ierr
          ! counters
        COMPLEX(DP), ALLOCATABLE :: ps(:,:), qqc(:,:)
-       COMPLEX(DP), DEVICE, CONTIGUOUS, POINTER :: ps_d(:,:)
-       COMPLEX(DP), DEVICE, CONTIGUOUS, POINTER :: vkb_d(:,:)
+       COMPLEX(DP), DEVICE, POINTER :: ps_d(:,:)
+       COMPLEX(DP), DEVICE, POINTER :: vkb_d(:,:)
          ! ps = product vkb and psi ; qqc = complex version of qq
        !
        ALLOCATE( ps( nkb, m ), STAT=ierr )
@@ -383,8 +383,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        INTEGER :: ikb, jkb, ih, jh, na, nt, ibnd, ipol, ierr
        ! counters
        COMPLEX (DP), ALLOCATABLE :: ps (:,:,:)
-       COMPLEX(DP), DEVICE, CONTIGUOUS, POINTER :: ps_d(:,:,:)
-       COMPLEX(DP), DEVICE, CONTIGUOUS, POINTER :: vkb_d(:,:)
+       COMPLEX(DP), DEVICE, POINTER :: ps_d(:,:,:)
+       COMPLEX(DP), DEVICE, POINTER :: vkb_d(:,:)
        ! the product vkb and psi
        !
        ALLOCATE (ps(nkb,npol,m),STAT=ierr)    
