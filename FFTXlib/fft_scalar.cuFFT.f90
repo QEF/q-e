@@ -645,8 +645,13 @@
      !TYPE(C_PTR), SAVE :: fw_plan ( 3, ndims ) = C_NULL_PTR
      !TYPE(C_PTR), SAVE :: bw_plan ( 3, ndims ) = C_NULL_PTR
      INTEGER, SAVE :: cufft_plan_1d( 3, ndims ) = 0
-     !CALL cfft3d_gpu (f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign)
-     !return
+     !
+     ! The current version of this function is massively outperformed by
+     !  cfft3d_gpu. Leaving the call to full 3D FFT for the time being.
+     ! 
+     CALL cfft3d_gpu (f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign)
+     return
+     
      tscale = 1.0_DP
      
      IF( ny /= ldy ) &
