@@ -13,7 +13,9 @@ MODULE fft_types
 
   USE fft_support, ONLY : good_fft_order, good_fft_dimension
   USE fft_param
-
+#if defined(__CUDA)
+  USE fftx_buffers, ONLY : cpu_buffer, gpu_buffer
+#endif
   IMPLICIT NONE
   PRIVATE
   SAVE
@@ -82,7 +84,7 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: indw_tg(:)! is the inverse of ir1w_tg
 
 #if defined(__CUDA)
-    INTEGER, POINTER, CONTIGUOUS, DEVICE :: ir1p_d(:), ir1w_d(:), ir1w_tg_d(:)
+    INTEGER, POINTER, DEVICE :: ir1p_d(:), ir1w_d(:), ir1w_tg_d(:)
 #endif
 
     INTEGER :: nst      ! total number of sticks ( potential )
@@ -118,7 +120,7 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: isind(:) ! for each position in the plane indicate the stick index
     INTEGER, ALLOCATABLE :: ismap(:) ! for each stick in the plane indicate the position
 #if defined(__CUDA)
-    INTEGER, POINTER, CONTIGUOUS, DEVICE :: ismap_d(:)
+    INTEGER, POINTER, DEVICE :: ismap_d(:)
 #endif
     INTEGER, ALLOCATABLE :: nl(:)    ! position of the G vec in the FFT grid
     INTEGER, ALLOCATABLE :: nlm(:)   ! with gamma sym. position of -G vec in the FFT grid

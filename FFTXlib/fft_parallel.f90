@@ -175,7 +175,8 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
   !
   USE cudafor
-  USE fft_scalar, ONLY : cft_1z_gpu
+  USE fftx_buffers,   ONLY : gpu_buffer
+  USE fft_scalar,     ONLY : cft_1z_gpu
   USE scatter_mod_gpu,ONLY : fft_scatter_xy_gpu, fft_scatter_yz_gpu, fft_scatter_tg_gpu
   USE scatter_mod_gpu,ONLY : fft_scatter_tg_opt_gpu
   USE fft_types,  ONLY : fft_type_descriptor
@@ -189,8 +190,8 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   INTEGER                          :: n1, n2, n3, nx1, nx2, nx3
   INTEGER                          :: nnr_
   INTEGER                          :: nsticks_x, nsticks_y, nsticks_z
-  COMPLEX(DP), ALLOCATABLE, DEVICE :: aux_d (:)
-  INTEGER                          :: i
+  COMPLEX(DP), POINTER, DEVICE     :: aux_d (:)
+  INTEGER                          :: ierr, i
   !
   !write (6,*) 'enter tg_cft3s ',isgn ; write(6,*) ; FLUSH(6)
   n1  = dfft%nr1  ; n2  = dfft%nr2  ; n3  = dfft%nr3
@@ -214,14 +215,15 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   else
      CALL fftx_error__( ' tg_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
   end if
-  ALLOCATE( aux_d( nnr_ ) ) 
+  !
+  CALL gpu_buffer%lock_buffer(aux_d, nnr_, ierr);
   !
   IF ( isgn > 0 ) THEN  ! G -> R
      if (isgn==+3) then 
         call fft_scatter_tg_opt_gpu ( dfft, f_d, aux_d, nnr_, isgn)
      else
         !aux_d(1:nnr_)=f_d(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f_d)>size(aux_d)
-        i = cudaMemcpy( aux_d(1), f_d(1), nnr_, cudaMemcpyDeviceToDevice )
+        ierr = cudaMemcpy( aux_d(1), f_d(1), nnr_, cudaMemcpyDeviceToDevice )
      endif
      CALL cft_1z_gpu( aux_d, nsticks_z, n3, nx3, isgn, f_d )
      CALL fft_scatter_yz_gpu ( dfft, f_d, aux_d, nnr_, isgn )
@@ -229,7 +231,12 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
      CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn )
      CALL cft_1z_gpu( aux_d, nsticks_x, n1, nx1, isgn, f_d )
      ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
-     if (nsticks_x*nx1 < nnr_) f_d(nsticks_x*nx1+1:nnr_) = (0.0_DP,0.0_DP)
+     if (nsticks_x*nx1 < nnr_) then
+        !$cuf kernel do(1)
+        do i=nsticks_x*nx1+1, nnr_
+            f_d(i) = (0.0_DP,0.0_DP)
+        end do
+     endif
      !
   ELSE                  ! R -> G
      !
@@ -239,17 +246,22 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
      CALL fft_scatter_yz_gpu ( dfft, f_d, aux_d, nnr_, isgn )
      CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d )
      ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
-     if (nsticks_z*nx3 < nnr_) aux_d(nsticks_z*nx3+1:nnr_) = (0.0_DP,0.0_DP)
+     if (nsticks_z*nx3 < nnr_) then
+        !$cuf kernel do(1)
+        do i=nsticks_z*nx3+1, nnr_
+            aux_d(i) = (0.0_DP,0.0_DP)
+        end do
+     endif
      if (isgn==-3) then 
         call fft_scatter_tg_opt_gpu ( dfft, aux_d, f_d, nnr_, isgn)
      else
         !f_d(1:nnr_)=aux_d(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f_d)>size(aux_d)
-        i = cudaMemcpy( f_d(1), aux_d(1), nnr_, cudaMemcpyDeviceToDevice )
+        ierr = cudaMemcpy( f_d(1), aux_d(1), nnr_, cudaMemcpyDeviceToDevice )
      endif
   ENDIF
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
   !
-  DEALLOCATE( aux_d )
+  CALL gpu_buffer%release_buffer(aux_d, ierr);
   !
   !if (.true.) stop
   RETURN

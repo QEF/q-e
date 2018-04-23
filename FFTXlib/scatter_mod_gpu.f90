@@ -72,6 +72,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   !    f_in  contains the output Y columns.
   !
   USE cudafor
+  USE fftx_buffers, ONLY : cpu_buffer
   IMPLICIT NONE
 
   TYPE (fft_type_descriptor), INTENT(in) :: desc
@@ -80,7 +81,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 
 #if defined(__MPI)
   !
-  COMPLEX (DP), ALLOCATABLE    :: f_in(:), f_aux(:)
+  COMPLEX (DP), POINTER    :: f_in(:), f_aux(:)
   INTEGER :: ierr, me2, nproc2, iproc2, ncpx, my_nr2p, nr2px, ip, ip0
   INTEGER :: i, it, j, k, kfrom, kdest, offset, ioff, mc, m1, m3, i1, icompact, sendsize
   INTEGER, ALLOCATABLE :: ncp_(:)
@@ -125,7 +126,9 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   
   sendsize = ncpx * nr2px       ! dimension of the scattered chunks (safe value)
   !
-  ALLOCATE(f_in(nxx_), f_aux(nxx_))         ! allocate host copy of f_in and f_aux
+  ! allocate host copy of f_in and f_aux
+  CALL cpu_buffer%lock_buffer(f_in, nxx_, ierr)
+  CALL cpu_buffer%lock_buffer(f_aux, nxx_, ierr)
   !
   ierr = 0
   IF (isgn.gt.0) THEN
@@ -292,7 +295,9 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 
   ENDIF
 
-  DEALLOCATE ( ncp_ , nr1p__d, indx_d , f_in, f_aux)
+  DEALLOCATE ( ncp_ , nr1p__d, indx_d )
+  CALL cpu_buffer%release_buffer(f_in, ierr)
+  CALL cpu_buffer%release_buffer(f_aux, ierr)
   CALL stop_clock ('fft_scatt_xy')
 
 #endif
@@ -339,6 +344,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   !    f_in  contains the output Z columns.
   !
   USE cudafor
+  USE fftx_buffers, ONLY : cpu_buffer
   IMPLICIT NONE
 
   TYPE (fft_type_descriptor), INTENT(in) :: desc
@@ -346,13 +352,13 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   COMPLEX (DP), DEVICE, INTENT(inout)    :: f_in_d (nxx_), f_aux_d (nxx_)
 
 #if defined(__MPI)
-  COMPLEX (DP),    ALLOCATABLE :: f_in(:), f_aux(:)
-  INTEGER, DEVICE, POINTER, CONTIGUOUS :: desc_ismap_d(:)
+  COMPLEX (DP),    POINTER :: f_in(:), f_aux(:)
+  INTEGER, DEVICE, POINTER :: desc_ismap_d(:)
   !
   INTEGER :: ierr, me, me2, me2_start, me2_end, me3, nproc3, iproc3, ncpx, nr3px, ip, ip0
   INTEGER :: i, it, it0, k, kfrom, kdest, offset, ioff, mc, m1, m2, i1,  sendsize
   INTEGER, ALLOCATABLE :: ncp_(:)
-  INTEGER, DEVICE, POINTER, CONTIGUOUS :: ir1p__d(:)
+  INTEGER, DEVICE, POINTER :: ir1p__d(:)
   INTEGER :: my_nr1p_
   !
 #if defined(__NON_BLOCKING_SCATTER)
@@ -395,7 +401,9 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   
   sendsize = ncpx * nr3px       ! dimension of the scattered chunks
   
-  ALLOCATE(f_in(nxx_), f_aux(nxx_))         ! allocate host copy of f_in and f_aux
+  ! allocate host copy of f_in and f_aux
+  CALL cpu_buffer%lock_buffer(f_in, nxx_, ierr)
+  CALL cpu_buffer%lock_buffer(f_aux, nxx_, ierr)
   desc_ismap_d => desc%ismap_d
 
   ierr = 0
@@ -589,7 +597,9 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 
   ENDIF
 
-  DEALLOCATE ( ncp_ , f_aux, f_in)
+  DEALLOCATE ( ncp_ ) ! , f_aux, f_in)
+  CALL cpu_buffer%release_buffer(f_in, ierr)
+  CALL cpu_buffer%release_buffer(f_aux, ierr)
   CALL stop_clock ('fft_scatt_yz')
 
 #endif
@@ -615,19 +625,22 @@ SUBROUTINE fft_scatter_tg_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   !    f_aux is used as working array, may contain garbage in output
   !
   USE cudafor
+  USE fftx_buffers, ONLY : cpu_buffer
   IMPLICIT NONE
 
   TYPE (fft_type_descriptor), INTENT(in) :: desc
   INTEGER, INTENT(in)                    :: nxx_, isgn
   COMPLEX (DP), DEVICE, INTENT(inout)    :: f_in_d (nxx_), f_aux_d (nxx_)
-  COMPLEX (DP), ALLOCATABLE              :: f_in(:), f_aux(:)
+  COMPLEX (DP), POINTER              :: f_in(:), f_aux(:)
 
   INTEGER :: ierr
 
   CALL start_clock ('fft_scatt_tg')
 
   if ( abs (isgn) /= 3 ) call fftx_error__ ('fft_scatter_tg', 'wrong call', 1 )
-  ALLOCATE(f_in(nxx_), f_aux(nxx_))
+  ! get pinned memory buffers for ALLTOALL
+  CALL cpu_buffer%lock_buffer(f_in, nxx_, ierr);
+  CALL cpu_buffer%lock_buffer(f_aux, nxx_, ierr);
 #if defined(__MPI)
   !
   f_aux(1:nxx_) = f_in_d(1:nxx_)
@@ -645,7 +658,9 @@ SUBROUTINE fft_scatter_tg_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   end if
   f_in_d(1:nxx_) = f_in(1:nxx_)
 #endif
-  DEALLOCATE(f_in, f_aux)
+  !
+  CALL cpu_buffer%release_buffer(f_in, ierr);
+  CALL cpu_buffer%release_buffer(f_aux, ierr);
   CALL stop_clock ('fft_scatt_tg')
   RETURN
 99 format ( 20 ('(',2f12.9,')') )
@@ -667,12 +682,13 @@ SUBROUTINE fft_scatter_tg_opt_gpu ( desc, f_in_d, f_out_d, nxx_, isgn )
   !    f_out contains the output data
   !
   USE cudafor
+  USE fftx_buffers, ONLY : cpu_buffer
   IMPLICIT NONE
 
   TYPE (fft_type_descriptor), INTENT(in) :: desc
   INTEGER, INTENT(in)                    :: nxx_, isgn
   COMPLEX (DP), DEVICE, INTENT(inout)    :: f_in_d (nxx_), f_out_d (nxx_)
-  COMPLEX (DP), ALLOCATABLE              :: f_in(:), f_out(:)
+  COMPLEX (DP), POINTER                  :: f_in(:), f_out(:)
 
   INTEGER :: ierr
 
@@ -680,7 +696,8 @@ SUBROUTINE fft_scatter_tg_opt_gpu ( desc, f_in_d, f_out_d, nxx_, isgn )
 
   if ( abs (isgn) /= 3 ) call fftx_error__ ('fft_scatter_tg', 'wrong call', 1 )
   !
-  ALLOCATE(f_in(nxx_), f_out(nxx_))
+  CALL cpu_buffer%lock_buffer(f_in, nxx_, ierr);
+  CALL cpu_buffer%lock_buffer(f_out, nxx_, ierr);
   f_in(1:nxx_) = f_in_d(1:nxx_)
 #if defined(__MPI)
   !
@@ -699,7 +716,9 @@ SUBROUTINE fft_scatter_tg_opt_gpu ( desc, f_in_d, f_out_d, nxx_, isgn )
 
 #endif
   f_out_d(1:nxx_) = f_out(1:nxx_)
-  DEALLOCATE(f_in, f_out)
+  !
+  CALL cpu_buffer%release_buffer(f_in, ierr);
+  CALL cpu_buffer%release_buffer(f_out, ierr);
   CALL stop_clock ('fft_scatt_tg')
 
   RETURN
