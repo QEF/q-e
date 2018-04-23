@@ -27,7 +27,7 @@
 !=----------------------------------------------------------------------=!
 
 
-   SUBROUTINE cft_1z_gpu(c_d, nsl, nz, ldz, isign, cout_d, stream_in)
+   SUBROUTINE cft_1z_gpu(c_d, nsl, nz, ldz, isign, cout_d, in_place, stream_in)
 
 !     driver routine for nsl 1d complex fft's of length nz
 !     ldz >= nz is the distance between sequences to be transformed
@@ -44,6 +44,7 @@
 
      INTEGER, INTENT(IN) :: isign
      INTEGER, INTENT(IN) :: nsl, nz, ldz
+     LOGICAL, INTENT(IN), optional :: in_place
      INTEGER(kind = cuda_stream_kind), INTENT(IN), optional :: stream_in
      INTEGER(kind = cuda_stream_kind) :: stream
 
@@ -57,6 +58,7 @@
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
      LOGICAL :: found
+     LOGICAL :: is_inplace
 
      INTEGER :: tid
 
@@ -89,7 +91,13 @@
      ELSE
        stream = 0
      ENDIF
-
+     !
+     IF ( present( in_place ) ) THEN
+       is_inplace = in_place
+     ELSE
+       is_inplace = .false.
+     END IF
+     !
      istat = cufftSetStream(cufft_planz(ip), stream)
 
 #if defined(__FFT_CLOCKS)
@@ -101,14 +109,25 @@
         !call flush(6)
         istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), c_d(1), CUFFT_FORWARD )
         tscale = 1.0_DP / nz
+        IF (is_inplace) THEN
 !$cuf kernel do(1) <<<*,*,0,stream>>>
-        DO i=1, ldz * nsl
-           cout_d( i ) = c_d( i ) * tscale
-        END DO
+           DO i=1, ldz * nsl
+              c_d( i ) = c_d( i ) * tscale
+           END DO
+        ELSE
+!$cuf kernel do(1) <<<*,*,0,stream>>>
+           DO i=1, ldz * nsl
+              cout_d( i ) = c_d( i ) * tscale
+           END DO
+        END IF
      ELSE IF (isign > 0) THEN
         !print *,"exec cufft INV",nz,ldz,nsl
         !call flush(6)
-        istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), cout_d(1), CUFFT_INVERSE ) !CUFFT_FORWARD )
+        IF (is_inplace) THEN
+           istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), c_d(1), CUFFT_INVERSE ) !CUFFT_FORWARD )
+        ELSE
+           istat = cufftExecZ2Z( cufft_planz( ip), c_d(1), cout_d(1), CUFFT_INVERSE ) !CUFFT_FORWARD )
+        END IF
      END IF
 
 #if defined(__FFT_CLOCKS)
@@ -645,8 +664,13 @@
      !TYPE(C_PTR), SAVE :: fw_plan ( 3, ndims ) = C_NULL_PTR
      !TYPE(C_PTR), SAVE :: bw_plan ( 3, ndims ) = C_NULL_PTR
      INTEGER, SAVE :: cufft_plan_1d( 3, ndims ) = 0
-     !CALL cfft3d_gpu (f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign)
-     !return
+     !
+     ! The current version of this function is massively outperformed by
+     !  cfft3d_gpu. Leaving the call to full 3D FFT for the time being.
+     ! 
+     CALL cfft3d_gpu (f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign)
+     return
+     
      tscale = 1.0_DP
      
      IF( ny /= ldy ) &

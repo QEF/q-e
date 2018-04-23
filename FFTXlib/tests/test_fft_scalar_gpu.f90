@@ -85,6 +85,31 @@ program test_fft_scalar_gpu
     c = cout_d
     CALL test%assert_close( c, cout )
     !
+    ! ==  Same as above, for inplace call ==
+    !
+    CALL fill_random(c, c_d, nsl*ldz)
+    !
+    ! Check forward direction
+    CALL cft_1z(c, nsl, nz, ldz, 1, cout)
+    CALL cft_1z_gpu(c_d, nsl, nz, ldz, 1, cout_d, in_place=.true.)
+    !
+    ! Use c as auxiliary variable hosting GPU results
+    c = (0.d0, 0.d0)
+    c = c_d
+    CALL test%assert_close( c, cout )
+    !
+    !
+    CALL fill_random(c, c_d, nsl*ldz)
+    !
+    ! Check backward direction
+    CALL cft_1z(c, nsl, nz, ldz, -1, cout)
+    CALL cft_1z_gpu(c_d, nsl, nz, ldz, -1, cout_d, in_place=.true.)
+    !
+    ! Use c as auxiliary variable hosting GPU results
+    c = (0.d0, 0.d0)
+    c = c_d
+    CALL test%assert_close( c, cout )
+    !
   END SUBROUTINE test_cft_1z_gpu
   !
   SUBROUTINE test_cft_2xy_gpu(test)

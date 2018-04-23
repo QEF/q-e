@@ -221,11 +221,12 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   IF ( isgn > 0 ) THEN  ! G -> R
      if (isgn==+3) then 
         call fft_scatter_tg_opt_gpu ( dfft, f_d, aux_d, nnr_, isgn)
+        CALL cft_1z_gpu( aux_d, nsticks_z, n3, nx3, isgn, f_d )
      else
         !aux_d(1:nnr_)=f_d(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f_d)>size(aux_d)
-        ierr = cudaMemcpy( aux_d(1), f_d(1), nnr_, cudaMemcpyDeviceToDevice )
+        !ierr = cudaMemcpy( aux_d(1), f_d(1), nnr_, cudaMemcpyDeviceToDevice )
+        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d, in_place=.true. )
      endif
-     CALL cft_1z_gpu( aux_d, nsticks_z, n3, nx3, isgn, f_d )
      CALL fft_scatter_yz_gpu ( dfft, f_d, aux_d, nnr_, isgn )
      CALL cft_1z_gpu( aux_d, nsticks_y, n2, nx2, isgn, f_d )
      CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn )
@@ -244,19 +245,28 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
      CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn )
      CALL cft_1z_gpu( f_d, nsticks_y, n2, nx2, isgn, aux_d )
      CALL fft_scatter_yz_gpu ( dfft, f_d, aux_d, nnr_, isgn )
-     CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d )
-     ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
-     if (nsticks_z*nx3 < nnr_) then
-        !$cuf kernel do(1)
-        do i=nsticks_z*nx3+1, nnr_
-            aux_d(i) = (0.0_DP,0.0_DP)
-        end do
-     endif
-     if (isgn==-3) then 
+
+     if (isgn==-3) then
+        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d )
+        ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
+        if (nsticks_z*nx3 < nnr_) then
+           !$cuf kernel do(1)
+           do i=nsticks_z*nx3+1, nnr_
+               aux_d(i) = (0.0_DP,0.0_DP)
+           end do
+        endif
         call fft_scatter_tg_opt_gpu ( dfft, aux_d, f_d, nnr_, isgn)
      else
         !f_d(1:nnr_)=aux_d(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f_d)>size(aux_d)
-        ierr = cudaMemcpy( f_d(1), aux_d(1), nnr_, cudaMemcpyDeviceToDevice )
+        !ierr = cudaMemcpy( f_d(1), aux_d(1), nnr_, cudaMemcpyDeviceToDevice )
+        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d, in_place=.true. )
+        ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
+        if (nsticks_z*nx3 < nnr_) then
+           !$cuf kernel do(1)
+           do i=nsticks_z*nx3+1, nnr_
+               f_d(i) = (0.0_DP,0.0_DP)
+           end do
+        endif
      endif
   ENDIF
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
