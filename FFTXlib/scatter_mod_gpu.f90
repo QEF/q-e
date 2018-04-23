@@ -347,12 +347,12 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 
 #if defined(__MPI)
   COMPLEX (DP),    ALLOCATABLE :: f_in(:), f_aux(:)
-  INTEGER, DEVICE, POINTER, CONTIGUOUS :: desc_ismap_d(:)
+  INTEGER, DEVICE, POINTER :: desc_ismap_d(:)
   !
   INTEGER :: ierr, me, me2, me2_start, me2_end, me3, nproc3, iproc3, ncpx, nr3px, ip, ip0
   INTEGER :: i, it, it0, k, kfrom, kdest, offset, ioff, mc, m1, m2, i1,  sendsize
   INTEGER, ALLOCATABLE :: ncp_(:)
-  INTEGER, DEVICE, POINTER, CONTIGUOUS :: ir1p__d(:)
+  INTEGER, DEVICE, POINTER :: ir1p__d(:)
   INTEGER :: my_nr1p_
   !
 #if defined(__NON_BLOCKING_SCATTER)
