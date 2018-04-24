@@ -527,7 +527,7 @@
      INTEGER :: i, k, j, err, idir, ip, istat
      REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
-     INTEGER, SAVE :: dims(3,ndims) = -1
+     INTEGER, SAVE :: dims(4,ndims) = -1
 
 !     C_POINTER, save :: fw_plan(ndims) = 0
 !     C_POINTER, save :: bw_plan(ndims) = 0
@@ -565,7 +565,7 @@
 
        tscale = 1.0_DP / DBLE( nx * ny * nz )
 !$cuf kernel do(1) <<<*,*>>>
-        DO i=1, nx*ny*nz
+        DO i=1, nx*ny*nz*howmany
            f_d( i ) = f_d( i ) * tscale
         END DO
 !       call ZDSCAL( nx * ny * nz, tscale, f_d(1), 1)
@@ -588,7 +588,8 @@
        !   for this combination of parameters
        IF ( ( nx == dims(1,i) ) .and. &
             ( ny == dims(2,i) ) .and. &
-            ( nz == dims(3,i) ) ) THEN
+            ( nz == dims(3,i) ) .and. &
+            ( howmany == dims(4,i) ) ) THEN
          ip = i
          EXIT
        END IF
@@ -608,7 +609,7 @@
        DATA_DIM(3) = ldx
             STRIDE = 1
               DIST = ldx*ldy*ldz
-             BATCH = 1
+             BATCH = howmany
 
        IF( cufft_plan_3d( icurrent) /= 0 )  istat = cufftDestroy( cufft_plan_3d(icurrent) )
 
@@ -624,6 +625,7 @@
        !idir = -1; CALL CREATE_PLAN_3D( fw_plan(icurrent), nx, ny, nz, idir)
        !idir =  1; CALL CREATE_PLAN_3D( bw_plan(icurrent), nx, ny, nz, idir)
        dims(1,icurrent) = nx; dims(2,icurrent) = ny; dims(3,icurrent) = nz
+       dims(4,icurrent) = howmany
        ip = icurrent
        icurrent = MOD( icurrent, ndims ) + 1
      END SUBROUTINE init_plan
