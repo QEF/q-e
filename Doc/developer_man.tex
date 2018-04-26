@@ -341,8 +341,8 @@ stopped: nothing new or potentially ''dangerous'' is added, and all
 attention is dedicated to fix bugs and to stabilize the distribution.
 This manual and the user manual have to be updated. After the release
 is tagged, the documentation produced by \texttt{make doc} must be copied
-to directory \texttt{/to/be/changed} on the web site (requires system
-privileges on the machine hosting the web server).
+to directory:\\
+\texttt{quantumespresso@qe.safevps.it:/storage/vhosts/quantum-espresso.org/htdocs/Doc}.
 
 \section{Structure of the distribution}
 
@@ -354,38 +354,24 @@ libraries, installation utilities, general documentation.
 
 The most important files and directories in the root (\texttt{q-e/})
 directory are:
-\begin{verbatim}
-   install/                 configure
-   include/                 make.inc
-   archive/                 Makefile
-   dev-tools/               License
-   pseudo/                  test-suite     environment_variables
-   Doc/                     README.md      CONTRIBUTING.md
-   clib/                    bin/
-   Modules/                 LR_Modules/
-   COUPLE/                  upftools/
-   FFTXlib/                 LAXlib/         UtilXlib
-\end{verbatim}
-\texttt{License}, \texttt{README.md} and \texttt{CONTRIBUTING.md}
-have an obvious meaning. The other files and directories are related to
 \begin{itemize}
 \item {\em Installation} (i.e. compilation and linking):\\
 \texttt{install/}, \texttt{dev-tools/}, \texttt{archive/},
 \configure, \make.inc
 \item  {\em Testing} (running tests and examples):\\
-\texttt{pseudo/}, \texttt{environment\_variables}, \texttt{test-suite}
+\texttt{pseudo/}, \texttt{environment\_variables}, \texttt{test-suite/}
 \item  {\em General documentation} (not package-specific):\\
-\texttt{Doc/}
-\item {\em  FFT, Linear Algebra, Utility Libraries}:\\
-\texttt{FFTXlib/}, \texttt{LAXlib/}, \texttt{UtilXlib/}
-\item {\em  C and Fortran Libraries, modules}:\\
-\texttt{clib/}, \texttt{Modules/}, \texttt{COUPLE/}
-(the latter contains code and documentation useful to call \qe\ programs
- from external codes)
+\texttt{Doc/}, \texttt{License}, \texttt{README.md}, \texttt{CONTRIBUTING.md}
+\item {\em  Libraries: FFT, Linear Algebra, Utility, Solvers, DFT-D3}:\\
+\texttt{FFTXlib/}, \texttt{LAXlib/}, \texttt{UtilXlib/},
+		\texttt{KS\_Solvers/}, \texttt{dft-d3/}
+\item {\em  C and Fortran sources}:\\
+\texttt{include/}, \texttt{clib/}, \texttt{Modules/}
+\item {\em utilities to call \qe\ programs from external codes}:\\
+\texttt{COUPLE/}
 \item {\em  Linear-response specific modules}:\\
 \texttt{LR\_Modules/}.
 \end{itemize}
-
 The core distribution also contains package-specific directories,
 e.g., \texttt{PW/}, \texttt{PP/}, \texttt{CPV/}, for
  \texttt{PWscf}, \texttt{PostProc}, \texttt{CP}, respectively.
@@ -785,10 +771,6 @@ are different from 0.
 
 (adapted from an answer by Dario Rocca).
 
-% \subsection{Diagonalization}
-% \subsection{Self-consistency}
-% \subsection{Structural optimization}
-% \subsection{Symmetrization}
 \subsection{Gamma tricks}
 
 In calculations using only the $\Gamma$ point (k=0),
@@ -816,63 +798,8 @@ with $G_{n'_1,n'_2,n'_3}$ and $G_{-n'_1,-n'_2,n'_3}$
 (with the exception of the case $n'_1=n'_2=0$),
 must be assigned to the same processor.
 
-\subsection{Restart}
 
-The two main packages, \texttt{PWscf} and \texttt{CP}, support
-restarting from interrupted calculations. Restarting is trivial
-in \texttt{CP}: it is sufficient to save from time to time a
-restart file containing wavefunctions, orthogonality matrix,
-forces, atomic positions, at the current and previous time step.
-
-Restarting is much more complicated in  \texttt{PWscf}. Since v.5.1.
-restarting from interrupted calculations is possible ONLY if the code
-has been explicitly stopped by user. It is not practical to try to
-restart from any possible case, such as e.g. crashes. This would
-imply saving lots of data all the time. With modern machines, this is
-not a good idea. Restart in  \texttt{PWscf} currently works as follows:
-\begin{itemize}
-\item Each loop calls \texttt{check\_stop\_now} just before the end.
-  If a user request to stop is found, a small file \texttt{restart\_*}
-  is created, containing only loop-specific local variables;
-  files used by the loop, if any, are closed and saved:
-  variable \texttt{conv\_elec} is set to .false.;
-  the loop is exited and the routine returns.
-\item When a routine containing a loop returns, a check is done 
-  if the code was stopped there or no convergence was achieved;
-  if so, data for the current loop, if needed, is saved, return.
-\item Return after return, all loops and exited and control is
-  tramsferred to the main program, which must save needed global
-  variables to file. The only difference with normal exit is that
-  temporary files are kept in their format, not in portable format.
-\item If variable \texttt{restart\_mode} is set in input to
-  \texttt{'restart'}:
-  \begin{itemize}
-  \item starting potential and wavefunctions are read from file
-  \item each routine containing a loop checks for the existence of a
-    \texttt{restart\_*} file before starting its own loop.
-  \end{itemize}
-\end{itemize}
-Since April 2013, all electronic loops are organized this way. Loops
-on nuclear positions will be organized in the same manner once their
-re-organization is completed.
-% To be done:
-% \begin{itemize}
-% \item wg and et should be read from data file
-% \item rho(+paw/U/metagga info) should be written to and read from
-%   unformatted data file similar to the file used in \texttt{mix\_rho};
-%   portable format should be written only at convergence.
-% \end{itemize}
-
-
-%\section{Structure of the code}
-% \subsection{Modules and global variables}
-% \subsection{Meaning of the most important variables}
-% \subsection{Conventions for indices}
-
-% \subsection{Performance issues}
-% \subsection{Portability issues}
-
-\section{Format of arrays containing charge density, potential, etc.}
+\subsection{Format of arrays containing charge density, potential, etc.}
 The index of arrays used to store functions defined on 3D meshes is
 actually a shorthand for three indices, following the FORTRAN convention
 ("leftmost index runs faster"). An example will explain this better.
@@ -922,6 +849,66 @@ In particular, it may be convenient to have \texttt{nrx1}=\texttt{nr1}+1
 to reduce memory conflicts. Note however that this possibility is not
 present with most common FFT's any longer, so it may be consider
 as obsolescent.
+
+\subsection{Restart}
+
+The two main packages, \texttt{PWscf} and \texttt{CP}, support
+restarting from interrupted calculations. Restarting is trivial
+in \texttt{CP}: it is sufficient to save from time to time a
+restart file containing wavefunctions, orthogonality matrix,
+forces, atomic positions, at the current and previous time step.
+
+Restarting is much more complicated in  \texttt{PWscf}. Since v.5.1.
+restarting from interrupted calculations is possible ONLY if the code
+has been explicitly stopped by user. It is not practical to try to
+restart from any possible case, such as e.g. crashes. This would
+imply saving lots of data all the time. With modern machines, this is
+not a good idea. Restart in  \texttt{PWscf} currently works as follows:
+\begin{itemize}
+\item Each loop calls \texttt{check\_stop\_now} just before the end.
+  If a user request to stop is found, a small file \texttt{restart\_*}
+  is created, containing only loop-specific local variables;
+  files used by the loop, if any, are closed and saved:
+  variable \texttt{conv\_elec} is set to .false.;
+  the loop is exited and the routine returns.
+\item When a routine containing a loop returns, a check is done 
+  if the code was stopped there or no convergence was achieved;
+  if so, data for the current loop, if needed, is saved, return.
+\item Return after return, all loops and exited and control is
+  tramsferred to the main program, which must save needed global
+  variables to file. The only difference with normal exit is that
+  temporary files are kept in their format, not in portable format.
+\item If variable \texttt{restart\_mode} is set in input to
+  \texttt{'restart'}:
+  \begin{itemize}
+  \item starting potential and wavefunctions are read from file
+  \item each routine containing a loop checks for the existence of a
+    \texttt{restart\_*} file before starting its own loop.
+  \end{itemize}
+\end{itemize}
+Since April 2013, all electronic loops are organized this way. Loops
+on nuclear positions will be organized in the same manner once their
+re-organization is completed.
+% To be done:
+% \begin{itemize}
+% \item wg and et should be read from data file
+% \item rho(+paw/U/metagga info) should be written to and read from
+%   unformatted data file similar to the file used in \texttt{mix\_rho};
+%   portable format should be written only at convergence.
+% \end{itemize}
+
+%\section{Structure of the code}
+% \subsection{Modules and global variables}
+% \subsection{Meaning of the most important variables}
+% \subsection{Conventions for indices}
+% \subsection{Diagonalization}
+% \subsection{Self-consistency}
+% \subsection{Structural optimization}
+% \subsection{Symmetrization}
+
+
+% \subsection{Performance issues}
+% \subsection{Portability issues}
 
 \section{Parallelization (MPI)}
 
