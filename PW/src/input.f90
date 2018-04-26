@@ -247,9 +247,7 @@ SUBROUTINE iosys()
                                B_field, fixed_magnetization, report, lspinorb,&
                                starting_spin_angle, assume_isolated,spline_ps,&
                                vdw_corr, london, london_s6, london_rcut, london_c6, &
-                               london_rvdw, &
-                               dftd3_s6, dftd3_rs6, dftd3_s18, dftd3_threebody,&
-                               dftd3_rs18, dftd3_alp, dftd3_version,          &
+                               london_rvdw, dftd3_threebody, dftd3_version,   &
                                ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,     &
                                xdm, xdm_a1, xdm_a2, lforcet,                  &
                                one_atom_occupations,                          &
@@ -1326,14 +1324,6 @@ SUBROUTINE iosys()
      in_c6(:)    = london_c6(:)
      in_rvdw(:)  = london_rvdw(:)
   END IF
-  IF (ldftd3) THEN
-     pars(1)     = dftd3_s6
-     pars(2)     = dftd3_rs6
-     pars(3)     = dftd3_s18
-     pars(4)     = dftd3_rs18
-     pars(5)     = dftd3_alp
-     call dftd3_set_params(dftd3,pars,dftd3_version)
-  ENDIF
   IF ( lxdm ) THEN
      a1i = xdm_a1
      a2i = xdm_a2
@@ -1667,6 +1657,7 @@ SUBROUTINE iosys()
   ! Setting DFT-D3 functional dependent parameters
   !
   IF ( ldftd3)  THEN
+      if (dftd3_version==2) dftd3_threebody=.false.
       dftd3_in%threebody = dftd3_threebody
       CALL dftd3_init(dftd3, dftd3_in)
       CALL dftd3_printout(dftd3, dftd3_in)
