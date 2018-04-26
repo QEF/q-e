@@ -129,10 +129,21 @@ contains
     integer, intent(in) :: version
     logical, intent(in) :: tz
 
+    character(len=256) :: func_local
+
+    func_local = trim(func)
+
     this%version = version
-    call setfuncpar(func, this%version, tz, this%s6, this%rs6, this%s18, &
+    if(trim(func_local)=="bp") func_local="b-p"
+    if(trim(func_local)=="blyp") func_local="b-lyp"
+    if(trim(func_local)=="b3lyp") func_local="b3-lyp"
+    if(trim(func_local)=="hse") func_local="hse06"
+    if(trim(func_local)=="pw86pbe") func_local="rpw86-pbe"
+    if(trim(func_local)=="olyp") func_local="o-lyp"
+
+    call setfuncpar(func_local, this%version, tz, this%s6, this%rs6, this%s18, &
         & this%rs18, this%alp)
-    
+
   end subroutine dftd3_set_functional
 
 
