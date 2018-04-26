@@ -28,7 +28,7 @@ subroutine dgradcorr (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   !
   REAL(DP), INTENT(IN) ::rho (dfft%nnr, nspin), grho (3, dfft%nnr, nspin0), &
        g (3, dfft%ngm), xq(3)       
-  REAL(DP), INTENT(OUT) :: &
+  REAL(DP), INTENT(IN) :: &
        dvxc_rr(dfft%nnr, nspin0, nspin0), dvxc_sr (dfft%nnr, nspin0, nspin0), &
        dvxc_ss (dfft%nnr,nspin0, nspin0), dvxc_s (dfft%nnr, nspin0, nspin0)
   COMPLEX(DP), INTENT(IN) :: drho (dfft%nnr, nspin)
