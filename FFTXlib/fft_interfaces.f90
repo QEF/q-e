@@ -40,13 +40,15 @@ MODULE fft_interfaces
        COMPLEX(DP) :: f(:)
      END SUBROUTINE invfft_b
 #if defined(__CUDA)
-     SUBROUTINE invfft_y_gpu( grid_type, f_d, dfft, howmany )
+     SUBROUTINE invfft_y_gpu( grid_type, f_d, dfft, howmany, stream )
        USE fft_types,  ONLY: fft_type_descriptor
-       USE fft_param,  ONLY :DP
+       USE fft_param,  ONLY: DP
+       USE cudafor
        IMPLICIT NONE
        CHARACTER(LEN=*),  INTENT(IN) :: grid_type
        TYPE(fft_type_descriptor), INTENT(IN) :: dfft
        INTEGER, OPTIONAL, INTENT(IN) :: howmany
+       INTEGER(kind = cuda_stream_kind), OPTIONAL, INTENT(IN) :: stream
        COMPLEX(DP), DEVICE :: f_d(:)
      END SUBROUTINE invfft_y_gpu
 #endif
@@ -63,13 +65,15 @@ MODULE fft_interfaces
        COMPLEX(DP) :: f(:)
      END SUBROUTINE fwfft_y
 #if defined(__CUDA)
-     SUBROUTINE fwfft_y_gpu( grid_type, f_d, dfft, howmany )
+     SUBROUTINE fwfft_y_gpu( grid_type, f_d, dfft, howmany, stream )
        USE fft_types,  ONLY: fft_type_descriptor
-       USE fft_param,  ONLY :DP
+       USE fft_param,  ONLY: DP
+       USE cudafor
        IMPLICIT NONE
        CHARACTER(LEN=*), INTENT(IN) :: grid_type
        TYPE(fft_type_descriptor), INTENT(IN) :: dfft
        INTEGER, OPTIONAL, INTENT(IN) :: howmany
+       INTEGER(kind = cuda_stream_kind), OPTIONAL, INTENT(IN) :: stream
        COMPLEX(DP), DEVICE :: f_d(:)
      END SUBROUTINE fwfft_y_gpu
 #endif

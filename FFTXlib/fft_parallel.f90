@@ -143,7 +143,7 @@ END SUBROUTINE tg_cft3s
 !  General purpose driver, GPU version
 !
 !----------------------------------------------------------------------------
-SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
+SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
   !----------------------------------------------------------------------------
   !
   !! ... isgn = +-1 : parallel 3d fft for rho and for the potential
@@ -186,12 +186,14 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   TYPE (fft_type_descriptor), INTENT(in) :: dfft   ! descriptor of fft data layout
   COMPLEX(DP), DEVICE, INTENT(inout)     :: f_d( : ) ! array containing data to be transformed
   INTEGER, INTENT(in)                    :: isgn   ! fft direction (potential: +/-1, wave: +/-2, wave_tg: +/-3)
+  INTEGER, INTENT(in)                    :: howmany ! 
   !
   INTEGER                          :: n1, n2, n3, nx1, nx2, nx3
   INTEGER                          :: nnr_
   INTEGER                          :: nsticks_x, nsticks_y, nsticks_z
   COMPLEX(DP), POINTER, DEVICE     :: aux_d (:)
   INTEGER                          :: ierr, i
+  INTEGER(kind = cuda_stream_kind) :: stream  = 0
   !
   !write (6,*) 'enter tg_cft3s ',isgn ; write(6,*) ; FLUSH(6)
   n1  = dfft%nr1  ; n2  = dfft%nr2  ; n3  = dfft%nr3
@@ -220,20 +222,20 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   !
   IF ( isgn > 0 ) THEN  ! G -> R
      if (isgn==+3) then 
-        call fft_scatter_tg_opt_gpu ( dfft, f_d, aux_d, nnr_, isgn)
-        CALL cft_1z_gpu( aux_d, nsticks_z, n3, nx3, isgn, f_d )
+        call fft_scatter_tg_opt_gpu ( dfft, f_d, aux_d, nnr_, isgn, stream)
+        CALL cft_1z_gpu( aux_d, nsticks_z, n3, nx3, isgn, f_d, stream )
      else
         !aux_d(1:nnr_)=f_d(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f_d)>size(aux_d)
         !ierr = cudaMemcpy( aux_d(1), f_d(1), nnr_, cudaMemcpyDeviceToDevice )
-        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d, in_place=.true. )
+        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d, stream, in_place=.true. )
      endif
-     CALL fft_scatter_yz_gpu ( dfft, f_d, aux_d, nnr_, isgn )
-     CALL cft_1z_gpu( aux_d, nsticks_y, n2, nx2, isgn, f_d )
-     CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn )
-     CALL cft_1z_gpu( aux_d, nsticks_x, n1, nx1, isgn, f_d )
+     CALL fft_scatter_yz_gpu ( dfft, f_d, aux_d, nnr_, isgn, stream )
+     CALL cft_1z_gpu( aux_d, nsticks_y, n2, nx2, isgn, f_d, stream )
+     CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn, stream )
+     CALL cft_1z_gpu( aux_d, nsticks_x, n1, nx1, isgn, f_d, stream )
      ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
      if (nsticks_x*nx1 < nnr_) then
-        !$cuf kernel do(1)
+        !$cuf kernel do(1)<<<*,*,0,stream>>>
         do i=nsticks_x*nx1+1, nnr_
             f_d(i) = (0.0_DP,0.0_DP)
         end do
@@ -241,28 +243,28 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
      !
   ELSE                  ! R -> G
      !
-     CALL cft_1z_gpu( f_d, nsticks_x, n1, nx1, isgn, aux_d )
-     CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn )
-     CALL cft_1z_gpu( f_d, nsticks_y, n2, nx2, isgn, aux_d )
-     CALL fft_scatter_yz_gpu ( dfft, f_d, aux_d, nnr_, isgn )
+     CALL cft_1z_gpu( f_d, nsticks_x, n1, nx1, isgn, aux_d, stream )
+     CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn, stream )
+     CALL cft_1z_gpu( f_d, nsticks_y, n2, nx2, isgn, aux_d, stream )
+     CALL fft_scatter_yz_gpu ( dfft, f_d, aux_d, nnr_, isgn, stream )
 
      if (isgn==-3) then
-        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d )
+        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d, stream )
         ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
         if (nsticks_z*nx3 < nnr_) then
-           !$cuf kernel do(1)
+           !$cuf kernel do(1)<<<*,*,0,stream>>>
            do i=nsticks_z*nx3+1, nnr_
                aux_d(i) = (0.0_DP,0.0_DP)
            end do
         endif
-        call fft_scatter_tg_opt_gpu ( dfft, aux_d, f_d, nnr_, isgn)
+        call fft_scatter_tg_opt_gpu ( dfft, aux_d, f_d, nnr_, isgn, stream)
      else
         !f_d(1:nnr_)=aux_d(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f_d)>size(aux_d)
         !ierr = cudaMemcpy( f_d(1), aux_d(1), nnr_, cudaMemcpyDeviceToDevice )
-        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d, in_place=.true. )
+        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d, stream, in_place=.true. )
         ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
         if (nsticks_z*nx3 < nnr_) then
-           !$cuf kernel do(1)
+           !$cuf kernel do(1)<<<*,*,0,stream>>>
            do i=nsticks_z*nx3+1, nnr_
                f_d(i) = (0.0_DP,0.0_DP)
            end do

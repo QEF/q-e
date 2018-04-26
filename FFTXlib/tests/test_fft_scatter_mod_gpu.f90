@@ -131,6 +131,7 @@ program test_fft_scatter_mod_gpu
     LOGICAL :: parallel
     COMPLEX(DP), ALLOCATABLE :: scatter_in(:), scatter_out(:), aux(:)
     COMPLEX(DP), ALLOCATABLE, DEVICE :: scatter_in_d(:), scatter_out_d(:)
+    integer(kind = cuda_stream_kind) :: stream = 0
     !
     parallel = mp%n .gt. 1
     CALL fft_desc_init(dfft, smap, "wave", gamma_only, parallel, mp%comm, nyfft=ny)
@@ -143,7 +144,7 @@ program test_fft_scatter_mod_gpu
     CALL fill_random(scatter_in, scatter_in_d, dfft%nnr)
     !
     CALL fft_scatter_xy( dfft, scatter_in, scatter_out, dfft%nnr, 1 )
-    CALL fft_scatter_xy_gpu( dfft, scatter_in_d, scatter_out_d, dfft%nnr, 1 )
+    CALL fft_scatter_xy_gpu( dfft, scatter_in_d, scatter_out_d, dfft%nnr, 1, stream )
     aux = scatter_out_d
     ! Check
     CALL test%assert_close( scatter_out, aux )
@@ -152,7 +153,7 @@ program test_fft_scatter_mod_gpu
     CALL fill_random(scatter_in, scatter_in_d, dfft%nnr)
     !
     CALL fft_scatter_xy( dfft, scatter_out, scatter_in, dfft%nnr, -1 )
-    CALL fft_scatter_xy_gpu( dfft, scatter_out_d, scatter_in_d, dfft%nnr, -1 )
+    CALL fft_scatter_xy_gpu( dfft, scatter_out_d, scatter_in_d, dfft%nnr, -1, stream )
     aux = scatter_out_d
     ! Check
     CALL test%assert_close( scatter_out, aux )
@@ -185,6 +186,7 @@ program test_fft_scatter_mod_gpu
     LOGICAL :: parallel
     COMPLEX(DP), ALLOCATABLE :: scatter_in(:), scatter_out(:), aux(:)
     COMPLEX(DP), ALLOCATABLE, DEVICE :: scatter_in_d(:), scatter_out_d(:)
+    integer(kind = cuda_stream_kind) :: stream = 0
     !
     parallel = mp%n .gt. 1
     CALL fft_desc_init(dfft, smap, "wave", gamma_only, parallel, mp%comm, nyfft=ny)
@@ -197,7 +199,7 @@ program test_fft_scatter_mod_gpu
     CALL fill_random(scatter_in, scatter_in_d, dfft%nnr)
     !
     CALL fft_scatter_yz( dfft, scatter_in, scatter_out, dfft%nnr, 1 )
-    CALL fft_scatter_yz_gpu( dfft, scatter_in_d, scatter_out_d, dfft%nnr, 1 )
+    CALL fft_scatter_yz_gpu( dfft, scatter_in_d, scatter_out_d, dfft%nnr, 1, stream )
     aux = scatter_out_d
     ! Check
     CALL test%assert_close( scatter_out, aux )
@@ -206,7 +208,7 @@ program test_fft_scatter_mod_gpu
     CALL fill_random(scatter_in, scatter_in_d, dfft%nnr)
     !
     CALL fft_scatter_yz( dfft, scatter_out, scatter_in, dfft%nnr, -1 )
-    CALL fft_scatter_yz_gpu( dfft, scatter_out_d, scatter_in_d, dfft%nnr, -1 )
+    CALL fft_scatter_yz_gpu( dfft, scatter_out_d, scatter_in_d, dfft%nnr, -1, stream )
     aux = scatter_out_d
     ! Check
     CALL test%assert_close( scatter_out, aux )

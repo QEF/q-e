@@ -261,7 +261,7 @@ END SUBROUTINE invfft_b
 
 #if defined(__CUDA)
 
-SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany )
+SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
   !! Compute G-space to R-space for a specific grid type
   !! 
   !! **fft_kind = 'Rho'** : 
@@ -279,7 +279,7 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany )
   !! **dfft = FFT grid descriptor**, IMPORTANT NOTICE: grid is specified only by dfft.
   !!   No check is performed on the correspondence between dfft and fft_kind. 
   !!   from all other cases
-  
+  USE cudafor
   USE fft_scalar,    ONLY: cfft3d_gpu, cfft3ds_gpu
   USE fft_smallbox,  ONLY: cft_b, cft_b_omp
   USE fft_parallel,  ONLY: tg_cft3s_gpu
@@ -292,11 +292,21 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany )
   CHARACTER(LEN=*), INTENT(IN) :: fft_kind
   COMPLEX(DP), DEVICE :: f_d(:)
   INTEGER, OPTIONAL, INTENT(IN) :: howmany
-  INTEGER :: howmany_ = 1
+  INTEGER(kind = cuda_stream_kind), OPTIONAL, INTENT(IN) :: stream
+  !
+  INTEGER                          :: howmany_ = 1
+  INTEGER(kind = cuda_stream_kind) :: stream_  = 0
+
   CHARACTER(LEN=12) :: clock_label
 
   IF(PRESENT(howmany) ) THEN
      howmany_ = howmany
+  END IF
+  !
+  IF( present( stream ) ) THEN
+    stream_ = stream
+  ELSE
+    stream_ = 0
   END IF
   !
   IF( fft_kind == 'Rho' ) THEN
@@ -315,24 +325,27 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany )
      IF( howmany_ /= 1 ) THEN
         CALL fftx_error__( ' invfft ', ' howmany not yet implemented for parallel driver ', 1 )
      END IF
+     IF( stream_ /= 0 ) THEN
+        CALL fftx_error__( ' invfft ', ' stream support not implemented for parallel driver ', 1 )
+     END IF
      
      IF( fft_kind == 'Rho' ) THEN
-        CALL tg_cft3s_gpu( f_d, dfft, 1 )
+        CALL tg_cft3s_gpu( f_d, dfft, 1, 1 )
      ELSE IF( fft_kind == 'Wave' ) THEN
-        CALL tg_cft3s_gpu( f_d, dfft, 2 )
+        CALL tg_cft3s_gpu( f_d, dfft, 2, 1 )
      ELSE IF( fft_kind == 'tgWave' ) THEN
-        CALL tg_cft3s_gpu( f_d, dfft, 3 )
+        CALL tg_cft3s_gpu( f_d, dfft, 3, 1 )
      END IF
 
   ELSE
 
      IF( fft_kind == 'Rho' ) THEN
         CALL cfft3d_gpu( f_d, dfft%nr1, dfft%nr2, dfft%nr3, &
-                        dfft%nr1x, dfft%nr2x, dfft%nr3x, howmany_ , 1)
+                        dfft%nr1x, dfft%nr2x, dfft%nr3x, howmany_ , 1, stream_)
      ELSE 
         CALL cfft3ds_gpu( f_d, dfft%nr1, dfft%nr2, dfft%nr3, &
                         dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1, &
-                        dfft%isind, dfft%iplw )
+                        dfft%isind, dfft%iplw, stream_ )
      END IF
 
   END IF
@@ -345,7 +358,7 @@ END SUBROUTINE invfft_y_gpu
 !
 !=---------------------------------------------------------------------------=!
 !
-SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany )
+SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
   !! Compute R-space to G-space for a specific grid type
   !! 
   !! **fft_kind = 'Rho'**
@@ -360,7 +373,7 @@ SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany )
   !!   forward fourier transform of wave functions f with task group
   !!   On output, f is overwritten
   !! 
-  
+  USE cudafor
   USE fft_scalar,    ONLY: cfft3d_gpu, cfft3ds_gpu
   USE fft_parallel,  ONLY: tg_cft3s_gpu
   USE fft_types,     ONLY: fft_type_descriptor
@@ -372,13 +385,23 @@ SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany )
   CHARACTER(LEN=*), INTENT(IN) :: fft_kind
   COMPLEX(DP), DEVICE :: f_d(:)
   INTEGER, OPTIONAL, INTENT(IN) :: howmany
-  INTEGER :: howmany_ = 1
-  CHARACTER(LEN=12) :: clock_label
+  INTEGER(kind = cuda_stream_kind), OPTIONAL, INTENT(IN) :: stream
 
+  INTEGER                          :: howmany_ = 1
+  INTEGER(kind = cuda_stream_kind) :: stream_  = 0
+
+  CHARACTER(LEN=12) :: clock_label
+  !
   IF(PRESENT(howmany) ) THEN
      howmany_ = howmany
   END IF
-
+  !
+  IF( present( stream ) ) THEN
+    stream_ = stream
+  ELSE
+    stream_ = 0
+  END IF
+  !
   IF( fft_kind == 'Rho' ) THEN
      clock_label = dfft%rho_clock_label
   ELSE IF( fft_kind == 'Wave' .OR. fft_kind == 'tgWave' ) THEN
@@ -395,24 +418,27 @@ SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany )
      IF( howmany_ /= 1 ) THEN
         CALL fftx_error__( ' fwfft ', ' howmany not yet implemented for parallel driver ', 1 )
      END IF
+     IF( stream_ /= 0 ) THEN
+        CALL fftx_error__( ' fwfft ', ' stream support not implemented for parallel driver ', 1 )
+     END IF
      
      IF( fft_kind == 'Rho' ) THEN
-        CALL tg_cft3s_gpu(f_d,dfft,-1)
+        CALL tg_cft3s_gpu(f_d,dfft,-1, 1)
      ELSE IF( fft_kind == 'Wave' ) THEN
-        CALL tg_cft3s_gpu(f_d,dfft,-2 )
+        CALL tg_cft3s_gpu(f_d,dfft,-2, 1)
      ELSE IF( fft_kind == 'tgWave' ) THEN
-        CALL tg_cft3s_gpu(f_d,dfft,-3 )
+        CALL tg_cft3s_gpu(f_d,dfft,-3, 1)
      END IF
 
   ELSE
 
      IF( fft_kind == 'Rho' ) THEN
         CALL cfft3d_gpu( f_d, dfft%nr1, dfft%nr2, dfft%nr3, &
-                        dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1)
+                        dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1, stream_ )
      ELSE 
         CALL cfft3ds_gpu( f_d, dfft%nr1, dfft%nr2, dfft%nr3, &
                          dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1, &
-                         dfft%isind, dfft%iplw )
+                         dfft%isind, dfft%iplw, stream_ )
      END IF
 
   END IF
