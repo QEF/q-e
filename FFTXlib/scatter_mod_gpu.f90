@@ -386,7 +386,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   INTEGER, DEVICE, POINTER :: desc_ismap_d(:)
   !
   INTEGER :: ierr, me, me2, me2_start, me2_end, me3, nproc3, iproc3, ncpx, nr3px, ip, ip0
-  INTEGER :: i, it, it0, k, kfrom, kdest, offset, ioff, mc, m1, m2, i1,  sendsize
+  INTEGER :: i, it, it0, k, kfrom, kdest, offset, ioff, mc, m1, m2, i1,  sendsize, aux
   INTEGER, ALLOCATABLE :: ncp_(:)
   INTEGER, DEVICE, POINTER :: ir1p__d(:)
   INTEGER :: my_nr1p_
@@ -528,8 +528,9 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
         DO me2 = me2_start, me2_end
            ip = desc%iproc( me2, iproc3)
            ioff = desc%iss(ip)
+           aux = ncp_( ip )
 !$cuf kernel do(2) <<<*,*,0,stream>>>
-           DO i = 1, ncp_( ip ) ! was ncp_(iproc3)
+           DO i = 1, aux ! was ncp_(iproc3)
               DO k = 1, desc%my_nr3p
                  it = it0 + (i-1)*nr3px
                  mc = desc_ismap_d( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
@@ -553,8 +554,9 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
         DO me2 = me2_start, me2_end
            ip = desc%iproc(me2, iproc3)
            ioff = desc%iss(ip)
+           aux = ncp_( ip )
 !$cuf kernel do(2) <<<*,*,0,stream>>>
-           DO i = 1, ncp_( ip )
+           DO i = 1, aux
               DO k = 1, desc%my_nr3p
                  it = it0 + (i-1)*nr3px
                  mc = desc_ismap_d( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
@@ -632,8 +634,9 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
      ! clean extra array elements in each stick
 
      IF( desc%nr3x /= desc%nr3 ) THEN
+       aux = ncp_ ( desc%mype+1 ) 
 !$cuf kernel do(2) <<<*,*,0,stream>>>
-       DO k = 1, ncp_ ( desc%mype+1 ) 
+       DO k = 1, aux
           DO i = desc%nr3, desc%nr3x
              f_in_d( (k-1)*desc%nr3x + i ) = 0.0d0 
           END DO

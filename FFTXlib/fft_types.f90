@@ -267,6 +267,7 @@ CONTAINS
     ALLOCATE( desc%indp_d( desc%nr1x,desc%nproc2 ) ) ; desc%indp_d  = 0
     ALLOCATE( desc%indw_d( desc%nr1x, desc%nproc2 ) ) ; desc%indw_d  = 0
     ALLOCATE( desc%indw_tg_d( desc%nr1x, 1 ) ) ; desc%indw_tg_d  = 0
+    
     ALLOCATE( desc%nr1p_d(desc%nproc2)) ; desc%nr1p_d  = 0
     ALLOCATE( desc%nr1w_d(desc%nproc2)) ; desc%nr1w_d  = 0
     ALLOCATE( desc%nr1w_tg_d(1) ) ; desc%nr1w_tg_d = 0
@@ -738,15 +739,15 @@ CONTAINS
 #if defined(__CUDA)
     desc%ismap_d = desc%ismap
     desc%ir1p_d = desc%ir1p
-    desc%ir1w_d  = desc%ir1w
+    desc%ir1w_d = desc%ir1w
     desc%ir1w_tg_d = desc%ir1w_tg
 
     desc%indp_d = desc%indp
-    desc%indw_d  = desc%indw
+    desc%indw_d = desc%indw
     desc%indw_tg_d(:,1) = desc%indw_tg
 
     desc%nr1p_d = desc%nr1p
-    desc%nr1w_d  = desc%nr1w
+    desc%nr1w_d = desc%nr1w
     desc%nr1w_tg_d(1) = desc%nr1w_tg
 
 #endif
