@@ -88,7 +88,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   INTEGER :: ierr, me2, nproc2, iproc2, ncpx, my_nr2p, nr2px, ip, ip0
   INTEGER :: i, it, j, k, kfrom, kdest, offset, ioff, mc, m1, m3, i1, icompact, sendsize
   INTEGER, ALLOCATABLE :: ncp_(:)
-  INTEGER, ALLOCATABLE, DEVICE :: nr1p__d(:), indx_d(:,:)
+  INTEGER, POINTER, DEVICE :: nr1p__d(:), indx_d(:,:)
   !
 #if defined(__NON_BLOCKING_SCATTER)
   INTEGER :: sh(desc%nproc2), rh(desc%nproc2)
@@ -97,21 +97,21 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   nproc2 = desc%nproc2 ; if ( abs(isgn) == 3 ) nproc2 = 1 
 
   ! allocate auxiliary array for columns distribution
-  ALLOCATE ( ncp_(nproc2), nr1p__d(nproc2), indx_d(desc%nr1x,nproc2) )
+  ALLOCATE ( ncp_(nproc2))
   if ( abs (isgn) == 1 ) then          ! It's a potential FFT
      ncp_ = desc%nr1p * desc%my_nr3p
-     nr1p__d= desc%nr1p
-     indx_d = desc%indp
+     nr1p__d=> desc%nr1p_d
+     indx_d => desc%indp_d
      my_nr2p=desc%my_nr2p
   else if ( abs (isgn) == 2 ) then     ! It's a wavefunction FFT
      ncp_ = desc%nr1w * desc%my_nr3p
-     nr1p__d= desc%nr1w
-     indx_d = desc%indw
+     nr1p__d=> desc%nr1w_d
+     indx_d => desc%indw_d
      my_nr2p=desc%my_nr2p
   else if ( abs (isgn) == 3 ) then     ! It's a wavefunction FFT with task group
      ncp_ = desc%nr1w_tg * desc%my_nr3p! 
-     nr1p__d= desc%nr1w_tg               !
-     indx_d(1:desc%nr1x,1) = desc%indw_tg(1:desc%nr1x)          ! 
+     nr1p__d=> desc%nr1w_tg_d               !
+     indx_d => desc%indw_tg_d         ! 
      my_nr2p=desc%nr2x                 ! in task group FFTs whole Y colums are distributed
   end if
   !
@@ -324,7 +324,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
 
   ENDIF
 
-  DEALLOCATE ( ncp_ , nr1p__d, indx_d )
+  DEALLOCATE ( ncp_ )
   CALL cpu_buffer%release_buffer(f_in, ierr)
   CALL cpu_buffer%release_buffer(f_aux, ierr)
   CALL stop_clock ('fft_scatt_xy')

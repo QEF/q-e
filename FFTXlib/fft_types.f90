@@ -84,7 +84,9 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: indw_tg(:)! is the inverse of ir1w_tg
 
 #if defined(__CUDA)
-    INTEGER, POINTER, DEVICE :: ir1p_d(:), ir1w_d(:), ir1w_tg_d(:)
+    INTEGER, POINTER, DEVICE :: ir1p_d(:),   ir1w_d(:),   ir1w_tg_d(:)
+    INTEGER, POINTER, DEVICE :: indp_d(:,:), indw_d(:,:), indw_tg_d(:,:)
+    INTEGER, POINTER, DEVICE :: nr1p_d(:),   nr1w_d(:),   nr1w_tg_d(:)
 #endif
 
     INTEGER :: nst      ! total number of sticks ( potential )
@@ -262,6 +264,13 @@ CONTAINS
     ALLOCATE( desc%tg_rdsp( desc%nproc2) ) ; desc%tg_rdsp = 0
 
 #if defined(__CUDA)
+    ALLOCATE( desc%indp_d( desc%nr1x,desc%nproc2 ) ) ; desc%indp_d  = 0
+    ALLOCATE( desc%indw_d( desc%nr1x, desc%nproc2 ) ) ; desc%indw_d  = 0
+    ALLOCATE( desc%indw_tg_d( desc%nr1x, 1 ) ) ; desc%indw_tg_d  = 0
+    ALLOCATE( desc%nr1p_d(desc%nproc2)) ; desc%nr1p_d  = 0
+    ALLOCATE( desc%nr1w_d(desc%nproc2)) ; desc%nr1w_d  = 0
+    ALLOCATE( desc%nr1w_tg_d(1) ) ; desc%nr1w_tg_d = 0
+
     ALLOCATE( desc%ir1p_d( desc%nr1x ) ) ; desc%ir1p_d  = 0
     ALLOCATE( desc%ir1w_d( desc%nr1x ) ) ; desc%ir1w_d  = 0
     ALLOCATE( desc%ir1w_tg_d( desc%nr1x ) ) ; desc%ir1w_tg_d  = 0
@@ -316,6 +325,17 @@ CONTAINS
     IF ( ALLOCATED( desc%ir1p_d ) )    DEALLOCATE( desc%ir1p_d )
     IF ( ALLOCATED( desc%ir1w_d ) )    DEALLOCATE( desc%ir1w_d )
     IF ( ALLOCATED( desc%ir1w_tg_d ) ) DEALLOCATE( desc%ir1w_tg_d )
+
+    IF ( ALLOCATED( desc%indp_d ) )   DEALLOCATE( desc%indp_d )
+    IF ( ALLOCATED( desc%indw_d ) )    DEALLOCATE( desc%indw_d )
+    IF ( ALLOCATED( desc%indw_tg_d ) ) DEALLOCATE( desc%indw_tg_d )
+
+    IF ( ALLOCATED( desc%nr1p_d ) )   DEALLOCATE( desc%nr1p_d )
+    IF ( ALLOCATED( desc%nr1w_d ) )    DEALLOCATE( desc%nr1w_d )
+    IF ( ALLOCATED( desc%nr1w_tg_d ) ) DEALLOCATE( desc%nr1w_tg_d )
+
+
+
 #endif
 
     desc%comm  = MPI_COMM_NULL 
@@ -720,6 +740,15 @@ CONTAINS
     desc%ir1p_d = desc%ir1p
     desc%ir1w_d  = desc%ir1w
     desc%ir1w_tg_d = desc%ir1w_tg
+
+    desc%indp_d = desc%indp
+    desc%indw_d  = desc%indw
+    desc%indw_tg_d(:,1) = desc%indw_tg
+
+    desc%nr1p_d = desc%nr1p
+    desc%nr1w_d  = desc%nr1w
+    desc%nr1w_tg_d(1) = desc%nr1w_tg
+
 #endif
 
     RETURN
