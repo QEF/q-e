@@ -238,7 +238,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
      !
      DO iproc2 = 1, nproc2
         
-        !$cuf kernel do (1) <<<*,*,0,stream>>>
+        !$cuf kernel do (2) <<<*,*,0,stream>>>
         DO i = 1, ncp_( iproc2 )
            DO j = 1, my_nr2p
               it = ( iproc2 - 1 ) * sendsize + (i-1)*nr2px
