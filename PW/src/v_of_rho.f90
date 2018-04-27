@@ -53,11 +53,12 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   ! ... calculate exchange-correlation potential
   !
+  CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
+  !
   if (dft_is_meta() .and. (get_meta() /= 4)) then
-     call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
-  else
-     CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
+    call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
   endif
+  !
   !
   ! ... add a magnetic field  (if any)
   !
@@ -100,7 +101,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
 END SUBROUTINE v_of_rho
 !----------------------------------------------------------------------------
-SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
+SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc_out, vtxc_out, v_out, kedtaur )
   !----------------------------------------------------------------------------
   !
   ! ... Exchange-Correlation potential Vxc(r) from n(r)
@@ -125,8 +126,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
     ! the core charge in real space
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
     ! the core charge in reciprocal space
-  REAL(DP), INTENT(OUT) :: v(dfftp%nnr,nspin), kedtaur(dfftp%nnr,nspin), &
-                           vtxc, etxc
+  REAL(DP), INTENT(INOUT) :: v_out(dfftp%nnr,nspin), kedtaur(dfftp%nnr,nspin), &
+                           vtxc_out, etxc_out
     ! v:      V_xc potential
     ! kedtau: local K energy density 
     ! vtxc:   integral V_xc * rho
@@ -134,6 +135,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
     !
     ! ... local variables
     !
+  REAL(DP),ALLOCATABLE :: v(:,:)
+  REAL(DP) :: vtxc, etxc
   REAL(DP) :: zeta, rh
   INTEGER  :: k, ipol, is
   REAL(DP) :: ex, ec, v1x, v2x, v3x,v1c, v2c, v3c,                     &
@@ -158,6 +161,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   etxc      = zero
   vtxc      = zero
+  ALLOCATE(v(dfftp%nnr,nspin))
   v(:,:)    = zero
   rhoneg(:) = zero
   !
@@ -316,6 +320,11 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   CALL mp_sum(  vtxc , intra_bgrp_comm )
   CALL mp_sum(  etxc , intra_bgrp_comm )
   !
+  vtxc_out = vtxc_out +vtxc
+  etxc_out = etxc_out +etxc
+  v_out    = v_out + v
+  !
+  DEALLOCATE(v)
   DEALLOCATE(grho)
   DEALLOCATE(h)
   DEALLOCATE(rhoout)
@@ -338,7 +347,8 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
-  USE funct,            ONLY : xc, xc_spin, nlc, dft_is_nonlocc
+  USE funct,            ONLY : xc, xc_spin, nlc, dft_is_nonlocc, &
+                               get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
   USE scf,              ONLY : scf_type
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
@@ -379,6 +389,15 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   etxc   = 0.D0
   vtxc   = 0.D0
   v(:,:) = 0.D0
+  
+  
+  ! If there is no X, C, GX, GC or non-local C (i.e. we're doing pur meta-GGA),
+  ! or other exotic stuff, we quit here
+  IF ( ALL((/ get_iexch(), get_icorr(), get_igcx(), get_igcc(), get_inlc()/)==0) ) THEN
+    WRITE(stdout,*) "Quick return in v_xc because there is no X, C, GX, GC or non-local C"
+    RETURN
+  ENDIF
+  
   rhoneg = 0.D0
   !
   IF ( nspin == 1 .OR. ( nspin == 4 .AND. .NOT. domag ) ) THEN
