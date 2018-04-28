@@ -2,8 +2,6 @@
     calculation='scf',
     restart_mode='from_scratch',
     prefix='graphite'
-    pseudo_dir = '/home/pietro/q-e_gitlab/pseudo',
-    outdir='/home/pietro/q-e_gitlab/tempdir'
  /
  &system
     ibrav = 0,

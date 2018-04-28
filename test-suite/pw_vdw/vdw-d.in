@@ -14,9 +14,7 @@
  occupations='smearing'
  degauss=0.02
  smearing='marzari-vanderbilt'
- london=.true.
- london_rcut = 150
- london_s6 = 0.75
+ vdw_corr='dft-d'
 /
 &electrons
  mixing_beta=0.5
