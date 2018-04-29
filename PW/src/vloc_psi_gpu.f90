@@ -17,8 +17,8 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
-  USE wavefunctions_module,       ONLY: psic_h => psic
-  USE wavefunctions_module_gpum,       ONLY: psic_d
+  !USE wavefunctions_module,       ONLY: psic_h => psic
+  !USE wavefunctions_module_gpum,       ONLY: psic_d
   USE fft_helper_subroutines
   USE qe_buffers,    ONLY : qe_buffer
   !
@@ -35,6 +35,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   LOGICAL :: use_tg
   ! Variables for task groups
 !@njs: tg_v, tg_psic
+  COMPLEX(DP), DEVICE, POINTER :: psic_d(:)
   REAL(DP),    DEVICE, POINTER :: tg_v_d(:)
   COMPLEX(DP), DEVICE, POINTER :: tg_psic_d(:)
   INTEGER,     DEVICE, POINTER :: dffts_nl_d(:), dffts_nlm_d(:)
@@ -44,7 +45,8 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   CALL start_clock ('vloc_psi')
   incr = 2
   !
-  IF (.not. allocated(psic_d)) ALLOCATE(psic_d, SOURCE=psic_h)
+  !IF (.not. allocated(psic_d)) ALLOCATE(psic_d, SOURCE=psic_h)
+  CALL qe_buffer%lock_buffer( psic_d, dffts%nnr, ierr )
   use_tg = dffts%has_task_groups 
   !
   IF( use_tg ) THEN
@@ -213,6 +215,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL qe_buffer%release_buffer( tg_v_d, ierr )
      !
   ENDIF
+  CALL qe_buffer%release_buffer( psic_d, ierr )
   CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
   CALL qe_buffer%release_buffer( dffts_nlm_d, ierr )
   CALL stop_clock ('vloc_psi')
@@ -240,8 +243,8 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
   USE fft_helper_subroutines
-  USE wavefunctions_module, ONLY: psic_h => psic
-  USE wavefunctions_module_gpum, ONLY: psic_d
+  !USE wavefunctions_module, ONLY: psic_h => psic
+  !USE wavefunctions_module_gpum, ONLY: psic_d
   USE qe_buffers,    ONLY : qe_buffer
   !
   IMPLICIT NONE
@@ -256,6 +259,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   !
   LOGICAL :: use_tg
   ! Task Groups
+  COMPLEX(DP), DEVICE, POINTER :: psic_d(:)
   REAL(DP),    DEVICE, POINTER :: tg_v_d(:)
   COMPLEX(DP), DEVICE, POINTER :: tg_psic_d(:)
   INTEGER,     DEVICE, POINTER :: dffts_nl_d(:)
@@ -263,7 +267,8 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER :: v_siz, idx, ioff
   INTEGER :: ierr
   !
-  IF (.not. allocated(psic_d)) ALLOCATE(psic_d, SOURCE=psic_h)
+  !IF (.not. allocated(psic_d)) ALLOCATE(psic_d, dffts%nnr*4)
+  CALL qe_buffer%lock_buffer( psic_d, dffts%nnr, ierr )
   CALL start_clock ('vloc_psi')
   use_tg = dffts%has_task_groups 
   !
@@ -399,6 +404,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   ENDIF
   CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
   CALL qe_buffer%release_buffer( igk_k_d, ierr )
+  CALL qe_buffer%release_buffer( psic_d, ierr )
   CALL stop_clock ('vloc_psi')
   !
 99 format ( 20 ('(',2f12.9,')') )
