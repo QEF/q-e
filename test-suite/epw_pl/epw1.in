@@ -43,8 +43,6 @@
    
   band_plot   = .true.
 
-  parallel_k  = .true.
-  parallel_q  = .false.
 
   fsthick     = 3.0
   eptemp      = 20.0

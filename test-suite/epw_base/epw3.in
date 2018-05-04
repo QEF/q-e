@@ -32,9 +32,6 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  parallel_k  = .true.
-  parallel_q  = .false.
-
   fsthick     = 15 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)
   degaussw    = 1.0 ! eV

@@ -36,7 +36,7 @@
                             vme, degaussw, epexst, eig_read, kmaps, &
                             epwwrite, epbread, phonselfen, elecselfen, &
                             a2f, rand_k, rand_nq, rand_q, plselfen, &
-                            parallel_q, parallel_k, nkf1, specfun_pl, &
+                            nkf1, specfun_pl, &
                             nkf2, nkf3, nqf1, nqf2, nqf3, rand_nk, &
                             nest_fn, eps_acustic, nw, wmax, wmin, &
                             mp_mesh_q, filqf, filkf, delta_qsmear, degaussq, &
@@ -107,7 +107,7 @@
        wannierize, dis_win_max, dis_win_min, dis_froz_min, dis_froz_max,       &
        num_iter, proj, bands_skipped, wdata, iprint, write_wfn,                &
        wmin, wmax, nw, eps_acustic, a2f, nest_fn, plselfen,                    & 
-       elecselfen, phonselfen, parallel_k, parallel_q,                         &
+       elecselfen, phonselfen,                                                 &
        rand_q, rand_nq, rand_k, rand_nk, specfun_pl,                           &
        nqf1, nqf2, nqf3, nkf1, nkf2, nkf3,                                     &
        mp_mesh_k, mp_mesh_q, filqf, filkf, ephwrite,                           & 
@@ -361,8 +361,6 @@
   eptemp       = 300.0d0
   degaussw     = 0.025d0 ! eV
 !  tphases      = .false.
-  parallel_k   = .true.
-  parallel_q   = .false.
   a2f          = .false.
   etf_mem      = 1 
 !  fildvscf0    = ' '
@@ -514,12 +512,6 @@
        &' nbndskip must not be less than 0', 1)
   IF ((nw.lt.1).or.(nw.gt.1000)) CALL errore ('epw_readin', &
        &' unreasonable nw', 1)
-  IF (parallel_k .and. parallel_q) CALL errore('epw_readin', &
-       &'can only parallelize over k OR q',1)
-  IF (.not.(parallel_k .or. parallel_q)) CALL errore('epw_readin', &
-       &'must parallelize over k OR q',1)
-  IF (parallel_k .and. elecselfen) CALL errore('epw_readin', &
-       &'Electron selfenergy is more efficient with k_para',-1)
   IF (elecselfen .and. plselfen) CALL errore('epw_readin', &
        &'Electron-plasmon self-energy cannot be computed with electron-phonon',1)
   IF (phonselfen .and. plselfen) CALL errore('epw_readin', &
@@ -528,8 +520,6 @@
        &'Electron-plasmon self-energy cannot be computed with el-ph spectral function',1)
   IF (specfun_ph .and. plselfen) CALL errore('epw_readin', &
        &'Electron-plasmon self-energy cannot be computed with el-ph spectral function',1)
-  IF (parallel_q .and. plselfen) CALL errore('epw_readin', &
-       &'Electron-plasmon self-energy cannot be computed with q-parallelization',1)
   IF (elecselfen .and. specfun_pl ) CALL errore('epw_readin', &
        &'Electron-plasmon spectral function cannot be computed with electron-phonon',1)
   IF (phonselfen .and. specfun_pl) CALL errore('epw_readin', &
@@ -538,14 +528,8 @@
        &'Electron-plasmon spectral function cannot be computed with el-ph spectral function',1)
   IF (specfun_ph .and. specfun_pl) CALL errore('epw_readin', &
        &'Electron-plasmon spectral function cannot be computed with el-ph spectral function',1)
-  IF (parallel_q .and. specfun_pl) CALL errore('epw_readin', &
-       &'Electron-plasmon spectral function cannot be computed with q-parallelization',1)
   IF (a2f .and. .not.phonselfen) CALL errore('epw_readin', &
        &'a2f requires phonoselfen',1)
-  IF (parallel_q .and. phonselfen) CALL errore('epw_readin', &
-       &'Phonon selfenergy is more efficient with q_para',-1)
-  IF (parallel_q) CALL errore('epw_readin', &
-       &'WARNING: Parallel q not tested!', -1)
   IF (elph .and. .not.ep_coupling ) CALL errore('epw_readin', &
       &'elph requires ep_coupling=.true.',1)
   IF ( (elph.and.wannierize) .and. (epwread) ) CALL errore('epw_readin', &
@@ -572,8 +556,6 @@
      CALL errore('epw_readin', 'ephwrite requires nkf1,nkf2,nkf3 to be multiple of nqf1,nqf2,nqf3',1)
   IF (band_plot .and. filkf .eq. ' ' .and. filqf .eq. ' ') CALL errore('epw_readin', &
       &'plot band structure and phonon dispersion requires k- and q-points read from filkf and filqf files',1)
-  IF (band_plot .and. parallel_q ) CALL errore('epw_readin', &
-      &'band_plot can only be used with parallel_k',1)    
   IF (band_plot .and. filkf .ne. ' ' .and. (nkf1 > 0 .or. nkf2 > 0 .or. nkf3 > 0) ) CALL errore('epw_readin', &
                 &'You should define either filkf or nkf when band_plot = .true.',1)
   IF (band_plot .and. filqf .ne. ' ' .and. (nqf1 > 0 .or. nqf2 > 0 .or. nqf3 > 0) ) CALL errore('epw_readin', &
@@ -604,14 +586,8 @@
        &'Error: kmaps has to be true for a restart run. ',1)
   IF ( .not. epwread .AND. .not. epwwrite) CALL errore('epw_init',&
        &'Error: Either epwread or epwwrite needs to be true. ',1)
-  IF ( etf_mem == 2 .AND. parallel_q) CALL errore('epw_init',&
-       &'Error: Memory optimized version and q-parallelization not implemented. ',1)
-  IF ( lscreen .AND. parallel_q) CALL errore('epw_init',&
-       &'Error: lscreen can only be used with parallel_k ',1)
   IF ( lscreen .AND. etf_mem == 2) CALL errore('epw_init',&
        &'Error: lscreen not implemented with etf_mem=2 ',1)
-  IF ( cumulant .AND. parallel_q ) CALL errore('epw_init',&
-       &'Error: Cumulant and parallel_q is not implemented ',1)
 !#ifndef __MPI
 !  IF ( etf_mem == 2 ) CALL errore('epw_init','Error: etf_mem == 2 only works with MPI.',1)
 !#endif

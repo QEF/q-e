@@ -196,10 +196,6 @@
   !! if .TRUE. calculate plasmon spectral function
   LOGICAL :: wannierize
   !! if .TRUE. run the wannier90 code
-  LOGICAL :: parallel_k
-  !! if .TRUE. scatter the electron k-points on the fine mesh among pools (not q)
-  LOGICAL :: parallel_q
-  !! if .TRUE. scatter the phonon q-points on the fine mesh among pools (not k)
   LOGICAL :: a2f
   !! if .TRUE. calculate Eliashberg spectral electron function from selfen_phon
   LOGICAL :: write_wfn

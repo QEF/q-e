@@ -1019,7 +1019,7 @@
     !! adopted for the electronic case (nmodes->nmodes etc)
     !!
     USE kinds,         only : DP
-    USE epwcom,        only : parallel_k, parallel_q, etf_mem
+    USE epwcom,        only : etf_mem
     USE elph2,         only : epmatwp
     USE constants_epw, ONLY : twopi, ci, czero, cone
     USE io_epw,        ONLY : iunepmatwp, iunepmatwp2
@@ -1093,14 +1093,7 @@
     !  g~(R_e,q') is epmatf(nmodes, nmodes, ik )
     !  every pool works with its own subset of k points on the fine grid
     !
-    IF (parallel_k) THEN
-       CALL para_bounds(ir_start, ir_stop, nrr_q)
-    ELSEIF (parallel_q) THEN
-       ir_start = 1
-       ir_stop  = nrr_q
-    ELSE 
-       CALL errore ('ephwan2blochp', 'Problem with parallel_k/q scheme', nrr_q)
-    ENDIF
+    CALL para_bounds(ir_start, ir_stop, nrr_q)
     !
     eptmp = czero
     cfac(:) = czero
@@ -1173,7 +1166,7 @@
     ENDIF
     !
 #if defined(__MPI)
-    IF (parallel_k) CALL mp_sum(eptmp, world_comm)
+    CALL mp_sum(eptmp, world_comm)
 #endif  
     !
     !----------------------------------------------------------
