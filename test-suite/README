@@ -1,6 +1,9 @@
-# Copyright (C) 2001 Quantum ESPRESSO                                                                                 #
-# This program is free software; you can redistribute it and/or                                                       # modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2                                                      # of the License. See the file `License' in the root directory
+# Copyright (C) 2001 Quantum ESPRESSO                                                                                
+#
+# This program is free software; you can redistribute it and/or  
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License. See the file `License' in the root directory
 # of the present distribution.
 
 TEST-SUITE  v6.1
@@ -39,3 +42,142 @@ LDFLAGS        = -g -pthread -fopenmp
 During execution:
 
 OMP_NUM_THREADS = 4
+
+#################################################################################################
+# TEST DESCRIPTIONS and what is tested.
+#################################################################################################
+
+#################################################################################################
+# EPW tests
+#################################################################################################
+#############################
+# epw_base: B-doped diamond # 
+#############################
+The following features of the code are tested:
+- Correct unfolding from IBZ to full BZ
+- Correct Wannier interpolation
+- Phonon & electron self-energy
+- Eliashberg a2F
+- Homogeneous fine k and q-grid integration
+- Test nesting function
+- Test spectral function
+- Test parallel_k (epw1.in)
+- Test parallel_q (epw2.in)
+- Test restart feature epwread = .true. (epw2.in)
+- Test band_plot (epw3.in)
+- Test iverbosity = 1 (epw4.in)
+- Test phonon spectral function (epw5.in)
+- Test band parallelism, etf_mem 2 (epw6.in)
+- Test restart feature (epw7.in)
+- Test cumulant (epw8.in)
+
+#################
+# epw_metal: Pb #
+#################
+The following features of the code are tested:
+- Test metals (epw.in)
+- Test crystal ASR (epw2.in)
+
+###############
+# epw_mob: Si #
+###############
+The following features of the code are tested:
+- Test crystal ASR and etf_mem 1 (epw1.in)
+- Test scattering rates and mobility (epw2.in)
+- Test restart option, same input as epw2.in (epw3.in)
+- Test indirect absortpion (epw4.in)
+
+##############
+# epw_pl: Si #
+##############
+The following features of the code are tested:
+- Test plasmon spectral functions (epw1.in)
+
+##################
+# epw_polar: SiC #
+##################
+The following features of the code are tested:
+- Test the polar Wannier interpolation (epw1.in)
+- Test band parallelism with polar (epw2.in)
+- Test screening (epw3.in)
+
+###############
+# epw_soc: Pb #
+###############
+The following features of the code are tested:
+- Test SOC (epw.in)
+- Test crystal ASR with SOC (epw2.in)
+
+###################
+# epw_super: MgB2 #
+###################
+The following features of the code are tested:
+- Test isotropic Eliashberg superconductivity (epw_iso.in)
+- Test anisotropic Eliashberg superconductivity (epw_aniso.in)
+
+#################
+# epw_trev: SiC #
+#################
+The following features of the code are tested:
+- Time-reversal symmetry when inversion sym. is not part of the small group of q. (epw.in)
+
+
+################
+# epw_comp: Si #
+################
+This test is to compare electron-phonon matrix element produced directly by the phonon code 
+and by EPW. It requires modification to the phonon code. 
+Note that this folder is NOT tested in the test-suite but is here as it can be useful. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
