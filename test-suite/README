@@ -48,6 +48,265 @@ OMP_NUM_THREADS = 4
 #################################################################################################
 
 #################################################################################################
+# PWSCF tests
+#################################################################################################
+######################
+# pw_atom : O and Ni #
+######################
+The following features of the code are tested:
+- occupancies from input, also with spin polarization
+- PBE and spin-polarized PBE
+- PBE and s-PBE stress
+- atomic occupations: Ni d8s2 and d9s1
+
+#####################
+# pw_berry : PbTiO3 #
+#####################
+The following features of the code are tested:
+- scf: Q function in real space (tqr=.true.)
+- nscf: Berry phase calculation (with and without empty bands)
+
+##################
+# pw_b3lyp-O : O #
+##################
+The following features of the code are tested:
+- B3LYP hybrid functional (spin polarized), Gamma
+
+##################
+# pw_b3lyp-h2o : H2O #
+##################
+The following features of the code are tested:
+- structural optimization with B3LYP, unpolarized, Gamma
+
+##################################
+# pw_cluster : N and NH4 and H2O #
+##################################
+The following features of the code are tested:
+- Martyna-Tuckermann method for isolated systems
+- Makov-Payne correction for isolated systems
+
+###############
+# pw_dft : Si #
+###############
+The following features of the code are tested:
+- Various flavours of XC (GGA, no hybrid-meta-nonlocal XC)
+
+#########################
+# pw_dipole : CO and Ni #
+#########################
+The following features of the code are tested:
+- dipole field correction
+
+#####################
+# pw_electric : Si  #
+#####################
+The following features of the code are tested:
+- finite electric field using Berry's phase approach
+
+#######################
+# pw_eval_infix : Si  #
+#######################
+The following features of the code are tested:
+- parser
+
+###################
+# pw_gau-pbe : Si #
+###################
+The following features of the code are tested:
+-GAU-PBE functional
+
+###############
+# pw_hse : Si #
+###############
+The following features of the code are tested:
+- HSE hybrid functional, nq=1
+- HSE hybrid functional, nq=2
+- HSE hybrid functional, nq=4
+
+####################
+# pw_langevin : H2 #
+####################
+The following features of the code are tested:
+- Langevin dynamics, Smart Monte Carlo algorithm
+
+###################
+# pw_lattice : H2 #
+###################
+The following features of the code are tested:
+- all bravais lattices, CELL_PARAMETERS, a b c parameters
+- Gamma and automatic k-points
+
+##################
+# pw_lda+U : FeO #
+##################
+The following features of the code are tested:
+- LDA+U with standard and user-defined occupancies
+- forces and stresses, gamma-only case
+
+####################
+# pw_lsda : Ni fcc #
+####################
+The following features of the code are tested:
+- LSDA with starting magnetization and free occupancies
+- core corrections
+- davidson and cg diagonalizations
+- simple, TF, local-TF mixing, ndim=4,8
+- constrained occupancies: tot_magnetization, nelup+neldw
+- LSDA stress
+- non-scf calculation
+
+###############
+# pw_md : Si  #
+###############
+The following features of the code are tested:
+- verlet algorithm
+- potential extrapolation
+- wavefunction extrapolation
+
+#####################
+# pw_metaGGA : C4H6 #
+#####################
+The following features of the code are tested:
+- meta-GGA
+
+#####################
+# pw_metal : Al fcc #
+#####################
+The following features of the code are tested:
+- occupancies: all smearing schemes, tetrahedra
+- stress in metals
+- non-scf calculation with smearing and tetrahedra
+
+########################
+# pw_noncolin : Fe bcc #
+########################
+The following features of the code are tested:
+- noncollinear magnetization
+- davidson and cg diagonalizations
+- constraints: atomic, atomic direction, total magnetization
+- noncollinear stress
+- non-scf calculation, tetrahedra
+- hybrid functionals (norm-conserving)
+
+##########################
+# pw_paw-atom : O and Cu #
+##########################
+The following features of the code are tested:
+- PAW
+
+#####################
+# pw_paw-bfgs : H2O #
+#####################
+The following features of the code are tested:
+- PAW with bfgs
+
+#######################
+# pw_paw-vcbfgs : H2O #
+#######################
+The following features of the code are tested:
+- PAW with variable-cell bfgs
+
+##################
+# pw_pbeq2d : Cu #
+##################
+The following features of the code are tested:
+- Modified PBE functional PBEQ2D
+
+###############
+# pw_pbe : Si #
+###############
+The following features of the code are tested:
+- BE0 hybrid functional, nq=1
+- BE0 hybrid functional, nq=2
+- BE0 hybrid functional, nq=4
+
+#########################
+# pw_plugin-pw2casino : #
+#########################
+The following features of the code are tested:
+- interface with CASINO
+
+#################
+# pw_relax : CO #
+#################
+The following features of the code are tested:
+- forces
+- bfgs and damped dynamics
+- energies, forces, bfgs with saw-like electric field
+- bfgs with external forces
+
+##################
+# pw_relax2 : Al #
+##################
+The following features of the code are tested:
+- forces in metals
+- bfgs_ndim=3
+
+###################
+# pw_scf : Si fcc #
+###################
+The following features of the code are tested:
+- davidson and cg diagonalizations
+- simple, TF, local-TF mixing, ndim=4,8
+- Gamma, automatic, list of k-points (tpiba, crystal, tpiba_b)
+- wf_collect, disk_io, force_symmorphic, use_all_frac options
+- stress with k-points and at Gamma
+- non-scf calculation
+- old "ncpp" format for pseudopotentials
+
+#########################
+# pw_spinorbit : Pt fcc #
+#########################
+The following features of the code are tested:
+- spin-orbit + noncollinear magnetization
+- spin-orbit stress
+- non-scf calculation, tetrahedra
+
+#######################################
+# pw_uspp : Cu fcc and H2O and Ni fcc #
+#######################################
+The following features of the code are tested:
+- US PP, both single and double grid
+- davidson and cg diagonalizations
+- simple, TF, local-TF mixing, ndim=4,8
+- stress with single and double grid
+- non-scf calculation
+- hybrid functionals (pbe0/hse, gamma/k, real/G-space)
+- old Vanderbilt format for pseudopotentials
+- Fake coulombian (1/r) pseudopotential
+- core corrections
+- stress with core corrections
+- non-scf calculation
+
+####################
+# pw_vc-relax : As #
+####################
+The following features of the code are tested:
+- Variable-cell optimization (both damped dynamics and bfgs) at zero pressure and under an external pressure
+
+#################
+# pw_vc-md : As #
+#################
+The following features of the code are tested:
+- Variable-cell dynamics (Wentzcovitch dynamics) at zero pressure and under an external pressure
+
+##############
+# pw_vdw : C #
+##############
+The following features of the code are tested:
+- Dispersion (van der Waals) interactions with DFT-D (Grimme)
+- As above, with vdW-DF[1-4] (nonlocal) functionals
+- As above, with vdW-DF-C09  (nonlocal) functionals
+- As above, Tkatchenko-Scheffler
+
+##############
+# pw_xdm : C #
+##############
+The following features of the code are tested:
+- XDM dispersion correction.
+
+
+#################################################################################################
 # EPW tests
 #################################################################################################
 #############################
@@ -128,48 +387,6 @@ The following features of the code are tested:
 This test is to compare electron-phonon matrix element produced directly by the phonon code 
 and by EPW. It requires modification to the phonon code. 
 Note that this folder is NOT tested in the test-suite but is here as it can be useful. 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
