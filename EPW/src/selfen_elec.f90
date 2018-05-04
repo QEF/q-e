@@ -648,7 +648,7 @@
     ! (but in this case they are the same)
     !
     IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
-        ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+         ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
       !
       fermicount = fermicount + 1
       DO imode = 1, nmodes

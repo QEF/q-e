@@ -84,24 +84,33 @@
   !------------------------------------------------------------
   !!
   !!
-  !!  This SUBROUTINE write the prefix.win file which wannier90.x
+  !!  This subroutine writes the prefix.win file which wannier90.x
   !!  needs to run.  Primarily it contains information about the 
-  !!  windows USEd for the disentanglement, and the initial projections.
+  !!  windows used for the disentanglement, and the initial projections.
   !!  JN - 10/2008  projections now in elph.in file  
   !------------------------------------------------------------
   !
+  USE kinds,       ONLY : DP
   USE io_files,    ONLY : prefix
   USE io_epw,      ONLY : iuwinfil
   USE io_global,   ONLY : meta_ionode
+  USE pwcom,       ONLY : et, nbnd, nkstot, nks
   USE epwcom,      ONLY : nbndsub, nwanxx, proj, iprint, dis_win_min, &
                           dis_win_max, dis_froz_min, dis_froz_max, num_iter, &
-                          wdata 
+                          bands_skipped, wdata 
+  USE constants_epw, ONLY : ryd2ev
   !
-  implicit none
+  IMPLICIT NONE
   !
-  integer :: i
+  INTEGER :: i
   !
-  logical :: random
+  REAL(KIND=DP) :: et_tmp(nbnd,nkstot)
+  !! eigenvalues on full coarse k-mesh
+  !
+  LOGICAL :: random
+  !
+  CALL poolgather ( nbnd, nkstot, nks, et(1:nbnd,1:nks), et_tmp)
+  et_tmp = et_tmp*ryd2ev
   !
   IF (meta_ionode) THEN
     !
@@ -113,7 +122,7 @@
     WRITE (iuwinfil,'(a)') "begin projections"
     !
     random = .true.
-    DO i = 1, nbndsub+1
+    DO i = 1, nbndsub
        IF (proj(i) .ne. ' ') THEN
           WRITE (iuwinfil,*) trim(proj(i))
           random = .false.
@@ -124,8 +133,15 @@
     !
     WRITE (iuwinfil,'(a)') "end projections"
     !
+    IF (bands_skipped .ne. ' ') WRITE(iuwinfil,*) bands_skipped
+    !
     WRITE (iuwinfil,'("num_wann ",i3)') nbndsub
     WRITE (iuwinfil,'("iprint ",i3)') iprint
+    !
+    IF ( dis_win_min .lt. minval(et_tmp) ) dis_win_min = minval(et_tmp)
+    IF ( dis_win_max .gt. maxval(et_tmp) ) dis_win_max = maxval(et_tmp)
+    IF ( dis_froz_min .lt. minval(et_tmp) ) dis_froz_min = minval(et_tmp)
+    IF ( dis_froz_max .gt. maxval(et_tmp) ) dis_froz_max = maxval(et_tmp)
     !
     WRITE (iuwinfil, '("dis_win_min ", f9.3)')  dis_win_min
     WRITE (iuwinfil, '("dis_win_max ", f9.3)')  dis_win_max
@@ -143,9 +159,6 @@
   ENDIF
   !
   END SUBROUTINE write_winfil
-
-
-
 !------------------------------------------------------------
   SUBROUTINE proj_w90
 !------------------------------------------------------------
@@ -176,6 +189,7 @@
   !
   logical :: lwin( nbnd, nks ), lwinq( nbnd, nks )
   ! FG: introduced after extensive compiler tests
+  logical :: exband( nbnd )
   !
   WRITE(stdout,'(5x,"Computing energy projections")')
   ! dummy var
@@ -196,7 +210,7 @@
   ALLOCATE (cu (nbnd, n_wannier, nks) )
   ALLOCATE (cuq(nbnd, n_wannier, nks) )
   !
-  CALL loadumat(nbnd, n_wannier, nks, nkstot, xxq, cu, cuq, lwin, lwinq) 
+  CALL loadumat(nbnd, n_wannier, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband) 
   ! FG: introduced after ifort checks
 
   !

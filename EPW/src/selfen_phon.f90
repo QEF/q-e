@@ -32,14 +32,14 @@
   use epwcom,     ONLY : nbndsub, fsthick, &
                          eptemp, ngaussw, degaussw, shortrange, &
                          nsmear, delta_smear, eps_acustic, specfun_ph, &
-                         efermi_read, fermi_energy, delta_approx
+                         efermi_read, fermi_energy, delta_approx, vme
   use pwcom,      ONLY : nelec, ef, isk
   use elph2,      ONLY : epf17, ibndmax, ibndmin, etf, &
                          wkf, xqf, wqf, nkqf, nqtotf,   &
                          nkf, wf, nkqtotf, xqf, &
                          lambda_all, lambda_v_all, &
-                         dmef, gamma_all,gamma_v_all, efnew
-  USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi
+                         dmef, vmef, gamma_all,gamma_v_all, efnew
+  USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, eps4
   use mp,         ONLY : mp_barrier, mp_sum
   use mp_global,  ONLY : inter_pool_comm
   !
@@ -204,26 +204,42 @@
       ikk = 2 * ik - 1
       ikq = ikk + 1
       ! 
-      coskkq = 0.d0
-      DO ibnd = 1, ibndmax-ibndmin+1
-        DO jbnd = 1, ibndmax-ibndmin+1
-          ! coskkq = (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
-          ! this is different from :   coskkq = (vk dot vkq) / |vk||vkq|
-          ! In principle the only coskkq contributing to lambda_tr are both near the
-          ! Fermi surface and the magnitudes will not differ greatly between vk and vkq
-          ! we may implement the approximation to the angle between k and k+q vectors also 
-          ! listed in Grimvall
-          !
-          ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
-          ! 1/m  = 2 in Rydberg atomic units
-          !
-          vkk(:, ibnd ) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
-          vkq(:, jbnd ) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
-          IF ( abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) > 1.d-4) &
-              coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
-              DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
+      coskkq = zero
+      ! coskkq = (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
+      ! this is different from :   coskkq = (vk dot vkq) / |vk||vkq|
+      ! In principle the only coskkq contributing to lambda_tr are both near the
+      ! Fermi surface and the magnitudes will not differ greatly between vk and vkq
+      ! we may implement the approximation to the angle between k and k+q
+      ! vectors also listed in Grimvall
+      !
+      IF (vme ) THEN 
+        DO ibnd = 1, ibndmax-ibndmin+1
+          DO jbnd = 1, ibndmax-ibndmin+1
+            !
+            ! vmef is in units of Ryd * bohr
+            !
+            vkk(:, ibnd ) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
+            vkq(:, jbnd ) = REAL (vmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
+            IF ( abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) > eps4) &
+                coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
+                DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
+          ENDDO
         ENDDO
-      ENDDO
+      ELSE
+        DO ibnd = 1, ibndmax-ibndmin+1
+          DO jbnd = 1, ibndmax-ibndmin+1
+            !
+            ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+            ! 1/m  = 2 in Rydberg atomic units
+            !
+            vkk(:, ibnd ) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
+            vkq(:, jbnd ) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
+            IF ( abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) > eps4) &
+                coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
+                DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
+          ENDDO
+        ENDDO
+      ENDIF
       !
       !DBSP
       !if (ik==3) THEN
@@ -233,7 +249,7 @@
       !
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
       IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-          ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+           ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
         !
         fermicount = fermicount + 1
         DO imode = 1, nmodes
@@ -398,14 +414,14 @@ END SUBROUTINE selfen_phon_q
   use epwcom,     ONLY : nbndsub, fsthick, &
                          eptemp, ngaussw, degaussw, shortrange, &
                          nsmear, delta_smear, eps_acustic, &
-                         efermi_read, fermi_energy, delta_approx
+                         efermi_read, fermi_energy, delta_approx, vme
   use pwcom,      ONLY : nelec, ef, isk
   use elph2,      ONLY : epf17, ibndmax, ibndmin, etf, etf_k, &
                          wkf, xqf, wqf, nkqf, nqtotf,   &
                          wf, nkqtotf, xqf, nqf, &
                          lambda_all, lambda_v_all, &
-                         dmef, gamma_all,gamma_v_all, efnew
-  USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi
+                         dmef, vmef, gamma_all,gamma_v_all, efnew
+  USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, eps4
   use mp,         ONLY : mp_barrier, mp_sum, mp_bcast
   use mp_global,  ONLY : me_pool, inter_pool_comm
   USE mp_world,   ONLY : mpime
@@ -591,30 +607,46 @@ END SUBROUTINE selfen_phon_q
       ikq = 2 * iq
       ikk = ikq - 1
       ! 
-      coskkq = 0.d0
-      DO ibnd = 1, ibndmax-ibndmin+1
-        DO jbnd = 1, ibndmax-ibndmin+1
-          ! coskkq = (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
-          ! this is different from :   coskkq = (vk dot vkq) / |vk||vkq|
-          ! In principle the only coskkq contributing to lambda_tr are both near the
-          ! Fermi surface and the magnitudes will not differ greatly between vk and vkq
-          ! we may implement the approximation to the angle between k and k+q vectors also 
-          ! listed in Grimvall
-          !
-          ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
-          ! 1/m  = 2 in Rydberg atomic units
-          !
-          vkk(:, ibnd ) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
-          vkq(:, jbnd ) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
-          IF ( abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) .gt. 1.d-4) &
-               coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
-               DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
+      coskkq = zero
+      ! coskkq = (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
+      ! this is different from :   coskkq = (vk dot vkq) / |vk||vkq|
+      ! In principle the only coskkq contributing to lambda_tr are both near the
+      ! Fermi surface and the magnitudes will not differ greatly between vk and vkq
+      ! we may implement the approximation to the angle between k and k+q
+      ! vectors also listed in Grimvall
+      !
+      IF (vme ) THEN
+        DO ibnd = 1, ibndmax-ibndmin+1
+          DO jbnd = 1, ibndmax-ibndmin+1
+            !
+            ! vmef is in units of Ryd * bohr
+            !
+            vkk(:, ibnd ) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
+            vkq(:, jbnd ) = REAL (vmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
+            IF ( abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) > eps4) &
+                coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
+                DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
+          ENDDO
         ENDDO
-      ENDDO
+      ELSE
+        DO ibnd = 1, ibndmax-ibndmin+1
+          DO jbnd = 1, ibndmax-ibndmin+1
+            !
+            ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+            ! 1/m  = 2 in Rydberg atomic units
+            !
+            vkk(:, ibnd ) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk ) )
+            vkq(:, jbnd ) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
+            IF ( abs ( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2) > eps4) &
+                coskkq(ibnd, jbnd ) = DDOT(3, vkk(:,ibnd ), 1, vkq(:,jbnd),1)  / &
+                DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd),1)
+          ENDDO
+        ENDDO
+      ENDIF
       !
       ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
       IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-          ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+           ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
         !
         fermicount = fermicount + 1
         DO imode = 1, nmodes

@@ -16,26 +16,21 @@
   !!
   !-----------------------------------------------------------------------
   USE kinds,         ONLY : DP
-  USE io_global,     ONLY : stdout
+  USE io_global,     ONLY : stdout, ionode_id
   USE io_epw,        ONLY : iuindabs
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, lrepmatf, shortrange, &
                             fsthick, eptemp, ngaussw, degaussw, &
                             eps_acustic, efermi_read, fermi_energy,&
-                            restart, restart_freq, &
-                            omegamin, omegamax, omegastep, n_r, scissor
-  USE pwcom,         ONLY : ef !, nelec, isk
+                            vme, omegamin, omegamax, omegastep, n_r, scissor
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
                             nkf, epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
-                            sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, &
+                            sigmar_all, sigmai_all, sigmai_mode, efnew, &
                             dmef, omegap, alpha_abs, vmef, etf_ks
   USE transportcom,  ONLY : lower_bnd, upper_bnd
-  USE control_flags, ONLY : iverbosity
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, czero
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : inter_pool_comm
-  USE mp_world,      ONLY : mpime
-  USE io_global,     ONLY : ionode_id
   USE cell_base,     ONLY : omega
   !
   implicit none
@@ -217,21 +212,45 @@
       END IF
     END DO
     !
-    DO ibnd = 1, ibndmax-ibndmin+1
-      DO jbnd = 1, ibndmax-ibndmin+1
-        IF (ABS(scissor) > 0.000001 .AND. &
-            ABS( etf_ks(ibndmin-1+ibnd,ikk)-etf_ks(ibndmin-1+jbnd,ikk)) > 0.000001 .AND. &
-            ABS( etf_ks(ibndmin-1+ibnd,ikq)-etf_ks(ibndmin-1+jbnd,ikq)) > 0.000001 ) THEN
-          vkk(:,ibnd,jbnd) = 2.0 * dmef (:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikk) &
-               *( etf(ibndmin-1+ibnd,ikk)-etf(ibndmin-1+jbnd,ikk))/( etf_ks(ibndmin-1+ibnd,ikk)-etf_ks(ibndmin-1+jbnd,ikk))
-          vkq(:,ibnd,jbnd) = 2.0 * dmef (:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikq) &
-               *( etf(ibndmin-1+ibnd,ikq)-etf(ibndmin-1+jbnd,ikq))/( etf_ks(ibndmin-1+ibnd,ikq)-etf_ks(ibndmin-1+jbnd,ikq))
-        ELSE
-          vkk(:,ibnd,jbnd) = 2.0 * dmef (:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikk) 
-          vkq(:,ibnd,jbnd) = 2.0 * dmef (:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikq) 
-        END IF
+    ! RM - vme version should be checked
+    IF ( vme ) THEN 
+      DO ibnd = 1, ibndmax-ibndmin+1
+        DO jbnd = 1, ibndmax-ibndmin+1
+          ! vmef is in units of Ryd * bohr
+          IF (ABS(scissor) > eps6 .AND. &
+              ABS( etf_ks(ibndmin-1+ibnd,ikk)-etf_ks(ibndmin-1+jbnd,ikk)) > eps6 .AND. &
+              ABS( etf_ks(ibndmin-1+ibnd,ikq)-etf_ks(ibndmin-1+jbnd,ikq)) > eps6 ) THEN
+            vkk(:,ibnd,jbnd) = vmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikk) &
+                             * ( etf(ibndmin-1+ibnd,ikk)    - etf(ibndmin-1+jbnd,ikk) ) & 
+                             / ( etf_ks(ibndmin-1+ibnd,ikk) - etf_ks(ibndmin-1+jbnd,ikk) )
+            vkq(:,ibnd,jbnd) = vmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd,ikq) &
+                             * ( etf(ibndmin-1+ibnd,ikq)    - etf(ibndmin-1+jbnd,ikq) ) & 
+                             / ( etf_ks(ibndmin-1+ibnd,ikq) - etf_ks(ibndmin-1+jbnd,ikq) )
+          ELSE 
+            vkk(:,ibnd,jbnd) = vmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikk)
+            vkq(:,ibnd,jbnd) = vmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikq)
+          END IF
+        END DO
       END DO
-    END DO
+    ELSE
+      DO ibnd = 1, ibndmax-ibndmin+1
+        DO jbnd = 1, ibndmax-ibndmin+1
+          IF (ABS(scissor) > eps6 .AND. &
+              ABS( etf_ks(ibndmin-1+ibnd,ikk)-etf_ks(ibndmin-1+jbnd,ikk)) > eps6 .AND. &
+              ABS( etf_ks(ibndmin-1+ibnd,ikq)-etf_ks(ibndmin-1+jbnd,ikq)) > eps6 ) THEN
+            vkk(:,ibnd,jbnd) = 2.0 * dmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikk) &
+                             * ( etf(ibndmin-1+ibnd,ikk)    - etf(ibndmin-1+jbnd,ikk) ) & 
+                             / ( etf_ks(ibndmin-1+ibnd,ikk) - etf_ks(ibndmin-1+jbnd,ikk) )
+            vkq(:,ibnd,jbnd) = 2.0 * dmef (:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikq) &
+                             * ( etf(ibndmin-1+ibnd,ikq)    - etf(ibndmin-1+jbnd,ikq) ) & 
+                             / ( etf_ks(ibndmin-1+ibnd,ikq) - etf_ks(ibndmin-1+jbnd,ikq) )
+          ELSE
+            vkk(:,ibnd,jbnd) = 2.0 * dmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikk) 
+            vkq(:,ibnd,jbnd) = 2.0 * dmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikq) 
+          END IF
+        END DO
+      END DO
+    ENDIF
     ! 
     DO ibnd = 1, ibndmax-ibndmin+1
       !  the energy of the electron at k (relative to Ef)

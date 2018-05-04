@@ -44,7 +44,7 @@
                             nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
                             specfun_pl
   USE noncollin_module, ONLY : noncolin
-  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, eps2, zero, czero, &
+  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, eps2, zero, czero, cone, &
                             twopi, ci, kelvin2eV
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
@@ -58,7 +58,7 @@
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,   &
                             nkqtotf, sigmar_all, zi_allvb, inv_tau_all, Fi_all, &
-                            F_current, F_SERTA, inv_tau_allcb, zi_allcb
+                            F_current, F_SERTA, inv_tau_allcb, zi_allcb, exband
   USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                             upper_bnd, ixkqf_tr,  s_BZtoIBZ_full
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch, &
@@ -262,6 +262,7 @@
              cuq ( nbnd, nbndsub, nks), & 
              lwin ( nbnd, nks ), &
              lwinq ( nbnd, nks ), &
+             exband ( nbnd ), &
              irvec (3, 20*nk1*nk2*nk3), &
              ndegen_k (20*nk1*nk2*nk3), &
              ndegen_q (20*nq1*nq2*nq3), &
@@ -389,17 +390,21 @@
      !
      xxq = 0.d0 
      CALL loadumat &
-          ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq )  
+          ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband )  
      !
      ! ------------------------------------------------------
      !   Bloch to Wannier transform
      ! ------------------------------------------------------
      !
-     ALLOCATE ( chw     ( nbndsub, nbndsub, nrr_k ),        &
-          chw_ks  ( nbndsub, nbndsub, nrr_k ),        &
-          cdmew   ( 3, nbndsub, nbndsub, nrr_k ),     &
-          rdw     ( nmodes,  nmodes,  nrr_q ) )
-     IF (vme) ALLOCATE(cvmew   ( 3, nbndsub, nbndsub, nrr_k ) )
+     ALLOCATE( chw    ( nbndsub, nbndsub, nrr_k ),        &
+               chw_ks ( nbndsub, nbndsub, nrr_k ),        &
+               rdw    ( nmodes,  nmodes,  nrr_q ) )
+
+     IF (vme) THEN
+       ALLOCATE( cvmew ( 3, nbndsub, nbndsub, nrr_k ) )
+     ELSE
+       ALLOCATE( cdmew ( 3, nbndsub, nbndsub, nrr_k ) )
+     ENDIF
      ! 
      ! SP : Let the user chose. If false use files on disk
      ALLOCATE(epmatwe_mem ( nbndsub, nbndsub, nrr_k, nmodes))
@@ -408,32 +413,31 @@
      ! Hamiltonian
      !
      CALL hambloch2wan &
-          ( nbnd, nbndsub, nks, nkstot, et, xk, cu, lwin, nrr_k, irvec_kk, wslen, chw )
+          ( nbnd, nbndsub, nks, nkstot, et, xk, cu, lwin, exband, nrr_k, irvec_kk, wslen, chw )
      !
      ! Kohn-Sham eigenvalues
      !
      IF (eig_read) THEN
        WRITE (stdout,'(5x,a)') "Interpolating MB and KS eigenvalues"
        CALL hambloch2wan &
-            ( nbnd, nbndsub, nks, nkstot, et_ks, xk, cu, lwin, nrr_k, irvec_kk, wslen, chw_ks )
+            ( nbnd, nbndsub, nks, nkstot, et_ks, xk, cu, lwin, exband, nrr_k, irvec_kk, wslen, chw_ks )
      ENDIF
      !
-     ! Dipole
-     !
-    ! CALL dmebloch2wan &
-    !      ( nbnd, nbndsub, nks, nkstot, nkstot, dmec, xk, cu, nrr_k, irvec_kk, wslen )
-     CALL dmebloch2wan &
-          ( nbnd, nbndsub, nks, nkstot, dmec, xk, cu, nrr_k, irvec_kk, wslen, lwin )
+     IF (vme) THEN
+       ! Transform of position matrix elements
+       ! PRB 74 195118  (2006)
+       CALL vmebloch2wan &
+            ( nbnd, nbndsub, nks, nkstot, xk, cu, nrr_k, irvec_kk, wslen, lwin, exband )
+     ELSE
+       ! Dipole
+       CALL dmebloch2wan &
+            ( nbnd, nbndsub, nks, nkstot, dmec, xk, cu, nrr_k, irvec_kk, wslen, lwin, exband )
+     ENDIF
      !
      ! Dynamical Matrix 
      !
      IF (.not. lifc) CALL dynbloch2wan &
                           ( nmodes, nqc, xqc, dynq, nrr_q, irvec_qq, wslen )
-     !
-     ! Transform of position matrix elements
-     ! PRB 74 195118  (2006)
-     IF (vme) CALL vmebloch2wan &
-         ( nbnd, nbndsub, nks, nkstot, xk, cu, nrr_k, irvec_kk, wslen )
      !
      ! Electron-Phonon vertex (Bloch el and Bloch ph -> Wannier el and Bloch ph)
      !
@@ -443,7 +447,7 @@
        !
        ! we need the cu again for the k+q points, we generate the map here
        !
-       CALL loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq )
+       CALL loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband )
        !
        DO imode = 1, nmodes
          !
@@ -485,6 +489,7 @@
   IF ( ALLOCATED (cuq) )     DEALLOCATE (cuq)
   IF ( ALLOCATED (lwin) )    DEALLOCATE (lwin)
   IF ( ALLOCATED (lwinq) )   DEALLOCATE (lwinq)
+  IF ( ALLOCATED (exband) )  DEALLOCATE (exband)
   CLOSE(iunepmatwe, status = 'delete')
   CLOSE(iunepmatwp)
   ! 
@@ -508,19 +513,27 @@
   CALL loadqmesh_serial
   CALL loadkmesh_para
   !
-  ALLOCATE ( epmatwef( nbndsub, nbndsub, nrr_k),             &
-       wf ( nmodes,  nqf ), etf ( nbndsub, nkqf),                   &
-       etf_ks ( nbndsub, nkqf),                   &
-       epmatf( nbndsub, nbndsub), cufkk ( nbndsub, nbndsub), &
-       cufkq ( nbndsub, nbndsub), uf ( nmodes, nmodes),              &
-       bmatf( nbndsub, nbndsub), eps_rpa( nmodes) )
+  ALLOCATE ( epmatwef( nbndsub, nbndsub, nrr_k),         &
+             wf( nmodes,  nqf ),                         &
+             etf( nbndsub, nkqf),                        &
+             etf_ks( nbndsub, nkqf),                     &
+             epmatf( nbndsub, nbndsub),                  &
+             cufkk( nbndsub, nbndsub),                   &
+             cufkq( nbndsub, nbndsub),                   & 
+             uf( nmodes, nmodes),                        &
+             bmatf( nbndsub, nbndsub),                   & 
+             eps_rpa( nmodes) )
   !
   ! Need to be initialized
+  etf_ks(:,:) = zero
   epmatf(:,:) = czero
-  ! allocate dipole matrix elements after getting grid size
+  ! allocate velocity and dipole matrix elements after getting grid size
   !
-  ALLOCATE ( dmef(3, nbndsub, nbndsub, 2 * nkf) )
-  IF (vme) ALLOCATE ( vmef(3, nbndsub, nbndsub, 2 * nkf) )
+  IF (vme) THEN 
+     ALLOCATE ( vmef(3, nbndsub, nbndsub, 2 * nkf) )
+  ELSE
+     ALLOCATE ( dmef(3, nbndsub, nbndsub, 2 * nkf) )
+  ENDIF
   !
   ALLOCATE(cfac(nrr_k))
   ALLOCATE(cfacq(nrr_k))
@@ -676,13 +689,13 @@
      !  
      IF (parallel_k) efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
      IF (parallel_q) THEN 
-     IF (mpime .eq. ionode_id) THEN
-       efnew = efermig_seq(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
-       ! etf on the full k-grid is later required for selfen_phon_k          
-       etf_k = etf
-     ENDIF
-     CALL mp_bcast (efnew, ionode_id, inter_pool_comm)
-     CALL mp_bcast (etf_k, ionode_id, inter_pool_comm)
+       IF (mpime .eq. ionode_id) THEN
+         efnew = efermig_seq(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
+         ! etf on the full k-grid is later required for selfen_phon_k          
+         etf_k = etf
+       ENDIF
+       CALL mp_bcast (efnew, ionode_id, inter_pool_comm)
+       CALL mp_bcast (etf_k, ionode_id, inter_pool_comm)
      ENDIF
      !
      WRITE(stdout, '(/5x,a,f10.6,a)') &
@@ -694,7 +707,7 @@
         WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
      WRITE(stdout,'(/5x,a)') repeat('=',67)
      !
-     ef=efnew
+     ef = efnew
      !
   ENDIF
   !
@@ -995,48 +1008,52 @@
              ! Kohn-Sham first, then get the rotation matricies for following interp.
              IF (eig_read) THEN
                 CALL hamwan2bloch &
-                  ( nbndsub, nrr_k, cufkk, etf_ks (:, ikk), chw_ks, cfac)
+                  ( nbndsub, nrr_k, cufkk, etf_ks(:, ikk), chw_ks, cfac)
                 CALL hamwan2bloch &
-                  ( nbndsub, nrr_k, cufkq, etf_ks (:, ikq), chw_ks, cfacq)
+                  ( nbndsub, nrr_k, cufkq, etf_ks(:, ikq), chw_ks, cfacq)
              ENDIF
              !
              CALL hamwan2bloch &
-                  ( nbndsub, nrr_k, cufkk, etf (:, ikk), chw, cfac)
+                  ( nbndsub, nrr_k, cufkk, etf(:, ikk), chw, cfac)
              CALL hamwan2bloch &
-                  ( nbndsub, nrr_k, cufkq, etf (:, ikq), chw, cfacq)
+                  ( nbndsub, nrr_k, cufkq, etf(:, ikq), chw, cfacq)
              !
-             ! ------------------------------------------------------        
-             !  dipole: Wannier -> Bloch
-             ! ------------------------------------------------------        
-             !
-             CALL dmewan2bloch &
-                  ( nbndsub, nrr_k, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
-             CALL dmewan2bloch &
-                 ( nbndsub, nrr_k, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfacq)
-             ! 
-             !  ------------------------------------------------------        
-             !   velocity: Wannier -> Bloch
-             !  ------------------------------------------------------        
-             ! 
              IF (vme) THEN
+                !
+                ! ------------------------------------------------------
+                !  velocity: Wannier -> Bloch
+                ! ------------------------------------------------------
+                !
                 IF (eig_read) THEN
                    CALL vmewan2bloch &
-                        ( nbndsub, nrr_k, irvec_kk, ndegen_kk, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks)
+                        ( nbndsub, nrr_k, irvec_kk, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks, cfac )
                    CALL vmewan2bloch &
-                        ( nbndsub, nrr_k, irvec_kk, ndegen_kk, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks)
+                        ( nbndsub, nrr_k, irvec_kk, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks, cfacq )
                 ELSE
                    CALL vmewan2bloch &
-                        ( nbndsub, nrr_k, irvec_kk, ndegen_kk, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw)
+                        ( nbndsub, nrr_k, irvec_kk, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw, cfac )
                    CALL vmewan2bloch &
-                        ( nbndsub, nrr_k, irvec_kk, ndegen_kk, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw)
+                        ( nbndsub, nrr_k, irvec_kk, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw, cfacq )
                 ENDIF
+             ELSE
+                !
+                ! ------------------------------------------------------
+                !  dipole: Wannier -> Bloch
+                ! ------------------------------------------------------
+                !
+                CALL dmewan2bloch &
+                     ( nbndsub, nrr_k, cufkk, dmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
+                CALL dmewan2bloch &
+                     ( nbndsub, nrr_k, cufkq, dmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfacq)
+                !
              ENDIF
              !
              IF (.NOT. scatread) THEN
-               ! interpolate ONLY when (k,k+q) both have at least one band 
+               ! interpolate only when (k,k+q) both have at least one band 
                ! within a Fermi shell of size fsthick 
                !
-               IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) ) THEN
+               IF ( (( minval ( abs(etf(:, ikk) - ef) ) < fsthick ) .and. & 
+                     ( minval ( abs(etf(:, ikq) - ef) ) < fsthick )) ) THEN
                  !
                  !  fermicount = fermicount + 1
                  !
@@ -1110,8 +1127,8 @@
          ! epmatf(j) = sum_i eptmp(i) * uf(i,j)
          !
          DO ik=1, nkf
-           CALL zgemm( 'n', 'n', (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1), nmodes, nmodes, ( 1.d0, 0.d0 ), eptmp(:,:,:,ik),&
-                 (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1), uf, nmodes, ( 0.d0, 0.d0 ), &
+           CALL zgemm( 'n', 'n', (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1), nmodes, nmodes, cone, eptmp(:,:,:,ik),&
+                 (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1), uf, nmodes, czero, &
                  epf17(:,:,:,ik), (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1) )
          ENDDO
          ! 
@@ -1126,11 +1143,11 @@
          IF (prtgkk     ) CALL print_gkk( iq )
          IF (phonselfen ) CALL selfen_phon_q( iq )
          IF (elecselfen ) CALL selfen_elec_q( iq, first_cycle )
-         IF (plselfen   ) CALL selfen_pl_q( iq )
+         IF (plselfen .and. .not.vme ) CALL selfen_pl_q( iq )
          IF (nest_fn    ) CALL nesting_fn_q( iq )
          IF (specfun_el ) CALL spectral_func_q( iq )
          IF (specfun_ph ) CALL spectral_func_ph( iq )
-         IF (specfun_pl ) CALL spectral_func_pl_q( iq )
+         IF (specfun_pl .and. .not.vme ) CALL spectral_func_pl_q( iq )
          IF (ephwrite) THEN
             IF ( iq .eq. 1 ) THEN 
                CALL kmesh_fine
