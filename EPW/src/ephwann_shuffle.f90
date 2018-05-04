@@ -921,7 +921,7 @@
       ! 
       !iter = iter +1
       !
-      DO iq=iq_restart, nqf
+      DO iq = iq_restart, nqf
          !   
          CALL start_clock ( 'ep-interp' )
          !
@@ -1066,7 +1066,6 @@
                  CALL vmewan2bloch &
                       ( nbndsub, nrr_k, irvec_kk, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw, cfacq )
               ENDIF
-              ! 
            ELSE
               !
               ! ------------------------------------------------------
@@ -1078,7 +1077,7 @@
               CALL dmewan2bloch &
                    ( nbndsub, nrr_k, cufkq, dmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfacq)
               !
-           ENDIF ! vme
+           ENDIF
            !
            IF (.NOT. scatread) THEN
              ! interpolate only when (k,k+q) both have at least one band 
@@ -1107,7 +1106,7 @@
                ELSE
                  !
                  CALL ephwan2bloch &
-                   ( nbndsub, nrr_k, irvec_kk, ndegen_kk, epmatwef, xkk, cufkk, cufkq, epmatf, nmodes )
+                   ( nbndsub, nrr_k, epmatwef, cufkk, cufkq, epmatf, nmodes, cfac )
                  !
                ENDIF
                !
@@ -1463,7 +1462,7 @@
            ELSE
              !
              CALL ephwan2bloch &
-               ( nbndsub, nrr_k, irvec_kk, ndegen_kk, epmatwef, xkk, cufkk, cufkq, epmatf, nmodes )
+               ( nbndsub, nrr_k, epmatwef, cufkk, cufkq, epmatf, nmodes, cfac )
              !
            ENDIF
            ! 

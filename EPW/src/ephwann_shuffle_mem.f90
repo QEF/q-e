@@ -62,12 +62,10 @@
   USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                             upper_bnd, ixkqf_tr,  s_BZtoIBZ_full
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch, &
-                            ephwan2blochp, ephwan2bloch, vmewan2bloch, &
-                            dynifc2blochf, dynifc2blochc, ephwan2blochp_mem, &
-                            ephwan2bloch_mem
+                            vmewan2bloch, dynifc2blochf, dynifc2blochc, & 
+                            ephwan2blochp_mem, ephwan2bloch_mem
   USE bloch2wan,     ONLY : hambloch2wan, dmebloch2wan, dynbloch2wan, &
-                            vmebloch2wan, ephbloch2wane, ephbloch2wanp, &
-                            ephbloch2wanp_mem
+                            vmebloch2wan, ephbloch2wane, ephbloch2wanp_mem
   USE superconductivity, ONLY : write_ephmat, count_kpoints, kmesh_fine, &
                             kqmap_fine
   USE transport,     ONLY : transport_coeffs, iterativebte, scattering_rate_q
@@ -481,7 +479,6 @@
      ENDIF
      !
   ENDIF
-  !
   !
   IF ( ALLOCATED (epmatwe_mem) ) DEALLOCATE (epmatwe_mem)
   IF ( ALLOCATED (epmatq) )  DEALLOCATE (epmatq)
@@ -1075,7 +1072,7 @@
                  ELSE
                    !
                    CALL ephwan2bloch_mem &
-                     ( nbndsub, nrr_k, irvec_kk, ndegen_kk, epmatwef, xkk, cufkk, cufkq, epmatf )
+                     ( nbndsub, nrr_k, epmatwef, cufkk, cufkq, epmatf, cfac )
                    !
                  ENDIF
                  !

@@ -145,6 +145,7 @@ SUBROUTINE setup_nnkp (  )
   USE noncollin_module, ONLY : noncolin
   USE constants_epw,    ONLY : bohr
   USE mp_global,        ONLY : intra_pool_comm, mp_sum
+  USE epwcom,           ONLY : nbndskip
 !  USE w90_PARAMETERs,   ONLY : postproc_setup
   USE w90_io,           ONLY : post_proc_flag
   ! 
@@ -345,6 +346,10 @@ SUBROUTINE setup_nnkp (  )
   WRITE(stdout,'("      - Number of total bands is (",i3,")")') nbnd
   WRITE(stdout,'("      - Number of excluded bands is (",i3,")")') nexband
   WRITE(stdout,'("      - Number of wannier functions is (",i3,")")') n_wannier
+  IF ((nexband .gt. 0) .and. (nbndskip .ne. nexband)) THEN
+    WRITE(stdout,'(/5x,"Warning: check if nbndskip = ", i3 " makes sense since ", i3, &
+                  " bands are excluded from wannier projection")') nbndskip, nexband
+  ENDIF
   !
   IF ( (nbnd-nexband).ne.num_bands ) &
       CALL errore('setup_nnkp',' something wrong with num_bands',1)
@@ -757,6 +762,7 @@ SUBROUTINE compute_amn_para
       sgf_spinor = czero
       CALL orient_gf_spinor(npw)
     ENDIF
+
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !
     !  USPP
@@ -2542,12 +2548,12 @@ FUNCTION s()
 END FUNCTION s
 !======== l = 1 =====================================================================
 FUNCTION p_z(cost)
-   USE kinds, ONLY :  DP
-   USE constants_epw, ONLY : fpi
-   implicit none
-   real(DP) ::p_z, cost
-   p_z =  sqrt(3.d0/fpi) * cost
-   RETURN
+  USE kinds, ONLY :  DP
+  USE constants_epw, ONLY : fpi
+  IMPLICIT NONE
+  REAL(DP) ::p_z, cost
+  p_z =  sqrt(3.d0/fpi) * cost
+  RETURN
 END FUNCTION p_z
 FUNCTION px(cost,phi)
   USE kinds, ONLY :  DP

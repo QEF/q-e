@@ -103,8 +103,8 @@
     !   cfac = exp( ci*rdotk ) / ndegen(ir)
     !   !
     !   ! SP : Significantly faster !
-    !   !chf (:,:) = chf (:,:) + cfac * chw (:,:, ir )
-    !   CALL zaxpy(nbnd**2,cfac, chw (1,1, ir ),1, chf (1,1),1)
+    !   !chf(:,:) = chf(:,:) + cfac * chw(:,:,ir)
+    !   CALL zaxpy(nbnd**2, cfac, chw(1,1,ir), 1, chf(1,1), 1)
     !   !
     !ENDDO
     ! New one
@@ -119,7 +119,7 @@
     !
     DO jbnd = 1, nbnd
      DO ibnd = 1, jbnd
-        champ (ibnd + (jbnd - 1) * jbnd/2 ) = &
+        champ(ibnd + (jbnd - 1) * jbnd/2 ) = &
         ( chf( ibnd, jbnd) + conjg ( chf( jbnd, ibnd) ) ) * 0.5d0
      ENDDO
     ENDDO
@@ -771,7 +771,7 @@
     !  p~(k' )   is chf( nbnd, nbnd, 2*ik-1 )
     !  p~(k'+q') is chf( nbnd, nbnd, 2*ik   )
     !
-    ! SUM on ir of: cdmef (1,ibnd,jbnd) = cdmef (1,ibnd,jbnd) + cfac( ir) * cdmew (1, ibnd,jbnd, ir )
+    ! SUM on ir of: cdmef(1,ibnd,jbnd) = cdmef(1,ibnd,jbnd) + cfac(ir) * cdmew(1,ibnd,jbnd,ir)
     CALL zgemv('n', 3*(nbnd**2), nrr, cone, cdmew(:,:,:,:), 3*(nbnd**2), cfac(:), 1, cone, cdmef(:,:,:), 1  )
     !
     !----------------------------------------------------------
@@ -826,11 +826,11 @@
     !
     USE kinds,         ONLY : DP
     use elph2,         ONLY : cvmew 
-    use cell_base,     ONLY : at, celldm, alat
+    use cell_base,     ONLY : at, alat
     USE epwcom,        ONLY : eig_read
-    USE constants_epw, ONLY : twopi, ci, czero, cone, eps4, bohr2ang
+    USE constants_epw, ONLY : twopi, ci, czero, cone, zero, eps4, bohr2ang
     !USE io_global, ONLY : ionode_id
-    USE mp_world,  ONLY : mpime
+    !USE mp_world,  ONLY : mpime
     implicit none
     !
     !  input variables
@@ -887,6 +887,7 @@
     vmef(:,:,:) = czero
     chf_a_tmp(:,:) = czero
     chf_a(:,:,:) = czero
+    irvec_tmp(:) = zero
     !
     !----------------------------------------------------------
     !  STEP 3: inverse Fourier transform to fine k and k+q meshes
@@ -895,13 +896,8 @@
     ! [Eqn. 39 of PRB 74, 195118 (2006)]
     ! A^(W)_{mn,\alpha}(k') = 1/ndegen(R) sum_R e^{ik'R} r_{\alpha}(R)
     !
-    DO ir = 1, nrr
-      !
-      DO ipol = 1, 3
-        cvmef(ipol,:,:) = cvmef(ipol,:,:) + cfac(ir) * cvmew(ipol,:,:,ir)
-      ENDDO
-      !
-    ENDDO
+    ! SUM on ir of: cvmef(1,ibnd,jbnd) = cvmef(1,ibnd,jbnd) + cfac(ir) * cvmew(1,ibnd,jbnd,ir)
+    CALL zgemv('n', 3*(nbnd**2), nrr, cone, cvmew(:,:,:,:), 3*(nbnd**2), cfac(:), 1, cone, cvmef(:,:,:), 1  )
     !
     ! k-derivative of the Hamiltonian in the Wannier gauge
     ! [Eqn. 38 of PRB 74, 195118 (2006)] or [Eq. 29 of PRB 75, 195121 (2007)]
@@ -917,8 +913,8 @@
     DO ir = 1, nrr
       !
       ! convert irvec from reduce to cartesian coordinates
-      ! multiply by celldm(1) since at (crystal axis) are cart. coord. in units of a_0
-      !irvec_tmp(:) = celldm(1) * matmul( at, dble(irvec(:,ir)) )
+      ! multiply by alat since the crystal axis 'at' are in 
+      ! cart. coords. in units of a_0
       irvec_tmp(:) = alat * matmul( at, dble(irvec(:,ir)) )
       DO ipol = 1, 3
         chf_a(ipol,:,:) = chf_a(ipol,:,:) + &
@@ -957,7 +953,7 @@
     DO ipol = 1, 3
       !
       ! chf_a_tmp(:,:) = matmul( chf_a(ipol,:,:), conjg(transpose(cuf(:,:))) )
-      ! chf_a(ipol, :,:) = matmul(cuf(:,:), chf_a_tmp(:,:) )
+      ! chf_a(ipol,:,:) = matmul(cuf(:,:), chf_a_tmp(:,:) )
       !
       CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, chf_a(ipol,:,:), &
                  nbnd, cuf(:,:), nbnd, czero, chf_a_tmp(:,:), nbnd)
@@ -1195,8 +1191,8 @@
     END SUBROUTINE ephwan2blochp
     !
     !---------------------------------------------------------------------------
-    SUBROUTINE ephwan2bloch ( nbnd, nrr, irvec, ndegen, epmatw, &
-           xk, cufkk, cufkq, epmatf, nmodes)
+    SUBROUTINE ephwan2bloch ( nbnd, nrr, epmatw, cufkk, cufkq, &
+           epmatf, nmodes, cfac )
     !---------------------------------------------------------------------------
     !!
     !! Interpolation from Wannier to the fine Bloch grid of the electron-phonon 
@@ -1210,16 +1206,11 @@
     !! number of bands (possibly in the optimal subspace)
     INTEGER, INTENT (in) :: nrr
     !! Number of Wigner-Size points
-    INTEGER, INTENT (in) :: irvec( 3, nrr)
-    !! Coordinates of WS points
-    INTEGER, INTENT (in) :: ndegen(nrr)
-    !! Degeneracy of WS points
     INTEGER, INTENT (in) :: nmodes
     !! number of phonon modes
     !
-    REAL(kind=DP), INTENT (in) :: xk(3)
-    !! kpoint for the interpolation (WARNING: this must be in crystal coord!)
-    !
+    COMPLEX(kind=DP), INTENT (in) :: cfac(nrr)
+    !! Exponential factor
     COMPLEX(kind=DP), INTENT (in) :: epmatw( nbnd, nbnd, nrr, nmodes)
     !! e-p matrix in Wannier representation
     COMPLEX(kind=DP), INTENT (in) :: cufkk(nbnd, nbnd)
@@ -1236,11 +1227,6 @@
     INTEGER :: imode
     !! Counter on  phonon modes
     !
-    REAL(kind=DP) :: rdotk
-    !! $$\mathbf{r}\cdot\mathbf{k}
-    !
-    COMPLEX(kind=DP) :: cfac
-    !! $$e^{i\mathbf{r}\cdot\mathbf{k}}$$
     COMPLEX(kind=DP) :: eptmp( nbnd, nbnd)
     !! Temporary variable
     !
@@ -1256,17 +1242,20 @@
     !
     epmatf = czero
     !
-    DO ir = 1, nrr
-       !
-       ! note xk is assumed to be already in cryst coord
-       !
-       rdotk = twopi * dot_product ( xk, dble(irvec(:, ir)) )
-       cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
-       !
-       DO imode = 1, nmodes
-         epmatf(:, :, imode) = epmatf(:, :, imode) + cfac * epmatw( :, :, ir, imode)
-       ENDDO
-       !
+    !DO ir = 1, nrr
+    !   !
+    !   ! rdotk = twopi * dot_product ( xk, dble(irvec(:,ir)) )
+    !   ! cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
+    !   !
+    !   DO imode = 1, nmodes
+    !     epmatf(:,:,imode) = epmatf(:,:,imode) + cfac(ir) * epmatw(:,:,ir,imode)
+    !   ENDDO
+    !   !
+    !ENDDO
+    !
+    DO imode = 1, nmodes
+      ! SUM on ir of: epmatf(ibnd,jbnd,imode) = epmatf(ibnd,jbnd,imode) + cfac(ir) * epmatw(ibnd,jbnd,ir,imode)
+      CALL zgemv('n', nbnd**2, nrr, cone, epmatw(:,:,:,imode), nbnd**2, cfac(:), 1, cone, epmatf(:,:,imode), 1 )
     ENDDO
     !
     !----------------------------------------------------------
@@ -1294,8 +1283,8 @@
     END SUBROUTINE ephwan2bloch
     ! 
     !---------------------------------------------------------------------------
-    SUBROUTINE ephwan2bloch_mem ( nbnd, nrr, irvec, ndegen, epmatw, &
-           xk, cufkk, cufkq, epmatf )
+    SUBROUTINE ephwan2bloch_mem ( nbnd, nrr, epmatw, cufkk, cufkq, &
+           epmatf, cfac )
     !---------------------------------------------------------------------------
     !!
     !! Interpolation from Wannier to the fine Bloch grid of the electron-phonon 
@@ -1309,14 +1298,9 @@
     !! number of bands (possibly in the optimal subspace)
     INTEGER, INTENT (in) :: nrr
     !! Number of Wigner-Size points
-    INTEGER, INTENT (in) :: irvec( 3, nrr)
-    !! Coordinates of WS points
-    INTEGER, INTENT (in) :: ndegen(nrr)
-    !! Degeneracy of WS points
     !
-    REAL(kind=DP), INTENT (in) :: xk(3)
-    !! kpoint for the interpolation (WARNING: this must be in crystal coord!)
-    !
+    COMPLEX(kind=DP), INTENT (in) :: cfac(nrr)
+    !! Exponential factor
     COMPLEX(kind=DP), INTENT (in) :: epmatw( nbnd, nbnd, nrr)
     !! e-p matrix in Wannier representation
     COMPLEX(kind=DP), INTENT (in) :: cufkk(nbnd, nbnd)
@@ -1331,11 +1315,6 @@
     INTEGER :: ir
     !! Counter on real-space index
     !
-    REAL(kind=DP) :: rdotk
-    !! $$\mathbf{r}\cdot\mathbf{k}
-    !
-    COMPLEX(kind=DP) :: cfac
-    !! $$e^{i\mathbf{r}\cdot\mathbf{k}}$$
     COMPLEX(kind=DP) :: eptmp( nbnd, nbnd)
     !! Temporary variable
     !
@@ -1351,16 +1330,19 @@
     !
     epmatf = czero
     !
-    DO ir = 1, nrr
-       !
-       ! note xk is assumed to be already in cryst coord
-       !
-       rdotk = twopi * dot_product ( xk, dble(irvec(:, ir)) )
-       cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
-       !
-       epmatf(:, :) = epmatf(:, :) + cfac * epmatw( :, :, ir)
-       !
-    ENDDO
+    !DO ir = 1, nrr
+    !   !
+    !   ! note xk is assumed to be already in cryst coord
+    !   !
+    !   ! rdotk = twopi * dot_product ( xk, dble(irvec(:,ir)) )
+    !   ! cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
+    !   !
+    !   epmatf(:,:) = epmatf(:,:) + cfac(ir) * epmatw(:,:,ir)
+    !   !
+    !ENDDO
+    !
+    ! SUM on ir of: epmatf(ibnd,jbnd) = epmatf(ibnd,jbnd) + cfac(ir) * epmatw(ibnd,jbnd,ir)
+    CALL zgemv('n', nbnd**2, nrr, cone, epmatw(:,:,:), nbnd**2, cfac(:), 1, cone, epmatf(:,:), 1 )
     !
     !----------------------------------------------------------
     !  STEP 4: un-rotate to Bloch space, fine grid
