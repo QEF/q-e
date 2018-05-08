@@ -40,6 +40,11 @@ program test_fwinv_gpu
         CALL test_invfft_gpu_1(mp, test, .false., i)
       END IF
     END DO
+    CALL test_fwfft_many_gpu_1(mp, test, .true., 1)
+    CALL test_fwfft_many_gpu_1(mp, test, .false., 1)
+    !
+    CALL test_invfft_many_gpu_1(mp, test, .true., 1)
+    CALL test_invfft_many_gpu_1(mp, test, .false., 1)
     !
     CALL collect_results(test)
     !
@@ -237,7 +242,7 @@ program test_fwinv_gpu
       ! Allocate variables
       ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
       ALLOCATE(data_in_d(dfft%nnr))
-      CALL fill_random(data_in, data_in_d, dfft%nnr_tg)
+      CALL fill_random(data_in, data_in_d, dfft%nnr)
       !
       CALL invfft( 'Wave' , data_in, dfft, 1 )
       CALL invfft( 'Wave' , data_in_d, dfft, 1 )    
@@ -263,6 +268,141 @@ program test_fwinv_gpu
     DEALLOCATE(data_in, data_in_d, aux)
     !
   END SUBROUTINE test_invfft_gpu_1
+  !
+  SUBROUTINE test_fwfft_many_gpu_1(mp, test, gamma_only, ny)
+    USE cudafor
+    USE fft_param,       ONLY : DP
+    USE fft_types,       ONLY : fft_type_descriptor
+    USE stick_base,      ONLY : sticks_map
+    USE fft_interfaces,  ONLY : fwfft
+    implicit none
+    TYPE(mpi_t) :: mp
+    TYPE(tester_t) :: test
+    !
+    TYPE(fft_type_descriptor) :: dfft
+    TYPE(sticks_map) :: smap
+    LOGICAL, INTENT(IN) :: gamma_only
+    INTEGER, INTENT(IN) :: ny
+    !
+    LOGICAL :: parallel
+    COMPLEX(DP), ALLOCATABLE :: data_in(:), aux(:)
+    COMPLEX(DP), ALLOCATABLE, DEVICE :: data_in_d(:)
+    integer, parameter :: howmany=4
+    INTEGER :: i, start
+    !
+    parallel = mp%n .gt. 1
+    CALL fft_desc_init(dfft, smap, 'wave', gamma_only, parallel, mp%comm, nyfft=ny)
+    dfft%rho_clock_label='bla' ; dfft%wave_clock_label='bla'
+    !
+    ! Test 1
+    !
+    IF ( ny .gt. 1 ) THEN
+      ! Not (yet?) possible
+      RETURN
+    ELSE
+      ALLOCATE(data_in(dfft%nnr*howmany), aux(dfft%nnr*howmany))
+      ALLOCATE(data_in_d(dfft%nnr*howmany))
+      CALL fill_random(data_in, data_in_d, dfft%nnr*howmany)
+      !
+      CALL fwfft( 'Wave' , data_in_d, dfft, howmany=howmany)
+      !
+      DO i=0,0
+        start = i*dfft%nnr
+        CALL fwfft( 'Wave' , data_in(1+start:), dfft, 1 )
+        aux(start+1:start+dfft%nnr) = data_in_d(start+1:start+dfft%nnr)
+        ! Check
+        CALL test%assert_close( data_in(start+1:start+dfft%ngw), aux(start+1:start+dfft%ngw) )
+      END DO
+      !
+    ENDIF
+    !
+    ! Test 2
+    !
+    !!!! DEALLOCATE(data_in, data_in_d, aux)
+    !!!! ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
+    !!!! ALLOCATE(data_in_d(dfft%nnr))
+    !!!! CALL fill_random(data_in, data_in_d, dfft%nnr)
+    !!!! !
+    !!!! CALL fwfft( 'Rho' , data_in, dfft, 1 )
+    !!!! CALL fwfft( 'Rho' , data_in_d, dfft, 1 )
+    !!!! aux = data_in_d
+    !!!! ! Check
+    !!!! CALL test%assert_close( data_in, aux )
+    !
+    CALL fft_desc_finalize(dfft, smap)
+    DEALLOCATE(data_in, data_in_d, aux)
+    !
+  END SUBROUTINE test_fwfft_many_gpu_1
+  !
+  SUBROUTINE test_invfft_many_gpu_1(mp, test, gamma_only, ny)
+    USE cudafor
+    USE fft_param,       ONLY : DP
+    USE fft_types,       ONLY : fft_type_descriptor
+    USE stick_base,      ONLY : sticks_map
+    USE fft_interfaces,  ONLY : invfft
+    implicit none
+    TYPE(mpi_t) :: mp
+    TYPE(tester_t) :: test
+    !
+    TYPE(fft_type_descriptor) :: dfft
+    TYPE(sticks_map) :: smap
+    LOGICAL, INTENT(IN) :: gamma_only
+    INTEGER, INTENT(IN) :: ny
+    !
+    LOGICAL :: parallel
+    COMPLEX(DP), ALLOCATABLE :: data_in(:), aux(:)
+    COMPLEX(DP), ALLOCATABLE, DEVICE :: data_in_d(:)
+    INTEGER(kind = cuda_stream_kind) :: strm = 0
+    integer, parameter :: howmany=4
+    integer :: start, i
+    !
+    parallel = mp%n .gt. 1
+    CALL fft_desc_init(dfft, smap, 'wave', gamma_only, parallel, mp%comm, nyfft=ny)
+    dfft%rho_clock_label='bla' ; dfft%wave_clock_label='bla'
+    !
+    ! Test 1
+    !
+    IF ( ny .gt. 1 ) THEN
+      ! Not (yet?) possible
+      RETURN
+    ELSE
+      !
+      ! Allocate variables
+      ALLOCATE(data_in(howmany*dfft%nnr), aux(howmany*dfft%nnr))
+      ALLOCATE(data_in_d(howmany*dfft%nnr))
+      CALL fill_random(data_in, data_in_d, howmany*dfft%nnr)
+      !
+      !CALL invfft( 'Wave' , data_in, dfft, 1 )
+      CALL invfft( 'Wave' , data_in_d, dfft, howmany=howmany, stream=strm )
+      DO i=0,howmany-1
+        start = i*dfft%nnr
+        CALL invfft( 'Wave' , data_in(1+start:), dfft, 1 )
+        aux(start+1:start+dfft%nnr) = data_in_d(start+1:start+dfft%nnr)
+        ! Check
+        CALL test%assert_close( data_in(start+1:start+dfft%nnr), aux(start+1:start+dfft%nnr) )
+      END DO
+    ENDIF
+    !aux = data_in_d
+    ! Check
+    !CALL test%assert_close( data_in, aux )
+    !
+    ! Test 2
+    !
+    !!!!  DEALLOCATE(data_in, data_in_d, aux)
+    !!!!  ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
+    !!!!  ALLOCATE(data_in_d(dfft%nnr))
+    !!!!  CALL fill_random(data_in, data_in_d, dfft%nnr)
+    !!!!  !
+    !!!!  CALL invfft( 'Rho' , data_in, dfft, 1 )
+    !!!!  CALL invfft( 'Rho' , data_in_d, dfft, 1 )
+    !!!!  aux = data_in_d
+    !!!!  ! Check
+    !!!!  CALL test%assert_close( data_in, aux )
+    !!!!  !
+    !!!!  CALL fft_desc_finalize(dfft, smap)
+    !!!!  DEALLOCATE(data_in, data_in_d, aux)
+    !
+  END SUBROUTINE test_invfft_many_gpu_1
   
 end program test_fwinv_gpu
 ! dummy subroutines

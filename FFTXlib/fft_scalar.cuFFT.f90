@@ -27,7 +27,7 @@
 !=----------------------------------------------------------------------=!
 
 
-   SUBROUTINE cft_1z_gpu(c_d, nsl, nz, ldz, isign, cout_d, in_place, stream_in)
+   SUBROUTINE cft_1z_gpu(c_d, nsl, nz, ldz, isign, cout_d, stream, in_place)
 
 !     driver routine for nsl 1d complex fft's of length nz
 !     ldz >= nz is the distance between sequences to be transformed
@@ -44,9 +44,8 @@
 
      INTEGER, INTENT(IN) :: isign
      INTEGER, INTENT(IN) :: nsl, nz, ldz
-     LOGICAL, INTENT(IN), optional :: in_place
-     INTEGER(kind = cuda_stream_kind), INTENT(IN), optional :: stream_in
      INTEGER(kind = cuda_stream_kind) :: stream
+     LOGICAL, INTENT(IN), optional :: in_place
 
      COMPLEX (DP), DEVICE :: c_d(:), cout_d(:)
 
@@ -85,12 +84,6 @@
 
      !
      !   Now perform the FFTs using machine specific drivers
-     !
-     IF( present( stream_in ) ) THEN
-       stream = stream_in
-     ELSE
-       stream = 0
-     ENDIF
      !
      IF ( present( in_place ) ) THEN
        is_inplace = in_place
@@ -185,7 +178,7 @@
 
    END SUBROUTINE cft_1z_gpu
 
-   SUBROUTINE cft_2xy_gpu(r_d, temp_d, nzl, nx, ny, ldx, ldy, isign, pl2ix, stream_in)
+   SUBROUTINE cft_2xy_gpu(r_d, temp_d, nzl, nx, ny, ldx, ldy, isign, stream, pl2ix)
 
 !     driver routine for nzl 2d complex fft's of lengths nx and ny
 !     input : r_d(ldx*ldy)  complex, transform is in-place
@@ -196,15 +189,14 @@
 !     isign > 0 : forward (f(G)=>f(R)), isign <0 backward (f(R) => f(G))
 !     Up to "ndims" initializations (for different combinations of input
 !     parameters nx,ny,nzl,ldx) are stored and re-used if available
-#ifdef TRACK_FLOPS
-     USE flops_tracker, ONLY : fft_ops
-#endif
+!#ifdef TRACK_FLOPS
+!     USE flops_tracker, ONLY : fft_ops
+!#endif
      IMPLICIT NONE
 
      INTEGER, INTENT(IN) :: isign, ldx, ldy, nx, ny, nzl
-     INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
-     INTEGER(kind = cuda_stream_kind), INTENT(IN), optional :: stream_in
      INTEGER(kind = cuda_stream_kind) :: stream
+     INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
 !pgi$ ignore_tkr r_d, temp_d
      COMPLEX (DP), DEVICE :: r_d(ldx,ldy,nzl), temp_d(ldy,nzl,ldx)
      INTEGER :: i, k, j, err, idir, ip, kk, void, istat
@@ -273,11 +265,6 @@
        CALL init_plan()
 
      END IF
-     IF( present( stream_in ) ) THEN
-       stream = stream_in
-     ELSE
-       stream = 0
-     ENDIF
 
 #if defined(__FFTW_ALL_XY_PLANES)
      istat = cufftSetStream(cufft_plan_2d(ip), stream)
@@ -507,7 +494,7 @@
 !
 
 
-   SUBROUTINE cfft3d_gpu( f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign )
+   SUBROUTINE cfft3d_gpu( f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign, stream )
 
   !     driver routine for 3d complex fft of lengths nx, ny, nz
   !     input  :  f_d(ldx*ldy*ldz)  complex, transform is in-place
@@ -524,10 +511,11 @@
 
      INTEGER, INTENT(IN) :: nx, ny, nz, ldx, ldy, ldz, howmany, isign
      COMPLEX (DP), device :: f_d(:)
+     INTEGER(kind = cuda_stream_kind) :: stream
      INTEGER :: i, k, j, err, idir, ip, istat
      REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
-     INTEGER, SAVE :: dims(3,ndims) = -1
+     INTEGER, SAVE :: dims(4,ndims) = -1
 
 !     C_POINTER, save :: fw_plan(ndims) = 0
 !     C_POINTER, save :: bw_plan(ndims) = 0
@@ -558,14 +546,14 @@
      !
      !   Now perform the 3D FFT using the machine specific driver
      !
-
+     istat = cufftSetStream(cufft_plan_3d(ip), stream)
      IF( isign < 0 ) THEN
 
         istat = cufftExecZ2Z( cufft_plan_3d(ip), f_d(1), f_d(1), CUFFT_FORWARD )
 
        tscale = 1.0_DP / DBLE( nx * ny * nz )
-!$cuf kernel do(1) <<<*,*>>>
-        DO i=1, nx*ny*nz
+!$cuf kernel do(1) <<<*,*,0,stream>>>
+        DO i=1, nx*ny*nz*howmany
            f_d( i ) = f_d( i ) * tscale
         END DO
 !       call ZDSCAL( nx * ny * nz, tscale, f_d(1), 1)
@@ -588,7 +576,8 @@
        !   for this combination of parameters
        IF ( ( nx == dims(1,i) ) .and. &
             ( ny == dims(2,i) ) .and. &
-            ( nz == dims(3,i) ) ) THEN
+            ( nz == dims(3,i) ) .and. &
+            ( howmany == dims(4,i) ) ) THEN
          ip = i
          EXIT
        END IF
@@ -608,7 +597,7 @@
        DATA_DIM(3) = ldx
             STRIDE = 1
               DIST = ldx*ldy*ldz
-             BATCH = 1
+             BATCH = howmany
 
        IF( cufft_plan_3d( icurrent) /= 0 )  istat = cufftDestroy( cufft_plan_3d(icurrent) )
 
@@ -624,6 +613,7 @@
        !idir = -1; CALL CREATE_PLAN_3D( fw_plan(icurrent), nx, ny, nz, idir)
        !idir =  1; CALL CREATE_PLAN_3D( bw_plan(icurrent), nx, ny, nz, idir)
        dims(1,icurrent) = nx; dims(2,icurrent) = ny; dims(3,icurrent) = nz
+       dims(4,icurrent) = howmany
        ip = icurrent
        icurrent = MOD( icurrent, ndims ) + 1
      END SUBROUTINE init_plan
@@ -631,7 +621,7 @@
    END SUBROUTINE cfft3d_gpu
    
    SUBROUTINE cfft3ds_gpu (f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign, &
-     do_fft_z, do_fft_y)
+     do_fft_z, do_fft_y, stream)
      !
      !     driver routine for 3d complex "reduced" fft - see cfft3d
      !     The 3D fft are computed only on lines and planes which have
@@ -654,6 +644,7 @@
      
      complex(DP),device :: f_d ( ldx * ldy * ldz )
      integer :: do_fft_y(:), do_fft_z(:)
+     integer(kind = cuda_stream_kind) :: stream
      !
      integer :: m, incx1, incx2
      INTEGER :: i, k, j, err, idir, ip,  ii, jj, istat
@@ -668,7 +659,7 @@
      ! The current version of this function is massively outperformed by
      !  cfft3d_gpu. Leaving the call to full 3D FFT for the time being.
      ! 
-     CALL cfft3d_gpu (f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign)
+     CALL cfft3d_gpu (f_d, nx, ny, nz, ldx, ldy, ldz, howmany, isign, stream)
      return
      
      tscale = 1.0_DP
@@ -691,7 +682,9 @@
      
      END IF
      
-     
+     istat = cufftSetStream(cufft_plan_1d(3, ip), stream)
+     istat = cufftSetStream(cufft_plan_1d(2, ip), stream)
+     istat = cufftSetStream(cufft_plan_1d(1, ip), stream)
      IF ( isign > 0 ) THEN
      
         !
@@ -774,7 +767,7 @@
      
         !call DSCAL (2 * ldx * ldy * nz, 1.0_DP/(nx * ny * nz), f_d(1), 1)
         tscale = 1.0_DP / DBLE( nx * ny * nz )
-        !$cuf kernel do(1) <<<*,*>>>
+        !$cuf kernel do(1) <<<*,*,0,stream>>>
         DO i=1, nx*ny*nz
            f_d( i ) = f_d( i ) * tscale
         END DO

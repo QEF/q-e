@@ -143,7 +143,7 @@ END SUBROUTINE tg_cft3s
 !  General purpose driver, GPU version
 !
 !----------------------------------------------------------------------------
-SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
+SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
   !----------------------------------------------------------------------------
   !
   !! ... isgn = +-1 : parallel 3d fft for rho and for the potential
@@ -175,6 +175,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
   !
   USE cudafor
+  USE nvtx
   USE fftx_buffers,   ONLY : gpu_buffer
   USE fft_scalar,     ONLY : cft_1z_gpu
   USE scatter_mod_gpu,ONLY : fft_scatter_xy_gpu, fft_scatter_yz_gpu, fft_scatter_tg_gpu
@@ -186,12 +187,14 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   TYPE (fft_type_descriptor), INTENT(in) :: dfft   ! descriptor of fft data layout
   COMPLEX(DP), DEVICE, INTENT(inout)     :: f_d( : ) ! array containing data to be transformed
   INTEGER, INTENT(in)                    :: isgn   ! fft direction (potential: +/-1, wave: +/-2, wave_tg: +/-3)
+  INTEGER, INTENT(in)                    :: howmany ! 
   !
   INTEGER                          :: n1, n2, n3, nx1, nx2, nx3
   INTEGER                          :: nnr_
   INTEGER                          :: nsticks_x, nsticks_y, nsticks_z
   COMPLEX(DP), POINTER, DEVICE     :: aux_d (:)
   INTEGER                          :: ierr, i
+  INTEGER(kind = cuda_stream_kind) :: stream  = 0
   !
   !write (6,*) 'enter tg_cft3s ',isgn ; write(6,*) ; FLUSH(6)
   n1  = dfft%nr1  ; n2  = dfft%nr2  ; n3  = dfft%nr3
@@ -219,55 +222,59 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   CALL gpu_buffer%lock_buffer(aux_d, nnr_, ierr);
   !
   IF ( isgn > 0 ) THEN  ! G -> R
+     CALL nvtxStartRangeAsync("tg_cft3s_gpu G->R", 1)
      if (isgn==+3) then 
-        call fft_scatter_tg_opt_gpu ( dfft, f_d, aux_d, nnr_, isgn)
-        CALL cft_1z_gpu( aux_d, nsticks_z, n3, nx3, isgn, f_d )
+        call fft_scatter_tg_opt_gpu ( dfft, f_d, aux_d, nnr_, isgn, stream)
+        CALL cft_1z_gpu( aux_d, nsticks_z, n3, nx3, isgn, f_d, stream )
      else
         !aux_d(1:nnr_)=f_d(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f_d)>size(aux_d)
         !ierr = cudaMemcpy( aux_d(1), f_d(1), nnr_, cudaMemcpyDeviceToDevice )
-        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d, in_place=.true. )
+        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d, stream, in_place=.true. )
      endif
      CALL fft_scatter_yz_gpu ( dfft, f_d, aux_d, nnr_, isgn )
-     CALL cft_1z_gpu( aux_d, nsticks_y, n2, nx2, isgn, f_d )
-     CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn )
-     CALL cft_1z_gpu( aux_d, nsticks_x, n1, nx1, isgn, f_d )
+     CALL cft_1z_gpu( aux_d, nsticks_y, n2, nx2, isgn, f_d, stream )
+     CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn, stream )
+     CALL cft_1z_gpu( aux_d, nsticks_x, n1, nx1, isgn, f_d, stream )
      ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
      if (nsticks_x*nx1 < nnr_) then
-        !$cuf kernel do(1)
+        !$cuf kernel do(1)<<<*,*,0,stream>>>
         do i=nsticks_x*nx1+1, nnr_
             f_d(i) = (0.0_DP,0.0_DP)
         end do
      endif
+     CALL nvtxEndRangeAsync()
      !
   ELSE                  ! R -> G
      !
-     CALL cft_1z_gpu( f_d, nsticks_x, n1, nx1, isgn, aux_d )
-     CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn )
-     CALL cft_1z_gpu( f_d, nsticks_y, n2, nx2, isgn, aux_d )
+     CALL nvtxStartRangeAsync("tg_cft3s_gpu R->G", 2)
+     CALL cft_1z_gpu( f_d, nsticks_x, n1, nx1, isgn, aux_d, stream )
+     CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn, stream )
+     CALL cft_1z_gpu( f_d, nsticks_y, n2, nx2, isgn, aux_d, stream )
      CALL fft_scatter_yz_gpu ( dfft, f_d, aux_d, nnr_, isgn )
 
      if (isgn==-3) then
-        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d )
+        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d, stream )
         ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
         if (nsticks_z*nx3 < nnr_) then
-           !$cuf kernel do(1)
+           !$cuf kernel do(1)<<<*,*,0,stream>>>
            do i=nsticks_z*nx3+1, nnr_
                aux_d(i) = (0.0_DP,0.0_DP)
            end do
         endif
-        call fft_scatter_tg_opt_gpu ( dfft, aux_d, f_d, nnr_, isgn)
+        call fft_scatter_tg_opt_gpu ( dfft, aux_d, f_d, nnr_, isgn, stream)
      else
         !f_d(1:nnr_)=aux_d(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f_d)>size(aux_d)
         !ierr = cudaMemcpy( f_d(1), aux_d(1), nnr_, cudaMemcpyDeviceToDevice )
-        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d, in_place=.true. )
+        CALL cft_1z_gpu( f_d, nsticks_z, n3, nx3, isgn, aux_d, stream, in_place=.true. )
         ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
         if (nsticks_z*nx3 < nnr_) then
-           !$cuf kernel do(1)
+           !$cuf kernel do(1)<<<*,*,0,stream>>>
            do i=nsticks_z*nx3+1, nnr_
                f_d(i) = (0.0_DP,0.0_DP)
            end do
         endif
      endif
+     CALL nvtxEndRangeAsync()
   ENDIF
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
   !
@@ -278,6 +285,169 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
 99 format ( 20 ('(',2f12.9,')') )
   !
 END SUBROUTINE tg_cft3s_gpu
+
+!
+!  Specific driver for the new 'many' call, GPU version
+!
+!----------------------------------------------------------------------------
+SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
+  !----------------------------------------------------------------------------
+  !
+  !! ... isgn = +-1 : parallel 3d fft for rho and for the potential
+  !
+  !! ... isgn = +-2 : parallel 3d fft for wavefunctions
+  !
+  !! ... isgn = +-3 : parallel 3d fft for wavefunctions with task group
+  !
+  !! ... isgn = +   : G-space to R-space, output = \sum_G f(G)exp(+iG*R)
+  !! ...              fft along z using pencils        (cft_1z)
+  !! ...              transpose across nodes           (fft_scatter_yz)
+  !! ...              fft along y using pencils        (cft_1y)
+  !! ...              transpose across nodes           (fft_scatter_xy)
+  !! ...              fft along x using pencils        (cft_1x)
+  !
+  !! ... isgn = -   : R-space to G-space, output = \int_R f(R)exp(-iG*R)/Omega
+  !! ...              fft along x using pencils        (cft_1x)
+  !! ...              transpose across nodes           (fft_scatter_xy)
+  !! ...              fft along y using pencils        (cft_1y)
+  !! ...              transpose across nodes           (fft_scatter_yz)
+  !! ...              fft along z using pencils        (cft_1z)
+  !
+  ! If task_group_fft_is_active the FFT acts on a number of wfcs equal to 
+  ! dfft%nproc2, the number of Y-sections in which a plane is divided. 
+  ! Data are reshuffled by the fft_scatter_tg routine so that each of the 
+  ! dfft%nproc2 subgroups (made by dfft%nproc3 procs) deals with whole planes 
+  ! of a single wavefunciton.
+  !
+  ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
+  !
+  USE cudafor
+  USE nvtx
+  USE fftx_buffers,   ONLY : gpu_buffer
+  USE fft_scalar,     ONLY : cft_1z_gpu
+  USE scatter_mod_gpu,ONLY : aux_d => aux_d_workaround_d
+  USE scatter_mod_gpu,ONLY : fft_scatter_xy_gpu, fft_scatter_yz_gpu, &
+                              & fft_scatter_tg_gpu, fft_scatter_many_yz_gpu, &
+                              & fft_scatter_tg_opt_gpu
+  USE fft_types,  ONLY : fft_type_descriptor
+  !
+  IMPLICIT NONE
+  !
+  TYPE (fft_type_descriptor), INTENT(in) :: dfft     ! descriptor of fft data layout
+  COMPLEX(DP), DEVICE, INTENT(inout)     :: f_d( : ) ! array containing data to be transformed
+  INTEGER, INTENT(in)                    :: isgn     ! fft direction (potential: +/-1, wave: +/-2, wave_tg: +/-3)
+  INTEGER, INTENT(in)                    :: howmany  ! number of FFTs grouped together
+  !
+  INTEGER                          :: n1, n2, n3, nx1, nx2, nx3
+  INTEGER                          :: nnr_
+  INTEGER                          :: nsticks_x, nsticks_y, nsticks_z
+  INTEGER                          :: nsticks_zx
+  !COMPLEX(DP), POINTER, DEVICE     :: aux_d (:)
+  INTEGER                          :: ierr, i, j
+  INTEGER(kind = cuda_stream_kind), ALLOCATABLE :: streams(:)
+  !
+  !write (6,*) 'enter tg_cft3s ',isgn ; write(6,*) ; FLUSH(6)
+  n1  = dfft%nr1  ; n2  = dfft%nr2  ; n3  = dfft%nr3
+  nx1 = dfft%nr1x ; nx2 = dfft%nr2x ; nx3 = dfft%nr3x
+  !
+  if (abs(isgn) == 1 ) then       ! potential fft
+     nnr_ = dfft%nnr
+     nsticks_x = dfft%my_nr2p * dfft%my_nr3p
+     nsticks_y = dfft%nr1p(dfft%mype2+1) * dfft%my_nr3p
+     nsticks_z = dfft%nsp(dfft%mype+1)
+     CALL fftx_error__( ' many_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
+  else if (abs(isgn) == 2 ) then  ! wave func fft
+     nnr_ = dfft%nnr
+     nsticks_x = dfft%my_nr2p * dfft%my_nr3p
+     nsticks_y = dfft%nr1w(dfft%mype2+1) * dfft%my_nr3p
+     nsticks_z = dfft%nsw(dfft%mype+1)
+     nsticks_zx = MAXVAL(dfft%nsw)
+  else if (abs(isgn) == 3 ) then  ! wave func fft with task groups
+     CALL fftx_error__( ' many_cft3s', ' Taskgroup and many not supported ', 10+abs(isgn) )
+  else
+     CALL fftx_error__( ' many_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
+  end if
+  !
+  ALLOCATE(streams(howmany))
+  !
+  !
+  !  === workaround ===
+  ! Replacing this: CALL gpu_buffer%lock_buffer(aux_d, nnr_ * howmany, ierr)
+  !  with:
+  IF( ALLOCATED( aux_d   ) .and. SIZE( aux_d   ) < howmany * nnr_ ) DEALLOCATE( aux_d   )
+  IF( .not. ALLOCATED( aux_d   ) ) ALLOCATE( aux_d  ( howmany * nnr_ ) )
+  !  === end workaround ===
+  !
+  !
+  DO i=1,howmany
+      ierr = cudaStreamCreate( streams(i) )
+  END DO
+  !
+  IF ( isgn > 0 ) THEN  ! G -> R
+     CALL nvtxStartRangeAsync("many_cft3s_gpu G->R", 1)
+     DO i = 0, howmany-1
+        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_z, n3, nx3, isgn, aux_d(nx3*nsticks_zx*i+1:), streams(i+1))
+     END DO
+     !
+     ! this brings back data from packed to unpacked
+     CALL fft_scatter_many_yz_gpu ( dfft, aux_d(1), f_d(1), howmany*nnr_, isgn, howmany )
+     !
+     DO i = 0, howmany-1
+        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux_d(i*nnr_+1:), streams(i+1), in_place=.true. )
+        CALL fft_scatter_xy_gpu ( dfft, f_d(i*nnr_+1:), aux_d(i*nnr_+1:), nnr_, isgn, streams(i+1) )
+     END DO
+     !
+     DO i = 0, howmany-1
+        CALL cft_1z_gpu( aux_d(i*nnr_+1:), nsticks_x, n1, nx1, isgn, f_d(i*nnr_+1:), streams(i+1) )
+        ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
+        if (nsticks_x*nx1 < nnr_) then
+!$cuf kernel do(1)<<<*,*,0,streams(i+1)>>>
+           do j=nsticks_x*nx1+1, nnr_
+               f_d(j+i*nnr_) = (0.0_DP,0.0_DP)
+           end do
+        endif
+     END DO
+     !
+     CALL nvtxEndRangeAsync()
+     !
+  ELSE                  ! R -> G
+     !
+     CALL nvtxStartRangeAsync("many_cft3s_gpu R->G", 2)
+     DO i = 0, howmany-1
+        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_x, n1, nx1, isgn, aux_d(i*nnr_+1:), streams(i+1) )
+        !
+        CALL fft_scatter_xy_gpu ( dfft, f_d(i*nnr_+1), aux_d(i*nnr_+1), nnr_, isgn, streams(i+1) )
+     END DO
+     !
+     DO i = 0, howmany-1
+        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux_d(i*nnr_+1:), streams(i+1), in_place=.true. )
+     END DO
+     !
+     CALL fft_scatter_many_yz_gpu ( dfft, aux_d, f_d, nnr_, isgn, howmany )
+     !
+     DO i = 0, howmany-1
+        CALL cft_1z_gpu( aux_d(nx3*nsticks_zx*i+1:), nsticks_z, n3, nx3, isgn, f_d(i*nnr_+1:), streams(i+1) )
+        ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
+        if (nsticks_z*nx3 < nnr_) then
+!$cuf kernel do(1)<<<*,*,0,streams(i+1)>>>
+            do j=nsticks_z*nx3+1, nnr_
+                f_d(j+i*nnr_) = (0.0_DP,0.0_DP)
+            end do
+        endif
+     END DO
+     CALL nvtxEndRangeAsync()
+  ENDIF
+  !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
+  !
+  !CALL gpu_buffer%release_buffer(aux_d, ierr);
+  
+  DEALLOCATE(streams)
+  !
+  RETURN
+99 format ( 20 ('(',2f12.9,')') )
+  !
+END SUBROUTINE many_cft3s_gpu
+
 #endif
 !--------------------------------------------------------------------------------
 !   Auxiliary routines to read/write from/to a distributed array

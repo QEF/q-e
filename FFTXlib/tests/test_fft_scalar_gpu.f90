@@ -49,6 +49,8 @@ program test_fft_scalar_gpu
     !
     TYPE(tester_t) :: test
     !
+    ! stream
+    integer(kind = cuda_stream_kind) :: stream = 0
     ! size
     integer, parameter :: nsl=100, nz=56, ldz=56
     !
@@ -66,7 +68,7 @@ program test_fft_scalar_gpu
     !
     ! Check forward direction
     CALL cft_1z(c, nsl, nz, ldz, 1, cout)
-    CALL cft_1z_gpu(c_d, nsl, nz, ldz, 1, cout_d)
+    CALL cft_1z_gpu(c_d, nsl, nz, ldz, 1, cout_d, stream)
     !
     ! Use c as auxiliary variable hosting GPU results
     c = (0.d0, 0.d0)
@@ -78,7 +80,7 @@ program test_fft_scalar_gpu
     !
     ! Check backward direction
     CALL cft_1z(c, nsl, nz, ldz, -1, cout)
-    CALL cft_1z_gpu(c_d, nsl, nz, ldz, -1, cout_d)
+    CALL cft_1z_gpu(c_d, nsl, nz, ldz, -1, cout_d, stream)
     !
     ! Use c as auxiliary variable hosting GPU results
     c = (0.d0, 0.d0)
@@ -91,7 +93,7 @@ program test_fft_scalar_gpu
     !
     ! Check forward direction
     CALL cft_1z(c, nsl, nz, ldz, 1, cout)
-    CALL cft_1z_gpu(c_d, nsl, nz, ldz, 1, cout_d, in_place=.true.)
+    CALL cft_1z_gpu(c_d, nsl, nz, ldz, 1, cout_d, stream, in_place=.true.)
     !
     ! Use c as auxiliary variable hosting GPU results
     c = (0.d0, 0.d0)
@@ -103,7 +105,7 @@ program test_fft_scalar_gpu
     !
     ! Check backward direction
     CALL cft_1z(c, nsl, nz, ldz, -1, cout)
-    CALL cft_1z_gpu(c_d, nsl, nz, ldz, -1, cout_d, in_place=.true.)
+    CALL cft_1z_gpu(c_d, nsl, nz, ldz, -1, cout_d, stream, in_place=.true.)
     !
     ! Use c as auxiliary variable hosting GPU results
     c = (0.d0, 0.d0)
@@ -121,6 +123,8 @@ program test_fft_scalar_gpu
     !
     TYPE(tester_t) :: test
     !
+    ! stream
+    integer(kind = cuda_stream_kind) :: stream = 0
     ! size
     integer, parameter :: nx = 10, ny = 10, nzl = 5, ldx=10, ldy=10
     !
@@ -135,7 +139,7 @@ program test_fft_scalar_gpu
     !
     CALL fill_random(c, c_d, nzl * ldx * ldy)
     !
-    CALL cft_2xy_gpu(c_d, tmp_d, nzl, nx, ny, ldx, ldy, 1)
+    CALL cft_2xy_gpu(c_d, tmp_d, nzl, nx, ny, ldx, ldy, 1, stream)
     CALL cft_2xy(c, nzl, nx, ny, ldx, ldy, 1)
     !
     ! Use c as auxiliary variable hosting GPU results
@@ -144,7 +148,7 @@ program test_fft_scalar_gpu
     !
     CALL fill_random(c, c_d, nzl * ldx * ldy)
     !
-    CALL cft_2xy_gpu(c_d, tmp_d, nzl, nx, ny, ldx, ldy, -1)
+    CALL cft_2xy_gpu(c_d, tmp_d, nzl, nx, ny, ldx, ldy, -1, stream)
     CALL cft_2xy(c, nzl, nx, ny, ldx, ldy, -1)
     !
     ! Use c as auxiliary variable hosting GPU results
@@ -162,9 +166,16 @@ program test_fft_scalar_gpu
     !
     TYPE(tester_t) :: test
     !
+    ! stream
+    integer(kind = cuda_stream_kind) :: stream = 0
     ! size
     integer, parameter :: nx = 10, ny = 10, nz = 10
-    integer, parameter :: ldx= 10, ldy= 10, ldz= 10, howmany=12
+    integer, parameter :: ldx= 10, ldy= 10, ldz= 10
+#if ! defined(__DFTI)
+    integer, parameter :: howmany=1
+#else
+    integer, parameter :: howmany=12
+#endif
     !
     ! array for random values
     real(DP) :: rnd_aux(2 * howmany * ldx * ldy * ldz)
@@ -175,10 +186,14 @@ program test_fft_scalar_gpu
     complex(DP) :: c(howmany * ldx * ldy * ldz)
     complex(DP) :: tmp(howmany * ldx * ldy * ldz)
     !
+#if ! defined(__DFTI)
+    print *, 'The current CPU scalar driver does not support howmany. Reverting to howmany 1'
+#endif
+    
     CALL fill_random(c, c_d, howmany * ldx * ldy * ldz)
     !
     CALL cfft3d( c, nx, ny, nz, ldx, ldy, ldz, howmany, 1 )
-    CALL cfft3d_gpu( c_d, nx, ny, nz, ldx, ldy, ldz, howmany, 1 )
+    CALL cfft3d_gpu( c_d, nx, ny, nz, ldx, ldy, ldz, howmany, 1, stream )
     !
     ! Use c as auxiliary variable hosting GPU results
     tmp = c_d
@@ -187,7 +202,7 @@ program test_fft_scalar_gpu
     CALL fill_random(c, c_d, howmany * ldx * ldy * ldz)
     !
     CALL cfft3d( c, nx, ny, nz, ldx, ldy, ldz, howmany, -1 )
-    CALL cfft3d_gpu( c_d, nx, ny, nz, ldx, ldy, ldz, howmany, -1 )
+    CALL cfft3d_gpu( c_d, nx, ny, nz, ldx, ldy, ldz, howmany, -1, stream )
     !
     ! Use c as auxiliary variable hosting GPU results
     tmp = c_d
@@ -204,6 +219,8 @@ program test_fft_scalar_gpu
     !
     TYPE(tester_t) :: test
     !
+    ! stream
+    integer(kind = cuda_stream_kind) :: stream = 0
     ! size
     integer, parameter :: nx = 10, ny = 10, nz = 10
     integer, parameter :: ldx= 10, ldy= 10, ldz= 10, howmany=1
@@ -222,7 +239,7 @@ program test_fft_scalar_gpu
     do_fft_y = 1; do_fft_z = 1
     !
     CALL cfft3ds( c, nx, ny, nz, ldx, ldy, ldz, howmany, 1, do_fft_z, do_fft_y)
-    CALL cfft3ds_gpu( c_d, nx, ny, nz, ldx, ldy, ldz, howmany, 1, do_fft_z, do_fft_y)
+    CALL cfft3ds_gpu( c_d, nx, ny, nz, ldx, ldy, ldz, howmany, 1, do_fft_z, do_fft_y, stream)
     !
     ! Use c as auxiliary variable hosting GPU results
     tmp = c_d
@@ -231,7 +248,7 @@ program test_fft_scalar_gpu
     CALL fill_random(c, c_d, howmany * ldx * ldy * ldz)
     !
     CALL cfft3ds( c, nx, ny, nz, ldx, ldy, ldz, howmany, -1, do_fft_z, do_fft_y)
-    CALL cfft3ds_gpu( c_d, nx, ny, nz, ldx, ldy, ldz, howmany, -1, do_fft_z, do_fft_y )
+    CALL cfft3ds_gpu( c_d, nx, ny, nz, ldx, ldy, ldz, howmany, -1, do_fft_z, do_fft_y, stream )
     !
     ! Use c as auxiliary variable hosting GPU results
     tmp = c_d

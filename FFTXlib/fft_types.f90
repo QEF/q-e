@@ -11,11 +11,12 @@
 MODULE fft_types
 !=----------------------------------------------------------------------------=!
 
-  USE fft_support, ONLY : good_fft_order, good_fft_dimension
-  USE fft_param
 #if defined(__CUDA)
+  USE cudafor
   USE fftx_buffers, ONLY : cpu_buffer, gpu_buffer
 #endif
+  USE fft_support, ONLY : good_fft_order, good_fft_dimension
+  USE fft_param
   IMPLICIT NONE
   PRIVATE
   SAVE
@@ -84,7 +85,9 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: indw_tg(:)! is the inverse of ir1w_tg
 
 #if defined(__CUDA)
-    INTEGER, POINTER, DEVICE :: ir1p_d(:), ir1w_d(:), ir1w_tg_d(:)
+    INTEGER, POINTER, DEVICE :: ir1p_d(:),   ir1w_d(:),   ir1w_tg_d(:)
+    INTEGER, POINTER, DEVICE :: indp_d(:,:), indw_d(:,:), indw_tg_d(:,:)
+    INTEGER, POINTER, DEVICE :: nr1p_d(:),   nr1w_d(:),   nr1w_tg_d(:)
 #endif
 
     INTEGER :: nst      ! total number of sticks ( potential )
@@ -137,7 +140,10 @@ MODULE fft_types
     CHARACTER(len=12):: wave_clock_label = ' '
 
     INTEGER :: grid_id
-
+#if defined(__CUDA)
+    INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_yz
+    INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_xy
+#endif
   END TYPE
 
   REAL(DP) :: fft_dual = 4.0d0
@@ -262,10 +268,29 @@ CONTAINS
     ALLOCATE( desc%tg_rdsp( desc%nproc2) ) ; desc%tg_rdsp = 0
 
 #if defined(__CUDA)
+    ALLOCATE( desc%indp_d( desc%nr1x,desc%nproc2 ) ) ; desc%indp_d  = 0
+    ALLOCATE( desc%indw_d( desc%nr1x, desc%nproc2 ) ) ; desc%indw_d  = 0
+    ALLOCATE( desc%indw_tg_d( desc%nr1x, 1 ) ) ; desc%indw_tg_d  = 0
+    
+    ALLOCATE( desc%nr1p_d(desc%nproc2)) ; desc%nr1p_d  = 0
+    ALLOCATE( desc%nr1w_d(desc%nproc2)) ; desc%nr1w_d  = 0
+    ALLOCATE( desc%nr1w_tg_d(1) ) ; desc%nr1w_tg_d = 0
+
     ALLOCATE( desc%ir1p_d( desc%nr1x ) ) ; desc%ir1p_d  = 0
     ALLOCATE( desc%ir1w_d( desc%nr1x ) ) ; desc%ir1w_d  = 0
     ALLOCATE( desc%ir1w_tg_d( desc%nr1x ) ) ; desc%ir1w_tg_d  = 0
     ALLOCATE( desc%ismap_d( nx * ny ) ) ; desc%ismap_d = 0
+    
+    ALLOCATE ( desc%stream_scatter_yz(desc%nproc3) ) ;
+    do iproc = 1, desc%nproc3
+        ierr = cudaStreamCreate(desc%stream_scatter_yz(iproc))
+    end do
+    
+    ALLOCATE ( desc%stream_scatter_xy(desc%nproc2) ) ;
+    do iproc = 1, desc%nproc2
+        ierr = cudaStreamCreate(desc%stream_scatter_xy(iproc))
+    end do
+    
 #endif
 
     incremental_grid_identifier = incremental_grid_identifier + 1
@@ -275,7 +300,7 @@ CONTAINS
 
   SUBROUTINE fft_type_deallocate( desc )
     TYPE (fft_type_descriptor) :: desc
-    INTEGER :: ierr
+    INTEGER :: iproc, ierr
      !write (6,*) ' inside fft_type_deallocate' ; FLUSH(6)
     IF ( ALLOCATED( desc%nr2p ) )   DEALLOCATE( desc%nr2p )
     IF ( ALLOCATED( desc%i0r2p ) )  DEALLOCATE( desc%i0r2p )
@@ -316,6 +341,28 @@ CONTAINS
     IF ( ALLOCATED( desc%ir1p_d ) )    DEALLOCATE( desc%ir1p_d )
     IF ( ALLOCATED( desc%ir1w_d ) )    DEALLOCATE( desc%ir1w_d )
     IF ( ALLOCATED( desc%ir1w_tg_d ) ) DEALLOCATE( desc%ir1w_tg_d )
+
+    IF ( ALLOCATED( desc%indp_d ) )   DEALLOCATE( desc%indp_d )
+    IF ( ALLOCATED( desc%indw_d ) )    DEALLOCATE( desc%indw_d )
+    IF ( ALLOCATED( desc%indw_tg_d ) ) DEALLOCATE( desc%indw_tg_d )
+
+    IF ( ALLOCATED( desc%nr1p_d ) )   DEALLOCATE( desc%nr1p_d )
+    IF ( ALLOCATED( desc%nr1w_d ) )    DEALLOCATE( desc%nr1w_d )
+    IF ( ALLOCATED( desc%nr1w_tg_d ) ) DEALLOCATE( desc%nr1w_tg_d )
+
+    IF (ALLOCATED(desc%stream_scatter_yz)) THEN
+        do iproc = 1, desc%nproc3
+            ierr = cudaStreamDestroy(desc%stream_scatter_yz(iproc))
+        end do
+        DEALLOCATE(desc%stream_scatter_yz)
+    END IF
+    IF (ALLOCATED(desc%stream_scatter_xy)) THEN
+        do iproc = 1, desc%nproc2
+            ierr = cudaStreamDestroy(desc%stream_scatter_xy(iproc))
+        end do
+        DEALLOCATE(desc%stream_scatter_xy)
+    END IF
+
 #endif
 
     desc%comm  = MPI_COMM_NULL 
@@ -718,8 +765,17 @@ CONTAINS
 #if defined(__CUDA)
     desc%ismap_d = desc%ismap
     desc%ir1p_d = desc%ir1p
-    desc%ir1w_d  = desc%ir1w
+    desc%ir1w_d = desc%ir1w
     desc%ir1w_tg_d = desc%ir1w_tg
+
+    desc%indp_d = desc%indp
+    desc%indw_d = desc%indw
+    desc%indw_tg_d(:,1) = desc%indw_tg
+
+    desc%nr1p_d = desc%nr1p
+    desc%nr1w_d = desc%nr1w
+    desc%nr1w_tg_d(1) = desc%nr1w_tg
+
 #endif
 
     RETURN

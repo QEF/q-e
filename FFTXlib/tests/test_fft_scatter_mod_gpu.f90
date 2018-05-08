@@ -40,6 +40,9 @@ program test_fft_scatter_mod_gpu
         CALL test_fft_scatter_yz_gpu_1(mp, test, .false., i)
       END IF
     END DO
+    CALL test_fft_scatter_many_yz_gpu_1(mp, test, .true., 1)
+    CALL test_fft_scatter_many_yz_gpu_1(mp, test, .false., 1)
+
     !
     CALL collect_results(test)
     !
@@ -74,13 +77,13 @@ program test_fft_scatter_mod_gpu
     INTEGER :: comm, nyfft
     REAL(DP), PARAMETER :: pi=4.D0*DATAN(1.D0)
     !
-    REAL(DP) :: at(3:3), bg(3:3)
+    REAL(DP) :: at(3,3), bg(3,3)
     !
     at = RESHAPE((/1.d0, 0.d0, 0.d0, 0.d0, 1.d0, 0.d0, 0.d0, 0.d0, 1.d0/), shape(at))
     bg = RESHAPE((/1.d0, 0.d0, 0.d0, 0.d0, 1.d0, 0.d0, 0.d0, 0.d0, 1.d0/), shape(bg))
     bg = 2.d0*pi
     !
-    CALL fft_type_init(dfft, smap, flavor, gamma_only, parallel, comm, at, bg, 12.d0, 6.d0, nyfft=nyfft)
+    CALL fft_type_init(dfft, smap, flavor, gamma_only, parallel, comm, at, bg, 12.d0, 4.d0, nyfft=nyfft)
     !
   END SUBROUTINE fft_desc_init
   
@@ -131,32 +134,41 @@ program test_fft_scatter_mod_gpu
     LOGICAL :: parallel
     COMPLEX(DP), ALLOCATABLE :: scatter_in(:), scatter_out(:), aux(:)
     COMPLEX(DP), ALLOCATABLE, DEVICE :: scatter_in_d(:), scatter_out_d(:)
+    integer(kind = cuda_stream_kind) :: stream = 0
+    integer :: fft_sign = 2
+    integer :: vsiz
     !
     parallel = mp%n .gt. 1
+    
     CALL fft_desc_init(dfft, smap, "wave", gamma_only, parallel, mp%comm, nyfft=ny)
+    vsiz = dfft%nnr
+    if (ny > 1) then
+       fft_sign = 3
+       vsiz = dfft%nnr_tg
+    end if
     !
     ! Allocate variables
-    ALLOCATE(scatter_in(dfft%nnr), scatter_out(dfft%nnr), aux(dfft%nnr))
-    ALLOCATE(scatter_in_d(dfft%nnr), scatter_out_d(dfft%nnr))
+    ALLOCATE(scatter_in(vsiz), scatter_out(vsiz), aux(vsiz))
+    ALLOCATE(scatter_in_d(vsiz), scatter_out_d(vsiz))
     !
     ! Test 1
-    CALL fill_random(scatter_in, scatter_in_d, dfft%nnr)
+    CALL fill_random(scatter_in, scatter_in_d, vsiz)
     !
-    CALL fft_scatter_xy( dfft, scatter_in, scatter_out, dfft%nnr, 1 )
-    CALL fft_scatter_xy_gpu( dfft, scatter_in_d, scatter_out_d, dfft%nnr, 1 )
-    aux = scatter_out_d
+    CALL fft_scatter_xy( dfft, scatter_in, scatter_out, vsiz, fft_sign )
+    CALL fft_scatter_xy_gpu( dfft, scatter_in_d, scatter_out_d, vsiz, fft_sign, stream )
+    aux(1:vsiz) = scatter_out_d(1:vsiz)
     ! Check
     CALL test%assert_close( scatter_out, aux )
     !
     ! Test 2
-    CALL fill_random(scatter_in, scatter_in_d, dfft%nnr)
+    CALL fill_random(scatter_in, scatter_in_d, vsiz)
     !
-    CALL fft_scatter_xy( dfft, scatter_out, scatter_in, dfft%nnr, -1 )
-    CALL fft_scatter_xy_gpu( dfft, scatter_out_d, scatter_in_d, dfft%nnr, -1 )
-    aux = scatter_out_d
+    CALL fft_scatter_xy( dfft, scatter_out, scatter_in, vsiz, -1*fft_sign )
+    CALL fft_scatter_xy_gpu( dfft, scatter_out_d, scatter_in_d, vsiz, -1*fft_sign, stream )
+    aux(1:vsiz) = scatter_out_d(1:vsiz)
     ! Check
     CALL test%assert_close( scatter_out, aux )
-    !
+    !!
     CALL fft_desc_finalize(dfft, smap)
     DEALLOCATE(scatter_in, scatter_out, aux, scatter_in_d, scatter_out_d)
     !
@@ -185,29 +197,37 @@ program test_fft_scatter_mod_gpu
     LOGICAL :: parallel
     COMPLEX(DP), ALLOCATABLE :: scatter_in(:), scatter_out(:), aux(:)
     COMPLEX(DP), ALLOCATABLE, DEVICE :: scatter_in_d(:), scatter_out_d(:)
+    integer(kind = cuda_stream_kind) :: stream = 0
+    integer :: fft_sign = 2
+    integer :: vsiz
     !
     parallel = mp%n .gt. 1
     CALL fft_desc_init(dfft, smap, "wave", gamma_only, parallel, mp%comm, nyfft=ny)
+    vsiz = dfft%nnr
+    if (ny > 1) then
+       fft_sign = 3
+       vsiz = dfft%nnr_tg
+    end if
     !
     ! Allocate variables
-    ALLOCATE(scatter_in(dfft%nnr), scatter_out(dfft%nnr), aux(dfft%nnr))
-    ALLOCATE(scatter_in_d(dfft%nnr), scatter_out_d(dfft%nnr))
+    ALLOCATE(scatter_in(vsiz), scatter_out(vsiz), aux(vsiz))
+    ALLOCATE(scatter_in_d(vsiz), scatter_out_d(vsiz))
     !
     ! Test 1
-    CALL fill_random(scatter_in, scatter_in_d, dfft%nnr)
+    CALL fill_random(scatter_in, scatter_in_d, vsiz)
     !
-    CALL fft_scatter_yz( dfft, scatter_in, scatter_out, dfft%nnr, 1 )
-    CALL fft_scatter_yz_gpu( dfft, scatter_in_d, scatter_out_d, dfft%nnr, 1 )
-    aux = scatter_out_d
+    CALL fft_scatter_yz( dfft, scatter_in, scatter_out, vsiz, fft_sign )
+    CALL fft_scatter_yz_gpu( dfft, scatter_in_d, scatter_out_d, vsiz, fft_sign )
+    aux(1:vsiz) = scatter_out_d(1:vsiz)
     ! Check
     CALL test%assert_close( scatter_out, aux )
     !
     ! Test 2
-    CALL fill_random(scatter_in, scatter_in_d, dfft%nnr)
+    CALL fill_random(scatter_in, scatter_in_d, vsiz)
     !
-    CALL fft_scatter_yz( dfft, scatter_out, scatter_in, dfft%nnr, -1 )
-    CALL fft_scatter_yz_gpu( dfft, scatter_out_d, scatter_in_d, dfft%nnr, -1 )
-    aux = scatter_out_d
+    CALL fft_scatter_yz( dfft, scatter_out, scatter_in, vsiz, -1*fft_sign )
+    CALL fft_scatter_yz_gpu( dfft, scatter_out_d, scatter_in_d, vsiz, -1*fft_sign )
+    aux(1:vsiz) = scatter_out_d(1:vsiz)
     ! Check
     CALL test%assert_close( scatter_out, aux )
     !
@@ -215,6 +235,126 @@ program test_fft_scatter_mod_gpu
     DEALLOCATE(scatter_in, scatter_out, aux, scatter_in_d, scatter_out_d)
     !
   END SUBROUTINE test_fft_scatter_yz_gpu_1
+  !
+  SUBROUTINE test_fft_scatter_many_yz_gpu_1(mp, test, gamma_only, ny)
+    !
+    ! This test checks wave fft scatter, with parallel = .true. if 
+    !  called with more than 1 MPI.
+    !
+    USE cudafor
+    USE fft_param,       ONLY : DP
+    USE fft_types,       ONLY : fft_type_descriptor
+    USE stick_base,      ONLY : sticks_map
+    USE scatter_mod,     ONLY : fft_scatter_yz
+    USE scatter_mod_gpu, ONLY : fft_scatter_yz_gpu, fft_scatter_many_yz_gpu
+    implicit none
+    TYPE(mpi_t) :: mp
+    TYPE(tester_t) :: test
+    !
+    TYPE(fft_type_descriptor) :: dfft
+    TYPE(sticks_map) :: smap
+    LOGICAL, INTENT(IN) :: gamma_only
+    INTEGER, INTENT(IN) :: ny
+    INTEGER, PARAMETER :: howmany = 4
+    !
+    LOGICAL :: parallel
+    COMPLEX(DP), ALLOCATABLE :: scatter_in(:), scatter_in_cpy(:), scatter_out(:), aux(:)
+    COMPLEX(DP), ALLOCATABLE, DEVICE :: scatter_in_d(:), scatter_out_d(:), aux_d(:)
+    !                 convenient variables for slices
+    integer :: i, l, start_in, end_in, start_out, end_out, nstick_zx, nx3, vsiz
+    !integer(kind = cuda_stream_kind) :: streams(5)
+    !
+    parallel = mp%n .gt. 1
+    IF (ny > 1) print *, 'scatter_many does not support task grouping'
+    CALL fft_desc_init(dfft, smap, "wave", gamma_only, parallel, mp%comm, nyfft=ny)
+    !
+    ! Allocate variables
+    vsiz = dfft%nnr*howmany
+    ALLOCATE(scatter_in(vsiz), scatter_in_cpy(vsiz), scatter_out(vsiz), aux(vsiz))
+    ALLOCATE(scatter_in_d(vsiz), scatter_out_d(vsiz), aux_d(vsiz))
+    !
+    ! How FFT allocates bunches in this case:
+    nstick_zx = MAXVAL(dfft%nsw)
+    nx3 = dfft%nr3x
+    
+    ! Test 1
+    CALL fill_random(scatter_in, scatter_in_d, vsiz)
+    scatter_in_cpy = scatter_in
+    !
+    !print *, 'dfft%nnr, nr3, nr2, nr1 : ', dfft%nnr, dfft%nr3, dfft%nr2, dfft%nr1 
+    !  Test 1.1, compare scatter of slices 
+    DO i=0,howmany-1
+       start_in = i*dfft%nnr + 1
+       end_in = (i+1)*dfft%nnr
+       start_out = start_in
+       end_out = end_in
+       
+       CALL fft_scatter_yz( dfft, scatter_in(start_in:end_in), scatter_out(start_out:end_out), dfft%nnr, 2 )
+       CALL fft_scatter_yz_gpu( dfft, scatter_in_d(start_in:end_in), scatter_out_d(start_in:end_out), dfft%nnr, 2 )
+       aux(start_out:end_out) = scatter_out_d(start_out:end_out)
+       ! Check
+       CALL test%assert_close( scatter_out(start_out:end_out), aux(start_out:end_out) )
+    END DO
+    
+    scatter_in = scatter_in_cpy
+    ! Store data as expected in input
+    DO i=0,howmany-1
+       start_in = i*dfft%nnr + 1
+       end_in   = (i+1)*dfft%nnr
+       start_out= i*nstick_zx*nx3+1
+       end_out  = (i+1)*nstick_zx*nx3
+       scatter_in_d( start_out : end_out ) = scatter_in(start_in:start_in+nstick_zx*nx3)
+    END DO
+    CALL fft_scatter_many_yz_gpu ( dfft, scatter_in_d, scatter_out_d, vsiz, 2, howmany )
+    
+    DO i=0,howmany-1
+       start_out = i*dfft%nnr + 1
+       end_out   = (i+1)*dfft%nnr
+       !
+       aux(start_out:end_out) = scatter_out_d(start_out:end_out)
+       !
+       CALL test%assert_close( scatter_out(start_out:end_out), aux(start_out:end_out) )
+    END DO
+    !
+    !
+    
+    ! Test 2
+    CALL fill_random(scatter_in, scatter_in_d, vsiz)
+    scatter_in_cpy = scatter_in
+    !
+    !print *, 'dfft%nnr, nr3, nr2, nr1 : ', dfft%nnr, dfft%nr3, dfft%nr2, dfft%nr1 
+    DO i=0,howmany-1
+       start_in = i*dfft%nnr + 1
+       end_in = (i+1)*dfft%nnr
+       start_out = start_in
+       end_out = end_in       
+       CALL fft_scatter_yz( dfft, scatter_out(start_out:end_out), scatter_in(start_in:end_in),  dfft%nnr, -2 )
+       CALL fft_scatter_yz_gpu( dfft, scatter_out_d(start_out:end_out), scatter_in_d(start_in:end_in), dfft%nnr, -2 )
+       aux(start_out:end_out) = scatter_out_d(start_out:end_out)
+       ! Check
+       CALL test%assert_close( scatter_out(start_out:end_out), aux(start_out:end_out) )
+    END DO
+    scatter_in_d(1:vsiz) = scatter_in_cpy(1:vsiz)
+
+    CALL fft_scatter_many_yz_gpu ( dfft, scatter_out_d, scatter_in_d, vsiz, -2, howmany )
+    
+    DO i=0,howmany-1
+       start_out = 1 + i*nstick_zx*nx3
+       end_out   = (i+1)*nstick_zx*nx3
+       aux(start_out:end_out) = scatter_out_d(start_out:end_out)
+       
+       end_out  = start_out + dfft%nsw(mp%me+1)*nx3 - 1 ! nstick_zx*nx3 - 1 
+       
+       start_in = i*dfft%nnr + 1
+       end_in   = i*dfft%nnr + dfft%nsw(mp%me+1)*nx3    !nstick_zx*nx3!
+       ! print *, start_in, end_in, start_out, end_out
+       CALL test%assert_close( aux(start_out:end_out), scatter_out(start_in:end_in) )
+    END DO
+    !
+    CALL fft_desc_finalize(dfft, smap)
+    DEALLOCATE(scatter_in, scatter_in_cpy, scatter_out, aux, scatter_in_d, scatter_out_d)
+    !
+  END SUBROUTINE test_fft_scatter_many_yz_gpu_1
   
 end program test_fft_scatter_mod_gpu
 ! dummy subroutines

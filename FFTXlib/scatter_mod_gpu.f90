@@ -11,7 +11,11 @@
 ! Written by Carlo Cavazzoni, modified by Paolo Giannozzi
 ! Rewritten by Stefano de Gironcoli, ported to GPU by Pietro Bonfa'
 !----------------------------------------------------------------------
-!
+
+#if defined(__CUDA)
+
+#define __NON_BLOCKING_SCATTER
+
 !=----------------------------------------------------------------------=!
    MODULE scatter_mod_gpu
 !=----------------------------------------------------------------------=!
@@ -26,9 +30,12 @@
 
         PRIVATE
 
+        COMPLEX(DP), ALLOCATABLE, DEVICE     :: aux_d_workaround_d (:)
+        PUBLIC :: aux_d_workaround_d
+        !
         PUBLIC :: fft_type_descriptor
         PUBLIC :: fft_scatter_xy_gpu, fft_scatter_yz_gpu, fft_scatter_tg_gpu, &
-                  fft_scatter_tg_opt_gpu
+                  fft_scatter_tg_opt_gpu, fft_scatter_many_yz_gpu
 
 !=----------------------------------------------------------------------=!
       CONTAINS
@@ -36,7 +43,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
+SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   !-----------------------------------------------------------------------
   !
   ! transpose of the fft xy planes across the desc%comm2 communicator
@@ -72,43 +79,48 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   !    f_in  contains the output Y columns.
   !
   USE cudafor
+  USE nvtx
   USE fftx_buffers, ONLY : cpu_buffer
   IMPLICIT NONE
 
   TYPE (fft_type_descriptor), INTENT(in) :: desc
   INTEGER, INTENT(in)                    :: nxx_, isgn
   COMPLEX (DP), DEVICE, INTENT(inout)    :: f_in_d (nxx_), f_aux_d (nxx_)
+  INTEGER(kind=cuda_stream_kind), INTENT(IN) :: stream ! cuda stream for the execution
 
 #if defined(__MPI)
   !
   COMPLEX (DP), POINTER    :: f_in(:), f_aux(:)
   INTEGER :: ierr, me2, nproc2, iproc2, ncpx, my_nr2p, nr2px, ip, ip0
-  INTEGER :: i, it, j, k, kfrom, kdest, offset, ioff, mc, m1, m3, i1, icompact, sendsize
+  INTEGER :: i, it, j, k, kfrom, kdest, offset, ioff, mc, m1, m3, i1, icompact, sendsize, aux
   INTEGER, ALLOCATABLE :: ncp_(:)
-  INTEGER, ALLOCATABLE, DEVICE :: nr1p__d(:), indx_d(:,:)
+  INTEGER, POINTER, DEVICE :: nr1p__d(:), indx_d(:,:)
   !
 #if defined(__NON_BLOCKING_SCATTER)
   INTEGER :: sh(desc%nproc2), rh(desc%nproc2)
 #endif
+  !
+  CALL nvtxStartRangeAsync("fft_scatter_xy_gpu", isgn + 5)
+  !
   me2    = desc%mype2 + 1
   nproc2 = desc%nproc2 ; if ( abs(isgn) == 3 ) nproc2 = 1 
 
   ! allocate auxiliary array for columns distribution
-  ALLOCATE ( ncp_(nproc2), nr1p__d(nproc2), indx_d(desc%nr1x,nproc2) )
+  ALLOCATE ( ncp_(nproc2))
   if ( abs (isgn) == 1 ) then          ! It's a potential FFT
      ncp_ = desc%nr1p * desc%my_nr3p
-     nr1p__d= desc%nr1p
-     indx_d = desc%indp
+     nr1p__d=> desc%nr1p_d
+     indx_d => desc%indp_d
      my_nr2p=desc%my_nr2p
   else if ( abs (isgn) == 2 ) then     ! It's a wavefunction FFT
      ncp_ = desc%nr1w * desc%my_nr3p
-     nr1p__d= desc%nr1w
-     indx_d = desc%indw
+     nr1p__d=> desc%nr1w_d
+     indx_d => desc%indw_d
      my_nr2p=desc%my_nr2p
   else if ( abs (isgn) == 3 ) then     ! It's a wavefunction FFT with task group
      ncp_ = desc%nr1w_tg * desc%my_nr3p! 
-     nr1p__d= desc%nr1w_tg               !
-     indx_d(1:desc%nr1x,1) = desc%indw_tg(1:desc%nr1x)          ! 
+     nr1p__d=> desc%nr1w_tg_d               !
+     indx_d => desc%indw_tg_d         ! 
      my_nr2p=desc%nr2x                 ! in task group FFTs whole Y colums are distributed
   end if
   !
@@ -152,54 +164,55 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
         !  !kfrom = kfrom + desc%nr2x
         !ENDDO
         
-        ierr = cudaMemcpy2D( f_aux(kdest + 1), nr2px, f_in_d(kfrom + 1 ), desc%nr2x, desc%nr2p( iproc2 ), ncp_(me2), cudaMemcpyDeviceToHost )
+        ierr = cudaMemcpy2DAsync( f_aux(kdest + 1), nr2px, f_in_d(kfrom + 1 ), desc%nr2x, desc%nr2p( iproc2 ), ncp_(me2), cudaMemcpyDeviceToHost, stream )
         offset = offset + desc%nr2p( iproc2 )
-#if defined(__NON_BLOCKING_SCATTER)
-        CALL mpi_isend( f_aux( (iproc2-1)*sendsize + 1 ), sendsize, &
-                        MPI_DOUBLE_COMPLEX, iproc2-1, me2, desc%comm2, &
-                        sh( iproc2 ), ierr )
-#endif
      ENDDO
      !
      ! step two: communication  across the    nproc3    group
      !
 #if defined(__NON_BLOCKING_SCATTER)
+     ierr = cudaStreamSynchronize(stream)
      DO iproc2 = 1, nproc2
-        !
-        ! now post the receive
-        !
-        CALL mpi_irecv( f_in( (iproc2-1)*sendsize + 1 ), sendsize, &
-                        MPI_DOUBLE_COMPLEX, iproc2-1, MPI_ANY_TAG, &
-                        desc%comm2, rh( iproc2 ), ierr )
-        !IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' forward receive info<>0', abs(ierr) )
+        kdest = ( iproc2 - 1 ) * sendsize
+        CALL mpi_irecv( f_in( kdest + 1 ), sendsize, &
+                           MPI_DOUBLE_COMPLEX, iproc2-1, MPI_ANY_TAG, &
+                           desc%comm2, rh( iproc2 ), ierr )
+        CALL mpi_isend( f_aux( kdest + 1 ), sendsize, &
+                        MPI_DOUBLE_COMPLEX, iproc2-1, me2, desc%comm2, &
+                        sh( iproc2 ), ierr )
      ENDDO
-     
-     call mpi_waitall( nproc2, sh, MPI_STATUSES_IGNORE, ierr )
-     !
 #else
+     ierr = cudaStreamSynchronize(stream)
      CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), &
                         sendsize, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
      !
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
+
+     !f_in_d(1:nxx_) = f_in(1:nxx_)
+     ierr = cudaMemcpyAsync( f_in_d, f_in, nxx_, cudaMemcpyHostToDevice, stream )
+
 #endif
-     f_in_d(1:nxx_) = f_in(1:nxx_)
      !
 10   CONTINUE
      !
      !f_aux = (0.0_DP, 0.0_DP)
-     !$cuf kernel do (1) <<<*,*>>>
+     !$cuf kernel do (1) <<<*,*,0,stream>>>
      do i = lbound(f_aux_d,1), ubound(f_aux_d,1)
        f_aux_d(i) = (0.d0, 0.d0)
      end do
      !
-#if defined(__NON_BLOCKING_SCATTER)
-     if (nproc2 > 1) call mpi_waitall( nproc2, rh, MPI_STATUSES_IGNORE, ierr )
-#endif
-     !
      DO iproc2 = 1, nproc2
-        
-        !$cuf kernel do(2) <<<*,*>>>
-        DO i = 1, ncp_( iproc2 )
+#if defined(__NON_BLOCKING_SCATTER)
+        IF (nproc2 > 1) THEN
+           kdest = (iproc2-1)*sendsize
+           call mpi_wait( rh(iproc2), MPI_STATUSES_IGNORE, ierr )
+           call mpi_wait( sh(iproc2), MPI_STATUSES_IGNORE, ierr )
+           ierr = cudaMemcpyAsync( f_in_d(kdest + 1), f_in(kdest + 1 ), sendsize, cudaMemcpyHostToDevice, stream )
+        END IF
+#endif
+        aux = ncp_( iproc2 )
+        !$cuf kernel do(2) <<<*,*,0,stream>>>
+        DO i = 1, aux
            DO j = 1, my_nr2p
               it = ( iproc2 - 1 ) * sendsize + (i-1)*nr2px
               m3 = (i-1)/nr1p__d(iproc2)+1
@@ -220,9 +233,9 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
      !  "backward" scatter from planes to columns
      !
      DO iproc2 = 1, nproc2
-        
-        !$cuf kernel do (1) <<<*,*>>>
-        DO i = 1, ncp_( iproc2 )
+        aux = ncp_( iproc2 )
+        !$cuf kernel do (2) <<<*,*,0,stream>>>
+        DO i = 1, aux
            DO j = 1, my_nr2p
               it = ( iproc2 - 1 ) * sendsize + (i-1)*nr2px
               m3 = (i-1)/nr1p__d(iproc2)+1 ; i1  = mod(i-1,nr1p__d(iproc2))+1 ;  m1 = indx_d(i1,iproc2)
@@ -237,32 +250,36 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
         ! Async copy here?
         
 #if defined(__NON_BLOCKING_SCATTER)
-#error Not with GPUs now
-        IF( nproc2 > 1 ) CALL mpi_isend( f_in( ( iproc2 - 1 ) * sendsize + 1 ), &
-                              sendsize, MPI_DOUBLE_COMPLEX, iproc2-1, me2, &
-                              desc%comm2, sh( iproc2 ), ierr )
+        IF( nproc2 > 1 ) THEN
+          kdest = ( iproc2 - 1 ) * sendsize
+          ierr = cudaMemcpyAsync( f_in(kdest + 1), f_in_d(kdest + 1 ), sendsize, cudaMemcpyDeviceToHost, stream )
+        END IF
 #endif
      ENDDO
      IF (nproc2==1) GO TO 20
      !
      !  step two: communication
      !
-     f_in(1:nxx_) = f_in_d(1:nxx_)
-#if ! defined(__NON_BLOCKING_SCATTER)
+     
+#if defined(__NON_BLOCKING_SCATTER)
+     DO iproc2 = 1, nproc2
+        kdest = (iproc2-1)*sendsize
+        CALL mpi_irecv( f_aux( ( iproc2 - 1 ) * sendsize + 1 ), sendsize, &
+                        MPI_DOUBLE_COMPLEX, iproc2-1, MPI_ANY_TAG, &
+                        desc%comm2, rh(iproc2), ierr )
+        ierr = cudaStreamSynchronize(stream)
+        CALL mpi_isend( f_in( kdest + 1 ), &
+                            sendsize, MPI_DOUBLE_COMPLEX, iproc2-1, me2, &
+                            desc%comm2, sh( iproc2 ), ierr )
+        ! IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward receive info<>0', abs(ierr) )
+     ENDDO
+#else
+     !f_in(1:nxx_) = f_in_d(1:nxx_)
+     ierr = cudaMemcpy( f_in, f_in_d, nxx_, cudaMemcpyDeviceToHost)
      CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), &
                         sendsize, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
-#else
-     DO iproc2 = 1, nproc2
-        CALL mpi_irecv( f_aux( (iproc2-1)*sendsize + 1 ), sendsize, &
-                        MPI_DOUBLE_COMPLEX, iproc2-1, MPI_ANY_TAG, &
-                        desc%comm2, rh(iproc2), ierr )
-        ! IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward receive info<>0', abs(ierr) )
-     ENDDO
-        
-     call mpi_waitall( nproc2, sh, MPI_STATUSES_IGNORE, ierr )
-     call mpi_waitall( nproc2, rh, MPI_STATUSES_IGNORE, ierr )
 #endif
      !
      !  step one: store contiguously the columns
@@ -270,7 +287,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
      ! ensures that no garbage is present in the output 
      ! not useless ... clean the array to be returned from the garbage of previous A2A step
      !f_in = (0.0_DP, 0.0_DP) !
-     !$cuf kernel do (1) <<<*,*>>>
+     !$cuf kernel do (1) <<<*,*,0,stream>>>
      do i = lbound(f_in_d,1), ubound(f_in_d,1)
        f_in_d(i) = (0.d0, 0.d0)
      end do
@@ -278,7 +295,12 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
      offset = 0
      DO iproc2 = 1, nproc2
         kdest = ( iproc2 - 1 ) * sendsize
-        kfrom = offset 
+        kfrom = offset
+
+#if defined(__NON_BLOCKING_SCATTER)
+        call mpi_wait( rh(iproc2), MPI_STATUSES_IGNORE, ierr )
+        call mpi_wait( sh(iproc2), MPI_STATUSES_IGNORE, ierr )
+#endif
         !DO k = 1, ncp_(me2)
         !   DO i = 1, desc%nr2p( iproc2 )
         !      f_in ( kfrom + i ) = f_aux ( kdest + i )
@@ -286,7 +308,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
         !   kdest = kdest + nr2px
         !   kfrom = kfrom + desc%nr2x
         !ENDDO
-        ierr = cudaMemcpy2D( f_in_d(kfrom +1 ), desc%nr2x, f_aux(kdest + 1), nr2px, desc%nr2p( iproc2 ), ncp_(me2), cudaMemcpyHostToDevice )
+        ierr = cudaMemcpy2DAsync( f_in_d(kfrom +1 ), desc%nr2x, f_aux(kdest + 1), nr2px, desc%nr2p( iproc2 ), ncp_(me2), cudaMemcpyHostToDevice, stream )
         offset = offset + desc%nr2p( iproc2 )
      ENDDO
 
@@ -294,8 +316,9 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 
 
   ENDIF
-
-  DEALLOCATE ( ncp_ , nr1p__d, indx_d )
+  !
+  CALL nvtxEndRangeAsync()
+  DEALLOCATE ( ncp_ )
   CALL cpu_buffer%release_buffer(f_in, ierr)
   CALL cpu_buffer%release_buffer(f_aux, ierr)
   CALL stop_clock ('fft_scatt_xy')
@@ -344,19 +367,21 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   !    f_in  contains the output Z columns.
   !
   USE cudafor
+  USE nvtx
   USE fftx_buffers, ONLY : cpu_buffer
   IMPLICIT NONE
 
   TYPE (fft_type_descriptor), INTENT(in) :: desc
   INTEGER, INTENT(in)                    :: nxx_, isgn
   COMPLEX (DP), DEVICE, INTENT(inout)    :: f_in_d (nxx_), f_aux_d (nxx_)
+!  INTEGER(kind=cuda_stream_kind), INTENT(IN) :: stream ! cuda stream for the execution
 
 #if defined(__MPI)
   COMPLEX (DP),    POINTER :: f_in(:), f_aux(:)
   INTEGER, DEVICE, POINTER :: desc_ismap_d(:)
   !
   INTEGER :: ierr, me, me2, me2_start, me2_end, me3, nproc3, iproc3, ncpx, nr3px, ip, ip0
-  INTEGER :: i, it, it0, k, kfrom, kdest, offset, ioff, mc, m1, m2, i1,  sendsize
+  INTEGER :: i, it, it0, k, kfrom, kdest, offset, ioff, mc, m1, m2, i1,  sendsize, aux
   INTEGER, ALLOCATABLE :: ncp_(:)
   INTEGER, DEVICE, POINTER :: ir1p__d(:)
   INTEGER :: my_nr1p_
@@ -364,6 +389,9 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 #if defined(__NON_BLOCKING_SCATTER)
   INTEGER :: sh(desc%nproc3), rh(desc%nproc3)
 #endif
+  TYPE(cudaEvent) :: zero_event
+  CALL nvtxStartRangeAsync("fft_scatter_yz_gpu", isgn + 5)
+  ierr = cudaEventCreate( zero_event )
   !
   me     = desc%mype  + 1
   me2    = desc%mype2 + 1
@@ -429,17 +457,11 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
         !      kfrom = kfrom + desc%nr3x
         !   ENDDO
 
-        !      integer function cudaMemcpy2D(dst, dpitch, src, spitch, width, height, kdir)
-           ierr = cudaMemcpy2D( f_aux(kdest + 1), nr3px, f_in_d(kfrom + 1 ), desc%nr3x, desc%nr3p( iproc3 ), ncp_(ip), cudaMemcpyDeviceToHost )
+           ierr = cudaMemcpy2DAsync( f_aux(kdest + 1), nr3px, f_in_d(kfrom + 1 ), desc%nr3x, desc%nr3p( iproc3 ), ncp_(ip), cudaMemcpyDeviceToHost, desc%stream_scatter_yz(iproc3) )
            kdest = kdest + nr3px*ncp_ (ip)
            kfrom = kfrom + desc%nr3x*ncp_ (ip)
         ENDDO
         offset = offset + desc%nr3p( iproc3 )
-#if defined(__NON_BLOCKING_SCATTER)
-        CALL mpi_isend( f_aux( ( iproc3 - 1 ) * sendsize + 1 ), sendsize, &
-                        MPI_DOUBLE_COMPLEX, iproc3-1, me3, desc%comm3, &
-                        sh( iproc3 ), ierr )
-#endif
      ENDDO
      !
      ! ensures that no garbage is present in the output 
@@ -449,47 +471,51 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
      !
 #if defined(__NON_BLOCKING_SCATTER)
      DO iproc3 = 1, nproc3
-        !
-        ! now post the receive
-        !
-        CALL mpi_irecv( f_in( (iproc3-1)*sendsize + 1 ), sendsize, &
+        ierr = cudaStreamSynchronize(desc%stream_scatter_yz(iproc3))
+        CALL mpi_irecv( f_in(  ( iproc3 - 1 ) * sendsize + 1 ), sendsize, &
                         MPI_DOUBLE_COMPLEX, iproc3-1, MPI_ANY_TAG, &
                         desc%comm3, rh( iproc3 ), ierr )
-        !IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' forward receive info<>0', abs(ierr) )
-        !
-        !
+        CALL mpi_isend( f_aux( ( iproc3 - 1 ) * sendsize + 1 ), sendsize, &
+                        MPI_DOUBLE_COMPLEX, iproc3-1, me3, desc%comm3, &
+                        sh( iproc3 ), ierr )
      ENDDO
-     
-     call mpi_waitall( nproc3, sh, MPI_STATUSES_IGNORE, ierr )
      !
 #else
+     ierr = cudaDeviceSynchronize()
      CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), &
                         sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
-#endif     
      !
-     f_in_d(1:nxx_) = f_in(1:nxx_)
+     !f_in_d(1:nxx_) = f_in(1:nxx_)
+     ierr = cudaMemcpy( f_in_d, f_in, nxx_, cudaMemcpyHostToDevice )
+#endif
      !
 10   CONTINUE
      !
      !f_aux = (0.0_DP, 0.0_DP) !
-     !$cuf kernel do (1) <<<*,*>>>
+     !$cuf kernel do (1) <<<*,*,0,desc%stream_scatter_yz(1)>>>
      do i = lbound(f_aux_d,1), ubound(f_aux_d,1)
        f_aux_d(i) = (0.d0, 0.d0)
      end do
-     
-#if defined(__NON_BLOCKING_SCATTER)
-     if (nproc3 > 1) call mpi_waitall( nproc3, rh, MPI_STATUSES_IGNORE, ierr )
-#endif
+     ierr = cudaEventRecord ( zero_event, desc%stream_scatter_yz(1) )
      !
      DO iproc3 = 1, desc%nproc3
         it0 = ( iproc3 - 1 ) * sendsize
+#if defined(__NON_BLOCKING_SCATTER)
+        if (nproc3 > 1) then
+           call mpi_wait( rh(iproc3), MPI_STATUSES_IGNORE, ierr )
+           call mpi_wait( sh(iproc3), MPI_STATUSES_IGNORE, ierr )
+           ierr = cudaMemcpyAsync( f_in_d(it0+1), f_in(it0+1), sendsize, cudaMemcpyHostToDevice, desc%stream_scatter_yz(iproc3)  )
+        end if
+#endif
+        IF (iproc3 == 2) ierr = cudaEventSynchronize( zero_event )
         DO me2 = me2_start, me2_end
            ip = desc%iproc( me2, iproc3)
            ioff = desc%iss(ip)
-!$cuf kernel do(2) <<<*,*>>>
-           DO i = 1, ncp_( ip ) ! was ncp_(iproc3)
+           aux = ncp_( ip )
+!$cuf kernel do(2) <<<*,*,0,desc%stream_scatter_yz(iproc3)>>>
+           DO i = 1, aux ! was ncp_(iproc3)
               DO k = 1, desc%my_nr3p
                  it = it0 + (i-1)*nr3px
                  mc = desc_ismap_d( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
@@ -508,13 +534,14 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
      !
      !  "backward" scatter from planes to columns
      !
-     DO iproc3 = 1, desc%nproc3
+     DO iproc3 = 1, nproc3
         it0 = ( iproc3 - 1 ) * sendsize
         DO me2 = me2_start, me2_end
            ip = desc%iproc(me2, iproc3)
            ioff = desc%iss(ip)
-!$cuf kernel do(2) <<<*,*>>>
-           DO i = 1, ncp_( ip )
+           aux = ncp_( ip )
+!$cuf kernel do(2) <<<*,*,0,desc%stream_scatter_yz(iproc3)>>>
+           DO i = 1, aux
               DO k = 1, desc%my_nr3p
                  it = it0 + (i-1)*nr3px
                  mc = desc_ismap_d( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
@@ -529,34 +556,39 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
            it0 = it0 + ncp_( ip )*nr3px
         ENDDO
 #if defined(__NON_BLOCKING_SCATTER)
-#error Non blocking with GPU not yet available
-        IF( nproc3 > 1 ) CALL mpi_isend( f_in( ( iproc3 - 1 ) * sendsize + 1 ), &
-                                        sendsize, MPI_DOUBLE_COMPLEX, iproc3-1, &
-                                        me3, desc%comm3, sh( iproc3 ), ierr )
+        IF( nproc3 > 1 ) THEN
+           kdest = ( iproc3 - 1 ) * sendsize
+           ierr = cudaMemcpyAsync( f_in(kdest + 1), f_in_d(kdest + 1 ), sendsize, cudaMemcpyDeviceToHost, desc%stream_scatter_yz(iproc3) )
+        END IF
 #endif
      ENDDO
      
      IF( nproc3 == 1 ) GO TO 20
      !
-     f_in(1:nxx_) = f_in_d(1:nxx_)
      !
      !  step two: communication
      !
-#if ! defined(__NON_BLOCKING_SCATTER)
+#if defined(__NON_BLOCKING_SCATTER)
+     DO iproc3 = 1, nproc3
+           CALL mpi_irecv( f_aux( (iproc3 - 1) * sendsize + 1 ), sendsize, &
+                           MPI_DOUBLE_COMPLEX, iproc3-1, MPI_ANY_TAG, &
+                           desc%comm3, rh(iproc3), ierr )
+           ierr = cudaStreamSynchronize(desc%stream_scatter_yz(iproc3))
+           CALL mpi_isend( f_in( ( iproc3 - 1 ) * sendsize + 1 ), &
+                                        sendsize, MPI_DOUBLE_COMPLEX, iproc3-1, &
+                                        me3, desc%comm3, sh( iproc3 ), ierr )
+     END DO
+#else
+     !f_in(1:nxx_) = f_in_d(1:nxx_)
+     !ierr = cudaDeviceSynchronize()
+     ierr = cudaMemcpy( f_in, f_in_d, nxx_, cudaMemcpyDeviceToHost )
+
      CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), &
                         sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
-#else
-     DO iproc3 = 1, desc%nproc3
-        CALL mpi_irecv( f_aux( (iproc3-1)*sendsize + 1 ), sendsize, &
-                        MPI_DOUBLE_COMPLEX, iproc3-1, MPI_ANY_TAG, &
-                        desc%comm3, rh(iproc3), ierr )
-        ! IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', ' backward receive info<>0', abs(ierr) )
-     ENDDO
-        
-     call mpi_waitall( desc%nproc3, sh, MPI_STATUSES_IGNORE, ierr )
-     call mpi_waitall( desc%nproc3, rh, MPI_STATUSES_IGNORE, ierr )
+
+     
 #endif
      !
      !  step one: store contiguously the columns
@@ -564,6 +596,12 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
      offset = 0
      DO iproc3 = 1, nproc3
         kdest = ( iproc3 - 1 ) * sendsize
+#if defined(__NON_BLOCKING_SCATTER)
+        IF( nproc3 > 1 ) THEN
+           call mpi_wait( rh(iproc3), MPI_STATUSES_IGNORE, ierr )
+           call mpi_wait( sh(iproc3), MPI_STATUSES_IGNORE, ierr )
+        END IF
+#endif        
         kfrom = offset
         DO me2 = me2_start, me2_end
            ip = desc%iproc(me2,me3)
@@ -574,18 +612,24 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
         !      kdest = kdest + nr3px
         !      kfrom = kfrom + desc%nr3x
         !   ENDDO
-          ierr = cudaMemcpy2D( f_in_d(kfrom +1 ), desc%nr3x, f_aux(kdest + 1), nr3px, desc%nr3p( iproc3 ), ncp_ (ip), cudaMemcpyHostToDevice )
+          ierr = cudaMemcpy2DAsync( f_in_d(kfrom +1 ), desc%nr3x, f_aux(kdest + 1), nr3px, desc%nr3p( iproc3 ), ncp_ (ip), cudaMemcpyHostToDevice, desc%stream_scatter_yz(iproc3) )
           kdest = kdest + nr3px*ncp_ (ip)
           kfrom = kfrom + desc%nr3x*ncp_ (ip)
         ENDDO
         offset = offset + desc%nr3p( iproc3 )
      ENDDO
-
+     !
+     DO iproc3 = 1, nproc3
+        ierr = cudaStreamSynchronize(desc%stream_scatter_yz(iproc3))
+     END DO
+     
+     
      ! clean extra array elements in each stick
-
+     
      IF( desc%nr3x /= desc%nr3 ) THEN
+       aux = ncp_ ( desc%mype+1 ) 
 !$cuf kernel do(2) <<<*,*>>>
-       DO k = 1, ncp_ ( desc%mype+1 ) 
+       DO k = 1, aux
           DO i = desc%nr3, desc%nr3x
              f_in_d( (k-1)*desc%nr3x + i ) = 0.0d0 
           END DO
@@ -600,6 +644,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   DEALLOCATE ( ncp_ ) ! , f_aux, f_in)
   CALL cpu_buffer%release_buffer(f_in, ierr)
   CALL cpu_buffer%release_buffer(f_aux, ierr)
+  CALL nvtxEndRangeAsync()
   CALL stop_clock ('fft_scatt_yz')
 
 #endif
@@ -611,7 +656,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 END SUBROUTINE fft_scatter_yz_gpu
 !
 !-----------------------------------------------------------------------
-SUBROUTINE fft_scatter_tg_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
+SUBROUTINE fft_scatter_tg_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   !-----------------------------------------------------------------------
   !
   ! task group wavefunction redistribution
@@ -632,6 +677,7 @@ SUBROUTINE fft_scatter_tg_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   INTEGER, INTENT(in)                    :: nxx_, isgn
   COMPLEX (DP), DEVICE, INTENT(inout)    :: f_in_d (nxx_), f_aux_d (nxx_)
   COMPLEX (DP), POINTER              :: f_in(:), f_aux(:)
+  INTEGER(kind=cuda_stream_kind), INTENT(IN) :: stream ! cuda stream for the execution
 
   INTEGER :: ierr
 
@@ -642,8 +688,12 @@ SUBROUTINE fft_scatter_tg_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   CALL cpu_buffer%lock_buffer(f_in, nxx_, ierr);
   CALL cpu_buffer%lock_buffer(f_aux, nxx_, ierr);
 #if defined(__MPI)
-  !
-  f_aux(1:nxx_) = f_in_d(1:nxx_)
+  ! == OPTIMIZE, replace this with overlapped comunication on host and device, 
+  ! or possibly use GPU MPI?
+  
+  !f_aux(1:nxx_) = f_in_d(1:nxx_)
+  ierr = cudaMemcpyAsync( f_aux, f_in_d, nxx_, cudaMemcpyDeviceToHost, stream )
+  ierr = cudaStreamSynchronize(stream)
   if ( isgn > 0 ) then
 
      CALL MPI_ALLTOALLV( f_aux,  desc%tg_snd, desc%tg_sdsp, MPI_DOUBLE_COMPLEX, &
@@ -656,7 +706,9 @@ SUBROUTINE fft_scatter_tg_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
                          f_in, desc%tg_snd, desc%tg_sdsp, MPI_DOUBLE_COMPLEX, desc%comm2, ierr)
      IF( ierr /= 0 ) CALL fftx_error__( 'fft_scatter_tg', ' alltoall error 2 ', abs(ierr) )
   end if
-  f_in_d(1:nxx_) = f_in(1:nxx_)
+  !f_in_d(1:nxx_) = f_in(1:nxx_)
+  ierr = cudaMemcpyAsync( f_in_d, f_in, nxx_, cudaMemcpyHostToDevice, stream )
+  !ierr = cudaStreamSynchronize(stream)
 #endif
   !
   CALL cpu_buffer%release_buffer(f_in, ierr);
@@ -668,7 +720,7 @@ SUBROUTINE fft_scatter_tg_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 END SUBROUTINE fft_scatter_tg_gpu
 !
 !-----------------------------------------------------------------------
-SUBROUTINE fft_scatter_tg_opt_gpu ( desc, f_in_d, f_out_d, nxx_, isgn )
+SUBROUTINE fft_scatter_tg_opt_gpu ( desc, f_in_d, f_out_d, nxx_, isgn, stream )
   !-----------------------------------------------------------------------
   !
   ! task group wavefunction redistribution
@@ -688,6 +740,7 @@ SUBROUTINE fft_scatter_tg_opt_gpu ( desc, f_in_d, f_out_d, nxx_, isgn )
   TYPE (fft_type_descriptor), INTENT(in) :: desc
   INTEGER, INTENT(in)                    :: nxx_, isgn
   COMPLEX (DP), DEVICE, INTENT(inout)    :: f_in_d (nxx_), f_out_d (nxx_)
+  INTEGER(kind=cuda_stream_kind), INTENT(IN) :: stream ! cuda stream for the execution
   COMPLEX (DP), POINTER                  :: f_in(:), f_out(:)
 
   INTEGER :: ierr
@@ -698,7 +751,9 @@ SUBROUTINE fft_scatter_tg_opt_gpu ( desc, f_in_d, f_out_d, nxx_, isgn )
   !
   CALL cpu_buffer%lock_buffer(f_in, nxx_, ierr);
   CALL cpu_buffer%lock_buffer(f_out, nxx_, ierr);
-  f_in(1:nxx_) = f_in_d(1:nxx_)
+  !f_in(1:nxx_) = f_in_d(1:nxx_)
+  ierr = cudaMemcpyAsync( f_in, f_in_d, nxx_, cudaMemcpyDeviceToHost, stream )
+  ierr = cudaStreamSynchronize(stream)
 #if defined(__MPI)
   !
   if ( isgn > 0 ) then
@@ -715,7 +770,9 @@ SUBROUTINE fft_scatter_tg_opt_gpu ( desc, f_in_d, f_out_d, nxx_, isgn )
   end if
 
 #endif
-  f_out_d(1:nxx_) = f_out(1:nxx_)
+  !f_out_d(1:nxx_) = f_out(1:nxx_)
+  ierr = cudaMemcpyAsync( f_out_d, f_out, nxx_, cudaMemcpyHostToDevice, stream )
+  !ierr = cudaStreamSynchronize(stream)
   !
   CALL cpu_buffer%release_buffer(f_in, ierr);
   CALL cpu_buffer%release_buffer(f_out, ierr);
@@ -727,6 +784,258 @@ SUBROUTINE fft_scatter_tg_opt_gpu ( desc, f_in_d, f_out_d, nxx_, isgn )
 END SUBROUTINE fft_scatter_tg_opt_gpu
 
 #endif
+
+
+!-----------------------------------------------------------------------
+SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany )
+  !-----------------------------------------------------------------------
+  !
+  ! transpose of the fft yz planes across the desc%comm3 communicator
+  !
+  ! a) From Z-oriented columns to Y-oriented colums (isgn > 0)
+  !    Active columns (or sticks or pencils) along the Z direction for each 
+  !    processor are stored consecutively and are such that they correspond 
+  !    to a subset of the active X values.
+  !
+  !    The pencil -> slices transposition is performed in the subgroup 
+  !    of processors (desc%comm3) owning these X values.
+  !
+  !    The transpose takes place in two steps:
+  !    1) on each processor the columns are sliced into sections along Z
+  !       that are stored one after the other. On each processor, slices for
+  !       processor "iproc3" are desc%nr3p(iproc3)*desc%nsw/nsp(me) big.
+  !    2) all processors communicate to exchange slices (all columns with 
+  !       Z in the slice belonging to "me" must be received, all the others 
+  !       must be sent to "iproc3")
+  !
+  !    Finally one gets the "slice" representation: each processor has
+  !    desc%nr3p(mype3) Z values of all the active pencils along Y for the
+  !    X values of the current group. Data are organized with the Y index
+  !    running fastest, then the reordered X values, then Z.
+  !
+  !    f_in  contains the input Z columns, is destroyed on output
+  !    f_aux contains the output Y colums.
+  !
+  !  b) From planes to columns (isgn < 0)
+  !
+  !    Quite the same in the opposite direction
+  !    f_aux contains the input Y columns, is destroyed on output
+  !    f_in  contains the output Z columns.
+  !
+  USE cudafor
+  USE nvtx
+  USE fftx_buffers, ONLY : cpu_buffer
+  IMPLICIT NONE
+
+  TYPE (fft_type_descriptor), INTENT(in) :: desc
+  INTEGER, INTENT(in)                    :: nxx_, isgn
+  COMPLEX (DP), DEVICE, INTENT(inout)    :: f_in_d (nxx_), f_aux_d (nxx_)
+  INTEGER, INTENT(IN)                    :: howmany
+
+#if defined(__MPI)
+  COMPLEX (DP),    POINTER :: f_in(:), f_aux(:)
+  INTEGER, DEVICE, POINTER :: desc_ismap_d(:)
+  !
+  INTEGER :: ierr, me, me2, me3, nproc3, iproc3, ncpx, nr3px, ip, ip0, me2_start, me2_end
+  INTEGER :: i, j, it, it0, k, kfrom, kdest, offset, ioff, mc, m1, m2, i1,  sendsize, aux
+  INTEGER, ALLOCATABLE :: ncp_(:)
+  INTEGER, DEVICE, POINTER :: ir1p__d(:)
+  INTEGER :: my_nr1p_
+  !
+#if defined(__NON_BLOCKING_SCATTER)
+  INTEGER :: sh(desc%nproc3), rh(desc%nproc3)
+#endif
+  CALL nvtxStartRangeAsync("fft_scatter_many_yz_gpu", isgn + 5)
+
+
+  !
+  me     = desc%mype  + 1
+  me2    = desc%mype2 + 1
+  me3    = desc%mype3 + 1
+  nproc3 = desc%nproc3
+
+  ! allocate auxiliary array for columns distribution
+  ALLOCATE ( ncp_( desc%nproc) )
+  !
+  me2_start = me2 ; me2_end = me2
+  if ( abs (isgn) == 1 ) then      ! It's a potential FFT
+     ncp_ = desc%nsp 
+     my_nr1p_ = count (desc%ir1p   > 0)
+     ir1p__d => desc%ir1p_d
+  else if ( abs (isgn) == 2 ) then ! It's a wavefunction FFT
+     ncp_ = desc%nsw
+     my_nr1p_ = count (desc%ir1w   > 0)
+     ir1p__d => desc%ir1w_d
+  else if ( abs (isgn) == 3 ) then ! It's a wavefunction FFT with task group
+     print *, "ERRORE, this should never happen!"
+  end if
+  !
+  CALL start_clock ('fft_scatt_yz')
+  !
+  ! calculate the message size
+  !
+  nr3px = MAXVAL ( desc%nr3p )  ! maximum number of Z values to be exchanged
+  ncpx  = MAXVAL ( ncp_ )       ! maximum number of Z columns to be exchanged
+  
+  sendsize = howmany * ncpx * nr3px       ! dimension of the scattered chunks
+  
+  ! allocate host copy of f_in and f_aux
+  CALL cpu_buffer%lock_buffer(f_in, nxx_, ierr)
+  CALL cpu_buffer%lock_buffer(f_aux, nxx_, ierr)
+  desc_ismap_d => desc%ismap_d
+  !
+  ierr = 0
+  IF (isgn.gt.0) THEN
+
+     IF (nproc3==1) GO TO 10
+     !
+     ! "forward" scatter from columns to planes
+     !
+     ! step one: store contiguously the slices
+     !
+     offset = 0
+     DO iproc3 = 1, nproc3
+        kdest = ( iproc3 - 1 ) * sendsize
+        kfrom = offset
+        !
+        ierr = cudaMemcpy2D( f_aux(kdest + 1), nr3px, f_in_d(kfrom + 1 ), desc%nr3x, desc%nr3p( iproc3 ), howmany*ncpx, cudaMemcpyDeviceToHost)
+        !
+        offset = offset + desc%nr3p( iproc3 )
+     ENDDO
+     !
+     ! ensures that no garbage is present in the output 
+     ! useless; the later accessed elements are overwritten by the A2A step
+     !
+     ! step two: communication  across the    nproc3    group
+     !
+
+     CALL mpi_alltoall (f_aux(1), sendsize, MPI_DOUBLE_COMPLEX, f_in(1), &
+                        sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
+
+     IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
+     !
+     !f_in_d(1:nxx_) = f_in(1:nxx_)
+     ierr = cudaMemcpy( f_in_d, f_in, nxx_, cudaMemcpyHostToDevice)
+     !
+10   CONTINUE
+     !
+     !f_aux = (0.0_DP, 0.0_DP) !
+     !$cuf kernel do (1) <<<*,*>>>
+     do i = lbound(f_aux_d,1), ubound(f_aux_d,1)
+       f_aux_d(i) = (0.d0, 0.d0)
+     end do
+     !
+     DO iproc3 = 1, desc%nproc3
+        it0 = ( iproc3 - 1 ) * sendsize
+
+        ioff = desc%iss(iproc3)
+        aux = ncp_( iproc3 )
+
+!$cuf kernel do(3) <<<*,*>>>
+        DO j=0, howmany-1
+           DO i = 1, aux ! was ncp_(iproc3)
+              DO k = 1, desc%my_nr3p
+                 it = it0 + (i-1)*nr3px + j*ncpx*nr3px !desc%nnr !aux*nr3px
+                 mc = desc_ismap_d( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
+                 m1 = mod (mc-1,desc%nr1x) + 1 ; m2 = (mc-1)/desc%nr1x + 1 
+                 i1 = m2 + ( ir1p__d(m1) - 1 ) * desc%nr2x + (k-1)*desc%nr2x*my_nr1p_
+              
+                 f_aux_d( i1 + j*desc%nnr ) = f_in_d( k + it )
+                 !i1 = i1 + desc%nr2x*my_nr1p_
+              ENDDO
+           ENDDO
+           !it0 = it0 + ncp_( ip )*nr3px
+        ENDDO
+     ENDDO
+
+  ELSE
+     !
+     !  "backward" scatter from planes to columns
+     !
+     DO iproc3 = 1, nproc3
+        it0 = ( iproc3 - 1 ) * sendsize
+        
+        ip = desc%iproc(me2, iproc3)
+        ioff = desc%iss(ip)
+        aux = ncp_( ip )
+!$cuf kernel do(3) <<<*,*>>>
+        DO j = 0, howmany - 1
+           DO i = 1, aux
+              DO k = 1, desc%my_nr3p
+                 it = it0 + (i-1)*nr3px + j*ncpx*nr3px
+                 mc = desc_ismap_d( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
+                 m1 = mod (mc-1,desc%nr1x) + 1 ; m2 = (mc-1)/desc%nr1x + 1 
+                 i1 = m2 + ( ir1p__d(m1) - 1 ) * desc%nr2x + (k-1)*(desc%nr2x * my_nr1p_)
+              
+                 f_in_d( k + it ) = f_aux_d( i1  + j*desc%nnr )
+                 !i1 = i1 + desc%nr2x * my_nr1p_
+              ENDDO
+              !it = it + nr3px
+           ENDDO
+           !it0 = it0 + ncp_( ip )*nr3px
+        ENDDO
+     ENDDO
+     
+     IF( nproc3 == 1 ) GO TO 20
+     !
+     !
+     !  step two: communication
+     !
+     ierr = cudaMemcpy( f_in, f_in_d, nxx_, cudaMemcpyDeviceToHost )
+
+     CALL mpi_alltoall (f_in(1), sendsize, MPI_DOUBLE_COMPLEX, f_aux(1), &
+                        sendsize, MPI_DOUBLE_COMPLEX, desc%comm3, ierr)
+
+     IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
+
+     
+     !
+     !  step one: store contiguously the columns
+     !
+     offset = 0
+     DO iproc3 = 1, nproc3
+        kdest = ( iproc3 - 1 ) * sendsize     
+        kfrom = offset
+        ierr = cudaMemcpy2D( f_in_d(kfrom +1 ), desc%nr3x, f_aux(kdest + 1), nr3px, desc%nr3p( iproc3 ), howmany * ncpx, cudaMemcpyHostToDevice)
+        !
+        offset = offset + desc%nr3p( iproc3 )
+     ENDDO
+
+     ! clean extra array elements in each stick
+
+     IF( desc%nr3x /= desc%nr3 ) THEN
+       aux = ncp_ ( desc%mype+1 )
+!$cuf kernel do(3) <<<*,*>>>
+       DO j=0, howmany-1
+          DO k = 1, aux
+             DO i = desc%nr3, desc%nr3x
+                f_in_d( j*ncpx*desc%nr3x + (k-1)*desc%nr3x + i) = 0.0d0
+             END DO
+          END DO
+       END DO
+     END IF
+
+20   CONTINUE
+
+  ENDIF
+
+  DEALLOCATE ( ncp_ ) ! , f_aux, f_in)
+  CALL cpu_buffer%release_buffer(f_in, ierr)
+  CALL cpu_buffer%release_buffer(f_aux, ierr)
+  CALL nvtxEndRangeAsync()
+  CALL stop_clock ('fft_scatt_yz')
+
+#endif
+
+  RETURN
+98 format ( 10 ('(',2f12.9,')') )
+99 format ( 20 ('(',2f12.9,')') )
+
+END SUBROUTINE fft_scatter_many_yz_gpu
+
 !=----------------------------------------------------------------------=!
 END MODULE scatter_mod_gpu
 !=----------------------------------------------------------------------=!
+
+! defined (__CUDA)
+#endif 
