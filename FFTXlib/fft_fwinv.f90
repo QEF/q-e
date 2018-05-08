@@ -282,7 +282,7 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
   USE cudafor
   USE fft_scalar,    ONLY: cfft3d_gpu, cfft3ds_gpu
   USE fft_smallbox,  ONLY: cft_b, cft_b_omp
-  USE fft_parallel,  ONLY: tg_cft3s_gpu
+  USE fft_parallel,  ONLY: tg_cft3s_gpu, many_cft3s_gpu
   USE fft_types,     ONLY: fft_type_descriptor
   USE fft_param,     ONLY: DP
 
@@ -322,7 +322,7 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
 
   IF( dfft%lpara ) THEN
 
-     IF( howmany_ /= 1 ) THEN
+     IF( howmany_ /= 1 .and. fft_kind /= 'Wave' ) THEN
         CALL fftx_error__( ' invfft ', ' howmany not yet implemented for parallel driver ', 1 )
      END IF
      IF( stream_ /= 0 ) THEN
@@ -332,7 +332,11 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
      IF( fft_kind == 'Rho' ) THEN
         CALL tg_cft3s_gpu( f_d, dfft, 1, 1 )
      ELSE IF( fft_kind == 'Wave' ) THEN
-        CALL tg_cft3s_gpu( f_d, dfft, 2, 1 )
+        IF( howmany_ == 1 ) THEN
+            CALL tg_cft3s_gpu( f_d, dfft, 2, 1 )
+        ELSE
+            CALL many_cft3s_gpu( f_d, dfft, 2, howmany_ )
+        END IF
      ELSE IF( fft_kind == 'tgWave' ) THEN
         CALL tg_cft3s_gpu( f_d, dfft, 3, 1 )
      END IF
@@ -375,7 +379,7 @@ SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
   !! 
   USE cudafor
   USE fft_scalar,    ONLY: cfft3d_gpu, cfft3ds_gpu
-  USE fft_parallel,  ONLY: tg_cft3s_gpu
+  USE fft_parallel,  ONLY: tg_cft3s_gpu, many_cft3s_gpu
   USE fft_types,     ONLY: fft_type_descriptor
   USE fft_param,     ONLY: DP
 
@@ -415,7 +419,7 @@ SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
 
   IF( dfft%lpara ) THEN
 
-     IF( howmany_ /= 1 ) THEN
+     IF( howmany_ /= 1 .and. fft_kind /= 'Wave' ) THEN
         CALL fftx_error__( ' fwfft ', ' howmany not yet implemented for parallel driver ', 1 )
      END IF
      IF( stream_ /= 0 ) THEN
@@ -425,7 +429,11 @@ SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
      IF( fft_kind == 'Rho' ) THEN
         CALL tg_cft3s_gpu(f_d,dfft,-1, 1)
      ELSE IF( fft_kind == 'Wave' ) THEN
-        CALL tg_cft3s_gpu(f_d,dfft,-2, 1)
+        IF( howmany_ == 1 ) THEN
+           CALL tg_cft3s_gpu(f_d,dfft,-2, 1)
+        ELSE
+           CALL many_cft3s_gpu(f_d,dfft,-2, howmany_)
+        END IF
      ELSE IF( fft_kind == 'tgWave' ) THEN
         CALL tg_cft3s_gpu(f_d,dfft,-3, 1)
      END IF
