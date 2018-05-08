@@ -382,7 +382,7 @@ The following features of the code are tested:
 
 
 ################
-# epw_comp: Si #
+# not_epw_comp: Si #
 ################
 This test is to compare electron-phonon matrix element produced directly by the phonon code 
 and by EPW. It requires modification to the phonon code. 
