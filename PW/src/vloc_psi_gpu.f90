@@ -243,7 +243,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
   USE fft_helper_subroutines
-  !USE wavefunctions_module, ONLY: psic_h => psic
+  USE wavefunctions_module, ONLY: psic_h => psic
   !USE wavefunctions_module_gpum, ONLY: psic_d
   USE qe_buffers,    ONLY : qe_buffer
   !
@@ -257,20 +257,23 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER :: ibnd, j, incr
   INTEGER :: i, right_nnr, right_nr3, right_inc
   !
-  LOGICAL :: use_tg
+  LOGICAL :: use_tg, use_many
   ! Task Groups
   COMPLEX(DP), DEVICE, POINTER :: psic_d(:)
   REAL(DP),    DEVICE, POINTER :: tg_v_d(:)
   COMPLEX(DP), DEVICE, POINTER :: tg_psic_d(:)
   INTEGER,     DEVICE, POINTER :: dffts_nl_d(:)
   INTEGER,     DEVICE, POINTER :: igk_k_d(:)
+  !
+  REAL(DP) :: v_tmp
   INTEGER :: v_siz, idx, ioff
   INTEGER :: ierr
-  !
-  !IF (.not. allocated(psic_d)) ALLOCATE(psic_d, dffts%nnr*4)
-  CALL qe_buffer%lock_buffer( psic_d, dffts%nnr, ierr )
+  INTEGER :: howmany = 12
+  INTEGER :: group_size
+  
   CALL start_clock ('vloc_psi')
-  use_tg = dffts%has_task_groups 
+  use_tg = dffts%has_task_groups
+  use_many = .true.
   !
   IF( use_tg ) THEN
      !
@@ -283,6 +286,10 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock ('vloc_psi:tg_gather')
      !
+  ELSE IF (use_many) THEN
+     CALL qe_buffer%lock_buffer( psic_d, dffts%nnr*howmany, ierr )
+  ELSE
+     CALL qe_buffer%lock_buffer( psic_d, dffts%nnr, ierr )
   ENDIF
   CALL qe_buffer%lock_buffer( dffts_nl_d, size(dffts%nl) , ierr )
   CALL qe_buffer%lock_buffer( igk_k_d, n, ierr )
@@ -356,6 +363,42 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
         ENDDO
         !
      ENDDO
+  ELSE IF (use_many) THEN
+     DO ibnd = 1, m, howmany
+        !
+        !!! == OPTIMIZE HERE == (setting to 0 and setting elements!)
+        psic_d(:) = (0.d0, 0.d0)
+        group_size = MIN(howmany, m - (ibnd -1))
+
+!$cuf kernel do(1) <<<,>>>
+        DO j = 1, n
+           DO idx = 0, group_size-1
+              psic_d (dffts_nl_d (igk_k_d(j)) + idx*dffts%nnr) = psi_d(j, ibnd+idx)
+           END DO
+        END DO
+        !
+        CALL invfft ('Wave', psic_d, dffts, howmany=group_size)
+        !
+!$cuf kernel do(1) <<<,>>>
+        DO j = 1, dffts%nnr
+           v_tmp = v_d(j)
+           DO idx = 0, group_size-1
+              psic_d (j + idx*dffts%nnr) = psic_d (j + idx*dffts%nnr) * v_tmp
+           END DO
+        ENDDO
+        !
+        CALL fwfft ('Wave', psic_d, dffts, howmany=group_size)
+        !
+        !   addition to the total product
+        !
+!$cuf kernel do(1) <<<*,*>>>
+        DO j = 1, n
+           DO idx = 0, group_size-1
+              hpsi_d (j, ibnd + idx)   = hpsi_d (j, ibnd + idx)   + psic_d (dffts_nl_d(igk_k_d(j)) + idx * dffts%nnr)
+           ENDDO
+        ENDDO
+        !
+     ENDDO
   ELSE
      DO ibnd = 1, m
         !
@@ -401,10 +444,11 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL qe_buffer%release_buffer( tg_psic_d, ierr )
      CALL qe_buffer%release_buffer( tg_v_d, ierr )
      !
+  ELSE
+     CALL qe_buffer%release_buffer( psic_d, ierr )
   ENDIF
   CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
   CALL qe_buffer%release_buffer( igk_k_d, ierr )
-  CALL qe_buffer%release_buffer( psic_d, ierr )
   CALL stop_clock ('vloc_psi')
   !
 99 format ( 20 ('(',2f12.9,')') )
