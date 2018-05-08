@@ -170,7 +170,12 @@ program test_fft_scalar_gpu
     integer(kind = cuda_stream_kind) :: stream = 0
     ! size
     integer, parameter :: nx = 10, ny = 10, nz = 10
-    integer, parameter :: ldx= 10, ldy= 10, ldz= 10, howmany=12
+    integer, parameter :: ldx= 10, ldy= 10, ldz= 10
+#if ! defined(__DFTI)
+    integer, parameter :: howmany=1
+#else
+    integer, parameter :: howmany=12
+#endif
     !
     ! array for random values
     real(DP) :: rnd_aux(2 * howmany * ldx * ldy * ldz)
@@ -181,6 +186,10 @@ program test_fft_scalar_gpu
     complex(DP) :: c(howmany * ldx * ldy * ldz)
     complex(DP) :: tmp(howmany * ldx * ldy * ldz)
     !
+#if ! defined(__DFTI)
+    print *, 'The current CPU scalar driver does not support howmany. Reverting to howmany 1'
+#endif
+    
     CALL fill_random(c, c_d, howmany * ldx * ldy * ldz)
     !
     CALL cfft3d( c, nx, ny, nz, ldx, ldy, ldz, howmany, 1 )
