@@ -11,11 +11,12 @@
 MODULE fft_types
 !=----------------------------------------------------------------------------=!
 
-  USE fft_support, ONLY : good_fft_order, good_fft_dimension
-  USE fft_param
 #if defined(__CUDA)
+  USE cudafor
   USE fftx_buffers, ONLY : cpu_buffer, gpu_buffer
 #endif
+  USE fft_support, ONLY : good_fft_order, good_fft_dimension
+  USE fft_param
   IMPLICIT NONE
   PRIVATE
   SAVE
@@ -139,7 +140,10 @@ MODULE fft_types
     CHARACTER(len=12):: wave_clock_label = ' '
 
     INTEGER :: grid_id
-
+#if defined(__CUDA)
+    INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_yz
+    INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_xy
+#endif
   END TYPE
 
   REAL(DP) :: fft_dual = 4.0d0
@@ -276,6 +280,17 @@ CONTAINS
     ALLOCATE( desc%ir1w_d( desc%nr1x ) ) ; desc%ir1w_d  = 0
     ALLOCATE( desc%ir1w_tg_d( desc%nr1x ) ) ; desc%ir1w_tg_d  = 0
     ALLOCATE( desc%ismap_d( nx * ny ) ) ; desc%ismap_d = 0
+    
+    ALLOCATE ( desc%stream_scatter_yz(desc%nproc3) ) ;
+    do iproc = 1, desc%nproc3
+        ierr = cudaStreamCreate(desc%stream_scatter_yz(iproc))
+    end do
+    
+    ALLOCATE ( desc%stream_scatter_xy(desc%nproc2) ) ;
+    do iproc = 1, desc%nproc2
+        ierr = cudaStreamCreate(desc%stream_scatter_xy(iproc))
+    end do
+    
 #endif
 
     incremental_grid_identifier = incremental_grid_identifier + 1
@@ -285,7 +300,7 @@ CONTAINS
 
   SUBROUTINE fft_type_deallocate( desc )
     TYPE (fft_type_descriptor) :: desc
-    INTEGER :: ierr
+    INTEGER :: iproc, ierr
      !write (6,*) ' inside fft_type_deallocate' ; FLUSH(6)
     IF ( ALLOCATED( desc%nr2p ) )   DEALLOCATE( desc%nr2p )
     IF ( ALLOCATED( desc%i0r2p ) )  DEALLOCATE( desc%i0r2p )
@@ -335,7 +350,18 @@ CONTAINS
     IF ( ALLOCATED( desc%nr1w_d ) )    DEALLOCATE( desc%nr1w_d )
     IF ( ALLOCATED( desc%nr1w_tg_d ) ) DEALLOCATE( desc%nr1w_tg_d )
 
-
+    IF (ALLOCATED(desc%stream_scatter_yz)) THEN
+        do iproc = 1, desc%nproc3
+            ierr = cudaStreamDestroy(desc%stream_scatter_yz(iproc))
+        end do
+        DEALLOCATE(desc%stream_scatter_yz)
+    END IF
+    IF (ALLOCATED(desc%stream_scatter_xy)) THEN
+        do iproc = 1, desc%nproc2
+            ierr = cudaStreamDestroy(desc%stream_scatter_xy(iproc))
+        end do
+        DEALLOCATE(desc%stream_scatter_xy)
+    END IF
 
 #endif
 
