@@ -143,10 +143,10 @@
     IF ( dis_froz_min .lt. minval(et_tmp) ) dis_froz_min = minval(et_tmp)
     IF ( dis_froz_max .gt. maxval(et_tmp) ) dis_froz_max = maxval(et_tmp)
     !
-    WRITE (iuwinfil, '("dis_win_min ", f9.3)')  dis_win_min
-    WRITE (iuwinfil, '("dis_win_max ", f9.3)')  dis_win_max
-    WRITE (iuwinfil, '("dis_froz_min ", f9.3)') dis_froz_min
-    WRITE (iuwinfil, '("dis_froz_max ", f9.3)') dis_froz_max
+    WRITE (iuwinfil, '("dis_win_min ", f18.12)')  dis_win_min
+    WRITE (iuwinfil, '("dis_win_max ", f18.12)')  dis_win_max
+    WRITE (iuwinfil, '("dis_froz_min ", f18.12)') dis_froz_min
+    WRITE (iuwinfil, '("dis_froz_max ", f18.12)') dis_froz_max
     WRITE (iuwinfil, '("num_iter ", i7)')       num_iter
     !
     ! write any extra parameters to the prefix.win file
