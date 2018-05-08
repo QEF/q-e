@@ -355,6 +355,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
      nsticks_x = dfft%my_nr2p * dfft%my_nr3p
      nsticks_y = dfft%nr1p(dfft%mype2+1) * dfft%my_nr3p
      nsticks_z = dfft%nsp(dfft%mype+1)
+     nsticks_z = MAXVAL(dfft%nsp)
      CALL fftx_error__( ' many_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
   else if (abs(isgn) == 2 ) then  ! wave func fft
      nnr_ = dfft%nnr
@@ -368,9 +369,6 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
      CALL fftx_error__( ' many_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
   end if
   !
-  ALLOCATE(streams(howmany))
-  !
-  !
   !  === workaround ===
   ! Replacing this: CALL gpu_buffer%lock_buffer(aux_d, nnr_ * howmany, ierr)
   !  with:
@@ -379,6 +377,8 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   !  === end workaround ===
   !
   !
+  ierr = cudaDeviceSynchronize()
+  ALLOCATE(streams(howmany))
   DO i=1,howmany
       ierr = cudaStreamCreate( streams(i) )
   END DO
@@ -423,7 +423,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
         CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux_d(i*nnr_+1:), streams(i+1), in_place=.true. )
      END DO
      !
-     CALL fft_scatter_many_yz_gpu ( dfft, aux_d, f_d, nnr_, isgn, howmany )
+     CALL fft_scatter_many_yz_gpu ( dfft, aux_d, f_d, howmany*nnr_, isgn, howmany )
      !
      DO i = 0, howmany-1
         CALL cft_1z_gpu( aux_d(nx3*nsticks_zx*i+1:), nsticks_z, n3, nx3, isgn, f_d(i*nnr_+1:), streams(i+1) )
@@ -440,7 +440,10 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
   !
   !CALL gpu_buffer%release_buffer(aux_d, ierr);
-  
+  DO i=1,howmany
+      ierr = cudaStreamSynchronize( streams(i) )
+      ierr = cudaStreamDestroy( streams(i) )
+  END DO
   DEALLOCATE(streams)
   !
   RETURN
