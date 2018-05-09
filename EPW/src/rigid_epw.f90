@@ -22,6 +22,7 @@
   USE kinds,         ONLY : dp
   USE constants_epw, ONLY : pi, fpi, e2
   USE cell_base,     ONLY : bg, omega
+  USE constants_epw, ONLY : eps6
   !
   implicit none
   !
@@ -55,7 +56,6 @@
   real(DP) :: alph, fac,g1,g2,g3, facgd, arg, gmax
   real(DP) :: zag(3),zbg(3),zcg(3), fnat(3)
   complex(dp) :: facg
-  real(DP) :: eps=1.0d-6
   !
   ! alph is the Ewald parameter, geg is an estimate of G^2
   ! such that the G-space sum is convergent for that alph
@@ -90,7 +90,7 @@
                  sqrt (bg (1, 3) **2 + bg (2, 3) **2 + bg (3, 3) **2) ) + 1
   ENDIF
   !
-  IF (abs(abs(signe) - 1.0) > eps) &
+  IF (abs(abs(signe) - 1.0) > eps6) &
        CALL errore ('rgd_blk',' wrong value for signe ',1)
   !
   fac = signe*e2*fpi/omega
@@ -284,11 +284,11 @@ SUBROUTINE rgd_blk_epw(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
         DO na = 1,nat
           arg = -twopi* ( g1*tau(1,na)+ g2*tau(2,na)+ g3*tau(3,na) )
           facq = facqd * CMPLX(cos(arg),sin(arg),kind=DP)
-          DO ipol=1,3
+          DO ipol = 1,3
             zaq=g1*zeu(1,ipol,na)+g2*zeu(2,ipol,na)+g3*zeu(3,ipol,na)
             !
-            epmat = epmat + facq * zaq * uq(3*(na-1)+ipol,:)*bmat
-            epmatl = epmatl + facq * zaq * uq(3*(na-1)+ipol,:)*bmat
+            epmat = epmat + facq * zaq * uq(3*(na-1)+ipol,:) * bmat
+            epmatl = epmatl + facq * zaq * uq(3*(na-1)+ipol,:) * bmat
             !
           ENDDO !ipol
         ENDDO !nat
@@ -660,23 +660,23 @@ SUBROUTINE compute_umn_f (nbnd, cufkk, cufkq, bmatf)
   !  input variables
   INTEGER :: nbnd 
   !! number of bands (possibly in the optimal subspace)
-  COMPLEX(kind=DP) :: cufkk (nbnd, nbnd)
-  !! rotation matrix U(k)
-  COMPLEX(kind=DP) :: cufkq (nbnd, nbnd)
-  !! rotation matrix U(k+q)
+  COMPLEX(kind=DP) :: cufkk(nbnd, nbnd)
+  !! rotation matrix U(k)^\dagger, fine mesh
+  COMPLEX(kind=DP) :: cufkq(nbnd, nbnd)
+  !! rotation matrix U(k+q)^\dagger, fine mesh
   !
   !  output variables
-  COMPLEX(kind=DP) :: bmatf (nbnd, nbnd)
+  COMPLEX(kind=DP) :: bmatf(nbnd, nbnd)
   ! overlap wfcs in Bloch representation, fine grid
   !
   !  every pool works with its own subset of k points on the fine grid
   !
   bmatf = czero
   !
-  !  U_q^ (k') U_k^dagger (k')
+  !  U(k'+q')^\dagger * U(k')
   !
   CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, cufkq, &
-       nbnd, cufkk, nbnd, czero, bmatf, nbnd)
+             nbnd, cufkk, nbnd, czero, bmatf, nbnd)
   !
   !bmatf = bmatf / dble(nkstot)
   !
@@ -702,11 +702,11 @@ SUBROUTINE compute_umn_c (nbnd, nbndsub, nks, cuk, cukq, bmat)
   INTEGER, INTENT (in) :: nbndsub
   !! Number of band on the subspace of Wannier
   ! 
-  COMPLEX(kind=DP), INTENT (in) :: cuk (nbnd,nbndsub,nks)
-  !! rotation matrix U(k)
-  COMPLEX(kind=DP), INTENT (in) :: cukq (nbnd,nbndsub,nks)
-  !! rotation matrix U(k+q)
-  COMPLEX(kind=DP), INTENT (out) :: bmat (nbnd, nbnd, nks)
+  COMPLEX(kind=DP), INTENT (in) :: cuk(nbnd,nbndsub,nks)
+  !! rotation matrix U(k), coarse mesh
+  COMPLEX(kind=DP), INTENT (in) :: cukq(nbnd,nbndsub,nks)
+  !! rotation matrix U(k+q), coarse mesh
+  COMPLEX(kind=DP), INTENT (out) :: bmat(nbnd, nbnd, nks)
   !! overlap wfcs in Bloch representation, fine grid
   !
   ! Work variables 
@@ -717,11 +717,11 @@ SUBROUTINE compute_umn_c (nbnd, nbndsub, nks, cuk, cukq, bmat)
   !
   bmat = czero
   !
-  !  U_q^ (k') U_k^dagger (k')
+  !  U(k+q) * U(k)^\dagger 
   !
-  DO ik=1,nks
+  DO ik = 1, nks
     CALL zgemm ('n', 'c', nbnd, nbnd, nbndsub, cone, cukq(:,:,ik), &
-         nbnd, cuk(:,:,ik), nbnd, czero, bmat(:,:,ik), nbnd)
+               nbnd, cuk(:,:,ik), nbnd, czero, bmat(:,:,ik), nbnd)
   ENDDO
   !
   !WRITE(stdout,'(5x,a)') 'UMN calculated'
@@ -729,7 +729,6 @@ SUBROUTINE compute_umn_c (nbnd, nbndsub, nks, cuk, cukq, bmat)
   !
   !
 END SUBROUTINE compute_umn_c
-!
 
 
 
