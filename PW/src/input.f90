@@ -303,7 +303,7 @@ SUBROUTINE iosys()
   USE dftd3_api,             ONLY : dftd3_init, dftd3_set_params, &
                                     dftd3_set_functional, dftd3_calc, &
                                     dftd3_input
-  USE dftd3_qe,              ONLY : dftd3_printout, dftd3, dftd3_in
+  USE dftd3_qe,              ONLY : dftd3_printout, dftd3_xc, dftd3, dftd3_in
   USE xdm_module,            ONLY : init_xdm, a1i, a2i
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
   USE us,                    ONLY : spline_ps_ => spline_ps
@@ -324,19 +324,15 @@ SUBROUTINE iosys()
      CHARACTER(LEN=*),INTENT(IN)  :: obj_tagname
      END SUBROUTINE
   END INTERFACE
-!!!!  
+  !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  CHARACTER(LEN=256):: dft_
+  !
   INTEGER, EXTERNAL :: read_config_from_file
   !
   INTEGER  :: ia, nt, inlc, ibrav_sg, ierr
   LOGICAL  :: exst, parallelfs
   REAL(DP) :: theta, phi, ecutwfc_pp, ecutrho_pp
-  !
-  CHARACTER(LEN=1), EXTERNAL :: lowercase
-  !
-  ! Auxiliary variables for DFT-D3
-  !
-  real(DP) :: pars(5)
   !
   ! ... various initializations of control variables
   !
@@ -1661,11 +1657,9 @@ SUBROUTINE iosys()
       dftd3_in%threebody = dftd3_threebody
       CALL dftd3_init(dftd3, dftd3_in)
       CALL dftd3_printout(dftd3, dftd3_in)
-      input_dft = get_dft_short ( )
-      do ia=1,len_trim(input_dft)
-         input_dft(ia:ia) = lowercase(input_dft(ia:ia))
-      end do
-      CALL dftd3_set_functional(dftd3, func=input_dft,version=dftd3_version,tz=.false.)
+      dft_ = get_dft_short( )
+      dft_ = dftd3_xc ( dft_ )
+      CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)
   END IF
   !
   IF ( lxdm) CALL init_xdm ( )

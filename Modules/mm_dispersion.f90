@@ -256,9 +256,9 @@ MODULE london_module
            !
          END DO
          !
-         WRITE ( stdout ,'( /, 5X, "-------------------------------------" , &
-                          & /, 5X, "Parameters for Dispersion Correction:" , &
-                          & /, 5X, "-------------------------------------" , &
+         WRITE ( stdout ,'( /, 5X, "-------------------------------------------------" , &
+                          & /, 5X, "Parameters for Dispersion (Grimme-D2) Correction:" , &
+                          & /, 5X, "-------------------------------------------------" , &
                           & /, 5X, "  atom      VdW radius       C_6     " , / )' )
          DO ata = 1 , ntyp
             !
