@@ -44,7 +44,7 @@ inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-hyb
 
 [pw_vdw/]
 program = PW
-inputs_args = ('vdw1.in' ,''), ('vdw2.in' ,''), ('vdw3.in' ,''), ('vdw5.in' ,''), ('vdw6.in' ,''), ('vdw-d.in',''),('vdw-d3.in',''),('vdw-ts.in','')
+inputs_args = ('vdw1.in' ,''), ('vdw2.in' ,''), ('vdw3.in' ,''), ('vdw5.in' ,''), ('vdw6.in' ,''), ('vdw-d2.in',''), ('vdw-d3.in',''),('vdw-ts.in',''),('xdm.in,'')
 
 [ph_base/]
 program = PH

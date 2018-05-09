@@ -1,32 +1,29 @@
 &control
-    calculation='scf',
-    restart_mode='from_scratch',
-    prefix='graphite'
- /
- &system
-    ibrav = 0,
-    celldm(1) =4.66,
-    nat=  4,
-    ntyp= 1,
-    vdw_corr = 'dft-d3',
-    ecutwfc = 37
-    ecutrho = 318
- /
- &electrons
-    conv_thr =1.0d-8
+ calculation='scf'
+ tprnfor=.true.
+ tstress=.true.
 /
- &ions
+&system
+ ibrav=4
+ celldm(1)=4.66
+ celldm(3)=2.60
+ nat=4
+ ecutwfc=18.
+ ecutrho=200.
+ ntyp=1
+ occupations='smearing'
+ degauss=0.02
+ smearing='marzari-vanderbilt'
+ vdw_corr='grimme-d3'
 /
-CELL_PARAMETERS alat
-1.0 0.0 0.0
--0.5 0.8660254037844386 0.0
-0.0 0.0 3.60
+&electrons
+ mixing_beta=0.5
+/
 ATOMIC_SPECIES
- C 12.011 C.pbe-n-rrkjus_psl.0.1.UPF
-ATOMIC_POSITIONS crystal
- C 0.00000    1.00000    0.75000
- C 0.66667    0.33333    0.75000
- C 0.00000    1.00000    0.25000
- C 0.33333    0.66667    0.25000
-K_POINTS AUTOMATIC
-3 3 3 1 1 1
+ C   12.   C.pbe-van_bm.UPF   1
+K_POINTS {gamma}
+ATOMIC_POSITIONS {crystal}
+ C      0.000000    1.000000    0.75000 
+ C      0.666667    0.333333    0.75000 
+ C      0.000000    1.000000    0.25000
+ C      0.333333    0.666667    0.25000
