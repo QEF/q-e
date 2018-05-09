@@ -1,6 +1,5 @@
-# Copyright (C) 2001 Quantum ESPRESSO                                                                                
-#
-# This program is free software; you can redistribute it and/or  
+# Copyright (C) 2016-2018 Quantum ESPRESSO
+# This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License. See the file `License' in the root directory
@@ -9,7 +8,7 @@
 TEST-SUITE  v6.1
 ------------------
 
-Type 'make' for the list of possible options. Currently only PW, CP and EPW
+Type 'make' for the list of possible options. Currently only PW, CP, PH, EPW
 are supported.
 
 'make compare' compare the latest run of tests (SERIAL or PARALLEl) and 
@@ -24,9 +23,8 @@ command
 REFERENCE OUTPUTS
 -----------------
 
-All reference outputs have been computed using GCC 4.8.5
-
-The following configure options have been used:
+Most reference outputs have been computed using GCC 4.8.5 with the following
+"configure" options:
 
 ./configure --enable-openmp --disable-parallel --with-netlib
 
@@ -294,15 +292,10 @@ The following features of the code are tested:
 # pw_vdw : C #
 ##############
 The following features of the code are tested:
-- Dispersion (van der Waals) interactions with DFT-D (Grimme)
+- Dispersion (van der Waals) interactions with DFT-D2 and DFT-D3 (Grimme)
 - As above, with vdW-DF[1-4] (nonlocal) functionals
 - As above, with vdW-DF-C09  (nonlocal) functionals
 - As above, Tkatchenko-Scheffler
-
-##############
-# pw_xdm : C #
-##############
-The following features of the code are tested:
 - XDM dispersion correction.
 
 
