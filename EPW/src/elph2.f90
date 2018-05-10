@@ -77,7 +77,9 @@
        inv_tau_allcb(:,:,:),   &!  Second scattering rate (for both)
        zi_allvb(:,:,:),        &!  Z-factor in scattering rate  
        zi_allcb(:,:,:),        &!  Second Z-factor in scattering rate (for both VB and CB calculations) 
-       ifc(:,:,:,:,:,:,:)       !  Interatomic force constant in real space
+       ifc(:,:,:,:,:,:,:),     &!  Interatomic force constant in real space
+       omegap(:),              &!  Photon energy for phonon-assisted absorption
+       alpha_abs(:,:)           !  Imaginary part of dielectric function for phonon-assisted absorption 
   REAL(KIND=DP) ::             &!
        efnew                    !  SP: Fermi level on the fine grid. Added globaly for efficiency reason 
   INTEGER ::                   &!
@@ -108,6 +110,7 @@
   LOGICAL, allocatable ::      &
        lwin(:,:),              &!  identify bands within outer energy windows (when disentanglement is used)
        lwinq(:,:),             &!
+       exband(:),              &!  k-point independent list of bands excluded from the calculation of overlap and projection matrices in W90
        done_elph(:)
   LOGICAL ::                   &
        elph                   

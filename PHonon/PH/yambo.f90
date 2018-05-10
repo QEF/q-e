@@ -80,7 +80,7 @@ SUBROUTINE elph_yambo_eval_and_IO( )
   USE modes,       ONLY : u,nmodes
   USE dynmat,      ONLY : w2,dyn
   USE io_global,   ONLY : ionode, ionode_id
-  USE xml_io_base, ONLY : create_directory
+  USE io_files,    ONLY : create_directory
   USE mp_images,   ONLY : intra_image_comm
   USE mp,          ONLY : mp_bcast
   USE control_lr,  ONLY : lgamma

@@ -63,8 +63,12 @@ allDyn=`grep "Estimated Allen-Dynes Tc =" $fname | awk '{print $5}'`
 bcsgap=`grep "Estimated BCS superconducting gap =" $fname | awk '{print $6}'`
 pi=`grep "Re[Pi]=" $fname | awk '{print $4; print $7; print $10}'`
 mobvb=`grep "Mobility VB Fermi level" $fname | awk '{print $5}'`
-mobx=`grep " x-axis" $fname | awk '{print $1; print $2; print $3; print $4}'`
+mobcb=`grep "Mobility CB Fermi level" $fname | awk '{print $5}'`
+density=`grep " x-axis" $fname | awk '{print $1; print $2; print $3}'`
+mobx=`grep " x-axis" $fname | awk '{print $4}'`
+mobav=`grep "   avg" $fname | awk '{print $1}'`
 mobxZ=`grep " x-axis [Z]" $fname | awk '{print $1; print $2; print $3; print $4}'`
+indabs=`grep "  (cm-1)" $fname | awk '{print $1; print $2; print $3; print $4}'` 
 
 if test "$efm" != ""; then
         echo efm
@@ -102,14 +106,34 @@ if test "$mobvb" != ""; then
         for x in $mobvb; do echo $x; done
 fi
 
+if test "$mobcb" != ""; then
+        echo mobcb
+        for x in $mobcb; do echo $x; done
+fi
+
 if test "$mobx" != ""; then
         echo mobx
         for x in $mobx; do echo $x; done
 fi
 
+if test "$mobav" != ""; then
+        echo mobav
+        for x in $mobav; do echo $x; done
+fi
+
+if test "$density" != ""; then
+        echo density
+        for x in $density; do echo $x; done
+fi
+
 if test "$mobxZ" != ""; then
         echo mobxZ
         for x in $mobxZ; do echo $x; done
+fi
+
+if test "$indabs" != ""; then
+        echo indabs
+        for x in $indabs; do echo $x; done
 fi
 
 if test "$qdir" != ""; then

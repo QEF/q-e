@@ -19,13 +19,13 @@
   !!
   !-----------------------------------------------------------------------
   !
-  USE mp_global,     ONLY : my_pool_id, inter_pool_comm, root_pool, &
-                            intra_pool_comm,npool, inter_image_comm,&
-                            world_comm
+  USE kinds,         ONLY : DP
+  USE mp_global,     ONLY : my_pool_id, inter_pool_comm, &
+                            npool, inter_image_comm, world_comm
   USE mp_images,     ONLY : my_image_id, nimage
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_barrier, mp_bcast
-  USE io_global,     ONLY : meta_ionode, meta_ionode_id
+  USE io_global,     ONLY : stdout, meta_ionode, meta_ionode_id
   USE us,            ONLY : nqxq, dq, qrad
   USE gvect,         ONLY : gcutm, ngm
   USE cellmd,        ONLY : cell_factor
@@ -34,9 +34,7 @@
   USE wavefunctions_module, ONLY: evc
   USE ions_base,     ONLY : nat, nsp, tau, ityp
   USE control_flags, ONLY : iverbosity
-  USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : iuepb, QPeig_read
-  USE kinds,         ONLY : DP
   USE pwcom,         ONLY : et, xk, nks, nbnd, nkstot
   USE cell_base,     ONLY : at, bg
   USE symm_base,     ONLY : irt, s, nsym, ftau, sname, invs, s_axis_to_cart,&
@@ -44,15 +42,14 @@
                             remove_sym, allfrac
   USE start_k,       ONLY : nk1, nk2, nk3
   USE phcom,         ONLY : dpsi, dvpsi, evq, nq1, nq3, nq2 
-  USE qpoint,        ONLY : igkq
-  USE qpoint,        ONLY : xq
+  USE qpoint,        ONLY : igkq, xq
   USE modes,         ONLY : nmodes
   USE lr_symm_base,  ONLY : minus_q, rtau, gi, gimq, irotmq, nsymq, invsymq
-  USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem,  &
+  USE epwcom,        ONLY : epbread, epbwrite, epwread, lifc, etf_mem, vme, &
                             nbndsub, iswitch, kmaps, eig_read, dvscf_dir, lpolar
   USE elph2,         ONLY : epmatq, dynq, sumr, et_all, xk_all, et_mb, et_ks, &
                             zstar, epsi, cu, cuq, lwin, lwinq, bmat, igk_k_all, &
-                            ngk_all
+                            ngk_all, exband
   USE constants_epw, ONLY : ryd2ev 
   USE fft_base,      ONLY : dfftp
   USE control_ph,    ONLY : u_from_file
@@ -228,23 +225,23 @@
   IF ( .not. ALLOCATED(et_mb) ) ALLOCATE(et_mb(nbnd,nks))
   et_ks(:,:) = 0.d0
   et_mb(:,:) = 0.d0
-  IF (eig_read) then
-  IF (meta_ionode) THEN
-    WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
-         nbnd, ",", nkstot,")"
-    tempfile=trim(prefix)//'.eig'
-    OPEN(QPeig_read, file=tempfile, form='formatted', action='read', iostat=ios)
-    IF (ios /= 0) CALL errore ('elphon_shuffle_wrap','error opening' // tempfile, 1)
-    READ (QPeig_read,'(a)') line
-    DO ik = 1, nkstot
-      ! We do not save the k-point for the moment ==> should be read and
-      ! tested against the current one  
+  IF (eig_read) THEN
+    IF (meta_ionode) THEN
+      WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
+           nbnd, ",", nkstot,")"
+      tempfile=trim(prefix)//'.eig'
+      OPEN(QPeig_read, file=tempfile, form='formatted', action='read', iostat=ios)
+      IF (ios /= 0) CALL errore ('elphon_shuffle_wrap','error opening' // tempfile, 1)
       READ (QPeig_read,'(a)') line
-      READ (QPeig_read,*) et_tmp (:,ik)
-    ENDDO
-    CLOSE(QPeig_read)
-    ! from eV to Ryd
-    et_tmp = et_tmp / ryd2ev
+      DO ik = 1, nkstot
+        ! We do not save the k-point for the moment ==> should be read and
+        ! tested against the current one  
+        READ (QPeig_read,'(a)') line
+        READ (QPeig_read,*) et_tmp (:,ik)
+      ENDDO
+      CLOSE(QPeig_read)
+      ! from eV to Ryd
+      et_tmp = et_tmp / ryd2ev
     ENDIF
     CALL mp_bcast (et_tmp, meta_ionode_id, world_comm)
     !
@@ -255,11 +252,11 @@
   ENDIF
   !
   ! Do not recompute dipole matrix elements
-  IF ( epwread .and. .not. epbread ) then
+  IF ( epwread .and. .not. epbread ) THEN 
     continue
   ELSE
-  ! compute coarse grid dipole matrix elements.  Very fast 
-    CALL compute_pmn_para
+    ! compute coarse grid dipole matrix elements.  Very fast 
+    IF (.not. vme) CALL compute_pmn_para
   ENDIF
   !
   !  gather electronic eigenvalues for subsequent shuffle
@@ -288,7 +285,7 @@
   CALL mp_barrier(inter_image_comm)
   !
   ! Do not do symmetry stuff 
-  IF ( epwread .and. .not. epbread ) then
+  IF ( epwread .and. .not. epbread ) THEN
     CONTINUE
   ELSE
     !
@@ -298,7 +295,7 @@
          epmatq (nbnd, nbnd, nks, nmodes, nq1*nq2*nq3), &
          epsi(3,3), zstar(3,3,nat), bmat(nbnd, nbnd, nks, nq1*nq2*nq3), &
          cu ( nbnd, nbndsub, nks), cuq ( nbnd, nbndsub, nks), & 
-         lwin ( nbnd, nks ), lwinq ( nbnd, nks ) )
+         lwin ( nbnd, nks ), lwinq ( nbnd, nks ) , exband (nbnd ) )
     !
     epsi=0.d0
     zstar=0.d0
@@ -590,7 +587,7 @@
         !END
         !
         !
-        CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq )
+        CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband )
         !
         ! Calculate overlap U_k+q U_k^\dagger
         IF (lpolar) CALL compute_umn_c ( nbnd, nbndsub, nks, cu, cuq, bmat(:,:,:,nqc) )
@@ -608,10 +605,9 @@
         !  bring epmatq in the mode representation of iq_first, 
         !  and then in the cartesian representation of iq
         !
-        CALL rotate_eigenm ( iq_first, nqc, isym, s, invs, irt, &
-           rtau, xq, cz1, cz2 )
+        CALL rotate_eigenm ( iq_first, nqc, isym, s, invs, irt, rtau, xq, cz1, cz2 )
         !
-        CALL rotate_epmat ( cz1, cz2, xq, nqc, lwin, lwinq )
+        CALL rotate_epmat ( cz1, cz2, xq, nqc, lwin, lwinq, exband )
   !DBSP
   !      write(*,*)'epmatq(:,:,2,:,nqc)',SUM(epmatq(:,:,2,:,nqc))
   !      write(*,*)'epmatq(:,:,2,:,nqc)**2',SUM((REAL(REAL(epmatq(:,:,2,:,nqc))))**2)+&
@@ -643,7 +639,7 @@
           !
           xq0 = -xq0
           ! 
-          CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq )
+          CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband )
           !
           ! Calculate overlap U_k+q U_k^\dagger
           IF (lpolar) CALL compute_umn_c ( nbnd, nbndsub, nks, cu, cuq, bmat(:,:,:,nqc) )
@@ -653,10 +649,9 @@
           !  bring epmatq in the mode representation of iq_first, 
           !  and then in the cartesian representation of iq
           !
-          CALL rotate_eigenm ( iq_first, nqc, isym, s, invs, irt, &
-             rtau, xq, cz1, cz2 )
+          CALL rotate_eigenm ( iq_first, nqc, isym, s, invs, irt, rtau, xq, cz1, cz2 )
           !
-          CALL rotate_epmat ( cz1, cz2, xq, nqc, lwin, lwinq )
+          CALL rotate_epmat ( cz1, cz2, xq, nqc, lwin, lwinq, exband )
           !
     !DBSP
     !      write(*,*)'epmatq(:,:,2,:,nqc)',SUM(epmatq(:,:,2,:,nqc))
@@ -737,19 +732,20 @@
   !
   ! free up some memory
   !
-  IF ( ASSOCIATED (evq)  )     NULLIFY    (evq)
-  IF ( ALLOCATED  (evc)  )     DEALLOCATE (evc)
-  IF ( ASSOCIATED (igkq) )     NULLIFY    (igkq)
-  IF ( ALLOCATED  (dvpsi))     DEALLOCATE (dvpsi)
-  IF ( ALLOCATED  (dpsi) )     DEALLOCATE (dpsi)
-  IF ( ALLOCATED  (sumr) )     DEALLOCATE (sumr)
-  IF ( ALLOCATED (cu) )        DEALLOCATE (cu)
-  IF ( ALLOCATED (cuq) )       DEALLOCATE (cuq)
-  IF ( ALLOCATED (lwin) )      DEALLOCATE (lwin)
-  IF ( ALLOCATED (lwinq) )     DEALLOCATE (lwinq)
-  IF ( ALLOCATED (bmat) )      DEALLOCATE (bmat)
-  IF ( ALLOCATED (igk_k_all) ) DEALLOCATE(igk_k_all)
-  IF ( ALLOCATED (ngk_all) )   DEALLOCATE(ngk_all)
+  IF ( ASSOCIATED (evq)  )      NULLIFY    (evq)
+  IF ( ALLOCATED  (evc)  )      DEALLOCATE (evc)
+  IF ( ASSOCIATED (igkq) )      NULLIFY    (igkq)
+  IF ( ALLOCATED  (dvpsi))      DEALLOCATE (dvpsi)
+  IF ( ALLOCATED  (dpsi) )      DEALLOCATE (dpsi)
+  IF ( ALLOCATED  (sumr) )      DEALLOCATE (sumr)
+  IF ( ALLOCATED  (cu) )        DEALLOCATE (cu)
+  IF ( ALLOCATED  (cuq) )       DEALLOCATE (cuq)
+  IF ( ALLOCATED  (lwin) )      DEALLOCATE (lwin)
+  IF ( ALLOCATED  (lwinq) )     DEALLOCATE (lwinq)
+  IF ( ALLOCATED  (bmat) )      DEALLOCATE (bmat)
+  IF ( ALLOCATED  (igk_k_all) ) DEALLOCATE (igk_k_all)
+  IF ( ALLOCATED  (ngk_all) )   DEALLOCATE (ngk_all)
+  IF ( ALLOCATED  (exband) )    DEALLOCATE (exband)
   ! 
   CALL stop_clock ( 'elphon_wrap' )
 !DBSP

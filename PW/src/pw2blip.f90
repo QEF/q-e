@@ -11,7 +11,7 @@ MODULE pw2blip
 
    PRIVATE
    PUBLIC pw2blip_init,pw2blip_cleanup,pw2blip_transform,pw2blip_transform2,&
-    &blipgrid,cavc,avc1,avc2,pw2blip_get,blipeval,blip3dk,g_int
+    &blipgrid,cavc,avc1,avc2,pw2blip_get,blipeval,g_int
 
    INTEGER,PUBLIC :: blipreal = 0
    ! blipreal == 0 -- complex wfn1

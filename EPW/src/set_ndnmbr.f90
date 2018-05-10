@@ -27,7 +27,7 @@
   !
   node = (pool-1)*procp + proc + 1
   !
-  ndlab = '    '
+  ndlab = '   '
   IF ( nprocs < 10 ) THEN
     WRITE (ndlab(1:1),'(i1)') node
   ELSEIF ( nprocs < 100 ) then

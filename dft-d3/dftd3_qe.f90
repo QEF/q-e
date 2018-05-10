@@ -15,14 +15,45 @@ MODULE dftd3_qe
   !
   SAVE
   !
-   type(dftd3_calc) :: dftd3
-   type(dftd3_input):: dftd3_in
-   real(wp) :: energy_dftd3
+  type(dftd3_calc) :: dftd3
+  type(dftd3_input):: dftd3_in
+  real(wp) :: energy_dftd3
    
   CONTAINS
 
+    !> Clean memory after a dftd3 calculator is run.
+    !!
+    SUBROUTINE dftd3_clean( )
+
+      IF (ALLOCATED(dftd3%c6ab)) DEALLOCATE(dftd3%c6ab)
+      IF (ALLOCATED(dftd3%mxc) ) DEALLOCATE(dftd3%mxc)
+      IF (ALLOCATED(dftd3%r0ab)) DEALLOCATE(dftd3%r0ab)
+
+    END SUBROUTINE dftd3_clean
+    
+    !> Convert XC labels from QE to those used by DFT-D3
+    FUNCTION dftd3_xc ( dft )
+      IMPLICIT NONE
+      CHARACTER(LEN=*), INTENT(in) :: dft
+      CHARACTER(LEN=256) :: dftd3_xc
+      CHARACTER(LEN=1), EXTERNAL :: lowercase
+      integer :: i
+       
+      dftd3_xc = ''
+      DO i=1,LEN_TRIM(dft)
+         dftd3_xc(i:i) = lowercase(dft(i:i))
+      END DO
+      IF( TRIM(dftd3_xc)=="bp")      dftd3_xc="b-p"
+      IF( TRIM(dftd3_xc)=="blyp")    dftd3_xc="b-lyp"
+      IF( TRIM(dftd3_xc)=="b3lyp")   dftd3_xc="b3-lyp"
+      IF( TRIM(dftd3_xc)=="hse")     dftd3_xc="hse06"
+      IF( TRIM(dftd3_xc)=="pw86pbe") dftd3_xc="rpw86-pbe"
+      IF( TRIM(dftd3_xc)=="olyp")    dftd3_xc="o-lyp"
+
+    END FUNCTION dftd3_xc
+  
   !> Calculates forces and stress
-  !! Added interfce routine to original Aradi's interface
+  !! Added interface routine to original Aradi's interface
   !! for calculating force and stress separately from the energy.
   subroutine dftd3_pbc_gdisp(this, coords, izp, latvecs, &
                             force_dftd3, stress_dftd3)
@@ -77,8 +108,6 @@ MODULE dftd3_qe
 
     type(dftd3_calc), intent(inout) :: this
     type(dftd3_input), intent(in) :: input_dftd3
-    logical, allocatable :: minc6list(:), maxc6list(:)
-    logical :: minc6, maxc6
     integer :: i,j,ata,z,iz(nat)
     real*8  :: cn(nat),rtmp3(3),c6,c8,dum,x
     !

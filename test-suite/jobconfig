@@ -44,7 +44,7 @@ inputs_args = ('uspp.in' ,''), ('uspp-2.in' ,''), ('uspp-cg.in' ,''), ('uspp-hyb
 
 [pw_vdw/]
 program = PW
-inputs_args = ('vdw1.in' ,''), ('vdw2.in' ,''), ('vdw3.in' ,''), ('vdw5.in' ,''), ('vdw6.in' ,''), ('vdw-d.in',''),('vdw-ts.in','')
+inputs_args = ('vdw1.in' ,''), ('vdw2.in' ,''), ('vdw3.in' ,''), ('vdw5.in' ,''), ('vdw6.in' ,''), ('vdw-d2.in',''), ('vdw-d3.in',''),('vdw-ts.in',''),('xdm.in,'')
 
 [ph_base/]
 program = PH
@@ -84,7 +84,7 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.i
 
 [epw_mob/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3')
 
 [tddfpt_CH4/]
 program = TDDFPT

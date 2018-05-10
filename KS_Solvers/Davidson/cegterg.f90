@@ -1160,7 +1160,6 @@ CONTAINS
            notcl = notcnv_ip( ipc )
            ic    = ic_notcnv( ipc ) 
 
-           ptmp = ZERO
            beta = ZERO
 
            DO ipr = 1, desc%npr
@@ -1189,7 +1188,7 @@ CONTAINS
               END IF
               !
               CALL ZGEMM( 'N', 'N', kdim, notcl, nr, ONE, &
-                      hpsi( 1, 1, ir ), kdmx, vtmp, nx, ONE, ptmp, kdmx )
+                      hpsi( 1, 1, ir ), kdmx, vtmp, nx, beta, ptmp, kdmx )
 
               beta = ONE
 

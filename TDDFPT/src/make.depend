@@ -427,7 +427,6 @@ lr_readin.o : ../../Modules/paw_variables.o
 lr_readin.o : ../../Modules/plugin_flags.o
 lr_readin.o : ../../Modules/recvec.o
 lr_readin.o : ../../Modules/uspp.o
-lr_readin.o : ../../Modules/xml_io_base.o
 lr_readin.o : ../../PW/src/esm.o
 lr_readin.o : ../../PW/src/exx.o
 lr_readin.o : ../../PW/src/io_rho_xml.o

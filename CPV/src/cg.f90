@@ -14,6 +14,7 @@ MODULE cg_module
   SAVE
 
       logical      :: tcg        = .false.   ! if true do conjugate gradient minimization for electrons
+      integer      :: nfi_firstcg = 0        ! number of the step of the first conjugate gradient step (the algoritm has to do different things)
       integer      :: maxiter    = 100      ! maximum number of iterations
       real(DP) :: conv_thr    = 1.d-5   !energy treshold 
       real(DP) :: passop    =0.3d0    !small step for conjugate gradient
@@ -101,7 +102,10 @@ CONTAINS
     INTEGER :: nfi
     LOGICAL :: tfirst
     INTEGER :: i, ig
-    if(.not. tfirst.and.(mod(nfi,10).ne.1)) then
+!    if(.not. tfirst.and.(mod(nfi,10).ne.1)) then  ! why mod(nfi,10).ne.1 ?
+!    isn't this the condition that is satisfied only by the first step, when
+!    tfirst=true ?
+    if(.not. tfirst .and. nfi .ne. nfi_firstcg) then
       call DSWAP(2*ngw*n,c0,1,c0old,1)
       do i=1,n
         do ig=1,ngw

@@ -76,7 +76,6 @@ phq_readin.o : ../../Modules/paw_variables.o
 phq_readin.o : ../../Modules/run_info.o
 phq_readin.o : ../../Modules/uspp.o
 phq_readin.o : ../../Modules/wannier_gw.o
-phq_readin.o : ../../Modules/xml_io_base.o
 phq_readin.o : ../../PHonon/PH/dfile_star.o
 phq_readin.o : ../../PHonon/PH/elph.o
 phq_readin.o : ../../PHonon/PH/ph_restart.o

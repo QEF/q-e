@@ -16,9 +16,9 @@ MODULE cond_restart
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE xml_io_base, ONLY : create_directory, attr
+  USE xml_io_base, ONLY : attr
   USE io_files,  ONLY : tmp_dir, xmlpun, iunpun, qexml_version, &
-       qexml_version_init
+       qexml_version_init, create_directory
   USE io_global, ONLY : ionode, ionode_id
   USE mp_global, ONLY : intra_image_comm
   USE mp,        ONLY : mp_bcast

@@ -25,7 +25,6 @@
   !!
   !
   USE ions_base,        ONLY : nat, ityp, ntyp => nsp
-  USE io_global,        ONLY : stdout
   USE pwcom,            ONLY : lspinorb, nspin, domag
   USE cell_base,        ONLY : tpiba2, omega, tpiba
   USE gvect,            ONLY : ngm, gg, g, eigts1, eigts2, eigts3, mill
@@ -63,7 +62,6 @@
   ! the augmentation function at G
   complex(kind=DP), POINTER :: qgmq (:)
   ! the augmentation function at q+G
-  logical :: exst
   ! 
   IF (.not.okvan) RETURN
   ! 

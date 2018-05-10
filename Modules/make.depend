@@ -6,6 +6,10 @@ autopilot.o : kind.o
 autopilot.o : mp_world.o
 autopilot.o : parser.o
 basic_algebra_routines.o : kind.o
+bcast_qes_module.o : ../UtilXlib/mp.o
+bcast_qes_module.o : io_global.o
+bcast_qes_module.o : kind.o
+bcast_qes_module.o : qes_types.o
 becmod.o : ../UtilXlib/mp.o
 becmod.o : control_flags.o
 becmod.o : kind.o
@@ -138,9 +142,12 @@ io_base.o : ../UtilXlib/mp.o
 io_base.o : kind.o
 io_base.o : mp_wave.o
 io_base.o : qeh5_module.o
+io_files.o : ../UtilXlib/mp.o
 io_files.o : io_global.o
 io_files.o : kind.o
+io_files.o : mp_images.o
 io_files.o : parameters.o
+io_files.o : wrappers.o
 ions_base.o : cell_base.o
 ions_base.o : constants.o
 ions_base.o : io_global.o
@@ -222,6 +229,7 @@ pw_dot.o : kind.o
 pw_dot.o : mp_global.o
 pw_dot.o : recvec.o
 qeh5_module.o : kind.o
+qes_libs.o : kind.o
 qes_libs.o : qes_types.o
 qes_module.o : ../iotk/src/iotk_module.o
 qes_module.o : qes_libs.o
@@ -253,7 +261,6 @@ qexsd.o : qes_module.o
 qexsd.o : qes_types.o
 qexsd.o : version.o
 qexsd_input.o : ../iotk/src/iotk_base.o
-qexsd_input.o : ../iotk/src/iotk_module.o
 qexsd_input.o : constants.o
 qexsd_input.o : input_parameters.o
 qexsd_input.o : kind.o
@@ -477,7 +484,6 @@ xml_io_base.o : mp_global.o
 xml_io_base.o : mp_images.o
 xml_io_base.o : mp_wave.o
 xml_io_base.o : parser.o
-xml_io_base.o : wrappers.o
 xsf.o : constants.o
 xsf.o : kind.o
 ylmr2.o : constants.o

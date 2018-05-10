@@ -60,18 +60,17 @@ MODULE qexsd_module
   LOGICAL          :: qexsd_use_large_indent = .FALSE.
   !
   ! 
-  TYPE (input_type)                :: qexsd_input_obj
-  TYPE (general_info_type)         :: general_info
-  TYPE (parallel_info_type)        :: parallel_info
-  TYPE (berryPhaseOutput_type)     :: qexsd_bp_obj
-  TYPE (dipoleOutput_type )        :: qexsd_dipol_obj
-  TYPE (k_points_IBZ_type)         :: qexsd_start_k_obj 
-  TYPE (occupations_type)          :: qexsd_occ_obj
-  TYPE (smearing_type)             :: qexsd_smear_obj
-  TYPE ( step_type),ALLOCATABLE    :: steps(:)
-  INTEGER                          :: exit_status
-  TYPE ( closed_type )             :: qexsd_closed_element
-  INTEGER                          :: step_counter
+  TYPE (input_type)                            :: qexsd_input_obj
+  TYPE (general_info_type)                     :: general_info
+  TYPE (parallel_info_type)                    :: parallel_info
+  TYPE (berryPhaseOutput_type),TARGET          :: qexsd_bp_obj
+  TYPE (k_points_IBZ_type)                     :: qexsd_start_k_obj 
+  TYPE (occupations_type)                      :: qexsd_occ_obj
+  TYPE (smearing_type)                         :: qexsd_smear_obj
+  TYPE ( step_type),ALLOCATABLE                :: steps(:)
+  INTEGER                                      :: exit_status
+  TYPE ( closed_type )                         :: qexsd_closed_element
+  INTEGER                                      :: step_counter
   !
   ! end of declarations
   !
@@ -89,11 +88,11 @@ MODULE qexsd_module
             qexsd_init_magnetization, qexsd_init_band_structure, & 
             qexsd_init_total_energy, qexsd_init_forces, qexsd_init_stress, &
             qexsd_init_dipole_info, qexsd_init_outputElectricField,   &
-            qexsd_init_outputPBC
+            qexsd_init_outputPBC, qexsd_init_gate_info  
   !
   PUBLIC :: qexsd_step_addstep, qexsd_set_status    
   ! 
-  PUBLIC :: qexsd_init_berryPhaseOutput, qexsd_bp_obj, qexsd_dipol_obj
+  PUBLIC :: qexsd_init_berryPhaseOutput, qexsd_bp_obj
 CONTAINS
 !
 !-------------------------------------------
@@ -1102,56 +1101,27 @@ CONTAINS
     !
     ! 
     !---------------------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_total_energy(obj,etot,eband,ehart,vtxc,etxc,ewald,degauss,demet,electric_field_corr,&
-                                       potentiostat_contr)
+    SUBROUTINE qexsd_init_total_energy(obj, etot, eband, ehart, vtxc, etxc, &
+         ewald, degauss, demet, electric_field_corr, potentiostat_contr, gate_contribution)
     !----------------------------------------------------------------------------------------
     !
     ! 
     IMPLICIT NONE
     ! 
     TYPE (total_energy_type)        :: obj
-    REAL(DP),INTENT(IN)             :: etot,eband,ehart,vtxc,etxc,ewald,demet
-    REAL(DP),INTENT(IN)             :: degauss
-    REAL(DP),OPTIONAL,INTENT(IN)    :: electric_field_corr
-    REAL(DP),OPTIONAL,INTENT(IN)    :: potentiostat_contr
+    REAL(DP),INTENT(IN)             :: etot, ehart,vtxc,etxc
+    REAL(DP),OPTIONAL,INTENT(IN)    :: ewald,demet, eband, degauss 
+    REAL(DP),OPTIONAL               :: electric_field_corr
+    REAL(DP),OPTIONAL               :: potentiostat_contr
+    REAL(DP),OPTIONAL               :: gate_contribution
     !
     LOGICAL                         :: demet_ispresent
     CHARACTER(LEN=*),PARAMETER      :: TAGNAME="total_energy"
-    REAL(DP)                        :: etot_har,eband_har,vtxc_har,etxc_har,ewald_har,&
-                                       demet_har,ehart_har,efield_corr, potst_contribution_har
-
-    etot_har  = etot/e2
-    eband_har = etot/e2
-    vtxc_har  = vtxc/e2
-    etxc_har  = etxc/e2
-    ewald_har = ewald/e2
-    ehart_har = ehart/e2
-    IF (PRESENT(electric_field_corr)) THEN
-       efield_corr=electric_field_corr/e2
-    ELSE
-       efield_corr=0.d0
-    END IF
-    IF (PRESENT ( potentiostat_contr ) ) THEN
-       potst_contribution_har = potentiostat_contr/e2
-    ELSE 
-       potst_contribution_har = 0.d0
-    END IF 
-
-    IF (degauss .GT. 0.D0) THEN 
-       demet_ispresent=.TRUE.
-       demet_har=demet/e2
-    ELSE 
-       demet_ispresent=.FALSE.
-       demet_har=0.d0
-    ENDIF
-    
-    CALL  qes_init_total_energy(obj,TAGNAME,etot_har,eband_ispresent=.TRUE.,eband=eband_har,&
-                               ehart_ispresent=.TRUE., ehart=ehart_har,vtxc_ispresent=.TRUE.,& 
-                               vtxc=vtxc_har,etxc_ispresent=.TRUE., etxc=etxc_har,ewald_ispresent=.TRUE.,&
-                               ewald=ewald_har, demet_ispresent=demet_ispresent,demet=demet_har, &
-                               efieldcorr_ispresent=PRESENT(electric_field_corr), efieldcorr=efield_corr,&
-                               POTENTIOSTAT_CONTR_ISPRESENT = PRESENT(potentiostat_contr), & 
-                               POTENTIOSTAT_CONTR = potst_contribution_har)
+    ! 
+    CALL  qes_init_total_energy(obj,TAGNAME,etot, EBAND = eband , EHART = ehart, VTXC = vtxc,& 
+                               ETXC = etxc , EWALD = ewald, DEMET = demet, &
+                               EFIELDCORR=electric_field_corr, POTENTIOSTAT_CONTR = potentiostat_contr,  & 
+                               GATE_CONTRIBUTION = gate_contribution )
 
     END SUBROUTINE qexsd_init_total_energy
     ! 
@@ -1234,6 +1204,9 @@ CONTAINS
        ! 
        dipole_info%idir = edir  
        fac=omega/fpi
+       dipole_info%tagname = "dipoleInfo"
+       dipole_info%lwrite  = .TRUE.
+       dipole_info%lread   = .TRUE.
        CALL qes_init_scalarQuantity(dipole_info%ion_dipole,"ion_dipole" , units="Atomic Units", &
                                     scalarQuantity= ion_dipole*fac)
        CALL qes_init_scalarQuantity(dipole_info%elec_dipole,"elec_dipole" , units="Atomic Units",&
@@ -1249,12 +1222,12 @@ CONTAINS
        CALL qes_init_scalarQuantity(dipole_info%potentialAmp,"potentialAmp" , units="Atomic Units",&
                                      scalarQuantity= vamp)
        CALL qes_init_scalarQuantity(dipole_info%totalLength, "totalLength", units = "Bohr",&
-                                     scalarQuantity = length ) 
+                                     scalarQuantity = length )
   
     END SUBROUTINE qexsd_init_dipole_info
     !---------------------------------------------------------------------------------------------
     SUBROUTINE  qexsd_init_outputElectricField(obj, lelfield, tefield, ldipole, lberry, bp_obj, el_pol, &
-                                               ion_pol, dipole_obj )
+                                               ion_pol, dipole_obj , gateInfo)
     !---------------------------------------------------------------------------------------------
     !
     IMPLICIT NONE
@@ -1262,9 +1235,10 @@ CONTAINS
     TYPE(outputElectricField_type)                    :: obj 
     ! 
     LOGICAL,INTENT(IN)                                :: lberry, lelfield, tefield, ldipole
-    REAL(DP),OPTIONAL,DIMENSION(3),INTENT(IN)         :: el_pol, ion_pol
+    REAL(DP),OPTIONAL,INTENT(IN)                      :: el_pol(:), ion_pol(:)
     TYPE(berryPhaseOutput_type),OPTIONAL,INTENT(IN)   :: bp_obj
     TYPE ( dipoleOutput_type ),OPTIONAL, INTENT(IN)   :: dipole_obj 
+    TYPE ( gateInfo_type),OPTIONAL,INTENT(IN)         :: gateInfo
     ! 
     CHARACTER(LEN=*),PARAMETER                        :: TAGNAME="electric_field" 
     TYPE ( berryPhaseOutput_type )                    :: bp_loc_obj
@@ -1274,7 +1248,6 @@ CONTAINS
                                                          dipo_is = .FALSE.
     ! 
     
-
     IF (lberry .AND. PRESENT ( bp_obj))  THEN
        bp_is = .TRUE. 
        bp_loc_obj = bp_obj
@@ -1287,35 +1260,38 @@ CONTAINS
        dipo_is = .TRUE.
        dip_loc_obj=dipole_obj
     END IF 
-    CALL  qes_init_outputElectricField(obj, TAGNAME, BerryPhase_ispresent = bp_is, &
-                                       BerryPhase = bp_loc_obj, &
-                                       finiteElectricFieldInfo_ispresent = finfield_is, & 
-                                       finiteElectricFieldInfo = finiteField_obj, &
-                                        dipoleInfo_ispresent = dipo_is, dipoleInfo = dip_loc_obj)
-    IF (dipo_is) CALL qes_reset_dipoleOutput( dip_loc_obj )
-    IF ( bp_is ) CALL qes_reset_berryPhaseOutput( bp_loc_obj ) 
+    CALL  qes_init_outputElectricField(obj, TAGNAME, BerryPhase = bp_obj, &
+                                    finiteElectricFieldInfo  = finiteField_obj, &
+                                    dipoleInfo = dipole_obj, &
+                                    GATEINFO =  gateInfo   )
+    IF ( finfield_is) CALL qes_reset_finiteFieldOut( finiteField_obj) 
     !
     END SUBROUTINE qexsd_init_outputElectricField
     ! 
     !----------------------------------------------------------------------------------------
-    SUBROUTINE   qexsd_step_addstep( i_step, max_steps, ntyp, atm, ityp, nat,& 
-                                   tau, alat, a1, a2, a3, etot, eband, ehart, vtxc, etxc,&
-                                   ewald, degauss, demet, forces, stress, n_scf_steps, scf_error, potstat_contr, &
-                                   fcp_force, fcp_tot_charge )
+    SUBROUTINE qexsd_step_addstep(i_step, max_steps, ntyp, atm, ityp, nat, tau, alat, a1, a2, a3, &
+                                  etot, eband, ehart, vtxc, etxc, ewald, degauss, demet, forces,  &
+                                  stress, n_scf_steps, scf_error, efieldcorr, potstat_contr,      &
+                                  fcp_force, fcp_tot_charge, gatefield_en)
     !-----------------------------------------------------------------------------------------
+    !! This routing initializes le steps array containing up to max_steps elements of the step_type
+    !! data structure. Each element contains structural and energetic info for m.d. trajectories and 
+    !! structural minimization paths. All quantities must be provided directly in Hartree atomic units. 
+    !! @Note updated on April 10th 2018 by Pietro Delugas
     IMPLICIT NONE 
     ! 
     INTEGER ,INTENT(IN)             :: i_step, max_steps, ntyp, nat, n_scf_steps, ityp(:)
     REAL(DP),INTENT(IN)             :: tau(3,nat), alat, a1(3), a2(3), a3(3), etot, eband, ehart, vtxc, &
-                                       etxc, ewald, degauss, demet, scf_error, forces(3,nat), stress(3,3) 
-    REAL(DP),OPTIONAL,INTENT (IN)   :: potstat_contr, fcp_force, fcp_tot_charge         
+                                       etxc, ewald, scf_error, forces(3,nat), stress(3,3) 
+    REAL(DP),OPTIONAL,INTENT(IN)    :: degauss, demet, gatefield_en, efieldcorr
+    REAL(DP),OPTIONAL,INTENT (IN)   :: potstat_contr, fcp_force, fcp_tot_charge       
     CHARACTER(LEN=*),INTENT(IN)     :: atm(:)
     TYPE (step_type)                :: step_obj
     TYPE ( scf_conv_type )          :: scf_conv_obj
     TYPE ( atomic_structure_type )  :: atomic_struct_obj
     TYPE ( total_energy_type )      :: tot_en_obj
     TYPE ( matrix_type )            :: mat_forces, mat_stress  
-    !
+    !    
     IF ( i_step .EQ. 1 ) THEN 
        ALLOCATE (steps(max_steps))
        step_counter = 0
@@ -1335,12 +1311,8 @@ CONTAINS
     step_obj%atomic_structure=atomic_struct_obj
     CALL qes_reset_atomic_structure( atomic_struct_obj )
     ! 
-    CALL qexsd_init_total_energy ( tot_en_obj, etot/e2, eband/e2, ehart/e2, vtxc/e2, etxc/e2, ewald/e2, degauss/e2, &
-                                   demet/e2 )
-    IF ( PRESENT ( potstat_contr )) THEN  
-       tot_en_obj%potentiostat_contr_ispresent = .TRUE. 
-       tot_en_obj%potentiostat_contr = potstat_contr/e2 
-    END IF  
+    CALL qexsd_init_total_energy (tot_en_obj, etot, eband, ehart, &
+          vtxc, etxc, ewald, degauss, demet, efieldcorr, potstat_contr, gatefield_en)  
     step_obj%total_energy=tot_en_obj
     CALL qes_reset_total_energy( tot_en_obj )
     ! 
@@ -1354,6 +1326,8 @@ CONTAINS
     IF ( PRESENT ( fcp_force ) ) THEN 
        step_obj%FCP_force = fcp_force
        step_obj%FCP_force_ispresent = .TRUE.
+    END IF 
+    IF (PRESENT( fcp_tot_charge)) THEN 
        step_obj%FCP_tot_charge = fcp_tot_charge
        step_obj%FCP_tot_charge_ispresent = .TRUE. 
     END IF 
@@ -1388,7 +1362,6 @@ CONTAINS
     !  
     REAL(DP),INTENT(IN)                               :: wstring(nstring)      
     ! 
-#if !defined (__OLDXLM)
     CHARACTER(LEN=*),PARAMETER                        :: TAGNAME = "BerryPhase"
     TYPE ( polarization_type)                         :: tot_pol_obj
     ! 
@@ -1453,7 +1426,6 @@ CONTAINS
     CALL qes_reset_polarization(tot_pol_obj)
     CALL qes_reset_scalarQuantity(pol_val)
     CALL qes_reset_phase(tot_phase) 
-#endif 
     !
     END SUBROUTINE qexsd_init_berryPhaseOutput
     !
@@ -1463,9 +1435,6 @@ CONTAINS
     IMPLICIT NONE 
     !
     INTEGER      :: status_int
-#if !defined(__OLDXML)  
-    !CALL qes_init_status( exit_status, "status", status_int)
-#endif
     END SUBROUTINE qexsd_set_status 
     !
     !--------------------------------------------------------------------------------------------------
@@ -1480,19 +1449,33 @@ CONTAINS
     CALL qes_init_closed (qexsd_closed_element, "closed", date_string, time_string,&
                           "")
     END SUBROUTINE qexsd_set_closed 
-     
-!-------------------------------------------------------------------------
-!
-!-------------------------------------------
-! ... read subroutines
-!-------------------------------------------
-! 
+    
+!-----------------------------------------------------------------------------------
+SUBROUTINE qexsd_init_gate_info(obj, tagname, gatefield_en, zgate_, nelec_, alat_, at_, bg_, zv_, ityp_) 
+   !--------------------------------------------------------------------------------
+   USE kinds,         ONLY : DP
+   USE constants,     ONLY : tpi
+   !
+   IMPLICIT NONE
+   TYPE (gateInfo_type),INTENT(INOUT)      :: obj;
+   CHARACTER(LEN=*)                        :: tagname
+   REAL(DP), INTENT(IN)                    :: gatefield_en, zgate_, alat_, at_(3,3), bg_(3,3), zv_(:), nelec_ 
+   INTEGER,INTENT(IN)                      :: ityp_(:) 
+   ! 
+   REAL(DP)                                :: bmod, area, ionic_charge, gateamp, gate_gate_term
+   ! 
+   bmod=SQRT(bg_(1,3)**2+bg_(2,3)**2+bg_(3,3)**2)
+   ionic_charge = SUM( zv_(ityp_(:)) )
+   area = ABS((at_(1,1)*at_(2,2)-at_(2,1)*at_(1,2))*alat_**2) 
+   gateamp = (-(nelec_-ionic_charge)/area*tpi)
+   gate_gate_term =  (- (nelec_-ionic_charge) * gateamp * (alat_/bmod) / 6.0)
+   obj = gateInfo_type( TAGNAME = TRIM(tagname), lwrite = .TRUE., lread = .FALSE., POT_PREFACTOR = gateamp, &
+                        GATE_ZPOS = zgate_,  GATE_GATE_TERM = gate_gate_term, GATEFIELDENERGY = gatefield_en) 
+   ! 
+END SUBROUTINE qexsd_init_gate_info 
 
 
 
-
-
-    !
 END MODULE qexsd_module
 
 !

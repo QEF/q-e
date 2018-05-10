@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE move_ions ( idone )
+SUBROUTINE move_ions ( idone, ions_status )
   !----------------------------------------------------------------------------
   !
   ! ... Perform an ionic step, according to the requested scheme:
@@ -29,21 +29,14 @@ SUBROUTINE move_ions ( idone )
                                      fix_volume, fix_area
   USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, zv, tau, if_pos
-  USE fft_base,               ONLY : dfftp
-  USE fft_base,               ONLY : dffts
-  USE fft_types,              ONLY : fft_type_allocate
-  USE gvect,                  ONLY : gcutm
-  USE gvecs,                  ONLY : gcutms
   USE symm_base,              ONLY : checkallsym
   USE ener,                   ONLY : etot, ef
   USE force_mod,              ONLY : force, sigma
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, &
-                                     lconstrain, conv_ions, lmd, tr2
-  USE basis,                  ONLY : starting_wfc, starting_pot
+                                     lconstrain, lmd, tr2
   USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE mp_images,              ONLY : intra_image_comm
-  USE mp_bands,               ONLY : intra_bgrp_comm, nyfft
   USE io_global,              ONLY : ionode_id, ionode
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
@@ -55,28 +48,24 @@ SUBROUTINE move_ions ( idone )
   USE fcp_variables,          ONLY : lfcpopt, lfcpdyn, fcp_mu, &
                                      fcp_relax, fcp_relax_crit
   USE klist,                  ONLY : nelec
-  USE dfunct,                 only : newd
   !
   IMPLICIT NONE
   !
-  INTEGER,  INTENT(IN) :: idone
+  INTEGER,  INTENT(IN)   :: idone
+  !! idone: see run_pwscf
+  INTEGER,  INTENT(INOUT):: ions_status
+  !! ions_status: see run_pwscf
   !
-  LOGICAL, SAVE         :: lcheck_mag = .TRUE., &
-                           restart_with_starting_magnetiz = .FALSE., &
-                           lcheck_cell= .TRUE., &
-                           final_cell_calculation=.FALSE.
   REAL(DP)              :: energy_error, gradient_error, cell_error
   LOGICAL               :: step_accepted, exst
   REAL(DP), ALLOCATABLE :: pos(:), grad(:)
   REAL(DP)              :: h(3,3), fcell(3,3)=0.d0, epsp1
   INTEGER,  ALLOCATABLE :: fixion(:)
-  LOGICAL               :: conv_fcp
+  LOGICAL               :: conv_fcp, conv_ions
   !
   ! ... only one node does the calculation in the parallel case
   !
   IF ( ionode ) THEN
-     !
-     conv_ions = .FALSE.
      !
      ! ... do the minimization / dynamics step
      !
@@ -90,13 +79,11 @@ SUBROUTINE move_ions ( idone )
         !
      END IF
      !
-     ! ... BFGS algorithm is used to minimize ionic configuration
-     !
      bfgs_minimization : &
      IF ( lbfgs ) THEN
         !
-        ! ... the bfgs procedure is used
-        !  
+        ! ... BFGS algorithm is used to minimize ionic configuration
+        !
         ALLOCATE( pos( 3*nat ), grad( 3*nat ), fixion( 3*nat ) )
         !
         h = at * alat
@@ -148,24 +135,47 @@ SUBROUTINE move_ions ( idone )
         !
         IF ( conv_ions ) THEN
            !
-           IF ( ( lsda .AND. ( absmag < eps6 ) .AND. lcheck_mag ) ) THEN
+           IF ( ions_status == 3 ) THEN
               !
-              ! ... lsda relaxation :  a final configuration with zero 
-              ! ...                    absolute magnetization has been found.
-              !                        A check on this configuration is needed
-              restart_with_starting_magnetiz = .true.
-              ! 
-           ELSE IF (lmovecell.and.lcheck_cell) THEN
+              IF ( lsda .AND. absmag < eps6 ) THEN
+                 !
+                 ! ... a final configuration with zero absolute magnetization
+                 ! ... has been found - do check with nonzero magnetization
+                 !
+                 ions_status = 2
+                 !
+              ELSE IF ( lmovecell ) THEN
+                 !
+                 ! ... Variable-cell relaxation converged with starting cell
+                 ! ... Do final calculation with G-vectors for relaxed cell
+                 !
+                 ions_status = 1
+                 !
+              ELSE
+                 !
+                 ! ... Fixed-cell relaxation converged, prepare to exit
+                 !
+                 ions_status = 0
+                 !
+              END IF
               !
-              !  After the cell relaxation we make a final calculation
-              !  with the correct g vectors corresponding to the relaxed
-              !  cell.
+           ELSE IF ( ions_status == 2 ) THEN
               !
-              final_cell_calculation=.TRUE.
-              CALL terminate_bfgs ( etot, epse, epsf, epsp, lmovecell, &
-                                    stdout, tmp_dir )
+              ! ... check with nonzero magnetization succeeded, see above
               !
-           ELSE
+              IF ( lmovecell ) THEN
+                 ions_status = 1
+              ELSE
+                 ions_status = 0
+              END IF
+              !
+           ELSE IF ( ions_status == 1 ) THEN
+              !
+              ions_status = 0
+              !
+           END IF
+           !
+           IF ( ions_status < 2 ) THEN
               !
               CALL terminate_bfgs ( etot, epse, epsf, epsp, lmovecell, &
                                     stdout, tmp_dir )
@@ -175,13 +185,13 @@ SUBROUTINE move_ions ( idone )
            ! ... FCP output
            !
            IF ( lfcpopt ) THEN
-             WRITE( stdout, '(/,5X, "FCP Optimisation : converged ", &
-               & "( criteria force < ",ES8.1," )")') fcp_relax_crit
-             WRITE( stdout, '(5X,"FCP Optimisation : tot_charge =",F12.6,/)') &
-               SUM( zv(ityp(1:nat)) ) - nelec
-             IF ( TRIM(fcp_relax) == 'mdiis' ) THEN
-                CALL fcp_mdiis_end()
-             END IF
+              WRITE( stdout, '(/,5X, "FCP Optimisation : converged ", &
+                   & "( criteria force < ",ES8.1," )")') fcp_relax_crit
+              WRITE( stdout, '(5X,"FCP Optimisation : tot_charge =",F12.6,/)') &
+                   SUM( zv(ityp(1:nat)) ) - nelec
+              IF ( TRIM(fcp_relax) == 'mdiis' ) THEN
+                 CALL fcp_mdiis_end()
+              END IF
            END IF
            !
         ELSE
@@ -205,13 +215,6 @@ SUBROUTINE move_ions ( idone )
                      '(5X,"new conv_thr",T30,"= ",1PE18.1 ," Ry",/)' ) tr2
            END IF
            !
-           ! ... the logical flag lcheck_mag is set again to .TRUE. (needed if 
-           ! ... a new configuration with zero absolute magnetization is 
-           ! ... identified in the following steps of the relaxation)
-           !
-           lcheck_mag = .TRUE.
-           IF (lmovecell) lcheck_cell = .TRUE.
-           !
         END IF
         !
         CALL output_tau( lmovecell, conv_ions )
@@ -220,9 +223,9 @@ SUBROUTINE move_ions ( idone )
         !
      END IF bfgs_minimization
      !
-     ! ... molecular dynamics schemes are used
-     !
      IF ( lmd ) THEN
+        !
+        conv_ions = .FALSE.
         !
         ! ... fixed-cell molecular dynamics algorithms first:
         ! ... projected Verlet, Langevin, Verlet
@@ -307,6 +310,8 @@ SUBROUTINE move_ions ( idone )
            !
         END IF
         !
+        IF ( conv_ions ) ions_status  = 0
+        !
      END IF
      !
      ! ... before leaving check that the new positions still transform
@@ -315,73 +320,11 @@ SUBROUTINE move_ions ( idone )
      CALL checkallsym( nat, tau, ityp)
      !
   END IF
-
-  CALL mp_bcast(restart_with_starting_magnetiz,ionode_id,intra_image_comm)
-  CALL mp_bcast(final_cell_calculation,ionode_id,intra_image_comm)
+  !
+  
+  CALL mp_bcast( ions_status, ionode_id, intra_image_comm )
   IF ( lfcpopt .or. lfcpdyn ) CALL mp_bcast(nelec,ionode_id,intra_image_comm)
   !
-  IF ( final_cell_calculation ) THEN
-     ! 
-     ! ... Variable-cell optimization: once convergence is achieved, 
-     ! ... make a final calculation with G-vectors and plane waves
-     ! ... calculated for the final cell (may differ from the current
-     ! ... result, using G_vectors and PWs for the starting cell)
-     !
-     WRITE( UNIT = stdout, FMT = 9110 )
-     WRITE( UNIT = stdout, FMT = 9120 )
-     !
-     ! ... prepare for a new run, restarted from scratch, not from previous
-     ! ... data (dimensions and file lengths will be different in general)
-     !
-     ! ... get magnetic moments from previous run before charge is deleted
-     !
-     CALL reset_starting_magnetization ( )
-     !
-     CALL clean_pw( .FALSE. )
-     CALL close_files(.TRUE.)
-     lmovecell=.FALSE.
-     lcheck_cell=.FALSE.
-     final_cell_calculation=.FALSE.
-     lbfgs=.FALSE.
-     lmd=.FALSE.
-     lcheck_mag = .FALSE.
-     restart_with_starting_magnetiz = .FALSE.
-     if (trim(starting_wfc) == 'file') starting_wfc = 'atomic+random'
-     starting_pot='atomic'
-     ! ... conv_ions is set to .FALSE. to perform a final scf cycle
-     conv_ions = .FALSE.
-     !
-     ! ... re-set and re-calculate FFT grid 
-     !
-     dfftp%nr1=0; dfftp%nr2=0; dfftp%nr3=0
-     CALL fft_type_allocate (dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft)
-     dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
-     CALL fft_type_allocate (dffts, at, bg, gcutms,intra_bgrp_comm, nyfft=nyfft)
-     !
-     CALL init_run()
-     !
-  ELSE IF (restart_with_starting_magnetiz) THEN
-     !
-     ! ... lsda optimization :  a final configuration with zero 
-     ! ... absolute magnetization has been found and we check 
-     ! ... if it is really the minimum energy structure by 
-     ! ... performing a new scf iteration without any "electronic" history
-     !
-     WRITE( UNIT = stdout, FMT = 9010 )
-     WRITE( UNIT = stdout, FMT = 9020 )
-     !
-     lcheck_mag = .FALSE.
-     restart_with_starting_magnetiz = .FALSE.
-     ! ... conv_ions is set to .FALSE. to perform a final scf cycle
-     conv_ions = .FALSE.
-     !
-     ! ... re-initialize the potential (no need to re-initialize wavefunctions)
-     !
-     CALL potinit()
-     CALL newd()
-     !!! CALL wfcinit()
-     !
-  END IF
   !
   ! ... broadcast calculated quantities to all nodes
   !
@@ -389,7 +332,6 @@ SUBROUTINE move_ions ( idone )
   CALL mp_bcast( tau,       ionode_id, intra_image_comm )
   CALL mp_bcast( force,     ionode_id, intra_image_comm )
   CALL mp_bcast( tr2,       ionode_id, intra_image_comm )
-  CALL mp_bcast( conv_ions, ionode_id, intra_image_comm )
   !
   IF ( lmovecell ) THEN
      !
@@ -402,85 +344,5 @@ SUBROUTINE move_ions ( idone )
   END IF
   !
   RETURN
-
-9010 FORMAT( /5X,'lsda relaxation :  a final configuration with zero', &
-           & /5X,'                   absolute magnetization has been found' )
-9020 FORMAT( /5X,'the program is checking if it is really ', &
-           &     'the minimum energy structure',             &
-           & /5X,'by performing a new scf iteration ',       & 
-           &     'without any "electronic" history' )               
-  !
-9110 FORMAT( /5X,'A final scf calculation at the relaxed structure.' )
-9120 FORMAT(  5X,'The G-vectors are recalculated for the final unit cell'/ &
-              5X,'Results may differ from those at the preceding step.' )
   !
 END SUBROUTINE move_ions
-!
-SUBROUTINE reset_starting_magnetization ( ) 
-  !
-  ! On input,  the scf charge density is needed
-  ! On output, new values for starting_magnetization, angle1, angle2
-  ! estimated from atomic magnetic moments - to be used in last step
-  !
-  USE kinds,     ONLY : dp
-  USE constants, ONLY : pi
-  USE ions_base, ONLY : nsp, ityp, nat
-  USE lsda_mod,  ONLY : nspin, starting_magnetization
-  USE scf,       ONLY : rho
-  USE spin_orb,  ONLY : domag
-  USE noncollin_module, ONLY : noncolin, angle1, angle2
-  !
-  IMPLICIT NONE
-  INTEGER :: i, nt, iat
-  REAL(dp):: norm_tot, norm_xy, theta, phi
-  REAL (DP), ALLOCATABLE :: r_loc(:), m_loc(:,:)
-  !
-  IF ( (noncolin .AND. domag) .OR. nspin==2) THEN
-     ALLOCATE ( r_loc(nat), m_loc(nspin-1,nat) )
-     CALL get_locals(r_loc,m_loc,rho%of_r)
-  ELSE
-     RETURN
-  END IF
-  DO i = 1, nsp
-     !
-     starting_magnetization(i) = 0.0_DP
-     angle1(i) = 0.0_DP
-     angle2(i) = 0.0_DP
-     nt = 0
-     DO iat = 1, nat
-        IF (ityp(iat) == i) THEN
-           nt = nt + 1
-           IF (noncolin) THEN
-              norm_tot= sqrt(m_loc(1,iat)**2+m_loc(2,iat)**2+m_loc(3,iat)**2)
-              norm_xy = sqrt(m_loc(1,iat)**2+m_loc(2,iat)**2)
-              IF (norm_tot > 1.d-10) THEN
-                 theta = acos(m_loc(3,iat)/norm_tot)
-                 IF (norm_xy > 1.d-10) THEN
-                    phi = acos(m_loc(1,iat)/norm_xy)
-                    IF (m_loc(2,iat).lt.0.d0) phi = - phi
-                 ELSE
-                    phi = 2.d0*pi
-                 END IF
-              ELSE
-                 theta = 2.d0*pi
-                 phi = 2.d0*pi
-              END IF
-              angle1(i) = angle1(i) + theta
-              angle2(i) = angle2(i) + phi
-              starting_magnetization(i) = starting_magnetization(i) + &
-                   norm_tot/r_loc(iat)
-           ELSE
-              starting_magnetization(i) = starting_magnetization(i) + &
-                   m_loc(1,iat)/r_loc(iat)
-           END IF
-        END IF
-     END DO
-     IF ( nt > 0 ) THEN
-        starting_magnetization(i) = starting_magnetization(i) / DBLE(nt)
-        angle1(i) = angle1(i) / DBLE(nt)
-        angle2(i) = angle2(i) / DBLE(nt)
-     END IF
-  END DO
-  DEALLOCATE ( r_loc, m_loc )
-
-END SUBROUTINE reset_starting_magnetization

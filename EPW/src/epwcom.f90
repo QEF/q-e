@@ -158,6 +158,16 @@
   !! difference between Fermi energy and band edge (in eV)
   REAL (KIND=DP) :: smear_rpa
   !! smearing for the calculation of the Lindhard function (in eV)
+  ! 
+  ! Phonon-assisted absorption
+  REAL (KIND=DP) :: omegamin
+  !! Photon energy minimum (in eV)
+  REAL (KIND=DP) :: omegamax
+  !! Photon energy maximum (in eV)
+  REAL (KIND=DP) :: omegastep
+  !! Photon energy step (in eV)
+  REAL (KIND=DP) :: n_r
+  !! Refractive index
   !
   !LOGICAL :: tphases
   !! tphases:  if .TRUE. set absolute reference for unitary gauge of the eigenvectors
@@ -186,10 +196,6 @@
   !! if .TRUE. calculate plasmon spectral function
   LOGICAL :: wannierize
   !! if .TRUE. run the wannier90 code
-  LOGICAL :: parallel_k
-  !! if .TRUE. scatter the electron k-points on the fine mesh among pools (not q)
-  LOGICAL :: parallel_q
-  !! if .TRUE. scatter the phonon q-points on the fine mesh among pools (not k)
   LOGICAL :: a2f
   !! if .TRUE. calculate Eliashberg spectral electron function from selfen_phon
   LOGICAL :: write_wfn
@@ -234,6 +240,10 @@
   !! if .true. the system is 2 dimensional (vaccum is in z-direction)
   LOGICAL :: prtgkk
   !! if .true. print the |g| vertex in [meV].
+  LOGICAL :: lphase
+  !! if .true. then fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian. 
+  LOGICAL :: lindabs
+  !! if .true., perform phonon-assisted absorption calculations
   !
   ! Superconductivity
   LOGICAL :: ephwrite
@@ -285,8 +295,13 @@
   !! directory for .dvscf and .dyn files (wannier interpolation)
   CHARACTER(len=80) :: fileig 
   !! output file for the electron-phonon coefficients
-  CHARACTER(len=256), dimension(200) :: proj, wdata 
-  !! projections and any extra info for W90 
+  CHARACTER(len=256), dimension(200) :: proj 
+  !! projections for W90 
+  CHARACTER(len=256) :: bands_skipped
+  !! k-point independent list of bands excluded from the calculation 
+  !! of overlap and projection matrices in W90
+  CHARACTER(len=256), dimension(200) :: wdata
+  !! any extra info for W90
   CHARACTER(LEN=75) :: title 
   !! ...  title of the simulation  
   CHARACTER(LEN=10)  :: asr_typ
