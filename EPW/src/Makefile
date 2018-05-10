@@ -12,7 +12,8 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../PHonon/PH \
           $(MOD_FLAG)../../LR_Modules \
-          $(MOD_FLAG)../../wannier90-2.1.0/src/obj
+          $(MOD_FLAG)../../wannier90-2.1.0/src/obj \
+          $(MOD_FLAG)../../dft-d3
 
 #
 # The above is in alphabetical order except when order matter during compilation
@@ -107,7 +108,7 @@ W90LIB = ../../wannier90-2.1.0/libwannier.a
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a 
 QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/CG/libcg.a  ../../KS_Solvers/Davidson/libdavid.a ../../LAXlib/libqela.a \
-         ../../FFTXlib/libqefft.a
+         ../../FFTXlib/libqefft.a ../../dft-d3/libdftd3qe.a
 LIBOBJS =../../UtilXlib/libutil.a ../../clib/clib.a ../../iotk/src/libiotk.a 
 
 TLDEPS= bindir mods libs pw-lib pw ph
