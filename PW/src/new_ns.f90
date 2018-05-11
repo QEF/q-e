@@ -40,6 +40,7 @@ SUBROUTINE new_ns(ns)
   USE mp,                   ONLY : mp_sum
   USE becmod,               ONLY : bec_type, calbec, &
                                    allocate_bec_type, deallocate_bec_type
+  USE wavefunctions_module_gpum, ONLY : using_evc
 
   IMPLICIT NONE
   !
@@ -52,6 +53,7 @@ SUBROUTINE new_ns(ns)
   !    "    "  spins
   REAL(DP) , ALLOCATABLE :: nr (:,:,:,:)
   REAL(DP) :: psum
+  CALL using_evc(.false.)
 
   CALL start_clock('new_ns')
   ldim = 2 * Hubbard_lmax + 1
@@ -72,6 +74,7 @@ SUBROUTINE new_ns(ns)
      npw = ngk (ik)
      IF (nks > 1) &
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
+     IF (nks > 1) CALL using_evc(.true.)
      !
      ! make the projection
      !
@@ -226,6 +229,7 @@ SUBROUTINE new_ns(ns)
     !
     CALL allocate_bec_type (nkb, nbnd, becp)
     CALL init_us_2 (npw,igk_k(1,ik),xk(1,ik),vkb)
+    CALL using_evc(.false.)
     CALL calbec (npw, vkb, evc, becp)
     !
     IF ( gamma_only ) THEN 
@@ -302,6 +306,8 @@ SUBROUTINE new_ns_nc(ns)
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
 
+  USE wavefunctions_module_gpum, ONLY : using_evc
+
   IMPLICIT NONE
   !
   ! I/O variables
@@ -330,11 +336,13 @@ SUBROUTINE new_ns_nc(ns)
 !--
 !    loop on k points
 !
+  CALL using_evc(.false.)
   DO ik = 1, nks
 
      npw = ngk (ik)
      IF (nks > 1) THEN
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
+        CALL using_evc(.true.)
         CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
      END IF
      !

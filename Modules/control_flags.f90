@@ -247,6 +247,9 @@ MODULE control_flags
   LOGICAL, PUBLIC :: &
     do_makov_payne = .FALSE.   ! if .TRUE. makov-payne correction for isolated
                                ! system is used
+  LOGICAL, PUBLIC :: &
+    use_gpu = .FALSE.          ! if .TRUE. selects the accelerated version of the subroutines
+                               ! when available
   !
   INTEGER  :: ortho_max = 0      ! maximum number of iterations in routine ortho
   REAL(DP) :: ortho_eps = 0.0_DP ! threshold for convergence in routine ortho

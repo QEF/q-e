@@ -35,6 +35,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE mp_bands, ONLY: intra_bgrp_comm
    USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
    USE buffers,              ONLY : get_buffer
+   USE wavefunctions_module_gpum, ONLY : using_evc
 
    USE pw2blip
 
@@ -79,6 +80,8 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    INTEGER,PARAMETER :: Nran=1009,Nkeep=100 ! See comment on p. 188 of Knuth.
    INTEGER,SAVE :: ran_array_idx=-1
    REAL(DP),SAVE :: ran_array(Nran)
+
+   CALL using_evc(.false.)
 
    dowrite=ionode.or..not.(gather.or.blip)
 
@@ -209,11 +212,14 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    iorb = 0
    norb = nk*nspin*nbnd
 
+   CALL using_evc(.false.)
+
    DO ik = 1, nk
       DO ispin = 1, nspin
          ikk = ik + nk*(ispin-1)
          npw = ngk(ikk)
          IF( nks > 1 ) CALL get_buffer(evc,nwordwfc,iunwfc,ikk)
+         IF( nks > 1 ) CALL using_evc(.true.)
          DO ibnd = 1, nbnd
             evc_l(:) = (0.d0, 0d0)
             evc_l(gtoig(igk_k(1:npw,ikk))) = evc(1:npw,ibnd)
@@ -358,10 +364,13 @@ CONTAINS
             ENDDO
          ENDDO
 
+         CALL using_evc(.false.)
+
          DO ik = 1, nk
             ikk = ik + nk*(ispin-1)
             npw = ngk(ikk)
             IF( nks > 1 ) CALL get_buffer (evc, nwordwfc, iunwfc, ikk )
+            IF( nks > 1 ) CALL using_evc(.true.)
             CALL init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
             CALL calbec ( npw, vkb, evc, becp )
             !

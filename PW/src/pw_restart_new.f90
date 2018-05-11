@@ -528,6 +528,7 @@ MODULE pw_restart_new
       USE mp_pools,             ONLY : intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : my_bgrp_id, root_bgrp, intra_bgrp_comm,&
                                        root_bgrp_id, nbgrp
+      USE wavefunctions_module_gpum, ONLY : using_evc
       !
       IMPLICIT NONE
       !
@@ -539,6 +540,8 @@ MODULE pw_restart_new
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
+      !
+      CALL using_evc(.false.)
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
@@ -604,6 +607,7 @@ MODULE pw_restart_new
          ! ... read wavefunctions - do not read if already in memory (nsk==1)
          !
          IF ( nks > 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+         IF ( nks > 1 ) CALL using_evc(.false.)
          !
          IF ( nspin == 2 ) THEN
             !
@@ -1970,6 +1974,7 @@ MODULE pw_restart_new
                                        intra_pool_comm, inter_pool_comm
       USE mp,                   ONLY : mp_sum, mp_max
       USE io_base,              ONLY : read_wfc
+      USE wavefunctions_module_gpum, ONLY : using_evc
       !
       IMPLICIT NONE
       !
@@ -1988,6 +1993,8 @@ MODULE pw_restart_new
 
       !
       IF ( .NOT. twfcollect ) RETURN 
+      !
+      CALL using_evc(.true.)
       !
       iks = global_kpoint_index (nkstot, 1)
       ike = iks + nks - 1
@@ -2063,6 +2070,7 @@ MODULE pw_restart_new
          CALL read_wfc( iunpun, filename, root_bgrp, intra_bgrp_comm, &
               ik_g, xk_, ispin, npol_, evc, npw_g, gamma_only, nbnd_, &
               igk_l2g_kdip(:), ngk(ik), b1, b2, b3, mill_k, scalef )
+         ! CALL using_evc(.true.) !here may be needed if this function will ever be ported
          !
          ! ... here one should check for consistency between what is read
          ! ... and what is expected
@@ -2072,6 +2080,7 @@ MODULE pw_restart_new
                  & I6," bands were read from file")')  nbnd, nbnd_  
             CALL errore ('pw_restart - read_collected_to_evc', msg, 1 )
          END IF
+         ! CALL using_evc(.true.) !here may be needed if this function will ever be ported
          CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
          ! 
       END DO k_points_loop

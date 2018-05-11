@@ -40,6 +40,8 @@ SUBROUTINE force_hub(forceh)
    USE io_files,             ONLY : nwordwfc, iunwfc
    USE buffers,              ONLY : get_buffer
 
+   USE wavefunctions_module_gpum, ONLY : using_evc
+
    IMPLICIT NONE
    REAL (DP) :: forceh(3,nat)  ! output: the Hubbard forces
 
@@ -75,6 +77,8 @@ SUBROUTINE force_hub(forceh)
    !
    !    we start a loop on k points
    !
+   CALL using_evc(.false.)  
+   
    DO ik = 1, nks
       !
       IF (lsda) current_spin = isk(ik)
@@ -82,6 +86,7 @@ SUBROUTINE force_hub(forceh)
 
       IF (nks > 1) &
          CALL get_buffer (evc, nwordwfc, iunwfc, ik)
+      IF (nks > 1)  CALL using_evc(.true.)
 
       CALL init_us_2 (npw,igk_k(1,ik),xk(1,ik),vkb)
       CALL calbec( npw, vkb, evc, becp )
@@ -350,6 +355,7 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj)
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    
+   USE wavefunctions_module_gpum, ONLY : using_evc
    IMPLICIT NONE
    INTEGER, INTENT (IN) :: ik,      &! k-point index
                            alpha,   &! the displaced atom
@@ -430,6 +436,7 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj)
       END DO
    END DO
 !!omp end parallel do
+   CALL using_evc(.false.)  
    CALL calbec ( npw, dbeta, evc, dbetapsi ) 
    CALL calbec ( npw, wfcU, dbeta, wfatdbeta ) 
    DEALLOCATE ( dbeta )
@@ -508,6 +515,8 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
    
+   USE wavefunctions_module_gpum, ONLY : using_evc
+
    IMPLICIT NONE
 
    INTEGER, INTENT (IN) :: ik,      &! k-point index
@@ -585,6 +594,7 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       END DO
    END DO
 !!omp end parallel do
+   CALL using_evc(.false.)
    CALL calbec ( npw, dbeta, evc, dbetapsi ) 
    CALL calbec ( npw, wfcU, dbeta, wfatdbeta ) 
    DEALLOCATE ( dbeta )

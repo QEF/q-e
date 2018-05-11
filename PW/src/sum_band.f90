@@ -44,6 +44,7 @@ SUBROUTINE sum_band()
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    becp
+  USE wavefunctions_module_gpum, ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -245,6 +246,7 @@ SUBROUTINE sum_band()
        LOGICAL :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp
        !
+       CALL using_evc(.false.)
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -273,6 +275,7 @@ SUBROUTINE sum_band()
           !
           IF ( nks > 1 ) &
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+          IF ( nks > 1 ) CALL using_evc(.true.) ! get_buffer(evc, ...) evc is updated (intent out)
           !
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
@@ -485,6 +488,9 @@ SUBROUTINE sum_band()
        LOGICAL  :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp
        !
+       CALL using_evc(.false.)
+       !
+       !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
@@ -523,6 +529,7 @@ SUBROUTINE sum_band()
           !
           IF ( nks > 1 ) &
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+          IF ( nks > 1 ) CALL using_evc(.true.)
           !
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
@@ -864,6 +871,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE us_exx,        ONLY : store_becxx0
   USE mp_bands,      ONLY : nbgrp,inter_bgrp_comm
   USE mp,            ONLY : mp_sum
+  USE wavefunctions_module_gpum, ONLY : using_evc
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
@@ -875,6 +883,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js
   ! counters on beta functions, atoms, atom types, spin
   !
+  CALL using_evc(.false.) ! calbec->in ; invfft_orbital_gamma|k -> in
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
      ! calbec computes becp = <vkb_i|psi_j>

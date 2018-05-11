@@ -33,6 +33,7 @@ SUBROUTINE compute_becsum ( iflag )
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp
   !
+  USE wavefunctions_module_gpum, ONLY : using_evc
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: iflag
@@ -42,6 +43,7 @@ SUBROUTINE compute_becsum ( iflag )
   !
   !
   IF ( .NOT. okvan ) RETURN
+  CALL using_evc(.false.)
   !
   CALL start_clock( 'compute_becsum' )
   !
@@ -59,6 +61,7 @@ SUBROUTINE compute_becsum ( iflag )
      IF ( lsda ) current_spin = isk(ik)
      IF ( nks > 1 ) &
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+     IF ( nks > 1 ) CALL using_evc(.true.)
      IF ( nkb > 0 ) &
           CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !

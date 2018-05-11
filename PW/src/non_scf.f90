@@ -24,6 +24,7 @@
   USE lsda_mod,             ONLY : lsda, nspin
   USE wvfct,                ONLY : nbnd, et, npwx
   USE wavefunctions_module, ONLY : evc
+  USE wavefunctions_module_gpum, ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -31,6 +32,7 @@
   !
   INTEGER :: iter, i
   REAL(DP), EXTERNAL :: get_clock
+  CALL using_evc(.false.) ! This may not be needed. save buffer is intent(in)
   !
   !
   CALL start_clock( 'electrons' )
@@ -91,6 +93,8 @@
   ! ... save converged wfc if they have not been written previously
   ! ... FIXME: it shouldn't be necessary to do this here
   !
+  IF ( nks == 1 .AND. (io_level < 2) .AND. (io_level > -1) ) &
+        CALL using_evc(.false.) ! save buffer is intent(in)
   IF ( nks == 1 .AND. (io_level < 2) .AND. (io_level > -1) ) &
         CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
   !

@@ -33,6 +33,7 @@ SUBROUTINE punch( what )
   USE io_rho_xml,           ONLY : write_scf
   USE a2F,                  ONLY : la2F, a2Fsave
   USE wavefunctions_module, ONLY : evc
+  USE wavefunctions_module_gpum, ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -43,6 +44,8 @@ SUBROUTINE punch( what )
   !
   !
   IF (io_level < 0 ) RETURN
+  !
+  CALL using_evc(.false.)
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
       TRIM( prefix ) // '.save'

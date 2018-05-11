@@ -139,6 +139,7 @@ SUBROUTINE dndepsilon ( ipol, jpol, ldim, dns )
    USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm, &
                                     me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
+   USE wavefunctions_module_gpum, ONLY : using_evc
 
    IMPLICIT NONE
    !
@@ -156,6 +157,8 @@ SUBROUTINE dndepsilon ( ipol, jpol, ldim, dns )
    REAL(DP), ALLOCATABLE :: dns_(:,:,:,:) ! partial contribution 
    COMPLEX (DP), ALLOCATABLE :: spsi(:,:), wfcatom(:,:)
    type (bec_type) :: proj, dproj
+   !
+   CALL using_evc(.false.)
    !
    ! poor-man parallelization over bands
    ! - if nproc_pool=1   : nb_s=1, nb_e=nbnd, mykey=0
@@ -186,6 +189,7 @@ SUBROUTINE dndepsilon ( ipol, jpol, ldim, dns )
       !
       IF (nks > 1) &
          CALL get_buffer (evc, nwordwfc, iunwfc, ik)
+      IF (nks > 1) CALL using_evc(.true.)
       !
       CALL init_us_2 (npw,igk_k(1,ik),xk(1,ik),vkb)
       CALL calbec( npw, vkb, evc, becp )
@@ -302,6 +306,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE becmod,               ONLY : bec_type, becp, calbec
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
+   USE wavefunctions_module_gpum, ONLY : using_evc
 
    IMPLICIT NONE
    !
@@ -334,6 +339,8 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    !       qm1(npwx)
    !
    ! xyz are the three unit vectors in the x,y,z directions
+   CALL using_evc(.false.)
+   !
    xyz(:,:) = 0.d0
    DO i=1,3
       xyz(i,i) = 1.d0
@@ -479,6 +486,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    USE becmod,               ONLY : bec_type, becp, calbec
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
+   USE wavefunctions_module_gpum, ONLY : using_evc
 
    IMPLICIT NONE
    !
@@ -509,6 +517,8 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    REAL (DP), ALLOCATABLE :: gk(:,:), qm1(:)
    !       gk(3,npwx),
    !       qm1(npwx)
+   !
+   CALL using_evc(.false.)
    !
    ! xyz are the three unit vectors in the x,y,z directions
    xyz(:,:) = 0.d0

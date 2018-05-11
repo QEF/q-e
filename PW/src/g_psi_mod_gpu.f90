@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#if defined(__CUDA)
 MODULE g_psi_mod_gpum
   !
   ! ... These are the variables needed in g_psi
@@ -91,3 +92,4 @@ MODULE g_psi_mod_gpum
   END SUBROUTINE using_s_diag_d
   !
 END MODULE g_psi_mod_gpum
+#endif

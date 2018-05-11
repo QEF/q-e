@@ -19,6 +19,9 @@
        evc(:,:)     ! wavefunctions in the PW basis set
                     ! noncolinear case: first index
                     ! is a combined PW + spin index
+#if defined(__CUDA)
+       attributes(PINNED) :: evc
+#endif
      !
      COMPLEX(DP) , ALLOCATABLE, TARGET :: &
        psic(:), &      ! additional memory for FFT

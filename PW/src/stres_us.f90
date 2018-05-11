@@ -31,6 +31,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp, calbec
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, mp_circular_shift_left 
+  USE wavefunctions_module_gpum, ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -41,6 +42,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   REAL(DP), ALLOCATABLE  :: qm1(:)
   REAL(DP)               :: q
   INTEGER                :: npw, i
+  !
+  CALL using_evc(.false.)
   !
   !
   IF ( nkb == 0 ) RETURN

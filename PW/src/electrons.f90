@@ -1301,6 +1301,7 @@ FUNCTION exxenergyace ( )
   USE mp,       ONLY : mp_sum
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
+  USE wavefunctions_module_gpum, ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -1311,11 +1312,13 @@ FUNCTION exxenergyace ( )
   !
   domat = .true.
   exxenergyace=0.0_dp
+  CALL using_evc(.false.)
   DO ik = 1, nks
      npw = ngk (ik)
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
      IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+     IF (nks > 1) CALL using_evc(.true.)
      IF (gamma_only) THEN
         call vexxace_gamma ( npw, nbnd, evc, ex )
      ELSE

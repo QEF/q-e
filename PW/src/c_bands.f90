@@ -31,6 +31,8 @@ SUBROUTINE c_bands( iter )
   USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
+
+  USE wavefunctions_module_gpum, ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -60,6 +62,7 @@ SUBROUTINE c_bands( iter )
   DO ik = 1, ik_
      IF ( nks > 1 .OR. lelfield ) &
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+     IF ( nks > 1 .OR. lelfield ) CALL using_evc(.true.)
   END DO
   !
   IF ( isolve == 0 ) THEN
@@ -88,6 +91,7 @@ SUBROUTINE c_bands( iter )
      !
      IF ( nks > 1 .OR. lelfield ) &
           CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+     IF ( nks > 1 .OR. lelfield ) CALL using_evc(.true.)
      !
      ! ... Needed for LDA+U
      !
@@ -102,6 +106,7 @@ SUBROUTINE c_bands( iter )
      ! ... iterative diagonalization of the next scf iteration
      ! ... and for rho calculation
      !
+     CALL using_evc(.false.)
      IF ( nks > 1 .OR. lelfield ) &
           CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
@@ -159,7 +164,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE gvect,                ONLY : gstart
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, btype
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, &
-                                   gamma_only, use_para_diag
+                                   gamma_only, use_para_diag, use_gpu
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag
@@ -173,6 +178,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, &
                                    my_bgrp_id, nbgrp
   USE mp,                   ONLY : mp_sum, mp_bcast
+
+  USE wavefunctions_module_gpum, ONLY : evc_d, using_evc, using_evc_d
   !
   IMPLICIT NONE
   !
@@ -195,7 +202,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   external h_psi, s_psi, g_psi
 #if defined(__CUDA)
   external h_psi_gpu, s_psi_gpu, g_psi_gpu
-  COMPLEX(DP), ALLOCATABLE, DEVICE :: evc_d(:,:)
   REAL(DP), ALLOCATABLE, DEVICE :: et_d(:)
 #endif
 ! subroutine h_psi(npwx,npw,nvec,psi,hpsi)  computes H*psi
@@ -291,15 +297,19 @@ CONTAINS
           !
           IF ( .NOT. lrot ) THEN
              !
+             CALL using_evc(.false.)
              CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
+             CALL using_evc(.true.)
              !
              avg_iter = avg_iter + 1.D0
              !
           END IF
           !
+          CALL using_evc(.false.)
           CALL rcgdiagg( h_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
+          CALL using_evc(.true.)
           !
           avg_iter = avg_iter + cg_iter
           !
@@ -330,39 +340,43 @@ CONTAINS
           !
           lrot = ( iter == 1 )
           !
-          IF ( use_para_diag ) then
-             !
-#if ! defined(__CUDA)
-!             ! make sure that all processors have the same wfc
-             CALL pregterg( h_psi, s_psi, okvan, g_psi, &
-                         npw, npwx, nbnd, nbndx, evc, ethr, &
-                         et(1,ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call 
-#else
-             ALLOCATE( evc_d( npwx*npol, nbnd ), et_d(nbnd))
-             evc_d = evc
-             CALL pregterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
-                         npw, npwx, nbnd, nbndx, evc_d, ethr, &
-                         et_d(1), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call 
-             evc = evc_d
-             et(:,ik) = et_d
-             DEALLOCATE(evc_d, et_d)
-#endif
-             !
-          ELSE
-             !
-#if ! defined(__CUDA)
-             CALL regterg (  h_psi, s_psi, okvan, g_psi, &
+          IF (.not. use_gpu) THEN
+             CALL using_evc(.false.)
+             IF ( use_para_diag ) THEN
+!                ! make sure that all processors have the same wfc
+                CALL pregterg( h_psi, s_psi, okvan, g_psi, &
+                            npw, npwx, nbnd, nbndx, evc, ethr, &
+                            et(1,ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
+             ELSE
+                CALL regterg (  h_psi, s_psi, okvan, g_psi, &
                          npw, npwx, nbnd, nbndx, evc, ethr, &
                          et(1,ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
-#else
-             ALLOCATE( evc_d( npwx*npol, nbnd ), et_d(nbnd))
-             evc_d = evc
-             CALL regterg_gpu (  h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+             END IF
+             CALL using_evc(.true.)
+          ELSE
+#if defined(__CUDA)
+             CALL using_evc_d(.false.)
+             IF ( use_para_diag ) THEN
+                ALLOCATE(et_d(nbnd))
+                CALL pregterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+                            npw, npwx, nbnd, nbndx, evc_d, ethr, &
+                            et_d(1), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call 
+                !evc = evc_d
+                et(:,ik) = et_d
+                DEALLOCATE(et_d) !evc_d, 
+                !
+             ELSE
+                !
+                ALLOCATE( et_d(nbnd)) !evc_d( npwx*npol, nbnd ), 
+                CALL regterg_gpu (  h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                          npw, npwx, nbnd, nbndx, evc_d, ethr, &
                          et_d(1), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
-             evc = evc_d
-             et(:,ik) = et_d
-             DEALLOCATE(evc_d, et_d)
+                et(:,ik) = et_d
+                DEALLOCATE(et_d) !evc_d, 
+             END IF
+             CALL using_evc_d(.true.) !evc_d = evc
+#else
+             CALL errore( ' diag_bands '. ' Called GPU version which is not available!', 1)
 #endif
           END IF
           !
@@ -401,6 +415,7 @@ CONTAINS
        !
        ! ... save wave functions from previous iteration for electric field
        !
+       CALL using_evc(.false.)
        evcel = evc
        !
        !... read projectors from disk
@@ -453,12 +468,14 @@ CONTAINS
           !
           IF ( .NOT. lrot ) THEN
              !
+             CALL using_evc(.true.)
              CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
              !
              avg_iter = avg_iter + 1.D0
              !
           END IF
           !
+          CALL using_evc(.true.)
           CALL ccgdiagg( h_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
@@ -496,39 +513,43 @@ CONTAINS
           !
           lrot = ( iter == 1 )
           !
-          IF ( use_para_diag ) then
-             !
-#if ! defined(__CUDA)
-             CALL pcegterg( h_psi, s_psi, okvan, g_psi, &
-                            npw, npwx, nbnd, nbndx, npol, evc, ethr, &
-                            et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
-#else
-             ALLOCATE( evc_d( npwx*npol, nbnd ), et_d(nbnd))
-             evc_d = evc
-             CALL pcegterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
-                            npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
-                            et_d(1), btype(1,ik), notconv, lrot, dav_iter )
-             evc = evc_d
-             et(:,ik) = et_d
-             DEALLOCATE(evc_d, et_d)
-#endif
-             !
+          IF (.not. use_gpu ) THEN
+             CALL using_evc(.true.)
+             IF ( use_para_diag ) then
+                !
+                CALL pcegterg( h_psi, s_psi, okvan, g_psi, &
+                               npw, npwx, nbnd, nbndx, npol, evc, ethr, &
+                               et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
+                !
+             ELSE
+                !
+                CALL cegterg ( h_psi, s_psi, okvan, g_psi, &
+                               npw, npwx, nbnd, nbndx, npol, evc, ethr, &
+                               et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
+             END IF
           ELSE
-             !
-#if ! defined(__CUDA)
-             CALL cegterg ( h_psi, s_psi, okvan, g_psi, &
-                            npw, npwx, nbnd, nbndx, npol, evc, ethr, &
-                            et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
-#else
-             ALLOCATE( evc_d( npwx*npol, nbnd ), et_d(nbnd))
-             evc_d = evc
-             CALL cegterg_gpu ( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
-                            npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
-                            et_d(1), btype(1,ik), notconv, lrot, dav_iter )
-             evc = evc_d
-             et(:,ik) = et_d
-             DEALLOCATE(evc_d, et_d)
-#endif
+             CALL using_evc_d(.true.) !evc_d = evc
+             IF ( use_para_diag ) then
+                !
+                ALLOCATE( et_d(nbnd))
+                !
+                CALL pcegterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+                               npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
+                               et_d(1), btype(1,ik), notconv, lrot, dav_iter )
+                !evc = evc_d
+                et(:,ik) = et_d
+                DEALLOCATE(et_d)
+                !
+             ELSE
+                !
+                ALLOCATE(et_d(nbnd))
+                !
+                CALL cegterg_gpu ( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
+                               npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
+                               et_d(1), btype(1,ik), notconv, lrot, dav_iter )
+                et(:,ik) = et_d
+                DEALLOCATE(et_d)
+             END IF
           END IF
           !
           avg_iter = avg_iter + dav_iter
@@ -657,6 +678,8 @@ SUBROUTINE c_bands_nscf( )
   USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
+
+  USE wavefunctions_module_gpum, ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -677,6 +700,7 @@ SUBROUTINE c_bands_nscf( )
   !
   ! ... If restarting, calculated wavefunctions have to be read from file
   !
+  CALL using_evc(.true.)
   DO ik = 1, ik_
      CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
   END DO
@@ -715,6 +739,7 @@ SUBROUTINE c_bands_nscf( )
      !
      IF ( TRIM(starting_wfc) == 'file' ) THEN
         !
+        CALL using_evc(.true.)
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
         !
      ELSE
@@ -729,6 +754,7 @@ SUBROUTINE c_bands_nscf( )
      !
      ! ... save wave-functions (unless disabled in input)
      !
+     IF ( io_level > -1 ) CALL using_evc(.false.)
      IF ( io_level > -1 ) CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
      ! ... beware: with pools, if the number of k-points on different

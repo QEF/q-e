@@ -33,6 +33,8 @@ SUBROUTINE force_us( forcenl )
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
+
+  USE wavefunctions_module_gpum, ONLY : using_evc
   !
   IMPLICIT NONE
   !
@@ -57,6 +59,8 @@ SUBROUTINE force_us( forcenl )
   !
   ! ... the forces are a sum over the K points and over the bands
   !   
+  CALL using_evc(.false.)
+  !
   DO ik = 1, nks
      !
      IF ( lsda ) current_spin = isk(ik)
@@ -64,6 +68,7 @@ SUBROUTINE force_us( forcenl )
 
      IF ( nks > 1 ) THEN
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
+        CALL using_evc(.true.)
         IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
      END IF

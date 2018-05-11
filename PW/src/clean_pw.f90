@@ -67,6 +67,8 @@ SUBROUTINE clean_pw( lflag )
   USE control_flags,        ONLY : ts_vdw
   USE tsvdw_module,         ONLY : tsvdw_finalize
   !
+  USE wavefunctions_module_gpum, ONLY : using_evc, using_evc_d
+  !
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: lflag
@@ -169,6 +171,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
+  CALL using_evc(.true.); CALL using_evc_d(.true.);
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
   !
   ! ... fft structures allocated in data_structure.f90  

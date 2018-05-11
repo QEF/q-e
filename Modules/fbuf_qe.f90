@@ -4831,3 +4831,4832 @@ contains
 
 #endif
 end module
+
+
+!> The **FBUF** module.
+module fbuf_qe_cpu
+#if defined(__CUDA)
+  use cudafor
+  implicit none
+  integer, parameter :: DP = selected_real_kind(14,200)
+
+
+  private
+  public :: buf_pinned_t
+
+  !
+  integer, pinned, allocatable, target  :: data_iv0_d(:)
+  logical :: lockediv0 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_iv1_d(:)
+  logical :: lockediv1 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_iv2_d(:)
+  logical :: lockediv2 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_iv3_d(:)
+  logical :: lockediv3 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_iv4_d(:)
+  logical :: lockediv4 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_iv5_d(:)
+  logical :: lockediv5 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_iv6_d(:)
+  logical :: lockediv6 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_iv7_d(:)
+  logical :: lockediv7 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_iv8_d(:)
+  logical :: lockediv8 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_iv9_d(:)
+  logical :: lockediv9 = .false.
+    
+ 
+
+  integer, pinned, allocatable, target  :: data_im0_d(:,:)
+  logical :: lockedim0 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_im1_d(:,:)
+  logical :: lockedim1 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_im2_d(:,:)
+  logical :: lockedim2 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_im3_d(:,:)
+  logical :: lockedim3 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_im4_d(:,:)
+  logical :: lockedim4 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_im5_d(:,:)
+  logical :: lockedim5 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_im6_d(:,:)
+  logical :: lockedim6 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_im7_d(:,:)
+  logical :: lockedim7 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_im8_d(:,:)
+  logical :: lockedim8 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_im9_d(:,:)
+  logical :: lockedim9 = .false.
+    
+ 
+
+  integer, pinned, allocatable, target  :: data_it0_d(:,:,:)
+  logical :: lockedit0 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_it1_d(:,:,:)
+  logical :: lockedit1 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_it2_d(:,:,:)
+  logical :: lockedit2 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_it3_d(:,:,:)
+  logical :: lockedit3 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_it4_d(:,:,:)
+  logical :: lockedit4 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_it5_d(:,:,:)
+  logical :: lockedit5 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_it6_d(:,:,:)
+  logical :: lockedit6 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_it7_d(:,:,:)
+  logical :: lockedit7 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_it8_d(:,:,:)
+  logical :: lockedit8 = .false.
+    
+ 
+  integer, pinned, allocatable, target  :: data_it9_d(:,:,:)
+  logical :: lockedit9 = .false.
+    
+ 
+
+  real(DP), pinned, allocatable, target  :: data_rv0_d(:)
+  logical :: lockedrv0 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rv1_d(:)
+  logical :: lockedrv1 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rv2_d(:)
+  logical :: lockedrv2 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rv3_d(:)
+  logical :: lockedrv3 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rv4_d(:)
+  logical :: lockedrv4 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rv5_d(:)
+  logical :: lockedrv5 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rv6_d(:)
+  logical :: lockedrv6 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rv7_d(:)
+  logical :: lockedrv7 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rv8_d(:)
+  logical :: lockedrv8 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rv9_d(:)
+  logical :: lockedrv9 = .false.
+    
+ 
+
+  real(DP), pinned, allocatable, target  :: data_rm0_d(:,:)
+  logical :: lockedrm0 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rm1_d(:,:)
+  logical :: lockedrm1 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rm2_d(:,:)
+  logical :: lockedrm2 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rm3_d(:,:)
+  logical :: lockedrm3 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rm4_d(:,:)
+  logical :: lockedrm4 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rm5_d(:,:)
+  logical :: lockedrm5 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rm6_d(:,:)
+  logical :: lockedrm6 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rm7_d(:,:)
+  logical :: lockedrm7 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rm8_d(:,:)
+  logical :: lockedrm8 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rm9_d(:,:)
+  logical :: lockedrm9 = .false.
+    
+ 
+
+  real(DP), pinned, allocatable, target  :: data_rt0_d(:,:,:)
+  logical :: lockedrt0 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rt1_d(:,:,:)
+  logical :: lockedrt1 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rt2_d(:,:,:)
+  logical :: lockedrt2 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rt3_d(:,:,:)
+  logical :: lockedrt3 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rt4_d(:,:,:)
+  logical :: lockedrt4 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rt5_d(:,:,:)
+  logical :: lockedrt5 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rt6_d(:,:,:)
+  logical :: lockedrt6 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rt7_d(:,:,:)
+  logical :: lockedrt7 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rt8_d(:,:,:)
+  logical :: lockedrt8 = .false.
+    
+ 
+  real(DP), pinned, allocatable, target  :: data_rt9_d(:,:,:)
+  logical :: lockedrt9 = .false.
+    
+ 
+
+  complex(DP), pinned, allocatable, target  :: data_cv0_d(:)
+  logical :: lockedcv0 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cv1_d(:)
+  logical :: lockedcv1 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cv2_d(:)
+  logical :: lockedcv2 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cv3_d(:)
+  logical :: lockedcv3 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cv4_d(:)
+  logical :: lockedcv4 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cv5_d(:)
+  logical :: lockedcv5 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cv6_d(:)
+  logical :: lockedcv6 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cv7_d(:)
+  logical :: lockedcv7 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cv8_d(:)
+  logical :: lockedcv8 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cv9_d(:)
+  logical :: lockedcv9 = .false.
+    
+ 
+
+  complex(DP), pinned, allocatable, target  :: data_cm0_d(:,:)
+  logical :: lockedcm0 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cm1_d(:,:)
+  logical :: lockedcm1 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cm2_d(:,:)
+  logical :: lockedcm2 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cm3_d(:,:)
+  logical :: lockedcm3 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cm4_d(:,:)
+  logical :: lockedcm4 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cm5_d(:,:)
+  logical :: lockedcm5 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cm6_d(:,:)
+  logical :: lockedcm6 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cm7_d(:,:)
+  logical :: lockedcm7 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cm8_d(:,:)
+  logical :: lockedcm8 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_cm9_d(:,:)
+  logical :: lockedcm9 = .false.
+    
+ 
+
+  complex(DP), pinned, allocatable, target  :: data_ct0_d(:,:,:)
+  logical :: lockedct0 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_ct1_d(:,:,:)
+  logical :: lockedct1 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_ct2_d(:,:,:)
+  logical :: lockedct2 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_ct3_d(:,:,:)
+  logical :: lockedct3 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_ct4_d(:,:,:)
+  logical :: lockedct4 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_ct5_d(:,:,:)
+  logical :: lockedct5 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_ct6_d(:,:,:)
+  logical :: lockedct6 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_ct7_d(:,:,:)
+  logical :: lockedct7 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_ct8_d(:,:,:)
+  logical :: lockedct8 = .false.
+    
+ 
+  complex(DP), pinned, allocatable, target  :: data_ct9_d(:,:,:)
+  logical :: lockedct9 = .false.
+    
+ 
+
+
+!> The main **fbuf** class.
+  type :: buf_pinned_t
+     logical :: is_initialized = .false.             !< Logical, tells if initialization has been done
+     integer :: nbufs = 10
+     logical :: verbose = .false.
+     !
+   contains
+     procedure :: init                     !< Initialize the class selecting buffers dimension and number per type.\
+     final :: clean
+
+     generic, public :: lock_buffer => &
+                        lock_buffer_iv, &           !< Releases a integer, pinned vector buffer
+                        lock_buffer_im, &           !< Releases a integer, pinned matrix buffer
+                        lock_buffer_it, &           !< Releases a integer, pinned tensor buffer
+                        lock_buffer_rv, &           !< Releases a real(DP), pinned vector buffer
+                        lock_buffer_rm, &           !< Releases a real(DP), pinned matrix buffer
+                        lock_buffer_rt, &           !< Releases a real(DP), pinned tensor buffer
+                        lock_buffer_cv, &           !< Releases a complex(DP), pinned vector buffer
+                        lock_buffer_cm, &           !< Releases a complex(DP), pinned matrix buffer
+                        lock_buffer_ct           !< Releases a complex(DP), pinned tensor buffer
+     !     
+     procedure, private :: lock_buffer_iv           !< Releases a integer, pinned vector buffer     
+     procedure, private :: lock_buffer_im           !< Releases a integer, pinned matrix buffer     
+     procedure, private :: lock_buffer_it           !< Releases a integer, pinned tensor buffer     
+     procedure, private :: lock_buffer_rv           !< Releases a real(DP), pinned vector buffer     
+     procedure, private :: lock_buffer_rm           !< Releases a real(DP), pinned matrix buffer     
+     procedure, private :: lock_buffer_rt           !< Releases a real(DP), pinned tensor buffer     
+     procedure, private :: lock_buffer_cv           !< Releases a complex(DP), pinned vector buffer     
+     procedure, private :: lock_buffer_cm           !< Releases a complex(DP), pinned matrix buffer     
+     procedure, private :: lock_buffer_ct           !< Releases a complex(DP), pinned tensor buffer
+     !
+     generic, public :: release_buffer => &
+                        release_buffer_iv, &        !< Releases a integer, pinned vector buffer
+                        release_buffer_im, &        !< Releases a integer, pinned matrix buffer
+                        release_buffer_it, &        !< Releases a integer, pinned tensor buffer
+                        release_buffer_rv, &        !< Releases a real(DP), pinned vector buffer
+                        release_buffer_rm, &        !< Releases a real(DP), pinned matrix buffer
+                        release_buffer_rt, &        !< Releases a real(DP), pinned tensor buffer
+                        release_buffer_cv, &        !< Releases a complex(DP), pinned vector buffer
+                        release_buffer_cm, &        !< Releases a complex(DP), pinned matrix buffer
+                        release_buffer_ct        !< Releases a complex(DP), pinned tensor buffer
+     !     
+     procedure, private :: release_buffer_iv           !< Releases a integer, pinned vector buffer     
+     procedure, private :: release_buffer_im           !< Releases a integer, pinned matrix buffer     
+     procedure, private :: release_buffer_it           !< Releases a integer, pinned tensor buffer     
+     procedure, private :: release_buffer_rv           !< Releases a real(DP), pinned vector buffer     
+     procedure, private :: release_buffer_rm           !< Releases a real(DP), pinned matrix buffer     
+     procedure, private :: release_buffer_rt           !< Releases a real(DP), pinned tensor buffer     
+     procedure, private :: release_buffer_cv           !< Releases a complex(DP), pinned vector buffer     
+     procedure, private :: release_buffer_cm           !< Releases a complex(DP), pinned matrix buffer     
+     procedure, private :: release_buffer_ct           !< Releases a complex(DP), pinned tensor buffer
+  end type
+
+  
+  
+contains
+  !> Initialize the class selecting the device type.
+  subroutine init(this, n, info, verbose)
+    implicit none
+    class(buf_pinned_t),  intent(inout) :: this     !< The class.
+    integer,       intent(in)  :: n       !< Wether device can be the host itself
+    integer,       intent(out) :: info    !< Error reporting.
+                                          !<  0: ok
+                                          !< -1: generic error
+    logical, optional, intent(in) :: verbose
+    !
+    integer :: i
+    this%is_initialized = .true.
+    this%nbufs = n
+    this%verbose = .false.
+    if (present(verbose)) this%verbose = verbose
+    
+    if ( n > 10 ) then 
+        write (*, *) "Sorry this version of fbuf supports  10 buffers"
+        stop
+    endif
+    
+    if (this%verbose) write (*, *) "Initializing ", this%nbufs, " buffers"
+      lockediv0 = .false.
+      lockedim0 = .false.
+      lockedit0 = .false.
+      lockedrv0 = .false.
+      lockedrm0 = .false.
+      lockedrt0 = .false.
+      lockedcv0 = .false.
+      lockedcm0 = .false.
+      lockedct0 = .false.
+      !
+      lockediv1 = .false.
+      lockedim1 = .false.
+      lockedit1 = .false.
+      lockedrv1 = .false.
+      lockedrm1 = .false.
+      lockedrt1 = .false.
+      lockedcv1 = .false.
+      lockedcm1 = .false.
+      lockedct1 = .false.
+      !
+      lockediv2 = .false.
+      lockedim2 = .false.
+      lockedit2 = .false.
+      lockedrv2 = .false.
+      lockedrm2 = .false.
+      lockedrt2 = .false.
+      lockedcv2 = .false.
+      lockedcm2 = .false.
+      lockedct2 = .false.
+      !
+      lockediv3 = .false.
+      lockedim3 = .false.
+      lockedit3 = .false.
+      lockedrv3 = .false.
+      lockedrm3 = .false.
+      lockedrt3 = .false.
+      lockedcv3 = .false.
+      lockedcm3 = .false.
+      lockedct3 = .false.
+      !
+      lockediv4 = .false.
+      lockedim4 = .false.
+      lockedit4 = .false.
+      lockedrv4 = .false.
+      lockedrm4 = .false.
+      lockedrt4 = .false.
+      lockedcv4 = .false.
+      lockedcm4 = .false.
+      lockedct4 = .false.
+      !
+      lockediv5 = .false.
+      lockedim5 = .false.
+      lockedit5 = .false.
+      lockedrv5 = .false.
+      lockedrm5 = .false.
+      lockedrt5 = .false.
+      lockedcv5 = .false.
+      lockedcm5 = .false.
+      lockedct5 = .false.
+      !
+      lockediv6 = .false.
+      lockedim6 = .false.
+      lockedit6 = .false.
+      lockedrv6 = .false.
+      lockedrm6 = .false.
+      lockedrt6 = .false.
+      lockedcv6 = .false.
+      lockedcm6 = .false.
+      lockedct6 = .false.
+      !
+      lockediv7 = .false.
+      lockedim7 = .false.
+      lockedit7 = .false.
+      lockedrv7 = .false.
+      lockedrm7 = .false.
+      lockedrt7 = .false.
+      lockedcv7 = .false.
+      lockedcm7 = .false.
+      lockedct7 = .false.
+      !
+      lockediv8 = .false.
+      lockedim8 = .false.
+      lockedit8 = .false.
+      lockedrv8 = .false.
+      lockedrm8 = .false.
+      lockedrt8 = .false.
+      lockedcv8 = .false.
+      lockedcm8 = .false.
+      lockedct8 = .false.
+      !
+      lockediv9 = .false.
+      lockedim9 = .false.
+      lockedit9 = .false.
+      lockedrv9 = .false.
+      lockedrm9 = .false.
+      lockedrt9 = .false.
+      lockedcv9 = .false.
+      lockedcm9 = .false.
+      lockedct9 = .false.
+      !
+    info = 0
+    !
+  end subroutine init
+  subroutine clean(this)
+    implicit none
+    type(buf_pinned_t) :: this     !< The class.
+    integer :: i
+    if (this%verbose) write (*, '("Cleaning ", I2, " buffers")') this%nbufs
+      if (allocated( data_iv0_d ) ) deallocate( data_iv0_d )
+      if (allocated( data_im0_d ) ) deallocate( data_im0_d )
+      if (allocated( data_it0_d ) ) deallocate( data_it0_d )
+      if (allocated( data_rv0_d ) ) deallocate( data_rv0_d )
+      if (allocated( data_rm0_d ) ) deallocate( data_rm0_d )
+      if (allocated( data_rt0_d ) ) deallocate( data_rt0_d )
+      if (allocated( data_cv0_d ) ) deallocate( data_cv0_d )
+      if (allocated( data_cm0_d ) ) deallocate( data_cm0_d )
+      if (allocated( data_ct0_d ) ) deallocate( data_ct0_d )
+      lockediv0 = .false.
+      lockedim0 = .false.
+      lockedit0 = .false.
+      lockedrv0 = .false.
+      lockedrm0 = .false.
+      lockedrt0 = .false.
+      lockedcv0 = .false.
+      lockedcm0 = .false.
+      lockedct0 = .false.
+      !
+      if (allocated( data_iv1_d ) ) deallocate( data_iv1_d )
+      if (allocated( data_im1_d ) ) deallocate( data_im1_d )
+      if (allocated( data_it1_d ) ) deallocate( data_it1_d )
+      if (allocated( data_rv1_d ) ) deallocate( data_rv1_d )
+      if (allocated( data_rm1_d ) ) deallocate( data_rm1_d )
+      if (allocated( data_rt1_d ) ) deallocate( data_rt1_d )
+      if (allocated( data_cv1_d ) ) deallocate( data_cv1_d )
+      if (allocated( data_cm1_d ) ) deallocate( data_cm1_d )
+      if (allocated( data_ct1_d ) ) deallocate( data_ct1_d )
+      lockediv1 = .false.
+      lockedim1 = .false.
+      lockedit1 = .false.
+      lockedrv1 = .false.
+      lockedrm1 = .false.
+      lockedrt1 = .false.
+      lockedcv1 = .false.
+      lockedcm1 = .false.
+      lockedct1 = .false.
+      !
+      if (allocated( data_iv2_d ) ) deallocate( data_iv2_d )
+      if (allocated( data_im2_d ) ) deallocate( data_im2_d )
+      if (allocated( data_it2_d ) ) deallocate( data_it2_d )
+      if (allocated( data_rv2_d ) ) deallocate( data_rv2_d )
+      if (allocated( data_rm2_d ) ) deallocate( data_rm2_d )
+      if (allocated( data_rt2_d ) ) deallocate( data_rt2_d )
+      if (allocated( data_cv2_d ) ) deallocate( data_cv2_d )
+      if (allocated( data_cm2_d ) ) deallocate( data_cm2_d )
+      if (allocated( data_ct2_d ) ) deallocate( data_ct2_d )
+      lockediv2 = .false.
+      lockedim2 = .false.
+      lockedit2 = .false.
+      lockedrv2 = .false.
+      lockedrm2 = .false.
+      lockedrt2 = .false.
+      lockedcv2 = .false.
+      lockedcm2 = .false.
+      lockedct2 = .false.
+      !
+      if (allocated( data_iv3_d ) ) deallocate( data_iv3_d )
+      if (allocated( data_im3_d ) ) deallocate( data_im3_d )
+      if (allocated( data_it3_d ) ) deallocate( data_it3_d )
+      if (allocated( data_rv3_d ) ) deallocate( data_rv3_d )
+      if (allocated( data_rm3_d ) ) deallocate( data_rm3_d )
+      if (allocated( data_rt3_d ) ) deallocate( data_rt3_d )
+      if (allocated( data_cv3_d ) ) deallocate( data_cv3_d )
+      if (allocated( data_cm3_d ) ) deallocate( data_cm3_d )
+      if (allocated( data_ct3_d ) ) deallocate( data_ct3_d )
+      lockediv3 = .false.
+      lockedim3 = .false.
+      lockedit3 = .false.
+      lockedrv3 = .false.
+      lockedrm3 = .false.
+      lockedrt3 = .false.
+      lockedcv3 = .false.
+      lockedcm3 = .false.
+      lockedct3 = .false.
+      !
+      if (allocated( data_iv4_d ) ) deallocate( data_iv4_d )
+      if (allocated( data_im4_d ) ) deallocate( data_im4_d )
+      if (allocated( data_it4_d ) ) deallocate( data_it4_d )
+      if (allocated( data_rv4_d ) ) deallocate( data_rv4_d )
+      if (allocated( data_rm4_d ) ) deallocate( data_rm4_d )
+      if (allocated( data_rt4_d ) ) deallocate( data_rt4_d )
+      if (allocated( data_cv4_d ) ) deallocate( data_cv4_d )
+      if (allocated( data_cm4_d ) ) deallocate( data_cm4_d )
+      if (allocated( data_ct4_d ) ) deallocate( data_ct4_d )
+      lockediv4 = .false.
+      lockedim4 = .false.
+      lockedit4 = .false.
+      lockedrv4 = .false.
+      lockedrm4 = .false.
+      lockedrt4 = .false.
+      lockedcv4 = .false.
+      lockedcm4 = .false.
+      lockedct4 = .false.
+      !
+      if (allocated( data_iv5_d ) ) deallocate( data_iv5_d )
+      if (allocated( data_im5_d ) ) deallocate( data_im5_d )
+      if (allocated( data_it5_d ) ) deallocate( data_it5_d )
+      if (allocated( data_rv5_d ) ) deallocate( data_rv5_d )
+      if (allocated( data_rm5_d ) ) deallocate( data_rm5_d )
+      if (allocated( data_rt5_d ) ) deallocate( data_rt5_d )
+      if (allocated( data_cv5_d ) ) deallocate( data_cv5_d )
+      if (allocated( data_cm5_d ) ) deallocate( data_cm5_d )
+      if (allocated( data_ct5_d ) ) deallocate( data_ct5_d )
+      lockediv5 = .false.
+      lockedim5 = .false.
+      lockedit5 = .false.
+      lockedrv5 = .false.
+      lockedrm5 = .false.
+      lockedrt5 = .false.
+      lockedcv5 = .false.
+      lockedcm5 = .false.
+      lockedct5 = .false.
+      !
+      if (allocated( data_iv6_d ) ) deallocate( data_iv6_d )
+      if (allocated( data_im6_d ) ) deallocate( data_im6_d )
+      if (allocated( data_it6_d ) ) deallocate( data_it6_d )
+      if (allocated( data_rv6_d ) ) deallocate( data_rv6_d )
+      if (allocated( data_rm6_d ) ) deallocate( data_rm6_d )
+      if (allocated( data_rt6_d ) ) deallocate( data_rt6_d )
+      if (allocated( data_cv6_d ) ) deallocate( data_cv6_d )
+      if (allocated( data_cm6_d ) ) deallocate( data_cm6_d )
+      if (allocated( data_ct6_d ) ) deallocate( data_ct6_d )
+      lockediv6 = .false.
+      lockedim6 = .false.
+      lockedit6 = .false.
+      lockedrv6 = .false.
+      lockedrm6 = .false.
+      lockedrt6 = .false.
+      lockedcv6 = .false.
+      lockedcm6 = .false.
+      lockedct6 = .false.
+      !
+      if (allocated( data_iv7_d ) ) deallocate( data_iv7_d )
+      if (allocated( data_im7_d ) ) deallocate( data_im7_d )
+      if (allocated( data_it7_d ) ) deallocate( data_it7_d )
+      if (allocated( data_rv7_d ) ) deallocate( data_rv7_d )
+      if (allocated( data_rm7_d ) ) deallocate( data_rm7_d )
+      if (allocated( data_rt7_d ) ) deallocate( data_rt7_d )
+      if (allocated( data_cv7_d ) ) deallocate( data_cv7_d )
+      if (allocated( data_cm7_d ) ) deallocate( data_cm7_d )
+      if (allocated( data_ct7_d ) ) deallocate( data_ct7_d )
+      lockediv7 = .false.
+      lockedim7 = .false.
+      lockedit7 = .false.
+      lockedrv7 = .false.
+      lockedrm7 = .false.
+      lockedrt7 = .false.
+      lockedcv7 = .false.
+      lockedcm7 = .false.
+      lockedct7 = .false.
+      !
+      if (allocated( data_iv8_d ) ) deallocate( data_iv8_d )
+      if (allocated( data_im8_d ) ) deallocate( data_im8_d )
+      if (allocated( data_it8_d ) ) deallocate( data_it8_d )
+      if (allocated( data_rv8_d ) ) deallocate( data_rv8_d )
+      if (allocated( data_rm8_d ) ) deallocate( data_rm8_d )
+      if (allocated( data_rt8_d ) ) deallocate( data_rt8_d )
+      if (allocated( data_cv8_d ) ) deallocate( data_cv8_d )
+      if (allocated( data_cm8_d ) ) deallocate( data_cm8_d )
+      if (allocated( data_ct8_d ) ) deallocate( data_ct8_d )
+      lockediv8 = .false.
+      lockedim8 = .false.
+      lockedit8 = .false.
+      lockedrv8 = .false.
+      lockedrm8 = .false.
+      lockedrt8 = .false.
+      lockedcv8 = .false.
+      lockedcm8 = .false.
+      lockedct8 = .false.
+      !
+      if (allocated( data_iv9_d ) ) deallocate( data_iv9_d )
+      if (allocated( data_im9_d ) ) deallocate( data_im9_d )
+      if (allocated( data_it9_d ) ) deallocate( data_it9_d )
+      if (allocated( data_rv9_d ) ) deallocate( data_rv9_d )
+      if (allocated( data_rm9_d ) ) deallocate( data_rm9_d )
+      if (allocated( data_rt9_d ) ) deallocate( data_rt9_d )
+      if (allocated( data_cv9_d ) ) deallocate( data_cv9_d )
+      if (allocated( data_cm9_d ) ) deallocate( data_cm9_d )
+      if (allocated( data_ct9_d ) ) deallocate( data_ct9_d )
+      lockediv9 = .false.
+      lockedim9 = .false.
+      lockedit9 = .false.
+      lockedrv9 = .false.
+      lockedrm9 = .false.
+      lockedrt9 = .false.
+      lockedcv9 = .false.
+      lockedcm9 = .false.
+      lockedct9 = .false.
+      !
+    
+    this%is_initialized = .false.
+  end subroutine clean
+  !
+
+  !> Get or allocate a buffer for an integer, pinned vector.
+  subroutine lock_buffer_iv(this, p, vsize, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: vsize    !< vector dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+    integer :: i
+    ! add omp critical here
+    if (this%verbose) write(*,100) vsize
+    info = 0
+    i = 0
+    ! the logic here is the following:
+    !  we loop until a free (.i.e. not locked) buffer is found
+      if ( .not. lockediv0 ) then
+          if ( .not. allocated( data_iv0_d ) ) then
+              allocate(data_iv0_d(vsize))
+              p => data_iv0_d
+              lockediv0 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_iv0_d ), vsize
+              
+              if ( ubound( data_iv0_d , 1) >= vsize ) then
+                p => data_iv0_d
+                lockediv0 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_iv0_d ), vsize
+                return
+              else
+                deallocate(data_iv0_d)
+                allocate(data_iv0_d(vsize))
+                p => data_iv0_d
+                lockediv0 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_iv0_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockediv1 ) then
+          if ( .not. allocated( data_iv1_d ) ) then
+              allocate(data_iv1_d(vsize))
+              p => data_iv1_d
+              lockediv1 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_iv1_d ), vsize
+              
+              if ( ubound( data_iv1_d , 1) >= vsize ) then
+                p => data_iv1_d
+                lockediv1 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_iv1_d ), vsize
+                return
+              else
+                deallocate(data_iv1_d)
+                allocate(data_iv1_d(vsize))
+                p => data_iv1_d
+                lockediv1 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_iv1_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockediv2 ) then
+          if ( .not. allocated( data_iv2_d ) ) then
+              allocate(data_iv2_d(vsize))
+              p => data_iv2_d
+              lockediv2 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_iv2_d ), vsize
+              
+              if ( ubound( data_iv2_d , 1) >= vsize ) then
+                p => data_iv2_d
+                lockediv2 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_iv2_d ), vsize
+                return
+              else
+                deallocate(data_iv2_d)
+                allocate(data_iv2_d(vsize))
+                p => data_iv2_d
+                lockediv2 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_iv2_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockediv3 ) then
+          if ( .not. allocated( data_iv3_d ) ) then
+              allocate(data_iv3_d(vsize))
+              p => data_iv3_d
+              lockediv3 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_iv3_d ), vsize
+              
+              if ( ubound( data_iv3_d , 1) >= vsize ) then
+                p => data_iv3_d
+                lockediv3 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_iv3_d ), vsize
+                return
+              else
+                deallocate(data_iv3_d)
+                allocate(data_iv3_d(vsize))
+                p => data_iv3_d
+                lockediv3 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_iv3_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockediv4 ) then
+          if ( .not. allocated( data_iv4_d ) ) then
+              allocate(data_iv4_d(vsize))
+              p => data_iv4_d
+              lockediv4 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_iv4_d ), vsize
+              
+              if ( ubound( data_iv4_d , 1) >= vsize ) then
+                p => data_iv4_d
+                lockediv4 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_iv4_d ), vsize
+                return
+              else
+                deallocate(data_iv4_d)
+                allocate(data_iv4_d(vsize))
+                p => data_iv4_d
+                lockediv4 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_iv4_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockediv5 ) then
+          if ( .not. allocated( data_iv5_d ) ) then
+              allocate(data_iv5_d(vsize))
+              p => data_iv5_d
+              lockediv5 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_iv5_d ), vsize
+              
+              if ( ubound( data_iv5_d , 1) >= vsize ) then
+                p => data_iv5_d
+                lockediv5 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_iv5_d ), vsize
+                return
+              else
+                deallocate(data_iv5_d)
+                allocate(data_iv5_d(vsize))
+                p => data_iv5_d
+                lockediv5 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_iv5_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockediv6 ) then
+          if ( .not. allocated( data_iv6_d ) ) then
+              allocate(data_iv6_d(vsize))
+              p => data_iv6_d
+              lockediv6 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_iv6_d ), vsize
+              
+              if ( ubound( data_iv6_d , 1) >= vsize ) then
+                p => data_iv6_d
+                lockediv6 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_iv6_d ), vsize
+                return
+              else
+                deallocate(data_iv6_d)
+                allocate(data_iv6_d(vsize))
+                p => data_iv6_d
+                lockediv6 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_iv6_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockediv7 ) then
+          if ( .not. allocated( data_iv7_d ) ) then
+              allocate(data_iv7_d(vsize))
+              p => data_iv7_d
+              lockediv7 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_iv7_d ), vsize
+              
+              if ( ubound( data_iv7_d , 1) >= vsize ) then
+                p => data_iv7_d
+                lockediv7 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_iv7_d ), vsize
+                return
+              else
+                deallocate(data_iv7_d)
+                allocate(data_iv7_d(vsize))
+                p => data_iv7_d
+                lockediv7 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_iv7_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockediv8 ) then
+          if ( .not. allocated( data_iv8_d ) ) then
+              allocate(data_iv8_d(vsize))
+              p => data_iv8_d
+              lockediv8 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_iv8_d ), vsize
+              
+              if ( ubound( data_iv8_d , 1) >= vsize ) then
+                p => data_iv8_d
+                lockediv8 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_iv8_d ), vsize
+                return
+              else
+                deallocate(data_iv8_d)
+                allocate(data_iv8_d(vsize))
+                p => data_iv8_d
+                lockediv8 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_iv8_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockediv9 ) then
+          if ( .not. allocated( data_iv9_d ) ) then
+              allocate(data_iv9_d(vsize))
+              p => data_iv9_d
+              lockediv9 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_iv9_d ), vsize
+              
+              if ( ubound( data_iv9_d , 1) >= vsize ) then
+                p => data_iv9_d
+                lockediv9 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_iv9_d ), vsize
+                return
+              else
+                deallocate(data_iv9_d)
+                allocate(data_iv9_d(vsize))
+                p => data_iv9_d
+                lockediv9 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_iv9_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+10  CONTINUE 
+
+    write(*, 104) 
+    allocate(p(vsize))
+    info = -1
+    !
+    100 FORMAT ("Locking a buffer for an integer, pinned vector ", 1I4, " elements long")
+    101 FORMAT ("Trying buffer ", I2 , " with size ", 1I4, " elements long for ", 1I4)
+    1021 FORMAT ("Chose buffer ", I2 , " with size ", 1I4, " elements long for ", 1I4)
+    1022 FORMAT ("Reallocated buffer ", I2 , " with size ", 1I4, " elements long for ", 1I4)
+    103 FORMAT ("Buffer ", I2 , " is free but not allocated. Allocated and Locked.")
+    104 FORMAT ("WARNING: no free buffers found. Allocated space outside buffers.")
+  end subroutine lock_buffer_iv
+
+  !> Get or allocate a buffer for an integer, pinned matrix.
+  subroutine lock_buffer_im(this, p, msize, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: msize(2)    !< matrix dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+    integer :: i
+    ! add omp critical here
+    if (this%verbose) write(*,100) msize
+    info = 0
+    i = 0
+    ! the logic here is the following:
+    !  we loop until a free (.i.e. not locked) buffer is found
+      if ( .not. lockedim0 ) then
+          if ( .not. allocated( data_im0_d ) ) then
+              allocate(data_im0_d(msize(1),msize(2)))
+              p => data_im0_d
+              lockedim0 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_im0_d ), msize
+              
+              if ( ubound( data_im0_d , 1) == msize(1) .and. &
+                   &  ubound( data_im0_d , 2) >= msize(2) ) then
+                p => data_im0_d
+                lockedim0 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_im0_d ), msize
+                return
+              else if ( ubound( data_im0_d , 1) == msize(1) .and. &
+                   &  ubound( data_im0_d , 2) < msize(2) ) then
+                deallocate(data_im0_d)
+                allocate(data_im0_d(msize(1),msize(2)))
+                p => data_im0_d
+                lockedim0 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_im0_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedim1 ) then
+          if ( .not. allocated( data_im1_d ) ) then
+              allocate(data_im1_d(msize(1),msize(2)))
+              p => data_im1_d
+              lockedim1 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_im1_d ), msize
+              
+              if ( ubound( data_im1_d , 1) == msize(1) .and. &
+                   &  ubound( data_im1_d , 2) >= msize(2) ) then
+                p => data_im1_d
+                lockedim1 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_im1_d ), msize
+                return
+              else if ( ubound( data_im1_d , 1) == msize(1) .and. &
+                   &  ubound( data_im1_d , 2) < msize(2) ) then
+                deallocate(data_im1_d)
+                allocate(data_im1_d(msize(1),msize(2)))
+                p => data_im1_d
+                lockedim1 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_im1_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedim2 ) then
+          if ( .not. allocated( data_im2_d ) ) then
+              allocate(data_im2_d(msize(1),msize(2)))
+              p => data_im2_d
+              lockedim2 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_im2_d ), msize
+              
+              if ( ubound( data_im2_d , 1) == msize(1) .and. &
+                   &  ubound( data_im2_d , 2) >= msize(2) ) then
+                p => data_im2_d
+                lockedim2 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_im2_d ), msize
+                return
+              else if ( ubound( data_im2_d , 1) == msize(1) .and. &
+                   &  ubound( data_im2_d , 2) < msize(2) ) then
+                deallocate(data_im2_d)
+                allocate(data_im2_d(msize(1),msize(2)))
+                p => data_im2_d
+                lockedim2 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_im2_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedim3 ) then
+          if ( .not. allocated( data_im3_d ) ) then
+              allocate(data_im3_d(msize(1),msize(2)))
+              p => data_im3_d
+              lockedim3 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_im3_d ), msize
+              
+              if ( ubound( data_im3_d , 1) == msize(1) .and. &
+                   &  ubound( data_im3_d , 2) >= msize(2) ) then
+                p => data_im3_d
+                lockedim3 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_im3_d ), msize
+                return
+              else if ( ubound( data_im3_d , 1) == msize(1) .and. &
+                   &  ubound( data_im3_d , 2) < msize(2) ) then
+                deallocate(data_im3_d)
+                allocate(data_im3_d(msize(1),msize(2)))
+                p => data_im3_d
+                lockedim3 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_im3_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedim4 ) then
+          if ( .not. allocated( data_im4_d ) ) then
+              allocate(data_im4_d(msize(1),msize(2)))
+              p => data_im4_d
+              lockedim4 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_im4_d ), msize
+              
+              if ( ubound( data_im4_d , 1) == msize(1) .and. &
+                   &  ubound( data_im4_d , 2) >= msize(2) ) then
+                p => data_im4_d
+                lockedim4 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_im4_d ), msize
+                return
+              else if ( ubound( data_im4_d , 1) == msize(1) .and. &
+                   &  ubound( data_im4_d , 2) < msize(2) ) then
+                deallocate(data_im4_d)
+                allocate(data_im4_d(msize(1),msize(2)))
+                p => data_im4_d
+                lockedim4 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_im4_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedim5 ) then
+          if ( .not. allocated( data_im5_d ) ) then
+              allocate(data_im5_d(msize(1),msize(2)))
+              p => data_im5_d
+              lockedim5 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_im5_d ), msize
+              
+              if ( ubound( data_im5_d , 1) == msize(1) .and. &
+                   &  ubound( data_im5_d , 2) >= msize(2) ) then
+                p => data_im5_d
+                lockedim5 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_im5_d ), msize
+                return
+              else if ( ubound( data_im5_d , 1) == msize(1) .and. &
+                   &  ubound( data_im5_d , 2) < msize(2) ) then
+                deallocate(data_im5_d)
+                allocate(data_im5_d(msize(1),msize(2)))
+                p => data_im5_d
+                lockedim5 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_im5_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedim6 ) then
+          if ( .not. allocated( data_im6_d ) ) then
+              allocate(data_im6_d(msize(1),msize(2)))
+              p => data_im6_d
+              lockedim6 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_im6_d ), msize
+              
+              if ( ubound( data_im6_d , 1) == msize(1) .and. &
+                   &  ubound( data_im6_d , 2) >= msize(2) ) then
+                p => data_im6_d
+                lockedim6 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_im6_d ), msize
+                return
+              else if ( ubound( data_im6_d , 1) == msize(1) .and. &
+                   &  ubound( data_im6_d , 2) < msize(2) ) then
+                deallocate(data_im6_d)
+                allocate(data_im6_d(msize(1),msize(2)))
+                p => data_im6_d
+                lockedim6 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_im6_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedim7 ) then
+          if ( .not. allocated( data_im7_d ) ) then
+              allocate(data_im7_d(msize(1),msize(2)))
+              p => data_im7_d
+              lockedim7 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_im7_d ), msize
+              
+              if ( ubound( data_im7_d , 1) == msize(1) .and. &
+                   &  ubound( data_im7_d , 2) >= msize(2) ) then
+                p => data_im7_d
+                lockedim7 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_im7_d ), msize
+                return
+              else if ( ubound( data_im7_d , 1) == msize(1) .and. &
+                   &  ubound( data_im7_d , 2) < msize(2) ) then
+                deallocate(data_im7_d)
+                allocate(data_im7_d(msize(1),msize(2)))
+                p => data_im7_d
+                lockedim7 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_im7_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedim8 ) then
+          if ( .not. allocated( data_im8_d ) ) then
+              allocate(data_im8_d(msize(1),msize(2)))
+              p => data_im8_d
+              lockedim8 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_im8_d ), msize
+              
+              if ( ubound( data_im8_d , 1) == msize(1) .and. &
+                   &  ubound( data_im8_d , 2) >= msize(2) ) then
+                p => data_im8_d
+                lockedim8 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_im8_d ), msize
+                return
+              else if ( ubound( data_im8_d , 1) == msize(1) .and. &
+                   &  ubound( data_im8_d , 2) < msize(2) ) then
+                deallocate(data_im8_d)
+                allocate(data_im8_d(msize(1),msize(2)))
+                p => data_im8_d
+                lockedim8 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_im8_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedim9 ) then
+          if ( .not. allocated( data_im9_d ) ) then
+              allocate(data_im9_d(msize(1),msize(2)))
+              p => data_im9_d
+              lockedim9 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_im9_d ), msize
+              
+              if ( ubound( data_im9_d , 1) == msize(1) .and. &
+                   &  ubound( data_im9_d , 2) >= msize(2) ) then
+                p => data_im9_d
+                lockedim9 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_im9_d ), msize
+                return
+              else if ( ubound( data_im9_d , 1) == msize(1) .and. &
+                   &  ubound( data_im9_d , 2) < msize(2) ) then
+                deallocate(data_im9_d)
+                allocate(data_im9_d(msize(1),msize(2)))
+                p => data_im9_d
+                lockedim9 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_im9_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+10  CONTINUE 
+
+    write(*, 104) 
+    allocate(p(msize(1),msize(2)))
+    info = -1
+    !
+    100 FORMAT ("Locking a buffer for an integer, pinned matrix ", 2I4, " elements long")
+    101 FORMAT ("Trying buffer ", I2 , " with size ", 2I4, " elements long for ", 2I4)
+    1021 FORMAT ("Chose buffer ", I2 , " with size ", 2I4, " elements long for ", 2I4)
+    1022 FORMAT ("Reallocated buffer ", I2 , " with size ", 2I4, " elements long for ", 2I4)
+    103 FORMAT ("Buffer ", I2 , " is free but not allocated. Allocated and Locked.")
+    104 FORMAT ("WARNING: no free buffers found. Allocated space outside buffers.")
+  end subroutine lock_buffer_im
+
+  !> Get or allocate a buffer for an integer, pinned tensor.
+  subroutine lock_buffer_it(this, p, tsize, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: tsize(3)    !< tensor dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+    integer :: i
+    ! add omp critical here
+    if (this%verbose) write(*,100) tsize
+    info = 0
+    i = 0
+    ! the logic here is the following:
+    !  we loop until a free (.i.e. not locked) buffer is found
+      if ( .not. lockedit0 ) then
+          if ( .not. allocated( data_it0_d ) ) then
+              allocate(data_it0_d(tsize(1),tsize(2),tsize(3)))
+              p => data_it0_d
+              lockedit0 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_it0_d ), tsize
+              
+              if ( ubound( data_it0_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it0_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it0_d , 3) >= tsize(3) ) then
+                p => data_it0_d
+                lockedit0 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_it0_d ), tsize
+                return
+              else if ( ubound( data_it0_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it0_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it0_d , 3) < tsize(3) ) then
+                deallocate(data_it0_d)
+                allocate(data_it0_d(tsize(1),tsize(2),tsize(3)))
+                p => data_it0_d
+                lockedit0 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_it0_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedit1 ) then
+          if ( .not. allocated( data_it1_d ) ) then
+              allocate(data_it1_d(tsize(1),tsize(2),tsize(3)))
+              p => data_it1_d
+              lockedit1 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_it1_d ), tsize
+              
+              if ( ubound( data_it1_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it1_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it1_d , 3) >= tsize(3) ) then
+                p => data_it1_d
+                lockedit1 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_it1_d ), tsize
+                return
+              else if ( ubound( data_it1_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it1_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it1_d , 3) < tsize(3) ) then
+                deallocate(data_it1_d)
+                allocate(data_it1_d(tsize(1),tsize(2),tsize(3)))
+                p => data_it1_d
+                lockedit1 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_it1_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedit2 ) then
+          if ( .not. allocated( data_it2_d ) ) then
+              allocate(data_it2_d(tsize(1),tsize(2),tsize(3)))
+              p => data_it2_d
+              lockedit2 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_it2_d ), tsize
+              
+              if ( ubound( data_it2_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it2_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it2_d , 3) >= tsize(3) ) then
+                p => data_it2_d
+                lockedit2 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_it2_d ), tsize
+                return
+              else if ( ubound( data_it2_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it2_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it2_d , 3) < tsize(3) ) then
+                deallocate(data_it2_d)
+                allocate(data_it2_d(tsize(1),tsize(2),tsize(3)))
+                p => data_it2_d
+                lockedit2 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_it2_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedit3 ) then
+          if ( .not. allocated( data_it3_d ) ) then
+              allocate(data_it3_d(tsize(1),tsize(2),tsize(3)))
+              p => data_it3_d
+              lockedit3 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_it3_d ), tsize
+              
+              if ( ubound( data_it3_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it3_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it3_d , 3) >= tsize(3) ) then
+                p => data_it3_d
+                lockedit3 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_it3_d ), tsize
+                return
+              else if ( ubound( data_it3_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it3_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it3_d , 3) < tsize(3) ) then
+                deallocate(data_it3_d)
+                allocate(data_it3_d(tsize(1),tsize(2),tsize(3)))
+                p => data_it3_d
+                lockedit3 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_it3_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedit4 ) then
+          if ( .not. allocated( data_it4_d ) ) then
+              allocate(data_it4_d(tsize(1),tsize(2),tsize(3)))
+              p => data_it4_d
+              lockedit4 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_it4_d ), tsize
+              
+              if ( ubound( data_it4_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it4_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it4_d , 3) >= tsize(3) ) then
+                p => data_it4_d
+                lockedit4 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_it4_d ), tsize
+                return
+              else if ( ubound( data_it4_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it4_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it4_d , 3) < tsize(3) ) then
+                deallocate(data_it4_d)
+                allocate(data_it4_d(tsize(1),tsize(2),tsize(3)))
+                p => data_it4_d
+                lockedit4 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_it4_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedit5 ) then
+          if ( .not. allocated( data_it5_d ) ) then
+              allocate(data_it5_d(tsize(1),tsize(2),tsize(3)))
+              p => data_it5_d
+              lockedit5 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_it5_d ), tsize
+              
+              if ( ubound( data_it5_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it5_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it5_d , 3) >= tsize(3) ) then
+                p => data_it5_d
+                lockedit5 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_it5_d ), tsize
+                return
+              else if ( ubound( data_it5_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it5_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it5_d , 3) < tsize(3) ) then
+                deallocate(data_it5_d)
+                allocate(data_it5_d(tsize(1),tsize(2),tsize(3)))
+                p => data_it5_d
+                lockedit5 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_it5_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedit6 ) then
+          if ( .not. allocated( data_it6_d ) ) then
+              allocate(data_it6_d(tsize(1),tsize(2),tsize(3)))
+              p => data_it6_d
+              lockedit6 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_it6_d ), tsize
+              
+              if ( ubound( data_it6_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it6_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it6_d , 3) >= tsize(3) ) then
+                p => data_it6_d
+                lockedit6 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_it6_d ), tsize
+                return
+              else if ( ubound( data_it6_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it6_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it6_d , 3) < tsize(3) ) then
+                deallocate(data_it6_d)
+                allocate(data_it6_d(tsize(1),tsize(2),tsize(3)))
+                p => data_it6_d
+                lockedit6 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_it6_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedit7 ) then
+          if ( .not. allocated( data_it7_d ) ) then
+              allocate(data_it7_d(tsize(1),tsize(2),tsize(3)))
+              p => data_it7_d
+              lockedit7 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_it7_d ), tsize
+              
+              if ( ubound( data_it7_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it7_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it7_d , 3) >= tsize(3) ) then
+                p => data_it7_d
+                lockedit7 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_it7_d ), tsize
+                return
+              else if ( ubound( data_it7_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it7_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it7_d , 3) < tsize(3) ) then
+                deallocate(data_it7_d)
+                allocate(data_it7_d(tsize(1),tsize(2),tsize(3)))
+                p => data_it7_d
+                lockedit7 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_it7_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedit8 ) then
+          if ( .not. allocated( data_it8_d ) ) then
+              allocate(data_it8_d(tsize(1),tsize(2),tsize(3)))
+              p => data_it8_d
+              lockedit8 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_it8_d ), tsize
+              
+              if ( ubound( data_it8_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it8_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it8_d , 3) >= tsize(3) ) then
+                p => data_it8_d
+                lockedit8 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_it8_d ), tsize
+                return
+              else if ( ubound( data_it8_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it8_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it8_d , 3) < tsize(3) ) then
+                deallocate(data_it8_d)
+                allocate(data_it8_d(tsize(1),tsize(2),tsize(3)))
+                p => data_it8_d
+                lockedit8 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_it8_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedit9 ) then
+          if ( .not. allocated( data_it9_d ) ) then
+              allocate(data_it9_d(tsize(1),tsize(2),tsize(3)))
+              p => data_it9_d
+              lockedit9 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_it9_d ), tsize
+              
+              if ( ubound( data_it9_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it9_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it9_d , 3) >= tsize(3) ) then
+                p => data_it9_d
+                lockedit9 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_it9_d ), tsize
+                return
+              else if ( ubound( data_it9_d , 1) == tsize(1) .and. &
+                   &  ubound( data_it9_d , 2) == tsize(2) .and. &
+                   &  ubound( data_it9_d , 3) < tsize(3) ) then
+                deallocate(data_it9_d)
+                allocate(data_it9_d(tsize(1),tsize(2),tsize(3)))
+                p => data_it9_d
+                lockedit9 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_it9_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+10  CONTINUE 
+
+    write(*, 104) 
+    allocate(p(tsize(1),tsize(2),tsize(3)))
+    info = -1
+    !
+    100 FORMAT ("Locking a buffer for an integer, pinned tensor ", 3I4, " elements long")
+    101 FORMAT ("Trying buffer ", I2 , " with size ", 3I4, " elements long for ", 3I4)
+    1021 FORMAT ("Chose buffer ", I2 , " with size ", 3I4, " elements long for ", 3I4)
+    1022 FORMAT ("Reallocated buffer ", I2 , " with size ", 3I4, " elements long for ", 3I4)
+    103 FORMAT ("Buffer ", I2 , " is free but not allocated. Allocated and Locked.")
+    104 FORMAT ("WARNING: no free buffers found. Allocated space outside buffers.")
+  end subroutine lock_buffer_it
+
+  !> Get or allocate a buffer for an real(DP), pinned vector.
+  subroutine lock_buffer_rv(this, p, vsize, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: vsize    !< vector dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+    integer :: i
+    ! add omp critical here
+    if (this%verbose) write(*,100) vsize
+    info = 0
+    i = 0
+    ! the logic here is the following:
+    !  we loop until a free (.i.e. not locked) buffer is found
+      if ( .not. lockedrv0 ) then
+          if ( .not. allocated( data_rv0_d ) ) then
+              allocate(data_rv0_d(vsize))
+              p => data_rv0_d
+              lockedrv0 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rv0_d ), vsize
+              
+              if ( ubound( data_rv0_d , 1) >= vsize ) then
+                p => data_rv0_d
+                lockedrv0 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rv0_d ), vsize
+                return
+              else
+                deallocate(data_rv0_d)
+                allocate(data_rv0_d(vsize))
+                p => data_rv0_d
+                lockedrv0 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rv0_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrv1 ) then
+          if ( .not. allocated( data_rv1_d ) ) then
+              allocate(data_rv1_d(vsize))
+              p => data_rv1_d
+              lockedrv1 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rv1_d ), vsize
+              
+              if ( ubound( data_rv1_d , 1) >= vsize ) then
+                p => data_rv1_d
+                lockedrv1 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rv1_d ), vsize
+                return
+              else
+                deallocate(data_rv1_d)
+                allocate(data_rv1_d(vsize))
+                p => data_rv1_d
+                lockedrv1 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rv1_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrv2 ) then
+          if ( .not. allocated( data_rv2_d ) ) then
+              allocate(data_rv2_d(vsize))
+              p => data_rv2_d
+              lockedrv2 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rv2_d ), vsize
+              
+              if ( ubound( data_rv2_d , 1) >= vsize ) then
+                p => data_rv2_d
+                lockedrv2 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rv2_d ), vsize
+                return
+              else
+                deallocate(data_rv2_d)
+                allocate(data_rv2_d(vsize))
+                p => data_rv2_d
+                lockedrv2 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rv2_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrv3 ) then
+          if ( .not. allocated( data_rv3_d ) ) then
+              allocate(data_rv3_d(vsize))
+              p => data_rv3_d
+              lockedrv3 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rv3_d ), vsize
+              
+              if ( ubound( data_rv3_d , 1) >= vsize ) then
+                p => data_rv3_d
+                lockedrv3 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rv3_d ), vsize
+                return
+              else
+                deallocate(data_rv3_d)
+                allocate(data_rv3_d(vsize))
+                p => data_rv3_d
+                lockedrv3 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rv3_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrv4 ) then
+          if ( .not. allocated( data_rv4_d ) ) then
+              allocate(data_rv4_d(vsize))
+              p => data_rv4_d
+              lockedrv4 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rv4_d ), vsize
+              
+              if ( ubound( data_rv4_d , 1) >= vsize ) then
+                p => data_rv4_d
+                lockedrv4 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rv4_d ), vsize
+                return
+              else
+                deallocate(data_rv4_d)
+                allocate(data_rv4_d(vsize))
+                p => data_rv4_d
+                lockedrv4 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rv4_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrv5 ) then
+          if ( .not. allocated( data_rv5_d ) ) then
+              allocate(data_rv5_d(vsize))
+              p => data_rv5_d
+              lockedrv5 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rv5_d ), vsize
+              
+              if ( ubound( data_rv5_d , 1) >= vsize ) then
+                p => data_rv5_d
+                lockedrv5 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rv5_d ), vsize
+                return
+              else
+                deallocate(data_rv5_d)
+                allocate(data_rv5_d(vsize))
+                p => data_rv5_d
+                lockedrv5 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rv5_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrv6 ) then
+          if ( .not. allocated( data_rv6_d ) ) then
+              allocate(data_rv6_d(vsize))
+              p => data_rv6_d
+              lockedrv6 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rv6_d ), vsize
+              
+              if ( ubound( data_rv6_d , 1) >= vsize ) then
+                p => data_rv6_d
+                lockedrv6 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rv6_d ), vsize
+                return
+              else
+                deallocate(data_rv6_d)
+                allocate(data_rv6_d(vsize))
+                p => data_rv6_d
+                lockedrv6 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rv6_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrv7 ) then
+          if ( .not. allocated( data_rv7_d ) ) then
+              allocate(data_rv7_d(vsize))
+              p => data_rv7_d
+              lockedrv7 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rv7_d ), vsize
+              
+              if ( ubound( data_rv7_d , 1) >= vsize ) then
+                p => data_rv7_d
+                lockedrv7 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rv7_d ), vsize
+                return
+              else
+                deallocate(data_rv7_d)
+                allocate(data_rv7_d(vsize))
+                p => data_rv7_d
+                lockedrv7 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rv7_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrv8 ) then
+          if ( .not. allocated( data_rv8_d ) ) then
+              allocate(data_rv8_d(vsize))
+              p => data_rv8_d
+              lockedrv8 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rv8_d ), vsize
+              
+              if ( ubound( data_rv8_d , 1) >= vsize ) then
+                p => data_rv8_d
+                lockedrv8 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rv8_d ), vsize
+                return
+              else
+                deallocate(data_rv8_d)
+                allocate(data_rv8_d(vsize))
+                p => data_rv8_d
+                lockedrv8 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rv8_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrv9 ) then
+          if ( .not. allocated( data_rv9_d ) ) then
+              allocate(data_rv9_d(vsize))
+              p => data_rv9_d
+              lockedrv9 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rv9_d ), vsize
+              
+              if ( ubound( data_rv9_d , 1) >= vsize ) then
+                p => data_rv9_d
+                lockedrv9 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rv9_d ), vsize
+                return
+              else
+                deallocate(data_rv9_d)
+                allocate(data_rv9_d(vsize))
+                p => data_rv9_d
+                lockedrv9 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rv9_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+10  CONTINUE 
+
+    write(*, 104) 
+    allocate(p(vsize))
+    info = -1
+    !
+    100 FORMAT ("Locking a buffer for an real(DP), pinned vector ", 1I4, " elements long")
+    101 FORMAT ("Trying buffer ", I2 , " with size ", 1I4, " elements long for ", 1I4)
+    1021 FORMAT ("Chose buffer ", I2 , " with size ", 1I4, " elements long for ", 1I4)
+    1022 FORMAT ("Reallocated buffer ", I2 , " with size ", 1I4, " elements long for ", 1I4)
+    103 FORMAT ("Buffer ", I2 , " is free but not allocated. Allocated and Locked.")
+    104 FORMAT ("WARNING: no free buffers found. Allocated space outside buffers.")
+  end subroutine lock_buffer_rv
+
+  !> Get or allocate a buffer for an real(DP), pinned matrix.
+  subroutine lock_buffer_rm(this, p, msize, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: msize(2)    !< matrix dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+    integer :: i
+    ! add omp critical here
+    if (this%verbose) write(*,100) msize
+    info = 0
+    i = 0
+    ! the logic here is the following:
+    !  we loop until a free (.i.e. not locked) buffer is found
+      if ( .not. lockedrm0 ) then
+          if ( .not. allocated( data_rm0_d ) ) then
+              allocate(data_rm0_d(msize(1),msize(2)))
+              p => data_rm0_d
+              lockedrm0 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rm0_d ), msize
+              
+              if ( ubound( data_rm0_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm0_d , 2) >= msize(2) ) then
+                p => data_rm0_d
+                lockedrm0 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rm0_d ), msize
+                return
+              else if ( ubound( data_rm0_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm0_d , 2) < msize(2) ) then
+                deallocate(data_rm0_d)
+                allocate(data_rm0_d(msize(1),msize(2)))
+                p => data_rm0_d
+                lockedrm0 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rm0_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrm1 ) then
+          if ( .not. allocated( data_rm1_d ) ) then
+              allocate(data_rm1_d(msize(1),msize(2)))
+              p => data_rm1_d
+              lockedrm1 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rm1_d ), msize
+              
+              if ( ubound( data_rm1_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm1_d , 2) >= msize(2) ) then
+                p => data_rm1_d
+                lockedrm1 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rm1_d ), msize
+                return
+              else if ( ubound( data_rm1_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm1_d , 2) < msize(2) ) then
+                deallocate(data_rm1_d)
+                allocate(data_rm1_d(msize(1),msize(2)))
+                p => data_rm1_d
+                lockedrm1 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rm1_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrm2 ) then
+          if ( .not. allocated( data_rm2_d ) ) then
+              allocate(data_rm2_d(msize(1),msize(2)))
+              p => data_rm2_d
+              lockedrm2 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rm2_d ), msize
+              
+              if ( ubound( data_rm2_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm2_d , 2) >= msize(2) ) then
+                p => data_rm2_d
+                lockedrm2 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rm2_d ), msize
+                return
+              else if ( ubound( data_rm2_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm2_d , 2) < msize(2) ) then
+                deallocate(data_rm2_d)
+                allocate(data_rm2_d(msize(1),msize(2)))
+                p => data_rm2_d
+                lockedrm2 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rm2_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrm3 ) then
+          if ( .not. allocated( data_rm3_d ) ) then
+              allocate(data_rm3_d(msize(1),msize(2)))
+              p => data_rm3_d
+              lockedrm3 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rm3_d ), msize
+              
+              if ( ubound( data_rm3_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm3_d , 2) >= msize(2) ) then
+                p => data_rm3_d
+                lockedrm3 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rm3_d ), msize
+                return
+              else if ( ubound( data_rm3_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm3_d , 2) < msize(2) ) then
+                deallocate(data_rm3_d)
+                allocate(data_rm3_d(msize(1),msize(2)))
+                p => data_rm3_d
+                lockedrm3 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rm3_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrm4 ) then
+          if ( .not. allocated( data_rm4_d ) ) then
+              allocate(data_rm4_d(msize(1),msize(2)))
+              p => data_rm4_d
+              lockedrm4 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rm4_d ), msize
+              
+              if ( ubound( data_rm4_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm4_d , 2) >= msize(2) ) then
+                p => data_rm4_d
+                lockedrm4 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rm4_d ), msize
+                return
+              else if ( ubound( data_rm4_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm4_d , 2) < msize(2) ) then
+                deallocate(data_rm4_d)
+                allocate(data_rm4_d(msize(1),msize(2)))
+                p => data_rm4_d
+                lockedrm4 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rm4_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrm5 ) then
+          if ( .not. allocated( data_rm5_d ) ) then
+              allocate(data_rm5_d(msize(1),msize(2)))
+              p => data_rm5_d
+              lockedrm5 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rm5_d ), msize
+              
+              if ( ubound( data_rm5_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm5_d , 2) >= msize(2) ) then
+                p => data_rm5_d
+                lockedrm5 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rm5_d ), msize
+                return
+              else if ( ubound( data_rm5_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm5_d , 2) < msize(2) ) then
+                deallocate(data_rm5_d)
+                allocate(data_rm5_d(msize(1),msize(2)))
+                p => data_rm5_d
+                lockedrm5 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rm5_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrm6 ) then
+          if ( .not. allocated( data_rm6_d ) ) then
+              allocate(data_rm6_d(msize(1),msize(2)))
+              p => data_rm6_d
+              lockedrm6 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rm6_d ), msize
+              
+              if ( ubound( data_rm6_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm6_d , 2) >= msize(2) ) then
+                p => data_rm6_d
+                lockedrm6 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rm6_d ), msize
+                return
+              else if ( ubound( data_rm6_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm6_d , 2) < msize(2) ) then
+                deallocate(data_rm6_d)
+                allocate(data_rm6_d(msize(1),msize(2)))
+                p => data_rm6_d
+                lockedrm6 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rm6_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrm7 ) then
+          if ( .not. allocated( data_rm7_d ) ) then
+              allocate(data_rm7_d(msize(1),msize(2)))
+              p => data_rm7_d
+              lockedrm7 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rm7_d ), msize
+              
+              if ( ubound( data_rm7_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm7_d , 2) >= msize(2) ) then
+                p => data_rm7_d
+                lockedrm7 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rm7_d ), msize
+                return
+              else if ( ubound( data_rm7_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm7_d , 2) < msize(2) ) then
+                deallocate(data_rm7_d)
+                allocate(data_rm7_d(msize(1),msize(2)))
+                p => data_rm7_d
+                lockedrm7 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rm7_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrm8 ) then
+          if ( .not. allocated( data_rm8_d ) ) then
+              allocate(data_rm8_d(msize(1),msize(2)))
+              p => data_rm8_d
+              lockedrm8 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rm8_d ), msize
+              
+              if ( ubound( data_rm8_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm8_d , 2) >= msize(2) ) then
+                p => data_rm8_d
+                lockedrm8 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rm8_d ), msize
+                return
+              else if ( ubound( data_rm8_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm8_d , 2) < msize(2) ) then
+                deallocate(data_rm8_d)
+                allocate(data_rm8_d(msize(1),msize(2)))
+                p => data_rm8_d
+                lockedrm8 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rm8_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrm9 ) then
+          if ( .not. allocated( data_rm9_d ) ) then
+              allocate(data_rm9_d(msize(1),msize(2)))
+              p => data_rm9_d
+              lockedrm9 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rm9_d ), msize
+              
+              if ( ubound( data_rm9_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm9_d , 2) >= msize(2) ) then
+                p => data_rm9_d
+                lockedrm9 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rm9_d ), msize
+                return
+              else if ( ubound( data_rm9_d , 1) == msize(1) .and. &
+                   &  ubound( data_rm9_d , 2) < msize(2) ) then
+                deallocate(data_rm9_d)
+                allocate(data_rm9_d(msize(1),msize(2)))
+                p => data_rm9_d
+                lockedrm9 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rm9_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+10  CONTINUE 
+
+    write(*, 104) 
+    allocate(p(msize(1),msize(2)))
+    info = -1
+    !
+    100 FORMAT ("Locking a buffer for an real(DP), pinned matrix ", 2I4, " elements long")
+    101 FORMAT ("Trying buffer ", I2 , " with size ", 2I4, " elements long for ", 2I4)
+    1021 FORMAT ("Chose buffer ", I2 , " with size ", 2I4, " elements long for ", 2I4)
+    1022 FORMAT ("Reallocated buffer ", I2 , " with size ", 2I4, " elements long for ", 2I4)
+    103 FORMAT ("Buffer ", I2 , " is free but not allocated. Allocated and Locked.")
+    104 FORMAT ("WARNING: no free buffers found. Allocated space outside buffers.")
+  end subroutine lock_buffer_rm
+
+  !> Get or allocate a buffer for an real(DP), pinned tensor.
+  subroutine lock_buffer_rt(this, p, tsize, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: tsize(3)    !< tensor dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+    integer :: i
+    ! add omp critical here
+    if (this%verbose) write(*,100) tsize
+    info = 0
+    i = 0
+    ! the logic here is the following:
+    !  we loop until a free (.i.e. not locked) buffer is found
+      if ( .not. lockedrt0 ) then
+          if ( .not. allocated( data_rt0_d ) ) then
+              allocate(data_rt0_d(tsize(1),tsize(2),tsize(3)))
+              p => data_rt0_d
+              lockedrt0 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rt0_d ), tsize
+              
+              if ( ubound( data_rt0_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt0_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt0_d , 3) >= tsize(3) ) then
+                p => data_rt0_d
+                lockedrt0 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rt0_d ), tsize
+                return
+              else if ( ubound( data_rt0_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt0_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt0_d , 3) < tsize(3) ) then
+                deallocate(data_rt0_d)
+                allocate(data_rt0_d(tsize(1),tsize(2),tsize(3)))
+                p => data_rt0_d
+                lockedrt0 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rt0_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrt1 ) then
+          if ( .not. allocated( data_rt1_d ) ) then
+              allocate(data_rt1_d(tsize(1),tsize(2),tsize(3)))
+              p => data_rt1_d
+              lockedrt1 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rt1_d ), tsize
+              
+              if ( ubound( data_rt1_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt1_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt1_d , 3) >= tsize(3) ) then
+                p => data_rt1_d
+                lockedrt1 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rt1_d ), tsize
+                return
+              else if ( ubound( data_rt1_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt1_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt1_d , 3) < tsize(3) ) then
+                deallocate(data_rt1_d)
+                allocate(data_rt1_d(tsize(1),tsize(2),tsize(3)))
+                p => data_rt1_d
+                lockedrt1 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rt1_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrt2 ) then
+          if ( .not. allocated( data_rt2_d ) ) then
+              allocate(data_rt2_d(tsize(1),tsize(2),tsize(3)))
+              p => data_rt2_d
+              lockedrt2 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rt2_d ), tsize
+              
+              if ( ubound( data_rt2_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt2_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt2_d , 3) >= tsize(3) ) then
+                p => data_rt2_d
+                lockedrt2 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rt2_d ), tsize
+                return
+              else if ( ubound( data_rt2_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt2_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt2_d , 3) < tsize(3) ) then
+                deallocate(data_rt2_d)
+                allocate(data_rt2_d(tsize(1),tsize(2),tsize(3)))
+                p => data_rt2_d
+                lockedrt2 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rt2_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrt3 ) then
+          if ( .not. allocated( data_rt3_d ) ) then
+              allocate(data_rt3_d(tsize(1),tsize(2),tsize(3)))
+              p => data_rt3_d
+              lockedrt3 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rt3_d ), tsize
+              
+              if ( ubound( data_rt3_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt3_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt3_d , 3) >= tsize(3) ) then
+                p => data_rt3_d
+                lockedrt3 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rt3_d ), tsize
+                return
+              else if ( ubound( data_rt3_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt3_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt3_d , 3) < tsize(3) ) then
+                deallocate(data_rt3_d)
+                allocate(data_rt3_d(tsize(1),tsize(2),tsize(3)))
+                p => data_rt3_d
+                lockedrt3 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rt3_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrt4 ) then
+          if ( .not. allocated( data_rt4_d ) ) then
+              allocate(data_rt4_d(tsize(1),tsize(2),tsize(3)))
+              p => data_rt4_d
+              lockedrt4 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rt4_d ), tsize
+              
+              if ( ubound( data_rt4_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt4_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt4_d , 3) >= tsize(3) ) then
+                p => data_rt4_d
+                lockedrt4 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rt4_d ), tsize
+                return
+              else if ( ubound( data_rt4_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt4_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt4_d , 3) < tsize(3) ) then
+                deallocate(data_rt4_d)
+                allocate(data_rt4_d(tsize(1),tsize(2),tsize(3)))
+                p => data_rt4_d
+                lockedrt4 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rt4_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrt5 ) then
+          if ( .not. allocated( data_rt5_d ) ) then
+              allocate(data_rt5_d(tsize(1),tsize(2),tsize(3)))
+              p => data_rt5_d
+              lockedrt5 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rt5_d ), tsize
+              
+              if ( ubound( data_rt5_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt5_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt5_d , 3) >= tsize(3) ) then
+                p => data_rt5_d
+                lockedrt5 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rt5_d ), tsize
+                return
+              else if ( ubound( data_rt5_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt5_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt5_d , 3) < tsize(3) ) then
+                deallocate(data_rt5_d)
+                allocate(data_rt5_d(tsize(1),tsize(2),tsize(3)))
+                p => data_rt5_d
+                lockedrt5 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rt5_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrt6 ) then
+          if ( .not. allocated( data_rt6_d ) ) then
+              allocate(data_rt6_d(tsize(1),tsize(2),tsize(3)))
+              p => data_rt6_d
+              lockedrt6 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rt6_d ), tsize
+              
+              if ( ubound( data_rt6_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt6_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt6_d , 3) >= tsize(3) ) then
+                p => data_rt6_d
+                lockedrt6 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rt6_d ), tsize
+                return
+              else if ( ubound( data_rt6_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt6_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt6_d , 3) < tsize(3) ) then
+                deallocate(data_rt6_d)
+                allocate(data_rt6_d(tsize(1),tsize(2),tsize(3)))
+                p => data_rt6_d
+                lockedrt6 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rt6_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrt7 ) then
+          if ( .not. allocated( data_rt7_d ) ) then
+              allocate(data_rt7_d(tsize(1),tsize(2),tsize(3)))
+              p => data_rt7_d
+              lockedrt7 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rt7_d ), tsize
+              
+              if ( ubound( data_rt7_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt7_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt7_d , 3) >= tsize(3) ) then
+                p => data_rt7_d
+                lockedrt7 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rt7_d ), tsize
+                return
+              else if ( ubound( data_rt7_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt7_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt7_d , 3) < tsize(3) ) then
+                deallocate(data_rt7_d)
+                allocate(data_rt7_d(tsize(1),tsize(2),tsize(3)))
+                p => data_rt7_d
+                lockedrt7 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rt7_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrt8 ) then
+          if ( .not. allocated( data_rt8_d ) ) then
+              allocate(data_rt8_d(tsize(1),tsize(2),tsize(3)))
+              p => data_rt8_d
+              lockedrt8 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rt8_d ), tsize
+              
+              if ( ubound( data_rt8_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt8_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt8_d , 3) >= tsize(3) ) then
+                p => data_rt8_d
+                lockedrt8 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rt8_d ), tsize
+                return
+              else if ( ubound( data_rt8_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt8_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt8_d , 3) < tsize(3) ) then
+                deallocate(data_rt8_d)
+                allocate(data_rt8_d(tsize(1),tsize(2),tsize(3)))
+                p => data_rt8_d
+                lockedrt8 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rt8_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedrt9 ) then
+          if ( .not. allocated( data_rt9_d ) ) then
+              allocate(data_rt9_d(tsize(1),tsize(2),tsize(3)))
+              p => data_rt9_d
+              lockedrt9 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_rt9_d ), tsize
+              
+              if ( ubound( data_rt9_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt9_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt9_d , 3) >= tsize(3) ) then
+                p => data_rt9_d
+                lockedrt9 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_rt9_d ), tsize
+                return
+              else if ( ubound( data_rt9_d , 1) == tsize(1) .and. &
+                   &  ubound( data_rt9_d , 2) == tsize(2) .and. &
+                   &  ubound( data_rt9_d , 3) < tsize(3) ) then
+                deallocate(data_rt9_d)
+                allocate(data_rt9_d(tsize(1),tsize(2),tsize(3)))
+                p => data_rt9_d
+                lockedrt9 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_rt9_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+10  CONTINUE 
+
+    write(*, 104) 
+    allocate(p(tsize(1),tsize(2),tsize(3)))
+    info = -1
+    !
+    100 FORMAT ("Locking a buffer for an real(DP), pinned tensor ", 3I4, " elements long")
+    101 FORMAT ("Trying buffer ", I2 , " with size ", 3I4, " elements long for ", 3I4)
+    1021 FORMAT ("Chose buffer ", I2 , " with size ", 3I4, " elements long for ", 3I4)
+    1022 FORMAT ("Reallocated buffer ", I2 , " with size ", 3I4, " elements long for ", 3I4)
+    103 FORMAT ("Buffer ", I2 , " is free but not allocated. Allocated and Locked.")
+    104 FORMAT ("WARNING: no free buffers found. Allocated space outside buffers.")
+  end subroutine lock_buffer_rt
+
+  !> Get or allocate a buffer for an complex(DP), pinned vector.
+  subroutine lock_buffer_cv(this, p, vsize, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: vsize    !< vector dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+    integer :: i
+    ! add omp critical here
+    if (this%verbose) write(*,100) vsize
+    info = 0
+    i = 0
+    ! the logic here is the following:
+    !  we loop until a free (.i.e. not locked) buffer is found
+      if ( .not. lockedcv0 ) then
+          if ( .not. allocated( data_cv0_d ) ) then
+              allocate(data_cv0_d(vsize))
+              p => data_cv0_d
+              lockedcv0 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cv0_d ), vsize
+              
+              if ( ubound( data_cv0_d , 1) >= vsize ) then
+                p => data_cv0_d
+                lockedcv0 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cv0_d ), vsize
+                return
+              else
+                deallocate(data_cv0_d)
+                allocate(data_cv0_d(vsize))
+                p => data_cv0_d
+                lockedcv0 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cv0_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcv1 ) then
+          if ( .not. allocated( data_cv1_d ) ) then
+              allocate(data_cv1_d(vsize))
+              p => data_cv1_d
+              lockedcv1 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cv1_d ), vsize
+              
+              if ( ubound( data_cv1_d , 1) >= vsize ) then
+                p => data_cv1_d
+                lockedcv1 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cv1_d ), vsize
+                return
+              else
+                deallocate(data_cv1_d)
+                allocate(data_cv1_d(vsize))
+                p => data_cv1_d
+                lockedcv1 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cv1_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcv2 ) then
+          if ( .not. allocated( data_cv2_d ) ) then
+              allocate(data_cv2_d(vsize))
+              p => data_cv2_d
+              lockedcv2 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cv2_d ), vsize
+              
+              if ( ubound( data_cv2_d , 1) >= vsize ) then
+                p => data_cv2_d
+                lockedcv2 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cv2_d ), vsize
+                return
+              else
+                deallocate(data_cv2_d)
+                allocate(data_cv2_d(vsize))
+                p => data_cv2_d
+                lockedcv2 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cv2_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcv3 ) then
+          if ( .not. allocated( data_cv3_d ) ) then
+              allocate(data_cv3_d(vsize))
+              p => data_cv3_d
+              lockedcv3 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cv3_d ), vsize
+              
+              if ( ubound( data_cv3_d , 1) >= vsize ) then
+                p => data_cv3_d
+                lockedcv3 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cv3_d ), vsize
+                return
+              else
+                deallocate(data_cv3_d)
+                allocate(data_cv3_d(vsize))
+                p => data_cv3_d
+                lockedcv3 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cv3_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcv4 ) then
+          if ( .not. allocated( data_cv4_d ) ) then
+              allocate(data_cv4_d(vsize))
+              p => data_cv4_d
+              lockedcv4 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cv4_d ), vsize
+              
+              if ( ubound( data_cv4_d , 1) >= vsize ) then
+                p => data_cv4_d
+                lockedcv4 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cv4_d ), vsize
+                return
+              else
+                deallocate(data_cv4_d)
+                allocate(data_cv4_d(vsize))
+                p => data_cv4_d
+                lockedcv4 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cv4_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcv5 ) then
+          if ( .not. allocated( data_cv5_d ) ) then
+              allocate(data_cv5_d(vsize))
+              p => data_cv5_d
+              lockedcv5 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cv5_d ), vsize
+              
+              if ( ubound( data_cv5_d , 1) >= vsize ) then
+                p => data_cv5_d
+                lockedcv5 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cv5_d ), vsize
+                return
+              else
+                deallocate(data_cv5_d)
+                allocate(data_cv5_d(vsize))
+                p => data_cv5_d
+                lockedcv5 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cv5_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcv6 ) then
+          if ( .not. allocated( data_cv6_d ) ) then
+              allocate(data_cv6_d(vsize))
+              p => data_cv6_d
+              lockedcv6 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cv6_d ), vsize
+              
+              if ( ubound( data_cv6_d , 1) >= vsize ) then
+                p => data_cv6_d
+                lockedcv6 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cv6_d ), vsize
+                return
+              else
+                deallocate(data_cv6_d)
+                allocate(data_cv6_d(vsize))
+                p => data_cv6_d
+                lockedcv6 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cv6_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcv7 ) then
+          if ( .not. allocated( data_cv7_d ) ) then
+              allocate(data_cv7_d(vsize))
+              p => data_cv7_d
+              lockedcv7 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cv7_d ), vsize
+              
+              if ( ubound( data_cv7_d , 1) >= vsize ) then
+                p => data_cv7_d
+                lockedcv7 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cv7_d ), vsize
+                return
+              else
+                deallocate(data_cv7_d)
+                allocate(data_cv7_d(vsize))
+                p => data_cv7_d
+                lockedcv7 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cv7_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcv8 ) then
+          if ( .not. allocated( data_cv8_d ) ) then
+              allocate(data_cv8_d(vsize))
+              p => data_cv8_d
+              lockedcv8 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cv8_d ), vsize
+              
+              if ( ubound( data_cv8_d , 1) >= vsize ) then
+                p => data_cv8_d
+                lockedcv8 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cv8_d ), vsize
+                return
+              else
+                deallocate(data_cv8_d)
+                allocate(data_cv8_d(vsize))
+                p => data_cv8_d
+                lockedcv8 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cv8_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcv9 ) then
+          if ( .not. allocated( data_cv9_d ) ) then
+              allocate(data_cv9_d(vsize))
+              p => data_cv9_d
+              lockedcv9 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cv9_d ), vsize
+              
+              if ( ubound( data_cv9_d , 1) >= vsize ) then
+                p => data_cv9_d
+                lockedcv9 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cv9_d ), vsize
+                return
+              else
+                deallocate(data_cv9_d)
+                allocate(data_cv9_d(vsize))
+                p => data_cv9_d
+                lockedcv9 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cv9_d ), vsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+10  CONTINUE 
+
+    write(*, 104) 
+    allocate(p(vsize))
+    info = -1
+    !
+    100 FORMAT ("Locking a buffer for an complex(DP), pinned vector ", 1I4, " elements long")
+    101 FORMAT ("Trying buffer ", I2 , " with size ", 1I4, " elements long for ", 1I4)
+    1021 FORMAT ("Chose buffer ", I2 , " with size ", 1I4, " elements long for ", 1I4)
+    1022 FORMAT ("Reallocated buffer ", I2 , " with size ", 1I4, " elements long for ", 1I4)
+    103 FORMAT ("Buffer ", I2 , " is free but not allocated. Allocated and Locked.")
+    104 FORMAT ("WARNING: no free buffers found. Allocated space outside buffers.")
+  end subroutine lock_buffer_cv
+
+  !> Get or allocate a buffer for an complex(DP), pinned matrix.
+  subroutine lock_buffer_cm(this, p, msize, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: msize(2)    !< matrix dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+    integer :: i
+    ! add omp critical here
+    if (this%verbose) write(*,100) msize
+    info = 0
+    i = 0
+    ! the logic here is the following:
+    !  we loop until a free (.i.e. not locked) buffer is found
+      if ( .not. lockedcm0 ) then
+          if ( .not. allocated( data_cm0_d ) ) then
+              allocate(data_cm0_d(msize(1),msize(2)))
+              p => data_cm0_d
+              lockedcm0 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cm0_d ), msize
+              
+              if ( ubound( data_cm0_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm0_d , 2) >= msize(2) ) then
+                p => data_cm0_d
+                lockedcm0 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cm0_d ), msize
+                return
+              else if ( ubound( data_cm0_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm0_d , 2) < msize(2) ) then
+                deallocate(data_cm0_d)
+                allocate(data_cm0_d(msize(1),msize(2)))
+                p => data_cm0_d
+                lockedcm0 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cm0_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcm1 ) then
+          if ( .not. allocated( data_cm1_d ) ) then
+              allocate(data_cm1_d(msize(1),msize(2)))
+              p => data_cm1_d
+              lockedcm1 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cm1_d ), msize
+              
+              if ( ubound( data_cm1_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm1_d , 2) >= msize(2) ) then
+                p => data_cm1_d
+                lockedcm1 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cm1_d ), msize
+                return
+              else if ( ubound( data_cm1_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm1_d , 2) < msize(2) ) then
+                deallocate(data_cm1_d)
+                allocate(data_cm1_d(msize(1),msize(2)))
+                p => data_cm1_d
+                lockedcm1 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cm1_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcm2 ) then
+          if ( .not. allocated( data_cm2_d ) ) then
+              allocate(data_cm2_d(msize(1),msize(2)))
+              p => data_cm2_d
+              lockedcm2 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cm2_d ), msize
+              
+              if ( ubound( data_cm2_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm2_d , 2) >= msize(2) ) then
+                p => data_cm2_d
+                lockedcm2 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cm2_d ), msize
+                return
+              else if ( ubound( data_cm2_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm2_d , 2) < msize(2) ) then
+                deallocate(data_cm2_d)
+                allocate(data_cm2_d(msize(1),msize(2)))
+                p => data_cm2_d
+                lockedcm2 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cm2_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcm3 ) then
+          if ( .not. allocated( data_cm3_d ) ) then
+              allocate(data_cm3_d(msize(1),msize(2)))
+              p => data_cm3_d
+              lockedcm3 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cm3_d ), msize
+              
+              if ( ubound( data_cm3_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm3_d , 2) >= msize(2) ) then
+                p => data_cm3_d
+                lockedcm3 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cm3_d ), msize
+                return
+              else if ( ubound( data_cm3_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm3_d , 2) < msize(2) ) then
+                deallocate(data_cm3_d)
+                allocate(data_cm3_d(msize(1),msize(2)))
+                p => data_cm3_d
+                lockedcm3 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cm3_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcm4 ) then
+          if ( .not. allocated( data_cm4_d ) ) then
+              allocate(data_cm4_d(msize(1),msize(2)))
+              p => data_cm4_d
+              lockedcm4 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cm4_d ), msize
+              
+              if ( ubound( data_cm4_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm4_d , 2) >= msize(2) ) then
+                p => data_cm4_d
+                lockedcm4 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cm4_d ), msize
+                return
+              else if ( ubound( data_cm4_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm4_d , 2) < msize(2) ) then
+                deallocate(data_cm4_d)
+                allocate(data_cm4_d(msize(1),msize(2)))
+                p => data_cm4_d
+                lockedcm4 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cm4_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcm5 ) then
+          if ( .not. allocated( data_cm5_d ) ) then
+              allocate(data_cm5_d(msize(1),msize(2)))
+              p => data_cm5_d
+              lockedcm5 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cm5_d ), msize
+              
+              if ( ubound( data_cm5_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm5_d , 2) >= msize(2) ) then
+                p => data_cm5_d
+                lockedcm5 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cm5_d ), msize
+                return
+              else if ( ubound( data_cm5_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm5_d , 2) < msize(2) ) then
+                deallocate(data_cm5_d)
+                allocate(data_cm5_d(msize(1),msize(2)))
+                p => data_cm5_d
+                lockedcm5 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cm5_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcm6 ) then
+          if ( .not. allocated( data_cm6_d ) ) then
+              allocate(data_cm6_d(msize(1),msize(2)))
+              p => data_cm6_d
+              lockedcm6 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cm6_d ), msize
+              
+              if ( ubound( data_cm6_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm6_d , 2) >= msize(2) ) then
+                p => data_cm6_d
+                lockedcm6 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cm6_d ), msize
+                return
+              else if ( ubound( data_cm6_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm6_d , 2) < msize(2) ) then
+                deallocate(data_cm6_d)
+                allocate(data_cm6_d(msize(1),msize(2)))
+                p => data_cm6_d
+                lockedcm6 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cm6_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcm7 ) then
+          if ( .not. allocated( data_cm7_d ) ) then
+              allocate(data_cm7_d(msize(1),msize(2)))
+              p => data_cm7_d
+              lockedcm7 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cm7_d ), msize
+              
+              if ( ubound( data_cm7_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm7_d , 2) >= msize(2) ) then
+                p => data_cm7_d
+                lockedcm7 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cm7_d ), msize
+                return
+              else if ( ubound( data_cm7_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm7_d , 2) < msize(2) ) then
+                deallocate(data_cm7_d)
+                allocate(data_cm7_d(msize(1),msize(2)))
+                p => data_cm7_d
+                lockedcm7 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cm7_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcm8 ) then
+          if ( .not. allocated( data_cm8_d ) ) then
+              allocate(data_cm8_d(msize(1),msize(2)))
+              p => data_cm8_d
+              lockedcm8 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cm8_d ), msize
+              
+              if ( ubound( data_cm8_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm8_d , 2) >= msize(2) ) then
+                p => data_cm8_d
+                lockedcm8 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cm8_d ), msize
+                return
+              else if ( ubound( data_cm8_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm8_d , 2) < msize(2) ) then
+                deallocate(data_cm8_d)
+                allocate(data_cm8_d(msize(1),msize(2)))
+                p => data_cm8_d
+                lockedcm8 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cm8_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedcm9 ) then
+          if ( .not. allocated( data_cm9_d ) ) then
+              allocate(data_cm9_d(msize(1),msize(2)))
+              p => data_cm9_d
+              lockedcm9 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_cm9_d ), msize
+              
+              if ( ubound( data_cm9_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm9_d , 2) >= msize(2) ) then
+                p => data_cm9_d
+                lockedcm9 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_cm9_d ), msize
+                return
+              else if ( ubound( data_cm9_d , 1) == msize(1) .and. &
+                   &  ubound( data_cm9_d , 2) < msize(2) ) then
+                deallocate(data_cm9_d)
+                allocate(data_cm9_d(msize(1),msize(2)))
+                p => data_cm9_d
+                lockedcm9 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_cm9_d ), msize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+10  CONTINUE 
+
+    write(*, 104) 
+    allocate(p(msize(1),msize(2)))
+    info = -1
+    !
+    100 FORMAT ("Locking a buffer for an complex(DP), pinned matrix ", 2I4, " elements long")
+    101 FORMAT ("Trying buffer ", I2 , " with size ", 2I4, " elements long for ", 2I4)
+    1021 FORMAT ("Chose buffer ", I2 , " with size ", 2I4, " elements long for ", 2I4)
+    1022 FORMAT ("Reallocated buffer ", I2 , " with size ", 2I4, " elements long for ", 2I4)
+    103 FORMAT ("Buffer ", I2 , " is free but not allocated. Allocated and Locked.")
+    104 FORMAT ("WARNING: no free buffers found. Allocated space outside buffers.")
+  end subroutine lock_buffer_cm
+
+  !> Get or allocate a buffer for an complex(DP), pinned tensor.
+  subroutine lock_buffer_ct(this, p, tsize, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: tsize(3)    !< tensor dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+    integer :: i
+    ! add omp critical here
+    if (this%verbose) write(*,100) tsize
+    info = 0
+    i = 0
+    ! the logic here is the following:
+    !  we loop until a free (.i.e. not locked) buffer is found
+      if ( .not. lockedct0 ) then
+          if ( .not. allocated( data_ct0_d ) ) then
+              allocate(data_ct0_d(tsize(1),tsize(2),tsize(3)))
+              p => data_ct0_d
+              lockedct0 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_ct0_d ), tsize
+              
+              if ( ubound( data_ct0_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct0_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct0_d , 3) >= tsize(3) ) then
+                p => data_ct0_d
+                lockedct0 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_ct0_d ), tsize
+                return
+              else if ( ubound( data_ct0_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct0_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct0_d , 3) < tsize(3) ) then
+                deallocate(data_ct0_d)
+                allocate(data_ct0_d(tsize(1),tsize(2),tsize(3)))
+                p => data_ct0_d
+                lockedct0 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_ct0_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedct1 ) then
+          if ( .not. allocated( data_ct1_d ) ) then
+              allocate(data_ct1_d(tsize(1),tsize(2),tsize(3)))
+              p => data_ct1_d
+              lockedct1 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_ct1_d ), tsize
+              
+              if ( ubound( data_ct1_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct1_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct1_d , 3) >= tsize(3) ) then
+                p => data_ct1_d
+                lockedct1 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_ct1_d ), tsize
+                return
+              else if ( ubound( data_ct1_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct1_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct1_d , 3) < tsize(3) ) then
+                deallocate(data_ct1_d)
+                allocate(data_ct1_d(tsize(1),tsize(2),tsize(3)))
+                p => data_ct1_d
+                lockedct1 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_ct1_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedct2 ) then
+          if ( .not. allocated( data_ct2_d ) ) then
+              allocate(data_ct2_d(tsize(1),tsize(2),tsize(3)))
+              p => data_ct2_d
+              lockedct2 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_ct2_d ), tsize
+              
+              if ( ubound( data_ct2_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct2_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct2_d , 3) >= tsize(3) ) then
+                p => data_ct2_d
+                lockedct2 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_ct2_d ), tsize
+                return
+              else if ( ubound( data_ct2_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct2_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct2_d , 3) < tsize(3) ) then
+                deallocate(data_ct2_d)
+                allocate(data_ct2_d(tsize(1),tsize(2),tsize(3)))
+                p => data_ct2_d
+                lockedct2 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_ct2_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedct3 ) then
+          if ( .not. allocated( data_ct3_d ) ) then
+              allocate(data_ct3_d(tsize(1),tsize(2),tsize(3)))
+              p => data_ct3_d
+              lockedct3 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_ct3_d ), tsize
+              
+              if ( ubound( data_ct3_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct3_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct3_d , 3) >= tsize(3) ) then
+                p => data_ct3_d
+                lockedct3 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_ct3_d ), tsize
+                return
+              else if ( ubound( data_ct3_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct3_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct3_d , 3) < tsize(3) ) then
+                deallocate(data_ct3_d)
+                allocate(data_ct3_d(tsize(1),tsize(2),tsize(3)))
+                p => data_ct3_d
+                lockedct3 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_ct3_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedct4 ) then
+          if ( .not. allocated( data_ct4_d ) ) then
+              allocate(data_ct4_d(tsize(1),tsize(2),tsize(3)))
+              p => data_ct4_d
+              lockedct4 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_ct4_d ), tsize
+              
+              if ( ubound( data_ct4_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct4_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct4_d , 3) >= tsize(3) ) then
+                p => data_ct4_d
+                lockedct4 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_ct4_d ), tsize
+                return
+              else if ( ubound( data_ct4_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct4_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct4_d , 3) < tsize(3) ) then
+                deallocate(data_ct4_d)
+                allocate(data_ct4_d(tsize(1),tsize(2),tsize(3)))
+                p => data_ct4_d
+                lockedct4 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_ct4_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedct5 ) then
+          if ( .not. allocated( data_ct5_d ) ) then
+              allocate(data_ct5_d(tsize(1),tsize(2),tsize(3)))
+              p => data_ct5_d
+              lockedct5 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_ct5_d ), tsize
+              
+              if ( ubound( data_ct5_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct5_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct5_d , 3) >= tsize(3) ) then
+                p => data_ct5_d
+                lockedct5 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_ct5_d ), tsize
+                return
+              else if ( ubound( data_ct5_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct5_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct5_d , 3) < tsize(3) ) then
+                deallocate(data_ct5_d)
+                allocate(data_ct5_d(tsize(1),tsize(2),tsize(3)))
+                p => data_ct5_d
+                lockedct5 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_ct5_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedct6 ) then
+          if ( .not. allocated( data_ct6_d ) ) then
+              allocate(data_ct6_d(tsize(1),tsize(2),tsize(3)))
+              p => data_ct6_d
+              lockedct6 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_ct6_d ), tsize
+              
+              if ( ubound( data_ct6_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct6_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct6_d , 3) >= tsize(3) ) then
+                p => data_ct6_d
+                lockedct6 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_ct6_d ), tsize
+                return
+              else if ( ubound( data_ct6_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct6_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct6_d , 3) < tsize(3) ) then
+                deallocate(data_ct6_d)
+                allocate(data_ct6_d(tsize(1),tsize(2),tsize(3)))
+                p => data_ct6_d
+                lockedct6 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_ct6_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedct7 ) then
+          if ( .not. allocated( data_ct7_d ) ) then
+              allocate(data_ct7_d(tsize(1),tsize(2),tsize(3)))
+              p => data_ct7_d
+              lockedct7 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_ct7_d ), tsize
+              
+              if ( ubound( data_ct7_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct7_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct7_d , 3) >= tsize(3) ) then
+                p => data_ct7_d
+                lockedct7 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_ct7_d ), tsize
+                return
+              else if ( ubound( data_ct7_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct7_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct7_d , 3) < tsize(3) ) then
+                deallocate(data_ct7_d)
+                allocate(data_ct7_d(tsize(1),tsize(2),tsize(3)))
+                p => data_ct7_d
+                lockedct7 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_ct7_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedct8 ) then
+          if ( .not. allocated( data_ct8_d ) ) then
+              allocate(data_ct8_d(tsize(1),tsize(2),tsize(3)))
+              p => data_ct8_d
+              lockedct8 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_ct8_d ), tsize
+              
+              if ( ubound( data_ct8_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct8_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct8_d , 3) >= tsize(3) ) then
+                p => data_ct8_d
+                lockedct8 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_ct8_d ), tsize
+                return
+              else if ( ubound( data_ct8_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct8_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct8_d , 3) < tsize(3) ) then
+                deallocate(data_ct8_d)
+                allocate(data_ct8_d(tsize(1),tsize(2),tsize(3)))
+                p => data_ct8_d
+                lockedct8 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_ct8_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+      if ( .not. lockedct9 ) then
+          if ( .not. allocated( data_ct9_d ) ) then
+              allocate(data_ct9_d(tsize(1),tsize(2),tsize(3)))
+              p => data_ct9_d
+              lockedct9 = .true.
+              if (this%verbose) write(*, 103) i
+              return
+          else
+              if (this%verbose) write(*, 101) i, shape(data_ct9_d ), tsize
+              
+              if ( ubound( data_ct9_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct9_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct9_d , 3) >= tsize(3) ) then
+                p => data_ct9_d
+                lockedct9 = .true.
+                if (this%verbose) write(*, 1021) i, shape(data_ct9_d ), tsize
+                return
+              else if ( ubound( data_ct9_d , 1) == tsize(1) .and. &
+                   &  ubound( data_ct9_d , 2) == tsize(2) .and. &
+                   &  ubound( data_ct9_d , 3) < tsize(3) ) then
+                deallocate(data_ct9_d)
+                allocate(data_ct9_d(tsize(1),tsize(2),tsize(3)))
+                p => data_ct9_d
+                lockedct9 = .true.
+                if (this%verbose) write(*, 1022) i, shape(data_ct9_d ), tsize
+                return
+              endif
+              
+          endif
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 10
+      !
+10  CONTINUE 
+
+    write(*, 104) 
+    allocate(p(tsize(1),tsize(2),tsize(3)))
+    info = -1
+    !
+    100 FORMAT ("Locking a buffer for an complex(DP), pinned tensor ", 3I4, " elements long")
+    101 FORMAT ("Trying buffer ", I2 , " with size ", 3I4, " elements long for ", 3I4)
+    1021 FORMAT ("Chose buffer ", I2 , " with size ", 3I4, " elements long for ", 3I4)
+    1022 FORMAT ("Reallocated buffer ", I2 , " with size ", 3I4, " elements long for ", 3I4)
+    103 FORMAT ("Buffer ", I2 , " is free but not allocated. Allocated and Locked.")
+    104 FORMAT ("WARNING: no free buffers found. Allocated space outside buffers.")
+  end subroutine lock_buffer_ct
+
+  !
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_iv(this, p, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(inout) :: p(:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+    integer :: i
+    ! add omp critical here
+    info = 0
+    i = 0
+      if (associated(p, data_iv0_d )) then
+        nullify(p)
+        lockediv0 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_iv1_d )) then
+        nullify(p)
+        lockediv1 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_iv2_d )) then
+        nullify(p)
+        lockediv2 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_iv3_d )) then
+        nullify(p)
+        lockediv3 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_iv4_d )) then
+        nullify(p)
+        lockediv4 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_iv5_d )) then
+        nullify(p)
+        lockediv5 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_iv6_d )) then
+        nullify(p)
+        lockediv6 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_iv7_d )) then
+        nullify(p)
+        lockediv7 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_iv8_d )) then
+        nullify(p)
+        lockediv8 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_iv9_d )) then
+        nullify(p)
+        lockediv9 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+20  CONTINUE 
+    ! if this point is reached, the pointer was outside the buffers,
+    !deallocate it
+    info = -1
+    if (associated(p)) then
+      deallocate(p)
+      nullify(p)
+    else
+      info = -2
+      if (this%verbose) write(*,102) 
+    end if
+    
+    if (this%verbose) write(*,101) 
+    100 FORMAT ("Pointer passed to release_buffer matched buffer integer, pinned ", I2,". Buffer released, pointer set to NULL.")
+    101 FORMAT ("Pointer passed to release_buffer did not match any buffer! Data deallocated, pointer set to NULL.")
+    102 FORMAT ("WARNING: Pointer passed to release_buffer is not associated! Pointer set to NULL.")
+  end subroutine release_buffer_iv
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_im(this, p, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(inout) :: p(:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+    integer :: i
+    ! add omp critical here
+    info = 0
+    i = 0
+      if (associated(p, data_im0_d )) then
+        nullify(p)
+        lockedim0 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_im1_d )) then
+        nullify(p)
+        lockedim1 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_im2_d )) then
+        nullify(p)
+        lockedim2 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_im3_d )) then
+        nullify(p)
+        lockedim3 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_im4_d )) then
+        nullify(p)
+        lockedim4 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_im5_d )) then
+        nullify(p)
+        lockedim5 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_im6_d )) then
+        nullify(p)
+        lockedim6 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_im7_d )) then
+        nullify(p)
+        lockedim7 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_im8_d )) then
+        nullify(p)
+        lockedim8 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_im9_d )) then
+        nullify(p)
+        lockedim9 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+20  CONTINUE 
+    ! if this point is reached, the pointer was outside the buffers,
+    !deallocate it
+    info = -1
+    if (associated(p)) then
+      deallocate(p)
+      nullify(p)
+    else
+      info = -2
+      if (this%verbose) write(*,102) 
+    end if
+    
+    if (this%verbose) write(*,101) 
+    100 FORMAT ("Pointer passed to release_buffer matched buffer integer, pinned ", I2,". Buffer released, pointer set to NULL.")
+    101 FORMAT ("Pointer passed to release_buffer did not match any buffer! Data deallocated, pointer set to NULL.")
+    102 FORMAT ("WARNING: Pointer passed to release_buffer is not associated! Pointer set to NULL.")
+  end subroutine release_buffer_im
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_it(this, p, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(inout) :: p(:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+    integer :: i
+    ! add omp critical here
+    info = 0
+    i = 0
+      if (associated(p, data_it0_d )) then
+        nullify(p)
+        lockedit0 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_it1_d )) then
+        nullify(p)
+        lockedit1 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_it2_d )) then
+        nullify(p)
+        lockedit2 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_it3_d )) then
+        nullify(p)
+        lockedit3 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_it4_d )) then
+        nullify(p)
+        lockedit4 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_it5_d )) then
+        nullify(p)
+        lockedit5 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_it6_d )) then
+        nullify(p)
+        lockedit6 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_it7_d )) then
+        nullify(p)
+        lockedit7 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_it8_d )) then
+        nullify(p)
+        lockedit8 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_it9_d )) then
+        nullify(p)
+        lockedit9 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+20  CONTINUE 
+    ! if this point is reached, the pointer was outside the buffers,
+    !deallocate it
+    info = -1
+    if (associated(p)) then
+      deallocate(p)
+      nullify(p)
+    else
+      info = -2
+      if (this%verbose) write(*,102) 
+    end if
+    
+    if (this%verbose) write(*,101) 
+    100 FORMAT ("Pointer passed to release_buffer matched buffer integer, pinned ", I2,". Buffer released, pointer set to NULL.")
+    101 FORMAT ("Pointer passed to release_buffer did not match any buffer! Data deallocated, pointer set to NULL.")
+    102 FORMAT ("WARNING: Pointer passed to release_buffer is not associated! Pointer set to NULL.")
+  end subroutine release_buffer_it
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_rv(this, p, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(inout) :: p(:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+    integer :: i
+    ! add omp critical here
+    info = 0
+    i = 0
+      if (associated(p, data_rv0_d )) then
+        nullify(p)
+        lockedrv0 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rv1_d )) then
+        nullify(p)
+        lockedrv1 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rv2_d )) then
+        nullify(p)
+        lockedrv2 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rv3_d )) then
+        nullify(p)
+        lockedrv3 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rv4_d )) then
+        nullify(p)
+        lockedrv4 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rv5_d )) then
+        nullify(p)
+        lockedrv5 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rv6_d )) then
+        nullify(p)
+        lockedrv6 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rv7_d )) then
+        nullify(p)
+        lockedrv7 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rv8_d )) then
+        nullify(p)
+        lockedrv8 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rv9_d )) then
+        nullify(p)
+        lockedrv9 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+20  CONTINUE 
+    ! if this point is reached, the pointer was outside the buffers,
+    !deallocate it
+    info = -1
+    if (associated(p)) then
+      deallocate(p)
+      nullify(p)
+    else
+      info = -2
+      if (this%verbose) write(*,102) 
+    end if
+    
+    if (this%verbose) write(*,101) 
+    100 FORMAT ("Pointer passed to release_buffer matched buffer real(DP), pinned ", I2,". Buffer released, pointer set to NULL.")
+    101 FORMAT ("Pointer passed to release_buffer did not match any buffer! Data deallocated, pointer set to NULL.")
+    102 FORMAT ("WARNING: Pointer passed to release_buffer is not associated! Pointer set to NULL.")
+  end subroutine release_buffer_rv
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_rm(this, p, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(inout) :: p(:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+    integer :: i
+    ! add omp critical here
+    info = 0
+    i = 0
+      if (associated(p, data_rm0_d )) then
+        nullify(p)
+        lockedrm0 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rm1_d )) then
+        nullify(p)
+        lockedrm1 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rm2_d )) then
+        nullify(p)
+        lockedrm2 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rm3_d )) then
+        nullify(p)
+        lockedrm3 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rm4_d )) then
+        nullify(p)
+        lockedrm4 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rm5_d )) then
+        nullify(p)
+        lockedrm5 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rm6_d )) then
+        nullify(p)
+        lockedrm6 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rm7_d )) then
+        nullify(p)
+        lockedrm7 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rm8_d )) then
+        nullify(p)
+        lockedrm8 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rm9_d )) then
+        nullify(p)
+        lockedrm9 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+20  CONTINUE 
+    ! if this point is reached, the pointer was outside the buffers,
+    !deallocate it
+    info = -1
+    if (associated(p)) then
+      deallocate(p)
+      nullify(p)
+    else
+      info = -2
+      if (this%verbose) write(*,102) 
+    end if
+    
+    if (this%verbose) write(*,101) 
+    100 FORMAT ("Pointer passed to release_buffer matched buffer real(DP), pinned ", I2,". Buffer released, pointer set to NULL.")
+    101 FORMAT ("Pointer passed to release_buffer did not match any buffer! Data deallocated, pointer set to NULL.")
+    102 FORMAT ("WARNING: Pointer passed to release_buffer is not associated! Pointer set to NULL.")
+  end subroutine release_buffer_rm
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_rt(this, p, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(inout) :: p(:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+    integer :: i
+    ! add omp critical here
+    info = 0
+    i = 0
+      if (associated(p, data_rt0_d )) then
+        nullify(p)
+        lockedrt0 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rt1_d )) then
+        nullify(p)
+        lockedrt1 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rt2_d )) then
+        nullify(p)
+        lockedrt2 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rt3_d )) then
+        nullify(p)
+        lockedrt3 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rt4_d )) then
+        nullify(p)
+        lockedrt4 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rt5_d )) then
+        nullify(p)
+        lockedrt5 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rt6_d )) then
+        nullify(p)
+        lockedrt6 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rt7_d )) then
+        nullify(p)
+        lockedrt7 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rt8_d )) then
+        nullify(p)
+        lockedrt8 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_rt9_d )) then
+        nullify(p)
+        lockedrt9 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+20  CONTINUE 
+    ! if this point is reached, the pointer was outside the buffers,
+    !deallocate it
+    info = -1
+    if (associated(p)) then
+      deallocate(p)
+      nullify(p)
+    else
+      info = -2
+      if (this%verbose) write(*,102) 
+    end if
+    
+    if (this%verbose) write(*,101) 
+    100 FORMAT ("Pointer passed to release_buffer matched buffer real(DP), pinned ", I2,". Buffer released, pointer set to NULL.")
+    101 FORMAT ("Pointer passed to release_buffer did not match any buffer! Data deallocated, pointer set to NULL.")
+    102 FORMAT ("WARNING: Pointer passed to release_buffer is not associated! Pointer set to NULL.")
+  end subroutine release_buffer_rt
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_cv(this, p, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(inout) :: p(:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+    integer :: i
+    ! add omp critical here
+    info = 0
+    i = 0
+      if (associated(p, data_cv0_d )) then
+        nullify(p)
+        lockedcv0 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cv1_d )) then
+        nullify(p)
+        lockedcv1 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cv2_d )) then
+        nullify(p)
+        lockedcv2 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cv3_d )) then
+        nullify(p)
+        lockedcv3 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cv4_d )) then
+        nullify(p)
+        lockedcv4 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cv5_d )) then
+        nullify(p)
+        lockedcv5 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cv6_d )) then
+        nullify(p)
+        lockedcv6 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cv7_d )) then
+        nullify(p)
+        lockedcv7 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cv8_d )) then
+        nullify(p)
+        lockedcv8 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cv9_d )) then
+        nullify(p)
+        lockedcv9 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+20  CONTINUE 
+    ! if this point is reached, the pointer was outside the buffers,
+    !deallocate it
+    info = -1
+    if (associated(p)) then
+      deallocate(p)
+      nullify(p)
+    else
+      info = -2
+      if (this%verbose) write(*,102) 
+    end if
+    
+    if (this%verbose) write(*,101) 
+    100 FORMAT ("Pointer passed to release_buffer matched buffer complex(DP), pinned ", I2,". Buffer released, pointer set to NULL.")
+    101 FORMAT ("Pointer passed to release_buffer did not match any buffer! Data deallocated, pointer set to NULL.")
+    102 FORMAT ("WARNING: Pointer passed to release_buffer is not associated! Pointer set to NULL.")
+  end subroutine release_buffer_cv
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_cm(this, p, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(inout) :: p(:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+    integer :: i
+    ! add omp critical here
+    info = 0
+    i = 0
+      if (associated(p, data_cm0_d )) then
+        nullify(p)
+        lockedcm0 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cm1_d )) then
+        nullify(p)
+        lockedcm1 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cm2_d )) then
+        nullify(p)
+        lockedcm2 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cm3_d )) then
+        nullify(p)
+        lockedcm3 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cm4_d )) then
+        nullify(p)
+        lockedcm4 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cm5_d )) then
+        nullify(p)
+        lockedcm5 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cm6_d )) then
+        nullify(p)
+        lockedcm6 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cm7_d )) then
+        nullify(p)
+        lockedcm7 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cm8_d )) then
+        nullify(p)
+        lockedcm8 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_cm9_d )) then
+        nullify(p)
+        lockedcm9 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+20  CONTINUE 
+    ! if this point is reached, the pointer was outside the buffers,
+    !deallocate it
+    info = -1
+    if (associated(p)) then
+      deallocate(p)
+      nullify(p)
+    else
+      info = -2
+      if (this%verbose) write(*,102) 
+    end if
+    
+    if (this%verbose) write(*,101) 
+    100 FORMAT ("Pointer passed to release_buffer matched buffer complex(DP), pinned ", I2,". Buffer released, pointer set to NULL.")
+    101 FORMAT ("Pointer passed to release_buffer did not match any buffer! Data deallocated, pointer set to NULL.")
+    102 FORMAT ("WARNING: Pointer passed to release_buffer is not associated! Pointer set to NULL.")
+  end subroutine release_buffer_cm
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_ct(this, p, info)
+    use cudafor
+    implicit none
+    class(buf_pinned_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(inout) :: p(:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+    integer :: i
+    ! add omp critical here
+    info = 0
+    i = 0
+      if (associated(p, data_ct0_d )) then
+        nullify(p)
+        lockedct0 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_ct1_d )) then
+        nullify(p)
+        lockedct1 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_ct2_d )) then
+        nullify(p)
+        lockedct2 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_ct3_d )) then
+        nullify(p)
+        lockedct3 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_ct4_d )) then
+        nullify(p)
+        lockedct4 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_ct5_d )) then
+        nullify(p)
+        lockedct5 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_ct6_d )) then
+        nullify(p)
+        lockedct6 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_ct7_d )) then
+        nullify(p)
+        lockedct7 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_ct8_d )) then
+        nullify(p)
+        lockedct8 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+      if (associated(p, data_ct9_d )) then
+        nullify(p)
+        lockedct9 = .false.
+        if (this%verbose) write(*,100) i
+        return
+      end if
+      i = i + 1
+      if ( i == this%nbufs ) goto 20
+20  CONTINUE 
+    ! if this point is reached, the pointer was outside the buffers,
+    !deallocate it
+    info = -1
+    if (associated(p)) then
+      deallocate(p)
+      nullify(p)
+    else
+      info = -2
+      if (this%verbose) write(*,102) 
+    end if
+    
+    if (this%verbose) write(*,101) 
+    100 FORMAT ("Pointer passed to release_buffer matched buffer complex(DP), pinned ", I2,". Buffer released, pointer set to NULL.")
+    101 FORMAT ("Pointer passed to release_buffer did not match any buffer! Data deallocated, pointer set to NULL.")
+    102 FORMAT ("WARNING: Pointer passed to release_buffer is not associated! Pointer set to NULL.")
+  end subroutine release_buffer_ct
+
+
+#endif
+end module

@@ -311,6 +311,8 @@ MODULE exx
          exx_divergence
     USE exx_band,             ONLY : change_data_structure, nwordwfc_exx, &
          transform_evc_to_exx, igk_exx, evc_exx
+
+    USE wavefunctions_module_gpum, ONLY : using_evc
     !
     IMPLICIT NONE
     INTEGER :: ik,ibnd, i, j, k, ir, isym, ikq, ig
@@ -1651,6 +1653,8 @@ MODULE exx
     USE uspp,                   ONLY : okvan,nkb,vkb
     USE exx_band,               ONLY : nwordwfc_exx, igk_exx
 
+    USE wavefunctions_module_gpum, ONLY : using_evc
+
     IMPLICIT NONE
 
     TYPE(bec_type) :: becpsi
@@ -1665,6 +1669,8 @@ MODULE exx
 
     IF(okvan) CALL allocate_bec_type( nkb, nbnd, becpsi)
     energy = 0._dp
+
+    CALL using_evc(.false.)
 
     DO ik=1,nks
        npw = ngk (ik)
@@ -2935,6 +2941,8 @@ SUBROUTINE aceinit( exex )
   USE mp,         ONLY : mp_sum
   USE wavefunctions_module, ONLY : evc
   !
+  USE wavefunctions_module_gpum, ONLY : using_evc
+  !
   IMPLICIT NONE
   !
   REAL (DP) :: ee, eexx
@@ -2947,6 +2955,8 @@ SUBROUTINE aceinit( exex )
     CALL errore('aceinit','n_proj must be between occ and tot.',1)
   END IF 
 
+  CALL using_evc(.false.)
+
   IF (.not. allocated(xi)) ALLOCATE( xi(npwx*npol,nbndproj,nks) )
   IF ( okvan ) CALL allocate_bec_type( nkb, nbnd, becpsi)
   eexx = 0.0d0
@@ -2956,6 +2966,7 @@ SUBROUTINE aceinit( exex )
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
      IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
+     IF ( nks > 1 ) CALL using_evc(.true.)
      IF ( okvan ) THEN
         CALL init_us_2(npw, igk_k(1,ik), xk(:,ik), vkb)
         CALL calbec ( npw, vkb, evc, becpsi, nbnd )

@@ -9,6 +9,7 @@
 MODULE qe_buffers
 #if defined(__CUDA)
   USE fbuf_qe, ONLY : bufqe_t
+  USE fbuf_qe_cpu, ONLY : buf_pinned_t
   !
   IMPLICIT NONE
   !
