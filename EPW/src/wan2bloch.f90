@@ -28,7 +28,7 @@
     !           Hamiltonian in Wannier representation chw(nbnd, nbnd, nrr)
     !           kpoint coordinate xk(3)
     !
-    !  output : rotation matrix cuf (nbnd, nbnd)
+    !  output : rotation matrix cuf(nbnd, nbnd)
     !           interpolated hamiltonian eigenvalues eig(nbnd)
     !
     !  SP [optimization]
@@ -38,7 +38,7 @@
     !--------------------------------------------------------------------------
     !
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : czero, cone, eps12
+    USE constants_epw, ONLY : czero, cone, zero, one, eps12
     USE epwcom,        ONLY : lphase
     !
     implicit none
@@ -55,10 +55,10 @@
     ! 
     COMPLEX(kind=DP), INTENT (in) :: cfac(nrr)
     !! Exponential factor
-    COMPLEX(kind=DP), INTENT (in) :: chw ( nbnd, nbnd, nrr)
-    !! Hamiltonian in Bloch basis, fine mesh
+    COMPLEX(kind=DP), INTENT (in) :: chw( nbnd, nbnd, nrr)
+    !! Hamiltonian in Wannier basis
     COMPLEX(kind=DP), INTENT (out) :: cuf(nbnd, nbnd)
-    !! Rotation matrix, fine mesh
+    !! Rotation matrix U^\dagger, fine mesh
     !
     ! variables for lapack ZHPEVX 
     !
@@ -71,8 +71,13 @@
     !
     ! work variables 
     !
-    INTEGER :: ibnd, jbnd
-    COMPLEX(kind=DP) :: chf(nbnd, nbnd) 
+    INTEGER :: ibnd
+    !! Counter on band index
+    INTEGER :: jbnd
+    !! Counter on band index
+    !
+    COMPLEX(kind=DP) :: chf(nbnd, nbnd)
+    !! Hamiltonian in Bloch basis, fine mesh
     COMPLEX(KIND=DP) :: zdotu
     !! Dot product between the two phonon eigenvectors.
     !
@@ -81,13 +86,15 @@
     !  STEP 3: inverse Fourier transform to fine k and k+q meshes
     !----------------------------------------------------------
     !
-    !  H~_k'   = sum_R 1/ndegen(R) e^{-ik'R    } H_k(R)
-    !  H~_k'+q = sum_R 1/ndegen(R) e^{-i(k'+q)R} H_k+q(R)
+    !  [Eqn. 31 of PRB 76, 165108 (2007)]
+    !  H~(k')    = 1/ndegen(R) sum_R e^{ik'R     } H(R)
+    !  H~(k'+q') = 1/ndegen(R) sum_R e^{i(k'+q')R} H(R)
+    !  Note H~(k') is H^(W)(k') in PRB 74, 195118 (2006) notations
     !
-    !  H~_k   is chf ( nbnd, nbnd, 2*ik-1 )
-    !  H~_k+q is chf ( nbnd, nbnd, 2*ik   )
+    !  H~(k')    is chf( nbnd, nbnd, 2*ik-1 )
+    !  H~(k'+q') is chf( nbnd, nbnd, 2*ik   )
     !
-    chf (:,:) = czero
+    chf(:,:) = czero
     !
     ! Previous implementation
     !DO ir = 1, nrr
@@ -96,8 +103,8 @@
     !   cfac = exp( ci*rdotk ) / ndegen(ir)
     !   !
     !   ! SP : Significantly faster !
-    !   !chf (:,:) = chf (:,:) + cfac * chw (:,:, ir )
-    !   CALL zaxpy(nbnd**2,cfac, chw (1,1, ir ),1, chf (1,1),1)
+    !   !chf(:,:) = chf(:,:) + cfac * chw(:,:,ir)
+    !   CALL zaxpy(nbnd**2, cfac, chw(1,1,ir), 1, chf(1,1), 1)
     !   !
     !ENDDO
     ! New one
@@ -112,18 +119,18 @@
     !
     DO jbnd = 1, nbnd
      DO ibnd = 1, jbnd
-        champ (ibnd + (jbnd - 1) * jbnd/2 ) = &
-        ( chf ( ibnd, jbnd) + conjg ( chf ( jbnd, ibnd) ) ) * 0.5d0
+        champ(ibnd + (jbnd - 1) * jbnd/2 ) = &
+        ( chf( ibnd, jbnd) + conjg ( chf( jbnd, ibnd) ) ) * 0.5d0
      ENDDO
     ENDDO
     !
-    CALL zhpevx ('V', 'A', 'U', nbnd, champ , 0.0, 0.0, &
-                 0, 0,-1.0, neig, w, cz, nbnd, cwork, &
+    CALL zhpevx ('V', 'A', 'U', nbnd, champ , zero, zero, &
+                 0, 0, -one, neig, w, cz, nbnd, cwork, &
                  rwork, iwork, ifail, info)
     ! clean noise
     DO jbnd = 1, nbnd
       DO ibnd = 1, nbnd
-        IF ( ABS( cz(ibnd,jbnd) ) < eps12 ) cz(ibnd,jbnd) = cmplx(0.d0,0.d0, kind=DP)
+        IF ( ABS( cz(ibnd,jbnd) ) < eps12 ) cz(ibnd,jbnd) = czero
       ENDDO
     ENDDO
     !  
@@ -140,9 +147,11 @@
       ENDDO
     ENDIF
     ! 
-    ! rotation matrix and Ham eigenvalues 
-    ! [in Ry, mind when comparing with wannier code]
+    ! rotation matrix and Ham eigenvalues in Ryd
+    ! [mind when comparing with wannier code (eV units)]
     ! 
+    ! U^\dagger is cuf(nbnd,nbnd)
+    !
     cuf = conjg( transpose ( cz ) )
     eig = w 
     !
@@ -155,7 +164,7 @@
     !--------------------------------------------------------------------------
     !!
     !!
-    !!  WARNING: this SUBROUTINE is identical to hamwan2bloch.f90, except
+    !!  WARNING: this subroutine is identical to hamwan2bloch.f90, except
     !!           that here rdw is a real array, not a complex one. This is
     !!           required to obtain proper phonon dispersion interpolation
     !!           and corresponds to the reality of the interatomic force
@@ -174,38 +183,54 @@
     USE ions_base, ONLY : amass, tau, nat, ityp
     USE elph2,     ONLY : rdw, epsi, zstar
     USE epwcom,    ONLY : lpolar, lphase
-    USE constants_epw, ONLY : twopi, ci, czero, eps12
+    USE constants_epw, ONLY : twopi, ci, czero, zero, one, eps12
     !
     implicit none
     !
     INTEGER, INTENT (in) :: nmodes
     !! number of modes (possibly of the optimal subspace)
     INTEGER, INTENT (in) :: nrr
-    !! kpoint number for the interpolation
-    INTEGER, INTENT (in) :: irvec (3, nrr)
-    !! record length and unit for direct write of rotation matrix
-    INTEGER, INTENT (in) :: ndegen (nrr)
-    !! number of WS points, crystal coordinates, degeneracy
+    !! number of WS points
+    INTEGER, INTENT (in) :: irvec(3, nrr)
+    !! coordinates of phononic WS points
+    INTEGER, INTENT (in) :: ndegen(nrr)
+    !! degeneracy of WS points
     !
-    REAL(kind=DP), INTENT (in) :: xxq (3)
+    REAL(kind=DP), INTENT (in) :: xxq(3)
     !! kpoint coordinates for the interpolation
-    REAL(kind=DP), INTENT (out) :: eig (nmodes)
-    !! interpolated hamiltonian eigenvalues for this kpoint
+    REAL(kind=DP), INTENT (out) :: eig(nmodes)
+    !! interpolated dynamical matrix eigenvalues for this kpoint
     COMPLEX(kind=DP), INTENT (out) :: cuf(nmodes, nmodes)
     !! Rotation matrix, fine mesh 
     !
     ! work variables
-    ! variables for lapack ZHPEVX
-    integer :: neig, info, ifail( nmodes ), iwork( 5*nmodes )
-    integer :: imode, jmode, ir, na, nb
-    real(kind=DP) :: w( nmodes ), rwork( 7*nmodes )
     !
-    real(kind=DP) :: xq (3)
-    real(kind=DP) :: rdotk, massfac
+    ! variables for lapack ZHPEVX
+    INTEGER :: neig, info, ifail( nmodes ), iwork( 5*nmodes )
+    REAL(kind=DP) :: w( nmodes ), rwork( 7*nmodes )
+    COMPLEX(kind=DP) :: champ( nmodes*(nmodes+1)/2 )
+    COMPLEX(kind=DP) :: cwork( 2*nmodes ), cz( nmodes, nmodes)
+    !
+    INTEGER :: imode
+    !! Counter on modes
+    INTEGER :: jmode
+    !! Counter on modes
+    INTEGER :: ir
+    !! Counter on real-space index
+    INTEGER :: na
+    !! Counter on atoms
+    INTEGER :: nb
+    !! Counter on atoms
+    !
+    REAL(kind=DP) :: xq(3)
+    !! Coordinates q-point
+    REAL(kind=DP) :: rdotk
+    !! $$\mathbf{r}\cdot\mathbf{k}   
+    REAL(kind=DP) :: massfac
+    !! inverse square root of masses
+    !
     COMPLEX(kind=DP) :: chf(nmodes, nmodes)
-    ! Hamiltonian in Bloch basis, fine mesh
-    COMPLEX(kind=DP) :: champ( nmodes*(nmodes+1)/2 ), &
-      cwork( 2*nmodes ), cz( nmodes, nmodes)
+    ! Dynamical matrix in Bloch basis, fine mesh
     COMPLEX(kind=DP) :: cfac
     !! Complex prefactor for Fourier transform. 
     COMPLEX(KIND=DP) :: zdotu
@@ -216,20 +241,21 @@
     !  STEP 3: inverse Fourier transform to fine k and k+q meshes
     !----------------------------------------------------------
     !
-    !  H~_k'   = sum_R 1/ndegen(R) e^{-ik'R    } H_k(R)
-    !  H~_k'+q = sum_R 1/ndegen(R) e^{-i(k'+q)R} H_k+q(R)
+    !  [Eqn. 32 of PRB 76, 165108 (2007)]
+    !  D~(k')    = 1/ndegen(R) sum_R e^{ik'R     } D(R)
+    !  D~(k'+q') = 1/ndegen(R) sum_R e^{i(k'+q')R} D(R)
     !
-    !  H~_k   is chf ( nmodes, nmodes, 2*ik-1 )
-    !  H~_k+q is chf ( nmodes, nmodes, 2*ik   )
+    !  D~(k')    is chf ( nmodes, nmodes, 2*ik-1 )
+    !  D~(k'+q') is chf ( nmodes, nmodes, 2*ik   )
     !
     xq = xxq
-    chf (:,:) = czero
+    chf(:,:) = czero
     !
     DO ir = 1, nrr
       !
       rdotk = twopi * dot_product( xq, dble(irvec( :, ir) ))
       cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
-      chf = chf + cfac * rdw (:,:, ir )
+      chf = chf + cfac * rdw(:,:, ir )
       !
     ENDDO
     !
@@ -267,19 +293,19 @@
     !
     DO jmode = 1, nmodes
      DO imode = 1, jmode
-       champ (imode + (jmode - 1) * jmode/2 ) = &
-       ( chf ( imode, jmode) + conjg ( chf ( jmode, imode) ) ) / 2.d0
+       champ(imode + (jmode - 1) * jmode/2 ) = &
+       ( chf( imode, jmode) + conjg ( chf( jmode, imode) ) ) * 0.5d0
      ENDDO
     ENDDO
     !
-    CALL zhpevx ('V', 'A', 'U', nmodes, champ , 0.0, 0.0, &
-                 0, 0,-1.0, neig, w, cz, nmodes, cwork, &
+    CALL zhpevx ('V', 'A', 'U', nmodes, champ, zero, zero, &
+                 0, 0, -one, neig, w, cz, nmodes, cwork, &
                  rwork, iwork, ifail, info)
     ! 
     ! clean noise
     DO jmode=1,nmodes
       DO imode=1,nmodes
-        IF ( ABS( cz(imode,jmode) ) < eps12 ) cz(imode,jmode) = cmplx(0.d0,0.d0, kind=DP)
+        IF ( ABS( cz(imode,jmode) ) < eps12 ) cz(imode,jmode) = czero
       ENDDO
     ENDDO
     ! 
@@ -295,9 +321,8 @@
         END DO INNER
       ENDDO
     ENDIF
-    ! 
-    ! rotation matrix and Ham eigenvalues
-    ! [in Ry, mind when comparing with wannier code]
+    !
+    ! cuf(nmodes,nmodes) is rotation matrix (eigenmodes e_k)
     !
     cuf = cz
     eig = w
@@ -322,7 +347,7 @@
     USE ions_base, ONLY : amass, tau, nat, ityp
     USE elph2,     ONLY : ifc, epsi, zstar
     USE epwcom,    ONLY : lpolar
-    USE constants_epw, ONLY : twopi, czero
+    USE constants_epw, ONLY : twopi, czero, zero, one
     USE io_global, ONLY : stdout
     !
     implicit none
@@ -343,20 +368,45 @@
     !! Rotation matrix, fine mesh 
     !
     ! work variables
+    !
     ! variables for lapack ZHPEVX
     INTEGER :: neig, info, ifail( nmodes ), iwork( 5*nmodes )
     REAL(kind=DP) :: w( nmodes ), rwork( 7*nmodes )
     COMPLEX(kind=DP) :: champ( nmodes*(nmodes+1)/2 )
     COMPLEX(kind=DP) :: cwork( 2*nmodes ), cz( nmodes, nmodes)
     !
-    LOGICAL,SAVE :: first=.true.
-    INTEGER :: imode, jmode, na, nb, n1,n2,n3, m1,m2,m3, ipol,jpol, i
-    REAL(kind=DP) :: xq (3)
+    LOGICAL, SAVE :: first=.true.
+    !
+    INTEGER :: n1,n2,n3, m1,m2,m3, i
+    !! 
+    INTEGER :: imode
+    !! Counter on modes
+    INTEGER :: jmode
+    !! Counter on modes
+    INTEGER :: ir
+    !! Counter on real-space index
+    INTEGER :: na
+    !! Counter on atoms
+    INTEGER :: nb
+    !! Counter on atoms
+    INTEGER :: ipol
+    !! Counter on polarizations
+    INTEGER :: jpol
+    !! Counter on polarizations
+    !
+    REAL(kind=DP) :: xq(3)
+    !! Coordinates q-point
     REAL(kind=DP) :: massfac
+    !! inverse square root of masses
+    !
     REAL(kind=DP), EXTERNAL :: wsweight
-    REAL(kind=DP),SAVE,ALLOCATABLE :: wscache(:,:,:,:,:)
+    REAL(kind=DP), SAVE, ALLOCATABLE :: wscache(:,:,:,:,:)
     REAL(kind=DP) total_weight, weight, arg, r(3), r_ws(3)
-    COMPLEX(kind=DP) :: chf(nmodes, nmodes), dyn(3,3,nat,nat)
+    !
+    COMPLEX(kind=DP) :: chf(nmodes, nmodes)
+    !! Dynamical matrix in Bloch basis, fine mesh
+    COMPLEX(kind=DP) :: dyn(3,3,nat,nat)
+    !! Dynamical matrix
     !
     xq = xxq
     ! bring xq in cart. coordinates
@@ -367,7 +417,7 @@
       ALLOCATE( wscache(-2*nq3:2*nq3, -2*nq2:2*nq2, -2*nq1:2*nq1, nat,nat) )
       DO na=1, nat
          DO nb=1, nat
-            total_weight=0.0d0
+            total_weight = zero
             !
             DO n1=-2*nq1,2*nq1
                DO n2=-2*nq2,2*nq2
@@ -389,18 +439,19 @@
     !  STEP 3: inverse Fourier transform to fine k and k+q meshes
     !----------------------------------------------------------
     !
-    !  H~_k'   = sum_R 1/ndegen(R) e^{-ik'R    } H_k(R)
-    !  H~_k'+q = sum_R 1/ndegen(R) e^{-i(k'+q)R} H_k+q(R)
+    !  [Eqn. 32 of PRB 76, 165108 (2007)]
+    !  D~(k')    = 1/ndegen(R) sum_R e^{ik'R     } D(R)
+    !  D~(k'+q') = 1/ndegen(R) sum_R e^{i(k'+q')R} D(R)
     !
-    !  H~_k   is chf ( nmodes, nmodes, 2*ik-1 )
-    !  H~_k+q is chf ( nmodes, nmodes, 2*ik   )
+    !  D~(k')    is chf ( nmodes, nmodes, 2*ik-1 )
+    !  D~(k'+q') is chf ( nmodes, nmodes, 2*ik   )
     !
     chf = czero
     dyn = czero
     !
     DO na=1, nat
        DO nb=1, nat
-          total_weight=0.0d0
+          total_weight=zero
           DO n1=-2*nq1,2*nq1
              DO n2=-2*nq2,2*nq2
                 DO n3=-2*nq3,2*nq3
@@ -482,16 +533,15 @@
     DO jmode = 1, nmodes
      DO imode = 1, jmode
         champ (imode + (jmode - 1) * jmode/2 ) = &
-        ( chf ( imode, jmode) + conjg ( chf ( jmode, imode) ) ) / 2.d0
+        ( chf ( imode, jmode) + conjg ( chf ( jmode, imode) ) ) * 0.5d0
      ENDDO
     ENDDO
     !
-    CALL zhpevx ('V', 'A', 'U', nmodes, champ , 0.0, 0.0, &
-                 0, 0,-1.0, neig, w, cz, nmodes, cwork, &
+    CALL zhpevx ('V', 'A', 'U', nmodes, champ , zero, zero, &
+                 0, 0, -one, neig, w, cz, nmodes, cwork, &
                  rwork, iwork, ifail, info)
     !
-    ! rotation matrix and Ham eigenvalues
-    ! [in Ry, mind when comparing with wannier code]
+    ! cuf(nmodes,nmodes) is rotation matrix (eigenmodes e_k)
     !
     cuf = cz
     eig = w
@@ -516,7 +566,7 @@
     USE ions_base, ONLY : tau, nat
     USE elph2,     ONLY : ifc, epsi, zstar
     USE epwcom,    ONLY : lpolar
-    USE constants_epw, ONLY : twopi, czero
+    USE constants_epw, ONLY : twopi, czero, zero
     USE io_global, ONLY : stdout
     !
     implicit none
@@ -529,7 +579,7 @@
     !!INTEGER, INTENT (in) :: rws(0:3,nrws)
     REAL(kind=DP), INTENT (in) :: rws(0:3,nrws)
     !! Wigner-Seitz radius 
-    REAL(kind=DP), INTENT (in) :: xq (3)
+    REAL(kind=DP), INTENT (in) :: xq(3)
     !! qpoint coordinates for the interpolation
     COMPLEX(kind=DP), INTENT (out) :: chf(nmodes, nmodes)
     !! dyn mat (not divided by the masses)
@@ -538,11 +588,24 @@
     !
     ! Dyn mat in Bloch basis, fine mesh
     LOGICAL,SAVE :: first=.true.
-    INTEGER :: na, nb, n1,n2,n3, m1,m2,m3, ipol,jpol, i
+    !
+    INTEGER :: n1,n2,n3, m1,m2,m3, i
+    !! 
+    INTEGER :: na
+    !! Counter on atoms
+    INTEGER :: nb
+    !! Counter on atoms
+    INTEGER :: ipol
+    !! Counter on polarizations
+    INTEGER :: jpol
+    !! Counter on polarizations
+    !
     REAL(kind=DP), EXTERNAL :: wsweight
-    REAL(kind=DP),SAVE,ALLOCATABLE :: wscache(:,:,:,:,:)
+    REAL(kind=DP), SAVE, ALLOCATABLE :: wscache(:,:,:,:,:)
     REAL(kind=DP) total_weight, weight, arg, r(3), r_ws(3)  
+    !
     COMPLEX(kind=DP) :: dyn(3,3,nat,nat)
+    !! Dynamical matrix
     !
     ! bring xq in cart. coordinates
     !CALL cryst_to_cart (1, xq, bg, 1)
@@ -552,7 +615,7 @@
       ALLOCATE( wscache(-2*nq3:2*nq3, -2*nq2:2*nq2, -2*nq1:2*nq1, nat,nat) )
       DO na=1, nat
          DO nb=1, nat
-            total_weight=0.0d0
+            total_weight = zero
             !
             DO n1=-2*nq1,2*nq1
                DO n2=-2*nq2,2*nq2
@@ -574,7 +637,7 @@
     !
     DO na=1, nat
        DO nb=1, nat
-          total_weight=0.0d0
+          total_weight = zero
           DO n1=-2*nq1,2*nq1
              DO n2=-2*nq2,2*nq2
                 DO n3=-2*nq3,2*nq3
@@ -657,7 +720,7 @@
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : cdmew
     USE epwcom,        ONLY : eig_read
-    USE constants_epw, ONLY : cone, czero
+    USE constants_epw, ONLY : cone, czero, eps4
     !
     implicit none
     !
@@ -666,76 +729,87 @@
     INTEGER, INTENT (in) :: nrr 
     !! kpoint number for the interpolation
     !
-    REAL(kind=DP), INTENT (in) :: etf (nbnd)
+    REAL(kind=DP), INTENT (in) :: etf(nbnd)
     !! Eigenenergies on the fine grid
-    REAL(kind=DP), INTENT (in) :: etf_ks (nbnd) 
-    !! 
-    COMPLEX(kind=DP), INTENT (in) :: cuf (nbnd, nbnd)
-    !! Rotation matrix, fine mesh 
-    COMPLEX(kind=DP), INTENT (out) :: dmef (3, nbnd, nbnd)
+    REAL(kind=DP), INTENT (in) :: etf_ks(nbnd) 
+    !! Kohn-Sham eigenvalues
+    !
+    COMPLEX(kind=DP), INTENT (in) :: cuf(nbnd, nbnd)
+    !! Rotation matrix U^\dagger, fine mesh 
+    COMPLEX(kind=DP), INTENT (out) :: dmef(3, nbnd, nbnd)
     !! interpolated dipole matrix elements in Bloch basis, fine mesh
     COMPLEX(kind=DP), INTENT (in) :: cfac(nrr)
+    !! Exponential factor
     ! 
     ! local variables
     !
-    INTEGER :: ibnd, jbnd, j 
-    COMPLEX( kind=DP ) :: congj_cuf (nbnd, nbnd)
-    COMPLEX( kind=DP ) :: cdmef (3, nbnd, nbnd)
-    COMPLEX( kind=DP ) :: cdmef_tmp (3, nbnd, nbnd)
-    ! dipole matrix elements in Bloch basis, fine mesh
+    INTEGER :: ibnd
+    !! Counter on band index
+    INTEGER :: jbnd
+    !! Counter on band index
+    INTEGER :: ipol
+    !! Counter on polarization
+    !
+    COMPLEX( kind=DP ) :: cdmef(3, nbnd, nbnd)
+    !! dipole matrix elements in Bloch basis, fine mesh
+    COMPLEX( kind=DP ) :: cdmef_tmp(nbnd, nbnd)
+    !! dipole matrix elements in Bloch basis, fine mesh
+    !
+    ! Initialization
+    cdmef_tmp(:,:) = czero
+    dmef(:,:,:) = czero
+    cdmef(:,:,:) = czero
     !
     !----------------------------------------------------------
     !  STEP 3: inverse Fourier transform to fine k and k+q meshes
     !----------------------------------------------------------
     !
-    !  H~_k'   = sum_R 1/ndegen(R) e^{-ik'R    } H_k(R)
-    !  H~_k'+q = sum_R 1/ndegen(R) e^{-i(k'+q)R} H_k+q(R)
+    !  p~(k')    = 1/ndegen(R) sum_R e^{ik'R     } p(R)
+    !  p~(k'+q') = 1/ndegen(R) sum_R e^{i(k'+q')R} p(R)
+    !  Note p~(k') is p^(W)(k') in PRB 74, 195118 (2006) notations
     !
-    !  H~_k   is chf ( nbnd, nbnd, 2*ik-1 )
-    !  H~_k+q is chf ( nbnd, nbnd, 2*ik   )
+    !  p~(k' )   is chf( nbnd, nbnd, 2*ik-1 )
+    !  p~(k'+q') is chf( nbnd, nbnd, 2*ik   )
     !
-    ! Initialization
-    cdmef_tmp (:,:,:) = czero
-    dmef (:,:,: ) = czero
-    cdmef (:,:,:) = czero
-    !   
-    ! SUM on ir of: cdmef (1,ibnd,jbnd) = cdmef (1,ibnd,jbnd) + cfac( ir) * cdmew (1, ibnd,jbnd, ir )
+    ! SUM on ir of: cdmef(1,ibnd,jbnd) = cdmef(1,ibnd,jbnd) + cfac(ir) * cdmew(1,ibnd,jbnd,ir)
     CALL zgemv('n', 3*(nbnd**2), nrr, cone, cdmew(:,:,:,:), 3*(nbnd**2), cfac(:), 1, cone, cdmef(:,:,:), 1  )
-    ! 
     !
-    ! pmn(k) = U p~ U^dagger
-    ! cuf,  passed from hamwan2bloch.
+    !----------------------------------------------------------
+    !  STEP 4: un-rotate to Bloch space, fine grid
+    !----------------------------------------------------------
     !
-    congj_cuf = Conjg(Transpose(cuf))
-    DO j=1, 3
-      CALL zgemm ('n', 'n', nbnd, nbnd, nbnd, cone, cdmef(j,:,:), &
-           nbnd, congj_cuf(:,:), nbnd, czero, cdmef_tmp(j,:,:), nbnd)
-    ENDDO
+    ! [Eqn. 21 of PRB 74, 195118 (2006)]
+    ! p(k') = U(k')^\dagger * p~(k') * U(k')
     !
-    DO j=1, 3
+    ! U^\dagger is cuf(nbnd,nbnd), passed from hamwan2bloch.
+    ! Note p(k') is p^(H)(k') in PRB 74, 195118 (2006) notations
+    !
+    DO ipol = 1, 3
+      CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, cdmef(ipol,:,:), &
+                 nbnd, cuf(:,:), nbnd, czero, cdmef_tmp(:,:), nbnd)
       CALL zgemm ('n', 'n', nbnd, nbnd, nbnd, cone, cuf(:,:), &
-                 nbnd, cdmef_tmp(j,:,:), nbnd, czero, dmef(j,:,:), nbnd)
+                 nbnd, cdmef_tmp(:,:), nbnd, czero, dmef(ipol,:,:), nbnd)
     ENDDO
     !
     ! Satisfy
-    ! Phys. Rev. B 62, 4927–4944 (2000) , Eq. (30)
+    ! Phys. Rev. B 62, 4927-4944 (2000) , Eq. (30)
     !
     IF (eig_read) THEN
        DO ibnd = 1, nbnd
-          DO jbnd = 1, nbnd
-             IF (abs(etf_ks(ibnd) - etf_ks(jbnd)) .gt. 1.d-4) THEN
-                dmef(:, ibnd, jbnd) = dmef(:,ibnd, jbnd) * &
+         DO jbnd = 1, nbnd
+           IF (abs(etf_ks(ibnd) - etf_ks(jbnd)) .gt. eps4) THEN
+              dmef(:,ibnd,jbnd) = dmef(:,ibnd,jbnd) * &
                      ( etf(ibnd)    - etf(jbnd) )/ &
                      ( etf_ks(ibnd) - etf_ks(jbnd) )
-             ENDIF
-          ENDDO
+           ENDIF
+         ENDDO
        ENDDO
     ENDIF
     !
     END SUBROUTINE dmewan2bloch
     !
     !--------------------------------------------------------------------------
-    subroutine vmewan2bloch ( nbnd, nrr, irvec, ndegen, xk, cuf, vmef, et, et_ks, chw)
+    SUBROUTINE vmewan2bloch ( nbnd, nrr, irvec, cuf, vmef, etf, etf_ks, chw, cfac)
     !--------------------------------------------------------------------------
     !
     !  From the Velocity matrix elements in Wannier representation, find the corresponding
@@ -746,119 +820,193 @@
     !  output : vmef; velocity matrix elements on the fine mesh
     !
     !  Adapted from hamwan2bloch by Jesse Noffsinger and Emmanouil Kioupakis
+    !  RM 04/2018: optimized
     !
     !--------------------------------------------------------------------------
     !
     USE kinds,         ONLY : DP
-    use elph2,         ONLY : cvmew !, chw
-    use cell_base,     ONLY : at, celldm
+    use elph2,         ONLY : cvmew 
+    use cell_base,     ONLY : at, alat
     USE epwcom,        ONLY : eig_read
-    USE constants_epw, ONLY : twopi, ci, czero
-    !
+    USE constants_epw, ONLY : twopi, ci, czero, cone, zero, eps4, bohr2ang
+    !USE io_global, ONLY : ionode_id
+    !USE mp_world,  ONLY : mpime
     implicit none
     !
     !  input variables
     !
-    integer :: nbnd, nrr, irvec (3, nrr), ndegen (nrr), ipol
-    ! number of bands (possibly of the optimal subspace)
-    ! kpoint number for the interpolation
-    ! record length and unit for direct write of rotation matrix
-    ! number of WS points, crystal coordinates, degeneracy
+    INTEGER, INTENT (in) :: nbnd
+    !! number of bands (possibly of the optimal subspace)
+    INTEGER, INTENT (in) :: nrr
+    !! number of WS points
+    INTEGER :: irvec(3, nrr)
+    !! coordinates of WS points
     !
-    ! Hamiltonian in wannier basis
+    REAL(kind=DP), INTENT (in) :: etf(nbnd)
+    !! Eigenenergies on the fine grid
+    REAL(kind=DP), INTENT (in) :: etf_ks(nbnd)
+    !! Kohn-Sham eigenvalues
     !
-    real(kind=DP) :: xk (3), et(nbnd),et_ks(nbnd),irvec_tmp(3)
-    ! kpoint coordinates for the interpolation
+    COMPLEX(kind=DP), INTENT (in) :: cfac(nrr)
+    !! Exponential factor
+    COMPLEX(kind=DP), INTENT (in) :: chw(nbnd, nbnd, nrr)
+    !! Hamiltonian in Wannier basis
+    COMPLEX(kind=DP), INTENT (in) :: cuf(nbnd, nbnd)
+    !! Rotation matrix U^\dagger, fine mesh
     !
-    ! output variables
-    !  
-    complex(kind=DP) :: chf_a(3,nbnd, nbnd), chf_a_tmp(nbnd, nbnd)
-    complex(kind=DP) :: vmef (3,nbnd,nbnd)
-    ! interpolated hamiltonian eigenvalues for this kpoint 
-    complex(kind=DP) :: cuf(nbnd, nbnd), chw(nbnd, nbnd, nrr)
-    ! Rotation matrix, fine mesh 
+    COMPLEX(kind=DP), INTENT (out) :: vmef(3,nbnd,nbnd)
+    !! interpolated velocity matrix elements in Bloch basis, fine mesh
     !
+    ! local variables
     !
-    complex(kind=DP) :: cvmef(3,nbnd, nbnd), cvmef_tmp(nbnd, nbnd)
-    ! Hamiltonian in Bloch basis, fine mesh
-    integer :: ibnd, jbnd, ir
-    real(kind=DP) :: rdotk
-    complex(kind=DP) :: cfac
+    INTEGER :: ir
+    !! Counter on real-space index
+    INTEGER :: ibnd
+    !! Counter on band index
+    INTEGER :: jbnd
+    !! Counter on band index
+    INTEGER :: ipol
+    !! Counter on polarization
+    !
+    REAL(kind=DP) :: irvec_tmp(3)
+    !! coordinates of WS points for the interpolation, cartesian coordinates
+    !
+    COMPLEX(kind=DP) :: chf_a(3, nbnd, nbnd)
+    !! derivative of interpolated hamiltonian eigenvalues, fine mesh
+    COMPLEX(kind=DP) :: chf_a_tmp(nbnd, nbnd)
+    !! derivative of interpolated hamiltonian eigenvalues, fine mesh
+    COMPLEX(kind=DP) :: cvmef(3, nbnd, nbnd)
+    !! velocity matrix elements in Bloch basis, fine mesh
+    COMPLEX(kind=DP) :: cvmef_tmp(nbnd, nbnd)
+    !! velocity matrix elements in Bloch basis, fine mesh
+    !
+    ! Initialization
+    !
+    cvmef_tmp(:,:) = czero
+    cvmef(:,:,:) = czero
+    vmef(:,:,:) = czero
+    chf_a_tmp(:,:) = czero
+    chf_a(:,:,:) = czero
+    irvec_tmp(:) = zero
     !
     !----------------------------------------------------------
     !  STEP 3: inverse Fourier transform to fine k and k+q meshes
     !----------------------------------------------------------
     !
-    !  H~_k'   = sum_R 1/ndegen(R) e^{-ik'R    } H_k(R)
-    !  H~_k'+q = sum_R 1/ndegen(R) e^{-i(k'+q)R} H_k+q(R)
+    ! [Eqn. 39 of PRB 74, 195118 (2006)]
+    ! A^(W)_{mn,\alpha}(k') = 1/ndegen(R) sum_R e^{ik'R} r_{\alpha}(R)
     !
-    !  H~_k   is chf ( nbnd, nbnd, 2*ik-1 )
-    !  H~_k+q is chf ( nbnd, nbnd, 2*ik   )
+    ! SUM on ir of: cvmef(1,ibnd,jbnd) = cvmef(1,ibnd,jbnd) + cfac(ir) * cvmew(1,ibnd,jbnd,ir)
+    CALL zgemv('n', 3*(nbnd**2), nrr, cone, cvmew(:,:,:,:), 3*(nbnd**2), cfac(:), 1, cone, cvmef(:,:,:), 1  )
     !
-    !  
-    cvmef (:,:,:) = czero
+    ! k-derivative of the Hamiltonian in the Wannier gauge
+    ! [Eqn. 38 of PRB 74, 195118 (2006)] or [Eq. 29 of PRB 75, 195121 (2007)]
     !
-    DO ir = 1, nrr
-       !
-       rdotk = twopi * dot_product( xk, dble(irvec( :, ir) ))
-       cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
-       DO ipol = 1,3
-          cvmef (ipol,:,:) = cvmef (ipol,:,:) + cfac * cvmew (ipol, :,:, ir )
-       ENDDO
-       !
-    ENDDO
+    ! dH~_{\alpha}(k')    = 1/ndegen(R) sum_R i*R_{\alpha} e^{ik'R     } H(R)
+    ! dH~_{\alpha}(k'+q') = 1/ndegen(R) sum_R i*R_{\alpha} e^{i(k'+q')R} H(R)
     !
+    ! Note dH~_{\alpha}(k') is H^(W)_{mn,\alpha}(k') in PRB 74, 195118 (2006) notations
     !
-    ! vmn(k) = U v(amn)~ U^dagger
-    !cuf,  passed from hamwan2bloch.
-    DO ipol = 1,3
-       cvmef_tmp(:,:) = matmul( cvmef(ipol,:,:) ,  conjg(transpose(cuf(:,:)))  )
-       vmef(ipol, :,:) = matmul(cuf(:,:) , cvmef_tmp(:,:) )
-    ENDDO
-    !
-    !
-    !
-    !  get k-derivative of the Hamiltonian in the Wannier gauge
-    !
-    chf_a (:,:,:) = czero
+    ! dH~(k')    is chf_a( nbnd, nbnd, 2*ik-1 )
+    ! dH~(k'+q') is chf_a( nbnd, nbnd, 2*ik   )
     !
     DO ir = 1, nrr
-       !
-       rdotk = twopi * dot_product( xk, dble(irvec( :, ir) ))
-       cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
-       irvec_tmp(:) = celldm(1) * matmul ( at, dble(irvec(:,ir)) )
-       DO ipol = 1, 3
-          chf_a (ipol,:,:) = chf_a (ipol,:,:) + &
-               ci * irvec_tmp( ipol ) * cfac * chw (:,:, ir )
-       ENDDO
-       !
+      !
+      ! convert irvec from reduce to cartesian coordinates
+      ! multiply by alat since the crystal axis 'at' are in 
+      ! cart. coords. in units of a_0
+      irvec_tmp(:) = alat * matmul( at, dble(irvec(:,ir)) )
+      DO ipol = 1, 3
+        chf_a(ipol,:,:) = chf_a(ipol,:,:) + &
+              ci * irvec_tmp(ipol) * cfac(ir) * chw(:,:,ir)
+      ENDDO
+      !
     ENDDO
     !
-    ! H'mn(k) = U H'~ U^dagger
-    ! cuf,  passed from hamwan2bloch.
-    DO ipol = 1,3
-       chf_a_tmp(:,:) = matmul( chf_a(ipol,:,:) ,  conjg(transpose(cuf(:,:)))  )
-       chf_a(ipol, :,:) = matmul(cuf(:,:) , chf_a_tmp(:,:) )
+    !----------------------------------------------------------
+    !  STEP 4: un-rotate to Bloch space, fine grid
+    !----------------------------------------------------------
+    !
+    ! [Eqn. 21 of PRB 74, 195118 (2006)]
+    ! A^(H)_{mn,\alpha}(k') = U(k')^\dagger A^(W)_{mn,\alpha}(k') U(k')
+    !
+    ! U^\dagger is cuf(nbnd,nbnd), passed from hamwan2bloch.
+    !
+    DO ipol = 1, 3
+      !
+      ! cvmef_tmp(:,:) = matmul( cvmef(ipol,:,:), conjg(transpose(cuf(:,:))) )
+      ! vmef(ipol,:,:) = matmul( cuf(:,:), cvmef_tmp(:,:) )
+      !
+      CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, cvmef(ipol,:,:), &
+                 nbnd, cuf(:,:), nbnd, czero, cvmef_tmp(:,:), nbnd)
+      CALL zgemm ('n', 'n', nbnd, nbnd, nbnd, cone, cuf(:,:), &
+                 nbnd, cvmef_tmp(:,:), nbnd, czero, vmef(ipol,:,:), nbnd)
     ENDDO
     !
+    ! [Eqn. 21 of PRB 74, 195118 (2006)]
+    ! dH_{\alpha}(k') = U(k')^\dagger dH~_{\alpha}(k') U(k')
     !
-    DO ibnd = 1, nbnd
-       DO jbnd = 1, nbnd
-          vmef (:,ibnd,jbnd) = chf_a(:, ibnd, jbnd) - &
-               ci * (et_ks(jbnd) - et_ks(ibnd) ) *  vmef(:,ibnd,jbnd)
-       ENDDO
+    ! Note dH_{\alpha}(k') is H^(H)_{mn,\alpha}(k') in PRB 74, 195118 (2006) notations
+    !
+    ! U^\dagger is cuf(nbnd,nbnd), passed from hamwan2bloch.
+    !
+    DO ipol = 1, 3
+      !
+      ! chf_a_tmp(:,:) = matmul( chf_a(ipol,:,:), conjg(transpose(cuf(:,:))) )
+      ! chf_a(ipol,:,:) = matmul(cuf(:,:), chf_a_tmp(:,:) )
+      !
+      CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, chf_a(ipol,:,:), &
+                 nbnd, cuf(:,:), nbnd, czero, chf_a_tmp(:,:), nbnd)
+      CALL zgemm ('n', 'n', nbnd, nbnd, nbnd, cone, cuf(:,:), &
+                 nbnd, chf_a_tmp(:,:), nbnd, czero, chf_a(ipol,:,:), nbnd)
     ENDDO
+    !DBSP
+    !if (mpime==1) write(902,*)SUM(irvec_tmp), celldm(1), at, SUM(irvec(:,ir))
+    !if (mpime==1) write(902,*) 'celldm',celldm
+    !if (mpime==1) write(902,*) 'celldm',alat
+    !if (mpime==1) write(902,*) 'at',at
+    !if (mpime==1) write(902,*)SUM(chw)
+    !if (mpime==1) write(902,*)SUM(cuf(:,:))
+    !if (mpime==1) write(902,*)SUM(vmef(:,:,:))
+    !if (mpime==1) write(902,*)SUM(chf_a_tmp(:,:))
+    !if (mpime==1) write(902,*)SUM(chf_a(:,:,:))
+
+    !
+    ! velocity matrix elements
+    ! [Eqn. 31 of PRB 74, 195118 (2006)]
+    ! \hbar v_{mn,\alpha}(k') = H^(H)_{mn,\alpha}(k') &
+    !                         - (E^(H)_nk'-E^(H)_mk') * A^(H)_{mn,\alpha}(k')
+    !
+    ! RM - use etf instead of etf_ks when eig_read=.false.
+    IF (eig_read) THEN
+      DO ibnd = 1, nbnd
+        DO jbnd = 1, nbnd
+          vmef(:,ibnd,jbnd) = chf_a(:,ibnd,jbnd) - &
+               ci * ( etf_ks(jbnd) - etf_ks(ibnd) ) * vmef(:,ibnd,jbnd)
+        ENDDO
+      ENDDO
+    ELSE
+      DO ibnd = 1, nbnd
+        DO jbnd = 1, nbnd
+          vmef(:,ibnd,jbnd) = chf_a(:,ibnd,jbnd) - &
+              ci * ( etf(jbnd) - etf(ibnd) ) * vmef(:,ibnd,jbnd)
+        ENDDO
+      ENDDO
+    ENDIF
+    !
+    ! Satisfy
+    ! Phys. Rev. B 62, 4927-4944 (2000) , Eq. (30)
     !
     IF (eig_read) THEN
-       DO ibnd = 1, nbnd
-          DO jbnd = 1, nbnd
-             IF (abs(et_ks(ibnd) - et_ks(jbnd)) .gt. 1.d-4) THEN
-                vmef(:, ibnd, jbnd) = vmef(:,ibnd, jbnd) * &
-                     ( et(ibnd)    - et(jbnd) )/ &
-                     ( et_ks(ibnd) - et_ks(jbnd) )
-             ENDIF
-          ENDDO
-       ENDDO
+      DO ibnd = 1, nbnd
+        DO jbnd = 1, nbnd
+          IF (abs(etf_ks(ibnd) - etf_ks(jbnd)) .gt. eps4) THEN
+            vmef(:,ibnd,jbnd) = vmef(:,ibnd,jbnd) * &
+                   ( etf(ibnd)    - etf(jbnd) )/ &
+                   ( etf_ks(ibnd) - etf_ks(jbnd) )
+          ENDIF
+        ENDDO
+      ENDDO
     ENDIF
     !
     END SUBROUTINE vmewan2bloch
@@ -871,9 +1019,9 @@
     !! adopted for the electronic case (nmodes->nmodes etc)
     !!
     USE kinds,         only : DP
-    USE epwcom,        only : parallel_k, parallel_q, etf_mem
+    USE epwcom,        only : etf_mem
     USE elph2,         only : epmatwp
-    USE constants_epw, ONLY : twopi, ci, czero
+    USE constants_epw, ONLY : twopi, ci, czero, cone
     USE io_epw,        ONLY : iunepmatwp, iunepmatwp2
     USE mp_global,     ONLY : mp_sum
     USE mp_world,      ONLY : world_comm
@@ -885,7 +1033,7 @@
     INTEGER, INTENT (in) :: nmodes
     !! Total number of modes
     INTEGER, INTENT (in) :: nrr_q
-    !! Number of WS points
+    !! Number of phononic WS points
     INTEGER, INTENT (in) :: irvec ( 3, nrr_q)
     !! Coordinates of WS points
     INTEGER, INTENT (in) :: ndegen (nrr_q)
@@ -896,9 +1044,9 @@
     !! Number of electronic WS points
     REAL(kind=DP) :: xxq(3)
     !! Kpoint for the interpolation (WARNING: this must be in crystal coord!)
-    COMPLEX(kind=DP), INTENT (in) :: cuf (nmodes, nmodes)
+    COMPLEX(kind=DP), INTENT (in) :: cuf(nmodes, nmodes)
     !! e-p matrix in Wanner representation
-    COMPLEX(kind=DP), INTENT (out) :: epmatf (nbnd, nbnd, nrr_k, nmodes)
+    COMPLEX(kind=DP), INTENT (out) :: epmatf(nbnd, nbnd, nrr_k, nmodes)
     !! e-p matrix in Bloch representation, fine grid
     ! 
     ! Local variables 
@@ -911,7 +1059,6 @@
     !! Ending ir for this pool
     INTEGER :: ierr
     !! Return if there is an error
-    !integer(kind=8) ::  lrepmatw,  lrepmatw2
 #if defined(__MPI)
     INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw
     !! Offset to tell where to start reading the file
@@ -931,27 +1078,22 @@
     !! Temporary matrix to store el-ph
     COMPLEX(kind=DP) :: cfac(nrr_q)
     !! Factor for the FT
-    COMPLEX(kind=DP), ALLOCATABLE :: epmatw ( :,:,:,:)
+    COMPLEX(kind=DP), ALLOCATABLE :: epmatw( :,:,:,:)
     !! El-ph matrix elements
     !
     CALL start_clock('ephW2Bp')
+    ! 
     !----------------------------------------------------------
     !  STEP 3: inverse Fourier transform of g to fine k mesh
     !----------------------------------------------------------
     !
-    !  g~ (k') = sum_R 1/ndegen(R) e^{-ik'R} g (R)
+    !  [Eqn. 22 of PRB 76, 165108 (2007)]
+    !  g~(R_e,q') = 1/ndegen(R_p) sum_R_p e^{iq'R_p} g(R_e,R_p)
     !
-    !  g~(k') is epmatf (nmodes, nmodes, ik )
+    !  g~(R_e,q') is epmatf(nmodes, nmodes, ik )
     !  every pool works with its own subset of k points on the fine grid
     !
-    IF (parallel_k) THEN
-       CALL para_bounds(ir_start, ir_stop, nrr_q)
-    ELSEIF (parallel_q) THEN
-       ir_start = 1
-       ir_stop  = nrr_q
-    ELSE 
-       CALL errore ('ephwan2blochp', 'Problem with parallel_k/q scheme', nrr_q)
-    ENDIF
+    CALL para_bounds(ir_start, ir_stop, nrr_q)
     !
     eptmp = czero
     cfac(:) = czero
@@ -967,8 +1109,8 @@
     IF (etf_mem == 0) then
       !      
       ! SP: This is faster by 20 % 
-      Call zgemv( 'n',  nbnd * nbnd * nrr_k * nmodes, ir_stop - ir_start + 1, ( 1.d0, 0.d0 ),&
-               epmatwp(1,1,1,1,ir_start), nbnd * nbnd * nrr_k * nmodes, cfac(ir_start),1,( 0.d0, 0.d0),eptmp, 1 )    
+      Call zgemv( 'n',  nbnd * nbnd * nrr_k * nmodes, ir_stop - ir_start + 1, cone, &
+               epmatwp(1,1,1,1,ir_start), nbnd * nbnd * nrr_k * nmodes, cfac(ir_start), 1, czero, eptmp, 1 )    
       !
     ELSE
       !
@@ -1014,7 +1156,7 @@
         IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
         ! 
 #else      
-        call rwepmatw ( epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
+        CALL rwepmatw ( epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
 #endif
         !
         CALL ZAXPY(nbnd * nbnd * nrr_k * nmodes, cfac(ir), epmatw, 1, eptmp, 1)
@@ -1024,26 +1166,26 @@
     ENDIF
     !
 #if defined(__MPI)
-    IF (parallel_k) CALL mp_sum(eptmp, world_comm)
+    CALL mp_sum(eptmp, world_comm)
 #endif  
     !
     !----------------------------------------------------------
     !  STEP 4: un-rotate to Bloch space, fine grid
     !----------------------------------------------------------
     !
+    ! [Eqn. 22 of PRB 76, 165108 (2007)]
     ! epmatf(j) = sum_i eptmp(i) * uf(i,j)
     !
-    Call zgemm( 'n', 'n', nbnd * nbnd * nrr_k, nmodes, nmodes, ( 1.d0, 0.d0 ),eptmp  , nbnd * nbnd * nrr_k, &
-                                                                                      cuf, nmodes         , &
-                                                               ( 0.d0, 0.d0 ),epmatf, nbnd * nbnd * nrr_k )
+    Call zgemm( 'n', 'n', nbnd * nbnd * nrr_k, nmodes, nmodes, cone, eptmp, & 
+                nbnd * nbnd * nrr_k, cuf, nmodes, czero, epmatf, nbnd * nbnd * nrr_k )
     !
     CALL stop_clock('ephW2Bp')
     !
     END SUBROUTINE ephwan2blochp
     !
     !---------------------------------------------------------------------------
-    SUBROUTINE ephwan2bloch ( nbnd, nrr, irvec, ndegen, epmatw, &
-           xk, cufkk, cufkq, epmatf, nmodes)
+    SUBROUTINE ephwan2bloch ( nbnd, nrr, epmatw, cufkk, cufkq, &
+           epmatf, nmodes, cfac )
     !---------------------------------------------------------------------------
     !!
     !! Interpolation from Wannier to the fine Bloch grid of the electron-phonon 
@@ -1057,61 +1199,69 @@
     !! number of bands (possibly in the optimal subspace)
     INTEGER, INTENT (in) :: nrr
     !! Number of Wigner-Size points
-    INTEGER, INTENT (in) :: irvec ( 3, nrr)
-    !! Coordinates of WS points
-    INTEGER, INTENT (in) :: ndegen (nrr)
-    !! Degeneracy of WS points
     INTEGER, INTENT (in) :: nmodes
     !! number of phonon modes
     !
-    REAL(kind=DP), INTENT (in) :: xk(3)
-    !! kpoint for the interpolation (WARNING: this must be in crystal coord!)
-    !
-    COMPLEX(kind=DP), INTENT (in) :: epmatw ( nbnd, nbnd, nrr, nmodes)
+    COMPLEX(kind=DP), INTENT (in) :: cfac(nrr)
+    !! Exponential factor
+    COMPLEX(kind=DP), INTENT (in) :: epmatw( nbnd, nbnd, nrr, nmodes)
     !! e-p matrix in Wannier representation
-    COMPLEX(kind=DP), INTENT (in) :: cufkk (nbnd, nbnd)
-    !! rotation matrix U(k)
-    COMPLEX(kind=DP), INTENT (in) :: cufkq (nbnd, nbnd)
-    !! rotation matrix U(k+q)
-    COMPLEX(kind=DP), INTENT (out) :: epmatf (nbnd, nbnd, nmodes)
+    COMPLEX(kind=DP), INTENT (in) :: cufkk(nbnd, nbnd)
+    !! rotation matrix U(k)^\dagger, fine k mesh
+    COMPLEX(kind=DP), INTENT (in) :: cufkq(nbnd, nbnd)
+    !! rotation matrix U(k+q)^\dagger, fine q mesh
+    COMPLEX(kind=DP), INTENT (out) :: epmatf(nbnd, nbnd, nmodes)
     !! e-p matrix in Bloch representation, fine grid
     !
     ! work variables 
-    integer :: ir, imode
-    real(kind=DP) :: rdotk
-    complex(kind=DP) :: cfac, eptmp( nbnd, nbnd)
+    !
+    INTEGER :: ir
+    !! Counter on real-space index
+    INTEGER :: imode
+    !! Counter on  phonon modes
+    !
+    COMPLEX(kind=DP) :: eptmp( nbnd, nbnd)
+    !! Temporary variable
     !
     !----------------------------------------------------------
     !  STEP 3: inverse Fourier transform of g to fine k mesh
     !----------------------------------------------------------
     !
-    !  g~ (k') = sum_R 1/ndegen(R) e^{-ik'R} g (R)
+    !  [Eqn. 22 of PRB 76, 165108 (2007)]
+    !  g~(k',q') = 1/ndegen(R_e) sum_R_e e^{ik'R_e} g(R_e,q')
     !
-    !  g~(k') is epmatf (nbnd, nbnd, ik )
+    !  g~(k',q') is epmatf(nmodes, nmodes, ik)
     !  every pool works with its own subset of k points on the fine grid
     !
     epmatf = czero
     !
-    DO ir = 1, nrr
-       !
-       ! note xk is assumed to be already in cryst coord
-       !
-       rdotk = twopi * dot_product ( xk, dble(irvec(:, ir)) )
-       cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
-       !
-       DO imode = 1, nmodes
-         epmatf (:, :, imode) = epmatf (:, :, imode) + cfac * epmatw ( :, :, ir, imode)
-       ENDDO
-       !
+    !DO ir = 1, nrr
+    !   !
+    !   ! rdotk = twopi * dot_product ( xk, dble(irvec(:,ir)) )
+    !   ! cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
+    !   !
+    !   DO imode = 1, nmodes
+    !     epmatf(:,:,imode) = epmatf(:,:,imode) + cfac(ir) * epmatw(:,:,ir,imode)
+    !   ENDDO
+    !   !
+    !ENDDO
+    !
+    DO imode = 1, nmodes
+      ! SUM on ir of: epmatf(ibnd,jbnd,imode) = epmatf(ibnd,jbnd,imode) + cfac(ir) * epmatw(ibnd,jbnd,ir,imode)
+      CALL zgemv('n', nbnd**2, nrr, cone, epmatw(:,:,:,imode), nbnd**2, cfac(:), 1, cone, epmatf(:,:,imode), 1 )
     ENDDO
     !
     !----------------------------------------------------------
     !  STEP 4: un-rotate to Bloch space, fine grid
     !----------------------------------------------------------
     !
-    !  g (k') = U_q^\dagger (k') g~ (k') U_k (k')
+    !  [Eqn. 22 of PRB 76, 165108 (2007)]
+    !  g(k',q') = U(k'+q') * g~(k',q') * U(k')^\dagger
     !
-    ! the two zgemm calls perform the following ops:
+    !  RM - this is what is calculated
+    !  g(k',q') = U(k'+q')^\dagger * g~(k',q') * U(k')
+    !
+    !  the two zgemm calls perform the following ops:
     !  epmatf  = [ cufkq * epmatf ] * cufkk^\dagger
     !
     DO imode = 1, nmodes
@@ -1123,12 +1273,11 @@
       !
     ENDDO
     !
-    !
     END SUBROUTINE ephwan2bloch
     ! 
     !---------------------------------------------------------------------------
-    SUBROUTINE ephwan2bloch_mem ( nbnd, nrr, irvec, ndegen, epmatw, &
-           xk, cufkk, cufkq, epmatf )
+    SUBROUTINE ephwan2bloch_mem ( nbnd, nrr, epmatw, cufkk, cufkq, &
+           epmatf, cfac )
     !---------------------------------------------------------------------------
     !!
     !! Interpolation from Wannier to the fine Bloch grid of the electron-phonon 
@@ -1142,64 +1291,70 @@
     !! number of bands (possibly in the optimal subspace)
     INTEGER, INTENT (in) :: nrr
     !! Number of Wigner-Size points
-    INTEGER, INTENT (in) :: irvec ( 3, nrr)
-    !! Coordinates of WS points
-    INTEGER, INTENT (in) :: ndegen (nrr)
-    !! Degeneracy of WS points
     !
-    REAL(kind=DP), INTENT (in) :: xk(3)
-    !! kpoint for the interpolation (WARNING: this must be in crystal coord!)
-    !
-    COMPLEX(kind=DP), INTENT (in) :: epmatw ( nbnd, nbnd, nrr)
+    COMPLEX(kind=DP), INTENT (in) :: cfac(nrr)
+    !! Exponential factor
+    COMPLEX(kind=DP), INTENT (in) :: epmatw( nbnd, nbnd, nrr)
     !! e-p matrix in Wannier representation
-    COMPLEX(kind=DP), INTENT (in) :: cufkk (nbnd, nbnd)
-    !! rotation matrix U(k)
-    COMPLEX(kind=DP), INTENT (in) :: cufkq (nbnd, nbnd)
-    !! rotation matrix U(k+q)
-    COMPLEX(kind=DP), INTENT (out) :: epmatf (nbnd, nbnd)
+    COMPLEX(kind=DP), INTENT (in) :: cufkk(nbnd, nbnd)
+    !! rotation matrix U(k)^\dagger, fine k mesh
+    COMPLEX(kind=DP), INTENT (in) :: cufkq(nbnd, nbnd)
+    !! rotation matrix U(k+q)^\dagger, fine k mesh
+    COMPLEX(kind=DP), INTENT (out) :: epmatf(nbnd, nbnd)
     !! e-p matrix in Bloch representation, fine grid
     !
     ! work variables 
-    integer :: ir 
-    real(kind=DP) :: rdotk
-    complex(kind=DP) :: cfac, eptmp( nbnd, nbnd)
+    !
+    INTEGER :: ir
+    !! Counter on real-space index
+    !
+    COMPLEX(kind=DP) :: eptmp( nbnd, nbnd)
+    !! Temporary variable
     !
     !----------------------------------------------------------
     !  STEP 3: inverse Fourier transform of g to fine k mesh
     !----------------------------------------------------------
     !
-    !  g~ (k') = sum_R 1/ndegen(R) e^{-ik'R} g (R)
+    !  [Eqn. 22 of PRB 76, 165108 (2007)]
+    !  g~(k',q') = 1/ndegen(R_e) sum_R_e e^{ik'R_e} g(R_e,q')
     !
-    !  g~(k') is epmatf (nbnd, nbnd, ik )
+    !  g~(k',q') is epmatf(nmodes, nmodes, ik)
     !  every pool works with its own subset of k points on the fine grid
     !
     epmatf = czero
     !
-    DO ir = 1, nrr
-       !
-       ! note xk is assumed to be already in cryst coord
-       !
-       rdotk = twopi * dot_product ( xk, dble(irvec(:, ir)) )
-       cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
-       !
-       epmatf (:, :) = epmatf (:, :) + cfac * epmatw ( :, :, ir)
-       !
-    ENDDO
+    !DO ir = 1, nrr
+    !   !
+    !   ! note xk is assumed to be already in cryst coord
+    !   !
+    !   ! rdotk = twopi * dot_product ( xk, dble(irvec(:,ir)) )
+    !   ! cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
+    !   !
+    !   epmatf(:,:) = epmatf(:,:) + cfac(ir) * epmatw(:,:,ir)
+    !   !
+    !ENDDO
+    !
+    ! SUM on ir of: epmatf(ibnd,jbnd) = epmatf(ibnd,jbnd) + cfac(ir) * epmatw(ibnd,jbnd,ir)
+    CALL zgemv('n', nbnd**2, nrr, cone, epmatw(:,:,:), nbnd**2, cfac(:), 1, cone, epmatf(:,:), 1 )
     !
     !----------------------------------------------------------
     !  STEP 4: un-rotate to Bloch space, fine grid
     !----------------------------------------------------------
     !
-    !  g (k') = U_q^\dagger (k') g~ (k') U_k (k')
+    !  [Eqn. 22 of PRB 76, 165108 (2007)]
+    !  g(k',q') = U(k'+q') * g~(k',q') * U(k')^\dagger
     !
-    ! the two zgemm calls perform the following ops:
+    !  RM - this is what is calculated
+    !  g(k',q') = U(k'+q')^\dagger * g~(k',q') * U(k')
+    !
+    !  the two zgemm calls perform the following ops:
     !  epmatf  = [ cufkq * epmatf ] * cufkk^\dagger
     !
     !
     CALL zgemm ('n', 'n', nbnd, nbnd, nbnd, cone, cufkq, &
-         nbnd, epmatf (:,:), nbnd, czero, eptmp, nbnd)
+               nbnd, epmatf (:,:), nbnd, czero, eptmp, nbnd)
     CALL zgemm ('n', 'c', nbnd, nbnd, nbnd, cone, eptmp, &
-         nbnd, cufkk, nbnd, czero, epmatf(:,:), nbnd)
+               nbnd, cufkk, nbnd, czero, epmatf(:,:), nbnd)
     !
     END SUBROUTINE ephwan2bloch_mem
     ! 
@@ -1225,10 +1380,10 @@
     INTEGER, INTENT (in) :: nmodes
     !! Total number of modes
     INTEGER, INTENT (in) :: nrr_q
-    !! Number of WS points
-    INTEGER, INTENT (in) :: irvec ( 3, nrr_q)
+    !! Number of phononic WS points
+    INTEGER, INTENT (in) :: irvec( 3, nrr_q)
     !! Coordinates of WS points
-    INTEGER, INTENT (in) :: ndegen (nrr_q)
+    INTEGER, INTENT (in) :: ndegen(nrr_q)
     !! Number of degeneracy of WS points
     INTEGER, INTENT (in) :: nbnd
     !! Number of bands
@@ -1247,14 +1402,14 @@
     INTEGER :: ir
     !! Real space WS index
     INTEGER :: ir_start
-    !! Starting ir for this cores
+    !! Starting ir for this pool
     INTEGER :: ir_stop
     !! Ending ir for this pool
     INTEGER :: iunepmatwp2
     !! Return the file unit
     INTEGER :: ierr
-#if defined(__MPI)  
     !! Return if there is an error
+#if defined(__MPI)  
     INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw
     !! Offset to tell where to start reading the file
     INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw2
@@ -1266,7 +1421,7 @@
     !
     COMPLEX(kind=DP) :: cfac(nrr_q)
     !! Factor for the FT
-    COMPLEX(kind=DP), ALLOCATABLE :: epmatw ( :,:,:)
+    COMPLEX(kind=DP), ALLOCATABLE :: epmatw( :,:,:)
     !! El-ph matrix elements
     !
     CALL start_clock('ephW2Bp')
@@ -1274,9 +1429,10 @@
     !  STEP 3: inverse Fourier transform of g to fine k mesh
     !----------------------------------------------------------
     !
-    !  g~ (k') = sum_R 1/ndegen(R) e^{-ik'R} g (R)
+    !  [Eqn. 22 of PRB 76, 165108 (2007)]
+    !  g~(R_e,q') = 1/ndegen(R_p) sum_R_p e^{iq'R_p} g(R_e,R_p)
     !
-    !  g~(k') is epmatf (nmodes, nmodes, ik )
+    !  g~(R_e,q') is epmatf(nmodes, nmodes, ik )
     !  every pool works with its own subset of k points on the fine grid
     !
     CALL para_bounds(ir_start, ir_stop, nrr_q)
@@ -1296,7 +1452,7 @@
        cfac(ir) = exp( ci*rdotk ) / dble( ndegen(ir) )
     ENDDO
     ! 
-    ALLOCATE(epmatw ( nbnd, nbnd, nrr_k))
+    ALLOCATE(epmatw( nbnd, nbnd, nrr_k))
     !
 #if defined(__MPI)  
     lrepmatw2 = 2_MPI_OFFSET_KIND * INT( nbnd  , kind = MPI_OFFSET_KIND ) * &

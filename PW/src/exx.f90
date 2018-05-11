@@ -3210,6 +3210,10 @@ IMPLICIT NONE
   CALL ZGEMM ('N','N',npwx*npol,nbnd,nbndproj,-(One,Zero),xi(1,1,current_k),npwx*npol,cmexx,nbndproj,(One,Zero),vv,npwx*npol)
 
   IF(domat) THEN
+     IF ( nbndproj /= nbnd) THEN
+        DEALLOCATE( cmexx )
+        ALLOCATE( cmexx(nbnd,nbnd) )
+     END IF
      CALL matcalc_k('ACE',.true.,0,current_k,npwx*npol,nbnd,nbnd,phi,vv,cmexx,exxe)
 #if defined(__DEBUG)
     WRITE(stdout,'(3(A,I3),A,I9,A,f12.6)') 'vexxace_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &

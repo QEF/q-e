@@ -57,7 +57,8 @@ CONTAINS
   INTEGER, INTENT(IN):: nks, nsym, t_rev(48), s(3,3,48), npk, &
                         k1, k2, k3, nk1, nk2, nk3
   LOGICAL, INTENT (IN) :: time_reversal
-  real(DP), INTENT(IN) :: at(3,3), bg(3,3), xk(3,npk)
+  real(DP), INTENT(IN) :: at(3,3), bg(3,3)
+  real(DP), INTENT(INOUT) :: xk(3,npk)
   !
   real(DP) :: xkr(3), deltap(3), deltam(3)
   real(DP), PARAMETER:: eps=1.0d-5
@@ -235,7 +236,9 @@ CONTAINS
   !
   REAL(dp),INTENT(IN) :: &
        & at(3,3), & ! Direct lattice vectors [Bohr]
-       & bg(3,3), & ! Reciplocal lattice vectors [2 pi / a]
+       & bg(3,3)    ! Reciplocal lattice vectors [2 pi / a]
+  !
+  REAL(dp),INTENT(INOUT) :: &
        & xk(3,npk)  ! k points [2 pi / a]
   !
   REAL(dp),PARAMETER :: eps = 1e-5_dp

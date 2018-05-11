@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------------------
-  subroutine loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq )
+  subroutine loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband )
   !----------------------------------------------------------------------------
   !!
   !!   wannier interpolation of e-p vertex:
@@ -27,8 +27,16 @@
   USE io_global, ONLY : ionode_id, meta_ionode
   USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_sum, mp_barrier, mp_bcast
-  implicit none
+  !
+  IMPLICIT NONE
   ! 
+  LOGICAL, INTENT (out) :: lwin( nbnd, nks )
+  !! Band windows at k
+  LOGICAL, INTENT (out) :: lwinq( nbnd, nks )
+  !! Band windows at k+q
+  LOGICAL, INTENT (out) :: exband( nbnd )
+  !! Band excluded
+  !
   INTEGER, INTENT (in) :: nbnd
   !! Number of bands
   INTEGER, INTENT (in) :: nbndsub
@@ -38,34 +46,47 @@
   INTEGER, INTENT (in) :: nkstot
   !! total number of kpoints across pools
   ! 
-  LOGICAL, INTENT (out) :: lwin( nbnd, nks )
-  !! Band windows at k
-  LOGICAL, INTENT (out) :: lwinq( nbnd, nks )
-  !! Band windows at k+q
-  ! 
   REAL(kind=DP), INTENT (in) :: xxq(3)
   !! the qpoint for folding of U
   !
-  COMPLEX(kind=DP), INTENT (out) :: cu ( nbnd, nbndsub, nks)
-  !! U matrix
-  COMPLEX(kind=DP), INTENT (out) :: cuq ( nbnd, nbndsub, nks)
-  !! U(k+q) matrix
+  COMPLEX(kind=DP), INTENT (out) :: cu( nbnd, nbndsub, nks )
+  !! U(k) matrix for k-points in the pool
+  COMPLEX(kind=DP), INTENT (out) :: cuq( nbnd, nbndsub, nks )
+  !! U(k+q) matrix for k+q-points in the pool
   ! 
   ! work variables 
   !
-  integer :: ik, ibnd, jbnd, ios, ik_start, ik_stop
-  complex(kind=DP) :: cu_big ( nbnd, nbndsub, nkstot), cuq_big ( nbnd, nbndsub, nkstot)
-  logical :: lwin_big( nbnd, nkstot ), lwinq_big( nbnd, nkstot )
+  INTEGER :: ik
+  !! Counter of k-point index
+  INTEGER :: ibnd
+  !! Counter on band index
+  INTEGER :: jbnd
+  !! Counter on wannierized bands
+  INTEGER :: ios
+  !! integer variable for I/O control
+  INTEGER :: ik_start
+  !! Index of first k-point in the pool  
+  INTEGER :: ik_stop
+  !! Index of last k-point in the pool
+  !
+  COMPLEX(kind=DP) :: cu_big ( nbnd, nbndsub, nkstot)
+  !! U(k) matrix for all k-points
+  COMPLEX(kind=DP) :: cuq_big ( nbnd, nbndsub, nkstot)
+  !! U(k+q) matrix for all k+q-points
+  !
+  LOGICAL :: lwin_big( nbnd, nkstot )
+  !! .true. if the band ibnd lies within the outer window at k-point ik
+  LOGICAL :: lwinq_big( nbnd, nkstot )
+  !! .true. if the band ibnd lies within the outer window at k+qpoint ikq
   !
   cu_big = czero
   cuq_big = czero
-  IF (meta_ionode) then
+  IF (meta_ionode) THEN
     !
     ! first proc read rotation matrix (coarse mesh) from file
     !
-    open ( unit = iunukk, file = filukk, status = 'old', form = 'formatted',iostat=ios)
+    OPEN ( unit = iunukk, file = filukk, status = 'old', form = 'formatted',iostat=ios)
     IF (ios /=0) call errore ('loadumat', 'error opening ukk file',iunukk)
-
     !
     DO ik = 1, nkstot
       DO ibnd = 1, nbnd
@@ -74,13 +95,16 @@
         ENDDO
       ENDDO
     ENDDO
-    DO ik = 1,nkstot
-       DO ibnd = 1,nbnd
+    DO ik = 1, nkstot
+       DO ibnd = 1, nbnd
           READ (iunukk,*) lwin_big(ibnd,ik)
        ENDDO
     ENDDO
+    DO ibnd = 1, nbnd
+       READ (iunukk,*) exband(ibnd)
+    ENDDO
     !
-    close ( iunukk )
+    CLOSE ( iunukk )
     !
     !  generate U(k+q) through the map 
     !
@@ -100,10 +124,11 @@
     ENDDO
     !
   ENDIF
-  CALL mp_sum (cu_big,  inter_pool_comm)
-  CALL mp_sum (cuq_big, inter_pool_comm)
+  CALL mp_bcast (cu_big, ionode_id, inter_pool_comm)
+  CALL mp_bcast (cuq_big, ionode_id, inter_pool_comm)   
   CALL mp_bcast (lwin_big, ionode_id, inter_pool_comm)
   CALL mp_bcast (lwinq_big, ionode_id, inter_pool_comm)
+  CALL mp_bcast (exband, ionode_id, inter_pool_comm)
   !
   CALL ckbounds(ik_start, ik_stop)
   IF ( (ik_stop-ik_start+1) .ne. nks) call errore('loadumat',"Improper parallel ukk load",1)

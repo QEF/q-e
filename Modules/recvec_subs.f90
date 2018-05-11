@@ -292,7 +292,7 @@ CONTAINS
     ! Local number of G-vectors in subgrid
     INTEGER, INTENT(OUT):: ngms
     ! Optionally: G-vectors and modules
-    REAL(DP), INTENT(OUT), POINTER, OPTIONAL:: gs(:,:), ggs(:)
+    REAL(DP), INTENT(INOUT), POINTER, OPTIONAL:: gs(:,:), ggs(:)
     !
     INTEGER :: i, ng, ngm
     !
