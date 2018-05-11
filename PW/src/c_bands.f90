@@ -376,7 +376,7 @@ CONTAINS
              END IF
              CALL using_evc_d(.true.) !evc_d = evc
 #else
-             CALL errore( ' diag_bands '. ' Called GPU version which is not available!', 1)
+             CALL errore( ' diag_bands ', ' Called GPU version of c_bands which is not available!', 1)
 #endif
           END IF
           !
@@ -528,6 +528,7 @@ CONTAINS
                                et(1,ik), btype(1,ik), notconv, lrot, dav_iter )
              END IF
           ELSE
+#if defined(__CUDA)
              CALL using_evc_d(.true.) !evc_d = evc
              IF ( use_para_diag ) then
                 !
@@ -550,6 +551,9 @@ CONTAINS
                 et(:,ik) = et_d
                 DEALLOCATE(et_d)
              END IF
+#else
+             CALL errore( ' diag_bands ', ' Called GPU version of c_bands which is not available!', 1)
+#endif
           END IF
           !
           avg_iter = avg_iter + dav_iter

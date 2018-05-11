@@ -161,6 +161,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        ! ... non diagonal contribution - derivative of the bessel function
        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+       CALL using_evc(.false.)
        ALLOCATE( dvkb( npwx, nkb ) )
        !
        CALL gen_us_dj( ik, dvkb )
@@ -223,6 +224,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        IF ( lmaxkb == 0 ) GO TO 10
        !
+       CALL using_evc(.false.) ! This is redundant
        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        DO ipol = 1, 3
           CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
@@ -407,6 +409,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        CALL gen_us_dj( ik, dvkb )
        !
+       CALL using_evc(.false.)
        DO ibnd = 1, nbnd
           IF (noncolin) THEN
              work2_nc = (0.D0,0.D0)

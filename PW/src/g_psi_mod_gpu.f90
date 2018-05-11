@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__CUDA)
 MODULE g_psi_mod_gpum
   !
   ! ... These are the variables needed in g_psi
@@ -14,14 +13,18 @@ MODULE g_psi_mod_gpum
   !
   IMPLICIT NONE
   !
-  REAL(DP), DEVICE, ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
     h_diag_d (:,:),&   ! diagonal part of the Hamiltonian
     s_diag_d (:,:)     ! diagonal part of the overlap matrix
-  
+
+#if defined(__CUDA)
+  attributes(device) :: h_diag_d, s_diag_d
+
   LOGICAL :: h_diag_ood = .false.    ! used to flag out of date variables
   LOGICAL :: s_diag_ood = .false.
   LOGICAL :: h_diag_d_ood = .false.
   LOGICAL :: s_diag_d_ood = .false.
+#endif
   !
   CONTAINS
   !
@@ -29,12 +32,14 @@ MODULE g_psi_mod_gpum
       USE g_psi_mod, ONLY : h_diag
       implicit none
       LOGICAL, INTENT(IN) :: writing
+#if defined(__CUDA)
       !
       IF (h_diag_ood) THEN
           h_diag = h_diag_d
           h_diag_ood = .false.
       ENDIF
       IF (writing)    h_diag_d_ood = .true.
+#endif
   END SUBROUTINE using_h_diag
   !
   SUBROUTINE using_h_diag_d(writing)
@@ -42,6 +47,7 @@ MODULE g_psi_mod_gpum
       implicit none
       LOGICAL, INTENT(IN) :: writing
       !
+#if defined(__CUDA)
       IF (.not. allocated(h_diag)) THEN
           IF (allocated(h_diag_d)) DEALLOCATE(h_diag_d)
           h_diag_d_ood = .false.
@@ -56,24 +62,28 @@ MODULE g_psi_mod_gpum
           h_diag_d_ood = .false.
       ENDIF
       IF (writing)    h_diag_ood = .true.
+#endif
   END SUBROUTINE using_h_diag_d
   !
   SUBROUTINE using_s_diag(writing)
       USE g_psi_mod, ONLY : s_diag
       implicit none
       LOGICAL, INTENT(IN) :: writing
+#if defined(__CUDA)
       !
       IF (s_diag_ood) THEN
           s_diag = s_diag_d
           s_diag_ood = .false.
       ENDIF
       IF (writing)    s_diag_d_ood = .true.
+#endif
   END SUBROUTINE using_s_diag
   !
   SUBROUTINE using_s_diag_d(writing)
       USE g_psi_mod, ONLY : s_diag
       implicit none
       LOGICAL, INTENT(IN) :: writing
+#if defined(__CUDA)
       !
       IF (.not. allocated(s_diag)) THEN
           IF (allocated(s_diag_d)) DEALLOCATE(s_diag_d)
@@ -89,7 +99,7 @@ MODULE g_psi_mod_gpum
           s_diag_d_ood = .false.
       ENDIF
       IF (writing)    s_diag_ood = .true.
+#endif
   END SUBROUTINE using_s_diag_d
   !
 END MODULE g_psi_mod_gpum
-#endif

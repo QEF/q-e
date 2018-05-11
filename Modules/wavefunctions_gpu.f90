@@ -33,10 +33,11 @@
      CONTAINS
      !
      SUBROUTINE using_evc(changing)
-#if defined(__CUDA)
+         !
          USE wavefunctions_module, ONLY : evc
          implicit none
          LOGICAL, INTENT(IN) :: changing
+#if defined(__CUDA)
          !
          IF (evc_ood) THEN
              IF (.not. allocated(evc_d)) THEN
@@ -57,10 +58,11 @@
      END SUBROUTINE using_evc
      !
      SUBROUTINE using_evc_d(changing)
-#if defined(__CUDA)
+         !
          USE wavefunctions_module, ONLY : evc
          implicit none
          LOGICAL, INTENT(IN) :: changing
+#if defined(__CUDA)
          !
          IF (.not. allocated(evc)) THEN
              IF (allocated(evc_d)) DEALLOCATE(evc_d)
