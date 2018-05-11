@@ -1113,13 +1113,13 @@ SUBROUTINE diropn_gw (unit, filename, recl, exst, mpime, nd_nmbr_ )
   CHARACTER(len=256) :: tempfile
   ! complete file name
   CHARACTER(len=80) :: assstr
-  INTEGER :: ios, unf_recl, ierr
+  INTEGER :: ios, unf_recl, ierr, direct_io_factor
   ! used to check I/O operations
   ! length of the record
   ! error code
   LOGICAL :: opnd
   ! if true the file is already opened
-
+  REAL(dp):: dummy
 
   IF (unit < 0) CALL errore ('diropn', 'wrong unit', 1)
   !
@@ -1139,8 +1139,8 @@ SUBROUTINE diropn_gw (unit, filename, recl, exst, mpime, nd_nmbr_ )
   !
   !      the unit for record length is unfortunately machine-dependent
   !
-#define DIRECT_IO_FACTOR 8
-  unf_recl = DIRECT_IO_FACTOR * recl
+  INQUIRE (IOLENGTH=direct_io_factor) dummy
+  unf_recl = direct_io_factor * recl
   IF (unf_recl <= 0) CALL errore ('diropn', 'wrong record length', 3)
   !
   OPEN ( unit, file = trim(tempfile), iostat = ios, form = 'unformatted', &

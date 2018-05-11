@@ -28,9 +28,9 @@
     USE phcom,         ONLY : nmodes
     USE epwcom,        ONLY : nbndsub, fsthick, eps_acustic, degaussw, & 
                               nstemp, scattering_serta, scattering_0rta, shortrange,&
-                              restart, restart_freq, restart_filq
+                              restart, restart_freq, restart_filq, vme
     USE pwcom,         ONLY : ef
-    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, dmef, wf, wqf, & 
+    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf, & 
                               epf17, nqtotf, nkqtotf, inv_tau_all, inv_tau_allcb, &
                               xqf, zi_allvb, zi_allcb
     USE transportcom,  ONLY : transp_temp, lower_bnd
@@ -176,21 +176,39 @@
           IF ( scattering_0rta ) THEN 
             !vel_factor = 1 - (vk dot vkq) / |vk|^2  appears in Grimvall 8.20
             vel_factor(:,:) = zero
-            DO ibnd = 1, ibndmax-ibndmin+1
-              !
-              ! vkk(3,nbnd) - velocity for k
-              vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
-              !
-              DO jbnd = 1, ibndmax-ibndmin+1
-                ! 
-                ! vkq(3,nbnd) - velocity for k + q
-                vkq(:,jbnd) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
+            IF ( vme ) THEN 
+              DO ibnd = 1, ibndmax-ibndmin+1
                 !
-                IF ( abs( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2 ) > eps) &
-                  vel_factor(ibnd,jbnd) = DDOT(3, vkk(:,ibnd), 1, vkq(:,jbnd), 1) / &
-                                          DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd), 1)
+                ! vkk(3,nbnd) - velocity for k
+                vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                !
+                DO jbnd = 1, ibndmax-ibndmin+1
+                  !
+                  ! vkq(3,nbnd) - velocity for k + q
+                  vkq(:,jbnd) = REAL (vmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
+                  !
+                  IF ( abs( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2 ) > eps) &
+                    vel_factor(ibnd,jbnd) = DDOT(3, vkk(:,ibnd), 1, vkq(:,jbnd), 1) / &
+                                            DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd), 1)
+                ENDDO
               ENDDO
-            ENDDO
+            ELSE
+              DO ibnd = 1, ibndmax-ibndmin+1
+                !
+                ! vkk(3,nbnd) - velocity for k
+                vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                !
+                DO jbnd = 1, ibndmax-ibndmin+1
+                  ! 
+                  ! vkq(3,nbnd) - velocity for k + q
+                  vkq(:,jbnd) = 2.0 * REAL (dmef (:, ibndmin-1+jbnd, ibndmin-1+jbnd, ikq ) )
+                  !
+                  IF ( abs( vkk(1,ibnd)**2 + vkk(2,ibnd)**2 + vkk(3,ibnd)**2 ) > eps) &
+                    vel_factor(ibnd,jbnd) = DDOT(3, vkk(:,ibnd), 1, vkq(:,jbnd), 1) / &
+                                            DDOT(3, vkk(:,ibnd), 1, vkk(:,ibnd), 1)
+                ENDDO  
+              ENDDO
+            ENDIF
             vel_factor(:,:) = one - vel_factor(:,:)
           ENDIF
           !
@@ -556,11 +574,11 @@
     USE epwcom,        ONLY : fsthick, & 
                               eps_acustic, degaussw, & 
                               system_2d, int_mob, ncarrier, restart, restart_freq,&
-                              mp_mesh_k, nkf1, nkf2, nkf3
+                              mp_mesh_k, nkf1, nkf2, nkf3, vme
     USE pwcom,         ONLY : ef 
-    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, wf, wqf, xkf, & 
-                              epf17, nqtotf, nkqtotf, inv_tau_all, xqf, F_current, &
-                              Fi_all, F_SERTA
+    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, vmef, & 
+                              wf, wqf, xkf, epf17, nqtotf, nkqtotf, inv_tau_all, xqf, & 
+                              F_current, Fi_all, F_SERTA
     USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                               ixkqf_tr, s_BZtoIBZ_full
     USE constants_epw, ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, & 
@@ -791,7 +809,16 @@
           DO ibnd = 1, ibndmax-ibndmin+1
             !
             ! vkk(3,nbnd) - velocity for k
-            vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+            IF ( vme ) THEN
+              ! vmef is in units of Ryd * bohr
+              vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+            ELSE
+              ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+              ! 1/m  = 2 in Rydberg atomic units
+              ! dmef is in units of 1/a.u. (where a.u. is bohr)
+              ! v_(k,i) is in units of Ryd * a.u.
+              vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+            ENDIF
             ! 
             ! The inverse of SERTA 
             tau = one / inv_tau_all(1,ibnd,ik+lower_bnd-1)
@@ -909,9 +936,18 @@
           DO ibnd = 1, ibndmax-ibndmin+1
             !
             ! vkk(3,nbnd) - velocity for k
-            vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
-            ! 
-            ! The inverse of SERTA 
+            IF ( vme ) THEN
+              ! vmef is in units of Ryd * bohr
+              vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+            ELSE
+              ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+              ! 1/m  = 2 in Rydberg atomic units
+              ! dmef is in units of 1/a.u. (where a.u. is bohr)
+              ! v_(k,i) is in units of Ryd * a.u.
+              vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+            ENDIF
+            !
+            ! The inverse of SERTA
             tau = one / inv_tau_all(1,ibnd,ik+lower_bnd-1)
             F_SERTA(:,ibnd,ik+lower_bnd-1) = vkk(:,ibnd) * tau
             !
@@ -1012,7 +1048,11 @@
           DO ibnd = 1, ibndmax-ibndmin+1
             ! This selects only valence bands for hole conduction
             IF (etf (ibndmin-1+ibnd, ikk) < ef0 ) THEN
-              vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
+              IF ( vme ) THEN 
+                vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
+              ELSE
+                vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
+              ENDIF
               ! 
               DO j = 1, 3
                 DO i = 1, 3
@@ -1093,7 +1133,11 @@
           DO ibnd = 1, ibndmax-ibndmin+1
             ! This selects only valence bands for hole conduction
             IF (etf (ibndmin-1+ibnd, ikk) > ef0 ) THEN
-              vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
+              IF ( vme ) THEN 
+                vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
+              ELSE
+                vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
+              ENDIF
               ! 
               DO j = 1, 3
                 DO i = 1, 3
@@ -1184,9 +1228,9 @@
     USE epwcom,    ONLY : nbndsub, fsthick, & 
                           system_2d, nstemp, &
                           int_mob, ncarrier, scatread, &
-                          iterative_bte
+                          iterative_bte, vme
     USE pwcom,     ONLY : ef 
-    USE elph2,     ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, & 
+    USE elph2,     ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, vmef, & 
                           inv_tau_all, nkqtotf, Fi_all, inv_tau_allcb, &
                           zi_allvb, zi_allcb
     USE transportcom,  ONLY : transp_temp
@@ -1283,6 +1327,8 @@
     !! Eigen-energies on the fine grid collected from all pools in parallel case
     COMPLEX(kind=DP), ALLOCATABLE :: dmef_all(:,:,:,:)
     !! dipole matrix elements on the fine mesh among all pools
+    COMPLEX(kind=DP), ALLOCATABLE :: vmef_all(:,:,:,:)
+    !! velocity matrix elements on the fine mesh among all pools
     REAL(DP), ALLOCATABLE :: tdf_sigma_m(:,:,:,:)
     !! transport distribution function
     REAL(DP), ALLOCATABLE :: wkf_all(:)
@@ -1305,14 +1351,24 @@
         ! 
         ! Lets gather the velocities from all pools
 #ifdef __MPI
-        IF ( .not. ALLOCATED(dmef_all) )  ALLOCATE( dmef_all(3,nbndsub,nbndsub,nkqtotf) )
+        IF ( vme ) THEN 
+          IF ( .not. ALLOCATED(vmef_all) )  ALLOCATE( vmef_all(3,nbndsub,nbndsub,nkqtotf) )
+          vmef_all(:,:,:,:) = czero
+          CALL poolgatherc4 ( 3, nbndsub, nbndsub, nkqtotf, 2*nkf, vmef, vmef_all )
+        ELSE
+          IF ( .not. ALLOCATED(dmef_all) )  ALLOCATE( dmef_all(3,nbndsub,nbndsub,nkqtotf) )
+          dmef_all(:,:,:,:) = czero
+          CALL poolgatherc4 ( 3, nbndsub, nbndsub, nkqtotf, 2*nkf, dmef, dmef_all )
+        ENDIF
         IF ( .not. ALLOCATED(wkf_all) )  ALLOCATE( wkf_all(nkqtotf) )
         wkf_all(:) = zero
-        dmef_all(:,:,:,:) = czero
         CALL poolgather2 ( 1, nkqtotf, 2*nkf, wkf, wkf_all  )
-        CALL poolgatherc4 ( 3, nbndsub, nbndsub, nkqtotf, 2*nkf, dmef, dmef_all )
 #else
-        dmef_all = dmef
+        IF ( vme ) THEN
+          vmef_all = vmef
+        ELSE
+          dmef_all = dmef
+        ENDIF
 #endif     
         ! 
         ! In this case, the sum over q has already been done. It should therefore be ok 
@@ -1348,7 +1404,11 @@
               DO ibnd = 1, ibndmax-ibndmin+1
                 ! This selects only valence bands for hole conduction
                 IF (etf_all (ibndmin-1+ibnd, ik) < ef0(itemp)  ) THEN
-                  vkk(:,ibnd) = 2.0 * REAL (dmef_all (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                  IF ( vme ) THEN
+                    vkk(:,ibnd) = REAL (vmef_all (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk)) 
+                  ELSE
+                    vkk(:,ibnd) = 2.0 * REAL (dmef_all (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                  ENDIF
                   ! We take itemp = 1 only !!!!
                   tau = one / inv_tau_all(1,ibnd,ik)
                   ekk = etf_all (ibndmin-1+ibnd, ik) -  ef0(itemp)
@@ -1425,7 +1485,11 @@
               DO ibnd = 1, ibndmax-ibndmin+1
                 ! This selects only conduction bands for electron conduction
                 IF (etf_all (ibndmin-1+ibnd, ik) > ef0(itemp)  ) THEN
-                  vkk(:,ibnd) = 2.0 * REAL (dmef_all (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                  IF ( vme ) THEN 
+                    vkk(:,ibnd) = REAL (vmef_all (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                  ELSE 
+                    vkk(:,ibnd) = 2.0 * REAL (dmef_all (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                  ENDIF
                   tau = one / inv_tau_all(1,ibnd,ik)
                   ekk = etf_all (ibndmin-1+ibnd, ik) -  ef0(itemp)
                   ! 
@@ -1525,18 +1589,22 @@
             ! here we must have ef, not ef0, to be consistent with ephwann_shuffle
             IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
               !
-              ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
-              ! 1/m  = 2 in Rydberg atomic units
-              ! dmef is in units of 1/a.u. (where a.u. is bohr)
-              ! v_(k,i) is in units of Rydberg * a.u.
-              !
               DO ibnd = 1, ibndmax-ibndmin+1
                 !
                 ! This selects only valence bands for hole conduction
                 IF (etf (ibndmin-1+ibnd, ikk) < ef0(itemp) ) THEN 
                   !
                   ! vkk(3,nbnd) - velocity for k
-                  vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                  IF ( vme ) THEN
+                    ! vmef is in units of Ryd * bohr
+                    vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                  ELSE 
+                    ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+                    ! 1/m  = 2 in Rydberg atomic units
+                    ! dmef is in units of 1/a.u. (where a.u. is bohr)
+                    ! v_(k,i) is in units of Ryd * a.u.
+                    vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                  ENDIF
                   !
                   !  energy at k (relative to Ef)
                   ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
@@ -1715,7 +1783,17 @@
                 DO ibnd = 1, ibndmax-ibndmin+1
                   ! This selects only cond bands for electron conduction
                   IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp) ) THEN
-                    vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                    ! vkk(3,nbnd) - velocity for k
+                    IF ( vme ) THEN
+                      ! vmef is in units of Ryd * bohr
+                      vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                    ELSE
+                      ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+                      ! 1/m  = 2 in Rydberg atomic units
+                      ! dmef is in units of 1/a.u. (where a.u. is bohr)
+                      ! v_(k,i) is in units of Ryd * a.u.
+                      vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                    ENDIF
                     ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
                     tau = one / inv_tau_all(itemp,ibnd,ik+lower_bnd-1)
                     ij = 0
@@ -1746,7 +1824,17 @@
                 DO ibnd = 1, ibndmax-ibndmin+1
                   ! This selects only cond bands for hole conduction
                   IF (etf (ibndmin-1+ibnd, ikk) > efcb(itemp) ) THEN
-                    vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                    ! vkk(3,nbnd) - velocity for k
+                    IF ( vme ) THEN
+                      ! vmef is in units of Ryd * bohr
+                      vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                    ELSE
+                      ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+                      ! 1/m  = 2 in Rydberg atomic units
+                      ! dmef is in units of 1/a.u. (where a.u. is bohr)
+                      ! v_(k,i) is in units of Ryd * a.u.
+                      vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+                    ENDIF
                     ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
                     tau = one / inv_tau_allcb(itemp,ibnd,ik+lower_bnd-1)
                     ij = 0
@@ -1917,7 +2005,17 @@
         ikk = 2 * ik - 1
         IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
           DO ibnd = 1, ibndmax-ibndmin+1
-            vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
+            ! vkk(3,nbnd) - velocity for k
+            IF ( vme ) THEN
+              ! vmef is in units of Ryd * bohr
+              vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+            ELSE
+              ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
+              ! 1/m  = 2 in Rydberg atomic units
+              ! dmef is in units of 1/a.u. (where a.u. is bohr)
+              ! v_(k,i) is in units of Ryd * a.u.
+              vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+            ENDIF
             tau = one / inv_tau_all(1,ibnd,ik+lower_bnd-1)
             Fi_all(:,ibnd,ik+lower_bnd-1) = vkk(:,ibnd) * tau
           ENDDO

@@ -66,6 +66,7 @@ SUBROUTINE clean_pw( lflag )
   !
   USE control_flags,        ONLY : ts_vdw
   USE tsvdw_module,         ONLY : tsvdw_finalize
+  USE dftd3_qe,             ONLY : dftd3_clean
   !
   USE wavefunctions_module_gpum, ONLY : using_evc, using_evc_d
   !
@@ -97,6 +98,7 @@ SUBROUTINE clean_pw( lflag )
      !
      CALL dealloca_london()
      CALL cleanup_xdm()
+     CALL dftd3_clean()
      CALL deallocate_constraint()
      CALL deallocate_tetra ( )
      !

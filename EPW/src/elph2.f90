@@ -110,6 +110,7 @@
   LOGICAL, allocatable ::      &
        lwin(:,:),              &!  identify bands within outer energy windows (when disentanglement is used)
        lwinq(:,:),             &!
+       exband(:),              &!  k-point independent list of bands excluded from the calculation of overlap and projection matrices in W90
        done_elph(:)
   LOGICAL ::                   &
        elph                   

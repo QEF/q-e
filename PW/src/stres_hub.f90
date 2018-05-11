@@ -45,7 +45,7 @@ SUBROUTINE stres_hub ( sigmah )
    ldim = 2 * Hubbard_lmax + 1
    ALLOCATE (dns(ldim,ldim,nspin,nat))
    !
-#ifdef DEBUG
+#if defined (DEBUG)
    DO na=1,nat
       DO is=1,nspin
          nt = ityp(na)
@@ -72,7 +72,7 @@ SUBROUTINE stres_hub ( sigmah )
             nt = ityp(na)
             IF ( is_hubbard(nt) ) THEN
                DO is = 1,nspin
-#ifdef DEBUG
+#if defined (DEBUG)
                   WRITE( stdout,'(a,4i3)') 'DNS(IPOL,JPOL,NA,IS) ', ipol,jpol,na,is
                   WRITE( stdout,'(5f10.4)') ((dns(m1,m2,is,na),m2=1,5),m1=1,5)
 #endif

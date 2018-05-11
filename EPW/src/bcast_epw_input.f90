@@ -38,7 +38,7 @@
                             specfun_el, specfun_ph, lifc, asr_typ, &
                             lscreen, scr_typ, fermi_diff, smear_rpa, &
                             rand_q, rand_nq, rand_nk, rand_k, pwc, phonselfen, &
-                            parallel_q, parallel_k, specfun_pl, cumulant, bnd_cum, &
+                            specfun_pl, cumulant, bnd_cum, &
                             nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear, &
                             wsfc, wscut, write_wfn, wmin_specfun, wmin, &
                             wmax_specfun, wmax, wepexst, wannierize, &
@@ -89,8 +89,6 @@
   CALL mp_bcast (kmaps           , meta_ionode_id, world_comm) 
   CALL mp_bcast (nest_fn         , meta_ionode_id, world_comm)
   CALL mp_bcast (eig_read        , meta_ionode_id, world_comm) 
-  CALL mp_bcast (parallel_k      , meta_ionode_id, world_comm) 
-  CALL mp_bcast (parallel_q      , meta_ionode_id, world_comm)
   CALL mp_bcast (a2f             , meta_ionode_id, world_comm)
   CALL mp_bcast (etf_mem         , meta_ionode_id, world_comm)
   CALL mp_bcast (rand_q          , meta_ionode_id, world_comm)

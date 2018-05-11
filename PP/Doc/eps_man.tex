@@ -33,7 +33,7 @@ epsilon.x provides the real and imaginary parts of the dielectric tensor or the 
 parallel mode, also pool parallelization is supported. As all the others post processing codes, epsilon.x must run with the same number of
 processors of the previews parallel PW runs, to avoid this constrain set the variable WF\_COLLECT=.TRUE.
 in pw.x input file.   
-Epsilon.x doesn't support the reduction of the k-points grid into the unreducible Brillouin zone, so the previous PW runs must be
+Epsilon.x doesn't support the reduction of the k-points grid into the irreducible Brillouin zone, so the previous PW runs must be
 performed with a uniform k-points grid and all k-points weights must be equal to each other, i.e. in the k-points card the k-points
 coordinates must be given manually in \emph{crystal} or \emph{alat} or \emph{bohr}, but not with the \emph{automatic} option. Also the
 auto-symmetrization of k-points grid can produce a non uniform distribution of k-points weights, in order to avoid this
@@ -66,27 +66,30 @@ parts of the dielectric
 tensor diagonal components $\epsilon_{1_{\alpha,\alpha}}(\omega)$ e $\epsilon_{2_{\alpha,\alpha}}(\omega)$,
 as a function of frequency (in eV). The third file contains the electron energy loss spectrum calculated from the diagonal
 elements of dielectric tensor and the last one contains the diagonal components of
-dielectric tensor calculated on the imaginary axe of frequency (via London transformation)
+dielectric tensor calculated on the imaginary axis of frequency (via London transformation)
 $\epsilon_{\alpha,\alpha}(i\omega)$. If the PW calculations have been performed in collinear spin mode the previous files 
 contain the sum of spin up and spin down contribution, other files with prefix \emph{u-} or  \emph{d-} are created containing 
 the same quantities for spin up or spin down separately. 
-\item  \emph{jdos}: joint density of state calculation, in addition to the standard output the code produces the file
-\emph{jdos.dat}, containing the joint density of state (in eV$^{-1}$) as a function of frequency (in eV). If the PW 
-calculations have been performed in collinear spin mode, \emph{jdos.dat} contains separately the spin up and spin down 
-joind donsity of states.  
+\item  \emph{jdos}: joint density of state (JDOS) calculation. 
+In addition to the standard output the code produces the file
+\emph{jdos.dat}, containing the JDOS (in eV$^{-1}$) as a function 
+of frequency (in eV). The JDOS is normalized to 1. If the PW 
+calculations have been performed in collinear spin mode, 
+\emph{jdos.dat} contains separately the spin up and spin down JDOS.
 \item  \emph{offdiag}: calculation of diagonal and off-diagonal components of dielectric tensor. In addition
 to the standard output the code produces one file for each component of the dielectric tensor (i.e.
 \emph{epsxy.dat}), each file contains real and imaginary part of the tensor component.
 \item  \emph{occ}: calculation of occupation factors and its first derivative, results are written on 
-\emph{occupations.dat}. In metallic systems it is highly raccomanded to permorm this calculation before
-enything else.  
+\emph{occupations.dat}. In metallic systems it is highly recommended to perform this calculation before
+anything else.  
 Plotting this file it is easy to see if the chosen broadening parameter and k points number 
 are enough to have a good sampling of the fermi surface.
 \end{itemize}
-\emph{smeartype} select the kind of broadening for the plot of joint density of state, it can be both
+\emph{smeartype} select the kind of broadening for the plot of JDOS, it can be both
 \emph{gauss} or \emph{lorentz} for a Gaussian or Lorentzian broadening. \emph{intersmear} is the broadening 
 parameter (in eV) for the interband contribution,
-it will be the Gaussian or Lorentzian broadening parameter in the case of joint density of state calculation or the
+it will be the Gaussian or Lorentzian broadening parameter in the case of JDOS
+or the
 Drude-Lorentz broadening parameter for the dielectric tensor calculation.
 \emph{intrasmear} is the broadening parameter for the intraband, i.e. metal Drude like term (again in eV), 
 the intraband contribution is calculated only if a Gaussian broadening or tetrahedron method it's been 
@@ -96,7 +99,7 @@ is the number of points of the frequency mesh, \emph{wmax} is expected to be in 
 of eV for an optional rigid shift of the imaginary part of the dielectric function.
 
 \section{Joint density of states}
-The joint density of state is defined has:
+The joint density of state (JDOS) is defined has:
 \begin{displaymath}
 n(\omega)=\sum_{\sigma}\sum_{n\in V}\sum_{n'\in C}\frac{\Omega}{(2\pi)^3}\int d^3\textbf{k}\delta(E_{\textbf{k},n'}-E_{\textbf{k},n}
 -\hbar\omega)
@@ -141,8 +144,8 @@ Integrating analytically (\ref{imp}) one obtains:
 \begin{eqnarray}
 \sum_{\textbf{k}}\sum_{n}\sum_{n'}[f(E_{\textbf{k},n})-f(E_{\textbf{k},n'})]
 \end{eqnarray}
-so a division by this quantity is needed to renormalize to one the joint density of state, the standard output file
-contains a convergence check on this renormalizzazion. Note that in the case of
+so a division by this quantity is needed to renormalize to 1 the JDOS, the standard output file
+contains a convergence check on this normalization. Note that in the case of
 joint density of state the two kinds of broadening (\ref{lor}) and (\ref{gau}) are exactly equivalent.
 
 \section{Dielectric tensor}
@@ -247,16 +250,16 @@ G_{\beta}\bigg)
 \end{equation}
 defined in this way the matrix element accounts only for interband transitions, i.e. vertical transition in which the
 electron momentum $\textbf{k}$ is conserved (optical approximation). In standard optics the intraband transitions give a 
-neglectable contribution due to the very low momentum transfered by the incoming/outcoming photon.\\
+negligible contribution due to the very low momentum transferred by the incoming/outgoing photon.\\
 Operating a London transformation upon $\epsilon_{2_{\alpha,\beta}}(\omega)$, it's possible to obtain the whole dielectric
-tensor calculated on the imaginary frequency axe $\epsilon_{\alpha,\beta}(i\omega)$. 
+tensor calculated on the imaginary frequency axis $\epsilon_{\alpha,\beta}(i\omega)$. 
 \begin{equation}
 \epsilon_{\alpha,\beta}(i\omega)=1+\frac{2}{\pi}\int_{0}^{\infty}\frac{\omega' \epsilon_{2_{\alpha,\beta}}(\omega')}
 {\omega'^{2}+\omega^{2}}d\omega'
 \end{equation}
 The LOSS spectrum is proportional to the imaginary of the inverse dielectric tensor, that is:
 \begin{equation}
-Imm\Bigg\{\frac{1}{\epsilon_{\alpha,\beta}(\omega)}\Bigg\}=
+Im\Bigg\{\frac{1}{\epsilon_{\alpha,\beta}(\omega)}\Bigg\}=
 \frac{\epsilon_{2_{\alpha,\beta}}(\omega)}{\epsilon_{1_{\alpha,\beta}}^{2}(\omega)+
 \epsilon_{2_{\alpha,\beta}}^{2}(\omega)}
 \end{equation}

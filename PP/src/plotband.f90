@@ -51,8 +51,10 @@ PROGRAM plotband
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !!!
   LOGICAL :: exist_proj
-  CHARACTER(len=256) :: filename2, line, field
-  INTEGER :: nat, ntyp, atwfclst(99), natomwfc, nprojwfc, nwfc, idum
+  CHARACTER(len=256) :: filename2, field
+  CHARACTER(len=2096) :: line
+  INTEGER, ALLOCATABLE :: atwfclst(:)
+  INTEGER :: nat, ntyp, natomwfc, nprojwfc, nwfc, idum
   REAL(DP) :: proj, fdum
   REAL(DP), ALLOCATABLE :: sumproj(:,:), p_rap(:,:)
   !!!
@@ -162,10 +164,11 @@ PROGRAM plotband
   ! onto the selected wavefunctions.
   !!!
   IF (exist_proj) THEN
-     atwfclst(:) = -1
      WRITE(*,'("List of atomic wavefunctions: ")', advance="NO")
      READ (5,'(A)') line
      CALL field_count( nprojwfc, line )
+     ALLOCATE ( atwfclst(nprojwfc) )
+     atwfclst(:) = -1
      DO nwfc = 1,nprojwfc
         CALL get_field(nwfc, field, line)
         READ(field,*) atwfclst(nwfc)
@@ -182,6 +185,7 @@ PROGRAM plotband
         ENDDO
      ENDDO
      CLOSE(22)
+     DEALLOCATE (atwfclst)
   ENDIF
   !!!
 
