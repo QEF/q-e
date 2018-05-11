@@ -155,18 +155,10 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
                        & ' from file :',/,3X,A)") nt, TRIM(file_pseudo)
      END IF
      !
-     CALL  read_upf(upf(nt), rgrid(nt), isupf, filename = file_pseudo, xml_only = .TRUE. )
+     CALL  read_upf(upf(nt), rgrid(nt), isupf, filename = file_pseudo )
      !
      !! start reading - check  first if files are readable as xml files,
-     !! xml_only set to avoid check on upf v1.  
-     !
-     IF ( isupf .GT. 0 ) THEN
-       !
-       ! File not readable as xml: try UPF v.1 
-       ! 
-       OPEN ( UNIT = iunps, FILE = TRIM(file_pseudo), STATUS = 'old', FORM = 'formatted' ) 
-       CALL read_upf( upf(nt), rgrid(nt), isupf, UNIT = iunps) 
-     END IF
+     !! then as UPF v.2, then as UPF v.1
      !
      upf(nt)%is_gth=.false.
      if (isupf == -2 .OR. isupf == -1 .OR. isupf == 0) then
@@ -187,7 +179,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         !
      else
         !
-        rewind (unit = iunps)
+        OPEN ( UNIT = iunps, FILE = TRIM(file_pseudo), STATUS = 'old', FORM = 'formatted' ) 
         !
         !     The type of the pseudopotential is determined by the file name:
         !    *.upf or *.UPF  UPF format                          pseudo_type=0
@@ -237,11 +229,11 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            !
         endif
         !
+        ! end of reading
+        !
+        CLOSE (iunps)
+        !
      endif
-     !
-     ! end of reading
-     !
-     close (iunps)
      !
      ! Calculate MD5 checksum for this pseudopotential
      !

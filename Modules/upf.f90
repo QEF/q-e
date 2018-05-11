@@ -25,7 +25,7 @@
       CONTAINS
 
 !------------------------------------------------+
-SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
+SUBROUTINE read_upf(upf, grid, ierr, unit,  filename) !
    !---------------------------------------------+
    !! Reads pseudopotential in UPF format (either v.1 or v.2 or upf_schema).
    !! Derived-type variable *upf* and optionally *grid* store in output the 
@@ -33,10 +33,8 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    !! If unit number is provided with the *unit* argument, only UPF v1 format
    !! is chhecked; the PP file must be opened and closed outside the routine.  
    !! Otherwise the *filename* argument must be given, file is opened and closed
-   !! inside the routine, all formats will be  checked. The optional *xml_only* 
-   !! argument may be set to true value to prevent the routine from checking
-   !! v1 format. 
-   !! @Note last revision: 14-11-2017
+   !! inside the routine, all formats will be  checked. 
+   !! @Note last revision: 11-05-2018 OG - removed xml_only
    !
    USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
    USE read_upf_v1_module,ONLY: read_upf_v1
@@ -55,8 +53,6 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    !! i/o unit:    
    CHARACTER(len=*),INTENT(IN),OPTIONAL    :: filename  
    !! i/o filename
-   LOGICAL,INTENT(IN), OPTIONAL            :: xml_only
-   !! if present and true the program will parse only xml documents neglecting version 1 upf format
    TYPE(pseudo_upf),INTENT(INOUT) :: upf       
    !! the derived type storing the pseudo data
    TYPE(radial_grid_type),OPTIONAL,INTENT(INOUT),TARGET :: grid
@@ -65,7 +61,6 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    !! ierr=0: xml schema, ierr=-1: UPF v.1,  ierr=-2: UPF v.2
    !! ierr>0: error reading PP file
    !
-   LOGICAL            :: xml_only_ = .FALSE. 
    TYPE(Node),POINTER :: u,doc     
    INTEGER            :: u_temp,&    ! i/o unit in case of upf v1
                          iun, ferr  
@@ -74,9 +69,8 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    CHARACTER(LEN=256) :: temp_upf_file
    CHARACTER(LEN=1024) :: msg
    LOGICAL             :: should_be_xml
-   IF (PRESENT(xml_only) ) xml_only_ = xml_only
-   ierr = 0
 
+   ierr = 0
    IF ( present ( unit ) ) THEN 
       REWIND (unit) 
       CALL deallocate_pseudo_upf(upf) 
@@ -84,8 +78,6 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
       CALL read_upf_v1 (unit, upf, grid, ierr ) 
       IF (ierr == 0 ) ierr = -1     
       !
-      RETURN
-      ! 
    ELSE IF (PRESENT(filename) ) THEN
       doc => parseFile(TRIM(filename), EX = ex )
       ierr = getExceptionCode( ex )
@@ -93,7 +85,7 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
          WRITE(temp_upf_file, '("tmp_",I0,".UPF")') my_image_id  
          IF ( ionode ) THEN
             CALL make_emended_upf_copy( TRIM(filename), TRIM(tmp_dir)//trim(temp_upf_file), should_be_xml)  
-         END IF   
+         END IF
          CALL mp_bcast ( should_be_xml, ionode_id, intra_image_comm)     
          IF ( should_be_xml) THEN 
             doc => parseFile(TRIM(tmp_dir)//trim(temp_upf_file), EX = ex, IOSTAT = ferr )
@@ -112,46 +104,41 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
                CALL infomsg('read_upf:', trim(msg) )    
             END IF
          END IF
-            ! 
-            IF (ionode) ferr = f_remove(TRIM(tmp_dir)//TRIM(temp_upf_file) )
-            temp_upf_file=""
-         END IF 
-         IF ( ierr == 0 ) THEN 
-            u => getFirstChild(doc) 
-            SELECT CASE (TRIM(getTagname(u))) 
-               CASE ('UPF') 
-                  CALL read_upf_v2( u, upf, grid, ierr )
-                  IF ( ierr == 0 ) ierr = -2
-               CASE ('qe_pp:pseudo') 
-                  CALL read_upf_schema( u, upf, grid, ierr)
-               CASE default 
-                  ierr = 1
-                  CALL errore('read_upf', 'xml format '//TRIM(getTagName(u))//' not implemented', ierr) 
-               END SELECT 
-            IF ( ierr > 0 ) CALL errore( 'read_upf', 'File is Incomplete or wrong: '//TRIM(filename), ierr)
-            RETURN
-            !  
-         ELSE IF ( ierr > 0 ) THEN
          ! 
-         IF ( .NOT. xml_only_ ) THEN
-            u_temp = find_free_unit()
-            OPEN (UNIT = u_temp, FILE = TRIM(filename), STATUS = 'old', FORM = 'formatted', IOSTAT = ierr)
-            CALL errore ("upf_module:read_upf", "error while opening file " // TRIM(filename), ierr) 
-            CALL deallocate_pseudo_upf( upf )
-            CALL deallocate_radial_grid( grid )
-            CALL read_upf_v1( u_temp, upf, grid, ierr )
-            IF ( ierr == 0 ) ierr = -1
-            CLOSE ( u_temp)  
-         END IF
-          !
-         RETURN
-          !
-       END IF
+         IF (ionode) ferr = f_remove(TRIM(tmp_dir)//TRIM(temp_upf_file) )
+         temp_upf_file=""
+      END IF
+      IF ( ierr == 0 ) THEN 
+         u => getFirstChild(doc) 
+         SELECT CASE (TRIM(getTagname(u))) 
+         CASE ('UPF') 
+            CALL read_upf_v2( u, upf, grid, ierr )
+            IF ( ierr == 0 ) ierr = -2
+         CASE ('qe_pp:pseudo') 
+            CALL read_upf_schema( u, upf, grid, ierr)
+         CASE default 
+            ierr = 1
+            CALL errore('read_upf', 'xml format '//TRIM(getTagName(u))//' not implemented', ierr) 
+         END SELECT
+         IF ( ierr > 0 ) CALL errore( 'read_upf', 'File is Incomplete or wrong: '//TRIM(filename), ierr)
+         !  
+      ELSE IF ( ierr > 0 ) THEN
+         ! 
+         u_temp = find_free_unit()
+         OPEN (UNIT = u_temp, FILE = TRIM(filename), STATUS = 'old', FORM = 'formatted', IOSTAT = ierr)
+         CALL errore ("upf_module:read_upf", "error while opening file " // TRIM(filename), ierr) 
+         CALL deallocate_pseudo_upf( upf )
+         CALL deallocate_radial_grid( grid )
+         CALL read_upf_v1( u_temp, upf, grid, ierr )
+         IF ( ierr == 0 ) ierr = -1
+         CLOSE ( u_temp)  
+         !
+      END IF
    ELSE 
-       CALL errore('read_upf',&
-         'Nothing to read !!! you must provide one of filename or unit optional arguments',1)
+      CALL errore('read_upf', 'Nothing to read !!! Provide either filename or unit optional arguments',1)
    END IF
-END SUBROUTINE read_upf
+   !
+ END SUBROUTINE read_upf
 !=----------------------------------------------------------------------------=!
       END MODULE upf_module
 !=----------------------------------------------------------------------------=!
