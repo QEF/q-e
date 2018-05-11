@@ -9,10 +9,10 @@
 !=----------------------------------------------------------------------------=!
 !! author: Unknown 
 !! this module handles reading of unified pseudopotential format (UPF)
-!! in either v1 or v2 of schema format.
+!! in either v1 or v2 or schema format.
 !! @Note
-!! 14/11/17 Pietro Delugas: new revision passed from iotk to FoX lib, added support 
-!!  new schema for UPF files 
+!! 14/11/17 Pietro Delugas: new revision passed from iotk to FoX lib,
+!!                          added support for new schema format
       !
       USE kinds,               ONLY: DP
       USE pseudo_types,        ONLY: pseudo_upf, deallocate_pseudo_upf
@@ -28,13 +28,14 @@
 SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    !---------------------------------------------+
    !! Reads pseudopotential in UPF format (either v.1 or v.2 or upf_schema).
-   !! Derived type variable *upf* and optionally *grid* store in output the data read
-   !! from file. 
-   !! If the unit number is provided with the *unit* argument  only UPF v1 format 
-   !! is checked, the pseudo file must be opened and closed outside the routine.  
-   !! Otherwise the *filename* argument must be given, file is opened and closed inside 
-   !! the routine   and all formats will be  checked. The logical *xml_only* optional 
-   !! argument may be given with true value to prevent the routine to check v1 format. 
+   !! Derived-type variable *upf* and optionally *grid* store in output the 
+   !! data read from file. 
+   !! If unit number is provided with the *unit* argument, only UPF v1 format
+   !! is chhecked; the PP file must be opened and closed outside the routine.  
+   !! Otherwise the *filename* argument must be given, file is opened and closed
+   !! inside the routine, all formats will be  checked. The optional *xml_only* 
+   !! argument may be set to true value to prevent the routine from checking
+   !! v1 format. 
    !! @Note last revision: 14-11-2017
    !
    USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
@@ -61,6 +62,8 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
    TYPE(radial_grid_type),OPTIONAL,INTENT(INOUT),TARGET :: grid
    !! derived type where is possible to store data on the radial mesh
    INTEGER,INTENT(OUT) :: ierr
+   !! ierr=0: xml schema, ierr=-1: UPF v.1,  ierr=-2: UPF v.2
+   !! ierr>0: error reading PP file
    !
    LOGICAL            :: xml_only_ = .FALSE. 
    TYPE(Node),POINTER :: u,doc     
@@ -118,9 +121,9 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename, xml_only) !
             SELECT CASE (TRIM(getTagname(u))) 
                CASE ('UPF') 
                   CALL read_upf_v2( u, upf, grid, ierr )
+                  IF ( ierr == 0 ) ierr = -2
                CASE ('qe_pp:pseudo') 
                   CALL read_upf_schema( u, upf, grid, ierr)
-                  IF ( ierr == 0 ) ierr = -2
                CASE default 
                   ierr = 1
                   CALL errore('read_upf', 'xml format '//TRIM(getTagName(u))//' not implemented', ierr) 
