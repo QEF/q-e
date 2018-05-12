@@ -167,7 +167,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            IF ( isupf == 0 ) THEN
               WRITE( stdout, "(3X,'file type is xml')") 
            ELSE
-              WRITE( stdout, "(3X,'file type is UPF v.',I1)"), ABS(isupf) 
+              WRITE( stdout, "(3X,'file type is UPF v.',I1)") ABS(isupf) 
            END IF
         END IF
         !
