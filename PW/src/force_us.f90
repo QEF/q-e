@@ -35,6 +35,7 @@ SUBROUTINE force_us( forcenl )
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
 
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wvfct_gpum,                ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -149,6 +150,7 @@ SUBROUTINE force_us( forcenl )
        ! ... 3) the band group is subsequently used to parallelize over bands
        !
        !
+       CALL using_et(.false.)
        DO nt = 1, ntyp
           IF ( nh(nt) == 0 ) CYCLE
           ALLOCATE ( aux(nh(nt),becp%nbnd_loc) )
@@ -201,6 +203,7 @@ SUBROUTINE force_us( forcenl )
        REAL(DP) :: fac
        INTEGER  :: ibnd, ih, jh, na, nt, ikb, jkb, ijkb0, is, js, ijs !counters
        !
+       CALL using_et(.false.)
        DO ibnd = 1, nbnd
           IF (noncolin) THEN
              CALL compute_deff_nc(deff_nc,et(ibnd,ik))

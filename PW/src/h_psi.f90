@@ -101,6 +101,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE funct,    ONLY : exx_is_active
   USE fft_helper_subroutines
   !
+  USE wvfct_gpum, ONLY : using_g2kin
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)     :: lda, n, m
@@ -111,6 +113,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   REAL(dp)    :: ee
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
+  CALL using_g2kin(.false.)
 
   hpsi (:, 1:m) = (0.0_dp, 0.0_dp)
 

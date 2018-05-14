@@ -17,4 +17,7 @@ MODULE g_psi_mod
     h_diag (:,:),&   ! diagonal part of the Hamiltonian
     s_diag (:,:)     ! diagonal part of the overlap matrix
   !
+#if defined(__CUDA)
+    attributes(PINNED) :: h_diag, s_diag
+#endif 
 END MODULE g_psi_mod

@@ -51,6 +51,8 @@ SUBROUTINE electrons()
   USE ions_base,            ONLY : nat
   USE loc_scdm,             ONLY : use_scdm, localize_orbitals
   !
+  USE wvfct_gpum,           ONLY : using_et
+  !
   !
   IMPLICIT NONE
   !
@@ -112,6 +114,7 @@ SUBROUTINE electrons()
            READ (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
            READ (iunres, *) (et(1:nbnd,ik),ik=1,nks)
            CLOSE ( unit=iunres, status='delete')
+           CALL using_et(.true.)
            ! ... if restarting here, exx was already active
            ! ... initialize stuff for exx
            first = .false.
@@ -152,6 +155,7 @@ SUBROUTINE electrons()
      IF ( stopped_by_user .OR. .NOT. conv_elec ) THEN
         conv_elec=.FALSE.
         IF ( .NOT. first) THEN
+           CALL using_et(.false.)
            WRITE(stdout,'(5x,"Calculation (EXX) stopped during iteration #", &
                         & i6)') iter
            CALL seqopn (iunres, 'restart_e', 'formatted', exst)
@@ -291,6 +295,7 @@ SUBROUTINE electrons()
      WRITE( stdout,'(/5x,"EXX: now go back to refine exchange calculation")')
      !
      IF ( check_stop_now() ) THEN
+        CALL using_et(.false.)
         WRITE(stdout,'(5x,"Calculation (EXX) stopped after iteration #", &
                         & i6)') iter
         conv_elec=.FALSE.
@@ -402,6 +407,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
   USE plugin_variables,     ONLY : plugin_etot
   !
+  USE wvfct_gpum,           ONLY : using_et
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT (IN) :: printout
@@ -445,6 +452,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   iter = 0
   dr2  = 0.0_dp
   IF ( restart ) CALL restart_in_electrons (iter, dr2, ethr, et )
+  IF ( restart ) CALL using_et(.true.)
   !
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
   !
@@ -501,6 +509,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      IF ( check_stop_now() ) THEN
         conv_elec=.FALSE.
+        CALL using_et(.false.)
         CALL save_in_electrons (iter, dr2, ethr, et )
         GO TO 10
      END IF
@@ -554,6 +563,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         !
         IF ( stopped_by_user ) THEN
            conv_elec=.FALSE.
+           CALL using_et(.false.)
            CALL save_in_electrons (iter-1, dr2, ethr, et )
            GO TO 10
         END IF
@@ -564,6 +574,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! ... explicitely collected to the first node
         ! ... this is done here for et, in sum_band for wg
         !
+        CALL using_et(.true.)
         CALL poolrecover( et, nbnd, nkstot, nks )
         !
         ! ... the new density is computed here. For PAW:

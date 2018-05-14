@@ -49,7 +49,7 @@
                 IF (changing)    evc_d_ood = .true.
                 return
              END IF
-             print *, "Really copied D->H"
+             print *, "Really copied evc D->H"
              evc = evc_d
              evc_ood = .false.
          ENDIF
@@ -74,7 +74,7 @@
              IF (.not. allocated(evc_d)) THEN
                  ALLOCATE(evc_d, SOURCE=evc)
              ELSE
-                 print *, "Really copied H->D"
+                 print *, "Really copied evc H->D"
                  evc_d = evc
              ENDIF
              evc_d_ood = .false.

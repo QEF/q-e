@@ -33,6 +33,7 @@ SUBROUTINE c_bands( iter )
   USE check_stop,           ONLY : check_stop_now
 
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wvfct_gpum,                ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -50,9 +51,11 @@ SUBROUTINE c_bands( iter )
 
   !
   CALL start_clock( 'c_bands' ); !write (*,*) 'start c_bands' ; FLUSH(6)
+  CALL using_evc(.false.)
   !
   ik_ = 0
   avg_iter = 0.D0
+  IF ( restart ) CALL using_et(.true.)
   IF ( restart ) CALL restart_in_cbands(ik_, ethr, avg_iter, et )
   !
   ! ... If restarting, calculated wavefunctions have to be read from file
@@ -118,6 +121,7 @@ SUBROUTINE c_bands( iter )
      !
      IF (ik .le. nkdum) THEN
         IF (check_stop_now()) THEN
+           CALL  using_et(.false.)
            CALL save_in_cbands(ik, ethr, avg_iter, et )
            RETURN
         END IF
@@ -180,6 +184,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE mp,                   ONLY : mp_sum, mp_bcast
 
   USE wavefunctions_module_gpum, ONLY : evc_d, using_evc, using_evc_d
+  USE wvfct_gpum,                ONLY : et_d, using_et, using_et_d, using_g2kin
   !
   IMPLICIT NONE
   !
@@ -202,7 +207,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   external h_psi, s_psi, g_psi
 #if defined(__CUDA)
   external h_psi_gpu, s_psi_gpu, g_psi_gpu
-  REAL(DP), ALLOCATABLE, DEVICE :: et_d(:)
 #endif
 ! subroutine h_psi(npwx,npw,nvec,psi,hpsi)  computes H*psi
 ! subroutine s_psi(npwx,npw,nvec,psi,spsi)  computes S*psi (if needed)
@@ -215,7 +219,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 ! In addition to the above ithe initial wfc rotation uses h_psi, and s_psi
 
   ALLOCATE( h_diag( npwx, npol ), STAT=ierr )
-  call using_h_diag(.true.); call using_s_diag(.true.)
+
   IF( ierr /= 0 ) &
      CALL errore( ' diag_bands ', ' cannot allocate h_diag ', ABS(ierr) )
   !
@@ -223,6 +227,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   IF( ierr /= 0 ) &
      CALL errore( ' diag_bands ', ' cannot allocate s_diag ', ABS(ierr) )
   !
+  call using_h_diag(.true.); call using_s_diag(.true.)
   ipw=npwx
   CALL mp_sum(ipw, intra_bgrp_comm)
   IF ( nbndx > ipw ) &
@@ -282,6 +287,7 @@ CONTAINS
        !
        ! ... h_diag is the precondition matrix
        !
+       CALL using_g2kin(.false.)
        FORALL( ig = 1 : npw )
           !
           h_diag(ig,1) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
@@ -297,19 +303,20 @@ CONTAINS
           !
           IF ( .NOT. lrot ) THEN
              !
-             CALL using_evc(.false.)
+             CALL using_evc(.false.); ! et is used as intent(out)
              CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
-             CALL using_evc(.true.)
+             CALL using_evc(.true.);  CALL using_et(.true.);
              !
              avg_iter = avg_iter + 1.D0
              !
           END IF
           !
-          CALL using_evc(.false.)
+          CALL using_evc(.true.);  CALL using_et(.true.);
+          call using_h_diag(.false.) ! precontidtion has intent(in)
           CALL rcgdiagg( h_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
-          CALL using_evc(.true.)
+          !CALL using_evc(.true.)  specified above
           !
           avg_iter = avg_iter + cg_iter
           !
@@ -329,10 +336,12 @@ CONTAINS
        ! ... hamiltonian used in g_psi to evaluate the correction
        ! ... to the trial eigenvectors
        !
+       call using_h_diag(.true.); call using_s_diag(.true.);
+       !
+       CALL using_g2kin(.false.)
        h_diag(1:npw, 1) = g2kin(1:npw) + v_of_0
        !
        CALL usnldiag( npw, h_diag, s_diag )
-       call using_h_diag(.true.); call using_s_diag(.true.);
        !
        ntry = 0
        !
@@ -341,7 +350,7 @@ CONTAINS
           lrot = ( iter == 1 )
           !
           IF (.not. use_gpu) THEN
-             CALL using_evc(.false.)
+             CALL using_evc(.true.); CALL using_et(.true.);
              IF ( use_para_diag ) THEN
 !                ! make sure that all processors have the same wfc
                 CALL pregterg( h_psi, s_psi, okvan, g_psi, &
@@ -352,29 +361,22 @@ CONTAINS
                          npw, npwx, nbnd, nbndx, evc, ethr, &
                          et(1,ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
              END IF
-             CALL using_evc(.true.)
+             ! CALL using_evc(.true.) done above
           ELSE
 #if defined(__CUDA)
-             CALL using_evc_d(.false.)
+             CALL using_evc_d(.true.); CALL using_et_d(.true.);
              IF ( use_para_diag ) THEN
-                ALLOCATE(et_d(nbnd))
                 CALL pregterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                             npw, npwx, nbnd, nbndx, evc_d, ethr, &
-                            et_d(1), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call 
-                !evc = evc_d
-                et(:,ik) = et_d
-                DEALLOCATE(et_d) !evc_d, 
+                            et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call 
                 !
              ELSE
                 !
-                ALLOCATE( et_d(nbnd)) !evc_d( npwx*npol, nbnd ), 
                 CALL regterg_gpu (  h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                          npw, npwx, nbnd, nbndx, evc_d, ethr, &
-                         et_d(1), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
-                et(:,ik) = et_d
-                DEALLOCATE(et_d) !evc_d, 
+                         et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
              END IF
-             CALL using_evc_d(.true.) !evc_d = evc
+             ! CALL using_evc_d(.true.) ! done above
 #else
              CALL errore( ' diag_bands ', ' Called GPU version of c_bands which is not available!', 1)
 #endif
@@ -453,6 +455,7 @@ CONTAINS
        !write (*,*) ' inside CG solver branch '
        h_diag = 1.D0
        !
+       CALL using_g2kin(.false.)
        FORALL( ig = 1 : npwx )
           !
           h_diag(ig,:) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
@@ -498,14 +501,15 @@ CONTAINS
        ! ... hamiltonian used in g_psi to evaluate the correction
        ! ... to the trial eigenvectors
        !
+       CALL using_g2kin(.false.)
        DO ipol = 1, npol
           !
           h_diag(1:npw, ipol) = g2kin(1:npw) + v_of_0
           !
        END DO
        !
-       CALL usnldiag( npw, h_diag, s_diag )
        call using_h_diag(.true.); call using_s_diag(.true.);
+       CALL usnldiag( npw, h_diag, s_diag )
        !
        ntry = 0
        !
@@ -514,7 +518,7 @@ CONTAINS
           lrot = ( iter == 1 )
           !
           IF (.not. use_gpu ) THEN
-             CALL using_evc(.true.)
+             CALL using_evc(.true.) ; CALL using_et(.true.)
              IF ( use_para_diag ) then
                 !
                 CALL pcegterg( h_psi, s_psi, okvan, g_psi, &
@@ -529,27 +533,19 @@ CONTAINS
              END IF
           ELSE
 #if defined(__CUDA)
-             CALL using_evc_d(.true.) !evc_d = evc
+             CALL using_evc_d(.true.) ; CALL using_et_d(.true.) 
              IF ( use_para_diag ) then
-                !
-                ALLOCATE( et_d(nbnd))
                 !
                 CALL pcegterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                                npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
-                               et_d(1), btype(1,ik), notconv, lrot, dav_iter )
-                !evc = evc_d
-                et(:,ik) = et_d
-                DEALLOCATE(et_d)
+                               et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter )
+
                 !
              ELSE
                 !
-                ALLOCATE(et_d(nbnd))
-                !
                 CALL cegterg_gpu ( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                                npw, npwx, nbnd, nbndx, npol, evc_d, ethr, &
-                               et_d(1), btype(1,ik), notconv, lrot, dav_iter )
-                et(:,ik) = et_d
-                DEALLOCATE(et_d)
+                               et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter )
              END IF
 #else
              CALL errore( ' diag_bands ', ' Called GPU version of c_bands which is not available!', 1)
@@ -684,6 +680,7 @@ SUBROUTINE c_bands_nscf( )
   USE check_stop,           ONLY : check_stop_now
 
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wvfct_gpum,                ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -700,6 +697,7 @@ SUBROUTINE c_bands_nscf( )
   !
   ik_ = 0
   avg_iter = 0.D0
+  IF ( restart ) CALL using_et(.true.)
   IF ( restart ) CALL restart_in_cbands(ik_, ethr, avg_iter, et )
   !
   ! ... If restarting, calculated wavefunctions have to be read from file
@@ -772,6 +770,7 @@ SUBROUTINE c_bands_nscf( )
         ! ... save wavefunctions to file
         !
         IF (check_stop_now()) THEN
+           CALL using_et(.false.)
            CALL save_in_cbands(ik, ethr, avg_iter, et )
            RETURN
         END IF

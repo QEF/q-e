@@ -120,6 +120,8 @@ MODULE pw_restart_new
       USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
       USE io_files,             ONLY : pseudo_dir
       !
+      USE wvfct_gpum,           ONLY : using_et
+      !
       IMPLICIT NONE
       !
       CHARACTER(15)         :: subname="pw_write_schema"
@@ -151,6 +153,8 @@ MODULE pw_restart_new
       !
       ! PW dimensions need to be properly computed 
       ! reducing across MPI tasks
+      !
+      CALL using_et(.false.)
       !
       ALLOCATE( ngk_g( nkstot ) )
       !
@@ -529,6 +533,7 @@ MODULE pw_restart_new
       USE mp_bands,             ONLY : my_bgrp_id, root_bgrp, intra_bgrp_comm,&
                                        root_bgrp_id, nbgrp
       USE wavefunctions_module_gpum, ONLY : using_evc
+      USE wvfct_gpum,                ONLY : using_et
       !
       IMPLICIT NONE
       !
@@ -541,7 +546,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
       !
-      CALL using_evc(.false.)
+      CALL using_evc(.false.); CALL using_et(.false.) !? Is this needed? et never used!
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
@@ -1890,6 +1895,7 @@ MODULE pw_restart_new
       USE wvfct,    ONLY : et, wg, nbnd
       USE ener,     ONLY : ef, ef_up, ef_dw
       USE qes_types_module, ONLY : band_structure_type
+      USE wvfct_gpum,       ONLY : using_et
       !
       IMPLICIT NONE
       TYPE ( band_structure_type)         :: band_struct_obj
@@ -1921,6 +1927,7 @@ MODULE pw_restart_new
          ef_up = 0.d0
          ef_dw = 0.d0
       END IF 
+      CALL using_et(.true.)
       DO ik =1, band_struct_obj%ndim_ks_energies
          IF ( band_struct_obj%lsda) THEN
             IF ( band_struct_obj%nbnd_up_ispresent .AND. band_struct_obj%nbnd_dw_ispresent) THEN

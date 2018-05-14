@@ -69,6 +69,8 @@ SUBROUTINE clean_pw( lflag )
   USE dftd3_qe,             ONLY : dftd3_clean
   !
   USE wavefunctions_module_gpum, ONLY : using_evc, using_evc_d
+  USE wvfct_gpum,                ONLY : using_et, using_et_d
+  USE wvfct_gpum,                ONLY : using_g2kin, using_g2kin_d
   !
   IMPLICIT NONE
   !
@@ -152,6 +154,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
+  CALL using_g2kin(.false.);     CALL using_g2kin_d(.false.); 
   IF ( ALLOCATED( qrad ) )       DEALLOCATE( qrad )
   IF ( ALLOCATED( tab ) )        DEALLOCATE( tab )
   IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
@@ -167,6 +170,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
+  CALL using_et(.true.); CALL using_et_d(.true.);
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
   IF ( ALLOCATED( btype ) )      DEALLOCATE( btype )
   !

@@ -19,6 +19,7 @@ SUBROUTINE g2_kin ( ik )
   USE gvect,                ONLY : g
   USE gvecw,                ONLY : ecfixed, qcutz, q2sigma
   USE wvfct,                ONLY : g2kin
+  USE wvfct_gpum,           ONLY : using_g2kin
   !
   IMPLICIT NONE
   !
@@ -30,6 +31,7 @@ SUBROUTINE g2_kin ( ik )
   REAL(DP), EXTERNAL :: qe_erf
   !
   !
+  CALL using_g2kin(.true.)
   npw = ngk(ik)
   g2kin(1:npw) = ( ( xk(1,ik) + g(1,igk_k(1:npw,ik)) )**2 + &
                    ( xk(2,ik) + g(2,igk_k(1:npw,ik)) )**2 + &

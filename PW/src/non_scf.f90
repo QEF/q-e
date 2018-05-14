@@ -24,7 +24,9 @@
   USE lsda_mod,             ONLY : lsda, nspin
   USE wvfct,                ONLY : nbnd, et, npwx
   USE wavefunctions_module, ONLY : evc
+  !
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wvfct_gpum,                ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -64,6 +66,7 @@
   ! ... explicitly collected to the first node
   ! ... this is done here for et, in weights () for wg
   !
+  CALL using_et(.true.)
   CALL poolrecover( et, nbnd, nkstot, nks )
   !
   ! ... calculate weights of Kohn-Sham orbitals (only weights, not Ef,

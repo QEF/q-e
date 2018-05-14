@@ -96,7 +96,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE becmod,   ONLY : bec_type, becp, calbec
   USE lsda_mod, ONLY : current_spin
   USE scf,      ONLY : vrs
-  USE wvfct,    ONLY : g2kin
   USE uspp,     ONLY : vkb, nkb
   USE ldaU,     ONLY : lda_plus_u, U_projection
   USE gvect,    ONLY : gstart
@@ -112,15 +111,17 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE funct,    ONLY : exx_is_active
   USE fft_helper_subroutines
   !
+  USE wvfct_gpum,    ONLY : g2kin_d, using_g2kin_d
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)     :: lda, n, m
   COMPLEX(DP), DEVICE, INTENT(IN)  :: psi_d(lda*npol,m) 
   COMPLEX(DP), DEVICE, INTENT(OUT) :: hpsi_d(lda*npol,m)   
   !
-  REAL(DP), DEVICE, ALLOCATABLE :: g2kin_d(:), vrs_d(:,:)
-  COMPLEX(DP), ALLOCATABLE :: psi_host(:,:)
-  COMPLEX(DP), ALLOCATABLE :: hpsi_host(:,:)
+  REAL(DP), DEVICE, ALLOCATABLE :: vrs_d(:,:)
+  COMPLEX(DP), ALLOCATABLE, PINNED :: psi_host(:,:)
+  COMPLEX(DP), ALLOCATABLE, PINNED :: hpsi_host(:,:)
   !
   INTEGER     :: ipol, ibnd, incr, i
   REAL(dp)    :: ee
@@ -128,7 +129,8 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   LOGICAL     :: need_host_copy
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
-  ALLOCATE(g2kin_d, SOURCE=g2kin)
+  CALL using_g2kin_d(.false.)
+  !
   ALLOCATE(vrs_d, SOURCE=vrs)
   hpsi_d (:, 1:m) = (0.0_dp, 0.0_dp)
 
@@ -315,7 +317,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   if (need_host_copy) then
       DEALLOCATE(psi_host , hpsi_host )
   end if
-  DEALLOCATE(g2kin_d, vrs_d)
+  DEALLOCATE(vrs_d)
   CALL stop_clock( 'h_psi' )
   !
   RETURN

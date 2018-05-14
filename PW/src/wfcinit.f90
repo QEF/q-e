@@ -233,7 +233,9 @@ SUBROUTINE init_wfc ( ik )
   USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, &
                                    nbgrp, root_bgrp_id
   USE mp,                   ONLY : mp_bcast
+  !
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wvfct_gpum,                ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -363,6 +365,7 @@ SUBROUTINE init_wfc ( ik )
   ! ... eigenvectors are already copied inside routine rotate_wfc
   !
   et(1:nbnd,ik) = etatom(1:nbnd)
+  CALL using_et(.true.)
   !
   CALL deallocate_bec_type ( becp )
   DEALLOCATE( etatom )

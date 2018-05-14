@@ -27,6 +27,8 @@ SUBROUTINE weights()
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE io_global,            ONLY : ionode, ionode_id
+
+  USE wvfct_gpum,           ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -34,6 +36,8 @@ SUBROUTINE weights()
   !
   INTEGER :: ibnd, ik ! counters: bands, k-points
   real (DP) demet_up, demet_dw
+  !
+  CALL using_et(.false.)
   !
   demet         = 0.D0
   !
@@ -187,12 +191,16 @@ SUBROUTINE weights_only ()
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE io_global,            ONLY : ionode, ionode_id
   !
+  USE wvfct_gpum,           ONLY : using_et
+  !
   IMPLICIT NONE
   !
   ! ... local variables
   !
   INTEGER :: ibnd, ik ! counters: bands, k-points
   real (DP) demet_up, demet_dw
+  !
+  CALL using_et(.false.)
   !
   demet         = 0.D0
   !

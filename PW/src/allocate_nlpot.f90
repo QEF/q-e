@@ -40,6 +40,8 @@ SUBROUTINE allocate_nlpot
   USE uspp_param,       ONLY : upf, lmaxq, lmaxkb, nh, nhm, nbetam
   USE spin_orb,         ONLY : lspinorb, fcoef
   !
+  USE wvfct_gpum,       ONLY : using_g2kin
+  !
   IMPLICIT NONE
   !
   INTEGER, EXTERNAL :: n_plane_waves
@@ -52,6 +54,7 @@ SUBROUTINE allocate_nlpot
   !   g2kin contains the kinetic energy \hbar^2(k+G)^2/2m
   !
   ALLOCATE (g2kin ( npwx ) )
+  CALL using_g2kin(.true.)
   !
   ! Note: computation of the number of beta functions for
   ! each atomic type and the maximum number of beta functions

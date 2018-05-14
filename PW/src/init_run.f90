@@ -34,6 +34,8 @@ SUBROUTINE init_run()
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
   !
+  USE wvfct_gpum,         ONLY : using_et
+  !
   IMPLICIT NONE
   INTEGER :: ierr
   !
@@ -100,6 +102,8 @@ SUBROUTINE init_run()
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )
   !
   et(:,:) = 0.D0
+  CALL using_et(.true.)
+  !
   wg(:,:) = 0.D0
   !
   btype(:,:) = 1

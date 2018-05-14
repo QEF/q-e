@@ -29,6 +29,7 @@ subroutine wannier_proj(ik, wan_func)
   USE buffers,          ONLY : get_buffer, save_buffer
 
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wvfct_gpum,                ONLY : using_et
   
   implicit none
   ! input-output
@@ -57,7 +58,7 @@ subroutine wannier_proj(ik, wan_func)
   ! call get_buffer ( evc, nwordwfc, iunwfc, ik )  
   call davcio ( evc, 2*nwordwfc, iunwfc, ik, -1 )  
   !
-  CALL using_evc(.true.)
+  CALL using_evc(.true.); CALL using_et(.false.)
   !
   ! Reads ortho-atomic wfc
   ! You should prepare data using orthoatwfc.f90

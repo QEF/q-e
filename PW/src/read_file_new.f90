@@ -153,6 +153,8 @@ SUBROUTINE read_xml_file ( )
   USE mp_images,             ONLY : intra_image_comm
 #endif
   !
+  USE wvfct_gpum,            ONLY : using_et
+  !
   IMPLICIT NONE
 
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
@@ -237,6 +239,7 @@ SUBROUTINE read_xml_file ( )
   !
   nbndx = nbnd
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ) )
+  CALL using_et(.true.)
   !
   ! ... here we read all the variables defining the system
   !
@@ -248,6 +251,7 @@ SUBROUTINE read_xml_file ( )
   !
   CALL divide_et_impera( nkstot, xk, wk, isk, nks )
   !
+  CALL using_et(.true.)
   CALL poolscatter( nbnd, nkstot, et, nks, et )
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   !

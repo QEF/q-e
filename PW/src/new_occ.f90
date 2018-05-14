@@ -33,6 +33,7 @@ SUBROUTINE new_evc()
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wvfct_gpum,                ONLY : using_et
 
   IMPLICIT NONE
   !
@@ -68,6 +69,7 @@ SUBROUTINE new_evc()
   !  we start a loop over k points
   !
   CALL using_evc(.false.) ! save buffer is intent(in)
+  CALL using_et(.true.) ! this may be .false. but requires further checks
   DO ik = 1, nks
      IF (lsda) current_spin = isk(ik)
      npw = ngk (ik)
@@ -109,6 +111,7 @@ SUBROUTINE new_evc()
 !  natomwfc with large projections.
 !
      IF (natomwfc < nbnd) THEN
+        CALL using_et(.true.)
         DO ibnd=1,nbnd
            wband(ibnd) =0.0_DP
            DO iatwfc=1,natomwfc

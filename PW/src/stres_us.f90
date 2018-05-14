@@ -32,6 +32,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                    bec_type, becp, calbec
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, mp_circular_shift_left 
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wvfct_gpum,                ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -124,6 +125,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        evps = 0.D0
        IF ( nproc == 1 .AND. me_pool /= root_pool ) GO TO 100
        !
+       CALL using_et(.false.) ! compute_deff : intent(in)
        DO ibnd_loc = 1, nbnd_loc
           ibnd = ibnd_loc + becp%ibnd_begin - 1 
           CALL compute_deff ( deff, et(ibnd,ik) )
@@ -166,6 +168,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        CALL gen_us_dj( ik, dvkb )
        !
+       CALL using_et(.false.) ! compute_deff : intent(in)
        DO icyc = 0, nproc -1
           !
           DO ibnd_loc = 1, nbnd_loc
@@ -224,7 +227,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        IF ( lmaxkb == 0 ) GO TO 10
        !
-       CALL using_evc(.false.) ! This is redundant
+       CALL using_evc(.false.); CALL using_et(.false.) ! compute_deff : intent(in) (this is redundant)
        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        DO ipol = 1, 3
           CALL gen_us_dy( ik, xyz(1,ipol), dvkb )
@@ -336,6 +339,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        ! ... the contribution is calculated only on one processor because
        ! ... partial results are later summed over all processors
        !
+       CALL using_et(.false.) ! compute_deff : intent(in)
        DO ibnd = 1, nbnd
           fac = wg(ibnd,ik)
           IF (ABS(fac) < 1.d-9) CYCLE
@@ -409,7 +413,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        CALL gen_us_dj( ik, dvkb )
        !
-       CALL using_evc(.false.)
+       CALL using_evc(.false.); CALL using_et(.false.) ! this is redundant
        DO ibnd = 1, nbnd
           IF (noncolin) THEN
              work2_nc = (0.D0,0.D0)

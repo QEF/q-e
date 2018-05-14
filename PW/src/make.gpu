@@ -3,7 +3,10 @@ PWLIBS += \
   g_psi_gpu.o \
   h_psi_gpu.o \
   s_psi_gpu.o \
-  vloc_psi_gpu.o
+  vloc_psi_gpu.o \
+  pwcom_gpu.o
 
+pwcom_gpu.o : pwcom.o
+a2fmod.o : pwcom_gpu.o
 g_psi_mod_gpu.o : g_psi_mod.o
 c_bands.o : g_psi_mod_gpu.o

@@ -30,11 +30,13 @@ MODULE a2F
       USE symm_base,    ONLY : s, nsym, irt
       USE io_global,    ONLY : ionode
       USE io_files,     ONLY : seqopn
+      USE wvfct_gpum,   ONLY : using_et
       implicit none
       !
       INTEGER :: iuna2Fsave  = 40, i, j, ik, ns, na
       logical  ::  exst
       !
+      CALL using_et(.false.)
       ! parallel case: only first node writes
       IF ( ionode ) THEN
          !

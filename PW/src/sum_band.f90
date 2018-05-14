@@ -45,6 +45,7 @@ SUBROUTINE sum_band()
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    becp
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wvfct_gpum,                ONLY : using_et
   !
   IMPLICIT NONE
   !
@@ -246,7 +247,7 @@ SUBROUTINE sum_band()
        LOGICAL :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp
        !
-       CALL using_evc(.false.)
+       CALL using_evc(.false.); CALL using_et(.false.)
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -488,7 +489,7 @@ SUBROUTINE sum_band()
        LOGICAL  :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp
        !
-       CALL using_evc(.false.)
+       CALL using_evc(.false.); CALL using_et(.false.)
        !
        !
        ! ... here we sum for each k point the contribution
@@ -872,6 +873,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE mp_bands,      ONLY : nbgrp,inter_bgrp_comm
   USE mp,            ONLY : mp_sum
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wvfct_gpum,                ONLY : using_et
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
@@ -884,6 +886,8 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   ! counters on beta functions, atoms, atom types, spin
   !
   CALL using_evc(.false.) ! calbec->in ; invfft_orbital_gamma|k -> in
+  CALL using_et(.false.)
+  !
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
      ! calbec computes becp = <vkb_i|psi_j>
