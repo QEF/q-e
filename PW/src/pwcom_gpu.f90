@@ -70,6 +70,7 @@
          IF (g2kin_d_ood) THEN
              IF ( allocated(g2kin_d) .and. (SIZE(g2kin_d)/=SIZE(g2kin))) deallocate(g2kin_d)
              IF (.not. allocated(g2kin_d)) THEN
+                 print *, "Allocating g2kin_d, SOURCE=g2kin"
                  ALLOCATE(g2kin_d, SOURCE=g2kin)
              ELSE
                  print *, "Really copied g2kin H->D"

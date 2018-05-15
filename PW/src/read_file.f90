@@ -154,6 +154,8 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE esm,                  ONLY : do_comp_esm, esm_init
   USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
   !
+  USE gvect_gpum,           ONLY : using_g, using_gg, using_g_d, using_gg_d
+  !
   IMPLICIT NONE
 
   ! Used to specify whether to read the band structure (files 
@@ -299,6 +301,10 @@ SUBROUTINE read_xml_file_internal(withbs)
   CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
        g, gg, mill, ig_l2g, gstart ) 
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
+
+  CALL using_g(.true.); CALL using_gg(.true.)       ! g and gg are used almost only after
+  CALL using_g_d(.false.); CALL using_gg_d(.false.) ! a single initialization.
+                                                    ! This is a trck to avoid checking for sync everywhere.
   IF (do_comp_esm) THEN
     CALL pw_readfile( 'esm', ierr )
     CALL esm_init()

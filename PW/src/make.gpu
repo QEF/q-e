@@ -4,7 +4,8 @@ PWLIBS += \
   h_psi_gpu.o \
   s_psi_gpu.o \
   vloc_psi_gpu.o \
-  pwcom_gpu.o
+  pwcom_gpu.o \
+  g2_kin_gpu.o
 
 pwcom_gpu.o : pwcom.o
 a2fmod.o : pwcom_gpu.o

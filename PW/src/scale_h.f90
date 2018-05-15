@@ -29,6 +29,8 @@ subroutine scale_h
   USE mp,         ONLY : mp_max
   USE mp_bands,   ONLY : intra_bgrp_comm
   !
+  USE gvect_gpum, ONLY : using_g, using_g_d, using_gg, using_gg_d
+  !
   implicit none
   !
   integer :: ig
@@ -70,6 +72,9 @@ subroutine scale_h
      gg_max = max(gg(ig), gg_max)
   enddo
 
+  CALL using_g(.true.); CALL using_gg(.true.)       ! g and gg are used almost only after
+  CALL using_g_d(.false.); CALL using_gg_d(.false.) ! a single initialization.
+  !                                                   This is a trick to avoid checking for sync everywhere.
   CALL mp_max (gg_max, intra_bgrp_comm)
 
   if(nqxq < int(sqrt(gg_max)/dq)+4) then

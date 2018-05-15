@@ -35,6 +35,14 @@ MODULE klist
   INTEGER, ALLOCATABLE :: &
        igk_k(:,:),&       ! index of G corresponding to a given index of k+G
        ngk(:)             ! number of plane waves for each k point
+
+  INTEGER, ALLOCATABLE :: &
+       igk_k_d(:,:),&       ! index of G corresponding to a given index of k+G
+       ngk_d(:)             ! number of plane waves for each k point
+#if defined (__CUDA)
+       attributes(DEVICE) :: igk_k_d, ngk_d
+       attributes(PINNED) :: igk_k
+#endif
   !
   INTEGER :: &
        nks,               &! number of k points in this pool
@@ -74,12 +82,20 @@ CONTAINS
        CALL gk_sort( xk(1,ik), ngm, g, gcutw, ngk(ik), igk_k(1,ik), gk )
     END DO
     DEALLOCATE ( gk )
+#if defined (__CUDA)
+    IF(ALLOCATED(igk_k_d)) deallocate(igk_k_d)
+    ALLOCATE ( igk_k_d, source=igk_k)
+    IF(ALLOCATED(ngk_d)) deallocate(ngk_d)
+    ALLOCATE ( ngk_d, source=ngk)
+#endif
     !
   END SUBROUTINE init_igk
   !
   SUBROUTINE deallocate_igk ( ) 
   IF ( ALLOCATED( ngk ) )        DEALLOCATE( ngk )
   IF ( ALLOCATED( igk_k ) )      DEALLOCATE( igk_k )
+  IF ( ALLOCATED( igk_k_d ) )    DEALLOCATE( igk_k_d )
+  IF ( ALLOCATED( ngk_d ) )      DEALLOCATE( ngk_d )
   END SUBROUTINE deallocate_igk
 
 END MODULE klist

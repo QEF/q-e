@@ -1,4 +1,7 @@
 MODULES += \
   fbuf_qe.o \
   qe_buffers.o \
-  wavefunctions_gpu.o
+  wavefunctions_gpu.o \
+  recvec_gpu.o
+
+recvec_gpu.o : recvec.o

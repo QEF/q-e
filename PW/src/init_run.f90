@@ -35,6 +35,7 @@ SUBROUTINE init_run()
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
   !
   USE wvfct_gpum,         ONLY : using_et
+  USE gvect_gpum,         ONLY : using_g, using_gg, using_g_d, using_gg_d
   !
   IMPLICIT NONE
   INTEGER :: ierr
@@ -72,6 +73,10 @@ SUBROUTINE init_run()
      ! ... Solvers need to know gstart
      call export_gstart_2_cg(gstart); call export_gstart_2_davidson(gstart)
   END IF
+
+  CALL using_g(.true.); CALL using_gg(.true.)       ! g and gg are used almost only after
+  CALL using_g_d(.false.); CALL using_gg_d(.false.) ! a single initialization.
+  !                                                   This is a trick to avoid checking for sync everywhere.
   !
   IF (do_comp_esm) CALL esm_init()
   !

@@ -23,7 +23,7 @@ SUBROUTINE c_bands( iter )
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
-  USE control_flags,        ONLY : ethr, isolve, restart
+  USE control_flags,        ONLY : ethr, isolve, restart, use_gpu
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc
@@ -84,7 +84,11 @@ SUBROUTINE c_bands( iter )
      !
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
-     call g2_kin( ik )
+     IF (use_gpu) THEN
+        call g2_kin_gpu( ik )
+     ELSE
+        call g2_kin( ik )
+     END IF
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
