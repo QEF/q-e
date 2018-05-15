@@ -233,10 +233,8 @@ epsilon.o : ../../Modules/mp_world.o
 epsilon.o : ../../Modules/recvec.o
 epsilon.o : ../../Modules/uspp.o
 epsilon.o : ../../Modules/wavefunctions.o
-epsilon.o : ../../Modules/xml_io_base.o
 epsilon.o : ../../PW/src/pwcom.o
 epsilon.o : ../../UtilXlib/mp.o
-epsilon.o : ../../iotk/src/iotk_module.o
 fermi_proj.o : ../../Modules/environment.o
 fermi_proj.o : ../../Modules/io_files.o
 fermi_proj.o : ../../Modules/io_global.o
