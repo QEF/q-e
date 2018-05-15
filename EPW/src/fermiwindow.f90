@@ -23,9 +23,19 @@
   USE pwcom,         ONLY : ef
   USE mp,            ONLY : mp_max, mp_min
   USE mp_global,     ONLY : inter_pool_comm
+  !
   implicit none
-  integer :: ik, ibnd
-  real(kind=DP) :: ebnd, ebndmin, ebndmax
+  !
+  integer :: ik
+  !! Counter on k-points in the pool
+  integer :: ibnd
+  !! Counter on bands
+  real(kind=DP) :: ebnd
+  !! Eigenvalue at etf(ibnd,ik)
+  real(kind=DP) :: ebndmin
+  !! Minimum eigenvalue
+  real(kind=DP) :: ebndmax
+  !! Maximum eigenvalue
   real(kind=DP) :: tmp
   !
   !

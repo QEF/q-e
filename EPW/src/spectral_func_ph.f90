@@ -161,8 +161,7 @@
        !
        ef0 = efermig(etf,nbndsub,nkqf,nelec,wkf,degaussw0,ngaussw,0,isk)
        ! if some bands are skipped (nbndskip.neq.0), nelec has already been
-       ! recalculated 
-       ! in ephwann_shuffle
+       ! recalculated in ephwann_shuffle
        !
      ELSE !SP: This is added for efficiency reason because the efermig routine is slow
        ef0 = efnew
@@ -177,7 +176,7 @@
        WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
      ENDIF
      !
-     CALL start_clock('PH SELF-ENERGY')
+     CALL start_clock('PH SPECTRAL-FUNCTIO')
      !
      fermicount = 0
      gamma0(:)  = zero
@@ -188,7 +187,7 @@
        ! 
        ! Here we must have ef, not ef0, to be consistent with ephwann_shuffle
        IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-           ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+            ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
          !
          fermicount = fermicount + 1
          !
@@ -279,7 +278,7 @@
        !
      ENDDO ! loop on k
      !
-     CALL stop_clock('PH SELF-ENERGY')
+     CALL stop_clock('PH SPECTRAL-FUNCTION')
      !
 #if defined(__MPI)
      !
