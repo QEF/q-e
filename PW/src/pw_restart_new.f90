@@ -16,7 +16,8 @@ MODULE pw_restart_new
   ! ... collected on / distributed to all other processors in pool
   !
   USE KINDS,        ONLY: DP
-  USE qes_module 
+  USE qes_types_module
+  USE qes_libs_module
   USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
                           qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
                           qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
@@ -850,7 +851,7 @@ MODULE pw_restart_new
                             lef, lexx, lesm, lpbc, lvalid_input
       !
       LOGICAL            :: need_qexml, found, electric_field_ispresent
-      INTEGER            :: tmp, iotk_err 
+      INTEGER            :: tmp
       
       !    
       !
@@ -2150,7 +2151,7 @@ MODULE pw_restart_new
       !------------------------------------------------------------------------
       IMPLICIT NONE 
       ! 
-      INTEGER                                            :: ierr, iotk_err  
+      INTEGER                                          :: ierr
       TYPE( output_type ),OPTIONAL,      INTENT(OUT)   :: restart_output
       TYPE(input_type),OPTIONAL,         INTENT(OUT)   :: restart_input
       TYPE(parallel_info_type),OPTIONAL, INTENT(OUT)   :: restart_parallel_info

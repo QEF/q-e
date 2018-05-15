@@ -215,7 +215,7 @@ elf.o : ../../Modules/control_flags.o
 elf.o : ../../Modules/fft_base.o
 elf.o : ../../Modules/io_files.o
 elf.o : ../../Modules/kind.o
-elf.o : ../../Modules/mp_global.o
+elf.o : ../../Modules/mp_pools.o
 elf.o : ../../Modules/recvec.o
 elf.o : ../../Modules/wavefunctions.o
 elf.o : ../../PW/src/pwcom.o

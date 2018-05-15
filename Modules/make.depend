@@ -231,7 +231,6 @@ pw_dot.o : recvec.o
 qeh5_module.o : kind.o
 qes_libs.o : kind.o
 qes_libs.o : qes_types.o
-qes_module.o : ../iotk/src/iotk_module.o
 qes_module.o : qes_libs.o
 qes_module.o : qes_types.o
 qes_read_module.o : kind.o
@@ -257,14 +256,14 @@ qexsd.o : mp_world.o
 qexsd.o : noncol.o
 qexsd.o : parameters.o
 qexsd.o : qes_libs.o
-qexsd.o : qes_module.o
 qexsd.o : qes_types.o
 qexsd.o : version.o
 qexsd_input.o : ../iotk/src/iotk_base.o
 qexsd_input.o : constants.o
 qexsd_input.o : input_parameters.o
 qexsd_input.o : kind.o
-qexsd_input.o : qes_module.o
+qexsd_input.o : qes_libs.o
+qexsd_input.o : qes_types.o
 qmmm.o : ../FFTXlib/fft_types.o
 qmmm.o : ../UtilXlib/mp.o
 qmmm.o : ../UtilXlib/parallel_include.o

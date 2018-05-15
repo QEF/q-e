@@ -271,7 +271,6 @@ clean_pw.o : ../../Modules/tsvdw.o
 clean_pw.o : ../../Modules/uspp.o
 clean_pw.o : ../../Modules/wannier_new.o
 clean_pw.o : ../../Modules/wavefunctions.o
-clean_pw.o : ../../dft-d3/api.o
 clean_pw.o : ../../dft-d3/dftd3_qe.o
 clean_pw.o : Coul_cut_2D.o
 clean_pw.o : atomic_wfc_mod.o
@@ -1498,7 +1497,8 @@ pw_init_qexsd_input.o : ../../Modules/input_parameters.o
 pw_init_qexsd_input.o : ../../Modules/ions_base.o
 pw_init_qexsd_input.o : ../../Modules/kind.o
 pw_init_qexsd_input.o : ../../Modules/parameters.o
-pw_init_qexsd_input.o : ../../Modules/qes_module.o
+pw_init_qexsd_input.o : ../../Modules/qes_libs.o
+pw_init_qexsd_input.o : ../../Modules/qes_types.o
 pw_init_qexsd_input.o : ../../Modules/qexsd.o
 pw_init_qexsd_input.o : ../../Modules/qexsd_input.o
 pw_init_qexsd_input.o : ../../Modules/uspp.o
@@ -1574,7 +1574,6 @@ pw_restart_new.o : ../../Modules/mp_pools.o
 pw_restart_new.o : ../../Modules/noncol.o
 pw_restart_new.o : ../../Modules/paw_variables.o
 pw_restart_new.o : ../../Modules/qes_libs.o
-pw_restart_new.o : ../../Modules/qes_module.o
 pw_restart_new.o : ../../Modules/qes_read_module.o
 pw_restart_new.o : ../../Modules/qes_types.o
 pw_restart_new.o : ../../Modules/qexsd.o
