@@ -52,6 +52,8 @@ SUBROUTINE orbm_kubo()
   USE gvecs,                ONLY : doublegrid
   USE mp_pools,             ONLY : intra_pool_comm
   USE mp_world,             ONLY : world_comm
+  !
+  USE scf_gpum,             ONLY : using_vrs
 
   !  --- Avoid implicit definitions ---
   IMPLICIT NONE
@@ -117,6 +119,7 @@ SUBROUTINE orbm_kubo()
   ALLOCATE(H_evc(npol*npwx,nbnd))
   ALLOCATE(temp(ngm))
 
+  CALL using_vrs(.true.)
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   CALL allocate_bec_type ( nkb, nbnd, becp )
   ! Initializations

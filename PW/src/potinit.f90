@@ -61,6 +61,8 @@ SUBROUTINE potinit()
   USE paw_init,             ONLY : PAW_atomic_becsum
   USE paw_onecenter,        ONLY : PAW_potential
   !
+  USE scf_gpum,             ONLY : using_vrs
+  !
   IMPLICIT NONE
   !
   REAL(DP)              :: charge           ! the starting charge
@@ -245,6 +247,7 @@ SUBROUTINE potinit()
   !
   ! ... define the total local potential (external+scf)
   !
+  CALL using_vrs(.true.)
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   !
   ! ... write on output the parameters used in the lda+U calculation

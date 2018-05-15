@@ -52,6 +52,7 @@ SUBROUTINE electrons()
   USE loc_scdm,             ONLY : use_scdm, localize_orbitals
   !
   USE wvfct_gpum,           ONLY : using_et
+  USE scf_gpum,             ONLY : using_vrs
   !
   !
   IMPLICIT NONE
@@ -129,6 +130,7 @@ SUBROUTINE electrons()
            CALL v_of_rho( rho, rho_core, rhog_core, &
                ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
+           CALL using_vrs(.true.)
            CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
                          nspin, doublegrid )
            !
@@ -201,6 +203,7 @@ SUBROUTINE electrons()
         etot = etot + etxc + exxen
         !
         IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
+        CALL using_vrs(.true.)
         CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
              nspin, doublegrid )
         !
@@ -408,6 +411,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE plugin_variables,     ONLY : plugin_etot
   !
   USE wvfct_gpum,           ONLY : using_et
+  USE scf_gpum,             ONLY : using_vrs
   !
   IMPLICIT NONE
   !
@@ -738,10 +742,12 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      ! ... define the total local potential (external + scf)
      !
+     CALL using_vrs(.true.)
      CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
      !
      ! ... interpolate the total local potential
      !
+     CALL using_vrs(.true.) ! redundant
      CALL interpolate_vrs( dfftp%nnr, nspin, doublegrid, kedtau, v%kin_r, vrs )
      !
      ! ... in the US case we have to recompute the self-consistent

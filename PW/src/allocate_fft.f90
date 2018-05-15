@@ -29,6 +29,8 @@ SUBROUTINE allocate_fft
       report, i_cons, noncolin, npol
   USE wavefunctions_module, ONLY : psic, psic_nc
   USE funct,     ONLY: dft_is_meta
+  !
+  USE scf_gpum,  ONLY : using_vrs
   IMPLICIT NONE
   !
   ! First a bunch of checks
@@ -66,6 +68,7 @@ SUBROUTINE allocate_fft
   ALLOCATE (rhog_core( ngm ) )
   ALLOCATE (psic( dfftp%nnr))
   ALLOCATE (vrs( dfftp%nnr, nspin))
+  CALL using_vrs(.true.)
 
   IF (noncolin) ALLOCATE (psic_nc( dfftp%nnr, npol))
 

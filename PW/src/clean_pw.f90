@@ -72,6 +72,7 @@ SUBROUTINE clean_pw( lflag )
   USE wvfct_gpum,                ONLY : using_et, using_et_d
   USE wvfct_gpum,                ONLY : using_g2kin, using_g2kin_d
   USE gvect_gpum,                ONLY : using_g, using_gg, using_g_d, using_gg_d
+  USE scf_gpum,                  ONLY : using_vrs, using_vrs_d
   !
   IMPLICIT NONE
   !
@@ -142,6 +143,7 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( psic ) )       DEALLOCATE( psic )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
   IF ( ALLOCATED( vrs ) )        DEALLOCATE( vrs )
+  CALL using_vrs(.true.); CALL using_vrs_d(.false.); ! Trick to deallocate
   if (spline_ps) then
     IF ( ALLOCATED( tab_d2y) )     DEALLOCATE( tab_d2y )
   endif

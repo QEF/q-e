@@ -102,6 +102,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE fft_helper_subroutines
   !
   USE wvfct_gpum, ONLY : using_g2kin
+  USE scf_gpum,   ONLY : using_vrs
   !
   IMPLICIT NONE
   !
@@ -114,6 +115,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
   CALL using_g2kin(.false.)
+  CALL using_vrs(.false.)   ! vloc_psi_gamma (intent:in)
 
   hpsi (:, 1:m) = (0.0_dp, 0.0_dp)
 

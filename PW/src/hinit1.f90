@@ -31,6 +31,8 @@ SUBROUTINE hinit1()
   USE paw_symmetry,  ONLY : paw_symmetrize_ddd
   USE dfunct,        ONLY : newd
   !
+  USE scf_gpum,      ONLY : using_vrs
+  !
   IMPLICIT NONE
   !
   !
@@ -50,6 +52,7 @@ SUBROUTINE hinit1()
   !
   ! ... define the total local potential (external+scf)
   !
+  CALL using_vrs(.true.)
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   !
   IF ( tqr ) CALL generate_qpointlist()
