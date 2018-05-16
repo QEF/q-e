@@ -91,7 +91,7 @@ MODULE qexsd_module
             qexsd_init_dipole_info, qexsd_init_outputElectricField,   &
             qexsd_init_outputPBC, qexsd_init_gate_info  
   !
-  PUBLIC :: qexsd_step_addstep, qexsd_set_status    
+  PUBLIC :: qexsd_step_addstep, qexsd_set_status, qexsd_reset_steps    
   ! 
   PUBLIC :: qexsd_init_berryPhaseOutput, qexsd_bp_obj
 CONTAINS
@@ -1339,6 +1339,18 @@ CONTAINS
     steps(step_counter)%lread   = .TRUE. 
     call qes_reset_step(step_obj)
     END SUBROUTINE qexsd_step_addstep 
+    !
+    !------------------------------------------------------------------------------------
+    SUBROUTINE qexsd_reset_steps()
+       IMPLICIT NONE
+       INTEGER  :: i_step
+       IF (ALLOCATED(steps)) THEN
+          DO i_step =1, SIZE(steps) 
+            CALL qes_reset_step(steps(i_step))
+          END DO
+          DEALLOCATE (steps)
+      END IF
+   END SUBROUTINE
     !-------------------------------------------------------------------------------------------------
     SUBROUTINE qexsd_init_berryPhaseOutput( obj, gpar, gvec, nppstr, nkort, xk, pdl_ion,  &    
                                             mod_ion, pdl_ion_tot, mod_ion_tot, nstring, pdl_elec,  &
