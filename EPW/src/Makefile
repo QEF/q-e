@@ -111,7 +111,7 @@ QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/CG/libcg.a  ../../KS_Solvers/
          ../../FFTXlib/libqefft.a ../../dft-d3/libdftd3qe.a
 LIBOBJS =../../UtilXlib/libutil.a ../../clib/clib.a ../../iotk/src/libiotk.a 
 
-TLDEPS= bindir mods libs pw-lib pw ph
+TLDEPS= pw ph
 
 #all :   pw ph wannier wcorr pp ld1 upf libepw.a epw.x 
 #all :   pw ph wannier pp ld1 upf libepw.a epw.x 

@@ -27,7 +27,8 @@ MODULE qexsd_module
   USE global_version,   ONLY:  version_number, svn_revision
   !
   USE constants,        ONLY : e2
-  USE qes_module
+  USE qes_types_module
+  USE qes_libs_module
   !
   USE FoX_wxml
   !

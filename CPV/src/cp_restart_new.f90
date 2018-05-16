@@ -20,7 +20,8 @@ MODULE cp_restart_new
   USE kinds,     ONLY : DP
 #if !defined(__OLDXML)
   !
-  USE qes_module
+  USE qes_types_module
+  USE qes_libs_module
   USE qexsd_input, ONLY: qexsd_init_k_points_ibz
   USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
                           qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
@@ -493,7 +494,6 @@ MODULE cp_restart_new
                             ekincm, c02, cm2, wfc )
       !------------------------------------------------------------------------
       !
-      USE iotk_module
       USE FoX_dom,                  ONLY : parseFile, destroy, item, getElementsByTagname,&
                                            Node
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
@@ -620,10 +620,11 @@ MODULE cp_restart_new
       LOGICAL :: x_gamma_extrapolation
       REAL(dp):: hubbard_dum(3,nsp)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
+      INTEGER, EXTERNAL :: find_free_unit
       !
       ! ... look for an empty unit
       !
-      CALL iotk_free_unit( iunpun, ierr )
+      iunpun = find_free_unit( )
       CALL errore( 'cp_readfile', &
                    'no free units to read wavefunctions', ierr )
       !
@@ -1836,13 +1837,13 @@ MODULE cp_restart_new
     REAL(DP)         :: b1_(3), b2_(3), b3_(3)
     REAL(DP)         :: tau_(3,nat) 
     CHARACTER(LEN=3) :: atm_(ntypx)
-    CHARACTER(iotk_attlenx)  :: attr
     TYPE(output_type) :: output_obj
     TYPE(Node),POINTER :: root, simpleNode, timestepsNode, cellNode, stepNode
+    INTEGER, EXTERNAL :: find_free_unit
     !
     ! ... look for an empty unit
     !
-    CALL iotk_free_unit( iunpun, ierr )
+    iunpun = find_free_unit( )
     CALL errore( 'cp_read_cell', 'no free units ', ierr )
     !
     CALL qexsd_init_schema( iunpun )
@@ -1942,7 +1943,7 @@ MODULE cp_restart_new
     END IF
     CALL destroy (root)
     !
-100 CALL errore( 'cp_read_cell ', attr, ierr )
+100 CALL errore( 'cp_read_cell ', 'error reading MD steps', ierr )
     !
   END SUBROUTINE cp_read_cell
 

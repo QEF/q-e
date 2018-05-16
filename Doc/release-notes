@@ -12,6 +12,9 @@ New in development version:
 
 Problems fixed in development version:
 
+  * Calculation of ELF wasn't always working due to a bad usage of FFT
+    descriptors - noticed by Enrique Zanardi Maffiotte (commit a86fb75d)
+
   * Workaround for gfortran bug in FoX (commit 5b36b697) and for pgi+openmp
     bug (f43e72c9)
 
