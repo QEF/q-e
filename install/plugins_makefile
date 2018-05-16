@@ -26,7 +26,7 @@ d3q:  uncompress-d3q
 	fi
 	touch make-d3q
 
-uncompress-d3q: touch-dummy
+uncompress-d3q:
 	$(call download_and_unpack,$(D3Q),$(D3Q_URL),D3Q,d3q)
 	touch uncompress-d3q
 
@@ -59,19 +59,9 @@ test-suite: uncompress-test-suite
 	if test -d ../test-suite ; then \
 	( cd ../test-suite ; $(MAKE) TLDEPS= run-tests || exit 1) ; fi
 
-uncompress-test-suite: touch-dummy
+uncompress-test-suite:
 	$(call download_and_unpack,$(TESTSUITE),$(TESTSUITE_URL),test-suite,test-suite)
 	touch uncompress-test-suite
-
-###########################################################
-# Examples
-###########################################################
-
-#examples: uncompress-examples
-
-#uncompress-examples: touch-dummy
-#	$(call download_and_unpack,$(EXAMPLES),$(EXAMPLES_URL),Examples,Examples)
-#	touch uncompress-examples
 
 ##########################################################
 # GIPAW
@@ -82,11 +72,11 @@ gipaw:  uncompress-gipaw configure-gipaw
 	cd ../GIPAW; $(MAKE) all || exit 1; cd ../bin; ln -fs ../GIPAW/src/gipaw.x . ; fi
 	touch make-gipaw
 
-uncompress-gipaw: touch-dummy
+uncompress-gipaw:
 	$(call download_and_unpack,$(GIPAW),$(GIPAW_URL),GIPAW,qe-gipaw)	
 	touch uncompress-gipaw
 
-configure-gipaw: touch-dummy
+configure-gipaw: 
 	cd ../GIPAW ; \
 	./configure --with-qe-source=${TOPDIR}
 	touch ./configure-gipaw
@@ -101,11 +91,11 @@ w90: uncompress-w90 configure-w90
 	-(cd ../bin; ln -fs ../W90/wannier90.x .)
 	touch make-w90
 
-uncompress-w90: touch-dummy
+uncompress-w90:
 	$(call download_and_unpack,$(W90),$(W90_URL),W90,wannier90)
 	touch uncompress-w90
 
-configure-w90: touch-dummy
+configure-w90: 
 	cd ../W90 ; \
 	if (test -e ../install/make_wannier90.sys) || (test -d ../W90); then \
 	(cp ../install/make_wannier90.inc ../W90/make.inc); fi 
@@ -121,11 +111,11 @@ want: extlibs uncompress-want configure-want
 #	- ( cd ../bin ; ln -sf ../WANT/bin/* . ) 
 	touch ./make-want
 
-uncompress-want: touch-dummy
+uncompress-want: 
 	$(call download_and_unpack,$(WANT),$(WANT_URL),WANT,want)
 	touch uncompress-want
 
-configure-want: touch-dummy
+configure-want:
 	cd ../WANT ; \
 	./configure \
 	--with-external-iotk \
@@ -159,11 +149,11 @@ yambo: extlibs uncompress-yambo configure-yambo
 	cd ../YAMBO; $(MAKE) yambo interfaces ypp || exit 1; fi
 	touch ./make-yambo
 
-uncompress-yambo: touch-dummy
+uncompress-yambo: 
 	$(call download_and_unpack,$(YAMBO),$(YAMBO_URL),YAMBO,yambo)
 	touch uncompress-yambo
 
-configure-yambo: touch-dummy
+configure-yambo: 
 	@(if test -z "$(F90)" ; then \
 	echo "*** F90 is not defined; please define F90 or edit make.inc" ; exit 1 ; fi)
 	cd ../YAMBO ; \
@@ -184,11 +174,11 @@ yambo-devel: extlibs uncompress-yambo-devel configure-yambo-devel
 	cd ../YAMBO_DEVEL; $(MAKE) yambo interfaces ypp || exit 1; fi
 	touch ./make-yambo-devel
 
-uncompress-yambo-devel: touch-dummy
+uncompress-yambo-devel: 
 	$(call download_and_unpack,$(YAMBO_DEVEL),$(YAMBO_DEVEL_URL),YAMBO_DEVEL,yambo-devel)
 	touch uncompress-yambo-devel
 
-configure-yambo-devel: touch-dummy
+configure-yambo-devel: 
 	@(if test -z "$(F90)" ; then \
 	echo "*** F90 is not defined; please define F90 or edit make.inc" ; exit 1 ; fi)
 	cd ../YAMBO_DEVEL ; \
@@ -204,9 +194,6 @@ configure-yambo-devel: touch-dummy
 	 F77="$(F77)"
 	touch ./configure-yambo-devel
 
-touch-dummy:
-	$(dummy-variable)
-
 ###########################################################
 # plumed
 ###########################################################
@@ -216,16 +203,16 @@ plumed: test-plumed uncompress-plumed patch-plumed
 	cd ../; $(MAKE) pw; $(MAKE) cp; fi
 	touch make-plumed
 
-test-plumed: touch-dummy
+test-plumed:
 	@(if test ! -s ../archive/$(PLUMED).tar.gz && test ! -d ../PLUMED; then \
 	echo "The release contains no PLUMED package. Trying to download it from qe-forge."; fi) 
 	touch ./test-plumed
 
-uncompress-plumed: touch-dummy
+uncompress-plumed:
 	$(call download_and_unpack,$(PLUMED),$(PLUMED_URL),PLUMED,plumed)
 	touch uncompress-plumed
 
-patch-plumed: touch-dummy
+patch-plumed:
 	if test -d ../PLUMED; then \
 	(cd ../PLUMED ; export plumedir="`pwd`" ; \
 	cp  patches/plumedpatch_qespresso_5.2.sh ../ ; \
@@ -242,11 +229,11 @@ sax: extlibs uncompress-sax configure-sax
 #	- ( cd ../bin ; ln -sf ../SaX/sax/bin/* . ) 
 	touch ./make-sax
 
-uncompress-sax: touch-dummy
+uncompress-sax: 
 	$(call download_and_unpack,$(SAX),$(SAX_URL),SaX,$(SAX))
 	touch uncompress-sax
 
-configure-sax: touch-dummy
+configure-sax: 
 	cd ../SaX ; \
 	./configure \
 	--with-external-iotk \
@@ -277,7 +264,7 @@ west: extlibs uncompress-west
 	cd ../West; $(MAKE) -j1 all || exit 1; fi
 	touch ./make-west
 
-uncompress-west: touch-dummy
+uncompress-west: 
 	$(call download_and_unpack,$(WEST),$(WEST_URL),West,WEST)
 	touch uncompress-west
 
@@ -291,7 +278,7 @@ SternheimerGW: extlibs uncompress-SternheimerGW
 	fi
 	touch ./make-SternheimerGW
 
-uncompress-SternheimerGW: touch-dummy
+uncompress-SternheimerGW: 
 	$(call download_and_unpack,$(SternheimerGW),$(SternheimerGW_URL),SternheimerGW,SternheimerGW)
 	touch uncompress-SternheimerGW
 
