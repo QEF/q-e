@@ -61,7 +61,7 @@ lr_us.o\
 lr_test_restart.o\
 lr_dav_debug.o
 
-TLDEPS=bindir libs pw-lib libfft libla lrmods
+TLDEPS=bindir libs mods lrmods
 
 all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x
 

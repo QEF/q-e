@@ -29,6 +29,7 @@ SUBROUTINE punch( what )
   USE pw_restart,           ONLY : pw_writefile
 #else
   USE pw_restart_new,       ONLY : pw_write_schema, pw_write_binaries
+  USE qexsd_module,         ONLY : qexsd_reset_steps
 #endif
   USE io_rho_xml,           ONLY : write_scf
   USE a2F,                  ONLY : la2F, a2Fsave
@@ -100,6 +101,11 @@ SUBROUTINE punch( what )
         IF ( TRIM(cp_source) /= TRIM(cp_dest) ) &
              cp_status = f_copy(cp_source, cp_dest)
      END DO
+     !
+     ! ... if allocated deallocate  steps 
+     ! 
+     CALL qexsd_reset_steps()
+     !
      inlc = get_inlc()
      IF ( inlc > 0 ) THEN 
         cp_source = TRIM(kernel_file_name)
