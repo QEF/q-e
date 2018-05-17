@@ -112,6 +112,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE fft_helper_subroutines
   !
   USE wvfct_gpum,    ONLY : g2kin_d, using_g2kin_d
+  USE uspp_gpum,     ONLY : using_vkb
   !
   IMPLICIT NONE
   !
@@ -130,6 +131,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
   CALL using_g2kin_d(.false.)
   CALL using_vrs_d(.false.)
+  CALL using_vkb(.false.)
   !
   hpsi_d (:, 1:m) = (0.0_dp, 0.0_dp)
 

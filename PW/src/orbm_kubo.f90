@@ -54,6 +54,7 @@ SUBROUTINE orbm_kubo()
   USE mp_world,             ONLY : world_comm
   !
   USE scf_gpum,             ONLY : using_vrs
+  USE uspp_gpum,            ONLY : using_vkb
 
   !  --- Avoid implicit definitions ---
   IMPLICIT NONE
@@ -175,6 +176,8 @@ SUBROUTINE orbm_kubo()
         ! needed by h_psi
         npw_k = ngk(n)
         current_k=n
+        !
+        CALL using_vkb(.true.)
         CALL init_us_2(npw_k,igk_k(1,n),xk(1,n),vkb)
         CALL g2_kin( n )
 

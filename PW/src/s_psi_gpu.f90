@@ -93,7 +93,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   USE cublas
   USE kinds,      ONLY : DP
   USE becmod,     ONLY : becp
-  USE uspp,       ONLY : vkb, nkb, okvan, qq_at, qq_so, indv_ijkb0
+  USE uspp,       ONLY : nkb, okvan, qq_at, qq_so, indv_ijkb0
   USE spin_orb,   ONLY : lspinorb
   USE uspp_param, ONLY : upf, nh, nhm
   USE ions_base,  ONLY : nat, nsp, ityp
@@ -102,6 +102,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   USE realus,     ONLY :  real_space, &
                   invfft_orbital_gamma, fwfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma, &
                   invfft_orbital_k, fwfft_orbital_k, calbec_rs_k, s_psir_k
+  !
+  USE uspp_gpum,  ONLY : vkb_d, using_vkb_d
   !
   IMPLICIT NONE
   !
@@ -203,8 +205,9 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
          ! data distribution functions
        REAL(DP), ALLOCATABLE :: ps(:,:)
        REAL(DP),    DEVICE, POINTER :: ps_d(:,:)
-       COMPLEX(DP), DEVICE, POINTER :: vkb_d(:,:)
          ! the product vkb and psi
+       !
+       CALL using_vkb_d(.false.)
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
           nproc   = 1
@@ -227,7 +230,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        ALLOCATE( ps( nkb, m_max ), STAT=ierr )
        CALL qe_buffer%lock_buffer(ps_d, (/ nkb, m_max /), ierr)
-       CALL qe_buffer%lock_buffer(vkb_d, (/ lda, nkb /), ierr)
        
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_gamma ', ' cannot allocate memory (ps) ', ABS(ierr) )
@@ -255,7 +257,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           END IF
        END DO
        ps_d ( 1:nkb, 1:m_max ) = ps( 1:nkb, 1:m_max )
-       vkb_d(1:lda, 1:nkb) = vkb(1:lda,1:nkb)
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
           IF ( m == 1 ) THEN
@@ -296,7 +297,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        DEALLOCATE( ps ) 
        CALL qe_buffer%release_buffer(ps_d, ierr)
-       CALL qe_buffer%release_buffer(vkb_d, ierr)
        !
        RETURN
        !
@@ -318,7 +318,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
          ! counters
        COMPLEX(DP), ALLOCATABLE :: ps(:,:), qqc(:,:)
        COMPLEX(DP), DEVICE, POINTER :: ps_d(:,:)
-       COMPLEX(DP), DEVICE, POINTER :: vkb_d(:,:)
          ! ps = product vkb and psi ; qqc = complex version of qq
        !
        ALLOCATE( ps( nkb, m ), STAT=ierr )
@@ -326,9 +325,9 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_k ', ' cannot allocate memory (ps) ', ABS(ierr) )
        CALL qe_buffer%lock_buffer(ps_d, (/ nkb, m /), ierr)
-       CALL qe_buffer%lock_buffer(vkb_d, (/ lda, nkb /), ierr)
-       !ALLOCATE(vkb_d, SOURCE=vkb)
 
+       ! sync vkb if needed
+       CALL using_vkb_d(.false.)
        !
        ps(:,:) = ( 0.D0, 0.D0 )
        !
@@ -350,7 +349,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           END IF
        END DO
        ps_d(1:nkb, 1:m )   = ps(1:nkb, 1:m )
-       vkb_d(1:lda, 1:nkb) = vkb(1:lda,1:nkb)
        !
        IF ( m == 1 ) THEN
           !
@@ -366,8 +364,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        DEALLOCATE( ps )
        CALL qe_buffer%release_buffer(ps_d, ierr)
-       CALL qe_buffer%release_buffer(vkb_d, ierr)
-       !DEALLOCATE(vkb_d)
        !
        RETURN
        !
@@ -390,13 +386,14 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        ! counters
        COMPLEX (DP), ALLOCATABLE :: ps (:,:,:)
        COMPLEX(DP), DEVICE, POINTER :: ps_d(:,:,:)
-       COMPLEX(DP), DEVICE, POINTER :: vkb_d(:,:)
        ! the product vkb and psi
        !
        ALLOCATE (ps(nkb,npol,m),STAT=ierr)    
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_nc ', ' cannot allocate memory (ps) ', ABS(ierr) )
 
+       ! sync vkb if needed
+       CALL using_vkb_d(.false.)
 
        ps(:,:,:) = (0.D0,0.D0)
        !
@@ -434,10 +431,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           END IF
        END DO
        CALL qe_buffer%lock_buffer(ps_d, (/ nkb,npol,m /), ierr)
-       CALL qe_buffer%lock_buffer(vkb_d, (/ lda, nkb /), ierr)
        
        ps_d(1:nkb,1:npol,1:m) = ps(1:nkb,1:npol,1:m)
-       vkb_d(1:lda, 1:nkb) = vkb(1:lda,1:nkb)
        
        
        call ZGEMM ('N', 'N', n, m*npol, nkb, (1.d0, 0.d0) , vkb_d, &
@@ -445,7 +440,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
 
        DEALLOCATE(ps)
        CALL qe_buffer%release_buffer(ps_d, ierr)
-       CALL qe_buffer%release_buffer(vkb_d, ierr)
 
        RETURN
 

@@ -217,6 +217,8 @@ SUBROUTINE new_ns(ns)
     USE uspp,                 ONLY : nkb, vkb, indv_ijkb0
     USE uspp_param,           ONLY : nhm, nh
     !
+    USE uspp_gpum,            ONLY : using_vkb
+    !
     IMPLICIT NONE
     REAL(DP), INTENT(IN) :: q(nwfcU,nhm,nat)
     TYPE(bec_type), INTENT(INOUT) :: p
@@ -228,6 +230,7 @@ SUBROUTINE new_ns(ns)
     ! compute <beta|psi>
     !
     CALL allocate_bec_type (nkb, nbnd, becp)
+    CALL using_vkb(.true.)
     CALL init_us_2 (npw,igk_k(1,ik),xk(1,ik),vkb)
     CALL using_evc(.false.)
     CALL calbec (npw, vkb, evc, becp)
@@ -307,6 +310,7 @@ SUBROUTINE new_ns_nc(ns)
   USE mp,                   ONLY : mp_sum
 
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE uspp_gpum,                 ONLY : using_vkb
 
   IMPLICIT NONE
   !

@@ -46,6 +46,7 @@ SUBROUTINE sum_band()
                                    becp
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
+  USE uspp_gpum,                 ONLY : using_vkb
   !
   IMPLICIT NONE
   !
@@ -278,6 +279,7 @@ SUBROUTINE sum_band()
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
           IF ( nks > 1 ) CALL using_evc(.true.) ! get_buffer(evc, ...) evc is updated (intent out)
           !
+          IF ( nkb > 0 ) CALL using_vkb(.true.)
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
           !
@@ -532,6 +534,7 @@ SUBROUTINE sum_band()
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
           IF ( nks > 1 ) CALL using_evc(.true.)
           !
+          IF ( nkb > 0 ) CALL using_vkb(.true.)
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
           !
@@ -874,6 +877,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE mp,            ONLY : mp_sum
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
+  USE uspp_gpum,                 ONLY : using_vkb
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
@@ -887,6 +891,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   !
   CALL using_evc(.false.) ! calbec->in ; invfft_orbital_gamma|k -> in
   CALL using_et(.false.)
+  CALL using_vkb(.false.)
   !
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN

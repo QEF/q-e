@@ -313,6 +313,7 @@ MODULE exx
          transform_evc_to_exx, igk_exx, evc_exx
 
     USE wavefunctions_module_gpum, ONLY : using_evc
+    USE uspp_gpum,                 ONLY : using_vkb ! is this needed?
     !
     IMPLICIT NONE
     INTEGER :: ik,ibnd, i, j, k, ir, isym, ikq, ig
@@ -1654,6 +1655,7 @@ MODULE exx
     USE exx_band,               ONLY : nwordwfc_exx, igk_exx
 
     USE wavefunctions_module_gpum, ONLY : using_evc
+    USE uspp_gpum,                 ONLY : using_vkb 
 
     IMPLICIT NONE
 
@@ -1685,6 +1687,7 @@ MODULE exx
        ENDIF
        !
        IF(okvan)THEN
+          CALL using_vkb(.true.)
           ! prepare the |beta> function at k+q
           CALL init_us_2(npw, igk_exx(1,ik), xk(:,ik), vkb)
           ! compute <beta_I|psi_j> at this k+q point, for all band and all projectors
@@ -2942,6 +2945,7 @@ SUBROUTINE aceinit( exex )
   USE wavefunctions_module, ONLY : evc
   !
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE uspp_gpum,                 ONLY : using_vkb
   !
   IMPLICIT NONE
   !
@@ -2968,6 +2972,7 @@ SUBROUTINE aceinit( exex )
      IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
      IF ( nks > 1 ) CALL using_evc(.true.)
      IF ( okvan ) THEN
+        CALL using_vkb(.true.)
         CALL init_us_2(npw, igk_k(1,ik), xk(:,ik), vkb)
         CALL calbec ( npw, vkb, evc, becpsi, nbnd )
      ENDIF

@@ -41,6 +41,7 @@ SUBROUTINE allocate_nlpot
   USE spin_orb,         ONLY : lspinorb, fcoef
   !
   USE wvfct_gpum,       ONLY : using_g2kin
+  USE uspp_gpum,        ONLY : using_vkb
   !
   IMPLICIT NONE
   !
@@ -54,7 +55,6 @@ SUBROUTINE allocate_nlpot
   !   g2kin contains the kinetic energy \hbar^2(k+G)^2/2m
   !
   ALLOCATE (g2kin ( npwx ) )
-  CALL using_g2kin(.true.)
   !
   ! Note: computation of the number of beta functions for
   ! each atomic type and the maximum number of beta functions
@@ -108,6 +108,9 @@ SUBROUTINE allocate_nlpot
   nwfcm = maxval ( upf(1:nsp)%nwfc )
   ALLOCATE (tab_at( nqx , nwfcm , nsp))
 
+  CALL using_g2kin(.true.)
+  CALL using_vkb(.true.)
+  !
   RETURN
 END SUBROUTINE allocate_nlpot
 

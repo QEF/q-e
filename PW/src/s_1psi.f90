@@ -22,6 +22,8 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
               invfft_orbital_k, fwfft_orbital_k, calbec_rs_k, s_psir_k
   USE wvfct,  ONLY: nbnd
   !
+  USE uspp_gpum, ONLY : using_vkb
+  !
   IMPLICIT NONE
   !
   INTEGER     :: npwx, n, ibnd
@@ -53,6 +55,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
      END IF
   ELSE
      !
+     CALL using_vkb(.false.)
      CALL calbec( n, vkb, psi, becp )
      CALL s_psi( npwx, n, 1, psi, spsi )
      !

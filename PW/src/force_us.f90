@@ -36,6 +36,7 @@ SUBROUTINE force_us( forcenl )
 
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
+  USE uspp_gpum,                 ONLY : using_vkb
   !
   IMPLICIT NONE
   !
@@ -70,10 +71,12 @@ SUBROUTINE force_us( forcenl )
      IF ( nks > 1 ) THEN
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
         CALL using_evc(.true.)
+        IF ( nkb > 0 ) CALL using_vkb(.true.)
         IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
      END IF
      !
+     CALL using_vkb(.false.)
      CALL calbec ( npw, vkb, evc, becp )
      !
      DO ipol = 1, 3

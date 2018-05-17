@@ -639,6 +639,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE mp,                   ONLY : mp_barrier
   !
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE uspp_gpum,                 ONLY : using_vkb
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: wfc_extr
@@ -665,6 +667,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   CALL mp_barrier( intra_image_comm ) ! debug
   !
   CALL using_evc(.false.)
+  CALL using_vkb(.false.)
+
   IF ( wfc_extr == 1 ) THEN
      !
      CALL diropn( iunoldwfc, 'oldwfc', 2*nwordwfc, exst )
@@ -739,6 +743,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
            ! ... Required by s_psi:
            ! ... nonlocal pseudopotential projectors |beta>, <psi|beta>
            !
+           IF ( nkb > 0 ) CALL using_vkb(.true.)
            IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
            CALL calbec( npw, vkb, evc, becp )
            !

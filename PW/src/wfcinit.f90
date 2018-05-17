@@ -37,6 +37,7 @@ SUBROUTINE wfcinit()
   USE qes_libs_module,      ONLY : qes_reset_output
 #endif
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE uspp_gpum,                 ONLY : using_vkb
   !
   IMPLICIT NONE
   !
@@ -186,6 +187,7 @@ SUBROUTINE wfcinit()
      !
      ! ... More Hpsi initialization: nonlocal pseudopotential projectors |beta>
      !
+     IF ( nkb > 0 ) CALL using_vkb(.true.)
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... Needed for LDA+U

@@ -29,6 +29,8 @@ SUBROUTINE orthoUwfc
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
+  !
+  USE uspp_gpum, ONLY : using_vkb
   ! 
   IMPLICIT NONE
   !
@@ -87,6 +89,7 @@ SUBROUTINE orthoUwfc
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
      npw = ngk (ik)
+     CALL using_vkb(.true.)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      CALL calbec (npw, vkb, wfcatom, becp) 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
@@ -131,6 +134,8 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
                          bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
+  !
+  USE uspp_gpum, ONLY : using_vkb
   ! 
   IMPLICIT NONE
   !
@@ -157,6 +162,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
      npw = ngk (ik)
+     CALL using_vkb(.true.)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      CALL calbec (npw, vkb, wfcatom, becp) 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)

@@ -34,6 +34,7 @@ SUBROUTINE c_bands( iter )
 
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
+  USE uspp_gpum,                 ONLY : using_vkb
   !
   IMPLICIT NONE
   !
@@ -92,6 +93,7 @@ SUBROUTINE c_bands( iter )
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
+     IF ( nkb > 0 ) CALL using_vkb(.true.)
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... read in wavefunctions from the previous iteration
@@ -189,6 +191,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 
   USE wavefunctions_module_gpum, ONLY : evc_d, using_evc, using_evc_d
   USE wvfct_gpum,                ONLY : et_d, using_et, using_et_d, using_g2kin
+  USE uspp_gpum,                 ONLY : using_vkb
   !
   IMPLICIT NONE
   !
@@ -442,6 +445,7 @@ CONTAINS
           !
           call allocate_bec_type(nkb,nbnd,bec_evcel)
           
+          CALL using_vkb(.false.)
           !
           CALL calbec(npw, vkb, evcel, bec_evcel)
           !
@@ -685,6 +689,7 @@ SUBROUTINE c_bands_nscf( )
 
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
+  USE uspp_gpum,                 ONLY : using_vkb
   !
   IMPLICIT NONE
   !
@@ -732,6 +737,7 @@ SUBROUTINE c_bands_nscf( )
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
+     IF ( nkb > 0 ) CALL using_vkb(.true.)
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... Needed for LDA+U

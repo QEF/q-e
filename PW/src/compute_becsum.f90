@@ -34,6 +34,8 @@ SUBROUTINE compute_becsum ( iflag )
                                    bec_type, becp
   !
   USE wavefunctions_module_gpum, ONLY : using_evc
+  USE uspp_gpum,                 ONLY : using_vkb
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: iflag
@@ -62,6 +64,8 @@ SUBROUTINE compute_becsum ( iflag )
      IF ( nks > 1 ) &
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
      IF ( nks > 1 ) CALL using_evc(.true.)
+     !
+     IF ( nkb > 0 ) CALL using_vkb(.true.)
      IF ( nkb > 0 ) &
           CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !

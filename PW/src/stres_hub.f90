@@ -487,6 +487,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    USE wavefunctions_module_gpum, ONLY : using_evc
+   USE uspp_gpum,                 ONLY : using_vkb
 
    IMPLICIT NONE
    !
@@ -572,6 +573,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    ! and here the derivative of the spherical harmonic
    CALL gen_us_dy (ik, xyz(1,ipol), aux1)
 
+   CALL using_vkb(.false.)
    DO nt=1,ntyp
       ALLOCATE (dbeta(npwx,nh(nt)), dbetapsi(nh(nt),nbnd), betapsi(nh(nt),nbnd), &
                 wfatbeta(nwfcU,nh(nt)), wfatdbeta(nwfcU,nh(nt)) )

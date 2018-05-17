@@ -37,6 +37,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE buffers,              ONLY : get_buffer
    USE wavefunctions_module_gpum, ONLY : using_evc
    USE wvfct_gpum,                ONLY : using_et
+   USE uspp_gpum,                 ONLY : using_vkb
 
    USE pw2blip
 
@@ -372,6 +373,8 @@ CONTAINS
             npw = ngk(ikk)
             IF( nks > 1 ) CALL get_buffer (evc, nwordwfc, iunwfc, ikk )
             IF( nks > 1 ) CALL using_evc(.true.)
+            !
+            CALL using_vkb(.true.)
             CALL init_us_2 (npw, igk_k(1,ikk), xk (1, ikk), vkb)
             CALL calbec ( npw, vkb, evc, becp )
             !
