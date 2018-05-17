@@ -217,7 +217,7 @@ SUBROUTINE new_ns(ns)
     USE uspp,                 ONLY : nkb, vkb, indv_ijkb0
     USE uspp_param,           ONLY : nhm, nh
     !
-    USE uspp_gpum,            ONLY : using_vkb
+    USE uspp_gpum,            ONLY : using_vkb, using_indv_ijkb0
     !
     IMPLICIT NONE
     REAL(DP), INTENT(IN) :: q(nwfcU,nhm,nat)
@@ -226,6 +226,8 @@ SUBROUTINE new_ns(ns)
     INTEGER :: ib, iw, nt, na, ikb, ih
 
     IF ( nkb == 0 ) RETURN
+    !
+    CALL using_indv_ijkb0(.false.)
     !
     ! compute <beta|psi>
     !

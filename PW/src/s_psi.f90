@@ -96,7 +96,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
   USE realus,     ONLY :  real_space, &
                   invfft_orbital_gamma, fwfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma, &
                   invfft_orbital_k, fwfft_orbital_k, calbec_rs_k, s_psir_k
-  USE uspp_gpum,  ONLY : using_vkb
+  USE uspp_gpum,  ONLY : using_vkb, using_indv_ijkb0
   !
   IMPLICIT NONE
   !
@@ -182,6 +182,8 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
          ! data distribution functions
        REAL(DP), ALLOCATABLE :: ps(:,:)
          ! the product vkb and psi
+       !
+       CALL using_indv_ijkb0(.false.)
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
           nproc   = 1
@@ -288,6 +290,8 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        COMPLEX(DP), ALLOCATABLE :: ps(:,:), qqc(:,:)
          ! ps = product vkb and psi ; qqc = complex version of qq
        !
+       CALL using_indv_ijkb0(.false.)
+       !
        ALLOCATE( ps( nkb, m ), STAT=ierr )    
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_k ', ' cannot allocate memory (ps) ', ABS(ierr) )
@@ -346,6 +350,8 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        ! counters
        COMPLEX (DP), ALLOCATABLE :: ps (:,:,:)
        ! the product vkb and psi
+       !
+       CALL using_indv_ijkb0(.false.)
        !
        ALLOCATE (ps(nkb,npol,m),STAT=ierr)    
        IF( ierr /= 0 ) &

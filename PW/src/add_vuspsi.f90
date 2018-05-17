@@ -30,7 +30,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   USE uspp_param,    ONLY: nh, nhm
   USE becmod,        ONLY: bec_type, becp
   !
-  USE uspp_gpum,     ONLY : using_vkb
+  USE uspp_gpum,     ONLY : using_vkb, using_indv_ijkb0
   !
   IMPLICIT NONE
   !
@@ -82,6 +82,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        IF ( nkb == 0 ) RETURN
        !
        CALL using_vkb(.false.)
+       CALL using_indv_ijkb0(.false.)
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
           nproc   = 1
@@ -188,6 +189,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        IF ( nkb == 0 ) RETURN
        !
        CALL using_vkb(.false.)
+       CALL using_indv_ijkb0(.false.)
        !
        ALLOCATE (ps (nkb,m), STAT=ierr )
        IF( ierr /= 0 ) &
@@ -239,6 +241,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        IF ( nkb == 0 ) RETURN
        !
        CALL using_vkb(.false.)
+       CALL using_indv_ijkb0(.false.)
        !
        ALLOCATE (ps(  nkb,npol, m), STAT=ierr )    
        IF( ierr /= 0 ) &

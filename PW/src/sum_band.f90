@@ -877,7 +877,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE mp,            ONLY : mp_sum
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb
+  USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
@@ -892,6 +892,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   CALL using_evc(.false.) ! calbec->in ; invfft_orbital_gamma|k -> in
   CALL using_et(.false.)
   CALL using_vkb(.false.)
+  CALL using_indv_ijkb0(.false.)
   !
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN

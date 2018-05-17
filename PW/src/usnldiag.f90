@@ -22,7 +22,7 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   USE spin_orb, ONLY: lspinorb
   USE noncollin_module, ONLY: noncolin, npol
   !
-  USE uspp_gpum, ONLY : using_vkb
+  USE uspp_gpum, ONLY : using_vkb, using_indv_ijkb0
   !
   IMPLICIT NONE
   !
@@ -37,6 +37,7 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   COMPLEX(DP) :: ps1(2), ps2(2), ar
   !
   CALL using_vkb(.false.)
+  CALL using_indv_ijkb0(.false.)
   !
   ! initialise s_diag
   !

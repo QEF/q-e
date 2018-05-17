@@ -148,6 +148,8 @@ MODULE us_exx
     USE cell_base,           ONLY : tpiba
     USE control_flags,       ONLY : gamma_only
     USE fft_types,           ONLY : fft_type_descriptor
+    !
+    USE uspp_gpum,           ONLY : using_indv_ijkb0
     IMPLICIT NONE
     !
     TYPE ( fft_type_descriptor ), INTENT(IN) :: dfftt 
@@ -169,6 +171,8 @@ MODULE us_exx
     !
     IF(.not.okvan) RETURN
     CALL start_clock( 'addusxx' )
+    !
+    CALL using_indv_ijkb0(.false.)
     !
     ngms = dfftt%ngm
     add_complex = ( flag=='c' .OR. flag=='C' )
@@ -314,6 +318,8 @@ MODULE us_exx
     USE control_flags,  ONLY : gamma_only
     USE fft_types,      ONLY : fft_type_descriptor
     !
+    USE uspp_gpum,           ONLY : using_indv_ijkb0
+    !
     IMPLICIT NONE
     !
     TYPE ( fft_type_descriptor ), INTENT(IN) :: dfftt 
@@ -338,6 +344,8 @@ MODULE us_exx
     LOGICAL :: add_complex, add_real, add_imaginary
     !
     IF(.not.okvan) RETURN
+    !
+    CALL using_indv_ijkb0(.false.)
     !
     ngms = dfftt%ngm
     add_complex = ( flag=='c' .OR. flag=='C' )
@@ -468,6 +476,8 @@ MODULE us_exx
     USE uspp_param,          ONLY : upf, nh
     USE wvfct,               ONLY : nbnd, npwx
     USE control_flags,       ONLY : gamma_only
+    !
+    USE uspp_gpum,           ONLY : using_indv_ijkb0
     IMPLICIT NONE
     !
     ! In input I get a slice of <beta|left> and <beta|right> only for this kpoint and this band
@@ -488,6 +498,8 @@ MODULE us_exx
     CALL start_clock( 'nlxx_pot' )
     !
     IF(.not.okvan) RETURN
+    !
+    CALL using_indv_ijkb0(.false.)
     !
     ! These are beta functions for k-point "xkp" with indices "igkp"
     ! Possibly already available in the calling routines vexx, since
@@ -550,6 +562,8 @@ MODULE us_exx
     !
     USE realus,           ONLY : tabxx
     !
+    USE uspp_gpum,           ONLY : using_indv_ijkb0
+    !
     IMPLICIT NONE
     !
     COMPLEX(DP),INTENT(inout) :: rho(:)
@@ -561,6 +575,8 @@ MODULE us_exx
     !
     IF ( .not. okvan ) RETURN
     CALL start_clock( 'addusxx' )
+    !
+    CALL using_indv_ijkb0(.false.)
     !
     DO ia = 1, nat
       !
@@ -603,6 +619,8 @@ MODULE us_exx
     USE fft_types,        ONLY : fft_type_descriptor
     USE realus,           ONLY : tabxx
     !
+    USE uspp_gpum,           ONLY : using_indv_ijkb0
+    !
     IMPLICIT NONE
     !
     TYPE ( fft_type_descriptor ), INTENT(IN) :: dfftt 
@@ -619,6 +637,9 @@ MODULE us_exx
     COMPLEX(DP) :: aux
     !
     CALL start_clock( 'newdxx' )
+    !
+    CALL using_indv_ijkb0(.false.)
+    !
     domega = omega/(dfftt%nr1 *dfftt%nr2 *dfftt%nr3)
     !
     DO ia = 1, nat
@@ -837,6 +858,9 @@ MODULE us_exx
     USE becmod,       ONLY : allocate_bec_type, is_allocated_bec_type
 
     USE cell_base,            ONLY : at, bg
+    !
+    USE uspp_gpum,           ONLY : using_indv_ijkb0
+    !
     IMPLICIT NONE
     !
     COMPLEX(DP), INTENT(IN)  :: becp0(nkb,nbnd)
@@ -871,6 +895,8 @@ MODULE us_exx
       ENDIF
       RETURN
     ENDIF
+    !
+    CALL using_indv_ijkb0(.false.)
     !
     ! d_matrix are now done in setup.f90
     !CALL d_matrix(d1,d2,d3)

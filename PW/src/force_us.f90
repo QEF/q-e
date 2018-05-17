@@ -36,7 +36,7 @@ SUBROUTINE force_us( forcenl )
 
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb
+  USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0
   !
   IMPLICIT NONE
   !
@@ -154,6 +154,8 @@ SUBROUTINE force_us( forcenl )
        !
        !
        CALL using_et(.false.)
+       CALL using_indv_ijkb0(.false.)
+
        DO nt = 1, ntyp
           IF ( nh(nt) == 0 ) CYCLE
           ALLOCATE ( aux(nh(nt),becp%nbnd_loc) )
@@ -207,6 +209,7 @@ SUBROUTINE force_us( forcenl )
        INTEGER  :: ibnd, ih, jh, na, nt, ikb, jkb, ijkb0, is, js, ijs !counters
        !
        CALL using_et(.false.)
+       CALL using_indv_ijkb0(.false.)
        DO ibnd = 1, nbnd
           IF (noncolin) THEN
              CALL compute_deff_nc(deff_nc,et(ibnd,ik))

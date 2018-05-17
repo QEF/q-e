@@ -41,7 +41,7 @@ SUBROUTINE force_hub(forceh)
    USE buffers,              ONLY : get_buffer
 
    USE wavefunctions_module_gpum, ONLY : using_evc
-   USE uspp_gpum,                 ONLY : using_vkb
+   USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0
 
    IMPLICIT NONE
    REAL (DP) :: forceh(3,nat)  ! output: the Hubbard forces
@@ -78,7 +78,8 @@ SUBROUTINE force_hub(forceh)
    !
    !    we start a loop on k points
    !
-   CALL using_evc(.false.)  
+   CALL using_evc(.false.)
+   CALL using_indv_ijkb0(.false.)
    
    DO ik = 1, nks
       !

@@ -41,7 +41,7 @@ SUBROUTINE allocate_nlpot
   USE spin_orb,         ONLY : lspinorb, fcoef
   !
   USE wvfct_gpum,       ONLY : using_g2kin
-  USE uspp_gpum,        ONLY : using_vkb
+  USE uspp_gpum,        ONLY : using_vkb, using_indv_ijkb0, using_indv_ijkb0_d
   !
   IMPLICIT NONE
   !
@@ -110,6 +110,7 @@ SUBROUTINE allocate_nlpot
 
   CALL using_g2kin(.true.)
   CALL using_vkb(.true.)
+  CALL using_indv_ijkb0(.true.)
   !
   RETURN
 END SUBROUTINE allocate_nlpot

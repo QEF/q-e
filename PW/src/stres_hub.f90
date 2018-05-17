@@ -487,7 +487,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    USE wavefunctions_module_gpum, ONLY : using_evc
-   USE uspp_gpum,                 ONLY : using_vkb
+   USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0
 
    IMPLICIT NONE
    !
@@ -520,6 +520,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    !       qm1(npwx)
    !
    CALL using_evc(.false.)
+   CALL using_indv_ijkb0(.false.)
    !
    ! xyz are the three unit vectors in the x,y,z directions
    xyz(:,:) = 0.d0

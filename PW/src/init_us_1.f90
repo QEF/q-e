@@ -44,6 +44,8 @@ subroutine init_us_1
   USE mp_bands,     ONLY : intra_bgrp_comm
   USE mp,           ONLY : mp_sum
   !
+  USE uspp_gpum,    ONLY : using_indv_ijkb0, using_indv_ijkb0_d
+  !
   implicit none
   !
   !     here a few local variables
@@ -418,6 +420,8 @@ subroutine init_us_1
 
   deallocate (besr)
   deallocate (aux)
+
+  CALL using_indv_ijkb0(.true.); CALL using_indv_ijkb0_d(.false.) ! trick to initialize immediately
 
   call stop_clock ('init_us_1')
   return
