@@ -625,8 +625,8 @@ MODULE cp_restart_new
       ! ... look for an empty unit
       !
       iunpun = find_free_unit( )
-      CALL errore( 'cp_readfile', &
-                   'no free units to read wavefunctions', ierr )
+      IF ( iunpun < 0 ) CALL errore( 'cp_readfile', &
+                   'no free units to read wavefunctions', 1 )
       !
       CALL qexsd_init_schema( iunpun )
       !
@@ -639,6 +639,7 @@ MODULE cp_restart_new
       root => parseFile (TRIM(filename))
       !
       nodePointer => item (getElementsByTagname (root, "general_info"),0)
+      ierr = 0 
       IF (ASSOCIATED(nodePointer)) THEN 
          CALL qes_read(nodePointer, geninfo_obj)
       ELSE 
@@ -1844,7 +1845,7 @@ MODULE cp_restart_new
     ! ... look for an empty unit
     !
     iunpun = find_free_unit( )
-    CALL errore( 'cp_read_cell', 'no free units ', ierr )
+    IF ( iunpun < 0 ) CALL errore( 'cp_read_cell', 'no free units ', 1 )
     !
     CALL qexsd_init_schema( iunpun )
     !
@@ -1854,12 +1855,12 @@ MODULE cp_restart_new
     IF (.NOT. found ) &
          CALL errore ('cp_read_cell', 'xml data file not found', 1)
     !
-   
     root => parseFile(filename) 
     !
     timestepsNode => item(getElementsByTagname(root, "TIMESTEPS"),0)
     found = ASSOCIATED(timestepsNode)
     !
+    ierr = 0
     IF ( found ) THEN
        !
        CALL extractDataAttribute(timestepsNode, "nt", nt_)
