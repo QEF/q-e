@@ -29,8 +29,6 @@
 
   iverbosity  = 0
 
-  parallel_k  = .true.
-  parallel_q  = .false.
 
   eps_acustic = 5.0    ! Lowest boundary for the 
   ephwrite    = .true. ! Writes .ephmat files used when wliasberg = .true.

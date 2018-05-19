@@ -271,6 +271,8 @@ clean_pw.o : ../../Modules/tsvdw.o
 clean_pw.o : ../../Modules/uspp.o
 clean_pw.o : ../../Modules/wannier_new.o
 clean_pw.o : ../../Modules/wavefunctions.o
+clean_pw.o : ../../dft-d3/api.o
+clean_pw.o : ../../dft-d3/dftd3_qe.o
 clean_pw.o : Coul_cut_2D.o
 clean_pw.o : atomic_wfc_mod.o
 clean_pw.o : bp_mod.o

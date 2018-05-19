@@ -39,8 +39,6 @@
   elecselfen  = .true.
   phonselfen  = .true.
 
-  parallel_k  = .true.
-  parallel_q  = .false.
 
   fsthick     = 6 ! eV
   eptemp      = 0.0 ! K

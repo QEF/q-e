@@ -36,8 +36,6 @@
   wmax_specfun = 20
   nw_specfun   = 20
 
-  parallel_k  = .true.
-  parallel_q  = .false.
 
   fsthick     = 15 ! eV 
   eptemp      = 300 ! K 
