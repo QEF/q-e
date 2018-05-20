@@ -148,8 +148,6 @@ PROGRAM epsilon
   USE io_global,   ONLY : stdout, ionode, ionode_id
   USE mp,          ONLY : mp_bcast
   USE mp_world,    ONLY : world_comm
-  USE iotk_module
-  USE xml_io_base
   USE io_files,    ONLY : tmp_dir, prefix
   USE constants,   ONLY : RYTOEV
   USE ener,        ONLY : ef

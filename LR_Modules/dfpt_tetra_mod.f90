@@ -290,7 +290,7 @@ SUBROUTINE dfpt_tetra_calc_delta(tfst,tlst,et_col,delta)
            !
         END DO
         !
-        wdos0(1:nbnd,1:4) = 0.0_dp
+        wdos0(1:4,1:nbnd) = 0.0_dp
         !
         DO ibnd = 1, nbnd
            !

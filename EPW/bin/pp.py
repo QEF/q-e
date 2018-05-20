@@ -102,11 +102,11 @@ for iqpt in np.arange(1,nqpt+1):
       os.system('cp '+prefix+'.dyn0 '+prefix+'.dyn0.xml')
       os.system('cp '+prefix+'.dyn'+str(iqpt)+'.xml save/'+prefix+'.dyn_q'+label+'.xml')
       if (iqpt == 1):
-        os.system('cp _ph0/'+prefix+'.dvscf* save/'+prefix+'.dvscf_q'+label)
+        os.system('cp _ph0/'+prefix+'.dvscf1 save/'+prefix+'.dvscf_q'+label)
         os.system('cp -r _ph0/'+prefix+'.phsave save/')
         os.system('cp '+prefix+'.fc.xml save/ifc.q2r.xml')
       else:
-        os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix+'.dvscf* save/'+prefix+'.dvscf_q'+label)
+        os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix+'.dvscf1 save/'+prefix+'.dvscf_q'+label)
         os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*' )
     # Case without SOC
     if SOC == 'false':

@@ -161,7 +161,7 @@ SUBROUTINE read_upf_header(u, upf)
    INTEGER                     :: ierr, ios  ! /= 0 if something went wrong
    CHARACTER(len=256) :: dft_buffer     ! needed to allow the string defining the
                                         ! DFT flavor to be longer than upf%dft 
-                                        ! (currntly 25) without getting iotk upset. 
+                                        ! (currently 25)
                                         ! An error message is issued if trimmed 
                                         ! dft_buffer exceeds upf%dft size.
    INTEGER :: len_buffer
@@ -472,7 +472,6 @@ SUBROUTINE read_upf_header(u, upf)
       ! Read the hamiltonian terms D_ij
       locNode => item( getElementsByTagname(nlcNode, 'PP_DIJ'),0)    
       CALL extractDataContent(locNode, upf%dion)
-      !   CALL iotk_scan_attr(attr, 'non_zero_elements', upf%nd)
       !
       ! Read the augmentation charge section
       augmentation : &

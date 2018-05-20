@@ -453,7 +453,7 @@ SUBROUTINE elph_tetra_delta2(nbnd_fs,ej0,w)
   !
   DO ibnd = 1, nbnd_fs
      !
-     IF(MAXVAL(ABS(ej0(ibnd,1:3))) < 1e-10_dp) &
+     IF(MAXVAL(ABS(ej0(1:3,ibnd))) < 1e-10_dp) &
      & CALL errore("elph_tetra_delta2", "Nesting occurs.", ibnd)
      !
      itetra(1) = 0

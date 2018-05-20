@@ -266,7 +266,7 @@ CONTAINS
   USE ions_base,       ONLY : zv, ntyp => nsp, nat, ityp, atm, tau
   CHARACTER (LEN=25), INTENT(IN) :: filplot
   REAL(DP) :: plot(dfftp%nnr)
-  CHARACTER (LEN=25) :: title
+  CHARACTER (LEN=75) :: title
   INTEGER :: plot_num=0, iflag=+1
 
   CALL plot_io (filplot, title, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, &

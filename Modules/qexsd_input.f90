@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__OLDXLM)
+#if defined(__OLDXML)
 ! 
 MODULE qexsd_input
   IMPLICIT NONE
@@ -24,9 +24,9 @@ MODULE qexsd_input
   USE kinds,            ONLY : DP
   USE input_parameters, ONLY : input_xml_schema_file
   !
-  USE iotk_base,        ONLY : iotk_indent, iotk_maxindent
   USE constants,        ONLY : e2,bohr_radius_angs
-  USE qes_module
+  USE qes_types_module
+  USE qes_libs_module
   !
   IMPLICIT NONE
   !
