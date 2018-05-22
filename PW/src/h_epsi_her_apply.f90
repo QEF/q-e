@@ -39,6 +39,8 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   !
+  USE uspp_gpum, ONLY : using_qq_at, using_qq_so
+  !
   implicit none
   INTEGER, INTENT(in) :: pdir!direction on which the polarization is calculated
   REAL(DP) :: e_field!electric field along pdir    
@@ -71,6 +73,9 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   eps=0.000001d0
   if(ABS(e_field)<eps) return
   call start_clock('h_epsi_apply')
+  !
+  CALL using_qq_at(0)
+  IF (lspinorb) CALL using_qq_so(0)
 
   ALLOCATE( evct(npwx*npol,nbnd))
   call allocate_bec_type(nkb,nbnd,becp0)

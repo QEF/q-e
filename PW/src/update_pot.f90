@@ -666,8 +666,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   !
   CALL mp_barrier( intra_image_comm ) ! debug
   !
-  CALL using_evc(.false.)
-  CALL using_vkb(.false.)
+  CALL using_evc(0)
+  CALL using_vkb(0)
 
   IF ( wfc_extr == 1 ) THEN
      !
@@ -678,7 +678,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         ! ... "now"  -> "old"
         !
         IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-        IF ( nks > 1 ) CALL using_evc(.true.)
+        IF ( nks > 1 ) CALL using_evc(2)
         CALL davcio( evc, 2*nwordwfc, iunoldwfc, ik, +1 )
         !
      END DO
@@ -733,7 +733,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         CALL davcio( evcold, 2*nwordwfc, iunoldwfc, ik, -1 )
         IF ( nks > 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-        IF ( nks > 1 ) CALL using_evc(.true.)
+        IF ( nks > 1 ) CALL using_evc(2)
         CALL davcio(    evc, 2*nwordwfc, iunoldwfc, ik, +1 )
         !
         npw = ngk (ik)
@@ -743,7 +743,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
            ! ... Required by s_psi:
            ! ... nonlocal pseudopotential projectors |beta>, <psi|beta>
            !
-           IF ( nkb > 0 ) CALL using_vkb(.true.)
+           IF ( nkb > 0 ) CALL using_vkb(1)
            IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
            CALL calbec( npw, vkb, evc, becp )
            !
@@ -796,7 +796,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         ! ... alpha0 and beta0 are calculated in "update_pot"
         ! ... for first-order interpolation, alpha0=1, beta0=0
         !
-        CALL using_evc(.true.)
+        CALL using_evc(1)
         IF ( wfc_extr == 3 ) THEN
            evc = ( 1.0_dp + alpha0 ) * evc + ( beta0 - alpha0 ) * aux
         ELSE
@@ -828,7 +828,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         ! ... save interpolated wavefunctions to file iunwfc
         !
-        ! CALL using_evc(.false.) aldready done above
+        ! CALL using_evc(0) aldready done above
         IF ( nks > 1 ) CALL save_buffer( evc, nwordwfc, iunwfc, ik )
         !
      END DO

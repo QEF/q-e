@@ -37,7 +37,7 @@ SUBROUTINE weights()
   INTEGER :: ibnd, ik ! counters: bands, k-points
   real (DP) demet_up, demet_dw
   !
-  CALL using_et(.false.)
+  CALL using_et(0)
   !
   demet         = 0.D0
   !
@@ -200,7 +200,7 @@ SUBROUTINE weights_only ()
   INTEGER :: ibnd, ik ! counters: bands, k-points
   real (DP) demet_up, demet_dw
   !
-  CALL using_et(.false.)
+  CALL using_et(0)
   !
   demet         = 0.D0
   !

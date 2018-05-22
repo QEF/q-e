@@ -286,7 +286,7 @@ SUBROUTINE c_phase
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
-   CALL using_evc(.false.)           ! Syncronize from gpu data
+   CALL using_evc(0)           ! Syncronize from gpu data
    ALLOCATE (psi(npwx*npol,nbnd))
    ALLOCATE (aux(ngm*npol))
    ALLOCATE (aux0(ngm*npol))
@@ -483,7 +483,7 @@ SUBROUTINE c_phase
                igk0(:) = igk_k(:,kpoint-1)
                CALL get_buffer (psi,nwordwfc,iunwfc,kpoint-1)
                if (okvan) then
-                  CALL using_vkb(.true.)
+                  CALL using_vkb(1)
                   CALL init_us_2 (npw0,igk0,xk(1,kpoint-1),vkb)
                   CALL calbec (npw0, vkb, psi, becp0)
                endif
@@ -492,9 +492,9 @@ SUBROUTINE c_phase
                   npw1 = ngk(kpoint)
                   igk1(:) = igk_k(:,kpoint)
                   CALL get_buffer(evc,nwordwfc,iunwfc,kpoint)
-                  CALL using_evc(.true.)
+                  CALL using_evc(1)
                   if (okvan) then
-                     CALL using_vkb(.true.)
+                     CALL using_vkb(1)
                      CALL init_us_2 (npw1,igk1,xk(1,kpoint),vkb)
                      CALL calbec (npw1, vkb, evc, becp_bp)
                   endif
@@ -503,9 +503,9 @@ SUBROUTINE c_phase
                   npw1 = ngk(kstart)
                   igk1(:) = igk_k(:,kstart)
                   CALL get_buffer(evc,nwordwfc,iunwfc,kstart)
-                  CALL using_evc(.true.)
+                  CALL using_evc(1)
                   if (okvan) then
-                     CALL using_vkb(.true.)
+                     CALL using_vkb(1)
                      CALL init_us_2 (npw1,igk1,xk(1,kstart),vkb)
                      CALL calbec(npw1, vkb, evc, becp_bp)
                   endif
@@ -561,7 +561,7 @@ SUBROUTINE c_phase
 
 !              --- Matrix elements calculation ---
 
-               CALL using_evc(.false.)
+               CALL using_evc(0)
                mat(:,:) = (0.d0, 0.d0)
                DO mb=1,nbnd
                   IF ( .NOT. l_cal(mb) ) THEN

@@ -26,11 +26,16 @@
 #endif
      CONTAINS
      !
-     SUBROUTINE using_vrs(changing)
+     SUBROUTINE using_vrs(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE scf, ONLY : vrs
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (vrs_ood) THEN
@@ -39,41 +44,49 @@
                 stop
              END IF
              IF (.not. allocated(vrs)) THEN
-                !print *, "WARNING: sync of vrs with unallocated array. Bye!"
-                IF (changing)    vrs_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of vrs with unallocated array and intento /= 2?"
+                IF (intento > 0)    vrs_d_ood = .true.
                 return
              END IF
-             print *, "Really copied vrs D->H"
-             vrs = vrs_d
-             vrs_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied vrs D->H"
+                vrs = vrs_d
+                vrs_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    vrs_d_ood = .true.
+         IF (intento > 0)    vrs_d_ood = .true.
 #endif
      END SUBROUTINE using_vrs
      !
-     SUBROUTINE using_vrs_d(changing)
+     SUBROUTINE using_vrs_d(intento)
          !
          USE scf, ONLY : vrs
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(vrs)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of vrs_d with unallocated array and intento /= 2?"
              IF (allocated(vrs_d)) DEALLOCATE(vrs_d)
              vrs_d_ood = .false.
              RETURN
          END IF
+         ! here we know that vrs is allocated, check if size if 0 
+         IF ( SIZE(vrs) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array vrs_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (vrs_d_ood) THEN
              IF ( allocated(vrs_d) .and. (SIZE(vrs_d)/=SIZE(vrs))) deallocate(vrs_d)
-             IF (.not. allocated(vrs_d)) THEN
-                 ALLOCATE(vrs_d, SOURCE=vrs)
-             ELSE
-                 print *, "Really copied vrs H->D"
-                 vrs_d = vrs
-             ENDIF
+             IF (.not. allocated(vrs_d)) ALLOCATE(vrs_d, MOLD=vrs)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied vrs H->D"
+                vrs_d = vrs
+             END IF
              vrs_d_ood = .false.
          ENDIF
-         IF (changing)    vrs_ood = .true.
+         IF (intento > 0)    vrs_ood = .true.
 #else
          CALL errore('using_vrs_d', 'Trying to use device data without device compilated code!', 1)
 #endif

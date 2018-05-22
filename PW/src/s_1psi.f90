@@ -55,7 +55,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
      END IF
   ELSE
      !
-     CALL using_vkb(.false.)
+     CALL using_vkb(0)
      CALL calbec( n, vkb, psi, becp )
      CALL s_psi( npwx, n, 1, psi, spsi )
      !

@@ -14,29 +14,36 @@
      IMPLICIT NONE
      SAVE
      !
-     COMPLEX(DP), ALLOCATABLE, TARGET :: &
-       evc_d(:,:)     ! wavefunctions in the PW basis set
-                    ! noncolinear case: first index
-                    ! is a combined PW + spin index
-     !
-     COMPLEX(DP) , ALLOCATABLE, TARGET :: &
-       psic_d(:), &      ! additional memory for FFT
-       psic_nc_d(:,:)    ! as above for the noncolinear case
+     COMPLEX(DP), ALLOCATABLE, TARGET :: evc_d(:, :)
+
+     COMPLEX(DP), ALLOCATABLE, TARGET :: psic_d(:)
+
+     COMPLEX(DP), ALLOCATABLE, TARGET :: psic_nc_d(:, :)
+
      !
 #if defined(__CUDA)
-     attributes (DEVICE) :: psic_d, psic_nc_d, evc_d
-     
+     attributes (DEVICE) :: evc_d, psic_d, psic_nc_d
+
      LOGICAL :: evc_ood = .false.    ! used to flag out of date variables
      LOGICAL :: evc_d_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: psic_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: psic_d_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: psic_nc_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: psic_nc_d_ood = .false.    ! used to flag out of date variables
      !
 #endif
      CONTAINS
      !
-     SUBROUTINE using_evc(changing)
+     SUBROUTINE using_evc(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE wavefunctions_module, ONLY : evc
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (evc_ood) THEN
@@ -45,51 +52,191 @@
                 stop
              END IF
              IF (.not. allocated(evc)) THEN
-                print *, "WARNING: sync of evc with unallocated array. Bye!"
-                IF (changing)    evc_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of evc with unallocated array and intento /= 2?"
+                IF (intento > 0)    evc_d_ood = .true.
                 return
              END IF
-             print *, "Really copied evc D->H"
-             evc = evc_d
-             evc_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied evc D->H"
+                evc = evc_d
+                evc_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    evc_d_ood = .true.
+         IF (intento > 0)    evc_d_ood = .true.
 #endif
      END SUBROUTINE using_evc
      !
-     SUBROUTINE using_evc_d(changing)
+     SUBROUTINE using_evc_d(intento)
          !
          USE wavefunctions_module, ONLY : evc
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(evc)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of evc_d with unallocated array and intento /= 2?"
              IF (allocated(evc_d)) DEALLOCATE(evc_d)
              evc_d_ood = .false.
              RETURN
          END IF
+         ! here we know that evc is allocated, check if size if 0 
+         IF ( SIZE(evc) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array evc_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (evc_d_ood) THEN
              IF ( allocated(evc_d) .and. (SIZE(evc_d)/=SIZE(evc))) deallocate(evc_d)
-             IF (.not. allocated(evc_d)) THEN
-                 ALLOCATE(evc_d, SOURCE=evc)
-             ELSE
-                 print *, "Really copied evc H->D"
-                 evc_d = evc
-             ENDIF
+             IF (.not. allocated(evc_d)) ALLOCATE(evc_d, MOLD=evc)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied evc H->D"
+                evc_d = evc
+             END IF
              evc_d_ood = .false.
          ENDIF
-         IF (changing)    evc_ood = .true.
+         IF (intento > 0)    evc_ood = .true.
 #else
          CALL errore('using_evc_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_evc_d
      !
-     SUBROUTINE deallocate_wavefunctions_gpu
-       IF( ALLOCATED( psic_nc_d ) ) DEALLOCATE( psic_nc_D )
-       IF( ALLOCATED( psic_d ) ) DEALLOCATE( psic_d )
+     SUBROUTINE using_psic(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
+         !
+         USE wavefunctions_module, ONLY : psic
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         !
+         IF (psic_ood) THEN
+             IF (.not. allocated(psic_d)) THEN
+                CALL errore('using_psic_d', 'PANIC: sync of psic from psic_d with unallocated array. Bye!!', 1)
+                stop
+             END IF
+             IF (.not. allocated(psic)) THEN
+                IF (intento /= 2) print *, "WARNING: sync of psic with unallocated array and intento /= 2?"
+                IF (intento > 0)    psic_d_ood = .true.
+                return
+             END IF
+             IF (intento < 2) THEN
+                print *, "Really copied psic D->H"
+                psic = psic_d
+                psic_ood = .false.
+             END IF
+         ENDIF
+         IF (intento > 0)    psic_d_ood = .true.
+#endif
+     END SUBROUTINE using_psic
+     !
+     SUBROUTINE using_psic_d(intento)
+         !
+         USE wavefunctions_module, ONLY : psic
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         !
+         IF (.not. allocated(psic)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of psic_d with unallocated array and intento /= 2?"
+             IF (allocated(psic_d)) DEALLOCATE(psic_d)
+             psic_d_ood = .false.
+             RETURN
+         END IF
+         ! here we know that psic is allocated, check if size if 0 
+         IF ( SIZE(psic) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array psic_d. If used, code will crash."
+             RETURN
+         END IF
+         !
+         IF (psic_d_ood) THEN
+             IF ( allocated(psic_d) .and. (SIZE(psic_d)/=SIZE(psic))) deallocate(psic_d)
+             IF (.not. allocated(psic_d)) ALLOCATE(psic_d, MOLD=psic)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied psic H->D"
+                psic_d = psic
+             END IF
+             psic_d_ood = .false.
+         ENDIF
+         IF (intento > 0)    psic_ood = .true.
+#else
+         CALL errore('using_psic_d', 'Trying to use device data without device compilated code!', 1)
+#endif
+     END SUBROUTINE using_psic_d
+     !
+     SUBROUTINE using_psic_nc(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
+         !
+         USE wavefunctions_module, ONLY : psic_nc
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         !
+         IF (psic_nc_ood) THEN
+             IF (.not. allocated(psic_nc_d)) THEN
+                CALL errore('using_psic_nc_d', 'PANIC: sync of psic_nc from psic_nc_d with unallocated array. Bye!!', 1)
+                stop
+             END IF
+             IF (.not. allocated(psic_nc)) THEN
+                IF (intento /= 2) print *, "WARNING: sync of psic_nc with unallocated array and intento /= 2?"
+                IF (intento > 0)    psic_nc_d_ood = .true.
+                return
+             END IF
+             IF (intento < 2) THEN
+                print *, "Really copied psic_nc D->H"
+                psic_nc = psic_nc_d
+                psic_nc_ood = .false.
+             END IF
+         ENDIF
+         IF (intento > 0)    psic_nc_d_ood = .true.
+#endif
+     END SUBROUTINE using_psic_nc
+     !
+     SUBROUTINE using_psic_nc_d(intento)
+         !
+         USE wavefunctions_module, ONLY : psic_nc
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         !
+         IF (.not. allocated(psic_nc)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of psic_nc_d with unallocated array and intento /= 2?"
+             IF (allocated(psic_nc_d)) DEALLOCATE(psic_nc_d)
+             psic_nc_d_ood = .false.
+             RETURN
+         END IF
+         ! here we know that psic_nc is allocated, check if size if 0 
+         IF ( SIZE(psic_nc) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array psic_nc_d. If used, code will crash."
+             RETURN
+         END IF
+         !
+         IF (psic_nc_d_ood) THEN
+             IF ( allocated(psic_nc_d) .and. (SIZE(psic_nc_d)/=SIZE(psic_nc))) deallocate(psic_nc_d)
+             IF (.not. allocated(psic_nc_d)) ALLOCATE(psic_nc_d, MOLD=psic_nc)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied psic_nc H->D"
+                psic_nc_d = psic_nc
+             END IF
+             psic_nc_d_ood = .false.
+         ENDIF
+         IF (intento > 0)    psic_nc_ood = .true.
+#else
+         CALL errore('using_psic_nc_d', 'Trying to use device data without device compilated code!', 1)
+#endif
+     END SUBROUTINE using_psic_nc_d
+     !     
+     SUBROUTINE deallocate_wavefunctions_module_gpu
        IF( ALLOCATED( evc_d ) ) DEALLOCATE( evc_d )
-     END SUBROUTINE deallocate_wavefunctions_gpu
+       IF( ALLOCATED( psic_d ) ) DEALLOCATE( psic_d )
+       IF( ALLOCATED( psic_nc_d ) ) DEALLOCATE( psic_nc_d )
+     END SUBROUTINE deallocate_wavefunctions_module_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE wavefunctions_module_gpum
 !=----------------------------------------------------------------------------=!

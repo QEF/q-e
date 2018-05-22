@@ -30,11 +30,16 @@
 #endif
      CONTAINS
      !
-     SUBROUTINE using_gg(changing)
+     SUBROUTINE using_gg(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE gvect, ONLY : gg
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (gg_ood) THEN
@@ -43,51 +48,64 @@
                 stop
              END IF
              IF (.not. allocated(gg)) THEN
-                print *, "WARNING: sync of gg with unallocated array. Bye!"
-                IF (changing)    gg_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of gg with unallocated array and intento /= 2?"
+                IF (intento > 0)    gg_d_ood = .true.
                 return
              END IF
-             print *, "Really copied gg D->H"
-             gg = gg_d
-             gg_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied gg D->H"
+                gg = gg_d
+                gg_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    gg_d_ood = .true.
+         IF (intento > 0)    gg_d_ood = .true.
 #endif
      END SUBROUTINE using_gg
      !
-     SUBROUTINE using_gg_d(changing)
+     SUBROUTINE using_gg_d(intento)
          !
          USE gvect, ONLY : gg
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(gg)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of gg_d with unallocated array and intento /= 2?"
              IF (allocated(gg_d)) DEALLOCATE(gg_d)
              gg_d_ood = .false.
              RETURN
          END IF
+         ! here we know that gg is allocated, check if size if 0 
+         IF ( SIZE(gg) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array gg_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (gg_d_ood) THEN
              IF ( allocated(gg_d) .and. (SIZE(gg_d)/=SIZE(gg))) deallocate(gg_d)
-             IF (.not. allocated(gg_d)) THEN
-                 ALLOCATE(gg_d, SOURCE=gg)
-             ELSE
-                 print *, "Really copied gg H->D"
-                 gg_d = gg
-             ENDIF
+             IF (.not. allocated(gg_d)) ALLOCATE(gg_d, MOLD=gg)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied gg H->D"
+                gg_d = gg
+             END IF
              gg_d_ood = .false.
          ENDIF
-         IF (changing)    gg_ood = .true.
+         IF (intento > 0)    gg_ood = .true.
 #else
          CALL errore('using_gg_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_gg_d
      !
-     SUBROUTINE using_g(changing)
+     SUBROUTINE using_g(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE gvect, ONLY : g
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (g_ood) THEN
@@ -96,41 +114,49 @@
                 stop
              END IF
              IF (.not. allocated(g)) THEN
-                !print *, "WARNING: sync of g with unallocated array. Bye!"
-                IF (changing)    g_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of g with unallocated array and intento /= 2?"
+                IF (intento > 0)    g_d_ood = .true.
                 return
              END IF
-             print *, "Really copied g D->H"
-             g = g_d
-             g_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied g D->H"
+                g = g_d
+                g_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    g_d_ood = .true.
+         IF (intento > 0)    g_d_ood = .true.
 #endif
      END SUBROUTINE using_g
      !
-     SUBROUTINE using_g_d(changing)
+     SUBROUTINE using_g_d(intento)
          !
          USE gvect, ONLY : g
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(g)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of g_d with unallocated array and intento /= 2?"
              IF (allocated(g_d)) DEALLOCATE(g_d)
              g_d_ood = .false.
              RETURN
          END IF
+         ! here we know that g is allocated, check if size if 0 
+         IF ( SIZE(g) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array g_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (g_d_ood) THEN
              IF ( allocated(g_d) .and. (SIZE(g_d)/=SIZE(g))) deallocate(g_d)
-             IF (.not. allocated(g_d)) THEN
-                 ALLOCATE(g_d, SOURCE=g)
-             ELSE
-                 print *, "Really copied g H->D"
-                 g_d = g
-             ENDIF
+             IF (.not. allocated(g_d)) ALLOCATE(g_d, MOLD=g)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied g H->D"
+                g_d = g
+             END IF
              g_d_ood = .false.
          ENDIF
-         IF (changing)    g_ood = .true.
+         IF (intento > 0)    g_ood = .true.
 #else
          CALL errore('using_g_d', 'Trying to use device data without device compilated code!', 1)
 #endif

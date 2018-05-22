@@ -52,7 +52,7 @@ SUBROUTINE hinit1()
   !
   ! ... define the total local potential (external+scf)
   !
-  CALL using_vrs(.true.)
+  CALL using_vrs(1)
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   !
   IF ( tqr ) CALL generate_qpointlist()

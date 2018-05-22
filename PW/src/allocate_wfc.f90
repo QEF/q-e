@@ -27,7 +27,7 @@ SUBROUTINE allocate_wfc()
   !
   !
   ALLOCATE( evc( npwx*npol, nbnd ) )
-  CALL using_evc(.true.)
+  CALL using_evc(2)
   !
   IF ( one_atom_occupations .OR. use_wannier ) &
      ALLOCATE( swfcatom( npwx*npol, natomwfc) )

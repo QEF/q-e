@@ -48,7 +48,7 @@ SUBROUTINE wfcinit()
   TYPE ( output_type )                    :: output_obj
 #endif 
   !
-  CALL using_evc(.false.) ! this may be removed
+  CALL using_evc(0) ! this may be removed
   !
   !
   CALL start_clock( 'wfcinit' )
@@ -84,7 +84,7 @@ SUBROUTINE wfcinit()
      ! ... workaround: with k-point parallelization and 1 k-point per pool,
      ! ... pw_readfile does not leave evc properly initialized on all pools
      !
-     IF ( nks == 1 ) CALL using_evc(.false.) ! davcio(..., 1) -> saves evc to file
+     IF ( nks == 1 ) CALL using_evc(0) ! davcio(..., 1) -> saves evc to file
      IF ( nks == 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, 1 )
      !
   ELSE
@@ -98,7 +98,7 @@ SUBROUTINE wfcinit()
          inquire (unit = iunwfc, opened = opnd_file)
          if (.not.opnd_file) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
          CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
-         CALL using_evc(.true.) ! davcio(..., -1) -> updates evc
+         CALL using_evc(2) ! davcio(..., -1) -> updates evc
          if(.not.opnd_file) CLOSE ( UNIT=iunwfc, STATUS='keep' )
      END IF
      !
@@ -124,7 +124,7 @@ SUBROUTINE wfcinit()
            inquire (unit = iunwfc, opened = opnd_file)
            if (.not.opnd_file) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
            CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
-           CALL using_evc(.true.) ! davcio(..., -1) -> updates evc
+           CALL using_evc(2) ! davcio(..., -1) -> updates evc
            if(.not.opnd_file) CLOSE ( UNIT=iunwfc, STATUS='keep' )
         END IF
      END IF
@@ -187,7 +187,7 @@ SUBROUTINE wfcinit()
      !
      ! ... More Hpsi initialization: nonlocal pseudopotential projectors |beta>
      !
-     IF ( nkb > 0 ) CALL using_vkb(.true.)
+     IF ( nkb > 0 ) CALL using_vkb(1)
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... Needed for LDA+U
@@ -201,7 +201,7 @@ SUBROUTINE wfcinit()
      !
      ! ... write  starting wavefunctions to file
      !
-     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) CALL using_evc(.false.)
+     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) CALL using_evc(0)
      IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
          CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
@@ -358,7 +358,7 @@ SUBROUTINE init_wfc ( ik )
   !
   CALL start_clock( 'wfcinit:wfcrot' ); !write(*,*) 'start wfcinit:wfcrot' ; FLUSH(6)
   CALL rotate_wfc ( npwx, ngk(ik), n_starting_wfc, gstart, nbnd, wfcatom, npol, okvan, evc, etatom )
-  CALL using_evc(.true.)  ! rotate_wfc (..., evc, etatom) -> evc : out (not specified)
+  CALL using_evc(1)  ! rotate_wfc (..., evc, etatom) -> evc : out (not specified)
   CALL stop_clock( 'wfcinit:wfcrot' ); !write(*,*) 'stop wfcinit:wfcrot' ; FLUSH(6)
   !
   lelfield = lelfield_save
@@ -366,8 +366,8 @@ SUBROUTINE init_wfc ( ik )
   ! ... copy the first nbnd eigenvalues
   ! ... eigenvectors are already copied inside routine rotate_wfc
   !
+  CALL using_et(1)
   et(1:nbnd,ik) = etatom(1:nbnd)
-  CALL using_et(.true.)
   !
   CALL deallocate_bec_type ( becp )
   DEALLOCATE( etatom )

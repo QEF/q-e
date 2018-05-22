@@ -53,7 +53,7 @@ SUBROUTINE new_ns(ns)
   !    "    "  spins
   REAL(DP) , ALLOCATABLE :: nr (:,:,:,:)
   REAL(DP) :: psum
-  CALL using_evc(.false.)
+  CALL using_evc(0)
 
   CALL start_clock('new_ns')
   ldim = 2 * Hubbard_lmax + 1
@@ -74,7 +74,7 @@ SUBROUTINE new_ns(ns)
      npw = ngk (ik)
      IF (nks > 1) &
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
-     IF (nks > 1) CALL using_evc(.true.)
+     IF (nks > 1) CALL using_evc(1)
      !
      ! make the projection
      !
@@ -227,14 +227,14 @@ SUBROUTINE new_ns(ns)
 
     IF ( nkb == 0 ) RETURN
     !
-    CALL using_indv_ijkb0(.false.)
+    CALL using_indv_ijkb0(0)
     !
     ! compute <beta|psi>
     !
     CALL allocate_bec_type (nkb, nbnd, becp)
-    CALL using_vkb(.true.)
+    CALL using_vkb(1)
     CALL init_us_2 (npw,igk_k(1,ik),xk(1,ik),vkb)
-    CALL using_evc(.false.)
+    CALL using_evc(0)
     CALL calbec (npw, vkb, evc, becp)
     !
     IF ( gamma_only ) THEN 
@@ -342,13 +342,13 @@ SUBROUTINE new_ns_nc(ns)
 !--
 !    loop on k points
 !
-  CALL using_evc(.false.)
+  CALL using_evc(0)
   DO ik = 1, nks
 
      npw = ngk (ik)
      IF (nks > 1) THEN
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
-        CALL using_evc(.true.)
+        CALL using_evc(1)
         CALL get_buffer (wfcU, nwordwfcU, iunhub, ik)
      END IF
      !

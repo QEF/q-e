@@ -17,11 +17,17 @@ USE ions_base, ONLY : nsp, nat, ityp
 USE uspp, ONLY : deeq, qq_at, okvan
 USE uspp_param, ONLY : nhm
 USE lsda_mod, ONLY : current_spin
+!
+USE uspp_gpum, ONLY : using_deeq, using_qq_at
+!
 IMPLICIT NONE
 
 INTEGER :: nt, na, is
 REAL(DP), INTENT(OUT) :: deff(nhm, nhm, nat) 
 REAL(DP), INTENT(IN) :: et
+
+CALL using_deeq(0)
+CALL using_qq_at(0)
 
 deff(:,:,:) = deeq(:,:,:,current_spin) 
 IF (okvan) THEN
@@ -49,11 +55,18 @@ USE noncollin_module, ONLY : noncolin, npol
 USE uspp, ONLY : deeq_nc, qq_at, qq_so, okvan
 USE uspp_param, ONLY : nhm
 USE lsda_mod, ONLY : nspin
+!
+USE uspp_gpum, ONLY : using_deeq_nc, using_qq_at, using_qq_so
+!
 IMPLICIT NONE
 
 INTEGER :: nt, na, is, js, ijs
 COMPLEX(DP), INTENT(OUT) :: deff(nhm, nhm, nat, nspin) 
 REAL(DP), INTENT(IN) :: et
+
+CALL using_deeq_nc(0)
+IF (.not. lspinorb) CALL using_qq_at(0)
+IF (lspinorb) CALL using_qq_so(0)
 
 deff=deeq_nc
 IF (okvan) THEN

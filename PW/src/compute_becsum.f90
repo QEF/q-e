@@ -45,7 +45,7 @@ SUBROUTINE compute_becsum ( iflag )
   !
   !
   IF ( .NOT. okvan ) RETURN
-  CALL using_evc(.false.)
+  CALL using_evc(0)
   !
   CALL start_clock( 'compute_becsum' )
   !
@@ -63,9 +63,9 @@ SUBROUTINE compute_becsum ( iflag )
      IF ( lsda ) current_spin = isk(ik)
      IF ( nks > 1 ) &
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-     IF ( nks > 1 ) CALL using_evc(.true.)
+     IF ( nks > 1 ) CALL using_evc(2)
      !
-     IF ( nkb > 0 ) CALL using_vkb(.true.)
+     IF ( nkb > 0 ) CALL using_vkb(1)
      IF ( nkb > 0 ) &
           CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !

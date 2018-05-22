@@ -36,7 +36,7 @@ MODULE a2F
       INTEGER :: iuna2Fsave  = 40, i, j, ik, ns, na
       logical  ::  exst
       !
-      CALL using_et(.false.)
+      CALL using_et(0)
       ! parallel case: only first node writes
       IF ( ionode ) THEN
          !

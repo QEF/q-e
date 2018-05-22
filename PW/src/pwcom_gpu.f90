@@ -30,11 +30,16 @@
 #endif
      CONTAINS
      !
-     SUBROUTINE using_g2kin(changing)
+     SUBROUTINE using_g2kin(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE wvfct, ONLY : g2kin
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (g2kin_ood) THEN
@@ -43,52 +48,64 @@
                 stop
              END IF
              IF (.not. allocated(g2kin)) THEN
-                print *, "WARNING: sync of g2kin with unallocated array. Bye!"
-                IF (changing)    g2kin_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of g2kin with unallocated array and intento /= 2?"
+                IF (intento > 0)    g2kin_d_ood = .true.
                 return
              END IF
-             print *, "Really copied g2kin D->H"
-             g2kin = g2kin_d
-             g2kin_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied g2kin D->H"
+                g2kin = g2kin_d
+                g2kin_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    g2kin_d_ood = .true.
+         IF (intento > 0)    g2kin_d_ood = .true.
 #endif
      END SUBROUTINE using_g2kin
      !
-     SUBROUTINE using_g2kin_d(changing)
+     SUBROUTINE using_g2kin_d(intento)
          !
          USE wvfct, ONLY : g2kin
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(g2kin)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of g2kin_d with unallocated array and intento /= 2?"
              IF (allocated(g2kin_d)) DEALLOCATE(g2kin_d)
              g2kin_d_ood = .false.
              RETURN
          END IF
+         ! here we know that g2kin is allocated, check if size if 0 
+         IF ( SIZE(g2kin) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array g2kin_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (g2kin_d_ood) THEN
              IF ( allocated(g2kin_d) .and. (SIZE(g2kin_d)/=SIZE(g2kin))) deallocate(g2kin_d)
-             IF (.not. allocated(g2kin_d)) THEN
-                 print *, "Allocating g2kin_d, SOURCE=g2kin"
-                 ALLOCATE(g2kin_d, SOURCE=g2kin)
-             ELSE
-                 print *, "Really copied g2kin H->D"
-                 g2kin_d = g2kin
-             ENDIF
+             IF (.not. allocated(g2kin_d)) ALLOCATE(g2kin_d, MOLD=g2kin)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied g2kin H->D"
+                g2kin_d = g2kin
+             END IF
              g2kin_d_ood = .false.
          ENDIF
-         IF (changing)    g2kin_ood = .true.
+         IF (intento > 0)    g2kin_ood = .true.
 #else
          CALL errore('using_g2kin_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_g2kin_d
      !
-     SUBROUTINE using_et(changing)
+     SUBROUTINE using_et(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE wvfct, ONLY : et
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (et_ood) THEN
@@ -97,41 +114,49 @@
                 stop
              END IF
              IF (.not. allocated(et)) THEN
-                print *, "WARNING: sync of et with unallocated array. Bye!"
-                IF (changing)    et_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of et with unallocated array and intento /= 2?"
+                IF (intento > 0)    et_d_ood = .true.
                 return
              END IF
-             print *, "Really copied et D->H"
-             et = et_d
-             et_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied et D->H"
+                et = et_d
+                et_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    et_d_ood = .true.
+         IF (intento > 0)    et_d_ood = .true.
 #endif
      END SUBROUTINE using_et
      !
-     SUBROUTINE using_et_d(changing)
+     SUBROUTINE using_et_d(intento)
          !
          USE wvfct, ONLY : et
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(et)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of et_d with unallocated array and intento /= 2?"
              IF (allocated(et_d)) DEALLOCATE(et_d)
              et_d_ood = .false.
              RETURN
          END IF
+         ! here we know that et is allocated, check if size if 0 
+         IF ( SIZE(et) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array et_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (et_d_ood) THEN
              IF ( allocated(et_d) .and. (SIZE(et_d)/=SIZE(et))) deallocate(et_d)
-             IF (.not. allocated(et_d)) THEN
-                 ALLOCATE(et_d, SOURCE=et)
-             ELSE
-                 print *, "Really copied et H->D"
-                 et_d = et
-             ENDIF
+             IF (.not. allocated(et_d)) ALLOCATE(et_d, MOLD=et)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied et H->D"
+                et_d = et
+             END IF
              et_d_ood = .false.
          ENDIF
-         IF (changing)    et_ood = .true.
+         IF (intento > 0)    et_ood = .true.
 #else
          CALL errore('using_et_d', 'Trying to use device data without device compilated code!', 1)
 #endif

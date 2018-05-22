@@ -73,6 +73,7 @@ SUBROUTINE clean_pw( lflag )
   USE wvfct_gpum,                ONLY : using_g2kin, using_g2kin_d
   USE gvect_gpum,                ONLY : using_g, using_gg, using_g_d, using_gg_d
   USE scf_gpum,                  ONLY : using_vrs, using_vrs_d
+  USE uspp_gpum,                 ONLY : deallocate_uspp_gpu
   !
   IMPLICIT NONE
   !
@@ -128,8 +129,8 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( g ) )          DEALLOCATE( g )
   IF ( ALLOCATED( gg ) )         DEALLOCATE( gg )
   !
-  CALL using_g(.true.); CALL using_gg(.true.)       ! Trick to deallocate
-  CALL using_g_d(.false.); CALL using_gg_d(.false.)
+  CALL using_g(2); CALL using_gg(2)       ! Trick to deallocate
+  CALL using_g_d(2); CALL using_gg_d(2)
   !
   IF ( ALLOCATED( igtongl ) )    DEALLOCATE( igtongl )  
   IF ( ALLOCATED( mill ) )       DEALLOCATE( mill )
@@ -143,7 +144,7 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( psic ) )       DEALLOCATE( psic )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
   IF ( ALLOCATED( vrs ) )        DEALLOCATE( vrs )
-  CALL using_vrs(.true.); CALL using_vrs_d(.false.); ! Trick to deallocate
+  CALL using_vrs(2); CALL using_vrs_d(2); ! Trick to deallocate
   if (spline_ps) then
     IF ( ALLOCATED( tab_d2y) )     DEALLOCATE( tab_d2y )
   endif
@@ -161,7 +162,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
-  CALL using_g2kin(.true.) ;     CALL using_g2kin_d(.false.)
+  CALL using_g2kin(2) ;     CALL using_g2kin_d(2)
   IF ( ALLOCATED( qrad ) )       DEALLOCATE( qrad )
   IF ( ALLOCATED( tab ) )        DEALLOCATE( tab )
   IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
@@ -171,20 +172,22 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_igk ( )
   CALL deallocate_uspp() 
+  CALL deallocate_uspp_gpu()
+  !
   CALL deallocate_gth( lflag ) 
   CALL deallocate_noncol() 
   !
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
-  CALL using_et(.true.); CALL using_et_d(.false.);
+  CALL using_et(2); CALL using_et_d(2);
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
   IF ( ALLOCATED( btype ) )      DEALLOCATE( btype )
   !
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
-  CALL using_evc(.true.); CALL using_evc_d(.false.);
+  CALL using_evc(2); CALL using_evc_d(2);
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
   !
   ! ... fft structures allocated in data_structure.f90  

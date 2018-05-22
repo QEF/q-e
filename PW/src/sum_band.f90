@@ -248,7 +248,7 @@ SUBROUTINE sum_band()
        LOGICAL :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp
        !
-       CALL using_evc(.false.); CALL using_et(.false.)
+       CALL using_evc(0); CALL using_et(0)
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -277,9 +277,9 @@ SUBROUTINE sum_band()
           !
           IF ( nks > 1 ) &
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-          IF ( nks > 1 ) CALL using_evc(.true.) ! get_buffer(evc, ...) evc is updated (intent out)
+          IF ( nks > 1 ) CALL using_evc(1) ! get_buffer(evc, ...) evc is updated (intent out)
           !
-          IF ( nkb > 0 ) CALL using_vkb(.true.)
+          IF ( nkb > 0 ) CALL using_vkb(1)
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
           !
@@ -491,7 +491,7 @@ SUBROUTINE sum_band()
        LOGICAL  :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp
        !
-       CALL using_evc(.false.); CALL using_et(.false.)
+       CALL using_evc(0); CALL using_et(0)
        !
        !
        ! ... here we sum for each k point the contribution
@@ -532,9 +532,9 @@ SUBROUTINE sum_band()
           !
           IF ( nks > 1 ) &
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-          IF ( nks > 1 ) CALL using_evc(.true.)
+          IF ( nks > 1 ) CALL using_evc(1)
           !
-          IF ( nkb > 0 ) CALL using_vkb(.true.)
+          IF ( nkb > 0 ) CALL using_vkb(1)
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
           !
@@ -889,10 +889,10 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js
   ! counters on beta functions, atoms, atom types, spin
   !
-  CALL using_evc(.false.) ! calbec->in ; invfft_orbital_gamma|k -> in
-  CALL using_et(.false.)
-  CALL using_vkb(.false.)
-  CALL using_indv_ijkb0(.false.)
+  CALL using_evc(0) ! calbec->in ; invfft_orbital_gamma|k -> in
+  CALL using_et(0)
+  CALL using_vkb(0)
+  CALL using_indv_ijkb0(0)
   !
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN

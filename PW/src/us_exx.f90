@@ -172,7 +172,7 @@ MODULE us_exx
     IF(.not.okvan) RETURN
     CALL start_clock( 'addusxx' )
     !
-    CALL using_indv_ijkb0(.false.)
+    CALL using_indv_ijkb0(0)
     !
     ngms = dfftt%ngm
     add_complex = ( flag=='c' .OR. flag=='C' )
@@ -345,7 +345,7 @@ MODULE us_exx
     !
     IF(.not.okvan) RETURN
     !
-    CALL using_indv_ijkb0(.false.)
+    CALL using_indv_ijkb0(0)
     !
     ngms = dfftt%ngm
     add_complex = ( flag=='c' .OR. flag=='C' )
@@ -499,7 +499,7 @@ MODULE us_exx
     !
     IF(.not.okvan) RETURN
     !
-    CALL using_indv_ijkb0(.false.)
+    CALL using_indv_ijkb0(0)
     !
     ! These are beta functions for k-point "xkp" with indices "igkp"
     ! Possibly already available in the calling routines vexx, since
@@ -576,7 +576,7 @@ MODULE us_exx
     IF ( .not. okvan ) RETURN
     CALL start_clock( 'addusxx' )
     !
-    CALL using_indv_ijkb0(.false.)
+    CALL using_indv_ijkb0(0)
     !
     DO ia = 1, nat
       !
@@ -638,7 +638,7 @@ MODULE us_exx
     !
     CALL start_clock( 'newdxx' )
     !
-    CALL using_indv_ijkb0(.false.)
+    CALL using_indv_ijkb0(0)
     !
     domega = omega/(dfftt%nr1 *dfftt%nr2 *dfftt%nr3)
     !
@@ -896,7 +896,7 @@ MODULE us_exx
       RETURN
     ENDIF
     !
-    CALL using_indv_ijkb0(.false.)
+    CALL using_indv_ijkb0(0)
     !
     ! d_matrix are now done in setup.f90
     !CALL d_matrix(d1,d2,d3)

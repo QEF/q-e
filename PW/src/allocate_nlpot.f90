@@ -41,7 +41,9 @@ SUBROUTINE allocate_nlpot
   USE spin_orb,         ONLY : lspinorb, fcoef
   !
   USE wvfct_gpum,       ONLY : using_g2kin
-  USE uspp_gpum,        ONLY : using_vkb, using_indv_ijkb0, using_indv_ijkb0_d
+  USE uspp_gpum,        ONLY : using_vkb, using_indv_ijkb0, using_indv_ijkb0_d, &
+                               using_deeq, using_deeq_nc, using_deeq_nc_d, &
+                               using_qq_at, using_qq_so
   !
   IMPLICIT NONE
   !
@@ -108,9 +110,13 @@ SUBROUTINE allocate_nlpot
   nwfcm = maxval ( upf(1:nsp)%nwfc )
   ALLOCATE (tab_at( nqx , nwfcm , nsp))
 
-  CALL using_g2kin(.true.)
-  CALL using_vkb(.true.)
-  CALL using_indv_ijkb0(.true.)
+  CALL using_g2kin(2)
+  CALL using_vkb(2)
+  CALL using_indv_ijkb0(2)
+  CALL using_deeq(2)
+  IF (noncolin) CALL using_deeq_nc(2)
+  CALL using_qq_at(2)
+  IF (lspinorb) CALL using_qq_so(2)
   !
   RETURN
 END SUBROUTINE allocate_nlpot

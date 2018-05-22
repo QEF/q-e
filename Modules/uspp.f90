@@ -337,7 +337,6 @@ CONTAINS
   SUBROUTINE deallocate_uspp()
     !-----------------------------------------------------------------------
     !
-    USE uspp_gpum, ONLY : using_vkb, using_vkb_d, using_indv_ijkb0, using_indv_ijkb0_d
     !
     IF( ALLOCATED( nhtol ) )      DEALLOCATE( nhtol )
     IF( ALLOCATED( indv ) )       DEALLOCATE( indv )
@@ -362,9 +361,6 @@ CONTAINS
     IF( ALLOCATED( ap_d ) )       DEALLOCATE(ap_d)
     IF( ALLOCATED( lpx_d ) )      DEALLOCATE(lpx_d)
     IF( ALLOCATED( lpl_d ) )      DEALLOCATE(lpl_d)
-    !
-    CALL using_vkb(.true.);        CALL using_vkb_d(.false.)
-    CALL using_indv_ijkb0(.true.); CALL using_indv_ijkb0_d(.false.)
 #endif
     !
   END SUBROUTINE deallocate_uspp

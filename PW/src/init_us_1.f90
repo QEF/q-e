@@ -44,7 +44,9 @@ subroutine init_us_1
   USE mp_bands,     ONLY : intra_bgrp_comm
   USE mp,           ONLY : mp_sum
   !
-  USE uspp_gpum,    ONLY : using_indv_ijkb0, using_indv_ijkb0_d
+  USE uspp_gpum,    ONLY : using_indv_ijkb0, using_indv_ijkb0_d, &
+                           using_qq_at, using_qq_at_d, &
+                           using_qq_so, using_qq_so_d
   !
   implicit none
   !
@@ -421,7 +423,12 @@ subroutine init_us_1
   deallocate (besr)
   deallocate (aux)
 
-  CALL using_indv_ijkb0(.true.); CALL using_indv_ijkb0_d(.false.) ! trick to initialize immediately
+  CALL using_indv_ijkb0(2); CALL using_indv_ijkb0_d(0) ! trick to update immediately
+  CALL using_qq_at(2);      CALL using_qq_at_d(0) ! trick to update immediately
+  IF (lspinorb) THEN 
+      CALL using_qq_so(2);
+      CALL using_qq_so_d(0) ! trick to update immediately
+  END IF      
 
   call stop_clock ('init_us_1')
   return

@@ -74,8 +74,8 @@ SUBROUTINE init_run()
      call export_gstart_2_cg(gstart); call export_gstart_2_davidson(gstart)
   END IF
 
-  CALL using_g(.true.); CALL using_gg(.true.)       ! g and gg are used almost only after
-  CALL using_g_d(.false.); CALL using_gg_d(.false.) ! a single initialization.
+  CALL using_g(1); CALL using_gg(1)       ! g and gg are used almost only after
+  CALL using_g_d(0); CALL using_gg_d(0) ! a single initialization.
   !                                                   This is a trick to avoid checking for sync everywhere.
   !
   IF (do_comp_esm) CALL esm_init()
@@ -107,7 +107,7 @@ SUBROUTINE init_run()
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )
   !
   et(:,:) = 0.D0
-  CALL using_et(.true.)
+  CALL using_et(1)
   !
   wg(:,:) = 0.D0
   !

@@ -52,11 +52,11 @@ SUBROUTINE c_bands( iter )
 
   !
   CALL start_clock( 'c_bands' ); !write (*,*) 'start c_bands' ; FLUSH(6)
-  CALL using_evc(.false.)
+  CALL using_evc(0)
   !
   ik_ = 0
   avg_iter = 0.D0
-  IF ( restart ) CALL using_et(.true.)
+  IF ( restart ) CALL using_et(1)
   IF ( restart ) CALL restart_in_cbands(ik_, ethr, avg_iter, et )
   !
   ! ... If restarting, calculated wavefunctions have to be read from file
@@ -66,7 +66,7 @@ SUBROUTINE c_bands( iter )
   DO ik = 1, ik_
      IF ( nks > 1 .OR. lelfield ) &
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-     IF ( nks > 1 .OR. lelfield ) CALL using_evc(.true.)
+     IF ( nks > 1 .OR. lelfield ) CALL using_evc(1)
   END DO
   !
   IF ( isolve == 0 ) THEN
@@ -93,14 +93,14 @@ SUBROUTINE c_bands( iter )
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( nkb > 0 ) CALL using_vkb(.true.)
+     IF ( nkb > 0 ) CALL using_vkb(1)
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... read in wavefunctions from the previous iteration
      !
      IF ( nks > 1 .OR. lelfield ) &
           CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-     IF ( nks > 1 .OR. lelfield ) CALL using_evc(.true.)
+     IF ( nks > 1 .OR. lelfield ) CALL using_evc(1)
      !
      ! ... Needed for LDA+U
      !
@@ -115,7 +115,7 @@ SUBROUTINE c_bands( iter )
      ! ... iterative diagonalization of the next scf iteration
      ! ... and for rho calculation
      !
-     CALL using_evc(.false.)
+     CALL using_evc(0)
      IF ( nks > 1 .OR. lelfield ) &
           CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
@@ -127,7 +127,7 @@ SUBROUTINE c_bands( iter )
      !
      IF (ik .le. nkdum) THEN
         IF (check_stop_now()) THEN
-           CALL  using_et(.false.)
+           CALL  using_et(0)
            CALL save_in_cbands(ik, ethr, avg_iter, et )
            RETURN
         END IF
@@ -178,7 +178,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag
-  USE g_psi_mod_gpum,       ONLY : using_h_diag, using_s_diag
+  USE g_psi_mod_gpum,       ONLY : h_diag_d, s_diag_d, using_h_diag, using_s_diag, using_h_diag_d, using_s_diag_d
   USE scf,                  ONLY : v_of_0
   USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel,&
                                    gdir, l3dstring, efield, efield_cry
@@ -190,7 +190,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE mp,                   ONLY : mp_sum, mp_bcast
 
   USE wavefunctions_module_gpum, ONLY : evc_d, using_evc, using_evc_d
-  USE wvfct_gpum,                ONLY : et_d, using_et, using_et_d, using_g2kin
+  USE wvfct_gpum,                ONLY : et_d, using_et, using_et_d, &
+                                        g2kin_d, using_g2kin, using_g2kin_d
   USE uspp_gpum,                 ONLY : using_vkb
   !
   IMPLICIT NONE
@@ -234,7 +235,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   IF( ierr /= 0 ) &
      CALL errore( ' diag_bands ', ' cannot allocate s_diag ', ABS(ierr) )
   !
-  call using_h_diag(.true.); call using_s_diag(.true.)
+  call using_h_diag(2); call using_s_diag(2)
   ipw=npwx
   CALL mp_sum(ipw, intra_bgrp_comm)
   IF ( nbndx > ipw ) &
@@ -260,7 +261,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   CALL deallocate_bec_type ( becp )
   DEALLOCATE( s_diag )
   DEALLOCATE( h_diag )
-  call using_h_diag(.true.); call using_s_diag(.true.)
+  call using_h_diag(2); call using_s_diag(2)
   !
   IF ( notconv > MAX( 5, nbnd / 4 ) ) THEN
      !
@@ -294,13 +295,13 @@ CONTAINS
        !
        ! ... h_diag is the precondition matrix
        !
-       CALL using_g2kin(.false.)
+       CALL using_g2kin(0)
+       CALL using_h_diag(2)
        FORALL( ig = 1 : npw )
           !
           h_diag(ig,1) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
           !
        END FORALL
-       call using_h_diag(.true.)
        !
        ntry = 0
        !
@@ -310,20 +311,18 @@ CONTAINS
           !
           IF ( .NOT. lrot ) THEN
              !
-             CALL using_evc(.false.); ! et is used as intent(out)
+             CALL using_evc(1);  CALL using_et(1); ! et is used as intent(out), set intento=2?
              CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
-             CALL using_evc(.true.);  CALL using_et(.true.);
              !
              avg_iter = avg_iter + 1.D0
              !
           END IF
           !
-          CALL using_evc(.true.);  CALL using_et(.true.);
-          call using_h_diag(.false.) ! precontidtion has intent(in)
+          CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
           CALL rcgdiagg( h_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
-          !CALL using_evc(.true.)  specified above
+          !CALL using_evc(1)  specified above
           !
           avg_iter = avg_iter + cg_iter
           !
@@ -343,11 +342,12 @@ CONTAINS
        ! ... hamiltonian used in g_psi to evaluate the correction
        ! ... to the trial eigenvectors
        !
-       call using_h_diag(.true.); call using_s_diag(.true.);
+       call using_h_diag(2); call using_s_diag(2);
        !
-       CALL using_g2kin(.false.)
+       CALL using_g2kin(0)
        h_diag(1:npw, 1) = g2kin(1:npw) + v_of_0
        !
+       ! move this to GPU?
        CALL usnldiag( npw, h_diag, s_diag )
        !
        ntry = 0
@@ -357,7 +357,7 @@ CONTAINS
           lrot = ( iter == 1 )
           !
           IF (.not. use_gpu) THEN
-             CALL using_evc(.true.); CALL using_et(.true.);
+             CALL using_evc(1); CALL using_et(1);
              IF ( use_para_diag ) THEN
 !                ! make sure that all processors have the same wfc
                 CALL pregterg( h_psi, s_psi, okvan, g_psi, &
@@ -368,10 +368,10 @@ CONTAINS
                          npw, npwx, nbnd, nbndx, evc, ethr, &
                          et(1,ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
              END IF
-             ! CALL using_evc(.true.) done above
+             ! CALL using_evc(1) done above
           ELSE
 #if defined(__CUDA)
-             CALL using_evc_d(.true.); CALL using_et_d(.true.);
+             CALL using_evc_d(1); CALL using_et_d(1);
              IF ( use_para_diag ) THEN
                 CALL pregterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
                             npw, npwx, nbnd, nbndx, evc_d, ethr, &
@@ -383,7 +383,7 @@ CONTAINS
                          npw, npwx, nbnd, nbndx, evc_d, ethr, &
                          et_d(1, ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
              END IF
-             ! CALL using_evc_d(.true.) ! done above
+             ! CALL using_evc_d(1) ! done above
 #else
              CALL errore( ' diag_bands ', ' Called GPU version of c_bands which is not available!', 1)
 #endif
@@ -424,7 +424,7 @@ CONTAINS
        !
        ! ... save wave functions from previous iteration for electric field
        !
-       CALL using_evc(.false.)
+       CALL using_evc(0)
        evcel = evc
        !
        !... read projectors from disk
@@ -445,7 +445,7 @@ CONTAINS
           !
           call allocate_bec_type(nkb,nbnd,bec_evcel)
           
-          CALL using_vkb(.false.)
+          CALL using_vkb(0)
           !
           CALL calbec(npw, vkb, evcel, bec_evcel)
           !
@@ -463,13 +463,13 @@ CONTAINS
        !write (*,*) ' inside CG solver branch '
        h_diag = 1.D0
        !
-       CALL using_g2kin(.false.)
+       CALL using_g2kin(0)
+       CALL using_h_diag(2);
        FORALL( ig = 1 : npwx )
           !
           h_diag(ig,:) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
           !
        END FORALL
-       call using_h_diag(.true.);
        !
        ntry = 0
        !
@@ -479,14 +479,14 @@ CONTAINS
           !
           IF ( .NOT. lrot ) THEN
              !
-             CALL using_evc(.true.)
+             CALL using_evc(1)
              CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
              !
              avg_iter = avg_iter + 1.D0
              !
           END IF
           !
-          CALL using_evc(.true.)
+          CALL using_evc(1)
           CALL ccgdiagg( h_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
@@ -509,15 +509,31 @@ CONTAINS
        ! ... hamiltonian used in g_psi to evaluate the correction
        ! ... to the trial eigenvectors
        !
-       CALL using_g2kin(.false.)
-       DO ipol = 1, npol
+       IF ( .not. use_gpu ) THEN
           !
-          h_diag(1:npw, ipol) = g2kin(1:npw) + v_of_0
+          CALL using_g2kin(0); CALL using_h_diag(2);
           !
-       END DO
-       !
-       call using_h_diag(.true.); call using_s_diag(.true.);
-       CALL usnldiag( npw, h_diag, s_diag )
+          DO ipol = 1, npol
+             !
+             h_diag(1:npw, ipol) = g2kin(1:npw) + v_of_0
+             !
+          END DO
+          !
+          call using_s_diag(2);
+          CALL usnldiag( npw, h_diag, s_diag )
+       ELSE
+          !
+          CALL using_g2kin(0) ;CALL using_h_diag(2)
+          !
+          DO ipol = 1, npol
+             !
+             h_diag(1:npw, ipol) = g2kin(1:npw) + v_of_0
+             !
+          END DO
+          !
+          CALL using_s_diag_d(2); CALL using_h_diag_d(1)
+          CALL usnldiag_gpu( npw, h_diag_d, s_diag_d )
+       END IF
        !
        ntry = 0
        !
@@ -526,7 +542,7 @@ CONTAINS
           lrot = ( iter == 1 )
           !
           IF (.not. use_gpu ) THEN
-             CALL using_evc(.true.) ; CALL using_et(.true.)
+             CALL using_evc(1) ; CALL using_et(1)
              IF ( use_para_diag ) then
                 !
                 CALL pcegterg( h_psi, s_psi, okvan, g_psi, &
@@ -541,7 +557,7 @@ CONTAINS
              END IF
           ELSE
 #if defined(__CUDA)
-             CALL using_evc_d(.true.) ; CALL using_et_d(.true.) 
+             CALL using_evc_d(1) ; CALL using_et_d(1) 
              IF ( use_para_diag ) then
                 !
                 CALL pcegterg_gpu( h_psi_gpu, s_psi_gpu, okvan, g_psi_gpu, &
@@ -706,12 +722,12 @@ SUBROUTINE c_bands_nscf( )
   !
   ik_ = 0
   avg_iter = 0.D0
-  IF ( restart ) CALL using_et(.true.)
+  IF ( restart ) CALL using_et(1)
   IF ( restart ) CALL restart_in_cbands(ik_, ethr, avg_iter, et )
   !
   ! ... If restarting, calculated wavefunctions have to be read from file
   !
-  CALL using_evc(.true.)
+  CALL using_evc(1)
   DO ik = 1, ik_
      CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
   END DO
@@ -737,7 +753,7 @@ SUBROUTINE c_bands_nscf( )
      ! 
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( nkb > 0 ) CALL using_vkb(.true.)
+     IF ( nkb > 0 ) CALL using_vkb(1)
      IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
      !
      ! ... Needed for LDA+U
@@ -751,7 +767,7 @@ SUBROUTINE c_bands_nscf( )
      !
      IF ( TRIM(starting_wfc) == 'file' ) THEN
         !
-        CALL using_evc(.true.)
+        CALL using_evc(1)
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
         !
      ELSE
@@ -766,7 +782,7 @@ SUBROUTINE c_bands_nscf( )
      !
      ! ... save wave-functions (unless disabled in input)
      !
-     IF ( io_level > -1 ) CALL using_evc(.false.)
+     IF ( io_level > -1 ) CALL using_evc(0)
      IF ( io_level > -1 ) CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
      ! ... beware: with pools, if the number of k-points on different
@@ -780,7 +796,7 @@ SUBROUTINE c_bands_nscf( )
         ! ... save wavefunctions to file
         !
         IF (check_stop_now()) THEN
-           CALL using_et(.false.)
+           CALL using_et(0)
            CALL save_in_cbands(ik, ethr, avg_iter, et )
            RETURN
         END IF

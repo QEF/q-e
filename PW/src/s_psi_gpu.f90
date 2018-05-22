@@ -207,7 +207,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        REAL(DP),    DEVICE, POINTER :: ps_d(:,:)
          ! the product vkb and psi
        !
-       CALL using_vkb_d(.false.)
+       CALL using_vkb_d(0)
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
           nproc   = 1
@@ -327,7 +327,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        CALL qe_buffer%lock_buffer(ps_d, (/ nkb, m /), ierr)
 
        ! sync vkb if needed
-       CALL using_vkb_d(.false.)
+       CALL using_vkb_d(0)
        !
        ps(:,:) = ( 0.D0, 0.D0 )
        !
@@ -393,7 +393,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           CALL errore( ' s_psi_nc ', ' cannot allocate memory (ps) ', ABS(ierr) )
 
        ! sync vkb if needed
-       CALL using_vkb_d(.false.)
+       CALL using_vkb_d(0)
 
        ps(:,:,:) = (0.D0,0.D0)
        !

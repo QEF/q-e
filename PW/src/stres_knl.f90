@@ -35,7 +35,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   real(DP) :: twobysqrtpi, gk2, arg
   integer :: npw, ik, l, m, i, ibnd, is
   !
-  CALL using_evc(.false.)
+  CALL using_evc(0)
   !
   allocate (gk(  3, npwx))    
   allocate (kfac(   npwx))    
@@ -49,7 +49,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   do ik = 1, nks
      if (nks > 1) &
         call get_buffer (evc, nwordwfc, iunwfc, ik)
-     if (nks > 1) CALL using_evc(.true.)
+     if (nks > 1) CALL using_evc(2)
      npw = ngk(ik)
      do i = 1, npw
         gk (1, i) = (xk (1, ik) + g (1, igk_k(i,ik) ) ) * tpiba

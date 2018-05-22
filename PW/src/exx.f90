@@ -1672,7 +1672,7 @@ MODULE exx
     IF(okvan) CALL allocate_bec_type( nkb, nbnd, becpsi)
     energy = 0._dp
 
-    CALL using_evc(.false.)
+    CALL using_evc(0)
 
     DO ik=1,nks
        npw = ngk (ik)
@@ -1687,7 +1687,7 @@ MODULE exx
        ENDIF
        !
        IF(okvan)THEN
-          CALL using_vkb(.true.)
+          CALL using_vkb(1)
           ! prepare the |beta> function at k+q
           CALL init_us_2(npw, igk_exx(1,ik), xk(:,ik), vkb)
           ! compute <beta_I|psi_j> at this k+q point, for all band and all projectors
@@ -2959,7 +2959,7 @@ SUBROUTINE aceinit( exex )
     CALL errore('aceinit','n_proj must be between occ and tot.',1)
   END IF 
 
-  CALL using_evc(.false.)
+  CALL using_evc(0)
 
   IF (.not. allocated(xi)) ALLOCATE( xi(npwx*npol,nbndproj,nks) )
   IF ( okvan ) CALL allocate_bec_type( nkb, nbnd, becpsi)
@@ -2970,9 +2970,9 @@ SUBROUTINE aceinit( exex )
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
      IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-     IF ( nks > 1 ) CALL using_evc(.true.)
+     IF ( nks > 1 ) CALL using_evc(2)
      IF ( okvan ) THEN
-        CALL using_vkb(.true.)
+        CALL using_vkb(1)
         CALL init_us_2(npw, igk_k(1,ik), xk(:,ik), vkb)
         CALL calbec ( npw, vkb, evc, becpsi, nbnd )
      ENDIF

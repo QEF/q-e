@@ -81,7 +81,7 @@ SUBROUTINE stres_mgga( sigmaxc )
     IF ( nks > 1 ) THEN
        !
        CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-       CALL using_evc(.true.)
+       CALL using_evc(2)
        !
     END IF
     !
@@ -207,7 +207,7 @@ SUBROUTINE wfc_gradient ( ibnd, ik, npw, gradpsi )
   REAL(DP)               :: kplusg(npwx)
   INTEGER                :: ipol
   !
-  CALL using_evc(.false.)
+  CALL using_evc(0)
   !
   ! Compute the gradient of the wavefunction in reciprocal space
   !

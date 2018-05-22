@@ -94,7 +94,7 @@ MODULE exx_band
     INTEGER :: lda, n, ik
     LOGICAL :: exst_mem, exst_file
     !
-    CALL using_evc(.false.)
+    CALL using_evc(0)
     !
     IF (negrp.eq.1) THEN
        !
@@ -168,7 +168,7 @@ MODULE exx_band
        ! read evc for the local data structure
        !
        IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-       IF ( nks > 1 ) CALL using_evc(.true.)
+       IF ( nks > 1 ) CALL using_evc(2)
        !
        ! transform evc to the EXX data structure
        !

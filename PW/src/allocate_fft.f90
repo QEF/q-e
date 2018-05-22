@@ -68,7 +68,7 @@ SUBROUTINE allocate_fft
   ALLOCATE (rhog_core( ngm ) )
   ALLOCATE (psic( dfftp%nnr))
   ALLOCATE (vrs( dfftp%nnr, nspin))
-  CALL using_vrs(.true.)
+  CALL using_vrs(2)
 
   IF (noncolin) ALLOCATE (psic_nc( dfftp%nnr, npol))
 

@@ -247,7 +247,7 @@ SUBROUTINE potinit()
   !
   ! ... define the total local potential (external+scf)
   !
-  CALL using_vrs(.true.)
+  CALL using_vrs(1)
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   !
   ! ... write on output the parameters used in the lda+U calculation

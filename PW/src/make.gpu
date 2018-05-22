@@ -6,7 +6,8 @@ PWLIBS += \
   vloc_psi_gpu.o \
   pwcom_gpu.o \
   g2_kin_gpu.o \
-  scf_mod_gpu.o
+  scf_mod_gpu.o \
+  usnldiag_gpu.o
 
 pwcom_gpu.o : pwcom.o
 a2fmod.o : pwcom_gpu.o

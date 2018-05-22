@@ -351,7 +351,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
          if(okvan) then
-            CALL using_vkb(.true.)
+            CALL using_vkb(1)
             CALL init_us_2 (npw0,igk0,xk(1,nx_el(ik-1,pdir)),vkb)
             CALL calbec( npw0, vkb, evct, becp0 )
          endif
@@ -372,7 +372,7 @@ subroutine h_epsi_her_set(pdir, e_field)
          END DO
       
          if(okvan) then
-            CALL using_vkb(.true.)
+            CALL using_vkb(1)
             CALL init_us_2 (npw1,igk1,xk(1,nx_el(ik,pdir)),vkb)
             CALL calbec( npw1, vkb, evcel, becp_bp )
          endif
@@ -539,7 +539,7 @@ subroutine h_epsi_her_set(pdir, e_field)
                enddo
             enddo
 
-            CALL using_vkb(.false.) ! this is redundant
+            CALL using_vkb(0) ! this is redundant
             call ZGEMM ('N', 'N', npw1, nbnd*npol , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
                  npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx)
             do m=1,nbnd
@@ -572,7 +572,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
           
          if(okvan) then
-            CALL using_vkb(.true.)
+            CALL using_vkb(1)
             CALL init_us_2 (npw0,igk0,xk(1,nx_el(ik+nppstr_3d(pdir)-1,pdir)),vkb)
             CALL calbec( npw0, vkb, evct, becp0 )
          endif
@@ -594,7 +594,7 @@ subroutine h_epsi_her_set(pdir, e_field)
             END DO
          endif
          if(okvan) then
-            CALL using_vkb(.true.)
+            CALL using_vkb(1)
             CALL init_us_2 (npw1,igk1,xk(1,nx_el(ik,pdir)),vkb)
             CALL calbec( npw1, vkb, evcel, becp_bp )
          endif
@@ -858,7 +858,7 @@ subroutine h_epsi_her_set(pdir, e_field)
                enddo
             enddo
             
-            CALL using_vkb(.false.) !this is redundant
+            CALL using_vkb(0) !this is redundant
             call ZGEMM ('N', 'N', npw1, nbnd*npol , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
                  npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx)
             do m=1,nbnd
@@ -892,7 +892,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
          
          if(okvan) then
-            CALL using_vkb(.true.)
+            CALL using_vkb(1)
             CALL init_us_2 (npw0,igk0,xk(1,nx_el(ik+1,pdir)),vkb)
             CALL calbec( npw0, vkb, evct, becp0)
          endif
@@ -913,7 +913,7 @@ subroutine h_epsi_her_set(pdir, e_field)
          END DO
         
          if(okvan) then
-            CALL using_vkb(.true.)
+            CALL using_vkb(1)
             CALL init_us_2 (npw1,igk1,xk(1,nx_el(ik,pdir)),vkb)
             CALL calbec( npw1, vkb, evcel, becp_bp )
          endif
@@ -1085,7 +1085,7 @@ subroutine h_epsi_her_set(pdir, e_field)
             enddo
          enddo
 
-         CALL using_vkb(.false.)
+         CALL using_vkb(0)
          call ZGEMM ('N', 'N', npw1, nbnd*npol , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
                  npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx)
                  
@@ -1122,7 +1122,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
 
       if(okvan) then
-         CALL using_vkb(.true.)
+         CALL using_vkb(1)
          CALL init_us_2 (npw0,igk0,xk(1,nx_el(ik-nppstr_3d(pdir)+1,pdir)),vkb)
          CALL calbec( npw0, vkb, evct, becp0 )
       endif
@@ -1145,7 +1145,7 @@ subroutine h_epsi_her_set(pdir, e_field)
       endif
 
       if(okvan) then
-         CALL using_vkb(.true.)
+         CALL using_vkb(1)
          CALL init_us_2 (npw1,igk1,xk(1,nx_el(ik,pdir)),vkb)
          CALL calbec( npw1, vkb, evcel, becp_bp )
       endif
@@ -1401,7 +1401,7 @@ subroutine h_epsi_her_set(pdir, e_field)
             enddo
          enddo
 
-         CALL using_vkb(.false.)
+         CALL using_vkb(0)
          call ZGEMM ('N', 'N', npw1, nbnd*npol , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the ik read
                  npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx)
          do m=1,nbnd

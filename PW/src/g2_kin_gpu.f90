@@ -30,7 +30,7 @@ SUBROUTINE g2_kin_gpu ( ik )
   INTEGER :: ig, npw,i
   REAL(DP):: xk1,xk2,xk3
   !
-  CALL using_g_d(.false.); CALL using_g2kin_d(.true.)
+  CALL using_g_d(0); CALL using_g2kin_d(2)
   !
   !
   !

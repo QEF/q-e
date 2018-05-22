@@ -39,8 +39,8 @@ subroutine g_psi_gpu (lda, n, m, npol, psi_d, e_d)
   ! counter on psi functions
   ! counter on G vectors
   !
-  call using_h_diag_d(.false.)
-  call using_s_diag_d(.false.)
+  call using_h_diag_d(0)
+  call using_s_diag_d(0)
   !
   call start_clock ('g_psi')
   !

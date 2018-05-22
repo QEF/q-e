@@ -38,7 +38,7 @@ subroutine g_psi (lda, n, m, npol, psi, e)
   ! counter on psi functions
   ! counter on G vectors
   !
-  call using_h_diag(.false.); call using_s_diag(.false.)
+  call using_h_diag(0); call using_s_diag(0)
   call start_clock ('g_psi')
   !
 #ifdef TEST_NEW_PRECONDITIONING

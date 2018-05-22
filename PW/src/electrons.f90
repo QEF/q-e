@@ -115,7 +115,7 @@ SUBROUTINE electrons()
            READ (iunres, *) (wg(1:nbnd,ik),ik=1,nks)
            READ (iunres, *) (et(1:nbnd,ik),ik=1,nks)
            CLOSE ( unit=iunres, status='delete')
-           CALL using_et(.true.)
+           CALL using_et(2)
            ! ... if restarting here, exx was already active
            ! ... initialize stuff for exx
            first = .false.
@@ -130,7 +130,7 @@ SUBROUTINE electrons()
            CALL v_of_rho( rho, rho_core, rhog_core, &
                ehart, etxc, vtxc, eth, etotefield, charge, v)
            IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
-           CALL using_vrs(.true.)
+           CALL using_vrs(1)
            CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
                          nspin, doublegrid )
            !
@@ -157,7 +157,7 @@ SUBROUTINE electrons()
      IF ( stopped_by_user .OR. .NOT. conv_elec ) THEN
         conv_elec=.FALSE.
         IF ( .NOT. first) THEN
-           CALL using_et(.false.)
+           CALL using_et(0)
            WRITE(stdout,'(5x,"Calculation (EXX) stopped during iteration #", &
                         & i6)') iter
            CALL seqopn (iunres, 'restart_e', 'formatted', exst)
@@ -203,7 +203,7 @@ SUBROUTINE electrons()
         etot = etot + etxc + exxen
         !
         IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
-        CALL using_vrs(.true.)
+        CALL using_vrs(1)
         CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
              nspin, doublegrid )
         !
@@ -298,7 +298,7 @@ SUBROUTINE electrons()
      WRITE( stdout,'(/5x,"EXX: now go back to refine exchange calculation")')
      !
      IF ( check_stop_now() ) THEN
-        CALL using_et(.false.)
+        CALL using_et(0)
         WRITE(stdout,'(5x,"Calculation (EXX) stopped after iteration #", &
                         & i6)') iter
         conv_elec=.FALSE.
@@ -456,7 +456,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   iter = 0
   dr2  = 0.0_dp
   IF ( restart ) CALL restart_in_electrons (iter, dr2, ethr, et )
-  IF ( restart ) CALL using_et(.true.)
+  IF ( restart ) CALL using_et(2)
   !
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
   !
@@ -513,7 +513,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      IF ( check_stop_now() ) THEN
         conv_elec=.FALSE.
-        CALL using_et(.false.)
+        CALL using_et(0)
         CALL save_in_electrons (iter, dr2, ethr, et )
         GO TO 10
      END IF
@@ -567,7 +567,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         !
         IF ( stopped_by_user ) THEN
            conv_elec=.FALSE.
-           CALL using_et(.false.)
+           CALL using_et(0)
            CALL save_in_electrons (iter-1, dr2, ethr, et )
            GO TO 10
         END IF
@@ -578,7 +578,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! ... explicitely collected to the first node
         ! ... this is done here for et, in sum_band for wg
         !
-        CALL using_et(.true.)
+        CALL using_et(1)
         CALL poolrecover( et, nbnd, nkstot, nks )
         !
         ! ... the new density is computed here. For PAW:
@@ -742,12 +742,12 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      ! ... define the total local potential (external + scf)
      !
-     CALL using_vrs(.true.)
+     CALL using_vrs(1)
      CALL sum_vrs( dfftp%nnr, nspin, vltot, v%of_r, vrs )
      !
      ! ... interpolate the total local potential
      !
-     CALL using_vrs(.true.) ! redundant
+     CALL using_vrs(1) ! redundant
      CALL interpolate_vrs( dfftp%nnr, nspin, doublegrid, kedtau, v%kin_r, vrs )
      !
      ! ... in the US case we have to recompute the self-consistent
@@ -1329,13 +1329,13 @@ FUNCTION exxenergyace ( )
   !
   domat = .true.
   exxenergyace=0.0_dp
-  CALL using_evc(.false.)
+  CALL using_evc(0)
   DO ik = 1, nks
      npw = ngk (ik)
      current_k = ik
      IF ( lsda ) current_spin = isk(ik)
      IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-     IF (nks > 1) CALL using_evc(.true.)
+     IF (nks > 1) CALL using_evc(2)
      IF (gamma_only) THEN
         call vexxace_gamma ( npw, nbnd, evc, ex )
      ELSE

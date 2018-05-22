@@ -30,7 +30,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   USE uspp_param,    ONLY: nh, nhm
   USE becmod,        ONLY: bec_type, becp
   !
-  USE uspp_gpum,     ONLY : using_vkb, using_indv_ijkb0
+  USE uspp_gpum,     ONLY : using_vkb, using_indv_ijkb0, using_deeq, using_deeq_nc
   !
   IMPLICIT NONE
   !
@@ -81,8 +81,9 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        IF ( nkb == 0 ) RETURN
        !
-       CALL using_vkb(.false.)
-       CALL using_indv_ijkb0(.false.)
+       CALL using_vkb(0)
+       CALL using_indv_ijkb0(0)
+       CALL using_deeq(0)
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
           nproc   = 1
@@ -188,8 +189,9 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        IF ( nkb == 0 ) RETURN
        !
-       CALL using_vkb(.false.)
-       CALL using_indv_ijkb0(.false.)
+       CALL using_vkb(0)
+       CALL using_indv_ijkb0(0)
+       CALL using_deeq(0)
        !
        ALLOCATE (ps (nkb,m), STAT=ierr )
        IF( ierr /= 0 ) &
@@ -240,8 +242,9 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        !
        IF ( nkb == 0 ) RETURN
        !
-       CALL using_vkb(.false.)
-       CALL using_indv_ijkb0(.false.)
+       CALL using_vkb(0)
+       CALL using_indv_ijkb0(0)
+       CALL using_deeq_nc(0)
        !
        ALLOCATE (ps(  nkb,npol, m), STAT=ierr )    
        IF( ierr /= 0 ) &

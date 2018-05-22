@@ -120,7 +120,7 @@ SUBROUTINE orbm_kubo()
   ALLOCATE(H_evc(npol*npwx,nbnd))
   ALLOCATE(temp(ngm))
 
-  CALL using_vrs(.true.)
+  CALL using_vrs(1)
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   CALL allocate_bec_type ( nkb, nbnd, becp )
   ! Initializations
@@ -177,7 +177,7 @@ SUBROUTINE orbm_kubo()
         npw_k = ngk(n)
         current_k=n
         !
-        CALL using_vkb(.true.)
+        CALL using_vkb(1)
         CALL init_us_2(npw_k,igk_k(1,n),xk(1,n),vkb)
         CALL g2_kin( n )
 

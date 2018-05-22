@@ -58,7 +58,7 @@ subroutine wannier_proj(ik, wan_func)
   ! call get_buffer ( evc, nwordwfc, iunwfc, ik )  
   call davcio ( evc, 2*nwordwfc, iunwfc, ik, -1 )  
   !
-  CALL using_evc(.true.); CALL using_et(.false.)
+  CALL using_evc(2); CALL using_et(0)
   !
   ! Reads ortho-atomic wfc
   ! You should prepare data using orthoatwfc.f90

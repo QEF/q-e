@@ -29,7 +29,7 @@ subroutine wannier_enrg(enrg)
 
   integer :: i,j, ik
 
-  CALL using_et(.false.)
+  CALL using_et(0)
 
   enrg = ZERO
   current_spin = 1

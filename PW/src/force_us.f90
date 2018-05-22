@@ -36,7 +36,8 @@ SUBROUTINE force_us( forcenl )
 
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0
+  USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0, using_qq_at, &
+                                        using_deeq
   !
   IMPLICIT NONE
   !
@@ -61,7 +62,7 @@ SUBROUTINE force_us( forcenl )
   !
   ! ... the forces are a sum over the K points and over the bands
   !   
-  CALL using_evc(.false.)
+  CALL using_evc(0)
   !
   DO ik = 1, nks
      !
@@ -70,13 +71,13 @@ SUBROUTINE force_us( forcenl )
 
      IF ( nks > 1 ) THEN
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-        CALL using_evc(.true.)
-        IF ( nkb > 0 ) CALL using_vkb(.true.)
+        CALL using_evc(1)
+        IF ( nkb > 0 ) CALL using_vkb(1)
         IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
      END IF
      !
-     CALL using_vkb(.false.)
+     CALL using_vkb(0)
      CALL calbec ( npw, vkb, evc, becp )
      !
      DO ipol = 1, 3
@@ -153,8 +154,10 @@ SUBROUTINE force_us( forcenl )
        ! ... 3) the band group is subsequently used to parallelize over bands
        !
        !
-       CALL using_et(.false.)
-       CALL using_indv_ijkb0(.false.)
+       CALL using_et(0)
+       CALL using_indv_ijkb0(0)
+       CALL using_deeq(0)
+       CALL using_qq_at(0)
 
        DO nt = 1, ntyp
           IF ( nh(nt) == 0 ) CYCLE
@@ -208,8 +211,8 @@ SUBROUTINE force_us( forcenl )
        REAL(DP) :: fac
        INTEGER  :: ibnd, ih, jh, na, nt, ikb, jkb, ijkb0, is, js, ijs !counters
        !
-       CALL using_et(.false.)
-       CALL using_indv_ijkb0(.false.)
+       CALL using_et(0)
+       CALL using_indv_ijkb0(0)
        DO ibnd = 1, nbnd
           IF (noncolin) THEN
              CALL compute_deff_nc(deff_nc,et(ibnd,ik))

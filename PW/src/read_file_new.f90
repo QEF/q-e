@@ -240,7 +240,7 @@ SUBROUTINE read_xml_file ( )
   !
   nbndx = nbnd
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ) )
-  CALL using_et(.true.)
+  CALL using_et(1)
   !
   ! ... here we read all the variables defining the system
   !
@@ -252,7 +252,7 @@ SUBROUTINE read_xml_file ( )
   !
   CALL divide_et_impera( nkstot, xk, wk, isk, nks )
   !
-  CALL using_et(.true.)
+  CALL using_et(1)
   CALL poolscatter( nbnd, nkstot, et, nks, et )
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   !
@@ -302,8 +302,8 @@ SUBROUTINE read_xml_file ( )
        g, gg, mill, ig_l2g, gstart ) 
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
 
-  CALL using_g(.true.); CALL using_gg(.true.)       ! g and gg are used almost only after
-  CALL using_g_d(.false.); CALL using_gg_d(.false.) ! a single initialization.
+  CALL using_g(1); CALL using_gg(1)       ! g and gg are used almost only after
+  CALL using_g_d(0); CALL using_gg_d(0) ! a single initialization.
                                                     ! This is a trck to avoid checking for sync everywhere.
 
   IF (do_comp_esm) THEN

@@ -208,6 +208,8 @@ SUBROUTINE newd( )
   USE control_flags, ONLY : tqr
   USE ldaU,          ONLY : lda_plus_U, U_projection
   !
+  USE uspp_gpum,     ONLY : using_deeq, using_deeq_nc
+  !
   IMPLICIT NONE
   !
   INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb
@@ -216,6 +218,12 @@ SUBROUTINE newd( )
   !
   !
   IF ( .NOT. okvan ) THEN
+     ! Sync
+     IF ( lspinorb .or. noncolin ) THEN
+       CALL using_deeq_nc(1)
+     ELSE
+       CALL using_deeq(1)
+     END IF
      !
      ! ... no ultrasoft potentials: use bare coefficients for projectors
      !
@@ -254,6 +262,10 @@ SUBROUTINE newd( )
   END IF
   !
   CALL start_clock( 'newd' )
+  !
+  ! Sync
+  CALL using_deeq(1)
+  IF ( lspinorb .or. noncolin ) CALL using_deeq_nc(1) ! lspinorb implies noncolin 
   !
   IF (tqr) THEN
      CALL newq_r(v%of_r,deeq,.false.)

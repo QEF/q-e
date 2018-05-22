@@ -68,14 +68,14 @@ SUBROUTINE new_evc()
   !
   !  we start a loop over k points
   !
-  CALL using_evc(.false.) ! save buffer is intent(in)
-  CALL using_et(.true.) ! this may be .false. but requires further checks
+  CALL using_evc(0) ! save buffer is intent(in)
+  CALL using_et(1) ! this may be 0 but requires further checks
   DO ik = 1, nks
      IF (lsda) current_spin = isk(ik)
      npw = ngk (ik)
      IF (nks > 1) &
         CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
-     IF (nks > 1) CALL using_evc(.true.)
+     IF (nks > 1) CALL using_evc(2)
 
      CALL get_buffer (swfcatom, nwordatwfc, iunsat, ik)
      !
@@ -111,7 +111,7 @@ SUBROUTINE new_evc()
 !  natomwfc with large projections.
 !
      IF (natomwfc < nbnd) THEN
-        CALL using_et(.true.)
+        CALL using_et(1)
         DO ibnd=1,nbnd
            wband(ibnd) =0.0_DP
            DO iatwfc=1,natomwfc
@@ -131,7 +131,7 @@ SUBROUTINE new_evc()
         ALLOCATE(aux(npwx*npol,1))
         ALLOCATE(aux_proj(natomwfc,1))
         current_band=natomwfc+1
-        CALL using_evc(.true.)
+        CALL using_evc(1)
         DO ibnd =1, natomwfc
            IF (ind(ibnd) > natomwfc) THEN
               DO jbnd=current_band,nbnd
@@ -235,7 +235,7 @@ SUBROUTINE new_evc()
                                      proj(:,start_band(igroup)+jbnd-1)
               ENDDO
            ENDDO
-           CALL using_evc(.true.)
+           CALL using_evc(1)
            evc(:,start_band(igroup):start_band(igroup)+nsize-1)= aux(:,:)
            proj(:,start_band(igroup):start_band(igroup)+nsize-1)= aux_proj(:,:)
            DEALLOCATE(aux)
@@ -247,7 +247,7 @@ SUBROUTINE new_evc()
 !
 !  Finally, we order the new bands as the atomic states
 !
-     CALL using_evc(.true.)
+     CALL using_evc(1)
      ALLOCATE(aux(npwx*npol,natomwfc))
      used_atwfc=0
      DO ibnd=1,natomwfc
@@ -269,7 +269,7 @@ SUBROUTINE new_evc()
 !
 !  If needed save the new bands on disk
 !
-     ! CALL using_evc(.true.) (already done above, no functions call in between)
+     ! CALL using_evc(1) (already done above, no functions call in between)
      IF (nks > 1) THEN
         CALL save_buffer  (evc, nwordwfc, iunwfc, ik)
      END IF

@@ -89,7 +89,7 @@ SUBROUTINE orthoUwfc
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
      npw = ngk (ik)
-     CALL using_vkb(.true.)
+     CALL using_vkb(1)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      CALL calbec (npw, vkb, wfcatom, becp) 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
@@ -162,7 +162,7 @@ SUBROUTINE orthoatwfc (orthogonalize_wfc)
        CALL atomic_wfc (ik, wfcatom)
      ENDIF
      npw = ngk (ik)
-     CALL using_vkb(.true.)
+     CALL using_vkb(1)
      CALL init_us_2 (npw, igk_k(1,ik), xk (1, ik), vkb)
      CALL calbec (npw, vkb, wfcatom, becp) 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)

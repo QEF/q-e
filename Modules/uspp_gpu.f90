@@ -82,11 +82,16 @@
 #endif
      CONTAINS
      !
-     SUBROUTINE using_indv(changing)
+     SUBROUTINE using_indv(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : indv
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (indv_ood) THEN
@@ -95,51 +100,64 @@
                 stop
              END IF
              IF (.not. allocated(indv)) THEN
-                !print *, "WARNING: sync of indv with unallocated array. Bye!"
-                IF (changing)    indv_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of indv with unallocated array and intento /= 2?"
+                IF (intento > 0)    indv_d_ood = .true.
                 return
              END IF
-             print *, "Really copied indv D->H"
-             indv = indv_d
-             indv_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied indv D->H"
+                indv = indv_d
+                indv_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    indv_d_ood = .true.
+         IF (intento > 0)    indv_d_ood = .true.
 #endif
      END SUBROUTINE using_indv
      !
-     SUBROUTINE using_indv_d(changing)
+     SUBROUTINE using_indv_d(intento)
          !
          USE uspp, ONLY : indv
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(indv)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of indv_d with unallocated array and intento /= 2?"
              IF (allocated(indv_d)) DEALLOCATE(indv_d)
              indv_d_ood = .false.
              RETURN
          END IF
+         ! here we know that indv is allocated, check if size if 0 
+         IF ( SIZE(indv) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array indv_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (indv_d_ood) THEN
              IF ( allocated(indv_d) .and. (SIZE(indv_d)/=SIZE(indv))) deallocate(indv_d)
-             IF (.not. allocated(indv_d)) THEN
-                 ALLOCATE(indv_d, SOURCE=indv)
-             ELSE
-                 print *, "Really copied indv H->D"
-                 indv_d = indv
-             ENDIF
+             IF (.not. allocated(indv_d)) ALLOCATE(indv_d, MOLD=indv)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied indv H->D"
+                indv_d = indv
+             END IF
              indv_d_ood = .false.
          ENDIF
-         IF (changing)    indv_ood = .true.
+         IF (intento > 0)    indv_ood = .true.
 #else
          CALL errore('using_indv_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_indv_d
      !
-     SUBROUTINE using_nhtol(changing)
+     SUBROUTINE using_nhtol(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : nhtol
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (nhtol_ood) THEN
@@ -148,51 +166,64 @@
                 stop
              END IF
              IF (.not. allocated(nhtol)) THEN
-                !print *, "WARNING: sync of nhtol with unallocated array. Bye!"
-                IF (changing)    nhtol_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of nhtol with unallocated array and intento /= 2?"
+                IF (intento > 0)    nhtol_d_ood = .true.
                 return
              END IF
-             print *, "Really copied nhtol D->H"
-             nhtol = nhtol_d
-             nhtol_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied nhtol D->H"
+                nhtol = nhtol_d
+                nhtol_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    nhtol_d_ood = .true.
+         IF (intento > 0)    nhtol_d_ood = .true.
 #endif
      END SUBROUTINE using_nhtol
      !
-     SUBROUTINE using_nhtol_d(changing)
+     SUBROUTINE using_nhtol_d(intento)
          !
          USE uspp, ONLY : nhtol
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(nhtol)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of nhtol_d with unallocated array and intento /= 2?"
              IF (allocated(nhtol_d)) DEALLOCATE(nhtol_d)
              nhtol_d_ood = .false.
              RETURN
          END IF
+         ! here we know that nhtol is allocated, check if size if 0 
+         IF ( SIZE(nhtol) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array nhtol_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (nhtol_d_ood) THEN
              IF ( allocated(nhtol_d) .and. (SIZE(nhtol_d)/=SIZE(nhtol))) deallocate(nhtol_d)
-             IF (.not. allocated(nhtol_d)) THEN
-                 ALLOCATE(nhtol_d, SOURCE=nhtol)
-             ELSE
-                 print *, "Really copied nhtol H->D"
-                 nhtol_d = nhtol
-             ENDIF
+             IF (.not. allocated(nhtol_d)) ALLOCATE(nhtol_d, MOLD=nhtol)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied nhtol H->D"
+                nhtol_d = nhtol
+             END IF
              nhtol_d_ood = .false.
          ENDIF
-         IF (changing)    nhtol_ood = .true.
+         IF (intento > 0)    nhtol_ood = .true.
 #else
          CALL errore('using_nhtol_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_nhtol_d
      !
-     SUBROUTINE using_nhtolm(changing)
+     SUBROUTINE using_nhtolm(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : nhtolm
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (nhtolm_ood) THEN
@@ -201,51 +232,64 @@
                 stop
              END IF
              IF (.not. allocated(nhtolm)) THEN
-                !print *, "WARNING: sync of nhtolm with unallocated array. Bye!"
-                IF (changing)    nhtolm_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of nhtolm with unallocated array and intento /= 2?"
+                IF (intento > 0)    nhtolm_d_ood = .true.
                 return
              END IF
-             print *, "Really copied nhtolm D->H"
-             nhtolm = nhtolm_d
-             nhtolm_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied nhtolm D->H"
+                nhtolm = nhtolm_d
+                nhtolm_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    nhtolm_d_ood = .true.
+         IF (intento > 0)    nhtolm_d_ood = .true.
 #endif
      END SUBROUTINE using_nhtolm
      !
-     SUBROUTINE using_nhtolm_d(changing)
+     SUBROUTINE using_nhtolm_d(intento)
          !
          USE uspp, ONLY : nhtolm
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(nhtolm)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of nhtolm_d with unallocated array and intento /= 2?"
              IF (allocated(nhtolm_d)) DEALLOCATE(nhtolm_d)
              nhtolm_d_ood = .false.
              RETURN
          END IF
+         ! here we know that nhtolm is allocated, check if size if 0 
+         IF ( SIZE(nhtolm) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array nhtolm_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (nhtolm_d_ood) THEN
              IF ( allocated(nhtolm_d) .and. (SIZE(nhtolm_d)/=SIZE(nhtolm))) deallocate(nhtolm_d)
-             IF (.not. allocated(nhtolm_d)) THEN
-                 ALLOCATE(nhtolm_d, SOURCE=nhtolm)
-             ELSE
-                 print *, "Really copied nhtolm H->D"
-                 nhtolm_d = nhtolm
-             ENDIF
+             IF (.not. allocated(nhtolm_d)) ALLOCATE(nhtolm_d, MOLD=nhtolm)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied nhtolm H->D"
+                nhtolm_d = nhtolm
+             END IF
              nhtolm_d_ood = .false.
          ENDIF
-         IF (changing)    nhtolm_ood = .true.
+         IF (intento > 0)    nhtolm_ood = .true.
 #else
          CALL errore('using_nhtolm_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_nhtolm_d
      !
-     SUBROUTINE using_ijtoh(changing)
+     SUBROUTINE using_ijtoh(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : ijtoh
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (ijtoh_ood) THEN
@@ -254,51 +298,64 @@
                 stop
              END IF
              IF (.not. allocated(ijtoh)) THEN
-                !print *, "WARNING: sync of ijtoh with unallocated array. Bye!"
-                IF (changing)    ijtoh_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of ijtoh with unallocated array and intento /= 2?"
+                IF (intento > 0)    ijtoh_d_ood = .true.
                 return
              END IF
-             print *, "Really copied ijtoh D->H"
-             ijtoh = ijtoh_d
-             ijtoh_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied ijtoh D->H"
+                ijtoh = ijtoh_d
+                ijtoh_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    ijtoh_d_ood = .true.
+         IF (intento > 0)    ijtoh_d_ood = .true.
 #endif
      END SUBROUTINE using_ijtoh
      !
-     SUBROUTINE using_ijtoh_d(changing)
+     SUBROUTINE using_ijtoh_d(intento)
          !
          USE uspp, ONLY : ijtoh
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(ijtoh)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of ijtoh_d with unallocated array and intento /= 2?"
              IF (allocated(ijtoh_d)) DEALLOCATE(ijtoh_d)
              ijtoh_d_ood = .false.
              RETURN
          END IF
+         ! here we know that ijtoh is allocated, check if size if 0 
+         IF ( SIZE(ijtoh) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array ijtoh_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (ijtoh_d_ood) THEN
              IF ( allocated(ijtoh_d) .and. (SIZE(ijtoh_d)/=SIZE(ijtoh))) deallocate(ijtoh_d)
-             IF (.not. allocated(ijtoh_d)) THEN
-                 ALLOCATE(ijtoh_d, SOURCE=ijtoh)
-             ELSE
-                 print *, "Really copied ijtoh H->D"
-                 ijtoh_d = ijtoh
-             ENDIF
+             IF (.not. allocated(ijtoh_d)) ALLOCATE(ijtoh_d, MOLD=ijtoh)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied ijtoh H->D"
+                ijtoh_d = ijtoh
+             END IF
              ijtoh_d_ood = .false.
          ENDIF
-         IF (changing)    ijtoh_ood = .true.
+         IF (intento > 0)    ijtoh_ood = .true.
 #else
          CALL errore('using_ijtoh_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_ijtoh_d
      !
-     SUBROUTINE using_indv_ijkb0(changing)
+     SUBROUTINE using_indv_ijkb0(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : indv_ijkb0
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (indv_ijkb0_ood) THEN
@@ -307,51 +364,64 @@
                 stop
              END IF
              IF (.not. allocated(indv_ijkb0)) THEN
-                !print *, "WARNING: sync of indv_ijkb0 with unallocated array. Bye!"
-                IF (changing)    indv_ijkb0_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of indv_ijkb0 with unallocated array and intento /= 2?"
+                IF (intento > 0)    indv_ijkb0_d_ood = .true.
                 return
              END IF
-             print *, "Really copied indv_ijkb0 D->H"
-             indv_ijkb0 = indv_ijkb0_d
-             indv_ijkb0_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied indv_ijkb0 D->H"
+                indv_ijkb0 = indv_ijkb0_d
+                indv_ijkb0_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    indv_ijkb0_d_ood = .true.
+         IF (intento > 0)    indv_ijkb0_d_ood = .true.
 #endif
      END SUBROUTINE using_indv_ijkb0
      !
-     SUBROUTINE using_indv_ijkb0_d(changing)
+     SUBROUTINE using_indv_ijkb0_d(intento)
          !
          USE uspp, ONLY : indv_ijkb0
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(indv_ijkb0)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of indv_ijkb0_d with unallocated array and intento /= 2?"
              IF (allocated(indv_ijkb0_d)) DEALLOCATE(indv_ijkb0_d)
              indv_ijkb0_d_ood = .false.
              RETURN
          END IF
+         ! here we know that indv_ijkb0 is allocated, check if size if 0 
+         IF ( SIZE(indv_ijkb0) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array indv_ijkb0_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (indv_ijkb0_d_ood) THEN
              IF ( allocated(indv_ijkb0_d) .and. (SIZE(indv_ijkb0_d)/=SIZE(indv_ijkb0))) deallocate(indv_ijkb0_d)
-             IF (.not. allocated(indv_ijkb0_d)) THEN
-                 ALLOCATE(indv_ijkb0_d, SOURCE=indv_ijkb0)
-             ELSE
-                 print *, "Really copied indv_ijkb0 H->D"
-                 indv_ijkb0_d = indv_ijkb0
-             ENDIF
+             IF (.not. allocated(indv_ijkb0_d)) ALLOCATE(indv_ijkb0_d, MOLD=indv_ijkb0)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied indv_ijkb0 H->D"
+                indv_ijkb0_d = indv_ijkb0
+             END IF
              indv_ijkb0_d_ood = .false.
          ENDIF
-         IF (changing)    indv_ijkb0_ood = .true.
+         IF (intento > 0)    indv_ijkb0_ood = .true.
 #else
          CALL errore('using_indv_ijkb0_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_indv_ijkb0_d
      !
-     SUBROUTINE using_vkb(changing)
+     SUBROUTINE using_vkb(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : vkb
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (vkb_ood) THEN
@@ -360,51 +430,64 @@
                 stop
              END IF
              IF (.not. allocated(vkb)) THEN
-                !print *, "WARNING: sync of vkb with unallocated array. Bye!"
-                IF (changing)    vkb_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of vkb with unallocated array and intento /= 2?"
+                IF (intento > 0)    vkb_d_ood = .true.
                 return
              END IF
-             print *, "Really copied vkb D->H"
-             vkb = vkb_d
-             vkb_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied vkb D->H"
+                vkb = vkb_d
+                vkb_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    vkb_d_ood = .true.
+         IF (intento > 0)    vkb_d_ood = .true.
 #endif
      END SUBROUTINE using_vkb
      !
-     SUBROUTINE using_vkb_d(changing)
+     SUBROUTINE using_vkb_d(intento)
          !
          USE uspp, ONLY : vkb
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(vkb)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of vkb_d with unallocated array and intento /= 2?"
              IF (allocated(vkb_d)) DEALLOCATE(vkb_d)
              vkb_d_ood = .false.
              RETURN
          END IF
+         ! here we know that vkb is allocated, check if size if 0 
+         IF ( SIZE(vkb) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array vkb_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (vkb_d_ood) THEN
              IF ( allocated(vkb_d) .and. (SIZE(vkb_d)/=SIZE(vkb))) deallocate(vkb_d)
-             IF (.not. allocated(vkb_d)) THEN
-                 ALLOCATE(vkb_d, SOURCE=vkb)
-             ELSE
-                 print *, "Really copied vkb H->D"
-                 vkb_d = vkb
-             ENDIF
+             IF (.not. allocated(vkb_d)) ALLOCATE(vkb_d, MOLD=vkb)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied vkb H->D"
+                vkb_d = vkb
+             END IF
              vkb_d_ood = .false.
          ENDIF
-         IF (changing)    vkb_ood = .true.
+         IF (intento > 0)    vkb_ood = .true.
 #else
          CALL errore('using_vkb_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_vkb_d
      !
-     SUBROUTINE using_becsum(changing)
+     SUBROUTINE using_becsum(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : becsum
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (becsum_ood) THEN
@@ -413,51 +496,64 @@
                 stop
              END IF
              IF (.not. allocated(becsum)) THEN
-                !print *, "WARNING: sync of becsum with unallocated array. Bye!"
-                IF (changing)    becsum_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of becsum with unallocated array and intento /= 2?"
+                IF (intento > 0)    becsum_d_ood = .true.
                 return
              END IF
-             print *, "Really copied becsum D->H"
-             becsum = becsum_d
-             becsum_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied becsum D->H"
+                becsum = becsum_d
+                becsum_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    becsum_d_ood = .true.
+         IF (intento > 0)    becsum_d_ood = .true.
 #endif
      END SUBROUTINE using_becsum
      !
-     SUBROUTINE using_becsum_d(changing)
+     SUBROUTINE using_becsum_d(intento)
          !
          USE uspp, ONLY : becsum
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(becsum)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of becsum_d with unallocated array and intento /= 2?"
              IF (allocated(becsum_d)) DEALLOCATE(becsum_d)
              becsum_d_ood = .false.
              RETURN
          END IF
+         ! here we know that becsum is allocated, check if size if 0 
+         IF ( SIZE(becsum) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array becsum_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (becsum_d_ood) THEN
              IF ( allocated(becsum_d) .and. (SIZE(becsum_d)/=SIZE(becsum))) deallocate(becsum_d)
-             IF (.not. allocated(becsum_d)) THEN
-                 ALLOCATE(becsum_d, SOURCE=becsum)
-             ELSE
-                 print *, "Really copied becsum H->D"
-                 becsum_d = becsum
-             ENDIF
+             IF (.not. allocated(becsum_d)) ALLOCATE(becsum_d, MOLD=becsum)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied becsum H->D"
+                becsum_d = becsum
+             END IF
              becsum_d_ood = .false.
          ENDIF
-         IF (changing)    becsum_ood = .true.
+         IF (intento > 0)    becsum_ood = .true.
 #else
          CALL errore('using_becsum_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_becsum_d
      !
-     SUBROUTINE using_dvan(changing)
+     SUBROUTINE using_dvan(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : dvan
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (dvan_ood) THEN
@@ -466,51 +562,64 @@
                 stop
              END IF
              IF (.not. allocated(dvan)) THEN
-                !print *, "WARNING: sync of dvan with unallocated array. Bye!"
-                IF (changing)    dvan_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of dvan with unallocated array and intento /= 2?"
+                IF (intento > 0)    dvan_d_ood = .true.
                 return
              END IF
-             print *, "Really copied dvan D->H"
-             dvan = dvan_d
-             dvan_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied dvan D->H"
+                dvan = dvan_d
+                dvan_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    dvan_d_ood = .true.
+         IF (intento > 0)    dvan_d_ood = .true.
 #endif
      END SUBROUTINE using_dvan
      !
-     SUBROUTINE using_dvan_d(changing)
+     SUBROUTINE using_dvan_d(intento)
          !
          USE uspp, ONLY : dvan
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(dvan)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of dvan_d with unallocated array and intento /= 2?"
              IF (allocated(dvan_d)) DEALLOCATE(dvan_d)
              dvan_d_ood = .false.
              RETURN
          END IF
+         ! here we know that dvan is allocated, check if size if 0 
+         IF ( SIZE(dvan) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array dvan_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (dvan_d_ood) THEN
              IF ( allocated(dvan_d) .and. (SIZE(dvan_d)/=SIZE(dvan))) deallocate(dvan_d)
-             IF (.not. allocated(dvan_d)) THEN
-                 ALLOCATE(dvan_d, SOURCE=dvan)
-             ELSE
-                 print *, "Really copied dvan H->D"
-                 dvan_d = dvan
-             ENDIF
+             IF (.not. allocated(dvan_d)) ALLOCATE(dvan_d, MOLD=dvan)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied dvan H->D"
+                dvan_d = dvan
+             END IF
              dvan_d_ood = .false.
          ENDIF
-         IF (changing)    dvan_ood = .true.
+         IF (intento > 0)    dvan_ood = .true.
 #else
          CALL errore('using_dvan_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_dvan_d
      !
-     SUBROUTINE using_deeq(changing)
+     SUBROUTINE using_deeq(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : deeq
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (deeq_ood) THEN
@@ -519,51 +628,64 @@
                 stop
              END IF
              IF (.not. allocated(deeq)) THEN
-                !print *, "WARNING: sync of deeq with unallocated array. Bye!"
-                IF (changing)    deeq_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of deeq with unallocated array and intento /= 2?"
+                IF (intento > 0)    deeq_d_ood = .true.
                 return
              END IF
-             print *, "Really copied deeq D->H"
-             deeq = deeq_d
-             deeq_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied deeq D->H"
+                deeq = deeq_d
+                deeq_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    deeq_d_ood = .true.
+         IF (intento > 0)    deeq_d_ood = .true.
 #endif
      END SUBROUTINE using_deeq
      !
-     SUBROUTINE using_deeq_d(changing)
+     SUBROUTINE using_deeq_d(intento)
          !
          USE uspp, ONLY : deeq
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(deeq)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of deeq_d with unallocated array and intento /= 2?"
              IF (allocated(deeq_d)) DEALLOCATE(deeq_d)
              deeq_d_ood = .false.
              RETURN
          END IF
+         ! here we know that deeq is allocated, check if size if 0 
+         IF ( SIZE(deeq) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array deeq_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (deeq_d_ood) THEN
              IF ( allocated(deeq_d) .and. (SIZE(deeq_d)/=SIZE(deeq))) deallocate(deeq_d)
-             IF (.not. allocated(deeq_d)) THEN
-                 ALLOCATE(deeq_d, SOURCE=deeq)
-             ELSE
-                 print *, "Really copied deeq H->D"
-                 deeq_d = deeq
-             ENDIF
+             IF (.not. allocated(deeq_d)) ALLOCATE(deeq_d, MOLD=deeq)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied deeq H->D"
+                deeq_d = deeq
+             END IF
              deeq_d_ood = .false.
          ENDIF
-         IF (changing)    deeq_ood = .true.
+         IF (intento > 0)    deeq_ood = .true.
 #else
          CALL errore('using_deeq_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_deeq_d
      !
-     SUBROUTINE using_qq_nt(changing)
+     SUBROUTINE using_qq_nt(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : qq_nt
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (qq_nt_ood) THEN
@@ -572,51 +694,64 @@
                 stop
              END IF
              IF (.not. allocated(qq_nt)) THEN
-                !print *, "WARNING: sync of qq_nt with unallocated array. Bye!"
-                IF (changing)    qq_nt_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of qq_nt with unallocated array and intento /= 2?"
+                IF (intento > 0)    qq_nt_d_ood = .true.
                 return
              END IF
-             print *, "Really copied qq_nt D->H"
-             qq_nt = qq_nt_d
-             qq_nt_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied qq_nt D->H"
+                qq_nt = qq_nt_d
+                qq_nt_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    qq_nt_d_ood = .true.
+         IF (intento > 0)    qq_nt_d_ood = .true.
 #endif
      END SUBROUTINE using_qq_nt
      !
-     SUBROUTINE using_qq_nt_d(changing)
+     SUBROUTINE using_qq_nt_d(intento)
          !
          USE uspp, ONLY : qq_nt
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(qq_nt)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of qq_nt_d with unallocated array and intento /= 2?"
              IF (allocated(qq_nt_d)) DEALLOCATE(qq_nt_d)
              qq_nt_d_ood = .false.
              RETURN
          END IF
+         ! here we know that qq_nt is allocated, check if size if 0 
+         IF ( SIZE(qq_nt) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array qq_nt_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (qq_nt_d_ood) THEN
              IF ( allocated(qq_nt_d) .and. (SIZE(qq_nt_d)/=SIZE(qq_nt))) deallocate(qq_nt_d)
-             IF (.not. allocated(qq_nt_d)) THEN
-                 ALLOCATE(qq_nt_d, SOURCE=qq_nt)
-             ELSE
-                 print *, "Really copied qq_nt H->D"
-                 qq_nt_d = qq_nt
-             ENDIF
+             IF (.not. allocated(qq_nt_d)) ALLOCATE(qq_nt_d, MOLD=qq_nt)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied qq_nt H->D"
+                qq_nt_d = qq_nt
+             END IF
              qq_nt_d_ood = .false.
          ENDIF
-         IF (changing)    qq_nt_ood = .true.
+         IF (intento > 0)    qq_nt_ood = .true.
 #else
          CALL errore('using_qq_nt_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_qq_nt_d
      !
-     SUBROUTINE using_qq_at(changing)
+     SUBROUTINE using_qq_at(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : qq_at
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (qq_at_ood) THEN
@@ -625,51 +760,64 @@
                 stop
              END IF
              IF (.not. allocated(qq_at)) THEN
-                !print *, "WARNING: sync of qq_at with unallocated array. Bye!"
-                IF (changing)    qq_at_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of qq_at with unallocated array and intento /= 2?"
+                IF (intento > 0)    qq_at_d_ood = .true.
                 return
              END IF
-             print *, "Really copied qq_at D->H"
-             qq_at = qq_at_d
-             qq_at_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied qq_at D->H"
+                qq_at = qq_at_d
+                qq_at_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    qq_at_d_ood = .true.
+         IF (intento > 0)    qq_at_d_ood = .true.
 #endif
      END SUBROUTINE using_qq_at
      !
-     SUBROUTINE using_qq_at_d(changing)
+     SUBROUTINE using_qq_at_d(intento)
          !
          USE uspp, ONLY : qq_at
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(qq_at)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of qq_at_d with unallocated array and intento /= 2?"
              IF (allocated(qq_at_d)) DEALLOCATE(qq_at_d)
              qq_at_d_ood = .false.
              RETURN
          END IF
+         ! here we know that qq_at is allocated, check if size if 0 
+         IF ( SIZE(qq_at) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array qq_at_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (qq_at_d_ood) THEN
              IF ( allocated(qq_at_d) .and. (SIZE(qq_at_d)/=SIZE(qq_at))) deallocate(qq_at_d)
-             IF (.not. allocated(qq_at_d)) THEN
-                 ALLOCATE(qq_at_d, SOURCE=qq_at)
-             ELSE
-                 print *, "Really copied qq_at H->D"
-                 qq_at_d = qq_at
-             ENDIF
+             IF (.not. allocated(qq_at_d)) ALLOCATE(qq_at_d, MOLD=qq_at)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied qq_at H->D"
+                qq_at_d = qq_at
+             END IF
              qq_at_d_ood = .false.
          ENDIF
-         IF (changing)    qq_at_ood = .true.
+         IF (intento > 0)    qq_at_ood = .true.
 #else
          CALL errore('using_qq_at_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_qq_at_d
      !
-     SUBROUTINE using_nhtoj(changing)
+     SUBROUTINE using_nhtoj(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : nhtoj
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (nhtoj_ood) THEN
@@ -678,51 +826,64 @@
                 stop
              END IF
              IF (.not. allocated(nhtoj)) THEN
-                !print *, "WARNING: sync of nhtoj with unallocated array. Bye!"
-                IF (changing)    nhtoj_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of nhtoj with unallocated array and intento /= 2?"
+                IF (intento > 0)    nhtoj_d_ood = .true.
                 return
              END IF
-             print *, "Really copied nhtoj D->H"
-             nhtoj = nhtoj_d
-             nhtoj_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied nhtoj D->H"
+                nhtoj = nhtoj_d
+                nhtoj_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    nhtoj_d_ood = .true.
+         IF (intento > 0)    nhtoj_d_ood = .true.
 #endif
      END SUBROUTINE using_nhtoj
      !
-     SUBROUTINE using_nhtoj_d(changing)
+     SUBROUTINE using_nhtoj_d(intento)
          !
          USE uspp, ONLY : nhtoj
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(nhtoj)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of nhtoj_d with unallocated array and intento /= 2?"
              IF (allocated(nhtoj_d)) DEALLOCATE(nhtoj_d)
              nhtoj_d_ood = .false.
              RETURN
          END IF
+         ! here we know that nhtoj is allocated, check if size if 0 
+         IF ( SIZE(nhtoj) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array nhtoj_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (nhtoj_d_ood) THEN
              IF ( allocated(nhtoj_d) .and. (SIZE(nhtoj_d)/=SIZE(nhtoj))) deallocate(nhtoj_d)
-             IF (.not. allocated(nhtoj_d)) THEN
-                 ALLOCATE(nhtoj_d, SOURCE=nhtoj)
-             ELSE
-                 print *, "Really copied nhtoj H->D"
-                 nhtoj_d = nhtoj
-             ENDIF
+             IF (.not. allocated(nhtoj_d)) ALLOCATE(nhtoj_d, MOLD=nhtoj)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied nhtoj H->D"
+                nhtoj_d = nhtoj
+             END IF
              nhtoj_d_ood = .false.
          ENDIF
-         IF (changing)    nhtoj_ood = .true.
+         IF (intento > 0)    nhtoj_ood = .true.
 #else
          CALL errore('using_nhtoj_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_nhtoj_d
      !
-     SUBROUTINE using_qq_so(changing)
+     SUBROUTINE using_qq_so(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : qq_so
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (qq_so_ood) THEN
@@ -731,51 +892,64 @@
                 stop
              END IF
              IF (.not. allocated(qq_so)) THEN
-                !print *, "WARNING: sync of qq_so with unallocated array. Bye!"
-                IF (changing)    qq_so_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of qq_so with unallocated array and intento /= 2?"
+                IF (intento > 0)    qq_so_d_ood = .true.
                 return
              END IF
-             print *, "Really copied qq_so D->H"
-             qq_so = qq_so_d
-             qq_so_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied qq_so D->H"
+                qq_so = qq_so_d
+                qq_so_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    qq_so_d_ood = .true.
+         IF (intento > 0)    qq_so_d_ood = .true.
 #endif
      END SUBROUTINE using_qq_so
      !
-     SUBROUTINE using_qq_so_d(changing)
+     SUBROUTINE using_qq_so_d(intento)
          !
          USE uspp, ONLY : qq_so
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(qq_so)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of qq_so_d with unallocated array and intento /= 2?"
              IF (allocated(qq_so_d)) DEALLOCATE(qq_so_d)
              qq_so_d_ood = .false.
              RETURN
          END IF
+         ! here we know that qq_so is allocated, check if size if 0 
+         IF ( SIZE(qq_so) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array qq_so_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (qq_so_d_ood) THEN
              IF ( allocated(qq_so_d) .and. (SIZE(qq_so_d)/=SIZE(qq_so))) deallocate(qq_so_d)
-             IF (.not. allocated(qq_so_d)) THEN
-                 ALLOCATE(qq_so_d, SOURCE=qq_so)
-             ELSE
-                 print *, "Really copied qq_so H->D"
-                 qq_so_d = qq_so
-             ENDIF
+             IF (.not. allocated(qq_so_d)) ALLOCATE(qq_so_d, MOLD=qq_so)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied qq_so H->D"
+                qq_so_d = qq_so
+             END IF
              qq_so_d_ood = .false.
          ENDIF
-         IF (changing)    qq_so_ood = .true.
+         IF (intento > 0)    qq_so_ood = .true.
 #else
          CALL errore('using_qq_so_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_qq_so_d
      !
-     SUBROUTINE using_dvan_so(changing)
+     SUBROUTINE using_dvan_so(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : dvan_so
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (dvan_so_ood) THEN
@@ -784,51 +958,64 @@
                 stop
              END IF
              IF (.not. allocated(dvan_so)) THEN
-                !print *, "WARNING: sync of dvan_so with unallocated array. Bye!"
-                IF (changing)    dvan_so_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of dvan_so with unallocated array and intento /= 2?"
+                IF (intento > 0)    dvan_so_d_ood = .true.
                 return
              END IF
-             print *, "Really copied dvan_so D->H"
-             dvan_so = dvan_so_d
-             dvan_so_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied dvan_so D->H"
+                dvan_so = dvan_so_d
+                dvan_so_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    dvan_so_d_ood = .true.
+         IF (intento > 0)    dvan_so_d_ood = .true.
 #endif
      END SUBROUTINE using_dvan_so
      !
-     SUBROUTINE using_dvan_so_d(changing)
+     SUBROUTINE using_dvan_so_d(intento)
          !
          USE uspp, ONLY : dvan_so
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(dvan_so)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of dvan_so_d with unallocated array and intento /= 2?"
              IF (allocated(dvan_so_d)) DEALLOCATE(dvan_so_d)
              dvan_so_d_ood = .false.
              RETURN
          END IF
+         ! here we know that dvan_so is allocated, check if size if 0 
+         IF ( SIZE(dvan_so) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array dvan_so_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (dvan_so_d_ood) THEN
              IF ( allocated(dvan_so_d) .and. (SIZE(dvan_so_d)/=SIZE(dvan_so))) deallocate(dvan_so_d)
-             IF (.not. allocated(dvan_so_d)) THEN
-                 ALLOCATE(dvan_so_d, SOURCE=dvan_so)
-             ELSE
-                 print *, "Really copied dvan_so H->D"
-                 dvan_so_d = dvan_so
-             ENDIF
+             IF (.not. allocated(dvan_so_d)) ALLOCATE(dvan_so_d, MOLD=dvan_so)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied dvan_so H->D"
+                dvan_so_d = dvan_so
+             END IF
              dvan_so_d_ood = .false.
          ENDIF
-         IF (changing)    dvan_so_ood = .true.
+         IF (intento > 0)    dvan_so_ood = .true.
 #else
          CALL errore('using_dvan_so_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_dvan_so_d
      !
-     SUBROUTINE using_deeq_nc(changing)
+     SUBROUTINE using_deeq_nc(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
          USE uspp, ONLY : deeq_nc
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (deeq_nc_ood) THEN
@@ -837,41 +1024,49 @@
                 stop
              END IF
              IF (.not. allocated(deeq_nc)) THEN
-                !print *, "WARNING: sync of deeq_nc with unallocated array. Bye!"
-                IF (changing)    deeq_nc_d_ood = .true.
+                IF (intento /= 2) print *, "WARNING: sync of deeq_nc with unallocated array and intento /= 2?"
+                IF (intento > 0)    deeq_nc_d_ood = .true.
                 return
              END IF
-             print *, "Really copied deeq_nc D->H"
-             deeq_nc = deeq_nc_d
-             deeq_nc_ood = .false.
+             IF (intento < 2) THEN
+                print *, "Really copied deeq_nc D->H"
+                deeq_nc = deeq_nc_d
+                deeq_nc_ood = .false.
+             END IF
          ENDIF
-         IF (changing)    deeq_nc_d_ood = .true.
+         IF (intento > 0)    deeq_nc_d_ood = .true.
 #endif
      END SUBROUTINE using_deeq_nc
      !
-     SUBROUTINE using_deeq_nc_d(changing)
+     SUBROUTINE using_deeq_nc_d(intento)
          !
          USE uspp, ONLY : deeq_nc
          implicit none
-         LOGICAL, INTENT(IN) :: changing
+         INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
          !
          IF (.not. allocated(deeq_nc)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of deeq_nc_d with unallocated array and intento /= 2?"
              IF (allocated(deeq_nc_d)) DEALLOCATE(deeq_nc_d)
              deeq_nc_d_ood = .false.
              RETURN
          END IF
+         ! here we know that deeq_nc is allocated, check if size if 0 
+         IF ( SIZE(deeq_nc) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array deeq_nc_d. If used, code will crash."
+             RETURN
+         END IF
+         !
          IF (deeq_nc_d_ood) THEN
              IF ( allocated(deeq_nc_d) .and. (SIZE(deeq_nc_d)/=SIZE(deeq_nc))) deallocate(deeq_nc_d)
-             IF (.not. allocated(deeq_nc_d)) THEN
-                 ALLOCATE(deeq_nc_d, SOURCE=deeq_nc)
-             ELSE
-                 print *, "Really copied deeq_nc H->D"
-                 deeq_nc_d = deeq_nc
-             ENDIF
+             IF (.not. allocated(deeq_nc_d)) ALLOCATE(deeq_nc_d, MOLD=deeq_nc)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied deeq_nc H->D"
+                deeq_nc_d = deeq_nc
+             END IF
              deeq_nc_d_ood = .false.
          ENDIF
-         IF (changing)    deeq_nc_ood = .true.
+         IF (intento > 0)    deeq_nc_ood = .true.
 #else
          CALL errore('using_deeq_nc_d', 'Trying to use device data without device compilated code!', 1)
 #endif

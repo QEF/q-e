@@ -43,7 +43,7 @@ SUBROUTINE print_ks_energies()
       ik,           &! counter on k points
       ibnd           ! counter on bands
   !
-  CALL using_et(.false.)
+  CALL using_et(0)
   !
   IF (nkstot >= 100 .and. iverbosity <= 0 ) THEN
      WRITE( stdout, '(/,5x,a)') &
@@ -184,7 +184,7 @@ SUBROUTINE get_homo_lumo ( ehomo, elumo )
       kbnd,         &! possible position of HOMO
       ibnd, ik       ! counters on bands and k-points
   !
-  CALL using_et(.false.)
+  CALL using_et(0)
   !
   ehomo=-1D+6
   elumo=+1D+6

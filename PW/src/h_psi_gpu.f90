@@ -129,9 +129,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   LOGICAL     :: need_host_copy
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
-  CALL using_g2kin_d(.false.)
-  CALL using_vrs_d(.false.)
-  CALL using_vkb(.false.)
+  CALL using_g2kin_d(0)
+  CALL using_vrs_d(0)
+  CALL using_vkb(0)
   !
   hpsi_d (:, 1:m) = (0.0_dp, 0.0_dp)
 

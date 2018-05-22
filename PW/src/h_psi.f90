@@ -114,8 +114,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   REAL(dp)    :: ee
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
-  CALL using_g2kin(.false.)
-  CALL using_vrs(.false.)   ! vloc_psi_gamma (intent:in)
+  CALL using_g2kin(0)
+  CALL using_vrs(0)   ! vloc_psi_gamma (intent:in)
 
   hpsi (:, 1:m) = (0.0_dp, 0.0_dp)
 

@@ -45,7 +45,7 @@ SUBROUTINE punch( what )
   !
   IF (io_level < 0 ) RETURN
   !
-  CALL using_evc(.false.)
+  CALL using_evc(0)
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
       TRIM( prefix ) // '.save'

@@ -54,7 +54,7 @@ MODULE paw_exx
     !
     CALL start_clock( 'PAW_newdxx' )
     !
-    CALL using_indv_ijkb0(.false.)
+    CALL using_indv_ijkb0(0)
     !
     ! Worst possible parallelisation:
     IF(ionode) THEN
@@ -124,7 +124,7 @@ MODULE paw_exx
         CALL errore("PAW_xx_energy", "you have to initialize paw paw_fockrnl before", 1)
     !
     CALL start_clock("PAW_xx_nrg")
-    CALL using_indv_ijkb0(.false.)
+    CALL using_indv_ijkb0(0)
     !
     PAW_xx_energy = 0._dp
     IF(ionode) THEN

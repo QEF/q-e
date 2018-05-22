@@ -78,8 +78,8 @@ SUBROUTINE force_hub(forceh)
    !
    !    we start a loop on k points
    !
-   CALL using_evc(.false.)
-   CALL using_indv_ijkb0(.false.)
+   CALL using_evc(0)
+   CALL using_indv_ijkb0(0)
    
    DO ik = 1, nks
       !
@@ -88,9 +88,9 @@ SUBROUTINE force_hub(forceh)
 
       IF (nks > 1) &
          CALL get_buffer (evc, nwordwfc, iunwfc, ik)
-      IF (nks > 1)  CALL using_evc(.true.)
+      IF (nks > 1)  CALL using_evc(1)
 
-      CALL using_vkb(.true.)
+      CALL using_vkb(1)
       CALL init_us_2 (npw,igk_k(1,ik),xk(1,ik),vkb)
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
@@ -359,7 +359,7 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj)
    USE mp,                   ONLY : mp_sum
    
    USE wavefunctions_module_gpum, ONLY : using_evc
-   USE uspp_gpum,                 ONLY : using_vkb
+   USE uspp_gpum,                 ONLY : using_vkb, using_qq_at
 
    IMPLICIT NONE
    INTEGER, INTENT (IN) :: ik,      &! k-point index
@@ -426,7 +426,8 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj)
    ALLOCATE ( wfatbeta(nwfcU,nh(nt)) )
    ALLOCATE ( dbeta(npwx,nh(nt)) )
 
-   CALL using_vkb(.false.)
+   CALL using_vkb(0)
+   CALL using_qq_at(0)
 
 !!omp parallel do default(shared) private(ig,ih)
    DO ih=1,nh(nt)
@@ -444,7 +445,7 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj)
       END DO
    END DO
 !!omp end parallel do
-   CALL using_evc(.false.)  
+   CALL using_evc(0)  
    CALL calbec ( npw, dbeta, evc, dbetapsi ) 
    CALL calbec ( npw, wfcU, dbeta, wfatdbeta ) 
    DEALLOCATE ( dbeta )
@@ -524,7 +525,7 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE mp,                   ONLY : mp_sum
    
    USE wavefunctions_module_gpum, ONLY : using_evc
-   USE uspp_gpum,                 ONLY : using_vkb
+   USE uspp_gpum,                 ONLY : using_vkb, using_qq_at
 
    IMPLICIT NONE
 
@@ -588,7 +589,8 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    ALLOCATE ( wfatbeta(nwfcU,nh(nt)) )
    ALLOCATE ( dbeta(npwx,nh(nt)) )
 
-   CALL using_vkb(.false.)
+   CALL using_vkb(0)
+   CALL using_qq_at(0)
 
 !!omp parallel do default(shared) private(ih,ig)
    DO ih=1,nh(nt)
@@ -606,7 +608,7 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
       END DO
    END DO
 !!omp end parallel do
-   CALL using_evc(.false.)
+   CALL using_evc(0)
    CALL calbec ( npw, dbeta, evc, dbetapsi ) 
    CALL calbec ( npw, wfcU, dbeta, wfatdbeta ) 
    DEALLOCATE ( dbeta )
