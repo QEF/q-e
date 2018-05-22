@@ -65,39 +65,35 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
-pw : bindir libfft libdavid libcg libla libutil mods liblapack libs libiotk dftd3
+pw : bindir libs mods libdavid libcg dftd3
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-pw-lib : bindir libdavid libcg libfft libla libutil mods liblapack libs libiotk
-	if test -d PW ; then \
-	( cd PW ; $(MAKE) TLDEPS= pw-lib || exit 1) ; fi
-
-cp : bindir libdavid libcg libfft libla libutil mods liblapack libs libiotk libfox
+cp : bindir libs mods libdavid libcg
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-ph : bindir libfft libla libutil mods libs pw lrmods
+ph : pw lrmods
 	if test -d PHonon; then \
 	(cd PHonon; $(MAKE) all || exit 1) ; fi
 
-neb : bindir libfft libla libutil mods libs pw
+neb : pw
 	if test -d NEB; then \
   (cd NEB; $(MAKE) all || exit 1) ; fi
 
-tddfpt : bindir libfft libla libutil mods libs pw
+tddfpt : pw
 	if test -d TDDFPT; then \
 	(cd TDDFPT; $(MAKE) all || exit 1) ; fi
 
-pp : bindir libfft libla libutil mods libs pw
+pp : pw
 	if test -d PP ; then \
 	( cd PP ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-pwcond : bindir libfft libla libutil mods libs pw pp
+pwcond : pp
 	if test -d PWCOND ; then \
 	( cd PWCOND ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-acfdt : bindir libfft libla libutil mods libs pw ph
+acfdt : ph
 	if test -d ACFDT ; then \
 	( cd ACFDT ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -112,22 +108,22 @@ gwl : ph
 gipaw : pw
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-d3q : pw ph
+d3q : ph
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-ld1 : bindir liblapack libfft libla libutil mods libs
+ld1 : bindir libs mods
 	if test -d atomic ; then \
 	( cd atomic ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-upf : libfft libla libutil mods libs liblapack
+upf : libs mods
 	if test -d upftools ; then \
 	( cd upftools ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-pw_export : libiotk bindir libfft mods libs pw
+pw_export : pw
 	if test -d PP ; then \
 	( cd PP ; $(MAKE) TLDEPS= pw_export.x || exit 1 ) ; fi
 
-xspectra : bindir libfft mods libs pw
+xspectra : pw
 	if test -d XSpectra ; then \
 	( cd XSpectra ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -135,7 +131,7 @@ couple : pw cp
 	if test -d COUPLE ; then \
 	( cd COUPLE ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-epw: pw ph
+epw: ph
 	if test -d EPW ; then \
 	( cd EPW ; $(MAKE) all || exit 1; \
 		cd ../bin; ln -fs ../EPW/bin/epw.x . ); fi
@@ -148,7 +144,7 @@ gui :
 	@echo 'Check "GUI/README" how to access the Graphical User Interface'
 #@echo 'Check "PWgui-X.Y/README" how to access the Graphical User Interface'
 
-examples : touch-dummy
+examples :
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 pwall : pw neb ph pp pwcond acfdt
@@ -160,31 +156,31 @@ all   : pwall cp ld1 upf tddfpt xspectra gwl
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
 
-libdavid_rci : touch-dummy libla clib libutil
-	( cd KS_Solvers/Davidson_RCI ; $(MAKE) TLDEPS= all || exit 1 )
-
-libdavid : touch-dummy libla clib libutil
-	( cd KS_Solvers/Davidson ; $(MAKE) TLDEPS= all || exit 1 )
-
-libcg : touch-dummy libla clib libutil
-	( cd KS_Solvers/CG ; $(MAKE) TLDEPS= all || exit 1 )
-
-libla : touch-dummy liblapack libutil libcuda
-	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
-
-libfft : touch-dummy
-	( cd FFTXlib ; $(MAKE) TLDEPS= all || exit 1 )
-
-libutil : touch-dummy 
-	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
-
-mods : libiotk libfox libla libfft libutil
+mods : libiotk libfox libutil libla libfft
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
-libs : mods
+libdavid_rci : libs libutil libla
+	( cd KS_Solvers/Davidson_RCI ; $(MAKE) TLDEPS= all || exit 1 )
+
+libdavid : libs libutil libla
+	( cd KS_Solvers/Davidson ; $(MAKE) TLDEPS= all || exit 1 )
+
+libcg : libs libutil libla
+	( cd KS_Solvers/CG ; $(MAKE) TLDEPS= all || exit 1 )
+
+libla : liblapack libutil libcuda
+	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
+libfft : 
+	( cd FFTXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
+libutil : 
+	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
+libs :
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
 
-lrmods : libs libla libfft  libutil
+lrmods : libs libutil libla libfft
 	( cd LR_Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 dftd3 : mods
@@ -197,15 +193,15 @@ bindir :
 # Targets for external libraries
 ############################################################
 
-libblas : touch-dummy
+libblas : 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
-liblapack: touch-dummy
+liblapack: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
-libiotk: touch-dummy
+libiotk: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
-libfox: touch-dummy
+libfox: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
 libcuda: touch-dummy
@@ -220,29 +216,26 @@ libcuda: touch-dummy
 w90: bindir liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-want : touch-dummy
+want : 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-SaX : touch-dummy
+SaX : 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo: touch-dummy
+yambo: 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-yambo-devel: touch-dummy
+yambo-devel: 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-plumed: touch-dummy
+plumed: 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-west: pw touch-dummy
+west: pw
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-SternheimerGW: pw lrmods touch-dummy
+SternheimerGW: pw lrmods 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-touch-dummy :
-	$(dummy-variable)
 
 #########################################################
 # "make links" produces links to all executables in bin/
@@ -270,7 +263,7 @@ links : bindir
 # - If the final directory does not exists it creates it
 #########################################################
 
-install : touch-dummy
+install : 
 	@if test -d bin ; then mkdir -p $(PREFIX)/bin ; \
 	for x in `find * ! -path "test-suite/*" -name *.x -type f` ; do \
 		cp $$x $(PREFIX)/bin/ ; done ; \
@@ -283,7 +276,7 @@ install : touch-dummy
 #     already computed once (usualy during release)
 #########################################################
 
-test-suite: pw cp touch-dummy
+test-suite: pw cp 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
@@ -366,7 +359,7 @@ tar-qe-modes :
 # in order to build the .pdf files in Doc, "pdflatex" is needed;
 # in order to build html files for user guide and developer manual,
 # "latex2html" and "convert" (from Image-Magick) are needed.
-doc : touch-dummy
+doc : 
 	if test -d Doc ; then \
 	( cd Doc ; $(MAKE) TLDEPS= all ) ; fi
 	for dir in */Doc; do \

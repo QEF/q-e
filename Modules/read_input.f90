@@ -5,6 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! NOTE May 2018 (PG): reading of old xml input file using iotk is disabled
+! See open_close_input_file.f90 and the following preprocessing variable
+! 
+#undef __XML_INPUT
 !----------------------------------------------------------------------------
 MODULE read_input
    !---------------------------------------------------------------------------
@@ -32,15 +36,21 @@ MODULE read_input
      USE xml_input,             ONLY : xml_input_dump
      USE mp,                    ONLY : mp_bcast
      USE mp_images,             ONLY : intra_image_comm
-     USE iotk_module,           ONLY : iotk_attlenx
      USE open_close_input_file, ONLY : open_input_file, close_input_file
+#if defined (__XML_INPUT)
+     USE iotk_module,           ONLY : iotk_attlenx
+#endif
      !
      IMPLICIT NONE
      !
      CHARACTER(LEN=*), INTENT (IN) :: prog
      CHARACTER(LEN=*), INTENT (IN) :: input_file_
      !
+#if defined (__XML_INPUT)
      CHARACTER(LEN=iotk_attlenx) :: attr
+#else
+     CHARACTER(LEN=256) :: attr
+#endif
      LOGICAL :: xmlinput
      INTEGER :: ierr
      !
@@ -57,9 +67,12 @@ MODULE read_input
      !
      IF ( xmlinput ) THEN
         !
+#if defined (__XML_INPUT)
+        CALL mp_bcast( attr, ionode_id, intra_image_comm )
+        CALL read_xml ( prog, attr )
+#else
         CALL errore('read_input', 'xml input disabled',1)
-        !!! CALL mp_bcast( attr, ionode_id, intra_image_comm )
-        !!! CALL read_xml ( prog, attr )
+#endif
         !
      ELSE
         !
