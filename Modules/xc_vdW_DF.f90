@@ -1003,7 +1003,7 @@ CONTAINS
 
   vdW_xc_energy = 0.0D0
   allocate (u_vdW(dfftp%nnr,Nqs), kernel_of_k(Nqs, Nqs))
-  u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP)
+  u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP,kind=dp)
 
 
   ! --------------------------------------------------------------------
@@ -1210,7 +1210,7 @@ CONTAINS
 
   do icar = 1,3
 
-     h(:) = CMPLX( h_prefactor(:) * grad_rho(icar,:), 0.0_DP )
+     h(:) = CMPLX( h_prefactor(:) * grad_rho(icar,:), 0.0_DP, kind=dp )
 
      do i_grid = 1, dfftp%nnr
         gradient2 = grad_rho(1,i_grid)**2 + grad_rho(2,i_grid)**2 + grad_rho(3,i_grid)**2
@@ -1218,7 +1218,7 @@ CONTAINS
      end do
 
      CALL fwfft ('Rho', h, dfftp)
-     h(dfftp%nl(:)) = CMPLX(0.0_DP,1.0_DP) * tpiba * g(icar,:) * h(dfftp%nl(:))
+     h(dfftp%nl(:)) = CMPLX(0.0_DP,1.0_DP, kind=dp) * tpiba * g(icar,:) * h(dfftp%nl(:))
      if (gamma_only) h(dfftp%nlm(:)) = CONJG(h(dfftp%nl(:)))
      CALL invfft ('Rho', h, dfftp)
      potential(:) = potential(:) - REAL(h(:))
@@ -1952,7 +1952,7 @@ CONTAINS
 
   allocate( kernel_of_k(Nqs, Nqs) )
 
-  u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP)
+  u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP,kind=dp)
 
   last_g = -1
 

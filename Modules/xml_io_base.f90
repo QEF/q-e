@@ -18,9 +18,11 @@ MODULE xml_io_base
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun
+  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, check_file_exist, &
+       create_directory
   USE io_global, ONLY : ionode, ionode_id, stdout
-  USE mp,        ONLY : mp_bcast
+  USE mp,        ONLY : mp_bcast, mp_sum, mp_get, mp_put, mp_max, mp_rank, &
+       mp_size
   USE parser,    ONLY : version_compare
   !
   IMPLICIT NONE
@@ -33,47 +35,9 @@ MODULE xml_io_base
   PUBLIC :: attr
   !
   PUBLIC :: read_wfc, write_wfc, read_rho, write_rho, &
-       save_print_counter, read_print_counter
-  PUBLIC :: create_directory, check_file_exst, restart_dir
+       save_print_counter, read_print_counter, restart_dir
   !
   CONTAINS
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE create_directory( dirname )
-      !------------------------------------------------------------------------
-      !
-      USE wrappers,  ONLY : f_mkdir_safe
-      USE mp,        ONLY : mp_barrier
-      USE mp_images, ONLY : me_image, intra_image_comm
-      USE io_files,  ONLY : check_writable
-      !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
-      !
-      INTEGER                    :: ierr
-      !
-      CHARACTER(LEN=6), EXTERNAL :: int_to_char
-      !
-      IF ( ionode ) ierr = f_mkdir_safe( TRIM( dirname ) )
-      CALL mp_bcast ( ierr, ionode_id, intra_image_comm )
-      !
-      CALL errore( 'create_directory', &
-           'unable to create directory ' // TRIM( dirname ), ierr )
-      !
-      ! ... syncronize all jobs (not sure it is really useful)
-      !
-      CALL mp_barrier( intra_image_comm )
-      !
-      ! ... check whether the scratch directory is writable
-      !
-      IF ( ionode ) ierr = check_writable ( dirname, me_image )
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      CALL errore( 'create_directory:', &
-                   TRIM( dirname ) // ' non existent or non writable', ierr )
-      !
-      RETURN
-      !
-    END SUBROUTINE create_directory
     !
     !------------------------------------------------------------------------
     FUNCTION restart_dir( outdir, runit )
@@ -111,7 +75,6 @@ MODULE xml_io_base
     FUNCTION check_restartfile( outdir, ndr )
       !------------------------------------------------------------------------
       !
-      USE io_global, ONLY : ionode, ionode_id
       USE mp_images, ONLY : intra_image_comm
       !
       IMPLICIT NONE
@@ -142,42 +105,12 @@ MODULE xml_io_base
     END FUNCTION check_restartfile
     !
     !------------------------------------------------------------------------
-    FUNCTION check_file_exst( filename )
-      !------------------------------------------------------------------------
-      !
-      USE io_global, ONLY : ionode, ionode_id
-      USE mp_images, ONLY : intra_image_comm
-      !
-      IMPLICIT NONE
-      !
-      LOGICAL          :: check_file_exst
-      CHARACTER(LEN=*) :: filename
-      !
-      LOGICAL :: lexists
-      !
-      IF ( ionode ) THEN 
-         !
-         INQUIRE( FILE = TRIM( filename ), EXIST = lexists )
-         !
-      ENDIF
-      !
-      CALL mp_bcast ( lexists, ionode_id, intra_image_comm )
-      !
-      check_file_exst = lexists
-      RETURN
-      !
-    END FUNCTION check_file_exst
-    !
-    !
-    !------------------------------------------------------------------------
     SUBROUTINE save_print_counter( iter, outdir, wunit )
       !------------------------------------------------------------------------
       !
       ! ... a counter indicating the last successful printout iteration is saved
       !
-      USE io_global, ONLY : ionode, ionode_id
       USE mp_images, ONLY : intra_image_comm
-      USE mp,        ONLY : mp_bcast
       !
       IMPLICIT NONE
       !
@@ -228,9 +161,7 @@ MODULE xml_io_base
       ! ... the counter indicating the last successful printout iteration 
       ! ... is read here
       !
-      USE io_global, ONLY : ionode, ionode_id
       USE mp_images, ONLY : intra_image_comm
-      USE mp,        ONLY : mp_bcast
       !
       IMPLICIT NONE
       !
@@ -280,8 +211,6 @@ MODULE xml_io_base
       !
       ! ... set working variables for k-point index (ikt) and 
       ! ... k-points number (nkt)
-      !
-      USE mp,         ONLY : mp_sum, mp_get, mp_max, mp_rank, mp_size
       !
       IMPLICIT NONE
       !
@@ -411,7 +340,6 @@ MODULE xml_io_base
       ! ... $dirname directory - $dirname must exist and end with '/'
       !
       USE fft_base, ONLY : dfftp
-      USE io_global,ONLY : ionode
       USE mp_bands, ONLY : intra_bgrp_comm, inter_bgrp_comm
       !
       IMPLICIT NONE
@@ -481,7 +409,6 @@ MODULE xml_io_base
       ! ... files saved into the '.save' directory
       !
       USE fft_base,  ONLY : dfftp
-      USE io_global, ONLY : ionode
       !
       IMPLICIT NONE
       !
@@ -539,7 +466,6 @@ MODULE xml_io_base
       ! ... all processors, avoiding an overall collect of the charge density
       ! ... on a single proc.
       !
-      USE mp,        ONLY : mp_get, mp_sum, mp_rank, mp_size
 #if defined __HDF5
       USE hdf5_qe,  ONLY  : write_rho_hdf5, h5fclose_f, &
                             prepare_for_writing_final, add_attributes_hdf5, rho_hdf5_write  
@@ -704,9 +630,7 @@ MODULE xml_io_base
       ! ... Reads charge density rho, one plane at a time, to avoid 
       ! ... collecting the entire charge density on a single processor
       !
-      USE io_global, ONLY : ionode, ionode_id
       USE mp_images, ONLY : intra_image_comm
-      USE mp,        ONLY : mp_put, mp_sum, mp_rank, mp_size
 #if defined __HDF5
       USE hdf5_qe,   ONLY : read_rho_hdf5, read_attributes_hdf5, &
            prepare_for_reading_final, h5fclose_f, rho_hdf5_write, hdf5_type
@@ -741,12 +665,12 @@ MODULE xml_io_base
       !
 #if defined(__HDF5)
       rho_file_hdf5 = TRIM( rho_file_base ) // '.hdf5'
-      exst = check_file_exst(TRIM(rho_file_hdf5))
+      exst = check_file_exist(TRIM(rho_file_hdf5))
       IF ( .NOT. exst ) CALL errore ('read_rho_xml', 'searching for '// TRIM(rho_file_hdf5),10)
 #else 
       rhounit = find_free_unit ( )
       rho_file = TRIM( rho_file_base ) // ".dat"
-      exst = check_file_exst( TRIM(rho_file) ) 
+      exst = check_file_exist( TRIM(rho_file) ) 
       !
       IF ( .NOT. exst ) CALL errore('read_rho_xml', 'searching for '//TRIM(rho_file), 10)
 #endif
@@ -853,7 +777,6 @@ MODULE xml_io_base
       !------------------------------------------------------------------------
       !
       USE mp_wave,    ONLY : mergewf
-      USE mp,         ONLY : mp_get, mp_size, mp_rank, mp_sum
       USE control_flags,     ONLY : lwfnscf, lwfpbe0nscf  ! Lingzhu Kong
 #if defined  __HDF5
       !USE hdf5_qe,    ONLY : evc_hdf5, read_data_hdf5, write_data_hdf5, &
@@ -1024,7 +947,6 @@ MODULE xml_io_base
       !------------------------------------------------------------------------
       !
       USE mp_wave,   ONLY : splitwf
-      USE mp,        ONLY : mp_put, mp_size, mp_rank, mp_sum
 
 #if defined  __HDF5
       USE hdf5_qe

@@ -16,7 +16,7 @@ PROGRAM cpmd2upf
   !
   USE pseudo_types, ONLY : pseudo_upf, nullify_pseudo_upf, &
                            deallocate_pseudo_upf
-  USE write_upf_v2_module, ONLY :  write_upf_v2
+  USE write_upf_module, ONLY :  write_upf
   !
   IMPLICIT NONE
   TYPE(pseudo_upf) :: upf
@@ -44,11 +44,7 @@ PROGRAM cpmd2upf
   !
   fileout=trim(filein)//'.UPF'
   PRINT '(''Output PP file in UPF format :  '',a)', fileout
-  OPEN(unit=2,file=fileout,status='unknown',form='formatted')
-  !
-  CALL write_upf_v2 (2, upf )
-  !
-  CLOSE (unit=2)
+  CALL write_upf(filename=TRIM(fileout), UPF = upf, SCHEMA = 'v2') 
   CALL deallocate_pseudo_upf ( upf )
   !     ----------------------------------------------------------
   WRITE (6,"('Pseudopotential successfully written')")

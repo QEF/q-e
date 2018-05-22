@@ -16,7 +16,7 @@ SUBROUTINE lr_readin
   USE lr_variables
   USE lr_dav_variables
   USE kinds,               ONLY : DP
-  USE io_files,            ONLY : tmp_dir, prefix, wfc_dir
+  USE io_files,            ONLY : tmp_dir, prefix, wfc_dir, create_directory
   USE lsda_mod,            ONLY : current_spin, nspin, isk, lsda
   USE control_flags,       ONLY : twfcollect,use_para_diag, &
                                   & tqr, lkpoint_dir, gamma_only, &
@@ -52,7 +52,6 @@ SUBROUTINE lr_readin
   USE martyna_tuckerman,   ONLY : do_comp_mt
   USE esm,                 ONLY : do_comp_esm
   USE qpoint,              ONLY : xq
-  USE xml_io_base,         ONLY : create_directory
   USE io_rho_xml,          ONLY : write_scf
   USE noncollin_module,    ONLY : noncolin
   USE mp_bands,            ONLY : ntask_groups
@@ -81,9 +80,10 @@ SUBROUTINE lr_readin
   ! Fine control of beta_gamma_z file
   CHARACTER(LEN=80) :: disk_io
   ! Specify the amount of I/O activities
+  CHARACTER(LEN=6) :: int_to_char
   INTEGER :: ios, iunout, ierr, ipol
   LOGICAL :: auto_rs
-  CHARACTER(LEN=6) :: int_to_char
+  LOGICAL, EXTERNAL  :: check_para_diag
   !
   NAMELIST / lr_input /   restart, restart_step ,lr_verbosity, prefix, outdir, &
                         & test_case_no, wfcdir, disk_io, max_seconds
@@ -517,12 +517,7 @@ SUBROUTINE lr_readin
   !
   ! Scalapack related stuff.
   !
-#if defined(__MPI)
-  use_para_diag = .TRUE.
-  CALL check_para_diag( nbnd )
-#else
-  use_para_diag = .FALSE.
-#endif
+  use_para_diag = check_para_diag( nbnd )
   !
   RETURN
   !

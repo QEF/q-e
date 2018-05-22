@@ -27,7 +27,7 @@ dftd3_qe.o
 
 TLDEPS=mods
 
-all : tldeps libdftd3qe.a test.x
+all : tldeps libdftd3qe.a 
 
 
 libdftd3qe.a: $(DFTD3OBJ)
@@ -36,7 +36,7 @@ libdftd3qe.a: $(DFTD3OBJ)
 
 test.x : $(TESTOBJ) $(TESTMODS) $(QEMODS)
 	$(LD) $(LDFLAGS) $(MODFLAGS) -o $@ \
-        $(TESTOBJ) $(TESTMODS) $(QEMODS) $(LIBS)	
+        $(TESTOBJ) $(TESTMODS) $(QEMODS) $(LIBS) $(LIBOBJS)
 
 tldeps :
 	if test -n "$(TLDEPS)" ; then \

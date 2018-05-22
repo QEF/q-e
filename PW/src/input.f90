@@ -6,11 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-! TB
-! included gate related stuff, search for 'TB'
-!----------------------------------------------------------------------------
-!
-!----------------------------------------------------------------------------
 SUBROUTINE iosys()
   !-----------------------------------------------------------------------------
   !
@@ -96,7 +91,8 @@ SUBROUTINE iosys()
   USE io_files,      ONLY : input_drho, output_drho, &
                             psfile, tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
-                            pseudo_dir_ => pseudo_dir
+                            pseudo_dir_ => pseudo_dir, &
+                            check_tempdir, clean_tempdir
   !
   USE force_mod,     ONLY : lforce, lstres, force
   !
@@ -131,14 +127,14 @@ SUBROUTINE iosys()
   !
   USE a2F,           ONLY : la2F_ => la2F
   !
-  USE exx,           ONLY : x_gamma_extrapolation_ => x_gamma_extrapolation, &
+  USE exx_base,      ONLY : x_gamma_extrapolation_ => x_gamma_extrapolation, &
                             nqx1_ => nq1, &
                             nqx2_ => nq2, &
                             nqx3_ => nq3, &
                             exxdiv_treatment_ => exxdiv_treatment, &
                             yukawa_           => yukawa, &
-                            ecutvcut_         => ecutvcut, &
-                            ecutfock_         => ecutfock, &
+                            ecutvcut_         => ecutvcut
+  USE exx,          ONLY:   ecutfock_         => ecutfock, &
                             use_ace, nbndproj, local_thr 
   USE loc_scdm,      ONLY : use_scdm, scdm_den, scdm_grd 
   !
@@ -251,9 +247,7 @@ SUBROUTINE iosys()
                                B_field, fixed_magnetization, report, lspinorb,&
                                starting_spin_angle, assume_isolated,spline_ps,&
                                vdw_corr, london, london_s6, london_rcut, london_c6, &
-                               london_rvdw, &
-                               dftd3_s6, dftd3_rs6, dftd3_s18, dftd3_threebody,&
-                               dftd3_rs18, dftd3_alp, dftd3_version,          &
+                               london_rvdw, dftd3_threebody, dftd3_version,   &
                                ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,     &
                                xdm, xdm_a1, xdm_a2, lforcet,                  &
                                one_atom_occupations,                          &
@@ -309,7 +303,7 @@ SUBROUTINE iosys()
   USE dftd3_api,             ONLY : dftd3_init, dftd3_set_params, &
                                     dftd3_set_functional, dftd3_calc, &
                                     dftd3_input
-  USE dftd3_qe,              ONLY : dftd3_printout, dftd3, dftd3_in
+  USE dftd3_qe,              ONLY : dftd3_printout, dftd3_xc, dftd3, dftd3_in
   USE xdm_module,            ONLY : init_xdm, a1i, a2i
   USE tsvdw_module,          ONLY : vdw_isolated, vdw_econv_thr
   USE us,                    ONLY : spline_ps_ => spline_ps
@@ -330,19 +324,15 @@ SUBROUTINE iosys()
      CHARACTER(LEN=*),INTENT(IN)  :: obj_tagname
      END SUBROUTINE
   END INTERFACE
-!!!!  
+  !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
+  CHARACTER(LEN=256):: dft_
+  !
   INTEGER, EXTERNAL :: read_config_from_file
   !
   INTEGER  :: ia, nt, inlc, ibrav_sg, ierr
   LOGICAL  :: exst, parallelfs
   REAL(DP) :: theta, phi, ecutwfc_pp, ecutrho_pp
-  !
-  CHARACTER(LEN=1), EXTERNAL :: lowercase
-  !
-  ! Auxiliary variables for DFT-D3
-  !
-  real(DP) :: pars(5)
   !
   ! ... various initializations of control variables
   !
@@ -1330,14 +1320,6 @@ SUBROUTINE iosys()
      in_c6(:)    = london_c6(:)
      in_rvdw(:)  = london_rvdw(:)
   END IF
-  IF (ldftd3) THEN
-     pars(1)     = dftd3_s6
-     pars(2)     = dftd3_rs6
-     pars(3)     = dftd3_s18
-     pars(4)     = dftd3_rs18
-     pars(5)     = dftd3_alp
-     call dftd3_set_params(dftd3,pars,dftd3_version)
-  ENDIF
   IF ( lxdm ) THEN
      a1i = xdm_a1
      a2i = xdm_a2
@@ -1671,14 +1653,13 @@ SUBROUTINE iosys()
   ! Setting DFT-D3 functional dependent parameters
   !
   IF ( ldftd3)  THEN
+      if (dftd3_version==2) dftd3_threebody=.false.
       dftd3_in%threebody = dftd3_threebody
       CALL dftd3_init(dftd3, dftd3_in)
       CALL dftd3_printout(dftd3, dftd3_in)
-      input_dft = get_dft_short ( )
-      do ia=1,len_trim(input_dft)
-         input_dft(ia:ia) = lowercase(input_dft(ia:ia))
-      end do
-      CALL dftd3_set_functional(dftd3, func=input_dft,version=dftd3_version,tz=.false.)
+      dft_ = get_dft_short( )
+      dft_ = dftd3_xc ( dft_ )
+      CALL dftd3_set_functional(dftd3, func=dft_, version=dftd3_version,tz=.false.)
   END IF
   !
   IF ( lxdm) CALL init_xdm ( )
@@ -1892,72 +1873,3 @@ SUBROUTINE convert_tau (tau_format, nat_, tau)
   END SELECT
   !
 END SUBROUTINE convert_tau
-!-----------------------------------------------------------------------
-SUBROUTINE check_tempdir ( tmp_dir, exst, pfs )
-  !-----------------------------------------------------------------------
-  !
-  ! ... Verify if tmp_dir exists, creates it if not
-  ! ... On output:
-  ! ...    exst= .t. if tmp_dir exists
-  ! ...    pfs = .t. if tmp_dir visible from all procs of an image
-  !
-  USE wrappers,      ONLY : f_mkdir_safe
-  USE io_global,     ONLY : ionode, ionode_id
-  USE mp_images,     ONLY : intra_image_comm, nproc_image, me_image
-  USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
-  !
-  IMPLICIT NONE
-  !
-  CHARACTER(len=*), INTENT(in) :: tmp_dir
-  LOGICAL, INTENT(out)         :: exst, pfs
-  !
-  INTEGER             :: ios, image, proc, nofi
-  CHARACTER (len=256) :: file_path, filename
-  CHARACTER(len=6), EXTERNAL :: int_to_char
-  !
-  ! ... create tmp_dir on ionode
-  ! ... f_mkdir_safe returns -1 if tmp_dir already exists
-  ! ...                       0 if         created
-  ! ...                       1 if         cannot be created
-  !
-  IF ( ionode ) ios = f_mkdir_safe( TRIM(tmp_dir) )
-  CALL mp_bcast ( ios, ionode_id, intra_image_comm )
-  exst = ( ios == -1 )
-  IF ( ios > 0 ) CALL errore ('check_tempdir','tmp_dir cannot be opened',1)
-  !
-  ! ... let us check now if tmp_dir is visible on all nodes
-  ! ... if not, a local tmp_dir is created on each node
-  !
-  ios = f_mkdir_safe( TRIM(tmp_dir) )
-  CALL mp_sum ( ios, intra_image_comm )
-  pfs = ( ios == -nproc_image ) ! actually this is true only if .not.exst 
-  !
-  RETURN
-  !
-END SUBROUTINE check_tempdir
-!
-!-----------------------------------------------------------------------
-SUBROUTINE clean_tempdir( tmp_dir )
-  !-----------------------------------------------------------------------
-  !
-  USE io_files,         ONLY : prefix, delete_if_present
-  USE io_global,        ONLY : ionode
-  !
-  IMPLICIT NONE
-  !
-  CHARACTER(len=*), INTENT(in) :: tmp_dir
-  !
-  CHARACTER (len=256) :: file_path, filename
-  !
-  ! ... remove temporary files from tmp_dir ( only by the master node )
-  !
-  file_path = trim( tmp_dir ) // trim( prefix )
-  IF ( ionode ) THEN
-     CALL delete_if_present( trim( file_path ) // '.update' )
-     CALL delete_if_present( trim( file_path ) // '.md' )
-     CALL delete_if_present( trim( file_path ) // '.bfgs' )
-  ENDIF
-  !
-  RETURN
-  !
-END SUBROUTINE clean_tempdir

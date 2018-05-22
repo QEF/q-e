@@ -167,7 +167,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 .FALSE. do not collect wavefunctions, leave them in temporary
                         local files (one per processor). The resulting format
                         is readable only on the same number of processors and
-                        with the same knd of paralleliztio used to write it.
+                        with the same kind of parallelization used to write it.
 
                 Note that this flag has no effect on reading, only on writing.
             }
@@ -235,7 +235,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 each processor (*.wfc{N}, *.igk{N}, etc.). Useful for
                 machines without a parallel file system: set @ref wfcdir to
                 a local file system, while @ref outdir should be a parallel
-                or networkfile system, visible to all processors. Beware:
+                or network file system, visible to all processors. Beware:
                 in order to restart from interrupted runs, or to perform
                 further calculations using the produced data files, you
                 may need to copy files to @ref outdir. Works only for pw.x.
@@ -444,7 +444,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             see { zgate, relaxz, block, block_1, block_2, block_height }
             info {
                 In the case of charged cells (@ref tot_charge .ne. 0) setting gate = .TRUE.
-                represents the counter charge (i.e. -tot_charge) not by a homogenous
+                represents the counter charge (i.e. -tot_charge) not by a homogeneous
                 background charge but with a charged plate, which is placed at @ref zgate
                 (see below). Details of the gate potential can be found in
                 T. Brumme, M. Calandra, F. Mauri; PRB 89, 245406 (2014).
@@ -470,8 +470,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var ibrav -type INTEGER {
             status { REQUIRED }
             info {
-                Bravais-lattice index. If ibrav /= 0, specify EITHER
-                [ @ref celldm(1)-@ref celldm(6) ] OR [ @ref A, @ref B, @ref C, @ref cosAB, @ref cosAC, @ref cosBC ]
+                Bravais-lattice index. Optional only if space_group is set.
+                If ibrav /= 0, specify EITHER [ @ref celldm(1)-@ref celldm(6) ]
+                OR [ @ref A, @ref B, @ref C, @ref cosAB, @ref cosAC, @ref cosBC ]
                 but NOT both. The lattice parameter "alat" is set to
                 alat = celldm(1) (in a.u.) or alat = A (in Angstrom);
                 see below for the other parameters.
@@ -531,6 +532,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     v1 = (a/2, b/2,0),  v2 = (-a/2,b/2,0),  v3 = (0,0,c)
                -9          as 9, alternate description
                     v1 = (a/2,-b/2,0),  v2 = (a/2, b/2,0),  v3 = (0,0,c)
+               91          Orthorhombic one-face base-centered A-type
+                                                           celldm(2)=b/a
+                                                           celldm(3)=c/a
+                    v1 = (a, 0, 0),  v2 = (0,b/2,-c/2),  v3 = (0,b/2,c/2)
 
                10          Orthorhombic face-centered      celldm(2)=b/a
                                                            celldm(3)=c/a
@@ -552,12 +557,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     where beta is the angle between axis a and c
 
                13          Monoclinic base-centered        celldm(2)=b/a
-                                                           celldm(3)=c/a,
+                           (unique axis c)                 celldm(3)=c/a,
                                                            celldm(4)=cos(ab)
-                    v1 = (  a/2,         0,                -c/2),
-                    v2 = (b*cos(gamma), b*sin(gamma), 0),
-                    v3 = (  a/2,         0,                  c/2),
+                    v1 = (  a/2,         0,          -c/2),
+                    v2 = (b*cos(gamma), b*sin(gamma), 0  ),
+                    v3 = (  a/2,         0,           c/2),
                     where gamma is the angle between axis a and b
+
+              -13          Monoclinic base-centered        celldm(2)=b/a
+                           (unique axis b)                 celldm(3)=c/a,
+                                                           celldm(5)=cos(ac)
+                    v1 = (  a/2,         0,          -c/2),
+                    v2 = (  a/2,         0,           c/2),
+                    v3 = (b*cos(beta),   0,   b*sin(beta)),
+                    where beta is the angle between axis a and c
+ 
 
                14          Triclinic                       celldm(2)= b/a,
                                                            celldm(3)= c/a,
@@ -1147,7 +1161,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             info {
                 Hubbard_alpha(i) is the perturbation (on atom i, in eV)
                 used to compute U with the linear-response method of
-                Cococcioni and de Gironcoli, PRB 71, 35105 (2005)
+                Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
                 (only for @ref lda_plus_u_kind=0)
             }
         }
@@ -1156,7 +1170,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             info {
                 Hubbard_beta(i) is the perturbation (on atom i, in eV)
                 used to compute J0 with the linear-response method of
-                Cococcioni and de Gironcoli, PRB 71, 35105 (2005)
+                Cococcioni and de Gironcoli, PRB 71, 035105 (2005)
                 (only for @ref lda_plus_u_kind=0). See also 
                 PRB 84, 115108 (2011).
             }
@@ -1443,7 +1457,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
                        - Components of the total stress; sigma_xy, sigma_yz,
                          sigma_zz, sigma_zy, and sigma_zx are meaningless 
-                         bacause ESM stress routines calculate only
+                         because ESM stress routines calculate only
                          components of stress; sigma_xx, sigma_xy, sigma_yx,
                          and sigma_yy.
 
@@ -1545,23 +1559,26 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
          var vdw_corr -type CHARACTER {
              default { 'none' }
              see {
-                 london_s6, london_rcut, london_c6, london_rvdw, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2
+                 london_s6, london_rcut, london_c6, london_rvdw, 
+                 dftd3_version, dftd3_threebody, ts_vdw_econv_thr, ts_vdw_isolated, xdm_a1, xdm_a2
              }
              options {
                  info {
                      Type of Van der Waals correction. Allowed values:
                  }
 
-                 opt -val {'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d' } {
-                     Semiempirical Grimme's DFT-D2.
-                     Optional variables: @ref london_s6, @ref london_rcut, @ref london_c6, @ref london_rvdw,
+                 opt -val {'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d', 'grimme-d3', 'Grimme-D3', 'DFT-D3', 'dft-d3' } {
+                     Semiempirical Grimme's DFT-D2 and DFT-D3.
+                     Optional variables for D2: @ref london_s6, @ref london_rcut, @ref london_c6, @ref london_rvdw,
                      S. Grimme, J. Comp. Chem. 27, 1787 (2006), doi:10.1002/jcc.20495
                      V. Barone et al., J. Comp. Chem. 30, 934 (2009), doi:10.1002/jcc.21112
+                     Optional variables for D3: @ref dftd3_version, @ref dftd3_threebody,
+                     S. Grimme et al, J. Chem. Phys 132, 154104 (2010)
                  }
 
                  opt -val {'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler'} {
                      Tkatchenko-Scheffler dispersion corrections with first-principle derived
-                     C6 coefficients (implemented in CP only).
+                     C6 coefficients.
                      Optional variables: @ref ts_vdw_econv_thr, @ref ts_vdw_isolated
                      See A. Tkatchenko and M. Scheffler, PRL 102, 073005 (2009).
                  }
@@ -1611,6 +1628,22 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
            default { 200 }
            info {
                cutoff radius (a.u.) for dispersion interactions
+           }
+         }
+         var dftd3_version -type integer {
+           default { 3 }
+           info {
+               Version of Grimme implementation of Grimme-D3. Version=3 is Grimme-D3. Version=2
+               is the original Grimme-D2 parametrization. NOTE: not all functionals are
+               parametrized.
+           }
+         }
+         var dftd3_threebody -type logical{
+           default { TRUE }
+           info {
+               Turn three-body terms in Grimme-D3 on. If .false. two-body contributions 
+               only are computed, using two-body parameters of Grimme-D3.
+               If dftd3_version=2, three-body contribution is always disabled.
            }
          }
         var ts_vdw_econv_thr -type REAL {
@@ -1669,7 +1702,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                  This allows to give in input only the inequivalent atomic 
                  positions. The positions of all the symmetry equivalent atoms
                  are calculated by the code. Used only when the atomic positions
-                 are of type crystal_sg. 
+                 are of type crystal_sg. See also @ref uniqueb,
+                 @ref origin_choice, @ref rhombohedral
              }
          }
 
@@ -1707,7 +1741,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
          }
     
         group {
-	    label { below variables are used only if @ref gate = .TRUE. }
+	    label { variables used only if @ref gate = .TRUE. }
 
 	    var zgate -type REAL {
 		default { 0.5 }
@@ -2474,18 +2508,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		info {
 		    Select which of the cell parameters should be moved:
 		}                
-                opt -val 'all'     { all axis and angles are moved }
-                opt -val 'x'       { only the x component of axis 1 (v1_x) is moved }
-                opt -val 'y'       { only the y component of axis 2 (v2_y) is moved }
-                opt -val 'z'       { only the z component of axis 3 (v3_z) is moved }
-                opt -val 'xy'      { only v1_x and v2_y are moved }
-                opt -val 'xz'      { only v1_x and v3_z are moved }
-                opt -val 'yz'      { only v2_y and v3_z are moved }
-                opt -val 'xyz'     { only v1_x, v2_y, v3_z are moved }
-                opt -val 'shape'   { all axis and angles, keeping the volume fixed }
-                opt -val 'volume'  { the volume changes, keeping all angles fixed (i.e. only celldm(1) changes) }
-                opt -val '2Dxy'    { only x and y components are allowed to change }
-                opt -val '2Dshape' { as above, keeping the area in xy plane fixed }
+                opt -val 'all'          { all axis and angles are moved }
+                opt -val 'x'            { only the x component of axis 1 (v1_x) is moved }
+                opt -val 'y'            { only the y component of axis 2 (v2_y) is moved }
+                opt -val 'z'            { only the z component of axis 3 (v3_z) is moved }
+                opt -val 'xy'           { only v1_x and v2_y are moved }
+                opt -val 'xz'           { only v1_x and v3_z are moved }
+                opt -val 'yz'           { only v2_y and v3_z are moved }
+                opt -val 'xyz'          { only v1_x, v2_y, v3_z are moved }
+                opt -val 'shape'        { all axis and angles, keeping the volume fixed }
+                opt -val 'volume'       { the volume changes, keeping all angles fixed (i.e. only celldm(1) changes) }
+                opt -val '2Dxy'         { only x and y components are allowed to change }
+                opt -val '2Dshape'      { as above, keeping the area in xy plane fixed }
+                opt -val 'epitaxial_ab' {fix axis 1 and 2 while allowing axis 3 to move }
+                opt -val 'epitaxial_ac' {fix axis 1 and 3 while allowing axis 2 to move }
+                opt -val 'epitaxial_bc' {fix axis 2 and 3 while allowing axis 1 to move }
 		info {
 		    BEWARE: if axis are not orthogonal, some of these options do not
 		            work (symmetry is broken). If you are not happy with them, 
@@ -2583,7 +2620,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     in relative coordinates of the primitive lattice.
                     This option differs from the previous one because
                     in this case only the symmetry inequivalent atoms
-                    are given. The variable space_group must indicate
+                    are given. The variable @ref space_group must indicate
                     the space group number used to find the symmetry
                     equivalent atoms. The other variables that control 
                     this option are uniqueb, origin_choice, and 

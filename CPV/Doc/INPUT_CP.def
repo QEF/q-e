@@ -1482,7 +1482,7 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
             }
         }
 
-	var abivol -type LOGICAL { 
+	var abisur -type LOGICAL { 
             default { .false. }
             info { 
                .true. for finite surface tension calculations
@@ -2013,13 +2013,16 @@ Nota Bene 1:   For calwf = 5, wffort is not used. The
 	    	}
 
 	label { 
-	    Optional card, reads velocities (in atomic units) from standard input 
+	    Optional card, reads velocities from standard input  
 	}
 
 
         message {
                when starting with ion_velocities="from_input" it is convenient
-               to perform few steps (~5-10) with a smaller time step (0.5 a.u.)
+               to perform few steps (~5-10) with a smaller time step (0.5 a.u.).
+               The velocities must be expressed using the same length units
+               indicated in the card ATOMIC_POSITIONS, divided by time
+               in atomic units.
 	}
 
 	syntax {

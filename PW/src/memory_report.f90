@@ -31,7 +31,8 @@ SUBROUTINE memory_report()
   USE wvfct,     ONLY : nbnd, nbndx
   USE basis,     ONLY : natomwfc, starting_wfc
   USE cell_base, ONLY : omega, bg, alat
-  USE exx,       ONLY : ecutfock, nkqs, use_ace
+  USE exx,       ONLY : ecutfock, use_ace
+  USE exx_base,  ONLY : nkqs
   USE fft_base,  ONLY : dffts, dfftp
   USE gvect,     ONLY : ngm, ngl, ngm_g, g, gcutm
   USE gvecs,     ONLY : ngms, doublegrid
@@ -386,10 +387,10 @@ SUBROUTINE memory_report()
   maxram = ram + ram_
   !
   ! arrays used for global sorting in ggen:
-  !    mill_g, mill_unsorted, igsrt, g2sort_g, total dimensions:
+  !    igsrt, g2l, g2sort_g, total dimensions:
   !
   IF ( .NOT. smallmem ) maxram = MAX ( maxram, &
-       int_size * 7 * ngm_g + real_size * ngm_g )
+       int_size * 2 * ngm_g + real_size * ngm_g )
   !
   totram = maxram * nproc_image
   IF ( iverbosity > 0 ) THEN

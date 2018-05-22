@@ -17,9 +17,8 @@
   USE io_global,     ONLY : stdout
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub
-  USE pwcom,         ONLY : ef !, nelec, isk
-  USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, nqf, &
-                            nkf, epf17, nqtotf, xkf, nkqtotf, wf
+  USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
+                            nkf, epf17, xkf, nkqtotf, wf
   USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : inter_pool_comm

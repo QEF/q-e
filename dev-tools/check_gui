@@ -6,7 +6,7 @@ exec tclsh "$0" "$@"
 # Usage:   check_gui module
 #          ( module = pw, ph, pp, projwfc, atomic, or d3 )
 #
-# Purpose: check the PWgui modules wrt coprresponding INPUT_*.def
+# Purpose: check the PWgui modules wrt corresponding INPUT_*.def
 #          files and create a PWgui help files.
 #
 

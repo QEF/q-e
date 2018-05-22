@@ -8,7 +8,41 @@ New in development version:
     Localized exchange can deal with virtual orbitals (empty bands)
     (Ivan Carnimeo)
 
+  * Spin-polarized X3LYP (experimental)
+
 Problems fixed in development version:
+
+  * Calculation of ELF wasn't always working due to a bad usage of FFT
+    descriptors - noticed by Enrique Zanardi Maffiotte (commit a86fb75d)
+
+  * Workaround for gfortran bug in FoX (commit 5b36b697) and for pgi+openmp
+    bug (f43e72c9)
+
+  * Reading of starting wavefunctions from file, including restart case,
+    wasn't always working as expected. This might be at the origin of
+    mysterious "davcio errors" (April 18, 2018)
+
+  * Parameters for electric fields were not saved to the new XML file, thus
+    breaking some forms of postprocessing (noticed by Thomas Brumme and 
+    Giovanni Cantele, fixed April 18, 2018)
+
+  * Bug in reading (with FoX) the augmentation part of pseudopotentials in
+    upf v.2 format. The bug shows up only for PPs generated using David
+    Vanderbilt's code, yielding a mysterious message "Error in scalartorealdp
+    Too few elements found" (March 20, 2018)
+
+  * LDA+U for spin-orbit (kind=1) was crashing for one k-point, trying to read
+    data not previously saved (noticed by Christof Wolf, Feb 8, 2018)
+
+  * ibrav =-13 wasn't documented and did not recognize the correct parameter
+    cosBC (noticed by Jose' Conesa, Jan 26, 2018)
+
+  * Yet another problem with the final scf step in a vc-relax calculation: if
+    restarted from an interrupted calculation, the final step was trying to
+    read the charge density with a different number of G-vectors (Jan 23, 2018)
+
+  * CP with LDA+U: the choice of the LDA+U manifolds from atomic wavefunctions
+    was sometimes not working properly due to a missing check (Jan 22, 2018)
 
   * pw2bgw.x fixed, courtesy G. Samsonidze (Jan.16, 2018)
 
@@ -25,6 +59,9 @@ Problems fixed in development version:
   * PWscf in "manypw" mode wasn't working due to a bad IF (Dec.12, 2017)
 
 Incompatible changes in development version:
+
+  * various subroutines computing gradients and similar quantities using FFTs
+    have been harmonized and collected into Modules/gradutils.f90
 
   * subroutine "ggen" split into two subroutines: "ggen" takes care of
     G-vectors for the FFT grid only, "ggens" for the subgrid only

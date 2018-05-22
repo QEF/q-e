@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-SUBROUTINE export_upf(iunps, unit_loc)
+SUBROUTINE export_upf(filename, unit_loc)
   !---------------------------------------------------------------------
   !
   use constants, only : fpi
@@ -24,18 +24,17 @@ SUBROUTINE export_upf(iunps, unit_loc)
                      jjts, vpstot, lltsc, rcuttsc, rcutustsc, eltsc, &
                      lsave_wfc, wfc_ae_recon, wfc_ps_recon, tm, enlts, &
                      nstoaets, pseudotype, enls, rhoc, vnl, vpsloc, &
-                     lgipaw_reconstruction, use_paw_as_gipaw
+                     lgipaw_reconstruction, use_paw_as_gipaw, use_xsd
   use funct, only: get_dft_name
   use global_version, only: version_number, svn_revision
   !
   use pseudo_types
-  use write_upf_v2_module, only: write_upf_v2, &
-                                 pseudo_config, deallocate_pseudo_config
+  use write_upf_module, only: write_upf
   !
   implicit none
   !
-  !CHARACTER(len=*),INTENT(IN) :: filename
-  INTEGER,INTENT(IN)::iunps, unit_loc
+  CHARACTER(len=*),INTENT(IN) :: filename
+  INTEGER,INTENT(IN):: unit_loc
   !
   integer :: ibeta, jbeta, kbeta, l, ind, l1, l2
   !
@@ -45,7 +44,7 @@ SUBROUTINE export_upf(iunps, unit_loc)
   TYPE (pseudo_upf)              :: upf
   TYPE (pseudo_config)           :: at_conf
   TYPE (radial_grid_type),TARGET :: internal_grid
-  CHARACTER(len=2), external :: atom_name
+  CHARACTER(len=2), external     :: atom_name
   CHARACTER(len=9) :: day, hour
 
   call date_and_tim(day,hour)
@@ -267,7 +266,11 @@ SUBROUTINE export_upf(iunps, unit_loc)
   upf%has_wfc = lsave_wfc
   if (upf%has_wfc)   CALL export_upf_wfc()
   !
-  CALL write_upf_v2( iunps, upf, at_conf, unit_loc )
+  if (use_xsd) then 
+     CALL write_upf( FILENAME = TRIM(filename) , UPF=upf, SCHEMA = 'qe_pp', CONF = at_conf, U_INPUT = unit_loc)
+  else
+     CALL write_upf( FILENAME = TRIM(filename), UPF= upf, SCHEMA = 'v2', CONF = at_conf, U_INPUT = unit_loc)
+  endif
   !
   CALL deallocate_pseudo_upf( upf )
   CALL deallocate_radial_grid( internal_grid )

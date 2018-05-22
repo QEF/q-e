@@ -15,7 +15,7 @@ MODULE loc_scdm
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE exx,                  ONLY : dfftt, locbuff, locmat, nkqs
+  USE exx,                  ONLY : dfftt, locbuff, locmat
 
   IMPLICIT NONE
   SAVE
@@ -36,6 +36,7 @@ SUBROUTINE localize_orbitals( )
   USE wvfct,             ONLY : nbnd
   USE control_flags,     ONLY : gamma_only
   USE exx,               ONLY : x_occupation
+  USE exx_base,          ONLY : nkqs
   !   
   implicit none
   integer :: NGrid, ikq, NBands
@@ -242,7 +243,9 @@ IMPLICIT NONE
   deallocate( cpu_npt )
 
 ! Cholesky(psi)^(-1) in mat 
-  CALL invchol(NBands,mat)
+! CALL invchol(NBands,mat)
+  CALL MatChol(NBands,mat)
+  CALL MatInv('L',NBands,mat)
   Call MatSymm('U','L',mat, NBands)
 
 ! Phi = Pc * Chol^(-1) = QRbuff * mat

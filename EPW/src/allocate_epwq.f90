@@ -23,7 +23,6 @@
   USE pwcom,        ONLY : npwx, nbnd, nspin, nks
   USE gvect,        ONLY : ngm
   USE noncollin_module, ONLY : noncolin, npol
-  USE wavefunctions_module,  ONLY: evc
   USE spin_orb,     ONLY : lspinorb
   USE control_lr,   ONLY : nbnd_occ
   USE phcom,        ONLY : evq, dpsi, vlocq,&
@@ -43,6 +42,8 @@
   USE modes,        ONLY : u, npert, name_rap_mode, num_rap_mode
   USE fft_base,     ONLY : dffts
   USE klist,        ONLY : nks
+  USE transportcom, ONLY : transp_temp
+  USE epwcom,       ONLY : nstemp  
 
   implicit none
   ! SP: Had to add these allocations becaue they are now private in QE 5.0.
@@ -56,6 +57,8 @@
   !
   ALLOCATE (evq ( npwx*npol, nbnd))
   ALLOCATE (dpsi ( npwx*npol, nbnd))
+  ALLOCATE( transp_temp(nstemp) )
+  !
   ALLOCATE (vlocq ( ngm, ntyp))    
 ! SP: nrxx is not used in QE 5 ==> tg_nnr is the maximum among nnr
 !     This SHOULD have the same dim as nrxx had.

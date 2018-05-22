@@ -43,6 +43,7 @@ fft_types.o : stick_base.o
 scatter_mod.o : fft_param.o
 scatter_mod.o : fft_types.o
 stick_base.o : fft_param.o
+test.o : fft_ggen.o
 test.o : fft_helper_subroutines.o
 test.o : fft_interfaces.o
 test.o : fft_parallel.o

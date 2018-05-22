@@ -96,21 +96,24 @@ wannier_new.o \
 wave_base.o \
 wavefunctions.o \
 wrappers.o\
+write_upf.o \
 write_upf_v2.o \
+write_upf_schema.o \
 ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
 xml_input.o \
 xml_io_base.o \
 io_base.o \
-qes_module.o  \
 qes_types.o \
 qes_libs.o  \
 qes_read_module.o \
+bcast_qes_module.o \
 qexsd.o   \
 qexsd_input.o \
 hdf5_qe.o\
 qeh5_module.o\
+fox_init_module.o \
 xsf.o \
 wyckoff.o \
 wypos.o \
@@ -160,20 +163,7 @@ deviatoric.o
 
 TLDEPS=libfft
 
-all : version version.o libqemod.a
-
-## If no update_version is found, or it is not executable,
-## just copy version.f90.in (that contains 'version=unknown').
-## We use cat and not cp so that version.f90 has a new timestamp,
-## forcing recompilation of version.f90.
-## We use the inner if to avoid recompilation at each make.
-version:
-	- ( if test -x ../install/update_version ; then \
-	../install/update_version; \
-	else if test ! -f version.f90 ; then \
-	cat version.f90.in > version.f90 ; fi ; fi )	
-
-version.f90: version
+all : libqemod.a
 
 ## The following is needed only for lapack compiled from sources
 
@@ -191,13 +181,5 @@ tldeps :
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L
-
-# .PHONY forces execution of a rule irrespective of the presence of an
-# updated file with the same name of the rule. In this way, the script 
-# that generates version.f90 always runs, updating the version if you 
-# execute "svn update". The update_version script takes care of not
-# changing the file if the svn version did not change
-
-.PHONY: version all clean
 
 include make.depend

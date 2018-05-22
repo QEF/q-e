@@ -42,6 +42,7 @@
   REAL(DP), PARAMETER :: bohr2ang = 0.52917721092d0
   REAL(DP), PARAMETER :: ev2cmm1  = 8065.541d0
   REAL(DP), PARAMETER :: kelvin2eV= 8.6173427909d-05
+  REAL(DP), PARAMETER :: kelvin2Ry= 6.333627859634130e-06
   REAL(DP), PARAMETER :: ryd2ghz  = 3.289828d6
   REAL(DP), PARAMETER :: mev2ps   = 0.6582119514  ! 1000/((1/hbar)*1e-12)
   REAL(DP), PARAMETER :: mev2invps = 1.0 / meV2ps  
@@ -52,7 +53,9 @@
   !
   ! ... zero up to a given accuracy
   !
+  REAL(DP), PARAMETER :: eps2  = 1.0E-2_DP
   REAL(DP), PARAMETER :: eps4  = 1.0E-4_DP
+  REAL(DP), PARAMETER :: eps5  = 1.0E-5_DP
   REAL(DP), PARAMETER :: eps6  = 1.0E-6_DP
   REAL(DP), PARAMETER :: eps8  = 1.0E-8_DP
   REAL(DP), PARAMETER :: eps12 = 1.0E-12_DP

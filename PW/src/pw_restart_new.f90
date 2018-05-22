@@ -15,7 +15,9 @@ MODULE pw_restart_new
   ! ... the wavefunction files are written / read by one processor per pool,
   ! ... collected on / distributed to all other processors in pool
   !
-  USE qes_module
+  USE KINDS,        ONLY: DP
+  USE qes_types_module
+  USE qes_libs_module
   USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
                           qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
                           qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
@@ -25,8 +27,7 @@ MODULE pw_restart_new
                           qexsd_init_forces,qexsd_init_stress, qexsd_xf,               &
                           qexsd_init_outputElectricField,                              &
                           qexsd_input_obj, qexsd_occ_obj, qexsd_smear_obj,             &
-                          qexsd_init_outputPBC
-  USE iotk_module
+                          qexsd_init_outputPBC, qexsd_init_gate_info  
   USE io_global, ONLY : ionode, ionode_id
   USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir
   !
@@ -56,7 +57,7 @@ MODULE pw_restart_new
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, ibrav
       USE gvect,                ONLY : ig_l2g
-      USE ions_base,            ONLY : nsp, ityp, atm, nat, tau
+      USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, zv
       USE noncollin_module,     ONLY : noncolin, npol
       USE io_files,             ONLY : nwordwfc, iunwfc, psfile
       USE buffers,              ONLY : get_buffer
@@ -95,26 +96,27 @@ MODULE pw_restart_new
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
                                        emaxpos, eopreg, eamp, el_dipole, ion_dipole,&
                                        gate, zgate, relaxz, block, block_1,&
-                                       block_2, block_height ! TB
+                                       block_2, block_height, etotgatefield ! TB
       USE mp,                   ONLY : mp_sum
       USE mp_bands,             ONLY : intra_bgrp_comm
       USE funct,                ONLY : get_exx_fraction, dft_is_hybrid, &
                                        get_gau_parameter, &
                                        get_screening_parameter, exx_is_active
-      USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
-                                       exxdiv_treatment, yukawa, ecutvcut, ecutfock
+      USE exx_base,             ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
+                                       exxdiv_treatment, yukawa, ecutvcut
+      USE exx,                  ONLY : ecutfock
       USE london_module,        ONLY : scal6, lon_rcut, in_c6
       USE xdm_module,           ONLY : xdm_a1=>a1i, xdm_a2=>a2i
       USE tsvdw_module,         ONLY : vdw_isolated, vdw_econv_thr
       USE input_parameters,     ONLY : verbosity, calculation, ion_dynamics, starting_ns_eigenvalue, &
                                        vdw_corr, london, k_points, assume_isolated, &  
                                        input_parameters_occupations => occupations                                        
-      USE bp,                   ONLY : lelfield, lberry, bp_mod_el_pol => el_pol, bp_mod_ion_pol => ion_pol
+      USE bp,                   ONLY : lelfield, lberry, el_pol, ion_pol
       !
       USE rap_point_group,      ONLY : elem, nelem, name_class
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
       USE bfgs_module,          ONLY : bfgs_get_n_iter
-      USE qexsd_module,         ONLY : qexsd_dipol_obj, qexsd_bp_obj, qexsd_start_k_obj
+      USE qexsd_module,         ONLY : qexsd_bp_obj, qexsd_start_k_obj
       USE qexsd_input,          ONLY : qexsd_init_k_points_ibz, qexsd_init_occupations, qexsd_init_smearing
       USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
       USE io_files,             ONLY : pseudo_dir
@@ -128,15 +130,25 @@ MODULE pw_restart_new
       INTEGER               :: npwx_g, ispin, inlc
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       LOGICAL               :: lwfc, lrho, lxsd, occupations_are_fixed
-      CHARACTER(iotk_attlenx)  :: attr
       INTEGER                  :: iclass, isym, ielem
       CHARACTER(LEN=15)        :: symop_2_class(48)
       LOGICAL                  :: opt_conv_ispresent
       INTEGER                  :: n_opt_steps, n_scf_steps_, h_band
       REAL(DP)                 :: h_energy
+      TYPE(gateInfo_type),TARGET      :: gate_info_temp
+      TYPE(gateInfo_type),POINTER     :: gate_info_ptr => NULL()
+      TYPE(dipoleOutput_type),TARGET  :: dipol_obj 
+      TYPE(dipoleOutput_type),POINTER :: dipol_ptr  => NULL()
+      TYPE(BerryPhaseOutput_type),  POINTER :: bp_obj_ptr => NULL()
+      !
+      !
       !
       TYPE(output_type) :: output
-      
+      REAL(DP),POINTER    :: degauss_, demet_, efield_corr, potstat_corr, &
+                                 gatefield_corr, bp_el_pol(:), bp_ion_pol(:) 
+      REAL(DP),TARGET     :: temp(20)
+      INTEGER             :: itemp = 1
+      NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr, bp_el_pol, bp_ion_pol)
       !
       ! PW dimensions need to be properly computed 
       ! reducing across MPI tasks
@@ -372,22 +384,43 @@ MODULE pw_restart_new
 ! ... TOTAL ENERGY
 !-------------------------------------------------------------------------------------------
          !
-         IF (tefield) THEN
-            CALL  qexsd_init_total_energy(output%total_energy,etot,eband,ehart,vtxc,etxc, &
-                 ewld, degauss ,demet , etotefield )
-         ELSE 
-            CALL  qexsd_init_total_energy(output%total_energy,etot,eband,ehart,vtxc,etxc, &
-                 ewld,degauss,demet)
+         IF ( degauss > 0.0d0 ) THEN
+            !
+            itemp = itemp + 1 
+            temp(itemp)  = degauss/e2
+            degauss_ => temp(itemp)
+            !
+            itemp = itemp+1
+            temp(itemp)   = demet/e2
+            demet_ => temp(itemp) 
+         END IF
+         IF ( tefield ) THEN 
+            itemp = itemp+1 
+            temp(itemp) = etotefield/e2
+            efield_corr => temp(itemp) 
          END IF
          IF (lfcpopt .OR. lfcpdyn ) THEN 
-            output%total_energy%potentiostat_contr_ispresent = .TRUE.
-            output%total_energy%potentiostat_contr = ef * tot_charge/e2
+            itemp = itemp +1 
+            temp(itemp) = ef * tot_charge/e2
+            potstat_corr => temp(itemp) 
             output%FCP_tot_charge_ispresent = .TRUE.
             output%FCP_tot_charge = tot_charge
             output%FCP_force_ispresent = .TRUE.
+            !FIXME ( decide what units to use here ) 
             output%FCP_force = fcp_mu - ef 
          END IF 
+         IF ( gate) THEN
+            itemp = itemp + 1 
+            temp(itemp) = etotgatefield/e2
+            gatefield_corr => temp(itemp)  
+         END IF
+         CALL  qexsd_init_total_energy(output%total_energy, etot/e2, eband/e2, ehart/e2, vtxc/e2, &
+                                       etxc/e2, ewld/e2, degauss_, demet_, efield_corr, potstat_corr,&
+                                       gatefield_corr) 
          !
+         NULLIFY(degauss_, demet_, efield_corr, potstat_corr, gatefield_corr)
+         itemp = 0
+          !
 !---------------------------------------------------------------------------------------------
 ! ... FORCES
 !----------------------------------------------------------------------------------------------
@@ -413,25 +446,45 @@ MODULE pw_restart_new
 !-------------------------------------------------------------------------------------------------
 ! ... ELECTRIC FIELD
 !-------------------------------------------------------------------------------------------------
-         IF ( lelfield ) THEN
-            output%electric_field_ispresent = .TRUE. 
-            CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
-                 lberry, el_pol = bp_mod_el_pol, ion_pol = bp_mod_ion_pol) 
-         ELSE IF ( lberry ) THEN 
-            output%electric_field_ispresent = .TRUE.
-            CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, & 
-                 lberry, bp_obj=qexsd_bp_obj) 
-         ELSE IF ( tefield .AND. dipfield  ) THEN 
-            output%electric_field_ispresent = .TRUE.
-            CALL qexsd_init_dipole_info(qexsd_dipol_obj, el_dipole, ion_dipole, edir, eamp, &
-                                  emaxpos, eopreg )  
-           qexsd_dipol_obj%tagname = "dipoleInfo"
+         output%electric_field_ispresent = ( gate .OR. lelfield .OR. lberry .OR. tefield ) 
 
-            CALL  qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
-                 lberry, dipole_obj = qexsd_dipol_obj )                     
-         ELSE 
-            output%electric_field_ispresent = .FALSE.
+         IF ( gate ) THEN 
+            CALL qexsd_init_gate_info(gate_info_temp,"gateInfo", etotgatefield/e2, zgate, nelec, &
+                   alat, at, bg, zv, ityp) 
+            gate_info_ptr => gate_info_temp    
+         END IF             
+         IF ( lelfield ) THEN
+            itemp=itemp+1
+            temp(itemp:itemp+2) = el_pol
+            bp_el_pol => temp(itemp:itemp+2) 
+            itemp = (itemp + 2) + 1
+            temp(itemp:itemp+2)  = ion_pol(1:3)
+            bp_ion_pol => temp(itemp:itemp+2) 
+            itemp = itemp + 2 
+         END IF
+         IF ( tefield .AND. dipfield) THEN 
+            CALL qexsd_init_dipole_info(dipol_obj, el_dipole, ion_dipole, edir, eamp, &
+                                  emaxpos, eopreg )  
+            dipol_ptr => dipol_obj
+         END IF
+         IF ( lberry ) bp_obj_ptr => qexsd_bp_obj
+         IF (output%electric_field_ispresent) &
+            CALL qexsd_init_outputElectricField(output%electric_field, lelfield, tefield, dipfield, &
+                 lberry, BP_OBJ = bp_obj_ptr, EL_POL = bp_el_pol, ION_POL = bp_ion_pol,          &
+                 GATEINFO = gate_info_ptr, DIPOLE_OBJ =  dipol_ptr) 
+         !
+         temp = 0 
+         IF (ASSOCIATED(gate_info_ptr)) THEN 
+            CALL qes_reset_gateInfo(gate_info_ptr)
+            NULLIFY(gate_info_ptr)
          ENDIF
+         NULLIFY( bp_el_pol, bp_ion_pol)
+         IF (ASSOCIATED (dipol_ptr) ) THEN
+            CALL qes_reset_dipoleOutput(dipol_ptr)
+            NULLIFY(dipol_ptr)
+         ENDIF
+         NULLIFY ( bp_obj_ptr) 
+
 !------------------------------------------------------------------------------------------------
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
@@ -487,7 +540,6 @@ MODULE pw_restart_new
       CHARACTER(LEN=2), DIMENSION(2) :: updw = (/ 'up', 'dw' /)
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
-      CHARACTER(iotk_attlenx)  :: attr
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
@@ -675,7 +727,8 @@ MODULE pw_restart_new
     END SUBROUTINE gk_l2gmap_kdip
 
     !------------------------------------------------------------------------
-    SUBROUTINE pw_readschema_file(ierr, restart_output, restart_parallel_info, restart_general_info)
+    SUBROUTINE pw_readschema_file(ierr, restart_output, restart_parallel_info, restart_general_info, &
+                                  prev_input)
       !------------------------------------------------------------------------
       USE qes_types_module,     ONLY : input_type, output_type, general_info_type, parallel_info_type    
       !
@@ -689,6 +742,7 @@ MODULE pw_restart_new
       TYPE( output_type ),OPTIONAL,        INTENT(OUT)   :: restart_output
       TYPE(parallel_info_type),OPTIONAL,   INTENT(OUT)   :: restart_parallel_info
       TYPE(general_info_type ),OPTIONAL,   INTENT(OUT)   :: restart_general_info
+      TYPE(input_type),OPTIONAL,           INTENT(OUT)   :: prev_input
       ! 
       TYPE(Node), POINTER     :: root, nodePointer
       TYPE(nodeList),POINTER  :: listPointer
@@ -749,6 +803,20 @@ MODULE pw_restart_new
          !CALL qes_write_output ( 82, restart_output ) 
       END IF 
       !
+      IF (PRESENT (prev_input)) THEN
+         nodePointer => item( getElementsByTagname(root, "input"),0)
+         IF ( ASSOCIATED(nodePointer) ) THEN
+            CALL qes_read (nodePointer, prev_input, ierr ) 
+         ELSE 
+            ierr = 5
+         END IF
+         IF (ierr /= 0 ) THEN
+             CALL infomsg ('pw_readschema_file',& 
+                            'failed retrieving input info from xml file, check it !!!')
+             IF ( TRIM(prev_input%tagname) == 'input' )  CALL qes_reset_input(prev_input) 
+             ierr = 0 
+         END IF
+      END IF
       ! 
       CALL destroy(root)       
 
@@ -757,7 +825,7 @@ MODULE pw_restart_new
     END SUBROUTINE pw_readschema_file
     !  
     !------------------------------------------------------------------------
-    SUBROUTINE init_vars_from_schema( what, ierr, output_obj, par_info, gen_info )
+    SUBROUTINE init_vars_from_schema( what, ierr, output_obj, par_info, gen_info, input_obj )
       !------------------------------------------------------------------------
       !
       USE control_flags,        ONLY : twfcollect
@@ -773,16 +841,17 @@ MODULE pw_restart_new
       TYPE ( output_type), INTENT(IN)        :: output_obj
       TYPE ( parallel_info_type), INTENT(IN) :: par_info
       TYPE ( general_info_type ), INTENT(IN) :: gen_info
+      TYPE ( input_type), OPTIONAL, INTENT(IN)         :: input_obj
       INTEGER,INTENT (OUT)                   :: ierr 
       !
       CHARACTER(LEN=256) :: dirname
       LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
                             lxc, locc, lbz, lbs, lwfc, lheader,          &
                             lsymm, lrho, lefield, ldim, &
-                            lef, lexx, lesm, lpbc
+                            lef, lexx, lesm, lpbc, lvalid_input
       !
       LOGICAL            :: need_qexml, found, electric_field_ispresent
-      INTEGER            :: tmp, iotk_err 
+      INTEGER            :: tmp
       
       !    
       !
@@ -790,6 +859,11 @@ MODULE pw_restart_new
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
       !
       !
+      IF ( PRESENT (input_obj) ) THEN 
+         lvalid_input = (TRIM(input_obj%tagname) == "input")
+      ELSE
+         lvalid_input = .FALSE. 
+      ENDIF
       !
       !
       ldim    = .FALSE.
@@ -958,8 +1032,13 @@ MODULE pw_restart_new
          IF (output_obj%band_structure%wf_collected)  CALL read_collected_to_evc(dirname ) 
       END IF
       IF ( lsymm ) THEN
-         CALL readschema_symmetry ( output_obj%symmetries, output_obj%basis_set )
-      END IF
+         IF ( lvalid_input ) THEN 
+            CALL readschema_symmetry (  output_obj%symmetries, output_obj%basis_set, input_obj%symmetry_flags )
+         ELSE 
+            CALL readschema_symmetry( output_obj%symmetries,output_obj%basis_set) 
+         ENDIF
+      ENDIF
+      !
       IF ( lrho ) THEN
          !
          ! ... to read the charge-density we use the routine from io_rho_xml 
@@ -976,6 +1055,8 @@ MODULE pw_restart_new
       IF ( lpbc ) THEN
          CALL readschema_outputPBC ( output_obj%boundary_conditions)
       END IF
+      !
+      IF ( lefield .AND. lvalid_input ) CALL readschema_efield ( input_obj%electric_field ) 
       !
       IF ( lexx .AND. output_obj%dft%hybrid_ispresent  ) CALL readschema_exx ( output_obj%dft%hybrid )
       !
@@ -1181,7 +1262,7 @@ MODULE pw_restart_new
     END SUBROUTINE readschema_ions
     !  
     !------------------------------------------------------------------------
-    SUBROUTINE readschema_symmetry ( symms_obj, basis_obj  ) 
+    SUBROUTINE readschema_symmetry ( symms_obj, basis_obj, flags_obj  ) 
     !------------------------------------------------------------------------
       ! 
       USE symm_base,       ONLY : nrot, nsym, invsym, s, ft,ftau, irt, t_rev, &
@@ -1195,8 +1276,14 @@ MODULE pw_restart_new
       ! 
       TYPE ( symmetries_type )               :: symms_obj 
       TYPE ( basis_set_type )                :: basis_obj
+      TYPE ( symmetry_flags_type),OPTIONAL   :: flags_obj
       INTEGER                                :: isym 
       ! 
+      IF ( PRESENT(flags_obj) ) THEN 
+         noinv = flags_obj%noinv
+         no_t_rev = flags_obj%no_t_rev
+      ENDIF
+      !
       nrot = symms_obj%nrot 
       nsym = symms_obj%nsym
       ! 
@@ -1231,7 +1318,8 @@ MODULE pw_restart_new
     SUBROUTINE readschema_efield( efield_obj  ) 
     !---------------------------------------------------------------------------
       !       
-      USE extfield, ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp
+      USE extfield, ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp, gate, zgate, &
+                           block, block_1, block_2, block_height, relaxz
       ! 
       IMPLICIT NONE 
       ! 
@@ -1254,9 +1342,9 @@ MODULE pw_restart_new
             edir = 3 
          END IF
          IF ( efield_obj%potential_max_position_ispresent ) THEN 
-            edir = efield_obj%electric_field_direction
+            emaxpos = efield_obj%potential_max_position
          ELSE 
-            emaxpos = 3 
+            emaxpos = 5d-1
          END IF 
          IF ( efield_obj%potential_decrease_width_ispresent ) THEN 
             eopreg = efield_obj%potential_decrease_width
@@ -1268,6 +1356,16 @@ MODULE pw_restart_new
          ELSE 
             eamp = 1.d-3
          END IF
+         IF (efield_obj%gate_settings_ispresent) THEN 
+            gate = efield_obj%gate_settings%use_gate
+            IF (efield_obj%gate_settings%zgate_ispresent) zgate     = efield_obj%gate_settings%zgate
+            IF (efield_obj%gate_settings%relaxz_ispresent) relaxz   = efield_obj%gate_settings%relaxz
+            IF (efield_obj%gate_settings%block_ispresent) block     = efield_obj%gate_settings%block
+            IF (efield_obj%gate_settings%block_1_ispresent) block_1 = efield_obj%gate_settings%block_1
+            IF (efield_obj%gate_settings%block_2_ispresent) block_2 = efield_obj%gate_settings%block_2
+            IF (efield_obj%gate_settings%block_height_ispresent) &
+                                                         block_height = efield_obj%gate_settings%block_height
+         END IF 
       END IF 
       !
   END SUBROUTINE readschema_efield  
@@ -2016,8 +2114,9 @@ MODULE pw_restart_new
       USE constants,            ONLY : e2
       USE funct,                ONLY : set_exx_fraction, set_screening_parameter, &
                                       set_gau_parameter, enforce_input_dft, start_exx
-      USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
-                                       exxdiv_treatment, yukawa, ecutvcut, ecutfock
+      USE exx_base,             ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
+                                       exxdiv_treatment, yukawa, ecutvcut
+      USE exx,                  ONLY : ecutfock
       ! 
       USE  qes_types_module,   ONLY : hybrid_type 
       IMPLICIT NONE
@@ -2052,7 +2151,7 @@ MODULE pw_restart_new
       !------------------------------------------------------------------------
       IMPLICIT NONE 
       ! 
-      INTEGER                                            :: ierr, iotk_err  
+      INTEGER                                          :: ierr
       TYPE( output_type ),OPTIONAL,      INTENT(OUT)   :: restart_output
       TYPE(input_type),OPTIONAL,         INTENT(OUT)   :: restart_input
       TYPE(parallel_info_type),OPTIONAL, INTENT(OUT)   :: restart_parallel_info
@@ -2074,7 +2173,7 @@ MODULE pw_restart_new
       CONTINUE 
    END SUBROUTINE read_collected_to_evc
    !
-   SUBROUTINE init_vars_from_schema( what, ierr, output_obj, input_obj, par_info, gen_info )
+   SUBROUTINE init_vars_from_schema( what, ierr, output_obj, par_info, gen_info, input_obj )
       !------------------------------------------------------------------------
       !
       USE qes_types_module,     ONLY : input_type, output_type, &
@@ -2084,10 +2183,10 @@ MODULE pw_restart_new
 !      !
       CHARACTER(LEN=*), INTENT(IN)           :: what
       TYPE ( output_type), INTENT(IN)        :: output_obj
-      TYPE ( input_type ), INTENT(IN)        :: input_obj
       TYPE ( parallel_info_type), INTENT(IN) :: par_info
       TYPE ( general_info_type ), INTENT(IN) :: gen_info
       INTEGER,INTENT (OUT)                   :: ierr 
+      TYPE ( input_type ), OPTIONAL, INTENT(IN)        :: input_obj
       !
       CONTINUE
     END SUBROUTINE init_vars_from_schema

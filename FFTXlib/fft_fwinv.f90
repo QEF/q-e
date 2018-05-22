@@ -6,26 +6,24 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#define NEW_FFT_INTERFACE
-#if defined( NEW_FFT_INTERFACE )
 !=---------------------------------------------------------------------------=!
-SUBROUTINE invfft_y( grid_type, f, dfft, howmany )
+SUBROUTINE invfft_y( fft_kind, f, dfft, howmany )
   !! Compute G-space to R-space for a specific grid type
   !! 
-  !! **grid_type = 'Rho'** : 
+  !! **fft_kind = 'Rho'** : 
   !!   inverse fourier transform of potentials and charge density f
   !!   On output, f is overwritten
   !! 
-  !! **grid_type = 'Wave'** :
+  !! **fft_kind = 'Wave'** :
   !!   inverse fourier transform of  wave functions f
   !!   On output, f is overwritten
   !!
-  !! **grid_type = 'tgWave'** :
+  !! **fft_kind = 'tgWave'** :
   !!   inverse fourier transform of  wave functions f with task group
   !!   On output, f is overwritten
   !!
-  !! **dfft = FFT descriptor**, IMPORTANT NOTICE: grid is specified only by dfft.
-  !!   No check is performed on the correspondence between dfft and grid_type.
+  !! **dfft = FFT grid descriptor**, IMPORTANT NOTICE: grid is specified only by dfft.
+  !!   No check is performed on the correspondence between dfft and fft_kind. 
   !!   from all other cases
   
   USE fft_scalar,    ONLY: cfft3d, cfft3ds
@@ -37,7 +35,7 @@ SUBROUTINE invfft_y( grid_type, f, dfft, howmany )
   IMPLICIT NONE
 
   TYPE(fft_type_descriptor), INTENT(IN) :: dfft
-  CHARACTER(LEN=*), INTENT(IN) :: grid_type
+  CHARACTER(LEN=*), INTENT(IN) :: fft_kind
   COMPLEX(DP) :: f(:)
   INTEGER, OPTIONAL, INTENT(IN) :: howmany
   INTEGER :: howmany_ = 1
@@ -47,14 +45,14 @@ SUBROUTINE invfft_y( grid_type, f, dfft, howmany )
      howmany_ = howmany
   END IF
   !
-  IF( grid_type == 'Rho' ) THEN
+  IF( fft_kind == 'Rho' ) THEN
      clock_label = dfft%rho_clock_label
-  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'tgWave' ) THEN
+  ELSE IF( fft_kind == 'Wave' .OR. fft_kind == 'tgWave' ) THEN
      clock_label = dfft%wave_clock_label
   ELSE
-     CALL fftx_error__( ' invfft ', ' unknown grid: '//grid_type , 1 )
+     CALL fftx_error__( ' invfft ', ' unknown fft kind : '//fft_kind , 1 )
   END IF
-  IF (clock_label == ' ') CALL fftx_error__( ' invfft ', ' uninitialized fft type : '//grid_type , 1 )
+  IF (clock_label == ' ') CALL fftx_error__( ' invfft ', ' uninitialized fft kind : '//fft_kind , 1 )
 
   CALL start_clock(clock_label)
 
@@ -64,17 +62,17 @@ SUBROUTINE invfft_y( grid_type, f, dfft, howmany )
         CALL fftx_error__( ' invfft ', ' howmany not yet implemented for parallel driver ', 1 )
      END IF
      
-     IF( grid_type == 'Rho' ) THEN
+     IF( fft_kind == 'Rho' ) THEN
         CALL tg_cft3s( f, dfft, 1 )
-     ELSE IF( grid_type == 'Wave' ) THEN
+     ELSE IF( fft_kind == 'Wave' ) THEN
         CALL tg_cft3s( f, dfft, 2 )
-     ELSE IF( grid_type == 'tgWave' ) THEN
+     ELSE IF( fft_kind == 'tgWave' ) THEN
         CALL tg_cft3s( f, dfft, 3 )
      END IF
 
   ELSE
 
-     IF( grid_type == 'Rho' ) THEN
+     IF( fft_kind == 'Rho' ) THEN
         CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                         dfft%nr1x, dfft%nr2x, dfft%nr3x, howmany_ , 1)
      ELSE 
@@ -93,18 +91,18 @@ END SUBROUTINE invfft_y
 !
 !=---------------------------------------------------------------------------=!
 !
-SUBROUTINE fwfft_y( grid_type, f, dfft, howmany )
+SUBROUTINE fwfft_y( fft_kind, f, dfft, howmany )
   !! Compute R-space to G-space for a specific grid type
   !! 
-  !! **grid_type = 'Rho'**
+  !! **fft_kind = 'Rho'**
   !!   forward fourier transform of potentials and charge density f
   !!   On output, f is overwritten
   !! 
-  !! **grid_type = 'Wave'**
+  !! **fft_kind = 'Wave'**
   !!   forward fourier transform of  wave functions f
   !!   On output, f is overwritten
   !!
-  !! **grid_type = 'tgWave'**
+  !! **fft_kind = 'tgWave'**
   !!   forward fourier transform of wave functions f with task group
   !!   On output, f is overwritten
   !! 
@@ -117,7 +115,7 @@ SUBROUTINE fwfft_y( grid_type, f, dfft, howmany )
   IMPLICIT NONE
 
   TYPE(fft_type_descriptor), INTENT(IN) :: dfft
-  CHARACTER(LEN=*), INTENT(IN) :: grid_type
+  CHARACTER(LEN=*), INTENT(IN) :: fft_kind
   COMPLEX(DP) :: f(:)
   INTEGER, OPTIONAL, INTENT(IN) :: howmany
   INTEGER :: howmany_ = 1
@@ -127,14 +125,14 @@ SUBROUTINE fwfft_y( grid_type, f, dfft, howmany )
      howmany_ = howmany
   END IF
 
-  IF( grid_type == 'Rho' ) THEN
+  IF( fft_kind == 'Rho' ) THEN
      clock_label = dfft%rho_clock_label
-  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'tgWave' ) THEN
+  ELSE IF( fft_kind == 'Wave' .OR. fft_kind == 'tgWave' ) THEN
      clock_label = dfft%wave_clock_label
   ELSE
-     CALL fftx_error__( ' fwfft ', ' unknown grid: '//grid_type , 1 )
+     CALL fftx_error__( ' fwfft ', ' unknown fft kind: '//fft_kind , 1 )
   END IF
-  IF (clock_label == ' ') CALL fftx_error__( ' fwfft ', ' uninitialized fft type : '//grid_type , 1 )
+  IF (clock_label == ' ') CALL fftx_error__( ' fwfft ', ' uninitialized fft kind : '//fft_kind , 1 )
 
   CALL start_clock(clock_label)
 
@@ -144,17 +142,17 @@ SUBROUTINE fwfft_y( grid_type, f, dfft, howmany )
         CALL fftx_error__( ' fwfft ', ' howmany not yet implemented for parallel driver ', 1 )
      END IF
      
-     IF( grid_type == 'Rho' ) THEN
+     IF( fft_kind == 'Rho' ) THEN
         CALL tg_cft3s(f,dfft,-1)
-     ELSE IF( grid_type == 'Wave' ) THEN
+     ELSE IF( fft_kind == 'Wave' ) THEN
         CALL tg_cft3s(f,dfft,-2 )
-     ELSE IF( grid_type == 'tgWave' ) THEN
+     ELSE IF( fft_kind == 'tgWave' ) THEN
         CALL tg_cft3s(f,dfft,-3 )
      END IF
 
   ELSE
 
-     IF( grid_type == 'Rho' ) THEN
+     IF( fft_kind == 'Rho' ) THEN
         CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
                         dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1)
      ELSE 
@@ -172,229 +170,6 @@ SUBROUTINE fwfft_y( grid_type, f, dfft, howmany )
 END SUBROUTINE fwfft_y
 !=---------------------------------------------------------------------------=!
 
-#else
-
-!=---------------------------------------------------------------------------=!
-SUBROUTINE invfft_x( grid_type, f, dfft, howmany )
-  !! Compute G-space to R-space for a specific grid type
-  !! 
-  !! **grid_type = 'Dense'** : 
-  !!   inverse fourier transform of potentials and charge density f
-  !!   on the dense grid . On output, f is overwritten
-  !! 
-  !! **grid_type = 'Smooth'** :
-  !!   inverse fourier transform of  potentials and charge density f
-  !!   on the smooth grid . On output, f is overwritten
-  !! 
-  !! **grid_type = 'Wave'** :
-  !!   inverse fourier transform of  wave functions f
-  !!   on the smooth grid . On output, f is overwritten
-  !!
-  !! **grid_type = 'tgWave'** :
-  !!   inverse fourier transform of  wave functions f with task group
-  !!   on the smooth grid . On output, f is overwritten
-  !!
-  !! **grid_type = 'Custom'** : 
-  !!   inverse fourier transform of potentials and charge density f
-  !!   on a custom grid. On output, f is overwritten
-  !! 
-  !! **grid_type = 'CustomWave'** :
-  !!   inverse fourier transform of  wave functions f
-  !!   on a custom grid. On output, f is overwritten
-  !! 
-  !! **dfft = FFT descriptor**, IMPORTANT NOTICE: grid is specified only by dfft.
-  !!   No check is performed on the correspondence between dfft and grid_type.
-  !!   grid_type is now used only to distinguish cases 'Wave' / 'CustomWave' 
-  !!   from all other cases
-  
-  USE fft_scalar,    ONLY: cfft3d, cfft3ds
-  USE fft_smallbox,  ONLY: cft_b, cft_b_omp
-  USE fft_parallel,  ONLY: tg_cft3s
-  USE fft_types,     ONLY: fft_type_descriptor
-  USE fft_param,     ONLY: DP
-
-  IMPLICIT NONE
-
-  TYPE(fft_type_descriptor), INTENT(IN) :: dfft
-  CHARACTER(LEN=*), INTENT(IN) :: grid_type
-  COMPLEX(DP) :: f(:)
-  INTEGER, OPTIONAL, INTENT(IN) :: howmany
-  INTEGER :: howmany_ = 1
-
-  IF(PRESENT(howmany) ) THEN
-     howmany_ = howmany
-  END IF
-  !
-  IF( grid_type == 'Dense' ) THEN
-     CALL start_clock( 'fft' )
-  ELSE IF( grid_type == 'Smooth' ) THEN
-     CALL start_clock( 'ffts' )
-  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'tgWave' ) THEN
-     CALL start_clock('fftw')
-  ELSE IF( grid_type == 'Custom' ) THEN
-     CALL start_clock('fftc')
-  ELSE IF( grid_type == 'CustomWave' ) THEN
-     CALL start_clock('fftcw')
-  ELSE 
-     CALL fftx_error__( ' invfft ', ' unknown grid: '//grid_type , 1 )
-  END IF
-
-  IF( dfft%lpara ) THEN
-
-     IF( howmany_ /= 1 ) THEN
-        CALL fftx_error__( ' invfft ', ' howmany not yet implemented for parallel driver ', 1 )
-     END IF
-     
-     IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
-          grid_type == 'Custom' ) THEN
-        CALL tg_cft3s( f, dfft, 1 )
-     ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
-        CALL tg_cft3s( f, dfft, 2 )
-     ELSE IF( grid_type == 'tgWave' ) THEN
-        CALL tg_cft3s( f, dfft, 3 )
-     END IF
-
-  ELSE
-
-     IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
-         grid_type == 'Custom' ) THEN
-        CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                        dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1)
-     ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' .OR. grid_type == 'tgWave' ) THEN
-        CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                         dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , 1, &
-                         dfft%isind, dfft%iplw )
-     END IF
-
-  END IF
-
-  IF( grid_type == 'Dense' ) THEN
-     CALL stop_clock( 'fft' )
-  ELSE IF( grid_type == 'Smooth' ) THEN
-     CALL stop_clock( 'ffts' )
-  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'tgWave' ) THEN
-     CALL stop_clock('fftw')
-  ELSE IF( grid_type == 'Custom' ) THEN
-     CALL stop_clock('fftc')
-  ELSE IF( grid_type == 'CustomWave' ) THEN
-     CALL stop_clock('fftcw')
-  END IF
-
-  RETURN
-
-END SUBROUTINE invfft_x
-!
-!=---------------------------------------------------------------------------=!
-SUBROUTINE fwfft_x( grid_type, f, dfft, howmany )
-  !! Compute R-space to G-space for a specific grid type
-  !! 
-  !! **grid_type = 'Dense'**
-  !!   forward fourier transform of potentials and charge density f
-  !!   on the dense grid . On output, f is overwritten
-  !! 
-  !! **grid_type = 'Smooth'**
-  !!   forward fourier transform of potentials and charge density f
-  !!   on the smooth grid . On output, f is overwritten
-  !! 
-  !! **grid_type = 'Wave'**
-  !!   forward fourier transform of  wave functions f
-  !!   on the smooth grid . On output, f is overwritten
-  !!
-  !! **grid_type = 'tgWave'**
-  !!   forward fourier transform of wave functions f with task group
-  !!   on the smooth grid . On output, f is overwritten
-  !! 
-  !! **grid_type = 'Custom'**
-  !!   forward fourier transform of potentials and charge density f
-  !!   on a custom grid . On output, f is overwritten
-  !! 
-  !! **grid_type = 'CustomWave'**
-  !!   forward fourier transform of  wave functions
-  !!   on a custom grid . On output, f is overwritten
-  !! 
-  !! **dfft = FFT descriptor**, IMPORTANT NOTICE: grid is specified only by dfft.
-  !!   No check is performed on the correspondence between dfft and grid_type.
-  !!   grid_type is now used only to distinguish cases 'Wave' / 'CustomWave' 
-  !!   from all other cases
-  
-  USE fft_scalar,    ONLY: cfft3d, cfft3ds
-  USE fft_parallel,  ONLY: tg_cft3s
-  USE fft_types,     ONLY: fft_type_descriptor
-  USE fft_param,     ONLY: DP
-
-  IMPLICIT NONE
-
-  TYPE(fft_type_descriptor), INTENT(IN) :: dfft
-  CHARACTER(LEN=*), INTENT(IN) :: grid_type
-  COMPLEX(DP) :: f(:)
-  INTEGER, OPTIONAL, INTENT(IN) :: howmany
-  INTEGER :: howmany_ = 1
-
-  IF(PRESENT(howmany) ) THEN
-     howmany_ = howmany
-  END IF
-
-  IF( grid_type == 'Dense' ) THEN
-     CALL start_clock( 'fft' )
-  ELSE IF( grid_type == 'Smooth' ) THEN
-     CALL start_clock( 'ffts' )
-  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'tgWave' ) THEN
-     CALL start_clock( 'fftw' )
-  ELSE IF( grid_type == 'Custom' ) THEN
-     CALL start_clock('fftc')
-  ELSE IF( grid_type == 'CustomWave' ) THEN
-     CALL start_clock('fftcw')
-  ELSE
-     CALL fftx_error__( ' fwfft ', ' unknown grid: '//grid_type , 1 )
-  END IF
-
-  IF( dfft%lpara ) THEN
-
-     IF( howmany_ /= 1 ) THEN
-        CALL fftx_error__( ' fwfft ', ' howmany not yet implemented for parallel driver ', 1 )
-     END IF
-     
-     IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
-         grid_type == 'Custom' ) THEN
-        CALL tg_cft3s(f,dfft,-1)
-     ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' ) THEN
-        CALL tg_cft3s(f,dfft,-2 )
-     ELSE IF( grid_type == 'tgWave' ) THEN
-        CALL tg_cft3s(f,dfft,-3 )
-     END IF
-
-  ELSE
-
-     IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
-         grid_type == 'Custom' ) THEN
-        CALL cfft3d( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                        dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1)
-     ELSE IF( grid_type == 'Wave' .OR. grid_type == 'CustomWave' .OR. grid_type == 'tgWave' ) THEN
-        CALL cfft3ds( f, dfft%nr1, dfft%nr2, dfft%nr3, &
-                         dfft%nr1x,dfft%nr2x,dfft%nr3x, howmany_ , -1, &
-                         dfft%isind, dfft%iplw )
-     END IF
-
-  END IF
-
-  IF( grid_type == 'Dense' ) THEN
-     CALL stop_clock( 'fft' )
-  ELSE IF( grid_type == 'Smooth' ) THEN
-     CALL stop_clock( 'ffts' )
-  ELSE IF( grid_type == 'Wave' .OR. grid_type == 'tgWave' ) THEN
-     CALL stop_clock( 'fftw' )
-  ELSE IF( grid_type == 'Custom' ) THEN
-     CALL stop_clock('fftc')
-  ELSE IF( grid_type == 'CustomWave' ) THEN
-     CALL stop_clock('fftcw')
-  END IF
-  
-  RETURN
-  !
-END SUBROUTINE fwfft_x
-
-#endif
-
 !
 !=---------------------------------------------------------------------------=!
 SUBROUTINE invfft_b( f, dfft, ia )
@@ -409,7 +184,7 @@ SUBROUTINE invfft_b( f, dfft, ia )
   !! the y-sections that have components on the dense grid for each processor. 
   !! Note that the final array will no longer be the same on all processors.
   !! 
-  !! **grid_type** = 'Box' (only allowed value!)
+  !! **fft_kind** = 'Box' (only allowed value!)
   !! 
   !! **dfft** = fft descriptor for the box grid
   !! 

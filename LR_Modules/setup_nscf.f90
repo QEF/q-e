@@ -57,6 +57,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   REAL (DP), ALLOCATABLE :: rtau (:,:,:)
   LOGICAL  :: magnetic_sym, sym(48)
   LOGICAL  :: skip_equivalence
+  LOGICAL, EXTERNAL  :: check_para_diag
   !
   IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
   !
@@ -72,11 +73,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   max_cg_iter=20
   natomwfc = n_atom_wfc( nat, ityp, noncolin )
   !
-#if defined(__MPI)
-  IF ( use_para_diag )  CALL check_para_diag( nbnd )
-#else
-  use_para_diag = .FALSE.
-#endif
+  use_para_diag = check_para_diag( nbnd )
   !
   ! ... Symmetry and k-point section
   !

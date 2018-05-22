@@ -15,11 +15,13 @@ MODULE atom
   !
   SAVE
   !
-  type(radial_grid_type), allocatable, target :: &
-       rgrid(:)                ! the information on atomic radial grids.
-                               ! NB: some of the subsequent data are therefore redundant 
-                               ! and will be eliminated in due course asap
-  INTEGER, ALLOCATABLE :: &
-       msh(:)                  ! the point at rcut
+  ! the information on atomic radial grids
+  type(radial_grid_type), allocatable, target :: rgrid(:)
+  !
+  ! last grid point with r < rcut = 10 a.u. (currently set in read_pseudo)
+  ! used to perform integration of atomic functions going to 0 at large r
+  ! (e.g. Vloc(r)-Ze^2/r), cutting off numerical noise
+  ! FIXME: should be included in "rgrid"
+  INTEGER, ALLOCATABLE :: msh(:) 
   !
 END MODULE atom

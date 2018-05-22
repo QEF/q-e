@@ -202,8 +202,10 @@ end program special_points
 subroutine check(n,k,kw,ieq,s,nrot,nmax)
   !-----------------------------------------------------------------------
   !
-  integer k(3,n),kw(n), s(3,3,nrot),kr(3),ieq(n),nmax(3)
-  logical flag
+  integer :: n, nrot
+  integer :: k(3,n),kw(n), s(3,3,nrot),kr(3),ieq(n),nmax(3)
+  logical :: flag
+  integer :: irot, j, naux, np
   !
   irot=1
   flag=.true.

@@ -56,22 +56,22 @@ CONTAINS
     !
     !     here a few local variables
     !
-    REAL(DP) ::  t (3), tt
-    INTEGER :: ngm_save, n1, n2, n3, ngm_offset, ngm_max
+    REAL(DP) :: tx(3), ty(3), t(3)
+    REAL(DP), ALLOCATABLE :: tt(:)
+    INTEGER :: ngm_save, n1, n2, n3, ngm_offset, ngm_max, ngm_local
     !
     REAL(DP), ALLOCATABLE :: g2sort_g(:)
-    ! array containing all g vectors, on all processors: replicated data
-    ! when no_global_sort is present (and it is true) only g vectors for
-    ! the current processor are stored
-    INTEGER, ALLOCATABLE :: mill_g(:,:), mill_unsorted(:,:)
+    ! array containing only g vectors for the current processor
+    INTEGER, ALLOCATABLE :: mill_unsorted(:,:)
     ! array containing all g vectors generators, on all processors
     ! (replicated data). When no_global_sort is present and .true.,
     ! only g-vectors for the current processor are stored
-    INTEGER, ALLOCATABLE :: igsrt(:)
+    INTEGER, ALLOCATABLE :: igsrt(:), g2l(:)
     !
     INTEGER :: ni, nj, nk, i, j, k, ipol, ng, igl, indsw
+    INTEGER :: istart, jstart, kstart
     INTEGER :: mype, npe
-    LOGICAL :: global_sort
+    LOGICAL :: global_sort, is_local
     INTEGER, ALLOCATABLE :: ngmpe(:)
     !
     global_sort = .TRUE.
@@ -90,6 +90,7 @@ CONTAINS
     ngm_save  = ngm
     !
     ngm = 0
+    ngm_local = 0
     !
     !    set the total number of fft mesh points and and initial value of gg
     !    The choice of gcutm is due to the fact that we have to order the
@@ -99,11 +100,16 @@ CONTAINS
     !
     !    and computes all the g vectors inside a sphere
     !
-    ALLOCATE( mill_g( 3, ngm_max ),mill_unsorted( 3, ngm_max ) )
+    ALLOCATE( mill_unsorted( 3, ngm_save ) )
     ALLOCATE( igsrt( ngm_max ) )
+    ALLOCATE( g2l( ngm_max ) )
     ALLOCATE( g2sort_g( ngm_max ) )
     !
     g2sort_g(:) = 1.0d20
+    !
+    ! allocate temporal array
+    !
+    ALLOCATE( tt( dfftp%nr3 ) )
     !
     ! max miller indices (same convention as in module stick_set)
     !
@@ -111,42 +117,81 @@ CONTAINS
     nj = (dfftp%nr2-1)/2
     nk = (dfftp%nr3-1)/2
     !
-    iloop: DO i = -ni, ni
+    ! gamma-only: exclude space with x < 0
+    !
+    IF ( gamma_only ) THEN
+       istart = 0
+    ELSE
+       istart = -ni
+    ENDIF
+    !
+    iloop: DO i = istart, ni
        !
-       ! gamma-only: exclude space with x < 0
+       ! gamma-only: exclude plane with x = 0, y < 0
        !
-       IF ( gamma_only .and. i < 0) CYCLE iloop
-       jloop: DO j = -nj, nj
+       IF ( gamma_only .and. i == 0 ) THEN
+          jstart = 0
+       ELSE
+          jstart = -nj
+       ENDIF
+       !
+       tx(1:3) = i * bg(1:3,1)
+       !
+       jloop: DO j = jstart, nj
           !
-          ! gamma-only: exclude plane with x = 0, y < 0
-          !
-          IF ( gamma_only .and. i == 0 .and. j < 0) CYCLE jloop
-          
-          IF( .NOT. global_sort ) THEN
-             IF ( fft_stick_index( dfftp, i, j ) == 0) CYCLE jloop
+          IF ( .NOT. global_sort ) THEN
+             IF ( fft_stick_index( dfftp, i, j ) == 0 ) CYCLE jloop
+             is_local = .TRUE.
+          ELSE
+             IF ( dfftp%lpara .AND. fft_stick_index( dfftp, i, j ) == 0) THEN
+                is_local = .FALSE.
+             ELSE
+                is_local = .TRUE.
+             END IF
           END IF
-          
-          kloop: DO k = -nk, nk
+          !
+          ! gamma-only: exclude line with x = 0, y = 0, z < 0
+          !
+          IF ( gamma_only .and. i == 0 .and. j == 0 ) THEN
+             kstart = 0
+          ELSE
+             kstart = -nk
+          ENDIF
+          !
+          ty(1:3) = tx(1:3) + j * bg(1:3,2)
+          !
+          !  compute all the norm square
+          !
+          DO k = kstart, nk
              !
-             ! gamma-only: exclude line with x = 0, y = 0, z < 0
-             !
-             IF ( gamma_only .and. i == 0 .and. j == 0 .and. k < 0) CYCLE kloop
-             t(:) = i * bg (:,1) + j * bg (:,2) + k * bg (:,3)
-             tt = t(1)**2+t(2)**2+t(3)**2
-             IF (tt <= gcutm) THEN
+             t(1) = ty(1) + k * bg(1,3)
+             t(2) = ty(2) + k * bg(2,3)
+             t(3) = ty(3) + k * bg(3,3)
+             tt(k-kstart+1) = t(1)**2 + t(2)**2 + t(3)**2
+          ENDDO
+          !
+          !  save all the norm square within cutoff
+          !
+          DO k = kstart, nk
+             IF (tt(k-kstart+1) <= gcutm) THEN
                 ngm = ngm + 1
                 IF (ngm > ngm_max) CALL errore ('ggen 1', 'too many g-vectors', ngm)
-                mill_unsorted( :, ngm ) = (/ i,j,k /)
-                IF ( tt > eps8 ) THEN
-                   g2sort_g(ngm) = tt
+                IF ( tt(k-kstart+1) > eps8 ) THEN
+                   g2sort_g(ngm) = tt(k-kstart+1)
                 ELSE
                    g2sort_g(ngm) = 0.d0
                 ENDIF
+                IF (is_local) THEN
+                  ngm_local = ngm_local + 1
+                  mill_unsorted( :, ngm_local ) = (/ i,j,k /)
+                  g2l(ngm) = ngm_local
+                ELSE
+                  g2l(ngm) = 0
+                ENDIF
              ENDIF
-          ENDDO kloop
+          ENDDO
        ENDDO jloop
     ENDDO iloop
-    
     IF (ngm  /= ngm_max) &
          CALL errore ('ggen', 'g-vectors missing !', abs(ngm - ngm_max))
     !
@@ -156,10 +201,7 @@ CONTAINS
     ELSE
        CALL hpsort_eps( ngm_g, g2sort_g, igsrt, eps8 )
     END IF
-    mill_g(1,:) = mill_unsorted(1,igsrt(:))
-    mill_g(2,:) = mill_unsorted(2,igsrt(:))
-    mill_g(3,:) = mill_unsorted(3,igsrt(:))
-    DEALLOCATE( g2sort_g, igsrt, mill_unsorted )
+    DEALLOCATE( g2sort_g, tt )
     
     IF( .NOT. global_sort ) THEN
        !
@@ -183,33 +225,31 @@ CONTAINS
     ngm = 0
     !
     ngloop: DO ng = 1, ngm_max
-       
-       i = mill_g(1, ng)
-       j = mill_g(2, ng)
-       k = mill_g(3, ng)
-       
-       IF( dfftp%lpara .AND. global_sort ) THEN
-          IF ( fft_stick_index( dfftp, i, j ) == 0) CYCLE ngloop
-       END IF
-       
-       ngm = ngm + 1
-       
-       !  Here map local and global g index !!! N.B: :
-       !  the global G vectors arrangement depends on the number of processors
        !
-       IF( .NOT. global_sort ) THEN
-          ig_l2g( ngm ) = ng + ngm_offset
-       ELSE
-          ig_l2g( ngm ) = ng
-       END IF
+       IF (g2l(igsrt(ng))>0) THEN
+          ! fetch the indices
+          i = mill_unsorted(1, g2l(igsrt(ng)))
+          j = mill_unsorted(2, g2l(igsrt(ng)))
+          k = mill_unsorted(3, g2l(igsrt(ng)))
+          !
+          ngm = ngm + 1
+          !
+          !  Here map local and global g index !!! N.B: :
+          !  the global G vectors arrangement depends on the number of processors
+          !
+          IF( .NOT. global_sort ) THEN
+             ig_l2g( ngm ) = ng + ngm_offset
+          ELSE
+             ig_l2g( ngm ) = ng
+          END IF
        
-       g (1:3, ngm) = i * bg (:, 1) + j * bg (:, 2) + k * bg (:, 3)
-       gg (ngm) = sum(g (1:3, ngm)**2)
-       
+          g(1:3, ngm) = i * bg (:, 1) + j * bg (:, 2) + k * bg (:, 3)
+          gg(ngm) = sum(g(1:3, ngm)**2)
+       ENDIF
     ENDDO ngloop
-    
-    DEALLOCATE( mill_g )
-    
+
+    DEALLOCATE( igsrt, g2l )
+
     IF (ngm /= ngm_save) &
          CALL errore ('ggen', 'g-vectors (ngm) missing !', abs(ngm - ngm_save))
     !
@@ -252,7 +292,7 @@ CONTAINS
     ! Local number of G-vectors in subgrid
     INTEGER, INTENT(OUT):: ngms
     ! Optionally: G-vectors and modules
-    REAL(DP), INTENT(OUT), POINTER, OPTIONAL:: gs(:,:), ggs(:)
+    REAL(DP), INTENT(INOUT), POINTER, OPTIONAL:: gs(:,:), ggs(:)
     !
     INTEGER :: i, ng, ngm
     !

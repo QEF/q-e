@@ -311,6 +311,8 @@ MODULE ld1inc
   CHARACTER(len=256) ::      & !
        file_pseudo,          & ! input file containing the pseudopotential
        file_pseudopw           ! output file where the pseudopot is written
+  LOGICAL            ::      &
+       use_xsd = .FALSE.       ! if .true. follow xsd schema else use upf-v2.1 format  
   CHARACTER(len=256) ::      & ! output filenames read from input, containing:
        file_charge,          & ! all-electron total charge only
        file_chi,             & ! chi functions

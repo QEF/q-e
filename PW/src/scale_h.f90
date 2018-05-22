@@ -23,7 +23,8 @@ subroutine scale_h
   USE us,         ONLY : nqxq, qrad, tab, tab_at, dq
   USE control_flags, ONLY : iverbosity
   USE start_k,    ONLY : nks_start, xk_start, nk1,nk2,nk3
-  USE exx,        ONLY : exx_grid_reinit
+  USE exx_base,   ONLY : exx_grid_init, exx_mp_init
+  USE exx,        ONLY : exx_gvec_reinit
   USE funct,      ONLY : dft_is_hybrid
   USE mp,         ONLY : mp_max
   USE mp_bands,   ONLY : intra_bgrp_comm
@@ -40,7 +41,7 @@ subroutine scale_h
   !
   call cryst_to_cart (nkstot, xk, at_old, - 1)
   call cryst_to_cart (nkstot, xk, bg, + 1)
-  IF(nks_start>0)THEN
+  IF (nks_start>0) THEN
     call cryst_to_cart (nks_start, xk_start, at_old, - 1)
     call cryst_to_cart (nks_start, xk_start, bg, + 1)
   ENDIF
@@ -88,7 +89,12 @@ subroutine scale_h
   !
   ! for hybrid functionals
   !
-  IF ( dft_is_hybrid() ) CALL exx_grid_reinit( at_old )
+  IF ( dft_is_hybrid() ) THEN
+     CALL exx_grid_init( reinit=.true. )
+     ! not sure next line is needed
+     CALL exx_mp_init( )
+     CALL exx_gvec_reinit( at_old )
+  END IF
   !
   return
 end subroutine scale_h

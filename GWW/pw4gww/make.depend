@@ -275,6 +275,7 @@ produce_wannier_gamma.o : ../../Modules/wannier_gw.o
 produce_wannier_gamma.o : ../../Modules/wavefunctions.o
 produce_wannier_gamma.o : ../../PW/src/extfield.o
 produce_wannier_gamma.o : ../../PW/src/exx.o
+produce_wannier_gamma.o : ../../PW/src/exx_base.o
 produce_wannier_gamma.o : ../../PW/src/ldaU.o
 produce_wannier_gamma.o : ../../PW/src/pwcom.o
 produce_wannier_gamma.o : ../../PW/src/scf_mod.o
@@ -385,7 +386,7 @@ v_basis.o : ../../Modules/kind.o
 v_basis.o : ../../Modules/mp_world.o
 v_basis.o : ../../Modules/recvec.o
 v_basis.o : ../../Modules/wannier_gw.o
-v_basis.o : ../../PW/src/exx.o
+v_basis.o : ../../PW/src/exx_base.o
 v_basis.o : ../../PW/src/pwcom.o
 v_basis.o : ../../UtilXlib/mp.o
 wannier.o : ../../Modules/cell_base.o

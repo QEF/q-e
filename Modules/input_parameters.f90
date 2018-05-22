@@ -441,7 +441,7 @@ MODULE input_parameters
         REAL(DP) :: conv_thr_multi = 0.1_DP
         REAL(DP) :: ecutfock = -1.d0
           ! variables used in Lin Lin's ACE and SCDM
-        REAL(DP) :: localization_thr = 0.0_dp, scdmden=0.10d0, scdmgrd=0.20d0
+        REAL(DP) :: localization_thr = 0.0_dp, scdmden=1.0d0, scdmgrd=1.0d0
         INTEGER  :: n_proj  = 0
         LOGICAL  :: scdm=.FALSE.
         LOGICAL  :: ace=.TRUE.
@@ -517,13 +517,9 @@ MODULE input_parameters
                        london_rvdw( nsx ) = -1.0_DP
 
           ! Grimme-D3 (DFT-D3) dispersion correction.
-          ! Values taken for PBE functional,
-          ! as found in original code of Grimme.
-        REAL ( DP ) :: dftd3_s6  =  1.0_DP ,&
-                       dftd3_rs6 =  1.217_DP ,&
-                       dftd3_s18 =  0.722_DP ,&
-                       dftd3_rs18 = 1.0_DP ,&
-                       dftd3_alp =  14.0_DP
+          ! version=3 is Grimme-D3, version=2 is Grimme-D2,
+          ! version=3 dftd3_threebody = .false. similar to grimme d2 but with
+          ! the two_body parameters of d3
         integer  ::    dftd3_version = 3
         logical ::     dftd3_threebody = .true.
 
@@ -639,8 +635,7 @@ MODULE input_parameters
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
              tot_charge, tot_magnetization, spline_ps, one_atom_occupations,  &
              vdw_corr, london, london_s6, london_rcut, london_c6, london_rvdw,&
-             dftd3_s6, dftd3_rs6, dftd3_s18, dftd3_rs18, dftd3_alp,           &
-             dftd3_version,                                                   &
+             dftd3_version, dftd3_threebody,                                  &
              ts_vdw, ts_vdw_isolated, ts_vdw_econv_thr,                       &
              xdm, xdm_a1, xdm_a2,                                             &
              step_pen, A_pen, sigma_pen, alpha_pen, no_t_rev,                 &

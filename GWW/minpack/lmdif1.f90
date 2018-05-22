@@ -103,7 +103,7 @@
 !     burton s. garbow, kenneth e. hillstrom, jorge j. more
 !
 !     **********
-      integer maxfev,mode,mp5n,nfev,nprint,n_max_iter
+      integer maxfev,mode,mp5n,nfev,nprint,n_max_iter,iflga
       double precision epsfcn,factor,ftol,gtol,xtol,zero
       info = 0
 !

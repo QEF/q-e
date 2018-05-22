@@ -27,13 +27,13 @@ subroutine ld1_writeout
   use funct, only : get_dft_name
   use paw_type, only : deallocate_pseudo_paw
   use open_close_input_file, only: close_input_file
-
+  use FoX_wxml, only: xml_Openfile, xml_Close, xmlf_t
   implicit none
 
   integer :: &
        ios,   &  ! I/O control
        iunps     ! the unit with the pseudopotential
-
+  type(xmlf_t)  :: xml_desc
   logical, external :: matches
   logical :: oldformat
   character (len=20) :: dft_name
@@ -53,11 +53,15 @@ subroutine ld1_writeout
               .not. matches('.upf',file_pseudopw)
 
   iunps=28
-  if (ionode) &
-     open(unit=iunps, file=trim(file_pseudopw), status='unknown',  &
-          form='formatted', err=50, iostat=ios)
+  if (ionode)  then 
+      if ( oldformat ) then 
+         open(unit=iunps, file=trim(file_pseudopw), status='unknown',  form='formatted', err=50, iostat=ios)
+      else 
+         ios = 0 
+      end if
+   end if
 50  call mp_bcast(ios, ionode_id, world_comm)
-  call errore('ld1_writeout','opening file_pseudopw',abs(ios))
+  call errore('ld1_writeout','opening '//trim(file_pseudopw) ,abs(ios))
 
   if (ionode) then
      if (oldformat) then
@@ -87,15 +91,14 @@ subroutine ld1_writeout
            call write_rrkj ( iunps )
         end if
         !
+        close (iunps)
      else
         !
-        call export_upf(iunps, qestdin)
+        call export_upf(TRIM(file_pseudopw), qestdin)
         !
         if(lpaw) call deallocate_pseudo_paw( pawsetup )
         !
      endif
-     !
-     close(iunps)
      ! close input data unit if not done previously
      ios = close_input_file ( )
   endif

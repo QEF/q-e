@@ -12,7 +12,9 @@
   SUBROUTINE epw_summary
   !-----------------------------------------------------------------------
   !!
-  !!    Output symmetry informations
+  !!    Output symmetry informations 
+  !! 
+  !!    27/03/2018 - Update with recent PHonon/PH/phq_summary.f90 routine - S. Ponce
   !!
   USE ions_base,     ONLY : nat, ityp, atm, tau, ntyp => nsp, amass
   USE io_global,     ONLY : stdout
@@ -21,11 +23,13 @@
   USE gvect,         ONLY : gcutm, ngm
   USE gvecs,         ONLY : dual, doublegrid, gcutms, ngms
   USE gvecw,         ONLY : ecutwfc
-  USE symm_base,     ONLY : s, sname, ftau, s_axis_to_cart,sr
+  USE symm_base,     ONLY : s, sname, ftau, s_axis_to_cart, sr, t_rev
+  USE noncollin_module, ONLY : noncolin
+  USE spin_orb,      ONLY : domag
   USE funct,         ONLY : write_dft_name
   USE epwcom,        ONLY : title
   USE phcom,         ONLY : DP, tr2_ph, nmix_ph, alpha_mix
-  USE lr_symm_base,  ONLY : irotmq, minus_q, nsymq, irgq
+  USE lr_symm_base,  ONLY : irotmq, minus_q, nsymq
   USE control_flags, ONLY : iverbosity
   USE fft_base,      ONLY : dfftp, dffts
 #if defined(__NAG)
@@ -123,12 +127,13 @@
            isym = irotmq
            WRITE( stdout, '(/,5x,"This transformation sends q -> -q+G")')
         ELSE
-           isym = irgq (isymq)
+           isym = isymq
         ENDIF
-        !WRITE( stdout, '(6x,"isym = ",i2,5x,a)') isymq, sname (isym)
-        WRITE( stdout, *) 'isym = ', isymq, sname (isym)
-      !  CALL s_axis_to_cart (s (1, 1, isym), sr, at, bg)
-        CALL s_axis_to_cart ()
+        WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isymq, sname (isym)
+        IF (noncolin.and.domag) &
+            WRITE(stdout,'(1x, "Time Reversal",i3)') t_rev(isym) 
+        
+       ! CALL s_axis_to_cart ()
         IF (ftau (1, isym) .ne.0.or.ftau (2, isym) .ne.0.or.ftau (3, &
              isym) .ne.0) THEN
            ft1 = at (1, 1) * ftau (1, isym) / dfftp%nr1 + at (1, 2) * ftau ( &

@@ -131,7 +131,7 @@ SUBROUTINE read_xml_file ( )
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
   USE pw_restart_new,       ONLY :  pw_readschema_file, init_vars_from_schema 
-  USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type
+  USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type, input_type
   USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_input, qes_reset_general_info, qes_reset_parallel_info 
   USE io_rho_xml,           ONLY : read_scf
   USE fft_rho,              ONLY : rho_g2r
@@ -147,6 +147,11 @@ SUBROUTINE read_xml_file ( )
   USE esm,                  ONLY : do_comp_esm, esm_init
   USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
+#if defined(__BEOWULF)
+  USE io_global,             ONLY : ionode, ionode_id
+  USE bcast_qes_types_module,ONLY : qes_bcast 
+  USE mp_images,             ONLY : intra_image_comm
+#endif
   !
   IMPLICIT NONE
 
@@ -156,11 +161,23 @@ SUBROUTINE read_xml_file ( )
   CHARACTER(LEN=20) dft_name
   TYPE ( output_type)                   :: output_obj 
   TYPE (parallel_info_type)             :: parinfo_obj
-  TYPE (general_info_type )             :: geninfo_obj 
+  TYPE (general_info_type )             :: geninfo_obj
+  TYPE (input_type)                     :: input_obj
   !
   !
-  CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj)
+#if defined(__BEOWULF)
+   IF (ionode) THEN
+      CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
+      IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
+   END IF
+   CALL qes_bcast(output_obj, ionode_id, intra_image_comm)
+   CALL qes_bcast(parinfo_obj, ionode_id, intra_image_comm)
+   CALL qes_bcast(geninfo_obj, ionode_id, intra_image_comm) 
+   CALL qes_bcast(input_obj, ionode_id, intra_image_comm)
+#else
+  CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
+#endif
   ! ... first we get the version of the qexml file
   !     if not already read
   !
@@ -223,7 +240,7 @@ SUBROUTINE read_xml_file ( )
   !
   ! ... here we read all the variables defining the system
   !
-  CALL init_vars_from_schema ( 'nowave', ierr, output_obj, parinfo_obj, geninfo_obj )
+  CALL init_vars_from_schema ( 'nowave', ierr, output_obj, parinfo_obj, geninfo_obj, input_obj )
   !
   ! ... distribute across pools k-points and related variables.
   ! ... nks is defined by the following routine as the number 
@@ -342,6 +359,7 @@ SUBROUTINE read_xml_file ( )
   CALL qes_reset_output ( output_obj )  
   CALL qes_reset_general_info ( geninfo_obj ) 
   CALL qes_reset_parallel_info ( parinfo_obj ) 
+  IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset_input ( input_obj) 
   ! 
   RETURN
   !

@@ -12,9 +12,13 @@
   !
   ! This is the main driver for solving the Eliashberg equations 
   !
-  USE io_global,     ONLY : stdout 
-  USE epwcom,        ONLY : liso, fila2f, gap_edge, lreal, limag, laniso 
-  USE eliashbergcom, ONLY : gap0
+  USE io_global,         ONLY : stdout 
+  USE epwcom,            ONLY : liso, fila2f, gap_edge, lreal, limag, laniso 
+  USE eliashbergcom,     ONLY : gap0
+  USE superconductivity, ONLY : read_a2f, eliashberg_init, read_frequencies, read_eigenvalues, &
+                                eliashberg_init, evaluate_a2f_lambda, estimate_tc_gap, &
+                                eliashberg_iso_raxis, eliashberg_iso_iaxis, read_ephmat, &
+                                eliashberg_aniso_iaxis, deallocate_eliashberg, read_kqmap
   !
   IMPLICIT NONE
   !

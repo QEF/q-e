@@ -1,6 +1,5 @@
   !                                                                            
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino
-  ! Copyright (C) 2007-2009 Roxana Margine
   !                                                                            
   ! This file is distributed under the terms of the GNU General Public         
   ! License. See the file `LICENSE' in the root directory of the               
@@ -17,10 +16,16 @@
   !
   INTEGER :: lower_bnd
   !! lower bound for the k-depend index among the mpi pools
+  INTEGER :: upper_bnd
+  !! lower bound for the k-depend index among the mpi pools
+  INTEGER, ALLOCATABLE :: ixkqf_tr(:,:)
+  !! Mapping matrix from k+q (where q is full BZ) to IBZ
+  INTEGER, ALLOCATABLE :: s_BZtoIBZ_full(:,:,:,:)
+  !! Rotation that brink that k-point from BZ to IBZ
 
   REAL(DP) :: mobilityh_save, mobilityel_save
 
-  REAL(DP), ALLOCATABLE :: tdf_sigma(:,:,:), transp_temp(:), & 
+  REAL(DP), ALLOCATABLE :: transp_temp(:), & 
                            SigmaS(:,:), SigmaS2(:,:), Seebeck(:,:), & 
                            Kappael(:,:), Kappa(:,:)
   !

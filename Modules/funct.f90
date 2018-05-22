@@ -979,7 +979,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   function igcc_is_lyp ()
      logical :: igcc_is_lyp
-     igcc_is_lyp = (get_igcc() == 3 .or. get_igcc() == 7)
+     igcc_is_lyp = (get_igcc()==3 .or. get_igcc()==7 .OR. get_igcc()==13)
      return
   end function igcc_is_lyp
   !-----------------------------------------------------------------------
@@ -1250,8 +1250,8 @@ subroutine xc (rho, ex, ec, vx, vc)
   ELSEIF (iexch == 7) THEN         !  'B3LYP'
      CALL slater(rs, ex, vx)
      if (exx_started) then
-        ex = 0.8_DP * ex 
-        vx = 0.8_DP * vx 
+        ex = (1.0_DP - exx_fraction) * ex 
+        vx = (1.0_DP - exx_fraction) * vx 
      end if
   ELSEIF (iexch == 8) THEN         !  'sla+kzk'
      if (.NOT. finite_size_cell_volume_set) call errore ('XC',&
@@ -1261,8 +1261,8 @@ subroutine xc (rho, ex, ec, vx, vc)
   ELSEIF (iexch == 9) THEN         !  'X3LYP'
      CALL slater(rs, ex, vx)
      if (exx_started) then
-        ex = 0.782_DP * ex 
-        vx = 0.782_DP * vx 
+        ex = (1.0_DP - exx_fraction) * ex 
+        vx = (1.0_DP - exx_fraction) * vx 
      end if
   else
      ex = 0.0_DP
@@ -1379,9 +1379,16 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
   ELSEIF (iexch == 7) THEN  ! 'B3LYP'
      call slater_spin (rho, zeta, ex, vxup, vxdw)
      if (exx_started) then
-        ex   = 0.8_DP * ex
-        vxup = 0.8_DP * vxup 
-        vxdw = 0.8_DP * vxdw 
+        ex   = (1.0_DP - exx_fraction) * ex
+        vxup = (1.0_DP - exx_fraction) * vxup 
+        vxdw = (1.0_DP - exx_fraction) * vxdw 
+     end if
+  ELSEIF (iexch == 9) THEN  ! 'X3LYP'
+     call slater_spin (rho, zeta, ex, vxup, vxdw)
+     if (exx_started) then
+        ex   = (1.0_DP - exx_fraction) * ex
+        vxup = (1.0_DP - exx_fraction) * vxup 
+        vxdw = (1.0_DP - exx_fraction) * vxdw 
      end if
   ELSE
      ex = 0.0_DP
@@ -1419,6 +1426,15 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
      ec = ec + 0.81_DP * ec__
      vcup = vcup + 0.81_DP * vcup__
      vcdw = vcdw + 0.81_DP * vcdw__
+  elseif (icorr == 14) then   ! 'X3LYP
+     call vwn1_rpa_spin (rs, zeta, ec, vcup, vcdw)
+     ec = 0.129_DP * ec
+     vcup = 0.129_DP * vcup
+     vcdw = 0.129_DP * vcdw
+     call lsd_lyp (rho, zeta, ec__, vcup__, vcdw__) ! from CP/FPMD (more_functionals)
+     ec = ec + 0.871_DP * ec__
+     vcup = vcup + 0.871_DP * vcup__
+     vcdw = vcdw + 0.871_DP * vcdw__
   else
      call errore ('lsda_functional (xc_spin)', 'not implemented', icorr)
   endif
@@ -1733,7 +1749,7 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
   ! derivatives of exchange wr. rho
   ! derivatives of exchange wr. grho
   !
-  real(DP) :: sxsr, v1xupsr, v2xupsr, v1xdwsr, v2xdwsr
+  real(DP) :: sxsr, sxupsr, sxdwsr, v1xupsr, v2xupsr, v1xdwsr, v2xdwsr
   real(DP), parameter :: small = 1.E-10_DP
   real(DP) :: rho, sxup, sxdw
   integer :: iflag
@@ -1846,7 +1862,7 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
         v2xdw = v2xdw - exx_fraction*v2xdwsr
      end if
 
-  elseif (igcx == 9) then
+  elseif (igcx == 9) then ! B3LYP
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
         call becke88_spin (rhoup, grhoup2, sxup, v1xup, v2xup)
      else
@@ -2003,6 +2019,44 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      sx = 0.5_DP * (sxup + sxdw)
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
+
+  elseif (igcx == 28) then ! X3LYP
+
+     if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
+        call pbex (2.0_DP*rhoup, 4.0_DP*grhoup2, 1, sxupsr, v1xupsr, v2xupsr)
+        call becke88_spin (rhoup, grhoup2, sxup, v1xup, v2xup)
+     else
+        sxup   = 0.0_DP
+        v1xup  = 0.0_DP
+        v2xup  = 0.0_DP
+        sxupsr = 0.0_DP
+        v1xupsr= 0.0_DP
+        v2xupsr= 0.0_DP
+     endif
+     if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
+        call pbex (2.0_DP*rhodw, 4.0_DP*grhodw2, 1, sxdwsr, v1xdwsr, v2xdwsr)
+        call becke88_spin (rhodw, grhodw2, sxdw, v1xdw, v2xdw)
+     else
+        sxdw   = 0.0_DP
+        v1xdw  = 0.0_DP
+        v2xdw  = 0.0_DP
+        sxdwsr = 0.0_DP
+        v1xdwsr= 0.0_DP
+        v2xdwsr= 0.0_DP
+     endif
+     sx = 0.5_DP*(sxupsr + sxdwsr)*0.235_dp + (sxup + sxdw)*0.765_dp 
+     v1xup = v1xupsr*0.235_dp + v1xup*0.765_dp
+     v1xdw = v1xdwsr*0.235_dp + v1xdw*0.765_dp
+     v2xup = 2.0_DP*v2xupsr*0.235_dp + v2xup*0.765_dp
+     v2xdw = 2.0_DP*v2xdwsr*0.235_dp + v2xdw*0.765_dp
+     
+     if (exx_started ) then
+        sx = 0.709_DP * sx
+        v1xup = 0.709_DP * v1xup
+        v1xdw = 0.709_DP * v1xdw
+        v2xup = 0.709_DP * v2xup
+        v2xdw = 0.709_DP * v2xdw
+     end if
 
   elseif (igcx == 29) then ! 'cx0 for vdw-df-cx0' etc
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
@@ -2602,7 +2656,7 @@ end subroutine gcc_spin
 !   ==--------------------------------------------------------------==
 
       IMPLICIT NONE
-      REAL(DP) :: RHOA,RHOB,GRHOAA,GRHOBB,GRHOAB
+REAL(DP) :: RHOA,RHOB,GRHOAA,GRHOBB,GRHOAB
       REAL(DP) :: SC,V1CA,V2CA,V1CB,V2CB,V2CAB
 
       ! ... Gradient Correction for correlation
@@ -2616,22 +2670,29 @@ end subroutine gcc_spin
       V1CB=0.0_DP
       V2CB=0.0_DP
       V2CAB=0.0_DP
-      IF( igcc == 3 .or. igcc == 7) THEN
+      IF( igcc == 3 .or. igcc == 7 .OR. igcc == 13) THEN ! B3LYP, X3LYP
         RHO=RHOA+RHOB
         IF(RHO.GT.SMALL) then
-             CALL LSD_GLYP(RHOA,RHOB,GRHOAA,GRHOAB,GRHOBB,SC,&
-                  V1CA,V2CA,V1CB,V2CB,V2CAB)
-             if (igcc == 7 .and. exx_started) then
-                SC = 0.81d0*SC
-                V1CA = 0.81d0*V1CA
-                V2CA = 0.81d0*V2CA
-                V1CB = 0.81d0*V1CB
-                V2CB = 0.81d0*V2CB
-                V2CAB = 0.81d0*V2CAB
-             endif
-         endif
-      ELSE
-        CALL errore( " gcc_spin_more ", " gradiet correction not implemented ", 1 )
+           CALL LSD_GLYP(RHOA,RHOB,GRHOAA,GRHOAB,GRHOBB,SC,&
+                V1CA,V2CA,V1CB,V2CB,V2CAB)
+           if (igcc == 7 .and. exx_started) then
+              SC = 0.81d0*SC
+              V1CA = 0.81d0*V1CA
+              V2CA = 0.81d0*V2CA
+              V1CB = 0.81d0*V1CB
+              V2CB = 0.81d0*V2CB
+              V2CAB = 0.81d0*V2CAB
+           else if (igcc == 13 .and. exx_started) then
+              SC = 0.871d0*SC
+              V1CA = 0.871d0*V1CA
+              V2CA = 0.871d0*V2CA
+              V1CB = 0.871d0*V1CB
+              V2CB = 0.871d0*V2CB
+              V2CAB = 0.871d0*V2CAB
+           endif
+        endif
+     ELSE
+        CALL errore( " gcc_spin_more ", " gradient correction not implemented ", 1 )
       ENDIF
 !     ==--------------------------------------------------------------==
       RETURN
@@ -2879,7 +2940,7 @@ subroutine tau_xc_array_spin (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, &
   implicit none
 
   integer, intent(in) :: nnr
-  real(DP) :: rho(nnr,2), grho(nnr,3,2), tau(nnr,2), ex(nnr), ec(nnr)
+  real(DP) :: rho(nnr,2), grho(3,nnr,2), tau(nnr,2), ex(nnr), ec(nnr)
   real(DP) :: v1x(nnr,2), v2x(nnr,3), v3x(nnr,2), v1c(nnr,2), v2c(nnr,3), v3c(nnr,2)
 
   !Local variables  
@@ -2898,9 +2959,9 @@ subroutine tau_xc_array_spin (nnr, rho, grho, tau, ex, ec, v1x, v2x, v3x, &
   do k=1,nnr
 
     do ipol=1,3
-       grho2(1,k) = grho2(1,k) + grho(k,ipol,1)**2
-       grho2(2,k) = grho2(2,k) + grho(k,ipol,1) * grho(k,ipol,2)
-       grho2(3,k) = grho2(3,k) + grho(k,ipol,2)**2
+       grho2(1,k) = grho2(1,k) + grho(ipol,k,1)**2
+       grho2(2,k) = grho2(2,k) + grho(ipol,k,1) * grho(ipol,k,2)
+       grho2(3,k) = grho2(3,k) + grho(ipol,k,2)**2
     end do
 
    !MCA: transforming to libxc format (DIRTY HACK)
