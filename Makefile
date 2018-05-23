@@ -204,7 +204,7 @@ libiotk:
 libfox: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
-libcuda: touch-dummy
+libcuda: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 # In case of trouble with iotk and compilers, add
 # FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
