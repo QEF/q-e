@@ -31,6 +31,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   USE becmod,        ONLY: bec_type, becp
   !
   USE uspp_gpum,     ONLY : using_vkb, using_indv_ijkb0, using_deeq, using_deeq_nc
+  USE becmod_subs_gpum, ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -46,6 +47,7 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   !
   !
   CALL start_clock( 'add_vuspsi' )  
+  CALL using_becp_auto(0)
   !
   IF ( gamma_only ) THEN
      !

@@ -38,6 +38,7 @@ SUBROUTINE force_us( forcenl )
   USE wvfct_gpum,                ONLY : using_et
   USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0, using_qq_at, &
                                         using_deeq
+  USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -52,6 +53,7 @@ SUBROUTINE force_us( forcenl )
   forcenl(:,:) = 0.D0
   !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )   
+  CALL using_becp_auto(2)
   CALL allocate_bec_type ( nkb, nbnd, dbecp, intra_bgrp_comm )   
   ALLOCATE( vkb1( npwx, nkb ) )   
   IF (noncolin) then
@@ -77,7 +79,7 @@ SUBROUTINE force_us( forcenl )
              CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
      END IF
      !
-     CALL using_vkb(0)
+     CALL using_vkb(0); CALL using_becp_auto(2)
      CALL calbec ( npw, vkb, evc, becp )
      !
      DO ipol = 1, 3
@@ -105,6 +107,7 @@ SUBROUTINE force_us( forcenl )
   !
   ! ... if sums over bands are parallelized over the band group
   !
+  CALL using_becp_auto(1)
   IF( becp%comm /= mp_get_comm_null() ) CALL mp_sum( forcenl, becp%comm )
   !
   IF (noncolin) THEN
@@ -115,6 +118,7 @@ SUBROUTINE force_us( forcenl )
   DEALLOCATE( vkb1 )
   CALL deallocate_bec_type ( dbecp )   
   CALL deallocate_bec_type ( becp )   
+  CALL using_becp_auto(2)
   !
   ! ... collect contributions across pools from all k-points
   !

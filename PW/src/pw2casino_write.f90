@@ -332,6 +332,10 @@ CONTAINS
       USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type
       USE exx,    ONLY : exxenergy2, fock2
       USE funct,  ONLY : dft_is_hybrid
+      !
+      USE becmod_subs_gpum, ONLY : using_becp_auto
+      !
+      IMPLICIT NONE
 
       COMPLEX(DP), ALLOCATABLE :: aux(:)
       INTEGER :: npw, ibnd, j, ig, ik,ikk, ispin, na, nt, ijkb0, ikb,jkb, ih,jh
@@ -340,6 +344,7 @@ CONTAINS
 
       ALLOCATE (aux(dfftp%nnr))
       CALL allocate_bec_type ( nkb, nbnd, becp )
+      CALL using_becp_auto(2)
 
       ek  = 0.d0
       eloc= 0.d0
@@ -479,6 +484,7 @@ CONTAINS
       END IF
       !
       CALL deallocate_bec_type (becp)
+      CALL using_becp_auto(2)
       DEALLOCATE (aux)
 
       WRITE (stdout,*)

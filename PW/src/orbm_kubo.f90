@@ -55,6 +55,7 @@ SUBROUTINE orbm_kubo()
   !
   USE scf_gpum,             ONLY : using_vrs
   USE uspp_gpum,            ONLY : using_vkb
+  USE becmod_subs_gpum,     ONLY : using_becp_auto
 
   !  --- Avoid implicit definitions ---
   IMPLICIT NONE
@@ -123,6 +124,7 @@ SUBROUTINE orbm_kubo()
   CALL using_vrs(1)
   CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, nspin, doublegrid )
   CALL allocate_bec_type ( nkb, nbnd, becp )
+  CALL using_becp_auto(2)
   ! Initializations
 
   ! Define small number
@@ -543,6 +545,7 @@ SUBROUTINE orbm_kubo()
 
   ! Deallocate arrays
   CALL deallocate_bec_type ( becp )
+  CALL using_becp_auto(2)
   DEALLOCATE(temp)
   DEALLOCATE(evc_k)
   DEALLOCATE(evc_kp)

@@ -193,6 +193,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE wvfct_gpum,                ONLY : et_d, using_et, using_et_d, &
                                         g2kin_d, using_g2kin, using_g2kin_d
   USE uspp_gpum,                 ONLY : using_vkb
+  USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -244,6 +245,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! ... allocate space for <beta_i|psi_j> - used in h_psi and s_psi
   !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )
+  CALL using_becp_auto(2)
   !
   npw = ngk(ik)
   IF ( gamma_only ) THEN
@@ -259,6 +261,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! ... deallocate work space
   !
   CALL deallocate_bec_type ( becp )
+  CALL using_becp_auto(2)
   DEALLOCATE( s_diag )
   DEALLOCATE( h_diag )
   call using_h_diag(2); call using_s_diag(2)

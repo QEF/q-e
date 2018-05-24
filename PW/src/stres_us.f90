@@ -34,6 +34,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
   USE uspp_gpum,                 ONLY : using_vkb, using_deeq
+  USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -56,7 +57,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
   !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm ) 
-  CALL using_vkb(0)
+  
+  CALL using_vkb(0); CALL using_becp_auto(2)
   CALL calbec( npw, vkb, evc, becp )
   !
   ALLOCATE( qm1( npwx ) )
@@ -81,6 +83,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   !
   DEALLOCATE( qm1 )
   CALL deallocate_bec_type ( becp ) 
+  CALL using_becp_auto(2)
   !
   RETURN
   !

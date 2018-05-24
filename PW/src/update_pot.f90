@@ -640,6 +640,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   !
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE uspp_gpum,                 ONLY : using_vkb
+  USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -745,6 +746,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
            !
            IF ( nkb > 0 ) CALL using_vkb(1)
            IF ( nkb > 0 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
+           CALL using_becp_auto(2)
            CALL calbec( npw, vkb, evc, becp )
            !
            CALL s_psi ( npwx, npw, nbnd, evc, aux )
@@ -841,6 +843,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      DEALLOCATE( u_m, w_m, ew, aux, evcold, sp_m )
      DEALLOCATE( work, rwork )
      CALL deallocate_bec_type ( becp ) 
+     CALL using_becp_auto(2)
      !
      CLOSE( UNIT = iunoldwfc, STATUS = 'KEEP' )
      IF ( wfc_extr > 2 .OR. wfc_order > 2 ) &

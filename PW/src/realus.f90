@@ -1592,6 +1592,8 @@ MODULE realus
     USE mp_bands,              ONLY : intra_bgrp_comm
     USE mp,                    ONLY : mp_sum
     !
+    USE becmod_gpum,           ONLY : using_becp_k
+    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(in) :: ibnd, last
@@ -1606,6 +1608,7 @@ MODULE realus
     !
     !
     CALL start_clock( 'calbec_rs' )
+    CALL using_becp_k(1) ! intento=2?
     !
     IF( dffts%has_task_groups ) CALL errore( 'calbec_rs_k', 'task_groups not implemented', 1 )
 
@@ -1673,6 +1676,7 @@ MODULE realus
       USE fft_base,               ONLY : dffts
       !
       USE uspp_gpum,              ONLY : using_qq_at
+      USE becmod_gpum,            ONLY : using_becp_r
       !
       IMPLICIT NONE
       !
@@ -1690,6 +1694,7 @@ MODULE realus
 
       ! Sync
       CALL using_qq_at(0)
+      CALL using_becp_r(0)
       !
       fac = sqrt(omega)
       !
@@ -1760,6 +1765,7 @@ MODULE realus
       USE fft_base,               ONLY : dffts
       !
       USE uspp_gpum,              ONLY : using_qq_at
+      USE becmod_gpum,            ONLY : using_becp_k
       !
       IMPLICIT NONE
       !
@@ -1778,6 +1784,7 @@ MODULE realus
 
       ! Sync
       CALL using_qq_at(0)
+      CALL using_becp_k(0)
 
       call set_xkphase(current_k)
 
@@ -1853,6 +1860,7 @@ MODULE realus
   USE fft_base,               ONLY : dffts
   !
   USE uspp_gpum,              ONLY : using_deeq
+  USE becmod_gpum,            ONLY : using_becp_r
   !
   IMPLICIT NONE
   !
@@ -1873,6 +1881,7 @@ MODULE realus
   ELSE !non task groups part starts here
 
    CALL using_deeq(0)
+   CALL using_becp_r(0)
    !
    fac = sqrt(omega)
    !
@@ -1958,6 +1967,7 @@ MODULE realus
   USE fft_base,               ONLY : dffts
   !
   USE uspp_gpum,              ONLY : using_deeq
+  USE becmod_gpum,            ONLY : using_becp_k
   !
   IMPLICIT NONE
   !
@@ -1975,6 +1985,7 @@ MODULE realus
   IF( dffts%has_task_groups ) CALL errore( 'add_vuspsir_k', 'task_groups not implemented', 1 )
 
   CALL using_deeq(0)
+  CALL using_becp_k(0)
 
   call set_xkphase(current_k)
    !

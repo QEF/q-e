@@ -169,6 +169,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        ! ... gamma version
        !
        USE mp, ONLY: mp_get_comm_null, mp_circular_shift_left
+       USE becmod_gpum, ONLY : using_becp_r
        !
        IMPLICIT NONE  
        !
@@ -185,6 +186,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        !
        CALL using_indv_ijkb0(0)
        CALL using_qq_at(0)
+       CALL using_becp_r(0)
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
           nproc   = 1
@@ -282,6 +284,8 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        !
        ! ... k-points version
        !
+       USE becmod_gpum, ONLY : using_becp_k
+       !
        IMPLICIT NONE
        !
        ! ... local variables
@@ -293,6 +297,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        !
        CALL using_indv_ijkb0(0)
        CALL using_qq_at(0)
+       CALL using_becp_k(0)
        !
        ALLOCATE( ps( nkb, m ), STAT=ierr )    
        IF( ierr /= 0 ) &
@@ -344,6 +349,8 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        !
        ! ... k-points noncolinear/spinorbit version
        !
+       USE becmod_gpum,  ONLY : using_becp_nc
+       !
        IMPLICIT NONE
        !
        !    here the local variables
@@ -356,6 +363,7 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        CALL using_indv_ijkb0(0)
        IF ( .NOT. lspinorb ) CALL using_qq_at(0)
        IF (lspinorb)         CALL using_qq_so(0)
+       CALL using_becp_nc(0)
        !
        ALLOCATE (ps(nkb,npol,m),STAT=ierr)    
        IF( ierr /= 0 ) &

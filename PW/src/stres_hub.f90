@@ -140,6 +140,7 @@ SUBROUTINE dndepsilon ( ipol, jpol, ldim, dns )
                                     me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
    USE wavefunctions_module_gpum, ONLY : using_evc
+   USE becmod_subs_gpum,          ONLY : using_becp_auto
 
    IMPLICIT NONE
    !
@@ -174,6 +175,8 @@ SUBROUTINE dndepsilon ( ipol, jpol, ldim, dns )
    call allocate_bec_type ( nwfcU,nbnd, dproj )
    call allocate_bec_type ( nkb,nbnd, becp )
    ALLOCATE ( dns_(ldim,ldim,nspin,nat) )
+   !
+   CALL using_becp_auto(2)
    !
    ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
    !
@@ -279,6 +282,8 @@ SUBROUTINE dndepsilon ( ipol, jpol, ldim, dns )
    call deallocate_bec_type (becp)
    DEALLOCATE ( spsi )
    DEALLOCATE ( wfcatom  )
+
+   CALL using_becp_auto(2)
 
    RETURN
 END SUBROUTINE dndepsilon
@@ -490,6 +495,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    USE mp,                   ONLY : mp_sum
    USE wavefunctions_module_gpum, ONLY : using_evc
    USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0, using_qq_at
+   USE becmod_subs_gpum,          ONLY : using_becp_auto
 
    IMPLICIT NONE
    !

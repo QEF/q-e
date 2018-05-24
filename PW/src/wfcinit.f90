@@ -238,6 +238,7 @@ SUBROUTINE init_wfc ( ik )
   !
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
+  USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -345,6 +346,7 @@ SUBROUTINE init_wfc ( ik )
   ! ... Allocate space for <beta|psi>
   !
   CALL allocate_bec_type ( nkb, n_starting_wfc, becp, intra_bgrp_comm )
+  CALL using_becp_auto (2)
   !
   ! ... the following trick is for electric fields with Berry's phase:
   ! ... by setting lelfield = .false. one prevents the calculation of
@@ -370,6 +372,7 @@ SUBROUTINE init_wfc ( ik )
   et(1:nbnd,ik) = etatom(1:nbnd)
   !
   CALL deallocate_bec_type ( becp )
+  CALL using_becp_auto (2)
   DEALLOCATE( etatom )
   DEALLOCATE( wfcatom )
   !

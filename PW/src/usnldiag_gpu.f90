@@ -31,10 +31,13 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   !
   INTEGER, INTENT(in) :: npw
   ! number of plane waves
-  REAL(dp), DEVICE, INTENT(inout) :: h_diag_d (npwx,npol)
+  REAL(dp), INTENT(inout) :: h_diag_d (npwx,npol)
   ! the diagonal part of the hamiltonian
-  REAL(dp), DEVICE, INTENT(out)   :: s_diag_d (npwx,npol)
+  REAL(dp), INTENT(out)   :: s_diag_d (npwx,npol)
   ! the diagonal part of the S matrix
+#if defined(__CUDA)
+  attributes(DEVICE) :: h_diag_d, s_diag_d
+#endif
   !
   INTEGER :: ig, ipol
   !

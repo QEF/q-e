@@ -104,6 +104,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
                   invfft_orbital_k, fwfft_orbital_k, calbec_rs_k, s_psir_k
   !
   USE uspp_gpum,  ONLY : vkb_d, using_vkb_d
+  USE becmod_gpum, ONLY : using_becp_r, using_becp_k, using_becp_nc
   !
   IMPLICIT NONE
   !
@@ -208,6 +209,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
          ! the product vkb and psi
        !
        CALL using_vkb_d(0)
+       CALL using_becp_r(0)
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
           nproc   = 1
@@ -260,7 +262,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        IF( becp%comm == mp_get_comm_null() ) THEN
           IF ( m == 1 ) THEN
-             CALL myDGEMV( 'N', 2 * n, nkb, 1.D0, vkb_d, &
+             CALL cudaDGEMV( 'N', 2 * n, nkb, 1.D0, vkb_d, &
                   2 * lda, ps_d, 1, 1.D0, spsi_d, 1 )
           ELSE
              CALL cublasDGEMM( 'N', 'N', 2 * n, m, nkb, 1.D0, vkb_d, &
@@ -328,6 +330,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
 
        ! sync vkb if needed
        CALL using_vkb_d(0)
+       CALL using_becp_k(0)
        !
        ps(:,:) = ( 0.D0, 0.D0 )
        !
@@ -394,6 +397,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
 
        ! sync vkb if needed
        CALL using_vkb_d(0)
+       CALL using_becp_nc(0)
 
        ps(:,:,:) = (0.D0,0.D0)
        !
@@ -448,18 +452,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
 END SUBROUTINE s_psi__gpu
 !@nje
 
-SUBROUTINE myDGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
-    use cudafor
-    use cublas
-    implicit none
-    DOUBLE PRECISION ALPHA,BETA
-    INTEGER INCX,INCY,LDA,M,N
-    CHARACTER TRANS
-    DOUBLE PRECISION, DEVICE :: A(LDA,*),X(*),Y(*)
-    !
-    call DGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
-    !
-END SUBROUTINE myDGEMV
+
 
 SUBROUTINE s_psi_gpu_compatibility( lda, n, m, psi_d, spsi_d )
   USE kinds,            ONLY : DP

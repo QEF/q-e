@@ -218,6 +218,7 @@ SUBROUTINE new_ns(ns)
     USE uspp_param,           ONLY : nhm, nh
     !
     USE uspp_gpum,            ONLY : using_vkb, using_indv_ijkb0
+    USE becmod_subs_gpum,     ONLY : using_becp_auto
     !
     IMPLICIT NONE
     REAL(DP), INTENT(IN) :: q(nwfcU,nhm,nat)
@@ -232,6 +233,7 @@ SUBROUTINE new_ns(ns)
     ! compute <beta|psi>
     !
     CALL allocate_bec_type (nkb, nbnd, becp)
+    CALL using_becp_auto(2)
     CALL using_vkb(1)
     CALL init_us_2 (npw,igk_k(1,ik),xk(1,ik),vkb)
     CALL using_evc(0)
@@ -243,6 +245,7 @@ SUBROUTINE new_ns(ns)
        p%k(:,:) = (0.0_DP,0.0_DP)
     ENDIF
     !
+    CALL using_becp_auto(0)
     DO nt = 1, ntyp
        !
        DO na = 1, nat
@@ -279,6 +282,7 @@ SUBROUTINE new_ns(ns)
     END DO
     !
     CALL deallocate_bec_type ( becp )
+    CALL using_becp_auto(2)
 
     RETURN
   END SUBROUTINE compute_pproj

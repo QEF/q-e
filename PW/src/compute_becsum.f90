@@ -35,6 +35,7 @@ SUBROUTINE compute_becsum ( iflag )
   !
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE uspp_gpum,                 ONLY : using_vkb
+  USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -55,6 +56,7 @@ SUBROUTINE compute_becsum ( iflag )
   !
   becsum(:,:,:) = 0.D0
   CALL allocate_bec_type (nkb,nbnd, becp,intra_bgrp_comm)
+  CALL using_becp_auto(2)
   call divide (inter_bgrp_comm, nbnd, ibnd_start, ibnd_end )
   this_bgrp_nbnd = ibnd_end - ibnd_start + 1
   !
@@ -93,6 +95,7 @@ SUBROUTINE compute_becsum ( iflag )
   ENDIF
   !
   CALL deallocate_bec_type ( becp )
+  CALL using_becp_auto(2)
   !
   CALL stop_clock( 'compute_becsum' )
   !

@@ -30,7 +30,8 @@ SUBROUTINE orthoUwfc
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
   !
-  USE uspp_gpum, ONLY : using_vkb
+  USE uspp_gpum,        ONLY : using_vkb
+  USE becmod_subs_gpum, ONLY : using_becp_auto
   ! 
   IMPLICIT NONE
   !
@@ -80,6 +81,7 @@ SUBROUTINE orthoUwfc
 
   ! Allocate the array becp = <beta|wfcatom>
   CALL allocate_bec_type (nkb,natomwfc, becp) 
+  CALL using_becp_auto(2)
   
   DO ik = 1, nks
      
@@ -107,6 +109,7 @@ SUBROUTINE orthoUwfc
   ENDDO
   DEALLOCATE (wfcatom, swfcatom)
   CALL deallocate_bec_type ( becp )
+  CALL using_becp_auto(2)
   !
   RETURN
      

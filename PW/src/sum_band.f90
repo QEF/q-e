@@ -47,6 +47,7 @@ SUBROUTINE sum_band()
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
   USE uspp_gpum,                 ONLY : using_vkb
+  USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -110,6 +111,7 @@ SUBROUTINE sum_band()
   ! ... Allocate (and later deallocate) arrays needed in specific cases
   !
   IF ( okvan ) CALL allocate_bec_type (nkb,nbnd, becp,intra_bgrp_comm)
+  IF ( okvan ) CALL using_becp_auto(2)
   IF (dft_is_meta() .OR. lxdm) ALLOCATE (kplusg(npwx))
   !
   ! ... specialized routines are called to sum at Gamma or for each k point 
@@ -132,6 +134,7 @@ SUBROUTINE sum_band()
   !
   IF (dft_is_meta() .OR. lxdm) DEALLOCATE (kplusg)
   IF ( okvan ) CALL deallocate_bec_type ( becp )
+  IF ( okvan ) CALL using_becp_auto(2)
   !
   ! ... sum charge density over pools (distributed k-points) and bands
   !
@@ -878,6 +881,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
   USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0
+  USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
@@ -893,6 +897,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   CALL using_et(0)
   CALL using_vkb(0)
   CALL using_indv_ijkb0(0)
+  CALL using_becp_auto(2)
   !
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN

@@ -113,6 +113,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   !
   USE wvfct_gpum,    ONLY : g2kin_d, using_g2kin_d
   USE uspp_gpum,     ONLY : using_vkb
+  USE becmod_subs_gpum, ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -132,6 +133,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   CALL using_g2kin_d(0)
   CALL using_vrs_d(0)
   CALL using_vkb(0)
+  CALL using_becp_auto(0)
   !
   hpsi_d (:, 1:m) = (0.0_dp, 0.0_dp)
 

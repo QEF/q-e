@@ -42,6 +42,7 @@ SUBROUTINE force_hub(forceh)
 
    USE wavefunctions_module_gpum, ONLY : using_evc
    USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0
+   USE becmod_subs_gpum,          ONLY : using_becp_auto
 
    IMPLICIT NONE
    REAL (DP) :: forceh(3,nat)  ! output: the Hubbard forces
@@ -65,6 +66,8 @@ SUBROUTINE force_hub(forceh)
    ALLOCATE ( wfcatom (npwx,natomwfc) ) 
    call allocate_bec_type ( nkb, nbnd, becp) 
    call allocate_bec_type ( nwfcU, nbnd, proj )
+   !
+   CALL using_becp_auto(2)
    !
    ! poor-man parallelization over bands
    ! - if nproc_pool=1   : nb_s=1, nb_e=nbnd, mykey=0
@@ -90,7 +93,7 @@ SUBROUTINE force_hub(forceh)
          CALL get_buffer (evc, nwordwfc, iunwfc, ik)
       IF (nks > 1)  CALL using_evc(1)
 
-      CALL using_vkb(1)
+      CALL using_vkb(1); CALL using_becp_auto(2)
       CALL init_us_2 (npw,igk_k(1,ik),xk(1,ik),vkb)
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
@@ -145,6 +148,7 @@ SUBROUTINE force_hub(forceh)
    DEALLOCATE( wfcatom  ) 
    DEALLOCATE( spsi  ) 
    DEALLOCATE( dns ) 
+   CALL using_becp_auto(2)
    
    IF (nspin == 1) forceh(:,:) = 2.d0 * forceh(:,:)
    !

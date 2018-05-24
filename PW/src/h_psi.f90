@@ -103,6 +103,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   USE wvfct_gpum, ONLY : using_g2kin
   USE scf_gpum,   ONLY : using_vrs
+  USE becmod_subs_gpum, ONLY : using_becp_auto
   !
   IMPLICIT NONE
   !
@@ -126,6 +127,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   IF ( gamma_only ) THEN
      ! 
      IF ( real_space .and. nkb > 0  ) then 
+        CALL using_becp_auto(1)
         !
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
@@ -167,6 +169,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
         !
+        CALL using_becp_auto(1)
         IF ( dffts%has_task_groups ) then 
            incr = fftx_ntgrp(dffts)
         ELSE
@@ -199,6 +202,8 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   ! ... (not in the real-space case: it is done together with V_loc)
   !
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
+     !
+     CALL using_becp_auto(1)
      !
      CALL start_clock( 'h_psi:calbec' )
      CALL calbec ( n, vkb, psi, becp, m )
@@ -242,6 +247,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            CALL vexxace_k(lda,m,psi,ee,hpsi) 
         END IF
      ELSE
+        CALL using_becp_auto(0)
         CALL vexx( lda, n, m, psi, hpsi, becp )
      END IF
   END IF
