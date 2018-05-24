@@ -2789,6 +2789,8 @@ SUBROUTINE compute_becpsi (npw_, igk_, q_, evc_exx, becpsi_k)
   USE becmod,     ONLY : calbec
   USE mp_exx,     ONLY : ibands, nibands, my_egrp_id
   !
+  USE us_gpum,    ONLY : using_tab, using_tab_d2y
+  !
   implicit none
   !
   INTEGER, INTENT (IN) :: npw_, igk_ (npw_)
@@ -2816,6 +2818,10 @@ SUBROUTINE compute_becpsi (npw_, igk_, q_, evc_exx, becpsi_k)
   !
   !
   if (lmaxkb.lt.0) return
+  !
+  call using_tab(0)
+  if (spline_ps) call using_tab_d2y(0)
+  !
   allocate (vkb1( npw_,nhm))    
   allocate (  sk( npw_))    
   allocate (  qg( npw_))    

@@ -23,6 +23,9 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   USE us, ONLY: dq, qrad
   USE uspp_param, ONLY: lmaxq, nbetam
   USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtolm
+  !
+  USE us_gpum, ONLY : using_qrad
+  !
   implicit none
   !
   ! Input variables
@@ -80,6 +83,9 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
        call errore (' qvan2 ', ' wrong dimensions (1)', MAX(nb,mb))
   if (ivl > nlx .OR. jvl > nlx) &
        call errore (' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
+  !
+  CALL using_qrad(0) ! if lmaxq > 0 ?
+  !
   qg = 0.d0
   !
   !    and make the sum over the non zero LM

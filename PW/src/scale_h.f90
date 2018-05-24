@@ -30,6 +30,7 @@ subroutine scale_h
   USE mp_bands,   ONLY : intra_bgrp_comm
   !
   USE gvect_gpum, ONLY : using_g, using_g_d, using_gg, using_gg_d
+  USE us_gpum,    ONLY : using_tab, using_tab_at, using_qrad
   !
   implicit none
   !
@@ -83,6 +84,8 @@ subroutine scale_h
   endif
   !
   ! scale the non-local pseudopotential tables
+  !
+  CALL using_tab(1); CALL using_tab_at(1); CALL using_qrad(1)
   !
   tab(:,:,:) = tab(:,:,:) * sqrt (omega_old/omega)
   qrad(:,:,:,:) = qrad(:,:,:,:) * omega_old/omega

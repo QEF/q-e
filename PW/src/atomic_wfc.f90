@@ -29,6 +29,8 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
   USE mp_bands,   ONLY : inter_bgrp_comm
   USE mp,         ONLY : mp_sum
   !
+  USE us_gpum,    ONLY : using_tab_at
+  !
   implicit none
   !
   integer, intent(in) :: ik
@@ -80,6 +82,8 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
   n_starting_wfc = 0
   !
   ! chiq = radial fourier transform of atomic orbitals chi
+  !
+  call using_tab_at(0)
   !
   do nt = 1, ntyp
      do nb = 1, upf(nt)%nwfc

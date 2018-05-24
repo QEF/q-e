@@ -30,6 +30,8 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   USE uspp,       ONLY : nkb, nhtol, nhtolm, indv
   USE uspp_param, ONLY : upf, lmaxkb, nhm, nh
   !
+  USE us_gpum,    ONLY : using_tab, using_tab_d2y
+  !
   implicit none
   !
   INTEGER, INTENT (IN) :: npw_, igk_ (npw_)
@@ -52,6 +54,10 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   !
   if (lmaxkb.lt.0) return
   call start_clock ('init_us_2')
+  !
+  call using_tab(0)
+  if (spline_ps) call using_tab_d2y(0)
+  !
   allocate (vkb1( npw_,nhm))    
   allocate (  sk( npw_))    
   allocate (  qg( npw_))    

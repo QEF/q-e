@@ -6,8 +6,7 @@ MODULES += \
   uspp_gpu.o \
   becmod_gpu.o \
   becmod_subs_gpu.o \
-  cuda_subroutines.o \
-  ylmr2_gpu.o
+  cuda_subroutines.o
 
 recvec_gpu.o : recvec.o
 uspp_gpu.o : uspp.o

@@ -47,6 +47,7 @@ subroutine init_us_1
   USE uspp_gpum,    ONLY : using_indv_ijkb0, using_indv_ijkb0_d, &
                            using_qq_at, using_qq_at_d, &
                            using_qq_so, using_qq_so_d
+  USE us_gpum,      ONLY : using_tab, using_tab_d2y, using_qrad
   !
   implicit none
   !
@@ -77,6 +78,10 @@ subroutine init_us_1
   real(DP) :: d1
   !
   call start_clock ('init_us_1')
+  !
+  !    NB: duplicated modules' variables are syncronized at the end. This
+  !        may lead to problems if these variables are using during function
+  !        calls in this subroutines. However this should never happen.
   !
   !    Initialization of the variables
   !
@@ -259,6 +264,7 @@ subroutine init_us_1
   !
   do nt = 1, ntyp
      if ( upf(nt)%tvanp ) then
+        call using_qrad(2) ! this is redundant
         do l = 0, upf(nt)%nqlc -1
            !
            !     first we build for each nb,mb,l the total Q(|r|) function
@@ -407,6 +413,7 @@ subroutine init_us_1
 
   ! initialize spline interpolation
   if (spline_ps) then
+     CALL using_tab_d2y(2);
      allocate( xdata(nqx) )
      do iq = 1, nqx
         xdata(iq) = (iq - 1) * dq
@@ -423,6 +430,8 @@ subroutine init_us_1
   deallocate (besr)
   deallocate (aux)
 
+  CALL using_tab(2)
+  IF (lmaxq > 0) CALL using_qrad(2)
   CALL using_indv_ijkb0(2); CALL using_indv_ijkb0_d(0) ! trick to update immediately
   CALL using_qq_at(2);      CALL using_qq_at_d(0) ! trick to update immediately
   IF (lspinorb) THEN 

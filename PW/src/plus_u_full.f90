@@ -295,6 +295,8 @@ SUBROUTINE atomic_wfc_nc_updown (ik, wfcatom)
   USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef, lmaxx, domag, &
                          starting_spin_angle
   !
+  USE us_gpum,    ONLY : using_tab_at
+  !
   implicit none
   !
   integer, intent(in) :: ik
@@ -308,6 +310,7 @@ SUBROUTINE atomic_wfc_nc_updown (ik, wfcatom)
   real(DP) :: arg, px, ux, vx, wx
 
   call start_clock ('atomic_wfc')
+  call using_tab_at(0)
 
   ! calculate max angular momentum required in wavefunctions
   lmax_wfc = 0

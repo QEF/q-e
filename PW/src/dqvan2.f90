@@ -23,6 +23,8 @@ SUBROUTINE dqvan2 (ih, jh, np, ipol, ngy, g, qmod, ylmk0, dylmk0, dqg )
   USE uspp_param, ONLY: lmaxq, nbetam
   USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
   !
+  USE us_gpum, ONLY : using_qrad
+  !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ngy, ih, jh, np, ipol
   ! ngy: the number of G vectors to compute
@@ -81,6 +83,9 @@ SUBROUTINE dqvan2 (ih, jh, np, ipol, ngy, g, qmod, ylmk0, dylmk0, dqg )
   IF (ivl > nlx .or. jvl > nlx) &
        CALL errore (' dqvan2 ', ' wrong dimensions (2)', max(ivl,jvl))
 
+  !
+  CALL using_qrad(0)
+  !
   dqg(:) = (0.d0,0.d0)
   !
   !    and make the sum over the non zero LM

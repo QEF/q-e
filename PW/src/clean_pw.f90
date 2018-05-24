@@ -74,6 +74,7 @@ SUBROUTINE clean_pw( lflag )
   USE gvect_gpum,                ONLY : deallocate_gvect_gpu !using_g, using_gg, using_g_d, using_gg_d
   USE scf_gpum,                  ONLY : using_vrs, using_vrs_d
   USE uspp_gpum,                 ONLY : deallocate_uspp_gpu
+  USE us_gpum,                   ONLY : deallocate_us_gpu
   !
   IMPLICIT NONE
   !
@@ -174,6 +175,7 @@ SUBROUTINE clean_pw( lflag )
   CALL deallocate_igk ( )
   CALL deallocate_uspp() 
   CALL deallocate_uspp_gpu()
+  CALL deallocate_us_gpu()
   !
   CALL deallocate_gth( lflag ) 
   CALL deallocate_noncol() 

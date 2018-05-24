@@ -26,6 +26,8 @@ subroutine gen_us_dj (ik, dvkb)
   USE splinelib
   USE uspp_param, ONLY : upf, lmaxkb, nbetam, nh
   !
+  USE us_gpum,    ONLY : using_tab, using_tab_d2y
+  !
   implicit none
   !
   integer, intent(in) :: ik
@@ -57,6 +59,9 @@ subroutine gen_us_dj (ik, dvkb)
   if (nkb.eq.0) return
 
   call start_clock('stres_us31')
+
+  call using_tab(0);
+  if (spline_ps) call using_tab_d2y(0);
 
   npw = ngk(ik)
   allocate (djl( npw , nbetam , ntyp))    

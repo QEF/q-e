@@ -26,6 +26,8 @@ subroutine gen_at_dj ( ik, natw, is_hubbard, hubbard_l, dwfcat )
    USE us,         ONLY : tab_at, dq
    USE uspp_param, ONLY : upf
    !
+   USE us_gpum,    ONLY : using_tab_at
+   !
    implicit none
    !
    !  I/O variables
@@ -64,6 +66,7 @@ subroutine gen_at_dj ( ik, natw, is_hubbard, hubbard_l, dwfcat )
 
    q(:) = dsqrt ( q(:) )
 
+   call using_tab_at(0)
    do nt=1,ntyp
       do nb=1,upf(nt)%nwfc
          if (upf(nt)%oc(nb) >= 0.d0) then

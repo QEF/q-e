@@ -26,6 +26,8 @@ subroutine gen_at_dy ( ik, natw, is_hubbard, hubbard_l, u, dwfcat )
    USE us,         ONLY : tab_at, dq
    USE uspp_param, ONLY : upf
    !
+   USE us_gpum,    ONLY : using_tab_at
+   !
    implicit none
    !
    !  I/O variables
@@ -74,6 +76,8 @@ subroutine gen_at_dy ( ik, natw, is_hubbard, hubbard_l, u, dwfcat )
 
    !
    !    here we compute the radial fourier transform of the chi functions
+   !
+   call using_tab_at(0)
    !
    do nt = 1,ntyp
       do nb = 1,upf(nt)%nwfc
