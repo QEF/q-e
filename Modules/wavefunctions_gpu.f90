@@ -15,11 +15,8 @@
      SAVE
      !
      COMPLEX(DP), ALLOCATABLE, TARGET :: evc_d(:, :)
-
      COMPLEX(DP), ALLOCATABLE, TARGET :: psic_d(:)
-
      COMPLEX(DP), ALLOCATABLE, TARGET :: psic_nc_d(:, :)
-
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: evc_d, psic_d, psic_nc_d
@@ -45,6 +42,8 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
          !
          IF (evc_ood) THEN
              IF (.not. allocated(evc_d)) THEN
@@ -52,17 +51,20 @@
                 stop
              END IF
              IF (.not. allocated(evc)) THEN
-                IF (intento /= 2) print *, "WARNING: sync of evc with unallocated array and intento /= 2?"
-                IF (intento > 0)    evc_d_ood = .true.
-                return
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of evc with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+
+                ! IF (intento_ > 0)    evc_d_ood = .true.
              END IF
-             IF (intento < 2) THEN
+             IF (intento_ < 2) THEN
                 print *, "Really copied evc D->H"
                 evc = evc_d
-                evc_ood = .false.
              END IF
+             evc_ood = .false.
          ENDIF
-         IF (intento > 0)    evc_d_ood = .true.
+         IF (intento_ > 0)    evc_d_ood = .true.
 #endif
      END SUBROUTINE using_evc
      !
@@ -79,7 +81,7 @@
              evc_d_ood = .false.
              RETURN
          END IF
-         ! here we know that evc is allocated, check if size if 0 
+         ! here we know that evc is allocated, check if size is 0 
          IF ( SIZE(evc) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array evc_d. If used, code will crash."
              RETURN
@@ -111,6 +113,8 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
          !
          IF (psic_ood) THEN
              IF (.not. allocated(psic_d)) THEN
@@ -118,17 +122,20 @@
                 stop
              END IF
              IF (.not. allocated(psic)) THEN
-                IF (intento /= 2) print *, "WARNING: sync of psic with unallocated array and intento /= 2?"
-                IF (intento > 0)    psic_d_ood = .true.
-                return
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of psic with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+
+                ! IF (intento_ > 0)    psic_d_ood = .true.
              END IF
-             IF (intento < 2) THEN
+             IF (intento_ < 2) THEN
                 print *, "Really copied psic D->H"
                 psic = psic_d
-                psic_ood = .false.
              END IF
+             psic_ood = .false.
          ENDIF
-         IF (intento > 0)    psic_d_ood = .true.
+         IF (intento_ > 0)    psic_d_ood = .true.
 #endif
      END SUBROUTINE using_psic
      !
@@ -145,7 +152,7 @@
              psic_d_ood = .false.
              RETURN
          END IF
-         ! here we know that psic is allocated, check if size if 0 
+         ! here we know that psic is allocated, check if size is 0 
          IF ( SIZE(psic) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array psic_d. If used, code will crash."
              RETURN
@@ -177,6 +184,8 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
          !
          IF (psic_nc_ood) THEN
              IF (.not. allocated(psic_nc_d)) THEN
@@ -184,17 +193,20 @@
                 stop
              END IF
              IF (.not. allocated(psic_nc)) THEN
-                IF (intento /= 2) print *, "WARNING: sync of psic_nc with unallocated array and intento /= 2?"
-                IF (intento > 0)    psic_nc_d_ood = .true.
-                return
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of psic_nc with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+
+                ! IF (intento_ > 0)    psic_nc_d_ood = .true.
              END IF
-             IF (intento < 2) THEN
+             IF (intento_ < 2) THEN
                 print *, "Really copied psic_nc D->H"
                 psic_nc = psic_nc_d
-                psic_nc_ood = .false.
              END IF
+             psic_nc_ood = .false.
          ENDIF
-         IF (intento > 0)    psic_nc_d_ood = .true.
+         IF (intento_ > 0)    psic_nc_d_ood = .true.
 #endif
      END SUBROUTINE using_psic_nc
      !
@@ -211,7 +223,7 @@
              psic_nc_d_ood = .false.
              RETURN
          END IF
-         ! here we know that psic_nc is allocated, check if size if 0 
+         ! here we know that psic_nc is allocated, check if size is 0 
          IF ( SIZE(psic_nc) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array psic_nc_d. If used, code will crash."
              RETURN

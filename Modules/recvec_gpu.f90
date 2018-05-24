@@ -15,9 +15,7 @@
      SAVE
      !
      REAL(DP), ALLOCATABLE, TARGET :: gg_d(:)
-
      REAL(DP), ALLOCATABLE, TARGET :: g_d(:, :)
-
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: gg_d, g_d
@@ -41,6 +39,8 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
          !
          IF (gg_ood) THEN
              IF (.not. allocated(gg_d)) THEN
@@ -48,17 +48,20 @@
                 stop
              END IF
              IF (.not. allocated(gg)) THEN
-                IF (intento /= 2) print *, "WARNING: sync of gg with unallocated array and intento /= 2?"
-                IF (intento > 0)    gg_d_ood = .true.
-                return
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of gg with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+
+                ! IF (intento_ > 0)    gg_d_ood = .true.
              END IF
-             IF (intento < 2) THEN
+             IF (intento_ < 2) THEN
                 print *, "Really copied gg D->H"
                 gg = gg_d
-                gg_ood = .false.
              END IF
+             gg_ood = .false.
          ENDIF
-         IF (intento > 0)    gg_d_ood = .true.
+         IF (intento_ > 0)    gg_d_ood = .true.
 #endif
      END SUBROUTINE using_gg
      !
@@ -75,7 +78,7 @@
              gg_d_ood = .false.
              RETURN
          END IF
-         ! here we know that gg is allocated, check if size if 0 
+         ! here we know that gg is allocated, check if size is 0 
          IF ( SIZE(gg) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array gg_d. If used, code will crash."
              RETURN
@@ -107,6 +110,8 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
          !
          IF (g_ood) THEN
              IF (.not. allocated(g_d)) THEN
@@ -114,17 +119,20 @@
                 stop
              END IF
              IF (.not. allocated(g)) THEN
-                IF (intento /= 2) print *, "WARNING: sync of g with unallocated array and intento /= 2?"
-                IF (intento > 0)    g_d_ood = .true.
-                return
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of g with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+
+                ! IF (intento_ > 0)    g_d_ood = .true.
              END IF
-             IF (intento < 2) THEN
+             IF (intento_ < 2) THEN
                 print *, "Really copied g D->H"
                 g = g_d
-                g_ood = .false.
              END IF
+             g_ood = .false.
          ENDIF
-         IF (intento > 0)    g_d_ood = .true.
+         IF (intento_ > 0)    g_d_ood = .true.
 #endif
      END SUBROUTINE using_g
      !
@@ -141,7 +149,7 @@
              g_d_ood = .false.
              RETURN
          END IF
-         ! here we know that g is allocated, check if size if 0 
+         ! here we know that g is allocated, check if size is 0 
          IF ( SIZE(g) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array g_d. If used, code will crash."
              RETURN

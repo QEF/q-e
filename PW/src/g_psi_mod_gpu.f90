@@ -15,9 +15,7 @@
      SAVE
      !
      REAL(DP), ALLOCATABLE, TARGET :: h_diag_d(:, :)
-
      REAL(DP), ALLOCATABLE, TARGET :: s_diag_d(:, :)
-
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: h_diag_d, s_diag_d
@@ -41,6 +39,8 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
          !
          IF (h_diag_ood) THEN
              IF (.not. allocated(h_diag_d)) THEN
@@ -48,17 +48,20 @@
                 stop
              END IF
              IF (.not. allocated(h_diag)) THEN
-                IF (intento /= 2) print *, "WARNING: sync of h_diag with unallocated array and intento /= 2?"
-                IF (intento > 0)    h_diag_d_ood = .true.
-                return
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of h_diag with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+
+                ! IF (intento_ > 0)    h_diag_d_ood = .true.
              END IF
-             IF (intento < 2) THEN
+             IF (intento_ < 2) THEN
                 print *, "Really copied h_diag D->H"
                 h_diag = h_diag_d
-                h_diag_ood = .false.
              END IF
+             h_diag_ood = .false.
          ENDIF
-         IF (intento > 0)    h_diag_d_ood = .true.
+         IF (intento_ > 0)    h_diag_d_ood = .true.
 #endif
      END SUBROUTINE using_h_diag
      !
@@ -75,7 +78,7 @@
              h_diag_d_ood = .false.
              RETURN
          END IF
-         ! here we know that h_diag is allocated, check if size if 0 
+         ! here we know that h_diag is allocated, check if size is 0 
          IF ( SIZE(h_diag) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array h_diag_d. If used, code will crash."
              RETURN
@@ -107,6 +110,8 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
          !
          IF (s_diag_ood) THEN
              IF (.not. allocated(s_diag_d)) THEN
@@ -114,17 +119,20 @@
                 stop
              END IF
              IF (.not. allocated(s_diag)) THEN
-                IF (intento /= 2) print *, "WARNING: sync of s_diag with unallocated array and intento /= 2?"
-                IF (intento > 0)    s_diag_d_ood = .true.
-                return
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of s_diag with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+
+                ! IF (intento_ > 0)    s_diag_d_ood = .true.
              END IF
-             IF (intento < 2) THEN
+             IF (intento_ < 2) THEN
                 print *, "Really copied s_diag D->H"
                 s_diag = s_diag_d
-                s_diag_ood = .false.
              END IF
+             s_diag_ood = .false.
          ENDIF
-         IF (intento > 0)    s_diag_d_ood = .true.
+         IF (intento_ > 0)    s_diag_d_ood = .true.
 #endif
      END SUBROUTINE using_s_diag
      !
@@ -141,7 +149,7 @@
              s_diag_d_ood = .false.
              RETURN
          END IF
-         ! here we know that s_diag is allocated, check if size if 0 
+         ! here we know that s_diag is allocated, check if size is 0 
          IF ( SIZE(s_diag) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array s_diag_d. If used, code will crash."
              RETURN

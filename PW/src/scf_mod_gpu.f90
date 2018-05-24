@@ -15,7 +15,6 @@
      SAVE
      !
      REAL(DP), ALLOCATABLE, TARGET :: vrs_d(:, :)
-
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: vrs_d
@@ -37,6 +36,8 @@
          implicit none
          INTEGER, INTENT(IN) :: intento
 #if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
          !
          IF (vrs_ood) THEN
              IF (.not. allocated(vrs_d)) THEN
@@ -44,17 +45,20 @@
                 stop
              END IF
              IF (.not. allocated(vrs)) THEN
-                IF (intento /= 2) print *, "WARNING: sync of vrs with unallocated array and intento /= 2?"
-                IF (intento > 0)    vrs_d_ood = .true.
-                return
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of vrs with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+
+                ! IF (intento_ > 0)    vrs_d_ood = .true.
              END IF
-             IF (intento < 2) THEN
+             IF (intento_ < 2) THEN
                 print *, "Really copied vrs D->H"
                 vrs = vrs_d
-                vrs_ood = .false.
              END IF
+             vrs_ood = .false.
          ENDIF
-         IF (intento > 0)    vrs_d_ood = .true.
+         IF (intento_ > 0)    vrs_d_ood = .true.
 #endif
      END SUBROUTINE using_vrs
      !
@@ -71,7 +75,7 @@
              vrs_d_ood = .false.
              RETURN
          END IF
-         ! here we know that vrs is allocated, check if size if 0 
+         ! here we know that vrs is allocated, check if size is 0 
          IF ( SIZE(vrs) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array vrs_d. If used, code will crash."
              RETURN
