@@ -960,6 +960,9 @@ MODULE exx_band
     USE fft_types,      ONLY : fft_type_init
     USE recvec_subs,    ONLY : ggen, ggens
     !
+    USE gvect_gpum,     ONLY : using_g, using_gg, using_g_d, using_gg_d, &
+                                 using_mill, using_mill_d
+    !
     IMPLICIT NONE
     !
     LOGICAL, intent(in) :: is_exx
@@ -1050,6 +1053,14 @@ MODULE exx_band
        CALL ggen ( dfftp, gamma_only, at, bg, gcutm, ngm_g, ngm, &
             g, gg, mill, ig_l2g, gstart )
        CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
+
+       ! Sync duplicated data
+       ! All these variables are actually set by ggen which has intent out
+       CALL using_mill(2); CALL using_mill_d(0); ! updates mill indices,
+       CALL using_g(2);    CALL using_g_d(0);    ! g and gg that are used almost only after
+       CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
+                                                 ! This is a trick to avoid checking for sync everywhere.
+       !
        allocate( ig_l2g_exx(ngm), g_exx(3,ngm), gg_exx(ngm) )
        allocate( mill_exx(3,ngm), nl_exx(ngm) )
        allocate( nls_exx(size(dffts%nl)) )

@@ -154,7 +154,11 @@ SUBROUTINE read_xml_file_internal(withbs)
   USE esm,                  ONLY : do_comp_esm, esm_init
   USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
   !
-  USE gvect_gpum,           ONLY : using_g, using_gg, using_g_d, using_gg_d
+  USE gvect_gpum,            ONLY : using_g, using_gg, using_g_d, using_gg_d, &
+                                    using_mill, using_mill_d, &
+                                    using_eigts1, using_eigts2, using_eigts3, &
+                                    using_eigts1_d, using_eigts2_d, using_eigts3_d
+
   !
   IMPLICIT NONE
 
@@ -302,9 +306,11 @@ SUBROUTINE read_xml_file_internal(withbs)
        g, gg, mill, ig_l2g, gstart ) 
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms ) 
 
-  CALL using_g(1); CALL using_gg(1)       ! g and gg are used almost only after
-  CALL using_g_d(0); CALL using_gg_d(0) ! a single initialization.
-                                                    ! This is a trck to avoid checking for sync everywhere.
+  ! All these variables are actually set by ggen which has intent out
+  CALL using_mill(2); CALL using_mill_d(0); ! updates mill indices,
+  CALL using_g(2);    CALL using_g_d(0);    ! g and gg that are used almost only after
+  CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
+                                            ! This is a trick to avoid checking for sync everywhere.
   IF (do_comp_esm) THEN
     CALL pw_readfile( 'esm', ierr )
     CALL esm_init()
@@ -341,6 +347,9 @@ SUBROUTINE read_xml_file_internal(withbs)
   CALL init_vloc()
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, dfftp%nr1, dfftp%nr2, &
                    dfftp%nr3, strf, eigts1, eigts2, eigts3 )
+  CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
+  CALL using_eigts1_d(0); CALL using_eigts2_d(0); CALL using_eigts3_d(0);
+  !
   CALL setlocal()
   CALL set_rhoc()
   !

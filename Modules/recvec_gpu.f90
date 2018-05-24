@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+! #define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
 !=----------------------------------------------------------------------------=!
    MODULE gvect_gpum
 !=----------------------------------------------------------------------------=!
@@ -16,14 +16,26 @@
      !
      REAL(DP), ALLOCATABLE, TARGET :: gg_d(:)
      REAL(DP), ALLOCATABLE, TARGET :: g_d(:, :)
+     INTEGER, ALLOCATABLE, TARGET :: mill_d(:, :)
+     COMPLEX(DP), ALLOCATABLE, TARGET :: eigts1_d(:, :)
+     COMPLEX(DP), ALLOCATABLE, TARGET :: eigts2_d(:, :)
+     COMPLEX(DP), ALLOCATABLE, TARGET :: eigts3_d(:, :)
      !
 #if defined(__CUDA)
-     attributes (DEVICE) :: gg_d, g_d
+     attributes (DEVICE) :: gg_d, g_d, mill_d, eigts1_d, eigts2_d, eigts3_d
 
      LOGICAL :: gg_ood = .false.    ! used to flag out of date variables
      LOGICAL :: gg_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: g_ood = .false.    ! used to flag out of date variables
      LOGICAL :: g_d_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: mill_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: mill_d_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: eigts1_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: eigts1_d_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: eigts2_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: eigts2_d_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: eigts3_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: eigts3_d_ood = .false.    ! used to flag out of date variables
      !
 #endif
      CONTAINS
@@ -169,10 +181,298 @@
          CALL errore('using_g_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_g_d
+     !
+     SUBROUTINE using_mill(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
+         !
+         USE gvect, ONLY : mill
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
+         !
+         IF (mill_ood) THEN
+             IF (.not. allocated(mill_d)) THEN
+                CALL errore('using_mill_d', 'PANIC: sync of mill from mill_d with unallocated array. Bye!!', 1)
+                stop
+             END IF
+             IF (.not. allocated(mill)) THEN
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of mill with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+
+                ! IF (intento_ > 0)    mill_d_ood = .true.
+             END IF
+             IF (intento_ < 2) THEN
+                print *, "Really copied mill D->H"
+                mill = mill_d
+             END IF
+             mill_ood = .false.
+         ENDIF
+         IF (intento_ > 0)    mill_d_ood = .true.
+#endif
+     END SUBROUTINE using_mill
+     !
+     SUBROUTINE using_mill_d(intento)
+         !
+         USE gvect, ONLY : mill
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         !
+         IF (.not. allocated(mill)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of mill_d with unallocated array and intento /= 2?"
+             IF (allocated(mill_d)) DEALLOCATE(mill_d)
+             mill_d_ood = .false.
+             RETURN
+         END IF
+         ! here we know that mill is allocated, check if size is 0 
+         IF ( SIZE(mill) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array mill_d. If used, code will crash."
+             RETURN
+         END IF
+         !
+         IF (mill_d_ood) THEN
+             IF ( allocated(mill_d) .and. (SIZE(mill_d)/=SIZE(mill))) deallocate(mill_d)
+             IF (.not. allocated(mill_d)) ALLOCATE(mill_d, MOLD=mill)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied mill H->D"
+                mill_d = mill
+             END IF
+             mill_d_ood = .false.
+         ENDIF
+         IF (intento > 0)    mill_ood = .true.
+#else
+         CALL errore('using_mill_d', 'Trying to use device data without device compilated code!', 1)
+#endif
+     END SUBROUTINE using_mill_d
+     !
+     SUBROUTINE using_eigts1(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
+         !
+         USE gvect, ONLY : eigts1
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
+         !
+         IF (eigts1_ood) THEN
+             IF (.not. allocated(eigts1_d)) THEN
+                CALL errore('using_eigts1_d', 'PANIC: sync of eigts1 from eigts1_d with unallocated array. Bye!!', 1)
+                stop
+             END IF
+             IF (.not. allocated(eigts1)) THEN
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of eigts1 with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+
+                ! IF (intento_ > 0)    eigts1_d_ood = .true.
+             END IF
+             IF (intento_ < 2) THEN
+                print *, "Really copied eigts1 D->H"
+                eigts1 = eigts1_d
+             END IF
+             eigts1_ood = .false.
+         ENDIF
+         IF (intento_ > 0)    eigts1_d_ood = .true.
+#endif
+     END SUBROUTINE using_eigts1
+     !
+     SUBROUTINE using_eigts1_d(intento)
+         !
+         USE gvect, ONLY : eigts1
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         !
+         IF (.not. allocated(eigts1)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of eigts1_d with unallocated array and intento /= 2?"
+             IF (allocated(eigts1_d)) DEALLOCATE(eigts1_d)
+             eigts1_d_ood = .false.
+             RETURN
+         END IF
+         ! here we know that eigts1 is allocated, check if size is 0 
+         IF ( SIZE(eigts1) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array eigts1_d. If used, code will crash."
+             RETURN
+         END IF
+         !
+         IF (eigts1_d_ood) THEN
+             IF ( allocated(eigts1_d) .and. (SIZE(eigts1_d)/=SIZE(eigts1))) deallocate(eigts1_d)
+             IF (.not. allocated(eigts1_d)) ALLOCATE(eigts1_d, MOLD=eigts1)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied eigts1 H->D"
+                eigts1_d = eigts1
+             END IF
+             eigts1_d_ood = .false.
+         ENDIF
+         IF (intento > 0)    eigts1_ood = .true.
+#else
+         CALL errore('using_eigts1_d', 'Trying to use device data without device compilated code!', 1)
+#endif
+     END SUBROUTINE using_eigts1_d
+     !
+     SUBROUTINE using_eigts2(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
+         !
+         USE gvect, ONLY : eigts2
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
+         !
+         IF (eigts2_ood) THEN
+             IF (.not. allocated(eigts2_d)) THEN
+                CALL errore('using_eigts2_d', 'PANIC: sync of eigts2 from eigts2_d with unallocated array. Bye!!', 1)
+                stop
+             END IF
+             IF (.not. allocated(eigts2)) THEN
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of eigts2 with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+
+                ! IF (intento_ > 0)    eigts2_d_ood = .true.
+             END IF
+             IF (intento_ < 2) THEN
+                print *, "Really copied eigts2 D->H"
+                eigts2 = eigts2_d
+             END IF
+             eigts2_ood = .false.
+         ENDIF
+         IF (intento_ > 0)    eigts2_d_ood = .true.
+#endif
+     END SUBROUTINE using_eigts2
+     !
+     SUBROUTINE using_eigts2_d(intento)
+         !
+         USE gvect, ONLY : eigts2
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         !
+         IF (.not. allocated(eigts2)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of eigts2_d with unallocated array and intento /= 2?"
+             IF (allocated(eigts2_d)) DEALLOCATE(eigts2_d)
+             eigts2_d_ood = .false.
+             RETURN
+         END IF
+         ! here we know that eigts2 is allocated, check if size is 0 
+         IF ( SIZE(eigts2) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array eigts2_d. If used, code will crash."
+             RETURN
+         END IF
+         !
+         IF (eigts2_d_ood) THEN
+             IF ( allocated(eigts2_d) .and. (SIZE(eigts2_d)/=SIZE(eigts2))) deallocate(eigts2_d)
+             IF (.not. allocated(eigts2_d)) ALLOCATE(eigts2_d, MOLD=eigts2)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied eigts2 H->D"
+                eigts2_d = eigts2
+             END IF
+             eigts2_d_ood = .false.
+         ENDIF
+         IF (intento > 0)    eigts2_ood = .true.
+#else
+         CALL errore('using_eigts2_d', 'Trying to use device data without device compilated code!', 1)
+#endif
+     END SUBROUTINE using_eigts2_d
+     !
+     SUBROUTINE using_eigts3(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
+         !
+         USE gvect, ONLY : eigts3
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
+         !
+         IF (eigts3_ood) THEN
+             IF (.not. allocated(eigts3_d)) THEN
+                CALL errore('using_eigts3_d', 'PANIC: sync of eigts3 from eigts3_d with unallocated array. Bye!!', 1)
+                stop
+             END IF
+             IF (.not. allocated(eigts3)) THEN
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of eigts3 with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+
+                ! IF (intento_ > 0)    eigts3_d_ood = .true.
+             END IF
+             IF (intento_ < 2) THEN
+                print *, "Really copied eigts3 D->H"
+                eigts3 = eigts3_d
+             END IF
+             eigts3_ood = .false.
+         ENDIF
+         IF (intento_ > 0)    eigts3_d_ood = .true.
+#endif
+     END SUBROUTINE using_eigts3
+     !
+     SUBROUTINE using_eigts3_d(intento)
+         !
+         USE gvect, ONLY : eigts3
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         !
+         IF (.not. allocated(eigts3)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of eigts3_d with unallocated array and intento /= 2?"
+             IF (allocated(eigts3_d)) DEALLOCATE(eigts3_d)
+             eigts3_d_ood = .false.
+             RETURN
+         END IF
+         ! here we know that eigts3 is allocated, check if size is 0 
+         IF ( SIZE(eigts3) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array eigts3_d. If used, code will crash."
+             RETURN
+         END IF
+         !
+         IF (eigts3_d_ood) THEN
+             IF ( allocated(eigts3_d) .and. (SIZE(eigts3_d)/=SIZE(eigts3))) deallocate(eigts3_d)
+             IF (.not. allocated(eigts3_d)) ALLOCATE(eigts3_d, MOLD=eigts3)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied eigts3 H->D"
+                eigts3_d = eigts3
+             END IF
+             eigts3_d_ood = .false.
+         ENDIF
+         IF (intento > 0)    eigts3_ood = .true.
+#else
+         CALL errore('using_eigts3_d', 'Trying to use device data without device compilated code!', 1)
+#endif
+     END SUBROUTINE using_eigts3_d
      !     
      SUBROUTINE deallocate_gvect_gpu
        IF( ALLOCATED( gg_d ) ) DEALLOCATE( gg_d )
        IF( ALLOCATED( g_d ) ) DEALLOCATE( g_d )
+       IF( ALLOCATED( mill_d ) ) DEALLOCATE( mill_d )
+       IF( ALLOCATED( eigts1_d ) ) DEALLOCATE( eigts1_d )
+       IF( ALLOCATED( eigts2_d ) ) DEALLOCATE( eigts2_d )
+       IF( ALLOCATED( eigts3_d ) ) DEALLOCATE( eigts3_d )
      END SUBROUTINE deallocate_gvect_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE gvect_gpum

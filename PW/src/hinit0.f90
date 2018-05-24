@@ -29,6 +29,9 @@ SUBROUTINE hinit0()
   USE control_flags,ONLY : tqr, tq_smoothing, tbeta_smoothing
   USE io_global,    ONLY : stdout
   !
+  USE gvect_gpum,   ONLY : using_eigts1, using_eigts2, using_eigts3, &
+                           using_eigts1_D, using_eigts2_d, using_eigts3_d
+  !
   IMPLICIT NONE
   !
   INTEGER :: ik                 ! counter on k points
@@ -74,6 +77,9 @@ SUBROUTINE hinit0()
   !
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
                    dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
+  ! sync duplicated version
+  CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
+  CALL using_eigts1_d(0); CALL using_eigts2_d(0); CALL using_eigts3_d(0);
   !
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters

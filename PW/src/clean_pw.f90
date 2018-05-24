@@ -71,7 +71,7 @@ SUBROUTINE clean_pw( lflag )
   USE wavefunctions_module_gpum, ONLY : using_evc, using_evc_d
   USE wvfct_gpum,                ONLY : using_et, using_et_d
   USE wvfct_gpum,                ONLY : using_g2kin, using_g2kin_d
-  USE gvect_gpum,                ONLY : using_g, using_gg, using_g_d, using_gg_d
+  USE gvect_gpum,                ONLY : deallocate_gvect_gpu !using_g, using_gg, using_g_d, using_gg_d
   USE scf_gpum,                  ONLY : using_vrs, using_vrs_d
   USE uspp_gpum,                 ONLY : deallocate_uspp_gpu
   !
@@ -129,8 +129,9 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( g ) )          DEALLOCATE( g )
   IF ( ALLOCATED( gg ) )         DEALLOCATE( gg )
   !
-  CALL using_g(2); CALL using_gg(2)       ! Trick to deallocate
-  CALL using_g_d(2); CALL using_gg_d(2)
+  CALL deallocate_gvect_gpu()
+  !CALL using_g(2); CALL using_gg(2)       ! Trick to deallocate
+  !CALL using_g_d(2); CALL using_gg_d(2)
   !
   IF ( ALLOCATED( igtongl ) )    DEALLOCATE( igtongl )  
   IF ( ALLOCATED( mill ) )       DEALLOCATE( mill )
