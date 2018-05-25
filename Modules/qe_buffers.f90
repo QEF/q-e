@@ -7,12 +7,10 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE qe_buffers
-#if defined(__CUDA)
-  USE fbuf_qe, ONLY : bufqe_t
-  USE fbuf_qe_cpu, ONLY : buf_pinned_t
+  USE fbuf_dev, ONLY : fbuf_dev_t
+  USE fbuf_pin, ONLY : fbuf_pin_t
   !
   IMPLICIT NONE
   !
-  TYPE(bufqe_t) :: qe_buffer
-#endif
+  TYPE(fbuf_dev_t) :: qe_buffer
 END MODULE qe_buffers

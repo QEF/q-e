@@ -33,6 +33,7 @@ subroutine init_us_2_gpu (npw_, igk__d, q_, vkb__d)
 !  USE ylmr2_gpum, ONLY : ylmr2_gpu
   !
   USE us_gpum,    ONLY : using_tab_d, using_tab_d2y_d
+  USE qe_buffers, ONLY : qe_buffer
 #if defined(__CUDA)
   USE cudafor
 #endif
@@ -53,12 +54,12 @@ subroutine init_us_2_gpu (npw_, igk__d, q_, vkb__d)
   integer :: istat
   integer :: iv_d
   real(DP) :: px, ux, vx, wx, arg, q1, q2, q3
-  real(DP), allocatable :: gk_d (:,:), qg_d (:), vq_d(:), ylm_d(:,:), vkb1_d(:,:)
+  real(DP), pointer :: gk_d (:,:), qg_d (:), vq_d(:), ylm_d(:,:), vkb1_d(:,:)
   real(DP), allocatable :: qg_h (:), vq_h(:)
   real(DP) :: rv_d
 
   complex(DP) :: phase, pref
-  complex(DP), allocatable :: sk_d(:)
+  complex(DP), pointer :: sk_d(:)
 
   logical :: is_gth
   integer :: iq
@@ -76,12 +77,18 @@ subroutine init_us_2_gpu (npw_, igk__d, q_, vkb__d)
 
   ! JR Eventually replace with smarter allocation/deallocation of GPU temp arrays
   ! PB use buffer class here
-  allocate (vkb1_d( npw_,nhm))    
-  allocate (  sk_d( npw_))    
-  allocate (  qg_d( npw_))    
-  allocate (  vq_d( npw_))    
-  allocate ( ylm_d( npw_, (lmaxkb + 1) **2))    
-  allocate (  gk_d( 3, npw_))
+  !allocate (vkb1_d( npw_,nhm))    
+  !allocate (  sk_d( npw_))    
+  !allocate (  qg_d( npw_))    
+  !allocate (  vq_d( npw_))    
+  !allocate ( ylm_d( npw_, (lmaxkb + 1) **2))    
+  !allocate (  gk_d( 3, npw_))
+  CALL qe_buffer%lock_buffer(vkb1_d, (/ npw_,nhm/), istat )
+  CALL qe_buffer%lock_buffer(  sk_d, npw_, istat )
+  CALL qe_buffer%lock_buffer(  qg_d, npw_, istat )
+  CALL qe_buffer%lock_buffer(  vq_d, npw_, istat )
+  CALL qe_buffer%lock_buffer( ylm_d, (/ npw_, (lmaxkb + 1) **2 /), istat )
+  CALL qe_buffer%lock_buffer(  gk_d, (/ 3, npw_ /), istat )
 
   is_gth = .false.
   do nt = 1, ntyp
@@ -206,12 +213,18 @@ subroutine init_us_2_gpu (npw_, igk__d, q_, vkb__d)
      enddo
   enddo
 
-  deallocate(gk_d)
-  deallocate(ylm_d) 
-  deallocate(vq_d)
-  deallocate(qg_d)
-  deallocate(sk_d)
-  deallocate(vkb1_d)
+  !deallocate(gk_d)
+  !deallocate(ylm_d) 
+  !deallocate(vq_d)
+  !deallocate(qg_d)
+  !deallocate(sk_d)
+  !deallocate(vkb1_d)
+  CALL qe_buffer%release_buffer(vkb1_d, istat )
+  CALL qe_buffer%release_buffer(  sk_d, istat )
+  CALL qe_buffer%release_buffer(  qg_d, istat )
+  CALL qe_buffer%release_buffer(  vq_d, istat )
+  CALL qe_buffer%release_buffer( ylm_d, istat )
+  CALL qe_buffer%release_buffer(  gk_d, istat )
   IF (is_gth) THEN
      deallocate ( qg_h, vq_h )
   END IF

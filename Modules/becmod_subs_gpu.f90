@@ -65,7 +65,7 @@ CONTAINS
     INTEGER, EXTERNAL :: ldim_block, gind_block
     INTEGER :: m_loc, m_begin, ip
     REAL(DP), ALLOCATABLE :: dtmp_d(:,:)   ! replace this with buffers !
-    INTEGER :: i, j, npwx
+    INTEGER :: i, j, nkb
     REAL(DP), POINTER :: betapsi_d_r_d(:,:)
 #if defined(__CUDA)
     attributes(DEVICE) :: dtmp_d, betapsi_d_r_d
@@ -94,11 +94,11 @@ CONTAINS
              IF( m_loc > 0 ) THEN
                 CALL calbec_gamma_gpu ( npw, beta_d, psi_d(:,m_begin:m_begin+m_loc-1), dtmp_d, m_loc, betapsi_d%comm )
                 IF( ip == betapsi_d%mype ) THEN
-                   npwx = SIZE( betapsi_d%r_d, 1 )
+                   nkb = SIZE( betapsi_d%r_d, 1 )
                    betapsi_d_r_d => betapsi_d%r_d
 !$cuf kernel do(2) <<<*,*>>>
                    DO j=1,m_loc
-                      DO i=1, npwx
+                      DO i=1, nkb
                          betapsi_d_r_d(i,j) = dtmp_d(i,j)
                       END DO
                    END DO
