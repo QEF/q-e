@@ -92,7 +92,7 @@ subroutine init_us_2_gpu (npw_, igk__d, q_, vkb__d)
         is_gth = .true.
         exit
      end if
-  end if
+  end do
   !
   q1 = q_(1)
   q2 = q_(2)
