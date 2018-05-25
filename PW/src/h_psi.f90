@@ -101,6 +101,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE funct,    ONLY : exx_is_active
   USE fft_helper_subroutines
   !
+  USE uspp_gpum,  ONLY : using_vkb
   USE wvfct_gpum, ONLY : using_g2kin
   USE scf_gpum,   ONLY : using_vrs
   USE becmod_subs_gpum, ONLY : using_becp_auto
@@ -204,6 +205,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL using_becp_auto(1)
+     CALL using_vkb(0)
      !
      CALL start_clock( 'h_psi:calbec' )
      CALL calbec ( n, vkb, psi, becp, m )

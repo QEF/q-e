@@ -19,7 +19,7 @@ SUBROUTINE c_bands( iter )
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunhub, iunwfc, nwordwfc, nwordwfcU
   USE buffers,              ONLY : get_buffer, save_buffer, close_buffer
-  USE klist,                ONLY : nkstot, nks, xk, ngk, igk_k
+  USE klist,                ONLY : nkstot, nks, ngk, igk_k, igk_k_d, xk
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g
   USE wvfct,                ONLY : et, nbnd, npwx, current_k
@@ -34,7 +34,7 @@ SUBROUTINE c_bands( iter )
 
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb
+  USE uspp_gpum,                 ONLY : vkb_d, using_vkb, using_vkb_d
   !
   IMPLICIT NONE
   !
@@ -93,8 +93,13 @@ SUBROUTINE c_bands( iter )
      !
      ! ... More stuff needed by the hamiltonian: nonlocal projectors
      !
-     IF ( nkb > 0 ) CALL using_vkb(1)
-     IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+     IF (use_gpu) THEN
+        IF ( nkb > 0 ) CALL using_vkb_d(2)
+        IF ( nkb > 0 ) CALL init_us_2_gpu( ngk(ik), igk_k_d(1,ik), xk(1,ik), vkb_d )
+     ELSE
+        IF ( nkb > 0 ) CALL using_vkb(2)
+        IF ( nkb > 0 ) CALL init_us_2( ngk(ik), igk_k(1,ik), xk(1,ik), vkb )
+     END IF
      !
      ! ... read in wavefunctions from the previous iteration
      !
@@ -482,14 +487,14 @@ CONTAINS
           !
           IF ( .NOT. lrot ) THEN
              !
-             CALL using_evc(1)
+             CALL using_evc(1); CALL using_et(1);
              CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
              !
              avg_iter = avg_iter + 1.D0
              !
           END IF
           !
-          CALL using_evc(1)
+          CALL using_evc(1); CALL using_et(1);
           CALL ccgdiagg( h_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
