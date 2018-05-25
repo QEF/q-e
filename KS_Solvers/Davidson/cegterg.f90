@@ -1513,7 +1513,7 @@ CONTAINS
         ic = irc_ip( ipc )
         !
         IF( ic+nc-1 >= nb1 ) THEN
-
+           !
            nc = MIN( nc, ic+nc-1 - nb1 + 1 )
            IF( ic >= nb1 ) THEN
               ii = ic
@@ -1522,7 +1522,10 @@ CONTAINS
               ii = nb1
               icc = nb1-ic+1
            END IF
-
+           !
+           ! icc to nc is the local index of the unconverged bands
+           ! ii is the global index of the first unconverged bands
+           !
            DO ipr = 1, ipc ! desc%npr use symmetry
               !
               nr = nrc_ip( ipr )
