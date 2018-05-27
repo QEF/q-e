@@ -23,7 +23,7 @@ SUBROUTINE wfcinit()
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
-                                   diropn, tmp_dir, prefix
+                                   diropn, tmp_dir, prefix, postfix
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions_module, ONLY : evc
@@ -102,7 +102,7 @@ SUBROUTINE wfcinit()
   CALL pw_readschema_file(IERR = ierr, RESTART_OUTPUT = output_obj )
   IF ( ierr == 0 ) THEN 
      twfcollect_file = output_obj%band_structure%wf_collected   
-     dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/' 
+     dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
      IF ( twfcollect_file ) THEN
         CALL read_collected_to_evc(dirname )
      ELSE IF ( .NOT. exst_file) THEN
