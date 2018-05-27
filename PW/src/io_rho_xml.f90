@@ -79,7 +79,7 @@ MODULE io_rho_xml
          !
          iunocc = find_free_unit ()
          IF ( ionode ) THEN
-            CALL seqopn( iunocc, 'save/occup.txt', 'FORMATTED', lexist )
+            CALL seqopn( iunocc, postfix//'occup.txt', 'FORMATTED', lexist )
             if (noncolin) then
               WRITE( iunocc, * , iostat = ierr) rho%ns_nc
             else
@@ -98,7 +98,7 @@ MODULE io_rho_xml
          !
          iunpaw = find_free_unit ()
          IF ( ionode ) THEN
-            CALL seqopn( iunpaw, 'save/paw.txt', 'FORMATTED', lexist )
+            CALL seqopn( iunpaw, postfix//'paw.txt', 'FORMATTED', lexist )
             WRITE( iunpaw, * , iostat = ierr) rho%bec
          END IF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
@@ -164,7 +164,7 @@ MODULE io_rho_xml
          !
          iunocc = find_free_unit ()
          IF ( ionode ) THEN
-            CALL seqopn( iunocc, 'save/occup.txt', 'FORMATTED', lexist )
+            CALL seqopn( iunocc, postfix//'occup.txt', 'FORMATTED', lexist )
             if (noncolin) then
               READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns_nc
             else
@@ -198,7 +198,7 @@ MODULE io_rho_xml
          !
          iunpaw = find_free_unit ()
          IF ( ionode ) THEN
-            CALL seqopn( iunpaw, 'save/paw.txt', 'FORMATTED', lexist )
+            CALL seqopn( iunpaw, postfix//'paw.txt', 'FORMATTED', lexist )
             READ( UNIT = iunpaw, FMT = *, iostat=ierr ) rho%bec
          END IF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
