@@ -14,7 +14,7 @@ SUBROUTINE punch( what )
   !
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunpun, iunwfc, nwordwfc, diropn, &
-       tmp_dir, prefix, create_directory
+       tmp_dir, prefix, postfix, create_directory
   USE control_flags,        ONLY : io_level, twfcollect, io_level, lscf
   USE klist,                ONLY : nks
   USE io_files,             ONLY : xmlpun_schema, psfile, pseudo_dir
@@ -45,7 +45,7 @@ SUBROUTINE punch( what )
   IF (io_level < 0 ) RETURN
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
-      TRIM( prefix ) // '.save'
+      TRIM( prefix ) // postfix
   !
   ! ... if wavefunctions are stored in "distributed" format,
   ! ... save here wavefunctions to file if never saved before
@@ -67,7 +67,7 @@ SUBROUTINE punch( what )
   !
   ! ... create the main restart directory (if needed)
   !
-  CALL create_directory( TRIM( tmp_dir ) // TRIM( prefix ) // '.save' )
+  CALL create_directory( TRIM( tmp_dir ) // TRIM( prefix ) // postfix )
   !
   CALL pw_write_schema( )
   !
@@ -83,7 +83,7 @@ SUBROUTINE punch( what )
      ! ... make a copy of xml file one level up (FIXME: why?)
      !
      IF (ionode) THEN
-        cp_source = TRIM(tmp_dir)//TRIM(prefix)//'.save/'//xmlpun_schema
+        cp_source = TRIM(tmp_dir)//TRIM(prefix)//postfix//xmlpun_schema
         cp_dest   = TRIM(tmp_dir)//TRIM(prefix)//'.xml'
         cp_status = f_copy(cp_source, cp_dest)
      END IF
@@ -96,14 +96,14 @@ SUBROUTINE punch( what )
      !
      DO nt = 1, nsp
         cp_source = TRIM(pseudo_dir)//psfile(nt)
-        cp_dest   = TRIM(tmp_dir)//TRIM(prefix)//'.save/'//psfile(nt)
+        cp_dest   = TRIM(tmp_dir)//TRIM(prefix)//postfix//psfile(nt)
         IF ( TRIM(cp_source) /= TRIM(cp_dest) ) &
              cp_status = f_copy(cp_source, cp_dest)
      END DO
      inlc = get_inlc()
      IF ( inlc > 0 ) THEN 
         cp_source = TRIM(kernel_file_name)
-        cp_dest = TRIM(tmp_dir)//TRIM(prefix)//'.save/'//TRIM(vdw_table_name)
+        cp_dest = TRIM(tmp_dir)//TRIM(prefix)//postfix//TRIM(vdw_table_name)
         IF ( TRIM(cp_source) /= TRIM(cp_dest) ) & 
            cp_status = f_copy(cp_source, cp_dest)
      END IF  

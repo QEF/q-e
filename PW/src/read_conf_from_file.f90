@@ -13,7 +13,7 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   !
   USE kinds,          ONLY : DP
   USE io_global,      ONLY : stdout
-  USE io_files,       ONLY : tmp_dir, prefix
+  USE io_files,       ONLY : tmp_dir, prefix, postfix
 #if defined (__OLDXML)
   USE pw_restart,     ONLY : pw_readfile
 #else
@@ -40,7 +40,7 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   !
   !
   WRITE( stdout, '(/5X,"Atomic positions and unit cell read from directory:", &
-                &  /,5X,A)') TRIM( tmp_dir ) // TRIM( prefix ) // ".save/"
+                &  /,5X,A)') TRIM( tmp_dir ) // TRIM( prefix ) // postfix
   !
   ! ... check if restart file is present, if yes read config parameters
   !

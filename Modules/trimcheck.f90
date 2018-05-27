@@ -10,23 +10,29 @@
   FUNCTION trimcheck ( directory )
     !-----------------------------------------------------------------------
     !
-    ! ... verify if directory ends with /, add one if needed;
+    ! ... verify if directory ends with / or \ for Windows, add one if needed
     ! ... trim white spaces and put the result in trimcheck
     !
     IMPLICIT NONE
     !
     CHARACTER (LEN=*), INTENT(IN) :: directory
     CHARACTER (LEN=256) :: trimcheck
+#if defined (_WIN32)
+    CHARACTER (LEN=1) :: separator = '\'
+#else
+    CHARACTER (LEN=1) :: separator = '/'
+#endif
     INTEGER  :: l
     !
     l = LEN_TRIM( directory )
     IF ( l == 0 ) CALL errore( 'trimcheck', ' input name empty', 1)
     !
-    IF ( directory(l:l) == '/' ) THEN
+    IF ( directory(l:l) == separator ) THEN
        trimcheck = TRIM ( ADJUSTL(directory) )
     ELSE
+       trimcheck = TRIM ( ADJUSTL(directory) )
        IF ( l < LEN( trimcheck ) ) THEN
-          trimcheck = TRIM ( ADJUSTL(directory) ) // '/'
+          trimcheck = TRIM ( ADJUSTL(directory) ) // separator
        ELSE
           CALL errore(  'trimcheck', ' input name too long', l )
        END IF
