@@ -31,8 +31,8 @@ MODULE cp_restart_new
                           qexsd_init_dipole_info, qexsd_init_total_energy,             &
                           qexsd_init_forces,qexsd_init_stress, qexsd_xf,               &
                           qexsd_init_outputElectricField, input_obj => qexsd_input_obj
-  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, qexsd_fmt,&
-       qexsd_version, create_directory
+  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, postfix, &
+       qexsd_fmt, qexsd_version, create_directory
   USE io_base,   ONLY : write_wfc, read_wfc, write_rhog
   !
   USE io_global, ONLY : ionode, ionode_id, stdout
@@ -66,7 +66,7 @@ MODULE cp_restart_new
       USE parameters,               ONLY : ntypx
       USE dener,                    ONLY : detot
       USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
-                                           nwordwfc, tmp_dir, diropn
+                                           nwordwfc, diropn
       USE mp_images,                ONLY : intra_image_comm, me_image, &
                                            nproc_image
       USE mp_bands,                 ONLY : my_bgrp_id, intra_bgrp_comm, &
@@ -241,7 +241,7 @@ MODULE cp_restart_new
       !
       ! XML descriptor
       ! 
-      WRITE(dirname,'(A,A,"_",I2,".save/")') TRIM(tmp_dir), TRIM(prefix), ndw
+      WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndw, postfix
       WRITE( stdout, '(/,3X,"writing restart file (with schema): ",A)' ) &
              TRIM(dirname)
       !
@@ -498,8 +498,7 @@ MODULE cp_restart_new
                                            Node
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
                                            ts_vdw, lxdm, iverbosity, twfcollect, lwf
-      USE io_files,                 ONLY : iunpun, xmlpun, iunwfc, nwordwfc, &
-                                           tmp_dir, diropn
+      USE io_files,                 ONLY : iunwfc, nwordwfc, diropn
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm
       USE gvecw,                    ONLY : ngw, ngw_g
@@ -630,7 +629,7 @@ MODULE cp_restart_new
       !
       CALL qexsd_init_schema( iunpun )
       !
-      WRITE(dirname,'(A,A,"_",I2,".save/")') TRIM(tmp_dir), TRIM(prefix), ndr
+      WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr, postfix
       filename = TRIM( dirname ) // TRIM( xmlpun_schema )
       INQUIRE ( file=filename, exist=found )
       IF (.NOT. found ) &
@@ -1487,7 +1486,6 @@ MODULE cp_restart_new
     ! Wrapper, and ugly hack, for old cp_read_wfc called in restart.f90
     ! If ierr is present, returns ierr=-1 if file not found, 0 otherwise
     !
-    USE io_files,           ONLY : prefix, iunpun
     USE mp_bands,           ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE electrons_base,     ONLY : iupdwn, nupdwn
     USE gvecw,              ONLY : ngw, ngw_g
@@ -1509,11 +1507,11 @@ MODULE cp_restart_new
     LOGICAL            :: gamma_only
     !
     IF ( tag == 'm' ) THEN
-       WRITE(filename,'(A,A,"_",I2,".save/wfcm",I1)') &
-            TRIM(tmp_dir), TRIM(prefix), ndr, iss
+       WRITE(filename,'(A,A,"_",I2,A,"wfcm",I1)') &
+            TRIM(tmp_dir), TRIM(prefix), ndr, postfix,iss
     ELSE
-       WRITE(filename,'(A,A,"_",I2,".save/wfc",I1)') &
-            TRIM(tmp_dir), TRIM(prefix), ndr, iss
+       WRITE(filename,'(A,A,"_",I2,A,"wfc",I1)') &
+            TRIM(tmp_dir), TRIM(prefix), ndr, postfix,iss
     END IF
     ib = iupdwn(iss)
     nb = nupdwn(iss)
@@ -1848,7 +1846,7 @@ MODULE cp_restart_new
     !
     CALL qexsd_init_schema( iunpun )
     !
-    WRITE(dirname,'(A,A,"_",I2,".save/")') TRIM(tmp_dir), TRIM(prefix), ndr
+    WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr, postfix
     filename = TRIM( dirname ) // TRIM( xmlpun_schema )
     INQUIRE ( file=filename, exist=found )
     IF (.NOT. found ) &
@@ -2041,7 +2039,6 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE io_files,  ONLY : iunpun, prefix, tmp_dir
     USE cp_main_variables, ONLY : descla
     USE cp_interfaces, ONLY : collect_zmat
     USE electrons_base,ONLY: nspin, nudx
@@ -2057,7 +2054,7 @@ MODULE cp_restart_new
     REAL(dp), ALLOCATABLE :: mrepl(:,:)
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     !
-    WRITE(dirname,'(A,A,"_",I2,".save/")') TRIM(tmp_dir), TRIM(prefix), ndw
+    WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndw,postfix
     !
     IF ( ionode ) OPEN( unit=iunpun, file =TRIM(filename), &
          status='unknown', form='unformatted', iostat=ierr)
@@ -2094,7 +2091,6 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE io_files,  ONLY : iunpun, prefix, tmp_dir
     USE cp_main_variables, ONLY : descla
     USE cp_interfaces, ONLY : distribute_zmat
     USE electrons_base,ONLY: nspin, nudx
@@ -2110,7 +2106,7 @@ MODULE cp_restart_new
     REAL(dp), ALLOCATABLE :: mrepl(:,:)
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     !
-    WRITE(dirname,'(A,A,"_",I2,".save/")') TRIM(tmp_dir), TRIM(prefix), ndr
+    WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr,postfix
     !
     IF ( ionode ) OPEN( unit=iunpun, file =TRIM(filename), &
          status='old', form='unformatted', iostat=ierr)
