@@ -55,7 +55,6 @@ MODULE io_rho_xml
       INTEGER :: nspin_, iunocc, iunpaw, ierr
       INTEGER, EXTERNAL :: find_free_unit
 
-      ! Use the equivalent routine to write real space density
       dirname = TRIM(tmp_dir) // TRIM(prefix) // postfix
       CALL create_directory( dirname )
       ! in the following case do not read or write polarization
@@ -65,8 +64,10 @@ MODULE io_rho_xml
          nspin_ = nspin
       ENDIF
 #if defined (__OLDXML)
+      ! Write real space density
       CALL write_rho ( dirname, rho%of_r, nspin_ )
 #else
+      ! Write G-space density
       IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
            CALL write_rhog( dirname, root_bgrp, intra_bgrp_comm, &
            bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
@@ -79,7 +80,8 @@ MODULE io_rho_xml
          !
          iunocc = find_free_unit ()
          IF ( ionode ) THEN
-            CALL seqopn( iunocc, postfix//'occup.txt', 'FORMATTED', lexist )
+            ! postfix(2:6) = without the dot (seqopn already adds it)
+            CALL seqopn( iunocc, postfix(2:6)//'occup.txt', 'FORMATTED', lexist )
             if (noncolin) then
               WRITE( iunocc, * , iostat = ierr) rho%ns_nc
             else
@@ -98,7 +100,8 @@ MODULE io_rho_xml
          !
          iunpaw = find_free_unit ()
          IF ( ionode ) THEN
-            CALL seqopn( iunpaw, postfix//'paw.txt', 'FORMATTED', lexist )
+            ! postfix(2:6) = without the dot (seqopn already adds it)
+            CALL seqopn( iunpaw, postfix(2:6)//'paw.txt', 'FORMATTED', lexist )
             WRITE( iunpaw, * , iostat = ierr) rho%bec
          END IF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
@@ -164,7 +167,8 @@ MODULE io_rho_xml
          !
          iunocc = find_free_unit ()
          IF ( ionode ) THEN
-            CALL seqopn( iunocc, postfix//'occup.txt', 'FORMATTED', lexist )
+            ! postfix(2:6) = without the dot (seqopn already adds it)
+            CALL seqopn( iunocc, postfix(2:6)//'occup.txt', 'FORMATTED', lexist )
             if (noncolin) then
               READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns_nc
             else
@@ -198,7 +202,8 @@ MODULE io_rho_xml
          !
          iunpaw = find_free_unit ()
          IF ( ionode ) THEN
-            CALL seqopn( iunpaw, postfix//'paw.txt', 'FORMATTED', lexist )
+            ! postfix(2:6) = without the dot (seqopn already adds it)
+            CALL seqopn( iunpaw, postfix(2:6)//'paw.txt', 'FORMATTED', lexist )
             READ( UNIT = iunpaw, FMT = *, iostat=ierr ) rho%bec
          END IF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
