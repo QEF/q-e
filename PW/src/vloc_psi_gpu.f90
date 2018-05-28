@@ -238,7 +238,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE parallel_include
   USE kinds, ONLY : DP
   USE wvfct, ONLY : current_k
-  USE klist, ONLY : igk_k_host => igk_k
+  USE klist, ONLY : igk_k_d
   USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
@@ -263,7 +263,6 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   REAL(DP),    DEVICE, POINTER :: tg_v_d(:)
   COMPLEX(DP), DEVICE, POINTER :: tg_psic_d(:)
   INTEGER,     DEVICE, POINTER :: dffts_nl_d(:)
-  INTEGER,     DEVICE, POINTER :: igk_k_d(:)
   !
   REAL(DP) :: v_tmp
   INTEGER :: v_siz, idx, ioff
@@ -292,10 +291,8 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL qe_buffer%lock_buffer( psic_d, dffts%nnr, ierr )
   ENDIF
   CALL qe_buffer%lock_buffer( dffts_nl_d, size(dffts%nl) , ierr )
-  CALL qe_buffer%lock_buffer( igk_k_d, n, ierr )
   !
   dffts_nl_d = dffts%nl
-  igk_k_d(1:n) = igk_k_host(1:n, current_k)
   !
   IF( use_tg ) THEN
 
@@ -311,7 +308,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
            IF( idx + ibnd - 1 <= m ) THEN
 !$cuf kernel do(1) <<<,>>>
               DO j = 1, n
-                 tg_psic_d(dffts_nl_d (igk_k_d(j))+ioff) =  psi_d(j,idx+ibnd-1)
+                 tg_psic_d(dffts_nl_d (igk_k_d(j, current_k))+ioff) =  psi_d(j,idx+ibnd-1)
               ENDDO
 
            ENDIF
@@ -350,7 +347,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
 !$cuf kernel do(1) <<<,>>>
               DO j = 1, n
                  hpsi_d (j, ibnd+idx-1) = hpsi_d (j, ibnd+idx-1) + &
-                    tg_psic_d( dffts_nl_d(igk_k_d(j)) + ioff )
+                    tg_psic_d( dffts_nl_d(igk_k_d(j, current_k)) + ioff )
               ENDDO
 !
            ENDIF
@@ -373,7 +370,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
 !$cuf kernel do(1) <<<,>>>
         DO j = 1, n
            DO idx = 0, group_size-1
-              psic_d (dffts_nl_d (igk_k_d(j)) + idx*dffts%nnr) = psi_d(j, ibnd+idx)
+              psic_d (dffts_nl_d (igk_k_d(j, current_k)) + idx*dffts%nnr) = psi_d(j, ibnd+idx)
            END DO
         END DO
         !
@@ -394,7 +391,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
 !$cuf kernel do(1) <<<*,*>>>
         DO j = 1, n
            DO idx = 0, group_size-1
-              hpsi_d (j, ibnd + idx)   = hpsi_d (j, ibnd + idx)   + psic_d (dffts_nl_d(igk_k_d(j)) + idx * dffts%nnr)
+              hpsi_d (j, ibnd + idx)   = hpsi_d (j, ibnd + idx)   + psic_d (dffts_nl_d(igk_k_d(j, current_k)) + idx * dffts%nnr)
            ENDDO
         ENDDO
         !
@@ -406,7 +403,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
         psic_d(:) = (0.d0, 0.d0)
 !$cuf kernel do(1) <<<,>>>
         DO j = 1, n
-          psic_d (dffts_nl_d (igk_k_d(j))) = psi_d(j, ibnd)
+          psic_d (dffts_nl_d (igk_k_d(j, current_k))) = psi_d(j, ibnd)
         END DO
 !
         !write (6,*) 'wfc G ', ibnd
@@ -430,7 +427,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
         !
 !$cuf kernel do(1) <<<,>>>
         DO j = 1, n
-           hpsi_d (j, ibnd)   = hpsi_d (j, ibnd)   + psic_d (dffts_nl_d(igk_k_d(j)))
+           hpsi_d (j, ibnd)   = hpsi_d (j, ibnd)   + psic_d (dffts_nl_d(igk_k_d(j, current_k)))
         ENDDO
 !
         !write (6,*) 'v psi G ', ibnd
@@ -448,7 +445,6 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL qe_buffer%release_buffer( psic_d, ierr )
   ENDIF
   CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
-  CALL qe_buffer%release_buffer( igk_k_d, ierr )
   CALL stop_clock ('vloc_psi')
   !
 99 format ( 20 ('(',2f12.9,')') )
@@ -466,7 +462,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   USE parallel_include
   USE kinds,   ONLY : DP
   USE wvfct, ONLY : current_k
-  USE klist, ONLY : igk_k_host => igk_k
+  USE klist, ONLY : igk_k_d
   USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dffts, dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
@@ -485,7 +481,6 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   COMPLEX(DP), DEVICE, INTENT(in)   :: psi_d (lda*npol, m)
   COMPLEX(DP), DEVICE, INTENT(inout):: hpsi_d (lda,npol,m)
   INTEGER,     DEVICE, POINTER :: dffts_nl_d(:)
-  INTEGER,     DEVICE, POINTER :: igk_k_d(:)
   !
   INTEGER :: ibnd, j,ipol, incr, is
   COMPLEX(DP) :: sup, sdwn
@@ -523,9 +518,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
      incr = fftx_ntgrp(dffts)
   ENDIF
   CALL qe_buffer%lock_buffer( dffts_nl_d, size(dffts%nl), ierr )
-  CALL qe_buffer%lock_buffer( igk_k_d, n, ierr )
   dffts_nl_d = dffts%nl
-  igk_k_d(1:n) = igk_k_host(1:n, current_k)
   !
   ! the local potential V_Loc psi. First the psi in real space
   !
@@ -546,7 +539,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
               IF( idx + ibnd - 1 <= m ) THEN
                  !$cuf kernel do(1) <<<,>>>
                  DO j = 1, n
-                    tg_psic_d( dffts_nl_d( igk_k_d(j) ) + ioff, ipol ) = &
+                    tg_psic_d( dffts_nl_d( igk_k_d(j, current_k) ) + ioff, ipol ) = &
                        psi_d( j +(ipol-1)*lda, idx+ibnd-1 )
                  ENDDO
               ENDIF
@@ -564,7 +557,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
         DO ipol=1,npol
            !$cuf kernel do(1) <<<,>>>
            DO j = 1, n
-              psic_nc_d(dffts_nl_d(igk_k_d(j)),ipol) = psi_d(j+(ipol-1)*lda,ibnd)
+              psic_nc_d(dffts_nl_d(igk_k_d(j, current_k)),ipol) = psi_d(j+(ipol-1)*lda,ibnd)
            ENDDO
            CALL invfft ('Wave', psic_nc_d(:,ipol), dffts)
         ENDDO
@@ -628,7 +621,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
                  !$cuf kernel do(1) <<<,>>>
                  DO j = 1, n
                     hpsi_d (j, ipol, ibnd+idx-1) = hpsi_d (j, ipol, ibnd+idx-1) + &
-                                 tg_psic_d( dffts_nl_d(igk_k_d(j)) + ioff, ipol )
+                                 tg_psic_d( dffts_nl_d(igk_k_d(j, current_k)) + ioff, ipol )
                  ENDDO
               ENDIF
               !
@@ -650,7 +643,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
            !$cuf kernel do(1) <<<,>>>
            DO j = 1, n
               hpsi_d(j,ipol,ibnd) = hpsi_d(j,ipol,ibnd) + &
-                                  psic_nc_d(dffts_nl_d(igk_k_d(j)),ipol)
+                                  psic_nc_d(dffts_nl_d(igk_k_d(j, current_k)),ipol)
            ENDDO
         ENDDO
 
@@ -664,7 +657,6 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
      !
   ENDIF
   CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
-  CALL qe_buffer%release_buffer( igk_k_d, ierr )
   CALL stop_clock ('vloc_psi')
   !
   RETURN

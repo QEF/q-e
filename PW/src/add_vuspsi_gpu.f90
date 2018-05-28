@@ -277,7 +277,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        COMPLEX(DP), ALLOCATABLE :: ps_d (:,:,:)  ! use buffer here, move this to buffer here
        INTEGER :: ierr
        ! counters
-       INTEGER :: ijkb0, jkb, ikb, ih, jh, na, nt, ibnd, k, j
+       INTEGER :: na, nt, ibnd
 
 #if defined(__CUDA)
        ATTRIBUTES( DEVICE ) :: ps_d
@@ -298,6 +298,8 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        !
        ps_d (:,:,:) = (0.d0, 0.d0)
        !
+       !  OPTIMIZE HERE: use buffers and possibly streamline
+       !
        DO nt = 1, ntyp
           !
           IF ( nh(nt) == 0 ) CYCLE
@@ -305,8 +307,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
              !
              IF ( ityp(na) == nt ) THEN
                 !
-                ijkb0 = indv_ijkb0(na)
-
                 CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
                            deeq_nc_d(1,1,na,1), nhm, becp_d%nc_d(indv_ijkb0(na)+1,1,1), 2*nkb, &
                           (0.0_dp, 0.0_dp), ps_d(indv_ijkb0(na)+1,1,1), 2*nkb )
