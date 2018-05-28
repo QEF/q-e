@@ -356,6 +356,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
                  ONE, psi(1,1,nb1), kdmx )
      CALL mp_sum( psi(:,:,nb1:nbase+notcnv), inter_bgrp_comm )
      !
+     ! clean up garbage if there is any
+     IF (npw < npwx) psi(npw+1:npwx,:,nb1:nbase+notcnv) = ZERO
+     !
      CALL stop_clock( 'cegterg:update' )
      !
      ! ... approximate inverse iteration
