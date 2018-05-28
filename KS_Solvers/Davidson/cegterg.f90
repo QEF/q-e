@@ -68,7 +68,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   USE david_param,   ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
           nbgrp, my_bgrp_id
-  USE mp,            ONLY : mp_sum, mp_bcast
+  USE mp,            ONLY : mp_sum, mp_allgather, mp_bcast, mp_size,&
+                            mp_type_create_column_section, mp_type_free
   !
   IMPLICIT NONE
   !
@@ -109,6 +110,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
     ! adapted npw and npwx
     ! do-loop counters
   INTEGER :: n_start, n_end, my_n
+  INTEGER :: column_section_type
+    ! defines a column section for communication
   INTEGER :: ierr
   COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
     ! Hamiltonian on the reduced basis
@@ -124,6 +127,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
     ! true if the root is converged
   REAL(DP) :: empty_ethr 
     ! threshold for empty bands
+  INTEGER, ALLOCATABLE :: recv_counts(:), displs(:)
+    ! receive counts and memory offsets
   !
   REAL(DP), EXTERNAL :: ddot
   !
@@ -185,16 +190,14 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   ALLOCATE( conv( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate conv ', ABS(ierr) )
+  ALLOCATE( recv_counts(mp_size(inter_bgrp_comm)), displs(mp_size(inter_bgrp_comm)) )
   !
   notcnv = nvec
   nbase  = nvec
   conv   = .FALSE.
   !
 !$omp parallel
-  IF ( uspp ) CALL threaded_fill_value_nowait(spsi, nvecx*npol*npwx, ZERO)
-  CALL threaded_fill_value_nowait(hpsi, nvecx*npol*npwx, ZERO)
   CALL threaded_fill_array_nowait(psi, nvec*npol*npwx, evc)
-  CALL threaded_fill_value_nowait(psi(1,1,nvec+1), (nvecx-nvec)*npol*npwx, ZERO)
 !$omp end parallel
   !
   ! ... hpsi contains h times the basis vectors
@@ -209,17 +212,16 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   ! ... space vc contains the eigenvectors of hc
   !
   CALL start_clock( 'cegterg:init' )
-  hc(:,:) = ZERO
-  sc(:,:) = ZERO
-  vc(:,:) = ZERO
   !
-  CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
+  CALL divide_all(inter_bgrp_comm,nbase,n_start,n_end,recv_counts,displs)
+  CALL mp_type_create_column_section(sc(1,1), 0, nbase, nvecx, column_section_type)
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
+  !
   if (n_start .le. n_end) &
   CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
-  CALL mp_sum( hc( :, 1:nbase ), inter_bgrp_comm )
   !
-  CALL mp_sum( hc( :, 1:nbase ), intra_bgrp_comm )
+  if (n_start .le. n_end) CALL mp_sum( hc( 1:nbase, n_start:n_end ), intra_bgrp_comm )
+  CALL mp_allgather( hc(1,1), column_section_type, recv_counts, displs, inter_bgrp_comm )
   !
   IF ( uspp ) THEN
      !
@@ -234,12 +236,33 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
                  ZERO, sc(1,n_start), nvecx )
      !
   END IF
-  CALL mp_sum( sc( :, 1:nbase ), inter_bgrp_comm )
   !
-  CALL mp_sum( sc( :, 1:nbase ), intra_bgrp_comm )
+  if (n_start .le. n_end) CALL mp_sum( sc( 1:nbase, n_start:n_end ), intra_bgrp_comm )
+  CALL mp_allgather( sc(1,1), column_section_type, recv_counts, displs, inter_bgrp_comm )
+  !
+  CALL mp_type_free( column_section_type )
+  !
+  DO n = 1, nbase
+     !
+     ! ... the diagonal of hc and sc must be strictly real
+     !
+     hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
+     sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
+     !
+     DO m = n + 1, nbase
+        !
+        hc(n,m) = CONJG( hc(m,n) )
+        sc(n,m) = CONJG( sc(m,n) )
+        !
+     END DO
+     !
+  END DO
+  !
   CALL stop_clock( 'cegterg:init' )
   !
   IF ( lrot ) THEN
+     !
+     vc(1:nbase,1:nbase) = ZERO
      !
      DO n = 1, nbase
         !
@@ -305,7 +328,6 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
-     psi(:,:,nb1:nbase+notcnv)=ZERO
      IF ( uspp ) THEN
         !
         if (n_start .le. n_end) &
@@ -379,32 +401,34 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      CALL start_clock( 'cegterg:overlap' )
      !
-     hc( :, nb1:nb1+notcnv-1 )=ZERO
-     CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
+     CALL divide_all(inter_bgrp_comm,nbase+notcnv,n_start,n_end,recv_counts,displs)
+     CALL mp_type_create_column_section(sc(1,1), nbase, notcnv, nvecx, column_section_type)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
-     CALL ZGEMM( 'C','N', my_n, notcnv, kdim, ONE, psi(1,1,n_start), kdmx, hpsi(1,1,nb1), kdmx, &
-                 ZERO, hc(n_start,nb1), nvecx )
-     CALL mp_sum( hc( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
-     CALL mp_sum( hc( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
+     CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi(1,1,nb1), kdmx, psi(1,1,n_start), kdmx, &
+                 ZERO, hc(nb1,n_start), nvecx )
      !
-     sc( :, nb1:nb1+notcnv-1 )=ZERO
+     if (n_start .le. n_end) CALL mp_sum( hc( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
+     CALL mp_allgather( hc(1,1), column_section_type, recv_counts, displs, inter_bgrp_comm )
+     !
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
-        CALL ZGEMM( 'C','N', my_n, notcnv, kdim, ONE, psi(1,1,n_start), kdmx, spsi(1,1,nb1), kdmx, &
-                    ZERO, sc(n_start,nb1), nvecx )
+        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, spsi(1,1,nb1), kdmx, psi(1,1,n_start), kdmx, &
+                    ZERO, sc(nb1,n_start), nvecx )
         !     
      ELSE
         !
-        CALL ZGEMM( 'C','N', my_n, notcnv, kdim, ONE, psi(1,1,n_start), kdmx, psi(1,1,nb1), kdmx, &
-                     ZERO, sc(n_start,nb1), nvecx )
+        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, psi(1,1,nb1), kdmx, psi(1,1,n_start), kdmx, &
+                    ZERO, sc(nb1,n_start), nvecx )
         !
      END IF
-     CALL mp_sum( sc( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
-     CALL mp_sum( sc( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
+     if (n_start .le. n_end) CALL mp_sum( sc( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
+     CALL mp_allgather( sc(1,1), column_section_type, recv_counts, displs, inter_bgrp_comm )
+     !
+     CALL mp_type_free( column_section_type )
      !
      CALL stop_clock( 'cegterg:overlap' )
      !
@@ -412,15 +436,17 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      DO n = 1, nbase
         !
-        ! ... the diagonal of hc and sc must be strictly real 
+        ! ... the diagonal of hc and sc must be strictly real
         !
-        hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
-        sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
+        IF( n>=nb1 ) THEN
+           hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
+           sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
+        ENDIF
         !
-        DO m = n + 1, nbase
+        DO m = MAX(n+1,nb1), nbase
            !
-           hc(m,n) = CONJG( hc(n,m) )
-           sc(m,n) = CONJG( sc(n,m) )
+           hc(n,m) = CONJG( hc(m,n) )
+           sc(n,m) = CONJG( sc(m,n) )
            !
         END DO
         !
@@ -467,7 +493,6 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
         CALL start_clock( 'cegterg:last' )
         !
-        evc = ZERO
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
         CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
@@ -501,33 +526,28 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
         IF ( uspp ) THEN
            !
-           psi(:,:,nvec+1:nvec+nvec) = ZERO
            CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
                        ZERO, psi(1,1,nvec+1), kdmx)
-           CALL mp_sum( psi(:,:,nvec+1:nvec+nvec), inter_bgrp_comm )
-           !
            spsi(:,:,1:nvec) = psi(:,:,nvec+1:nvec+nvec)
+           CALL mp_sum( spsi(:,:,1:nvec), inter_bgrp_comm )
            !
         END IF
         !
-        psi(:,:,nvec+1:nvec+nvec) = ZERO
         CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,1,nvec+1), kdmx )
-        CALL mp_sum( psi(:,:,nvec+1:nvec+nvec), inter_bgrp_comm )
-        !
         hpsi(:,:,1:nvec) = psi(:,:,nvec+1:nvec+nvec)
+        CALL mp_sum( hpsi(:,:,1:nvec), inter_bgrp_comm )
         !
         ! ... refresh the reduced hamiltonian 
         !
         nbase = nvec
         !
-        hc(:,1:nbase) = ZERO
-        sc(:,1:nbase) = ZERO
-        vc(:,1:nbase) = ZERO
+        hc(1:nbase,1:nbase) = ZERO
+        sc(1:nbase,1:nbase) = ZERO
+        vc(1:nbase,1:nbase) = ZERO
         !
         DO n = 1, nbase
            !
-!           hc(n,n) = REAL( e(n) )
            hc(n,n) = CMPLX( e(n), 0.0_DP ,kind=DP)
            !
            sc(n,n) = ONE
@@ -541,6 +561,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
   END DO iterate
   !
+  DEALLOCATE( recv_counts )
+  DEALLOCATE( displs )
   DEALLOCATE( conv )
   DEALLOCATE( ew )
   DEALLOCATE( vc )
