@@ -555,7 +555,7 @@ SUBROUTINE phq_readin()
   amass_input(:)= amass(:)
   !
   tmp_dir_save=tmp_dir
-  tmp_dir_ph= TRIM (tmp_dir) // '_ph' // TRIM(int_to_char(my_image_id)) //'/'
+  tmp_dir_ph= trimcheck( TRIM (tmp_dir) // '_ph' // int_to_char(my_image_id) )
   CALL check_tempdir ( tmp_dir_ph, exst, parallelfs )
   tmp_dir_phq=tmp_dir_ph
 
@@ -583,8 +583,8 @@ SUBROUTINE phq_readin()
 !   we read from there, otherwise use the information in tmp_dir.
 !
      IF (lqdir) THEN
-        tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
-                          & '.q_' // TRIM(int_to_char(current_iq))//'/'
+        tmp_dir_phq= trimcheck ( TRIM(tmp_dir_ph) // TRIM(prefix) // &
+                                & '.q_' // int_to_char(current_iq) )
         CALL check_restart_recover(ext_recover, ext_restart)
         IF (.NOT.ext_recover.AND..NOT.ext_restart) tmp_dir_phq=tmp_dir_ph
      ENDIF
