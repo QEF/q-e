@@ -10,7 +10,9 @@
    MODULE becmod_gpum
 !=----------------------------------------------------------------------------=!
      USE kinds, ONLY :  DP
-
+#if defined(__CUDA)
+     use cudafor
+#endif
      IMPLICIT NONE
      SAVE
      !

@@ -132,7 +132,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
   CALL using_g2kin_d(0)
   CALL using_vrs_d(0)
-  CALL using_vkb(0)
+  !
   CALL using_becp_auto(0)
   !
   hpsi_d (:, 1:m) = (0.0_dp, 0.0_dp)
@@ -233,11 +233,10 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL start_clock( 'h_psi:calbec' )
+     CALL using_vkb(0); CALL using_becp_auto(1)
      CALL calbec ( n, vkb, psi_host, becp, m )
      CALL stop_clock( 'h_psi:calbec' )
-     hpsi_host = hpsi_d
-     CALL add_vuspsi( lda, n, m, hpsi_host )
-     hpsi_d = hpsi_host
+     CALL add_vuspsi_gpu( lda, n, m, hpsi_d )
      !
   END IF
   !  
