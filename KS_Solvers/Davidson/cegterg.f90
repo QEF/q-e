@@ -67,8 +67,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   !
   USE david_param,   ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
-          nbgrp, my_bgrp_id
-  USE mp,            ONLY : mp_sum, mp_allgather, mp_bcast, mp_size,&
+          nbgrp, my_bgrp_id, root_bgrp
+  USE mp,            ONLY : mp_sum, mp_gather, mp_bcast, mp_size,&
                             mp_type_create_column_section, mp_type_free
   !
   IMPLICIT NONE
@@ -221,7 +221,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
   !
   if (n_start .le. n_end) CALL mp_sum( hc( 1:nbase, n_start:n_end ), intra_bgrp_comm )
-  CALL mp_allgather( hc(1,1), column_section_type, recv_counts, displs, inter_bgrp_comm )
+  CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
   !
   IF ( uspp ) THEN
      !
@@ -238,7 +238,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   END IF
   !
   if (n_start .le. n_end) CALL mp_sum( sc( 1:nbase, n_start:n_end ), intra_bgrp_comm )
-  CALL mp_allgather( sc(1,1), column_section_type, recv_counts, displs, inter_bgrp_comm )
+  CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
   !
   CALL mp_type_free( column_section_type )
   !
@@ -271,6 +271,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         vc(n,n) = ONE
         !
      END DO
+     !
+     CALL mp_bcast( e, root_bgrp_id, inter_bgrp_comm )
      !
   ELSE
      !
@@ -409,7 +411,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
                  ZERO, hc(nb1,n_start), nvecx )
      !
      if (n_start .le. n_end) CALL mp_sum( hc( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
-     CALL mp_allgather( hc(1,1), column_section_type, recv_counts, displs, inter_bgrp_comm )
+     CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
      !
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
@@ -426,7 +428,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      END IF
      !
      if (n_start .le. n_end) CALL mp_sum( sc( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
-     CALL mp_allgather( sc(1,1), column_section_type, recv_counts, displs, inter_bgrp_comm )
+     CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
      !
      CALL mp_type_free( column_section_type )
      !

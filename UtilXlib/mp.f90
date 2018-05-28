@@ -19,7 +19,7 @@
 
       PUBLIC :: mp_start, mp_abort, mp_stop, mp_end, &
         mp_bcast, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
-        mp_gather, mp_allgather, mp_alltoall, mp_get, mp_put, &
+        mp_gather, mp_alltoall, mp_get, mp_put, &
         mp_barrier, mp_report, mp_group_free, &
         mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, &
         mp_group_create, mp_comm_split, mp_set_displs, &
@@ -68,12 +68,8 @@
 
       INTERFACE mp_gather
         MODULE PROCEDURE mp_gather_i1, mp_gather_iv, mp_gatherv_rv, mp_gatherv_iv, &
-          mp_gatherv_rm, mp_gatherv_im, mp_gatherv_cv
-      END INTERFACE
-
-      INTERFACE mp_allgather
-        MODULE PROCEDURE mp_allgatherv_inplace_c1dv, mp_allgatherv_inplace_c2dv, &
-                         mp_allgatherv_inplace_cplx_column_section
+          mp_gatherv_rm, mp_gatherv_im, mp_gatherv_cv, &
+          mp_gatherv_inplace_cplx_column_section
       END INTERFACE
 
       INTERFACE mp_alltoall
@@ -1978,87 +1974,36 @@
 
 
 !------------------------------------------------------------------------------!
-!..mp_allgatherv_inplace_cv
+!..mp_gatherv_inplace_cplx_column_section
 !..Ye Luo
 
-      SUBROUTINE mp_allgatherv_inplace_cv_any(alldata, my_cplx_type, recvcount, displs, gid)
+      SUBROUTINE mp_gatherv_inplace_cplx_column_section(alldata, my_column_type, recvcount, displs, root, gid)
         IMPLICIT NONE
-        COMPLEX(DP) :: alldata(*)
-        INTEGER, INTENT(IN) :: my_cplx_type
+        COMPLEX(DP) :: alldata(:,:)
+        INTEGER, INTENT(IN) :: my_column_type
         INTEGER, INTENT(IN) :: recvcount(:), displs(:)
-        INTEGER, INTENT(IN) :: gid
-        INTEGER :: ierr
+        INTEGER, INTENT(IN) :: root, gid
+        INTEGER :: ierr, npe, myid
 
 #if defined (__MPI)
-        CALL MPI_ALLGATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
-                             alldata, recvcount, displs, my_cplx_type, gid, ierr )
+        CALL mpi_comm_size( gid, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 8069 )
+        CALL mpi_comm_rank( gid, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8070 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
+        !
+        IF (myid==root) THEN
+           CALL MPI_GATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
+                             alldata, recvcount, displs, my_column_type, root, gid, ierr )
+        ELSE
+           CALL MPI_GATHERV( alldata(1,displs(myid+1)+1), recvcount(myid+1), my_column_type, &
+                             MPI_IN_PLACE, recvcount, displs, MPI_DATATYPE_NULL, root, gid, ierr )
+        ENDIF
         IF (ierr/=0) CALL mp_stop( 8074 )
 #endif
         RETURN
-      END SUBROUTINE mp_allgatherv_inplace_cv_any
-
-      SUBROUTINE mp_allgatherv_inplace_c1dv(alldata, recvcount, displs, gid)
-        IMPLICIT NONE
-        COMPLEX(DP) :: alldata(:), dummy
-        INTEGER, INTENT(IN) :: recvcount(:), displs(:)
-        INTEGER, INTENT(IN) :: gid
-        INTEGER :: ierr, npe, myid
-
-#if defined (__MPI)
-        CALL mpi_comm_size( gid, npe, ierr )
-        IF (ierr/=0) CALL mp_stop( 8069 )
-        CALL mpi_comm_rank( gid, myid, ierr )
-        IF (ierr/=0) CALL mp_stop( 8070 )
-        !
-        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
-        !
-        IF ( SIZE( alldata ) < displs( npe ) + recvcount( npe ) ) CALL mp_stop( 8072 )
-        CALL mp_allgatherv_inplace_cv_any(alldata, MPI_DOUBLE_COMPLEX, recvcount, displs, gid)
-#endif
-        RETURN
-      END SUBROUTINE mp_allgatherv_inplace_c1dv
-
-      SUBROUTINE mp_allgatherv_inplace_c2dv(alldata, recvcount, displs, gid)
-        IMPLICIT NONE
-        COMPLEX(DP) :: alldata(:,:)
-        INTEGER, INTENT(IN) :: recvcount(:), displs(:)
-        INTEGER, INTENT(IN) :: gid
-        INTEGER :: ierr, npe, myid
-
-#if defined (__MPI)
-        CALL mpi_comm_size( gid, npe, ierr )
-        IF (ierr/=0) CALL mp_stop( 8069 )
-        CALL mpi_comm_rank( gid, myid, ierr )
-        IF (ierr/=0) CALL mp_stop( 8070 )
-        !
-        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
-        !
-        IF ( SIZE( alldata ) < displs( npe ) + recvcount( npe ) ) CALL mp_stop( 8072 )
-        CALL mp_allgatherv_inplace_cv_any(alldata, MPI_DOUBLE_COMPLEX, recvcount, displs, gid)
-#endif
-        RETURN
-      END SUBROUTINE mp_allgatherv_inplace_c2dv
-
-      SUBROUTINE mp_allgatherv_inplace_cplx_column_section(alldata, my_column_type, recvcount, displs, gid)
-        IMPLICIT NONE
-        COMPLEX(DP) :: alldata
-        INTEGER, INTENT(IN) :: my_column_type
-        INTEGER, INTENT(IN) :: recvcount(:), displs(:)
-        INTEGER, INTENT(IN) :: gid
-        INTEGER :: ierr, npe, myid
-
-#if defined (__MPI)
-        CALL mpi_comm_size( gid, npe, ierr )
-        IF (ierr/=0) CALL mp_stop( 8069 )
-        CALL mpi_comm_rank( gid, myid, ierr )
-        IF (ierr/=0) CALL mp_stop( 8070 )
-        !
-        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
-        !
-        CALL mp_allgatherv_inplace_cv_any(alldata, my_column_type, recvcount, displs, gid)
-#endif
-        RETURN
-      END SUBROUTINE mp_allgatherv_inplace_cplx_column_section
+      END SUBROUTINE mp_gatherv_inplace_cplx_column_section
 
 !------------------------------------------------------------------------------!
 
