@@ -64,10 +64,10 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      !
   ENDIF
   ! Sync fft data
-  CALL qe_buffer%lock_buffer( dffts_nl_d, size(dffts%nl), ierr )
-  CALL qe_buffer%lock_buffer( dffts_nlm_d, size(dffts%nlm), ierr )
-  dffts_nl_d(1:n) = dffts%nl(1:n)
-  dffts_nlm_d(1:n) = dffts%nlm(1:n)
+  !CALL qe_buffer%lock_buffer( dffts_nl_d, size(dffts%nl), ierr )
+  !CALL qe_buffer%lock_buffer( dffts_nlm_d, size(dffts%nlm), ierr )
+  dffts_nl_d => dffts%nl_d
+  dffts_nlm_d => dffts%nlm_d
   ! End Sync
   
   !
@@ -216,8 +216,8 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      !
   ENDIF
   CALL qe_buffer%release_buffer( psic_d, ierr )
-  CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
-  CALL qe_buffer%release_buffer( dffts_nlm_d, ierr )
+!  CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
+!  CALL qe_buffer%release_buffer( dffts_nlm_d, ierr )
   CALL stop_clock ('vloc_psi')
   !
   RETURN
@@ -290,9 +290,8 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   ELSE
      CALL qe_buffer%lock_buffer( psic_d, dffts%nnr, ierr )
   ENDIF
-  CALL qe_buffer%lock_buffer( dffts_nl_d, size(dffts%nl) , ierr )
   !
-  dffts_nl_d = dffts%nl
+  dffts_nl_d => dffts%nl_d
   !
   IF( use_tg ) THEN
 
@@ -444,7 +443,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   ELSE
      CALL qe_buffer%release_buffer( psic_d, ierr )
   ENDIF
-  CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
+  !
   CALL stop_clock ('vloc_psi')
   !
 99 format ( 20 ('(',2f12.9,')') )
@@ -517,8 +516,8 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
 
      incr = fftx_ntgrp(dffts)
   ENDIF
-  CALL qe_buffer%lock_buffer( dffts_nl_d, size(dffts%nl), ierr )
-  dffts_nl_d = dffts%nl
+  !CALL qe_buffer%lock_buffer( dffts_nl_d, size(dffts%nl), ierr )
+  dffts_nl_d => dffts%nl_d
   !
   ! the local potential V_Loc psi. First the psi in real space
   !
@@ -656,7 +655,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
      DEALLOCATE(tg_v_d, tg_psic_d)
      !
   ENDIF
-  CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
+  !CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
   CALL stop_clock ('vloc_psi')
   !
   RETURN

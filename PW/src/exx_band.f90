@@ -1095,9 +1095,18 @@ MODULE exx_band
        ! end workaround. FIXME: this part of code must disappear ASAP
        dfftp%nl = nl_exx
        dffts%nl = nls_exx
+       ! workaround: create a helper subroutine to set nl from variables!!!
+#if defined(__CUDA)
+       dfftp%nl_d = dfftp%nl
+       dffts%nl_d = dffts%nl
+#endif
        IF( gamma_only ) THEN
           dfftp%nlm = nlm_exx
           dffts%nlm = nlsm_exx
+#if defined(__CUDA)
+          dfftp%nlm_d = dfftp%nlm
+          dffts%nlm_d = dffts%nlm
+#endif
        ENDIF
        ngm = ngm_exx
        ngm_g = ngm_g_exx
