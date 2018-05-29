@@ -10,12 +10,14 @@
    MODULE g_psi_mod_gpum
 !=----------------------------------------------------------------------------=!
      USE kinds, ONLY :  DP
-
+#if defined(__CUDA)
+     USE cudafor
+#endif
      IMPLICIT NONE
      SAVE
      !
-     REAL(DP), ALLOCATABLE, TARGET :: h_diag_d(:, :)
-     REAL(DP), ALLOCATABLE, TARGET :: s_diag_d(:, :)
+     REAL(DP), ALLOCATABLE :: h_diag_d(:, :)
+     REAL(DP), ALLOCATABLE :: s_diag_d(:, :)
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: h_diag_d, s_diag_d

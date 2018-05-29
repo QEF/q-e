@@ -10,11 +10,13 @@
    MODULE scf_gpum
 !=----------------------------------------------------------------------------=!
      USE kinds, ONLY :  DP
-
+#if defined(__CUDA)
+     USE cudafor
+#endif
      IMPLICIT NONE
      SAVE
      !
-     REAL(DP), ALLOCATABLE, TARGET :: vrs_d(:, :)
+     REAL(DP), ALLOCATABLE :: vrs_d(:, :)
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: vrs_d

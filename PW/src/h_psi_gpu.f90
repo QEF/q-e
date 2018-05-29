@@ -91,12 +91,16 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   ! ... output:
   ! ...    hpsi  H*psi
   !
+#if defined(__CUDA)
+  USE cudafor
+#endif
   USE kinds,    ONLY : DP
   USE bp,       ONLY : lelfield,l3dstring,gdir, efield, efield_cry
   USE becmod,   ONLY : bec_type, becp, calbec
+  USE becmod_gpum, ONLY : becp_d
   USE lsda_mod, ONLY : current_spin
   USE scf_gpum, ONLY : vrs_d, using_vrs_d
-  USE uspp,     ONLY : vkb, nkb
+  USE uspp,     ONLY : nkb
   USE ldaU,     ONLY : lda_plus_u, U_projection
   USE gvect,    ONLY : gstart
   USE funct,    ONLY : dft_is_meta
@@ -112,8 +116,8 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   USE fft_helper_subroutines
   !
   USE wvfct_gpum,    ONLY : g2kin_d, using_g2kin_d
-  USE uspp_gpum,     ONLY : using_vkb
-  USE becmod_subs_gpum, ONLY : using_becp_auto
+  USE uspp_gpum,     ONLY : vkb_d, using_vkb_d
+  USE becmod_subs_gpum, ONLY : calbec_gpu, using_becp_auto, using_becp_d_auto
   !
   IMPLICIT NONE
   !
@@ -132,8 +136,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
   CALL using_g2kin_d(0)
   CALL using_vrs_d(0)
-  !
-  CALL using_becp_auto(0)
   !
   hpsi_d (:, 1:m) = (0.0_dp, 0.0_dp)
 
@@ -165,6 +167,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
         ELSE
            incr = 2
         ENDIF
+        CALL using_becp_auto(1)
         DO ibnd = 1, m, incr
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_gamma(psi_host,ibnd,m) 
@@ -233,8 +236,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL start_clock( 'h_psi:calbec' )
-     CALL using_vkb(0); CALL using_becp_auto(1)
-     CALL calbec ( n, vkb, psi_host, becp, m )
+     CALL using_vkb_d(0); CALL using_becp_d_auto(1)
+!ATTENTION HERE: calling without (:,:) causes segfaults
+     CALL calbec_gpu ( n, vkb_d(:,:), psi_d, becp_d, m )
      CALL stop_clock( 'h_psi:calbec' )
      CALL add_vuspsi_gpu( lda, n, m, hpsi_d )
      !
@@ -285,6 +289,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
            CALL vexxace_k(lda,m,psi_host,ee,hpsi_host) 
         END IF
      ELSE
+        CALL using_becp_auto(0)
         CALL vexx( lda, n, m, psi_host, hpsi_host, becp )
      END IF
      hpsi_d = hpsi_host

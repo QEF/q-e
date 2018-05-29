@@ -370,7 +370,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi_gpu( npwx, npw, notcnv, psi_d(1,1,nb1), hpsi_d(1,1,nb1) )
+     CALL h_psi_gpu( npwx, npw, notcnv, psi_d(:,:,nb1), hpsi_d(:,:,nb1) )
      !
      IF ( uspp ) CALL s_psi_gpu( npwx, npw, notcnv, psi_d(1,1,nb1), spsi_d(1,1,nb1) )
      !

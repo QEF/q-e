@@ -9,7 +9,7 @@
 !
 MODULE becmod_subs_gpum
   
-  ! NOTA BENE : THE SUBROUTINES IN THIS FILE HAVE NOT BEEN TESTED YET!!!!!!!
+  ! NOTA BENE : THE SUBROUTINES IN THIS FILE ARE ONLY PARTIALLY TESTED!
    
   !
   ! ... *bec* contain <beta|psi> - used in h_psi, s_psi, many other places

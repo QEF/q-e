@@ -10,16 +10,18 @@
    MODULE gvect_gpum
 !=----------------------------------------------------------------------------=!
      USE kinds, ONLY :  DP
-
+#if defined(__CUDA)
+     USE cudafor
+#endif
      IMPLICIT NONE
      SAVE
      !
-     REAL(DP), ALLOCATABLE, TARGET :: gg_d(:)
-     REAL(DP), ALLOCATABLE, TARGET :: g_d(:, :)
-     INTEGER, ALLOCATABLE, TARGET :: mill_d(:, :)
-     COMPLEX(DP), ALLOCATABLE, TARGET :: eigts1_d(:, :)
-     COMPLEX(DP), ALLOCATABLE, TARGET :: eigts2_d(:, :)
-     COMPLEX(DP), ALLOCATABLE, TARGET :: eigts3_d(:, :)
+     REAL(DP), ALLOCATABLE :: gg_d(:)
+     REAL(DP), ALLOCATABLE :: g_d(:, :)
+     INTEGER, ALLOCATABLE :: mill_d(:, :)
+     COMPLEX(DP), ALLOCATABLE :: eigts1_d(:, :)
+     COMPLEX(DP), ALLOCATABLE :: eigts2_d(:, :)
+     COMPLEX(DP), ALLOCATABLE :: eigts3_d(:, :)
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: gg_d, g_d, mill_d, eigts1_d, eigts2_d, eigts3_d

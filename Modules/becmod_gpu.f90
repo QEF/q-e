@@ -11,7 +11,7 @@
 !=----------------------------------------------------------------------------=!
      USE kinds, ONLY :  DP
 #if defined(__CUDA)
-     use cudafor
+     USE cudafor
 #endif
      IMPLICIT NONE
      SAVE

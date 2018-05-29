@@ -10,12 +10,14 @@
    MODULE wvfct_gpum
 !=----------------------------------------------------------------------------=!
      USE kinds, ONLY :  DP
-
+#if defined(__CUDA)
+     USE cudafor
+#endif
      IMPLICIT NONE
      SAVE
      !
-     REAL(DP), ALLOCATABLE, TARGET :: g2kin_d(:)
-     REAL(DP), ALLOCATABLE, TARGET :: et_d(:, :)
+     REAL(DP), ALLOCATABLE :: g2kin_d(:)
+     REAL(DP), ALLOCATABLE :: et_d(:, :)
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: g2kin_d, et_d
@@ -188,14 +190,16 @@
    MODULE us_gpum
 !=----------------------------------------------------------------------------=!
      USE kinds, ONLY :  DP
-
+#if defined(__CUDA)
+     USE cudafor
+#endif
      IMPLICIT NONE
      SAVE
      !
-     REAL(DP), ALLOCATABLE, TARGET :: qrad_d(:, :, :, :)
-     REAL(DP), ALLOCATABLE, TARGET :: tab_d(:, :, :)
-     REAL(DP), ALLOCATABLE, TARGET :: tab_at_d(:, :, :)
-     REAL(DP), ALLOCATABLE, TARGET :: tab_d2y_d(:, :, :)
+     REAL(DP), ALLOCATABLE :: qrad_d(:, :, :, :)
+     REAL(DP), ALLOCATABLE :: tab_d(:, :, :)
+     REAL(DP), ALLOCATABLE :: tab_at_d(:, :, :)
+     REAL(DP), ALLOCATABLE :: tab_d2y_d(:, :, :)
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: qrad_d, tab_d, tab_at_d, tab_d2y_d

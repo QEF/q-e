@@ -10,25 +10,27 @@
    MODULE uspp_gpum
 !=----------------------------------------------------------------------------=!
      USE kinds, ONLY :  DP
-
+#if defined(__CUDA)
+     USE cudafor
+#endif
      IMPLICIT NONE
      SAVE
      !
-     INTEGER, ALLOCATABLE, TARGET :: indv_d(:, :)
-     INTEGER, ALLOCATABLE, TARGET :: nhtol_d(:, :)
-     INTEGER, ALLOCATABLE, TARGET :: nhtolm_d(:, :)
-     INTEGER, ALLOCATABLE, TARGET :: ijtoh_d(:, :, :)
-     INTEGER, ALLOCATABLE, TARGET :: indv_ijkb0_d(:)
-     COMPLEX(DP), ALLOCATABLE, TARGET :: vkb_d(:, :)
-     COMPLEX(DP), ALLOCATABLE, TARGET :: becsum_d(:, :, :)
-     REAL(DP), ALLOCATABLE, TARGET :: dvan_d(:, :, :)
-     REAL(DP), ALLOCATABLE, TARGET :: deeq_d(:, :, :, :)
-     REAL(DP), ALLOCATABLE, TARGET :: qq_nt_d(:, :, :)
-     REAL(DP), ALLOCATABLE, TARGET :: qq_at_d(:, :, :)
-     REAL(DP), ALLOCATABLE, TARGET :: nhtoj_d(:, :)
-     COMPLEX(DP), ALLOCATABLE, TARGET :: qq_so_d(:, :, :, :)
-     COMPLEX(DP), ALLOCATABLE, TARGET :: dvan_so_d(:, :, :, :)
-     COMPLEX(DP), ALLOCATABLE, TARGET :: deeq_nc_d(:, :, :, :)
+     INTEGER, ALLOCATABLE :: indv_d(:, :)
+     INTEGER, ALLOCATABLE :: nhtol_d(:, :)
+     INTEGER, ALLOCATABLE :: nhtolm_d(:, :)
+     INTEGER, ALLOCATABLE :: ijtoh_d(:, :, :)
+     INTEGER, ALLOCATABLE :: indv_ijkb0_d(:)
+     COMPLEX(DP), ALLOCATABLE :: vkb_d(:, :)
+     COMPLEX(DP), ALLOCATABLE :: becsum_d(:, :, :)
+     REAL(DP), ALLOCATABLE :: dvan_d(:, :, :)
+     REAL(DP), ALLOCATABLE :: deeq_d(:, :, :, :)
+     REAL(DP), ALLOCATABLE :: qq_nt_d(:, :, :)
+     REAL(DP), ALLOCATABLE :: qq_at_d(:, :, :)
+     REAL(DP), ALLOCATABLE :: nhtoj_d(:, :)
+     COMPLEX(DP), ALLOCATABLE :: qq_so_d(:, :, :, :)
+     COMPLEX(DP), ALLOCATABLE :: dvan_so_d(:, :, :, :)
+     COMPLEX(DP), ALLOCATABLE :: deeq_nc_d(:, :, :, :)
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: indv_d, nhtol_d, nhtolm_d, ijtoh_d, indv_ijkb0_d, vkb_d, becsum_d, dvan_d, deeq_d, qq_nt_d, qq_at_d, nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d

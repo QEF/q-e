@@ -10,13 +10,15 @@
    MODULE wavefunctions_module_gpum
 !=----------------------------------------------------------------------------=!
      USE kinds, ONLY :  DP
-
+#if defined(__CUDA)
+     USE cudafor
+#endif
      IMPLICIT NONE
      SAVE
      !
-     COMPLEX(DP), ALLOCATABLE, TARGET :: evc_d(:, :)
-     COMPLEX(DP), ALLOCATABLE, TARGET :: psic_d(:)
-     COMPLEX(DP), ALLOCATABLE, TARGET :: psic_nc_d(:, :)
+     COMPLEX(DP), ALLOCATABLE :: evc_d(:, :)
+     COMPLEX(DP), ALLOCATABLE :: psic_d(:)
+     COMPLEX(DP), ALLOCATABLE :: psic_nc_d(:, :)
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: evc_d, psic_d, psic_nc_d
