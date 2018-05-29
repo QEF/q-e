@@ -25,7 +25,8 @@
         mp_group_create, mp_comm_split, mp_set_displs, &
         mp_circular_shift_left, &
         mp_get_comm_null, mp_get_comm_self, mp_count_nodes, &
-        mp_type_create_column_section, mp_type_free
+        mp_type_create_column_section, mp_type_free, &
+        mp_type_create_row, mp_allgather
 
 !
       INTERFACE mp_bcast
@@ -72,6 +73,10 @@
           mp_gatherv_inplace_cplx_column_section
       END INTERFACE
 
+      INTERFACE mp_allgather
+        MODULE PROCEDURE mp_allgatherv_inplace_cplx_row
+      END INTERFACE
+
       INTERFACE mp_alltoall
         MODULE PROCEDURE mp_alltoall_c3d, mp_alltoall_i3d
       END INTERFACE
@@ -86,6 +91,10 @@
 
       INTERFACE mp_type_create_column_section
         MODULE PROCEDURE mp_type_create_cplx_column_section
+      END INTERFACE
+
+      INTERFACE mp_type_create_row
+        MODULE PROCEDURE mp_type_create_cplx_row
       END INTERFACE
 
 !------------------------------------------------------------------------------!
@@ -2006,6 +2015,33 @@
       END SUBROUTINE mp_gatherv_inplace_cplx_column_section
 
 !------------------------------------------------------------------------------!
+!..mp_allgatherv_inplace_cplx_row
+!..Ye Luo
+
+      SUBROUTINE mp_allgatherv_inplace_cplx_row(alldata, my_row_type, recvcount, displs, gid)
+        IMPLICIT NONE
+        COMPLEX(DP) :: alldata(:,:)
+        INTEGER, INTENT(IN) :: my_row_type
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:)
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: ierr, npe, myid
+
+#if defined (__MPI)
+        CALL mpi_comm_size( gid, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 8069 )
+        CALL mpi_comm_rank( gid, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8070 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
+        !
+        CALL MPI_ALLGATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
+                             alldata, recvcount, displs, my_row_type, gid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8074 )
+#endif
+        RETURN
+      END SUBROUTINE mp_allgatherv_inplace_cplx_row
+
+!------------------------------------------------------------------------------!
 
       SUBROUTINE mp_set_displs( recvcount, displs, ntot, nproc )
         !  Given the number of elements on each processor (recvcount), this subroutine
@@ -2425,6 +2461,36 @@ SUBROUTINE mp_type_create_cplx_column_section(dummy, start, length, stride, myty
   !
   RETURN
 END SUBROUTINE mp_type_create_cplx_column_section
+
+SUBROUTINE mp_type_create_cplx_row(dummy, ncols, stride, mytype)
+  IMPLICIT NONE
+  !
+  COMPLEX (DP), INTENT(IN) :: dummy
+  INTEGER, INTENT(IN) :: ncols, stride
+  INTEGER, INTENT(OUT) :: mytype
+  !
+#if defined(__MPI)
+  INTEGER :: ierr
+  INTEGER column_type
+  INTEGER (KIND=MPI_ADDRESS_KIND) lb, sizeofcplx
+  !
+  CALL MPI_TYPE_GET_EXTENT(MPI_DOUBLE_COMPLEX, lb, sizeofcplx, ierr)
+  IF (ierr/=0) CALL mp_stop( 8081 )
+  CALL MPI_TYPE_VECTOR(ncols, 1, stride, MPI_DOUBLE_COMPLEX, column_type, ierr);
+  IF (ierr/=0) CALL mp_stop( 8082 )
+  CALL MPI_TYPE_COMMIT(column_type, ierr);
+  IF (ierr/=0) CALL mp_stop( 8083 )
+  CALL MPI_TYPE_CREATE_RESIZED(column_type, 0, sizeofcplx, mytype, ierr);
+  IF (ierr/=0) CALL mp_stop( 8084 )
+  CALL MPI_TYPE_COMMIT(mytype, ierr);
+  IF (ierr/=0) CALL mp_stop( 8085 )
+  CALL mp_type_free(column_type);
+#else
+  mytype = 0;
+#endif
+  !
+  RETURN
+END SUBROUTINE mp_type_create_cplx_row
 
 SUBROUTINE mp_type_free(mytype)
   IMPLICIT NONE

@@ -634,7 +634,9 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
                                  ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
   USE descriptors,      ONLY : la_descriptor, descla_init , descla_local_dims
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst
-  USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
+  USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier, &
+                               mp_size, mp_type_create_row, mp_type_free, &
+                               mp_allgather
   !
   IMPLICIT NONE
   !
@@ -1239,72 +1241,82 @@ CONTAINS
      !
      INTEGER :: ipc, ipr
      INTEGER :: nr, ir, ic, notcl, root, np, ipol, ig
+     INTEGER :: ortho_parent_comm_size
      COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
-     COMPLEX(DP), ALLOCATABLE :: ptmp( :, :, : )
-     COMPLEX(DP) :: beta
+     INTEGER :: row_type
+     INTEGER, ALLOCATABLE :: counts(:), displs(:)
 
-     ALLOCATE( vtmp( nx, nx ) )
-     ALLOCATE( ptmp( npwx, npol, nx ) )
+     ortho_parent_comm_size = mp_size(ortho_parent_comm)
+     !
+     ALLOCATE( vtmp( nvecx, nx ) )
+     ALLOCATE( counts(ortho_parent_comm_size), displs(ortho_parent_comm_size) )
 
      DO ipc = 1, desc%npc
         !
         IF( notcnv_ip( ipc ) > 0 ) THEN
 
            notcl = notcnv_ip( ipc )
-           ic    = ic_notcnv( ipc ) 
-
-           beta = ZERO
-
+           ic    = ic_notcnv( ipc )
+           !
+           counts = 0
+           !
            DO ipr = 1, desc%npr
-              !
               nr = nrc_ip( ipr )
               ir = irc_ip( ipr )
-              !
               root = rank_ip( ipr, ipc )
-
+              counts(root+1) = nr
               IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
-                 vtmp(:,1:notcl) = vl(:,1:notcl)
+                 vtmp(ir:ir+nr-1,1:notcl) = vl(:,1:notcl)
               END IF
-
-              CALL mp_bcast( vtmp(:,1:notcl), root, ortho_parent_comm )
-              ! 
-              IF ( uspp ) THEN
-                 !
-                 CALL ZGEMM( 'N', 'N', kdim, notcl, nr, ONE, &
-                    spsi( 1, 1, ir ), kdmx, vtmp, nx, beta, psi(1,1,nb1+ic-1), kdmx )
-                 !
-              ELSE
-                 !
-                 CALL ZGEMM( 'N', 'N', kdim, notcl, nr, ONE, &
-                    psi( 1, 1, ir ), kdmx, vtmp, nx, beta, psi(1,1,nb1+ic-1), kdmx )
-                 !
-              END IF
+           ENDDO
+           !
+           displs(1) = 0
+           !
+           DO np = 1, ortho_parent_comm_size - 1
+              displs(np+1) = displs(np) + counts(np)
+           ENDDO
+           !
+           CALL mp_type_create_row(vtmp(1,1), notcl, nvecx, row_type)
+           !
+           CALL mp_allgather(vtmp, row_type, counts, displs, ortho_parent_comm)
+           !
+           CALL mp_type_free(row_type)
+           !
+           IF ( uspp ) THEN
               !
-              CALL ZGEMM( 'N', 'N', kdim, notcl, nr, ONE, &
-                      hpsi( 1, 1, ir ), kdmx, vtmp, nx, beta, ptmp, kdmx )
-
-              beta = ONE
-
-           END DO
-
+              CALL ZGEMM( 'N', 'N', kdim, notcl, nbase, ONE, &
+                 spsi, kdmx, vtmp, nvecx, ZERO, psi(1,1,nb1+ic-1), kdmx )
+              !
+           ELSE
+              !
+              CALL ZGEMM( 'N', 'N', kdim, notcl, nbase, ONE, &
+                 psi, kdmx, vtmp, nvecx, ZERO, psi(1,1,nb1+ic-1), kdmx )
+              !
+           END IF
+           !
 !$omp parallel do collapse(3)
            DO np = 1, notcl
               DO ipol = 1, npol
                  DO ig = 1, npwx
                     !
-                    psi(ig,ipol,nbase+np+ic-1) = ptmp(ig,ipol,np) - ew(nbase+np+ic-1) * psi(ig,ipol,nbase+np+ic-1)
+                    psi(ig,ipol,nbase+np+ic-1) = ew(nbase+np+ic-1) * psi(ig,ipol,nbase+np+ic-1)
                     !
                  END DO
               END DO
            END DO
 !$omp end parallel do
            !
+           CALL ZGEMM( 'N', 'N', kdim, notcl, nbase, ONE, &
+                   hpsi, kdmx, vtmp, nvecx, -ONE, psi(1,1,nb1+ic-1), kdmx )
+
+           !
         END IF
         !
      END DO
 
      DEALLOCATE( vtmp )
-     DEALLOCATE( ptmp )
+     DEALLOCATE( displs )
+     DEALLOCATE( counts )
 
      RETURN
   END SUBROUTINE hpsi_dot_v
