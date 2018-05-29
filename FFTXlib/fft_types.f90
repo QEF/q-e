@@ -7,6 +7,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
+#if defined(__CUDA)
+#define DEV_ATTRIBUTES , DEVICE
+#else
+#define DEV_ATTRIBUTES
+#endif
+
 !=----------------------------------------------------------------------------=!
 MODULE fft_types
 !=----------------------------------------------------------------------------=!
@@ -84,11 +90,9 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: ir1w_tg(:)! if >0 ir1w_tg(m1) is the incremental index of the active ( wfc ) X value in task group
     INTEGER, ALLOCATABLE :: indw_tg(:)! is the inverse of ir1w_tg
 
-#if defined(__CUDA)
-    INTEGER, POINTER, DEVICE :: ir1p_d(:),   ir1w_d(:),   ir1w_tg_d(:)
-    INTEGER, POINTER, DEVICE :: indp_d(:,:), indw_d(:,:), indw_tg_d(:,:)
-    INTEGER, POINTER, DEVICE :: nr1p_d(:),   nr1w_d(:),   nr1w_tg_d(:)
-#endif
+    INTEGER, POINTER DEV_ATTRIBUTES :: ir1p_d(:),   ir1w_d(:),   ir1w_tg_d(:)   ! duplicated version of the arrays declared above
+    INTEGER, POINTER DEV_ATTRIBUTES :: indp_d(:,:), indw_d(:,:), indw_tg_d(:,:) !
+    INTEGER, POINTER DEV_ATTRIBUTES :: nr1p_d(:),   nr1w_d(:),   nr1w_tg_d(:)   !
 
     INTEGER :: nst      ! total number of sticks ( potential )
 
@@ -122,11 +126,14 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: iss(:)   ! index of the first rho stick on each proc
     INTEGER, ALLOCATABLE :: isind(:) ! for each position in the plane indicate the stick index
     INTEGER, ALLOCATABLE :: ismap(:) ! for each stick in the plane indicate the position
-#if defined(__CUDA)
-    INTEGER, POINTER, DEVICE :: ismap_d(:)
-#endif
+
+    INTEGER, POINTER DEV_ATTRIBUTES :: ismap_d(:)
+
     INTEGER, ALLOCATABLE :: nl(:)    ! position of the G vec in the FFT grid
     INTEGER, ALLOCATABLE :: nlm(:)   ! with gamma sym. position of -G vec in the FFT grid
+
+    INTEGER, POINTER DEV_ATTRIBUTES :: nl_d(:)    ! duplication of the variables defined above
+    INTEGER, POINTER DEV_ATTRIBUTES :: nlm_d(:)   ! 
     !
     ! task group ALLTOALL communication layout
     INTEGER, ALLOCATABLE :: tg_snd(:) ! number of elements to be sent in task group redistribution
@@ -290,7 +297,6 @@ CONTAINS
     do iproc = 1, desc%nproc2
         ierr = cudaStreamCreate(desc%stream_scatter_xy(iproc))
     end do
-    
 #endif
 
     incremental_grid_identifier = incremental_grid_identifier + 1
@@ -363,6 +369,8 @@ CONTAINS
         DEALLOCATE(desc%stream_scatter_xy)
     END IF
 
+    IF ( ALLOCATED( desc%nl_d ) )  DEALLOCATE( desc%nl_d )
+    IF ( ALLOCATED( desc%nlm_d ) ) DEALLOCATE( desc%nlm_d )
 #endif
 
     desc%comm  = MPI_COMM_NULL 
