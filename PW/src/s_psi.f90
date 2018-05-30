@@ -290,25 +290,28 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_k ', ' cannot allocate memory (ps) ', ABS(ierr) )
        !
-       ps(:,:) = ( 0.D0, 0.D0 )
-       !
-       DO nt = 1, nsp
+       !$pragma omp parallel private(qqc,nt)
+       ALLOCATE( qqc(nhm,nhm) )
+       !$pragma omp for
+       DO na = 1, nat
+          nt = ityp(na)
           IF ( upf(nt)%tvanp ) THEN
              ! qq is real:  copy it into a complex variable to perform
              ! a zgemm - simple but sub-optimal solution
-             ALLOCATE( qqc(nh(nt),nh(nt)) )
-             DO na = 1, nat
-                IF ( ityp(na) == nt ) THEN
-                   qqc(:,:) = CMPLX ( qq_at(1:nh(nt),1:nh(nt),na), 0.0_dp, KIND=dp )
-                   CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                        qqc, nh(nt), becp%k(indv_ijkb0(na)+1,1), nkb, &
-                        (0.0_dp,0.0_dp), ps(indv_ijkb0(na)+1,1), nkb )
-                   !
-                END IF
-             END DO
-             DEALLOCATE (qqc)
+             qqc(1:nh(nt),1:nh(nt)) = CMPLX ( qq_at(1:nh(nt),1:nh(nt),na), 0.0_dp, KIND=dp )
+             CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                  qqc, nhm, becp%k(indv_ijkb0(na)+1,1), nkb, &
+                  (0.0_dp,0.0_dp), ps(indv_ijkb0(na)+1,1), nkb )
+             !
+          ELSE
+             IF (nh(nt)>0) THEN
+                ps(indv_ijkb0(na)+1:indv_ijkb0(na)+nh(nt),1:m) = ( 0.D0, 0.D0 )
+             ENDIF
           END IF
        END DO
+       !$pragma omp end for nowait
+       DEALLOCATE (qqc)
+       !$pragma omp end parallel
        !
        IF ( m == 1 ) THEN
           !
