@@ -186,31 +186,31 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        ALLOCATE (ps (nkb,m), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_k ', ' cannot allocate ps ', ABS( ierr ) )
-       ps(:,:) = ( 0.D0, 0.D0 )
        !
-       DO nt = 1, ntyp
+       !$pragma omp parallel private(deeaux,nt)
+       ALLOCATE ( deeaux(nhm,nhm) )
+       !$pragma omp for
+       DO na = 1, nat
           !
-          IF ( nh(nt) == 0 ) CYCLE
-          ALLOCATE ( deeaux(nh(nt),nh(nt)) )
-          DO na = 1, nat
+          nt = ityp(na)
+          !
+          IF ( nh(nt) > 0 ) THEN
              !
-             IF ( ityp(na) == nt ) THEN
-                !
-                ! deeq is real: copy it into a complex variable to perform
-                ! a zgemm - simple but sub-optimal solution
-                !
-                deeaux(:,:) = CMPLX(deeq(1:nh(nt),1:nh(nt),na,current_spin),&
-                                    0.0_dp, KIND=dp )
-                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                           deeaux, nh(nt), becp%k(indv_ijkb0(na)+1,1), nkb, &
-                          (0.0_dp, 0.0_dp), ps(indv_ijkb0(na)+1,1), nkb )
-                !
-             END IF
+             ! deeq is real: copy it into a complex variable to perform
+             ! a zgemm - simple but sub-optimal solution
              !
-          END DO
-          DEALLOCATE (deeaux)
+             deeaux(1:nh(nt),1:nh(nt)) = CMPLX(deeq(1:nh(nt),1:nh(nt),na,current_spin),&
+                                 0.0_dp, KIND=dp )
+             CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                        deeaux, nhm, becp%k(indv_ijkb0(na)+1,1), nkb, &
+                       (0.0_dp, 0.0_dp), ps(indv_ijkb0(na)+1,1), nkb )
+             !
+          ENDIF
           !
        END DO
+       !$pragma omp end for nowait
+       DEALLOCATE (deeaux)
+       !$pragma omp end parallel
        !
        CALL ZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ) , vkb, &
                    lda, ps, nkb, ( 1.D0, 0.D0 ) , hpsi, lda )
