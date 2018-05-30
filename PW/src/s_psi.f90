@@ -290,9 +290,9 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
        IF( ierr /= 0 ) &
           CALL errore( ' s_psi_k ', ' cannot allocate memory (ps) ', ABS(ierr) )
        !
-       !$pragma omp parallel private(qqc,nt)
+       !$omp parallel private(qqc,nt)
        ALLOCATE( qqc(nhm,nhm) )
-       !$pragma omp for
+       !$omp do
        DO na = 1, nat
           nt = ityp(na)
           IF ( upf(nt)%tvanp ) THEN
@@ -309,9 +309,9 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
              ENDIF
           END IF
        END DO
-       !$pragma omp end for nowait
+       !$omp end do nowait
        DEALLOCATE (qqc)
-       !$pragma omp end parallel
+       !$omp end parallel
        !
        IF ( m == 1 ) THEN
           !

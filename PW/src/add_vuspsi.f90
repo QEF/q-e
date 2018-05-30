@@ -187,9 +187,9 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_k ', ' cannot allocate ps ', ABS( ierr ) )
        !
-       !$pragma omp parallel private(deeaux,nt)
+       !$omp parallel private(deeaux,nt)
        ALLOCATE ( deeaux(nhm,nhm) )
-       !$pragma omp for
+       !$omp do
        DO na = 1, nat
           !
           nt = ityp(na)
@@ -208,9 +208,9 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
           ENDIF
           !
        END DO
-       !$pragma omp end for nowait
+       !$omp end do nowait
        DEALLOCATE (deeaux)
-       !$pragma omp end parallel
+       !$omp end parallel
        !
        CALL ZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ) , vkb, &
                    lda, ps, nkb, ( 1.D0, 0.D0 ) , hpsi, lda )
