@@ -70,11 +70,11 @@
       INTERFACE mp_gather
         MODULE PROCEDURE mp_gather_i1, mp_gather_iv, mp_gatherv_rv, mp_gatherv_iv, &
           mp_gatherv_rm, mp_gatherv_im, mp_gatherv_cv, &
-          mp_gatherv_inplace_cplx_column_section
+          mp_gatherv_inplace_cplx_array
       END INTERFACE
 
       INTERFACE mp_allgather
-        MODULE PROCEDURE mp_allgatherv_inplace_cplx_row
+        MODULE PROCEDURE mp_allgatherv_inplace_cplx_array
       END INTERFACE
 
       INTERFACE mp_alltoall
@@ -1983,10 +1983,10 @@
 
 
 !------------------------------------------------------------------------------!
-!..mp_gatherv_inplace_cplx_column_section
+!..mp_gatherv_inplace_cplx_array
 !..Ye Luo
 
-      SUBROUTINE mp_gatherv_inplace_cplx_column_section(alldata, my_column_type, recvcount, displs, root, gid)
+      SUBROUTINE mp_gatherv_inplace_cplx_array(alldata, my_column_type, recvcount, displs, root, gid)
         IMPLICIT NONE
         COMPLEX(DP) :: alldata(:,:)
         INTEGER, INTENT(IN) :: my_column_type
@@ -2012,16 +2012,16 @@
         IF (ierr/=0) CALL mp_stop( 8074 )
 #endif
         RETURN
-      END SUBROUTINE mp_gatherv_inplace_cplx_column_section
+      END SUBROUTINE mp_gatherv_inplace_cplx_array
 
 !------------------------------------------------------------------------------!
-!..mp_allgatherv_inplace_cplx_row
+!..mp_allgatherv_inplace_cplx_array
 !..Ye Luo
 
-      SUBROUTINE mp_allgatherv_inplace_cplx_row(alldata, my_row_type, recvcount, displs, gid)
+      SUBROUTINE mp_allgatherv_inplace_cplx_array(alldata, my_element_type, recvcount, displs, gid)
         IMPLICIT NONE
         COMPLEX(DP) :: alldata(:,:)
-        INTEGER, INTENT(IN) :: my_row_type
+        INTEGER, INTENT(IN) :: my_element_type
         INTEGER, INTENT(IN) :: recvcount(:), displs(:)
         INTEGER, INTENT(IN) :: gid
         INTEGER :: ierr, npe, myid
@@ -2035,11 +2035,11 @@
         IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
         !
         CALL MPI_ALLGATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
-                             alldata, recvcount, displs, my_row_type, gid, ierr )
+                             alldata, recvcount, displs, my_element_type, gid, ierr )
         IF (ierr/=0) CALL mp_stop( 8074 )
 #endif
         RETURN
-      END SUBROUTINE mp_allgatherv_inplace_cplx_row
+      END SUBROUTINE mp_allgatherv_inplace_cplx_array
 
 !------------------------------------------------------------------------------!
 
