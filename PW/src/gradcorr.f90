@@ -109,6 +109,8 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      ! ... This is the spin-unpolarised case
      !
+!$omp parallel do private( arho, grho2, segno, sx, sc, v1x, v2x, v1c, v2c ) &
+!$omp             reduction(+:etxcgc,vtxcgc)
      DO k = 1, dfftp%nnr
         !
         arho = ABS( rhoout(k,1) )
@@ -147,6 +149,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
         END IF
         !
      END DO
+!$omp end parallel do
      !
   ELSE
      !
