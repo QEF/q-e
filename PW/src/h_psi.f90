@@ -111,12 +111,23 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   REAL(dp)    :: ee
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
-
-  hpsi (:, 1:m) = (0.0_dp, 0.0_dp)
-
-  CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
+  !
+  ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
+  !
+  !$omp parallel do
+  DO ibnd = 1, m
+     hpsi (1:n, ibnd) = g2kin (1:n) * psi (1:n, ibnd)
+     IF (n<lda) hpsi (n+1:lda, ibnd) = (0.0_dp, 0.0_dp)
+     IF ( noncolin ) THEN
+        hpsi (lda+1:lda+n, ibnd) = g2kin (1:n) * psi (lda+1:lda+n, ibnd)
+        IF (n<lda) hpsi (lda+n+1:lda+lda, ibnd) = (0.0_dp, 0.0_dp)
+     END IF
+  END DO
+  !$omp end parallel do
   !
   ! ... Here the product with the local potential V_loc psi
+  !
+  CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
   !
   IF ( gamma_only ) THEN
      ! 
@@ -203,15 +214,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   END IF
   !  
   CALL stop_clock( 'h_psi:pot' )
-  !
-  ! ... Here we add the kinetic energy (k+G)^2 psi
-  !
-  DO ibnd = 1, m
-     hpsi (1:n, ibnd) = hpsi(1:n, ibnd) + g2kin (1:n) * psi (1:n, ibnd)
-     IF ( noncolin ) THEN
-        hpsi (lda+1:lda+n, ibnd) = hpsi(lda+1:lda+n,ibnd) + g2kin (1:n) * psi (lda+1:lda+n, ibnd)
-     END IF
-  END DO
   !
   if (dft_is_meta()) call h_psi_meta (lda, n, m, psi, hpsi)
   !
