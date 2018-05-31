@@ -92,8 +92,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   USE cudafor
   USE cublas
   USE kinds,      ONLY : DP
-  USE becmod,     ONLY : becp
-  USE uspp,       ONLY : nkb, okvan, qq_at, qq_so, indv_ijkb0
+  USE becmod_gpum,ONLY : becp_d
+  USE uspp,       ONLY : nkb, okvan, indv_ijkb0
   USE spin_orb,   ONLY : lspinorb
   USE uspp_param, ONLY : upf, nh, nhm
   USE ions_base,  ONLY : nat, nsp, ityp
@@ -103,8 +103,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
                   invfft_orbital_gamma, fwfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma, &
                   invfft_orbital_k, fwfft_orbital_k, calbec_rs_k, s_psir_k
   !
-  USE uspp_gpum,  ONLY : vkb_d, using_vkb_d
-  USE becmod_gpum, ONLY : using_becp_r, using_becp_k, using_becp_nc
+  USE uspp_gpum,  ONLY : vkb_d, using_vkb_d, using_indv_ijkb0
+  USE becmod_gpum, ONLY : using_becp_r_d, using_becp_k_d, using_becp_nc_d
   !
   IMPLICIT NONE
   !
@@ -112,8 +112,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   COMPLEX(DP), DEVICE, INTENT(IN) :: psi_d(lda*npol,m)
   COMPLEX(DP), DEVICE, INTENT(OUT)::spsi_d(lda*npol,m)
   !
-  COMPLEX(DP), ALLOCATABLE :: psi_host(:,:)
-  COMPLEX(DP), ALLOCATABLE ::spsi_host(:,:)
+  COMPLEX(DP), PINNED, ALLOCATABLE :: psi_host(:,:)
+  COMPLEX(DP), PINNED, ALLOCATABLE ::spsi_host(:,:)
   !
   INTEGER :: ibnd
   !
@@ -192,7 +192,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        USE mp, ONLY: mp_get_comm_null, mp_circular_shift_left
        USE qe_buffers, ONLY : qe_buffer
-
+       USE uspp_gpum,  ONLY : qq_at_d, using_qq_at_d
        !
        IMPLICIT NONE  
        !
@@ -204,14 +204,15 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
          ! data distribution indexes
        INTEGER, EXTERNAL :: ldim_block, gind_block
          ! data distribution functions
-       REAL(DP), ALLOCATABLE :: ps(:,:)
        REAL(DP),    DEVICE, POINTER :: ps_d(:,:)
          ! the product vkb and psi
        !
        CALL using_vkb_d(0)
-       CALL using_becp_r(0)
+       CALL using_becp_r_d(0)
+       CALL using_qq_at_d(0)
+       CALL using_indv_ijkb0(0)
        !
-       IF( becp%comm == mp_get_comm_null() ) THEN
+       IF( becp_d%comm == mp_get_comm_null() ) THEN
           nproc   = 1
           mype    = 0
           m_loc   = m
@@ -222,21 +223,20 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           ! becp(l,i) = <beta_l|psi_i>, with vkb(n,l)=|beta_l>
           ! in this case becp(l,i) are distributed (index i is)
           !
-          nproc   = becp%nproc
-          mype    = becp%mype
-          m_loc   = becp%nbnd_loc
-          m_begin = becp%ibnd_begin
-          m_max   = SIZE( becp%r, 2 )
+          nproc   = becp_d%nproc
+          mype    = becp_d%mype
+          m_loc   = becp_d%nbnd_loc
+          m_begin = becp_d%ibnd_begin
+          m_max   = SIZE( becp_d%r_d, 2 )
           IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
        END IF
        !
-       ALLOCATE( ps( nkb, m_max ), STAT=ierr )
        CALL qe_buffer%lock_buffer(ps_d, (/ nkb, m_max /), ierr)
        
-       IF( ierr /= 0 ) &
-          CALL errore( ' s_psi_gamma ', ' cannot allocate memory (ps) ', ABS(ierr) )
-       !    
-       ps(:,:) = 0.D0
+       IF( ierr /= 0 .and. ierr /= -1 ) &
+          CALL errore( ' s_psi_gamma_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
+       !
+       ps_d(1:nkb,1:m_max) = 0.D0
        !
        !   In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
        !   run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
@@ -251,16 +251,15 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
                    !
                    IF ( m_loc > 0 ) THEN
                       CALL DGEMM('N', 'N', nh(nt), m_loc, nh(nt), 1.0_dp, &
-                                  qq_at(1,1,na), nhm, becp%r(indv_ijkb0(na)+1,1),&
-                                  nkb, 0.0_dp, ps(indv_ijkb0(na)+1,1), nkb )
+                                  qq_at_d(1,1,na), nhm, becp_d%r_d(indv_ijkb0(na)+1,1),&
+                                  nkb, 0.0_dp, ps_d(indv_ijkb0(na)+1,1), nkb )
                    END IF
                 END IF
              END DO
           END IF
        END DO
-       ps_d ( 1:nkb, 1:m_max ) = ps( 1:nkb, 1:m_max )
        !
-       IF( becp%comm == mp_get_comm_null() ) THEN
+       IF( becp_d%comm == mp_get_comm_null() ) THEN
           IF ( m == 1 ) THEN
              CALL cudaDGEMV( 'N', 2 * n, nkb, 1.D0, vkb_d, &
                   2 * lda, ps_d, 1, 1.D0, spsi_d, 1 )
@@ -276,8 +275,8 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           !
           DO icyc = 0, nproc - 1
 
-             m_loc   = ldim_block( becp%nbnd , nproc, icur_blk )
-             m_begin = gind_block( 1,  becp%nbnd, nproc, icur_blk )
+             m_loc   = ldim_block( becp_d%nbnd , nproc, icur_blk )
+             m_begin = gind_block( 1,  becp_d%nbnd, nproc, icur_blk )
 
              IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
 
@@ -288,7 +287,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
 
              ! block rotation
              !
-             CALL mp_circular_shift_left( ps_d, icyc, becp%comm )
+             CALL mp_circular_shift_left( ps_d, icyc, becp_d%comm )
 
              icur_blk = icur_blk + 1
              IF( icur_blk == nproc ) icur_blk = 0
@@ -297,7 +296,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           !
        END IF
        !
-       DEALLOCATE( ps ) 
        CALL qe_buffer%release_buffer(ps_d, ierr)
        !
        RETURN
@@ -311,6 +309,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        ! ... k-points version
        !
        USE qe_buffers, ONLY : qe_buffer
+       USE uspp_gpum,  ONLY : qq_at_d, using_qq_at_d
 
        IMPLICIT NONE
        !
@@ -318,40 +317,53 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        INTEGER :: ikb, jkb, ih, jh, na, nt, ibnd, ierr
          ! counters
-       COMPLEX(DP), ALLOCATABLE :: ps(:,:), qqc(:,:)
+       COMPLEX(DP), DEVICE, POINTER :: qqc_d(:,:,:)
        COMPLEX(DP), DEVICE, POINTER :: ps_d(:,:)
          ! ps = product vkb and psi ; qqc = complex version of qq
        !
-       ALLOCATE( ps( nkb, m ), STAT=ierr )
-       !
-       IF( ierr /= 0 ) &
-          CALL errore( ' s_psi_k ', ' cannot allocate memory (ps) ', ABS(ierr) )
        CALL qe_buffer%lock_buffer(ps_d, (/ nkb, m /), ierr)
+       !
+       IF( ierr /= 0 .and. ierr /= -1 ) &
+          CALL errore( ' s_psi_k_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
 
        ! sync vkb if needed
        CALL using_vkb_d(0)
-       CALL using_becp_k(0)
+       CALL using_becp_k_d(0)
+       CALL using_qq_at_d(0)
        !
-       ps(:,:) = ( 0.D0, 0.D0 )
+       ps_d(1:nkb,1:m) = ( 0.D0, 0.D0 )
        !
+       ! qq is real:  copy it into a complex variable to perform
+       ! a zgemm - simple but sub-optimal solution
+       !
+       ! here we need to use qq_at_d instead of qq_nt_d otherwise real space augmentation brakes!
+       !  qq_nt_d would be much faster and works for calculations without real space augmentation
+       CALL qe_buffer%lock_buffer( qqc_d, (/ nhm, nhm, nat/), ierr )
+       IF( ierr /= 0 .and. ierr /= -1 ) &
+          CALL errore( ' s_psi_k_gpu ', ' cannot allocate buffer (qqc_d) ', ABS(ierr) )
+
+!$cuf kernel do(3) <<<*,*>>>
+       DO na = 1, nat
+          DO jh = 1, nhm
+             DO ih = 1, nhm
+                qqc_d(ih,jh, na) = CMPLX ( qq_at_d(ih,jh, na), 0.0_dp, KIND=dp )
+             END DO
+          END DO
+       END DO
+
        DO nt = 1, nsp
           IF ( upf(nt)%tvanp ) THEN
-             ! qq is real:  copy it into a complex variable to perform
-             ! a zgemm - simple but sub-optimal solution
-             ALLOCATE( qqc(nh(nt),nh(nt)) )
              DO na = 1, nat
                 IF ( ityp(na) == nt ) THEN
-                   qqc(:,:) = CMPLX ( qq_at(1:nh(nt),1:nh(nt),na), 0.0_dp, KIND=dp )
                    CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                        qqc, nh(nt), becp%k(indv_ijkb0(na)+1,1), nkb, &
-                        (0.0_dp,0.0_dp), ps(indv_ijkb0(na)+1,1), nkb )
+                        qqc_d(1,1,na), nhm, becp_d%k_d(indv_ijkb0(na)+1,1), nkb, &
+                        (0.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,1), nkb )
                    !
                 END IF
              END DO
-             DEALLOCATE (qqc)
           END IF
        END DO
-       ps_d(1:nkb, 1:m )   = ps(1:nkb, 1:m )
+       CALL qe_buffer%release_buffer(qqc_d, ierr)
        !
        IF ( m == 1 ) THEN
           !
@@ -365,7 +377,6 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           !
        END IF
        !
-       DEALLOCATE( ps )
        CALL qe_buffer%release_buffer(ps_d, ierr)
        !
        RETURN
@@ -380,6 +391,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        ! ... k-points noncolinear/spinorbit version
        !
        USE qe_buffers, ONLY : qe_buffer
+       USE uspp_gpum,  ONLY : qq_at_d, using_qq_at_d, qq_so_d, using_qq_so_d
 
        IMPLICIT NONE
        !
@@ -387,62 +399,78 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        INTEGER :: ikb, jkb, ih, jh, na, nt, ibnd, ipol, ierr
        ! counters
-       COMPLEX (DP), ALLOCATABLE :: ps (:,:,:)
        COMPLEX(DP), DEVICE, POINTER :: ps_d(:,:,:)
+       COMPLEX(DP), DEVICE, POINTER :: qqc_d(:,:,:)
        ! the product vkb and psi
        !
-       ALLOCATE (ps(nkb,npol,m),STAT=ierr)    
-       IF( ierr /= 0 ) &
-          CALL errore( ' s_psi_nc ', ' cannot allocate memory (ps) ', ABS(ierr) )
-
-       ! sync vkb if needed
+       ! sync if needed
        CALL using_vkb_d(0)
-       CALL using_becp_nc(0)
+       CALL using_becp_nc_d(0)
+       CALL using_indv_ijkb0(0)
+       IF ( .not. lspinorb ) CALL using_qq_at_d(0)
+       IF ( lspinorb ) CALL using_qq_so_d(0)
 
-       ps(:,:,:) = (0.D0,0.D0)
+       CALL qe_buffer%lock_buffer(ps_d, (/ nkb, npol, m /), ierr)
+       IF( ierr /= 0 .and. ierr /= -1 ) &
+          CALL errore( ' s_psi_nc_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
+
+       ps_d(1:nkb,1:npol,1:m) = (0.D0,0.D0)
+       !
+       IF ( .NOT. lspinorb ) THEN
+          CALL qe_buffer%lock_buffer( qqc_d, (/ nhm, nhm, nat /), ierr )
+          IF( ierr /= 0 .and. ierr /= -1 ) &
+             CALL errore( ' s_psi_nc_gpu ', ' cannot allocate buffer (qqc_d) ', ABS(ierr) )
+          ! Possibly convert only what's needed??
+!$cuf kernel do(3) <<<*,*>>>
+          DO na = 1, nat
+             DO jh = 1, nhm
+                DO ih = 1, nhm
+                   qqc_d(ih, jh, na) = CMPLX ( qq_at_d(ih,jh, na), 0.0_dp, KIND=dp )
+                END DO
+             END DO
+          END DO
+       END IF
        !
        DO nt = 1, nsp
           !
           IF ( upf(nt)%tvanp ) THEN
              !
-             DO na = 1, nat
-                IF ( ityp(na) == nt ) THEN
-                   DO ih = 1,nh(nt)
-                      ikb = indv_ijkb0(na) + ih
-                      DO jh = 1, nh (nt)
-                         jkb = indv_ijkb0(na) + jh
-                         IF ( .NOT. lspinorb ) THEN
-                            DO ipol=1,npol
-                               DO ibnd = 1, m
-                                  ps(ikb,ipol,ibnd) = ps(ikb,ipol,ibnd) + &
-                                       qq_at(ih,jh,na)*becp%nc(jkb,ipol,ibnd)
-                               END DO
-                            END DO
-                         ELSE
-                            DO ibnd = 1, m
-                               ps(ikb,1,ibnd)=ps(ikb,1,ibnd) + &
-                                    qq_so(ih,jh,1,nt)*becp%nc(jkb,1,ibnd)+ &
-                                    qq_so(ih,jh,2,nt)*becp%nc(jkb,2,ibnd)
-                               ps(ikb,2,ibnd)=ps(ikb,2,ibnd) + &
-                                    qq_so(ih,jh,3,nt)*becp%nc(jkb,1,ibnd)+ &
-                                    qq_so(ih,jh,4,nt)*becp%nc(jkb,2,ibnd)
-                            END DO
-                         END IF
-                      END DO
-                   END DO
-                END IF
-             END DO
+             IF ( .NOT. lspinorb ) THEN
+                DO na = 1, nat
+                   IF ( ityp(na) == nt ) THEN
+                      DO ipol=1,npol
+                         CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                              qqc_d(1,1, na), nhm, becp_d%nc_d(indv_ijkb0(na)+1,ipol,1), nkb*npol, &
+                              (0.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,ipol,1), nkb*npol )
+                       END DO
+                    END IF
+                END DO
+             ELSE
+                DO na = 1, nat
+                   IF ( ityp(na) == nt ) THEN
+                      CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                           qq_so_d(1,1,1,nt), nhm, becp_d%nc_d(indv_ijkb0(na)+1,1,1), nkb*npol, &
+                           (0.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,1,1), nkb*npol )
+                      CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                           qq_so_d(1,1,2,nt), nhm, becp_d%nc_d(indv_ijkb0(na)+1,2,1), nkb*npol, &
+                           (1.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,1,1), nkb*npol )
+                      !
+                      CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                           qq_so_d(1,1,3,nt), nhm, becp_d%nc_d(indv_ijkb0(na)+1,1,1), nkb*npol, &
+                           (0.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,2,1), nkb*npol )
+                      CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                           qq_so_d(1,1,4,nt), nhm, becp_d%nc_d(indv_ijkb0(na)+1,2,1), nkb*npol, &
+                           (1.0_dp,0.0_dp), ps_d(indv_ijkb0(na)+1,2,1), nkb*npol )
+                    END IF
+                END DO
+             END IF
           END IF
        END DO
-       CALL qe_buffer%lock_buffer(ps_d, (/ nkb,npol,m /), ierr)
-       
-       ps_d(1:nkb,1:npol,1:m) = ps(1:nkb,1:npol,1:m)
-       
-       
+       IF ( .NOT. lspinorb ) CALL qe_buffer%release_buffer(qqc_d, ierr)
+
        call ZGEMM ('N', 'N', n, m*npol, nkb, (1.d0, 0.d0) , vkb_d, &
           lda, ps_d, nkb, (1.d0, 0.d0) , spsi_d(1,1), lda)
 
-       DEALLOCATE(ps)
        CALL qe_buffer%release_buffer(ps_d, ierr)
 
        RETURN
@@ -450,33 +478,4 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
     END SUBROUTINE s_psi_nc_gpu
 
 END SUBROUTINE s_psi__gpu
-!@nje
-
-
-
-SUBROUTINE s_psi_gpu_compatibility( lda, n, m, psi_d, spsi_d )
-  USE kinds,            ONLY : DP
-  USE noncollin_module, ONLY : npol
-  USE cudafor
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN)      :: lda, n, m
-  COMPLEX(DP), DEVICE, INTENT(IN)  :: psi_d(lda*npol,m) 
-  COMPLEX(DP), DEVICE, INTENT(OUT) :: spsi_d(lda*npol,m)
-
-
-  COMPLEX(DP), ALLOCATABLE  :: psi(:,:)
-  COMPLEX(DP), ALLOCATABLE  :: spsi(:,:)
-
-  
-  ALLOCATE(psi(lda*npol,m), spsi(lda*npol,m) )
-  
-  psi = psi_d
-  CALL s_psi( lda, n, m, psi, spsi )
-  spsi_d = spsi
-  
-  DEALLOCATE(psi, spsi )
-  
-END SUBROUTINE s_psi_gpu_compatibility
 #endif
