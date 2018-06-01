@@ -45,6 +45,8 @@ subroutine init_us_1
   USE mp,           ONLY : mp_sum
   !
   USE uspp_gpum,    ONLY : using_indv_ijkb0, using_indv_ijkb0_d, &
+                           using_indv, using_indv_d, &
+                           using_nhtolm, using_nhtolm_d, &
                            using_qq_at, using_qq_at_d, &
                            using_qq_so, using_qq_so_d
   USE us_gpum,      ONLY : using_tab, using_tab_d2y, using_qrad
@@ -432,6 +434,8 @@ subroutine init_us_1
 
   CALL using_tab(2)
   IF (lmaxq > 0) CALL using_qrad(2)
+  CALL using_indv(2); CALL using_indv_d(0) ! trick to update immediately
+  CALL using_nhtolm(2); CALL using_nhtolm_d(0) ! trick to update immediately
   CALL using_indv_ijkb0(2); CALL using_indv_ijkb0_d(0) ! trick to update immediately
   CALL using_qq_at(2);      CALL using_qq_at_d(0) ! trick to update immediately
   IF (lspinorb) THEN 

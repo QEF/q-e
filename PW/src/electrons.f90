@@ -374,7 +374,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    iprint, conv_elec, &
                                    restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
-                                   llondon, ldftd3, scf_must_converge, lxdm, ts_vdw
+                                   llondon, ldftd3, scf_must_converge, lxdm, ts_vdw, &
+                                   use_gpu
   USE control_flags,        ONLY : n_scf_steps, scf_error
 
   USE io_files,             ONLY : iunmix, output_drho, &
@@ -585,7 +586,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! ... sum_band computes new becsum (stored in uspp modules)
         ! ... and a subtly different copy in rho%bec (scf module)
         !
-        CALL sum_band()
+        IF (.not. use_gpu) CALL sum_band()
+        IF (      use_gpu) CALL sum_band_gpu()
         !
         ! ... the Harris-Weinert-Foulkes energy is computed here using only
         ! ... quantities obtained from the input density

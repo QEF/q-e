@@ -164,6 +164,7 @@ MODULE uspp
        dbeta(:,:,:,:,:)      ! derivative of beta functions w.r.t. cell for CP (without struct.factor)
   !
 #if defined (__CUDA)
+  PUBLIC :: lpx_d, lpl_d, ap_d
   INTEGER, ALLOCATABLE, DEVICE ::             &! for each pair of combined momenta lm(1),lm(2): 
        lpx_d(:,:),     &! maximum combined angular momentum LM
        lpl_d(:,:,:)    ! list of combined angular momenta  LM
