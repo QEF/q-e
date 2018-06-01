@@ -33,21 +33,30 @@ subroutine g_psi (lda, n, m, npol, psi, e)
   real(DP), parameter :: eps = 1.0d-4
   ! a small number
   real(DP) :: x, scala, denm
+  !
   integer :: k, i
   ! counter on psi functions
   ! counter on G vectors
+  integer :: iblock, numblock, blocksize
+  ! chunking parameters
   !
   call start_clock ('g_psi')
+  !
+  ! setting chunck size
+  blocksize = 256
+  numblock  = (n+blocksize-1)/blocksize
   !
 #ifdef TEST_NEW_PRECONDITIONING
   scala = 1.d0
   !$omp parallel do collapse(3) private(x, denm)
   do k = 1, m
-     do ipol=1,npol
-        do i = 1, n
-           x = (h_diag(i,ipol) - e(k)*s_diag(i,ipol))*scala
-           denm = 0.5_dp*(1.d0+x+sqrt(1.d0+(x-1)*(x-1.d0)))/scala
-           psi (i, ipol, k) = psi (i, ipol, k) / denm
+     do ipol=1, npol
+        do iblock = 1, numblock
+           do i = (iblock-1)*blocksize+1, MIN(iblock*blocksize, n)
+              x = (h_diag(i,ipol) - e(k)*s_diag(i,ipol))*scala
+              denm = 0.5_dp*(1.d0+x+sqrt(1.d0+(x-1)*(x-1.d0)))/scala
+              psi (i, ipol, k) = psi (i, ipol, k) / denm
+           enddo
         enddo
      enddo
   enddo
