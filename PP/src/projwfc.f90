@@ -1591,7 +1591,7 @@ SUBROUTINE  write_proj (filename, lbinary, projs, lwrite_ovp, ovps )
   !-----------------------------------------------------------------------
   !
   USE kinds
-  USE io_files,         ONLY : iun => iunsat, prefix, tmp_dir
+  USE io_files,         ONLY : iun => iunsat, prefix, tmp_dir, postfix
   USE basis,            ONLY : natomwfc
   USE cell_base
   USE klist,            ONLY : wk, xk, nkstot, nelec
@@ -1616,7 +1616,7 @@ SUBROUTINE  write_proj (filename, lbinary, projs, lwrite_ovp, ovps )
 ! subroutine body
 !
 
-  tmp = trim( tmp_dir ) // trim( prefix ) // '.save/' //trim(filename)
+  tmp = trim( tmp_dir ) // trim( prefix ) // postfix //trim(filename)
   !
   IF ( lbinary ) THEN
       tmp = TRIM(tmp) // ".dat"
