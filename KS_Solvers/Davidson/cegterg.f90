@@ -81,7 +81,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   INTEGER, PARAMETER :: maxter = 20
     ! maximum number of iterations
   !
-  INTEGER :: kter, nbase, np, kdim, kdmx, n, m, nb1, nbn
+  INTEGER :: kter, nbase, np, kdim, kdmx, n, m, ipol, nb1, nbn
     ! counter on iterations
     ! dimension of the reduced basis
     ! counter on the reduced basis vectors
@@ -321,11 +321,15 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      END IF
 ! NB: must not call mp_sum over inter_bgrp_comm here because it is done later to the full correction
      !
-     DO np = 1, notcnv
-        !
-        psi(:,:,nbase+np) = - ew(nbase+np)*psi(:,:,nbase+np)
-        !
+     !$omp parallel do collapse(3)
+     DO n = 1, notcnv
+        DO ipol = 1, npol
+           DO m = 1, npw
+              psi(m,ipol,nbase+n) = - ew(nbase+n)*psi(m,ipol,nbase+n)
+           END DO
+        END DO
      END DO
+     !$omp end parallel do
      !
      if (n_start .le. n_end) &
      CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
@@ -366,11 +370,15 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
      !
+     !$omp parallel do collapse(3)
      DO n = 1, notcnv
-        !
-        psi(:,:,nbase+n) = psi(:,:,nbase+n) / SQRT( ew(n) )
-        !
+        DO ipol = 1, npol
+           DO m = 1, npw
+              psi(m,ipol,nbase+n) = psi(m,ipol,nbase+n) / SQRT( ew(n) )
+           END DO
+        END DO
      END DO
+     !$omp end parallel do
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
@@ -625,7 +633,7 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   INTEGER, PARAMETER :: maxter = 20
     ! maximum number of iterations
   !
-  INTEGER :: kter, nbase, np, kdim, kdmx, n, nb1, nbn
+  INTEGER :: kter, nbase, np, kdim, kdmx, n, m, ipol, nb1, nbn
     ! counter on iterations
     ! dimension of the reduced basis
     ! counter on the reduced basis vectors
@@ -876,11 +884,15 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
      !
      CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
      !
+     !$omp parallel do collapse(3)
      DO n = 1, notcnv
-        !
-        psi(:,:,nbase+n) = psi(:,:,nbase+n) / SQRT( ew(n) )
-        !
+        DO ipol = 1, npol
+           DO m = 1, npw
+              psi(m,ipol,nbase+n) = psi(m,ipol,nbase+n) / SQRT( ew(n) )
+           END DO
+        END DO
      END DO
+     !$omp end parallel do
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
