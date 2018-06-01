@@ -38,7 +38,7 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   !
   !     Local variables
   !
-  integer :: i0,i1,i2,i3, ig, lm, na, nt, nb, ih, jkb
+  integer :: i0,i1,i2,i3, ig, ig_orig, lm, na, nt, nb, ih, jkb
 
   real(DP) :: px, ux, vx, wx, arg
   real(DP), allocatable :: gk (:,:), qg (:), vq (:), ylm (:,:), vkb1(:,:)
@@ -49,32 +49,17 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   real(DP), allocatable :: xdata(:)
   integer :: iq
 
+  ! cache blocking parameters
+  INTEGER :: iblock, numblock, blocksize, realblocksize
   !
   if (lmaxkb.lt.0) return
   call start_clock ('init_us_2')
-  allocate (vkb1( npw_,nhm))    
-  allocate (  sk( npw_))    
-  allocate (  qg( npw_))    
-  allocate (  vq( npw_))    
-  allocate ( ylm( npw_, (lmaxkb + 1) **2))    
-  allocate (  gk( 3, npw_))    
-  !
+
 !   write(*,'(3i4,i5,3f10.5)') size(tab,1), size(tab,2), size(tab,3), size(vq), q_
 
-  do ig = 1, npw_
-     gk (1,ig) = q_(1) + g(1, igk_(ig) )
-     gk (2,ig) = q_(2) + g(2, igk_(ig) )
-     gk (3,ig) = q_(3) + g(3, igk_(ig) )
-     qg (ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
-  enddo
-  !
-  call ylmr2 ((lmaxkb+1)**2, npw_, gk, qg, ylm)
-  !
-  ! set now qg=|q+G| in atomic units
-  !
-  do ig = 1, npw_
-     qg(ig) = sqrt(qg(ig))*tpiba
-  enddo
+  ! setting cache blocking size
+  blocksize = 256
+  numblock  = (npw_+blocksize-1)/blocksize
 
   if (spline_ps) then
     allocate(xdata(nqx))
@@ -82,81 +67,123 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
       xdata(iq) = (iq - 1) * dq
     enddo
   endif
-  ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
-  jkb = 0
-  do nt = 1, ntyp
-     ! calculate beta in G-space using an interpolation table f_l(q)=\int _0 ^\infty dr r^2 f_l(r) j_l(q.r)
-     do nb = 1, upf(nt)%nbeta
-        if ( upf(nt)%is_gth ) then
-           call mk_ffnl_gth( nt, nb, npw_, qg, vq )
-        else
-           do ig = 1, npw_
-              if (spline_ps) then
-                vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
-              else
-                px = qg (ig) / dq - int (qg (ig) / dq)
-                ux = 1.d0 - px
-                vx = 2.d0 - px
-                wx = 3.d0 - px
-                i0 = INT( qg (ig) / dq ) + 1
-                i1 = i0 + 1
-                i2 = i0 + 2
-                i3 = i0 + 3
-                vq (ig) = tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                          tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
-                          tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
-                          tab (i3, nb, nt) * px * ux * vx / 6.d0
+
+!$omp parallel private(vkb1, sk, qg, vq, ylm, gk, ig_orig, &
+!$omp                  realblocksize, jkb, px, ux, vx, wx, &
+!$omp                  i0, i1, i2, i3, lm, arg, phase, pref)
+  !
+  allocate (vkb1(blocksize,nhm))
+  allocate (  sk(blocksize))
+  allocate (  qg(blocksize))
+  allocate (  vq(blocksize))
+  allocate ( ylm(blocksize, (lmaxkb + 1) **2))
+  allocate (  gk(3, blocksize))
+  !
+!$omp do
+  DO iblock = 1, numblock
+     !
+     realblocksize = MIN(npw_-(iblock-1)*blocksize,blocksize)
+     !
+     do ig = 1, realblocksize
+        ig_orig = (iblock-1)*blocksize+ig
+        gk (1,ig) = q_(1) + g(1, igk_(ig_orig) )
+        gk (2,ig) = q_(2) + g(2, igk_(ig_orig) )
+        gk (3,ig) = q_(3) + g(3, igk_(ig_orig) )
+        qg (ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
+     enddo
+     !
+     call ylmr2 ((lmaxkb+1)**2, realblocksize, gk, qg, ylm(1:realblocksize,:))
+     !
+     ! set now qg=|q+G| in atomic units
+     !
+     do ig = 1, realblocksize
+        qg(ig) = sqrt(qg(ig))*tpiba
+     enddo
+
+     ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
+     jkb = 0
+     do nt = 1, ntyp
+        ! calculate beta in G-space using an interpolation table f_l(q)=\int _0 ^\infty dr r^2 f_l(r) j_l(q.r)
+        do nb = 1, upf(nt)%nbeta
+           if ( upf(nt)%is_gth ) then
+              call mk_ffnl_gth( nt, nb, realblocksize, qg, vq )
+           else
+              do ig = 1, realblocksize
+                 if (spline_ps) then
+                    vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
+                 else
+                    px = qg (ig) / dq - int (qg (ig) / dq)
+                    ux = 1.d0 - px
+                    vx = 2.d0 - px
+                    wx = 3.d0 - px
+                    i0 = INT( qg (ig) / dq ) + 1
+                    i1 = i0 + 1
+                    i2 = i0 + 2
+                    i3 = i0 + 3
+                    vq (ig) = tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
+                              tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
+                              tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
+                              tab (i3, nb, nt) * px * ux * vx / 6.d0
+                 endif
+              enddo
+           endif
+           ! add spherical harmonic part  (Y_lm(q)*f_l(q)) 
+           do ih = 1, nh (nt)
+              if (nb.eq.indv (ih, nt) ) then
+                 !l = nhtol (ih, nt)
+                 lm =nhtolm (ih, nt)
+                 do ig = 1, realblocksize
+                    vkb1 (ig,ih) = ylm (ig, lm) * vq (ig)
+                 enddo
               endif
            enddo
-        endif
-        ! add spherical harmonic part  (Y_lm(q)*f_l(q)) 
-        do ih = 1, nh (nt)
-           if (nb.eq.indv (ih, nt) ) then
-              !l = nhtol (ih, nt)
-              lm =nhtolm (ih, nt)
-              do ig = 1, npw_
-                 vkb1 (ig,ih) = ylm (ig, lm) * vq (ig)
+        enddo
+        !
+        ! vkb1 contains all betas including angular part for type nt
+        ! now add the structure factor and factor (-i)^l
+        !
+        do na = 1, nat
+           ! ordering: first all betas for atoms of type 1
+           !           then  all betas for atoms of type 2  and so on
+           if (ityp (na) .eq.nt) then
+              arg = (q_(1) * tau (1, na) + &
+                     q_(2) * tau (2, na) + &
+                     q_(3) * tau (3, na) ) * tpi
+              phase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
+              do ig = 1, realblocksize
+                 ig_orig = (iblock-1)*blocksize+ig
+                 sk (ig) = eigts1 (mill(1,igk_(ig_orig)), na) * &
+                           eigts2 (mill(2,igk_(ig_orig)), na) * &
+                           eigts3 (mill(3,igk_(ig_orig)), na)
+              enddo
+              do ih = 1, nh (nt)
+                 jkb = jkb + 1
+                 pref = (0.d0, -1.d0) **nhtol (ih, nt) * phase
+                 do ig = 1, realblocksize
+                    vkb_((iblock-1)*blocksize+ig, jkb) = vkb1 (ig,ih) * sk (ig) * pref
+                 enddo
+                 ! clean up garbage in the last block
+                 if (iblock.eq.numblock) then
+                    do ig = npw_+1, npwx
+                       vkb_(ig, jkb) = (0.0_dp, 0.0_dp)
+                    enddo
+                 endif
               enddo
            endif
         enddo
      enddo
-     !
-     ! vkb1 contains all betas including angular part for type nt
-     ! now add the structure factor and factor (-i)^l
-     !
-     do na = 1, nat
-        ! ordering: first all betas for atoms of type 1
-        !           then  all betas for atoms of type 2  and so on
-        if (ityp (na) .eq.nt) then
-           arg = (q_(1) * tau (1, na) + &
-                  q_(2) * tau (2, na) + &
-                  q_(3) * tau (3, na) ) * tpi
-           phase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
-           do ig = 1, npw_
-              sk (ig) = eigts1 (mill(1,igk_(ig)), na) * &
-                        eigts2 (mill(2,igk_(ig)), na) * &
-                        eigts3 (mill(3,igk_(ig)), na)
-           enddo
-           do ih = 1, nh (nt)
-              jkb = jkb + 1
-              pref = (0.d0, -1.d0) **nhtol (ih, nt) * phase
-              do ig = 1, npw_
-                 vkb_(ig, jkb) = vkb1 (ig,ih) * sk (ig) * pref
-              enddo
-              do ig = npw_+1, npwx
-                 vkb_(ig, jkb) = (0.0_dp, 0.0_dp)
-              enddo
-           enddo
-        endif
-     enddo
   enddo
+!$omp end do nowait
   deallocate (gk)
   deallocate (ylm)
   deallocate (vq)
   deallocate (qg)
   deallocate (sk)
   deallocate (vkb1)
-
+!$omp end parallel
+  !
+  if (spline_ps) deallocate(xdata)
+  !
   call stop_clock ('init_us_2')
   return
 end subroutine init_us_2
