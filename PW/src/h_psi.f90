@@ -28,7 +28,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE noncollin_module, ONLY : npol
   USE funct,            ONLY : exx_is_active
   USE mp_bands,         ONLY : use_bgrp_in_hpsi, inter_bgrp_comm
-  USE mp,               ONLY : mp_sum, mp_allgather, mp_size, &
+  USE mp,               ONLY : mp_allgather, mp_size, &
                                mp_type_create_column_section, mp_type_free
   !
   IMPLICIT NONE
@@ -37,7 +37,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   COMPLEX(DP), INTENT(IN)  :: psi(lda*npol,m) 
   COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)
   !
-  INTEGER     :: m_start, m_end
+  INTEGER :: m_start, m_end
   INTEGER :: column_type
   INTEGER, ALLOCATABLE :: recv_counts(:), displs(:)
   !

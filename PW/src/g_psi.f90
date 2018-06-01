@@ -41,8 +41,9 @@ subroutine g_psi (lda, n, m, npol, psi, e)
   !
 #ifdef TEST_NEW_PRECONDITIONING
   scala = 1.d0
-  do ipol=1,npol
-     do k = 1, m
+  !$omp parallel do collapse(3) private(x, denm)
+  do k = 1, m
+     do ipol=1,npol
         do i = 1, n
            x = (h_diag(i,ipol) - e(k)*s_diag(i,ipol))*scala
            denm = 0.5_dp*(1.d0+x+sqrt(1.d0+(x-1)*(x-1.d0)))/scala
@@ -50,7 +51,9 @@ subroutine g_psi (lda, n, m, npol, psi, e)
         enddo
      enddo
   enddo
+  !$omp end parallel do
 #else
+  !$omp parallel do collapse(3) private(denm)
   do ipol=1,npol
      do k = 1, m
         do i = 1, n
@@ -66,6 +69,7 @@ subroutine g_psi (lda, n, m, npol, psi, e)
         enddo
      enddo
   enddo
+  !$omp end parallel do
 #endif
 
   call stop_clock ('g_psi')
