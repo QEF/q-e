@@ -50,7 +50,8 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   integer :: iq
 
   ! cache blocking parameters
-  INTEGER :: iblock, numblock, blocksize, realblocksize
+  INTEGER, PARAMETER :: blocksize = 256
+  INTEGER :: iblock, numblock, realblocksize
   !
   if (lmaxkb.lt.0) return
   call start_clock ('init_us_2')
@@ -58,7 +59,6 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
 !   write(*,'(3i4,i5,3f10.5)') size(tab,1), size(tab,2), size(tab,3), size(vq), q_
 
   ! setting cache blocking size
-  blocksize = 256
   numblock  = (npw_+blocksize-1)/blocksize
 
   if (spline_ps) then

@@ -37,13 +37,13 @@ subroutine g_psi (lda, n, m, npol, psi, e)
   integer :: k, i
   ! counter on psi functions
   ! counter on G vectors
-  integer :: iblock, numblock, blocksize
+  integer, parameter :: blocksize = 256
+  integer :: iblock, numblock
   ! chunking parameters
   !
   call start_clock ('g_psi')
   !
   ! setting chunck size
-  blocksize = 256
   numblock  = (n+blocksize-1)/blocksize
   !
 #ifdef TEST_NEW_PRECONDITIONING

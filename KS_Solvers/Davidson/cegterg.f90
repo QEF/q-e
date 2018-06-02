@@ -36,7 +36,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
     ! maximum dimension of the reduced basis set :
     !    (the basis set is refreshed when its dimension would exceed nvecx)
     ! umber of spin polarizations
-  INTEGER :: numblock, blocksize
+  INTEGER, PARAMETER :: blocksize = 256
+  INTEGER :: numblock
     ! chunking parameters
   COMPLEX(DP), INTENT(INOUT) :: evc(npwx,npol,nvec)
     !  evc contains the  refined estimates of the eigenvectors  
@@ -121,7 +122,6 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   END IF
   !
   ! setting chunck size
-  blocksize = 256
   numblock  = (npw+blocksize-1)/blocksize
   !
   ALLOCATE(  psi( npwx, npol, nvecx ), STAT=ierr )
@@ -597,7 +597,8 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
     ! maximum dimension of the reduced basis set
     !    (the basis set is refreshed when its dimension would exceed nvecx)
     ! number of spin polarizations
-  INTEGER :: numblock, blocksize
+  INTEGER, PARAMETER :: blocksize = 256
+  INTEGER :: numblock
     ! chunking parameters
   COMPLEX(DP), INTENT(INOUT) :: evc(npwx,npol,nvec)
     !  evc   contains the  refined estimates of the eigenvectors
@@ -687,7 +688,6 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   END IF
   !
   ! setting chunck size
-  blocksize = 256
   numblock  = (npw+blocksize-1)/blocksize
   !
   ALLOCATE(  psi( npwx, npol, nvecx ), STAT=ierr )

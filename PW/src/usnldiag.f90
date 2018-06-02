@@ -34,10 +34,10 @@ SUBROUTINE usnldiag (npw, h_diag, s_diag)
   INTEGER :: ikb, jkb, ih, jh, na, nt, ig, ipol
   COMPLEX(DP) :: ps1(2), ps2(2), ar
   ! cache blocking parameters
-  INTEGER :: iblock, numblock, blocksize
+  INTEGER, PARAMETER :: blocksize = 256
+  INTEGER :: iblock, numblock
   !
   ! setting cache blocking size
-  blocksize = 256
   numblock  = (npw+blocksize-1)/blocksize
   !
 !$omp parallel do private(ikb, jkb, ps1, ps2, ar)
