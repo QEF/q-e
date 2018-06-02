@@ -58,6 +58,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
     ! maximum dimension of the reduced basis set :
     !    (the basis set is refreshed when its dimension would exceed nvecx)
     ! umber of spin polarizations
+  INTEGER :: numblock, blocksize
+    ! chunking parameters
   COMPLEX(DP), INTENT(INOUT) :: evc(npwx,npol,nvec)
     !  evc contains the  refined estimates of the eigenvectors  
   REAL(DP), INTENT(IN) :: ethr
@@ -139,6 +141,10 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      kdmx = npwx*npol
      !
   END IF
+  !
+  ! setting chunck size
+  blocksize = 256
+  numblock  = (npw+blocksize-1)/blocksize
   !
   ALLOCATE(  psi( npwx, npol, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
@@ -324,8 +330,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !$omp parallel do collapse(3)
      DO n = 1, notcnv
         DO ipol = 1, npol
-           DO m = 1, npw
-              psi(m,ipol,nbase+n) = - ew(nbase+n)*psi(m,ipol,nbase+n)
+           DO m = 1, numblock
+              psi((m-1)*blocksize+1:MIN(npw, m*blocksize),ipol,nbase+n) = &
+                 - ew(nbase+n)*psi((m-1)*blocksize+1:MIN(npw, m*blocksize),ipol,nbase+n)
            END DO
         END DO
      END DO
@@ -373,8 +380,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !$omp parallel do collapse(3)
      DO n = 1, notcnv
         DO ipol = 1, npol
-           DO m = 1, npw
-              psi(m,ipol,nbase+n) = psi(m,ipol,nbase+n) / SQRT( ew(n) )
+           DO m = 1, numblock
+              psi((m-1)*blocksize+1:MIN(npw, m*blocksize),ipol,nbase+n) = &
+                 psi((m-1)*blocksize+1:MIN(npw, m*blocksize),ipol,nbase+n) / SQRT( ew(n) )
            END DO
         END DO
      END DO
@@ -611,6 +619,8 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
     ! maximum dimension of the reduced basis set
     !    (the basis set is refreshed when its dimension would exceed nvecx)
     ! number of spin polarizations
+  INTEGER :: numblock, blocksize
+    ! chunking parameters
   COMPLEX(DP), INTENT(INOUT) :: evc(npwx,npol,nvec)
     !  evc   contains the  refined estimates of the eigenvectors
   REAL(DP), INTENT(IN) :: ethr
@@ -697,7 +707,11 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
      kdmx = npwx*npol
      !
   END IF
-
+  !
+  ! setting chunck size
+  blocksize = 256
+  numblock  = (npw+blocksize-1)/blocksize
+  !
   ALLOCATE(  psi( npwx, npol, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' pcegterg ',' cannot allocate psi ', ABS(ierr) )
@@ -887,8 +901,9 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
      !$omp parallel do collapse(3)
      DO n = 1, notcnv
         DO ipol = 1, npol
-           DO m = 1, npw
-              psi(m,ipol,nbase+n) = psi(m,ipol,nbase+n) / SQRT( ew(n) )
+           DO m = 1, numblock
+              psi((m-1)*blocksize+1:MIN(npw, m*blocksize),ipol,nbase+n) = &
+                 psi((m-1)*blocksize+1:MIN(npw, m*blocksize),ipol,nbase+n) / SQRT( ew(n) )
            END DO
         END DO
      END DO
@@ -1203,7 +1218,7 @@ CONTAINS
   SUBROUTINE hpsi_dot_v()
      !
      INTEGER :: ipc, ipr
-     INTEGER :: nr, ir, ic, notcl, root, np, ipol, ig
+     INTEGER :: nr, ir, ic, notcl, root, np, ipol, ib
      INTEGER :: ortho_parent_comm_size
      COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
      INTEGER :: row_type
@@ -1257,17 +1272,18 @@ CONTAINS
               !
            END IF
            !
-!$omp parallel do collapse(3)
+           !$omp parallel do collapse(3)
            DO np = 1, notcl
               DO ipol = 1, npol
-                 DO ig = 1, npwx
+                 DO ib = 1, numblock
                     !
-                    psi(ig,ipol,nbase+np+ic-1) = ew(nbase+np+ic-1) * psi(ig,ipol,nbase+np+ic-1)
+                    psi((ib-1)*blocksize+1:MIN(npw, ib*blocksize),ipol,nbase+np+ic-1) = &
+                       ew(nbase+np+ic-1) * psi((ib-1)*blocksize+1:MIN(npw, ib*blocksize),ipol,nbase+np+ic-1)
                     !
                  END DO
               END DO
            END DO
-!$omp end parallel do
+           !$omp end parallel do
            !
            CALL ZGEMM( 'N', 'N', kdim, notcl, nbase, ONE, &
                    hpsi, kdmx, vtmp, nvecx, -ONE, psi(1,1,nbase+ic), kdmx )
