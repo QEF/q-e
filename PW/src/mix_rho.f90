@@ -439,11 +439,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   !$omp parallel
      !
-     !$omp do
-     DO ir = 1, dffts%nnr
-        psic(ir) = ZERO
-     ENDDO
-     !$omp end do
+     CALL threaded_barrier_memset(psic, 0.0_DP, dffts%nnr*2)
      IF ( nspin == 2 ) THEN
         !$omp do
         DO ig = 1, ngm0
@@ -497,11 +493,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   ! ... calculate deltaV and the first correction vector
   !
   !$omp parallel
-     !$omp do
-     DO ir = 1, dffts%nnr
-       psic(ir) = ZERO
-     ENDDO
-     !$omp end do
+     CALL threaded_barrier_memset(psic, 0.0_DP, dffts%nnr*2)
      !$omp do
      DO ig = 1, ngm0
         psic(dffts%nl(ig)) = drho%of_g(ig,1)
