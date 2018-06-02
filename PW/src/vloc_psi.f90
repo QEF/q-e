@@ -255,12 +255,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
      DO ibnd = 1, m, fftx_ntgrp(dffts)
         !
 !$omp parallel
-        !$omp do
-        DO j = 1, fftx_ntgrp(dffts) * right_nnr
-           tg_psic(j) = (0.d0, 0.d0)
-        ENDDO
-        !$omp end do
-        !
+        CALL threaded_barrier_memset(tg_psic, 0.D0, fftx_ntgrp(dffts)*right_nnr*2)
         !$omp do collapse(2)
         DO idx = 1, MIN(fftx_ntgrp(dffts), m+1-ibnd)
            DO j = 1, n
@@ -304,11 +299,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
      DO ibnd = 1, m
         !
 !$omp parallel
-        !$omp do
-        DO j = 1, dffts%nnr
-           psic(j) = (0.d0, 0.d0)
-        ENDDO
-        !$omp end do
+        CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
         !$omp do
         DO j = 1, n
            psic (dffts%nl (igk_k(j,current_k))) = psi(j, ibnd)

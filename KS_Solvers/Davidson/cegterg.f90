@@ -8,28 +8,6 @@
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
-SUBROUTINE threaded_fill_array(array, length, array_in)
-  !
-  USE david_param,   ONLY : DP
-  !
-  IMPLICIT NONE
-  !
-  COMPLEX(DP), INTENT(OUT) :: array(length)
-  INTEGER, INTENT(IN) :: length
-  COMPLEX(DP), INTENT(IN) :: array_in(length)
-  !
-  INTEGER :: i
-  !
-  IF (length<=0) RETURN
-  !
-  !$omp parallel do
-  DO i=1, length
-     array(i) = array_in(i)
-  ENDDO
-  !$omp end parallel do
-  !
-END SUBROUTINE threaded_fill_array
-!
 !----------------------------------------------------------------------------
 SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
                     npw, npwx, nvec, nvecx, npol, evc, ethr, &
@@ -180,7 +158,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   nbase  = nvec
   conv   = .FALSE.
   !
-  CALL threaded_fill_array(psi, nvec*npol*npwx, evc)
+  CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -519,20 +497,20 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        CALL threaded_fill_array(psi, nvec*npol*npwx, evc)
+        CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
         !
         IF ( uspp ) THEN
            !
            CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
                        ZERO, psi(1,1,nvec+1), kdmx)
-           CALL threaded_fill_array(spsi, nvec*npol*npwx, psi(1,1,nvec+1))
+           CALL threaded_memcpy(spsi, psi(1,1,nvec+1), nvec*npol*npwx*2)
            CALL mp_sum( spsi(:,:,1:nvec), inter_bgrp_comm )
            !
         END IF
         !
         CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,1,nvec+1), kdmx )
-        CALL threaded_fill_array(hpsi, nvec*npol*npwx, psi(1,1,nvec+1))
+        CALL threaded_memcpy(hpsi, psi(1,1,nvec+1), nvec*npol*npwx*2)
         CALL mp_sum( hpsi(:,:,1:nvec), inter_bgrp_comm )
         !
         ! ... refresh the reduced hamiltonian 
@@ -795,7 +773,7 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   nbase  = nvec
   conv   = .FALSE.
   !
-  CALL threaded_fill_array(psi, nvec*npol*npwx, evc)
+  CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -1040,7 +1018,7 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        CALL threaded_fill_array(psi, nvec*npol*npwx, evc)
+        CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
         !
         IF ( uspp ) THEN
            !
@@ -1412,7 +1390,7 @@ CONTAINS
         !
      END DO
      !
-     CALL threaded_fill_array(spsi, nvec*npol*npwx, psi(1,1,nvec+1))
+     CALL threaded_memcpy(spsi, psi(1,1,nvec+1), nvec*npol*npwx*2)
      !
      DEALLOCATE( vtmp )
 
@@ -1474,7 +1452,7 @@ CONTAINS
      !
      DEALLOCATE( vtmp )
      !
-     CALL threaded_fill_array(hpsi, nvec*npol*npwx, psi(1,1,nvec+1))
+     CALL threaded_memcpy(hpsi, psi(1,1,nvec+1), nvec*npol*npwx*2)
      !
      RETURN
   END SUBROUTINE refresh_hpsi

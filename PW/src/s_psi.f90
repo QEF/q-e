@@ -111,17 +111,11 @@ SUBROUTINE s_psi_( lda, n, m, psi, spsi )
   COMPLEX(DP), INTENT(IN) :: psi(lda*npol,m)
   COMPLEX(DP), INTENT(OUT)::spsi(lda*npol,m)
   !
-  INTEGER :: ibnd, ii
+  INTEGER :: ibnd
   !
   ! ... initialize  spsi
   !
-  !$omp parallel do collapse(2)
-  DO ibnd = 1, m
-     DO ii = 1, lda*npol
-        spsi(ii,ibnd) = psi(ii,ibnd)
-     END DO
-  END DO
-  !$omp end parallel do
+  CALL threaded_memcpy(spsi, psi, lda*npol*m*2)
   !
   IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
   !

@@ -543,11 +543,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
      ! ... generate the vector w
      !     
      !$omp parallel
-        !$omp do
-        DO ir = 1, dffts%nnr
-          psic(ir) = ZERO
-        ENDDO
-        !$omp end do
+        CALL threaded_barrier_memset(psic, 0.0_DP, dffts%nnr*2)
         !$omp do
         DO ig = 1, ngm0
            !

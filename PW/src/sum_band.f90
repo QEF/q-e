@@ -639,11 +639,7 @@ SUBROUTINE sum_band()
                    ntgrp = fftx_ntgrp( dffts )
                    !
 !$omp parallel
-                   !$omp do
-                   DO j = 1, ntgrp*right_nnr
-                      tg_psi(j) = ( 0.D0, 0.D0 )
-                   END DO
-                   !$omp end do
+                   CALL threaded_barrier_memset(tg_psi, 0.D0, ntgrp*right_nnr*2)
                    !
                    ! ... ntgrp ffts at the same time
                    !
@@ -684,11 +680,7 @@ SUBROUTINE sum_band()
                 ELSE
                    !
 !$omp parallel
-                   !$omp do
-                   DO j = 1, dffts%nnr
-                      psic(j) = ( 0.D0, 0.D0 )
-                   ENDDO
-                   !$omp enddo
+                   CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
                    !
                    !$omp do
                    DO j = 1, npw

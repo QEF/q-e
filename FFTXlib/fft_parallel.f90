@@ -103,11 +103,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
      if (isgn==+3) then 
         call fft_scatter_tg_opt ( dfft, f, aux, nnr_, isgn)
      else
-!$omp parallel do
-        do i=1, nsticks_z*nx3
-           aux(i) = f(i)
-        enddo
-!$omp end parallel do
+        call threaded_memcpy(aux, f, nsticks_z*nx3*2)
      endif
      ! Gz, Gy, Gx
      CALL cft_1z( aux, nsticks_z, n3, nx3, isgn, f )
@@ -139,11 +135,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
      if (isgn==-3) then 
         call fft_scatter_tg_opt ( dfft, aux, f, nnr_, isgn)
      else
-!$omp parallel do
-        do i=1, nsticks_z*nx3
-           f(i) = aux(i)
-        enddo
-!$omp end parallel do
+        call threaded_memcpy(f, aux, nsticks_z*nx3*2)
      endif
   ENDIF
   !write (6,99) f(1:400); write(6,*); FLUSH(6)
