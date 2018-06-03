@@ -485,6 +485,10 @@ SUBROUTINE sum_band()
        LOGICAL  :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp
        !
+       ! chunking parameters
+       INTEGER, PARAMETER :: blocksize = 256
+       INTEGER :: numblock
+       !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
@@ -638,15 +642,19 @@ SUBROUTINE sum_band()
                    !
                    ntgrp = fftx_ntgrp( dffts )
                    !
+                   ! compute the number of chuncks
+                   numblock  = (npw+blocksize-1)/blocksize
+                   !
 !$omp parallel
                    CALL threaded_barrier_memset(tg_psi, 0.D0, ntgrp*right_nnr*2)
                    !
                    ! ... ntgrp ffts at the same time
                    !
                    !$omp do collapse(2)
-                   DO idx = 1, MIN(ntgrp, ibnd_end+1-ibnd)
-                      DO j = 1, npw
-                         tg_psi( dffts%nl(igk_k(j,ik))+right_nnr*(idx-1) ) = evc(j,idx+ibnd-1)
+                   DO idx = 0, MIN(ntgrp-1, ibnd_end-ibnd)
+                      DO j = 1, numblock
+                         tg_psi( dffts%nl(igk_k((j-1)*blocksize+1:MIN(j*blocksize, npw),ik))+right_nnr*idx ) = &
+                            evc((j-1)*blocksize+1:MIN(j*blocksize, npw),idx+ibnd)
                       END DO
                    END DO
                    !$omp end do nowait

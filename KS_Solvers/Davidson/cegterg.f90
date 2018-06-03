@@ -121,7 +121,7 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
   END IF
   !
-  ! setting chunck size
+  ! compute the number of chuncks
   numblock  = (npw+blocksize-1)/blocksize
   !
   ALLOCATE(  psi( npwx, npol, nvecx ), STAT=ierr )
@@ -686,7 +686,7 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
      !
   END IF
   !
-  ! setting chunck size
+  ! compute the number of chuncks
   numblock  = (npw+blocksize-1)/blocksize
   !
   ALLOCATE(  psi( npwx, npol, nvecx ), STAT=ierr )

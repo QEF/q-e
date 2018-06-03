@@ -43,7 +43,7 @@ subroutine g_psi (lda, n, m, npol, psi, e)
   !
   call start_clock ('g_psi')
   !
-  ! setting chunck size
+  ! compute the number of chuncks
   numblock  = (n+blocksize-1)/blocksize
   !
 #ifdef TEST_NEW_PRECONDITIONING
@@ -65,16 +65,18 @@ subroutine g_psi (lda, n, m, npol, psi, e)
   !$omp parallel do collapse(3) private(denm)
   do ipol=1,npol
      do k = 1, m
-        do i = 1, n
-           denm = h_diag (i,ipol) - e (k) * s_diag (i,ipol)
-        !
-        ! denm = g2+v(g=0) - e(k)
-        !
-           if (abs (denm) < eps) denm = sign (eps, denm)
-        !
-        ! denm = sign( max( abs(denm),eps ), denm )
-        !
-           psi (i, ipol, k) = psi (i, ipol, k) / denm
+        do iblock = 1, numblock
+           do i = (iblock-1)*blocksize+1, MIN(iblock*blocksize, n)
+              denm = h_diag (i,ipol) - e (k) * s_diag (i,ipol)
+              !
+              ! denm = g2+v(g=0) - e(k)
+              !
+                 if (abs (denm) < eps) denm = sign (eps, denm)
+              !
+              ! denm = sign( max( abs(denm),eps ), denm )
+              !
+              psi (i, ipol, k) = psi (i, ipol, k) / denm
+           enddo
         enddo
      enddo
   enddo
