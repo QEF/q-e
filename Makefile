@@ -261,7 +261,7 @@ links : bindir
 # - If the final directory does not exists it creates it
 #########################################################
 
-install : touch-dummy
+install : 
 	@if test -d bin ; then mkdir -p $(PREFIX)/bin ; \
 	for x in `find * ! -path "test-suite/*" -name *.x -type f` ; do \
 		cp $$x $(PREFIX)/bin/ ; done ; \
@@ -274,7 +274,7 @@ install : touch-dummy
 #     already computed once (usualy during release)
 #########################################################
 
-test-suite: pw cp touch-dummy
+test-suite: pw cp 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
@@ -357,7 +357,7 @@ tar-qe-modes :
 # in order to build the .pdf files in Doc, "pdflatex" is needed;
 # in order to build html files for user guide and developer manual,
 # "latex2html" and "convert" (from Image-Magick) are needed.
-doc : touch-dummy
+doc : 
 	if test -d Doc ; then \
 	( cd Doc ; $(MAKE) TLDEPS= all ) ; fi
 	for dir in */Doc; do \

@@ -1439,6 +1439,7 @@ punch.o : ../../Modules/io_files.o
 punch.o : ../../Modules/io_global.o
 punch.o : ../../Modules/ions_base.o
 punch.o : ../../Modules/kernel_table.o
+punch.o : ../../Modules/qexsd.o
 punch.o : ../../Modules/wavefunctions.o
 punch.o : ../../Modules/wrappers.o
 punch.o : a2fmod.o

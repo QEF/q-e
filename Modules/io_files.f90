@@ -28,6 +28,12 @@ MODULE io_files
   CHARACTER(len=256) :: wfc_dir = 'undefined'
   ! ... prefix is prepended to all file (and directory) names 
   CHARACTER(len=256) :: prefix  = 'os'
+  ! ... postfix is appended to directory names
+#if defined (_WIN32)
+  CHARACTER(len=6) :: postfix  = '.save\'
+#else
+  CHARACTER(len=6) :: postfix  = '.save/'
+#endif
   ! ... for parallel case and distributed I/O: node number
   CHARACTER(len=6)   :: nd_nmbr = '000000'
   ! ... directory where pseudopotential files are found
@@ -109,11 +115,16 @@ CONTAINS
     !
     CHARACTER(LEN=*), INTENT(IN) :: dirname
     !
-    INTEGER                    :: ierr
+    INTEGER                    :: ierr, length
     !
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     !
-    IF ( ionode ) ierr = f_mkdir_safe( TRIM( dirname ) )
+    length = LEN_TRIM(dirname)
+#if defined (_WIN32)
+    ! Windows returns error if tmp_dir ends with a backslash
+    IF ( dirname(length:length) == '\' ) length=length-1
+#endif
+    IF ( ionode ) ierr = f_mkdir_safe( dirname(1:length ) )
     CALL mp_bcast ( ierr, ionode_id, intra_image_comm )
     !
     CALL errore( 'create_directory', &
@@ -153,7 +164,7 @@ CONTAINS
     CHARACTER(len=*), INTENT(in) :: tmp_dir
     LOGICAL, INTENT(out)         :: exst, pfs
     !
-    INTEGER             :: ios, image, proc, nofi
+    INTEGER             :: ios, image, proc, nofi, length
     CHARACTER (len=256) :: file_path, filename
     CHARACTER(len=6), EXTERNAL :: int_to_char
     !
@@ -162,7 +173,12 @@ CONTAINS
     ! ...                       0 if         created
     ! ...                       1 if         cannot be created
     !
-    IF ( ionode ) ios = f_mkdir_safe( TRIM(tmp_dir) )
+    length = LEN_TRIM(tmp_dir)
+#if defined (_WIN32)
+    ! Windows returns error if tmp_dir ends with a backslash
+    IF ( tmp_dir(length:length) == '\' ) length=length-1
+#endif
+    IF ( ionode ) ios = f_mkdir_safe( tmp_dir(1:length) )
     CALL mp_bcast ( ios, ionode_id, intra_image_comm )
     exst = ( ios == -1 )
     IF ( ios > 0 ) CALL errore ('check_tempdir','tmp_dir cannot be opened',1)

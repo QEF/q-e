@@ -383,6 +383,7 @@ do_phonon.o : phcom.o
 do_phonon.o : yambo.o
 do_q2r.o : ../../FFTXlib/fft_scalar.o
 do_q2r.o : ../../Modules/environment.o
+do_q2r.o : ../../Modules/io_files.o
 do_q2r.o : ../../Modules/io_global.o
 do_q2r.o : ../../Modules/kind.o
 do_q2r.o : ../../Modules/mp_global.o

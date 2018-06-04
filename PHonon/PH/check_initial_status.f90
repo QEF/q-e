@@ -69,7 +69,7 @@ SUBROUTINE check_initial_status(auxdyn)
   USE io_global,       ONLY : stdout
   USE control_flags,   ONLY : modenum
   USE ions_base,       ONLY : nat
-  USE io_files,        ONLY : tmp_dir
+  USE io_files,        ONLY : tmp_dir, postfix
   USE lsda_mod,        ONLY : nspin
   USE scf,             ONLY : rho
   USE disp,            ONLY : nqs, x_q, comp_iq, nq1, nq2, nq3, &
@@ -104,7 +104,8 @@ SUBROUTINE check_initial_status(auxdyn)
   IMPLICIT NONE
   !
   CHARACTER (LEN=256) :: auxdyn, filename
-  CHARACTER (LEN=6), EXTERNAL :: int_to_char
+  CHARACTER (LEN=256), EXTERNAL :: trimcheck
+  CHARACTER (LEN=6  ), EXTERNAL :: int_to_char
   LOGICAL :: exst
   INTEGER :: iq, iq_start, ierr
   !
@@ -195,8 +196,8 @@ SUBROUTINE check_initial_status(auxdyn)
 !  If a recover or a restart file exists the first q point is the current one.
 !
      IF ((.NOT.lgamma_iq(current_iq).OR. newgrid).AND.lqdir) THEN
-        tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
-                          & '.q_' // TRIM(int_to_char(current_iq))//'/'
+        tmp_dir_phq= trimcheck ( TRIM (tmp_dir_ph) // TRIM(prefix) // &
+                               & '.q_' // int_to_char(current_iq) )
         tmp_dir=tmp_dir_phq
         CALL check_restart_recover(ext_recover, ext_restart)
         tmp_dir=tmp_dir_ph
@@ -304,9 +305,9 @@ SUBROUTINE check_initial_status(auxdyn)
      ! here and copy the charge density inside
      !
      IF ((.NOT.lgamma.OR. newgrid).AND.lqdir) THEN
-        tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
-                          & '.q_' // TRIM(int_to_char(iq))//'/'
-        filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/charge-density.dat'
+        tmp_dir_phq= trimcheck ( TRIM (tmp_dir_ph) // TRIM(prefix) // &
+                                & '.q_' // int_to_char(iq) ) 
+        filename=TRIM(tmp_dir_phq)//TRIM(prefix)//postfix//'charge-density.dat'
         IF (ionode) inquire (file =TRIM(filename), exist = exst)
         !
         CALL mp_bcast( exst, ionode_id, intra_image_comm )
@@ -503,7 +504,13 @@ SUBROUTINE check_initial_status(auxdyn)
    LOGICAL :: exst
    CHARACTER(LEN=256) :: file_input, file_output
    CHARACTER(LEN=6), EXTERNAL :: int_to_char
+   CHARACTER(LEN=8) :: phpostfix
 
+#if defined (_WIN32)
+   phpostfix='.phsave\'
+#else
+   phpostfix='.phsave/'
+#endif
    CALL mp_barrier(intra_image_comm)
    IF (nimage == 1) RETURN
    IF (my_image_id==0) RETURN
@@ -512,12 +519,12 @@ SUBROUTINE check_initial_status(auxdyn)
       DO irr=0, irr_iq(iq)
          IF (comp_irr_iq(irr,iq).and.ionode) THEN
             file_input=TRIM( tmp_dir_ph ) // &
-                    & TRIM( prefix ) // '.phsave/dynmat.'  &
+                    & TRIM( prefix ) // phpostfix // 'dynmat.'  &
                     &  // TRIM(int_to_char(iq))&
                     &  // '.' // TRIM(int_to_char(irr)) // '.xml'
 
             file_output=TRIM( tmp_dir_save ) // '/_ph0/' &
-                    &    // TRIM( prefix ) // '.phsave/dynmat.' &
+                    &    // TRIM( prefix ) // phpostfix // 'dynmat.' &
                     &    // TRIM(int_to_char(iq))  &
                     &    // '.' // TRIM(int_to_char(irr)) // '.xml'
 
@@ -526,12 +533,12 @@ SUBROUTINE check_initial_status(auxdyn)
             IF ( elph .AND. irr>0 ) THEN
 
                file_input=TRIM( tmp_dir_ph ) // &
-                    & TRIM( prefix ) // '.phsave/elph.'  &
+                    & TRIM( prefix ) // phpostfix // 'elph.'  &
                     &  // TRIM(int_to_char(iq))&
                     &  // '.' // TRIM(int_to_char(irr)) // '.xml'
 
                file_output=TRIM( tmp_dir_save ) // '/_ph0/' // &
-                    &   TRIM( prefix ) // '.phsave/elph.' &
+                    &   TRIM( prefix ) // phpostfix // 'elph.' &
                     &    // TRIM(int_to_char(iq))  &
                     &    // '.' // TRIM(int_to_char(irr)) // '.xml'
 
@@ -543,10 +550,10 @@ SUBROUTINE check_initial_status(auxdyn)
       IF ((ldisp.AND..NOT. (lgauss .OR. ltetra)).OR.(epsil.OR.zeu.OR.zue)) THEN
          IF (lgamma_iq(iq).AND.comp_irr_iq(0,iq).AND.ionode) THEN
             file_input=TRIM( tmp_dir_ph ) // &
-                      TRIM( prefix ) // '.phsave/tensors.xml'
+                      TRIM( prefix ) // phpostfix // 'tensors.xml'
 
             file_output=TRIM( tmp_dir_save ) // '/_ph0/' &
-                    // TRIM( prefix ) // '.phsave/tensors.xml'
+                    // TRIM( prefix ) // phpostfix // 'tensors.xml'
 
             INQUIRE (FILE = TRIM(file_input), EXIST = exst)
             IF (exst) ios = f_copy(file_input, file_output)
