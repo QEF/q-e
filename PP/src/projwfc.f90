@@ -287,6 +287,15 @@ SUBROUTINE get_et_from_gww ( nbnd, et )
   ENDIF
 END SUBROUTINE get_et_from_gww
 !
+SUBROUTINE write_lowdin ( filproj, nat )
+  !
+  USE io_global, ONLY : stdout, ionode
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER (len=*), INTENT(in) :: filproj
+END SUBROUTINE 
+!
 !-----------------------------------------------------------------------
 SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   !-----------------------------------------------------------------------
