@@ -1,5 +1,7 @@
 New in development version:
 
+  * Improved FFT threading (Ye Luo, Argonne)
+
   * EXX: ACE can be projected on arbitrary number of orbitals
     Slight change in SCF convergence with ACE (dexx) properly
     accounting for difference between 2*<new|V(old)|new> 

@@ -416,20 +416,19 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 
                13          Monoclinic base-centered        celldm(2)=b/a
                                                            celldm(3)=c/a,
-                                                           celldm(4)=cos(ab)
+                                                           celldm(4)=cos(gamma)
                     v1 = (  a/2,         0,                -c/2),
                     v2 = (b*cos(gamma), b*sin(gamma),       0  ),
                     v3 = (  a/2,         0,                 c/2),
-                    where gamma is the angle between axis a and b
+                    where gamma=angle between axis a and b projected on xy plane
 
               -13          Monoclinic base-centered        celldm(2)=b/a
                            (unique axis b)                 celldm(3)=c/a,
-                                                           celldm(5)=cos(ac)
+                                                           celldm(5)=cos(beta)
                     v1 = (  a/2,      -b/2,             0),
                     v2 = (  a/2,       b/2,             0),
                     v3 = (c*cos(beta),   0,   c*sin(beta)),
-                    where beta is the angle between axis a and c
- 
+                    where beta=angle between axis a and c projected on xz plane
 
                14          Triclinic                       celldm(2)= b/a,
                                                            celldm(3)= c/a,
