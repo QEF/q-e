@@ -8,8 +8,6 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-source ${ESPRESSO_ROOT}/test-suite/ENVIRONMENT
-
 if [ $QE_USE_MPI == 1 ]; then
   export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
   export PARA_POSTFIX=" "

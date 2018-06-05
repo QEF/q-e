@@ -1637,7 +1637,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                parametrized.
            }
          }
-         var dftd3_threebody -type logical{
+         var dftd3_threebody -type LOGICAL {
            default { TRUE }
            info {
                Turn three-body terms in Grimme-D3 on. If .false. two-body contributions 
