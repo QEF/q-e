@@ -40,7 +40,7 @@ SUBROUTINE run_dist ( exit_status )
   ! and reprinted along with the lattice vectors, irrespective of
   ! what was provided in output - useful for checking and conversion
   !
-  CALL lat2celldm ( ibrav, alat, at(1,1), at(1,2), at(1,3), celldm )
+  CALL at2celldm ( ibrav, alat, at(1,1), at(1,2), at(1,3), celldm )
   CALL celldm2abc ( ibrav, celldm, a,b,c,cosab,cosac,cosbc )
   !
   WRITE(stdout,'(/,5x,"Bravais lattice index ibrav =",i3)') ibrav
