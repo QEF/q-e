@@ -441,8 +441,11 @@ SUBROUTINE fft_scatter_yz ( desc, f_in, f_aux, nxx_, isgn )
 !$omp parallel
      ! ensures that no garbage is present in the output
      !
-     CALL threaded_barrier_memset(f_aux, 0.0_DP, desc%my_nr3p*my_nr1p_*desc%nr2x*2)
-     !
+!$omp do
+     DO k = 1, desc%my_nr3p*my_nr1p_*desc%nr2x
+        f_aux(k) = (0.0_DP, 0.0_DP)
+     ENDDO
+!$omp end do
 !$omp do collapse(3) private(ip,it,mc,m1,m2,i1)
      DO iproc3 = 1, desc%nproc3
         DO me2 = me2_start, me2_end
