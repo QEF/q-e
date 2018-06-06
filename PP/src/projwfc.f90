@@ -318,7 +318,6 @@ SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
      WRITE( stdout, '(/"Lowdin Charges: "/)')
      WRITE( unit, '(/"Lowdin Charges: "/)')
      !
-     WRITE(stdout, *) charges
      DO na = 1, nat
         DO is = 1, nspin
           WRITE(stdout, *) is, nspin, charges(na,0:lmax_wfc,is)
