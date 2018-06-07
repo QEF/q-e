@@ -43,7 +43,7 @@ SUBROUTINE iosys()
   USE ions_base,     ONLY : if_pos, ityp, tau, extfor, &
                             ntyp_ => nsp, &
                             nat_  => nat, &
-                            amass, tau_format
+                            amass, tau_format, ind_srt
   !
   USE basis,         ONLY : startingconfig, starting_wfc, starting_pot
   !
@@ -1446,6 +1446,7 @@ SUBROUTINE iosys()
   !
 
   ALLOCATE( ityp( nat_ ) )
+  ALLOCATE( ind_srt( nat_ ) )
   ALLOCATE( tau(    3, nat_ ) )
   ALLOCATE( force(  3, nat_ ) )
   ALLOCATE( if_pos( 3, nat_ ) )
@@ -1470,7 +1471,6 @@ SUBROUTINE iosys()
   !
   call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
                         trd_ht, rd_ht, cell_units )
-
   !
   ! ... Files (for compatibility) and directories
   !     This stuff must be done before calling read_config_from_file!
@@ -1737,7 +1737,7 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
                                  lsg
   USE dynamics_module,    ONLY : vel
   USE cell_base,          ONLY : at, ibrav
-  USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
+  USE ions_base,          ONLY : sort_specie, nat, ntyp => nsp, ityp, tau, atm, extfor
   USE fixed_occ,          ONLY : tfixed_occ, f_inp_ => f_inp
   USE ions_base,          ONLY : if_pos, amass, fixatom
   USE control_flags,      ONLY : textfor, tv0rd
@@ -1793,6 +1793,8 @@ SUBROUTINE read_cards_pw ( psfile, tau_format )
         !
      ENDDO
   ENDIF
+  !
+  CALL sort_specie()
   !
   ! ... check for initial velocities read from input file
   !
