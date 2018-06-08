@@ -1698,8 +1698,8 @@ DO i=1, o%ndim_ionicPolarization
    CALL bcast_ionicPolarization_type(o%ionicPolarization(i), ionode_id, comm)
 ENDDO
 CALL mp_bcast(o%ndim_electronicPolarization, ionode_id, comm)
-IF (.NOT. ionode) ALLOCATE(o%electronicPolarization&
-                                   (o%ndim_electronicPolarization))
+IF (.NOT. ionode) &
+   ALLOCATE(o%electronicPolarization (o%ndim_electronicPolarization))
 DO i=1, o%ndim_electronicPolarization
    CALL bcast_electronicPolarization_type(o%electronicPolarization(i), &
                                                             ionode_id, comm)
