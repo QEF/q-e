@@ -461,7 +461,16 @@ MODULE exx
          ENDDO
       ENDDO
     ELSE
-      CALL threaded_memset(exxbuff, 0.0_DP, nrxxs*npol*SIZE(exxbuff,2)*nkqs*2)
+!$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs,ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
+      DO ikq=1,SIZE(exxbuff,3) 
+         DO ibnd=ibnd_buff_start,ibnd_buff_end
+            DO ir=1,nrxxs*npol
+               exxbuff(ir,ibnd,ikq)=(0.0_DP,0.0_DP)
+            ENDDO
+         ENDDO
+      ENDDO
+      ! the above loops will replaced with the following line soon
+      !CALL threaded_memset(exxbuff, 0.0_DP, nrxxs*npol*SIZE(exxbuff,2)*nkqs*2)
     END IF
     !
     !   This is parallelized over pools. Each pool computes only its k-points
