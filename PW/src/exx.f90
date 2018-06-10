@@ -295,7 +295,7 @@ MODULE exx
     USE mp_exx,               ONLY : me_egrp, negrp, &
                                      init_index_over_band, my_egrp_id,  &
                                      inter_egrp_comm, intra_egrp_comm, &
-                                     iexx_start, iexx_end
+                                     iexx_start, iexx_end, max_jbands_per_egrp
     USE mp,                   ONLY : mp_sum, mp_bcast
     USE funct,                ONLY : get_exx_fraction, start_exx,exx_is_active,&
                                      get_screening_parameter, get_gau_parameter
@@ -445,7 +445,7 @@ MODULE exx
          IF (gamma_only) THEN
             ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nks))
          ELSE
-            ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nkqs))
+            ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_jbands_per_egrp-1, nkqs))
          END IF
       END IF
     END IF
@@ -461,14 +461,7 @@ MODULE exx
          ENDDO
       ENDDO
     ELSE
-!$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs,ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
-      DO ikq=1,SIZE(exxbuff,3) 
-         DO ibnd=ibnd_buff_start,ibnd_buff_end
-            DO ir=1,nrxxs*npol
-               exxbuff(ir,ibnd,ikq)=(0.0_DP,0.0_DP)
-            ENDDO
-         ENDDO
-      ENDDO
+      CALL threaded_memset(exxbuff, 0.0_DP, nrxxs*npol*SIZE(exxbuff,2)*nkqs*2)
     END IF
     !
     !   This is parallelized over pools. Each pool computes only its k-points
@@ -1179,10 +1172,12 @@ MODULE exx
     USE klist,          ONLY : xk, nks, nkstot
     USE fft_interfaces, ONLY : fwfft, invfft
     USE becmod,         ONLY : bec_type
-    USE mp_exx,       ONLY : inter_egrp_comm, intra_egrp_comm, my_egrp_id, &
-                             negrp, max_pairs, egrp_pairs, ibands, nibands, &
-                             max_ibands, iexx_istart, iexx_iend, jblock
-    USE mp,             ONLY : mp_sum, mp_barrier, mp_bcast
+    USE mp_exx,         ONLY : inter_egrp_comm, my_egrp_id, negrp, &
+                               intra_egrp_comm, me_egrp, &
+                               max_pairs, egrp_pairs, ibands, nibands, &
+                               max_ibands, iexx_istart, iexx_iend, &
+                               all_start, all_end, iexx_start, jblock
+    USE mp,             ONLY : mp_sum, mp_barrier, mp_bcast, mp_circular_shift_left
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
     USE us_exx,         ONLY : bexg_merge, becxx, addusxx_g, addusxx_r, &
@@ -1191,7 +1186,7 @@ MODULE exx
     USE paw_exx,        ONLY : PAW_newdxx
     USE exx_base,       ONLY : nqs, xkq_collect, index_xkq, index_xk, &
          coulomb_fac, g2_convolution_all
-    USE exx_band,       ONLY : exxbuff_comm, result_sum, igk_exx
+    USE exx_band,       ONLY : result_sum, igk_exx
     USE io_global,      ONLY : stdout
     !
     !
@@ -1238,7 +1233,7 @@ MODULE exx
     INTEGER :: ii, jstart, jend, jcount, jind
     INTEGER :: ialloc, ending_im
     INTEGER :: ijt, njt, jblock_start, jblock_end
-    COMPLEX(DP), ALLOCATABLE :: exxtemp(:,:)
+    INTEGER :: iegrp, wegrp
     !
     ialloc = nibands(my_egrp_id+1)
     !
@@ -1251,8 +1246,6 @@ MODULE exx
     ELSE
        ALLOCATE( temppsic(nrxxs,ialloc), result(nrxxs,ialloc) )
     ENDIF
-    !
-    ALLOCATE( exxtemp(nrxxs*npol, jblock) )
     !
     IF(okvan) ALLOCATE(deexx(nkb,ialloc))
     !
@@ -1349,192 +1342,185 @@ MODULE exx
        !
        IF ( okvan .and..not.tqr ) CALL qvan_init (dfftt%ngm, xkq, xkp)
        !
-       njt = nbnd / jblock
-       if (mod(nbnd, jblock) .ne. 0) njt = njt + 1
-       !
-       DO ijt=1, njt
+       DO iegrp=1, negrp
           !
-          jblock_start = (ijt - 1) * jblock + 1
-          jblock_end = min(jblock_start+jblock-1,nbnd)
+          ! compute the id of group whose data is currently worked on
+          wegrp = MOD(iegrp+my_egrp_id-1, negrp)+1
+          njt = (all_end(wegrp)-all_start(wegrp)+jblock)/jblock
           !
-          !gather exxbuff for jblock_start:jblock_end
-          call exxbuff_comm( exxbuff, exxtemp, ikq, nrxxs*npol, &
-                  jblock_start,jblock_end)
-          !
-          DO ii=1, nibands(my_egrp_id+1)
+          DO ijt=1, njt
              !
-             ibnd = ibands(ii,my_egrp_id+1)
+             jblock_start = (ijt - 1) * jblock + all_start(wegrp)
+             jblock_end = min(jblock_start+jblock-1,all_end(wegrp))
              !
-             IF (ibnd.eq.0.or.ibnd.gt.m) CYCLE
-             !
-             !determine which j-bands to calculate
-             jstart = 0
-             jend = 0
-             DO ipair=1, max_pairs
-                IF(egrp_pairs(1,ipair,my_egrp_id+1).eq.ibnd)THEN
-                   IF(jstart.eq.0)THEN
-                      jstart = egrp_pairs(2,ipair,my_egrp_id+1)
-                      jend = jstart
-                   ELSE
-                      jend = egrp_pairs(2,ipair,my_egrp_id+1)
+             DO ii=1, nibands(my_egrp_id+1)
+                !
+                ibnd = ibands(ii,my_egrp_id+1)
+                !
+                IF (ibnd.eq.0.or.ibnd.gt.m) CYCLE
+                !
+                !determine which j-bands to calculate
+                jstart = 0
+                jend = 0
+                DO ipair=1, max_pairs
+                   IF(egrp_pairs(1,ipair,my_egrp_id+1).eq.ibnd)THEN
+                      IF(jstart.eq.0)THEN
+                         jstart = egrp_pairs(2,ipair,my_egrp_id+1)
+                         jend = jstart
+                      ELSE
+                         jend = egrp_pairs(2,ipair,my_egrp_id+1)
+                      END IF
                    END IF
-                END IF
-             END DO
-             !
-             jstart = max(jstart,jblock_start)
-             jend = min(jend,jblock_end)
-             !
-             !how many iters
-             jcount=jend-jstart+1
-             if(jcount<=0) cycle
-             !
-             !----------------------------------------------------------------------!
-             !INNER LOOP START
-             !----------------------------------------------------------------------!
-             !
-             !loads the phi from file
-             !
-             IF (noncolin) THEN
-!$omp parallel do collapse(2) default(shared) firstprivate(jstart,jend) private(jbnd,ir)
-                DO jbnd=jstart, jend
-                   DO ir = 1, nrxxs
-                      rhoc(ir,jbnd-jstart+1) = ( conjg(exxtemp(ir,jbnd-jblock_start+1))*temppsic_nc(ir,1,ii) +&
-                      conjg(exxtemp(nrxxs+ir,jbnd-jblock_start+1))*temppsic_nc(ir,2,ii) )/omega
-                   END DO
                 END DO
-!$omp end parallel do
-             ELSE
+                !
+                jstart = max(jstart,jblock_start)
+                jend = min(jend,jblock_end)
+                !
+                !how many iters
+                jcount=jend-jstart+1
+                if(jcount<=0) cycle
+                !
+                !----------------------------------------------------------------------!
+                !INNER LOOP START
+                !----------------------------------------------------------------------!
+                !
                 nblock=2048
-                nrt = nrxxs / nblock
-                if (mod(nrxxs, nblock) .ne. 0) nrt = nrt + 1
-!$omp parallel do collapse(2) default(shared) firstprivate(jstart,jend,nblock,nrxxs,omega_inv) private(irt,ir,ir_start,ir_end,jbnd)
+                nrt = (nrxxs+nblock-1)/nblock
+                !
+!$omp parallel do collapse(2) private(ir_start,ir_end)
                 DO irt = 1, nrt
                    DO jbnd=jstart, jend
                       ir_start = (irt - 1) * nblock + 1
                       ir_end = min(ir_start+nblock-1,nrxxs)
+                      IF (noncolin) THEN
+                         DO ir = ir_start, ir_end
+                            rhoc(ir,jbnd-jstart+1) = &
+                               ( conjg(exxbuff(ir,jbnd-all_start(wegrp)+iexx_start,ikq))*temppsic_nc(ir,1,ii) +&
+                               conjg(exxbuff(nrxxs+ir,jbnd-all_start(wegrp)+iexx_start,ikq))*temppsic_nc(ir,2,ii) )/omega
+                         ENDDO
+                      ELSE
 !DIR$ vector nontemporal (rhoc)
-                      DO ir = ir_start, ir_end
-                         rhoc(ir,jbnd-jstart+1)=conjg(exxtemp(ir,jbnd-jblock_start+1))*temppsic(ir,ii) * omega_inv
-                      ENDDO
+                         DO ir = ir_start, ir_end
+                            rhoc(ir,jbnd-jstart+1) = &
+                               conjg(exxbuff(ir,jbnd-all_start(wegrp)+iexx_start,ikq))*temppsic(ir,ii) * omega_inv
+                         ENDDO
+                      ENDIF
                    ENDDO
                 ENDDO
 !$omp end parallel do
-             ENDIF
-             !
-             !   >>>> add augmentation in REAL space HERE
-             IF(okvan .and. tqr) THEN ! augment the "charge" in real space
-                DO jbnd=jstart, jend
-                   CALL addusxx_r(rhoc(:,jbnd-jstart+1), becxx(ikq)%k(:,jbnd), becpsi%k(:,ibnd))
-                ENDDO
-             ENDIF
-             !
-             !   >>>> brings it to G-space
-#if defined(__USE_MANY_FFT)
-             CALL fwfft ('Rho', prhoc, dfftt, howmany=jcount)
-#else
-             DO jbnd=jstart, jend
-                CALL fwfft('Rho', rhoc(:,jbnd-jstart+1), dfftt)
-             ENDDO
-#endif
-             !
-             !   >>>> add augmentation in G space HERE
-             IF(okvan .and. .not. tqr) THEN
-                DO jbnd=jstart, jend
-                   CALL addusxx_g(dfftt, rhoc(:,jbnd-jstart+1), xkq, xkp, &
-                   'c', becphi_c=becxx(ikq)%k(:,jbnd),becpsi_c=becpsi%k(:,ibnd))
-                ENDDO
-             ENDIF
-             !   >>>> charge done
-             !
-!call start_collection()
-             nblock=2048
-             nrt = nrxxs / nblock
-             if (mod(nrxxs, nblock) .ne. 0) nrt = nrt + 1
-!$omp parallel do collapse(2) default(shared) firstprivate(jstart,jend,nblock,nrxxs,nqs_inv) private(irt,ir,ir_start,ir_end,jbnd)
-             DO irt = 1, nrt
-                DO jbnd=jstart, jend
-                   ir_start = (irt - 1) * nblock + 1
-                   ir_end = min(ir_start+nblock-1,nrxxs)
-!DIR$ vector nontemporal (vc)
-                   DO ir = ir_start, ir_end
-                      vc(ir,jbnd-jstart+1) = facb(ir) * rhoc(ir,jbnd-jstart+1)*&
-                                             x_occupation(jbnd,ik) * nqs_inv
-                   ENDDO
-                ENDDO
-             ENDDO
-!$omp end parallel do
-!call stop_collection()
-             !
-             ! Add ultrasoft contribution (RECIPROCAL SPACE)
-             ! compute alpha_I,j,k+q = \sum_J \int <beta_J|phi_j,k+q> V_i,j,k,q Q_I,J(r) d3r
-             IF(okvan .and. .not. tqr) THEN
-                DO jbnd=jstart, jend
-                   CALL newdxx_g(dfftt, vc(:,jbnd-jstart+1), xkq, xkp, 'c',&
-                                 deexx(:,ii), becphi_c=becxx(ikq)%k(:,jbnd))
-                ENDDO
-             ENDIF
-             !
-             !brings back v in real space
-#if defined(__USE_MANY_FFT)
-             !fft many
-             CALL invfft ('Rho', pvc, dfftt, howmany=jcount)
-#else
-             DO jbnd=jstart, jend
-                CALL invfft('Rho', vc(:,jbnd-jstart+1), dfftt)
-             ENDDO
-#endif
-             !
-             ! Add ultrasoft contribution (REAL SPACE)
-             IF(okvan .and. tqr) THEN
-                DO jbnd=jstart, jend
-                   CALL newdxx_r(dfftt, vc(:,jbnd-jstart+1), becxx(ikq)%k(:,jbnd),deexx(:,ii))
-                ENDDO
-             ENDIF
-             !
-             ! Add PAW one-center contribution
-             IF(okpaw) THEN
-                DO jbnd=jstart, jend
-                   CALL PAW_newdxx(x_occupation(jbnd,ik)/nqs, becxx(ikq)%k(:,jbnd), becpsi%k(:,ibnd), deexx(:,ii))
-                ENDDO
-             ENDIF
-             !
-             !accumulates over bands and k points
-             !
-             IF (noncolin) THEN
-!$omp parallel do default(shared) firstprivate(jstart,jend) private(ir,jbnd)
-                DO ir = 1, nrxxs
+                !
+                !   >>>> add augmentation in REAL space HERE
+                IF(okvan .and. tqr) THEN ! augment the "charge" in real space
                    DO jbnd=jstart, jend
-                      result_nc(ir,1,ii)= result_nc(ir,1,ii) + vc(ir,jbnd-jstart+1) * exxtemp(ir,jbnd-jblock_start+1)
-                      result_nc(ir,2,ii)= result_nc(ir,2,ii) + vc(ir,jbnd-jstart+1) * exxtemp(ir+nrxxs,jbnd-jblock_start+1)
+                      CALL addusxx_r(rhoc(:,jbnd-jstart+1), becxx(ikq)%k(:,jbnd), becpsi%k(:,ibnd))
                    ENDDO
+                ENDIF
+                !
+                !   >>>> brings it to G-space
+#if defined(__USE_MANY_FFT)
+                CALL fwfft ('Rho', prhoc, dfftt, howmany=jcount)
+#else
+                DO jbnd=jstart, jend
+                   CALL fwfft('Rho', rhoc(:,jbnd-jstart+1), dfftt)
                 ENDDO
-!$omp end parallel do
-             ELSE
+#endif
+                !
+                !   >>>> add augmentation in G space HERE
+                IF(okvan .and. .not. tqr) THEN
+                   DO jbnd=jstart, jend
+                      CALL addusxx_g(dfftt, rhoc(:,jbnd-jstart+1), xkq, xkp, &
+                      'c', becphi_c=becxx(ikq)%k(:,jbnd),becpsi_c=becpsi%k(:,ibnd))
+                   ENDDO
+                ENDIF
+                !   >>>> charge done
+                !
 !call start_collection()
-                nblock=2048
-                nrt = nrxxs / nblock
-                if (mod(nrxxs, nblock) .ne. 0) nrt = nrt + 1
-!$omp parallel do default(shared) firstprivate(jstart,jend,nblock,nrxxs) private(ir,ir_start,ir_end,jbnd)
+!$omp parallel do collapse(2) private(ir_start,ir_end)
                 DO irt = 1, nrt
                    DO jbnd=jstart, jend
                       ir_start = (irt - 1) * nblock + 1
                       ir_end = min(ir_start+nblock-1,nrxxs)
-!!dir$ vector nontemporal (result)
+!DIR$ vector nontemporal (vc)
                       DO ir = ir_start, ir_end
-                         result(ir,ii) = result(ir,ii) + vc(ir,jbnd-jstart+1)*exxtemp(ir,jbnd-jblock_start+1)
+                         vc(ir,jbnd-jstart+1) = facb(ir) * rhoc(ir,jbnd-jstart+1)*&
+                                                x_occupation(jbnd,ik) * nqs_inv
                       ENDDO
                    ENDDO
                 ENDDO
 !$omp end parallel do
 !call stop_collection()
-             ENDIF
-             !
-             !----------------------------------------------------------------------!
-             !INNER LOOP END
-             !----------------------------------------------------------------------!
-             !
-          END DO !I-LOOP
-       END DO !IJT
+                !
+                ! Add ultrasoft contribution (RECIPROCAL SPACE)
+                ! compute alpha_I,j,k+q = \sum_J \int <beta_J|phi_j,k+q> V_i,j,k,q Q_I,J(r) d3r
+                IF(okvan .and. .not. tqr) THEN
+                   DO jbnd=jstart, jend
+                      CALL newdxx_g(dfftt, vc(:,jbnd-jstart+1), xkq, xkp, 'c',&
+                                    deexx(:,ii), becphi_c=becxx(ikq)%k(:,jbnd))
+                   ENDDO
+                ENDIF
+                !
+                !brings back v in real space
+#if defined(__USE_MANY_FFT)
+                !fft many
+                CALL invfft ('Rho', pvc, dfftt, howmany=jcount)
+#else
+                DO jbnd=jstart, jend
+                   CALL invfft('Rho', vc(:,jbnd-jstart+1), dfftt)
+                ENDDO
+#endif
+                !
+                ! Add ultrasoft contribution (REAL SPACE)
+                IF(okvan .and. tqr) THEN
+                   DO jbnd=jstart, jend
+                      CALL newdxx_r(dfftt, vc(:,jbnd-jstart+1), becxx(ikq)%k(:,jbnd),deexx(:,ii))
+                   ENDDO
+                ENDIF
+                !
+                ! Add PAW one-center contribution
+                IF(okpaw) THEN
+                   DO jbnd=jstart, jend
+                      CALL PAW_newdxx(x_occupation(jbnd,ik)/nqs, becxx(ikq)%k(:,jbnd), becpsi%k(:,ibnd), deexx(:,ii))
+                   ENDDO
+                ENDIF
+                !
+                !accumulates over bands and k points
+                !
+!call start_collection()
+!$omp parallel do private(ir_start,ir_end)
+                DO irt = 1, nrt
+                   DO jbnd=jstart, jend
+                      ir_start = (irt - 1) * nblock + 1
+                      ir_end = min(ir_start+nblock-1,nrxxs)
+                      IF (noncolin) THEN
+                         DO ir = ir_start, ir_end
+                            result_nc(ir,1,ii) = result_nc(ir,1,ii) &
+                                               + vc(ir,jbnd-jstart+1) * exxbuff(ir,jbnd-all_start(wegrp)+iexx_start,ikq)
+                            result_nc(ir,2,ii) = result_nc(ir,2,ii) &
+                                               + vc(ir,jbnd-jstart+1) * exxbuff(ir+nrxxs,jbnd-all_start(wegrp)+iexx_start,ikq)
+                         ENDDO
+                      ELSE
+!!dir$ vector nontemporal (result)
+                         DO ir = ir_start, ir_end
+                            result(ir,ii) = result(ir,ii) &
+                                          + vc(ir,jbnd-jstart+1)*exxbuff(ir,jbnd-all_start(wegrp)+iexx_start,ikq)
+                         ENDDO
+                      ENDIF
+                   ENDDO
+                ENDDO
+!$omp end parallel do
+!call stop_collection()
+                !
+                !----------------------------------------------------------------------!
+                !INNER LOOP END
+                !----------------------------------------------------------------------!
+                !
+             END DO !I-LOOP
+          END DO !IJT
+          !
+          ! get the next nbnd/negrp data
+          call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+          !
+       END DO !iegrp
        !
        IF ( okvan .and..not.tqr ) CALL qvan_clean ()
     END DO
@@ -1616,8 +1602,6 @@ MODULE exx
     DEALLOCATE(big_result)
     !
     DEALLOCATE(fac, facb )
-    !
-    DEALLOCATE(exxtemp)
     !
     IF(okvan) DEALLOCATE( deexx)
     !

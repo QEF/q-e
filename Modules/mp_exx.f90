@@ -47,9 +47,9 @@ MODULE mp_exx
   INTEGER :: iexx_start = 0              ! starting band index used in bgrp parallelization
   INTEGER :: iexx_end = 0                ! ending band index used in bgrp parallelization
   INTEGER, ALLOCATABLE :: iexx_istart(:) ! starting band inded for the outer loop
-  INTEGER, ALLOCATABLE :: iexx_iend(:)  ! ending band index used in the outer loop
-  INTEGER, ALLOCATABLE :: all_start(:)
-  INTEGER, ALLOCATABLE :: all_end(:)
+  INTEGER, ALLOCATABLE :: iexx_iend(:)   ! ending band index used in the outer loop
+  INTEGER, ALLOCATABLE :: all_start(:)   ! starting band inded for the inner loop
+  INTEGER, ALLOCATABLE :: all_end(:)     ! ending band index used in the inner loop
   INTEGER :: max_contributors
   !
   ! flag for whether the exx part of the calculation is in progress
@@ -59,6 +59,7 @@ MODULE mp_exx
   ! maximum number of bands for psi
   !
   INTEGER :: max_ibands
+  INTEGER :: max_jbands_per_egrp
   !
   INTEGER :: jblock
   !
@@ -154,7 +155,8 @@ CONTAINS
     INTEGER :: pair_bands(nbnd,nbnd)
 
     jblock = 7
-    
+
+    max_jbands_per_egrp = (nbnd+negrp-1)/negrp
     max_ibands = CEILING(DBLE(nbnd)/DBLE(negrp))+2
     IF (ALLOCATED(all_start)) THEN
        DEALLOCATE( all_start, all_end )
@@ -168,28 +170,9 @@ CONTAINS
     myrank = mp_rank(comm)
     npe = mp_size(comm)
 
+    !determine all_start and all_end for all of the inner loop bands
     rest = mod(nbnd, npe)
     k = int(nbnd/npe)
-    
-    IF ( k >= 1 ) THEN
-       IF ( rest > myrank ) THEN
-          iexx_start = (myrank)*k + (myrank+1)
-          iexx_end = (myrank+1)*k + (myrank+1)
-       ELSE
-          iexx_start = (myrank)*k + rest + 1
-          iexx_end = (myrank+1)*k + rest
-       END IF
-    ELSE
-       IF(my_egrp_id+1.le.m) THEN
-          iexx_start = my_egrp_id+1
-          iexx_end = my_egrp_id+1
-       ELSE
-          iexx_start = 0
-          iexx_end = 0
-       END IF
-    END IF
-
-    !determine iexx_start and iexx_end for all of the other bands
     all_start = 0
     all_end = 0
     DO i=1, negrp
@@ -211,6 +194,8 @@ CONTAINS
           END IF
        END IF
     END DO
+    iexx_start = all_start(myrank+1)
+    iexx_end   = all_end  (myrank+1)
 
     !determine the first and last indices for the outer loop
     rest_i = mod(m, npe)
