@@ -527,8 +527,9 @@
      IF ( ny < 1 ) &
          call fftx_error__('cfft3d',' ny is less than 1 ', 1)
      IF ( nz < 1 ) &
-         call fftx_error__('cfft3',' nz is less than 1 ', 1)
-
+         call fftx_error__('cfft3d',' nz is less than 1 ', 1)
+     IF ( nx /= ldx .or. ny /= ldy .or. nz /= ldz ) &
+         call fftx_error__('cfft3d',' leading dimensions must match data dimension ', 1)
      !
      !   Here initialize table only if necessary
      !
@@ -592,9 +593,9 @@
         FFT_DIM(1) = nx
         FFT_DIM(2) = ny
         FFT_DIM(3) = nz
-       DATA_DIM(1) = nx
-       DATA_DIM(2) = ny
-       DATA_DIM(3) = nz
+       DATA_DIM(1) = ldx
+       DATA_DIM(2) = ldy
+       DATA_DIM(3) = ldz
             STRIDE = 1
               DIST = ldx*ldy*ldz
              BATCH = howmany

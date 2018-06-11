@@ -170,7 +170,7 @@ program test_fft_scalar_gpu
     integer(kind = cuda_stream_kind) :: stream = 0
     ! size
     integer, parameter :: nx = 10, ny = 10, nz = 10
-    integer, parameter :: ldx= 11, ldy= 12, ldz= 13
+    integer, parameter :: ldx= 10, ldy= 10, ldz= 10
 #if ! defined(__DFTI)
     integer, parameter :: howmany=1
 #else
