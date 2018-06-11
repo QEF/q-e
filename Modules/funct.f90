@@ -553,7 +553,7 @@ CONTAINS
        dft_defined = set_dft_values(1,4,13,4,3,0)
     else if ('RVV10-SCAN' .EQ. TRIM(dftout) ) then
     ! Special case rVV10+scan
-       dft_defined = set_dft_values(1,4,13,4,3,5)
+       dft_defined = set_dft_values(0,0,0,0,3,5)
     else if ('B3LYP'.EQ. TRIM(dftout) ) then
     ! special case : B3LYP hybrid
        dft_defined = set_dft_values(7,12,9,7,0,0)
