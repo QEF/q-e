@@ -103,7 +103,7 @@ CONTAINS
     !
     SUBROUTINE write_info(u, upf, conf, u_input)
       ! Write human-readable header
-      ! The header is written directly, not via iotk
+      !
       IMPLICIT NONE
       TYPE(xmlf_t),INTENT(INOUT)          :: u   ! i/o unit: write to unit u
       TYPE(pseudo_upf),INTENT(IN) :: upf  ! the pseudo data
@@ -680,8 +680,6 @@ CONTAINS
    RETURN
  END SUBROUTINE write_gipaw
  !
- ! Remove '<' and '>' from string, replacing them with '/', necessary
- ! or iotk will complain while read-skipping PP_INFO section.
 END SUBROUTINE write_upf_v2
 
  

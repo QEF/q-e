@@ -5,10 +5,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! NOTE May 2018 (PG): reading of old xml input file using iotk is disabled
+! Look for following preprocessing variable to see what and where
+#undef __XML_INPUT
 MODULE open_close_input_file
   !
   USE io_global,     ONLY : stdin, stdout, qestdin
+#if defined (__XML_INPUT)
   USE iotk_module,   ONLY : iotk_open_read, iotk_close_read,iotk_attlenx
+#endif
   !
   LOGICAL, SAVE :: lxmlinput_loc = .false.
   CHARACTER(LEN=256), SAVE :: input_file = ' '
@@ -113,8 +118,13 @@ CONTAINS
      ELSE
         WRITE(stdout, '(5x,a)') "Reading xml input from standard input"
      END IF
+#if defined (__XML_INPUT)
      CALL iotk_open_read( qestdin, TRIM(input_file), attr = attr, &
                           qe_syntax = .true., ierr = ierr)
+#else
+     OPEN ( UNIT = qestdin, FILE = TRIM(input_file), FORM = 'FORMATTED', &
+            STATUS = 'OLD', IOSTAT = ierr )
+#endif
   ELSE 
      IF ( input_file .NE. "input_tmp.in") THEN
          WRITE(stdout, '(5x,a)') "Reading input from "//TRIM(input_file)
@@ -150,7 +160,11 @@ INTEGER FUNCTION close_input_file ( )
   IF (opnd) THEN
      !
      IF (lxmlinput_loc) THEN
+#if defined (__XML_INPUT)
         CALL iotk_close_read(unit=qestdin, ierr = ierr)
+#else
+        CLOSE (UNIT=qestdin, STATUS='keep', IOSTAT=ierr )
+#endif
      ELSE
         IF ( TRIM(input_file) == "input_tmp.in") THEN
            CLOSE (UNIT=qestdin, STATUS='delete', IOSTAT=ierr )

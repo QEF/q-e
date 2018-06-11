@@ -44,9 +44,6 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  parallel_k  = .true.
-  parallel_q  = .false.
-
   fsthick     = 1.0 ! eV 
   eptemp      = 1 ! K 
   degaussw    = 0.01 ! eV

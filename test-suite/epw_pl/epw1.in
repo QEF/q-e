@@ -17,8 +17,8 @@
 
   wannierize  = .true.
   num_iter    = 300
-!  dis_win_max = 8
-!  dis_froz_max= 5.5
+  dis_win_max = 8
+  dis_froz_max= 5.5
   proj(1)     = 'Si : sp3'
   wdata(1) = 'bands_plot = .true.'
   wdata(2) = 'begin kpoint_path'
@@ -43,8 +43,6 @@
    
   band_plot   = .true.
 
-  parallel_k  = .true.
-  parallel_q  = .false.
 
   fsthick     = 3.0
   eptemp      = 20.0

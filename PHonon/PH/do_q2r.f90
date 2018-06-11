@@ -17,7 +17,8 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
   USE mp_global,  ONLY : mp_startup, mp_global_end
   USE dynamicalq, ONLY : phiq, tau, ityp, zeu
   USE fft_scalar, ONLY : cfft3d
-  USE io_global, ONLY : ionode_id, ionode, stdout
+  USE io_global,  ONLY : ionode_id, ionode, stdout
+  USE io_files,   ONLY : postfix
   USE io_dyn_mat, ONLY : read_dyn_mat_param, read_dyn_mat_header, &
                          read_dyn_mat, read_dyn_mat_tail, &
                          write_dyn_mat_header, write_ifc
@@ -66,7 +67,7 @@ SUBROUTINE do_q2r(fildyn_, flfrc, prefix, zasr, la2F, loto_2d)
   IF(xmldyn) post='.xml'
 
   IF ( trim( prefix ) /= ' ' ) THEN
-     fildyn = trim(prefix) // '.save/' //trim(fildyn_)
+     fildyn = trim(prefix) // postfix //trim(fildyn_)
   ELSE
      fildyn = trim(fildyn_)
   END IF

@@ -16,7 +16,8 @@ MODULE pw_restart_new
   ! ... collected on / distributed to all other processors in pool
   !
   USE KINDS,        ONLY: DP
-  USE qes_module 
+  USE qes_types_module
+  USE qes_libs_module
   USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
                           qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
                           qexsd_init_atomic_species, qexsd_init_atomic_structure,      &
@@ -28,7 +29,7 @@ MODULE pw_restart_new
                           qexsd_input_obj, qexsd_occ_obj, qexsd_smear_obj,             &
                           qexsd_init_outputPBC, qexsd_init_gate_info  
   USE io_global, ONLY : ionode, ionode_id
-  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir
+  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, postfix
   !
   IMPLICIT NONE
   !
@@ -172,7 +173,7 @@ MODULE pw_restart_new
       ! 
       ! XML descriptor
       ! 
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
       !
       CALL qexsd_init_schema( iunpun )
       !
@@ -540,7 +541,7 @@ MODULE pw_restart_new
       CHARACTER(LEN=256)    :: dirname
       CHARACTER(LEN=320)    :: filename
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
       !
       ! ... write wavefunctions and k+G vectors
       !
@@ -759,8 +760,7 @@ MODULE pw_restart_new
             CALL errore ("pw_readschema_file", "could not find a free unit to open data-file-schema.xml", 1)
       CALL qexsd_init_schema( iunpun )
       !
-      filename = TRIM( tmp_dir ) // TRIM( prefix ) // '.save' &
-               & // '/' // TRIM( xmlpun_schema )
+      filename = TRIM( tmp_dir ) // TRIM( prefix ) // postfix // TRIM( xmlpun_schema )
       INQUIRE ( file=filename, exist=found )
       IF (.NOT. found ) ierr = ierr + 1
       IF ( ierr /=0 ) THEN
@@ -850,12 +850,12 @@ MODULE pw_restart_new
                             lef, lexx, lesm, lpbc, lvalid_input
       !
       LOGICAL            :: need_qexml, found, electric_field_ispresent
-      INTEGER            :: tmp, iotk_err 
+      INTEGER            :: tmp
       
       !    
       !
       ierr = 0 
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
       !
       !
       IF ( PRESENT (input_obj) ) THEN 
@@ -1196,7 +1196,7 @@ MODULE pw_restart_new
     !! if ibrav is present, cell parameters were computed by subroutine
     !! "latgen" using ibrav and celldm parameters: recalculate celldm
     !
-    CALL lat2celldm (ibrav,alat,at(:,1),at(:,2),at(:,3),celldm)
+    CALL at2celldm (ibrav,alat,at(:,1),at(:,2),at(:,3),celldm)
     !
     tpiba = tpi/alat
     tpiba2= tpiba**2
@@ -2150,7 +2150,7 @@ MODULE pw_restart_new
       !------------------------------------------------------------------------
       IMPLICIT NONE 
       ! 
-      INTEGER                                            :: ierr, iotk_err  
+      INTEGER                                          :: ierr
       TYPE( output_type ),OPTIONAL,      INTENT(OUT)   :: restart_output
       TYPE(input_type),OPTIONAL,         INTENT(OUT)   :: restart_input
       TYPE(parallel_info_type),OPTIONAL, INTENT(OUT)   :: restart_parallel_info

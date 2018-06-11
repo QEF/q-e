@@ -103,29 +103,47 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
      if (isgn==+3) then 
         call fft_scatter_tg_opt ( dfft, f, aux, nnr_, isgn)
      else
-        aux(1:nnr_)=f(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f)>size(aux)
+!$omp parallel do
+        do i=1, nsticks_z*nx3
+           aux(i) = f(i)
+        enddo
+!$omp end parallel do
      endif
+     ! Gz, Gy, Gx
      CALL cft_1z( aux, nsticks_z, n3, nx3, isgn, f )
+     ! Rz, Gy, Gx
      CALL fft_scatter_yz ( dfft, f, aux, nnr_, isgn )
+     ! Gy, Rz, Gx
      CALL cft_1z( aux, nsticks_y, n2, nx2, isgn, f )
+     ! Ry, Rz, Gx
      CALL fft_scatter_xy ( dfft, f, aux, nnr_, isgn )
+     ! Gx, Rz, Ry
      CALL cft_1z( aux, nsticks_x, n1, nx1, isgn, f )
-     ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
+     ! Rx, Rz, Ry
+     ! clean garbage beyond the intended dimension.
      if (nsticks_x*nx1 < nnr_) f(nsticks_x*nx1+1:nnr_) = (0.0_DP,0.0_DP)
      !
   ELSE                  ! R -> G
      !
+     ! Rx, Rz, Ry
      CALL cft_1z( f, nsticks_x, n1, nx1, isgn, aux )
+     ! Gx, Rz, Ry
      CALL fft_scatter_xy ( dfft, f, aux, nnr_, isgn )
+     ! Ry, Rz, Gx
      CALL cft_1z( f, nsticks_y, n2, nx2, isgn, aux )
+     ! Gy, Rz, Gx
      CALL fft_scatter_yz ( dfft, f, aux, nnr_, isgn )
+     ! Rz, Gy, Gx
      CALL cft_1z( f, nsticks_z, n3, nx3, isgn, aux )
-     ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
-     if (nsticks_z*nx3 < nnr_) aux(nsticks_z*nx3+1:nnr_) = (0.0_DP,0.0_DP)
+     ! Gz, Gy, Gx
      if (isgn==-3) then 
         call fft_scatter_tg_opt ( dfft, aux, f, nnr_, isgn)
      else
-        f(1:nnr_)=aux(1:nnr_) ! not limiting the range to dfft%nnr may crash when size(f)>size(aux)
+!$omp parallel do
+        do i=1, nsticks_z*nx3
+           f(i) = aux(i)
+        enddo
+!$omp end parallel do
      endif
   ENDIF
   !write (6,99) f(1:400); write(6,*); FLUSH(6)

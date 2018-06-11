@@ -331,6 +331,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   DEALLOCATE(rhoout)
   DEALLOCATE(rhogsum)
   !
+  CALL stop_clock( 'v_xc_meta' )
+  !
   RETURN
   !
 END SUBROUTINE v_xc_meta

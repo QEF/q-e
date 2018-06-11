@@ -1050,7 +1050,7 @@ INTEGER :: nclass_ref, &    ! Output: number of classes
            nrap_ref,   &    ! Output: number of irreducible representation
            code_group       ! Input: code of the group 
 
-CHARACTER(LEN=15) :: name_rap(24)   ! Output: name of the representations
+CHARACTER(LEN=15) :: name_rap(12)   ! Output: name of the representations
 CHARACTER(LEN=5) :: name_class(24), & ! Output: name of the classes
                     name_class1(24) ! Output: name of the classes
 

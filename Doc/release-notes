@@ -1,5 +1,7 @@
 New in development version:
 
+  * Improved FFT threading (Ye Luo, Argonne)
+
   * EXX: ACE can be projected on arbitrary number of orbitals
     Slight change in SCF convergence with ACE (dexx) properly
     accounting for difference between 2*<new|V(old)|new> 
@@ -12,13 +14,24 @@ New in development version:
 
 Problems fixed in development version:
 
+  * Calculation of ELF wasn't always working due to a bad usage of FFT
+    descriptors - noticed by Enrique Zanardi Maffiotte (commit a86fb75d)
+
+  * Workaround for gfortran bug in FoX (commit 5b36b697) and for pgi+openmp
+    bug (f43e72c9)
+
   * Reading of starting wavefunctions from file, including restart case,
     wasn't always working as expected. This might be at the origin of
     mysterious "davcio errors" (April 18, 2018)
 
-  * Parameters for electric fields were not saved to the new XML file, tus
+  * Parameters for electric fields were not saved to the new XML file, thus
     breaking some forms of postprocessing (noticed by Thomas Brumme and 
     Giovanni Cantele, fixed April 18, 2018)
+
+  * Bug in reading (with FoX) the augmentation part of pseudopotentials in
+    upf v.2 format. The bug shows up only for PPs generated using David
+    Vanderbilt's code, yielding a mysterious message "Error in scalartorealdp
+    Too few elements found" (March 20, 2018)
 
   * LDA+U for spin-orbit (kind=1) was crashing for one k-point, trying to read
     data not previously saved (noticed by Christof Wolf, Feb 8, 2018)

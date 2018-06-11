@@ -31,14 +31,13 @@
                                 nstemp, muc, lreal, lpade, liso, limag, laniso, &
                                 lacon, kerwrite, kerread, imag_read, fila2f, temps, &
                                 wsfc, wscut, tempsmin, tempsmax, rand_q, rand_k
-    USE constants_epw,   ONLY : pi, kelvin2eV
+    USE constants_epw,   ONLY : pi, kelvin2eV, eps6
     USE eliashbergcom,   ONLY : estemp, nsw, nsiw, dwsph, wsphmax, wsph
     !
     IMPLICIT NONE
     !
     INTEGER :: itemp, iwph, imelt
     REAL(DP) :: dtemp
-    REAL(DP) :: eps=1.0d-6
     !
     IF ( eliashberg .AND. liso .AND. laniso ) CALL errore('eliashberg_init', &
          'liso or laniso needs to be true',1)
@@ -123,7 +122,7 @@
     !
     IF ( lreal ) THEN
       !
-      IF ( ABS(wsfc) < eps .OR. ABS(wscut) < eps .OR. nswfc .eq. 0 .OR. nswc .eq. 0 ) THEN 
+      IF ( ABS(wsfc) < eps6 .OR. ABS(wscut) < eps6 .OR. nswfc .eq. 0 .OR. nswc .eq. 0 ) THEN 
         wsfc  =  5.d0 * wsphmax
         wscut = 15.d0 * wsphmax
         nswfc = 5 * nqstep
@@ -151,7 +150,7 @@
         WRITE(stdout,'(5x,a)') 'when nswi .gt. 0, wscut is not used for limag=.true.'
       ENDIF
       !
-      IF ( ABS(wscut) < eps ) THEN 
+      IF ( ABS(wscut) < eps6 ) THEN 
         wscut = 10.d0 * wsphmax
       ENDIF
       ! 
@@ -1905,7 +1904,7 @@
     USE eliashbergcom, ONLY : nsiw, estemp, gap0, gap, Agap, wsi, NZnormi, Znormi, Deltai, & 
                               AZnormi, NAZnormi, ADeltai, nkfs, nbndfs, ef0, ekfs, &
                               dosef, wkfs, w0g
-    USE constants_epw, ONLY : kelvin2eV
+    USE constants_epw, ONLY : kelvin2eV, eps6
     USE io_global, ONLY : ionode_id
     USE mp_global, ONLY : inter_pool_comm
     USE mp_world,  ONLY : mpime
@@ -1927,7 +1926,6 @@
     INTEGER :: ios
     !! Status variables when reading a file
     REAL(DP) :: temp, eband, omega, weight
-    REAL(DP) :: eps=1.0d-6
     CHARACTER (len=256) :: name1, word
     !
     ! get the size of required allocated memory 
@@ -1976,7 +1974,7 @@
                ENDIF
             ENDDO ! ibnd
          ENDDO ! ik             
-         IF ( abs(wsi(iw)-omega) .gt. eps ) &
+         IF ( abs(wsi(iw)-omega) .gt. eps6 ) &
             CALL errore('eliashberg_read_aniso_iaxis','temperature not the same with the input',1)
       ENDDO ! iw
       CLOSE(iufilgap)
@@ -3438,7 +3436,7 @@
     ! kernelm - phonon kernel K_{-}(w,w',T)
     !
     USE kinds,         ONLY : DP
-    USE constants_epw, ONLY : pi, ci
+    USE constants_epw, ONLY : pi, ci, eps6
     USE epwcom,        ONLY : nqstep
     USE eliashbergcom, ONLY : a2f_iso, bewph, wsph, dwsph, ws, fdwp, estemp
     ! 
@@ -3448,7 +3446,6 @@
     REAL(DP) :: degaussw0, f1, f2, f3, f4
     COMPLEX(DP) :: e1, e2, e3, e4, kernelp, kernelm
     REAL(DP), EXTERNAL :: wgauss, w0gauss
-    REAL(DP) :: eps=1.0d-6
     !
     degaussw0 = 1.d0 * dwsph
     ngaussw0 = 0
@@ -3468,7 +3465,7 @@
     ! Bose-Einstein distribution
     DO iwph = 1, nqstep  ! loop over Omega (integration variable)
        IF ( iw .eq. 1 .AND. iwp .eq. 1 ) THEN
-          IF ( ABS(estemp(itemp)) <  eps ) THEN
+          IF ( ABS(estemp(itemp)) <  eps6 ) THEN
              bewph(iwph)  = 0.d0
           ELSE
              bewph(iwph) = wgauss( -wsph(iwph) / estemp(itemp), -99 )
@@ -4012,21 +4009,25 @@
     !
     ! read the frequencies obtained from a previous epw run
     !
-    USE io_global, ONLY : stdout
+    USE io_global, ONLY : stdout, ionode_id
     USE io_epw,    ONLY : iufilfreq
     USE io_files,  ONLY : prefix, tmp_dir
     USE phcom,     ONLY : nmodes
     USE elph2,   ONLY : nqtotf, wf, wqf, xqf
     USE eliashbergcom, ONLY : wsphmax
     USE constants_epw, ONLY : ryd2ev
-    USE io_global, ONLY : ionode_id 
     USE mp_global, ONLY : inter_pool_comm
     USE mp_world,  ONLY : mpime
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
     !
     IMPLICIT NONE
-    !    
-    INTEGER :: iq, imode, ios
+    !
+    INTEGER :: ios
+    !! integer variable for I/O control
+    INTEGER :: iq
+    !! Counter on q points
+    INTEGER :: imode
+    !! Counter on modes
     CHARACTER (len=256) :: filfreq
     !
     ! read frequencies from file
@@ -4081,22 +4082,33 @@
     !! read the eigenvalues obtained from a previous epw run
     !!
     USE kinds,         ONLY : DP
-    USE io_global,     ONLY : stdout
+    USE io_global,     ONLY : stdout, ionode_id
     USE io_files,      ONLY : prefix, tmp_dir
     USE pwcom,         ONLY : ef
     USE epwcom,        ONLY : nkf1, nkf2, nkf3, degaussw, fsthick, mp_mesh_k
     USE eliashbergcom, ONLY : nkfs, nbndfs, dosef, ef0, ekfs, wkfs, xkfs, w0g
     USE constants_epw, ONLY : ryd2ev
     USE io_epw,        ONLY : iufilegnv
-    USE io_global, ONLY : ionode_id
     USE mp_global, ONLY : inter_pool_comm
     USE mp_world,  ONLY : mpime
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
     ! 
     IMPLICIT NONE
     !
+    INTEGER :: ios
+    !! integer variable for I/O control
+    INTEGER :: ik
+    !! Counter on k-points
+    INTEGER :: ibnd
+    !! Counter on bands
+    INTEGER ::  nkftot
+    !! Number of k-points
+    INTEGER ::  n, nbnd_
+    !! Band indexes
+    !
     REAL(DP), ALLOCATABLE :: ekf_(:,:)
-    INTEGER :: ik, ibnd, ios, nkftot, n, nbnd_
+    !! Temporary eigenvalues on the k point grid
+    !
     CHARACTER (len=256) :: filegnv
     REAL(DP), EXTERNAL :: w0gauss
     !
@@ -4221,7 +4233,7 @@
     ! read the map index of k+(sign)q on the k-mesh
     !
     USE kinds,     ONLY : DP
-    USE io_global, ONLY : stdout
+    USE io_global, ONLY : stdout, ionode_id
     USE io_epw,    ONLY : iufilikmap
     USE io_files,  ONLY : prefix, tmp_dir
     USE symm_base, ONLY : t_rev, time_reversal, s, set_sym_bl
@@ -4229,22 +4241,55 @@
     USE epwcom,    ONLY : nkf1, nkf2, nkf3, mp_mesh_k
     USE elph2,     ONLY : nqtotf, xqf
     USE eliashbergcom, ONLY : ixkff, xkff, ixkf, xkfs, nkfs, ixkqf, ixqfs, nbndfs, nqfs, memlt_pool
+    USE constants_epw, ONLY : eps5
     USE mp_global,     ONLY : npool
     USE symm_base, ONLY : nrot
-    USE io_global, ONLY : ionode_id
     USE mp_global, ONLY : inter_pool_comm
     USE mp_world,  ONLY : mpime
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
     ! 
     IMPLICIT NONE
     !
-    REAL(DP), PARAMETER :: eps=1.0d-5
-    INTEGER :: i, j, k, ik, iq, n, nkq, nks, nk, nkf_irr, nkftot, ns,& 
-               lower_bnd, upper_bnd, ios, imelt
-    INTEGER, ALLOCATABLE :: index_(:,:), equiv_(:)
-    REAL(DP) :: xk(3), xq(3), xkr(3), xx, yy, zz
+    INTEGER :: i, j, k, ik, nk, n
+    !! Counter on k points
+    INTEGER :: iq
+    !! Counter on q points
+    INTEGER :: nkq
+    !! Index of k+sign*q on the fine k-mesh
+    INTEGER :: nkftot
+    !! Total number of k points
+    INTEGER :: nkf_mesh
+    !! Nr. of k points read from .ikmap file
+    INTEGER :: lower_bnd
+    !! Lower bounds index after k or q paral
+    INTEGER :: upper_bnd
+    !! Upper bounds index after k or q paral
+    INTEGER :: nks
+    !! Number of non-equivalent k points
+    INTEGER :: ns
+    !! Counter on rotation operations
+    INTEGER :: ios
+    !! Integer variable for I/O control
+    INTEGER :: imelt
+    !! Memory allocated
+    INTEGER, ALLOCATABLE :: equiv_(:)
+    !! Index of equivalence of k points
+    INTEGER, ALLOCATABLE :: index_(:,:)
+    !! Index of q-point on the full q-mesh for which k+sign*q is within the Fermi shell
+    !
+    REAL(kind=DP) :: xk(3)
+    !! coordinates of k points
+    REAL(kind=DP) :: xq(3)
+    !! coordinates of q points
+    REAL(kind=DP) :: xkr(3)
+    !! coordinates of k points
+    REAL(DP) :: xx, yy, zz
+    !! Temporary variables
+    !
     LOGICAL :: in_the_list
+    !! Check if k point is in the list
     CHARACTER (len=256) :: filikmap
+    !! Name of the file
     !
     IF ( .not. ALLOCATED(memlt_pool) ) ALLOCATE(memlt_pool(npool))
     memlt_pool(:) = 0.d0
@@ -4270,14 +4315,14 @@
       OPEN(iufilikmap, file=filikmap, status='old', form='unformatted', err=100, iostat=ios)
 100   CALL errore('read_kqmap','opening file '//filikmap,abs(ios))
       !
-      ! nkf_irr - total nr of irreducible k-points
-      !READ(iufilikmap,'(i9)') nkf_irr
-      READ(iufilikmap) nkf_irr
+      ! nkf_mesh - Total number of k points
+      !          - These are irreducible k-points if mp_mesh_k = .true.
+      READ(iufilikmap) nkf_mesh
       !
-      IF ( .not. ALLOCATED(ixkf) ) ALLOCATE(ixkf(nkf_irr))
+      IF ( .not. ALLOCATED(ixkf) ) ALLOCATE(ixkf(nkf_mesh))
       ixkf(:) = 0
       !
-      DO ik = 1, nkf_irr
+      DO ik = 1, nkf_mesh
          !READ(iufilikmap,'(i9)') ixkf(ik)
          READ(iufilikmap) ixkf(ik)
       ENDDO
@@ -4304,7 +4349,7 @@
       !  equiv_(nk)!=nk : k-point nk is equivalent to k-point equiv(nk)
       !
       DO nk = 1, nkftot
-         equiv_(nk)=nk
+         equiv_(nk) = nk
       ENDDO
       !
       IF ( mp_mesh_k ) THEN 
@@ -4325,9 +4370,9 @@
                   xx = xkr(1)*nkf1
                   yy = xkr(2)*nkf2
                   zz = xkr(3)*nkf3
-                  in_the_list = abs( xx-nint(xx) ) .le. eps .AND. &
-                                abs( yy-nint(yy) ) .le. eps .AND. &
-                                abs( zz-nint(zz) ) .le. eps
+                  in_the_list = abs( xx-nint(xx) ) .le. eps5 .AND. &
+                                abs( yy-nint(yy) ) .le. eps5 .AND. &
+                                abs( zz-nint(zz) ) .le. eps5
                   IF ( in_the_list ) THEN
                      i = mod( nint( xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
                      j = mod( nint( xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
@@ -4344,9 +4389,9 @@
                      xx = -xkr(1)*nkf1
                      yy = -xkr(2)*nkf2
                      zz = -xkr(3)*nkf3
-                     in_the_list = abs( xx-nint(xx) ) .le. eps .AND. &
-                                   abs( yy-nint(yy) ) .le. eps .AND. &
-                                   abs( zz-nint(zz) ) .le. eps
+                     in_the_list = abs( xx-nint(xx) ) .le. eps5 .AND. &
+                                   abs( yy-nint(yy) ) .le. eps5 .AND. &
+                                   abs( zz-nint(zz) ) .le. eps5
                      IF ( in_the_list ) THEN
                         i = mod( nint( -xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
                         j = mod( nint( -xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
@@ -4377,7 +4422,7 @@
             ixkff(nk) = ixkff(equiv_(nk))
          ENDIF
       ENDDO
-      IF ( nks .ne. nkf_irr) CALL errore('read_kmap_mp', 'something wrong with the mesh',1)
+      IF ( nks .ne. nkf_mesh) CALL errore('read_kmap_mp', 'something wrong with the mesh',1)
       !
       IF ( ALLOCATED(equiv_) ) DEALLOCATE(equiv_)
       IF ( ALLOCATED(ixkf) )   DEALLOCATE(ixkf)
@@ -4400,8 +4445,9 @@
     index_(:,:) = 0
     !
     !
-    ! find the index of k+sign*q on the irreducible fine k-mesh
-    ! nkfs - nr of irreducible k-points within the Fermi shell (fine mesh)
+    ! find the index of k+sign*q on the fine k-mesh
+    ! nkfs - total nr. of k-points within the Fermi shell (fine mesh)
+    !      - these are irreducible k-points if mp_mesh_k=.true.
     ! nqtotf - total nr of q-points on the fine mesh
     !
     DO ik = lower_bnd, upper_bnd
@@ -4409,11 +4455,11 @@
           xk(:) = xkfs(:,ik)
           xq(:) = xqf(:,iq)
           !
-          !  nkq - index of k+sign*q on the irreducible fine k-mesh.
+          !  nkq - index of k+sign*q on the full fine k-mesh.
           !
           CALL kpmq_map( xk, xq, +1, nkq )
           !
-          !  ixkqf(ik,iq) - index of k+sign*q on the irreducible fine k-mesh
+          !  ixkqf(ik,iq) - index of k+sign*q on the fine k-mesh within the Fermi shell
           !
           ixkqf(ik,iq) = ixkff(nkq)
           !
@@ -4485,15 +4531,49 @@
     USE epwcom,        ONLY : eps_acustic, fsthick
     USE eliashbergcom, ONLY : nkfs, nbndfs, ef0, ekfs, g2, ixkqf, nqfs
     USE constants_epw, ONLY : ryd2ev
-    USE mp_global,     ONLY : npool
     USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm, npool
     !  
     IMPLICIT NONE
     !
-    INTEGER :: ik, iq, ibnd, jbnd, imode, nnk, nnq(nkfs), ipool, tmp_pool_id, ios, & 
-               lower_bnd, upper_bnd, nkpool(npool), nmin, nmax, nks, imelt
+    INTEGER :: ios
+    !! integer variable for I/O control
+    INTEGER :: ik
+    !! Counter on k-points
+    INTEGER :: iq
+    !! Counter on q-points
+    INTEGER :: ibnd
+    !! Counter on bands
+    INTEGER :: jbnd
+    !! Counter on bands
+    INTEGER :: imode
+    !! Counter on modes
+    INTEGER :: nnk
+    !! Number of k-points within the Fermi shell
+    INTEGER :: nnq(nkfs)
+    !! Number of k+q points within the Fermi shell for a given k-point
+    INTEGER :: ipool
+    !! Counter on pools
+    INTEGER :: lower_bnd
+    !! Lower bounds index after k or q paral
+    INTEGER :: upper_bnd
+    !! Upper bounds index after k or q paral
+    INTEGER :: tmp_pool_id
+    !! Pool index read from file
+    INTEGER :: nkpool(npool)
+    !! nkpool(ipool) - sum of nr. of k points from pool 1 to pool ipool
+    INTEGER :: nmin
+    !! Lower bound index for .ephmat file read in current pool
+    INTEGER :: nmax
+    !! Lower bound index for .ephmat file read in current pool
+    INTEGER :: nks
+    !! Counter on k points within the Fermi shell
+    INTEGER :: imelt
+    !! Memory allocated
+    !
     REAL(DP) :: gmat
+    !! Electron-phonon matrix element square
+    !
     CHARACTER (len=256) :: filephmat
     CHARACTER (len=3) :: filelab
     !
@@ -4533,6 +4613,8 @@
     ENDDO
     CALL mp_barrier(inter_pool_comm)
     !
+    ! since the nkfs k-points within the Fermi shell are not evenly distrubed
+    ! among the .ephmat files, we re-distribute them here among the npool-pools
     nmin = npool
     nmax = npool
     DO ipool = npool, 1, -1
@@ -4624,7 +4706,6 @@
                            nqtotf, wf, xqf, nkqtotf, efnew 
     USE eliashbergcom, ONLY : equivk, nkfs, ekfs, wkfs, xkfs, dosef, ixkf, ixkqf, nbndfs
     USE constants_epw, ONLY : ryd2ev, two
-    USE mp_global,  ONLY :  my_pool_id
     USE mp,         ONLY : mp_barrier, mp_sum
     USE mp_global,  ONLY : inter_pool_comm, my_pool_id, npool
     !
@@ -4667,6 +4748,7 @@
     REAL(kind=DP):: g2
     !! Electron-phonon matrix element square
     REAL(kind=DP), EXTERNAL :: efermig, dos_ef
+    !
     CHARACTER (len=256) :: filfreq, filegnv, filephmat
     CHARACTER (len=3) :: filelab
     !
@@ -4725,7 +4807,7 @@
         !
         IF ( equivk(lower_bnd+ik-1) .eq. lower_bnd+ik-1 ) THEN
           IF ( minval( abs( etf(:,ikk) - ef  ) ) .lt. fsthick ) THEN
-             fermicount = fermicount + 1 
+             fermicount = fermicount + 1
           ENDIF
         ENDIF
         !
@@ -4875,8 +4957,28 @@
     USE mp_global, ONLY : inter_pool_comm
     !
     IMPLICIT NONE
-    INTEGER :: ik, ikk, ikq, iq, fermicount, nks
-    REAL(DP) :: ef0, dosef
+    !
+    INTEGER, INTENT (in) :: iq
+    !! Current q-points
+    !
+    ! Local variables
+    !
+    INTEGER :: ik
+    !! Counter on the k-point index
+    INTEGER :: ikk
+    !! k-point index
+    INTEGER :: ikq
+    !! q-point index
+    INTEGER :: fermicount
+    !! Number of states on the Fermi surface
+    INTEGER :: nks
+    !! Number of k-point on the current pool
+    !
+    REAL(kind=DP) :: ef0
+    !! Fermi energy level
+    REAL(kind=DP) :: dosef
+    !! density of states at the Fermi level
+    !
     REAL(DP), EXTERNAL :: efermig, dos_ef
     ! 
     IF (iq.eq.1) THEN
@@ -4936,27 +5038,44 @@
     !!   within the Fermi shell
     !!
     USE kinds,     ONLY : DP
-    USE io_global, ONLY : stdout
+    USE io_global, ONLY : ionode_id, stdout
     USE io_files,  ONLY : prefix, tmp_dir
     USE epwcom,    ONLY : nkf1, nkf2, nkf3, fsthick, mp_mesh_k
     USE pwcom,     ONLY : ef
     USE io_epw,    ONLY : iufilikmap
     USE elph2,     ONLY : xkf, wkf, etf, nkf, nkqtotf, ibndmin, ibndmax
     USE eliashbergcom, ONLY : nkfs, ixkf, equivk, xkfs, wkfs, ekfs, nbndfs, memlt_pool
-    USE io_global, ONLY : ionode_id
     USE mp_global, ONLY : inter_pool_comm, npool
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
     USE mp_world,  ONLY : mpime
     !
     IMPLICIT NONE
     !
-    INTEGER :: nk, nks, ikk, lower_bnd, upper_bnd, nkf_mesh, imelt
+    INTEGER :: nk
+    !! Counter on k points
+    INTEGER :: nks
+    !! Counter on k points within the Fermi shell
+    INTEGER :: ikk
+    !! k-point index
+    INTEGER :: nkf_mesh
+    !! Total number of k points
+    !! These are irreducible k-points if mp_mesh_k = .true.
+    INTEGER :: lower_bnd
+    !! Lower bounds index after k or q paral
+    INTEGER :: upper_bnd
+    !! Upper bounds index after k or q paral
+    INTEGER :: imelt
+    !! Memory allocated
     REAL(DP) :: xx, yy, zz
-    REAL(DP), ALLOCATABLE :: wkf_(:), ekf_(:,:), xkf_(:,:)
+    !!
+    REAL(DP), ALLOCATABLE :: xkf_(:,:)
+    !! Temporary k point grid
+    REAL(DP), ALLOCATABLE :: wkf_(:)
+    !! Temporary weights on the k point grid
+    REAL(DP), ALLOCATABLE :: ekf_(:,:)
+    !! Temporary eigenvalues on the k point grid
     CHARACTER (len=256) :: filikmap
-    !
-    ! nkf_mesh - nr of k-points 
-    ! for mp_mesh_k = true, nkf_mesh - nr of irreducible k-points
+    !! Name of the file
     !
     nkf_mesh = nkqtotf / 2 
     nbndfs = ibndmax - ibndmin + 1
@@ -5007,7 +5126,7 @@
     !
     IF ( mpime .eq. ionode_id ) THEN
       DO nk = 1, nkf_mesh
-         equivk(nk)=nk
+         equivk(nk) = nk
       ENDDO
       !
       IF ( mp_mesh_k) THEN
@@ -5110,6 +5229,7 @@
     USE epwcom,    ONLY : nkf1, nkf2, nkf3, mp_mesh_k
     USE elph2,     ONLY : nqtotf, xqf
     USE eliashbergcom, ONLY : ixkff, xkff, ixkf, xkfs, nkfs, ixkqf, ixqfs, nqfs
+    USE constants_epw, ONLY : eps5
     USE symm_base, ONLY : nrot
     USE io_global, ONLY : ionode_id
     USE mp_global, ONLY : inter_pool_comm
@@ -5118,11 +5238,38 @@
     ! 
     IMPLICIT NONE
     !
-    REAL(DP), PARAMETER :: eps=1.0d-5
-    INTEGER :: i, j, k, ik, iq, n, nkq, nks, nk, nkftot, ns, lower_bnd, upper_bnd, imelt
-    INTEGER, ALLOCATABLE :: index_(:,:), equiv_(:)
-    REAL(DP) :: xk(3), xq(3), xkr(3), xx, yy, zz
+    INTEGER :: i, j, k, ik, nk, n
+    !! Counter on k points
+    INTEGER :: iq
+    !! Counter on q points
+    INTEGER :: nkq
+    !! Index of k+sign*q on the fine k-mesh
+    INTEGER :: nkftot
+    !! Total number of k points
+    INTEGER :: lower_bnd
+    !! Lower bounds index after k or q paral
+    INTEGER :: upper_bnd
+    !! Upper bounds index after k or q paral
+    INTEGER :: nks
+    !! Number of non-equivalent k points
+    INTEGER :: ns
+    !! Counter on rotation operations
+    INTEGER :: imelt
+    !! Memory allocated
+    INTEGER, ALLOCATABLE :: equiv_(:)
+    !! Index of equivalence of k points
+    INTEGER, ALLOCATABLE :: index_(:,:)
+    !! Index of q-point on the full q-mesh for which k+sign*q is within the Fermi shell
+    REAL(kind=DP) :: xk(3)
+    !! coordinates of k points
+    REAL(kind=DP) :: xq(3)
+    !! coordinates of q points
+    REAL(kind=DP) :: xkr(3)
+    !! coordinates of k points
+    REAL(DP) :: xx, yy, zz
+    !! Temporary variables
     LOGICAL :: in_the_list
+    !! Check if k point is in the list
     !
     nkftot = nkf1 * nkf2 * nkf3
     !
@@ -5162,7 +5309,7 @@
       !  equiv_(nk)!=nk : k-point nk is equivalent to k-point equiv(nk)
       !
       DO nk = 1, nkftot
-         equiv_(nk)=nk
+         equiv_(nk) = nk
       ENDDO
       !
       IF ( mp_mesh_k ) THEN
@@ -5183,9 +5330,9 @@
               xx = xkr(1)*nkf1
               yy = xkr(2)*nkf2
               zz = xkr(3)*nkf3
-              in_the_list = abs( xx-nint(xx) ) .le. eps .AND. &
-                            abs( yy-nint(yy) ) .le. eps .AND. &
-                            abs( zz-nint(zz) ) .le. eps
+              in_the_list = abs( xx-nint(xx) ) .le. eps5 .AND. &
+                            abs( yy-nint(yy) ) .le. eps5 .AND. &
+                            abs( zz-nint(zz) ) .le. eps5
               IF ( in_the_list ) THEN
                 i = mod( nint( xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
                 j = mod( nint( xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
@@ -5202,9 +5349,9 @@
                 xx = -xkr(1)*nkf1
                 yy = -xkr(2)*nkf2
                 zz = -xkr(3)*nkf3
-                in_the_list = abs( xx-nint(xx) ) .le. eps .AND. &
-                              abs( yy-nint(yy) ) .le. eps .AND. &
-                              abs( zz-nint(zz) ) .le. eps
+                in_the_list = abs( xx-nint(xx) ) .le. eps5 .AND. &
+                              abs( yy-nint(yy) ) .le. eps5 .AND. &
+                              abs( zz-nint(zz) ) .le. eps5
                 IF ( in_the_list ) THEN
                   i = mod( nint( -xkr(1)*nkf1 + 2*nkf1), nkf1 ) + 1
                   j = mod( nint( -xkr(2)*nkf2 + 2*nkf2), nkf2 ) + 1
@@ -5266,8 +5413,8 @@
     index_(:,:) = 0
     !
     ! find the index of k+sign*q on the fine k-mesh
-    ! nkfs - nr of k-points within the Fermi shell  
-    ! for mp_mesh_k = true, nkfs - nr of irreducible k-points within the Fermi shell
+    ! nkfs - total nr. of k-points within the Fermi shell
+    !      - these are irreducible k-points if mp_mesh_k = true
     ! nqtotf - total nr of q-points on the fine mesh
     !
     DO ik = lower_bnd, upper_bnd
@@ -5275,11 +5422,11 @@
         xk(:) = xkfs(:,ik)
         xq(:) = xqf(:,iq)
         !
-        ! find nkq - index of k+sign*q on the irreducible fine k-mesh.
+        ! find nkq - index of k+sign*q on the full fine k-mesh.
         !
         CALL kpmq_map( xk, xq, +1, nkq )
         !
-        ! find ixkqf(ik,iq) - index of k+sign*q on the irreducible fine k-mesh
+        ! find ixkqf(ik,iq) - index of k+sign*q on the fine k-mesh within the Fermi shell
         !
         ixkqf(ik,iq) = ixkff(nkq) 
         !
@@ -5291,7 +5438,7 @@
           index_(ik,nqfs(ik)) = iq
         ENDIF
       ENDDO ! loop over full set of q-points (fine mesh)
-    ENDDO ! loop over irreducible k-points within the Fermi shell in each pool (fine mesh) 
+    ENDDO ! loop over k-points within the Fermi shell in each pool (fine mesh) 
     !
     ! collect contributions from all pools (sum over k-points)
     CALL mp_sum( ixkqf, inter_pool_comm )
@@ -5345,6 +5492,7 @@
     !!
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : nkf1, nkf2, nkf3
+    USE constants_epw, ONLY : eps5
     USE mp,        ONLY : mp_bcast, mp_barrier
     ! 
     IMPLICIT NONE
@@ -5360,20 +5508,17 @@
     !! coordinates of q points
     ! 
     ! Local variables
-    REAL(DP) :: xx, yy, zz, eps, xxk(3)
+    REAL(DP) :: xx, yy, zz, xxk(3)
     LOGICAL :: in_the_list
     !
-    !
-    ! loosy tolerance, no problem since we use integer comparisons
-    eps = 1.d-5
     !
     xxk(:) = xk(:) + dble(sign1) * xq(:)
     xx = xxk(1) * nkf1
     yy = xxk(2) * nkf2
     zz = xxk(3) * nkf3
-    in_the_list = abs(xx-nint(xx)) .le. eps .AND. &
-                  abs(yy-nint(yy)) .le. eps .AND. &
-                  abs(zz-nint(zz)) .le. eps
+    in_the_list = abs(xx-nint(xx)) .le. eps5 .AND. &
+                  abs(yy-nint(yy)) .le. eps5 .AND. &
+                  abs(zz-nint(zz)) .le. eps5
     IF ( .not. in_the_list ) CALL errore('kpmq_map','k+q does not fall on k-grid',1)
     !
     !  find the index of this k+q or k-q in the k-grid
@@ -5402,6 +5547,7 @@
     !!
     !
     USE kinds, ONLY : DP
+    USE constants_epw, ONLY : eps6
     ! 
     IMPLICIT NONE
     !
@@ -5416,11 +5562,9 @@
     REAL(kind=DP), INTENT (out) :: rgammam
     !! bose_einstein( w' ) + fermi_dirac( -w + w' )
     ! 
-    REAL(DP) :: eps=1.0d-6
-    !
     rgammap = 0.d0
     rgammam = 0.d0
-    IF ( ABS(temp) < eps ) THEN
+    IF ( ABS(temp) < eps6 ) THEN
        rgammap = 0.d0
        rgammam = 1.d0
     ELSEIF ( omegap .gt. 0.d0 ) THEN 
