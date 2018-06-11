@@ -23,6 +23,7 @@
      INTEGER, ALLOCATABLE :: indv_ijkb0_d(:)
      COMPLEX(DP), ALLOCATABLE :: vkb_d(:, :)
      COMPLEX(DP), ALLOCATABLE :: becsum_d(:, :, :)
+     COMPLEX(DP), ALLOCATABLE :: ebecsum_d(:, :, :)
      REAL(DP), ALLOCATABLE :: dvan_d(:, :, :)
      REAL(DP), ALLOCATABLE :: deeq_d(:, :, :, :)
      REAL(DP), ALLOCATABLE :: qq_nt_d(:, :, :)
@@ -33,7 +34,7 @@
      COMPLEX(DP), ALLOCATABLE :: deeq_nc_d(:, :, :, :)
      !
 #if defined(__CUDA)
-     attributes (DEVICE) :: indv_d, nhtol_d, nhtolm_d, ijtoh_d, indv_ijkb0_d, vkb_d, becsum_d, dvan_d, deeq_d, qq_nt_d, qq_at_d, nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
+     attributes (DEVICE) :: indv_d, nhtol_d, nhtolm_d, ijtoh_d, indv_ijkb0_d, vkb_d, becsum_d, ebecsum_d, dvan_d, deeq_d, qq_nt_d, qq_at_d, nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
 
      LOGICAL :: indv_ood = .false.    ! used to flag out of date variables
      LOGICAL :: indv_d_ood = .false.    ! used to flag out of date variables
@@ -49,6 +50,8 @@
      LOGICAL :: vkb_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: becsum_ood = .false.    ! used to flag out of date variables
      LOGICAL :: becsum_d_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: ebecsum_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: ebecsum_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: dvan_ood = .false.    ! used to flag out of date variables
      LOGICAL :: dvan_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: deeq_ood = .false.    ! used to flag out of date variables
@@ -565,6 +568,77 @@
          CALL errore('using_becsum_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_becsum_d
+     !
+     SUBROUTINE using_ebecsum(intento)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
+         !
+         USE uspp, ONLY : ebecsum
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
+         !
+         IF (ebecsum_ood) THEN
+             IF (.not. allocated(ebecsum_d)) THEN
+                CALL errore('using_ebecsum_d', 'PANIC: sync of ebecsum from ebecsum_d with unallocated array. Bye!!', 1)
+                stop
+             END IF
+             IF (.not. allocated(ebecsum)) THEN
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of ebecsum with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+
+                ! IF (intento_ > 0)    ebecsum_d_ood = .true.
+             END IF
+             IF (intento_ < 2) THEN
+                print *, "Really copied ebecsum D->H"
+                ebecsum = ebecsum_d
+             END IF
+             ebecsum_ood = .false.
+         ENDIF
+         IF (intento_ > 0)    ebecsum_d_ood = .true.
+#endif
+     END SUBROUTINE using_ebecsum
+     !
+     SUBROUTINE using_ebecsum_d(intento)
+         !
+         USE uspp, ONLY : ebecsum
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+#if defined(__CUDA)
+         !
+         IF (.not. allocated(ebecsum)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of ebecsum_d with unallocated array and intento /= 2?"
+             IF (allocated(ebecsum_d)) DEALLOCATE(ebecsum_d)
+             ebecsum_d_ood = .false.
+             RETURN
+         END IF
+         ! here we know that ebecsum is allocated, check if size is 0 
+         IF ( SIZE(ebecsum) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array ebecsum_d. If used, code will crash."
+             RETURN
+         END IF
+         !
+         IF (ebecsum_d_ood) THEN
+             IF ( allocated(ebecsum_d) .and. (SIZE(ebecsum_d)/=SIZE(ebecsum))) deallocate(ebecsum_d)
+             IF (.not. allocated(ebecsum_d)) ALLOCATE(ebecsum_d, MOLD=ebecsum)  ! this copy may be avoided
+             IF (intento < 2) THEN
+                print *, "Really copied ebecsum H->D"
+                ebecsum_d = ebecsum
+             END IF
+             ebecsum_d_ood = .false.
+         ENDIF
+         IF (intento > 0)    ebecsum_ood = .true.
+#else
+         CALL errore('using_ebecsum_d', 'Trying to use device data without device compilated code!', 1)
+#endif
+     END SUBROUTINE using_ebecsum_d
      !
      SUBROUTINE using_dvan(intento)
          !
@@ -1142,6 +1216,7 @@
        IF( ALLOCATED( indv_ijkb0_d ) ) DEALLOCATE( indv_ijkb0_d )
        IF( ALLOCATED( vkb_d ) ) DEALLOCATE( vkb_d )
        IF( ALLOCATED( becsum_d ) ) DEALLOCATE( becsum_d )
+       IF( ALLOCATED( ebecsum_d ) ) DEALLOCATE( ebecsum_d )
        IF( ALLOCATED( dvan_d ) ) DEALLOCATE( dvan_d )
        IF( ALLOCATED( deeq_d ) ) DEALLOCATE( deeq_d )
        IF( ALLOCATED( qq_nt_d ) ) DEALLOCATE( qq_nt_d )
