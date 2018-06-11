@@ -113,25 +113,25 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
      CALL cft_1z( aux, nsticks_z, n3, nx3, isgn, f )
      ! Rz, Gy, Gx
      CALL fft_scatter_yz ( dfft, f, aux, nnr_, isgn )
-     ! Gy, Rz, Gx
+     ! Gy, Gx, Rz
      CALL cft_1z( aux, nsticks_y, n2, nx2, isgn, f )
-     ! Ry, Rz, Gx
+     ! Ry, Gx, Rz
      CALL fft_scatter_xy ( dfft, f, aux, nnr_, isgn )
-     ! Gx, Rz, Ry
+     ! Gx, Ry, Rz
      CALL cft_1z( aux, nsticks_x, n1, nx1, isgn, f )
-     ! Rx, Rz, Ry
+     ! Rx, Ry, Rz
      ! clean garbage beyond the intended dimension.
      if (nsticks_x*nx1 < nnr_) f(nsticks_x*nx1+1:nnr_) = (0.0_DP,0.0_DP)
      !
   ELSE                  ! R -> G
      !
-     ! Rx, Rz, Ry
+     ! Rx, Ry, Rz
      CALL cft_1z( f, nsticks_x, n1, nx1, isgn, aux )
-     ! Gx, Rz, Ry
+     ! Gx, Ry, Rz
      CALL fft_scatter_xy ( dfft, f, aux, nnr_, isgn )
-     ! Ry, Rz, Gx
+     ! Ry, Gx, Rz
      CALL cft_1z( f, nsticks_y, n2, nx2, isgn, aux )
-     ! Gy, Rz, Gx
+     ! Gy, Gx, Rz
      CALL fft_scatter_yz ( dfft, f, aux, nnr_, isgn )
      ! Rz, Gy, Gx
      CALL cft_1z( f, nsticks_z, n3, nx3, isgn, aux )
