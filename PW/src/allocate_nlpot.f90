@@ -43,7 +43,7 @@ SUBROUTINE allocate_nlpot
   USE wvfct_gpum,       ONLY : using_g2kin
   USE uspp_gpum,        ONLY : using_vkb, using_indv_ijkb0, using_indv_ijkb0_d, &
                                using_deeq, using_deeq_nc, using_deeq_nc_d, &
-                               using_qq_at, using_qq_so
+                               using_qq_at, using_qq_so, using_becsum, using_ebecsum
   USE us_gpum,          ONLY : using_tab, using_tab_at, using_tab_d2y, using_qrad
   !
   IMPLICIT NONE
@@ -97,6 +97,7 @@ SUBROUTINE allocate_nlpot
   ALLOCATE (vkb( npwx,  nkb))
   ALLOCATE (becsum( nhm * (nhm + 1)/2, nat, nspin))
   if (tqr) ALLOCATE (ebecsum( nhm * (nhm + 1)/2, nat, nspin))
+  CALL using_becsum(2); IF (tqr) CALL using_ebecsum(2)
   !
   ! Calculate dimensions for array tab (including a possible factor
   ! coming from cell contraction during variable cell relaxation/MD)

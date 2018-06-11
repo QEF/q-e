@@ -1185,6 +1185,8 @@ MODULE realus
       USE fft_interfaces,   ONLY : fwfft
       USE wavefunctions_module,  ONLY : psic
       !
+      USE uspp_gpum,        ONLY : using_becsum
+      !
       IMPLICIT NONE
       ! The charge density to be augmented (in G-space)
       COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag) 
@@ -1203,6 +1205,8 @@ MODULE realus
       IF ( real_space ) tolerance = 1.d-2
       !
       CALL start_clock( 'addusdens' )
+      !
+      CALL using_becsum(0)
       !
       ALLOCATE ( rho_1(dfftp%nnr,nspin_mag) )
       rho_1(:,:) = 0.0_dp
@@ -1286,6 +1290,8 @@ MODULE realus
       USE mp_bands,   ONLY : intra_bgrp_comm
       USE mp,         ONLY : mp_sum
       !
+      USE uspp_gpum,  ONLY : using_becsum, using_ebecsum
+      !
       IMPLICIT NONE
       !
       REAL(DP), INTENT(INOUT) :: forcenl (3, nat)
@@ -1295,6 +1301,8 @@ MODULE realus
       REAL(dp) :: dqrforce(3), dqb(3), dqeb(3), v_eff
       !
       IF (.not.okvan) RETURN
+      !
+      CALL using_becsum(0); CALL using_ebecsum(0)
       !
       ALLOCATE ( forceq(3,nat) )
       forceq(:,:) = 0.0_dp
@@ -1365,6 +1373,8 @@ MODULE realus
       USE mp_bands,   ONLY : intra_bgrp_comm
       USE mp,         ONLY : mp_sum
       !
+      USE uspp_gpum,  ONLY : using_becsum, using_ebecsum
+      !
       IMPLICIT NONE
       !
       REAL(DP), INTENT(INOUT) :: sigmanl (3,3)
@@ -1374,6 +1384,8 @@ MODULE realus
       REAL(dp) :: sus(3,3), sus_at(3,3), qb, qeb, dqb(3), dqeb(3), v_eff
       !
       IF (.not.okvan) RETURN
+      !
+      CALL using_becsum(0); CALL using_ebecsum(0)
       !
       sus(:,:) = 0.0_dp
       !

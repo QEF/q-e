@@ -52,11 +52,13 @@ SUBROUTINE addusdens_g_gpu(rho)
   USE gvect_gpum,           ONLY : gg_d, g_d, &
                                    eigts1_d, eigts2_d, eigts3_d, mill_d
   USE noncollin_module,     ONLY : noncolin, nspin_mag
-  USE uspp,                 ONLY : becsum, okvan
+  USE uspp,                 ONLY : okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE control_flags,        ONLY : gamma_only
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
+  !
+  USE uspp_gpum,            ONLY : becsum_d, using_becsum_d
   !
   IMPLICIT NONE
   !
@@ -75,12 +77,12 @@ SUBROUTINE addusdens_g_gpu(rho)
   ! modulus of G, spherical harmonics
   COMPLEX(DP), ALLOCATABLE :: skk_d(:,:), aux2_d(:,:)
   ! structure factors, US contribution to rho
-  COMPLEX(DP), ALLOCATABLE ::  aux_d (:,:), qgm_d(:), becsum_cpy_d(:,:,:)
+  COMPLEX(DP), ALLOCATABLE ::  aux_d (:,:), qgm_d(:)
   COMPLEX(DP), ALLOCATABLE ::  aux_h (:,:)
   ! work space for rho(G,nspin), Fourier transform of q
   INTEGER :: ij, im
 #if defined(__CUDA)
-  attributes(device) :: becsum_cpy_d, tbecsum_d, qmod_d, ylmk0_d, skk_d, &
+  attributes(device) :: tbecsum_d, qmod_d, ylmk0_d, skk_d, &
                         aux2_d, aux_d, qgm_d
   attributes(pinned) :: aux_h
 #endif
@@ -103,11 +105,8 @@ SUBROUTINE addusdens_g_gpu(rho)
   ! for the extraordinary unlikely case of more processors than G-vectors
   IF ( ngm_l <= 0 ) GO TO 10
   !
-  ! ====== this should eventually go away
-  nij = nhm*(nhm+1)/2
-  ALLOCATE (becsum_cpy_d (nij,nat,nspin_mag) )
-  becsum_cpy_d(1:nij,1:nat,1:nspin_mag) = becsum(1:nij,1:nat,1:nspin_mag)
-  ! ====== 
+  ! Sync becsum if needed
+  CALL using_becsum_d(0)
   !
   ALLOCATE (qmod_d(ngm_l), qgm_d(ngm_l) )
   ALLOCATE (ylmk0_d(ngm_l, lmaxq * lmaxq) )
@@ -143,7 +142,7 @@ SUBROUTINE addusdens_g_gpu(rho)
 !$cuf kernel do(2) <<<*,*>>>
               DO im = 1, nspin_mag
                  DO ij = 1, nij
-                   tbecsum_d(ij,nb,im) = becsum_cpy_d(ij,na,im)
+                   tbecsum_d(ij,nb,im) = becsum_d(ij,na,im)
                  ENDDO
               ENDDO
               
@@ -180,7 +179,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   ENDDO
   !
   DEALLOCATE (ylmk0_d)
-  DEALLOCATE (qgm_d, qmod_d, becsum_cpy_d)
+  DEALLOCATE (qgm_d, qmod_d)
   !
   10 CONTINUE
   !

@@ -159,6 +159,8 @@ SUBROUTINE PAW_atomic_becsum()
     USE random_numbers,     ONLY : randy
     USE basis,              ONLY : starting_wfc
     USE noncollin_module,   ONLY : nspin_mag, angle1, angle2
+    !
+    USE uspp_gpum,          ONLY : using_becsum
 
     IMPLICIT NONE
     !REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)
@@ -175,6 +177,7 @@ SUBROUTINE PAW_atomic_becsum()
     IF ( starting_wfc=='random')        noise = 0.10_dp
     !
     !
+    CALL using_becsum(2)
     becsum=0.0_DP
     na_loop: DO na = 1, nat
        nt = ityp(na)

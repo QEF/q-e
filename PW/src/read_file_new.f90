@@ -37,6 +37,8 @@ SUBROUTINE read_file()
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
   !
+  USE uspp_gpum,            ONLY : using_becsum
+  !
   IMPLICIT NONE 
   INTEGER :: ierr
   LOGICAL :: exst
@@ -77,6 +79,7 @@ SUBROUTINE read_file()
   IF (lda_plus_u .AND. (U_projection == 'pseudo')) CALL init_q_aeps()
   !
   IF (okpaw) THEN
+     CALL using_becsum(2)
      becsum = rho%bec
      CALL PAW_potential(rho%bec, ddd_PAW)
   ENDIF 

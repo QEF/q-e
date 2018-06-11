@@ -62,6 +62,8 @@ SUBROUTINE addusstress_g (sigmanlc)
   USE mp_pools,   ONLY : inter_pool_comm
   USE mp,         ONLY : mp_sum
   !
+  USE uspp_gpum,  ONLY : using_becsum
+  !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(inout) :: sigmanlc (3, 3)
@@ -117,6 +119,9 @@ SUBROUTINE addusstress_g (sigmanlc)
   DO ig = 1, ngm_l
      qmod (ig) = sqrt (gg (ngm_s+ig-1) )
   ENDDO
+  !
+  ! Sync bescum if needed
+  CALL using_becsum(0)
   !
   ! here we compute the integral Q*V for each atom,
   !       I = sum_G i G_a exp(-iR.G) Q_nm v^*

@@ -46,7 +46,7 @@ SUBROUTINE sum_band()
                                    becp
   USE wavefunctions_module_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb
+  USE uspp_gpum,                 ONLY : using_vkb, using_becsum, using_ebecsum
   USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
   IMPLICIT NONE
@@ -65,7 +65,10 @@ SUBROUTINE sum_band()
   !
   CALL start_clock( 'sum_band' )
   !
+  CALL using_becsum(2)
+  !
   becsum(:,:,:) = 0.D0
+  if (tqr) CALL using_ebecsum(2)
   if (tqr) ebecsum(:,:,:) = 0.D0
   rho%of_r(:,:)      = 0.D0
   rho%of_g(:,:)      = (0.D0, 0.D0)
