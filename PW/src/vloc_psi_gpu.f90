@@ -64,8 +64,6 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      !
   ENDIF
   ! Sync fft data
-  !CALL qe_buffer%lock_buffer( dffts_nl_d, size(dffts%nl), ierr )
-  !CALL qe_buffer%lock_buffer( dffts_nlm_d, size(dffts%nlm), ierr )
   dffts_nl_d => dffts%nl_d
   dffts_nlm_d => dffts%nlm_d
   ! End Sync
@@ -216,8 +214,6 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      !
   ENDIF
   CALL qe_buffer%release_buffer( psic_d, ierr )
-!  CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
-!  CALL qe_buffer%release_buffer( dffts_nlm_d, ierr )
   CALL stop_clock ('vloc_psi')
   !
   RETURN
@@ -267,7 +263,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   REAL(DP) :: v_tmp
   INTEGER :: v_siz, idx, ioff
   INTEGER :: ierr
-  INTEGER :: howmany = 12
+  INTEGER :: howmany = 12           ! this must become an option
   INTEGER :: group_size
   
   CALL start_clock ('vloc_psi')
@@ -468,7 +464,6 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   USE lsda_mod,      ONLY : nspin
   USE spin_orb,      ONLY : domag
   USE noncollin_module,     ONLY: npol
-  USE wavefunctions_module,       ONLY: psic_nc_h => psic_nc
   USE wavefunctions_module_gpum,  ONLY: psic_nc_d
   USE fft_helper_subroutines
   USE qe_buffers,    ONLY : qe_buffer
@@ -494,7 +489,6 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   !
   CALL start_clock ('vloc_psi')
   !
-  IF (.not. allocated(psic_nc_d)) ALLOCATE(psic_nc_d, SOURCE=psic_nc_h)
   incr = 1
   !
   use_tg = dffts%has_task_groups 
