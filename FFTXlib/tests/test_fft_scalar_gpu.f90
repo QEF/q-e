@@ -186,6 +186,8 @@ program test_fft_scalar_gpu
     complex(DP) :: c(howmany * ldx * ldy * ldz)
     complex(DP) :: tmp(howmany * ldx * ldy * ldz)
     !
+    integer :: i, rs, re
+    !
 #if ! defined(__DFTI)
     print *, 'The current CPU scalar driver does not support howmany. Reverting to howmany 1'
 #endif
@@ -197,7 +199,11 @@ program test_fft_scalar_gpu
     !
     ! Use c as auxiliary variable hosting GPU results
     tmp = c_d
-    CALL test%assert_close( c, tmp )
+    DO i=0, howmany - 1
+      rs = i * ldx * ldy * ldz + 1
+      re = rs + nx * ny  * nz  - 1
+      CALL test%assert_close( c(rs:re), tmp(rs:re) )
+    END DO
     !
     CALL fill_random(c, c_d, howmany * ldx * ldy * ldz)
     !
@@ -206,7 +212,11 @@ program test_fft_scalar_gpu
     !
     ! Use c as auxiliary variable hosting GPU results
     tmp = c_d
-    CALL test%assert_close( c, tmp )
+    DO i=0, howmany - 1
+      rs = i * ldx * ldy * ldz + 1
+      re = rs + nx * ny  * nz  - 1
+      CALL test%assert_close( c(rs:re), tmp(rs:re) )
+    END DO
     !
   END SUBROUTINE test_cfft3d_gpu
   !

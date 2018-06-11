@@ -43,6 +43,8 @@ SUBROUTINE invfft_y( fft_kind, f, dfft, howmany )
 
   IF(PRESENT(howmany) ) THEN
      howmany_ = howmany
+  ELSE
+     howmany_ = 1
   END IF
   !
   IF( fft_kind == 'Rho' ) THEN
@@ -123,6 +125,8 @@ SUBROUTINE fwfft_y( fft_kind, f, dfft, howmany )
 
   IF(PRESENT(howmany) ) THEN
      howmany_ = howmany
+  ELSE
+     howmany_ = 1
   END IF
 
   IF( fft_kind == 'Rho' ) THEN
@@ -301,6 +305,8 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
 
   IF(PRESENT(howmany) ) THEN
      howmany_ = howmany
+  ELSE
+     howmany_ = 1
   END IF
   !
   IF( present( stream ) ) THEN
@@ -398,6 +404,8 @@ SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
   !
   IF(PRESENT(howmany) ) THEN
      howmany_ = howmany
+  ELSE
+     howmany_ = 1
   END IF
   !
   IF( present( stream ) ) THEN
