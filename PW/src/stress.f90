@@ -60,8 +60,8 @@ subroutine stress ( sigma )
   WRITE( stdout, '(//5x,"Computing stress (Cartesian axis) and pressure"/)')
 
   IF ( noncolin .AND. dft_is_gradient() ) then
-     CALL infomsg('stres', 'noncollinear stress + GGA not implemented')
-     RETURN
+     CALL infomsg('stres', 'noncollinear stress + GGA **** EXPERIMENTAL ****!!')
+     !RETURN
   ELSE IF ( lelfield .AND. okvan ) THEN
      CALL infomsg('stres', 'stress with USPP and electric fields (Berry) not implemented')
      RETURN
