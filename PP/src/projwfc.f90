@@ -446,6 +446,16 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   LOGICAL :: freeswfcatom
   !
   !
+  INTERFACE 
+      SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
+           IMPORT  :: DP
+           CHARACTER (len=*), INTENT(in) :: filproj
+           INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
+           REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
+           REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
+      END SUBROUTINE write_lowdin
+  END INTERFACE
+
   WRITE( stdout, '(/5x,"Calling projwave .... ")')
   IF ( gamma_only ) THEN
      WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
@@ -887,6 +897,15 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   !
   !
   !
+  INTERFACE 
+      SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
+           IMPORT  :: DP
+           CHARACTER (len=*), INTENT(in) :: filproj
+           INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
+           REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
+           REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
+      END SUBROUTINE write_lowdin
+  END INTERFACE
   IF (.not.noncolin) CALL errore('projwave_nc','called in the wrong case',1)
   IF (gamma_only) CALL errore('projwave_nc','gamma_only not yet implemented',1)
   WRITE( stdout, '(/5x,"Calling projwave_nc .... ")')
@@ -1840,6 +1859,16 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
   !
+  !
+  INTERFACE 
+      SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
+           IMPORT  :: DP
+           CHARACTER (len=*), INTENT(in) :: filproj
+           INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
+           REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
+           REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
+      END SUBROUTINE write_lowdin
+  END INTERFACE
   !
   WRITE( stdout, '(/5x,"Calling pprojwave .... ")')
   IF ( gamma_only ) THEN
