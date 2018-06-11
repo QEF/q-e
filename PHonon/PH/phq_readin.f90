@@ -50,7 +50,7 @@ SUBROUTINE phq_readin()
   USE partial,       ONLY : atomo, nat_todo, nat_todo_input
   USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3, x_q, wq, nqs, lgamma_iq
-  USE io_files,      ONLY : tmp_dir, prefix, create_directory, check_tempdir
+  USE io_files,      ONLY : tmp_dir, prefix, postfix, create_directory, check_tempdir
   USE noncollin_module, ONLY : i_cons, noncolin
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum, twfcollect
@@ -555,7 +555,7 @@ SUBROUTINE phq_readin()
   amass_input(:)= amass(:)
   !
   tmp_dir_save=tmp_dir
-  tmp_dir_ph= TRIM (tmp_dir) // '_ph' // TRIM(int_to_char(my_image_id)) //'/'
+  tmp_dir_ph= trimcheck( TRIM (tmp_dir) // '_ph' // int_to_char(my_image_id) )
   CALL check_tempdir ( tmp_dir_ph, exst, parallelfs )
   tmp_dir_phq=tmp_dir_ph
 
@@ -583,16 +583,16 @@ SUBROUTINE phq_readin()
 !   we read from there, otherwise use the information in tmp_dir.
 !
      IF (lqdir) THEN
-        tmp_dir_phq= TRIM (tmp_dir_ph) //TRIM(prefix)//&
-                          & '.q_' // TRIM(int_to_char(current_iq))//'/'
+        tmp_dir_phq= trimcheck ( TRIM(tmp_dir_ph) // TRIM(prefix) // &
+                                & '.q_' // int_to_char(current_iq) )
         CALL check_restart_recover(ext_recover, ext_restart)
         IF (.NOT.ext_recover.AND..NOT.ext_restart) tmp_dir_phq=tmp_dir_ph
      ENDIF
      !
 #if defined (__OLDXML)
-     filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/data-file.xml'
+     filename=TRIM(tmp_dir_phq)//TRIM(prefix)//postfix//'data-file.xml'
 #else
-     filename=TRIM(tmp_dir_phq)//TRIM(prefix)//'.save/data-file-schema.xml'
+     filename=TRIM(tmp_dir_phq)//TRIM(prefix)//postfix//'data-file-schema.xml'
 #endif
      IF (ionode) inquire (file =TRIM(filename), exist = exst)
      !
@@ -739,7 +739,7 @@ SUBROUTINE phq_readin()
   !  .xml or in the noncollinear case.
   !
   xmldyn=has_xml(fildyn)
-!  IF (noncolin) xmldyn=.TRUE.
+  !IF (noncolin) xmldyn=.TRUE.
   !
   ! If a band structure calculation needs to be done do not open a file
   ! for k point
