@@ -225,6 +225,9 @@ module funct
   !              "vdwy"   vdW-DF-y                       inlc =5, reserved Thonhauser, not implemented
   !              "vdwz"   vdW-DF-z                       inlc =6, reserved Thonhauser, not implemented
   !
+  ! Meta-GGA with Van der Waals
+  !              "rvv10-scan" rVV10 (with b=15.7) and scan inlc=3 (PRX 6, 041005 (2016))
+  !
   ! Note: as a rule, all keywords should be unique, and should be different
   ! from the short name, but there are a few exceptions.
   !
