@@ -53,10 +53,11 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   ! ... calculate exchange-correlation potential
   !
-  CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
   !
   if (dft_is_meta() .and. (get_meta() /= 4)) then
     call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
+  else
+    CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
   endif
   !
   !
@@ -101,7 +102,8 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
 END SUBROUTINE v_of_rho
 !----------------------------------------------------------------------------
-SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc_out, vtxc_out, v_out, kedtaur )
+!SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc_out, vtxc_out, v_out, kedtaur )
+SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !----------------------------------------------------------------------------
   !
   ! ... Exchange-Correlation potential Vxc(r) from n(r)
@@ -114,7 +116,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc_out, vtxc_out, v_out, kedta
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
-  USE funct,            ONLY : xc, xc_spin, tau_xc, tau_xc_spin, get_meta
+  USE funct,            ONLY : xc, xc_spin, tau_xc, tau_xc_spin, get_meta, dft_is_nonlocc, nlc
   USE scf,              ONLY : scf_type
   USE mp,               ONLY : mp_sum
   USE mp_bands,         ONLY : intra_bgrp_comm
@@ -126,8 +128,10 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc_out, vtxc_out, v_out, kedta
     ! the core charge in real space
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
     ! the core charge in reciprocal space
-  REAL(DP), INTENT(INOUT) :: v_out(dfftp%nnr,nspin), kedtaur(dfftp%nnr,nspin), &
-                           vtxc_out, etxc_out
+!   REAL(DP), INTENT(INOUT) :: v_out(dfftp%nnr,nspin), kedtaur(dfftp%nnr,nspin), &
+!                            vtxc_out, etxc_out
+  REAL(DP), INTENT(INOUT) :: v(dfftp%nnr,nspin), kedtaur(dfftp%nnr,nspin), &
+                           vtxc, etxc
     ! v:      V_xc potential
     ! kedtau: local K energy density 
     ! vtxc:   integral V_xc * rho
@@ -135,8 +139,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc_out, vtxc_out, v_out, kedta
     !
     ! ... local variables
     !
-  REAL(DP),ALLOCATABLE :: v(:,:)
-  REAL(DP) :: vtxc, etxc
+!   REAL(DP),ALLOCATABLE :: v(:,:)
+!   REAL(DP) :: vtxc, etxc
   REAL(DP) :: zeta, rh
   INTEGER  :: k, ipol, is
   REAL(DP) :: ex, ec, v1x, v2x, v3x,v1c, v2c, v3c,                     &
@@ -161,7 +165,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc_out, vtxc_out, v_out, kedta
   !
   etxc      = zero
   vtxc      = zero
-  ALLOCATE(v(dfftp%nnr,nspin))
+  !ALLOCATE(v(dfftp%nnr,nspin))
   v(:,:)    = zero
   rhoneg(:) = zero
   !
@@ -255,7 +259,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc_out, vtxc_out, v_out, kedta
           !
           ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
           !
-          if (get_meta()==1 .OR.get_meta()==5 ) then  ! tpss, scan
+          if (get_meta()==1 .OR. get_meta()==5 ) then  ! tpss, scan
             !
             h(:,k,1) = (v2xup * grhoup(:) + v2cup(:)) * e2
             h(:,k,2) = (v2xdw * grhodw(:) + v2cdw(:)) * e2
@@ -317,14 +321,11 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc_out, vtxc_out, v_out, kedta
   vtxc = omega * vtxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 ) 
   etxc = omega * etxc / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
   !
+  IF ( dft_is_nonlocc() ) CALL nlc( rho%of_r, rho_core, nspin, etxc, vtxc, v )
+  !
   CALL mp_sum(  vtxc , intra_bgrp_comm )
   CALL mp_sum(  etxc , intra_bgrp_comm )
   !
-  vtxc_out = vtxc_out +vtxc
-  etxc_out = etxc_out +etxc
-  v_out    = v_out + v
-  !
-  DEALLOCATE(v)
   DEALLOCATE(grho)
   DEALLOCATE(h)
   DEALLOCATE(rhoout)
