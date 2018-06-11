@@ -230,7 +230,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   ! Task Groups
   REAL(DP),    ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
-  INTEGER :: v_siz, idx, ioff
+  INTEGER :: v_siz, idx
   !
   CALL start_clock ('vloc_psi')
   use_tg = dffts%has_task_groups 
@@ -254,24 +254,21 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
 
      DO ibnd = 1, m, fftx_ntgrp(dffts)
         !
-        tg_psic = (0.d0, 0.d0)
-        ioff   = 0
-        !
-        DO idx = 1, fftx_ntgrp(dffts)
-
-           IF( idx + ibnd - 1 <= m ) THEN
-!$omp parallel do
-              DO j = 1, n
-                 tg_psic(dffts%nl (igk_k(j,current_k))+ioff) =  psi(j,idx+ibnd-1)
-              ENDDO
-!$omp end parallel do
-           ENDIF
-
-        !write (6,*) 'wfc G ', idx+ibnd-1
-        !write (6,99) (tg_psic(i+ioff), i=1,400)
-
-           ioff = ioff + right_nnr
+!$omp parallel
+        !$omp do
+        DO j = 1, fftx_ntgrp(dffts) * right_nnr
+           tg_psic(j) = (0.d0, 0.d0)
         ENDDO
+        !$omp end do
+        !
+        !$omp do collapse(2)
+        DO idx = 1, MIN(fftx_ntgrp(dffts), m+1-ibnd)
+           DO j = 1, n
+              tg_psic(dffts%nl (igk_k(j,current_k))+right_nnr*(idx-1)) =  psi(j,idx+ibnd-1)
+           ENDDO
+        ENDDO
+        !$omp end do nowait
+!$omp end parallel
         !
         CALL  invfft ('tgWave', tg_psic, dffts )
         !write (6,*) 'wfc R ' 
@@ -291,34 +288,33 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
         !
         !   addition to the total product
         !
-        ioff   = 0
-        !
         CALL tg_get_recip_inc( dffts, right_inc )
         !
-        DO idx = 1, fftx_ntgrp(dffts)
-           !
-           IF( idx + ibnd - 1 <= m ) THEN
-!$omp parallel do
-              DO j = 1, n
-                 hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
-                    tg_psic( dffts%nl(igk_k(j,current_k)) + ioff )
-              ENDDO
-!$omp end parallel do
-           ENDIF
-           !
-        !write (6,*) 'v psi G ', idx+ibnd-1
-        !write (6,99) (tg_psic(i+ioff), i=1,400)
-
-           ioff = ioff + right_inc
-           !
+!$omp parallel do collapse(2)
+        DO idx = 1, MIN(fftx_ntgrp(dffts), m+1-ibnd)
+           DO j = 1, n
+              hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
+                 tg_psic( dffts%nl(igk_k(j,current_k)) + right_inc*(idx-1) )
+           ENDDO
         ENDDO
+!$omp end parallel do
         !
      ENDDO
   ELSE
      DO ibnd = 1, m
         !
-        psic(:) = (0.d0, 0.d0)
-        psic (dffts%nl (igk_k(1:n,current_k))) = psi(1:n, ibnd)
+!$omp parallel
+        !$omp do
+        DO j = 1, dffts%nnr
+           psic(j) = (0.d0, 0.d0)
+        ENDDO
+        !$omp end do
+        !$omp do
+        DO j = 1, n
+           psic (dffts%nl (igk_k(j,current_k))) = psi(j, ibnd)
+        ENDDO
+        !$omp end do nowait
+!$omp end parallel
         !write (6,*) 'wfc G ', ibnd
         !write (6,99) (psic(i), i=1,400)
         !

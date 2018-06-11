@@ -36,7 +36,6 @@ pseudo :
 	@./check_pseudo.sh pw_
 	@./check_pseudo.sh cp_
 
-
 run-tests : run-tests-serial
 
 run-tests-serial : run-tests-pw-serial run-tests-cp-serial 
@@ -44,10 +43,12 @@ run-tests-serial : run-tests-pw-serial run-tests-cp-serial
 run-tests-parallel : run-tests-pw-parallel run-tests-cp-parallel run-tests-ph-parallel run-tests-epw-parallel
 
 
-run-tests-cp-serial : prolog pseudo 
+run-tests-cp-serial : prolog pseudo
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
 run-tests-cp-parallel : prolog pseudo
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=cp_all
 
 run-tests-pw-serial : prolog pseudo
@@ -89,7 +90,8 @@ run-tests-xsd-pw-serial : prolog pseudo
 		python ../validate_xsd_pw.py $$file; \
     done ; cd ..
 
-create-reference-cp : pseudo prolog 
+create-reference-cp : pseudo prolog
+	@if ! test -d $(ESPRESSO_TMPDIR); then mkdir $(ESPRESSO_TMPDIR); fi 
 	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --category=cp_all make-benchmarks
 
 create-reference-pw : pseudo prolog
@@ -144,7 +146,9 @@ clean:
 		epw_*/*.epmatwp epw_*/*.phdos epw_*/*.epwane epw_*/*.ephmat \
 		epw_*/*.fmt epw_*/*.H epw_*/*.epb* epw_*/*self epw_*/*.a2f epw_*/*.01 \
 		epw_*/*.kpt epw_*/*.gnu epw_*/*.eig epw_*/*.lambda_FS epw_*/*.sigma_restart1 \
-		epw_*/specfun.phon epw_*/specfun_sup.phon
+		epw_*/specfun.phon epw_*/specfun_sup.phon epw_*/*.tau_restart* \
+                epw_*/*_elcond_* epw_*/fort.* epw_*/decay.* epw_*/scattering_rate* \
+                epw_*/*.fc.* epw_*/*_band.dat 
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save
 

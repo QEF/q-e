@@ -105,10 +105,10 @@ xc_rVV10.o \
 xml_input.o \
 xml_io_base.o \
 io_base.o \
-qes_module.o  \
 qes_types.o \
 qes_libs.o  \
 qes_read_module.o \
+bcast_qes_module.o \
 qexsd.o   \
 qexsd_input.o \
 hdf5_qe.o\

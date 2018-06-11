@@ -43,13 +43,13 @@ SUBROUTINE potinit()
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns
   USE noncollin_module,     ONLY : noncolin, report
-  USE io_files,             ONLY : tmp_dir, prefix, input_drho, check_file_exist
+  USE io_files,             ONLY : tmp_dir, prefix, postfix, input_drho, check_file_exist
   USE spin_orb,             ONLY : domag, lforcet
   USE mp,                   ONLY : mp_sum
   USE mp_bands ,            ONLY : intra_bgrp_comm, root_bgrp
   USE io_global,            ONLY : ionode, ionode_id
   USE io_rho_xml,           ONLY : read_scf
-#if defined __OLDXML
+#if defined(__OLDXML)
   USE xml_io_base,          ONLY : read_rho
 #else
   USE io_base,              ONLY : read_rhog
@@ -72,7 +72,7 @@ SUBROUTINE potinit()
   !
   CALL start_clock('potinit')
   !
-  dirname = TRIM(tmp_dir) // TRIM (prefix) // '.save/'
+  dirname = TRIM(tmp_dir) // TRIM (prefix) // postfix
 #if defined __HDF5
   filename = TRIM(dirname) // 'charge-density.hdf5'
 #else 
@@ -293,7 +293,7 @@ SUBROUTINE nc_magnetization_from_lsda ( nnr, nspin, rho )
        angle1(1)/PI*180.d0, angle2(1)/PI*180.d0 
   WRITE(stdout,*) '-----------'
   !
-#ifdef __OLDXML
+#if defined(__OLDXML)
   ! On input, rho(1)=rho_up, rho(2)=rho_down
   ! Set rho(1)=rho_tot, rho(3)=rho_up-rho_down=magnetization
   ! 

@@ -12,7 +12,7 @@ SUBROUTINE from_restart( )
    USE control_flags,         ONLY : tbeg, taurdr, tfor, tsdp, iverbosity, &
                                      tsde, tzeroe, tzerop, nbeg, tranp, amprp,&
                                      thdyn, tzeroc, force_pairing, trhor, &
-                                     ampre, trane, tpre, dt_old
+                                     ampre, trane, tpre, dt_old, tv0rd
    USE wavefunctions_module,  ONLY : c0_bgrp, cm_bgrp
    USE electrons_module,      ONLY : occn_info
    USE electrons_base,        ONLY : nspin, iupdwn, nupdwn, f, nbsp, nbsp_bgrp
@@ -21,7 +21,7 @@ SUBROUTINE from_restart( )
                                      velh, at, alat
    USE ions_base,             ONLY : na, nsp, iforce, vel_srt, nat, randpos
    USE time_step,             ONLY : tps, delt
-   USE ions_positions,        ONLY : taus, tau0, tausm, taum, vels, fion, fionm, set_velocities
+   USE ions_positions,        ONLY : taus, tau0, tausm, taum, vels, fion, fionm, set_velocities, velsm
    USE ions_nose,             ONLY : xnhp0, xnhpm
    USE gvect,    ONLY : mill, eigts1, eigts2, eigts3 
    USE printout_base,         ONLY : printout_pos
@@ -59,6 +59,21 @@ SUBROUTINE from_restart( )
       ! ... in readfile, only scaled positions are read
       !
       CALL r_to_s( tau0, taus, na, nsp, ainv )
+      !
+   END IF
+   !
+   ! MCA
+   IF ( tv0rd .AND. tfor ) THEN
+      !
+      ! ... vel_srt=starting velocities, read from input, are brough to
+      ! ... scaled axis and copied into array vels. Since velocites are
+      ! ... not actually used by the Verlet algorithm, we set tau(t-dt)
+      ! ... to tausm=tau(t)-v*delta t so that the Verlet algorithm will 
+      ! ... start with the correct velocity
+      !
+      CALL r_to_s( vel_srt, vels, na, nsp, ainv )
+      tausm(:,:) =  taus(:,:) - vels(:,:)*delt
+      velsm(:,:) =  vels(:,:)
       !
    END IF
    !
@@ -135,7 +150,12 @@ SUBROUTINE from_restart( )
       !
       WRITE( stdout, 515 ) ampre
       !
-515   FORMAT(   3X,'Initial random displacement of el. coordinates',/ &
+515   FORMAT(   3X,'',/ &
+                3X,'!======================================!',/ &
+                3X,'!======RANDOMIZING WAVE FUNCTIONS======!',/ &
+                3X,'!======================================!',/ &
+                3X,'',/ &
+                3X,'Initial random displacement of el. coordinates',/ &
                 3X,'Amplitude = ',F10.6 )
       !
       CALL rande_base( c0_bgrp, ampre )

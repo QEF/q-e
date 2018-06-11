@@ -122,8 +122,7 @@
   !!    lower_bnd= 11 and upper_bnd=19 for the second pool
   !-----------------------------------------------------------------------
   !
-  USE mp_global,    ONLY: my_pool_id, npool
-  USE mp_images,    ONLY: nimage, nproc_image, me_image, my_image_id
+  USE mp_images,    ONLY: nimage, my_image_id
   ! number of images, number of processor within an image, index of the proc within an image
   !
   IMPLICIT NONE

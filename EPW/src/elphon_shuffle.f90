@@ -144,8 +144,8 @@
           CALL zgemv ('n', nmodes, nmodes, cone, u , nmodes, &
             el_ph_mat (ibnd,jbnd,ik,:), 1, czero, epmatq (ibnd,jbnd,ik,:,iq), 1)
         ELSE
-        CALL zgemv ('n', nmodes, nmodes, cone, CONJG ( u ), nmodes, &
-          el_ph_mat (ibnd,jbnd,ik,:), 1, czero, epmatq (ibnd,jbnd,ik,:,iq), 1 )
+          CALL zgemv ('n', nmodes, nmodes, cone, CONJG( u ), nmodes, &
+            el_ph_mat (ibnd,jbnd,ik,:), 1, czero, epmatq (ibnd,jbnd,ik,:,iq), 1 )
         ENDIF 
         !
       ENDDO

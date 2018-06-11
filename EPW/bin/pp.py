@@ -35,12 +35,25 @@ def hasSOC(prefix):
   
   return lSOC
 
+# Check if the calculation was done in sequential
+def isSEQ(prefix):
+  fname = '_ph0/'+str(prefix)+'.dvscf'
+  if (os.path.isfile(fname)):
+    lseq = True
+  else:
+    lseq = False
+ 
+  return lseq
+    
 # Enter the number of irr. q-points
 user_input = raw_input('Enter the prefix used for PH calculations (e.g. diam)\n')
 prefix = str(user_input)
 
+# Test if SOC
 SOC = hasSOC(prefix)
 
+# Test if seq. or parallel run
+SEQ = isSEQ(prefix)
 
 if True: # this gets the nqpt from the outputfiles
   nqpt =  get_nqpt(prefix)
@@ -59,24 +72,49 @@ os.system('mkdir save')
 for iqpt in np.arange(1,nqpt+1):
   label = str(iqpt)
 
-  # Case with SOC
-  if SOC == 'true':
-    os.system('cp '+prefix+'.dyn0 '+prefix+'.dyn0.xml')
-    os.system('cp '+prefix+'.dyn'+str(iqpt)+'.xml save/'+prefix+'.dyn_q'+label+'.xml')
-    if (iqpt == 1):
-      os.system('cp _ph0/'+prefix+'.dvscf* save/'+prefix+'.dvscf_q'+label)
-      os.system('cp -r _ph0/'+prefix+'.phsave save/')
-      os.system('cp '+prefix+'.fc.xml save/ifc.q2r.xml')
-    else:
-      os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix+'.dvscf* save/'+prefix+'.dvscf_q'+label)
-      os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*' )
-  # Case without SOC
-  if SOC == 'false':
-    os.system('cp '+prefix+'.dyn'+str(iqpt)+' save/'+prefix+'.dyn_q'+label)
-    if (iqpt == 1):
-      os.system('cp _ph0/'+prefix+'.dvscf1 save/'+prefix+'.dvscf_q'+label)
-      os.system('cp -r _ph0/'+prefix+'.phsave save/')
-      os.system('cp '+prefix+'.fc save/ifc.q2r')
-    else:
-      os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix+'.dvscf1 save/'+prefix+'.dvscf_q'+label)
-      os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*' )
+  # Case calculation in seq.
+  if SEQ:
+    # Case with SOC
+    if SOC == 'true':
+      os.system('cp '+prefix+'.dyn0 '+prefix+'.dyn0.xml')
+      os.system('cp '+prefix+'.dyn'+str(iqpt)+'.xml save/'+prefix+'.dyn_q'+label+'.xml')
+      if (iqpt == 1):
+        os.system('cp _ph0/'+prefix+'.dvscf* save/'+prefix+'.dvscf_q'+label)
+        os.system('cp -r _ph0/'+prefix+'.phsave save/')
+        os.system('cp '+prefix+'.fc.xml save/ifc.q2r.xml')
+      else:
+        os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix+'.dvscf* save/'+prefix+'.dvscf_q'+label)
+        os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*' )
+    # Case without SOC
+    if SOC == 'false':
+      os.system('cp '+prefix+'.dyn'+str(iqpt)+' save/'+prefix+'.dyn_q'+label)
+      if (iqpt == 1):
+        os.system('cp _ph0/'+prefix+'.dvscf save/'+prefix+'.dvscf_q'+label)
+        os.system('cp -r _ph0/'+prefix+'.phsave save/')
+        os.system('cp '+prefix+'.fc save/ifc.q2r')
+      else:
+        os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix+'.dvscf save/'+prefix+'.dvscf_q'+label)
+        os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*' )
+ 
+  else:
+    # Case with SOC
+    if SOC == 'true':
+      os.system('cp '+prefix+'.dyn0 '+prefix+'.dyn0.xml')
+      os.system('cp '+prefix+'.dyn'+str(iqpt)+'.xml save/'+prefix+'.dyn_q'+label+'.xml')
+      if (iqpt == 1):
+        os.system('cp _ph0/'+prefix+'.dvscf1 save/'+prefix+'.dvscf_q'+label)
+        os.system('cp -r _ph0/'+prefix+'.phsave save/')
+        os.system('cp '+prefix+'.fc.xml save/ifc.q2r.xml')
+      else:
+        os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix+'.dvscf1 save/'+prefix+'.dvscf_q'+label)
+        os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*' )
+    # Case without SOC
+    if SOC == 'false':
+      os.system('cp '+prefix+'.dyn'+str(iqpt)+' save/'+prefix+'.dyn_q'+label)
+      if (iqpt == 1):
+        os.system('cp _ph0/'+prefix+'.dvscf1 save/'+prefix+'.dvscf_q'+label)
+        os.system('cp -r _ph0/'+prefix+'.phsave save/')
+        os.system('cp '+prefix+'.fc save/ifc.q2r')
+      else:
+        os.system('cp _ph0/'+prefix+'.q_'+str(iqpt)+'/'+prefix+'.dvscf1 save/'+prefix+'.dvscf_q'+label)
+        os.system('rm _ph0/'+prefix+'.q_'+str(iqpt)+'/*wfc*' )

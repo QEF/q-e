@@ -27,7 +27,7 @@
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp
   USE lsda_mod,   ONLY : lsda, current_spin, isk, nspin
   USE spin_orb,   ONLY : lspinorb
-  USE wvfct,      ONLY : nbnd, npwx, et
+  USE wvfct,      ONLY : npwx, et
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp,       ONLY : okvan, nkb, vkb
   USE uspp_param, ONLY : nh, nhm

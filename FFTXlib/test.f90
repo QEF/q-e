@@ -154,7 +154,7 @@ program test
   at(2, :) = (/0.5d0, 0.0d0, 0.5d0/)
   at(3, :) = (/0.0d0, 0.5d0, 1.5d0/)
   !
-  DO i = 1, iargc()
+  DO i = 1, command_argument_count()
     CALL getarg(i, arg)
     IF ((trim(arg) == "-h") .or. (trim(arg) == "--help")) THEN
       print *, "Example usage:  mpirun -np 4 ./fft_test.x -ecutwfc 80 -alat 20  -nbnd 128 -ntg 4 -gamma .true."

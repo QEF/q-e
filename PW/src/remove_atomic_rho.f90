@@ -9,7 +9,7 @@
 subroutine remove_atomic_rho
   !-----------------------------------------------------------------------
   USE io_global, ONLY: stdout
-  USE io_files, ONLY: output_drho, tmp_dir, prefix
+  USE io_files, ONLY: output_drho, tmp_dir, prefix, postfix
   USE kinds, ONLY: DP
   USE fft_base, ONLY: dfftp
   USE lsda_mod, ONLY: nspin
@@ -36,7 +36,7 @@ subroutine remove_atomic_rho
   !
   work = rho%of_r - work
   !
-  dirname = TRIM(tmp_dir) // TRIM(prefix) // '.save/'
+  dirname = TRIM(tmp_dir) // TRIM(prefix) // postfix
   call write_rho ( dirname, work, 1, output_drho )
   !
   deallocate(work)

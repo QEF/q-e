@@ -10,6 +10,7 @@ MODULE io_files
 !=----------------------------------------------------------------------------=!
   !
   USE parameters, ONLY: ntypx
+  USE kinds,      ONLY: dp
   USE io_global,  ONLY: ionode, ionode_id, stdout
   !
   ! ... I/O related variables: file names, units, utilities
@@ -27,6 +28,12 @@ MODULE io_files
   CHARACTER(len=256) :: wfc_dir = 'undefined'
   ! ... prefix is prepended to all file (and directory) names 
   CHARACTER(len=256) :: prefix  = 'os'
+  ! ... postfix is appended to directory names
+#if defined (_WIN32)
+  CHARACTER(len=6) :: postfix  = '.save\'
+#else
+  CHARACTER(len=6) :: postfix  = '.save/'
+#endif
   ! ... for parallel case and distributed I/O: node number
   CHARACTER(len=6)   :: nd_nmbr = '000000'
   ! ... directory where pseudopotential files are found
@@ -108,11 +115,16 @@ CONTAINS
     !
     CHARACTER(LEN=*), INTENT(IN) :: dirname
     !
-    INTEGER                    :: ierr
+    INTEGER                    :: ierr, length
     !
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     !
-    IF ( ionode ) ierr = f_mkdir_safe( TRIM( dirname ) )
+    length = LEN_TRIM(dirname)
+#if defined (_WIN32)
+    ! Windows returns error if tmp_dir ends with a backslash
+    IF ( dirname(length:length) == '\' ) length=length-1
+#endif
+    IF ( ionode ) ierr = f_mkdir_safe( dirname(1:length ) )
     CALL mp_bcast ( ierr, ionode_id, intra_image_comm )
     !
     CALL errore( 'create_directory', &
@@ -152,7 +164,7 @@ CONTAINS
     CHARACTER(len=*), INTENT(in) :: tmp_dir
     LOGICAL, INTENT(out)         :: exst, pfs
     !
-    INTEGER             :: ios, image, proc, nofi
+    INTEGER             :: ios, image, proc, nofi, length
     CHARACTER (len=256) :: file_path, filename
     CHARACTER(len=6), EXTERNAL :: int_to_char
     !
@@ -161,7 +173,12 @@ CONTAINS
     ! ...                       0 if         created
     ! ...                       1 if         cannot be created
     !
-    IF ( ionode ) ios = f_mkdir_safe( TRIM(tmp_dir) )
+    length = LEN_TRIM(tmp_dir)
+#if defined (_WIN32)
+    ! Windows returns error if tmp_dir ends with a backslash
+    IF ( tmp_dir(length:length) == '\' ) length=length-1
+#endif
+    IF ( ionode ) ios = f_mkdir_safe( tmp_dir(1:length) )
     CALL mp_bcast ( ios, ionode_id, intra_image_comm )
     exst = ( ios == -1 )
     IF ( ios > 0 ) CALL errore ('check_tempdir','tmp_dir cannot be opened',1)
@@ -310,15 +327,6 @@ subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   !     On output, "exst" is .T. if opened file already exists
   !     If recl=-1, the file existence is checked, nothing else is done
   !
-#if defined(__SX6)
-#  define DIRECT_IO_FACTOR 1
-#else
-#  define DIRECT_IO_FACTOR 8 
-#endif
-  !
-  ! the  record length in direct-access I/O is given by the number of
-  ! real*8 words times DIRECT_IO_FACTOR (may depend on the compiler)
-  !
   implicit none
   !
   !    first the input variables
@@ -337,26 +345,23 @@ subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   !
   character(len=256) :: tempfile, filename
   ! complete file name
-  integer :: ios
+  real(dp):: dummy
   integer*8 :: unf_recl
-  ! used to check I/O operations
-  ! length of the record
+  ! double precision to prevent integer overflow
+  integer :: ios, direct_io_factor
   logical :: opnd
-
-  ! Check if the optional variable tmp_dir is included
   !
-
-  ! if true the file is already opened
+  !    initial checks
   !
   if (unit < 0) call errore ('diropn', 'wrong unit', 1)
   !
-  !    we first check that the file is not already openend
+  !    ifirst we check that the file is not already openend
   !
   ios = 0
   inquire (unit = unit, opened = opnd)
   if (opnd) call errore ('diropn', "can't open a connected unit", abs(unit))
   !
-  !      then we check the filename extension
+  !    then we check the filename extension
   !
   if (extension == ' ') call errore ('diropn','filename extension not given',2)
   filename = trim(prefix) // "." // trim(extension)
@@ -369,12 +374,14 @@ subroutine diropn (unit, extension, recl, exst, tmp_dir_)
   inquire (file = tempfile, exist = exst)
   if (recl == -1) RETURN
   !
-  !      the unit for record length is unfortunately machine-dependent
+  ! the  record length in direct-access I/O is given by the number of
+  ! real*8 words times direct_io_factor (may depend on the compiler)
   !
-  unf_recl = DIRECT_IO_FACTOR * int(recl, kind=kind(unf_recl))
+  INQUIRE (IOLENGTH=direct_io_factor) dummy
+  unf_recl = direct_io_factor * int(recl, kind=kind(unf_recl))
   if (unf_recl <= 0) call errore ('diropn', 'wrong record length', 3)
   !
-  open (unit, file = trim(adjustl(tempfile)), iostat = ios, form = 'unformatted', &
+  open (unit, file=trim(adjustl(tempfile)), iostat=ios, form='unformatted', &
        status = 'unknown', access = 'direct', recl = unf_recl)
 
   if (ios /= 0) call errore ('diropn', 'error opening '//trim(tempfile), unit)

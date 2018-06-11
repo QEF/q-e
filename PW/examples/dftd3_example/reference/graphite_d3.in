@@ -1,0 +1,34 @@
+&control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='graphite'
+    pseudo_dir = '/scratch/marsamos/qe-github/q-e/pseudo',
+    outdir='/scratch/marsamos/qe-github/q-e/tempdir'
+ /
+ &system
+    ibrav = 0,
+    celldm(1) =4.66,
+    nat=  4,
+    ntyp= 1,
+    vdw_corr = 'dft-d3',
+    ecutwfc = 37
+    ecutrho = 318
+ /
+ &electrons
+    conv_thr =1.0d-8
+/
+ &ions
+/
+CELL_PARAMETERS alat
+1.0 0.0 0.0
+-0.5 0.8660254037844386 0.0
+0.0 0.0 3.60
+ATOMIC_SPECIES
+ C 12.011 C.pbe-n-rrkjus_psl.0.1.UPF
+ATOMIC_POSITIONS crystal
+ C 0.00000    1.00000    0.75000
+ C 0.66667    0.33333    0.75000
+ C 0.00000    1.00000    0.25000
+ C 0.33333    0.66667    0.25000
+K_POINTS AUTOMATIC
+3 3 3 1 1 1

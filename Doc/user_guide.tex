@@ -158,8 +158,12 @@ the responsibility of Carlo Cavazzoni.
 Contributors to \qe, beyond the authors of the papers
 mentioned in Sect.\ref{SubSec:Terms}, include:
 \begin{itemize}
+  \item Ye Luo (Argonne) for improved FFT threading and miscellaneous
+  contributions and optimization;
+  \item Pietro Bonf\`a (CINECA) for multiple contributions to optimization
+  and maiintenance;
   \item Hsin-Yu Ho and Marcos Calegari Andrade (U.Princeton) for SCAN
-  and other meta-GG functionals with \texttt{libxc};
+  and other meta-GGA functionals with \texttt{libxc};
   \item Fabio Affinito (CINECA) for ELPA support, for contributions
   to the FFT library, and for various parallelization improvements;
   \item Sebastiano Caravati for direct support of GTH pseudopotentials
@@ -379,9 +383,15 @@ to all linear-response codes.
 To install \qe\ from source, you need first of all a minimal Unix
 environment: basically, a command shell (e.g.,
 bash or tcsh) and the utilities \make, \texttt{awk}, \texttt{sed}.
- MS-Windows users need to have Cygwin (a UNIX environment which
- runs under Windows) installed:
-see \texttt{http://www.cygwin.com/}. Note that the scripts contained
+ MS-Windows users may enable the Windows Subsystem for Linux ( assuming they are using Windows 10) 
+ and install there a Linux distribution.
+ They can alternatively use Mingw/MSYS following the instructions given 
+ at \texttt{https://gitlab.com/QEF/q-e/issues/21} 
+ Other option for MS-Windows users is to use Cygwin 
+ (a UNIX environment which runs under Windows):
+ see \texttt{http://www.cygwin.com/}. 
+
+Note that the scripts contained
 in the distribution assume that the local  language is set to the
 standard, i.e. "C"; other settings
 may break them. Use \texttt{export LC\_ALL=C} (sh/bash) or
@@ -542,16 +552,25 @@ Finally, \configure\ recognizes the following command-line options:\\
 \texttt{--enable-shared}&       use shared libraries if available (default: yes;\\
                         &       "no" is implemented, untested, in only a few cases)\\
 \texttt{--enable-debug}&        compile with debug flags (only for selected cases; default: no)\\
-\texttt{--disable-wrappers}&    disable C to fortran wrapper check (default: enabled)\\
 \texttt{--enable-signals}&      enable signal trapping (default: disabled)\\
 \end{tabular}\\
+\\
 and the following optional packages:\\
+\\
 \begin{tabular}{ll}
 \texttt{--with-internal-blas}&    compile with internal BLAS (default: no)\\
 \texttt{--with-internal-lapack}&  compile with internal LAPACK (default: no)\\
-\texttt{--with-scalapack=no}&     do not use ScaLAPACK (default: yes)\\
-\texttt{--with-scalapack=intel}&  use ScaLAPACK for Intel MPI (default:OpenMPI)\\
+	\texttt{--with-scalapack}&        (yes$|$no$|$intel) Use scalapack if available. \\&Set to \texttt{intel} to use Intel MPI and blacs. (default: USE openMPI)\\
+        \texttt{--with-elpa-include}&   Specify full path ELPA include and modules headers 
+	                                (default: no)\\
+	\texttt{--with-elpa-lib}& Specify full path ELPA static or dynamic library
+	                          (default: no)\\
+	\texttt{--with-elpa-version}& Specify ELPA version, only year (2015 or 2016,
+	                          default: 2016)\\
+	\texttt{--with-hdf5}&   (no $|$ \texttt{<path>}) Use HDF5, a valid \texttt{<path>} must be specified (default: no)\\
 \end{tabular}\\
+\\
+
 If you want to modify the \configure\ script (advanced users only!),
 see the Developer Manual.
 
@@ -593,6 +612,8 @@ routines are affected by the changed settings and how to force their recompilati
 A copy of the needed routines is provided with the distribution. However,
 when available, optimized vendor-specific libraries should be used: this
 often yields huge performance gains.
+\\
+
 
 \paragraph{BLAS and LAPACK}
 \qe\ can use any architecture-optimized BLAS and LAPACK replacements,
@@ -648,6 +669,24 @@ happen, especially on PC clusters, see Sec.\ref{SubSec:LinuxPCMPI}.
 
 {\em Note:} since v.6.1, MPI libraries implementing v.3 of the standard
 (notably, non-blocking broadcast and gather operations) are required.
+
+\paragraph {HDF5}
+The HDF5 library (\texttt{https://www.hdfgroup.org/downloads/hdf5/}) can be used to perform binary I/O using the 
+HDF5 format.  
+
+The user has to install this library. The library should be compiled with the configure options:
+\texttt{--enable-parallel}, {\texttt{--enable-fortran} and \texttt{--enable-fortran-2003}. 
+
+The path to the  root dir of the library ( the one containing the bin, include and lib directories) 
+has to be passed to the \qe{} configure script via the \texttt{--with-hdf5} option.
+
+It is possible to use a library with disabled parallism, 
+but one has to add manually the flag \texttt{-D\_\_HDF5\_SERIAL} to the \texttt{MANUAL\_DFLAGS} in the 
+\texttt{make.inc} file. 
+
+The HDF5 packages provided by many LINUX distributions also work, but the configure script fails if  
+includes and libraries are not placed under the same root directory. 
+In this case the user should set manually  these paths in the make.inc file.  
 
 
 \paragraph{Other libraries}

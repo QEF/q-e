@@ -80,9 +80,10 @@ SUBROUTINE lr_readin
   ! Fine control of beta_gamma_z file
   CHARACTER(LEN=80) :: disk_io
   ! Specify the amount of I/O activities
+  CHARACTER(LEN=6) :: int_to_char
   INTEGER :: ios, iunout, ierr, ipol
   LOGICAL :: auto_rs
-  CHARACTER(LEN=6) :: int_to_char
+  LOGICAL, EXTERNAL  :: check_para_diag
   !
   NAMELIST / lr_input /   restart, restart_step ,lr_verbosity, prefix, outdir, &
                         & test_case_no, wfcdir, disk_io, max_seconds
@@ -516,12 +517,7 @@ SUBROUTINE lr_readin
   !
   ! Scalapack related stuff.
   !
-#if defined(__MPI)
-  use_para_diag = .TRUE.
-  CALL check_para_diag( nbnd )
-#else
-  use_para_diag = .FALSE.
-#endif
+  use_para_diag = check_para_diag( nbnd )
   !
   RETURN
   !

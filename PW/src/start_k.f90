@@ -38,7 +38,8 @@ MODULE start_k
        !
        INTEGER, INTENT (IN) :: nk1_, nk2_, nk3_, k1_, k2_, k3_, nk_
        CHARACTER(LEN=*), INTENT (IN) :: k_points
-       REAL(dp),INTENT (IN) :: xk_(3,nk_), wk_(nk_)
+       REAL(dp),INTENT (INOUT) :: xk_(3,nk_)
+       REAL(dp),INTENT (IN) :: wk_(nk_)
        !
        LOGICAL :: done
        !
@@ -80,6 +81,8 @@ MODULE start_k
     LOGICAL FUNCTION reset_grid ( nk1_, nk2_, nk3_, k1_, k2_, k3_ ) 
        !
        ! reset the automatic grid to new values if these are > 0
+       !
+       INTEGER, INTENT (IN) :: nk1_, nk2_, nk3_, k1_, k2_, k3_
        !
        reset_grid = (nk1_*nk2_*nk3_ > 0)
        IF ( .NOT. reset_grid ) RETURN

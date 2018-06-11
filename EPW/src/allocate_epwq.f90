@@ -23,7 +23,6 @@
   USE pwcom,        ONLY : npwx, nbnd, nspin, nks
   USE gvect,        ONLY : ngm
   USE noncollin_module, ONLY : noncolin, npol
-  USE wavefunctions_module,  ONLY: evc
   USE spin_orb,     ONLY : lspinorb
   USE control_lr,   ONLY : nbnd_occ
   USE phcom,        ONLY : evq, dpsi, vlocq,&

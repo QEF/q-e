@@ -13,6 +13,17 @@ AC_ARG_ENABLE(debug,
    fi],
    [use_debug=0])
 
+# pedantic flags implemented only for gcc
+AC_ARG_ENABLE(pedantic,
+   [AS_HELP_STRING([--enable-pedantic],
+       [compile Fortran with pedantic flags (default: no)])],
+   [if   test "$enableval" = "yes" ; then
+      use_pedantic=1
+   else
+      use_pedantic=0
+   fi],
+   [use_pedantic=0])
+
 # shared library flags are implemented only for a few (untested) cases
 AC_ARG_ENABLE(shared,
    [AS_HELP_STRING([--enable-shared],
@@ -88,16 +99,18 @@ ia32:path* | ia64:path* | x86_64:path* )
         have_cpp=0
         ;;
 *:*gfortran )
+	try_fflags="-O3 -g"
         if test "$use_debug" -eq 1; then
             try_fflags="-O3 -g  -Wall -fbounds-check -frange-check"
-        else
-            try_fflags="-O3 -g"
+        fi
+        if test "$use_pedantic" -eq 1; then
+            try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"
         fi
         try_fflags_openmp="-fopenmp"
         try_f90flags="\$(FFLAGS) -x f95-cpp-input"
         try_fflags_noopt="-O0 -g"
-        try_ldflags="-g -pthread"
-        try_ldflags_openmp="-fopenmp"
+        try_ldflags="-g"
+        try_ldflags_openmp="-pthread -fopenmp"
         try_ldflags_static="-static"
         ;;
 crayxt*:cray* )

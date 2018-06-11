@@ -39,14 +39,15 @@ MODULE pw_restart
                           qexml_read_bands_info, qexml_read_bands_pw, qexml_read_symmetry, &
                           qexml_read_efield, qexml_read_para, qexml_read_exx, qexml_read_esm
   !
-  USE xml_io_base, ONLY : rho_binary,read_wfc, write_wfc, create_directory
+  USE xml_io_base, ONLY : rho_binary,read_wfc, write_wfc
   !
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : e2, PI
   !
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
-                        qexml_version, qexml_version_init, pseudo_dir
+                        qexml_version, qexml_version_init, pseudo_dir,      &
+                        create_directory, postfix
   !
   USE io_global, ONLY : ionode, ionode_id
   USE mp_images, ONLY : intra_image_comm
@@ -213,7 +214,7 @@ MODULE pw_restart
       CALL errore( 'pw_writefile ', &
                    'no free units to write wavefunctions', ierr )
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
       !
       ! ... create the main restart directory
       !
@@ -834,7 +835,7 @@ MODULE pw_restart
       !
       ierr = 0
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
       !
       ! ... look for an empty unit
       !
@@ -2909,7 +2910,7 @@ MODULE pw_restart
       LOGICAL            :: lval, found, back_compat
       !
       !
-      dirname  = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+      dirname  = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
       filename = TRIM( dirname ) // TRIM( xmlpun )
       !
       IF ( ionode ) &
