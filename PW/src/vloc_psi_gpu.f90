@@ -4,8 +4,7 @@
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-#if defined(__CUDA)
-!@njs: vloc_psi_gamma, psi, v, hpsi, psic
+
 !-----------------------------------------------------------------------
 SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   !-----------------------------------------------------------------------
@@ -25,20 +24,25 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: lda, n, m
-  COMPLEX(DP), DEVICE, INTENT(in)   :: psi_d (lda, m)
-  COMPLEX(DP), DEVICE, INTENT(inout):: hpsi_d (lda, m)
-  REAL(DP), DEVICE, INTENT(in) :: v_d(dffts%nnr)
+  COMPLEX(DP), INTENT(in)   :: psi_d (lda, m)
+  COMPLEX(DP), INTENT(inout):: hpsi_d (lda, m)
+  REAL(DP),    INTENT(in)   :: v_d(dffts%nnr)
+#if defined(__CUDA)
+  attributes(DEVICE) :: psi_d, hpsi_d, v_d
+#endif
   !
   INTEGER :: ibnd, j, incr, right_nnr, right_nr3, right_inc
   COMPLEX(DP) :: fp, fm
   !
   LOGICAL :: use_tg
   ! Variables for task groups
-!@njs: tg_v, tg_psic
-  COMPLEX(DP), DEVICE, POINTER :: psic_d(:)
-  REAL(DP),    DEVICE, POINTER :: tg_v_d(:)
-  COMPLEX(DP), DEVICE, POINTER :: tg_psic_d(:)
-  INTEGER,     DEVICE, POINTER :: dffts_nl_d(:), dffts_nlm_d(:)
+  COMPLEX(DP), POINTER :: psic_d(:)
+  REAL(DP),    POINTER :: tg_v_d(:)
+  COMPLEX(DP), POINTER :: tg_psic_d(:)
+  INTEGER,     POINTER :: dffts_nl_d(:), dffts_nlm_d(:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: psic_d, tg_v_d, tg_psic_d, dffts_nl_d, dffts_nlm_d
+#endif
   INTEGER :: v_siz, idx, ioff
   INTEGER :: ierr
   !
@@ -246,19 +250,25 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: lda, n, m
-  COMPLEX(DP), DEVICE, INTENT(in)   :: psi_d (lda, m)
-  COMPLEX(DP), DEVICE, INTENT(inout):: hpsi_d (lda, m)
-  REAL(DP), DEVICE, INTENT(in) :: v_d(dffts%nnr)
+  COMPLEX(DP), INTENT(in)   :: psi_d (lda, m)
+  COMPLEX(DP), INTENT(inout):: hpsi_d (lda, m)
+  REAL(DP),    INTENT(in)   :: v_d(dffts%nnr)
+#if defined(__CUDA)
+  attributes(DEVICE) :: psi_d, hpsi_d, v_d
+#endif
   !
   INTEGER :: ibnd, j, incr
   INTEGER :: i, right_nnr, right_nr3, right_inc
   !
   LOGICAL :: use_tg, use_many
   ! Task Groups
-  COMPLEX(DP), DEVICE, POINTER :: psic_d(:)
-  REAL(DP),    DEVICE, POINTER :: tg_v_d(:)
-  COMPLEX(DP), DEVICE, POINTER :: tg_psic_d(:)
-  INTEGER,     DEVICE, POINTER :: dffts_nl_d(:)
+  COMPLEX(DP), POINTER :: psic_d(:)
+  REAL(DP),    POINTER :: tg_v_d(:)
+  COMPLEX(DP), POINTER :: tg_psic_d(:)
+  INTEGER,     POINTER :: dffts_nl_d(:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: psic_d, tg_v_d, tg_psic_d, dffts_nl_d
+#endif
   !
   REAL(DP) :: v_tmp
   INTEGER :: v_siz, idx, ioff
@@ -471,18 +481,24 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: lda, n, m
-  REAL(DP), DEVICE, INTENT(in) :: v_d(dfftp%nnr,4) ! beware dimensions!
-  COMPLEX(DP), DEVICE, INTENT(in)   :: psi_d (lda*npol, m)
-  COMPLEX(DP), DEVICE, INTENT(inout):: hpsi_d (lda,npol,m)
-  INTEGER,     DEVICE, POINTER :: dffts_nl_d(:)
+  REAL(DP),    INTENT(in)   :: v_d(dfftp%nnr,4) ! beware dimensions!
+  COMPLEX(DP), INTENT(in)   :: psi_d (lda*npol, m)
+  COMPLEX(DP), INTENT(inout):: hpsi_d (lda,npol,m)
+#if defined(__CUDA)
+  attributes(DEVICE) :: v_d, psi_d, hpsi_d
+#endif
   !
   INTEGER :: ibnd, j,ipol, incr, is
   COMPLEX(DP) :: sup, sdwn
   !
   LOGICAL :: use_tg
   ! Variables for task groups
-  REAL(DP),    DEVICE, ALLOCATABLE :: tg_v_d(:,:)
-  COMPLEX(DP), DEVICE, ALLOCATABLE :: tg_psic_d(:,:)
+  REAL(DP),    ALLOCATABLE :: tg_v_d(:,:)
+  COMPLEX(DP), ALLOCATABLE :: tg_psic_d(:,:)
+  INTEGER,     POINTER      :: dffts_nl_d(:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: tg_v_d, tg_psic_d, dffts_nl_d
+#endif
   INTEGER :: v_siz, idx, ioff
   INTEGER :: right_nnr, right_nr3, right_inc
   INTEGER :: ierr
@@ -654,5 +670,4 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   !
   RETURN
 END SUBROUTINE vloc_psi_nc_gpu
-!@nje
-#endif
+
