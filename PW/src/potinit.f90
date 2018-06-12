@@ -43,7 +43,7 @@ SUBROUTINE potinit()
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns
   USE noncollin_module,     ONLY : noncolin, report
-  USE io_files,             ONLY : tmp_dir, prefix, input_drho, check_file_exist
+  USE io_files,             ONLY : tmp_dir, prefix, postfix, input_drho, check_file_exist
   USE spin_orb,             ONLY : domag, lforcet
   USE mp,                   ONLY : mp_sum
   USE mp_bands ,            ONLY : intra_bgrp_comm, root_bgrp
@@ -74,7 +74,7 @@ SUBROUTINE potinit()
   !
   CALL start_clock('potinit')
   !
-  dirname = TRIM(tmp_dir) // TRIM (prefix) // '.save/'
+  dirname = TRIM(tmp_dir) // TRIM (prefix) // postfix
 #if defined __HDF5
   filename = TRIM(dirname) // 'charge-density.hdf5'
 #else 

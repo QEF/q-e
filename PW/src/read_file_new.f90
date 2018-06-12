@@ -31,7 +31,7 @@ SUBROUTINE read_file()
   USE ldaU,                 ONLY : lda_plus_u, U_projection
   USE pw_restart_new,       ONLY : read_collected_to_evc
   USE control_flags,        ONLY : twfcollect
-  USE io_files,             ONLY : tmp_dir, prefix
+  USE io_files,             ONLY : tmp_dir, prefix, postfix
   USE control_flags,        ONLY : io_level
   USE klist,                ONLY : init_igk
   USE gvect,                ONLY : ngm, g
@@ -49,7 +49,7 @@ SUBROUTINE read_file()
   !
   ! ... Read the contents of the xml data file
   !
-  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
   IF ( ionode ) WRITE( stdout, '(/,5x,A,/,5x,A)') &
      'Reading data from directory:', TRIM( dirname )
   !

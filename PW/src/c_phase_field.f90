@@ -343,9 +343,9 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    if(ionode .and. phase_control>0) then
       iun_phase=find_free_unit()
       if(phase_control==1) THEN
-         OPEN( iun_phase, file=trim(tmp_dir)//'/'//trim(prefix)//'.phase.data'//trim(iun_name),status='unknown')
+         OPEN( iun_phase, file=trim(tmp_dir)//trim(prefix)//'.phase.data'//trim(iun_name),status='unknown')
       ELSE
-         OPEN( iun_phase, file=trim(tmp_dir)//'/'//trim(prefix)//'.phase.data'//trim(iun_name),status='OLD')
+         OPEN( iun_phase, file=trim(tmp_dir)//trim(prefix)//'.phase.data'//trim(iun_name),status='OLD')
          do is=1,nspinnc
             do kort=1,nkort
                read(iun_phase,*) idumm1,idumm2,zetas(kort,is)

@@ -29,7 +29,7 @@ MODULE pw_restart_new
                           qexsd_input_obj, qexsd_occ_obj, qexsd_smear_obj,             &
                           qexsd_init_outputPBC, qexsd_init_gate_info  
   USE io_global, ONLY : ionode, ionode_id
-  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir
+  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, postfix
   !
   IMPLICIT NONE
   !
@@ -177,7 +177,7 @@ MODULE pw_restart_new
       ! 
       ! XML descriptor
       ! 
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
       !
       CALL qexsd_init_schema( iunpun )
       !
@@ -549,7 +549,7 @@ MODULE pw_restart_new
       !
       CALL using_evc(0); CALL using_et(0) !? Is this needed? et never used!
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
       !
       ! ... write wavefunctions and k+G vectors
       !
@@ -769,8 +769,7 @@ MODULE pw_restart_new
             CALL errore ("pw_readschema_file", "could not find a free unit to open data-file-schema.xml", 1)
       CALL qexsd_init_schema( iunpun )
       !
-      filename = TRIM( tmp_dir ) // TRIM( prefix ) // '.save' &
-               & // '/' // TRIM( xmlpun_schema )
+      filename = TRIM( tmp_dir ) // TRIM( prefix ) // postfix // TRIM( xmlpun_schema )
       INQUIRE ( file=filename, exist=found )
       IF (.NOT. found ) ierr = ierr + 1
       IF ( ierr /=0 ) THEN
@@ -865,7 +864,7 @@ MODULE pw_restart_new
       !    
       !
       ierr = 0 
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
       !
       !
       IF ( PRESENT (input_obj) ) THEN 
@@ -1206,7 +1205,7 @@ MODULE pw_restart_new
     !! if ibrav is present, cell parameters were computed by subroutine
     !! "latgen" using ibrav and celldm parameters: recalculate celldm
     !
-    CALL lat2celldm (ibrav,alat,at(:,1),at(:,2),at(:,3),celldm)
+    CALL at2celldm (ibrav,alat,at(:,1),at(:,2),at(:,3),celldm)
     !
     tpiba = tpi/alat
     tpiba2= tpiba**2

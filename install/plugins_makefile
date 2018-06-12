@@ -273,8 +273,8 @@ uncompress-west:
 ###########################################################
 
 SternheimerGW: extlibs uncompress-SternheimerGW
-	if test -d ../SternheimerGW/src; then \
-	  cd ../SternheimerGW/src ; $(MAKE) ; \
+	if test -d ../SternheimerGW; then \
+	  cd ../SternheimerGW; $(MAKE); \
 	fi
 	touch ./make-SternheimerGW
 

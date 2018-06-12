@@ -243,7 +243,8 @@ SUBROUTINE update_pot()
   ! ...                     + beta0*( tau(t-dt) -tau(t-2*dt) )
   !
   !
-  USE io_files,      ONLY : prefix, iunupdate, tmp_dir, wfc_dir, nd_nmbr, seqopn
+  USE io_files,      ONLY : prefix, iunupdate, tmp_dir, wfc_dir, nd_nmbr, &
+                            postfix, seqopn
   USE io_global,     ONLY : ionode, ionode_id
   USE cell_base,     ONLY : bg
   USE ions_base,     ONLY : nat, tau, nsp, ityp
@@ -353,7 +354,7 @@ SUBROUTINE update_pot()
   !
   IF ( pot_order > 1 .AND. ionode ) THEN
      !
-     dirname =  TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+     dirname =  TRIM( tmp_dir ) // TRIM( prefix ) // postfix
      INQUIRE( FILE = TRIM( dirname ) // 'charge-density.old.dat', &
           EXIST = exists )
      !

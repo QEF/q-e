@@ -24,7 +24,8 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE ener,             ONLY : etot
   USE f90sockets,       ONLY : readbuffer, writebuffer
   USE extrapolation,    ONLY : update_file, update_pot
-  USE io_files,         ONLY : iunupdate, nd_nmbr, prefix, tmp_dir, wfc_dir, delete_if_present, seqopn
+  USE io_files,         ONLY : iunupdate, nd_nmbr, prefix, tmp_dir, postfix, &
+                               wfc_dir, delete_if_present, seqopn
   !
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
@@ -374,8 +375,8 @@ CONTAINS
     CALL delete_if_present(TRIM( wfc_dir ) // TRIM( prefix ) // '.oldwfc' // nd_nmbr)
     CALL delete_if_present(TRIM( wfc_dir ) // TRIM( prefix ) // '.old2wfc' // nd_nmbr)
     IF ( ionode ) THEN
-       CALL delete_if_present(TRIM( tmp_dir ) // TRIM( prefix ) // '.save/' // 'charge-density.old.dat')
-       CALL delete_if_present(TRIM( tmp_dir ) // TRIM( prefix ) // '.save/' // 'charge-density.old2.dat')
+       CALL delete_if_present(TRIM( tmp_dir ) // TRIM( prefix ) // postfix // 'charge-density.old.dat')
+       CALL delete_if_present(TRIM( tmp_dir ) // TRIM( prefix ) // postfix // 'charge-density.old2.dat')
        !
        ! ... The easiest way to wipe the iunupdate unit, is to delete it
        ! ... and run update_file(), which will recreate the file
