@@ -187,30 +187,29 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_k ', ' cannot allocate ps ', ABS( ierr ) )
        !
-       !$omp parallel private(deeaux,nt)
-       ALLOCATE ( deeaux(nhm,nhm) )
-       !$omp do
-       DO na = 1, nat
+       DO nt = 1, ntyp
           !
-          nt = ityp(na)
-          !
-          IF ( nh(nt) > 0 ) THEN
+          IF ( nh(nt) == 0 ) CYCLE
+          ALLOCATE ( deeaux(nh(nt),nh(nt)) )
+          DO na = 1, nat
              !
-             ! deeq is real: copy it into a complex variable to perform
-             ! a zgemm - simple but sub-optimal solution
+             IF ( ityp(na) == nt ) THEN
+                !
+                ! deeq is real: copy it into a complex variable to perform
+                ! a zgemm - simple but sub-optimal solution
+                !
+                deeaux(:,:) = CMPLX(deeq(1:nh(nt),1:nh(nt),na,current_spin),&
+                                    0.0_dp, KIND=dp )
+                CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
+                           deeaux, nh(nt), becp%k(indv_ijkb0(na)+1,1), nkb, &
+                          (0.0_dp, 0.0_dp), ps(indv_ijkb0(na)+1,1), nkb )
+                !
+             END IF
              !
-             deeaux(1:nh(nt),1:nh(nt)) = CMPLX(deeq(1:nh(nt),1:nh(nt),na,current_spin),&
-                                 0.0_dp, KIND=dp )
-             CALL ZGEMM('N','N', nh(nt), m, nh(nt), (1.0_dp,0.0_dp), &
-                        deeaux, nhm, becp%k(indv_ijkb0(na)+1,1), nkb, &
-                       (0.0_dp, 0.0_dp), ps(indv_ijkb0(na)+1,1), nkb )
-             !
-          ENDIF
+          END DO
+          DEALLOCATE (deeaux)
           !
        END DO
-       !$omp end do nowait
-       DEALLOCATE (deeaux)
-       !$omp end parallel
        !
        CALL ZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ) , vkb, &
                    lda, ps, nkb, ( 1.D0, 0.D0 ) , hpsi, lda )
