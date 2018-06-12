@@ -105,7 +105,7 @@ SUBROUTINE c_bands( iter )
      !
      IF ( nks > 1 .OR. lelfield ) &
           CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-     IF ( nks > 1 .OR. lelfield ) CALL using_evc(1)
+     IF ( nks > 1 .OR. lelfield ) CALL using_evc(2)
      !
      ! ... Needed for LDA+U
      !
@@ -297,6 +297,8 @@ CONTAINS
     !
     IMPLICIT NONE
     !
+    INTEGER :: j
+    !
     IF ( isolve == 1 ) THEN
        !
        ! ... Conjugate-Gradient diagonalization
@@ -350,13 +352,26 @@ CONTAINS
        ! ... hamiltonian used in g_psi to evaluate the correction
        ! ... to the trial eigenvectors
        !
-       call using_h_diag(2); call using_s_diag(2);
-       !
-       CALL using_g2kin(0)
-       h_diag(1:npw, 1) = g2kin(1:npw) + v_of_0
-       !
-       ! move this to GPU?
-       CALL usnldiag( npw, h_diag, s_diag )
+       IF ( .not. use_gpu ) THEN
+          call using_h_diag(2); call using_s_diag(2);
+          !
+          CALL using_g2kin(0)
+          DO j=1, npw
+             h_diag_d(j, 1) = g2kin(j) + v_of_0
+          END DO
+          !
+          CALL usnldiag( npw, h_diag, s_diag )
+       ELSE
+          call using_h_diag_d(2); call using_s_diag_d(2);
+          !
+          CALL using_g2kin_d(0)
+          !$cuf kernel do(1)
+          DO j=1, npw
+             h_diag_d(j, 1) = g2kin_d(j) + v_of_0
+          END DO
+          !
+          CALL usnldiag_gpu( npw, h_diag_d, s_diag_d )
+       END IF
        !
        ntry = 0
        !
@@ -423,7 +438,7 @@ CONTAINS
     !
     ! ... here the local variables
     !
-    INTEGER :: ipol
+    INTEGER :: ipol, j ! loop index for CUF kernels must reside here
     REAL(dp) :: eps=0.000001d0
     !  --- Define a small number ---
     !
@@ -531,11 +546,14 @@ CONTAINS
           CALL usnldiag( npw, h_diag, s_diag )
        ELSE
           !
-          CALL using_g2kin(0) ;CALL using_h_diag(2)
+          CALL using_g2kin_d(0) ;CALL using_h_diag_d(2)
           !
           DO ipol = 1, npol
              !
-             h_diag(1:npw, ipol) = g2kin(1:npw) + v_of_0
+             !$cuf kernel do(1)
+             DO j = 1, npw
+                h_diag_d(j, ipol) = g2kin_d(j) + v_of_0
+             END DO
              !
           END DO
           !
