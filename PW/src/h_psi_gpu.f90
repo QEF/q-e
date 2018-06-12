@@ -236,7 +236,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   IF ( nkb > 0 .AND. .NOT. real_space) THEN
      !
      CALL start_clock( 'h_psi:calbec' )
-     CALL using_vkb_d(0); CALL using_becp_d_auto(1)
+     CALL using_vkb_d(0); CALL using_becp_d_auto(2)
 !ATTENTION HERE: calling without (:,:) causes segfaults
      CALL calbec_gpu ( n, vkb_d(:,:), psi_d, becp_d, m )
      CALL stop_clock( 'h_psi:calbec' )

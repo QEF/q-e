@@ -82,15 +82,27 @@
              IF (intento_ < 2) THEN
                 print *, "Really copied becp%r D->H"
                 becp%r = becp_d%r_d
-                ! update auxiliary variables
-                becp%comm = becp_d%comm
-                becp%nbnd = becp_d%nbnd
-                becp%nproc = becp_d%nproc
-                becp%mype = becp_d%mype
-                becp%nbnd_loc = becp_d%nbnd_loc
-                becp%ibnd_begin = becp_d%ibnd_begin
-                !
              END IF
+             ! ALWAYS update auxiliary variables
+             !IF ( becp%comm /= becp_d%comm ) &
+             !     print *, "WARNING: auxiliary variable becp%comm changed"
+             becp%comm = becp_d%comm
+             !IF ( becp%nbnd /= becp_d%nbnd ) &
+             !     print *, "WARNING: auxiliary variable becp%nbnd changed"
+             becp%nbnd = becp_d%nbnd
+             !IF ( becp%nproc /= becp_d%nproc ) &
+             !     print *, "WARNING: auxiliary variable becp%nproc changed"
+             becp%nproc = becp_d%nproc
+             !IF ( becp%mype /= becp_d%mype ) &
+             !     print *, "WARNING: auxiliary variable becp%mype changed"
+             becp%mype = becp_d%mype
+             !IF ( becp%nbnd_loc /= becp_d%nbnd_loc ) &
+             !     print *, "WARNING: auxiliary variable becp%nbnd_loc changed"
+             becp%nbnd_loc = becp_d%nbnd_loc
+             !IF ( becp%ibnd_begin /= becp_d%ibnd_begin ) &
+             !     print *, "WARNING: auxiliary variable becp%ibnd_begin changed"
+             becp%ibnd_begin = becp_d%ibnd_begin
+             !
              becp_r_ood = .false.
          ENDIF
          IF (intento_ > 0)    becp_d_r_d_ood = .true.
@@ -122,15 +134,15 @@
              IF (intento < 2) THEN
                 print *, "Really copied becp%r H->D"
                 becp_d%r_d = becp%r
-                ! update auxiliary variables
-                becp_d%comm = becp%comm
-                becp_d%nbnd = becp%nbnd
-                becp_d%nproc = becp%nproc
-                becp_d%mype = becp%mype
-                becp_d%nbnd_loc = becp%nbnd_loc
-                becp_d%ibnd_begin = becp%ibnd_begin
-                !
              END IF
+             ! ALWAYS update auxiliary variables
+             becp_d%comm = becp%comm
+             becp_d%nbnd = becp%nbnd
+             becp_d%nproc = becp%nproc
+             becp_d%mype = becp%mype
+             becp_d%nbnd_loc = becp%nbnd_loc
+             becp_d%ibnd_begin = becp%ibnd_begin
+             !
              becp_d_r_d_ood = .false.
          ENDIF
          IF (intento > 0)    becp_r_ood = .true.
@@ -167,15 +179,27 @@
              IF (intento_ < 2) THEN
                 print *, "Really copied becp%k D->H"
                 becp%k = becp_d%k_d
-                ! update auxiliary variables
-                becp%comm = becp_d%comm
-                becp%nbnd = becp_d%nbnd
-                becp%nproc = becp_d%nproc
-                becp%mype = becp_d%mype
-                becp%nbnd_loc = becp_d%nbnd_loc
-                becp%ibnd_begin = becp_d%ibnd_begin
-                !
              END IF
+             ! ALWAYS update auxiliary variables
+             !IF ( becp%comm /= becp_d%comm ) &
+             !     print *, "WARNING: auxiliary variable becp%comm changed"
+             becp%comm = becp_d%comm
+             !IF ( becp%nbnd /= becp_d%nbnd ) &
+             !     print *, "WARNING: auxiliary variable becp%nbnd changed"
+             becp%nbnd = becp_d%nbnd
+             !IF ( becp%nproc /= becp_d%nproc ) &
+             !     print *, "WARNING: auxiliary variable becp%nproc changed"
+             becp%nproc = becp_d%nproc
+             !IF ( becp%mype /= becp_d%mype ) &
+             !     print *, "WARNING: auxiliary variable becp%mype changed"
+             becp%mype = becp_d%mype
+             !IF ( becp%nbnd_loc /= becp_d%nbnd_loc ) &
+             !     print *, "WARNING: auxiliary variable becp%nbnd_loc changed"
+             becp%nbnd_loc = becp_d%nbnd_loc
+             !IF ( becp%ibnd_begin /= becp_d%ibnd_begin ) &
+             !     print *, "WARNING: auxiliary variable becp%ibnd_begin changed"
+             becp%ibnd_begin = becp_d%ibnd_begin
+             !
              becp_k_ood = .false.
          ENDIF
          IF (intento_ > 0)    becp_d_k_d_ood = .true.
@@ -207,15 +231,15 @@
              IF (intento < 2) THEN
                 print *, "Really copied becp%k H->D"
                 becp_d%k_d = becp%k
-                ! update auxiliary variables
-                becp_d%comm = becp%comm
-                becp_d%nbnd = becp%nbnd
-                becp_d%nproc = becp%nproc
-                becp_d%mype = becp%mype
-                becp_d%nbnd_loc = becp%nbnd_loc
-                becp_d%ibnd_begin = becp%ibnd_begin
-                !
              END IF
+             ! ALWAYS update auxiliary variables
+             becp_d%comm = becp%comm
+             becp_d%nbnd = becp%nbnd
+             becp_d%nproc = becp%nproc
+             becp_d%mype = becp%mype
+             becp_d%nbnd_loc = becp%nbnd_loc
+             becp_d%ibnd_begin = becp%ibnd_begin
+             !
              becp_d_k_d_ood = .false.
          ENDIF
          IF (intento > 0)    becp_k_ood = .true.
@@ -252,15 +276,27 @@
              IF (intento_ < 2) THEN
                 print *, "Really copied becp%nc D->H"
                 becp%nc = becp_d%nc_d
-                ! update auxiliary variables
-                becp%comm = becp_d%comm
-                becp%nbnd = becp_d%nbnd
-                becp%nproc = becp_d%nproc
-                becp%mype = becp_d%mype
-                becp%nbnd_loc = becp_d%nbnd_loc
-                becp%ibnd_begin = becp_d%ibnd_begin
-                !
              END IF
+             ! ALWAYS update auxiliary variables
+             !IF ( becp%comm /= becp_d%comm ) &
+             !     print *, "WARNING: auxiliary variable becp%comm changed"
+             becp%comm = becp_d%comm
+             !IF ( becp%nbnd /= becp_d%nbnd ) &
+             !     print *, "WARNING: auxiliary variable becp%nbnd changed"
+             becp%nbnd = becp_d%nbnd
+             !IF ( becp%nproc /= becp_d%nproc ) &
+             !     print *, "WARNING: auxiliary variable becp%nproc changed"
+             becp%nproc = becp_d%nproc
+             !IF ( becp%mype /= becp_d%mype ) &
+             !     print *, "WARNING: auxiliary variable becp%mype changed"
+             becp%mype = becp_d%mype
+             !IF ( becp%nbnd_loc /= becp_d%nbnd_loc ) &
+             !     print *, "WARNING: auxiliary variable becp%nbnd_loc changed"
+             becp%nbnd_loc = becp_d%nbnd_loc
+             !IF ( becp%ibnd_begin /= becp_d%ibnd_begin ) &
+             !     print *, "WARNING: auxiliary variable becp%ibnd_begin changed"
+             becp%ibnd_begin = becp_d%ibnd_begin
+             !
              becp_nc_ood = .false.
          ENDIF
          IF (intento_ > 0)    becp_d_nc_d_ood = .true.
@@ -292,15 +328,15 @@
              IF (intento < 2) THEN
                 print *, "Really copied becp%nc H->D"
                 becp_d%nc_d = becp%nc
-                ! update auxiliary variables
-                becp_d%comm = becp%comm
-                becp_d%nbnd = becp%nbnd
-                becp_d%nproc = becp%nproc
-                becp_d%mype = becp%mype
-                becp_d%nbnd_loc = becp%nbnd_loc
-                becp_d%ibnd_begin = becp%ibnd_begin
-                !
              END IF
+             ! ALWAYS update auxiliary variables
+             becp_d%comm = becp%comm
+             becp_d%nbnd = becp%nbnd
+             becp_d%nproc = becp%nproc
+             becp_d%mype = becp%mype
+             becp_d%nbnd_loc = becp%nbnd_loc
+             becp_d%ibnd_begin = becp%ibnd_begin
+             !
              becp_d_nc_d_ood = .false.
          ENDIF
          IF (intento > 0)    becp_nc_ood = .true.
