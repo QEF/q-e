@@ -297,7 +297,7 @@ SUBROUTINE nc_magnetization_from_lsda ( nnr, nspin, rho )
   ! On input, rho(1)=rho_up, rho(2)=rho_down
   ! Set rho(1)=rho_tot, rho(3)=rho_up-rho_down=magnetization
   ! 
-  rho(:,3) = rho(:,1)-rho(:,2)
+  rho(:,4) = rho(:,1)-rho(:,2)
   rho(:,1) = rho(:,1)+rho(:,2)
 #endif
   !
@@ -305,9 +305,10 @@ SUBROUTINE nc_magnetization_from_lsda ( nnr, nspin, rho )
   !         rho(3)=magn*sin(theta)*sin(phi)   y
   !         rho(4)=magn*cos(theta)            z
   !
-  rho(:,4) = rho(:,3)*cos(angle1(1))
-  rho(:,2) = rho(:,3)*sin(angle1(1))
+  !rho(:,4) = rho(:,3)*cos(angle1(1))
+  rho(:,2) = rho(:,4)*sin(angle1(1))
   rho(:,3) = rho(:,2)*sin(angle2(1))
+  rho(:,4) = rho(:,4)*cos(angle1(1))
   rho(:,2) = rho(:,2)*cos(angle2(1))
   !
   RETURN

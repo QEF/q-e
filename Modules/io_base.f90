@@ -734,7 +734,7 @@ MODULE io_base
            CALL infomsg('read_rhog', 'some G-vectors are missing' )
       !
       !
-     IF (ionode_in_group ) THEN
+      IF (ionode_in_group ) THEN
          allocate(mill_g(3,ngm_g_))
       ELSE
          allocate(mill_g(1,1))
@@ -763,7 +763,7 @@ MODULE io_base
       END IF
       ALLOCATE (rhoaux(ngm))
       !
-      DO ns = 1, nspin
+      DO ns = 1, nspin_
          !
          IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
@@ -786,8 +786,6 @@ MODULE io_base
 
          ENDIF
 
-         deallocate(mill_g)
-
          CALL splitwf( rhoaux, rho_g, ngm, ig_l2g, me_in_group, &
               nproc_in_group, root_in_group, intra_group_comm )
          DO ig = 1, ngm
@@ -805,8 +803,16 @@ MODULE io_base
                rho(ig,ns-1)= rhoup
                rho(ig,ns  )= rhodw
             END DO
+         ELSE IF ( nspin_ == 2 .AND. nspin == 4 .AND. ns == 2) THEN 
+            DO ig = 1, ngm 
+               rho(ig, 4 ) = rho(ig, 2) 
+               rho(ig, 2 ) = cmplx(0.d0,0.d0, KIND = DP) 
+               rho(ig, 3 ) = cmplx(0.d0,0.d0, KIND = DP)
+            END DO
          END IF
       END DO
+
+      deallocate(mill_g)
       !
 #if defined(__HDF5)
       IF ( ionode_in_group ) CALL qeh5_close( h5file)
