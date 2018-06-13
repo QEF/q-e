@@ -63,7 +63,7 @@ SUBROUTINE memory_report()
   INTEGER, PARAMETER :: MB=1024*1024
   INTEGER, PARAMETER :: GB=1024*MB
   INTEGER :: g_fact, mix_type_size, scf_type_size
-  INTEGER :: nk, nbnd_l, npwx_g, npwx_l, ngxx_g, nexx_l, ngm_l
+  INTEGER :: nk, nbnd_l, npwx_g, npwx_l, ngxx_g, nexx_l, nexx_g, ngm_l
   INTEGER :: maxbnd, maxnab, maxnij, nab, na, nij, nt, lmaxq, nqxq
   INTEGER :: indm, ijv, roughestimate
   REAL(DP):: mbr, mbx, mby, mbz, dmbx, dmby, dmbz
@@ -125,15 +125,22 @@ SUBROUTINE memory_report()
   ! hybrid functionals
   IF ( dft_is_hybrid () ) THEN
      ! ngxx_g = estimated global number of G-vectors used in V_x\psi products
+     ! nexx_g = estimated global size of the FFT grid used in V_x\psi products
      ! nexx_l = estimated local size of the FFT grid used in V_x\psi products
      ngxx_g = NINT ( fpi/3.0_dp * SQRT(ecutfock)**3 / (tpi**3/omega) )
-     nexx_l = 16*ngxx_g/nproc_bgrp
+     nexx_g = 2*ngxx_g
+     nexx_l = nexx_g/nproc_bgrp
      ! nbnd_l : estimated number of bands per proc with band parallelization
      nbnd_l = NINT( DBLE(nbnd) / nbgrp )
      ! Stored wavefunctions in real space 
      add = complex_size/g_fact * nexx_l * npol * nbnd_l * nkqs
      ! ACE Projectors
      IF (use_ace) add = add + complex_size * npwx_l * npol * nbnd * nks
+#if defined (__MPI)
+     ! scratch space needed for symmetrization
+     add = add + complex_size * nexx_g*npol*2
+#endif
+     add = add + complex_size * nexx_l*npol*2
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'EXX', add/MB
      ram = ram + add
   END IF

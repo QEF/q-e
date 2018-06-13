@@ -287,6 +287,117 @@ SUBROUTINE get_et_from_gww ( nbnd, et )
   ENDIF
 END SUBROUTINE get_et_from_gww
 !
+SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
+  !
+  USE kinds, ONLY : dp
+  USE io_global, ONLY : stdout, ionode
+  USE klist, ONLY: nelec
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER (len=*), INTENT(in) :: filproj
+  INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
+  REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
+  REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
+  INTEGER, EXTERNAL :: find_free_unit
+  !
+  CHARACTER(len=256) :: filename
+  INTEGER :: is, l, m, na, unit
+  REAL(DP) :: totcharge(2), psum
+  CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)
+  CHARACTER (len=7)  :: lm_label(1:7,1:3)=reshape( (/ &
+    'z      ','x      ','y      ','       ','       ','       ','       ', &
+    'z2     ','xz     ','yz     ','x2-y2  ','xy     ','       ','       ', &
+    'z3     ','xz2    ','yz2    ','zx2-zy2','xyz    ','x3-3xy2','3yx2-y3' /), (/7,3/) )
+  !
+  filename = trim(filproj)//'.lowdin'
+
+  IF ( ionode ) THEN
+     unit = find_free_unit()
+     OPEN( unit=unit, file=trim(filename), status='unknown', form='formatted')
+     WRITE( stdout, '(/"Lowdin Charges: "/)')
+     WRITE( unit, '(/"Lowdin Charges: "/)')
+     !
+     DO na = 1, nat
+        DO is = 1, nspin
+          WRITE(stdout, *) is, nspin, charges(na,0:lmax_wfc,is)
+          totcharge(is) = SUM(charges(na,0:lmax_wfc,is))
+        ENDDO
+        IF ( nspin == 1) THEN
+           DO l = 0, lmax_wfc
+              WRITE(stdout, 2000,advance='no') na, totcharge(1), l_label(l), charges(na,l,1)
+              WRITE(unit, 2000,advance='no') na, totcharge(1), l_label(l), charges(na,l,1)
+              IF (l /= 0 .AND. present(charges_lm)) THEN
+                 DO m = 1, 2*l+1
+                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
+                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
+                    WRITE( unit,'(A1,A,"=",F8.4,", ")',advance='no') &
+                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
+                 ENDDO
+              ENDIF
+              WRITE(stdout,*)
+              WRITE(unit,*)
+           ENDDO
+        ELSEIF ( nspin == 2) THEN
+           WRITE( stdout, 2000) na, totcharge(1) + totcharge(2), &
+                ( l_label(l), charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
+          WRITE( unit, 2000) na, totcharge(1) + totcharge(2), &
+                ( l_label(l), charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
+           DO l = 0, lmax_wfc
+              WRITE(stdout,2001,advance='no') totcharge(1), l_label(l), charges(na,l,1)
+              WRITE(unit,2001,advance='no') totcharge(1), l_label(l), charges(na,l,1)
+              IF (l /= 0 .AND. present(charges_lm)) THEN
+                 DO m = 1, 2*l+1
+                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
+                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
+                    WRITE( unit,'(A1,A,"=",F8.4,", ")',advance='no') &
+                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
+                 ENDDO
+              ENDIF
+              WRITE(stdout,*)
+              WRITE(unit,*)
+           ENDDO
+           DO l = 0, lmax_wfc
+              WRITE(stdout,2002,advance='no') totcharge(2), l_label(l), charges(na,l,2)
+              WRITE(unit,2002,advance='no') totcharge(2), l_label(l), charges(na,l,2)
+              IF (l /= 0 .AND. present(charges_lm)) THEN
+                 DO m = 1, 2*l+1
+                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
+                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,2)
+                    WRITE( unit,'(A1,A,"=",F8.4,", ")',advance='no') &
+                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,2)
+                 ENDDO
+              ENDIF
+              WRITE(stdout,*)
+              WRITE(unit,*)
+           ENDDO
+           WRITE( stdout, 2003) totcharge(1) - totcharge(2), &
+                ( l_label(l), charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
+           WRITE( unit, 2003) totcharge(1) - totcharge(2), &
+                ( l_label(l), charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
+        ENDIF
+     ENDDO
+     !
+     psum = SUM(charges(:,:,:)) / nelec
+     WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum
+     WRITE( unit, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum
+     !
+     ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995).
+     ! The spilling parameter measures the ability of the basis provided by
+     ! the pseudo-atomic wfc to represent the PW eigenstates,
+     ! by measuring how much of the subspace of the Hamiltonian
+     ! eigenstates falls outside the subspace spanned by the atomic basis
+     !
+     CLOSE(unit)
+  END IF
+
+2000 FORMAT (5x,"Atom # ",i3,": total charge = ",f8.4,4(", ",a1," =",f8.4))
+2001 FORMAT (15x,"  spin up      = ",f8.4,4(", ",a1," =",f8.4))
+2002 FORMAT (15x,"  spin down    = ",f8.4,4(", ",a1," =",f8.4))
+2003 FORMAT (15x,"  polarization = ",f8.4,4(", ",a1," =",f8.4))
+
+END SUBROUTINE
+!
 !-----------------------------------------------------------------------
 SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   !-----------------------------------------------------------------------
@@ -327,19 +438,24 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   REAL   (DP), ALLOCATABLE ::roverlap(:,:), rwork1(:),rproj0(:,:)
   ! ... or for gamma-point.
   REAL(DP), ALLOCATABLE :: charges(:,:,:), charges_lm(:,:,:,:), proj1 (:)
-  REAL(DP) :: psum, totcharge(2)
+  REAL(DP) :: psum
   INTEGER  :: nksinit, nkslast
   CHARACTER(len=256) :: filename
-  CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)
-  CHARACTER (len=7)  :: lm_label(1:7,1:3)=reshape( (/ &
-    'z      ','x      ','y      ','       ','       ','       ','       ', &
-    'z2     ','xz     ','yz     ','x2-y2  ','xy     ','       ','       ', &
-    'z3     ','xz2    ','yz2    ','zx2-zy2','xyz    ','x3-3xy2','3yx2-y3' /), (/7,3/) )
   INTEGER, ALLOCATABLE :: idx(:)
   LOGICAL :: lsym
   LOGICAL :: freeswfcatom
   !
   !
+  INTERFACE 
+      SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
+           IMPORT  :: DP
+           CHARACTER (len=*), INTENT(in) :: filproj
+           INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
+           REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
+           REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
+      END SUBROUTINE write_lowdin
+  END INTERFACE
+
   WRITE( stdout, '(/5x,"Calling projwave .... ")')
   IF ( gamma_only ) THEN
      WRITE( stdout, '(5x,"gamma-point specific algorithms are used")')
@@ -712,63 +828,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
         ENDDO
      ENDDO
      !
-     WRITE( stdout, '(/"Lowdin Charges: "/)')
-     !
-     DO na = 1, nat
-        DO is = 1, nspin
-           totcharge(is) = SUM(charges(na,0:lmax_wfc,is))
-        ENDDO
-        IF ( nspin == 1) THEN
-           DO l = 0, lmax_wfc
-              WRITE(stdout, 2000,advance='no') na, totcharge(1), l_label(l), charges(na,l,1)
-              IF (l /= 0) THEN
-                 DO m = 1, 2*l+1
-                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
-                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
-                 ENDDO
-              ENDIF
-              WRITE(stdout,*)
-           ENDDO
-        ELSEIF ( nspin == 2) THEN
-           WRITE( stdout, 2000) na, totcharge(1) + totcharge(2), &
-                ( l_label(l), charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
-           DO l = 0, lmax_wfc
-              WRITE(stdout,2001,advance='no') totcharge(1), l_label(l), charges(na,l,1)
-              IF (l /= 0) THEN
-                 DO m = 1, 2*l+1
-                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
-                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,1)
-                 ENDDO
-              ENDIF
-              WRITE(stdout,*)
-           ENDDO
-           DO l = 0, lmax_wfc
-              WRITE(stdout,2002,advance='no') totcharge(2), l_label(l), charges(na,l,2)
-              IF (l /= 0) THEN
-                 DO m = 1, 2*l+1
-                    WRITE( stdout,'(A1,A,"=",F8.4,", ")',advance='no') &
-                       l_label(l), trim(lm_label(m,l)), charges_lm(na,l,m,2)
-                 ENDDO
-              ENDIF
-              WRITE(stdout,*)
-           ENDDO
-           WRITE( stdout, 2003) totcharge(1) - totcharge(2), &
-                ( l_label(l), charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
-        ENDIF
-     ENDDO
-2000 FORMAT (5x,"Atom # ",i3,": total charge = ",f8.4,4(", ",a1," =",f8.4))
-2001 FORMAT (15x,"  spin up      = ",f8.4,4(", ",a1," =",f8.4))
-2002 FORMAT (15x,"  spin down    = ",f8.4,4(", ",a1," =",f8.4))
-2003 FORMAT (15x,"  polarization = ",f8.4,4(", ",a1," =",f8.4))
-     !
-     psum = SUM(charges(:,:,:)) / nelec
-     WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum
-     !
-     ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995).
-     ! The spilling parameter measures the ability of the basis provided by
-     ! the pseudo-atomic wfc to represent the PW eigenstates,
-     ! by measuring how much of the subspace of the Hamiltonian
-     ! eigenstates falls outside the subspace spanned by the atomic basis
+     CALL write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
      !
      DEALLOCATE (charges, charges_lm)
      !
@@ -827,7 +887,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:), work1(:), proj0(:,:)
   ! Some workspace for k-point calculation ...
   REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:), eband_proj(:)
-  REAL(DP) :: psum, totcharge(2), fact(2), spinor, compute_mj
+  REAL(DP) :: psum, fact(2), spinor, compute_mj
   INTEGER, ALLOCATABLE :: idx(:)
   !
   COMPLEX(DP) :: d12(2, 2, 48), d32(4, 4, 48), d52(6, 6, 48), &
@@ -837,6 +897,15 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   !
   !
   !
+  INTERFACE 
+      SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
+           IMPORT  :: DP
+           CHARACTER (len=*), INTENT(in) :: filproj
+           INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
+           REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
+           REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
+      END SUBROUTINE write_lowdin
+  END INTERFACE
   IF (.not.noncolin) CALL errore('projwave_nc','called in the wrong case',1)
   IF (gamma_only) CALL errore('projwave_nc','gamma_only not yet implemented',1)
   WRITE( stdout, '(/5x,"Calling projwave_nc .... ")')
@@ -1354,43 +1423,7 @@ ENDIF
         ENDDO
      ENDIF
      !
-     WRITE( stdout, '(/"Lowdin Charges: "/)')
-     !
-     DO na = 1, nat
-        DO is = 1, nspin0
-           totcharge(is) = SUM(charges(na,0:lmax_wfc,is))
-        ENDDO
-        IF ( nspin0 == 1) THEN
-           WRITE( stdout, 2000) na, totcharge(1), &
-                ( charges(na,l,1), l= 0,lmax_wfc)
-        ELSEIF ( nspin0 == 2) THEN
-           WRITE( stdout, 2000) na, totcharge(1) + totcharge(2), &
-                ( charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
-           WRITE( stdout, 2001) totcharge(1), &
-                ( charges(na,l,1), l= 0,lmax_wfc)
-           WRITE( stdout, 2002) totcharge(2), &
-                ( charges(na,l,2), l= 0,lmax_wfc)
-           WRITE( stdout, 2003) totcharge(1) - totcharge(2), &
-                 ( charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
-        ENDIF
-     ENDDO
-2000 FORMAT (5x,"Atom # ",i3,": total charge = ",f8.4 ,&
-          & ", s, p, d, f = ",4f8.4)
-2001 FORMAT (15x,"  spin up      = ",f8.4 , &
-          & ", s, p, d, f = ",4f8.4)
-2002 FORMAT (15x,"  spin down    = ",f8.4 , &
-          & ", s, p, d, f = ",4f8.4)
-2003 FORMAT (15x,"  polarization = ",f8.4 , &
-          & ", s, p, d, f = ",4f8.4)
-     !
-     psum = sum(charges(:,:,:)) / nelec
-     WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum
-     !
-     ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995).
-     ! The spilling parameter measures the ability of the basis provided by
-     ! the pseudo-atomic wfc to represent the PW eigenstates,
-     ! by measuring how much of the subspace of the Hamiltonian
-     ! eigenstates falls outside the subspace spanned by the atomic basis
+     CALL write_lowdin ( filproj, nat, lmax_wfc, nspin0, charges )
      !
      DEALLOCATE (charges)
      !
@@ -1444,13 +1477,8 @@ SUBROUTINE projwave_paw( filproj)
   REAL   (DP), ALLOCATABLE ::roverlap(:,:), rwork1(:),rproj0(:,:)
   ! ... or for gamma-point.
   REAL(DP), ALLOCATABLE :: charges(:,:,:), charges_lm(:,:,:,:), proj1 (:)
-  REAL(DP) :: psum, totcharge(2)
+  REAL(DP) :: psum
   INTEGER  :: nksinit, nkslast
-  CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)
-  CHARACTER (len=7)  :: lm_label(1:7,1:3)=reshape( (/ &
-    'z      ','x      ','y      ','       ','       ','       ','       ', &
-    'z2     ','xz     ','yz     ','x2-y2  ','xy     ','       ','       ', &
-    'z3     ','xz2    ','yz2    ','zx2-zy2','xyz    ','x3-3xy2','3yx2-y3' /), (/7,3/) )
   INTEGER, ALLOCATABLE :: idx(:)
   LOGICAL :: lsym
   LOGICAL :: freeswfcatom
@@ -1813,11 +1841,10 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   REAL   (DP), ALLOCATABLE ::roverlap_d(:,:)
   ! ... or for gamma-point.
   REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:)
-  REAL(DP) :: psum, totcharge(2)
+  REAL(DP) :: psum
   INTEGER  :: nksinit, nkslast
   CHARACTER(len=256) :: filename
   CHARACTER(len=256) :: auxname
-  CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)
   INTEGER, ALLOCATABLE :: idx(:)
   LOGICAL :: lsym
   LOGICAL :: freeswfcatom
@@ -1832,6 +1859,16 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
   !
+  !
+  INTERFACE 
+      SUBROUTINE write_lowdin ( filproj, nat, lmax_wfc, nspin, charges, charges_lm )
+           IMPORT  :: DP
+           CHARACTER (len=*), INTENT(in) :: filproj
+           INTEGER, INTENT(IN) :: nat, lmax_wfc, nspin
+           REAL(DP), INTENT(in) :: charges (nat, 0:lmax_wfc, nspin )
+           REAL(DP), INTENT(in), OPTIONAL :: charges_lm (nat, 0:lmax_wfc, 1:2*lmax_wfc+1, nspin )
+      END SUBROUTINE write_lowdin
+  END INTERFACE
   !
   WRITE( stdout, '(/5x,"Calling pprojwave .... ")')
   IF ( gamma_only ) THEN
@@ -2284,39 +2321,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
         ENDDO
      ENDDO
      !
-     WRITE( stdout, '(/"Lowdin Charges: "/)')
-     !
-     DO na = 1, nat
-        DO is = 1, nspin
-           totcharge(is) = SUM(charges(na,0:lmax_wfc,is))
-        ENDDO
-        IF ( nspin == 1) THEN
-           WRITE( stdout, 2000) na, totcharge(1), &
-                ( l_label(l), charges(na,l,1), l= 0,lmax_wfc)
-        ELSEIF ( nspin == 2) THEN
-           WRITE( stdout, 2000) na, totcharge(1) + totcharge(2), &
-                ( l_label(l), charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
-           WRITE( stdout, 2001) totcharge(1), &
-                ( l_label(l), charges(na,l,1), l= 0,lmax_wfc)
-           WRITE( stdout, 2002) totcharge(2), &
-                ( l_label(l), charges(na,l,2), l= 0,lmax_wfc)
-           WRITE( stdout, 2003) totcharge(1) - totcharge(2), &
-                ( l_label(l), charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
-        ENDIF
-     ENDDO
-2000 FORMAT (5x,"Atom # ",i3,": total charge = ",f8.4,4(", ",a1," =",f8.4))
-2001 FORMAT (15x,"  spin up      = ",f8.4,4(", ",a1," =",f8.4))
-2002 FORMAT (15x,"  spin down    = ",f8.4,4(", ",a1," =",f8.4))
-2003 FORMAT (15x,"  polarization = ",f8.4,4(", ",a1," =",f8.4))
-     !
-     psum = SUM(charges(:,:,:)) / nelec
-     WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum
-     !
-     ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995).
-     ! The spilling parameter measures the ability of the basis provided by
-     ! the pseudo-atomic wfc to represent the PW eigenstates,
-     ! by measuring how much of the subspace of the Hamiltonian
-     ! eigenstates falls outside the subspace spanned by the atomic basis
+     CALL write_lowdin ( filproj, nat, lmax_wfc, nspin, charges)
      !
      DEALLOCATE (charges)
      !

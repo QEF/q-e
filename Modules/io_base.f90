@@ -625,6 +625,7 @@ MODULE io_base
       !
       USE mp,         ONLY : mp_size, mp_rank, mp_bcast
       USE mp_wave,    ONLY : splitwf
+      USE gvect,      ONLY : ngm_g
       !
 #if defined (__HDF5) 
       USE qeh5_base_module
@@ -650,11 +651,13 @@ MODULE io_base
       COMPLEX(dp), ALLOCATABLE :: rhoaux(:)
       COMPLEX(dp)              :: rhoup, rhodw
       REAL(dp)                 :: b1(3), b2(3), b3(3)
-      INTEGER                  :: ngm, nspin_, ngm_g, isup, isdw
+      INTEGER                  :: ngm, nspin_, isup, isdw
       INTEGER                  :: iun, mill_dum, ns, ig, ierr
       INTEGER                  :: me_in_group, nproc_in_group
       LOGICAL                  :: ionode_in_group, gamma_only_
       CHARACTER(LEN=320)       :: filename
+      INTEGER                  :: ngm_g_
+      INTEGER, ALLOCATABLE     :: mill_g(:,:)
       !
 #if defined __HDF5
       TYPE ( qeh5_file)       :: h5file
@@ -689,7 +692,7 @@ MODULE io_base
 #if defined (__HDF5) 
          CALL qeh5_openfile(h5file, TRIM(filename), ACTION = 'read', error = ierr)
          CALL qeh5_read_attribute (h5file%id, "gamma_only", tempchar, MAXLEN = len(tempchar)  )
-         CALL qeh5_read_attribute (h5file%id, "ngm_g", ngm_g ) 
+         CALL qeh5_read_attribute (h5file%id, "ngm_g", ngm_g_ ) 
          CALL qeh5_read_attribute (h5file%id, "nspin", nspin_)  
          SELECT CASE (TRIM(tempchar) )  
             CASE ('.true.', '.TRUE.' ) 
@@ -704,7 +707,7 @@ MODULE io_base
             ierr = 1
             GO TO 10
          END IF
-         READ (iun, iostat=ierr) gamma_only_, ngm_g, nspin_
+         READ (iun, iostat=ierr) gamma_only_, ngm_g_, nspin_
          IF ( ierr /= 0 ) THEN
             ierr = 2
             GO TO 10
@@ -714,33 +717,36 @@ MODULE io_base
 #endif
 10       CONTINUE 
       END IF
+
       !
       CALL mp_bcast( ierr, root_in_group, intra_group_comm )
       IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
            & // TRIM( filename ), ierr )
-      CALL mp_bcast( ngm_g, root_in_group, intra_group_comm )
+      CALL mp_bcast( ngm_g_, root_in_group, intra_group_comm )
       CALL mp_bcast( nspin_, root_in_group, intra_group_comm )
       !
       IF ( PRESENT(gamma_only) ) THEN
          CALL mp_bcast( gamma_only_, root_in_group, intra_group_comm )
-         IF ( gamma_only .NEQV. gamma_only_ ) THEN
-            WRITE(6,'(/," *** read rho(G) for half G-sphere,", &
-                   & " complete rho(G) required: unsupported case")')
-           WRITE(6,'(" *** Do not use Gamma tricks to generate rho(G),", &
-                   &" or, use the old file format")')
-            CALL errore ( 'read_rhog','See above, case not yet implemented', 1)
-         END IF
-      END IF
+      ENDIF
       IF ( nspin > nspin_ ) &
          CALL infomsg('read_rhog', 'some spin components not found')
       IF ( ngm_g < MAXVAL (ig_l2g(:)) ) &
            CALL infomsg('read_rhog', 'some G-vectors are missing' )
       !
-      ! ... skip record containing G-vector indices
       !
+     IF (ionode_in_group ) THEN
+         allocate(mill_g(3,ngm_g_))
+      ELSE
+         allocate(mill_g(1,1))
+      ENDIF
+
       IF ( ionode_in_group ) THEN
-#if !defined(__HDF5)
-         READ (iun, iostat=ierr) mill_dum
+#if defined (__HDF5)
+            CALL qeh5_open_dataset( h5file, h5dset_mill, NAME = "MillerIndices", ACTION = 'read', ERROR = ierr)
+            CALL qeh5_read_dataset ( rho_g , h5dset_mill )
+            CALL qeh5_close ( h5dset_mill )
+#else
+         READ (iun, iostat=ierr) mill_g(1:3,1:ngm_g_)
 #endif
       END IF
       CALL mp_bcast( ierr, root_in_group, intra_group_comm )
@@ -751,7 +757,7 @@ MODULE io_base
       ! ... of the charge density (one spin at the time to save memory)
       !
       IF ( ionode_in_group ) THEN
-         ALLOCATE( rho_g( ngm_g ) )
+         ALLOCATE( rho_g( ngm_g_ ) )
       ELSE
          ALLOCATE( rho_g( 1 ) )
       END IF
@@ -765,13 +771,23 @@ MODULE io_base
             CALL qeh5_read_dataset ( rho_g , h5dset_rho_g )
             CALL qeh5_close ( h5dset_rho_g )  
 #else 
-            READ (iun, iostat=ierr) rho_g(1:ngm_g)
+            READ (iun, iostat=ierr) rho_g(1:ngm_g_)
 #endif
          END IF
          CALL mp_bcast( ierr, root_in_group, intra_group_comm )
          IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
               & // TRIM( filename ), 2+ns )
          !
+        IF ( PRESENT(gamma_only) ) THEN
+            IF ( gamma_only .NEQV. gamma_only_ ) THEN
+
+               CALL charge_k_to_g(ngm_g_,rho_g,mill_g,root_in_group,intra_group_comm)
+            ENDIF
+
+         ENDIF
+
+         deallocate(mill_g)
+
          CALL splitwf( rhoaux, rho_g, ngm, ig_l2g, me_in_group, &
               nproc_in_group, root_in_group, intra_group_comm )
          DO ig = 1, ngm
@@ -805,4 +821,74 @@ MODULE io_base
       !
     END SUBROUTINE read_rhog
     !
+ SUBROUTINE charge_k_to_g(ngm_g_k,rho_g,mill_g_k,root_in_group,intra_group_comm)
+!this routine reorder charge G vectors on global mesh from the k case to
+!the gamma only one
+      USE fft_base,   ONLY : dfftp, dffts
+      USE fft_types, ONLY :  fft_type_deallocate, fft_type_allocate
+      USE gvect, ONLY : ngm, ngm_g,  deallocate_gvect,ig_l2g,mill
+      USE cell_base,          ONLY : at, bg
+      USE gvect,              ONLY : gcutm
+      USE gvecs,              ONLY : gcutms
+      USE control_flags,      ONLY : gamma_only
+      USE mp_bands,           ONLY : intra_bgrp_comm, nyfft
+      USE io_global, ONLY : stdout
+      USE fft_base,     ONLY : smap
+      USE  stick_base
+      USE mp,                   ONLY : mp_sum, mp_bcast, mp_size,mp_rank
+      USE mp_wave,              ONLY : mergewf, mergekg
+     
+
+      implicit none
+      INTEGER, INTENT(in) :: intra_group_comm,root_in_group
+      INTEGER, INTENT(in) :: ngm_g_k!relative to k case
+      INTEGER, INTENT(in) :: mill_g_k(:,:)
+      COMPLEX(kind=DP), INTENT(inout) :: rho_g(:)!relative to k case  in input, gamma case in output
+       INTEGER                  :: me_in_group, npr
+      COMPLEX(kind=DP), ALLOCATABLE :: rho_aux(:)
+      LOGICAL                  :: ionode_in_group
+      INTEGER :: nproc_in_group
+      INTEGER, ALLOCATABLE :: mill_g(:,:)
+      
+      INTEGER :: ig, jg
+
+      write(stdout,*) 'Conversion: K charge Gamma charge'
+
+      me_in_group     = mp_rank( intra_group_comm )
+      nproc_in_group  = mp_size( intra_group_comm )
+      ionode_in_group = ( me_in_group == root_in_group )
+
+      IF(ionode_in_group) THEN
+         allocate(rho_aux(ngm_g_k))
+         allocate(mill_g(3,ngm_g))
+         rho_aux(1:ngm_g_k)=rho_g(1:ngm_g_k)
+      ELSE
+         allocate(rho_aux(1))
+         allocate(mill_g(1,1))
+      ENDIF
+
+
+      
+      CALL mergekg( mill, mill_g, ngm, ig_l2g, me_in_group, &
+           nproc_in_group, root_in_group, intra_group_comm )
+
+      IF(ionode_in_group) THEN
+         rho_g(1:ngm_g_k)=0.d0
+         DO ig=1,ngm_g
+            DO jg=1,ngm_g_k
+               if(mill_g(1,ig)==mill_g_k(1,jg) .and. &
+                    mill_g(2,ig)==mill_g_k(2,jg) .and. mill_g(3,ig)==mill_g_k(3,jg)) then
+                  rho_g(ig)=rho_aux(jg)
+
+               endif
+            END DO
+         ENDDO
+      ENDIF
+        
+      deallocate(rho_aux,mill_g)
+      
+      return
+    END SUBROUTINE charge_k_to_g
+    !
   END MODULE io_base
+
