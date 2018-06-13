@@ -741,7 +741,7 @@ MODULE io_base
 #if defined (__HDF5)
          CALL qeh5_open_dataset( h5file, h5dset_mill, &
               NAME = "MillerIndices", ACTION = 'read', ERROR = ierr)
-         CALL qeh5_read_dataset ( rho_g , h5dset_mill )
+         IF (readmill)  CALL qeh5_read_dataset ( mill_g , h5dset_mill )
          CALL qeh5_close ( h5dset_mill )
 #else
          READ (iun, iostat=ierr) mill_g(1:3,1:ngm_g_)
@@ -822,7 +822,7 @@ MODULE io_base
       !
       DEALLOCATE( rhoaux )
       DEALLOCATE( rho_g )
-      DEALLOCATE( mill_g )
+      IF (ALLOCATED(mill_g))  DEALLOCATE( mill_g )
       !
       RETURN
       !
