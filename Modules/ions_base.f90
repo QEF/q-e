@@ -43,7 +43,6 @@
       REAL(DP), ALLOCATABLE :: tau_srt(:,:) !  tau sorted by specie in bohr
       REAL(DP), ALLOCATABLE :: vel_srt(:,:) !  vel sorted by specie in bohr
       INTEGER,  ALLOCATABLE :: ind_srt(:)   !  index of tau sorted by specie
-      INTEGER :: ia_srt(ntypx) = 0          !  atom index offsets of species after sorting
       INTEGER,  ALLOCATABLE :: ind_bck(:)   !  reverse of ind_srt
       CHARACTER(LEN=3)      :: atm( ntypx )
       CHARACTER(LEN=3), ALLOCATABLE :: label_srt( : ) 
@@ -93,37 +92,6 @@
 !------------------------------------------------------------------------------!
   CONTAINS
 !------------------------------------------------------------------------------!
-
-    SUBROUTINE sort_specie()
-      IMPLICIT NONE
-      !
-      INTEGER :: is, ia
-      !
-      ! ... count the atoms for each specie
-      na  = 0
-      DO ia = 1, nat
-        is  =  ityp( ia )
-        IF( is < 1 .OR. is > nsp ) &
-          CALL errore(' sorttau ', ' wrong species index for positions ', ia )
-        na( is ) = na( is ) + 1
-      END DO
-      IF ( ANY ( na(1:nsp) == 0 ) ) &
-         CALL errore ('sort_atoms', 'some atomic species have no atoms',1)
-      ! ... compute the index of the first atom in each specie
-      ia_srt( 1 ) = 0
-      DO is = 2, nsp
-        ia_srt( is ) = ia_srt( is - 1 ) + na( is - 1 )
-      END DO
-
-      ! ... sort the position according to atomic specie
-      na  = 0
-      DO ia = 1, nat
-        is  =  ityp( ia )
-        na( is ) = na( is ) + 1
-        ind_srt( na(is) + ia_srt(is) ) = ia
-      END DO
-      RETURN
-    END SUBROUTINE sort_specie
 
     SUBROUTINE sort_tau( tausrt, isrt, tau, isp, nat, nsp )
       IMPLICIT NONE

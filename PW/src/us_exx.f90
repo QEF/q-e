@@ -38,6 +38,7 @@ MODULE us_exx
                                                ! two bands stored per stripe 
   COMPLEX(DP),ALLOCATABLE :: qgm(:,:)          ! used in addusxx_g and newdxx_g
                                                ! pre-computed projectors
+  INTEGER, ALLOCATABLE :: nij_type(:)             ! (ih,jh) pairs offset for all atom types
 
  CONTAINS ! ~~+~~---//--~~~-+
   !
@@ -86,8 +87,10 @@ MODULE us_exx
     !
     ! nij = number of (ih,jh) pairs for all atom types
     !
+    ALLOCATE( nij_type(ntyp) )
     nij = 0
     DO nt = 1, ntyp
+       nij_type(nt) = nij
        IF ( upf(nt)%tvanp ) nij = nij + (nh(nt)*(nh(nt)+1))/2
     END DO
     ALLOCATE ( qgm(ngms,nij) )
@@ -125,6 +128,7 @@ MODULE us_exx
   !-----------------------------------------------------------------------
     !
     DEALLOCATE (qgm)
+    DEALLOCATE (nij_type)
     !
   END SUBROUTINE qvan_clean
   !
@@ -202,10 +206,11 @@ MODULE us_exx
     !
     ALLOCATE( aux1(blocksize), aux2(blocksize) )
     !
-    nij = 0
     DO nt = 1, ntyp
        !
        IF ( upf(nt)%tvanp ) THEN
+          !
+          nij = nij_type(nt)
           !
           !$omp do
           DO iblock = 1, numblock
@@ -270,8 +275,6 @@ MODULE us_exx
           ENDDO   ! block
           !$omp end do nowait
           !
-          nij = nij + (nh(nt)*(nh(nt)+1))/2
-          !
        END IF
        !
     ENDDO   ! nt
@@ -305,7 +308,7 @@ MODULE us_exx
     ! The two latter cases are used together with gamma tricks
     ! 
     USE constants,      ONLY : tpi
-    USE ions_base,      ONLY : nat, ntyp => nsp, ityp, tau, nasp => na, ind_srt, ia_srt
+    USE ions_base,      ONLY : nat, ntyp => nsp, ityp, tau
     USE uspp,           ONLY : nkb, vkb,  okvan, indv_ijkb0, ijtoh
     USE uspp_param,     ONLY : upf, nh, nhm, lmaxq
     USE gvect,          ONLY : gg, g, gstart, eigts1, eigts2, eigts3, mill
@@ -392,60 +395,56 @@ MODULE us_exx
     ! setting cache blocking size
     numblock  = (ngms+blocksize-1)/blocksize
     !
-    !$omp parallel private(aux1,aux2,nij,offset,realblocksize,ijkb0,ikb,jkb,na)
+    !$omp parallel private(aux1,aux2,nij,offset,realblocksize,ijkb0,ikb,jkb,nt)
     !
     ALLOCATE( aux1(blocksize), aux2(blocksize) )
     !
-    nij = 0
-    DO nt = 1, ntyp
+    DO iblock = 1, numblock
        !
-       IF ( upf(nt)%tvanp ) THEN
+       offset = (iblock-1)*blocksize
+       realblocksize = MIN(ngms-offset,blocksize)
+       !
+       !$omp do
+       DO na = 1, nat
           !
-          DO iblock = 1, numblock
+          nt = ityp(na)
+          !
+          IF ( upf(nt)%tvanp ) THEN
              !
-             !$omp do
-             DO ina = 1, nasp(nt)
-                !
-                na = ind_srt(ia_srt(nt)+ina)
-                !
-                offset = (iblock-1)*blocksize
-                realblocksize = MIN(ngms-offset,blocksize)
-                !
-                ! ijkb0 points to the manifold of beta functions for atom na
-                !
-                ijkb0 = indv_ijkb0(na) 
-                !
-                aux2(1:realblocksize) = CONJG( auxvc(offset+1:offset+realblocksize) ) * eigqts(na) * &
-                           eigts1(mill(1,offset+1:offset+realblocksize), na) * &
-                           eigts2(mill(2,offset+1:offset+realblocksize), na) * &
-                           eigts3(mill(3,offset+1:offset+realblocksize), na)
-                DO ih = 1, nh(nt)
-                   ikb = ijkb0 + ih
-                   aux1(:) = (0.0_dp, 0.0_dp)
-                   DO jh = 1, nh(nt)
-                      jkb = ijkb0 + jh
-                      IF ( gamma_only ) THEN
-                         aux1(1:realblocksize) = aux1(1:realblocksize) + becphi_r(jkb) * &
-                              CONJG( qgm(offset+1:offset+realblocksize,nij+ijtoh(ih,jh,nt)) )
-                      ELSE
-                         aux1(1:realblocksize) = aux1(1:realblocksize) + becphi_c(jkb) * &
-                              CONJG( qgm(offset+1:offset+realblocksize,nij+ijtoh(ih,jh,nt)) )
-                      END IF
-                   END DO
-                   !
-                   deexx(ikb) = deexx(ikb) + fact*zdotc(realblocksize, aux2, 1, aux1, 1)
-                   IF( gamma_only .AND. gstart == 2 .AND. iblock == 1 ) &
-                        deexx(ikb) =  deexx(ikb) - omega*CONJG (aux2(1))*aux1(1)
-                ENDDO
-             ENDDO ! nat
-             !$omp end do nowait
+             nij = nij_type(nt)
              !
-          ENDDO ! block
+             ! ijkb0 points to the manifold of beta functions for atom na
+             !
+             ijkb0 = indv_ijkb0(na)
+             !
+             aux2(1:realblocksize) = CONJG( auxvc(offset+1:offset+realblocksize) ) * eigqts(na) * &
+                        eigts1(mill(1,offset+1:offset+realblocksize), na) * &
+                        eigts2(mill(2,offset+1:offset+realblocksize), na) * &
+                        eigts3(mill(3,offset+1:offset+realblocksize), na)
+             DO ih = 1, nh(nt)
+                ikb = ijkb0 + ih
+                aux1(:) = (0.0_dp, 0.0_dp)
+                DO jh = 1, nh(nt)
+                   jkb = ijkb0 + jh
+                   IF ( gamma_only ) THEN
+                      aux1(1:realblocksize) = aux1(1:realblocksize) + becphi_r(jkb) * &
+                           CONJG( qgm(offset+1:offset+realblocksize,nij+ijtoh(ih,jh,nt)) )
+                   ELSE
+                      aux1(1:realblocksize) = aux1(1:realblocksize) + becphi_c(jkb) * &
+                           CONJG( qgm(offset+1:offset+realblocksize,nij+ijtoh(ih,jh,nt)) )
+                   END IF
+                END DO
+                !
+                deexx(ikb) = deexx(ikb) + fact*zdotc(realblocksize, aux2, 1, aux1, 1)
+                IF( gamma_only .AND. gstart == 2 .AND. iblock == 1 ) &
+                     deexx(ikb) =  deexx(ikb) - omega*CONJG (aux2(1))*aux1(1)
+             ENDDO
+          ENDIF
           !
-          nij = nij + (nh(nt)*(nh(nt)+1))/2
-          !
-       END IF
-    ENDDO
+       ENDDO ! nat
+       !$omp end do nowait
+       !
+    ENDDO ! block
     !
     DEALLOCATE( aux2, aux1 )
     !
