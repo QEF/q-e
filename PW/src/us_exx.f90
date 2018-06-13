@@ -399,6 +399,9 @@ MODULE us_exx
     !
     ALLOCATE( aux1(blocksize), aux2(blocksize) )
     !
+    ! Note: cache blocking is more efficient when atoms are grouped by specie (see history)
+    ! However, it requires atom sorting info available in ion_base which requires consistent fixing.
+    !
     DO iblock = 1, numblock
        !
        offset = (iblock-1)*blocksize
