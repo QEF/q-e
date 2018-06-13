@@ -202,7 +202,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        USE cublas
 #endif
        IMPLICIT NONE
-       COMPLEX(DP), ALLOCATABLE :: ps_d (:,:), deeaux_d (:,:)  ! move this to buffers !
+       COMPLEX(DP), ALLOCATABLE :: ps_d (:,:), deeaux_d (:,:)  ! OPTIMIZE HERE: move this to buffers ?
        INTEGER :: ierr
        ! counters
        INTEGER :: i, j, k, jkb, ikb, ih, jh, na, nt, ibnd
@@ -221,7 +221,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        ALLOCATE (ps_d (nkb,m), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_k ', ' cannot allocate ps ', ABS( ierr ) )
-       ps_d(:,:) = ( 0.D0, 0.D0 )
        !
        ALLOCATE ( deeaux_d(nhm, nhm) )
        DO nt = 1, ntyp
@@ -295,8 +294,6 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_nc ', ' error allocating ps ', ABS( ierr ) )
-       !
-       ps_d (:,:,:) = (0.d0, 0.d0)
        !
        !  OPTIMIZE HERE: use buffers and possibly streamline
        !
