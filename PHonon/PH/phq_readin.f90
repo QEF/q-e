@@ -66,7 +66,7 @@ SUBROUTINE phq_readin()
   USE freq_ph,       ONLY : fpol, fiu, nfs
   USE cryst_ph,      ONLY : magnetic_sym
   USE ph_restart,    ONLY : ph_readfile
-  USE el_phon,       ONLY : elph,elph_mat,elph_simple,elph_nbnd_min, elph_nbnd_max, &
+  USE el_phon,       ONLY : elph,elph_mat,elph_simple,elph_epa,elph_nbnd_min, elph_nbnd_max, &
                             el_ph_sigma, el_ph_nsigma, el_ph_ngauss,auxdvscf
   USE dfile_star,    ONLY : drho_star, dvscf_star
 
@@ -375,20 +375,29 @@ SUBROUTINE phq_readin()
      elph=.true.
      elph_mat=.false.
      elph_simple=.true. 
+     elph_epa=.false.
+  CASE( 'epa' )
+     elph=.true.
+     elph_mat=.false.
+     elph_simple=.false.
+     elph_epa=.true.
   CASE( 'Wannier' )
      elph=.true.
      elph_mat=.true.
      elph_simple=.false.
+     elph_epa=.false.
      auxdvscf=trim(fildvscf)
   CASE( 'interpolated' )
      elph=.true.
      elph_mat=.false.
      elph_simple=.false.
+     elph_epa=.false.
   ! YAMBO >
   CASE( 'yambo' )
      elph=.true.
      elph_mat=.false.
      elph_simple=.false.
+     elph_epa=.false.
      elph_yambo=.true.
      nogg=.true.
      auxdvscf=trim(fildvscf)
@@ -396,6 +405,7 @@ SUBROUTINE phq_readin()
      elph=.false.
      elph_mat=.false.
      elph_simple=.false.
+     elph_epa=.false.
      elph_yambo=.false.
      dvscf_yambo=.true.
      nogg=.true.
@@ -423,6 +433,7 @@ SUBROUTINE phq_readin()
      elph=.false.
      elph_mat=.false.
      elph_simple=.false.
+     elph_epa=.false.
   END SELECT
   ! YAMBO >
   IF (.not.elph_yambo) then
