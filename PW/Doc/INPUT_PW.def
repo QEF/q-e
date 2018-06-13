@@ -1300,6 +1300,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 For noncollinear calculations only.
             }
         }
+        
+        var lforcet -type LOGICAL {
+		info { When starting a non collinear calculation using an existing density
+		       file from a collinear lsda calculation assumes previous density points in 
+		       z direction and rotates is in the direction described by @ref angle1 and 
+		       @ref angle2 variables for atomic type 1} 
+	} 
 
         var constrained_magnetization -type CHARACTER { 
             see { lambda, fixed_magnetization }
