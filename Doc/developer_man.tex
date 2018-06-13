@@ -1290,15 +1290,15 @@ on GitHub: \verb|https://github.com/QEF/q-e|. To download the repository:
    \verb|git clone https://gitlab.com/QEF/q-e.git|  or\\
    \verb|git clone git@gitlab.com:QEF/q-e.git|
 \end{quote}
-Registration on GitLab is not needed, just useful. GitLab accepts a number
-of other accounts (Google, GitHub, ...) to sign in.
+Registration on GitLab is not needed at this stage but it is useful anyway. 
+GitLab accepts a number of other accounts (Google, GitHub, ...) to sign in.
 
-The repository contains a ``master''(default) and a ``develop'' branch,
-plus other branches for specific goals. The ``develop'' branch is
-where development goes on. The ``master'' branch is aligned to the
-``develop'' branch from time to time, when ``develop'' looks stable
-enough. No other changes are allowed in ``master'' except for serious
-bugs.
+The repository contains a ``master'' and a ``develop'' branch,
+plus other branches for specific goals. The ``develop'' branch is the
+default and is where development goes on. The ``master'' branch is 
+aligned to the ``develop'' branch from time to time, when ``develop'' 
+looks stable enough. No other changes are allowed in ``master'' except 
+for serious bugs.
 
 \subsection{Developing with git}
 
@@ -1309,7 +1309,8 @@ Development can proceed in different ways:
 \item Directly into the ``develop'' branch
 \end{enumerate}
 The first option is the recommended one. Register on GitLab and {\em save
-your public ssh keys} on your GitLab account. Then:
+your public ssh keys} on your GitLab account (in this page:
+\verb|https://gitlab.com/profile/keys|). Then:
 \begin{itemize}
 \item  {\em fork} the QEF/q-e project: point your browser to
 	 \verb|https://gitlab.com/QEF/q-e|, use the ``fork'' button
@@ -1322,7 +1323,7 @@ your public ssh keys} on your GitLab account. Then:
 Once you have changed your local copy of the repository,
 you have to {\em commit} (save) those changes:
 \begin{quote}
-  \verb|git add list-of-changed-or-added-files|\\
+  \verb|git add| {\em list-of-changed-or-added-files}\\
   \verb|git commit |
 \end{quote}
 then you can align the repository to the ``develop'' branch:
@@ -1340,11 +1341,10 @@ Beware! you may need to manually merge files that have been modified both
 by you and in the repository.
 The stash can be cleared using \texttt{git stash clear}.
 
-Note: it is good practice to use \verb|git fetch| before a pull,
-as in, e.g.:
-\begin{quote}
-  \verb|git fetch  git@gitlab.com:QEF/q-e.git develop|
-\end{quote}
+%Note: it is good practice to use \verb|git fetch| before a pull, as in, e.g.:
+%\begin{quote}
+%  \verb|git fetch  git@gitlab.com:QEF/q-e.git develop|
+%\end{quote}
 
 You may repeat the procedure above, adding more commits to your local copy.
 Unlike in svn, you need to explicitly {\em push} (publish) them to the remote
