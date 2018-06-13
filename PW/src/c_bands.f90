@@ -357,7 +357,7 @@ CONTAINS
           !
           CALL using_g2kin(0)
           DO j=1, npw
-             h_diag_d(j, 1) = g2kin(j) + v_of_0
+             h_diag(j, 1) = g2kin(j) + v_of_0
           END DO
           !
           CALL usnldiag( npw, h_diag, s_diag )
