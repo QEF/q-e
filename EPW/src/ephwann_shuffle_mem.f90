@@ -1246,7 +1246,7 @@
              IF (int_mob .AND. carrier) THEN
                call errore('ephwann_shuffle','The iterative solution cannot be solved with int_mob AND carrier at the moment',1)
              ELSE
-               CALL iterativebte(iter, iq, ef0(1), error_h, error_el, first_cycle, first_time)
+               CALL iterativebte(iter, iq, ef0, efcb, error_h, error_el, first_cycle, first_time)
              ENDIF   
              !
              IF (iq == nqf) iter = iter + 1 

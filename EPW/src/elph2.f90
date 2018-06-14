@@ -63,6 +63,9 @@
        Fi_all(:,:,:,:),        &! 
        F_current(:,:,:,:),     &! 
        F_SERTA(:,:,:,:),       &! 
+       Fi_allcb(:,:,:,:),      &! 
+       F_currentcb(:,:,:,:),   &! 
+       F_SERTAcb(:,:,:,:),     &! 
        zi_all(:,:),            &!
        esigmar_all(:,:,:),     &!
        esigmai_all(:,:,:),     &!   

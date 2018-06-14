@@ -17,7 +17,7 @@
   CONTAINS
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE iterativebte( iter, iq, ef0, error_h, error_el, first_cycle, first_time ) 
+    SUBROUTINE iterativebte( iter, iq, ef0, efcb, error_h, error_el, first_cycle, first_time ) 
     !-----------------------------------------------------------------------
     !!
     !!  This subroutine computes the scattering rate with the iterative BTE
@@ -37,11 +37,12 @@
     USE pwcom,         ONLY : ef 
     USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, vmef, & 
                               wf, wqf, xkf, epf17, nqtotf, nkqtotf, inv_tau_all, xqf, & 
-                              F_current, Fi_all, F_SERTA
+                              F_current, Fi_all, F_SERTA, F_currentcb, Fi_allcb, &
+                              F_SERTAcb, inv_tau_allcb
     USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                               ixkqf_tr, s_BZtoIBZ_full
     USE constants_epw, ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, & 
-                              electron_SI, bohr2ang, ang2cm, hbarJ
+                              electron_SI, bohr2ang, ang2cm, hbarJ, eps6
     USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
@@ -60,6 +61,8 @@
     !! Q-point index
     REAL(KIND=DP), INTENT(IN) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
+    REAL(KIND=DP), INTENT(IN) :: efcb(nstemp)
+    !! Second Fermi level for the temperature itemp. Could be unused (0).
     REAL(KIND=DP), INTENT(out) :: error_h
     !! Error on the hole mobility made in the last iterative step.
     REAL(KIND=DP), INTENT(out) :: error_el
@@ -285,6 +288,13 @@
               tau = one / inv_tau_all(itemp,ibnd,ik+lower_bnd-1)
               F_SERTA(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau
               !
+              ! In this case we are also computing the scattering rate for another Fermi level position
+              ! This is used to compute both the electron and hole mobility at the same time.  
+              IF ( ABS(efcb(itemp)) > eps6 ) THEN
+                tau = one / inv_tau_allcb(1,ibnd,ik+lower_bnd-1)
+                F_SERTAcb(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau
+              ENDIF  
+              !
             ENDDO
           ENDIF
           !
@@ -346,6 +356,42 @@
                   ! 
                 ENDDO !jbnd
                 !
+                IF ( ABS(efcb(itemp)) > eps6 ) THEN
+                  ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
+                  !
+                  DO jbnd = 1, ibndmax-ibndmin+1
+                    !
+                    !  energy and fermi occupation at k+q
+                    ekq = etf (ibndmin-1+jbnd, ikq) - efcb(itemp)
+                    fmkq = wgauss( -ekq*inv_etemp, -99)
+                    !
+                    ! here we take into account the zero-point sqrt(hbar/2M\omega)
+                    ! with hbar = 1 and M already contained in the eigenmodes
+                    ! g2 is Ry^2, wkf must already account for the spin factor
+                    !
+                    g2 = (abs(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq * g2_tmp
+                    !
+                    ! delta[E_k - E_k+q + w_q] and delta[E_k - E_k+q - w_q]
+                    w0g1 = w0gauss( (ekk-ekq+wq) * inv_degaussw, 0) * inv_degaussw
+                    w0g2 = w0gauss( (ekk-ekq-wq) * inv_degaussw, 0) * inv_degaussw
+                    !
+                    trans_prob = pi * wqf(iq) * g2 * &
+                                 ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
+                    !
+                    CALL cryst_to_cart(1,Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),at,-1)
+
+                    CALL dgemv( 'n', 3, 3, 1.d0,&
+                        REAL(s_BZtoIBZ_full(:,:,ik,iq), kind=DP), 3, Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),1 ,0.d0 , Fi_rot(:), 1 )
+                    CALL cryst_to_cart(1,Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),bg,1)
+                    CALL cryst_to_cart(1,Fi_rot,bg,1)
+                    ! 
+                    F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) = F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) +&
+                                 two * trans_prob * Fi_rot
+                    ! 
+                  ENDDO !jbnd
+                  ! 
+                ENDIF !  efcb
+                !
               ENDDO !ibnd
               !
             ENDDO !imode
@@ -364,7 +410,12 @@
           ! The mp_sum will aggreage the results on each k-points. 
           CALL mp_sum( F_current, inter_pool_comm )
           !
-          CALL F_write(iter, iq, nqtotf, nkqtotf/2, error_h, error_el)
+          IF ( ABS(efcb(1)) > eps6 ) THEN
+            CALL mp_sum( F_currentcb, inter_pool_comm)
+            CALL F_write(iter, iq, nqtotf, nkqtotf/2, error_h, error_el, .TRUE.)
+          ELSE
+            CALL F_write(iter, iq, nqtotf, nkqtotf/2, error_h, error_el, .FALSE.)
+          ENDIF
           ! 
         ENDIF
       ENDIF
@@ -414,8 +465,13 @@
               ENDIF
               !
               ! The inverse of SERTA
-              tau = one / inv_tau_all(1,ibnd,ik+lower_bnd-1)
+              tau = one / inv_tau_all(itemp,ibnd,ik+lower_bnd-1)
               F_SERTA(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau
+              ! 
+              IF ( ABS(efcb(itemp)) > eps6 ) THEN
+                tau = one / inv_tau_allcb(itemp,ibnd,ik+lower_bnd-1)
+                F_SERTAcb(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau
+              ENDIF 
               !
             ENDDO
           ENDIF
@@ -472,6 +528,37 @@
                   ! 
                 ENDDO !jbnd
                 !
+                IF ( ABS(efcb(itemp)) > eps6 ) THEN
+                  !  energy at k (relative to Ef)
+                  ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
+                  !
+                  DO jbnd = 1, ibndmax-ibndmin+1
+                    !
+                    !  energy and fermi occupation at k+q
+                    ekq = etf (ibndmin-1+jbnd, ikq) - efcb(itemp)
+                    fmkq = wgauss( -ekq*inv_etemp, -99)
+                    !
+                    ! here we take into account the zero-point sqrt(hbar/2M\omega)
+                    ! with hbar = 1 and M already contained in the eigenmodes
+                    ! g2 is Ry^2, wkf must already account for the spin factor
+                    !
+                    g2 = (abs(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq * g2_tmp
+                    !
+                    ! delta[E_k - E_k+q + w_q] and delta[E_k - E_k+q - w_q]
+                    w0g1 = w0gauss( (ekk-ekq+wq) * inv_degaussw, 0) * inv_degaussw
+                    w0g2 = w0gauss( (ekk-ekq-wq) * inv_degaussw, 0) * inv_degaussw
+                    !
+                    trans_prob = pi * wqf(iq) * g2 * &
+                                 ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
+                    !
+                    ! IBTE
+                    F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) = F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) +&
+                                                          two * trans_prob * Fi_allcb(:,jbnd,nkq_abs,itemp)
+                    ! 
+                  ENDDO !jbnd
+                  !
+                ENDIF
+                ! 
               ENDDO !ibnd
               !
             ENDDO !imode
@@ -496,16 +583,27 @@
               tau = one / inv_tau_all(itemp,ibnd,ik+lower_bnd-1)
               F_current(:,ibnd,ik+lower_bnd-1,itemp) = F_SERTA(:,ibnd,ik+lower_bnd-1,itemp) +&
                                                     tau * F_current(:,ibnd,ik+lower_bnd-1,itemp)
+              IF ( ABS(efcb(itemp)) > eps6 ) THEN
+                tau = one / inv_tau_allcb(itemp,ibnd,ik+lower_bnd-1)
+                F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) = F_SERTAcb(:,ibnd,ik+lower_bnd-1,itemp) +&
+                                                    tau * F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) 
+              ENDIF 
             ENDDO
           ENDIF
         ENDDO
       ENDDO
       !
       CALL mp_sum( F_current, inter_pool_comm )
+      IF ( ABS(efcb(1)) > eps6 ) CALL mp_sum( F_currentcb, inter_pool_comm )
       !
       ! The next Fi is equal to the current Fi+1 F_current. 
       Fi_all = F_current
       F_current = zero
+      ! 
+      IF ( ABS(efcb(1)) > eps6 ) THEN
+        Fi_allcb = F_currentcb
+        F_currentcb = zero
+      ENDIF
       !
       ! From the F, we compute the HOLE conductivity
       IF (int_mob .OR. (ncarrier < -1E5)) THEN
@@ -606,8 +704,8 @@
           WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
           WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
           ! 
-          error_h = ABS(mobility-mobilityh_save)
-          mobilityh_save = mobility
+          error_h = ABS(mobility-mobilityh_save(itemp))
+          mobilityh_save(itemp) = mobility
           WRITE(stdout,'(47x, 1E16.4, a)') error_h, '     Err'
           !
         ENDDO ! itemp
@@ -627,33 +725,62 @@
             ikk = 2 * ik - 1
             IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
               DO ibnd = 1, ibndmax-ibndmin+1
-                ! This selects only valence bands for hole conduction
-                IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp) ) THEN
-                  IF ( vme ) THEN 
-                    vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
-                  ELSE
-                    vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
-                  ENDIF
-                  ! 
-                  ij = 0
-                  DO j = 1, 3
-                    DO i = 1, 3
-                      ij = ij + 1
-                      tdf_sigma(ij) = vkk(i,ibnd) * Fi_all(j,ibnd,ik+lower_bnd-1,itemp)
+                IF ( ABS(efcb(itemp)) < eps6 ) THEN ! Case with 1 Fermi level
+                  ! This selects only conduction bands for electron conduction
+                  IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp) ) THEN
+                    IF ( vme ) THEN 
+                      vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
+                    ELSE
+                      vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
+                    ENDIF
+                    ! 
+                    ij = 0
+                    DO j = 1, 3
+                      DO i = 1, 3
+                        ij = ij + 1
+                        tdf_sigma(ij) = vkk(i,ibnd) * Fi_all(j,ibnd,ik+lower_bnd-1,itemp)
+                      ENDDO
                     ENDDO
-                  ENDDO
-                  ! 
-                  !  energy at k (relative to Ef)
-                  ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
-                  !  
-                  ! derivative Fermi distribution
-                  ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-                  dfnk = w0gauss( ekk / etemp, -99 ) / etemp          
-                  !
-                  ! electrical conductivity
-                  Sigma(:,itemp) = Sigma(:,itemp) + wkf(ikk) * dfnk * tdf_sigma(:)
-                  !
-                ENDIF
+                    ! 
+                    !  energy at k (relative to Ef)
+                    ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
+                    !  
+                    ! derivative Fermi distribution
+                    ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
+                    dfnk = w0gauss( ekk / etemp, -99 ) / etemp          
+                    !
+                    ! electrical conductivity
+                    Sigma(:,itemp) = Sigma(:,itemp) + wkf(ikk) * dfnk * tdf_sigma(:)
+                    !
+                  ENDIF
+                ELSE ! In this case we have 2 Fermi level
+                  IF (etf (ibndmin-1+ibnd, ikk) > efcb(itemp) ) THEN
+                    IF ( vme ) THEN
+                      vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
+                    ELSE
+                      vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
+                    ENDIF
+                    ! 
+                    ij = 0
+                    DO j = 1, 3
+                      DO i = 1, 3
+                        ij = ij + 1
+                        tdf_sigma(ij) = vkk(i,ibnd) * Fi_all(j,ibnd,ik+lower_bnd-1,itemp)
+                      ENDDO
+                    ENDDO
+                    ! 
+                    !  energy at k (relative to Ef)
+                    ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
+                    !  
+                    ! derivative Fermi distribution
+                    ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
+                    dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+                    !
+                    ! electrical conductivity
+                    Sigma(:,itemp) = Sigma(:,itemp) + wkf(ikk) * dfnk * tdf_sigma(:)
+                    !
+                  ENDIF ! efcb
+                ENDIF 
               ENDDO ! iband
             ENDIF ! fsthick
           ENDDO ! ik
@@ -669,12 +796,22 @@
             ikk = 2 * ik - 1
             DO ibnd = 1, ibndmax-ibndmin+1
               ! This selects only valence bands for hole conduction
-              IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp) ) THEN
-                !  energy at k (relative to Ef)
-                ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
-                fnk = wgauss( -ekk / etemp, -99)
-                ! The wkf(ikk) already include a factor 2
-                carrier_density = carrier_density + wkf(ikk) * fnk
+              IF ( ABS(efcb(itemp)) < eps6 ) THEN
+                IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp) ) THEN
+                  !  energy at k (relative to Ef)
+                  ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
+                  fnk = wgauss( -ekk / etemp, -99)
+                  ! The wkf(ikk) already include a factor 2
+                  carrier_density = carrier_density + wkf(ikk) * fnk
+                ENDIF
+              ELSE
+                IF (etf (ibndmin-1+ibnd, ikk) > efcb(itemp) ) THEN
+                  !  energy at k (relative to Ef)
+                  ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
+                  fnk = wgauss( -ekk / etemp, -99)
+                  ! The wkf(ikk) already include a factor 2
+                  carrier_density = carrier_density + wkf(ikk) * fnk
+                ENDIF
               ENDIF
             ENDDO
           ENDDO
@@ -706,14 +843,14 @@
           WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
           WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
           WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
-          error_el = ABS(mobility-mobilityel_save)
-          mobilityel_save = mobility
+          error_el = ABS(mobility-mobilityel_save(itemp))
+          mobilityel_save(itemp) = mobility
           WRITE(stdout,'(47x, 1E16.4, a)') error_el, '     Err'
           ! 
         ENDDO ! itemp
       ENDIF ! Electron mobility
       !
-    ENDIF
+    ENDIF ! iq == nq
     !
     RETURN
     !

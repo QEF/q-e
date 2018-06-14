@@ -6,7 +6,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------------------
-  SUBROUTINE F_write(iter, iq, nqtotf, nktotf, error_h, error_el)
+  SUBROUTINE F_write(iter, iq, nqtotf, nktotf, error_h, error_el, second)
   !----------------------------------------------------------------------------
   USE kinds,        ONLY : DP
   USE io_epw,       ONLY : iufilFi_all
@@ -15,7 +15,7 @@
   USE mp,           ONLY : mp_barrier
   USE mp_world,     ONLY : mpime
   USE io_global,    ONLY : ionode_id
-  USE elph2,        ONLY : F_current, ibndmax, ibndmin
+  USE elph2,        ONLY : F_current, ibndmax, ibndmin, F_currentcb
   USE transportcom, ONLY : lower_bnd, upper_bnd, mobilityh_save, mobilityel_save
   USE constants_epw, ONLY : zero
   !
@@ -33,6 +33,8 @@
   !! Error in the hole mobility
   REAL(kind=DP), INTENT(IN) :: error_el
   !! Error in the electron mobility
+  LOGICAL, INTENT(IN) :: second
+  !! IF we have two Fermi level
   ! 
   ! Local variable
   LOGICAL :: exst
@@ -50,7 +52,7 @@
   INTEGER :: itemp
   !! Temperature index
   ! 
-  REAL(KIND=DP) :: aux ( 3 * nstemp * (ibndmax-ibndmin+1) * nktotf + 7 )
+  REAL(KIND=DP) :: aux ( 3 * nstemp * (ibndmax-ibndmin+1) * nktotf + 7 + 2 * nstemp )
   !! Vector to store the array
   !
   !
@@ -64,15 +66,25 @@
     ! Total number of q-points
     aux(3) = nqtotf
     ! Value of the previous h mobility (used for error evaluation)
-    aux(4) = mobilityh_save
-    ! Value of the previous el mobility (used for error evaluation)
-    aux(5) = mobilityel_save
-    ! Error in the hole mobility
-    aux(6) = error_h
+    aux(4) = error_h
     ! Error in the electron mobility
-    aux(7) = error_el
+    aux(5) = error_el
+    ! 
+    i = 5
+    DO itemp=1, nstemp
+      i = i + 1  
+      ! Value of the previous h mobility (used for error evaluation)
+      aux(i) = mobilityh_save(itemp)
+    ENDDO
+    ! 
+    i = 5 + nstemp
+    DO itemp=1, nstemp
+      i = i + 1  
+      ! Value of the previous el mobility (used for error evaluation)
+      aux(i) = mobilityel_save(itemp)
+    ENDDO
     !
-    i = 7
+    i = 5 + nstemp + nstemp
     DO itemp=1, nstemp
       DO ik=1, nktotf
         DO ibnd=1, (ibndmax-ibndmin+1)
@@ -86,18 +98,69 @@
     CALL diropn (iufilFi_all, 'F_restart', lfi_all, exst)
     CALL davcio ( aux, lfi_all, iufilFi_all, 1, +1 )
     CLOSE(iufilFi_all)
+    !
+    IF (second) THEN
+      !
+      lfi_all = 3* (ibndmax-ibndmin+1) * nktotf +3
+      ! First element is the iteration number
+      aux(1) = iter
+      ! Current q-point number 
+      aux(2) = iq -1   ! -1 because we will start at the next one.
+      ! Total number of q-points
+      aux(3) = nqtotf
+      ! Error in the hole mobility
+      aux(4) = error_h
+      ! Error in the electron mobility
+      aux(5) = error_el
+      ! 
+      i = 5
+      DO itemp=1, nstemp
+        i = i + 1  
+        ! Value of the previous h mobility (used for error evaluation)
+        aux(i) = mobilityh_save(itemp)
+      ENDDO
+      ! 
+      i = 5 + nstemp
+      DO itemp=1, nstemp
+        i = i + 1  
+        ! Value of the previous el mobility (used for error evaluation)
+        aux(i) = mobilityel_save(itemp)
+      ENDDO
+      !
+      i = 5 + nstemp + nstemp
+      DO itemp=1, nstemp
+        DO ik=1, nktotf
+          DO ibnd=1, (ibndmax-ibndmin+1)
+            DO idir=1,3
+              i = i +1
+              aux(i) = F_currentcb(idir,ibnd, ik, itemp)
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+      CALL diropn (iufilFi_all, 'F_restart_CB', lfi_all, exst)
+      CALL davcio ( aux, lfi_all, iufilFi_all, 1, +1 )
+      CLOSE(iufilFi_all)
+      ! 
+    ENDIF
+    ! 
   ENDIF
   !
   ! Make everythin 0 except the range of k-points we are working on
   IF (lower_bnd > 1 ) F_current(:,:,1:lower_bnd-1,:) = zero
   IF (upper_bnd < nktotf ) F_current(:,:,upper_bnd+1:nktotf,:) = zero
   ! 
+  IF (second) THEN
+    IF (lower_bnd > 1 ) F_currentcb(:,:,1:lower_bnd-1,:) = zero
+    IF (upper_bnd < nktotf ) F_currentcb(:,:,upper_bnd+1:nktotf,:) = zero
+  ENDIF
+  ! 
   !----------------------------------------------------------------------------
   END SUBROUTINE F_write
   !----------------------------------------------------------------------------
 
   !----------------------------------------------------------------------------
-  SUBROUTINE F_read(iter, iq, nqtotf, nktotf, error_h, error_el)
+  SUBROUTINE F_read(iter, iq, nqtotf, nktotf, error_h, error_el, second)
   !----------------------------------------------------------------------------
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
@@ -109,7 +172,8 @@
   USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, root_pool
   USE mp_world,  ONLY : mpime
   USE io_global, ONLY : ionode_id
-  USE elph2,        ONLY : F_current, ibndmax, ibndmin, Fi_all
+  USE elph2,        ONLY : F_current, ibndmax, ibndmin, Fi_all, F_currentcb, &
+                           Fi_allcb
   USE transportcom, ONLY : lower_bnd, upper_bnd, mobilityh_save, mobilityel_save
   !
   IMPLICIT NONE
@@ -126,7 +190,8 @@
   !! Error in the hole mobility
   REAL(kind=DP), INTENT(INOUT) :: error_el
   !! Error in the electron mobility
-
+  LOGICAL, INTENT(IN) :: second
+  !! IF we have two Fermi level
   !
   ! Local variable
   LOGICAL :: exst
@@ -148,7 +213,7 @@
   ! 
   CHARACTER (len=256) :: name1
  
-  REAL(KIND=DP) :: aux ( 3 * (ibndmax-ibndmin+1) * nktotf + 7 )
+  REAL(KIND=DP) :: aux ( 3 * nstemp * (ibndmax-ibndmin+1) * nktotf + 7 + 2 * nstemp )
   !! Vector to store the array
   !
   IF (mpime.eq.ionode_id) THEN
@@ -174,14 +239,10 @@
       iq = iq + 1 ! we need to start at the next q
       ! Total number of q-points
       nqtotf_read = INT( aux(3) )
-      ! Last value of hole mobility
-      mobilityh_save = aux(4) 
-      ! Last value of electron mobility
-      mobilityel_save = aux(5) 
       ! Error in hole mobility
-      error_h = aux(6) 
+      error_h = aux(4) 
       ! Error in electron mobility
-      error_el = aux(7) 
+      error_el = aux(5) 
       ! This is the error of the previous iteration. Therefore when you restart
       ! from a converged one, you want to be finished. 
       ! This small substraction wont affect anything. 
@@ -191,7 +252,21 @@
       IF ( nqtotf_read /= nqtotf) CALL errore('io_scattering',&
         &'Error: The current total number of q-point is not the same as the read one. ',1)
       !
-      i = 7
+      i = 5
+      DO itemp=1, nstemp
+        i = i + 1  
+        ! Last value of hole mobility 
+        mobilityh_save(itemp) = aux(i)
+      ENDDO
+      ! 
+      i = 5 + nstemp
+      DO itemp=1, nstemp
+        i = i + 1  
+        ! Last value of electron mobility
+        mobilityel_save(itemp) = aux(i)
+      ENDDO
+      ! 
+      i = 5 + nstemp + nstemp
       DO itemp=1, nstemp
         DO ik=1, nktotf
           DO ibnd=1, (ibndmax-ibndmin+1)
@@ -204,7 +279,73 @@
       ENDDO
       CLOSE(iufilFi_all)
     ENDIF
-  ENDIF
+    ! 
+    IF (second) THEN
+      ! 
+      ! First inquire if the file exists
+#if defined(__MPI)
+      name1 = trim(tmp_dir) // trim(prefix) // '.F_restart_CB1'
+#else
+      name1 = trim(tmp_dir) // trim(prefix) // '.F_restart_CB'
+#endif
+      INQUIRE(file = name1, exist=exst)
+      ! 
+      IF (exst) THEN ! read the file
+        !
+        lfi_all = 3* (ibndmax-ibndmin+1) * nktotf +3
+        CALL diropn (iufilFi_all, 'F_restart', lfi_all, exst)
+        CALL davcio ( aux, lfi_all, iufilFi_all, 1, -1 )
+        !
+        ! First element is the iteration number
+        iter = INT( aux(1) )
+        ! Current iteration number
+        iq = INT( aux(2) )
+        iq = iq + 1 ! we need to start at the next q
+        ! Total number of q-points
+        nqtotf_read = INT( aux(3) )
+        ! Last value of hole mobility
+        ! Error in hole mobility
+        error_h = aux(4)
+        ! Error in electron mobility
+        error_el = aux(5)
+        ! This is the error of the previous iteration. Therefore when you restart
+        ! from a converged one, you want to be finished. 
+        ! This small substraction wont affect anything. 
+        error_h = error_h -0.5E-2
+        error_el = error_el -0.5E-2
+        !
+        IF ( nqtotf_read /= nqtotf) CALL errore('io_scattering',&
+          &'Error: The current total number of q-point is not the same as the read one. ',1)
+        !
+        i = 5
+        DO itemp=1, nstemp
+          i = i + 1  
+          ! Last value of hole mobility 
+          mobilityh_save(itemp) = aux(i)
+        ENDDO
+        ! 
+        i = 5 + nstemp
+        DO itemp=1, nstemp
+          i = i + 1  
+          ! Last value of electron mobility
+          mobilityel_save(itemp) = aux(i)
+        ENDDO
+        ! 
+        i = 5 + nstemp + nstemp
+        DO itemp=1, nstemp
+          DO ik=1, nktotf
+            DO ibnd=1, (ibndmax-ibndmin+1)
+              DO idir=1,3
+                i = i +1
+                F_currentcb(idir,ibnd, ik, itemp) = aux(i)
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+        CLOSE(iufilFi_all)
+      ENDIF ! exist 
+    ENDIF ! second
+  ENDIF ! mpime
   ! 
   CALL mp_bcast (exst, ionode_id, inter_pool_comm)
   CALL mp_bcast (exst, root_pool, intra_pool_comm)
@@ -216,6 +357,10 @@
     CALL mp_bcast (iq, root_pool, intra_pool_comm)
     CALL mp_bcast (F_current, ionode_id, inter_pool_comm)
     CALL mp_bcast (F_current, root_pool, intra_pool_comm)
+    IF (second) THEN
+      CALL mp_bcast (F_currentcb, ionode_id, inter_pool_comm)
+      CALL mp_bcast (F_currentcb, root_pool, intra_pool_comm)
+    ENDIF
     CALL mp_bcast (mobilityh_save, ionode_id, inter_pool_comm)
     CALL mp_bcast (mobilityh_save, root_pool, intra_pool_comm)
     CALL mp_bcast (mobilityel_save, ionode_id, inter_pool_comm)
@@ -235,8 +380,18 @@
     IF (lower_bnd > 1 ) F_current(:,:,1:lower_bnd-1,:) = zero
     IF (upper_bnd < nktotf ) F_current(:,:,upper_bnd+1:nktotf,:) = zero
     ! 
+    IF (second) THEN
+      Fi_allcb = F_currentcb
+      CALL mp_bcast (Fi_allcb, ionode_id, inter_pool_comm)
+      CALL mp_bcast (Fi_allcb, root_pool, intra_pool_comm)
+      ! 
+      ! Make everythin 0 except the range of k-points we are working on
+      IF (lower_bnd > 1 ) F_currentcb(:,:,1:lower_bnd-1,:) = zero
+      IF (upper_bnd < nktotf ) F_currentcb(:,:,upper_bnd+1:nktotf,:) = zero
+    ENDIF
+    ! 
     WRITE(stdout, '(a,i10,a,i10,a,i10)' ) '     Restart from iter: ',iter,' and iq: ',iq,'/',nqtotf
-  ENDIF
+  ENDIF ! exists
   !
   !----------------------------------------------------------------------------
   END SUBROUTINE F_read
