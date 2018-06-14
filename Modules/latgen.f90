@@ -611,11 +611,11 @@ CONTAINS
   !
   LOGICAL FUNCTION eqq (x,y)
     REAL(dp), INTENT (in) :: x,y
-    eqq = abs(x-y) < 1.0d-6
+    eqq = abs(x-y) < 1.0d-5
   END FUNCTION eqq
   LOGICAL FUNCTION neqq (x,y)
     REAL(dp), INTENT (in) :: x,y
-    neqq = abs(x-y) > 1.0d-6
+    neqq= abs(x-y) > 1.0d-5
   END FUNCTION neqq
   !
 END FUNCTION at2ibrav
