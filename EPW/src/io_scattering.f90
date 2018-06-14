@@ -11,6 +11,7 @@
   USE kinds,        ONLY : DP
   USE io_epw,       ONLY : iufilFi_all
   USE io_files,     ONLY : diropn
+  USE epwcom,       ONLY : nstemp
   USE mp,           ONLY : mp_barrier
   USE mp_world,     ONLY : mpime
   USE io_global,    ONLY : ionode_id
@@ -46,8 +47,10 @@
   !! band index
   INTEGER :: idir
   !! Direction index
+  INTEGER :: itemp
+  !! Temperature index
   ! 
-  REAL(KIND=DP) :: aux ( 3 * (ibndmax-ibndmin+1) * nktotf + 7 )
+  REAL(KIND=DP) :: aux ( 3 * nstemp * (ibndmax-ibndmin+1) * nktotf + 7 )
   !! Vector to store the array
   !
   !
@@ -70,11 +73,13 @@
     aux(7) = error_el
     !
     i = 7
-    DO ik=1, nktotf
-      DO ibnd=1, (ibndmax-ibndmin+1)
-        DO idir=1,3
-          i = i +1
-          aux(i) = F_current(idir,ibnd, ik)
+    DO itemp=1, nstemp
+      DO ik=1, nktotf
+        DO ibnd=1, (ibndmax-ibndmin+1)
+          DO idir=1,3
+            i = i +1
+            aux(i) = F_current(idir, ibnd, ik, itemp)
+          ENDDO
         ENDDO
       ENDDO
     ENDDO
@@ -84,8 +89,8 @@
   ENDIF
   !
   ! Make everythin 0 except the range of k-points we are working on
-  IF (lower_bnd > 1 ) F_current(:,:,1:lower_bnd-1) = zero
-  IF (upper_bnd < nktotf ) F_current(:,:,upper_bnd+1:nktotf) = zero
+  IF (lower_bnd > 1 ) F_current(:,:,1:lower_bnd-1,:) = zero
+  IF (upper_bnd < nktotf ) F_current(:,:,upper_bnd+1:nktotf,:) = zero
   ! 
   !----------------------------------------------------------------------------
   END SUBROUTINE F_write
@@ -97,6 +102,7 @@
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE io_epw,    ONLY : iufilFi_all
+  USE epwcom,    ONLY : nstemp
   USE constants_epw, ONLY : zero
   USE io_files,  ONLY : prefix, tmp_dir, diropn
   USE mp,        ONLY : mp_barrier, mp_bcast
@@ -137,6 +143,8 @@
   !! Direction index
   INTEGER :: nqtotf_read
   !! Total number of q-point read
+  INTEGER :: itemp
+  !! Temperature index
   ! 
   CHARACTER (len=256) :: name1
  
@@ -184,11 +192,13 @@
         &'Error: The current total number of q-point is not the same as the read one. ',1)
       !
       i = 7
-      DO ik=1, nktotf
-        DO ibnd=1, (ibndmax-ibndmin+1)
-          DO idir=1,3
-            i = i +1
-            F_current(idir,ibnd, ik) = aux(i)
+      DO itemp=1, nstemp
+        DO ik=1, nktotf
+          DO ibnd=1, (ibndmax-ibndmin+1)
+            DO idir=1,3
+              i = i +1
+              F_current(idir, ibnd, ik, itemp) = aux(i)
+            ENDDO
           ENDDO
         ENDDO
       ENDDO
@@ -222,8 +232,8 @@
     CALL mp_bcast (Fi_all, root_pool, intra_pool_comm)
     ! 
     ! Make everythin 0 except the range of k-points we are working on
-    IF (lower_bnd > 1 ) F_current(:,:,1:lower_bnd-1) = zero
-    IF (upper_bnd < nktotf ) F_current(:,:,upper_bnd+1:nktotf) = zero
+    IF (lower_bnd > 1 ) F_current(:,:,1:lower_bnd-1,:) = zero
+    IF (upper_bnd < nktotf ) F_current(:,:,upper_bnd+1:nktotf,:) = zero
     ! 
     WRITE(stdout, '(a,i10,a,i10,a,i10)' ) '     Restart from iter: ',iter,' and iq: ',iq,'/',nqtotf
   ENDIF
