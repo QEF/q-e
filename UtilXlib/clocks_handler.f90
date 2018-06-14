@@ -352,8 +352,11 @@ SUBROUTINE print_this_clock( n )
      !
   ENDIF
   !
+#define PRINT_AVG_CPU_TIME_PER_THREAD
+#if defined(PRINT_AVG_CPU_TIME_PER_THREAD)
   ! rescale the elapsed cpu time on a per-thread basis
   elapsed_cpu_time   = elapsed_cpu_time * mpi_per_thread
+#endif
   !
   nmax = called(n)
   !
