@@ -1258,6 +1258,9 @@ CONTAINS
            END DO
            !$omp end parallel do
            !
+           ! clean up garbage if there is any
+           IF (npw < npwx) psi(npw+1:npwx,:,nbase+ic:nbase+notcl+ic-1) = ZERO
+           !
         END IF
         !
      END DO
