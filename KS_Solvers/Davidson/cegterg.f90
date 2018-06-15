@@ -1196,7 +1196,7 @@ CONTAINS
 
            DO np = 1, notcl
               !
-              psi(:,:,nbase+np+ic-1) = ptmp(:,:,np) - ew(nbase+np+ic-1) * psi(:,:,nbase+np+ic-1)
+              psi(1:npw,:,nbase+np+ic-1) = ptmp(1:npw,:,np) - ew(nbase+np+ic-1) * psi(1:npw,:,nbase+np+ic-1)
               !
            END DO
            !
