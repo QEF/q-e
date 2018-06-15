@@ -8,6 +8,7 @@
     celldm(3) = 2.0,
     celldm(4) = 0.1,
     nat=2, ntyp=1,
+    nbnd = 4,
     ecutwfc = 25.0
  /
  &electrons
