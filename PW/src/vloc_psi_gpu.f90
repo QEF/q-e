@@ -13,11 +13,10 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   !
   USE parallel_include
   USE kinds,   ONLY : DP
+  USE control_flags, ONLY : many_fft
   USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
-  !USE wavefunctions_module,       ONLY: psic_h => psic
-  !USE wavefunctions_module_gpum,       ONLY: psic_d
   USE fft_helper_subroutines
   USE qe_buffers,    ONLY : qe_buffer
   !
@@ -45,12 +44,13 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
 #endif
   INTEGER :: v_siz, idx, ioff
   INTEGER :: ierr
+  ! Variables to handle batched FFT
+  INTEGER :: group_size, pack_size, remainder, howmany
+  REAL(DP):: v_tmp
   !
   CALL start_clock ('vloc_psi')
-  incr = 2
+  incr = 2 * many_fft
   !
-  !IF (.not. allocated(psic_d)) ALLOCATE(psic_d, SOURCE=psic_h)
-  CALL qe_buffer%lock_buffer( psic_d, dffts%nnr, ierr )
   use_tg = dffts%has_task_groups 
   !
   IF( use_tg ) THEN
@@ -66,6 +66,8 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      !
      incr = 2 * fftx_ntgrp(dffts)
      !
+  ELSE
+     CALL qe_buffer%lock_buffer( psic_d, dffts%nnr * many_fft, ierr )
   ENDIF
   ! Sync fft data
   dffts_nl_d => dffts%nl_d
@@ -105,6 +107,42 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
 
         ENDDO
         !
+     ELSE IF (many_fft > 1) THEN
+        !
+        psic_d(:) = (0.d0, 0.d0)
+        !
+        ! FFT batching strategy is defined here:
+        !  the buffer in psi_c can contain 2*many_fft bands.
+        !  * group_size: is the number of bands that will be transformed.
+        !  * pack_size:  is the number of slots in psi_c used to store
+        !                the (couples) of bands
+        !  * remainder:  can be 1 or 0, if 1, a spare band should be added
+        !                in the the first slot of psi_c not occupied by
+        !                the couples of bands.
+        !
+        group_size = MIN(2*many_fft, m - (ibnd -1))
+        pack_size  = (group_size/2) ! This is FLOOR(group_size/2)
+        remainder  = group_size - 2*pack_size
+        howmany    = pack_size+remainder
+        !
+        ! two ffts at the same time
+        IF ( pack_size > 0 ) THEN
+           !$cuf kernel do(1) <<<,>>>
+           DO j = 1, n
+              DO idx = 0, pack_size-1
+                 psic_d(dffts_nl_d (j) + idx*dffts%nnr)=      psi_d(j,ibnd+2*idx) + (0.0d0,1.d0)*psi_d(j,ibnd+2*idx+1)
+                 psic_d(dffts_nlm_d(j) + idx*dffts%nnr)=conjg(psi_d(j,ibnd+2*idx) - (0.0d0,1.d0)*psi_d(j,ibnd+2*idx+1))
+              end do
+           ENDDO
+        END IF
+        IF (remainder > 0) THEN
+           !$cuf kernel do(1) <<<,>>>
+           DO j = 1, n
+              psic_d (dffts_nl_d (j) + pack_size*dffts%nnr) =       psi_d(j, ibnd+group_size-1)
+              psic_d (dffts_nlm_d(j) + pack_size*dffts%nnr) = conjg(psi_d(j, ibnd+group_size-1))
+           ENDDO
+        ENDIF
+        !
      ELSE
         !
         psic_d(:) = (0.d0, 0.d0)
@@ -141,6 +179,20 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
         ENDDO
         !
         CALL fwfft ('tgWave', tg_psic_d, dffts )
+        !
+     ELSE IF ( many_fft > 1 ) THEN
+        !
+        CALL invfft ('Wave', psic_d, dffts, howmany=howmany)
+        !
+        !$cuf kernel do(1) <<<,>>>
+        DO j = 1, dffts%nnr
+           v_tmp = v_d(j)
+           DO idx = 0, howmany-1
+              psic_d (j + idx*dffts%nnr) = psic_d (j+ idx*dffts%nnr) * v_tmp
+           END DO
+        ENDDO
+        !
+        CALL fwfft ('Wave', psic_d, dffts, howmany=howmany)
         !
      ELSE
         !
@@ -189,6 +241,28 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
            !
         ENDDO
         !
+     ELSE IF ( many_fft > 1 ) THEN
+        IF ( pack_size > 0 ) THEN
+           ! two ffts at the same time
+           !$cuf kernel do(1) <<<,>>>
+           DO j = 1, n
+              DO idx = 0, pack_size-1
+                 ioff = idx*dffts%nnr
+                 fp = (psic_d (ioff + dffts_nl_d(j)) + psic_d (ioff + dffts_nlm_d(j)))*0.5d0
+                 fm = (psic_d (ioff + dffts_nl_d(j)) - psic_d (ioff + dffts_nlm_d(j)))*0.5d0
+                 hpsi_d (j, ibnd + idx*2)   = hpsi_d (j, ibnd + idx*2)   + &
+                                    cmplx( dble(fp), aimag(fm),kind=DP)
+                 hpsi_d (j, ibnd + idx*2 +1) = hpsi_d (j, ibnd + idx*2 +1) + &
+                                    cmplx(aimag(fp),- dble(fm),kind=DP)
+              ENDDO
+           ENDDO
+        END IF
+        IF (remainder > 0) THEN
+           !$cuf kernel do(1) <<<,>>>
+           DO j = 1, n
+              hpsi_d (j, ibnd + group_size-1)   = hpsi_d (j, ibnd + group_size-1)   + psic_d (pack_size*dffts%nnr + dffts_nl_d(j))
+           ENDDO
+        ENDIF
      ELSE
         IF (ibnd < m) THEN
            ! two ffts at the same time
@@ -216,8 +290,9 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL qe_buffer%release_buffer( tg_psic_d, ierr )
      CALL qe_buffer%release_buffer( tg_v_d, ierr )
      !
-  ENDIF
-  CALL qe_buffer%release_buffer( psic_d, ierr )
+  ELSE
+     CALL qe_buffer%release_buffer( psic_d, ierr )
+  END IF
   CALL stop_clock ('vloc_psi')
   !
   RETURN
@@ -240,6 +315,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE wvfct, ONLY : current_k
   USE klist, ONLY : igk_k_d
   USE mp_bands,      ONLY : me_bgrp
+  USE control_flags, ONLY : many_fft
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
   USE fft_helper_subroutines
@@ -260,7 +336,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   INTEGER :: ibnd, j, incr
   INTEGER :: i, right_nnr, right_nr3, right_inc
   !
-  LOGICAL :: use_tg, use_many
+  LOGICAL :: use_tg
   ! Task Groups
   COMPLEX(DP), POINTER :: psic_d(:)
   REAL(DP),    POINTER :: tg_v_d(:)
@@ -273,12 +349,10 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   REAL(DP) :: v_tmp
   INTEGER :: v_siz, idx, ioff
   INTEGER :: ierr
-  INTEGER :: howmany = 12           ! this must become an option
   INTEGER :: group_size
   
   CALL start_clock ('vloc_psi')
   use_tg = dffts%has_task_groups
-  use_many = .true.
   !
   IF( use_tg ) THEN
      !
@@ -291,10 +365,8 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock ('vloc_psi:tg_gather')
      !
-  ELSE IF (use_many) THEN
-     CALL qe_buffer%lock_buffer( psic_d, dffts%nnr*howmany, ierr )
   ELSE
-     CALL qe_buffer%lock_buffer( psic_d, dffts%nnr, ierr )
+     CALL qe_buffer%lock_buffer( psic_d, dffts%nnr*many_fft, ierr )
   ENDIF
   !
   dffts_nl_d => dffts%nl_d
@@ -365,12 +437,12 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
         ENDDO
         !
      ENDDO
-  ELSE IF (use_many) THEN
-     DO ibnd = 1, m, howmany
+  ELSE IF (many_fft > 1) THEN
+     DO ibnd = 1, m, many_fft
         !
         !!! == OPTIMIZE HERE == (setting to 0 and setting elements!)
         psic_d(:) = (0.d0, 0.d0)
-        group_size = MIN(howmany, m - (ibnd -1))
+        group_size = MIN(many_fft, m - (ibnd -1))
 
 !$cuf kernel do(1) <<<,>>>
         DO j = 1, n

@@ -250,6 +250,9 @@ MODULE control_flags
   LOGICAL, PUBLIC :: &
     use_gpu = .FALSE.          ! if .TRUE. selects the accelerated version of the subroutines
                                ! when available
+  INTEGER, PUBLIC :: &
+    many_fft = 12              ! the size of FFT batches in vloc_psi and
+                               ! sumband. Only use in accelerated subroutines.
   !
   INTEGER  :: ortho_max = 0      ! maximum number of iterations in routine ortho
   REAL(DP) :: ortho_eps = 0.0_DP ! threshold for convergence in routine ortho
