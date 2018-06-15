@@ -178,8 +178,8 @@ CONTAINS
     USE atom, ONLY: msh, rgrid
     USE splinelib, ONLY : splint
     USE mp_images, ONLY : me_image, nproc_image, intra_image_comm
-    USE mp_pools,  ONLY : me_pool
     USE mp, ONLY : mp_sum
+    USE mp_bands, ONLY : intra_bgrp_comm
 
     REAL(DP) :: evdw
 
@@ -373,10 +373,9 @@ CONTAINS
              END DO ! n
           END DO ! iat
        END DO ! ispin
-#if defined(__MPI)
-       CALL mp_sum(avol,intra_image_comm)
-       CALL mp_sum(ml,intra_image_comm)
-#endif
+       CALL mp_sum(avol,intra_bgrp_comm)
+       CALL mp_sum(ml,intra_bgrp_comm)
+
        avol = avol * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
        ml = ml * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
 
@@ -523,14 +522,12 @@ CONTAINS
     sigma = -0.5_DP * sigma / omega
     ehadd = -0.5_DP * ehadd
 
-#if defined(__MPI)
     CALL mp_sum(evdw,intra_image_comm)
     CALL mp_sum(for,intra_image_comm)
     CALL mp_sum(sigma,intra_image_comm)
     DO nn = 6, 10
        CALL mp_sum(ehadd(nn),intra_image_comm)
     ENDDO
-#endif
 
     ! Convert to Ry
     evdw = evdw * 2
@@ -705,7 +702,6 @@ CONTAINS
     USE scf,           ONLY : scf_type
     USE fft_base,      ONLY : dfftp
     USE mp,            ONLY : mp_bcast, mp_sum
-    USE mp_pools,      ONLY : me_pool
     USE mp_images,     ONLY : intra_image_comm
     USE io_global,     ONLY : ionode_id
     USE splinelib,     ONLY : spline, splint
@@ -874,7 +870,6 @@ CONTAINS
     USE fft_base,  ONLY : dfftp
     USE splinelib, ONLY : splint
     use cell_base, ONLY : alat
-    USE mp_pools,  ONLY : me_pool
     implicit none
 
     real(DP), intent(out) :: rhoc(dfftp%nnr) ! core density in the real-space grid
