@@ -42,6 +42,8 @@ upf2upf2.o : ../Modules/write_upf.o
 vanderbilt.o : ../Modules/constants.o
 vanderbilt.o : write_upf.o
 virtual.o : ../Modules/funct.o
+virtual.o : ../Modules/kind.o
+virtual.o : ../Modules/pseudo_types.o
 virtual.o : ../Modules/splinelib.o
-virtual.o : read_upf.o
-virtual.o : write_upf.o
+virtual.o : ../Modules/upf.o
+virtual.o : ../Modules/write_upf.o

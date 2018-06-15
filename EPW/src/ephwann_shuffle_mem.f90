@@ -68,7 +68,8 @@
                             vmebloch2wan, ephbloch2wane, ephbloch2wanp_mem
   USE superconductivity, ONLY : write_ephmat, count_kpoints, kmesh_fine, &
                             kqmap_fine
-  USE transport,     ONLY : transport_coeffs, iterativebte, scattering_rate_q
+  USE transport,     ONLY : transport_coeffs, scattering_rate_q
+  USE transport_iter,ONLY : iterativebte
 #ifdef __NAG
   USE f90_unix_io,   ONLY : flush
 #endif
@@ -750,13 +751,13 @@
   ENDIF
   !
   IF (iterative_bte) THEN
-    ALLOCATE(Fi_all(3,ibndmax-ibndmin+1,nkqtotf/2))
+    ALLOCATE(Fi_all(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
     ! Current iterative F(i+1) function
-    ALLOCATE(F_current(3,ibndmax-ibndmin+1,nkqtotf/2))
-    ALLOCATE(F_SERTA(3,ibndmax-ibndmin+1,nkqtotf/2))
-    Fi_all(:,:,:) = zero
-    F_current(:,:,:) = zero
-    F_SERTA(:,:,:) = zero
+    ALLOCATE(F_current(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+    ALLOCATE(F_SERTA(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+    Fi_all(:,:,:,:) = zero
+    F_current(:,:,:,:) = zero
+    F_SERTA(:,:,:,:) = zero
   ENDIF 
   ! 
   ! Define it only once for the full run. 
@@ -1245,7 +1246,7 @@
              IF (int_mob .AND. carrier) THEN
                call errore('ephwann_shuffle','The iterative solution cannot be solved with int_mob AND carrier at the moment',1)
              ELSE
-               CALL iterativebte(iter, iq, ef0(1), error_h, error_el, first_cycle, first_time)
+               CALL iterativebte(iter, iq, ef0, efcb, error_h, error_el, first_cycle, first_time)
              ENDIF   
              !
              IF (iq == nqf) iter = iter + 1 

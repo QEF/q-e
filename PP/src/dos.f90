@@ -157,7 +157,7 @@ PROGRAM do_dos
         Emin = Emin/rytoev
      END IF
      IF ( Emax  == E_unset ) THEN
-        Emax = MINVAL ( et(nbnd, 1:nks) )
+        Emax = MAXVAL ( et(nbnd, 1:nks) )
         IF ( degauss > 0.0_dp ) Emax = Emax + 3.0_dp * degauss
      ELSE 
         Emax = Emax/rytoev
