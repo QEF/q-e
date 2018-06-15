@@ -87,6 +87,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   REAL(DP), ALLOCATABLE :: e_host(:)
     ! auxiliary variables for performing dot product
   INTEGER :: i,j,k
+  REAL(DP):: aux
   !
   !
   EXTERNAL  h_psi_gpu, s_psi_gpu, g_psi_gpu
@@ -183,7 +184,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   if (n_start .le. n_end) &
   CALL cublasDgemm( 'T','N', nbase, my_n, npw2, 2.D0 , psi_d, npwx2, hpsi_d(1,n_start), npwx2, 0.D0, hr_d(1,n_start), nvecx )
-  IF ( gstart == 2 ) CALL MyDger(nbase, my_n, -1.D0, psi_d, npwx2, hpsi_d(1,n_start), npwx2, hr_d(1,n_start), nvecx )
+  IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi_d, npwx2, hpsi_d(1,n_start), npwx2, hr_d(1,n_start), nvecx )
   CALL mp_sum( hr_d( :, 1:nbase ), inter_bgrp_comm )
   !
   CALL mp_sum( hr_d( :, 1:nbase ), intra_bgrp_comm )
@@ -192,13 +193,13 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      if (n_start .le. n_end) &
      CALL cublasDgemm( 'T','N', nbase, my_n, npw2, 2.D0, psi_d, npwx2, spsi_d(1,n_start), npwx2, 0.D0, sr_d(1,n_start), nvecx )
-     IF ( gstart == 2 ) CALL MyDger(nbase, my_n, -1.D0, psi_d, npwx2, spsi_d(1,n_start), npwx2, sr_d(1,n_start), nvecx )
+     IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi_d, npwx2, spsi_d(1,n_start), npwx2, sr_d(1,n_start), nvecx )
      !
   ELSE
      !
      if (n_start .le. n_end) &
      CALL cublasDgemm( 'T','N', nbase, my_n, npw2, 2.D0, psi_d, npwx2, psi_d(1,n_start), npwx2, 0.D0, sr_d(1,n_start), nvecx )
-     IF ( gstart == 2 ) CALL MyDger(nbase, my_n, -1.D0, psi_d, npwx2, psi_d(1,n_start), npwx2, sr_d(1,n_start), nvecx )
+     IF ( gstart == 2 ) CALL KScudaDGER(nbase, my_n, -1.D0, psi_d, npwx2, psi_d(1,n_start), npwx2, sr_d(1,n_start), nvecx )
      !
   END IF
   CALL mp_sum( sr_d( :, 1:nbase ), inter_bgrp_comm )
@@ -323,18 +324,19 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !
      ! == TO BE OPTIMIZED == !!!!
+     !$cuf kernel do(1) <<<*,*>>>
      DO n = 1, notcnv
         !
         nbn = nbase + n
-!$cuf kernel do(1) <<<*,*>>>
+        aux = 0.0_DP
         DO i = 1, npw
-          !
-          IF ( i == 1 ) ew_d(n) = 0.D0
-          ew_d(n) = ew_d(n) + 2.D0 * DCONJG(psi_d(i,nbn)) * psi_d(i, nbn)
-          IF ( (gstart == 2) .and. (i == 1)) ew_d(n) = ew_d(n) - DBLE(psi_d(1,nbn) * psi_d(1,nbn)) ! psi_d(1,nbn) * psi_d(1,nbn)
+          aux = aux + 2.D0 * DCONJG(psi_d(i,nbn)) * psi_d(i, nbn)
         END DO
+        !
+        IF (gstart == 2) aux = aux - DBLE(psi_d(1,nbn) * psi_d(1,nbn)) ! psi_d(1,nbn) * psi_d(1,nbn)
+        ew_d(n) = aux
      END DO
-     !
+     ! == OPTIMIZE ABOVE ==
      CALL mp_sum( ew_d( 1:notcnv ), intra_bgrp_comm )
      !
 !$cuf kernel do(2) <<<*,*>>>
@@ -364,7 +366,7 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi_d(1,n_start), npwx2, hpsi_d(1,nb1), npwx2, 0.D0, hr_d(n_start,nb1), nvecx )
-     IF ( gstart == 2 ) CALL MyDger( my_n, notcnv, -1.D0, psi_d(1,n_start), npwx2, hpsi_d(1,nb1), npwx2, hr_d(n_start,nb1), nvecx )
+     IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi_d(1,n_start), npwx2, hpsi_d(1,nb1), npwx2, hr_d(n_start,nb1), nvecx )
      CALL mp_sum( hr_d( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
      CALL mp_sum( hr_d( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
@@ -380,12 +382,12 @@ SUBROUTINE regterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      IF ( uspp ) THEN
         !
         CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi_d(1,n_start), npwx2, spsi_d(1,nb1), npwx2, 0.D0, sr_d(n_start,nb1), nvecx )
-        IF ( gstart == 2 ) CALL MyDger( my_n, notcnv, -1.D0, psi_d(1,n_start), npwx2, spsi_d(1,nb1), npwx2, sr_d(n_start,nb1), nvecx )
+        IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi_d(1,n_start), npwx2, spsi_d(1,nb1), npwx2, sr_d(n_start,nb1), nvecx )
         !
      ELSE
         !
         CALL cublasDgemm( 'T','N', my_n, notcnv, npw2, 2.D0, psi_d(1,n_start), npwx2, psi_d(1,nb1), npwx2, 0.D0, sr_d(n_start,nb1), nvecx )
-        IF ( gstart == 2 ) CALL MyDger( my_n, notcnv, -1.D0, psi_d(1,n_start), npwx2, psi_d(1,nb1), npwx2, sr_d(n_start,nb1), nvecx )
+        IF ( gstart == 2 ) CALL KScudaDGER( my_n, notcnv, -1.D0, psi_d(1,n_start), npwx2, psi_d(1,nb1), npwx2, sr_d(n_start,nb1), nvecx )
 
         !
      END IF
@@ -1688,18 +1690,17 @@ END SUBROUTINE pregterg_gpu
 
 
 ! In principle this can go away .......
-SUBROUTINE MyDger ( m, n, alpha, x, incx, y, incy, a, lda)
-   USE david_param, ONLY : DP
-   USE cudafor
-   USE cublas, ONLY : dger
-   IMPLICIT NONE
-   INTEGER, INTENT(IN) :: m, n, lda, incx, incy
-   REAL(DP), INTENT(IN) :: alpha
-   REAL(DP), DEVICE, INTENT(IN) :: x, y
-   REAL(DP), DEVICE, INTENT(INOUT) :: a
+SUBROUTINE KScudaDGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
+    use cudafor
+    use cublas
+!     .. Scalar Arguments ..
+    DOUBLE PRECISION ::  ALPHA
+    INTEGER          ::   INCX, INCY, LDA, M, N
+!     .. Array Arguments ..
+    DOUBLE PRECISION :: A( LDA, * ), X( * ), Y( * )
+    attributes(device) :: A, X, Y
+    CALL DGER  ( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
 
-   call dger( M, N, ALPHA, X, INCX, Y, INCY, A, LDA )
-
-END SUBROUTINE MyDger
+END SUBROUTINE KScudaDGER
 
 #endif

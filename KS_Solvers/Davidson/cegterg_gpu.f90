@@ -339,6 +339,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      !
      ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !
+     !!! == OPTIMIZE HERE ==
      DO n = 1, notcnv
         !
         nbn = nbase + n
