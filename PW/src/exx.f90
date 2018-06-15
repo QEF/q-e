@@ -423,11 +423,8 @@ MODULE exx
     ibnd_end_new = iexx_end
 
     IF ( gamma_only ) THEN
-        ibnd_buff_start = ibnd_start_new/2
-        IF(mod(iexx_start,2)==1) ibnd_buff_start = ibnd_buff_start +1
-        !
-        ibnd_buff_end = ibnd_end_new/2
-        IF(mod(iexx_end,2)==1) ibnd_buff_end = ibnd_buff_end +1
+        ibnd_buff_start = (ibnd_start_new+1)/2
+        ibnd_buff_end   = (ibnd_end_new+1)/2
     ELSE
         ibnd_buff_start = ibnd_start_new
         ibnd_buff_end   = ibnd_end_new
@@ -443,7 +440,7 @@ MODULE exx
     ELSE
       IF (.not. allocated(exxbuff)) THEN
          IF (gamma_only) THEN
-            ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_end, nks))
+            ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+(max_jbands_per_egrp-1)/2, nks))
          ELSE
             ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_jbands_per_egrp-1, nkqs))
          END IF
@@ -820,10 +817,12 @@ MODULE exx
     USE klist,          ONLY : xk, nks, nkstot, igk_k
     USE fft_interfaces, ONLY : fwfft, invfft
     USE becmod,         ONLY : bec_type
-    USE mp_exx,       ONLY : inter_egrp_comm, intra_egrp_comm, my_egrp_id,  &
-                             negrp, max_pairs, egrp_pairs, ibands, nibands, &
-                             max_ibands, iexx_istart, iexx_iend, jblock
-    USE mp,             ONLY : mp_sum, mp_barrier, mp_bcast
+    USE mp_exx,         ONLY : inter_egrp_comm, my_egrp_id, &
+                               intra_egrp_comm, me_egrp, &
+                               negrp, max_pairs, egrp_pairs, ibands, nibands, &
+                               max_ibands, iexx_istart, iexx_iend, &
+                               all_start, all_end, iexx_start, jblock
+    USE mp,             ONLY : mp_sum, mp_barrier, mp_circular_shift_left
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
     USE us_exx,         ONLY : bexg_merge, becxx, addusxx_g, addusxx_r, &
@@ -832,7 +831,7 @@ MODULE exx
     USE paw_exx,        ONLY : PAW_newdxx
     USE exx_base,       ONLY : nqs, index_xkq, index_xk, xkq_collect, &
          coulomb_fac, g2_convolution_all
-    USE exx_band,       ONLY : exxbuff_comm_gamma, result_sum, igk_exx
+    USE exx_band,       ONLY : result_sum, igk_exx
     !
     !
     IMPLICIT NONE
@@ -853,7 +852,7 @@ MODULE exx
     INTEGER          :: ir, ig
     INTEGER          :: current_ik
     INTEGER          :: ibnd_loop_start
-    INTEGER          :: h_ibnd, nrxxs
+    INTEGER          :: nrxxs
     REAL(DP) :: x1, x2, xkp(3)
     REAL(DP) :: xkq(3)
     INTEGER, EXTERNAL :: global_kpoint_index
@@ -861,11 +860,12 @@ MODULE exx
     LOGICAL :: l_fft_singleband
     INTEGER :: ialloc
     COMPLEX(DP), ALLOCATABLE :: big_result(:,:)
-    INTEGER :: iegrp, iproc, nproc_egrp, ii, ipair
+    INTEGER :: iproc, nproc_egrp, ii, ipair
     INTEGER :: jbnd, jstart, jend
     COMPLEX(DP), ALLOCATABLE :: exxtemp(:,:), psiwork(:)
-    INTEGER :: ijt, njt, jblock_start, jblock_end
-    INTEGER :: index_start, index_end, exxtemp_index
+    INTEGER :: jblock_start, jblock_end
+    INTEGER :: iegrp, wegrp
+    INTEGER :: exxtemp_index
     INTEGER :: ending_im
     !
     ialloc = nibands(my_egrp_id+1)
@@ -877,8 +877,6 @@ MODULE exx
     ALLOCATE( result(nrxxs,ialloc), temppsic_dble(nrxxs) )
     ALLOCATE( temppsic_aimag(nrxxs) )
     ALLOCATE( psiwork(nrxxs) )
-    !
-    ALLOCATE( exxtemp(nrxxs*npol, jblock) )
     !
     ALLOCATE(rhoc(nrxxs,nbnd), vc(nrxxs,nbnd))
     IF(okvan) ALLOCATE(deexx(nkb,ialloc))
@@ -907,20 +905,13 @@ MODULE exx
        CALL g2_convolution_all(dfftt%ngm, gt, xkp, xkq, iq, current_k)
        IF ( okvan .and..not.tqr ) CALL qvan_init (dfftt%ngm, xkq, xkp)
        !
-       njt = nbnd / (2*jblock)
-       if (mod(nbnd, (2*jblock)) .ne. 0) njt = njt + 1
-       !
-       IJT_LOOP : &
-       DO ijt=1, njt
+       DO iegrp=1, negrp
           !
-          jblock_start = (ijt - 1) * (2*jblock) + 1
-          jblock_end = min(jblock_start+(2*jblock)-1,nbnd)
-          index_start = (ijt - 1) * jblock + 1
-          index_end = min(index_start+jblock-1,nbnd/2)
+          ! compute the id of group whose data is currently worked on
+          wegrp = MOD(iegrp+my_egrp_id-1, negrp)+1
           !
-          !gather exxbuff for jblock_start:jblock_end
-          call exxbuff_comm_gamma( exxbuff, exxtemp, current_k,nrxxs*npol,&
-                  jblock_start,jblock_end,jblock)
+          jblock_start = all_start(wegrp)
+          jblock_end   = all_end(wegrp)
           !
           LOOP_ON_PSI_BANDS : &
           DO ii = 1,  nibands(my_egrp_id+1)
@@ -983,22 +974,16 @@ MODULE exx
              jstart = max(jstart,jblock_start)
              jend = min(jend,jblock_end)
              !
-             h_ibnd = jstart/2
              IF(mod(jstart,2)==0) THEN
-                h_ibnd=h_ibnd-1
                 ibnd_loop_start=jstart-1
              ELSE
                 ibnd_loop_start=jstart
              ENDIF
              !
-             exxtemp_index = max(0, (jstart-jblock_start)/2 )
-             !
              IBND_LOOP_GAM : &
              DO jbnd=ibnd_loop_start,jend, 2 !for each band of psi
                 !
-                h_ibnd = h_ibnd + 1
-                !
-                exxtemp_index = exxtemp_index + 1
+                exxtemp_index = (jbnd-all_start(wegrp)+iexx_start)/2+1
                 !
                 IF( jbnd < jstart ) THEN
                    x1 = 0.0_DP
@@ -1019,13 +1004,13 @@ MODULE exx
                 IF( mod(ii,2) == 0 ) THEN
 !$omp parallel do default(shared), private(ir)
                    DO ir = 1, nrxxs
-                      rhoc(ir,ii) = exxtemp(ir,exxtemp_index) * temppsic_aimag(ir) / omega
+                      psiwork(ir) = exxbuff(ir,exxtemp_index,ikq) * temppsic_aimag(ir) / omega
                    ENDDO
 !$omp end parallel do
                 ELSE
 !$omp parallel do default(shared), private(ir)
                    DO ir = 1, nrxxs
-                      rhoc(ir,ii) = exxtemp(ir,exxtemp_index) * temppsic_dble(ir) / omega
+                      psiwork(ir) = exxbuff(ir,exxtemp_index,ikq) * temppsic_dble(ir) / omega
                    ENDDO
 !$omp end parallel do
                 ENDIF
@@ -1035,23 +1020,23 @@ MODULE exx
                 !   >>>> add augmentation in REAL SPACE here
                 IF(okvan .and. tqr) THEN
                    IF(jbnd>=jstart) &
-                        CALL addusxx_r(rhoc(:,ii), &
+                        CALL addusxx_r(psiwork, &
                        _CX(becxx(ikq)%r(:,jbnd)), _CX(becpsi%r(:,ibnd)))
                    IF(jbnd<jend) &
-                        CALL addusxx_r(rhoc(:,ii), &
+                        CALL addusxx_r(psiwork, &
                        _CY(becxx(ikq)%r(:,jbnd+1)),_CX(becpsi%r(:,ibnd)))
                 ENDIF
                 !
-                CALL fwfft ('Rho', rhoc(:,ii), dfftt)
+                CALL fwfft ('Rho', psiwork, dfftt)
                 !   >>>> add augmentation in G SPACE here
                 IF(okvan .and. .not. tqr) THEN
                    ! contribution from one band added to real (in real space) part of rhoc
                    IF(jbnd>=jstart) &
-                        CALL addusxx_g(dfftt, rhoc(:,ii), xkq,  xkp, 'r', &
+                        CALL addusxx_g(dfftt, psiwork, xkq,  xkp, 'r', &
                         becphi_r=becxx(ikq)%r(:,jbnd), becpsi_r=becpsi%r(:,ibnd) )
                    ! contribution from following band added to imaginary (in real space) part of rhoc
                    IF(jbnd<jend) &
-                        CALL addusxx_g(dfftt, rhoc(:,ii), xkq,  xkp, 'i', &
+                        CALL addusxx_g(dfftt, psiwork, xkq,  xkp, 'i', &
                         becphi_r=becxx(ikq)%r(:,jbnd+1), becpsi_r=becpsi%r(:,ibnd) )
                 ENDIF
                 !   >>>> charge density done
@@ -1061,8 +1046,8 @@ MODULE exx
 !$omp parallel do default(shared), private(ig)
                 DO ig = 1, dfftt%ngm
                    !
-                   vc(dfftt%nl(ig),ii)  = coulomb_fac(ig,iq,current_k) * rhoc(dfftt%nl(ig),ii)
-                   vc(dfftt%nlm(ig),ii) = coulomb_fac(ig,iq,current_k) * rhoc(dfftt%nlm(ig),ii)
+                   vc(dfftt%nl(ig),ii)  = coulomb_fac(ig,iq,current_k) * psiwork(dfftt%nl(ig))
+                   vc(dfftt%nlm(ig),ii) = coulomb_fac(ig,iq,current_k) * psiwork(dfftt%nlm(ig))
                    !
                 ENDDO
 !$omp end parallel do
@@ -1101,8 +1086,9 @@ MODULE exx
                 !
 !$omp parallel do default(shared), private(ir)
                 DO ir = 1, nrxxs
-                   result(ir,ii) = result(ir,ii)+x1* dble(vc(ir,ii))* dble(exxtemp(ir,exxtemp_index))&
-                                                +x2*aimag(vc(ir,ii))*aimag(exxtemp(ir,exxtemp_index))
+                   result(ir,ii) = result(ir,ii) &
+                                 + x1* dble(vc(ir,ii))* dble(exxbuff(ir,exxtemp_index,ikq)) &
+                                 + x2*aimag(vc(ir,ii))*aimag(exxbuff(ir,exxtemp_index,ikq))
                 ENDDO
 !$omp end parallel do
                 !
@@ -1111,8 +1097,11 @@ MODULE exx
              !
           ENDDO &
           LOOP_ON_PSI_BANDS
-       ENDDO &
-       IJT_LOOP
+          !
+          ! get the next nbnd/negrp data
+          call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+          !
+       ENDDO ! iegrp
        IF ( okvan .and..not.tqr ) CALL qvan_clean ()
     ENDDO &
     INTERNAL_LOOP_ON_Q
@@ -1160,7 +1149,6 @@ MODULE exx
     DEALLOCATE(big_result)
     DEALLOCATE( result, temppsic_dble, temppsic_aimag)
     DEALLOCATE(rhoc, vc, fac )
-    DEALLOCATE(exxtemp)
     IF(okvan) DEALLOCATE( deexx )
     !
     !-----------------------------------------------------------------------
@@ -1186,7 +1174,7 @@ MODULE exx
                                max_pairs, egrp_pairs, ibands, nibands, &
                                max_ibands, iexx_istart, iexx_iend, &
                                all_start, all_end, iexx_start, jblock
-    USE mp,             ONLY : mp_sum, mp_barrier, mp_bcast, mp_circular_shift_left
+    USE mp,             ONLY : mp_sum, mp_barrier, mp_circular_shift_left
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
     USE us_exx,         ONLY : bexg_merge, becxx, addusxx_g, addusxx_r, &
@@ -1232,7 +1220,7 @@ MODULE exx
     INTEGER  :: irt, nrt, nblock
     INTEGER  :: current_ik
     INTEGER  :: ibnd_loop_start
-    INTEGER  :: h_ibnd, nrxxs
+    INTEGER  :: nrxxs
     REAL(DP) :: x1, x2, xkp(3), omega_inv, nqs_inv
     REAL(DP) :: xkq(3)
     INTEGER, EXTERNAL :: global_kpoint_index
@@ -1792,7 +1780,7 @@ MODULE exx
     INTEGER :: istart, iend, ipair, ii, ialloc
     COMPLEX(DP), ALLOCATABLE :: exxtemp(:,:)
     INTEGER :: ijt, njt, jblock_start, jblock_end
-    INTEGER :: index_start, index_end, exxtemp_index
+    INTEGER :: exxtemp_index
     INTEGER :: calbec_start, calbec_end
     INTEGER :: intra_bgrp_comm_
     !
@@ -1866,8 +1854,6 @@ MODULE exx
              !
              jblock_start = (ijt - 1) * (2*jblock) + 1
              jblock_end = min(jblock_start+(2*jblock)-1,nbnd)
-             index_start = (ijt - 1) * jblock + 1
-             index_end = min(index_start+jblock-1,nbnd/2)
              !
              !gather exxbuff for jblock_start:jblock_end
              call exxbuff_comm_gamma( exxbuff, exxtemp, ikk, nrxxs*npol,&
