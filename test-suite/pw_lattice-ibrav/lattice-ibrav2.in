@@ -5,6 +5,7 @@
     ibrav = 2,
     celldm(1) =10.0, 
     nat=2, ntyp=1,
+    nbnd = 4,
     ecutwfc = 25.0
  /
  &electrons
