@@ -43,10 +43,13 @@ subroutine drhoc (ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, rhocg)
   ! counter on g shells
   ! lower limit for loop on ngl
 
+!$omp parallel private(aux, gx, rhocg1)
+  !
   allocate (aux( mesh))     
   !
   ! G=0 term
   !
+!$omp single
   if (gl (1) < 1.0d-8) then
      do ir = 1, mesh
         aux (ir) = r (ir) **2 * rhoc (ir)
@@ -57,9 +60,11 @@ subroutine drhoc (ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, rhocg)
   else
      igl0 = 1
   endif
+!$omp end single
   !
   ! G <> 0 term
   !
+!$omp do
   do igl = igl0, ngl
      gx = sqrt (gl (igl) * tpiba2)
      call sph_bes (mesh, r, gx, 0, aux)
@@ -69,7 +74,10 @@ subroutine drhoc (ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, rhocg)
      call simpson (mesh, aux, rab, rhocg1)
      rhocg (igl) = fpi * rhocg1 / omega
   enddo
+!$omp end do
   deallocate(aux)
+  !
+!$omp end parallel
   !
   return
 end subroutine drhoc

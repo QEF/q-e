@@ -226,8 +226,12 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   INTEGER :: ibnd, j, incr
   INTEGER :: i, right_nnr, right_nr3, right_inc
   !
-  LOGICAL :: use_tg
+  ! chunking parameters
+  integer, parameter :: blocksize = 256
+  integer :: numblock
+  !
   ! Task Groups
+  LOGICAL :: use_tg
   REAL(DP),    ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx
@@ -252,19 +256,18 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
 
      CALL tg_get_nnr( dffts, right_nnr )
 
+     ! compute the number of chuncks
+     numblock  = (n+blocksize-1)/blocksize
+
      DO ibnd = 1, m, fftx_ntgrp(dffts)
         !
 !$omp parallel
-        !$omp do
-        DO j = 1, fftx_ntgrp(dffts) * right_nnr
-           tg_psic(j) = (0.d0, 0.d0)
-        ENDDO
-        !$omp end do
-        !
+        CALL threaded_barrier_memset(tg_psic, 0.D0, fftx_ntgrp(dffts)*right_nnr*2)
         !$omp do collapse(2)
-        DO idx = 1, MIN(fftx_ntgrp(dffts), m+1-ibnd)
-           DO j = 1, n
-              tg_psic(dffts%nl (igk_k(j,current_k))+right_nnr*(idx-1)) =  psi(j,idx+ibnd-1)
+        DO idx = 0, MIN(fftx_ntgrp(dffts)-1, m-ibnd)
+           DO j = 1, numblock
+              tg_psic(dffts%nl (igk_k((j-1)*blocksize+1:MIN(j*blocksize, n),current_k))+right_nnr*idx) = &
+                 psi((j-1)*blocksize+1:MIN(j*blocksize, n),idx+ibnd)
            ENDDO
         ENDDO
         !$omp end do nowait
@@ -291,10 +294,11 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
         CALL tg_get_recip_inc( dffts, right_inc )
         !
 !$omp parallel do collapse(2)
-        DO idx = 1, MIN(fftx_ntgrp(dffts), m+1-ibnd)
-           DO j = 1, n
-              hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
-                 tg_psic( dffts%nl(igk_k(j,current_k)) + right_inc*(idx-1) )
+        DO idx = 0, MIN(fftx_ntgrp(dffts)-1, m-ibnd)
+           DO j = 1, numblock
+              hpsi ((j-1)*blocksize+1:MIN(j*blocksize, n), ibnd+idx) = &
+                 hpsi ((j-1)*blocksize+1:MIN(j*blocksize, n), ibnd+idx) + &
+                 tg_psic( dffts%nl(igk_k((j-1)*blocksize+1:MIN(j*blocksize, n),current_k)) + right_inc*idx )
            ENDDO
         ENDDO
 !$omp end parallel do
@@ -304,11 +308,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
      DO ibnd = 1, m
         !
 !$omp parallel
-        !$omp do
-        DO j = 1, dffts%nnr
-           psic(j) = (0.d0, 0.d0)
-        ENDDO
-        !$omp end do
+        CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
         !$omp do
         DO j = 1, n
            psic (dffts%nl (igk_k(j,current_k))) = psi(j, ibnd)

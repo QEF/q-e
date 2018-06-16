@@ -186,7 +186,6 @@ SUBROUTINE add_vuspsi( lda, n, m, hpsi )
        ALLOCATE (ps (nkb,m), STAT=ierr )
        IF( ierr /= 0 ) &
           CALL errore( ' add_vuspsi_k ', ' cannot allocate ps ', ABS( ierr ) )
-       ps(:,:) = ( 0.D0, 0.D0 )
        !
        DO nt = 1, ntyp
           !
