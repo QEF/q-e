@@ -58,7 +58,8 @@
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,   &
                             nkqtotf, sigmar_all, zi_allvb, inv_tau_all, Fi_all, &
-                            F_current, F_SERTA, inv_tau_allcb, zi_allcb, exband
+                            F_current, F_SERTA, inv_tau_allcb, zi_allcb, exband,&
+                            F_currentcb, F_SERTAcb, Fi_allcb
   USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                             upper_bnd, ixkqf_tr,  s_BZtoIBZ_full
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch, &
@@ -758,6 +759,18 @@
     Fi_all(:,:,:,:) = zero
     F_current(:,:,:,:) = zero
     F_SERTA(:,:,:,:) = zero
+    ALLOCATE(mobilityh_save(nstemp))
+    ALLOCATE(mobilityel_save(nstemp))
+    mobilityh_save(:) = zero
+    mobilityel_save(:) = zero
+    IF (int_mob .AND. carrier) THEN
+      ALLOCATE(Fi_allcb(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+      ALLOCATE(F_currentcb(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+      ALLOCATE(F_SERTAcb(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+      Fi_allcb(:,:,:,:) = zero
+      F_currentcb(:,:,:,:) = zero
+      F_SERTAcb(:,:,:,:) = zero
+    ENDIF
   ENDIF 
   ! 
   ! Define it only once for the full run. 
@@ -777,8 +790,6 @@
   ELSE
     error_h = 0_DP
   ENDIF
-  mobilityh_save = 0.0_DP
-  mobilityel_save = 0.0_DP
   !
   ! Restart calculation
   iq_restart = 1
