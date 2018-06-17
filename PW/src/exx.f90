@@ -920,6 +920,7 @@ MODULE exx
                 psi_rhoc_work = (0._DP,0._DP)
                 !
                 IF ( (ii+1)<=min(m,nibands(my_egrp_id+1)) ) THEN
+                   ! deal with double bands
 !$omp parallel do  default(shared), private(ig)
                    DO ig = 1, npwt
                       psi_rhoc_work( dfftt%nl(ig) )  =       psi(ig, ii) + (0._DP,1._DP) * psi(ig, ii+1)
@@ -929,6 +930,7 @@ MODULE exx
                 ENDIF
                 !
                 IF ( ii==min(m,nibands(my_egrp_id+1)) ) THEN
+                   ! deal with a single last band
 !$omp parallel do  default(shared), private(ig)
                    DO ig = 1, npwt
                       psi_rhoc_work( dfftt%nl(ig) )  =       psi(ig,ii)
