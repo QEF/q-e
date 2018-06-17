@@ -393,7 +393,7 @@
       !
       ! Creation of a restart point
       IF (restart) THEN
-        IF (MOD(iq,restart_freq) == 0) THEN
+        IF (MOD(iq,restart_freq) == 0 ) THEN
           WRITE(stdout, '(a)' ) '     Creation of a restart point'
           ! 
           ! The mp_sum will aggreage the results on each k-points. 
@@ -543,7 +543,34 @@
       ENDDO !nstemp 
       !
       IF ( ALLOCATED(etf_all) )     DEALLOCATE( etf_all )
-    ENDIF
+      ! 
+      ! Creation of a restart point at the end
+      IF (restart) THEN
+        WRITE(stdout, '(a)' ) '     Creation of a restart point'
+        ! 
+        ! The mp_sum will aggreage the results on each k-points. 
+        CALL mp_sum( inv_tau_all, world_comm )
+        CALL mp_sum( zi_allvb,    world_comm )
+        !
+        IF ( ABS(efcb(1)) > eps ) THEN
+          ! 
+          CALL mp_sum( inv_tau_allcb, world_comm )
+          CALL mp_sum( zi_allcb,      world_comm )
+          ! 
+        ENDIF
+        ! 
+        IF ( ABS(efcb(1)) > eps ) THEN
+          CALL tau_write(iq,nqtotf,nkqtotf/2,.TRUE.)
+        ELSE
+          CALL tau_write(iq,nqtotf,nkqtotf/2,.FALSE.)
+        ENDIF
+        ! 
+        ! Now show intermediate mobility with that amount of q-points
+        CALL transport_coeffs(ef0,efcb)
+        ! 
+      ENDIF ! restart
+      ! 
+    ENDIF ! iq 
     ! DBSP
     !write(stdout,*),'iq ',iq
     !print*,shape(inv_tau_all)
@@ -580,7 +607,7 @@
     USE pwcom,     ONLY : ef 
     USE elph2,     ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, vmef, & 
                           inv_tau_all, nkqtotf, Fi_all, inv_tau_allcb, &
-                          zi_allvb, zi_allcb
+                          zi_allvb, zi_allcb, Fi_allcb
     USE transportcom,  ONLY : transp_temp
     USE constants_epw, ONLY : zero, one, bohr2ang, ryd2ev, electron_SI, &
                               kelvin2eV, hbar, Ang2m, hbarJ, ang2cm, czero
@@ -1442,30 +1469,38 @@
       ENDIF ! Electron mobilities
     ENDIF ! scatread
     ! 
-    ! IF IBTE we want the SRTA solution to be the first iteration of IBTE
-    IF (iterative_bte) THEN
-      Fi_all(:,:,:,:) = zero
-      ! 
-      DO itemp = 1, nstemp
-        DO ik = 1, nkf
-          ikk = 2 * ik - 1
-          IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
-            DO ibnd = 1, ibndmax-ibndmin+1
-              IF ( vme ) THEN
-                vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
-              ELSE
-                vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
-              ENDIF
-              tau = one / inv_tau_all(itemp,ibnd,ik+lower_bnd-1)
-              Fi_all(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau
-            ENDDO
-          ENDIF
-        ENDDO ! kpoints
-        !DBSP
-        !print*,'itemp ',itemp,' ',sum(Fi_all(:,:,:,itemp))
-      ENDDO ! itemp
-      CALL mp_sum( Fi_all, world_comm )
-    ENDIF
+    !! IF IBTE we want the SRTA solution to be the first iteration of IBTE
+    !IF (iterative_bte) THEN
+    !  Fi_all(:,:,:,:) = zero
+    !  IF ( ABS(efcb(1)) > eps ) Fi_allcb(:,:,:,:) = zero
+    !  ! 
+    !  DO itemp = 1, nstemp
+    !    DO ik = 1, nkf
+    !      ikk = 2 * ik - 1
+    !      IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
+    !        DO ibnd = 1, ibndmax-ibndmin+1
+    !          IF ( vme ) THEN
+    !            vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+    !          ELSE
+    !            vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
+    !          ENDIF
+    !          tau = one / inv_tau_all(itemp,ibnd,ik+lower_bnd-1)
+    !          Fi_all(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau
+    !          IF ( ABS(efcb(itemp)) > eps ) THEN
+    !            tau = one / inv_tau_allcb(itemp,ibnd,ik+lower_bnd-1)
+    !            Fi_allcb(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau 
+    !          ENDIF
+    !          !
+    !        ENDDO
+    !      ENDIF
+    !    ENDDO ! kpoints
+    !    !DBSP
+    !    print*,'itemp ',itemp,' ',sum(Fi_all(:,:,:,itemp)), sum(inv_tau_all)
+    !    print*,'itemp cb',itemp,' ',sum(Fi_allcb(:,:,:,itemp)), sum(inv_tau_allcb)
+    !  ENDDO ! itemp
+    !  CALL mp_sum( Fi_all, world_comm )
+    !  IF ( ABS(efcb(1)) > eps ) CALL mp_sum( Fi_allcb, world_comm )
+    !ENDIF
     !
     RETURN
     !

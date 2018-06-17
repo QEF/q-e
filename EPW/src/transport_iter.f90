@@ -44,7 +44,7 @@
     USE constants_epw, ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, & 
                               electron_SI, bohr2ang, ang2cm, hbarJ, eps6
     USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_global,     ONLY : inter_pool_comm, world_comm
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
@@ -204,71 +204,15 @@
     !
 #endif 
     ! 
-    IF (mp_mesh_k .and. first_time) THEN
+    IF (first_time) THEN
       first_time = .FALSE.
-      IF ( .not. ALLOCATED(ixkqf_tr) ) ALLOCATE(ixkqf_tr(nkf,nqtotf))
-      IF ( .not. ALLOCATED(s_BZtoIBZ_full) ) ALLOCATE(s_BZtoIBZ_full(3,3,nkf,nqtotf))
-      ixkqf_tr(:,:) = 0
-      s_BZtoIBZ_full(:,:,:,:) = 0
-      ! 
-      IF ( mpime .eq. ionode_id ) THEN
-        ! 
-        CALL set_sym_bl( )
-        !
-        BZtoIBZ(:) = 0
-        s_BZtoIBZ(:,:,:) = 0 
-        ! What we get from this call is BZtoIBZ
-        CALL kpoint_grid_epw ( nrot, time_reversal, .false., s, t_rev, bg, nkf1*nkf2*nkf3, &
-                   nkf1,nkf2,nkf3, nkqtotf_tmp, xkf_tmp, wkf_tmp,BZtoIBZ,s_BZtoIBZ)
-        ! 
-        DO ik = 1, nkqtotf/2
-          ikk = 2 * ik - 1
-          xkf_red(:,ik) = xkf_all(:,ikk)
-        ENDDO 
-        ! 
-      ENDIF ! mpime
-      CALL mp_bcast( xkf_red, ionode_id, inter_pool_comm )
-      CALL mp_bcast( s_BZtoIBZ, ionode_id, inter_pool_comm )
-      CALL mp_bcast( BZtoIBZ, ionode_id, inter_pool_comm )
-      ! 
-      DO ik = 1, nkf
-        !
-        DO iiq=1, nqtotf
-          ! 
-          CALL kpmq_map( xkf_red(:,ik+lower_bnd-1), xqf (:, iiq), +1, nkq_abs )
-          ! 
-          ! We want to map k+q onto the full fine k and keep the symm that bring
-          ! that point onto the IBZ one.
-          s_BZtoIBZ_full(:,:,ik,iiq) = s_BZtoIBZ(:,:,nkq_abs)  
-          !
-          ixkqf_tr(ik,iiq) = BZtoIBZ(nkq_abs) 
-          ! 
-        ENDDO ! q-loop
-      ENDDO ! k-loop
-      ! 
-    ENDIF ! mp_mesh_k
-    !
-    ! In the case of a restart do not add the first step
-    IF (first_cycle) THEN
-      first_cycle = .FALSE.
-      ! 
-    ELSEIF(mp_mesh_k) THEN ! Use IBZ k-point grid
       DO itemp = 1, nstemp
-        !
-        etemp = transp_temp(itemp)
-        inv_etemp = 1.0/etemp
-        inv_degaussw = 1.0/degaussw
-        ! 
+        !   
         DO ik = 1, nkf
           !
           ikk = 2 * ik - 1
           ikq = ikk + 1
           ! 
-          xxq = xqf (:, iq)
-          xkk = xkf (:, ikk)
-          CALL cryst_to_cart (1, xkk, bg, +1)
-          CALL cryst_to_cart (1, xxq, bg, +1)
-          !
           IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
             DO ibnd = 1, ibndmax-ibndmin+1
               !
@@ -293,76 +237,120 @@
               IF ( ABS(efcb(itemp)) > eps6 ) THEN
                 tau = one / inv_tau_allcb(1,ibnd,ik+lower_bnd-1)
                 F_SERTAcb(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau
-              ENDIF  
-              !
-            ENDDO
-          ENDIF
-          !
-          ! We are not consistent with ef from ephwann_shuffle but it should not 
-          ! matter if fstick is large enough.
-          IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-               ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
-            !
-            DO imode = 1, nmodes
-              !
-              ! the phonon frequency and bose occupation
-              wq = wf (imode, iq)
-              wgq = wgauss( -wq*inv_etemp, -99)
-              wgq = wgq / ( one - two * wgq )
-              !
-              ! SP : Define the inverse for efficiency
-              inv_wq =  1.0/(two * wq)
-              ! SP : Avoid if statement in inner loops
-              ! the coupling from Gamma acoustic phonons is negligible
-              IF ( wq .gt. eps_acustic ) THEN
-                g2_tmp = 1.0
-              ELSE
-                g2_tmp = 0.0
               ENDIF
               !
-              DO ibnd = 1, ibndmax-ibndmin+1
+            ENDDO ! ibnd
+          ENDIF
+        ENDDO ! ik 
+      ENDDO ! itemp
+      ! 
+      Fi_all = F_SERTA
+      CALL mp_sum( Fi_all, world_comm )
+      IF ( ABS(efcb(1)) > eps6 ) THEN
+        Fi_allcb = F_SERTAcb 
+        CALL mp_sum( Fi_allcb, world_comm )
+      ENDIF
+      ! 
+      IF (mp_mesh_k) THEN
+        IF ( .not. ALLOCATED(ixkqf_tr) ) ALLOCATE(ixkqf_tr(nkf,nqtotf))
+        IF ( .not. ALLOCATED(s_BZtoIBZ_full) ) ALLOCATE(s_BZtoIBZ_full(3,3,nkf,nqtotf))
+        ixkqf_tr(:,:) = 0
+        s_BZtoIBZ_full(:,:,:,:) = 0
+        ! 
+        IF ( mpime .eq. ionode_id ) THEN
+          ! 
+          CALL set_sym_bl( )
+          !
+          BZtoIBZ(:) = 0
+          s_BZtoIBZ(:,:,:) = 0 
+          ! What we get from this call is BZtoIBZ
+          CALL kpoint_grid_epw ( nrot, time_reversal, .false., s, t_rev, bg, nkf1*nkf2*nkf3, &
+                     nkf1,nkf2,nkf3, nkqtotf_tmp, xkf_tmp, wkf_tmp,BZtoIBZ,s_BZtoIBZ)
+          ! 
+          DO ik = 1, nkqtotf/2
+            ikk = 2 * ik - 1
+            xkf_red(:,ik) = xkf_all(:,ikk)
+          ENDDO 
+          ! 
+        ENDIF ! mpime
+        CALL mp_bcast( xkf_red, ionode_id, inter_pool_comm )
+        CALL mp_bcast( s_BZtoIBZ, ionode_id, inter_pool_comm )
+        CALL mp_bcast( BZtoIBZ, ionode_id, inter_pool_comm )
+        ! 
+        DO ik = 1, nkf
+          !
+          DO iiq=1, nqtotf
+            ! 
+            CALL kpmq_map( xkf_red(:,ik+lower_bnd-1), xqf (:, iiq), +1, nkq_abs )
+            ! 
+            ! We want to map k+q onto the full fine k and keep the symm that bring
+            ! that point onto the IBZ one.
+            s_BZtoIBZ_full(:,:,ik,iiq) = s_BZtoIBZ(:,:,nkq_abs)  
+            !
+            ixkqf_tr(ik,iiq) = BZtoIBZ(nkq_abs) 
+            ! 
+          ENDDO ! q-loop
+        ENDDO ! k-loop
+      ENDIF ! mp_mesh_k
+      ! 
+    ENDIF ! first_time
+    ! 
+    !print*,'Start iterative -----------------', iq
+    !print*,'Fi_all ',SUM(Fi_all)
+    !print*,'Fi_allcb ',SUM(Fi_allcb)
+    !print*,'F_current ',sum(F_current)
+    !print*,'F_currentcb ',sum(F_currentcb)
+    !print*,'F_SERTA ',sum(F_SERTA)
+    !print*,'F_SERTAcb ',sum(F_SERTAcb)
+    !
+    ! In the case of a restart do not add the first step
+    IF (first_cycle) THEN
+      first_cycle = .FALSE.
+    ELSE
+      DO itemp = 1, nstemp
+        etemp = transp_temp(itemp)
+        inv_etemp = 1.0/etemp
+        inv_degaussw = 1.0/degaussw
+        ! 
+        IF(mp_mesh_k) THEN ! Use IBZ k-point grid
+          !
+          DO ik = 1, nkf
+            !
+            ikk = 2 * ik - 1
+            ikq = ikk + 1
+            ! 
+            ! We are not consistent with ef from ephwann_shuffle but it should not 
+            ! matter if fstick is large enough.
+            IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
+                 ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+              !
+              DO imode = 1, nmodes
                 !
-                !  energy at k (relative to Ef)
-                ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
+                ! the phonon frequency and bose occupation
+                wq = wf (imode, iq)
                 !
-                DO jbnd = 1, ibndmax-ibndmin+1
-                  !
-                  !  energy and fermi occupation at k+q
-                  ekq = etf (ibndmin-1+jbnd, ikq) - ef0(itemp)
-                  fmkq = wgauss( -ekq*inv_etemp, -99)
-                  !
-                  ! here we take into account the zero-point sqrt(hbar/2M\omega)
-                  ! with hbar = 1 and M already contained in the eigenmodes
-                  ! g2 is Ry^2, wkf must already account for the spin factor
-                  !
-                  g2 = (abs(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq * g2_tmp
-                  !
-                  ! delta[E_k - E_k+q + w_q] and delta[E_k - E_k+q - w_q]
-                  w0g1 = w0gauss( (ekk-ekq+wq) * inv_degaussw, 0) * inv_degaussw
-                  w0g2 = w0gauss( (ekk-ekq-wq) * inv_degaussw, 0) * inv_degaussw
-                  !
-                  trans_prob = pi * wqf(iq) * g2 * & 
-                               ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
-                  !
-                  CALL cryst_to_cart(1,Fi_all(:,jbnd,ixkqf_tr(ik,iq),itemp),at,-1)
-  
-                  CALL dgemv( 'n', 3, 3, 1.d0,&
-                      REAL(s_BZtoIBZ_full(:,:,ik,iq), kind=DP), 3, Fi_all(:,jbnd,ixkqf_tr(ik,iq),itemp),1 ,0.d0 , Fi_rot(:), 1 )       
-                  CALL cryst_to_cart(1,Fi_all(:,jbnd,ixkqf_tr(ik,iq),itemp),bg,1)
-                  CALL cryst_to_cart(1,Fi_rot,bg,1)
-                  ! 
-                  F_current(:,ibnd,ik+lower_bnd-1,itemp) = F_current(:,ibnd,ik+lower_bnd-1,itemp) +&
-                               two * trans_prob * Fi_rot
-                  ! 
-                ENDDO !jbnd
+                ! SP : Avoid if statement in inner loops
+                ! the coupling from Gamma acoustic phonons is negligible
+                IF ( wq .gt. eps_acustic ) THEN
+                  inv_wq = 1.0/( two * wq )
+                  wgq    = wgauss( -wq*inv_etemp, -99)
+                  wgq    = wgq / ( one - two * wgq )
+                  g2_tmp = 1.0
+                ELSE
+                  inv_wq = 0.0
+                  wgq    = 0.0
+                  g2_tmp = 0.0
+                ENDIF
                 !
-                IF ( ABS(efcb(itemp)) > eps6 ) THEN
-                  ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
+                DO ibnd = 1, ibndmax-ibndmin+1
+                  !
+                  !  energy at k (relative to Ef)
+                  ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
                   !
                   DO jbnd = 1, ibndmax-ibndmin+1
                     !
                     !  energy and fermi occupation at k+q
-                    ekq = etf (ibndmin-1+jbnd, ikq) - efcb(itemp)
+                    ekq = etf (ibndmin-1+jbnd, ikq) - ef0(itemp)
                     fmkq = wgauss( -ekq*inv_etemp, -99)
                     !
                     ! here we take into account the zero-point sqrt(hbar/2M\omega)
@@ -375,167 +363,124 @@
                     w0g1 = w0gauss( (ekk-ekq+wq) * inv_degaussw, 0) * inv_degaussw
                     w0g2 = w0gauss( (ekk-ekq-wq) * inv_degaussw, 0) * inv_degaussw
                     !
-                    trans_prob = pi * wqf(iq) * g2 * &
+                    trans_prob = pi * wqf(iq) * g2 * & 
                                  ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
                     !
-                    CALL cryst_to_cart(1,Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),at,-1)
-
+                    CALL cryst_to_cart(1,Fi_all(:,jbnd,ixkqf_tr(ik,iq),itemp),at,-1)
+  
                     CALL dgemv( 'n', 3, 3, 1.d0,&
-                        REAL(s_BZtoIBZ_full(:,:,ik,iq), kind=DP), 3, Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),1 ,0.d0 , Fi_rot(:), 1 )
-                    CALL cryst_to_cart(1,Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),bg,1)
+                        REAL(s_BZtoIBZ_full(:,:,ik,iq), kind=DP), 3, Fi_all(:,jbnd,ixkqf_tr(ik,iq),itemp),1 ,0.d0 , Fi_rot(:), 1 )       
+                    CALL cryst_to_cart(1,Fi_all(:,jbnd,ixkqf_tr(ik,iq),itemp),bg,1)
                     CALL cryst_to_cart(1,Fi_rot,bg,1)
                     ! 
-                    F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) = F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) +&
+                    F_current(:,ibnd,ik+lower_bnd-1,itemp) = F_current(:,ibnd,ik+lower_bnd-1,itemp) +&
                                  two * trans_prob * Fi_rot
                     ! 
                   ENDDO !jbnd
-                  ! 
-                ENDIF !  efcb
+                  !
+                  IF ( ABS(efcb(itemp)) > eps6 ) THEN
+                    ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
+                    !
+                    DO jbnd = 1, ibndmax-ibndmin+1
+                      !
+                      !  energy and fermi occupation at k+q
+                      ekq = etf (ibndmin-1+jbnd, ikq) - efcb(itemp)
+                      fmkq = wgauss( -ekq*inv_etemp, -99)
+                      !
+                      ! here we take into account the zero-point sqrt(hbar/2M\omega)
+                      ! with hbar = 1 and M already contained in the eigenmodes
+                      ! g2 is Ry^2, wkf must already account for the spin factor
+                      !
+                      g2 = (abs(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq * g2_tmp
+                      !
+                      ! delta[E_k - E_k+q + w_q] and delta[E_k - E_k+q - w_q]
+                      w0g1 = w0gauss( (ekk-ekq+wq) * inv_degaussw, 0) * inv_degaussw
+                      w0g2 = w0gauss( (ekk-ekq-wq) * inv_degaussw, 0) * inv_degaussw
+                      !
+                      trans_prob = pi * wqf(iq) * g2 * &
+                                   ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
+                      !
+                      CALL cryst_to_cart(1,Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),at,-1)
+
+                      CALL dgemv( 'n', 3, 3, 1.d0,&
+                          REAL(s_BZtoIBZ_full(:,:,ik,iq), kind=DP), 3, Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),1 ,0.d0 , Fi_rot(:), 1 )
+                      CALL cryst_to_cart(1,Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),bg,1)
+                      CALL cryst_to_cart(1,Fi_rot,bg,1)
+                      ! 
+                      F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) = F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) +&
+                                   two * trans_prob * Fi_rot
+                      ! 
+                    ENDDO !jbnd
+                    ! 
+                  ENDIF !  efcb
+                  !
+                ENDDO !ibnd
                 !
-              ENDDO !ibnd
+              ENDDO !imode
               !
-            ENDDO !imode
+            ENDIF ! endif  fsthick
             !
-          ENDIF ! endif  fsthick
-          !
-        ENDDO ! end loop on k
-        ! 
-      ENDDO ! itemp 
-      !  
-      ! Creation of a restart point
-      IF (restart) THEN
-        IF (MOD(iq,restart_freq) == 0) THEN
-          WRITE(stdout, '(a)' ) '     Creation of a restart point'
+          ENDDO ! end loop on k
           ! 
-          ! The mp_sum will aggreage the results on each k-points. 
-          CALL mp_sum( F_current, inter_pool_comm )
-          !
-          IF ( ABS(efcb(1)) > eps6 ) THEN
-            CALL mp_sum( F_currentcb, inter_pool_comm)
-            CALL F_write(iter, iq, nqtotf, nkqtotf/2, error_h, error_el, .TRUE.)
-          ELSE
-            CALL F_write(iter, iq, nqtotf, nkqtotf/2, error_h, error_el, .FALSE.)
-          ENDIF
+        ELSE ! Now the case with FULL k-point grid. 
+          ! We need to recast xkf_all with only the full k point (not all k and k+q)
+          DO ik = 1, nkqtotf/2
+            ikk = 2 * ik - 1
+            xkf_red(:,ik) = xkf_all(:,ikk)
+          ENDDO
+          ! We do some code dupplication wrt to above to avoid branching in a loop.
           ! 
-        ENDIF
-      ENDIF
-      !  
-    ELSE ! Now the case with FULL k-point grid. 
-      ! We need to recast xkf_all with only the full k point (not all k and k+q)
-      DO ik = 1, nkqtotf/2
-        ikk = 2 * ik - 1
-        xkf_red(:,ik) = xkf_all(:,ikk)
-      ENDDO
-      ! We do some code dupplication wrt to above to avoid branching in a loop.
-      DO itemp = 1, nstemp
-        ! 
-        etemp = transp_temp(itemp)
-        DO ik = 1, nkf
-          !
-          ikk = 2 * ik - 1
-          ikq = ikk + 1
-          ! 
-          ! We need to find F_{mk+q}^i (Fi_all). The grids need to be commensurate !
-          !CALL ktokpmq ( xk (:, ik), xq, +1, ipool, nkq, nkq_abs )
-          xxq = xqf (:, iq)
-          xkk = xkf (:, ikk)
-          CALL cryst_to_cart (1, xkk, bg, +1)
-          CALL cryst_to_cart (1, xxq, bg, +1)
+          DO ik = 1, nkf
+            !
+            ikk = 2 * ik - 1
+            ikq = ikk + 1
+            ! 
+            ! We need to find F_{mk+q}^i (Fi_all). The grids need to be commensurate !
+            !CALL ktokpmq ( xk (:, ik), xq, +1, ipool, nkq, nkq_abs )
+            xxq = xqf (:, iq)
+            xkk = xkf (:, ikk)
+            CALL cryst_to_cart (1, xkk, bg, +1)
+            CALL cryst_to_cart (1, xxq, bg, +1)
   
-          !xkq = xkk + xxq
-          !
-          ! Note: In this case, Fi_all contains all the k-point across all pools. 
-          ! Therefore in the call below, ipool and nkq are dummy variable.
-          ! We only want the global index for k+q ==> nkq_abs  
-          CALL ktokpmq_fine ( xkf_red ,xkk, xxq, +1, ipool, nkq, nkq_abs )
-          ! 
-          IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
-            DO ibnd = 1, ibndmax-ibndmin+1
-              !
-              ! vkk(3,nbnd) - velocity for k
-              IF ( vme ) THEN
-                ! vmef is in units of Ryd * bohr
-                vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
-              ELSE
-                ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
-                ! 1/m  = 2 in Rydberg atomic units
-                ! dmef is in units of 1/a.u. (where a.u. is bohr)
-                ! v_(k,i) is in units of Ryd * a.u.
-                vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
-              ENDIF
-              !
-              ! The inverse of SERTA
-              tau = one / inv_tau_all(itemp,ibnd,ik+lower_bnd-1)
-              F_SERTA(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau
-              ! 
-              IF ( ABS(efcb(itemp)) > eps6 ) THEN
-                tau = one / inv_tau_allcb(itemp,ibnd,ik+lower_bnd-1)
-                F_SERTAcb(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau
-              ENDIF 
-              !
-            ENDDO
-          ENDIF
-          !
-          ! We are not consistent with ef from ephwann_shuffle but it should not 
-          ! matter if fstick is large enough.
-          IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-               ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
+            !xkq = xkk + xxq
             !
-            DO imode = 1, nmodes
+            ! Note: In this case, Fi_all contains all the k-point across all pools. 
+            ! Therefore in the call below, ipool and nkq are dummy variable.
+            ! We only want the global index for k+q ==> nkq_abs  
+            CALL ktokpmq_fine ( xkf_red ,xkk, xxq, +1, ipool, nkq, nkq_abs )
+            ! 
+            ! We are not consistent with ef from ephwann_shuffle but it should not 
+            ! matter if fstick is large enough.
+            IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
+                 ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
               !
-              ! the phonon frequency and bose occupation
-              wq = wf (imode, iq)
-              wgq = wgauss( -wq*inv_etemp, -99)
-              wgq = wgq / ( one - two * wgq )
-              !
-              ! SP : Define the inverse for efficiency
-              inv_wq =  1.0/(two * wq)
-              ! SP : Avoid if statement in inner loops
-              ! the coupling from Gamma acoustic phonons is negligible
-              IF ( wq .gt. eps_acustic ) THEN
-                g2_tmp = 1.0
-              ELSE
-                g2_tmp = 0.0
-              ENDIF
-              !
-              DO ibnd = 1, ibndmax-ibndmin+1
+              DO imode = 1, nmodes
                 !
-                !  energy at k (relative to Ef)
-                ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
+                ! the phonon frequency and bose occupation
+                wq = wf (imode, iq)
                 !
-                DO jbnd = 1, ibndmax-ibndmin+1
-                  !
-                  !  energy and fermi occupation at k+q
-                  ekq = etf (ibndmin-1+jbnd, ikq) - ef0(itemp)
-                  fmkq = wgauss( -ekq*inv_etemp, -99)
-                  !
-                  ! here we take into account the zero-point sqrt(hbar/2M\omega)
-                  ! with hbar = 1 and M already contained in the eigenmodes
-                  ! g2 is Ry^2, wkf must already account for the spin factor
-                  !
-                  g2 = (abs(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq * g2_tmp
-                  !
-                  ! delta[E_k - E_k+q + w_q] and delta[E_k - E_k+q - w_q]
-                  w0g1 = w0gauss( (ekk-ekq+wq) * inv_degaussw, 0) * inv_degaussw
-                  w0g2 = w0gauss( (ekk-ekq-wq) * inv_degaussw, 0) * inv_degaussw
-                  !
-                  trans_prob = pi * wqf(iq) * g2 * &
-                               ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
-                  !
-                  ! IBTE
-                  F_current(:,ibnd,ik+lower_bnd-1,itemp) = F_current(:,ibnd,ik+lower_bnd-1,itemp) +&
-                                                        two * trans_prob * Fi_all(:,jbnd,nkq_abs,itemp)
-                  ! 
-                ENDDO !jbnd
+                ! SP : Avoid if statement in inner loops
+                ! the coupling from Gamma acoustic phonons is negligible
+                IF ( wq .gt. eps_acustic ) THEN
+                  inv_wq = 1.0/( two * wq )
+                  wgq    = wgauss( -wq*inv_etemp, -99)
+                  wgq    = wgq / ( one - two * wgq )
+                  g2_tmp = 1.0
+                ELSE
+                  inv_wq = 0.0
+                  wgq    = 0.0
+                  g2_tmp = 0.0
+                ENDIF
                 !
-                IF ( ABS(efcb(itemp)) > eps6 ) THEN
+                DO ibnd = 1, ibndmax-ibndmin+1
+                  !
                   !  energy at k (relative to Ef)
-                  ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
+                  ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
                   !
                   DO jbnd = 1, ibndmax-ibndmin+1
                     !
                     !  energy and fermi occupation at k+q
-                    ekq = etf (ibndmin-1+jbnd, ikq) - efcb(itemp)
+                    ekq = etf (ibndmin-1+jbnd, ikq) - ef0(itemp)
                     fmkq = wgauss( -ekq*inv_etemp, -99)
                     !
                     ! here we take into account the zero-point sqrt(hbar/2M\omega)
@@ -552,24 +497,74 @@
                                  ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
                     !
                     ! IBTE
-                    F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) = F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) +&
-                                                          two * trans_prob * Fi_allcb(:,jbnd,nkq_abs,itemp)
+                    F_current(:,ibnd,ik+lower_bnd-1,itemp) = F_current(:,ibnd,ik+lower_bnd-1,itemp) +&
+                                                          two * trans_prob * Fi_all(:,jbnd,nkq_abs,itemp)
                     ! 
                   ENDDO !jbnd
                   !
-                ENDIF
-                ! 
-              ENDDO !ibnd
+                  IF ( ABS(efcb(itemp)) > eps6 ) THEN
+                    !  energy at k (relative to Ef)
+                    ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
+                    !
+                    DO jbnd = 1, ibndmax-ibndmin+1
+                      !
+                      !  energy and fermi occupation at k+q
+                      ekq = etf (ibndmin-1+jbnd, ikq) - efcb(itemp)
+                      fmkq = wgauss( -ekq*inv_etemp, -99)
+                      !
+                      ! here we take into account the zero-point sqrt(hbar/2M\omega)
+                      ! with hbar = 1 and M already contained in the eigenmodes
+                      ! g2 is Ry^2, wkf must already account for the spin factor
+                      !
+                      g2 = (abs(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq * g2_tmp
+                      !
+                      ! delta[E_k - E_k+q + w_q] and delta[E_k - E_k+q - w_q]
+                      w0g1 = w0gauss( (ekk-ekq+wq) * inv_degaussw, 0) * inv_degaussw
+                      w0g2 = w0gauss( (ekk-ekq-wq) * inv_degaussw, 0) * inv_degaussw
+                      !
+                      trans_prob = pi * wqf(iq) * g2 * &
+                                   ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
+                      !
+                      ! IBTE
+                      F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) = F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) +&
+                                                            two * trans_prob * Fi_allcb(:,jbnd,nkq_abs,itemp)
+                      ! 
+                    ENDDO !jbnd
+                    !
+                  ENDIF
+                  ! 
+                ENDDO !ibnd
+                !
+              ENDDO !imode
               !
-            ENDDO !imode
+            ENDIF ! endif  fsthick
             !
-          ENDIF ! endif  fsthick
+          ENDDO ! end loop on k
           !
-        ENDDO ! end loop on k
+        ENDIF ! mp_mesh_k
         !
       ENDDO ! itemp 
-      ! 
+      !  
+      ! Creation of a restart point
+      IF (restart) THEN
+        IF ( MOD(iq,restart_freq) == 0 .or. iq == nqtotf ) THEN
+          WRITE(stdout, '(a)' ) '     Creation of a restart point'
+          ! 
+          ! The mp_sum will aggreage the results on each k-points. 
+          CALL mp_sum( F_current, inter_pool_comm )
+          !
+          IF ( ABS(efcb(1)) > eps6 ) THEN
+            CALL mp_sum( F_currentcb, inter_pool_comm)
+            CALL F_write(iter, iq, nqtotf, nkqtotf/2, error_h, error_el, .TRUE.)
+          ELSE
+            CALL F_write(iter, iq, nqtotf, nkqtotf/2, error_h, error_el, .FALSE.)
+          ENDIF
+          ! 
+        ENDIF
+      ENDIF
+      !
     ENDIF ! first_cycle
+    !  
     ! 
     ! The k points are distributed among pools: here we collect them
     !

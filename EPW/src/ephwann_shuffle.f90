@@ -846,11 +846,9 @@
         !
         ! Here inv_tau_all and inv_tau_allcb gets updated
         CALL tau_read(iq_restart, nqf, nkqtotf/2, .TRUE.)
-        !
       ELSE
         ! Here inv_tau_all gets updated
         CALL tau_read(iq_restart, nqf, nkqtotf/2, .FALSE.)
-        !
       ENDIF
       !
     ENDIF
@@ -1304,8 +1302,8 @@
   IF (iterative_bte) DEALLOCATE (F_SERTA)
   IF (iterative_bte) DEALLOCATE (inv_tau_all)
   IF (iterative_bte) DEALLOCATE (zi_allvb)
-  IF (iterative_bte) DEALLOCATE (s_BZtoIBZ_full)
-  IF (iterative_bte) DEALLOCATE (ixkqf_tr)
+  IF (mp_mesh_k .AND. iterative_bte) DEALLOCATE (s_BZtoIBZ_full)
+  IF (mp_mesh_k .AND. iterative_bte) DEALLOCATE (ixkqf_tr)
   IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (inv_tau_allcb)
   IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (zi_allcb)
   IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (Fi_allcb)

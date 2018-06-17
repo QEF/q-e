@@ -58,7 +58,7 @@
   !
   IF (mpime.eq.ionode_id) THEN
     !
-    lfi_all = 3* (ibndmax-ibndmin+1) * nktotf +3
+    lfi_all = 3 * nstemp * (ibndmax-ibndmin+1) * nktotf + 7 + 2 * nstemp
     ! First element is the iteration number
     aux(1) = iter
     ! Current q-point number 
@@ -100,32 +100,6 @@
     CLOSE(iufilFi_all)
     !
     IF (second) THEN
-      !
-      lfi_all = 3* (ibndmax-ibndmin+1) * nktotf +3
-      ! First element is the iteration number
-      aux(1) = iter
-      ! Current q-point number 
-      aux(2) = iq -1   ! -1 because we will start at the next one.
-      ! Total number of q-points
-      aux(3) = nqtotf
-      ! Error in the hole mobility
-      aux(4) = error_h
-      ! Error in the electron mobility
-      aux(5) = error_el
-      ! 
-      i = 5
-      DO itemp=1, nstemp
-        i = i + 1  
-        ! Value of the previous h mobility (used for error evaluation)
-        aux(i) = mobilityh_save(itemp)
-      ENDDO
-      ! 
-      i = 5 + nstemp
-      DO itemp=1, nstemp
-        i = i + 1  
-        ! Value of the previous el mobility (used for error evaluation)
-        aux(i) = mobilityel_save(itemp)
-      ENDDO
       !
       i = 5 + nstemp + nstemp
       DO itemp=1, nstemp
@@ -228,7 +202,7 @@
     ! 
     IF (exst) THEN ! read the file
       !
-      lfi_all = 3* (ibndmax-ibndmin+1) * nktotf +3
+      lfi_all = 3 * nstemp * (ibndmax-ibndmin+1) * nktotf + 7 + 2 * nstemp
       CALL diropn (iufilFi_all, 'F_restart', lfi_all, exst)
       CALL davcio ( aux, lfi_all, iufilFi_all, 1, -1 )
       !
@@ -292,45 +266,9 @@
       ! 
       IF (exst) THEN ! read the file
         !
-        lfi_all = 3* (ibndmax-ibndmin+1) * nktotf +3
-        CALL diropn (iufilFi_all, 'F_restart', lfi_all, exst)
+        CALL diropn (iufilFi_all, 'F_restart_CB', lfi_all, exst)
         CALL davcio ( aux, lfi_all, iufilFi_all, 1, -1 )
         !
-        ! First element is the iteration number
-        iter = INT( aux(1) )
-        ! Current iteration number
-        iq = INT( aux(2) )
-        iq = iq + 1 ! we need to start at the next q
-        ! Total number of q-points
-        nqtotf_read = INT( aux(3) )
-        ! Last value of hole mobility
-        ! Error in hole mobility
-        error_h = aux(4)
-        ! Error in electron mobility
-        error_el = aux(5)
-        ! This is the error of the previous iteration. Therefore when you restart
-        ! from a converged one, you want to be finished. 
-        ! This small substraction wont affect anything. 
-        error_h = error_h -0.5E-2
-        error_el = error_el -0.5E-2
-        !
-        IF ( nqtotf_read /= nqtotf) CALL errore('io_scattering',&
-          &'Error: The current total number of q-point is not the same as the read one. ',1)
-        !
-        i = 5
-        DO itemp=1, nstemp
-          i = i + 1  
-          ! Last value of hole mobility 
-          mobilityh_save(itemp) = aux(i)
-        ENDDO
-        ! 
-        i = 5 + nstemp
-        DO itemp=1, nstemp
-          i = i + 1  
-          ! Last value of electron mobility
-          mobilityel_save(itemp) = aux(i)
-        ENDDO
-        ! 
         i = 5 + nstemp + nstemp
         DO itemp=1, nstemp
           DO ik=1, nktotf
