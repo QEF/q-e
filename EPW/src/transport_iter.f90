@@ -403,7 +403,8 @@
                       CALL cryst_to_cart(1,Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),at,-1)
 
                       CALL dgemv( 'n', 3, 3, 1.d0,&
-                          REAL(s_BZtoIBZ_full(:,:,ik,iq), kind=DP), 3, Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),1 ,0.d0 , Fi_rot(:), 1 )
+                          REAL(s_BZtoIBZ_full(:,:,ik,iq), kind=DP), 3, &
+                          Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),1 ,0.d0 , Fi_rot(:), 1 )
                       CALL cryst_to_cart(1,Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),bg,1)
                       CALL cryst_to_cart(1,Fi_rot,bg,1)
                       ! 
