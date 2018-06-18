@@ -1301,9 +1301,6 @@ the multithreading libraries and the availability of
 multithreading FFTs. If you are using MKL,\footnote{Beware:
 MKL v.10.2.2 has a buggy \texttt{dsyev} yielding wrong results
 with more than one thread; fixed in v.10.2.4}
-you may want to select FFTW3 (set \texttt{CPPFLAGS=-D\_\_FFTW3...}
-in \texttt{make.inc}) and to link with the MKL interface to FFTW3.
-You will get a decent speedup ($\sim 25$\%) on two cores.
 
 Explicit OpenMP is a recent addition, still under
 development, devised to increase scalability on
