@@ -40,7 +40,7 @@ CONTAINS
 !!                                       |  xc_rVV10   |
 !!                                       |_____________|
 
-  SUBROUTINE xc_rVV10(rho_valence, rho_core, nspin, etxc, vtxc, v)
+  SUBROUTINE xc_rVV10(rho_valence, rho_core, nspin, etxc, vtxc, v, b_value_)
     
     !! Modules to include
     !! -------------------------------------------------------------------------
@@ -57,6 +57,7 @@ CONTAINS
     real(dp), intent(IN) :: rho_core(:)            !  PWSCF input variables 
     INTEGER,  INTENT(IN) :: nspin                  !
     real(dp), intent(inout) :: etxc, vtxc, v(:,:)  !_  
+    real(DP),optional,intent(in) :: b_value_
    
     
     integer :: i_grid, theta_i, i_proc, I      
@@ -84,6 +85,8 @@ CONTAINS
     !call errore('xc_rVV10','rVV10 functional not implemented for spin polarized runs', size(rho_valence,2)-1)
     if (nspin>2) call errore('xc_vdW_DF','vdW functional not implemented for nspin > 2', nspin)
 
+    if(present(b_value_)) b_value = b_value_
+    
     !! --------------------------------------------------------------------------------------------------------
 
     call start_clock( 'rVV10' )

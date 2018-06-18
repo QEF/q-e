@@ -743,9 +743,11 @@ END FUNCTION ns_ddot
   !
   fac = e2 * fpi / tpiba2
   !
+  !$omp parallel do reduction(+:local_tf_ddot)
   DO ig = gstart, ngm0
      local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
   END DO
+  !$omp end parallel do
   !
   local_tf_ddot = fac * local_tf_ddot * omega * 0.5D0
   !

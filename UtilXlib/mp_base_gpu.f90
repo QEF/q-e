@@ -925,7 +925,7 @@ SUBROUTINE parallel_min_real_gpu( dim, ps_d, comm, root )
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN)    :: dim
-  REAL,     DEVICE        :: ps_d(dim)
+  REAL(DP), DEVICE        :: ps_d(dim)
   INTEGER,  INTENT(IN)    :: comm    ! communecator
   INTEGER,  INTENT(IN)    :: root    ! if root <  0 perform a reduction to all procs
                                      ! if root >= 0 perform a reduce only to root proc.
@@ -1025,7 +1025,7 @@ SUBROUTINE parallel_max_real_gpu( dim, ps_d, comm, root )
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN)    :: dim
-  REAL,     DEVICE        :: ps_d(dim)
+  REAL(DP), DEVICE        :: ps_d(dim)
   INTEGER,  INTENT(IN)    :: comm    ! communecator
   INTEGER,  INTENT(IN)    :: root    ! if root <  0 perform a reduction to all procs
                                      ! if root >= 0 perform a reduce only to root proc.

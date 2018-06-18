@@ -37,6 +37,8 @@ SUBROUTINE loadkmesh_para
   !! k-point index
   INTEGER :: ikq
   !! q-point index
+  INTEGER :: idir
+  !! Crystal direction (G-vector)
   INTEGER :: lower_bnd
   !! Lower bounds index after k paral
   INTEGER :: upper_bnd
@@ -109,14 +111,14 @@ SUBROUTINE loadkmesh_para
           ! SP: The variable xkfval is a duplication. However, it allows to avoid some strange 
           !     memory allocation issue. FIXME
           DO ik = 1, nkqtotf
-             ikk = 2 * ik - 1
-             ikq = ikk + 1
-             xkf_(:,ikk)   = xkf_tmp(:,ik)
-             xkf_(:,ikq)   = xkf_tmp(:,ik)
-             xkfval(:,ikk) = xkf_tmp(:,ik)
-             xkfval(:,ikq) = xkf_tmp(:,ik)
-             wkf_(ikk)   = 2.d0 * wkf_tmp(ik)
-             wkf_(ikq)   = 0.d0
+            ikk = 2 * ik - 1
+            ikq = ikk + 1
+            xkf_(:,ikk)   = xkf_tmp(:,ik)
+            xkf_(:,ikq)   = xkf_tmp(:,ik)
+            xkfval(:,ikk) = xkf_tmp(:,ik)
+            xkfval(:,ikq) = xkf_tmp(:,ik)
+            wkf_(ikk)   = 2.d0 * wkf_tmp(ik)
+            wkf_(ikq)   = 0.d0
           ENDDO
           DEALLOCATE (xkf_tmp, wkf_tmp)
           !       
@@ -124,6 +126,15 @@ SUBROUTINE loadkmesh_para
           !CALL cryst_to_cart (2*nkqtotf, xkf_, at, -1)
           CALL cryst_to_cart (2*nkqtotf, xkfval, at, -1)
           xkf_(:,:) = xkfval(:,:)
+          ! 
+          ! Fold the points in the region [0-1] from the region -0.5,0.5
+          DO ik = 1, 2*nkqtotf
+            DO idir=1, 3
+              IF (xkf_(idir,ik) < 0.0 ) THEN
+                xkf_(idir,ik) = xkf_(idir,ik) + 1.0
+              ENDIF 
+            ENDDO
+          ENDDO 
           !
           ! redefine nkqtotf to include the k+q points
           !

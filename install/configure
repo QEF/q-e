@@ -5737,7 +5737,7 @@ ia32:path* | ia64:path* | x86_64:path* )
 *:*gfortran )
 	try_fflags="-O3 -g"
         if test "$use_debug" -eq 1; then
-            try_fflags="-O3 -g  -Wall -fbounds-check -frange-check"
+            try_fflags="-O3 -g  -Wall -fbounds-check -frange-check -finit-integer=987654321 -finit-real=nan -finit-logical=true -finit-character=64"
         fi
         if test "$use_pedantic" -eq 1; then
             try_fflags="-O2 -g -pedantic -Wall -Wextra -Wconversion -fimplicit-none -fbacktrace -ffree-line-length-0 -fcheck=all"

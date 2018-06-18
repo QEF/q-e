@@ -534,10 +534,8 @@ MODULE input_parameters
 
         LOGICAL :: xdm = .FALSE.
           ! OBSOLESCENT: same as vdw_corr='xdm'
-        REAL(DP) :: xdm_a1 = 0.6836_DP
-        REAL(DP) :: xdm_a2 = 1.5045_DP
-          ! xdm_a1 and xdm_a2 -- parameters for the BJ damping function
-          ! The default values are for the b86bpbe functional.
+        REAL(DP) :: xdm_a1 = 0.0_DP
+        REAL(DP) :: xdm_a2 = 0.0_DP
           !
         CHARACTER(LEN=3) :: esm_bc = 'pbc'
           ! 'pbc': ordinary calculation with periodic boundary conditions

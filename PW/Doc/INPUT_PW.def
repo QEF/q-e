@@ -1300,6 +1300,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 For noncollinear calculations only.
             }
         }
+        
+        var lforcet -type LOGICAL {
+		info { When starting a non collinear calculation using an existing density
+		       file from a collinear lsda calculation assumes previous density points in 
+		       z direction and rotates is in the direction described by @ref angle1 and 
+		       @ref angle2 variables for atomic type 1} 
+	} 
 
         var constrained_magnetization -type CHARACTER { 
             see { lambda, fixed_magnetization }
@@ -1671,10 +1678,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
          var xdm_a1 -type REAL {
            default { 0.6836 }
            info {
-               Damping function parameter a1 (adimensional). This value should change
-               with the exchange-correlation functional. The default corresponds to 
-               PW86PBE. 
-               For other functionals, see:
+               Damping function parameter a1 (adimensional). It is NOT necessary to give
+	       a value if the functional is one of B86bPBE, PW86PBE, PBE, BLYP. For functionals
+               in this list, the coefficients are given in:
                   http://schooner.chem.dal.ca/wiki/XDM
 	          A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
 	          doi:10.1063/1.4705760
@@ -1683,10 +1689,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
          var xdm_a2 -type REAL {
            default { 1.5045 }
            info {
-               Damping function parameter a2 (angstrom). This value should change
-               with the exchange-correlation functional. The default corresponds to 
-               PW86PBE. 
-               For other functionals, see:
+               Damping function parameter a2 (angstrom). It is NOT necessary to give
+	       a value if the functional is one of B86bPBE, PW86PBE, PBE, BLYP. For functionals
+               in this list, the coefficients are given in:
                   http://schooner.chem.dal.ca/wiki/XDM
 	          A. Otero de la Roza, E. R. Johnson, J. Chem. Phys. 138, 204109 (2013),
 	          doi:10.1063/1.4705760

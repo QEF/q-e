@@ -34,40 +34,55 @@ subroutine g_psi (lda, n, m, npol, psi, e)
   real(DP), parameter :: eps = 1.0d-4
   ! a small number
   real(DP) :: x, scala, denm
+  !
   integer :: k, i
   ! counter on psi functions
   ! counter on G vectors
+  integer, parameter :: blocksize = 256
+  integer :: iblock, numblock
+  ! chunking parameters
   !
   call using_h_diag(0); call using_s_diag(0)
   call start_clock ('g_psi')
   !
+  ! compute the number of chuncks
+  numblock  = (n+blocksize-1)/blocksize
+  !
 #ifdef TEST_NEW_PRECONDITIONING
   scala = 1.d0
-  do ipol=1,npol
-     do k = 1, m
-        do i = 1, n
-           x = (h_diag(i,ipol) - e(k)*s_diag(i,ipol))*scala
-           denm = 0.5_dp*(1.d0+x+sqrt(1.d0+(x-1)*(x-1.d0)))/scala
-           psi (i, ipol, k) = psi (i, ipol, k) / denm
+  !$omp parallel do collapse(3) private(x, denm)
+  do k = 1, m
+     do ipol=1, npol
+        do iblock = 1, numblock
+           do i = (iblock-1)*blocksize+1, MIN(iblock*blocksize, n)
+              x = (h_diag(i,ipol) - e(k)*s_diag(i,ipol))*scala
+              denm = 0.5_dp*(1.d0+x+sqrt(1.d0+(x-1)*(x-1.d0)))/scala
+              psi (i, ipol, k) = psi (i, ipol, k) / denm
+           enddo
         enddo
      enddo
   enddo
+  !$omp end parallel do
 #else
+  !$omp parallel do collapse(3) private(denm)
   do ipol=1,npol
      do k = 1, m
-        do i = 1, n
-           denm = h_diag (i,ipol) - e (k) * s_diag (i,ipol)
-        !
-        ! denm = g2+v(g=0) - e(k)
-        !
-           if (abs (denm) < eps) denm = sign (eps, denm)
-        !
-        ! denm = sign( max( abs(denm),eps ), denm )
-        !
-           psi (i, ipol, k) = psi (i, ipol, k) / denm
+        do iblock = 1, numblock
+           do i = (iblock-1)*blocksize+1, MIN(iblock*blocksize, n)
+              denm = h_diag (i,ipol) - e (k) * s_diag (i,ipol)
+              !
+              ! denm = g2+v(g=0) - e(k)
+              !
+                 if (abs (denm) < eps) denm = sign (eps, denm)
+              !
+              ! denm = sign( max( abs(denm),eps ), denm )
+              !
+              psi (i, ipol, k) = psi (i, ipol, k) / denm
+           enddo
         enddo
      enddo
   enddo
+  !$omp end parallel do
 #endif
 
   call stop_clock ('g_psi')

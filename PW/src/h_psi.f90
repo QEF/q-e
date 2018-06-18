@@ -28,15 +28,18 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE noncollin_module, ONLY : npol
   USE funct,            ONLY : exx_is_active
   USE mp_bands,         ONLY : use_bgrp_in_hpsi, inter_bgrp_comm
-  USE mp,               ONLY : mp_sum
+  USE mp,               ONLY : mp_allgather, mp_size, &
+                               mp_type_create_column_section, mp_type_free
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)      :: lda, n, m
   COMPLEX(DP), INTENT(IN)  :: psi(lda*npol,m) 
-  COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)   
+  COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)
   !
-  INTEGER     :: m_start, m_end
+  INTEGER :: m_start, m_end
+  INTEGER :: column_type
+  INTEGER, ALLOCATABLE :: recv_counts(:), displs(:)
   !
   CALL start_clock( 'h_psi_bgrp' ); !write (*,*) 'start h_psi_bgrp'; FLUSH(6)
 
@@ -48,12 +51,18 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !
   IF (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) THEN
      ! use band parallelization here
-     hpsi(:,:) = (0.d0,0.d0)
-     CALL divide(inter_bgrp_comm,m,m_start,m_end)
+     ALLOCATE( recv_counts(mp_size(inter_bgrp_comm)), displs(mp_size(inter_bgrp_comm)) )
+     CALL divide_all(inter_bgrp_comm,m,m_start,m_end,recv_counts,displs)
+     CALL mp_type_create_column_section(hpsi(1,1), 0, lda*npol, lda*npol, column_type)
+     !
      ! Check if there at least one band in this band group
      IF (m_end >= m_start) &
         CALL h_psi_( lda, n, m_end-m_start+1, psi(1,m_start), hpsi(1,m_start) )
-     CALL mp_sum(hpsi,inter_bgrp_comm)
+     CALL mp_allgather(hpsi, column_type, recv_counts, displs, inter_bgrp_comm)
+     !
+     CALL mp_type_free( column_type )
+     DEALLOCATE( recv_counts )
+     DEALLOCATE( displs )
   ELSE
      ! don't use band parallelization here
      CALL h_psi_( lda, n, m, psi, hpsi )
@@ -119,11 +128,22 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   CALL using_g2kin(0)
   CALL using_vrs(0)   ! vloc_psi_gamma (intent:in)
 
-  hpsi (:, 1:m) = (0.0_dp, 0.0_dp)
-
-  CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
+  !
+  ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
+  !
+  !$omp parallel do
+  DO ibnd = 1, m
+     hpsi (1:n, ibnd) = g2kin (1:n) * psi (1:n, ibnd)
+     IF (n<lda) hpsi (n+1:lda, ibnd) = (0.0_dp, 0.0_dp)
+     IF ( noncolin ) THEN
+        hpsi (lda+1:lda+n, ibnd) = g2kin (1:n) * psi (lda+1:lda+n, ibnd)
+        IF (n<lda) hpsi (lda+n+1:lda+lda, ibnd) = (0.0_dp, 0.0_dp)
+     END IF
+  END DO
   !
   ! ... Here the product with the local potential V_loc psi
+  !
+  CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
   !
   IF ( gamma_only ) THEN
      ! 
@@ -215,15 +235,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   END IF
   !  
   CALL stop_clock( 'h_psi:pot' )
-  !
-  ! ... Here we add the kinetic energy (k+G)^2 psi
-  !
-  DO ibnd = 1, m
-     hpsi (1:n, ibnd) = hpsi(1:n, ibnd) + g2kin (1:n) * psi (1:n, ibnd)
-     IF ( noncolin ) THEN
-        hpsi (lda+1:lda+n, ibnd) = hpsi(lda+1:lda+n,ibnd) + g2kin (1:n) * psi (lda+1:lda+n, ibnd)
-     END IF
-  END DO
   !
   if (dft_is_meta()) call h_psi_meta (lda, n, m, psi, hpsi)
   !

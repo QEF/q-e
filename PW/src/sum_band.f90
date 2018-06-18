@@ -497,6 +497,10 @@ SUBROUTINE sum_band()
        LOGICAL  :: use_tg
        INTEGER :: right_nnr, right_nr3, right_inc, ntgrp
        !
+       ! chunking parameters
+       INTEGER, PARAMETER :: blocksize = 256
+       INTEGER :: numblock
+       !
        CALL using_evc(0); CALL using_et(0)
        !
        !
@@ -651,33 +655,26 @@ SUBROUTINE sum_band()
                 !
                 IF( use_tg ) THEN
                    !
-!$omp parallel default(shared), private(j,ioff,idx)
-!$omp do
-                   DO j = 1, SIZE( tg_psi )
-                      tg_psi(j) = ( 0.D0, 0.D0 )
-                   END DO
-!$omp end do
-                   !
-                   ioff   = 0
-                   !
                    CALL tg_get_nnr( dffts, right_nnr )
+                   !
                    ntgrp = fftx_ntgrp( dffts )
                    !
-                   DO idx = 1, ntgrp
-                      !
-                      ! ... ntgrp ffts at the same time
-                      !
-                      IF( idx + ibnd - 1 <= ibnd_end ) THEN
-!$omp do
-                         DO j = 1, npw
-                            tg_psi( dffts%nl(igk_k(j,ik))+ioff ) = evc(j,idx+ibnd-1)
-                         END DO
-!$omp end do
-                      END IF
-
-                      ioff = ioff + right_nnr
-
+                   ! compute the number of chuncks
+                   numblock  = (npw+blocksize-1)/blocksize
+                   !
+!$omp parallel
+                   CALL threaded_barrier_memset(tg_psi, 0.D0, ntgrp*right_nnr*2)
+                   !
+                   ! ... ntgrp ffts at the same time
+                   !
+                   !$omp do collapse(2)
+                   DO idx = 0, MIN(ntgrp-1, ibnd_end-ibnd)
+                      DO j = 1, numblock
+                         tg_psi( dffts%nl(igk_k((j-1)*blocksize+1:MIN(j*blocksize, npw),ik))+right_nnr*idx ) = &
+                            evc((j-1)*blocksize+1:MIN(j*blocksize, npw),idx+ibnd)
+                      END DO
                    END DO
+                   !$omp end do nowait
 !$omp end parallel
                    !
                    CALL invfft ('tgWave', tg_psi, dffts)
@@ -707,9 +704,15 @@ SUBROUTINE sum_band()
                    !
                 ELSE
                    !
-                   psic(:) = ( 0.D0, 0.D0 )
+!$omp parallel
+                   CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
                    !
-                   psic(dffts%nl(igk_k(1:npw,ik))) = evc(1:npw,ibnd)
+                   !$omp do
+                   DO j = 1, npw
+                      psic(dffts%nl(igk_k(j,ik))) = evc(j,ibnd)
+                   ENDDO
+                   !$omp end do nowait
+!$omp end parallel
                    !
                    CALL invfft ('Wave', psic, dffts)
                    !

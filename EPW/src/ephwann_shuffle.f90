@@ -56,7 +56,8 @@
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,   &
                             nkqtotf, sigmar_all, zi_allvb, inv_tau_all, Fi_all, &
-                            F_current, F_SERTA, inv_tau_allcb, zi_allcb, exband
+                            F_current, F_SERTA, inv_tau_allcb, zi_allcb, exband,&
+                            Fi_allcb, F_currentcb, F_SERTAcb
   USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                             upper_bnd, ixkqf_tr,  s_BZtoIBZ_full
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch, &
@@ -67,7 +68,8 @@
                             ephbloch2wanp_mem
   USE superconductivity, ONLY : write_ephmat, count_kpoints, kmesh_fine, &
                             kqmap_fine
-  USE transport,     ONLY : transport_coeffs, iterativebte, scattering_rate_q
+  USE transport,     ONLY : transport_coeffs, scattering_rate_q
+  USE transport_iter,ONLY : iterativebte
 #ifdef __NAG
   USE f90_unix_io,   ONLY : flush
 #endif
@@ -782,13 +784,25 @@
   ENDIF
   !
   IF (iterative_bte) THEN
-    ALLOCATE(Fi_all(3,ibndmax-ibndmin+1,nkqtotf/2))
+    ALLOCATE(Fi_all(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
     ! Current iterative F(i+1) function
-    ALLOCATE(F_current(3,ibndmax-ibndmin+1,nkqtotf/2))
-    ALLOCATE(F_SERTA(3,ibndmax-ibndmin+1,nkqtotf/2))
-    Fi_all(:,:,:) = zero
-    F_current(:,:,:) = zero
-    F_SERTA(:,:,:) = zero
+    ALLOCATE(F_current(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+    ALLOCATE(F_SERTA(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+    Fi_all(:,:,:,:) = zero
+    F_current(:,:,:,:) = zero
+    F_SERTA(:,:,:,:) = zero
+    ALLOCATE(mobilityh_save(nstemp))
+    ALLOCATE(mobilityel_save(nstemp))
+    mobilityh_save(:) = zero
+    mobilityel_save(:) = zero
+    IF (int_mob .AND. carrier) THEN
+      ALLOCATE(Fi_allcb(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+      ALLOCATE(F_currentcb(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+      ALLOCATE(F_SERTAcb(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+      Fi_allcb(:,:,:,:) = zero
+      F_currentcb(:,:,:,:) = zero
+      F_SERTAcb(:,:,:,:) = zero
+    ENDIF
   ENDIF 
   ! 
   ! Define it only once for the full run. 
@@ -808,8 +822,6 @@
   ELSE
     error_h = 0_DP
   ENDIF
-  mobilityh_save = 0.0_DP
-  mobilityel_save = 0.0_DP
   !
   ! Restart calculation
   iq_restart = 1
@@ -834,28 +846,30 @@
         !
         ! Here inv_tau_all and inv_tau_allcb gets updated
         CALL tau_read(iq_restart, nqf, nkqtotf/2, .TRUE.)
-        !
       ELSE
         ! Here inv_tau_all gets updated
         CALL tau_read(iq_restart, nqf, nkqtotf/2, .FALSE.)
-        !
       ENDIF
       !
     ENDIF
     IF ( iterative_bte ) THEN
       ! 
-      CALL F_read(iter, iq_restart, nqf, nkqtotf/2, error_h, error_el)
+      IF (int_mob .AND. carrier) THEN
+        CALL F_read(iter, iq_restart, nqf, nkqtotf/2, error_h, error_el, .TRUE.)
+      ELSE
+        CALL F_read(iter, iq_restart, nqf, nkqtotf/2, error_h, error_el, .FALSE.)
+      ENDIF
       ! 
       IF (int_mob .OR. (ncarrier < 1E5)) THEN
         IF ( error_h < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
         IF ( error_h < eps2 ) &
-          WRITE( stdout,'(5x,"IBTE is converged with value for hole mobility of",1E18.6," "/)') mobilityh_save
+          WRITE( stdout,'(5x,"IBTE is converged with value for hole mobility of",1E18.6," "/)') MAXVAL(mobilityh_save(:))
         IF ( error_h < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
       ENDIF
       IF (int_mob .OR. (ncarrier > 1E5)) THEN
         IF ( error_el < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
         IF ( error_el < eps2 ) &
-          WRITE( stdout,'(5x,"IBTE is converged with value for electron mobility of",1E18.6," "/)') mobilityel_save
+          WRITE( stdout,'(5x,"IBTE is converged with value for electron mobility of",1E18.6," "/)') MAXVAL(mobilityel_save(:))
         IF ( error_el < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
       ENDIF
       !
@@ -882,8 +896,8 @@
       ENDIF
       WRITE(stdout,'(/5x,"Iteration number:", i10," "/)') iter
       ! 
-      IF (nstemp > 1) CALL errore('ephwann_shuffle', &
-          'Iterative BTE can only be done at 1 temperature, nstemp = 1.',1)  
+      !IF (nstemp > 1) CALL errore('ephwann_shuffle', &
+      !    'Iterative BTE can only be done at 1 temperature, nstemp = 1.',1)  
       ! 
       IF (iter > maxiter) CALL errore('ephwann_shuffle', &
         'The iteration reached the maximum but did not converge. ',1)
@@ -1254,11 +1268,11 @@
                ! 
              ELSE
                ! 
-               IF (int_mob .AND. carrier) THEN
-                 call errore('ephwann_shuffle','The iterative solution cannot be solved with int_mob AND carrier at the moment',1)
-               ELSE
-                 CALL iterativebte(iter, iq, ef0(1), error_h, error_el, first_cycle, first_time)
-               ENDIF   
+               !IF (int_mob .AND. carrier) THEN
+               !  call errore('ephwann_shuffle','The iterative solution cannot be solved with int_mob AND carrier at the moment',1)
+               !ELSE
+               CALL iterativebte(iter, iq, ef0, efcb, error_h, error_el, first_cycle, first_time)
+               !ENDIF   
                !
                IF (iq == nqf) iter = iter + 1 
              ENDIF
@@ -1288,10 +1302,13 @@
   IF (iterative_bte) DEALLOCATE (F_SERTA)
   IF (iterative_bte) DEALLOCATE (inv_tau_all)
   IF (iterative_bte) DEALLOCATE (zi_allvb)
-  IF (iterative_bte) DEALLOCATE (s_BZtoIBZ_full)
-  IF (iterative_bte) DEALLOCATE (ixkqf_tr)
+  IF (mp_mesh_k .AND. iterative_bte) DEALLOCATE (s_BZtoIBZ_full)
+  IF (mp_mesh_k .AND. iterative_bte) DEALLOCATE (ixkqf_tr)
   IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (inv_tau_allcb)
   IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (zi_allcb)
+  IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (Fi_allcb)
+  IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (F_currentcb)
+  IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (F_SERTAcb)
   ! 
   !  Close th epmatwp file
 #if defined(__MPI)

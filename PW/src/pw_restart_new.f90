@@ -1205,7 +1205,7 @@ MODULE pw_restart_new
     !! if ibrav is present, cell parameters were computed by subroutine
     !! "latgen" using ibrav and celldm parameters: recalculate celldm
     !
-    CALL at2celldm (ibrav,alat,at(:,1),at(:,2),at(:,3),celldm)
+    CALL at2celldm (ibrav,1.0_dp,at(:,1),at(:,2),at(:,3),celldm)
     !
     tpiba = tpi/alat
     tpiba2= tpiba**2
