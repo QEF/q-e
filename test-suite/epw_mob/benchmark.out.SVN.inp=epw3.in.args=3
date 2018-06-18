@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 18Jun2018 at  9:42:11 
+     Program EPW v.5.0.0 starts on 18Jun2018 at 14: 8:49 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -219,59 +219,7 @@
 
      Writing scattering rate to file
 
-     Creation of a restart point
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
-
-      300.000      6.8427       0.999998E+13       0.330502E+02  x-axis
-                                                   0.398818E+02  y-axis
-                                                   0.134902E+03  z-axis
-                                                   0.692779E+02     avg
-      350.000      6.9378       0.999995E+13       0.253108E+02  x-axis
-                                                   0.299804E+02  y-axis
-                                                   0.976728E+02  z-axis
-                                                   0.509880E+02     avg
-      400.000      7.0333       0.999999E+13       0.200705E+02  x-axis
-                                                   0.234287E+02  y-axis
-                                                   0.737338E+02  z-axis
-                                                   0.390777E+02     avg
-      450.000      7.1291       0.999994E+13       0.163434E+02  x-axis
-                                                   0.188734E+02  y-axis
-                                                   0.575581E+02  z-axis
-                                                   0.309250E+02     avg
-      500.000      7.2251       0.999995E+13       0.135883E+02  x-axis
-                                                   0.155737E+02  y-axis
-                                                   0.461673E+02  z-axis
-                                                   0.251098E+02     avg
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
-     ===================================================================
-
-      300.000      7.1085       0.999997E+13       0.636990E+02  x-axis
-                                                   0.102544E+03  y-axis
-                                                   0.147547E+03  z-axis
-                                                   0.104597E+03     avg
-      350.000      7.0241       0.100000E+14       0.461247E+02  x-axis
-                                                   0.742132E+02  y-axis
-                                                   0.106834E+03  z-axis
-                                                   0.757238E+02     avg
-      400.000      6.9395       0.100000E+14       0.346863E+02  x-axis
-                                                   0.557750E+02  y-axis
-                                                   0.802779E+02  z-axis
-                                                   0.569130E+02     avg
-      450.000      6.8546       0.100001E+14       0.268648E+02  x-axis
-                                                   0.431678E+02  y-axis
-                                                   0.621048E+02  z-axis
-                                                   0.440458E+02     avg
-      500.000      6.7695       0.999993E+13       0.213097E+02  x-axis
-                                                   0.342130E+02  y-axis
-                                                   0.491950E+02  z-axis
-                                                   0.349059E+02     avg
-
-     Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
+     Creation of the final restart point
      ===================================================================
      Memory usage:  VmHWM =        17Mb
                    VmPeak =       415Mb
@@ -338,16 +286,16 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.22s CPU      0.13s WALL (       1 calls)
-     ep-interp    :      0.06s CPU      0.02s WALL (       1 calls)
+     ephwann      :      0.17s CPU      0.14s WALL (       1 calls)
+     ep-interp    :      0.04s CPU      0.02s WALL (       1 calls)
 
      DynW2B       :      0.00s CPU      0.00s WALL (       1 calls)
      HamW2B       :      0.02s CPU      0.01s WALL (     420 calls)
-     ephW2Bp      :      0.00s CPU      0.00s WALL (       1 calls)
+     ephW2Bp      :      0.01s CPU      0.00s WALL (       1 calls)
 
 
      Total program execution
-     EPW          :     0.22s CPU         0.14s WALL
+     EPW          :     0.17s CPU         0.14s WALL
 
                                                                                           
  Please consider citing:                                                                  

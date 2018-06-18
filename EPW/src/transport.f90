@@ -546,27 +546,13 @@
       ! 
       ! Creation of a restart point at the end
       IF (restart) THEN
-        WRITE(stdout, '(a)' ) '     Creation of a restart point'
-        ! 
-        ! The mp_sum will aggreage the results on each k-points. 
-        CALL mp_sum( inv_tau_all, world_comm )
-        CALL mp_sum( zi_allvb,    world_comm )
-        !
-        IF ( ABS(efcb(1)) > eps ) THEN
-          ! 
-          CALL mp_sum( inv_tau_allcb, world_comm )
-          CALL mp_sum( zi_allcb,      world_comm )
-          ! 
-        ENDIF
+        WRITE(stdout, '(a)' ) '     Creation of the final restart point'
         ! 
         IF ( ABS(efcb(1)) > eps ) THEN
           CALL tau_write(iq,nqtotf,nkqtotf/2,.TRUE.)
         ELSE
           CALL tau_write(iq,nqtotf,nkqtotf/2,.FALSE.)
         ENDIF
-        ! 
-        ! Now show intermediate mobility with that amount of q-points
-        CALL transport_coeffs(ef0,efcb)
         ! 
       ENDIF ! restart
       ! 

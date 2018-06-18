@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 18Jun2018 at  9:42:11 
+     Program EPW v.5.0.0 starts on 18Jun2018 at 14: 8:49 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -235,16 +235,16 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :     10.34s CPU      5.20s WALL (       1 calls)
-     ep-interp    :     10.12s CPU      5.05s WALL (      64 calls)
+     ephwann      :     10.52s CPU      5.22s WALL (       1 calls)
+     ep-interp    :     10.32s CPU      5.06s WALL (      64 calls)
 
-     DynW2B       :      0.03s CPU      0.02s WALL (      64 calls)
-     HamW2B       :      4.31s CPU      2.08s WALL (   66560 calls)
-     ephW2Bp      :      0.20s CPU      0.12s WALL (      64 calls)
+     DynW2B       :      0.03s CPU      0.01s WALL (      64 calls)
+     HamW2B       :      4.30s CPU      2.10s WALL (   66560 calls)
+     ephW2Bp      :      0.20s CPU      0.14s WALL (      64 calls)
 
 
      Total program execution
-     EPW          :    10.35s CPU         5.20s WALL
+     EPW          :    10.52s CPU         5.22s WALL
 
                                                                                           
  Please consider citing:                                                                  

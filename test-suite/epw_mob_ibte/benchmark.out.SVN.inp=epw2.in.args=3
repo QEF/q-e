@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 18Jun2018 at 10:32:52 
+     Program EPW v.5.0.0 starts on 18Jun2018 at 14:11:49 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -360,43 +360,7 @@
 
      Writing scattering rate to file
 
-     Creation of a restart point
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
-
-      300.000      6.7223       0.100000E+14       0.672171E-16  x-axis
-                                                   0.135565E-14  y-axis
-                                                   0.525690E-14  z-axis
-                                                   0.222659E-14     avg
-      400.000      6.8779       0.999994E+13       0.192156E-03  x-axis
-                                                   0.294890E-03  y-axis
-                                                   0.517635E-03  z-axis
-                                                   0.334894E-03     avg
-      500.000      7.0335       0.100000E+14       0.194394E-02  x-axis
-                                                   0.295160E-02  y-axis
-                                                   0.511290E-02  z-axis
-                                                   0.333615E-02     avg
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
-     ===================================================================
-
-      300.000      7.3212       0.100001E+14       0.112487E+02  x-axis
-                                                   0.112487E+02  y-axis
-                                                   0.112487E+02  z-axis
-                                                   0.112487E+02     avg
-      400.000      7.1549       0.100001E+14       0.909579E+01  x-axis
-                                                   0.909689E+01  y-axis
-                                                   0.909689E+01  z-axis
-                                                   0.909652E+01     avg
-      500.000      6.9882       0.100001E+14       0.716361E+01  x-axis
-                                                   0.716943E+01  y-axis
-                                                   0.716943E+01  z-axis
-                                                   0.716749E+01     avg
-
-     Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
+     Creation of the final restart point
 
      ===================================================================
      Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
@@ -678,16 +642,16 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :    105.20s CPU     46.95s WALL (       1 calls)
-     ep-interp    :    104.82s CPU     46.64s WALL (     864 calls)
+     ephwann      :    105.40s CPU     48.55s WALL (       1 calls)
+     ep-interp    :    105.05s CPU     48.24s WALL (     864 calls)
 
-     DynW2B       :      0.24s CPU      0.12s WALL (     864 calls)
-     HamW2B       :     33.16s CPU     13.37s WALL (  373680 calls)
-     ephW2Bp      :      6.90s CPU      4.66s WALL (     864 calls)
+     DynW2B       :      0.27s CPU      0.21s WALL (     864 calls)
+     HamW2B       :     32.82s CPU     13.71s WALL (  373680 calls)
+     ephW2Bp      :      7.21s CPU      5.14s WALL (     864 calls)
 
 
      Total program execution
-     EPW          :  1m45.20s CPU     0m46.95s WALL
+     EPW          :  1m45.40s CPU     0m48.55s WALL
 
                                                                                           
  Please consider citing:                                                                  
