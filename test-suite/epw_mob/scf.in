@@ -13,9 +13,9 @@
     celldm(1)       = 10.262
     nat             = 2
     ntyp            = 1
-    ecutwfc         = 15
-    noncolin        =.true.
-    lspinorb        =.true.
+    ecutwfc         = 20
+    noncolin        =.false.
+    lspinorb        =.false.
  /
  &electrons
     diagonalization = 'david'

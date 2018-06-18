@@ -12,9 +12,9 @@
     nat             = 2
     ntyp            = 1
     ecutwfc         = 15
-    noncolin        =.true.
-    lspinorb        =.true.
-    nbnd            = 20
+    noncolin        =.false.
+    lspinorb        =.false.
+    nbnd            = 10
  /
  &electrons
     diagonalization = 'david'

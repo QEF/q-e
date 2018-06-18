@@ -17,15 +17,19 @@
   scattering_serta = .true.
   int_mob     = .true.
   carrier     = .true.
-  ncarrier    = 1E13
+  ncarrier    =  1E13
+  mp_mesh_k   = .true.
+  iterative_bte = .true.
+
+  vme         = .false.
 
   scissor     =  0.7
-  nstemp      =   5
+  nstemp      =   3
   tempsmin    = 300
   tempsmax    = 500
 
-  restart    = .true.
-  restart_freq = 1000
+  restart     = .false.
+  restart_freq = 50
 
   lifc        = .true.
   asr_typ     = 'crystal'
@@ -53,27 +57,31 @@
   wdata(10) = 'dis_mix_ratio     = 1.0'
   wdata(11) = 'conv_tol = 1E-9'
   wdata(12) = 'conv_window = 4'
+  wdata(13) = 'write_hr   = .true.'
+  wdata(14) = 'write_rmn  = .true.'
 
 
   elecselfen  = .false.
   phonselfen  = .false.
   a2f         = .false.
 
-  fsthick     = 1.2 ! eV 
+  fsthick     = 3.0
   eptemp      = 1 ! K 
   degaussw    = 0.05 ! eV
 
   dvscf_dir   = './save/'
   
-  filkf       = './kpt.txt'
+  nkf1        = 6
+  nkf2        = 6
+  nkf3        = 6
 
-  nqf1        = 12
-  nqf2        = 12
-  nqf3        = 12
+  nqf1        = 6
+  nqf2        = 6
+  nqf3        = 6
 
-  nk1         = 4 
-  nk2         = 4
-  nk3         = 4
+  nk1         = 6
+  nk2         = 6
+  nk3         = 6
 
   nq1         = 2
   nq2         = 2

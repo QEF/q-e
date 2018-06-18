@@ -28,7 +28,7 @@
 
   etf_mem     = 1
 
-  nbndsub     =  16
+  nbndsub     =  8
   nbndskip    =  0
 
   wannierize  = .false.
