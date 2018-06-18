@@ -55,7 +55,7 @@ SUBROUTINE elph_tetra_lambda()
   USE lsda_mod,   ONLY : nspin
   USE ktetra,     ONLY : ntetra, tetra, opt_tetra_dos_t
   USE output, ONLY : fildyn
-  USE xml_io_base, ONLY : create_directory
+  USE io_files, ONLY : create_directory
   !
   IMPLICIT NONE
   !
@@ -453,7 +453,7 @@ SUBROUTINE elph_tetra_delta2(nbnd_fs,ej0,w)
   !
   DO ibnd = 1, nbnd_fs
      !
-     IF(MAXVAL(ABS(ej0(ibnd,1:3))) < 1e-10_dp) &
+     IF(MAXVAL(ABS(ej0(1:3,ibnd))) < 1e-10_dp) &
      & CALL errore("elph_tetra_delta2", "Nesting occurs.", ibnd)
      !
      itetra(1) = 0
@@ -518,7 +518,7 @@ SUBROUTINE elph_tetra_gamma()
   USE ktetra,     ONLY : ntetra, tetra, opt_tetra_dos_t
   USE mp_images, ONLY : me_image, nproc_image, intra_image_comm
   USE output, ONLY : fildyn
-  USE xml_io_base, ONLY : create_directory
+  USE io_files, ONLY : create_directory
   USE ions_base, ONLY : ityp, amass
   !
   IMPLICIT NONE

@@ -1127,7 +1127,6 @@ CONTAINS
            notcl = notcnv_ip( ipc )
            ic    = ic_notcnv( ipc ) 
 
-           ptmp = 0.0d0
            beta = 0.0d0
 
            DO ipr = 1, desc%npr
@@ -1156,7 +1155,7 @@ CONTAINS
               END IF
               !
               CALL DGEMM( 'N', 'N', npw2, notcl, nr, 1.D0, &
-                      hpsi( 1, ir ), npwx2, vtmp, nx, 1.D0, ptmp, npwx2 )
+                      hpsi( 1, ir ), npwx2, vtmp, nx, beta, ptmp, npwx2 )
 
               beta = 1.0d0
 
@@ -1164,7 +1163,7 @@ CONTAINS
 
            DO np = 1, notcl
               !
-              psi(:,nbase+np+ic-1) = ptmp(:,np) - ew(nbase+np+ic-1) * psi(:,nbase+np+ic-1)
+              psi(1:npw,nbase+np+ic-1) = ptmp(1:npw,np) - ew(nbase+np+ic-1) * psi(1:npw,nbase+np+ic-1)
               !
            END DO
            !

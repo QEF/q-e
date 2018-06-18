@@ -215,7 +215,7 @@ elf.o : ../../Modules/control_flags.o
 elf.o : ../../Modules/fft_base.o
 elf.o : ../../Modules/io_files.o
 elf.o : ../../Modules/kind.o
-elf.o : ../../Modules/mp_global.o
+elf.o : ../../Modules/mp_pools.o
 elf.o : ../../Modules/recvec.o
 elf.o : ../../Modules/wavefunctions.o
 elf.o : ../../PW/src/pwcom.o
@@ -233,10 +233,8 @@ epsilon.o : ../../Modules/mp_world.o
 epsilon.o : ../../Modules/recvec.o
 epsilon.o : ../../Modules/uspp.o
 epsilon.o : ../../Modules/wavefunctions.o
-epsilon.o : ../../Modules/xml_io_base.o
 epsilon.o : ../../PW/src/pwcom.o
 epsilon.o : ../../UtilXlib/mp.o
-epsilon.o : ../../iotk/src/iotk_module.o
 fermi_proj.o : ../../Modules/environment.o
 fermi_proj.o : ../../Modules/io_files.o
 fermi_proj.o : ../../Modules/io_global.o
@@ -380,6 +378,7 @@ open_grid.o : ../../Modules/recvec.o
 open_grid.o : ../../Modules/wavefunctions.o
 open_grid.o : ../../PW/src/buffers.o
 open_grid.o : ../../PW/src/exx.o
+open_grid.o : ../../PW/src/exx_base.o
 open_grid.o : ../../PW/src/io_rho_xml.o
 open_grid.o : ../../PW/src/pwcom.o
 open_grid.o : ../../PW/src/scf_mod.o
@@ -665,7 +664,6 @@ pw_export.o : ../../Modules/mp_global.o
 pw_export.o : ../../Modules/mp_pools.o
 pw_export.o : ../../Modules/mp_wave.o
 pw_export.o : ../../Modules/mp_world.o
-pw_export.o : ../../Modules/parameters.o
 pw_export.o : ../../Modules/recvec.o
 pw_export.o : ../../Modules/uspp.o
 pw_export.o : ../../Modules/version.o

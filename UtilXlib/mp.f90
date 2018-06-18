@@ -23,11 +23,14 @@
 
       PUBLIC :: mp_start, mp_abort, mp_stop, mp_end, &
         mp_bcast, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
-        mp_gather, mp_alltoall, mp_get, mp_put, mp_barrier, mp_report, mp_group_free, &
+        mp_gather, mp_alltoall, mp_get, mp_put, &
+        mp_barrier, mp_report, mp_group_free, &
         mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, &
         mp_group_create, mp_comm_split, mp_set_displs, &
         mp_circular_shift_left, &
-        mp_get_comm_null, mp_get_comm_self, mp_count_nodes
+        mp_get_comm_null, mp_get_comm_self, mp_count_nodes, &
+        mp_type_create_column_section, mp_type_free, &
+        mp_allgather
 
 !
       INTERFACE mp_bcast
@@ -92,26 +95,38 @@
         MODULE PROCEDURE mp_max_i_gpu, mp_max_r_gpu, mp_max_rv_gpu, mp_max_iv_gpu
 #endif
       END INTERFACE
+
       INTERFACE mp_min
         MODULE PROCEDURE mp_min_i, mp_min_r, mp_min_rv, mp_min_iv
 #if defined(__CUDA)
         MODULE PROCEDURE mp_min_i_gpu, mp_min_r_gpu, mp_min_rv_gpu, mp_min_iv_gpu
 #endif
       END INTERFACE
+
       INTERFACE mp_gather
         MODULE PROCEDURE mp_gather_i1, mp_gather_iv, mp_gatherv_rv, mp_gatherv_iv, &
-          mp_gatherv_rm, mp_gatherv_im, mp_gatherv_cv
+                         mp_gatherv_rm, mp_gatherv_im, mp_gatherv_cv, &
+                         mp_gatherv_inplace_cplx_array
 #if defined(__CUDA)
         MODULE PROCEDURE mp_gather_i1_gpu, mp_gather_iv_gpu, mp_gatherv_rv_gpu, mp_gatherv_iv_gpu, &
-          mp_gatherv_rm_gpu, mp_gatherv_im_gpu, mp_gatherv_cv_gpu
+          mp_gatherv_rm_gpu, mp_gatherv_im_gpu, mp_gatherv_cv_gpu, mp_gatherv_inplace_cplx_array
 #endif
       END INTERFACE
+
+      INTERFACE mp_allgather
+        MODULE PROCEDURE mp_allgatherv_inplace_cplx_array
+#if defined(__CUDA)
+        MODULE PROCEDURE mp_allgatherv_inplace_cplx_array_gpu
+#endif
+      END INTERFACE
+
       INTERFACE mp_alltoall
         MODULE PROCEDURE mp_alltoall_c3d, mp_alltoall_i3d
 #if defined(__CUDA)
         MODULE PROCEDURE mp_alltoall_c3d_gpu, mp_alltoall_i3d_gpu
 #endif
       END INTERFACE
+
       INTERFACE mp_circular_shift_left
         MODULE PROCEDURE mp_circular_shift_left_i0, &
           mp_circular_shift_left_i1, &
@@ -125,6 +140,10 @@
           mp_circular_shift_left_r2d_gpu, &
           mp_circular_shift_left_c2d_gpu
 #endif
+      END INTERFACE
+
+      INTERFACE mp_type_create_column_section
+        MODULE PROCEDURE mp_type_create_cplx_column_section
       END INTERFACE
 
 !------------------------------------------------------------------------------!
@@ -2038,6 +2057,65 @@
 
 
 !------------------------------------------------------------------------------!
+!..mp_gatherv_inplace_cplx_array
+!..Ye Luo
+
+      SUBROUTINE mp_gatherv_inplace_cplx_array(alldata, my_column_type, recvcount, displs, root, gid)
+        IMPLICIT NONE
+        COMPLEX(DP) :: alldata(:,:)
+        INTEGER, INTENT(IN) :: my_column_type
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:)
+        INTEGER, INTENT(IN) :: root, gid
+        INTEGER :: ierr, npe, myid
+
+#if defined (__MPI)
+        CALL mpi_comm_size( gid, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 8069 )
+        CALL mpi_comm_rank( gid, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8070 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
+        !
+        IF (myid==root) THEN
+           CALL MPI_GATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
+                             alldata, recvcount, displs, my_column_type, root, gid, ierr )
+        ELSE
+           CALL MPI_GATHERV( alldata(1,displs(myid+1)+1), recvcount(myid+1), my_column_type, &
+                             MPI_IN_PLACE, recvcount, displs, MPI_DATATYPE_NULL, root, gid, ierr )
+        ENDIF
+        IF (ierr/=0) CALL mp_stop( 8074 )
+#endif
+        RETURN
+      END SUBROUTINE mp_gatherv_inplace_cplx_array
+
+!------------------------------------------------------------------------------!
+!..mp_allgatherv_inplace_cplx_array
+!..Ye Luo
+
+      SUBROUTINE mp_allgatherv_inplace_cplx_array(alldata, my_element_type, recvcount, displs, gid)
+        IMPLICIT NONE
+        COMPLEX(DP) :: alldata(:,:)
+        INTEGER, INTENT(IN) :: my_element_type
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:)
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: ierr, npe, myid
+
+#if defined (__MPI)
+        CALL mpi_comm_size( gid, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 8069 )
+        CALL mpi_comm_rank( gid, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8070 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
+        !
+        CALL MPI_ALLGATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
+                             alldata, recvcount, displs, my_element_type, gid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8074 )
+#endif
+        RETURN
+      END SUBROUTINE mp_allgatherv_inplace_cplx_array
+
+!------------------------------------------------------------------------------!
 
       SUBROUTINE mp_set_displs( recvcount, displs, ntot, nproc )
         !  Given the number of elements on each processor (recvcount), this subroutine
@@ -2436,6 +2514,39 @@ FUNCTION mp_get_comm_self( )
   mp_get_comm_self = MPI_COMM_SELF
 END FUNCTION mp_get_comm_self
 
+SUBROUTINE mp_type_create_cplx_column_section(dummy, start, length, stride, mytype)
+  IMPLICIT NONE
+  !
+  COMPLEX (DP), INTENT(IN) :: dummy
+  INTEGER, INTENT(IN) :: start, length, stride
+  INTEGER, INTENT(OUT) :: mytype
+  !
+#if defined(__MPI)
+  INTEGER :: ierr
+  !
+  CALL MPI_TYPE_CREATE_SUBARRAY(1, stride, length, start, MPI_ORDER_FORTRAN,&
+                                MPI_DOUBLE_COMPLEX, mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8081 )
+  CALL MPI_Type_commit(mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8082 )
+#else
+  mytype = 0;
+#endif
+  !
+  RETURN
+END SUBROUTINE mp_type_create_cplx_column_section
+
+SUBROUTINE mp_type_free(mytype)
+  IMPLICIT NONE
+  INTEGER :: mytype, ierr
+  !
+#if defined(__MPI)
+  CALL MPI_TYPE_FREE(mytype, ierr)
+  IF (ierr/=0) CALL mp_stop( 8083 )
+#endif
+  !
+  RETURN
+END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !  GPU specific subroutines (Pietro Bonfa')
 !------------------------------------------------------------------------------!
@@ -4620,306 +4731,378 @@ END FUNCTION mp_get_comm_self
 !
 !------------------------------------------------------------------------------!
 !
-SUBROUTINE mp_alltoall_c3d_gpu( sndbuf_d, rcvbuf_d, gid )
-   IMPLICIT NONE
-   COMPLEX(DP), DEVICE :: sndbuf_d( :, :, : )
-   COMPLEX(DP), DEVICE :: rcvbuf_d( :, :, : )
-   INTEGER, INTENT(IN) :: gid
-   INTEGER :: nsiz, group, ierr, npe
+      SUBROUTINE mp_alltoall_c3d_gpu( sndbuf_d, rcvbuf_d, gid )
+         IMPLICIT NONE
+         COMPLEX(DP), DEVICE :: sndbuf_d( :, :, : )
+         COMPLEX(DP), DEVICE :: rcvbuf_d( :, :, : )
+         INTEGER, INTENT(IN) :: gid
+         INTEGER :: nsiz, group, ierr, npe
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-   COMPLEX(DP), ALLOCATABLE :: sndbuf_h(:,:,:)
-   COMPLEX(DP), ALLOCATABLE :: rcvbuf_h(:,:,:)
-   
-   ALLOCATE(sndbuf_h, source=sndbuf_d)
-   ALLOCATE(rcvbuf_h, source=rcvbuf_d)
-   CALL mp_alltoall_c3d( sndbuf_h, rcvbuf_h, gid )
-   sndbuf_d = sndbuf_h ; rcvbuf_d = rcvbuf_h
-   DEALLOCATE(sndbuf_h , rcvbuf_h)
+         COMPLEX(DP), ALLOCATABLE :: sndbuf_h(:,:,:)
+         COMPLEX(DP), ALLOCATABLE :: rcvbuf_h(:,:,:)
+         
+         ALLOCATE(sndbuf_h, source=sndbuf_d)
+         ALLOCATE(rcvbuf_h, source=rcvbuf_d)
+         CALL mp_alltoall_c3d( sndbuf_h, rcvbuf_h, gid )
+         sndbuf_d = sndbuf_h ; rcvbuf_d = rcvbuf_h
+         DEALLOCATE(sndbuf_h , rcvbuf_h)
 #else
-   group = gid
-
-   CALL mpi_comm_size( group, npe, ierr )
-   IF (ierr/=0) CALL mp_stop( 9104 )
-
-   IF ( SIZE( sndbuf_d, 3 ) < npe ) CALL mp_stop( 9105 )
-   IF ( SIZE( rcvbuf_d, 3 ) < npe ) CALL mp_stop( 9106 )
-
-   nsiz = SIZE( sndbuf_d, 1 ) * SIZE( sndbuf_d, 2 )
-
-   CALL MPI_ALLTOALL( sndbuf_d, nsiz, MPI_DOUBLE_COMPLEX, &
-                      rcvbuf_d, nsiz, MPI_DOUBLE_COMPLEX, group, ierr )
-
-   IF (ierr/=0) CALL mp_stop( 9107 )
+         group = gid
+      
+         CALL mpi_comm_size( group, npe, ierr )
+         IF (ierr/=0) CALL mp_stop( 9104 )
+      
+         IF ( SIZE( sndbuf_d, 3 ) < npe ) CALL mp_stop( 9105 )
+         IF ( SIZE( rcvbuf_d, 3 ) < npe ) CALL mp_stop( 9106 )
+      
+         nsiz = SIZE( sndbuf_d, 1 ) * SIZE( sndbuf_d, 2 )
+      
+         CALL MPI_ALLTOALL( sndbuf_d, nsiz, MPI_DOUBLE_COMPLEX, &
+                            rcvbuf_d, nsiz, MPI_DOUBLE_COMPLEX, group, ierr )
+      
+         IF (ierr/=0) CALL mp_stop( 9107 )
 #endif
 #else
 
-   rcvbuf_d = sndbuf_d
+         rcvbuf_d = sndbuf_d
 
 #endif
 
-   RETURN
-END SUBROUTINE mp_alltoall_c3d_gpu
+         RETURN
+      END SUBROUTINE mp_alltoall_c3d_gpu
 !
 !------------------------------------------------------------------------------!
 !
-SUBROUTINE mp_alltoall_i3d_gpu( sndbuf_d, rcvbuf_d, gid )
-   IMPLICIT NONE
-   INTEGER, DEVICE :: sndbuf_d( :, :, : )
-   INTEGER, DEVICE :: rcvbuf_d( :, :, : )
-   INTEGER, INTENT(IN) :: gid
-   INTEGER :: nsiz, group, ierr, npe
+     SUBROUTINE mp_alltoall_i3d_gpu( sndbuf_d, rcvbuf_d, gid )
+        IMPLICIT NONE
+        INTEGER, DEVICE :: sndbuf_d( :, :, : )
+        INTEGER, DEVICE :: rcvbuf_d( :, :, : )
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: nsiz, group, ierr, npe
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-   INTEGER, ALLOCATABLE :: sndbuf_h(:,:,:)
-   INTEGER, ALLOCATABLE :: rcvbuf_h(:,:,:)
-   
-   ALLOCATE(sndbuf_h, source=sndbuf_d)
-   ALLOCATE(rcvbuf_h, source=rcvbuf_d)
-   CALL mp_alltoall_i3d( sndbuf_h, rcvbuf_h, gid )
-   sndbuf_d = sndbuf_h ; rcvbuf_d = rcvbuf_h
-   DEALLOCATE(sndbuf_h , rcvbuf_h)
-   RETURN
+        INTEGER, ALLOCATABLE :: sndbuf_h(:,:,:)
+        INTEGER, ALLOCATABLE :: rcvbuf_h(:,:,:)
+        
+        ALLOCATE(sndbuf_h, source=sndbuf_d)
+        ALLOCATE(rcvbuf_h, source=rcvbuf_d)
+        CALL mp_alltoall_i3d( sndbuf_h, rcvbuf_h, gid )
+        sndbuf_d = sndbuf_h ; rcvbuf_d = rcvbuf_h
+        DEALLOCATE(sndbuf_h , rcvbuf_h)
+        RETURN
 #else
-   group = gid
+        group = gid
+     
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 9108 )
+     
+        IF ( SIZE( sndbuf_d, 3 ) < npe ) CALL mp_stop( 9109 )
+        IF ( SIZE( rcvbuf_d, 3 ) < npe ) CALL mp_stop( 9110 )
+     
+        nsiz = SIZE( sndbuf_d, 1 ) * SIZE( sndbuf_d, 2 )
+     
+        CALL MPI_ALLTOALL( sndbuf_d, nsiz, MPI_INTEGER, &
+                           rcvbuf_d, nsiz, MPI_INTEGER, group, ierr )
 
-   CALL mpi_comm_size( group, npe, ierr )
-   IF (ierr/=0) CALL mp_stop( 9108 )
-
-   IF ( SIZE( sndbuf_d, 3 ) < npe ) CALL mp_stop( 9109 )
-   IF ( SIZE( rcvbuf_d, 3 ) < npe ) CALL mp_stop( 9110 )
-
-   nsiz = SIZE( sndbuf_d, 1 ) * SIZE( sndbuf_d, 2 )
-
-   CALL MPI_ALLTOALL( sndbuf_d, nsiz, MPI_INTEGER, &
-                      rcvbuf_d, nsiz, MPI_INTEGER, group, ierr )
-
-   IF (ierr/=0) CALL mp_stop( 9111 )
+        IF (ierr/=0) CALL mp_stop( 9111 )
 #endif
 #else
 
-   rcvbuf_d = sndbuf_d
+        rcvbuf_d = sndbuf_d
 
 #endif
 
-   RETURN
-END SUBROUTINE mp_alltoall_i3d_gpu
+        RETURN
+     END SUBROUTINE mp_alltoall_i3d_gpu
 !
 !------------------------------------------------------------------------------!
 !
-SUBROUTINE mp_circular_shift_left_i0_gpu( buf_d, itag, gid )
-   IMPLICIT NONE
-   INTEGER, DEVICE :: buf_d
-   INTEGER, INTENT(IN) :: itag
-   INTEGER, INTENT(IN) :: gid
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+     SUBROUTINE mp_circular_shift_left_i0_gpu( buf_d, itag, gid )
+        IMPLICIT NONE
+        INTEGER, DEVICE :: buf_d
+        INTEGER, INTENT(IN) :: itag
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-   INTEGER :: buf_h
-   buf_h = buf_d
-   CALL mp_circular_shift_left_i0( buf_h, itag, gid )
-   buf_d = buf_h
+        INTEGER :: buf_h
+        buf_h = buf_d
+        CALL mp_circular_shift_left_i0( buf_h, itag, gid )
+        buf_d = buf_h
 #else
-   INTEGER :: istatus( mpi_status_size )
-   !
-   group = gid
-   !
-   CALL mpi_comm_size( group, npe, ierr )
-   IF (ierr/=0) CALL mp_stop( 9112 )
-   CALL mpi_comm_rank( group, mype, ierr )
-   IF (ierr/=0) CALL mp_stop( 9113 )
-   !
-   sour = mype + 1
-   IF( sour == npe ) sour = 0
-   dest = mype - 1
-   IF( dest == -1 ) dest = npe - 1
-   !
-   CALL MPI_Sendrecv_replace( buf_d, 1, MPI_INTEGER, &
-        dest, itag, sour, itag, group, istatus, ierr)
-   !
-   IF (ierr/=0) CALL mp_stop( 9114 )
-   !
+        INTEGER :: istatus( mpi_status_size )
+        !
+        group = gid
+        !
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 9112 )
+        CALL mpi_comm_rank( group, mype, ierr )
+        IF (ierr/=0) CALL mp_stop( 9113 )
+        !
+        sour = mype + 1
+        IF( sour == npe ) sour = 0
+        dest = mype - 1
+        IF( dest == -1 ) dest = npe - 1
+        !
+        CALL MPI_Sendrecv_replace( buf_d, 1, MPI_INTEGER, &
+             dest, itag, sour, itag, group, istatus, ierr)
+        !
+        IF (ierr/=0) CALL mp_stop( 9114 )
+        !
 #endif
 #else
-   ! do nothing
+        ! do nothing
 #endif
-   RETURN
-END SUBROUTINE mp_circular_shift_left_i0_gpu
+        RETURN
+     END SUBROUTINE mp_circular_shift_left_i0_gpu
 !
 !------------------------------------------------------------------------------!
 !
-SUBROUTINE mp_circular_shift_left_i1_gpu( buf_d, itag, gid )
-   IMPLICIT NONE
-   INTEGER, DEVICE :: buf_d(:)
-   INTEGER, INTENT(IN) :: itag
-   INTEGER, INTENT(IN) :: gid
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+     SUBROUTINE mp_circular_shift_left_i1_gpu( buf_d, itag, gid )
+        IMPLICIT NONE
+        INTEGER, DEVICE :: buf_d(:)
+        INTEGER, INTENT(IN) :: itag
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-   INTEGER, ALLOCATABLE :: buf_h(:)
-   ALLOCATE(buf_h, source=buf_d)
-   buf_h = buf_d
-   CALL mp_circular_shift_left_i1( buf_h, itag, gid )
-   buf_d = buf_h; DEALLOCATE(buf_h)
+        INTEGER, ALLOCATABLE :: buf_h(:)
+        ALLOCATE(buf_h, source=buf_d)
+        CALL mp_circular_shift_left_i1( buf_h, itag, gid )
+        buf_d = buf_h; DEALLOCATE(buf_h)
 #else
-   INTEGER :: istatus( mpi_status_size )
-   !
-   group = gid
-   !
-   CALL mpi_comm_size( group, npe, ierr )
-   IF (ierr/=0) CALL mp_stop( 9115 )
-   CALL mpi_comm_rank( group, mype, ierr )
-   IF (ierr/=0) CALL mp_stop( 9116 )
-   !
-   sour = mype + 1
-   IF( sour == npe ) sour = 0
-   dest = mype - 1
-   IF( dest == -1 ) dest = npe - 1
-   !
-   CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_INTEGER, &
-        dest, itag, sour, itag, group, istatus, ierr)
-   !
-   IF (ierr/=0) CALL mp_stop( 9117 )
-   !
+        INTEGER :: istatus( mpi_status_size )
+        !
+        group = gid
+        !
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 9115 )
+        CALL mpi_comm_rank( group, mype, ierr )
+        IF (ierr/=0) CALL mp_stop( 9116 )
+        !
+        sour = mype + 1
+        IF( sour == npe ) sour = 0
+        dest = mype - 1
+        IF( dest == -1 ) dest = npe - 1
+        !
+        CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_INTEGER, &
+             dest, itag, sour, itag, group, istatus, ierr)
+        !
+        IF (ierr/=0) CALL mp_stop( 9117 )
+        !
 #endif
 #else
-   ! do nothing
+        ! do nothing
 #endif
-   RETURN
-END SUBROUTINE mp_circular_shift_left_i1_gpu
+        RETURN
+     END SUBROUTINE mp_circular_shift_left_i1_gpu
 !
 !------------------------------------------------------------------------------!
 !
-SUBROUTINE mp_circular_shift_left_i2_gpu( buf_d, itag, gid )
-   IMPLICIT NONE
-   INTEGER, DEVICE :: buf_d(:,:)
-   INTEGER, INTENT(IN) :: itag
-   INTEGER, INTENT(IN) :: gid
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+     SUBROUTINE mp_circular_shift_left_i2_gpu( buf_d, itag, gid )
+        IMPLICIT NONE
+        INTEGER, DEVICE :: buf_d(:,:)
+        INTEGER, INTENT(IN) :: itag
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-   INTEGER, ALLOCATABLE :: buf_h(:,:)
-   ALLOCATE(buf_h, source=buf_d)
-   buf_h = buf_d
-   CALL mp_circular_shift_left_i2( buf_h, itag, gid )
-   buf_d = buf_h; DEALLOCATE(buf_h)
+        INTEGER, ALLOCATABLE :: buf_h(:,:)
+        ALLOCATE(buf_h, source=buf_d)
+        CALL mp_circular_shift_left_i2( buf_h, itag, gid )
+        buf_d = buf_h; DEALLOCATE(buf_h)
 #else
-   INTEGER :: istatus( mpi_status_size )
-   !
-   group = gid
-   !
-   CALL mpi_comm_size( group, npe, ierr )
-   IF (ierr/=0) CALL mp_stop( 9118 )
-   CALL mpi_comm_rank( group, mype, ierr )
-   IF (ierr/=0) CALL mp_stop( 9119 )
-   !
-   sour = mype + 1
-   IF( sour == npe ) sour = 0
-   dest = mype - 1
-   IF( dest == -1 ) dest = npe - 1
-   !
-   CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_INTEGER, &
-        dest, itag, sour, itag, group, istatus, ierr)
-   !
-   IF (ierr/=0) CALL mp_stop( 9120 )
-   !
+        INTEGER :: istatus( mpi_status_size )
+        !
+        group = gid
+        !
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 9118 )
+        CALL mpi_comm_rank( group, mype, ierr )
+        IF (ierr/=0) CALL mp_stop( 9119 )
+        !
+        sour = mype + 1
+        IF( sour == npe ) sour = 0
+        dest = mype - 1
+        IF( dest == -1 ) dest = npe - 1
+        !
+        CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_INTEGER, &
+             dest, itag, sour, itag, group, istatus, ierr)
+        !
+        IF (ierr/=0) CALL mp_stop( 9120 )
+        !
 #endif
 #else
-   ! do nothing
+        ! do nothing
 #endif
-   RETURN
-END SUBROUTINE mp_circular_shift_left_i2_gpu
+        RETURN
+     END SUBROUTINE mp_circular_shift_left_i2_gpu
 !
 !------------------------------------------------------------------------------!
 !
-SUBROUTINE mp_circular_shift_left_r2d_gpu( buf_d, itag, gid )
-   IMPLICIT NONE
-   REAL(DP), DEVICE :: buf_d( :, : )
-   INTEGER, INTENT(IN) :: itag
-   INTEGER, INTENT(IN) :: gid
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+     SUBROUTINE mp_circular_shift_left_r2d_gpu( buf_d, itag, gid )
+        IMPLICIT NONE
+        REAL(DP), DEVICE :: buf_d( :, : )
+        INTEGER, INTENT(IN) :: itag
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-   REAL(DP), ALLOCATABLE :: buf_h(:, :)
-   ALLOCATE(buf_h, source=buf_d)
-   buf_h = buf_d
-   CALL mp_circular_shift_left_r2d( buf_h, itag, gid )
-   buf_d = buf_h; DEALLOCATE(buf_h)
+        REAL(DP), ALLOCATABLE :: buf_h(:, :)
+        ALLOCATE(buf_h, source=buf_d)
+        CALL mp_circular_shift_left_r2d( buf_h, itag, gid )
+        buf_d = buf_h; DEALLOCATE(buf_h)
 #else
-   INTEGER :: istatus( mpi_status_size )
-   !
-   group = gid
-   !
-   CALL mpi_comm_size( group, npe, ierr )
-   IF (ierr/=0) CALL mp_stop( 9121 )
-   CALL mpi_comm_rank( group, mype, ierr )
-   IF (ierr/=0) CALL mp_stop( 9122 )
-   !
-   sour = mype + 1
-   IF( sour == npe ) sour = 0
-   dest = mype - 1
-   IF( dest == -1 ) dest = npe - 1
-   !
-   CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_DOUBLE_PRECISION, &
-        dest, itag, sour, itag, group, istatus, ierr)
-   !
-   IF (ierr/=0) CALL mp_stop( 9123 )
-   !
+        INTEGER :: istatus( mpi_status_size )
+        !
+        group = gid
+        !
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 9121 )
+        CALL mpi_comm_rank( group, mype, ierr )
+        IF (ierr/=0) CALL mp_stop( 9122 )
+        !
+        sour = mype + 1
+        IF( sour == npe ) sour = 0
+        dest = mype - 1
+        IF( dest == -1 ) dest = npe - 1
+        !
+        CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_DOUBLE_PRECISION, &
+             dest, itag, sour, itag, group, istatus, ierr)
+        !
+        IF (ierr/=0) CALL mp_stop( 9123 )
+        !
 #endif
 #else
-   ! do nothing
+        ! do nothing
 #endif
-   RETURN
-END SUBROUTINE mp_circular_shift_left_r2d_gpu
+        RETURN
+     END SUBROUTINE mp_circular_shift_left_r2d_gpu
 !
 !------------------------------------------------------------------------------!
 !
-SUBROUTINE mp_circular_shift_left_c2d_gpu( buf_d, itag, gid )
-   IMPLICIT NONE
-   COMPLEX(DP), DEVICE :: buf_d( :, : )
-   INTEGER, INTENT(IN) :: itag
-   INTEGER, INTENT(IN) :: gid
-   INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+     SUBROUTINE mp_circular_shift_left_c2d_gpu( buf_d, itag, gid )
+        IMPLICIT NONE
+        COMPLEX(DP), DEVICE :: buf_d( :, : )
+        INTEGER, INTENT(IN) :: itag
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-   COMPLEX(DP), ALLOCATABLE :: buf_h(:, :)
-   ALLOCATE(buf_h, source=buf_d)
-   buf_h = buf_d
-   CALL mp_circular_shift_left_c2d( buf_h, itag, gid )
-   buf_d = buf_h; DEALLOCATE(buf_h)
+        COMPLEX(DP), ALLOCATABLE :: buf_h(:, :)
+        ALLOCATE(buf_h, source=buf_d)
+        CALL mp_circular_shift_left_c2d( buf_h, itag, gid )
+        buf_d = buf_h; DEALLOCATE(buf_h)
 #else
-   INTEGER :: istatus( mpi_status_size )
-   !
-   group = gid
-   !
-   CALL mpi_comm_size( group, npe, ierr )
-   IF (ierr/=0) CALL mp_stop( 9124 )
-   CALL mpi_comm_rank( group, mype, ierr )
-   IF (ierr/=0) CALL mp_stop( 9125 )
-   !
-   sour = mype + 1
-   IF( sour == npe ) sour = 0
-   dest = mype - 1
-   IF( dest == -1 ) dest = npe - 1
-   !
-   CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_DOUBLE_COMPLEX, &
-        dest, itag, sour, itag, group, istatus, ierr)
-   !
-   IF (ierr/=0) CALL mp_stop( 9126 )
-   !
+        INTEGER :: istatus( mpi_status_size )
+        !
+        group = gid
+        !
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 9124 )
+        CALL mpi_comm_rank( group, mype, ierr )
+        IF (ierr/=0) CALL mp_stop( 9125 )
+        !
+        sour = mype + 1
+        IF( sour == npe ) sour = 0
+        dest = mype - 1
+        IF( dest == -1 ) dest = npe - 1
+        !
+        CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_DOUBLE_COMPLEX, &
+             dest, itag, sour, itag, group, istatus, ierr)
+        !
+        IF (ierr/=0) CALL mp_stop( 9126 )
+        !
 #endif
 #else
-   ! do nothing
+        ! do nothing
 #endif
-   RETURN
-END SUBROUTINE mp_circular_shift_left_c2d_gpu
+        RETURN
+     END SUBROUTINE mp_circular_shift_left_c2d_gpu
+
+!------------------------------------------------------------------------------!
+!..mp_gatherv_inplace_cplx_array
+!
+
+     SUBROUTINE mp_gatherv_inplace_cplx_array_gpu(alldata_d, my_column_type, recvcount, displs, root, gid)
+        IMPLICIT NONE
+        COMPLEX(DP), DEVICE :: alldata_d(:,:)
+        INTEGER, INTENT(IN) :: my_column_type
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:)
+        INTEGER, INTENT(IN) :: root, gid
+        INTEGER :: ierr, npe, myid
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+        COMPLEX(DP), ALLOCATABLE :: alldata_h(:, :)
+        ALLOCATE(alldata_h, source=alldata_d)
+        CALL mp_gatherv_inplace_cplx_array(alldata_h, my_column_type, recvcount, displs, root, gid)
+        alldata_d = alldata_h; DEALLOCATE(alldata_h)
+#else
+        CALL mpi_comm_size( gid, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 9127 )
+        CALL mpi_comm_rank( gid, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 9128 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9129 )
+        !
+        IF (myid==root) THEN
+           CALL MPI_GATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
+                             alldata_d, recvcount, displs, my_column_type, root, gid, ierr )
+        ELSE
+           CALL MPI_GATHERV( alldata_d(1,displs(myid+1)+1), recvcount(myid+1), my_column_type, &
+                             MPI_IN_PLACE, recvcount, displs, MPI_DATATYPE_NULL, root, gid, ierr )
+        ENDIF
+        IF (ierr/=0) CALL mp_stop( 9130 )
+#endif
+#endif
+        RETURN
+     END SUBROUTINE mp_gatherv_inplace_cplx_array_gpu
+
+!------------------------------------------------------------------------------!
+!..mp_allgatherv_inplace_cplx_array
+!
+
+     SUBROUTINE mp_allgatherv_inplace_cplx_array_gpu(alldata_d, my_element_type, recvcount, displs, gid)
+        IMPLICIT NONE
+        COMPLEX(DP), DEVICE :: alldata_d(:,:)
+        INTEGER, INTENT(IN) :: my_element_type
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:)
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: ierr, npe, myid
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+        COMPLEX(DP), ALLOCATABLE :: alldata_h(:, :)
+        ALLOCATE(alldata_h, source=alldata_d)
+        CALL mp_allgatherv_inplace_cplx_array(alldata_h, my_element_type, recvcount, displs, gid)
+        alldata_d = alldata_h; DEALLOCATE(alldata_h)
+#else
+        CALL mpi_comm_size( gid, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 9131 )
+        CALL mpi_comm_rank( gid, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 9132 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9133 )
+        !
+        CALL MPI_ALLGATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
+                             alldata_d, recvcount, displs, my_element_type, gid, ierr )
+        IF (ierr/=0) CALL mp_stop( 9134 )
+#endif
+#endif
+        RETURN
+     END SUBROUTINE mp_allgatherv_inplace_cplx_array_gpu
+
+!------------------------------------------------------------------------------!
+
 #endif
 !------------------------------------------------------------------------------!
     END MODULE mp

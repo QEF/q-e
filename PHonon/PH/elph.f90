@@ -12,7 +12,7 @@ MODULE el_phon
   !
   SAVE
   !
-  LOGICAL :: elph, elph_mat, elph_simple
+  LOGICAL :: elph, elph_mat, elph_simple, elph_epa
   INTEGER :: elph_nbnd_min, elph_nbnd_max
   INTEGER :: el_ph_ngauss, el_ph_nsigma
   INTEGER :: iunwfcwann, lrwfcr

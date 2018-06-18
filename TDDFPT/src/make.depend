@@ -293,6 +293,7 @@ lr_exx_kernel.o : ../../Modules/mp_global.o
 lr_exx_kernel.o : ../../Modules/recvec.o
 lr_exx_kernel.o : ../../Modules/wavefunctions.o
 lr_exx_kernel.o : ../../PW/src/exx.o
+lr_exx_kernel.o : ../../PW/src/exx_base.o
 lr_exx_kernel.o : ../../PW/src/pwcom.o
 lr_exx_kernel.o : ../../PW/src/realus.o
 lr_exx_kernel.o : ../../PW/src/symm_base.o
@@ -401,7 +402,6 @@ lr_read_wf.o : ../../Modules/recvec.o
 lr_read_wf.o : ../../Modules/uspp.o
 lr_read_wf.o : ../../Modules/wavefunctions.o
 lr_read_wf.o : ../../PW/src/buffers.o
-lr_read_wf.o : ../../PW/src/exx.o
 lr_read_wf.o : ../../PW/src/pwcom.o
 lr_read_wf.o : ../../PW/src/realus.o
 lr_read_wf.o : lr_exx_kernel.o
@@ -427,7 +427,6 @@ lr_readin.o : ../../Modules/paw_variables.o
 lr_readin.o : ../../Modules/plugin_flags.o
 lr_readin.o : ../../Modules/recvec.o
 lr_readin.o : ../../Modules/uspp.o
-lr_readin.o : ../../Modules/xml_io_base.o
 lr_readin.o : ../../PW/src/esm.o
 lr_readin.o : ../../PW/src/exx.o
 lr_readin.o : ../../PW/src/io_rho_xml.o

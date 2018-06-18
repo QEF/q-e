@@ -225,6 +225,9 @@ module funct
   !              "vdwy"   vdW-DF-y                       inlc =5, reserved Thonhauser, not implemented
   !              "vdwz"   vdW-DF-z                       inlc =6, reserved Thonhauser, not implemented
   !
+  ! Meta-GGA with Van der Waals
+  !              "rvv10-scan" rVV10 (with b=15.7) and scan inlc=3 (PRX 6, 041005 (2016))
+  !
   ! Note: as a rule, all keywords should be unique, and should be different
   ! from the short name, but there are a few exceptions.
   !
@@ -551,7 +554,9 @@ CONTAINS
     else if ('RVV10' .EQ. TRIM(dftout) ) then
     ! Special case rVV10
        dft_defined = set_dft_values(1,4,13,4,3,0)
-       
+    else if ('RVV10-SCAN' .EQ. TRIM(dftout) ) then
+    ! Special case rVV10+scan
+       dft_defined = set_dft_values(0,0,0,0,3,5)
     else if ('B3LYP'.EQ. TRIM(dftout) ) then
     ! special case : B3LYP hybrid
        dft_defined = set_dft_values(7,12,9,7,0,0)
@@ -2737,9 +2742,11 @@ subroutine nlc (rho_valence, rho_core, nspin, enl, vnl, v)
      end if
 
   elseif (inlc == 3) then
-
-      call xc_rVV10 (rho_valence, rho_core, nspin, enl, vnl, v)
-  
+      if(imeta == 0) then
+        call xc_rVV10 (rho_valence, rho_core, nspin, enl, vnl, v)
+      else
+        call xc_rVV10 (rho_valence, rho_core, nspin, enl, vnl, v, 15.7_dp)
+      endif
   else
      enl = 0.0_DP
      vnl = 0.0_DP

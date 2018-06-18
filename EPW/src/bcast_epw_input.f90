@@ -38,7 +38,7 @@
                             specfun_el, specfun_ph, lifc, asr_typ, &
                             lscreen, scr_typ, fermi_diff, smear_rpa, &
                             rand_q, rand_nq, rand_nk, rand_k, pwc, phonselfen, &
-                            parallel_q, parallel_k, specfun_pl, cumulant, bnd_cum, &
+                            specfun_pl, cumulant, bnd_cum, &
                             nw_specfun, nw, nswi, nswfc, nswc, nstemp, nsmear, &
                             wsfc, wscut, write_wfn, wmin_specfun, wmin, &
                             wmax_specfun, wmax, wepexst, wannierize, &
@@ -47,7 +47,8 @@
                             scattering, scattering_serta, scattering_0rta, &
                             int_mob, scissor, carrier, ncarrier, iterative_bte, &
                             restart, restart_freq, prtgkk, nel, meff, epsiHEG, &
-                            scatread, restart, restart_freq, restart_filq
+                            scatread, restart, restart_freq, restart_filq, &
+                            lphase, omegamin, omegamax, omegastep, n_r, lindabs
   USE elph2,         ONLY : elph 
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -88,8 +89,6 @@
   CALL mp_bcast (kmaps           , meta_ionode_id, world_comm) 
   CALL mp_bcast (nest_fn         , meta_ionode_id, world_comm)
   CALL mp_bcast (eig_read        , meta_ionode_id, world_comm) 
-  CALL mp_bcast (parallel_k      , meta_ionode_id, world_comm) 
-  CALL mp_bcast (parallel_q      , meta_ionode_id, world_comm)
   CALL mp_bcast (a2f             , meta_ionode_id, world_comm)
   CALL mp_bcast (etf_mem         , meta_ionode_id, world_comm)
   CALL mp_bcast (rand_q          , meta_ionode_id, world_comm)
@@ -130,6 +129,8 @@
   CALL mp_bcast (carrier         , meta_ionode_id, world_comm)  
   CALL mp_bcast (restart         , meta_ionode_id, world_comm)
   CALL mp_bcast (prtgkk          , meta_ionode_id, world_comm)
+  CALL mp_bcast (lphase          , meta_ionode_id, world_comm)
+  CALL mp_bcast (lindabs         , meta_ionode_id, world_comm)
   !
   ! integers
   !
@@ -162,7 +163,7 @@
   CALL mp_bcast (scr_typ     , meta_ionode_id, world_comm)
   CALL mp_bcast (bnd_cum     , meta_ionode_id, world_comm)
   !
-  ! real*8
+  ! REAL*8
   !
   CALL mp_bcast (tr2_ph        , meta_ionode_id, world_comm)
   CALL mp_bcast (amass         , meta_ionode_id, world_comm)
@@ -195,6 +196,10 @@
   CALL mp_bcast (epsiHEG       , meta_ionode_id, world_comm)      
   CALL mp_bcast (fermi_diff    , meta_ionode_id, world_comm)
   CALL mp_bcast (smear_rpa     , meta_ionode_id, world_comm)
+  CALL mp_bcast (omegamin      , meta_ionode_id, world_comm)
+  CALL mp_bcast (omegamax      , meta_ionode_id, world_comm)
+  CALL mp_bcast (omegastep     , meta_ionode_id, world_comm)
+  CALL mp_bcast (n_r           , meta_ionode_id, world_comm)
   !
   ! characters
   !

@@ -15,7 +15,7 @@ SUBROUTINE run_dist ( exit_status )
   !
   USE kinds,     ONLY : dp
   USE constants, ONLY : pi, bohr_radius_angs
-  USE cell_base, ONLY : at, bg, alat
+  USE cell_base, ONLY : at, bg, alat, ibrav
   USE ions_base, ONLY : atm, nat, ityp, tau, nsp
   USE io_global, ONLY : stdout
   !
@@ -23,19 +23,53 @@ SUBROUTINE run_dist ( exit_status )
   !
   INTEGER, INTENT(out) :: exit_status
   INTEGER, PARAMETER:: ounit=4, ndistx=9999, nn=4
-  real(dp), PARAMETER:: dmin=0.01_dp, dmax=3.0_dp
+  REAL(dp), PARAMETER:: dmin=0.01_dp, dmax=3.0_dp
   INTEGER :: ndist, nsp1, nsp2, na, nb, n, nd, nn1, nn2, nn3, i, nbad
   INTEGER,  ALLOCATABLE :: atom1(:), atom2(:), idx(:)
   CHARACTER(len=3 ) :: atm1, atm2
   CHARACTER(len=80) :: filename, line
   CHARACTER(len=1)  :: other_cell(ndistx)
-  real(dp), ALLOCATABLE :: d(:)
-  real(dp) :: dr(3), dd, dn1, dn2, dn3, scalef, arg
-  real(dp) :: angolo(nn*(nn-1)/2), drv(3), drn(3,nn), temp, rtemp(3)
+  REAL(dp), ALLOCATABLE :: d(:)
+  REAL(dp) :: dr(3), dd, dn1, dn2, dn3, scalef, arg
+  REAL(dp) :: angolo(nn*(nn-1)/2), drv(3), drn(3,nn), temp, rtemp(3)
+  REAL(dp) :: celldm(6), a, b, c, cosab, cosac, cosbc
   !
   exit_status=0
+  !
+  ! celldm and abc parameters are recomputed from lattice vectors
+  ! and reprinted along with the lattice vectors, irrespective of
+  ! what was provided in output - useful for checking and conversion
+  !
+  CALL at2celldm ( ibrav, alat, at(1,1), at(1,2), at(1,3), celldm )
+  CALL celldm2abc ( ibrav, celldm, a,b,c,cosab,cosac,cosbc )
+  !
+  WRITE(stdout,'(/,5x,"Bravais lattice index ibrav =",i3)') ibrav
+  WRITE(stdout,'(5X,"celldm(1) = ",f12.8," (au)",t40,"a = ",f12.8," (A)")') &
+       celldm(1), a
+  IF ( ibrav == 0 .OR. ABS(ibrav) > 7 ) &
+       WRITE(stdout,'(5X,"celldm(2) = ",f12.8,t40,"b = ",f12.8," (A)")') &
+       celldm(2), b
+  IF ( ibrav == 0 .OR. ibrav == 4 .OR. ABS(ibrav) > 5 ) &
+       WRITE(stdout,'(5X,"celldm(3) = ",f12.8,t40,"c = ",f12.8," (A)")') &
+       celldm(3), c
+  IF ( ibrav == 0 .OR. ABS(ibrav) == 5 .OR. (ibrav > 11 .AND. ibrav < 15) ) &
+       WRITE(stdout,'(5X,"celldm(4) = ",f12.8,t40,"cosAB = ",f12.8)') &
+       celldm(4), cosab
+  IF ( ibrav == 0 .OR. ibrav < -11 .OR. ibrav == 14 ) &
+       WRITE(stdout,'(5X,"celldm(5) = ",f12.8,t40,"cosAC = ",f12.8)') &
+       celldm(5), cosac
+  IF ( ibrav == 0 .OR. ibrav == 14 ) &
+       WRITE(stdout,'(5X,"celldm(6) = ",f12.8,t40,"cosBC = ",f12.8)') &
+       celldm(6), cosbc
+  !
+  WRITE(stdout,'(/,5x, "Lattice vectors (Cartesian axis) in units of alat = ",&
+       &         f12.8,"au :")') alat
+  WRITE(stdout,'(5x,"a1 = ", 3f15.8)') at(:,1)
+  WRITE(stdout,'(5x,"a2 = ", 3f15.8)') at(:,2)
+  WRITE(stdout,'(5x,"a3 = ", 3f15.8)') at(:,3)
+
   OPEN(unit=ounit,file='dist.out',status='unknown',form='formatted')
-  WRITE(stdout,'(/,5x,"Output written to file dist.out")')
+  WRITE(stdout,'(/,5x,"Distances between atoms written to file dist.out")')
   !
   scalef=bohr_radius_angs*alat
   !

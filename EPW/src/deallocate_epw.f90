@@ -35,7 +35,7 @@
                                 etq, et_all, wf, wkf, wqf, wslen,&
                                 xkq, xk_all, zstar, xkf, xqf, epmatwp, eps_rpa
   USE epwcom,            ONLY : epbread, epwread
-  USE modes,             ONLY : t, npert, u, name_rap_mode, num_rap_mode
+  USE modes,             ONLY : npert, u, name_rap_mode, num_rap_mode
   USE qpoint,            ONLY : eigqts, igkq 
   USE klist,             ONLY : nks
   !
@@ -59,6 +59,7 @@
     IF(ALLOCATED(xk_all))    DEALLOCATE (xk_all)
     IF(ALLOCATED(et_all))    DEALLOCATE (et_all)
     IF(ALLOCATED(wslen))     DEALLOCATE (wslen)
+    IF(ALLOCATED(eps_rpa))   DEALLOCATE (eps_rpa)
     IF(ALLOCATED(eps_rpa))   DEALLOCATE (eps_rpa) 
     ! 
   ELSE
@@ -78,7 +79,6 @@
     if(allocated(name_rap_mode)) deallocate (name_rap_mode)
     if(allocated(num_rap_mode)) deallocate (num_rap_mode)
     IF(ALLOCATED(dyn)) DEALLOCATE (dyn)
-    !IF(ASSOCIATED(t)) DEALLOCATE (t)
     IF(ALLOCATED(epsi)) DEALLOCATE (epsi)
     IF(ALLOCATED(zstar)) DEALLOCATE (zstar)
     !

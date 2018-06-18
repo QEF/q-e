@@ -177,7 +177,6 @@ check_initial_status.o : ../../Modules/ions_base.o
 check_initial_status.o : ../../Modules/mp_global.o
 check_initial_status.o : ../../Modules/mp_images.o
 check_initial_status.o : ../../Modules/wrappers.o
-check_initial_status.o : ../../Modules/xml_io_base.o
 check_initial_status.o : ../../PW/src/io_rho_xml.o
 check_initial_status.o : ../../PW/src/pwcom.o
 check_initial_status.o : ../../PW/src/scf_mod.o
@@ -384,6 +383,7 @@ do_phonon.o : phcom.o
 do_phonon.o : yambo.o
 do_q2r.o : ../../FFTXlib/fft_scalar.o
 do_q2r.o : ../../Modules/environment.o
+do_q2r.o : ../../Modules/io_files.o
 do_q2r.o : ../../Modules/io_global.o
 do_q2r.o : ../../Modules/kind.o
 do_q2r.o : ../../Modules/mp_global.o
@@ -674,12 +674,12 @@ elph_scdft_mod.o : phcom.o
 elph_tetra_mod.o : ../../LR_Modules/lrcom.o
 elph_tetra_mod.o : ../../Modules/cell_base.o
 elph_tetra_mod.o : ../../Modules/constants.o
+elph_tetra_mod.o : ../../Modules/io_files.o
 elph_tetra_mod.o : ../../Modules/io_global.o
 elph_tetra_mod.o : ../../Modules/ions_base.o
 elph_tetra_mod.o : ../../Modules/kind.o
 elph_tetra_mod.o : ../../Modules/mp_images.o
 elph_tetra_mod.o : ../../Modules/mp_pools.o
-elph_tetra_mod.o : ../../Modules/xml_io_base.o
 elph_tetra_mod.o : ../../PW/src/pwcom.o
 elph_tetra_mod.o : ../../PW/src/symm_base.o
 elph_tetra_mod.o : ../../PW/src/tetra.o
@@ -705,7 +705,6 @@ elphon.o : ../../Modules/paw_variables.o
 elphon.o : ../../Modules/recvec.o
 elphon.o : ../../Modules/uspp.o
 elphon.o : ../../Modules/wavefunctions.o
-elphon.o : ../../Modules/xml_io_base.o
 elphon.o : ../../PW/src/buffers.o
 elphon.o : ../../PW/src/pwcom.o
 elphon.o : ../../PW/src/start_k.o
@@ -995,11 +994,9 @@ phq_readin.o : ../../Modules/mp_images.o
 phq_readin.o : ../../Modules/mp_pools.o
 phq_readin.o : ../../Modules/mp_world.o
 phq_readin.o : ../../Modules/noncol.o
-phq_readin.o : ../../Modules/parameters.o
 phq_readin.o : ../../Modules/paw_variables.o
 phq_readin.o : ../../Modules/run_info.o
 phq_readin.o : ../../Modules/uspp.o
-phq_readin.o : ../../Modules/xml_io_base.o
 phq_readin.o : ../../PW/src/ldaU.o
 phq_readin.o : ../../PW/src/pwcom.o
 phq_readin.o : ../../PW/src/start_k.o
@@ -1587,11 +1584,11 @@ write_rec.o : ph_restart.o
 write_rec.o : phcom.o
 yambo.o : ../../LR_Modules/lrcom.o
 yambo.o : ../../Modules/cell_base.o
+yambo.o : ../../Modules/io_files.o
 yambo.o : ../../Modules/io_global.o
 yambo.o : ../../Modules/ions_base.o
 yambo.o : ../../Modules/kind.o
 yambo.o : ../../Modules/mp_images.o
-yambo.o : ../../Modules/xml_io_base.o
 yambo.o : ../../PW/src/pwcom.o
 yambo.o : ../../UtilXlib/mp.o
 yambo.o : elph.o

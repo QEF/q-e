@@ -1508,10 +1508,12 @@ subroutine scanxc_spin( rhoup, rhodw, grhoup, grhodw, tauup, taudw, &
 #if defined(__LIBXC)
   use xc_f90_types_m
   use xc_f90_lib_m
+#endif
   implicit none  
   real(DP), intent(in) :: rhoup, rhodw, grhoup(3), grhodw(3), tauup, taudw
   real(dp), intent(out):: sx, v1xup, v1xdw, v2xup, v2xdw, v3xup, v3xdw, &
                         & sc, v1cup, v1cdw, v2cup(3), v2cdw(3), v3cup, v3cdw
+#if defined(__LIBXC)
   ! 
   ! Internal Variables
   !

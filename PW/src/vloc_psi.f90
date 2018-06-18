@@ -226,11 +226,15 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   INTEGER :: ibnd, j, incr
   INTEGER :: i, right_nnr, right_nr3, right_inc
   !
-  LOGICAL :: use_tg
+  ! chunking parameters
+  integer, parameter :: blocksize = 256
+  integer :: numblock
+  !
   ! Task Groups
+  LOGICAL :: use_tg
   REAL(DP),    ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
-  INTEGER :: v_siz, idx, ioff
+  INTEGER :: v_siz, idx
   !
   CALL start_clock ('vloc_psi')
   use_tg = dffts%has_task_groups 
@@ -252,26 +256,22 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
 
      CALL tg_get_nnr( dffts, right_nnr )
 
+     ! compute the number of chuncks
+     numblock  = (n+blocksize-1)/blocksize
+
      DO ibnd = 1, m, fftx_ntgrp(dffts)
         !
-        tg_psic = (0.d0, 0.d0)
-        ioff   = 0
-        !
-        DO idx = 1, fftx_ntgrp(dffts)
-
-           IF( idx + ibnd - 1 <= m ) THEN
-!$omp parallel do
-              DO j = 1, n
-                 tg_psic(dffts%nl (igk_k(j,current_k))+ioff) =  psi(j,idx+ibnd-1)
-              ENDDO
-!$omp end parallel do
-           ENDIF
-
-        !write (6,*) 'wfc G ', idx+ibnd-1
-        !write (6,99) (tg_psic(i+ioff), i=1,400)
-
-           ioff = ioff + right_nnr
+!$omp parallel
+        CALL threaded_barrier_memset(tg_psic, 0.D0, fftx_ntgrp(dffts)*right_nnr*2)
+        !$omp do collapse(2)
+        DO idx = 0, MIN(fftx_ntgrp(dffts)-1, m-ibnd)
+           DO j = 1, numblock
+              tg_psic(dffts%nl (igk_k((j-1)*blocksize+1:MIN(j*blocksize, n),current_k))+right_nnr*idx) = &
+                 psi((j-1)*blocksize+1:MIN(j*blocksize, n),idx+ibnd)
+           ENDDO
         ENDDO
+        !$omp end do nowait
+!$omp end parallel
         !
         CALL  invfft ('tgWave', tg_psic, dffts )
         !write (6,*) 'wfc R ' 
@@ -291,34 +291,30 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
         !
         !   addition to the total product
         !
-        ioff   = 0
-        !
         CALL tg_get_recip_inc( dffts, right_inc )
         !
-        DO idx = 1, fftx_ntgrp(dffts)
-           !
-           IF( idx + ibnd - 1 <= m ) THEN
-!$omp parallel do
-              DO j = 1, n
-                 hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + &
-                    tg_psic( dffts%nl(igk_k(j,current_k)) + ioff )
-              ENDDO
-!$omp end parallel do
-           ENDIF
-           !
-        !write (6,*) 'v psi G ', idx+ibnd-1
-        !write (6,99) (tg_psic(i+ioff), i=1,400)
-
-           ioff = ioff + right_inc
-           !
+!$omp parallel do collapse(2)
+        DO idx = 0, MIN(fftx_ntgrp(dffts)-1, m-ibnd)
+           DO j = 1, numblock
+              hpsi ((j-1)*blocksize+1:MIN(j*blocksize, n), ibnd+idx) = &
+                 hpsi ((j-1)*blocksize+1:MIN(j*blocksize, n), ibnd+idx) + &
+                 tg_psic( dffts%nl(igk_k((j-1)*blocksize+1:MIN(j*blocksize, n),current_k)) + right_inc*idx )
+           ENDDO
         ENDDO
+!$omp end parallel do
         !
      ENDDO
   ELSE
      DO ibnd = 1, m
         !
-        psic(:) = (0.d0, 0.d0)
-        psic (dffts%nl (igk_k(1:n,current_k))) = psi(1:n, ibnd)
+!$omp parallel
+        CALL threaded_barrier_memset(psic, 0.D0, dffts%nnr*2)
+        !$omp do
+        DO j = 1, n
+           psic (dffts%nl (igk_k(j,current_k))) = psi(j, ibnd)
+        ENDDO
+        !$omp end do nowait
+!$omp end parallel
         !write (6,*) 'wfc G ', ibnd
         !write (6,99) (psic(i), i=1,400)
         !

@@ -20,7 +20,8 @@ MODULE cp_restart_new
   USE kinds,     ONLY : DP
 #if !defined(__OLDXML)
   !
-  USE qes_module
+  USE qes_types_module
+  USE qes_libs_module
   USE qexsd_input, ONLY: qexsd_init_k_points_ibz
   USE qexsd_module, ONLY: qexsd_init_schema, qexsd_openschema, qexsd_closeschema,      &
                           qexsd_init_convergence_info, qexsd_init_algorithmic_info,    & 
@@ -30,10 +31,9 @@ MODULE cp_restart_new
                           qexsd_init_dipole_info, qexsd_init_total_energy,             &
                           qexsd_init_forces,qexsd_init_stress, qexsd_xf,               &
                           qexsd_init_outputElectricField, input_obj => qexsd_input_obj
-  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, qexsd_fmt,&
-       qexsd_version
+  USE io_files,  ONLY : iunpun, xmlpun_schema, prefix, tmp_dir, postfix, &
+       qexsd_fmt, qexsd_version, create_directory
   USE io_base,   ONLY : write_wfc, read_wfc, write_rhog
-  USE xml_io_base,ONLY: create_directory
   !
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
@@ -66,7 +66,7 @@ MODULE cp_restart_new
       USE parameters,               ONLY : ntypx
       USE dener,                    ONLY : detot
       USE io_files,                 ONLY : psfile, pseudo_dir, iunwfc, &
-                                           nwordwfc, tmp_dir, diropn
+                                           nwordwfc, diropn
       USE mp_images,                ONLY : intra_image_comm, me_image, &
                                            nproc_image
       USE mp_bands,                 ONLY : my_bgrp_id, intra_bgrp_comm, &
@@ -241,7 +241,7 @@ MODULE cp_restart_new
       !
       ! XML descriptor
       ! 
-      WRITE(dirname,'(A,A,"_",I2,".save/")') TRIM(tmp_dir), TRIM(prefix), ndw
+      WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndw, postfix
       WRITE( stdout, '(/,3X,"writing restart file (with schema): ",A)' ) &
              TRIM(dirname)
       !
@@ -334,8 +334,8 @@ MODULE cp_restart_new
 !-------------------------------------------------------------------------------
 ! ... BAND STRUCTURE
 !-------------------------------------------------------------------------------
-         CALL  qexsd_init_total_energy(output_obj%total_energy,enthal, 0.0_dp, eht,&
-              vave, exc, 0.0_dp, 0.0_dp, 0.0_dp)
+         CALL  qexsd_init_total_energy(output_obj%total_energy, ETOT = enthal , &
+                              EHART = eht, VTXC = vave, ETXC = exc )
 !-------------------------------------------------------------------------------
 ! ... BAND STRUCTURE
 !-------------------------------------------------------------------------------
@@ -494,13 +494,11 @@ MODULE cp_restart_new
                             ekincm, c02, cm2, wfc )
       !------------------------------------------------------------------------
       !
-      USE iotk_module
       USE FoX_dom,                  ONLY : parseFile, destroy, item, getElementsByTagname,&
                                            Node
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
                                            ts_vdw, lxdm, iverbosity, twfcollect, lwf
-      USE io_files,                 ONLY : iunpun, xmlpun, iunwfc, nwordwfc, &
-                                           tmp_dir, diropn
+      USE io_files,                 ONLY : iunwfc, nwordwfc, diropn
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm
       USE gvecw,                    ONLY : ngw, ngw_g
@@ -621,16 +619,17 @@ MODULE cp_restart_new
       LOGICAL :: x_gamma_extrapolation
       REAL(dp):: hubbard_dum(3,nsp)
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
+      INTEGER, EXTERNAL :: find_free_unit
       !
       ! ... look for an empty unit
       !
-      CALL iotk_free_unit( iunpun, ierr )
-      CALL errore( 'cp_readfile', &
-                   'no free units to read wavefunctions', ierr )
+      iunpun = find_free_unit( )
+      IF ( iunpun < 0 ) CALL errore( 'cp_readfile', &
+                   'no free units to read wavefunctions', 1 )
       !
       CALL qexsd_init_schema( iunpun )
       !
-      WRITE(dirname,'(A,A,"_",I2,".save/")') TRIM(tmp_dir), TRIM(prefix), ndr
+      WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr, postfix
       filename = TRIM( dirname ) // TRIM( xmlpun_schema )
       INQUIRE ( file=filename, exist=found )
       IF (.NOT. found ) &
@@ -639,6 +638,7 @@ MODULE cp_restart_new
       root => parseFile (TRIM(filename))
       !
       nodePointer => item (getElementsByTagname (root, "general_info"),0)
+      ierr = 0 
       IF (ASSOCIATED(nodePointer)) THEN 
          CALL qes_read(nodePointer, geninfo_obj)
       ELSE 
@@ -1487,7 +1487,6 @@ MODULE cp_restart_new
     ! Wrapper, and ugly hack, for old cp_read_wfc called in restart.f90
     ! If ierr is present, returns ierr=-1 if file not found, 0 otherwise
     !
-    USE io_files,           ONLY : prefix, iunpun
     USE mp_bands,           ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
     USE electrons_base,     ONLY : iupdwn, nupdwn
     USE gvecw,              ONLY : ngw, ngw_g
@@ -1509,11 +1508,11 @@ MODULE cp_restart_new
     LOGICAL            :: gamma_only
     !
     IF ( tag == 'm' ) THEN
-       WRITE(filename,'(A,A,"_",I2,".save/wfcm",I1)') &
-            TRIM(tmp_dir), TRIM(prefix), ndr, iss
+       WRITE(filename,'(A,A,"_",I2,A,"wfcm",I1)') &
+            TRIM(tmp_dir), TRIM(prefix), ndr, postfix,iss
     ELSE
-       WRITE(filename,'(A,A,"_",I2,".save/wfc",I1)') &
-            TRIM(tmp_dir), TRIM(prefix), ndr, iss
+       WRITE(filename,'(A,A,"_",I2,A,"wfc",I1)') &
+            TRIM(tmp_dir), TRIM(prefix), ndr, postfix,iss
     END IF
     ib = iupdwn(iss)
     nb = nupdwn(iss)
@@ -1837,29 +1836,29 @@ MODULE cp_restart_new
     REAL(DP)         :: b1_(3), b2_(3), b3_(3)
     REAL(DP)         :: tau_(3,nat) 
     CHARACTER(LEN=3) :: atm_(ntypx)
-    CHARACTER(iotk_attlenx)  :: attr
     TYPE(output_type) :: output_obj
     TYPE(Node),POINTER :: root, simpleNode, timestepsNode, cellNode, stepNode
+    INTEGER, EXTERNAL :: find_free_unit
     !
     ! ... look for an empty unit
     !
-    CALL iotk_free_unit( iunpun, ierr )
-    CALL errore( 'cp_read_cell', 'no free units ', ierr )
+    iunpun = find_free_unit( )
+    IF ( iunpun < 0 ) CALL errore( 'cp_read_cell', 'no free units ', 1 )
     !
     CALL qexsd_init_schema( iunpun )
     !
-    WRITE(dirname,'(A,A,"_",I2,".save/")') TRIM(tmp_dir), TRIM(prefix), ndr
+    WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr, postfix
     filename = TRIM( dirname ) // TRIM( xmlpun_schema )
     INQUIRE ( file=filename, exist=found )
     IF (.NOT. found ) &
          CALL errore ('cp_read_cell', 'xml data file not found', 1)
     !
-   
     root => parseFile(filename) 
     !
     timestepsNode => item(getElementsByTagname(root, "TIMESTEPS"),0)
     found = ASSOCIATED(timestepsNode)
     !
+    ierr = 0
     IF ( found ) THEN
        !
        CALL extractDataAttribute(timestepsNode, "nt", nt_)
@@ -1943,7 +1942,7 @@ MODULE cp_restart_new
     END IF
     CALL destroy (root)
     !
-100 CALL errore( 'cp_read_cell ', attr, ierr )
+100 CALL errore( 'cp_read_cell ', 'error reading MD steps', ierr )
     !
   END SUBROUTINE cp_read_cell
 
@@ -2041,7 +2040,6 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE io_files,  ONLY : iunpun, prefix, tmp_dir
     USE cp_main_variables, ONLY : descla
     USE cp_interfaces, ONLY : collect_zmat
     USE electrons_base,ONLY: nspin, nudx
@@ -2057,7 +2055,7 @@ MODULE cp_restart_new
     REAL(dp), ALLOCATABLE :: mrepl(:,:)
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     !
-    WRITE(dirname,'(A,A,"_",I2,".save/")') TRIM(tmp_dir), TRIM(prefix), ndw
+    WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndw,postfix
     !
     IF ( ionode ) OPEN( unit=iunpun, file =TRIM(filename), &
          status='unknown', form='unformatted', iostat=ierr)
@@ -2094,7 +2092,6 @@ MODULE cp_restart_new
     USE mp, ONLY : mp_bcast
     USE mp_images, ONLY : intra_image_comm
     USE io_global, ONLY : ionode, ionode_id
-    USE io_files,  ONLY : iunpun, prefix, tmp_dir
     USE cp_main_variables, ONLY : descla
     USE cp_interfaces, ONLY : distribute_zmat
     USE electrons_base,ONLY: nspin, nudx
@@ -2110,7 +2107,7 @@ MODULE cp_restart_new
     REAL(dp), ALLOCATABLE :: mrepl(:,:)
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     !
-    WRITE(dirname,'(A,A,"_",I2,".save/")') TRIM(tmp_dir), TRIM(prefix), ndr
+    WRITE(dirname,'(A,A,"_",I2,A)') TRIM(tmp_dir), TRIM(prefix), ndr,postfix
     !
     IF ( ionode ) OPEN( unit=iunpun, file =TRIM(filename), &
          status='old', form='unformatted', iostat=ierr)

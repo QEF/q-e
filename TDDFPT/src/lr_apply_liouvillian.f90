@@ -120,8 +120,8 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
      ELSE
         ALLOCATE( dvrsc(dfftp%nnr, nspin) )
         ALLOCATE( dvrssc(dffts%nnr) )
-        dvrsc(:,:)=0.0d0
-        dvrssc(:) =0.0d0
+        dvrsc(:,:)=(0.0d0,0.0d0)
+        dvrssc(:) =(0.0d0,0.0d0)
      ENDIF
      !
      ! Calculation of the charge density response
@@ -141,7 +141,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
            dvrs(:,1) = 0.0d0
            CALL fft_interpolate (dfftp, dvrs(:,1), dffts, dvrss)
         ELSE
-           dvrsc(:,1) = 0.0d0
+           dvrsc(:,1) = (0.0d0,0.0d0)
            CALL fft_interpolate (dfftp, dvrsc(:,1), dffts, dvrssc)
         ENDIF
         !
@@ -204,16 +204,24 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
            !
         ENDIF
         !
+        ! USPP case: compute the integral of the response HXC potential with
+        ! the Q function
+        !
         IF ( okvan )  THEN
-           IF ( tqr ) THEN
-              CALL newq_r(dvrs,d_deeq,.TRUE.)
+           IF (gamma_only) THEN 
+              IF ( tqr ) THEN
+                 CALL newq_r(dvrs,d_deeq,.TRUE.)
+              ELSE
+                 ALLOCATE( psic(dfftp%nnr) )
+                 psic(:) = (0.0d0,0.0d0)
+                 CALL newq(dvrs,d_deeq,.TRUE.)
+                 DEALLOCATE( psic )
+              ENDIF
            ELSE
-              ALLOCATE( psic(dfftp%nnr) )
-              psic(:)=(0.0d0,0.0d0)
-              !
-              CALL newq(dvrs,d_deeq,.TRUE.)
-              !
-              DEALLOCATE( psic )
+              ! IT: Here we need to compute the integral of dvrsc and Q function
+              ! The issue is that newq wants as input an array of type REAL while
+              ! dvrsc is of type COMPLEX.
+              CALL errore( 'lr_apply_liouvillian', 'The integral of Q and dV is not implemented', 1 )
            ENDIF
         ENDIF
         !

@@ -11,6 +11,7 @@
 !       =========================================================
 !
         IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+        INTEGER N, I,j,k,IT,NR
         DIMENSION X(N),W(N)
         HN=1.0D0/N
         DO 35 NR=1,N

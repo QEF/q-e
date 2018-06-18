@@ -34,15 +34,12 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  parallel_k  = .true.
-  parallel_q  = .false.
 
   fsthick     = 1.5 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)
   degaussw    = 0.3 ! eV
 
   dvscf_dir   = './save/'
-  filukk      = './diam.ukk'
 
   nkf1        = 6
   nkf2        = 6

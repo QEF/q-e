@@ -9,9 +9,6 @@
 # of the present distribution.
 
 
-#include ${ESPRESSO_ROOT}/test-suite/ENVIRONMEN
-bash ../ENVIRONMENT
-
 if [[ $QE_USE_MPI == 1 ]]; then
   export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
   export PARA_SUFFIX="-npool ${TESTCODE_NPROCS}"
@@ -40,7 +37,7 @@ then
     cat $3
   fi
   echo "Gather results in save" 
-  python pp.py < pp.in
+  python ../../EPW/bin/pp.py < pp.in
 elif [[ "$1" == "3" ]]
 then
   echo "Running EPW ..."
@@ -50,6 +47,17 @@ then
   then
     cat $3
   fi
+elif [[ "$1" == "4" ]]
+then
+  echo "Running Q2R ..."
+  echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/q2r.x < $2 > $3 2> $4"  
+  ${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/q2r.x < $2 > $3 2> $4
+  if [[ -e CRASH ]]
+  then
+    cat $3
+  fi
+  echo "Gather results in save" 
+  python ../../EPW/bin/pp.py < pp.in
 fi
 
 #rm -f input_tmp.in

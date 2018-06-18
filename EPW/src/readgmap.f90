@@ -17,8 +17,7 @@
   !--------------------------------------------------------------
   USE mp_global,ONLY : inter_pool_comm, world_comm
   USE mp,       ONLY : mp_bcast,mp_max,mp_min
-  USE mp_world, ONLY : mpime
-  use io_global,ONLY : ionode_id, meta_ionode, meta_ionode_id
+  use io_global,ONLY : meta_ionode, meta_ionode_id
   USE kinds,    ONLY : DP
   use io_epw,   ONLY : iukgmap, iukmap
   use pwcom,    ONLY : nks
@@ -78,7 +77,6 @@
   ngxx = nint (tmp)
 #endif
   !
-  !IF (mpime.eq.ionode_id) then
   IF (meta_ionode) then
     !
     open ( unit = iukgmap, file = trim(prefix)//'.kgmap', form = 'formatted',status='old',iostat=ios)

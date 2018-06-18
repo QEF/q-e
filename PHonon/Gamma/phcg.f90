@@ -485,7 +485,7 @@ SUBROUTINE newscf
   USE wvfct, ONLY: nbnd, nbndx
   USE noncollin_module, ONLY: report
   USE symm_base,     ONLY : nsym
-  USE io_files,      ONLY : iunwfc, input_drho, output_drho, prefix, tmp_dir
+  USE io_files,      ONLY : iunwfc, input_drho, output_drho, prefix, tmp_dir, postfix
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : restart, io_level, lscf, iprint, &
                             david, max_cg_iter, &
@@ -535,7 +535,7 @@ SUBROUTINE newscf
   !
   CALL openfil
   !
-  dirname = TRIM(tmp_dir) //TRIM(prefix) // '.save/'
+  dirname = TRIM(tmp_dir) //TRIM(prefix) // postfix
   CALL extrapolate_charge( dirname, 1 )
   CALL hinit1
   CALL electrons ( )

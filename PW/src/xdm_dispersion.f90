@@ -40,9 +40,17 @@ module xdm_module
   ! have moments been computed before?
   LOGICAL :: saved = .FALSE.
 
-  ! a1 and a2 coefficients, with defaults for pw86pbe
-  REAL(DP) :: a1i = 0.6836_DP
-  REAL(DP) :: a2i = 1.5045_DP
+  ! a1 and a2 coefficients
+  REAL(DP) :: a1i = 0.0_DP
+  REAL(DP) :: a2i = 0.0_DP
+
+  ! iexch icorr igcx igcc
+  ! SLA PW B86B PBC ( 1  4 22  4 0 0)
+  ! USE funct, ONLY: get_iexch, get_icorr, get_igcx, get_igcc
+  ! IF (get_iexch().EQ.1.AND.get_icorr().EQ.4.AND.get_igcx().EQ.3.AND.get_igcc().EQ.4) THEN
+  !   !
+  !   sR=0.94_DP !PBE=sla+pw+pbx+pbc
+  !   !
 
   ! radial atomic densities
   REAL(DP), ALLOCATABLE :: rfree(:,:), w2free(:,:), rmaxg2(:)
@@ -171,6 +179,7 @@ CONTAINS
     USE scf, ONLY: rho
     USE io_global, ONLY: stdout, ionode
     USE fft_base, ONLY : dfftp
+    USE funct, ONLY : get_iexch, get_icorr, get_igcx, get_igcc
     USE cell_base, ONLY : at, alat, omega
     USE ions_base, ONLY: nat, tau, atm, ityp, ntyp => nsp
     USE constants, ONLY: au_gpa
@@ -178,8 +187,8 @@ CONTAINS
     USE atom, ONLY: msh, rgrid
     USE splinelib, ONLY : splint
     USE mp_images, ONLY : me_image, nproc_image, intra_image_comm
-    USE mp_pools,  ONLY : me_pool
     USE mp, ONLY : mp_sum
+    USE mp_bands, ONLY : intra_bgrp_comm
 
     REAL(DP) :: evdw
 
@@ -202,10 +211,9 @@ CONTAINS
     INTEGER :: i3, nn
     REAL(DP) :: for(3,nat), sigma(3,3), sat(3,3)
     INTEGER :: resto, divid, first, last, it
-    INTEGER :: idx, ispin
+    INTEGER :: idx, ispin, iexch, icorr, igcx, igcc
     INTEGER, EXTERNAL :: atomic_number
-
-    real*8 :: iix, iiy, iiz
+    REAL(DP) :: iix, iiy, iiz
 
     ! initialize
     IF (nspin > 2) CALL errore('energy_xdm','nspin > 2 not implemented',1)
@@ -216,6 +224,41 @@ CONTAINS
 
     ! do we need to recalculate the coefficients?
     docalc = .NOT.saved .OR. .NOT.(lbfgs .OR. lmd)
+
+    ! Set the coefficients if none are given in the input
+    ! See: http://schooner.chem.dal.ca/wiki/XDM#Quantum_ESPRESSO
+    ! For functionals not in the list, please contact aoterodelaroza@gmail.com
+    IF (a1i==0._DP .AND. a2i==0._DP) THEN
+       iexch = get_iexch()
+       icorr = get_icorr()
+       igcx = get_igcx()
+       igcc = get_igcc()
+       IF (iexch==1 .AND. icorr==4 .AND. igcx==22 .AND. igcc==4) THEN
+          ! B86bPBE
+          a1i = 0.6512_DP
+          a2i = 1.4633_DP
+       ELSE IF (iexch==1 .AND. icorr==4 .AND. igcx==21 .AND. igcc==4) THEN
+          ! PW86PBE
+          a1i = 0.6836_DP
+          a2i = 1.5045_DP
+       ELSE IF (iexch==1 .AND. icorr==4 .AND. igcx==3 .AND. igcc==4) THEN
+          ! PBE
+          a1i = 0.3275_DP
+          a2i = 2.7673_DP
+       ELSE IF (iexch==1 .AND. icorr==3 .AND. igcx==1 .AND. igcc==3) THEN
+          ! BLYP
+          a1i = 0.4502_DP
+          a2i = 1.6210_DP
+       ELSE
+          IF (ionode) THEN
+             WRITE (stdout,'(/"Error: XDM not parametrized for this functional and XDM parameters not given.")')
+             WRITE (stdout,'("For the XDM parametrization list, please visit")')
+             WRITE (stdout,'("  http://schooner.chem.dal.ca/wiki/XDM#Quantum_ESPRESSO")')
+             WRITE (stdout,'("For functionals not in the list, please contact aoterodelaroza@gmail.com"/)')
+          ENDIF
+          CALL errore('energy_xdm','XDM not parametrized for this functional and XDM parameters not given.',1)
+       END IF
+    ENDIF
 
     ! Define damping coefficients
     a1 = a1i
@@ -373,10 +416,9 @@ CONTAINS
              END DO ! n
           END DO ! iat
        END DO ! ispin
-#if defined(__MPI)
-       CALL mp_sum(avol,intra_image_comm)
-       CALL mp_sum(ml,intra_image_comm)
-#endif
+       CALL mp_sum(avol,intra_bgrp_comm)
+       CALL mp_sum(ml,intra_bgrp_comm)
+
        avol = avol * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
        ml = ml * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
 
@@ -523,14 +565,12 @@ CONTAINS
     sigma = -0.5_DP * sigma / omega
     ehadd = -0.5_DP * ehadd
 
-#if defined(__MPI)
     CALL mp_sum(evdw,intra_image_comm)
     CALL mp_sum(for,intra_image_comm)
     CALL mp_sum(sigma,intra_image_comm)
     DO nn = 6, 10
        CALL mp_sum(ehadd(nn),intra_image_comm)
     ENDDO
-#endif
 
     ! Convert to Ry
     evdw = evdw * 2
@@ -705,7 +745,6 @@ CONTAINS
     USE scf,           ONLY : scf_type
     USE fft_base,      ONLY : dfftp
     USE mp,            ONLY : mp_bcast, mp_sum
-    USE mp_pools,      ONLY : me_pool
     USE mp_images,     ONLY : intra_image_comm
     USE io_global,     ONLY : ionode_id
     USE splinelib,     ONLY : spline, splint
@@ -874,7 +913,6 @@ CONTAINS
     USE fft_base,  ONLY : dfftp
     USE splinelib, ONLY : splint
     use cell_base, ONLY : alat
-    USE mp_pools,  ONLY : me_pool
     implicit none
 
     real(DP), intent(out) :: rhoc(dfftp%nnr) ! core density in the real-space grid

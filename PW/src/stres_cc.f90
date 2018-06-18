@@ -11,7 +11,7 @@ subroutine stres_cc (sigmaxcc)
   !-----------------------------------------------------------------------
   !
   USE kinds,                ONLY : DP
-  USE atom,                 ONLY : rgrid
+  USE atom,                 ONLY : rgrid, msh
   USE uspp_param,           ONLY : upf
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
@@ -71,7 +71,7 @@ subroutine stres_cc (sigmaxcc)
   end if
   do nt = 1, ntyp
      if ( upf(nt)%nlcc ) then
-        call drhoc (ngl, gl, omega, tpiba2, rgrid(nt)%mesh, rgrid(nt)%r, &
+        call drhoc (ngl, gl, omega, tpiba2, msh(nt), rgrid(nt)%r, &
               rgrid(nt)%rab, upf(nt)%rho_atc, rhocg)
         ! diagonal term
         if (gstart==2) sigmadiag = sigmadiag + &
@@ -81,7 +81,7 @@ subroutine stres_cc (sigmaxcc)
                 strf (ng,nt) * rhocg (igtongl (ng) ) * fact
         enddo
 
-        call deriv_drhoc (ngl, gl, omega, tpiba2, rgrid(nt)%mesh, &
+        call deriv_drhoc (ngl, gl, omega, tpiba2, msh(nt), &
              rgrid(nt)%r, rgrid(nt)%rab, upf(nt)%rho_atc, rhocg)
         ! non diagonal term (g=0 contribution missing)
         do ng = gstart, ngm

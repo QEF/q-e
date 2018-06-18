@@ -6,7 +6,8 @@ include ../../make.inc
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG) ../../KS_Solvers/Davidson \
           $(MOD_FLAG)../../KS_Solvers/CG \
-          $(MOD_FLAG)../../PW/src
+          $(MOD_FLAG)../../PW/src \
+          $(MOD_FLAG)../../dft-d3
 IFLAGS=
 
 PWCONDOBJS = \
@@ -50,7 +51,8 @@ transmit.o
 
 PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
+	 ../../dft-d3/libdftd3qe.a
 
 TLDEPS= bindir mods libs pw pp
 

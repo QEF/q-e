@@ -125,8 +125,6 @@ SUBROUTINE fft_qgradient (dfft, a, xq, g, ga)
   INTEGER  :: n, ipol
   COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
 
-  IF ( dfft%lgamma ) CALL errore( 'fft_qgradient', &
-       'not to be called with Gamma tricks', 1 )
   ALLOCATE (gaux(dfft%nnr))
   ALLOCATE (aux (dfft%nnr))
 
@@ -140,6 +138,7 @@ SUBROUTINE fft_qgradient (dfft, a, xq, g, ga)
      DO n = 1, dfft%ngm
         gaux(dfft%nl(n)) = CMPLX( 0.0_dp, xq (ipol) + g(ipol,n), kind=DP ) * &
              aux (dfft%nl(n))
+        IF ( dfft%lgamma ) gaux(dfft%nlm(n)) = CONJG( gaux (dfft%nl(n)) )
      END DO
      ! bring back to R-space, (\grad_ipol a)(r) ...
 
@@ -391,8 +390,6 @@ SUBROUTINE fft_qgraddot ( dfft, a, xq, g, da)
   INTEGER :: n, ipol
   COMPLEX(DP), allocatable :: aux (:)
 
-  IF ( dfft%lgamma ) CALL errore( 'fft_qgraddot', &
-       'not to be called with Gamma tricks', 1 )
   ALLOCATE (aux (dfft%nnr))
   da(:) = (0.0_dp, 0.0_dp)
   DO ipol = 1, 3
@@ -408,6 +405,11 @@ SUBROUTINE fft_qgraddot ( dfft, a, xq, g, da)
              CMPLX(0.0_dp, xq (ipol) + g (ipol, n),kind=DP) * aux(dfft%nl(n))
      END DO
   END DO
+  IF ( dfft%lgamma ) THEN
+     DO n = 1, dfft%ngm
+        da (dfft%nlm(n)) = CONJG( da (dfft%nl(n)) )
+     END DO
+  END IF
   !  bring back to R-space, (\grad_ipol a)(r) ...
   CALL invfft ('Rho', da, dfft)
   ! ...add the factor 2\pi/a  missing in the definition of q+G
@@ -516,6 +518,76 @@ END SUBROUTINE fft_laplacian
 ! Routines computing hessian via FFT
 !--------------------------------------------------------------------
 !
+!----------------------------------------------------------------------
+SUBROUTINE fft_hessian_g2r ( dfft, a, g, ha )
+!----------------------------------------------------------------------
+  !
+  ! ... Calculates ha = hessian(a)
+  ! ... input : dfft     FFT descriptor
+  ! ...         a(:)     a real function on the real-space FFT grid
+  ! ...         g(3,:)   G-vectors, in (2\pi/a)^2 units
+  ! ... output: ha(6,:)  hessian(a), real, on the real-space FFT grid
+  ! ...                  lower-packed matrix indeces 1-6 correspond to:
+  ! ...                  1 = xx, 2 = yx, 3 = yy, 4 = zx, 5 = zy, 6 = zz
+  !
+  USE kinds,     ONLY : DP
+  USE cell_base, ONLY : tpiba
+  USE fft_types, ONLY : fft_type_descriptor
+  USE fft_interfaces,ONLY : fwfft, invfft
+  USE fft_helper_subroutines, ONLY: fftx_oned2threed
+  !
+  IMPLICIT NONE
+  !
+  TYPE(fft_type_descriptor),INTENT(IN) :: dfft
+  REAL(DP), INTENT(IN)  :: g(3,dfft%ngm)
+  COMPLEX(DP), INTENT(IN)  :: a(dfft%ngm)
+  REAL(DP), INTENT(OUT) :: ha( 6, dfft%nnr )
+  !
+  INTEGER                  :: ig, ir
+  COMPLEX(DP), ALLOCATABLE :: aux(:), haux(:,:)
+  !
+  IF ( .NOT. dfft%lgamma ) CALL errore ('fft_hessian_g2r',&
+       'only gamma case is implemented',1)
+  ALLOCATE ( aux(dfft%nnr))
+  ALLOCATE (haux(dfft%ngm,2))
+  ! xx, yx
+  DO ig=1,dfft%ngm
+     haux(ig,1) = -tpiba**2*g(1,ig)**2     *a(ig)
+     haux(ig,2) = -tpiba**2*g(1,ig)*g(2,ig)*a(ig)
+  END DO
+  CALL fftx_oned2threed( dfft, aux, haux(:,1), haux(:,2) )
+  CALL invfft('Rho', aux, dfft)
+  DO ir=1,dfft%nnr
+     ha(1,ir) = DBLE(aux(ir))
+     ha(2,ir) =AIMAG(aux(ir))
+  END DO
+  ! yy, zx
+  DO ig=1,dfft%ngm
+     haux(ig,1) = -tpiba**2*g(2,ig)**2     *a(ig)
+     haux(ig,2) = -tpiba**2*g(1,ig)*g(3,ig)*a(ig)
+  END DO
+  CALL fftx_oned2threed( dfft, aux, haux(:,1), haux(:,2) )
+  CALL invfft('Rho', aux, dfft)
+  DO ir=1,dfft%nnr
+     ha(3,ir) = DBLE(aux(ir))
+     ha(4,ir) =AIMAG(aux(ir))
+  END DO
+  ! zy, zz
+  DO ig=1,dfft%ngm
+     haux(ig,1) = -tpiba**2*g(2,ig)*g(3,ig)*a(ig)
+     haux(ig,2) = -tpiba**2*g(3,ig)**2     *a(ig)
+  END DO
+  CALL fftx_oned2threed( dfft, aux, haux(:,1), haux(:,2) )
+  CALL invfft('Rho', aux, dfft)
+  DO ir=1,dfft%nnr
+     ha(5,ir) = DBLE(aux(ir))
+     ha(6,ir) =AIMAG(aux(ir))
+  END DO
+  !
+  DEALLOCATE(aux)
+  DEALLOCATE(haux)
+  
+END SUBROUTINE fft_hessian_g2r
 !--------------------------------------------------------------------
 SUBROUTINE fft_hessian( dfft, a, g, ga, ha )
 !--------------------------------------------------------------------

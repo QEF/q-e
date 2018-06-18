@@ -38,10 +38,12 @@ upf2casino.o : casino_pp.o
 upf2upf2.o : ../Modules/pseudo_types.o
 upf2upf2.o : ../Modules/radial_grids.o
 upf2upf2.o : ../Modules/read_upf_v1.o
-upf2upf2.o : ../Modules/write_upf_v2.o
+upf2upf2.o : ../Modules/write_upf.o
 vanderbilt.o : ../Modules/constants.o
 vanderbilt.o : write_upf.o
 virtual.o : ../Modules/funct.o
+virtual.o : ../Modules/kind.o
+virtual.o : ../Modules/pseudo_types.o
 virtual.o : ../Modules/splinelib.o
-virtual.o : read_upf.o
-virtual.o : write_upf.o
+virtual.o : ../Modules/upf.o
+virtual.o : ../Modules/write_upf.o

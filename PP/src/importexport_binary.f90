@@ -72,7 +72,8 @@ SUBROUTINE impexp ()
   !-----------------------------------------------------------------------
 
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : tmp_dir, prefix, psfile, pseudo_dir, xmlpun
+  USE io_files,  ONLY : tmp_dir, prefix, postfix, psfile, pseudo_dir, &
+                        xmlpun, create_directory
   USE ions_base, ONLY : nsp
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast
@@ -80,7 +81,7 @@ SUBROUTINE impexp ()
   USE io_rho_xml,    ONLY : write_scf
   USE scf,           ONLY : rho
   USE lsda_mod,      ONLY : nspin
-  USE xml_io_base,   ONLY : rho_binary, create_directory
+  USE xml_io_base,   ONLY : rho_binary
   USE wrappers, ONLY: f_copy
 
 
@@ -194,15 +195,15 @@ SUBROUTINE impexp ()
   
   ! I need to copy XML file
   filename =  TRIM( xmlpun )
-  sourcef = TRIM( old_tmp_dir ) // TRIM( prefix ) // '.save/' // TRIM( filename )
-  destf   = TRIM( new_tmp_dir ) // TRIM( prefix ) // '.save/' // TRIM( filename )
+  sourcef = TRIM( old_tmp_dir ) // TRIM( prefix ) // postfix // TRIM( filename )
+  destf   = TRIM( new_tmp_dir ) // TRIM( prefix ) // postfix // TRIM( filename )
   ios = f_copy( TRIM( sourcef ), TRIM( destf ))
   IF ( ios /= 0) CALL errore ('importexport', 'copying the '//TRIM(filename)//' file', abs(ios))
 
   ! I also need to copy the UPF files
   do l=1, nsp
-     sourcef = TRIM( old_tmp_dir ) // TRIM( prefix ) // '.save/' // TRIM(psfile(l))
-     destf = TRIM( new_tmp_dir ) // TRIM( prefix ) // '.save/' // TRIM(psfile(l))
+     sourcef = TRIM( old_tmp_dir ) // TRIM( prefix ) // postfix // TRIM(psfile(l))
+     destf   = TRIM( new_tmp_dir ) // TRIM( prefix ) // postfix // TRIM(psfile(l))
      ios = f_copy( TRIM( sourcef ), TRIM( destf ))
      IF ( ios /= 0) CALL errore ('importexport', 'copying the ' // TRIM(psfile(l)) // ' pseudo', abs(ios))
   end do

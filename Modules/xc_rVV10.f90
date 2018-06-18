@@ -40,7 +40,7 @@ CONTAINS
 !!                                       |  xc_rVV10   |
 !!                                       |_____________|
 
-  SUBROUTINE xc_rVV10(rho_valence, rho_core, nspin, etxc, vtxc, v)
+  SUBROUTINE xc_rVV10(rho_valence, rho_core, nspin, etxc, vtxc, v, b_value_)
     
     !! Modules to include
     !! -------------------------------------------------------------------------
@@ -57,6 +57,7 @@ CONTAINS
     real(dp), intent(IN) :: rho_core(:)            !  PWSCF input variables 
     INTEGER,  INTENT(IN) :: nspin                  !
     real(dp), intent(inout) :: etxc, vtxc, v(:,:)  !_  
+    real(DP),optional,intent(in) :: b_value_
    
     
     integer :: i_grid, theta_i, i_proc, I      
@@ -84,6 +85,8 @@ CONTAINS
     !call errore('xc_rVV10','rVV10 functional not implemented for spin polarized runs', size(rho_valence,2)-1)
     if (nspin>2) call errore('xc_vdW_DF','vdW functional not implemented for nspin > 2', nspin)
 
+    if(present(b_value_)) b_value = b_value_
+    
     !! --------------------------------------------------------------------------------------------------------
 
     call start_clock( 'rVV10' )
@@ -1036,7 +1039,7 @@ subroutine thetas_to_uk(thetas, u_vdW)
   
   allocate( kernel_of_k(Nqs, Nqs) )
 
-  u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP)
+  u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP, kind=dp)
   
   last_g = -1 
 
@@ -1097,7 +1100,7 @@ subroutine vdW_energy(thetas, vdW_xc_energy)
   vdW_xc_energy = 0.0D0
  
   allocate (u_vdW(dfftp%nnr,Nqs))
-  u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP)
+  u_vdW(:,:) = CMPLX(0.0_DP,0.0_DP, kind=dp)
 
   allocate( kernel_of_k(Nqs, Nqs) )
   
@@ -1257,9 +1260,9 @@ end subroutine vdW_energy
     end do
 
     do icar = 1,3
-      h(:) = CMPLX(h_prefactor(:) * gradient_rho(icar,:),0.0_DP)
+      h(:) = CMPLX( h_prefactor(:)*gradient_rho(icar,:), 0.0_DP, kind=dp)
       CALL fwfft ('Rho', h, dfftp) 
-      h(dfftp%nl(:)) = CMPLX(0.0_DP,1.0_DP) * tpiba * g(icar,:) * h(dfftp%nl(:))
+      h(dfftp%nl(:)) = CMPLX(0.0_DP,1.0_DP,kind=dp)*tpiba*g(icar,:)*h(dfftp%nl(:))
       if (gamma_only) h(dfftp%nlm(:)) = CONJG(h(dfftp%nl(:)))
       CALL invfft ('Rho', h, dfftp) 
       potential(:) = potential(:) - REAL(h(:))

@@ -28,6 +28,10 @@ write(stdout,'(a)') "                                                           
 write(stdout,'(a)') " Please consider citing:                                                                  "
 write(stdout,'(a)') " S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) " 
 write(stdout,'(a)') "                                                                                          "
+write(stdout,'(a)') " In addition, if you used anisotropic Eliashberg superconductivity please cite:           "
+write(stdout,'(a)') "              E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)               "
+write(stdout,'(a)') "              if you used transport properties (scattering rates, mobility) please cite:  "
+write(stdout,'(a)') "              S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     "
   CALL mp_barrier(inter_pool_comm)
   CALL mp_end(inter_pool_comm)
   !

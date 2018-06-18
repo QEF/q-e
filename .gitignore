@@ -23,9 +23,15 @@ include/c_defs.h
 install/config.log
 install/config.status
 install/configure.msg
-Modules/version.f90
+install/make-*
+install/configure-*
+install/uncompress-*
 test-suite/*/test.err.*
 test-suite/*/test.out.*
 */results
 S3DE
-
+D3Q
+W90
+archive/wannier90-*tgz
+wannier90-*
+tempdir

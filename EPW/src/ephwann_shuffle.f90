@@ -31,16 +31,19 @@
   USE start_k,       ONLY : nk1, nk2, nk3
   USE ions_base,     ONLY : nat, amass, ityp, tau
   USE phcom,         ONLY : nq1, nq2, nq3, nmodes
-  USE epwcom,        ONLY : nbndsub, lrepmatf, fsthick, epwread, longrange,     &
+  USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange,     &
                             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
-                            nbndskip, parallel_k, parallel_q, etf_mem, scr_typ, &
+                            nbndskip, etf_mem, scr_typ, &
                             elecselfen, phonselfen, nest_fn, a2f, specfun_ph,   &
                             vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          & 
                             efermi_read, fermi_energy, specfun_el, band_plot,   &
-                            nqf1, nqf2, nqf3, mp_mesh_k, restart, prtgkk,       &
-                            plselfen, specfun_pl
+                            scattering, nstemp, int_mob, scissor, carrier,      &
+                            iterative_bte, longrange, scatread, nqf1, prtgkk,   &
+                            nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
+                            specfun_pl, lindabs
   USE noncollin_module, ONLY : noncolin
-  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, czero, twopi, ci, zero
+  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, eps2, zero, czero, &
+                            twopi, ci, kelvin2eV, eps6
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
@@ -51,8 +54,23 @@
                             wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
-                            efnew, ifc, sigmar_all, zi_all, nkqtotf, eps_rpa
-#if defined(__NAG)
+                            efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,   &
+                            nkqtotf, sigmar_all, zi_allvb, inv_tau_all, Fi_all, &
+                            F_current, F_SERTA, inv_tau_allcb, zi_allcb, exband,&
+                            Fi_allcb, F_currentcb, F_SERTAcb
+  USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
+                            upper_bnd, ixkqf_tr,  s_BZtoIBZ_full
+  USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch, &
+                            ephwan2blochp, ephwan2bloch, vmewan2bloch, &
+                            dynifc2blochf, dynifc2blochc 
+  USE bloch2wan,     ONLY : hambloch2wan, dmebloch2wan, dynbloch2wan, &
+                            vmebloch2wan, ephbloch2wane, ephbloch2wanp, &
+                            ephbloch2wanp_mem
+  USE superconductivity, ONLY : write_ephmat, count_kpoints, kmesh_fine, &
+                            kqmap_fine
+  USE transport,     ONLY : transport_coeffs, scattering_rate_q
+  USE transport_iter,ONLY : iterativebte
+#ifdef __NAG
   USE f90_unix_io,   ONLY : flush
 #endif
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
@@ -76,16 +94,24 @@
   !! Skipping band during the Wannierization
   LOGICAL :: exst
   !! If the file exist
-  LOGICAL :: opnd
-  !! Check whether the file is open.
+  LOGICAL :: first_cycle
+  !! Check wheter this is the first cycle after a restart. 
+  LOGICAL :: first_time
+  !! Check wheter this is the first timeafter a restart. 
   !
   CHARACTER (len=256) :: filint
   !! Name of the file to write/read 
-  CHARACTER (len=256) :: nameF
-  !! Name of the file
   CHARACTER (len=30)  :: myfmt
   !! Variable used for formatting output
   ! 
+  INTEGER, ALLOCATABLE :: ndegen_kk(:)
+  !! Number of degeneresence with nrr_k bounds. 
+  INTEGER, ALLOCATABLE :: ndegen_qq(:)
+  !! Number of degeneresence with nrr_q bounds. 
+  INTEGER, ALLOCATABLE :: irvec_kk(:,:)
+  !! Irevec on the nrr_k bounds
+  INTEGER, ALLOCATABLE :: irvec_qq(:,:)
+  !! Irevec on the nrr_k bounds
   INTEGER :: ios
   !! integer variable for I/O control
   INTEGER :: iq 
@@ -112,12 +138,8 @@
   !! counter on mode
   INTEGER :: fermicount
   !! Number of states at the Fermi level
-  INTEGER :: nrec
-  !! record index when reading file
   INTEGER :: lrepmatw
   !! record length while reading file
-  INTEGER :: i 
-  !! Index when writing to file
   INTEGER :: ikx
   !! Counter on the coase k-grid
   INTEGER :: ikfx 
@@ -200,12 +222,35 @@
   !! Rotation matrix for phonons
   COMPLEX(kind=DP), ALLOCATABLE :: bmatf ( :, :)
   !! overlap U_k+q U_k^\dagger in smooth Bloch basis, fine mesh
-  !COMPLEX(kind=DP), ALLOCATABLE :: cfac1(:)
-  !COMPLEX(kind=DP), ALLOCATABLE :: cfacq1(:)
   COMPLEX(kind=DP), ALLOCATABLE :: cfac(:)
   !! Used to store $e^{2\pi r \cdot k}$ exponential 
   COMPLEX(kind=DP), ALLOCATABLE :: cfacq(:)
   !! Used to store $e^{2\pi r \cdot k+q}$ exponential
+
+  ! Conductivity ------------
+  INTEGER, PARAMETER :: maxiter = 300
+  !! Maximum number of iteration in the case of iterative BTE
+  INTEGER :: iter
+  !! Current iteration number
+  INTEGER :: itemp
+  !! Temperature index
+  INTEGER :: icbm
+  !! Index of the CBM
+  REAL(KIND=DP) :: error_h
+  !! Error in the hole iterative BTE
+  REAL(KIND=DP) :: error_el
+  !! Error in the electron iterative BTE
+  REAL(KIND=DP) :: etemp
+  !! Temperature in Ry (this includes division by kb)
+  REAL(KIND=DP) :: ef0(nstemp)
+  !! Fermi level for the temperature itemp  
+  REAL(KIND=DP) :: efcb(nstemp)
+  !! Second Fermi level for the temperature itemp  
+  REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)
+  !! Eigen-energies on the fine grid collected from all pools in parallel case
+  REAL(KIND=DP), EXTERNAL :: fermicarrier
+  !! Function that returns the Fermi level so that n=p (if int_mob = .true.)  
+  ! -----------------
   ! 
   IF (nbndsub.ne.nbnd) &
        WRITE(stdout, '(/,14x,a,i4)' ) 'band disentanglement is used:  nbndsub = ', nbndsub
@@ -214,6 +259,7 @@
              cuq ( nbnd, nbndsub, nks), & 
              lwin ( nbnd, nks ), &
              lwinq ( nbnd, nks ), &
+             exband ( nbnd ), &
              irvec (3, 20*nk1*nk2*nk3), &
              ndegen_k (20*nk1*nk2*nk3), &
              ndegen_q (20*nq1*nq2*nq3), &
@@ -250,32 +296,32 @@
       READ (crystal,*) noncolin
       ! 
     ENDIF
-    CALL mp_bcast (nat, ionode_id, inter_pool_comm)
-    CALL mp_bcast (nat, root_pool, intra_pool_comm)  
+    CALL mp_bcast (nat     , ionode_id, inter_pool_comm)
+    CALL mp_bcast (nat     , root_pool, intra_pool_comm)  
     IF (mpime /= ionode_id) ALLOCATE( ityp( nat ) )
-    CALL mp_bcast (nmodes, ionode_id, inter_pool_comm)
-    CALL mp_bcast (nmodes, root_pool, intra_pool_comm)  
-    CALL mp_bcast (nelec, ionode_id, inter_pool_comm)
-    CALL mp_bcast (nelec, root_pool, intra_pool_comm)  
-    CALL mp_bcast (at, ionode_id, inter_pool_comm)
-    CALL mp_bcast (at, root_pool, intra_pool_comm)  
-    CALL mp_bcast (bg, ionode_id, inter_pool_comm)
-    CALL mp_bcast (bg, root_pool, intra_pool_comm)  
-    CALL mp_bcast (omega, ionode_id, inter_pool_comm)
-    CALL mp_bcast (omega, root_pool, intra_pool_comm)  
-    CALL mp_bcast (alat, ionode_id, inter_pool_comm)
-    CALL mp_bcast (alat, root_pool, intra_pool_comm)  
+    CALL mp_bcast (nmodes  , ionode_id, inter_pool_comm)
+    CALL mp_bcast (nmodes  , root_pool, intra_pool_comm)  
+    CALL mp_bcast (nelec   , ionode_id, inter_pool_comm)
+    CALL mp_bcast (nelec   , root_pool, intra_pool_comm)  
+    CALL mp_bcast (at      , ionode_id, inter_pool_comm)
+    CALL mp_bcast (at      , root_pool, intra_pool_comm)  
+    CALL mp_bcast (bg      , ionode_id, inter_pool_comm)
+    CALL mp_bcast (bg      , root_pool, intra_pool_comm)  
+    CALL mp_bcast (omega   , ionode_id, inter_pool_comm)
+    CALL mp_bcast (omega   , root_pool, intra_pool_comm)  
+    CALL mp_bcast (alat    , ionode_id, inter_pool_comm)
+    CALL mp_bcast (alat    , root_pool, intra_pool_comm)  
     IF (mpime /= ionode_id) ALLOCATE( tau( 3, nat ) )
-    CALL mp_bcast (tau, ionode_id, inter_pool_comm)
-    CALL mp_bcast (tau, root_pool, intra_pool_comm)  
-    CALL mp_bcast (amass, ionode_id, inter_pool_comm)
-    CALL mp_bcast (amass, root_pool, intra_pool_comm)  
-    CALL mp_bcast (ityp, ionode_id, inter_pool_comm)
-    CALL mp_bcast (ityp, root_pool, intra_pool_comm)  
-    CALL mp_bcast (isk, ionode_id, inter_pool_comm)
-    CALL mp_bcast (isk, root_pool, intra_pool_comm)    
+    CALL mp_bcast (tau     , ionode_id, inter_pool_comm)
+    CALL mp_bcast (tau     , root_pool, intra_pool_comm)  
+    CALL mp_bcast (amass   , ionode_id, inter_pool_comm)
+    CALL mp_bcast (amass   , root_pool, intra_pool_comm)  
+    CALL mp_bcast (ityp    , ionode_id, inter_pool_comm)
+    CALL mp_bcast (ityp    , root_pool, intra_pool_comm)  
+    CALL mp_bcast (isk     , ionode_id, inter_pool_comm)
+    CALL mp_bcast (isk     , root_pool, intra_pool_comm)  
     CALL mp_bcast (noncolin, ionode_id, inter_pool_comm)
-    CALL mp_bcast (noncolin, root_pool, intra_pool_comm)    
+    CALL mp_bcast (noncolin, root_pool, intra_pool_comm)  
     IF (mpime.eq.ionode_id) THEN
       CLOSE(crystal)
     ENDIF
@@ -291,6 +337,23 @@
   !
   CALL wigner_seitz2 &
        ( nk1, nk2, nk3, nq1, nq2, nq3, nrr_k, nrr_q, irvec, wslen, ndegen_k, ndegen_q )
+  ! 
+  ALLOCATE ( ndegen_kk(nrr_k) )
+  ALLOCATE ( ndegen_qq(nrr_q) )
+  ALLOCATE ( irvec_kk(3,nrr_k) )
+  ALLOCATE ( irvec_qq(3,nrr_q) )
+  DO ir = 1, nrr_k
+    ndegen_kk(ir) = ndegen_k(ir)
+    irvec_kk(:,ir) = irvec(:,ir)
+  ENDDO
+  DO ir = 1, nrr_q
+    ndegen_qq(ir) = ndegen_q(ir)
+    irvec_qq(:,ir) = irvec(:,ir)
+  ENDDO
+
+  DEALLOCATE(ndegen_k) 
+  DEALLOCATE(ndegen_q) 
+  DEALLOCATE(irvec) 
   !
 #ifndef __MPI  
   ! Open like this only in sequential. Otherwize open with MPI-open
@@ -319,24 +382,26 @@
        CALL diropn (iunepmatwe, 'epmatwe', lrepmatw, exst)
 #ifdef __MPI       
        filint    = trim(prefix)//'.epmatwp'
-       CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)    
+       CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
 #endif
-     ENDIF          
-     !
+     ENDIF
      !
      xxq = 0.d0 
      CALL loadumat &
-          ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq )  
+          ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband )  
      !
      ! ------------------------------------------------------
      !   Bloch to Wannier transform
      ! ------------------------------------------------------
      !
-     ALLOCATE ( chw     ( nbndsub, nbndsub, nrr_k ),        &
-          chw_ks  ( nbndsub, nbndsub, nrr_k ),        &
-          cdmew   ( 3, nbndsub, nbndsub, nrr_k ),     &
-          rdw     ( nmodes,  nmodes,  nrr_q ) )
-     IF (vme) ALLOCATE(cvmew   ( 3, nbndsub, nbndsub, nrr_k ) )
+     ALLOCATE( chw    ( nbndsub, nbndsub, nrr_k ),        &
+               chw_ks ( nbndsub, nbndsub, nrr_k ),        &
+               rdw    ( nmodes,  nmodes,  nrr_q ) )
+     IF (vme) THEN 
+       ALLOCATE( cvmew ( 3, nbndsub, nbndsub, nrr_k ) )
+     ELSE
+       ALLOCATE( cdmew ( 3, nbndsub, nbndsub, nrr_k ) )
+     ENDIF
      ! 
      ! SP : Let the user chose. If false use files on disk
      IF (etf_mem == 0) THEN
@@ -344,37 +409,38 @@
        ALLOCATE (epmatwp ( nbndsub, nbndsub, nrr_k, nmodes, nrr_q))
      ELSE
        ALLOCATE(epmatwe_mem ( nbndsub, nbndsub, nrr_k, nmodes))
+       epmatwe_mem(:,:,:,:) = czero
      ENDIF
      !
      ! Hamiltonian
      !
      CALL hambloch2wan &
-          ( nbnd, nbndsub, nks, nkstot, et, xk, cu, lwin, nrr_k, irvec, wslen, chw )
+          ( nbnd, nbndsub, nks, nkstot, et, xk, cu, lwin, exband, nrr_k, irvec_kk, wslen, chw )
      !
      ! Kohn-Sham eigenvalues
      !
      IF (eig_read) THEN
-       WRITE (6,'(5x,a)') "Interpolating MB and KS eigenvalues"
+       WRITE (stdout,'(5x,a)') "Interpolating MB and KS eigenvalues"
        CALL hambloch2wan &
-            ( nbnd, nbndsub, nks, nkstot, et_ks, xk, cu, lwin, nrr_k, irvec, wslen, chw_ks )
+            ( nbnd, nbndsub, nks, nkstot, et_ks, xk, cu, lwin, exband, nrr_k, irvec_kk, wslen, chw_ks )
      ENDIF
      !
-     ! Dipole
+     IF (vme) THEN 
+       ! Transform of position matrix elements
+       ! PRB 74 195118  (2006)
+       CALL vmebloch2wan &
+            ( nbnd, nbndsub, nks, nkstot, xk, cu, nrr_k, irvec_kk, wslen, lwin, exband )
+     ELSE
+       ! Dipole
+       CALL dmebloch2wan &
+            ( nbnd, nbndsub, nks, nkstot, dmec, xk, cu, nrr_k, irvec_kk, wslen, lwin, exband )
+     ENDIF
      !
-    ! CALL dmebloch2wan &
-    !      ( nbnd, nbndsub, nks, nkstot, nkstot, dmec, xk, cu, nrr_k, irvec, wslen )
-     CALL dmebloch2wan &
-          ( nbnd, nbndsub, nks, nkstot, dmec, xk, cu, nrr_k, irvec, wslen, lwin )
-     !
-     ! Dynamical Matrix 
+     ! Dynamical Matrix
      !
      IF (.not. lifc) CALL dynbloch2wan &
-                          ( nmodes, nqc, xqc, dynq, nrr_q, irvec, wslen )
+                          ( nmodes, nqc, xqc, dynq, nrr_q, irvec_qq, wslen )
      !
-     ! Transform of position matrix elements
-     ! PRB 74 195118  (2006)
-     IF (vme) CALL vmebloch2wan &
-         ( nbnd, nbndsub, nks, nkstot, xk, cu, nrr_k, irvec, wslen )
      !
      ! Electron-Phonon vertex (Bloch el and Bloch ph -> Wannier el and Bloch ph)
      !
@@ -384,18 +450,18 @@
        !
        ! we need the cu again for the k+q points, we generate the map here
        !
-       CALL loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq )
+       CALL loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband )
        !
        DO imode = 1, nmodes
          !
          IF (etf_mem == 0) THEN 
            CALL ephbloch2wane &
              ( nbnd, nbndsub, nks, nkstot, xk, cu, cuq, &
-             epmatq (:,:,:,imode,iq), nrr_k, irvec, wslen, epmatwe(:,:,:,imode,iq) )
+             epmatq(:,:,:,imode,iq), nrr_k, irvec_kk, wslen, epmatwe(:,:,:,imode,iq) )
          ELSE
            CALL ephbloch2wane &
              ( nbnd, nbndsub, nks, nkstot, xk, cu, cuq, &
-             epmatq (:,:,:,imode,iq), nrr_k, irvec, wslen, epmatwe_mem(:,:,:,imode) )
+             epmatq(:,:,:,imode,iq), nrr_k, irvec_kk, wslen, epmatwe_mem(:,:,:,imode) )
            !
          ENDIF
          !
@@ -415,10 +481,10 @@
      IF (ionode) THEN
        IF (etf_mem == 0) THEN
          CALL ephbloch2wanp &
-           ( nbndsub, nmodes, xqc, nqc, irvec, nrr_k, nrr_q, epmatwe )
+           ( nbndsub, nmodes, xqc, nqc, irvec_kk, nrr_k, nrr_q, epmatwe )
        ELSE
           CALL ephbloch2wanp_mem &
-           ( nbndsub, nmodes, xqc, nqc, irvec, nrr_k, nrr_q, epmatwe_mem )
+           ( nbndsub, nmodes, xqc, nqc, irvec_kk, nrr_k, nrr_q, epmatwe_mem )
        ENDIF
      ENDIF
      !
@@ -431,7 +497,6 @@
      !
   ENDIF
   !
-  !
   IF ( ALLOCATED (epmatwe) ) DEALLOCATE (epmatwe)
   IF ( ALLOCATED (epmatwe_mem) ) DEALLOCATE (epmatwe_mem)
   IF ( ALLOCATED (epmatq) )  DEALLOCATE (epmatq)
@@ -439,7 +504,12 @@
   IF ( ALLOCATED (cuq) )     DEALLOCATE (cuq)
   IF ( ALLOCATED (lwin) )    DEALLOCATE (lwin)
   IF ( ALLOCATED (lwinq) )   DEALLOCATE (lwinq)
-  CLOSE(iunepmatwe)
+  IF ( ALLOCATED (exband) )  DEALLOCATE (exband)
+  IF (etf_mem == 1) THEN
+    CLOSE(iunepmatwe, status = 'delete')
+  ELSE
+    CLOSE(iunepmatwe)
+  ENDIF
 #ifdef __MPI
   CLOSE(iunepmatwp)
 #endif
@@ -452,49 +522,46 @@
   WRITE(stdout, '(a,i10,a)' ) '                   VmPeak =',valueRSS(1)/1024,'Mb'
   WRITE(stdout, '(a)' )             '     ==================================================================='
   WRITE(stdout, '(a)' )             '     '
-  ! 
+  
   !
-  ! at this point, we will interpolate the Wannier rep to the Bloch rep 
-  ! for electrons, phonons and the ep-matrix
+  !  At this point, we will interpolate the Wannier rep to the Bloch rep 
+  !  for electrons, phonons and the ep-matrix
   !
   !  need to add some sort of parallelization (on g-vectors?)  what
   !  else can be done when we don't ever see the wfcs??
   !
-  ! SP: k-point parallelization should always be efficient here
-  IF (parallel_k) THEN
-     CALL loadqmesh_serial
-     CALL loadkmesh_para
-  ELSEIF(parallel_q) THEN
-     CALL loadkmesh_serial
-     CALL loadqmesh_para
-     ALLOCATE(etf_k ( nbndsub, nkqf))
-  ELSE
-     CALL errore('ephwann_shuffle', "parallel k and q not (yet) implemented",1)
-  ENDIF
+  CALL loadqmesh_serial
+  CALL loadkmesh_para
   !
-  ALLOCATE ( epmatwef( nbndsub, nbndsub, nrr_k, nmodes),             &
-       wf ( nmodes,  nqf ), etf ( nbndsub, nkqf),                   &
-       etf_ks ( nbndsub, nkqf),                   &
-       epmatf( nbndsub, nbndsub, nmodes), cufkk ( nbndsub, nbndsub), &
-       cufkq ( nbndsub, nbndsub), uf ( nmodes, nmodes),              &
-       bmatf( nbndsub, nbndsub), eps_rpa( nmodes) )
+  ALLOCATE ( epmatwef( nbndsub, nbndsub, nrr_k, nmodes), &
+             wf( nmodes,  nqf ),                         &
+             etf( nbndsub, nkqf),                        &
+             etf_ks( nbndsub, nkqf),                     &
+             epmatf( nbndsub, nbndsub, nmodes),          &
+             cufkk( nbndsub, nbndsub),                   &
+             cufkq( nbndsub, nbndsub),                   & 
+             uf( nmodes, nmodes),                        &
+             bmatf( nbndsub, nbndsub),                   & 
+             eps_rpa( nmodes) )
   !
   ! Need to be initialized
+  etf_ks(:,:) = zero
   epmatf(:,:,:) = czero
-  ! allocate dipole matrix elements after getting grid size
   !
-  ALLOCATE ( dmef(3, nbndsub, nbndsub, 2 * nkf) )
-  IF (vme) ALLOCATE ( vmef(3, nbndsub, nbndsub, 2 * nkf) )
+  ! allocate velocity and dipole matrix elements after getting grid size
+  !
+  IF (vme) THEN 
+     ALLOCATE ( vmef(3, nbndsub, nbndsub, 2 * nkf) )
+  ELSE
+     ALLOCATE ( dmef(3, nbndsub, nbndsub, 2 * nkf) )
+  ENDIF
   !
   ALLOCATE(cfac(nrr_k))
-  !DBSP
-  !ALLOCATE(cfac1(nrr_k))
-  !ALLOCATE(cfacq1(nrr_k))
   ALLOCATE(cfacq(nrr_k))
   ALLOCATE(rdotk(nrr_k))
   ! This is simply because dgemv take only real number (not integer)
   ALLOCATE(irvec_r(3,nrr_k))
-  irvec_r = REAL(irvec,KIND=dp)
+  irvec_r = REAL(irvec_kk,KIND=dp)
   ! 
   ! SP: Create a look-up table for the exponential of the factor. 
   !     This can only work with homogeneous fine grids.
@@ -506,7 +573,7 @@
     ! Along x
     DO ikx = -2*nk1, 2*nk1
       DO ikfx = 0, nkf1-1
-        !rdotk = twopi * ( xk(1)*irvec(1,ir))
+        !rdotk = twopi * ( xk(1)*irvec_kk(1,ir))
         rdotk_scal = twopi * ( (REAL(ikfx,kind=DP)/nkf1) * ikx )
         tablex(ikx+2*nk1+1,ikfx+1) = exp( ci*rdotk_scal )  
       ENDDO
@@ -560,8 +627,6 @@
   xxq = 0.d0
   !
   ! nkqf is the number of kpoints in the pool
-  ! parallel_k case = nkqtotf/npool
-  ! parallel_q case = nkqtotf
   !
   DO ik = 1, nkqf
      !
@@ -580,10 +645,10 @@
      ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
      ! + optimize the 2\pi r\cdot k with Blas
      CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xxk, 1, 0.0_DP, rdotk, 1 )
-     cfac(:) = exp( ci*rdotk ) / ndegen_k(:)
+     cfac(:) = exp( ci*rdotk ) / ndegen_kk(:)
      ! 
      CALL hamwan2bloch &
-          ( nbndsub, nrr_k, cufkk, etf (:, ik), chw, cfac)
+          ( nbndsub, nrr_k, cufkk, etf(:, ik), chw, cfac)
      !
      !
   ENDDO
@@ -597,7 +662,7 @@
   ! or read it from input (Fermi level from the coarse grid 
   ! may be wrong or inaccurate)
   !
-  WRITE(6,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
+  WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
   !
   IF( efermi_read ) THEN
      !
@@ -606,6 +671,7 @@
      WRITE(stdout, '(/5x,a,f10.6,a)') &
          'Fermi energy is read from the input file: Ef = ', ef * ryd2ev, ' eV'
      WRITE(stdout,'(/5x,a)') repeat('=',67)
+     !
      ! SP: even when reading from input the number of electron needs to be correct
      already_skipped = .false.
      IF ( nbndskip .gt. 0 ) THEN
@@ -616,11 +682,11 @@
               nelec = nelec - two * nbndskip
            ENDIF
            already_skipped = .true.
-           WRITE(6,'(/5x,"Skipping the first ",i4," bands:")') nbndskip
-           WRITE(6,'(/5x,"The Fermi level will be determined with ",f9.5," electrons")') nelec
+           WRITE(stdout,'(/5x,"Skipping the first ",i4," bands:")') nbndskip
+           WRITE(stdout,'(/5x,"The Fermi level will be determined with ",f9.5," electrons")') nelec
         ENDIF
-     ENDIF     
-     !
+     ENDIF
+     !      
   ELSEIF( band_plot ) THEN 
      !
      WRITE(stdout,'(/5x,a)') repeat('=',67)
@@ -649,16 +715,7 @@
      !  
      ! since wkf(:,ikq) = 0 these bands do not bring any contribution to Fermi level
      !  
-     IF (parallel_k) efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
-     IF (parallel_q) THEN 
-     IF (mpime .eq. ionode_id) THEN
-       efnew = efermig_seq(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
-       ! etf on the full k-grid is later required for selfen_phon_k          
-       etf_k = etf
-     ENDIF
-     CALL mp_bcast (efnew, ionode_id, inter_pool_comm)
-     CALL mp_bcast (etf_k, ionode_id, inter_pool_comm)
-     ENDIF
+     efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk)
      !
      WRITE(stdout, '(/5x,a,f10.6,a)') &
          'Fermi energy is calculated from the fine k-mesh: Ef = ', efnew * ryd2ev, ' eV'
@@ -669,7 +726,7 @@
         WRITE(stdout,'(/5x,a)') 'Warning: check if difference with Fermi level fine grid makes sense'
      WRITE(stdout,'(/5x,a)') repeat('=',67)
      !
-     ef=efnew
+     ef = efnew
      !
   ENDIF
   !
@@ -682,9 +739,6 @@
   !  xqf must be in crystal coordinates
   !
   ! this loops over the fine mesh of q points.
-  ! if parallel_k then this is the entire q-list (nqftot)
-  ! if parallel_q then this is nqftot/npool
-  !
   ! ---------------------------------------------------------------------------------------
   ! ---------------------------------------------------------------------------------------
   IF (lifc) THEN
@@ -706,39 +760,155 @@
     filint = trim(tmp_dir)//trim(prefix)//'.epmatwp1'
     CALL MPI_FILE_OPEN(world_comm,filint,MPI_MODE_RDONLY,MPI_INFO_NULL,iunepmatwp2,ierr)
     IF( ierr /= 0 ) CALL errore( 'ephwann_shuffle', 'error in MPI_FILE_OPEN',1 )
-    IF( parallel_q ) CALL errore( 'ephwann_shuffle', 'q-parallel+etf_mem = 1 is not supported',1 )
   ENDIF
 #endif
   !
-  IF (parallel_k) THEN
-    !
-    ! get the size of the matrix elements stored in each pool
-    ! for informational purposes.  Not necessary
-    !
-    CALL mem_size(ibndmin, ibndmax, nmodes, nkf)
-    !
-    ! Fine mesh set of g-matrices.  It is large for memory storage
-    ! SP: Should not be a memory problem. If so, can always the number of cores to reduce nkf. 
-    ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf) )
-    epf17(:,:,:,:) = zero
+  ! get the size of the matrix elements stored in each pool
+  ! for informational purposes.  Not necessary
+  !
+  CALL mem_size(ibndmin, ibndmax, nmodes, nkf)
+  !
+  ! Fine mesh set of g-matrices.  It is large for memory storage
+  ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf) )
+  ALLOCATE ( etf_all ( nbndsub, nkqtotf ) )
+  ALLOCATE ( inv_tau_all (nstemp, ibndmax-ibndmin+1, nkqtotf/2) )
+  inv_tau_all(:,:,:) = zero
+  ALLOCATE ( zi_allvb (nstemp, ibndmax-ibndmin+1, nkqtotf/2) )
+  zi_allvb(:,:,:) = zero
+  ! 
+  IF (int_mob .AND. carrier) THEN
+    ALLOCATE ( inv_tau_allcb (nstemp, ibndmax-ibndmin+1, nkqtotf/2) )
+    inv_tau_allcb(:,:,:) = zero
+    ALLOCATE ( zi_allcb (nstemp, ibndmax-ibndmin+1, nkqtotf/2) )
+    zi_allcb(:,:,:) = zero
+  ENDIF
+  !
+  IF (iterative_bte) THEN
+    ALLOCATE(Fi_all(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+    ! Current iterative F(i+1) function
+    ALLOCATE(F_current(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+    ALLOCATE(F_SERTA(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+    Fi_all(:,:,:,:) = zero
+    F_current(:,:,:,:) = zero
+    F_SERTA(:,:,:,:) = zero
+    ALLOCATE(mobilityh_save(nstemp))
+    ALLOCATE(mobilityel_save(nstemp))
+    mobilityh_save(:) = zero
+    mobilityel_save(:) = zero
+    IF (int_mob .AND. carrier) THEN
+      ALLOCATE(Fi_allcb(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+      ALLOCATE(F_currentcb(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+      ALLOCATE(F_SERTAcb(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
+      Fi_allcb(:,:,:,:) = zero
+      F_currentcb(:,:,:,:) = zero
+      F_SERTAcb(:,:,:,:) = zero
+    ENDIF
+  ENDIF 
+  ! 
+  ! Define it only once for the full run. 
+  CALL fkbounds( nkqtotf/2, lower_bnd, upper_bnd )
+  ! 
+  !  Start iteration index
+  iter = 1
+  !iter = 0
+  ! Eerror for iterative BTE
+  IF (int_mob .OR. (ncarrier > 1E5)) THEN
+    error_el = 10_DP
+  ELSE
+    error_el = 0_DP
+  ENDIF
+  IF (int_mob .OR. (ncarrier < 1E5)) THEN
+    error_h = 10_DP
+  ELSE
+    error_h = 0_DP
+  ENDIF
+  !
+  ! Restart calculation
+  iq_restart = 1
+  first_cycle = .FALSE.
+  first_time = .TRUE.
+  IF (restart) THEN
     ! 
-    ! Restart calculation
-    iq_restart = 1
-    IF (restart) THEN
+    IF ( elecselfen ) THEN
+      IF ( .not. ALLOCATED (sigmar_all) ) ALLOCATE( sigmar_all(ibndmax-ibndmin+1, nkqtotf/2) )
+      IF ( .not. ALLOCATED (sigmai_all) ) ALLOCATE( sigmai_all(ibndmax-ibndmin+1, nkqtotf/2) )
+      IF ( .not. ALLOCATED (zi_all) )     ALLOCATE( zi_all(ibndmax-ibndmin+1, nkqtotf/2) )
+      sigmar_all(:,:) = zero
+      sigmai_all(:,:) = zero
+      zi_all(:,:) = zero
+      !
+      CALL electron_read(iq_restart, nqf, nkqtotf/2, sigmar_all, sigmai_all, zi_all)
+      !
+    ENDIF
+    IF ( scattering ) THEN
       ! 
-      IF ( elecselfen ) THEN
-        IF ( .not. ALLOCATED (sigmar_all) ) ALLOCATE( sigmar_all(ibndmax-ibndmin+1, nkqtotf/2) )
-        IF ( .not. ALLOCATED (sigmai_all) ) ALLOCATE( sigmai_all(ibndmax-ibndmin+1, nkqtotf/2) )
-        IF ( .not. ALLOCATED (zi_all) )     ALLOCATE( zi_all(ibndmax-ibndmin+1, nkqtotf/2) )
-        sigmar_all(:,:) = zero
-        sigmai_all(:,:) = zero
-        zi_all(:,:) = zero
+      IF (int_mob .AND. carrier) THEN
         !
-        CALL electron_read(iq_restart,nqf,nkqtotf/2,sigmar_all,sigmai_all,zi_all)
+        ! Here inv_tau_all and inv_tau_allcb gets updated
+        CALL tau_read(iq_restart, nqf, nkqtotf/2, .TRUE.)
+      ELSE
+        ! Here inv_tau_all gets updated
+        CALL tau_read(iq_restart, nqf, nkqtotf/2, .FALSE.)
+      ENDIF
+      !
+    ENDIF
+    IF ( iterative_bte ) THEN
+      ! 
+      IF (int_mob .AND. carrier) THEN
+        CALL F_read(iter, iq_restart, nqf, nkqtotf/2, error_h, error_el, .TRUE.)
+      ELSE
+        CALL F_read(iter, iq_restart, nqf, nkqtotf/2, error_h, error_el, .FALSE.)
       ENDIF
       ! 
+      IF (int_mob .OR. (ncarrier < 1E5)) THEN
+        IF ( error_h < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
+        IF ( error_h < eps2 ) &
+          WRITE( stdout,'(5x,"IBTE is converged with value for hole mobility of",1E18.6," "/)') MAXVAL(mobilityh_save(:))
+        IF ( error_h < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
+      ENDIF
+      IF (int_mob .OR. (ncarrier > 1E5)) THEN
+        IF ( error_el < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
+        IF ( error_el < eps2 ) &
+          WRITE( stdout,'(5x,"IBTE is converged with value for electron mobility of",1E18.6," "/)') MAXVAL(mobilityel_save(:))
+        IF ( error_el < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
+      ENDIF
+      !
+    ENDIF     
+    !
+    ! If you restart from reading a file. This prevent 
+    ! the case were you restart but the file does not exist
+    IF (iq_restart > 1) first_cycle = .TRUE.
+    ! 
+  ENDIF
+  ! 
+  ! Scatread assumes that you alread have done the full q-integration
+  ! We just do one loop to get interpolated eigenenergies.  
+  IF(scatread) iq_restart = nqf -1 
+  !      
+  DO WHILE ( (error_h > eps2) .OR. (error_el > eps2) )
+    !
+    IF ( iterative_bte ) THEN
+      IF (iter==1 .OR. first_cycle) THEN
+        WRITE(stdout,'(5x,a)') ' '
+        WRITE(stdout,'(5x,a)') repeat('=',67)
+        WRITE(stdout,'(5x,"Start solving iterative Boltzmann Transport Equation")')
+        WRITE(stdout,'(5x,a/)') repeat('=',67)
+      ENDIF
+      WRITE(stdout,'(/5x,"Iteration number:", i10," "/)') iter
+      ! 
+      !IF (nstemp > 1) CALL errore('ephwann_shuffle', &
+      !    'Iterative BTE can only be done at 1 temperature, nstemp = 1.',1)  
+      ! 
+      IF (iter > maxiter) CALL errore('ephwann_shuffle', &
+        'The iteration reached the maximum but did not converge. ',1)
+      ! 
+      ! Reading iter X if the file exist from a restart
+      !CALL F_read(Fi_all, ibndmax-ibndmin+1, nkqtotf/2, iter)
+      ! 
     ENDIF
-    !      
+    ! 
+    !iter = iter +1
+    !
     DO iq = iq_restart, nqf
        !   
        CALL start_clock ( 'ep-interp' )
@@ -746,7 +916,7 @@
        ! In case of big calculation, show progression of iq (especially usefull when
        ! elecselfen = true as nothing happen during the calculation otherwise. 
        !
-       IF (.not. phonselfen) THEN 
+       IF ( .not. phonselfen) THEN 
          IF (MOD(iq,50) == 0) THEN
            WRITE(stdout, '(a,i10,a,i10)' ) '     Progression iq (fine) = ',iq,'/',nqf
          ENDIF
@@ -759,10 +929,10 @@
        ! ------------------------------------------------------
        !
        IF (.not. lifc) THEN
-          CALL dynwan2bloch &
-               ( nmodes, nrr_q, irvec, ndegen_q, xxq, uf, w2 )
+         CALL dynwan2bloch &
+             ( nmodes, nrr_q, irvec_qq, ndegen_qq, xxq, uf, w2 )
        ELSE
-          CALL dynifc2blochf ( nmodes, rws, nrws, xxq, uf, w2 ) 
+         CALL dynifc2blochf ( nmodes, rws, nrws, xxq, uf, w2 )
        ENDIF
        !
        ! ...then take into account the mass factors and square-root the frequencies...
@@ -788,27 +958,26 @@
        ! epmat : Wannier el and Wannier ph -> Wannier el and Bloch ph
        ! --------------------------------------------------------------
        !
+       !DBSP
+       !CALL start_clock ( 'cl2' )
        IF (.NOT. longrange) THEN
          CALL ephwan2blochp &
-            ( nmodes, xxq, irvec, ndegen_q, nrr_q, uf, epmatwef, nbndsub, nrr_k )
+             ( nmodes, xxq, irvec_qq, ndegen_qq, nrr_q, uf, epmatwef, nbndsub, nrr_k )
        ENDIF
+       !CALL stop_clock ( 'cl2' )
        !
        !
        !  number of k points with a band on the Fermi surface
        fermicount = 0
        !
        IF (lscreen) THEN
-          IF (scr_typ == 0) CALL rpa_epsilon (xxq, wf(:,iq), nmodes, epsi, eps_rpa)
-          IF (scr_typ == 1) CALL tf_epsilon (xxq, nmodes, epsi, eps_rpa)
+         IF (scr_typ == 0) CALL rpa_epsilon (xxq, wf(:,iq), nmodes, epsi, eps_rpa)
+         IF (scr_typ == 1) CALL tf_epsilon (xxq, nmodes, epsi, eps_rpa)
        ENDIF
-       !
        ! this is a loop over k blocks in the pool
        ! (size of the local k-set)
        DO ik = 1, nkf
-         !
-         ! DBSP
-         !write(900,*),'iq ik ',iq, ' ',ik
-         !write(901,*),'iq ik ',iq, ' ',ik
+         !print*,'ik in ephwann ', ik
          !
          ! xkf is assumed to be in crys coord
          !
@@ -821,24 +990,24 @@
          ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
          ! + optimize the 2\pi r\cdot k with Blas
          IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
-            (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen) THEN          
+            (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen ) THEN
            ! We need to use NINT (nearest integer to x) rather than INT
            xkk1 = NINT(xkk(1)*(nkf1)) + 1
            xkk2 = NINT(xkk(2)*(nkf2)) + 1
-           xkk3 = NINT(xkk(3)*(nkf3)) + 1 
+           xkk3 = NINT(xkk(3)*(nkf3)) + 1
            xkq1 = NINT(xkq(1)*(nkf1)) + 1
            xkq2 = NINT(xkq(2)*(nkf2)) + 1
-           xkq3 = NINT(xkq(3)*(nkf3)) + 1 
+           xkq3 = NINT(xkq(3)*(nkf3)) + 1
            ! 
            ! SP: Look-up table is more effecient than calling the exp function.
            DO ir = 1, nrr_k
-             cfac(ir) = ( tablex(irvec(1,ir)+2*nk1+1,xkk1) *&
-                     tabley(irvec(2,ir)+2*nk2+1,xkk2) * tablez(irvec(3,ir)+2*nk3+1,xkk3) ) / ndegen_k(ir)
-             cfacq(ir) = ( tableqx(irvec(1,ir)+2*nk1+1,xkq1) *&
-                     tableqy(irvec(2,ir)+2*nk2+1,xkq2) * tableqz(irvec(3,ir)+2*nk3+1,xkq3) ) /  ndegen_k(ir)
+             cfac(ir) = ( tablex(irvec_kk(1,ir)+2*nk1+1,xkk1) *&
+                     tabley(irvec_kk(2,ir)+2*nk2+1,xkk2) * tablez(irvec_kk(3,ir)+2*nk3+1,xkk3) ) / ndegen_kk(ir)
+             cfacq(ir) = ( tableqx(irvec_kk(1,ir)+2*nk1+1,xkq1) *&
+                     tableqy(irvec_kk(2,ir)+2*nk2+1,xkq2) * tableqz(irvec_kk(3,ir)+2*nk3+1,xkq3) ) /  ndegen_kk(ir)
            ENDDO
            !DBSP
-           !IF ( (iq == 1) .and. (ik ==4)) THEN
+           !IF ( (iq == 1) .and. (ik ==12)) THEN
            !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
            !  cfac1(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
            !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
@@ -846,14 +1015,10 @@
            !ENDIF
          ELSE
            CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-           cfac(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+           cfac(:) = exp( ci*rdotk(:) ) / ndegen_kk(:)
            CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
-           cfacq(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
+           cfacq(:) = exp( ci*rdotk(:) ) / ndegen_kk(:)
          ENDIF
-         !DO ir = 1, nrr_k
-         !  write(900,*)ir, ' ', cfacq(ir)
-         !  write(901,*)ir, ' ', cfacq1(ir)
-         !ENDDO
          !
          ! ------------------------------------------------------        
          ! hamiltonian : Wannier -> Bloch 
@@ -862,364 +1027,289 @@
          ! Kohn-Sham first, then get the rotation matricies for following interp.
          IF (eig_read) THEN
             CALL hamwan2bloch &
-              ( nbndsub, nrr_k, cufkk, etf_ks (:, ikk), chw_ks, cfac)
+              ( nbndsub, nrr_k, cufkk, etf_ks(:, ikk), chw_ks, cfac)
             CALL hamwan2bloch &
-              ( nbndsub, nrr_k, cufkq, etf_ks (:, ikq), chw_ks, cfacq)
+              ( nbndsub, nrr_k, cufkq, etf_ks(:, ikq), chw_ks, cfacq)
          ENDIF
          !
          CALL hamwan2bloch &
-              ( nbndsub, nrr_k, cufkk, etf (:, ikk), chw, cfac)
+              ( nbndsub, nrr_k, cufkk, etf(:, ikk), chw, cfac)
          CALL hamwan2bloch &
-              ( nbndsub, nrr_k, cufkq, etf (:, ikq), chw, cfacq)
-         !DBSP
-         !write(900,*)'ikk ',etf(:,ikk)
-         !write(900,*)'ikq ',etf(:,ikq)
-         !
-         ! ------------------------------------------------------        
-         !  dipole: Wannier -> Bloch
-         ! ------------------------------------------------------        
-         !
-         CALL dmewan2bloch &
-              ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
-         CALL dmewan2bloch &
-              ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfacq)
-         !
-         ! ------------------------------------------------------        
-         !  velocity: Wannier -> Bloch
-         ! ------------------------------------------------------        
+              ( nbndsub, nrr_k, cufkq, etf(:, ikq), chw, cfacq)
          !
          IF (vme) THEN
+            !
+            ! ------------------------------------------------------
+            !  velocity: Wannier -> Bloch
+            ! ------------------------------------------------------
+            !
             IF (eig_read) THEN
                CALL vmewan2bloch &
-                    ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks)
+                    ( nbndsub, nrr_k, irvec_kk, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks, cfac )
                CALL vmewan2bloch &
-                    ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks)
+                    ( nbndsub, nrr_k, irvec_kk, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks, cfacq )
             ELSE
                CALL vmewan2bloch &
-                    ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw)
+                    ( nbndsub, nrr_k, irvec_kk, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw, cfac )
                CALL vmewan2bloch &
-                    ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw)
+                    ( nbndsub, nrr_k, irvec_kk, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw, cfacq )
             ENDIF
+         ELSE
+            !
+            ! ------------------------------------------------------
+            !  dipole: Wannier -> Bloch
+            ! ------------------------------------------------------
+            !
+            CALL dmewan2bloch &
+                 ( nbndsub, nrr_k, cufkk, dmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
+            CALL dmewan2bloch &
+                 ( nbndsub, nrr_k, cufkq, dmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfacq)
+            !
          ENDIF
          !
-         ! interpolate ONLY when (k,k+q) both have at least one band 
-         ! within a Fermi shell of size fsthick 
-         !
-         IF ( (( minval ( abs(etf (:, ikk) - ef) ) < fsthick ) .and. &
-              ( minval ( abs(etf (:, ikq) - ef) ) < fsthick )) .and. &
-                    (.NOT. plselfen) .and. (.NOT.specfun_pl) ) THEN
+         IF (.NOT. scatread) THEN
+           ! interpolate only when (k,k+q) both have at least one band 
+           ! within a Fermi shell of size fsthick 
            !
-           !  fermicount = fermicount + 1
-           !
-           ! --------------------------------------------------------------
-           ! epmat : Wannier el and Bloch ph -> Bloch el and Bloch ph
-           ! --------------------------------------------------------------
-           !
-           ! SP: Note: In case of polar materials, computing the long-range and short-range term 
-           !     separately might help speed up the convergence. Indeed the long-range term should be 
-           !     much faster to compute. Note however that the short-range term still contains a linear
-           !     long-range part and therefore could still be a bit more difficult to converge than 
-           !     non-polar materials. 
-           ! 
-           IF (longrange) THEN
-             !      
-             epmatf = czero
+           IF ( (( minval ( abs(etf(:, ikk) - ef) ) < fsthick ) .and. & 
+                 ( minval ( abs(etf(:, ikq) - ef) ) < fsthick )) ) THEN
              !
-           ELSE        
+             !  fermicount = fermicount + 1
              !
-             CALL ephwan2bloch &
-               ( nbndsub, nrr_k, irvec, ndegen_k, epmatwef, xkk, cufkk, cufkq, epmatf, nmodes )
+             ! --------------------------------------------------------------
+             ! epmat : Wannier el and Bloch ph -> Bloch el and Bloch ph
+             ! --------------------------------------------------------------
              !
-           ENDIF
-           !
-           IF (lpolar) THEN
              !
-             CALL compute_umn_f( nbndsub, cufkk, cufkq, bmatf )
-             !
-             IF ( (abs(xxq(1)) > eps) .or. (abs(xxq(2)) > eps) .or. (abs(xxq(3)) > eps) ) THEN
+             ! SP: Note: In case of polar materials, computing the long-range and short-range term 
+             !     separately might help speed up the convergence. Indeed the long-range term should be 
+             !     much faster to compute. Note however that the short-range term still contains a linear
+             !     long-range part and therefore could still be a bit more difficult to converge than 
+             !     non-polar materials. 
+             ! 
+             IF (longrange) THEN
                !      
-               CALL cryst_to_cart (1, xxq, bg, 1)
-               CALL rgd_blk_epw_fine(nq1, nq2, nq3, xxq, uf, epmatf, &
-                                     nmodes, epsi, zstar, bmatf, +1.d0)
-               CALL cryst_to_cart (1, xxq, at, -1)
+               epmatf = czero
+               !
+             ELSE
+               !
+               CALL ephwan2bloch &
+                 ( nbndsub, nrr_k, epmatwef, cufkk, cufkq, epmatf, nmodes, cfac )
                !
              ENDIF
              !
-           ENDIF
-           ! 
-           ! Store epmatf in memory
-           !
-           DO jbnd = ibndmin, ibndmax
-             DO ibnd = ibndmin, ibndmax
-               ! 
-               IF (lscreen) THEN
-                  epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:) / eps_rpa(:)
-               ELSE
-                  epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:)
+             IF (lpolar) THEN
+               !
+               CALL compute_umn_f( nbndsub, cufkk, cufkq, bmatf )
+               !
+               IF ( (abs(xxq(1)) > eps) .or. (abs(xxq(2)) > eps) .or. (abs(xxq(3)) > eps) ) THEN
+                 !      
+                 CALL cryst_to_cart (1, xxq, bg, 1)
+                 CALL rgd_blk_epw_fine(nq1, nq2, nq3, xxq, uf, epmatf, &
+                                       nmodes, epsi, zstar, bmatf, one)
+                 CALL cryst_to_cart (1, xxq, at, -1)
+                 !
                ENDIF
                !
+             ENDIF
+             ! 
+             ! Store epmatf in memory
+             !
+             DO jbnd = ibndmin, ibndmax
+               DO ibnd = ibndmin, ibndmax
+                 ! 
+                 IF (lscreen) THEN
+                    epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:) / eps_rpa(:)
+                 ELSE
+                    epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,ik) = epmatf(ibnd,jbnd,:)
+                 ENDIF
+                 !
+               ENDDO
              ENDDO
-           ENDDO
-           ! 
-           !DBSP
-           ! Debug on the long/short range. Usefull to keep commented for now.  
-           !if (ik==2) then
-           !  !print*,'iq ',iq
-           !  !do imode = 1, nmodes
-           !    !write(*,*) 'epmatf ',SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
-           !    F = SUM((REAL(REAL(epmatf(:,:,:))))**2)+SUM((REAL(AIMAG(epmatf(:,:,:))))**2)
-           !    !S = SUM((REAL(REAL(epmatfs(:,:,:))))**2)+SUM((REAL(AIMAG(epmatfs(:,:,:))))**2)
-           !    S = SUM((epmatfs(:,:,:))**2)
-           !    L = SUM((REAL(REAL(epmatfl(:,:,:))))**2)+SUM((REAL(AIMAG(epmatfl(:,:,:))))**2)
-           !    write(*,*) 'F, S+L', F, S+L
-           !    DO ibnd = 1, nbndsub
-           !      print*,'ibnd ',ibnd
-           !      DO jbnd = 1, nbndsub
-           !        print*,'jbnd ',jbnd
-           !        F = SUM((REAL(REAL(epmatf(ibnd,jbnd,:))))**2)+SUM((REAL(AIMAG(epmatf(ibnd,jbnd,:))))**2)
-           !        !S = SUM((REAL(REAL(epmatfs(ibnd,jbnd,:))))**2)+SUM((REAL(AIMAG(epmatfs(ibnd,jbnd,:))))**2)
-           !        S = SUM(epmatfs(ibnd,jbnd,:)**2)
-           !        L = SUM((REAL(REAL(epmatfl(ibnd,jbnd,:))))**2)+SUM((REAL(AIMAG(epmatfl(ibnd,jbnd,:))))**2)
-           !        write(*,*) 'F, S+L', F, S+L
-           !        DO imode = 1, nmodes
-           !          print*,'imode ',imode
-           !          F = (REAL(REAL(epmatf(ibnd,jbnd,imode))))**2+(REAL(AIMAG(epmatf(ibnd,jbnd,imode))))**2
-           !          !S = (REAL(REAL(epmatfs(ibnd,jbnd,imode))))**2+(REAL(AIMAG(epmatfs(ibnd,jbnd,imode))))**2
-           !          S = (epmatfs(ibnd,jbnd,imode))**2
-           !          L = (REAL(REAL(epmatfl(ibnd,jbnd,imode))))**2+(REAL(AIMAG(epmatfl(ibnd,jbnd,imode))))**2
-           !          write(*,*) 'F, S+L', F, S+L
-           !        ENDDO
-           !      ENDDO
-           !    ENDDO
-           !  !enddo
-           !endif
-           ! 
-           ! Print the vertex |g|. This is slow and produces huge amount of .txt data            
-           ! Do average over degenerate states since g is gauge-dependent.  
-           !
-         ENDIF
+             !
+             !if (ik==2) then
+             !  do imode = 1, nmodes
+             !    write(*,*) 'epmatf ',SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
+             !  enddo
+             !endif
+             !
+           ENDIF
+         ENDIF ! scatread 
          !
        ENDDO  ! end loop over k points
        !
-       IF (prtgkk     ) CALL print_gkk( iq ) 
+       IF (prtgkk     ) CALL print_gkk( iq )
        IF (phonselfen ) CALL selfen_phon_q( iq )
-       IF (elecselfen ) CALL selfen_elec_q( iq )
-       IF (plselfen   ) CALL selfen_pl_q( iq ) 
+       IF (elecselfen ) CALL selfen_elec_q( iq, first_cycle )
+       IF (plselfen .and. .not.vme ) CALL selfen_pl_q( iq )
        IF (nest_fn    ) CALL nesting_fn_q( iq )
        IF (specfun_el ) CALL spectral_func_q( iq )
        IF (specfun_ph ) CALL spectral_func_ph( iq )
-       IF (specfun_pl ) CALL spectral_func_pl_q( iq )
+       IF (specfun_pl .and. .not.vme ) CALL spectral_func_pl_q( iq )
        IF (ephwrite) THEN
-         IF ( iq .eq. 1 ) THEN 
-           CALL kmesh_fine
-           CALL kqmap_fine
-         ENDIF
-         CALL write_ephmat( iq ) 
-         CALL count_kpoints(iq)
+          IF ( iq .eq. 1 ) THEN 
+             CALL kmesh_fine
+             CALL kqmap_fine
+          ENDIF
+          CALL write_ephmat( iq ) 
+          CALL count_kpoints(iq)
        ENDIF
-       !
-       CALL stop_clock ( 'ep-interp' )
-       !
-    ENDDO  ! end loop over q points
-    ! 
-  ENDIF ! end parallel_k
-  ! 
-  IF (parallel_q) THEN
-    !      
-    ! get the size of the matrix elements stored in each pool
-    ! for informational purposes.  Not necessary
-    !
-    CALL mem_size(ibndmin, ibndmax, nmodes, nkf)
-    !
-    ! Fine mesh set of g-matrices.  It is large for memory storage
-    ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nqf) )
-    !
-    DO ik = 1, nkf
-      ! 
-      CALL start_clock ( 'ep-interp' )
-      !
-      DO iq = 1, nqf
-        !
-        ikq = 2 * iq
-        ikk = ikq - 1 
-        !   
-        ! xkf is assumed to be in crys coord
-        !
-        xkk = xkf (:, 2*ik-1)
-        xxq = xqf (:, iq)
-        xkq = xkk + xxq
-        !
-        ! ------------------------------------------------------
-        ! dynamical matrix : Wannier -> Bloch
-        ! ------------------------------------------------------
-        !
-        CALL dynwan2bloch &
-             ( nmodes, nrr_q, irvec, ndegen_q, xxq, uf, w2 )
-        !
-        ! ...then take into account the mass factors and square-root the frequencies...
-        !
-        DO nu = 1, nmodes
-           !
-           ! wf are the interpolated eigenfrequencies
-           ! (omega on fine grid)
-           !
-           IF ( w2 (nu) .gt. 0.d0 ) THEN
-              wf(nu,iq) =  sqrt(abs( w2 (nu) ))
+       ! 
+       IF (.NOT. scatread) THEN
+         ! 
+         ! Indirect absorption ---------------------------------------------------------
+         ! If Indirect absortpion, keep unshifted values:
+         IF ( lindabs .AND. .NOT. scattering ) etf_ks(:,:) = etf(:,:)
+         ! 
+         ! Apply a scissor shift to CBM if required by user
+         ! The shift is apply to k and k+q
+         IF (ABS(scissor) > eps6) THEN
+           IF ( noncolin ) THEN
+             icbm = FLOOR(nelec/1.0d0) +1
            ELSE
-              wf(nu,iq) = -sqrt(abs( w2 (nu) ))
+             icbm = FLOOR(nelec/2.0d0) +1
            ENDIF
            !
-           DO mu = 1, nmodes
-              na = (mu - 1) / 3 + 1
-              uf (mu, nu) = uf (mu, nu) / sqrt(amass(ityp(na)))
-           ENDDO
-        ENDDO
-        ! ------------------------------------------------------------
-        ! epmat : Wannier el and Wannier ph -> Wannier el and Bloch ph
-        ! --------------------------------------------------------------
-        !
-        CALL ephwan2blochp &
-             ( nmodes, xxq, irvec, ndegen_q, nrr_q, uf, epmatwef, nbndsub, nrr_k )
-        !
-        !  number of k points with a band on the Fermi surface
-        fermicount = 0
-        !
-        ! this is a loop over k blocks in the pool
-        ! (size of the local k-set)
-        !
-        ! 
-        ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
-        ! + optimize the 2\pi r\cdot k with Blas
-        CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-        cfac(:) = exp( ci*rdotk ) / ndegen_k(:)
-        CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
-        cfacq(:) = exp( ci*rdotk ) / ndegen_k(:)
-        ! 
-        ! ------------------------------------------------------        
-        ! hamiltonian : Wannier -> Bloch
-        ! ------------------------------------------------------
-        !
-        ! Kohn-Sham first, then get the rotation matricies for following interp.
-        IF (eig_read) THEN
-           CALL hamwan2bloch &
-             ( nbndsub, nrr_k, cufkk, etf_ks (:, ikk), chw_ks, cfac)     
-           CALL hamwan2bloch &
-             ( nbndsub, nrr_k, cufkq, etf_ks (:, ikq), chw_ks, cfacq)
-        ENDIF
-        !
-        CALL hamwan2bloch &
-             ( nbndsub, nrr_k, cufkk, etf (:, ikk), chw, cfac)        
-        CALL hamwan2bloch &
-             ( nbndsub, nrr_k, cufkq, etf (:, ikq), chw, cfacq)
-        !
-        ! ------------------------------------------------------        
-        !  dipole: Wannier -> Bloch
-        ! ------------------------------------------------------        
-        !
-        CALL dmewan2bloch &
-             ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, dmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
-        CALL dmewan2bloch &
-             ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, dmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfac)
-        !
-        ! ------------------------------------------------------        
-        !  velocity: Wannier -> Bloch
-        ! ------------------------------------------------------        
-        !
-        IF (vme) THEN
-           IF (eig_read) THEN
-              CALL vmewan2bloch &
-                   ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks)
-              CALL vmewan2bloch &
-                   ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks)
-           ELSE
-              CALL vmewan2bloch &
-                   ( nbndsub, nrr_k, irvec, ndegen_k, xkk, cufkk, vmef (:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw)
-              CALL vmewan2bloch &
-                   ( nbndsub, nrr_k, irvec, ndegen_k, xkq, cufkq, vmef (:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw)
-           ENDIF
-        ENDIF
-        !
-        ! interpolate ONLY when (k,k+q) both have at least one band 
-        ! within a Fermi shell of size fsthick 
-        !
-        IF ( (( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .and. &
-             ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ))) THEN
-           !
-           !  fermicount = fermicount + 1
-           !
-           ! --------------------------------------------------------------
-           ! epmat : Wannier el and Bloch ph -> Bloch el and Bloch ph
-           ! --------------------------------------------------------------
-           !
-           ! SP: Note: In case of polar materials, computing the long-range and short-range term 
-           !     separately might help speed up the convergence. Indeed the long-range term should be 
-           !     much faster to compute. Note however that the short-range term still contains a linear
-           !     long-range part and therefore could still be a bit more difficult to converge than 
-           !     non-polar materials. 
-           ! 
-           IF (longrange) THEN
-             !      
-             epmatf = czero
-             !
-           ELSE
-             !
-             CALL ephwan2bloch &
-               ( nbndsub, nrr_k, irvec, ndegen_k, epmatwef, xkk, cufkk, cufkq, epmatf, nmodes )
-             !
-           ENDIF           
-           ! 
-           IF (lpolar) THEN
-             !
-             CALL compute_umn_f( nbndsub, cufkk, cufkq, bmatf )
-             !
-             IF ( (abs(xxq(1)).gt.eps) .or. (abs(xxq(2)).gt.eps) .or. (abs(xxq(3)).gt.eps) ) THEN
-                CALL cryst_to_cart (1, xxq, bg, 1)
-                DO ibnd = 1, nbndsub
-                  DO jbnd = 1, nbndsub
-                    CALL rgd_blk_epw(nq1, nq2, nq3, xxq, uf, epmatf(ibnd,jbnd,:), &
-                          nmodes, epsi, zstar, bmatf(ibnd,jbnd), +1.d0)
-                  ENDDO
-                ENDDO
-                CALL cryst_to_cart (1, xxq, at, -1)
-             ENDIF
-             !
-           ENDIF
-           !            
-           ! write epmatf to file / store in memory
-           !
-           !
-           DO jbnd = ibndmin, ibndmax
-             DO ibnd = ibndmin, ibndmax
+           DO ik = 1, nkf
+             ikk = 2 * ik - 1
+             ikq = ikk + 1
+             DO ibnd = icbm, nbndsub
                ! 
-               epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,iq) = epmatf(ibnd,jbnd,:)
-               !
+               etf (ibnd, ikk) = etf (ibnd, ikk) + scissor
+               etf (ibnd, ikq) = etf (ibnd, ikq) + scissor
              ENDDO
            ENDDO
+           IF ( iq .eq. 1 ) THEN
+             WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
+           ENDIF
+         ENDIF
+         !  
+         ! Indirect absorption
+         IF ( lindabs .AND. .NOT. scattering )  CALL indabs(iq)  
+         ! 
+         ! Conductivity ---------------------------------------------------------
+         IF (scattering) THEN
+           !   
+           ! If we want to compute intrinsic mobilities, call fermicarrier to 
+           ! correctly positionned the ef0 level.
+           ! This is only done once for iq = 0 
+           IF ( iq == iq_restart ) THEN
+             ! 
+             DO itemp = 1, nstemp
+               ! 
+               etemp = transp_temp(itemp) 
+               WRITE(stdout, '(/5x,"Temperature ",f8.3," K")' ) etemp * ryd2ev / kelvin2eV
+               ! 
+               ! Small gap semiconductor. Computes intrinsic mobility by placing 
+               ! the Fermi level such that carrier density is equal for electron and holes
+               IF (int_mob .AND. .NOT. carrier) THEN               
+                 !
+                 ef0(itemp) = fermicarrier( etemp )
+                 WRITE(stdout, '(5x,"Mobility Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev  
+                 ! We only compute 1 Fermi level so we do not need the other
+                 efcb(itemp) = 0
+                 !   
+               ENDIF
+               ! 
+               ! Large bandgap semiconductor. Place the gap at the value ncarrier.
+               ! The user want both VB and CB mobilities. 
+               IF (int_mob .AND. carrier) THEN
+                 ! 
+                 ncarrier = - ABS(ncarrier) 
+                 ef0(itemp) = fermicarrier( etemp )
+                 WRITE(stdout, '(5x,"Mobility VB Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev 
+                 ! 
+                 ncarrier = ABS(ncarrier) 
+                 efcb(itemp) = fermicarrier( etemp )
+                 WRITE(stdout, '(5x,"Mobility CB Fermi level ",f10.6," eV")' )  efcb(itemp) * ryd2ev
+                 !  
+               ENDIF   
+               ! 
+               ! User decide the carrier concentration and choose to only look at VB or CB  
+               IF (.NOT. int_mob .AND. carrier) THEN
+                 ! SP: Determination of the Fermi level for intrinsic or doped carrier 
+                 !     One also need to apply scissor before calling it.
+                 ! 
+                 ef0(itemp) = fermicarrier( etemp )               
+                 WRITE(stdout, '(5x,"Mobility Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev
+                 ! We only compute 1 Fermi level so we do not need the other
+                 efcb(itemp) = 0
+                 ! 
+               ENDIF
+               ! 
+               IF (.NOT. int_mob .AND. .NOT. carrier ) THEN
+                 IF ( efermi_read ) THEN
+                   !
+                   ef0(itemp) = fermi_energy
+                   !
+                 ELSE !SP: This is added for efficiency reason because the efermig routine is slow
+                   ef0(itemp) = efnew
+                 ENDIF
+                 ! We only compute 1 Fermi level so we do not need the other
+                 efcb(itemp) = 0
+                 !  
+               ENDIF
+               ! 
+             ENDDO
+             !
+             ! 
+           ENDIF ! iq=0
+           !   
+           IF ( iterative_bte) THEN
+             ! First iteration is just SERTA
+             IF (iter == 1) THEN 
+               !
+               CALL scattering_rate_q( iq, ef0, efcb, first_cycle )
+               !print*,'SUM(inv_tau_all) after ',SUM(inv_tau_all)
+               !
+               ! Compute the SERTA mobility for the first iteration
+               IF (iq == nqf) CALL transport_coeffs (ef0,efcb)
+               IF (iq == nqf) iter = iter + 1 
+               ! 
+             ELSE
+               ! 
+               !IF (int_mob .AND. carrier) THEN
+               !  call errore('ephwann_shuffle','The iterative solution cannot be solved with int_mob AND carrier at the moment',1)
+               !ELSE
+               CALL iterativebte(iter, iq, ef0, efcb, error_h, error_el, first_cycle, first_time)
+               !ENDIF   
+               !
+               IF (iq == nqf) iter = iter + 1 
+             ENDIF
+             !
+           ELSE
+             !
+             CALL scattering_rate_q( iq, ef0, efcb, first_cycle )
+             ! 
+           ENDIF
            ! 
-           !if (ik==2) then
-           !  do imode = 1, nmodes
-           !    write(*,*) 'epmatf ',SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
-           !  enddo
-           !endif
-           !
-        ENDIF
-        !
-      ENDDO  ! end loop over q points
-      !
-      IF (phonselfen ) CALL selfen_phon_k( ik )
-      IF (elecselfen ) CALL selfen_elec_k( ik )
-      IF (nest_fn    ) CALL nesting_fn_k( ik )
-      IF (specfun_el ) CALL spectral_func_k( ik )
-      IF (ephwrite) THEN
-        CALL errore('ephwann_shuffle', "parallel q not (yet) implemented with ephwrite = .true.",1)
-      ENDIF
-      !
-      CALL stop_clock ( 'ep-interp' )
-      !
-    ENDDO  ! end loop over k points
+         ENDIF ! scattering
+         ! --------------------------------------       
+         !
+         CALL stop_clock ( 'ep-interp' )
+         !
+       ENDIF ! scatread
+    ENDDO  ! end loop over q points
+    !
+    IF (iterative_bte) iq_restart = 1 
+    ! If we do not do iterative BTE, then exist the while loop.
+    IF (.NOT. iterative_bte) error_h = 0.0_DP
+    IF (.NOT. iterative_bte) error_el = 0.0_DP
     ! 
-  ENDIF ! end parallel_q
-  !
+  ENDDO ! End the while loop  
+  IF (iterative_bte) DEALLOCATE (Fi_all)
+  IF (iterative_bte) DEALLOCATE (F_current)
+  IF (iterative_bte) DEALLOCATE (F_SERTA)
+  IF (iterative_bte) DEALLOCATE (inv_tau_all)
+  IF (iterative_bte) DEALLOCATE (zi_allvb)
+  IF (mp_mesh_k .AND. iterative_bte) DEALLOCATE (s_BZtoIBZ_full)
+  IF (mp_mesh_k .AND. iterative_bte) DEALLOCATE (ixkqf_tr)
+  IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (inv_tau_allcb)
+  IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (zi_allcb)
+  IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (Fi_allcb)
+  IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (F_currentcb)
+  IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (F_SERTAcb)
+  ! 
   !  Close th epmatwp file
 #if defined(__MPI)
   IF (etf_mem == 1) then
@@ -1245,7 +1335,7 @@
   CALL mp_barrier(inter_pool_comm)
   IF (mpime.eq.ionode_id) THEN
     !
-    IF (phonselfen .and. parallel_k ) THEN
+    IF (phonselfen) THEN
       OPEN(unit=lambda_phself,file='lambda.phself')
       WRITE(lambda_phself, '(/2x,a/)') '#Lambda phonon self-energy'
       WRITE(lambda_phself, *) '#Modes     ',(imode, imode=1,nmodes)
@@ -1276,17 +1366,54 @@
   !
   IF (a2f) CALL eliashberg_a2f
   ! 
-  IF ( ALLOCATED(lambda_all) )    DEALLOCATE( lambda_all )
-  IF ( ALLOCATED(gamma_all) )     DEALLOCATE( gamma_all )
-  IF ( ALLOCATED(sigmai_all) )    DEALLOCATE( sigmai_all )
-  IF ( ALLOCATED(sigmai_mode) )   DEALLOCATE( sigmai_mode )
-  IF ( ALLOCATED(w2) )            DEALLOCATE( w2 )
-  IF ( ALLOCATED(epf17) )         DEALLOCATE( epf17 )
+  ! if scattering is read then Fermi level and scissor have not been computed.
+  IF (scatread) THEN
+    IF (ABS(scissor) > 0.000001) THEN
+      icbm = FLOOR(nelec/2.0d0) + nbndskip + 1
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        ikq = ikk + 1
+        DO ibnd = icbm, nbndsub
+          etf (ibnd, ikk) = etf (ibnd, ikk) + scissor
+          etf (ibnd, ikq) = etf (ibnd, ikq) + scissor
+        ENDDO
+      ENDDO
+      WRITE( stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
+    ENDIF          
+    DO itemp = 1, nstemp
+      etemp = transp_temp(itemp)      
+      IF (int_mob .OR. carrier) THEN
+        ! SP: Determination of the Fermi level for intrinsic or doped carrier 
+        !     One also need to apply scissor before calling it.
+        ef0(itemp) = fermicarrier( etemp )
+      ELSE
+        IF ( efermi_read ) THEN
+          ef0(itemp) = fermi_energy
+        ELSE !SP: This is added for efficiency reason because the efermig routine is slow
+          ef0(itemp) = efnew
+        ENDIF
+      ENDIF
+    ENDDO ! itemp
+  ENDIF ! if scattering 
+  ! 
+  IF ( ALLOCATED(lambda_all) )   DEALLOCATE( lambda_all )
+  IF ( ALLOCATED(gamma_all) )    DEALLOCATE( gamma_all )
+  IF ( ALLOCATED(sigmai_all) )   DEALLOCATE( sigmai_all )
+  IF ( ALLOCATED(sigmai_mode) )  DEALLOCATE( sigmai_mode )
+  IF ( ALLOCATED(w2) )           DEALLOCATE( w2 )
   DEALLOCATE(cfac)
   DEALLOCATE(cfacq)
   DEALLOCATE(rdotk)
   DEALLOCATE(irvec_r)
-
+  DEALLOCATE(irvec_kk)
+  DEALLOCATE(irvec_qq)
+  ! 
+  IF (.not. iterative_bte) CALL transport_coeffs (ef0,efcb)
+  !
+  IF ( ALLOCATED(inv_tau_all) )     DEALLOCATE( inv_tau_all )
+  IF ( ALLOCATED(inv_tau_allcb) )   DEALLOCATE( inv_tau_allcb )
+  IF ( ALLOCATED(zi_allvb) )        DEALLOCATE( zi_allvb )
+  IF ( ALLOCATED(zi_allcb) )        DEALLOCATE( zi_allcb )
   !
   CALL stop_clock ( 'ephwann' )
   !
@@ -1296,7 +1423,6 @@
   SUBROUTINE epw_write
   !-------------------------------------------
   !
-  USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem
   USE pwcom,     ONLY : ef, nelec, isk
   USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, cdmew, cvmew, chw_ks, &
@@ -1314,9 +1440,8 @@
   USE io_global, ONLY : ionode_id
   !
   implicit none
-  ! 
   LOGICAL             :: exst
-  INTEGER             :: ibnd, jbnd, jmode, imode, irk, irq, ipol, i, lrepmatw
+  INTEGER             :: ibnd, jbnd, jmode, imode, irk, irq, ipol, lrepmatw
   CHARACTER (len=256) :: filint
   !
   WRITE(6,'(/5x,"Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file"/)')
@@ -1325,8 +1450,11 @@
     !
     OPEN(unit=epwdata,file='epwdata.fmt')
     OPEN(unit=crystal,file='crystal.fmt')
-    OPEN(unit=iundmedata,file='dmedata.fmt')
-    IF (vme) OPEN(unit=iunvmedata,file='vmedata.fmt')
+    IF (vme) THEN 
+       OPEN(unit=iunvmedata,file='vmedata.fmt')
+    ELSE
+       OPEN(unit=iundmedata,file='dmedata.fmt')
+    ENDIF
     IF (eig_read) OPEN(unit=iunksdata,file='ksdata.fmt')
     WRITE (crystal,*) nat
     WRITE (crystal,*) nmodes
@@ -1350,8 +1478,11 @@
           WRITE (epwdata,*) chw(ibnd,jbnd,irk)
           IF (eig_read) WRITE (iunksdata,*) chw_ks(ibnd,jbnd,irk)
           DO ipol = 1,3
-            WRITE (iundmedata,*) cdmew(ipol, ibnd,jbnd,irk)
-            IF (vme) WRITE (iunvmedata,*) cvmew(ipol, ibnd,jbnd,irk)
+            IF (vme) THEN 
+              WRITE (iunvmedata,*) cvmew(ipol,ibnd,jbnd,irk)
+            ELSE
+              WRITE (iundmedata,*) cdmew(ipol,ibnd,jbnd,irk)
+            ENDIF
           ENDDO
         ENDDO
       ENDDO
@@ -1384,8 +1515,11 @@
     !
     CLOSE(epwdata)
     CLOSE(crystal)
-    CLOSE(iundmedata)
-    IF (vme) CLOSE(iunvmedata)
+    IF (vme) THEN 
+      CLOSE(iunvmedata)
+    ELSE
+      CLOSE(iundmedata)
+    ENDIF
     IF (eig_read) CLOSE(iunksdata)
     !
   ENDIF
@@ -1396,10 +1530,9 @@
   !---------------------------------
   SUBROUTINE epw_read()
   !---------------------------------
-  USE kinds,     ONLY : DP
   USE epwcom,    ONLY : nbndsub, vme, eig_read, etf_mem, lifc
   USE pwcom,     ONLY : ef
-  USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, ifc, epmatwp, &
+  USE elph2,     ONLY : nrr_k, nrr_q, chw, rdw, epmatwp, &
                         cdmew, cvmew, chw_ks, zstar, epsi
   USE ions_base, ONLY : nat
   USE phcom,     ONLY : nmodes  
@@ -1420,25 +1553,28 @@
   LOGICAL             :: exst
   CHARACTER (len=256) :: filint
   INTEGER             :: ibnd, jbnd, jmode, imode, irk, irq, &
-                         ipol, ios, i, lrepmatw
+                         ipol, ios, lrepmatw
   !
   WRITE(stdout,'(/5x,"Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file"/)')
   call flush(6)
   ! 
   ! This is important in restart mode as zstar etc has not been allocated
   IF (.NOT. ALLOCATED (zstar) ) ALLOCATE( zstar(3,3,nat) )
-  IF (.NOT. ALLOCATED (epsi) ) ALLOCATE( epsi(3,3) )
+  IF (.NOT. ALLOCATED (epsi) )  ALLOCATE( epsi(3,3) )
 
   IF (mpime.eq.ionode_id) THEN
     !
     OPEN(unit=epwdata,file='epwdata.fmt',status='old',iostat=ios)
     IF (ios /= 0) call errore ('ephwann_shuffle', 'error opening epwdata.fmt',epwdata)
-    OPEN(unit=iundmedata,file='dmedata.fmt',status='old',iostat=ios)
-    IF (ios /= 0) call errore ('ephwann_shuffle', 'error opening dmedata.fmt',iundmedata)
     IF (eig_read) OPEN(unit=iunksdata,file='ksdata.fmt',status='old',iostat=ios)
     IF (eig_read .AND. ios /= 0) call errore ('ephwann_shuffle', 'error opening ksdata.fmt',iunksdata)
-    IF (vme) OPEN(unit=iunvmedata,file='vmedata.fmt',status='old',iostat=ios)
-    IF (vme .AND. ios /= 0) call errore ('ephwann_shuffle', 'error opening vmedata.fmt',iunvmedata)
+    IF (vme) THEN 
+      OPEN(unit=iunvmedata,file='vmedata.fmt',status='old',iostat=ios)
+      IF (ios /= 0) call errore ('ephwann_shuffle', 'error opening vmedata.fmt',iunvmedata)
+    ELSE
+      OPEN(unit=iundmedata,file='dmedata.fmt',status='old',iostat=ios)
+      IF (ios /= 0) call errore ('ephwann_shuffle', 'error opening dmedata.fmt',iundmedata)
+    ENDIF
     READ (epwdata,*) ef
     READ (epwdata,*) nbndsub, nrr_k, nmodes, nrr_q
     READ (epwdata,*) zstar, epsi
@@ -1465,11 +1601,14 @@
   CALL mp_bcast (epsi, ionode_id, inter_pool_comm)
   CALL mp_bcast (epsi, root_pool, intra_pool_comm)
   !
-  IF (.not. ALLOCATED(chw)    ) ALLOCATE ( chw ( nbndsub, nbndsub, nrr_k )            )
-  IF (.not. ALLOCATED(chw_ks) ) ALLOCATE ( chw_ks ( nbndsub, nbndsub, nrr_k )         )
-  IF (.not. ALLOCATED(rdw)    ) ALLOCATE ( rdw ( nmodes,  nmodes,  nrr_q )            )
-  IF (.not. ALLOCATED(cdmew)  ) ALLOCATE ( cdmew ( 3, nbndsub, nbndsub, nrr_k )       )
-  IF (vme .and. (.not.ALLOCATED(cvmew))  ) ALLOCATE ( cvmew   ( 3, nbndsub, nbndsub, nrr_k )     )
+  IF (.not. ALLOCATED(chw)    ) ALLOCATE ( chw ( nbndsub, nbndsub, nrr_k ) )
+  IF (.not. ALLOCATED(chw_ks) ) ALLOCATE ( chw_ks ( nbndsub, nbndsub, nrr_k ) )
+  IF (.not. ALLOCATED(rdw)    ) ALLOCATE ( rdw ( nmodes,  nmodes,  nrr_q ) )
+  IF (vme) THEN 
+     IF (.not. ALLOCATED(cvmew) ) ALLOCATE ( cvmew ( 3, nbndsub, nbndsub, nrr_k ) )
+  ELSE
+     IF (.not. ALLOCATED(cdmew) ) ALLOCATE ( cdmew ( 3, nbndsub, nbndsub, nrr_k ) )
+  ENDIF
   !
   IF (mpime.eq.ionode_id) THEN
     !
@@ -1479,8 +1618,11 @@
              READ (epwdata,*) chw(ibnd,jbnd,irk)
              IF (eig_read) READ (iunksdata,*) chw_ks(ibnd,jbnd,irk)
              DO ipol = 1,3
-                READ (iundmedata,*) cdmew(ipol, ibnd,jbnd,irk)
-                IF (vme) READ (iunvmedata,*) cvmew(ipol, ibnd,jbnd,irk)
+                IF (vme) THEN 
+                   READ (iunvmedata,*) cvmew(ipol,ibnd,jbnd,irk)
+                ELSE
+                   READ (iundmedata,*) cdmew(ipol,ibnd,jbnd,irk)
+                ENDIF
              ENDDO
           ENDDO
        ENDDO
@@ -1507,12 +1649,14 @@
   IF (.not. lifc) CALL mp_bcast (rdw, ionode_id, inter_pool_comm)
   IF (.not. lifc) CALL mp_bcast (rdw, root_pool, intra_pool_comm)
   !
-  CALL mp_bcast (cdmew, ionode_id, inter_pool_comm)
-  CALL mp_bcast (cdmew, root_pool, intra_pool_comm)
+  IF (vme) THEN 
+     CALL mp_bcast (cvmew, ionode_id, inter_pool_comm)
+     CALL mp_bcast (cvmew, root_pool, intra_pool_comm)
+  ELSE
+     CALL mp_bcast (cdmew, ionode_id, inter_pool_comm)
+     CALL mp_bcast (cdmew, root_pool, intra_pool_comm)
+  ENDIF
   !
-  IF (vme) CALL mp_bcast (cvmew, ionode_id, inter_pool_comm)
-  IF (vme) CALL mp_bcast (cvmew, root_pool, intra_pool_comm)
-  
   IF (lifc) CALL read_ifc
   !
   IF (etf_mem == 0) then
@@ -1542,8 +1686,11 @@
   CALL mp_barrier(inter_pool_comm)
   IF (mpime.eq.ionode_id) THEN
     CLOSE(epwdata)
-    CLOSE(iundmedata)
-    IF (vme) CLOSE(iunvmedata)
+    IF (vme) THEN 
+       CLOSE(iunvmedata)
+    ELSE
+       CLOSE(iundmedata)
+    ENDIF
   ENDIF
   !
   WRITE(stdout,'(/5x,"Finished reading Wann rep data from file"/)')
@@ -1818,5 +1965,298 @@
   ! ----------------------------------------------------------------------
   end subroutine rwepmatw
   ! ----------------------------------------------------------------------
-        
+  ! 
+  !-----------------------------------------------------------------------
+  FUNCTION fermicarrier( temp )
+  !-----------------------------------------------------------------------
+  !!
+  !!  This subroutine computes the Fermi energy associated with a given 
+  !!  carrier concentration using bissection
+  !!
+  !-----------------------------------------------------------------------
+  USE cell_base, ONLY : omega, alat, at
+  USE kinds,     ONLY : DP
+  USE io_global, ONLY : stdout
+  USE elph2,     ONLY : etf, nkf, wkf
+  USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm
+  USE noncollin_module, ONLY : noncolin
+  USE pwcom,     ONLY : nelec
+  USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, &
+                        system_2d, carrier
+  USE mp,        ONLY : mp_barrier, mp_sum, mp_max, mp_min
+  USE mp_global, ONLY : inter_pool_comm
+  !
+  IMPLICIT NONE
+  !
+  REAL(KIND=DP), intent(in) :: temp
+  !! Temperature in kBT [Ry] unit.
+  INTEGER :: i
+  !! Index for the bisection iteration
+  INTEGER :: ik
+  !! k-point index per pool
+  INTEGER :: ikk
+  !! Odd index to read etf
+  INTEGER :: ibnd
+  !! Local band index
+  INTEGER :: ivbm
+  !! Index of the VBM
+  INTEGER :: icbm
+  !! Index of the CBM
+  INTEGER, PARAMETER :: maxiter = 500 ! 300
+  !! Maximum interation
+  REAL(KIND=DP) :: fermicarrier
+  !! Fermi level returned
+  REAL(KIND=DP) :: fnk
+  !! Fermi-Diract occupation
+  REAL(KIND=DP) :: ks_exp(nbndsub, nkf)
+  !! Exponential of the eigenvalues divided by kBT
+  REAL(KIND=DP) :: fermi_exp
+  !! Fermi level in exponential format
+  REAL(KIND=DP) :: rel_err
+  !! Relative error
+  REAL(KIND=DP) :: factor
+  !! Factor that goes from number of carrier per unit cell to number of
+  !! carrier per cm^-3
+  REAL(KIND=DP) :: arg
+  !! Argument of the exponential
+  REAL(KIND=DP) :: inv_cell
+  !! Inverse of the volume in [Bohr^{-3}]
+  REAL(KIND=DP) :: evbm
+  !! Energy of the VBM
+  REAL(KIND=DP) :: ecbm
+  !! Energy of the CBM
+  REAL(KIND=DP) :: Ef
+  !! Energy of the current Fermi level for the bisection method
+  REAL(KIND=DP) :: Elw
+  !! Energy lower bound for the bisection method
+  REAL(KIND=DP) :: Eup
+  !! Energy upper bound for the bisection method
+  REAL(KIND=DP) :: hole_density
+  !! Hole carrier density
+  REAL(KIND=DP) :: electron_density 
+  !! Electron carrier density
+  REAL(DP), PARAMETER :: maxarg = 200.d0
+  !! Maximum value for the argument of the exponential
+  REAL(DP), PARAMETER :: eps= 1.0d-5
+  !! Tolerence to be converged [relative]
+  ! 
+  Ef = 0.0d0
+  ! 
+  inv_cell = 1.0d0/omega
+  ! for 2d system need to divide by area (vacuum in z-direction)
+  IF ( system_2d ) &
+     inv_cell = inv_cell * at(3,3) * alat
 
+  ! vbm index
+  IF ( noncolin ) THEN
+    ivbm = FLOOR(nelec/1.0d0)
+  ELSE
+    ivbm = FLOOR(nelec/2.0d0)
+  ENDIF  
+  icbm = ivbm + 1 ! Nb of bands
+  !
+  ! Initialization value. Should be large enough ...
+  evbm = -10000
+  ecbm = 10000 ! In Ry
+  ! 
+  DO ik = 1, nkf
+    ikk = 2 * ik - 1
+    DO ibnd = 1, nbndsub
+      IF ( ibnd < ivbm+1) THEN
+        IF (etf (ibnd, ikk) > evbm ) THEN
+          evbm = etf (ibnd, ikk)
+        ENDIF
+      ENDIF
+      ! Find cbm index 
+      IF (ibnd > ivbm) THEN
+        IF (etf (ibnd, ikk) < ecbm ) THEN
+          ecbm = etf (ibnd, ikk)
+        ENDIF
+      ENDIF
+      ! 
+    ENDDO
+  ENDDO
+  !
+  ! Find max and min across pools
+  !         
+  call mp_max( evbm, inter_pool_comm )
+  call mp_min( ecbm, inter_pool_comm )
+  !    
+  WRITE( stdout, '(5x,"Valence band maximum    = ",f10.6," eV")' )  evbm * ryd2ev
+  WRITE( stdout, '(5x,"Conduction band minimum = ",f10.6," eV")' )  ecbm * ryd2ev
+
+
+  !WRITE(stdout,*),'evbm ',evbm * ryd2ev
+  !WRITE(stdout,*),'ecbm ',ecbm * ryd2ev
+  !WRITE(stdout,*),'temp ',temp * ryd2ev
+  ! 
+  ! Store e^(e_nk/kbT) on each core
+  DO ik = 1, nkf
+    DO ibnd = 1, nbndsub
+      ikk = 2 * ik - 1
+      ! Because the number are so large. It does lead to instabilities
+      ! Therefore we rescale everything to the VBM
+      arg = (etf (ibnd, ikk) - evbm )/ temp 
+      !
+      IF (arg .lt. - maxarg) THEN
+        ks_exp(ibnd,ik) = 0.0
+      ELSE
+        ks_exp(ibnd,ik) = exp (arg)
+      ENDIF
+    ENDDO
+  ENDDO
+  ! 
+  ! Starting bounds energy for the biscection method. The energies are rescaled
+  ! to the VBM
+  Elw = 1.0d0
+  Eup = exp (- (ecbm-evbm) / temp)
+  !
+  ! Intrinsic mobilities (electron and hole concentration are the same)   
+  IF (int_mob .AND. .NOT. carrier) THEN
+    ! Use bisection method
+    DO i = 1, maxiter
+      !
+      !WRITE(stdout,*),'Iteration ',i
+      ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
+      Ef = SQRT(Eup)*SQRT(Elw)     
+      ! 
+      !WRITE(stdout,*),'Ef ', - log (Ef) * temp * ryd2ev
+      hole_density = 0.0
+      electron_density = 0.0
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        ! Compute hole carrier concentration
+        DO ibnd = 1, ivbm 
+          ! Discard very large numbers
+          IF (ks_exp(ibnd,ik) * Ef > 10E30) THEN
+            fnk = 0.0d0
+          ELSE
+            fnk = 1.0d0 / ( ks_exp(ibnd,ik) * Ef  + 1.0d0)  
+          ENDIF
+          ! The wkf(ikk) already include a factor 2
+          hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk)
+        ENDDO
+        ! Compute electron carrier concentration
+        DO ibnd = icbm, nbndsub            
+          ! Discard very large numbers
+          IF (ks_exp(ibnd,ik) * Ef > 10E30) THEN
+            fnk = 0.0d0
+          ELSE
+            fnk = 1.0d0 / ( ks_exp(ibnd,ik) * Ef  + 1.0d0)
+          ENDIF
+          ! The wkf(ikk) already include a factor 2
+          electron_density = electron_density + wkf(ikk) * fnk
+        ENDDO    
+        ! 
+      ENDDO 
+      !
+      CALL mp_sum( hole_density, inter_pool_comm )
+      CALL mp_sum( electron_density, inter_pool_comm )
+      ! 
+!      WRITE(stdout,*),'hole_density ',hole_density * (1.0d0/omega) * ( bohr2ang * ang2cm  )**(-3)
+!      WRITE(stdout,*),'electron_density ',electron_density * (1.0d0/omega) * (bohr2ang * ang2cm  )**(-3)
+      rel_err = (hole_density-electron_density) / hole_density
+      !
+      IF (abs (rel_err) < eps) THEN
+        fermi_exp = Ef
+        fermicarrier = (- log (fermi_exp) * temp) + evbm
+        return
+      ELSEIF( (rel_err) > eps) THEN
+        Elw = Ef                           
+      ELSE                                   
+        Eup = Ef 
+      ENDIF
+    ENDDO ! iteration
+  ENDIF 
+  ! 
+  factor = inv_cell * ( bohr2ang * ang2cm  )**(-3)
+  ! Electron doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)   
+  IF (ncarrier > 1E5) THEN
+    ! Use bisection method
+    DO i = 1, maxiter
+      ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
+      Ef = SQRT(Eup)*SQRT(Elw)
+      ! 
+      electron_density = 0.0
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        ! Compute electron carrier concentration
+        DO ibnd = icbm, nbndsub
+          ! Discard very large numbers
+          IF (ks_exp(ibnd,ik) * Ef > 10E30) THEN
+            fnk = 0.0d0
+          ELSE
+            fnk = 1.0d0 / ( ks_exp(ibnd,ik) * Ef  + 1.0d0)
+          ENDIF
+          ! The wkf(ikk) already include a factor 2
+          electron_density = electron_density + wkf(ikk) * fnk * factor
+        ENDDO
+        ! 
+      ENDDO
+      !
+      CALL mp_sum( electron_density, inter_pool_comm )
+      ! 
+      rel_err = (electron_density-ncarrier) / electron_density
+      !
+      IF (abs (rel_err) < eps) THEN
+        fermi_exp = Ef
+        fermicarrier = (- log (fermi_exp) * temp) + evbm
+        return
+      ELSEIF( (rel_err) > eps) THEN
+        Eup = Ef
+      ELSE
+        Elw = Ef
+      ENDIF
+    ENDDO ! iteration
+  ENDIF
+  ! 
+  ! Hole doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)   
+  IF (ncarrier < -1E5) THEN
+    ! Use bisection method
+    DO i = 1, maxiter
+      ! We want Ef = (Eup + Elw) / 2.d0 but the variables are exp therefore:
+      Ef = SQRT(Eup)*SQRT(Elw)
+      ! 
+      hole_density = 0.0
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        ! Compute hole carrier concentration
+        DO ibnd = 1, ivbm
+          ! Discard very large numbers
+          IF (ks_exp(ibnd,ik) * Ef > 10E30) THEN
+            fnk = 0.0d0
+          ELSE
+            fnk = 1.0d0 / ( ks_exp(ibnd,ik) * Ef  + 1.0d0)
+          ENDIF
+          ! The wkf(ikk) already include a factor 2
+          hole_density = hole_density + wkf(ikk) * (1.0d0 - fnk) * factor
+        ENDDO
+        ! 
+      ENDDO
+      !
+      CALL mp_sum( hole_density, inter_pool_comm )
+      !
+      ! In this case ncarrier is a negative number
+      rel_err = (hole_density-ABS(ncarrier)) / hole_density
+      !
+      IF (abs (rel_err) < eps) THEN
+        fermi_exp = Ef
+        fermicarrier = (- log (fermi_exp) * temp) + evbm
+        return
+      ELSEIF( (rel_err) > eps) THEN
+        Elw = Ef
+      ELSE
+        Eup = Ef
+      ENDIF
+    ENDDO ! iteration
+  ENDIF
+  ! 
+  fermi_exp = Ef
+  fermicarrier = (- log (fermi_exp) * temp) + evbm
+  ! 
+  WRITE( stdout, '(5x,"Warning: too many iterations in bisection"/ &
+       &      5x,"Ef = ",f10.6)' ) fermicarrier * ryd2ev
+  !
+  return   
+  END FUNCTION fermicarrier
+  !--------------------------------------------------------------------------

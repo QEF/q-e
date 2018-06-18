@@ -70,7 +70,7 @@
 #else
       USE io_base,            ONLY: read_rhog
 #endif      
-      USE io_files,           ONLY: tmp_dir, prefix
+      USE io_files,           ONLY: tmp_dir, prefix, postfix
       USE fft_rho
       USE fft_helper_subroutines, ONLY: c2psi_gamma
       !
@@ -191,8 +191,8 @@
             CALL read_rho( dirname, rhor, nspin )
 #else
             CALL errore('rhoofr','option trhor unverified, please report',1)
-            WRITE(dirname,'(A,A,"_",I2,".save/")') &
-                 TRIM(tmp_dir), TRIM(prefix), ndr
+            WRITE(dirname,'(A,A,"_",I2,A)') &
+                 TRIM(tmp_dir), TRIM(prefix), ndr,postfix
             CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
                  ig_l2g, nspin, rhog )
             CALL rho_g2r ( dfftp, rhog, rhor )

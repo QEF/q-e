@@ -55,7 +55,8 @@
                                 lberry,nppstr,nberrycyc,                                                              &
                                 nconstr_inp, nc_fields, constr_type_inp, constr_target_inp, constr_inp, tconstr,      &
                                 constr_tol_inp, constrained_magnetization, lambda, fixed_magnetization, input_dft,    &
-                                tf_inp, ip_ibrav => ibrav                                                        
+                                tf_inp, ip_ibrav => ibrav,                                                            &
+                                gate, zgate, relaxz, block, block_1, block_2, block_height
 !
   USE fixed_occ,         ONLY:  f_inp               
                                 
@@ -69,7 +70,8 @@
                                  get_dft_is_nonlocc => dft_is_nonlocc, get_nonlocc_name, get_dft_short
   USE uspp_param,        ONLY:   upf
   USE control_flags,     ONLY:   cf_nstep => nstep 
-  USE qes_module
+  USE qes_types_module
+  USE qes_libs_module
   USE qexsd_module,      ONLY: qexsd_init_atomic_species, qexsd_init_atomic_structure, qexsd_init_dft
   USE qexsd_input  
   IMPLICIT NONE
@@ -91,8 +93,13 @@
   CHARACTER(len=20)                        ::   dft_shortname
   CHARACTER(len=25)                        ::   dft_longname
   CHARACTER(LEN=80)                        ::  vdw_corr_  
+  LOGICAL,TARGET                           ::  gate_tgt, block_tgt, relaxz_tgt
+  LOGICAL,POINTER                          ::  gate_ptr, block_ptr, relaxz_ptr
+  REAL(DP),TARGET                          ::  block_1_tgt, block_2_tgt, block_height_tgt, zgate_tgt
+  REAL(DP),POINTER                         ::  block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr
   !
   ! 
+  NULLIFY (gate_ptr, block_ptr, relaxz_ptr, block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr)
 #if !defined(__OLDXML)
   obj%tagname=TRIM(obj_tagname)
   IF ( ABS(ip_ibrav)  .GT. 0 ) THEN  
@@ -332,10 +339,28 @@
   !-------------------------------------------------------------------------------------------------------------------------------
   !                                ELECTRIC FIELD
   !--------------------------------------------------------------------------------------------------------------------------- 
-  IF (tefield .OR. lelfield .OR. lberry ) THEN 
+  IF (tefield .OR. lelfield .OR. lberry .or. gate ) THEN 
      obj%electric_field_ispresent=.TRUE.
-     CALL qexsd_init_electric_field_input(obj%electric_field, tefield, dipfield, lelfield, lberry, edir, gdir,        &
-                                                  emaxpos, eopreg, eamp, efield, efield_cart, nberrycyc, nppstr )
+     IF ( gate ) THEN 
+         gate_tgt = gate
+         gate_ptr => gate_tgt
+         zgate_tgt = zgate
+         zgate_ptr => zgate_tgt
+         block_tgt = block
+         block_ptr => block_tgt
+         block_1_tgt = block_1
+         block_1_ptr => block_1_tgt
+         block_2_tgt = block_2
+         block_2_ptr => block_2_tgt
+         block_height_tgt = block_height
+         block_height_ptr => block_height_tgt
+         relaxz_tgt = relaxz 
+         relaxz_ptr => relaxz_tgt
+     END IF
+     CALL qexsd_init_electric_field_input(obj%electric_field, tefield, dipfield, lelfield, lberry,       &
+                              edir, gdir, emaxpos, eopreg, eamp, efield, efield_cart, nberrycyc, nppstr, &
+                              GATE = gate_ptr, ZGATE = zgate_ptr, RELAXZ = relaxz_ptr, BLOCK = block_ptr,&
+                              BLOCK_1 = block_1_ptr, BLOCK_2 = block_2_ptr, BLOCK_HEIGHT = block_height_ptr)
   ELSE
      obj%electric_field_ispresent=.FALSE.
   END IF

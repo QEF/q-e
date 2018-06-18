@@ -13,12 +13,11 @@ SUBROUTINE loadkmesh_para
   !!  load fine k mesh and distribute among pools
   !!
   !-----------------------------------------------------------------------
-  USE io_global, ONLY : ionode_id
+  USE io_global, ONLY : ionode_id, stdout
   USE mp_global, ONLY : inter_pool_comm, my_pool_id, npool
   USE mp,        ONLY : mp_bcast, mp_sum
   USE mp_world,  ONLY : mpime 
   USE kinds,     ONLY : DP
-  USE io_global, ONLY : stdout
   USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, &
                         rand_k, rand_nk, mp_mesh_k, system_2d
   USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf
@@ -28,15 +27,31 @@ SUBROUTINE loadkmesh_para
 
   USE noncollin_module, ONLY : noncolin
   !
-  implicit none
+  IMPLICIT NONE
   !
-  real(kind=DP), ALLOCATABLE :: xkf_(:,:), wkf_(:), xkf_tmp(:,:)
-  REAL(kind=DP), ALLOCATABLE :: wkf_tmp(:)
-  REAL(kind=DP), ALLOCATABLE :: xkfval(:,:)
-  integer :: ik, ikk, ikq, lower_bnd, upper_bnd, i, j, k, ios
+  INTEGER :: ios
+  !! integer variable for I/O control
+  INTEGER :: ik
+  !! Counter on the k-point index
+  INTEGER :: ikk
+  !! k-point index
+  INTEGER :: ikq
+  !! q-point index
+  INTEGER :: idir
+  !! Crystal direction (G-vector)
+  INTEGER :: lower_bnd
+  !! Lower bounds index after k paral
+  INTEGER :: upper_bnd
+  !! Upper bounds index after k paral
+  INTEGER :: i, j, k
+  !! Counter on the k-point index along nkf1, nkf2, nkf3
+  INTEGER :: rest
+  !! rest from the division of nr of q-points over pools
   !
-  !
-  integer :: rest
+  REAL(kind=DP), ALLOCATABLE :: xkf_(:,:), xkf_tmp(:,:), xkfval(:,:)
+  !! coordinates k-points
+  REAL(kind=DP), ALLOCATABLE :: wkf_(:), wkf_tmp(:)
+  !! weights k-points
   !
   IF (mpime .eq. ionode_id) THEN
     IF (filkf .ne. '') THEN ! load from file (crystal coordinates)
@@ -84,7 +99,7 @@ SUBROUTINE loadkmesh_para
                0,0,0, nkf1,nkf2,nkf3, nkqtotf, xkf_, wkf_)
           DEALLOCATE (xkf_, wkf_)
           ALLOCATE ( xkf_ (3, 2*nkqtotf), wkf_(2*nkqtotf)) 
-          ALLOCATE (xkf_tmp (3,nkqtotf), wkf_tmp(nkqtotf))
+          ALLOCATE ( xkf_tmp (3,nkqtotf), wkf_tmp(nkqtotf))
           ALLOCATE ( xkfval (3, 2*nkqtotf))   
           xkf_(:,:) = 0.0d0
           xkfval(:,:) = 0.0d0
@@ -96,14 +111,14 @@ SUBROUTINE loadkmesh_para
           ! SP: The variable xkfval is a duplication. However, it allows to avoid some strange 
           !     memory allocation issue. FIXME
           DO ik = 1, nkqtotf
-             ikk = 2 * ik - 1
-             ikq = ikk + 1
-             xkf_(:,ikk)   = xkf_tmp(:,ik)
-             xkf_(:,ikq)   = xkf_tmp(:,ik)
-             xkfval(:,ikk) = xkf_tmp(:,ik)
-             xkfval(:,ikq) = xkf_tmp(:,ik)
-             wkf_(ikk)   = 2.d0 * wkf_tmp(ik)
-             wkf_(ikq)   = 0.d0
+            ikk = 2 * ik - 1
+            ikq = ikk + 1
+            xkf_(:,ikk)   = xkf_tmp(:,ik)
+            xkf_(:,ikq)   = xkf_tmp(:,ik)
+            xkfval(:,ikk) = xkf_tmp(:,ik)
+            xkfval(:,ikq) = xkf_tmp(:,ik)
+            wkf_(ikk)   = 2.d0 * wkf_tmp(ik)
+            wkf_(ikq)   = 0.d0
           ENDDO
           DEALLOCATE (xkf_tmp, wkf_tmp)
           !       
@@ -111,6 +126,15 @@ SUBROUTINE loadkmesh_para
           !CALL cryst_to_cart (2*nkqtotf, xkf_, at, -1)
           CALL cryst_to_cart (2*nkqtotf, xkfval, at, -1)
           xkf_(:,:) = xkfval(:,:)
+          ! 
+          ! Fold the points in the region [0-1] from the region -0.5,0.5
+          DO ik = 1, 2*nkqtotf
+            DO idir=1, 3
+              IF (xkf_(idir,ik) < 0.0 ) THEN
+                xkf_(idir,ik) = xkf_(idir,ik) + 1.0
+              ENDIF 
+            ENDDO
+          ENDDO 
           !
           ! redefine nkqtotf to include the k+q points
           !
@@ -251,22 +275,35 @@ SUBROUTINE loadkmesh_serial
 !!  Load fine k mesh
 !!
 !-----------------------------------------------------------------------
-  USE io_global, ONLY : ionode_id
+  USE io_global, ONLY : ionode_id, stdout
   USE mp_global, ONLY : inter_pool_comm
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : mpime
   USE kinds,     ONLY : DP
-  USE io_global, ONLY : stdout
   USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, &
                         rand_k, rand_nk, mp_mesh_k, system_2d
   USE elph2,     ONLY : xkf, wkf, nkqtotf, nkf, nkqf
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
   USE io_epw,    ONLY : iunkf
-  implicit none
   !
-  integer :: ik, i, j, k, ios, ikk, ikq
-  real(kind=DP), ALLOCATABLE ::  xkf_tmp(:,:), wkf_tmp(:)
+  IMPLICIT NONE
+  !
+  INTEGER :: ios
+  !! integer variable for I/O control
+  INTEGER :: ik
+  !! Counter on the k-point index
+  INTEGER :: ikk
+  !! k-point index
+  INTEGER :: ikq
+  !! q-point index
+  INTEGER :: i, j, k
+  !! Counter on the k-point index along nkf1, nkf2, nkf3
+  !
+  REAL(kind=DP), ALLOCATABLE :: xkf_tmp(:,:)
+  !! coordinates k-points
+  REAL(kind=DP), ALLOCATABLE :: wkf_tmp(:)
+  !! weights k-points
   !
   IF (mpime .eq. ionode_id) THEN
     IF (filkf .ne. '') THEN ! load from file (crystal coordinates)

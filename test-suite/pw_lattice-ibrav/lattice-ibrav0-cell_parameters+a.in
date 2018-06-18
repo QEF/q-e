@@ -4,6 +4,7 @@
  &system    
     ibrav = 0
     nat=2, ntyp=1,
+    nbnd = 4,
     ecutwfc = 25.0
     a=5.29177
  /

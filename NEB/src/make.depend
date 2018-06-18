@@ -94,7 +94,6 @@ path_base.o : path_reparametrisation.o
 path_base.o : path_variables.o
 path_gen_inputs.o : ../../Modules/mp_global.o
 path_input_parameters_module.o : ../../Modules/kind.o
-path_input_parameters_module.o : ../../Modules/parameters.o
 path_interpolation.o : ../../Modules/basic_algebra_routines.o
 path_interpolation.o : ../../Modules/cell_base.o
 path_interpolation.o : ../../Modules/constants.o

@@ -21,7 +21,6 @@ MODULE path_input_parameters_module
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx
   !
   IMPLICIT NONE
   !

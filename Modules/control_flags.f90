@@ -38,7 +38,8 @@ MODULE control_flags
             timing, memchk, trane, dt_old, ampre, tranp, amprp,              &
             tnosee, tnosep, tnoseh, tcp, tcap,                               &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
-            tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem
+            tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem,    &
+            tfirst, tlast, tprint
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
@@ -50,6 +51,12 @@ MODULE control_flags
   LOGICAL :: trhor     = .FALSE. ! read rho from unit 47 (only cp, seldom used)
   LOGICAL :: trhow     = .FALSE. ! CP code, write rho to restart dir
   LOGICAL :: tksw      = .FALSE. ! CP: write Kohn-Sham states to restart dir
+  LOGICAL :: tfirst    = .TRUE.  ! CP: true if first iteration after restart
+  LOGICAL :: tlast     = .FALSE. ! CP: true if last iteration before ending
+  LOGICAL :: tprint    = .FALSE. ! CP: set to true when calculation of time
+                                 !     derivatives of wave functions must be 
+                                 !     computed via projection on occupied
+                                 !     manifold 
   !
   LOGICAL :: tsde          = .FALSE. ! electronic steepest descent
   LOGICAL :: tzeroe        = .FALSE. ! set to zero the electronic velocities
