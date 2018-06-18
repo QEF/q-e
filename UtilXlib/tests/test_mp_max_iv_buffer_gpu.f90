@@ -19,8 +19,8 @@ PROGRAM test_mp_max_iv_buffer_gpu
     TYPE(tester_t) :: test
     INTEGER :: world_group = 0
     ! test variable
-    REAL(DP), DEVICE :: iv_d(200001)
-    REAL(DP) :: iv_h(200001)
+    INTEGER, DEVICE :: iv_d(200001)
+    INTEGER :: iv_h(200001)
     !
     CALL test%init()
     
