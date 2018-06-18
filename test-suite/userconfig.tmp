@@ -93,7 +93,7 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (1.0   , 1.0e-2, 'mobav'),
               (1.0e+10, 1.0e+2, 'density'),
               (1.0   , 1.0e-2, 'mobxZ'),
-              (250.0 , None  , 'indabs'))
+              (350.0 , None  , 'indabs'))
 
 skip_program = grep
 skip_args = 'not present in this version'

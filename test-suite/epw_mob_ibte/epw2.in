@@ -24,8 +24,8 @@
   vme         = .false.
 
   scissor     =  0.7
-  nstemp      =   3
-  tempsmin    = 300
+  nstemp      =   2
+  tempsmin    = 400
   tempsmax    = 500
 
   restart      = .true.
