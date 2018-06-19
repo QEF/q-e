@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------
-[[11447,1],0]: A high-performance Open MPI point-to-point messaging module
+[[13855,1],0]: A high-performance Open MPI point-to-point messaging module
 was unable to find any relevant network interfaces:
 
 Module: OpenFabrics (openib)
@@ -37,7 +37,7 @@ lower performance.
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 18Jun2018 at 15:54: 0 
+     Program EPW v.5.0.0 starts on 19Jun2018 at  9:33:31 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -47,10 +47,9 @@ lower performance.
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
+     Parallel version (MPI), running on     1 processors
 
      MPI processes distributed on     1 nodes
-     K-points division:     npool     =       4
 
      Reading data from directory:
      ./si.save/
@@ -64,7 +63,7 @@ lower performance.
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
-     Sum         211     211     85                 2109     2109     531
+     Sum         295     295    109                 3287     3287     725
  
 
      --                                                                         
@@ -74,8 +73,8 @@ lower performance.
      unit-cell volume          =     270.1693 (a.u.)^3
      number of atoms/cell      =            2
      number of atomic types    =            1
-     kinetic-energy cut-off    =      15.0000  Ry
-     charge density cut-off    =      60.0000  Ry
+     kinetic-energy cut-off    =      20.0000  Ry
+     charge density cut-off    =      80.0000  Ry
      convergence threshold     =      0.0E+00
      beta                      =       0.0000
      number of iterations used =            0
@@ -104,10 +103,10 @@ lower performance.
         1        Si  28.0879   tau( 1) = (    0.00000    0.00000    0.00000  )
         2        Si  28.0879   tau( 2) = (    0.25000    0.25000    0.25000  )
  
-     25 Sym.Ops. (with q -> -q+G )
+     49 Sym.Ops. (with q -> -q+G )
 
 
-     G cutoff =  160.0499  (   2109 G-vectors)     FFT grid: ( 18, 18, 18)
+     G cutoff =  213.3999  (   3287 G-vectors)     FFT grid: ( 24, 24, 24)
      number of k points=   64
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0312500
@@ -187,9 +186,9 @@ lower performance.
                 l(4) =   1
                 l(5) =   2
                 l(6) =   2
-     EPW          :     0.39s CPU         0.40s WALL
+     EPW          :     0.43s CPU         0.46s WALL
 
-     EPW          :     0.45s CPU         0.47s WALL
+     EPW          :     0.56s CPU         0.59s WALL
 
      No wavefunction gauge setting applied
      -------------------------------------------------------------------
@@ -223,61 +222,157 @@ lower performance.
       - All neighbours are found 
  
      AMN
-      k points =    64 in    4 pools
-            1 of   16 on ionode
-            2 of   16 on ionode
-            3 of   16 on ionode
-            4 of   16 on ionode
-            5 of   16 on ionode
-            6 of   16 on ionode
-            7 of   16 on ionode
-            8 of   16 on ionode
-            9 of   16 on ionode
-           10 of   16 on ionode
-           11 of   16 on ionode
-           12 of   16 on ionode
-           13 of   16 on ionode
-           14 of   16 on ionode
-           15 of   16 on ionode
-           16 of   16 on ionode
+      k points =    64 in    1 pools
+            1 of   64 on ionode
+            2 of   64 on ionode
+            3 of   64 on ionode
+            4 of   64 on ionode
+            5 of   64 on ionode
+            6 of   64 on ionode
+            7 of   64 on ionode
+            8 of   64 on ionode
+            9 of   64 on ionode
+           10 of   64 on ionode
+           11 of   64 on ionode
+           12 of   64 on ionode
+           13 of   64 on ionode
+           14 of   64 on ionode
+           15 of   64 on ionode
+           16 of   64 on ionode
+           17 of   64 on ionode
+           18 of   64 on ionode
+           19 of   64 on ionode
+           20 of   64 on ionode
+           21 of   64 on ionode
+           22 of   64 on ionode
+           23 of   64 on ionode
+           24 of   64 on ionode
+           25 of   64 on ionode
+           26 of   64 on ionode
+           27 of   64 on ionode
+           28 of   64 on ionode
+           29 of   64 on ionode
+           30 of   64 on ionode
+           31 of   64 on ionode
+           32 of   64 on ionode
+           33 of   64 on ionode
+           34 of   64 on ionode
+           35 of   64 on ionode
+           36 of   64 on ionode
+           37 of   64 on ionode
+           38 of   64 on ionode
+           39 of   64 on ionode
+           40 of   64 on ionode
+           41 of   64 on ionode
+           42 of   64 on ionode
+           43 of   64 on ionode
+           44 of   64 on ionode
+           45 of   64 on ionode
+           46 of   64 on ionode
+           47 of   64 on ionode
+           48 of   64 on ionode
+           49 of   64 on ionode
+           50 of   64 on ionode
+           51 of   64 on ionode
+           52 of   64 on ionode
+           53 of   64 on ionode
+           54 of   64 on ionode
+           55 of   64 on ionode
+           56 of   64 on ionode
+           57 of   64 on ionode
+           58 of   64 on ionode
+           59 of   64 on ionode
+           60 of   64 on ionode
+           61 of   64 on ionode
+           62 of   64 on ionode
+           63 of   64 on ionode
+           64 of   64 on ionode
  
      AMN calculated
  
      MMN
-      k points =    64 in    4 pools
-            1 of   16 on ionode
-            2 of   16 on ionode
-            3 of   16 on ionode
-            4 of   16 on ionode
-            5 of   16 on ionode
-            6 of   16 on ionode
-            7 of   16 on ionode
-            8 of   16 on ionode
-            9 of   16 on ionode
-           10 of   16 on ionode
-           11 of   16 on ionode
-           12 of   16 on ionode
-           13 of   16 on ionode
-           14 of   16 on ionode
-           15 of   16 on ionode
-           16 of   16 on ionode
+      k points =    64 in    1 pools
+            1 of   64 on ionode
+            2 of   64 on ionode
+            3 of   64 on ionode
+            4 of   64 on ionode
+            5 of   64 on ionode
+            6 of   64 on ionode
+            7 of   64 on ionode
+            8 of   64 on ionode
+            9 of   64 on ionode
+           10 of   64 on ionode
+           11 of   64 on ionode
+           12 of   64 on ionode
+           13 of   64 on ionode
+           14 of   64 on ionode
+           15 of   64 on ionode
+           16 of   64 on ionode
+           17 of   64 on ionode
+           18 of   64 on ionode
+           19 of   64 on ionode
+           20 of   64 on ionode
+           21 of   64 on ionode
+           22 of   64 on ionode
+           23 of   64 on ionode
+           24 of   64 on ionode
+           25 of   64 on ionode
+           26 of   64 on ionode
+           27 of   64 on ionode
+           28 of   64 on ionode
+           29 of   64 on ionode
+           30 of   64 on ionode
+           31 of   64 on ionode
+           32 of   64 on ionode
+           33 of   64 on ionode
+           34 of   64 on ionode
+           35 of   64 on ionode
+           36 of   64 on ionode
+           37 of   64 on ionode
+           38 of   64 on ionode
+           39 of   64 on ionode
+           40 of   64 on ionode
+           41 of   64 on ionode
+           42 of   64 on ionode
+           43 of   64 on ionode
+           44 of   64 on ionode
+           45 of   64 on ionode
+           46 of   64 on ionode
+           47 of   64 on ionode
+           48 of   64 on ionode
+           49 of   64 on ionode
+           50 of   64 on ionode
+           51 of   64 on ionode
+           52 of   64 on ionode
+           53 of   64 on ionode
+           54 of   64 on ionode
+           55 of   64 on ionode
+           56 of   64 on ionode
+           57 of   64 on ionode
+           58 of   64 on ionode
+           59 of   64 on ionode
+           60 of   64 on ionode
+           61 of   64 on ionode
+           62 of   64 on ionode
+           63 of   64 on ionode
+           64 of   64 on ionode
      MMN calculated
  
      Running Wannier90
  
      Wannier Function centers (cartesian, alat) and spreads (ang):
  
-     (   0.04113   0.04113   0.04113) :   2.22844
-     (   0.04113  -0.04113  -0.04113) :   2.22844
-     (  -0.04113   0.04113  -0.04113) :   2.22844
-     (  -0.04113  -0.04113   0.04113) :   2.22844
-     (   0.33400   0.33400   0.33400) :   1.84745
-     (   0.33400   0.16600   0.16600) :   1.84745
-     (   0.16600   0.33400   0.16600) :   1.84745
-     (   0.16600   0.16600   0.33400) :   1.84745
+     (   0.04117   0.04117   0.04117) :   2.23801
+     (   0.04117  -0.04117  -0.04117) :   2.23801
+     (  -0.04117   0.04117  -0.04117) :   2.23801
+     (  -0.04117  -0.04117   0.04117) :   2.23801
+     (   0.33383   0.33383   0.33383) :   1.85742
+     (   0.33383   0.16617   0.16617) :   1.85742
+     (   0.16617   0.33383   0.16617) :   1.85742
+     (   0.16617   0.16617   0.33383) :   1.85742
  
      -------------------------------------------------------------------
-     WANNIER      :      1.95s CPU      2.18s WALL (       1 calls)
+     WANNIER      :     10.15s CPU     10.35s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
@@ -286,27 +381,27 @@ lower performance.
      Calculating kmap and kgmap
      Progress  kmap: ########################################
      Progress kgmap: ########################################
-     kmaps        :      0.51s CPU      0.57s WALL (       1 calls)
+     kmaps        :      1.10s CPU      1.21s WALL (       1 calls)
 
      Reading interatomic force constants
 
   Read Z*, epsilon
-     IFC last   -0.0033813
+     IFC last   -0.0033824
      Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000244
+     Norm of the difference between old and new force-constants:    0.0000252
      Imposed crystal ASR
 
      Finished reading ifcs
 
      Symmetries of bravais lattice:  48
-     Symmetries of crystal:          24
+     Symmetries of crystal:          48
 
 
      ===================================================================
      irreducible q point #    1
      ===================================================================
 
-     Symmetries of small group of q: 24
+     Symmetries of small group of q: 48
           in addition sym. q -> -q+G:
  
      Number of q in the star =    1
@@ -323,40 +418,40 @@ lower performance.
      irreducible q point #    2
      ===================================================================
 
-     Symmetries of small group of q:  6
+     Symmetries of small group of q: 12
           in addition sym. q -> -q+G:
  
      Number of q in the star =    4
      List of q in the star:
           1   0.500000000  -0.500000000   0.500000000
-          2  -0.500000000   0.500000000   0.500000000
-          3   0.500000000   0.500000000  -0.500000000
-          4  -0.500000000  -0.500000000  -0.500000000
+          2   0.500000000   0.500000000  -0.500000000
+          3  -0.500000000  -0.500000000  -0.500000000
+          4   0.500000000  -0.500000000  -0.500000000
      Dyn mat calculated from ifcs
  
         q(    2 ) = (   0.5000000  -0.5000000   0.5000000 )
-        q(    3 ) = (  -0.5000000   0.5000000   0.5000000 )
-        q(    4 ) = (   0.5000000   0.5000000  -0.5000000 )
-        q(    5 ) = (  -0.5000000  -0.5000000  -0.5000000 )
+        q(    3 ) = (   0.5000000   0.5000000  -0.5000000 )
+        q(    4 ) = (  -0.5000000  -0.5000000  -0.5000000 )
+        q(    5 ) = (   0.5000000  -0.5000000  -0.5000000 )
 
 
      ===================================================================
      irreducible q point #    3
      ===================================================================
 
-     Symmetries of small group of q:  8
+     Symmetries of small group of q: 16
           in addition sym. q -> -q+G:
  
      Number of q in the star =    3
      List of q in the star:
           1   0.000000000  -1.000000000   0.000000000
-          2   0.000000000   0.000000000  -1.000000000
-          3  -1.000000000   0.000000000   0.000000000
+          2  -1.000000000   0.000000000   0.000000000
+          3   0.000000000   0.000000000   1.000000000
      Dyn mat calculated from ifcs
  
         q(    6 ) = (   0.0000000  -1.0000000   0.0000000 )
-        q(    7 ) = (   0.0000000   0.0000000  -1.0000000 )
-        q(    8 ) = (  -1.0000000   0.0000000   0.0000000 )
+        q(    7 ) = (  -1.0000000   0.0000000   0.0000000 )
+        q(    8 ) = (   0.0000000   0.0000000   1.0000000 )
 
      Writing epmatq on .epb files
 
@@ -375,9 +470,9 @@ lower performance.
      Reading interatomic force constants
 
   Read Z*, epsilon
-     IFC last   -0.0033813
+     IFC last   -0.0033824
      Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000244
+     Norm of the difference between old and new force-constants:    0.0000252
      Imposed crystal ASR
 
      Finished reading ifcs
@@ -386,15 +481,15 @@ lower performance.
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        47Mb
-                   VmPeak =       424Mb
+     Memory usage:  VmHWM =        54Mb
+                   VmPeak =       285Mb
      ===================================================================
      
      Using q-mesh file: ./LGX.txt
      Size of q point mesh for interpolation:        100
       Using k-mesh file: ./LGX.txt
      Size of k point mesh for interpolation:        200
-     Max number of k points per pool:               50
+     Max number of k points per pool:              200
 
      Fermi energy coarse grid =   0.000000 eV
 
@@ -404,44 +499,44 @@ lower performance.
 
      ===================================================================
 
-              ibndmin =     2  ebndmin =    -0.073
-              ibndmax =     2  ebndmax =     0.067
+              ibndmin =     2  ebndmin =    -0.063
+              ibndmax =     2  ebndmax =     0.066
 
 
-     Number of ep-matrix elements per pool :          150 ~=    1.17 Kb (@ 8 bytes/ DP)
+     Number of ep-matrix elements per pool :          600 ~=    4.69 Kb (@ 8 bytes/ DP)
      Progression iq (fine) =         50/       100
      Progression iq (fine) =        100/       100
      ===================================================================
-     Memory usage:  VmHWM =        47Mb
-                   VmPeak =       426Mb
+     Memory usage:  VmHWM =        54Mb
+                   VmPeak =       285Mb
      ===================================================================
 
  
      Unfolding on the coarse grid
-     elphon_wrap  :      6.75s CPU      6.91s WALL (       1 calls)
+     elphon_wrap  :     42.92s CPU     43.85s WALL (       1 calls)
  
      INITIALIZATION: 
  
-     set_drhoc    :      0.20s CPU      0.20s WALL (       9 calls)
+     set_drhoc    :      0.31s CPU      0.31s WALL (       9 calls)
      init_vloc    :      0.01s CPU      0.01s WALL (      10 calls)
-     init_us_1    :      0.08s CPU      0.08s WALL (      10 calls)
+     init_us_1    :      0.09s CPU      0.09s WALL (      10 calls)
  
  
      Electron-Phonon interpolation
-     ephwann      :      0.77s CPU      0.96s WALL (       1 calls)
-     ep-interp    :      0.50s CPU      0.58s WALL (     100 calls)
+     ephwann      :      1.71s CPU      2.04s WALL (       1 calls)
+     ep-interp    :      1.39s CPU      1.60s WALL (     100 calls)
  
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
-     Ham: step 2  :      0.01s CPU      0.02s WALL (       1 calls)
-     ep: step 1   :      0.00s CPU      0.00s WALL (      48 calls)
-     ep: step 2   :      0.03s CPU      0.04s WALL (      48 calls)
-     DynW2B       :      0.01s CPU      0.00s WALL (     100 calls)
-     HamW2B       :      0.13s CPU      0.14s WALL (    5050 calls)
-     ephW2Bp      :      0.14s CPU      0.21s WALL (     100 calls)
+     Ham: step 2  :      0.01s CPU      0.03s WALL (       1 calls)
+     ep: step 1   :      0.01s CPU      0.01s WALL (      48 calls)
+     ep: step 2   :      0.07s CPU      0.07s WALL (      48 calls)
+     DynW2B       :      0.00s CPU      0.00s WALL (     100 calls)
+     HamW2B       :      0.55s CPU      0.55s WALL (   20200 calls)
+     ephW2Bp      :      0.14s CPU      0.33s WALL (     100 calls)
  
  
      Total program execution
-     EPW          :     9.92s CPU        10.51s WALL
+     EPW          :    55.33s CPU        56.83s WALL
 
                                                                                           
  Please consider citing:                                                                  

@@ -11,7 +11,7 @@
     celldm(1)       = 10.262
     nat             = 2
     ntyp            = 1
-    ecutwfc         = 15
+    ecutwfc         = 20
     noncolin        =.false.
     lspinorb        =.false.
     nbnd            = 10
