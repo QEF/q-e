@@ -65,9 +65,9 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  fsthick     = 3.0
+  fsthick     = 4.0
   eptemp      = 1 ! K 
-  degaussw    = 0.05 ! eV
+  degaussw    = 0.1 ! eV
 
   dvscf_dir   = './save/'
   

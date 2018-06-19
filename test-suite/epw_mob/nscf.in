@@ -11,15 +11,15 @@
     celldm(1)       = 10.262
     nat             = 2
     ntyp            = 1
-    ecutwfc         = 20
-    noncolin        =.false.
-    lspinorb        =.false.
-    nbnd            = 10
+    ecutwfc         = 15
+    noncolin        =.true.
+    lspinorb        =.true.
+    nbnd            = 20
  /
  &electrons
     diagonalization = 'david'
     mixing_beta     = 0.7
-    conv_thr        = 1.0d-9
+    conv_thr        = 1.0d-10
  /
 ATOMIC_SPECIES
   Si  28.0855  Si_r.upf

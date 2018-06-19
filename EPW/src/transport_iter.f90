@@ -185,6 +185,8 @@
     REAL(kind=DP) :: wkf_tmp(nkqtotf)
     !! Temporary k-weights (dummy variable)
     ! 
+    CALL start_clock ('MOBITER')
+    !
     inv_cell = 1.0d0/omega
     ! for 2d system need to divide by area (vacuum in z-direction)
     IF ( system_2d ) &
@@ -835,7 +837,7 @@
           ! carrier_density in cm^-1
           carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm  )**(-3)         
           WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV,&
-                                                           ef0(itemp)*ryd2ev, carrier_density, mobility_xx, '  x-axis'
+                                                           efcb(itemp)*ryd2ev, carrier_density, mobility_xx, '  x-axis'
           WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
           WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
           WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
@@ -845,9 +847,14 @@
           ! 
         ENDDO ! itemp
       ENDIF ! Electron mobility
+      ! Timing
+      CALL stop_clock ('MOBITER')
+      WRITE( stdout,  * ) '    Total time so far'
+      CALL print_clock ('MOBITER')
+      WRITE(stdout,'(5x)')
       !
     ENDIF ! iq == nq
-    !
+    ! 
     RETURN
     !
     ! ---------------------------------------------------------------------------

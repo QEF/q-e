@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------
-[[13604,1],0]: A high-performance Open MPI point-to-point messaging module
+[[27492,1],0]: A high-performance Open MPI point-to-point messaging module
 was unable to find any relevant network interfaces:
 
 Module: OpenFabrics (openib)
@@ -9,7 +9,7 @@ Another transport will be used instead, although this may result in
 lower performance.
 --------------------------------------------------------------------------
 
-     Program Q2R v.6.3rc starts on 19Jun2018 at  9:33:21 
+     Program Q2R v.6.3rc starts on 19Jun2018 at 15:13:53 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -23,43 +23,31 @@ lower performance.
 
      MPI processes distributed on     1 nodes
 
-     reading grid info from file si.dyn0    
+     reading grid info from file si.dyn0.xml
   reading force constants from file si.dyn1
- macroscopic fields = T
-  23.41898   0.00000   0.00000
-   0.00000  23.41898   0.00000
-   0.00000   0.00000  23.41898
-  na=            1
-  -1.16174   0.00000   0.00000
-   0.00000  -1.16174   0.00000
-   0.00000   0.00000  -1.16174
-  na=            2
-  -1.16174   0.00000   0.00000
-   0.00000  -1.16174   0.00000
-   0.00000   0.00000  -1.16174
-Norm of the difference between old and new effective charges:    2.84566193353070140404
+Norm of the difference between old and new effective charges:    2.78758358911622172727
   nqs=            1
  q=   0.00000000  0.00000000  0.00000000
   reading force constants from file si.dyn2
   nqs=            4
  q=   0.50000000 -0.50000000  0.50000000
+ q=  -0.50000000  0.50000000  0.50000000
  q=   0.50000000  0.50000000 -0.50000000
  q=  -0.50000000 -0.50000000 -0.50000000
- q=   0.50000000 -0.50000000 -0.50000000
   reading force constants from file si.dyn3
   nqs=            3
  q=   0.00000000 -1.00000000  0.00000000
+ q=   0.00000000  0.00000000 -1.00000000
  q=  -1.00000000  0.00000000  0.00000000
- q=   0.00000000  0.00000000  1.00000000
 
       q-space grid ok, #points =    8
 
       fft-check success (sum of imaginary terms < 10^-12)
  
-     Q2R          :     0.00s CPU         0.00s WALL
+     Q2R          :     0.06s CPU         0.06s WALL
 
  
-   This run was terminated on:   9:33:21  19Jun2018            
+   This run was terminated on:  15:13:53  19Jun2018            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -1,5 +1,15 @@
+--------------------------------------------------------------------------
+[[5775,1],0]: A high-performance Open MPI point-to-point messaging module
+was unable to find any relevant network interfaces:
 
-     Program Q2R v.6.3rc starts on 18Jun2018 at 10:32: 0 
+Module: OpenFabrics (openib)
+  Host: magneto
+
+Another transport will be used instead, although this may result in
+lower performance.
+--------------------------------------------------------------------------
+
+     Program Q2R v.6.3rc starts on 19Jun2018 at 15:30:21 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -16,18 +26,18 @@
      reading grid info from file si.dyn0    
   reading force constants from file si.dyn1
  macroscopic fields = T
-  13.98415   0.00000  -0.00000
-   0.00000  13.98415  -0.00000
-  -0.00000  -0.00000  13.98415
+  13.98415   0.00000   0.00000
+   0.00000  13.98415   0.00000
+   0.00000   0.00000  13.98415
   na=            1
-  -0.23424  -0.00000  -0.00000
-  -0.00000  -0.23424   0.00000
-  -0.00000   0.00000  -0.23424
+  -0.23424   0.00000   0.00000
+   0.00000  -0.23424   0.00000
+   0.00000   0.00000  -0.23424
   na=            2
-  -0.23475  -0.00000   0.00000
+  -0.23475   0.00000   0.00000
    0.00000  -0.23475   0.00000
-   0.00000  -0.00000  -0.23475
-Norm of the difference between old and new effective charges:    0.57439715223193799076
+   0.00000   0.00000  -0.23475
+Norm of the difference between old and new effective charges:    0.57439715801395851980
   nqs=            1
  q=   0.00000000  0.00000000  0.00000000
   reading force constants from file si.dyn2
@@ -45,11 +55,11 @@ Norm of the difference between old and new effective charges:    0.5743971522319
       q-space grid ok, #points =    8
 
       fft-check success (sum of imaginary terms < 10^-12)
-
+ 
      Q2R          :     0.00s CPU         0.00s WALL
 
-
-   This run was terminated on:  10:32: 0  18Jun2018            
+ 
+   This run was terminated on:  15:30:21  19Jun2018            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

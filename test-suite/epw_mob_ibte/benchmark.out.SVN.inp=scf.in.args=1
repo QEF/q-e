@@ -1,5 +1,15 @@
+--------------------------------------------------------------------------
+[[4584,1],0]: A high-performance Open MPI point-to-point messaging module
+was unable to find any relevant network interfaces:
 
-     Program PWSCF v.6.3rc starts on 18Jun2018 at 10:30:28 
+Module: OpenFabrics (openib)
+  Host: magneto
+
+Another transport will be used instead, although this may result in
+lower performance.
+--------------------------------------------------------------------------
+
+     Program PWSCF v.6.3rc starts on 19Jun2018 at 15:30:22 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -23,12 +33,12 @@
      Subspace diagonalization in iterative solution of the eigenvalue problem:
      a serial algorithm will be used
 
-
+ 
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         151     151     55                 1139     1139     283
-
+ 
 
 
      bravais-lattice index     =            2
@@ -459,7 +469,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      starting charge    7.99877, renormalised to    8.00000
      Starting wfcs are    8 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.3 secs
 
      Self-consistent Calculation
 
@@ -473,7 +483,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      Davidson diagonalization with overlap
      ethr =  6.84E-04,  avg # of iterations =  1.1
 
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.4 secs
 
      total energy              =     -16.84542024 Ry
      Harris-Foulkes estimate   =     -16.85510633 Ry
@@ -483,7 +493,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      Davidson diagonalization with overlap
      ethr =  6.80E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.4 secs
 
      total energy              =     -16.84661549 Ry
      Harris-Foulkes estimate   =     -16.84682547 Ry
@@ -493,7 +503,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      Davidson diagonalization with overlap
      ethr =  3.69E-05,  avg # of iterations =  1.4
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.5 secs
 
      total energy              =     -16.84682708 Ry
      Harris-Foulkes estimate   =     -16.84682816 Ry
@@ -503,7 +513,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      Davidson diagonalization with overlap
      ethr =  2.75E-07,  avg # of iterations =  3.4
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.5 secs
 
      total energy              =     -16.84685875 Ry
      Harris-Foulkes estimate   =     -16.84685977 Ry
@@ -513,7 +523,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      Davidson diagonalization with overlap
      ethr =  2.83E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.3 secs
+     total cpu time spent up to now is        0.6 secs
 
      total energy              =     -16.84685904 Ry
      Harris-Foulkes estimate   =     -16.84685922 Ry
@@ -523,7 +533,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      Davidson diagonalization with overlap
      ethr =  5.13E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.6 secs
 
      total energy              =     -16.84685908 Ry
      Harris-Foulkes estimate   =     -16.84685908 Ry
@@ -533,7 +543,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      Davidson diagonalization with overlap
      ethr =  2.43E-11,  avg # of iterations =  3.2
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.7 secs
 
      total energy              =     -16.84685909 Ry
      Harris-Foulkes estimate   =     -16.84685909 Ry
@@ -543,7 +553,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      Davidson diagonalization with overlap
      ethr =  1.40E-12,  avg # of iterations =  2.4
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.7 secs
 
      total energy              =     -16.84685909 Ry
      Harris-Foulkes estimate   =     -16.84685909 Ry
@@ -553,7 +563,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      Davidson diagonalization with overlap
      ethr =  4.79E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.7 secs
 
      total energy              =     -16.84685909 Ry
      Harris-Foulkes estimate   =     -16.84685909 Ry
@@ -563,7 +573,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      Davidson diagonalization with overlap
      ethr =  2.70E-13,  avg # of iterations =  1.8
 
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        0.8 secs
 
      total energy              =     -16.84685909 Ry
      Harris-Foulkes estimate   =     -16.84685909 Ry
@@ -573,7 +583,7 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        0.8 secs
 
      End of self-consistent calculation
 
@@ -706,25 +716,25 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
 
      Forces acting on atoms (cartesian axes, Ry/au):
 
-     atom    1 type  1   force =     0.00000000   -0.00000000    0.00000000
-     atom    2 type  1   force =    -0.00000000   -0.00000000    0.00000000
+     atom    1 type  1   force =    -0.00000000    0.00000000   -0.00000000
+     atom    2 type  1   force =    -0.00000000    0.00000000   -0.00000000
      The non-local contrib.  to forces
-     atom    1 type  1   force =     0.00000000   -0.00000000    0.00000000
+     atom    1 type  1   force =    -0.00000000    0.00000000   -0.00000000
      atom    2 type  1   force =     0.00000000   -0.00000000    0.00000000
      The ionic contribution  to forces
-     atom    1 type  1   force =    -0.00000000   -0.00000000   -0.00000000
-     atom    2 type  1   force =    -0.00000000   -0.00000000   -0.00000000
+     atom    1 type  1   force =    -0.00000000    0.00000000   -0.00000000
+     atom    2 type  1   force =     0.00000000   -0.00000000   -0.00000000
      The local contribution  to forces
      atom    1 type  1   force =     0.00000000   -0.00000000   -0.00000000
      atom    2 type  1   force =     0.00000000    0.00000000    0.00000000
      The core correction contribution to forces
-     atom    1 type  1   force =    -0.00000000    0.00000000   -0.00000000
-     atom    2 type  1   force =     0.00000000    0.00000000    0.00000000
+     atom    1 type  1   force =     0.00000000   -0.00000000   -0.00000000
+     atom    2 type  1   force =    -0.00000000   -0.00000000    0.00000000
      The Hubbard contrib.    to forces
      atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
      atom    2 type  1   force =     0.00000000    0.00000000    0.00000000
      The SCF correction term to forces
-     atom    1 type  1   force =    -0.00000000    0.00000000    0.00000000
+     atom    1 type  1   force =    -0.00000000   -0.00000000    0.00000000
      atom    2 type  1   force =     0.00000000   -0.00000000   -0.00000000
 
      Total force =     0.000000     Total SCF correction =     0.000000
@@ -733,33 +743,33 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      Computing stress (Cartesian axis) and pressure
 
           total   stress  (Ry/bohr**3)                   (kbar)     P=  -67.23
-  -0.00045703  -0.00000000  -0.00000000        -67.23     -0.00     -0.00
-  -0.00000000  -0.00045703   0.00000000         -0.00    -67.23      0.00
-   0.00000000   0.00000000  -0.00045703          0.00      0.00    -67.23
+  -0.00045703   0.00000000   0.00000000        -67.23      0.00      0.00
+   0.00000000  -0.00045703  -0.00000000          0.00    -67.23     -0.00
+   0.00000000  -0.00000000  -0.00045703          0.00     -0.00    -67.23
 
-     kinetic stress (kbar)   2201.89      0.00      0.00
-                                0.00   2201.89      0.00
-                                0.00      0.00   2201.89
+     kinetic stress (kbar)   2201.89     -0.00     -0.00
+                               -0.00   2201.89      0.00
+                               -0.00      0.00   2201.89
 
-     local   stress (kbar)   -110.53     -0.00     -0.00
-                               -0.00   -110.53      0.00
-                               -0.00      0.00   -110.53
+     local   stress (kbar)   -110.53      0.00      0.00
+                                0.00   -110.53     -0.00
+                                0.00     -0.00   -110.53
 
-     nonloc. stress (kbar)   1645.34     -0.00     -0.00
-                               -0.00   1645.34     -0.00
-                               -0.00     -0.00   1645.34
+     nonloc. stress (kbar)   1645.34      0.00      0.00
+                                0.00   1645.34     -0.00
+                                0.00     -0.00   1645.34
 
      hartree stress (kbar)    194.61     -0.00     -0.00
-                               -0.00    194.61      0.00
-                               -0.00      0.00    194.61
+                               -0.00    194.61     -0.00
+                               -0.00     -0.00    194.61
 
-     exc-cor stress (kbar)   -169.45      0.00      0.00
-                                0.00   -169.45     -0.00
-                                0.00     -0.00   -169.45
+     exc-cor stress (kbar)   -169.45     -0.00      0.00
+                               -0.00   -169.45      0.00
+                                0.00      0.00   -169.45
 
-     corecor stress (kbar)   -780.36      0.00     -0.00
-                                0.00   -780.36     -0.00
-                               -0.00     -0.00   -780.36
+     corecor stress (kbar)   -780.36     -0.00     -0.00
+                               -0.00   -780.36      0.00
+                               -0.00      0.00   -780.36
 
      ewald   stress (kbar)  -3048.73     -0.00     -0.00
                                -0.00  -3048.73     -0.00
@@ -792,59 +802,59 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
 
 
      Writing output data file si.save/
-
-     init_run     :      0.09s CPU      0.08s WALL (       1 calls)
-     electrons    :      0.61s CPU      0.33s WALL (       1 calls)
-     forces       :      0.03s CPU      0.02s WALL (       1 calls)
-     stress       :      0.12s CPU      0.06s WALL (       1 calls)
+ 
+     init_run     :      0.04s CPU      0.05s WALL (       1 calls)
+     electrons    :      0.45s CPU      0.47s WALL (       1 calls)
+     forces       :      0.01s CPU      0.01s WALL (       1 calls)
+     stress       :      0.02s CPU      0.03s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.02s CPU      0.01s WALL (       1 calls)
+     wfcinit      :      0.02s CPU      0.02s WALL (       1 calls)
      wfcinit:atom :      0.00s CPU      0.00s WALL (      16 calls)
-     wfcinit:wfcr :      0.02s CPU      0.01s WALL (      16 calls)
+     wfcinit:wfcr :      0.01s CPU      0.02s WALL (      16 calls)
      potinit      :      0.00s CPU      0.00s WALL (       1 calls)
-     hinit0       :      0.06s CPU      0.06s WALL (       1 calls)
+     hinit0       :      0.02s CPU      0.02s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.51s CPU      0.27s WALL (      12 calls)
-     sum_band     :      0.06s CPU      0.04s WALL (      12 calls)
-     v_of_rho     :      0.04s CPU      0.02s WALL (      12 calls)
+     c_bands      :      0.38s CPU      0.39s WALL (      12 calls)
+     sum_band     :      0.05s CPU      0.05s WALL (      12 calls)
+     v_of_rho     :      0.03s CPU      0.02s WALL (      12 calls)
      v_h          :      0.00s CPU      0.00s WALL (      12 calls)
-     v_xc         :      0.05s CPU      0.03s WALL (      14 calls)
+     v_xc         :      0.03s CPU      0.03s WALL (      14 calls)
      mix_rho      :      0.00s CPU      0.00s WALL (      12 calls)
 
      Called by c_bands:
-     init_us_2    :      0.02s CPU      0.03s WALL (     432 calls)
-     cegterg      :      0.34s CPU      0.18s WALL (     192 calls)
+     init_us_2    :      0.04s CPU      0.04s WALL (     432 calls)
+     cegterg      :      0.24s CPU      0.25s WALL (     192 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      0.28s CPU      0.14s WALL (     566 calls)
-     g_psi        :      0.00s CPU      0.00s WALL (     358 calls)
-     cdiaghg      :      0.04s CPU      0.03s WALL (     534 calls)
-     cegterg:over :      0.01s CPU      0.01s WALL (     358 calls)
-     cegterg:upda :      0.00s CPU      0.00s WALL (     358 calls)
+     h_psi        :      0.20s CPU      0.21s WALL (     566 calls)
+     g_psi        :      0.01s CPU      0.00s WALL (     358 calls)
+     cdiaghg      :      0.03s CPU      0.03s WALL (     534 calls)
+     cegterg:over :      0.00s CPU      0.01s WALL (     358 calls)
+     cegterg:upda :      0.01s CPU      0.01s WALL (     358 calls)
      cegterg:last :      0.00s CPU      0.00s WALL (     197 calls)
 
      Called by h_psi:
-     h_psi:pot    :      0.28s CPU      0.14s WALL (     566 calls)
-     h_psi:calbec :      0.04s CPU      0.01s WALL (     566 calls)
-     vloc_psi     :      0.20s CPU      0.11s WALL (     566 calls)
-     add_vuspsi   :      0.03s CPU      0.01s WALL (     566 calls)
+     h_psi:pot    :      0.20s CPU      0.21s WALL (     566 calls)
+     h_psi:calbec :      0.02s CPU      0.02s WALL (     566 calls)
+     vloc_psi     :      0.16s CPU      0.17s WALL (     566 calls)
+     add_vuspsi   :      0.02s CPU      0.02s WALL (     566 calls)
 
      General routines
-     calbec       :      0.04s CPU      0.01s WALL (     646 calls)
+     calbec       :      0.01s CPU      0.02s WALL (     646 calls)
      fft          :      0.01s CPU      0.01s WALL (     146 calls)
      ffts         :      0.00s CPU      0.00s WALL (      12 calls)
-     fftw         :      0.19s CPU      0.10s WALL (    5014 calls)
-
+     fftw         :      0.17s CPU      0.18s WALL (    5014 calls)
+ 
      Parallel routines
+ 
+     PWSCF        :     0.81s CPU         0.84s WALL
 
-     PWSCF        :     0.97s CPU         0.59s WALL
-
-
-   This run was terminated on:  10:30:29  18Jun2018            
+ 
+   This run was terminated on:  15:30:22  19Jun2018            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

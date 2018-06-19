@@ -18,7 +18,7 @@
   lifc        = .true.
   asr_typ     = 'crystal'
 
-  nbndsub     =  8
+  nbndsub     =  16
   nbndskip    =  0
 
   wannierize  = .true.

@@ -1,1 +1,1 @@
-&input fildyn='si.dyn', zasr='crystal', flfrc='si.fc' /
+&input fildyn='si.dyn.xml', zasr='crystal', flfrc='si.fc' /

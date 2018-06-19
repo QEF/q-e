@@ -135,6 +135,8 @@
     REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
     !! Tolerence
     ! 
+    CALL start_clock ( 'SCAT' )
+    ! 
     IF ( iq .eq. 1 ) THEN
       !
       WRITE(stdout,'(/5x,a)') repeat('=',67)
@@ -557,6 +559,8 @@
       ENDIF ! restart
       ! 
     ENDIF ! iq 
+    !
+    CALL stop_clock ( 'SCAT' )
     ! DBSP
     !write(stdout,*),'iq ',iq
     !print*,shape(inv_tau_all)
@@ -724,7 +728,7 @@
     !REAL(kind=DP) :: vk_cart(3)
     !!! veloctiy in cartesian coordinate
     !REAL(kind=DP) :: sa(3,3), sb(3,3), sr(3,3)
-
+    CALL start_clock('MOB')
     !
     inv_cell = 1.0d0/omega
     ! for 2d system need to divide by area (vacuum in z-direction)
@@ -795,8 +799,7 @@
                   ELSE
                     vkk(:,ibnd) = 2.0 * REAL (dmef_all (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
                   ENDIF
-                  ! We take itemp = 1 only !!!!
-                  tau = one / inv_tau_all(1,ibnd,ik)
+                  tau = one / inv_tau_all(itemp,ibnd,ik)
                   ekk = etf_all (ibndmin-1+ibnd, ik) -  ef0(itemp)
                   ! 
                   DO j = 1, 3
@@ -875,7 +878,7 @@
                   ELSE 
                     vkk(:,ibnd) = 2.0 * REAL (dmef_all (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
                   ENDIF
-                  tau = one / inv_tau_all(1,ibnd,ik)
+                  tau = one / inv_tau_all(itemp,ibnd,ik)
                   ekk = etf_all (ibndmin-1+ibnd, ik) -  ef0(itemp)
                   ! 
                   DO j = 1, 3
@@ -1454,6 +1457,13 @@
         ! 
       ENDIF ! Electron mobilities
     ENDIF ! scatread
+    !
+    CALL stop_clock('MOB')
+    ! 
+    WRITE( stdout,  * ) '    Total time so far'
+    CALL print_clock ('SCAT')
+    CALL print_clock ('MOB')
+    WRITE(stdout,'(5x)')
     ! 
     !! IF IBTE we want the SRTA solution to be the first iteration of IBTE
     !IF (iterative_bte) THEN
