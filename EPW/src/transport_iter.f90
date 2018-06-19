@@ -38,7 +38,7 @@
     USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, vmef, & 
                               wf, wqf, xkf, epf17, nqtotf, nkqtotf, inv_tau_all, xqf, & 
                               F_current, Fi_all, F_SERTA, F_currentcb, Fi_allcb, &
-                              F_SERTAcb, inv_tau_allcb
+                              F_SERTAcb, inv_tau_allcb, BZtoIBZ, s_BZtoIBZ
     USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                               ixkqf_tr, s_BZtoIBZ_full
     USE constants_epw, ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, & 
@@ -49,6 +49,7 @@
     USE io_global,     ONLY : ionode_id
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE superconductivity, ONLY : kpmq_map
+    USE noncollin_module, ONLY : noncolin
     !
     IMPLICIT NONE
     !
@@ -95,11 +96,12 @@
     !! Index of the pool the the k+q point is
     INTEGER :: nkq_abs
     !! Index of the k+q point from the full grid. 
-    INTEGER :: BZtoIBZ(nkf1*nkf2*nkf3)
-    !! Map between the full uniform k-grid and the IBZ
-    INTEGER :: s_BZtoIBZ(3,3,nkf1*nkf2*nkf3)
-    !! Save the symmetry operation that brings BZ k into IBZ
     INTEGER :: nkqtotf_tmp
+    !! Temporary k-q points.
+    INTEGER :: ikbz
+    !! k-point index that run on the full BZ
+    INTEGER :: nb
+    !! Number of points in the BZ corresponding to a point in IBZ 
     ! 
     REAL(KIND=DP) :: tau
     !! Relaxation time
@@ -168,8 +170,15 @@
     !! Current q-point 
     REAL(kind=DP) :: xkk(3)
     !! Current k-point on the fine grid
+    REAL(kind=DP) :: Fi_cart(3)
+    !! Cartesian Fi_all 
     REAL(kind=DP) :: Fi_rot(3)
     !! Rotated Fi_all by the symmetry operation
+    REAL(kind=DP) :: v_rot(3)
+    !! Rotated velocity by the symmetry operation
+    REAL(kind=DP) :: vk_cart(3)
+    !! veloctiy in cartesian coordinate
+    REAL(kind=DP) :: sa(3,3), sb(3,3), sr(3,3)
     !
     !
     REAL(KIND=DP), EXTERNAL :: DDOT
@@ -263,8 +272,6 @@
           ! 
           CALL set_sym_bl( )
           !
-          BZtoIBZ(:) = 0
-          s_BZtoIBZ(:,:,:) = 0 
           ! What we get from this call is BZtoIBZ
           CALL kpoint_grid_epw ( nrot, time_reversal, .false., s, t_rev, bg, nkf1*nkf2*nkf3, &
                      nkf1,nkf2,nkf3, nkqtotf_tmp, xkf_tmp, wkf_tmp,BZtoIBZ,s_BZtoIBZ)
@@ -630,13 +637,60 @@
                     vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
                   ENDIF
                   ! 
-                  ij = 0
-                  DO j = 1, 3
-                    DO i = 1, 3
-                      ij = ij + 1
-                      tdf_sigma(ij) = vkk(i,ibnd) * Fi_all(j,ibnd,ik+lower_bnd-1,itemp)
+                  ! Use k-point symmetries.  
+                  IF (mp_mesh_k) THEN
+                    !
+                    vk_cart(:) = vkk(:,ibnd)
+                    Fi_cart(:) = Fi_all(:,ibnd,ik+lower_bnd-1,itemp)
+                    ! 
+                    ! Loop on full BZ 
+                    tdf_sigma(:) = zero
+                    nb = 0
+                    DO ikbz=1, nkf1*nkf2*nkf3
+                      ! If the k-point from the full BZ is related by a symmetry operation 
+                      ! to the current k-point, then take it.  
+                      IF (BZtoIBZ(ikbz) == ik+lower_bnd-1) THEN
+                        nb = nb + 1
+                        ! Transform the symmetry matrix from Crystal to cartesian
+                        sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
+                        sb = matmul ( bg, sa )
+                        sr (:,:) = matmul ( at, transpose (sb) )
+                        CALL dgemv( 'n', 3, 3, 1.d0,&
+                          sr, 3, vk_cart(:),1 ,0.d0 , v_rot(:), 1 )
+                        ! 
+                        CALL dgemv( 'n', 3, 3, 1.d0,&
+                          sr, 3, Fi_cart(:),1 ,0.d0 , Fi_rot(:), 1 )
+                        !
+                        ij = 0
+                        DO j = 1, 3
+                          DO i = 1, 3
+                            ij = ij + 1
+                            ! The factor two in the weight at the end is to account for spin
+                            IF (noncolin) THEN
+                              tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 1.0 / (nkf1*nkf2*nkf3)
+                            ELSE
+                              tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 2.0 / (nkf1*nkf2*nkf3)
+                            ENDIF
+                          ENDDO
+                        ENDDO
+                      ENDIF
+                    ENDDO ! ikbz 
+                    IF (ABS(nb*1.0/(nkf1*nkf2*nkf3) - wkf(ikk)) < eps6) THEN
+                      CALL errore ('transport', &
+                               &' The number of kpoint in the IBZ is not equal to the weight', 1)
+                    ENDIF
+                  ! withtout symmetries
+                  ELSE
+                    ! 
+                    ij = 0
+                    DO j = 1, 3
+                      DO i = 1, 3
+                        ij = ij + 1
+                        tdf_sigma(ij) = vkk(i,ibnd) * Fi_all(j,ibnd,ik+lower_bnd-1,itemp) * wkf(ikk)
+                      ENDDO
                     ENDDO
-                  ENDDO
+                    !
+                  ENDIF ! mp_mesh_k
                   ! 
                   !  energy at k (relative to Ef)
                   ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
@@ -646,7 +700,7 @@
                   dfnk = w0gauss( ekk / etemp, -99 ) / etemp          
                   !
                   ! electrical conductivity
-                  Sigma(:,itemp) = Sigma(:,itemp) + wkf(ikk) * dfnk * tdf_sigma(:)
+                  Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
                 ENDIF
               ENDDO ! iband
             ENDIF ! fsthick
@@ -731,14 +785,60 @@
                     ELSE
                       vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
                     ENDIF
-                    ! 
-                    ij = 0
-                    DO j = 1, 3
-                      DO i = 1, 3
-                        ij = ij + 1
-                        tdf_sigma(ij) = vkk(i,ibnd) * Fi_all(j,ibnd,ik+lower_bnd-1,itemp)
+                    ! Use k-point symmetries.  
+                    IF (mp_mesh_k) THEN
+                      !
+                      vk_cart(:) = vkk(:,ibnd)
+                      Fi_cart(:) = Fi_all(:,ibnd,ik+lower_bnd-1,itemp)
+                      ! 
+                      ! Loop on full BZ 
+                      tdf_sigma(:) = zero
+                      nb = 0
+                      DO ikbz=1, nkf1*nkf2*nkf3
+                        ! If the k-point from the full BZ is related by a symmetry operation 
+                        ! to the current k-point, then take it.  
+                        IF (BZtoIBZ(ikbz) == ik+lower_bnd-1) THEN
+                          nb = nb + 1
+                          ! Transform the symmetry matrix from Crystal to cartesian
+                          sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
+                          sb = matmul ( bg, sa )
+                          sr (:,:) = matmul ( at, transpose (sb) )
+                          CALL dgemv( 'n', 3, 3, 1.d0,&
+                            sr, 3, vk_cart(:),1 ,0.d0 , v_rot(:), 1 )
+                          ! 
+                          CALL dgemv( 'n', 3, 3, 1.d0,&
+                            sr, 3, Fi_cart(:),1 ,0.d0 , Fi_rot(:), 1 )
+                          !
+                          ij = 0
+                          DO j = 1, 3
+                            DO i = 1, 3
+                              ij = ij + 1
+                              ! The factor two in the weight at the end is to account for spin
+                              IF (noncolin) THEN
+                                tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 1.0 / (nkf1*nkf2*nkf3)
+                              ELSE
+                                tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 2.0 / (nkf1*nkf2*nkf3)
+                              ENDIF
+                            ENDDO
+                          ENDDO
+                        ENDIF
+                      ENDDO ! ikbz 
+                      IF (ABS(nb*1.0/(nkf1*nkf2*nkf3) - wkf(ikk)) < eps6) THEN
+                        CALL errore ('transport', &
+                                 &' The number of kpoint in the IBZ is not equal to the weight', 1)
+                      ENDIF
+                    ! withtout symmetries
+                    ELSE
+                      ! 
+                      ij = 0
+                      DO j = 1, 3
+                        DO i = 1, 3
+                          ij = ij + 1
+                          tdf_sigma(ij) = vkk(i,ibnd) * Fi_all(j,ibnd,ik+lower_bnd-1,itemp) * wkf(ikk)
+                        ENDDO
                       ENDDO
-                    ENDDO
+                      !
+                    ENDIF ! mp_mesh_k
                     ! 
                     !  energy at k (relative to Ef)
                     ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
@@ -748,7 +848,7 @@
                     dfnk = w0gauss( ekk / etemp, -99 ) / etemp          
                     !
                     ! electrical conductivity
-                    Sigma(:,itemp) = Sigma(:,itemp) + wkf(ikk) * dfnk * tdf_sigma(:)
+                    Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
                     !
                   ENDIF
                 ELSE ! In this case we have 2 Fermi level
@@ -759,14 +859,61 @@
                       vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
                     ENDIF
                     ! 
-                    ij = 0
-                    DO j = 1, 3
-                      DO i = 1, 3
-                        ij = ij + 1
-                        tdf_sigma(ij) = vkk(i,ibnd) * Fi_all(j,ibnd,ik+lower_bnd-1,itemp)
+                    ! Use k-point symmetries.  
+                    IF (mp_mesh_k) THEN
+                      !
+                      vk_cart(:) = vkk(:,ibnd)
+                      Fi_cart(:) = Fi_all(:,ibnd,ik+lower_bnd-1,itemp)
+                      ! 
+                      ! Loop on full BZ 
+                      tdf_sigma(:) = zero
+                      nb = 0
+                      DO ikbz=1, nkf1*nkf2*nkf3
+                        ! If the k-point from the full BZ is related by a symmetry operation 
+                        ! to the current k-point, then take it.  
+                        IF (BZtoIBZ(ikbz) == ik+lower_bnd-1) THEN
+                          nb = nb + 1
+                          ! Transform the symmetry matrix from Crystal to cartesian
+                          sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
+                          sb = matmul ( bg, sa )
+                          sr (:,:) = matmul ( at, transpose (sb) )
+                          CALL dgemv( 'n', 3, 3, 1.d0,&
+                            sr, 3, vk_cart(:),1 ,0.d0 , v_rot(:), 1 )
+                          ! 
+                          CALL dgemv( 'n', 3, 3, 1.d0,&
+                            sr, 3, Fi_cart(:),1 ,0.d0 , Fi_rot(:), 1 )
+                          !
+                          ij = 0
+                          DO j = 1, 3
+                            DO i = 1, 3
+                              ij = ij + 1
+                              ! The factor two in the weight at the end is to account for spin
+                              IF (noncolin) THEN
+                                tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 1.0 / (nkf1*nkf2*nkf3)
+                              ELSE
+                                tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 2.0 / (nkf1*nkf2*nkf3)
+                              ENDIF
+                            ENDDO
+                          ENDDO
+                        ENDIF
+                      ENDDO ! ikbz 
+                      IF (ABS(nb*1.0/(nkf1*nkf2*nkf3) - wkf(ikk)) < eps6) THEN
+                        CALL errore ('transport', &
+                                 &' The number of kpoint in the IBZ is not equal to the weight', 1)
+                      ENDIF
+                    ! withtout symmetries
+                    ELSE
+                      ! 
+                      ij = 0
+                      DO j = 1, 3
+                        DO i = 1, 3
+                          ij = ij + 1
+                          tdf_sigma(ij) = vkk(i,ibnd) * Fi_all(j,ibnd,ik+lower_bnd-1,itemp) * wkf(ikk)
+                        ENDDO
                       ENDDO
-                    ENDDO
-                    ! 
+                      !
+                    ENDIF ! mp_mesh_k
+                    !
                     !  energy at k (relative to Ef)
                     ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
                     !  
@@ -775,7 +922,7 @@
                     dfnk = w0gauss( ekk / etemp, -99 ) / etemp
                     !
                     ! electrical conductivity
-                    Sigma(:,itemp) = Sigma(:,itemp) + wkf(ikk) * dfnk * tdf_sigma(:)
+                    Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
                     !
                   ENDIF ! efcb
                 ENDIF 

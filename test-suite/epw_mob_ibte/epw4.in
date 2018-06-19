@@ -71,13 +71,13 @@
 
   dvscf_dir   = './save/'
   
-  nkf1        = 6
-  nkf2        = 6
-  nkf3        = 6
+  nkf1        = 7
+  nkf2        = 7
+  nkf3        = 7
 
-  nqf1        = 6
-  nqf2        = 6
-  nqf3        = 6
+  nqf1        = 7
+  nqf2        = 7
+  nqf3        = 7
 
   nk1         = 6
   nk2         = 6

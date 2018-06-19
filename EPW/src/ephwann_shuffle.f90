@@ -57,7 +57,7 @@
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,   &
                             nkqtotf, sigmar_all, zi_allvb, inv_tau_all, Fi_all, &
                             F_current, F_SERTA, inv_tau_allcb, zi_allcb, exband,&
-                            Fi_allcb, F_currentcb, F_SERTAcb
+                            Fi_allcb, F_currentcb, F_SERTAcb, BZtoIBZ, s_BZtoIBZ
   USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                             upper_bnd, ixkqf_tr,  s_BZtoIBZ_full
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch, &
@@ -803,6 +803,10 @@
       F_currentcb(:,:,:,:) = zero
       F_SERTAcb(:,:,:,:) = zero
     ENDIF
+    ALLOCATE ( BZtoIBZ(nkf1*nkf2*nkf3) )
+    ALLOCATE ( s_BZtoIBZ(3,3,nkf1*nkf2*nkf3) )
+    BZtoIBZ(:) = 0
+    s_BZtoIBZ(:,:,:) = 0
   ENDIF 
   ! 
   ! Define it only once for the full run. 
@@ -1302,6 +1306,8 @@
   IF (iterative_bte) DEALLOCATE (F_SERTA)
   IF (iterative_bte) DEALLOCATE (inv_tau_all)
   IF (iterative_bte) DEALLOCATE (zi_allvb)
+  IF (iterative_bte) DEALLOCATE (BZtoIBZ)
+  IF (iterative_bte) DEALLOCATE (s_BZtoIBZ)
   IF (mp_mesh_k .AND. iterative_bte) DEALLOCATE (s_BZtoIBZ_full)
   IF (mp_mesh_k .AND. iterative_bte) DEALLOCATE (ixkqf_tr)
   IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (inv_tau_allcb)
