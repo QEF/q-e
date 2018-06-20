@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------
-[[4584,1],0]: A high-performance Open MPI point-to-point messaging module
+[[31882,1],0]: A high-performance Open MPI point-to-point messaging module
 was unable to find any relevant network interfaces:
 
 Module: OpenFabrics (openib)
@@ -9,7 +9,7 @@ Another transport will be used instead, although this may result in
 lower performance.
 --------------------------------------------------------------------------
 
-     Program PWSCF v.6.3rc starts on 19Jun2018 at 15:30:22 
+     Program PWSCF v.6.3rc starts on 20Jun2018 at 12:51:51 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -804,19 +804,19 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      Writing output data file si.save/
  
      init_run     :      0.04s CPU      0.05s WALL (       1 calls)
-     electrons    :      0.45s CPU      0.47s WALL (       1 calls)
+     electrons    :      0.46s CPU      0.48s WALL (       1 calls)
      forces       :      0.01s CPU      0.01s WALL (       1 calls)
-     stress       :      0.02s CPU      0.03s WALL (       1 calls)
+     stress       :      0.03s CPU      0.03s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.02s CPU      0.02s WALL (       1 calls)
      wfcinit:atom :      0.00s CPU      0.00s WALL (      16 calls)
-     wfcinit:wfcr :      0.01s CPU      0.02s WALL (      16 calls)
+     wfcinit:wfcr :      0.02s CPU      0.02s WALL (      16 calls)
      potinit      :      0.00s CPU      0.00s WALL (       1 calls)
      hinit0       :      0.02s CPU      0.02s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.38s CPU      0.39s WALL (      12 calls)
+     c_bands      :      0.38s CPU      0.40s WALL (      12 calls)
      sum_band     :      0.05s CPU      0.05s WALL (      12 calls)
      v_of_rho     :      0.03s CPU      0.02s WALL (      12 calls)
      v_h          :      0.00s CPU      0.00s WALL (      12 calls)
@@ -824,24 +824,24 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
      mix_rho      :      0.00s CPU      0.00s WALL (      12 calls)
 
      Called by c_bands:
-     init_us_2    :      0.04s CPU      0.04s WALL (     432 calls)
-     cegterg      :      0.24s CPU      0.25s WALL (     192 calls)
+     init_us_2    :      0.03s CPU      0.04s WALL (     432 calls)
+     cegterg      :      0.24s CPU      0.26s WALL (     192 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      0.20s CPU      0.21s WALL (     566 calls)
+     h_psi        :      0.21s CPU      0.21s WALL (     566 calls)
      g_psi        :      0.01s CPU      0.00s WALL (     358 calls)
      cdiaghg      :      0.03s CPU      0.03s WALL (     534 calls)
      cegterg:over :      0.00s CPU      0.01s WALL (     358 calls)
-     cegterg:upda :      0.01s CPU      0.01s WALL (     358 calls)
+     cegterg:upda :      0.00s CPU      0.01s WALL (     358 calls)
      cegterg:last :      0.00s CPU      0.00s WALL (     197 calls)
 
      Called by h_psi:
      h_psi:pot    :      0.20s CPU      0.21s WALL (     566 calls)
-     h_psi:calbec :      0.02s CPU      0.02s WALL (     566 calls)
-     vloc_psi     :      0.16s CPU      0.17s WALL (     566 calls)
-     add_vuspsi   :      0.02s CPU      0.02s WALL (     566 calls)
+     h_psi:calbec :      0.01s CPU      0.02s WALL (     566 calls)
+     vloc_psi     :      0.17s CPU      0.17s WALL (     566 calls)
+     add_vuspsi   :      0.03s CPU      0.02s WALL (     566 calls)
 
      General routines
      calbec       :      0.01s CPU      0.02s WALL (     646 calls)
@@ -851,10 +851,10 @@ T_2    3.00  0.00 -1.00 -1.00  1.00
  
      Parallel routines
  
-     PWSCF        :     0.81s CPU         0.84s WALL
+     PWSCF        :     0.81s CPU         0.85s WALL
 
  
-   This run was terminated on:  15:30:22  19Jun2018            
+   This run was terminated on:  12:51:51  20Jun2018            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
