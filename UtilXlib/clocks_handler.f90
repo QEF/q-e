@@ -402,32 +402,50 @@ SUBROUTINE print_this_clock( n )
      mmin  = msec / 60
      msec  = msec - 60 * mmin
      !
-     IF ( nday > 0 .or. mday > 0 ) THEN
+     IF ( nday > 0 ) THEN
         !
-        WRITE( stdout, &
-               '(5X,A12," : ",3X,I2,"d",3X,I2,"h",I2, "m CPU ", &
-           &            "   ",3X,I2,"d",3X,I2,"h",I2, "m WALL"/)' ) &
-             clock_label(n), nday, nhour, nmin, mday, mhour, mmin
+        WRITE( stdout, ADVANCE='no', &
+               FMT='(5X,A12," : ",3X,I2,"d",3X,I2,"h",I2, "m CPU ")' ) &
+             clock_label(n), nday, nhour, nmin
         !
-     ELSEIF ( nhour > 0 .or. mhour > 0 ) THEN
+     ELSEIF ( nhour > 0 ) THEN
         !
-        WRITE( stdout, &
-               '(5X,A12," : ",3X,I2,"h",I2,"m CPU ", &
-           &            "   ",3X,I2,"h",I2,"m WALL"/)' ) &
-             clock_label(n), nhour, nmin, mhour, mmin
+        WRITE( stdout, ADVANCE='no', &
+                FMT='(5X,A12," : ",3X,I2,"h",I2,"m CPU ")' ) &
+             clock_label(n), nhour, nmin
         !
-     ELSEIF ( nmin > 0 .or. mmin > 0 ) THEN
+     ELSEIF ( nmin > 0 ) THEN
         !
-        WRITE( stdout, &
-               '(5X,A12," : ",I2,"m",F5.2,"s CPU ", &
-               &        "   ",I2,"m",F5.2,"s WALL"/)' ) &
-             clock_label(n), nmin, nsec, mmin, msec
+        WRITE( stdout, ADVANCE='no', &
+               FMT='(5X,A12," : ",I2,"m",F5.2,"s CPU ")' ) &
+             clock_label(n), nmin, nsec
         !
      ELSE
         !
-        WRITE( stdout, &
-               '(5X,A12," : ",3X,F5.2,"s CPU ",7X,F5.2,"s WALL"/)' )&
-             clock_label(n), nsec, msec
+        WRITE( stdout, ADVANCE='no', &
+               FMT='(5X,A12," : ",3X,F5.2,"s CPU ")' )&
+             clock_label(n), nsec
+        !
+     ENDIF
+     IF ( mday > 0 ) THEN
+        !
+        WRITE( stdout, '("   ",3X,I2,"d",3X,I2,"h",I2, "m WALL"/)' ) &
+             mday, mhour, mmin
+        !
+     ELSEIF ( mhour > 0 ) THEN
+        !
+        WRITE( stdout, '("   ",3X,I2,"h",I2,"m WALL"/)' ) &
+             nmin, mhour, mmin
+        !
+     ELSEIF ( mmin > 0 ) THEN
+        !
+        WRITE( stdout, '("   ",I2,"m",F5.2,"s WALL"/)' ) &
+             mmin, msec
+        !
+     ELSE
+        !
+        WRITE( stdout, '(7X,F5.2,"s WALL"/)' ) &
+             msec
         !
      ENDIF
 #endif
