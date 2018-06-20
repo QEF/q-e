@@ -47,6 +47,8 @@ MODULE mytime
   CHARACTER(len=12) :: clock_label(maxclock)
   INTEGER           :: called(maxclock)
   !
+  REAL(DP)          :: mpi_per_thread = 1.0_DP
+
   INTEGER :: nclock = 0
   LOGICAL :: no
 #if defined (__TRACE)
@@ -80,7 +82,7 @@ SUBROUTINE init_clocks( go )
   !
   USE util_param,  ONLY : DP, stdout
   USE mytime, ONLY : called, t0cpu, cputime, no, notrunning, maxclock, &
-       clock_label, walltime, t0wall, nclock
+       clock_label, walltime, t0wall, nclock, mpi_per_thread
 #if defined (__TRACE)
   USE mytime, ONLY : mpime, max_print_depth, MPI_COMM_WORLD
 #endif
@@ -93,6 +95,10 @@ SUBROUTINE init_clocks( go )
 #endif
   INTEGER :: n, ierr
   !
+#if defined(_OPENMP)
+  INTEGER, EXTERNAL :: omp_get_max_threads
+  mpi_per_thread = 1.0_DP/omp_get_max_threads()
+#endif
   no = .not. go
   nclock = 0
   !
@@ -319,7 +325,7 @@ SUBROUTINE print_this_clock( n )
   !----------------------------------------------------------------------------
   !
   USE util_param, ONLY : DP, stdout
-  USE mytime,     ONLY : clock_label, cputime, walltime, &
+  USE mytime,     ONLY : clock_label, cputime, walltime, mpi_per_thread, &
                          notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
   !
   IMPLICIT NONE
@@ -345,6 +351,12 @@ SUBROUTINE print_this_clock( n )
      called(n)  = called(n) + 1
      !
   ENDIF
+  !
+!#define PRINT_AVG_CPU_TIME_PER_THREAD
+#if defined(PRINT_AVG_CPU_TIME_PER_THREAD)
+  ! rescale the elapsed cpu time on a per-thread basis
+  elapsed_cpu_time   = elapsed_cpu_time * mpi_per_thread
+#endif
   !
   nmax = called(n)
   !

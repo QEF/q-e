@@ -347,7 +347,7 @@ MODULE realus
                   distsq = posi(1)**2 + posi(2)**2 + posi(3)**2
                   IF ( distsq < boxradsq_ia ) THEN
                      ! compute fft index ir from ii,jj,kk
-                     ir = 1 + ii + jj * dfft%nr1x + kk * dfft%nr1x * dfft%nr2x
+                     ir = 1 + ii + jj * dfft%nr1x + kk * dfft%nr1x * dfft%my_nr2p
                      !
                      mbia = mbia + 1
                      IF( mbia > roughestimate ) CALL errore('qpointlist', 'rough-estimate is too rough', 3)
@@ -916,7 +916,7 @@ MODULE realus
                   distsq = posi(1)**2 + posi(2)**2 + posi(3)**2
                   IF ( distsq < boxradsq_ia ) THEN
                      ! compute fft index ir from ii,jj,kk
-                     ir = 1 + ii + jj * dffts%nr1x + kk * dffts%nr1x * dffts%nr2x
+                     ir = 1 + ii + jj * dffts%nr1x + kk * dffts%nr1x * dffts%my_nr2p
                      !
                      mbia = maxbox_beta(ia) + 1
                      !
@@ -939,8 +939,10 @@ MODULE realus
       !
       ! ... now store them in a more convenient place
       !
+      IF ( allocated( xyz_beta ) )     DEALLOCATE( xyz_beta )
       IF ( allocated( box_beta ) )     DEALLOCATE( box_beta )
       IF ( allocated( boxdist_beta ) ) DEALLOCATE( boxdist_beta )
+      IF ( allocated( xkphase ) )      DEALLOCATE( xkphase )
       !
       ALLOCATE( xyz_beta ( 3, goodestimate, nat ) )
       ALLOCATE( box_beta    ( goodestimate, nat ) )
