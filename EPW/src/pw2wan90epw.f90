@@ -1474,6 +1474,7 @@ SUBROUTINE compute_pmn_para
   USE becmod,          ONLY : becp, deallocate_bec_type, allocate_bec_type
   USE uspp,            ONLY : nkb
   USE wannierEPW,      ONLY : n_wannier
+  USE io_global,    ONLY : meta_ionode
   !
   IMPLICIT NONE
   !  
@@ -1517,7 +1518,7 @@ SUBROUTINE compute_pmn_para
     CALL davcio( evc, lrwfc, iuwfc, ik, -1 )
     !
     ! setup k+G grids for each kpt
-    !CALL gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk_k(1,ik), g2kin)
+    CALL gk_sort (xk(:,ik), ngm, g, ecutwfc / tpiba2, npw, igk_k(:,ik), g2kin)
     !
     dipole_aux = czero
     DO jbnd = 1,nbnd
@@ -1570,6 +1571,12 @@ SUBROUTINE compute_pmn_para
   !
   WRITE(stdout,'(/5x,a)') 'Dipole matrix elements calculated'
   WRITE(stdout,*)
+  !DBSP 
+  !WRITE(stdout,*) 'dmec ',sum(dmec)
+  !IF (meta_ionode) THEN
+  !   WRITE(stdout,*) 'dmec(:,:,:,1) ',sum(dmec(:,:,:,1))
+  !   WRITE(stdout,*) 'dmec(:,:,:,2) ',sum(dmec(:,:,:,2))
+  !ENDIF
   !
   RETURN
 END SUBROUTINE compute_pmn_para

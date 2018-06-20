@@ -947,6 +947,10 @@
         CALL mp_bcast( s_BZtoIBZ, ionode_id, inter_pool_comm )
         CALL mp_bcast( BZtoIBZ, ionode_id, inter_pool_comm )
         ! 
+        !WRITE(stdout,*)'s ',s
+        !WRITE(stdout,*)'BZtoIBZ ',BZtoIBZ
+        !WRITE(stdout,*)'s_BZtoIBZ ',s_BZtoIBZ
+        ! 
       ENDIF
       !
       ! This is hole mobility. In the case of intrinsic mobilities we can do both
@@ -993,6 +997,7 @@
                 IF (etf (ibndmin-1+ibnd, ikk) < ef0(itemp) ) THEN 
                   !
                   ! vkk(3,nbnd) - velocity for k
+                  tdf_sigma(:) = zero
                   IF ( vme ) THEN
                     ! vmef is in units of Ryd * bohr
                     vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
@@ -1009,7 +1014,6 @@
                     vk_cart(:) = vkk(:,ibnd)
                     ! 
                     ! Loop on full BZ 
-                    tdf_sigma(:) = zero
                     nb = 0
                     DO ikbz=1, nkf1*nkf2*nkf3
                       ! If the k-point from the full BZ is related by a symmetry operation 
@@ -1213,6 +1217,7 @@
                   ! This selects only cond bands for electron conduction
                   IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp) ) THEN
                     ! vkk(3,nbnd) - velocity for k
+                    tdf_sigma(:) = zero
                     IF ( vme ) THEN
                       ! vmef is in units of Ryd * bohr
                       vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
@@ -1228,7 +1233,6 @@
                       vk_cart(:) = vkk(:,ibnd)
                       ! 
                       ! Loop on full BZ 
-                      tdf_sigma(:) = zero
                       nb = 0
                       DO ikbz=1, nkf1*nkf2*nkf3
                         ! If the k-point from the full BZ is related by a symmetry operation 
@@ -1302,7 +1306,6 @@
                       vk_cart(:) = vkk(:,ibnd)
                       ! 
                       ! Loop on full BZ 
-                      tdf_sigma(:) = zero
                       nb = 0
                       DO ikbz=1, nkf1*nkf2*nkf3
                         ! If the k-point from the full BZ is related by a symmetry operation 

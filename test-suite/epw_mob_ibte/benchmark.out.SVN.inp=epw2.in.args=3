@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------
-[[15570,1],0]: A high-performance Open MPI point-to-point messaging module
+[[30800,1],0]: A high-performance Open MPI point-to-point messaging module
 was unable to find any relevant network interfaces:
 
 Module: OpenFabrics (openib)
@@ -37,7 +37,7 @@ lower performance.
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 19Jun2018 at 18: 1:59 
+     Program EPW v.5.0.0 starts on 20Jun2018 at 12:52:47 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -122,7 +122,7 @@ lower performance.
 
      Reading interatomic force constants
 
-  Read Z*, epsilon
+     Read Z* and epsilon
      IFC last   -0.0026001
      Norm of the difference between old and new effective charges:    0.0000000
      Norm of the difference between old and new force-constants:    0.0001053
@@ -223,7 +223,7 @@ lower performance.
 
      Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
      Total time so far
-     SCAT         :      1.99s CPU      2.00s WALL (      50 calls)
+     SCAT         :      1.98s CPU      1.99s WALL (      50 calls)
      MOB          :      0.00s CPU      0.00s WALL (       1 calls)
 
      Progression iq (fine) =        100/       343
@@ -257,7 +257,7 @@ lower performance.
 
      Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
      Total time so far
-     SCAT         :      3.98s CPU      3.99s WALL (     101 calls)
+     SCAT         :      3.97s CPU      3.98s WALL (     101 calls)
      MOB          :      0.00s CPU      0.00s WALL (       2 calls)
 
      Progression iq (fine) =        150/       343
@@ -291,7 +291,7 @@ lower performance.
 
      Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
      Total time so far
-     SCAT         :      5.97s CPU      5.99s WALL (     152 calls)
+     SCAT         :      5.95s CPU      5.98s WALL (     152 calls)
      MOB          :      0.00s CPU      0.00s WALL (       3 calls)
 
      Progression iq (fine) =        200/       343
@@ -325,7 +325,7 @@ lower performance.
 
      Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
      Total time so far
-     SCAT         :      7.95s CPU      7.99s WALL (     203 calls)
+     SCAT         :      7.94s CPU      7.97s WALL (     203 calls)
      MOB          :      0.00s CPU      0.00s WALL (       4 calls)
 
      Progression iq (fine) =        250/       343
@@ -359,7 +359,7 @@ lower performance.
 
      Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
      Total time so far
-     SCAT         :      9.94s CPU      9.98s WALL (     254 calls)
+     SCAT         :      9.92s CPU      9.96s WALL (     254 calls)
      MOB          :      0.00s CPU      0.00s WALL (       5 calls)
 
      Progression iq (fine) =        300/       343
@@ -393,8 +393,8 @@ lower performance.
 
      Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
      Total time so far
-     SCAT         :     11.93s CPU     11.98s WALL (     305 calls)
-     MOB          :      0.00s CPU      0.01s WALL (       6 calls)
+     SCAT         :     11.91s CPU     11.95s WALL (     305 calls)
+     MOB          :      0.01s CPU      0.01s WALL (       6 calls)
 
      Temperature  400.000 K
      Average over degenerate eigenstates is performed
@@ -438,8 +438,8 @@ lower performance.
 
      Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
      Total time so far
-     SCAT         :     13.66s CPU     13.72s WALL (     349 calls)
-     MOB          :      0.00s CPU      0.01s WALL (       7 calls)
+     SCAT         :     13.62s CPU     13.69s WALL (     349 calls)
+     MOB          :      0.01s CPU      0.01s WALL (       7 calls)
 
 
      Iteration number:         2 
@@ -505,7 +505,7 @@ lower performance.
                                                    0.289249E+02     avg
                                                      0.2892E+02     Err
      Total time so far
-     MOBITER      :     56.05s CPU     58.59s WALL (       1 calls)
+     MOBITER      :     56.47s CPU     59.12s WALL (       1 calls)
 
 
      Iteration number:         3 
@@ -571,7 +571,7 @@ lower performance.
                                                    0.297817E+02     avg
                                                      0.8569E+00     Err
      Total time so far
-     MOBITER      :    112.09s CPU    117.19s WALL (       2 calls)
+     MOBITER      :    113.77s CPU    119.07s WALL (       2 calls)
 
 
      Iteration number:         4 
@@ -637,7 +637,7 @@ lower performance.
                                                    0.296354E+02     avg
                                                      0.1463E+00     Err
      Total time so far
-     MOBITER      :    168.13s CPU    175.79s WALL (       3 calls)
+     MOBITER      :    174.54s CPU    182.76s WALL (       3 calls)
 
 
      Iteration number:         5 
@@ -703,7 +703,7 @@ lower performance.
                                                    0.296614E+02     avg
                                                      0.2598E-01     Err
      Total time so far
-     MOBITER      :    224.17s CPU    234.38s WALL (       4 calls)
+     MOBITER      :    234.81s CPU    245.98s WALL (       4 calls)
 
 
      Iteration number:         6 
@@ -769,7 +769,7 @@ lower performance.
                                                    0.296567E+02     avg
                                                      0.4750E-02     Err
      Total time so far
-     MOBITER      :    280.20s CPU    292.99s WALL (       5 calls)
+     MOBITER      :    293.57s CPU    307.56s WALL (       5 calls)
 
      ===================================================================
      Memory usage:  VmHWM =        30Mb
@@ -785,16 +785,16 @@ lower performance.
  
  
      Electron-Phonon interpolation
-     ephwann      :    336.54s CPU    351.96s WALL (       1 calls)
-     ep-interp    :    336.17s CPU    351.59s WALL (    2058 calls)
+     ephwann      :    350.40s CPU    367.03s WALL (       1 calls)
+     ep-interp    :    350.04s CPU    366.66s WALL (    2058 calls)
  
-     DynW2B       :      0.10s CPU      0.10s WALL (    2058 calls)
-     HamW2B       :     56.09s CPU     57.30s WALL ( 1412474 calls)
-     ephW2Bp      :     10.00s CPU     22.73s WALL (    2058 calls)
+     DynW2B       :      0.12s CPU      0.12s WALL (    2058 calls)
+     HamW2B       :     60.01s CPU     60.98s WALL ( 1412474 calls)
+     ephW2Bp      :     10.65s CPU     24.43s WALL (    2058 calls)
  
  
      Total program execution
-     EPW          :  5m36.54s CPU     5m51.96s WALL
+     EPW          :  5m50.40s CPU     6m 7.04s WALL
 
                                                                                           
  Please consider citing:                                                                  

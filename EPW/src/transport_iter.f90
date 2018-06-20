@@ -631,6 +631,8 @@
               DO ibnd = 1, ibndmax-ibndmin+1
                 ! This selects only valence bands for hole conduction
                 IF (etf (ibndmin-1+ibnd, ikk) < ef0(itemp) ) THEN
+                  !
+                  tdf_sigma(:) = zero  
                   IF ( vme ) THEN 
                     vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
                   ELSE
@@ -644,7 +646,6 @@
                     Fi_cart(:) = Fi_all(:,ibnd,ik+lower_bnd-1,itemp)
                     ! 
                     ! Loop on full BZ 
-                    tdf_sigma(:) = zero
                     nb = 0
                     DO ikbz=1, nkf1*nkf2*nkf3
                       ! If the k-point from the full BZ is related by a symmetry operation 
@@ -780,6 +781,7 @@
                 IF ( ABS(efcb(itemp)) < eps6 ) THEN ! Case with 1 Fermi level
                   ! This selects only conduction bands for electron conduction
                   IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp) ) THEN
+                    tdf_sigma(:) = zero
                     IF ( vme ) THEN 
                       vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
                     ELSE
@@ -792,7 +794,6 @@
                       Fi_cart(:) = Fi_all(:,ibnd,ik+lower_bnd-1,itemp)
                       ! 
                       ! Loop on full BZ 
-                      tdf_sigma(:) = zero
                       nb = 0
                       DO ikbz=1, nkf1*nkf2*nkf3
                         ! If the k-point from the full BZ is related by a symmetry operation 
@@ -853,6 +854,7 @@
                   ENDIF
                 ELSE ! In this case we have 2 Fermi level
                   IF (etf (ibndmin-1+ibnd, ikk) > efcb(itemp) ) THEN
+                    tdf_sigma(:) = zero
                     IF ( vme ) THEN
                       vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
                     ELSE
@@ -866,7 +868,6 @@
                       Fi_cart(:) = Fi_all(:,ibnd,ik+lower_bnd-1,itemp)
                       ! 
                       ! Loop on full BZ 
-                      tdf_sigma(:) = zero
                       nb = 0
                       DO ikbz=1, nkf1*nkf2*nkf3
                         ! If the k-point from the full BZ is related by a symmetry operation 

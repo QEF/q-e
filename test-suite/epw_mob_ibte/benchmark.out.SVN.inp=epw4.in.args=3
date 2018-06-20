@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------
-[[15261,1],0]: A high-performance Open MPI point-to-point messaging module
+[[28970,1],0]: A high-performance Open MPI point-to-point messaging module
 was unable to find any relevant network interfaces:
 
 Module: OpenFabrics (openib)
@@ -37,7 +37,7 @@ lower performance.
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 19Jun2018 at 18: 7:52 
+     Program EPW v.5.0.0 starts on 20Jun2018 at 12:58:55 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -122,7 +122,7 @@ lower performance.
 
      Reading interatomic force constants
 
-  Read Z*, epsilon
+     Read Z* and epsilon
      IFC last   -0.0026001
      Norm of the difference between old and new effective charges:    0.0000000
      Norm of the difference between old and new force-constants:    0.0001053
@@ -299,7 +299,7 @@ lower performance.
                                                    0.289444E+02     avg
                                                      0.2894E+02     Err
      Total time so far
-     MOBITER      :      6.15s CPU      8.25s WALL (       1 calls)
+     MOBITER      :      6.18s CPU      8.23s WALL (       1 calls)
 
 
      Iteration number:         3 
@@ -358,7 +358,7 @@ lower performance.
                                                    0.297807E+02     avg
                                                      0.8363E+00     Err
      Total time so far
-     MOBITER      :     12.29s CPU     16.49s WALL (       2 calls)
+     MOBITER      :     12.29s CPU     16.47s WALL (       2 calls)
 
 
      Iteration number:         4 
@@ -417,7 +417,7 @@ lower performance.
                                                    0.296439E+02     avg
                                                      0.1368E+00     Err
      Total time so far
-     MOBITER      :     18.45s CPU     24.74s WALL (       3 calls)
+     MOBITER      :     18.36s CPU     24.70s WALL (       3 calls)
 
 
      Iteration number:         5 
@@ -476,7 +476,7 @@ lower performance.
                                                    0.296666E+02     avg
                                                      0.2274E-01     Err
      Total time so far
-     MOBITER      :     24.58s CPU     32.99s WALL (       4 calls)
+     MOBITER      :     24.42s CPU     32.93s WALL (       4 calls)
 
 
      Iteration number:         6 
@@ -535,7 +535,7 @@ lower performance.
                                                    0.296628E+02     avg
                                                      0.3817E-02     Err
      Total time so far
-     MOBITER      :     30.71s CPU     41.24s WALL (       5 calls)
+     MOBITER      :     30.55s CPU     41.16s WALL (       5 calls)
 
      ===================================================================
      Memory usage:  VmHWM =        26Mb
@@ -551,16 +551,16 @@ lower performance.
  
  
      Electron-Phonon interpolation
-     ephwann      :     35.97s CPU     48.67s WALL (       1 calls)
-     ep-interp    :     35.65s CPU     48.35s WALL (    2058 calls)
+     ephwann      :     35.78s CPU     48.61s WALL (       1 calls)
+     ep-interp    :     35.46s CPU     48.29s WALL (    2058 calls)
  
-     DynW2B       :      0.11s CPU      0.10s WALL (    2058 calls)
-     HamW2B       :      3.54s CPU      3.60s WALL (   82360 calls)
-     ephW2Bp      :      9.68s CPU     22.24s WALL (    2058 calls)
+     DynW2B       :      0.13s CPU      0.10s WALL (    2058 calls)
+     HamW2B       :      3.53s CPU      3.63s WALL (   82360 calls)
+     ephW2Bp      :      9.69s CPU     22.33s WALL (    2058 calls)
  
  
      Total program execution
-     EPW          :    35.97s CPU        48.68s WALL
+     EPW          :    35.78s CPU        48.62s WALL
 
                                                                                           
  Please consider citing:                                                                  

@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------
-[[14476,1],0]: A high-performance Open MPI point-to-point messaging module
+[[30685,1],0]: A high-performance Open MPI point-to-point messaging module
 was unable to find any relevant network interfaces:
 
 Module: OpenFabrics (openib)
@@ -37,7 +37,7 @@ lower performance.
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 19Jun2018 at 18: 7:51 
+     Program EPW v.5.0.0 starts on 20Jun2018 at 12:58:54 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -122,7 +122,7 @@ lower performance.
 
      Reading interatomic force constants
 
-  Read Z*, epsilon
+     Read Z* and epsilon
      IFC last   -0.0026001
      Norm of the difference between old and new effective charges:    0.0000000
      Norm of the difference between old and new force-constants:    0.0001053
@@ -236,7 +236,7 @@ lower performance.
  
      Electron-Phonon interpolation
      ephwann      :      0.50s CPU      0.52s WALL (       1 calls)
-     ep-interp    :      0.14s CPU      0.15s WALL (       1 calls)
+     ep-interp    :      0.13s CPU      0.15s WALL (       1 calls)
  
      DynW2B       :      0.00s CPU      0.00s WALL (       1 calls)
      HamW2B       :      0.07s CPU      0.07s WALL (    1372 calls)
