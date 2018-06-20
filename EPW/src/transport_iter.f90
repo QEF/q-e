@@ -676,9 +676,16 @@
                         ENDDO
                       ENDIF
                     ENDDO ! ikbz 
-                    IF (ABS(nb*1.0/(nkf1*nkf2*nkf3) - wkf(ikk)) < eps6) THEN
-                      CALL errore ('transport', &
+                    IF (noncolin) THEN
+                      IF (ABS(nb*1.0/(nkf1*nkf2*nkf3) - wkf(ikk)) > eps6) THEN
+                        CALL errore ('transport', &
                                &' The number of kpoint in the IBZ is not equal to the weight', 1)
+                      ENDIF
+                    ELSE
+                      IF (ABS(nb*2.0/(nkf1*nkf2*nkf3) - wkf(ikk)) > eps6) THEN
+                        CALL errore ('transport', &
+                               &' The number of kpoint in the IBZ is not equal to the weight', 1)
+                      ENDIF
                     ENDIF
                   ! withtout symmetries
                   ELSE
@@ -824,9 +831,16 @@
                           ENDDO
                         ENDIF
                       ENDDO ! ikbz 
-                      IF (ABS(nb*1.0/(nkf1*nkf2*nkf3) - wkf(ikk)) < eps6) THEN
-                        CALL errore ('transport', &
+                      IF (noncolin) THEN
+                        IF (ABS(nb*1.0/(nkf1*nkf2*nkf3) - wkf(ikk)) > eps6) THEN
+                          CALL errore ('transport', & 
                                  &' The number of kpoint in the IBZ is not equal to the weight', 1)
+                        ENDIF
+                      ELSE
+                        IF (ABS(nb*2.0/(nkf1*nkf2*nkf3) - wkf(ikk)) > eps6) THEN
+                          CALL errore ('transport', & 
+                                 &' The number of kpoint in the IBZ is not equal to the weight', 1)
+                        ENDIF
                       ENDIF
                     ! withtout symmetries
                     ELSE
@@ -898,9 +912,16 @@
                           ENDDO
                         ENDIF
                       ENDDO ! ikbz 
-                      IF (ABS(nb*1.0/(nkf1*nkf2*nkf3) - wkf(ikk)) < eps6) THEN
-                        CALL errore ('transport', &
+                      IF (noncolin) THEN
+                        IF (ABS(nb*1.0/(nkf1*nkf2*nkf3) - wkf(ikk)) > eps6) THEN
+                          CALL errore ('transport', & 
                                  &' The number of kpoint in the IBZ is not equal to the weight', 1)
+                        ENDIF
+                      ELSE
+                        IF (ABS(nb*2.0/(nkf1*nkf2*nkf3) - wkf(ikk)) > eps6) THEN
+                          CALL errore ('transport', & 
+                                 &' The number of kpoint in the IBZ is not equal to the weight', 1)
+                        ENDIF
                       ENDIF
                     ! withtout symmetries
                     ELSE
