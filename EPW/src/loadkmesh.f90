@@ -18,7 +18,7 @@ SUBROUTINE loadkmesh_para
   USE mp,        ONLY : mp_bcast, mp_sum
   USE mp_world,  ONLY : mpime 
   USE kinds,     ONLY : DP
-  USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, &
+  USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, iterative_bte, &
                         rand_k, rand_nk, mp_mesh_k, system_2d
   USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf
   USE cell_base, ONLY : at, bg
@@ -127,14 +127,16 @@ SUBROUTINE loadkmesh_para
           CALL cryst_to_cart (2*nkqtotf, xkfval, at, -1)
           xkf_(:,:) = xkfval(:,:)
           ! 
-          ! Fold the points in the region [0-1] from the region -0.5,0.5
-          DO ik = 1, 2*nkqtotf
-            DO idir=1, 3
-              IF (xkf_(idir,ik) < 0.0 ) THEN
-                xkf_(idir,ik) = xkf_(idir,ik) + 1.0
-              ENDIF 
-            ENDDO
-          ENDDO 
+          IF (iterative_bte) THEN
+            ! Fold the points in the region [0-1] from the region -0.5,0.5             
+            DO ik = 1, 2*nkqtotf
+              DO idir=1, 3
+                IF (xkf_(idir,ik) < 0.0 ) THEN
+                  xkf_(idir,ik) = xkf_(idir,ik) + 1.0
+                ENDIF 
+              ENDDO
+            ENDDO 
+          ENDIF
           !
           ! redefine nkqtotf to include the k+q points
           !
