@@ -12,7 +12,17 @@ New in development version:
 
   * Spin-polarized X3LYP (experimental)
 
+  * EPW: Electronic transport (Botlzmann transport equation)
+         Iterative Botlzmann transport equation (experimental)
+         Cumulant treatement (model)
+         Possible screening
+         Support for exclude bands
+         Calculation of velocity beyond the local approximation (experimental)
+
 Problems fixed in development version:
+
+  * EPW: Velocity in the dipole approximation was unstable because of 
+    G-vector ordering. 
 
   * Real-space augmentation functions were crashing with -nt N option
 
@@ -63,6 +73,9 @@ Problems fixed in development version:
   * PWscf in "manypw" mode wasn't working due to a bad IF (Dec.12, 2017)
 
 Incompatible changes in development version:
+
+  * EPW: Removal of q-point paralelization (not very used and generated large code 
+    duplication) ==> removal of the parallel_k and parallel_q input variables. 
 
   * various subroutines computing gradients and similar quantities using FFTs
     have been harmonized and collected into Modules/gradutils.f90
