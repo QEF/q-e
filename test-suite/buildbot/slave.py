@@ -1,5 +1,8 @@
+#
 # 2016-2018 : Samuel Ponce' and Martin Schlipf
+# 
 # Setup used by the different Buildbot slaves. 
+# 
 
 from buildbot.plugins import steps
 from buildbot.steps.shell import ShellCommand
@@ -10,9 +13,9 @@ class Steps:
   def __init__(self,Environ):
     # Max number of running builds
     build_lock = SlaveLock('build',
-         maxCount = 2,
+         maxCount = 1,
          maxCountForSlave = {
-             'farmer-slave1': 2,
+             'farmer-slave1': 1,
     })
     
     # All repo
