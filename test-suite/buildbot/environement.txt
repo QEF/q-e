@@ -1,0 +1,51 @@
+# 2016-2018 : Samuel Ponce'
+# This is a list of environement used on the CINECA virtual machine that host the Buildbot test-farm
+
+# For GCC 640 serial
+export LD_LIBRARY_PATH=/mnt/buildbot/local/gcc640/lib64:/mnt/buildbot/local/gcc640/lib32/:/usr/local/lib64:/usr/local/lib
+export PATH=/mnt/buildbot/local/gcc640/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games 
+
+# For pgi17+ mvapich 2.3
+export LD_LIBRARY_PATH=/mnt/buildbot/local/mvapich2.3/lib:/mnt/buildbot/local/pgi17.4/linux86-64/17.4/lib:/usr/local/lib64:/usr/local/lib
+export PATH=/mnt/buildbot/local/mvapich2.3/bin:/mnt/buildbot/local/pgi17.4/linux86-64/17.4/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+export MV2_SMP_USE_CMA=0
+
+# for pgi17+mvaptich2.2
+export LD_LIBRARY_PATH=/mnt/buildbot/local/mvapich2.2-pgi17/lib:/mnt/buildbot/local/pgi17.4/linux86-64/17.4/lib:/usr/local/lib64:/usr/local/lib
+export PATH=/mnt/buildbot/local/mvapich2.2-pgi17/bin:/mnt/buildbot/local/pgi17.4/linux86-64/17.4/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+
+#pgi17 + openmpi 1.10.7
+export LD_LIBRARY_PATH=/mnt/buildbot/local/openmpi-1.10.7_pgi17/lib:/mnt/buildbot/local/pgi17.4/linux86-64/17.4/lib:/usr/local/lib64:/usr/local/lib
+export PATH=/mnt/buildbot/local/openmpi-1.10.7_pgi17/bin:/mnt/buildbot/local/pgi17.4/linux86-64/17.4/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+export MPICH_F90=pgf90
+export FC=pgfortran
+export F90=pgf90
+export MPIF90_F90=pgf90
+
+# pgi17 + mpich 3.2
+export LD_LIBRARY_PATH=/mnt/buildbot/local/mpich3.2-pgi17/lib:/mnt/buildbot/local/pgi17.4/linux86-64/17.4/lib:/usr/local/lib64:/usr/local/lib
+export PATH=/mnt/buildbot/local/mpich3.2-pgi17/bin:/mnt/buildbot/local/pgi17.4/linux86-64/17.4/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+
+export CC=pgcc
+export CXX=pgc++
+export F77=pgf77
+export F90=pgf90
+export FC=pgfortran
+export MPIF90=mpif90
+
+# For intel17
+export  LD_LIBRARY_PATH=/mnt/buildbot/local/intel17/compilers_and_libraries_2017.4.196/linux/mpi/intel64/lib:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.4.196/linux/mpi/mic/lib:/mnt/buildbot/local/intel17/debugger_2017/iga/lib:/mnt/buildbot/local/intel17/debugger_2017/libipt/intel64/lib:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/compiler/lib/intel64:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/compiler/lib/intel64_lin:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/mpi/intel64/lib:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/mpi/mic/lib:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/ipp/lib/intel64:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/compiler/lib/intel64_lin:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/mkl/lib/intel64_lin:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/tbb/lib/intel64/gcc4.7:/mnt/buildbot/local/intel17/debugger_2017/iga/lib:/mnt/buildbot/local/intel17/debugger_2017/libipt/intel64/lib:/mnt/buildbot/local/intel12/composer_xe_2011_sp1.8.273/compiler/lib/intel64:/mnt/buildbot/local/intel12/composer_xe_2011_sp1.8.273/ipp/../compiler/lib/intel64:/mnt/buildbot/local/intel12/composer_xe_2011_sp1.8.273/ipp/lib/intel64:/mnt/buildbot/local/intel12/composer_xe_2011_sp1.8.273/compiler/lib/intel64:/mnt/buildbot/local/intel12/composer_xe_2011_sp1.8.273/mkl/lib/intel64:/mnt/buildbot/local/intel12/composer_xe_2011_sp1.8.273/tbb/lib/intel64/cc4.1.0_libc2.4_kernel2.6.16.21:/mnt/buildbot/local/intel12/composer_xe_2011_sp1.8.273/debugger/lib/intel64:/mnt/buildbot/local/intel12/composer_xe_2011_sp1.8.273/mpirt/lib/intel64:/mnt/buildbot/local/intel17/impi/2017.1.132/intel64/lib:/mnt/buildbot/local/intel17/impi/2017.1.132/lib64:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/compiler/lib/intel64:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/compiler/lib/intel64_lin:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/mpi/intel64/lib:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/mpi/mic/lib:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/ipp/lib/intel64:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/compiler/lib/intel64_lin:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/mkl/lib/intel64_lin:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/tbb/lib/intel64/gcc4.7:/mnt/buildbot/local/intel17/debugger_2017/iga/lib:/mnt/buildbot/local/intel17/debugger_2017/libipt/intel64/lib:/mnt/buildbot/local/intel17/impi/2017.1.132/lib64:/mnt/buildbot/local/intel17/compilers_and_libraries_2017/linux/lib/intel64:/usr/local/lib64:/usr/local/lib:/mnt/buildbot/local/intel17/compilers_and_libraries_2017/linux/lib/intel64:/usr/local/lib64:/usr/local/lib
+
+
+export  PATH=/mnt/buildbot/local/intel17/compilers_and_libraries_2017.4.196/linux/mpi/intel64/bin:/mnt/buildbot/local/intel17/debugger_2017/gdb/intel64_mic/bin:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/bin/intel64:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/mpi/intel64/bin:/mnt/buildbot/local/intel17/debugger_2017/gdb/intel64_mic/bin:/mnt/buildbot/local/intel12/composer_xe_2011_sp1.8.273/bin/intel64:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/mnt/buildbot/local/intel12/composer_xe_2011_sp1.8.273/mpirt/bin/intel64:/mnt/buildbot/local/intel17/parallel_studio_xe_2017.4.056/bin:/mnt/buildbot/local/intel17/impi/2017.1.132/intel64/bin:/mnt/buildbot/local/intel17/impi/2017.1.132/bin64:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/bin/intel64:/mnt/buildbot/local/intel17/compilers_and_libraries_2017.1.132/linux/mpi/intel64/bin:/mnt/buildbot/local/intel17/debugger_2017/gdb/intel64_mic/bin:/mnt/buildbot/local/intel17/compilers_and_libraries_2017/linux/bin/intel64:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+ 
+export  MKLROOT=/mnt/buildbot/local/intel17/mkl
+export  MPICC_CC=icc
+export  MPICH_CC=icc
+export  MPICH_CCC=icpc
+export  MPICH_CPP=icc -E
+export  MPICH_CXX=icpc
+export  MPICH_F77=ifort
+export  MPICH_F90=ifort
+export  MPICXX_CXX=icpc
+export  MPIF90_F90=ifort
