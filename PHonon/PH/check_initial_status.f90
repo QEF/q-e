@@ -72,7 +72,7 @@ SUBROUTINE check_initial_status(auxdyn)
   USE io_files,        ONLY : tmp_dir, postfix
   USE lsda_mod,        ONLY : nspin
   USE scf,             ONLY : rho
-  USE disp,            ONLY : nqs, x_q, comp_iq, nq1, nq2, nq3, &
+  USE disp,            ONLY : nqs, x_q, wq, comp_iq, nq1, nq2, nq3, &
                               done_iq, lgamma_iq
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
@@ -138,8 +138,10 @@ SUBROUTINE check_initial_status(auxdyn)
         nqs = 1
         last_q = 1
         ALLOCATE(x_q(3,1))
+        ALLOCATE(wq(1))
         ALLOCATE(lgamma_iq(1))
         x_q(:,1)=xq(:)
+        wq(1)=1.0d0
         lgamma_iq(1)=lgamma
         !
      END IF

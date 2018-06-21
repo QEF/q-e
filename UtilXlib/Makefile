@@ -15,7 +15,8 @@ mp.o \
 mp_base.o \
 mp_bands_util.o \
 parallel_include.o \
-util_param.o
+util_param.o \
+thread_util.o
 
 all : libutil.a
 

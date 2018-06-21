@@ -20,7 +20,7 @@ default :
 	@echo '  neb          code for Nudged Elastic Band method'
 	@echo '  pp           postprocessing programs'
 	@echo '  pwall        same as "make pw ph pp pwcond neb"'
-	@echo '  cp           CP code: CP MD with ultrasoft pseudopotentials'
+	@echo '  cp           CP code: Car-Parrinello molecular dynamics'
 	@echo '  tddfpt       time dependent dft code'
 	@echo '  gwl          GW with Lanczos chains'
 	@echo '  ld1          utilities for pseudopotential generation'
@@ -309,7 +309,6 @@ veryclean : clean
 		CPV/version.h ChangeLog* intel.pcl */intel.pcl
 	- rm -rf include/configure.h install/make_wannier90.inc
 	- cd install ; rm -fr autom4te.cache
-	- cd pseudo; ./clean_ps ; cd -
 	- cd install; ./clean.sh ; cd -
 	- cd include; ./clean.sh ; cd -
 	- rm -f espresso.tar.gz -
@@ -317,6 +316,7 @@ veryclean : clean
 	- rm -rf FoX
 # remove everything not in the original distribution
 distclean : veryclean
+	- cd pseudo; ./clean_ps ; cd -
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 tar :

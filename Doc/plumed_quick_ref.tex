@@ -380,7 +380,7 @@ This tells you that everything is going fine. The index of atoms are parsed corr
                 0.000000000      0.000000000      0.000000000
 \end{verbatim}
 
-In the first line there is a simple remainder to the elements that you have in each column. Namely time first (in a.u. by default in \qe), then the value of the two CVs followed by the various additional potential energies introduced by \texttt{PLUMED}.  The fourth column is the bias potential, the wall potential is in the fifth column and the external potential is in the last. Now you can plot the evolution of the CVs with gnuplot by using the command \texttt{p "./COLVAR" u 1:2 t "CV1" ,"" u 1:3 t "CV2"} and you’ll get something like Fig. \ref{FIG_sn2_cv}. If you want to understand how the CVs are related then you may use the command \texttt{p "./COLVAR" u 2:3} with gnuplot that results in a plot like that in Fig. \ref{FIG_sn2_cvs}.
+In the first line there is a simple remainder to the elements that you have in each column. Namely time first (in a.u. by default in \qe), then the value of the two CVs followed by the various additional potential energies introduced by \texttt{PLUMED}.  The fourth column is the bias potential, the wall potential is in the fifth column and the external potential is in the last. Now you can plot the evolution of the CVs with gnuplot by using the command \texttt{p "./COLVAR" u 1:2 t "CV1" ,"" u 1:3 t "CV2"} and you will get something like Fig. \ref{FIG_sn2_cv}. If you want to understand how the CVs are related then you may use the command \texttt{p "./COLVAR" u 2:3} with gnuplot that results in a plot like that in Fig. \ref{FIG_sn2_cvs}.
 
 \begin{figure*}[htbp]
 \begin{center}

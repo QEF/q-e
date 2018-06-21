@@ -568,8 +568,8 @@
        CALL errore('epw_init', 'define either (tempsmin and tempsmax) or temps(:)',1)
   IF ( scattering .AND. tempsmax < tempsmin ) &
        CALL errore('epw_init', 'tempsmax should be greater than tempsmin',1)
-  IF ( int_mob .AND. efermi_read)  CALL errore('epw_init', &
-       'Fermi level can not be set (efermi_read) when computing intrinsic mobilities',1)
+!  IF ( int_mob .AND. efermi_read)  CALL errore('epw_init', &
+!       'Fermi level can not be set (efermi_read) when computing intrinsic mobilities',1)
 !  IF ( int_mob .AND. (ABS(ncarrier) > 1E+5) )  CALL errore('epw_init', &
 !       'You cannot compute intrinsic mobilities and doped mobilities at the same time',1)
   IF ( (ABS(ncarrier) > 1E+5) .and. .not. carrier ) CALL errore('epw_init', &

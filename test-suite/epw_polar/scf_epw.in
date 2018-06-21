@@ -13,7 +13,7 @@
     celldm(1)       = 8.237
     nat             = 2
     ntyp            = 2
-    ecutwfc         = 60
+    ecutwfc         = 20
     nbnd            = 4
  /
  &electrons

@@ -1,5 +1,15 @@
+--------------------------------------------------------------------------
+[[26023,1],0]: A high-performance Open MPI point-to-point messaging module
+was unable to find any relevant network interfaces:
 
-     Program PWSCF v.6.2.2 starts on 15Feb2018 at 16:15:44 
+Module: OpenFabrics (openib)
+  Host: magneto
+
+Another transport will be used instead, although this may result in
+lower performance.
+--------------------------------------------------------------------------
+
+     Program PWSCF v.6.3rc starts on 19Jun2018 at 15:13:56 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -22,17 +32,17 @@
 
      Atomic positions and unit cell read from directory:
      ./si.save/
-
+ 
 
      Subspace diagonalization in iterative solution of the eigenvalue problem:
      a serial algorithm will be used
 
-
+ 
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         211     211     85                 2109     2109     531
-
+ 
 
 
      bravais-lattice index     =            2
@@ -167,14 +177,14 @@
      The potential is recalculated from file :
      ./si.save/charge-density.dat
 
-     Starting wfc are   16 randomized atomic wfcs +    4 random wfc
+     Starting wfcs are   16 randomized atomic wfcs +    4 random wfcs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  1.25E-11,  avg # of iterations = 22.7
+     ethr =  1.25E-12,  avg # of iterations = 25.1
 
-     total cpu time spent up to now is       11.4 secs
+     total cpu time spent up to now is       17.1 secs
 
      End of band structure calculation
 
@@ -564,48 +574,49 @@
 
      highest occupied, lowest unoccupied level (ev):     6.3028    7.0141
 
-     Writing output data file si.save
-
-     init_run     :      0.09s CPU      0.09s WALL (       1 calls)
-     electrons    :     11.15s CPU     11.23s WALL (       1 calls)
+     Writing output data file si.save/
+ 
+     init_run     :      0.05s CPU      0.06s WALL (       1 calls)
+     electrons    :     16.54s CPU     16.72s WALL (       1 calls)
 
      Called by init_run:
      wfcinit      :      0.00s CPU      0.00s WALL (       1 calls)
      potinit      :      0.01s CPU      0.01s WALL (       1 calls)
+     hinit0       :      0.04s CPU      0.05s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :     11.15s CPU     11.23s WALL (       1 calls)
-     v_of_rho     :      0.00s CPU      0.00s WALL (       1 calls)
+     c_bands      :     16.54s CPU     16.72s WALL (       1 calls)
+     v_of_rho     :      0.01s CPU      0.01s WALL (       1 calls)
 
      Called by c_bands:
-     init_us_2    :      0.00s CPU      0.01s WALL (      64 calls)
-     cegterg      :     10.50s CPU     10.57s WALL (      96 calls)
+     init_us_2    :      0.01s CPU      0.01s WALL (      64 calls)
+     cegterg      :     15.27s CPU     15.43s WALL (     108 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      6.76s CPU      6.70s WALL (    1611 calls)
-     g_psi        :      0.02s CPU      0.03s WALL (    1451 calls)
-     cdiaghg      :      1.32s CPU      1.48s WALL (    1515 calls)
+     h_psi        :     11.97s CPU     12.07s WALL (    1779 calls)
+     g_psi        :      0.12s CPU      0.13s WALL (    1607 calls)
+     cdiaghg      :      2.08s CPU      2.10s WALL (    1671 calls)
 
      Called by h_psi:
-     h_psi:pot    :      6.74s CPU      6.69s WALL (    1611 calls)
-     h_psi:calbec :      1.06s CPU      0.96s WALL (    1611 calls)
-     vloc_psi     :      4.78s CPU      4.80s WALL (    1611 calls)
-     add_vuspsi   :      0.90s CPU      0.92s WALL (    1611 calls)
+     h_psi:pot    :     11.95s CPU     12.03s WALL (    1779 calls)
+     h_psi:calbec :      0.46s CPU      0.46s WALL (    1779 calls)
+     vloc_psi     :     10.76s CPU     10.82s WALL (    1779 calls)
+     add_vuspsi   :      0.73s CPU      0.74s WALL (    1779 calls)
 
      General routines
-     calbec       :      1.06s CPU      0.96s WALL (    1611 calls)
-     fft          :      0.00s CPU      0.00s WALL (      18 calls)
-     fftw         :      4.34s CPU      4.36s WALL (   77596 calls)
-     davcio       :      0.01s CPU      0.01s WALL (     128 calls)
-
+     calbec       :      0.45s CPU      0.45s WALL (    1779 calls)
+     fft          :      0.01s CPU      0.01s WALL (      18 calls)
+     fftw         :      9.90s CPU      9.96s WALL (   85988 calls)
+     davcio       :      0.00s CPU      0.01s WALL (     128 calls)
+ 
      Parallel routines
+ 
+     PWSCF        :    16.93s CPU        17.15s WALL
 
-     PWSCF        :    11.35s CPU        11.44s WALL
-
-
-   This run was terminated on:  16:15:55  15Feb2018            
+ 
+   This run was terminated on:  15:14:14  19Jun2018            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

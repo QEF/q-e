@@ -320,7 +320,7 @@ SUBROUTINE read_xml_file ( )
   !
   ! ... read the charge density
   !
-  CALL read_scf( rho, nspin )
+  CALL read_scf( rho, nspin, gamma_only )
 #if ! defined (__OLDXML)
   ! FIXME: for compatibility. rho was previously read and written in real space
   ! FIXME: now it is in G space - to be removed together with old format

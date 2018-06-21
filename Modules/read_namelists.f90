@@ -280,8 +280,8 @@ MODULE read_namelists_module
        ts_vdw_isolated = .FALSE.
        ts_vdw_econv_thr = 1.E-6_DP
        xdm = .FALSE.
-       xdm_a1 = 0.6836_DP
-       xdm_a2 = 1.5045_DP
+       xdm_a1 = 0.0_DP
+       xdm_a2 = 0.0_DP
        !
        ! ... ESM
        !

@@ -35,8 +35,8 @@ SAX=sax-2.0.3
 SAX_URL=$(URL)$(SAX).tar.gz
 #
 # Package maintainer: Davide Ceresoli
-GIPAW=qe-gipaw-6.2.2
-GIPAW_URL=https://github.com/dceresoli/qe-gipaw/archive/6.2.2.tar.gz
+GIPAW=qe-gipaw-6.3
+GIPAW_URL=https://github.com/dceresoli/qe-gipaw/archive/6.3.tar.gz
 #
 # Package maintainer: Layla Martin-Samos
 PLUMED=plumed-1.3-qe
@@ -55,7 +55,7 @@ WEST=West-2.0.1
 WEST_URL=http://www.west-code.org/downloads/$(WEST).tar.gz
 #
 # Package maintainer: Martin Schlipf
-SternheimerGW_version=0.14_qe6.2
+SternheimerGW_version=0.15_QE6.3
 SternheimerGW=SternheimerGW-$(SternheimerGW_version)
 SternheimerGW_archive=v$(SternheimerGW_version).tar.gz
 SternheimerGW_URL=https://github.com/QEF/SternheimerGW/archive/$(SternheimerGW_archive)

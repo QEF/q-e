@@ -22,12 +22,11 @@
   !! Mapping matrix from k+q (where q is full BZ) to IBZ
   INTEGER, ALLOCATABLE :: s_BZtoIBZ_full(:,:,:,:)
   !! Rotation that brink that k-point from BZ to IBZ
-
-  REAL(DP) :: mobilityh_save, mobilityel_save
-
-  REAL(DP), ALLOCATABLE :: transp_temp(:), & 
+  !
+  REAL(kind=DP), ALLOCATABLE :: transp_temp(:), & 
                            SigmaS(:,:), SigmaS2(:,:), Seebeck(:,:), & 
-                           Kappael(:,:), Kappa(:,:)
+                           Kappael(:,:), Kappa(:,:),  mobilityh_save(:), &
+                           mobilityel_save(:)
   !
   ! tdf_sigma(9,nbnd,nkf) : transport distribution function
   ! transp_temp(nstemp) : temperature array

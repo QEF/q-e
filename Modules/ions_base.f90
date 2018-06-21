@@ -21,7 +21,7 @@
       !     nat       = total number of atoms of all species
 
       INTEGER :: nsp     = 0
-      INTEGER :: na(ntypx) = 0    
+      INTEGER :: na(ntypx) = 0
       INTEGER :: nax     = 0
       INTEGER :: nat     = 0
 
@@ -44,7 +44,7 @@
       REAL(DP), ALLOCATABLE :: vel_srt(:,:) !  vel sorted by specie in bohr
       INTEGER,  ALLOCATABLE :: ind_srt(:)   !  index of tau sorted by specie
       INTEGER,  ALLOCATABLE :: ind_bck(:)   !  reverse of ind_srt
-      CHARACTER(LEN=3)      :: atm( ntypx ) 
+      CHARACTER(LEN=3)      :: atm( ntypx )
       CHARACTER(LEN=3), ALLOCATABLE :: label_srt( : ) 
       CHARACTER(LEN=80)     :: tau_format   ! format of input atomic positions:
                                             ! 'alat','crystal','bohr','angstrom'

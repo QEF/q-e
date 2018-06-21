@@ -1,5 +1,15 @@
+--------------------------------------------------------------------------
+[[27202,1],0]: A high-performance Open MPI point-to-point messaging module
+was unable to find any relevant network interfaces:
 
-     Program PWSCF v.6.2.2 starts on 15Feb2018 at 16:10:17 
+Module: OpenFabrics (openib)
+  Host: magneto
+
+Another transport will be used instead, although this may result in
+lower performance.
+--------------------------------------------------------------------------
+
+     Program PWSCF v.6.3rc starts on 19Jun2018 at 15:13:54 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -23,12 +33,12 @@
      Subspace diagonalization in iterative solution of the eigenvalue problem:
      a serial algorithm will be used
 
-
+ 
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         211     211     73                 2109     2109     411
-
+ 
 
 
      bravais-lattice index     =            2
@@ -110,9 +120,9 @@
      Initial potential from superposition of free atoms
 
      starting charge    7.99877, renormalised to    8.00000
-     Starting wfc are   16 randomized atomic wfcs
+     Starting wfcs are   16 randomized atomic wfcs
 
-     total cpu time spent up to now is        0.2 secs
+     total cpu time spent up to now is        0.4 secs
 
      Self-consistent Calculation
 
@@ -126,7 +136,7 @@
      Davidson diagonalization with overlap
      ethr =  7.71E-04,  avg # of iterations =  1.1
 
-     total cpu time spent up to now is        0.4 secs
+     total cpu time spent up to now is        0.8 secs
 
      total energy              =     -16.89802949 Ry
      Harris-Foulkes estimate   =     -16.91351351 Ry
@@ -136,7 +146,7 @@
      Davidson diagonalization with overlap
      ethr =  7.61E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        0.5 secs
+     total cpu time spent up to now is        1.0 secs
 
      total energy              =     -16.89987525 Ry
      Harris-Foulkes estimate   =     -16.90013907 Ry
@@ -146,7 +156,7 @@
      Davidson diagonalization with overlap
      ethr =  3.52E-05,  avg # of iterations =  1.9
 
-     total cpu time spent up to now is        0.6 secs
+     total cpu time spent up to now is        1.1 secs
 
      total energy              =     -16.90016038 Ry
      Harris-Foulkes estimate   =     -16.90016724 Ry
@@ -156,7 +166,7 @@
      Davidson diagonalization with overlap
      ethr =  5.08E-07,  avg # of iterations =  3.1
 
-     total cpu time spent up to now is        0.7 secs
+     total cpu time spent up to now is        1.4 secs
 
      total energy              =     -16.90019238 Ry
      Harris-Foulkes estimate   =     -16.90019216 Ry
@@ -166,7 +176,7 @@
      Davidson diagonalization with overlap
      ethr =  3.91E-09,  avg # of iterations =  3.5
 
-     total cpu time spent up to now is        0.8 secs
+     total cpu time spent up to now is        1.6 secs
 
      total energy              =     -16.90019257 Ry
      Harris-Foulkes estimate   =     -16.90019256 Ry
@@ -176,7 +186,7 @@
      Davidson diagonalization with overlap
      ethr =  9.51E-11,  avg # of iterations =  3.1
 
-     total cpu time spent up to now is        0.9 secs
+     total cpu time spent up to now is        1.8 secs
 
      total energy              =     -16.90019257 Ry
      Harris-Foulkes estimate   =     -16.90019257 Ry
@@ -186,7 +196,7 @@
      Davidson diagonalization with overlap
      ethr =  9.65E-12,  avg # of iterations =  2.2
 
-     total cpu time spent up to now is        1.0 secs
+     total cpu time spent up to now is        2.0 secs
 
      total energy              =     -16.90019257 Ry
      Harris-Foulkes estimate   =     -16.90019257 Ry
@@ -196,7 +206,7 @@
      Davidson diagonalization with overlap
      ethr =  1.61E-13,  avg # of iterations =  3.9
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        2.3 secs
 
      total energy              =     -16.90019257 Ry
      Harris-Foulkes estimate   =     -16.90019257 Ry
@@ -206,7 +216,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-13,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is        1.2 secs
+     total cpu time spent up to now is        2.4 secs
 
      End of self-consistent calculation
 
@@ -259,7 +269,7 @@
 
      Forces acting on atoms (cartesian axes, Ry/au):
 
-     atom    1 type  1   force =     0.00000000    0.00000000   -0.00000000
+     atom    1 type  1   force =     0.00000000    0.00000000    0.00000000
      atom    2 type  1   force =    -0.00000000   -0.00000000    0.00000000
 
      Total force =     0.000000     Total SCF correction =     0.000000
@@ -270,51 +280,52 @@
      Message from routine stres:
      noncollinear stress + GGA not implemented
 
-     Writing output data file si.save
-
-     init_run     :      0.14s CPU      0.14s WALL (       1 calls)
-     electrons    :      1.01s CPU      1.02s WALL (       1 calls)
+     Writing output data file si.save/
+ 
+     init_run     :      0.15s CPU      0.16s WALL (       1 calls)
+     electrons    :      1.99s CPU      2.03s WALL (       1 calls)
      forces       :      0.03s CPU      0.03s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.06s CPU      0.06s WALL (       1 calls)
+     wfcinit      :      0.10s CPU      0.10s WALL (       1 calls)
      potinit      :      0.01s CPU      0.01s WALL (       1 calls)
+     hinit0       :      0.04s CPU      0.05s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      0.89s CPU      0.89s WALL (      10 calls)
-     sum_band     :      0.08s CPU      0.09s WALL (      10 calls)
-     v_of_rho     :      0.03s CPU      0.03s WALL (      10 calls)
-     mix_rho      :      0.01s CPU      0.01s WALL (      10 calls)
+     c_bands      :      1.76s CPU      1.77s WALL (      10 calls)
+     sum_band     :      0.19s CPU      0.19s WALL (      10 calls)
+     v_of_rho     :      0.04s CPU      0.04s WALL (      10 calls)
+     mix_rho      :      0.01s CPU      0.02s WALL (      10 calls)
 
      Called by c_bands:
-     init_us_2    :      0.02s CPU      0.02s WALL (     176 calls)
-     cegterg      :      0.72s CPU      0.72s WALL (      80 calls)
+     init_us_2    :      0.04s CPU      0.03s WALL (     176 calls)
+     cegterg      :      1.11s CPU      1.14s WALL (      80 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :      0.64s CPU      0.67s WALL (     271 calls)
-     g_psi        :      0.01s CPU      0.00s WALL (     183 calls)
-     cdiaghg      :      0.02s CPU      0.02s WALL (     255 calls)
+     h_psi        :      1.08s CPU      1.10s WALL (     271 calls)
+     g_psi        :      0.01s CPU      0.01s WALL (     183 calls)
+     cdiaghg      :      0.04s CPU      0.04s WALL (     255 calls)
 
      Called by h_psi:
-     h_psi:pot    :      0.63s CPU      0.67s WALL (     271 calls)
-     h_psi:calbec :      0.09s CPU      0.10s WALL (     271 calls)
-     vloc_psi     :      0.43s CPU      0.48s WALL (     271 calls)
-     add_vuspsi   :      0.11s CPU      0.09s WALL (     271 calls)
+     h_psi:pot    :      1.08s CPU      1.10s WALL (     271 calls)
+     h_psi:calbec :      0.05s CPU      0.05s WALL (     271 calls)
+     vloc_psi     :      0.97s CPU      0.97s WALL (     271 calls)
+     add_vuspsi   :      0.06s CPU      0.07s WALL (     271 calls)
 
      General routines
-     calbec       :      0.10s CPU      0.11s WALL (     303 calls)
-     fft          :      0.01s CPU      0.01s WALL (     142 calls)
-     ffts         :      0.00s CPU      0.00s WALL (      40 calls)
-     fftw         :      0.44s CPU      0.50s WALL (    9052 calls)
-
+     calbec       :      0.05s CPU      0.05s WALL (     303 calls)
+     fft          :      0.03s CPU      0.03s WALL (     142 calls)
+     ffts         :      0.01s CPU      0.01s WALL (      40 calls)
+     fftw         :      1.05s CPU      1.04s WALL (    9052 calls)
+ 
      Parallel routines
+ 
+     PWSCF        :     2.43s CPU         2.48s WALL
 
-     PWSCF        :     1.25s CPU         1.27s WALL
-
-
-   This run was terminated on:  16:10:18  15Feb2018            
+ 
+   This run was terminated on:  15:13:56  19Jun2018            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

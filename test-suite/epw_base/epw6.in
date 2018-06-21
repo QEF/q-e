@@ -40,7 +40,6 @@
   degaussw    = 0.3 ! eV
 
   dvscf_dir   = './save/'
-  filukk      = './diam.ukk'
 
   nkf1        = 6
   nkf2        = 6

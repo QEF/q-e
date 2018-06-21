@@ -1,5 +1,7 @@
 New in development version:
 
+  * Improved FFT threading (Ye Luo, Argonne)
+
   * EXX: ACE can be projected on arbitrary number of orbitals
     Slight change in SCF convergence with ACE (dexx) properly
     accounting for difference between 2*<new|V(old)|new> 
@@ -11,6 +13,8 @@ New in development version:
   * Spin-polarized X3LYP (experimental)
 
 Problems fixed in development version:
+
+  * Real-space augmentation functions were crashing with -nt N option
 
   * Calculation of ELF wasn't always working due to a bad usage of FFT
     descriptors - noticed by Enrique Zanardi Maffiotte (commit a86fb75d)

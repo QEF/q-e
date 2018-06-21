@@ -711,7 +711,7 @@
             READ (iunifc,*) idum
             READ (iunifc,*) ((zstar(i,j,na), j=1,3), i=1,3)
          ENDDO
-         WRITE(stdout,*) " Read Z*, epsilon"
+         WRITE (stdout,'(5x,a)') "Read Z* and epsilon"
       ENDIF
       !
       READ (iunifc,*) idum

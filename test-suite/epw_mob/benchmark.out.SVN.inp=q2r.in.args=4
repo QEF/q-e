@@ -1,5 +1,15 @@
+--------------------------------------------------------------------------
+[[27492,1],0]: A high-performance Open MPI point-to-point messaging module
+was unable to find any relevant network interfaces:
 
-     Program Q2R v.6.2.2 starts on 15Feb2018 at 16:15:42 
+Module: OpenFabrics (openib)
+  Host: magneto
+
+Another transport will be used instead, although this may result in
+lower performance.
+--------------------------------------------------------------------------
+
+     Program Q2R v.6.3rc starts on 19Jun2018 at 15:13:53 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -15,7 +25,7 @@
 
      reading grid info from file si.dyn0.xml
   reading force constants from file si.dyn1
-Norm of the difference between old and new effective charges:    2.78758358922483306941
+Norm of the difference between old and new effective charges:    2.78758358911622172727
   nqs=            1
  q=   0.00000000  0.00000000  0.00000000
   reading force constants from file si.dyn2
@@ -33,11 +43,11 @@ Norm of the difference between old and new effective charges:    2.7875835892248
       q-space grid ok, #points =    8
 
       fft-check success (sum of imaginary terms < 10^-12)
+ 
+     Q2R          :     0.06s CPU         0.06s WALL
 
-     Q2R          :     0.02s CPU         0.02s WALL
-
-
-   This run was terminated on:  16:15:42  15Feb2018            
+ 
+   This run was terminated on:  15:13:53  19Jun2018            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
