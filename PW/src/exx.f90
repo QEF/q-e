@@ -2379,8 +2379,9 @@ MODULE exx
     USE mp_pools,             ONLY : npool, inter_pool_comm
     USE mp_exx,               ONLY : inter_egrp_comm, intra_egrp_comm, &
                                      ibands, nibands, my_egrp_id, jblock, &
-                                     egrp_pairs, max_pairs, negrp
-    USE mp,                   ONLY : mp_sum
+                                     egrp_pairs, max_pairs, negrp, me_egrp, &
+                                     all_start, all_end, iexx_start
+    USE mp,                   ONLY : mp_sum, mp_circular_shift_left
     USE fft_base,             ONLY : dffts
     USE fft_interfaces,       ONLY : fwfft, invfft
     USE uspp,                 ONLY : okvan
@@ -2407,14 +2408,14 @@ MODULE exx
     COMPLEX(DP),ALLOCATABLE :: rhoc(:)
     REAL(DP),   ALLOCATABLE :: fac(:), fac_tens(:,:,:), fac_stress(:)
     INTEGER  :: npw, jbnd, ibnd, ik, ikk, ig, ir, ikq, iq, isym
-    INTEGER  :: h_ibnd, nqi, iqi, beta, nrxxs, ngm
+    INTEGER  :: nqi, iqi, beta, nrxxs, ngm
     INTEGER  :: ibnd_loop_start
     REAL(DP) :: x1, x2
     REAL(DP) :: qq, xk_cryst(3), sxk(3), xkq(3), vc(3,3), x, q(3)
     REAL(DP) :: delta(3,3)
-    COMPLEX(DP), ALLOCATABLE :: exxtemp(:,:)
-    INTEGER :: jstart, jend, ipair, jblock_start, jblock_end
-    INTEGER :: ijt, njt, ii, jcount, exxtemp_index
+    INTEGER :: jstart, jend, ii, ipair, jblock_start, jblock_end
+    INTEGER :: iegrp, wegrp
+    INTEGER :: exxbuff_index
 
     CALL start_clock ('exx_stress')
 
@@ -2430,8 +2431,6 @@ MODULE exx
     exx_stress_ = 0._dp
     ALLOCATE( tempphic(nrxxs), temppsic(nrxxs), rhoc(nrxxs), fac(ngm) )
     ALLOCATE( fac_tens(3,3,ngm), fac_stress(ngm) )
-    !
-    ALLOCATE( exxtemp(nrxxs*npol, nbnd) )
     !
     nqi=nqs
     !
@@ -2546,29 +2545,15 @@ MODULE exx
                 ENDDO
 !$omp end parallel do
                 !CALL stop_clock ('exxen2_ngmloop')
+        DO iegrp=1, negrp
+           !
+           ! compute the id of group whose data is currently worked on
+           wegrp = MOD(iegrp+my_egrp_id-1, negrp)+1
+           !
+           jblock_start = all_start(wegrp)
+           jblock_end   = all_end(wegrp)
+           !
         ! loop over bands
-        njt = nbnd / jblock
-        if (mod(nbnd, jblock) .ne. 0) njt = njt + 1
-        !
-        DO ijt=1, njt
-           !
-           !gather exxbuff for jblock_start:jblock_end
-           IF (gamma_only) THEN
-              !
-              jblock_start = (ijt - 1) * (2*jblock) + 1
-              jblock_end = min(jblock_start+(2*jblock)-1,nbnd)
-              !
-              call exxbuff_comm_gamma(exxbuff, exxtemp, ikq, nrxxs*npol, &
-                      jblock_start, jblock_end, jblock)
-           ELSE
-              !
-              jblock_start = (ijt - 1) * jblock + 1
-              jblock_end = min(jblock_start+jblock-1,nbnd)
-              !
-              call exxbuff_comm(exxbuff, exxtemp, ikq, nrxxs*npol, &
-                      jblock_start, jblock_end)
-           END IF
-           !
         DO ii = 1, nibands(my_egrp_id+1)
             !
             jbnd = ibands(ii,my_egrp_id+1)
@@ -2592,10 +2577,6 @@ MODULE exx
             jstart = max(jstart,jblock_start)
             jend = min(jend,jblock_end)
             !
-            !how many iters
-            jcount=jend-jstart+1
-            if(jcount<=0) cycle
-            !
             temppsic(:) = ( 0._dp, 0._dp )
 !$omp parallel do default(shared), private(ig)
             DO ig = 1, npw
@@ -2616,22 +2597,15 @@ MODULE exx
 
                 IF (gamma_only) THEN
                     !
-                    h_ibnd = jstart/2
-                    !
                     IF(mod(jstart,2)==0) THEN
-                      h_ibnd=h_ibnd-1
                       ibnd_loop_start=jstart-1
                     ELSE
                       ibnd_loop_start=jstart
                     ENDIF
                     !
-                    exxtemp_index = max(0, (jstart-jblock_start)/2 )
-                    !
                     DO ibnd = ibnd_loop_start, jend, 2     !for each band of psi
                         !
-                        h_ibnd = h_ibnd + 1
-                        !
-                        exxtemp_index = exxtemp_index + 1
+                        exxbuff_index = (ibnd+1)/2-(all_start(wegrp)+1)/2+(iexx_start+1)/2
                         !
                         IF( ibnd < jstart ) THEN
                             x1 = 0._dp
@@ -2649,7 +2623,7 @@ MODULE exx
                         ! calculate rho in real space
 !$omp parallel do default(shared), private(ir)
                         DO ir = 1, nrxxs
-                            tempphic(ir) = exxtemp(ir,exxtemp_index)
+                            tempphic(ir) = exxbuff(ir,exxbuff_index,ikq)
                             rhoc(ir)     = conjg(tempphic(ir))*temppsic(ir) / omega
                         ENDDO
 !$omp end parallel do
@@ -2683,7 +2657,7 @@ MODULE exx
                       ! calculate rho in real space
 !$omp parallel do default(shared), private(ir)
                       DO ir = 1, nrxxs
-                          tempphic(ir) = exxtemp(ir,ibnd-jblock_start+1)
+                          tempphic(ir) = exxbuff(ir,ibnd-all_start(wegrp)+iexx_start,ikq)
                           rhoc(ir)     = conjg(tempphic(ir))*temppsic(ir) / omega
                       ENDDO
 !$omp end parallel do
@@ -2707,12 +2681,15 @@ MODULE exx
                 ENDIF ! gamma or k-points
 
         ENDDO ! jbnd
-        ENDDO !ijt
+           !
+           ! get the next nbnd/negrp data
+           IF ( negrp>1) call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+           !
+        ENDDO ! iegrp
             ENDDO ! iqi
     ENDDO ! ikk
 
     DEALLOCATE(tempphic, temppsic, rhoc, fac, fac_tens, fac_stress )
-    DEALLOCATE(exxtemp)
     !
     CALL mp_sum( exx_stress_, intra_egrp_comm )
     CALL mp_sum( exx_stress_, inter_egrp_comm )
