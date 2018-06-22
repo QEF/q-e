@@ -590,12 +590,12 @@
        INTEGER :: FFT_DIM(RANK), DATA_DIM(RANK)
        INTEGER :: STRIDE, DIST, BATCH
 
-        FFT_DIM(1) = nx
+        FFT_DIM(1) = nz
         FFT_DIM(2) = ny
-        FFT_DIM(3) = nz
-       DATA_DIM(1) = ldx
+        FFT_DIM(3) = nx
+       DATA_DIM(1) = ldz
        DATA_DIM(2) = ldy
-       DATA_DIM(3) = ldz
+       DATA_DIM(3) = ldx
             STRIDE = 1
               DIST = ldx*ldy*ldz
              BATCH = howmany
