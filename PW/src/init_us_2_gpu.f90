@@ -22,6 +22,9 @@ subroutine init_us_2_gpu (npw_, igk__d, q_, vkb__d)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE cell_base,  ONLY : tpiba
   USE constants,  ONLY : tpi
+#if defined(__BUG)
+  USE gvect,      ONLY : eigts1, eigts2, eigts3, mill
+#endif
   USE gvect_gpum, ONLY : eigts1_d, eigts2_d, eigts3_d, mill_d, g_d
   USE wvfct,      ONLY : npwx
   USE us,         ONLY : nqx, dq, spline_ps
@@ -54,18 +57,25 @@ subroutine init_us_2_gpu (npw_, igk__d, q_, vkb__d)
   integer :: istat
   integer :: iv_d
   real(DP) :: px, ux, vx, wx, arg, q1, q2, q3
-  real(DP), pointer :: gk_d (:,:), qg_d (:), vq_d(:), ylm_d(:,:), vkb1_d(:,:)
+  real(DP), allocatable :: gk_d (:,:), qg_d (:), vq_d(:), ylm_d(:,:), vkb1_d(:,:)
   real(DP), allocatable :: qg_h (:), vq_h(:)
   real(DP) :: rv_d
 
   complex(DP) :: phase, pref
-  complex(DP), pointer :: sk_d(:)
+  complex(DP), allocatable :: sk_d(:)
 
   logical :: is_gth
   integer :: iq
 #if defined(__CUDA)
   attributes(DEVICE) :: gk_d, qg_d, vq_d, ylm_d, vkb1_d, sk_d
   attributes(PINNED) :: qg_h, vq_h
+#endif
+#if defined(__BUG)
+  complex(DP), allocatable, pinned :: sk_h(:)
+  INTEGER, allocatable, pinned :: igk__h (:)
+  allocate(sk_h(npw_))
+  allocate(igk__h(npw_))
+  igk__h(1:npw_) = igk__d(1:npw_)
 #endif
   !
   !
@@ -77,18 +87,18 @@ subroutine init_us_2_gpu (npw_, igk__d, q_, vkb__d)
 
   ! JR Eventually replace with smarter allocation/deallocation of GPU temp arrays
   ! PB use buffer class here
-  !allocate (vkb1_d( npw_,nhm))    
-  !allocate (  sk_d( npw_))    
-  !allocate (  qg_d( npw_))    
-  !allocate (  vq_d( npw_))    
-  !allocate ( ylm_d( npw_, (lmaxkb + 1) **2))    
-  !allocate (  gk_d( 3, npw_))
-  CALL qe_buffer%lock_buffer(vkb1_d, (/ npw_,nhm/), istat )
-  CALL qe_buffer%lock_buffer(  sk_d, npw_, istat )
-  CALL qe_buffer%lock_buffer(  qg_d, npw_, istat )
-  CALL qe_buffer%lock_buffer(  vq_d, npw_, istat )
-  CALL qe_buffer%lock_buffer( ylm_d, (/ npw_, (lmaxkb + 1) **2 /), istat )
-  CALL qe_buffer%lock_buffer(  gk_d, (/ 3, npw_ /), istat )
+  allocate (vkb1_d( npw_,nhm))
+  allocate (  sk_d( npw_))
+  allocate (  qg_d( npw_))
+  allocate (  vq_d( npw_))
+  allocate ( ylm_d( npw_, (lmaxkb + 1) **2))
+  allocate (  gk_d( 3, npw_))
+  !CALL qe_buffer%lock_buffer(vkb1_d, (/ npw_,nhm/), istat )
+  !CALL qe_buffer%lock_buffer(  sk_d, npw_, istat )
+  !CALL qe_buffer%lock_buffer(  qg_d, npw_, istat )
+  !CALL qe_buffer%lock_buffer(  vq_d, npw_, istat )
+  !CALL qe_buffer%lock_buffer( ylm_d, (/ npw_, (lmaxkb + 1) **2 /), istat )
+  !CALL qe_buffer%lock_buffer(  gk_d, (/ 3, npw_ /), istat )
 
   is_gth = .false.
   do nt = 1, ntyp
@@ -191,12 +201,30 @@ subroutine init_us_2_gpu (npw_, igk__d, q_, vkb__d)
                   q_(2) * tau (2, na) + &
                   q_(3) * tau (3, na) ) * tpi
            phase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
+#if ! defined(__BUG)
            !$cuf kernel do(1) <<<*,*>>>
            do ig = 1, npw_
               sk_d (ig) = eigts1_d (mill_d(1,igk__d(ig)), na) * &
                           eigts2_d (mill_d(2,igk__d(ig)), na) * &
                           eigts3_d (mill_d(3,igk__d(ig)), na)
            enddo
+#else
+           !$cuf kernel do(1) <<<*,*>>>
+           do ig = 1, npw_
+              sk_d (ig) = eigts1_d (mill_d(1,igk__d(ig)), na) * &
+                          eigts2_d (mill_d(2,igk__d(ig)), na) * &
+                          eigts3_d (mill_d(3,igk__d(ig)), na)
+           enddo
+           sk_h = sk_d
+           print *, "SUM of sk_d", SUM(sk_h)
+           do ig = 1, npw_
+              sk_h (ig) = eigts1 (mill(1,igk__h(ig)), na) * &
+                          eigts2 (mill(2,igk__h(ig)), na) * &
+                          eigts3 (mill(3,igk__h(ig)), na)
+           enddo
+           print *, "SUM of sk_h", SUM(sk_h)
+           sk_d = sk_h
+#endif
            do ih = 1, nh (nt)
               jkb = jkb + 1
               pref = (0.d0, -1.d0) **nhtol (ih, nt) * phase
@@ -212,19 +240,21 @@ subroutine init_us_2_gpu (npw_, igk__d, q_, vkb__d)
         endif
      enddo
   enddo
-
-  !deallocate(gk_d)
-  !deallocate(ylm_d) 
-  !deallocate(vq_d)
-  !deallocate(qg_d)
-  !deallocate(sk_d)
-  !deallocate(vkb1_d)
-  CALL qe_buffer%release_buffer(vkb1_d, istat )
-  CALL qe_buffer%release_buffer(  sk_d, istat )
-  CALL qe_buffer%release_buffer(  qg_d, istat )
-  CALL qe_buffer%release_buffer(  vq_d, istat )
-  CALL qe_buffer%release_buffer( ylm_d, istat )
-  CALL qe_buffer%release_buffer(  gk_d, istat )
+#if defined(__BUG)
+  deallocate( sk_h, igk__h )
+#endif
+  deallocate(gk_d)
+  deallocate(ylm_d)
+  deallocate(vq_d)
+  deallocate(qg_d)
+  deallocate(sk_d)
+  deallocate(vkb1_d)
+  !CALL qe_buffer%release_buffer(vkb1_d, istat )
+  !CALL qe_buffer%release_buffer(  sk_d, istat )
+  !CALL qe_buffer%release_buffer(  qg_d, istat )
+  !CALL qe_buffer%release_buffer(  vq_d, istat )
+  !CALL qe_buffer%release_buffer( ylm_d, istat )
+  !CALL qe_buffer%release_buffer(  gk_d, istat )
   IF (is_gth) THEN
      deallocate ( qg_h, vq_h )
   END IF
