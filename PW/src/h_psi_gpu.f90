@@ -142,7 +142,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   need_host_copy = ( real_space .and. nkb > 0  ) .OR. &
                     dft_is_meta() .OR. &
                     (lda_plus_u .AND. U_projection.NE."pseudo" ) .OR. &
-                    ( nkb > 0 .AND. .NOT. real_space) .OR. &
                     exx_is_active() .OR. lelfield
 
   if (need_host_copy) then
