@@ -1,0 +1,155 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: bands.x / PWscf / Quantum Espresso (version: svn)
+------------------------------------------------------------------------
+
+
+Purpose of bands.x:
+   Re-order bands, computes band-related properties. Currently,
+   re-ordering can be done with two different algorithms:
+   (a) by maximising the overlap with bands at previous k-point
+   (b) by computing symmetry properties of each wavefunction
+   Bands-related properties that can be computed are currently
+   (a) The expectation value of the spin operator on each spinor
+       wave-function (noncolinear case only)
+   (b) The expectation value of p
+
+The input data can be read from standard input or from file using
+command-line options "bands.x -i file-name" (same syntax as for pw.x)
+
+Output files:
+- file "filband" containing the band structure, in a format
+  suitable for plotting code "plotband.x"
+- file "filband".rap (if "lsym" is .t.)  with symmetry information,
+  to be read by plotting code "plotband.x"
+- if ("lsigma"(i)): file "filband".i, i=1,2,3, with expectation values
+  of the spin operator in the noncolinear case
+- file "filband".gnu with bands in eV, directly plottable using gnuplot
+- file "filp" with matrix elements of p
+
+Structure of the input data:
+============================
+
+   &BANDS
+     ...
+   /
+
+
+
+========================================================================
+NAMELIST: &BANDS
+
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           CHARACTER
+   Default:        'pwscf'
+   Description:    prefix of files saved by program pw.x
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           CHARACTER
+   Description:    directory containing the input data, i.e. the same as in pw.x
+   Default:        value of the ESPRESSO_TMPDIR environment variable if set;
+                   current directory ('./') otherwise
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       filband
+   
+   Type:           CHARACTER
+   Default:        'bands.out'
+   Description:    file name for band output (to be read by "plotband.x")
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       spin_component
+   
+   Type:           INTEGER
+   Description:    In the lsda case select:
+                   
+                      1 = spin-up
+                      2 = spin-down
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lsigma(i), i=1,3
+   
+   Type:           LOGICAL
+   Description:    If true computes expectation values of the spin operator
+                   on the spinor wave-functions (only in the noncollinear case),
+                   writes them to a file "filband".i, i=1,2,3
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lp
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. matrix elements of the momentum operator p between
+                   conduction and valence bands are computed and written to file
+                   specified in "filp"
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       filp
+   
+   Type:           CHARACTER
+   Default:        'p_avg.dat'
+   Description:    If "lp" is set to .true., file name for matrix elements of p
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lsym
+   
+   Type:           LOGICAL
+   Default:        .true.
+   Description:    If .true. the bands are classified according to the
+                   irreducible representations of the small group of k.
+                   A file "filband".rap with the same format of "filband"
+                   is written, for usage by "plotband.x"
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       no_overlap
+   
+   Type:           LOGICAL
+   Default:        .true.
+   Description:    If .false., and if "lsym" is .false., writes the eigenvalues
+                   in the order that maximises overlap with the neighbor k-points
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       plot_2d
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. writes the eigenvalues in the output file
+                   in a 2D format readable by gnuplot. Band ordering is not
+                   changed. Each band is written in a different file called
+                   filband.# with the format:
+                   
+                      xk, yk, energy
+                      xk, yk, energy
+                      ..  ..  ..
+                   
+                   energies are written in eV and xk in units 2\pi/a.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variables:      firstk, lastk
+   
+   Type:           INTEGER
+   Description:    if @ref lsym=.true. makes the symmetry analysis only for k
+                   points between firstk to lastk
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Fri Jun 22 17:11:35 CEST 2018

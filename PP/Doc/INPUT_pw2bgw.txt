@@ -1,0 +1,386 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: pw2bgw.x / PWscf / Quantum Espresso (version: svn)
+------------------------------------------------------------------------
+
+
+Purpose of pw2bgw.x:
+   Converts the output files produced by pw.x to the input files for BerkeleyGW.
+
+You cannot use USPP, PAW, or spinors in a pw.x run for BerkeleyGW.
+
+You cannot use "K_POINTS gamma" in a pw.x run for BerkeleyGW.
+Use "K_POINTS { tpiba | automatic | crystal }" even for the
+Gamma-point calculation.
+
+It is recommended to run a pw.x "bands" calculation with "K_POINTS crystal"
+and a list of k-points produced by kgrid.x, which is a part of BerkeleyGW
+package (see BerkeleyGW documentation for details).
+
+You can also run a pw.x "nscf" calculation instead of "bands", but in this
+case pw.x may generate more k-points than provided in the input file of pw.x.
+If this is the case for your calculation you will get errors in BerkeleyGW.
+
+Examples showing how to run BerkeleyGW on top of Quantum ESPRESSO including
+the input files for pw.x and pw2bgw.x are distributed together with the
+BerkeleyGW package.
+
+Structure of the input data:
+============================
+
+   &INPUT_PW2BGW
+     ...
+   /
+
+
+
+========================================================================
+NAMELIST: &INPUT_PW2BGW
+
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           STRING
+   Status:         MANDATORY
+   Description:    prefix of files saved by program pw.x
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           STRING
+   Default:        './'
+   Description:    the scratch directory where the massive data-files are written
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       real_or_complex
+   
+   Type:           INTEGER
+   Default:        2
+   Description:    1 | 2
+                   1 for real flavor of BerkeleyGW (for systems with inversion symmetry and
+                   time-reversal symmetry) or 2 for complex flavor of BerkeleyGW (for systems
+                   without inversion symmetry and time-reversal symmetry)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       symm_type
+   
+   Type:           STRING
+   Default:        'cubic'
+   Description:   
+                   Options are:
+                        'cubic'
+                        'hexagonal'
+    
+                   type of crystal system, 'cubic' for space groups 1 ... 142 and 195 ... 230
+                   and 'hexagonal' for space groups 143 ... 194. Only used if ibrav = 0 in a
+                   pw.x run. Written to BerkeleyGW WFN, RHO, VXC and VKB files but no longer
+                   used (except in SAPO code in BerkeleyGW). You can use the default value for
+                   all systems. Don't set to different values in different files for the same
+                   system or you will get errors in BerkeleyGW.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_flag
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    write wavefunctions in G-space to BerkeleyGW WFN file
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_file
+   
+   Type:           STRING
+   Default:        'WFN'
+   Description:    name of BerkeleyGW WFN output file. Not used if "wfng_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_kgrid
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    overwrite k-grid parameters in BerkeleyGW WFN file.
+                   If pw.x input file contains an explicit list of k-points,
+                   the k-grid parameters in the output of pw.x will be set to zero.
+                   Since sigma and absorption in BerkeleyGW both need to know the
+                   k-grid dimensions, we patch these parameters into BerkeleyGW WFN file
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_nk1
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    number of k-points along b_1 reciprocal lattice vector.
+                   Not used if "wfng_kgrid" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_nk2
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    number of k-points along b_2 reciprocal lattice vector.
+                   Not used if "wfng_kgrid" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_nk3
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    number of k-points along b_3 reciprocal lattice vector.
+                   Not used if "wfng_kgrid" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_dk1
+   
+   Type:           REAL
+   Default:        0.0
+   Description:    k-grid offset (0.0 unshifted, 0.5 shifted by half a grid step)
+                   along b_1 reciprocal lattice vector. Not used if "wfng_kgrid" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_dk2
+   
+   Type:           REAL
+   Default:        0.0
+   Description:    k-grid offset (0.0 unshifted, 0.5 shifted by half a grid step)
+                   along b_2 reciprocal lattice vector. Not used if "wfng_kgrid" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_dk3
+   
+   Type:           REAL
+   Default:        0.0
+   Description:    k-grid offset (0.0 unshifted, 0.5 shifted by half a grid step)
+                   along b_3 reciprocal lattice vector. Not used if "wfng_kgrid" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_occupation
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    overwrite occupations in BerkeleyGW WFN file
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_nvmin
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    index of the lowest occupied band (normally = 1).
+                   Not used if "wfng_occupation" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_nvmax
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    index of the highest occupied band (normally = number of occupied bands).
+                   Not used if "wfng_occupation" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rhog_flag
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    write charge density in G-space to BerkeleyGW RHO file.
+                   Only used for the GPP model in sigma code in BerkeleyGW
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rhog_file
+   
+   Type:           STRING
+   Default:        'RHO'
+   Description:    name of BerkeleyGW RHO output file. Only used for the GPP model in sigma
+                   code in BerkeleyGW. Not used if "rhog_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rhog_nvmin
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    index of the lowest band used for calculation of charge density. This is
+                   needed if one wants to exclude semicore states from charge density used
+                   for the GPP model in sigma code in BerkeleyGW. Make sure to include the
+                   same k-points as in scf calculation. Self-consistent charge density is
+                   used if rhog_nvmin = 0 and rhog_nvmax = 0. Not used if "rhog_flag" = .FALSE.
+                   BEWARE: this feature is highly experimental and may not work at all in
+                   parallel, with pools, with spins, etc.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rhog_nvmax
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    index of the highest band used for calculation of charge density. See
+                   description of rhog_nvmin for more details
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vxcg_flag
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    write local part of exchange-correlation potential in G-space to
+                   BerkeleyGW VXC file. Only used in sigma code in BerkeleyGW, it is
+                   recommended to use "vxc_flag" instead
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vxcg_file
+   
+   Type:           STRING
+   Default:        'VXC'
+   Description:    name of BerkeleyGW VXC output file. Only used in sigma code in BerkeleyGW,
+                   it is recommended to use "vxc_flag" instead. Not used if "vxcg_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vxc0_flag
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    write Vxc(G = 0) to text file. Only for testing, not required for BerkeleyGW
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vxc0_file
+   
+   Type:           STRING
+   Default:        'vxc0.dat'
+   Description:    name of output text file for Vxc(G = 0). Only for testing, not required for
+                   BerkeleyGW. Not used if "vxc0_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vxc_flag
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    write matrix elements of exchange-correlation potential to text file.
+                   Only used in sigma code in BerkeleyGW
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vxc_file
+   
+   Type:           STRING
+   Default:        'vxc.dat'
+   Description:    name of output text file for Vxc matrix elements. Only used in sigma code
+                   in BerkeleyGW. Not used if "vxc_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vxc_integral
+   
+   Type:           STRING
+   Default:        'g'
+   Description:    'g' | 'r'
+                   'g' to compute matrix elements of exchange-correlation potential in G-space.
+                   'r' to compute matrix elements of the local part of exchange-correlation
+                   potential in R-space. It is recommended to use 'g'. Not used if "vxc_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vxc_diag_nmin
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    minimum band index for diagonal Vxc matrix elements. Not used if "vxc_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vxc_diag_nmax
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    maximum band index for diagonal Vxc matrix elements. Not used if "vxc_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vxc_offdiag_nmin
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    minimum band index for off-diagonal Vxc matrix elements. Not used if "vxc_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vxc_offdiag_nmax
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    maximum band index for off-diagonal Vxc matrix elements. Not used if "vxc_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vxc_zero_rho_core
+   
+   Type:           LOGICAL
+   Default:        .TRUE.
+   Description:    set to .TRUE. to zero out NLCC or to .FALSE. to keep NLCC when computing
+                   exchange-correlation potential. This flag has no effect for pseudopotentials
+                   without NLCC.
+                   BEWARE: setting "vxc_zero_rho_core" to .FALSE. will produce
+                   incorrect results. This functionality is only included for testing purposes
+                   and is not meant to be used in a production environment
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vscg_flag
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    write local part of self-consistent potential in G-space to
+                   BerkeleyGW VSC file. Only used in SAPO code in BerkeleyGW
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vscg_file
+   
+   Type:           STRING
+   Default:        'VSC'
+   Description:    name of BerkeleyGW VSC output file. Only used in SAPO code in BerkeleyGW.
+                   Not used if "vscg_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vkbg_flag
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    write Kleinman-Bylander projectors in G-space to BerkeleyGW VKB file.
+                   Only used in SAPO code in BerkeleyGW
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       vkbg_file
+   
+   Type:           STRING
+   Default:        'VKB'
+   Description:    name of BerkeleyGW VKB output file. Only used in SAPO code in BerkeleyGW.
+                   Not used if "vkbg_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Fri Jun 22 17:11:36 CEST 2018

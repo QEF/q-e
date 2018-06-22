@@ -1,0 +1,109 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: bgw2pw.x / PWscf / Quantum Espresso (version: svn)
+------------------------------------------------------------------------
+
+
+Purpose of bgw2pw.x:
+   Converts BerkeleyGW WFN and RHO files to the format of pw.x.
+   This can be useful, for example, if you generate the plane waves
+   on top of the valence bands and want to diagonalize them in pw.x.
+   Look at the documentation for SAPO code in BerkeleyGW for more information.
+
+bgw2pw.x reads common parameters from file "prefix".save/data-file.xml and
+writes files "prefix".save/charge-density.dat (charge density in R-space),
+"prefix".save/gvectors.dat (G-vectors for charge density and potential),
+"prefix".save/K$n/eigenval.xml (eigenvalues and occupations for nth k-point),
+"prefix".save/K$n/evc.dat (wavefunctions in G-space for nth k-point), and
+"prefix".save/K$n/gkvectors.dat (G-vectors for nth k-point).
+
+bgw2pw.x doesn't modify file "prefix".save/data-file.xml so make changes to this
+file manually (for example, you will need to change the number of bands if you
+are using bgw2pw.x in conjunction with SAPO code in BerkeleyGW).
+
+Structure of the input data:
+============================
+
+   &INPUT_BGW2PW
+     ...
+   /
+
+
+
+========================================================================
+NAMELIST: &INPUT_BGW2PW
+
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           STRING
+   Status:         MANDATORY
+   Description:    prefix of files saved by program pw.x
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           STRING
+   Default:        './'
+   Description:    the scratch directory where the massive data-files are written
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       real_or_complex
+   
+   Type:           INTEGER
+   Default:        2
+   Description:    1 | 2
+                   1 for real flavor of BerkeleyGW (for systems with inversion symmetry and
+                   time-reversal symmetry) or 2 for complex flavor of BerkeleyGW (for systems
+                   without inversion symmetry and time-reversal symmetry)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_flag
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    read wavefunctions in G-space from BerkeleyGW WFN file
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_file
+   
+   Type:           STRING
+   Default:        'WFN'
+   Description:    name of BerkeleyGW WFN input file. Not used if "wfng_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       wfng_nband
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    number of bands to write (0 = all). Not used if "wfng_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rhog_flag
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    read charge density in G-space from BerkeleyGW RHO file
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       rhog_file
+   
+   Type:           STRING
+   Default:        'RHO'
+   Description:    name of BerkeleyGW RHO input file. Not used if "rhog_flag" = .FALSE.
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Fri Jun 22 17:11:36 CEST 2018
