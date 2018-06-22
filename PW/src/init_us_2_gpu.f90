@@ -216,13 +216,13 @@ subroutine init_us_2_gpu (npw_, igk__d, q_, vkb__d)
                           eigts3_d (mill_d(3,igk__d(ig)), na)
            enddo
            sk_h = sk_d
-           print *, "SUM of sk_d", SUM(sk_h)
+           if (na == 1) print *, "SUM of sk_d", SUM(sk_h)
            do ig = 1, npw_
               sk_h (ig) = eigts1 (mill(1,igk__h(ig)), na) * &
                           eigts2 (mill(2,igk__h(ig)), na) * &
                           eigts3 (mill(3,igk__h(ig)), na)
            enddo
-           print *, "SUM of sk_h", SUM(sk_h)
+           if (na == 1) print *, "SUM of sk_h", SUM(sk_h)
            sk_d = sk_h
 #endif
            do ih = 1, nh (nt)

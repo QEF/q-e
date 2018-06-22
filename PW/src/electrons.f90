@@ -586,12 +586,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! ... sum_band computes new becsum (stored in uspp modules)
         ! ... and a subtly different copy in rho%bec (scf module)
         !
-#if defined(__BUG)
-        CALL sum_band()
-#else
         IF (.not. use_gpu) CALL sum_band()
         IF (      use_gpu) CALL sum_band_gpu()
-#endif
         !
         ! ... the Harris-Weinert-Foulkes energy is computed here using only
         ! ... quantities obtained from the input density
