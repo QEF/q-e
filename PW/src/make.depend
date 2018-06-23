@@ -357,6 +357,7 @@ data_structure.o : ../../Modules/mp_pools.o
 data_structure.o : ../../Modules/recvec.o
 data_structure.o : ../../UtilXlib/mp.o
 data_structure.o : pwcom.o
+data_structure.o : realus.o
 deriv_drhoc.o : ../../Modules/constants.o
 deriv_drhoc.o : ../../Modules/kind.o
 divide_class.o : ../../Modules/constants.o
