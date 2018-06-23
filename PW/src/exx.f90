@@ -2634,11 +2634,11 @@ MODULE exx
 !$omp parallel do default(shared), private(ig), reduction(+:vc)
                         DO ig = 1, ngm
                             !
-                            vc(:,:) = vc(:,:) + fac(ig) * x1 * &
+                            vc(:,:) = vc(:,:) + x1 * 0.25_dp * &
                                       abs( rhoc(dfftt%nl(ig)) + &
                                       conjg(rhoc(dfftt%nlm(ig))))**2 * &
                                       (fac_tens(:,:,ig)*fac_stress(ig)/2.d0 - delta(:,:)*fac(ig))
-                            vc(:,:) = vc(:,:) + fac(ig) * x2 * &
+                            vc(:,:) = vc(:,:) + x2 * 0.25_dp * &
                                       abs( rhoc(dfftt%nl(ig)) - &
                                       conjg(rhoc(dfftt%nlm(ig))))**2 * &
                                       (fac_tens(:,:,ig)*fac_stress(ig)/2.d0 - delta(:,:)*fac(ig))
