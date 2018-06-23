@@ -22,6 +22,7 @@ New in development version:
 Problems fixed in development version:
 
   * Stress with hybrid functionals and Gamma point was grossly wrong
+    (5ed148646)
 
   * EPW: Velocity in the dipole approximation was unstable because of 
     G-vector ordering. 
