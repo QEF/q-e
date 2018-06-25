@@ -5,7 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! #define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+#define DIMS1D(my_array) lbound(my_array,1):ubound(my_array,1)
+#define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+#define DIMS3D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3)
+#define DIMS4D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3),lbound(my_array,4):ubound(my_array,4)
 !=----------------------------------------------------------------------------=!
    MODULE wvfct_gpum
 !=----------------------------------------------------------------------------=!
@@ -54,7 +57,6 @@
                    print *, "WARNING: sync of g2kin with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    g2kin_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -88,7 +90,7 @@
          !
          IF (g2kin_d_ood) THEN
              IF ( allocated(g2kin_d) .and. (SIZE(g2kin_d)/=SIZE(g2kin))) deallocate(g2kin_d)
-             IF (.not. allocated(g2kin_d)) ALLOCATE(g2kin_d, MOLD=g2kin)  ! this copy may be avoided
+             IF (.not. allocated(g2kin_d)) ALLOCATE(g2kin_d(DIMS1D(g2kin)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied g2kin H->D"
                 g2kin_d = g2kin
@@ -125,7 +127,6 @@
                    print *, "WARNING: sync of et with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    et_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -159,7 +160,7 @@
          !
          IF (et_d_ood) THEN
              IF ( allocated(et_d) .and. (SIZE(et_d)/=SIZE(et))) deallocate(et_d)
-             IF (.not. allocated(et_d)) ALLOCATE(et_d, MOLD=et)  ! this copy may be avoided
+             IF (.not. allocated(et_d)) ALLOCATE(et_d(DIMS2D(et)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied et H->D"
                 et_d = et
@@ -171,7 +172,7 @@
          CALL errore('using_et_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_et_d
-     !     
+     !
      SUBROUTINE deallocate_wvfct_gpu
        IF( ALLOCATED( g2kin_d ) ) DEALLOCATE( g2kin_d )
        IF( ALLOCATED( et_d ) ) DEALLOCATE( et_d )
@@ -185,7 +186,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! #define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+#define DIMS1D(my_array) lbound(my_array,1):ubound(my_array,1)
+#define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+#define DIMS3D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3)
+#define DIMS4D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3),lbound(my_array,4):ubound(my_array,4)
 !=----------------------------------------------------------------------------=!
    MODULE us_gpum
 !=----------------------------------------------------------------------------=!
@@ -240,7 +244,6 @@
                    print *, "WARNING: sync of qrad with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    qrad_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -274,7 +277,7 @@
          !
          IF (qrad_d_ood) THEN
              IF ( allocated(qrad_d) .and. (SIZE(qrad_d)/=SIZE(qrad))) deallocate(qrad_d)
-             IF (.not. allocated(qrad_d)) ALLOCATE(qrad_d, MOLD=qrad)  ! this copy may be avoided
+             IF (.not. allocated(qrad_d)) ALLOCATE(qrad_d(DIMS4D(qrad)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied qrad H->D"
                 qrad_d = qrad
@@ -311,7 +314,6 @@
                    print *, "WARNING: sync of tab with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    tab_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -345,7 +347,7 @@
          !
          IF (tab_d_ood) THEN
              IF ( allocated(tab_d) .and. (SIZE(tab_d)/=SIZE(tab))) deallocate(tab_d)
-             IF (.not. allocated(tab_d)) ALLOCATE(tab_d, MOLD=tab)  ! this copy may be avoided
+             IF (.not. allocated(tab_d)) ALLOCATE(tab_d(DIMS3D(tab)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied tab H->D"
                 tab_d = tab
@@ -382,7 +384,6 @@
                    print *, "WARNING: sync of tab_at with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    tab_at_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -416,7 +417,7 @@
          !
          IF (tab_at_d_ood) THEN
              IF ( allocated(tab_at_d) .and. (SIZE(tab_at_d)/=SIZE(tab_at))) deallocate(tab_at_d)
-             IF (.not. allocated(tab_at_d)) ALLOCATE(tab_at_d, MOLD=tab_at)  ! this copy may be avoided
+             IF (.not. allocated(tab_at_d)) ALLOCATE(tab_at_d(DIMS3D(tab_at)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied tab_at H->D"
                 tab_at_d = tab_at
@@ -453,7 +454,6 @@
                    print *, "WARNING: sync of tab_d2y with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    tab_d2y_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -487,7 +487,7 @@
          !
          IF (tab_d2y_d_ood) THEN
              IF ( allocated(tab_d2y_d) .and. (SIZE(tab_d2y_d)/=SIZE(tab_d2y))) deallocate(tab_d2y_d)
-             IF (.not. allocated(tab_d2y_d)) ALLOCATE(tab_d2y_d, MOLD=tab_d2y)  ! this copy may be avoided
+             IF (.not. allocated(tab_d2y_d)) ALLOCATE(tab_d2y_d(DIMS3D(tab_d2y)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied tab_d2y H->D"
                 tab_d2y_d = tab_d2y
@@ -499,7 +499,7 @@
          CALL errore('using_tab_d2y_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_tab_d2y_d
-     !     
+     !
      SUBROUTINE deallocate_us_gpu
        IF( ALLOCATED( qrad_d ) ) DEALLOCATE( qrad_d )
        IF( ALLOCATED( tab_d ) ) DEALLOCATE( tab_d )

@@ -5,7 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#define DIMS1D(my_array) lbound(my_array,1):ubound(my_array,1)
 #define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+#define DIMS3D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3)
+#define DIMS4D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3),lbound(my_array,4):ubound(my_array,4)
 !=----------------------------------------------------------------------------=!
    MODULE becmod_gpum
 !=----------------------------------------------------------------------------=!
@@ -130,7 +133,7 @@
          !
          IF (becp_d_r_d_ood) THEN
              IF ( allocated(becp_d%r_d) .and. (SIZE(becp_d%r_d)/=SIZE(becp%r))) deallocate(becp_d%r_d)
-             IF (.not. allocated(becp_d%r_d)) ALLOCATE(becp_d%r_d, MOLD=becp%r)  ! this copy may be avoided
+             IF (.not. allocated(becp_d%r_d)) ALLOCATE(becp_d%r_d(DIMS2D(becp%r)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied becp%r H->D"
                 becp_d%r_d = becp%r
@@ -227,7 +230,7 @@
          !
          IF (becp_d_k_d_ood) THEN
              IF ( allocated(becp_d%k_d) .and. (SIZE(becp_d%k_d)/=SIZE(becp%k))) deallocate(becp_d%k_d)
-             IF (.not. allocated(becp_d%k_d)) ALLOCATE(becp_d%k_d, MOLD=becp%k)  ! this copy may be avoided
+             IF (.not. allocated(becp_d%k_d)) ALLOCATE(becp_d%k_d(DIMS2D(becp%k)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied becp%k H->D"
                 becp_d%k_d = becp%k
@@ -324,7 +327,7 @@
          !
          IF (becp_d_nc_d_ood) THEN
              IF ( allocated(becp_d%nc_d) .and. (SIZE(becp_d%nc_d)/=SIZE(becp%nc))) deallocate(becp_d%nc_d)
-             IF (.not. allocated(becp_d%nc_d)) ALLOCATE(becp_d%nc_d, MOLD=becp%nc)  ! this copy may be avoided
+             IF (.not. allocated(becp_d%nc_d)) ALLOCATE(becp_d%nc_d(DIMS3D(becp%nc)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied becp%nc H->D"
                 becp_d%nc_d = becp%nc

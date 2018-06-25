@@ -5,7 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! #define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+#define DIMS1D(my_array) lbound(my_array,1):ubound(my_array,1)
+#define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+#define DIMS3D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3)
+#define DIMS4D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3),lbound(my_array,4):ubound(my_array,4)
 !=----------------------------------------------------------------------------=!
    MODULE uspp_gpum
 !=----------------------------------------------------------------------------=!
@@ -96,7 +99,6 @@
                    print *, "WARNING: sync of indv with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    indv_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -130,7 +132,7 @@
          !
          IF (indv_d_ood) THEN
              IF ( allocated(indv_d) .and. (SIZE(indv_d)/=SIZE(indv))) deallocate(indv_d)
-             IF (.not. allocated(indv_d)) ALLOCATE(indv_d, MOLD=indv)  ! this copy may be avoided
+             IF (.not. allocated(indv_d)) ALLOCATE(indv_d(DIMS2D(indv)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied indv H->D"
                 indv_d = indv
@@ -167,7 +169,6 @@
                    print *, "WARNING: sync of nhtol with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    nhtol_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -201,7 +202,7 @@
          !
          IF (nhtol_d_ood) THEN
              IF ( allocated(nhtol_d) .and. (SIZE(nhtol_d)/=SIZE(nhtol))) deallocate(nhtol_d)
-             IF (.not. allocated(nhtol_d)) ALLOCATE(nhtol_d, MOLD=nhtol)  ! this copy may be avoided
+             IF (.not. allocated(nhtol_d)) ALLOCATE(nhtol_d(DIMS2D(nhtol)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied nhtol H->D"
                 nhtol_d = nhtol
@@ -238,7 +239,6 @@
                    print *, "WARNING: sync of nhtolm with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    nhtolm_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -272,7 +272,7 @@
          !
          IF (nhtolm_d_ood) THEN
              IF ( allocated(nhtolm_d) .and. (SIZE(nhtolm_d)/=SIZE(nhtolm))) deallocate(nhtolm_d)
-             IF (.not. allocated(nhtolm_d)) ALLOCATE(nhtolm_d, MOLD=nhtolm)  ! this copy may be avoided
+             IF (.not. allocated(nhtolm_d)) ALLOCATE(nhtolm_d(DIMS2D(nhtolm)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied nhtolm H->D"
                 nhtolm_d = nhtolm
@@ -309,7 +309,6 @@
                    print *, "WARNING: sync of ijtoh with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    ijtoh_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -343,7 +342,7 @@
          !
          IF (ijtoh_d_ood) THEN
              IF ( allocated(ijtoh_d) .and. (SIZE(ijtoh_d)/=SIZE(ijtoh))) deallocate(ijtoh_d)
-             IF (.not. allocated(ijtoh_d)) ALLOCATE(ijtoh_d, MOLD=ijtoh)  ! this copy may be avoided
+             IF (.not. allocated(ijtoh_d)) ALLOCATE(ijtoh_d(DIMS3D(ijtoh)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied ijtoh H->D"
                 ijtoh_d = ijtoh
@@ -380,7 +379,6 @@
                    print *, "WARNING: sync of indv_ijkb0 with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    indv_ijkb0_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -414,7 +412,7 @@
          !
          IF (indv_ijkb0_d_ood) THEN
              IF ( allocated(indv_ijkb0_d) .and. (SIZE(indv_ijkb0_d)/=SIZE(indv_ijkb0))) deallocate(indv_ijkb0_d)
-             IF (.not. allocated(indv_ijkb0_d)) ALLOCATE(indv_ijkb0_d, MOLD=indv_ijkb0)  ! this copy may be avoided
+             IF (.not. allocated(indv_ijkb0_d)) ALLOCATE(indv_ijkb0_d(DIMS1D(indv_ijkb0)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied indv_ijkb0 H->D"
                 indv_ijkb0_d = indv_ijkb0
@@ -451,7 +449,6 @@
                    print *, "WARNING: sync of vkb with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    vkb_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -485,7 +482,7 @@
          !
          IF (vkb_d_ood) THEN
              IF ( allocated(vkb_d) .and. (SIZE(vkb_d)/=SIZE(vkb))) deallocate(vkb_d)
-             IF (.not. allocated(vkb_d)) ALLOCATE(vkb_d, MOLD=vkb)  ! this copy may be avoided
+             IF (.not. allocated(vkb_d)) ALLOCATE(vkb_d(DIMS2D(vkb)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied vkb H->D"
                 vkb_d = vkb
@@ -522,7 +519,6 @@
                    print *, "WARNING: sync of becsum with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    becsum_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -556,7 +552,7 @@
          !
          IF (becsum_d_ood) THEN
              IF ( allocated(becsum_d) .and. (SIZE(becsum_d)/=SIZE(becsum))) deallocate(becsum_d)
-             IF (.not. allocated(becsum_d)) ALLOCATE(becsum_d, MOLD=becsum)  ! this copy may be avoided
+             IF (.not. allocated(becsum_d)) ALLOCATE(becsum_d(DIMS3D(becsum)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied becsum H->D"
                 becsum_d = becsum
@@ -593,7 +589,6 @@
                    print *, "WARNING: sync of ebecsum with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    ebecsum_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -627,7 +622,7 @@
          !
          IF (ebecsum_d_ood) THEN
              IF ( allocated(ebecsum_d) .and. (SIZE(ebecsum_d)/=SIZE(ebecsum))) deallocate(ebecsum_d)
-             IF (.not. allocated(ebecsum_d)) ALLOCATE(ebecsum_d, MOLD=ebecsum)  ! this copy may be avoided
+             IF (.not. allocated(ebecsum_d)) ALLOCATE(ebecsum_d(DIMS3D(ebecsum)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied ebecsum H->D"
                 ebecsum_d = ebecsum
@@ -664,7 +659,6 @@
                    print *, "WARNING: sync of dvan with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    dvan_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -698,7 +692,7 @@
          !
          IF (dvan_d_ood) THEN
              IF ( allocated(dvan_d) .and. (SIZE(dvan_d)/=SIZE(dvan))) deallocate(dvan_d)
-             IF (.not. allocated(dvan_d)) ALLOCATE(dvan_d, MOLD=dvan)  ! this copy may be avoided
+             IF (.not. allocated(dvan_d)) ALLOCATE(dvan_d(DIMS3D(dvan)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied dvan H->D"
                 dvan_d = dvan
@@ -735,7 +729,6 @@
                    print *, "WARNING: sync of deeq with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    deeq_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -769,7 +762,7 @@
          !
          IF (deeq_d_ood) THEN
              IF ( allocated(deeq_d) .and. (SIZE(deeq_d)/=SIZE(deeq))) deallocate(deeq_d)
-             IF (.not. allocated(deeq_d)) ALLOCATE(deeq_d, MOLD=deeq)  ! this copy may be avoided
+             IF (.not. allocated(deeq_d)) ALLOCATE(deeq_d(DIMS4D(deeq)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied deeq H->D"
                 deeq_d = deeq
@@ -806,7 +799,6 @@
                    print *, "WARNING: sync of qq_nt with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    qq_nt_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -840,7 +832,7 @@
          !
          IF (qq_nt_d_ood) THEN
              IF ( allocated(qq_nt_d) .and. (SIZE(qq_nt_d)/=SIZE(qq_nt))) deallocate(qq_nt_d)
-             IF (.not. allocated(qq_nt_d)) ALLOCATE(qq_nt_d, MOLD=qq_nt)  ! this copy may be avoided
+             IF (.not. allocated(qq_nt_d)) ALLOCATE(qq_nt_d(DIMS3D(qq_nt)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied qq_nt H->D"
                 qq_nt_d = qq_nt
@@ -877,7 +869,6 @@
                    print *, "WARNING: sync of qq_at with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    qq_at_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -911,7 +902,7 @@
          !
          IF (qq_at_d_ood) THEN
              IF ( allocated(qq_at_d) .and. (SIZE(qq_at_d)/=SIZE(qq_at))) deallocate(qq_at_d)
-             IF (.not. allocated(qq_at_d)) ALLOCATE(qq_at_d, MOLD=qq_at)  ! this copy may be avoided
+             IF (.not. allocated(qq_at_d)) ALLOCATE(qq_at_d(DIMS3D(qq_at)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied qq_at H->D"
                 qq_at_d = qq_at
@@ -948,7 +939,6 @@
                    print *, "WARNING: sync of nhtoj with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    nhtoj_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -982,7 +972,7 @@
          !
          IF (nhtoj_d_ood) THEN
              IF ( allocated(nhtoj_d) .and. (SIZE(nhtoj_d)/=SIZE(nhtoj))) deallocate(nhtoj_d)
-             IF (.not. allocated(nhtoj_d)) ALLOCATE(nhtoj_d, MOLD=nhtoj)  ! this copy may be avoided
+             IF (.not. allocated(nhtoj_d)) ALLOCATE(nhtoj_d(DIMS2D(nhtoj)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied nhtoj H->D"
                 nhtoj_d = nhtoj
@@ -1019,7 +1009,6 @@
                    print *, "WARNING: sync of qq_so with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    qq_so_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -1053,7 +1042,7 @@
          !
          IF (qq_so_d_ood) THEN
              IF ( allocated(qq_so_d) .and. (SIZE(qq_so_d)/=SIZE(qq_so))) deallocate(qq_so_d)
-             IF (.not. allocated(qq_so_d)) ALLOCATE(qq_so_d, MOLD=qq_so)  ! this copy may be avoided
+             IF (.not. allocated(qq_so_d)) ALLOCATE(qq_so_d(DIMS4D(qq_so)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied qq_so H->D"
                 qq_so_d = qq_so
@@ -1090,7 +1079,6 @@
                    print *, "WARNING: sync of dvan_so with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    dvan_so_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -1124,7 +1112,7 @@
          !
          IF (dvan_so_d_ood) THEN
              IF ( allocated(dvan_so_d) .and. (SIZE(dvan_so_d)/=SIZE(dvan_so))) deallocate(dvan_so_d)
-             IF (.not. allocated(dvan_so_d)) ALLOCATE(dvan_so_d, MOLD=dvan_so)  ! this copy may be avoided
+             IF (.not. allocated(dvan_so_d)) ALLOCATE(dvan_so_d(DIMS4D(dvan_so)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied dvan_so H->D"
                 dvan_so_d = dvan_so
@@ -1161,7 +1149,6 @@
                    print *, "WARNING: sync of deeq_nc with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    deeq_nc_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -1195,7 +1182,7 @@
          !
          IF (deeq_nc_d_ood) THEN
              IF ( allocated(deeq_nc_d) .and. (SIZE(deeq_nc_d)/=SIZE(deeq_nc))) deallocate(deeq_nc_d)
-             IF (.not. allocated(deeq_nc_d)) ALLOCATE(deeq_nc_d, MOLD=deeq_nc)  ! this copy may be avoided
+             IF (.not. allocated(deeq_nc_d)) ALLOCATE(deeq_nc_d(DIMS4D(deeq_nc)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied deeq_nc H->D"
                 deeq_nc_d = deeq_nc
@@ -1207,7 +1194,7 @@
          CALL errore('using_deeq_nc_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_deeq_nc_d
-     !     
+     !
      SUBROUTINE deallocate_uspp_gpu
        IF( ALLOCATED( indv_d ) ) DEALLOCATE( indv_d )
        IF( ALLOCATED( nhtol_d ) ) DEALLOCATE( nhtol_d )

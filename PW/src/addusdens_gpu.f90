@@ -76,7 +76,6 @@ SUBROUTINE addusdens_g_gpu(rho)
   REAL(DP), ALLOCATABLE :: qmod_d (:), ylmk0_d (:,:)
   ! modulus of G, spherical harmonics
   COMPLEX(DP), ALLOCATABLE :: skk_d(:,:), aux2_d(:,:)
-  COMPLEX(DP), ALLOCATABLE :: skk_h(:,:)
   ! structure factors, US contribution to rho
   COMPLEX(DP), ALLOCATABLE ::  aux_d (:,:), qgm_d(:)
   COMPLEX(DP), ALLOCATABLE ::  aux_h (:,:)
@@ -134,9 +133,6 @@ SUBROUTINE addusdens_g_gpu(rho)
         ENDDO
         !
         ALLOCATE ( skk_d(ngm_l,nab), tbecsum_d(nij,nab,nspin_mag), aux2_d(ngm_l,nij) )
-#if defined(__BUG)
-        ALLOCATE ( skk_h(ngm_l,nab) )
-#endif
         !
         nb = 0
         DO na = 1, nat
@@ -150,21 +146,12 @@ SUBROUTINE addusdens_g_gpu(rho)
                  ENDDO
               ENDDO
 
-#if ! defined(__BUG)
 !$cuf kernel do(1) <<<*,*>>>
               DO ig = 1, ngm_l
                  skk_d(ig,nb) = eigts1_d (mill_d (1,ngm_s+ig-1), na) * &
                               eigts2_d (mill_d (2,ngm_s+ig-1), na) * &
                               eigts3_d (mill_d (3,ngm_s+ig-1), na)
               ENDDO
-#else
-              DO ig = 1, ngm_l
-                 skk_h(ig,nb) = eigts1 (mill (1,ngm_s+ig-1), na) * &
-                              eigts2 (mill (2,ngm_s+ig-1), na) * &
-                              eigts3 (mill (3,ngm_s+ig-1), na)
-              ENDDO
-              skk_d = skk_h
-#endif
            ENDIF
         ENDDO
 
@@ -187,9 +174,6 @@ SUBROUTINE addusdens_g_gpu(rho)
            ENDDO
         ENDDO
         DEALLOCATE (aux2_d, tbecsum_d, skk_d )
-#if defined(__BUG)
-        DEALLOCATE ( skk_h )
-#endif
      ENDIF
   ENDDO
   !

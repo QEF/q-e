@@ -5,7 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! #define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+#define DIMS1D(my_array) lbound(my_array,1):ubound(my_array,1)
+#define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+#define DIMS3D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3)
+#define DIMS4D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3),lbound(my_array,4):ubound(my_array,4)
 !=----------------------------------------------------------------------------=!
    MODULE scf_gpum
 !=----------------------------------------------------------------------------=!
@@ -51,7 +54,6 @@
                    print *, "WARNING: sync of vrs with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    vrs_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -85,7 +87,7 @@
          !
          IF (vrs_d_ood) THEN
              IF ( allocated(vrs_d) .and. (SIZE(vrs_d)/=SIZE(vrs))) deallocate(vrs_d)
-             IF (.not. allocated(vrs_d)) ALLOCATE(vrs_d, MOLD=vrs)  ! this copy may be avoided
+             IF (.not. allocated(vrs_d)) ALLOCATE(vrs_d(DIMS2D(vrs)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied vrs H->D"
                 vrs_d = vrs
@@ -97,7 +99,7 @@
          CALL errore('using_vrs_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_vrs_d
-     !     
+     !
      SUBROUTINE deallocate_scf_gpu
        IF( ALLOCATED( vrs_d ) ) DEALLOCATE( vrs_d )
      END SUBROUTINE deallocate_scf_gpu

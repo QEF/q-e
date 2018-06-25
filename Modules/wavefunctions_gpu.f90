@@ -5,7 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! #define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+#define DIMS1D(my_array) lbound(my_array,1):ubound(my_array,1)
+#define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+#define DIMS3D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3)
+#define DIMS4D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3),lbound(my_array,4):ubound(my_array,4)
 !=----------------------------------------------------------------------------=!
    MODULE wavefunctions_module_gpum
 !=----------------------------------------------------------------------------=!
@@ -57,7 +60,6 @@
                    print *, "WARNING: sync of evc with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    evc_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -91,7 +93,7 @@
          !
          IF (evc_d_ood) THEN
              IF ( allocated(evc_d) .and. (SIZE(evc_d)/=SIZE(evc))) deallocate(evc_d)
-             IF (.not. allocated(evc_d)) ALLOCATE(evc_d, MOLD=evc)  ! this copy may be avoided
+             IF (.not. allocated(evc_d)) ALLOCATE(evc_d(DIMS2D(evc)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied evc H->D"
                 evc_d = evc
@@ -128,7 +130,6 @@
                    print *, "WARNING: sync of psic with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    psic_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -162,7 +163,7 @@
          !
          IF (psic_d_ood) THEN
              IF ( allocated(psic_d) .and. (SIZE(psic_d)/=SIZE(psic))) deallocate(psic_d)
-             IF (.not. allocated(psic_d)) ALLOCATE(psic_d, MOLD=psic)  ! this copy may be avoided
+             IF (.not. allocated(psic_d)) ALLOCATE(psic_d(DIMS1D(psic)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied psic H->D"
                 psic_d = psic
@@ -199,7 +200,6 @@
                    print *, "WARNING: sync of psic_nc with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    psic_nc_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -233,7 +233,7 @@
          !
          IF (psic_nc_d_ood) THEN
              IF ( allocated(psic_nc_d) .and. (SIZE(psic_nc_d)/=SIZE(psic_nc))) deallocate(psic_nc_d)
-             IF (.not. allocated(psic_nc_d)) ALLOCATE(psic_nc_d, MOLD=psic_nc)  ! this copy may be avoided
+             IF (.not. allocated(psic_nc_d)) ALLOCATE(psic_nc_d(DIMS2D(psic_nc)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied psic_nc H->D"
                 psic_nc_d = psic_nc
@@ -245,7 +245,7 @@
          CALL errore('using_psic_nc_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_psic_nc_d
-     !     
+     !
      SUBROUTINE deallocate_wavefunctions_module_gpu
        IF( ALLOCATED( evc_d ) ) DEALLOCATE( evc_d )
        IF( ALLOCATED( psic_d ) ) DEALLOCATE( psic_d )

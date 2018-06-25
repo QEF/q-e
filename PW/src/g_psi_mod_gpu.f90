@@ -5,7 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! #define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+#define DIMS1D(my_array) lbound(my_array,1):ubound(my_array,1)
+#define DIMS2D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2)
+#define DIMS3D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3)
+#define DIMS4D(my_array) lbound(my_array,1):ubound(my_array,1),lbound(my_array,2):ubound(my_array,2),lbound(my_array,3):ubound(my_array,3),lbound(my_array,4):ubound(my_array,4)
 !=----------------------------------------------------------------------------=!
    MODULE g_psi_mod_gpum
 !=----------------------------------------------------------------------------=!
@@ -54,7 +57,6 @@
                    print *, "WARNING: sync of h_diag with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    h_diag_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -88,7 +90,7 @@
          !
          IF (h_diag_d_ood) THEN
              IF ( allocated(h_diag_d) .and. (SIZE(h_diag_d)/=SIZE(h_diag))) deallocate(h_diag_d)
-             IF (.not. allocated(h_diag_d)) ALLOCATE(h_diag_d, MOLD=h_diag)  ! this copy may be avoided
+             IF (.not. allocated(h_diag_d)) ALLOCATE(h_diag_d(DIMS2D(h_diag)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied h_diag H->D"
                 h_diag_d = h_diag
@@ -125,7 +127,6 @@
                    print *, "WARNING: sync of s_diag with unallocated array and intento /= 2? Changed to 2!"
                    intento_ = 2
                 END IF
-
                 ! IF (intento_ > 0)    s_diag_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
@@ -159,7 +160,7 @@
          !
          IF (s_diag_d_ood) THEN
              IF ( allocated(s_diag_d) .and. (SIZE(s_diag_d)/=SIZE(s_diag))) deallocate(s_diag_d)
-             IF (.not. allocated(s_diag_d)) ALLOCATE(s_diag_d, MOLD=s_diag)  ! this copy may be avoided
+             IF (.not. allocated(s_diag_d)) ALLOCATE(s_diag_d(DIMS2D(s_diag)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
                 print *, "Really copied s_diag H->D"
                 s_diag_d = s_diag
@@ -171,7 +172,7 @@
          CALL errore('using_s_diag_d', 'Trying to use device data without device compilated code!', 1)
 #endif
      END SUBROUTINE using_s_diag_d
-     !     
+     !
      SUBROUTINE deallocate_g_psi_mod_gpu
        IF( ALLOCATED( h_diag_d ) ) DEALLOCATE( h_diag_d )
        IF( ALLOCATED( s_diag_d ) ) DEALLOCATE( s_diag_d )
