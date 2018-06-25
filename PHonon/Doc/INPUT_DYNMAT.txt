@@ -1,0 +1,179 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: dynmat.x / PWscf / Quantum Espresso (version: svn)
+------------------------------------------------------------------------
+
+
+Purpose of dynmat.x:
+
+- reads a dynamical matrix file produced by the phonon code
+
+- adds the non-analytical part (if Z* and epsilon are read from
+  file), applies the chosen Acoustic Sum Rule (if q=0)
+
+- diagonalise the dynamical matrix
+
+- calculates IR and Raman cross sections (if Z* and Raman
+  tensors are read from file, respectively)
+
+- writes the results to files, both for inspection and for
+  plotting
+
+
+Structure of the input data:
+========================================================================
+
+&INPUT
+   ...specs of namelist variables...
+/
+
+
+
+========================================================================
+NAMELIST: &INPUT
+
+   +--------------------------------------------------------------------
+   Variable:       fildyn
+   
+   Type:           CHARACTER
+   Description:    input file containing the dynamical matrix
+   Default:        'matdyn'
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       q(i), i=1,3
+   
+   Type:           REAL
+   Description:    calculate LO modes (add non-analytic terms) along the direction q (Cartesian axis)
+   Default:        q = (0,0,0)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       amass(i), i=1,ntyp
+   
+   Type:           REAL
+   Description:    mass for each atom type
+   Default:        amass is read from file "fildyn"
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       asr
+   
+   Type:           CHARACTER
+   Default:        'no'
+   Description:   
+                   Indicates the type of Acoustic Sum Rule imposed.
+                   
+                   Allowed values:
+    
+                   'no' :
+                        no Acoustic Sum Rules imposed (default)
+    
+                   'simple' :
+                        previous implementation of the asr used
+                        (3 translational asr imposed by correction of
+                         the diagonal elements of the dynamical matrix)
+    
+                   'crystal' :
+                        3 translational asr imposed by optimized
+                        correction of the dyn. matrix (projection)
+    
+                   'one-dim' :
+                        3 translational asr + 1 rotational asr imposed
+                        by optimized correction of the dyn. mat. (the
+                        rotation axis is the direction of periodicity; it
+                        will work only if this axis considered is one of
+                        the Cartesian axis).
+    
+                   'zero-dim' :
+                        3 translational asr + 3 rotational asr imposed
+                        by optimized correction of the dyn. mat.
+    
+                   Note that in certain cases, not all the rotational asr
+                   can be applied (e.g. if there are only 2 atoms in a
+                   molecule or if all the atoms are aligned, etc.).  In
+                   these cases the supplementary asr are canceled during
+                   the orthonormalization procedure (see below).
+                   
+                   Finally, in all cases except 'no' a simple correction
+                   on the effective charges is performed (same as in the
+                   previous implementation).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       axis
+   
+   Type:           INTEGER
+   Description:    indicates the rotation axis for a 1D system (1=Ox, 2=Oy, 3=Oz)
+   Default:        3
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lperm
+   
+   Type:           LOGICAL
+   Description:    if .true. then calculate Gamma-point mode contributions to
+                   dielectric permittivity tensor
+   Default:        .false.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lplasma
+   
+   Type:           LOGICAL
+   Description:    if .true. then calculate Gamma-point mode effective plasma
+                   frequencies, automatically triggers "lperm" = .true.
+   Default:        .false.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       filout
+   
+   Type:           CHARACTER
+   Description:    output file containing phonon frequencies and normalized
+                   phonon displacements (i.e. eigenvectors divided by the
+                   square root of the mass and then normalized; they are
+                   not orthogonal)
+   Default:        'dynmat.out'
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fileig
+   
+   Type:           CHARACTER
+   Description:    output file containing phonon frequencies and eigenvectors
+                   of the dynamical matrix (they are orthogonal)
+   Default:        ' '
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       filmol
+   
+   Type:           CHARACTER
+   Description:    as above, in a format suitable for molden
+   Default:        'dynmat.mold'
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       filxsf
+   
+   Type:           CHARACTER
+   Description:    as above, in axsf format suitable for xcrysden
+   Default:        'dynmat.axsf'
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       loto_2d
+   
+   Type:           LOGICAL
+   Description:    set to .true. to activate two-dimensional treatment of LO-TO splitting.
+   Default:        '.false.'
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Fri Jun 22 17:11:33 CEST 2018

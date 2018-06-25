@@ -1,0 +1,717 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- *** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST *** --><meta http-equiv="Content-Style-Type" CONTENT="text/css">
+<style>
+	  body {
+	  background-color:#ffffff;
+	  font:normal 14px/1.8em arial, helvetica, sans-serif;
+	  width:900px;
+	  text-align:justify;
+	  margin: 30 10 10 30;
+	  }
+
+	  h1 {
+	  font-size:24px;
+	  }
+	  
+	  h2 {
+	  font-size:18px;
+	  }
+	  
+	  h3 {
+	  font-size:16px;
+	  }
+	  pre, tt, code {
+	  font-size:14px;
+	  }	  
+	  .syntax, .syntax table {
+	  font-size:14px;
+	  }
+	  span.namelist {
+	  color: #214478;
+	  }
+	  span.card {
+	  color: #782167;
+	  }
+	  span.flag {
+	  color: #008000;
+	  font-weight: bold;
+	  }
+	</style>
+<title>neb.x: input description</title>
+</head>
+<body>
+<a name="__top__"></a><table style="border-width: 0; table-layout: auto; width: 100%; text-align: left; vertical-align: top; background: #00395a;">
+<tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
+<h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
+<h2 style="margin: 10 10 10 15; text-align: left;"> Program:
+	      neb.x / NEB / Quantum Espresso<span style="font-weight: normal;"> (version: svn)</span>
+</h2>
+</th></tr>
+<tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
+   <blockquote style="margin-bottom: 2em;">
+<h3>TABLE OF CONTENTS</h3>
+<blockquote>
+   
+   
+   <p><a href="#idm3">INTRODUCTION</a></p>
+   <p><a href="#idm26">BEGIN</a></p>
+<blockquote>
+<p><a href="#idm27">BEGIN_PATH_INPUT</a></p>
+<blockquote>
+<p><a href="#idm28">&amp;PATH</a></p>
+<blockquote>
+<a href="#idm29">string_method</a> | <a href="#idm35">restart_mode</a> | <a href="#idm41">nstep_path</a> | <a href="#idm44">num_of_images</a> | <a href="#idm47">opt_scheme</a> | <a href="#idm56">CI_scheme</a> | <a href="#idm64">first_last_opt</a> | <a href="#idm67">minimum_image</a> | <a href="#idm70">temp_req</a> | <a href="#idm73">ds</a> | <a href="#idm78">k_max</a> | <a href="#idm79">k_min</a> | <a href="#idm82">path_thr</a> | <a href="#idm85">use_masses</a> | <a href="#idm88">use_freezing</a> | <a href="#idm91">lfcpopt</a> | <a href="#idm96">fcp_mu</a> | <a href="#idm104">fcp_tot_charge_first</a> | <a href="#idm110">fcp_tot_charge_last</a>
+</blockquote>
+<p><a href="#idm116">CLIMBING_IMAGES</a></p>
+<blockquote><a href="#idm120"> index1, index2, ... indexN
+                  </a></blockquote>
+</blockquote>
+<p><a href="#idm123">BEGIN_ENGINE_INPUT</a></p>
+<blockquote>
+<p><a href="#idm134">BEGIN_POSITIONS</a></p>
+<blockquote>
+<p><a href="#idm142">FIRST_IMAGE</a></p>
+<blockquote><p><a href="#idm143">ATOMIC_POSITIONS</a></p></blockquote>
+<p><a href="#idm149">INTERMEDIATE_IMAGE</a></p>
+<blockquote><p><a href="#idm150">ATOMIC_POSITIONS</a></p></blockquote>
+<p><a href="#idm155">LAST_IMAGE</a></p>
+<blockquote><p><a href="#idm156">ATOMIC_POSITIONS</a></p></blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+   <blockquote>
+<a name="idm3"></a><h3>INTRODUCTION</h3>
+<blockquote><pre>
+<b>Input data format:</b> { } = optional, [ ] = it depends, | = or
+
+All quantities whose dimensions are not explicitly specified are in
+RYDBERG ATOMIC UNITS
+
+<b>BEWARE:</b> TABS, DOS &lt;CR&gt;&lt;LF&gt; CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE
+
+<b>neb.x DOES NOT READ FROM STANDARD INPUT !</b>
+
+There are two ways for running a calculation with neb.x:
+
+(1) specifying a file to parse with the <b>./neb.x -inp</b> or <b>./neb.x -input</b>
+    command line option.
+
+(2) or specifying the number of copies of PWscf inputs with the <b>./neb.x -input_images</b>
+
+<b>For case (1)</b> a file containing special KEYWORDS (aka SUPERCARDS) has to be
+written (see below). These KEYWORDS tell the parser which part of the file
+contains the neb specifics and which part contains the energy/force engine
+input (at the moment only PW).  After the parsing, different files are
+generated: neb.dat, with the neb specific variables, and a set of pw_*.in
+PWscf input files, i.e., one for each input position. All options for a
+single SCF calculation apply.
+
+The general structure of the file to be parsed is:
+==================================================
+
+<b>BEGIN</b>
+  <b>BEGIN_PATH_INPUT</b>
+    ... neb specific namelists and cards
+  <b>END_PATH_INPUT</b>
+
+  <b>BEGIN_ENGINE_INPUT</b>
+    ...pw specific namelists and cards
+    <b>BEGIN_POSITIONS</b>
+      <b>FIRST_IMAGE</b>
+      ...pw ATOMIC_POSITIONS card
+      <b>INTERMEDIATE_IMAGE</b>
+      ...pw ATOMIC_POSITIONS card
+      <b>LAST_IMAGE</b>
+      ...pw ATOMIC_POSITIONS card
+    <b>END_POSITIONS</b>
+    ... other pw specific cards
+  <b>END_ENGINE_INPUT</b>
+<b>END</b>
+
+
+<b>For case (2)</b> neb.dat and all pw_1.in, pw_2.in ... should be already present.
+
+Structure of the NEB-only input data (file neb.dat):
+====================================================
+
+<b>&amp;PATH</b>
+  ...
+<b>/</b>
+
+[ <b>CLIMBING_IMAGES</b>
+   list of images, separated by a comma ]
+   </pre></blockquote>
+</blockquote>
+   <a name="idm26"></a><a name="BEGIN"></a><table style="table-layout: auto; width: 100%; border: 3px solid #1b587b; border-collapse: collapse; margin: 10 5 20 5; padding-right: 5px;">
+<tr><th bgcolor="#c8c4b7"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;">BEGIN</h2></th></tr>
+<tr><td bgcolor="#eeeeee" style="padding: 5 10 5 15;">
+<i>Syntax of this supercard is the following:</i><br><pre>BEGIN<br><i>  ... content of the supercard here ...</i><br>END</pre>
+<i>and the content is:</i>
+</td></tr>
+<tr><td style="text-align: left; background: #ffffff; padding: 5 5 5 30; ">
+      <a name="idm27"></a><a name="BEGIN_PATH_INPUT"></a><table style="table-layout: auto; width: 100%; border: 3px solid #1b587b; border-collapse: collapse; margin: 10 5 20 5; padding-right: 5px;">
+<tr><th bgcolor="#c8c4b7"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;">BEGIN_PATH_INPUT</h2></th></tr>
+<tr><td bgcolor="#eeeeee" style="padding: 5 10 5 15;">
+<i>Syntax of this supercard is the following:</i><br><pre>BEGIN_PATH_INPUT<br><i>  ... content of the supercard here ...</i><br>END_PATH_INPUT</pre>
+<i>and the content is:</i>
+</td></tr>
+<tr><td style="text-align: left; background: #ffffff; padding: 5 5 5 30; ">
+         <a name="idm28"></a><a name="PATH"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>PATH</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+            <a name="idm29"></a><a name="string_method"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">string_method</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'neb'
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+A string describing the task to be performed. Options are:
+                  </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'neb'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> nudget-elastic-band
+                  </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'smd'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> string-method-dynamics
+                  </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm35"></a><a name="restart_mode"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">restart_mode</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'from_scratch'
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;"> Options are:
+                  </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'from_scratch'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> from scratch
+                  </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'restart'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> from previous interrupted run
+                  </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm41"></a><a name="nstep_path"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nstep_path</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+1
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+number of ionic + electronic steps
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm44"></a><a name="num_of_images"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">num_of_images</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Number of points used to discretize the path
+(it must be larger than 3).
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm47"></a><a name="opt_scheme"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">opt_scheme</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'quick-min'
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+Specify the type of optimization scheme:
+                  </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'sd'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+steepest descent
+                  </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'broyden'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+quasi-Newton Broyden's second method (suggested)
+                  </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'broyden2'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+another variant of the quasi-Newton Broyden's
+second method to be tested and compared with the
+previous one.
+                  </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'quick-min'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+an optimisation algorithm based on the
+projected velocity Verlet scheme
+                  </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'langevin'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+finite temperature langevin dynamics of the
+string (smd only). It is used to compute the
+average path and the free-energy profile.
+                  </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm56"></a><a name="CI_scheme"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">CI_scheme</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'no-CI'
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+Specify the type of Climbing Image scheme:
+                  </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'no-CI'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+climbing image is not used
+                  </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'auto'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+original CI scheme. The image highest in energy
+does not feel the effect of springs and is
+allowed to climb along the path
+                  </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'manual'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+images that have to climb are manually selected.
+See also <a href="#CLIMBING_IMAGES">CLIMBING_IMAGES</a> card
+                  </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm64"></a><a name="first_last_opt"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">first_last_opt</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Also the first and the last configurations are optimized
+"on the fly" (these images do not feel the effect of the springs).
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm67"></a><a name="minimum_image"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">minimum_image</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Assume a "minimum image criterion" to build the path. If an atom
+moves by more than half the length of a crystal axis between one
+image and the next in the input (before interpolation),
+an appropriate periodic replica of that atom is chosen.
+Useful to avoid jumps in the initial reaction path.
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm70"></a><a name="temp_req"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">temp_req</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0.D0 Kelvin
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Temperature used for the langevin dynamics of the string.
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm73"></a><a name="ds"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ds</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.D0
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Optimisation step length ( Hartree atomic units ).
+If <a href="#opt_scheme">opt_scheme</a>=="broyden", ds is used as a guess for the
+diagonal part of the Jacobian matrix.
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm78"></a><a name="k_max"></a>k_max, <a name="idm79"></a><a name="k_min"></a>k_min</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0.1D0 Hartree atomic units
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Set them to use a Variable Elastic Constants scheme
+elastic constants are in the range [ k_min, k_max ]
+this is useful to rise the resolution around the saddle point.
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm82"></a><a name="path_thr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">path_thr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0.05D0 eV / Angstrom
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The simulation stops when the error ( the norm of the force
+orthogonal to the path in eV/A ) is less than path_thr.
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm85"></a><a name="use_masses"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">use_masses</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If. TRUE. the optimisation of the path is performed using
+mass-weighted coordinates. Useful together with quick-min
+optimization scheme, if some bonds are much stiffer than
+others. By assigning a larger (fictitious) mass to atoms
+with stiff bonds, one may use a longer time step "ds"
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm88"></a><a name="use_freezing"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">use_freezing</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If. TRUE. the images are optimised according to their error:
+only those images with an error larger than half of the largest
+are optimised. The other images are kept frozen.
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm91"></a><a name="lfcpopt"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lfcpopt</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .FALSE.
+               </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#fcp_mu">fcp_mu</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .TRUE. perform a constant bias potential (constant-mu)
+calculation with ESM method (assume_isolated = 'esm' and
+esm_bc = 'bc2' or 'bc3' must be set in SYSTEM namelist).
+<a href="#fcp_mu">fcp_mu</a> gives the target Fermi energy.
+See the header of PW/src/fcp.f90 for documentation
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm96"></a><a name="fcp_mu"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fcp_mu</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0.d0
+               </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#lfcpopt">lfcpopt</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If <a href="#lfcpopt">lfcpopt</a> == .TRUE., gives the target Fermi energy [Ry].
+One can specify the total charge of the system for the first
+and last image by giving <a href="#fcp_tot_charge_first">fcp_tot_charge_first</a> and <a href="#fcp_tot_charge_last">fcp_tot_charge_last</a>
+so that the Fermi energy of these systems will be the target value,
+otherwise <a href="#first_last_opt">first_last_opt</a> should be .TRUE.
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm104"></a><a name="fcp_tot_charge_first"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fcp_tot_charge_first</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0.d0
+               </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#lfcpopt">lfcpopt</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Total charge of the system ('tot_charge') for the first image.
+Initial 'tot_charge' for intermediate images will be given by
+linear interpolation of <a href="#fcp_tot_charge_first">fcp_tot_charge_first</a> and <a href="#fcp_tot_charge_last">fcp_tot_charge_last</a>
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+            <a name="idm110"></a><a name="fcp_tot_charge_last"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fcp_tot_charge_last</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0.d0
+               </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#lfcpopt">lfcpopt</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Total charge of the system ('tot_charge') for the last image.
+Initial 'tot_charge' for intermediate images will be given by
+linear interpolation of <a href="#fcp_tot_charge_first">fcp_tot_charge_first</a> and <a href="#fcp_tot_charge_last">fcp_tot_charge_last</a>
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         </td></tr></tbody></table></td></tr>
+</table>
+         <a name="idm116"></a><a name="CLIMBING_IMAGES"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">CLIMBING_IMAGES</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td>
+<p><b>
+Optional card, needed only if <a href="#CI_scheme">CI_scheme</a> == 'manual', ignored otherwise !
+            </b></p>
+<h3>Syntax:</h3>
+<blockquote>
+<b style="white-space: nowrap;">CLIMBING_IMAGES </b><br><div class="syntax">
+<i><a href="#idm120"> index1, index2, ... indexN
+                  </a></i>  </div>
+</blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm120"></a><a name="climbing_images_list"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; "> index1, index2, ... indexN
+                  </th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+index1, index2, ..., indexN are indices of the images to which the
+Climbing-Image procedure apply. If more than one image is specified
+they must be separated by a comma.
+                  </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+      </td></tr>
+<tr><th bgcolor="#c8c4b7"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;">END_PATH_INPUT</h2></th></tr>
+</table>
+      <a name="idm123"></a><a name="BEGIN_ENGINE_INPUT"></a><table style="table-layout: auto; width: 100%; border: 3px solid #1b587b; border-collapse: collapse; margin: 10 5 20 5; padding-right: 5px;">
+<tr><th bgcolor="#c8c4b7"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;">BEGIN_ENGINE_INPUT</h2></th></tr>
+<tr><td bgcolor="#eeeeee" style="padding: 5 10 5 15;">
+<i>Syntax of this supercard is the following:</i><br><pre>BEGIN_ENGINE_INPUT<br><i>  ... content of the supercard here ...</i><br>END_ENGINE_INPUT</pre>
+<i>and the content is:</i>
+</td></tr>
+<tr><td style="text-align: left; background: #ffffff; padding: 5 5 5 30; ">
+         <p><pre>
+Here comes the pw.x specific namelists and cards (see file: <a href="INPUT_PW.html">INPUT_PW.html</a> or INPUT_PW.txt)
+with the exception of <a href="#ATOMIC_POSITIONS">ATOMIC_POSITIONS</a> cards, which are specified separately within the
+<a href="#BEGIN_POSITIONS">BEGIN_POSITIONS</a>/END_POSITIONS supercard as described below.
+
+So the input that follows here is of the following structure:
+
+   <b>&amp;CONTROL</b>
+      ...
+   <b>/</b>
+   <b>&amp;SYSTEM</b>
+     ...
+   <b>/</b>
+   <b>&amp;ELECTRONS</b>
+     ...
+   <b>/</b>
+   ...
+         </pre></p>
+         <a name="idm134"></a><a name="BEGIN_POSITIONS"></a><table style="table-layout: auto; width: 100%; border: 3px solid #1b587b; border-collapse: collapse; margin: 10 5 20 5; padding-right: 5px;">
+<tr><th bgcolor="#c8c4b7"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;">BEGIN_POSITIONS</h2></th></tr>
+<tr><td bgcolor="#eeeeee" style="padding: 5 10 5 15;">
+<i>Syntax of this supercard is the following:</i><br><pre>BEGIN_POSITIONS<br><i>  ... content of the supercard here ...</i><br>END_POSITIONS</pre>
+<i>and the content is:</i>
+</td></tr>
+<tr><td style="text-align: left; background: #ffffff; padding: 5 5 5 30; ">
+            <p><pre>
+NB:
+Atomic positions for all the images are specified within the <a href="#BEGIN_POSITIONS">BEGIN_POSITIONS</a> / END_POSITIONS
+supercard, where each instance of <a href="#ATOMIC_POSITIONS">ATOMIC_POSITIONS</a> card is prefixed either by <a href="#FIRST_IMAGE">FIRST_IMAGE</a>,
+<a href="#INTERMEDIATE_IMAGE">INTERMEDIATE_IMAGE</a>, or <a href="#LAST_IMAGE">LAST_IMAGE</a> keywords.
+
+Note that intermediate images are optional, i.e., there can be none or any number of
+<a href="#INTERMEDIATE_IMAGE">INTERMEDIATE_IMAGE</a> images.
+            </pre></p>
+            <a name="idm142"></a><a name="FIRST_IMAGE"></a><table style="table-layout: auto; width: 100%; border: 3px solid #1b587b; border-collapse: collapse; margin: 10 5 20 5; padding-right: 5px;">
+<tr><th bgcolor="#c8c4b7"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;">FIRST_IMAGE</h2></th></tr>
+<tr><td bgcolor="#eeeeee" style="padding: 5 10 5 15;">
+<i>Syntax of this supercard is the following:</i><br><pre>FIRST_IMAGE<br><i>  ... content of the supercard here ...</i><br></pre>
+<i>and the content is:</i>
+</td></tr>
+<tr><td style="text-align: left; background: #ffffff; padding: 5 5 5 30; ">
+               <a name="idm143"></a><a name="ATOMIC_POSITIONS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">ATOMIC_POSITIONS</span> { <span class="flag">alat</span> | <span class="flag">bohr</span> | <span class="flag">angstrom</span> | <span class="flag">crystal</span> | <span class="flag">crystal_sg</span> } </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody><tr><td><p><pre>
+For the description of ATOMIC_POSITIONS card see file: <a href="INPUT_PW.html">INPUT_PW.html</a> or INPUT_PW.txt
+                  </pre></p></td></tr></tbody></table></td></tr>
+</table>
+            </td></tr>
+</table>
+            
+               <a name="idm149"></a><a name="INTERMEDIATE_IMAGE"></a><table style="table-layout: auto; width: 100%; border: 3px solid #1b587b; border-collapse: collapse; margin: 10 5 20 5; padding-right: 5px;">
+<tr><th bgcolor="#c8c4b7"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;">INTERMEDIATE_IMAGE</h2></th></tr>
+<tr><td bgcolor="#eeeeee" style="padding: 5 10 5 15;">
+<i>Syntax of this supercard is the following:</i><br><pre>INTERMEDIATE_IMAGE<br><i>  ... content of the supercard here ...</i><br></pre>
+<i>and the content is:</i>
+</td></tr>
+<tr><td style="padding: 10 10 10 15; background: #ffffff; text-align: left;"><i>( <b>Remark:</b>    There can be any number (including zero) of INTERMEDIATE_IMAGE supercards.        )</i></td></tr>
+<tr><td style="text-align: left; background: #ffffff; padding: 5 5 5 30; ">
+                  <a name="idm150"></a><a name="ATOMIC_POSITIONS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">ATOMIC_POSITIONS</span> { <span class="flag">alat</span> | <span class="flag">bohr</span> | <span class="flag">angstrom</span> | <span class="flag">crystal</span> | <span class="flag">crystal_sg</span> } </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody><tr><td><p><pre>
+For the description of ATOMIC_POSITIONS card see file: <a href="INPUT_PW.html">INPUT_PW.html</a> or INPUT_PW.txt
+                     </pre></p></td></tr></tbody></table></td></tr>
+</table>
+               </td></tr>
+</table>
+            
+            <a name="idm155"></a><a name="LAST_IMAGE"></a><table style="table-layout: auto; width: 100%; border: 3px solid #1b587b; border-collapse: collapse; margin: 10 5 20 5; padding-right: 5px;">
+<tr><th bgcolor="#c8c4b7"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;">LAST_IMAGE</h2></th></tr>
+<tr><td bgcolor="#eeeeee" style="padding: 5 10 5 15;">
+<i>Syntax of this supercard is the following:</i><br><pre>LAST_IMAGE<br><i>  ... content of the supercard here ...</i><br></pre>
+<i>and the content is:</i>
+</td></tr>
+<tr><td style="text-align: left; background: #ffffff; padding: 5 5 5 30; ">
+               <a name="idm156"></a><a name="ATOMIC_POSITIONS"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">ATOMIC_POSITIONS</span> { <span class="flag">alat</span> | <span class="flag">bohr</span> | <span class="flag">angstrom</span> | <span class="flag">crystal</span> | <span class="flag">crystal_sg</span> } </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody><tr><td><p><pre>
+For the description of ATOMIC_POSITIONS card see file: <a href="INPUT_PW.html">INPUT_PW.html</a> or INPUT_PW.txt
+                  </pre></p></td></tr></tbody></table></td></tr>
+</table>
+            </td></tr>
+</table>
+         </td></tr>
+<tr><th bgcolor="#c8c4b7"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;">END_POSITIONS</h2></th></tr>
+</table>
+         <p><pre>
+Here can follow other <b>pw</b> specific <b>cards</b> ...
+         </pre></p>
+      </td></tr>
+<tr><th bgcolor="#c8c4b7"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;">END_ENGINE_INPUT</h2></th></tr>
+</table>
+   </td></tr>
+<tr><th bgcolor="#c8c4b7"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;">END</h2></th></tr>
+</table>
+</td></tr>
+</table>
+<small>
+	  This file has been created by helpdoc utility on Fri Jun 22 17:11:02 CEST 2018.
+	</small>
+</body>
+</html>
