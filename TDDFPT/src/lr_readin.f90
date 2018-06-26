@@ -57,20 +57,6 @@ SUBROUTINE lr_readin
   USE mp_bands,            ONLY : ntask_groups
   USE constants,           ONLY : eps4
   USE control_lr,          ONLY : lrpa
-#if defined(__ENVIRON)
-  USE environ_base,        ONLY : environ_base_init, ir_end
-  USE environ_input,       ONLY : read_environ
-  USE environ_base,        ONLY : ifdtype, nfdpoint
-  USE ions_base,           ONLY : nsp, ityp, zv, tau, nat
-  USE cell_base,           ONLY : at, alat, omega, ibrav
-  USE solvent_tddfpt,      ONLY : solvent_initbase_tddfpt
-  USE environ_init,        ONLY : environ_initions, environ_initcell,      &
-                                  environ_clean, environ_initbase,         &
-                                  environ_initions_allocate
-  USE environ_main,        ONLY : calc_venviron
-  USE plugin_flags,        ONLY : use_environ
-#endif
-  
 
   IMPLICIT NONE
   !
@@ -90,7 +76,7 @@ SUBROUTINE lr_readin
   NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, lrpa,   &
                         & charge_response, tqr, auto_rs, no_hxc, n_ipol, project,      &
                         & scissor, ecutfock, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
-                        & q1, q2, q3, approximation 
+                        & q1, q2, q3, approximation
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
   namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
                         & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
@@ -124,8 +110,8 @@ SUBROUTINE lr_readin
      pseudo_hermitian=.true.
      ipol = 1
      n_ipol = 1
-     no_hxc = .FALSE.      
-     lrpa = .false.         
+     no_hxc = .FALSE.
+     lrpa = .false.
      real_space = .FALSE.
      real_space_debug = 0
      charge_response = 0
@@ -145,8 +131,8 @@ SUBROUTINE lr_readin
      !
      ! For EELS
      !
-     q1 = 1.0d0         
-     q2 = 1.0d0         
+     q1 = 1.0d0
+     q2 = 1.0d0
      q3 = 1.0d0
      approximation = 'TDDFT'
      !
@@ -181,8 +167,7 @@ SUBROUTINE lr_readin
      if_dft_spectrum=.false.
      lplot_drho=.false.
      !
-     ! 
-     !   Reading possible plugin arguments (-environ).
+     !   Reading possible plugin arguments
      !
      CALL plugin_arguments()
      !
@@ -238,7 +223,7 @@ SUBROUTINE lr_readin
      !
      IF (.NOT.eels) THEN
         w_T_prefix = TRIM( tmp_dir ) // &
-                   & TRIM( beta_gamma_z_prefix ) // ".beta_gamma_z." 
+                   & TRIM( beta_gamma_z_prefix ) // ".beta_gamma_z."
      ENDIF
      !
      ierr = 0
@@ -246,20 +231,20 @@ SUBROUTINE lr_readin
      IF (eels) THEN
         !
         IF (n_ipol /= 1) THEN
-           WRITE(stdout,'(5X,"n_ipol /= 1 is not allowed for EELS.")') 
-           WRITE(stdout,'(5X,"Setting n_ipol = 1 ...")') 
+           WRITE(stdout,'(5X,"n_ipol /= 1 is not allowed for EELS.")')
+           WRITE(stdout,'(5X,"Setting n_ipol = 1 ...")')
            n_ipol = 1
         ENDIF
         IF (ipol /= 1) THEN
-           WRITE(stdout,'(5X,"ipol /= 1 is not allowed for EELS.")') 
-           WRITE(stdout,'(5X,"Setting ipol = 1 ...")')                
+           WRITE(stdout,'(5X,"ipol /= 1 is not allowed for EELS.")')
+           WRITE(stdout,'(5X,"Setting ipol = 1 ...")')
            ipol = 1
         ENDIF
         LR_polarization = 1
         !
      ELSE
         !
-        ! Optics: set up polarization direction(s) 
+        ! Optics: set up polarization direction(s)
         !
         IF ( ipol==4 ) THEN
            !
@@ -340,7 +325,7 @@ SUBROUTINE lr_readin
   !
   ! Required for restart runs as this never gets initialized.
   !
-  current_k = 1     
+  current_k = 1
   !
   outdir = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
   !
@@ -350,7 +335,7 @@ SUBROUTINE lr_readin
      IF (real_space) real_space_debug=99
      IF (real_space_debug > 0) real_space=.TRUE.
      IF (lr_verbosity > 1) THEN
-        WRITE(stdout,'(5x,"Status of real space flags: TQR=", L5 ,& 
+        WRITE(stdout,'(5x,"Status of real space flags: TQR=", L5 ,&
                       &"  REAL_SPACE=", L5)') tqr, real_space
      ENDIF
      !
@@ -376,15 +361,15 @@ SUBROUTINE lr_readin
   !
   ! Optical case: the variables igk_k and ngk are set up through this path:
   ! read_file -> init_igk.
-  ! EELS: the variables igk_k and ngk will be re-set up later (because there 
+  ! EELS: the variables igk_k and ngk will be re-set up later (because there
   ! will be not only poins k but also points k+q) through the path:
-  ! lr_run_nscf -> init_run -> hinit0 -> init_igk 
+  ! lr_run_nscf -> init_run -> hinit0 -> init_igk
   !
   CALL read_file()
   !
   !   Set wfc_dir - this is done here because read_file sets wfc_dir = tmp_dir
   !   FIXME:,if wfcdir is not present in input, wfc_dir is set to "undefined"
-  !   instead of tmp_dir, because of the logic used in the rest of TDDFPT   
+  !   instead of tmp_dir, because of the logic used in the rest of TDDFPT
   !
   wfc_dir = trimcheck ( wfcdir )
   !
@@ -406,69 +391,26 @@ SUBROUTINE lr_readin
      !
   ENDIF
   !
-  ! Make sure all the features used in the PWscf calculation 
+  ! Make sure all the features used in the PWscf calculation
   ! are actually supported by TDDFPT.
   !
   CALL input_sanity()
   !
-#if defined(__ENVIRON)
+  ! Compute and add plugin contributions to SCF potential
   !
-  ! Self-consistent continuum solvation model
+  CALL plugin_read_input("TD")
   !
-  IF ( use_environ ) THEN
-     !
-     ! Periodic boundary corrections, which were possibly activated in PW
-     !
-#if defined(__MPI)
-  IF (ionode) THEN
-#endif
-     if (do_makov_payne) then
-        assume_isolated = 'makov-payne'
-     elseif (do_comp_mt) then
-        assume_isolated = 'martyna-tuckerman'
-     elseif (do_comp_esm) then
-        assume_isolated = 'esm'
-     else
-        assume_isolated = 'none'
-     endif
-#if defined(__MPI)
-  ENDIF
-  CALL mp_bcast(assume_isolated, ionode_id, world_comm)
-#endif
-     !
-     ! Copied from PW/src/input.f90
-     !
-     CALL read_environ( nat, nsp, assume_isolated, ibrav )
-     !
-     ! Taken from PW/src/init_run.f90
-     !
-     ir_end = MIN(dfftp%nnr,dfftp%nr1x*dfftp%my_nr2p*dfftp%my_nr3p)
-     CALL environ_initbase( dfftp%nnr )
-     !
-     ! Taken from PW/src/electrons.f90
-     !
-     CALL environ_initions( dfftp%nnr, nat, nsp, ityp, zv, tau, alat )
-     CALL environ_initcell( dfftp%nnr, dfftp%nr1, dfftp%nr2, dfftp%nr3, ibrav, omega, alat, at )
-     !
-     ! Compute additional unperturbed potentials due to the presence of the
-     ! environment and add them to the SCF (HXC) potential.
-     !
-     WRITE( stdout, '(/5x,"Computing and adding the polarization potentials to HXC potential")' )
-     !
-     CALL calc_venviron( .TRUE., dfftp%nnr, nspin, 0.0d0, rho%of_r, v%of_r(:,1))
-     !
-     ! Now, once the Environ potentials were computed we can deallocate numerous 
-     ! Environ arrays because they are not needed any longer.
-     !
-     CALL environ_clean( .TRUE. )
-     !
-     ! Allocations for TDDFPT
-     !
-     CALL solvent_initbase_tddfpt(ifdtype, nfdpoint, dfftp%nnr)
-     !
-  ENDIF
+  CALL plugin_initbase()
   !
-#endif
+  CALL plugin_init_ions()
+  !
+  CALL plugin_init_cell()
+  !
+  CALL plugin_init_potential( v%of_r(:,1) )
+  !
+  CALL plugin_scf_potential( rho, v%of_r(:,1) )
+  !
+  CALL plugin_clean( 'TD', .FALSE. )
   !
   !  Deallocate some variables created with read_file but not used in TDDFPT
   !
@@ -497,8 +439,8 @@ SUBROUTINE lr_readin
   !
   ! Now put the potential calculated in read_file into the correct place
   ! and deallocate the redundant associated variables.
-  ! Set the total local potential vrs on the smooth mesh 
-  ! adding the scf (Hartree + XC) part and the sum of 
+  ! Set the total local potential vrs on the smooth mesh
+  ! adding the scf (Hartree + XC) part and the sum of
   ! all the local pseudopotential contributions.
   ! vrs = vltot + v%of_r
   !
@@ -508,8 +450,8 @@ SUBROUTINE lr_readin
   CALL destroy_scf_type(v)
   !
   ! Recalculate the weights of the Kohn-Sham orbitals.
-  ! (Should this not be a call to weights() to make this 
-  ! less insulator specific?)                            
+  ! (Should this not be a call to weights() to make this
+  ! less insulator specific?)
   !
   IF (.NOT.eels) CALL iweights( nks, wk, nbnd, nelec, et, ef, wg, 0, isk)
   !
@@ -524,8 +466,8 @@ SUBROUTINE lr_readin
 CONTAINS
   !
   SUBROUTINE input_sanity()
-    !-------------------------------------------------------------------------- 
-    ! 
+    !--------------------------------------------------------------------------
+    !
     ! This subroutine aims to gather all of the input sanity checks
     ! (features enabled in PWscf which are unsupported in TDDFPT).
     ! Written by Simone Binnie 2011
@@ -585,7 +527,7 @@ CONTAINS
        !
     ENDIF
     !
-    !  Check that either we have the same number of procs as the initial PWscf run 
+    !  Check that either we have the same number of procs as the initial PWscf run
     !  OR that the wavefunctions were gathered into one file at the end of
     !  the PWscf run.
     !
@@ -655,12 +597,9 @@ CONTAINS
        !
        ! Note, all variables of the turboDavidson code cannot be used by turboEELS.
        !
-#if defined(__ENVIRON)
+       ! EELS + plugins is not supported.
        !
-       ! EELS + implicit solvent model is not supported.
-       !
-       IF ( use_environ ) CALL errore( 'lr_readin', 'Implicit solvent model cannot be used.', 1)
-#endif
+       CALL plugin_check('lr_readin')
        !
     ENDIF
     !
@@ -721,5 +660,5 @@ CONTAINS
       RETURN
       !
     END SUBROUTINE read_rs_status
- 
+
 END SUBROUTINE lr_readin

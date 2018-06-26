@@ -5,20 +5,21 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine plugin_read_input()
+subroutine plugin_read_input(prog)
 !
-! This routine is used for reading 
-! plugin input files
+! This routine is used for reading plugin input files
 ! DO NOT REMOVE THE TAGS ! ***ADDSON_NAME KIND_OF_PATCH***
 !
 USE plugin_flags
 USE input_parameters, ONLY : nat, ntyp
-USE input_parameters, ONLY : assume_isolated, ibrav 
+USE input_parameters, ONLY : assume_isolated, ibrav
 !
 ! ***Environ MODULES BEGIN***
 ! ***Environ MODULES END***
 !
 implicit none
+!
+CHARACTER(LEN=*), INTENT(IN) :: prog
 !
 ! ***Environ VARIABLES BEGIN***
 ! ***Environ VARIABLES END***

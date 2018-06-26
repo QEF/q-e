@@ -1440,7 +1440,7 @@ SUBROUTINE iosys()
   fcp_mdiis_size_ = fcp_mdiis_size
   fcp_mdiis_step_ = fcp_mdiis_step
   !
-  CALL plugin_read_input()
+  CALL plugin_read_input("PW")
   !
   ! ... read following cards
   !
