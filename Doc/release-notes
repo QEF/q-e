@@ -13,7 +13,7 @@ New in development version:
   * Spin-polarized X3LYP (experimental)
 
   * EPW: Electronic transport (Boltzmann transport equation)
-         Iterative Botlzmann transport equation (experimental)
+         Iterative Boltzmann transport equation (experimental)
          Cumulant treatement (model)
          Possible screening
          Support for exclude bands
