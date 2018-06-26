@@ -1,0 +1,2104 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- *** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST *** --><meta http-equiv="Content-Style-Type" CONTENT="text/css">
+<style>
+	  body {
+	  background-color:#ffffff;
+	  font:normal 14px/1.8em arial, helvetica, sans-serif;
+	  width:900px;
+	  text-align:justify;
+	  margin: 30 10 10 30;
+	  }
+
+	  h1 {
+	  font-size:24px;
+	  }
+	  
+	  h2 {
+	  font-size:18px;
+	  }
+	  
+	  h3 {
+	  font-size:16px;
+	  }
+	  pre, tt, code {
+	  font-size:14px;
+	  }	  
+	  .syntax, .syntax table {
+	  font-size:14px;
+	  }
+	  span.namelist {
+	  color: #214478;
+	  }
+	  span.card {
+	  color: #782167;
+	  }
+	  span.flag {
+	  color: #008000;
+	  font-weight: bold;
+	  }
+	</style>
+<title>ld1.x: input description</title>
+</head>
+<body>
+<a name="__top__"></a><table style="border-width: 0; table-layout: auto; width: 100%; text-align: left; vertical-align: top; background: #00395a;">
+<tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
+<h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
+<h2 style="margin: 10 10 10 15; text-align: left;"> Program:
+	      ld1.x /  / Quantum Espresso<span style="font-weight: normal;"> (version: svn)</span>
+</h2>
+</th></tr>
+<tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
+   <blockquote style="margin-bottom: 2em;">
+<h3>TABLE OF CONTENTS</h3>
+<blockquote>
+   
+   
+   <p><a href="#idm3">INTRODUCTION</a></p>
+   <p><a href="#idm4">&amp;INPUT</a></p>
+<blockquote>
+<a href="#idm6">title</a> | <a href="#idm11">zed</a> | <a href="#idm18">atom</a> | <a href="#idm26">xmin</a> | <a href="#idm32">dx</a> | <a href="#idm36">rmax</a> | <a href="#idm39">beta</a> | <a href="#idm42">tr2</a> | <a href="#idm45">iswitch</a> | <a href="#idm50">nld</a> | <a href="#idm52">rlderiv</a> | <a href="#idm55">eminld</a> | <a href="#idm56">emaxld</a> | <a href="#idm58">deld</a> | <a href="#idm60">rpwe</a> | <a href="#idm64">rel</a> | <a href="#idm67">lsmall</a> | <a href="#idm70">max_out_wfc</a> | <a href="#idm73">noscf</a> | <a href="#idm76">lsd</a> | <a href="#idm80">dft</a> | <a href="#idm88">latt</a> | <a href="#idm91">isic</a> | <a href="#idm95">rytoev_fact</a> | <a href="#idm98">cau_fact</a> | <a href="#idm101">vdw</a> | <a href="#idm105">prefix</a> | <a href="#idm108">verbosity</a> | <a href="#idm114">file_charge</a> | <a href="#idm117">config</a> | <a href="#idm123">relpert</a> | <a href="#idm128">rel_dist</a> | <a href="#idm135">write_coulomb</a>
+</blockquote>
+   <p><a href="#idm138">AllElectronCards</a></p>
+<blockquote>
+<a href="#idm144">nwf</a> | <a href="#idm148">nl</a> | <a href="#idm150">n</a> | <a href="#idm152">l</a> | <a href="#idm154">oc</a> | <a href="#idm156">isw</a> | <a href="#idm168">jj</a>
+</blockquote>
+   <p><a href="#idm170">&amp;INPUTP</a></p>
+<blockquote>
+<a href="#idm171">zval</a> | <a href="#idm174">pseudotype</a> | <a href="#idm176">file_pseudopw</a> | <a href="#idm179">file_recon</a> | <a href="#idm182">lloc</a> | <a href="#idm185">rcloc</a> | <a href="#idm190">nlcc</a> | <a href="#idm194">new_core_ps</a> | <a href="#idm198">rcore</a> | <a href="#idm200">tm</a> | <a href="#idm206">rho0</a> | <a href="#idm209">lpaw</a> | <a href="#idm214">which_augfun</a> | <a href="#idm224">rmatch_augfun</a> | <a href="#idm228">rmatch_augfun_nc</a> | <a href="#idm232">lsave_wfc</a> | <a href="#idm235">lgipaw_reconstruction</a> | <a href="#idm239">use_paw_as_gipaw</a> | <a href="#idm243">author</a> | <a href="#idm246">file_chi</a> | <a href="#idm249">file_beta</a> | <a href="#idm252">file_qvan</a> | <a href="#idm255">file_screen</a> | <a href="#idm258">file_core</a> | <a href="#idm261">file_wfcaegen</a> | <a href="#idm264">file_wfcncgen</a> | <a href="#idm267">file_wfcusgen</a>
+</blockquote>
+   <p><a href="#idm270">PseudoPotentialGenerationCards</a></p>
+<blockquote>
+<a href="#idm275">nwfs</a> | <a href="#idm279">nls</a> | <a href="#idm281">nns</a> | <a href="#idm283">lls</a> | <a href="#idm285">ocs</a> | <a href="#idm287">ener</a> | <a href="#idm289">rcut</a> | <a href="#idm291">rcutus</a> | <a href="#idm293">jjs</a> | </blockquote>
+   <p><a href="#idm317">&amp;TEST</a></p>
+<blockquote>
+<a href="#idm319">nconf</a> | <a href="#idm322">file_pseudo</a> | <a href="#idm327">ecutmin</a> | <a href="#idm328">ecutmax</a> | <a href="#idm329">decut</a> | <a href="#idm341">rm</a> | <a href="#idm344">configts</a> | <a href="#idm346">lsdts</a> | <a href="#idm350">frozen_core</a> | <a href="#idm353">rcutv</a>
+</blockquote>
+   <p><a href="#idm356">PseudoPotentialTestCards</a></p>
+<blockquote>
+<a href="#idm362">nwfts</a> | <a href="#idm366">elts</a> | <a href="#idm368">nnts</a> | <a href="#idm370">llts</a> | <a href="#idm372">octs</a> | <a href="#idm374">enerts</a> | <a href="#idm376">rcutts</a> | <a href="#idm378">rcutusts</a> | <a href="#idm380">iswts</a> | <a href="#idm395">jjts</a> | </blockquote>
+   <p><a href="#idm410">Notes</a></p>
+<blockquote><a href="#idm412">Output files written</a></blockquote>
+<blockquote><a href="#idm414">Recipes to reproduce old all-electron atomic results with the ld1 program</a></blockquote>
+</blockquote>
+</blockquote>
+   <blockquote>
+<a name="idm3"></a><h3>INTRODUCTION</h3>
+<blockquote><pre>
+Input data cards for ld1.x program:
+
+Always present:
+  1   namelist &amp;input
+  1.1 optional cards for all-electron calculations
+
+Needed for PP generation:
+  2   namelist &amp;inputp
+  2.1 additional cards for PP generation
+
+Needed for pseudo-potential (PP) test. optional for PP generation:
+  3   namelist &amp;test
+  3.1 optional cards for PP test
+   </pre></blockquote>
+</blockquote>
+   <a name="idm4"></a><a name="INPUT"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>INPUT</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <p><b> This namelist is always needed !
+      </b></p>
+      <a name="idm6"></a><a name="title"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">title</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> OPTIONAL
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> A string describing the job.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <p><b> Either:
+         </b></p>
+         <a name="idm11"></a><a name="zed"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">zed</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#atom">atom</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The nuclear charge (1 &lt; zed &lt; 100).
+
+<b>IMPORTANT:</b>
+Specify either <a href="#zed">zed</a> OR <a href="#atom">atom</a>, not both!
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <p><b> Or:
+         </b></p>
+         <a name="idm18"></a><a name="atom"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">atom</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#zed">zed</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Atomic symbol: atom='H', 'He', 'Be', etc.
+
+<b>IMPORTANT:</b>
+Specify either <a href="#atom">atom</a> OR <a href="#zed">zed</a>, not both!
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      </td></tr></table>
+      <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <p><b> Radial grid parameters:
+         </b></p>
+         <a name="idm26"></a><a name="xmin"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">xmin</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+-7.0 if <a href="#iswitch">iswitch</a>&gt;1 or <a href="#rel">rel</a>=0,
+-8.0 otherwise
+            </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#dx">dx</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Radial grid parameter.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm32"></a><a name="dx"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">dx</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+0.0125 if <a href="#iswitch">iswitch</a>&gt;1,
+0.008 otherwise
+            </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Radial grid parameter.
+
+The radial grid is: r(i+1) = exp(xmin+i*dx)/zed  a.u.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm36"></a><a name="rmax"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rmax</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 100.0 a.u.
+            </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Outermost grid point.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      </td></tr></table>
+      <a name="idm39"></a><a name="beta"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">beta</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0.2
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> parameter for potential mixing
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm42"></a><a name="tr2"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">tr2</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1e-14
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> convergence threshold for scf
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm45"></a><a name="iswitch"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">iswitch</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+1    all-electron calculation
+2    PP test calculation
+3    PP generation
+4    LDA-1/2 correction, needs a previously generated PP file
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <p><b> Parameters for logarithmic derivatives:
+         </b></p>
+         <a name="idm50"></a><a name="nld"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nld</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> the number of logarithmic derivatives to be calculated
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm52"></a><a name="rlderiv"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rlderiv</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> radius (a.u.) at which logarithmic derivatives are calculated
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm55"></a><a name="eminld"></a>eminld, <a name="idm56"></a><a name="emaxld"></a>emaxld</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Energy range (min, max energy, in Ry) at which
+logarithmic derivatives are calculated.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm58"></a><a name="deld"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">deld</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Delta e (Ry) of energy for logarithmic derivatives.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm60"></a><a name="rpwe"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rpwe</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> rlderiv
+            </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> radius (a.u.) at which partial wave expansions are calculated
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <p><pre>
+If the above parameters are not specified, logarithmic
+derivatives and partial wave expansions are not calculated.
+         </pre></p>
+      </td></tr></table>
+      <a name="idm64"></a><a name="rel"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rel</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+0 for Z &lt;= 18;
+1 for Z &gt;  18
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+0 ... non relativistic calculation
+1 ... scalar relativistic calculation
+2 ... full relativistic calculation with spin-orbit
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm67"></a><a name="lsmall"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lsmall</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if .true. writes on files the small component
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm70"></a><a name="max_out_wfc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">max_out_wfc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 7
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Maximum number of atomic wavefunctions written in the output
+file.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm73"></a><a name="noscf"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">noscf</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+if .true. the charge is not computed. The occupations are
+not used and the eigenvalues and eigenfunctions are those
+of a hydrogen-like atom.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm76"></a><a name="lsd"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lsd</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+0 ... non spin polarized calculation
+1 ... spin-polarized calculation
+
+<b>BEWARE:</b>
+not allowed if iswitch=3 (PP generation) or with full
+relativistic calculation
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm80"></a><a name="dft"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">dft</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Exchange-correlation functional.
+
+Examples:
+<b>'PZ'</b>    Perdew and Zunger formula for LDA
+<b>'PW91'</b>  Perdew and Wang GGA
+<b>'BP'</b>    Becke and Perdew GGA
+<b>'PBE'</b>   Perdew, Becke and Ernzerhof GGA
+<b>'BLYP'</b>  ...
+
+For the complete list, see module "functionals" in ../Modules/
+The default is <b>'PZ'</b> for all-electron calculations,
+it is read from the PP file in a PP calculation.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm88"></a><a name="latt"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">latt</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+0 ... no Latter correction
+1 ... apply Latter correction
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm91"></a><a name="isic"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">isic</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+only for all-electron calculation
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+0 ... no Self-interaction correction
+1 ... apply Self-interaction correction
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm95"></a><a name="rytoev_fact"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rytoev_fact</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> as specified in file Modules/constants.f90
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Factor used to convert Ry into eV.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm98"></a><a name="cau_fact"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">cau_fact</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> as specified in file Modules/constants.f90
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Speed of light in a.u..
+
+(Be careful the default value is always used in the
+ relativistic exchange.)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm101"></a><a name="vdw"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">vdw</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+Gradient-corrected DFT not yet implemented.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true., the frequency dependent polarizability and van der
+Waals coefficient C6 will be computed in Thomas-Fermi and
+von Weizsaecker approximation(only for closed-shell ions).
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm105"></a><a name="prefix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">prefix</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'ld1'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Prefix for file names - only for output file names
+containing the orbitals, logarithmic derivatives, tests
+See below for file names and the content of the file.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm108"></a><a name="verbosity"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">verbosity</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'low'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+<b>'low'</b> or <b>'high'</b>
+
+if <b>'high'</b> with iswitch=2,3 prints separately core and
+valence contributions to the energies. Print the
+frozen-core energy.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm114"></a><a name="file_charge"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">file_charge</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Name of the file where the code writes the all-electron
+total charge. No charge is written if file_charge=' '.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm117"></a><a name="config"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">config</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+A string with the electronic configuration.
+
+Example:
+  '[Ar] 3d10 4s2 4p2.5'
+
+* If <a href="#lsd">lsd</a>=1, spin-up and spin-down state may appear twice
+  with the respective occupancy: 3p4 3p2 = 4 up,
+  2 down. Otherwise, the Hund's rule is assumed.
+
+* If <a href="#rel">rel</a>=2, states with jj=l-1/2 are filled first.
+  If a state appears twice, the first one has jj=l-1/2,
+  the second one jj=l+1/2 (except S states)
+  (Use rel_dist if you want to average the electrons
+  over all available states.)
+
+* If config='default' the code uses <a href="#zed">zed</a> to set the ground
+  state electronic configuration for the atom.
+
+Negative occupancies are used to flag unbound states;
+they are not actually used.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm123"></a><a name="relpert"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">relpert</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. the relativistic corrections to the non-relativistic
+Kohn-Sham energy levels (<a href="#rel">rel</a>=0 .and. <a href="#lsd">lsd</a>=0) are computed using
+first-order perturbation theory in all-electron calculations.
+The corrections consist of the following terms:
+   E_vel: velocity (p^4) correction
+   E_Dar: Darwin term
+   E_S-O: spin-orbit coupling
+The spin-orbit term vanishes for s-electron states and gives
+rise to a splitting of (2*l+1)*E_S-O for the other states.
+The separate contributions are printed only if verbosity='high'.
+
+Formulas and notation are based on the Herman-Skillman book:
+F. Herman and S. Skillman, "Atomic Structure Calculations",
+Prentice-Hall, Inc., Englewood Cliffs, New Jersey, 1963
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm128"></a><a name="rel_dist"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rel_dist</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'energy'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+<b>'energy'</b> or <b>'average'</b>
+
+* if <b>'energy'</b> the relativistic l-1/2 states are filled first.
+
+* if <b>'average'</b> the electrons are uniformly distributed
+  among all the states with the given l.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm135"></a><a name="write_coulomb"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">write_coulomb</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true., a fake pseudo-potential file with name X.UPF,
+where X is the atomic symbol, is written. It contains
+the radial grid and the wavefunctions as specified in input,
+plus the info needed to build the Coulomb potential
+for an all-electron calculation - for testing only.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+   <a name="idm138"></a><a name="AllElectronCards"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">AllElectronCards</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td>
+<p><b>
+If config is empty the electronic configuration is read from
+the following cards:
+      </b></p>
+<table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
+<b>IF </b><tt><em>rel &lt; 2</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+            <h3>Syntax:</h3>
+<blockquote><div class="syntax">
+<i><a href="#idm144">nwf</a></i>  <br><a name="idm146"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm148">nl(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm150">n(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm152">l(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm154">oc(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm156">isw(1)</a></i> </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm148">nl(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm150">n(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm152">l(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm154">oc(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm156">isw(2)</a></i> </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm148">nl(nwf)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm150">n(nwf)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm152">l(nwf)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm154">oc(nwf)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm156">isw(nwf)</a></i> </td>
+</tr>
+</table>
+</div></blockquote>
+         </td></tr></table></blockquote>
+<b>ELSEIF </b><tt><em>rel = 2</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+            <h3>Syntax:</h3>
+<blockquote><div class="syntax">
+<i>nwf</i>  <br><a name="idm162"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i>nl(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>n(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>l(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>oc(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm168">jj(1)</a></i> </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i>nl(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>n(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>l(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>oc(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm168">jj(2)</a></i> </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i>nl(nwf)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>n(nwf)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>l(nwf)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>oc(nwf)
+	  </i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm168">jj(nwf)</a></i> </td>
+</tr>
+</table>
+</div></blockquote>
+         </td></tr></table></blockquote>
+</td></tr></table>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm144"></a><a name="nwf"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nwf</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+number of wavefunctions
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="nl"><a name="idm148">nl</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> wavefunction label (e.g. 1s, 2s, etc.)
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="n"><a name="idm150">n</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> principal quantum number
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="l"><a name="idm152">l</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> angular quantum number
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="oc"><a name="idm154">oc</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> occupation number
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="isw"><a name="idm156">isw</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> the spin index (1-2) used only in the lsda case
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="jj"><a name="idm168">jj</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The total angular momentum (0.0 is allowed for complete
+shells: the codes fills 2l states with jj=l-1/2,
+2l+2 with jj=l+1/2).
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+   <a name="idm170"></a><a name="INPUTP"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>INPUTP</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <a name="idm171"></a><a name="zval"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">zval</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> (calculated)
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Valence charge.
+
+zval is automatically calculated from available data.
+If the value of zval is provided in input, it will be
+checked versus the calculated value. The only case in
+which you need to explicitly provide the value of zval
+for noninteger zval (i.e. half core-hole pseudo-potentials).
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm174"></a><a name="pseudotype"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">pseudotype</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+1 ... norm-conserving, single-projector PP
+      IMPORTANT: if pseudotype=1 all calculations are done
+      using the SEMILOCAL form, not the separable nonlocal form
+
+2 ... norm-conserving PP in separable form (obsolescent)
+      All calculations are done using SEPARABLE non-local form
+      IMPORTANT: multiple projectors allowed but not properly
+      implemented, use only if you know what you are doing
+
+3 ... ultrasoft PP or PAW
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm176"></a><a name="file_pseudopw"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">file_pseudopw</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> REQUIRED
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+File where the generated PP is written.
+
+* if the file name ends with "upf" or "UPF",
+or in any case for spin-orbit PP (rel=2),
+the file is written in UPF format;
+
+* if the file name ends with 'psp' it is
+written in native CPMD format (this is currently
+an experimental feature); otherwise it is written
+in the old "NC" format if pseudotype=1, or
+in the old RRKJ format if pseudotype=2 or 3
+(no default, must be specified).
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm179"></a><a name="file_recon"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">file_recon</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+File containing data needed for GIPAW reconstruction
+of all-electron wavefunctions from PP results.
+If you want to use additional states to perform the
+reconstruction, add them at the end of the list
+of all-electron states.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm182"></a><a name="lloc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lloc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> -1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Angular momentum of the local channel.
+
+* lloc=-1 or lloc=-2 pseudizes the all-electron potential
+  if lloc=-2 the original recipe of Troullier-Martins
+  is used (zero first and second derivatives at r=0)
+* lloc&gt;-1 uses the corresponding channel as local PP
+
+NB: if lloc&gt;-1, the corresponding channel must be the last in the
+list of wavefunctions appearing after the namelist &amp;inputp
+In the relativistic case, if lloc &gt; 0 both the j=lloc-1/2 and
+the j=lloc+1/2 wavefunctions must be at the end of the list.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm185"></a><a name="rcloc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rcloc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+Must be specified only if <a href="#lloc">lloc</a>=-1, otherwise the
+corresponding value of <a href="#rcut">rcut</a> is used.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Matching radius (a.u.) for local pseudo-potential (no default).
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm190"></a><a name="nlcc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nlcc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. produce a PP with the nonlinear core
+correction of Louie, Froyen, and Cohen
+[<a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.26.1738">PRB 26, 1738 (1982)</a>].
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm194"></a><a name="new_core_ps"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">new_core_ps</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> requires nlcc=.true.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. pseudizes the core charge with bessel functions.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm198"></a><a name="rcore"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rcore</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Matching radius (a.u.) for the smoothing of the core charge.
+If not specified, the matching radius is determined
+by the condition:  rho_core(rcore) = 2*rho_valence(rcore)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm200"></a><a name="tm"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">tm</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+* .true. for Troullier-Martins pseudization [<a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.43.1993">PRB 43, 1993 (1991)</a>]
+
+* .false. for Rappe-Rabe-Kaxiras-Joannopoulos pseudization
+  [<a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.41.1227">PRB 41, 1227 (1990)</a>, erratum <a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.44.13175">PRB 44, 13175 (1991)</a>]
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm206"></a><a name="rho0"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rho0</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0.0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Charge at the origin: when the Rappe-Rabe-Kaxiras-Joannopoulos
+method with 3 Bessel functions fails, specifying rho0 &gt; 0
+may allow to override the problem (using 4 Bessel functions).
+Typical values are in the order of 0.01-0.02
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm209"></a><a name="lpaw"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lpaw</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. produce a PAW dataset, experimental feature
+only for <a href="#pseudotype">pseudotype</a>=3
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <a name="idm214"></a><a name="which_augfun"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">which_augfun</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+<tt>'AE'</tt> for Vanderbilt-Ultrasoft pseudo-potentials and 'BESSEL' for PAW datasets.
+            </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If different from <b>'AE'</b> the augmentation functions are pseudized
+before <a href="#rmatch_augfun">rmatch_augfun</a>. The pseudization options are:
+
+* <b>'PSQ'</b>        Use Bessel functions to pseudize Q
+               from the origin to rmatch_augfun.
+
+These features are available only for PAW:
+
+* <b>'BESSEL'</b>     Use Bessel functions to pseudize the Q.
+* <b>'GAUSS'</b>      Use 2 Gaussian functions to pseudize the Q.
+* <b>'BG'</b>         Use original Bloechl's recipe with a single gaussian.
+
+Note: if lpaw is true and which_augfun is set to AE real all-
+electron charge will be used, which will produce extremely
+hard augmentation.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm224"></a><a name="rmatch_augfun"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rmatch_augfun</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0.5 a.u.
+            </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> Used only if which_augfun is different from 'AE'.
+            </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Pseudization radius for the augmentation functions. Presently
+it has the same value for all L.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm228"></a><a name="rmatch_augfun_nc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rmatch_augfun_nc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+            </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> Used only if which_augfun is 'PSQ'.
+            </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. the augmentation functions are pseudized
+from the origin to min(rcut(ns),rcut(ns1)) where ns
+and ns1 are the two channels for that Q. In this case
+rmatch_augfun is not used.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      </td></tr></table>
+      <a name="idm232"></a><a name="lsave_wfc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lsave_wfc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false. if .not. lpaw, otherwise .true.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Set it to .true. to save all-electron and pseudo wavefunctions
+used in the pseudo-potential generation in the UPF file. Only
+works for UPFv2 format.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm235"></a><a name="lgipaw_reconstruction"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lgipaw_reconstruction</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Set it to .true. to generate pseudo-potentials containing the
+additional info required for reconstruction of all-electron
+orbitals, used by GIPAW. You will typically need to specify
+additional projectors beyond those used in the generation of
+pseudo-potentials. You should also specify <a href="#file_recon">file_recon</a>.
+
+All projectors used in the reconstruction must be listed BOTH
+in the test configuration after namelist &amp;test AND in the
+all-electron configuration (variable 'config', namelist &amp;inputp,
+Use negative occupancies for projectors on unbound states). The
+core radii in the test configuration should be the same as in
+the pseudo-potential generation section and will be used as the
+radius of reconstruction. Projectors not used to generate the
+pseudo-potential should have zero occupation number.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm239"></a><a name="use_paw_as_gipaw"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">use_paw_as_gipaw</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+When generating a PAW dataset, setting this option to .true. will
+save the core all-electron wavefunctions to the UPF file.
+The GIPAW reconstruction to be performed using the PAW data and
+projectors for the valence wavefunctions.
+
+In the default case, the GIPAW valence wavefunction and projectors
+are independent from the PAW ones and must be then specified as
+explained above in lgipaw_reconstruction.
+
+Setting this to .true. always implies <a href="#lgipaw_reconstruction">lgipaw_reconstruction</a> = .true.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm243"></a><a name="author"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">author</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'anonymous'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Name of the author.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm246"></a><a name="file_chi"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">file_chi</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> file containing output PP chi functions
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm249"></a><a name="file_beta"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">file_beta</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> file containing output PP beta functions
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm252"></a><a name="file_qvan"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">file_qvan</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> file containing output PP qvan functions
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm255"></a><a name="file_screen"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">file_screen</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> file containing output screening potential
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm258"></a><a name="file_core"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">file_core</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> file containing output total and core charge
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm261"></a><a name="file_wfcaegen"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">file_wfcaegen</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> file with the all-electron wfc for generation
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm264"></a><a name="file_wfcncgen"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">file_wfcncgen</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> file with the norm-conserving wfc for generation
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm267"></a><a name="file_wfcusgen"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">file_wfcusgen</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> file with the ultra-soft wfc for generation
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+   <a name="idm270"></a><a name="PseudoPotentialGenerationCards"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">PseudoPotentialGenerationCards</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
+<b>IF </b><tt><em>rel=0  OR  rel=2</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+            <h3>Syntax:</h3>
+<blockquote><div class="syntax">
+<i><a href="#idm275">nwfs</a></i>  <br><a name="idm277"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm279">nls(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm281">nns(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm283">lls(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm285">ocs(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm287">ener(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm289">rcut(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm291">rcutus(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm293">jjs(1)</a></i> </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm279">nls(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm281">nns(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm283">lls(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm285">ocs(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm287">ener(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm289">rcut(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm291">rcutus(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm293">jjs(2)</a></i> </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm279">nls(nwfs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm281">nns(nwfs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm283">lls(nwfs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm285">ocs(nwfs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm287">ener(nwfs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm289">rcut(nwfs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm291">rcutus(nwfs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm293">jjs(nwfs)</a></i> </td>
+</tr>
+</table>
+</div></blockquote>
+            <p><pre>
+* if <a href="#lloc">lloc</a>&gt;-1 the state with <a href="#lls">lls</a>=<a href="#lloc">lloc</a> must be the last
+
+* if <a href="#lloc">lloc</a>&gt;0 in the relativistic case, both states with <a href="#jjs">jjs</a>=<a href="#lloc">lloc</a>-1/2
+  and <a href="#jjs">jjs</a>=<a href="#lloc">lloc</a>+1/2 must be the last two
+            </pre></p>
+         </td></tr></table></blockquote>
+<b>ELSE </b><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+            <h3>Syntax:</h3>
+<blockquote><div class="syntax">
+<i>nwfs</i>  <br><a name="idm308"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i>nls(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>nns(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>lls(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>ocs(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>ener(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcut(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutus(1)
+	  </i> </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i>nls(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>nns(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>lls(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>ocs(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>ener(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcut(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutus(2)
+	  </i> </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i>nls(nwfs)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>nns(nwfs)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>lls(nwfs)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>ocs(nwfs)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>ener(nwfs)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcut(nwfs)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutus(nwfs)
+	  </i> </td>
+</tr>
+</table>
+</div></blockquote>
+         </td></tr></table></blockquote>
+</td></tr></table></td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm275"></a><a name="nwfs"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nwfs</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> number of wavefunctions to be pseudized
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="nls"><a name="idm279">nls</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Wavefunction label (same as in the all-electron configuration).
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="nns"><a name="idm281">nns</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Principal quantum number (referred to the PSEUDOPOTENTIAL case;
+nns=1 for lowest s, nns=2 for lowest p, and so on).
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="lls"><a name="idm283">lls</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Angular momentum quantum number.
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="ocs"><a name="idm285">ocs</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Occupation number  (same as in the all-electron configuration).
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="ener"><a name="idm287">ener</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Energy (Ry) used to pseudize the corresponding state.
+If 0.d0, use the one-electron energy of the all-electron state.
+Do not use 0.d0 for unbound states!
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="rcut"><a name="idm289">rcut</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Matching radius (a.u.) for norm conserving PP.
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="rcutus"><a name="idm291">rcutus</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Matching radius (a.u.) for ultrasoft PP - only for pseudotype=3.
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="jjs"><a name="idm293">jjs</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> The total angular momentum (0.0 is allowed for complete shells).
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+   <a name="idm317"></a><a name="TEST"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>TEST</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <p><b> needed only if iswitch=2 or iswitch=4, optional if iswitch=3
+      </b></p>
+      <a name="idm319"></a><a name="nconf"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nconf</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> the number of configurations to be tested. For iswitch = 4 nconf=2
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm322"></a><a name="file_pseudo"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">file_pseudo</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ignored if iswitch=3
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+File containing the PP.
+
+* If the file name contains  ".upf" or ".UPF",
+the file is assumed to be in UPF format;
+
+* else if the file name contains ".rrkj3" or ".RRKJ3",
+the old RRKJ format is first tried;
+
+* otherwise, the old NC format is read.
+
+IMPORTANT: in the latter case, all calculations are done
+using the SEMILOCAL form, not the separable nonlocal form.
+Use the UPF format if you want to test the separable form!
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm327"></a><a name="ecutmin"></a>ecutmin, <a name="idm328"></a><a name="ecutmax"></a>ecutmax, <a name="idm329"></a><a name="decut"></a>decut</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+decut=5.0 Ry; ecutmin=ecutmax=0Ry
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> specify <a href="#ecutmin">ecutmin</a> and <a href="#ecutmax">ecutmax</a> if you want to perform this test
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Parameters (Ry) used for test with a basis set of spherical
+Bessel functions j_l(qr) . The hamiltonian at fixed scf
+potential is diagonalized for various values of ecut:
+<a href="#ecutmin">ecutmin</a>, <a href="#ecutmin">ecutmin</a>+<a href="#decut">decut</a>, <a href="#ecutmin">ecutmin</a>+2*<a href="#decut">decut</a> ... up to <a href="#ecutmax">ecutmax</a>.
+This yields an indication of convergence with the
+corresponding plane-wave cutoff in solids, and shows
+in an unambiguous way if there are "ghost" states
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm341"></a><a name="rm"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rm</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 30 a.u.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Radius of the box used with spherical Bessel functions.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm344"></a><a name="configts"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">configts(i), i=1,nconf</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+A string containing the test valence electronic
+configuration nc, nc=1,nconf. Same syntax as for "config".
+If configts(i) is not set, the electron configuration
+is read from the cards following the namelist.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm346"></a><a name="lsdts"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">lsdts(i), i=1,nconf</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#lsd">lsd</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+0 or 1. It is the value of lsd used in the i-th test.
+Allows to make simultaneously spin-polarized and
+spin-unpolarized tests.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm350"></a><a name="frozen_core"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">frozen_core</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. only the core wavefunctions of the first
+configuration are calculated. The eigenvalues, orbitals
+and energies of the other configurations are calculated
+with the core of the first configuration.
+The first configuration must be spin-unpolarized.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm353"></a><a name="rcutv"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">rcutv</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> -1.0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Cutoff distance (CUT) for the inclusion of LDA-1/2 potential.
+                  Needed (mandatory) only if iswitch = 4
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+   <a name="idm356"></a><a name="PseudoPotentialTestCards"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">PseudoPotentialTestCards</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td>
+<p><b> IMPORTANT: this card has to be specified for each missing configts(i)
+      </b></p>
+<table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
+<b>IF </b><tt><em>lsd=1</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+            <h3>Syntax:</h3>
+<blockquote><div class="syntax">
+<i><a href="#idm362">nwfts</a></i>  <br><a name="idm364"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm366">elts(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm368">nnts(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm370">llts(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm372">octs(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm374">enerts(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm376">rcutts(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm378">rcutusts(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm380">iswts(1)</a></i> </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm366">elts(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm368">nnts(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm370">llts(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm372">octs(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm374">enerts(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm376">rcutts(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm378">rcutusts(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm380">iswts(2)</a></i> </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm366">elts(nwfts)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm368">nnts(nwfts)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm370">llts(nwfts)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm372">octs(nwfts)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm374">enerts(nwfts)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm376">rcutts(nwfts)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm378">rcutusts(nwfts)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm380">iswts(nwfts)</a></i> </td>
+</tr>
+</table>
+</div></blockquote>
+         </td></tr></table></blockquote>
+<b>ELSEIF </b><tt><em>rel=2</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+            <h3>Syntax:</h3>
+<blockquote><div class="syntax">
+<i>nwfts</i>  <br><a name="idm386"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i>elts(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>nnts(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>llts(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>octs(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>enerts(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutts(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutusts(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm395">jjts(1)</a></i> </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i>elts(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>nnts(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>llts(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>octs(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>enerts(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutts(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutusts(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm395">jjts(2)</a></i> </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i>elts(nwfts)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>nnts(nwfts)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>llts(nwfts)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>octs(nwfts)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>enerts(nwfts)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutts(nwfts)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutusts(nwfts)
+	  </i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm395">jjts(nwfts)</a></i> </td>
+</tr>
+</table>
+</div></blockquote>
+         </td></tr></table></blockquote>
+<b>ELSE </b><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+            <h3>Syntax:</h3>
+<blockquote><div class="syntax">
+<i>nwfts</i>  <br><a name="idm401"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i>elts(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>nnts(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>llts(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>octs(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>enerts(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutts(1)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutusts(1)
+	  </i> </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i>elts(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>nnts(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>llts(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>octs(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>enerts(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutts(2)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutusts(2)
+	  </i> </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i>elts(nwfts)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>nnts(nwfts)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>llts(nwfts)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>octs(nwfts)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>enerts(nwfts)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutts(nwfts)
+	  </i> </td>
+<td style="white-space:nowrap"> <i>rcutusts(nwfts)
+	  </i> </td>
+</tr>
+</table>
+</div></blockquote>
+         </td></tr></table></blockquote>
+</td></tr></table>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm362"></a><a name="nwfts"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nwfts</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> number of wavefunctions
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="elts"><a name="idm366">elts</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#nls">nls</a></td>
+</tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="nnts"><a name="idm368">nnts</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#nns">nns</a></td>
+</tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="llts"><a name="idm370">llts</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#lls">lls</a></td>
+</tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="octs"><a name="idm372">octs</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#ocs">ocs</a></td>
+</tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="enerts"><a name="idm374">enerts</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> not used
+                        </td>
+</tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="rcutts"><a name="idm376">rcutts</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> not used
+                        </td>
+</tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="rcutusts"><a name="idm378">rcutusts</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Status:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> not used
+                        </td>
+</tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="iswts"><a name="idm380">iswts</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> spin index (1 or 2, used in lsda case)
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="jjts"><a name="idm395">jjts</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> total angular momentum of the state
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+   <blockquote>
+<a name="idm410"><h3>Notes</h3></a>
+      <blockquote><pre>
+For PP generation you do not need to specify namelist &amp;test, UNLESS:
+
+1. you want to use a different configuration for unscreening wrt the
+one used to generate the PP. This is useful for PP with semicore
+states: use semicore states ONLY to produce the PP, use semicore
+AND valence states (if occupied) to make the unscreening
+
+2. you want to specify some more states for PAW style reconstruction of
+all-electron orbitals from pseudo-orbitals
+      </pre></blockquote>
+      <blockquote>
+<a name="idm412"><h4>Output files written</h4></a>
+         <blockquote><pre>
+* file_tests            "prefix".test    results of transferability test
+
+for each testing configuration N:
+
+* file_wavefunctions    "prefix"N.wfc     all-electron KS orbitals
+* file_wavefunctionsps  "prefix"Nps.wfc   pseudo KS orbitals
+
+if lsd=1:
+
+* file_wavefunctions    "prefix"N.wfc.up  all-electron KS up orbitals
+* file_wavefunctions    "prefix"N.wfc.dw  all-electron KS down orbitals
+
+if rel=2 and lsmall=.true.:
+
+* file_wavefunctions    "prefix".wfc.small  all-electron KS small component
+
+if parameters for logarithmic derivatives are specified:
+
+* file_logder           "prefix"Nps.dlog  all-electron logarithmic derivatives
+* file_logderps         "prefix"Nps.dlog  pseudo logarithmic derivatives
+
+"N" is not present if there is just one testing configuration.
+         </pre></blockquote>
+      </blockquote>
+      <blockquote>
+<a name="idm414"><h4>Recipes to reproduce old all-electron atomic results with the ld1 program</h4></a>
+         <blockquote><pre>
+* The Hartree results in Phys. Rev. 59, 299 (1940) or in
+  Phys. Rev. 59, 306 (1940) can be reproduced with:
+
+    rel=0,
+    isic=1,
+    dft='NOX-NOC'
+
+* The Herman-Skillman tables can be reproduced with:
+
+    rel=0,
+    isic=0,
+    latt=1,
+    dft='SL1-NOC'
+
+* Data on the paper Liberman, Waber, Cromer Phys. Rev. 137, A27 (1965) can be
+reproduced with:
+
+    rel=2,
+    isic=0,
+    latt=1,
+    dft='SL1-NOC'
+
+* Data on the paper S. Cohen Phys. Rev. 118, 489 (1960) can be reproduced with:
+
+    rel=2,
+    isic=1,
+    latt=0,
+    dft='NOX-NOC'
+
+* The revised PBE described in <a href="https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.80.890">PRL 80, 890 (1998)</a> can be obtained with:
+
+    isic=0
+    latt=0
+    dft='SLA-PW-RPB-PBC' or 'dft='revPBE'
+
+* The relativistic energies of closed shell atoms reported in <a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.64.235126">PRB 64 235126 (2001)</a>
+can be reproduced with:
+
+    isic=0
+    latt=0
+    cau_fact=137.0359895
+    dft='sla-vwn' for the LDA case
+    dft='PBE'     for the PBE case
+
+* The NIST results in PRA 55, 191 (1997):
+
+    LDA:
+        rel=0
+        dft='sla-vwn'
+
+    LSD:
+        rel=0
+        lsd=1
+        dft='sla-vwn'
+
+    RLDA
+        rel=2
+        rel_dist='average'
+        dft='rxc-vwn'
+
+    ScRLDA:
+        rel=1
+        dft='rxc-vwn'
+         </pre></blockquote>
+      </blockquote>
+   </blockquote>
+</td></tr>
+</table>
+<small>
+	  This file has been created by helpdoc utility on Fri Jun 22 17:13:19 CEST 2018.
+	</small>
+</body>
+</html>

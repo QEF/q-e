@@ -12,7 +12,7 @@ New in development version:
 
   * Spin-polarized X3LYP (experimental)
 
-  * EPW: Electronic transport (Botlzmann transport equation)
+  * EPW: Electronic transport (Boltzmann transport equation)
          Iterative Botlzmann transport equation (experimental)
          Cumulant treatement (model)
          Possible screening
@@ -20,6 +20,9 @@ New in development version:
          Calculation of velocity beyond the local approximation (experimental)
 
 Problems fixed in development version:
+
+  * Stress with hybrid functionals and Gamma point was grossly wrong
+    (5ed148646)
 
   * EPW: Velocity in the dipole approximation was unstable because of 
     G-vector ordering. 
