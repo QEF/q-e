@@ -18,8 +18,6 @@ USE lr_variables,     ONLY : davidson
 USE plugin_flags
 !
 ! ***Environ MODULES BEGIN***
-USE scf,              ONLY : rho
-USE environ_main,     ONLY : calc_dvenviron
 ! ***Environ MODULES END***
 !
 IMPLICIT NONE
@@ -28,16 +26,6 @@ IMPLICIT NONE
 ! ***Environ VARIABLES END***
 !
 ! ***Environ CALLS BEGIN***
-IF ( use_environ ) THEN
-   !
-   IF (.not.davidson) THEN
-      WRITE( stdout, '(5x,"ENVIRON: Calculate the response &
-           & polarization and dielectric potentials")' )
-   ENDIF
-   !
-   CALL calc_dvenviron( dfftp%nnr, nspin, rho%of_r, rho_1, dv )
-   !
-ENDIF
 ! ***Environ CALLS END***
 !
 RETURN

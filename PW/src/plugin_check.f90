@@ -24,9 +24,6 @@ CHARACTER(LEN=*), INTENT(IN) :: calling_subroutine
 ! ***Environ VARIABLES END***
 !
 ! ***Environ CALLS BEGIN***
-!Environ patch
-IF (use_environ) CALL errore( calling_subroutine, 'Embedding environment cannot be used.', 1)
-!Environ patch
 ! ***Environ CALLS END***
 !
 END SUBROUTINE plugin_check
