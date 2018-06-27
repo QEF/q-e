@@ -10,7 +10,8 @@ SUBROUTINE plugin_int_forces()
 !----------------------------------------------------------------------------
 !
 USE kinds,            ONLY : DP
-USE ions_base,        ONLY : nat
+USE io_global,        ONLY : stdout
+USE ions_base,        ONLY : nat, ityp
 USE force_mod,        ONLY : force
 USE control_flags,    ONLY : iverbosity
 USE plugin_flags
