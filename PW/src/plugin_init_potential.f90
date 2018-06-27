@@ -10,6 +10,7 @@ subroutine plugin_init_potential(vltot)
 ! DO NOT REMOVE THE TAGS ! ***ADDSON_NAME KIND_OF_PATCH***
 !
 USE plugin_flags
+USE kinds, ONLY : DP
 USE fft_base,  ONLY : dfftp
 !
 ! ***Environ MODULES BEGIN***
