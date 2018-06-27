@@ -40,6 +40,7 @@ SUBROUTINE external_wg_corr_force( rhor, force )
   USE kinds,             ONLY : DP
   USE cell_base,         ONLY : omega
   USE ions_base,         ONLY : nat, ntyp => nsp, ityp, tau, zv
+  use lsda_mod,         only : nspin
   USE gvect,             ONLY : ngm, g
   USE fft_base,          ONLY : dfftp
   USE fft_interfaces,    ONLY : fwfft
@@ -49,15 +50,12 @@ SUBROUTINE external_wg_corr_force( rhor, force )
   !
   IMPLICIT NONE
   !
-  REAL( DP ), INTENT(IN) ::  rhor ( :, : )
+  REAL( DP ), INTENT(IN) ::  rhor ( dfftp%nnr, nspin )
   REAL( DP ), INTENT(OUT) :: force (3, nat)
   !
   ! ... Local variables
   !
-  INTEGER :: nspin
   COMPLEX (DP), ALLOCATABLE :: auxg( : ), auxr( : )
-  !
-  nspin = SIZE( rhor, 2 )
   !
   allocate(auxr(dfftp%nnr))
   auxr = cmplx(rhor(:,1),0.0_dp)
@@ -89,20 +87,17 @@ SUBROUTINE external_force_lc( rhor, force )
   USE ions_base,     ONLY : nat, ityp, tau
   USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm, gstart, ngl, igtongl, g
+  use lsda_mod,         only : nspin
   USE control_flags, ONLY : gamma_only
   !
   USE vlocal,        ONLY : vloc
   !
   IMPLICIT NONE
   !
-  REAL( DP ), INTENT(IN) ::  rhor ( :, : )
-  REAL( DP ), INTENT(OUT) :: force (3, nat)
+  REAL( DP ), INTENT(IN) ::  rhor ( dfftp%nnr, nspin )
+  REAL( DP ), INTENT(OUT) :: force ( 3, nat )
   !
   ! ... Local variables
-  !
-  INTEGER :: nspin
-  !
-  nspin = SIZE( rhor, 2 )
   !
   CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
        g, rhor, dfftp%nl, nspin, gstart, gamma_only, vloc, force )
