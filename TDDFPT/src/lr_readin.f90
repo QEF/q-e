@@ -408,7 +408,7 @@ SUBROUTINE lr_readin
   !
   CALL plugin_init_potential( v%of_r(:,1) )
   !
-  CALL plugin_scf_potential( rho, v%of_r(:,1) )
+  CALL plugin_scf_potential( rho, .FALSE., -1.D0, v%of_r(:,1) )
   !
   CALL plugin_clean( 'TD', .FALSE. )
   !
