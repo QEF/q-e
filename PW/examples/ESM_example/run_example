@@ -639,7 +639,7 @@ C    0.0000000000    1.5276024985    0.0000000000
 K_POINTS {automatic}
 12 12 1 0 0 0
 EOF
-$ECHO "  running the stress calculation for graphen with PBC (slab-slab-slab)"
+$ECHO "  running the stress calculation for graphene with PBC (slab-slab-slab)"
 $PW_COMMAND < graphene_pbc.in > graphene_pbc.out
 check_failure $?
 $ECHO " done"
@@ -677,7 +677,7 @@ C    0.0000000000    1.5276024985    0.0000000000
 K_POINTS {automatic}
 12 12 1 0 0 0
 EOF
-$ECHO "  running the stress calculation for graphen with BC1 (vacuum-slab-vacuum)"
+$ECHO "  running the stress calculation for graphene with BC1 (vacuum-slab-vacuum)"
 $PW_COMMAND < graphene_bc1.in > graphene_bc1.out
 check_failure $?
 $ECHO " done"
@@ -716,7 +716,7 @@ C    0.0000000000    1.5276024985    0.0000000000
 K_POINTS {automatic}
 12 12 1 0 0 0
 EOF
-$ECHO "  running the stress calculation for graphen with BC2 (metal-slab-metal)"
+$ECHO "  running the stress calculation for graphene with BC2 (metal-slab-metal)"
 $PW_COMMAND < graphene_bc2.in > graphene_bc2.out
 check_failure $?
 $ECHO " done"
@@ -756,7 +756,7 @@ C    0.0000000000    1.5276024985    0.0000000000
 K_POINTS {automatic}
 12 12 1 0 0 0
 EOF
-$ECHO "  running the stress calculation for graphen with BC3 (vacuum-slab-metal)"
+$ECHO "  running the stress calculation for graphene with BC3 (vacuum-slab-metal)"
 $PW_COMMAND < graphene_bc3.in > graphene_bc3.out
 check_failure $?
 $ECHO " done"
@@ -805,7 +805,7 @@ C    0.0000000000    1.5276024985    0.0000000000
 K_POINTS {automatic}
 12 12 1 0 0 0
 EOF
-$ECHO "  running the vc-relax calculation for graphen with BC1 (vacuum-slab-vacuum)"
+$ECHO "  running the vc-relax calculation for graphene with BC1 (vacuum-slab-vacuum)"
 $PW_COMMAND < graphene_bc1_vc-relax.in > graphene_bc1_vc-relax.out
 check_failure $?
 $ECHO " done"
@@ -854,7 +854,7 @@ C    0.0000000000    1.5276024985    0.0000000000
 K_POINTS {automatic}
 12 12 1 0 0 0
 EOF
-$ECHO "  running the vc-relax calculation for graphen with BC3 (vacuum-slab-metal) + charged"
+$ECHO "  running the vc-relax calculation for graphene with BC3 (vacuum-slab-metal) + charged"
 $PW_COMMAND < graphene_bc3_vc-relax_p002.in > graphene_bc3_vc-relax_p002.out
 check_failure $?
 $ECHO " done"
