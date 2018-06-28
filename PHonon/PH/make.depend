@@ -692,6 +692,7 @@ elphon.o : ../../LR_Modules/lrcom.o
 elphon.o : ../../Modules/cell_base.o
 elphon.o : ../../Modules/constants.o
 elphon.o : ../../Modules/fft_base.o
+elphon.o : ../../Modules/gvecw.o
 elphon.o : ../../Modules/io_files.o
 elphon.o : ../../Modules/io_global.o
 elphon.o : ../../Modules/ions_base.o
@@ -741,6 +742,8 @@ ep_matrix_element_wannier.o : ../../UtilXlib/mp.o
 ep_matrix_element_wannier.o : elph.o
 ep_matrix_element_wannier.o : io_dyn_mat.o
 ep_matrix_element_wannier.o : phcom.o
+epa.o : ../../Modules/constants.o
+epa.o : ../../Modules/kind.o
 find_irrep.o : ../../LR_Modules/lrcom.o
 find_irrep.o : ../../Modules/control_flags.o
 find_irrep.o : ../../Modules/ions_base.o

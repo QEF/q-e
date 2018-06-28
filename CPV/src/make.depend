@@ -110,6 +110,7 @@ cp_autopilot.o : cg.o
 cp_autopilot.o : cp_emass.o
 cp_autopilot.o : ensemble_dft.o
 cp_autopilot.o : ions_nose.o
+cp_autopilot.o : ions_positions.o
 cp_autopilot.o : mainvar.o
 cp_emass.o : ../../Modules/control_flags.o
 cp_emass.o : ../../Modules/kind.o
