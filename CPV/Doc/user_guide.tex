@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.2.1}
+\def\version{6.3}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -70,20 +70,22 @@ People who want to modify or contribute to
 variable-cell dynamics, and free-energy surface calculation at
 fixed cell through meta-dynamics, if patched with PLUMED.
 
-The \CP\ package is based on the original code written by
- Roberto Car
+The \CP\ package is based on the original code written by Roberto Car
 and Michele Parrinello. \CP\ was developed by Alfredo Pasquarello
-(IRRMA, Lausanne), Kari Laasonen (Oulu), Andrea Trave, Roberto
-Car (Princeton), Nicola Marzari (Univ. Oxford), Paolo Giannozzi, and others.
-FPMD, later merged with \CP, was developed by Carlo
-Cavazzoni, 
+(EPF Lausanne), Kari Laasonen (Oulu), Andrea Trave, Roberto
+Car (Princeton), Nicola Marzari (EPF Lausanne), Paolo Giannozzi, and others.
+FPMD, later merged with \CP, was developed by Carlo Cavazzoni, 
 Gerardo Ballabio (CINECA), Sandro Scandolo (ICTP), 
-Guido Chiarotti (SISSA), Paolo Focher, and others.
+Guido Chiarotti, Paolo Focher, and others.
 We quote in particular:
 \begin{itemize}
-  \item Robert DiStasio (Cornell)), Biswajit Santra (Princeton), and
-    Hsin-Yu Ko (Princeton) for hybrid functionals with MLWF
-    (maximally localized Wannier functions);
+  \item Federico Grasselli and Riccardo Bertossa (SISSA) for bug fixes,
+        extensions to Autopilot;
+  \item Biswajit Santra, Hsin-Yu Ko, Marcus Calegari Andrade (Princeton)
+	for SCAN functional;
+  \item Robert DiStasio (Cornell)), Biswajit Santra, and Hsin-Yu Ko 
+	for hybrid functionals with MLWF;
+        (maximally localized Wannier functions);
   \item Manu Sharma (Princeton) and Yudong Wu (Princeton) for dynamics
     with MLWF;
   \item Paolo Umari (Univ. Padua) for finite electric fields and conjugate
