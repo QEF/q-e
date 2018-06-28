@@ -22,6 +22,9 @@ USE plugin_flags
 !
 IMPLICIT NONE
 !
+REAL(DP), INTENT(IN) :: drho(dfftp%nnr,nspin)
+REAL(DP), INTENT(INOUT) :: dv(dfftp%nnr,nspin)
+!
 ! ***Environ VARIABLES BEGIN***
 ! ***Environ VARIABLES END***
 !
