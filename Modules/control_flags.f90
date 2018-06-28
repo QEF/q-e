@@ -39,7 +39,7 @@ MODULE control_flags
             tnosee, tnosep, tnoseh, tcp, tcap,                               &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
             tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem,    &
-            tfirst, tlast, tprint
+            tfirst, tlast, tprint, trescalee
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
@@ -60,6 +60,7 @@ MODULE control_flags
   !
   LOGICAL :: tsde          = .FALSE. ! electronic steepest descent
   LOGICAL :: tzeroe        = .FALSE. ! set to zero the electronic velocities
+  LOGICAL :: trescalee     = .FALSE. ! rescale the electronics velocities
   LOGICAL :: tfor          = .FALSE. ! move the ions ( calculate forces )
   LOGICAL :: tsdp          = .FALSE. ! ionic steepest descent
   LOGICAL :: tzerop        = .FALSE. ! set to zero the ionic velocities
