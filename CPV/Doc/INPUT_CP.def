@@ -934,6 +934,12 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                'zero'      : restart setting electronic velocities to zero
                'default'   : restart using electronic velocities of the
                            previous run
+               'change_step' : restart simulation using electronic velocities of the
+                           previous run, with rescaling due to the timestep change.
+                           specify the old step via tolp as in
+                           tolp = 'old_time_step_value' in au.
+                           Note that you may want to specify
+                            ion_velocities = 'change_step'
 	    }
 	}
 
@@ -1106,7 +1112,9 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
                'change_step' : restart the simulation with atomic velocities read
                                from the restart file, with rescaling due to the
                                timestep change, specify the old step via tolp
-                               as in tolp = 'old_time_step_value' in au
+                               as in tolp = 'old_time_step_value' in au.
+                               Note that you may want to specify
+                                electron_velocities = 'change_step'
                'random'      : start the simulation with random atomic velocities
                'from_input'  : restart the simulation with atomic velocities read
                                from standard input - see card 'ATOMIC_VELOCITIES'

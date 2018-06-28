@@ -13,7 +13,7 @@ SUBROUTINE openfilq()
   ! ... calculation.
   !
   USE kinds,           ONLY : DP
-  USE control_flags,   ONLY : io_level, modenum
+  USE control_flags,   ONLY : io_level, modenum, twfcollect
   USE units_ph,        ONLY : iuwfc, iudwf, iubar, iucom, iudvkb3, &
                               iudrhous, iuebar, iudrho, iudyn, iudvscf, &
                               lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
@@ -78,7 +78,7 @@ SUBROUTINE openfilq()
      ENDIF
   ELSE  
      ! this is the standard treatment
-     IF (lgamma.AND.modenum==0.AND.nk1.eq.0.AND.nk2.eq.0.AND.nk3.eq.0) tmp_dir=tmp_dir_save
+     IF (lgamma.AND.modenum==0.AND.nk1.eq.0.AND.nk2.eq.0.AND.nk3.eq.0.and.twfcollect) tmp_dir=tmp_dir_save
   ENDIF
 !!!!!!!!!!!!!!!!!!!!!!!! END OF ACFDT TEST !!!!!!!!!!!!!!!!
   iuwfc = 20
