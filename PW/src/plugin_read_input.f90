@@ -11,8 +11,6 @@ subroutine plugin_read_input(prog)
 ! DO NOT REMOVE THE TAGS ! ***ADDSON_NAME KIND_OF_PATCH***
 !
 USE plugin_flags
-USE input_parameters, ONLY : nat, ntyp
-USE input_parameters, ONLY : assume_isolated, ibrav
 !
 ! ***Environ MODULES BEGIN***
 ! ***Environ MODULES END***
