@@ -29,17 +29,13 @@ PROGRAM lr_dav_main
                                     ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
   USE wavefunctions_module,  ONLY : psic
-  USE control_flags,         ONLY : tddfpt, do_makov_payne
+  USE control_flags,         ONLY : do_makov_payne
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE funct,                 ONLY : dft_is_hybrid
 
   use lr_dav_routines
   use lr_dav_variables
   use lr_dav_debug
-#if defined(__ENVIRON)
-  USE plugin_flags,          ONLY : use_environ
-  USE environ_info,          ONLY : environ_summary
-#endif
   !
   IMPLICIT NONE
   INTEGER            :: ibnd_occ,ibnd_virt,ibnd,ip
@@ -49,11 +45,6 @@ PROGRAM lr_dav_main
 #if defined(__MPI)
   CALL mp_startup ( )
 #endif
-  !
-  ! Let the routines of the Environ plugin know that 
-  ! they are doing TDDFPT. 
-  !
-  tddfpt = .true.
   !
   ! Tell to the code that we are using the Davidson method
   !
@@ -65,11 +56,10 @@ PROGRAM lr_dav_main
   !   Reading input file and PWSCF xml, some initialisation
   CALL lr_readin ( )
 
-  ! Writing a summary to the standard output about Environ variables
-#if defined(__ENVIRON)
-  IF ( use_environ ) CALL environ_summary()
-#endif
- 
+  ! Writing a summary of plugin variables
+
+  CALL plugin_summary()
+
   CALL check_stop_init()
 
   CALL lr_init_nfo() !Initialisation of degauss/openshell related stuff
@@ -145,9 +135,6 @@ CONTAINS
     USE uspp,                ONLY : okvan
     USE funct,               ONLY : dft_is_hybrid
     USE martyna_tuckerman,   ONLY : do_comp_mt
-#if defined(__ENVIRON)
-    USE plugin_flags,        ONLY : use_environ
-#endif
 
     IMPLICIT NONE
     !
@@ -155,13 +142,6 @@ CONTAINS
     WRITE( stdout, '(/5x,"Please cite the TDDFPT project as:")')
     WRITE( stdout, '(7x,"X. Ge, S. J. Binnie, D. Rocca, R. Gebauer, and S. Baroni,")')
     WRITE( stdout, '(7x,"Comput. Phys. Commun. 185, 2080 (2014)")')
-#if defined(__ENVIRON)
-    IF ( use_environ ) THEN
-      WRITE( stdout, '(5x,"and the TDDFPT+Environ project as:")' )
-      WRITE( stdout, '(7x,"I. Timrov, O. Andreussi, A. Biancardi, N. Marzari, and S. Baroni,")' )
-      WRITE( stdout, '(7x,"J. Chem. Phys. 142, 034111 (2015)")' )
-    ENDIF
-#endif
     WRITE( stdout, '(5x,"in publications and presentations arising from this work.")' )
     WRITE( stdout, '(/5x,"=-----------------------------------------------------------------=")')
     ! 
