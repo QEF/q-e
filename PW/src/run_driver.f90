@@ -35,8 +35,8 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   !
   ! Local variables
   INTEGER, PARAMETER :: MSGLEN=12
-  REAL*8, PARAMETER :: gvec_omega_tol= 1.0D-1
-  LOGICAL :: isinit=.false., hasdata=.false., firststep=.true., exst, lgreset
+  REAL*8, PARAMETER :: gvec_omega_tol=1.0D-1
+  LOGICAL :: isinit=.false., hasdata=.false., exst, firststep
   CHARACTER*12 :: header
   CHARACTER*1024 :: parbuffer
   INTEGER :: socket, nat, rid, ccmd, i, info, rid_old=-1
@@ -51,6 +51,8 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   lstres    = .true.
   lmd       = .true.
   lmovecell = .true.
+  firststep = .true.
+  omega_reset = 0.d0
   !
   exit_status = 0
   IF ( ionode ) WRITE( unit = stdout, FMT = 9010 ) ntypx, npk, lmaxx
@@ -73,18 +75,9 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   CALL plugin_initialization()
   !
   CALL check_stop_init()
-  !
-  ! ... We do a fake run so that the G vectors are initialized
-  ! ... based on the pw input. This is needed to guarantee smooth energy
-  ! ... upon PW restart in NPT runs. Probably can be done in a smarter way
-  ! ... but we have to figure out how...
-  !
-  ! call setup()
-  ! call init_run()
-  CALL initialize_g_vectors
-  CALL electrons()
-  CALL update_file()
-  !
+  CALL setup()
+  ! ... Initializations
+  CALL init_run()
   IF (ionode) CALL create_socket(srvaddress)
   !
   driver_loop: DO
@@ -125,7 +118,6 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
         !
         isinit = .false.
         hasdata=.false.
-        firststep = .false.
         !
      CASE DEFAULT
         exit_status = 130
@@ -179,13 +171,10 @@ CONTAINS
     CALL mp_bcast( rid, ionode_id, intra_image_comm )
     !
     IF ( ionode ) WRITE(*,*) " @ DRIVER MODE: Receiving replica", rid, rid_old
-    IF ( rid .NE. rid_old .AND. .NOT. firststep ) THEN
+    IF ( rid .NE. rid_old ) THEN
        !
        ! ... If a different replica reset the history
-       ! ... the G-vectors will be reinitialized only if needed!
-       ! ... see lgreset below
        !
-       IF ( ionode ) write(*,*) " @ DRIVER MODE: Resetting scf history "
        CALL reset_history_for_extrapolation()
     END IF
     !
@@ -206,11 +195,8 @@ CONTAINS
     !
     ! ... Receives the positions & the cell data
     !
-    !
-    IF ( .NOT. firststep) THEN
-       at_old = at
-       omega_old = omega
-    END IF
+    at_old = at
+    omega_old = omega
     !
     ! ... Read the atomic position from ipi and share to all processes
     !
@@ -223,27 +209,32 @@ CONTAINS
     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
     CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
     !
-    ! ... Check if the cell is changed too much and in that case reset the
-    ! ... g-vectors
-    !
-    lgreset = ( ABS ( omega_reset - omega ) / omega .GT. gvec_omega_tol )
-    !
-    ! ... Initialize the G-Vectors when needed
-    !
-    IF ( lgreset ) THEN
-       !
-       ! ... Reinitialize the G-Vectors if the cell is changed
-       !
-       CALL initialize_g_vectors()
-       !
-    ELSE
-       !
-       ! ... Update only atomic position and potential from the history
-       ! ... if the cell did not change too much
-       !
-       CALL update_pot()
-       CALL hinit1()
-    END IF
+    ! ... If the cell is changes too much, reinitialize G-Vectors
+    ! ... also extrapolation history must be reset
+    ! ... If firststep, it will also be executed (omega_reset equals 0),
+    ! ... to make sure we initialize G-vectors using positions from I-PI
+        IF ( ((ABS( omega_reset - omega ) / omega) .GT. gvec_omega_tol) .AND. (gvec_omega_tol .GE. 0.d0) ) THEN
+           IF (ionode) THEN
+               IF (firststep) THEN
+                   WRITE(*,*) " @ DRIVER MODE: initialize G-vectors "
+               ELSE
+                   WRITE(*,*) " @ DRIVER MODE: reinitialize G-vectors "
+               END IF
+           END IF
+           CALL initialize_g_vectors()
+           CALL reset_history_for_extrapolation()
+           !
+        ELSE
+           !
+           ! ... Update only atomic position and potential from the history
+           ! ... if the cell did not change too much
+           !
+           IF (.NOT. firststep) THEN
+               CALL update_pot()
+               CALL hinit1()
+           END IF
+        END IF
+    firststep = .false.
     !
     ! ... Compute everything
     !
@@ -329,21 +320,7 @@ CONTAINS
   !
   SUBROUTINE initialize_g_vectors()
     !
-    IF (ionode) THEN
-       IF (firststep) WRITE(*,*) " @ DRIVER MODE: initialize G-vectors "
-       IF (lgreset .AND. .NOT. firststep ) WRITE(*,*) &
-            " @ DRIVER MODE: reinitialize G-vectors "
-    END IF
-    !
-    ! ... Keep trace of the last time the gvectors have been initialized
-    !
-    IF ( firststep ) CALL setup()
-    !
-    ! ... Reset the history
-    !
     CALL clean_pw( .FALSE. )
-    IF ( .NOT. firststep) CALL reset_history_for_extrapolation()
-    !
     CALL init_run()
     !
     CALL mp_bcast( at,        ionode_id, intra_image_comm )
