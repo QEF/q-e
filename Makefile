@@ -168,7 +168,7 @@ libdavid : libs libutil libla
 libcg : libs libutil libla
 	( cd KS_Solvers/CG ; $(MAKE) TLDEPS= all || exit 1 )
 
-libla : liblapack libutil
+libla : liblapack libutil libcuda
 	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libfft : 
@@ -204,6 +204,8 @@ libiotk:
 libfox: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
+libcuda: 
+	cd install ; $(MAKE) -f extlibs_makefile $@
 # In case of trouble with iotk and compilers, add
 # FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
 

@@ -2,7 +2,7 @@
 
 include ../make.inc
 
-MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../ELPA/src  $(MOD_FLAG) .
+MODFLAGS= $(MOD_FLAG)../UtilXlib $(MOD_FLAG)../ELPA/src  $(MOD_FLAG)../EIGENSOLVER_GPU/lib_eigsolve $(MOD_FLAG) .
 
 LAX = la_types.o \
 la_error.o \

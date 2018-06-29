@@ -22,10 +22,16 @@ LAPACK_NETLIB=lapack-3.6.1.tgz
 LAPACK_NETLIB_NAME=lapack-3.6.1
 LAPACK_NETLIB_URL=http://www.netlib.org/lapack/${LAPACK_NETLIB}
 
+# NVIDIA Eigensolver targets
+EIGENSOLVER_VERSION=0.3
+EIGENSOLVER_GPU=v${EIGENSOLVER_VERSION}.tar.gz
+EIGENSOLVER_GPU_NAME=Eigensolver_gpu-${EIGENSOLVER_VERSION}
+EIGENSOLVER_GPU_URL=https://github.com/NVIDIA/Eigensolver_gpu/archive/${EIGENSOLVER_GPU}
+
 #
 # MAIN target
 #
-all: 
+all: libcuda
 	$(MAKE) libblas_$(BLAS_LIBS_SWITCH) 
 	$(MAKE) liblapack_$(LAPACK_LIBS_SWITCH) 
 	$(MAKE) libelpa_internal 
@@ -81,7 +87,8 @@ libfox:
 	if test ! -d ../FoX; then \
         mkdir ../FoX; \
 	(gzip -dc ../archive/fox.tgz | (cd ../FoX; tar -xvf -)); \
-	cd ../FoX/fox/; export FC=$(F90); ./configure --prefix=$(TOPDIR)/FoX ;\
+	cd ../FoX/fox/; export FC=$(F90); export FCFLAGS="$(F90FLAGS)"; \
+	./configure --prefix=$(TOPDIR)/FoX ;\
 	$(MAKE) install; cd ../; rm -fr fox;fi
 # ELPA
 libelpa : libelpa_$(ELPA_LIBS_SWITCH)
@@ -97,6 +104,16 @@ libelpa_enabled:
 	if test ! -d ../ELPA; then \
 	( gzip -dc ../archive/ELPA-0.3.tar.gz |(cd ../; tar -xvf -)); fi
 	cd ../ELPA; $(MAKE)
+
+# CUDA
+libcuda : $(addprefix libcuda_,$(CUDA_EXTLIBS))
+
+libcuda_eigensolver :
+	$(call download_and_unpack,$(EIGENSOLVER_GPU_NAME),$(EIGENSOLVER_GPU_URL),EIGENSOLVER_GPU,EIGENSOLVER_GPU)
+	if test ! -e ../EIGENSOLVER_GPU/lib_eigsolve/lib_eigsolve.a ; then \
+    (cp Makefile.lib_eigsolve ../EIGENSOLVER_GPU/lib_eigsolve/Makefile; \
+    cd ../EIGENSOLVER_GPU/lib_eigsolve/; $(MAKE) ); else \
+	(echo "No configuration file found for GPU custom eigensolver"; exit); fi
 
 ###################################
 # cleaning
@@ -132,7 +149,10 @@ iotk_veryclean:
 	rm -f ../bin/iotk.x; \
 	rm -f ../bin/iotk_print_kinds.x; \
 	rm -f ../iotk
-
+libcuda_eigensolver_clean:
+	if test -d ../EIGENSOLVER_GPU; then (cd ../EIGENSOLVER_GPU/lib_eigsolve ; $(MAKE) clean); fi
+libcuda_eigensolver_veryclean:
+	if test -d ../EIGENSOLVER_GPU; then (rm -R -f ../EIGENSOLVER_GPU ../${EIGENSOLVER_GPU_NAME}); fi
 # general cleaning
-clean: lapack_clean elpa_clean iotk_clean fox_clean
-veryclean: lapack_veryclean elpa_veryclean iotk_veryclean fox_clean
+clean: lapack_clean elpa_clean iotk_clean fox_clean libcuda_eigensolver_clean
+veryclean: lapack_veryclean elpa_veryclean iotk_veryclean fox_clean libcuda_eigensolver_veryclean

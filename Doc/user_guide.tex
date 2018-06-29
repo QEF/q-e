@@ -16,6 +16,7 @@
 \def\pwx{\texttt{pw.x}}
 \def\cpx{\texttt{cp.x}}
 \def\phx{\texttt{ph.x}}
+\def\epwx{\texttt{epw.x}}
 \def\nebx{\texttt{neb.x}}
 \def\configure{\texttt{configure}}
 \def\PWscf{\texttt{PWscf}}
@@ -466,8 +467,7 @@ Additional instructions for special machines:
 \texttt{include/configure.h} &  info on compilation flags (not used: in Modules/environment.f90\\
 &  uncomment \verb|#define __HAVE_CONFIG_INFO| to enable its usage)\\
 \end{tabular}\\
-NOTA BENE: unlike previous versions, \configure\ no longer runs the
-\texttt{makedeps.sh} shell script that updates dependencies. If you modify the
+NOTA BENE: \configure\ no longer updates dependencies. If you modify the
 sources, run \texttt{./install/makedeps.sh} or type \texttt{make depend}
 to update files \texttt{make.depend} in the various subdirectories.\\
 NOTA BENE 2: \texttt{make.inc} used to be called \texttt{make.sys}
@@ -558,7 +558,6 @@ Finally, \configure\ recognizes the following command-line options:\\
 \end{tabular}\\
 \\
 and the following optional packages:\\
-\\
 \begin{tabular}{ll}
 \texttt{--with-internal-blas}&    compile with internal BLAS (default: no)\\
 \texttt{--with-internal-lapack}&  compile with internal LAPACK (default: no)\\
@@ -573,6 +572,32 @@ and the following optional packages:\\
                                   & A valid \texttt{<path>} for HDF5 library must be specified (default: no)\\
 \end{tabular}\\
 \\
+The following options are available for the CUDA Fortran accelerated version
+(currently in a separate package, not yet included in the main distribution):\\
+\begin{tabular}{ll}
+\texttt{--with-cuda=value}&         enables compilation of the CUDA Fortran\\
+                          &         accelerated subroutines. \\
+                          &         \texttt{value} should point the path where the CUDA toolkit \\
+                          &         is installed, e.g. \texttt{/opt/cuda} (default: no)\\
+\texttt{--with-cuda-cc=value}&      sets the compute capabilities for the compilation\\
+                             &      of the accelerated subroutines. \\
+                             &      \texttt{value} must be consistent with the hardware and the\\
+                             &      NVidia driver installed on the workstation or on the\\
+                             &      compute nodes of the HPC facility (default: 35)\\
+\texttt{--with-cuda-runtime=value}& sets the version of the CUDA toolkit used \\
+                                  & for the compilation of the accelerated code.\\
+                                  & \texttt{value} must be consistent with the\\
+                                  & CUDA Toolkit installed on the workstation \\
+                                  & or available on the compute nodes of the HPC facility.\\
+                                  & PGI compilers currently accept 7.5, 8.0 or 9.0 (default: 8.0)\\
+\end{tabular}\\
+
+Please note that in order to compile the CUDA Fortran code you need ...
+the CUDA Fortran code (it is not yet available in the main distribution)! 
+you also need a recent version of the PGI Fortran compilers (at least 17.4).
+OpenMP must be enabled,
+and you may want to use a CUDA-aware MPI distribution to optimize the data
+transfer between the processes.
 
 If you want to modify \configure\ (advanced users only!),
 see the Developer Manual.
@@ -595,7 +620,8 @@ compilation flags)
 after a previous (successful or failed) compilation, you must run
 \texttt{make clean} before recompiling, unless you know exactly which
 routines are affected by the changed settings and how to force their
-recompilation.
+recompilation. \configure\ will clean object and executables, unless
+you use option \texttt{--save}.
 
 \subsection{Libraries}
 \label{Sec:Libraries}
@@ -666,6 +692,11 @@ happen, especially on PC clusters, see Sec.\ref{SubSec:LinuxPCMPI}.
 
 {\em Note:} since v.6.1, MPI libraries implementing v.3 of the standard
 (notably, non-blocking broadcast and gather operations) are required.
+
+\paragraph{Libraries for accelerators}
+The accelerated version of the code uses standard CUDA libraries such as
+\texttt{cublas, cufft, cusolver} and the eigensolver library explicitly 
+developed for \qe{} by NVidia and distributed at \texttt{https://github.com/NVIDIA/Eigensolver\_gpu}.
 
 \paragraph {HDF5}
 The HDF5 library (\texttt{https://www.hdfgroup.org/downloads/hdf5/})
@@ -785,25 +816,30 @@ and try \texttt{make} again. Also see Sec.(\ref{SubSec:Download}).
 \label{SubSec:Examples}
 
 As a final check that compilation was successful, you may want to run some or
-all of the examples. There are two different types of examples:
-\begin{itemize}
-\item automated tests. Quick and exhaustive, but not
-meant to be realistic, implemented only for a subset of codes
-\item examples.
-Cover many more programs and features of the \qe\ distribution,
-but require manual inspection of the results.
-\end{itemize}
+all of the tests and examples. 
 Notice that most tests and examples are devised to be run serially
 or on a small number of processors; do not use tests and examples
 to benchmark parallelism, do not try to run on too many processors.
 
+\subsubsection{Test-suite}
+Automated tests give a "pass/fail" answer. All tests run quickly 
+(less than a minute at most), but they are not meant to be realistic, 
+just to test a specific case. Many features are tested but only for
+the following codes: \pwx, \cpx, \phx, \epwx.
 Instructions for the impatient:
 \begin{verbatim}
     cd test-suite
-   make run-tests
+    make run-tests
 \end{verbatim}
 Instructions for all others: go to the \texttt{test-suite/} directory,
-read the \texttt{README} file.
+read the \texttt{README} file, or at least, type \make. You may need
+to edit the \texttt{run-XX.sh} shells, defining variables
+\texttt{PARA\_PREFIX} and \texttt{PARA\_POSTFIX} (see below for their
+meaning).
+
+\subsubsection{Examples}
+There are many examples and reference data for almost every piece of \qe,
+but you have to manually inspect the results.
 
 In order to use examples, you should edit file \texttt{environment\_variables},
 setting the following variables as needed.
@@ -825,9 +861,8 @@ is the default if parallel libraries are detected), you will usually
 have to specify a launcher program (such as \texttt{mpirun} or
 \texttt{mpiexec}) and the number of processors: see Sec.\ref{Sec:para} for
 details. In order to do that, edit again the \texttt{environment\_variables}
-file
-and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed.
-Parallel executables will be run by a command like this:
+file and set the \texttt{PARA\_PREFIX} and \texttt{PARA\_POSTFIX} variables
+as needed. Parallel executables will be run by a command like this:
 \begin{verbatim}
       $PARA_PREFIX pw.x $PARA_POSTFIX -i file.in > file.out
 \end{verbatim}
@@ -835,12 +870,12 @@ For example, if the command line is like this (as for an IBM SP):
 \begin{verbatim}
       poe pw.x -procs 4 -i file.in > file.out
 \end{verbatim}
-you should set PARA\_PREFIX="poe", PARA\_POSTFIX="-procs
-4". Furthermore, if your machine does not support interactive use, you
+you should set \texttt{PARA\_PREFIX="poe"}, \texttt{PARA\_POSTFIX="-procs 4"}.
+Furthermore, if your machine does not support interactive use, you
 must run the commands specified above through the batch queuing
 system installed on that machine. Ask your system administrator for
 instructions. For execution using OpenMP on N threads,
-you should set PARA\_PREFIX to \texttt{"env OMP\_NUM\_THREADS=N ... "}.
+use \texttt{PARA\_PREFIX="env OMP\_NUM\_THREADS=N ... "}.
 
 To run an example, go to the corresponding directory (e.g.
  \texttt{PW/examples/example01}) and execute:
@@ -849,8 +884,7 @@ To run an example, go to the corresponding directory (e.g.
 \end{verbatim}
 This will create a subdirectory \texttt{results/}, containing the input and
 output files generated by the calculation. Some examples take only a
-few seconds to run, while others may require several minutes depending
-on your system.
+few seconds to run, while others may require up to several minutes.
 
 In each example's directory, the \texttt{reference/} subdirectory contains
 verified output files, that you can check your results against. They
@@ -956,7 +990,7 @@ have different environment. For example on the machine I usually use
 for tests [...] I do have to unload some modules to make QE running
 properly. On another CRAY [...] there is also Intel compiler as option
 and the system is slightly different compared to the other.
-So my recipe should work, 99\% of the cases.
+So my recipe should work, 99\% of the cases.'' (info by Filippo Spiga)
 
 For Cray XT machines, use \texttt{./configure ARCH=crayxt4} or else
 \configure\ will not recognize the Cray-specific software environment.
@@ -1040,7 +1074,7 @@ with the most recent patches. Since each major release of ifort
 differs a lot from the previous one, compiled objects from different
 releases may be incompatible and should not be mixed.
 
-The Intel compiler is nolonger free for personal usage, but it is still
+The Intel compiler is no longer free for personal usage, but it is still
 for students and open-source contributors
 (\texttt{https://software.intel.com/en-us/qualify-for-free-software}).
 
@@ -1158,8 +1192,8 @@ final "/" that Windows doesn't like); run "make". Note that on some Windows
 the code fails when checking that \texttt{tmp\_dir} is writable, for unclear 
 reasons.
 
-Another option is Cygwin, a UNIX environment which runs under Windows:
-see \texttt{http://www.cygwin.com/}. 
+Another option is Cygwin, a UNIX environment which runs under Windows: see\\
+\texttt{http://www.cygwin.com/}. 
 
 Finally, Windows-10 users may enable the Windows Subsystem for Linux
 and install there a Linux distribution.
@@ -1216,17 +1250,9 @@ via command-line options to the executable, are implemented
 with MPI. This is your first choice for execution on a parallel
 machine.
 
-Library OpenMP is a low-effort parallelization suitable for
-multicore CPUs. Its effectiveness relies upon the quality of
-the multithreading libraries and the availability of
-multithreading FFTs. If you are using MKL,\footnote{Beware:
-MKL v.10.2.2 has a buggy \texttt{dsyev} yielding wrong results
-with more than one thread; fixed in v.10.2.4}
-
-Explicit OpenMP is a recent addition, still under
-development, devised to increase scalability on
-large multicore parallel machines. Explicit OpenMP can be used
-together with MPI and also together with library OpenMP. Beware
+The support for explicit OpenMP is steadingly improving.
+Explicit OpenMP can be used together with MPI and also 
+together with library OpenMP. Beware
 conflicts between the various kinds of parallelization!
 If you don't know how to run MPI processes
 and OpenMP threads in a controlled manner, forget about mixed
@@ -1237,13 +1263,10 @@ OpenMP-MPI parallelization.
 Parallel execution is strongly system- and installation-dependent.
 Typically one has to specify:
 \begin{enumerate}
-\item a launcher program (not always needed),
-such as \texttt{poe}, \texttt{mpirun}, \texttt{mpiexec},
+\item a launcher program such as \texttt{mpirun} or \texttt{mpiexec},
   with the  appropriate options (if any);
 \item the number of processors, typically as an option to the launcher
-  program, but in some cases to be specified after the name of the
-  program to be
-  executed;
+  program;
 \item the program to be executed, with the proper path if needed;
 \item other \qe-specific parallelization options, to be
   read and interpreted by the running code.
@@ -1279,7 +1302,8 @@ calculation, loosely coupled to others.
 {\bf bands}: each pool is subpartitioned into
 "band groups", each taking care of a group
 of Kohn-Sham orbitals (also called bands, or
-wavefunctions) (still experimental)
+wavefunctions). Especially useful for calculations
+with hybrid functionals.
 \item
 {\bf PW}: orbitals in the PW basis set,
 as well as charges and density in either
@@ -1298,8 +1322,10 @@ G-vectors that are distributed to processors).
 In order to allow good parallelization of the 3D FFT when
 the number of processors exceeds the number of FFT planes,
 FFTs on Kohn-Sham states are redistributed to
-"task" groups so that each group
+``task'' groups so that each group
 can process several wavefunctions at the same time.
+Alternatively, when this is not possible, a further
+subdivision of FFT planes is performed.
 \item
 {\bf linear-algebra group}:
 A further level of parallelization, independent on
@@ -1316,19 +1342,17 @@ The diagonalization is then performed
 in parallel using standard linear algebra operations.
 (This diagonalization is used by, but should not be confused with,
 the iterative Davidson algorithm). The preferred option is to use
-ScaLAPACK; alternative built-in algorithms are anyway available.
+ELPA and ScaLAPACK; alternative built-in algorithms are anyway available.
 \end{itemize}
 Note however that not all parallelization levels
-are implemented in all codes!
+are implemented in all codes.
 
 \paragraph{About communications}
-Images and pools are loosely coupled and processors communicate
-between different images and pools only once in a while, whereas
-processors within each pool are tightly coupled and communications
-are significant. This means that Gigabit ethernet (typical for
-cheap PC clusters) is ok up to 4-8 processors per pool, but {\em fast}
-communication hardware (e.g. Mirynet or comparable) is absolutely
-needed beyond 8 processors per pool.
+Images and pools are loosely coupled: inter-processors communication
+between different images and pools is modest. Processors within each 
+pool are instead tightly coupled and communications are significant. 
+This means that fast communication hardware is needed if
+your pool extends over more than a few processors on different nodes.
 
 \paragraph{Choosing parameters}:
 To control the number of processors in each group,
@@ -1359,49 +1383,13 @@ of processors of each pool.
 \paragraph{Massively parallel calculations}
 For very large jobs (i.e. O(1000) atoms or more) or for very long jobs,
 to be run on massively parallel  machines (e.g. IBM BlueGene) it is
-crucial to use in an effective way all available parallelization levels.
+crucial to use in an effective way all available parallelization levels:
+on linear algebra (irequires compilation with ELPA and/or ScaLAPACK), 
+on "task groups" (requires run-time option "-nt N"), and mixed
+MPI-OpenMP (requires OpenMP compilation: \configure --enable-openmp).
 Without a judicious choice of parameters, large jobs will find a
 stumbling block in either memory or CPU requirements. Note that I/O
 may also become a limiting factor.
-
-Since v.4.1, ScaLAPACK can be used to diagonalize block distributed
-matrices, yielding better speed-up than the internal algorithms for
-large ($ > 1000\times 1000$) matrices, when using a large number of processors
-($> 512$). You need to have \texttt{-D\_\_SCALAPACK} added to DFLAGS
-in \texttt{make.inc}, LAPACK\_LIBS set to something like:
-\begin{verbatim}
-    LAPACK_LIBS = -lscalapack -lblacs -lblacsF77init -lblacs -llapack
-\end{verbatim}
-The repeated \texttt{-lblacs} is not an error, it is needed!
-\configure\ tries to find a ScaLAPACK  library, unless
-\texttt{configure --with-scalapack=no} is specified.
-If it doesn't, inquire with your system manager
-on the correct way to link it.
-
-A further possibility to expand scalability, especially on machines
-like IBM BlueGene, is to use mixed MPI-OpenMP. The idea is to have
-one (or more) MPI process(es) per multicore node, with OpenMP
-parallelization inside a same node. This option is activated by  \texttt{configure --with-openmp},
-which adds preprocessing flag \texttt{-D\_\_OPENMP}
-and one  of the following compiler options:
-
-\begin{tabular}{ll}
- ifort& \texttt{-openmp}\\
- xlf&   \texttt{-qsmp=omp}\\
- PGI&   \texttt{-mp}\\
- ftn&   \texttt{-mp=nonuma}\\
-\end{tabular}
-
-OpenMP parallelization is currently implemented and tested for the following combinations of FFTs
-and libraries:
-
-\begin{tabular}{ll}
- internal FFTW copy &requires \texttt{-D\_\_FFTW}\\
- ESSL& requires \texttt{-D\_\_ESSL} or \texttt{-D\_\_LINUX\_ESSL}, link
- with \texttt{-lesslsmp}\\
-\end{tabular}
-
-Currently, ESSL (when available) are faster than internal FFTW.
 
 \subsubsection{Understanding parallel I/O}
 In parallel execution, each processor has its own slice of data
@@ -1410,16 +1398,15 @@ to temporary files during the calculation,
 or to data files at the end of the calculation.
 This can be done in two different ways:
 \begin{itemize}
-\item ``distributed'': each processor
-writes its own slice to disk in its internal
-format to a different file.
 \item ``collected'': all slices are
 collected by the code to a single processor
 that writes them to disk, in a single file,
 using a format that doesn't depend upon
 the number of processors or their distribution.
-\end{itemize}
-
+This is the default since v.6.2 for final data.
+\item ``distributed'': each processor
+writes its own slice to disk in its internal
+format to a different file.
 The ``distributed'' format is fast and simple,
 but the data so produced is readable only by
 a job running on the same number of processors,
@@ -1430,18 +1417,11 @@ processors (i.e., you cannot use local scratch
 directories: there is presently no way to ensure
 that the distribution of processes across
 processors will follow the same pattern
-for different jobs).
-
-Currently, \CP\ uses the ``collected'' format;
-\PWscf\ uses the ``distributed'' format, but
-has the option to write the final data file in
-``collected'' format (input variable \texttt{wf\_collect})
-so that it can be easily read by \CP\ and by other
-codes running on a different  number of processors.
-
-In addition to the above, other restrictions to file
-interoperability apply: e.g., \CP\ can read only files
-produced by \PWscf\ for the $k=0$ case.
+for different jobs). The distributed format for
+final data requires compilation with \verb|-D__OLDXML|
+preprocessing option and will be removed
+in the next releases.
+\end{itemize}
 
 The directory for data is specified in input variables
 \texttt{outdir} and \texttt{prefix} (the former can be specified
