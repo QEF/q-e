@@ -1319,6 +1319,7 @@ paw_symmetry.o : ../../Modules/uspp.o
 paw_symmetry.o : ../../UtilXlib/mp.o
 paw_symmetry.o : pwcom.o
 paw_symmetry.o : symm_base.o
+plugin_check.o : ../../Modules/plugin_flags.o
 plugin_clean.o : ../../Modules/plugin_flags.o
 plugin_clock.o : ../../Modules/io_global.o
 plugin_clock.o : ../../Modules/plugin_flags.o
@@ -1334,8 +1335,8 @@ plugin_init_ions.o : ../../Modules/fft_base.o
 plugin_init_ions.o : ../../Modules/kind.o
 plugin_init_ions.o : ../../Modules/plugin_flags.o
 plugin_init_potential.o : ../../Modules/fft_base.o
+plugin_init_potential.o : ../../Modules/kind.o
 plugin_init_potential.o : ../../Modules/plugin_flags.o
-plugin_init_potential.o : scf_mod.o
 plugin_initbase.o : ../../Modules/fft_base.o
 plugin_initbase.o : ../../Modules/mp_bands.o
 plugin_initbase.o : ../../Modules/plugin_flags.o
@@ -1350,18 +1351,14 @@ plugin_int_forces.o : ../../Modules/fft_base.o
 plugin_int_forces.o : ../../Modules/io_global.o
 plugin_int_forces.o : ../../Modules/ions_base.o
 plugin_int_forces.o : ../../Modules/kind.o
-plugin_int_forces.o : ../../Modules/mp_images.o
 plugin_int_forces.o : ../../Modules/plugin_flags.o
 plugin_int_forces.o : ../../Modules/recvec.o
-plugin_int_forces.o : ../../UtilXlib/mp.o
 plugin_int_forces.o : martyna_tuckerman.o
 plugin_int_forces.o : pwcom.o
-plugin_int_forces.o : scf_mod.o
 plugin_print_energies.o : ../../Modules/io_files.o
 plugin_print_energies.o : ../../Modules/io_global.o
 plugin_print_energies.o : ../../Modules/kind.o
 plugin_print_energies.o : ../../Modules/plugin_flags.o
-plugin_read_input.o : ../../Modules/input_parameters.o
 plugin_read_input.o : ../../Modules/plugin_flags.o
 plugin_scf_energy.o : ../../Modules/fft_base.o
 plugin_scf_energy.o : ../../Modules/io_files.o
@@ -1371,7 +1368,6 @@ plugin_scf_energy.o : ../../Modules/plugin_flags.o
 plugin_scf_energy.o : pwcom.o
 plugin_scf_energy.o : scf_mod.o
 plugin_scf_potential.o : ../../Modules/fft_base.o
-plugin_scf_potential.o : ../../Modules/io_files.o
 plugin_scf_potential.o : ../../Modules/io_global.o
 plugin_scf_potential.o : ../../Modules/kind.o
 plugin_scf_potential.o : ../../Modules/plugin_flags.o
