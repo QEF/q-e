@@ -557,8 +557,7 @@ Finally, \configure\ recognizes the following command-line options:\\
 \texttt{--enable-signals}&      enable signal trapping (default: disabled)\\
 \end{tabular}\\
 \\
-and the following optional packages:\\
-\\
+the following optional packages:\\
 \begin{tabular}{ll}
 \texttt{--with-internal-blas}&    compile with internal BLAS (default: no)\\
 \texttt{--with-internal-lapack}&  compile with internal LAPACK (default: no)\\
@@ -573,6 +572,29 @@ and the following optional packages:\\
                                   & A valid \texttt{<path>} for HDF5 library must be specified (default: no)\\
 \end{tabular}\\
 \\
+and the following options targeting the CUDA Fortran accelerated version:\\
+\begin{tabular}{ll}
+\texttt{--with-cuda=value}&         enables the compiltion of the CUDA Fortran\\
+                          &         accelerated subroutines. \\
+                          &         \texttt{value} should point the path where the CUDA toolkit \\
+                          &         is installed, e.g. \texttt{/opt/cuda} (default: no)\\
+\texttt{--with-cuda-cc=value}&      sets the compute capabilities for the compilation\\
+                             &      of the accelerated subroutines. \\
+                             &      \texttt{value} must be consistent with the hardware and the\\
+                             &      NVidia driver installed on the workstation or on the\\
+                             &      compute nodes of the HPC facility (default: 35)\\
+\texttt{--with-cuda-runtime=value}& sets the version of the CUDA toolkit used \\
+                                  & for the compilation of the accelerated code.\\
+                                  & \texttt{value} must be consistent with the\\
+                                  & CUDA Toolkit installed on the workstation \\
+                                  & or available on the compute nodes of the HPC facility.\\
+                                  & PGI compilers currently accept 7.5, 8.0 or 9.0 (default: 8.0)\\
+\end{tabular}\\
+
+Please note that in order to compile the CUDA Fortran code you also need a
+recent version of the PGI Fortran compilers (at least 17.4), OpenMP must be enabled,
+and you may want to use a CUDA-aware MPI distribution to optimize the data
+transfer between the processes.
 
 If you want to modify \configure\ (advanced users only!),
 see the Developer Manual.
@@ -666,6 +688,11 @@ happen, especially on PC clusters, see Sec.\ref{SubSec:LinuxPCMPI}.
 
 {\em Note:} since v.6.1, MPI libraries implementing v.3 of the standard
 (notably, non-blocking broadcast and gather operations) are required.
+
+\paragraph{Libraries for accelerators}
+The accelerated version of the code uses standard CUDA libraries such as
+\texttt{cublas, cufft, cusolver} and the eigensolver library explicitly 
+developed for \qe{} by NVidia and distributed at \texttt{https://github.com/NVIDIA/Eigensolver\_gpu}.
 
 \paragraph {HDF5}
 The HDF5 library (\texttt{https://www.hdfgroup.org/downloads/hdf5/})
