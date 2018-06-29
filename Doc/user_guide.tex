@@ -557,7 +557,7 @@ Finally, \configure\ recognizes the following command-line options:\\
 \texttt{--enable-signals}&      enable signal trapping (default: disabled)\\
 \end{tabular}\\
 \\
-the following optional packages:\\
+and the following optional packages:\\
 \begin{tabular}{ll}
 \texttt{--with-internal-blas}&    compile with internal BLAS (default: no)\\
 \texttt{--with-internal-lapack}&  compile with internal LAPACK (default: no)\\
@@ -572,9 +572,10 @@ the following optional packages:\\
                                   & A valid \texttt{<path>} for HDF5 library must be specified (default: no)\\
 \end{tabular}\\
 \\
-and the following options targeting the CUDA Fortran accelerated version:\\
+The following options are available for the CUDA Fortran accelerated version
+(currently in a separate package, not yet included in the main distribution):\\
 \begin{tabular}{ll}
-\texttt{--with-cuda=value}&         enables the compiltion of the CUDA Fortran\\
+\texttt{--with-cuda=value}&         enables compilation of the CUDA Fortran\\
                           &         accelerated subroutines. \\
                           &         \texttt{value} should point the path where the CUDA toolkit \\
                           &         is installed, e.g. \texttt{/opt/cuda} (default: no)\\
@@ -591,8 +592,10 @@ and the following options targeting the CUDA Fortran accelerated version:\\
                                   & PGI compilers currently accept 7.5, 8.0 or 9.0 (default: 8.0)\\
 \end{tabular}\\
 
-Please note that in order to compile the CUDA Fortran code you also need a
-recent version of the PGI Fortran compilers (at least 17.4), OpenMP must be enabled,
+Please note that in order to compile the CUDA Fortran code you need ...
+the CUDA Fortran code (it is not yet available in the main distribution)! 
+you also need a recent version of the PGI Fortran compilers (at least 17.4).
+OpenMP must be enabled,
 and you may want to use a CUDA-aware MPI distribution to optimize the data
 transfer between the processes.
 
