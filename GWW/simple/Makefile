@@ -18,13 +18,11 @@ SIMPLEOBJS = \
   stop_pp.o \
   read_export.o \
   openfile_simple.o \
-  check_wfcs.o \
   input_simple.o \
   wfc_basis.o \
   product_basis.o \
   v_product.o \
   epe.o  \
-  debug_wfc.o \
   gk_sort_limit.o \
   khamiltonian.o \
   init_us_2_max.o \
