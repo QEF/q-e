@@ -8,7 +8,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../KS_Solvers/Davidson \
           $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../dft-d3/
-IFLAGS=
 
 PPOBJS = \
 addusdens1d.o \

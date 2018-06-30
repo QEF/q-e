@@ -212,7 +212,7 @@ SUBROUTINE clean_pw( lflag )
   !
   IF (ts_vdw) CALL tsvdw_finalize()
   !
-  CALL plugin_clean( lflag )
+  CALL plugin_clean( 'PW', lflag )
   !
   RETURN
   !

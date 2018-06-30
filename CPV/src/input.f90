@@ -141,6 +141,7 @@ MODULE input
                                nstep_      => nstep
      USE control_flags, ONLY : tsde_          => tsde, &
                                tzeroe_        => tzeroe, &
+                               trescalee_     => trescalee, &
                                trhor_         => trhor, &
                                trhow_         => trhow, &
                                tksw_          => tksw,  &
@@ -468,6 +469,9 @@ MODULE input
           tzeroe_ = .FALSE.
         CASE ('zero')
           tzeroe_ = .TRUE.
+        CASE ('change_step')
+          tzeroe_=.FALSE.
+          trescalee_ = .TRUE.
         CASE DEFAULT
           CALL errore(' control_flags ',' unknown electron_velocities '//TRIM(electron_velocities), 1 )
       END SELECT

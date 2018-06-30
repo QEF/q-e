@@ -26,8 +26,9 @@ MANUAL=" Usage
  <conf_flags>         these flags will be passed to 
                       the autoconf configure
 
- After configuration, the make.inc file will created in the
+ After configuration, the make.inc file will be created in the
  QE home (current) directory
+ NOTE: CUDA Fortran code available only as a separate package
  
  ---------------------------------------------------------------
  Manual from autoconf configure : 

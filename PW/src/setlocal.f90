@@ -109,7 +109,7 @@ SUBROUTINE setlocal
   !
   ! ... Save vltot for possible modifications in plugins
   !
-  CALL plugin_init_potential()
+  CALL plugin_init_potential(vltot)
   !
   DEALLOCATE(aux)
   !

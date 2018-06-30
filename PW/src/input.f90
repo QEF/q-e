@@ -1440,8 +1440,6 @@ SUBROUTINE iosys()
   fcp_mdiis_size_ = fcp_mdiis_size
   fcp_mdiis_step_ = fcp_mdiis_step
   !
-  CALL plugin_read_input()
-  !
   ! ... read following cards
   !
 
@@ -1470,7 +1468,10 @@ SUBROUTINE iosys()
   !
   call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
                         trd_ht, rd_ht, cell_units )
-
+  !
+  ! ... once input variables have been stored, read optional plugin input files
+  !
+  CALL plugin_read_input("PW")
   !
   ! ... Files (for compatibility) and directories
   !     This stuff must be done before calling read_config_from_file!
@@ -1606,8 +1607,8 @@ SUBROUTINE iosys()
   END IF
   IF ( lstres .AND. dft_is_hybrid() .AND. npool > 1 )  CALL errore('iosys', &
          'stress for hybrid functionals not available with pools', 1)
-  IF ( lmovecell.AND. dft_is_hybrid() ) CALL errore('iosys',&
-         'Variable cell and hybrid XC not tested',1)
+  IF ( lmovecell.AND. dft_is_hybrid() ) CALL infomsg('iosys',&
+         'Variable cell and hybrid XC little tested')
   !
   ! ... must be done AFTER dft is read from PP files and initialized
   ! ... or else the two following parameters will be overwritten

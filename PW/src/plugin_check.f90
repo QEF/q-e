@@ -5,9 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine plugin_read_input(prog)
+SUBROUTINE plugin_check(calling_subroutine)
 !
-! This routine is used for reading plugin input files
+! This routine is used to raise an error if
+! a plugin is activated
 ! DO NOT REMOVE THE TAGS ! ***ADDSON_NAME KIND_OF_PATCH***
 !
 USE plugin_flags
@@ -15,9 +16,9 @@ USE plugin_flags
 ! ***Environ MODULES BEGIN***
 ! ***Environ MODULES END***
 !
-implicit none
+IMPLICIT NONE
 !
-CHARACTER(LEN=*), INTENT(IN) :: prog
+CHARACTER(LEN=*), INTENT(IN) :: calling_subroutine
 !
 ! ***Environ VARIABLES BEGIN***
 ! ***Environ VARIABLES END***
@@ -25,4 +26,4 @@ CHARACTER(LEN=*), INTENT(IN) :: prog
 ! ***Environ CALLS BEGIN***
 ! ***Environ CALLS END***
 !
-end subroutine plugin_read_input
+END SUBROUTINE plugin_check

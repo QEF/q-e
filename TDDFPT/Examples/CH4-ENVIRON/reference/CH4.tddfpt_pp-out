@@ -1,27 +1,18 @@
  Warning: Only a single CPU will be used!
 
-     Program TDDFPT_PP v.6.beta (svn rev. 12993M) starts on 21Sep2016 at 15:34:34 
+     Program TDDFPT_PP v.6.3rc starts on 29Jun2018 at 16: 6: 5 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
- 
-           HOST :    @host@
-           ARCH :    x86_64
-             CC :    icc
-            CPP :    cpp
-            F90 :    mpiifort
-            F77 :    ifort
-         DFLAGS :    -D__INTEL -D__FFTW3 -D__MPI -D__SCALAPACK
-      BLAS LIBS :    -lmkl_intel_lp64  -lmkl_sequential -lmkl_core
-    LAPACK LIBS :    
-       FFT LIBS :    -lfftw3
-      MASS LIBS :    
 
      Parallel version (MPI), running on     8 processors
+
+     MPI processes distributed on     1 nodes
      R & G space division:  proc/nbgrp/npool/nimage =       8
 
      Reading    500 Lanczos steps for direction 1
@@ -38,18 +29,18 @@
 
      Polarization direction:1
      Lanczos coefficients:
-     Average =    13.02090162
-     Average oscillation amplitude =     0.35165067
+     Average =    13.01977793
+     Average oscillation amplitude =     0.35150419
 
      Polarization direction:2
      Lanczos coefficients:
-     Average =    13.02097024
-     Average oscillation amplitude =     0.35164771
+     Average =    13.01979503
+     Average oscillation amplitude =     0.35150249
 
      Polarization direction:3
      Lanczos coefficients:
-     Average =    13.02104647
-     Average oscillation amplitude =     0.35164423
+     Average =    13.01983616
+     Average oscillation amplitude =     0.35149876
 
      Data ready, starting to calculate observables...
 
@@ -67,10 +58,10 @@
 
      Functions are reported in \hbar.\omega  Energy unit is (Ry)
  
-     TDDFPT_PP    :    10.51s CPU        10.54s WALL
+     TDDFPT_PP    :    10.45s CPU        10.50s WALL
 
  
-   This run was terminated on:  15:34:44  21Sep2016            
+   This run was terminated on:  16: 6:16  29Jun2018            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
