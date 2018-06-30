@@ -46,7 +46,7 @@ SUBROUTINE hinit1()
   !
   ! ... plugin contribution to local potential
   !
-  CALL plugin_scf_potential(rho,.FALSE.,-1.d0)
+  CALL plugin_scf_potential(rho,.FALSE.,-1.d0,vltot)
   !
   ! ... define the total local potential (external+scf)
   !
