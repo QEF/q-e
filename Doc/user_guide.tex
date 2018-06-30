@@ -166,7 +166,7 @@ mentioned in Sect.\ref{SubSec:Terms}, include:
   \item Ye Luo (Argonne) for improved FFT threading and miscellaneous
   contributions and optimization;
   \item Pietro Bonf\`a (CINECA) for multiple contributions to optimization
-  and maiintenance;
+  and maintenance;
   \item Hsin-Yu Ho and Marcos Calegari Andrade (U.Princeton) for SCAN
   and other meta-GGA functionals with \texttt{libxc};
   \item Fabio Affinito (CINECA) for ELPA support, for contributions
@@ -718,7 +718,7 @@ to the \texttt{MANUAL\_DFLAGS} in the \texttt{make.inc} file.
 The HDF5 packages provided by many LINUX distributions may also work,
 but the configure script fails if includes and libraries are not placed
 under the same root directory. In this case the user should manually set
-the porrect paths in the \texttt{make.inc} file.
+the correct paths in the \texttt{make.inc} file.
 
 \paragraph{Other libraries}
 \qe\ can use the MASS vector math
@@ -765,7 +765,7 @@ At your choice, you may compile the complete \qe\ suite of programs
 \item \texttt{make ph}  compiles the \PHonon\ package. All executables are linked
 			in main \texttt{bin} directory
 \item \texttt{make pp}  compiles the postprocessing package \PostProc
-\item \texttt{make pwcond} compiles the balistic conductance package 
+\item \texttt{make pwcond} compiles the ballistic conductance package 
 	                \texttt{PWcond}. All executables are linked
 			in main \texttt{bin} directory
 \item \texttt{make pwall} produces all of the above.
@@ -1088,7 +1088,7 @@ initialization files. Consult the documentation provided by Intel.
 
 The warning: {\em feupdateenv is not implemented and will always fail},
 can be safely ignored. Warnings on ``bad preprocessing option'' when compiling
-iotk and complains about ``recommanded formats'' may also be ignored.
+iotk and complains about ``recommended formats'' may also be ignored.
 
 The following compiler releases are known to give segmentation faults
 in at least some cases of compilation of \qe\ v.6.0:
@@ -1250,7 +1250,7 @@ via command-line options to the executable, are implemented
 with MPI. This is your first choice for execution on a parallel
 machine.
 
-The support for explicit OpenMP is steadingly improving.
+The support for explicit OpenMP is steadily improving.
 Explicit OpenMP can be used together with MPI and also 
 together with library OpenMP. Beware
 conflicts between the various kinds of parallelization!
@@ -1384,7 +1384,7 @@ of processors of each pool.
 For very large jobs (i.e. O(1000) atoms or more) or for very long jobs,
 to be run on massively parallel  machines (e.g. IBM BlueGene) it is
 crucial to use in an effective way all available parallelization levels:
-on linear algebra (irequires compilation with ELPA and/or ScaLAPACK), 
+on linear algebra (requires compilation with ELPA and/or ScaLAPACK), 
 on "task groups" (requires run-time option "-nt N"), and mixed
 MPI-OpenMP (requires OpenMP compilation: \configure --enable-openmp).
 Without a judicious choice of parameters, large jobs will find a
