@@ -11,3 +11,4 @@ mp_bands_util.o : mp.o
 mp_bands_util.o : parallel_include.o
 mp_base.o : parallel_include.o
 mp_base.o : util_param.o
+thread_util.o : util_param.o
