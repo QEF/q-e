@@ -2362,11 +2362,12 @@ xdm_dispersion.o : ../../Modules/cell_base.o
 xdm_dispersion.o : ../../Modules/constants.o
 xdm_dispersion.o : ../../Modules/control_flags.o
 xdm_dispersion.o : ../../Modules/fft_base.o
+xdm_dispersion.o : ../../Modules/funct.o
 xdm_dispersion.o : ../../Modules/io_global.o
 xdm_dispersion.o : ../../Modules/ions_base.o
 xdm_dispersion.o : ../../Modules/kind.o
+xdm_dispersion.o : ../../Modules/mp_bands.o
 xdm_dispersion.o : ../../Modules/mp_images.o
-xdm_dispersion.o : ../../Modules/mp_pools.o
 xdm_dispersion.o : ../../Modules/paw_variables.o
 xdm_dispersion.o : ../../Modules/splinelib.o
 xdm_dispersion.o : ../../Modules/uspp.o
