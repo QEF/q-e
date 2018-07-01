@@ -1,13 +1,3 @@
---------------------------------------------------------------------------
-[[32490,1],0]: A high-performance Open MPI point-to-point messaging module
-was unable to find any relevant network interfaces:
-
-Module: OpenFabrics (openib)
-  Host: magneto
-
-Another transport will be used instead, although this may result in
-lower performance.
---------------------------------------------------------------------------
                                                                                       
                                        ``:oss/                                        
                            `.+s+.     .+ys--yh+     `./ss+.                           
@@ -37,7 +27,7 @@ lower performance.
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 20Jun2018 at 12:52: 2 
+     Program EPW v.5.0.0 starts on  1Jul2018 at 15:53:16 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -338,9 +328,9 @@ lower performance.
                 l(4) =   1
                 l(5) =   2
                 l(6) =   2
-     EPW          :     0.60s CPU         0.63s WALL
+     EPW          :     0.49s CPU         0.51s WALL
 
-     EPW          :     0.69s CPU         0.72s WALL
+     EPW          :     0.59s CPU         0.61s WALL
 
      No wavefunction gauge setting applied
      -------------------------------------------------------------------
@@ -828,7 +818,7 @@ lower performance.
      (   0.16574   0.16574   0.33426) :   2.12918
  
      -------------------------------------------------------------------
-     WANNIER      :     12.30s CPU     12.78s WALL (       1 calls)
+     WANNIER      :     12.23s CPU     12.79s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
@@ -837,7 +827,7 @@ lower performance.
      Calculating kmap and kgmap
      Progress  kmap: ########################################
      Progress kgmap: ########################################
-     kmaps        :      0.18s CPU      0.22s WALL (       1 calls)
+     kmaps        :      0.20s CPU      0.22s WALL (       1 calls)
 
      Reading interatomic force constants
 
@@ -938,7 +928,7 @@ lower performance.
 
      ===================================================================
      Memory usage:  VmHWM =        73Mb
-                   VmPeak =       307Mb
+                   VmPeak =       306Mb
      ===================================================================
      
      Using q-mesh file: ./LGX.txt
@@ -964,38 +954,35 @@ lower performance.
      Progression iq (fine) =        100/       100
      ===================================================================
      Memory usage:  VmHWM =        73Mb
-                   VmPeak =       307Mb
+                   VmPeak =       306Mb
      ===================================================================
-
-     Total time so far
-     MOB          :      0.00s CPU      0.00s WALL (       1 calls)
 
  
      Unfolding on the coarse grid
-     elphon_wrap  :     24.78s CPU     25.38s WALL (       1 calls)
+     elphon_wrap  :     25.06s CPU     25.63s WALL (       1 calls)
  
      INITIALIZATION: 
  
      set_drhoc    :      0.11s CPU      0.11s WALL (       9 calls)
      init_vloc    :      0.00s CPU      0.00s WALL (      10 calls)
-     init_us_1    :      0.07s CPU      0.06s WALL (      10 calls)
+     init_us_1    :      0.06s CPU      0.06s WALL (      10 calls)
  
  
      Electron-Phonon interpolation
-     ephwann      :      4.41s CPU      5.37s WALL (       1 calls)
-     ep-interp    :      3.08s CPU      3.72s WALL (     100 calls)
+     ephwann      :      4.35s CPU      5.42s WALL (       1 calls)
+     ep-interp    :      2.95s CPU      3.67s WALL (     100 calls)
  
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
      Ham: step 2  :      0.04s CPU      0.08s WALL (       1 calls)
      ep: step 1   :      0.03s CPU      0.03s WALL (      48 calls)
-     ep: step 2   :      0.52s CPU      0.56s WALL (      48 calls)
+     ep: step 2   :      0.54s CPU      0.58s WALL (      48 calls)
      DynW2B       :      0.00s CPU      0.00s WALL (     100 calls)
-     HamW2B       :      0.81s CPU      0.85s WALL (   20200 calls)
-     ephW2Bp      :      0.44s CPU      1.04s WALL (     100 calls)
+     HamW2B       :      0.83s CPU      0.84s WALL (   20200 calls)
+     ephW2Bp      :      0.31s CPU      0.99s WALL (     100 calls)
  
  
      Total program execution
-     EPW          :    42.19s CPU        44.25s WALL
+     EPW          :    42.23s CPU        44.45s WALL
 
                                                                                           
  Please consider citing:                                                                  

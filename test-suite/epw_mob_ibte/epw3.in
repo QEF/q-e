@@ -20,6 +20,7 @@
   ncarrier    =  1E13
   mp_mesh_k   = .false.
   iterative_bte = .true.
+  mob_maxiter = 4
 
   vme         = .false.
 

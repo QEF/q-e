@@ -379,7 +379,7 @@
      !  read all quantities in Wannier representation from file
      !  in parallel case all pools read the same file
      !
-     CALL epw_read
+     CALL epw_read(nrr_k, nrr_q, nrr_g)
      !
   ELSE !if not epwread (i.e. need to calculate fmt file)
      ! 
@@ -480,8 +480,8 @@
      CALL mp_barrier(inter_pool_comm)
      !
      IF ( epwwrite ) THEN
-        CALL epw_write 
-        CALL epw_read 
+        CALL epw_write(nrr_k, nrr_q, nrr_g)
+        CALL epw_read(nrr_k, nrr_q, nrr_g) 
      ENDIF
      !
   ENDIF

@@ -40,7 +40,7 @@
                             scattering, nstemp, int_mob, scissor, carrier,      &
                             iterative_bte, longrange, scatread, nqf1, prtgkk,   &
                             nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
-                            specfun_pl, lindabs
+                            specfun_pl, lindabs, mob_maxiter
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, eps2, zero, czero, &
                             twopi, ci, kelvin2eV, eps6
@@ -248,8 +248,6 @@
   !! Used to store $e^{2\pi r \cdot k+q}$ exponential
 
   ! Conductivity ------------
-  INTEGER, PARAMETER :: maxiter = 300
-  !! Maximum number of iteration in the case of iterative BTE
   INTEGER :: iter
   !! Current iteration number
   INTEGER :: itemp
@@ -907,8 +905,14 @@
       !IF (nstemp > 1) CALL errore('ephwann_shuffle', &
       !    'Iterative BTE can only be done at 1 temperature, nstemp = 1.',1)  
       ! 
-      IF (iter > maxiter) CALL errore('ephwann_shuffle', &
-        'The iteration reached the maximum but did not converge. ',1)
+      IF (iter > mob_maxiter) THEN
+        ! CALL errore('ephwann_shuffle', &
+        !'The iteration reached the maximum but did not converge. ',0)
+        WRITE(stdout,'(5x,a)') repeat('=',67)
+        WRITE(stdout,'(5x,"The iteration reached the maximum but did not converge.")')
+        WRITE(stdout,'(5x,a/)') repeat('=',67)
+        exit
+      ENDIF
       ! 
       ! Reading iter X if the file exist from a restart
       !CALL F_read(Fi_all, ibndmax-ibndmin+1, nkqtotf/2, iter)

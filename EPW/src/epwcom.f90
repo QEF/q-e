@@ -60,6 +60,8 @@
   !! If 0 calculates the Lindhard screening, if 1 the Thomas-Fermi screening
   INTEGER :: bnd_cum
   !! band index for which the cumulant calculation is done
+  INTEGER :: mob_maxiter
+  !! Maximum number of iteration for the IBTE
   !
   ! Superconductivity
   INTEGER :: nswfc

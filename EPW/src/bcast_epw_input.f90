@@ -48,7 +48,8 @@
                             int_mob, scissor, carrier, ncarrier, iterative_bte, &
                             restart, restart_freq, prtgkk, nel, meff, epsiHEG, &
                             scatread, restart, restart_freq, restart_filq, &
-                            lphase, omegamin, omegamax, omegastep, n_r, lindabs
+                            lphase, omegamin, omegamax, omegastep, n_r, lindabs,&
+                            mob_maxiter 
   USE elph2,         ONLY : elph 
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -162,6 +163,7 @@
   CALL mp_bcast (restart_freq, meta_ionode_id, world_comm)
   CALL mp_bcast (scr_typ     , meta_ionode_id, world_comm)
   CALL mp_bcast (bnd_cum     , meta_ionode_id, world_comm)
+  CALL mp_bcast (mob_maxiter , meta_ionode_id, world_comm)
   !
   ! REAL*8
   !
