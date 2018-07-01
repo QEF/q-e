@@ -152,7 +152,7 @@ FFT_LIBS       = @fft_libs@
 HDF5_LIB = @hdf5_libs@
 FOX_LIB  = -L$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common\
             -lFoX_utils -lFoX_fsys 
-
+FOX_FLAGS = @foxflags@
 # For parallel execution, the correct path to MPI libraries must
 # be specified in MPI_LIBS (except for IBM if you use mpxlf)
 
