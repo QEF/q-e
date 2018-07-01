@@ -1037,8 +1037,10 @@
     USE io_epw,           ONLY : iunepmatwp, iunepmatwp2
     USE mp_global,        ONLY : mp_sum
     USE mp_world,         ONLY : world_comm
+#if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, &
                                  MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE
+#endif
     USE ions_base,        ONLY : nat
     implicit none
     !
@@ -1394,9 +1396,11 @@
     USE io_files,         ONLY : prefix, tmp_dir
     USE mp_global,        ONLY : mp_sum
     USE mp_world,         ONLY : world_comm
+#if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, &
                                  MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, &
                                  MPI_MODE_RDONLY,MPI_INFO_NULL
+#endif
     USE ions_base,        ONLY : nat
 
     implicit none
