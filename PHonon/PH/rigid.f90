@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 MODULE rigid
-  PUBLIC :: rgd_blk, dyndiag, nonanal, nonanal_ifc
+  PUBLIC :: rgd_blk, dyndiag, nonanal, nonanal_ifc, cdiagh2
   PRIVATE
   CONTAINS
 !
