@@ -6,9 +6,8 @@ include ../../make.inc
 IFLAGS=
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
-          $(MOD_FLAG)../pw4gww $(MOD_FLAG)../../PW/src  \
-          $(MOD_FLAG)../../LAXlib $(MOD_FLAG)../../UtilXlib $(MOD_FLAG).
+MODFLAGS= $(BASEMOD_FLAGS) \
+          $(MOD_FLAG)../pw4gww $(MOD_FLAG)../../PW/src 
 
 #location of needed libraries
 LIBOBJS= ../../iotk/src/libiotk.a  \

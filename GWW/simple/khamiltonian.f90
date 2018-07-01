@@ -102,7 +102,8 @@ subroutine khamiltonian
        enddo
       enddo
      ! Scalar product: at the end we have \sum_G e_i*(G) G e_j(G)
-     call ZGEMM('C','N',ntot_e,ntot_e,npol*npw_max,(1.d0,0.d0),g2e,npol*npw_max,wfc_e,npol*npw_max,(0.d0,0.d0),g2e_mat,ntot_e)
+     call ZGEMM('C','N',ntot_e,ntot_e,npol*npw_max,(1.d0,0.d0),g2e, &
+             npol*npw_max,wfc_e,npol*npw_max,(0.d0,0.d0),g2e_mat,ntot_e)
      call mp_sum(g2e_mat,world_comm)
      !
      g2e_mat = g2e_mat*tpiba*2.0 ! In the definition of K1_ij there is a factor 2 in front
@@ -162,7 +163,8 @@ subroutine khamiltonian
     end if
 
     ! Calculate integral of e_j(r)* x V_loc(r) x e_i(r)
-    call ZGEMM('C','N',ntot_e,ntot_e,npol*dffts%nnr,(1.d0,0.d0),rwfc,npol*dffts%nnr,v_rwfc,npol*dffts%nnr,(0.d0,0.d0),g2e_mat,ntot_e)
+    call ZGEMM('C','N',ntot_e,ntot_e,npol*dffts%nnr,(1.d0,0.d0),rwfc, &
+            npol*dffts%nnr,v_rwfc,npol*dffts%nnr,(0.d0,0.d0),g2e_mat,ntot_e)
     call mp_sum(g2e_mat,world_comm)
     !
     g2e_mat = g2e_mat / dble(dffts%nr1*dffts%nr2*dffts%nr3)
