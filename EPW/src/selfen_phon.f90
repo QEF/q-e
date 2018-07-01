@@ -130,10 +130,18 @@
   !! Temporary value of lambda for av.
   REAL(kind=DP) :: tmp2
   !! Temporary value of lambda_v for av.
+  REAL(kind=DP) :: tmp3
+  !! Temporary value of lambda_v for av.
+  REAL(kind=DP) :: tmp4
+  !! Temporary value of lambda_v for av.
   REAL(kind=DP) :: lambda_tmp(nmodes)
   !! Temporary value of lambda for av.  
   REAL(kind=DP) :: lambda_v_tmp(nmodes)
   !! Temporary value of lambda v for av.  
+  REAL(kind=DP) :: gamma_tmp(nmodes)
+  !! Temporary value of gamma for av.  
+  REAL(kind=DP) :: gamma_v_tmp(nmodes)
+  !! Temporary value of gamma v for av.  
   REAL(kind=DP), external :: dos_ef
   !! Function to compute the Density of States at the Fermi level
   REAL(kind=DP), external :: wgauss
@@ -362,40 +370,39 @@
       n = 0
       tmp = 0.0_DP
       tmp2 = 0.0_DP
+      tmp3 = 0.0_DP
+      tmp4 = 0.0_DP
       wq = wf (imode, iq)
       DO jmode = 1, nmodes
         wq_tmp = wf (jmode, iq)
         IF ( ABS(wq - wq_tmp) < eps6 ) THEN
           n = n + 1
-          tmp  =  tmp + lambda_all  ( jmode, iq, ismear )
-          tmp2 =  tmp2 + lambda_v_all  ( jmode, iq, ismear )
+          IF ( wq_tmp .gt. eps_acustic ) THEN 
+            tmp  =  tmp  + gamma  ( jmode ) / pi / wq**two / dosef
+            tmp2 =  tmp2 + gamma_v( jmode ) / pi / wq**two / dosef
+          ENDIF
+          tmp3 =  tmp3 + gamma(jmode)
+          tmp4 =  tmp4 + gamma_v(jmode)
         ENDIF
       ENDDO ! jbnd
       lambda_tmp(imode)   = tmp / float(n)
       lambda_v_tmp(imode) = tmp2 / float(n)
+      gamma_tmp(imode)    = tmp3 / float(n)
+      gamma_v_tmp(imode)  = tmp4 / float(n)
     ENDDO
-    lambda_all( :, iq, ismear ) = lambda_tmp(:)
+    lambda_all( :, iq, ismear )   = lambda_tmp(:)
     lambda_v_all( :, iq, ismear ) = lambda_v_tmp(:)
- 
+    gamma_all( :, iq, ismear )    = gamma_tmp(:)
+    gamma_v_all( :, iq, ismear )  = gamma_v_tmp(:)
+    lambda_tot = sum(lambda_all(:,iq,ismear))
+    lambda_tr_tot = sum(lambda_v_all(:,iq,ismear))
     !
     WRITE(stdout,'(/5x,"ismear = ",i5," iq = ",i7," coord.: ", 3f9.5, " wt: ", f9.5)') ismear, iq, xqf(:,iq), wqf(iq)
     WRITE(stdout,'(5x,a)') repeat('-',67)
     !
-    lambda_tot = 0.d0
-    lambda_tr_tot = 0.d0
-    !
     DO imode = 1, nmodes
       ! 
       wq = wf (imode, iq)
-      IF ( wq .gt. eps_acustic ) THEN 
-        lambda_all  ( imode, iq, ismear ) = gamma  ( imode ) / pi / wq**two / dosef
-        lambda_v_all( imode, iq, ismear ) = gamma_v( imode ) / pi / wq**two / dosef
-      ENDIF
-      gamma_all  ( imode, iq, ismear ) = gamma  ( imode )
-      gamma_v_all( imode, iq, ismear ) = gamma_v( imode )
-      lambda_tot    = lambda_tot    + lambda_all  ( imode, iq, ismear )
-      lambda_tr_tot = lambda_tr_tot + lambda_v_all( imode, iq, ismear )
-      !
       WRITE(stdout, 102) imode, lambda_all(imode,iq,ismear),ryd2mev*gamma_all(imode,iq,ismear), ryd2mev*wq
       WRITE(stdout, 104) imode, lambda_v_all(imode,iq,ismear),ryd2mev*gamma_v_all(imode,iq,ismear), ryd2mev*wq
       !
@@ -449,6 +456,4 @@ FUNCTION dos_ef_seq (ngauss, degauss, ef, et, wk, nks, nbnd)
   !
   RETURN
 END FUNCTION dos_ef_seq
-
-
 
