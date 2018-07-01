@@ -84,10 +84,11 @@ libiotk:
 	cd ../; rm -rf iotk ; ln -fs S3DE/iotk iotk
 
 libfox:
+	echo $(HOST)
 	if test ! -d ../FoX; then \
         mkdir ../FoX; \
 	(gzip -dc ../archive/fox.tgz | (cd ../FoX; tar -xvf -)); \
-	cd ../FoX/fox/; export FC=$(F90); export FCFLAGS="$(F90FLAGS)"; \
+	cd ../FoX/fox/; export FC=$(F90); export FCFLAGS="$(FOX_FLAGS)"; \
 	./configure --prefix=$(TOPDIR)/FoX ;\
 	$(MAKE) install; cd ../; rm -fr fox;fi
 # ELPA
