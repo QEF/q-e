@@ -39,7 +39,7 @@
                          nkf, wf, nkqtotf, xqf, &
                          lambda_all, lambda_v_all, &
                          dmef, vmef, gamma_all,gamma_v_all, efnew
-  USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, eps4
+  USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, eps4, eps6
   use mp,         ONLY : mp_barrier, mp_sum
   use mp_global,  ONLY : inter_pool_comm
   !
@@ -62,11 +62,15 @@
   !! Counter on bands
   INTEGER :: imode
   !! Counter on mode
+  INTEGER :: jmode
+  !! Counter on mode
   INTEGER :: fermicount
   !! Number of states on the Fermi surface
   INTEGER :: ismear
   !! Upper bounds index after k or q paral
   !! Smearing for the Gaussian function 
+  INTEGER :: n
+  !! Counter on number of mode degeneracies
   ! 
   REAL(kind=DP) :: g2
   !! Electron-phonon matrix elements squared in Ry^2
@@ -76,6 +80,8 @@
   !! Eigen energy of k+q on the fine grid relative to the Fermi level
   REAL(kind=DP) :: wq
   !! Phonon frequency on the fine grid
+  REAL(kind=DP) :: wq_tmp
+  !! Temporary Phonon frequency on the fine grid
   REAL(kind=DP) :: ef0
   !! Fermi energy level
   REAL(kind=DP) :: wgkq
@@ -120,6 +126,14 @@
   !! Electronic velocity $v_{nk}$
   REAL(kind=DP) :: vkq(3,ibndmax-ibndmin+1)
   !! Electronic velocity $v_{nk+q}$
+  REAL(kind=DP) :: tmp
+  !! Temporary value of lambda for av.
+  REAL(kind=DP) :: tmp2
+  !! Temporary value of lambda_v for av.
+  REAL(kind=DP) :: lambda_tmp(nmodes)
+  !! Temporary value of lambda for av.  
+  REAL(kind=DP) :: lambda_v_tmp(nmodes)
+  !! Temporary value of lambda v for av.  
   REAL(kind=DP), external :: dos_ef
   !! Function to compute the Density of States at the Fermi level
   REAL(kind=DP), external :: wgauss
@@ -342,6 +356,27 @@
     CALL mp_sum(gamma_v,inter_pool_comm) 
     CALL mp_sum(fermicount, inter_pool_comm)
     CALL mp_barrier(inter_pool_comm)
+    ! 
+    ! An average over degenerate phonon-mode is performed. 
+    DO imode = 1, nmodes
+      n = 0
+      tmp = 0.0_DP
+      tmp2 = 0.0_DP
+      wq = wf (imode, iq)
+      DO jmode = 1, nmodes
+        wq_tmp = wf (jmode, iq)
+        IF ( ABS(wq - wq_tmp) < eps6 ) THEN
+          n = n + 1
+          tmp  =  tmp + lambda_all  ( jmode, iq, ismear )
+          tmp2 =  tmp2 + lambda_v_all  ( jmode, iq, ismear )
+        ENDIF
+      ENDDO ! jbnd
+      lambda_tmp(imode)   = tmp / float(n)
+      lambda_v_tmp(imode) = tmp2 / float(n)
+    ENDDO
+    lambda_all( :, iq, ismear ) = lambda_tmp(:)
+    lambda_v_all( :, iq, ismear ) = lambda_v_tmp(:)
+ 
     !
     WRITE(stdout,'(/5x,"ismear = ",i5," iq = ",i7," coord.: ", 3f9.5, " wt: ", f9.5)') ismear, iq, xqf(:,iq), wqf(iq)
     WRITE(stdout,'(5x,a)') repeat('-',67)
