@@ -77,12 +77,8 @@ subroutine wfc_basis
    npw = ngk (1)
    !IF ( nks > 1 ) READ( iunigk ) igk
    
-   if(.not.l_debug) then
-      call davcio (evc, 2*nwordwfc, iunwfc, 1, -1)
-   else
-      call debug_wfc(npw)
-   endif
-   
+   call davcio (evc, 2*nwordwfc, iunwfc, 1, -1)
+      
 
 !allocate basis 
 
@@ -130,11 +126,8 @@ subroutine wfc_basis
       npw1 = ngk (ik)
       npw = ngk (ik)
       
-      if(.not.l_debug) then
-         call davcio (evc, 2*nwordwfc, iunwfc, ik, -1)
-      else
-         call debug_wfc(npw1)
-      endif
+      call davcio (evc, 2*nwordwfc, iunwfc, ik, -1)
+      
 
       wfc_t=(0.d0,0.d0)
       do ipol=0,npol-1
@@ -283,12 +276,8 @@ subroutine wfc_basis
 !!weight
        npw = ngk (ik)
 
-       if(.not.l_debug) then
-         call davcio (evc, 2*nwordwfc, iunwfc, ik, -1)
-      else
-         call debug_wfc(npw)
-      endif
-       
+       call davcio (evc, 2*nwordwfc, iunwfc, ik, -1)
+            
 !!energies
        if(ionode) write(iun) et(num_nbndv(1)-num_val+1:num_nbndv(1)+num_cond,ik) 
 !!matrix <wfc_e|wfc_ik>
