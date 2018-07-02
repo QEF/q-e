@@ -348,7 +348,7 @@
   eig_read     = .false.
   dis_win_max  = 1d3
   dis_win_min  = -1d3
-  dis_froz_max = -0.9d3
+  dis_froz_max =  1d3
   dis_froz_min = -1d3
   num_iter     = 200
   proj(:)      = ''
