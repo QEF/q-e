@@ -448,7 +448,7 @@ subroutine pw (rs, iflag, ec, vc)
 end subroutine pw
 !
 !-----------------------------------------------------------------------
-subroutine wigner (rs, ec, vc)
+subroutine wignerc(rs, ec, vc)
   !-----------------------------------------------------------------------
   !        Wigner correlation
   !
@@ -465,7 +465,7 @@ subroutine wigner (rs, ec, vc)
   ec = - 0.738d0 * rho13 * (0.959d0 / (1.d0 + 12.57d0 * rho13) )
   !
   return
-end subroutine wigner
+end subroutine wignerc
 !
 !-----------------------------------------------------------------------
 subroutine hl (rs, ec, vc)

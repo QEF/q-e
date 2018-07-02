@@ -1283,7 +1283,7 @@ subroutine xc (rho, ex, ec, vx, vc)
   elseif (icorr == 4) then
      call pw (rs, 1, ec, vc)
   elseif (icorr == 5) then
-     call wigner (rs, ec, vc)
+     call wignerc(rs, ec, vc)
   elseif (icorr == 6) then
      call hl (rs, ec, vc)
   elseif (icorr == 7) then
