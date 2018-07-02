@@ -6,15 +6,13 @@
 
   iverbosity  = 0
 
-  elph        = .true.
+  ep_coupling = .false.
+  elph        = .false.
   kmaps       = .true.
   epbwrite    = .false.
   epbread     = .false.
 
-  etf_mem     = 2
-
-  restart      = .true.
-  restart_freq = 50      ! We test the restart feature
+  etf_mem     = 1
 
   epwwrite    = .false.
   epwread     = .true.
@@ -29,17 +27,24 @@
   dis_froz_max= 7
   proj(1)     = 'f=0,0,0:l=-3'   
 
-  elecselfen  = .true.
-  nest_fn     = .false.
+  elecselfen  = .false.
   phonselfen  = .false.
   a2f         = .false.
 
+  specfun_el   = .false.
+  wmin_specfun = -4
+  wmax_specfun = 1
+  nw_specfun   = 20
+  cumulant     = .true.
+  bnd_cum      = 4
 
-  fsthick     = 1.5 ! eV 
+
+  fsthick     = 15 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)
-  degaussw    = 0.3 ! eV
+  degaussw    = 1.0 ! eV
 
   dvscf_dir   = './save/'
+  filukk      = './diam.ukk'
 
   nkf1        = 6
   nkf2        = 6
@@ -58,8 +63,8 @@
   nq3         = 3
  /
       4 cartesian
-  0.000000000000   0.000000000000   0.000000000000 
- -0.333333333333   0.333333333333  -0.333333333333 
-  0.000000000000   0.666666666667   0.000000000000 
-  0.666666666667   0.000000000000   0.666666666667 
+  0.000000000000   0.000000000000   0.000000000000  
+ -0.333333333333   0.333333333333  -0.333333333333  
+  0.000000000000   0.666666666667   0.000000000000  
+  0.666666666667   0.000000000000   0.666666666667  
 

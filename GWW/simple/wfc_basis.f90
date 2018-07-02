@@ -596,6 +596,10 @@ SUBROUTINE optimal_gram_schmidt_z(num_in,wfcs,ithres,thres,num_out)
   deallocate(prod)
   return
 END SUBROUTINE optimal_gram_schmidt_z
+SUBROUTINE debug_wfc(npw)
+   integer :: npw
+   call errore('debug_wfc','not implemented',abs(npw))
+END SUBROUTINE debug_wfc
 
 
 

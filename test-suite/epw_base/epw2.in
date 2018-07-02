@@ -26,15 +26,10 @@
   dis_froz_max= 7
   proj(1)     = 'f=0,0,0:l=-3'   
 
-  elecselfen  = .true.
+  elecselfen  = .false.
   nest_fn     = .true.
   phonselfen  = .false.
   a2f         = .false.
-
-  specfun_el   = .true.
-  wmin_specfun = -4
-  wmax_specfun = 1
-  nw_specfun   = 20
 
   fsthick     = 15 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)

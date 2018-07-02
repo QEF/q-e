@@ -83,6 +83,7 @@ ia32:pgf* | ia64:pgf* | x86_64:pgf* )
         try_fflags="-fast"
         try_fflags_openmp="-mp"
         try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        try_foxflags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
         try_fflags_noopt="-O0"
         try_ldflags=""
         try_ldflags_openmp="-mp"
@@ -240,6 +241,7 @@ fi
 
 if test "$fflags" = ""   ; then fflags=$try_fflags     ; fi
 if test "$f90flags" = "" ; then f90flags=$try_f90flags ; fi
+if test "try_foxflags" != ""; then foxflags=$try_foxflags; fi
 if test "$fflags_noopt" = ""   ; then fflags_noopt=$try_fflags_noopt     ; fi
 if test "$fflags_nomain" = ""   ; then fflags_nomain=$try_fflags_nomain     ; fi
 
@@ -266,5 +268,5 @@ AC_SUBST(fflags)
 AC_SUBST(fflags_noopt)
 AC_SUBST(fflags_nomain)
 AC_SUBST(imod)
-
+AC_SUBST(foxflags)
 ])

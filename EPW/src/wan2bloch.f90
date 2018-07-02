@@ -160,7 +160,7 @@
     END SUBROUTINE hamwan2bloch
     !
     !--------------------------------------------------------------------------
-    SUBROUTINE dynwan2bloch ( nmodes, nrr, irvec, ndegen, xxq, cuf, eig)
+    SUBROUTINE dynwan2bloch ( nmodes, nrr_q, irvec_q, ndegen_q, xxq, cuf, eig)
     !--------------------------------------------------------------------------
     !!
     !!
@@ -184,16 +184,17 @@
     USE elph2,     ONLY : rdw, epsi, zstar
     USE epwcom,    ONLY : lpolar, lphase
     USE constants_epw, ONLY : twopi, ci, czero, zero, one, eps12
+    USE rigid,     ONLY : cdiagh2
     !
     implicit none
     !
     INTEGER, INTENT (in) :: nmodes
     !! number of modes (possibly of the optimal subspace)
-    INTEGER, INTENT (in) :: nrr
+    INTEGER, INTENT (in) :: nrr_q
     !! number of WS points
-    INTEGER, INTENT (in) :: irvec(3, nrr)
+    INTEGER, INTENT (in) :: irvec_q(3, nrr_q)
     !! coordinates of phononic WS points
-    INTEGER, INTENT (in) :: ndegen(nrr)
+    INTEGER, INTENT (in) :: ndegen_q(nrr_q, nat, nat)
     !! degeneracy of WS points
     !
     REAL(kind=DP), INTENT (in) :: xxq(3)
@@ -251,11 +252,21 @@
     xq = xxq
     chf(:,:) = czero
     !
-    DO ir = 1, nrr
+    DO ir = 1, nrr_q
       !
-      rdotk = twopi * dot_product( xq, dble(irvec( :, ir) ))
-      cfac = exp( ci*rdotk ) / dble( ndegen(ir) )
-      chf = chf + cfac * rdw(:,:, ir )
+      rdotk = twopi * dot_product( xq, dble(irvec_q( :, ir) ))
+      ! 
+      DO na = 1, nat
+        DO nb = 1, nat
+          IF ( ndegen_q(ir, na, nb) > 0 ) THEN
+            cfac = exp( ci*rdotk ) / dble( ndegen_q(ir,na,nb) )
+            ! To map atom coordinate to mode basis. 
+            chf(3*(na-1)+1:3*na, 3*(nb-1)+1:3*nb) = &
+              chf(3*(na-1)+1:3*na, 3*(nb-1)+1:3*nb) &
+            + cfac * rdw(3*(na-1)+1:3*na, 3*(nb-1)+1:3*nb, ir )
+          ENDIF
+        ENDDO
+      ENDDO
       !
     ENDDO
     !
@@ -298,9 +309,10 @@
      ENDDO
     ENDDO
     !
-    CALL zhpevx ('V', 'A', 'U', nmodes, champ, zero, zero, &
-                 0, 0, -one, neig, w, cz, nmodes, cwork, &
-                 rwork, iwork, ifail, info)
+    !CALL zhpevx ('V', 'A', 'U', nmodes, champ, zero, zero, &
+    !             0, 0, -one, neig, w, cz, nmodes, cwork, &
+    !             rwork, iwork, ifail, info)
+    CALL cdiagh2(nmodes,chf,nmodes,w,cz)
     ! 
     ! clean noise
     DO jmode=1,nmodes
@@ -1012,31 +1024,35 @@
     END SUBROUTINE vmewan2bloch
     !
     !---------------------------------------------------------------------------
-    SUBROUTINE ephwan2blochp ( nmodes, xxq, irvec, ndegen, nrr_q, cuf, epmatf, nbnd, nrr_k )
+    SUBROUTINE ephwan2blochp ( nmodes, xxq, irvec_g, ndegen_g, nrr_g, cuf, epmatf, nbnd, nrr_k )
     !---------------------------------------------------------------------------
     !!
     !! even though this is for phonons, I use the same notations
     !! adopted for the electronic case (nmodes->nmodes etc)
     !!
-    USE kinds,         only : DP
-    USE epwcom,        only : etf_mem
-    USE elph2,         only : epmatwp
-    USE constants_epw, ONLY : twopi, ci, czero, cone
-    USE io_epw,        ONLY : iunepmatwp, iunepmatwp2
-    USE mp_global,     ONLY : mp_sum
-    USE mp_world,      ONLY : world_comm
-    USE parallel_include
+    USE kinds,            ONLY : DP
+    USE epwcom,           ONLY : etf_mem
+    USE elph2,            ONLY : epmatwp
+    USE constants_epw,    ONLY : twopi, ci, czero, cone
+    USE io_epw,           ONLY : iunepmatwp, iunepmatwp2
+    USE mp_global,        ONLY : mp_sum
+    USE mp_world,         ONLY : world_comm
+#if defined(__MPI)
+    USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, &
+                                 MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE
+#endif
+    USE ions_base,        ONLY : nat
     implicit none
     !
     !  input variables
     !
     INTEGER, INTENT (in) :: nmodes
     !! Total number of modes
-    INTEGER, INTENT (in) :: nrr_q
+    INTEGER, INTENT (in) :: nrr_g
     !! Number of phononic WS points
-    INTEGER, INTENT (in) :: irvec ( 3, nrr_q)
+    INTEGER, INTENT (in) :: irvec_g ( 3, nrr_g)
     !! Coordinates of WS points
-    INTEGER, INTENT (in) :: ndegen (nrr_q)
+    INTEGER, INTENT (in) :: ndegen_g (nrr_g, nat)
     !! Number of degeneracy of WS points
     INTEGER, INTENT (in) :: nbnd
     !! Number of bands
@@ -1059,6 +1075,8 @@
     !! Ending ir for this pool
     INTEGER :: ierr
     !! Return if there is an error
+    INTEGER :: na
+    !! Atom index
 #if defined(__MPI)
     INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw
     !! Offset to tell where to start reading the file
@@ -1076,7 +1094,7 @@
     !
     COMPLEX(kind=DP) :: eptmp( nbnd, nbnd, nrr_k, nmodes)
     !! Temporary matrix to store el-ph
-    COMPLEX(kind=DP) :: cfac(nrr_q)
+    COMPLEX(kind=DP) :: cfac(nat, nrr_g)
     !! Factor for the FT
     COMPLEX(kind=DP), ALLOCATABLE :: epmatw( :,:,:,:)
     !! El-ph matrix elements
@@ -1093,24 +1111,29 @@
     !  g~(R_e,q') is epmatf(nmodes, nmodes, ik )
     !  every pool works with its own subset of k points on the fine grid
     !
-    CALL para_bounds(ir_start, ir_stop, nrr_q)
+    CALL para_bounds(ir_start, ir_stop, nrr_g)
     !
-    eptmp = czero
-    cfac(:) = czero
+    eptmp(:,:,:,:) = czero
+    cfac(:,:) = czero
     !
     DO ir = ir_start, ir_stop
-       !   
-       ! note xxq is assumed to be already in cryst coord
-       !
-       rdotk = twopi * dot_product ( xxq, dble(irvec(:, ir)) )
-       cfac(ir) = exp( ci*rdotk ) / dble( ndegen(ir) )
+      !   
+      ! note xxq is assumed to be already in cryst coord
+      !
+      rdotk = twopi * dot_product ( xxq, dble(irvec_g(:, ir)) )
+      DO na = 1, nat
+        IF (ndegen_g(ir,na) > 0) &
+          cfac(na,ir) = exp( ci*rdotk ) / dble( ndegen_g(ir,na) )
+      ENDDO
     ENDDO
     ! 
     IF (etf_mem == 0) then
       !      
-      ! SP: This is faster by 20 % 
-      Call zgemv( 'n',  nbnd * nbnd * nrr_k * nmodes, ir_stop - ir_start + 1, cone, &
-               epmatwp(1,1,1,1,ir_start), nbnd * nbnd * nrr_k * nmodes, cfac(ir_start), 1, czero, eptmp, 1 )    
+      DO na = 1, nat
+        Call zgemv( 'n',  nbnd * nbnd * nrr_k * 3, ir_stop - ir_start + 1, cone, &
+               epmatwp(:,:,:,3*(na-1)+1:3*na,ir_start:ir_stop), nbnd * nbnd * nrr_k * 3, &
+               cfac(na,ir_start:ir_stop), 1, czero, eptmp(:,:,:,3*(na-1)+1:3*na), 1 )
+      ENDDO
       !
     ELSE
       !
@@ -1159,7 +1182,10 @@
         CALL rwepmatw ( epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
 #endif
         !
-        CALL ZAXPY(nbnd * nbnd * nrr_k * nmodes, cfac(ir), epmatw, 1, eptmp, 1)
+        DO na = 1, nat
+          CALL ZAXPY(nbnd * nbnd * nrr_k * 3, cfac(na,ir), epmatw(:,:,:,3*(na-1)+1:3*na), 1, &
+                  eptmp(:,:,:,3*(na-1)+1:3*na), 1)
+        ENDDO
         ! 
       ENDDO
       DEALLOCATE(epmatw)
@@ -1359,18 +1385,24 @@
     END SUBROUTINE ephwan2bloch_mem
     ! 
     !---------------------------------------------------------------------------
-    SUBROUTINE ephwan2blochp_mem (imode, nmodes, xxq, irvec, ndegen, nrr_q, epmatf, nbnd, nrr_k )
+    SUBROUTINE ephwan2blochp_mem (imode, nmodes, xxq, irvec_g, ndegen_g, nrr_g, epmatf, nbnd, nrr_k )
     !---------------------------------------------------------------------------
     !!
     !! Even though this is for phonons, I use the same notations
     !! adopted for the electronic case (nmodes->nmodes etc)
     !!
-    USE kinds,         only : DP
-    USE constants_epw, ONLY : twopi, ci, czero
-    USE io_files,      ONLY : prefix, tmp_dir
-    USE mp_global,     ONLY : mp_sum
-    USE mp_world,      ONLY : world_comm
-    USE parallel_include
+    USE kinds,            ONLY : DP
+    USE constants_epw,    ONLY : twopi, ci, czero
+    USE io_files,         ONLY : prefix, tmp_dir
+    USE mp_global,        ONLY : mp_sum
+    USE mp_world,         ONLY : world_comm
+#if defined(__MPI)
+    USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, &
+                                 MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, &
+                                 MPI_MODE_RDONLY,MPI_INFO_NULL
+#endif
+    USE ions_base,        ONLY : nat
+
     implicit none
     !
     !  input variables
@@ -1379,11 +1411,11 @@
     !! Current mode  
     INTEGER, INTENT (in) :: nmodes
     !! Total number of modes
-    INTEGER, INTENT (in) :: nrr_q
+    INTEGER, INTENT (in) :: nrr_g
     !! Number of phononic WS points
-    INTEGER, INTENT (in) :: irvec( 3, nrr_q)
+    INTEGER, INTENT (in) :: irvec_g( 3, nrr_g)
     !! Coordinates of WS points
-    INTEGER, INTENT (in) :: ndegen(nrr_q)
+    INTEGER, INTENT (in) :: ndegen_g(nrr_g, nat)
     !! Number of degeneracy of WS points
     INTEGER, INTENT (in) :: nbnd
     !! Number of bands
@@ -1409,6 +1441,8 @@
     !! Return the file unit
     INTEGER :: ierr
     !! Return if there is an error
+    INTEGER :: na
+    !! Index on atom
 #if defined(__MPI)  
     INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw
     !! Offset to tell where to start reading the file
@@ -1419,7 +1453,7 @@
     REAL(kind=DP) :: rdotk
     !! Exponential for the FT
     !
-    COMPLEX(kind=DP) :: cfac(nrr_q)
+    COMPLEX(kind=DP) :: cfac(nrr_g)
     !! Factor for the FT
     COMPLEX(kind=DP), ALLOCATABLE :: epmatw( :,:,:)
     !! El-ph matrix elements
@@ -1435,7 +1469,7 @@
     !  g~(R_e,q') is epmatf(nmodes, nmodes, ik )
     !  every pool works with its own subset of k points on the fine grid
     !
-    CALL para_bounds(ir_start, ir_stop, nrr_q)
+    CALL para_bounds(ir_start, ir_stop, nrr_g)
     !
 #if defined(__MPI)  
     filint = trim(tmp_dir)//trim(prefix)//'.epmatwp1'
@@ -1446,10 +1480,12 @@
     cfac(:) = czero
     !
     DO ir = ir_start, ir_stop
-       !   
-       ! note xxq is assumed to be already in cryst coord
-       rdotk = twopi * dot_product ( xxq, dble(irvec(:, ir)) )
-       cfac(ir) = exp( ci*rdotk ) / dble( ndegen(ir) )
+      !   
+      ! note xxq is assumed to be already in cryst coord
+      rdotk = twopi * dot_product ( xxq, dble(irvec_g(:, ir)) )
+      na = (imode - 1) / 3 + 1
+      IF (ndegen_g(ir, na) > 0) &
+        cfac(ir) = exp( ci*rdotk ) / dble( ndegen_g(ir, na) )
     ENDDO
     ! 
     ALLOCATE(epmatw( nbnd, nbnd, nrr_k))
