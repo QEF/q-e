@@ -4,7 +4,7 @@
 include ../../make.inc
 
 # location of include files
-IFLAGS=
+IFLAGS+=
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \

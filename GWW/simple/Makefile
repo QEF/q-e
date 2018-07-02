@@ -1,9 +1,9 @@
 # Makefile for  simple
 
 include ../../make.inc
-
+LIBMIN = ../minpack/minpacklib.a
 # location of include files
-IFLAGS=-I../../../include
+IFLAGS+=-I../../../include
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
