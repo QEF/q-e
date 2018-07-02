@@ -107,20 +107,20 @@
     !! in the basis of the lattice vectors for electrons
     INTEGER :: irvec_qq (3,20*nq1*nq2*nq3)
     !! local integer components of the ir-th Wigner-Seitz grid point for phonons
-    INTEGER :: irvec_gg (3,20*nk1*nk2*nk3)
+    INTEGER :: irvec_gg (3,20*nq1*nq2*nq3)
     !! local integer components of the ir-th Wigner-Seitz grid point for electron-phonons
     !! We use nk1 instead of nq1 because the k-grid is always larger or equal to q-grid.  
     INTEGER :: ndegen_kk (20*nk1*nk2*nk3)
     !! local Wigner-Seitz number of degenerescence (weights) for the electrons grid
     INTEGER :: ndegen_qq (20*nq1*nq2*nq3, nat, nat)
     !! local Wigner-Seitz number of degenerescence (weights) for the phonons grid
-    INTEGER :: ndegen_gg (20*nk1*nk2*nk3, nat)
+    INTEGER :: ndegen_gg (20*nq1*nq2*nq3, nat)
     !! local Wigner-Seitz number of degenerescence (weights) for the electron-phonons grid
     REAL(kind=DP) :: wslen_kk (20*nk1*nk2*nk3)
     !! local real-space length for electrons, in units of alat
     REAL(kind=DP) :: wslen_qq (20*nq1*nq2*nq3)
     !! local real-space length for phonons, in units of alat
-    REAL(kind=DP) :: wslen_gg (20*nk1*nk2*nk3)
+    REAL(kind=DP) :: wslen_gg (20*nq1*nq2*nq3)
     !! local real-space length for electron-phonon, in units of alat
     !
     !  Check the bounds
