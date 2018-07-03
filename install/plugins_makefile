@@ -406,8 +406,8 @@ west_distclean:
 	   rm -f ../archive/$(WEST).tar.gz
 
 SternheimerGW_clean:
-	if test -d ../SternheimerGW/src; then \
-	  cd ../SternheimerGW/src ; $(MAKE) clean ; \
+	if test -d ../SternheimerGW; then \
+	  cd ../SternheimerGW ; $(MAKE) clean ; \
 	fi
 	- rm -rf ./make-SternheimerGW
 
