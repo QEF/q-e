@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on  1Jul2018 at 15:57: 6 
+     Program EPW v.5.0.0 starts on  3Jul2018 at 12:50:47 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -113,7 +113,7 @@
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026001
+     IFC last   -0.0026003
      Norm of the difference between old and new effective charges:    0.0000000
      Norm of the difference between old and new force-constants:    0.0001053
      Imposed crystal ASR
@@ -124,8 +124,8 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        18Mb
-                   VmPeak =       239Mb
+     Memory usage:  VmHWM =        14Mb
+                   VmPeak =       247Mb
      ===================================================================
      
      Using uniform q-mesh:    7   7   7
@@ -179,31 +179,31 @@
      Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      6.8620       0.100000E+14       0.248431E-02  x-axis
-                                                   0.336890E-02  y-axis
-                                                   0.557498E-02  z-axis
-                                                   0.380940E-02     avg
-                                                     0.2370E-03     Err
-      500.000      7.0136       0.100000E+14       0.141407E-01  x-axis
-                                                   0.193229E-01  y-axis
-                                                   0.322869E-01  z-axis
-                                                   0.219168E-01     avg
-                                                     0.1413E-02     Err
+      400.000      6.8620       0.100000E+14       0.578173E-02  x-axis
+                                                   0.778638E-02  y-axis
+                                                   0.102963E-01  z-axis
+                                                   0.795480E-02     avg
+                                                     0.1550E-03     Err
+      500.000      7.0136       0.100000E+14       0.332919E-01  x-axis
+                                                   0.451450E-01  y-axis
+                                                   0.589510E-01  z-axis
+                                                   0.457960E-01     avg
+                                                     0.9350E-03     Err
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      7.0305       0.999996E+13       0.223359E+02  x-axis
-                                                   0.223359E+02  y-axis
-                                                   0.363754E+02  z-axis
-                                                   0.270158E+02     avg
-                                                     0.6675E+01     Err
-      500.000      6.8729       0.999999E+13       0.146338E+02  x-axis
-                                                   0.146338E+02  y-axis
-                                                   0.238209E+02  z-axis
-                                                   0.176961E+02     avg
-                                                     0.4470E+01     Err
+      400.000      7.0305       0.999995E+13       0.342030E+02  x-axis
+                                                   0.342030E+02  y-axis
+                                                   0.531325E+02  z-axis
+                                                   0.405129E+02     avg
+                                                     0.1712E+01     Err
+      500.000      6.8729       0.999998E+13       0.232978E+02  x-axis
+                                                   0.232978E+02  y-axis
+                                                   0.361117E+02  z-axis
+                                                   0.275691E+02     avg
+                                                     0.1147E+01     Err
      Total time so far
      MOBITER      :      0.00s CPU      0.00s WALL (       1 calls)
 
@@ -245,33 +245,33 @@
      Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      6.8620       0.100000E+14       0.251658E-02  x-axis
-                                                   0.340725E-02  y-axis
-                                                   0.579327E-02  z-axis
-                                                   0.390570E-02     avg
-                                                     0.9630E-04     Err
-      500.000      7.0136       0.100000E+14       0.143291E-01  x-axis
-                                                   0.195470E-01  y-axis
-                                                   0.336216E-01  z-axis
-                                                   0.224992E-01     avg
-                                                     0.5824E-03     Err
+      400.000      6.8620       0.100000E+14       0.579235E-02  x-axis
+                                                   0.781949E-02  y-axis
+                                                   0.103095E-01  z-axis
+                                                   0.797377E-02     avg
+                                                     0.1897E-04     Err
+      500.000      7.0136       0.100000E+14       0.333592E-01  x-axis
+                                                   0.453494E-01  y-axis
+                                                   0.590312E-01  z-axis
+                                                   0.459133E-01     avg
+                                                     0.1173E-03     Err
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      7.0305       0.999996E+13       0.202631E+02  x-axis
-                                                   0.202631E+02  y-axis
-                                                   0.318419E+02  z-axis
-                                                   0.241227E+02     avg
-                                                     0.2893E+01     Err
-      500.000      6.8729       0.999999E+13       0.132273E+02  x-axis
-                                                   0.132273E+02  y-axis
-                                                   0.207564E+02  z-axis
-                                                   0.157370E+02     avg
-                                                     0.1959E+01     Err
+      400.000      7.0305       0.999995E+13       0.340643E+02  x-axis
+                                                   0.340643E+02  y-axis
+                                                   0.523807E+02  z-axis
+                                                   0.401697E+02     avg
+                                                     0.3431E+00     Err
+      500.000      6.8729       0.999998E+13       0.232078E+02  x-axis
+                                                   0.232078E+02  y-axis
+                                                   0.356049E+02  z-axis
+                                                   0.273401E+02     avg
+                                                     0.2290E+00     Err
      Total time so far
-     MOBITER      :     57.26s CPU     60.12s WALL (       2 calls)
+     MOBITER      :     65.20s CPU     67.98s WALL (       2 calls)
 
 
      Iteration number:         5 
@@ -281,8 +281,8 @@
      ===================================================================
 
      ===================================================================
-     Memory usage:  VmHWM =        30Mb
-                   VmPeak =       278Mb
+     Memory usage:  VmHWM =        26Mb
+                   VmPeak =       286Mb
      ===================================================================
 
  
@@ -294,16 +294,16 @@
  
  
      Electron-Phonon interpolation
-     ephwann      :     57.91s CPU     60.80s WALL (       1 calls)
-     ep-interp    :     57.51s CPU     60.39s WALL (     344 calls)
+     ephwann      :     65.83s CPU     68.63s WALL (       1 calls)
+     ep-interp    :     65.46s CPU     68.26s WALL (     344 calls)
  
      DynW2B       :      0.01s CPU      0.02s WALL (     344 calls)
-     HamW2B       :      9.70s CPU      9.93s WALL (  236670 calls)
-     ephW2Bp      :      1.02s CPU      3.44s WALL (     344 calls)
+     HamW2B       :     10.50s CPU     10.55s WALL (  236670 calls)
+     ephW2Bp      :      1.76s CPU      4.36s WALL (     344 calls)
  
  
      Total program execution
-     EPW          :    57.91s CPU     1m 0.80s WALL
+     EPW          :  1m 5.83s CPU     1m 8.63s WALL
 
                                                                                           
  Please consider citing:                                                                  

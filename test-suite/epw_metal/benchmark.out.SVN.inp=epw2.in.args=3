@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on  1Jul2018 at 13:24:35 
+     Program EPW v.5.0.0 starts on  3Jul2018 at 12:35:24 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -134,9 +134,9 @@
      Using radial grid of 1281 points,  2 beta functions with: 
                 l(1) =   2
                 l(2) =   1
-     EPW          :     0.44s CPU         0.46s WALL
+     EPW          :     0.30s CPU         0.31s WALL
 
-     EPW          :     0.68s CPU         0.70s WALL
+     EPW          :     0.54s CPU         0.56s WALL
 
      No wavefunction gauge setting applied
      -------------------------------------------------------------------
@@ -238,7 +238,7 @@
      (  -0.08268  -0.08268   0.08268) :   1.58499
  
      -------------------------------------------------------------------
-     WANNIER      :      9.73s CPU      9.90s WALL (       1 calls)
+     WANNIER      :     10.82s CPU     10.90s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
@@ -247,7 +247,7 @@
      Calculating kmap and kgmap
      Progress  kmap: ###########################
      Progress kgmap: ########################################
-     kmaps        :     10.08s CPU     10.49s WALL (       1 calls)
+     kmaps        :     11.72s CPU     11.96s WALL (       1 calls)
 
      Reading interatomic force constants
 
@@ -393,7 +393,7 @@
 
      ===================================================================
      Memory usage:  VmHWM =        68Mb
-                   VmPeak =       301Mb
+                   VmPeak =       312Mb
      ===================================================================
      
      Using uniform q-mesh:    6   6   6
@@ -471,7 +471,7 @@
      lambda_tr(   2 )=      -0.146973   gamma_tr=      -0.006733 meV   omega=      5.3034 meV
      lambda___(   3 )=       0.255676   gamma___=       0.028608 meV   omega=      8.2884 meV
      lambda_tr(   3 )=      -0.198283   gamma_tr=      -0.022186 meV   omega=      8.2884 meV
-     lambda___( tot )=       0.493116
+     lambda___( tot )=       0.493115
      lambda_tr( tot )=      -0.492229
      -------------------------------------------------------------------
 
@@ -1926,7 +1926,7 @@
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
+     lambda_tr(   3 )=      -0.011604   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
      lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
@@ -1976,7 +1976,7 @@
      lambda___(   3 )=       0.115530   gamma___=       0.014599 meV   omega=      8.8081 meV
      lambda_tr(   3 )=       0.315166   gamma_tr=       0.039826 meV   omega=      8.8081 meV
      lambda___( tot )=       0.135679
-     lambda_tr( tot )=       0.373360
+     lambda_tr( tot )=       0.373361
      -------------------------------------------------------------------
 
 
@@ -2295,7 +2295,7 @@
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda___( tot )=       0.303281
+     lambda___( tot )=       0.303280
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -3888,35 +3888,35 @@
 
      ===================================================================
      Memory usage:  VmHWM =        68Mb
-                   VmPeak =       301Mb
+                   VmPeak =       312Mb
      ===================================================================
 
  
      Unfolding on the coarse grid
-     elphon_wrap  :    149.78s CPU    152.27s WALL (       1 calls)
+     elphon_wrap  :    172.31s CPU    174.13s WALL (       1 calls)
  
      INITIALIZATION: 
  
-     init_vloc    :      0.06s CPU      0.06s WALL (      29 calls)
-     init_us_1    :      1.81s CPU      1.82s WALL (      29 calls)
+     init_vloc    :      0.05s CPU      0.05s WALL (      29 calls)
+     init_us_1    :      1.78s CPU      1.78s WALL (      29 calls)
  
  
      Electron-Phonon interpolation
-     ephwann      :      2.44s CPU      2.63s WALL (       1 calls)
-     ep-interp    :      2.27s CPU      2.41s WALL (     216 calls)
-     PH SELF-ENER :      0.13s CPU      0.14s WALL (     216 calls)
+     ephwann      :      2.43s CPU      2.56s WALL (       1 calls)
+     ep-interp    :      2.25s CPU      2.34s WALL (     216 calls)
+     PH SELF-ENER :      0.15s CPU      0.15s WALL (     216 calls)
  
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
      Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
      ep: step 1   :      0.00s CPU      0.01s WALL (      81 calls)
      ep: step 2   :      0.02s CPU      0.03s WALL (      81 calls)
      DynW2B       :      0.01s CPU      0.01s WALL (     216 calls)
-     HamW2B       :      0.96s CPU      1.01s WALL (   93744 calls)
-     ephW2Bp      :      0.03s CPU      0.06s WALL (     216 calls)
+     HamW2B       :      0.88s CPU      0.93s WALL (   93744 calls)
+     ephW2Bp      :      0.04s CPU      0.06s WALL (     216 calls)
  
  
      Total program execution
-     EPW          :  2m42.63s CPU     2m45.50s WALL
+     EPW          :  3m 6.10s CPU     3m 8.15s WALL
 
                                                                                           
  Please consider citing:                                                                  

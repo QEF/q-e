@@ -658,9 +658,9 @@
                   !
                   ! Calculate distance squared |r-R|^2 
                   !
-                  ndiff(1) = n1 - i1*nq1 -tau(1,na)
-                  ndiff(2) = n2 - i2*nq2 -tau(2,na)
-                  ndiff(3) = n3 - i3*nq3 -tau(3,na)
+                  ndiff(1) = n1 - i1*nq1 +tau(1,na)
+                  ndiff(2) = n2 - i2*nq2 +tau(2,na)
+                  ndiff(3) = n3 - i3*nq3 +tau(3,na)
                   DO ipol = 1, 3
                     DO jpol = 1, 3
                       dist(i) = dist(i) + dble(ndiff(ipol))*adot(ipol,jpol)*dble(ndiff(jpol))

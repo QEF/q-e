@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on  1Jul2018 at 15:53:16 
+     Program EPW v.5.0.0 starts on  3Jul2018 at 12:46:39 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -328,9 +328,9 @@
                 l(4) =   1
                 l(5) =   2
                 l(6) =   2
-     EPW          :     0.49s CPU         0.51s WALL
+     EPW          :     0.33s CPU         0.35s WALL
 
-     EPW          :     0.59s CPU         0.61s WALL
+     EPW          :     0.44s CPU         0.46s WALL
 
      No wavefunction gauge setting applied
      -------------------------------------------------------------------
@@ -808,17 +808,17 @@
  
      Wannier Function centers (cartesian, alat) and spreads (ang):
  
-     (   0.04064   0.04064   0.04064) :   2.52564
-     (   0.04064  -0.04064  -0.04064) :   2.52564
-     (  -0.04064   0.04064  -0.04064) :   2.52564
-     (  -0.04064  -0.04064   0.04064) :   2.52564
-     (   0.33426   0.33426   0.33426) :   2.12918
-     (   0.33426   0.16574   0.16574) :   2.12918
-     (   0.16574   0.33426   0.16574) :   2.12918
-     (   0.16574   0.16574   0.33426) :   2.12918
+     (   0.04064   0.04064   0.04064) :   2.52563
+     (   0.04064  -0.04064  -0.04064) :   2.52563
+     (  -0.04064   0.04064  -0.04064) :   2.52563
+     (  -0.04064  -0.04064   0.04064) :   2.52563
+     (   0.33426   0.33426   0.33426) :   2.12919
+     (   0.33426   0.16574   0.16574) :   2.12919
+     (   0.16574   0.33426   0.16574) :   2.12919
+     (   0.16574   0.16574   0.33426) :   2.12919
  
      -------------------------------------------------------------------
-     WANNIER      :     12.23s CPU     12.79s WALL (       1 calls)
+     WANNIER      :     12.82s CPU     13.18s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
@@ -827,12 +827,12 @@
      Calculating kmap and kgmap
      Progress  kmap: ########################################
      Progress kgmap: ########################################
-     kmaps        :      0.20s CPU      0.22s WALL (       1 calls)
+     kmaps        :      0.22s CPU      0.24s WALL (       1 calls)
 
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026001
+     IFC last   -0.0026003
      Norm of the difference between old and new effective charges:    0.0000000
      Norm of the difference between old and new force-constants:    0.0001053
      Imposed crystal ASR
@@ -916,7 +916,7 @@
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026001
+     IFC last   -0.0026003
      Norm of the difference between old and new effective charges:    0.0000000
      Norm of the difference between old and new force-constants:    0.0001053
      Imposed crystal ASR
@@ -927,8 +927,8 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        73Mb
-                   VmPeak =       306Mb
+     Memory usage:  VmHWM =        69Mb
+                   VmPeak =       317Mb
      ===================================================================
      
      Using q-mesh file: ./LGX.txt
@@ -953,36 +953,36 @@
      Progression iq (fine) =         50/       100
      Progression iq (fine) =        100/       100
      ===================================================================
-     Memory usage:  VmHWM =        73Mb
-                   VmPeak =       306Mb
+     Memory usage:  VmHWM =        69Mb
+                   VmPeak =       317Mb
      ===================================================================
 
  
      Unfolding on the coarse grid
-     elphon_wrap  :     25.06s CPU     25.63s WALL (       1 calls)
+     elphon_wrap  :     27.65s CPU     28.15s WALL (       1 calls)
  
      INITIALIZATION: 
  
      set_drhoc    :      0.11s CPU      0.11s WALL (       9 calls)
-     init_vloc    :      0.00s CPU      0.00s WALL (      10 calls)
-     init_us_1    :      0.06s CPU      0.06s WALL (      10 calls)
+     init_vloc    :      0.01s CPU      0.00s WALL (      10 calls)
+     init_us_1    :      0.07s CPU      0.07s WALL (      10 calls)
  
  
      Electron-Phonon interpolation
-     ephwann      :      4.35s CPU      5.42s WALL (       1 calls)
-     ep-interp    :      2.95s CPU      3.67s WALL (     100 calls)
+     ephwann      :      4.86s CPU      5.88s WALL (       1 calls)
+     ep-interp    :      3.36s CPU      4.12s WALL (     100 calls)
  
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
-     Ham: step 2  :      0.04s CPU      0.08s WALL (       1 calls)
-     ep: step 1   :      0.03s CPU      0.03s WALL (      48 calls)
-     ep: step 2   :      0.54s CPU      0.58s WALL (      48 calls)
+     Ham: step 2  :      0.04s CPU      0.07s WALL (       1 calls)
+     ep: step 1   :      0.04s CPU      0.04s WALL (      48 calls)
+     ep: step 2   :      0.58s CPU      0.61s WALL (      48 calls)
      DynW2B       :      0.00s CPU      0.00s WALL (     100 calls)
-     HamW2B       :      0.83s CPU      0.84s WALL (   20200 calls)
-     ephW2Bp      :      0.31s CPU      0.99s WALL (     100 calls)
+     HamW2B       :      0.89s CPU      0.90s WALL (   20200 calls)
+     ephW2Bp      :      0.52s CPU      1.25s WALL (     100 calls)
  
  
      Total program execution
-     EPW          :    42.23s CPU        44.45s WALL
+     EPW          :    45.77s CPU        47.68s WALL
 
                                                                                           
  Please consider citing:                                                                  
