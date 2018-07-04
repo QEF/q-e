@@ -5,7 +5,6 @@ include ../../make.inc
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../CPV/src
 
-IFLAGS=#-DDEBUG_QECOUPLE
 TLDEPS=pw cp
 
 COUPLEOBJS= \

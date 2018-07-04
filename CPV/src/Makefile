@@ -7,8 +7,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../KS_Solvers/Davidson
 
-#IFLAGS=
-
 FOBJS = \
 berryion.o \
 bforceion.o \

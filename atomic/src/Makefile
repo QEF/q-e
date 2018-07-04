@@ -6,7 +6,6 @@ include ../../make.inc
 
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS)
-IFLAGS=
 
 LD1OBJS = \
 add_exchange.o \

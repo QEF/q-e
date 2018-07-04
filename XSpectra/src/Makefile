@@ -8,7 +8,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../KS_Solvers/Davidson \
           $(MOD_FLAG)../../dft-d3
-IFLAGS=
 
 XOBJS = \
 ./gaunt_mod.o \
