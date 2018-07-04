@@ -2,8 +2,6 @@
 
 include ../../make.inc
 
-IFLAGS         = -I../../include
-
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \

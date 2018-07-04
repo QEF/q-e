@@ -5,8 +5,6 @@ include ../make.inc
 # location of needed modules and included files (if any)
 MODFLAGS=$(BASEMOD_FLAGS) $(MOD_FLAG)$(TOPDIR)/PW/src
 
-IFLAGS=
-
 LR_MODULES = \
 adddvscf.o \
 addusdbec.o \

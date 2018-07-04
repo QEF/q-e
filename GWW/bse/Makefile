@@ -1,9 +1,6 @@
 # Makefile for BSE
 #
- include ../../make.inc
-
-# location of include files
-IFLAGS=-I../../include
+include ../../make.inc
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \

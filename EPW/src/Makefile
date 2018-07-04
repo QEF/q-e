@@ -7,7 +7,6 @@ include make.libs
 # use recursive definitions in Makefile to modify the PATH for modules
 #
 
-IFLAGS   = -I../../include  -I../../UtilXlib/ 
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../PHonon/PH \
