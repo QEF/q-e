@@ -1,4 +1,10 @@
-New in development version:
+New in 6.3 version:
+  * New implementation, using  a more robust algorithm for the Wigner-Size construction in  EPW. 
+    (Samuel Ponce and Carla Verdi) 
+  * New application for optical spectra computation using optimized basis sets 
+   (Paolo Umari, Nicola Marzari and Giovanni Prandini).  
+
+  * Improved interface between TDDFPT and Environ using plugins( Oliviero Andreussi)  
 
   * Improved FFT threading (Ye Luo, Argonne)
 
@@ -76,7 +82,7 @@ Problems fixed in development version:
 
   * PWscf in "manypw" mode wasn't working due to a bad IF (Dec.12, 2017)
 
-Incompatible changes in development version:
+Incompatible changes in 6.3  version:
 
   * EPW: Removal of q-point paralelization (not very used and generated large code 
     duplication) ==> removal of the parallel_k and parallel_q input variables. 
