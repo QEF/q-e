@@ -1,8 +1,3 @@
-Problems fixed in development version:
-
-  * The restart option in turboEELS (turbo_eels.x) with ultrasoft pseudopotentials
-    was not working.
-
 New in 6.3 version:
   * New implementation, using  a more robust algorithm for the Wigner-Size construction in  EPW. 
     (Samuel Ponce and Carla Verdi) 
@@ -31,7 +26,7 @@ New in 6.3 version:
          Support for exclude bands
          Calculation of velocity beyond the local approximation (experimental)
 
-Problems fixed in development version:
+Problems fixed in 6.3 version:
 
   * Stress with hybrid functionals and Gamma point was grossly wrong
     (5ed148646)
