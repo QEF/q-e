@@ -1,0 +1,103 @@
+! Implemented: cm
+
+#if defined(__CUDA)
+#define {vname}
+PROGRAM test_mp_gatherv_{vname}_gpu
+!
+! Simple program to check the functionalities of mp_gather.
+!
+!
+    USE cudafor
+#if defined(__MPI)
+    USE MPI
+#endif
+    USE util_param, ONLY : DP
+    USE mp, ONLY : mp_allgather, mp_type_create_column_section
+    USE mp_world, ONLY : mp_world_start, mp_world_end, mpime, &
+                          root, nproc, world_comm
+    USE tester
+    IMPLICIT NONE
+    !
+    TYPE(tester_t) :: test
+    INTEGER :: rnk, valid_sum, world_group = 0
+    INTEGER, PARAMETER :: datasize = {datasize}
+    !
+    ! Stuff for comparing with CPU implementation
+    integer :: i
+    REAL(DP) :: rnd{size}
+    !
+    ! test variable
+    {type}, ALLOCATABLE, DEVICE :: all_{vname}_d{all}
+    {type} :: {vname}_h{size}
+    {type}, ALLOCATABLE :: all_{vname}_h{all}
+    {type}, ALLOCATABLE :: aux_h{all}
+    INTEGER, ALLOCATABLE :: recvcount(:)
+    INTEGER, ALLOCATABLE :: displs(:)
+    INTEGER :: istart, iend, column_section_type_d, column_section_type_h
+    
+    !
+    CALL test%init()
+    
+#if defined(__MPI)    
+    world_group = MPI_COMM_WORLD
+#endif
+    CALL mp_world_start(world_group)
+    !
+    ALLOCATE(all_{vname}_h(datasize, nproc), all_{vname}_d(datasize, nproc))
+    ALLOCATE(aux_h(datasize, nproc))
+    !
+    ! The sum of n ints with rank=1 is (starting from 1)
+    !  sum = (n+1)*n*0.5
+    !
+    ! What follows is a dirty trick 
+    !
+    rnk = SIZE(SHAPE({vname}_h)) - 1
+    valid_sum = (datasize**(rnk)) * (nproc+1)*nproc/2
+    !
+    !
+    ALLOCATE(recvcount(nproc), displs(nproc))
+    CALL divide_all(world_group,nproc,istart,iend,recvcount,displs)
+    CALL mp_type_create_column_section(all_{vname}_d(1,1), 0, datasize, datasize, column_section_type_d)
+    CALL mp_type_create_column_section(all_{vname}_h(1,1), 0, datasize, datasize, column_section_type_h)
+    !
+    all_{vname}_h = mpime + 1
+    all_{vname}_d = all_{vname}_h
+    DO i=0, nproc-1
+      !CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+      CALL mp_allgather(all_{vname}_d, column_section_type_d, recvcount , displs, world_comm)
+      all_{vname}_h = all_{vname}_d
+      !
+      CALL test%assert_equal(SUM(all_{vname}_h), {typeconv} (valid_sum ) )
+    END DO
+    !
+    !
+    ! Test against CPU implementation
+    CALL save_random_seed("test_mp_gatherv_{vname}_gpu", mpime)
+    !
+    DO i = 0, nproc-1
+      CALL RANDOM_NUMBER(rnd)
+      all_{vname}_h = {typeconv} ( 10.0 * rnd )
+      all_{vname}_d = all_{vname}_h
+
+      aux_h = 0
+      CALL mp_allgather(all_{vname}_d, column_section_type_d, recvcount , displs, world_comm)
+      CALL mp_allgather(all_{vname}_h, column_section_type_h, recvcount , displs, world_comm)
+      aux_h = all_{vname}_d
+      CALL test%assert_{compare}( SUM(all_{vname}_h) / (nproc * 10.d0) , &
+                              SUM(aux_h) / (nproc * 10.d0) )
+    END DO
+    !
+    DEALLOCATE(all_{vname}_h, all_{vname}_d, aux_h, recvcount, displs)
+    !
+    CALL collect_results(test)
+    !
+    CALL mp_world_end()
+    !
+    IF (mpime .eq. 0) CALL test%print()
+    !
+END PROGRAM test_mp_gatherv_{vname}_gpu
+#else
+PROGRAM test_mp_gatherv_{vname}_gpu
+    CALL no_test()
+END PROGRAM test_mp_gatherv_{vname}_gpu
+#endif
