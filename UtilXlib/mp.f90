@@ -109,7 +109,7 @@
                          mp_gatherv_inplace_cplx_array
 #if defined(__CUDA)
         MODULE PROCEDURE mp_gather_i1_gpu, mp_gather_iv_gpu, mp_gatherv_rv_gpu, mp_gatherv_iv_gpu, &
-          mp_gatherv_rm_gpu, mp_gatherv_im_gpu, mp_gatherv_cv_gpu, mp_gatherv_inplace_cplx_array
+          mp_gatherv_rm_gpu, mp_gatherv_im_gpu, mp_gatherv_cv_gpu, mp_gatherv_inplace_cplx_array_gpu
 #endif
       END INTERFACE
 
@@ -144,6 +144,9 @@
 
       INTERFACE mp_type_create_column_section
         MODULE PROCEDURE mp_type_create_cplx_column_section
+#if defined(__CUDA)
+        MODULE PROCEDURE mp_type_create_cplx_column_section_gpu
+#endif
       END INTERFACE
 
 !------------------------------------------------------------------------------!
@@ -5100,6 +5103,28 @@ END SUBROUTINE mp_type_free
 #endif
         RETURN
      END SUBROUTINE mp_allgatherv_inplace_cplx_array_gpu
+
+     SUBROUTINE mp_type_create_cplx_column_section_gpu(dummy, start, length, stride, mytype)
+        IMPLICIT NONE
+        !
+        COMPLEX (DP), DEVICE, INTENT(IN) :: dummy
+        INTEGER, INTENT(IN) :: start, length, stride
+        INTEGER, INTENT(OUT) :: mytype
+        !
+#if defined(__MPI)
+        INTEGER :: ierr
+        !
+        CALL MPI_TYPE_CREATE_SUBARRAY(1, stride, length, start, MPI_ORDER_FORTRAN,&
+                                      MPI_DOUBLE_COMPLEX, mytype, ierr)
+        IF (ierr/=0) CALL mp_stop( 8081 )
+        CALL MPI_Type_commit(mytype, ierr)
+        IF (ierr/=0) CALL mp_stop( 8082 )
+#else
+        mytype = 0;
+#endif
+        !
+        RETURN
+     END SUBROUTINE mp_type_create_cplx_column_section_gpu
 
 !------------------------------------------------------------------------------!
 
