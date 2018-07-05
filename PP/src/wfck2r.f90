@@ -6,10 +6,28 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 ! -----------------------------------------------------------------
-! This program reads the prefix.wfc in G-space written by QE and 
-! writes it in real space prefix.wfc_r.
+! This program reads wavefunctions in G-space written by QE,
+! re-writes then in real space
 ! Warning: The wfc is written out in real space on the smooth
 ! grid, as such it occupies much more disk space then that in G-space.
+!
+! input: a namelist like 
+! &inputpp
+!   prefix='MgB2',
+!   outdir='./tmp',
+! /
+! with "prefix" and "outdir" as in the scf/nscf/band calculation. 
+! A file "prefix".wfc_r1 will be created in "outdir" with wfcs in real space
+! The code prints on screen the dimension of the grid and of the wavefunctions
+
+! Other namelist variables
+! To select a subset of k-points and bands (by default, everything is written):
+!        * first_k
+!        * last_k
+!        * first_band
+!        * last_band
+! To create a file that is readable by matlab (false by default):
+!        * lmatlab=.true.
 !
 ! Program written by Matteo Calandra.
 ! Modified by D. Ceresoli (2017)
