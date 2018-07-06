@@ -57,7 +57,7 @@
 #endif
      CONTAINS
      !
-     SUBROUTINE using_becp_r(intento)
+     SUBROUTINE using_becp_r(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -67,9 +67,13 @@
          USE becmod, ONLY : becp
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
+         !
+#if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
-#if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, debug_info
          !
          IF (becp_r_ood) THEN
              IF (.not. allocated(becp_d%r_d)) THEN
@@ -112,12 +116,16 @@
 #endif
      END SUBROUTINE using_becp_r
      !
-     SUBROUTINE using_becp_r_d(intento)
+     SUBROUTINE using_becp_r_d(intento, debug_info)
          !
          USE becmod, ONLY : becp
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
+         !
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, debug_info
          !
          IF (.not. allocated(becp%r)) THEN
              IF (intento /= 2) print *, "WARNING: sync of becp%r_d with unallocated array and intento /= 2?"
@@ -154,7 +162,7 @@
 #endif
      END SUBROUTINE using_becp_r_d
      !
-     SUBROUTINE using_becp_k(intento)
+     SUBROUTINE using_becp_k(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -164,9 +172,13 @@
          USE becmod, ONLY : becp
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
+         !
+#if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
-#if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, debug_info
          !
          IF (becp_k_ood) THEN
              IF (.not. allocated(becp_d%k_d)) THEN
@@ -209,12 +221,16 @@
 #endif
      END SUBROUTINE using_becp_k
      !
-     SUBROUTINE using_becp_k_d(intento)
+     SUBROUTINE using_becp_k_d(intento, debug_info)
          !
          USE becmod, ONLY : becp
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
+         !
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, debug_info
          !
          IF (.not. allocated(becp%k)) THEN
              IF (intento /= 2) print *, "WARNING: sync of becp%k_d with unallocated array and intento /= 2?"
@@ -251,7 +267,7 @@
 #endif
      END SUBROUTINE using_becp_k_d
      !
-     SUBROUTINE using_becp_nc(intento)
+     SUBROUTINE using_becp_nc(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -261,9 +277,13 @@
          USE becmod, ONLY : becp
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
+         !
+#if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
-#if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, debug_info
          !
          IF (becp_nc_ood) THEN
              IF (.not. allocated(becp_d%nc_d)) THEN
@@ -306,12 +326,16 @@
 #endif
      END SUBROUTINE using_becp_nc
      !
-     SUBROUTINE using_becp_nc_d(intento)
+     SUBROUTINE using_becp_nc_d(intento, debug_info)
          !
          USE becmod, ONLY : becp
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
+         !
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, debug_info
          !
          IF (.not. allocated(becp%nc)) THEN
              IF (intento /= 2) print *, "WARNING: sync of becp%nc_d with unallocated array and intento /= 2?"

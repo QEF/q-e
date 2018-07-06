@@ -75,7 +75,7 @@
 #endif
      CONTAINS
      !
-     SUBROUTINE using_indv(intento)
+     SUBROUTINE using_indv(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -85,9 +85,12 @@
          USE uspp, ONLY : indv
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_indv ", debug_info, indv_ood
          !
          IF (indv_ood) THEN
              IF (.not. allocated(indv_d)) THEN
@@ -111,12 +114,15 @@
 #endif
      END SUBROUTINE using_indv
      !
-     SUBROUTINE using_indv_d(intento)
+     SUBROUTINE using_indv_d(intento, debug_info)
          !
          USE uspp, ONLY : indv
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_indv_d ", debug_info, indv_d_ood
          !
          IF (.not. allocated(indv)) THEN
              IF (intento /= 2) print *, "WARNING: sync of indv_d with unallocated array and intento /= 2?"
@@ -145,7 +151,7 @@
 #endif
      END SUBROUTINE using_indv_d
      !
-     SUBROUTINE using_nhtol(intento)
+     SUBROUTINE using_nhtol(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -155,9 +161,12 @@
          USE uspp, ONLY : nhtol
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_nhtol ", debug_info, nhtol_ood
          !
          IF (nhtol_ood) THEN
              IF (.not. allocated(nhtol_d)) THEN
@@ -181,12 +190,15 @@
 #endif
      END SUBROUTINE using_nhtol
      !
-     SUBROUTINE using_nhtol_d(intento)
+     SUBROUTINE using_nhtol_d(intento, debug_info)
          !
          USE uspp, ONLY : nhtol
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_nhtol_d ", debug_info, nhtol_d_ood
          !
          IF (.not. allocated(nhtol)) THEN
              IF (intento /= 2) print *, "WARNING: sync of nhtol_d with unallocated array and intento /= 2?"
@@ -215,7 +227,7 @@
 #endif
      END SUBROUTINE using_nhtol_d
      !
-     SUBROUTINE using_nhtolm(intento)
+     SUBROUTINE using_nhtolm(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -225,9 +237,12 @@
          USE uspp, ONLY : nhtolm
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_nhtolm ", debug_info, nhtolm_ood
          !
          IF (nhtolm_ood) THEN
              IF (.not. allocated(nhtolm_d)) THEN
@@ -251,12 +266,15 @@
 #endif
      END SUBROUTINE using_nhtolm
      !
-     SUBROUTINE using_nhtolm_d(intento)
+     SUBROUTINE using_nhtolm_d(intento, debug_info)
          !
          USE uspp, ONLY : nhtolm
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_nhtolm_d ", debug_info, nhtolm_d_ood
          !
          IF (.not. allocated(nhtolm)) THEN
              IF (intento /= 2) print *, "WARNING: sync of nhtolm_d with unallocated array and intento /= 2?"
@@ -285,7 +303,7 @@
 #endif
      END SUBROUTINE using_nhtolm_d
      !
-     SUBROUTINE using_ijtoh(intento)
+     SUBROUTINE using_ijtoh(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -295,9 +313,12 @@
          USE uspp, ONLY : ijtoh
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_ijtoh ", debug_info, ijtoh_ood
          !
          IF (ijtoh_ood) THEN
              IF (.not. allocated(ijtoh_d)) THEN
@@ -321,12 +342,15 @@
 #endif
      END SUBROUTINE using_ijtoh
      !
-     SUBROUTINE using_ijtoh_d(intento)
+     SUBROUTINE using_ijtoh_d(intento, debug_info)
          !
          USE uspp, ONLY : ijtoh
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_ijtoh_d ", debug_info, ijtoh_d_ood
          !
          IF (.not. allocated(ijtoh)) THEN
              IF (intento /= 2) print *, "WARNING: sync of ijtoh_d with unallocated array and intento /= 2?"
@@ -355,7 +379,7 @@
 #endif
      END SUBROUTINE using_ijtoh_d
      !
-     SUBROUTINE using_indv_ijkb0(intento)
+     SUBROUTINE using_indv_ijkb0(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -365,9 +389,12 @@
          USE uspp, ONLY : indv_ijkb0
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_indv_ijkb0 ", debug_info, indv_ijkb0_ood
          !
          IF (indv_ijkb0_ood) THEN
              IF (.not. allocated(indv_ijkb0_d)) THEN
@@ -391,12 +418,15 @@
 #endif
      END SUBROUTINE using_indv_ijkb0
      !
-     SUBROUTINE using_indv_ijkb0_d(intento)
+     SUBROUTINE using_indv_ijkb0_d(intento, debug_info)
          !
          USE uspp, ONLY : indv_ijkb0
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_indv_ijkb0_d ", debug_info, indv_ijkb0_d_ood
          !
          IF (.not. allocated(indv_ijkb0)) THEN
              IF (intento /= 2) print *, "WARNING: sync of indv_ijkb0_d with unallocated array and intento /= 2?"
@@ -425,7 +455,7 @@
 #endif
      END SUBROUTINE using_indv_ijkb0_d
      !
-     SUBROUTINE using_vkb(intento)
+     SUBROUTINE using_vkb(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -435,9 +465,12 @@
          USE uspp, ONLY : vkb
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_vkb ", debug_info, vkb_ood
          !
          IF (vkb_ood) THEN
              IF (.not. allocated(vkb_d)) THEN
@@ -461,12 +494,15 @@
 #endif
      END SUBROUTINE using_vkb
      !
-     SUBROUTINE using_vkb_d(intento)
+     SUBROUTINE using_vkb_d(intento, debug_info)
          !
          USE uspp, ONLY : vkb
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_vkb_d ", debug_info, vkb_d_ood
          !
          IF (.not. allocated(vkb)) THEN
              IF (intento /= 2) print *, "WARNING: sync of vkb_d with unallocated array and intento /= 2?"
@@ -495,7 +531,7 @@
 #endif
      END SUBROUTINE using_vkb_d
      !
-     SUBROUTINE using_becsum(intento)
+     SUBROUTINE using_becsum(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -505,9 +541,12 @@
          USE uspp, ONLY : becsum
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_becsum ", debug_info, becsum_ood
          !
          IF (becsum_ood) THEN
              IF (.not. allocated(becsum_d)) THEN
@@ -531,12 +570,15 @@
 #endif
      END SUBROUTINE using_becsum
      !
-     SUBROUTINE using_becsum_d(intento)
+     SUBROUTINE using_becsum_d(intento, debug_info)
          !
          USE uspp, ONLY : becsum
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_becsum_d ", debug_info, becsum_d_ood
          !
          IF (.not. allocated(becsum)) THEN
              IF (intento /= 2) print *, "WARNING: sync of becsum_d with unallocated array and intento /= 2?"
@@ -565,7 +607,7 @@
 #endif
      END SUBROUTINE using_becsum_d
      !
-     SUBROUTINE using_ebecsum(intento)
+     SUBROUTINE using_ebecsum(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -575,9 +617,12 @@
          USE uspp, ONLY : ebecsum
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_ebecsum ", debug_info, ebecsum_ood
          !
          IF (ebecsum_ood) THEN
              IF (.not. allocated(ebecsum_d)) THEN
@@ -601,12 +646,15 @@
 #endif
      END SUBROUTINE using_ebecsum
      !
-     SUBROUTINE using_ebecsum_d(intento)
+     SUBROUTINE using_ebecsum_d(intento, debug_info)
          !
          USE uspp, ONLY : ebecsum
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_ebecsum_d ", debug_info, ebecsum_d_ood
          !
          IF (.not. allocated(ebecsum)) THEN
              IF (intento /= 2) print *, "WARNING: sync of ebecsum_d with unallocated array and intento /= 2?"
@@ -635,7 +683,7 @@
 #endif
      END SUBROUTINE using_ebecsum_d
      !
-     SUBROUTINE using_dvan(intento)
+     SUBROUTINE using_dvan(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -645,9 +693,12 @@
          USE uspp, ONLY : dvan
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_dvan ", debug_info, dvan_ood
          !
          IF (dvan_ood) THEN
              IF (.not. allocated(dvan_d)) THEN
@@ -671,12 +722,15 @@
 #endif
      END SUBROUTINE using_dvan
      !
-     SUBROUTINE using_dvan_d(intento)
+     SUBROUTINE using_dvan_d(intento, debug_info)
          !
          USE uspp, ONLY : dvan
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_dvan_d ", debug_info, dvan_d_ood
          !
          IF (.not. allocated(dvan)) THEN
              IF (intento /= 2) print *, "WARNING: sync of dvan_d with unallocated array and intento /= 2?"
@@ -705,7 +759,7 @@
 #endif
      END SUBROUTINE using_dvan_d
      !
-     SUBROUTINE using_deeq(intento)
+     SUBROUTINE using_deeq(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -715,9 +769,12 @@
          USE uspp, ONLY : deeq
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_deeq ", debug_info, deeq_ood
          !
          IF (deeq_ood) THEN
              IF (.not. allocated(deeq_d)) THEN
@@ -741,12 +798,15 @@
 #endif
      END SUBROUTINE using_deeq
      !
-     SUBROUTINE using_deeq_d(intento)
+     SUBROUTINE using_deeq_d(intento, debug_info)
          !
          USE uspp, ONLY : deeq
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_deeq_d ", debug_info, deeq_d_ood
          !
          IF (.not. allocated(deeq)) THEN
              IF (intento /= 2) print *, "WARNING: sync of deeq_d with unallocated array and intento /= 2?"
@@ -775,7 +835,7 @@
 #endif
      END SUBROUTINE using_deeq_d
      !
-     SUBROUTINE using_qq_nt(intento)
+     SUBROUTINE using_qq_nt(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -785,9 +845,12 @@
          USE uspp, ONLY : qq_nt
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_qq_nt ", debug_info, qq_nt_ood
          !
          IF (qq_nt_ood) THEN
              IF (.not. allocated(qq_nt_d)) THEN
@@ -811,12 +874,15 @@
 #endif
      END SUBROUTINE using_qq_nt
      !
-     SUBROUTINE using_qq_nt_d(intento)
+     SUBROUTINE using_qq_nt_d(intento, debug_info)
          !
          USE uspp, ONLY : qq_nt
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_qq_nt_d ", debug_info, qq_nt_d_ood
          !
          IF (.not. allocated(qq_nt)) THEN
              IF (intento /= 2) print *, "WARNING: sync of qq_nt_d with unallocated array and intento /= 2?"
@@ -845,7 +911,7 @@
 #endif
      END SUBROUTINE using_qq_nt_d
      !
-     SUBROUTINE using_qq_at(intento)
+     SUBROUTINE using_qq_at(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -855,9 +921,12 @@
          USE uspp, ONLY : qq_at
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_qq_at ", debug_info, qq_at_ood
          !
          IF (qq_at_ood) THEN
              IF (.not. allocated(qq_at_d)) THEN
@@ -881,12 +950,15 @@
 #endif
      END SUBROUTINE using_qq_at
      !
-     SUBROUTINE using_qq_at_d(intento)
+     SUBROUTINE using_qq_at_d(intento, debug_info)
          !
          USE uspp, ONLY : qq_at
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_qq_at_d ", debug_info, qq_at_d_ood
          !
          IF (.not. allocated(qq_at)) THEN
              IF (intento /= 2) print *, "WARNING: sync of qq_at_d with unallocated array and intento /= 2?"
@@ -915,7 +987,7 @@
 #endif
      END SUBROUTINE using_qq_at_d
      !
-     SUBROUTINE using_nhtoj(intento)
+     SUBROUTINE using_nhtoj(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -925,9 +997,12 @@
          USE uspp, ONLY : nhtoj
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_nhtoj ", debug_info, nhtoj_ood
          !
          IF (nhtoj_ood) THEN
              IF (.not. allocated(nhtoj_d)) THEN
@@ -951,12 +1026,15 @@
 #endif
      END SUBROUTINE using_nhtoj
      !
-     SUBROUTINE using_nhtoj_d(intento)
+     SUBROUTINE using_nhtoj_d(intento, debug_info)
          !
          USE uspp, ONLY : nhtoj
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_nhtoj_d ", debug_info, nhtoj_d_ood
          !
          IF (.not. allocated(nhtoj)) THEN
              IF (intento /= 2) print *, "WARNING: sync of nhtoj_d with unallocated array and intento /= 2?"
@@ -985,7 +1063,7 @@
 #endif
      END SUBROUTINE using_nhtoj_d
      !
-     SUBROUTINE using_qq_so(intento)
+     SUBROUTINE using_qq_so(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -995,9 +1073,12 @@
          USE uspp, ONLY : qq_so
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_qq_so ", debug_info, qq_so_ood
          !
          IF (qq_so_ood) THEN
              IF (.not. allocated(qq_so_d)) THEN
@@ -1021,12 +1102,15 @@
 #endif
      END SUBROUTINE using_qq_so
      !
-     SUBROUTINE using_qq_so_d(intento)
+     SUBROUTINE using_qq_so_d(intento, debug_info)
          !
          USE uspp, ONLY : qq_so
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_qq_so_d ", debug_info, qq_so_d_ood
          !
          IF (.not. allocated(qq_so)) THEN
              IF (intento /= 2) print *, "WARNING: sync of qq_so_d with unallocated array and intento /= 2?"
@@ -1055,7 +1139,7 @@
 #endif
      END SUBROUTINE using_qq_so_d
      !
-     SUBROUTINE using_dvan_so(intento)
+     SUBROUTINE using_dvan_so(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -1065,9 +1149,12 @@
          USE uspp, ONLY : dvan_so
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_dvan_so ", debug_info, dvan_so_ood
          !
          IF (dvan_so_ood) THEN
              IF (.not. allocated(dvan_so_d)) THEN
@@ -1091,12 +1178,15 @@
 #endif
      END SUBROUTINE using_dvan_so
      !
-     SUBROUTINE using_dvan_so_d(intento)
+     SUBROUTINE using_dvan_so_d(intento, debug_info)
          !
          USE uspp, ONLY : dvan_so
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_dvan_so_d ", debug_info, dvan_so_d_ood
          !
          IF (.not. allocated(dvan_so)) THEN
              IF (intento /= 2) print *, "WARNING: sync of dvan_so_d with unallocated array and intento /= 2?"
@@ -1125,7 +1215,7 @@
 #endif
      END SUBROUTINE using_dvan_so_d
      !
-     SUBROUTINE using_deeq_nc(intento)
+     SUBROUTINE using_deeq_nc(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -1135,9 +1225,12 @@
          USE uspp, ONLY : deeq_nc
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_deeq_nc ", debug_info, deeq_nc_ood
          !
          IF (deeq_nc_ood) THEN
              IF (.not. allocated(deeq_nc_d)) THEN
@@ -1161,12 +1254,15 @@
 #endif
      END SUBROUTINE using_deeq_nc
      !
-     SUBROUTINE using_deeq_nc_d(intento)
+     SUBROUTINE using_deeq_nc_d(intento, debug_info)
          !
          USE uspp, ONLY : deeq_nc
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_deeq_nc_d ", debug_info, deeq_nc_d_ood
          !
          IF (.not. allocated(deeq_nc)) THEN
              IF (intento /= 2) print *, "WARNING: sync of deeq_nc_d with unallocated array and intento /= 2?"

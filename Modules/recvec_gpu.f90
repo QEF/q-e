@@ -45,7 +45,7 @@
 #endif
      CONTAINS
      !
-     SUBROUTINE using_gg(intento)
+     SUBROUTINE using_gg(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -55,9 +55,12 @@
          USE gvect, ONLY : gg
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_gg ", debug_info, gg_ood
          !
          IF (gg_ood) THEN
              IF (.not. allocated(gg_d)) THEN
@@ -81,12 +84,15 @@
 #endif
      END SUBROUTINE using_gg
      !
-     SUBROUTINE using_gg_d(intento)
+     SUBROUTINE using_gg_d(intento, debug_info)
          !
          USE gvect, ONLY : gg
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_gg_d ", debug_info, gg_d_ood
          !
          IF (.not. allocated(gg)) THEN
              IF (intento /= 2) print *, "WARNING: sync of gg_d with unallocated array and intento /= 2?"
@@ -115,7 +121,7 @@
 #endif
      END SUBROUTINE using_gg_d
      !
-     SUBROUTINE using_g(intento)
+     SUBROUTINE using_g(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -125,9 +131,12 @@
          USE gvect, ONLY : g
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_g ", debug_info, g_ood
          !
          IF (g_ood) THEN
              IF (.not. allocated(g_d)) THEN
@@ -151,12 +160,15 @@
 #endif
      END SUBROUTINE using_g
      !
-     SUBROUTINE using_g_d(intento)
+     SUBROUTINE using_g_d(intento, debug_info)
          !
          USE gvect, ONLY : g
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_g_d ", debug_info, g_d_ood
          !
          IF (.not. allocated(g)) THEN
              IF (intento /= 2) print *, "WARNING: sync of g_d with unallocated array and intento /= 2?"
@@ -185,7 +197,7 @@
 #endif
      END SUBROUTINE using_g_d
      !
-     SUBROUTINE using_mill(intento)
+     SUBROUTINE using_mill(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -195,9 +207,12 @@
          USE gvect, ONLY : mill
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_mill ", debug_info, mill_ood
          !
          IF (mill_ood) THEN
              IF (.not. allocated(mill_d)) THEN
@@ -221,12 +236,15 @@
 #endif
      END SUBROUTINE using_mill
      !
-     SUBROUTINE using_mill_d(intento)
+     SUBROUTINE using_mill_d(intento, debug_info)
          !
          USE gvect, ONLY : mill
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_mill_d ", debug_info, mill_d_ood
          !
          IF (.not. allocated(mill)) THEN
              IF (intento /= 2) print *, "WARNING: sync of mill_d with unallocated array and intento /= 2?"
@@ -255,7 +273,7 @@
 #endif
      END SUBROUTINE using_mill_d
      !
-     SUBROUTINE using_eigts1(intento)
+     SUBROUTINE using_eigts1(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -265,9 +283,12 @@
          USE gvect, ONLY : eigts1
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_eigts1 ", debug_info, eigts1_ood
          !
          IF (eigts1_ood) THEN
              IF (.not. allocated(eigts1_d)) THEN
@@ -291,12 +312,15 @@
 #endif
      END SUBROUTINE using_eigts1
      !
-     SUBROUTINE using_eigts1_d(intento)
+     SUBROUTINE using_eigts1_d(intento, debug_info)
          !
          USE gvect, ONLY : eigts1
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_eigts1_d ", debug_info, eigts1_d_ood
          !
          IF (.not. allocated(eigts1)) THEN
              IF (intento /= 2) print *, "WARNING: sync of eigts1_d with unallocated array and intento /= 2?"
@@ -325,7 +349,7 @@
 #endif
      END SUBROUTINE using_eigts1_d
      !
-     SUBROUTINE using_eigts2(intento)
+     SUBROUTINE using_eigts2(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -335,9 +359,12 @@
          USE gvect, ONLY : eigts2
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_eigts2 ", debug_info, eigts2_ood
          !
          IF (eigts2_ood) THEN
              IF (.not. allocated(eigts2_d)) THEN
@@ -361,12 +388,15 @@
 #endif
      END SUBROUTINE using_eigts2
      !
-     SUBROUTINE using_eigts2_d(intento)
+     SUBROUTINE using_eigts2_d(intento, debug_info)
          !
          USE gvect, ONLY : eigts2
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_eigts2_d ", debug_info, eigts2_d_ood
          !
          IF (.not. allocated(eigts2)) THEN
              IF (intento /= 2) print *, "WARNING: sync of eigts2_d with unallocated array and intento /= 2?"
@@ -395,7 +425,7 @@
 #endif
      END SUBROUTINE using_eigts2_d
      !
-     SUBROUTINE using_eigts3(intento)
+     SUBROUTINE using_eigts3(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -405,9 +435,12 @@
          USE gvect, ONLY : eigts3
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_eigts3 ", debug_info, eigts3_ood
          !
          IF (eigts3_ood) THEN
              IF (.not. allocated(eigts3_d)) THEN
@@ -431,12 +464,15 @@
 #endif
      END SUBROUTINE using_eigts3
      !
-     SUBROUTINE using_eigts3_d(intento)
+     SUBROUTINE using_eigts3_d(intento, debug_info)
          !
          USE gvect, ONLY : eigts3
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_eigts3_d ", debug_info, eigts3_d_ood
          !
          IF (.not. allocated(eigts3)) THEN
              IF (intento /= 2) print *, "WARNING: sync of eigts3_d with unallocated array and intento /= 2?"

@@ -33,7 +33,7 @@
 #endif
      CONTAINS
      !
-     SUBROUTINE using_h_diag(intento)
+     SUBROUTINE using_h_diag(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -43,9 +43,12 @@
          USE g_psi_mod, ONLY : h_diag
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_h_diag ", debug_info, h_diag_ood
          !
          IF (h_diag_ood) THEN
              IF (.not. allocated(h_diag_d)) THEN
@@ -69,12 +72,15 @@
 #endif
      END SUBROUTINE using_h_diag
      !
-     SUBROUTINE using_h_diag_d(intento)
+     SUBROUTINE using_h_diag_d(intento, debug_info)
          !
          USE g_psi_mod, ONLY : h_diag
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_h_diag_d ", debug_info, h_diag_d_ood
          !
          IF (.not. allocated(h_diag)) THEN
              IF (intento /= 2) print *, "WARNING: sync of h_diag_d with unallocated array and intento /= 2?"
@@ -103,7 +109,7 @@
 #endif
      END SUBROUTINE using_h_diag_d
      !
-     SUBROUTINE using_s_diag(intento)
+     SUBROUTINE using_s_diag(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -113,9 +119,12 @@
          USE g_psi_mod, ONLY : s_diag
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_s_diag ", debug_info, s_diag_ood
          !
          IF (s_diag_ood) THEN
              IF (.not. allocated(s_diag_d)) THEN
@@ -139,12 +148,15 @@
 #endif
      END SUBROUTINE using_s_diag
      !
-     SUBROUTINE using_s_diag_d(intento)
+     SUBROUTINE using_s_diag_d(intento, debug_info)
          !
          USE g_psi_mod, ONLY : s_diag
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_s_diag_d ", debug_info, s_diag_d_ood
          !
          IF (.not. allocated(s_diag)) THEN
              IF (intento /= 2) print *, "WARNING: sync of s_diag_d with unallocated array and intento /= 2?"

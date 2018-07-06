@@ -33,7 +33,7 @@
 #endif
      CONTAINS
      !
-     SUBROUTINE using_g2kin(intento)
+     SUBROUTINE using_g2kin(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -43,9 +43,12 @@
          USE wvfct, ONLY : g2kin
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_g2kin ", debug_info, g2kin_ood
          !
          IF (g2kin_ood) THEN
              IF (.not. allocated(g2kin_d)) THEN
@@ -69,12 +72,15 @@
 #endif
      END SUBROUTINE using_g2kin
      !
-     SUBROUTINE using_g2kin_d(intento)
+     SUBROUTINE using_g2kin_d(intento, debug_info)
          !
          USE wvfct, ONLY : g2kin
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_g2kin_d ", debug_info, g2kin_d_ood
          !
          IF (.not. allocated(g2kin)) THEN
              IF (intento /= 2) print *, "WARNING: sync of g2kin_d with unallocated array and intento /= 2?"
@@ -103,7 +109,7 @@
 #endif
      END SUBROUTINE using_g2kin_d
      !
-     SUBROUTINE using_et(intento)
+     SUBROUTINE using_et(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -113,9 +119,12 @@
          USE wvfct, ONLY : et
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_et ", debug_info, et_ood
          !
          IF (et_ood) THEN
              IF (.not. allocated(et_d)) THEN
@@ -139,12 +148,15 @@
 #endif
      END SUBROUTINE using_et
      !
-     SUBROUTINE using_et_d(intento)
+     SUBROUTINE using_et_d(intento, debug_info)
          !
          USE wvfct, ONLY : et
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_et_d ", debug_info, et_d_ood
          !
          IF (.not. allocated(et)) THEN
              IF (intento /= 2) print *, "WARNING: sync of et_d with unallocated array and intento /= 2?"
@@ -220,7 +232,7 @@
 #endif
      CONTAINS
      !
-     SUBROUTINE using_qrad(intento)
+     SUBROUTINE using_qrad(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -230,9 +242,12 @@
          USE us, ONLY : qrad
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_qrad ", debug_info, qrad_ood
          !
          IF (qrad_ood) THEN
              IF (.not. allocated(qrad_d)) THEN
@@ -256,12 +271,15 @@
 #endif
      END SUBROUTINE using_qrad
      !
-     SUBROUTINE using_qrad_d(intento)
+     SUBROUTINE using_qrad_d(intento, debug_info)
          !
          USE us, ONLY : qrad
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_qrad_d ", debug_info, qrad_d_ood
          !
          IF (.not. allocated(qrad)) THEN
              IF (intento /= 2) print *, "WARNING: sync of qrad_d with unallocated array and intento /= 2?"
@@ -290,7 +308,7 @@
 #endif
      END SUBROUTINE using_qrad_d
      !
-     SUBROUTINE using_tab(intento)
+     SUBROUTINE using_tab(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -300,9 +318,12 @@
          USE us, ONLY : tab
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_tab ", debug_info, tab_ood
          !
          IF (tab_ood) THEN
              IF (.not. allocated(tab_d)) THEN
@@ -326,12 +347,15 @@
 #endif
      END SUBROUTINE using_tab
      !
-     SUBROUTINE using_tab_d(intento)
+     SUBROUTINE using_tab_d(intento, debug_info)
          !
          USE us, ONLY : tab
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_tab_d ", debug_info, tab_d_ood
          !
          IF (.not. allocated(tab)) THEN
              IF (intento /= 2) print *, "WARNING: sync of tab_d with unallocated array and intento /= 2?"
@@ -360,7 +384,7 @@
 #endif
      END SUBROUTINE using_tab_d
      !
-     SUBROUTINE using_tab_at(intento)
+     SUBROUTINE using_tab_at(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -370,9 +394,12 @@
          USE us, ONLY : tab_at
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_tab_at ", debug_info, tab_at_ood
          !
          IF (tab_at_ood) THEN
              IF (.not. allocated(tab_at_d)) THEN
@@ -396,12 +423,15 @@
 #endif
      END SUBROUTINE using_tab_at
      !
-     SUBROUTINE using_tab_at_d(intento)
+     SUBROUTINE using_tab_at_d(intento, debug_info)
          !
          USE us, ONLY : tab_at
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_tab_at_d ", debug_info, tab_at_d_ood
          !
          IF (.not. allocated(tab_at)) THEN
              IF (intento /= 2) print *, "WARNING: sync of tab_at_d with unallocated array and intento /= 2?"
@@ -430,7 +460,7 @@
 #endif
      END SUBROUTINE using_tab_at_d
      !
-     SUBROUTINE using_tab_d2y(intento)
+     SUBROUTINE using_tab_d2y(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -440,9 +470,12 @@
          USE us, ONLY : tab_d2y
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_tab_d2y ", debug_info, tab_d2y_ood
          !
          IF (tab_d2y_ood) THEN
              IF (.not. allocated(tab_d2y_d)) THEN
@@ -466,12 +499,15 @@
 #endif
      END SUBROUTINE using_tab_d2y
      !
-     SUBROUTINE using_tab_d2y_d(intento)
+     SUBROUTINE using_tab_d2y_d(intento, debug_info)
          !
          USE us, ONLY : tab_d2y
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_tab_d2y_d ", debug_info, tab_d2y_d_ood
          !
          IF (.not. allocated(tab_d2y)) THEN
              IF (intento /= 2) print *, "WARNING: sync of tab_d2y_d with unallocated array and intento /= 2?"

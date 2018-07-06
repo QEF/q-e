@@ -30,7 +30,7 @@
 #endif
      CONTAINS
      !
-     SUBROUTINE using_vrs(intento)
+     SUBROUTINE using_vrs(intento, debug_info)
          !
          ! intento is used to specify what the variable will  be used for :
          !  0 -> in , the variable needs to be synchronized but won't be changed
@@ -40,9 +40,12 @@
          USE scf, ONLY : vrs
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
          INTEGER :: intento_
          intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_vrs ", debug_info, vrs_ood
          !
          IF (vrs_ood) THEN
              IF (.not. allocated(vrs_d)) THEN
@@ -66,12 +69,15 @@
 #endif
      END SUBROUTINE using_vrs
      !
-     SUBROUTINE using_vrs_d(intento)
+     SUBROUTINE using_vrs_d(intento, debug_info)
          !
          USE scf, ONLY : vrs
          implicit none
          INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
 #if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_vrs_d ", debug_info, vrs_d_ood
          !
          IF (.not. allocated(vrs)) THEN
              IF (intento /= 2) print *, "WARNING: sync of vrs_d with unallocated array and intento /= 2?"
