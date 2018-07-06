@@ -49,7 +49,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: my_world_comm
     INTEGER :: color, key, ndev
-#if defined(__MPI)
+#if defined(__MPI) || defined(__CUDA)
     INTEGER :: ierr
 #endif
 #if defined(_OPENMP)
