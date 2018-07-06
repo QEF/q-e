@@ -7,7 +7,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../dft-d3 \
           $(MOD_FLAG)../../LR_Modules
-IFLAGS=
 PHOBJS = \
 acfdtest.o \
 add_dkmds.o \

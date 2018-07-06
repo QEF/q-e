@@ -339,6 +339,22 @@ The following features of the code are tested:
 - Test restart option, same input as epw2.in (epw3.in)
 - Test indirect absortpion (epw4.in)
 
+####################
+# epw_mob_ibte: Si #
+####################
+The following features of the code are tested:
+- Test the iterative BTE without using k-point symmetry (epw2.in)
+- Test scissor (epw2.in)
+- Test multiple temperature (epw2.in)
+- Test 2 Fermi level (VBM and CBM) calculation (epw2.in)
+- Test restart feature of IBTE, same input as previous (epw3.in)
+- Test the iterative BTE without k-point symmetry (epw4.in)
+
+Note 1: scf.in, nscf.in, ph.in and epw1.in are given but not tested (too long)
+Note 2: epw2.in and epw3.in should give the same results but 
+slightly differs because of convergence and symmetries being not exact
+(two k-points related by symmetry do not yield exactly the same results). 
+
 ##############
 # epw_pl: Si #
 ##############

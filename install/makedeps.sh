@@ -16,7 +16,8 @@ then
            PW/src CPV/src PW/tools upftools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/FD atomic/src \
            XSpectra/src ACFDT/src NEB/src TDDFPT/src \
-           GWW/pw4gww GWW/gww GWW/head GWW/bse" 
+           GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
+	   GWW/simple_bse GWW/simple_ip" 
           
 elif
     test $1 = "-addson" 
@@ -81,6 +82,12 @@ for dir in $dirs; do
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;	
 	GWW/bse )
 	 DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules $LEVEL2/GWW/pw4gww $LEVEL2/GWW/gww" ;;	
+	GWW/simple )
+	 DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/GWW/pw4gww $LEVEL2/GWW/gww" ;;
+	GWW/simple_bse )
+	 DEPENDS="$DEPEND2 $LEVEL2/GWW/gww" ;;
+	GWW/simple_ip)
+	DEPENDS="$DEPEND2" ;;
     *)
 # if addson needs a make.depend file
 	DEPENDS="$DEPENDS $add_deps"

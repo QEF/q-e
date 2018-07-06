@@ -58,7 +58,8 @@
                             ncarrier, carrier, scattering_serta, restart, restart_freq, &
                             scattering_0rta, longrange, shortrange, scatread, &
                             restart_filq, prtgkk, nel, meff, epsiHEG, lphase, &
-                            omegamin, omegamax, omegastep, n_r, lindabs
+                            omegamin, omegamax, omegastep, n_r, lindabs, &
+                            mob_maxiter
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV
@@ -123,7 +124,7 @@
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
        scatread, restart, restart_freq, restart_filq, prtgkk, nel, meff,       &
-       epsiHEG, lphase, omegamin, omegamax, omegastep, n_r, lindabs
+       epsiHEG, lphase, omegamin, omegamax, omegastep, n_r, lindabs, mob_maxiter
 
   ! tphases, fildvscf0
   !
@@ -282,6 +283,7 @@
   ! meff            : Density of state effective mass (in unit of the electron mass)
   ! epsiHEG         : Dielectric constant at zero doping
   ! lphase          : If .true., fix the gauge on the phonon eigenvectors and electronic eigenvectors - DS 
+  ! mob_maxiter     : Maximum number of iteration for the IBTE. 
   !  
   ! Added by Manos Kioupakis
   ! omegamin  : Photon energy minimum
@@ -346,7 +348,7 @@
   eig_read     = .false.
   dis_win_max  = 1d3
   dis_win_min  = -1d3
-  dis_froz_max = -0.9d3
+  dis_froz_max =  1d3
   dis_froz_min = -1d3
   num_iter     = 200
   proj(:)      = ''
@@ -477,6 +479,7 @@
   omegastep  = 1.d0  ! eV
   n_r        = 1.d0
   lindabs    = .false.
+  mob_maxiter= 50
   !
   !     reading the namelist inputepw
   !
@@ -568,8 +571,8 @@
        CALL errore('epw_init', 'define either (tempsmin and tempsmax) or temps(:)',1)
   IF ( scattering .AND. tempsmax < tempsmin ) &
        CALL errore('epw_init', 'tempsmax should be greater than tempsmin',1)
-  IF ( int_mob .AND. efermi_read)  CALL errore('epw_init', &
-       'Fermi level can not be set (efermi_read) when computing intrinsic mobilities',1)
+!  IF ( int_mob .AND. efermi_read)  CALL errore('epw_init', &
+!       'Fermi level can not be set (efermi_read) when computing intrinsic mobilities',1)
 !  IF ( int_mob .AND. (ABS(ncarrier) > 1E+5) )  CALL errore('epw_init', &
 !       'You cannot compute intrinsic mobilities and doped mobilities at the same time',1)
   IF ( (ABS(ncarrier) > 1E+5) .and. .not. carrier ) CALL errore('epw_init', &

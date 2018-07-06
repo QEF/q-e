@@ -237,7 +237,7 @@ SUBROUTINE potinit()
   !
   ! ... plugin contribution to local potential
   !
-  CALL plugin_scf_potential(rho,.FALSE.,-1.d0)
+  CALL plugin_scf_potential(rho,.FALSE.,-1.d0,vltot)
   !
   ! ... compute the potential and store it in v
   !

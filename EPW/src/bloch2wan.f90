@@ -1,5 +1,5 @@
   !
-  ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino  
+  !k Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino  
   ! 
   ! This file is distributed under the terms of the GNU General Public         
   ! License. See the file `LICENSE' in the root directory of the               
@@ -261,6 +261,7 @@
     USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_barrier, mp_sum
+    ! 
     implicit none
     !
     !  input variables
@@ -1186,8 +1187,8 @@
     END SUBROUTINE ephbloch2wane  
     ! 
     !--------------------------------------------------------------------------
-    SUBROUTINE ephbloch2wanp ( nbnd, nmodes, xk, nq, irvec, &
-      nrk, nrr, epmatwe )
+    SUBROUTINE ephbloch2wanp ( nbnd, nmodes, xk, nq, irvec_k, irvec_g, &
+      nrr_k, nrr_g, epmatwe )
     !--------------------------------------------------------------------------
     !!
     !!  From the EP Matrix in Electron Bloch representation (coarse mesh), 
@@ -1203,28 +1204,30 @@
     USE io_global,     ONLY : ionode_id
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
+    ! 
     implicit none
     !
-    !  Input variables - note irvec is dimensioned with nrr_k 
-    !                    (which is assumed to be larger than nrr_q)
+    !  Input variables 
     !
     INTEGER, INTENT(in) :: nbnd
     !! Number of electronic bands
-    INTEGER, INTENT(in) :: nrk
-    !! number of electronic WS points
     INTEGER, INTENT(in) :: nmodes
     !! number of branches
     INTEGER, INTENT(in) :: nq 
     !! number of qpoints
-    INTEGER, INTENT(in) :: nrr
-    !! number of phononic WS points
-    INTEGER, INTENT(in) :: irvec(3, nrk)
-    !! Coordinates of real space vector (irvec is dimensioned with nrk)
+    INTEGER, INTENT(in) :: nrr_k
+    !! number of electronic WS points
+    INTEGER, INTENT(in) :: nrr_g
+    !! number of el-ph WS points
+    INTEGER, INTENT(in) :: irvec_k(3, nrr_k)
+    !! Coordinates of real space vector for electrons
+    INTEGER, INTENT(in) :: irvec_g(3, nrr_g)
+    !! Coordinates of real space vector for electron-phonon
     !
     REAL(kind=DP), INTENT(in) :: xk(3, nq)
     !! Kpoint coordinates (cartesian in units of 2piba) 
     ! 
-    COMPLEX(kind=DP), INTENT(in) :: epmatwe(nbnd, nbnd, nrk, nmodes, nq)
+    COMPLEX(kind=DP), INTENT(in) :: epmatwe(nbnd, nbnd, nrr_k, nmodes, nq)
     !! EP matrix in electron-wannier representation and phonon bloch representation
     !!   (Cartesian coordinates)
     !
@@ -1232,8 +1235,8 @@
     !
     ! Work variables
     !
-    INTEGER :: ik
-    !! Counter on k-point
+    INTEGER :: iq
+    !! Counter on q-point
     INTEGER :: ir
     !! Counter on WS points
     INTEGER :: ire
@@ -1262,14 +1265,14 @@
     !
     epmatwp = czero
     ! 
-    DO ir = 1, nrr
+    DO ir = 1, nrr_g
       !
-      DO ik = 1, nq
-         !
-         rdotk = twopi * dot_product( xk( :, ik), dble(irvec( :, ir) ))
-         cfac = exp( -ci*rdotk ) / dble(nq)
-         epmatwp(:,:,:,:,ir) = epmatwp(:,:,:,:,ir) + cfac * epmatwe(:,:,:,:,ik)
-         !
+      DO iq = 1, nq
+        !
+        rdotk = twopi * dot_product( xk( :, iq), dble(irvec_g( :, ir) ))
+        cfac = exp( -ci*rdotk ) / dble(nq)
+        epmatwp(:,:,:,:,ir) = epmatwp(:,:,:,:,ir) + cfac * epmatwe(:,:,:,:,iq)
+        !
       ENDDO
       !
       !  check spatial decay of e-p matrix elements in wannier basis - electrons
@@ -1280,14 +1283,14 @@
       IF (mpime.eq.ionode_id) THEN
         IF (ir.eq.1) open(unit=iuwanep,file='decay.epmat_wanep',status='unknown')
         IF (ir.eq.1) WRITE(iuwanep, '(a)') '#  R_e,    R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)| '
-        DO ire = 1, nrk
+        DO ire = 1, nrr_k
           !
-          rvec1 = dble(irvec(1,ire))*at(:,1) + &
-                  dble(irvec(2,ire))*at(:,2) + &
-                  dble(irvec(3,ire))*at(:,3)
-          rvec2 = dble(irvec(1,ir))*at(:,1) + &
-                  dble(irvec(2,ir))*at(:,2) + &
-                  dble(irvec(3,ir))*at(:,3)
+          rvec1 = dble(irvec_k(1,ire))*at(:,1) + &
+                  dble(irvec_k(2,ire))*at(:,2) + &
+                  dble(irvec_k(3,ire))*at(:,3)
+          rvec2 = dble(irvec_g(1,ir))*at(:,1) + &
+                  dble(irvec_g(2,ir))*at(:,2) + &
+                  dble(irvec_g(3,ir))*at(:,3)
           len1 = sqrt(rvec1(1)**2.d0+rvec1(2)**2.d0+rvec1(3)**2.d0)
           len2 = sqrt(rvec2(1)**2.d0+rvec2(2)**2.d0+rvec2(3)**2.d0)
           tmp =  maxval ( abs( epmatwp (:, :, ire, :, ir) ) )
@@ -1298,7 +1301,7 @@
           WRITE(iuwanep, '(5f15.10)') len1 * celldm(1) * bohr2ang, &
                                   len2 * celldm(1) * bohr2ang, tmp
         ENDDO
-        IF (ir.eq.nrr) CLOSE(iuwanep)
+        IF (ir.eq.nrr_g) CLOSE(iuwanep)
       ENDIF
       !
     ENDDO
@@ -1311,8 +1314,8 @@
     !
     ! -----------------------------------------------------------
     !--------------------------------------------------------------------------
-    SUBROUTINE ephbloch2wanp_mem ( nbnd, nmodes, xk, nq, irvec, &
-      nrk, nrr, epmatwe )
+    SUBROUTINE ephbloch2wanp_mem ( nbnd, nmodes, xk, nq, irvec_k, irvec_g, &
+      nrr_k, nrr_g, epmatwe )
     !--------------------------------------------------------------------------
     !
     !  From the EP Matrix in Electron Bloch representation (coarse mesh), 
@@ -1334,21 +1337,23 @@
     !
     INTEGER, INTENT(in) :: nbnd
     !! Number of electronic bands
-    INTEGER, INTENT(in) :: nrk
+    INTEGER, INTENT(in) :: nrr_k
     !! number of electronic WS points
+    INTEGER, INTENT(in) :: nrr_g
+    !! number of el-h WS points
     INTEGER, INTENT(in) :: nmodes
     !! number of branches
     INTEGER, INTENT(in) :: nq
     !! number of qpoints
-    INTEGER, INTENT(in) :: nrr
-    !! number of phononic WS points 
-    INTEGER, INTENT(in) :: irvec (3, nrk)
-    !! Coordinates of real space vector (irvec is dimensioned with nrk)
+    INTEGER, INTENT(in) :: irvec_k (3, nrr_k)
+    !! Coordinates of real space vector 
+    INTEGER, INTENT(in) :: irvec_g (3, nrr_g)
+    !! Coordinates of real space vector 
     !
     REAL(kind=DP), INTENT(in) :: xk(3, nq)
     !! Kpoint coordinates (cartesian in units of 2piba) 
     ! 
-    COMPLEX(kind=DP), INTENT(in) :: epmatwe (nbnd, nbnd, nrk, nmodes)
+    COMPLEX(kind=DP), INTENT(in) :: epmatwe (nbnd, nbnd, nrr_k, nmodes)
     !! EP matrix in electron-wannier representation and phonon bloch representation
     !!   (Cartesian coordinates)
     !
@@ -1356,8 +1361,8 @@
     !
     ! work variables
     !
-    INTEGER :: ik
-    !! Counter on k-point
+    INTEGER :: iq
+    !! Counter on q-point
     INTEGER :: ir
     !! Counter on WS points
     INTEGER :: ire
@@ -1376,7 +1381,7 @@
     COMPLEX(KIND=DP), ALLOCATABLE :: epmatwp_mem(:,:,:,:)
     !!  e-p matrix in Wannier basis
     !
-    ALLOCATE (epmatwp_mem( nbnd, nbnd, nrk, nmodes))
+    ALLOCATE (epmatwp_mem( nbnd, nbnd, nrr_k, nmodes))
     ! 
     !----------------------------------------------------------
     !  Fourier transform to go into Wannier basis
@@ -1389,39 +1394,39 @@
     !
     CALL cryst_to_cart (nq, xk, at, -1)
     !
-    DO ir = 1, nrr
+    DO ir = 1, nrr_g
       !
       epmatwp_mem = czero
       ! 
-      DO ik = 1, nq
+      DO iq = 1, nq
          !
          ! direct read of epmatwe for this iq 
-         CALL rwepmatw ( epmatwe, nbnd, nrk, nmodes, ik, iunepmatwe, -1)
+         CALL rwepmatw ( epmatwe, nbnd, nrr_k, nmodes, iq, iunepmatwe, -1)
          !
-         rdotk = twopi * dot_product( xk( :, ik), dble(irvec( :, ir) ))
+         rdotk = twopi * dot_product( xk( :, iq), dble(irvec_g( :, ir) ))
          cfac = exp( -ci*rdotk ) / dble(nq)
          epmatwp_mem = epmatwp_mem + cfac * epmatwe
          !
       ENDDO
       !
       ! direct write of epmatwp_mem for this ir 
-      CALL rwepmatw (epmatwp_mem, nbnd, nrk, nmodes, ir, iunepmatwp, +1)
+      CALL rwepmatw (epmatwp_mem, nbnd, nrr_k, nmodes, ir, iunepmatwp, +1)
       !  check spatial decay of e-p matrix elements in wannier basis - electrons
       !  + phonons
       !
       !  we plot: R_e, R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)|
       !
-      IF (mpime.eq.ionode_id) THEN
-        IF (ir.eq.1) open(unit=iuwanep,file='decay.epmat_wanep',status='unknown')
-        IF (ir.eq.1) WRITE(iuwanep, '(a)') '#  R_e,    R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)| '
-        DO ire = 1, nrk
+      IF (mpime == ionode_id) THEN
+        IF (ir == 1) OPEN(unit=iuwanep, file='decay.epmat_wanep', status='unknown')
+        IF (ir == 1) WRITE(iuwanep, '(a)') '#  R_e,    R_p, max_{m,n,nu} |g(m,n,nu;R_e,R_p)| '
+        DO ire = 1, nrr_k
           !
-          rvec1 = dble(irvec(1,ire))*at(:,1) + &
-                  dble(irvec(2,ire))*at(:,2) + &
-                  dble(irvec(3,ire))*at(:,3)
-          rvec2 = dble(irvec(1,ir))*at(:,1) + &
-                  dble(irvec(2,ir))*at(:,2) + &
-                  dble(irvec(3,ir))*at(:,3)
+          rvec1 = dble(irvec_k(1,ire))*at(:,1) + &
+                  dble(irvec_k(2,ire))*at(:,2) + &
+                  dble(irvec_k(3,ire))*at(:,3)
+          rvec2 = dble(irvec_g(1,ir))*at(:,1) + &
+                  dble(irvec_g(2,ir))*at(:,2) + &
+                  dble(irvec_g(3,ir))*at(:,3)
           len1 = sqrt(rvec1(1)**2.d0+rvec1(2)**2.d0+rvec1(3)**2.d0)
           len2 = sqrt(rvec2(1)**2.d0+rvec2(2)**2.d0+rvec2(3)**2.d0)
           tmp =  maxval ( abs( epmatwp_mem(:, :, ire, :) ) )
@@ -1432,7 +1437,7 @@
           WRITE(iuwanep, '(5f15.10)') len1 * celldm(1) * bohr2ang, &
                                   len2 * celldm(1) * bohr2ang, tmp
         ENDDO
-        IF (ir.eq.nrr) CLOSE(iuwanep)
+        IF (ir == nrr_g) CLOSE(iuwanep)
       ENDIF
       !
     ENDDO

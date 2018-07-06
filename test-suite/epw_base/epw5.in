@@ -4,44 +4,39 @@
   amass(1)    = 12.01078
   outdir      = './'
 
-  iverbosity  = 0
+  iverbosity  = 1
 
   elph        = .true.
-  kmaps       = .true.
-  epbwrite    = .false.
+  kmaps       = .false.
+  epbwrite    = .true.
   epbread     = .false.
 
   etf_mem     = 0
 
-  epwwrite    = .false.
-  epwread     = .true.
+  epwwrite    = .true.
+  epwread     = .false.
 
   nbndsub     =  4
   nbndskip    =  0
 
-  wannierize  = .false.
+  wannierize  = .true.
   num_iter    = 300
   iprint      = 2
   dis_win_max = 12
   dis_froz_max= 7
   proj(1)     = 'f=0,0,0:l=-3'   
 
-  elecselfen  = .false.
-  nest_fn     = .false.
-  phonselfen  = .true.
+  elecselfen  = .true.
+  phonselfen  = .false.
   a2f         = .false.
-
-  specfun_ph   = .true.
-  wmin_specfun = 0
-  wmax_specfun = 20
-  nw_specfun   = 20
 
 
   fsthick     = 15 ! eV 
-  eptemp      = 300 ! K 
+  eptemp      = 300 ! K (same as PRB 76, 165108)
   degaussw    = 1.0 ! eV
 
   dvscf_dir   = './save/'
+  filukk      = './diam.ukk'
 
   nkf1        = 6
   nkf2        = 6
@@ -60,8 +55,8 @@
   nq3         = 3
  /
       4 cartesian
-  0.000000000000   0.000000000000   0.000000000000  
- -0.333333333333   0.333333333333  -0.333333333333  
-  0.000000000000   0.666666666667   0.000000000000  
-  0.666666666667   0.000000000000   0.666666666667  
+  0.000000000000   0.000000000000   0.000000000000   
+ -0.333333333333   0.333333333333  -0.333333333333   
+  0.000000000000   0.666666666667   0.000000000000   
+  0.666666666667   0.000000000000   0.666666666667   
 

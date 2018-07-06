@@ -1,0 +1,94 @@
+--
+&inputepw
+  prefix      = 'si'
+  amass(1)    = 28.0855
+  outdir      = './'
+
+  iverbosity  = 0
+
+  elph        = .true.
+  kmaps       = .true.
+  epbwrite    = .false.
+  epbread     = .false.
+  epwwrite    = .false.
+  epwread     = .true.
+
+  scattering  = .true.
+  scattering_serta = .true.
+  int_mob     = .true.
+  carrier     = .true.
+  ncarrier    =  1E13
+  mp_mesh_k   = .false.
+  iterative_bte = .true.
+  mob_maxiter = 3
+
+  vme         = .false.
+
+  scissor     =  0.7
+  nstemp      =   2
+  tempsmin    = 400
+  tempsmax    = 500
+
+  restart      = .true.
+  restart_freq = 50
+
+  lifc        = .true.
+  asr_typ     = 'crystal'
+
+  etf_mem     = 1
+
+  nbndsub     =  8
+  nbndskip    =  0
+
+  wannierize  = .false.
+  num_iter    = 1500
+  iprint      = 2
+  dis_win_max = 18
+  dis_froz_max= 8.5
+  proj(1)     = 'Si : sp3'   
+  wdata(1) = 'bands_plot = .true.'
+  wdata(2) = 'begin kpoint_path'
+  wdata(3) = 'L 0.50 0.00 0.00 G 0.00 0.00 0.00'
+  wdata(4) = 'G 0.00 0.00 0.00 X 0.50 0.50 0.00'
+  wdata(5) = 'end kpoint_path'
+  wdata(6) = 'bands_plot_format = gnuplot'
+  wdata(7) = 'guiding_centres = .true.'
+  wdata(8) = 'dis_num_iter      = 500'
+  wdata(9) = 'num_print_cycles  = 10'
+  wdata(10) = 'dis_mix_ratio     = 1.0'
+  wdata(11) = 'conv_tol = 1E-9'
+  wdata(12) = 'conv_window = 4'
+  wdata(13) = 'write_hr   = .true.'
+  wdata(14) = 'write_rmn  = .true.'
+
+
+  elecselfen  = .false.
+  phonselfen  = .false.
+  a2f         = .false.
+
+  fsthick     = 4.0
+  eptemp      = 1 ! K 
+  degaussw    = 0.1 ! eV
+
+  dvscf_dir   = './save/'
+  
+  nkf1        = 7
+  nkf2        = 7
+  nkf3        = 7
+
+  nqf1        = 7
+  nqf2        = 7
+  nqf3        = 7
+
+  nk1         = 6
+  nk2         = 6
+  nk3         = 6
+
+  nq1         = 2
+  nq2         = 2
+  nq3         = 2
+ /
+      3 cartesian
+ 0.000000000   0.000000000   0.000000000
+ 0.500000000  -0.500000000   0.500000000
+ 0.000000000  -1.000000000   0.000000000

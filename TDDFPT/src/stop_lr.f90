@@ -16,7 +16,7 @@ SUBROUTINE stop_lr( full_run  )
   USE lr_variables,         ONLY : n_ipol, LR_polarization, beta_store,          &
                                  & gamma_store, zeta_store, norm0, code1,code2,  &
                                  & lr_verbosity, itermax, bgz_suffix,            &
-                                   eels, q1, q2, q3              
+                                   eels, q1, q2, q3
   USE io_global,            ONLY : ionode, stdout
   USE io_files,             ONLY : tmp_dir, prefix, iunwfc
   USE environment,          ONLY : environment_end
@@ -26,10 +26,6 @@ SUBROUTINE stop_lr( full_run  )
   USE cell_base,            ONLY : celldm, at, bg, alat, omega
   USE klist,                ONLY : nelec
   USE buffers,              ONLY : close_buffer
-#if defined(__ENVIRON)
-  USE plugin_flags,         ONLY : use_environ
-  USE solvent_tddfpt,       ONLY : solvent_clean_tddfpt
-#endif  
   !
   IMPLICIT NONE
   !
@@ -119,10 +115,10 @@ SUBROUTINE stop_lr( full_run  )
      ! X. Ge: These two faked values will not be
      ! really used in the spectrum calculation.
      !
-     WRITE(158,*) beta_store(ip,itermax) 
-     WRITE(158,*) gamma_store(ip,itermax) 
-     DO j=1,n_ipol                                               
-        WRITE(158,*) zeta_store (ip,j,itermax)                    
+     WRITE(158,*) beta_store(ip,itermax)
+     WRITE(158,*) gamma_store(ip,itermax)
+     DO j=1,n_ipol
+        WRITE(158,*) zeta_store (ip,j,itermax)
      ENDDO
      !
      CLOSE(158)
@@ -135,13 +131,7 @@ SUBROUTINE stop_lr( full_run  )
   !
   CALL lr_dealloc()
   !
-#if defined(__ENVIRON)
-  !
-  ! Deallocate Environ related arrays
-  !
-  IF (use_environ) CALL solvent_clean_tddfpt()
-  !
-#endif
+  CALL plugin_clean( 'TD', .TRUE. )
   !
   IF (eels) THEN
      CALL environment_end(code2)

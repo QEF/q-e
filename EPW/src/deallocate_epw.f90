@@ -32,7 +32,7 @@
   USE control_lr,        ONLY : nbnd_occ
   USE becmod,            ONLY : becp, deallocate_bec_type
   USE elph2,             ONLY : el_ph_mat, epf17, epsi, etf,&
-                                etq, et_all, wf, wkf, wqf, wslen,&
+                                etq, et_all, wf, wkf, wqf, &
                                 xkq, xk_all, zstar, xkf, xqf, epmatwp, eps_rpa
   USE epwcom,            ONLY : epbread, epwread
   USE modes,             ONLY : npert, u, name_rap_mode, num_rap_mode
@@ -58,7 +58,6 @@
     IF(ALLOCATED(wqf))       DEALLOCATE (wqf)
     IF(ALLOCATED(xk_all))    DEALLOCATE (xk_all)
     IF(ALLOCATED(et_all))    DEALLOCATE (et_all)
-    IF(ALLOCATED(wslen))     DEALLOCATE (wslen)
     IF(ALLOCATED(eps_rpa))   DEALLOCATE (eps_rpa)
     IF(ALLOCATED(eps_rpa))   DEALLOCATE (eps_rpa) 
     ! 
@@ -134,7 +133,6 @@
     IF(ALLOCATED(wqf))       DEALLOCATE (wqf)    
     IF(ALLOCATED(xk_all))    DEALLOCATE (xk_all)    
     IF(ALLOCATED(et_all))    DEALLOCATE (et_all)    
-    IF(ALLOCATED(wslen))     DEALLOCATE (wslen)    
     IF(ALLOCATED(eps_rpa))   DEALLOCATE (eps_rpa)
   ENDIF ! epwread .and. .not. epbread 
   !

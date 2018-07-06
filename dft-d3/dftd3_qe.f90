@@ -112,7 +112,7 @@ MODULE dftd3_qe
     real*8  :: cn(nat),rtmp3(3),c6,c8,dum,x
     !
     !
-    write(*,'( /, 5X, "--------------------------------------------" , &
+    write(stdout,'( /, 5X, "--------------------------------------------" , &
                   & /, 5X, "Parameters for DFT-D3 Dispersion Correction:" , &
                   & /, 5X, "--------------------------------------------" , &
                   & /, 5X, "  Reference C6 values for interpolation: ",/, &
@@ -123,14 +123,14 @@ MODULE dftd3_qe
           if(i.ne.get_atomic_number(atm(ata))) cycle
             do j=1,maxc
               if(this%c6ab(i, i, j, j, 1).gt.0) then
-              write(*,'( 9X, A3 , 7X , F6.3, 9X, F8.2)' ) &
+              write(stdout,'( 9X, A3 , 7X , F6.3, 9X, F8.2)' ) &
                     atm(ata), this%c6ab(i,i,j,j,2), this%c6ab(i,i,j,j,1)*2.d0
               endif
             end do
         end do
     end do
 
-    write(*,'( /, 7X, "Values used:",/, &
+    write(stdout,'( /, 7X, "Values used:",/, &
               & /, 7X, "  atom   Coordination number  R0_AB[au]  C6      C8" )')
     !
     do ata=1,nat
@@ -157,10 +157,10 @@ MODULE dftd3_qe
                                 & iz(ata),iz(j),cn(ata),cn(j),dum)
           x = x + dum
         enddo
-        write(*,'( 9X, A3 , 7X, F6.3, 10X, F7.3, F10.2, F10.2)') &
+        write(stdout,'( 9X, A3 , 7X, F6.3, 10X, F7.3, F10.2, F10.2)') &
                 atm(ityp(ata)), cn(ata), 0.5*this%r0ab(z,z),c6*2.d0,c8*2.d0
     end do
-    write(*,'(/, 9X, "Molecular C6 ( Ry / a.u.^6 ) = ",F12.2,/)') x*2.d0
+    write(stdout,'(/, 9X, "Molecular C6 ( Ry / a.u.^6 ) = ",F12.2,/)') x*2.d0
 
   end subroutine dftd3_printout
 

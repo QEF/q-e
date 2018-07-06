@@ -121,7 +121,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   COMPLEX(DP), INTENT(IN)  :: psi(lda*npol,m) 
   COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)   
   !
-  INTEGER     :: ipol, ibnd, incr
+  INTEGER     :: ipol, ibnd
   REAL(dp)    :: ee
   !
   CALL start_clock( 'h_psi' ); !write (*,*) 'start h_psi';FLUSH(6)
@@ -153,12 +153,10 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
         !
-        IF ( dffts%has_task_groups ) then 
-           incr = 2 * fftx_ntgrp(dffts)
-        ELSE
-           incr = 2
-        ENDIF
-        DO ibnd = 1, m, incr
+        IF ( dffts%has_task_groups ) &
+             CALL errore( 'h_psi', 'task_groups not implemented with real_space', 1 )
+
+        DO ibnd = 1, m, 2
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_gamma(psi,ibnd,m) 
            ! ... compute becp%r = < beta|psi> from psic in real space
@@ -190,12 +188,11 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
         !
-        CALL using_becp_auto(1)
-        IF ( dffts%has_task_groups ) then 
-           incr = fftx_ntgrp(dffts)
-        ELSE
-           incr = 1
-        ENDIF
+        CALL using_becp_auto(1)  ! WHY IS THIS HERE?
+
+        IF ( dffts%has_task_groups ) &
+             CALL errore( 'h_psi', 'task_groups not implemented with real_space', 1 )
+
         DO ibnd = 1, m
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_k(psi,ibnd,m) 

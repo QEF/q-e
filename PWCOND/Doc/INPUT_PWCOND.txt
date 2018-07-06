@@ -1,0 +1,387 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: pwcond.x / PWscf / Quantum Espresso (version: svn)
+------------------------------------------------------------------------
+
+
+This program computes the transmittance of a system and/or its
+complex band structure.
+It is controlled through the following variables
+in the namelist inputcond.
+
+Structure of the input data:
+============================
+
+   &INPUTCOND
+     ...
+   /
+
+
+
+========================================================================
+NAMELIST: &INPUTCOND
+
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           CHARACTER
+   Description:    temporary directory (as in PWscf)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       prefixt
+   
+   Type:           CHARACTER
+   Description:    prefix for the file (as in PWscf) containing all the
+                   regions (left lead + scatt. reg. + right lead)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       prefixl
+   
+   Type:           CHARACTER
+   Description:    prefix for the file containing only the        left lead
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       prefixs
+   
+   Type:           CHARACTER
+   Description:    prefix for the file containing the scattering region
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       prefixr
+   
+   Type:           CHARACTER
+   Description:    prefix for the file containing only the right lead
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       tran_prefix
+   
+   Type:           CHARACTER
+   Default:        none
+   See:            recover
+   Description:    if tran_prefix is specified the program will save partial results
+                   of a transmission calculation (ikind .GE. 1) in a specific
+                   directory (outdir/tran_prefix.cond_save)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       max_seconds
+   
+   Type:           REAL
+   Default:        1.D+7, or 150 days, i.e. no time limit
+   See:            tran_prefix
+   Description:    jobs stops after max_seconds elapsed time (wallclock time).
+                   It can be enabled only if tran_prefix is specified.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       recover
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   See:            tran_prefix
+   Description:    restarts a previously interrupted transmission calculation (only if
+                   tran_prefix was specified). It can also be used to gather partial
+                   results from a calculation that was split by using start_e,last_e
+                   and/or start_k,last_k (see corresponding keywords).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       band_file
+   
+   Type:           CHARACTER
+   Description:    file on which the complex bands are saved
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       tran_file
+   
+   Type:           CHARACTER
+   Description:    file where the transmission is written
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       save_file
+   
+   Type:           CHARACTER
+   Description:    file where the data necessary for PWCOND are written
+                   so that no prefix files of PW are longer needed
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fil_loc
+   
+   Type:           CHARACTER
+   Description:    file on/from which the 2D eigenvalue problem data are
+                   saved/read
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lwrite_cond
+   
+   Type:           LOGICAL
+   Description:    if .t. save the data necessary for PWCOND in save_file
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       loop_ek
+   
+   Type:           LOGICAL
+   Description:    if .t. the energy loop is outside the k-point loop
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lread_cond
+   
+   Type:           LOGICAL
+   Description:    if .t. read the data necessary for PWCOND from save_file
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lwrite_loc
+   
+   Type:           LOGICAL
+   Description:    if .t. save 2D eigenvalue problem result in fil_loc
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lread_loc
+   
+   Type:           LOGICAL
+   Description:    if .t. read 2D eigenvalue problem result from fil_loc
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ikind
+   
+   Type:           INTEGER
+   Description:    The kind of conductance calculation:
+                   
+                   ikind=0  - just complex band structure (CBS) calculation
+                   
+                   ikind=1  - conductance calculation with identical
+                              left and right leads
+                   
+                   ikind=2  - conductance calculation with different
+                              left and right leads
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       iofspin
+   
+   Type:           INTEGER
+   Description:    spin index for which the calculations are performed
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       tk_plot
+   
+   Type:           INTEGER
+   Description:    if > 0, plot T(kx,ky) at each energy in the region [tk_plot x full BZ]
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       llocal
+   
+   Type:           LOGICAL
+   Description:    if .t. calculations are done with only local part of PP
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       bdl
+   
+   Type:           REAL
+   Description:    right boundary of the left lead (left one is supposed to be at 0)
+                   (in units of lattice parameter "alat" defined in the scf run)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       bds
+   
+   Type:           REAL
+   Description:    right boundary of the scatt. reg. (left one is at 0 if prefixs
+                   is used and = bdl if prefixt is used)
+                   (in units of lattice parameter "alat" defined in the scf run)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       bdr
+   
+   Type:           REAL
+   Description:    right boundary of the right lead (left one is at 0 if prefixr
+                   is used and = bds if prefixt is used)
+                   (in units of lattice parameter "alat" defined in the scf run)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       nz1
+   
+   Type:           INTEGER
+   Description:    the number of subslabs in the slab (to calculate integrals)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       energy0
+   
+   Type:           REAL
+   Description:    initial energy
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       denergy
+   
+   Type:           REAL
+   Description:    energy step (if denergy=0.0 the energy is read from the list)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       nenergy
+   
+   Type:           INTEGER
+   Description:    number of energies
+                   
+                   WARNING: the energy in input file is given in eV taken from Ef,
+                            and denergy should be negative
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       start_e
+   
+   Type:           INTEGER
+   Default:        1
+   See:            last_e
+   Description:    if start_e > 1, the scattering problem is solved only for those
+                   energies with index between start_e and last_e in the energy list.
+                   
+                   NOTE: start_e <= last_e and start_e <= nenergy must be satisfied
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       last_e
+   
+   Type:           INTEGER
+   Default:        nenergy
+   See:            start_e
+   Description:    index of the last energy to be computed. If last_e > nenergy,
+                   then last_e will be automatically set to nenergy.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       start_k
+   
+   Type:           INTEGER
+   Default:        1
+   See:            last_k
+   Description:    if start_k > 1, the scattering problem is solved only for those
+                   k-points with index between start_k and last_k in the k-point list.
+                   In order to recover the full transmission (i.e. integrated over the
+                   full Brillouin Zone) at the end, perform the partial runs specifying
+                   a value for tran_prefix (the restart directory), then put all the
+                   partial transmission files 'transmission_k#_e#' inside a unique
+                   restart directory and run pwcond.x with recover=.TRUE. (without
+                   specifying any value for start_k and last_k).
+                   
+                   NOTE: start_k <= last_k must be satisfied and start_k must also
+                      not be greater than the actual number of k-point in the list
+                      (if you compute the grid automatically by specifying the grid
+                      size and shifts, you can use kpoints.x to check that number).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       last_k
+   
+   Type:           INTEGER
+   Default:        nenergy
+   See:            start_k
+   Description:    index of the last k-point to be computed. If last_k is bigger than the
+                   actual number of points in the list, then it will be set to that number.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ecut2d
+   
+   Type:           REAL
+   Description:    2-D cutoff
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ewind
+   
+   Type:           REAL
+   Description:    the energy window for reduction of 2D plane wave basis set (in XY)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       epsproj
+   
+   Type:           REAL
+   Description:    accuracy of 2D basis set reduction
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       orbj_in
+   
+   Type:           REAL
+   Description:    the initial orbital for projecting the transmission
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       orbj_fin
+   
+   Type:           REAL
+   Description:    the final orbital for projecting the transmission
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+========================================================================
+CARD:  
+
+   /////////////////////////////////////////
+   // Syntax:                             //
+   /////////////////////////////////////////
+   
+         nkpts
+         kx(1)      ky(1)      weight(1)      
+         kx(2)      ky(2)      weight(2)      
+         . . . 
+         kx(nkpts)  ky(nkpts)  weight(nkpts)  
+         nenergy
+   
+   /////////////////////////////////////////
+   
+   DESCRIPTION OF ITEMS:
+   
+      +--------------------------------------------------------------------
+      Variable:       nkpts
+      
+      Type:           INTEGER
+      Description:    Number of k_\perp points
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      kx, ky, weight
+      
+      Type:           REAL
+      Description:    k-point coordinates and weights
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       nenergy
+      
+      Type:           INTEGER
+      Description:    number of energy points
+      +--------------------------------------------------------------------
+      
+===END OF CARD==========================================================
+
+
+This file has been created by helpdoc utility on Fri Jun 22 17:11:54 CEST 2018

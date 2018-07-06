@@ -27,36 +27,34 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.4.2.0 (svn rev. 13615) starts on 25Jul2017 at 12: 5:50 
+     Program EPW v.5.0.0 starts on  3Jul2018 at 12:35:24 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
          "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
           URL http://www.quantum-espresso.org", 
      in publications or presentations arising from this work. More details at
      http://www.quantum-espresso.org/quote
 
-     Parallel version (MPI), running on     4 processors
-     K-points division:     npool     =       4
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
 
      Reading data from directory:
      ./pb.save/
-
-   Info: using nr1, nr2, nr3 values from input
-
-   Info: using nr1, nr2, nr3 values from input
 
      IMPORTANT: XC functional enforced from input :
      Exchange-correlation      = PZ ( 1  1  0  0 0 0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
-
+ 
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         703     703    211                12387    12387    2109
-
+ 
 
      --                                                                         
 
@@ -93,7 +91,7 @@
 
      site n.  atom      mass           positions (a_0 units)
         1        Pb 207.2175   tau( 1) = (    0.00000    0.00000    0.00000  )
-
+ 
      49 Sym.Ops. (with q -> -q+G )
 
 
@@ -132,93 +130,134 @@
      ./pb_s.UPF
      MD5 check sum: 7774f596943a2055f0d8d19eea6f2ae8
      Pseudo is Norm-conserving, Zval = 14.0
-     Generated using "atomic" code by A. Dal Corso  (Quantum ESPRESSO distribution)
+     Generated using "atomic" code by A. Dal Corso (Quantum ESPRESSO distribution)
      Using radial grid of 1281 points,  2 beta functions with: 
                 l(1) =   2
                 l(2) =   1
-     EPW          :     0.31s CPU         0.32s WALL
+     EPW          :     0.30s CPU         0.31s WALL
 
-     EPW          :     0.69s CPU         0.71s WALL
+     EPW          :     0.54s CPU         0.56s WALL
 
      No wavefunction gauge setting applied
      -------------------------------------------------------------------
      Wannierization on  3 x  3 x  3 electronic grid
      -------------------------------------------------------------------
-
+ 
      Spin CASE ( default = unpolarized )
-
+ 
      Initializing Wannier90
-
-
+ 
+ 
      Initial Wannier projections
-
+ 
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   1
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   2
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   3
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   4
 
       - Number of bands is ( 11)
+      - Number of total bands is ( 11)
+      - Number of excluded bands is (  0)
       - Number of wannier functions is (  4)
       - All guiding functions are given 
-
+ 
   Reading data about k-point neighbours 
-
+ 
       - All neighbours are found 
-
+ 
      AMN
-      k points =    27 in    4 pools
-            1 of    7 on ionode
-            2 of    7 on ionode
-            3 of    7 on ionode
-            4 of    7 on ionode
-            5 of    7 on ionode
-            6 of    7 on ionode
-            7 of    7 on ionode
-
+      k points =    27 in    1 pools
+            1 of   27 on ionode
+            2 of   27 on ionode
+            3 of   27 on ionode
+            4 of   27 on ionode
+            5 of   27 on ionode
+            6 of   27 on ionode
+            7 of   27 on ionode
+            8 of   27 on ionode
+            9 of   27 on ionode
+           10 of   27 on ionode
+           11 of   27 on ionode
+           12 of   27 on ionode
+           13 of   27 on ionode
+           14 of   27 on ionode
+           15 of   27 on ionode
+           16 of   27 on ionode
+           17 of   27 on ionode
+           18 of   27 on ionode
+           19 of   27 on ionode
+           20 of   27 on ionode
+           21 of   27 on ionode
+           22 of   27 on ionode
+           23 of   27 on ionode
+           24 of   27 on ionode
+           25 of   27 on ionode
+           26 of   27 on ionode
+           27 of   27 on ionode
+ 
      AMN calculated
-
+ 
      MMN
-      k points =    27 in    4 pools
-            1 of    7 on ionode
-            2 of    7 on ionode
-            3 of    7 on ionode
-            4 of    7 on ionode
-            5 of    7 on ionode
-            6 of    7 on ionode
-            7 of    7 on ionode
+      k points =    27 in    1 pools
+            1 of   27 on ionode
+            2 of   27 on ionode
+            3 of   27 on ionode
+            4 of   27 on ionode
+            5 of   27 on ionode
+            6 of   27 on ionode
+            7 of   27 on ionode
+            8 of   27 on ionode
+            9 of   27 on ionode
+           10 of   27 on ionode
+           11 of   27 on ionode
+           12 of   27 on ionode
+           13 of   27 on ionode
+           14 of   27 on ionode
+           15 of   27 on ionode
+           16 of   27 on ionode
+           17 of   27 on ionode
+           18 of   27 on ionode
+           19 of   27 on ionode
+           20 of   27 on ionode
+           21 of   27 on ionode
+           22 of   27 on ionode
+           23 of   27 on ionode
+           24 of   27 on ionode
+           25 of   27 on ionode
+           26 of   27 on ionode
+           27 of   27 on ionode
      MMN calculated
-
+ 
      Running Wannier90
-
+ 
      Wannier Function centers (cartesian, alat) and spreads (ang):
-
+ 
      (   0.08268   0.08268   0.08268) :   1.58499
      (   0.08268  -0.08268  -0.08268) :   1.58499
      (  -0.08268   0.08268  -0.08268) :   1.58499
      (  -0.08268  -0.08268   0.08268) :   1.58499
-
+ 
      -------------------------------------------------------------------
-     WANNIER      :      2.95s CPU      2.97s WALL (       1 calls)
+     WANNIER      :     10.82s CPU     10.90s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
-
+ 
 
      Calculating kmap and kgmap
      Progress  kmap: ###########################
      Progress kgmap: ########################################
-     kmaps        :      2.38s CPU      2.40s WALL (       1 calls)
+     kmaps        :     11.72s CPU     11.96s WALL (       1 calls)
 
      Reading interatomic force constants
 
-  IFC last    3.1312592592599998E-005
-Norm of the difference between old and new effective charges:    0.00000000000000000000
-Norm of the difference between old and new force-constants:   0.00109860666665493288
-  Imposed crystal ASR
+     IFC last    0.0000313
+     Norm of the difference between old and new effective charges:    0.0000000
+     Norm of the difference between old and new force-constants:    0.0010986
+     Imposed crystal ASR
 
      Finished reading ifcs
 
-  IFC    5.5174220740693891E-002  -9.0754814813504068E-005
      Symmetries of bravais lattice:  48
      Symmetries of crystal:          48
 
@@ -229,13 +268,13 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
 
      Symmetries of small group of q: 48
           in addition sym. q -> -q+G:
-
+ 
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
-        Imposing acoustic sum rule on the dynamical matrix
-  Dyn mat calculated from ifcs
-
+     Imposing acoustic sum rule on the dynamical matrix
+     Dyn mat calculated from ifcs
+ 
         q(    1 ) = (   0.0000000   0.0000000   0.0000000 )
 
 
@@ -244,7 +283,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      ===================================================================
 
      Symmetries of small group of q:  6
-
+ 
      Number of q in the star =    8
      List of q in the star:
           1  -0.333333333   0.333333333  -0.333333333
@@ -255,8 +294,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
           6  -0.333333333  -0.333333333  -0.333333333
           7   0.333333333  -0.333333333  -0.333333333
           8  -0.333333333  -0.333333333   0.333333333
-  Dyn mat calculated from ifcs
-
+     Dyn mat calculated from ifcs
+ 
         q(    2 ) = (  -0.3333333   0.3333333  -0.3333333 )
         q(    3 ) = (   0.3333333   0.3333333  -0.3333333 )
         q(    4 ) = (   0.3333333   0.3333333   0.3333333 )
@@ -272,7 +311,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      ===================================================================
 
      Symmetries of small group of q:  8
-
+ 
      Number of q in the star =    6
      List of q in the star:
           1   0.000000000   0.666666667   0.000000000
@@ -281,8 +320,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
           4   0.000000000   0.000000000   0.666666667
           5   0.000000000   0.000000000  -0.666666667
           6   0.666666667   0.000000000   0.000000000
-  Dyn mat calculated from ifcs
-
+     Dyn mat calculated from ifcs
+ 
         q(   10 ) = (   0.0000000   0.6666667   0.0000000 )
         q(   11 ) = (  -0.6666667   0.0000000   0.0000000 )
         q(   12 ) = (   0.0000000  -0.6666667   0.0000000 )
@@ -296,7 +335,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      ===================================================================
 
      Symmetries of small group of q:  4
-
+ 
      Number of q in the star =   12
      List of q in the star:
           1   0.666666667   0.000000000   0.666666667
@@ -311,8 +350,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
          10   0.000000000   0.666666667   0.666666667
          11   0.000000000   0.666666667  -0.666666667
          12   0.000000000  -0.666666667  -0.666666667
-  Dyn mat calculated from ifcs
-
+     Dyn mat calculated from ifcs
+ 
         q(   16 ) = (   0.6666667   0.0000000   0.6666667 )
         q(   17 ) = (   0.6666667   0.0000000  -0.6666667 )
         q(   18 ) = (  -0.6666667   0.0000000  -0.6666667 )
@@ -342,27 +381,26 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
 
      Reading interatomic force constants
 
-  IFC last    3.1312592592599998E-005
-Norm of the difference between old and new effective charges:    0.00000000000000000000
-Norm of the difference between old and new force-constants:   0.00109860666665493288
-  Imposed crystal ASR
+     IFC last    0.0000313
+     Norm of the difference between old and new effective charges:    0.0000000
+     Norm of the difference between old and new force-constants:    0.0010986
+     Imposed crystal ASR
 
      Finished reading ifcs
 
-  IFC    5.5174220740693891E-002  -9.0754814813504068E-005
 
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        62Mb
-                   VmPeak =       459Mb
+     Memory usage:  VmHWM =        68Mb
+                   VmPeak =       312Mb
      ===================================================================
      
      Using uniform q-mesh:    6   6   6
      Size of q point mesh for interpolation:        216
      Using uniform k-mesh:    6   6   6
      Size of k point mesh for interpolation:        432
-     Max number of k points per pool:              108
+     Max number of k points per pool:              432
 
      Fermi energy coarse grid =   9.797928 eV
 
@@ -380,7 +418,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
               ibndmax =     4  ebndmax =     1.265
 
 
-     Number of ep-matrix elements per pool :         1458 ~=   11.39 Kb (@ 8 bytes/ DP)
+     Number of ep-matrix elements per pool :         5832 ~=   45.56 Kb (@ 8 bytes/ DP)
 
      ===================================================================
      Phonon (Imaginary) Self-Energy in the Migdal Approximation
@@ -401,7 +439,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      0.0000 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      0.0000 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      0.0000 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -417,7 +455,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.0810 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      4.8164 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      4.8164 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -427,14 +465,14 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
 
      ismear =     1 iq =       3 coord.:   0.00000  0.00000  0.33333 wt:   0.00463
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.118719   gamma___=       0.005439 meV   omega=      5.3034 meV
+     lambda___(   1 )=       0.118720   gamma___=       0.005439 meV   omega=      5.3034 meV
      lambda_tr(   1 )=      -0.146973   gamma_tr=      -0.006733 meV   omega=      5.3034 meV
      lambda___(   2 )=       0.118720   gamma___=       0.005439 meV   omega=      5.3034 meV
      lambda_tr(   2 )=      -0.146973   gamma_tr=      -0.006733 meV   omega=      5.3034 meV
      lambda___(   3 )=       0.255676   gamma___=       0.028608 meV   omega=      8.2884 meV
      lambda_tr(   3 )=      -0.198283   gamma_tr=      -0.022186 meV   omega=      8.2884 meV
-     lambda( tot )=       0.493116
-     lambda_tr( tot )=      -0.492230
+     lambda___( tot )=       0.493115
+     lambda_tr( tot )=      -0.492229
      -------------------------------------------------------------------
 
 
@@ -449,7 +487,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      6.1047 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.5393 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.5393 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -465,7 +503,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.146973   gamma_tr=      -0.006733 meV   omega=      5.3034 meV
      lambda___(   3 )=       0.255676   gamma___=       0.028608 meV   omega=      8.2884 meV
      lambda_tr(   3 )=      -0.198283   gamma_tr=      -0.022186 meV   omega=      8.2884 meV
-     lambda( tot )=       0.493116
+     lambda___( tot )=       0.493116
      lambda_tr( tot )=      -0.492229
      -------------------------------------------------------------------
 
@@ -481,7 +519,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.0810 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      4.8164 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      4.8164 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -497,7 +535,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.0810 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      4.8164 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      4.8164 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -511,10 +549,10 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   1 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
      lambda___(   2 )=       0.000000   gamma___=       0.000000 meV   omega=      3.2456 meV
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
-     lambda___(   3 )=      -0.000000   gamma___=      -0.000000 meV   omega=      5.8847 meV
-     lambda_tr(   3 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      5.8847 meV
-     lambda( tot )=      -0.000000
-     lambda_tr( tot )=      -0.000000
+     lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      5.8847 meV
+     lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.8847 meV
+     lambda___( tot )=       0.000000
+     lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
 
@@ -529,7 +567,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -540,12 +578,12 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      ismear =     1 iq =      10 coord.:   0.00000  0.16667  0.50000 wt:   0.00463
      -------------------------------------------------------------------
      lambda___(   1 )=       0.181180   gamma___=       0.011941 meV   omega=      6.3610 meV
-     lambda_tr(   1 )=       0.183503   gamma_tr=       0.012094 meV   omega=      6.3610 meV
+     lambda_tr(   1 )=       0.183502   gamma_tr=       0.012094 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda_tr(   3 )=      -0.011604   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172655
      -------------------------------------------------------------------
 
@@ -561,7 +599,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -577,7 +615,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.149116   gamma_tr=       0.005900 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055210   gamma___=       0.004600 meV   omega=      7.1525 meV
      lambda_tr(   3 )=       0.050116   gamma_tr=       0.004176 meV   omega=      7.1525 meV
-     lambda( tot )=       0.536777
+     lambda___( tot )=       0.536777
      lambda_tr( tot )=       0.478072
      -------------------------------------------------------------------
 
@@ -593,7 +631,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.146973   gamma_tr=      -0.006733 meV   omega=      5.3034 meV
      lambda___(   3 )=       0.255676   gamma___=       0.028608 meV   omega=      8.2884 meV
      lambda_tr(   3 )=      -0.198283   gamma_tr=      -0.022186 meV   omega=      8.2884 meV
-     lambda( tot )=       0.493116
+     lambda___( tot )=       0.493116
      lambda_tr( tot )=      -0.492229
      -------------------------------------------------------------------
 
@@ -609,7 +647,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -625,8 +663,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.419761   gamma_tr=       0.024059 meV   omega=      5.9321 meV
      lambda___(   3 )=       0.001406   gamma___=       0.000209 meV   omega=      9.5548 meV
      lambda_tr(   3 )=       0.001406   gamma_tr=       0.000209 meV   omega=      9.5548 meV
-     lambda( tot )=       0.840928
-     lambda_tr( tot )=       0.840928
+     lambda___( tot )=       0.840927
+     lambda_tr( tot )=       0.840927
      -------------------------------------------------------------------
 
 
@@ -641,7 +679,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -656,9 +694,9 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004161   gamma___=       0.000504 meV   omega=      8.6241 meV
      lambda_tr(   2 )=       0.011419   gamma_tr=       0.001383 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115530   gamma___=       0.014599 meV   omega=      8.8081 meV
-     lambda_tr(   3 )=       0.315167   gamma_tr=       0.039826 meV   omega=      8.8081 meV
-     lambda( tot )=       0.135679
-     lambda_tr( tot )=       0.373361
+     lambda_tr(   3 )=       0.315166   gamma_tr=       0.039826 meV   omega=      8.8081 meV
+     lambda___( tot )=       0.135679
+     lambda_tr( tot )=       0.373360
      -------------------------------------------------------------------
 
 
@@ -673,7 +711,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -689,7 +727,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      6.1047 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.5393 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.5393 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -704,8 +742,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.011604   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
@@ -721,7 +759,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -737,7 +775,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.059300   gamma_tr=       0.004763 meV   omega=      7.0223 meV
      lambda___(   3 )=       0.230362   gamma___=       0.042522 meV   omega=     10.6455 meV
      lambda_tr(   3 )=       0.563194   gamma_tr=       0.103958 meV   omega=     10.6455 meV
-     lambda( tot )=       0.282297
+     lambda___( tot )=       0.282297
      lambda_tr( tot )=       0.681793
      -------------------------------------------------------------------
 
@@ -753,7 +791,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -768,8 +806,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda_tr(   3 )=      -0.011604   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
@@ -785,8 +823,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.146973   gamma_tr=      -0.006733 meV   omega=      5.3034 meV
      lambda___(   3 )=       0.255676   gamma___=       0.028608 meV   omega=      8.2884 meV
      lambda_tr(   3 )=      -0.198283   gamma_tr=      -0.022186 meV   omega=      8.2884 meV
-     lambda( tot )=       0.493116
-     lambda_tr( tot )=      -0.492230
+     lambda___( tot )=       0.493116
+     lambda_tr( tot )=      -0.492229
      -------------------------------------------------------------------
 
 
@@ -801,7 +839,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -816,8 +854,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004161   gamma___=       0.000504 meV   omega=      8.6241 meV
      lambda_tr(   2 )=       0.011419   gamma_tr=       0.001383 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115530   gamma___=       0.014599 meV   omega=      8.8081 meV
-     lambda_tr(   3 )=       0.315167   gamma_tr=       0.039826 meV   omega=      8.8081 meV
-     lambda( tot )=       0.135679
+     lambda_tr(   3 )=       0.315166   gamma_tr=       0.039826 meV   omega=      8.8081 meV
+     lambda___( tot )=       0.135679
      lambda_tr( tot )=       0.373360
      -------------------------------------------------------------------
 
@@ -833,7 +871,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -849,8 +887,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.419761   gamma_tr=       0.024059 meV   omega=      5.9321 meV
      lambda___(   3 )=       0.001406   gamma___=       0.000209 meV   omega=      9.5548 meV
      lambda_tr(   3 )=       0.001406   gamma_tr=       0.000209 meV   omega=      9.5548 meV
-     lambda( tot )=       0.840928
-     lambda_tr( tot )=       0.840928
+     lambda___( tot )=       0.840927
+     lambda_tr( tot )=       0.840927
      -------------------------------------------------------------------
 
 
@@ -865,7 +903,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -881,7 +919,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.0810 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      4.8164 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      4.8164 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -891,13 +929,13 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
 
      ismear =     1 iq =      32 coord.:   0.00000  0.83333  0.16667 wt:   0.00463
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.311789   gamma___=       0.010985 meV   omega=      4.6509 meV
+     lambda___(   1 )=       0.311788   gamma___=       0.010985 meV   omega=      4.6509 meV
      lambda_tr(   1 )=       0.278840   gamma_tr=       0.009824 meV   omega=      4.6509 meV
      lambda___(   2 )=       0.169778   gamma___=       0.006718 meV   omega=      4.9287 meV
-     lambda_tr(   2 )=       0.149116   gamma_tr=       0.005900 meV   omega=      4.9287 meV
+     lambda_tr(   2 )=       0.149115   gamma_tr=       0.005900 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055210   gamma___=       0.004600 meV   omega=      7.1525 meV
      lambda_tr(   3 )=       0.050116   gamma_tr=       0.004176 meV   omega=      7.1525 meV
-     lambda( tot )=       0.536776
+     lambda___( tot )=       0.536776
      lambda_tr( tot )=       0.478071
      -------------------------------------------------------------------
 
@@ -913,7 +951,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -924,13 +962,13 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      ismear =     1 iq =      34 coord.:   0.00000  0.83333  0.50000 wt:   0.00463
      -------------------------------------------------------------------
      lambda___(   1 )=       0.181180   gamma___=       0.011941 meV   omega=      6.3610 meV
-     lambda_tr(   1 )=       0.183503   gamma_tr=       0.012094 meV   omega=      6.3610 meV
+     lambda_tr(   1 )=       0.183502   gamma_tr=       0.012094 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
-     lambda_tr( tot )=       0.172655
+     lambda___( tot )=       0.239507
+     lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
 
@@ -945,7 +983,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -961,8 +999,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      5.8847 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.8847 meV
-     lambda( tot )=       0.000001
-     lambda_tr( tot )=       0.000001
+     lambda___( tot )=       0.000000
+     lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
 
@@ -977,7 +1015,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.0810 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      4.8164 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      4.8164 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -992,8 +1030,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.000000   gamma___=       0.000000 meV   omega=      3.2456 meV
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
      lambda___(   3 )=      -0.000000   gamma___=      -0.000000 meV   omega=      5.8847 meV
-     lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.8847 meV
-     lambda( tot )=       0.000000
+     lambda_tr(   3 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      5.8847 meV
+     lambda___( tot )=      -0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1009,7 +1047,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1020,13 +1058,13 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      ismear =     1 iq =      40 coord.:   0.16667  0.00000  0.50000 wt:   0.00463
      -------------------------------------------------------------------
      lambda___(   1 )=       0.181180   gamma___=       0.011941 meV   omega=      6.3610 meV
-     lambda_tr(   1 )=       0.183503   gamma_tr=       0.012094 meV   omega=      6.3610 meV
+     lambda_tr(   1 )=       0.183502   gamma_tr=       0.012094 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.011604   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
-     lambda_tr( tot )=       0.172655
+     lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
+     lambda___( tot )=       0.239507
+     lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
 
@@ -1041,7 +1079,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1057,7 +1095,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.149116   gamma_tr=       0.005900 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055210   gamma___=       0.004600 meV   omega=      7.1525 meV
      lambda_tr(   3 )=       0.050116   gamma_tr=       0.004176 meV   omega=      7.1525 meV
-     lambda( tot )=       0.536777
+     lambda___( tot )=       0.536776
      lambda_tr( tot )=       0.478072
      -------------------------------------------------------------------
 
@@ -1071,10 +1109,10 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   1 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
      lambda___(   2 )=       0.000000   gamma___=       0.000000 meV   omega=      3.2456 meV
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
-     lambda___(   3 )=      -0.000000   gamma___=      -0.000000 meV   omega=      5.8847 meV
-     lambda_tr(   3 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      5.8847 meV
-     lambda( tot )=      -0.000000
-     lambda_tr( tot )=      -0.000000
+     lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      5.8847 meV
+     lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.8847 meV
+     lambda___( tot )=       0.000000
+     lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
 
@@ -1089,7 +1127,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.0810 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      4.8164 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      4.8164 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1105,7 +1143,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.149116   gamma_tr=       0.005900 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055210   gamma___=       0.004600 meV   omega=      7.1525 meV
      lambda_tr(   3 )=       0.050116   gamma_tr=       0.004176 meV   omega=      7.1525 meV
-     lambda( tot )=       0.536777
+     lambda___( tot )=       0.536776
      lambda_tr( tot )=       0.478072
      -------------------------------------------------------------------
 
@@ -1121,7 +1159,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1137,7 +1175,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
@@ -1153,7 +1191,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1169,7 +1207,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1179,13 +1217,13 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
 
      ismear =     1 iq =      50 coord.:   0.16667  0.33333  0.16667 wt:   0.00463
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.311789   gamma___=       0.010985 meV   omega=      4.6509 meV
+     lambda___(   1 )=       0.311788   gamma___=       0.010985 meV   omega=      4.6509 meV
      lambda_tr(   1 )=       0.278840   gamma_tr=       0.009824 meV   omega=      4.6509 meV
      lambda___(   2 )=       0.169778   gamma___=       0.006718 meV   omega=      4.9287 meV
-     lambda_tr(   2 )=       0.149116   gamma_tr=       0.005900 meV   omega=      4.9287 meV
+     lambda_tr(   2 )=       0.149115   gamma_tr=       0.005900 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055210   gamma___=       0.004600 meV   omega=      7.1525 meV
      lambda_tr(   3 )=       0.050116   gamma_tr=       0.004176 meV   omega=      7.1525 meV
-     lambda( tot )=       0.536776
+     lambda___( tot )=       0.536776
      lambda_tr( tot )=       0.478071
      -------------------------------------------------------------------
 
@@ -1201,7 +1239,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1211,13 +1249,13 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
 
      ismear =     1 iq =      52 coord.:   0.16667  0.33333  0.50000 wt:   0.00463
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.065583   gamma___=       0.004615 meV   omega=      6.5728 meV
+     lambda___(   1 )=       0.065582   gamma___=       0.004615 meV   omega=      6.5728 meV
      lambda_tr(   1 )=       0.053281   gamma_tr=       0.003749 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160243   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
-     lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
+     lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -1233,7 +1271,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1248,8 +1286,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.160243   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
-     lambda_tr(   3 )=       0.125513   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303282
+     lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162942
      -------------------------------------------------------------------
 
@@ -1263,10 +1301,10 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   1 )=       0.183502   gamma_tr=       0.012094 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
-     lambda___(   3 )=       0.053788   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.011604   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
-     lambda_tr( tot )=       0.172655
+     lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
+     lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
+     lambda___( tot )=       0.239507
+     lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
 
@@ -1281,7 +1319,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1297,7 +1335,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125513   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -1313,7 +1351,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1329,7 +1367,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.001288   gamma_tr=       0.000132 meV   omega=      7.9253 meV
      lambda___(   3 )=       0.009067   gamma___=       0.001400 meV   omega=      9.7374 meV
      lambda_tr(   3 )=       0.009067   gamma_tr=       0.001400 meV   omega=      9.7374 meV
-     lambda( tot )=       0.085625
+     lambda___( tot )=       0.085625
      lambda_tr( tot )=       0.085625
      -------------------------------------------------------------------
 
@@ -1345,7 +1383,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1361,7 +1399,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1376,8 +1414,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda_tr(   3 )=      -0.011604   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
@@ -1393,7 +1431,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1409,7 +1447,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.001288   gamma_tr=       0.000132 meV   omega=      7.9253 meV
      lambda___(   3 )=       0.009067   gamma___=       0.001400 meV   omega=      9.7374 meV
      lambda_tr(   3 )=       0.009067   gamma_tr=       0.001400 meV   omega=      9.7374 meV
-     lambda( tot )=       0.085625
+     lambda___( tot )=       0.085625
      lambda_tr( tot )=       0.085625
      -------------------------------------------------------------------
 
@@ -1425,7 +1463,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1436,12 +1474,12 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      ismear =     1 iq =      66 coord.:   0.16667  0.66667  0.83333 wt:   0.00463
      -------------------------------------------------------------------
      lambda___(   1 )=       0.065582   gamma___=       0.004615 meV   omega=      6.5728 meV
-     lambda_tr(   1 )=       0.053281   gamma_tr=       0.003749 meV   omega=      6.5728 meV
+     lambda_tr(   1 )=       0.053280   gamma_tr=       0.003749 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160243   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
-     lambda_tr(   3 )=       0.125513   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -1451,13 +1489,13 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
 
      ismear =     1 iq =      67 coord.:   0.16667  0.83333  0.00000 wt:   0.00463
      -------------------------------------------------------------------
-     lambda___(   1 )=       0.311789   gamma___=       0.010985 meV   omega=      4.6509 meV
+     lambda___(   1 )=       0.311788   gamma___=       0.010985 meV   omega=      4.6509 meV
      lambda_tr(   1 )=       0.278840   gamma_tr=       0.009824 meV   omega=      4.6509 meV
      lambda___(   2 )=       0.169778   gamma___=       0.006718 meV   omega=      4.9287 meV
-     lambda_tr(   2 )=       0.149116   gamma_tr=       0.005900 meV   omega=      4.9287 meV
+     lambda_tr(   2 )=       0.149115   gamma_tr=       0.005900 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055210   gamma___=       0.004600 meV   omega=      7.1525 meV
      lambda_tr(   3 )=       0.050116   gamma_tr=       0.004176 meV   omega=      7.1525 meV
-     lambda( tot )=       0.536776
+     lambda___( tot )=       0.536776
      lambda_tr( tot )=       0.478071
      -------------------------------------------------------------------
 
@@ -1473,7 +1511,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1489,8 +1527,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
-     lambda_tr( tot )=       0.162942
+     lambda___( tot )=       0.303281
+     lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
 
@@ -1505,7 +1543,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1519,9 +1557,9 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   1 )=       0.053280   gamma_tr=       0.003749 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160243   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
-     lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
-     lambda_tr(   3 )=       0.125513   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
+     lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
+     lambda___( tot )=       0.303280
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -1537,7 +1575,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1553,7 +1591,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.146973   gamma_tr=      -0.006733 meV   omega=      5.3034 meV
      lambda___(   3 )=       0.255676   gamma___=       0.028608 meV   omega=      8.2884 meV
      lambda_tr(   3 )=      -0.198283   gamma_tr=      -0.022186 meV   omega=      8.2884 meV
-     lambda( tot )=       0.493116
+     lambda___( tot )=       0.493116
      lambda_tr( tot )=      -0.492229
      -------------------------------------------------------------------
 
@@ -1569,7 +1607,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1585,8 +1623,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.419761   gamma_tr=       0.024059 meV   omega=      5.9321 meV
      lambda___(   3 )=       0.001406   gamma___=       0.000209 meV   omega=      9.5548 meV
      lambda_tr(   3 )=       0.001406   gamma_tr=       0.000209 meV   omega=      9.5548 meV
-     lambda( tot )=       0.840928
-     lambda_tr( tot )=       0.840928
+     lambda___( tot )=       0.840927
+     lambda_tr( tot )=       0.840927
      -------------------------------------------------------------------
 
 
@@ -1601,7 +1639,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1616,8 +1654,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004161   gamma___=       0.000504 meV   omega=      8.6241 meV
      lambda_tr(   2 )=       0.011419   gamma_tr=       0.001383 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115530   gamma___=       0.014599 meV   omega=      8.8081 meV
-     lambda_tr(   3 )=       0.315167   gamma_tr=       0.039826 meV   omega=      8.8081 meV
-     lambda( tot )=       0.135679
+     lambda_tr(   3 )=       0.315166   gamma_tr=       0.039826 meV   omega=      8.8081 meV
+     lambda___( tot )=       0.135679
      lambda_tr( tot )=       0.373360
      -------------------------------------------------------------------
 
@@ -1633,7 +1671,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1649,7 +1687,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1665,8 +1703,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.149116   gamma_tr=       0.005900 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055210   gamma___=       0.004600 meV   omega=      7.1525 meV
      lambda_tr(   3 )=       0.050116   gamma_tr=       0.004176 meV   omega=      7.1525 meV
-     lambda( tot )=       0.536777
-     lambda_tr( tot )=       0.478072
+     lambda___( tot )=       0.536776
+     lambda_tr( tot )=       0.478071
      -------------------------------------------------------------------
 
 
@@ -1681,7 +1719,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1695,9 +1733,9 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   1 )=       0.053280   gamma_tr=       0.003749 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160243   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
-     lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
+     lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -1713,7 +1751,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1728,8 +1766,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.160243   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
-     lambda_tr(   3 )=       0.125513   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
+     lambda___( tot )=       0.303282
      lambda_tr( tot )=       0.162942
      -------------------------------------------------------------------
 
@@ -1745,8 +1783,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.419761   gamma_tr=       0.024059 meV   omega=      5.9321 meV
      lambda___(   3 )=       0.001406   gamma___=       0.000209 meV   omega=      9.5548 meV
      lambda_tr(   3 )=       0.001406   gamma_tr=       0.000209 meV   omega=      9.5548 meV
-     lambda( tot )=       0.840928
-     lambda_tr( tot )=       0.840928
+     lambda___( tot )=       0.840927
+     lambda_tr( tot )=       0.840927
      -------------------------------------------------------------------
 
 
@@ -1761,7 +1799,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1777,7 +1815,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.146973   gamma_tr=      -0.006733 meV   omega=      5.3034 meV
      lambda___(   3 )=       0.255676   gamma___=       0.028608 meV   omega=      8.2884 meV
      lambda_tr(   3 )=      -0.198283   gamma_tr=      -0.022186 meV   omega=      8.2884 meV
-     lambda( tot )=       0.493116
+     lambda___( tot )=       0.493116
      lambda_tr( tot )=      -0.492229
      -------------------------------------------------------------------
 
@@ -1793,7 +1831,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1808,8 +1846,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004161   gamma___=       0.000504 meV   omega=      8.6241 meV
      lambda_tr(   2 )=       0.011419   gamma_tr=       0.001383 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115530   gamma___=       0.014599 meV   omega=      8.8081 meV
-     lambda_tr(   3 )=       0.315167   gamma_tr=       0.039826 meV   omega=      8.8081 meV
-     lambda( tot )=       0.135679
+     lambda_tr(   3 )=       0.315166   gamma_tr=       0.039826 meV   omega=      8.8081 meV
+     lambda___( tot )=       0.135679
      lambda_tr( tot )=       0.373360
      -------------------------------------------------------------------
 
@@ -1825,7 +1863,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1841,7 +1879,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -1852,12 +1890,12 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      ismear =     1 iq =      92 coord.:   0.33333  0.50000  0.16667 wt:   0.00463
      -------------------------------------------------------------------
      lambda___(   1 )=       0.065582   gamma___=       0.004615 meV   omega=      6.5728 meV
-     lambda_tr(   1 )=       0.053281   gamma_tr=       0.003749 meV   omega=      6.5728 meV
+     lambda_tr(   1 )=       0.053280   gamma_tr=       0.003749 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160243   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125513   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -1873,7 +1911,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1888,8 +1926,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda_tr(   3 )=      -0.011604   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
@@ -1905,7 +1943,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1921,7 +1959,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.001288   gamma_tr=       0.000132 meV   omega=      7.9253 meV
      lambda___(   3 )=       0.009067   gamma___=       0.001400 meV   omega=      9.7374 meV
      lambda_tr(   3 )=       0.009067   gamma_tr=       0.001400 meV   omega=      9.7374 meV
-     lambda( tot )=       0.085625
+     lambda___( tot )=       0.085625
      lambda_tr( tot )=       0.085625
      -------------------------------------------------------------------
 
@@ -1937,8 +1975,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.011419   gamma_tr=       0.001383 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115530   gamma___=       0.014599 meV   omega=      8.8081 meV
      lambda_tr(   3 )=       0.315166   gamma_tr=       0.039826 meV   omega=      8.8081 meV
-     lambda( tot )=       0.135679
-     lambda_tr( tot )=       0.373360
+     lambda___( tot )=       0.135679
+     lambda_tr( tot )=       0.373361
      -------------------------------------------------------------------
 
 
@@ -1953,7 +1991,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1968,9 +2006,9 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004161   gamma___=       0.000504 meV   omega=      8.6241 meV
      lambda_tr(   2 )=       0.011419   gamma_tr=       0.001383 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115530   gamma___=       0.014599 meV   omega=      8.8081 meV
-     lambda_tr(   3 )=       0.315167   gamma_tr=       0.039826 meV   omega=      8.8081 meV
-     lambda( tot )=       0.135679
-     lambda_tr( tot )=       0.373361
+     lambda_tr(   3 )=       0.315166   gamma_tr=       0.039826 meV   omega=      8.8081 meV
+     lambda___( tot )=       0.135679
+     lambda_tr( tot )=       0.373360
      -------------------------------------------------------------------
 
 
@@ -1985,7 +2023,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -1998,10 +2036,10 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   1 )=       0.015988   gamma___=       0.001275 meV   omega=      6.9975 meV
      lambda_tr(   1 )=       0.046775   gamma_tr=       0.003730 meV   omega=      6.9975 meV
      lambda___(   2 )=       0.004161   gamma___=       0.000504 meV   omega=      8.6241 meV
-     lambda_tr(   2 )=       0.011418   gamma_tr=       0.001383 meV   omega=      8.6241 meV
+     lambda_tr(   2 )=       0.011419   gamma_tr=       0.001383 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115530   gamma___=       0.014599 meV   omega=      8.8081 meV
      lambda_tr(   3 )=       0.315166   gamma_tr=       0.039826 meV   omega=      8.8081 meV
-     lambda( tot )=       0.135679
+     lambda___( tot )=       0.135679
      lambda_tr( tot )=       0.373360
      -------------------------------------------------------------------
 
@@ -2017,7 +2055,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2033,7 +2071,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2049,7 +2087,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -2065,7 +2103,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -2081,7 +2119,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.001288   gamma_tr=       0.000132 meV   omega=      7.9253 meV
      lambda___(   3 )=       0.009067   gamma___=       0.001400 meV   omega=      9.7374 meV
      lambda_tr(   3 )=       0.009067   gamma_tr=       0.001400 meV   omega=      9.7374 meV
-     lambda( tot )=       0.085625
+     lambda___( tot )=       0.085625
      lambda_tr( tot )=       0.085625
      -------------------------------------------------------------------
 
@@ -2097,7 +2135,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2113,8 +2151,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
-     lambda_tr( tot )=       0.172654
+     lambda___( tot )=       0.239507
+     lambda_tr( tot )=       0.172655
      -------------------------------------------------------------------
 
 
@@ -2129,7 +2167,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      6.1047 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.5393 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.5393 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2140,12 +2178,12 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      ismear =     1 iq =     110 coord.:   0.50000  0.00000  0.16667 wt:   0.00463
      -------------------------------------------------------------------
      lambda___(   1 )=       0.181180   gamma___=       0.011941 meV   omega=      6.3610 meV
-     lambda_tr(   1 )=       0.183503   gamma_tr=       0.012094 meV   omega=      6.3610 meV
+     lambda_tr(   1 )=       0.183502   gamma_tr=       0.012094 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda_tr(   3 )=      -0.011604   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172655
      -------------------------------------------------------------------
 
@@ -2161,7 +2199,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -2177,7 +2215,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.059300   gamma_tr=       0.004763 meV   omega=      7.0223 meV
      lambda___(   3 )=       0.230362   gamma___=       0.042522 meV   omega=     10.6455 meV
      lambda_tr(   3 )=       0.563194   gamma_tr=       0.103958 meV   omega=     10.6455 meV
-     lambda( tot )=       0.282297
+     lambda___( tot )=       0.282297
      lambda_tr( tot )=       0.681793
      -------------------------------------------------------------------
 
@@ -2193,7 +2231,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -2209,7 +2247,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
@@ -2225,7 +2263,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
@@ -2241,7 +2279,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2252,12 +2290,12 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      ismear =     1 iq =     117 coord.:   0.50000  0.16667  0.33333 wt:   0.00463
      -------------------------------------------------------------------
      lambda___(   1 )=       0.065582   gamma___=       0.004615 meV   omega=      6.5728 meV
-     lambda_tr(   1 )=       0.053281   gamma_tr=       0.003749 meV   omega=      6.5728 meV
+     lambda_tr(   1 )=       0.053280   gamma_tr=       0.003749 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160243   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
-     lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
-     lambda_tr(   3 )=       0.125513   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
+     lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
+     lambda___( tot )=       0.303280
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -2273,7 +2311,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -2289,7 +2327,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.001288   gamma_tr=       0.000132 meV   omega=      7.9253 meV
      lambda___(   3 )=       0.009067   gamma___=       0.001400 meV   omega=      9.7374 meV
      lambda_tr(   3 )=       0.009067   gamma_tr=       0.001400 meV   omega=      9.7374 meV
-     lambda( tot )=       0.085625
+     lambda___( tot )=       0.085625
      lambda_tr( tot )=       0.085624
      -------------------------------------------------------------------
 
@@ -2305,7 +2343,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2321,7 +2359,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -2337,7 +2375,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125513   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -2353,7 +2391,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2369,7 +2407,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
@@ -2385,7 +2423,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2401,8 +2439,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.001288   gamma_tr=       0.000132 meV   omega=      7.9253 meV
      lambda___(   3 )=       0.009067   gamma___=       0.001400 meV   omega=      9.7374 meV
      lambda_tr(   3 )=       0.009067   gamma_tr=       0.001400 meV   omega=      9.7374 meV
-     lambda( tot )=       0.085625
-     lambda_tr( tot )=       0.085625
+     lambda___( tot )=       0.085625
+     lambda_tr( tot )=       0.085624
      -------------------------------------------------------------------
 
 
@@ -2417,7 +2455,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.059300   gamma_tr=       0.004763 meV   omega=      7.0223 meV
      lambda___(   3 )=       0.230362   gamma___=       0.042522 meV   omega=     10.6455 meV
      lambda_tr(   3 )=       0.563194   gamma_tr=       0.103958 meV   omega=     10.6455 meV
-     lambda( tot )=       0.282297
+     lambda___( tot )=       0.282297
      lambda_tr( tot )=       0.681793
      -------------------------------------------------------------------
 
@@ -2433,7 +2471,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -2447,9 +2485,9 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   1 )=       0.183502   gamma_tr=       0.012094 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
-     lambda___(   3 )=       0.053788   gamma___=       0.007633 meV   omega=      9.3341 meV
+     lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.011604   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172655
      -------------------------------------------------------------------
 
@@ -2465,7 +2503,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      6.1047 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.5393 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.5393 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2476,12 +2514,12 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      ismear =     1 iq =     131 coord.:   0.50000  0.50000  0.66667 wt:   0.00463
      -------------------------------------------------------------------
      lambda___(   1 )=       0.181180   gamma___=       0.011941 meV   omega=      6.3610 meV
-     lambda_tr(   1 )=       0.183503   gamma_tr=       0.012094 meV   omega=      6.3610 meV
+     lambda_tr(   1 )=       0.183502   gamma_tr=       0.012094 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
@@ -2497,7 +2535,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -2513,7 +2551,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -2529,7 +2567,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.001288   gamma_tr=       0.000132 meV   omega=      7.9253 meV
      lambda___(   3 )=       0.009067   gamma___=       0.001400 meV   omega=      9.7374 meV
      lambda_tr(   3 )=       0.009067   gamma_tr=       0.001400 meV   omega=      9.7374 meV
-     lambda( tot )=       0.085625
+     lambda___( tot )=       0.085625
      lambda_tr( tot )=       0.085625
      -------------------------------------------------------------------
 
@@ -2545,7 +2583,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2561,7 +2599,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172655
      -------------------------------------------------------------------
 
@@ -2577,7 +2615,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2593,7 +2631,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -2609,7 +2647,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172655
      -------------------------------------------------------------------
 
@@ -2625,7 +2663,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2641,7 +2679,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.001288   gamma_tr=       0.000132 meV   omega=      7.9253 meV
      lambda___(   3 )=       0.009067   gamma___=       0.001400 meV   omega=      9.7374 meV
      lambda_tr(   3 )=       0.009067   gamma_tr=       0.001400 meV   omega=      9.7374 meV
-     lambda( tot )=       0.085625
+     lambda___( tot )=       0.085625
      lambda_tr( tot )=       0.085625
      -------------------------------------------------------------------
 
@@ -2657,7 +2695,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -2671,9 +2709,9 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   1 )=       0.053281   gamma_tr=       0.003749 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160243   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
-     lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
+     lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -2689,7 +2727,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2705,8 +2743,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.146973   gamma_tr=      -0.006733 meV   omega=      5.3034 meV
      lambda___(   3 )=       0.255676   gamma___=       0.028608 meV   omega=      8.2884 meV
      lambda_tr(   3 )=      -0.198283   gamma_tr=      -0.022186 meV   omega=      8.2884 meV
-     lambda( tot )=       0.493116
-     lambda_tr( tot )=      -0.492230
+     lambda___( tot )=       0.493116
+     lambda_tr( tot )=      -0.492229
      -------------------------------------------------------------------
 
 
@@ -2721,7 +2759,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2736,9 +2774,9 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004161   gamma___=       0.000504 meV   omega=      8.6241 meV
      lambda_tr(   2 )=       0.011419   gamma_tr=       0.001383 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115530   gamma___=       0.014599 meV   omega=      8.8081 meV
-     lambda_tr(   3 )=       0.315167   gamma_tr=       0.039826 meV   omega=      8.8081 meV
-     lambda( tot )=       0.135679
-     lambda_tr( tot )=       0.373360
+     lambda_tr(   3 )=       0.315166   gamma_tr=       0.039826 meV   omega=      8.8081 meV
+     lambda___( tot )=       0.135679
+     lambda_tr( tot )=       0.373361
      -------------------------------------------------------------------
 
 
@@ -2753,7 +2791,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -2769,7 +2807,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.419761   gamma_tr=       0.024059 meV   omega=      5.9321 meV
      lambda___(   3 )=       0.001406   gamma___=       0.000209 meV   omega=      9.5548 meV
      lambda_tr(   3 )=       0.001406   gamma_tr=       0.000209 meV   omega=      9.5548 meV
-     lambda( tot )=       0.840928
+     lambda___( tot )=       0.840928
      lambda_tr( tot )=       0.840928
      -------------------------------------------------------------------
 
@@ -2785,7 +2823,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -2801,7 +2839,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2816,8 +2854,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.011604   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
@@ -2833,7 +2871,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2849,7 +2887,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.001288   gamma_tr=       0.000132 meV   omega=      7.9253 meV
      lambda___(   3 )=       0.009067   gamma___=       0.001400 meV   omega=      9.7374 meV
      lambda_tr(   3 )=       0.009067   gamma_tr=       0.001400 meV   omega=      9.7374 meV
-     lambda( tot )=       0.085625
+     lambda___( tot )=       0.085625
      lambda_tr( tot )=       0.085625
      -------------------------------------------------------------------
 
@@ -2865,7 +2903,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -2880,8 +2918,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.160243   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
-     lambda_tr(   3 )=       0.125513   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -2894,10 +2932,10 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   1 )=       0.015988   gamma___=       0.001275 meV   omega=      6.9975 meV
      lambda_tr(   1 )=       0.046775   gamma_tr=       0.003730 meV   omega=      6.9975 meV
      lambda___(   2 )=       0.004161   gamma___=       0.000504 meV   omega=      8.6241 meV
-     lambda_tr(   2 )=       0.011419   gamma_tr=       0.001383 meV   omega=      8.6241 meV
+     lambda_tr(   2 )=       0.011418   gamma_tr=       0.001383 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115530   gamma___=       0.014599 meV   omega=      8.8081 meV
      lambda_tr(   3 )=       0.315166   gamma_tr=       0.039826 meV   omega=      8.8081 meV
-     lambda( tot )=       0.135679
+     lambda___( tot )=       0.135679
      lambda_tr( tot )=       0.373360
      -------------------------------------------------------------------
 
@@ -2913,7 +2951,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2928,9 +2966,9 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004161   gamma___=       0.000504 meV   omega=      8.6241 meV
      lambda_tr(   2 )=       0.011419   gamma_tr=       0.001383 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115530   gamma___=       0.014599 meV   omega=      8.8081 meV
-     lambda_tr(   3 )=       0.315167   gamma_tr=       0.039826 meV   omega=      8.8081 meV
-     lambda( tot )=       0.135679
-     lambda_tr( tot )=       0.373361
+     lambda_tr(   3 )=       0.315166   gamma_tr=       0.039826 meV   omega=      8.8081 meV
+     lambda___( tot )=       0.135679
+     lambda_tr( tot )=       0.373360
      -------------------------------------------------------------------
 
 
@@ -2945,7 +2983,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2961,7 +2999,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.011419   gamma_tr=       0.001383 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115530   gamma___=       0.014599 meV   omega=      8.8081 meV
      lambda_tr(   3 )=       0.315166   gamma_tr=       0.039826 meV   omega=      8.8081 meV
-     lambda( tot )=       0.135679
+     lambda___( tot )=       0.135679
      lambda_tr( tot )=       0.373360
      -------------------------------------------------------------------
 
@@ -2977,7 +3015,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -2993,7 +3031,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -3009,7 +3047,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.001288   gamma_tr=       0.000132 meV   omega=      7.9253 meV
      lambda___(   3 )=       0.009067   gamma___=       0.001400 meV   omega=      9.7374 meV
      lambda_tr(   3 )=       0.009067   gamma_tr=       0.001400 meV   omega=      9.7374 meV
-     lambda( tot )=       0.085625
+     lambda___( tot )=       0.085625
      lambda_tr( tot )=       0.085625
      -------------------------------------------------------------------
 
@@ -3025,7 +3063,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3041,8 +3079,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
-     lambda_tr( tot )=       0.172655
+     lambda___( tot )=       0.239507
+     lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
 
@@ -3057,7 +3095,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3073,7 +3111,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -3089,7 +3127,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.419761   gamma_tr=       0.024059 meV   omega=      5.9321 meV
      lambda___(   3 )=       0.001406   gamma___=       0.000209 meV   omega=      9.5548 meV
      lambda_tr(   3 )=       0.001406   gamma_tr=       0.000209 meV   omega=      9.5548 meV
-     lambda( tot )=       0.840928
+     lambda___( tot )=       0.840928
      lambda_tr( tot )=       0.840928
      -------------------------------------------------------------------
 
@@ -3105,7 +3143,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -3120,8 +3158,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004161   gamma___=       0.000504 meV   omega=      8.6241 meV
      lambda_tr(   2 )=       0.011419   gamma_tr=       0.001383 meV   omega=      8.6241 meV
      lambda___(   3 )=       0.115530   gamma___=       0.014599 meV   omega=      8.8081 meV
-     lambda_tr(   3 )=       0.315167   gamma_tr=       0.039826 meV   omega=      8.8081 meV
-     lambda( tot )=       0.135679
+     lambda_tr(   3 )=       0.315166   gamma_tr=       0.039826 meV   omega=      8.8081 meV
+     lambda___( tot )=       0.135679
      lambda_tr( tot )=       0.373360
      -------------------------------------------------------------------
 
@@ -3137,7 +3175,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3153,8 +3191,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.146973   gamma_tr=      -0.006733 meV   omega=      5.3034 meV
      lambda___(   3 )=       0.255676   gamma___=       0.028608 meV   omega=      8.2884 meV
      lambda_tr(   3 )=      -0.198283   gamma_tr=      -0.022186 meV   omega=      8.2884 meV
-     lambda( tot )=       0.493116
-     lambda_tr( tot )=      -0.492230
+     lambda___( tot )=       0.493116
+     lambda_tr( tot )=      -0.492229
      -------------------------------------------------------------------
 
 
@@ -3169,7 +3207,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -3185,7 +3223,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -3199,9 +3237,9 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   1 )=       0.053280   gamma_tr=       0.003749 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160243   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
-     lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
+     lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303280
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -3217,7 +3255,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3233,7 +3271,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -3249,7 +3287,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -3262,11 +3300,11 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   1 )=       0.311789   gamma___=       0.010985 meV   omega=      4.6509 meV
      lambda_tr(   1 )=       0.278840   gamma_tr=       0.009824 meV   omega=      4.6509 meV
      lambda___(   2 )=       0.169778   gamma___=       0.006718 meV   omega=      4.9287 meV
-     lambda_tr(   2 )=       0.149116   gamma_tr=       0.005900 meV   omega=      4.9287 meV
+     lambda_tr(   2 )=       0.149115   gamma_tr=       0.005900 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055210   gamma___=       0.004600 meV   omega=      7.1525 meV
      lambda_tr(   3 )=       0.050116   gamma_tr=       0.004176 meV   omega=      7.1525 meV
-     lambda( tot )=       0.536776
-     lambda_tr( tot )=       0.478072
+     lambda___( tot )=       0.536776
+     lambda_tr( tot )=       0.478071
      -------------------------------------------------------------------
 
 
@@ -3281,7 +3319,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.0810 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      4.8164 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      4.8164 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3297,7 +3335,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.149116   gamma_tr=       0.005900 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055210   gamma___=       0.004600 meV   omega=      7.1525 meV
      lambda_tr(   3 )=       0.050116   gamma_tr=       0.004176 meV   omega=      7.1525 meV
-     lambda( tot )=       0.536776
+     lambda___( tot )=       0.536776
      lambda_tr( tot )=       0.478071
      -------------------------------------------------------------------
 
@@ -3313,7 +3351,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3329,7 +3367,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
@@ -3345,7 +3383,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -3361,7 +3399,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      5.8847 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.8847 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3377,8 +3415,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.149116   gamma_tr=       0.005900 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055210   gamma___=       0.004600 meV   omega=      7.1525 meV
      lambda_tr(   3 )=       0.050116   gamma_tr=       0.004176 meV   omega=      7.1525 meV
-     lambda( tot )=       0.536776
-     lambda_tr( tot )=       0.478072
+     lambda___( tot )=       0.536776
+     lambda_tr( tot )=       0.478071
      -------------------------------------------------------------------
 
 
@@ -3393,7 +3431,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -3408,8 +3446,8 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.160243   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
-     lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda_tr(   3 )=       0.125513   gamma_tr=       0.017280 meV   omega=      9.1937 meV
+     lambda___( tot )=       0.303282
      lambda_tr( tot )=       0.162942
      -------------------------------------------------------------------
 
@@ -3425,7 +3463,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3441,7 +3479,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125513   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -3457,7 +3495,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -3473,7 +3511,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3489,7 +3527,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -3505,7 +3543,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -3521,7 +3559,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.001288   gamma_tr=       0.000132 meV   omega=      7.9253 meV
      lambda___(   3 )=       0.009067   gamma___=       0.001400 meV   omega=      9.7374 meV
      lambda_tr(   3 )=       0.009067   gamma_tr=       0.001400 meV   omega=      9.7374 meV
-     lambda( tot )=       0.085625
+     lambda___( tot )=       0.085625
      lambda_tr( tot )=       0.085625
      -------------------------------------------------------------------
 
@@ -3537,7 +3575,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3552,9 +3590,9 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.011604   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
-     lambda_tr( tot )=       0.172655
+     lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
+     lambda___( tot )=       0.239507
+     lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
 
@@ -3569,7 +3607,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
      lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
      lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172654
      -------------------------------------------------------------------
 
@@ -3585,7 +3623,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3601,7 +3639,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.001288   gamma_tr=       0.000132 meV   omega=      7.9253 meV
      lambda___(   3 )=       0.009067   gamma___=       0.001400 meV   omega=      9.7374 meV
      lambda_tr(   3 )=       0.009067   gamma_tr=       0.001400 meV   omega=      9.7374 meV
-     lambda( tot )=       0.085625
+     lambda___( tot )=       0.085625
      lambda_tr( tot )=       0.085625
      -------------------------------------------------------------------
 
@@ -3617,7 +3655,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      7.3507 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.9781 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.9781 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -3633,7 +3671,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303280
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -3649,7 +3687,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3665,7 +3703,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -3679,9 +3717,9 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   1 )=       0.053280   gamma_tr=       0.003749 meV   omega=      6.5728 meV
      lambda___(   2 )=       0.160243   gamma___=       0.012468 meV   omega=      6.9115 meV
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
-     lambda___(   3 )=       0.077456   gamma___=       0.010664 meV   omega=      9.1937 meV
+     lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303280
+     lambda___( tot )=       0.303280
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -3697,7 +3735,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.2341 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      9.0786 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      9.0786 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3713,7 +3751,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.015852   gamma_tr=      -0.001233 meV   omega=      6.9115 meV
      lambda___(   3 )=       0.077455   gamma___=       0.010664 meV   omega=      9.1937 meV
      lambda_tr(   3 )=       0.125512   gamma_tr=       0.017280 meV   omega=      9.1937 meV
-     lambda( tot )=       0.303281
+     lambda___( tot )=       0.303281
      lambda_tr( tot )=       0.162941
      -------------------------------------------------------------------
 
@@ -3729,7 +3767,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -3745,7 +3783,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.149115   gamma_tr=       0.005900 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055210   gamma___=       0.004600 meV   omega=      7.1525 meV
      lambda_tr(   3 )=       0.050116   gamma_tr=       0.004176 meV   omega=      7.1525 meV
-     lambda( tot )=       0.536776
+     lambda___( tot )=       0.536776
      lambda_tr( tot )=       0.478071
      -------------------------------------------------------------------
 
@@ -3759,10 +3797,10 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   1 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
      lambda___(   2 )=       0.000000   gamma___=       0.000000 meV   omega=      3.2456 meV
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.2456 meV
-     lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      5.8847 meV
+     lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      5.8847 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.8847 meV
-     lambda( tot )=       0.000001
-     lambda_tr( tot )=       0.000001
+     lambda___( tot )=       0.000000
+     lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
 
@@ -3777,7 +3815,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      5.4811 meV
      lambda___(   3 )=       0.000001   gamma___=       0.000000 meV   omega=      8.2169 meV
      lambda_tr(   3 )=       0.000001   gamma_tr=       0.000000 meV   omega=      8.2169 meV
-     lambda( tot )=       0.000002
+     lambda___( tot )=       0.000002
      lambda_tr( tot )=       0.000002
      -------------------------------------------------------------------
 
@@ -3791,9 +3829,9 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   1 )=       0.183503   gamma_tr=       0.012094 meV   omega=      6.3610 meV
      lambda___(   2 )=       0.004540   gamma___=       0.000364 meV   omega=      7.0201 meV
      lambda_tr(   2 )=       0.000757   gamma_tr=       0.000061 meV   omega=      7.0201 meV
-     lambda___(   3 )=       0.053787   gamma___=       0.007633 meV   omega=      9.3341 meV
-     lambda_tr(   3 )=      -0.011605   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
-     lambda( tot )=       0.239507
+     lambda___(   3 )=       0.053788   gamma___=       0.007633 meV   omega=      9.3341 meV
+     lambda_tr(   3 )=      -0.011604   gamma_tr=      -0.001647 meV   omega=      9.3341 meV
+     lambda___( tot )=       0.239507
      lambda_tr( tot )=       0.172655
      -------------------------------------------------------------------
 
@@ -3809,7 +3847,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=      -0.000000   gamma_tr=      -0.000000 meV   omega=      6.6358 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      8.9484 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      8.9484 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3825,7 +3863,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.149115   gamma_tr=       0.005900 meV   omega=      4.9287 meV
      lambda___(   3 )=       0.055210   gamma___=       0.004600 meV   omega=      7.1525 meV
      lambda_tr(   3 )=       0.050116   gamma_tr=       0.004176 meV   omega=      7.1525 meV
-     lambda( tot )=       0.536776
+     lambda___( tot )=       0.536776
      lambda_tr( tot )=       0.478071
      -------------------------------------------------------------------
 
@@ -3841,7 +3879,7 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      lambda_tr(   2 )=       0.000000   gamma_tr=       0.000000 meV   omega=      3.0810 meV
      lambda___(   3 )=       0.000000   gamma___=       0.000000 meV   omega=      4.8164 meV
      lambda_tr(   3 )=       0.000000   gamma_tr=       0.000000 meV   omega=      4.8164 meV
-     lambda( tot )=       0.000000
+     lambda___( tot )=       0.000000
      lambda_tr( tot )=       0.000000
      -------------------------------------------------------------------
 
@@ -3849,38 +3887,42 @@ Norm of the difference between old and new force-constants:   0.0010986066666549
      Number of (k,k+q) pairs on the Fermi surface:      214 out of      216
 
      ===================================================================
-     Memory usage:  VmHWM =        62Mb
-                   VmPeak =       459Mb
+     Memory usage:  VmHWM =        68Mb
+                   VmPeak =       312Mb
      ===================================================================
 
-
+ 
      Unfolding on the coarse grid
-     elphon_wrap  :     40.78s CPU     40.99s WALL (       1 calls)
-
+     elphon_wrap  :    172.31s CPU    174.13s WALL (       1 calls)
+ 
      INITIALIZATION: 
-
-     init_vloc    :      0.10s CPU      0.11s WALL (      29 calls)
-     init_us_1    :      1.27s CPU      1.27s WALL (      29 calls)
-
-
+ 
+     init_vloc    :      0.05s CPU      0.05s WALL (      29 calls)
+     init_us_1    :      1.78s CPU      1.78s WALL (      29 calls)
+ 
+ 
      Electron-Phonon interpolation
-     ephwann      :      0.67s CPU      0.70s WALL (       1 calls)
-     ep-interp    :      0.58s CPU      0.60s WALL (     216 calls)
-     PH SELF-ENER :      0.02s CPU      0.02s WALL (     216 calls)
-
+     ephwann      :      2.43s CPU      2.56s WALL (       1 calls)
+     ep-interp    :      2.25s CPU      2.34s WALL (     216 calls)
+     PH SELF-ENER :      0.15s CPU      0.15s WALL (     216 calls)
+ 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
      Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
-     ep: step 1   :      0.00s CPU      0.00s WALL (      81 calls)
-     ep: step 2   :      0.01s CPU      0.01s WALL (      81 calls)
-     DynW2B       :      0.00s CPU      0.00s WALL (     216 calls)
-     HamW2B       :      0.26s CPU      0.26s WALL (   23436 calls)
-     ephW2Bp      :      0.03s CPU      0.03s WALL (     216 calls)
-
-
+     ep: step 1   :      0.00s CPU      0.01s WALL (      81 calls)
+     ep: step 2   :      0.02s CPU      0.03s WALL (      81 calls)
+     DynW2B       :      0.01s CPU      0.01s WALL (     216 calls)
+     HamW2B       :      0.88s CPU      0.93s WALL (   93744 calls)
+     ephW2Bp      :      0.04s CPU      0.06s WALL (     216 calls)
+ 
+ 
      Total program execution
-     EPW          :    45.10s CPU        45.38s WALL
+     EPW          :  3m 6.10s CPU     3m 8.15s WALL
 
                                                                                           
  Please consider citing:                                                                  
  S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
                                                                                           
+ In addition, if you used anisotropic Eliashberg superconductivity please cite:           
+              E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)               
+              if you used transport properties (scattering rates, mobility) please cite:  
+              S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     

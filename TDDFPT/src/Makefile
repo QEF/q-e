@@ -59,7 +59,8 @@ lr_dav_variables.o\
 lr_dav_routines.o\
 lr_us.o\
 lr_test_restart.o\
-lr_dav_debug.o
+lr_dav_debug.o\
+plugin_tddfpt_potential.o
 
 TLDEPS=bindir libs mods lrmods
 

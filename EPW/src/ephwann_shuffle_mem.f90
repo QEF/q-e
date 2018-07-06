@@ -50,8 +50,8 @@
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
                             iunepmatwp, crystal, iunepmatwp2
-  USE elph2,         ONLY : nrr_k, nrr_q, cu, cuq, lwin, lwinq, irvec, ndegen_k,&
-                            ndegen_q, wslen, chw, chw_ks, cvmew, cdmew, rdw,    &
+  USE elph2,         ONLY : cu, cuq, lwin, lwinq, &
+                            chw, chw_ks, cvmew, cdmew, rdw,    &
                             epmatq, wf, etf, etf_k, etf_ks, xqf, xkf,  &
                             wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
@@ -60,6 +60,7 @@
                             nkqtotf, sigmar_all, zi_allvb, inv_tau_all, Fi_all, &
                             F_current, F_SERTA, inv_tau_allcb, zi_allcb, exband,&
                             F_currentcb, F_SERTAcb, Fi_allcb
+  USE wigner,        ONLY : wigner_seitz_wrap
   USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                             upper_bnd, ixkqf_tr,  s_BZtoIBZ_full
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch, &
@@ -105,14 +106,6 @@
   CHARACTER (len=30)  :: myfmt
   !! Variable used for formatting output
   ! 
-  INTEGER, ALLOCATABLE :: ndegen_kk(:)
-  !! Number of degeneresence with nrr_k bounds. 
-  INTEGER, ALLOCATABLE :: ndegen_qq(:)
-  !! Number of degeneresence with nrr_q bounds. 
-  INTEGER, ALLOCATABLE :: irvec_kk(:,:)
-  !! Irevec on the nrr_k bounds
-  INTEGER, ALLOCATABLE :: irvec_qq(:,:)
-  !! Irevec on the nrr_k bounds
   INTEGER :: ios
   !! integer variable for I/O control
   INTEGER :: iq 
@@ -159,6 +152,27 @@
   !! Return virtual and resisdent memory from system
   INTEGER :: ierr
   !! Error status
+  INTEGER :: nrr_k
+  !! Number of WS points for electrons
+  INTEGER :: nrr_q
+  !! Number of WS points for phonons
+  INTEGER :: nrr_g
+  !! Number of WS points for electron-phonons
+  INTEGER, ALLOCATABLE :: irvec_k(:,:)
+  !! integer components of the ir-th Wigner-Seitz grid point in the basis
+  !! of the lattice vectors for electrons
+  INTEGER, ALLOCATABLE :: irvec_q(:,:)
+  !! integer components of the ir-th Wigner-Seitz grid point for phonons
+  INTEGER, ALLOCATABLE :: irvec_g(:,:)
+  !! integer components of the ir-th Wigner-Seitz grid point for electron-phonon
+  INTEGER, ALLOCATABLE :: ndegen_k (:)
+  !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
+  INTEGER, ALLOCATABLE :: ndegen_q (:,:,:)
+  !! Wigner-Seitz weights for the phonon grid that depend on 
+  !! atomic positions $R + \tau(nb) - \tau(na)$
+  INTEGER, ALLOCATABLE :: ndegen_g (:,:)
+  !! Wigner-Seitz weights for the electron-phonon grid that depend on 
+  !! atomic positions $R - \tau(na)$
   INTEGER, PARAMETER :: nrwsx=200
   !! Maximum number of real-space Wigner-Seitz
   !  
@@ -188,6 +202,12 @@
   !! Wigner-Size supercell vectors, store in real instead of integer
   REAL(kind=DP), ALLOCATABLE :: rdotk(:)
   !! $r\cdot k$
+  REAL(kind=DP), ALLOCATABLE :: wslen_k(:)
+  !! real-space length for electrons, in units of alat
+  REAL(kind=DP), ALLOCATABLE :: wslen_q(:)
+  !! real-space length for phonons, in units of alat
+  REAL(kind=DP), ALLOCATABLE :: wslen_g(:)
+  !! real-space length for electron-phonons, in units of alat
   !
   COMPLEX(kind=DP) :: tablex (4*nk1+1,nkf1)
   !! Look-up table for the exponential (speed optimization) in the case of
@@ -262,16 +282,10 @@
              cuq ( nbnd, nbndsub, nks), & 
              lwin ( nbnd, nks ), &
              lwinq ( nbnd, nks ), &
-             exband ( nbnd ), &
-             irvec (3, 20*nk1*nk2*nk3), &
-             ndegen_k (20*nk1*nk2*nk3), &
-             ndegen_q (20*nq1*nq2*nq3), &
-             wslen(20*nk1*nk2*nk3)      )
+             exband ( nbnd ) )
   !
   CALL start_clock ( 'ephwann' )
   !
-  ! DBSP
-  ! HERE loadkmesh
   IF ( epwread ) THEN
     !
     ! Might have been pre-allocate depending of the restart configuration 
@@ -336,28 +350,17 @@
   !
   ALLOCATE( w2( 3*nat) )
   !
-  ! determine Wigner-Seitz points
+  ! Determine Wigner-Seitz points
   !
-  CALL wigner_seitz2 &
-       ( nk1, nk2, nk3, nq1, nq2, nq3, nrr_k, nrr_q, irvec, wslen, ndegen_k, ndegen_q )
+  ! Inside we allocate irvec_k, irvec_q, irvec_g, ndegen_k, ndegen_q, ndegen_g,
+  !                    wslen_k,  wslen_q,  wslen_g  
+  CALL wigner_seitz_wrap ( nk1, nk2, nk3, nq1, nq2, nq3, irvec_k, irvec_q, irvec_g, &
+                           ndegen_k, ndegen_q, ndegen_g, wslen_k,  wslen_q,  wslen_g )
   ! 
-  ALLOCATE ( ndegen_kk(nrr_k) )
-  ALLOCATE ( ndegen_qq(nrr_q) )
-  ALLOCATE ( irvec_kk(3,nrr_k) )
-  ALLOCATE ( irvec_qq(3,nrr_q) )
-
-  DO ir = 1, nrr_k
-    ndegen_kk(ir) = ndegen_k(ir)
-    irvec_kk(:,ir) = irvec(:,ir) 
-  ENDDO
-  DO ir = 1, nrr_q
-    ndegen_qq(ir) = ndegen_q(ir)
-    irvec_qq(:,ir) = irvec(:,ir)
-  ENDDO
-
-  DEALLOCATE(ndegen_k) 
-  DEALLOCATE(ndegen_q) 
-  DEALLOCATE(irvec) 
+  ! Determine the size of the respective WS sets based on the length of the matrices
+  nrr_k = SIZE(irvec_k(1,:))
+  nrr_q = SIZE(irvec_q(1,:))
+  nrr_g = SIZE(irvec_g(1,:))
   !
 #ifndef __MPI  
   ! Open like this only in sequential. Otherwize open with MPI-open
@@ -376,7 +379,7 @@
      !  read all quantities in Wannier representation from file
      !  in parallel case all pools read the same file
      !
-     CALL epw_read
+     CALL epw_read(nrr_k, nrr_q, nrr_g)
      !
   ELSE !if not epwread (i.e. need to calculate fmt file)
      ! 
@@ -413,31 +416,32 @@
      ! Hamiltonian
      !
      CALL hambloch2wan &
-          ( nbnd, nbndsub, nks, nkstot, et, xk, cu, lwin, exband, nrr_k, irvec_kk, wslen, chw )
+          ( nbnd, nbndsub, nks, nkstot, et, xk, cu, lwin, exband, nrr_k, irvec_k, wslen_k, chw )
      !
      ! Kohn-Sham eigenvalues
      !
      IF (eig_read) THEN
        WRITE (stdout,'(5x,a)') "Interpolating MB and KS eigenvalues"
        CALL hambloch2wan &
-            ( nbnd, nbndsub, nks, nkstot, et_ks, xk, cu, lwin, exband, nrr_k, irvec_kk, wslen, chw_ks )
+            ( nbnd, nbndsub, nks, nkstot, et_ks, xk, cu, lwin, exband, nrr_k, irvec_k, wslen_k, chw_ks )
      ENDIF
      !
      IF (vme) THEN
        ! Transform of position matrix elements
        ! PRB 74 195118  (2006)
        CALL vmebloch2wan &
-            ( nbnd, nbndsub, nks, nkstot, xk, cu, nrr_k, irvec_kk, wslen, lwin, exband )
+            ( nbnd, nbndsub, nks, nkstot, xk, cu, nrr_k, irvec_k, wslen_k, lwin, exband )
      ELSE
        ! Dipole
        CALL dmebloch2wan &
-            ( nbnd, nbndsub, nks, nkstot, dmec, xk, cu, nrr_k, irvec_kk, wslen, lwin, exband )
+            ( nbnd, nbndsub, nks, nkstot, dmec, xk, cu, nrr_k, irvec_k, wslen_k, lwin, exband )
      ENDIF
      !
      ! Dynamical Matrix 
      !
      IF (.not. lifc) CALL dynbloch2wan &
-                          ( nmodes, nqc, xqc, dynq, nrr_q, irvec_qq, wslen )
+                          ( nmodes, nqc, xqc, dynq, nrr_q, irvec_q, wslen_q )
+     !
      !
      ! Electron-Phonon vertex (Bloch el and Bloch ph -> Wannier el and Bloch ph)
      !
@@ -453,7 +457,7 @@
          !
          CALL ephbloch2wane &
            ( nbnd, nbndsub, nks, nkstot, xk, cu, cuq, &
-           epmatq (:,:,:,imode,iq), nrr_k, irvec_kk, wslen, epmatwe_mem(:,:,:,imode) )
+           epmatq (:,:,:,imode,iq), nrr_k, irvec_k, wslen_k, epmatwe_mem(:,:,:,imode) )
          !
        ENDDO
        ! Only the master node writes 
@@ -470,14 +474,14 @@
      ! Only master perform this task. Need to be parallelize in the future (SP)
      IF (ionode) THEN
        CALL ephbloch2wanp_mem &
-        ( nbndsub, nmodes, xqc, nqc, irvec_kk, nrr_k, nrr_q, epmatwe_mem )
+        ( nbndsub, nmodes, xqc, nqc, irvec_k, irvec_g, nrr_k, nrr_g, epmatwe_mem )
      ENDIF
      !
      CALL mp_barrier(inter_pool_comm)
      !
      IF ( epwwrite ) THEN
-        CALL epw_write 
-        CALL epw_read 
+        CALL epw_write(nrr_k, nrr_q, nrr_g)
+        CALL epw_read(nrr_k, nrr_q, nrr_g) 
      ENDIF
      !
   ENDIF
@@ -539,7 +543,7 @@
   ALLOCATE(rdotk(nrr_k))
   ! This is simply because dgemv take only real number (not integer)
   ALLOCATE(irvec_r(3,nrr_k))
-  irvec_r = REAL(irvec_kk,KIND=dp)
+  irvec_r = REAL(irvec_k,KIND=dp)
   ! 
   ! SP: Create a look-up table for the exponential of the factor. 
   !     This can only work with homogeneous fine grids.
@@ -622,7 +626,7 @@
      ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
      ! + optimize the 2\pi r\cdot k with Blas
      CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xxk, 1, 0.0_DP, rdotk, 1 )
-     cfac(:) = exp( ci*rdotk ) / ndegen_kk(:)
+     cfac(:) = exp( ci*rdotk ) / ndegen_k(:)
      ! 
      CALL hamwan2bloch &
           ( nbndsub, nrr_k, cufkk, etf (:, ik), chw, cfac)
@@ -824,18 +828,22 @@
     ENDIF
     IF ( iterative_bte ) THEN
       ! 
-      CALL F_read(iter, iq_restart, nqf,nkqtotf/2, error_h, error_el)
+      IF (int_mob .AND. carrier) THEN
+        CALL F_read(iter, iq_restart, nqf, nkqtotf/2, error_h, error_el, .TRUE.)
+      ELSE
+        CALL F_read(iter, iq_restart, nqf, nkqtotf/2, error_h, error_el, .FALSE.)
+      ENDIF
       ! 
       IF (int_mob .OR. (ncarrier < 1E5)) THEN
         IF ( error_h < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
         IF ( error_h < eps2 ) &
-          WRITE( stdout,'(5x,"IBTE is converged with value for hole mobility of",1E18.6," "/)') mobilityh_save
+          WRITE( stdout,'(5x,"IBTE is converged with value for hole mobility of",1E18.6," "/)') MAXVAL(mobilityh_save(:))
         IF ( error_h < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
       ENDIF
       IF (int_mob .OR. (ncarrier > 1E5)) THEN
         IF ( error_el < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
         IF ( error_el < eps2 ) &
-          WRITE( stdout,'(5x,"IBTE is converged with value for electron mobility of",1E18.6," "/)') mobilityel_save
+          WRITE( stdout,'(5x,"IBTE is converged with value for electron mobility of",1E18.6," "/)') MAXVAL(mobilityel_save(:))
         IF ( error_el < eps2 ) WRITE(stdout,'(5x,a)') repeat('=',67)
       ENDIF
       !
@@ -862,8 +870,8 @@
       ENDIF
       WRITE(stdout,'(/5x,"Iteration number:", i10," "/)') iter
       ! 
-      IF (nstemp > 1) CALL errore('ephwann_shuffle', &
-          'Iterative BTE can only be done at 1 temperature, nstemp = 1.',1)  
+      !IF (nstemp > 1) CALL errore('ephwann_shuffle', &
+      !    'Iterative BTE can only be done at 1 temperature, nstemp = 1.',1)  
       ! 
       IF (iter > maxiter) CALL errore('ephwann_shuffle', &
         'The iteration reached the maximum but did not converge. ',1)
@@ -875,7 +883,7 @@
     ! 
     !iter = iter +1
     !
-    DO iq=iq_restart, nqf
+    DO iq = iq_restart, nqf
        !   
        CALL start_clock ( 'ep-interp' )
        !
@@ -896,7 +904,7 @@
        !
        IF (.not. lifc) THEN
          CALL dynwan2bloch &
-             ( nmodes, nrr_q, irvec_qq, ndegen_qq, xxq, uf, w2 )
+             ( nmodes, nrr_q, irvec_q, ndegen_q, xxq, uf, w2 )
        ELSE
          CALL dynifc2blochf ( nmodes, rws, nrws, xxq, uf, w2 )
        ENDIF
@@ -935,7 +943,7 @@
          !CALL start_clock ( 'cl2' )
          IF (.NOT. longrange) THEN
            CALL ephwan2blochp_mem &
-               (imode, nmodes, xxq, irvec_qq, ndegen_qq, nrr_q, epmatwef, nbndsub, nrr_k )
+               (imode, nmodes, xxq, irvec_g, ndegen_g, nrr_g, epmatwef, nbndsub, nrr_k )
          ENDIF
          !CALL stop_clock ( 'cl2' )
          !
@@ -974,10 +982,10 @@
              ! 
              ! SP: Look-up table is more effecient than calling the exp function.
              DO ir = 1, nrr_k
-               cfac(ir) = ( tablex(irvec_kk(1,ir)+2*nk1+1,xkk1) *&
-                       tabley(irvec_kk(2,ir)+2*nk2+1,xkk2) * tablez(irvec_kk(3,ir)+2*nk3+1,xkk3) ) / ndegen_kk(ir)
-               cfacq(ir) = ( tableqx(irvec_kk(1,ir)+2*nk1+1,xkq1) *&
-                       tableqy(irvec_kk(2,ir)+2*nk2+1,xkq2) * tableqz(irvec_kk(3,ir)+2*nk3+1,xkq3) ) /  ndegen_kk(ir)
+               cfac(ir) = ( tablex(irvec_k(1,ir)+2*nk1+1,xkk1) *&
+                       tabley(irvec_k(2,ir)+2*nk2+1,xkk2) * tablez(irvec_k(3,ir)+2*nk3+1,xkk3) ) / ndegen_k(ir)
+               cfacq(ir) = ( tableqx(irvec_k(1,ir)+2*nk1+1,xkq1) *&
+                       tableqy(irvec_k(2,ir)+2*nk2+1,xkq2) * tableqz(irvec_k(3,ir)+2*nk3+1,xkq3) ) /  ndegen_k(ir)
              ENDDO
              !DBSP
              !IF ( (iq == 1) .and. (ik ==12)) THEN
@@ -988,9 +996,9 @@
              !ENDIF
            ELSE
              CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-             cfac(:) = exp( ci*rdotk(:) ) / ndegen_kk(:)
+             cfac(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
              CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
-             cfacq(:) = exp( ci*rdotk(:) ) / ndegen_kk(:)
+             cfacq(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
            ENDIF
            !
            ! ------------------------------------------------------        
@@ -1018,14 +1026,14 @@
               !
               IF (eig_read) THEN
                  CALL vmewan2bloch &
-                      ( nbndsub, nrr_k, irvec_kk, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks, cfac )
+                      ( nbndsub, nrr_k, irvec_k, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks, cfac )
                  CALL vmewan2bloch &
-                      ( nbndsub, nrr_k, irvec_kk, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks, cfacq )
+                      ( nbndsub, nrr_k, irvec_k, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks, cfacq )
               ELSE
                  CALL vmewan2bloch &
-                      ( nbndsub, nrr_k, irvec_kk, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw, cfac )
+                      ( nbndsub, nrr_k, irvec_k, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw, cfac )
                  CALL vmewan2bloch &
-                      ( nbndsub, nrr_k, irvec_kk, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw, cfacq )
+                      ( nbndsub, nrr_k, irvec_k, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw, cfacq )
               ENDIF
            ELSE
               !
@@ -1386,8 +1394,14 @@
   DEALLOCATE(cfacq)
   DEALLOCATE(rdotk)
   DEALLOCATE(irvec_r)
-  DEALLOCATE(irvec_kk)
-  DEALLOCATE(irvec_qq)
+  DEALLOCATE(irvec_k)
+  DEALLOCATE(irvec_q)
+  DEALLOCATE(ndegen_k)
+  DEALLOCATE(ndegen_q)
+  DEALLOCATE(ndegen_g)
+  DEALLOCATE(wslen_k)
+  DEALLOCATE(wslen_q)
+  DEALLOCATE(wslen_g)
   ! 
   IF (.not. iterative_bte) CALL transport_coeffs (ef0,efcb)
   !

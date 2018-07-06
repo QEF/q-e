@@ -46,7 +46,7 @@ MODULE mp_exx
   INTEGER, ALLOCATABLE :: ibands(:,:) ! bands for which the bgroup has a pair
   INTEGER :: iexx_start = 0              ! starting band index used in bgrp parallelization
   INTEGER :: iexx_end = 0                ! ending band index used in bgrp parallelization
-  INTEGER, ALLOCATABLE :: iexx_istart(:) ! starting band inded for the outer loop
+  INTEGER, ALLOCATABLE :: iexx_istart(:) ! starting band index for the outer loop
   INTEGER, ALLOCATABLE :: iexx_iend(:)   ! ending band index used in the outer loop
   INTEGER, ALLOCATABLE :: all_start(:)   ! starting band inded for the inner loop
   INTEGER, ALLOCATABLE :: all_end(:)     ! ending band index used in the inner loop
@@ -59,7 +59,6 @@ MODULE mp_exx
   ! maximum number of bands for psi
   !
   INTEGER :: max_ibands
-  INTEGER :: max_jbands_per_egrp
   !
   INTEGER :: jblock
   !
@@ -156,7 +155,6 @@ CONTAINS
 
     jblock = 7
 
-    max_jbands_per_egrp = (nbnd+negrp-1)/negrp
     max_ibands = CEILING(DBLE(nbnd)/DBLE(negrp))+2
     IF (ALLOCATED(all_start)) THEN
        DEALLOCATE( all_start, all_end )
