@@ -3659,7 +3659,9 @@
     !-----------------------------------------------------------
     !
     USE kinds, ONLY : DP
+#if ! defined(__GFORTRAN__) || (__GNUC__ > 4 )
     USE, INTRINSIC :: IEEE_ARITHMETIC
+#endif
     !
     implicit none
     INTEGER :: N
@@ -3706,6 +3708,7 @@
       !
       ar = real(a(p))
       ai = aimag(a(p))
+#if ! defined(__GFORTRAN__) || (__GNUC__ > 4 )
       IF ( IEEE_IS_NAN(ar) .or. IEEE_IS_NAN(ai) ) THEN
   !     write(6,*) (z(i),i=1,N)
   !     write(6,*) (u(i),i=1,N)
@@ -3713,6 +3716,7 @@
         write(6,*) 'one or more coefficients are NaN'
   !     call errore('pade_coeff','one or more coefficients are NaN',1)
       ENDIF
+#endif
       !
     enddo
     !
