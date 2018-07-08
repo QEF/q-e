@@ -212,7 +212,7 @@ CONTAINS
       ENDIF
 
       IF(TRIM(upf%comment) /= ' ') THEN
-         WRITE(line, '(4x,"Comment:",/,4x,a)', err=100) TRIM(upf%comment)
+         WRITE(line, '(4x,"Comment:",2x,a)', err=100) TRIM(upf%comment)
          char_buff = TRIM(char_buff) // new_line('a') // TRIM(line)
       END IF
       char_buff = TRIM(char_buff) // new_line('a')
