@@ -1629,12 +1629,15 @@ NAMELIST: &SYSTEM
    Description:   
                    Type of Van der Waals correction. Allowed values:
     
-                   'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d', 'grimme-d3', 'Grimme-D3', 'DFT-D3', 'dft-d3'  :
-                        Semiempirical Grimme's DFT-D2 and DFT-D3.
-                        Optional variables for D2: "london_s6", "london_rcut", "london_c6", "london_rvdw",
+                   'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d' :
+                        Semiempirical Grimme's DFT-D2. Optional variables:
+                        "london_s6", "london_rcut", "london_c6", "london_rvdw"
                         S. Grimme, J. Comp. Chem. 27, 1787 (2006), doi:10.1002/jcc.20495
                         V. Barone et al., J. Comp. Chem. 30, 934 (2009), doi:10.1002/jcc.21112
-                        Optional variables for D3: "dftd3_version", "dftd3_threebody",
+    
+                   'grimme-d3', 'Grimme-D3', 'DFT-D3', 'dft-d3'  :
+                        Semiempirical Grimme's DFT-D3. Optional variables:
+                        "dftd3_version", "dftd3_threebody"
                         S. Grimme et al, J. Chem. Phys 132, 154104 (2010)
     
                    'TS', 'ts', 'ts-vdw', 'ts-vdW', 'tkatchenko-scheffler' :
@@ -3282,4 +3285,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Jun 22 17:11:53 CEST 2018
+This file has been created by helpdoc utility on Fri Jul 06 17:20:04 CEST 2018

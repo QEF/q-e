@@ -1573,12 +1573,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                      Type of Van der Waals correction. Allowed values:
                  }
 
-                 opt -val {'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d', 'grimme-d3', 'Grimme-D3', 'DFT-D3', 'dft-d3' } {
-                     Semiempirical Grimme's DFT-D2 and DFT-D3.
-                     Optional variables for D2: @ref london_s6, @ref london_rcut, @ref london_c6, @ref london_rvdw,
+                 opt -val {'grimme-d2', 'Grimme-D2', 'DFT-D', 'dft-d'} {
+                     Semiempirical Grimme's DFT-D2. Optional variables:
+                     @ref london_s6, @ref london_rcut, @ref london_c6, @ref london_rvdw
                      S. Grimme, J. Comp. Chem. 27, 1787 (2006), doi:10.1002/jcc.20495
                      V. Barone et al., J. Comp. Chem. 30, 934 (2009), doi:10.1002/jcc.21112
-                     Optional variables for D3: @ref dftd3_version, @ref dftd3_threebody,
+                 }
+
+                 opt -val {'grimme-d3', 'Grimme-D3', 'DFT-D3', 'dft-d3' } {
+                     Semiempirical Grimme's DFT-D3. Optional variables:
+                     @ref dftd3_version, @ref dftd3_threebody
                      S. Grimme et al, J. Chem. Phys 132, 154104 (2010)
                  }
 

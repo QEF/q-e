@@ -9,8 +9,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../dft-d3/
 
-IFLAGS=
-
 NEBOBJS = \
 neb.o \
 
