@@ -39,15 +39,18 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
   USE noncollin_module, ONLY : npol
   USE funct,            ONLY : exx_is_active
   USE mp_bands,         ONLY : use_bgrp_in_hpsi, inter_bgrp_comm
-  USE mp,               ONLY : mp_sum
+  USE mp,               ONLY : mp_allgather, mp_size, &
+                               mp_type_create_column_section, mp_type_free
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)      :: lda, n, m
   COMPLEX(DP), DEVICE, INTENT(IN)  :: psi_d(lda*npol,m) 
-  COMPLEX(DP), DEVICE, INTENT(OUT) :: hpsi_d(lda*npol,m)   
+  COMPLEX(DP), DEVICE, INTENT(OUT) :: hpsi_d(lda*npol,m)
   !
-  INTEGER     :: m_start, m_end
+  INTEGER :: m_start, m_end
+  INTEGER :: column_type
+  INTEGER, ALLOCATABLE :: recv_counts(:), displs(:)
   !
   CALL start_clock( 'h_psi_bgrp' ); !write (*,*) 'start h_psi_bgrp'; FLUSH(6)
 
@@ -59,12 +62,18 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
   !
   IF (use_bgrp_in_hpsi .AND. .NOT. exx_is_active() .AND. m > 1) THEN
      ! use band parallelization here
-     hpsi_d(:,:) = (0.d0,0.d0)
-     CALL divide(inter_bgrp_comm,m,m_start,m_end)
+     ALLOCATE( recv_counts(mp_size(inter_bgrp_comm)), displs(mp_size(inter_bgrp_comm)) )
+     CALL divide_all(inter_bgrp_comm,m,m_start,m_end,recv_counts,displs)
+     CALL mp_type_create_column_section(hpsi_d(1,1), 0, lda*npol, lda*npol, column_type)
+     !
      ! Check if there at least one band in this band group
      IF (m_end >= m_start) &
         CALL h_psi__gpu( lda, n, m_end-m_start+1, psi_d(1,m_start), hpsi_d(1,m_start) )
-     CALL mp_sum(hpsi_d,inter_bgrp_comm)
+     CALL mp_allgather(hpsi_d, column_type, recv_counts, displs, inter_bgrp_comm)
+     !
+     CALL mp_type_free( column_type )
+     DEALLOCATE( recv_counts )
+     DEALLOCATE( displs )
   ELSE
      ! don't use band parallelization here
      CALL h_psi__gpu( lda, n, m, psi_d, hpsi_d )
@@ -137,7 +146,25 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   CALL using_g2kin_d(0)
   CALL using_vrs_d(0)
   !
-  hpsi_d (:, 1:m) = (0.0_dp, 0.0_dp)
+  ! ... Here we add the kinetic energy (k+G)^2 psi and clean up garbage
+  !
+  !$cuf kernel do(2)
+  DO ibnd = 1, m
+     DO i=1, lda
+        IF (i <= n) THEN
+           hpsi_d (i, ibnd) = g2kin_d (i) * psi_d (i, ibnd)
+           IF ( noncolin ) THEN
+              hpsi_d (lda+i, ibnd) = g2kin_d (i) * psi_d (lda+i, ibnd)
+           END IF
+        ELSE
+           hpsi_d (i, ibnd) = (0.0_dp, 0.0_dp)
+           IF ( noncolin ) THEN
+              hpsi_d (lda+i, ibnd) = (0.0_dp, 0.0_dp)
+           END IF
+        END IF
+     END DO
+  END DO
+  !
 
   need_host_copy = ( real_space .and. nkb > 0  ) .OR. &
                     dft_is_meta() .OR. &
@@ -147,7 +174,7 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   if (need_host_copy) then
       ALLOCATE(psi_host(lda*npol,m) , hpsi_host(lda*npol,m) )
       psi_host = psi_d
-      hpsi_host = hpsi_d ! this is not needed
+      hpsi_host = hpsi_d
   end if
 
   CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_pot';FLUSH(6)
@@ -161,13 +188,11 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
         !
-        IF ( dffts%has_task_groups ) then 
-           incr = 2 * fftx_ntgrp(dffts)
-        ELSE
-           incr = 2
-        ENDIF
+        IF ( dffts%has_task_groups ) &
+             CALL errore( 'h_psi', 'task_groups not implemented with real_space', 1 )
+
         CALL using_becp_auto(1)
-        DO ibnd = 1, m, incr
+        DO ibnd = 1, m, 2
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_gamma(psi_host,ibnd,m) 
            ! ... compute becp%r = < beta|psi> from psic in real space
@@ -200,11 +225,9 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
         ! ... real-space algorithm
         ! ... fixme: real_space without beta functions does not make sense
         !
-        IF ( dffts%has_task_groups ) then 
-           incr = fftx_ntgrp(dffts)
-        ELSE
-           incr = 1
-        ENDIF
+        IF ( dffts%has_task_groups ) &
+             CALL errore( 'h_psi', 'task_groups not implemented with real_space', 1 )
+        !
         DO ibnd = 1, m
            ! ... transform psi to real space -> psic 
            CALL invfft_orbital_k(psi_host,ibnd,m) 
@@ -244,18 +267,6 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   END IF
   !  
   CALL stop_clock( 'h_psi:pot' )
-  !
-  ! ... Here we add the kinetic energy (k+G)^2 psi
-  !
-  !$cuf kernel do(2)
-  DO ibnd = 1, m
-     DO i=1, n
-        hpsi_d (i, ibnd) = hpsi_d(i, ibnd) + g2kin_d (i) * psi_d (i, ibnd)
-        IF ( noncolin ) THEN
-           hpsi_d (lda+i, ibnd) = hpsi_d(lda+i,ibnd) + g2kin_d (i) * psi_d (lda+i, ibnd)
-        END IF
-     END DO
-  END DO
   !
   if (dft_is_meta()) then
      hpsi_host = hpsi_d
