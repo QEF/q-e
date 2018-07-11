@@ -871,7 +871,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
   !
-  COMPLEX(DP), ALLOCATABLE :: becsum_nc(:,:,:,:)
   COMPLEX(dp), ALLOCATABLE :: auxk1(:,:), auxk2(:,:), aux_nc(:,:)
   REAL(dp), ALLOCATABLE :: auxg(:,:), aux_gk(:,:), aux_egk(:,:)
   INTEGER :: ibnd, ibnd_loc, nbnd_loc  ! counters on bands
@@ -905,11 +904,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   CALL store_becxx0(ik, becp)
   !
   CALL start_clock( 'sum_band:becsum' )
-
-  IF (noncolin) THEN
-     ALLOCATE(becsum_nc(nhm*(nhm+1)/2,nat,npol,npol))
-     becsum_nc=(0.d0, 0.d0)
-  ENDIF
   !
   DO np = 1, ntyp
      !
@@ -1077,8 +1071,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
      END IF
      !
   END DO
-  !
-  IF ( noncolin ) DEALLOCATE ( becsum_nc )
   !
   CALL stop_clock( 'sum_band:becsum' )
   !
