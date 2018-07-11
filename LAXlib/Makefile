@@ -25,7 +25,7 @@ libqela.a:  $(LAX)
 	$(RANLIB) $@    
 
 la_test.x : test.o libqela.a 
-	$(LD) $(LDFLAGS) -o la_test.x test.o libqela.a $(LIBS)
+	$(LD) $(LDFLAGS) -o la_test.x test.o libqela.a $(QELIBS)
 
 TEST : la_test.x
 

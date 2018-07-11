@@ -18,7 +18,7 @@ all : tldeps turbo_spectrum.x
 
 turbo_spectrum.x : tddfpt_calculate_spectrum.o $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	tddfpt_calculate_spectrum.o $(QEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
+	tddfpt_calculate_spectrum.o $(QEMODS) $(PWOBJS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/tools/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../tools/$@ . ); fi
 

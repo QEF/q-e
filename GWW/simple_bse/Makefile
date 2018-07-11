@@ -38,7 +38,7 @@ all : tldeps simple_bse.x  libsimple_exc.a
 
 simple_bse.x : simple_bse.o $(EXCOBJS) $(LIBOBJS) $(QEMODS)  
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		simple_bse.o $(EXCOBJS) $(QEMODS) $(LIBOBJS)  $(LIBS)
+		simple_bse.o $(EXCOBJS) $(QEMODS) $(LIBOBJS)  $(QELIBS)
 	- ( cd ../../bin; ln -fs ../GWW/simple_bse/$@ . )
 
 

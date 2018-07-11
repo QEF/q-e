@@ -552,7 +552,7 @@ all : tldeps pw.x generate_vdW_kernel_table.x
 \begin{verbatim}
 pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
      $(LD) $(LDFLAGS) -o $@ \
-     $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(LIBS)
+     $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(QELIBS)
    - ( cd ../../bin; ln -fs ../PW/src/$@ . ; \
                ln -fs ../PW/src/$@ dist.x ; ln -fs ../PW/src/$@ manypw.x ; )
 \end{verbatim}

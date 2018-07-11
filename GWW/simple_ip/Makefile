@@ -32,7 +32,7 @@ all : tldeps simple_ip.x  libsimple_ip.a
 
 simple_ip.x : simple_ip.o $(SIMPLEIPOBJS) $(LIBOBJS) $(PWOBJS) $(QEMODS)  $(LIBMIN) 
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		simple_ip.o $(SIMPLEIPOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(LIBS) 
+		simple_ip.o $(SIMPLEIPOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(QELIBS) 
 	- ( cd ../../bin; ln -fs ../GWW/simple_ip/$@ . )
 
 libsimple_ip.a : $(SIMPLEIPOBJS)
