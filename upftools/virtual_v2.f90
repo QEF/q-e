@@ -628,13 +628,13 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
   upf_vca%kkbeta = maxval(upf_vca%kbeta)
 
   upf_vca%els_beta(1:upf(1)%nbeta) = upf(1)%els_beta
-  upf_vca%els_beta(upf(1)%nbeta+1:upf(2)%nbeta) = upf(2)%els_beta
+  upf_vca%els_beta(upf(1)%nbeta+1:upf_nbeta) = upf(2)%els_beta
 
   upf_vca%rcut(1:upf(1)%nbeta) = upf(1)%rcut
-  upf_vca%rcut(upf(1)%nbeta+1:upf(2)%nbeta) = upf(2)%rcut
+  upf_vca%rcut(upf(1)%nbeta+1:upf_nbeta) = upf(2)%rcut
 
   upf_vca%rcutus(1:upf(1)%nbeta) = upf(1)%rcutus
-  upf_vca%rcutus(upf(1)%nbeta+1:upf(2)%nbeta) = upf(2)%rcutus 
+  upf_vca%rcutus(upf(1)%nbeta+1:upf_nbeta) = upf(2)%rcutus
 
 
   !! DEBUG
