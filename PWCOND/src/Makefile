@@ -59,7 +59,7 @@ all : tldeps pwcond.x
 
 pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o pwcond.x $(PWCONDOBJS) \
-		$(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		$(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PWCOND/src/pwcond.x . )
 
 tldeps :
