@@ -37,7 +37,7 @@ SUBROUTINE sum_band_gpu()
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
-  USE spin_orb,             ONLY : lspinorb, domag, fcoef
+  USE spin_orb,             ONLY : lspinorb, domag
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
@@ -49,7 +49,7 @@ SUBROUTINE sum_band_gpu()
                                    becp
   USE wavefunctions_module_gpum, ONLY : evc_d, using_evc, using_evc_d
   USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : vkb_d, using_vkb, &
+  USE uspp_gpum,                 ONLY : becsum_d, ebecsum_d, vkb_d, using_vkb, &
                                         using_vkb_d, using_becsum_d, using_ebecsum_d, &
                                         using_becsum, using_ebecsum
   USE becmod_subs_gpum,          ONLY : using_becp_auto
@@ -70,11 +70,11 @@ SUBROUTINE sum_band_gpu()
   !
   CALL start_clock( 'sum_band' )
   !
-  CALL using_becsum(2)
+  CALL using_becsum_d(2)
   !
-  becsum(:,:,:) = 0.D0
-  if (tqr) CALL using_ebecsum(2)
-  if (tqr) ebecsum(:,:,:) = 0.D0
+  becsum_d(:,:,:) = 0.D0
+  if (tqr) CALL using_ebecsum_d(2)
+  if (tqr) ebecsum_d(:,:,:) = 0.D0
   rho%of_r(:,:)      = 0.D0
   rho%of_g(:,:)      = (0.D0, 0.D0)
   if ( dft_is_meta() .OR. lxdm ) then
@@ -969,14 +969,18 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   !
   ! Routine used in sum_band (if okvan) and in compute_becsum, called by hinit1 (if okpaw)
   !
+#if defined(__CUDA)
+  USE cudafor
+  USE cublas
+#endif
   USE kinds,         ONLY : DP
   USE becmod,        ONLY : becp, calbec, allocate_bec_type
   USE control_flags, ONLY : gamma_only, tqr
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
-  USE uspp,          ONLY : nkb, vkb, becsum, ebecsum, indv_ijkb0
+  USE uspp,          ONLY : nkb, becsum, ebecsum, indv_ijkb0
   USE uspp_param,    ONLY : upf, nh, nhm
   USE wvfct,         ONLY : nbnd, wg, et, current_k
-  USE klist,         ONLY : ngk
+  USE klist,         ONLY : ngk, nkstot
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE realus,        ONLY : real_space, &
@@ -985,35 +989,55 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE us_exx,        ONLY : store_becxx0
   USE mp_bands,      ONLY : nbgrp,inter_bgrp_comm
   USE mp,            ONLY : mp_sum
-  USE wavefunctions_module_gpum, ONLY : using_evc
-  USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0, &
+  !
+  ! GPU modules here
+  USE wavefunctions_module_gpum, ONLY : evc_d, using_evc, using_evc_d
+  USE wvfct_gpum,                ONLY : et_d, using_et, using_et_d
+  USE uspp_gpum,                 ONLY : using_indv_ijkb0, &
                                         using_becsum, using_ebecsum
-  USE becmod_subs_gpum,          ONLY : using_becp_auto
+  USE becmod_subs_gpum,          ONLY : calbec_gpu, using_becp_auto, using_becp_d_auto
+  USE becmod_gpum,               ONLY : becp_d
+  USE uspp_gpum,                 ONLY : vkb_d, becsum_d, ebecsum_d, indv_ijkb0_d
+  USE uspp_gpum,                 ONLY : using_vkb_d, using_becsum_d, using_ebecsum_d, using_indv_ijkb0_d
+  !
+  ! Used to avoid unnecessary memcopy
+  USE funct,                     ONLY : dft_is_hybrid
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
   !
-  COMPLEX(DP), ALLOCATABLE :: becsum_nc(:,:,:,:)
-  COMPLEX(dp), ALLOCATABLE :: auxk1(:,:), auxk2(:,:), aux_nc(:,:)
-  REAL(dp), ALLOCATABLE :: auxg(:,:), aux_gk(:,:), aux_egk(:,:)
+  COMPLEX(DP), ALLOCATABLE :: auxk1_d(:,:), auxk2_d(:,:), aux_nc_d(:,:)
+  REAL(DP), ALLOCATABLE    :: auxg_d(:,:), aux_gk_d(:,:), aux_egk_d(:,:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: becsum_nc_d, auxk1_d, auxk2_d, aux_nc_d
+  attributes(DEVICE) :: auxg_d, aux_gk_d, aux_egk_d
+#endif
   INTEGER :: ibnd, ibnd_loc, nbnd_loc  ! counters on bands
-  INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js
-  ! counters on beta functions, atoms, atom types, spin
+  INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js, nhnt
+  ! counters on beta functions, atoms, atom types, spin, and auxiliary vars
   !
-  CALL using_evc(0) ! calbec->in ; invfft_orbital_gamma|k -> in
-  CALL using_et(0)
-  CALL using_vkb(0)
-  CALL using_indv_ijkb0(0)
-  CALL using_becp_auto(2)
-  CALL using_becsum(1)
-  if (tqr) CALL using_ebecsum(1)
+  REAL(DP), POINTER :: becp_d_r_d(:,:)
+  COMPLEX(DP), POINTER :: becp_d_k_d(:,:), becp_d_nc_d(:,:,:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: becp_d_r_d, becp_d_k_d, becp_d_nc_d
+#endif
+  REAL(DP), ALLOCATABLE :: wg_d(:,:)
+#if defined(__CUDA)
+  attributes(DEVICE) :: wg_d
+#endif
+  !
+  ALLOCATE(wg_d, SOURCE=wg)   !!! OPTIMIZE HERE: move this to duplicated modules?
+  CALL using_indv_ijkb0_d(0)
+  CALL using_becsum_d(1)
+  if (tqr) CALL using_ebecsum_d(1)
   !
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
+     CALL using_evc_d(0); CALL using_vkb_d(0); CALL using_becp_d_auto(2)
      ! calbec computes becp = <vkb_i|psi_j>
-     CALL calbec( npw, vkb, evc, becp )
+     CALL calbec_gpu( npw, vkb_d, evc_d, becp_d )
   ELSE
+     CALL using_evc(0); CALL using_becp_auto(2)
      if (gamma_only) then
         do ibnd = ibnd_start, ibnd_end, 2
            call invfft_orbital_gamma(evc,ibnd,ibnd_end) 
@@ -1033,14 +1057,13 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   !
   ! In the EXX case with ultrasoft or PAW, a copy of becp will be
   ! saved in a global variable to be rotated later
-  CALL store_becxx0(ik, becp)
+  IF(dft_is_hybrid()) THEN       ! This if condition is not present in the CPU code!! Add it?
+     CALL using_becp_auto(0)
+     CALL store_becxx0(ik, becp)
+  ENDIF
   !
   CALL start_clock( 'sum_band:becsum' )
-
-  IF (noncolin) THEN
-     ALLOCATE(becsum_nc(nhm*(nhm+1)/2,nat,npol,npol))
-     becsum_nc=(0.d0, 0.d0)
-  ENDIF
+  CALL using_becp_d_auto(0)
   !
   DO np = 1, ntyp
      !
@@ -1049,22 +1072,23 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
         ! allocate work space used to perform GEMM operations
         !
         IF ( gamma_only ) THEN
-           nbnd_loc = becp%nbnd_loc
-           ALLOCATE( auxg( nbnd_loc, nh(np) ) )
+           nbnd_loc = becp_d%nbnd_loc
+           ALLOCATE( auxg_d( nbnd_loc, nh(np) ) )
         ELSE
-           ALLOCATE( auxk1( ibnd_start:ibnd_end, nh(np)*npol ), &
-                     auxk2( ibnd_start:ibnd_end, nh(np)*npol ) )
+           ALLOCATE( auxk1_d( ibnd_start:ibnd_end, nh(np)*npol ), &
+                     auxk2_d( ibnd_start:ibnd_end, nh(np)*npol ) )
         END IF
         IF ( noncolin ) THEN
-           ALLOCATE ( aux_nc( nh(np)*npol,nh(np)*npol ) ) 
+           ALLOCATE ( aux_nc_d( nh(np)*npol,nh(np)*npol ) ) 
         ELSE
-           ALLOCATE ( aux_gk( nh(np),nh(np) ) ) 
-           if (tqr) ALLOCATE ( aux_egk( nh(np),nh(np) ) ) 
+           ALLOCATE ( aux_gk_d( nh(np),nh(np) ) ) 
+           if (tqr) ALLOCATE ( aux_egk_d( nh(np),nh(np) ) ) 
         END IF
         !
         !   In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
         !   run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
         !
+        nhnt = nh(np)
         DO na = 1, nat
            !
            IF (ityp(na)==np) THEN
@@ -1074,87 +1098,89 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
               !
               IF ( noncolin ) THEN
                  !
-!$omp parallel do default(shared), private(is,ih,ikb,ibnd)
+                 becp_d_nc_d => becp_d%nc_d
+!$cuf kernel do(2)
                  DO is = 1, npol
-                    DO ih = 1, nh(np)
-                       ikb = indv_ijkb0(na) + ih
+                    DO ih = 1, nhnt
+                       ikb = indv_ijkb0_d(na) + ih
                        DO ibnd = ibnd_start, ibnd_end
-                          auxk1(ibnd,ih+(is-1)*nh(np))= becp%nc(ikb,is,ibnd)
-                          auxk2(ibnd,ih+(is-1)*nh(np))= wg(ibnd,ik) * &
-                                                        becp%nc(ikb,is,ibnd)
+                          auxk1_d(ibnd,ih+(is-1)*nhnt)= becp_d_nc_d(ikb,is,ibnd)
+                          auxk2_d(ibnd,ih+(is-1)*nhnt)= wg_d(ibnd,ik) * &
+                                                        becp_d_nc_d(ikb,is,ibnd)
                        END DO
                     END DO
                  END DO
-!$omp end parallel do
                  !
-                 CALL ZGEMM ( 'C', 'N', npol*nh(np), npol*nh(np), this_bgrp_nbnd, &
-                      (1.0_dp,0.0_dp), auxk1, this_bgrp_nbnd, auxk2, this_bgrp_nbnd, &
-                      (0.0_dp,0.0_dp), aux_nc, npol*nh(np) )
+                 CALL cublasZgemm ( 'C', 'N', npol*nhnt, npol*nhnt, this_bgrp_nbnd, &
+                      (1.0_dp,0.0_dp), auxk1_d, this_bgrp_nbnd, auxk2_d, this_bgrp_nbnd, &
+                      (0.0_dp,0.0_dp), aux_nc_d, npol*nhnt )
                  !
               ELSE IF ( gamma_only ) THEN
                  !
-!$omp parallel do default(shared), private(ih,ikb,ibnd,ibnd_loc)
-                 DO ih = 1, nh(np)
-                    ikb = indv_ijkb0(na) + ih
+                 becp_d_r_d => becp_d%r_d
+!$cuf kernel do(2)
+                DO ih = 1, nhnt
                     DO ibnd_loc = 1, nbnd_loc
-                       ibnd = ibnd_loc + becp%ibnd_begin - 1
-                       auxg(ibnd_loc,ih)= wg(ibnd,ik)*becp%r(ikb,ibnd_loc) 
+                       ikb = indv_ijkb0_d(na) + ih
+                       ibnd = ibnd_loc + becp_d%ibnd_begin - 1
+                       auxg_d(ibnd_loc,ih) = becp_d_r_d(ikb,ibnd_loc) * wg_d(ibnd,ik)
                     END DO
                  END DO
-!$omp end parallel do
                  !
                  ! NB: band parallelizazion has not been performed in this case because 
                  !     bands were already distributed across R&G processors.
                  !     Contribution to aux_gk is scaled by 1.d0/nbgrp so that the becsum
                  !     summation across bgrps performed outside will gives the right value.
                  !
-                 CALL DGEMM ( 'N', 'N', nh(np), nh(np), nbnd_loc, &
-                      1.0_dp/nbgrp, becp%r(indv_ijkb0(na)+1,1), nkb,    &
-                      auxg, nbnd_loc, 0.0_dp, aux_gk, nh(np) )
+                 CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
+                      1.0_dp/nbgrp, becp_d%r_d(indv_ijkb0(na)+1,1), nkb,    &
+                      auxg_d, nbnd_loc, 0.0_dp, aux_gk_d, nhnt )
                if (tqr) then
-!$omp parallel do default(shared), private(ih,ikb,ibnd,ibnd_loc)
-                 DO ih = 1, nh(np)
-                    ikb = indv_ijkb0(na) + ih
+                 CALL using_et_d(0)
+!$cuf kernel do(1)
+                 DO ih = 1, nhnt
+                    ikb = indv_ijkb0_d(na) + ih
                     DO ibnd_loc = 1, nbnd_loc
-                    auxg(ibnd_loc,ih) = et(ibnd_loc,ik) * auxg(ibnd_loc,ih)
+                    auxg_d(ibnd_loc,ih) = et_d(ibnd_loc,ik) * auxg_d(ibnd_loc,ih)
                     END DO
                  END DO
-!$omp end parallel do
-                 CALL DGEMM ( 'N', 'N', nh(np), nh(np), nbnd_loc, &
-                      1.0_dp/nbgrp, becp%r(indv_ijkb0(na)+1,1), nkb,    &
-                      auxg, nbnd_loc, 0.0_dp, aux_egk, nh(np) )
+
+                 CALL cublasDgemm ( 'N', 'N', nhnt, nhnt, nbnd_loc, &
+                      1.0_dp/nbgrp, becp_d%r_d(indv_ijkb0(na)+1,1), nkb,    &
+                      auxg_d, nbnd_loc, 0.0_dp, aux_egk_d, nhnt )
                end if
                  !
               ELSE
                  !
-!$omp parallel do default(shared), private(ih,ikb,ibnd)
-                 DO ih = 1, nh(np)
-                    ikb = indv_ijkb0(na) + ih
+                 becp_d_k_d => becp_d%k_d
+!$cuf kernel do(2) <<<*,*>>>
+                 DO ih = 1, nhnt
                     DO ibnd = ibnd_start, ibnd_end
-                       auxk1(ibnd,ih) = becp%k(ikb,ibnd) 
-                       auxk2(ibnd,ih) = wg(ibnd,ik)*becp%k(ikb,ibnd)
+                       ikb = indv_ijkb0_d(na) + ih
+                       auxk1_d(ibnd,ih) = becp_d_k_d(ikb,ibnd) 
+                       auxk2_d(ibnd,ih) = wg_d(ibnd,ik)*becp_d_k_d(ikb,ibnd)
                     END DO
                  END DO
-!$omp end parallel do
                  !
                  ! only the real part is computed
                  !
-                 CALL DGEMM ( 'C', 'N', nh(np), nh(np), 2*this_bgrp_nbnd, &
-                      1.0_dp, auxk1, 2*this_bgrp_nbnd, auxk2, 2*this_bgrp_nbnd, &
-                      0.0_dp, aux_gk, nh(np) )
+                 CALL cublasDgemm ( 'C', 'N', nhnt, nhnt, 2*this_bgrp_nbnd, &
+                      1.0_dp, auxk1_d, 2*this_bgrp_nbnd, auxk2_d, 2*this_bgrp_nbnd, &
+                      0.0_dp, aux_gk_d, nhnt )
                  !
                if (tqr) then
-!$omp parallel do default(shared), private(ih,ikb,ibnd)
-                 DO ih = 1, nh(np)
-                    ikb = indv_ijkb0(na) + ih
+                 CALL using_et_d(0)
+!$cuf kernel do(2)
+                 DO ih = 1, nhnt
                     DO ibnd = ibnd_start, ibnd_end
-                       auxk2(ibnd,ih) = et(ibnd,ik)*auxk2(ibnd,ih)
+                       ikb = indv_ijkb0_d(na) + ih
+                       auxk2_d(ibnd,ih) = et_d(ibnd,ik)*auxk2_d(ibnd,ih)
                     END DO
                  END DO
-!$omp end parallel do
-                 CALL DGEMM ( 'C', 'N', nh(np), nh(np), 2*this_bgrp_nbnd, &
-                      1.0_dp, auxk1, 2*this_bgrp_nbnd, auxk2, 2*this_bgrp_nbnd, &
-                      0.0_dp, aux_egk, nh(np) )
+
+                 CALL cublasDgemm ( 'C', 'N', nhnt, nhnt, 2*this_bgrp_nbnd, &
+                      1.0_dp, auxk1_d, 2*this_bgrp_nbnd, auxk2_d, 2*this_bgrp_nbnd, &
+                      0.0_dp, aux_egk_d, nhnt )
                end if
 
               END IF
@@ -1162,28 +1188,29 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
               ! copy output from GEMM into desired format
               !
               IF (noncolin .AND. .NOT. upf(np)%has_so) THEN
-                 CALL add_becsum_nc_gpu (na, np, aux_nc, becsum )
+                 CALL add_becsum_nc_gpu (na, np, aux_nc_d, becsum_d )
               ELSE IF (noncolin .AND. upf(np)%has_so) THEN
-                 CALL add_becsum_so_gpu (na, np, aux_nc,becsum )
+                 CALL add_becsum_so_gpu (na, np, aux_nc_d, becsum_d )
               ELSE
-                 ijh = 0
-                 DO ih = 1, nh(np)
-                    DO jh = ih, nh(np)
-                       ijh = ijh + 1
+                 !
+!$cuf kernel do(2) <<<*,*>>>
+                 DO ih = 1, nhnt
+                    DO jh = 1, nhnt
+                       ijh = jh + ((ih-1)*(2*nhnt-ih))/2  ! or use  ijtoh_d(ih,jh,np) ?  OPTIMIZE !!
                        !
                        ! nondiagonal terms summed and collapsed into a
                        ! single index (matrix is symmetric wrt (ih,jh))
                        !
                        IF ( jh == ih ) THEN
-                          becsum(ijh,na,current_spin) = &
-                               becsum(ijh,na,current_spin) + aux_gk (ih,jh)
-                          if (tqr) ebecsum(ijh,na,current_spin) = &
-                               ebecsum(ijh,na,current_spin) + aux_egk (ih,jh)
-                       ELSE
-                          becsum(ijh,na,current_spin) = &
-                               becsum(ijh,na,current_spin) + aux_gk(ih,jh)*2.0_dp
-                          if (tqr) ebecsum(ijh,na,current_spin) = &
-                               ebecsum(ijh,na,current_spin) + aux_egk(ih,jh)*2.0_dp
+                          becsum_d(ijh,na,current_spin) = &
+                               becsum_d(ijh,na,current_spin) + aux_gk_d (ih,jh)
+                          if (tqr) ebecsum_d(ijh,na,current_spin) = &
+                             ebecsum_d(ijh,na,current_spin) + aux_egk_d (ih,jh)
+                       ELSE IF ( jh > ih ) THEN
+                          becsum_d(ijh,na,current_spin) = &
+                               becsum_d(ijh,na,current_spin) + aux_gk_d(ih,jh)*2.0_dp
+                          if (tqr) ebecsum_d(ijh,na,current_spin) = &
+                             ebecsum_d(ijh,na,current_spin) + aux_egk_d(ih,jh)*2.0_dp
                        END IF
                     END DO
                  END DO
@@ -1194,35 +1221,38 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
         END DO
         !
         IF ( noncolin ) THEN
-           DEALLOCATE ( aux_nc )
+           DEALLOCATE ( aux_nc_d )
         ELSE
-           DEALLOCATE ( aux_gk  ) 
-           if (tqr) DEALLOCATE ( aux_egk  ) 
+           DEALLOCATE ( aux_gk_d  ) 
+           if (tqr) DEALLOCATE ( aux_egk_d  ) 
         END IF
         IF ( gamma_only ) THEN
-           DEALLOCATE( auxg )
+           DEALLOCATE( auxg_d )
         ELSE
-           DEALLOCATE( auxk2, auxk1 )
+           DEALLOCATE( auxk2_d, auxk1_d )
         END IF
         !
      END IF
      !
   END DO
   !
-  IF ( noncolin ) DEALLOCATE ( becsum_nc )
+  DEALLOCATE(wg_d)
   !
   CALL stop_clock( 'sum_band:becsum' )
   !
 END SUBROUTINE sum_bec_gpu
 !
 !----------------------------------------------------------------------------
-SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc, becsum )
+SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc_d, becsum_d )
 !----------------------------------------------------------------------------
   !
   ! This routine multiplies becsum_nc by the identity and the Pauli matrices,
   ! saves it in becsum for the calculation of augmentation charge and
   ! magnetization.
   !
+#if defined(__CUDA)
+  USE cudafor
+#endif
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
@@ -1230,35 +1260,45 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc, becsum )
   USE noncollin_module,     ONLY : npol, nspin_mag
   USE spin_orb,             ONLY : domag
   !
+  USE uspp_gpum,            ONLY : ijtoh_d
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: na, np
-  COMPLEX(DP), INTENT(IN) :: becsum_nc(nh(np),npol,nh(np),npol)
-  REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin_mag)
+  COMPLEX(DP), INTENT(IN) :: becsum_nc_d(nh(np),npol,nh(np),npol)
+  REAL(DP), INTENT(INOUT) :: becsum_d(nhm*(nhm+1)/2,nat,nspin_mag)
+#if defined(__CUDA)
+  attributes(DEVICE) :: becsum_nc_d, becsum_d
+#endif
   !
   ! ... local variables
   !
-  INTEGER :: ih, jh, ijh
-  REAL(dp) :: fac
+  INTEGER :: ih, jh, ijh, ipol, jpol, nhnp
+  REAL(DP) :: fac
   !
-  ijh=0
-  DO ih = 1, nh(np)
-     DO jh = ih, nh(np)
-        ijh=ijh+1
-        IF ( ih == jh ) THEN
-           fac = 1.0_dp
-        ELSE
-           fac = 2.0_dp
-        END IF
-        becsum(ijh,na,1)= becsum(ijh,na,1) + fac * &
-                DBLE( becsum_nc(ih,1,jh,1) + becsum_nc(ih,2,jh,2) )
-        IF (domag) THEN
-           becsum(ijh,na,2)= becsum(ijh,na,2) + fac *  &
-                DBLE( becsum_nc(ih,1,jh,2) + becsum_nc(ih,2,jh,1) )
-           becsum(ijh,na,3)= becsum(ijh,na,3) + fac * DBLE( (0.d0,-1.d0)* &
-               (becsum_nc(ih,1,jh,2) - becsum_nc(ih,2,jh,1)) )
-           becsum(ijh,na,4)= becsum(ijh,na,4) + fac * &
-                DBLE( becsum_nc(ih,1,jh,1) - becsum_nc(ih,2,jh,2) )
+  nhnp = nh(np)
+
+!$cuf kernel do(2) <<<*,*>>>
+  DO ih = 1, nhnp
+     DO jh = 1, nhnp
+        IF ( jh >= ih ) THEN
+           !ijh = jh + ((ih-1)*(2*nhnp-ih))/2  is this faster? Does it matter?
+           ijh=ijtoh_d(ih,jh,np)
+           IF ( ih == jh ) THEN
+              fac = 1.0_dp
+           ELSE
+              fac = 2.0_dp
+           END IF
+           becsum_d(ijh,na,1)= becsum_d(ijh,na,1) + fac * &
+                   DBLE( becsum_nc_d(ih,1,jh,1) + becsum_nc_d(ih,2,jh,2) )
+           IF (domag) THEN
+              becsum_d(ijh,na,2)= becsum_d(ijh,na,2) + fac *  &
+                   DBLE( becsum_nc_d(ih,1,jh,2) + becsum_nc_d(ih,2,jh,1) )
+              becsum_d(ijh,na,3)= becsum_d(ijh,na,3) + fac * DBLE( (0.d0,-1.d0)* &
+                  (becsum_nc_d(ih,1,jh,2) - becsum_nc_d(ih,2,jh,1)) )
+              becsum_d(ijh,na,4)= becsum_d(ijh,na,4) + fac * &
+                   DBLE( becsum_nc_d(ih,1,jh,1) - becsum_nc_d(ih,2,jh,2) )
+           END IF
         END IF
      END DO
   END DO
@@ -1266,54 +1306,78 @@ SUBROUTINE add_becsum_nc_gpu ( na, np, becsum_nc, becsum )
 END SUBROUTINE add_becsum_nc_gpu
 !
 !----------------------------------------------------------------------------
-SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc, becsum )
+SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
   !----------------------------------------------------------------------------
   !
   ! This routine multiplies becsum_nc by the identity and the Pauli matrices,
   ! rotates it as appropriate for the spin-orbit case, saves it in becsum
   ! for the calculation of augmentation charge and magnetization.
   !
+#if defined(__CUDA)
+  USE cudafor
+#endif
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
   USE uspp,                 ONLY : ijtoh, nhtol, nhtoj, indv
   USE noncollin_module,     ONLY : npol, nspin_mag
-  USE spin_orb,             ONLY : fcoef, domag
+  USE spin_orb,             ONLY : domag
+  !
+  !USE uspp_gpum,            ONLY : ijtoh_d, nhtol_d, nhtoj_d, indv_d
+  !USE spin_orb_gpum,        ONLY : fcoef_d
+  USE uspp,            ONLY : ijtoh_d=>ijtoh, nhtol_d=>nhtol, nhtoj_d=>nhtoj, indv_d=>indv
+  USE spin_orb,        ONLY : fcoef_d=>fcoef
   !
   IMPLICIT NONE
   
   INTEGER, INTENT(IN) :: na, np
-  COMPLEX(DP), INTENT(IN) :: becsum_nc(nh(np),npol,nh(np),npol)
-  REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin_mag)
+  COMPLEX(DP), INTENT(IN) :: becsum_nc_d(nh(np),npol,nh(np),npol)
+  REAL(DP), INTENT(INOUT) :: becsum_d(nhm*(nhm+1)/2,nat,nspin_mag)
+  COMPLEX(DP), ALLOCATABLE :: becsum_nc_h(:,:,:,:)
+  REAL(DP), ALLOCATABLE    :: becsum_h(:,:,:)
   !
   ! ... local variables
   !
-  INTEGER :: ih, jh, lh, kh, ijh, is1, is2
+  INTEGER :: ih, jh, lh, kh, ijh, is1, is2, nhnt
   COMPLEX(DP) :: fac
-  
-  DO ih = 1, nh(np)
-     DO jh = 1, nh(np)
-        ijh=ijtoh(ih,jh,np)
-        DO kh = 1, nh(np)
+
+#if defined(__CUDA)
+  attributes (DEVICE) :: becsum_nc_d, becsum_d
+#endif
+  !
+  ! TODO: FIND OUT PROBLEM WITH THIS CUF KERNEL
+  ! TODO : OPTIMIZE HERE!
+  !
+  ALLOCATE(becsum_nc_h(nh(np),npol,nh(np),npol))
+  ALLOCATE(becsum_h(nhm*(nhm+1)/2,nat,nspin_mag))
+  becsum_nc_h = becsum_nc_d
+  becsum_h = becsum_d
+  !
+  nhnt = nh(np)
+  !
+  DO ih = 1, nhnt
+     DO jh = 1, nhnt
+        ijh=ijtoh_d(ih,jh,np)
+        DO kh = 1, nhnt
            IF (same_lj(kh,ih,np)) THEN
-              DO lh=1,nh(np)
+              DO lh=1,nhnt
                  IF (same_lj(lh,jh,np)) THEN
                     DO is1=1,npol
                        DO is2=1,npol
-                          fac=becsum_nc(kh,is1,lh,is2)
-                          becsum(ijh,na,1)=becsum(ijh,na,1) + fac * &
-                               (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,1,is2,np) + &
-                               fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,2,is2,np)  )
+                          fac=becsum_nc_h(kh,is1,lh,is2)
+                          becsum_h(ijh,na,1)=becsum_h(ijh,na,1) + DBLE( fac * &
+                               (fcoef_d(kh,ih,is1,1,np)*fcoef_d(jh,lh,1,is2,np) + &
+                                fcoef_d(kh,ih,is1,2,np)*fcoef_d(jh,lh,2,is2,np)  ) )
                           IF (domag) THEN
-                            becsum(ijh,na,2)=becsum(ijh,na,2)+fac * &
-                                (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,2,is2,np) +&
-                                fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,1,is2,np)  )
-                            becsum(ijh,na,3)=becsum(ijh,na,3)+fac*(0.d0,-1.d0)*&
-                               (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,2,is2,np) - &
-                                fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,1,is2,np)  )
-                           becsum(ijh,na,4)=becsum(ijh,na,4) + fac * &
-                               (fcoef(kh,ih,is1,1,np)*fcoef(jh,lh,1,is2,np) - &
-                                fcoef(kh,ih,is1,2,np)*fcoef(jh,lh,2,is2,np)  )
+                            becsum_h(ijh,na,2)=becsum_h(ijh,na,2) + DBLE( fac * &
+                                (fcoef_d(kh,ih,is1,1,np)*fcoef_d(jh,lh,2,is2,np) +&
+                                 fcoef_d(kh,ih,is1,2,np)*fcoef_d(jh,lh,1,is2,np)  ) )
+                            becsum_h(ijh,na,3)=becsum_h(ijh,na,3) + DBLE( fac*(0.d0,-1.d0)*&
+                               (fcoef_d(kh,ih,is1,1,np)*fcoef_d(jh,lh,2,is2,np) - &
+                                fcoef_d(kh,ih,is1,2,np)*fcoef_d(jh,lh,1,is2,np)  ))
+                            becsum_h(ijh,na,4)=becsum_h(ijh,na,4) + DBLE(fac * &
+                               (fcoef_d(kh,ih,is1,1,np)*fcoef_d(jh,lh,1,is2,np) - &
+                                fcoef_d(kh,ih,is1,2,np)*fcoef_d(jh,lh,2,is2,np)  ) )
                         END IF
                      END DO
                   END DO
@@ -1323,7 +1387,8 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc, becsum )
       END DO
    END DO
 END DO
-!
+ becsum_d = becsum_h
+ DEALLOCATE(becsum_nc_h, becsum_h)
 CONTAINS
    LOGICAL FUNCTION same_lj(ih,jh,np)
    INTEGER :: ih, jh, np
