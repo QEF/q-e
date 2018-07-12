@@ -183,10 +183,12 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
   !
   ! pp_rhoatom
   real(8), ALLOCATABLE :: upf_rho_at(:)
+  !
+  ! pp_spin_orb
+  real(8), ALLOCATABLE :: upf_jjj(:)
 
   interpolate = .false.
 
-  ! DEBUG
   upf_vca = upf(1)
 
   !pp_info
@@ -363,6 +365,10 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
   WRITE (*,*) "upf(2)%lll = ", upf(2)%lll
 
 
+
+
+
+
   !pp_dij
   ALLOCATE( upf_dion(upf_nbeta, upf_nbeta) )
   upf_dion(:,:) = 0.d0
@@ -380,145 +386,166 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
   ENDDO
   !
 
-  !pp_qij
-  IF (upf(1)%nqf/=upf(2)%nqf) &
-      CALL errore ("Virtual","different nqf are not implemented (yet)", 1)
+  WRITE (*,*) "pp_dij completed."
 
-  IF (upf(1)%nqlc/=upf(2)%nqlc) &
-      CALL errore ("Virtual","different nqlc are not implemented (yet)", 1)
 
-  upf_nqf = upf(1)%nqf
-  upf_nqlc = upf(1)%nqlc
+  IF (matches(upf_vca%typ, "USPP")) THEN
 
-  ALLOCATE( upf_rinner(upf_nqlc) )
-  DO i=1,upf_nqlc
-    IF(upf(1)%rinner(i)/=upf(2)%rinner(i)) &
-       CALL errore("Virtual","different rinner are not implemented (yet)",i)
-  ENDDO
-
-  upf_rinner(1:upf_nqlc) = upf(1)%rinner(1:upf_nqlc)
-
-  ALLOCATE( upf_qqq(upf_nbeta,upf_nbeta) )
-  upf_qqq(:,:) = 0.d0
-
-  IF( upf(1)%q_with_l ) THEN
-     ALLOCATE( upf_qfuncl(upf_mesh, upf_nbeta*(upf_nbeta+1)/2, 0:2*upf(1)%lmax) )
-     upf_qfuncl(:,:,:) = 0.d0
-  ELSE
-     ALLOCATE( upf_qfunc(upf_mesh, upf_nbeta*(upf_nbeta+1)/2) )
-     upf_qfunc(:,:) = 0.d0
-  ENDIF
-
-  DO i=1,upf(1)%nbeta
-     DO j=i,upf(1)%nbeta
-        ijv = j * (j-1)/2 + i
-        upf_qqq(i,j) = x * upf(1)%qqq(i,j)
-
-        IF( ALLOCATED(upf_qfuncl) ) THEN
-           l1=upf(1)%lll(i)
-           l2=upf(1)%lll(j)
-           DO l=abs(l1-l2), l1+l2
-              upf_qfuncl(1:upf_mesh,ijv,l) = x * upf(1)%qfuncl(1:upf_mesh,ijv,l)
-           ENDDO
-        ELSE
-           upf_qfunc(1:upf_mesh,ijv) = x * upf(1)%qfunc(1:upf_mesh,ijv)
-        ENDIF
-
-     ENDDO
-  ENDDO
-
-  DO i=1,upf(2)%nbeta
-     DO j=i,upf(2)%nbeta
-        ijv = j * (j-1)/2 + i
-        upf_qqq(upf(1)%nbeta+i,upf(1)%nbeta+j) = (1.d0-x) * upf(2)%qqq(i,j)
-
-        ijv2 = (upf(1)%nbeta+j) * (upf(1)%nbeta+j-1) / 2 + (upf(1)%nbeta+i)
-
-        IF( ALLOCATED(upf_qfuncl) ) THEN
-           l1=upf(2)%lll(i)
-           l2=upf(2)%lll(j)
-           DO l=abs(l1-l2), l1+l2
-              IF (interpolate) THEN
-                 WRITE (*,*) " interpolate qfunc"
-                 aux2(1,1:upf(2)%mesh) = upf(2)%qfuncl(1:upf(2)%mesh,ijv,l)
-                 CALL dosplineint( upf(2)%r(1:upf(2)%mesh), aux2, upf_r(1:upf_mesh), aux1 )
-                 upf_qfuncl(1:upf_mesh, ijv2, l) = (1.d0-x) * aux1(1,1:upf_mesh)
-                 WRITE (*,*) " done"
-
-                 IF ((i==1) .AND. (j==1)) THEN
-                   WRITE (*,*) "CP1.1"
-                   WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
-                 ENDIF
-
-              ELSE
-                 upf_qfuncl(1:upf_mesh, ijv2, l) = (1.d0-x) * upf(2)%qfuncl(1:upf_mesh,ijv,l)
-
-                 IF ((i==1) .AND. (j==1)) THEN
-                   WRITE (*,*) "CP1.2"
-                   WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
-                 ENDIF
-
-              ENDIF
-           ENDDO
-
-        ELSE
-           IF (interpolate) THEN
-              aux2(1,1:upf(2)%mesh) = upf(2)%qfunc(1:upf(2)%mesh,ijv)
-              CALL dosplineint( upf(2)%r(1:upf(2)%mesh), aux2, upf_r(1:upf_mesh), aux1 )
-              ! upf(2)%qfunc(1:upf_mesh,i,j) = aux1(1,1:upf_mesh)
-              upf_qfunc(1:upf_mesh, ijv2) = (1.d0-x) * aux1(1,1:upf_mesh)
-
-              IF ((i==1) .AND. (j==1)) THEN
-                WRITE (*,*) "CP2.1"
-                WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
-              ENDIF
-
-           ELSE
-              upf_qfunc(1:upf_mesh, ijv2) = (1.d0-x) * upf(2)%qfunc(1:upf_mesh,ijv)
-
-              IF ((i==1) .AND. (j==1)) THEN
-                WRITE (*,*) "CP2.2"
-                WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
-              ENDIF
-
-           ENDIF
-
-        ENDIF
-        ! ! upf_qfunc(1:upf_mesh, upf(1)%nbeta+i, upf(1)%nbeta+j) = (1.d0-x) * qfunc(1:upf_mesh,i,j,2)
-
-        IF ((i==1) .AND. (j==1)) THEN
-          WRITE (*,*) "ijv = ", ijv
-          WRITE (*,*) "ijv2 = ", ijv2
-          WRITE (*,*) "x = ", x
-          WRITE (*,*) "(1.d0-x) * upf(2)%qfuncl = ", (1.d0-x) * upf(2)%qfuncl(1:10, ijv, 0)
-          WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
-        ENDIF
-
-     ENDDO
-  ENDDO
-  !
-
-  !pp_qfcoef
-  IF (upf_nqf/=0) THEN
-
-     ALLOCATE( upf_qfcoef(upf_nqf,upf_nqlc,upf_nbeta,upf_nbeta) )
-     upf_qfcoef(:,:,:,:) = 0.d0
-     DO i=1,upf(1)%nbeta
-        DO j=1,upf(1)%nbeta
-           upf_qfcoef(1:upf_nqf,1:upf_nqlc,i,j) = &
-               x * upf(1)%qfcoef(1:upf_nqf,1:upf_nqlc,i,j)
-        ENDDO
-     ENDDO
-     DO i=1,upf(2)%nbeta
-        DO j=1,upf(2)%nbeta
-           upf_qfcoef(1:upf_nqf,1:upf_nqlc,upf(1)%nbeta+i,upf(1)%nbeta+j) = &
-               (1.d0-x) * upf(2)%qfcoef(1:upf_nqf,1:upf_nqlc,i,j)
-        ENDDO
-     ENDDO
-
-  ENDIF
-  !
+    !pp_qij
+    IF (upf(1)%nqf/=upf(2)%nqf) &
+        CALL errore ("Virtual","different nqf are not implemented (yet)", 1)
   
+    IF (upf(1)%nqlc/=upf(2)%nqlc) &
+        CALL errore ("Virtual","different nqlc are not implemented (yet)", 1)
+  
+    upf_nqf = upf(1)%nqf
+    upf_nqlc = upf(1)%nqlc
+  
+    ALLOCATE( upf_rinner(upf_nqlc) )
+    DO i=1,upf_nqlc
+      IF(upf(1)%rinner(i)/=upf(2)%rinner(i)) &
+         CALL errore("Virtual","different rinner are not implemented (yet)",i)
+    ENDDO
+  
+    upf_rinner(1:upf_nqlc) = upf(1)%rinner(1:upf_nqlc)
+  
+    ALLOCATE( upf_qqq(upf_nbeta,upf_nbeta) )
+    upf_qqq(:,:) = 0.d0
+  
+    IF( upf(1)%q_with_l ) THEN
+       ALLOCATE( upf_qfuncl(upf_mesh, upf_nbeta*(upf_nbeta+1)/2, 0:2*upf(1)%lmax) )
+       upf_qfuncl(:,:,:) = 0.d0
+    ELSE
+       ALLOCATE( upf_qfunc(upf_mesh, upf_nbeta*(upf_nbeta+1)/2) )
+       upf_qfunc(:,:) = 0.d0
+    ENDIF
+  
+    WRITE (*,*) "pp_qij CP 1 reached."
+  
+    WRITE (*,*) "upf(1)%nbeta = ", upf(1)%nbeta
+    WRITE (*,*) "upf(1)%qqq has shape ", shape(upf(1)%qqq)
+    WRITE (*,*) "upf_qqq has shape ", shape(upf_qqq)
+  
+    DO i=1,upf(1)%nbeta
+       DO j=i,upf(1)%nbeta
+          ijv = j * (j-1)/2 + i
+          upf_qqq(i,j) = x * upf(1)%qqq(i,j)
+  
+          WRITE (*,*) "pp_qij CP 2.1.0 reached for i, j = ", i, j
+  
+          IF( ALLOCATED(upf_qfuncl) ) THEN
+             l1=upf(1)%lll(i)
+             l2=upf(1)%lll(j)
+             DO l=abs(l1-l2), l1+l2
+                upf_qfuncl(1:upf_mesh,ijv,l) = x * upf(1)%qfuncl(1:upf_mesh,ijv,l)
+                WRITE (*,*) "pp_qij CP 2.1.1 reached for i, j = ", i, j
+             ENDDO
+          ELSE
+             upf_qfunc(1:upf_mesh,ijv) = x * upf(1)%qfunc(1:upf_mesh,ijv)
+             WRITE (*,*) "pp_qij CP 2.1.2 reached for i, j = ", i, j
+          ENDIF
+  
+       ENDDO
+    ENDDO
+  
+    WRITE (*,*) "pp_qij CP 2.1 reached."
+  
+    DO i=1,upf(2)%nbeta
+       DO j=i,upf(2)%nbeta
+          ijv = j * (j-1)/2 + i
+          upf_qqq(upf(1)%nbeta+i,upf(1)%nbeta+j) = (1.d0-x) * upf(2)%qqq(i,j)
+  
+          ijv2 = (upf(1)%nbeta+j) * (upf(1)%nbeta+j-1) / 2 + (upf(1)%nbeta+i)
+  
+          WRITE (*,*) "pp_qij CP 2.2 reached for i, j = ", i, j
+  
+          IF( ALLOCATED(upf_qfuncl) ) THEN
+             l1=upf(2)%lll(i)
+             l2=upf(2)%lll(j)
+             DO l=abs(l1-l2), l1+l2
+                IF (interpolate) THEN
+                   WRITE (*,*) " interpolate qfunc"
+                   aux2(1,1:upf(2)%mesh) = upf(2)%qfuncl(1:upf(2)%mesh,ijv,l)
+                   CALL dosplineint( upf(2)%r(1:upf(2)%mesh), aux2, upf_r(1:upf_mesh), aux1 )
+                   upf_qfuncl(1:upf_mesh, ijv2, l) = (1.d0-x) * aux1(1,1:upf_mesh)
+                   WRITE (*,*) " done"
+  
+                   IF ((i==1) .AND. (j==1)) THEN
+                     WRITE (*,*) "CP1.1"
+                     WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
+                   ENDIF
+  
+                ELSE
+                   upf_qfuncl(1:upf_mesh, ijv2, l) = (1.d0-x) * upf(2)%qfuncl(1:upf_mesh,ijv,l)
+  
+                   IF ((i==1) .AND. (j==1)) THEN
+                     WRITE (*,*) "CP1.2"
+                     WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
+                   ENDIF
+  
+                ENDIF
+             ENDDO
+  
+          ELSE
+             IF (interpolate) THEN
+                aux2(1,1:upf(2)%mesh) = upf(2)%qfunc(1:upf(2)%mesh,ijv)
+                CALL dosplineint( upf(2)%r(1:upf(2)%mesh), aux2, upf_r(1:upf_mesh), aux1 )
+                ! upf(2)%qfunc(1:upf_mesh,i,j) = aux1(1,1:upf_mesh)
+                upf_qfunc(1:upf_mesh, ijv2) = (1.d0-x) * aux1(1,1:upf_mesh)
+  
+                IF ((i==1) .AND. (j==1)) THEN
+                  WRITE (*,*) "CP2.1"
+                  WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
+                ENDIF
+  
+             ELSE
+                upf_qfunc(1:upf_mesh, ijv2) = (1.d0-x) * upf(2)%qfunc(1:upf_mesh,ijv)
+  
+                IF ((i==1) .AND. (j==1)) THEN
+                  WRITE (*,*) "CP2.2"
+                  WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
+                ENDIF
+  
+             ENDIF
+  
+          ENDIF
+          ! ! upf_qfunc(1:upf_mesh, upf(1)%nbeta+i, upf(1)%nbeta+j) = (1.d0-x) * qfunc(1:upf_mesh,i,j,2)
+  
+          IF ((i==1) .AND. (j==1)) THEN
+            WRITE (*,*) "ijv = ", ijv
+            WRITE (*,*) "ijv2 = ", ijv2
+            WRITE (*,*) "x = ", x
+            WRITE (*,*) "(1.d0-x) * upf(2)%qfuncl = ", (1.d0-x) * upf(2)%qfuncl(1:10, ijv, 0)
+            WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
+          ENDIF
+  
+       ENDDO
+    ENDDO
+    !
+  
+    !pp_qfcoef
+    IF (upf_nqf/=0) THEN
+  
+       ALLOCATE( upf_qfcoef(upf_nqf,upf_nqlc,upf_nbeta,upf_nbeta) )
+       upf_qfcoef(:,:,:,:) = 0.d0
+       DO i=1,upf(1)%nbeta
+          DO j=1,upf(1)%nbeta
+             upf_qfcoef(1:upf_nqf,1:upf_nqlc,i,j) = &
+                 x * upf(1)%qfcoef(1:upf_nqf,1:upf_nqlc,i,j)
+          ENDDO
+       ENDDO
+       DO i=1,upf(2)%nbeta
+          DO j=1,upf(2)%nbeta
+             upf_qfcoef(1:upf_nqf,1:upf_nqlc,upf(1)%nbeta+i,upf(1)%nbeta+j) = &
+                 (1.d0-x) * upf(2)%qfcoef(1:upf_nqf,1:upf_nqlc,i,j)
+          ENDDO
+       ENDDO
+  
+    ENDIF
+    !
+
+  ENDIF
+
   !pp_pswfc
   ALLOCATE ( upf_chi(upf_mesh,upf_ntwfc) )
 
@@ -560,6 +587,14 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
   ELSE
      upf_rho_at(1:upf_mesh) =    x     * upf(1)%rho_at(1:upf_mesh) + &
                               (1.d0-x) * upf(2)%rho_at(1:upf_mesh)    
+  ENDIF
+
+  !pp_spin_orb
+  IF (upf_vca%has_so) THEN
+    WRITE (*,*) " this pseudopotential has spin orbit coupling!"
+    ALLOCATE (upf_jjj(upf_nbeta))
+    upf_jjj(1:upf(1)%nbeta) = upf(1)%jjj
+    upf_jjj(upf(1)%nbeta+1:upf_nbeta) = upf(2)%jjj
   ENDIF
 
 
@@ -607,22 +642,25 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
   upf_vca%lll = upf_lll
   ! pp_dij
   upf_vca%dion = upf_dion
-  ! pp_qij
-  upf_vca%qqq = upf_qqq
-  IF( upf_vca%q_with_l ) THEN
-     NULLIFY( upf_vca%qfuncl )
-     ALLOCATE( upf_vca%qfuncl(upf_mesh, upf_nbeta*(upf_nbeta+1)/2, 0:2*upf_lmax) )
-     upf_vca%qfuncl = upf_qfuncl
-  ELSE
-     NULLIFY( upf_vca%qfunc )
-     ALLOCATE( upf_vca%qfunc(upf_mesh, upf_nbeta*(upf_nbeta+1)/2) )
-     upf_vca%qfunc = upf_qfunc
-  ENDIF
-  ! pp_qfcoef
-  IF ( ALLOCATED(upf_qfcoef) ) THEN
-     NULLIFY( upf_vca%qfcoef )
-     ALLOCATE( upf_vca%qfcoef(upf_nqf, upf_nqlc, upf_nbeta, upf_nbeta) )
-     upf_vca%qfcoef = upf_qfcoef
+
+  IF (matches(upf_vca%typ, "USPP")) THEN
+    ! pp_qij
+    upf_vca%qqq = upf_qqq
+    IF( upf_vca%q_with_l ) THEN
+       NULLIFY( upf_vca%qfuncl )
+       ALLOCATE( upf_vca%qfuncl(upf_mesh, upf_nbeta*(upf_nbeta+1)/2, 0:2*upf_lmax) )
+       upf_vca%qfuncl = upf_qfuncl
+    ELSE
+       NULLIFY( upf_vca%qfunc )
+       ALLOCATE( upf_vca%qfunc(upf_mesh, upf_nbeta*(upf_nbeta+1)/2) )
+       upf_vca%qfunc = upf_qfunc
+    ENDIF
+    ! pp_qfcoef
+    IF ( ALLOCATED(upf_qfcoef) ) THEN
+       NULLIFY( upf_vca%qfcoef )
+       ALLOCATE( upf_vca%qfcoef(upf_nqf, upf_nqlc, upf_nbeta, upf_nbeta) )
+       upf_vca%qfcoef = upf_qfcoef
+    ENDIF
   ENDIF
 
   upf_vca%kkbeta = maxval(upf_vca%kbeta)
@@ -636,57 +674,63 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
   upf_vca%rcutus(1:upf(1)%nbeta) = upf(1)%rcutus
   upf_vca%rcutus(upf(1)%nbeta+1:upf_nbeta) = upf(2)%rcutus
 
+  IF (upf_vca%has_so) THEN
+     NULLIFY( upf_vca%jjj )
+     ALLOCATE( upf_vca%jjj(upf_nbeta) )
+     upf_vca%jjj = upf_jjj
+  ENDIF
 
-  !! DEBUG
-  !! upf(1)
-  WRITE (*,*) "upf(1)%nbeta = ", upf(1)%nbeta
-  WRITE (*,*) "shape of upf(1)%kbeta = ", shape(upf(1)%kbeta)
-  WRITE (*,*) "upf(1)%kbeta = ", upf(1)%kbeta
-  WRITE (*,*) "upf(1)%kkbeta = ", upf(1)%kkbeta
-  WRITE (*,*) "shape of upf(1)%lll = ", shape(upf(1)%lll)
-  WRITE (*,*) "shape of upf(1)%beta = ", shape(upf(1)%beta)
-  WRITE (*,*) "shape of upf(1)%els_beta = ", shape(upf(1)%els_beta)
-  WRITE (*,*) "shape of upf(1)%dion = ", shape(upf(1)%dion)
-  WRITE (*,*) "shape of upf(1)%qqq = ", shape(upf(1)%qqq)
-  WRITE (*,*) "shape of upf(1)%qfuncl = ", shape(upf(1)%qfuncl)
-  WRITE (*,*) "shape of upf(1)%qfcoef = ", shape(upf(1)%qfcoef)
-  WRITE (*,*) "upf(1)%aewfc = ", upf(1)%aewfc
-  WRITE (*,*) "upf(1)%pswfc = ", upf(1)%pswfc
-  WRITE (*,*) "shape of upf(1)%rcut = ", shape(upf(1)%rcut)
-  WRITE (*,*) "shape of upf(1)%rcutus = ", shape(upf(1)%rcutus)
-  WRITE (*,*) ""
-  !!! upf(2)
-  WRITE (*,*) "upf(2)%nbeta = ", upf(2)%nbeta
-  WRITE (*,*) "shape of upf(2)%kbeta = ", shape(upf(2)%kbeta)
-  WRITE (*,*) "upf(2)%kbeta = ", upf(2)%kbeta
-  WRITE (*,*) "upf(2)%kkbeta = ", upf(2)%kkbeta
-  WRITE (*,*) "shape of upf(2)%lll = ", shape(upf(2)%lll)
-  WRITE (*,*) "shape of upf(2)%beta = ", shape(upf(2)%beta)
-  WRITE (*,*) "shape of upf(2)%els_beta = ", shape(upf(2)%els_beta)
-  WRITE (*,*) "shape of upf(2)%dion = ", shape(upf(2)%dion)
-  WRITE (*,*) "shape of upf(2)%qqq = ", shape(upf(2)%qqq)
-  WRITE (*,*) "shape of upf(2)%qfuncl = ", shape(upf(2)%qfuncl)
-  WRITE (*,*) "shape of upf(2)%qfcoef = ", shape(upf(2)%qfcoef)
-  WRITE (*,*) "upf(2)%aewfc = ", upf(2)%aewfc
-  WRITE (*,*) "upf(2)%pswfc = ", upf(2)%pswfc
-  WRITE (*,*) "shape of upf(2)%rcut = ", shape(upf(2)%rcut)
-  WRITE (*,*) "shape of upf(2)%rcutus = ", shape(upf(2)%rcutus)
-  WRITE (*,*) ""
-  !!! upf_vca
-  WRITE (*,*) "upf_vca%nbeta = ", upf_vca%nbeta
-  WRITE (*,*) "shape of upf_vca%kbeta = ", shape(upf_vca%kbeta)
-  WRITE (*,*) "upf_vca%kbeta = ", upf_vca%kbeta
-  WRITE (*,*) "upf_vca%kkbeta = ", upf_vca%kkbeta
-  WRITE (*,*) "shape of upf_vca%lll = ", shape(upf_vca%lll)
-  WRITE (*,*) "shape of upf_vca%beta = ", shape(upf_vca%beta)
-  WRITE (*,*) "shape of upf_vca%els_beta = ", shape(upf_vca%els_beta)
-  WRITE (*,*) "shape of upf_vca%dion = ", shape(upf_vca%dion)
-  WRITE (*,*) "shape of upf_vca%qqq = ", shape(upf_vca%qqq)
-  WRITE (*,*) "shape of upf_vca%qfuncl = ", shape(upf_vca%qfuncl)
-  WRITE (*,*) "shape of upf_vca%qfcoef = ", shape(upf_vca%qfcoef)
-  WRITE (*,*) "shape of upf_vca%rcut = ", shape(upf_vca%rcut)
-  WRITE (*,*) "shape of upf_vca%rcutus = ", shape(upf_vca%rcutus)
-  !! DEBUG
+
+  ! !! DEBUG
+  ! !! upf(1)
+  ! WRITE (*,*) "upf(1)%nbeta = ", upf(1)%nbeta
+  ! WRITE (*,*) "shape of upf(1)%kbeta = ", shape(upf(1)%kbeta)
+  ! WRITE (*,*) "upf(1)%kbeta = ", upf(1)%kbeta
+  ! WRITE (*,*) "upf(1)%kkbeta = ", upf(1)%kkbeta
+  ! WRITE (*,*) "shape of upf(1)%lll = ", shape(upf(1)%lll)
+  ! WRITE (*,*) "shape of upf(1)%beta = ", shape(upf(1)%beta)
+  ! WRITE (*,*) "shape of upf(1)%els_beta = ", shape(upf(1)%els_beta)
+  ! WRITE (*,*) "shape of upf(1)%dion = ", shape(upf(1)%dion)
+  ! WRITE (*,*) "shape of upf(1)%qqq = ", shape(upf(1)%qqq)
+  ! WRITE (*,*) "shape of upf(1)%qfuncl = ", shape(upf(1)%qfuncl)
+  ! WRITE (*,*) "shape of upf(1)%qfcoef = ", shape(upf(1)%qfcoef)
+  ! WRITE (*,*) "upf(1)%aewfc = ", upf(1)%aewfc
+  ! WRITE (*,*) "upf(1)%pswfc = ", upf(1)%pswfc
+  ! WRITE (*,*) "shape of upf(1)%rcut = ", shape(upf(1)%rcut)
+  ! WRITE (*,*) "shape of upf(1)%rcutus = ", shape(upf(1)%rcutus)
+  ! WRITE (*,*) ""
+  ! !!! upf(2)
+  ! WRITE (*,*) "upf(2)%nbeta = ", upf(2)%nbeta
+  ! WRITE (*,*) "shape of upf(2)%kbeta = ", shape(upf(2)%kbeta)
+  ! WRITE (*,*) "upf(2)%kbeta = ", upf(2)%kbeta
+  ! WRITE (*,*) "upf(2)%kkbeta = ", upf(2)%kkbeta
+  ! WRITE (*,*) "shape of upf(2)%lll = ", shape(upf(2)%lll)
+  ! WRITE (*,*) "shape of upf(2)%beta = ", shape(upf(2)%beta)
+  ! WRITE (*,*) "shape of upf(2)%els_beta = ", shape(upf(2)%els_beta)
+  ! WRITE (*,*) "shape of upf(2)%dion = ", shape(upf(2)%dion)
+  ! WRITE (*,*) "shape of upf(2)%qqq = ", shape(upf(2)%qqq)
+  ! WRITE (*,*) "shape of upf(2)%qfuncl = ", shape(upf(2)%qfuncl)
+  ! WRITE (*,*) "shape of upf(2)%qfcoef = ", shape(upf(2)%qfcoef)
+  ! WRITE (*,*) "upf(2)%aewfc = ", upf(2)%aewfc
+  ! WRITE (*,*) "upf(2)%pswfc = ", upf(2)%pswfc
+  ! WRITE (*,*) "shape of upf(2)%rcut = ", shape(upf(2)%rcut)
+  ! WRITE (*,*) "shape of upf(2)%rcutus = ", shape(upf(2)%rcutus)
+  ! WRITE (*,*) ""
+  ! !!! upf_vca
+  ! WRITE (*,*) "upf_vca%nbeta = ", upf_vca%nbeta
+  ! WRITE (*,*) "shape of upf_vca%kbeta = ", shape(upf_vca%kbeta)
+  ! WRITE (*,*) "upf_vca%kbeta = ", upf_vca%kbeta
+  ! WRITE (*,*) "upf_vca%kkbeta = ", upf_vca%kkbeta
+  ! WRITE (*,*) "shape of upf_vca%lll = ", shape(upf_vca%lll)
+  ! WRITE (*,*) "shape of upf_vca%beta = ", shape(upf_vca%beta)
+  ! WRITE (*,*) "shape of upf_vca%els_beta = ", shape(upf_vca%els_beta)
+  ! WRITE (*,*) "shape of upf_vca%dion = ", shape(upf_vca%dion)
+  ! WRITE (*,*) "shape of upf_vca%qqq = ", shape(upf_vca%qqq)
+  ! WRITE (*,*) "shape of upf_vca%qfuncl = ", shape(upf_vca%qfuncl)
+  ! WRITE (*,*) "shape of upf_vca%qfcoef = ", shape(upf_vca%qfcoef)
+  ! WRITE (*,*) "shape of upf_vca%rcut = ", shape(upf_vca%rcut)
+  ! WRITE (*,*) "shape of upf_vca%rcutus = ", shape(upf_vca%rcutus)
+  ! !! DEBUG
 
 
 END SUBROUTINE compute_virtual
