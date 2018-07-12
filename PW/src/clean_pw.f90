@@ -75,6 +75,7 @@ SUBROUTINE clean_pw( lflag )
   USE scf_gpum,                  ONLY : using_vrs, using_vrs_d
   USE uspp_gpum,                 ONLY : deallocate_uspp_gpu
   USE us_gpum,                   ONLY : deallocate_us_gpu
+  USE spin_orb_gpum,             ONLY : deallocate_spin_orb_gpu
   !
   IMPLICIT NONE
   !
@@ -170,6 +171,7 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
   IF ( lspinorb ) THEN
      IF ( ALLOCATED( fcoef ) )   DEALLOCATE( fcoef )
+     CALL deallocate_spin_orb_gpu()
   END IF
   !
   CALL deallocate_igk ( )
