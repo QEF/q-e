@@ -3,7 +3,7 @@ subroutine direct_v_exc(a_in,fc,a_out)
 USE fft_custom_gwl
 use bse_basic_structures
 use exciton
-USE wavefunctions_module, ONLY :  psic
+USE wavefunctions, ONLY :  psic
 USE gvect,                 ONLY : ig_l2g
 USE io_global, ONLY : stdout, ionode, ionode_id
 USE mp_world, ONLY : mpime, nproc

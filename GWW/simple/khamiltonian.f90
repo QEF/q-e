@@ -9,7 +9,7 @@ subroutine khamiltonian
      USE kinds, ONLY : DP
      USE input_simple
      USE scf, ONLY : vrs
-     USE wavefunctions_module, ONLY : psic
+     USE wavefunctions, ONLY : psic
      USE cell_base, ONLY : tpiba2, tpiba, bg, alat, at
      USE gvect, ONLY : gg, g
      USE io_global, ONLY : stdout, ionode, ionode_id

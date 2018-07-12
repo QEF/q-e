@@ -28,7 +28,7 @@ subroutine dft_exchange(nbnd_v,nbnd_s,n_set, e_x,ks_wfcs)
   USE gvecs,              ONLY : doublegrid
   USE uspp
   USE uspp_param,           ONLY : lmaxq,upf,nh, nhm
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
  ! USE realus,  ONLY : adduspos_gamma_r
   USE cell_base,            ONLY : at, bg, omega
   USE mp, ONLY : mp_sum, mp_bcast
@@ -328,7 +328,7 @@ subroutine addus_charge(r_ij,becp_iw,becp_jw)
   USE scf,                  ONLY : rho
   USE uspp,                 ONLY : okvan, nkb
   USE uspp_param,           ONLY : lmaxq, upf, nh
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE control_flags ,       ONLY : gamma_only
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft

@@ -23,7 +23,7 @@ SUBROUTINE add_shift_cc (shift_cc)
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho, rho_core, rhog_core
   USE control_flags, ONLY: gamma_only
-  USE wavefunctions_module,    ONLY : psic
+  USE wavefunctions,    ONLY : psic
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
 

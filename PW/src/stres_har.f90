@@ -20,7 +20,7 @@ subroutine stres_har (sigmahar)
   USE lsda_mod,  ONLY: nspin
   USE scf,       ONLY: rho
   USE control_flags,        ONLY: gamma_only
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE mp_bands,  ONLY: intra_bgrp_comm
   USE mp,        ONLY: mp_sum
   USE Coul_cut_2D,  ONLY: do_cutoff_2D, cutoff_stres_sigmahar

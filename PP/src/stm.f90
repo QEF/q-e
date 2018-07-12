@@ -32,7 +32,7 @@ SUBROUTINE stm (sample_bias, stmdos, istates)
   USE scf, ONLY: rho
   USE wvfct, ONLY: npwx, nbnd, wg, et
   USE control_flags, ONLY : gamma_only
-  USE wavefunctions_module,  ONLY : evc, psic
+  USE wavefunctions,  ONLY : evc, psic
   USE io_files, ONLY: iunwfc, nwordwfc
   USE constants,      ONLY : degspin
   USE mp,        ONLY : mp_max, mp_min, mp_sum

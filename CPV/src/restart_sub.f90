@@ -14,7 +14,7 @@ SUBROUTINE from_restart( )
                                      thdyn, tzeroc, force_pairing, trhor, &
                                      ampre, trane, tpre, dt_old, tv0rd, &
                                      trescalee
-   USE wavefunctions_module,  ONLY : c0_bgrp, cm_bgrp
+   USE wavefunctions,  ONLY : c0_bgrp, cm_bgrp
    USE electrons_module,      ONLY : occn_info
    USE electrons_base,        ONLY : nspin, iupdwn, nupdwn, f, nbsp, nbsp_bgrp
    USE io_global,             ONLY : ionode, ionode_id, stdout

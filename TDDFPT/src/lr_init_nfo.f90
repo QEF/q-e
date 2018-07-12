@@ -35,7 +35,7 @@ SUBROUTINE lr_init_nfo()
   USE gvecs,                ONLY : doublegrid
   USE fft_base,             ONLY : dfftp 
   USE uspp,                 ONLY : vkb, okvan, nkb
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE becmod,               ONLY : calbec, allocate_bec_type
   USE lrus,                 ONLY : becp1
   USE control_lr,           ONLY : alpha_pv

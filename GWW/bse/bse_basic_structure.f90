@@ -214,7 +214,7 @@ MODULE bse_basic_structures
       use io_global, ONLY : stdout, ionode 
       USE gvect,                 ONLY : gstart
       USE lsda_mod,              ONLY : nspin
-      use wavefunctions_module,  ONLY : evc
+      use wavefunctions,  ONLY : evc
       use io_files,  ONLY : prefix, iunwfc, tmp_dir
       USE io_files, ONLY: nwordwfc
       USE wvfct,    ONLY : nbnd, npwx,npw,et
@@ -286,7 +286,7 @@ MODULE bse_basic_structures
       use io_global, ONLY : stdout, ionode 
       USE gvect,                 ONLY : gstart
       USE lsda_mod,              ONLY : nspin
-      use wavefunctions_module,  ONLY : evc
+      use wavefunctions,  ONLY : evc
       use io_files,  ONLY : prefix, iunwfc, tmp_dir
       USE io_files, ONLY: nwordwfc
       USE wvfct,    ONLY : nbnd, npwx,npw,et
@@ -387,7 +387,7 @@ MODULE bse_basic_structures
       USE mp_wave, ONLY : mergewf,splitwf
       USE mp,             ONLY : mp_sum
       USE gvect
-      USE wavefunctions_module, ONLY :  psic
+      USE wavefunctions, ONLY :  psic
 
       implicit none
 
@@ -472,7 +472,7 @@ MODULE bse_basic_structures
       USE mp_wave, ONLY : mergewf,splitwf
       USE mp,             ONLY : mp_sum
       USE gvect
-      USE wavefunctions_module, ONLY :  psic
+      USE wavefunctions, ONLY :  psic
 
       implicit none
 

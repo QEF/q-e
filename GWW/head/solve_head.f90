@@ -18,7 +18,7 @@ subroutine solve_head
   USE io_files,              ONLY : diropn,prefix, tmp_dir
   use pwcom
   USE cell_base,             ONLY : omega, tpiba2
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : becp,calbec
   USE uspp_param,            ONLY : nhm

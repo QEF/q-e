@@ -17,7 +17,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   USE uspp,                 ONLY : nkb,qq_nt,vkb,nhtol,nhtoj,nhtolm,indv
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx
-  USE wavefunctions_module, ONLY : evc, psic_nc
+  USE wavefunctions, ONLY : evc, psic_nc
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g,gg
   USE gvecs,                ONLY : doublegrid

@@ -32,7 +32,7 @@ PROGRAM lr_eels_main
   USE mp_global,             ONLY : nimage, mp_startup, inter_bgrp_comm, &
                                     ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
-  USE wavefunctions_module,  ONLY : psic
+  USE wavefunctions,  ONLY : psic
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE fft_base,              ONLY : dffts
   USE uspp,                  ONLY : okvan

@@ -447,7 +447,7 @@ contains
     USE mp_world, ONLY : mpime, nproc
     USE mp_pools, ONLY : intra_pool_comm
 !    USE mp_wave, ONLY : mergewf,splitwf
-    USE wavefunctions_module, ONLY :  psic
+    USE wavefunctions, ONLY :  psic
 
 
     implicit none
@@ -519,7 +519,7 @@ contains
     USE mp_world, ONLY : mpime, nproc
     USE mp_pools, ONLY : intra_pool_comm
 !    USE mp_wave, ONLY : mergewf,splitwf
-    USE wavefunctions_module, ONLY :  psic
+    USE wavefunctions, ONLY :  psic
 
 
     implicit none

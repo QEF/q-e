@@ -21,7 +21,7 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
   USE scf,       ONLY : kedtau
   USE klist,     ONLY : xk, igk_k
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE fft_base,             ONLY : dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   !

@@ -27,7 +27,7 @@ SUBROUTINE dynmat_us()
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE vlocal,               ONLY : vloc
   USE klist,                ONLY : xk, ngk, igk_k
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE cell_base,            ONLY : omega, tpiba2
   USE uspp_param,           ONLY : nh, nhm
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda

@@ -16,7 +16,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,&
   USE gvecw,           ONLY: gcutw
   USE lsda_mod,        ONLY: nspin,lsda,isk,current_spin
   USE cell_base,       ONLY: tpiba2, bg
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   USE klist,           ONLY: &
        nkstot,               & ! total number of k-points
        nks,                  & ! number of k-points per pool

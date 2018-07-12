@@ -60,7 +60,7 @@
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_put,mp_sum
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE io_files,      ONLY : diropn, seqopn
   USE wvfct,         ONLY : npwx
   USE pwcom,         ONLY : current_spin, isk, lsda, nbnd, xk, nks

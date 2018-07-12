@@ -16,7 +16,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   !
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE buffers,    ONLY : get_buffer
   USE uspp,       ONLY : okvan, nkb, vkb
   USE uspp_param, ONLY : nhm

@@ -19,7 +19,7 @@ subroutine dvpsi_e2
   USE klist,           ONLY : wk, ngk
   USE gvecs,           ONLY : doublegrid
   USE wvfct,           ONLY : npwx, nbnd
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   USE buffers,         ONLY : get_buffer
   USE fft_base,        ONLY : dfftp, dffts
   USE fft_interfaces,  ONLY : fft_interpolate

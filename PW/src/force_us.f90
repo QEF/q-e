@@ -23,7 +23,7 @@ SUBROUTINE force_us( forcenl )
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE symme,                ONLY : symvector
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE noncollin_module,     ONLY : npol, noncolin
   USE spin_orb,             ONLY : lspinorb
   USE io_files,             ONLY : iunwfc, nwordwfc

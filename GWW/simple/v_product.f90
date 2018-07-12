@@ -20,7 +20,7 @@ subroutine v_product
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
   USE io_files, ONLY : prefix, tmp_dir, diropn
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE polarization
   USE cell_base,        ONLY : alat
 

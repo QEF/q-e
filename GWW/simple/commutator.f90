@@ -334,7 +334,7 @@ subroutine commutator_Hx_psi_simple (qk, npw_max, nbnd_occ, becp1, becp2, ipol, 
   USE io_global,       ONLY : stdout
   USE gvect,           ONLY : g
   USE wvfct,           ONLY : nbnd, et
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   USE lsda_mod,        ONLY : nspin
   USE noncollin_module,ONLY : noncolin, npol
   USE becmod,          ONLY : becp, bec_type, calbec
