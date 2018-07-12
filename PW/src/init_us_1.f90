@@ -48,8 +48,12 @@ subroutine init_us_1
                            using_indv, using_indv_d, &
                            using_nhtolm, using_nhtolm_d, &
                            using_qq_at, using_qq_at_d, &
-                           using_qq_so, using_qq_so_d
+                           using_qq_so, using_qq_so_d, &
+                           using_ijtoh, using_ijtoh_d, &
+                           using_nhtol, using_nhtol_d, &
+                           using_nhtoj, using_nhtoj_d
   USE us_gpum,      ONLY : using_tab, using_tab_d2y, using_qrad
+  USE spin_orb_gpum,ONLY : using_fcoef, using_fcoef_d
   !
   implicit none
   !
@@ -437,10 +441,15 @@ subroutine init_us_1
   CALL using_indv(2); CALL using_indv_d(0) ! trick to update immediately
   CALL using_nhtolm(2); CALL using_nhtolm_d(0) ! trick to update immediately
   CALL using_indv_ijkb0(2); CALL using_indv_ijkb0_d(0) ! trick to update immediately
+  CALL using_ijtoh(2); CALL using_ijtoh_d(0) ! trick to update immediately
+  CALL using_nhtol(2); CALL using_nhtol_d(0)
+  CALL using_nhtoj(2); CALL using_nhtoj_d(0)
   CALL using_qq_at(2);      CALL using_qq_at_d(0) ! trick to update immediately
   IF (lspinorb) THEN 
       CALL using_qq_so(2);
       CALL using_qq_so_d(0) ! trick to update immediately
+      CALL using_fcoef(2)
+      CALL using_fcoef_d(0)
   END IF      
 
   call stop_clock ('init_us_1')
