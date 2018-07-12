@@ -229,7 +229,7 @@ MODULE wvfct
        wg(:,:),          &! the weight of each k point and band
        g2kin(:)           ! kinetic energy
 #if defined(__CUDA)
-       attributes(pinned) :: g2kin, et
+       attributes(pinned) :: g2kin, et, wg
 #endif
   INTEGER, ALLOCATABLE :: &
        btype(:,:)         ! one if the corresponding state has to be
