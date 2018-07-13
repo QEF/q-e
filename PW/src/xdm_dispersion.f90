@@ -21,6 +21,9 @@ module xdm_module
   PUBLIC :: stress_xdm  ! fetch the stresses calculated by energy_xdm
   PUBLIC :: cleanup_xdm ! deallocate arrays
 
+  ! is this a PAW calculation?
+  LOGICAL :: ispaw
+  
   ! atomic environments
   INTEGER :: nenv
   REAL(DP), ALLOCATABLE :: xenv(:,:)
@@ -43,14 +46,6 @@ module xdm_module
   ! a1 and a2 coefficients
   REAL(DP) :: a1i = 0.0_DP
   REAL(DP) :: a2i = 0.0_DP
-
-  ! iexch icorr igcx igcc
-  ! SLA PW B86B PBC ( 1  4 22  4 0 0)
-  ! USE funct, ONLY: get_iexch, get_icorr, get_igcx, get_igcc
-  ! IF (get_iexch().EQ.1.AND.get_icorr().EQ.4.AND.get_igcx().EQ.3.AND.get_igcc().EQ.4) THEN
-  !   !
-  !   sR=0.94_DP !PBE=sla+pw+pbx+pbc
-  !   !
 
   ! radial atomic densities
   REAL(DP), ALLOCATABLE :: rfree(:,:), w2free(:,:), rmaxg2(:)
@@ -92,8 +87,7 @@ CONTAINS
     INTEGER :: i, j, ialloc, nn
     REAL(DP), ALLOCATABLE :: d1y(:), d2y(:)
 
-    IF ( .NOT. ALL (upf(1:ntyp)%tpawp) ) &
-       CALL errore("init_xdm","XDM only implemented for PAW",1)
+    ispaw = ALL(upf(1:ntyp)%tpawp)
 
     ! allocate c6, etc.
     ALLOCATE(cx(nat,nat,2:4),rvdw(nat,nat),STAT=ialloc)
@@ -116,24 +110,34 @@ CONTAINS
     IF (ialloc /= 0) CALL alloc_failed("rcore")
     DO i = 1, ntyp
        nn = msh(i)
-       rfree(1:nn,i) = upf(i)%rho_at(1:nn) / (fpi*rgrid(i)%r(1:nn)**2) + upf(i)%paw%ae_rho_atc(1:nn)
+       IF (ispaw) THEN
+          rfree(1:nn,i) = upf(i)%rho_at(1:nn) / (fpi*rgrid(i)%r(1:nn)**2) + upf(i)%paw%ae_rho_atc(1:nn)
+       ELSE
+          rfree(1:nn,i) = upf(i)%rho_at(1:nn) / (fpi*rgrid(i)%r(1:nn)**2)
+       END IF
        CALL radial_gradient(rfree(1:nn,i),d1y(1:nn),rgrid(i)%r(1:nn),nn,1)
        CALL radial_gradient(d1y(1:nn),d2y(1:nn),rgrid(i)%r(1:nn),nn,1)
        CALL spline(rgrid(i)%r(1:nn),rfree(1:nn,i),d1y(1),d2y(1),w2free(1:nn,i))
        rmaxg2(i) = rgrid(i)%r(nn)**2
 
-       rcore(1:nn,i) = upf(i)%paw%ae_rho_atc(1:nn)
-       CALL radial_gradient(rcore(1:nn,i),d1y(1:nn),rgrid(i)%r(1:nn),nn,1)
-       CALL radial_gradient(d1y(1:nn),d2y(1:nn),rgrid(i)%r(1:nn),nn,1)
-       CALL spline(rgrid(i)%r(1:nn),rcore(1:nn,i),d1y(1),d2y(1),w2core(1:nn,i))
-       if (rcore(1,i) > 1e-8_DP) then
-          DO j = nn, 1, -1
-             IF (rcore(j,i) > 1e-8_DP) EXIT
-          END DO
-       else
-          j = 1
-       end if
-       rmaxcore2(i) = rgrid(i)%r(j)**2
+       IF (ispaw) THEN
+          rcore(1:nn,i) = upf(i)%paw%ae_rho_atc(1:nn)
+          CALL radial_gradient(rcore(1:nn,i),d1y(1:nn),rgrid(i)%r(1:nn),nn,1)
+          CALL radial_gradient(d1y(1:nn),d2y(1:nn),rgrid(i)%r(1:nn),nn,1)
+          CALL spline(rgrid(i)%r(1:nn),rcore(1:nn,i),d1y(1),d2y(1),w2core(1:nn,i))
+          if (rcore(1,i) > 1e-8_DP) then
+             DO j = nn, 1, -1
+                IF (rcore(j,i) > 1e-8_DP) EXIT
+             END DO
+          ELSE
+             j = 1
+          END IF
+          rmaxcore2(i) = rgrid(i)%r(j)**2
+       ELSE
+          rcore(1:nn,i) = 0._DP
+          w2core(1:nn,i) = 0._DP
+          rmaxcore2(i) = rmaxg2(i)
+       END IF
     END DO
 
     ! free volumes
@@ -285,8 +289,15 @@ CONTAINS
        ! all-electron density
        ALLOCATE(rhoae(dfftp%nnr),STAT=ialloc)
        IF (ialloc /= 0) CALL alloc_failed("rhoae")
-       CALL PAW_make_ae_charge_xdm(rho,rhoae)
-       rhoae = (rhoae + rhocor) / REAL(nspin,DP)
+       IF (ispaw) THEN
+          CALL PAW_make_ae_charge_xdm(rho,rhoae)
+          rhoae = (rhoae + rhocor) / REAL(nspin,DP)
+       ELSE
+          rhoae = 0._DP
+          DO i = 1, nspin
+             rhoae = rho%of_r(:,i)
+          END DO
+       ENDIF
 
        ! don't need the core anymore
        DEALLOCATE(rhocor)
@@ -915,8 +926,8 @@ CONTAINS
     use cell_base, ONLY : alat
     implicit none
 
-    real(DP), intent(out) :: rhoc(dfftp%nnr) ! core density in the real-space grid
-    real(DP), intent(out) :: rhot(dfftp%nnr) ! core density in the real-space grid
+    real(DP), intent(out) :: rhoc(dfftp%nnr) ! sum of core densities in the real-space grid
+    real(DP), intent(out) :: rhot(dfftp%nnr) ! all-electron sum of atomic densities in the real-space grid
 
     integer :: i, it, nn
     integer :: n, idx, ix, iy, iz, iy0, iz0
@@ -953,9 +964,11 @@ CONTAINS
           rrho = splint(rgrid(it)%r(1:nn),rfree(1:nn,it),w2free(1:nn,it),r)
           rhot(n) = rhot(n) + rrho
 
-          IF (r2 > rmaxcore2(it)) CYCLE
-          rrho = splint(rgrid(it)%r(1:nn),rcore(1:nn,it),w2core(1:nn,it),r)
-          rhoc(n) = rhoc(n) + rrho
+          IF (ispaw) THEN
+             IF (r2 > rmaxcore2(it)) CYCLE
+             rrho = splint(rgrid(it)%r(1:nn),rcore(1:nn,it),w2core(1:nn,it),r)
+             rhoc(n) = rhoc(n) + rrho
+          END IF
        END DO
        rhot(n) = MAX(rhot(n),1e-14_DP)
     END DO
