@@ -61,6 +61,7 @@ ktokpmq.o \
 loadkmesh.o \
 loadqmesh.o \
 loadumat.o \
+load_rebal.o \
 nesting_fn.o \
 openfilepw.o \
 rgd_blk_epw_fine_mem.o \

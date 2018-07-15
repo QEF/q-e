@@ -598,7 +598,7 @@
     USE elph2,     ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, vmef, & 
                           inv_tau_all, nkqtotf, Fi_all, inv_tau_allcb, &
                           zi_allvb, zi_allcb, Fi_allcb, BZtoIBZ,       &
-                          s_BZtoIBZ
+                          s_BZtoIBZ, map_rebal
     USE transportcom,  ONLY : transp_temp
     USE constants_epw, ONLY : zero, one, bohr2ang, ryd2ev, electron_SI, &
                               kelvin2eV, hbar, Ang2m, hbarJ, ang2cm, czero
@@ -648,6 +648,8 @@
     !! k-point index that run on the full BZ
     INTEGER :: nb
     !! Number of points in the BZ corresponding to a point in IBZ    
+    INTEGER :: BZtoIBZ_tmp(nkf1*nkf2*nkf3)
+    !! Temporary mapping
     ! 
     REAL(KIND=DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
@@ -942,6 +944,16 @@
           ! What we get from this call is BZtoIBZ
           CALL kpoint_grid_epw ( nrot, time_reversal, .false., s, t_rev, bg, nkf1*nkf2*nkf3, &
                      nkf1,nkf2,nkf3, nkqtotf_tmp, xkf_tmp, wkf_tmp,BZtoIBZ,s_BZtoIBZ)
+          ! 
+          IF (iterative_bte) THEN
+            ! Now we have to remap the points because the IBZ k-points have been
+            ! changed to to load balancing. 
+            BZtoIBZ_tmp(:) = 0
+            DO ikbz=1, nkf1*nkf2*nkf3
+              BZtoIBZ_tmp(ikbz) = map_rebal( BZtoIBZ( ikbz ) )
+            ENDDO
+            BZtoIBZ(:) = BZtoIBZ_tmp(:) 
+          ENDIF
           !
         ENDIF
         CALL mp_bcast( s_BZtoIBZ, ionode_id, inter_pool_comm )
