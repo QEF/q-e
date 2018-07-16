@@ -20,6 +20,17 @@ For more information, see the general documentation in directory Doc/,
 package-specific documentation in \*/Doc/, and the web site
 http://www.quantum-espresso.org/
 
+## PACKAGES
+
+- PWscf: structural optimisation and molecular dynamics on the electronic ground state, with self-consistent solution of DFT equations;
+- CP: Car-Parrinello molecular dynamics;
+- PHonon: vibrational and dielectric properties from Density-Functional Perturbation Theory;
+- TD-DFPT: spectra from Time-dependent Density-Functional Perturbation Theory;
+- EPW: calculation of electron-phonon coefficients in metals;
+- PWneb: reaction pathways and transition states with the Nudged Elastic Band method;
+- GWL: many-body perturbation theory in the GW approach using ultra-localised Wannier functions and Lanczos chains.
+
+
 ## LICENSE
 
 All the material included in this distribution is free software;
