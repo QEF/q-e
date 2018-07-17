@@ -128,7 +128,7 @@ then
         #here we check if dfti explicit calls work
         #it should work with blas flags
         AC_CHECK_LIB([mkl_intel_lp64],DftiComputeForward,have_fft=1,
-        ,$blas_libs -lm)
+        ,$blas_libs -lm $MKL_FLAGS)
 
         if test "$have_fft" == "1" 
         then
