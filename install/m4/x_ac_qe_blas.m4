@@ -96,7 +96,7 @@ then
                                  blas_libs="$try_loption $LIBS -lmkl_core -lmkl_pgi_thread"
                                  ldflags="$MKL_FLAGS $ldflags",
                                  echo "MKL not found",
-                                 -lmkl_sequential -lmkl_core -ldl -lpthread -lm)
+                                 -lmkl_pgi_thread -lmkl_core -ldl -lpthread -lm)
                         fi
 
                         if test "$ac_cv_search_dgemm" != "no"
