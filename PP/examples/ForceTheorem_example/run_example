@@ -124,12 +124,8 @@ mkdir $TMP_DIR/par.save
 mkdir $TMP_DIR/per.save
 cp $TMP_DIR/sr.save/data-file*.xml $TMP_DIR/par.save/
 cp $TMP_DIR/sr.save/charge-density.dat $TMP_DIR/par.save/
-# next line for old format
-cp $TMP_DIR/sr.save/spin-polarization.dat $TMP_DIR/par.save/
 cp $TMP_DIR/sr.save/data-file*.xml $TMP_DIR/per.save/
 cp $TMP_DIR/sr.save/charge-density.dat $TMP_DIR/per.save/
-# next line for old format
-cp $TMP_DIR/sr.save/spin-polarization.dat $TMP_DIR/per.save/
 
 
 # NSCF run with SOC for parallel configuration 
