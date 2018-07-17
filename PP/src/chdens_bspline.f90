@@ -193,6 +193,7 @@ SUBROUTINE plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
 
   ! and we print the charge on output
   if (ionode) then
+        !
      if (output_format == 0) then
         !
         !     gnuplot format
@@ -202,12 +203,7 @@ SUBROUTINE plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
            write (ounit, '(e25.14)') (  dble(carica(i,j)), j = 1, ny )
            write (ounit, * )
         enddo
-     elseif (output_format == 1) then
         !
-        !     contour.x format
-        !
-        write (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
-        write (ounit, '(4e25.14)') ( (  dble(carica(i,j)), j = 1, ny ), i = 1, nx )
      elseif (output_format == 2) then
         !
         !     plotrho format
@@ -226,6 +222,7 @@ SUBROUTINE plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
         !
         call xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
         call xsf_datagrid_2d (carica, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
+        !
      elseif (output_format == 7) then
         !
         !     gnuplot format : x, y, f(x,y)
@@ -238,7 +235,7 @@ SUBROUTINE plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
            write(ounit, *)
         enddo
      else
-        call errore('plot_2d', 'wrong output_format', 1)
+        call errore('plot_2d', 'wrong or obsolete output_format', 1)
      endif
   endif
 
@@ -255,7 +252,6 @@ SUBROUTINE plot_3d_bspline (alat, at, nat, tau, atm, ityp, rhor, &
   USE kinds,     ONLY : dp
   USE io_global, ONLY : stdout, ionode
   USE fft_base,  ONLY : dfftp
-  USE chdens_module, ONLY : write_openmol_file
   !---------------------------------------------------------------------
   implicit none
   integer, intent(in) :: nx, ny, nz, nat, ityp(nat), output_format, ounit
@@ -287,16 +283,11 @@ SUBROUTINE plot_3d_bspline (alat, at, nat, tau, atm, ityp, rhor, &
 
   rhomax = maxval(carica)
   if (ionode) then
-     if (output_format == 4) then
-        ! gOpenMol file
-        call write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
-               m1, m2, m3, nx, ny, nz, rhomax, carica, ounit)
-
-     elseif (output_format == 6) then
+     if (output_format == 6) then
         ! Gaussian Cube
         call write_cubefile_new(alat, nat, tau, atm, ityp, x0, &
-               m1, m2, m3, e1, e2, e3, nx, ny, nz, carica, ounit)
-
+             m1, m2, m3, e1, e2, e3, nx, ny, nz, carica, ounit)
+        
      else
         ! fallback to XCrysden
         call xsf_struct(alat, at, nat, tau, atm, ityp, ounit)
