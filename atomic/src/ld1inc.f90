@@ -32,7 +32,7 @@ MODULE ld1inc
        oc(nwfx),     & ! the occupations of the all-electron atom
        zed,          & ! the ionic charge
        enne,         & ! the number of electrons
-       sl3(0:lmx2,0:lmx2,0:lmx2)
+       sl3(0:lmx2,0:lmx2,0:lmx2) ! what is this, documented somewhere?
 
   real(DP)::          &
        enl(nwfx),          & ! the energies of the all-electron atom
@@ -170,8 +170,8 @@ MODULE ld1inc
        max_out_wfc, & ! maximum number of wavefunctions written on the
                      !   wavefunctions file.
        rel           ! 0 nonrelativistic calculation
-  ! 1 scalar relativistic calculation
-  ! 2 calculation with the full dirac equation
+                     ! 1 scalar relativistic calculation
+                     ! 2 calculation with the full dirac equation
   LOGICAL ::      &
        lsmall,    &     ! if true writes the small component on file
        relpert,   &     ! compute relativistic perturbative corrections
@@ -311,8 +311,6 @@ MODULE ld1inc
   CHARACTER(len=256) ::      & !
        file_pseudo,          & ! input file containing the pseudopotential
        file_pseudopw           ! output file where the pseudopot is written
-  LOGICAL            ::      &
-       use_xsd = .FALSE.       ! if .true. follow xsd schema else use upf-v2.1 format  
   CHARACTER(len=256) ::      & ! output filenames read from input, containing:
        file_charge,          & ! all-electron total charge only
        file_chi,             & ! chi functions
