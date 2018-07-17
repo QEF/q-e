@@ -8,6 +8,10 @@
 
 include make.inc
 
+# execute a target irrespective of the presence of a file or directory 
+# with the same name
+.PHONY: install
+
 default :
 	@echo 'to install Quantum ESPRESSO, type at the shell prompt:'
 	@echo '  ./configure [--prefix=]'
