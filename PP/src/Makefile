@@ -36,7 +36,6 @@ local_dos1d.o \
 openfil_pp.o\
 partialdos.o \
 paw_postproc.o \
-plot_whole_cell.o \
 projections_mod.o \
 projwfc_box.o \
 punch_plot.o \

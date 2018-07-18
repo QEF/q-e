@@ -452,7 +452,6 @@ plan_avg.o : ../../Modules/uspp.o
 plan_avg.o : ../../Modules/wavefunctions.o
 plan_avg.o : ../../PW/src/pwcom.o
 plan_avg.o : ../../UtilXlib/mp.o
-plot_whole_cell.o : ../../Modules/kind.o
 plotband.o : ../../Modules/kind.o
 plotband.o : ../../Modules/parser.o
 poormanwannier.o : ../../Modules/becmod.o
