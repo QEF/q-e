@@ -17,7 +17,7 @@ subroutine hdiag( npw, max_iter, avg_iter, et_ )
   USE wvfct,     ONLY: g2kin, nbnd, npwx
   USE uspp,      ONLY: vkb, okvan
   USE noncollin_module,    ONLY: npol
-  USE wavefunctions_module,ONLY: evc
+  USE wavefunctions,ONLY: evc
   USE ramanm,    ONLY: eth_ns
   implicit none
   !

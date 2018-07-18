@@ -23,7 +23,7 @@ PROGRAM open_grid
   USE gvect,              ONLY : g, ngm
   USE funct,              ONLY : dft_force_hybrid
   USE wvfct,              ONLY : nbnd, npwx, g2kin, et, wg
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE buffers,            ONLY : save_buffer, open_buffer, close_buffer
   USE scf,                ONLY : rho
   USE lsda_mod,           ONLY : nspin, lsda

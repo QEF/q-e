@@ -143,7 +143,7 @@ SUBROUTINE projection (first_band, last_band, min_energy, max_energy, sigma, iop
   USE becmod,     ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_files,   ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &
                         iunhub, nwordwfcU, nwordatwfc, diropn
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
 
   IMPLICIT NONE
   !

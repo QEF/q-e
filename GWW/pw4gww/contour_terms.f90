@@ -20,7 +20,7 @@
     USE wvfct,    ONLY : npwx, npw, nbnd
     USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
     USE mp_world, ONLY : mpime,nproc,world_comm
-    USE wavefunctions_module, ONLY : evc
+    USE wavefunctions, ONLY : evc
     USE gvect,    ONLY : gstart
      
     implicit none

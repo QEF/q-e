@@ -145,7 +145,7 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
   USE klist ,        ONLY : nks, xk, wk, ngk, igk_k
   USE lsda_mod,      ONLY : nspin
   USE io_files,      ONLY : nwordwfc, iunwfc
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE mp_global, ONLY : intra_image_comm, npool
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_sum , mp_max
@@ -901,7 +901,7 @@ SUBROUTINE write_gmaps ( kunit)
   USE wvfct,     ONLY : nbnd, npwx, et
   USE gvecw,     ONLY : gcutw
   USE klist,     ONLY : nkstot, ngk, nks, xk
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE io_files,  ONLY : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc
   USE io_global, ONLY : ionode
   USE mp_images, ONLY : my_image_id

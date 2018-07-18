@@ -35,7 +35,7 @@ SUBROUTINE force_hub(forceh)
                                     deallocate_bec_type
    USE uspp,                 ONLY : nkb, vkb, indv_ijkb0
    USE uspp_param,           ONLY : nh
-   USE wavefunctions_module, ONLY : evc
+   USE wavefunctions, ONLY : evc
    USE klist,                ONLY : nks, xk, ngk, igk_k
    USE io_files,             ONLY : nwordwfc, iunwfc
    USE buffers,              ONLY : get_buffer
@@ -345,7 +345,7 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj)
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb, qq_at
    USE uspp_param,           ONLY : nh
-   USE wavefunctions_module, ONLY : evc
+   USE wavefunctions, ONLY : evc
    USE becmod,               ONLY : bec_type, becp, calbec
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
@@ -502,7 +502,7 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE wvfct,                ONLY : nbnd, npwx,  wg
    USE uspp,                 ONLY : nkb, vkb, qq_at
    USE uspp_param,           ONLY : nh
-   USE wavefunctions_module, ONLY : evc
+   USE wavefunctions, ONLY : evc
    USE becmod,               ONLY : bec_type, becp, calbec
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool

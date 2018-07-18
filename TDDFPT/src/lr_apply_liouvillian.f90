@@ -44,7 +44,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE uspp_param,           ONLY : nhm, nh
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE wvfct,                ONLY : nbnd, npwx, g2kin, et
   USE control_flags,        ONLY : gamma_only
   USE realus,               ONLY : real_space, invfft_orbital_gamma,&

@@ -26,7 +26,7 @@ SUBROUTINE wfcinit()
                                    diropn, tmp_dir, prefix, postfix
   USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
 #if defined (__OLDXML)
@@ -222,7 +222,7 @@ SUBROUTINE init_wfc ( ik )
   USE wvfct,                ONLY : nbnd, npwx, et
   USE uspp,                 ONLY : nkb, okvan
   USE noncollin_module,     ONLY : npol
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE random_numbers,       ONLY : randy
   USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, &
                                    nbgrp, root_bgrp_id

@@ -33,7 +33,7 @@ subroutine solve_e
   USE wvfct,                 ONLY : nbnd, npwx, g2kin, et
   USE check_stop,            ONLY : check_stop_now
   USE buffers,               ONLY : get_buffer, save_buffer
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : upf, nhm
   USE noncollin_module,      ONLY : noncolin, npol, nspin_mag

@@ -190,7 +190,7 @@ contains
     use mp,                   only : mp_sum, mp_barrier
     use lr_dav_variables
     USE cell_base,              ONLY : omega
-    USE wavefunctions_module, ONLY : psic
+    USE wavefunctions, ONLY : psic
     USE realus,              ONLY : invfft_orbital_gamma, fwfft_orbital_gamma
       USE gvect,                ONLY : gstart
 

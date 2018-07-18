@@ -46,7 +46,7 @@ SUBROUTINE chdens (plot_files,plot_num)
   USE gvecw,      ONLY: ecutwfc
   USE run_info,   ONLY: title
   USE control_flags, ONLY: gamma_only
-  USE wavefunctions_module,  ONLY: psic
+  USE wavefunctions,  ONLY: psic
 
   IMPLICIT NONE
   CHARACTER (len=256), DIMENSION(:), ALLOCATABLE, INTENT(in) :: plot_files

@@ -22,7 +22,7 @@ subroutine stres_loc (sigmaloc)
   USE scf,                  ONLY : rho
   USE vlocal,               ONLY : strf, vloc
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE uspp_param,           ONLY : upf
   USE noncollin_module,     ONLY : nspin_lsda
   USE mp_bands,             ONLY : intra_bgrp_comm

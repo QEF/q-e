@@ -25,7 +25,7 @@ SUBROUTINE deallocate_modules_var()
   USE local_pseudo,         ONLY : deallocate_local_pseudo
   USE qgb_mod,              ONLY : deallocate_qgb_mod
   USE betax,                ONLY : deallocate_betax
-  USE wavefunctions_module, ONLY : deallocate_wavefunctions
+  USE wavefunctions, ONLY : deallocate_wavefunctions
   USE wannier_module,       ONLY : deallocate_wannier
   USE fft_types,            ONLY : fft_type_descriptor, fft_type_deallocate
   USE fft_smallbox_type,    ONLY : fft_box_deallocate

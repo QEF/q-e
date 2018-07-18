@@ -32,7 +32,7 @@ SUBROUTINE lr_solve_e
   USE uspp,                 ONLY : vkb
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_max, mp_min, mp_barrier
   USE realus,               ONLY : real_space, real_space_debug 
@@ -184,7 +184,7 @@ SUBROUTINE compute_d0psi_rs( n_ipol )
   USE wvfct,                ONLY : nbnd,npwx
   USE klist,                ONLY : nks
   USE lr_variables,         ONLY : evc0,sevc0,d0psi,lshift_d0psi
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE uspp,                 ONLY : okvan
   USE realus,               ONLY : fwfft_orbital_gamma, invfft_orbital_gamma, &
                                    fwfft_orbital_k, invfft_orbital_k

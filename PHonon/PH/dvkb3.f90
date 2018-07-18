@@ -18,7 +18,7 @@ subroutine dvkb3(ik,dvkb)
   USE lsda_mod,  ONLY : lsda, current_spin, isk
   USE klist,     ONLY : xk, ngk, igk_k
   USE wvfct,     ONLY : npwx
-  USE wavefunctions_module,    ONLY : evc
+  USE wavefunctions,    ONLY : evc
   USE uspp,      ONLY: nkb
   USE uspp_param,ONLY: nh
   USE units_ph,  ONLY: this_dvkb3_is_on_file, lrdvkb3, iudvkb3

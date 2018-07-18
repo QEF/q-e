@@ -285,7 +285,7 @@ MODULE exx
     ! DoLoc = .true.  ...    Real Array locbuff(ir, nbnd, nkqs)
     !         .false. ... Complex Array exxbuff(ir, nbnd/2, nkqs)
     !
-    USE wavefunctions_module, ONLY : evc
+    USE wavefunctions, ONLY : evc
     USE io_files,             ONLY : nwordwfc, iunwfc_exx
     USE buffers,              ONLY : get_buffer
     USE wvfct,                ONLY : nbnd, npwx, wg, current_k
@@ -1613,7 +1613,7 @@ MODULE exx
     USE buffers,                ONLY : get_buffer
     USE wvfct,                  ONLY : nbnd, npwx, wg, current_k
     USE gvect,                  ONLY : gstart
-    USE wavefunctions_module,   ONLY : evc
+    USE wavefunctions,   ONLY : evc
     USE lsda_mod,               ONLY : lsda, current_spin, isk
     USE klist,                  ONLY : ngk, nks, xk
     USE mp_pools,               ONLY : inter_pool_comm
@@ -1722,7 +1722,7 @@ MODULE exx
     USE symm_base,               ONLY : nsym, s
     USE gvect,                   ONLY : ngm, gstart, g
     USE wvfct,                   ONLY : nbnd, npwx, wg
-    USE wavefunctions_module,    ONLY : evc
+    USE wavefunctions,    ONLY : evc
     USE klist,                   ONLY : xk, ngk, nks, nkstot
     USE lsda_mod,                ONLY : lsda, current_spin, isk
     USE mp_pools,                ONLY : inter_pool_comm
@@ -2050,7 +2050,7 @@ MODULE exx
     USE symm_base,               ONLY : nsym, s
     USE gvect,                   ONLY : ngm, gstart, g
     USE wvfct,                   ONLY : nbnd, npwx, wg
-    USE wavefunctions_module,    ONLY : evc
+    USE wavefunctions,    ONLY : evc
     USE klist,                   ONLY : xk, ngk, nks, nkstot
     USE lsda_mod,                ONLY : lsda, current_spin, isk
     USE mp_pools,                ONLY : inter_pool_comm
@@ -2372,7 +2372,7 @@ MODULE exx
     USE cell_base,            ONLY : alat, omega, bg, at, tpiba
     USE symm_base,            ONLY : nsym, s
     USE wvfct,                ONLY : nbnd, npwx, wg, current_k
-    USE wavefunctions_module, ONLY : evc
+    USE wavefunctions, ONLY : evc
     USE klist,                ONLY : xk, ngk, nks
     USE lsda_mod,             ONLY : lsda, current_spin, isk
     USE gvect,                ONLY : g
@@ -2882,7 +2882,7 @@ SUBROUTINE aceinit( exex )
   USE mp_pools,   ONLY : inter_pool_comm
   USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   !
   IMPLICIT NONE
   !

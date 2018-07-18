@@ -5,7 +5,7 @@
 subroutine product_basis
   USE kinds, ONLY : DP
   USE io_files,             ONLY : prefix, iunwfc, nwordwfc, tmp_dir
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE wvfct, ONLY : npw,npwx,et
   USE mp, ONLY : mp_sum
   USE klist, ONLY : nks,ngk,xk

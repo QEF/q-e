@@ -26,7 +26,7 @@ SUBROUTINE c_bands( iter )
   USE control_flags,        ONLY : ethr, isolve, restart
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE bp,                   ONLY : lelfield
   USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -161,7 +161,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, &
                                    gamma_only, use_para_diag
   USE noncollin_module,     ONLY : noncolin, npol
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE scf,                  ONLY : v_of_0
   USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel,&
@@ -597,7 +597,7 @@ SUBROUTINE c_bands_nscf( )
   USE control_flags,        ONLY : ethr, restart, isolve, io_level, iverbosity
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : current_spin, lsda, isk
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE mp_pools,             ONLY : npool, kunit, inter_pool_comm
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now

@@ -12,7 +12,7 @@ subroutine epe
   USE uspp,     ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
   USE uspp_param, ONLY : upf, nh
   USE noncollin_module, ONLY: npol, noncolin
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE fft_base,         ONLY : dffts,dfftp
   USE fft_interfaces,ONLY : fwfft, invfft
   USE gvect, ONLY : ngm, gstart,gg, g

@@ -28,7 +28,7 @@ subroutine rotate_wannier( rot_u,ispin, iun_wannier)
   USE constants, ONLY : e2, pi, tpi, fpi
   USE io_files, ONLY: nwordwfc
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-  USE wavefunctions_module, ONLY: evc 
+  USE wavefunctions, ONLY: evc 
  
   implicit none
 
@@ -117,7 +117,7 @@ subroutine rotate_wannier_gamma( rot_u,ispin, itrasp)
   USE constants, ONLY : e2, pi, tpi, fpi
   USE io_files, ONLY: nwordwfc
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
  
 
   implicit none

@@ -104,7 +104,7 @@ MODULE pw_restart
       USE noncollin_module,     ONLY : noncolin, npol
       USE io_files,             ONLY : nwordwfc, iunwfc, psfile
       USE buffers,              ONLY : get_buffer
-      USE wavefunctions_module, ONLY : evc
+      USE wavefunctions, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, igk_k, wk, qnorm, &
                                        lgauss, ngauss, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw, ltetra
@@ -2311,7 +2311,7 @@ MODULE pw_restart
       USE klist,                ONLY : nkstot, wk, nks, xk, ngk
       USE wvfct,                ONLY : npw, npwx, et, wg, nbnd
       USE gvecw,                ONLY : ecutwfc
-      USE wavefunctions_module, ONLY : evc
+      USE wavefunctions, ONLY : evc
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ngm, ngm_g, g, ig_l2g

@@ -17,7 +17,7 @@ subroutine add_zstar_ue (imode0, npe)
   USE klist, ONLY : xk, wk, ngk, igk_k
   USE uspp,  ONLY : vkb
   USE wvfct, ONLY : npwx
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE noncollin_module,      ONLY: noncolin
   USE buffers,  ONLY : get_buffer
   USE qpoint,   ONLY: nksq

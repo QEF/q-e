@@ -39,7 +39,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
                                      & n_ipol, becp1_virt, rho_1c,&
                                      & lr_exx
   USE lsda_mod,               ONLY : current_spin, isk
-  USE wavefunctions_module,   ONLY : psic
+  USE wavefunctions,   ONLY : psic
   USE wvfct,                  ONLY : nbnd, et, wg, npwx
   USE control_flags,          ONLY : gamma_only
   USE uspp,                   ONLY : vkb, nkb, okvan, qq_nt, becsum

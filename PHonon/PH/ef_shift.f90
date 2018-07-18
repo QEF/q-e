@@ -22,7 +22,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
 
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
@@ -171,7 +171,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
   USE ions_base,            ONLY : nat
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE cell_base,            ONLY : omega
   USE buffers,              ONLY : get_buffer, save_buffer
   USE fft_base,             ONLY : dfftp, dffts

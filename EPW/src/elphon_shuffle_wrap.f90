@@ -31,7 +31,7 @@
   USE cellmd,        ONLY : cell_factor
   USE uspp_param,    ONLY : lmaxq, nbetam
   USE io_files,      ONLY : prefix, tmp_dir
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   USE ions_base,     ONLY : nat, nsp, tau, ityp
   USE control_flags, ONLY : iverbosity
   USE io_epw,        ONLY : iuepb, QPeig_read

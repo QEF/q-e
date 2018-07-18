@@ -19,7 +19,7 @@ subroutine dielec_test
   USE klist,    ONLY : wk, ngk
   USE symme,    ONLY : symmatrix, crys_to_cart
   USE buffers,  ONLY : get_buffer
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE efield_mod, ONLY : epsilon
   USE qpoint, ONLY : nksq
   USE eqv, ONLY : dpsi

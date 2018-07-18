@@ -25,7 +25,7 @@ subroutine solve_e_fpol ( iw )
   USE io_files,              ONLY : prefix, diropn
   USE buffers,               ONLY : get_buffer, save_buffer
   USE check_stop,            ONLY : check_stop_now
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : ltetra, lgauss, nkstot, wk, xk, ngk, igk_k
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk

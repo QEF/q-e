@@ -44,7 +44,7 @@ PROGRAM wfck2r
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast, mp_barrier
   USE mp_world,  ONLY : world_comm
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE gvect, ONLY : ngm, g 
   USE noncollin_module, ONLY : npol, noncolin

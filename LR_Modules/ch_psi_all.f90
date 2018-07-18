@@ -30,7 +30,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE control_lr,           ONLY : alpha_pv, nbnd_occ, lgamma
   !Needed only for TDDFPT
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
 
   IMPLICIT NONE
 

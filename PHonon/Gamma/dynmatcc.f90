@@ -21,7 +21,7 @@ SUBROUTINE dynmatcc(dyncc)
   USE fft_interfaces, ONLY : fwfft
   USE gvect,      ONLY : ngm, igtongl, ngl, g, gg, gl
   USE scf,        ONLY : rho, rho_core, rhog_core
-  USE wavefunctions_module,  ONLY: psic
+  USE wavefunctions,  ONLY: psic
   USE cgcom
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
