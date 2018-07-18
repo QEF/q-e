@@ -365,7 +365,7 @@ SUBROUTINE write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
                              allocate_bec_type, deallocate_bec_type
   USE symm_base,      ONLY : nsym, s, invsym, sname, irt, ftau
   USE  uspp,          ONLY : nkb, vkb
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE io_files,       ONLY : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc
   USE io_files,       ONLY : pseudo_dir, psfile
   USE io_base_export, ONLY : write_restart_wfc

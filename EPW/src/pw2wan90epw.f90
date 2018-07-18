@@ -650,7 +650,7 @@ SUBROUTINE compute_amn_para
   USE klist,           ONLY : xk, nks, igk_k
   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
   USE gvecw,           ONLY : ecutwfc
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE gvect,           ONLY : g, ngm
   USE cell_base,       ONLY : tpiba2
   USE uspp,            ONLY : nkb, vkb
@@ -965,7 +965,7 @@ SUBROUTINE compute_mmn_para
   USE kinds,           ONLY : DP
   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
   USE gvecw,           ONLY : ecutwfc
-  USE wavefunctions_module, ONLY : evc, psic, psic_nc
+  USE wavefunctions, ONLY : evc, psic, psic_nc
   USE units_ph,        ONLY : lrwfc, iuwfc
   USE fft_base,        ONLY : dffts
   USE fft_interfaces,  ONLY : fwfft, invfft
@@ -1463,7 +1463,7 @@ SUBROUTINE compute_pmn_para
   USE klist,           ONLY : xk, nks, igk_k
   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
   USE gvecw,           ONLY : ecutwfc
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE units_ph,        ONLY : lrwfc, iuwfc
   USE gvect,           ONLY : g, ngm
   USE cell_base,       ONLY : tpiba2, tpiba
@@ -2035,7 +2035,7 @@ SUBROUTINE write_plot
   USE io_epw,          ONLY : iun_plot
   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
   USE gvecw,           ONLY : ecutwfc
-  USE wavefunctions_module, ONLY : evc, psic, psic_nc
+  USE wavefunctions, ONLY : evc, psic, psic_nc
   USE wannierEPW,      ONLY : reduce_unk, wvfn_formatted, ispinw, nexband, &
                               excluded_band 
   USE klist,           ONLY : xk, nks, igk_k

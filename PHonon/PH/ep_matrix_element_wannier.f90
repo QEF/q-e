@@ -329,7 +329,7 @@ SUBROUTINE elphel_refolded (npe, imode0, dvscfins)
   !
   USE kinds, ONLY : DP
   USE fft_base, ONLY : dffts
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE io_files, ONLY: prefix, diropn
   USE klist, ONLY: xk, ngk, igk_k
   USE lsda_mod, ONLY: lsda, current_spin, isk
@@ -623,7 +623,7 @@ subroutine calculate_and_apply_phase(ik, ikqg, igqg, npwq_refolded, g_kpq, xk_ga
   USE gvecw, ONLY : gcutw
   USE cell_base, ONLY : bg
   USE qpoint, ONLY : nksq
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE noncollin_module,     ONLY : npol, noncolin
   USE el_phon, ONLY:iunwfcwann, lrwfcr
 

@@ -158,7 +158,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   USE uspp,                 ONLY : nkb, vkb
   USE uspp_param,           ONLY : upf, nh, nhm
   USE noncollin_module,     ONLY : noncolin, npol
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id, stdout
   USE mp,                   ONLY : mp_bcast
   USE mp_world,             ONLY : world_comm

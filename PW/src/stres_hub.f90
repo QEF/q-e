@@ -121,7 +121,7 @@ SUBROUTINE dndepsilon ( ipol, jpol, ldim, dns )
    ! contribution to the internal stres tensor.
    !
    USE kinds,                ONLY : DP
-   USE wavefunctions_module, ONLY : evc
+   USE wavefunctions, ONLY : evc
    USE ions_base,            ONLY : nat, ityp
    USE control_flags,        ONLY : gamma_only   
    USE klist,                ONLY : nks, xk, ngk, igk_k
@@ -298,7 +298,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb, qq_at, indv_ijkb0
    USE uspp_param,           ONLY : upf, nhm, nh
-   USE wavefunctions_module, ONLY : evc
+   USE wavefunctions, ONLY : evc
    USE becmod,               ONLY : bec_type, becp, calbec
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
@@ -475,7 +475,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    USE wvfct,                ONLY : nbnd, npwx, wg
    USE uspp,                 ONLY : nkb, vkb, qq_at, indv_ijkb0
    USE uspp_param,           ONLY : upf, nhm, nh
-   USE wavefunctions_module, ONLY : evc
+   USE wavefunctions, ONLY : evc
    USE becmod,               ONLY : bec_type, becp, calbec
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum

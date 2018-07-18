@@ -37,7 +37,7 @@ SUBROUTINE do_elf (elf)
   USE symme, ONLY: sym_rho, sym_rho_init
   USE wvfct, ONLY: nbnd, wg
   USE control_flags, ONLY: gamma_only
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE mp_pools, ONLY: inter_pool_comm, intra_pool_comm
   USE mp, ONLY: mp_sum
   !

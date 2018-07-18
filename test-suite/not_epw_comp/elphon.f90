@@ -272,7 +272,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !
   USE kinds, ONLY : DP
   USE fft_base, ONLY : dffts
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE buffers,  ONLY : get_buffer
   USE klist, ONLY: xk, ngk, igk_k
   USE lsda_mod, ONLY: lsda, current_spin, isk

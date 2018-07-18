@@ -17,7 +17,7 @@ SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   USE mp_bands,      ONLY : me_bgrp
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
-  USE wavefunctions_module,  ONLY: psic
+  USE wavefunctions,  ONLY: psic
   USE fft_helper_subroutines
   !
   IMPLICIT NONE
@@ -214,7 +214,7 @@ SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
   USE fft_helper_subroutines
-  USE wavefunctions_module,  ONLY: psic
+  USE wavefunctions,  ONLY: psic
   !
   IMPLICIT NONE
   !
@@ -374,7 +374,7 @@ SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   USE lsda_mod,      ONLY : nspin
   USE spin_orb,      ONLY : domag
   USE noncollin_module,     ONLY: npol
-  USE wavefunctions_module, ONLY: psic_nc
+  USE wavefunctions, ONLY: psic_nc
   USE fft_helper_subroutines
   !
   IMPLICIT NONE

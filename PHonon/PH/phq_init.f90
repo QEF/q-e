@@ -46,7 +46,7 @@ SUBROUTINE phq_init()
   USE spin_orb,             ONLY : lspinorb
   USE wvfct,                ONLY : npwx, nbnd
   USE gvecw,                ONLY : gcutw
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
   USE uspp,                 ONLY : okvan, vkb, nlcc_any
   USE uspp_param,           ONLY : upf

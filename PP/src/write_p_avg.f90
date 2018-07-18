@@ -25,7 +25,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
                                    allocate_bec_type, deallocate_bec_type
   USE noncollin_module,     ONLY : noncolin, npol
   USE ldaU,                 ONLY : lda_plus_u
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id, stdout
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE mp_bands,             ONLY : intra_bgrp_comm

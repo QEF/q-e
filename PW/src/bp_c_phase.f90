@@ -166,7 +166,7 @@ SUBROUTINE c_phase
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk, igk_k, ngk
    USE wvfct,                ONLY : npwx, nbnd, wg
-   USE wavefunctions_module, ONLY : evc
+   USE wavefunctions, ONLY : evc
    USE bp,                   ONLY : gdir, nppstr, mapgm_global, pdl_tot
    USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                     deallocate_bec_type

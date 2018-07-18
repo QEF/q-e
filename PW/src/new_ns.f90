@@ -33,7 +33,7 @@ SUBROUTINE new_ns(ns)
   USE symm_base,            ONLY : nsym, irt
   USE wvfct,                ONLY : nbnd, npwx, wg
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunhub
   USE buffers,              ONLY : get_buffer
   USE mp_pools,             ONLY : inter_pool_comm
@@ -294,7 +294,7 @@ SUBROUTINE new_ns_nc(ns)
   USE symm_base,            ONLY : nsym, irt, time_reversal, t_rev
   USE wvfct,                ONLY : nbnd, npwx, wg
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE gvect,                ONLY : gstart
   USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunhub
   USE buffers,              ONLY : get_buffer

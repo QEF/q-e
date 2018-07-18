@@ -88,7 +88,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        !
        ! ... k-points version
        !
-       USE wavefunctions_module, ONLY : psic
+       USE wavefunctions, ONLY : psic
        USE becmod,  ONLY : becp
        !
        IMPLICIT NONE
@@ -206,7 +206,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
                                &l_scissor,scissor,num_nbndv,num_nbnds
       ! USE realus,  ONLY : adduspos_gamma_r
        USE wvfct,    ONLY : npwx,npw,nbnd, et,g2kin
-       USE wavefunctions_module, ONLY : evc
+       USE wavefunctions, ONLY : evc
        USE klist,                ONLY : xk
        USE mp, ONLY : mp_sum
        USE mp_world, ONLY : world_comm

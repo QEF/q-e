@@ -21,7 +21,7 @@ subroutine add_zstar_ue_us(imode0,npe)
   USE uspp,  ONLY : nkb, vkb
   USE wvfct, ONLY : npwx, nbnd
   USE noncollin_module,   ONLY : npol
-  USE wavefunctions_module,    ONLY : evc
+  USE wavefunctions,    ONLY : evc
   USE buffers, ONLY: get_buffer
   USE qpoint,     ONLY : nksq
   USE efield_mod, ONLY: zstarue0_rec

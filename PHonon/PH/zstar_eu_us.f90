@@ -28,7 +28,7 @@ subroutine zstar_eu_us
   USE uspp,      ONLY : okvan, nkb, vkb, nlcc_any
   USE wvfct,     ONLY : nbnd, npwx
   USE paw_variables, ONLY : okpaw
-  USE wavefunctions_module,    ONLY : evc
+  USE wavefunctions,    ONLY : evc
   USE uspp_param,       ONLY : upf, nhm, nh
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE efield_mod, ONLY : zstareu0

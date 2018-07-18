@@ -24,7 +24,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
   USE wvfct,                ONLY : nbnd, npwx, et, current_k
   USE uspp,                 ONLY : vkb
   USE io_files,             ONLY : iunwfc, nwordwfc
-  USE wavefunctions_module, ONLY : evc, psic, psic_nc
+  USE wavefunctions, ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE uspp,                 ONLY : okvan
   USE mp_bands,             ONLY : ntask_groups, me_bgrp

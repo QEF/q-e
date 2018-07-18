@@ -30,7 +30,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct,     ONLY : nbnd, npwx, et
   USE becmod,    ONLY: calbec, bec_type, allocate_bec_type, deallocate_bec_type
-  USE wavefunctions_module,  ONLY: evc, psic, psic_nc
+  USE wavefunctions,  ONLY: evc, psic, psic_nc
   USE uspp,      ONLY: okvan, nkb, vkb
   USE uspp_param,ONLY: upf, nh, nhm
   USE qpoint,    ONLY : nksq

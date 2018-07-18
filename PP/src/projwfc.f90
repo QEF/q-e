@@ -420,7 +420,7 @@ SUBROUTINE projwave( filproj, lsym, lwrite_ovp, lbinary )
   USE uspp, ONLY: nkb, vkb
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   !
   USE projections
   !
@@ -862,7 +862,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   USE uspp_param, ONLY: upf
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
   USE mp_pools,             ONLY : inter_pool_comm
@@ -1459,7 +1459,7 @@ SUBROUTINE projwave_paw( filproj)
   USE uspp_param, ONLY : upf
   USE becmod,   ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   !
   USE projections
   !
@@ -1813,7 +1813,7 @@ SUBROUTINE pprojwave( filproj, lsym, lwrite_ovp, lbinary )
                                intra_pool_comm, me_image, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
                                leg_ortho, ortho_cntx
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst, zsqmcll, dsqmsym
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
   USE descriptors,      ONLY : la_descriptor, descla_init

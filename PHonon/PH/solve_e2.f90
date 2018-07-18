@@ -27,7 +27,7 @@ subroutine solve_e2
   USE ions_base, ONLY: nat
   USE uspp,      ONLY: okvan, nkb, vkb
   USE uspp_param,ONLY : nhm
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE control_ph, ONLY : convt, nmix_ph, alpha_mix, tr2_ph, &
                          niter_ph, rec_code, flmixdpot, rec_code_read
   USE units_ph,   ONLY : lrwfc, iuwfc

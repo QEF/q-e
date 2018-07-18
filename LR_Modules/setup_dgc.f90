@@ -22,7 +22,7 @@ subroutine setup_dgc
   USE spin_orb,             ONLY : domag
   USE scf,                  ONLY : rho, rho_core, rhog_core
   USE noncollin_module,     ONLY : noncolin, ux, nspin_gga, nspin_mag
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE kinds,                ONLY : DP
   USE funct,                ONLY : dft_is_gradient, gcxc, gcx_spin, &
                                    gcc_spin, dgcxc, dgcxc_spin

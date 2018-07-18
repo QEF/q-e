@@ -62,7 +62,7 @@ PROGRAM average
   USE fft_base,             ONLY : dffts
   USE ions_base,            ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE lsda_mod,             ONLY : nspin
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE io_files,             ONLY : iunpun
   USE scf,                  ONLY : rho
   USE mp_global,            ONLY : mp_startup

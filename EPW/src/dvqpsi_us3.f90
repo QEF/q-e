@@ -32,7 +32,7 @@
   USE noncollin_module,      ONLY : npol
   use uspp_param,            ONLY : upf
   USE wvfct,                 ONLY : npwx
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE nlcc_ph,               ONLY : drc
   USE uspp,                  ONLY : nlcc_any
   USE eqv,                   ONLY : dvpsi, dmuxc, vlocq

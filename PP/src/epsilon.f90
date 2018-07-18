@@ -1064,7 +1064,7 @@ SUBROUTINE dipole_calc( ik, dipole_aux, metalcalc, nbndmin, nbndmax )
   !
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : nbnd, npwx
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE klist,                ONLY : xk, ngk, igk_k
   USE gvect,                ONLY : ngm, g
   USE io_files,             ONLY : nwordwfc, iunwfc

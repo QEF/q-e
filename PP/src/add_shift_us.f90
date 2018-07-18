@@ -24,7 +24,7 @@ SUBROUTINE add_shift_us( shift_nl )
   USE wvfct,                ONLY : nbnd, wg, et
   USE lsda_mod,             ONLY : lsda, isk
   USE symme,                ONLY : symscalar
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE becmod,               ONLY : calbec
   !
