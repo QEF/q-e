@@ -3,7 +3,11 @@ FLAGS = -O3 -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo $(F90FLA
 FLAGS2 = -O3 -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo,maxregcount:64 $(F90FLAGS)
 
 # Need min CC
-FLAGS3 = -O3 -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo,nordc,maxregcount:255  $(F90FLAGS)
+ifeq ($(GPU_ARCH),$(filter $(GPU_ARCH),70))
+    FLAGS3 = -O3 -pgf90libs -Mcuda=cc60,cuda$(CUDA_RUNTIME),ptxinfo,nordc,maxregcount:255  $(F90FLAGS)
+else
+    FLAGS3 = -O3 -pgf90libs -Mcuda=cc$(GPU_ARCH),cuda$(CUDA_RUNTIME),ptxinfo,nordc,maxregcount:255  $(F90FLAGS)
+endif
 
 # Uncomment to enable NVTX markers
 #OPTFLAGS = -DUSE_NVTX
