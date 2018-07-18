@@ -63,6 +63,7 @@ lderiv.o \
 lderivps.o \
 lschps.o \
 newd_at.o \
+kli.o \
 new_potential.o \
 nodenum.o \
 normalize.o \
@@ -104,13 +105,13 @@ write_resultsps.o
 LD1MODS = \
 atomic_paw.o \
 ld1inc.o \
-parameters.o 
+parameters.o
 
 QEMODS=../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
        ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a \
-       ../../LAXlib/libqela.a ../../UtilXlib/libutil.a 
+       ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
-TLDEPS= bindir mods libs 
+TLDEPS= bindir mods libs
 
 all: tldeps ld1.x
 
