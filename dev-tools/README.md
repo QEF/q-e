@@ -38,4 +38,4 @@ This are some basic rules to follow when writting Fortran code.
 * Trailing whitespaces at the end the line should be removed.
 * Normalize multiword keywords.
 * Use capitalize version of the intrisic keywords (IF, DO, SUBROUTINE, etc.).
-* Perefer the newest version of the relational (==, >, etc.) instead of the old one (.eq., .gt., etc.)
+* Prefer the newest version of the comparison operators (==, >, etc.) instead of the old one (.eq., .gt., etc.)
