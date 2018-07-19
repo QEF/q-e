@@ -1,0 +1,11 @@
+# EditorConfig: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+end_of_line = lf
+insert_final_newline = true
+
+[*.{f90,F90}]
+charset = utf-8
+indent_style = space
+indent_size = 8

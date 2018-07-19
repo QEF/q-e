@@ -40,7 +40,7 @@ The following libraries have been isolated and partially encapsulated in view of
 - LRlib: performs a variety of tasks connected with (time-dependent) DFPT, to be used also in connection with Many-Body Perturbation Theory.
 
 ## Contributing
-Before contributing please read the [Contribution Guidelines](CONTRIBUTING.MD)
+Before contributing please read the [Contribution Guidelines](CONTRIBUTING.MD).
 
 
 
