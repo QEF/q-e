@@ -1,5 +1,14 @@
+New in development version:
+  * XDM now works also for USPP and norm-conserving PP
+
+Problems fixed in development version:
+  * bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
+
 Incompatible changes in development version:
   * Module "wavefunctions_module" renamed "wavefunctions"
+
+Known problems in development version:
+  * (none yet)
 
 New in 6.3 version:
   * New implementation, using  a more robust algorithm for the Wigner-Size construction in  EPW. 
@@ -29,7 +38,7 @@ New in 6.3 version:
          Support for exclude bands
          Calculation of velocity beyond the local approximation (experimental)
 
-Problems fixed in development version:
+Problems fixed in 6.3 version:
 
   * Stress with hybrid functionals and Gamma point was grossly wrong
     (5ed148646)
