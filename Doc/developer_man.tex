@@ -1345,10 +1345,10 @@ Beware! you may need to manually merge files that have been modified both
 by you and in the repository.
 The stash can be cleared using \texttt{git stash clear}.
 
-%Note: it is good practice to use \verb|git fetch| before a pull, as in, e.g.:
-%\begin{quote}
-%  \verb|git fetch  git@gitlab.com:QEF/q-e.git develop|
-%\end{quote}
+Note: if you do not change sources but only documentation, tests, examples,
+add \verb|[skip ci]| in the commit message. This prevents execution of 
+automatic compilation on GitLab (that sometimes fails for no good reason,
+blocking a subsequent merge request).
 
 You may repeat the procedure above, adding more commits to your local copy.
 Unlike in svn, you need to explicitly {\em push} (publish) them to the remote
