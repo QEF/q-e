@@ -5,7 +5,7 @@
 # USAGE: src-normal.py < input.f90 > output.f90
 #
 # Script to normalize Fortran source code:
-#   a) expand tabs to spaces (tab width 8 characters
+#   a) expand tabs to spaces (tab width 8 characters)
 #   b) remove trailing space
 #   c) normalize multiword keywords
 #   d) normalize capitalization of keywords and intrinsics

@@ -33,11 +33,15 @@ http://www.quantum-espresso.org/
 ## Modular libraries
 The following libraries have been isolated and partially encapsulated in view of their release for usage in other codes as well:
 
-- UtilXlib performing basic MPI handling, error handling, timing handling.
-- FFTXlib parallel (MPI and OpenMP) distributed three-dimensional FFTs, performing also load-balanceddistribution of data (plane waves, G-vectors and real-space grids) across processors.
-- LAXlib parallel distributed dense-matrix diagonalization, using ELPA, SCALapack, or a custom algorithm.
-- KS Solver parallel iterative diagonalization for the Kohn-Sham Hamiltonian (represented as an operator),using block Davidson and band-by-band Conjugate-Gradient algorithms.
-- LRlib performs a variety of tasks connected with (time-dependent) DFPT, to be used also in connectionwith Many-Body Perturbation Theory.
+- UtilXlib: performing basic MPI handling, error handling, timing handling.
+- FFTXlib: parallel (MPI and OpenMP) distributed three-dimensional FFTs, performing also load-balanced distribution of data (plane waves, G-vectors and real-space grids) across processors.
+- LAXlib: parallel distributed dense-matrix diagonalization, using ELPA, SCALapack, or a custom algorithm.
+- KS Solver: parallel iterative diagonalization for the Kohn-Sham Hamiltonian (represented as an operator),using block Davidson and band-by-band Conjugate-Gradient algorithms.
+- LRlib: performs a variety of tasks connected with (time-dependent) DFPT, to be used also in connection with Many-Body Perturbation Theory.
+
+## Contributing
+Before contributing please read the [Contribution Guidelines](CONTRIBUTING.MD).
+
 
 
 ## LICENSE
