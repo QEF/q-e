@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,17 +9,15 @@
 PROGRAM lr_eels_main
   !---------------------------------------------------------------------
   !
-  ! This is the main driver of the turboEELS code
-  ! for Electron Energy Loss Spectroscopy.
-  ! It applys the Lanczos algorithm to the matrix 
-  ! of equations coming from TDDFPT. It can calculate:
+  ! This is the main driver of the turboEELS code for Electron Energy Loss Spectroscopy.
+  ! It applys the Lanczos algorithm to the matrix of equations coming from TDDFPT. 
   !
-  ! Iurii Timrov, Ecole Polytechnique and SISSA, 2010-2015
+  ! Iurii Timrov (Ecole Polytechnique, SISSA, and EPFL) 2010-2018
   !
   USE lr_lanczos,            ONLY : one_lanczos_step
   USE io_global,             ONLY : stdout
   USE kinds,                 ONLY : dp
-  USE lr_variables,          ONLY : restart, restart_step, itermax, lr_verbosity,  &
+  USE lr_variables,          ONLY : restart_step, itermax, lr_verbosity,  &
                                   & evc1, evc1_old, norm0, n_ipol, &
                                   & d0psi, d0psi2, LR_iteration, LR_polarization, &
                                   & plot_type, nbnd_total, pseudo_hermitian, &
@@ -81,15 +79,9 @@ PROGRAM lr_eels_main
   !
   CALL lr_print_preamble_eels()
   !
-  ! Non-scf calculation at k and k+q
+  ! NSCF calculation at k and k+q
   !
-  IF (.NOT.restart) THEN
-     !
-     WRITE( stdout, '(/,5X,"------------ Nscf calculation ---------------")')
-     !
-     CALL lr_run_nscf( )
-     !
-  ENDIF
+  CALL lr_run_nscf( )
   !
   ! Initialisation, and read the wfct's at k and k+q
   !
