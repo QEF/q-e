@@ -71,7 +71,7 @@ subroutine add_exchange ( energy )
           end if
 !
          nst = 2 * min(l1,l2) + 2
-         sxc = sxc + int_0_inf_dr(wrk1,grid,grid%mesh,nst)
+         sxc = sxc + int_0_inf_dr(wrk1, grid, grid%mesh, nst)
       end do 
 !
       do i=1,grid%mesh
