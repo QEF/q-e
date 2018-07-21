@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2017 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -349,16 +349,8 @@ SUBROUTINE lr_readin
      CALL create_directory(tmp_dir_lr)
   ENDIF
   !
-  ! EELS: If restart=.true. read the initial information from the file
-  ! where the turboEELS code saved its own data (including the data about
-  ! the nscf calculation)
-  !
-  IF (eels .AND. restart) tmp_dir = tmp_dir_lr
-  !
   ! Now PWSCF XML file will be read, and various initialisations will be done.
-  ! I. Timrov: Allocate space for PW scf variables (EELS: for PW nscf files,
-  ! if restart=.true.), read and check them.
-  !
+  ! Allocate space for PW scf variables, read and check them.
   ! Optical case: the variables igk_k and ngk are set up through this path:
   ! read_file -> init_igk.
   ! EELS: the variables igk_k and ngk will be re-set up later (because there

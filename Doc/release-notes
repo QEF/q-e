@@ -2,6 +2,8 @@ New in development version:
   * XDM now works also for USPP and norm-conserving PP
 
 Problems fixed in development version:
+  * The restart option in turboEELS (turbo_eels.x) with ultrasoft
+    pseudopotentials was not working.
   * bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
 
 Incompatible changes in development version:
