@@ -405,46 +405,46 @@ SUBROUTINE print_this_clock( n )
      IF ( nday > 0 ) THEN
         !
         WRITE( stdout, ADVANCE='no', &
-               FMT='(5X,A12," : ",3X,I2,"d",3X,I2,"h",I2, "m CPU ")' ) &
+               FMT='(5X,A12," : ",1X,I2,"d",I2,"h",I2,"m CPU ")' ) &
              clock_label(n), nday, nhour, nmin
         !
      ELSEIF ( nhour > 0 ) THEN
         !
         WRITE( stdout, ADVANCE='no', &
-                FMT='(5X,A12," : ",3X,I2,"h",I2,"m CPU ")' ) &
+                FMT='(5X,A12," : ",4X,I2,"h",I2,"m CPU ")' ) &
              clock_label(n), nhour, nmin
         !
      ELSEIF ( nmin > 0 ) THEN
         !
         WRITE( stdout, ADVANCE='no', &
-               FMT='(5X,A12," : ",I2,"m",F5.2,"s CPU ")' ) &
+               FMT='(5X,A12," : ",1X,I2,"m",F5.2,"s CPU ")' ) &
              clock_label(n), nmin, nsec
         !
      ELSE
         !
         WRITE( stdout, ADVANCE='no', &
-               FMT='(5X,A12," : ",3X,F5.2,"s CPU ")' )&
+               FMT='(5X,A12," : ",4X,F5.2,"s CPU ")' )&
              clock_label(n), nsec
         !
      ENDIF
      IF ( mday > 0 ) THEN
         !
-        WRITE( stdout, '("   ",3X,I2,"d",3X,I2,"h",I2, "m WALL"/)' ) &
+        WRITE( stdout, '(1X,I2,"d",I2,"h",I2,"m WALL"/)' ) &
              mday, mhour, mmin
         !
      ELSEIF ( mhour > 0 ) THEN
         !
-        WRITE( stdout, '("   ",3X,I2,"h",I2,"m WALL"/)' ) &
-             nmin, mhour, mmin
+        WRITE( stdout, '(4X,I2,"h",I2,"m WALL"/)' ) &
+             mhour, mmin
         !
      ELSEIF ( mmin > 0 ) THEN
         !
-        WRITE( stdout, '("   ",I2,"m",F5.2,"s WALL"/)' ) &
+        WRITE( stdout, '(1X,I2,"m",F5.2,"s WALL"/)' ) &
              mmin, msec
         !
      ELSE
         !
-        WRITE( stdout, '(7X,F5.2,"s WALL"/)' ) &
+        WRITE( stdout, '(4X,F5.2,"s WALL"/)' ) &
              msec
         !
      ENDIF
