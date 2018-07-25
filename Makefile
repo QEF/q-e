@@ -73,7 +73,7 @@ pw : bindir libs mods libdavid libcg libppcg dftd3
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-cp : bindir libs mods libdavid libcg
+cp : bindir libs mods libdavid libcg libppcg
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 

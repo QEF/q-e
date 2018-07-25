@@ -17,7 +17,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
                                  ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
   !
   IMPLICIT NONE
-  COMPLEX (DP), PARAMETER ::  C_ONE = (1.D0,0.D0), C_ZERO = (0.D0,0.D0)
+  COMPLEX (DP), PARAMETER :: C_ONE = (1.D0,0.D0), C_ZERO = (0.D0,0.D0)
   !
   ! ... I/O variables
   !
