@@ -808,7 +808,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
  tot_time = tot_time + (tot_time1 - tot_time0)
 
 
-    write(6, '(5x,"Total  Time = ", F5.1)'), tot_time
+!    write(6, '(5x,"Total  Time = ", F5.1)'), tot_time
 
 !!!EV-BANDS
   if (print_info >= 1) then

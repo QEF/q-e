@@ -659,6 +659,8 @@ SUBROUTINE c_bands_nscf( )
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
   ELSE IF ( isolve == 1 ) THEN
      WRITE( stdout, '(5X,"CG style diagonalization")')
+  ELSE IF ( isolve == 2 ) THEN
+     WRITE( stdout, '(5X,"PPCG style diagonalization")')
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   END IF

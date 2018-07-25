@@ -73,11 +73,18 @@ SUBROUTINE print_clock_pw()
       ELSE
          CALL print_clock( 'cegterg' )
       ENDIF
-   ELSE 
+   ELSE  IF (isolve == 1) THEN
       IF ( gamma_only ) THEN
          CALL print_clock( 'rcgdiagg' )
       ELSE
          CALL print_clock( 'ccgdiagg' )
+      ENDIF
+      CALL print_clock( 'wfcrot' )
+   ELSE  IF (isolve == 2) THEN
+      IF ( gamma_only ) THEN
+         CALL print_clock( 'ppcg_gamma' )
+      ELSE
+         CALL print_clock( 'ppcg_k' )
       ENDIF
       CALL print_clock( 'wfcrot' )
    ENDIF
@@ -90,8 +97,10 @@ SUBROUTINE print_clock_pw()
    !
    IF ( isolve == 0 ) THEN
       WRITE( stdout, '(/5x,"Called by *egterg:")' )
-   ELSE 
+   ELSE IF ( isolve == 1 ) THEN
       WRITE( stdout, '(/5x,"Called by *cgdiagg:")' )
+   ELSE IF ( isolve == 2 ) THEN
+      WRITE( stdout, '(/5x,"Called by ppcg_*:")' )
    END IF
    !
    CALL print_clock( 'h_psi' )
