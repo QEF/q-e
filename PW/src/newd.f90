@@ -264,8 +264,8 @@ SUBROUTINE newd( )
   CALL start_clock( 'newd' )
   !
   ! Sync
-  CALL using_deeq(1)
-  IF ( lspinorb .or. noncolin ) CALL using_deeq_nc(1) ! lspinorb implies noncolin 
+  CALL using_deeq(2)   ! deeq is set to 0 in both newq and newq_r
+  IF ( lspinorb .or. noncolin ) CALL using_deeq_nc(1) ! lspinorb implies noncolin. Why here? Better move it in newd_so / newd_nc
   !
   IF (tqr) THEN
      CALL newq_r(v%of_r,deeq,.false.)

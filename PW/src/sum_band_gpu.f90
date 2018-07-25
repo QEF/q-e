@@ -1319,22 +1319,17 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE uspp_param,           ONLY : nh, nhm
-  USE uspp,                 ONLY : ijtoh, nhtol, nhtoj, indv
   USE noncollin_module,     ONLY : npol, nspin_mag
   USE spin_orb,             ONLY : domag
   !
-  !USE uspp_gpum,            ONLY : ijtoh_d, nhtol_d, nhtoj_d, indv_d
-  !USE spin_orb_gpum,        ONLY : fcoef_d
-  USE uspp,            ONLY : ijtoh_d=>ijtoh, nhtol_d=>nhtol, nhtoj_d=>nhtoj, indv_d=>indv
-  USE spin_orb,        ONLY : fcoef_d=>fcoef
+  USE uspp_gpum,            ONLY : ijtoh_d, nhtol_d, nhtoj_d, indv_d
+  USE spin_orb_gpum,        ONLY : fcoef_d
   !
   IMPLICIT NONE
   
   INTEGER, INTENT(IN) :: na, np
   COMPLEX(DP), INTENT(IN) :: becsum_nc_d(nh(np),npol,nh(np),npol)
   REAL(DP), INTENT(INOUT) :: becsum_d(nhm*(nhm+1)/2,nat,nspin_mag)
-  COMPLEX(DP), ALLOCATABLE :: becsum_nc_h(:,:,:,:)
-  REAL(DP), ALLOCATABLE    :: becsum_h(:,:,:)
   !
   ! ... local variables
   !
@@ -1345,37 +1340,34 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
   attributes (DEVICE) :: becsum_nc_d, becsum_d
 #endif
   !
-  ! TODO: FIND OUT PROBLEM WITH THIS CUF KERNEL
-  ! TODO : OPTIMIZE HERE!
-  !
-  ALLOCATE(becsum_nc_h(nh(np),npol,nh(np),npol))
-  ALLOCATE(becsum_h(nhm*(nhm+1)/2,nat,nspin_mag))
-  becsum_nc_h = becsum_nc_d
-  becsum_h = becsum_d
-  !
   nhnt = nh(np)
   !
+  !$cuf kernel do(1)
   DO ih = 1, nhnt
      DO jh = 1, nhnt
         ijh=ijtoh_d(ih,jh,np)
         DO kh = 1, nhnt
-           IF (same_lj(kh,ih,np)) THEN
+           IF ( (nhtol_d(kh,np)==nhtol_d(ih,np)).AND. &
+                (ABS(nhtoj_d(kh,np)-nhtoj_d(ih,np))<1.d8).AND. &
+                (indv_d(kh,np)==indv_d(ih,np)) ) THEN ! same_lj(kh,ih,np)
               DO lh=1,nhnt
-                 IF (same_lj(lh,jh,np)) THEN
+                 IF ( (nhtol_d(lh,np)==nhtol_d(jh,np)).AND. &
+                      (ABS(nhtoj_d(lh,np)-nhtoj_d(jh,np))<1.d8).AND. &
+                      (indv_d(lh,np)==indv_d(jh,np)) ) THEN   !same_lj(lh,jh,np)) THEN
                     DO is1=1,npol
                        DO is2=1,npol
-                          fac=becsum_nc_h(kh,is1,lh,is2)
-                          becsum_h(ijh,na,1)=becsum_h(ijh,na,1) + DBLE( fac * &
+                          fac=becsum_nc_d(kh,is1,lh,is2)
+                          becsum_d(ijh,na,1)=becsum_d(ijh,na,1) + DBLE( fac * &
                                (fcoef_d(kh,ih,is1,1,np)*fcoef_d(jh,lh,1,is2,np) + &
                                 fcoef_d(kh,ih,is1,2,np)*fcoef_d(jh,lh,2,is2,np)  ) )
                           IF (domag) THEN
-                            becsum_h(ijh,na,2)=becsum_h(ijh,na,2) + DBLE( fac * &
+                            becsum_d(ijh,na,2)=becsum_d(ijh,na,2) + DBLE( fac * &
                                 (fcoef_d(kh,ih,is1,1,np)*fcoef_d(jh,lh,2,is2,np) +&
                                  fcoef_d(kh,ih,is1,2,np)*fcoef_d(jh,lh,1,is2,np)  ) )
-                            becsum_h(ijh,na,3)=becsum_h(ijh,na,3) + DBLE( fac*(0.d0,-1.d0)*&
+                            becsum_d(ijh,na,3)=becsum_d(ijh,na,3) + DBLE( fac*(0.d0,-1.d0)*&
                                (fcoef_d(kh,ih,is1,1,np)*fcoef_d(jh,lh,2,is2,np) - &
                                 fcoef_d(kh,ih,is1,2,np)*fcoef_d(jh,lh,1,is2,np)  ))
-                            becsum_h(ijh,na,4)=becsum_h(ijh,na,4) + DBLE(fac * &
+                            becsum_d(ijh,na,4)=becsum_d(ijh,na,4) + DBLE(fac * &
                                (fcoef_d(kh,ih,is1,1,np)*fcoef_d(jh,lh,1,is2,np) - &
                                 fcoef_d(kh,ih,is1,2,np)*fcoef_d(jh,lh,2,is2,np)  ) )
                         END IF
@@ -1387,16 +1379,5 @@ SUBROUTINE add_becsum_so_gpu( na, np, becsum_nc_d, becsum_d )
       END DO
    END DO
 END DO
- becsum_d = becsum_h
- DEALLOCATE(becsum_nc_h, becsum_h)
-CONTAINS
-   LOGICAL FUNCTION same_lj(ih,jh,np)
-   INTEGER :: ih, jh, np
-   !
-   same_lj = ((nhtol(ih,np)==nhtol(jh,np)).AND. &
-             (ABS(nhtoj(ih,np)-nhtoj(jh,np))<1.d8).AND. &
-             (indv(ih,np)==indv(jh,np)) )
-   !
-   END FUNCTION same_lj
 
 END SUBROUTINE add_becsum_so_gpu
