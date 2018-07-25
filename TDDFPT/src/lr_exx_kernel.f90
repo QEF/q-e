@@ -1045,7 +1045,6 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd, orbital) RESULT (psi_int)
   INTEGER, INTENT(IN) :: ibnd
   COMPLEX(DP), INTENT(IN) :: orbital(:,:)
   COMPLEX(DP) :: psitemp(dfftt%nnr)
-  REAL(KIND=DP) :: w3
   !
   ! Workspaces
   !
@@ -1097,12 +1096,9 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd, orbital) RESULT (psi_int)
      psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
           & + DBLE(vhart(1:nnr_, 1)) * DBLE(psi(1:nnr_)) &
           & + AIMAG(vhart(1:nnr_,1)) * AIMAG(psi(1:nnr_))
-!          & + w1*DBLE(vhart(1:nnr_, 1)) * DBLE(psi(1:nnr_)) &
-!          & + w2*AIMAG(vhart(1:nnr_,1)) * AIMAG(psi(1:nnr_))
      !
      psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
            & + AIMAG(vhart(1:nnr_,1)) * DBLE(psi(1:nnr_))
-!           & + w1* AIMAG(vhart(1:nnr_,1)) * DBLE(psi(1:nnr_))
      !
      ! calculate vhart for couple ibnd+1,ibnd+1
      !
@@ -1133,7 +1129,6 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd, orbital) RESULT (psi_int)
      ! 
      psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
            & + DBLE(vhart(1:nnr_,1)) * AIMAG(psi(1:nnr_))
-!           & + w2* DBLE(vhart(1:nnr_,1)) * AIMAG(psi(1:nnr_))
      !
      !
      ! start second loop over bands
@@ -1189,20 +1184,15 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd, orbital) RESULT (psi_int)
         psi_int(1:nnr_,ibnd2) = psi_int(1:nnr_,ibnd2) &
              & + DBLE(vhart(1:nnr_, 1)) * DBLE(psi(1:nnr_)) &
              & + AIMAG(vhart(1:nnr_,1)) * AIMAG(psi(1:nnr_))
-!             & + w1*DBLE(vhart(1:nnr_, 1)) * DBLE(psi(1:nnr_)) &
-!             & + w2*AIMAG(vhart(1:nnr_,1)) * AIMAG(psi(1:nnr_))
         !
         CALL invfft_orbital_ibnd2_gamma(orbital(:,:), psitemp, ibnd2, npw_, dfftt)
         !
-!        w3 = wg(ibnd2,1)/omega
         !
         psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
              & + DBLE(vhart(1:nnr_, 1)) * DBLE(psitemp(1:nnr_))
-!             & + w3*DBLE(vhart(1:nnr_, 1)) * DBLE(psitemp(1:nnr_))
         !
         psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
              & + AIMAG(vhart(1:nnr_, 1)) * DBLE(psitemp(1:nnr_))
-!             & + w3*AIMAG(vhart(1:nnr_, 1)) * DBLE(psitemp(1:nnr_))
         !
      ENDDO
      !
@@ -1237,7 +1227,6 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd, orbital) RESULT (psi_int)
      ! 
      psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
            & + DBLE(vhart(1:nnr_,1)) * DBLE(psi(1:nnr_))
-!           & + w1* DBLE(vhart(1:nnr_,1)) * DBLE(psi(1:nnr_))
      !
      ! start second loop over bands
      !
@@ -1287,20 +1276,18 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd, orbital) RESULT (psi_int)
         !
         psi_int(1:nnr_,ibnd2) = psi_int(1:nnr_,ibnd2) &
              & + DBLE(vhart(1:nnr_, 1)) * DBLE(psi(1:nnr_))
-!             & + w1*DBLE(vhart(1:nnr_, 1)) * DBLE(psi(1:nnr_))
         !
         CALL invfft_orbital_ibnd2_gamma(orbital(:,:), psitemp, ibnd2, npw_, dfftt)
         !
-!        w3 = wg(ibnd2,1)/omega
         !
         psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
              & + DBLE(vhart(1:nnr_, 1)) * DBLE(psitemp(1:nnr_))
-!             & + w3*DBLE(vhart(1:nnr_, 1)) * DBLE(psitemp(1:nnr_))
         !
      ENDDO
 
   ENDIF
   !
+  RETURN
   !
 END FUNCTION k1d_term_gamma
 
@@ -1451,6 +1438,7 @@ FUNCTION k2d_vexx_term_gamma(w1, w2, psi, fac_in, ibnd, interaction) RESULT (psi
      !
   ENDDO
   !
+  RETURN
   !
 END FUNCTION k2d_vexx_term_gamma
 
