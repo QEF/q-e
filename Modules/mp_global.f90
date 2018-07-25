@@ -114,6 +114,7 @@ CONTAINS
     CALL mp_start_diag ( ndiag_, world_comm, my_comm, do_distr_diag_inside_bgrp )
     !
     call set_mpi_comm_4_cg( intra_pool_comm, intra_bgrp_comm, inter_bgrp_comm )
+    call set_mpi_comm_4_ppcg( intra_pool_comm, intra_bgrp_comm, inter_bgrp_comm )
     call set_mpi_comm_4_davidson( intra_pool_comm, intra_bgrp_comm, inter_bgrp_comm )
     !
     RETURN
@@ -127,6 +128,7 @@ CONTAINS
     USE mp, ONLY : mp_comm_free
     !
     CALL unset_mpi_comm_4_cg()
+    CALL unset_mpi_comm_4_ppcg()
     CALL unset_mpi_comm_4_davidson()
     CALL mp_comm_free ( intra_bgrp_comm )
     CALL mp_comm_free ( inter_bgrp_comm )

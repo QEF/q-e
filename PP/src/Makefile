@@ -7,6 +7,7 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../KS_Solvers/Davidson \
           $(MOD_FLAG)../../KS_Solvers/CG \
+          $(MOD_FLAG)../../KS_Solvers/PPCG \
           $(MOD_FLAG)../../dft-d3/
 
 PPOBJS = \
@@ -50,7 +51,8 @@ write_io_header.o \
 write_hamiltonians.o 
 
 PWOBJS = ../../PW/src/libpw.a
-QEOBJS = ../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a ../../KS_Solvers/CG/libcg.a \
+QEOBJS = ../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a \
+         ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/PPCG/libppcg.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
 MODULES = $(PWOBJS) $(QEOBJS)

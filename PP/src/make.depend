@@ -114,7 +114,6 @@ chdens_bspline.o : ../../Modules/cell_base.o
 chdens_bspline.o : ../../Modules/fft_base.o
 chdens_bspline.o : ../../Modules/io_global.o
 chdens_bspline.o : ../../Modules/kind.o
-chdens_bspline.o : chdens_module.o
 chdens_module.o : ../../FFTXlib/fft_interfaces.o
 chdens_module.o : ../../FFTXlib/fft_types.o
 chdens_module.o : ../../FFTXlib/scatter_mod.o
