@@ -20,7 +20,8 @@ diagonalization.o \
 dielectric.o  
 
 
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a \
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
+        ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/Davidson/libdavid.a \
 	../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 
