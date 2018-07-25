@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE set_mpi_comm_4_cg(parent_comm, intra_bgrp_comm_, inter_bgrp_comm_ )
+SUBROUTINE set_mpi_comm_4_ppcg(parent_comm, intra_bgrp_comm_, inter_bgrp_comm_ )
   !----------------------------------------------------------------------------
   !
   USE ppcg_param,    ONLY : DP
@@ -56,12 +56,12 @@ SUBROUTINE set_mpi_comm_4_cg(parent_comm, intra_bgrp_comm_, inter_bgrp_comm_ )
 
     !
 #endif
-  !write(*,*) ' exit set_mpi_4_cg'
+  !write(*,*) ' exit set_mpi_4_ppcg'
     RETURN
   !
-END SUBROUTINE set_mpi_comm_4_cg
+END SUBROUTINE set_mpi_comm_4_ppcg
 !----------------------------------------------------------------------------
-SUBROUTINE unset_mpi_comm_4_cg()
+SUBROUTINE unset_mpi_comm_4_ppcg()
   !----------------------------------------------------------------------------
   !
   use mp_diag
@@ -71,4 +71,4 @@ SUBROUTINE unset_mpi_comm_4_cg()
 #endif
     RETURN
   !
-END SUBROUTINE unset_mpi_comm_4_cg
+END SUBROUTINE unset_mpi_comm_4_ppcg

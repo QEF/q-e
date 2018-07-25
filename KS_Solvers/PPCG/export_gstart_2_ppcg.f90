@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE export_gstart_2_cg(gstart_)
+SUBROUTINE export_gstart_2_ppcg(gstart_)
   !----------------------------------------------------------------------------
   !
   USE mp_bands_util, ONLY : gstart
@@ -17,4 +17,4 @@ SUBROUTINE export_gstart_2_cg(gstart_)
   !
   gstart = gstart_
   !
-END SUBROUTINE export_gstart_2_cg
+END SUBROUTINE export_gstart_2_ppcg
