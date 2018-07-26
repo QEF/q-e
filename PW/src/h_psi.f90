@@ -99,7 +99,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE ldaU,     ONLY : lda_plus_u, U_projection
   USE gvect,    ONLY : gstart
   USE funct,    ONLY : dft_is_meta
-  USE control_flags,    ONLY : gamma_only, tddfpt
+  USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY: npol, noncolin
   USE realus,   ONLY : real_space, &
                        invfft_orbital_gamma, fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, & 
@@ -236,7 +236,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   ! ... Here the exact-exchange term Vxx psi
   !
-  IF ( exx_is_active() .and..not. (tddfpt .and. gamma_only)) THEN
+  IF ( exx_is_active() ) THEN
      IF ( use_ace) THEN
         IF (gamma_only) THEN
            CALL vexxace_gamma(lda,m,psi,ee,hpsi)
