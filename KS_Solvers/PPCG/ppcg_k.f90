@@ -1,7 +1,7 @@
 !
 SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
                  npwx, npw, nbnd, psi, e, btype, &
-                 ethr, maxter, notconv, ppcg_iter, sbsize, rr_step, scf_iter)
+                 ethr, maxter, notconv, avg_iter, sbsize, rr_step, scf_iter)
   !
   !----------------------------------------------------------------------------
   !
@@ -34,9 +34,10 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   REAL (DP),    INTENT(IN)    :: precondition(npw), ethr
   ! the diagonal preconditioner
   ! the convergence threshold for eigenvalues
-  INTEGER,      INTENT(OUT)   :: notconv, ppcg_iter
+  INTEGER,      INTENT(OUT)   :: notconv
+  REAL(DP),     INTENT(OUT)   :: avg_iter
   ! number of notconverged elements
-  ! number of iterations in PPCG
+  ! average number of iterations in PPCG
   INTEGER,      INTENT(IN)   ::  sbsize, rr_step      ! sub-block size (num. of vectors in sub-blocks)
                                                       ! ...to be used in PPCG block splitting. by default, sbsize=1
                                                       ! run the Rayleigh Ritz procedure every rr_step
@@ -150,6 +151,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   IF ( gstart == 2 ) psi(1,1:nbnd) = CMPLX( DBLE( psi(1,1:nbnd) ), 0.D0, kind=DP)
   CALL h_psi( npwx, npw, nbnd, psi, hpsi )
   if (overlap) CALL s_psi( npwx, npw, nbnd, psi, spsi)
+  avg_iter = 1.d0
   call cpu_time(tspmv1)
   tspmv = tspmv + (tspmv1 - tspmv0)
   !
@@ -259,6 +261,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
         CALL s_psi( npwx, npw, nact, buffer1, buffer )
         sw(:,act_idx(1:nact)) = buffer(:,1:nact)
      end if
+     avg_iter = avg_iter + nact/dble(nbnd)
      call cpu_time(tspmv1)
      tspmv = tspmv + (tspmv1 - tspmv0)
      !
@@ -792,11 +795,10 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
  !
 ! E.V. notconv issue comment
  notconv = 0 ! nact
- ppcg_iter = total_iter
  !
  IF (print_info >= 1) THEN
     WRITE(stdout, *) '-----------PPCG result summary ...  ----------------'
-    WRITE(stdout, '("ppcg_iter: ", I5,  ", notconv: ", I5)'), ppcg_iter, notconv
+    WRITE(stdout, '("avg_iter: ", f6.2,  ", notconv: ", I5)'), avg_iter, notconv
     CALL flush( stdout )
  END IF
  !
