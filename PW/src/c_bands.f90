@@ -307,9 +307,9 @@ CONTAINS
           ELSE
              CALL ppcg_gamma( h_psi, s_psi, okvan, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
-                         ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter  )
+                         0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter  )
              !
-             avg_iter = avg_iter + cg_iter
+             avg_iter = avg_iter + ppcg_iter
              !
           END IF
           !
@@ -457,7 +457,7 @@ CONTAINS
 ! BEWARE npol should be added to the arguments
              CALL ppcg_k( h_psi, s_psi, okvan, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
-                         ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter)
+                         0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter)
              !
              avg_iter = avg_iter + ppcg_iter
              !

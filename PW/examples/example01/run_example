@@ -74,7 +74,7 @@ $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
 
-for diago in ppcg david cg ; do
+for diago in david cg ppcg ; do
 
     # self-consistent calculation
     cat > si.scf.$diago.in << EOF
