@@ -35,7 +35,7 @@ SUBROUTINE sum_band_gpu()
   USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : upf, nh, nhm
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions,        ONLY : evc, psic
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE spin_orb,             ONLY : lspinorb, domag
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
@@ -982,7 +982,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE wvfct,         ONLY : nbnd, wg, et, current_k
   USE klist,         ONLY : ngk, nkstot
   USE noncollin_module,     ONLY : noncolin, npol
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE realus,        ONLY : real_space, &
                             invfft_orbital_gamma, calbec_rs_gamma, &
                             invfft_orbital_k, calbec_rs_k

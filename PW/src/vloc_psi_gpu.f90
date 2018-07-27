@@ -319,7 +319,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
   USE fft_helper_subroutines
-  USE wavefunctions_module, ONLY: psic_h => psic
+  USE wavefunctions, ONLY: psic_h => psic
   !USE wavefunctions_gpum, ONLY: psic_d
   USE qe_buffers,    ONLY : qe_buffer
   !
