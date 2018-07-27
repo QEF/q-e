@@ -7,7 +7,6 @@ include make.libs
 # use recursive definitions in Makefile to modify the PATH for modules
 #
 
-IFLAGS   = -I../../include  -I../../UtilXlib/ 
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../PHonon/PH \
@@ -62,6 +61,7 @@ ktokpmq.o \
 loadkmesh.o \
 loadqmesh.o \
 loadumat.o \
+load_rebal.o \
 nesting_fn.o \
 openfilepw.o \
 rgd_blk_epw_fine_mem.o \
@@ -123,7 +123,7 @@ libepw.a : $(EPWOBJS)
 
 epw.x : epw.o libepw.a $(PHOBJS) $(LRMODS) $(PWOBJS) $(W90LIB) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	epw.o  libepw.a	$(PHOBJS) $(LRMODS) $(W90LIB) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) 
+	epw.o  libepw.a	$(PHOBJS) $(LRMODS) $(W90LIB) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) 
 	- ( cd ../bin ; ln -fs ../src/epw.x . )
 
 # SP: Here to correct bugs in wannier 2.0.1

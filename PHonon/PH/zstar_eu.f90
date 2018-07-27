@@ -22,7 +22,7 @@ subroutine zstar_eu
   USE wvfct,     ONLY : npwx
   USE uspp,      ONLY : okvan, vkb
   use noncollin_module, ONLY : npol
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
 
   USE modes,     ONLY : u, nirr, npert
   USE qpoint,    ONLY : npwq, nksq

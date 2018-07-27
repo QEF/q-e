@@ -1321,8 +1321,8 @@ FUNCTION exxenergyace ( )
   USE mp_bands, ONLY : intra_bgrp_comm
   USE mp,       ONLY : mp_sum
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : evc
-  USE wavefunctions_gpum, ONLY : using_evc
+  USE wavefunctions,        ONLY : evc
+  USE wavefunctions_gpum,   ONLY : using_evc
   !
   IMPLICIT NONE
   !

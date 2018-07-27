@@ -1353,7 +1353,7 @@ contains
     use uspp,           only : okvan
     use io_global,    only : stdout
     use realus,              only : invfft_orbital_gamma, fwfft_orbital_gamma
-    use wavefunctions_module, only : psic
+    use wavefunctions, only : psic
     use cell_base,              only : omega
     use mp,                   only : mp_barrier
     use mp_world,               only : world_comm

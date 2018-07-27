@@ -19,7 +19,7 @@ subroutine addusldos (ldos, becsum1)
   use fft_base,  only: dfftp
   use fft_interfaces, only: invfft
   USE gvect, ONLY : eigts1, eigts2, eigts3, mill, gg, g, ngm
-  USE wavefunctions_module,  ONLY: psic
+  USE wavefunctions,  ONLY: psic
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   USE noncollin_module, ONLY : nspin_mag

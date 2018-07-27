@@ -230,7 +230,7 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
   use io_global, only : qestdin
   implicit none
   ! input
-  integer :: rel, lsd 
+  integer :: rel, lsd
   ! output: atomic states
   character(len=2) :: el(nwfx)
   integer :: nwf, nn(nwfx), ll(nwfx), isw(nwfx)
@@ -248,7 +248,7 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
   !
   !     read the occupation of the states
   !
-  do n=1,nwf  
+  do n=1,nwf
      if (rel < 2) then
         jj(n) = 0.0_dp
         if (lsd == 0) then
@@ -256,7 +256,7 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
                 el(n), nn(n), ll(n), oc(n)
            isw(n)=1
 20         call errore('read_config','reading orbital (lda)',abs(ios))
-        else  
+        else
            read(qestdin,*,err=21,end=21,iostat=ios) &
                 el(n), nn(n), ll(n), oc(n), isw(n)
 21         call errore('read_config','reading orbital (lsd)',abs(ios))
@@ -313,7 +313,7 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
   use io_global, only : qestdin
   implicit none
   ! input
-  integer :: rel, lsd 
+  integer :: rel, lsd
   ! output: atomic states
   character(len=2) :: els(nwfsx)
   integer :: nwfs, nns(nwfsx), lls(nwfsx), isws(nwfsx)

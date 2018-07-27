@@ -46,7 +46,7 @@ SUBROUTINE chdens (plot_files,plot_num)
   USE gvecw,      ONLY: ecutwfc
   USE run_info,   ONLY: title
   USE control_flags, ONLY: gamma_only
-  USE wavefunctions_module,  ONLY: psic
+  USE wavefunctions,  ONLY: psic
 
   IMPLICIT NONE
   CHARACTER (len=256), DIMENSION(:), ALLOCATABLE, INTENT(in) :: plot_files
@@ -73,10 +73,10 @@ SUBROUTINE chdens (plot_files,plot_num)
   LOGICAL :: luse_filepp
   CHARACTER (len=13), DIMENSION(0:7) :: formatname = &
        (/ 'gnuplot      ', &
-          'contour.x    ', &
+          'obsolete!    ', &
           'plotrho.x    ', &
           'XCrySDen     ', &
-          'gOpenMol     ', &
+          'obsolete!    ', &
           'XCrySDen     ', &
           'Gaussian cube', & 
           'gnuplot x,y,f' /)
@@ -175,8 +175,6 @@ SUBROUTINE chdens (plot_files,plot_num)
      CALL infomsg ('chdens', 'output format not set, exiting' )
      RETURN
   ENDIF
-
-
   !
   ! check for number of files
   !
@@ -187,8 +185,10 @@ SUBROUTINE chdens (plot_files,plot_num)
      CALL errore ('chdens ', &
        "can't mix nfile > 1 with multiple output files", 1)
   ENDIF
-
-
+  ! check for output_format
+  IF ( output_format == 1 .or. output_format == 4 .or. &
+       output_format < 0  .or. output_format  > 7 ) &
+       CALL errore ('chdens', 'output_format wrong or obsolete', 1)
   !
   ! prepare input and output files to read
   !
@@ -249,10 +249,8 @@ SUBROUTINE chdens (plot_files,plot_num)
           abs(e2(1)*e3(1) + e2(2)*e3(2) + e2(3)*e3(3)) > 1d-6 )    &
          CALL errore ('chdens', 'e1, e2, e3 are not orthogonal', 1)
 
-     IF ((iflag==3) .and.(output_format < 3 .or. output_format > 6)) &
+     IF ( output_format < 4 .or. output_format > 6 ) &
         CALL errore ('chdens', 'incompatible iflag/output_format', 1)
-     IF ((iflag/=3) .and. ((output_format == 5) .or. (output_format == 6))) &
-        CALL errore ('chdens', 'output_format=5/6, iflag<>3', 1)
 
   ELSEIF (iflag  == 4) THEN
 
@@ -524,23 +522,6 @@ SUBROUTINE chdens (plot_files,plot_num)
   
     ELSEIF (iflag == 3) THEN
   
-       IF (output_format == 4.and.ionode) THEN
-  
-          ! gopenmol wants the coordinates in a separate file
-  
-          IF (fileout /= ' ') THEN
-             OPEN (unit = ounit+1, file = trim(fileout)//'.xyz', &
-                  form = 'formatted', status = 'unknown')
-             WRITE( stdout, '(5x,"Writing coordinates to file ",a)') &
-                  trim(fileout)//'.xyz'
-          ELSE
-             OPEN (unit = ounit+1, file = 'coord.xyz', &
-                  form = 'formatted', status = 'unknown')
-             WRITE( stdout, '("Writing coordinates to file coord.xyz")')
-          ENDIF
-       ENDIF
-  
-  
        IF (output_format == 5.and.ionode) THEN
           !
           ! XCRYSDEN FORMAT
@@ -564,7 +545,7 @@ SUBROUTINE chdens (plot_files,plot_num)
   
        ELSEIF (ionode) THEN
           !
-          ! GOPENMOL OR XCRYSDEN FORMAT
+          ! XCRYSDEN FORMAT
           !
           IF (fast3d) THEN
   
@@ -842,12 +823,7 @@ SUBROUTINE plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
            WRITE (ounit, '(e25.14)') (  dble(carica(i,j)), j = 1, ny )
            WRITE (ounit, * )
         ENDDO
-     ELSEIF (output_format == 1) THEN
         !
-        !     contour.x format
-        !
-        WRITE (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
-        WRITE (ounit, '(4e25.14)') ( (  dble(carica(i,j)), j = 1, ny ), i = 1, nx )
      ELSEIF (output_format == 2) THEN
         !
         !     plotrho format
@@ -866,6 +842,7 @@ SUBROUTINE plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
         !
         CALL xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
         CALL xsf_datagrid_2d (carica, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
+        !
      ELSEIF (output_format == 7) THEN
         !
         !     gnuplot format : x, y, f(x,y)
@@ -978,6 +955,7 @@ SUBROUTINE plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
   !     and we print the charge on output
   !
   IF (ionode) THEN
+        !
      IF (output_format==0) THEN
         !
         !     gnuplot format
@@ -986,15 +964,9 @@ SUBROUTINE plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
         DO i = 1, nx
            WRITE (ounit, '(e25.14)') (  dble(carica(i,j)), j = 1, ny )
         ENDDO
-     ELSEIF (output_format==1) THEN
         !
-        !     contour.x format
-        !
-        WRITE (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
-        WRITE (ounit, '(4e25.14)') ( (  dble(carica(i,j)), j = 1, ny ), i = 1, nx )
      ELSE
-        CALL errore ('plot_2ds', 'not implemented plot', 1)
-
+        CALL errore ('plot_2ds', 'plot not implemented', 1)
      ENDIF
   ENDIF
   DEALLOCATE (carica)
@@ -1099,24 +1071,15 @@ SUBROUTINE plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
      rhomin, rhomax, rhotot, rhoabs
 
   IF (ionode) THEN
-     IF (output_format == 4) THEN
-        !
-        ! "gOpenMol" file
-        !
-
-        CALL write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
-             m1, m2, m3, nx, ny, nz, rhomax, carica, ounit)
-     ELSE
-        ! user has calculated for very long, be nice and write some output even
-        ! if the output_format is wrong; use XSF format as default
-
-        !
-        ! XCRYSDEN's XSF format
-        !
-        CALL xsf_struct      (alat, at, nat, tau, atm, ityp, ounit)
-        CALL xsf_datagrid_3d &
+     ! user has calculated for very long, be nice and write some output even
+     ! if the output_format is wrong; use XSF format as default
+     !
+     ! XCRYSDEN's XSF format
+     !
+     CALL xsf_struct      (alat, at, nat, tau, atm, ityp, ounit)
+     CALL xsf_datagrid_3d &
              (carica, nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, alat, ounit)
-     ENDIF
+     !
   ENDIF
 
   DEALLOCATE (carica)
@@ -1236,110 +1199,17 @@ SUBROUTINE plot_fast (alat, at, nat, tau, atm, ityp,&
 
   WRITE(stdout, '(/5x,"Min, Max, Total, Abs charge: ",4f10.6)') rhomin, &
        rhomax, rhotot, rhoabs
-
-  IF (output_format == 4) THEN
-     !
-     !     "gopenmol" file
-     !
-     CALL write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
-          m1, m2, m3, nx, ny, nz, rhomax, carica, ounit)
-  ELSE
-     !
-     ! write XSF format
-     !
-     CALL xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
-     CALL xsf_datagrid_3d (carica, nx, ny, nz, m1, m2, m3, x0, &
+  !
+  ! write XSF format
+  !
+  CALL xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
+  CALL xsf_datagrid_3d (carica, nx, ny, nz, m1, m2, m3, x0, &
           e1, e2, e3, alat, ounit)
-  ENDIF
   !
   DEALLOCATE (carica)
   RETURN
 
 END SUBROUTINE plot_fast
-!
-!-----------------------------------------------------------------------
-SUBROUTINE write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
-     m1, m2, m3, nx, ny, nz, rhomax, carica, ounit)
-  !-----------------------------------------------------------------------
-  USE io_global,  ONLY : stdout
-  USE kinds, ONLY : DP
-  USE constants, ONLY : bohr => BOHR_RADIUS_ANGS, eps4
-  IMPLICIT NONE
-  INTEGER :: nat, ityp (nat), nx, ny, nz, ounit
-  real(DP) :: alat, tau (3, nat), at (3, 3), rhomax, x0 (3), &
-       m1, m2, m3, carica (nx, ny, nz)
-  CHARACTER(len=3) :: atm(*)
-  !
-  INTEGER, PARAMETER :: MAXATOMS = 999
-  INTEGER :: natoms
-  CHARACTER(len=2) TYPE (MAXATOMS)
-  INTEGER :: n1, n2, n3, na, i
-  real(DP) :: atoms (3, MAXATOMS), r (3), x, y, z
-  real(DP) :: sidex, sidey, sidez
-  !
-  !   sides of the parallelepiped in A
-  !
-  sidex = m1 * alat * bohr
-  sidey = m2 * alat * bohr
-  sidez = m3 * alat * bohr
-
-  ! really bad algorithm to  generate (hopefully) all atoms
-  ! that are inside the visualization box
-
-  natoms = 0
-  DO n1 = - 3, + 3
-     DO n2 = - 3, + 3
-        DO n3 = - 3, + 3
-           DO i = 1, 3
-              r (i) = n1 * at (i, 1) + n2 * at (i, 2) + n3 * at (i, 3)
-           ENDDO
-           DO na = 1, nat
-              ! x,y,z are in A
-              x = (tau (1, na) + r (1) - x0 (1) ) * alat * bohr
-              y = (tau (2, na) + r (2) - x0 (2) ) * alat * bohr
-              z = (tau (3, na) + r (3) - x0 (3) ) * alat * bohr
-              IF ( x > -eps4 .and. x < sidex+eps4 .and. &
-                   y > -eps4 .and. y < sidey+eps4 .and. &
-                   z > -eps4 .and. z < sidez+eps4 ) THEN
-                 natoms = natoms + 1
-                 IF (natoms>MAXATOMS) THEN
-                    WRITE(stdout, '(" MAXATOMS (",i4,") Exceeded, " &
-                         &       ,"Truncating " )') MAXATOMS
-                    natoms = MAXATOMS
-                    GOTO 10
-                 ENDIF
-                 !
-                 atoms (1, natoms) = x
-                 atoms (2, natoms) = y
-                 atoms (3, natoms) = z
-                 !
-                 TYPE(natoms)=atm(ityp(na))
-              ENDIF
-           ENDDO
-        ENDDO
-     ENDDO
-
-  ENDDO
-
-10 WRITE( stdout,'(5x,"Found ",i4," atoms in the box")') natoms
-  WRITE(ounit,'("  3 2")')
-  WRITE(ounit,'(3i5)') nz,ny,nx
-  WRITE(ounit,'(6f10.4)') 0.0d0,sidez,0.0d0,sidey,0.0d0,sidex
-  DO n3=1,nz
-     DO n2 = 1, ny
-        DO n1 = 1, nx
-           WRITE (ounit, '(f20.10)') carica (n1, n2, n3)
-        ENDDO
-     ENDDO
-  ENDDO
-  !
-  ! gopenmol needs atomic positions in a separate file
-  !
-  WRITE(ounit+1,'(i4,/)') natoms
-  WRITE(ounit+1,'(2x,a2,3f9.4)') (TYPE(na),( atoms(i,na), i=1,3 ), na=1,natoms )
-  !
-  RETURN
-END SUBROUTINE write_openmol_file
 !
 SUBROUTINE isostm_plot(rhor, nr1x, nr2x, nr3x, & 
                       isovalue, heightmin, heightmax, direction)

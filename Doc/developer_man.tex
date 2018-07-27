@@ -552,7 +552,7 @@ all : tldeps pw.x generate_vdW_kernel_table.x
 \begin{verbatim}
 pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
      $(LD) $(LDFLAGS) -o $@ \
-     $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(LIBS)
+     $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(QELIBS)
    - ( cd ../../bin; ln -fs ../PW/src/$@ . ; \
                ln -fs ../PW/src/$@ dist.x ; ln -fs ../PW/src/$@ manypw.x ; )
 \end{verbatim}
@@ -1304,8 +1304,10 @@ for serious bugs.
 
 Development can proceed in different ways:
 \begin{enumerate}
-\item Via ``merge'' requests from a private repository
+\item Via ``merge'' requests from a private repository 
+	({\em recommended})
 \item Via ``merge'' requests from a branch
+	({\em not recommended})
 \item Directly into the ``develop'' branch
 \end{enumerate}
 The first option is the recommended one. Register on GitLab and {\em save
@@ -1395,7 +1397,7 @@ they didn't know what they were doing):
 \label{Sec:testfarm}
 
 The \qe\, test-suite is used to ensure continuous integration and long-term numerical stability of the code.
-The test-suite is also used by different Buildbot test-farm to automatically test the code nightly after a commit to the SVN qe-forge repository has been detected. 
+The test-suite is also used by different Buildbot test-farm to automatically test the code nightly after a commit to the repository has been detected. 
 
 The currently active test-farm machine can be accessed at 
 \texttt{test-farm.quantum-espresso.org} (points to a machine at CINECA:

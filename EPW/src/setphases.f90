@@ -42,7 +42,7 @@
   USE control_flags,        ONLY : iverbosity
   USE pwcom,                ONLY : igk 
   USE constants_epw,        ONLY : ci, czero
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE fft_base,             ONLY : dfftp, dffts
   USE wvfct,                ONLY : nbnd   
   USE gvecs,                ONLY : nls

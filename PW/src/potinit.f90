@@ -38,7 +38,7 @@ SUBROUTINE potinit()
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, v, vrs, kedtau
   USE funct,                ONLY : dft_is_meta
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns

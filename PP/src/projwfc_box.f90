@@ -33,8 +33,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   USE control_flags, ONLY: gamma_only
   USE uspp,      ONLY: okvan
   USE noncollin_module, ONLY: noncolin, npol
-  USE wavefunctions_module, ONLY: evc,    psic
-  USE wavefunctions_module, ONLY: psic_nc
+  USE wavefunctions, ONLY: evc,    psic, psic_nc
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE scf,                  ONLY : rho
   USE projections_ldos,     ONLY : proj

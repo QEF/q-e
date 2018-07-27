@@ -17,7 +17,7 @@ SUBROUTINE dvpsi_e(ik,ipol)
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
   USE uspp, ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, &
       deallocate_bec_type
   USE cell_base, ONLY : tpiba

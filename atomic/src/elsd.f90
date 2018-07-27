@@ -8,7 +8,7 @@
 !
 !---------------------------------------------------------------
 subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
-                  nspin, enl, oc, etot, ekin, encl, ehrt, ecxc, evxt )    
+                  nspin, enl, oc, etot, ekin, encl, ehrt, ecxc, evxt )
   !---------------------------------------------------------------
   !
   !   atomic total energy in the local-spin-density scheme
@@ -31,11 +31,13 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
   real(DP),allocatable :: f1(:), f2(:), f3(:), f4(:), f5(:)
   real(DP) :: int_0_inf_dr, rhotot
   integer:: i,n,is,ierr
-  logical:: oep, meta
+  logical:: oep, meta, kli
 
   if (noscf) return
-  oep=get_iexch().eq.4
-  meta=dft_is_meta()
+  oep = get_iexch().eq.4
+  kli = get_iexch().eq.10
+
+  meta = dft_is_meta()
 
   allocate(f1(grid%mesh),stat=ierr)
   allocate(f2(grid%mesh),stat=ierr)
@@ -44,8 +46,8 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
   allocate(f5(grid%mesh),stat=ierr)
 
   do i=1,grid%mesh
-     rhotot=rho(i,1)
-     if (nspin==2) rhotot=rhotot+rho(i,2) 
+     rhotot = rho(i,1)
+     if (nspin==2) rhotot=rhotot+rho(i,2)
 !
 !   The integral for the energy due to the interaction with nuclei
 !
@@ -55,7 +57,7 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
 !
      f2(i)= vh (i) * rhotot
 !
-!   The integral for the exchange and correlation energy 
+!   The integral for the exchange and correlation energy
 !
      f3(i) = exc(i) * rhotot + excgga(i)
 !
@@ -69,15 +71,16 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
      f5(i) =-vxc(i,1)*rho(i,1)-f1(i)-f2(i)-f4(i)
      if (nspin==2) f5(i) =f5(i)-vxc(i,2)*rho(i,2)
 
-     if (oep) then
+     if (oep .or. kli ) then
         do is = 1, nspin
            f5(i) = f5(i) - vx(i,is)*rho(i,is)
         end do
      end if
+
      if (meta) THEN
         do is = 1, nspin
-           f5(i) = f5(i) - vtau(i)*tau(i,is)*fpi*grid%r2(i) 
-        end do 
+           f5(i) = f5(i) - vtau(i)*tau(i,is)*fpi*grid%r2(i)
+        end do
      end if
   enddo
 !
@@ -96,7 +99,7 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
      if (oc(n)>0.0_DP) ekin=ekin+oc(n)*enl(n)
   enddo
 
-  if (oep) call add_exchange (ecxc)
+  if (oep .or. kli) call add_exchange (ecxc)
 
   etot= ekin + encl + ehrt + ecxc + evxt
 
@@ -106,5 +109,4 @@ subroutine elsd ( zed, grid, rho, vxt, vh, vxc, exc, excgga, nwf,&
   deallocate(f2)
   deallocate(f1)
 
-  return
 end subroutine elsd

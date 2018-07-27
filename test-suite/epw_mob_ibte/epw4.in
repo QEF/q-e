@@ -20,6 +20,7 @@
   ncarrier    =  1E13
   mp_mesh_k   = .true.
   iterative_bte = .true.
+  broyden_beta= 1.0
 
   vme         = .false.
 

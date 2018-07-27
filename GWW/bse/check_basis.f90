@@ -4,7 +4,7 @@ subroutine check_basis(numwprod,npw)
 USE fft_custom_gwl
 !USE io_files,             ONLY : find_free_unit, prefix, diropn
 USE io_files,             ONLY : prefix, diropn
-USE wavefunctions_module, ONLY :  psic
+USE wavefunctions, ONLY :  psic
 USE mp,          ONLY :mp_barrier
 use io_global, ONLY : stdout, ionode 
 USE kinds, ONLY : DP

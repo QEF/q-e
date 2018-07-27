@@ -8,7 +8,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../dft-d3
-IFLAGS=
 
 PWCONDOBJS = \
 allocate_cond.o \
@@ -60,7 +59,7 @@ all : tldeps pwcond.x
 
 pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o pwcond.x $(PWCONDOBJS) \
-		$(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		$(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PWCOND/src/pwcond.x . )
 
 tldeps :

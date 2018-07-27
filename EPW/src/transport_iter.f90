@@ -33,12 +33,12 @@
     USE epwcom,        ONLY : fsthick, & 
                               eps_acustic, degaussw, nstemp, & 
                               system_2d, int_mob, ncarrier, restart, restart_freq,&
-                              mp_mesh_k, nkf1, nkf2, nkf3, vme
+                              mp_mesh_k, nkf1, nkf2, nkf3, vme, broyden_beta
     USE pwcom,         ONLY : ef 
     USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, vmef, & 
                               wf, wqf, xkf, epf17, nqtotf, nkqtotf, inv_tau_all, xqf, & 
                               F_current, Fi_all, F_SERTA, F_currentcb, Fi_allcb, &
-                              F_SERTAcb, inv_tau_allcb, BZtoIBZ, s_BZtoIBZ
+                              F_SERTAcb, inv_tau_allcb, BZtoIBZ, s_BZtoIBZ, map_rebal
     USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                               ixkqf_tr, s_BZtoIBZ_full
     USE constants_epw, ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, & 
@@ -102,6 +102,8 @@
     !! k-point index that run on the full BZ
     INTEGER :: nb
     !! Number of points in the BZ corresponding to a point in IBZ 
+    INTEGER :: BZtoIBZ_tmp(nkf1*nkf2*nkf3)
+    !! Temporary mapping
     ! 
     REAL(KIND=DP) :: tau
     !! Relaxation time
@@ -280,6 +282,12 @@
             ikk = 2 * ik - 1
             xkf_red(:,ik) = xkf_all(:,ikk)
           ENDDO 
+          !  
+          BZtoIBZ_tmp(:) = 0
+          DO ikbz=1, nkf1*nkf2*nkf3
+            BZtoIBZ_tmp(ikbz) = map_rebal( BZtoIBZ( ikbz ) )
+          ENDDO
+          BZtoIBZ(:) = BZtoIBZ_tmp(:)
           ! 
         ENDIF ! mpime
         CALL mp_bcast( xkf_red, ionode_id, inter_pool_comm )
@@ -602,7 +610,9 @@
       IF ( ABS(efcb(1)) > eps6 ) CALL mp_sum( F_currentcb, inter_pool_comm )
       !
       ! The next Fi is equal to the current Fi+1 F_current. 
-      Fi_all = F_current
+      ! Addition of possible linear mixing
+      Fi_all = (1.0 - broyden_beta ) * Fi_all + broyden_beta * F_current
+      ! 
       F_current = zero
       ! 
       IF ( ABS(efcb(1)) > eps6 ) THEN

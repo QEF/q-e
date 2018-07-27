@@ -2,9 +2,6 @@
 #
 include ../../make.inc
 
-# location of include files
-IFLAGS=
-
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
 	$(MOD_FLAG)../../KS_Solvers/CG $(MOD_FLAG)../../KS_Solvers/Davidson \
@@ -41,7 +38,7 @@ all : tldeps simple_bse.x  libsimple_exc.a
 
 simple_bse.x : simple_bse.o $(EXCOBJS) $(LIBOBJS) $(QEMODS)  
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		simple_bse.o $(EXCOBJS) $(QEMODS) $(LIBOBJS)  $(LIBS)
+		simple_bse.o $(EXCOBJS) $(QEMODS) $(LIBOBJS)  $(QELIBS)
 	- ( cd ../../bin; ln -fs ../GWW/simple_bse/$@ . )
 
 

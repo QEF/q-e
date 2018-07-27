@@ -28,7 +28,7 @@ PROGRAM lr_dav_main
   USE mp_global,             ONLY : nimage, mp_startup, inter_bgrp_comm, &
                                     ibnd_start, ibnd_end
   USE wvfct,                 ONLY : nbnd
-  USE wavefunctions_module,  ONLY : psic
+  USE wavefunctions,  ONLY : psic
   USE control_flags,         ONLY : do_makov_payne
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE funct,                 ONLY : dft_is_hybrid

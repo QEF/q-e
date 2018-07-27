@@ -8,7 +8,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../KS_Solvers/Davidson \
           $(MOD_FLAG)../../dft-d3
-IFLAGS=
 
 XOBJS = \
 ./gaunt_mod.o \
@@ -52,12 +51,12 @@ all : tldeps xspectra.x spectra_correction.x molecularnexafs.x
 
 xspectra.x :   xspectra.o $(XOBJS) $(GIPAWOBJS) $(QEMODS) $(PWOBJS)
 	$(MPIF90) -o $@  xspectra.o $(XOBJS) $(GIPAWOBJS) \
-		$(PWOBJS) $(QEMODS) $(LDFLAGS) $(LIBOBJS) $(LIBS)
+		$(PWOBJS) $(QEMODS) $(LDFLAGS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
 
 spectra_correction.x : spectra_correction.o $(MANIP_XS_OBJ) $(QEMODS) $(PWOBJS)
 	$(MPIF90) -o $@  spectra_correction.o $(MANIP_XS_OBJ) $(PWOBJS) $(QEMODS) \
-                $(LDFLAGS) $(LIBOBJS) $(LIBS)
+                $(LDFLAGS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
 
 molecularnexafs.x : molecularnexafs.o 

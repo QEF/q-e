@@ -80,7 +80,7 @@ MODULE exx_band
     USE io_files,             ONLY : nwordwfc, iunwfc, iunwfc_exx
     USE klist,                ONLY : nks, ngk, igk_k
     USE uspp,                 ONLY : nkb, vkb
-    USE wavefunctions_module, ONLY : evc
+    USE wavefunctions, ONLY : evc
     USE control_flags,        ONLY : io_level
     USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
     USE mp_exx,               ONLY : max_ibands, negrp

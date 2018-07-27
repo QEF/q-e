@@ -25,7 +25,7 @@ SUBROUTINE dvpsi_kb(ik,nu)
   USE gvect,      ONLY : gstart, ngl, ngm, g, gg, gl, igtongl
   USE vlocal,     ONLY: vloc
   USE wvfct,      ONLY: nbnd, npwx
-  USE wavefunctions_module,  ONLY: evc, psic
+  USE wavefunctions,  ONLY: evc, psic
   USE cgcom
   !
   IMPLICIT NONE

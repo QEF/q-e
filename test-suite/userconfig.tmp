@@ -119,7 +119,7 @@ skip_program = grep
 skip_args = 'not present in this version'
 
 [user]
-benchmark = SVN
+benchmark = git
 date_fmt = %d%m%y
 diff = vimdiff
 

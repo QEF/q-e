@@ -1,9 +1,6 @@
 # Makefile for BSE
 #
- include ../../make.inc
-
-# location of include files
-IFLAGS=-I../../include
+include ../../make.inc
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
@@ -63,7 +60,7 @@ all : tldeps bse_main.x
 
 bse_main.x : bse_main.o libbse.a  $(BSEOBJS) $(PWOBJS) $(QEMODS) $(LIBPWPH)  $(GWWOBJ) $(PPOBJ)
 	$(LD) $(LDFLAGS) -o $@ \
-		bse_main.o libbse.a $(PWOBJS) $(EEOBJS) $(LIBPWPH) $(QEMODS) $(LIBOBJS) $(LIBS)  $(PW4GWWOBJ) $(GWWOBJ) $(PPOBJ)
+		bse_main.o libbse.a $(PWOBJS) $(EEOBJS) $(LIBPWPH) $(QEMODS) $(LIBOBJS) $(QELIBS)  $(PW4GWWOBJ) $(GWWOBJ) $(PPOBJ)
 	- ( cd ../../bin ; ln -fs ../GWW/bse/$@ . )
  
 tldeps:

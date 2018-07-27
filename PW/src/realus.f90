@@ -1185,7 +1185,7 @@ MODULE realus
       USE gvect,            ONLY : gstart
       USE fft_base,         ONLY : dfftp
       USE fft_interfaces,   ONLY : fwfft
-      USE wavefunctions_module,  ONLY : psic
+      USE wavefunctions,  ONLY : psic
       !
       USE uspp_gpum,        ONLY : using_becsum
       !
@@ -1492,7 +1492,7 @@ MODULE realus
   ! WARNING: For the sake of speed, there are no checks performed in this routine, check beforehand!
     USE kinds,                 ONLY : DP
     USE cell_base,             ONLY : omega
-    USE wavefunctions_module,  ONLY : psic
+    USE wavefunctions,  ONLY : psic
     USE ions_base,             ONLY : nat, nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
     USE fft_base,              ONLY : dffts
@@ -1598,7 +1598,7 @@ MODULE realus
     USE kinds,                 ONLY : DP
     USE wvfct,                 ONLY : current_k
     USE cell_base,             ONLY : omega
-    USE wavefunctions_module,  ONLY : psic
+    USE wavefunctions,  ONLY : psic
     USE ions_base,             ONLY : nat, nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
@@ -1681,7 +1681,7 @@ MODULE realus
 
       USE kinds,                  ONLY : DP
       USE cell_base,              ONLY : omega
-      USE wavefunctions_module,   ONLY : psic
+      USE wavefunctions,   ONLY : psic
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh
       USE lsda_mod,               ONLY : current_spin
@@ -1770,7 +1770,7 @@ MODULE realus
       USE kinds,                  ONLY : DP
       USE wvfct,                  ONLY : current_k
       USE cell_base,              ONLY : omega
-      USE wavefunctions_module,   ONLY : psic
+      USE wavefunctions,   ONLY : psic
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh
       USE lsda_mod,               ONLY : current_spin
@@ -1865,7 +1865,7 @@ MODULE realus
 
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : omega
-  USE wavefunctions_module,   ONLY : psic
+  USE wavefunctions,   ONLY : psic
   USE ions_base,              ONLY : nat, nsp, ityp
   USE uspp_param,             ONLY : nh
   USE lsda_mod,               ONLY : current_spin
@@ -1972,7 +1972,7 @@ MODULE realus
   USE kinds,                  ONLY : DP
   USE wvfct,                  ONLY : current_k
   USE cell_base,              ONLY : omega
-  USE wavefunctions_module,   ONLY : psic
+  USE wavefunctions,   ONLY : psic
   USE ions_base,              ONLY : nat, nsp, ityp
   USE uspp_param,             ONLY : nh
   USE lsda_mod,               ONLY : current_spin
@@ -2069,7 +2069,7 @@ MODULE realus
   ! last: index of the last band you want to transform (usually the total number 
   !       of bands but can be different in band parallelization)
   !
-    USE wavefunctions_module, &
+    USE wavefunctions, &
                        ONLY : psic
     USE gvecs,         ONLY : doublegrid
     USE klist,         ONLY : ngk, igk_k
@@ -2184,7 +2184,7 @@ MODULE realus
   ! last: index of the last band you want to transform (usually the total number 
   !       of bands but can be different in band parallelization)
   !
-    USE wavefunctions_module, &
+    USE wavefunctions, &
                        ONLY : psic
     USE klist,         ONLY : ngk, igk_k
     USE gvecs,         ONLY : doublegrid
@@ -2294,7 +2294,7 @@ MODULE realus
     !  current_k  variable  must contain the index of the desired kpoint
     !
     USE kinds,                    ONLY : DP
-    USE wavefunctions_module,     ONLY : psic
+    USE wavefunctions,     ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
     USE wvfct,                    ONLY : current_k
     USE gvecs,                    ONLY : doublegrid
@@ -2380,7 +2380,7 @@ MODULE realus
     !
     !  current_k  variable  must contain the index of the desired kpoint
     !
-    USE wavefunctions_module,     ONLY : psic
+    USE wavefunctions,     ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
     USE wvfct,                    ONLY : current_k
     USE gvecs,                    ONLY : doublegrid
@@ -2454,7 +2454,7 @@ MODULE realus
     ! modified for real space implementation
     ! OBM 241008
     !
-    USE wavefunctions_module, &
+    USE wavefunctions, &
                        ONLY : psic
     USE gvecs,         ONLY : doublegrid
     USE kinds,         ONLY : DP
@@ -2506,7 +2506,7 @@ MODULE realus
     ! Therefore must be the first term to be considered whn building hpsi
     ! SdG 290716
     !
-    USE wavefunctions_module, &
+    USE wavefunctions, &
                        ONLY : psic
     USE gvecs,         ONLY : doublegrid
     USE kinds,         ONLY : DP

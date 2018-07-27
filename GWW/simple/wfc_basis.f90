@@ -3,7 +3,7 @@
 subroutine wfc_basis
   USE kinds, ONLY : DP
   USE io_files,             ONLY : prefix, iunwfc, nwordwfc,tmp_dir
-  USE wavefunctions_module, ONLY : evc,psic
+  USE wavefunctions, ONLY : evc,psic
   USE wvfct, ONLY : nbnd,npw,npwx,et 
   USE mp, ONLY : mp_sum,mp_barrier
   USE klist, ONLY : nks,ngk,xk, igk_k

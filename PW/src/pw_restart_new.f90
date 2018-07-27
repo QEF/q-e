@@ -61,7 +61,7 @@ MODULE pw_restart_new
       USE noncollin_module,     ONLY : noncolin, npol
       USE io_files,             ONLY : nwordwfc, iunwfc, psfile
       USE buffers,              ONLY : get_buffer
-      USE wavefunctions_module, ONLY : evc
+      USE wavefunctions, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, smearing, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw, tot_charge
@@ -527,7 +527,7 @@ MODULE pw_restart_new
       USE noncollin_module,     ONLY : noncolin, npol
 
       USE buffers,              ONLY : get_buffer
-      USE wavefunctions_module, ONLY : evc
+      USE wavefunctions, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, igk_k, wk
       USE gvect,                ONLY : ngm, ngm_g, g, mill
       USE fft_base,             ONLY : dfftp
@@ -1976,7 +1976,7 @@ MODULE pw_restart_new
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nks, xk, ngk, igk_k
       USE wvfct,                ONLY : npwx, g2kin, et, wg, nbnd
-      USE wavefunctions_module, ONLY : evc
+      USE wavefunctions, ONLY : evc
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ig_l2g

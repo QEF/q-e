@@ -27,7 +27,7 @@ SUBROUTINE allocate_fft
   USE control_flags, ONLY : gamma_only
   USE noncollin_module, ONLY : pointlist, factlist, r_loc, &
       report, i_cons, noncolin, npol
-  USE wavefunctions_module, ONLY : psic, psic_nc
+  USE wavefunctions, ONLY : psic, psic_nc
   USE funct,     ONLY: dft_is_meta
   !
   USE scf_gpum,  ONLY : using_vrs

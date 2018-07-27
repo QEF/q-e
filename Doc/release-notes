@@ -1,3 +1,10 @@
+Incompatible changes in development version:
+  * Module "wavefunctions_module" renamed "wavefunctions"
+
+Problems fixed in development version:
+  * The restart option in turboEELS (turbo_eels.x) with ultrasoft pseudopotentials
+    was not working.
+
 New in 6.3 version:
   * New implementation, using  a more robust algorithm for the Wigner-Size construction in  EPW. 
     (Samuel Ponce and Carla Verdi) 

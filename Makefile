@@ -8,6 +8,10 @@
 
 include make.inc
 
+# execute a target irrespective of the presence of a file or directory 
+# with the same name
+.PHONY: install
+
 default :
 	@echo 'to install Quantum ESPRESSO, type at the shell prompt:'
 	@echo '  ./configure [--prefix=]'
@@ -111,7 +115,7 @@ gipaw : pw
 d3q : ph
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-ld1 : bindir libs mods
+ld1 : bindir libs mods libdavid libcg
 	if test -d atomic ; then \
 	( cd atomic ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 

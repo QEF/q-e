@@ -18,7 +18,7 @@ SUBROUTINE stres_mgga( sigmaxc )
   USE cell_base,              ONLY : alat, at, bg, omega, tpiba
   USE gvect,                  ONLY : g
   USE scf,                    ONLY : rho, v
-  USE wavefunctions_module,   ONLY : evc, psic
+  USE wavefunctions,   ONLY : evc, psic
   USE funct,                  ONLY : dft_is_meta
   USE klist,                  ONLY : nks, xk, ngk
   USE buffers,                ONLY : get_buffer
@@ -188,7 +188,7 @@ SUBROUTINE wfc_gradient ( ibnd, ik, npw, gradpsi )
   !
   USE kinds,                  ONLY : DP
   USE control_flags,          ONLY : gamma_only
-  USE wavefunctions_module,   ONLY : psic, evc
+  USE wavefunctions,   ONLY : psic, evc
   USE wvfct,                  ONLY : npwx, nbnd
   USE cell_base,              ONLY : omega, tpiba
   USE klist,                  ONLY : xk, igk_k

@@ -75,7 +75,7 @@ subroutine build_exch(vstate,vstate_r,fc)
 USE bse_wannier,           ONLY : num_nbndv
 USE wvfct,                 ONLY : nbnd, npwx,npw,et
 USE lsda_mod,              ONLY : nspin
-USE wavefunctions_module,  ONLY : evc
+USE wavefunctions,  ONLY : evc
 USE io_files,              ONLY : prefix, iunwfc, nwordwfc
 USE transitions,           ONLY : ttab,exch
 USE io_global,             ONLY : stdout,ionode

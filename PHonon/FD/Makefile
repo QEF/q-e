@@ -2,9 +2,6 @@
 
 include ../../make.inc
 
-# location of include files
-#IFLAGS=-I../../../include
-
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
@@ -27,17 +24,17 @@ all : tldeps fd.x fd_ifc.x fd_ef.x
 
 fd_ifc.x : fd_ifc.o libfd.a  $(FDOBJS) $(PWOBJS) $(QEMODS)  
 	$(LD) $(LDFLAGS) -o $@ \
-	fd_ifc.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	fd_ifc.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
 
 fd.x : fd.o libfd.a  $(FDOBJS) $(PWOBJS) $(QEMODS)  
 	$(LD) $(LDFLAGS) -o $@ \
-	fd.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) 
+	fd.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) 
 	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
 
 fd_ef.x : fd_ef.o libfd.a  $(FDOBJS) $(PWOBJS) $(QEMODS)  
 	$(LD) $(LDFLAGS) -o $@ \
-	fd_ef.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	fd_ef.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
 tldeps :
 	if test -n "$(TLDEPS)" ; then \

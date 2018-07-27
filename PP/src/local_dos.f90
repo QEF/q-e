@@ -38,7 +38,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE symme,                ONLY : sym_rho, sym_rho_init, sym_rho_deallocate
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : upf, nh, nhm
-  USE wavefunctions_module, ONLY : evc, psic, psic_nc
+  USE wavefunctions, ONLY : evc, psic, psic_nc
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin, npol

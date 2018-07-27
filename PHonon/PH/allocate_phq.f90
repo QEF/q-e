@@ -22,7 +22,7 @@ subroutine allocate_phq
   USE lsda_mod, ONLY : nspin
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE fft_base, ONLY : dfftp
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE spin_orb, ONLY : lspinorb
   USE becmod, ONLY: bec_type, becp, allocate_bec_type
   USE uspp, ONLY: okvan, nkb

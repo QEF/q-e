@@ -31,9 +31,9 @@
   USE start_k,       ONLY : nk1, nk2, nk3
   USE ions_base,     ONLY : nat, amass, ityp, tau
   USE phcom,         ONLY : nq1, nq2, nq3, nmodes
-  USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange,     &
+  USE epwcom,        ONLY : nbndsub, fsthick, epwread, longrange,               &
                             epwwrite, ngaussw, degaussw, lpolar, lifc, lscreen, &
-                            nbndskip, etf_mem, scr_typ, &
+                            nbndskip, etf_mem, scr_typ,                         &
                             elecselfen, phonselfen, nest_fn, a2f, specfun_ph,   &
                             vme, eig_read, ephwrite, nkf1, nkf2, nkf3,          & 
                             efermi_read, fermi_energy, specfun_el, band_plot,   &
@@ -42,19 +42,19 @@
                             nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
                             specfun_pl, lindabs, mob_maxiter
   USE noncollin_module, ONLY : noncolin
-  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, eps2, zero, czero, &
+  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, eps2, zero, czero,       &
                             twopi, ci, kelvin2eV, eps6
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
                             iunepmatwp, crystal, iunepmatwp2
-  USE elph2,         ONLY : cu, cuq, lwin, lwinq, &
-                            chw, chw_ks, cvmew, cdmew, rdw,    &
+  USE elph2,         ONLY : cu, cuq, lwin, lwinq, map_rebal, map_rebal_inv,     &
+                            chw, chw_ks, cvmew, cdmew, rdw,                     &
                             epmatwp, epmatq, wf, etf, etf_k, etf_ks, xqf, xkf,  &
                             wkf, dynq, nqtotf, nkqf, epf17, nkf, nqf, et_ks,    &
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
-                            efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,   &
+                            efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,        &
                             nkqtotf, sigmar_all, zi_allvb, inv_tau_all, Fi_all, &
                             F_current, F_SERTA, inv_tau_allcb, zi_allcb, exband,&
                             Fi_allcb, F_currentcb, F_SERTAcb, BZtoIBZ, s_BZtoIBZ
@@ -737,6 +737,16 @@
   !
   !
   CALL fermiwindow
+  ! 
+  ! Define it only once for the full run. 
+  CALL fkbounds( nkqtotf/2, lower_bnd, upper_bnd )
+  ! 
+  ! Re-order the k-point according to weather they are in or out of the fshick
+  ! windows
+  IF (iterative_bte .and. mp_mesh_k) THEN
+    CALL load_rebal() 
+  ENDIF
+  !
   !
   !  xqf must be in crystal coordinates
   !
@@ -810,9 +820,6 @@
     BZtoIBZ(:) = 0
     s_BZtoIBZ(:,:,:) = 0
   ENDIF 
-  ! 
-  ! Define it only once for the full run. 
-  CALL fkbounds( nkqtotf/2, lower_bnd, upper_bnd )
   ! 
   !  Start iteration index
   iter = 1
@@ -1320,6 +1327,8 @@
   IF (iterative_bte) DEALLOCATE (s_BZtoIBZ)
   IF (mp_mesh_k .AND. iterative_bte) DEALLOCATE (s_BZtoIBZ_full)
   IF (mp_mesh_k .AND. iterative_bte) DEALLOCATE (ixkqf_tr)
+  IF (mp_mesh_k .AND. iterative_bte) DEALLOCATE (map_rebal)
+  IF (mp_mesh_k .AND. iterative_bte) DEALLOCATE (map_rebal_inv)
   IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (inv_tau_allcb)
   IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (zi_allcb)
   IF (int_mob .AND. carrier .AND. iterative_bte) DEALLOCATE (Fi_allcb)

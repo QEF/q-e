@@ -668,7 +668,7 @@ SUBROUTINE write_cd ( input_file_name, real_or_complex, output_dir_name )
   USE mp_world, ONLY : world_comm
   USE scf, ONLY : rho
   USE symm_base, ONLY : s, nsym
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
 
   IMPLICIT NONE
 

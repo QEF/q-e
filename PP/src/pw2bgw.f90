@@ -427,7 +427,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   USE mp_bands, ONLY : intra_bgrp_comm, nbgrp
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base, ONLY : s, ftau, nsym
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE wvfct, ONLY : npwx, nbnd, et, wg
   USE gvecw, ONLY : ecutwfc
   USE matrix_inversion
@@ -1435,7 +1435,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   USE noncollin_module, ONLY : nspin_mag
   USE scf, ONLY : rho
   USE symme, ONLY : sym_rho, sym_rho_init
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE wvfct, ONLY : wg
 
   IMPLICIT NONE
@@ -1508,7 +1508,7 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
   USE symm_base, ONLY : s, ftau, nsym
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE matrix_inversion
 
   IMPLICIT NONE
@@ -1719,7 +1719,7 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core )
   USE mp, ONLY : mp_sum
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
 
   IMPLICIT NONE
 
@@ -1813,7 +1813,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE wvfct, ONLY : nbnd
 
   IMPLICIT NONE
@@ -2000,7 +2000,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE wvfct, ONLY : npwx, nbnd
 
   IMPLICIT NONE
@@ -2207,7 +2207,7 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : vltot, v
   USE symm_base, ONLY : s, ftau, nsym
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE matrix_inversion
 
   IMPLICIT NONE

@@ -7,8 +7,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../KS_Solvers/Davidson
 
-#IFLAGS=
-
 FOBJS = \
 berryion.o \
 bforceion.o \
@@ -130,12 +128,12 @@ all : tldeps libcp.a manycp.x cp.x cppp.x wfdd.x
 
 manycp.x : manycp.o libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o manycp.x manycp.o \
-		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(LIBS)
+		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/manycp.x . )
 
 cp.x : cprstart.o libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o cp.x cprstart.o \
-		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(LIBS)
+		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/cp.x . )
 
 libcp.a : $(FOBJS) $(LOBJS) 
@@ -149,11 +147,11 @@ cpver.h :
 		> cpver.h
 
 cppp.x : fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
 	- (cd ../../bin ; ln -fs ../CPV/src/cppp.x . )
 
 wfdd.x : wfdd.o
-	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/$@ . )
 
 tldeps :

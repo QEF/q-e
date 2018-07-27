@@ -31,7 +31,7 @@ SUBROUTINE lr_dvpsi_eels (ik, dvpsi1, dvpsi2)
   USE gvecw,                 ONLY : gcutw
   USE qpoint,                ONLY : ikks, ikqs, nksq 
   USE eqv,                   ONLY : evq, dpsi 
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
   use klist,                 only : xk, igk_k, ngk
   use gvect,                 only : ngm, g

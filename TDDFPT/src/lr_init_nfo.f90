@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,8 +21,7 @@ SUBROUTINE lr_init_nfo()
   USE klist,                ONLY : nks,xk,ngk,igk_k
   USE wvfct,                ONLY : nbnd
   USE realus,               ONLY : real_space
-  USE lr_variables,         ONLY : lr_verbosity, eels, restart, &
-                                   size_evc, tmp_dir_lr
+  USE lr_variables,         ONLY : lr_verbosity, eels, size_evc
   USE io_global,            ONLY : stdout
   USE constants,            ONLY : tpi, eps8
   USE noncollin_module,     ONLY : npol
@@ -35,7 +34,7 @@ SUBROUTINE lr_init_nfo()
   USE gvecs,                ONLY : doublegrid
   USE fft_base,             ONLY : dfftp 
   USE uspp,                 ONLY : vkb, okvan, nkb
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE becmod,               ONLY : calbec, allocate_bec_type
   USE lrus,                 ONLY : becp1
   USE control_lr,           ONLY : alpha_pv
@@ -98,20 +97,11 @@ SUBROUTINE lr_init_nfo()
      size_evc = nbnd * npwx * npol * nksq
      nwordwfc = nbnd * npwx * npol
      !
-     ! Open file to read the wavefunctions at k and k+q points 
-     ! after the nscf calculation.
-     !
-     IF (restart) wfc_dir = tmp_dir_lr
-     !
      CALL open_buffer (iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst)
      ! 
      IF (.NOT.exst .AND. .NOT.exst_mem) THEN
         CALL errore ('lr_init_nfo', 'file '//trim(prefix)//'.wfc not found', 1)
      ENDIF
-     !
-     ! If restart=.true. recalculate the small group of q.
-     !
-     IF (restart) CALL lr_smallgq (xq)
      !
      ! USPP-specific initializations
      !

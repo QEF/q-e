@@ -3,9 +3,6 @@
 
 include ../../make.inc
 
-# location of include files
-IFLAGS=-I../../include
-
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../KS_Solvers/Davidson \
@@ -63,7 +60,7 @@ all : tldeps pw4gww.x
 
 pw4gww.x : pw4gww.o libpw4gww.a  $(PW4GWWOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) 
 	$(LD) $(LDFLAGS) -o $@ \
-	pw4gww.o libpw4gww.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(LIBS)
+	pw4gww.o libpw4gww.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )
 
 tldeps :

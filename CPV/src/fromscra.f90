@@ -48,7 +48,7 @@ SUBROUTINE from_scratch( )
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi_bgrp
     USE wave_base,            ONLY : wave_steepest
-    USE wavefunctions_module, ONLY : c0_bgrp, cm_bgrp, phi_bgrp
+    USE wavefunctions, ONLY : c0_bgrp, cm_bgrp, phi_bgrp
     USE fft_base,             ONLY : dfftp, dffts
     USE time_step,            ONLY : delt
     USE cp_main_variables,    ONLY : descla, bephi, becp_bgrp, nfi, &

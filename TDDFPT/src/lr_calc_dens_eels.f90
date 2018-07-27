@@ -29,7 +29,7 @@ SUBROUTINE lr_calc_dens_eels (drhoscf, dpsi)
   USE wvfct,                 ONLY : nbnd, npwx
   USE gvecw,                 ONLY : gcutw
   USE qpoint,                ONLY : nksq, ikks, ikqs
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE uspp_param,            ONLY : nhm 
   USE uspp,                  ONLY : okvan, vkb
   USE mp_global,             ONLY : inter_pool_comm, intra_bgrp_comm

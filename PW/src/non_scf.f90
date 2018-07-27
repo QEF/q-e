@@ -23,7 +23,7 @@
   USE klist,                ONLY : xk, wk, nks, nkstot
   USE lsda_mod,             ONLY : lsda, nspin
   USE wvfct,                ONLY : nbnd, et, npwx
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   !
   USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et

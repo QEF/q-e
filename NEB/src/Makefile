@@ -9,8 +9,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../dft-d3/
 
-IFLAGS=
-
 NEBOBJS = \
 neb.o \
 
@@ -48,12 +46,12 @@ all : tldeps neb.x path_interpolation.x
 
 neb.x : $(NEBOBJS) libneb.a $(LIBOBJS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	$(NEBOBJS) libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	$(NEBOBJS) libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../NEB/src/$@ . )
 
 path_interpolation.x : path_interpolation.o libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	path_interpolation.o libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	path_interpolation.o libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../NEB/src/$@ . )
 
 libneb.a : $(NEBLIBS)

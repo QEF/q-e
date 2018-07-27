@@ -23,7 +23,7 @@ SUBROUTINE rhod2vkb(dyn0)
   USE klist,  ONLY : wk, ngk
   USE scf,    ONLY : rho
   USE vlocal, ONLY: vloc
-  USE wavefunctions_module,  ONLY: evc, psic
+  USE wavefunctions,  ONLY: evc, psic
   USE uspp,   ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
   USE becmod, ONLY: calbec

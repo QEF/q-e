@@ -19,7 +19,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
                                    gcc_spin_more, dft_is_gradient, get_igcc
   USE spin_orb,             ONLY : domag
   USE noncollin_module,     ONLY : ux
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
 

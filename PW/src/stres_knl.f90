@@ -22,7 +22,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   USE wvfct,                ONLY: npwx, nbnd, wg
   USE control_flags,        ONLY: gamma_only
   USE noncollin_module,     ONLY: noncolin, npol
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   USE mp_pools,             ONLY: inter_pool_comm
   USE mp_bands,             ONLY: intra_bgrp_comm
   USE mp,                   ONLY: mp_sum
