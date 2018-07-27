@@ -790,232 +790,6 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
   
 END SUBROUTINE lr_exx_kernel_int
 !
-FUNCTION k1d_term_k(w1, psi, fac_in, ibnd, ik,ikq) RESULT (psi_int)
-  !------------------------------------------------------------------
-  !
-  !   This routine computes the  K^1d term, Eq (21) from Eq Ref (1).
-  !   As the integral in this term remains the same throughout the 
-  !   chain it can also be calculated once for each combination of
-  !   bands and stored in k1d_pot().
-  !
-  !   psi contains two bands of |a> with w1, w2 the associated weights
-  !   fac_in contains the interaction W(G) and ibnd the band index n'.
-  !
-  !   (1)  Rocca, Lu and Galli, J. Chem. Phys., 133, 164109 (2010)
-  !------------------------------------------------------------------
-  !
-    
-  IMPLICIT NONE
-  
-  COMPLEX(KIND=DP),DIMENSION(:), INTENT(IN)  :: psi
-  REAL(KIND=DP),DIMENSION(:), INTENT(IN)     :: fac_in
-  REAL(kind=DP), INTENT(IN)  :: w1
-  COMPLEX(KIND=DP), ALLOCATABLE :: psi_int(:,:)
-  INTEGER, INTENT(IN) :: ibnd, ik,ikq
-  !
-  ! Workspaces
-  !
-  INTEGER                  :: ibnd2, is
-  
-  ALLOCATE(psi_int(dffts%nnr, nbnd))
-  psi_int = (0.d0,0.d0)
-  !
-  DO ibnd2=1,nbnd,1
-     !
-     !
-     ! Set up the pseudo density for this Hartree like interaction.
-     !
-     vhart(:,:) = (0.d0,0.d0)
-     pseudo_dens_c(:) = (0.d0,0.d0)
-     !
-     pseudo_dens_c(:) = CONJG(red_revc0(:,ibnd,ikq))*&
-          &red_revc0(:,ibnd2,k2q(ik))/omega
-     !
-     CALL fwfft ('Rho', pseudo_dens_c, dffts)
-     !
-     ! hartree contribution is computed in reciprocal space
-     !
-     DO is = 1, nspin
-        !
-        vhart(dffts%nl(1:ngm),is) = w1*pseudo_dens_c(dffts%nl(1:ngm)) *&
-             & fac_in(1:ngm) 
-        !
-        !  and transformed back to real space
-        !
-        CALL invfft ('Rho', vhart (:, is), dffts)
-        !
-     ENDDO
-     !
-     ! Finally return the interaction
-     !
-     psi_int(:,ibnd2) = psi_int(:,ibnd2) + vhart(:,1) * psi(:)
-     !
-  ENDDO
-  !
-END FUNCTION k1d_term_k
-!
-FUNCTION k2d_term_k(w1, psi, fac_in, ibnd, ik, ikq) RESULT (psi_int)
-  !------------------------------------------------------------------
-  !
-  !   This routine computes the  K^2d term, Eq (22) from Eq Ref (1).
-  !   psi contains two bands of |b> with w1, w2 the associated weights
-  !   fac_in contains the interaction W(G) and ibnd the band index n'.
-  !
-  !   (1)  Rocca, Lu and Galli, J. Chem. Phys., 133, 164109 (2010)
-  !------------------------------------------------------------------
-  !
-  
-  IMPLICIT NONE
-  
-  COMPLEX(KIND=DP),DIMENSION(:), INTENT(IN)  :: psi
-  REAL(KIND=DP),DIMENSION(:), INTENT(IN)     :: fac_in
-  REAL(kind=DP), INTENT(IN)  :: w1
-  INTEGER, INTENT(IN) :: ibnd, ik, ikq
-  COMPLEX(KIND=DP), ALLOCATABLE :: psi_int(:,:)
-  !
-  ! Workspaces
-  !
-  INTEGER                  :: ibnd2, is
-  !
-  ALLOCATE(psi_int(dffts%nnr, nbnd))
-  psi_int = (0.d0,0.d0)
-  !
-  DO ibnd2=1,nbnd,1
-     !
-     ! Set up the pseudo density for this Hartree like interaction.
-     !
-     vhart(:,:) = (0.d0,0.d0)
-     pseudo_dens_c(:) = (0.d0,0.d0)
-     !
-     pseudo_dens_c(:) =  CONJG(psi(:))*red_revc0(:,ibnd2,k2q(ik))/omega
-     !
-     CALL fwfft ('Rho', pseudo_dens_c, dffts)
-     !
-     ! hartree contribution is computed in reciprocal space
-     !
-     DO is = 1, nspin
-        !
-        vhart(dffts%nl(1:ngm),is) = w1*pseudo_dens_c(dffts%nl(1:ngm)) *&
-             & fac_in(1:ngm) 
-        !
-        !  and transformed back to real space
-        !
-        CALL invfft ('Rho', vhart (:, is), dffts)
-        !
-     ENDDO
-     !
-     !
-     ! Finally return the interaction
-     !
-     psi_int(:,ibnd2) = psi_int(:,ibnd2)  + vhart(:,1) *&
-          &red_revc0(:,ibnd,ikq)
-     !
-  ENDDO
-  !
-END FUNCTION k2d_term_k
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!! 
-!! The following routines are wrapper functions for inv/fw fft handling both
-!! the custom FFT grids and gamma tricks. They are the analogues of those found
-!! in PW/src/realus.f90. Ideally both these and their counterparts should be
-!! moved somewhere else but for now they live here.
-!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE invfft_orbital_custom_gamma(orbital, ibnd, nbnd, npwt, dfftt)
-
-  USE kinds,        ONLY : DP
-  USE fft_types,    ONLY : fft_type_descriptor
-
-  IMPLICIT NONE
-
-  COMPLEX(DP), INTENT(IN)    :: orbital(:,:)
-  INTEGER, INTENT(IN)        :: ibnd, nbnd, npwt
-  TYPE(fft_type_descriptor), INTENT(IN)  :: dfftt
-  !
-  psic=(0.0_dp, 0.0_dp)
-  !
-  IF (ibnd < nbnd) THEN
-     !
-     psic(dfftt%nl(1:npwt)) = orbital(1:npwt,ibnd) + &
-          &(0.0_dp, 1.0_dp) * orbital(1:npwt,ibnd+1) 
-     psic(dfftt%nlm(1:npwt)) = CONJG(orbital(1:npwt,ibnd) - &   
-          &(0.0_dp, 1.0_dp) * orbital(1:npwt,ibnd+1))
-     !
-  ELSE
-     !
-     psic(dfftt%nl(1:npwt))  = orbital(1:npwt,ibnd)
-     psic(dfftt%nlm(1:npwt)) =CONJG(orbital(1:npwt,ibnd))
-     !
-  ENDIF
-  !
-  CALL invfft ('Wave', psic, dfftt)
-  !
-  RETURN
-  !
-END SUBROUTINE invfft_orbital_custom_gamma
-
-SUBROUTINE fwfft_orbital_custom_gamma(orbital, ibnd, nbnd, npwt, dfftt)
-
-  USE kinds,        ONLY : DP
-  USE fft_types,    ONLY : fft_type_descriptor
-
-  IMPLICIT NONE
-
-  COMPLEX(DP), INTENT(INOUT)    :: orbital(:,:)
-  INTEGER, INTENT(IN)        :: ibnd, nbnd, npwt
-  TYPE(fft_type_descriptor), INTENT(IN)  :: dfftt
-
-  ! Workspaces
-  COMPLEX(DP) :: fp, fm
-  ! Counters
-  INTEGER :: j
-  !
-  CALL fwfft ('Wave', psic(:), dfftt)
-  !
-  IF (ibnd < nbnd) THEN
-     !
-     ! two ffts at the same time
-     DO j = 1, npwt
-        fp = (psic(dfftt%nl(j)) + psic(dfftt%nlm(j)))*0.5d0
-        fm = (psic(dfftt%nl(j)) - psic(dfftt%nlm(j)))*0.5d0
-        orbital( j, ibnd)   = CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
-        orbital( j, ibnd+1) = CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
-     ENDDO
-     !
-  ELSE
-     !
-     orbital(1:npwt,ibnd)=psic(dfftt%nl(1:npwt))
-     !
-  ENDIF
-  !
-  RETURN
-  !
-END SUBROUTINE fwfft_orbital_custom_gamma
-
-SUBROUTINE invfft_orbital_ibnd2_gamma(orbital, psitemp, ibnd2, npwt, dfftt)
-
-  USE kinds,        ONLY : DP
-  USE fft_types,    ONLY : fft_type_descriptor
-
-  IMPLICIT NONE
-
-  COMPLEX(DP), INTENT(IN)    :: orbital(:,:)
-  INTEGER, INTENT(IN)        :: ibnd2, npwt
-  TYPE(fft_type_descriptor), INTENT(IN)  :: dfftt
-  COMPLEX(DP), INTENT(OUT)   :: psitemp(:) 
-  !
-  psitemp=(0.0_dp, 0.0_dp)
-  !
-  psitemp(dfftt%nl(1:npwt))  = orbital(1:npwt,ibnd2)
-  psitemp(dfftt%nlm(1:npwt)) = CONJG(orbital(1:npwt,ibnd2))
-  !
-  CALL invfft ('Wave', psitemp, dfftt)
-  !
-  RETURN
-  !
-END SUBROUTINE invfft_orbital_ibnd2_gamma
-
 FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd, orbital) RESULT (psi_int)
   !------------------------------------------------------------------
   !
@@ -1027,14 +801,15 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd, orbital) RESULT (psi_int)
   !   psi contains two bands of |a> with w1, w2 the associated weights
   !   fac_in contains the interaction W(G) and ibnd the band index n'.
   !
-  !   vhart is symmetric integral so calculate only nbnd(nbnd+1)/2 
-  !   terms (Baseggio 2018)
+  !   in gamma, bands are real, so is not necessary computes vhart 
+  !   integrals for each couple of bands (integral in eq(21), 
+  !   because v, v' is the same of v', v, so only nbnd(nbnd+1)/2 
+  !   couple are computed    
   !
   !   (1)  Rocca, Lu and Galli, J. Chem. Phys., 133, 164109 (2010)
+  !
   !------------------------------------------------------------------
   !
-  USE io_global,              ONLY : stdout
-
 
   IMPLICIT NONE
   
@@ -1284,13 +1059,77 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd, orbital) RESULT (psi_int)
              & + DBLE(vhart(1:nnr_, 1)) * DBLE(psitemp(1:nnr_))
         !
      ENDDO
-
+     !
   ENDIF
   !
   RETURN
   !
 END FUNCTION k1d_term_gamma
-
+!
+FUNCTION k1d_term_k(w1, psi, fac_in, ibnd, ik,ikq) RESULT (psi_int)
+  !------------------------------------------------------------------
+  !
+  !   This routine computes the  K^1d term, Eq (21) from Eq Ref (1).
+  !   As the integral in this term remains the same throughout the 
+  !   chain it can also be calculated once for each combination of
+  !   bands and stored in k1d_pot().
+  !
+  !   psi contains two bands of |a> with w1, w2 the associated weights
+  !   fac_in contains the interaction W(G) and ibnd the band index n'.
+  !
+  !   (1)  Rocca, Lu and Galli, J. Chem. Phys., 133, 164109 (2010)
+  !------------------------------------------------------------------
+  !
+    
+  IMPLICIT NONE
+  
+  COMPLEX(KIND=DP),DIMENSION(:), INTENT(IN)  :: psi
+  REAL(KIND=DP),DIMENSION(:), INTENT(IN)     :: fac_in
+  REAL(kind=DP), INTENT(IN)  :: w1
+  COMPLEX(KIND=DP), ALLOCATABLE :: psi_int(:,:)
+  INTEGER, INTENT(IN) :: ibnd, ik,ikq
+  !
+  ! Workspaces
+  !
+  INTEGER                  :: ibnd2, is
+  
+  ALLOCATE(psi_int(dffts%nnr, nbnd))
+  psi_int = (0.d0,0.d0)
+  !
+  DO ibnd2=1,nbnd,1
+     !
+     !
+     ! Set up the pseudo density for this Hartree like interaction.
+     !
+     vhart(:,:) = (0.d0,0.d0)
+     pseudo_dens_c(:) = (0.d0,0.d0)
+     !
+     pseudo_dens_c(:) = CONJG(red_revc0(:,ibnd,ikq))*&
+          &red_revc0(:,ibnd2,k2q(ik))/omega
+     !
+     CALL fwfft ('Rho', pseudo_dens_c, dffts)
+     !
+     ! hartree contribution is computed in reciprocal space
+     !
+     DO is = 1, nspin
+        !
+        vhart(dffts%nl(1:ngm),is) = w1*pseudo_dens_c(dffts%nl(1:ngm)) *&
+             & fac_in(1:ngm) 
+        !
+        !  and transformed back to real space
+        !
+        CALL invfft ('Rho', vhart (:, is), dffts)
+        !
+     ENDDO
+     !
+     ! Finally return the interaction
+     !
+     psi_int(:,ibnd2) = psi_int(:,ibnd2) + vhart(:,1) * psi(:)
+     !
+  ENDDO
+  !
+END FUNCTION k1d_term_k
+!
 FUNCTION k2d_vexx_term_gamma(w1, w2, psi, fac_in, ibnd, interaction) RESULT (psi_int)
   !------------------------------------------------------------------
   !
@@ -1441,5 +1280,167 @@ FUNCTION k2d_vexx_term_gamma(w1, w2, psi, fac_in, ibnd, interaction) RESULT (psi
   RETURN
   !
 END FUNCTION k2d_vexx_term_gamma
+!
+FUNCTION k2d_term_k(w1, psi, fac_in, ibnd, ik, ikq) RESULT (psi_int)
+  !------------------------------------------------------------------
+  !
+  !   This routine computes the  K^2d term, Eq (22) from Eq Ref (1).
+  !   psi contains two bands of |b> with w1, w2 the associated weights
+  !   fac_in contains the interaction W(G) and ibnd the band index n'.
+  !
+  !   (1)  Rocca, Lu and Galli, J. Chem. Phys., 133, 164109 (2010)
+  !------------------------------------------------------------------
+  !
+  
+  IMPLICIT NONE
+  
+  COMPLEX(KIND=DP),DIMENSION(:), INTENT(IN)  :: psi
+  REAL(KIND=DP),DIMENSION(:), INTENT(IN)     :: fac_in
+  REAL(kind=DP), INTENT(IN)  :: w1
+  INTEGER, INTENT(IN) :: ibnd, ik, ikq
+  COMPLEX(KIND=DP), ALLOCATABLE :: psi_int(:,:)
+  !
+  ! Workspaces
+  !
+  INTEGER                  :: ibnd2, is
+  !
+  ALLOCATE(psi_int(dffts%nnr, nbnd))
+  psi_int = (0.d0,0.d0)
+  !
+  DO ibnd2=1,nbnd,1
+     !
+     ! Set up the pseudo density for this Hartree like interaction.
+     !
+     vhart(:,:) = (0.d0,0.d0)
+     pseudo_dens_c(:) = (0.d0,0.d0)
+     !
+     pseudo_dens_c(:) =  CONJG(psi(:))*red_revc0(:,ibnd2,k2q(ik))/omega
+     !
+     CALL fwfft ('Rho', pseudo_dens_c, dffts)
+     !
+     ! hartree contribution is computed in reciprocal space
+     !
+     DO is = 1, nspin
+        !
+        vhart(dffts%nl(1:ngm),is) = w1*pseudo_dens_c(dffts%nl(1:ngm)) *&
+             & fac_in(1:ngm) 
+        !
+        !  and transformed back to real space
+        !
+        CALL invfft ('Rho', vhart (:, is), dffts)
+        !
+     ENDDO
+     !
+     !
+     ! Finally return the interaction
+     !
+     psi_int(:,ibnd2) = psi_int(:,ibnd2)  + vhart(:,1) *&
+          &red_revc0(:,ibnd,ikq)
+     !
+  ENDDO
+  !
+END FUNCTION k2d_term_k
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! 
+!! The following routines are wrapper functions for inv/fw fft handling both
+!! the custom FFT grids and gamma tricks. They are the analogues of those found
+!! in PW/src/realus.f90. Ideally both these and their counterparts should be
+!! moved somewhere else but for now they live here.
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE invfft_orbital_custom_gamma(orbital, ibnd, nbnd, npwt, dfftt)
+
+  USE kinds,        ONLY : DP
+  USE fft_types,    ONLY : fft_type_descriptor
+
+  IMPLICIT NONE
+
+  COMPLEX(DP), INTENT(IN)    :: orbital(:,:)
+  INTEGER, INTENT(IN)        :: ibnd, nbnd, npwt
+  TYPE(fft_type_descriptor), INTENT(IN)  :: dfftt
+  !
+  psic=(0.0_dp, 0.0_dp)
+  !
+  IF (ibnd < nbnd) THEN
+     !
+     psic(dfftt%nl(1:npwt)) = orbital(1:npwt,ibnd) + &
+          &(0.0_dp, 1.0_dp) * orbital(1:npwt,ibnd+1) 
+     psic(dfftt%nlm(1:npwt)) = CONJG(orbital(1:npwt,ibnd) - &   
+          &(0.0_dp, 1.0_dp) * orbital(1:npwt,ibnd+1))
+     !
+  ELSE
+     !
+     psic(dfftt%nl(1:npwt))  = orbital(1:npwt,ibnd)
+     psic(dfftt%nlm(1:npwt)) =CONJG(orbital(1:npwt,ibnd))
+     !
+  ENDIF
+  !
+  CALL invfft ('Wave', psic, dfftt)
+  !
+  RETURN
+  !
+END SUBROUTINE invfft_orbital_custom_gamma
+
+SUBROUTINE fwfft_orbital_custom_gamma(orbital, ibnd, nbnd, npwt, dfftt)
+
+  USE kinds,        ONLY : DP
+  USE fft_types,    ONLY : fft_type_descriptor
+
+  IMPLICIT NONE
+
+  COMPLEX(DP), INTENT(INOUT)    :: orbital(:,:)
+  INTEGER, INTENT(IN)        :: ibnd, nbnd, npwt
+  TYPE(fft_type_descriptor), INTENT(IN)  :: dfftt
+
+  ! Workspaces
+  COMPLEX(DP) :: fp, fm
+  ! Counters
+  INTEGER :: j
+  !
+  CALL fwfft ('Wave', psic(:), dfftt)
+  !
+  IF (ibnd < nbnd) THEN
+     !
+     ! two ffts at the same time
+     DO j = 1, npwt
+        fp = (psic(dfftt%nl(j)) + psic(dfftt%nlm(j)))*0.5d0
+        fm = (psic(dfftt%nl(j)) - psic(dfftt%nlm(j)))*0.5d0
+        orbital( j, ibnd)   = CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
+        orbital( j, ibnd+1) = CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
+     ENDDO
+     !
+  ELSE
+     !
+     orbital(1:npwt,ibnd)=psic(dfftt%nl(1:npwt))
+     !
+  ENDIF
+  !
+  RETURN
+  !
+END SUBROUTINE fwfft_orbital_custom_gamma
+
+SUBROUTINE invfft_orbital_ibnd2_gamma(orbital, psitemp, ibnd2, npwt, dfftt)
+
+  USE kinds,        ONLY : DP
+  USE fft_types,    ONLY : fft_type_descriptor
+
+  IMPLICIT NONE
+
+  COMPLEX(DP), INTENT(IN)    :: orbital(:,:)
+  INTEGER, INTENT(IN)        :: ibnd2, npwt
+  TYPE(fft_type_descriptor), INTENT(IN)  :: dfftt
+  COMPLEX(DP), INTENT(OUT)   :: psitemp(:) 
+  !
+  psitemp=(0.0_dp, 0.0_dp)
+  !
+  psitemp(dfftt%nl(1:npwt))  = orbital(1:npwt,ibnd2)
+  psitemp(dfftt%nlm(1:npwt)) = CONJG(orbital(1:npwt,ibnd2))
+  !
+  CALL invfft ('Wave', psitemp, dfftt)
+  !
+  RETURN
+  !
+END SUBROUTINE invfft_orbital_ibnd2_gamma
 
 END MODULE lr_exx_kernel

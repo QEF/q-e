@@ -532,13 +532,13 @@ CONTAINS
     !
     ! vexx is already computed in lr_exx_kernel
     !
-    CALL stop_exx()
+    IF (lr_exx) CALL stop_exx()
     !
     ! Compute sevc1_new = H*evc1
     !
     CALL h_psi(npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
     !
-    CALL start_exx()
+    IF (lr_exx) CALL start_exx()
     !
     ! Compute spsi1 = S*evc1 
     !
