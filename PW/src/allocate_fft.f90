@@ -32,7 +32,7 @@ SUBROUTINE allocate_fft
   !
   USE scf_gpum,  ONLY : using_vrs
   !
-  USE wavefunctions_module_gpum, ONLY : using_psic, using_psic_nc, &
+  USE wavefunctions_gpum, ONLY : using_psic, using_psic_nc, &
                                         using_psic_d, using_psic_nc_d
   !
   IMPLICIT NONE

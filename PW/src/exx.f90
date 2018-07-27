@@ -312,7 +312,7 @@ MODULE exx
     USE exx_band,             ONLY : change_data_structure, nwordwfc_exx, &
          transform_evc_to_exx, igk_exx, evc_exx
 
-    USE wavefunctions_module_gpum, ONLY : using_evc
+    USE wavefunctions_gpum, ONLY : using_evc
     USE uspp_gpum,                 ONLY : using_vkb ! is this needed?
     !
     IMPLICIT NONE
@@ -1628,7 +1628,7 @@ MODULE exx
     USE uspp,                   ONLY : okvan,nkb,vkb
     USE exx_band,               ONLY : nwordwfc_exx, igk_exx
 
-    USE wavefunctions_module_gpum, ONLY : using_evc
+    USE wavefunctions_gpum, ONLY : using_evc
     USE uspp_gpum,                 ONLY : using_vkb 
 
     IMPLICIT NONE
@@ -2899,7 +2899,7 @@ SUBROUTINE aceinit( exex )
   USE mp,         ONLY : mp_sum
   USE wavefunctions_module, ONLY : evc
   !
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE uspp_gpum,                 ONLY : using_vkb
   !
   IMPLICIT NONE

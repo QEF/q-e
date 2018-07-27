@@ -34,7 +34,7 @@ SUBROUTINE force_us( forcenl )
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum, mp_get_comm_null
 
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
   USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0, using_qq_at, &
                                         using_deeq

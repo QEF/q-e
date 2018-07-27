@@ -27,7 +27,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   USE mp_bands,             ONLY: intra_bgrp_comm
   USE mp,                   ONLY: mp_sum
 
-  USE wavefunctions_module_gpum, ONLY: using_evc
+  USE wavefunctions_gpum, ONLY: using_evc
 
   implicit none
   real(DP) :: sigmanlc (3, 3), sigmakin (3, 3)

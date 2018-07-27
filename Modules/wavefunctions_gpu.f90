@@ -11,7 +11,7 @@
 #define DIMS4D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3),lbound(arr,4):ubound(arr,4)
 #define DIMS5D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3),lbound(arr,4):ubound(arr,4),lbound(arr,5):ubound(arr,5)
 !=----------------------------------------------------------------------------=!
-   MODULE wavefunctions_module_gpum
+   MODULE wavefunctions_gpum
 !=----------------------------------------------------------------------------=!
      USE kinds, ONLY :  DP
 #if defined(__CUDA)
@@ -44,7 +44,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE wavefunctions_module, ONLY : evc
+         USE wavefunctions, ONLY : evc
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -78,7 +78,7 @@
      !
      SUBROUTINE using_evc_d(intento, debug_info)
          !
-         USE wavefunctions_module, ONLY : evc
+         USE wavefunctions, ONLY : evc
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -120,7 +120,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE wavefunctions_module, ONLY : psic
+         USE wavefunctions, ONLY : psic
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -154,7 +154,7 @@
      !
      SUBROUTINE using_psic_d(intento, debug_info)
          !
-         USE wavefunctions_module, ONLY : psic
+         USE wavefunctions, ONLY : psic
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -196,7 +196,7 @@
          !  1 -> inout , the variable needs to be synchronized AND will be changed
          !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
          !
-         USE wavefunctions_module, ONLY : psic_nc
+         USE wavefunctions, ONLY : psic_nc
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -230,7 +230,7 @@
      !
      SUBROUTINE using_psic_nc_d(intento, debug_info)
          !
-         USE wavefunctions_module, ONLY : psic_nc
+         USE wavefunctions, ONLY : psic_nc
          implicit none
          INTEGER, INTENT(IN) :: intento
          CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
@@ -265,11 +265,11 @@
 #endif
      END SUBROUTINE using_psic_nc_d
      !
-     SUBROUTINE deallocate_wavefunctions_module_gpu
+     SUBROUTINE deallocate_wavefunctions_gpu
        IF( ALLOCATED( evc_d ) ) DEALLOCATE( evc_d )
        IF( ALLOCATED( psic_d ) ) DEALLOCATE( psic_d )
        IF( ALLOCATED( psic_nc_d ) ) DEALLOCATE( psic_nc_d )
-     END SUBROUTINE deallocate_wavefunctions_module_gpu
+     END SUBROUTINE deallocate_wavefunctions_gpu
 !=----------------------------------------------------------------------------=!
-   END MODULE wavefunctions_module_gpum
+   END MODULE wavefunctions_gpum
 !=----------------------------------------------------------------------------=!

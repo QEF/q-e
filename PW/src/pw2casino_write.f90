@@ -35,7 +35,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE mp_bands, ONLY: intra_bgrp_comm
    USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
    USE buffers,              ONLY : get_buffer
-   USE wavefunctions_module_gpum, ONLY : using_evc
+   USE wavefunctions_gpum, ONLY : using_evc
    USE wvfct_gpum,                ONLY : using_et
    USE uspp_gpum,                 ONLY : using_vkb
 

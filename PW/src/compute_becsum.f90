@@ -33,7 +33,7 @@ SUBROUTINE compute_becsum ( iflag )
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp
   !
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE uspp_gpum,                 ONLY : using_vkb, using_becsum
   USE becmod_subs_gpum,          ONLY : using_becp_auto
   !

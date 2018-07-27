@@ -40,7 +40,7 @@ SUBROUTINE new_ns(ns)
   USE mp,                   ONLY : mp_sum
   USE becmod,               ONLY : bec_type, calbec, &
                                    allocate_bec_type, deallocate_bec_type
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
 
   IMPLICIT NONE
   !
@@ -315,7 +315,7 @@ SUBROUTINE new_ns_nc(ns)
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
 
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE uspp_gpum,                 ONLY : using_vkb
 
   IMPLICIT NONE

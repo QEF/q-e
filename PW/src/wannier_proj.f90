@@ -28,7 +28,7 @@ subroutine wannier_proj(ik, wan_func)
   USE noncollin_module, ONLY : npol
   USE buffers,          ONLY : get_buffer, save_buffer
 
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
   
   implicit none

@@ -32,7 +32,7 @@ SUBROUTINE new_evc()
   USE buffers,              ONLY : get_buffer, save_buffer
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
 
   IMPLICIT NONE

@@ -538,7 +538,7 @@ MODULE pw_restart_new
       USE mp_pools,             ONLY : intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : my_bgrp_id, root_bgrp, intra_bgrp_comm,&
                                        root_bgrp_id, nbgrp
-      USE wavefunctions_module_gpum, ONLY : using_evc
+      USE wavefunctions_gpum, ONLY : using_evc
       USE wvfct_gpum,                ONLY : using_et
       !
       IMPLICIT NONE
@@ -1986,7 +1986,7 @@ MODULE pw_restart_new
                                        intra_pool_comm, inter_pool_comm
       USE mp,                   ONLY : mp_sum, mp_max
       USE io_base,              ONLY : read_wfc
-      USE wavefunctions_module_gpum, ONLY : using_evc
+      USE wavefunctions_gpum, ONLY : using_evc
       !
       IMPLICIT NONE
       !

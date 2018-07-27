@@ -34,7 +34,7 @@ SUBROUTINE punch( what )
   USE io_rho_xml,           ONLY : write_scf
   USE a2F,                  ONLY : la2F, a2Fsave
   USE wavefunctions_module, ONLY : evc
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   !
   IMPLICIT NONE
   !

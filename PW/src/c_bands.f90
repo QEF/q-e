@@ -32,7 +32,7 @@ SUBROUTINE c_bands( iter )
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
 
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
   USE uspp_gpum,                 ONLY : vkb_d, using_vkb, using_vkb_d
   !
@@ -194,7 +194,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                                    my_bgrp_id, nbgrp
   USE mp,                   ONLY : mp_sum, mp_bcast
 
-  USE wavefunctions_module_gpum, ONLY : evc_d, using_evc, using_evc_d
+  USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
   USE wvfct_gpum,                ONLY : et_d, using_et, using_et_d, &
                                         g2kin_d, using_g2kin, using_g2kin_d
   USE uspp_gpum,                 ONLY : using_vkb
@@ -729,7 +729,7 @@ SUBROUTINE c_bands_nscf( )
   USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
 
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
   USE uspp_gpum,                 ONLY : using_vkb
   !

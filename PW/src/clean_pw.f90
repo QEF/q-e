@@ -68,7 +68,7 @@ SUBROUTINE clean_pw( lflag )
   USE tsvdw_module,         ONLY : tsvdw_finalize
   USE dftd3_qe,             ONLY : dftd3_clean
   !
-  USE wavefunctions_module_gpum, ONLY : deallocate_wavefunctions_module_gpu
+  USE wavefunctions_gpum, ONLY : deallocate_wavefunctions_gpu
   USE wvfct_gpum,                ONLY : using_et, using_et_d
   USE wvfct_gpum,                ONLY : using_g2kin, using_g2kin_d
   USE gvect_gpum,                ONLY : deallocate_gvect_gpu !using_g, using_gg, using_g_d, using_gg_d
@@ -194,7 +194,7 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
   !
-  CALL deallocate_wavefunctions_module_gpu()
+  CALL deallocate_wavefunctions_gpu()
   !
   ! ... fft structures allocated in data_structure.f90  
   !

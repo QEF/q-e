@@ -85,7 +85,7 @@ MODULE exx_band
     USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
     USE mp_exx,               ONLY : max_ibands, negrp
 
-    USE wavefunctions_module_gpum, ONLY : using_evc
+    USE wavefunctions_gpum, ONLY : using_evc
     !
     !
     IMPLICIT NONE

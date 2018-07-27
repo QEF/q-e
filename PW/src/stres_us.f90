@@ -31,7 +31,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    bec_type, becp, calbec
   USE mp,                   ONLY : mp_sum, mp_get_comm_null, mp_circular_shift_left 
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
   USE uspp_gpum,                 ONLY : using_vkb, using_deeq
   USE becmod_subs_gpum,          ONLY : using_becp_auto

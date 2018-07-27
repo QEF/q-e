@@ -44,7 +44,7 @@ SUBROUTINE sum_band()
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    becp
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
   USE uspp_gpum,                 ONLY : using_vkb, using_becsum, using_ebecsum
   USE becmod_subs_gpum,          ONLY : using_becp_auto
@@ -884,7 +884,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE us_exx,        ONLY : store_becxx0
   USE mp_bands,      ONLY : nbgrp,inter_bgrp_comm
   USE mp,            ONLY : mp_sum
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
   USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0
   USE becmod_subs_gpum,          ONLY : using_becp_auto

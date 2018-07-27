@@ -20,7 +20,7 @@ SUBROUTINE allocate_wfc()
   USE ldaU,      ONLY : wfcU, nwfcU, lda_plus_u, U_projection
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE wannier_new, ONLY : use_wannier
   !
   IMPLICIT NONE

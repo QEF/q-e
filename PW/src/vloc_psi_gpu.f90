@@ -320,7 +320,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE fft_interfaces,ONLY : fwfft, invfft
   USE fft_helper_subroutines
   USE wavefunctions_module, ONLY: psic_h => psic
-  !USE wavefunctions_module_gpum, ONLY: psic_d
+  !USE wavefunctions_gpum, ONLY: psic_d
   USE qe_buffers,    ONLY : qe_buffer
   !
   IMPLICIT NONE
@@ -546,7 +546,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   USE lsda_mod,      ONLY : nspin
   USE spin_orb,      ONLY : domag
   USE noncollin_module,     ONLY: npol
-  USE wavefunctions_module_gpum,  ONLY: psic_nc_d
+  USE wavefunctions_gpum,  ONLY: psic_nc_d
   USE fft_helper_subroutines
   USE qe_buffers,    ONLY : qe_buffer
   !

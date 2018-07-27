@@ -36,7 +36,7 @@ SUBROUTINE wfcinit()
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset_output
 #endif
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE uspp_gpum,                 ONLY : using_vkb
   !
   IMPLICIT NONE
@@ -236,7 +236,7 @@ SUBROUTINE init_wfc ( ik )
                                    nbgrp, root_bgrp_id
   USE mp,                   ONLY : mp_bcast
   !
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
   USE becmod_subs_gpum,          ONLY : using_becp_auto
   !

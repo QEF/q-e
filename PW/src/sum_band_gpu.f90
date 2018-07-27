@@ -47,7 +47,7 @@ SUBROUTINE sum_band_gpu()
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
                                    becp
-  USE wavefunctions_module_gpum, ONLY : evc_d, using_evc, using_evc_d
+  USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
   USE wvfct_gpum,                ONLY : using_et
   USE uspp_gpum,                 ONLY : becsum_d, ebecsum_d, vkb_d, using_vkb, &
                                         using_vkb_d, using_becsum_d, using_ebecsum_d, &
@@ -521,7 +521,7 @@ SUBROUTINE sum_band_gpu()
        !
        ! ... k-points version
        !
-       USE wavefunctions_module_gpum, ONLY : psic_nc_d
+       USE wavefunctions_gpum, ONLY : psic_nc_d
        USE mp_bands,     ONLY : me_bgrp
        USE mp,           ONLY : mp_sum, mp_get_comm_null
        USE fft_helper_subroutines
@@ -991,7 +991,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   USE mp,            ONLY : mp_sum
   !
   ! GPU modules here
-  USE wavefunctions_module_gpum, ONLY : evc_d, using_evc, using_evc_d
+  USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
   USE wvfct_gpum,                ONLY : et_d, using_et, using_et_d
   USE uspp_gpum,                 ONLY : using_indv_ijkb0, &
                                         using_becsum, using_ebecsum

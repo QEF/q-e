@@ -40,7 +40,7 @@ SUBROUTINE force_hub(forceh)
    USE io_files,             ONLY : nwordwfc, iunwfc
    USE buffers,              ONLY : get_buffer
 
-   USE wavefunctions_module_gpum, ONLY : using_evc
+   USE wavefunctions_gpum, ONLY : using_evc
    USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0
    USE becmod_subs_gpum,          ONLY : using_becp_auto
 
@@ -362,7 +362,7 @@ SUBROUTINE dprojdtau_k (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dproj)
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
    
-   USE wavefunctions_module_gpum, ONLY : using_evc
+   USE wavefunctions_gpum, ONLY : using_evc
    USE uspp_gpum,                 ONLY : using_vkb, using_qq_at
 
    IMPLICIT NONE
@@ -528,7 +528,7 @@ SUBROUTINE dprojdtau_gamma (spsi, alpha, ijkb0, ipol, ik, nb_s, nb_e, mykey, dpr
    USE mp_pools,             ONLY : intra_pool_comm, me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
    
-   USE wavefunctions_module_gpum, ONLY : using_evc
+   USE wavefunctions_gpum, ONLY : using_evc
    USE uspp_gpum,                 ONLY : using_vkb, using_qq_at
 
    IMPLICIT NONE

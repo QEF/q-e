@@ -25,7 +25,7 @@
   USE wvfct,                ONLY : nbnd, et, npwx
   USE wavefunctions_module, ONLY : evc
   !
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
   !
   IMPLICIT NONE

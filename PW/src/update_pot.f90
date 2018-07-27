@@ -653,7 +653,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE mp_images,            ONLY : intra_image_comm
   USE mp,                   ONLY : mp_barrier
   !
-  USE wavefunctions_module_gpum, ONLY : using_evc
+  USE wavefunctions_gpum, ONLY : using_evc
   USE uspp_gpum,                 ONLY : using_vkb
   USE becmod_subs_gpum,          ONLY : using_becp_auto
   !

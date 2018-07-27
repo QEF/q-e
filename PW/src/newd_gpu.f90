@@ -32,7 +32,7 @@ SUBROUTINE newq_gpu(vr,deeq_d,skip_vltot)
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
-  USE wavefunctions_module_gpum, ONLY : psic_d
+  USE wavefunctions_gpum, ONLY : psic_d
   USE spin_orb,             ONLY : lspinorb, domag
   USE noncollin_module,     ONLY : nspin_mag
   USE mp_bands,             ONLY : intra_bgrp_comm

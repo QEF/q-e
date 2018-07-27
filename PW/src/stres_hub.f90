@@ -139,7 +139,7 @@ SUBROUTINE dndepsilon ( ipol, jpol, ldim, dns )
    USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm, &
                                     me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
-   USE wavefunctions_module_gpum, ONLY : using_evc
+   USE wavefunctions_gpum, ONLY : using_evc
    USE becmod_subs_gpum,          ONLY : using_becp_auto
 
    IMPLICIT NONE
@@ -311,7 +311,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE becmod,               ONLY : bec_type, becp, calbec
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
-   USE wavefunctions_module_gpum, ONLY : using_evc
+   USE wavefunctions_gpum, ONLY : using_evc
    USE uspp_gpum,                 ONLY : using_qq_at
 
    IMPLICIT NONE
@@ -493,7 +493,7 @@ SUBROUTINE dprojdepsilon_gamma ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj 
    USE becmod,               ONLY : bec_type, becp, calbec
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
-   USE wavefunctions_module_gpum, ONLY : using_evc
+   USE wavefunctions_gpum, ONLY : using_evc
    USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0, using_qq_at
    USE becmod_subs_gpum,          ONLY : using_becp_auto
 
