@@ -405,6 +405,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE paw_onecenter,        ONLY : PAW_potential
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE dfunct,               ONLY : newd
+  USE dfunct_gpum,          ONLY : newd_gpu
   USE esm,                  ONLY : do_comp_esm, esm_printpot, esm_ewald
   USE fcp_variables,        ONLY : lfcpopt, lfcpdyn
   USE wrappers,             ONLY : memstat
@@ -756,7 +757,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
      ! ... term in the nonlocal potential
      ! ... PAW: newd contains PAW updates of NL coefficients
      !
-     CALL newd()
+     IF (.not. use_gpu) CALL newd()
+     IF (      use_gpu) CALL newd_gpu()
      !
      IF ( lelfield ) en_el =  calc_pol ( )
      !

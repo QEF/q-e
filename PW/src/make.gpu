@@ -12,7 +12,10 @@ PWLIBS += \
   add_vuspsi_gpu.o \
   qvan2_gpu.o \
   addusdens_gpu.o \
-  sum_band_gpu.o
+  sum_band_gpu.o \
+  newd_gpu.o \
+  add_paw_to_deeq_gpu.o \
+  add_vhub_to_deeq_gpu.o
 
 pwcom_gpu.o : pwcom.o
 a2fmod.o : pwcom_gpu.o
@@ -20,3 +23,4 @@ g_psi_mod_gpu.o : g_psi_mod.o
 c_bands.o : g_psi_mod_gpu.o
 realus.o : scf_mod_gpu.o
 sum_band_gpu.o : addusdens_gpu.o
+electrons.o : newd_gpu.o
