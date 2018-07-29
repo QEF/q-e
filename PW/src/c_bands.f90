@@ -456,7 +456,7 @@ CONTAINS
           ELSE
 ! BEWARE npol should be added to the arguments
              CALL ppcg_k( h_psi, s_psi, okvan, h_diag, &
-                         npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
+                         npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                          0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter)
              !
              avg_iter = avg_iter + ppcg_iter
