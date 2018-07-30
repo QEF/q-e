@@ -23,7 +23,7 @@ common: $(UTILS)
 
 %.x: %.o
 	$(LD) $(LDFLAGS) $< $(UTILS) -o $@ ../libqela.a \
-	../../UtilXlib/libutil.a $(LIBOBJS) $(LIBS)
+	../../UtilXlib/libutil.a $(LIBOBJS) $(QELIBS)
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x
