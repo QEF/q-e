@@ -237,8 +237,9 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
   COMPLEX(DP), ALLOCATABLE, DEVICE :: work_d(:)
   ! various work space
   !
-  ! Temp arrays to save H and S. Replace this with better algorithm
-  COMPLEX(DP), ALLOCATABLE, DEVICE :: h_tmp_d(:,:), s_tmp_d(:,:)
+  ! Temp arrays to save H and S.
+  REAL(DP), ALLOCATABLE, DEVICE :: h_diag_d(:), s_diag_d(:)
+  INTEGER :: i, j
   !
   !
   !
@@ -251,10 +252,12 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
       ! NB: dimension is different!
       ALLOCATE(v_h(ldh,n), e_h(n))
       !
-      ! FIXME
-      ALLOCATE(h_tmp_d(ldh,n), s_tmp_d(ldh,n))
-      h_tmp_d =  h_d
-      s_tmp_d =  s_d
+      ALLOCATE(h_diag_d(n) , s_diag_d(n))
+      !$cuf kernel do(1) <<<*,*>>>
+      DO i = 1, n
+         h_diag_d(i) = DBLE( h_d(i,i) )
+         s_diag_d(i) = DBLE( s_d(i,i) )
+      END DO
       !
       lwork  = n
       lrwork = 1+5*n+2*n*n
@@ -278,10 +281,21 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
 
       IF( info /= 0 ) CALL errore( ' cdiaghg_gpu ', ' zhegvdx_gpu failed ', ABS( info ) )
       !
-      ! FIXME
-      h_d = h_tmp_d
-      s_d = s_tmp_d
-      DEALLOCATE(h_tmp_d, s_tmp_d)
+!$cuf kernel do(1) <<<*,*>>>
+      DO i = 1, n
+         h_d(i,i) = DCMPLX( h_diag_d(i), 0.0_DP)
+         s_d(i,i) = DCMPLX( s_diag_d(i), 0.0_DP)
+         DO j = i + 1, n
+            h_d(i,j) = DCONJG( h_d(j,i) )
+            s_d(i,j) = DCONJG( s_d(j,i) )
+         END DO
+         DO j = n + 1, ldh
+            h_d(j,i) = ( 0.0_DP, 0.0_DP )
+            s_d(j,i) = ( 0.0_DP, 0.0_DP )
+         END DO
+      END DO
+
+      DEALLOCATE(h_diag_d, s_diag_d)
       !
       DEALLOCATE(work, rwork, iwork)
       DEALLOCATE(work_d, rwork_d)
