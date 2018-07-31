@@ -9,8 +9,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   !
   USE ppcg_param,         ONLY : DP, stdout
   USE mp,                 ONLY : mp_bcast, mp_root_sum, mp_sum
-  USE mp_bands_util,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id, &
-                                 gstart
+  USE mp_bands_util,      ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, nbgrp, my_bgrp_id
   USE descriptors,        ONLY : la_descriptor, descla_init, descla_local_dims
   USE parallel_toolkit,   ONLY : zsqmher
   USE mp_diag,            ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho, &
@@ -28,7 +27,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   ! number of bands
   ! number of independent spin components of the wfc.
   ! maximum number of iterations
-  COMPLEX (DP), INTENT(INOUT) :: psi(npwx,npol,nbnd)
+  COMPLEX (DP), INTENT(INOUT) :: psi(npwx*npol,nbnd)
   INTEGER,      INTENT(IN)    :: btype(nbnd) ! one if the corresponding state has to be
                                              ! ...converged to full accuracy, zero otherwise (src/pwcom.f90)
   REAL (DP),    INTENT(INOUT) :: e(nbnd)
@@ -47,7 +46,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   ! ... local variables
   !
   COMPLEX(DP), ALLOCATABLE ::  hpsi(:,:), spsi(:,:), w(:,:), hw(:,:), sw(:,:), p(:,:), hp(:,:), sp(:,:)
-  COMPLEX(DP)              ::  buffer(npwx,nbnd), buffer1(npwx,nbnd)
+  COMPLEX(DP)              ::  buffer(npwx*npol,nbnd), buffer1(npwx*npol,nbnd)
   COMPLEX(DP), ALLOCATABLE ::  K(:,:), K_store(:,:), M(:,:), M_store(:,:), cwork(:)
   REAL(DP), ALLOCATABLE    ::  rwork(:)
   INTEGER,  ALLOCATABLE    ::  iwork(:)
@@ -65,7 +64,8 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
                                ! auxiliary indices
   INTEGER                  ::  n_start, n_end, my_n ! auxiliary indices for band group parallelization
   INTEGER                  ::  print_info     ! If > 0 then iteration information is printed
-  INTEGER                  ::  kdim, kdimx, ipol
+  INTEGER                  ::  kdim, kdimx, ipol, ibnd
+  LOGICAL                  ::  clean
   REAL(DP), EXTERNAL :: ZLANGE
 
   EXTERNAL h_psi, s_psi
@@ -125,15 +125,19 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   call cpu_time(tot_time0)
   !
   !  ... Initialization and validation
-  !
+!
   print_info = 0 ! 3 
   sbsize3 = sbsize*3
   if (npol == 1) then
      kdim  = npw
      kdimx = npwx
-  else
-     kdim  = npwx*npol
+     clean = .false.
+  else if (npol == 2 ) then
+     kdim  = npwx*(npol-1) + npw
      kdimx = npwx*npol
+     clean = (npw < npwx)
+  else
+     CALL errore( 'ppcg ',' wrong npol value: errcode = 1+abs(npol) ', 1+abs(npol) )
   endif
   !
   nact      =  nbnd
@@ -155,11 +159,11 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   !
   ! ... Compute block residual w = hpsi - psi*(psi'hpsi) (psi is orthonormal on input)
   !
-  !    set Im[ psi(G=0) ] -  needed for numerical stability
   call cpu_time(tspmv0)
-  IF ( gstart == 2 ) psi(1,1,1:nbnd) = CMPLX( DBLE( psi(1,1,1:nbnd) ), 0.D0, kind=DP)
-  CALL h_psi( npwx, npw, nbnd, psi, hpsi )
-  if (overlap) CALL s_psi( npwx, npw, nbnd, psi, spsi)
+                                                         if (clean)  psi(npw+1:npwx,:) = C_ZERO
+  CALL h_psi( npwx, npw, nbnd, psi, hpsi )             ; if (clean) hpsi(npw+1:npwx,:) = C_ZERO
+  if (overlap) CALL s_psi( npwx, npw, nbnd, psi, spsi) ; if (clean) spsi(npw+1:npwx,:) = C_ZERO
+
   avg_iter = 1.d0
   call cpu_time(tspmv1)
   tspmv = tspmv + (tspmv1 - tspmv0)
@@ -185,7 +189,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
      CALL ZGEMM('N','N',kdim, nbnd, my_n, -C_ONE, spsi(1,n_start), kdimx, G(n_start,1), nbnd, C_ONE, w, kdimx)
   else
      if (n_start .le. n_end) &
-     CALL ZGEMM('N','N',kdim, nbnd, my_n, -C_ONE,psi(1,1,n_start), kdimx, G(n_start,1), nbnd, C_ONE, w, kdimx)
+     CALL ZGEMM('N','N',kdim, nbnd, my_n, -C_ONE,psi(1,n_start), kdimx, G(n_start,1), nbnd, C_ONE, w, kdimx)
   end if
   CALL mp_sum( w, inter_bgrp_comm )
   call cpu_time(tgemm1)
@@ -230,7 +234,9 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
      !
      ! ... apply the diagonal preconditioner
      DO j = 1, nact
-        w(1:kdim, act_idx(j)) = w(1:kdim,act_idx(j)) / precondition(:)
+     do ipol=1,npol
+        w(1+npwx*(ipol-1):npwx*ipol, act_idx(j)) = w(1+npwx*(ipol-1):npwx*ipol,act_idx(j)) / precondition(1:npwx)
+     end do
      END DO
      !
      buffer(:,1:nact) = w(:,act_idx(1:nact))
@@ -242,7 +248,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
         CALL ZGEMM( 'C','N', my_n, nact, kdim, C_ONE, spsi(1,n_start), kdimx, buffer, kdimx, C_ZERO, G(n_start,1), nbnd )
      else
         if (n_start .le. n_end) &
-        CALL ZGEMM( 'C','N', my_n, nact, kdim, C_ONE,psi(1,1,n_start), kdimx, buffer, kdimx, C_ZERO, G(n_start,1), nbnd )
+        CALL ZGEMM( 'C','N', my_n, nact, kdim, C_ONE,psi(1,n_start), kdimx, buffer, kdimx, C_ZERO, G(n_start,1), nbnd )
      end if
      CALL mp_sum( G(1:nbnd,1:nact), inter_bgrp_comm )
      !
@@ -254,7 +260,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
      call cpu_time(tgemm0)
      buffer(:,1:nact) = C_ZERO  ; if (my_bgrp_id==root_bgrp_id) buffer(:,1:nact) = w(:,act_idx(1:nact))
      if (n_start .le. n_end) &
-     CALL ZGEMM('N','N', kdim, nact, my_n, -C_ONE, psi(1,1,n_start), kdimx, G(n_start,1), nbnd, C_ONE, buffer, kdimx)
+     CALL ZGEMM('N','N', kdim, nact, my_n, -C_ONE, psi(1,n_start), kdimx, G(n_start,1), nbnd, C_ONE, buffer, kdimx)
      CALL mp_sum( buffer(:,1:nact), inter_bgrp_comm )
      w(:,act_idx(1:nact)) = buffer(:,1:nact)
      call cpu_time(tgemm1)
@@ -262,12 +268,11 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
      !
      ! ... Compute h*w
      call cpu_time(tspmv0)
-     IF ( gstart == 2 ) w(1,act_idx(1:nact)) = CMPLX( DBLE( w(1,act_idx(1:nact)) ), 0.D0, kind=DP)
      buffer1(:,1:nact) = w(:,act_idx(1:nact))
-     CALL h_psi( npwx, npw, nact, buffer1, buffer )
+     CALL h_psi( npwx, npw, nact, buffer1, buffer )       ; if (clean) buffer (npw+1:npwx,1:nact) = C_ZERO
      hw(:,act_idx(1:nact)) = buffer(:,1:nact)
      if (overlap) then ! ... Compute s*w
-        CALL s_psi( npwx, npw, nact, buffer1, buffer )
+        CALL s_psi( npwx, npw, nact, buffer1, buffer )    ; if (clean) buffer(npw+1:npwx,1:nact) = C_ZERO
         sw(:,act_idx(1:nact)) = buffer(:,1:nact)
      end if
      avg_iter = avg_iter + nact/dble(nbnd)
@@ -283,9 +288,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
         if (overlap) then
            buffer(:,1:nact) =spsi(:,act_idx(1:nact))
         else
-           do ipol=1,npol
-              buffer(1+npwx*(ipol-1):npwx*ipol,1:nact) = psi(:,ipol,act_idx(1:nact))
-           end do
+           buffer(:,1:nact) = psi(:,act_idx(1:nact))
         end if
         buffer1(:,1:nact) = p(:,act_idx(1:nact))
         CALL divide(inter_bgrp_comm,nact,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nact,n_start,n_end
@@ -300,9 +303,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
         ! p = p - psi*G, hp = hp - hpsi*G, sp = sp - spsi*G
         call cpu_time(tgemm0)
         buffer(:,1:nact) = C_ZERO; if ( my_bgrp_id==root_bgrp_id) buffer(:,1:nact) = p(:,act_idx(1:nact))
-        do ipol=1,npol
-           buffer1(1+npwx*(ipol-1):npwx*ipol,1:nact) = psi(:,ipol,act_idx(1:nact))
-        end do
+        buffer1(:,1:nact) = psi(:,act_idx(1:nact))
         if (n_start .le. n_end) & ! could be done differently
         CALL ZGEMM('N','N', kdim, nact, my_n, -C_ONE, buffer1(1,n_start), kdimx, G(n_start,1), nbnd, C_ONE, buffer, kdimx)
         CALL mp_sum( buffer(:,1:nact), inter_bgrp_comm )
@@ -355,14 +356,12 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
         M = 0.D0
         !
         call cpu_time(tgemm0)
-        do ipol=1,npol
-           buffer(1+npwx*(ipol-1):npwx*ipol,1:l) = psi(:,ipol, col_idx(1:l))
-        end do
-        buffer1(:,1:l) = hpsi(:,col_idx(1:l))
+        buffer(:,1:l)  =  psi(:,col_idx(1:l)) ; if (clean) buffer(npw+1:npwx,1:l) = C_ZERO
+        buffer1(:,1:l) = hpsi(:,col_idx(1:l)) ; if (clean) buffer1(npw+1:npwx,1:l) = C_ZERO
         CALL ZGEMM('C','N', l, l, kdim, C_ONE, buffer, kdimx, buffer1, kdimx, C_ZERO, K, sbsize3)
         !
         if (overlap) then
-           buffer1(:,1:l) = spsi(:,col_idx(1:l))
+           buffer1(:,1:l) = spsi(:,col_idx(1:l)) ; if (clean) buffer1(npw+1:npwx,1:l) = C_ZERO
         else
            buffer1(:,1:l) = buffer(:,1:l)
         end if
@@ -381,9 +380,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
         CALL ZGEMM('C','N', l, l, kdim, C_ONE, buffer, kdimx, buffer1, kdimx, C_ZERO, M(l+1, l+1 ), sbsize3)
         !
         ! ---
-        do ipol=1,npol
-           buffer(1+npwx*(ipol-1):npwx*ipol,1:l) =  psi(:, ipol, col_idx(1:l))
-        end do
+        buffer(:,1:l) =  psi(:,  col_idx(1:l))
         buffer1(:,1:l) = hw(:,col_idx(1:l))
         CALL ZGEMM('C','N', l, l, kdim, C_ONE, buffer, kdimx, buffer1, kdimx, C_ZERO, K(1, l+1), sbsize3)
         !
@@ -416,9 +413,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
           CALL ZGEMM('C','N', l, l, kdim, C_ONE, buffer, kdimx, buffer1, kdimx, C_ZERO, M(2*l + 1, 2*l+1), sbsize3)
           !
           ! ---
-          do ipol=1,npol
-             buffer(1+npwx*(ipol-1):npwx*ipol,1:l) =  psi(:, ipol,col_idx(1:l))
-          end do
+          buffer(:,1:l) =  psi(:,col_idx(1:l))
           buffer1(:,1:l) = hp(:,col_idx(1:l))
           CALL ZGEMM('C','N', l, l, kdim, C_ONE, buffer, kdimx, buffer1, kdimx, C_ZERO, K(1, 2*l+1), sbsize3)
           !
@@ -496,6 +491,10 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
        !
        CALL ZHEGVD(1, 'V','U', dimp, K, sbsize3, M, sbsize3, D, cwork, lcwork, rwork, lrwork, iwork, liwork, info)
        IF (info /= 0) THEN
+         write (6,*)  'dimp, sbsize3 ', dimp, sbsize3
+         do ipol =1, dimp
+            write(6,*) M(ipol,1:dimp)
+         end do
          CALL errore( 'ppcg ',' zhegvd failed ', info )
          STOP
        END IF
@@ -565,14 +564,9 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
        !
        ! Update the sub-blocks of psi and hpsi (and spsi)
        call cpu_time(tgemm0)
-       do ipol=1,npol
-          buffer1(1+npwx*(ipol-1):npwx*ipol,1:l) = psi(:,ipol, col_idx(1:l))
-       end do
+       buffer1(:,1:l) = psi(:, col_idx(1:l))
        CALL ZGEMM('N','N', kdim, l, l, C_ONE, buffer1, kdimx, coord_psi, sbsize, C_ZERO, buffer, kdimx)
-       do ipol=1,npol
-          psi(:,ipol, col_idx(1:l))  = buffer(1+npwx*(ipol-1):npwx*ipol,1:l) + &
-                                            p(1+npwx*(ipol-1):npwx*ipol,col_idx(1:l))
-       end do
+       psi(:, col_idx(1:l))  = buffer(:,1:l) + p(:,col_idx(1:l))
        call cpu_time(tgemm1)
        tgemm = tgemm + (tgemm1 - tgemm0)
        !
@@ -597,7 +591,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
      ! set to zero the columns not assigned to this bgrp, inactive colums are assigned to root_bgrp
      do j=1,nbnd
         if (idx(j)==0) then
-           psi (:,:,j) = C_ZERO ; hpsi (:,j) = C_ZERO ; p(:,j) = C_ZERO ; hp(:,j) = C_ZERO
+           psi (:,j) = C_ZERO ; hpsi (:,j) = C_ZERO ; p(:,j) = C_ZERO ; hp(:,j) = C_ZERO
         end if
      end do
      CALL mp_sum(psi ,inter_bgrp_comm)
@@ -630,14 +624,12 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
        !     residuals for individual eigenpairs in psi and e
        if (overlap) then
           DO j = 1, nbnd
-             w(1:npw,j) = hpsi(1:npw,j) - spsi(1:npw,j)*e(j)
+             w(1:kdim,j) = hpsi(1:kdim,j) - spsi(1:kdim,j)*e(j)
           END DO
        else
-          do ipol=1,npol
-             DO j = 1, nbnd
-                w(1+npwx*(ipol-1):npwx*ipol,j) = hpsi(1+npwx*(ipol-1):npwx*ipol,j)-psi(:,ipol,j)*e(j)
-             END DO
-          end do
+          DO j = 1, nbnd
+             w(:,j) = hpsi(:,j)-psi(:,j)*e(j)
+          END DO
        end if
        !
        ! ... Lock converged eigenpairs (set up act_idx and nact)
@@ -661,9 +653,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
       ! ... orthogonalize psi and update hpsi accordingly
       IF ( .NOT. force_repmat ) THEN
          !
-         do ipol=1,npol
-            buffer(1+npwx*(ipol-1):npwx*ipol,1:nact) = psi(:,ipol,act_idx(1:nact))
-         end do
+         buffer(:,1:nact) = psi(:,act_idx(1:nact))
          if (overlap) then
             buffer1(:,1:nact) = spsi(:,act_idx(1:nact))
          else
@@ -675,9 +665,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
          call cpu_time(tqr1)
          tqr = tqr + (tqr1 - tqr0)
          !
-         do ipol=1,npol
-            psi(:,ipol,act_idx(1:nact)) = buffer(1+npwx*(ipol-1):npwx*ipol,1:nact)
-         end do
+         psi(:,act_idx(1:nact)) = buffer(:,1:nact)
          !
          buffer1(:,1:nact) = hpsi(:,act_idx(1:nact))
          call cpu_time(ttrsm0)
@@ -698,9 +686,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
          end if
       ELSE
          !
-         do ipol=1,npol
-            buffer(1+npwx*(ipol-1):npwx*ipol,1:nact) = psi(:,ipol,act_idx(1:nact))
-         end do
+         buffer(:,1:nact) = psi(:,act_idx(1:nact))
          if (overlap) then
             buffer1(:,1:nact) = spsi(:,act_idx(1:nact))
          else
@@ -712,9 +698,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
          call cpu_time(tqr1)
          tqr = tqr + (tqr1 - tqr0)
          !
-         do ipol=1,npol
-            psi(:,ipol,act_idx(1:nact)) = buffer(1+npwx*(ipol-1):npwx*ipol,1:nact)
-         end do
+         psi(:,act_idx(1:nact)) = buffer(:,1:nact)
          !
          buffer(:,1:nact) = hpsi(:,act_idx(1:nact))
          !
@@ -741,9 +725,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
        ! ... Compute the new subspace residual for active columns
        !
        !  G = psi'hpsi
-       do ipol=1,npol
-          buffer(1+npwx*(ipol-1):npwx*ipol,1:nact) = psi(:,ipol,act_idx(1:nact))
-       enddo
+       buffer(:,1:nact)  = psi(:,act_idx(1:nact))
        buffer1(:,1:nact) = hpsi(:,act_idx(1:nact))
        call cpu_time(tgemm0)
        G = C_ZERO
@@ -761,9 +743,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
        if (overlap) then
           buffer1(:,1:nact) =spsi(:,act_idx(1:nact))
        else
-          do ipol=1,npol
-             buffer1(1+npwx*(ipol-1):npwx*ipol,1:nact) = psi(:,ipol,act_idx(1:nact))
-          end do
+          buffer1(:,1:nact) = psi(:,act_idx(1:nact))
        end if
        call cpu_time(tgemm0)
        if (n_start .le. n_end) &
@@ -817,14 +797,12 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
     ! ... Compute residuals
     if (overlap) then
        DO j = 1, nbnd
-          w(1:npw,j) = hpsi(1:npw,j) - spsi(1:npw,j)*e(j)
+          w(1:kdim,j) = hpsi(1:kdim,j) - spsi(1:kdim,j)*e(j)
        END DO
     else
-       do ipol=1,npol
-          DO j = 1, nbnd
-             w(1+npwx*(ipol-1):npwx*ipol,j) = hpsi(1+npwx*(ipol-1):npwx*ipol,j) -  psi(:,ipol,j)*e(j)
-          END DO
-       end do
+       DO j = 1, nbnd
+          w(:,j) = hpsi(:,j) -  psi(:,j)*e(j)
+       END DO
     end if
     !
     ! ... Get the number of converged eigenpairs and their indices
@@ -1662,9 +1640,7 @@ nguard = 0 ! 24 ! 50
 !  EV begin new
 !   Instead computing the norm of the whole residual, compute it for X(:,nbnd-nguard)
      nwanted = nbnd - nguard
-     do ipol=1,npol
-        psi_t(1+npwx*(ipol-1):npwx*ipol,1:nwanted)  = psi(:,ipol,1:nwanted)
-     end do
+     psi_t(:,1:nwanted)  = psi(:,1:nwanted)
      hpsi_t(:,1:nwanted) = hpsi(:,1:nwanted)
      !
      !     G = psi_t'hpsi_t
