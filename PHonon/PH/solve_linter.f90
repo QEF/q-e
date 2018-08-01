@@ -52,7 +52,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE el_phon,              ONLY : elph
   USE uspp,                 ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
-                                   iuwfc, lrwfc, iudvscf, iuint3paw, lint3paw
+                                   iudvscf, iuint3paw, lint3paw
+  USE units_lr,             ONLY : iuwfc, lrwfc
   USE output,               ONLY : fildrho, fildvscf
   USE phus,                 ONLY : becsumort
   USE modes,                ONLY : npertx, npert, u, t, tmq
