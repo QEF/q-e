@@ -289,8 +289,6 @@ MODULE units_ph
   SAVE
   !
   INTEGER :: &
-       iuwfc,     & ! iunit with the wavefunctions
-       lrwfc,     & ! the length of wavefunction record
        iuvkb,     & ! unit with vkb
        iubar,     & ! unit with the part DV_{bare}
        lrbar,     & ! length of the DV_{bare}

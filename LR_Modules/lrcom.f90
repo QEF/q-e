@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -157,3 +157,16 @@ MODULE lrus
   ! localized on atoms N and P.
   !
 END MODULE lrus
+!
+MODULE units_lr
+  !
+  USE kinds,  ONLY : DP
+  !
+  ! ... These are the units used in the linear response calculations
+  !
+  SAVE
+  !
+  INTEGER :: iuwfc, & ! iunit with the wavefunctions
+             lrwfc    ! the length of wavefunction record
+  !
+END MODULE units_lr
