@@ -268,7 +268,7 @@
 #endif
 
       IF ( mpime == root .AND. igwx > size_pwt ) &
-        CALL infomsg(' splitwf ',' wrong size for pwt trying 0 padding' )
+        CALL errore (' splitwf ',' wrong size for pwt', size_pwt )
 
 #if defined __MPI
 
@@ -286,11 +286,7 @@
             CALL MPI_RECV( ig_ip, ngw_lmax, MPI_INTEGER, (ip-1), IP, gid, istatus, IERR )
             CALL MPI_GET_COUNT(istatus, MPI_INTEGER, ngw_ip, ierr)
             DO i = 1, ngw_ip
-              IF ( ig_ip(i) .LE. size_pwt ) THEN 
-                  pw_ip(i) = PWT(ig_ip(i))
-              ELSE 
-                 pw_ip(i) = cmplx(0.d0,0.d0, KIND = DP )
-              END IF 
+                  pw_ip(i) = PWT(ig_ip(i)) 
             END DO
             CALL MPI_SEND( pw_ip, ngw_ip, MPI_DOUBLE_COMPLEX, (ip-1), IP+NPROC, gid, IERR )
             DEALLOCATE(ig_ip)
@@ -299,11 +295,7 @@
         ELSE
           IF ( mpime == root ) THEN
             DO i = 1, ngwl
-              IF ( ig_l2g(i) .LE. size_pwt) THEN 
-                 pw(i) = PWT(ig_l2g(i)) 
-              ELSE 
-                 pw(i) = CMPLX ( 0.d0, 0.d0, KIND = DP ) 
-              END IF 
+                 pw(i) = PWT(ig_l2g(i))  
             END DO
           END IF
         END IF
@@ -313,11 +305,7 @@
 #elif ! defined __MPI
 
       DO I = 1, ngwl
-        IF ( ig_l2g(i) .LE. size_pwt ) THEN 
-           pw(i) = pwt( ig_l2g(i) )
-        ELSE 
-           pw(i) = CMPLX ( 0.d0, 0.d0, KIND = DP) 
-        END IF 
+           pw(i) = pwt( ig_l2g(i) ) 
       END DO
 
 #else
