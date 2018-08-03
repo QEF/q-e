@@ -243,7 +243,7 @@
       INTEGER, ALLOCATABLE :: ig_ip(:)
       COMPLEX(DP), ALLOCATABLE :: pw_ip(:)
 
-      INTEGER ierr, i, ngw_ip, ip, ngw_lmax, gid, igwx, itmp
+      INTEGER ierr, i, ngw_ip, ip, ngw_lmax, gid, igwx, itmp, size_pwt
 
 #if defined __MPI
       integer istatus(MPI_STATUS_SIZE)
@@ -254,6 +254,7 @@
 !
 
       igwx = MAXVAL( ig_l2g(1:ngwl) )
+      IF ( mpime == root ) size_pwt = SIZE(pwt) 
 
 #if defined __MPI
 
@@ -266,8 +267,8 @@
 
 #endif
 
-      IF ( mpime == root .AND. igwx > SIZE( pwt ) ) &
-        CALL errore(' splitwf ',' wrong size for pwt ',SIZE(pwt) )
+      IF ( mpime == root .AND. igwx > size_pwt ) &
+        CALL infomsg(' splitwf ',' wrong size for pwt trying 0 padding' )
 
 #if defined __MPI
 
@@ -285,7 +286,11 @@
             CALL MPI_RECV( ig_ip, ngw_lmax, MPI_INTEGER, (ip-1), IP, gid, istatus, IERR )
             CALL MPI_GET_COUNT(istatus, MPI_INTEGER, ngw_ip, ierr)
             DO i = 1, ngw_ip
-              pw_ip(i) = PWT(ig_ip(i))
+              IF ( ig_ip(i) .LE. size_pwt ) THEN 
+                  pw_ip(i) = PWT(ig_ip(i))
+              ELSE 
+                 pw_ip(i) = cmplx(0.d0,0.d0, KIND = DP )
+              END IF 
             END DO
             CALL MPI_SEND( pw_ip, ngw_ip, MPI_DOUBLE_COMPLEX, (ip-1), IP+NPROC, gid, IERR )
             DEALLOCATE(ig_ip)
@@ -294,7 +299,11 @@
         ELSE
           IF ( mpime == root ) THEN
             DO i = 1, ngwl
-              pw(i) = PWT(ig_l2g(i)) 
+              IF ( ig_l2g(i) .LE. size_pwt) THEN 
+                 pw(i) = PWT(ig_l2g(i)) 
+              ELSE 
+                 pw(i) = CMPLX ( 0.d0, 0.d0, KIND = DP ) 
+              END IF 
             END DO
           END IF
         END IF
@@ -304,7 +313,11 @@
 #elif ! defined __MPI
 
       DO I = 1, ngwl
-        pw(i) = pwt( ig_l2g(i) )
+        IF ( ig_l2g(i) .LE. size_pwt ) THEN 
+           pw(i) = pwt( ig_l2g(i) )
+        ELSE 
+           pw(i) = CMPLX ( 0.d0, 0.d0, KIND = DP) 
+        END IF 
       END DO
 
 #else
