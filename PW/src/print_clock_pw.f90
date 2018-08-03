@@ -140,6 +140,16 @@ SUBROUTINE print_clock_pw()
          CALL print_clock( 'cdiaghg:paragemm' )
       END IF
    END IF
+   IF ( isolve == 2 ) THEN
+!      IF ( iverbosity > 0 )  THEN
+         CALL print_clock( 'ppcg:zgemm' )
+         CALL print_clock( 'ppcg:hpsi' )
+         CALL print_clock( 'ppcg:cholQR' )
+         CALL print_clock( 'ppcg:RR' )
+         CALL print_clock( 'ppcg:ZTRSM' )
+         CALL print_clock( 'ppcg:lock' )
+!      END IF
+   END IF
    !
    WRITE( stdout, '(/5x,"Called by h_psi:")' )
 !   IF ( iverbosity > 0 )  THEN
