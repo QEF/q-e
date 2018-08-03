@@ -7,6 +7,7 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../KS_Solvers/Davidson \
           $(MOD_FLAG)../../KS_Solvers/CG \
+          $(MOD_FLAG)../../KS_Solvers/PPCG \
           $(MOD_FLAG)../../dft-d3/
 
 NEBOBJS = \
@@ -36,7 +37,8 @@ path_variables.o \
 set_defaults.o \
 stop_run_path.o 
 
-QEMODS=../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a ../../KS_Solvers/CG/libcg.a \
+QEMODS=../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a \
+       ../../KS_Solvers/CG/libcg.a  ../../KS_Solvers/PPCG/libppcg.a \
        ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 PWOBJS= ../../PW/src/libpw.a
 

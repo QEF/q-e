@@ -48,6 +48,7 @@ lr_apply_liouvillian.o : ../../Modules/becmod.o
 lr_apply_liouvillian.o : ../../Modules/cell_base.o
 lr_apply_liouvillian.o : ../../Modules/control_flags.o
 lr_apply_liouvillian.o : ../../Modules/fft_base.o
+lr_apply_liouvillian.o : ../../Modules/funct.o
 lr_apply_liouvillian.o : ../../Modules/io_global.o
 lr_apply_liouvillian.o : ../../Modules/ions_base.o
 lr_apply_liouvillian.o : ../../Modules/kind.o
@@ -453,6 +454,7 @@ lr_run_nscf.o : ../../Modules/cell_base.o
 lr_run_nscf.o : ../../Modules/control_flags.o
 lr_run_nscf.o : ../../Modules/fft_base.o
 lr_run_nscf.o : ../../Modules/io_files.o
+lr_run_nscf.o : ../../Modules/io_global.o
 lr_run_nscf.o : ../../Modules/mp_bands.o
 lr_run_nscf.o : ../../Modules/recvec.o
 lr_run_nscf.o : ../../PW/src/atomic_wfc_mod.o

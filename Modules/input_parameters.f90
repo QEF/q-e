@@ -846,7 +846,7 @@ MODULE input_parameters
           ! used only in PWscf
 
         CHARACTER(len=80) :: diagonalization = 'david'
-          ! diagonalization = 'david' or 'cg'
+          ! diagonalization = 'david', 'cg' or 'ppcg'
           ! algorithm used by PWscf for iterative diagonalization
 
         REAL(DP) :: diago_thr_init = 0.0_DP
@@ -856,6 +856,10 @@ MODULE input_parameters
         INTEGER :: diago_cg_maxiter = 100
           ! max number of iterations for the first iterative diagonalization
           ! using conjugate-gradient algorithm - used only in PWscf
+
+        INTEGER :: diago_ppcg_maxiter = 100
+          ! max number of iterations for the first iterative diagonalization
+          ! using projected preconditioned conjugate-gradient algorithm - used only in PWscf
 
         INTEGER :: diago_david_ndim = 4
           ! dimension of the subspace used in Davidson diagonalization

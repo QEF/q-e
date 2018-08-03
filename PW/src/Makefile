@@ -6,6 +6,7 @@ include ../../make.inc
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../KS_Solvers/Davidson \
           $(MOD_FLAG)../../KS_Solvers/CG \
+          $(MOD_FLAG)../../KS_Solvers/PPCG \
           $(MOD_FLAG)../../dft-d3/
 PWOBJS = \
 pwscf.o 
@@ -246,7 +247,10 @@ wannier_clean.o \
 wannier_occ.o \
 wannier_enrg.o
 
-QEMODS=../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a ../../KS_Solvers/CG/libcg.a \
+QEMODS=../../Modules/libqemod.a \
+       ../../KS_Solvers/Davidson/libdavid.a \
+       ../../KS_Solvers/CG/libcg.a \
+       ../../KS_Solvers/PPCG/libppcg.a \
        ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 
 TLDEPS=bindir mods libs liblapack libblas dftd3

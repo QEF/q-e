@@ -628,6 +628,8 @@ MODULE qes_types_module
     LOGICAL :: diago_full_acc
     LOGICAL  :: diago_cg_maxiter_ispresent = .FALSE.
     INTEGER :: diago_cg_maxiter
+    LOGICAL  :: diago_ppcg_maxiter_ispresent = .FALSE.
+    INTEGER :: diago_ppcg_maxiter
     LOGICAL  :: diago_david_ndim_ispresent = .FALSE.
     INTEGER :: diago_david_ndim
     !

@@ -5,6 +5,7 @@ include	../../make.inc
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../KS_Solvers/CG \
+          $(MOD_FLAG)../../KS_Solvers/PPCG \
           $(MOD_FLAG)../../KS_Solvers/Davidson
 
 FOBJS = \
@@ -119,7 +120,7 @@ entropy.o
 
 QEMODS=../../Modules/libqemod.a
 QEFFT=../../FFTXlib/libqefft.a
-QELA=../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a ../../LAXlib/libqela.a
+QELA=../../KS_Solvers/CG/libcg.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/Davidson/libdavid.a ../../LAXlib/libqela.a
 UTIL=../../UtilXlib/libutil.a
 
 TLDEPS= bindir mods libs libiotk
