@@ -6,6 +6,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   !----------------------------------------------------------------------------
   !
   ! E.V. Ignore btype, use ethr as threshold on subspace residual subspace
+  ! SdG  restore btype use in the eigenvalue locking procedure
   !
   USE ppcg_param,         ONLY : DP, stdout
   USE mp,                 ONLY : mp_bcast, mp_root_sum, mp_sum
@@ -186,10 +187,10 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   CALL divide(inter_bgrp_comm,nbnd,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbnd,n_start,n_end
   if (overlap) then
      if (n_start .le. n_end) &
-     CALL ZGEMM('N','N',kdim, nbnd, my_n, -C_ONE, spsi(1,n_start), kdimx, G(n_start,1), nbnd, C_ONE, w, kdimx)
+     CALL ZGEMM('N','N',kdim, nbnd, my_n, -C_ONE,spsi(1,n_start), kdimx, G(n_start,1), nbnd, C_ONE, w, kdimx)
   else
      if (n_start .le. n_end) &
-     CALL ZGEMM('N','N',kdim, nbnd, my_n, -C_ONE,psi(1,n_start), kdimx, G(n_start,1), nbnd, C_ONE, w, kdimx)
+     CALL ZGEMM('N','N',kdim, nbnd, my_n, -C_ONE, psi(1,n_start), kdimx, G(n_start,1), nbnd, C_ONE, w, kdimx)
   end if
   CALL mp_sum( w, inter_bgrp_comm )
   call cpu_time(tgemm1)
@@ -199,7 +200,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   ! ... Lock converged eigenpairs (set up act_idx and nact and store current nact in nact_old)
   call cpu_time(tlock0)
   nact_old = nact;
-  CALL lock_epairs(kdim, nbnd, w, kdimx, lock_tol, nact, act_idx)
+  CALL lock_epairs(kdim, nbnd, btype, w, kdimx, lock_tol, nact, act_idx)
   call cpu_time(tlock1)
   tlock = tlock + (tlock1 - tlock0)
   !
@@ -234,12 +235,12 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
      !
      ! ... apply the diagonal preconditioner
      DO j = 1, nact
-     do ipol=1,npol
-        w(1+npwx*(ipol-1):npwx*ipol, act_idx(j)) = w(1+npwx*(ipol-1):npwx*ipol,act_idx(j)) / precondition(1:npwx)
+     do ipol=0,npol-1
+        w(1+npwx*ipol:npw+npwx*ipol, act_idx(j)) = w(1+npwx*ipol:npw+npwx*ipol,act_idx(j)) / precondition(1:npw)
      end do
      END DO
      !
-     buffer(:,1:nact) = w(:,act_idx(1:nact))
+     buffer(:,1:nact) = w(:,act_idx(1:nact)) 
      call cpu_time(tgemm0)
      G(1:nbnd,1:nact) = C_ZERO
      CALL divide(inter_bgrp_comm,nbnd,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbnd,n_start,n_end
@@ -334,12 +335,12 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
         end if
      END IF
      !
-     !
      !  ... for each sub-block construct the small projected matrices K and M
      !      and store in K_store and M_store
      !
-     K_store = 0.D0
-     M_store = 0.D0
+     K_store = C_ZERO
+     M_store = C_ZERO
+     !
      CALL divide(inter_bgrp_comm,nsb,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nsb,n_start,n_end
      DO j = n_start, n_end
         !
@@ -352,12 +353,12 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
         col_idx(1:l) = act_idx(  (/ (i, i = (j-1)*sbsize + 1, (j-1)*sbsize + l) /) )
         !
         ! ... form the local Gramm matrices (K,M)
-        K = 0.D0
-        M = 0.D0
+        K = C_ZERO
+        M = C_ZERO
         !
         call cpu_time(tgemm0)
-        buffer(:,1:l)  =  psi(:,col_idx(1:l)) ; if (clean) buffer(npw+1:npwx,1:l) = C_ZERO
-        buffer1(:,1:l) = hpsi(:,col_idx(1:l)) ; if (clean) buffer1(npw+1:npwx,1:l) = C_ZERO
+        buffer(:,1:l)  =  psi(:,col_idx(1:l)) 
+        buffer1(:,1:l) = hpsi(:,col_idx(1:l)) 
         CALL ZGEMM('C','N', l, l, kdim, C_ONE, buffer, kdimx, buffer1, kdimx, C_ZERO, K, sbsize3)
         !
         if (overlap) then
@@ -380,8 +381,8 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
         CALL ZGEMM('C','N', l, l, kdim, C_ONE, buffer, kdimx, buffer1, kdimx, C_ZERO, M(l+1, l+1 ), sbsize3)
         !
         ! ---
-        buffer(:,1:l) =  psi(:,  col_idx(1:l))
-        buffer1(:,1:l) = hw(:,col_idx(1:l))
+        buffer(:,1:l) =  psi(:,  col_idx(1:l)) 
+        buffer1(:,1:l) = hw(:,col_idx(1:l))       ; if (clean) buffer1(npw+1:npwx,1:l) = C_ZERO
         CALL ZGEMM('C','N', l, l, kdim, C_ONE, buffer, kdimx, buffer1, kdimx, C_ZERO, K(1, l+1), sbsize3)
         !
         if (overlap) then
@@ -394,10 +395,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
         tgemm = tgemm + (tgemm1 - tgemm0)
         !
         ! ---
-        CALL ZLACPY('A', l, l,  K(1, l+1), sbsize3,  K(l+1, 1), sbsize3)
-        CALL ZLACPY('A', l, l,  M(1, l+1), sbsize3,  M(l+1, 1), sbsize3)
         !
-        ! ---
 !ev        IF ( MOD(iter,rr_step) /= 1 ) THEN   ! In this case, P is skipped after each RR
         IF ( iter  /= 1 ) THEN
           call cpu_time(tgemm0)
@@ -426,10 +424,8 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
           call cpu_time(tgemm1)
           tgemm = tgemm + (tgemm1 - tgemm0)
           !
-          CALL ZLACPY('A', l, l,  K(1, 2*l+1 ), sbsize3,  K(2*l+1, 1), sbsize3)
-          CALL ZLACPY('A', l, l,  M(1, 2*l+1 ), sbsize3,  M(2*l+1, 1), sbsize3)
-          !
           ! ---
+          !
           call cpu_time(tgemm0)
           buffer(:,1:l) =  w(:, col_idx(1:l))
           buffer1(:,1:l) = hp(:,col_idx(1:l))
@@ -443,9 +439,6 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
           CALL ZGEMM('C','N', l, l, kdim, C_ONE, buffer, kdimx, buffer1, kdimx, C_ZERO, M(l+1, 2*l+1), sbsize3)
           call cpu_time(tgemm1)
           tgemm = tgemm + (tgemm1 - tgemm0)
-          !
-          CALL ZLACPY('A', l, l,  K(l+1, 2*l+1), sbsize3,  K(2*l+1, l+1), sbsize3)
-          CALL ZLACPY('A', l, l,  M(l+1, 2*l+1), sbsize3,  M(2*l+1, l+1), sbsize3)
           !
         END IF
         !
@@ -474,6 +467,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
        ELSE
           l = sbsize_last
        END IF
+
        col_idx(1:l) = act_idx( (/ (i, i = (j-1)*sbsize + 1, (j-1)*sbsize + l) /)  )
        !
        K = K_store(:, (j-1)*sbsize3 + 1 : j*sbsize3)
@@ -491,12 +485,15 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
        !
        CALL ZHEGVD(1, 'V','U', dimp, K, sbsize3, M, sbsize3, D, cwork, lcwork, rwork, lrwork, iwork, liwork, info)
        IF (info /= 0) THEN
-         write (6,*)  'dimp, sbsize3 ', dimp, sbsize3
-         do ipol =1, dimp
-            write(6,*) M(ipol,1:dimp)
-         end do
-         CALL errore( 'ppcg ',' zhegvd failed ', info )
-         STOP
+       ! reset the matrix and try again with psi and w only
+          K = K_store(:, (j-1)*sbsize3 + 1 : j*sbsize3)
+          M = M_store(:, (j-1)*sbsize3 + 1 : j*sbsize3)
+          dimp = 2*l
+          CALL ZHEGVD(1, 'V','U', dimp, K, sbsize3, M, sbsize3, D, cwork, lcwork, rwork, lrwork, iwork, liwork, info)
+          IF (info /= 0) THEN
+             CALL errore( 'ppcg ',' zhegvd failed ', info )
+             STOP
+          END IF
        END IF
        !
        coord_psi(1 : l, 1 : l) = K(1 : l, 1 : l)
@@ -504,7 +501,8 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
        !
        ! ... update the sub-block of P and AP
 !ev       IF ( MOD(iter, rr_step) /= 1 ) THEN
-       IF ( iter /= 1 ) THEN
+!sdg      IF ( iter /= 1 ) THEN
+       IF ( dimp == 3*l ) THEN
           !
           coord_p(1 : l, 1 : l) = K(2*l+1 : 3*l, 1 : l)
           !
@@ -628,14 +626,14 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
           END DO
        else
           DO j = 1, nbnd
-             w(:,j) = hpsi(:,j)-psi(:,j)*e(j)
+             w(1:kdim,j) = hpsi(1:kdim,j) -  psi(1:kdim,j)*e(j)
           END DO
        end if
        !
        ! ... Lock converged eigenpairs (set up act_idx and nact)
        call cpu_time(tlock0)
        nact_old = nact;
-       CALL lock_epairs(kdim, nbnd, w, kdimx, lock_tol, nact, act_idx)
+       CALL lock_epairs(kdim, nbnd, btype, w, kdimx, lock_tol, nact, act_idx)
        call cpu_time(tlock1)
        tlock = tlock + (tlock1 - tlock0)
        !
@@ -660,7 +658,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
             buffer1(:,1:nact) = buffer(:,1:nact)
          end if
          !
-         call cpu_time(tqr0) ! ???????????????????????????????????????????????????????????????????
+         call cpu_time(tqr0) 
          CALL cholQR_dmat(kdim, nact, buffer, buffer1, kdimx, Gl, desc)
          call cpu_time(tqr1)
          tqr = tqr + (tqr1 - tqr0)
@@ -801,7 +799,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
        END DO
     else
        DO j = 1, nbnd
-          w(:,j) = hpsi(:,j) -  psi(:,j)*e(j)
+          w(1:kdim,j) = hpsi(1:kdim,j) -  psi(1:kdim,j)*e(j)
        END DO
     end if
     !
@@ -809,7 +807,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
     !     Note: The tolerance is 10*lock_tol, i.e., weaker tham lock_tol
 ! E.V. notconv issue should be addressed
     call cpu_time(tlock0)
-    CALL lock_epairs(kdim, nbnd, w, kdimx, 10*lock_tol, nact, act_idx)
+    CALL lock_epairs(kdim, nbnd, btype, w, kdimx, 10*lock_tol, nact, act_idx)
     call cpu_time(tlock1)
     tlock = tlock + (tlock1 - tlock0)
     !
@@ -1071,7 +1069,7 @@ CONTAINS
   !
   !
   !
-  SUBROUTINE lock_epairs(kdim, nbnd, w, kdimx, tol, nact, act_idx)
+  SUBROUTINE lock_epairs(kdim, nbnd, btype, w, kdimx, tol, nact, act_idx)
      !
      ! Lock converged eigenpairs: detect "active" columns of w
      ! by checking if each column has norm greater than tol.
@@ -1081,7 +1079,7 @@ CONTAINS
      !
      ! ... I/O variables
      !
-     INTEGER,     INTENT (IN) :: kdim, kdimx, nbnd
+     INTEGER,     INTENT (IN) :: kdim, kdimx, nbnd, btype(nbnd)
      COMPLEX(DP), INTENT (IN) :: w(kdimx,nbnd)
      REAL(DP),    INTENT (IN) :: tol
      INTEGER,     INTENT(OUT) :: nact, act_idx(nbnd)
@@ -1089,7 +1087,7 @@ CONTAINS
      ! ... local variables
      !
      INTEGER         :: j
-     REAL(DP)        :: rnrm_store(nbnd)
+     REAL(DP)        :: rnrm_store(nbnd), band_tollerance 
      REAL(DP), EXTERNAL :: DDOT
 
      !
@@ -1108,6 +1106,12 @@ CONTAINS
      !
      DO j = 1, nbnd
         !
+        if ( btype(j) == 0 ) then
+             band_tollerance = max(2.5*tol,1.d-3)
+        else
+             band_tollerance = tol
+        end if
+        !
         rnrm_store(j) = SQRT( rnrm_store(j) )
         !
         IF ( (print_info >= 2) .AND. (iter > 1) )  THEN
@@ -1115,7 +1119,7 @@ CONTAINS
                       j, e(j), rnrm_store(j)
         END IF
         !
-        IF ( rnrm_store(j) > tol ) THEN
+        IF ( rnrm_store(j) > band_tollerance ) THEN
            nact = nact + 1
            act_idx(nact) = j
         END IF
