@@ -62,6 +62,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE becmod,               ONLY : bec_type, becp, calbec
   USE lr_exx_kernel
   USE dv_of_drho_lr
+  USE funct,                ONLY : start_exx, stop_exx
   !
   IMPLICIT NONE
   !
@@ -529,9 +530,15 @@ CONTAINS
     ! The kinetic energy g2kin was already computed when
     ! calling the routine lr_solve_e.
     !
+    ! vexx is already computed in lr_exx_kernel
+    !
+    IF (lr_exx) CALL stop_exx()
+    !
     ! Compute sevc1_new = H*evc1
     !
     CALL h_psi(npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
+    !
+    IF (lr_exx) CALL start_exx()
     !
     ! Compute spsi1 = S*evc1 
     !

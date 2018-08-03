@@ -6,6 +6,7 @@ include ../../make.inc
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../KS_Solvers/CG \
+          $(MOD_FLAG)../../KS_Solvers/PPCG \
 	  $(MOD_FLAG)../../KS_Solvers/Davidson \
           $(MOD_FLAG)../pw4gww
 
@@ -46,7 +47,8 @@ vcprim.o
 
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
-         ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+         ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/Davidson/libdavid.a \
+         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
 LIBMIN= ../minpack/minpacklib.a
 

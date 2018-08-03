@@ -30,7 +30,7 @@ subroutine solve_e2
   USE wavefunctions,  ONLY: evc
   USE control_ph, ONLY : convt, nmix_ph, alpha_mix, tr2_ph, &
                          niter_ph, rec_code, flmixdpot, rec_code_read
-  USE units_ph,   ONLY : lrwfc, iuwfc
+  USE units_lr,   ONLY : lrwfc, iuwfc
   USE ramanm,     ONLY : lrba2, iuba2, lrd2w, iud2w
   USE recover_mod, ONLY : read_rec, write_rec
 

@@ -1220,8 +1220,9 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       Hubbard_J(i,ityp)
+   Variable:       Hubbard_J(i,ityp), (i,ityp)=(1,1) ... (3,ntyp)
    
+   Type:           REAL
    Default:        0.D0 for all species
    Description:    Hubbard_J(i,ityp): J parameters (eV) for species ityp,
                    used in DFT+U calculations (only for "lda_plus_u_kind"=1)
@@ -1234,16 +1235,19 @@ NAMELIST: &SYSTEM
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
-   Variable:       starting_ns_eigenvalue(m,ispin,I)
+   Variable:       starting_ns_eigenvalue(m,ispin,ityp), (m,ispin,ityp)=(1,1,1) ... (2*lmax+1,nspin or npol,ntyp)
    
    Type:           REAL
    Default:        -1.d0 that means NOT SET
    Description:    In the first iteration of an DFT+U run it overwrites
                    the m-th eigenvalue of the ns occupation matrix for the
-                   ispin component of atomic species I. Leave unchanged
-                   eigenvalues that are not set. This is useful to suggest
-                   the desired orbital occupations when the default choice
-                   takes another path.
+                   ispin component of atomic species ityp.
+                   For the noncolin case the ispin index runs up to npol.
+                   The value lmax  is given by the maximum angular momentum
+                   number to which the Hubbard U is applied.
+                   Leave unchanged eigenvalues that are not set.
+                   This is useful to suggest the desired orbital occupations
+                   when the default choice takes another path.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -3285,4 +3289,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Fri Jul 06 17:20:04 CEST 2018
+This file has been created by helpdoc utility on Mon Jul 23 13:55:31 CEST 2018
