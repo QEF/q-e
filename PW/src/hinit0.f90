@@ -78,8 +78,10 @@ SUBROUTINE hinit0()
   CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
                    dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
   ! sync duplicated version
+#if defined(__CUDA)
   CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
   CALL using_eigts1_d(0); CALL using_eigts2_d(0); CALL using_eigts3_d(0);
+#endif
   !
   ! these routines can be used to patch quantities that are dependent
   ! on the ions and cell parameters

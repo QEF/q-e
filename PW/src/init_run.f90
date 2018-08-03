@@ -75,11 +75,13 @@ SUBROUTINE init_run()
      call export_gstart_2_cg(gstart); call export_gstart_2_davidson(gstart)
   END IF
 
+#if defined(__CUDA)
   ! All these variables are actually set by ggen which has intent out
   CALL using_mill(2); CALL using_mill_d(0); ! updates mill indices,
   CALL using_g(2);    CALL using_g_d(0);    ! g and gg that are used almost only after
   CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
                                             ! This is a trick to avoid checking for sync everywhere.
+#endif
   !
   IF (do_comp_esm) CALL esm_init()
   !

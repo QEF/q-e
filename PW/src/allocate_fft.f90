@@ -72,15 +72,17 @@ SUBROUTINE allocate_fft
   ALLOCATE (rhog_core( ngm ) )
   ALLOCATE (psic( dfftp%nnr))
   ALLOCATE (vrs( dfftp%nnr, nspin))
+#if defined(__CUDA)
   CALL using_vrs(2)
   CALL using_psic(2); CALL using_psic_d(0)
-
+#endif
   IF (noncolin) ALLOCATE (psic_nc( dfftp%nnr, npol))
+#if defined(__CUDA)
   IF (noncolin) THEN
      CALL using_psic_nc(2)
      CALL using_psic_nc_d(0)
   END IF
-
+#endif
   IF ( ( (report.ne.0).or.(i_cons.ne.0) ) .and. (noncolin.and.domag) &
                       .or. (i_cons.eq.1) .or. nspin==2 ) THEN
 !

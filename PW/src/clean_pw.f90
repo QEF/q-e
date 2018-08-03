@@ -69,10 +69,9 @@ SUBROUTINE clean_pw( lflag )
   USE dftd3_qe,             ONLY : dftd3_clean
   !
   USE wavefunctions_gpum, ONLY : deallocate_wavefunctions_gpu
-  USE wvfct_gpum,                ONLY : using_et, using_et_d
-  USE wvfct_gpum,                ONLY : using_g2kin, using_g2kin_d
+  USE wvfct_gpum,                ONLY : deallocate_wvfct_gpu !et
   USE gvect_gpum,                ONLY : deallocate_gvect_gpu !using_g, using_gg, using_g_d, using_gg_d
-  USE scf_gpum,                  ONLY : using_vrs, using_vrs_d
+  USE scf_gpum,                  ONLY : deallocate_scf_gpu
   USE uspp_gpum,                 ONLY : deallocate_uspp_gpu
   USE us_gpum,                   ONLY : deallocate_us_gpu
   USE spin_orb_gpum,             ONLY : deallocate_spin_orb_gpu
@@ -147,7 +146,8 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( psic ) )       DEALLOCATE( psic )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
   IF ( ALLOCATED( vrs ) )        DEALLOCATE( vrs )
-  CALL using_vrs(2); CALL using_vrs_d(2); ! Trick to deallocate
+  CALL deallocate_scf_gpu()
+
   if (spline_ps) then
     IF ( ALLOCATED( tab_d2y) )     DEALLOCATE( tab_d2y )
   endif
@@ -165,7 +165,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
-  CALL using_g2kin(2) ;     CALL using_g2kin_d(2)
+  CALL deallocate_wvfct_gpu()
   IF ( ALLOCATED( qrad ) )       DEALLOCATE( qrad )
   IF ( ALLOCATED( tab ) )        DEALLOCATE( tab )
   IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
@@ -185,7 +185,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in init_run.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
-  CALL using_et(2); CALL using_et_d(2);
+  ! cleaned above with deallocate_wvfct_gpu
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
   IF ( ALLOCATED( btype ) )      DEALLOCATE( btype )
   !

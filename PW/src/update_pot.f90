@@ -428,9 +428,11 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      !
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
                       dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
+#if defined(__CUDA)
      ! sync duplicated version
      CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
      CALL using_eigts1_d(0); CALL using_eigts2_d(0); CALL using_eigts3_d(0);
+#endif
      !
      ! ... new charge density from extrapolated wfcs
      !
@@ -559,9 +561,11 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      !
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
                       dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
+#if defined(__CUDA)
      ! sync duplicated version
      CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
      CALL using_eigts1_d(0); CALL using_eigts2_d(0); CALL using_eigts3_d(0);
+#endif
      !
      CALL set_rhoc()
      !

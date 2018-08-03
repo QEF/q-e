@@ -437,7 +437,7 @@ subroutine init_us_1
 
   deallocate (besr)
   deallocate (aux)
-
+#if defined (__CUDA)
   CALL using_tab(2)
   IF (lmaxq > 0) CALL using_qrad(2)
   CALL using_indv(2); CALL using_indv_d(0) ! trick to update immediately
@@ -454,7 +454,7 @@ subroutine init_us_1
   ELSE
       CALL using_dvan(2) ; CALL using_dvan_d(0)
   END IF
-
+#endif
   call stop_clock ('init_us_1')
   return
 end subroutine init_us_1

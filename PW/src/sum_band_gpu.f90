@@ -972,6 +972,9 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
 #if defined(__CUDA)
   USE cudafor
   USE cublas
+#else
+#define cublasZgemm zgemm
+#define cublasDgemm dgemm
 #endif
   USE kinds,         ONLY : DP
   USE becmod,        ONLY : becp, calbec, allocate_bec_type

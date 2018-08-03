@@ -74,8 +74,11 @@ subroutine scale_h
   enddo
 
   CALL using_g(1); CALL using_gg(1)       ! g and gg are used almost only after
-  CALL using_g_d(0); CALL using_gg_d(0) ! a single initialization.
-  !                                                   This is a trick to avoid checking for sync everywhere.
+#if defined(__CUDA)
+  ! the preprocessor directive is needed to avoid touching duplicated data in CPU only sompilations
+  CALL using_g_d(0); CALL using_gg_d(0) ! This is a trick to avoid checking for sync everywhere.
+  !
+#endif
   CALL mp_max (gg_max, intra_bgrp_comm)
 
   if(nqxq < int(sqrt(gg_max)/dq)+4) then

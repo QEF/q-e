@@ -43,6 +43,8 @@ SUBROUTINE addusdens_g_gpu(rho)
 #if defined(__CUDA)
   USE cudafor
   USE cublas
+#else
+#define cublasDgemm Dgemm
 #endif
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
