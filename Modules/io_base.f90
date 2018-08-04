@@ -777,7 +777,7 @@ MODULE io_base
             CALL qeh5_close ( h5dset_rho_g )  
 #else 
             READ (iun, iostat=ierr) rho_g(1:ngm_g_)
-            #endif
+#endif
             IF ( ngm_g > ngm_g_) rho_g(ngm_g_+1:ngm_g) = cmplx(0.d0,0.d0, KIND = DP) 
          END IF
          CALL mp_bcast( ierr, root_in_group, intra_group_comm )
