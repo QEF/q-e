@@ -904,6 +904,7 @@ MODULE io_base
             END DO 
             ig = 1 
             minus_g_file = minus_g(ig) 
+            igloop: DO 
             DO jg = 1, ngm_g 
                 if ( mill_g (1,jg) == minus_g_file(1) .and. &
                      mill_g (2,jg) == minus_g_file(2) .and. &
@@ -913,8 +914,9 @@ MODULE io_base
                   ig = ig + 1 
                   if ( ig .le. ngm_g_file) minus_g_file = minus_g(ig) 
                end if 
-               if ( ig .GT. ngm_g_file ) EXIT               
+               if ( ig .GT. ngm_g_file ) EXIT igloop               
             END DO 
+            END DO igloop 
          END IF
       ENDIF
         
