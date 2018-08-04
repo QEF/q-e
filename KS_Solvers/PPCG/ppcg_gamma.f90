@@ -1655,7 +1655,7 @@ nguard = 0 ! 24 ! 50
   IF (present(act_idx) ) THEN
      !$omp parallel do collapse(2)
      DO i=1, nact
-        DO j =1, nblock
+        DO j=1, nblock
            array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), act_idx( i ) ) 
         ENDDO
      ENDDO
@@ -1663,7 +1663,7 @@ nguard = 0 ! 24 ! 50
   ELSE
      !$omp parallel do collapse(2)
      DO i=1, nact
-        DO j =1, nblock
+        DO j=1, nblock
            array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) 
         ENDDO
      ENDDO
