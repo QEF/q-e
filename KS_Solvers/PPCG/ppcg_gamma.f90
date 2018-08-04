@@ -1636,14 +1636,12 @@ nguard = 0 ! 24 ! 50
   INTEGER, INTENT(IN), OPTIONAL :: act_idx( * )
   LOGICAL, INTENT(IN), OPTIONAL :: bgrp_root_only
   !
-  INTEGER, PARAMETER :: blocksize = 256
-  INTEGER :: numblock
+  INTEGER, PARAMETER :: blocksz = 256
+  INTEGER :: nblock
 
-  INTEGER :: i, j, k
+  INTEGER :: i, j
   !
   IF (kdimx <=0 .OR. nact<= 0) RETURN
-  !
-  numblock = (kdimx - 1)/blocksize  + 1
   !
   IF (present(bgrp_root_only) ) THEN
      IF (bgrp_root_only .AND. ( my_bgrp_id /= root_bgrp_id ) ) THEN
@@ -1652,19 +1650,21 @@ nguard = 0 ! 24 ! 50
      END IF
   END IF
 
+  nblock = (kdimx - 1)/blocksz  + 1
+
   IF (present(act_idx) ) THEN
      !$omp parallel do collapse(2)
      DO i=1, nact
-        DO k=1, kdimx
-           array_out( k, i ) = array_in( k, act_idx( i ) ) 
+        DO j =1, nblock
+           array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), act_idx( i ) ) 
         ENDDO
      ENDDO
      !$omp end parallel do
   ELSE
      !$omp parallel do collapse(2)
      DO i=1, nact
-        DO k=1, kdimx
-           array_out( k, i ) = array_in( k, i ) 
+        DO j =1, nblock
+           array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) 
         ENDDO
      ENDDO
      !$omp end parallel do
