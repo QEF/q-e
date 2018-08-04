@@ -194,13 +194,13 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
      !
      ! ... apply the diagonal preconditioner
      !
-     !$omp paralled do collapse(2)
+     !$omp parallel do collapse(2)
      DO j = 1, nact
      do ipol=0,npol-1
         w(1+npwx*ipol:npw+npwx*ipol, act_idx(j)) = w(1+npwx*ipol:npw+npwx*ipol,act_idx(j)) / precondition(1:npw)
      end do
      END DO
-     !$omp end paralled do
+     !$omp end parallel do
      !
 !     buffer(:,1:nact) = w(:,act_idx(1:nact)) 
      call threaded_assign( buffer, w, kdimx, nact, act_idx )
