@@ -98,17 +98,11 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
 !
   print_info = 0 ! 3 
   sbsize3 = sbsize*3
-  if (npol == 1) then
-     kdim  = npw
-     kdimx = npwx
-     clean = .false.
-  else if (npol == 2 ) then
-     kdim  = npwx*(npol-1) + npw
-     kdimx = npwx*npol
-     clean = (npw < npwx)
-  else
-     CALL errore( 'ppcg ',' wrong npol value: errcode = 1+abs(npol) ', 1+abs(npol) )
-  endif
+  kdim  = npwx*(npol-1) + npw
+  kdimx = npwx*npol
+  clean = (npw < npwx)
+  if (npol> 2) CALL errore( 'ppcg ',' wrong npol value: npol > 2 ', npol )
+  if (npol<=0) CALL errore( 'ppcg ',' non positive npol value: errcode = 1+abs(npol) ', 1+abs(npol) )
   !
   nact      =  nbnd
   nact_old  =  nbnd
@@ -201,8 +195,8 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
      END DO
      !$omp end parallel do
      !
-     call threaded_assign( buffer, w, kdimx, nact, act_idx )
      call start_clock('ppcg:zgemm')
+     call threaded_assign( buffer, w, kdimx, nact, act_idx )
      G(1:nbnd,1:nact) = C_ZERO
      CALL divide(inter_bgrp_comm,nbnd,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbnd,n_start,n_end
      if (overlap) then
@@ -651,7 +645,6 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
          hpsi(:,act_idx(1:nact)) = buffer(:,1:nact)
          !
          if (overlap) then
-            buffer(:,1:nact) = spsi(:,act_idx(1:nact))
             call threaded_assign( buffer,  spsi, kdimx, nact, act_idx )
             !
             call start_clock('ppcg:ZTRSM')
@@ -1619,9 +1612,14 @@ nguard = 0 ! 24 ! 50
   INTEGER, INTENT(IN), OPTIONAL :: act_idx( * )
   LOGICAL, INTENT(IN), OPTIONAL :: bgrp_root_only
   !
-  INTEGER :: i,k
+  INTEGER, PARAMETER :: blocksize = 256
+  INTEGER :: numblock
+
+  INTEGER :: i, j, k
   !
   IF (kdimx <=0 .OR. nact<= 0) RETURN
+  !
+  numblock = (kdimx - 1)/blocksize  + 1
   !
   IF (present(bgrp_root_only) ) THEN
      IF (bgrp_root_only .AND. ( my_bgrp_id /= root_bgrp_id ) ) THEN
