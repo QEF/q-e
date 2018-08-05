@@ -8,8 +8,6 @@ MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../
 PPCG = \
 ppcg_gamma.o \
 ppcg_k.o \
-export_gstart_2_ppcg.o \
-set_mpi_comm_4_ppcg.o \
 ppcg_param.o
 
 all : libppcg.a

@@ -100,7 +100,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   sbsize3 = sbsize*3
   kdim  = npwx*(npol-1) + npw
   kdimx = npwx*npol
-  clean = (npw < npwx)
+  clean = (npw < npwx) .AND. ( npol == 2 )
   if (npol> 2) CALL errore( 'ppcg ',' wrong npol value: npol > 2 ', npol )
   if (npol<=0) CALL errore( 'ppcg ',' non positive npol value: errcode = 1+abs(npol) ', 1+abs(npol) )
   !

@@ -67,7 +67,7 @@ SUBROUTINE init_run()
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
   if (gamma_only) THEN
      ! ... Solvers need to know gstart
-     call export_gstart_2_cg(gstart); call export_gstart_2_ppcg(gstart); call export_gstart_2_davidson(gstart)
+     call export_gstart_2_solvers(gstart)
   END IF
   !
   IF (do_comp_esm) CALL esm_init()
