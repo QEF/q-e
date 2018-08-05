@@ -172,11 +172,11 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
   ! Print initial info ...
   IF (print_info >= 1)  THEN
      WRITE(stdout, '("Ethr: ",1pD9.2,", npw: ", I10, ", nbnd: ", I10, " , "   &
-                "maxter: ",I5, ", sbsize:  ", I10,", nsb: ", I10 ,", nact: ", I10, ", trtol: ", 1pD9.2 )'),  &
+                "maxter: ",I5, ", sbsize:  ", I10,", nsb: ", I10 ,", nact: ", I10, ", trtol: ", 1pD9.2 )')  &
                 ethr, npw, nbnd, maxter, sbsize, nsb, nact, trtol
      IF (print_info == 3) THEN
         CALL print_rnrm
-        WRITE(stdout,'("Res. norm:  ", 1pD9.2)'), res_array(iter)
+        WRITE(stdout,'("Res. norm:  ", 1pD9.2)') res_array(iter)
      END IF
      CALL flush( stdout )
   END IF
@@ -551,7 +551,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
        CALL extract_epairs_dmat(kdim, nbnd, kdimx, e, psi, hpsi, spsi )
        call stop_clock('ppcg:RR')
        !
-       IF (print_info >= 2) WRITE(stdout, *), 'RR has been invoked.' ; !CALL flush( stdout )
+       IF (print_info >= 2) WRITE(stdout, *) 'RR has been invoked.' ; !CALL flush( stdout )
        !
        ! ... Compute the new residual vector block by evaluating
        !     residuals for individual eigenpairs in psi and e
@@ -699,7 +699,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
        WRITE(stdout, '("iter: ", I5, " nact = ", I5, ", trdif = ", 1pD9.2, ", trtol = ", 1pD9.2 )') iter, nact, trdif, trtol
        IF (print_info == 3) THEN
           CALL print_rnrm
-          WRITE(stdout,'("Res. norm:  ", 1pD9.2)'), res_array(iter)
+          WRITE(stdout,'("Res. norm:  ", 1pD9.2)') res_array(iter)
        END IF
        CALL flush( stdout )
     END IF
@@ -751,7 +751,7 @@ SUBROUTINE ppcg_k( h_psi, s_psi, overlap, precondition, &
  !
  IF (print_info >= 1) THEN
     WRITE(stdout, *) '-----------PPCG result summary ...  ----------------'
-    WRITE(stdout, '("avg_iter: ", f6.2,  ", notconv: ", I5)'), avg_iter, notconv
+    WRITE(stdout, '("avg_iter: ", f6.2,  ", notconv: ", I5)') avg_iter, notconv
     CALL flush( stdout )
  END IF
  !
@@ -1028,7 +1028,7 @@ CONTAINS
         rnrm_store(j) = SQRT( rnrm_store(j) )
         !
         IF ( (print_info >= 2) .AND. (iter > 1) )  THEN
-          write(stdout, '( "Eigenvalue ", I5, " = ", 1pe12.4, ". Residual norm = ",  1pe9.2)'), &
+          write(stdout, '( "Eigenvalue ", I5, " = ", 1pe12.4, ". Residual norm = ",  1pe9.2)') &
                       j, e(j), rnrm_store(j)
         END IF
         !
