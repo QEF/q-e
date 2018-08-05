@@ -115,7 +115,7 @@ gipaw : pw
 d3q : ph
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-ld1 : bindir libs mods libdavid libcg
+ld1 : bindir libs mods libdavid libcg libppcg
 	if test -d atomic ; then \
 	( cd atomic ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
