@@ -1,4 +1,3 @@
-export_gstart_2_ppcg.o : ../../UtilXlib/mp_bands_util.o
 ppcg_gamma.o : ../../LAXlib/la_types.o
 ppcg_gamma.o : ../../LAXlib/mp_diag.o
 ppcg_gamma.o : ../../LAXlib/ptoolkit.o
@@ -25,7 +24,3 @@ rotate_wfc_k.o : ../../LAXlib/ptoolkit.o
 rotate_wfc_k.o : ../../UtilXlib/mp.o
 rotate_wfc_k.o : ../../UtilXlib/mp_bands_util.o
 rotate_wfc_k.o : ppcg_param.o
-set_mpi_comm_4_ppcg.o : ../../LAXlib/mp_diag.o
-set_mpi_comm_4_ppcg.o : ../../UtilXlib/mp.o
-set_mpi_comm_4_ppcg.o : ../../UtilXlib/mp_bands_util.o
-set_mpi_comm_4_ppcg.o : ppcg_param.o
