@@ -1,13 +1,22 @@
-Incompatible changes in development version:
-  * Module "wavefunctions_module" renamed "wavefunctions"
+New in development version:
+  * XDM now works also for USPP and norm-conserving PP
 
 Problems fixed in development version:
-  * The restart option in turboEELS (turbo_eels.x) with ultrasoft pseudopotentials
-    was not working.
+  * Printout of wall time was sometimes incorrect (courtesy Daniel Pinkal)
+  * The restart option in turboEELS (turbo_eels.x) with ultrasoft
+    pseudopotentials was not working.
+  * bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
+
+Incompatible changes in development version:
+  * Several routines moved from PHonon/PH to LR_Modules
+  * Module "wavefunctions_module" renamed "wavefunctions"
+
+Known problems in development version:
+  * (none yet)
 
 New in 6.3 version:
-  * New implementation, using  a more robust algorithm for the Wigner-Size construction in  EPW. 
-    (Samuel Ponce and Carla Verdi) 
+  * New implementation, using  a more robust algorithm for the Wigner-Seitz 
+    construction in EPW (Samuel Ponce and Carla Verdi) 
   * New application for optical spectra computation using optimized basis sets 
    (Paolo Umari, Nicola Marzari and Giovanni Prandini).  
 
@@ -33,7 +42,7 @@ New in 6.3 version:
          Support for exclude bands
          Calculation of velocity beyond the local approximation (experimental)
 
-Problems fixed in development version:
+Problems fixed in 6.3 version:
 
   * Stress with hybrid functionals and Gamma point was grossly wrong
     (5ed148646)
