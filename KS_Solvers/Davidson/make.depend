@@ -4,14 +4,9 @@ cegterg.o : ../../LAXlib/ptoolkit.o
 cegterg.o : ../../UtilXlib/mp.o
 cegterg.o : ../../UtilXlib/mp_bands_util.o
 cegterg.o : david_param.o
-export_gstart_2_davidson.o : ../../UtilXlib/mp_bands_util.o
 regterg.o : ../../LAXlib/la_types.o
 regterg.o : ../../LAXlib/mp_diag.o
 regterg.o : ../../LAXlib/ptoolkit.o
 regterg.o : ../../UtilXlib/mp.o
 regterg.o : ../../UtilXlib/mp_bands_util.o
 regterg.o : david_param.o
-set_mpi_comm_4_davidson.o : ../../LAXlib/mp_diag.o
-set_mpi_comm_4_davidson.o : ../../UtilXlib/mp.o
-set_mpi_comm_4_davidson.o : ../../UtilXlib/mp_bands_util.o
-set_mpi_comm_4_davidson.o : david_param.o
