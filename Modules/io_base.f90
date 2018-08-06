@@ -853,7 +853,7 @@ MODULE io_base
       INTEGER :: nproc_in_group
       INTEGER, ALLOCATABLE :: mill_g(:,:)
       
-      INTEGER :: ig, jg, minus_g_file(3), startjg, contaloop 
+      INTEGER :: ig, jg, minus_g_file(3), startjg 
       IF ( .NOT. PRESENT (this_run_is_gamma_only) ) RETURN 
       IF ( this_run_is_gamma_only) THEN 
          call infomsg('read_rhog','Conversion: K charge Gamma charge') 
@@ -905,7 +905,6 @@ MODULE io_base
             ig = 1 
             minus_g_file = minus_g(ig) 
             startjg = 1 
-            contaloop = 0 
             igloop: DO 
             DO jg = startjg, ngm_g  
                 if ( mill_g (1,jg) == minus_g_file(1) .and. &
@@ -918,7 +917,6 @@ MODULE io_base
                end if 
                if ( ig .GT. ngm_g_file ) EXIT igloop               
             END DO 
-            contaloop = contaloop + (ngm_g_file-startjg) 
             startjg = update_startjg(ig, igtongl(startjg))
             END DO igloop 
          END IF
