@@ -611,10 +611,10 @@ CONTAINS
              CALL xml_addAttribute (u, 'jchi', upf%jchi(nw))
           END IF
           CALL xml_addAttribute(u, 'occupation',    upf%oc(nw))
-          CALL xml_addAttribute(u, 'n',             upf%nchi(nw))
-          CALL xml_addAttribute(u, 'pseudo_energy', upf%epseu(nw))
-          CALL xml_addAttribute(u, 'cutoff_radius', upf%rcut_chi(nw))
-          CALL xml_addAttribute(u, 'ultrasoft_cutoff_radius', upf%rcutus_chi(nw))
+          IF ( upf%nchi(nw) .GT. upf%lchi(nw) ) CALL xml_addAttribute(u, 'n', upf%nchi(nw))
+          IF ( upf%epseu(nw) .GT. 0.0_DP )      CALL xml_addAttribute(u, 'pseudo_energy', upf%epseu(nw))
+          IF ( upf%rcut_chi(nw) .GT. 0.0_DP)    CALL xml_addAttribute(u, 'cutoff_radius', upf%rcut_chi(nw))
+          IF ( upf%rcutus_chi(nw) .GT. 0.0_DP)  CALL xml_addAttribute(u, 'ultrasoft_cutoff_radius', upf%rcutus_chi(nw))
           DO irow =1, upf%mesh, 4
              CALL xml_addNewLine(u)
              CALL xml_addCharacters(u, upf%chi(irow:min(irow-1+4,upf%mesh),nw) , fmt = 's16')
