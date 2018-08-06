@@ -836,7 +836,7 @@ MODULE io_base
    ! from the k case to the gamma-only one
    !
       USE io_global,     ONLY : stdout
-      USE gvect,         ONLY : ngm, ngm_g, ig_l2g, mill
+      USE gvect,         ONLY : ngm, ngm_g, ig_l2g, mill, igtongl, ngl, gl
       USE mp,            ONLY : mp_size,mp_rank
       USE mp_wave,       ONLY : mergewf, mergekg
      
@@ -853,7 +853,7 @@ MODULE io_base
       INTEGER :: nproc_in_group
       INTEGER, ALLOCATABLE :: mill_g(:,:)
       
-      INTEGER :: ig, jg, minus_g_file(3) 
+      INTEGER :: ig, jg, minus_g_file(3), startjg, contaloop 
       IF ( .NOT. PRESENT (this_run_is_gamma_only) ) RETURN 
       IF ( this_run_is_gamma_only) THEN 
          call infomsg('read_rhog','Conversion: K charge Gamma charge') 
@@ -904,8 +904,10 @@ MODULE io_base
             END DO 
             ig = 1 
             minus_g_file = minus_g(ig) 
+            startjg = 1 
+            contaloop = 0 
             igloop: DO 
-            DO jg = 1, ngm_g 
+            DO jg = startjg, ngm_g  
                 if ( mill_g (1,jg) == minus_g_file(1) .and. &
                      mill_g (2,jg) == minus_g_file(2) .and. &
                      mill_g (3,jg) == minus_g_file(3)  )  then 
@@ -916,6 +918,8 @@ MODULE io_base
                end if 
                if ( ig .GT. ngm_g_file ) EXIT igloop               
             END DO 
+            contaloop = contaloop + (ngm_g_file-startjg) 
+            startjg = update_startjg(ig, igtongl(startjg))
             END DO igloop 
          END IF
       ENDIF
@@ -938,6 +942,26 @@ MODULE io_base
                minus_mill = mill_g_file(:,imill) 
             endif 
          end function minus_g 
+
+
+         function  update_startjg(igsearching, startigl)  result(start) 
+            USE cell_base,   ONLY: bg 
+            implicit none
+            integer               :: start
+            integer,intent(in)    :: igsearching, startigl 
+            integer                 :: igl
+            real(8)                 :: g(3), gg 
+            
+            g = bg(:,1)*mill_g_file(1,igsearching)+bg(:,2)*mill_g_file(2,igsearching) &
+              + bg(:,3)*mill_g_file(3,igsearching) 
+            gg = (g(1)*g(1)+g(2)*g(2)+g(3)*g(3)) 
+            do igl = startigl, ngl 
+               if (abs(gg-gl(igl)) .lt. 1.d-6 ) exit 
+            end do 
+            do  start = startigl, ngm 
+               if ( igtongl(start) == igl) exit 
+            end do 
+         end function  update_startjg
     END SUBROUTINE charge_k_to_g
     !
   END MODULE io_base
