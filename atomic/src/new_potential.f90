@@ -116,7 +116,6 @@ subroutine new_potential &
      end do
      deallocate(dchi0)
   end if 
-  !
   ! latter correction
   !
   if (latt.ne.0) then
