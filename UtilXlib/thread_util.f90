@@ -20,16 +20,13 @@ SUBROUTINE threaded_memcpy(array, array_in, length)
   REAL(DP), INTENT(IN) :: array_in(length)
   INTEGER, INTENT(IN) :: length
   !
-  INTEGER, PARAMETER :: blocksz = 256
-  INTEGER :: i, nblock
+  INTEGER :: i
   !
   IF (length<=0) RETURN
-  
-  nblock = (length-1)/blocksz + 1
-  
+  !
   !$omp parallel do
-  DO i=1, nblock
-     array(1+(i-1)*blocksz:MIN(i*blocksz,length)) = array_in(1+(i-1)*blocksz:MIN(i*blocksz,length)) 
+  DO i=1, length
+     array(i) = array_in(i)
   ENDDO
   !$omp end parallel do
   !
@@ -45,16 +42,13 @@ SUBROUTINE threaded_barrier_memcpy(array, array_in, length)
   REAL(DP), INTENT(IN) :: array_in(length)
   INTEGER, INTENT(IN) :: length
   !
-  INTEGER, PARAMETER :: blocksz = 256
-  INTEGER :: i, nblock
+  INTEGER :: i
   !
   IF (length<=0) RETURN
-  
-  nblock = (length-1)/blocksz + 1
-  
+  !
   !$omp do
-  DO i=1, nblock
-     array(1+(i-1)*blocksz:MIN(i*blocksz,length)) = array_in(1+(i-1)*blocksz:MIN(i*blocksz,length)) 
+  DO i=1, length
+     array(i) = array_in(i)
   ENDDO
   !$omp end do
   !
@@ -70,16 +64,13 @@ SUBROUTINE threaded_nowait_memcpy(array, array_in, length)
   REAL(DP), INTENT(IN) :: array_in(length)
   INTEGER, INTENT(IN) :: length
   !
-  INTEGER, PARAMETER :: blocksz = 256
-  INTEGER :: i, nblock
+  INTEGER :: i
   !
   IF (length<=0) RETURN
-  
-  nblock = (length-1)/blocksz + 1
-  
+  !
   !$omp do
-  DO i=1, nblock
-     array(1+(i-1)*blocksz:MIN(i*blocksz,length)) = array_in(1+(i-1)*blocksz:MIN(i*blocksz,length)) 
+  DO i=1, length
+     array(i) = array_in(i)
   ENDDO
   !$omp end do nowait
   !
@@ -95,16 +86,13 @@ SUBROUTINE threaded_memset(array, val, length)
   REAL(DP), INTENT(IN) :: val
   INTEGER, INTENT(IN) :: length
   !
-  INTEGER, PARAMETER :: blocksz = 256
-  INTEGER :: i, nblock
+  INTEGER :: i
   !
   IF (length<=0) RETURN
-  
-  nblock = (length-1)/blocksz + 1
-  
+  !
   !$omp parallel do
-  DO i=1, nblock
-     array(1+(i-1)*blocksz:MIN(i*blocksz,length)) = val
+  DO i=1, length
+     array(i) = val
   ENDDO
   !$omp end parallel do
   !
@@ -120,16 +108,13 @@ SUBROUTINE threaded_barrier_memset(array, val, length)
   REAL(DP), INTENT(IN) :: val
   INTEGER, INTENT(IN) :: length
   !
-  INTEGER, PARAMETER :: blocksz = 256
-  INTEGER :: i, nblock
+  INTEGER :: i
   !
   IF (length<=0) RETURN
-  
-  nblock = (length-1)/blocksz + 1
-  
+  !
   !$omp do
-  DO i=1, nblock
-     array(1+(i-1)*blocksz:MIN(i*blocksz,length)) = val
+  DO i=1, length
+     array(i) = val
   ENDDO
   !$omp end do
   !
@@ -145,16 +130,13 @@ SUBROUTINE threaded_nowait_memset(array, val, length)
   REAL(DP), INTENT(IN) :: val
   INTEGER, INTENT(IN) :: length
   !
-  INTEGER, PARAMETER :: blocksz = 256
-  INTEGER :: i, nblock
+  INTEGER :: i
   !
   IF (length<=0) RETURN
-  
-  nblock = (length-1)/blocksz + 1
-  
+  !
   !$omp do
-  DO i=1, nblock
-     array(1+(i-1)*blocksz:MIN(i*blocksz,length)) = val
+  DO i=1, length
+     array(i) = val
   ENDDO
   !$omp end do nowait
   !
