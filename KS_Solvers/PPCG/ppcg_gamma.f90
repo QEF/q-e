@@ -87,9 +87,13 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
   LOGICAL :: force_repmat    ! = .TRUE. to force replication of the Gram matrices for Cholesky
                              ! Needed if the sizes of these  matrices become too small after locking
 
-   REAL                          :: res_array(maxter)
+  REAL                          :: res_array(maxter)
 
-   res_array     = 0.0
+  INTEGER, PARAMETER :: blocksz = 256 ! used to optimize some omp parallel do loops
+  INTEGER :: nblock
+  nblock = (npw -1) /blocksz + 1      ! used to optimize some omp parallel do loops
+
+  res_array     = 0.0
   !
   CALL start_clock( 'ppcg_gamma' )
   !
@@ -184,10 +188,12 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
      !
      ! ... apply the diagonal preconditioner
      !
-     !$omp parallel do
-     DO j = 1, nact
-        w(1:npw, act_idx(j)) = w(1:npw,act_idx(j)) / precondition(1:npw)
-     END DO
+     !$omp parallel do collapse(2)
+     DO j = 1, nact ; DO i=1,nblock
+        w(1+(i-1)*blocksz:MIN(i*blocksz,npw), act_idx(j)) = & 
+                w(1+(i-1)*blocksz:MIN(i*blocksz,npw), act_idx(j)) / &
+                      precondition(1+(i-1)*blocksz:MIN(i*blocksz,npw))
+     END DO ; END DO
      !$omp end parallel do
      !
      call start_clock('ppcg:dgemm')
@@ -567,19 +573,17 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
        !     residuals for individual eigenpairs in psi and e
        if (overlap) then
           !$omp parallel do collapse(2)
-          DO j = 1, nbnd
-             DO i = 1, npw
-                w( i, j ) = hpsi( i, j ) - spsi( i, j )*e( j )
-             END DO
-          END DO
+          DO j = 1, nbnd ; DO i=1,nblock
+             w( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) = hpsi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) &
+                                                 - spsi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j )*e( j )
+          END DO ; END DO
           !$omp end parallel do
        else
           !$omp parallel do collapse(2)
-          DO j = 1, nbnd
-             DO i = 1, npw
-                w( i, j ) = hpsi( i, j ) -  psi( i, j )*e( j )
-             END DO
-          END DO
+          DO j = 1, nbnd ; DO i=1,nblock
+             w( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) = hpsi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) &
+                                                 -  psi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j )*e( j )
+          END DO ; END DO
           !$omp end parallel do
        end if
        !
@@ -732,19 +736,17 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
     ! ... Compute residuals
     if (overlap) then
        !$omp parallel do collapse(2)
-       DO j = 1, nbnd
-          DO i = 1, npw
-             w( i, j ) = hpsi( i, j ) - spsi( i, j )*e( j )
-          END DO
-       END DO
+       DO j = 1, nbnd ; DO i=1,nblock
+          w( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) = hpsi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) &
+                                              - spsi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j )*e( j )
+       END DO ; END DO
        !$omp end parallel do
     else
        !$omp parallel do collapse(2)
-       DO j = 1, nbnd
-          DO i = 1, npw
-             w( i, j ) = hpsi( i, j ) -  psi( i, j )*e( j )
-          END DO
-       END DO
+       DO j = 1, nbnd ; DO i=1,nblock
+          w( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) = hpsi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) &
+                                              -  psi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j )*e( j )
+       END DO ; END DO
        !$omp end parallel do
     end if
     !
@@ -1654,19 +1656,15 @@ nguard = 0 ! 24 ! 50
 
   IF (present(act_idx) ) THEN
      !$omp parallel do collapse(2)
-     DO i=1, nact
-        DO j=1, nblock
-           array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), act_idx( i ) ) 
-        ENDDO
-     ENDDO
+     DO i=1, nact ; DO j=1,nblock
+        array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), act_idx( i ) ) 
+     ENDDO ; ENDDO
      !$omp end parallel do
   ELSE
      !$omp parallel do collapse(2)
-     DO i=1, nact
-        DO j=1, nblock
-           array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) 
-        ENDDO
-     ENDDO
+     DO i=1, nact ; DO j=1,nblock
+        array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) 
+     ENDDO ; ENDDO
      !$omp end parallel do
   END IF
   !
