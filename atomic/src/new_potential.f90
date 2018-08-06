@@ -22,7 +22,7 @@ subroutine new_potential &
   implicit none
   type(radial_grid_type),intent(in):: grid
   integer, intent(in) :: iflag
-  logical :: nlcc, gga, oep, meta, kli
+  logical :: nlcc, gga, oep, meta, kli_
   integer :: ndm,mesh,lsd,latt,i,is,nu, nspin, ierr
   real(DP):: rho(ndm,2),vxcp(2),vnew(ndm,2),vxt(ndm),vh(ndm), rhoc(ndm)
   real(DP):: zed,enne,rh(2),rhc, excp
@@ -38,7 +38,7 @@ subroutine new_potential &
   meta = dft_is_meta()
 
   oep = get_iexch().eq.4
-  kli = get_iexch().eq.10
+  kli_= get_iexch().eq.10
 
   nspin = 1
   if (lsd.eq.1) nspin = 2
@@ -133,7 +133,7 @@ subroutine new_potential &
      deallocate(dchi0)
   end if 
 
-  if(kli) then
+  if(kli_) then
       
       call compute_kli_potential(grid%mesh,vx)
       vnew(:, 1:nspin) = vnew(:, 1:nspin ) + vx(:,1:nspin)
