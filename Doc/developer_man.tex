@@ -602,6 +602,16 @@ prior to compilation of a2fmod.o - {\tt make} will take care of this.}
 resulting from many years of experiments on many different machines.
 Handle with care: what works for you may break other cases.
 
+{\bf BEWARE 2:} parallel make (\texttt{make -j N}) works only if all
+needed dependencies are in place. Note that parallel make does not 
+necessarily execute targets in the order they appear, e.g.: if you have
+\begin{verbatim}
+all : a b c d
+\end{verbatim}
+and "d" depends upon "a", that dependency must be explicitly present
+in the Makefiles, or else parallel make will not work (or will work 
+only erratically).
+
 \subsubsection{Preprocessing}
 
 \label{SubSec:CPP}
