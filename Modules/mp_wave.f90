@@ -254,7 +254,6 @@
 !
 
       igwx = MAXVAL( ig_l2g(1:ngwl) )
-      IF ( mpime == root ) size_pwt = SIZE(pwt) 
 
 #if defined __MPI
 
@@ -267,8 +266,8 @@
 
 #endif
 
-      IF ( mpime == root .AND. igwx > size_pwt ) &
-        CALL errore (' splitwf ',' wrong size for pwt', size_pwt )
+      IF ( mpime == root .AND. igwx > SIZE(pwt )) &
+        CALL errore (' splitwf ',' wrong size for pwt', SIZE(pwt) )
 
 #if defined __MPI
 
