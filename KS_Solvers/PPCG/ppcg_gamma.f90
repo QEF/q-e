@@ -133,7 +133,7 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
   !
   !     G = psi'hpsi
   call start_clock('ppcg:dgemm')
-  G = ZERO
+  call threaded_memset( G, ZERO, nbnd*nbnd ) ! G = ZERO
   CALL divide(inter_bgrp_comm,nbnd,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbnd,n_start,n_end
   if (n_start .le. n_end) &
   CALL DGEMM('T','N', nbnd, my_n, npw2, 2.D0, psi, npwx2, hpsi(1,n_start), npwx2, 0.D0, G(1,n_start), nbnd)
@@ -198,7 +198,7 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
      !
      call start_clock('ppcg:dgemm')
      call threaded_assign( buffer, w, npwx, nact, act_idx )
-     G(1:nbnd,1:nact) = ZERO
+     call threaded_memset( G, ZERO, nbnd*nact ) ! G(1:nbnd,1:nact) = ZERO
      CALL divide(inter_bgrp_comm,nbnd,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbnd,n_start,n_end
      if (overlap) then
         if (n_start .le. n_end) &
@@ -241,7 +241,7 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
      IF ( iter  /=  1 ) THEN
         !  G = spsi'p
         call start_clock('ppcg:dgemm')
-        G(1:nact,1:nact) = ZERO
+        call threaded_memset( G, ZERO, nbnd*nact ) ! G(1:nact,1:nact) = ZERO
         if (overlap) then
            call threaded_assign( buffer, spsi, npwx, nact, act_idx )
         else
@@ -539,24 +539,24 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
        idx(col_idx(1:l)) = 1 ! keep track of which columns this bgrp has acted on
      END DO  ! end 'separate RQ minimizations'
      ! set to zero the columns not assigned to this bgrp, inactive colums are assigned to root_bgrp
+     !omp parallel do
      do j=1,nbnd
         if (idx(j)==0) then
            psi (:,j) = C_ZERO ; hpsi (:,j) = C_ZERO ; p(:,j) = C_ZERO ; hp(:,j) = C_ZERO
+           if (overlap) then
+              spsi (:,j) = C_ZERO ; sp(:,j) = C_ZERO
+           end if
         end if
      end do
+     !omp end parallel do
      CALL mp_sum(psi ,inter_bgrp_comm)
      CALL mp_sum(hpsi,inter_bgrp_comm)
      CALL mp_sum(p ,inter_bgrp_comm)
      CALL mp_sum(hp,inter_bgrp_comm)
      if (overlap) then
-        do j=1,nbnd
-           if (idx(j)==0) then
-              spsi (:,j) = C_ZERO ;sp(:,j) = C_ZERO
-           end if
-        end do
         CALL mp_sum(spsi,inter_bgrp_comm)
         CALL mp_sum(sp,inter_bgrp_comm)
-    end if
+     end if
     !
     !
     ! ... Perform the RR procedure every rr_step
@@ -676,7 +676,7 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
        call threaded_assign( buffer,  psi, npwx, nact, act_idx )
        call threaded_assign( buffer1,  hpsi, npwx, nact, act_idx )
        call start_clock('ppcg:dgemm')
-       G = ZERO
+       call threaded_memset( G, ZERO, nbnd*nbnd ) ! G = ZERO
        CALL divide(inter_bgrp_comm,nact,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nact,n_start,n_end
        if (n_start .le. n_end) &
        CALL DGEMM('T','N', nact, my_n, npw2, 2.D0, buffer, npwx2, buffer1(1,n_start), npwx2, 0.D0, G(1,n_start), nbnd)
