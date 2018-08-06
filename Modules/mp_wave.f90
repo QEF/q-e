@@ -243,7 +243,7 @@
       INTEGER, ALLOCATABLE :: ig_ip(:)
       COMPLEX(DP), ALLOCATABLE :: pw_ip(:)
 
-      INTEGER ierr, i, ngw_ip, ip, ngw_lmax, gid, igwx, itmp
+      INTEGER ierr, i, ngw_ip, ip, ngw_lmax, gid, igwx, itmp, size_pwt
 
 #if defined __MPI
       integer istatus(MPI_STATUS_SIZE)
@@ -266,8 +266,8 @@
 
 #endif
 
-      IF ( mpime == root .AND. igwx > SIZE( pwt ) ) &
-        CALL errore(' splitwf ',' wrong size for pwt ',SIZE(pwt) )
+      IF ( mpime == root .AND. igwx > SIZE(pwt )) &
+        CALL errore (' splitwf ',' wrong size for pwt', SIZE(pwt) )
 
 #if defined __MPI
 
@@ -285,7 +285,7 @@
             CALL MPI_RECV( ig_ip, ngw_lmax, MPI_INTEGER, (ip-1), IP, gid, istatus, IERR )
             CALL MPI_GET_COUNT(istatus, MPI_INTEGER, ngw_ip, ierr)
             DO i = 1, ngw_ip
-              pw_ip(i) = PWT(ig_ip(i))
+                  pw_ip(i) = PWT(ig_ip(i)) 
             END DO
             CALL MPI_SEND( pw_ip, ngw_ip, MPI_DOUBLE_COMPLEX, (ip-1), IP+NPROC, gid, IERR )
             DEALLOCATE(ig_ip)
@@ -294,7 +294,7 @@
         ELSE
           IF ( mpime == root ) THEN
             DO i = 1, ngwl
-              pw(i) = PWT(ig_l2g(i)) 
+                 pw(i) = PWT(ig_l2g(i))  
             END DO
           END IF
         END IF
@@ -304,7 +304,7 @@
 #elif ! defined __MPI
 
       DO I = 1, ngwl
-        pw(i) = pwt( ig_l2g(i) )
+           pw(i) = pwt( ig_l2g(i) ) 
       END DO
 
 #else
