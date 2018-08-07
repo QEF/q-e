@@ -33,7 +33,7 @@ subroutine solve_e
   USE wvfct,                 ONLY : nbnd, npwx, g2kin, et
   USE check_stop,            ONLY : check_stop_now
   USE buffers,               ONLY : get_buffer, save_buffer
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : upf, nhm
   USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
@@ -42,8 +42,8 @@ subroutine solve_e
   USE paw_onecenter,         ONLY : paw_dpotential
   USE paw_symmetry,          ONLY : paw_desymmetrize
 
-  USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, lrdrho, &
-                                    iudrho
+  USE units_ph,              ONLY : lrdwf, iudwf, lrdrho, iudrho
+  USE units_lr,              ONLY : iuwfc, lrwfc
   USE output,                ONLY : fildrho
   USE control_ph,            ONLY : ext_recover, rec_code, &
                                     lnoloc, convt, tr2_ph, nmix_ph, &

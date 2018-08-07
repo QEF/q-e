@@ -38,7 +38,7 @@ SUBROUTINE potinit()
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, v, vrs, kedtau
   USE funct,                ONLY : dft_is_meta
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns
@@ -235,7 +235,7 @@ SUBROUTINE potinit()
   !
   ! ... plugin contribution to local potential
   !
-  CALL plugin_scf_potential(rho,.FALSE.,-1.d0)
+  CALL plugin_scf_potential(rho,.FALSE.,-1.d0,vltot)
   !
   ! ... compute the potential and store it in v
   !

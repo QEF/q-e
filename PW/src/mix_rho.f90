@@ -331,7 +331,7 @@ SUBROUTINE approx_screening( drho )
   USE lsda_mod,      ONLY : nspin
   USE control_flags, ONLY : ngm0
   USE scf,           ONLY : mix_type
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   !
   IMPLICIT NONE  
   !
@@ -376,7 +376,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE constants,            ONLY : e2, pi, tpi, fpi, eps8, eps32
   USE cell_base,            ONLY : omega, tpiba2
   USE gvect,                ONLY : gg, ngm
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE klist,                ONLY : nelec
   USE lsda_mod,             ONLY : nspin
   USE control_flags,        ONLY : ngm0, gamma_only

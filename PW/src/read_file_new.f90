@@ -126,7 +126,7 @@ SUBROUTINE read_xml_file ( )
   USE gvecs,                ONLY : ngms, gcutms 
   USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga

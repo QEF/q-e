@@ -147,7 +147,7 @@ SUBROUTINE iosys()
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
   USE extrapolation, ONLY : pot_order, wfc_order
-  USE control_flags, ONLY : isolve, max_cg_iter, david, tr2, imix, gamma_only,&
+  USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, tr2, imix, gamma_only,&
                             nmix, iverbosity, smallmem, niter, &
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, twfcollect, &
@@ -264,7 +264,8 @@ SUBROUTINE iosys()
   USE input_parameters, ONLY : electron_maxstep, mixing_mode, mixing_beta, &
                                mixing_ndim, mixing_fixed_ns, conv_thr,     &
                                tqr, tq_smoothing, tbeta_smoothing,         &
-                               diago_thr_init, diago_cg_maxiter,           &
+                               diago_thr_init,                             &
+                               diago_cg_maxiter, diago_ppcg_maxiter,       &
                                diago_david_ndim, diagonalization,          &
                                diago_full_acc, startingwfc, startingpot,   &
                                real_space, scf_must_converge
@@ -932,15 +933,20 @@ SUBROUTINE iosys()
   ENDIF
   !
   SELECT CASE( trim( diagonalization ) )
+  CASE ( 'david', 'davidson' )
+     !
+     isolve = 0
+     david = diago_david_ndim
+     !
   CASE ( 'cg' )
      !
      isolve = 1
      max_cg_iter = diago_cg_maxiter
      !
-  CASE ( 'david', 'davidson' )
+  CASE ( 'ppcg' )
      !
-     isolve = 0
-     david = diago_david_ndim
+     isolve = 2
+     max_ppcg_iter = diago_ppcg_maxiter
      !
   CASE DEFAULT
      !
@@ -1440,8 +1446,6 @@ SUBROUTINE iosys()
   fcp_mdiis_size_ = fcp_mdiis_size
   fcp_mdiis_step_ = fcp_mdiis_step
   !
-  CALL plugin_read_input()
-  !
   ! ... read following cards
   !
 
@@ -1470,7 +1474,10 @@ SUBROUTINE iosys()
   !
   call cell_base_init ( ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
                         trd_ht, rd_ht, cell_units )
-
+  !
+  ! ... once input variables have been stored, read optional plugin input files
+  !
+  CALL plugin_read_input("PW")
   !
   ! ... Files (for compatibility) and directories
   !     This stuff must be done before calling read_config_from_file!
@@ -1606,8 +1613,8 @@ SUBROUTINE iosys()
   END IF
   IF ( lstres .AND. dft_is_hybrid() .AND. npool > 1 )  CALL errore('iosys', &
          'stress for hybrid functionals not available with pools', 1)
-  IF ( lmovecell.AND. dft_is_hybrid() ) CALL errore('iosys',&
-         'Variable cell and hybrid XC not tested',1)
+  IF ( lmovecell.AND. dft_is_hybrid() ) CALL infomsg('iosys',&
+         'Variable cell and hybrid XC little tested')
   !
   ! ... must be done AFTER dft is read from PP files and initialized
   ! ... or else the two following parameters will be overwritten

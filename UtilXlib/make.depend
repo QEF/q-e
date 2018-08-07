@@ -15,3 +15,4 @@ mp_base.o : data_buffer.o
 mp_base_gpu.o : parallel_include.o
 mp_base_gpu.o : util_param.o
 mp_base_gpu.o : data_buffer.o
+thread_util.o : util_param.o

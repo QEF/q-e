@@ -196,7 +196,7 @@ CONTAINS
  end subroutine assign_scf_to_mix_type
  !
  subroutine assign_mix_to_scf_type(rho_m, rho_s)
-   USE wavefunctions_module, ONLY : psic
+   USE wavefunctions, ONLY : psic
    USE control_flags,        ONLY : gamma_only
    IMPLICIT NONE
    TYPE (mix_type), INTENT(IN) :: rho_m
@@ -312,7 +312,7 @@ CONTAINS
  end subroutine mix_type_SCAL
  !
  subroutine high_frequency_mixing ( rhoin, input_rhout, alphamix )
-   USE wavefunctions_module, ONLY : psic
+   USE wavefunctions, ONLY : psic
    USE control_flags,        ONLY : gamma_only
  IMPLICIT NONE
    TYPE (scf_type), INTENT(INOUT)     :: rhoin

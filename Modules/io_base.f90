@@ -728,7 +728,7 @@ MODULE io_base
       IF ( nspin > nspin_ ) &
          CALL infomsg('read_rhog', 'some spin components not found')
       IF ( ngm_g < MAXVAL (ig_l2g(:)) ) &
-           CALL infomsg('read_rhog', 'some G-vectors are missing' )
+           CALL infomsg('read_rhog', 'some G-vectors are missing, zero-padding' )
       !
       ! ... if required and if there is a mismatch between input gamma tricks
       ! ... and gamma tricks read from file: allocate and read Miller indices
@@ -762,7 +762,7 @@ MODULE io_base
       ! ... of the charge density (one spin at the time to save memory)
       !
       IF ( ionode_in_group ) THEN
-         ALLOCATE( rho_g( ngm_g_ ) )
+         ALLOCATE( rho_g(MAX(ngm_g_,ngm_g)) )
       ELSE
          ALLOCATE( rho_g( 1 ) )
       END IF
@@ -778,6 +778,7 @@ MODULE io_base
 #else 
             READ (iun, iostat=ierr) rho_g(1:ngm_g_)
 #endif
+            IF ( ngm_g > ngm_g_) rho_g(ngm_g_+1:ngm_g) = cmplx(0.d0,0.d0, KIND = DP) 
          END IF
          CALL mp_bcast( ierr, root_in_group, intra_group_comm )
          IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
@@ -786,7 +787,7 @@ MODULE io_base
          ! ... Convert charge from full G-vector to half G-vector format
          !
          IF ( readmill ) CALL charge_k_to_g (ngm_g_, rho_g, mill_g, &
-              root_in_group,intra_group_comm)
+              root_in_group,intra_group_comm, gamma_only)
          !
          CALL splitwf( rhoaux, rho_g, ngm, ig_l2g, me_in_group, &
               nproc_in_group, root_in_group, intra_group_comm )
@@ -828,40 +829,46 @@ MODULE io_base
       !
     END SUBROUTINE read_rhog
     !
-    SUBROUTINE charge_k_to_g ( ngm_g_k, rho_g, mill_g_k, root_in_group, &
-         intra_group_comm )
+    SUBROUTINE charge_k_to_g ( ngm_g_file, rho_g, mill_g_file, root_in_group, &
+         intra_group_comm , this_run_is_gamma_only)
    !
    ! this routine reorders G-vectors for the charge density on global mesh
    ! from the k case to the gamma-only one
    !
       USE io_global,     ONLY : stdout
-      USE gvect,         ONLY : ngm, ngm_g, ig_l2g, mill
+      USE gvect,         ONLY : ngm, ngm_g, ig_l2g, mill, igtongl, ngl, gl
       USE mp,            ONLY : mp_size,mp_rank
       USE mp_wave,       ONLY : mergewf, mergekg
      
-      implicit none
+      IMPLICIT NONE
       INTEGER, INTENT(in) :: intra_group_comm,root_in_group
-      INTEGER, INTENT(in) :: ngm_g_k!relative to k case
-      INTEGER, INTENT(in) :: mill_g_k(:,:)
+      INTEGER, INTENT(in) :: ngm_g_file  
+      !! number of g vectors found in file 
+      INTEGER, INTENT(in) :: mill_g_file(:,:)
       COMPLEX(kind=DP), INTENT(inout) :: rho_g(:)!relative to k case  in input, gamma case in output
-       INTEGER                  :: me_in_group, npr
+      LOGICAL, OPTIONAL, INTENT(in) :: this_run_is_gamma_only 
+      INTEGER                  :: me_in_group, npr
       COMPLEX(kind=DP), ALLOCATABLE :: rho_aux(:)
       LOGICAL                  :: ionode_in_group
       INTEGER :: nproc_in_group
       INTEGER, ALLOCATABLE :: mill_g(:,:)
       
-      INTEGER :: ig, jg
-
-      write(stdout,*) 'Conversion: K charge Gamma charge'
+      INTEGER :: ig, jg, minus_g_file(3), startjg 
+      IF ( .NOT. PRESENT (this_run_is_gamma_only) ) RETURN 
+      IF ( this_run_is_gamma_only) THEN 
+         call infomsg('read_rhog','Conversion: K charge Gamma charge') 
+      ELSE 
+         call infomsg ('read_rhog', 'Conversion: Gamma charge to K charge') 
+      ENDIF 
 
       me_in_group     = mp_rank( intra_group_comm )
       nproc_in_group  = mp_size( intra_group_comm )
       ionode_in_group = ( me_in_group == root_in_group )
 
       IF(ionode_in_group) THEN
-         allocate(rho_aux(ngm_g_k))
+         allocate(rho_aux(MAX(ngm_g_file, ngm_g) ))
          allocate(mill_g(3,ngm_g))
-         rho_aux(1:ngm_g_k)=rho_g(1:ngm_g_k)
+         rho_aux(1:ngm_g_file)=rho_g(1:ngm_g_file)
       ELSE
          allocate(rho_aux(1))
          allocate(mill_g(1,1))
@@ -871,21 +878,88 @@ MODULE io_base
            nproc_in_group, root_in_group, intra_group_comm )
 
       IF(ionode_in_group) THEN
-         rho_g(1:ngm_g_k)=0.d0
-         DO ig=1,ngm_g
-            DO jg=1,ngm_g_k
-               if(  mill_g(1,ig)==mill_g_k(1,jg) .and. &
-                    mill_g(2,ig)==mill_g_k(2,jg) .and. &
-                    mill_g(3,ig)==mill_g_k(3,jg) ) then
+         rho_g(:)= cmplx(0.d0, 0.d0,KIND = DP) 
+         IF ( this_run_is_gamma_only ) THEN 
+            ig = 1 
+            DO jg=1,ngm_g_file
+               if(  mill_g(1,ig)==mill_g_file(1,jg) .and. &
+                  mill_g(2,ig)==mill_g_file(2,jg) .and. &
+                  mill_g(3,ig)==mill_g_file(3,jg) ) then
                   rho_g(ig)=rho_aux(jg)
+                  ig = ig + 1 
                endif
+               IF ( ig .GE. ngm_g ) EXIT  
             END DO
-         ENDDO
+         ELSE ! this run uses full fft mesh 
+            ig = 1 
+            DO jg = 1, ngm_g
+               if (  mill_g (1,jg) == mill_g_file(1,ig) .and. &
+                     mill_g (2,jg) == mill_g_file(2,ig) .and. &
+                     mill_g (3,jg) == mill_g_file(3,ig) )  then 
+                  !
+                  rho_g(jg) = rho_aux(ig) 
+                  ig = ig + 1 
+               end if 
+               if ( ig .GE. ngm_g_file ) EXIT 
+            END DO 
+            ig = 1 
+            minus_g_file = minus_g(ig) 
+            startjg = 1 
+            igloop: DO 
+            DO jg = startjg, ngm_g  
+                if ( mill_g (1,jg) == minus_g_file(1) .and. &
+                     mill_g (2,jg) == minus_g_file(2) .and. &
+                     mill_g (3,jg) == minus_g_file(3)  )  then 
+                  !
+                  rho_g(jg) = dconjg(rho_aux(ig))
+                  ig = ig + 1 
+                  if ( ig .le. ngm_g_file) minus_g_file = minus_g(ig) 
+               end if 
+               if ( ig .GT. ngm_g_file ) EXIT igloop               
+            END DO 
+            startjg = update_startjg(ig, igtongl(startjg))
+            END DO igloop 
+         END IF
       ENDIF
         
       deallocate(rho_aux,mill_g)
       
       return
+      CONTAINS 
+         function minus_g  (imill) result ( minus_mill) 
+            implicit none
+            integer   :: minus_mill(3)  
+            integer   :: ipol, imill 
+            if ( mill_g_file(1,imill) > 0  ) then 
+               minus_mill  = mill_g_file(:,imill)*[-1,1,1]
+            else if (mill_g_file(1,imill)   == 0 .and. mill_g_file(2,imill)  > 0 ) then 
+               minus_mill  = mill_g_file(:,imill) * [ 0, -1, 1]
+            else if ( mill_g_file(1,imill) == 0 .and. mill_g_file(2,imill) == 0 .and. mill_g_file(3,imill) > 0 ) then 
+               minus_mill  = mill_g_file(:,imill) * [0, 0, -1] 
+            else 
+               minus_mill = mill_g_file(:,imill) 
+            endif 
+         end function minus_g 
+
+
+         function  update_startjg(igsearching, startigl)  result(start) 
+            USE cell_base,   ONLY: bg 
+            implicit none
+            integer               :: start
+            integer,intent(in)    :: igsearching, startigl 
+            integer                 :: igl
+            real(8)                 :: g(3), gg 
+            
+            g = bg(:,1)*mill_g_file(1,igsearching)+bg(:,2)*mill_g_file(2,igsearching) &
+              + bg(:,3)*mill_g_file(3,igsearching) 
+            gg = (g(1)*g(1)+g(2)*g(2)+g(3)*g(3)) 
+            do igl = startigl, ngl 
+               if (abs(gg-gl(igl)) .lt. 1.d-6 ) exit 
+            end do 
+            do  start = startigl, ngm 
+               if ( igtongl(start) == igl) exit 
+            end do 
+         end function  update_startjg
     END SUBROUTINE charge_k_to_g
     !
   END MODULE io_base

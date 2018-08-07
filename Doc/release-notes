@@ -1,4 +1,26 @@
 New in development version:
+  * XDM now works also for USPP and norm-conserving PP
+
+Problems fixed in development version:
+  * Printout of wall time was sometimes incorrect (courtesy Daniel Pinkal)
+  * The restart option in turboEELS (turbo_eels.x) with ultrasoft
+    pseudopotentials was not working.
+  * bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
+
+Incompatible changes in development version:
+  * Several routines moved from PHonon/PH to LR_Modules
+  * Module "wavefunctions_module" renamed "wavefunctions"
+
+Known problems in development version:
+  * (none yet)
+
+New in 6.3 version:
+  * New implementation, using  a more robust algorithm for the Wigner-Seitz 
+    construction in EPW (Samuel Ponce and Carla Verdi) 
+  * New application for optical spectra computation using optimized basis sets 
+   (Paolo Umari, Nicola Marzari and Giovanni Prandini).  
+
+  * Improved interface between TDDFPT and Environ using plugins( Oliviero Andreussi)  
 
   * Improved FFT threading (Ye Luo, Argonne)
 
@@ -12,7 +34,23 @@ New in development version:
 
   * Spin-polarized X3LYP (experimental)
 
-Problems fixed in development version:
+  * EPW: Electronic transport (Boltzmann transport equation)
+         Iterative Boltzmann transport equation (experimental)
+         Improved way to compute Wigner-Seitz vectors 
+         Cumulant treatement (model)
+         Possible screening
+         Support for exclude bands
+         Calculation of velocity beyond the local approximation (experimental)
+
+Problems fixed in 6.3 version:
+
+  * Stress with hybrid functionals and Gamma point was grossly wrong
+    (5ed148646)
+
+  * EPW: Velocity in the dipole approximation was unstable because of 
+    G-vector ordering. 
+
+  * Real-space augmentation functions were crashing with -nt N option
 
   * Calculation of ELF wasn't always working due to a bad usage of FFT
     descriptors - noticed by Enrique Zanardi Maffiotte (commit a86fb75d)
@@ -60,7 +98,10 @@ Problems fixed in development version:
 
   * PWscf in "manypw" mode wasn't working due to a bad IF (Dec.12, 2017)
 
-Incompatible changes in development version:
+Incompatible changes in 6.3  version:
+
+  * EPW: Removal of q-point paralelization (not very used and generated large code 
+    duplication) ==> removal of the parallel_k and parallel_q input variables. 
 
   * various subroutines computing gradients and similar quantities using FFTs
     have been harmonized and collected into Modules/gradutils.f90

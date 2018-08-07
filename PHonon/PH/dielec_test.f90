@@ -19,13 +19,12 @@ subroutine dielec_test
   USE klist,    ONLY : wk, ngk
   USE symme,    ONLY : symmatrix, crys_to_cart
   USE buffers,  ONLY : get_buffer
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE efield_mod, ONLY : epsilon
   USE qpoint, ONLY : nksq
   USE eqv, ONLY : dpsi
   USE control_lr, ONLY : nbnd_occ
-  USE units_ph, ONLY : lrwfc, iuwfc
-
+  USE units_lr, ONLY : lrwfc, iuwfc
   USE ramanm, ONLY : a1j, a2j, lrd2w, iud2w
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm

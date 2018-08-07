@@ -1,9 +1,6 @@
 # Makefile for BSE
 #
- include ../../make.inc
-
-# location of include files
-IFLAGS=-I../../include
+include ../../make.inc
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
@@ -47,7 +44,8 @@ qpcorrections.o
 #zvscal_test.o\
 
 
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a \
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
+         ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/Davidson/libdavid.a \
          ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 PW4GWWOBJ = ../pw4gww/fft_custom.o ../pw4gww/stop_pp.o ../pw4gww/mp_wave_parallel.o
@@ -63,7 +61,7 @@ all : tldeps bse_main.x
 
 bse_main.x : bse_main.o libbse.a  $(BSEOBJS) $(PWOBJS) $(QEMODS) $(LIBPWPH)  $(GWWOBJ) $(PPOBJ)
 	$(LD) $(LDFLAGS) -o $@ \
-		bse_main.o libbse.a $(PWOBJS) $(EEOBJS) $(LIBPWPH) $(QEMODS) $(LIBOBJS) $(LIBS)  $(PW4GWWOBJ) $(GWWOBJ) $(PPOBJ)
+		bse_main.o libbse.a $(PWOBJS) $(EEOBJS) $(LIBPWPH) $(QEMODS) $(LIBOBJS) $(QELIBS)  $(PW4GWWOBJ) $(GWWOBJ) $(PPOBJ)
 	- ( cd ../../bin ; ln -fs ../GWW/bse/$@ . )
  
 tldeps:

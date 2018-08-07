@@ -1,0 +1,13 @@
+ &input
+        title='He',
+        zed=2.0,
+        xmin=-7,
+        rmax = 30,
+        rel=0,
+        lsd=0,
+        isic=0,
+        latt=0,
+        iswitch=1,
+        config='[He]',
+        dft='OEP',
+ /

@@ -39,7 +39,7 @@ MODULE control_flags
             tnosee, tnosep, tnoseh, tcp, tcap,                               &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
             tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem,    &
-            tfirst, tlast, tprint
+            tfirst, tlast, tprint, trescalee
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
@@ -60,6 +60,7 @@ MODULE control_flags
   !
   LOGICAL :: tsde          = .FALSE. ! electronic steepest descent
   LOGICAL :: tzeroe        = .FALSE. ! set to zero the electronic velocities
+  LOGICAL :: trescalee     = .FALSE. ! rescale the electronics velocities
   LOGICAL :: tfor          = .FALSE. ! move the ions ( calculate forces )
   LOGICAL :: tsdp          = .FALSE. ! ionic steepest descent
   LOGICAL :: tzerop        = .FALSE. ! set to zero the ionic velocities
@@ -201,9 +202,10 @@ MODULE control_flags
   REAL(DP), PUBLIC  :: &
     ethr               ! the convergence threshold for eigenvalues
   INTEGER, PUBLIC :: &
-    isolve,           &! Davidson or CG or ParO diagonalization
+    isolve,           &! index selecting Davidson,  CG , PPCG or ParO diagonalization
     david,            &! max dimension of subspace in Davidson diagonalization
-    max_cg_iter        ! maximum number of iterations in a CG call
+    max_cg_iter,      &! maximum number of iterations in a CG call
+    max_ppcg_iter      ! maximum number of iterations in a PPCG call
   LOGICAL, PUBLIC :: &
     diago_full_acc = .FALSE. ! if true,  empty eigenvalues have the same
                              ! accuracy of the occupied ones

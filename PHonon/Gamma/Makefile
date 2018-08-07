@@ -7,7 +7,6 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../dft-d3 \
           $(MOD_FLAG)../../LR_Modules
-IFLAGS=
 
 CGOBJS = \
 a_h.o \
@@ -38,7 +37,8 @@ solve_ph.o \
 writedyn.o 
 
 PWOBJS = ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a ../../KS_Solvers/CG/libcg.a \
+QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a \
+         ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/PPCG/libppcg.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 
 TLDEPS= bindir mods libs pw
@@ -47,7 +47,7 @@ all : tldeps phcg.x libcg.a
 
 phcg.x : $(PWOBJS) $(CGOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o phcg.x \
-		$(CGOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		$(CGOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/Gamma/phcg.x . )
 tldeps :
 	if test -n "$(TLDEPS)" ; then \

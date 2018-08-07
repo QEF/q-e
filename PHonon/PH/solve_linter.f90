@@ -26,7 +26,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : prefix, diropn
   USE check_stop,           ONLY : check_stop_now
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE constants,            ONLY : degspin
   USE cell_base,            ONLY : at, tpiba2
   USE klist,                ONLY : ltetra, lgauss, degauss, ngauss, &
@@ -52,7 +52,8 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE el_phon,              ONLY : elph
   USE uspp,                 ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
-                                   iuwfc, lrwfc, iudvscf, iuint3paw, lint3paw
+                                   iudvscf, iuint3paw, lint3paw
+  USE units_lr,             ONLY : iuwfc, lrwfc
   USE output,               ONLY : fildrho, fildvscf
   USE phus,                 ONLY : becsumort
   USE modes,                ONLY : npertx, npert, u, t, tmq

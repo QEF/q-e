@@ -279,7 +279,7 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !
   USE kinds, ONLY : DP
   USE fft_base, ONLY : dffts
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE buffers,  ONLY : get_buffer
   USE klist, ONLY: xk, ngk, igk_k
   USE lsda_mod, ONLY: lsda, current_spin, isk
@@ -290,7 +290,8 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   USE el_phon, ONLY : el_ph_mat, el_ph_mat_rec, el_ph_mat_rec_col, &
                       comp_elph, done_elph, elph_nbnd_min, elph_nbnd_max
   USE modes, ONLY : u
-  USE units_ph, ONLY : iubar, lrbar, lrwfc, iuwfc
+  USE units_ph,   ONLY : iubar, lrbar
+  USE units_lr,   ONLY : iuwfc, lrwfc
   USE control_ph, ONLY : trans, current_iq
   USE ph_restart, ONLY : ph_writefile
   USE spin_orb,   ONLY : domag

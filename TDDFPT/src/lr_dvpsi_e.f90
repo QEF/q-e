@@ -28,7 +28,7 @@ SUBROUTINE lr_dvpsi_e(ik,ipol,dvpsi)
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : xk, ngk, igk_k
   USE wvfct,                ONLY : npwx, nbnd, g2kin, et
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE gvect,                ONLY : g
   USE noncollin_module,     ONLY : noncolin, npol
   USE becmod,               ONLY : allocate_bec_type, calbec, becp, &

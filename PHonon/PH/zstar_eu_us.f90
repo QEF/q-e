@@ -28,16 +28,16 @@ subroutine zstar_eu_us
   USE uspp,      ONLY : okvan, nkb, vkb, nlcc_any
   USE wvfct,     ONLY : nbnd, npwx
   USE paw_variables, ONLY : okpaw
-  USE wavefunctions_module,    ONLY : evc
+  USE wavefunctions,    ONLY : evc
   USE uspp_param,       ONLY : upf, nhm, nh
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE efield_mod, ONLY : zstareu0
   USE phus,       ONLY : becsumort
   USE modes,      ONLY : u, npert, nirr
   USE units_ph,   ONLY : lrdwf, iucom, lrcom, lrebar, iuebar, lrdrhous, &
-                         iudrhous, iudwf, lrwfc, iuwfc
-  USE mp_pools, ONLY : nproc_pool, npool
-
+                         iudrhous, iudwf
+  USE units_lr,   ONLY : iuwfc, lrwfc
+  USE mp_pools,   ONLY : nproc_pool, npool
   USE control_lr, ONLY : nbnd_occ
   USE lrus,       ONLY : int3, int3_paw
   USE eqv,        ONLY : dvpsi, dpsi

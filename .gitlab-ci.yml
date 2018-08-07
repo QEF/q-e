@@ -1,11 +1,7 @@
 build:pw:
   tags: [docker]
-  image: ubuntu:latest
+  image: espressofoundation/ubuntu:latest
   script:
-    - apt-get update
-    - apt-get install --yes build-essential gfortran wget python
-    - apt-get install --yes libopenmpi-dev openmpi-bin
-    - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
     - ./configure
     - make pw
 #    - export OMP_NUM_THREADS=1
@@ -16,12 +12,8 @@ build:pw:
 
 build:cp:
   tags: [docker]
-  image: ubuntu:latest
+  image: espressofoundation/ubuntu:latest
   script:
-    - apt-get update
-    - apt-get install --yes build-essential gfortran wget python
-    - apt-get install --yes libopenmpi-dev openmpi-bin
-    - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
     - ./configure
     - make cp
 #    - export OMP_NUM_THREADS=1
@@ -32,12 +24,8 @@ build:cp:
 
 build:ph:
   tags: [docker]
-  image: ubuntu:latest
+  image: espressofoundation/ubuntu:latest
   script:
-    - apt-get update
-    - apt-get install --yes build-essential gfortran wget python
-    - apt-get install --yes libopenmpi-dev openmpi-bin
-    - apt-get install --yes libblas-dev liblapack-dev fftw3 fftw3-dev pkg-config
     - ./configure
     - make ph
 #    - export OMP_NUM_THREADS=1
@@ -49,7 +37,7 @@ build:ph:
 #build:centos:
 #  image: centos:latest
 #  script:
-#    - yum -y groupinstall "Development Tools" 
+#    - yum -y groupinstall "Development Tools"
 #    - yum -y install wget which python27
 #    - ./configure
 #    - make all

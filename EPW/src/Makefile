@@ -7,7 +7,6 @@ include make.libs
 # use recursive definitions in Makefile to modify the PATH for modules
 #
 
-IFLAGS   = -I../../include  -I../../UtilXlib/ 
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../PHonon/PH \
@@ -29,6 +28,7 @@ superconductivity.o \
 transportcom.o \
 transport.o \
 transport_iter.o \
+wigner.o \
 a2f.o \
 allocate_epwq.o \
 bcast_epw_input.o \
@@ -61,6 +61,7 @@ ktokpmq.o \
 loadkmesh.o \
 loadqmesh.o \
 loadumat.o \
+load_rebal.o \
 nesting_fn.o \
 openfilepw.o \
 rgd_blk_epw_fine_mem.o \
@@ -93,8 +94,6 @@ wannierEPW.o \
 wannierize.o \
 pw2wan90epw.o \
 wan2bloch.o \
-wigner_seitz2.o \
-wigner_seitz.o \
 io_scattering.o \
 system_mem_usage.o
 
@@ -124,7 +123,7 @@ libepw.a : $(EPWOBJS)
 
 epw.x : epw.o libepw.a $(PHOBJS) $(LRMODS) $(PWOBJS) $(W90LIB) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	epw.o  libepw.a	$(PHOBJS) $(LRMODS) $(W90LIB) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) 
+	epw.o  libepw.a	$(PHOBJS) $(LRMODS) $(W90LIB) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) 
 	- ( cd ../bin ; ln -fs ../src/epw.x . )
 
 # SP: Here to correct bugs in wannier 2.0.1

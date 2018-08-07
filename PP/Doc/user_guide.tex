@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.2.1}
+\def\version{6.3}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -74,8 +74,10 @@ The \PostProc\ package was originally developed by Stefano Baroni,
 Stefano de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi 
 (Univ. Udine), and many others. We mention in particular: 
 \begin{itemize}
-	\item Olivia Pulci, Adriano Mosca Conte, Davide Grassano (RomaII)
-	for the \texttt{pw2gw} utility;
+\item Olivia Pulci, Adriano Mosca Conte, Davide Grassano (RomaII)
+      for the \texttt{pw2gw} utility;
+\item Cyrille Barreteau and Alexander Smogunov (CEA) for 
+      magnetic anisotropy with the Force Theorem in \texttt{projwfc.f90};
 \item Andrea Benassi (SISSA) for the \texttt{epsilon} utility,
       Tae Yun Kim and Cheol-Hwan Park (Seoul National University)
       for fixes to it;
@@ -119,7 +121,8 @@ and linked to \texttt{bin/}.
 
 All codes for which input documentation is not explicitly mentioned below
 have some documentation in the header of the fortran sources.
-In the following, ``Example N'' stands for subdirectory 
+In the following, subdirectories containing examples are found in
+\texttt{examples/}; ``Example N'' stands for subdirectory 
 \texttt{examples/exampleN/}.
 
 All quantities whose dimensions are not explicitly specified are in
@@ -167,8 +170,8 @@ Code \texttt{average.x} calculates planar averages of quantities calculated
 by \texttt{pp.x} (e.g. potentials, charge, magnetization densities).
 Note that \texttt{average.x} reads the intermediate file produced
 by \texttt{pp.x}, not data files produced by \pwx. Examples of usage 
-of \texttt{average.x} can be found in \texttt{examples/WorkFct\_example/} 
-and in \texttt{examples/dipole\_example/}.
+of \texttt{average.x} can be found in \texttt{WorkFct\_example/} 
+and in \texttt{dipole\_example/}.
 
 \paragraph{All-electron charge}
 \texttt{pawplot.x} produces plots of the all-electron charge
@@ -202,7 +205,7 @@ plottable format by auxiliary code
 in sequence along lines, or if two consecutive points are the same. 
 The code \texttt{bands.x} performs as well a 
 symmetry analysis of the band structure. For a complete input description,
-see\texttt{Doc/INPUT\_bands.*}. See Example 01, Example 04 and Example 06 
+see \texttt{Doc/INPUT\_bands.*}. See Example 01, Example 04 and Example 06 
 for simple band plots.
 
 The calculation of Fermi surface can be performed using code \texttt{fs.x}.
@@ -246,6 +249,11 @@ a surface system) can be computed using code \texttt{molecularpdos.x}
 (courtesy of Guido Fratesi). See file \texttt{Doc/INPUT\_MOLDOS.*}
 for input documentation and directory \texttt{MolDos\_example/} for
 an example.
+
+The calculation of magnetic anisotropy using the Force Theorem is described
+in the following paper:
+https://journals.aps.org/prb/abstract/10.1103/PhysRevB.90.205409. An
+example and a README can be found in \texttt{ForceTheorem\_example/}
 
 \subsection{Color plot of the Fermi velocity and the orbital character
   on Fermi surfaces}
@@ -294,7 +302,7 @@ and the indices of target wavefunctions, respectively.
 \end{enumerate}
 
 There is an example of \verb|fermi_velocity.x| and \verb|fermi_proj.x|
-in \verb|PP/example/fermisurf_example/|.
+in \verb|fermisurf_example/|.
 
 \subsection{Wannier functions}
 
@@ -306,7 +314,7 @@ in conjunction with DFT+U calculations (see Example 05)
 see the documentation in \texttt{W90/} (you have to install the 
 Wannier90 plug-in)
 \item The \texttt{wannier\_ham.x} code generates a model Hamiltonian 
-in Wannier functions basis: see \texttt{examples/WannierHam\_example/}.
+in Wannier functions basis: see \texttt{WannierHam\_example/}.
 \end{enumerate}
 Note that the \texttt{wfdd.x} code has been moved to \CP.
 
@@ -320,7 +328,7 @@ for input data documentation.
 Code \texttt{pw2gw.x} converts data files from \pwx\ to a format suitable 
 for usage by another GW code, computes optical properties in single-particle 
 approach (Fermi Golden Rule). See file \texttt{Doc/INPUT\_pw2gw.html}
-for input data documentation, directory \texttt{examples/pw2gw\_example/}
+for input data documentation, directory \texttt{pw2gw\_example/}
 for an example of usage.
 
 Code \texttt{pw\_export.x}, not compiled by default, is an interface
@@ -338,8 +346,8 @@ Code \texttt{epsilon.x} calculates RPA frequency-dependent complex dielectric
 function. Documentation is in file \texttt{Doc/eps\_man.tex}.
 
 Code \texttt{initial\_state.x} calculates the initial state contribution
-to the Core-level shift. See \texttt{examples/CLS\_IS\_example/} for
-an example, and \texttt{examples/CLS\_FS\_example/} for the corrsponding
+to the Core-level shift. See \texttt{CLS\_IS\_example/} for
+an example, and \texttt{CLS\_FS\_example/} for the corrsponding
 final state calculation of Core-level shifts.
 
 \section{Troubleshooting}

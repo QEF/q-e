@@ -22,13 +22,14 @@ subroutine zstar_eu
   USE wvfct,     ONLY : npwx
   USE uspp,      ONLY : okvan, vkb
   use noncollin_module, ONLY : npol
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
 
   USE modes,     ONLY : u, nirr, npert
   USE qpoint,    ONLY : npwq, nksq
   USE eqv,       ONLY : dvpsi, dpsi
   USE efield_mod,   ONLY : zstareu0, zstareu
-  USE units_ph,  ONLY : iudwf, lrdwf, iuwfc, lrwfc
+  USE units_ph,  ONLY : iudwf, lrdwf
+  USE units_lr,  ONLY : iuwfc, lrwfc
   USE control_lr,ONLY : nbnd_occ
   USE control_ph,ONLY : done_zeu
   USE ph_restart, ONLY : ph_writefile

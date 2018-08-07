@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.2.1+}
+\def\version{6.3}
 \def\QE{{\sc Quantum ESPRESSO}}
 \def\qe{QE}
 \textwidth = 17cm
@@ -20,7 +20,7 @@
 \def\make.inc{\texttt{make.inc}}
 \def\Makefile{\texttt{Makefile}}
 
-\def\qeImage{quantum_espresso.pdf}
+\def\qeImage{quantum_espresso}
 
 \begin{document}
 \author{}
@@ -552,7 +552,7 @@ all : tldeps pw.x generate_vdW_kernel_table.x
 \begin{verbatim}
 pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
      $(LD) $(LDFLAGS) -o $@ \
-     $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(LIBS)
+     $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(QELIBS)
    - ( cd ../../bin; ln -fs ../PW/src/$@ . ; \
                ln -fs ../PW/src/$@ dist.x ; ln -fs ../PW/src/$@ manypw.x ; )
 \end{verbatim}
@@ -601,6 +601,16 @@ prior to compilation of a2fmod.o - {\tt make} will take care of this.}
 {\bf BEWARE:} the Makefile system is in a stable but delicate equilibrium,
 resulting from many years of experiments on many different machines.
 Handle with care: what works for you may break other cases.
+
+{\bf BEWARE 2:} parallel make (\texttt{make -j N}) works only if all
+needed dependencies are in place. Note that parallel make does not 
+necessarily execute targets in the order they appear, e.g.: if you have
+\begin{verbatim}
+all : a b c d
+\end{verbatim}
+and "d" depends upon "a", that dependency must be explicitly present
+in the Makefiles, or else parallel make will not work (or will work 
+only erratically).
 
 \subsubsection{Preprocessing}
 
@@ -875,7 +885,7 @@ not a good idea. Restart in  \texttt{PWscf} currently works as follows:
   if the code was stopped there or no convergence was achieved;
   if so, data for the current loop, if needed, is saved, return.
 \item Return after return, all loops and exited and control is
-  tramsferred to the main program, which must save needed global
+  transferred to the main program, which must save needed global
   variables to file. The only difference with normal exit is that
   temporary files are kept in their format, not in portable format.
 \item If variable \texttt{restart\_mode} is set in input to
@@ -1225,6 +1235,8 @@ example:
 in this order (some compilers complain if you put the second line
 before the first).
 \end{itemize}
+The \texttt{dev-tools/} directory contains some useful tools for developers;
+see the \texttt{dev-tools/README.md} file.
 
 \subsection{Adding or modifying input variables}
 
@@ -1304,8 +1316,10 @@ for serious bugs.
 
 Development can proceed in different ways:
 \begin{enumerate}
-\item Via ``merge'' requests from a private repository
-\item Via ``merge'' requests from a branch
+\item Via ``merge'' requests from a branch in the developer's repository 
+      forked from the q-e repository ({\em recommended})
+\item Via ``merge'' requests from a branch of the q-e repository
+      ({\em not recommended})
 \item Directly into the ``develop'' branch
 \end{enumerate}
 The first option is the recommended one. Register on GitLab and {\em save
@@ -1341,10 +1355,10 @@ Beware! you may need to manually merge files that have been modified both
 by you and in the repository.
 The stash can be cleared using \texttt{git stash clear}.
 
-%Note: it is good practice to use \verb|git fetch| before a pull, as in, e.g.:
-%\begin{quote}
-%  \verb|git fetch  git@gitlab.com:QEF/q-e.git develop|
-%\end{quote}
+Note: if you do not change sources but only documentation, tests, examples,
+add \verb|[skip ci]| in the commit message. This prevents execution of 
+automatic compilation on GitLab (that sometimes fails for no good reason,
+blocking a subsequent merge request).
 
 You may repeat the procedure above, adding more commits to your local copy.
 Unlike in svn, you need to explicitly {\em push} (publish) them to the remote
@@ -1395,7 +1409,7 @@ they didn't know what they were doing):
 \label{Sec:testfarm}
 
 The \qe\, test-suite is used to ensure continuous integration and long-term numerical stability of the code.
-The test-suite is also used by different Buildbot test-farm to automatically test the code nightly after a commit to the SVN qe-forge repository has been detected. 
+The test-suite is also used by different Buildbot test-farm to automatically test the code nightly after a commit to the repository has been detected. 
 
 The currently active test-farm machine can be accessed at 
 \texttt{test-farm.quantum-espresso.org} (points to a machine at CINECA:

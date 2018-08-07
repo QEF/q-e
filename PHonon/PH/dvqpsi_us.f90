@@ -33,7 +33,7 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag, npol
   use uspp_param,ONLY : upf
   USE wvfct,     ONLY : nbnd, npwx
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE nlcc_ph,    ONLY : drc
   USE uspp,       ONLY : nlcc_any
   USE eqv,        ONLY : dvpsi, dmuxc, vlocq

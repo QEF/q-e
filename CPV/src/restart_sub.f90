@@ -12,8 +12,9 @@ SUBROUTINE from_restart( )
    USE control_flags,         ONLY : tbeg, taurdr, tfor, tsdp, iverbosity, &
                                      tsde, tzeroe, tzerop, nbeg, tranp, amprp,&
                                      thdyn, tzeroc, force_pairing, trhor, &
-                                     ampre, trane, tpre, dt_old, tv0rd
-   USE wavefunctions_module,  ONLY : c0_bgrp, cm_bgrp
+                                     ampre, trane, tpre, dt_old, tv0rd, &
+                                     trescalee
+   USE wavefunctions,  ONLY : c0_bgrp, cm_bgrp
    USE electrons_module,      ONLY : occn_info
    USE electrons_base,        ONLY : nspin, iupdwn, nupdwn, f, nbsp, nbsp_bgrp
    USE io_global,             ONLY : ionode, ionode_id, stdout
@@ -128,6 +129,14 @@ SUBROUTINE from_restart( )
       !
       WRITE( stdout, '(" Electronic velocities set to zero")' )
       !
+   ELSE IF (trescalee) THEN
+      IF (dt_old > 0.0d0 ) THEN
+         lambdam = lambda - (lambda-lambdam)*delt/dt_old
+         cm_bgrp = c0_bgrp - (c0_bgrp-cm_bgrp)*delt/dt_old
+         WRITE (stdout, '(" Electron velocities rescaled with tolp")')
+      ELSE
+         WRITE (stdout, '(" Cannot rescale electron velocities without tolp!")')
+      END IF
    END IF
    !
    ! ... computes form factors and initializes nl-pseudop. according

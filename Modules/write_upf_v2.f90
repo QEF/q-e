@@ -212,7 +212,7 @@ CONTAINS
       ENDIF
 
       IF(TRIM(upf%comment) /= ' ') THEN
-         WRITE(line, '(4x,"Comment:",/,4x,a)', err=100) TRIM(upf%comment)
+         WRITE(line, '(4x,"Comment:",2x,a)', err=100) TRIM(upf%comment)
          char_buff = TRIM(char_buff) // new_line('a') // TRIM(line)
       END IF
       char_buff = TRIM(char_buff) // new_line('a')
@@ -491,10 +491,10 @@ CONTAINS
             CALL xml_addAttribute(u, 'label',         upf%els(nw))
             CALL xml_addAttribute(u, 'l',             upf%lchi(nw))
             CALL xml_addAttribute(u, 'occupation',    upf%oc(nw))
-            CALL xml_addAttribute(u, 'n',             upf%nchi(nw))
-            CALL xml_addAttribute(u, 'pseudo_energy', upf%epseu(nw))
-            CALL xml_addAttribute(u, 'cutoff_radius', upf%rcut_chi(nw))
-            CALL xml_addAttribute(u, 'ultrasoft_cutoff_radius', upf%rcutus_chi(nw))
+            IF ( upf%nchi(nw) .GT. upf%lchi(nw) )  CALL xml_addAttribute(u, 'n',             upf%nchi(nw))
+            IF ( upf%epseu(nw) .GT. 0.0_DP)        CALL xml_addAttribute(u, 'pseudo_energy', upf%epseu(nw))
+            IF ( upf%rcut_chi(nw) .GT. 0.0_DP )    CALL xml_addAttribute(u, 'cutoff_radius', upf%rcut_chi(nw))
+            IF ( upf%rcutus_chi(nw) .GT. 0.0_DP )   CALL xml_addAttribute(u, 'ultrasoft_cutoff_radius', upf%rcutus_chi(nw))
             CALL write_data(u, upf%chi(:,nw), tag = TRIM(tag_chi))
       ENDDO
       !

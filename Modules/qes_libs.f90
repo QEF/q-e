@@ -3137,6 +3137,9 @@ SUBROUTINE qes_write_electron_control(xp, obj)
       CALL xml_NewElement(xp, 'diago_cg_maxiter')
          CALL xml_addCharacters(xp, obj%diago_cg_maxiter)
       CALL xml_EndElement(xp, 'diago_cg_maxiter')
+      CALL xml_NewElement(xp, 'diago_ppcg_maxiter')
+         CALL xml_addCharacters(xp, obj%diago_ppcg_maxiter)
+      CALL xml_EndElement(xp, 'diago_ppcg_maxiter')
    CALL xml_EndElement(xp, TRIM(obj%tagname))
    !
 END SUBROUTINE qes_write_electron_control
@@ -3144,7 +3147,7 @@ END SUBROUTINE qes_write_electron_control
 SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode, &
                               mixing_beta, conv_thr, mixing_ndim, max_nstep, real_space_q, &
                               tq_smoothing, tbeta_smoothing, diago_thr_init, &
-                              diago_full_acc, diago_cg_maxiter)
+                              diago_full_acc, diago_cg_maxiter, diago_ppcg_maxiter)
    IMPLICIT NONE
 
    TYPE(electron_control_type) :: obj
@@ -3162,6 +3165,7 @@ SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode,
    REAL(DP) :: diago_thr_init
    LOGICAL  :: diago_full_acc
    INTEGER  :: diago_cg_maxiter
+   INTEGER  :: diago_ppcg_maxiter
 
    obj%tagname = TRIM(tagname)
    obj%lwrite   = .TRUE.
@@ -3178,6 +3182,7 @@ SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode,
    obj%diago_thr_init = diago_thr_init
    obj%diago_full_acc = diago_full_acc
    obj%diago_cg_maxiter = diago_cg_maxiter
+   obj%diago_ppcg_maxiter = diago_ppcg_maxiter
 
 END SUBROUTINE qes_init_electron_control
 

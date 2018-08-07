@@ -1,7 +1,7 @@
 subroutine make_v_state(numb_v,v)
   USE gvect,                 ONLY : gstart
   USE lsda_mod,              ONLY : nspin
-  use wavefunctions_module,  ONLY : evc
+  use wavefunctions,  ONLY : evc
   use io_files,  ONLY : prefix, iunwfc
   USE wvfct,    ONLY : nbnd, npwx,npw
   implicit none

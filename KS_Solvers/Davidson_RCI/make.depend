@@ -1,7 +1,3 @@
 david_rci.o : ../../UtilXlib/mp.o
 david_rci.o : ../../UtilXlib/mp_bands_util.o
 david_rci.o : david_param.o
-set_mpi_comm_4_davidson.o : ../../LAXlib/mp_diag.o
-set_mpi_comm_4_davidson.o : ../../UtilXlib/mp.o
-set_mpi_comm_4_davidson.o : ../../UtilXlib/mp_bands_util.o
-set_mpi_comm_4_davidson.o : david_param.o

@@ -723,7 +723,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
      !
      CALL plugin_scf_energy(plugin_etot,rhoin)
      !
-     CALL plugin_scf_potential(rhoin,conv_elec,dr2)
+     CALL plugin_scf_potential(rhoin,conv_elec,dr2,vltot)
      !
      ! ... define the total local potential (external + scf)
      !
@@ -1300,7 +1300,7 @@ FUNCTION exxenergyace ( )
   USE mp_bands, ONLY : intra_bgrp_comm
   USE mp,       ONLY : mp_sum
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   !
   IMPLICIT NONE
   !

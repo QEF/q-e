@@ -80,9 +80,10 @@ x86_64:nagfor* )
         ;;
 ia32:pgf* | ia64:pgf* | x86_64:pgf* )
 	    try_fflags_nomain="-Mnomain"
-        try_fflags="-fast -r8"
+        try_fflags="-fast"
         try_fflags_openmp="-mp"
-        try_f90flags="-fast -r8 -Mcache_align -Mpreprocess"
+        try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
+        try_foxflags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
         try_fflags_noopt="-O0"
         try_ldflags=""
         try_ldflags_openmp="-mp"
@@ -133,8 +134,8 @@ crayxt*:pgf* )
 # see comment above for pgf*
 	    try_fflags_nomain="-Mnomain"
         try_fflags_openmp="-mp"
-        try_fflags="-O3 -r8"
-        try_f90flags="-fast -Mcache_align -r8 -Mpreprocess"
+        try_fflags="-O3"
+        try_f90flags="-fast -Mcache_align -Mpreprocess -Mlarge_arrays"
         try_fflags_noopt="-O0"
         try_ldflags_openmp="-mp"
         try_ldflags="-v"
@@ -240,6 +241,7 @@ fi
 
 if test "$fflags" = ""   ; then fflags=$try_fflags     ; fi
 if test "$f90flags" = "" ; then f90flags=$try_f90flags ; fi
+if test "try_foxflags" != ""; then foxflags=$try_foxflags; fi
 if test "$fflags_noopt" = ""   ; then fflags_noopt=$try_fflags_noopt     ; fi
 if test "$fflags_nomain" = ""   ; then fflags_nomain=$try_fflags_nomain     ; fi
 
@@ -266,5 +268,5 @@ AC_SUBST(fflags)
 AC_SUBST(fflags_noopt)
 AC_SUBST(fflags_nomain)
 AC_SUBST(imod)
-
+AC_SUBST(foxflags)
 ])

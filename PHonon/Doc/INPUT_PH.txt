@@ -1,0 +1,819 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: ph.x / PWscf / Quantum Espresso (version: svn)
+------------------------------------------------------------------------
+
+
+Input data format: { } = optional, [ ] = it depends, # = comment
+
+Structure of the input data:
+===============================================================================
+
+title_line
+
+&INPUTPH
+   ...
+/
+
+[ xq(1) xq(2) xq(3) ]                        # if "ldisp" != .true.  and  "qplot" != .true.
+
+[ nqs                                        # if "qplot" == .true.
+  xq(1,i)    xq(2,i)    xq(3,1)    nq(1)
+  ...
+  xq(1,nqs)  xq(2,nqs)  xq(3,nqs)  nq(nqs) ]
+
+[ atom(1)  atom(2)  ... atom(nat_todo) ]     # if "nat_todo" was specified
+
+
+
+========================================================================
+Line of input:
+
+      title_line
+   
+   
+   DESCRIPTION OF ITEMS:
+   
+      +--------------------------------------------------------------------
+      Variable:       title_line
+      
+      Type:           CHARACTER
+      Description:    Title of the job, i.e., a line that is reprinted on output.
+      +--------------------------------------------------------------------
+      
+===End of line-of-input=================================================
+
+
+========================================================================
+NAMELIST: &INPUTPH
+
+   +--------------------------------------------------------------------
+   Variable:       amass(i), i=1,ntyp
+   
+   Type:           REAL
+   Default:        0.0
+   Description:    Atomic mass [amu] of each atomic type.
+                   If not specified, masses are read from data file.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           CHARACTER
+   Default:        value of the ESPRESSO_TMPDIR environment variable if set;
+                    current directory ('./') otherwise
+   Description:    Directory containing input, output, and scratch files;
+                   must be the same as specified in the calculation of
+                   the unperturbed system.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           CHARACTER
+   Default:        'pwscf'
+   Description:    Prepended to input/output filenames; must be the same
+                   used in the calculation of unperturbed system.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       niter_ph
+   
+   Type:           INTEGER
+   Default:        maxter=100
+   Description:    Maximum number of iterations in a scf step. If you want
+                   more than 100, edit variable "maxter" in PH/phcom.f90
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       tr2_ph
+   
+   Type:           REAL
+   Default:        1e-12
+   Description:    Threshold for self-consistency.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       alpha_mix(niter)
+   
+   Type:           REAL
+   Default:        alpha_mix(1)=0.7
+   Description:    Mixing factor (for each iteration) for updating
+                   the scf potential:
+                   
+                   vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       nmix_ph
+   
+   Type:           INTEGER
+   Default:        4
+   Description:    Number of iterations used in potential mixing.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       verbosity
+   
+   Type:           CHARACTER
+   Default:        'default'
+   Description:   
+                   Options are:
+    
+                   'debug', 'high', 'medium' :
+                        verbose output
+    
+                   'low', 'default', 'minimal' :
+                        short output
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       reduce_io
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    Reduce I/O to the strict minimum.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       max_seconds
+   
+   Type:           REAL
+   Default:        1.d7
+   Description:    Maximum allowed run time before the job stops smoothly.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fildyn
+   
+   Type:           CHARACTER
+   Default:        'matdyn'
+   Description:    File where the dynamical matrix is written.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fildrho
+   
+   Type:           CHARACTER
+   Default:        ' '
+   Description:    File where the charge density responses are written. Note that the file
+                                     will actually be saved as ${outdir}/_ph0/${prefix}.${fildrho}1
+                                     where  ${outdir}, ${prefix} and ${fildrho} are the values of the
+                                     corresponding input variables
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fildvscf
+   
+   Type:           CHARACTER
+   Default:        ' '
+   Description:    File where the the potential variation is written
+                   (for later use in electron-phonon calculation, see also fildrho).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       epsil
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. in a q=0 calculation for a non metal the
+                   macroscopic dielectric constant of the system is
+                   computed. Do not set "epsil" to .true. if you have a
+                   metallic system or q/=0: the code will complain and stop.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lrpa
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. the dielectric constant is calculated at the
+                   RPA level with DV_xc=0.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lnoloc
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. the dielectric constant is calculated without
+                   local fields, i.e. by setting DV_H=0 and DV_xc=0.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       trans
+   
+   Type:           LOGICAL
+   Default:        .true.
+   Description:    If .true. the phonons are computed.
+                   If "trans" .and. "epsil" are .true. effective charges are
+                   calculated.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lraman
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. calculate non-resonant Raman coefficients
+                   using second-order response as in:
+                   M. Lazzeri and F. Mauri, PRL 90, 036401 (2003).
+   +--------------------------------------------------------------------
+   
+   ///---
+      OPTIONAL VARIABLES FOR RAMAN:
+      
+      +--------------------------------------------------------------------
+      Variable:       eth_rps
+      
+      Type:           REAL
+      Default:        1.0d-9
+      Description:    Threshold for calculation of  Pc R |psi>.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       eth_ns
+      
+      Type:           REAL
+      Default:        1.0e-12
+      Description:    Threshold for non-scf wavefunction calculation.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       dek
+      
+      Type:           REAL
+      Default:        1.0e-3
+      Description:    Delta_xk used for wavefunction derivation wrt k.
+      +--------------------------------------------------------------------
+      
+   \\\---
+   
+   +--------------------------------------------------------------------
+   Variable:       recover
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. restart from an interrupted run.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       low_directory_check
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. search in the phsave directory only the
+                                    quantities requested in input.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       only_init
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. only the bands and other initialization quantities are calculated.
+                   (used for GRID parallelization)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       qplot
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. a list of q points is read from input.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       q2d
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. three q points and relative weights are
+                   read from input. The three q points define the rectangle
+                   q(:,1) + l (q(:,2)-q(:,1)) + m (q(:,3)-q(:,1)) where
+                   0< l,m < 1. The weights are integer and those of points two
+                   and three are the number of points in the two directions.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       q_in_band_form
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    This flag is used only when qplot is .true. and q2d is
+                   .false.. When .true. each couple of q points q(:,i+1) and
+                   q(:,i) define the line from q(:,i) to q(:,i+1) and nq
+                   points are generated along that line. nq is the weigth of
+                   q(:,i). When .false. only the list of q points given as
+                   input is calculated. The weights are not used.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       electron_phonon
+   
+   Type:           CHARACTER
+   Default:        ' '
+   Description:   
+                   Options are:
+    
+                   'simple' :
+                        Electron-phonon lambda coefficients are computed
+                        for a given q and a grid of k-points specified by
+                        the variables nk1, nk2, nk3, k1, k2, k3.
+    
+                   'interpolated' :
+                        Electron-phonon is calculated by interpolation
+                        over the Brillouin Zone as in M. Wierzbowska, et
+                        al. arXiv:cond-mat/0504077
+    
+                   'lambda_tetra' :
+                        The electron-phonon coefficient \lambda_{q \nu}
+                        is calculated with the optimized tetrahedron method.
+    
+                   'gamma_tetra' :
+                        The phonon linewidth \gamma_{q \nu} is calculated
+                        from the electron-phonon interactions
+                        using the optimized tetrahedron method.
+    
+                   For metals only, requires gaussian smearing.
+                   
+                   If "trans"=.true., the lambdas are calculated in the same
+                   run, using the same k-point grid for phonons and lambdas.
+                   If "trans"=.false., the lambdas are calculated using
+                   previously saved DeltaVscf in "fildvscf", previously saved
+                   dynamical matrix, and the present punch file. This allows
+                   the use of a different (larger) k-point grid.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lshift_q
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    Use a wave-vector grid displaced by half a grid step
+                   in each direction - meaningful only when ldisp is .true.
+                   When this option is set, the q2r.x code cannot be used.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       zeu
+   
+   Type:           LOGICAL
+   Default:        zeu="epsil"
+   Description:    If .true. in a q=0 calculation for a non metal the
+                   effective charges are computed from the dielectric
+                   response. This is the default algorithm. If "epsil"=.true.
+                   and "zeu"=.false. only the dielectric tensor is calculated.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       zue
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. in a q=0 calculation for a non metal the
+                   effective charges are computed from the phonon
+                   density responses. This is an alternative algorithm,
+                   different from the default one (if "trans" .and. "epsil" )
+                   The results should be the same within numerical noise.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       elop
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. calculate electro-optic tensor.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fpol
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. calculate dynamic polarizabilities
+                   Requires "epsil"=.true. ( experimental stage:
+                   see example09 for calculation of methane ).
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ldisp
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. the run calculates phonons for a grid of
+                   q-points specified by "nq1", "nq2", "nq3" - for direct
+                   calculation of the entire phonon dispersion.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       nogg
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. disable the "gamma_gamma" trick used to speed
+                   up calculations at q=0 (phonon wavevector) if the sum over
+                   the Brillouin Zone includes k=0 only. The gamma_gamma
+                   trick exploits symmetry and acoustic sum rule to reduce
+                   the number of linear response calculations to the strict
+                   minimum, as it is done in code phcg.x.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       asr
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    Apply Acoustic Sum Rule to dynamical matrix, effective charges
+                   Works only in conjunction with "gamma_gamma" tricks (see above)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ldiag
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. forces the diagonalization of the dynamical
+                   matrix also when only a part of the dynamical matrix
+                   has been calculated. It is used together with "start_irr"
+                   and "last_irr". If all modes corresponding to a
+                   given irreducible representation have been calculated,
+                   the phonon frequencies of that representation are
+                   correct. The others are zero or wrong. Use with care.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lqdir
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. ph.x creates inside outdir a separate subdirectory
+                   for each q vector. The flag is set to .true. when "ldisp"=.true.
+                   and "fildvscf" /= ' ' or when an electron-phonon
+                   calculation is performed. The induced potential is saved
+                   separately for each q inside the subdirectories.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       search_sym
+   
+   Type:           LOGICAL
+   Default:        .true.
+   Description:    Set it to .false. if you want to disable the mode
+                   symmetry analysis.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variables:      nq1, nq2, nq3
+   
+   Type:           INTEGER
+   Default:        0,0,0
+   Description:    Parameters of the Monkhorst-Pack grid (no offset) used
+                   when @ref ldisp=.true. Same meaning as for nk1, nk2, nk3
+                   in the input of pw.x.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variables:      nk1, nk2, nk3, k1, k2, k3
+   
+   Type:           INTEGER
+   Default:        0,0,0,0,0,0
+   Description:    When these parameters are specified the phonon program
+                   runs a pw non-self consistent calculation with a different
+                   k-point grid thant that used for the charge density.
+                   This occurs even in the Gamma case.
+                   nk1,nk2,nk3 are the parameters of the Monkhorst-Pack grid
+                   with offset determined by k1,k2,k3.
+   +--------------------------------------------------------------------
+   
+   ///---
+      SPECIFICATION OF IRREDUCIBLE REPRESENTATION
+      
+      +--------------------------------------------------------------------
+      Variable:       start_irr
+      
+      Type:           INTEGER
+      Default:        1
+      See:            last_irr
+      Description:    Perform calculations only from "start_irr" to "last_irr"
+                      irreducible representations.
+                      
+                      IMPORTANT:
+                         * "start_irr" must be <= 3*nat
+                         * do not specify "nat_todo" together with
+                           "start_irr", "last_irr"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       last_irr
+      
+      Type:           INTEGER
+      Default:        3*nat
+      See:            start_irr
+      Description:    Perform calculations only from "start_irr" to "last_irr"
+                      irreducible representations.
+                      
+                      IMPORTANT:
+                         * "start_irr" must be <= 3*nat
+                         * do not specify "nat_todo" together with
+                           "start_irr", "last_irr"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       nat_todo
+      
+      Type:           INTEGER
+      Default:        0, i.e. displace all atoms
+      Description:    Choose the subset of atoms to be used in the linear response
+                      calculation: "nat_todo" atoms, specified in input (see below)
+                      are displaced. Can be used to estimate modes for a molecule
+                      adsorbed over a surface without performing a full fledged
+                      calculation. Use with care, at your own risk, and be aware
+                      that this is an approximation and may not work.
+                      IMPORTANT:
+                         * "nat_todo" <= nat
+                         * if linear-response is calculated for a given atom, it
+                           should also be done for all symmetry-equivalent atoms,
+                           or else you will get incorrect results
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       modenum
+      
+      Type:           INTEGER
+      Default:        0
+      Description:    For single-mode phonon calculation : modenum is the index of the
+                      irreducible representation (irrep) into which the reducible
+                      representation formed by the 3*nat atomic displacements are
+                      decomposed in order to perform the phonon calculation.
+                      Note that a single-mode calculation will not give you the
+                      frequency of a single phonon mode: in general, the selected
+                      "modenum" is not an eigenvector. What you get on output is
+                      a column of the dynamical matrix.
+      +--------------------------------------------------------------------
+      
+   \\\---
+   
+   ///---
+      Q-POINT SPECIFICATION
+      
+      +--------------------------------------------------------------------
+      Variable:       start_q
+      
+      Type:           INTEGER
+      Default:        1
+      See:            last_q
+      Description:    Used only when ldisp=.true..
+                      Computes only the q points from "start_q" to "last_q".
+                      
+                      IMPORTANT:
+                         * "start_q" must be <= "nqs" (number of q points found)
+                         * do not specify "nat_todo" together with
+                           "start_q", "last_q"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       last_q
+      
+      Type:           INTEGER
+      Default:        number of q points
+      See:            start_q
+      Description:    Used only when "ldisp"=.true..
+                      Computes only the q points from "start_q" to "last_q".
+                      
+                      IMPORTANT
+                         * "last_q" must be <= "nqs" (number of q points)
+                         * do not specify "nat_todo" together with
+                           "start_q", "last_q"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       dvscf_star
+      
+      Type:           STRUCTURE
+      Default:        disabled
+      Description:    It contains the following components:
+                      
+                      dvscf_star%open  (logical, default: .false.)
+                      dvscf_star%dir   (character, default: outdir//"Rotated_DVSCF" or the
+                                        ESPRESSO_FILDVSCF_DIR environment variable)
+                      dvscf_star%ext   (character, default: "dvscf") the extension to use
+                                        for the name of the output files, see below
+                      dvscf_star%basis (character, default: "cartesian") the basis on which
+                                        the rotated dvscf will be saved
+                      dvscf_star%pat   (logical, default: false) save an optional file with the
+                                        displacement patterns and q vector for each dvscf file
+                      
+                      IF dvscf_star%open is .true. use symmetry to compute and store the variation
+                      of the self-consistent potential on every q* in the star of the present q.
+                      
+                      The rotated dvscf will then be stored in directory dvscf_star%dir with name
+                      prefix.dvscf_star%ext.q_name//"1". Where q_name is derived from the coordinates
+                      of the q-point, expressed as fractions in crystalline coordinates
+                      (notice that ph.x reads q-points in cartesian coordinates).
+                      E.g. q_cryst= (0, 0.5, -0.25) -> q_name = "0_1o2_-1o4"
+                      
+                      The dvscf can be represented on a basis of cartesian 1-atom displacements
+                      (dvscf_star%basis='cartesian') or on the basis of the modes at the rotated q-point
+                      (dvscf_star%basis='modes'). Notice that the el-ph wannier code requires 'cartesian'.
+                      Each dvscf file comes with a corresponding pattern file with an additional ".pat"
+                      suffix; this file contains information about the basis and the q-point of the dvscf.
+                      
+                      Note: rotating dvscf can require a large amount of RAM memory and can be i/o
+                            intensive; in its current implementation all the operations are done
+                            on a single processor.
+                      Note2: this feature is currently untested with image parallelisation.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       drho_star
+      
+      Type:           STRUCTURE
+      See:            dvscf_star
+      Default:        disabled
+      Description:    It contains the following components:
+                      
+                      drho_star%open  (logical, default: .false.)
+                      drho_star%dir   (character, default: outdir//"Rotated_DRHO" or the
+                                       ESPRESSO_FILDRHO_DIR environment variable)
+                      drho_star%ext   (character, default: "drho") the extension to use
+                                       for the name of the output files, see below
+                      drho_star%basis (character, default: "modes") the basis on which
+                                       the rotated drho will be saved
+                      drho_star%pat   (logical, default: true) save an optional file with the
+                                       displacement patterns and q vector for each drho file
+                      
+                      Like "dvscf_star", but for the perturbation of the charge density.
+                      Notice that the defaults are different.
+      +--------------------------------------------------------------------
+      
+   \\\---
+   
+===END OF NAMELIST======================================================
+
+
+________________________________________________________________________
+* IF ldisp != .true.   and   qplot != .true. : 
+
+   ========================================================================
+   Line of input:
+   
+         xq(1)  xq(2)  xq(3)
+      
+      
+      DESCRIPTION OF ITEMS:
+      
+         +--------------------------------------------------------------------
+         Variables:      xq(1)  xq(2)  xq(3)
+         
+         Type:           REAL
+         Description:    The phonon wavevector, in units of 2pi/a0
+                         (a0 = lattice parameter).
+                         Not used if "ldisp"=.true. or "qplot"=.true.
+         +--------------------------------------------------------------------
+         
+         
+   ===End of line-of-input=================================================
+   
+   
+    
+* ELSE IF qplot == .true. : 
+
+   SPECIFICATION OF Q POINTS WHEN "QPLOT" == .TRUE.
+   
+   ========================================================================
+   CARD:  
+   
+      /////////////////////////////////////////
+      // Syntax:                             //
+      /////////////////////////////////////////
+      
+            nqs
+            xq1(1)    xq2(1)    xq3(1)    nq(1)    
+            xq1(2)    xq2(2)    xq3(2)    nq(2)    
+            . . . 
+            xq1(nqs)  xq2(nqs)  xq3(nqs)  nq(nqs)  
+      
+      /////////////////////////////////////////
+      
+      DESCRIPTION OF ITEMS:
+      
+         +--------------------------------------------------------------------
+         Variable:       nqs
+         
+         Type:           INTEGER
+         Description:    Number of q points in the list. Used only if "qplot"=.true.
+         +--------------------------------------------------------------------
+         
+         +--------------------------------------------------------------------
+         Variables:      xq1, xq2, xq3
+         
+         Type:           REAL
+         Description:    q-point coordinates; used only with @ref ldisp=.true. and qplot=.true.
+                         The phonon wavevector, in units of 2pi/a0 (a0 = lattice parameter).
+                         The meaning of these q points and their weights nq depend on the
+                         flags q2d and q_in_band_form. (NB: nq is integer)
+         +--------------------------------------------------------------------
+         
+         +--------------------------------------------------------------------
+         Variable:       nq
+         
+         Type:           INTEGER
+         Description:    The weight of the q-point; the meaning of nq depends
+                         on the flags q2d and q_in_band_form.
+         +--------------------------------------------------------------------
+         
+   ===END OF CARD==========================================================
+   
+   
+    
+ENDIF
+________________________________________________________________________
+
+________________________________________________________________________
+* IF nat_todo was specified : 
+
+   ========================================================================
+   Line of input:
+   
+         atom(1)  atom(2) ... atom(nat_todo)
+      
+      
+      DESCRIPTION OF ITEMS:
+      
+         +--------------------------------------------------------------------
+         Variables:      atom(1)  atom(2) ... atom(nat_todo)
+         
+         Type:           INTEGER
+         Description:    Contains the list of indices of atoms used in the
+                         calculation if "nat_todo" is specified.
+         +--------------------------------------------------------------------
+         
+         
+   ===End of line-of-input=================================================
+   
+   
+    
+ENDIF
+________________________________________________________________________
+
+
+::::  ADDITIONAL INFORMATION 
+
+   NB: The program ph.x writes on the tmp_dir/_ph0/{prefix}.phsave directory
+   a file for each representation of each q point. This file is called
+   dynmat.#iq.#irr.xml where #iq is the number of the q point and #irr
+   is the number of the representation. These files contain the
+   contribution to the dynamical matrix of the irr representation for the
+   iq point.
+   
+   If recover=.true. ph.x does not recalculate the
+   representations already saved in the tmp_dir/_ph0/{prefix}.phsave
+   directory.  Moreover ph.x writes on the files patterns.#iq.xml in the
+   tmp_dir/_ph0/{prefix}.phsave directory the displacement patterns that it
+   is using. If recover=.true. ph.x does not recalculate the
+   displacement patterns found in the tmp_dir/_ph0/{prefix}.phsave directory.
+   
+   This mechanism allows:
+   
+     1) To recover part of the ph.x calculation even if the recover file
+        or files are corrupted. You just remove the _ph0/{prefix}.recover
+        files from the tmp_dir directory. You can also remove all the _ph0
+        files and keep only the _ph0/{prefix}.phsave directory.
+   
+     2) To split a phonon calculation into several jobs for different
+        machines (or set of nodes). Each machine calculates a subset of
+        the representations and saves its dynmat.#iq.#irr.xml files on
+        its tmp_dir/_ph0/{prefix}.phsave directory. Then you collect all the
+        dynmat.#iq.#irr.xml files in one directory and run ph.x to
+        collect all the dynamical matrices and diagonalize them.
+   
+   NB: To split the q points in different machines, use the input
+   variables start_q and last_q. To split the irreducible
+   representations, use the input variables "start_irr", "last_irr". Please
+   note that different machines will use, in general, different
+   displacement patterns and it is not possible to recollect partial
+   dynamical matrices generated with different displacement patterns.  A
+   calculation split into different machines will run as follows: A
+   preparatory run of ph.x with "start_irr"=0, "last_irr"=0 produces the sets
+   of displacement patterns and save them on the patterns.#iq.xml files.
+   These files are copied in all the tmp_dir/_ph0/{prefix}.phsave directories
+   of the machines where you plan to run ph.x. ph.x is run in different
+   machines with complementary sets of start_q, last_q, "start_irr" and
+   "last_irr" variables.  All the files dynmat.#iq.#irr.xml are
+   collected on a single tmp_dir/_ph0/{prefix}.phsave directory (remember to
+   collect also dynmat.#iq.0.xml).  A final run of ph.x in this
+   machine collects all the data contained in the files and diagonalizes
+   the dynamical matrices.  This is done requesting a complete dispersion
+   calculation without using start_q, last_q, "start_irr", or "last_irr".
+   See an example in examples/GRID_example.
+   
+   On parallel machines the q point and the irreps calculations can be split
+   automatically using the -nimage flag. See the phonon user guide for further
+   information.
+   
+
+This file has been created by helpdoc utility on Fri Jun 22 17:11:33 CEST 2018

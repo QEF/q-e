@@ -51,7 +51,6 @@
        etf_k(:,:),             &!  Saved interpolated KS eigenenergies for later used in q-parallelization (nbnd, nkqf)
        etf_ks(:,:),            &!  interpolated eigenvalues (nbnd, nkqf) KS eigenvalues in the case of eig_read
        wf(:,:),                &!  interpolated eigenfrequencies 
-       wslen(:),               &!  length of the wigner seitz points in units of alat
        gamma_all(:,:,:),       &!
        gamma_nest(:,:),        &!  Nesting function in the case of q-parallelization
        gamma_v_all(:,:,:),     &!
@@ -92,21 +91,19 @@
        nkqtotf,                &!  total number of k+q points (fine grid)
        nqtotf,                 &!  total number of q points (fine grid)
        nrr,                    &!  number of wigner-seitz points (elec interp only)
-       nrr_k,                  &!  number of wigner-seitz points for electrons
-       nrr_q,                  &!  number of wigner-seitz points for phonons
        ibndmin,                &!  band bounds for slimming down electron-phonon matrix 
        ibndmax,                &!
        lower_band,             &!  Lower band index for image (band) parallelization
        upper_band               !  Upper band index for image (band) parallelization
   INTEGER, ALLOCATABLE ::      & 
-       irvec(:,:),             &!  crys coordinates of wigner-seitz vectors (both elec and phon)
-       ndegen(:),              &!  corresponding degeneragy, electrons (old version)
-       ndegen_k(:),            &!  corresponding degeneragy, electrons
-       ndegen_q(:),            &!  corresponding degeneragy, phonons
        igk(:),                 &!  Index for k+G vector
        igkq(:),                &!  Index for k+q+G vector
        igk_k_all(:,:),         &!  Global index (in case of parallel)
-       ngk_all(:)               !  Global number of plane wave for each global k-point
+       ngk_all(:),             &!  Global number of plane wave for each global k-point
+       s_BZtoIBZ(:,:,:),       &!  Save the symmetry operation that brings BZ k into IBZ
+       BZtoIBZ(:),             &!  Map between the full uniform k-grid and the IBZ  
+       map_rebal(:),           &!  Map between the k-point and their load rebalanced one
+       map_rebal_inv(:)         !  Map between the k-point and their load rebalanced one
   INTEGER, allocatable ::      &
        shift (:),              &!  for every k+q, index of the G0 which folds k+q into k+q+G0 of the first BZ
        gmap(:)                  !  the map G -> G-G_0 in the large (density) G vectors set, for every G_0

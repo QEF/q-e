@@ -1,0 +1,1308 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- *** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST *** --><meta http-equiv="Content-Style-Type" CONTENT="text/css">
+<style>
+	  body {
+	  background-color:#ffffff;
+	  font:normal 14px/1.8em arial, helvetica, sans-serif;
+	  width:900px;
+	  text-align:justify;
+	  margin: 30 10 10 30;
+	  }
+
+	  h1 {
+	  font-size:24px;
+	  }
+	  
+	  h2 {
+	  font-size:18px;
+	  }
+	  
+	  h3 {
+	  font-size:16px;
+	  }
+	  pre, tt, code {
+	  font-size:14px;
+	  }	  
+	  .syntax, .syntax table {
+	  font-size:14px;
+	  }
+	  span.namelist {
+	  color: #214478;
+	  }
+	  span.card {
+	  color: #782167;
+	  }
+	  span.flag {
+	  color: #008000;
+	  font-weight: bold;
+	  }
+	</style>
+<title>ph.x: input description</title>
+</head>
+<body>
+<a name="__top__"></a><table style="border-width: 0; table-layout: auto; width: 100%; text-align: left; vertical-align: top; background: #00395a;">
+<tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
+<h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
+<h2 style="margin: 10 10 10 15; text-align: left;"> Program:
+	      ph.x / PWscf / Quantum Espresso<span style="font-weight: normal;"> (version: svn)</span>
+</h2>
+</th></tr>
+<tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
+   <blockquote style="margin-bottom: 2em;">
+<h3>TABLE OF CONTENTS</h3>
+<blockquote>
+   
+   
+   <p><a href="#idm3">INTRODUCTION</a></p>
+   <p><a href="#idm15">Line-of-input:</a> <a href="#idm16">title_line</a></p>
+   <p><a href="#idm18">&amp;INPUTPH</a></p>
+<blockquote>
+<a href="#idm19">amass</a> | <a href="#idm22">outdir</a> | <a href="#idm27">prefix</a> | <a href="#idm30">niter_ph</a> | <a href="#idm33">tr2_ph</a> | <a href="#idm36">alpha_mix(niter)</a> | <a href="#idm39">nmix_ph</a> | <a href="#idm42">verbosity</a> | <a href="#idm48">reduce_io</a> | <a href="#idm51">max_seconds</a> | <a href="#idm54">fildyn</a> | <a href="#idm57">fildrho</a> | <a href="#idm60">fildvscf</a> | <a href="#idm63">epsil</a> | <a href="#idm67">lrpa</a> | <a href="#idm70">lnoloc</a> | <a href="#idm73">trans</a> | <a href="#idm78">lraman</a> | <a href="#idm84">eth_rps</a> | <a href="#idm87">eth_ns</a> | <a href="#idm90">dek</a> | <a href="#idm93">recover</a> | <a href="#idm96">low_directory_check</a> | <a href="#idm99">only_init</a> | <a href="#idm102">qplot</a> | <a href="#idm105">q2d</a> | <a href="#idm108">q_in_band_form</a> | <a href="#idm111">electron_phonon</a> | <a href="#idm124">lshift_q</a> | <a href="#idm127">zeu</a> | <a href="#idm133">zue</a> | <a href="#idm138">elop</a> | <a href="#idm141">fpol</a> | <a href="#idm145">ldisp</a> | <a href="#idm151">nogg</a> | <a href="#idm154">asr</a> | <a href="#idm157">ldiag</a> | <a href="#idm162">lqdir</a> | <a href="#idm167">search_sym</a> | <a href="#idm171">nq1</a> | <a href="#idm172">nq2</a> | <a href="#idm173">nq3</a> | <a href="#idm178">nk1</a> | <a href="#idm179">nk2</a> | <a href="#idm180">nk3</a> | <a href="#idm181">k1</a> | <a href="#idm182">k2</a> | <a href="#idm183">k3</a> | <a href="#idm188">start_irr</a> | <a href="#idm198">last_irr</a> | <a href="#idm208">nat_todo</a> | <a href="#idm213">modenum</a> | <a href="#idm218">start_q</a> | <a href="#idm229">last_q</a> | <a href="#idm241">dvscf_star</a> | <a href="#idm249">drho_star</a>
+</blockquote>
+   <p><a href="#idm261">Line-of-input:</a> <a href="#idm262"> xq(1)  xq(2)  xq(3)
+               </a></p>
+<p><a href="#idm270">qPointsSpecs</a></p>
+<blockquote>
+<a href="#idm273">nqs</a> | <a href="#idm281">xq1</a> | <a href="#idm282">xq2</a> | <a href="#idm283">xq3</a> | <a href="#idm284">nq</a>
+</blockquote>
+   <p><a href="#idm288">Line-of-input:</a> <a href="#idm289"> atom(1)  atom(2) ... atom(nat_todo)
+               </a></p>
+   <p><a href="#idm293"> ADDITIONAL INFORMATION </a></p>
+</blockquote>
+</blockquote>
+   <blockquote>
+<a name="idm3"></a><h3>INTRODUCTION</h3>
+<blockquote><pre>
+<b>Input data format:</b> { } = optional, [ ] = it depends, # = comment
+
+<b>Structure of the input data:</b>
+===============================================================================
+
+title_line
+
+<b>&amp;INPUTPH</b>
+   ...
+<b>/</b>
+
+[ xq(1) xq(2) xq(3) ]                        <i># if <a href="#ldisp">ldisp</a> != .true.  and  <a href="#qplot">qplot</a> != .true.</i>
+
+[ nqs                                        <i># if <a href="#qplot">qplot</a> == .true. </i>
+  xq(1,i)    xq(2,i)    xq(3,1)    nq(1)
+  ...
+  xq(1,nqs)  xq(2,nqs)  xq(3,nqs)  nq(nqs) ]
+
+[ atom(1)  atom(2)  ... atom(nat_todo) ]     <i># if <a href="#nat_todo">nat_todo</a> was specified</i>
+   </pre></blockquote>
+</blockquote>
+   <a name="idm15"></a><table border="0" width="100%" style="margin-bottom: 20; ">
+<tr><th bgcolor="#ddcba6"><h3 style="margin: 10 10 10 15; text-align: left;"> 
+	    Line of input 
+	  </h3></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%; "><tbody>
+<tr><td>
+<h3>Syntax:</h3>
+<blockquote>
+<i><a href="#idm16">title_line</a></i>  </blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm16"></a><a name="title_line"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">title_line</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Title of the job, i.e., a line that is reprinted on output.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+   <a name="idm18"></a><a name="INPUTPH"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>INPUTPH</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <a name="idm19"></a><a name="amass"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">amass(i), i=1,ntyp</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0.0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Atomic mass [amu] of each atomic type.
+If not specified, masses are read from data file.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm22"></a><a name="outdir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">outdir</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+value of the <tt>ESPRESSO_TMPDIR</tt> environment variable if set;
+<br> current directory ('./') otherwise
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Directory containing input, output, and scratch files;
+must be the same as specified in the calculation of
+the unperturbed system.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm27"></a><a name="prefix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">prefix</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'pwscf'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Prepended to input/output filenames; must be the same
+used in the calculation of unperturbed system.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm30"></a><a name="niter_ph"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">niter_ph</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> maxter=100
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Maximum number of iterations in a scf step. If you want
+more than 100, edit variable "maxter" in PH/phcom.f90
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm33"></a><a name="tr2_ph"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">tr2_ph</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1e-12
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Threshold for self-consistency.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm36"></a><a name="alpha_mix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">alpha_mix(niter)</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> alpha_mix(1)=0.7
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Mixing factor (for each iteration) for updating
+the scf potential:
+
+vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm39"></a><a name="nmix_ph"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nmix_ph</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 4
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Number of iterations used in potential mixing.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm42"></a><a name="verbosity"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">verbosity</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'default'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;"> Options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'debug'</span>, <span class="flag">'high'</span>, <span class="flag">'medium'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> verbose output
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'low'</span>, <span class="flag">'default'</span>, <span class="flag">'minimal'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;"> short output
+            </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm48"></a><a name="reduce_io"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">reduce_io</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Reduce I/O to the strict minimum.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm51"></a><a name="max_seconds"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">max_seconds</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.d7
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Maximum allowed run time before the job stops smoothly.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm54"></a><a name="fildyn"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fildyn</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'matdyn'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> File where the dynamical matrix is written.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm57"></a><a name="fildrho"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fildrho</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+File where the charge density responses are written. Note that the file
+                  will actually be saved as ${outdir}/_ph0/${prefix}.${fildrho}1
+                  where  ${outdir}, ${prefix} and ${fildrho} are the values of the
+                  corresponding input variables
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm60"></a><a name="fildvscf"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fildvscf</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+File where the the potential variation is written
+(for later use in electron-phonon calculation, see also fildrho).
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm63"></a><a name="epsil"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">epsil</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. in a q=0 calculation for a non metal the
+macroscopic dielectric constant of the system is
+computed. Do not set <a href="#epsil">epsil</a> to .true. if you have a
+metallic system or q/=0: the code will complain and stop.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm67"></a><a name="lrpa"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lrpa</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. the dielectric constant is calculated at the
+RPA level with DV_xc=0.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm70"></a><a name="lnoloc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lnoloc</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. the dielectric constant is calculated without
+local fields, i.e. by setting DV_H=0 and DV_xc=0.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm73"></a><a name="trans"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">trans</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .true.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. the phonons are computed.
+If <a href="#trans">trans</a> .and. <a href="#epsil">epsil</a> are .true. effective charges are
+calculated.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm78"></a><a name="lraman"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lraman</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. calculate non-resonant Raman coefficients
+using second-order response as in:
+M. Lazzeri and F. Mauri, <a href="https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.90.036401">PRL 90, 036401 (2003)</a>.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <p><b> Optional variables for Raman:
+         </b></p>
+         <a name="idm84"></a><a name="eth_rps"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">eth_rps</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.0d-9
+            </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Threshold for calculation of  Pc R |psi&gt;.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm87"></a><a name="eth_ns"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">eth_ns</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.0e-12
+            </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Threshold for non-scf wavefunction calculation.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm90"></a><a name="dek"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">dek</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.0e-3
+            </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> Delta_xk used for wavefunction derivation wrt k.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      </td></tr></table>
+      <a name="idm93"></a><a name="recover"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">recover</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> If .true. restart from an interrupted run.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm96"></a><a name="low_directory_check"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">low_directory_check</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. search in the phsave directory only the
+                 quantities requested in input.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm99"></a><a name="only_init"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">only_init</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. only the bands and other initialization quantities are calculated.
+(used for GRID parallelization)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm102"></a><a name="qplot"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">qplot</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;"> If .true. a list of q points is read from input.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm105"></a><a name="q2d"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">q2d</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. three q points and relative weights are
+read from input. The three q points define the rectangle
+q(:,1) + l (q(:,2)-q(:,1)) + m (q(:,3)-q(:,1)) where
+0&lt; l,m &lt; 1. The weights are integer and those of points two
+and three are the number of points in the two directions.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm108"></a><a name="q_in_band_form"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">q_in_band_form</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+This flag is used only when qplot is .true. and q2d is
+.false.. When .true. each couple of q points q(:,i+1) and
+q(:,i) define the line from q(:,i) to q(:,i+1) and nq
+points are generated along that line. nq is the weigth of
+q(:,i). When .false. only the list of q points given as
+input is calculated. The weights are not used.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm111"></a><a name="electron_phonon"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">electron_phonon</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ' '
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;">
+Options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'simple'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Electron-phonon lambda coefficients are computed
+for a given q and a grid of k-points specified by
+the variables nk1, nk2, nk3, k1, k2, k3.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'interpolated'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Electron-phonon is calculated by interpolation
+over the Brillouin Zone as in M. Wierzbowska, et
+al. <a href="https://arxiv.org/abs/cond-mat/0504077">arXiv:cond-mat/0504077</a>
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'lambda_tetra'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+The electron-phonon coefficient \lambda_{q \nu}
+is calculated with the optimized tetrahedron method.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'gamma_tetra'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+The phonon linewidth \gamma_{q \nu} is calculated
+from the electron-phonon interactions
+using the optimized tetrahedron method.
+            </pre></dd>
+</dl>
+<pre style="margin-bottom: -1em;">
+For metals only, requires gaussian smearing.
+
+If <a href="#trans">trans</a>=.true., the lambdas are calculated in the same
+run, using the same k-point grid for phonons and lambdas.
+If <a href="#trans">trans</a>=.false., the lambdas are calculated using
+previously saved DeltaVscf in <a href="#fildvscf">fildvscf</a>, previously saved
+dynamical matrix, and the present punch file. This allows
+the use of a different (larger) k-point grid.
+            </pre>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm124"></a><a name="lshift_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lshift_q</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Use a wave-vector grid displaced by half a grid step
+in each direction - meaningful only when ldisp is .true.
+When this option is set, the q2r.x code cannot be used.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm127"></a><a name="zeu"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">zeu</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> zeu=<a href="#epsil">epsil</a>
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. in a q=0 calculation for a non metal the
+effective charges are computed from the dielectric
+response. This is the default algorithm. If <a href="#epsil">epsil</a>=.true.
+and <a href="#zeu">zeu</a>=.false. only the dielectric tensor is calculated.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm133"></a><a name="zue"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">zue</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. in a q=0 calculation for a non metal the
+effective charges are computed from the phonon
+density responses. This is an alternative algorithm,
+different from the default one (if <a href="#trans">trans</a> .and. <a href="#epsil">epsil</a> )
+The results should be the same within numerical noise.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm138"></a><a name="elop"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">elop</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. calculate electro-optic tensor.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm141"></a><a name="fpol"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fpol</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. calculate dynamic polarizabilities
+Requires <a href="#epsil">epsil</a>=.true. ( experimental stage:
+see example09 for calculation of methane ).
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm145"></a><a name="ldisp"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ldisp</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. the run calculates phonons for a grid of
+q-points specified by <a href="#nq1">nq1</a>, <a href="#nq2">nq2</a>, <a href="#nq3">nq3</a> - for direct
+calculation of the entire phonon dispersion.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm151"></a><a name="nogg"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nogg</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. disable the "gamma_gamma" trick used to speed
+up calculations at q=0 (phonon wavevector) if the sum over
+the Brillouin Zone includes k=0 only. The gamma_gamma
+trick exploits symmetry and acoustic sum rule to reduce
+the number of linear response calculations to the strict
+minimum, as it is done in code phcg.x.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm154"></a><a name="asr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">asr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Apply Acoustic Sum Rule to dynamical matrix, effective charges
+Works only in conjunction with "gamma_gamma" tricks (see above)
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm157"></a><a name="ldiag"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ldiag</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. forces the diagonalization of the dynamical
+matrix also when only a part of the dynamical matrix
+has been calculated. It is used together with <a href="#start_irr">start_irr</a>
+and <a href="#last_irr">last_irr</a>. If all modes corresponding to a
+given irreducible representation have been calculated,
+the phonon frequencies of that representation are
+correct. The others are zero or wrong. Use with care.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm162"></a><a name="lqdir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lqdir</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. ph.x creates inside outdir a separate subdirectory
+for each q vector. The flag is set to .true. when <a href="#ldisp">ldisp</a>=.true.
+and <a href="#fildvscf">fildvscf</a> /= ' ' or when an electron-phonon
+calculation is performed. The induced potential is saved
+separately for each q inside the subdirectories.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm167"></a><a name="search_sym"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">search_sym</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .true.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Set it to .false. if you want to disable the mode
+symmetry analysis.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm171"></a><a name="nq1"></a>nq1, <a name="idm172"></a><a name="nq2"></a>nq2, <a name="idm173"></a><a name="nq3"></a>nq3</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0,0,0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Parameters of the Monkhorst-Pack grid (no offset) used
+when <a href="#ldisp">ldisp</a>=.true. Same meaning as for nk1, nk2, nk3
+in the input of pw.x.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm178"></a><a name="nk1"></a>nk1, <a name="idm179"></a><a name="nk2"></a>nk2, <a name="idm180"></a><a name="nk3"></a>nk3, <a name="idm181"></a><a name="k1"></a>k1, <a name="idm182"></a><a name="k2"></a>k2, <a name="idm183"></a><a name="k3"></a>k3</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0,0,0,0,0,0
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+When these parameters are specified the phonon program
+runs a pw non-self consistent calculation with a different
+k-point grid thant that used for the charge density.
+This occurs even in the Gamma case.
+nk1,nk2,nk3 are the parameters of the Monkhorst-Pack grid
+with offset determined by k1,k2,k3.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <p><b> Specification of irreducible representation
+         </b></p>
+         <a name="idm188"></a><a name="start_irr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">start_irr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+            </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#last_irr">last_irr</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Perform calculations only from <a href="#start_irr">start_irr</a> to <a href="#last_irr">last_irr</a>
+irreducible representations.
+
+IMPORTANT:
+   * <a href="#start_irr">start_irr</a> must be &lt;= 3*nat
+   * do not specify <a href="#nat_todo">nat_todo</a> together with
+     <a href="#start_irr">start_irr</a>, <a href="#last_irr">last_irr</a>
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm198"></a><a name="last_irr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">last_irr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 3*nat
+            </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#start_irr">start_irr</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Perform calculations only from <a href="#start_irr">start_irr</a> to <a href="#last_irr">last_irr</a>
+irreducible representations.
+
+IMPORTANT:
+   * <a href="#start_irr">start_irr</a> must be &lt;= 3*nat
+   * do not specify <a href="#nat_todo">nat_todo</a> together with
+     <a href="#start_irr">start_irr</a>, <a href="#last_irr">last_irr</a>
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm208"></a><a name="nat_todo"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nat_todo</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0, i.e. displace all atoms
+            </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Choose the subset of atoms to be used in the linear response
+calculation: <a href="#nat_todo">nat_todo</a> atoms, specified in input (see below)
+are displaced. Can be used to estimate modes for a molecule
+adsorbed over a surface without performing a full fledged
+calculation. Use with care, at your own risk, and be aware
+that this is an approximation and may not work.
+IMPORTANT:
+   * <a href="#nat_todo">nat_todo</a> &lt;= nat
+   * if linear-response is calculated for a given atom, it
+     should also be done for all symmetry-equivalent atoms,
+     or else you will get incorrect results
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm213"></a><a name="modenum"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">modenum</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+            </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+For single-mode phonon calculation : modenum is the index of the
+irreducible representation (irrep) into which the reducible
+representation formed by the 3*nat atomic displacements are
+decomposed in order to perform the phonon calculation.
+Note that a single-mode calculation will not give you the
+frequency of a single phonon mode: in general, the selected
+"modenum" is not an eigenvector. What you get on output is
+a column of the dynamical matrix.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      </td></tr></table>
+      <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <p><b> q-point specification
+         </b></p>
+         <a name="idm218"></a><a name="start_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">start_q</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+            </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#last_q">last_q</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Used only when ldisp=.true..
+Computes only the q points from <a href="#start_q">start_q</a> to <a href="#last_q">last_q</a>.
+
+IMPORTANT:
+   * <a href="#start_q">start_q</a> must be &lt;= <a href="#nqs">nqs</a> (number of q points found)
+   * do not specify <a href="#nat_todo">nat_todo</a> together with
+     <a href="#start_q">start_q</a>, <a href="#last_q">last_q</a>
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm229"></a><a name="last_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">last_q</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> number of q points
+            </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#start_q">start_q</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Used only when <a href="#ldisp">ldisp</a>=.true..
+Computes only the q points from <a href="#start_q">start_q</a> to <a href="#last_q">last_q</a>.
+
+IMPORTANT
+   * <a href="#last_q">last_q</a> must be &lt;= <a href="#nqs">nqs</a> (number of q points)
+   * do not specify <a href="#nat_todo">nat_todo</a> together with
+     <a href="#start_q">start_q</a>, <a href="#last_q">last_q</a>
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm241"></a><a name="dvscf_star"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">dvscf_star</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">STRUCTURE</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> disabled
+            </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+It contains the following components:
+
+<b>dvscf_star%open</b>  (logical, default: .false.)
+<b>dvscf_star%dir</b>   (character, default: outdir//"Rotated_DVSCF" or the
+                  ESPRESSO_FILDVSCF_DIR environment variable)
+<b>dvscf_star%ext</b>   (character, default: "dvscf") the extension to use
+                  for the name of the output files, see below
+<b>dvscf_star%basis</b> (character, default: "cartesian") the basis on which
+                  the rotated dvscf will be saved
+<b>dvscf_star%pat</b>   (logical, default: false) save an optional file with the
+                  displacement patterns and q vector for each dvscf file
+
+IF dvscf_star%open is .true. use symmetry to compute and store the variation
+of the self-consistent potential on every q* in the star of the present q.
+
+The rotated dvscf will then be stored in directory dvscf_star%dir with name
+prefix.dvscf_star%ext.q_name//"1". Where q_name is derived from the coordinates
+of the q-point, expressed as fractions in crystalline coordinates
+(notice that ph.x reads q-points in cartesian coordinates).
+E.g. q_cryst= (0, 0.5, -0.25) -&gt; q_name = "0_1o2_-1o4"
+
+The dvscf can be represented on a basis of cartesian 1-atom displacements
+(dvscf_star%basis='cartesian') or on the basis of the modes at the rotated q-point
+(dvscf_star%basis='modes'). Notice that the el-ph wannier code requires 'cartesian'.
+Each dvscf file comes with a corresponding pattern file with an additional ".pat"
+suffix; this file contains information about the basis and the q-point of the dvscf.
+
+Note: rotating dvscf can require a large amount of RAM memory and can be i/o
+      intensive; in its current implementation all the operations are done
+      on a single processor.
+Note2: this feature is currently untested with image parallelisation.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         <a name="idm249"></a><a name="drho_star"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">drho_star</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">STRUCTURE</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> disabled
+            </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#dvscf_star">dvscf_star</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+It contains the following components:
+
+<b>drho_star%open</b>  (logical, default: .false.)
+<b>drho_star%dir</b>   (character, default: outdir//"Rotated_DRHO" or the
+                 ESPRESSO_FILDRHO_DIR environment variable)
+<b>drho_star%ext</b>   (character, default: "drho") the extension to use
+                 for the name of the output files, see below
+<b>drho_star%basis</b> (character, default: "modes") the basis on which
+                 the rotated drho will be saved
+<b>drho_star%pat</b>   (logical, default: true) save an optional file with the
+                 displacement patterns and q vector for each drho file
+
+Like <a href="#dvscf_star">dvscf_star</a>, but for the perturbation of the charge density.
+Notice that the defaults are different.
+            </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      </td></tr></table>
+   </td></tr></tbody></table></td></tr>
+</table>
+   <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
+<b>IF </b><tt><em>ldisp != .true.   and   qplot != .true.</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <a name="idm261"></a><table border="0" width="100%" style="margin-bottom: 20; ">
+<tr><th bgcolor="#ddcba6"><h3 style="margin: 10 10 10 15; text-align: left;"> 
+	    Line of input 
+	  </h3></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%; "><tbody>
+<tr><td>
+<h3>Syntax:</h3>
+<blockquote>
+<i><a href="#idm262"> xq(1)  xq(2)  xq(3)
+               </a></i>  </blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm262"></a><a name="xq_list"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; "> xq(1)  xq(2)  xq(3)
+               </th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The phonon wavevector, in units of 2pi/a0
+(a0 = lattice parameter).
+Not used if <a href="#ldisp">ldisp</a>=.true. or <a href="#qplot">qplot</a>=.true.
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+      </td></tr></table></blockquote>
+<b>ELSEIF </b><tt><em>qplot == .true.</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <p><b> Specification of q points when <a href="#qplot">qplot</a> == .true.
+         </b></p>
+         <a name="idm270"></a><a name="qPointsSpecs"></a><table border="0" style="margin-bottom: 20; table-layout: auto; width: 100%;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left; white-space: nowrap;"> 
+	    Card: <span class="card">qPointsSpecs</span> </h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%;"><tbody>
+<tr><td>
+<h3>Syntax:</h3>
+<blockquote><div class="syntax">
+<i><a href="#idm273">nqs</a></i>  <br><a name="idm276"></a><table>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm281">xq1(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm282">xq2(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm283">xq3(1)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm284">nq(1)</a></i> </td>
+</tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm281">xq1(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm282">xq2(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm283">xq3(2)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm284">nq(2)</a></i> </td>
+</tr>
+<tr><td colspan="2"> . . .</td></tr>
+<tr>
+<td style="white-space:nowrap"> <i><a href="#idm281">xq1(nqs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm282">xq2(nqs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm283">xq3(nqs)</a></i> </td>
+<td style="white-space:nowrap"> <i><a href="#idm284">nq(nqs)</a></i> </td>
+</tr>
+</table>
+</div></blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm273"></a><a name="nqs"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nqs</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Number of q points in the list. Used only if <a href="#qplot">qplot</a>=.true.
+                     </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
+<a name="xq1"><a name="idm281">xq1</a></a>, <a name="xq2"><a name="idm282">xq2</a></a>, <a name="xq3"><a name="idm283">xq3</a></a>
+</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+q-point coordinates; used only with <a href="#ldisp">ldisp</a>=.true. and qplot=.true.
+The phonon wavevector, in units of 2pi/a0 (a0 = lattice parameter).
+The meaning of these q points and their weights nq depend on the
+flags q2d and q_in_band_form. (NB: nq is integer)
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+<table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; "><a name="nq"><a name="idm284">nq</a></a></th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The weight of the q-point; the meaning of nq depends
+on the flags q2d and q_in_band_form.
+                        </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+      </td></tr></table></blockquote>
+</td></tr></table>
+   <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
+<b>IF </b><tt><em>nat_todo was specified</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+         <a name="idm288"></a><table border="0" width="100%" style="margin-bottom: 20; ">
+<tr><th bgcolor="#ddcba6"><h3 style="margin: 10 10 10 15; text-align: left;"> 
+	    Line of input 
+	  </h3></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 100%; "><tbody>
+<tr><td>
+<h3>Syntax:</h3>
+<blockquote>
+<i><a href="#idm289"> atom(1)  atom(2) ... atom(nat_todo)
+               </a></i>  </blockquote>
+</td></tr>
+<tr><td>
+<h3>Description of items:</h3>
+<blockquote>
+<a name="idm289"></a><a name="nat_todo_list"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; "> atom(1)  atom(2) ... atom(nat_todo)
+               </th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Contains the list of indices of atoms used in the
+calculation if <a href="#nat_todo">nat_todo</a> is specified.
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+</blockquote>
+</td></tr>
+</tbody></table></td></tr>
+</table>
+      </td></tr></table></blockquote>
+</td></tr></table>
+   <blockquote>
+<a name="idm293"><h3> ADDITIONAL INFORMATION </h3></a>
+      <blockquote><pre>
+NB: The program ph.x writes on the tmp_dir/_ph0/{prefix}.phsave directory
+a file for each representation of each q point. This file is called
+dynmat.#iq.#irr.xml where #iq is the number of the q point and #irr
+is the number of the representation. These files contain the
+contribution to the dynamical matrix of the irr representation for the
+iq point.
+
+If recover=.true. ph.x does not recalculate the
+representations already saved in the tmp_dir/_ph0/{prefix}.phsave
+directory.  Moreover ph.x writes on the files patterns.#iq.xml in the
+tmp_dir/_ph0/{prefix}.phsave directory the displacement patterns that it
+is using. If recover=.true. ph.x does not recalculate the
+displacement patterns found in the tmp_dir/_ph0/{prefix}.phsave directory.
+
+This mechanism allows:
+
+  1) To recover part of the ph.x calculation even if the recover file
+     or files are corrupted. You just remove the _ph0/{prefix}.recover
+     files from the tmp_dir directory. You can also remove all the _ph0
+     files and keep only the _ph0/{prefix}.phsave directory.
+
+  2) To split a phonon calculation into several jobs for different
+     machines (or set of nodes). Each machine calculates a subset of
+     the representations and saves its dynmat.#iq.#irr.xml files on
+     its tmp_dir/_ph0/{prefix}.phsave directory. Then you collect all the
+     dynmat.#iq.#irr.xml files in one directory and run ph.x to
+     collect all the dynamical matrices and diagonalize them.
+
+NB: To split the q points in different machines, use the input
+variables start_q and last_q. To split the irreducible
+representations, use the input variables <a href="#start_irr">start_irr</a>, <a href="#last_irr">last_irr</a>. Please
+note that different machines will use, in general, different
+displacement patterns and it is not possible to recollect partial
+dynamical matrices generated with different displacement patterns.  A
+calculation split into different machines will run as follows: A
+preparatory run of ph.x with <a href="#start_irr">start_irr</a>=0, <a href="#last_irr">last_irr</a>=0 produces the sets
+of displacement patterns and save them on the patterns.#iq.xml files.
+These files are copied in all the tmp_dir/_ph0/{prefix}.phsave directories
+of the machines where you plan to run ph.x. ph.x is run in different
+machines with complementary sets of start_q, last_q, <a href="#start_irr">start_irr</a> and
+<a href="#last_irr">last_irr</a> variables.  All the files dynmat.#iq.#irr.xml are
+collected on a single tmp_dir/_ph0/{prefix}.phsave directory (remember to
+collect also dynmat.#iq.0.xml).  A final run of ph.x in this
+machine collects all the data contained in the files and diagonalizes
+the dynamical matrices.  This is done requesting a complete dispersion
+calculation without using start_q, last_q, <a href="#start_irr">start_irr</a>, or <a href="#last_irr">last_irr</a>.
+See an example in examples/GRID_example.
+
+On parallel machines the q point and the irreps calculations can be split
+automatically using the -nimage flag. See the phonon user guide for further
+information.
+      </pre></blockquote>
+   </blockquote>
+</td></tr>
+</table>
+<small>
+	  This file has been created by helpdoc utility on Fri Jun 22 17:11:33 CEST 2018.
+	</small>
+</body>
+</html>

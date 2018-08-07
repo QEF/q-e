@@ -16,7 +16,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   !
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE buffers,    ONLY : get_buffer
   USE uspp,       ONLY : okvan, nkb, vkb
   USE uspp_param, ONLY : nhm
@@ -29,8 +29,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   USE qpoint,     ONLY : nksq, ikks, ikqs
   USE eqv,        ONLY : evq
   USE control_lr, ONLY : lgamma
-
-  USE units_ph,   ONLY : iuwfc, lrwfc
+  USE units_lr,   ONLY : iuwfc, lrwfc
   USE becmod,     ONLY : bec_type
 
   implicit none

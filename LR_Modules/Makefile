@@ -5,19 +5,20 @@ include ../make.inc
 # location of needed modules and included files (if any)
 MODFLAGS=$(BASEMOD_FLAGS) $(MOD_FLAG)$(TOPDIR)/PW/src
 
-IFLAGS=
-
 LR_MODULES = \
 adddvscf.o \
 addusdbec.o \
 addusdbec_nc.o \
 apply_dpot.o \
+addusldos.o \
+adddvepsi_us.o \
 cft_wave.o \
 cgsolve_all.o \
 cg_psi.o \
 ch_psi_all.o \
 commutator_Hx_psi.o \
 Coul_cut_2D_ph.o \
+check_q_points_sym.o \
 dfpt_tetra_mod.o \
 dynmat_sub.o \
 h_prec.o \
@@ -35,14 +36,19 @@ set_dbecsum_nc.o \
 set_int3_nc.o \
 smallgq.o \
 lr_sm1_psi.o \
+localdos.o \
 setup_dgc.o \
 compute_vsgga.o \
 setup_dmuxc.o \
 setup_nbnd_occ.o \
 setup_alpha_pv.o \
-qdipol_cryst.o \
-adddvepsi_us.o \
+set_small_group_of_q.o \
+sgam_ph.o \
+star_q.o \
 setqmod.o \
+qdipol_cryst.o \
+mode_group.o \
+mix_pot.o \
 lrcom.o
 
 TLDEPS=libfft mods

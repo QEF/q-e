@@ -36,7 +36,7 @@ MODULE lr_exx_kernel
   USE lr_variables,           ONLY : gamma_only, lr_verbosity
   USE realus,                 ONLY : invfft_orbital_gamma, fwfft_orbital_gamma,&
                                    & invfft_orbital_k, fwfft_orbital_k
-  USE wavefunctions_module,   ONLY : psic
+  USE wavefunctions,          ONLY : psic
   USE cell_base,              ONLY : omega
   USE exx_base,               ONLY : g2_convolution
   USE exx,                    ONLY : exxalfa, npwt, gt, dfftt
@@ -391,6 +391,10 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
   COMPLEX(DP), ALLOCATABLE :: psic_all(:), temppsic_all(:), temppsic(:)
   !
   INTEGER   :: ibnd_start_gamma, ibnd_end_gamma
+
+  LOGICAL   :: exst
+
+
   ! Offset ibnd_start and ibnd_ed to avoid conflicts with gamma_tricks for
   ! even values
   !
@@ -451,9 +455,9 @@ SUBROUTINE lr_exx_kernel_noint ( evc, int_vect )
            w2=0.0d0
         ENDIF
         ! Update the container with the actual interaction for this band(s).
-        revc_int(1:dfftt%nnr,:)= revc_int(1:dfftt%nnr,:) & 
-             & -1.d0 * scale * k1d_term_gamma(w1,w2,psic,fac,ibnd) &
-             & +1.d0 * scale * k2d_term_gamma(w1,w2,psic,fac,ibnd)
+        revc_int(1:dfftt%nnr,:)= revc_int(1:dfftt%nnr,:) &
+             & -1.d0 * scale * k1d_term_gamma(w1,w2,psic,fac,ibnd,evc(:,:,1)) & 
+             & +1.d0 * scale * k2d_vexx_term_gamma(w1,w2,psic,fac,ibnd,.false.)
         !
      ENDDO
      !
@@ -684,8 +688,8 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
      !
      IF (.NOT.ltammd) THEN
         revc_int(1:dfftt%nnr,:)= revc_int(1:dfftt%nnr,:)&
-             & -1.d0 * scale * k1d_term_gamma(w1,w2,psic,fac,ibnd) &
-             & -1.d0 * scale * k2d_term_gamma(w1,w2,psic,fac,ibnd)
+             & -1.d0 * scale * k1d_term_gamma(w1,w2,psic,fac,ibnd,orbital) &
+             & -1.d0 * scale * k2d_vexx_term_gamma(w1,w2,psic,fac,ibnd,.true.)
      ELSE
         !
         ! Slightly different interaction in the Tamm--Dancoff case.
@@ -694,7 +698,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
         ! case.
         !
         revc_int(1:dfftt%nnr,:)= revc_int(1:dfftt%nnr,:)&
-             & -2.d0 * scale * k1d_term_gamma(w1,w2,psic,fac,ibnd)
+             & -2.d0 * scale * k1d_term_gamma(w1,w2,psic,fac,ibnd,orbital)
      ENDIF
      !
   ELSE
@@ -786,7 +790,7 @@ SUBROUTINE lr_exx_kernel_int ( orbital, ibnd, nbnd, ikk )
   
 END SUBROUTINE lr_exx_kernel_int
 !
-FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
+FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd, orbital) RESULT (psi_int)
   !------------------------------------------------------------------
   !
   !   This routine computes the  K^1d term, Eq (21) from Eq Ref (1).
@@ -797,7 +801,13 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
   !   psi contains two bands of |a> with w1, w2 the associated weights
   !   fac_in contains the interaction W(G) and ibnd the band index n'.
   !
+  !   in gamma, bands are real, so is not necessary computes vhart 
+  !   integrals for each couple of bands (integral in eq(21), 
+  !   because v, v' is the same of v', v, so only nbnd(nbnd+1)/2 
+  !   couple are computed    
+  !
   !   (1)  Rocca, Lu and Galli, J. Chem. Phys., 133, 164109 (2010)
+  !
   !------------------------------------------------------------------
   !
 
@@ -808,10 +818,14 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
   REAL(kind=DP), INTENT(IN)  :: w1, w2
   REAL(KIND=DP), ALLOCATABLE :: psi_int(:,:)
   INTEGER, INTENT(IN) :: ibnd
+  COMPLEX(DP), INTENT(IN) :: orbital(:,:)
+  COMPLEX(DP) :: psitemp(dfftt%nnr)
   !
   ! Workspaces
   !
   INTEGER                  :: ibnd2, is, npw_, ngm_, nnr_
+  INTEGER                  :: nrec
+  INTEGER                  :: idxvhartr, idxvharti
   !
   npw_=npwt
   ngm_=dfftt%ngm
@@ -821,56 +835,234 @@ FUNCTION k1d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
   psi_int = 0.d0
   !
   !
-  DO ibnd2=1,nbnd,1
-     !
-     !
-     ! Set up the pseudo density for this Hartree like interaction.
+  IF (ibnd < nbnd) then
      !
      vhart(:,:) = (0.d0,0.d0)
      pseudo_dens_c(:) = (0.d0,0.d0)
      !
-     ! The following code is to check if the value of ibnd2 is even or odd
-     ! and therefore whether the REAL or IMAGINARY part of red_revc0 is to be
-     ! used. This is because red_revc0 is stored using gamma_tricks.
+     ! calculate vhart for couples ibnd,ibnd and ibnd+1,ibnd
      !
-     IF (MOD(ibnd2,2)==1) THEN
-        pseudo_dens_c(1:nnr_) = CMPLX( w1*DBLE(red_revc0(1:nnr_,ibnd,1)) *&
-             & DBLE(red_revc0(1:nnr_,ibnd2,1)), &
-             & w2*AIMAG(red_revc0(1:nnr_,ibnd, 1)) *&
-             & DBLE(red_revc0(1:nnr_,ibnd2,1)), kind=DP )
-     ELSE
-        pseudo_dens_c(1:nnr_) = CMPLX( w1*DBLE(red_revc0(1:nnr_,ibnd,1)) *&
-             &AIMAG(red_revc0(1:nnr_,ibnd2-1,1)),&
-             & w2*AIMAG(red_revc0(1:nnr_,ibnd,1)) *&
-             &AIMAG(red_revc0(1:nnr_,ibnd2-1,1)), kind=DP )
-     ENDIF
+     pseudo_dens_c(1:nnr_) = CMPLX( w1*DBLE(red_revc0(1:nnr_,ibnd,1)) *&
+          & DBLE(red_revc0(1:nnr_,ibnd,1)), &
+          & w2*AIMAG(red_revc0(1:nnr_,ibnd, 1)) *&
+          & DBLE(red_revc0(1:nnr_,ibnd,1)), kind=DP )
      !
      CALL fwfft ('Rho', pseudo_dens_c, dfftt)
      !
-     ! hartree contribution is computed in reciprocal space
+     DO is = 1, nspin
+           !
+           vhart(dfftt%nl(1:ngm_),is) =&
+                & pseudo_dens_c(dfftt%nl(1:ngm_)) *&
+                & fac_in(1:ngm_)
+           IF (gamma_only) vhart(dfftt%nlm(1:ngm_),is) = &
+                & pseudo_dens_c(dfftt%nlm(1:ngm_)) *&
+                & fac_in(1:ngm_)
+           !
+           !  and transformed back to real space
+           !
+           CALL invfft ('Rho', vhart (:, is), dfftt)
+     ENDDO
+     !
+     ! Finally return the interaction psi_int for terms:
+     ! ibnd,   ibnd,   ibnd 
+     ! ibnd+1, ibnd+1, ibnd 
+     ! ibnd,   ibnd,   ibnd+1
+     !
+     psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
+          & + DBLE(vhart(1:nnr_, 1)) * DBLE(psi(1:nnr_)) &
+          & + AIMAG(vhart(1:nnr_,1)) * AIMAG(psi(1:nnr_))
+     !
+     psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
+           & + AIMAG(vhart(1:nnr_,1)) * DBLE(psi(1:nnr_))
+     !
+     ! calculate vhart for couple ibnd+1,ibnd+1
+     !
+     vhart(:,:) = (0.d0,0.d0)
+     pseudo_dens_c(:) = (0.d0,0.d0)
+     !
+     pseudo_dens_c(1:nnr_) = CMPLX( w2*AIMAG(red_revc0(1:nnr_,ibnd,1)) *&
+          & AIMAG(red_revc0(1:nnr_,ibnd,1)), 0.0d0, kind=DP )
+     !
+     CALL fwfft ('Rho', pseudo_dens_c, dfftt)
      !
      DO is = 1, nspin
+           !
+           vhart(dfftt%nl(1:ngm_),is) =&
+                & pseudo_dens_c(dfftt%nl(1:ngm_)) *&
+                & fac_in(1:ngm_)
+           IF (gamma_only) vhart(dfftt%nlm(1:ngm_),is) = &
+                & pseudo_dens_c(dfftt%nlm(1:ngm_)) *&
+                & fac_in(1:ngm_)
+           !
+           !  and transformed back to real space
+           !
+           CALL invfft ('Rho', vhart (:, is), dfftt)
+     ENDDO
+     !
+     ! Finally return the interaction psi_int for term:
+     ! ibnd+1, ibnd+1, ibnd+1
+     ! 
+     psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
+           & + DBLE(vhart(1:nnr_,1)) * AIMAG(psi(1:nnr_))
+     !
+     !
+     ! start second loop over bands
+     !
+     DO ibnd2=1,ibnd-1,1  
         !
-        vhart(dfftt%nl(1:ngm_),is) =&
-             & pseudo_dens_c(dfftt%nl(1:ngm_)) *&
-             & fac_in(1:ngm_) 
-        IF (gamma_only) vhart(dfftt%nlm(1:ngm_),is) = &
-             & pseudo_dens_c(dfftt%nlm(1:ngm_)) *&
-             & fac_in(1:ngm_) 
+        ! calculate vhart for couples ibnd,ibnd2 and ibnd+1,ibnd2
         !
-        !  and transformed back to real space
+        vhart(:,:) = (0.d0,0.d0)
+        pseudo_dens_c(:) = (0.d0,0.d0)
         !
-        CALL invfft ('Rho', vhart (:, is), dfftt)
+        ! The following code is to check if the value of ibnd2 is even or odd
+        ! and therefore whether the REAL or IMAGINARY part of red_revc0 is to be
+        ! used. This is because red_revc0 is stored using gamma_tricks.
+        !
+        IF (MOD(ibnd2,2)==1) THEN
+           pseudo_dens_c(1:nnr_) = CMPLX( w1*DBLE(red_revc0(1:nnr_,ibnd,1)) *&
+                & DBLE(red_revc0(1:nnr_,ibnd2,1)), &
+                & w2*AIMAG(red_revc0(1:nnr_,ibnd, 1)) *&
+                & DBLE(red_revc0(1:nnr_,ibnd2,1)), kind=DP )
+        ELSE
+           pseudo_dens_c(1:nnr_) = CMPLX( w1*DBLE(red_revc0(1:nnr_,ibnd,1)) *&
+                &AIMAG(red_revc0(1:nnr_,ibnd2-1,1)),&
+                &w2*AIMAG(red_revc0(1:nnr_,ibnd,1)) *&
+                &AIMAG(red_revc0(1:nnr_,ibnd2-1,1)), kind=DP )
+        ENDIF
+        !
+        CALL fwfft ('Rho', pseudo_dens_c, dfftt)
+        !
+        ! hartree contribution is computed in reciprocal space
+        !
+        DO is = 1, nspin
+           !
+           vhart(dfftt%nl(1:ngm_),is) =&
+                & pseudo_dens_c(dfftt%nl(1:ngm_)) *&
+                & fac_in(1:ngm_) 
+           IF (gamma_only) vhart(dfftt%nlm(1:ngm_),is) = &
+                & pseudo_dens_c(dfftt%nlm(1:ngm_)) *&
+                & fac_in(1:ngm_) 
+           !
+           !  and transformed back to real space
+           !
+           CALL invfft ('Rho', vhart (:, is), dfftt)
+           !
+        ENDDO
+        !
+        ! Finally return the interaction psi_int for terms:
+        ! ibnd,   ibnd,   ibnd2
+        ! ibnd+1, ibnd+1, ibnd2
+        ! ibnd2,  ibnd2,  ibnd
+        ! ibnd2,  ibnd2,  ibnd+1
+        !
+        psi_int(1:nnr_,ibnd2) = psi_int(1:nnr_,ibnd2) &
+             & + DBLE(vhart(1:nnr_, 1)) * DBLE(psi(1:nnr_)) &
+             & + AIMAG(vhart(1:nnr_,1)) * AIMAG(psi(1:nnr_))
+        !
+        CALL invfft_orbital_ibnd2_gamma(orbital(:,:), psitemp, ibnd2, npw_, dfftt)
+        !
+        !
+        psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
+             & + DBLE(vhart(1:nnr_, 1)) * DBLE(psitemp(1:nnr_))
+        !
+        psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
+             & + AIMAG(vhart(1:nnr_, 1)) * DBLE(psitemp(1:nnr_))
         !
      ENDDO
      !
-     ! Finally return the interaction
+  ELSE
      !
-     psi_int(1:nnr_,ibnd2) = psi_int(1:nnr_,ibnd2) &
-          & +DBLE(vhart(1:nnr_, 1)) * DBLE(psi(1:nnr_)) &
-          & +AIMAG(vhart(1:nnr_,1)) * AIMAG(psi(1:nnr_))
-  ENDDO
+     ! calculate vhart for couple ibnd,ibnd 
+     !
+     vhart(:,:) = (0.d0,0.d0)
+     pseudo_dens_c(:) = (0.d0,0.d0)
+     !
+     pseudo_dens_c(1:nnr_) = CMPLX( w1*DBLE(red_revc0(1:nnr_,ibnd,1)) *&
+          & DBLE(red_revc0(1:nnr_,ibnd,1)), 0.0d0, kind=DP )
+     !
+     CALL fwfft ('Rho', pseudo_dens_c, dfftt)
+     !
+     DO is = 1, nspin
+           !
+           vhart(dfftt%nl(1:ngm_),is) =&
+                & pseudo_dens_c(dfftt%nl(1:ngm_)) *&
+                & fac_in(1:ngm_)
+           IF (gamma_only) vhart(dfftt%nlm(1:ngm_),is) = &
+                & pseudo_dens_c(dfftt%nlm(1:ngm_)) *&
+                & fac_in(1:ngm_)
+           !
+           !  and transformed back to real space
+           !
+           CALL invfft ('Rho', vhart (:, is), dfftt)
+     ENDDO
+     !
+     ! Finally return the interaction psi_int for term:
+     ! ibnd,   ibnd,   ibnd
+     ! 
+     psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
+           & + DBLE(vhart(1:nnr_,1)) * DBLE(psi(1:nnr_))
+     !
+     ! start second loop over bands
+     !
+     DO ibnd2=1,ibnd-1,1
+        !
+        !
+        ! Set up the pseudo density for this Hartree like interaction.
+        ! calculate vhart for couple ibnd,ibnd2
+        !
+        vhart(:,:) = (0.d0,0.d0)
+        pseudo_dens_c(:) = (0.d0,0.d0)
+        !
+        ! The following code is to check if the value of ibnd2 is even or odd
+        ! and therefore whether the REAL or IMAGINARY part of red_revc0 is to be
+        ! used. This is because red_revc0 is stored using gamma_tricks.
+        !
+        IF (MOD(ibnd2,2)==1) THEN
+           pseudo_dens_c(1:nnr_) = CMPLX( w1*DBLE(red_revc0(1:nnr_,ibnd,1)) *&
+                & DBLE(red_revc0(1:nnr_,ibnd2,1)), 0.0d0, kind=DP )
+        ELSE
+           pseudo_dens_c(1:nnr_) = CMPLX( w1*DBLE(red_revc0(1:nnr_,ibnd,1)) *&
+                & AIMAG(red_revc0(1:nnr_,ibnd2-1,1)), 0.0d0, kind=DP )
+        ENDIF
+        !
+        CALL fwfft ('Rho', pseudo_dens_c, dfftt)
+        !
+        ! hartree contribution is computed in reciprocal space
+        !
+        DO is = 1, nspin
+           !
+           vhart(dfftt%nl(1:ngm_),is) =&
+                & pseudo_dens_c(dfftt%nl(1:ngm_)) *&
+                & fac_in(1:ngm_)
+           IF (gamma_only) vhart(dfftt%nlm(1:ngm_),is) = &
+                & pseudo_dens_c(dfftt%nlm(1:ngm_)) *&
+                & fac_in(1:ngm_)
+           !
+           !  and transformed back to real space
+           !
+           CALL invfft ('Rho', vhart (:, is), dfftt)
+           !
+        ENDDO
+        !
+        ! Finally return the interaction psi_int for terms:
+        ! ibnd, ibnd,  ibnd2
+        ! ibn2, ibnd2, ibnd
+        !
+        psi_int(1:nnr_,ibnd2) = psi_int(1:nnr_,ibnd2) &
+             & + DBLE(vhart(1:nnr_, 1)) * DBLE(psi(1:nnr_))
+        !
+        CALL invfft_orbital_ibnd2_gamma(orbital(:,:), psitemp, ibnd2, npw_, dfftt)
+        !
+        !
+        psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
+             & + DBLE(vhart(1:nnr_, 1)) * DBLE(psitemp(1:nnr_))
+        !
+     ENDDO
+     !
+  ENDIF
   !
+  RETURN
   !
 END FUNCTION k1d_term_gamma
 !
@@ -938,14 +1130,20 @@ FUNCTION k1d_term_k(w1, psi, fac_in, ibnd, ik,ikq) RESULT (psi_int)
   !
 END FUNCTION k1d_term_k
 !
-FUNCTION k2d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
+FUNCTION k2d_vexx_term_gamma(w1, w2, psi, fac_in, ibnd, interaction) RESULT (psi_int)
   !------------------------------------------------------------------
   !
   !   This routine computes the  K^2d term, Eq (22) from Eq Ref (1).
   !   psi contains two bands of |b> with w1, w2 the associated weights
   !   fac_in contains the interaction W(G) and ibnd the band index n'.
   !
+  !   Also computes the Vexx term, Eq (15) from Eq Ref (2). 
+  !   So in gamma calculations, h_psi soubrite doesn't call anymore 
+  !   vexx routine 
+  !
   !   (1)  Rocca, Lu and Galli, J. Chem. Phys., 133, 164109 (2010)
+  !   (2)  Ge, Binnie, Rocca, Gebauer, Baroni, Comp. Phys. Comm., 
+  !        185, 2080 (2014)
   !------------------------------------------------------------------
   !
 
@@ -956,6 +1154,7 @@ FUNCTION k2d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
   REAL(kind=DP), INTENT(IN)  :: w1, w2
   INTEGER, INTENT(IN) :: ibnd
   REAL(KIND=DP), ALLOCATABLE :: psi_int(:,:)
+  LOGICAL, INTENT(IN) :: interaction
   !
   ! Workspaces
   !
@@ -984,40 +1183,103 @@ FUNCTION k2d_term_gamma(w1, w2, psi, fac_in, ibnd) RESULT (psi_int)
         pseudo_dens_c(1:nnr_) = CMPLX( &
              & w1*DBLE(psi(1:nnr_))*DBLE(red_revc0(1:nnr_,ibnd2,1)),&
              & w2*AIMAG(psi(1:nnr_))*DBLE(red_revc0(1:nnr_,ibnd2,1)), kind=DP )
+        !
+        CALL fwfft ('Rho', pseudo_dens_c, dfftt)
+        !
+        ! hartree contribution is computed in reciprocal space
+        !
+        DO is = 1, nspin
+           !
+           vhart(dfftt%nl(1:ngm_),is) = pseudo_dens_c(dfftt%nl(1:ngm_)) * fac_in(1:ngm_)
+           IF (gamma_only) vhart(dfftt%nlm(1:ngm_),is) = &
+                & pseudo_dens_c(dfftt%nlm(1:ngm_)) *&
+                & fac_in(1:ngm_)
+           !
+           !  and transformed back to real space
+           !
+           CALL invfft ('Rho', vhart (:, is), dfftt)
+           !
+        ENDDO
+        !
+        !
+        ! Finally return the interaction
+        !
+        psi_int(1:nnr_,ibnd2) = psi_int(1:nnr_,ibnd2) &
+             & +DBLE(vhart(1:nnr_,1)) * DBLE(red_revc0(1:nnr_,ibnd,1)) &
+             & +AIMAG(vhart(1:nnr_,1)) * AIMAG(red_revc0(1:nnr_,ibnd,1))
+        !
+        IF (interaction) then 
+           psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
+                & +DBLE(vhart(1:nnr_,1)) * DBLE(red_revc0(1:nnr_,ibnd2,1))
+           IF (ibnd < nbnd) then
+              psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
+                   & +AIMAG(vhart(1:nnr_,1)) * DBLE(red_revc0(1:nnr_,ibnd2,1))
+           ENDIF
+        ELSE
+           psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
+                & -DBLE(vhart(1:nnr_,1)) * DBLE(red_revc0(1:nnr_,ibnd2,1)) 
+           IF (ibnd < nbnd) then
+              psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
+                   & -AIMAG(vhart(1:nnr_,1)) * DBLE(red_revc0(1:nnr_,ibnd2,1))
+           ENDIF
+        ENDIF
+        !
      ELSE
         pseudo_dens_c(1:nnr_) = CMPLX( &
              & w1*DBLE(psi(1:nnr_))*AIMAG(red_revc0(1:nnr_,ibnd2-1,1)),&
              & w2*AIMAG(psi(1:nnr_))*AIMAG(red_revc0(1:nnr_,ibnd2-1,1)), kind=DP )
+        !
+        CALL fwfft ('Rho', pseudo_dens_c, dfftt)
+        !
+        ! hartree contribution is computed in reciprocal space
+        !
+        DO is = 1, nspin
+           !
+           vhart(dfftt%nl(1:ngm_),is) = pseudo_dens_c(dfftt%nl(1:ngm_)) * fac_in(1:ngm_)
+           IF (gamma_only) vhart(dfftt%nlm(1:ngm_),is) = &
+                & pseudo_dens_c(dfftt%nlm(1:ngm_)) *&
+                & fac_in(1:ngm_)
+           !
+           !  and transformed back to real space
+           !
+           CALL invfft ('Rho', vhart (:, is), dfftt)
+           !
+        ENDDO
+        !
+        !
+        ! Finally return the interaction
+        !
+        psi_int(1:nnr_,ibnd2) = psi_int(1:nnr_,ibnd2) &
+             & +DBLE(vhart(1:nnr_,1)) * DBLE(red_revc0(1:nnr_,ibnd,1)) &
+             & +AIMAG(vhart(1:nnr_,1)) * AIMAG(red_revc0(1:nnr_,ibnd,1))
+        !
+        ! 
+        ! and interaction for Vexx term
+        !
+        IF (interaction) then
+           psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
+                & +DBLE(vhart(1:nnr_,1)) * AIMAG(red_revc0(1:nnr_,ibnd2-1,1)) 
+           IF (ibnd < nbnd) then
+              psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
+                   & +AIMAG(vhart(1:nnr_,1)) * AIMAG(red_revc0(1:nnr_,ibnd2-1,1))
+           ENDIF
+        ELSE
+           psi_int(1:nnr_,ibnd) = psi_int(1:nnr_,ibnd) &
+                & -DBLE(vhart(1:nnr_,1)) * AIMAG(red_revc0(1:nnr_,ibnd2-1,1))
+           IF (ibnd < nbnd) then
+              psi_int(1:nnr_,ibnd+1) = psi_int(1:nnr_,ibnd+1) &
+                   & -AIMAG(vhart(1:nnr_,1)) * AIMAG(red_revc0(1:nnr_,ibnd2-1,1))
+           ENDIF
+        ENDIF
+        !
      ENDIF
      !
-     CALL fwfft ('Rho', pseudo_dens_c, dfftt)
      !
-     ! hartree contribution is computed in reciprocal space
-     !
-     DO is = 1, nspin
-        !
-        vhart(dfftt%nl(1:ngm_),is) = pseudo_dens_c(dfftt%nl(1:ngm_)) * fac_in(1:ngm_)
-        IF (gamma_only) vhart(dfftt%nlm(1:ngm_),is) = &
-             & pseudo_dens_c(dfftt%nlm(1:ngm_)) *&
-             & fac_in(1:ngm_)
-        !
-        !  and transformed back to real space
-        !
-        CALL invfft ('Rho', vhart (:, is), dfftt)
-        !
-     ENDDO
-     !
-     !
-     ! Finally return the interaction
-     !
-     psi_int(1:nnr_,ibnd2) = psi_int(1:nnr_,ibnd2) &
-          & +DBLE(vhart(1:nnr_,1)) * DBLE(red_revc0(1:nnr_,ibnd,1)) &
-          & +AIMAG(vhart(1:nnr_,1)) * AIMAG(red_revc0(1:nnr_,ibnd,1))
-     ! 
   ENDDO
   !
+  RETURN
   !
-END FUNCTION k2d_term_gamma
+END FUNCTION k2d_vexx_term_gamma
 !
 FUNCTION k2d_term_k(w1, psi, fac_in, ibnd, ik, ikq) RESULT (psi_int)
   !------------------------------------------------------------------
@@ -1157,5 +1419,28 @@ SUBROUTINE fwfft_orbital_custom_gamma(orbital, ibnd, nbnd, npwt, dfftt)
   RETURN
   !
 END SUBROUTINE fwfft_orbital_custom_gamma
+
+SUBROUTINE invfft_orbital_ibnd2_gamma(orbital, psitemp, ibnd2, npwt, dfftt)
+
+  USE kinds,        ONLY : DP
+  USE fft_types,    ONLY : fft_type_descriptor
+
+  IMPLICIT NONE
+
+  COMPLEX(DP), INTENT(IN)    :: orbital(:,:)
+  INTEGER, INTENT(IN)        :: ibnd2, npwt
+  TYPE(fft_type_descriptor), INTENT(IN)  :: dfftt
+  COMPLEX(DP), INTENT(OUT)   :: psitemp(:) 
+  !
+  psitemp=(0.0_dp, 0.0_dp)
+  !
+  psitemp(dfftt%nl(1:npwt))  = orbital(1:npwt,ibnd2)
+  psitemp(dfftt%nlm(1:npwt)) = CONJG(orbital(1:npwt,ibnd2))
+  !
+  CALL invfft ('Wave', psitemp, dfftt)
+  !
+  RETURN
+  !
+END SUBROUTINE invfft_orbital_ibnd2_gamma
 
 END MODULE lr_exx_kernel

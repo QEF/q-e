@@ -114,7 +114,6 @@ chdens_bspline.o : ../../Modules/cell_base.o
 chdens_bspline.o : ../../Modules/fft_base.o
 chdens_bspline.o : ../../Modules/io_global.o
 chdens_bspline.o : ../../Modules/kind.o
-chdens_bspline.o : chdens_module.o
 chdens_module.o : ../../FFTXlib/fft_interfaces.o
 chdens_module.o : ../../FFTXlib/fft_types.o
 chdens_module.o : ../../FFTXlib/scatter_mod.o
@@ -452,7 +451,6 @@ plan_avg.o : ../../Modules/uspp.o
 plan_avg.o : ../../Modules/wavefunctions.o
 plan_avg.o : ../../PW/src/pwcom.o
 plan_avg.o : ../../UtilXlib/mp.o
-plot_whole_cell.o : ../../Modules/kind.o
 plotband.o : ../../Modules/kind.o
 plotband.o : ../../Modules/parser.o
 poormanwannier.o : ../../Modules/becmod.o

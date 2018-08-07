@@ -32,7 +32,7 @@ SUBROUTINE sum_band()
   USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, ebecsum, nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : upf, nh, nhm
-  USE wavefunctions_module, ONLY : evc, psic, psic_nc
+  USE wavefunctions, ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE spin_orb,             ONLY : lspinorb, domag, fcoef
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
@@ -860,7 +860,7 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE wvfct,         ONLY : nbnd, wg, et, current_k
   USE klist,         ONLY : ngk
   USE noncollin_module,     ONLY : noncolin, npol
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE realus,        ONLY : real_space, &
                             invfft_orbital_gamma, calbec_rs_gamma, &
                             invfft_orbital_k, calbec_rs_k
@@ -871,7 +871,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd
   !
-  COMPLEX(DP), ALLOCATABLE :: becsum_nc(:,:,:,:)
   COMPLEX(dp), ALLOCATABLE :: auxk1(:,:), auxk2(:,:), aux_nc(:,:)
   REAL(dp), ALLOCATABLE :: auxg(:,:), aux_gk(:,:), aux_egk(:,:)
   INTEGER :: ibnd, ibnd_loc, nbnd_loc  ! counters on bands
@@ -905,11 +904,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   CALL store_becxx0(ik, becp)
   !
   CALL start_clock( 'sum_band:becsum' )
-
-  IF (noncolin) THEN
-     ALLOCATE(becsum_nc(nhm*(nhm+1)/2,nat,npol,npol))
-     becsum_nc=(0.d0, 0.d0)
-  ENDIF
   !
   DO np = 1, ntyp
      !
@@ -1077,8 +1071,6 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
      END IF
      !
   END DO
-  !
-  IF ( noncolin ) DEALLOCATE ( becsum_nc )
   !
   CALL stop_clock( 'sum_band:becsum' )
   !

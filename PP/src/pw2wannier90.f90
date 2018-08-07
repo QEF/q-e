@@ -1223,7 +1223,7 @@ SUBROUTINE compute_dmn
    USE kinds,           ONLY: DP
    USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
-   USE wavefunctions_module, ONLY : evc, psic, psic_nc
+   USE wavefunctions, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
    USE klist,           ONLY : nkstot, xk, igk_k, ngk
@@ -1905,7 +1905,7 @@ SUBROUTINE compute_mmn
    USE kinds,           ONLY: DP
    USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
-   USE wavefunctions_module, ONLY : evc, psic, psic_nc
+   USE wavefunctions, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
    USE klist,           ONLY : nkstot, xk, igk_k, ngk
@@ -2300,7 +2300,7 @@ SUBROUTINE compute_spin
    USE kinds,           ONLY: DP
    USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
-   USE wavefunctions_module, ONLY : evc, psic, psic_nc
+   USE wavefunctions, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
@@ -2542,7 +2542,7 @@ SUBROUTINE compute_orb
    USE kinds,           ONLY: DP
    USE wvfct,           ONLY : nbnd, npwx, current_k
    USE control_flags,   ONLY : gamma_only
-   USE wavefunctions_module, ONLY : evc, psic, psic_nc
+   USE wavefunctions, ONLY : evc, psic, psic_nc
    USE fft_base,        ONLY : dffts, dfftp
    USE fft_interfaces,  ONLY : fwfft, invfft
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
@@ -2964,7 +2964,7 @@ SUBROUTINE compute_amn
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
    USE wvfct,           ONLY : nbnd, npwx
    USE control_flags,   ONLY : gamma_only
-   USE wavefunctions_module, ONLY : evc
+   USE wavefunctions, ONLY : evc
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE gvect,           ONLY : g, ngm, gstart
    USE uspp,            ONLY : nkb, vkb
@@ -3237,7 +3237,7 @@ SUBROUTINE compute_amn_with_scdm
    USE wvfct,           ONLY : nbnd, et
    USE gvecw,           ONLY : gcutw
    USE control_flags,   ONLY : gamma_only
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE io_files,        ONLY : nwordwfc, iunwfc
    USE wannier
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
@@ -3754,7 +3754,7 @@ SUBROUTINE write_plot
    USE wvfct, ONLY : nbnd, npwx
    USE gvecw, ONLY : gcutw
    USE control_flags, ONLY : gamma_only
-   USE wavefunctions_module, ONLY : evc, psic, psic_nc
+   USE wavefunctions, ONLY : evc, psic, psic_nc
    USE io_files, ONLY : nwordwfc, iunwfc
    USE wannier
    USE klist,           ONLY : nkstot, xk, ngk, igk_k
@@ -4021,7 +4021,7 @@ SUBROUTINE write_parity
    USE wvfct,                ONLY : nbnd
    USE gvecw,                ONLY : gcutw
    USE control_flags,        ONLY : gamma_only
-   USE wavefunctions_module, ONLY : evc
+   USE wavefunctions, ONLY : evc
    USE io_files,             ONLY : nwordwfc, iunwfc
    USE wannier
    USE klist,                ONLY : nkstot, xk, igk_k, ngk
@@ -4428,7 +4428,7 @@ SUBROUTINE wan2sic
   USE kinds, ONLY : DP
   USE io_files, ONLY : iunwfc, nwordwfc, nwordwann
   USE gvect, ONLY : g, ngm
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE wvfct, ONLY : nbnd, npwx
   USE gvecw, ONLY : gcutw
   USE klist, ONLY : nkstot, xk, wk, ngk

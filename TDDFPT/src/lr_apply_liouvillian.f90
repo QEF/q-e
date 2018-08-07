@@ -27,6 +27,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   ! Modified by Simone Binnie in 2012 (EXX)
   ! Modified by Xiaochuan Ge  in 2013 (Davidson)
   ! Modified by Iurii Timrov  in 2014 (Environ)
+  ! Modified by Oliviero Andreussi in 2018 (Environ-->Plugins)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : ityp, nat, ntyp=>nsp
@@ -43,7 +44,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE uspp_param,           ONLY : nhm, nh
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE wvfct,                ONLY : nbnd, npwx, g2kin, et
   USE control_flags,        ONLY : gamma_only
   USE realus,               ONLY : real_space, invfft_orbital_gamma,&
@@ -61,11 +62,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE becmod,               ONLY : bec_type, becp, calbec
   USE lr_exx_kernel
   USE dv_of_drho_lr
-#if defined(__ENVIRON)
-  USE plugin_flags,         ONLY : use_environ
-  USE scf,                  ONLY : rho
-  USE solvent_tddfpt,       ONLY : calc_vsolvent_tddfpt
-#endif
+  USE funct,                ONLY : start_exx, stop_exx
   !
   IMPLICIT NONE
   !
@@ -81,12 +78,6 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
                            & w1(:), w2(:)
   COMPLEX(DP), ALLOCATABLE :: dvrs_temp(:,:), spsi1(:,:), dvrsc(:,:), &
                               & dvrssc(:), sevc1_new(:,:,:)
-  !
-  ! Environ related arrays
-  !
-  REAL(DP), ALLOCATABLE :: &
-          dv_pol(:), &  ! response polarization potential
-          dv_epsilon(:) ! response dielectric potential
   !
   IF (lr_verbosity > 5) THEN
      WRITE(stdout,'("<lr_apply_liouvillian>")')
@@ -134,7 +125,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
      !
      IF (no_hxc) THEN
         !
-        ! With no_hxc=.true. we recover the independent electron 
+        ! With no_hxc=.true. we recover the independent electron
         ! approximation, so we zero the interation.
         !
         IF (gamma_only) THEN
@@ -156,45 +147,19 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
            !
            ALLOCATE( dvrs_temp(dfftp%nnr, nspin) )
            !
-           dvrs_temp = CMPLX( dvrs, 0.0d0, kind=DP )         
+           dvrs_temp = CMPLX( dvrs, 0.0d0, kind=DP )
            !
            DEALLOCATE ( dvrs )  ! to save memory
            !
            CALL dv_of_drho(dvrs_temp,.FALSE.)
            !
            ALLOCATE ( dvrs(dfftp%nnr, nspin) )
-           ! 
+           !
            dvrs = DBLE(dvrs_temp)
            !
            DEALLOCATE(dvrs_temp)
            !
-#if defined(__ENVIRON)
-           !
-           IF ( use_environ ) THEN
-              !
-              ALLOCATE( dv_pol(dfftp%nnr) )
-              ALLOCATE( dv_epsilon(dfftp%nnr) )
-              dv_pol(:) = 0.0d0
-              dv_epsilon(:) = 0.0d0
-              !
-              IF (.not.davidson) THEN
-                 WRITE( stdout, '(5x,"ENVIRON: Calculate the response &
-                             & polarization and dielectric potentials")' )
-              ENDIF
-              !
-              CALL calc_vsolvent_tddfpt(dfftp%nnr, nspin, rho%of_r(:,1), &
-                                       & rho_1(:,1), dv_pol, dv_epsilon)
-              !
-              ! Add the response polarization and dielectric potentials
-              ! to the response HXC potential.
-              !
-              dvrs(:,1) = dvrs(:,1) + dv_pol(:) + dv_epsilon(:)
-              !
-              DEALLOCATE( dv_pol )
-              DEALLOCATE( dv_epsilon )
-              !
-           ENDIF
-#endif           
+           CALL plugin_tddfpt_potential(rho_1,dvrs)
            !
         ELSE
            !
@@ -208,7 +173,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
         ! the Q function
         !
         IF ( okvan )  THEN
-           IF (gamma_only) THEN 
+           IF (gamma_only) THEN
               IF ( tqr ) THEN
                  CALL newq_r(dvrs,d_deeq,.TRUE.)
               ELSE
@@ -565,9 +530,15 @@ CONTAINS
     ! The kinetic energy g2kin was already computed when
     ! calling the routine lr_solve_e.
     !
+    ! vexx is already computed in lr_exx_kernel
+    !
+    IF (lr_exx) CALL stop_exx()
+    !
     ! Compute sevc1_new = H*evc1
     !
     CALL h_psi(npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
+    !
+    IF (lr_exx) CALL start_exx()
     !
     ! Compute spsi1 = S*evc1 
     !

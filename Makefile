@@ -8,6 +8,10 @@
 
 include make.inc
 
+# execute a target irrespective of the presence of a file or directory 
+# with the same name
+.PHONY: install
+
 default :
 	@echo 'to install Quantum ESPRESSO, type at the shell prompt:'
 	@echo '  ./configure [--prefix=]'
@@ -65,11 +69,11 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
-pw : bindir libs mods libdavid libcg dftd3
+pw : bindir libs mods libdavid libcg libppcg dftd3
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-cp : bindir libs mods libdavid libcg
+cp : bindir libs mods
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
@@ -168,7 +172,10 @@ libdavid : libs libutil libla
 libcg : libs libutil libla
 	( cd KS_Solvers/CG ; $(MAKE) TLDEPS= all || exit 1 )
 
-libla : liblapack libutil
+libppcg : libs libutil libla
+	( cd KS_Solvers/PPCG ; $(MAKE) TLDEPS= all || exit 1 )
+
+libla : liblapack libutil libcuda
 	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libfft : 
@@ -180,7 +187,7 @@ libutil :
 libs :
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
 
-lrmods : libs libutil libla libfft
+lrmods : mods pw
 	( cd LR_Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 dftd3 : mods
@@ -204,6 +211,8 @@ libiotk:
 libfox: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
+libcuda: 
+	cd install ; $(MAKE) -f extlibs_makefile $@
 # In case of trouble with iotk and compilers, add
 # FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
 
@@ -286,7 +295,7 @@ clean :
 	touch make.inc 
 	for dir in \
 		CPV LAXlib FFTXlib UtilXlib Modules PP PW EPW \
-                KS_Solvers/CG KS_Solvers/Davidson KS_Solvers/Davidson_RCI \
+                KS_Solvers/PPCG KS_Solvers/CG KS_Solvers/Davidson KS_Solvers/Davidson_RCI \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic clib LR_Modules pwtools upftools \
 		dev-tools extlibs Environ TDDFPT PHonon GWW \

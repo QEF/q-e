@@ -27,7 +27,7 @@ SUBROUTINE dynmat_us()
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE vlocal,               ONLY : vloc
   USE klist,                ONLY : xk, ngk, igk_k
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE cell_base,            ONLY : omega, tpiba2
   USE uspp_param,           ONLY : nh, nhm
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda
@@ -37,7 +37,7 @@ SUBROUTINE dynmat_us()
   USE modes,                ONLY : u
   USE dynmat,               ONLY : dyn
   USE phus,                 ONLY : alphap
-  USE units_ph,             ONLY : iuwfc, lrwfc
+  USE units_lr,             ONLY : iuwfc, lrwfc
   USE io_global,            ONLY : stdout
   USE mp_pools,             ONLY : my_pool_id, inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm

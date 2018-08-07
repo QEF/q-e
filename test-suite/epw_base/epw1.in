@@ -26,21 +26,15 @@
   proj(1)     = 'f=0,0,0:l=-3'   
 
   elecselfen  = .true.
-  nest_fn     = .true.  
+  nest_fn     = .false.  
   phonselfen  = .false.
   a2f         = .false.
-
-  specfun_el   = .true.
-  wmin_specfun = -4
-  wmax_specfun = 1
-  nw_specfun   = 20
 
   fsthick     = 15 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)
   degaussw    = 1.0 ! eV
 
   dvscf_dir   = './save/'
-  filukk      = './diam.ukk'
 
   nkf1        = 6
   nkf2        = 6

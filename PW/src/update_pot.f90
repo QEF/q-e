@@ -389,7 +389,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
   USE lsda_mod,             ONLY : lsda, nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE ldaU,                 ONLY : eth
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE extfield,             ONLY : etotefield
   USE cellmd,               ONLY : lmovecell, omega_old
@@ -631,7 +631,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
                                    iunoldwfc2, diropn
   USE buffers,              ONLY : get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb, okvan
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
   USE control_flags,        ONLY : gamma_only
   USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &

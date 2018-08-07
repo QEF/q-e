@@ -13,7 +13,7 @@ subroutine deallocate_phq
 !
   USE noncollin_module, ONLY : m_loc
   USE becmod, ONLY: bec_type, becp, deallocate_bec_type
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
 
   USE ramanm, ONLY: ramtns
   USE modes, ONLY : tmq, t, npert, u, name_rap_mode, num_rap_mode

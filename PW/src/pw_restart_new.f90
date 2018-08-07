@@ -61,7 +61,7 @@ MODULE pw_restart_new
       USE noncollin_module,     ONLY : noncolin, npol
       USE io_files,             ONLY : nwordwfc, iunwfc, psfile
       USE buffers,              ONLY : get_buffer
-      USE wavefunctions_module, ONLY : evc
+      USE wavefunctions, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, smearing, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw, tot_charge
@@ -348,9 +348,14 @@ MODULE pw_restart_new
          ELSE 
             occupations_are_fixed = .FALSE. 
             h_energy  = ef 
-         END IF 
-         CALL qexsd_init_k_points_ibz(qexsd_start_k_obj, k_points, calculation, nk1, nk2, nk3, k1, k2, k3,&
-                                      nks_start, xk_start, wk_start, alat, at(:,1), .TRUE.)
+         END IF
+         IF (nks_start == 0 .AND. nk1*nk2*nk3 > 0 ) THEN 
+            CALL qexsd_init_k_points_ibz(qexsd_start_k_obj, "automatic", calculation, &
+                 nk1, nk2, nk3, k1, k2, k3, nks_start, xk_start, wk_start, alat, at(:,1), .TRUE.)
+         ELSE
+            CALL qexsd_init_k_points_ibz(qexsd_start_k_obj, k_points, calculation, &
+                                nk1, nk2, nk3, k1, k2, k3, nks_start, xk_start, wk_start, alat, at(:,1), .TRUE.)
+         END IF
          qexsd_start_k_obj%tagname = 'starting_kpoints'
          IF ( TRIM (qexsd_input_obj%tagname) == 'input') THEN 
             qexsd_occ_obj = qexsd_input_obj%bands%occupations
@@ -518,7 +523,7 @@ MODULE pw_restart_new
       USE noncollin_module,     ONLY : noncolin, npol
 
       USE buffers,              ONLY : get_buffer
-      USE wavefunctions_module, ONLY : evc
+      USE wavefunctions, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, igk_k, wk
       USE gvect,                ONLY : ngm, ngm_g, g, mill
       USE fft_base,             ONLY : dfftp
@@ -1726,7 +1731,7 @@ MODULE pw_restart_new
        USE lsda_mod, ONLY : lsda, isk
        USE klist,    ONLY : nkstot, xk, wk
        USE start_k,  ONLY : nks_start, xk_start, wk_start, &
-                              nk1, nk2, nk3, k1, k2, k3
+                              nk1, nk2, nk3, k1, k2, k3 
        USE symm_base,ONLY : nrot, s, sname
        USE qes_types_module, ONLY : k_points_IBZ_type, occupations_type, symmetries_type, band_structure_type
        !
@@ -1960,7 +1965,7 @@ MODULE pw_restart_new
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nks, xk, ngk, igk_k
       USE wvfct,                ONLY : npwx, g2kin, et, wg, nbnd
-      USE wavefunctions_module, ONLY : evc
+      USE wavefunctions, ONLY : evc
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ig_l2g

@@ -4,9 +4,7 @@
   amass(1)    = 12.01078
   outdir      = './'
 
-  iverbosity  = 0
-
-  band_plot   = .true.
+  iverbosity  = 3
 
   elph        = .true.
   kmaps       = .true.
@@ -28,9 +26,15 @@
   dis_froz_max= 7
   proj(1)     = 'f=0,0,0:l=-3'   
 
-  elecselfen  = .true.
+  elecselfen  = .false.
+  nest_fn     = .false.
   phonselfen  = .false.
   a2f         = .false.
+
+  specfun_el   = .true.
+  wmin_specfun = -4
+  wmax_specfun = 1
+  nw_specfun   = 20
 
   fsthick     = 15 ! eV 
   eptemp      = 300 ! K (same as PRB 76, 165108)
@@ -39,9 +43,14 @@
   dvscf_dir   = './save/'
   filukk      = './diam.ukk'
 
-  filkf       = 'path.dat'
-  filqf       = 'path.dat'
+  nkf1        = 6
+  nkf2        = 6
+  nkf3        = 6 
 
+  nqf1        = 6
+  nqf2        = 6
+  nqf3        = 6
+  
   nk1         = 3
   nk2         = 3
   nk3         = 3
@@ -51,8 +60,8 @@
   nq3         = 3
  /
       4 cartesian
-  0.000000000000   0.000000000000   0.000000000000  
- -0.333333333333   0.333333333333  -0.333333333333  
-  0.000000000000   0.666666666667   0.000000000000  
-  0.666666666667   0.000000000000   0.666666666667  
+  0.000000000000   0.000000000000   0.000000000000 
+ -0.333333333333   0.333333333333  -0.333333333333 
+  0.000000000000   0.666666666667   0.000000000000 
+  0.666666666667   0.000000000000   0.666666666667 
 

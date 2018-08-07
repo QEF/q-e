@@ -41,7 +41,7 @@ SUBROUTINE lr_read_wf()
   USE funct,                ONLY : dft_is_hybrid
   USE lr_exx_kernel,        ONLY : lr_exx_revc0_init, lr_exx_alloc, &
                                    lr_exx_restart
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE buffers,              ONLY : open_buffer
   USE qpoint,               ONLY : nksq
   USE noncollin_module,     ONLY : npol
@@ -104,7 +104,7 @@ SUBROUTINE normal_read()
   ! The usual way of reading wavefunctions
   !
   USE lr_variables,             ONLY : tg_revc0
-  USE wavefunctions_module,     ONLY : psic
+  USE wavefunctions,     ONLY : psic
   USE realus,                   ONLY : tg_psic
   USE mp_global,                ONLY : me_bgrp
   !

@@ -3,7 +3,7 @@
   prefix   = 'si',
   epsil    = .false.,
   outdir   = './'
-  fildyn   = 'si.dyn',
+  fildyn   = 'si.dyn.xml',
   ldisp    = .true.
   fildvscf = 'dvscf'
   nq1=2,

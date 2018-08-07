@@ -6,6 +6,7 @@ include ../../make.inc
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../KS_Solvers/Davidson \
           $(MOD_FLAG)../../KS_Solvers/CG \
+          $(MOD_FLAG)../../KS_Solvers/PPCG \
           $(MOD_FLAG)../../dft-d3/
 PWOBJS = \
 pwscf.o 
@@ -150,6 +151,7 @@ plugin_init_cell.o \
 plugin_init_potential.o \
 plugin_initbase.o \
 plugin_clean.o \
+plugin_check.o \
 plugin_clock.o \
 plugin_summary.o \
 plugin_initialization.o \
@@ -245,7 +247,10 @@ wannier_clean.o \
 wannier_occ.o \
 wannier_enrg.o
 
-QEMODS=../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a ../../KS_Solvers/CG/libcg.a \
+QEMODS=../../Modules/libqemod.a \
+       ../../KS_Solvers/Davidson/libdavid.a \
+       ../../KS_Solvers/CG/libcg.a \
+       ../../KS_Solvers/PPCG/libppcg.a \
        ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 
 TLDEPS=bindir mods libs liblapack libblas dftd3
@@ -254,7 +259,7 @@ all : tldeps pw.x generate_vdW_kernel_table.x generate_rVV10_kernel_table.x
 
 pw.x : $(PWOBJS) libpw.a $(LIBOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	   $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(LIBS)
+	   $(PWOBJS) libpw.a $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../PW/src/$@ . ; \
                ln -fs ../PW/src/$@ dist.x ; ln -fs ../PW/src/$@ manypw.x ; )
 # dist.x and manypw.x link the same executable pw.x
@@ -272,12 +277,12 @@ clean :
 
 generate_vdW_kernel_table.x : libpw.a generate_vdW_kernel_table.o
 	$(LD) $(LDFLAGS) -o $@ \
-		generate_vdW_kernel_table.o $(QEMODS) libpw.a $(LIBOBJS) $(LIBS)
+		generate_vdW_kernel_table.o $(QEMODS) libpw.a $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
 
 generate_rVV10_kernel_table.x : libpw.a generate_rVV10_kernel_table.o
 	$(LD) $(LDFLAGS) -o $@ \
-		generate_rVV10_kernel_table.o $(QEMODS) libpw.a $(LIBOBJS) $(LIBS)
+		generate_rVV10_kernel_table.o $(QEMODS) libpw.a $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../PW/src/$@ . )
 
 

@@ -46,7 +46,7 @@ SUBROUTINE phq_init()
   USE spin_orb,             ONLY : lspinorb
   USE wvfct,                ONLY : npwx, nbnd
   USE gvecw,                ONLY : gcutw
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
   USE uspp,                 ONLY : okvan, vkb, nlcc_any
   USE uspp_param,           ONLY : upf
@@ -54,8 +54,7 @@ SUBROUTINE phq_init()
   USE phus,                 ONLY : alphap
   USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
-  USE units_ph,             ONLY : lrwfc, iuwfc
-
+  USE units_lr,             ONLY : lrwfc, iuwfc
   USE mp_bands,            ONLY : intra_bgrp_comm
   USE mp,                  ONLY : mp_sum
   USE acfdtest,            ONLY : acfdt_is_active, acfdt_num_der

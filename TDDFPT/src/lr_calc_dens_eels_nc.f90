@@ -29,7 +29,7 @@ SUBROUTINE lr_calc_dens_eels_nc (drhoscf, dpsi)
   USE wvfct,                 ONLY : nbnd, npwx
   USE gvecw,                 ONLY : gcutw
   USE qpoint,                ONLY : nksq, ikks, ikqs
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE noncollin_module,      ONLY : npol, nspin_mag
   USE uspp_param,            ONLY : nhm
   USE uspp,                  ONLY : okvan, vkb

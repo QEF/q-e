@@ -64,6 +64,14 @@
 ! Riccardo Bertossa, Federico Grasselli
 !   (SISSA - via Bonomea, 265 - 34136 Trieste ITALY)
 !********************************************************************************
+!06/2018
+!Implemented on the fly change of timestep (with correct rescaling of the
+!velocities)
+!
+! Riccardo Bertossa
+!********************************************************************************
+
+
 
 MODULE cp_autopilot
   !---------------------------------------------------------------------------
@@ -122,19 +130,20 @@ CONTAINS
                              tortho, tfirst, tlast, tprint
     use wave_base, only: frice
     use ions_base, only: fricp
-    USE ions_nose, ONLY: ions_nose_init
+    USE ions_nose, ONLY: ions_nose_init,xnhp0, xnhpm
+    USE ions_positions,        ONLY : taus, tausm
     USE io_global, ONLY: ionode, ionode_id
-    USE time_step,                ONLY : set_time_step
+    USE time_step,                ONLY : set_time_step,tps
     USE cp_electronic_mass,       ONLY: emass, emass_cutoff, emass_precond
     USE cg_module,                ONLY : tcg,allocate_cg,cg_info, &
                                          nfi_firstcg,c0old
-    USE wavefunctions_module,     ONLY : cm_bgrp
+    USE wavefunctions,     ONLY : cm_bgrp,c0_bgrp
     USE ensemble_dft,             ONLY : tens,allocate_ensemble_dft
     USE uspp,                     ONLY : nkb, nkbus
     USE electrons_base,           ONLY : nspin, nbsp, nbspx, nudx
     USE gvecw,                    ONLY : ngw
     USE fft_base,                 ONLY : dffts
-    USE cp_main_variables,        ONLY : descla
+    USE cp_main_variables,        ONLY : descla,lambdap, lambda, lambdam
     USE ions_base,                ONLY : nat_ions_base => nat 
     USE cell_base,                ONLY : tpiba2
     USE cp_main_variables,        ONLY : ema0bg
@@ -142,6 +151,8 @@ CONTAINS
 
     IMPLICIT NONE
 
+    REAL(DP) :: old_tps
+    
     !----------------------------------------
     !     &CONTROL
     !----------------------------------------
@@ -166,9 +177,26 @@ CONTAINS
 
     ! DT
     if (event_dt(event_index)) then
+       IF ( ionode ) write(*,'(4X,A,18X,F10.4)') 'Rule event: dt',rule_dt(event_index)
+       IF (dt /= rule_dt(event_index) ) THEN
+          IF  (.NOT. ( tcg .OR. tsde ) ) THEN !if I am doing verlet for electrons
+             !rescale electron velocities (wavefunctions and lagrange
+             !multipliers) 
+             IF ( ionode ) write(*,*) 'Rescaling electronic velocities with new dt' 
+             lambdam = lambda - (lambda-lambdam)*rule_dt(event_index)/dt
+             cm_bgrp = c0_bgrp - (c0_bgrp-cm_bgrp)*rule_dt(event_index)/dt
+          END IF
+          IF ( (.NOT. tsdp) .AND. tfor ) THEN !if I am doing verlet for ions
+             !rescale ionic velocities (ions and nose variables)
+             IF ( ionode ) write(*,*) 'Rescaling ionic velocities with new dt'
+             tausm = taus - (taus-tausm)*rule_dt(event_index)/dt
+             xnhpm = xnhp0 - (xnhp0-xnhpm)*rule_dt(event_index)/dt
+          END IF
+       END IF
        dt               = rule_dt(event_index)
-       CALL set_time_step( dt )  ! This will make the old velocities wrong!
-       IF ( ionode ) write(*,'(4X,A,18X,F10.4)') 'Rule event: dt', dt
+       old_tps=tps 
+       CALL set_time_step( dt ) !this subroutine sets to zero the elapsed time tps
+       tps=old_tps
     endif
 
     !----------------------------------------
@@ -233,6 +261,7 @@ CONTAINS
           tsde  = .false.
           tcg=.false.
        case ('CG')
+          tsde=.false.
           IF ( ionode ) write(*,*) 'Wow, setting tcg=.true. at step '&
                  ,current_nfi,' ! (La ghe domandi a mia molie)'
           if (.not. tcg) then

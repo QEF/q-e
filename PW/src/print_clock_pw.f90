@@ -73,11 +73,18 @@ SUBROUTINE print_clock_pw()
       ELSE
          CALL print_clock( 'cegterg' )
       ENDIF
-   ELSE 
+   ELSE  IF (isolve == 1) THEN
       IF ( gamma_only ) THEN
          CALL print_clock( 'rcgdiagg' )
       ELSE
          CALL print_clock( 'ccgdiagg' )
+      ENDIF
+      CALL print_clock( 'wfcrot' )
+   ELSE  IF (isolve == 2) THEN
+      IF ( gamma_only ) THEN
+         CALL print_clock( 'ppcg_gamma' )
+      ELSE
+         CALL print_clock( 'ppcg_k' )
       ENDIF
       CALL print_clock( 'wfcrot' )
    ENDIF
@@ -90,8 +97,10 @@ SUBROUTINE print_clock_pw()
    !
    IF ( isolve == 0 ) THEN
       WRITE( stdout, '(/5x,"Called by *egterg:")' )
-   ELSE 
+   ELSE IF ( isolve == 1 ) THEN
       WRITE( stdout, '(/5x,"Called by *cgdiagg:")' )
+   ELSE IF ( isolve == 2 ) THEN
+      WRITE( stdout, '(/5x,"Called by ppcg_*:")' )
    END IF
    !
    CALL print_clock( 'h_psi' )
@@ -130,6 +139,16 @@ SUBROUTINE print_clock_pw()
          CALL print_clock( 'cdiaghg:inversion' )
          CALL print_clock( 'cdiaghg:paragemm' )
       END IF
+   END IF
+   IF ( isolve == 2 ) THEN
+!      IF ( iverbosity > 0 )  THEN
+         CALL print_clock( 'ppcg:zgemm' ) ; CALL print_clock( 'ppcg:dgemm' )
+         CALL print_clock( 'ppcg:hpsi' )
+         CALL print_clock( 'ppcg:cholQR' )
+         CALL print_clock( 'ppcg:RR' )
+         CALL print_clock( 'ppcg:ZTRSM' ) ; CALL print_clock( 'ppcg:DTRSM' )
+         CALL print_clock( 'ppcg:lock' )
+!      END IF
    END IF
    !
    WRITE( stdout, '(/5x,"Called by h_psi:")' )

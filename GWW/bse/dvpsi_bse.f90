@@ -19,7 +19,7 @@ SUBROUTINE dvpsi_e(kpoint,ipol,dvpsi2,l_lr)
   USE cell_base, ONLY : tpiba, tpiba2
   USE uspp, ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE wvfct,    ONLY : nbnd, npwx,et
   USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_files, ONLY: nwordwfc,iunwfc

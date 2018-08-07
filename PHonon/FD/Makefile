@@ -2,21 +2,20 @@
 
 include ../../make.inc
 
-# location of include files
-#IFLAGS=-I../../../include
-
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
           $(MOD_FLAG)../../dft-d3 \
           $(MOD_FLAG)../../KS_Solvers/CG \
+          $(MOD_FLAG)../../KS_Solvers/PPCG \
           $(MOD_FLAG) ../../KS_Solvers/Davidson
 
 FDOBJS = \
         stop_pp.o 
 
 
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a \
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
+         ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/Davidson/libdavid.a \
          ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 PWOBJS = ../../PW/src/libpw.a
 
@@ -27,17 +26,17 @@ all : tldeps fd.x fd_ifc.x fd_ef.x
 
 fd_ifc.x : fd_ifc.o libfd.a  $(FDOBJS) $(PWOBJS) $(QEMODS)  
 	$(LD) $(LDFLAGS) -o $@ \
-	fd_ifc.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	fd_ifc.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
 
 fd.x : fd.o libfd.a  $(FDOBJS) $(PWOBJS) $(QEMODS)  
 	$(LD) $(LDFLAGS) -o $@ \
-	fd.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) 
+	fd.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) 
 	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
 
 fd_ef.x : fd_ef.o libfd.a  $(FDOBJS) $(PWOBJS) $(QEMODS)  
 	$(LD) $(LDFLAGS) -o $@ \
-	fd_ef.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	fd_ef.o libfd.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PHonon/FD/$@ . )
 tldeps :
 	if test -n "$(TLDEPS)" ; then \

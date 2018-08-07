@@ -23,7 +23,7 @@ SUBROUTINE lr_addusddens (drhoscf, dbecsum)
   USE fft_interfaces,       ONLY : invfft
   USE gvect,                ONLY : gg, ngm, g, eigts1, eigts2, eigts3, mill
   USE uspp,                 ONLY : okvan
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE paw_variables,        ONLY : okpaw
   USE qpoint,               ONLY : xq, eigqts
