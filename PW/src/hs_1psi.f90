@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
+SUBROUTINE hs_1psi( lda, n, psi, hpsi, spsi )
   !----------------------------------------------------------------------------
   !
   ! ... This routine applies the Hamiltonian and the S matrix
@@ -30,7 +30,7 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
   COMPLEX (DP) :: psi(lda*npol,1), hpsi(n), spsi(n,1)
   !
   !
-  CALL start_clock( 'h_1psi' )
+  CALL start_clock( 'hs_1psi' )
   ! 
   !OBM: I know this form is somewhat inelegant but, leaving the pre-real_space part intact
   !     makes it easier to debug probable errors, please do not "beautify" 
@@ -50,8 +50,8 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
   CALL s_psi( lda, n, 1, psi, spsi ) ! apply S to a single wfc (no bgrp parallelization here)
        endif
   !
-  CALL stop_clock( 'h_1psi' )
+  CALL stop_clock( 'hs_1psi' )
   !
   RETURN
   !
-END SUBROUTINE h_1psi
+END SUBROUTINE hs_1psi

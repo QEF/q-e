@@ -161,7 +161,8 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'add_vuspsi' ) ; CALL print_clock ( 'add_vuspsir' )
    CALL print_clock( 'vhpsi' )
    CALL print_clock( 'h_psi_meta' )
-   CALL print_clock( 'h_1psi' )
+   CALL print_clock( 'hs_1psi' )
+   CALL print_clock( 's_1psi' )
    !
    WRITE( stdout, '(/5X,"General routines")' )
    !
