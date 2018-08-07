@@ -531,20 +531,23 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
        call start_clock('ppcg:dgemm')
        call threaded_assign( buffer1,  psi, npwx, l, col_idx )
        CALL DGEMM('N','N',npw2, l, l, ONE, buffer1, npwx2, coord_psi, sbsize, ZERO, buffer, npwx2)
-       psi(:,col_idx(1:l))  = buffer(:,1:l)  + p(:,col_idx(1:l))
+!       psi(:,col_idx(1:l))  = buffer(:,1:l)  + p(:,col_idx(1:l))
+       call threaded_backassign( psi, act_idx, buffer, npwx, l, p )
        call stop_clock('ppcg:dgemm')
        !
        call start_clock('ppcg:dgemm')
        call threaded_assign( buffer1,  hpsi, npwx, l, col_idx )
        CALL DGEMM('N','N',npw2, l, l, ONE, buffer1, npwx2, coord_psi, sbsize, ZERO, buffer, npwx2)
-       hpsi(:,col_idx(1:l)) = buffer(:,1:l) + hp(:,col_idx(1:l))
+!       hpsi(:,col_idx(1:l)) = buffer(:,1:l) + hp(:,col_idx(1:l))
+       call threaded_backassign( hpsi, act_idx, buffer, npwx, l, hp )
        call stop_clock('ppcg:dgemm')
        !
        if (overlap) then
           call start_clock('ppcg:dgemm')
           call threaded_assign( buffer1,  spsi, npwx, l, col_idx )
           CALL DGEMM('N','N',npw2, l, l, ONE, buffer1, npwx2, coord_psi, sbsize, ZERO, buffer, npwx2)
-          spsi(:,col_idx(1:l)) = buffer(:,1:l) + sp(:,col_idx(1:l))
+!          spsi(:,col_idx(1:l)) = buffer(:,1:l) + sp(:,col_idx(1:l))
+          call threaded_backassign( spsi, act_idx, buffer, npwx, l, sp )
           call stop_clock('ppcg:dgemm')
        end if
        !
@@ -1689,11 +1692,14 @@ nguard = 0 ! 24 ! 50
   !
   END SUBROUTINE threaded_assign
 
-  SUBROUTINE threaded_backassign(array_out, idx, array_in, kdimx, nact )
+  SUBROUTINE threaded_backassign(array_out, idx, array_in, kdimx, nact, a2_in )
   ! 
   !  assign (copy) a complex array in a threaded way
   !
-  !  array_out( 1:kdimx, idx(1:nact) ) = array_in( 1:kdimx, 1:nact ) 
+  !  array_out( 1:kdimx, idx(1:nact) ) = array_in( 1:kdimx, 1:nact )      or
+  !
+  !  array_out( 1:kdimx, idx(1:nact) ) = array_in( 1:kdimx, 1:nact )  + a2_in( 1:kdimx, idx(1:nact) (
+  !  if a2_in is present
   !
   !  the index array idx is mandatory otherwise one could use previous routine)
   !
@@ -1703,6 +1709,7 @@ nguard = 0 ! 24 ! 50
   !
   COMPLEX(DP), INTENT(INOUT) :: array_out( kdimx, * ) ! we don't want to mess with un referenced columns
   COMPLEX(DP), INTENT(IN)  :: array_in ( kdimx, nact )
+  COMPLEX(DP), INTENT(IN), OPTIONAL  :: a2_in ( kdimx, * )
   INTEGER, INTENT(IN)      :: kdimx, nact
   INTEGER, INTENT(IN)      :: idx( * )
   !
@@ -1716,11 +1723,21 @@ nguard = 0 ! 24 ! 50
 
   nblock = (kdimx - 1)/blocksz  + 1
 
-  !$omp parallel do collapse(2)
-  DO i=1, nact ; DO j=1,nblock
-     array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), idx( i ) ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) 
-  ENDDO ; ENDDO
-  !$omp end parallel do
+  IF ( present(a2_in) ) THEN
+     !$omp parallel do collapse(2)
+     DO i=1, nact ; DO j=1,nblock
+        array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), idx( i ) ) = &
+            array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i )     + & 
+                a2_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), idx( i ) ) 
+     ENDDO ; ENDDO
+     !$omp end parallel do
+  ELSE
+     !$omp parallel do collapse(2)
+     DO i=1, nact ; DO j=1,nblock
+        array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), idx( i ) ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) 
+     ENDDO ; ENDDO
+     !$omp end parallel do
+  END IF
   !
   END SUBROUTINE threaded_backassign
 
