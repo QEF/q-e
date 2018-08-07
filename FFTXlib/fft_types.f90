@@ -350,6 +350,7 @@ CONTAINS
   SUBROUTINE fft_type_deallocate( desc )
     TYPE (fft_type_descriptor) :: desc
     INTEGER :: iproc, ierr
+    INTEGER :: i, nsubbatches
      !write (6,*) ' inside fft_type_deallocate' ; FLUSH(6)
     IF ( ALLOCATED( desc%nr2p ) )   DEALLOCATE( desc%nr2p )
     IF ( ALLOCATED( desc%nr2p_offset ) )   DEALLOCATE( desc%nr2p_offset )
@@ -418,6 +419,28 @@ CONTAINS
 
     IF ( ALLOCATED( desc%nl_d ) )  DEALLOCATE( desc%nl_d )
     IF ( ALLOCATED( desc%nlm_d ) ) DEALLOCATE( desc%nlm_d )
+    !
+    ! SLAB decomposition
+    IF ( ALLOCATED( desc%srh ) )   DEALLOCATE( desc%srh )
+    ierr = cudaStreamDestroy( desc%a2a_comp )
+    ierr = cudaStreamDestroy( desc%a2a_d2h )
+    ierr = cudaStreamDestroy( desc%a2a_h2d )
+
+
+    DO i = 1, 2*desc%nproc
+       ierr = cudaEventDestroy( desc%a2a_event( i ) )
+    ENDDO
+    DEALLOCATE( desc%a2a_event( 2*desc%nproc ) )
+
+    nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
+    DO i = 1, nsubbatches
+      ierr = cudaStreamDestroy( desc%bstreams(i) )
+      ierr = cudaEventDestroy( desc%bevents(i) )
+    ENDDO
+
+    DEALLOCATE( desc%bstreams )
+    DEALLOCATE( desc%bevents )
+
 #endif
 
     desc%comm  = MPI_COMM_NULL 
