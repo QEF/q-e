@@ -1,5 +1,6 @@
 fft_error.o : fft_param.o
 fft_fwinv.o : fft_parallel.o
+fft_fwinv.o : fft_parallel_2d.o
 fft_fwinv.o : fft_param.o
 fft_fwinv.o : fft_scalar.o
 fft_fwinv.o : fft_smallbox.o

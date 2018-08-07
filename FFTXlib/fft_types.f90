@@ -146,6 +146,7 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: tg_rdsp(:)! receive displacement for task group A2A communicattion
     !
     LOGICAL :: has_task_groups = .FALSE.
+    LOGICAL :: use_pencil_decomposition = .FALSE.
     !
     CHARACTER(len=12):: rho_clock_label  = ' '
     CHARACTER(len=12):: wave_clock_label = ' '
@@ -154,6 +155,19 @@ MODULE fft_types
 #if defined(__CUDA)
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_yz
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_xy
+
+    INTEGER(kind=cuda_stream_kind) :: a2a_comp, a2a_h2d, a2a_d2h
+    TYPE(cudaEvent), allocatable, dimension(:) :: a2a_event
+    INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: bstreams
+    TYPE(cudaEvent), allocatable, dimension(:) :: bevents
+
+    INTEGER              :: batchsize = 16    ! how many ffts to batch together
+    INTEGER              :: subbatchsize = 4  ! size of subbatch for pipelining
+
+#if defined(__USE_IPC)
+    INTEGER :: IPC_PEER(16)
+#endif
+    INTEGER, ALLOCATABLE :: srh(:,:) ! Isend/recv handles by subbatch
 #endif
   END TYPE
 
@@ -180,6 +194,7 @@ CONTAINS
     INTEGER, INTENT(IN), OPTIONAL :: nyfft
     INTEGER, INTENT(in) :: comm ! mype starting from 0
     INTEGER :: nx, ny, ierr, nzfft
+    INTEGER :: i, nsubbatches
     INTEGER :: mype, root, nproc, nproc2, nproc3, iproc, iproc2, iproc3 ! mype starting from 0
     INTEGER :: color, key, comm2, comm3
      !write (6,*) ' inside fft_type_allocate' ; FLUSH(6)
@@ -305,6 +320,26 @@ CONTAINS
     do iproc = 1, desc%nproc2
         ierr = cudaStreamCreate(desc%stream_scatter_xy(iproc))
     end do
+
+    ierr = cudaStreamCreate( desc%a2a_comp )
+    ierr = cudaStreamCreate( desc%a2a_d2h )
+    ierr = cudaStreamCreate( desc%a2a_h2d )
+
+    ALLOCATE( desc%a2a_event( max(2*nproc, 3) ) )
+    DO i = 1, max(2*nproc, 3)
+       ierr = cudaEventCreate( desc%a2a_event( i ) )
+    ENDDO
+
+    nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
+
+    ALLOCATE( desc%bstreams( nsubbatches ) )
+    ALLOCATE( desc%bevents( nsubbatches ) )
+    DO i = 1, nsubbatches
+      ierr = cudaStreamCreate( desc%bstreams(i) )
+      ierr = cudaEventCreate( desc%bevents(i) )
+    ENDDO
+    ALLOCATE( desc%srh(2*nproc, nsubbatches))
+
 #endif
 
     incremental_grid_identifier = incremental_grid_identifier + 1
