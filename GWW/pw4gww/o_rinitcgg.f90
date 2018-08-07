@@ -71,7 +71,7 @@ SUBROUTINE o_rinitcgg( npwx, npw, nstart, numwp, psi, o_evc, e, numv, v_states,h
   !
   DO m = 1, nstart
      !
-     !CALL h_1psi( npwx, npw, psi(1,m), aux(1,1), aux(1,2) )
+     !CALL hs_1psi( npwx, npw, psi(1,m), aux(1,1), aux(1,2) )
    
      write(stdout,*) 'Call o_1psi_gamma',m,nstart
      FLUSH(stdout)

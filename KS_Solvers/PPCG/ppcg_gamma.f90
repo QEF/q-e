@@ -87,9 +87,13 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
   LOGICAL :: force_repmat    ! = .TRUE. to force replication of the Gram matrices for Cholesky
                              ! Needed if the sizes of these  matrices become too small after locking
 
-   REAL                          :: res_array(maxter)
+  REAL                          :: res_array(maxter)
 
-   res_array     = 0.0
+  INTEGER, PARAMETER :: blocksz = 256 ! used to optimize some omp parallel do loops
+  INTEGER :: nblock
+  nblock = (npw -1) /blocksz + 1      ! used to optimize some omp parallel do loops
+
+  res_array     = 0.0
   !
   CALL start_clock( 'ppcg_gamma' )
   !
@@ -129,7 +133,7 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
   !
   !     G = psi'hpsi
   call start_clock('ppcg:dgemm')
-  G = ZERO
+  call threaded_memset( G, ZERO, nbnd*nbnd ) ! G = ZERO
   CALL divide(inter_bgrp_comm,nbnd,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbnd,n_start,n_end
   if (n_start .le. n_end) &
   CALL DGEMM('T','N', nbnd, my_n, npw2, 2.D0, psi, npwx2, hpsi(1,n_start), npwx2, 0.D0, G(1,n_start), nbnd)
@@ -184,15 +188,17 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
      !
      ! ... apply the diagonal preconditioner
      !
-     !$omp parallel do
-     DO j = 1, nact
-        w(1:npw, act_idx(j)) = w(1:npw,act_idx(j)) / precondition(1:npw)
-     END DO
+     !$omp parallel do collapse(2)
+     DO j = 1, nact ; DO i=1,nblock
+        w(1+(i-1)*blocksz:MIN(i*blocksz,npw), act_idx(j)) = & 
+                w(1+(i-1)*blocksz:MIN(i*blocksz,npw), act_idx(j)) / &
+                      precondition(1+(i-1)*blocksz:MIN(i*blocksz,npw))
+     END DO ; END DO
      !$omp end parallel do
      !
      call start_clock('ppcg:dgemm')
      call threaded_assign( buffer, w, npwx, nact, act_idx )
-     G(1:nbnd,1:nact) = ZERO
+     call threaded_memset( G, ZERO, nbnd*nact ) ! G(1:nbnd,1:nact) = ZERO
      CALL divide(inter_bgrp_comm,nbnd,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nbnd,n_start,n_end
      if (overlap) then
         if (n_start .le. n_end) &
@@ -214,7 +220,8 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
      if (n_start .le. n_end) &
      CALL DGEMM('N','N', npw2, nact, my_n, -ONE, psi(1,n_start), npwx2, G(n_start,1), nbnd, ONE, buffer, npwx2)
      CALL mp_sum( buffer(:,1:nact), inter_bgrp_comm )
-     w(:,act_idx(1:nact)) = buffer(:,1:nact)
+!     w(:,act_idx(1:nact)) = buffer(:,1:nact)
+     call threaded_backassign( w, act_idx, buffer, npwx, nact )
      call stop_clock('ppcg:dgemm')
      !
      ! ... Compute h*w
@@ -222,10 +229,12 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
      IF ( gstart == 2 ) w(1,act_idx(1:nact)) = CMPLX( DBLE( w(1,act_idx(1:nact)) ), 0.D0, kind=DP)
      call threaded_assign( buffer1, w, npwx, nact, act_idx )
      CALL h_psi( npwx, npw, nact, buffer1, buffer )
-     hw(:,act_idx(1:nact)) = buffer(:,1:nact)
+!     hw(:,act_idx(1:nact)) = buffer(:,1:nact)
+     call threaded_backassign( hw, act_idx, buffer, npwx, nact )
      if (overlap) then ! ... Compute s*w
         CALL s_psi( npwx, npw, nact, buffer1, buffer )
-        sw(:,act_idx(1:nact)) = buffer(:,1:nact)
+!        sw(:,act_idx(1:nact)) = buffer(:,1:nact)
+        call threaded_backassign( sw, act_idx, buffer, npwx, nact )
      end if
      avg_iter = avg_iter + nact/dble(nbnd)
      call stop_clock('ppcg:hpsi')
@@ -235,7 +244,7 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
      IF ( iter  /=  1 ) THEN
         !  G = spsi'p
         call start_clock('ppcg:dgemm')
-        G(1:nact,1:nact) = ZERO
+        call threaded_memset( G, ZERO, nbnd*nact ) ! G(1:nact,1:nact) = ZERO
         if (overlap) then
            call threaded_assign( buffer, spsi, npwx, nact, act_idx )
         else
@@ -258,7 +267,8 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
         if (n_start .le. n_end) & ! could be done differently
         CALL DGEMM('N','N', npw2, nact, my_n,-ONE, buffer1(1,n_start), npwx2, G(n_start,1), nbnd, ONE, buffer, npwx2)
         CALL mp_sum( buffer(:,1:nact), inter_bgrp_comm )
-        p(:,act_idx(1:nact)) = buffer(:,1:nact)
+!        p(:,act_idx(1:nact)) = buffer(:,1:nact)
+        call threaded_backassign( p, act_idx, buffer, npwx, nact )
         call stop_clock('ppcg:dgemm')
         !
         call start_clock('ppcg:dgemm')
@@ -267,7 +277,8 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
         if (n_start .le. n_end) &
         CALL DGEMM('N','N', npw2, nact, my_n,-ONE, buffer1(1,n_start), npwx2, G(n_start,1), nbnd, ONE, buffer, npwx2)
         CALL mp_sum( buffer(:,1:nact), inter_bgrp_comm )
-        hp(:,act_idx(1:nact)) = buffer(:,1:nact)
+!        hp(:,act_idx(1:nact)) = buffer(:,1:nact)
+        call threaded_backassign( hp, act_idx, buffer, npwx, nact )
         call stop_clock('ppcg:dgemm')
         !
         if (overlap) then
@@ -277,7 +288,8 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
            if (n_start .le. n_end) &
            CALL DGEMM('N','N', npw2, nact, my_n,-ONE, buffer1(1,n_start), npwx2, G(n_start,1), nbnd, ONE, buffer, npwx2)
            CALL mp_sum( buffer(:,1:nact), inter_bgrp_comm )
-           sp(:,act_idx(1:nact)) = buffer(:,1:nact)
+!           sp(:,act_idx(1:nact)) = buffer(:,1:nact)
+           call threaded_backassign( sp, act_idx, buffer, npwx, nact )
            call stop_clock('ppcg:dgemm')
         end if
      END IF
@@ -466,7 +478,8 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
           CALL DGEMM('N','N',npw2, l, l, ONE, buffer1, npwx2, coord_p, sbsize, ZERO, buffer, npwx2)
           call threaded_assign( buffer1,  w, npwx, l, col_idx )
           CALL DGEMM('N','N', npw2, l, l, ONE, buffer1, npwx2, coord_w, sbsize, ONE, buffer, npwx2)
-          p(:,col_idx(1:l))  = buffer(:,1:l)
+!          p(:,col_idx(1:l))  = buffer(:,1:l)
+          call threaded_backassign( p, col_idx, buffer, npwx, l )
           call stop_clock('ppcg:dgemm')
           !
           call start_clock('ppcg:dgemm')
@@ -474,7 +487,8 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
           CALL DGEMM('N','N',npw2, l, l, ONE, buffer1, npwx2, coord_p, sbsize, ZERO, buffer, npwx2)
           call threaded_assign( buffer1,  hw, npwx, l, col_idx )
           CALL DGEMM('N','N', npw2, l, l, ONE, buffer1, npwx2, coord_w, sbsize, ONE, buffer, npwx2)
-          hp(:,col_idx(1:l))  = buffer(:,1:l)
+!          hp(:,col_idx(1:l))  = buffer(:,1:l)
+          call threaded_backassign( hp, col_idx, buffer, npwx, l )
           call stop_clock('ppcg:dgemm')
           !
           if (overlap) then
@@ -483,7 +497,8 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
              CALL DGEMM('N','N',npw2, l, l, ONE, buffer1, npwx2, coord_p, sbsize, ZERO, buffer, npwx2)
              call threaded_assign( buffer1,  sw, npwx, l, col_idx )
              CALL DGEMM('N','N', npw2, l, l, ONE, buffer1, npwx2, coord_w, sbsize, ONE, buffer, npwx2)
-             sp(:,col_idx(1:l))  = buffer(:,1:l)
+!             sp(:,col_idx(1:l))  = buffer(:,1:l)
+             call threaded_backassign( sp, col_idx, buffer, npwx, l )
              call stop_clock('ppcg:dgemm')
           end if
        ELSE
@@ -491,20 +506,23 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
           call start_clock('ppcg:dgemm')
           call threaded_assign( buffer1,  w, npwx, l, col_idx )
           CALL DGEMM('N','N',npw2, l, l, ONE, buffer1, npwx2, coord_w, sbsize, ZERO, buffer, npwx2)
-          p(:,col_idx(1:l)) = buffer(:, 1:l)
+!          p(:,col_idx(1:l)) = buffer(:, 1:l)
+          call threaded_backassign( p, col_idx, buffer, npwx, l )
           call stop_clock('ppcg:dgemm')
           !
           call start_clock('ppcg:dgemm')
           call threaded_assign( buffer1,  hw, npwx, l, col_idx )
           CALL DGEMM('N','N',npw2, l, l, ONE, buffer1, npwx2, coord_w, sbsize, ZERO, buffer, npwx2)
-          hp(:,col_idx(1:l)) = buffer(:, 1:l)
+!          hp(:,col_idx(1:l)) = buffer(:, 1:l)
+          call threaded_backassign( hp, col_idx, buffer, npwx, l )
           call stop_clock('ppcg:dgemm')
           !
           if (overlap) then
              call start_clock('ppcg:dgemm')
              call threaded_assign( buffer1,  sw, npwx, l, col_idx )
              CALL DGEMM('N','N',npw2, l, l, ONE, buffer1, npwx2, coord_w, sbsize, ZERO, buffer, npwx2)
-             sp(:,col_idx(1:l)) = buffer(:, 1:l)
+!             sp(:,col_idx(1:l)) = buffer(:, 1:l)
+             call threaded_backassign( sp, col_idx, buffer, npwx, l )
              call stop_clock('ppcg:dgemm')
           end if
        END IF
@@ -513,44 +531,47 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
        call start_clock('ppcg:dgemm')
        call threaded_assign( buffer1,  psi, npwx, l, col_idx )
        CALL DGEMM('N','N',npw2, l, l, ONE, buffer1, npwx2, coord_psi, sbsize, ZERO, buffer, npwx2)
-       psi(:,col_idx(1:l))  = buffer(:,1:l)  + p(:,col_idx(1:l))
+!       psi(:,col_idx(1:l))  = buffer(:,1:l)  + p(:,col_idx(1:l))
+       call threaded_backassign( psi, act_idx, buffer, npwx, l, p )
        call stop_clock('ppcg:dgemm')
        !
        call start_clock('ppcg:dgemm')
        call threaded_assign( buffer1,  hpsi, npwx, l, col_idx )
        CALL DGEMM('N','N',npw2, l, l, ONE, buffer1, npwx2, coord_psi, sbsize, ZERO, buffer, npwx2)
-       hpsi(:,col_idx(1:l)) = buffer(:,1:l) + hp(:,col_idx(1:l))
+!       hpsi(:,col_idx(1:l)) = buffer(:,1:l) + hp(:,col_idx(1:l))
+       call threaded_backassign( hpsi, act_idx, buffer, npwx, l, hp )
        call stop_clock('ppcg:dgemm')
        !
        if (overlap) then
           call start_clock('ppcg:dgemm')
           call threaded_assign( buffer1,  spsi, npwx, l, col_idx )
           CALL DGEMM('N','N',npw2, l, l, ONE, buffer1, npwx2, coord_psi, sbsize, ZERO, buffer, npwx2)
-          spsi(:,col_idx(1:l)) = buffer(:,1:l) + sp(:,col_idx(1:l))
+!          spsi(:,col_idx(1:l)) = buffer(:,1:l) + sp(:,col_idx(1:l))
+          call threaded_backassign( spsi, act_idx, buffer, npwx, l, sp )
           call stop_clock('ppcg:dgemm')
        end if
        !
        idx(col_idx(1:l)) = 1 ! keep track of which columns this bgrp has acted on
      END DO  ! end 'separate RQ minimizations'
      ! set to zero the columns not assigned to this bgrp, inactive colums are assigned to root_bgrp
+     !omp parallel do
      do j=1,nbnd
         if (idx(j)==0) then
            psi (:,j) = C_ZERO ; hpsi (:,j) = C_ZERO ; p(:,j) = C_ZERO ; hp(:,j) = C_ZERO
+           if (overlap) then
+              spsi (:,j) = C_ZERO ; sp(:,j) = C_ZERO
+           end if
         end if
      end do
+     !omp end parallel do
      CALL mp_sum(psi ,inter_bgrp_comm)
      CALL mp_sum(hpsi,inter_bgrp_comm)
      CALL mp_sum(p ,inter_bgrp_comm)
      CALL mp_sum(hp,inter_bgrp_comm)
      if (overlap) then
-        do j=1,nbnd
-           if (idx(j)==0) then
-              spsi (:,j) = C_ZERO ;sp(:,j) = C_ZERO
-           end if
-        end do
         CALL mp_sum(spsi,inter_bgrp_comm)
         CALL mp_sum(sp,inter_bgrp_comm)
-    end if
+     end if
     !
     !
     ! ... Perform the RR procedure every rr_step
@@ -567,19 +588,17 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
        !     residuals for individual eigenpairs in psi and e
        if (overlap) then
           !$omp parallel do collapse(2)
-          DO j = 1, nbnd
-             DO i = 1, npw
-                w( i, j ) = hpsi( i, j ) - spsi( i, j )*e( j )
-             END DO
-          END DO
+          DO j = 1, nbnd ; DO i=1,nblock
+             w( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) = hpsi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) &
+                                                 - spsi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j )*e( j )
+          END DO ; END DO
           !$omp end parallel do
        else
           !$omp parallel do collapse(2)
-          DO j = 1, nbnd
-             DO i = 1, npw
-                w( i, j ) = hpsi( i, j ) -  psi( i, j )*e( j )
-             END DO
-          END DO
+          DO j = 1, nbnd ; DO i=1,nblock
+             w( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) = hpsi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) &
+                                                 -  psi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j )*e( j )
+          END DO ; END DO
           !$omp end parallel do
        end if
        !
@@ -614,14 +633,16 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
          CALL cholQR_dmat(npw, nact, buffer, buffer1, npwx, Gl, desc)
          call stop_clock('ppcg:cholQR')
          !
-         psi(:,act_idx(1:nact)) = buffer(:,1:nact)
+!         psi(:,act_idx(1:nact)) = buffer(:,1:nact)
+         call threaded_backassign( psi, act_idx, buffer, npwx, nact )
          !
          call threaded_assign( buffer1,  hpsi, npwx, nact, act_idx )
          call start_clock('ppcg:DTRSM')
          CALL dgemm_dmat( npw, nact, npwx, desc, ONE, buffer1, Gl, ZERO, buffer )
          call stop_clock('ppcg:DTRSM')
          !
-         hpsi(:,act_idx(1:nact)) = buffer(:,1:nact)
+!         hpsi(:,act_idx(1:nact)) = buffer(:,1:nact)
+         call threaded_backassign( hpsi, act_idx, buffer, npwx, nact )
          !
          if (overlap) then
             call threaded_assign( buffer1,  spsi, npwx, nact, act_idx )
@@ -629,7 +650,8 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
             CALL dgemm_dmat( npw, nact, npwx, desc, ONE, buffer1, Gl, ZERO, buffer )
             call stop_clock('ppcg:DTRSM')
             !
-            spsi(:,act_idx(1:nact)) = buffer(:,1:nact)
+!            spsi(:,act_idx(1:nact)) = buffer(:,1:nact)
+            call threaded_backassign( spsi, act_idx, buffer, npwx, nact )
          end if
       ELSE
          !
@@ -644,7 +666,8 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
          CALL cholQR(npw, nact, buffer, buffer1, npwx, G, nbnd)
          call stop_clock('ppcg:cholQR')
          !
-         psi(:,act_idx(1:nact)) = buffer(:,1:nact)
+!         psi(:,act_idx(1:nact)) = buffer(:,1:nact)
+         call threaded_backassign( psi, act_idx, buffer, npwx, nact )
          !
          call threaded_assign( buffer,  hpsi, npwx, nact, act_idx )
          !
@@ -652,7 +675,8 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
          CALL DTRSM('R', 'U', 'N', 'N', npw2, nact, ONE, G, nbnd, buffer, npwx2)
          call stop_clock('ppcg:DTRSM')
          !
-         hpsi(:,act_idx(1:nact)) = buffer(:,1:nact)
+!         hpsi(:,act_idx(1:nact)) = buffer(:,1:nact)
+         call threaded_backassign( hpsi, act_idx, buffer, npwx, nact )
          !
          if (overlap) then
             call threaded_assign( buffer,  spsi, npwx, nact, act_idx )
@@ -661,7 +685,8 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
             CALL DTRSM('R', 'U', 'N', 'N', npw2, nact, ONE, G, nbnd, buffer, npwx2)
             call stop_clock('ppcg:DTRSM')
             !
-            spsi(:,act_idx(1:nact)) = buffer(:,1:nact)
+!            spsi(:,act_idx(1:nact)) = buffer(:,1:nact)
+            call threaded_backassign( spsi, act_idx, buffer, npwx, nact )
          end if
       END IF
 !! EV end
@@ -672,7 +697,7 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
        call threaded_assign( buffer,  psi, npwx, nact, act_idx )
        call threaded_assign( buffer1,  hpsi, npwx, nact, act_idx )
        call start_clock('ppcg:dgemm')
-       G = ZERO
+       call threaded_memset( G, ZERO, nbnd*nbnd ) ! G = ZERO
        CALL divide(inter_bgrp_comm,nact,n_start,n_end); my_n = n_end - n_start + 1; !write (*,*) nact,n_start,n_end
        if (n_start .le. n_end) &
        CALL DGEMM('T','N', nact, my_n, npw2, 2.D0, buffer, npwx2, buffer1(1,n_start), npwx2, 0.D0, G(1,n_start), nbnd)
@@ -693,7 +718,8 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
        if (n_start .le. n_end) &
        CALL DGEMM('N','N',npw2, nact, my_n, -ONE, buffer1(1,n_start), npwx2, G(n_start,1), nbnd, ONE, buffer, npwx2)
        CALL mp_sum( buffer(:,1:nact), inter_bgrp_comm )
-       w(:,act_idx(1:nact)) = buffer(:,1:nact);
+!       w(:,act_idx(1:nact)) = buffer(:,1:nact);
+       call threaded_backassign( w, act_idx, buffer, npwx, nact )
 
        call stop_clock('ppcg:dgemm')
        !
@@ -732,19 +758,17 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
     ! ... Compute residuals
     if (overlap) then
        !$omp parallel do collapse(2)
-       DO j = 1, nbnd
-          DO i = 1, npw
-             w( i, j ) = hpsi( i, j ) - spsi( i, j )*e( j )
-          END DO
-       END DO
+       DO j = 1, nbnd ; DO i=1,nblock
+          w( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) = hpsi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) &
+                                              - spsi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j )*e( j )
+       END DO ; END DO
        !$omp end parallel do
     else
        !$omp parallel do collapse(2)
-       DO j = 1, nbnd
-          DO i = 1, npw
-             w( i, j ) = hpsi( i, j ) -  psi( i, j )*e( j )
-          END DO
-       END DO
+       DO j = 1, nbnd ; DO i=1,nblock
+          w( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) = hpsi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j ) &
+                                              -  psi( 1+(i-1)*blocksz:MIN(i*blocksz,npw), j )*e( j )
+       END DO ; END DO
        !$omp end parallel do
     end if
     !
@@ -1613,15 +1637,15 @@ nguard = 0 ! 24 ! 50
 
 !- routines to perform threaded assignements
 
-  SUBROUTINE threaded_assign(array_out, array_in, kdimx, nact, act_idx, bgrp_root_only)
+  SUBROUTINE threaded_assign(array_out, array_in, kdimx, nact, idx, bgrp_root_only)
   ! 
   !  assign (copy) a complex array in a threaded way
   !
   !  array_out( 1:kdimx, 1:nact ) = array_in( 1:kdimx, 1:nact )       or
   !
-  !  array_out( 1:kdimx, 1:nact ) = array_in( 1:kdimx, act_idx(1:nact) )
+  !  array_out( 1:kdimx, 1:nact ) = array_in( 1:kdimx, idx(1:nact) )
   !
-  !  if the index array act_idx is given
+  !  if the index array idx is given
   !
   !  if  bgrp_root_only is present and .true. the assignement is made only by the 
   !  MPI root process of the bgrp and array_out is zeroed otherwise
@@ -1633,7 +1657,7 @@ nguard = 0 ! 24 ! 50
   COMPLEX(DP), INTENT(OUT) :: array_out( kdimx, nact )
   COMPLEX(DP), INTENT(IN)  :: array_in ( kdimx, * )
   INTEGER, INTENT(IN)      :: kdimx, nact
-  INTEGER, INTENT(IN), OPTIONAL :: act_idx( * )
+  INTEGER, INTENT(IN), OPTIONAL :: idx( * )
   LOGICAL, INTENT(IN), OPTIONAL :: bgrp_root_only
   !
   INTEGER, PARAMETER :: blocksz = 256
@@ -1652,24 +1676,69 @@ nguard = 0 ! 24 ! 50
 
   nblock = (kdimx - 1)/blocksz  + 1
 
-  IF (present(act_idx) ) THEN
+  IF (present(idx) ) THEN
      !$omp parallel do collapse(2)
-     DO i=1, nact
-        DO j=1, nblock
-           array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), act_idx( i ) ) 
-        ENDDO
-     ENDDO
+     DO i=1, nact ; DO j=1,nblock
+        array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), idx( i ) ) 
+     ENDDO ; ENDDO
      !$omp end parallel do
   ELSE
      !$omp parallel do collapse(2)
-     DO i=1, nact
-        DO j=1, nblock
-           array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) 
-        ENDDO
-     ENDDO
+     DO i=1, nact ; DO j=1,nblock
+        array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) 
+     ENDDO ; ENDDO
      !$omp end parallel do
   END IF
   !
   END SUBROUTINE threaded_assign
+
+  SUBROUTINE threaded_backassign(array_out, idx, array_in, kdimx, nact, a2_in )
+  ! 
+  !  assign (copy) a complex array in a threaded way
+  !
+  !  array_out( 1:kdimx, idx(1:nact) ) = array_in( 1:kdimx, 1:nact )      or
+  !
+  !  array_out( 1:kdimx, idx(1:nact) ) = array_in( 1:kdimx, 1:nact )  + a2_in( 1:kdimx, idx(1:nact) (
+  !  if a2_in is present
+  !
+  !  the index array idx is mandatory otherwise one could use previous routine)
+  !
+  USE util_param,   ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(INOUT) :: array_out( kdimx, * ) ! we don't want to mess with un referenced columns
+  COMPLEX(DP), INTENT(IN)  :: array_in ( kdimx, nact )
+  COMPLEX(DP), INTENT(IN), OPTIONAL  :: a2_in ( kdimx, * )
+  INTEGER, INTENT(IN)      :: kdimx, nact
+  INTEGER, INTENT(IN)      :: idx( * )
+  !
+  INTEGER, PARAMETER :: blocksz = 256
+  INTEGER :: nblock
+
+  INTEGER :: i, j
+  !
+  IF (kdimx <=0 .OR. nact<= 0) RETURN
+  !
+
+  nblock = (kdimx - 1)/blocksz  + 1
+
+  IF ( present(a2_in) ) THEN
+     !$omp parallel do collapse(2)
+     DO i=1, nact ; DO j=1,nblock
+        array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), idx( i ) ) = &
+            array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i )     + & 
+                a2_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), idx( i ) ) 
+     ENDDO ; ENDDO
+     !$omp end parallel do
+  ELSE
+     !$omp parallel do collapse(2)
+     DO i=1, nact ; DO j=1,nblock
+        array_out(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), idx( i ) ) = array_in(1+(j-1)*blocksz:MIN(j*blocksz,kdimx), i ) 
+     ENDDO ; ENDDO
+     !$omp end parallel do
+  END IF
+  !
+  END SUBROUTINE threaded_backassign
 
 END SUBROUTINE ppcg_gamma

@@ -202,9 +202,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 ! subroutine g_psi(npwx,npw,nvec,psi,eig)   computes G*psi -> psi
 !------------------------------------------------------------------------
 ! CG diagonalization uses these external routines on a single band
-   external h_1psi, s_1psi
-!  subroutine h_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
-!  subroutine s_1psi(npwx,npw,psi,spsi)  computes S*psi (if needed)
+   external hs_1psi, s_1psi
+!  subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
+!  subroutine s_1psi(npwx,npw,psi,spsi)        computes S*psi (if needed)
 ! In addition to the above ithe initial wfc rotation uses h_psi, and s_psi
 !------------------------------------------------------------------------
 ! PPCG diagonalization uses these external routines on groups of bands
@@ -298,7 +298,7 @@ CONTAINS
           END IF
           !
           IF ( isolve == 1 ) THEN
-             CALL rcgdiagg( h_1psi, s_1psi, h_diag, &
+             CALL rcgdiagg( hs_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
              !
@@ -447,7 +447,7 @@ CONTAINS
           END IF
           !
           IF ( isolve == 1) then
-             CALL ccgdiagg( h_1psi, s_1psi, h_diag, &
+             CALL ccgdiagg( hs_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
              !
