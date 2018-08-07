@@ -73,7 +73,7 @@ SUBROUTINE impexp ()
 
   USE kinds,     ONLY : DP
   USE io_files,  ONLY : tmp_dir, prefix, postfix, psfile, pseudo_dir, &
-                        xmlpun, create_directory
+                        xmlpun_schema, create_directory
   USE ions_base, ONLY : nsp
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast
@@ -170,9 +170,10 @@ SUBROUTINE impexp ()
      rho_binary = .FALSE. 
   end if
 
-  ! Read XML and the charge densities; don't read the eigenval.xml
-  ! files that are not needed for import/export purposes
-  CALL read_xml_file_nobs
+  ! Read XML and the charge densities
+
+  CALL infomsg('importexport','UNTESTED, PLEASE CHECK AND REPORT PROBLEMS')
+  CALL read_xml_file ( )
   
   ! A trick here:
   ! I now change the out dir to the new one, to store there the outputs
@@ -194,7 +195,7 @@ SUBROUTINE impexp ()
   CALL write_scf(rho, nspin)
   
   ! I need to copy XML file
-  filename =  TRIM( xmlpun )
+  filename =  TRIM( xmlpun_schema )
   sourcef = TRIM( old_tmp_dir ) // TRIM( prefix ) // postfix // TRIM( filename )
   destf   = TRIM( new_tmp_dir ) // TRIM( prefix ) // postfix // TRIM( filename )
   ios = f_copy( TRIM( sourcef ), TRIM( destf ))
@@ -207,11 +208,6 @@ SUBROUTINE impexp ()
      ios = f_copy( TRIM( sourcef ), TRIM( destf ))
      IF ( ios /= 0) CALL errore ('importexport', 'copying the ' // TRIM(psfile(l)) // ' pseudo', abs(ios))
   end do
-
-  ! I am not copying the K?????/eigenval.xml files, this must be done by hand if needed
-  if (ionode) then
-     write(*,'(3X,A)') "NOTE! The band structure (files eigenval.xml) are not copied!"
-  end if
 
   ! Rho and the various files have been written, exit
 

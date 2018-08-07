@@ -19,7 +19,6 @@ chargedensity.o \
 cp_autopilot.o \
 cp_emass.o \
 cp_interfaces.o \
-cp_restart.o \
 cp_restart_new.o \
 cplib.o \
 cpr_mod.o \
@@ -147,9 +146,9 @@ cpver.h :
 	echo "CHARACTER(LEN=70), PARAMETER :: version_date = '"`date`"'" \
 		> cpver.h
 
-cppp.x : fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
-	- (cd ../../bin ; ln -fs ../CPV/src/cppp.x . )
+#cppp.x : fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
+#	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
+#	- (cd ../../bin ; ln -fs ../CPV/src/cppp.x . )
 
 wfdd.x : wfdd.o
 	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
