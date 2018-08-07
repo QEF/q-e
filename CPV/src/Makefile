@@ -124,7 +124,7 @@ UTIL=../../UtilXlib/libutil.a
 
 TLDEPS= bindir mods libs
 
-all : tldeps libcp.a manycp.x cp.x cppp.x wfdd.x
+all : tldeps libcp.a manycp.x cp.x wfdd.x #cppp.x
 
 manycp.x : manycp.o libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o manycp.x manycp.o \
