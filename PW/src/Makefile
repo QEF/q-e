@@ -163,7 +163,6 @@ potinit.o \
 print_clock_pw.o \
 print_ks_energies.o \
 punch.o \
-pw_restart.o \
 pw_restart_new.o \
 add_qexsd_step.o \
 pw_init_qexsd_input.o \
@@ -174,7 +173,6 @@ pw2casino_write.o \
 qvan2.o \
 rdiagh.o \
 read_conf_from_file.o \
-read_file.o \
 read_file_new.o \
 realus.o \
 remove_atomic_rho.o \

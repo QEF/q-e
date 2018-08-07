@@ -5,14 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__OLDXML)
-! 
-MODULE qexsd_input
-  IMPLICIT NONE
-  INTEGER :: dummy__
-END MODULE qexsd_input
-!
-#else
 !---------------------------------------------------------
 MODULE qexsd_input
 !--------------------------------------------------------
@@ -773,6 +765,4 @@ MODULE qexsd_input
       !--------------------------------------------------------------------------------------------
       !
 END MODULE qexsd_input          
-! 
-#endif
   

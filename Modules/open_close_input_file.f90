@@ -5,15 +5,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! NOTE May 2018 (PG): reading of old xml input file using iotk is disabled
-! Look for following preprocessing variable to see what and where
-#undef __XML_INPUT
+! NOTE Aug 2018 (PG): reading of old xml input file using iotk deleted
+
 MODULE open_close_input_file
   !
   USE io_global,     ONLY : stdin, stdout, qestdin
-#if defined (__XML_INPUT)
-  USE iotk_module,   ONLY : iotk_open_read, iotk_close_read,iotk_attlenx
-#endif
   !
   LOGICAL, SAVE :: lxmlinput_loc = .false.
   CHARACTER(LEN=256), SAVE :: input_file = ' '
@@ -22,15 +18,14 @@ MODULE open_close_input_file
   !
 CONTAINS
   !----------------------------------------------------------------------------
-  INTEGER FUNCTION open_input_file ( input_file_, lxmlinput, attr )
+  INTEGER FUNCTION open_input_file ( input_file_, lxmlinput )
   !-----------------------------------------------------------------------------
   !
   ! ...  Open file "input_file_" for input read, connecting it to unit qestdin.
   ! ...  If "input_file_" is empty, the standard input is dumped to temporary 
   ! ...  file "input_tmp.in"  and this is opened for read
   ! ...  If optional variable lxmlinput is present, test if the file is a
-  ! ...  valid xml file. In this case, optional variable attr must be 
-  ! ...  present and is used to open the file.
+  ! ...  valid xml file.
   ! ...  In parallel execution, should be called by a single processor
   ! ...  if reading from standard input; may be called on all processors
   ! ...  otherwise, but ensure first that all processors can read and write!
@@ -48,7 +43,6 @@ CONTAINS
   !
   CHARACTER (len=*), intent(in) :: input_file_
   LOGICAL, intent(out), optional :: lxmlinput
-  CHARACTER (len=*), intent(inout), optional :: attr
   !
   LOGICAL :: lcheckxml
   INTEGER :: ierr, len
@@ -59,12 +53,6 @@ CONTAINS
   !
   !
   lcheckxml = PRESENT(lxmlinput)
-  IF ( PRESENT(attr) ) THEN
-     attr=' '
-  ELSE IF ( lcheckxml ) THEN
-     open_input_file = 1
-     RETURN
-  ENDIF
   !
   stdtmp = find_free_unit()
   !
@@ -118,13 +106,8 @@ CONTAINS
      ELSE
         WRITE(stdout, '(5x,a)') "Reading xml input from standard input"
      END IF
-#if defined (__XML_INPUT)
-     CALL iotk_open_read( qestdin, TRIM(input_file), attr = attr, &
-                          qe_syntax = .true., ierr = ierr)
-#else
      OPEN ( UNIT = qestdin, FILE = TRIM(input_file), FORM = 'FORMATTED', &
             STATUS = 'OLD', IOSTAT = ierr )
-#endif
   ELSE 
      IF ( input_file .NE. "input_tmp.in") THEN
          WRITE(stdout, '(5x,a)') "Reading input from "//TRIM(input_file)

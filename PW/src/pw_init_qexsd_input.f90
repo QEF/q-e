@@ -101,7 +101,7 @@
   !
   ! 
   NULLIFY (gate_ptr, block_ptr, relaxz_ptr, block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr)
-#if !defined(__OLDXML)
+
   obj%tagname=TRIM(obj_tagname)
   IF ( ABS(ip_ibrav)  .GT. 0 ) THEN  
      ibrav_lattice = .TRUE. 
@@ -397,6 +397,5 @@
   obj%lwrite=.TRUE.
   ! 
   !
-#endif 
   END SUBROUTINE pw_init_qexsd_input
   !

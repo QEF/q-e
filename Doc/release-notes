@@ -8,6 +8,9 @@ Problems fixed in development version:
   * bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
 
 Incompatible changes in development version:
+  * Old format (-D__OLDXML) deleted. Some exotic options may cease to work.
+    No longer working for sure: cppp.x, importexport.x, bgw2pw.x
+    isome exotic option "
   * Several routines moved from PHonon/PH to LR_Modules
   * Module "wavefunctions_module" renamed "wavefunctions"
 

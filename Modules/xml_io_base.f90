@@ -18,8 +18,8 @@ MODULE xml_io_base
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, check_file_exist, &
-       create_directory
+  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun_schema, &
+          check_file_exist, create_directory
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast, mp_sum, mp_get, mp_put, mp_max, mp_rank, &
        mp_size
@@ -90,7 +90,7 @@ MODULE xml_io_base
       !
       IF ( ionode ) THEN
          !
-         filename = TRIM( filename ) // '/' // TRIM( xmlpun )
+         filename = TRIM( filename ) // '/' // TRIM( xmlpun_schema )
          !
          INQUIRE( FILE = TRIM( filename ), EXIST = lval )
          !

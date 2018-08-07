@@ -76,7 +76,7 @@ SUBROUTINE init_run()
   USE control_flags,            ONLY : lwfpbe0nscf         ! exx_wf related 
   USE wavefunctions,     ONLY : cv0                 ! exx_wf related
   USE wannier_base,             ONLY : vnbsp               ! exx_wf related
-  USE cp_restart,               ONLY : cp_read_wfc_Kong    ! exx_wf related
+  !!!USE cp_restart,               ONLY : cp_read_wfc_Kong    ! exx_wf related
   USE input_parameters,         ONLY : ref_cell
   USE cell_base,                ONLY : ref_tpiba2, init_tpiba2
   USE tsvdw_module,             ONLY : tsvdw_initialize
@@ -316,7 +316,8 @@ SUBROUTINE init_run()
      !======================================================================
      ! Kong, read the valence orbitals
      IF(lwfpbe0nscf) THEN
-        CALL cp_read_wfc_Kong( 36, tmp_dir, 1, 1, 1, 1, cv0, 'v' )
+       !!! CALL cp_read_wfc_Kong( 36, tmp_dir, 1, 1, 1, 1, cv0, 'v' )
+       CALL errore( 'init_run', 'cp_read_wfc_Kong no longer available', 1)
      ENDIF
      !======================================================================
      i = 1  

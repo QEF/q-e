@@ -13,9 +13,7 @@ MODULE io_rho_xml
   USE kinds,       ONLY : DP
   USE io_files,    ONLY : create_directory
   USE xml_io_base, ONLY : write_rho, read_rho
-#if !defined (__OLDXML)
   USE io_base,     ONLY : write_rhog, read_rhog
-#endif
   !
   PRIVATE
   PUBLIC :: write_scf, read_scf
@@ -63,16 +61,11 @@ MODULE io_rho_xml
       ELSE
          nspin_ = nspin
       ENDIF
-#if defined (__OLDXML)
-      ! Write real space density
-      CALL write_rho ( dirname, rho%of_r, nspin_ )
-#else
       ! Write G-space density
       IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
            CALL write_rhog( dirname, root_bgrp, intra_bgrp_comm, &
            bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
            gamma_only, mill, ig_l2g, rho%of_g(:,1:nspin_) )
-#endif
 
       ! Then write the other terms to separate files
 
@@ -152,12 +145,9 @@ MODULE io_rho_xml
       ELSE
          nspin_=nspin
       ENDIF
-#if defined (__OLDXML)
-      CALL read_rho ( dirname, rho%of_r, nspin_ )
-#else
+
       CALL read_rhog( dirname, root_bgrp, intra_bgrp_comm, &
            ig_l2g, nspin_, rho%of_g, gamma_only )
-#endif
       IF ( nspin > nspin_) rho%of_r(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
       !
       IF ( lda_plus_u ) THEN
