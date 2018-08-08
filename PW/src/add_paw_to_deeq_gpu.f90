@@ -18,9 +18,8 @@ SUBROUTINE add_paw_to_deeq_gpu(deeq_d)
   integer :: na, nb, nab, nt, ih, jh, ijh, nhnt, is
   REAL(kind=dp), intent(inout) :: deeq_d( nhm, nhm, nat, nspin )
   REAL(DP), ALLOCATABLE :: ddd_paw_d(:,:,:)
-  INTEGER, ALLOCATABLE :: paw_na_h(:), paw_na_d(:)
 #if defined(__CUDA)
-  attributes(DEVICE) :: deeq_d, ddd_paw_d, paw_na_d
+  attributes(DEVICE) :: deeq_d, ddd_paw_d
 #endif
 
 ! OPTIMIZE HERE: squeeze loop on atoms having PAW pseudo
@@ -28,35 +27,27 @@ SUBROUTINE add_paw_to_deeq_gpu(deeq_d)
 
   if (okpaw) then
      ALLOCATE(ddd_paw_d, SOURCE=ddd_paw)
-     ALLOCATE(paw_na_h(nat))
-     paw_na_h = -1
-     nab=0
      do na=1,nat
         nt = ityp(na)
-        IF (upf(nt)%tpawp) nab = nab + 1
-        IF (upf(nt)%tpawp) paw_na_h(nab) = na
-     end do
-     ALLOCATE(paw_na_d, source=paw_na_h)
-     
-!$cuf kernel do(4)
-     do is=1,nspin
-        do nb=1,nab
-           do ih=1,nhm
-              do jh=1,nhm
+        IF (.not.upf(nt)%tpawp) cycle
+        nhnt = nh(nt)
+!$cuf kernel do(3)
+        do is=1,nspin
+           do ih=1,nhnt
+              do jh=1,nhnt
                  if (jh >= ih) then
-                    na = paw_na_d(nb)
-                    ijh = jh + ((ih-1)*(2*nhm-ih))/2
+                    ijh = jh + ((ih-1)*(2*nhnt-ih))/2
                     deeq_d(ih,jh,na,is) = deeq_d(ih,jh,na,is) &
                                            + ddd_paw_d(ijh,na,is)
-                    if (jh > ih) deeq_d(jh,ih,na,is) = deeq_d(ih,jh,na,is)
+                    deeq_d(jh,ih,na,is) = deeq_d(ih,jh,na,is) 
                  end if
               end do
            end do
         end do
      end do
-     DEALLOCATE(ddd_paw_d, paw_na_d, paw_na_h)
+     deallocate(ddd_paw_d)
   end IF 
-  
+  !
   RETURN
   
 END SUBROUTINE add_paw_to_deeq_gpu
