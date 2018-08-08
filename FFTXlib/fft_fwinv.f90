@@ -59,7 +59,7 @@ SUBROUTINE invfft_y( fft_kind, f, dfft, howmany )
 
   CALL start_clock(clock_label)
 
-  IF( dfft%lpara .and. .false. ) THEN
+  IF( dfft%lpara .and. dfft%use_pencil_decomposition ) THEN
 
      IF( howmany_ /= 1 ) THEN
         CALL fftx_error__( ' invfft ', ' howmany not yet implemented for parallel driver ', 1 )
@@ -156,7 +156,7 @@ SUBROUTINE fwfft_y( fft_kind, f, dfft, howmany )
 
   CALL start_clock(clock_label)
 
-  IF( dfft%lpara .and. .false. ) THEN
+  IF( dfft%lpara .and. dfft%use_pencil_decomposition ) THEN
 
      IF( howmany_ /= 1 ) THEN
         CALL fftx_error__( ' fwfft ', ' howmany not yet implemented for parallel driver ', 1 )

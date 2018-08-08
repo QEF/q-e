@@ -156,7 +156,7 @@ MODULE fft_types
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_yz
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_xy
 
-    INTEGER(kind=cuda_stream_kind) :: a2a_comp, a2a_h2d, a2a_d2h
+    INTEGER(kind=cuda_stream_kind) :: a2a_comp
     TYPE(cudaEvent), allocatable, dimension(:) :: a2a_event
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: bstreams
     TYPE(cudaEvent), allocatable, dimension(:) :: bevents
@@ -322,8 +322,6 @@ CONTAINS
     end do
 
     ierr = cudaStreamCreate( desc%a2a_comp )
-    ierr = cudaStreamCreate( desc%a2a_d2h )
-    ierr = cudaStreamCreate( desc%a2a_h2d )
 
     ALLOCATE( desc%a2a_event( max(2*nproc, 3) ) )
     DO i = 1, max(2*nproc, 3)
@@ -423,8 +421,6 @@ CONTAINS
     ! SLAB decomposition
     IF ( ALLOCATED( desc%srh ) )   DEALLOCATE( desc%srh )
     ierr = cudaStreamDestroy( desc%a2a_comp )
-    ierr = cudaStreamDestroy( desc%a2a_d2h )
-    ierr = cudaStreamDestroy( desc%a2a_h2d )
 
 
     DO i = 1, 2*desc%nproc
