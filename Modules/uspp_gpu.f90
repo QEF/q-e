@@ -94,7 +94,7 @@
          IF (PRESENT(debug_info) ) print *, "using_indv ", debug_info, indv_ood
          !
          IF (indv_ood) THEN
-             IF (.not. allocated(indv_d)) THEN
+             IF ((.not. allocated(indv_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_indv_d', 'PANIC: sync of indv from indv_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -170,7 +170,7 @@
          IF (PRESENT(debug_info) ) print *, "using_nhtol ", debug_info, nhtol_ood
          !
          IF (nhtol_ood) THEN
-             IF (.not. allocated(nhtol_d)) THEN
+             IF ((.not. allocated(nhtol_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_nhtol_d', 'PANIC: sync of nhtol from nhtol_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -246,7 +246,7 @@
          IF (PRESENT(debug_info) ) print *, "using_nhtolm ", debug_info, nhtolm_ood
          !
          IF (nhtolm_ood) THEN
-             IF (.not. allocated(nhtolm_d)) THEN
+             IF ((.not. allocated(nhtolm_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_nhtolm_d', 'PANIC: sync of nhtolm from nhtolm_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -322,7 +322,7 @@
          IF (PRESENT(debug_info) ) print *, "using_ijtoh ", debug_info, ijtoh_ood
          !
          IF (ijtoh_ood) THEN
-             IF (.not. allocated(ijtoh_d)) THEN
+             IF ((.not. allocated(ijtoh_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_ijtoh_d', 'PANIC: sync of ijtoh from ijtoh_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -398,7 +398,7 @@
          IF (PRESENT(debug_info) ) print *, "using_indv_ijkb0 ", debug_info, indv_ijkb0_ood
          !
          IF (indv_ijkb0_ood) THEN
-             IF (.not. allocated(indv_ijkb0_d)) THEN
+             IF ((.not. allocated(indv_ijkb0_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_indv_ijkb0_d', 'PANIC: sync of indv_ijkb0 from indv_ijkb0_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -474,7 +474,7 @@
          IF (PRESENT(debug_info) ) print *, "using_vkb ", debug_info, vkb_ood
          !
          IF (vkb_ood) THEN
-             IF (.not. allocated(vkb_d)) THEN
+             IF ((.not. allocated(vkb_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_vkb_d', 'PANIC: sync of vkb from vkb_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -550,7 +550,7 @@
          IF (PRESENT(debug_info) ) print *, "using_becsum ", debug_info, becsum_ood
          !
          IF (becsum_ood) THEN
-             IF (.not. allocated(becsum_d)) THEN
+             IF ((.not. allocated(becsum_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_becsum_d', 'PANIC: sync of becsum from becsum_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -626,7 +626,7 @@
          IF (PRESENT(debug_info) ) print *, "using_ebecsum ", debug_info, ebecsum_ood
          !
          IF (ebecsum_ood) THEN
-             IF (.not. allocated(ebecsum_d)) THEN
+             IF ((.not. allocated(ebecsum_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_ebecsum_d', 'PANIC: sync of ebecsum from ebecsum_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -702,7 +702,7 @@
          IF (PRESENT(debug_info) ) print *, "using_dvan ", debug_info, dvan_ood
          !
          IF (dvan_ood) THEN
-             IF (.not. allocated(dvan_d)) THEN
+             IF ((.not. allocated(dvan_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_dvan_d', 'PANIC: sync of dvan from dvan_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -778,7 +778,7 @@
          IF (PRESENT(debug_info) ) print *, "using_deeq ", debug_info, deeq_ood
          !
          IF (deeq_ood) THEN
-             IF (.not. allocated(deeq_d)) THEN
+             IF ((.not. allocated(deeq_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_deeq_d', 'PANIC: sync of deeq from deeq_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -854,7 +854,7 @@
          IF (PRESENT(debug_info) ) print *, "using_qq_nt ", debug_info, qq_nt_ood
          !
          IF (qq_nt_ood) THEN
-             IF (.not. allocated(qq_nt_d)) THEN
+             IF ((.not. allocated(qq_nt_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_qq_nt_d', 'PANIC: sync of qq_nt from qq_nt_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -930,7 +930,7 @@
          IF (PRESENT(debug_info) ) print *, "using_qq_at ", debug_info, qq_at_ood
          !
          IF (qq_at_ood) THEN
-             IF (.not. allocated(qq_at_d)) THEN
+             IF ((.not. allocated(qq_at_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_qq_at_d', 'PANIC: sync of qq_at from qq_at_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -1006,7 +1006,7 @@
          IF (PRESENT(debug_info) ) print *, "using_nhtoj ", debug_info, nhtoj_ood
          !
          IF (nhtoj_ood) THEN
-             IF (.not. allocated(nhtoj_d)) THEN
+             IF ((.not. allocated(nhtoj_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_nhtoj_d', 'PANIC: sync of nhtoj from nhtoj_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -1082,7 +1082,7 @@
          IF (PRESENT(debug_info) ) print *, "using_qq_so ", debug_info, qq_so_ood
          !
          IF (qq_so_ood) THEN
-             IF (.not. allocated(qq_so_d)) THEN
+             IF ((.not. allocated(qq_so_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_qq_so_d', 'PANIC: sync of qq_so from qq_so_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -1158,7 +1158,7 @@
          IF (PRESENT(debug_info) ) print *, "using_dvan_so ", debug_info, dvan_so_ood
          !
          IF (dvan_so_ood) THEN
-             IF (.not. allocated(dvan_so_d)) THEN
+             IF ((.not. allocated(dvan_so_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_dvan_so_d', 'PANIC: sync of dvan_so from dvan_so_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -1234,7 +1234,7 @@
          IF (PRESENT(debug_info) ) print *, "using_deeq_nc ", debug_info, deeq_nc_ood
          !
          IF (deeq_nc_ood) THEN
-             IF (.not. allocated(deeq_nc_d)) THEN
+             IF ((.not. allocated(deeq_nc_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_deeq_nc_d', 'PANIC: sync of deeq_nc from deeq_nc_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -1294,21 +1294,37 @@
      !
      SUBROUTINE deallocate_uspp_gpu
        IF( ALLOCATED( indv_d ) ) DEALLOCATE( indv_d )
+       indv_d_ood = .false.
        IF( ALLOCATED( nhtol_d ) ) DEALLOCATE( nhtol_d )
+       nhtol_d_ood = .false.
        IF( ALLOCATED( nhtolm_d ) ) DEALLOCATE( nhtolm_d )
+       nhtolm_d_ood = .false.
        IF( ALLOCATED( ijtoh_d ) ) DEALLOCATE( ijtoh_d )
+       ijtoh_d_ood = .false.
        IF( ALLOCATED( indv_ijkb0_d ) ) DEALLOCATE( indv_ijkb0_d )
+       indv_ijkb0_d_ood = .false.
        IF( ALLOCATED( vkb_d ) ) DEALLOCATE( vkb_d )
+       vkb_d_ood = .false.
        IF( ALLOCATED( becsum_d ) ) DEALLOCATE( becsum_d )
+       becsum_d_ood = .false.
        IF( ALLOCATED( ebecsum_d ) ) DEALLOCATE( ebecsum_d )
+       ebecsum_d_ood = .false.
        IF( ALLOCATED( dvan_d ) ) DEALLOCATE( dvan_d )
+       dvan_d_ood = .false.
        IF( ALLOCATED( deeq_d ) ) DEALLOCATE( deeq_d )
+       deeq_d_ood = .false.
        IF( ALLOCATED( qq_nt_d ) ) DEALLOCATE( qq_nt_d )
+       qq_nt_d_ood = .false.
        IF( ALLOCATED( qq_at_d ) ) DEALLOCATE( qq_at_d )
+       qq_at_d_ood = .false.
        IF( ALLOCATED( nhtoj_d ) ) DEALLOCATE( nhtoj_d )
+       nhtoj_d_ood = .false.
        IF( ALLOCATED( qq_so_d ) ) DEALLOCATE( qq_so_d )
+       qq_so_d_ood = .false.
        IF( ALLOCATED( dvan_so_d ) ) DEALLOCATE( dvan_so_d )
+       dvan_so_d_ood = .false.
        IF( ALLOCATED( deeq_nc_d ) ) DEALLOCATE( deeq_nc_d )
+       deeq_nc_d_ood = .false.
      END SUBROUTINE deallocate_uspp_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE uspp_gpum

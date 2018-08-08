@@ -55,7 +55,7 @@
          IF (PRESENT(debug_info) ) print *, "using_evc ", debug_info, evc_ood
          !
          IF (evc_ood) THEN
-             IF (.not. allocated(evc_d)) THEN
+             IF ((.not. allocated(evc_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_evc_d', 'PANIC: sync of evc from evc_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -131,7 +131,7 @@
          IF (PRESENT(debug_info) ) print *, "using_psic ", debug_info, psic_ood
          !
          IF (psic_ood) THEN
-             IF (.not. allocated(psic_d)) THEN
+             IF ((.not. allocated(psic_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_psic_d', 'PANIC: sync of psic from psic_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -207,7 +207,7 @@
          IF (PRESENT(debug_info) ) print *, "using_psic_nc ", debug_info, psic_nc_ood
          !
          IF (psic_nc_ood) THEN
-             IF (.not. allocated(psic_nc_d)) THEN
+             IF ((.not. allocated(psic_nc_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_psic_nc_d', 'PANIC: sync of psic_nc from psic_nc_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -267,8 +267,11 @@
      !
      SUBROUTINE deallocate_wavefunctions_gpu
        IF( ALLOCATED( evc_d ) ) DEALLOCATE( evc_d )
+       evc_d_ood = .false.
        IF( ALLOCATED( psic_d ) ) DEALLOCATE( psic_d )
+       psic_d_ood = .false.
        IF( ALLOCATED( psic_nc_d ) ) DEALLOCATE( psic_nc_d )
+       psic_nc_d_ood = .false.
      END SUBROUTINE deallocate_wavefunctions_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE wavefunctions_gpum
