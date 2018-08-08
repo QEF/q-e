@@ -101,6 +101,11 @@ Problems fixed in 6.3 version:
 
   * PWscf in "manypw" mode wasn't working due to a bad IF (Dec.12, 2017)
 
+Known problems in 6.3 version:
+
+  * CP does not compile if the old XML format is enabled (-D__OLDXML)
+  * the 'make install' command does not work
+
 Incompatible changes in 6.3  version:
 
   * EPW: Removal of q-point paralelization (not very used and generated large code 
