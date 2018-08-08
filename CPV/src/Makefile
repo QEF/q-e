@@ -120,10 +120,10 @@ entropy.o
 
 QEMODS=../../Modules/libqemod.a
 QEFFT=../../FFTXlib/libqefft.a
-QELA=../../KS_Solvers/CG/libcg.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/Davidson/libdavid.a ../../LAXlib/libqela.a
+QELA=../../LAXlib/libqela.a
 UTIL=../../UtilXlib/libutil.a
 
-TLDEPS= bindir mods libs libiotk
+TLDEPS= bindir mods libs
 
 all : tldeps libcp.a manycp.x cp.x cppp.x wfdd.x
 

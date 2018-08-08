@@ -491,6 +491,12 @@ SUBROUTINE read_upf_pswfc(u, upf)
    nwfc_ = getLength(locList) 
    IF (nwfc_ /= upf%nwfc) CALL errore ( 'read_upf_schema', &
                                  'npwfc in header inconsistent with chi funcs found in '//upf%psd,5) 
+   ! 
+   upf%nchi       = -1 
+   upf%epseu      = 0._dp
+   upf%rcut_chi   = 0._dp
+   upf%rcutus_chi = 0._dp 
+   upf%els        = 'Xn'
    DO nw_ = 1,upf%nwfc
       locNode => item( locList, nw_ -1) 
       CALL extractDataAttribute ( locNode, "index", nw) 
@@ -502,21 +508,29 @@ SUBROUTINE read_upf_pswfc(u, upf)
          CALL extractDataAttribute( locNode, "jchi", upf%jchi(nw), IOSTAT = ierr) 
          CALL errore ('upf_read_schema', 'error reading jchi value', ierr) 
       END IF
-      CALL extractDataAttribute( locNode, 'label',  upf%els(nw) , IOSTAT = ierr )
-      CALL errore ('upf_read_schema', 'error reading chi label ', ierr ) 
+      IF ( hasAttribute (locNode, 'label')) THEN 
+         CALL extractDataAttribute( locNode, 'label',  upf%els(nw) , IOSTAT = ierr )
+         CALL errore ( 'upf_read_schema', 'error reading label value in ps_pswfc', ABS(ierr) )
+      END IF 
       CALL extractDataAttribute( locNode, 'l',  upf%lchi(nw) , IOSTAT = ierr )
       CALL errore ('upf_read_schema', 'error reading chi angular momentum l', ierr )
       CALL extractDataAttribute( locNode, 'occupation',  upf%oc(nw) , IOSTAT = ierr )
       CALL errore ('upf_read_schema', 'error reading chi occupation', ierr )
-      CALL extractDataAttribute( locNode, 'n',  upf%nchi(nw) , IOSTAT = ierr )
-      CALL errore ('upf_read_schema', 'error reading chi n number', ierr )
-      CALL extractDataAttribute( locNode, 'pseudo_energy',  upf%epseu(nw) , IOSTAT = ierr )
-      CALL errore ('upf_read_schema', 'error reading chi pseudo energy', ierr )
-      CALL extractDataAttribute( locNode, 'cutoff_radius',  upf%rcut_chi(nw) , IOSTAT = ierr )
-      CALL errore ('upf_read_schema', 'error reading chi rcut', ierr )
+      IF (hasAttribute( locNode, 'n')) THEN 
+         CALL extractDataAttribute( locNode, 'n',  upf%nchi(nw) , IOSTAT = ierr )
+         CALL errore ( 'upf_read_schema', 'error reading n value in ps_pswfc', ABS(ierr) )
+      END IF 
+      IF ( hasAttribute (locNode, 'pseudo_energy') ) THEN 
+         CALL extractDataAttribute( locNode, 'pseudo_energy',  upf%epseu(nw) , IOSTAT = ierr )
+         CALL errore ( 'upf_read_schema', 'error reading pseudo_energy value in ps_pswfc', ABS(ierr) )
+      END IF 
+      IF ( hasAttribute (locNode, 'cutoff_radius') ) THEN 
+         CALL extractDataAttribute( locNode, 'cutoff_radius',  upf%rcut_chi(nw) , IOSTAT = ierr )
+         CALL errore ( 'upf_read_schema', 'error reading cutoff_radius value in ps_pswfc', ABS(ierr) )
+      END IF 
       IF (hasAttribute( locNode, 'ultrasoft_cutoff_radius')) THEN 
          CALL extractDataAttribute( locNode, 'ultrasoft_cutoff_radius',  upf%rcutus_chi(nw) , IOSTAT = ierr )
-         CALL errore ('upf_read_schema', 'error reading chi US_rcut', ierr )
+         CALL errore ('upf_read_schema', 'error reading ultrasoft_cutoff_radius in ps_pswfc', ABS(ierr) )
       END IF
    END DO
    !

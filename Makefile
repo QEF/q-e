@@ -73,7 +73,7 @@ pw : bindir libs mods libdavid libcg libppcg dftd3
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-cp : bindir libs mods libdavid libcg libppcg
+cp : bindir libs mods
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
@@ -115,7 +115,7 @@ gipaw : pw
 d3q : ph
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-ld1 : bindir libs mods libdavid libcg libppcg
+ld1 : bindir libs mods
 	if test -d atomic ; then \
 	( cd atomic ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -187,7 +187,7 @@ libutil :
 libs :
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
 
-lrmods : libs libutil libla libfft
+lrmods : mods pw
 	( cd LR_Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 dftd3 : mods
