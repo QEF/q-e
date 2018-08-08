@@ -49,7 +49,7 @@
          IF (PRESENT(debug_info) ) print *, "using_vrs ", debug_info, vrs_ood
          !
          IF (vrs_ood) THEN
-             IF (.not. allocated(vrs_d)) THEN
+             IF ((.not. allocated(vrs_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_vrs_d', 'PANIC: sync of vrs from vrs_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -109,6 +109,7 @@
      !
      SUBROUTINE deallocate_scf_gpu
        IF( ALLOCATED( vrs_d ) ) DEALLOCATE( vrs_d )
+       vrs_d_ood = .false.
      END SUBROUTINE deallocate_scf_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE scf_gpum

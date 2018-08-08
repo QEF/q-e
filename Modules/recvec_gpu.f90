@@ -64,7 +64,7 @@
          IF (PRESENT(debug_info) ) print *, "using_gg ", debug_info, gg_ood
          !
          IF (gg_ood) THEN
-             IF (.not. allocated(gg_d)) THEN
+             IF ((.not. allocated(gg_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_gg_d', 'PANIC: sync of gg from gg_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -140,7 +140,7 @@
          IF (PRESENT(debug_info) ) print *, "using_g ", debug_info, g_ood
          !
          IF (g_ood) THEN
-             IF (.not. allocated(g_d)) THEN
+             IF ((.not. allocated(g_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_g_d', 'PANIC: sync of g from g_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -216,7 +216,7 @@
          IF (PRESENT(debug_info) ) print *, "using_mill ", debug_info, mill_ood
          !
          IF (mill_ood) THEN
-             IF (.not. allocated(mill_d)) THEN
+             IF ((.not. allocated(mill_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_mill_d', 'PANIC: sync of mill from mill_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -292,7 +292,7 @@
          IF (PRESENT(debug_info) ) print *, "using_eigts1 ", debug_info, eigts1_ood
          !
          IF (eigts1_ood) THEN
-             IF (.not. allocated(eigts1_d)) THEN
+             IF ((.not. allocated(eigts1_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_eigts1_d', 'PANIC: sync of eigts1 from eigts1_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -368,7 +368,7 @@
          IF (PRESENT(debug_info) ) print *, "using_eigts2 ", debug_info, eigts2_ood
          !
          IF (eigts2_ood) THEN
-             IF (.not. allocated(eigts2_d)) THEN
+             IF ((.not. allocated(eigts2_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_eigts2_d', 'PANIC: sync of eigts2 from eigts2_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -444,7 +444,7 @@
          IF (PRESENT(debug_info) ) print *, "using_eigts3 ", debug_info, eigts3_ood
          !
          IF (eigts3_ood) THEN
-             IF (.not. allocated(eigts3_d)) THEN
+             IF ((.not. allocated(eigts3_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_eigts3_d', 'PANIC: sync of eigts3 from eigts3_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -504,11 +504,17 @@
      !
      SUBROUTINE deallocate_gvect_gpu
        IF( ALLOCATED( gg_d ) ) DEALLOCATE( gg_d )
+       gg_d_ood = .false.
        IF( ALLOCATED( g_d ) ) DEALLOCATE( g_d )
+       g_d_ood = .false.
        IF( ALLOCATED( mill_d ) ) DEALLOCATE( mill_d )
+       mill_d_ood = .false.
        IF( ALLOCATED( eigts1_d ) ) DEALLOCATE( eigts1_d )
+       eigts1_d_ood = .false.
        IF( ALLOCATED( eigts2_d ) ) DEALLOCATE( eigts2_d )
+       eigts2_d_ood = .false.
        IF( ALLOCATED( eigts3_d ) ) DEALLOCATE( eigts3_d )
+       eigts3_d_ood = .false.
      END SUBROUTINE deallocate_gvect_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE gvect_gpum

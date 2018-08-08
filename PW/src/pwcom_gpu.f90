@@ -52,7 +52,7 @@
          IF (PRESENT(debug_info) ) print *, "using_g2kin ", debug_info, g2kin_ood
          !
          IF (g2kin_ood) THEN
-             IF (.not. allocated(g2kin_d)) THEN
+             IF ((.not. allocated(g2kin_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_g2kin_d', 'PANIC: sync of g2kin from g2kin_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -128,7 +128,7 @@
          IF (PRESENT(debug_info) ) print *, "using_et ", debug_info, et_ood
          !
          IF (et_ood) THEN
-             IF (.not. allocated(et_d)) THEN
+             IF ((.not. allocated(et_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_et_d', 'PANIC: sync of et from et_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -188,7 +188,9 @@
      !
      SUBROUTINE deallocate_wvfct_gpu
        IF( ALLOCATED( g2kin_d ) ) DEALLOCATE( g2kin_d )
+       g2kin_d_ood = .false.
        IF( ALLOCATED( et_d ) ) DEALLOCATE( et_d )
+       et_d_ood = .false.
      END SUBROUTINE deallocate_wvfct_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE wvfct_gpum
@@ -252,7 +254,7 @@
          IF (PRESENT(debug_info) ) print *, "using_qrad ", debug_info, qrad_ood
          !
          IF (qrad_ood) THEN
-             IF (.not. allocated(qrad_d)) THEN
+             IF ((.not. allocated(qrad_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_qrad_d', 'PANIC: sync of qrad from qrad_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -328,7 +330,7 @@
          IF (PRESENT(debug_info) ) print *, "using_tab ", debug_info, tab_ood
          !
          IF (tab_ood) THEN
-             IF (.not. allocated(tab_d)) THEN
+             IF ((.not. allocated(tab_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_tab_d', 'PANIC: sync of tab from tab_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -404,7 +406,7 @@
          IF (PRESENT(debug_info) ) print *, "using_tab_at ", debug_info, tab_at_ood
          !
          IF (tab_at_ood) THEN
-             IF (.not. allocated(tab_at_d)) THEN
+             IF ((.not. allocated(tab_at_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_tab_at_d', 'PANIC: sync of tab_at from tab_at_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -480,7 +482,7 @@
          IF (PRESENT(debug_info) ) print *, "using_tab_d2y ", debug_info, tab_d2y_ood
          !
          IF (tab_d2y_ood) THEN
-             IF (.not. allocated(tab_d2y_d)) THEN
+             IF ((.not. allocated(tab_d2y_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_tab_d2y_d', 'PANIC: sync of tab_d2y from tab_d2y_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -540,9 +542,13 @@
      !
      SUBROUTINE deallocate_us_gpu
        IF( ALLOCATED( qrad_d ) ) DEALLOCATE( qrad_d )
+       qrad_d_ood = .false.
        IF( ALLOCATED( tab_d ) ) DEALLOCATE( tab_d )
+       tab_d_ood = .false.
        IF( ALLOCATED( tab_at_d ) ) DEALLOCATE( tab_at_d )
+       tab_at_d_ood = .false.
        IF( ALLOCATED( tab_d2y_d ) ) DEALLOCATE( tab_d2y_d )
+       tab_d2y_d_ood = .false.
      END SUBROUTINE deallocate_us_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE us_gpum
@@ -597,7 +603,7 @@
          IF (PRESENT(debug_info) ) print *, "using_fcoef ", debug_info, fcoef_ood
          !
          IF (fcoef_ood) THEN
-             IF (.not. allocated(fcoef_d)) THEN
+             IF ((.not. allocated(fcoef_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_fcoef_d', 'PANIC: sync of fcoef from fcoef_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -657,6 +663,7 @@
      !
      SUBROUTINE deallocate_spin_orb_gpu
        IF( ALLOCATED( fcoef_d ) ) DEALLOCATE( fcoef_d )
+       fcoef_d_ood = .false.
      END SUBROUTINE deallocate_spin_orb_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE spin_orb_gpum

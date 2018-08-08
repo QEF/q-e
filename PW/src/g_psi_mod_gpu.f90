@@ -52,7 +52,7 @@
          IF (PRESENT(debug_info) ) print *, "using_h_diag ", debug_info, h_diag_ood
          !
          IF (h_diag_ood) THEN
-             IF (.not. allocated(h_diag_d)) THEN
+             IF ((.not. allocated(h_diag_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_h_diag_d', 'PANIC: sync of h_diag from h_diag_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -128,7 +128,7 @@
          IF (PRESENT(debug_info) ) print *, "using_s_diag ", debug_info, s_diag_ood
          !
          IF (s_diag_ood) THEN
-             IF (.not. allocated(s_diag_d)) THEN
+             IF ((.not. allocated(s_diag_d)) .and. (intento_ < 2)) THEN
                 CALL errore('using_s_diag_d', 'PANIC: sync of s_diag from s_diag_d with unallocated array. Bye!!', 1)
                 stop
              END IF
@@ -188,7 +188,9 @@
      !
      SUBROUTINE deallocate_g_psi_mod_gpu
        IF( ALLOCATED( h_diag_d ) ) DEALLOCATE( h_diag_d )
+       h_diag_d_ood = .false.
        IF( ALLOCATED( s_diag_d ) ) DEALLOCATE( s_diag_d )
+       s_diag_d_ood = .false.
      END SUBROUTINE deallocate_g_psi_mod_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE g_psi_mod_gpum
