@@ -966,7 +966,7 @@ SUBROUTINE compute_mmn_para
   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
   USE gvecw,           ONLY : ecutwfc
   USE wavefunctions, ONLY : evc, psic, psic_nc
-  USE units_ph,        ONLY : lrwfc, iuwfc
+  USE units_lr,        ONLY : lrwfc, iuwfc
   USE fft_base,        ONLY : dffts
   USE fft_interfaces,  ONLY : fwfft, invfft
   USE klist,           ONLY : nkstot, xk, nks, igk_k
@@ -1464,7 +1464,7 @@ SUBROUTINE compute_pmn_para
   USE wvfct,           ONLY : nbnd, npw, npwx, g2kin
   USE gvecw,           ONLY : ecutwfc
   USE wavefunctions,  ONLY : evc
-  USE units_ph,        ONLY : lrwfc, iuwfc
+  USE units_lr,        ONLY : lrwfc, iuwfc
   USE gvect,           ONLY : g, ngm
   USE cell_base,       ONLY : tpiba2, tpiba
   USE noncollin_module,ONLY : noncolin
