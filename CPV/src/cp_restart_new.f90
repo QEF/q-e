@@ -39,6 +39,8 @@ MODULE cp_restart_new
   USE mp,        ONLY : mp_bcast
   USE matrix_inversion
   !
+#else 
+  USE io_files, ONLY : iunpun, xmlpun, prefix, tmp_dir, postfix, create_directory
 #endif
   IMPLICIT NONE
   !
