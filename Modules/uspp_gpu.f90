@@ -39,6 +39,7 @@
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: indv_d, nhtol_d, nhtolm_d, ijtoh_d, indv_ijkb0_d, vkb_d, becsum_d, ebecsum_d, dvan_d, deeq_d, qq_nt_d, qq_at_d, nhtoj_d, qq_so_d, dvan_so_d, deeq_nc_d
+#endif
 
      LOGICAL :: indv_ood = .false.    ! used to flag out of date variables
      LOGICAL :: indv_d_ood = .false.    ! used to flag out of date variables
@@ -73,7 +74,6 @@
      LOGICAL :: deeq_nc_ood = .false.    ! used to flag out of date variables
      LOGICAL :: deeq_nc_d_ood = .false.    ! used to flag out of date variables
      !
-#endif
      CONTAINS
      !
      SUBROUTINE using_indv(intento, debug_info)

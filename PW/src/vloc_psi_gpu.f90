@@ -441,8 +441,8 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      DO ibnd = 1, m, many_fft
         !
         !!! == OPTIMIZE HERE == (setting to 0 and setting elements!)
-        psic_d(:) = (0.d0, 0.d0)
         group_size = MIN(many_fft, m - (ibnd -1))
+        psic_d(1: dffts%nnr*group_size) = (0.d0, 0.d0)
 
 !$cuf kernel do(1) <<<,>>>
         DO j = 1, n
