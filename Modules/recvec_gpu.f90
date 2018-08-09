@@ -29,6 +29,7 @@
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: gg_d, g_d, mill_d, eigts1_d, eigts2_d, eigts3_d
+#endif
 
      LOGICAL :: gg_ood = .false.    ! used to flag out of date variables
      LOGICAL :: gg_d_ood = .false.    ! used to flag out of date variables
@@ -43,7 +44,6 @@
      LOGICAL :: eigts3_ood = .false.    ! used to flag out of date variables
      LOGICAL :: eigts3_d_ood = .false.    ! used to flag out of date variables
      !
-#endif
      CONTAINS
      !
      SUBROUTINE using_gg(intento, debug_info)

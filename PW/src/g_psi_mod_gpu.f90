@@ -25,13 +25,13 @@
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: h_diag_d, s_diag_d
+#endif
 
      LOGICAL :: h_diag_ood = .false.    ! used to flag out of date variables
      LOGICAL :: h_diag_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: s_diag_ood = .false.    ! used to flag out of date variables
      LOGICAL :: s_diag_d_ood = .false.    ! used to flag out of date variables
      !
-#endif
      CONTAINS
      !
      SUBROUTINE using_h_diag(intento, debug_info)

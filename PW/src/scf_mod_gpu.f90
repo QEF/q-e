@@ -24,11 +24,11 @@
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: vrs_d
+#endif
 
      LOGICAL :: vrs_ood = .false.    ! used to flag out of date variables
      LOGICAL :: vrs_d_ood = .false.    ! used to flag out of date variables
      !
-#endif
      CONTAINS
      !
      SUBROUTINE using_vrs(intento, debug_info)

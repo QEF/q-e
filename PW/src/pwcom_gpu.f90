@@ -25,13 +25,13 @@
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: g2kin_d, et_d
+#endif
 
      LOGICAL :: g2kin_ood = .false.    ! used to flag out of date variables
      LOGICAL :: g2kin_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: et_ood = .false.    ! used to flag out of date variables
      LOGICAL :: et_d_ood = .false.    ! used to flag out of date variables
      !
-#endif
      CONTAINS
      !
      SUBROUTINE using_g2kin(intento, debug_info)
@@ -223,6 +223,7 @@
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: qrad_d, tab_d, tab_at_d, tab_d2y_d
+#endif
 
      LOGICAL :: qrad_ood = .false.    ! used to flag out of date variables
      LOGICAL :: qrad_d_ood = .false.    ! used to flag out of date variables
@@ -233,7 +234,6 @@
      LOGICAL :: tab_d2y_ood = .false.    ! used to flag out of date variables
      LOGICAL :: tab_d2y_d_ood = .false.    ! used to flag out of date variables
      !
-#endif
      CONTAINS
      !
      SUBROUTINE using_qrad(intento, debug_info)
@@ -578,11 +578,11 @@
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: fcoef_d
+#endif
 
      LOGICAL :: fcoef_ood = .false.    ! used to flag out of date variables
      LOGICAL :: fcoef_d_ood = .false.    ! used to flag out of date variables
      !
-#endif
      CONTAINS
      !
      SUBROUTINE using_fcoef(intento, debug_info)

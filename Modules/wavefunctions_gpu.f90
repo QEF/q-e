@@ -26,6 +26,7 @@
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: evc_d, psic_d, psic_nc_d
+#endif
 
      LOGICAL :: evc_ood = .false.    ! used to flag out of date variables
      LOGICAL :: evc_d_ood = .false.    ! used to flag out of date variables
@@ -34,7 +35,6 @@
      LOGICAL :: psic_nc_ood = .false.    ! used to flag out of date variables
      LOGICAL :: psic_nc_d_ood = .false.    ! used to flag out of date variables
      !
-#endif
      CONTAINS
      !
      SUBROUTINE using_evc(intento, debug_info)
