@@ -367,6 +367,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      !
   ELSE
      CALL qe_buffer%lock_buffer( psic_d, dffts%nnr*many_fft, ierr )
+     v_siz =  dffts%nnr
   ENDIF
   !
   dffts_nl_d => dffts%nl_d
@@ -447,17 +448,17 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
 !$cuf kernel do(1) <<<,>>>
         DO j = 1, n
            DO idx = 0, group_size-1
-              psic_d (dffts_nl_d (igk_k_d(j, current_k)) + idx*dffts%nnr) = psi_d(j, ibnd+idx)
+              psic_d (dffts_nl_d (igk_k_d(j, current_k)) + idx*v_siz) = psi_d(j, ibnd+idx)
            END DO
         END DO
         !
         CALL invfft ('Wave', psic_d, dffts, howmany=group_size)
         !
 !$cuf kernel do(1) <<<,>>>
-        DO j = 1, dffts%nnr
+        DO j = 1, v_siz
            v_tmp = v_d(j)
            DO idx = 0, group_size-1
-              psic_d (j + idx*dffts%nnr) = psic_d (j + idx*dffts%nnr) * v_tmp
+              psic_d (j + idx*v_siz) = psic_d (j + idx*v_siz) * v_tmp
            END DO
         ENDDO
         !
@@ -468,7 +469,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
 !$cuf kernel do(1) <<<*,*>>>
         DO j = 1, n
            DO idx = 0, group_size-1
-              hpsi_d (j, ibnd + idx)   = hpsi_d (j, ibnd + idx)   + psic_d (dffts_nl_d(igk_k_d(j, current_k)) + idx * dffts%nnr)
+              hpsi_d (j, ibnd + idx)   = hpsi_d (j, ibnd + idx)   + psic_d (dffts_nl_d(igk_k_d(j, current_k)) + idx * v_siz)
            ENDDO
         ENDDO
         !
@@ -491,7 +492,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
         !write (6,99) (psic(i), i=1,400)
         !
 !$cuf kernel do(1) <<<,>>>
-        DO j = 1, dffts%nnr
+        DO j = 1, v_siz
            psic_d (j) = psic_d (j) * v_d(j)
         ENDDO
 !
