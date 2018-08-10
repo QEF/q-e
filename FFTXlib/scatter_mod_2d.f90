@@ -86,7 +86,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
 
 #if defined(__MPI)
 
-  INTEGER :: k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
+  INTEGER :: k, offset, proc, ierr, me, nprocp, gproc, i, kdest, kfrom
   INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
   !
   !  Task Groups
@@ -122,27 +122,24 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      offset = 0
 
      DO proc = 1, nprocp
-        gproc = proc
         !
         kdest = ( proc - 1 ) * sendsiz
         kfrom = offset
         !
         DO k = 1, ncp_ (me)
-           DO i = 1, npp_ ( gproc )
+           DO i = 1, npp_ ( proc )
               f_aux ( kdest + i ) =  f_in ( kfrom + i )
            ENDDO
            kdest = kdest + nppx
            kfrom = kfrom + nr3x
         ENDDO
-        offset = offset + npp_ ( gproc )
+        offset = offset + npp_ ( proc )
      ENDDO
      !
      ! step two: communication
      !
 
-     gcomm = dfft%comm
-
-     CALL mpi_alltoall (f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, gcomm, ierr)
+     CALL mpi_alltoall (f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, dfft%comm, ierr)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
      !
@@ -168,35 +165,24 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
 
         npp  = dfft%nr3p( me )
         nnp  = dfft%nnp
-
-        nblk = dfft%nproc 
-        nsiz = 1
         !
-        ip = 1
-        !
-        DO gproc = 1, nblk
+        DO ip = 1, dfft%nproc
            !
            ii = 0
            !
-           DO ipp = 1, nsiz
+           ioff = dfft%iss( ip )
+           !
+           DO i = 1, dfft%nsw( ip )
               !
-              ioff = dfft%iss( ip )
+              mc = dfft%ismap( i + ioff )
               !
-              DO i = 1, dfft%nsw( ip )
-                 !
-                 mc = dfft%ismap( i + ioff )
-                 !
-                 it = ii * nppx + ( gproc - 1 ) * sendsiz
-                 !
-                 DO j = 1, npp
-                    f_aux( mc + ( j - 1 ) * nnp ) = f_in( j + it )
-                 ENDDO
-                 !
-                 ii = ii + 1
-                 !
+              it = ii * nppx + ( ip - 1 ) * sendsiz
+              !
+              DO j = 1, npp
+                 f_aux( mc + ( j - 1 ) * nnp ) = f_in( j + it )
               ENDDO
               !
-              ip = ip + 1
+              ii = ii + 1
               !
            ENDDO
            !
@@ -228,33 +214,25 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
         nnp  = dfft%nnp
 
         nblk = dfft%nproc 
-        nsiz = 1
         !
-        ip = 1
         !
-        DO gproc = 1, nblk
+        DO gproc = 1, dfft%nproc
            !
            ii = 0
            !
-           DO ipp = 1, nsiz
+           ioff = dfft%iss( gproc )
+           !
+           DO i = 1, dfft%nsw( gproc )
               !
-              ioff = dfft%iss( ip )
+              mc = dfft%ismap( i + ioff )
               !
-              DO i = 1, dfft%nsw( ip )
-                 !
-                 mc = dfft%ismap( i + ioff )
-                 !
-                 it = ii * nppx + ( gproc - 1 ) * sendsiz
-                 !
-                 DO j = 1, npp
-                    f_in( j + it ) = f_aux( mc + ( j - 1 ) * nnp )
-                 ENDDO
-                 !
-                 ii = ii + 1
-                 !
+              it = ii * nppx + ( gproc - 1 ) * sendsiz
+              !
+              DO j = 1, npp
+                 f_in( j + it ) = f_aux( mc + ( j - 1 ) * nnp )
               ENDDO
               !
-              ip = ip + 1
+              ii = ii + 1
               !
            ENDDO
            !
@@ -266,9 +244,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !
      !  step two: communication
      !
-     gcomm = dfft%comm
-
-     CALL mpi_alltoall (f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, gcomm, ierr)
+     
+     CALL mpi_alltoall (f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, dfft%comm, ierr)
 
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
      !
@@ -308,7 +285,7 @@ END SUBROUTINE fft_scatter
 !
 #else
 !
-!   NON BLOCKING SCATTER, NOT IMPLEMENTED YET
+!   NON BLOCKING SCATTER, NOT IMPLEMENTED YET !!
 !
 !-----------------------------------------------------------------------
 SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )

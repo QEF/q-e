@@ -164,7 +164,7 @@ MODULE fft_types
     INTEGER              :: batchsize = 16    ! how many ffts to batch together
     INTEGER              :: subbatchsize = 4  ! size of subbatch for pipelining
 
-#if defined(__USE_IPC)
+#if defined(__IPC)
     INTEGER :: IPC_PEER(16)
 #endif
     INTEGER, ALLOCATABLE :: srh(:,:) ! Isend/recv handles by subbatch
