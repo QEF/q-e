@@ -68,6 +68,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      !
   ELSE
      CALL qe_buffer%lock_buffer( psic_d, dffts%nnr * many_fft, ierr )
+     v_siz = dffts%nnr
   ENDIF
   ! Sync fft data
   dffts_nl_d => dffts%nl_d
@@ -109,8 +110,6 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
         !
      ELSE IF (many_fft > 1) THEN
         !
-        psic_d(:) = (0.d0, 0.d0)
-        !
         ! FFT batching strategy is defined here:
         !  the buffer in psi_c can contain 2*many_fft bands.
         !  * group_size: is the number of bands that will be transformed.
@@ -125,21 +124,24 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
         remainder  = group_size - 2*pack_size
         howmany    = pack_size+remainder
         !
-        ! two ffts at the same time
+        ! Reset only used data
+        psic_d(1: dffts%nnr*howmany) = (0.d0, 0.d0)
+        !
+        ! two ffts at the same time (remember, v_siz = dffts%nnr)
         IF ( pack_size > 0 ) THEN
-           !$cuf kernel do(1) <<<,>>>
-           DO j = 1, n
-              DO idx = 0, pack_size-1
-                 psic_d(dffts_nl_d (j) + idx*dffts%nnr)=      psi_d(j,ibnd+2*idx) + (0.0d0,1.d0)*psi_d(j,ibnd+2*idx+1)
-                 psic_d(dffts_nlm_d(j) + idx*dffts%nnr)=conjg(psi_d(j,ibnd+2*idx) - (0.0d0,1.d0)*psi_d(j,ibnd+2*idx+1))
-              end do
+           !$cuf kernel do(2) <<<,>>>
+           DO idx = 0, pack_size-1
+              DO j = 1, n
+                 psic_d(dffts_nl_d (j) + idx*v_siz)=      psi_d(j,ibnd+2*idx) + (0.0d0,1.d0)*psi_d(j,ibnd+2*idx+1)
+                 psic_d(dffts_nlm_d(j) + idx*v_siz)=conjg(psi_d(j,ibnd+2*idx) - (0.0d0,1.d0)*psi_d(j,ibnd+2*idx+1))
+              END DO
            ENDDO
         END IF
         IF (remainder > 0) THEN
            !$cuf kernel do(1) <<<,>>>
            DO j = 1, n
-              psic_d (dffts_nl_d (j) + pack_size*dffts%nnr) =       psi_d(j, ibnd+group_size-1)
-              psic_d (dffts_nlm_d(j) + pack_size*dffts%nnr) = conjg(psi_d(j, ibnd+group_size-1))
+              psic_d (dffts_nl_d (j) + pack_size*v_siz) =       psi_d(j, ibnd+group_size-1)
+              psic_d (dffts_nlm_d(j) + pack_size*v_siz) = conjg(psi_d(j, ibnd+group_size-1))
            ENDDO
         ENDIF
         !
@@ -185,10 +187,10 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
         CALL invfft ('Wave', psic_d, dffts, howmany=howmany)
         !
         !$cuf kernel do(1) <<<,>>>
-        DO j = 1, dffts%nnr
+        DO j = 1, v_siz
            v_tmp = v_d(j)
            DO idx = 0, howmany-1
-              psic_d (j + idx*dffts%nnr) = psic_d (j+ idx*dffts%nnr) * v_tmp
+              psic_d (j + idx*v_siz) = psic_d (j+ idx*v_siz) * v_tmp
            END DO
         ENDDO
         !
@@ -244,10 +246,10 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      ELSE IF ( many_fft > 1 ) THEN
         IF ( pack_size > 0 ) THEN
            ! two ffts at the same time
-           !$cuf kernel do(1) <<<,>>>
-           DO j = 1, n
-              DO idx = 0, pack_size-1
-                 ioff = idx*dffts%nnr
+           !$cuf kernel do(2) <<<,>>>
+           DO idx = 0, pack_size-1
+              DO j = 1, n
+                 ioff = idx*v_siz
                  fp = (psic_d (ioff + dffts_nl_d(j)) + psic_d (ioff + dffts_nlm_d(j)))*0.5d0
                  fm = (psic_d (ioff + dffts_nl_d(j)) - psic_d (ioff + dffts_nlm_d(j)))*0.5d0
                  hpsi_d (j, ibnd + idx*2)   = hpsi_d (j, ibnd + idx*2)   + &
@@ -260,7 +262,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
         IF (remainder > 0) THEN
            !$cuf kernel do(1) <<<,>>>
            DO j = 1, n
-              hpsi_d (j, ibnd + group_size-1)   = hpsi_d (j, ibnd + group_size-1)   + psic_d (pack_size*dffts%nnr + dffts_nl_d(j))
+              hpsi_d (j, ibnd + group_size-1)   = hpsi_d (j, ibnd + group_size-1)   + psic_d (pack_size*v_siz + dffts_nl_d(j))
            ENDDO
         ENDIF
      ELSE
@@ -445,9 +447,9 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
         group_size = MIN(many_fft, m - (ibnd -1))
         psic_d(1: dffts%nnr*group_size) = (0.d0, 0.d0)
 
-!$cuf kernel do(1) <<<,>>>
-        DO j = 1, n
-           DO idx = 0, group_size-1
+!$cuf kernel do(2) <<<,>>>
+        DO idx = 0, group_size-1
+           DO j = 1, n
               psic_d (dffts_nl_d (igk_k_d(j, current_k)) + idx*v_siz) = psi_d(j, ibnd+idx)
            END DO
         END DO
@@ -466,9 +468,9 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
         !
         !   addition to the total product
         !
-!$cuf kernel do(1) <<<*,*>>>
-        DO j = 1, n
-           DO idx = 0, group_size-1
+!$cuf kernel do(2) <<<*,*>>>
+        DO idx = 0, group_size-1
+           DO j = 1, n
               hpsi_d (j, ibnd + idx)   = hpsi_d (j, ibnd + idx)   + psic_d (dffts_nl_d(igk_k_d(j, current_k)) + idx * v_siz)
            ENDDO
         ENDDO
