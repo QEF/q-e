@@ -10,8 +10,8 @@
    MODULE fft_scalar_cuFFT
 !=----------------------------------------------------------------------=!
 #ifdef __CUDA
+#define __CUFFT_ALL_XY_PLANES
        USE fft_param
-!! iso_c_binding provides C_PTR, C_NULL_PTR, C_ASSOCIATED
        USE iso_c_binding
 
        USE cudafor
@@ -563,7 +563,7 @@
         istat = cufftExecZ2Z( cufft_plan_3d(ip), f_d(1), f_d(1), CUFFT_FORWARD )
 
        tscale = 1.0_DP / DBLE( nx * ny * nz )
-!$cuf kernel do(1) <<<*,*,0,stream>>>
+!$cuf kernel do(1) <<<*,(16,16,1),0,stream>>>
         DO i=1, ldx*ldy*ldz*howmany
            f_d( i ) = f_d( i ) * tscale
         END DO

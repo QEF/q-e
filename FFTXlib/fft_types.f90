@@ -131,13 +131,13 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: isind(:) ! for each position in the plane indicate the stick index
     INTEGER, ALLOCATABLE :: ismap(:) ! for each stick in the plane indicate the position
 
-    INTEGER, POINTER DEV_ATTRIBUTES :: ismap_d(:)
+    INTEGER, ALLOCATABLE DEV_ATTRIBUTES :: ismap_d(:)
 
     INTEGER, ALLOCATABLE :: nl(:)    ! position of the G vec in the FFT grid
     INTEGER, ALLOCATABLE :: nlm(:)   ! with gamma sym. position of -G vec in the FFT grid
 
     INTEGER, POINTER DEV_ATTRIBUTES :: nl_d(:)    ! duplication of the variables defined above
-    INTEGER, POINTER DEV_ATTRIBUTES :: nlm_d(:)   ! 
+    INTEGER, POINTER DEV_ATTRIBUTES :: nlm_d(:)   !
     !
     ! task group ALLTOALL communication layout
     INTEGER, ALLOCATABLE :: tg_snd(:) ! number of elements to be sent in task group redistribution

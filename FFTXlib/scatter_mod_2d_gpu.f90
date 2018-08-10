@@ -437,7 +437,7 @@ SUBROUTINE fft_scatter_gpu_batch ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_au
 
   INTEGER :: sh(dfft%nproc), rh(dfft%nproc)
   INTEGER :: k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
-  INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
+  INTEGER :: me_p, nppx, mc, j, npp, nnp, nnr, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
   !
 
   INTEGER, ALLOCATABLE, DIMENSION(:) :: offset_proc, kdest_proc, kfrom_proc
@@ -466,7 +466,7 @@ SUBROUTINE fft_scatter_gpu_batch ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_au
   END IF
 
   sendsiz = batchsize * ncpx * nppx
-
+  nnr     = dfft%nnr
   !
   offset = 0
 
@@ -643,7 +643,7 @@ SUBROUTINE fft_scatter_gpu_batch ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_au
                        !it = (cuf_i-1) * nppx + ( gproc - 1 ) * sendsiz
                        it = (cuf_i-1) * nppx + ( gproc - 1 ) * sendsiz + i*nppx*ncpx
                        !
-                       f_aux_d( mc + ( cuf_j - 1 ) * nnp + i*dfft%nnr ) = f_in_d( cuf_j + it )
+                       f_aux_d( mc + ( cuf_j - 1 ) * nnp + i*nnr ) = f_in_d( cuf_j + it )
                     ENDDO
                     !
                  ENDDO
@@ -706,7 +706,7 @@ SUBROUTINE fft_scatter_gpu_batch ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_au
                        it = (cuf_i-1) * nppx + ( gproc - 1 ) * sendsiz + i*nppx*ncpx
                     !
                        !f_in_d( cuf_j + it ) = f_aux_d( mc + ( cuf_j - 1 ) * nnp )
-                       f_in_d( cuf_j + it ) = f_aux_d( mc + ( cuf_j - 1 ) * nnp + i*dfft%nnr )
+                       f_in_d( cuf_j + it ) = f_aux_d( mc + ( cuf_j - 1 ) * nnp + i*nnr )
                     ENDDO
                     !
                  ENDDO
@@ -848,20 +848,16 @@ SUBROUTINE fft_scatter_batch_a_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_
 #if defined(__MPI)
   INTEGER :: sh(dfft%nproc), rh(dfft%nproc)
   INTEGER :: k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
-  INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
+  INTEGER :: me_p, nppx, mc, j, npp, nnp, nnr, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
   !
   LOGICAL :: use_tg
   INTEGER, ALLOCATABLE, DIMENSION(:) :: offset_proc, kdest_proc, kfrom_proc_
   INTEGER :: iter, dest, sorc
   INTEGER :: istatus(MPI_STATUS_SIZE)
 
-
   p_ismap_d => dfft%ismap_d
-
-
   me     = dfft%mype + 1
   !
-
   nprocp = dfft%nproc
   !
   !CALL start_clock ('fft_scatter')
@@ -885,7 +881,7 @@ SUBROUTINE fft_scatter_batch_a_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_
      nppx = dfft%nr3x
   END IF
   sendsiz = batchsize * ncpx * nppx
-
+  nnr     = dfft%nnr
   !
   ierr = 0
 
@@ -1006,7 +1002,7 @@ SUBROUTINE fft_scatter_batch_a_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_
                  !
                     it = (cuf_i-1) * nppx + ( gproc - 1 ) * sendsiz + i*nppx*ncpx
                  !
-                    f_aux2_d( cuf_j + it ) = f_aux_d( mc + ( cuf_j - 1 ) * nnp + i*dfft%nnr ) * tscale
+                    f_aux2_d( cuf_j + it ) = f_aux_d( mc + ( cuf_j - 1 ) * nnp + i*nnr ) * tscale
                  ENDDO
                  !
               ENDDO
@@ -1075,7 +1071,7 @@ SUBROUTINE fft_scatter_batch_b_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_
 
   INTEGER :: sh(dfft%nproc), rh(dfft%nproc)
   INTEGER :: k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
-  INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
+  INTEGER :: me_p, nppx, mc, j, npp, nnp, nnr, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
 
   INTEGER, ALLOCATABLE, DIMENSION(:) :: offset_proc, kdest_proc, kfrom_proc
   INTEGER :: iter, dest, sorc, req_cnt
@@ -1102,7 +1098,7 @@ SUBROUTINE fft_scatter_batch_b_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_
   END IF
 
   sendsiz = batchsize * ncpx * nppx
-
+  nnr     = dfft%nnr
 #ifdef USE_IPC
   call get_ipc_peers( dfft%IPC_PEER )
 #endif
@@ -1272,7 +1268,7 @@ SUBROUTINE fft_scatter_batch_b_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_
                      !
                      it = (cuf_i-1) * nppx + ( gproc - 1 ) * sendsiz + i*nppx*ncpx
                      !
-                     f_aux_d( mc + ( cuf_j - 1 ) * nnp + i*dfft%nnr ) = f_aux2_d( cuf_j + it )
+                     f_aux_d( mc + ( cuf_j - 1 ) * nnp + i*nnr ) = f_aux2_d( cuf_j + it )
                    ENDDO
                      !
                 ENDDO
