@@ -3,6 +3,7 @@ New in development version:
 
 Problems fixed in development version:
   * Printout of wall time was sometimes incorrect (courtesy Daniel Pinkal)
+  * 'make install' and 'make -j' cases fixed (maybe)
   * The restart option in turboEELS (turbo_eels.x) with ultrasoft
     pseudopotentials was not working.
   * bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
@@ -15,7 +16,7 @@ Incompatible changes in development version:
   * Module "wavefunctions_module" renamed "wavefunctions"
 
 Known problems in development version:
-  * (none yet)
+  * Frequent "dexx is negative" errors with hybrid functionals
 
 New in 6.3 version:
   * New implementation, using  a more robust algorithm for the Wigner-Seitz 
@@ -104,7 +105,7 @@ Problems fixed in 6.3 version:
 Known problems in 6.3 version:
 
   * CP does not compile if the old XML format is enabled (-D__OLDXML)
-  * the 'make install' command does not work
+  * the 'make install' and 'make -j' commands do not work
 
 Incompatible changes in 6.3  version:
 

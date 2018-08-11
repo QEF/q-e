@@ -5,8 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-
 !=----------------------------------------------------------------------------=!
    SUBROUTINE printout_new_x   &
      ( nfi, tfirst, tfilei, tprint, tps, h, stress, tau0, vels, &
@@ -21,7 +19,8 @@
       USE energies,          ONLY : print_energies, dft_energy_type
       USE printout_base,     ONLY : printout_base_open, printout_base_close, &
                                     printout_pos, printout_cell, printout_stress, &
-                                    printout_vefftsvdw, printout_wfc
+                                    printout_vefftsvdw, printout_wfc, &
+                                    save_print_counter
       USE constants,         ONLY : au_gpa, bohr_radius_cm, amu_au, &
                                     BOHR_RADIUS_ANGS, pi
       USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, amass, cdmi, &

@@ -19,7 +19,7 @@ MODULE xml_io_base
   !
   USE kinds,     ONLY : DP
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun_schema, &
-          check_file_exist, create_directory
+          check_file_exist
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast, mp_sum, mp_get, mp_put, mp_max, mp_rank, &
        mp_size
@@ -34,8 +34,7 @@ MODULE xml_io_base
   PUBLIC :: rho_binary
   PUBLIC :: attr
   !
-  PUBLIC :: read_wfc, write_wfc, read_rho, write_rho, &
-       save_print_counter, read_print_counter, restart_dir
+  PUBLIC :: read_wfc, write_wfc, read_rho, write_rho, restart_dir
   !
   CONTAINS
     !
@@ -103,105 +102,6 @@ MODULE xml_io_base
       RETURN
       !
     END FUNCTION check_restartfile
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE save_print_counter( iter, outdir, wunit )
-      !------------------------------------------------------------------------
-      !
-      ! ... a counter indicating the last successful printout iteration is saved
-      !
-      USE mp_images, ONLY : intra_image_comm
-      !
-      IMPLICIT NONE
-      !
-      INTEGER,          INTENT(IN) :: iter
-      CHARACTER(LEN=*), INTENT(IN) :: outdir
-      INTEGER,          INTENT(IN) :: wunit
-      !
-      INTEGER            :: ierr
-      CHARACTER(LEN=256) :: filename, dirname
-      !
-      !
-      dirname = restart_dir( outdir, wunit )
-      !
-      CALL create_directory( TRIM( dirname ) )
-      !
-      IF ( ionode ) THEN
-         !
-         filename = TRIM( dirname ) // 'print_counter.xml'
-         !
-         CALL iotk_open_write( iunpun, FILE = filename, &
-                             & ROOT = "PRINT_COUNTER",  IERR = ierr )
-         !
-      END IF
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      CALL errore( 'save_print_counter', &
-                   'cannot open restart file for writing', ierr )
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_write_begin( iunpun, "LAST_SUCCESSFUL_PRINTOUT" )
-         CALL iotk_write_dat(   iunpun, "STEP", iter )
-         CALL iotk_write_end(   iunpun, "LAST_SUCCESSFUL_PRINTOUT" )
-         !
-         CALL iotk_close_write( iunpun )
-         !
-      END IF
-      !
-      RETURN
-      !
-    END SUBROUTINE save_print_counter
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE read_print_counter( nprint_nfi, outdir, runit )
-      !------------------------------------------------------------------------
-      !
-      ! ... the counter indicating the last successful printout iteration 
-      ! ... is read here
-      !
-      USE mp_images, ONLY : intra_image_comm
-      !
-      IMPLICIT NONE
-      !
-      INTEGER,          INTENT(OUT) :: nprint_nfi
-      CHARACTER(LEN=*), INTENT(IN)  :: outdir
-      INTEGER,          INTENT(IN)  :: runit
-      !
-      INTEGER            :: ierr
-      CHARACTER(LEN=256) :: filename, dirname
-      !
-      !
-      dirname = restart_dir( outdir, runit )
-      !
-      IF ( ionode ) THEN
-         !
-         filename = TRIM( dirname ) // 'print_counter.xml'
-         !
-         CALL iotk_open_read( iunpun, FILE = filename, IERR = ierr )
-         !
-         IF ( ierr > 0 ) THEN
-            !
-            nprint_nfi = -1
-            !
-         ELSE
-            !
-            CALL iotk_scan_begin( iunpun, "LAST_SUCCESSFUL_PRINTOUT" )
-            CALL iotk_scan_dat(   iunpun, "STEP", nprint_nfi )
-            CALL iotk_scan_end(   iunpun, "LAST_SUCCESSFUL_PRINTOUT" )
-            !
-            CALL iotk_close_read( iunpun )
-            !
-         END IF
-         !
-      END IF
-      !
-      CALL mp_bcast( nprint_nfi, ionode_id, intra_image_comm )
-      !
-      RETURN
-      !
-    END SUBROUTINE read_print_counter   
     !
     !------------------------------------------------------------------------
     SUBROUTINE set_kpoints_vars( ik, nk, kunit, ngwl, igl, &
