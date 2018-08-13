@@ -50,7 +50,6 @@ SUBROUTINE fft_scatter_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp
   INTEGER, POINTER, DEVICE :: p_ismap_d(:)
 #if defined(__MPI)
 
-  INTEGER :: sh(dfft%nproc), rh(dfft%nproc)
   INTEGER :: srh(2*dfft%nproc)
   INTEGER :: k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
   INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
@@ -61,7 +60,7 @@ SUBROUTINE fft_scatter_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp
 
 
   p_ismap_d => dfft%ismap_d
-
+  !
   me     = dfft%mype + 1
   !
   nprocp = dfft%nproc
@@ -69,8 +68,6 @@ SUBROUTINE fft_scatter_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp
   CALL start_clock ('fft_scatter')
   istat = cudaDeviceSynchronize()
   !
-
-
   ncpx = 0
   nppx = 0
 
@@ -83,17 +80,6 @@ SUBROUTINE fft_scatter_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp
   END IF
   sendsiz = ncpx * nppx
   !
-
-   !offset = 0
-
-   !DO proc = 1, nprocp
-   !   gproc = proc
-   !   !
-   !   offset_proc( proc ) = offset
-   !   !
-   !   offset = offset + npp_ ( gproc )
-   !ENDDO
-
 
   ierr = 0
   IF (isgn.gt.0) THEN
@@ -395,7 +381,6 @@ SUBROUTINE fft_scatter_gpu_batch ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_au
   INTEGER, POINTER, DEVICE :: p_ismap_d(:)
 #if defined(__MPI)
 
-  INTEGER :: sh(dfft%nproc), rh(dfft%nproc)
   INTEGER :: k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
   INTEGER :: me_p, nppx, mc, j, npp, nnp, nnr, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
   !
@@ -756,7 +741,6 @@ SUBROUTINE fft_scatter_batch_a_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_
   INTEGER :: istat
   INTEGER, POINTER, DEVICE :: p_ismap_d(:)
 #if defined(__MPI)
-  INTEGER :: sh(dfft%nproc), rh(dfft%nproc)
   INTEGER :: k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
   INTEGER :: me_p, nppx, mc, j, npp, nnp, nnr, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
   !
@@ -964,7 +948,6 @@ SUBROUTINE fft_scatter_batch_b_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_
   INTEGER, POINTER, DEVICE :: p_ismap_d(:)
 #if defined(__MPI)
 
-  INTEGER :: sh(dfft%nproc), rh(dfft%nproc)
   INTEGER :: k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
   INTEGER :: me_p, nppx, mc, j, npp, nnp, nnr, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
 
@@ -1131,25 +1114,22 @@ SUBROUTINE fft_scatter_batch_b_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_
         !
         DO gproc = 1, nprocp
            !
-           !ii = 0
-           !
-           !
            ioff = dfft%iss( ip )
            nswip =  dfft%nsw( ip )
            !
 !$cuf kernel do(3) <<<*,*,0,dfft%a2a_comp>>>
            DO i = 0, batchsize-1
-             DO cuf_j = 1, npp
-               DO cuf_i = 1, nswip
-                  !
-                  mc = p_ismap_d( cuf_i + ioff )
-                  !
-                  it = (cuf_i-1) * nppx + ( gproc - 1 ) * sendsiz + i*nppx*ncpx
-                  !
-                  f_aux_d( mc + ( cuf_j - 1 ) * nnp + i*nnr ) = f_aux2_d( cuf_j + it )
-                ENDDO
-                  !
-             ENDDO
+              DO cuf_j = 1, npp
+                DO cuf_i = 1, nswip
+                   !
+                   mc = p_ismap_d( cuf_i + ioff )
+                   !
+                   it = (cuf_i-1) * nppx + ( gproc - 1 ) * sendsiz + i*nppx*ncpx
+                   !
+                   f_aux_d( mc + ( cuf_j - 1 ) * nnp + i*nnr ) = f_aux2_d( cuf_j + it )
+                 ENDDO
+                   !
+              ENDDO
            ENDDO
            !
            ip = ip + 1
@@ -1165,8 +1145,7 @@ SUBROUTINE fft_scatter_batch_b_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_
      !  step two: communication
      !
      gcomm = dfft%comm
-
-
+     !
      ! JR Note: Holding off staging receives until buffer is packed.
      istat = cudaEventSynchronize( dfft%bevents(batch_id) ) 
      CALL start_clock ('A2A')

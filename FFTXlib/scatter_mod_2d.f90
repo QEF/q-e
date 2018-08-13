@@ -87,7 +87,7 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
 #if defined(__MPI)
 
   INTEGER :: k, offset, proc, ierr, me, nprocp, gproc, i, kdest, kfrom
-  INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nblk, nsiz
+  INTEGER :: me_p, nppx, mc, j, npp, nnp, ii, it, ip, ioff, sendsiz, ncpx, ipp, nsiz
   !
   !  Task Groups
 
@@ -209,11 +209,9 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
         ENDDO
 
      ELSE
-
+        !
         npp  = dfft%nr3p( me )
         nnp  = dfft%nnp
-
-        nblk = dfft%nproc 
         !
         !
         DO gproc = 1, dfft%nproc
