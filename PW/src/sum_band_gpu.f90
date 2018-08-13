@@ -524,6 +524,7 @@ SUBROUTINE sum_band_gpu()
        USE wavefunctions_gpum, ONLY : psic_nc_d
        USE mp_bands,     ONLY : me_bgrp
        USE mp,           ONLY : mp_sum, mp_get_comm_null
+       USE control_flags, ONLY : many_fft
        USE fft_helper_subroutines
        !
        IMPLICIT NONE
@@ -534,7 +535,7 @@ SUBROUTINE sum_band_gpu()
        ! weights
        INTEGER :: npw, ipol, na, np
        !
-       INTEGER  :: idx, ioff, ioff_tg, nxyp, incr, v_siz, j
+       INTEGER  :: idx, ioff, ioff_tg, nxyp, incr, v_siz
        COMPLEX(DP), ALLOCATABLE :: tg_psi_d(:), tg_psi_nc_d(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho_d(:), tg_rho_nc_d(:,:)
        REAL(DP),    ALLOCATABLE :: tg_rho_h(:), tg_rho_nc_h(:,:)
@@ -542,7 +543,8 @@ SUBROUTINE sum_band_gpu()
        COMPLEX(DP), ALLOCATABLE :: psic_d(:)
        INTEGER,     POINTER     :: dffts_nl_d(:)
        LOGICAL  :: use_tg
-       INTEGER :: right_nnr, right_nr3, right_inc, ntgrp, ierr
+       INTEGER :: nnr, right_nnr, right_nr3, right_inc, ntgrp, ierr
+       INTEGER :: i, j, group_size
        !
 #if defined(__CUDA)
        attributes(device) :: psic_d, tg_psi_d, tg_rho_d, tg_psi_nc_d, tg_rho_nc_d
@@ -560,6 +562,7 @@ SUBROUTINE sum_band_gpu()
        use_tg = ( dffts%has_task_groups ) .AND. ( .NOT. (dft_is_meta() .OR. lxdm) )
        !
        incr = 1
+       nnr  = dffts%nnr
        !
        IF( use_tg ) THEN
           !
@@ -579,7 +582,13 @@ SUBROUTINE sum_band_gpu()
           !
        ELSE
           ALLOCATE(rho_d, MOLD=rho%of_r) ! OPTIMIZE HERE, use buffers!
-          ALLOCATE(psic_d(dffts%nnr))
+          IF (noncolin) THEN
+             ALLOCATE(psic_d(dffts%nnr))
+             incr  = 1
+          ELSE
+             ALLOCATE(psic_d(dffts%nnr * many_fft))
+             incr  = many_fft
+          END IF
           ! This is used as reduction variable on the device
           rho_d = 0.0_DP
        END IF
@@ -610,13 +619,13 @@ SUBROUTINE sum_band_gpu()
           !
           DO ibnd = ibnd_start, ibnd_end, incr
              !
-             IF( use_tg ) THEN
-                DO idx = 1, fftx_ntgrp(dffts)
-                   IF( idx + ibnd - 1 <= ibnd_end ) eband = eband + et( idx + ibnd - 1, ik ) * wg( idx + ibnd - 1, ik )
-                END DO
-             ELSE
-                eband = eband + et( ibnd, ik ) * wg( ibnd, ik )
-             END IF
+             !IF( use_tg ) THEN
+             DO idx = 1, incr
+                IF( idx + ibnd - 1 <= ibnd_end ) eband = eband + et( idx + ibnd - 1, ik ) * wg( idx + ibnd - 1, ik )
+             END DO
+             !ELSE
+             !   eband = eband + et( ibnd, ik ) * wg( ibnd, ik )
+             !END IF
              !
              ! ... the sum of eband and demet is the integral for e < ef of
              ! ... e n(e) which reduces for degauss=0 to the sum of the
@@ -770,6 +779,27 @@ SUBROUTINE sum_band_gpu()
                    !
                    CALL get_rho_gpu(tg_rho_d, dffts%nr1x * dffts%nr2x * right_nr3, w1, tg_psi_d)
                    !
+                ELSE IF (many_fft > 1) THEN
+                   !
+                   !!! == OPTIMIZE HERE == (setting to 0 and setting elements!)
+                   group_size = MIN(many_fft, ibnd_end - (ibnd -1))
+                   psic_d(1: nnr*group_size) = (0.d0, 0.d0)
+                   !
+                   !$cuf kernel do(2) <<<*,*>>>
+                   DO i = 0, group_size-1
+                      DO j = 1, npw
+                         psic_d(dffts_nl_d(igk_k_d(j,ik))+i*nnr) = evc_d(j,ibnd+i)
+                      END DO
+                   END DO
+                   !
+                   CALL invfft ('Wave', psic_d, dffts, howmany=group_size)
+                   !
+                   ! ... increment the charge density ...
+                   !
+                   DO i = 0, group_size - 1
+                     w1 = wg(ibnd+i,ik) / omega
+                     CALL get_rho_gpu(rho_d(:,current_spin), nnr, w1, psic_d(i*nnr+1:))
+                   ENDDO
                 ELSE
                    !
                    psic_d(:) = ( 0.D0, 0.D0 )
