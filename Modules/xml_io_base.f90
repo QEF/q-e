@@ -34,74 +34,9 @@ MODULE xml_io_base
   PUBLIC :: rho_binary
   PUBLIC :: attr
   !
-  PUBLIC :: read_wfc, write_wfc, read_rho, write_rho, restart_dir
+  PUBLIC :: read_wfc, write_wfc, read_rho, write_rho
   !
   CONTAINS
-    !
-    !------------------------------------------------------------------------
-    FUNCTION restart_dir( outdir, runit )
-      !------------------------------------------------------------------------
-      !
-      ! KNK_nimage
-      ! USE mp_images, ONLY:  my_image_id
-      CHARACTER(LEN=256)           :: restart_dir
-      CHARACTER(LEN=*), INTENT(IN) :: outdir
-      INTEGER,          INTENT(IN) :: runit
-      !
-      CHARACTER(LEN=256)         :: dirname
-      INTEGER                    :: strlen
-      CHARACTER(LEN=6), EXTERNAL :: int_to_char
-      !
-      ! ... main restart directory
-      !
-      dirname = TRIM( prefix ) // '_' // TRIM( int_to_char( runit ) )// '.save/'
-      !
-      IF ( LEN( outdir ) > 1 ) THEN
-         !
-         strlen = INDEX( outdir, ' ' ) - 1
-         !
-         dirname = outdir(1:strlen) // '/' // dirname
-         !
-      END IF
-      !
-      restart_dir = TRIM( dirname )
-      !
-      RETURN
-      !
-    END FUNCTION restart_dir
-    !
-    !------------------------------------------------------------------------
-    FUNCTION check_restartfile( outdir, ndr )
-      !------------------------------------------------------------------------
-      !
-      USE mp_images, ONLY : intra_image_comm
-      !
-      IMPLICIT NONE
-      !
-      LOGICAL                      :: check_restartfile
-      INTEGER,          INTENT(IN) :: ndr
-      CHARACTER(LEN=*), INTENT(IN) :: outdir
-      CHARACTER(LEN=256)           :: filename
-      LOGICAL                      :: lval
-      !
-      !
-      filename = restart_dir( outdir, ndr )
-      !
-      IF ( ionode ) THEN
-         !
-         filename = TRIM( filename ) // '/' // TRIM( xmlpun_schema )
-         !
-         INQUIRE( FILE = TRIM( filename ), EXIST = lval )
-         !
-      END IF
-      !
-      CALL mp_bcast( lval, ionode_id, intra_image_comm )
-      !
-      check_restartfile = lval
-      !
-      RETURN
-      !
-    END FUNCTION check_restartfile
     !
     !------------------------------------------------------------------------
     SUBROUTINE set_kpoints_vars( ik, nk, kunit, ngwl, igl, &

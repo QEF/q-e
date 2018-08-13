@@ -33,7 +33,6 @@
       USE electrons_module,  ONLY : print_eigenvalues
       USE pres_ai_mod,      ONLY : P_ext, Surf_t, volclu, surfclu, abivol, &
                                    abisur, pvar, n_ele
-      USE xml_io_base,       ONLY : save_print_counter
       USE cp_main_variables, ONLY : nprint_nfi, iprint_stdout
       USE io_files,          ONLY : tmp_dir
       USE control_flags,     ONLY : ndw

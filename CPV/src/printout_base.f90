@@ -376,10 +376,9 @@ CONTAINS
       !
       USE iotk_module
       USE io_global, ONLY: ionode, ionode_id
-      USE io_files, ONLY : iunpun, create_directory
+      USE io_files, ONLY : iunpun, create_directory, restart_dir
       USE mp, ONLY: mp_bcast
       USE mp_images, ONLY : intra_image_comm
-      USE xml_io_base, ONLY: restart_dir
       !
       IMPLICIT NONE
       !
@@ -432,10 +431,9 @@ CONTAINS
       !
       USE iotk_module
       USE io_global, ONLY: ionode, ionode_id
-      USE io_files, ONLY : iunpun
+      USE io_files, ONLY : iunpun, restart_dir
       USE mp, ONLY: mp_bcast
       USE mp_images, ONLY : intra_image_comm
-      USE xml_io_base, ONLY: restart_dir
       !
       IMPLICIT NONE
       !

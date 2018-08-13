@@ -550,7 +550,6 @@ init_run.o : ../../Modules/tsvdw.o
 init_run.o : ../../Modules/uspp.o
 init_run.o : ../../Modules/wavefunctions.o
 init_run.o : ../../Modules/wrappers.o
-init_run.o : ../../Modules/xml_io_base.o
 init_run.o : ../../UtilXlib/mp.o
 init_run.o : cell_nose.o
 init_run.o : cg.o
@@ -920,7 +919,6 @@ print_out.o : ../../Modules/ions_base.o
 print_out.o : ../../Modules/kind.o
 print_out.o : ../../Modules/tsvdw.o
 print_out.o : ../../Modules/wrappers.o
-print_out.o : ../../Modules/xml_io_base.o
 print_out.o : cg.o
 print_out.o : efield.o
 print_out.o : electrons.o
@@ -931,10 +929,13 @@ print_out.o : pres_ai_mod.o
 print_out.o : printout_base.o
 print_out.o : sic.o
 print_out.o : wannier.o
+printout_base.o : ../../Modules/io_files.o
 printout_base.o : ../../Modules/io_global.o
 printout_base.o : ../../Modules/kind.o
 printout_base.o : ../../Modules/mp_global.o
+printout_base.o : ../../Modules/mp_images.o
 printout_base.o : ../../UtilXlib/mp.o
+printout_base.o : ../../iotk/src/iotk_module.o
 problem_size.o : ../../Modules/electrons_base.o
 problem_size.o : ../../Modules/fft_base.o
 problem_size.o : ../../Modules/gvecw.o
