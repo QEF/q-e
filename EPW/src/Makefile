@@ -107,7 +107,7 @@ PWOBJS = ../../PW/src/libpw.a
 W90LIB = ../../wannier90-2.1.0/libwannier.a 
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a 
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/CG/libcg.a  ../../KS_Solvers/Davidson/libdavid.a ../../LAXlib/libqela.a \
+QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../dft-d3/libdftd3qe.a
 LIBOBJS =../../UtilXlib/libutil.a ../../clib/clib.a ../../iotk/src/libiotk.a 
 
