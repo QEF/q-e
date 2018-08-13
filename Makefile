@@ -69,7 +69,7 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
-pw : bindir libs mods libdavid libcg libppcg dftd3
+pw : bindir libs mods libks_solvers dftd3
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
@@ -163,17 +163,8 @@ all   : pwall cp ld1 upf tddfpt xspectra gwl
 mods : libiotk libfox libutil libla libfft
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
-libdavid_rci : libs libutil libla
-	( cd KS_Solvers/Davidson_RCI ; $(MAKE) TLDEPS= all || exit 1 )
-
-libdavid : libs libutil libla
-	( cd KS_Solvers/Davidson ; $(MAKE) TLDEPS= all || exit 1 )
-
-libcg : libs libutil libla
-	( cd KS_Solvers/CG ; $(MAKE) TLDEPS= all || exit 1 )
-
-libppcg : libs libutil libla
-	( cd KS_Solvers/PPCG ; $(MAKE) TLDEPS= all || exit 1 )
+libks_solvers : libs libutil libla
+	( cd KS_Solvers ; $(MAKE) TLDEPS= all || exit 1 )
 
 libla : liblapack libutil libcuda
 	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
@@ -294,8 +285,7 @@ test-suite: pw cp
 clean : 
 	touch make.inc 
 	for dir in \
-		CPV LAXlib FFTXlib UtilXlib Modules PP PW EPW \
-                KS_Solvers/PPCG KS_Solvers/CG KS_Solvers/Davidson KS_Solvers/Davidson_RCI \
+		CPV LAXlib FFTXlib UtilXlib Modules PP PW EPW KS_Solvers \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic clib LR_Modules pwtools upftools \
 		dev-tools extlibs Environ TDDFPT PHonon GWW \

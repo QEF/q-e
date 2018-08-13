@@ -177,11 +177,10 @@ write_eigenvectors.o
 
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a \
-         ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/PPCG/libppcg.a \
+QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 
-TLDEPS= bindir libs mods libdavid libcg lrmods
+TLDEPS= bindir libs mods libks_solvers lrmods
 
 all : tldeps libs-ph ph.x dynmat.x matdyn.x q2r.x q2trans.x q2trans_fd.x lambda.x fqha.x q2qstar.x \
 	alpha2f.x epa.x
