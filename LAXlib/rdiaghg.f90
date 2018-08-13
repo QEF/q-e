@@ -79,7 +79,11 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
         !
         ! ... calculate all eigenvalues
         !
-        v(:,:) = h(:,:)
+        !$omp parallel do
+        do i =1, n
+           v(1:ldh,i) = h(1:ldh,i)
+        end do
+        !$omp end parallel do
         !
 #if defined (__ESSL)
         !
@@ -118,6 +122,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
         !
         ! ... restore input H matrix from saved diagonal and lower triangle
         !
+        !$omp parallel do
         DO i = 1, n
            h(i,i) = hdiag(i)
            DO j = i + 1, n
@@ -127,6 +132,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
               h(j,i) = 0.0_DP
            END DO
         END DO
+        !$omp end parallel do
         !
         DEALLOCATE( hdiag )
         !
@@ -144,6 +150,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      
      ! ... restore input S matrix from saved diagonal and lower triangle
      !
+     !$omp parallel do
      DO i = 1, n
         s(i,i) = sdiag(i)
         DO j = i + 1, n
@@ -153,6 +160,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
            s(j,i) = 0.0_DP
         END DO
      END DO
+     !$omp end parallel do
      !
      DEALLOCATE( sdiag )
      !
@@ -214,6 +222,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
 #if defined(__SCALAPACK)
   INTEGER     :: desch( 16 ), info
 #endif
+  INTEGER               :: i
   !
   CALL start_clock( 'rdiaghg' )
   !
@@ -227,8 +236,12 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      ALLOCATE( hh( nx, nx ) )
      ALLOCATE( ss( nx, nx ) )
      !
-     hh(1:nx,1:nx) = h(1:nx,1:nx)
-     ss(1:nx,1:nx) = s(1:nx,1:nx)
+     !$omp parallel do
+     do i=1,nx
+        hh(1:nx,i) = h(1:nx,i)
+        ss(1:nx,i) = s(1:nx,i)
+     end do
+     !$omp end parallel do
      !
   END IF
   !
