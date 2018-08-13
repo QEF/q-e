@@ -43,7 +43,7 @@ PROGRAM do_dos
   !
   CHARACTER(len=256) :: fildos, outdir
   CHARACTER(LEN=33) :: fermi_str
-  REAL(DP) :: E, DOSofE (2), DOSint, DeltaE, Emin, Emax, &
+  REAL(DP) :: E, DOSofE (2), DOSint (2), DeltaE, Emin, Emax, &
               degauss1, E_unset=1000000.d0
   INTEGER :: nks2, n, ndos, ngauss1, ios
 
@@ -186,19 +186,23 @@ PROGRAM do_dos
         E = Emin + (n - 1) * DeltaE
         IF (ltetra) THEN
            IF (tetra_type == 0) THEN
-              CALL tetra_dos_t( et, nspin, nbnd, nks, E, DOSofE)
+              CALL tetra_dos_t( et, nspin, nbnd, nks, E, DOSofE, dosint)
            ELSE
-              CALL opt_tetra_dos_t( et, nspin, nbnd, nks, E, DOSofE)
+              CALL opt_tetra_dos_t( et, nspin, nbnd, nks, E, DOSofE, dosint)
            END IF
         ELSE
            CALL dos_g(et,nspin,nbnd, nks,wk,degauss,ngauss, E, DOSofE)
         ENDIF
         IF (nspin==1.or.nspin==4) THEN
-           DOSint = DOSint + DOSofE (1) * DeltaE
-           WRITE (4, '(f8.3,2e12.4)') E * rytoev, DOSofE(1)/rytoev, DOSint
+           IF ( .not. ltetra ) DOSint(1)  = DOSint(1) + DOSofE (1) * DeltaE
+           WRITE (4, '(f8.3,2e12.4)') E * rytoev, DOSofE(1)/rytoev, DOSint(1) 
         ELSE
-           DOSint = DOSint + (DOSofE (1) + DOSofE (2) ) * DeltaE
-           WRITE (4, '(f8.3,3e12.4)') E * rytoev, DOSofE/rytoev, DOSint
+           IF ( .not. ltetra )  THEN 
+               DOSint(1) = DOSint(1) + (DOSofE (1) + DOSofE (2) ) * DeltaE
+               WRITE (4, '(f8.3,3e12.4)') E * rytoev, DOSofE/rytoev, DOSint(1)
+           ELSE
+               WRITE (4, '(f8.3,3e12.4)') E * rytoev, DOSofE/rytoev, DOSint(1)+DOSint(2) 
+           END IF
         ENDIF
      ENDDO
 
