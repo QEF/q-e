@@ -143,11 +143,7 @@ INTEGER FUNCTION close_input_file ( )
   IF (opnd) THEN
      !
      IF (lxmlinput_loc) THEN
-#if defined (__XML_INPUT)
-        CALL iotk_close_read(unit=qestdin, ierr = ierr)
-#else
         CLOSE (UNIT=qestdin, STATUS='keep', IOSTAT=ierr )
-#endif
      ELSE
         IF ( TRIM(input_file) == "input_tmp.in") THEN
            CLOSE (UNIT=qestdin, STATUS='delete', IOSTAT=ierr )
