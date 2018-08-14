@@ -36,6 +36,33 @@ input_description -distribution {Quantum Espresso} -package PWscf -program dos.x
                       value of the @tt ESPRESSO_TMPDIR environment variable if set;
                       current directory ('./') otherwise }
         }
+ 
+        var bz_sum -type CHARACTER {
+            options {
+	    info {Keyword selecting  the method for BZ summation. Available options are:} 
+                 opt -val 'smearing' {
+                    integration using gaussian smearing. In fact currently 
+                    any string not related to tetrahedra defaults to smearing; 
+                  }
+                   opt -val 'tetrahedra' {
+                    Tetrahedron method, Bloechl's version:
+                    P.E. Bloechl, PRB 49, 16223 (1994)
+                    Requires uniform grid of k-points, to be
+                    automatically generated in pw.x.
+		}
+		opt -val 'tetrahedra_lin' {
+                    Original linear tetrahedron method.
+                    To be used only as a reference;
+                    the optimized tetrahedron method is more efficient.
+                }
+		opt -val 'tetrahedra_opt' {
+                    Optimized tetrahedron method:
+                    see M. Kawamura, PRB 89, 094515 (2014).
+                }
+              }
+              default { 'smearing' if degauss in given in input 'smearing', 
+                         options read from the xml data file otherwise. }  
+               }
 
 	var ngauss -type INTEGER {       
 	    default { 0 }

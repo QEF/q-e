@@ -43,12 +43,13 @@ PROGRAM do_dos
   !
   CHARACTER(len=256) :: fildos, outdir
   CHARACTER(LEN=33) :: fermi_str
+  CHARACTER(LEN=20) :: bz_sum
   REAL(DP) :: E, DOSofE (2), DOSint (2), DeltaE, Emin, Emax, &
               degauss1, E_unset=1000000.d0
   INTEGER :: nks2, n, ndos, ngauss1, ios
 
   NAMELIST /dos/ outdir, prefix, fildos, degauss, ngauss, &
-       Emin, Emax, DeltaE
+       Emin, Emax, DeltaE, bz_sum
   !
   ! initialise environment
   !
@@ -72,6 +73,7 @@ PROGRAM do_dos
      DeltaE = 0.01d0
      ngauss = 0
      degauss= 0.d0
+     bz_sum = "" 
      !
      CALL input_from_file ( )
      !
@@ -99,7 +101,23 @@ PROGRAM do_dos
      IF (nks /= nkstot) &
         CALL errore ('dos', 'pools not implemented, or incorrect file read', 1)
      !
-     IF (degauss1/=0.d0) THEN
+     SELECT CASE (TRIM(bz_sum)) 
+        CASE ('tetrahedra', 'TETRAHEDRA') 
+           ltetra = .TRUE. 
+           tetra_type = 0 
+        CASE ('tetrahedra_lin' ) 
+           ltetra = .TRUE. 
+           tetra_type = 1 
+        CASE ('tetrahedra_opt' , 'TETRAHEDRA_OPT') 
+           ltetra = .TRUE. 
+           tetra_type = 2 
+        CASE default 
+           tetra_type = -5 
+     END SELECT 
+     IF ( ltetra .and. nk1*nk2*nk3 .eq. 0 ) &
+        CALL errore ('dos:', 'tetrahedra integration selected on input can only be used with automatic ' //&
+                              'uniform k_point meshes.', tetra_type + 1) 
+     IF (degauss1/=0.d0 .and. tetra_type < 0 ) THEN
         degauss=degauss1
         ngauss =ngauss1
         WRITE( stdout,'(/5x,"Gaussian broadening (read from input): ",&
