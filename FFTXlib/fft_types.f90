@@ -131,7 +131,7 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: isind(:) ! for each position in the plane indicate the stick index
     INTEGER, ALLOCATABLE :: ismap(:) ! for each stick in the plane indicate the position
 
-    INTEGER, ALLOCATABLE DEV_ATTRIBUTES :: ismap_d(:)
+    INTEGER, POINTER DEV_ATTRIBUTES :: ismap_d(:)
 
     INTEGER, ALLOCATABLE :: nl(:)    ! position of the G vec in the FFT grid
     INTEGER, ALLOCATABLE :: nlm(:)   ! with gamma sym. position of -G vec in the FFT grid
