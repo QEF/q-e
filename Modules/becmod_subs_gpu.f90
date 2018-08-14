@@ -153,7 +153,7 @@ CONTAINS
     ! ... half of the G-vectors or PWs - assuming k=0 is the G=0 component:
     ! ... betapsi(i,j) = 2Re(\sum_k beta^*(i,k)psi(k,j)) + beta^*(i,0)psi(0,j)
     !
-    USE mp,        ONLY : mp_sum
+    USE mp,        ONLY : mp_sum, mp_size
 #if defined(__CUDA)
     USE cudafor
     USE cublas
@@ -209,7 +209,7 @@ CONTAINS
         !
     ENDIF
     !
-    CALL mp_sum( betapsi_d( :, 1:m ), comm )
+    IF (mp_size(comm) > 1) CALL mp_sum( betapsi_d( :, 1:m ), comm )
     !
     CALL stop_clock( 'calbec' )
     !
@@ -225,7 +225,7 @@ CONTAINS
     ! ... G-vectors or PWs : betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)
     !
     USE mp_bands, ONLY : intra_bgrp_comm
-    USE mp,       ONLY : mp_sum
+    USE mp,       ONLY : mp_sum, mp_size
 #if defined(__CUDA)
     USE cudafor
     USE cublas
@@ -273,7 +273,7 @@ CONTAINS
        !
     ENDIF
     !
-    CALL mp_sum( betapsi_d( :, 1:m ), intra_bgrp_comm )
+    IF (mp_size(intra_bgrp_comm) > 1) CALL mp_sum( betapsi_d( :, 1:m ), intra_bgrp_comm )
     !
     CALL stop_clock( 'calbec' )
     !
@@ -291,7 +291,7 @@ CONTAINS
     ! ... betapsi(i,2,j) = \sum_k=1,npw beta^*(i,k) psi(k+npwx,j)
     !
     USE mp_bands, ONLY : intra_bgrp_comm
-    USE mp,       ONLY : mp_sum
+    USE mp,       ONLY : mp_sum, mp_size
 #if defined(__CUDA)
     USE cudafor
     USE cublas
@@ -331,7 +331,7 @@ CONTAINS
     CALL ZGEMM ('C', 'N', nkb, m*npol, npw, (1.0_DP, 0.0_DP), beta_d, &
               npwx, psi_d, npwx, (0.0_DP, 0.0_DP),  betapsi_d, nkb)
     !
-    CALL mp_sum( betapsi_d( :, :, 1:m ), intra_bgrp_comm )
+    IF (mp_size(intra_bgrp_comm) > 1)  CALL mp_sum( betapsi_d( :, :, 1:m ), intra_bgrp_comm )
     !
     CALL stop_clock( 'calbec' )
     !

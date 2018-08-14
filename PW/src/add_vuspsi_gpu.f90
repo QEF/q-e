@@ -205,7 +205,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        COMPLEX(DP), ALLOCATABLE :: ps_d (:,:), deeaux_d (:,:)  ! OPTIMIZE HERE: move this to buffers ?
        INTEGER :: ierr
        ! counters
-       INTEGER :: i, j, k, jkb, ikb, ih, jh, na, nt, ibnd
+       INTEGER :: i, j, k, jkb, ikb, ih, jh, na, nt, ibnd, nhnt
 
 #if defined(__CUDA)
        ATTRIBUTES( DEVICE ) :: ps_d, deeaux_d
@@ -226,6 +226,9 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        DO nt = 1, ntyp
           !
           IF ( nh(nt) == 0 ) CYCLE
+          !
+          nhnt = nh(nt)
+          !
           DO na = 1, nat
              !
              IF ( ityp(na) == nt ) THEN
@@ -236,8 +239,8 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
                 !deeaux_d(:,:) = CMPLX(deeq_d(1:nh(nt),1:nh(nt),na,current_spin), 0.0_dp, KIND=dp )
                 !
 !$cuf kernel do(2) <<<*,*>>>
-                DO j = 1, nh(nt)
-                   DO k = 1, nh(nt)
+                DO j = 1, nhnt
+                   DO k = 1, nhnt
                       deeaux_d(k,j) = CMPLX(deeq_d(k,j,na,current_spin), 0.0_dp, KIND=DP )
                    END DO
                 END DO
