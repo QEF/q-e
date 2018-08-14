@@ -208,7 +208,6 @@ mp_world.o : ../UtilXlib/parallel_include.o
 mp_world.o : io_global.o
 noncol.o : kind.o
 noncol.o : parameters.o
-open_close_input_file.o : ../iotk/src/iotk_module.o
 open_close_input_file.o : io_global.o
 parser.o : ../UtilXlib/mp.o
 parser.o : io_global.o
@@ -237,13 +236,6 @@ qes_libs.o : qes_types.o
 qes_read_module.o : kind.o
 qes_read_module.o : qes_types.o
 qes_types.o : kind.o
-qexml.o : ../iotk/src/iotk_module.o
-qexml.o : hdf5_qe.o
-qexml.o : io_files.o
-qexml.o : kind.o
-qexml.o : mp_pools.o
-qexml.o : mp_world.o
-qexml.o : wrappers.o
 qexsd.o : ../UtilXlib/clocks_handler.o
 qexsd.o : cell_base.o
 qexsd.o : constants.o
@@ -291,7 +283,6 @@ read_cards.o : wannier_new.o
 read_cards.o : wrappers.o
 read_cards.o : wypos.o
 read_input.o : ../UtilXlib/mp.o
-read_input.o : ../iotk/src/iotk_module.o
 read_input.o : input_parameters.o
 read_input.o : io_global.o
 read_input.o : kind.o
@@ -299,7 +290,6 @@ read_input.o : mp_images.o
 read_input.o : open_close_input_file.o
 read_input.o : read_cards.o
 read_input.o : read_namelists.o
-read_input.o : xml_input.o
 read_namelists.o : ../UtilXlib/mp.o
 read_namelists.o : constants.o
 read_namelists.o : input_parameters.o
@@ -461,14 +451,6 @@ xc_vdW_DF.o : kernel_table.o
 xc_vdW_DF.o : kind.o
 xc_vdW_DF.o : mp_bands.o
 xc_vdW_DF.o : recvec.o
-xml_input.o : ../iotk/src/iotk_module.o
-xml_input.o : input_parameters.o
-xml_input.o : io_files.o
-xml_input.o : io_global.o
-xml_input.o : kind.o
-xml_input.o : qexml.o
-xml_input.o : version.o
-xml_input.o : xml_io_base.o
 xml_io_base.o : ../FFTXlib/fft_types.o
 xml_io_base.o : ../UtilXlib/mp.o
 xml_io_base.o : ../iotk/src/iotk_module.o

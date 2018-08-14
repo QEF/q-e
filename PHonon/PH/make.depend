@@ -896,7 +896,6 @@ ph_restart.o : ../../Modules/mp_images.o
 ph_restart.o : ../../Modules/mp_pools.o
 ph_restart.o : ../../Modules/parser.o
 ph_restart.o : ../../Modules/version.o
-ph_restart.o : ../../Modules/xml_io_base.o
 ph_restart.o : ../../PW/src/pwcom.o
 ph_restart.o : ../../PW/src/start_k.o
 ph_restart.o : ../../UtilXlib/mp.o

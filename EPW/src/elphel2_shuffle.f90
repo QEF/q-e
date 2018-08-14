@@ -69,10 +69,9 @@
   USE uspp,          ONLY : vkb
   USE symm_base,     ONLY : s
   USE modes,         ONLY : u  
-  USE phcom,         ONLY : iuwfc
   USE qpoint,        ONLY : xq, npwq
   USE eqv,           ONLY : dvpsi, evq
-  USE units_ph,      ONLY : lrwfc
+  USE units_lr,      ONLY : lrwfc, iuwfc
   USE phus,          ONLY : alphap
   USE lrus,          ONLY : becp1
   USE becmod,        ONLY : calbec 
