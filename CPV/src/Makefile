@@ -3,10 +3,7 @@
 include	../../make.inc
 
 # location of needed modules and included files (if any)
-MODFLAGS= $(BASEMOD_FLAGS) \
-          $(MOD_FLAG)../../KS_Solvers/CG \
-          $(MOD_FLAG)../../KS_Solvers/PPCG \
-          $(MOD_FLAG)../../KS_Solvers/Davidson
+MODFLAGS= $(BASEMOD_FLAGS) 
 
 FOBJS = \
 berryion.o \
