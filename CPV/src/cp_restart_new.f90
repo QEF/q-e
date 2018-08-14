@@ -458,9 +458,10 @@ MODULE cp_restart_new
         ! To be reconsidered once the old I/O is gone
         ALLOCATE ( rhog(ngm, nspin) )
         CALL rho_r2g (dfftp,rho, rhog)
+        filename = TRIM(dirname) // 'charge-density' 
         ! Only the first band group collects and writes
         IF ( my_bgrp_id == root_bgrp_id ) CALL write_rhog &
-                ( dirname, root_bgrp, intra_bgrp_comm, &
+                ( filename, root_bgrp, intra_bgrp_comm, &
                 tpiba*b1, tpiba*b2, tpiba*b3, gamma_only, &
                 mill, ig_l2g, rhog, ecutrho )
         !

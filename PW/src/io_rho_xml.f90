@@ -63,7 +63,8 @@ MODULE io_rho_xml
       ENDIF
       ! Write G-space density
       IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
-           CALL write_rhog( dirname, root_bgrp, intra_bgrp_comm, &
+           CALL write_rhog( TRIM(dirname) // "charge-density", &
+           root_bgrp, intra_bgrp_comm, &
            bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
            gamma_only, mill, ig_l2g, rho%of_g(:,1:nspin_) )
 
@@ -146,7 +147,8 @@ MODULE io_rho_xml
          nspin_=nspin
       ENDIF
 
-      CALL read_rhog( dirname, root_bgrp, intra_bgrp_comm, &
+      CALL read_rhog( TRIM(dirname) // "charge-density", &
+           root_bgrp, intra_bgrp_comm, &
            ig_l2g, nspin_, rho%of_g, gamma_only )
       IF ( nspin > nspin_) rho%of_r(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
       !
