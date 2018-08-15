@@ -109,7 +109,7 @@ LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a 
 QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../dft-d3/libdftd3qe.a
-LIBOBJS =../../UtilXlib/libutil.a ../../clib/clib.a ../../iotk/src/libiotk.a 
+LIBOBJS =../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../clib/clib.a ../../iotk/src/libiotk.a 
 
 TLDEPS= pw ph
 
