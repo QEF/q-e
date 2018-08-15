@@ -402,12 +402,12 @@ MODULE io_base
     END SUBROUTINE read_wfc
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_rhog ( dirname, root_in_group, intra_group_comm, &
+    SUBROUTINE write_rhog ( filename, root_in_group, intra_group_comm, &
          b1, b2, b3, gamma_only, mill, ig_l2g, rho, ecutrho )
       !------------------------------------------------------------------------
       !! Collects rho(G), distributed on "intra_group_comm", writes it
-      !! together with related information to file 'charge-density.*'
-      !! (* = dat if fortran binary, * = hdf5 if HDF5) in directory "dirname"
+      !! together with related information to file "filename".*
+      !! (* = dat if fortran binary, * = hdf5 if HDF5)
       !! Processor "root_in_group" collects data and writes to file
       !
       USE mp,                   ONLY : mp_sum, mp_bcast, mp_size, mp_rank
@@ -418,8 +418,8 @@ MODULE io_base
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
-      !! directory name where file is written - must end by '/'
+      CHARACTER(LEN=*), INTENT(IN) :: filename
+      !! name of file written (to which a suffix is added)
       INTEGER,            INTENT(IN) :: root_in_group
       !! root processor that collects and writes
       INTEGER,            INTENT(IN) :: intra_group_comm
@@ -450,7 +450,6 @@ MODULE io_base
       LOGICAL                  :: ionode_in_group
       INTEGER                  :: ngm, nspin, ngm_g, igwx
       INTEGER                  :: iun, ns, ig, ierr
-      CHARACTER(LEN=320)       :: filename
       !
 #if defined __HDF5
       TYPE (qeh5_file)          ::  h5file
@@ -482,13 +481,12 @@ MODULE io_base
       ngm_g = ngm
       CALL mp_sum( ngm_g, intra_group_comm )
       !
-      filename = TRIM( dirname ) // 'charge-density.dat'
       ierr = 0
 #if defined (__HDF5)
       IF ( ionode_in_group ) CALL qeh5_openfile(h5file, FILE = &
-           TRIM(dirname)//'charge-density.hdf5', ACTION = 'write', ERROR = ierr) 
+           TRIM(filename)//'.hdf5', ACTION = 'write', ERROR = ierr) 
 #else
-      IF ( ionode_in_group ) OPEN ( UNIT = iun, FILE = TRIM( filename ), &
+      IF ( ionode_in_group ) OPEN ( UNIT = iun, FILE = TRIM(filename)//'.dat', &
                 FORM = 'unformatted', STATUS = 'unknown', iostat = ierr )
 #endif
       CALL mp_bcast( ierr, root_in_group, intra_group_comm )
@@ -615,10 +613,10 @@ MODULE io_base
     END SUBROUTINE write_rhog
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_rhog ( dirname, root_in_group, intra_group_comm, &
+    SUBROUTINE read_rhog ( filename, root_in_group, intra_group_comm, &
          ig_l2g, nspin, rho, gamma_only )
       !------------------------------------------------------------------------
-      !! Read and distribute rho(G) from file  'charge-density.*' 
+      !! Read and distribute rho(G) from file  "filename".* 
       !! (* = dat if fortran binary, * = hdf5 if HDF5)
       !! Processor "root_in_group" reads from file, distributes to
       !! all processors in the intra_group_comm communicator 
@@ -632,8 +630,8 @@ MODULE io_base
 #endif
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
-      !! directory name where file is read - must end by '/'
+      CHARACTER(LEN=*), INTENT(IN) :: filename
+      !! name of file read (to which a suffix is added)
       INTEGER,          INTENT(IN) :: root_in_group
       !! root processor that reads and sirtibutes
       INTEGER,          INTENT(IN) :: intra_group_comm
@@ -655,7 +653,6 @@ MODULE io_base
       INTEGER                  :: iun, ns, ig, ierr
       INTEGER                  :: me_in_group, nproc_in_group
       LOGICAL                  :: ionode_in_group, gamma_only_, readmill
-      CHARACTER(LEN=320)       :: filename
       INTEGER                  :: ngm_g_
       INTEGER, ALLOCATABLE     :: mill_g(:,:)
       !
@@ -672,9 +669,6 @@ MODULE io_base
          datasets(3)  = "m_y"
          datasets(4)  = "m_z"
       END IF
-      filename = TRIM( dirname ) // 'charge-density.hdf5'
-#else 
-      filename = TRIM( dirname ) // 'charge-density.dat'
 #endif 
       !
       ngm  = SIZE (rho, 1)
@@ -690,7 +684,8 @@ MODULE io_base
       !
       IF ( ionode_in_group ) THEN
 #if defined (__HDF5) 
-         CALL qeh5_openfile(h5file, TRIM(filename), ACTION = 'read', error = ierr)
+         CALL qeh5_openfile(h5file, TRIM(filename)//'.hdf5', ACTION = 'read', &
+              error = ierr)
          CALL qeh5_read_attribute (h5file%id, "gamma_only", tempchar, MAXLEN = len(tempchar)  )
          CALL qeh5_read_attribute (h5file%id, "ngm_g", ngm_g_ ) 
          CALL qeh5_read_attribute (h5file%id, "nspin", nspin_)  
@@ -701,7 +696,7 @@ MODULE io_base
             gamma_only_ = .FALSE.
          END SELECT
 #else
-         OPEN ( UNIT = iun, FILE = TRIM( filename ), &
+         OPEN ( UNIT = iun, FILE = TRIM( filename ) // '.dat', &
               FORM = 'unformatted', STATUS = 'old', iostat = ierr )
          IF ( ierr /= 0 ) THEN
             ierr = 1

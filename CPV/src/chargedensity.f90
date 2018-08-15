@@ -100,7 +100,7 @@
 #endif
       COMPLEX(DP), ALLOCATABLE :: psis(:)
       REAL(DP), ALLOCATABLE :: drhovan(:,:,:,:,:)
-      CHARACTER(LEN=256) :: dirname
+      CHARACTER(LEN=320) :: filename
 
       LOGICAL, SAVE :: first = .TRUE.
       LOGICAL :: ttstress
@@ -182,9 +182,9 @@
          !
          IF( first ) THEN
             CALL errore('rhoofr','option trhor unverified, please report',1)
-            WRITE(dirname,'(A,A,"_",I2,A)') &
+            WRITE(filename,'(A,A,"_",I2,A,"charge-density")') &
                  TRIM(tmp_dir), TRIM(prefix), ndr,postfix
-            CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
+            CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
                  ig_l2g, nspin, rhog )
             CALL rho_g2r ( dfftp, rhog, rhor )
             rhopr = rhor

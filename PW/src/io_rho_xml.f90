@@ -12,7 +12,6 @@ MODULE io_rho_xml
   !
   USE kinds,       ONLY : DP
   USE io_files,    ONLY : create_directory
-  USE xml_io_base, ONLY : write_rho, read_rho
   USE io_base,     ONLY : write_rhog, read_rhog
   !
   PRIVATE
@@ -63,9 +62,20 @@ MODULE io_rho_xml
       ENDIF
       ! Write G-space density
       IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
-           CALL write_rhog( dirname, root_bgrp, intra_bgrp_comm, &
+           CALL write_rhog( TRIM(dirname) // "charge-density", &
+           root_bgrp, intra_bgrp_comm, &
            bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
            gamma_only, mill, ig_l2g, rho%of_g(:,1:nspin_) )
+      !
+      ! Write kinetic energy density density
+      IF ( dft_is_meta() ) THEN 
+         IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+              CALL write_rhog( TRIM(dirname) // "ekin-density", &
+              root_bgrp, intra_bgrp_comm, &
+              bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
+              gamma_only, mill, ig_l2g, rho%kin_g(:,1:nspin_) )
+         WRITE(stdout,'(5x,"Writing meta-gga kinetic term")')
+      ENDIF
 
       ! Then write the other terms to separate files
 
@@ -104,11 +114,6 @@ MODULE io_rho_xml
          ENDIF
          !
       END IF
-      !
-      IF ( dft_is_meta() ) THEN
-         WRITE(stdout,'(5x,"Writing meta-gga kinetic term")')
-          CALL write_rho ( dirname, rho%kin_r, nspin, 'kin' )
-      ENDIF
 
       RETURN
     END SUBROUTINE write_scf
@@ -145,11 +150,20 @@ MODULE io_rho_xml
       ELSE
          nspin_=nspin
       ENDIF
-
-      CALL read_rhog( dirname, root_bgrp, intra_bgrp_comm, &
+      ! read charge density
+      CALL read_rhog( TRIM(dirname) // "charge-density", &
+           root_bgrp, intra_bgrp_comm, &
            ig_l2g, nspin_, rho%of_g, gamma_only )
       IF ( nspin > nspin_) rho%of_r(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
       !
+      ! read kinetic energy density
+      IF ( dft_is_meta() ) THEN
+         CALL read_rhog( TRIM(dirname) // "ekin-density", &
+           root_bgrp, intra_bgrp_comm, &
+           ig_l2g, nspin_, rho%kin_g, gamma_only )
+         WRITE(stdout,'(5x,"Reading meta-gga kinetic term")')
+      END IF
+
       IF ( lda_plus_u ) THEN
          !
          ! The occupations ns also need to be read in order to build up
@@ -207,11 +221,6 @@ MODULE io_rho_xml
          !
       END IF
       !
-      IF ( dft_is_meta() ) THEN
-         WRITE(stdout,'(5x,"Reading meta-gga kinetic term")')
-         CALL read_rho( dirname, rho%kin_r, nspin, 'kin' )
-      END IF
-
       RETURN
     END SUBROUTINE read_scf
     !

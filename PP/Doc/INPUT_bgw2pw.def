@@ -5,6 +5,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program bgw2p
     intro {
 	@b {Purpose of bgw2pw.x:}
 	   Converts BerkeleyGW WFN and RHO files to the format of pw.x.
+           NO LONGER WORKING AFTER v.6.3.
 	   This can be useful, for example, if you generate the plane waves
 	   on top of the valence bands and want to diagonalize them in pw.x.
 	   Look at the documentation for SAPO code in BerkeleyGW for more information.

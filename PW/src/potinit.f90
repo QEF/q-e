@@ -64,17 +64,16 @@ SUBROUTINE potinit()
   REAL(DP)              :: fact
   INTEGER               :: is
   LOGICAL               :: exst 
-  CHARACTER(LEN=256)    :: dirname, filename
+  CHARACTER(LEN=320)    :: filename
   !
   CALL start_clock('potinit')
   !
-  dirname = TRIM(tmp_dir) // TRIM (prefix) // postfix
+  filename = TRIM(tmp_dir) // TRIM (prefix) // postfix // 'charge-density'
 #if defined __HDF5
-  filename = TRIM(dirname) // 'charge-density.hdf5'
+  exst     =  check_file_exist( TRIM(filename) // '.hdf5' )
 #else 
-  filename = TRIM(dirname) // 'charge-density.dat'
+  exst     =  check_file_exist( TRIM(filename) // '.dat' )
 #endif
-  exst     =  check_file_exist( TRIM(filename) )
   !
   IF ( starting_pot == 'file' .AND. exst ) THEN
      !
@@ -84,12 +83,13 @@ SUBROUTINE potinit()
      IF ( .NOT.lforcet ) THEN
         CALL read_scf ( rho, nspin, gamma_only )
         CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
+        CALL rho_g2r ( dfftp, rho%kin_g, rho%kin_r )
      ELSE
         !
         ! ... 'force theorem' calculation of MAE: read rho only from previous
         ! ... lsda calculation, set noncolinear magnetization from angles
         !
-        CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
+        CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, rho%of_g, gamma_only )
         CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
         CALL nc_magnetization_from_lsda ( dfftp%nnr, nspin, rho%of_r )
@@ -141,7 +141,7 @@ SUBROUTINE potinit()
         IF ( nspin > 1 ) CALL errore &
              ( 'potinit', 'spin polarization not allowed in drho', 1 )
         !
-        CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
+        CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, v%of_g, gamma_only )
         CALL rho_g2r ( dfftp, v%of_g, v%of_r )
         !
