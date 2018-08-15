@@ -83,6 +83,7 @@ SUBROUTINE potinit()
      IF ( .NOT.lforcet ) THEN
         CALL read_scf ( rho, nspin, gamma_only )
         CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
+        CALL rho_g2r ( dfftp, rho%kin_g, rho%kin_r )
      ELSE
         !
         ! ... 'force theorem' calculation of MAE: read rho only from previous
