@@ -1007,7 +1007,6 @@ io_rho_xml.o : ../../Modules/mp_pools.o
 io_rho_xml.o : ../../Modules/noncol.o
 io_rho_xml.o : ../../Modules/paw_variables.o
 io_rho_xml.o : ../../Modules/recvec.o
-io_rho_xml.o : ../../Modules/xml_io_base.o
 io_rho_xml.o : ../../UtilXlib/mp.o
 io_rho_xml.o : ldaU.o
 io_rho_xml.o : pwcom.o
@@ -1628,11 +1627,17 @@ realus.o : ../../Modules/wavefunctions.o
 realus.o : ../../UtilXlib/mp.o
 realus.o : pwcom.o
 realus.o : scf_mod.o
+remove_atomic_rho.o : ../../Modules/cell_base.o
+remove_atomic_rho.o : ../../Modules/control_flags.o
 remove_atomic_rho.o : ../../Modules/fft_base.o
+remove_atomic_rho.o : ../../Modules/fft_rho.o
+remove_atomic_rho.o : ../../Modules/io_base.o
 remove_atomic_rho.o : ../../Modules/io_files.o
 remove_atomic_rho.o : ../../Modules/io_global.o
 remove_atomic_rho.o : ../../Modules/kind.o
-remove_atomic_rho.o : ../../Modules/xml_io_base.o
+remove_atomic_rho.o : ../../Modules/mp_bands.o
+remove_atomic_rho.o : ../../Modules/mp_pools.o
+remove_atomic_rho.o : ../../Modules/recvec.o
 remove_atomic_rho.o : pwcom.o
 remove_atomic_rho.o : scf_mod.o
 report_mag.o : ../../Modules/constants.o

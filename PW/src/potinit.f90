@@ -83,7 +83,7 @@ SUBROUTINE potinit()
      IF ( .NOT.lforcet ) THEN
         CALL read_scf ( rho, nspin, gamma_only )
         CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
-        CALL rho_g2r ( dfftp, rho%kin_g, rho%kin_r )
+        IF ( dft_is_meta() ) CALL rho_g2r ( dfftp, rho%kin_g, rho%kin_r )
      ELSE
         !
         ! ... 'force theorem' calculation of MAE: read rho only from previous
@@ -141,13 +141,14 @@ SUBROUTINE potinit()
         IF ( nspin > 1 ) CALL errore &
              ( 'potinit', 'spin polarization not allowed in drho', 1 )
         !
+        filename = TRIM(tmp_dir) // TRIM (prefix) // postfix // input_drho
         CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, v%of_g, gamma_only )
         CALL rho_g2r ( dfftp, v%of_g, v%of_r )
         !
         WRITE( UNIT = stdout, &
                FMT = '(/5X,"a scf correction to at. rho is read from",A)' ) &
-            TRIM( input_drho )
+            TRIM( filename )
         !
         rho%of_r = rho%of_r + v%of_r
         !
