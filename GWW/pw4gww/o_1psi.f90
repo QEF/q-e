@@ -124,7 +124,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
-     !CALL h_1psi( npwx, npw, psi(1,m), hpsi, spsi )
+     !CALL hs_1psi( npwx, npw, psi(1,m), hpsi, spsi )
      call o_1psi_gamma( numv, v_states, psi(1,m), hpsi,.false.,hdiag, ptype,fcw_number,fcw_state,fcw_mat,ethr)
      spsi(1:npw)=psi(1:npw,m)
      
@@ -253,7 +253,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
         !
         ! ... |scg> is S|cg>
         !
-        !CALL h_1psi( npwx, npw, cg(1), ppsi(1), scg(1) )
+        !CALL hs_1psi( npwx, npw, cg(1), ppsi(1), scg(1) )
         call o_1psi_gamma( numv, v_states, cg, ppsi,.false.,hdiag, ptype,fcw_number,fcw_state,fcw_mat,ethr)
         sca=0.d0
         do ig=1,npw

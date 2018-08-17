@@ -4722,6 +4722,34 @@ MODULE qes_read_module
        obj%diago_cg_maxiter_ispresent = .FALSE.
     END IF
     !
+    tmp_node_list => getElementsByTagname(xml_node, "diago_ppcg_maxiter")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:electron_controlType","diago_ppcg_maxiter: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:electron_controlType","diago_ppcg_maxiter: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%diago_ppcg_maxiter_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%diago_ppcg_maxiter , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:electron_controlType","error reading diago_ppcg_maxiter")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:electron_controlType","error reading diago_ppcg_maxiter",10)
+         END IF
+      END IF
+    ELSE
+       obj%diago_ppcg_maxiter_ispresent = .FALSE.
+    END IF
+    !
     tmp_node_list => getElementsByTagname(xml_node, "diago_david_ndim")
     tmp_node_list_size = getLength(tmp_node_list)
     !

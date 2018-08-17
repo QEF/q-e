@@ -16,8 +16,7 @@ MODULE cond_restart
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE xml_io_base, ONLY : attr
-  USE io_files,  ONLY : tmp_dir, xmlpun, iunpun, qexml_version, &
+  USE io_files,  ONLY : tmp_dir, iunpun, qexml_version, &
        qexml_version_init, create_directory
   USE io_global, ONLY : ionode, ionode_id
   USE mp_global, ONLY : intra_image_comm
@@ -38,6 +37,8 @@ MODULE cond_restart
   ! and back compatibility
   !
   LOGICAL :: qexml_version_before_1_4_0 = .FALSE.
+  CHARACTER(LEN=13) :: xmlpun = 'data-file.xml'
+  CHARACTER(iotk_attlenx)  :: attr
   !
   !
   CONTAINS
@@ -260,7 +261,6 @@ MODULE cond_restart
       ! ... this routine reads the format version of the current xml datafile
       !
       USE parser, ONLY : version_compare
-      USE xml_io_base
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname

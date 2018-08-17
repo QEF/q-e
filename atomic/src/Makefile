@@ -108,7 +108,6 @@ ld1inc.o \
 parameters.o
 
 QEMODS=../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
-       ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a \
        ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
 TLDEPS= bindir mods libs

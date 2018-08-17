@@ -64,7 +64,6 @@ plugin_arguments.o \
 plugin_variables.o \
 pseudo_types.o \
 pw_dot.o \
-qexml.o \
 qmmm.o \
 radial_grids.o \
 random_numbers.o \
@@ -102,7 +101,6 @@ write_upf_schema.o \
 ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
-xml_input.o \
 xml_io_base.o \
 io_base.o \
 qes_types.o \

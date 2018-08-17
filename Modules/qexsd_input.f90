@@ -5,14 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__OLDXML)
-! 
-MODULE qexsd_input
-  IMPLICIT NONE
-  INTEGER :: dummy__
-END MODULE qexsd_input
-!
-#else
 !---------------------------------------------------------
 MODULE qexsd_input
 !--------------------------------------------------------
@@ -251,8 +243,8 @@ MODULE qexsd_input
   SUBROUTINE qexsd_init_electron_control( obj,diagonalization,mixing_mode,mixing_beta,&
                                           conv_thr, mixing_ndim, max_nstep, tqr,tq_smoothing, &
                                           tbeta_smoothing, & 
-                                          diago_thr_init, diago_full_acc, diago_cg_maxiter,&
-                                          diago_david_ndim)
+                                          diago_thr_init, diago_full_acc, &
+                                          diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim)
   !-------------------------------------------------------------------------------------------
   !
   IMPLICIT NONE
@@ -260,8 +252,8 @@ MODULE qexsd_input
   TYPE(electron_control_type)             ::  obj
   CHARACTER(LEN=*),INTENT(IN)             :: diagonalization,mixing_mode
   REAL(DP),INTENT(IN)                     :: mixing_beta, conv_thr, diago_thr_init
-  INTEGER,INTENT(IN)                      :: mixing_ndim,max_nstep,diago_cg_maxiter,&
-                                             diago_david_ndim
+  INTEGER,INTENT(IN)                      :: mixing_ndim,max_nstep, diago_cg_maxiter, &
+                                             diago_ppcg_maxiter, diago_david_ndim
   LOGICAL,INTENT(IN)                      :: diago_full_acc,tqr, tq_smoothing, tbeta_smoothing
   !
   CHARACTER(LEN=*),PARAMETER              :: TAGNAME="electron_control"
@@ -271,7 +263,8 @@ MODULE qexsd_input
                                 conv_thr=conv_thr,mixing_ndim=mixing_ndim,max_nstep=max_nstep,&
                                 tq_smoothing= tq_smoothing, tbeta_smoothing = tbeta_smoothing,& 
                                 real_space_q=tqr,diago_thr_init=diago_thr_init,& 
-                                diago_full_acc=diago_full_acc,diago_cg_maxiter=diago_cg_maxiter)
+                                diago_full_acc=diago_full_acc,diago_cg_maxiter=diago_cg_maxiter, &
+                                diago_ppcg_maxiter=diago_ppcg_maxiter)
    !
    END SUBROUTINE qexsd_init_electron_control
    !
@@ -772,6 +765,4 @@ MODULE qexsd_input
       !--------------------------------------------------------------------------------------------
       !
 END MODULE qexsd_input          
-! 
-#endif
   

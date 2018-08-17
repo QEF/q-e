@@ -42,8 +42,8 @@ subroutine hdiag( npw, max_iter, avg_iter, et_ )
   REAl(DP), ALLOCATABLE :: h_prec(:)
     ! preconditioning matrix (diagonal)
 ! CG diagonalization uses these external routines on a single band
-   external h_1psi, s_1psi
-!  subroutine h_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
+   external hs_1psi, s_1psi
+!  subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
 !  subroutine s_1psi(npwx,npw,psi,spsi)  computes S*psi (if needed)
 
   call start_clock ('hdiag')
@@ -67,7 +67,7 @@ subroutine hdiag( npw, max_iter, avg_iter, et_ )
        ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et_ )
      avg_iter = avg_iter + 1.d0
   endif
-  CALL ccgdiagg( h_1psi, s_1psi, h_prec, &
+  CALL ccgdiagg( hs_1psi, s_1psi, h_prec, &
        npwx, npw, nbnd, npol, evc, et_, btype, eth_ns, &
        max_iter, .true., notconv, cg_iter)
   avg_iter = avg_iter + cg_iter

@@ -6,9 +6,9 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 ! Utility functions to perform threaded memcpy and memset
-! threaded_memXXX is contains a parallel do region
-! threaded_barrier_memXXX contains do region without parallel
-! threaded_nowait_memXXX contains do region without parallel and a nowait at the end do
+! threaded_memXXX contains a parallel do region
+! threaded_barrier_memXXX contains a do region without parallel
+! threaded_nowait_memXXX contains a do region without parallel and a nowait at the end do
 !
 SUBROUTINE threaded_memcpy(array, array_in, length)
   !

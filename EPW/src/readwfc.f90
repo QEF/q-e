@@ -17,7 +17,7 @@
   !
   !-------------------------------------------------------------
   USE io_files, ONLY : prefix, tmp_dir
-  USE units_ph, ONLY : lrwfc, iuwfc
+  USE units_lr, ONLY : lrwfc, iuwfc
   USE kinds,    ONLY : DP
   USE wvfct,    ONLY : npwx
   USE pwcom,    ONLY : nbnd

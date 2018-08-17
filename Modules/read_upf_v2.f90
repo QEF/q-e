@@ -643,7 +643,7 @@ SUBROUTINE read_upf_header(u, upf)
          IF ( hasAttribute(locNode, 'n')) THEN 
             CALL extractDataAttribute(locNode, 'n',             upf%nchi(nw)) 
          ELSE 
-             upf%nchi = upf%lchi(nw)-1 
+             upf%nchi(nw) = upf%lchi(nw)-1 
          END IF
          IF ( hasAttribute(locNode, 'pseudo_energy') ) THEN 
             CALL extractDataAttribute(locNode, 'pseudo_energy', upf%epseu(nw) ) 

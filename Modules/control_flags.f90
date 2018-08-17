@@ -202,9 +202,10 @@ MODULE control_flags
   REAL(DP), PUBLIC  :: &
     ethr               ! the convergence threshold for eigenvalues
   INTEGER, PUBLIC :: &
-    isolve,           &! Davidson or CG or ParO diagonalization
+    isolve,           &! index selecting Davidson,  CG , PPCG or ParO diagonalization
     david,            &! max dimension of subspace in Davidson diagonalization
-    max_cg_iter        ! maximum number of iterations in a CG call
+    max_cg_iter,      &! maximum number of iterations in a CG call
+    max_ppcg_iter      ! maximum number of iterations in a PPCG call
   LOGICAL, PUBLIC :: &
     diago_full_acc = .FALSE. ! if true,  empty eigenvalues have the same
                              ! accuracy of the occupied ones

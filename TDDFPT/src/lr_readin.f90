@@ -604,11 +604,11 @@ CONTAINS
     !------------------------------------------------------------------------
     !
     ! This subroutine reads the real space control flags from a PWscf punch card
-    ! OBM 2009 - FIXME: should be moved to qexml.f90
+    ! OBM 2009 - FIXME: OBSOLETE, doesn not work any longer
     !
       USE iotk_module
       USE io_global,     ONLY : ionode,ionode_id
-      USE io_files,      ONLY : iunpun, xmlpun
+      USE io_files,      ONLY : iunpun
       USE mp,            ONLY : mp_bcast
       USE mp_images,     ONLY : intra_image_comm
       !
@@ -618,6 +618,7 @@ CONTAINS
       LOGICAL,          INTENT(out) :: tqr, real_space
       INTEGER,          INTENT(out) :: ierr
       !
+      CHARACTER(len=13) :: xmlpun='data-file.xml'
       !
       IF ( ionode ) THEN
           !

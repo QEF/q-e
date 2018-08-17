@@ -6,12 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE set_mpi_comm_4_davidson_rci(parent_comm, intra_bgrp_comm_, inter_bgrp_comm_ )
+SUBROUTINE set_mpi_comm_4_solvers(parent_comm, intra_bgrp_comm_, inter_bgrp_comm_ )
   !----------------------------------------------------------------------------
   !
-  USE david_param,      ONLY : DP
+  USE la_param,     ONLY : DP
   USE mp_bands_util
-  USE mp,               ONLY : mp_size, mp_rank
+  USE mp,           ONLY : mp_size, mp_rank
   !
   IMPLICIT NONE
   !
@@ -19,6 +19,7 @@ SUBROUTINE set_mpi_comm_4_davidson_rci(parent_comm, intra_bgrp_comm_, inter_bgrp
   ! local variables
   INTEGER :: parent_nproc, parent_mype, ortho_parent_comm_
   !
+  !write(*,*) ' enter set_mpi_comm_4_davidson'
   intra_bgrp_comm   = intra_bgrp_comm_
   inter_bgrp_comm   = inter_bgrp_comm_
   !
@@ -52,14 +53,14 @@ SUBROUTINE set_mpi_comm_4_davidson_rci(parent_comm, intra_bgrp_comm_, inter_bgrp
     me_bgrp    = MOD( parent_mype, nproc_bgrp )
     !
     CALL mp_barrier( parent_comm )
-
     !
 #endif
+    !write(*,*) ' exit set_mpi_comm_4_davidson'
     RETURN
   !
-END SUBROUTINE set_mpi_comm_4_davidson_rci
+END SUBROUTINE set_mpi_comm_4_solvers
 !----------------------------------------------------------------------------
-SUBROUTINE unset_mpi_comm_4_davidson_rci()
+SUBROUTINE unset_mpi_comm_4_solvers()
   !----------------------------------------------------------------------------
   !
   use mp_diag
@@ -69,4 +70,4 @@ SUBROUTINE unset_mpi_comm_4_davidson_rci()
 #endif
     RETURN
   !
-END SUBROUTINE unset_mpi_comm_4_davidson_rci
+END SUBROUTINE unset_mpi_comm_4_solvers

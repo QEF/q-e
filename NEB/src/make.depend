@@ -43,7 +43,6 @@ fcp_opt_routines.o : ../../Modules/ions_base.o
 fcp_opt_routines.o : ../../Modules/kind.o
 fcp_opt_routines.o : ../../Modules/mdiis.o
 fcp_opt_routines.o : ../../Modules/mp_world.o
-fcp_opt_routines.o : ../../PW/src/pw_restart.o
 fcp_opt_routines.o : ../../PW/src/pwcom.o
 fcp_opt_routines.o : ../../UtilXlib/mp.o
 fcp_opt_routines.o : path_variables.o

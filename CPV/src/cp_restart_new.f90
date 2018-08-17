@@ -18,7 +18,6 @@ MODULE cp_restart_new
   ! ... * lambda matrices are read by one processors, broadcast to all others
   !
   USE kinds,     ONLY : DP
-#if !defined(__OLDXML)
   !
   USE qes_types_module
   USE qes_libs_module
@@ -39,14 +38,12 @@ MODULE cp_restart_new
   USE mp,        ONLY : mp_bcast
   USE matrix_inversion
   !
-#endif
   IMPLICIT NONE
   !
   SAVE
   !
   CONTAINS
     !
-#if !defined(__OLDXML)
     !------------------------------------------------------------------------
     SUBROUTINE cp_writefile( ndw, ascii, nfi, simtime, acc, nk, xk,          &
                              wk, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh,   &
@@ -461,9 +458,10 @@ MODULE cp_restart_new
         ! To be reconsidered once the old I/O is gone
         ALLOCATE ( rhog(ngm, nspin) )
         CALL rho_r2g (dfftp,rho, rhog)
+        filename = TRIM(dirname) // 'charge-density' 
         ! Only the first band group collects and writes
         IF ( my_bgrp_id == root_bgrp_id ) CALL write_rhog &
-                ( dirname, root_bgrp, intra_bgrp_comm, &
+                ( filename, root_bgrp, intra_bgrp_comm, &
                 tpiba*b1, tpiba*b2, tpiba*b3, gamma_only, &
                 mill, ig_l2g, rhog, ecutrho )
         !
@@ -2028,7 +2026,6 @@ MODULE cp_restart_new
     DEALLOCATE( mrepl )
     !
   END SUBROUTINE cp_read_lambda
-#endif
   !
   !------------------------------------------------------------------------
   SUBROUTINE cp_write_zmat( ndw, mat_z, ierr )

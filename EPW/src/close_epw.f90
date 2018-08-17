@@ -14,7 +14,9 @@
   SUBROUTINE close_epw
   !------------------------------------------------------------------
   !
-  USE phcom,     ONLY : iuwfc, iudwf, fildrho, iudrho
+  USE units_lr,  ONLY : iuwfc
+  USE units_ph,  ONLY : iudwf, iudrho
+  USE phcom,     ONLY : fildrho
   USE mp_global, ONLY : me_pool,root_pool
   USE io_epw,    ONLY : iunepmatwe
   USE epwcom,    ONLY : etf_mem

@@ -19,12 +19,10 @@
   !!
   !-----------------------------------------------------------------------
   use io_files,         ONLY : prefix, diropn, seqopn
-  use units_ph,         ONLY : iuwfc
-  ! nwordwfc is the record length for the direct-access file containing
-  ! wavefunctions
+  use units_lr,         ONLY : iuwfc, lrwfc
   USE wvfct,            ONLY : nbnd, npwx
   USE noncollin_module, ONLY : npol,nspin_mag
-  use phcom,            ONLY : lrwfc, lrdrho
+  use phcom,            ONLY : lrdrho
   USE fft_base,         ONLY : dfftp
   !
   implicit none

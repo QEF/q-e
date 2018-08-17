@@ -582,7 +582,7 @@ SUBROUTINE sum_band_gpu()
           !
        ELSE
           ALLOCATE(rho_d, MOLD=rho%of_r) ! OPTIMIZE HERE, use buffers!
-          IF (noncolin) THEN
+          IF (noncolin .or. (dft_is_meta() .OR. lxdm)) THEN
              ALLOCATE(psic_d(dffts%nnr))
              incr  = 1
           ELSE
@@ -779,7 +779,7 @@ SUBROUTINE sum_band_gpu()
                    !
                    CALL get_rho_gpu(tg_rho_d, dffts%nr1x * dffts%nr2x * right_nr3, w1, tg_psi_d)
                    !
-                ELSE IF (many_fft > 1) THEN
+                ELSE IF (many_fft > 1 .and. (.not. (dft_is_meta() .OR. lxdm))) THEN
                    !
                    !!! == OPTIMIZE HERE == (setting to 0 and setting elements!)
                    group_size = MIN(many_fft, ibnd_end - (ibnd -1))
@@ -822,7 +822,7 @@ SUBROUTINE sum_band_gpu()
                       psic(:) = ( 0.D0, 0.D0 )
                       !
                       kplusg (1:npw) = (xk(j,ik)+g(j,igk_k(1:npw,ik))) * tpiba
-                      psic(dffts_nl_d(igk_k(1:npw,ik)))=CMPLX(0d0,kplusg(1:npw),kind=DP) * &
+                      psic(dffts%nl(igk_k(1:npw,ik)))=CMPLX(0d0,kplusg(1:npw),kind=DP) * &
                                               evc(1:npw,ibnd)
                       !
                       CALL invfft ('Wave', psic, dffts)
