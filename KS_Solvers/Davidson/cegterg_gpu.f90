@@ -624,7 +624,7 @@ END SUBROUTINE cegterg_gpu
 
 SUBROUTINE reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew_d, v_d)
    USE david_param,   ONLY : DP
-   USE david_buffer,  ONLY : buffer
+   USE gbuffers,  ONLY : buffer => dev_buf
    implicit none
    INTEGER, INTENT(IN) :: nbase, nvec, nvecx
    LOGICAL, INTENT(IN) :: conv(nvec)
@@ -645,8 +645,6 @@ SUBROUTINE reorder_evals_cevecs(nbase, nvec, nvecx, conv, e_d, ew_d, v_d)
          conv_idx(n) = np
       END IF
    END DO
-
-   IF (.not. buffer%is_initialized) CALL buffer%init(3, info)
 
    CALL buffer%lock_buffer(conv_idx_d, nvec, info)
    CALL buffer%lock_buffer(vtmp_d, (/nvecx, nvecx/), info)
@@ -699,7 +697,7 @@ SUBROUTINE pcegterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   USE descriptors,      ONLY : la_descriptor, descla_init , descla_local_dims
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
-  USE david_buffer,     ONLY : buffer
+  USE gbuffers,         ONLY : buffer => dev_buf
   !
   IMPLICIT NONE
   !

@@ -6,12 +6,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-MODULE david_buffer
-#if defined(__CUDA)
-  USE fbuf_david, ONLY : buf_t
+MODULE gbuffers
+  USE tb_dev, ONLY : tb_dev_t
+  USE tb_pin, ONLY : tb_pin_t
   !
   IMPLICIT NONE
   !
-  TYPE(buf_t) :: buffer
-#endif
-END MODULE david_buffer
+  TYPE(tb_dev_t) :: dev_buf
+  TYPE(tb_pin_t) :: pin_buf
+END MODULE gbuffers
