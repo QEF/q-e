@@ -47,8 +47,8 @@ subroutine dhdrhopsi
   USE becmod,    ONLY : calbec, bec_type, allocate_bec_type, &
                         deallocate_bec_type, beccopy
   use ramanm,    ONLY : lrchf, iuchf, lrd2w, iud2w, jab, dek, eth_ns
-  USE units_ph,  ONLY : lrdwf, iudwf, lrwfc, iuwfc
-
+  USE units_ph,  ONLY : lrdwf, iudwf
+  USE units_lr,  ONLY : iuwfc, lrwfc
   USE lrus,      ONLY : becp1
   USE eqv,       ONLY : dpsi, dvpsi
   USE qpoint,    ONLY : nksq

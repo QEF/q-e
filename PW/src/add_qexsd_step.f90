@@ -12,9 +12,6 @@
  
 !----------------------------------------------------------------
 SUBROUTINE add_qexsd_step(i_step)
-#if defined (__OLDXML)
-CONTINUE 
-#else
 !-----------------------------------------------------------------
 !
 !------------------------------------------------------------------------
@@ -89,6 +86,5 @@ CALL qexsd_step_addstep ( i_step, nstep, nsp, atm, ityp, nat, alat*tau, alat, al
                           ewld/e2, degauss_ptr, demet_ptr, force/e2, sigma/e2, n_scf_steps, scf_error, &
                           FCP_FORCE  = fcp_force_ptr , FCP_TOT_CHARGE = fcp_tot_charge_ptr,&
                           GATEFIELD_EN = gatefield_en_ptr) 
-#endif    
 !
 END SUBROUTINE  add_qexsd_step

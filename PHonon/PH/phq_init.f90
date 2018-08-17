@@ -54,8 +54,7 @@ SUBROUTINE phq_init()
   USE phus,                 ONLY : alphap
   USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
-  USE units_ph,             ONLY : lrwfc, iuwfc
-
+  USE units_lr,             ONLY : lrwfc, iuwfc
   USE mp_bands,            ONLY : intra_bgrp_comm
   USE mp,                  ONLY : mp_sum
   USE acfdtest,            ONLY : acfdt_is_active, acfdt_num_der

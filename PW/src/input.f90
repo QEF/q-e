@@ -147,7 +147,7 @@ SUBROUTINE iosys()
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
   USE extrapolation, ONLY : pot_order, wfc_order
-  USE control_flags, ONLY : isolve, max_cg_iter, david, tr2, imix, gamma_only,&
+  USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, tr2, imix, gamma_only,&
                             nmix, iverbosity, smallmem, niter, &
                             io_level, ethr, lscf, lbfgs, lmd, &
                             lbands, lconstrain, restart, twfcollect, &
@@ -264,7 +264,8 @@ SUBROUTINE iosys()
   USE input_parameters, ONLY : electron_maxstep, mixing_mode, mixing_beta, &
                                mixing_ndim, mixing_fixed_ns, conv_thr,     &
                                tqr, tq_smoothing, tbeta_smoothing,         &
-                               diago_thr_init, diago_cg_maxiter,           &
+                               diago_thr_init,                             &
+                               diago_cg_maxiter, diago_ppcg_maxiter,       &
                                diago_david_ndim, diagonalization,          &
                                diago_full_acc, startingwfc, startingpot,   &
                                real_space, scf_must_converge
@@ -932,15 +933,20 @@ SUBROUTINE iosys()
   ENDIF
   !
   SELECT CASE( trim( diagonalization ) )
+  CASE ( 'david', 'davidson' )
+     !
+     isolve = 0
+     david = diago_david_ndim
+     !
   CASE ( 'cg' )
      !
      isolve = 1
      max_cg_iter = diago_cg_maxiter
      !
-  CASE ( 'david', 'davidson' )
+  CASE ( 'ppcg' )
      !
-     isolve = 0
-     david = diago_david_ndim
+     isolve = 2
+     max_ppcg_iter = diago_ppcg_maxiter
      !
   CASE DEFAULT
      !

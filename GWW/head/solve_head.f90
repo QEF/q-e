@@ -23,6 +23,7 @@ subroutine solve_head
   USE becmod,                ONLY : becp,calbec
   USE uspp_param,            ONLY : nhm
   use phcom
+  use units_lr,             ONLY : iuwfc, lrwfc
   USE wannier_gw,           ONLY : n_gauss, omega_gauss, grid_type,&
                                    nsteps_lanczos,second_grid_n,second_grid_i,&
                                    l_scissor,scissor,len_head_block_freq, &

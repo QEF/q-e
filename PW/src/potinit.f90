@@ -49,12 +49,8 @@ SUBROUTINE potinit()
   USE mp_bands ,            ONLY : intra_bgrp_comm, root_bgrp
   USE io_global,            ONLY : ionode, ionode_id
   USE io_rho_xml,           ONLY : read_scf
-#if defined(__OLDXML)
-  USE xml_io_base,          ONLY : read_rho
-#else
   USE io_base,              ONLY : read_rhog
   USE fft_rho,              ONLY : rho_g2r
-#endif
   !
   USE uspp,                 ONLY : becsum
   USE paw_variables,        ONLY : okpaw, ddd_PAW
@@ -70,17 +66,16 @@ SUBROUTINE potinit()
   REAL(DP)              :: fact
   INTEGER               :: is
   LOGICAL               :: exst 
-  CHARACTER(LEN=256)    :: dirname, filename
+  CHARACTER(LEN=320)    :: filename
   !
   CALL start_clock('potinit')
   !
-  dirname = TRIM(tmp_dir) // TRIM (prefix) // postfix
+  filename = TRIM(tmp_dir) // TRIM (prefix) // postfix // 'charge-density'
 #if defined __HDF5
-  filename = TRIM(dirname) // 'charge-density.hdf5'
+  exst     =  check_file_exist( TRIM(filename) // '.hdf5' )
 #else 
-  filename = TRIM(dirname) // 'charge-density.dat'
+  exst     =  check_file_exist( TRIM(filename) // '.dat' )
 #endif
-  exst     =  check_file_exist( TRIM(filename) )
   !
   IF ( starting_pot == 'file' .AND. exst ) THEN
      !
@@ -89,21 +84,16 @@ SUBROUTINE potinit()
      !
      IF ( .NOT.lforcet ) THEN
         CALL read_scf ( rho, nspin, gamma_only )
-#if !defined (__OLDXML)
         CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
-#endif
+        IF ( dft_is_meta() ) CALL rho_g2r ( dfftp, rho%kin_g, rho%kin_r )
      ELSE
         !
         ! ... 'force theorem' calculation of MAE: read rho only from previous
         ! ... lsda calculation, set noncolinear magnetization from angles
         !
-#if defined (__OLDXML)
-        CALL read_rho ( dirname, rho%of_r, 2 )
-#else
-        CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
+        CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, rho%of_g, gamma_only )
         CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
-#endif
         CALL nc_magnetization_from_lsda ( dfftp%nnr, nspin, rho%of_r )
      END IF
      !
@@ -153,17 +143,14 @@ SUBROUTINE potinit()
         IF ( nspin > 1 ) CALL errore &
              ( 'potinit', 'spin polarization not allowed in drho', 1 )
         !
-#if defined (__OLDXML)
-        CALL read_rho ( dirname, v%of_r, 1, input_drho )
-#else
-        CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
+        filename = TRIM(tmp_dir) // TRIM (prefix) // postfix // input_drho
+        CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, v%of_g, gamma_only )
         CALL rho_g2r ( dfftp, v%of_g, v%of_r )
-#endif
         !
         WRITE( UNIT = stdout, &
                FMT = '(/5X,"a scf correction to at. rho is read from",A)' ) &
-            TRIM( input_drho )
+            TRIM( filename )
         !
         rho%of_r = rho%of_r + v%of_r
         !
@@ -295,14 +282,6 @@ SUBROUTINE nc_magnetization_from_lsda ( nnr, nspin, rho )
   WRITE(stdout,'("Spin angles Theta, Phi (degree) = ",2f8.4)') &
        angle1(1)/PI*180.d0, angle2(1)/PI*180.d0 
   WRITE(stdout,*) '-----------'
-  !
-#if defined(__OLDXML)
-  ! On input, rho(1)=rho_up, rho(2)=rho_down
-  ! Set rho(1)=rho_tot, rho(3)=rho_up-rho_down=magnetization
-  ! 
-  rho(:,4) = rho(:,1)-rho(:,2)
-  rho(:,1) = rho(:,1)+rho(:,2)
-#endif
   !
   ! now set rho(2)=magn*sin(theta)*cos(phi)   x
   !         rho(3)=magn*sin(theta)*sin(phi)   y

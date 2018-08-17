@@ -45,6 +45,35 @@ NAMELIST: &DOS
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
+   Variable:       bz_sum
+   
+   Type:           CHARACTER
+   Description:   
+                   Keyword selecting  the method for BZ summation. Available options are:
+    
+                   'smearing' :
+                        integration using gaussian smearing. In fact currently
+                        any string not related to tetrahedra defaults to smearing;
+    
+                   'tetrahedra' :
+                        Tetrahedron method, Bloechl's version:
+                        P.E. Bloechl, PRB 49, 16223 (1994)
+                        Requires uniform grid of k-points, to be
+                        automatically generated in pw.x.
+    
+                   'tetrahedra_lin' :
+                        Original linear tetrahedron method.
+                        To be used only as a reference;
+                        the optimized tetrahedron method is more efficient.
+    
+                   'tetrahedra_opt' :
+                        Optimized tetrahedron method:
+                        see M. Kawamura, PRB 89, 094515 (2014).
+   Default:        'smearing' if degauss in given in input 'smearing',
+                                           options read from the xml data file otherwise.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
    Variable:       ngauss
    
    Type:           INTEGER
@@ -132,4 +161,4 @@ NAMELIST: &DOS
       
 
 
-This file has been created by helpdoc utility on Fri Jun 22 17:11:35 CEST 2018
+This file has been created by helpdoc utility on Tue Aug 14 10:43:55 CEST 2018

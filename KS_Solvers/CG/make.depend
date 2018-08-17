@@ -1,7 +1,6 @@
 ccgdiagg.o : ../../UtilXlib/mp.o
 ccgdiagg.o : ../../UtilXlib/mp_bands_util.o
 ccgdiagg.o : cg_param.o
-export_gstart_2_cg.o : ../../UtilXlib/mp_bands_util.o
 rcgdiagg.o : ../../UtilXlib/mp.o
 rcgdiagg.o : ../../UtilXlib/mp_bands_util.o
 rcgdiagg.o : cg_param.o
@@ -17,7 +16,3 @@ rotate_wfc_k.o : ../../LAXlib/ptoolkit.o
 rotate_wfc_k.o : ../../UtilXlib/mp.o
 rotate_wfc_k.o : ../../UtilXlib/mp_bands_util.o
 rotate_wfc_k.o : cg_param.o
-set_mpi_comm_4_cg.o : ../../LAXlib/mp_diag.o
-set_mpi_comm_4_cg.o : ../../UtilXlib/mp.o
-set_mpi_comm_4_cg.o : ../../UtilXlib/mp_bands_util.o
-set_mpi_comm_4_cg.o : cg_param.o

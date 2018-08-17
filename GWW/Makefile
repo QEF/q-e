@@ -14,7 +14,7 @@ heada: libminpack
 gwwa:
 	( cd gww ; $(MAKE) all || exit 1 )
 
-bsea:
+bsea: gwwa
 	( cd bse ; $(MAKE) all || exit 1 )
 
 simplea: 

@@ -16,7 +16,7 @@ MODULE ph_restart
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : prefix, xmlpun, qexml_version, qexml_version_init
+  USE io_files,  ONLY : prefix, qexml_version, qexml_version_init
   USE control_ph, ONLY : tmp_dir_ph
   USE io_global, ONLY : ionode, ionode_id
   USE mp_images, ONLY : intra_image_comm
@@ -516,7 +516,6 @@ MODULE ph_restart
       ! ... this routine reads the format version of the current xml datafile
       !
       USE parser, ONLY : version_compare
-      USE xml_io_base, ONLY : attr
 
       IMPLICIT NONE
       !
@@ -1121,7 +1120,7 @@ MODULE ph_restart
   !
   USE kinds, ONLY : DP
   USE disp, ONLY : nqs, x_q, lgamma_iq
-  USE io_files, ONLY : tmp_dir, postfix
+  USE io_files, ONLY : tmp_dir, postfix, xmlpun_schema
   USE control_ph, ONLY : tmp_dir_ph, lqdir, current_iq, newgrid
   USE grid_irr_iq, ONLY : done_bands
   ! 
@@ -1133,7 +1132,7 @@ MODULE ph_restart
   INTEGER :: iq
   LOGICAL :: lgamma, exst, exst_restart, exst_recover
   !
-  ! We check if the file data-file.xml is present 
+  ! We check if the xml data file (data-file-schema.xml) is present 
   ! in the directory where it should be. If lqdir=.false. only the bands 
   ! of current_iq might be present, otherwise we have to check all q points.
   ! If the file is present and there is a restart file, the bands are not
@@ -1155,11 +1154,7 @@ MODULE ph_restart
            tmp_dir=tmp_dir_ph
         ENDIF
         !
-#if defined (__OLDXML)
-        filename=TRIM(dirname) // 'data-file.xml'
-#else
-        filename=TRIM(dirname) // 'data-file-schema.xml'
-#endif
+        filename=TRIM(dirname) // xmlpun_schema
         !
         IF (ionode) inquire (file =TRIM(filename), exist = exst)
         !
@@ -1272,7 +1267,7 @@ MODULE ph_restart
 !    and opens the appropriate file for reading or writing
 !
       USE io_global,    ONLY : ionode, ionode_id
-      USE io_files,     ONLY : create_directory
+      USE io_files,     ONLY : create_directory, xmlpun_schema
       USE freq_ph,      ONLY : fpol
       USE mp_images,    ONLY : intra_image_comm
       USE mp,           ONLY : mp_bcast
@@ -1305,12 +1300,7 @@ MODULE ph_restart
       !
       ! ... create the main restart directory
       !
-      IF (ionode) inquire (file = & 
-#if defined (__OLDXML)
-        & TRIM(dirname) // 'data-file.xml',        exist = exst)
-#else
-        & TRIM(dirname) // 'data-file-schema.xml', exist = exst)
-#endif
+      IF (ionode) inquire (file = TRIM(dirname) // xmlpun_schema, exist = exst)
       CALL mp_bcast( exst, ionode_id, intra_image_comm )
       !
       IF (.NOT. exst) CALL create_directory( dirname )

@@ -29,13 +29,10 @@ SUBROUTINE wfcinit()
   USE wavefunctions, ONLY : evc
   USE wvfct,                ONLY : nbnd, npwx, current_k
   USE wannier_new,          ONLY : use_wannier
-#if defined (__OLDXML)
-  USE pw_restart,           ONLY : pw_readfile
-#else
   USE pw_restart_new,       ONLY : pw_readschema_file, read_collected_to_evc 
   USE qes_types_module,     ONLY : output_type
   USE qes_libs_module,      ONLY : qes_reset_output
-#endif
+  !
   USE wavefunctions_gpum, ONLY : using_evc
   USE uspp_gpum,                 ONLY : using_vkb
   !
@@ -44,14 +41,10 @@ SUBROUTINE wfcinit()
   INTEGER :: ik, ierr
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
   CHARACTER (LEN=256)                     :: dirname
-#if !defined (__OLDXML) 
   TYPE ( output_type )                    :: output_obj
-#endif 
-  !
-  CALL using_evc(0) ! this may be removed
-  !
-  !
+  ! 
   CALL start_clock( 'wfcinit' )
+  CALL using_evc(0) ! this may be removed
   !
   ! ... Orthogonalized atomic functions needed for LDA+U and other cases
   !
@@ -64,74 +57,33 @@ SUBROUTINE wfcinit()
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst_file )
   !
   IF ( TRIM(starting_wfc) == 'file') THEN
-#if defined(__OLDXML)
-  ! ... now the various possible wavefunction initializations
-  ! ... first a check: is "tmp_dir"/"prefix".wfc found on disk?
-  !
-  IF ( .NOT. exst_file) THEN
-     !
-     ! ... "tmp_dir"/"prefix".wfc not found on disk: try to read
-     ! ... wavefunctions in "collected" format from "prefix".save/, 
-     ! ... rewrite them (in pw_readfile) using the internal format
-     !
-     ierr = 1
-     CALL pw_readfile( 'wave', ierr )
-     IF ( ierr > 0 ) THEN
-        WRITE( stdout, '(5X,"Cannot read wfc : file not found")' )
-        starting_wfc = 'atomic+random'
-     END IF
-     !
-     ! ... workaround: with k-point parallelization and 1 k-point per pool,
-     ! ... pw_readfile does not leave evc properly initialized on all pools
-     !
-     IF ( nks == 1 ) CALL using_evc(0) ! davcio(..., 1) -> saves evc to file
-     IF ( nks == 1 ) CALL get_buffer( evc, nwordwfc, iunwfc, 1 )
-     !
-  ELSE
-     !
-     ! ... wavefunctions are read from file (or buffer) in routine 
-     ! ... c_bands, but not if there is a single k-point. In such
-     ! ... a case, we read wavefunctions (directly from file in 
-     ! ... order to avoid a useless buffer allocation) here
-     !
-     IF ( nks == 1 ) THEN
-         inquire (unit = iunwfc, opened = opnd_file)
-         if (.not.opnd_file) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
-         CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
-         CALL using_evc(2) ! davcio(..., -1) -> updates evc
-         if(.not.opnd_file) CLOSE ( UNIT=iunwfc, STATUS='keep' )
-     END IF
-     !
-  END IF
-#else
-  CALL pw_readschema_file(IERR = ierr, RESTART_OUTPUT = output_obj )
-  IF ( ierr == 0 ) THEN 
-     twfcollect_file = output_obj%band_structure%wf_collected   
-     dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
-     IF ( twfcollect_file ) THEN
-        CALL read_collected_to_evc(dirname )
-     ELSE IF ( .NOT. exst_file) THEN
-        WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
-        starting_wfc = 'atomic+random'
-     ELSE
+     CALL pw_readschema_file(IERR = ierr, RESTART_OUTPUT = output_obj )
+     IF ( ierr == 0 ) THEN 
+        twfcollect_file = output_obj%band_structure%wf_collected   
+        dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
+        IF ( twfcollect_file ) THEN
+           CALL read_collected_to_evc(dirname )
+        ELSE IF ( .NOT. exst_file) THEN
+           WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
+          starting_wfc = 'atomic+random'
+        ELSE
         !
         ! ... wavefunctions are read from file (or buffer) not here but
         !  ...in routine c_bands. If however there is a single k-point,
         ! ... c_bands doesn't read wavefunctions, so we read them here
         ! ... (directly from file to avoid a useless buffer allocation)
         !
-        IF ( nks == 1 ) THEN
-           inquire (unit = iunwfc, opened = opnd_file)
-           if (.not.opnd_file) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
-           CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
-           CALL using_evc(2) ! davcio(..., -1) -> updates evc
-           if(.not.opnd_file) CLOSE ( UNIT=iunwfc, STATUS='keep' )
+           IF ( nks == 1 ) THEN
+              inquire (unit = iunwfc, opened = opnd_file)
+              if (.not.opnd_file) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+              CALL using_evc(2)
+              CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, -1 )
+             if(.not.opnd_file) CLOSE ( UNIT=iunwfc, STATUS='keep' )
+           END IF
         END IF
-     END IF
+     END IF 
+     CALL qes_reset_output ( output_obj ) 
   END IF 
-  CALL qes_reset_output ( output_obj ) 
-#endif
-  END IF
   !
   ! ... state what will happen
   !

@@ -37,7 +37,8 @@
                                 ip_nr2b=>nr2b, ip_nr3b => nr3b,                                                       &
                                 ip_diagonalization=>diagonalization, mixing_mode, mixing_beta,                        &
                                 mixing_ndim, tqr, tq_smoothing, tbeta_smoothing, electron_maxstep,                    &
-                                diago_thr_init, diago_full_acc, diago_cg_maxiter, diago_david_ndim,                   &
+                                diago_thr_init, diago_full_acc,                                                       & 
+                                diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim,                               &
                                 nk1, nk2, nk3, k1, k2, k3, nkstot, ip_xk => xk, ip_wk => wk,                          &
                                 ion_dynamics, upscale, remove_rigid_rot, refold_pos, pot_extrapolation,               &
                                 wfc_extrapolation, ion_temperature, tempw, tolp, delta_t, nraise, ip_dt => dt,        &
@@ -100,7 +101,7 @@
   !
   ! 
   NULLIFY (gate_ptr, block_ptr, relaxz_ptr, block_1_ptr, block_2_ptr, block_height_ptr, zgate_ptr)
-#if !defined(__OLDXML)
+
   obj%tagname=TRIM(obj_tagname)
   IF ( ABS(ip_ibrav)  .GT. 0 ) THEN  
      ibrav_lattice = .TRUE. 
@@ -247,7 +248,7 @@
   END IF
   CALL qexsd_init_electron_control(obj%electron_control, diagonalization, mixing_mode, mixing_beta, conv_thr,         &
                                    mixing_ndim, electron_maxstep, tqr, tq_smoothing, tbeta_smoothing, diago_thr_init, & 
-                                   diago_full_acc, diago_cg_maxiter,  diago_david_ndim )
+                                   diago_full_acc, diago_cg_maxiter,  diago_ppcg_maxiter, diago_david_ndim )
   !--------------------------------------------------------------------------------------------------------------------------------
   !                                                   K POINTS IBZ ELEMENT
   !------------------------------------------------------------------------------------------------------------------------------ 
@@ -396,6 +397,5 @@
   obj%lwrite=.TRUE.
   ! 
   !
-#endif 
   END SUBROUTINE pw_init_qexsd_input
   !

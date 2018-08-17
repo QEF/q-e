@@ -1002,8 +1002,11 @@ CALL mp_bcast(o%tbeta_smoothing, ionode_id, comm)
 CALL mp_bcast(o%diago_thr_init, ionode_id, comm)
 CALL mp_bcast(o%diago_full_acc, ionode_id, comm)
 CALL mp_bcast(o%diago_cg_maxiter_ispresent, ionode_id, comm)
+CALL mp_bcast(o%diago_ppcg_maxiter_ispresent, ionode_id, comm)
 IF (o%diago_cg_maxiter_ispresent) &
    CALL mp_bcast(o%diago_cg_maxiter, ionode_id, comm)
+IF (o%diago_ppcg_maxiter_ispresent) &
+   CALL mp_bcast(o%diago_ppcg_maxiter, ionode_id, comm)
 CALL mp_bcast(o%diago_david_ndim_ispresent, ionode_id, comm)
 IF (o%diago_david_ndim_ispresent) &
    CALL mp_bcast(o%diago_david_ndim, ionode_id, comm)

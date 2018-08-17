@@ -50,7 +50,8 @@ SUBROUTINE phq_readin()
   USE partial,       ONLY : atomo, nat_todo, nat_todo_input
   USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3, x_q, wq, nqs, lgamma_iq
-  USE io_files,      ONLY : tmp_dir, prefix, postfix, create_directory, check_tempdir
+  USE io_files,      ONLY : tmp_dir, prefix, postfix, create_directory, &
+                            check_tempdir, xmlpun_schema
   USE noncollin_module, ONLY : i_cons, noncolin
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum, twfcollect
@@ -600,11 +601,7 @@ SUBROUTINE phq_readin()
         IF (.NOT.ext_recover.AND..NOT.ext_restart) tmp_dir_phq=tmp_dir_ph
      ENDIF
      !
-#if defined (__OLDXML)
-     filename=TRIM(tmp_dir_phq)//TRIM(prefix)//postfix//'data-file.xml'
-#else
-     filename=TRIM(tmp_dir_phq)//TRIM(prefix)//postfix//'data-file-schema.xml'
-#endif
+     filename=TRIM(tmp_dir_phq)//TRIM(prefix)//postfix//xmlpun_schema
      IF (ionode) inquire (file =TRIM(filename), exist = exst)
      !
      CALL mp_bcast( exst, ionode_id, intra_image_comm )
