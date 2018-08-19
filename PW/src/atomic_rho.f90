@@ -7,12 +7,14 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine atomic_rho (rhoa, nspina)
+SUBROUTINE atomic_rho_g (rhocg, nspina)
   !-----------------------------------------------------------------------
-  ! This routine calculates rhoa as the superposition of atomic charges.
+  ! Compute superposition of atomic charges in reciprocal space.
   !
-  ! nspina is the number of spin components to be calculated
-  !
+  ! On input:
+  ! nspina (integer) is the number of spin components to be calculated
+  ! (may differ from nspin because in some cases the total charge only
+  !  is needed, even in a LSDA calculation)
   ! if nspina = 1 the total atomic charge density is calculated
   ! if nspina = 2 the spin up and spin down atomic charge densities are
   !               calculated assuming an uniform atomic spin-polarization
@@ -21,108 +23,93 @@ subroutine atomic_rho (rhoa, nspina)
   !               in the first component and the magnetization vector 
   !               in the other three.
   !
-  ! NB: nspina may not be equal to nspin because in some cases (as in update)
-  ! the total charge only could be needed, even in a LSDA calculation.
-  !
+  ! On output:
+  ! rhocg(ngm,nspina) (complex) contains G-space components of the
+  ! superposition of atomic charges contained in the array upf%rho_at
+  ! (read from pseudopotential files)
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : eps8
-  USE io_global,            ONLY : stdout
   USE atom,                 ONLY : rgrid, msh
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : tpiba, omega
   USE gvect,                ONLY : ngm, ngl, gstart, gl, igtongl
-  USE lsda_mod,             ONLY : starting_magnetization, lsda
+  USE lsda_mod,             ONLY : starting_magnetization
   USE vlocal,               ONLY : starting_charge, strf
-  USE control_flags,        ONLY : gamma_only
-  USE wavefunctions, ONLY : psic
   USE noncollin_module,     ONLY : angle1, angle2
   USE uspp_param,           ONLY : upf
-  USE mp_bands,             ONLY : intra_bgrp_comm
-  USE mp,                   ONLY : mp_sum
-  USE fft_base,             ONLY : dfftp
-  USE fft_interfaces,       ONLY : invfft
-
   !
-  implicit none
+  IMPLICIT NONE
   !
-  integer :: nspina
-  ! the number of spin polarizations
-  real(DP) :: rhoa (dfftp%nnr, nspina)
-  ! the output atomic charge
+  INTEGER, INTENT(IN) :: nspina
+  COMPLEX(DP), INTENT(OUT) :: rhocg (ngm, nspina)
   !
   ! local variables
   !
-  real(DP) :: rhoneg, rhoima, rhoscale, gx
-  real(DP), allocatable :: rhocgnt (:), aux (:)
-  complex(DP), allocatable :: rhocg (:,:)
-  integer :: ir, is, ig, igl, nt, ndm
+  REAL(DP) :: rhoneg, rhoima, rhoscale, gx
+  REAL(DP), ALLOCATABLE :: rhocgnt (:), aux (:)
+  INTEGER :: ir, is, ig, igl, nt, ndm
   !
-  ! superposition of atomic charges contained in the array rho_at
-  ! (read from pseudopotential files)
+  ! allocate work space 
   !
-  ! allocate work space (psic must already be allocated)
-  !
-  allocate (rhocg(  ngm, nspina))    
   ndm = MAXVAL ( msh(1:ntyp) )
-  allocate (aux(ndm))    
-  allocate (rhocgnt( ngl))    
-  rhoa(:,:) = 0.d0
-  rhocg(:,:) = (0.d0,0.d0)
+  ALLOCATE (aux(ndm))    
+  ALLOCATE (rhocgnt( ngl))    
+  rhocg(:,:) = (0.0_dp,0.0_dp)
 
-  do nt = 1, ntyp
+  DO nt = 1, ntyp
      !
      ! Here we compute the G=0 term
      !
-     if (gstart == 2) then
-        do ir = 1, msh (nt)
+     IF (gstart == 2) then
+        DO ir = 1, msh (nt)
            aux (ir) = upf(nt)%rho_at (ir)
-        enddo
+        ENDDO
         call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (1) )
-     endif
+     ENDIF
      !
      ! Here we compute the G<>0 term
      !
-     do igl = gstart, ngl
+     DO igl = gstart, ngl
         gx = sqrt (gl (igl) ) * tpiba
-        do ir = 1, msh (nt)
-           if (rgrid(nt)%r(ir) < 1.0d-8) then
+        DO ir = 1, msh (nt)
+           IF (rgrid(nt)%r(ir) < eps8) then
               aux(ir) = upf(nt)%rho_at(ir)
-           else
+           ELSE
               aux(ir) = upf(nt)%rho_at(ir) * &
                         sin(gx*rgrid(nt)%r(ir)) / (rgrid(nt)%r(ir)*gx)
-           endif
-        enddo
-        call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (igl) )
-     enddo
+           ENDIF
+        ENDDO
+        CALL simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (igl) )
+     ENDDO
      !
      ! we compute the 3D atomic charge in reciprocal space
      !
-     if (upf(nt)%zp > eps8) then
-        rhoscale = MAX(0.d0, upf(nt)%zp - starting_charge(nt)) / upf(nt)%zp
-     else
-        rhoscale = 1.d0
-     endif
+     IF (upf(nt)%zp > eps8) THEN
+        rhoscale = MAX(0.0_dp, upf(nt)%zp - starting_charge(nt)) / upf(nt)%zp
+     ELSE
+        rhoscale = 1.0_dp
+     ENDIF
      !
-     if (nspina == 1) then
-        do ig = 1, ngm
+     IF (nspina == 1) THEN
+        DO ig = 1, ngm
            rhocg(ig,1) = rhocg(ig,1) + &
                          strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig)) / omega
-        enddo
-     else if (nspina == 2) then
-        do ig = 1, ngm
+        ENDDO
+     ELSE IF (nspina == 2) THEN
+        DO ig = 1, ngm
            rhocg(ig,1) = rhocg(ig,1) + &
-                         0.5d0 * ( 1.d0 + starting_magnetization(nt) ) * &
+                         0.5_dp * ( 1.0_dp + starting_magnetization(nt) ) * &
                          strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig)) / omega
            rhocg(ig,2) = rhocg(ig,2) + &
-                         0.5d0 * ( 1.d0 - starting_magnetization(nt) ) * &
+                         0.5d0 * ( 1.0_dp - starting_magnetization(nt) ) * &
                          strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig)) / omega
-        enddo
-     else
+        ENDDO
+     ELSE
 !
 !    Noncolinear case
 !
-        do ig = 1,ngm
+        DO ig = 1,ngm
            rhocg(ig,1) = rhocg(ig,1) + &
                 strf(ig,nt)*rhoscale*rhocgnt(igtongl(ig))/omega
 
@@ -140,35 +127,71 @@ subroutine atomic_rho (rhoa, nspina)
                 starting_magnetization(nt)* &
                 cos(angle1(nt))* &
                 strf(ig,nt)*rhoscale*rhocgnt(igtongl(ig))/omega
-        end do
-     endif
-  enddo
+        END DO
+     ENDIF
+  ENDDO
 
-  deallocate (rhocgnt)
-  deallocate (aux)
-
-  do is = 1, nspina
+  DEALLOCATE (rhocgnt)
+  DEALLOCATE (aux)
+  
+END SUBROUTINE atomic_rho_g
+!
+!-----------------------------------------------------------------------
+SUBROUTINE atomic_rho (rhoa, nspina)
+  !-----------------------------------------------------------------------
+  ! As atomic_rho_g, with real-space output charge rhoa(:,nspina)
+  !
+  USE kinds,                ONLY : DP
+  USE io_global,            ONLY : stdout
+  USE cell_base,            ONLY : tpiba, omega
+  USE control_flags,        ONLY : gamma_only
+  USE lsda_mod,             ONLY : lsda
+  USE wavefunctions,        ONLY : psic
+  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp,                   ONLY : mp_sum
+  USE fft_base,             ONLY : dfftp
+  USE fft_interfaces,       ONLY : invfft
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: nspina
+  REAL(DP), INTENT(OUT) :: rhoa (dfftp%nnr, nspina)
+  ! local variables
+  !
+  REAL(DP) :: rhoneg, rhoima
+  COMPLEX(DP), allocatable :: rhocg (:,:)
+  INTEGER :: ir, is, ig, igl, nt, ndm
+  !
+  ! allocate work space (psic must already be allocated)
+  !
+  ALLOCATE (rhocg(dfftp%ngm, nspina))
+  !
+  CALL atomic_rho_g (rhocg, nspina)
+  !
+  ! bring to real space
+  !
+  rhoa(:,:) = 0.d0
+  !
+  DO is = 1, nspina
      !
-     ! and we return to real space
-     !
-     psic(:) = (0.d0,0.d0)
+     psic(:) = (0.0_dp,0.0_dp)
      psic (dfftp%nl (:) ) = rhocg (:, is)
-     if (gamma_only) psic ( dfftp%nlm(:) ) = CONJG( rhocg (:, is) )
+     IF (gamma_only)  psic ( dfftp%nlm(:) ) = CONJG( rhocg (:, is) )
      CALL invfft ('Rho', psic, dfftp)
      !
      ! we check that everything is correct
      !
-     rhoneg = 0.d0
-     rhoima = 0.d0
-     do ir = 1, dfftp%nnr
-        rhoneg = rhoneg + MIN (0.d0,  DBLE (psic (ir)) )
+     rhoneg = 0.0_dp
+     rhoima = 0.0_dp
+     DO ir = 1, dfftp%nnr
+        rhoneg = rhoneg + MIN (0.0_dp,  DBLE (psic (ir)) )
         rhoima = rhoima + abs (AIMAG (psic (ir) ) )
-     enddo
+     ENDDO
      rhoneg = omega * rhoneg / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
      rhoima = omega * rhoima / (dfftp%nr1 * dfftp%nr2 * dfftp%nr3)
      !
-     call mp_sum(  rhoneg, intra_bgrp_comm )
-     call mp_sum(  rhoima, intra_bgrp_comm )
+     CALL mp_sum(  rhoneg, intra_bgrp_comm )
+     CALL mp_sum(  rhoima, intra_bgrp_comm )
      !
      IF ( rhoima > 1.0d-4 ) THEN
         WRITE( stdout,'(5x,"Check: imaginary charge or magnetization=",&
@@ -195,9 +218,9 @@ subroutine atomic_rho (rhoa, nspina)
         rhoa (ir, is) =  DBLE (psic (ir))
      END DO
      !
-  enddo
+  ENDDO
 
-  deallocate (rhocg)
-  return
-end subroutine atomic_rho
+  DEALLOCATE (rhocg)
+
+END SUBROUTINE atomic_rho
 

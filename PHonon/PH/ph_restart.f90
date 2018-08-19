@@ -16,7 +16,7 @@ MODULE ph_restart
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : prefix, qexml_version, qexml_version_init
+  USE io_files,  ONLY : prefix
   USE control_ph, ONLY : tmp_dir_ph
   USE io_global, ONLY : ionode, ionode_id
   USE mp_images, ONLY : intra_image_comm
@@ -37,8 +37,10 @@ MODULE ph_restart
   ! variables to describe qexml current version
   ! and back compatibility
   !
+  CHARACTER(len=256) :: qexml_version = ' '       ! the format of the current qexml datafile 
   LOGICAL :: qexml_version_before_1_4_0 = .FALSE.
-
+  LOGICAL :: qexml_version_init = .FALSE.  ! whether the fmt has been read or not
+  !
   CHARACTER(iotk_attlenx)  :: attr
   !
   !

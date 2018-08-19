@@ -18,8 +18,7 @@ MODULE xml_io_base
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun_schema, &
-          check_file_exist
+  USE io_files,  ONLY : tmp_dir, prefix, iunpun, check_file_exist
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast, mp_sum, mp_get, mp_put, mp_max, mp_rank, &
        mp_size

@@ -56,19 +56,22 @@ CONTAINS
        CALL fwfft('Rho', psi, desc )
        CALL fftx_threed2oned( desc, psi, rhog(:,iss) )
     ELSE
-       isup=1
-       isdw=2
-       IF( PRESENT( v ) ) THEN
-          DO ir=1,desc%nnr
-             psi(ir)=CMPLX(rhor(ir,isup)+v(ir),rhor(ir,isdw)+v(ir),kind=dp)
-          END DO
-       ELSE
-          DO ir=1,desc%nnr
-             psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
-          END DO
-       END IF
-       CALL fwfft('Rho', psi, desc )
-       CALL fftx_threed2oned( desc, psi, rhog(:,isup), rhog(:,isdw) )
+       ! nspin/2 = 1 for LSDA, = 2 for noncolinear
+       DO iss=1,nspin/2
+          isup=1+(iss-1)*nspin/2 ! 1 for LSDA, 1 and 3 for noncolinear
+          isdw=2+(iss-1)*nspin/2 ! 2 for LSDA, 2 and 4 for noncolinear
+          IF( PRESENT( v ) ) THEN
+             DO ir=1,desc%nnr
+                psi(ir)=CMPLX(rhor(ir,isup)+v(ir),rhor(ir,isdw)+v(ir),kind=dp)
+             END DO
+          ELSE
+             DO ir=1,desc%nnr
+                psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
+             END DO
+          END IF
+          CALL fwfft('Rho', psi, desc )
+          CALL fftx_threed2oned( desc, psi, rhog(:,isup), rhog(:,isdw) )
+       END DO
     ENDIF
     
     DEALLOCATE( psi )
@@ -101,16 +104,19 @@ CONTAINS
           END DO
 !$omp end parallel do
        ELSE
-          isup=1
-          isdw=2
-          CALL fftx_oned2threed( desc, psi, rhog(:,isup), rhog(:,isdw) )
-          CALL invfft('Rho',psi, desc )
+          ! nspin/2 = 1 for LSDA, = 2 for noncolinear
+          DO iss=1,nspin/2
+             isup=1+(iss-1)*nspin/2 ! 1 for LSDA, 1 and 3 for noncolinear
+             isdw=2+(iss-1)*nspin/2 ! 2 for LSDA, 2 and 4 for noncolinear
+             CALL fftx_oned2threed( desc, psi, rhog(:,isup), rhog(:,isdw) )
+             CALL invfft('Rho',psi, desc )
 !$omp parallel do
-          DO ir=1,desc%nnr
-             rhor(ir,isup)= DBLE(psi(ir))
-             rhor(ir,isdw)=AIMAG(psi(ir))
-          END DO
+             DO ir=1,desc%nnr
+                rhor(ir,isup)= DBLE(psi(ir))
+                rhor(ir,isdw)=AIMAG(psi(ir))
+             END DO
 !$omp end parallel do
+          END DO
        ENDIF
        !
     ELSE
@@ -155,7 +161,7 @@ CONTAINS
              rhor(ir)=DBLE(psi(ir))
           END DO
 !$omp end parallel do
-       ELSE
+       ELSE IF ( nspin == 2) THEN
           isup=1
           isdw=2
           CALL fftx_oned2threed( desc, psi, rhog(:,isup), rhog(:,isdw) )
@@ -165,6 +171,8 @@ CONTAINS
              rhor(ir)= DBLE(psi(ir))+AIMAG(psi(ir))
           END DO
 !$omp end parallel do
+       ELSE
+          CALL errore('rho_g2r_sum_components','noncolinear case?',nspin)
        ENDIF
        !
     ELSE
