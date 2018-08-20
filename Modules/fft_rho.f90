@@ -56,22 +56,38 @@ CONTAINS
        CALL fwfft('Rho', psi, desc )
        CALL fftx_threed2oned( desc, psi, rhog(:,iss) )
     ELSE
-       ! nspin/2 = 1 for LSDA, = 2 for noncolinear
-       DO iss=1,nspin/2
-          isup=1+(iss-1)*nspin/2 ! 1 for LSDA, 1 and 3 for noncolinear
-          isdw=2+(iss-1)*nspin/2 ! 2 for LSDA, 2 and 4 for noncolinear
-          IF( PRESENT( v ) ) THEN
-             DO ir=1,desc%nnr
-                psi(ir)=CMPLX(rhor(ir,isup)+v(ir),rhor(ir,isdw)+v(ir),kind=dp)
-             END DO
-          ELSE
-             DO ir=1,desc%nnr
-                psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
-             END DO
-          END IF
-          CALL fwfft('Rho', psi, desc )
-          CALL fftx_threed2oned( desc, psi, rhog(:,isup), rhog(:,isdw) )
-       END DO
+       IF ( gamma_only ) THEN
+          ! nspin/2 = 1 for LSDA, = 2 for noncolinear
+          DO iss=1,nspin/2
+             isup=1+(iss-1)*nspin/2 ! 1 for LSDA, 1 and 3 for noncolinear
+             isdw=2+(iss-1)*nspin/2 ! 2 for LSDA, 2 and 4 for noncolinear
+             IF( PRESENT( v ) ) THEN
+                DO ir=1,desc%nnr
+                    psi(ir)=CMPLX(rhor(ir,isup)+v(ir),rhor(ir,isdw)+v(ir),kind=dp)
+                END DO
+             ELSE
+                DO ir=1,desc%nnr
+                   psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=dp)
+                END DO
+             END IF
+             CALL fwfft('Rho', psi, desc )
+             CALL fftx_threed2oned( desc, psi, rhog(:,isup), rhog(:,isdw) )
+          END DO
+       ELSE
+          DO iss=1,nspin
+             IF( PRESENT( v ) ) THEN
+                DO ir=1,desc%nnr
+                    psi(ir)=CMPLX(rhor(ir,iss)+v(ir),0.0_dp,kind=dp)
+                END DO
+             ELSE
+                DO ir=1,desc%nnr
+                   psi(ir)=CMPLX(rhor(ir,iss),0.0_dp,kind=dp)
+                END DO
+             END IF
+             CALL fwfft('Rho', psi, desc )
+             CALL fftx_threed2oned( desc, psi, rhog(:,iss) )
+          END DO
+       END IF
     ENDIF
     
     DEALLOCATE( psi )
