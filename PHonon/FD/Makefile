@@ -17,7 +17,7 @@ QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
 PWOBJS = ../../PW/src/libpw.a
 
 
-TLDEPS= bindir libs pw
+TLDEPS= pwlibs
 
 all : tldeps fd.x fd_ifc.x fd_ef.x
 

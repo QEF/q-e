@@ -27,7 +27,7 @@ PWOBJS = ../../PW/src/libpw.a
 
 LIBMIN= 
 
-TLDEPS=bindir mods libs libiotk pw
+TLDEPS=pwlibs
 
 all : tldeps simple_ip.x  libsimple_ip.a
 

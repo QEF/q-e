@@ -34,7 +34,7 @@ PWOBJS = ../../PW/src/libpw.a
 PW4GWWOBJS = ../pw4gww/libpw4gww.a
 GWWOBJ = ../gww/libgww.a
 
-TLDEPS= bindir libs pw
+TLDEPS= pwlibs gwwlib
 
 all : tldeps simple.x
 
