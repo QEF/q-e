@@ -101,7 +101,6 @@ write_upf_schema.o \
 ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
-xml_io_base.o \
 io_base.o \
 qes_types.o \
 qes_libs.o  \

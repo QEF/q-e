@@ -104,7 +104,6 @@ read_export.o : ../../Modules/wavefunctions.o
 read_export.o : ../../PW/src/ldaU.o
 read_export.o : ../../PW/src/pwcom.o
 read_export.o : ../../UtilXlib/mp.o
-read_export.o : ../../iotk/src/iotk_module.o
 simple.o : ../../Modules/cell_base.o
 simple.o : ../../Modules/constants.o
 simple.o : ../../Modules/environment.o
