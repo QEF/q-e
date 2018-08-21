@@ -2193,11 +2193,22 @@ NAMELIST: &ELECTRONS
    
    Type:           LOGICAL
    Default:        .FALSE.
-   Description:    If .true., use the real-space algorithm for augmentation
-                   charges in ultrasoft pseudopotentials.
-                   Must faster execution of ultrasoft-related calculations,
-                   but numerically less accurate than the default algorithm.
-                   Use with care and after testing!
+   Description:    If .true., use a real-space algorithm for augmentation
+                   charges of ultrasoft pseudopotentials and PAWsets.
+                   Faster but numerically less accurate than the default
+                   G-space algorithm. Use with care and after testing!
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       real_space
+   
+   Type:           LOGICAL
+   Default:        .FALSE.
+   Description:    If .true., exploit real-space localization to compute
+                   matrix elements for nonlocal projectors. Faster and in
+                   principle better scaling than the default G-space algorithm,
+                   but numerically less accurate, may lead to some loss of
+                   translational invariance. Use with care and after testing!
    +--------------------------------------------------------------------
    
 ===END OF NAMELIST======================================================
@@ -3289,4 +3300,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Mon Jul 23 13:55:31 CEST 2018
+This file has been created by helpdoc utility on Tue Aug 21 17:08:53 CEST 2018
