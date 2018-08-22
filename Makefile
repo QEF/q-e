@@ -89,11 +89,11 @@ tddfpt : phlibs
 	if test -d TDDFPT; then \
 	( cd TDDFPT; $(MAKE) all || exit 1) ; fi
 
-pp : pwlibs libiotk
+pp : pwlibs
 	if test -d PP ; then \
 	( cd PP ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-pwcond : pwlibs libiotk
+pwcond : pwlibs
 	if test -d PWCOND ; then \
 	( cd PWCOND ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -164,7 +164,7 @@ pwlibs: bindir libs mods libks_solvers dftd3
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) pw-lib || exit 1) ; fi
 
-phlibs: pwlibs lrmods libiotk
+phlibs: pwlibs lrmods
 	if test -d PHonon; then \
 	( cd PHonon; $(MAKE) ph-lib || exit 1) ; fi
 
@@ -176,7 +176,7 @@ pw4gwwlib : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-mods : libfox libutil libla libfft
+mods : libiotk libfox libutil libla libfft
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libs libutil libla

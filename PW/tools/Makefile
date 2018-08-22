@@ -12,8 +12,6 @@ PWOBJS = ../src/libpw.a
 
 TLDEPS= pwlibs
 
-LIBOBJS        = ../../clib/clib.a ../../iotk/src/libiotk.a
-
 all : tldeps ev.x kpoints.x pwi2xsf.x ibrav2cell.x
 
 ibrav2cell.x : ibrav2cell.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
