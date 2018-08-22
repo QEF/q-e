@@ -6,10 +6,6 @@ include ../../make.inc
 MODFLAGS= $(BASEMOD_FLAGS) \
 	$(MOD_FLAG)../../GWW/gww 
 
-#location of needed libraries
-LIBOBJS= ../../iotk/src/libiotk.a  \
-	../../clib/clib.a 
-
 EXCOBJS = \
 simple_object.o \
 start_end.o \

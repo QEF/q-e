@@ -7,10 +7,6 @@ LIBMIN = ../minpack/minpacklib.a
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src $(MOD_FLAG)../pw4gww $(MOD_FLAG)../gww 
 
-#location of needed libraries
-LIBOBJS= ../../iotk/src/libiotk.a \
-         ../../clib/clib.a
-
 SIMPLEOBJS = \
   stop_pp.o \
   read_export.o \
