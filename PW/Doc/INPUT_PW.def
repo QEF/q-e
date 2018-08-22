@@ -2090,11 +2090,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var tqr -type LOGICAL { 
             default { .FALSE. }
             info {
-                If .true., use the real-space algorithm for augmentation
-                charges in ultrasoft pseudopotentials.
-                Must faster execution of ultrasoft-related calculations,
-                but numerically less accurate than the default algorithm.
-                Use with care and after testing!
+                If .true., use a real-space algorithm for augmentation
+                charges of ultrasoft pseudopotentials and PAWsets.
+                Faster but numerically less accurate than the default
+		G-space algorithm. Use with care and after testing!
+            }
+        }
+
+        var real_space -type LOGICAL { 
+            default { .FALSE. }
+            info {
+                If .true., exploit real-space localization to compute
+		matrix elements for nonlocal projectors. Faster and in
+		principle better scaling than the default G-space algorithm,
+                but numerically less accurate, may lead to some loss of
+		translational invariance. Use with care and after testing!
             }
         }
     }

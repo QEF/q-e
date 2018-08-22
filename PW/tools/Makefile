@@ -10,7 +10,7 @@ QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
          ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 PWOBJS = ../src/libpw.a
 
-TLDEPS= bindir mods libs pw libfft libla libutil
+TLDEPS= pwlibs
 
 LIBOBJS        = ../../clib/clib.a ../../iotk/src/libiotk.a
 
