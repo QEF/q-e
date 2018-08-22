@@ -22,9 +22,9 @@ ibrav2cell.x : ibrav2cell.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
 	- ( cd ../../bin ; ln -fs ../PW/tools/cell2ibrav.py cell2ibrav.x )
 
-ev.x : ev.o ev_xml.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+ev.x : ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		ev.o ev_xml.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+		ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
 
 kpoints.x : kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
