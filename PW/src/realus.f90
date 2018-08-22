@@ -37,7 +37,6 @@ MODULE realus
   !General
   LOGICAL               :: real_space = .false.
   ! if true perform calculations in real space
-  INTEGER               :: real_space_debug = 0 ! FIXME: must disappear
   INTEGER               :: initialisation_level
   ! init_realspace_vars sets this to 3; qpointlist adds 5; betapointlist adds 7
   ! so the value should be 15 if the real space routine is initialised properly
@@ -73,7 +72,7 @@ MODULE realus
   PUBLIC :: generate_qpointlist, qpointlist, addusdens_r, newq_r, &
        addusforce_r, addusstress_r, real_space_dq, deallocate_realsp
   ! variables for real-space beta, followed by routines
-  PUBLIC :: real_space, initialisation_level, real_space_debug, &
+  PUBLIC :: real_space, initialisation_level, &
        tg_psic, betasave, maxbox_beta, box_beta
   PUBLIC :: betapointlist, init_realspace_vars, v_loc_psir, v_loc_psir_inplace
   PUBLIC :: invfft_orbital_gamma, fwfft_orbital_gamma, s_psir_gamma, &
@@ -140,16 +139,6 @@ MODULE realus
      ENDIF
      !
      initialisation_level = initialisation_level + 7
-     IF (real_space_debug > 20 .and. real_space_debug < 30) THEN
-       real_space=.false.
-       IF (tqr) THEN
-         tqr = .false.
-         WRITE(stdout,'("Debug level forced tqr to be set false")')
-       ELSE
-         WRITE(stdout,'("tqr was already set false")')
-       ENDIF
-       real_space_debug=real_space_debug-20
-     ENDIF
 
     END SUBROUTINE init_realspace_vars
     !------------------------------------------------------------------------
