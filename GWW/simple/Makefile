@@ -27,16 +27,15 @@ QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
 	../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
 PWOBJS = ../../PW/src/libpw.a
-PW4GWWOBJS = ../pw4gww/libpw4gww.a
 GWWOBJ = ../gww/libgww.a
 
 TLDEPS= pwlibs gwwlib
 
 all : tldeps simple.x
 
-simple.x : simple.o libsimple.a  $(SIMPLEOBJS) $(PWOBJS) $(QEMODS) $(PW4GWWOBJS) $(GWWOBJ)
+simple.x : simple.o libsimple.a  $(SIMPLEOBJS) $(PWOBJS) $(QEMODS) $(GWWOBJ)
 	$(LD) $(LDFLAGS) -o $@ \
-		simple.o libsimple.a $(PWOBJS) $(PW4GWWOBJS) $(GWWOBJ) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS) $(LIBMIN)
+		simple.o libsimple.a $(PWOBJS) $(GWWOBJ) $(QEMODS) $(LIBOBJS) $(QELIBS) $(LIBMIN)
 	- ( cd ../../bin ; ln -fs ../GWW/simple/$@ . )
 
 tldeps :

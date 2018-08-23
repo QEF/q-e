@@ -20,7 +20,7 @@ MODULE fft_rho
   PUBLIC :: rho_r2g, rho_g2r
   !
   INTERFACE rho_g2r
-    MODULE PROCEDURE rho_g2r_x, rho_g2r_sum_components
+    MODULE PROCEDURE rho_g2r_1, rho_g2r_2, rho_g2r_sum_components
   END INTERFACE
   !
 CONTAINS
@@ -94,7 +94,31 @@ CONTAINS
 
   END SUBROUTINE rho_r2g
   !
-  SUBROUTINE rho_g2r_x ( desc, rhog, rhor )
+  SUBROUTINE rho_g2r_1 ( desc, rhog, rhor )
+    USE fft_types,              ONLY: fft_type_descriptor
+    USE fft_helper_subroutines, ONLY: fftx_threed2oned, fftx_oned2threed
+    !
+    TYPE(fft_type_descriptor), INTENT(in) :: desc
+    COMPLEX(dp), INTENT(in ):: rhog(:)
+    REAL(dp),    INTENT(out):: rhor(:)
+    !
+    INTEGER :: ir
+    COMPLEX(dp), ALLOCATABLE :: psi(:)
+
+    ALLOCATE( psi( desc%nnr ) )
+    CALL fftx_oned2threed( desc, psi, rhog )
+    CALL invfft('Rho',psi, desc )
+!$omp parallel do
+    DO ir=1,desc%nnr
+       rhor(ir)=DBLE(psi(ir))
+    END DO
+!$omp end parallel do
+    
+    DEALLOCATE( psi )
+
+  END SUBROUTINE rho_g2r_1
+  !
+  SUBROUTINE rho_g2r_2 ( desc, rhog, rhor )
     USE fft_types,              ONLY: fft_type_descriptor
     USE fft_helper_subroutines, ONLY: fftx_threed2oned, fftx_oned2threed
     !
@@ -150,7 +174,7 @@ CONTAINS
     
     DEALLOCATE( psi )
 
-  END SUBROUTINE rho_g2r_x
+  END SUBROUTINE rho_g2r_2
   !
   SUBROUTINE rho_g2r_sum_components ( desc, rhog, rhor )
     USE fft_types,              ONLY: fft_type_descriptor
