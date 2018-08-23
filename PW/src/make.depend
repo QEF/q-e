@@ -1748,11 +1748,10 @@ scf_mod.o : paw_onecenter.o
 scf_mod.o : pwcom.o
 set_kplusq.o : ../../Modules/kind.o
 set_kup_and_kdw.o : ../../Modules/kind.o
-set_rhoc.o : ../../FFTXlib/fft_interfaces.o
 set_rhoc.o : ../../Modules/atom.o
 set_rhoc.o : ../../Modules/cell_base.o
-set_rhoc.o : ../../Modules/control_flags.o
 set_rhoc.o : ../../Modules/fft_base.o
+set_rhoc.o : ../../Modules/fft_rho.o
 set_rhoc.o : ../../Modules/io_global.o
 set_rhoc.o : ../../Modules/ions_base.o
 set_rhoc.o : ../../Modules/kind.o
