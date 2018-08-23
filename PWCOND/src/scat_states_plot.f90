@@ -12,7 +12,7 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
 ! right-moving scattering states (or Bloch states if ikind = 0).
 !
   use kinds,            ONLY : DP
-  USE constants,        ONLY : tpi, rytoev
+  USE constants,        ONLY : tpi, rytoev, bohr_radius_angs
   use io_global,        ONLY : stdout, ionode
   USE ions_base,        ONLY : ityp, tau, nat, atm
   use noncollin_module, ONLY : noncolin, npol
@@ -58,7 +58,7 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
   allocate( aux_plot(dfftp%nr1*dfftp%nr2*dfftp%nr3) )
 
 !-- z-mezh (in \AA)
-  raux1 = at(3,3)*alat*0.5291772108d0 / dfftp%nr3
+  raux1 = at(3,3)*alat*bohr_radius_angs / dfftp%nr3
   zdata(1) = 0.d0
   do iz = 2, dfftp%nr3
    zdata(iz) = zdata(iz-1) + raux1
