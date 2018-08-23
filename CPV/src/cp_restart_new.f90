@@ -269,20 +269,20 @@ MODULE cp_restart_new
          IF ( lwf ) CALL cp_writecenters ( qexsd_xf, h, wfc)
          !
 !-------------------------------------------------------------------------------
-! ... CONVERGENCE_INFO - TO BE VERIFIED
+! ... CONVERGENCE_INFO - TO BE VERIFIED   
 !-------------------------------------------------------------------------------
-!
+!! @note set lwrite to false for the element P. Delugas 
          CALL qexsd_init_convergence_info(output_obj%convergence_info, &
-              n_scf_steps=0, scf_error=0.0_dp, &
-              opt_conv_ispresent=.FALSE., &
+              scf_has_converged = .FALSE., n_scf_steps=0, scf_error=0.0_dp, &
               n_opt_steps=0, grad_norm=0.0_dp )
+         output_obj%convergence_info%lwrite = .FALSE. 
          !
 !-------------------------------------------------------------------------------
 ! ... ALGORITHMIC_INFO
 !-------------------------------------------------------------------------------
          !
          CALL qexsd_init_algorithmic_info(output_obj%algorithmic_info, &
-              real_space_q=.FALSE., uspp=okvan, paw=.FALSE.)
+              real_space_beta=.FALSE., real_space_q=.FALSE., uspp=okvan, paw=.FALSE.)
          !
 !-------------------------------------------------------------------------------
 ! ... ATOMIC_SPECIES

@@ -337,49 +337,54 @@ CONTAINS
 !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_convergence_info(obj, n_scf_steps, scf_error, &
-                                           opt_conv_ispresent, n_opt_steps, grad_norm )
+    SUBROUTINE qexsd_init_convergence_info(obj, n_scf_steps, scf_has_converged, scf_error, &
+                                           optimization_has_converged, n_opt_steps, grad_norm )
       !------------------------------------------------------------------------
       IMPLICIT NONE
       !
       TYPE(convergence_info_type)   :: obj
       INTEGER,           INTENT(IN) :: n_scf_steps
+      LOGICAL,           INTENT(IN) :: scf_has_converged   
       REAL(DP),          INTENT(IN) :: scf_error
-      LOGICAL,           INTENT(IN) :: opt_conv_ispresent
+      LOGICAL, OPTIONAL, INTENT(IN) :: optimization_has_converged
       INTEGER, OPTIONAL, INTENT(in) :: n_opt_steps
       REAL(DP),OPTIONAL, INTENT(IN) :: grad_norm
       !
       CHARACTER(27)       :: subname="qexsd_init_convergence_info"
       TYPE(scf_conv_type) :: scf_conv
-      TYPE(opt_conv_type) :: opt_conv
+      TYPE(opt_conv_type),POINTER :: opt_conv => NULL() 
       !
-      call qes_init_scf_conv(scf_conv, "scf_conv", n_scf_steps, scf_error)
+      call qes_init_scf_conv(scf_conv, "scf_conv", scf_has_converged, n_scf_steps, scf_error)
       !
-      IF ( opt_conv_ispresent ) THEN
+      IF ( PRESENT(optimization_has_converged ))  THEN
           !
           IF ( .NOT. PRESENT(n_opt_steps) ) CALL errore(subname,"n_opt_steps not present",10)
           IF ( .NOT. PRESENT(grad_norm) )   CALL errore(subname,"grad_norm not present",10)
+          ALLOCATE ( opt_conv) 
           !
-          call qes_init_opt_conv(opt_conv, "opt_conv", n_opt_steps, grad_norm)
+          call qes_init_opt_conv(opt_conv, "opt_conv", optimization_has_converged, n_opt_steps, grad_norm)
       ENDIF
       !
-      call qes_init_convergence_info(obj, "convergence_info", scf_conv, opt_conv_ispresent, opt_conv)
+      call qes_init_convergence_info(obj, "convergence_info", scf_conv, opt_conv)
       !
       call qes_reset_scf_conv(scf_conv)
-      call qes_reset_opt_conv(opt_conv)
+      IF (ASSOCIATED(opt_conv)) THEN
+         CALL qes_reset_opt_conv(opt_conv)
+         NULLIFY ( opt_conv) 
+      END IF 
       !
     END SUBROUTINE qexsd_init_convergence_info
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexsd_init_algorithmic_info(obj, real_space_q, uspp, paw )
+    SUBROUTINE qexsd_init_algorithmic_info(obj, real_space_beta, real_space_q, uspp, paw )
       !------------------------------------------------------------------------
       IMPLICIT NONE
       !
       TYPE(algorithmic_info_type)   :: obj
-      LOGICAL,           INTENT(IN) :: real_space_q, uspp, paw
+      LOGICAL,           INTENT(IN) :: real_space_beta, real_space_q, uspp, paw
       !
-      CALL qes_init_algorithmic_info(obj, "algorithmic_info", real_space_q, uspp, paw)
+      CALL qes_init_algorithmic_info(obj, "algorithmic_info", real_space_beta, real_space_q, uspp, paw)
       !
     END SUBROUTINE qexsd_init_algorithmic_info
     !
@@ -1272,7 +1277,7 @@ CONTAINS
     !----------------------------------------------------------------------------------------
     SUBROUTINE qexsd_step_addstep(i_step, max_steps, ntyp, atm, ityp, nat, tau, alat, a1, a2, a3, &
                                   etot, eband, ehart, vtxc, etxc, ewald, degauss, demet, forces,  &
-                                  stress, n_scf_steps, scf_error, efieldcorr, potstat_contr,      &
+                                  stress, scf_has_converged, n_scf_steps, scf_error, efieldcorr, potstat_contr,      &
                                   fcp_force, fcp_tot_charge, gatefield_en)
     !-----------------------------------------------------------------------------------------
     !! This routing initializes le steps array containing up to max_steps elements of the step_type
@@ -1284,6 +1289,7 @@ CONTAINS
     INTEGER ,INTENT(IN)             :: i_step, max_steps, ntyp, nat, n_scf_steps, ityp(:)
     REAL(DP),INTENT(IN)             :: tau(3,nat), alat, a1(3), a2(3), a3(3), etot, eband, ehart, vtxc, &
                                        etxc, ewald, scf_error, forces(3,nat), stress(3,3) 
+    LOGICAL,INTENT(IN)              :: scf_has_converged 
     REAL(DP),OPTIONAL,INTENT(IN)    :: degauss, demet, gatefield_en, efieldcorr
     REAL(DP),OPTIONAL,INTENT (IN)   :: potstat_contr, fcp_force, fcp_tot_charge       
     CHARACTER(LEN=*),INTENT(IN)     :: atm(:)
@@ -1302,7 +1308,7 @@ CONTAINS
     step_obj%tagname="step"
     step_obj%n_step = step_counter
     !
-    CALL qes_init_scf_conv( scf_conv_obj,"scf_conv", n_scf_steps, scf_error )
+    CALL qes_init_scf_conv( scf_conv_obj,"scf_conv", scf_has_converged, n_scf_steps, scf_error )
     !
     step_obj%scf_conv = scf_conv_obj 
     CALL qes_reset_scf_conv(scf_conv_obj)
