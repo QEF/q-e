@@ -10,7 +10,7 @@ print ""
 
        }
 { if ($3=="atoms/cell" && nr==0) {nat=$5};
-  if ($1=="lattice" && $2=="parameter" && nr==0 ) {alat= $5*0.529177}
+  if ($1=="lattice" && $2=="parameter" && nr==0 ) {alat= $5*0.52917720859}
   if ($1=="a(1)" && nr==0) \
                  {print"* it might be useful to duplicate as follows" ;
                   print "* dup ",$4*alat,$5*alat,$6*alat}
