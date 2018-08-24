@@ -224,6 +224,7 @@ MODULE read_namelists_module
        scdm=.FALSE.
        scdmden=1.0d0
        scdmgrd=1.0d0
+       nscdm=1
        !
        ! ... electric fields
        !
@@ -808,6 +809,7 @@ MODULE read_namelists_module
        CALL mp_bcast( scdm,                ionode_id, intra_image_comm )
        CALL mp_bcast( scdmden,             ionode_id, intra_image_comm )
        CALL mp_bcast( scdmgrd,             ionode_id, intra_image_comm )
+       CALL mp_bcast( nscdm,               ionode_id, intra_image_comm )
        CALL mp_bcast( n_proj,              ionode_id, intra_image_comm )
        CALL mp_bcast( nqx1,                   ionode_id, intra_image_comm )
        CALL mp_bcast( nqx2,                   ionode_id, intra_image_comm )
