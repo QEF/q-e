@@ -997,14 +997,12 @@ MODULE pw_restart_new
          CALL readschema_header( gen_info )
       END IF 
       IF ( ldim ) THEN
-         !         ! 
-
          ! 
-         CALL readschema_dim(par_info, output_obj%atomic_species, output_obj%atomic_structure, output_obj%symmetries, &
-                             output_obj%basis_set, output_obj%band_structure ) 
-         CALL readschema_kdim(output_obj%symmetries,  output_obj%band_structure )
-
-                                                                                                           
+         CALL readschema_dim(par_info, output_obj%atomic_species, &
+              output_obj%atomic_structure, output_obj%symmetries, &
+              output_obj%basis_set, output_obj%band_structure ) 
+         CALL readschema_kdim(output_obj%symmetries, output_obj%band_structure )
+         !
       ENDIF
       !
       IF ( lcell ) THEN
@@ -1071,9 +1069,6 @@ MODULE pw_restart_new
       IF ( lefield .AND. lvalid_input ) CALL readschema_efield ( input_obj%electric_field ) 
       !
       IF ( lexx .AND. output_obj%dft%hybrid_ispresent  ) CALL readschema_exx ( output_obj%dft%hybrid )
-      !
-      !
-      !
       !
       RETURN
       !
