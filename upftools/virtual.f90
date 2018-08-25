@@ -28,8 +28,11 @@ PROGRAM virtual
   USE pseudo_types, ONLY: pseudo_upf, nullify_pseudo_upf
   USE upf_module,   ONLY: read_upf 
   USE write_upf_module, ONLY: write_upf
+  USE environment, ONLY: environment_start, environment_end
+  USE mp_global, ONLY: mp_startup, mp_global_end
+  USE io_global, ONLY: ionode, stdout
   IMPLICIT NONE
-  TYPE (pseudo_upf)     :: upf_in(2), upf_out
+  TYPE (pseudo_upf)     :: upf_input(2), upf_out
   INTEGER :: is, ios, iunps = 4
   real (8) :: x
   CHARACTER (len=256) :: filein(2), fileout
@@ -43,37 +46,50 @@ PROGRAM virtual
         character(len=*),intent(in)         :: filein(2)
      END SUBROUTINE
    END INTERFACE
-  CALL nullify_pseudo_upf(upf_in(1))
-  CALL nullify_pseudo_upf(upf_in(2))
-  CALL nullify_pseudo_upf(upf_out) 
-  PRINT '(" ")'
-  PRINT '(" Generate the UPF pseudopotential for a virtual atom ")'
-  PRINT '(" combining two pseudopootentials in UPF format ")'
-  PRINT '(" ")'
-  !
-  DO is=1,2
-     WRITE(*,'("  Input PP file # ",i2," in UPF format > ")', advance="NO") is
-     READ (5, '(a)', end = 20, err = 20) filein(is)
-     !OPEN(unit=iunps,file=filein(is),status='old',form='formatted',iostat=ios)
-     CALL read_upf( upf_in(is), IERR = ios, FILENAME = TRIM(filein(is)))  
-     IF (ios > 0) STOP
-     WRITE (*,*) " IOS= ", ios, is, TRIM(filein(is)) 
+#if defined(__MPI)
+  CALL mp_startup()
+#endif
+  CALL environment_start('VIRTUAL.X') 
+  IF (ionode) THEN 
+     CALL nullify_pseudo_upf(upf_input(1))
+     CALL nullify_pseudo_upf(upf_input(2))
+     CALL nullify_pseudo_upf(upf_out) 
      PRINT '(" ")'
-  ENDDO
-  PRINT '(" New Pseudo = x ",a," + (1-x) ",a)', (trim(filein(is)), is=1,2)
-10 CONTINUE
-  WRITE(*,'(" mixing parameter x [0<x<1] = ")', advance="NO")
-  READ (5,*) x
-  IF (x<0.d0 .or. x>1)  GOTO 10
+     PRINT '(" Generate the UPF pseudopotential for a virtual atom ")'
+     PRINT '(" combining two pseudopootentials in UPF format ")'
+     PRINT '(" ")'
+     !
+     DO is=1,2
+        WRITE(stdout,'("  Input PP file # ",i2," in UPF format > ")', advance="NO") is
+        FLUSH(stdout) 
+        READ (5, '(a)', end = 20, err = 20) filein(is)
+        !OPEN(unit=iunps,file=filein(is),status='old',form='formatted',iostat=ios)
+        CALL read_upf( upf_input(is), IERR = ios, FILENAME = TRIM(filein(is)))  
+        IF (ios > 0) CALL errore('virtual.x:' , 'error parsing UPF FILE', ios) 
+        WRITE (stdout,*) " IOS= ", ios, is, TRIM(filein(is)) 
+        FLUSH (stdout) 
+        PRINT '(" ")'
+     ENDDO
+     PRINT '(" New Pseudo = x ",a," + (1-x) ",a)', (trim(filein(is)), is=1,2)
+10   CONTINUE
+       WRITE(stdout,'(" mixing parameter x [0<x<1] = ")', advance="NO")
+       FLUSH(stdout)
+       READ (5,*) x
+       IF (x<0.d0 .or. x>1)  GOTO 10
 
-  CALL compute_virtual(x,upf_in(1), upf_in(2), upf_out, filein)
+     CALL compute_virtual(x,upf_input(1), upf_input(2), upf_out, filein)
 
-  fileout='NewPseudo.UPF'
-  PRINT '("Output PP file in UPF format :  ",a)', fileout
+     fileout='NewPseudo.UPF'
+     PRINT '("Output PP file in UPF format :  ",a)', fileout
 
-  CALL write_upf ( TRIM(fileout), upf_out, SCHEMA='v2') 
-
-20 STOP
+     CALL write_upf ( TRIM(fileout), upf_out, SCHEMA='v2') 
+  END IF  
+  CALL environment_end('VIRTUAL.X')
+#if defined(__MPI) 
+  CALL mp_global_end()
+#endif 
+  STOP
+20 CALL errore ('virtual.x', 'error reading pseudo file', 1)   
 END PROGRAM virtual
 !
 !---------------------------------------------------------------------
@@ -102,7 +118,7 @@ SUBROUTINE compute_virtual(x_,upf_in1, upf_in2, upf_out,filein)
      WRITE (*,*) " pseudopotentials have different mesh "
      WRITE (*,*) upf_in1%mesh , upf_in2%mesh
      WRITE (*,*) upf_in1%r(1), upf_in2%r(1)
-     WRITE (*,*) upf_in1%r(upf_in(1)%mesh),upf_in2%r(upf_in(2)%mesh)
+     WRITE (*,*) upf_in1%r(upf_in1%mesh),upf_in2%r(upf_in2%mesh)
      interpolate = .true.
   ENDIF
   IF ( interpolate .AND. upf_in1%mesh .GT. upf_in2%mesh) THEN 
@@ -129,8 +145,9 @@ SUBROUTINE compute_virtual(x_,upf_in1, upf_in2, upf_out,filein)
   upf_out%date  = 'Date unknown '//&
                   'Refer to original pseudopotential files'
   WRITE( xlabel, '(f5.3)' ) x_
-  upf_out%comment    =  trim(filein(1)) // &
-                        "+ " // trim(filein(2)) //". x parm =" // trim(xlabel) 
+  !upf_out%comment    =  trim(filein(1)) // &
+  !                      "+ " // trim(filein(2)) //". x parm =" // trim(xlabel) 
+  upf_out%comment = ""
   upf_out%psd = "Xx"
   upf_out%typ  = "NC"
   IF (upf_in(1)%tvanp .OR. upf_in(2)%tvanp ) THEN 
@@ -434,5 +451,4 @@ SUBROUTINE compute_virtual(x_,upf_in1, upf_in2, upf_out,filein)
                            (1.d0-x) * upf_in(2)%rho_at(1:upf_out%mesh)
 
    END IF
-
 END SUBROUTINE compute_virtual
