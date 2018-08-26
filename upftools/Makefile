@@ -6,7 +6,7 @@ include ../make.inc
 MODFLAGS= $(BASEMOD_FLAGS)
 
 OBJS = write_upf.o read_upf.o
-QEMODS = ../Modules/libqemod.a ../FFTXlib/libqefft.a ../UtilXlib/libutil.a
+QEMODS = ../Modules/libqemod.a ../FFTXlib/libqefft.a  ../LAXlib/libqela.a   ../UtilXlib/libutil.a 
 
 TLDEPS = mods libs libfox
 

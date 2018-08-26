@@ -573,7 +573,7 @@ CONTAINS
      END SUBROUTINE convert_casino
 
 
-     SUBROUTINE write_casino_tab(upf_in, grid)
+     SUBROUTINE write_casino_tab(upf_in, grid, unout)
 
        USE pseudo_types, ONLY : pseudo_upf
        USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
@@ -582,29 +582,32 @@ CONTAINS
 
        TYPE(pseudo_upf), INTENT(in)       :: upf_in
        TYPE(radial_grid_type), INTENT(in) :: grid
-       INTEGER :: i, lp1
+       INTEGER,OPTIONAL                   :: unout 
+       INTEGER :: i, lp1, unout_ 
 
        INTEGER, EXTERNAL :: atomic_number
+       unout_ = 6 
+       IF (PRESENT(unout)) unout_ = unout
 
-       WRITE(6,*) "Converted Pseudopotential in REAL space for ", upf_in%psd
-       WRITE(6,*) "Atomic number and pseudo-charge"
-       WRITE(6,"(I3,F8.2)") atomic_number( upf_in%psd ),upf_in%zp
-       WRITE(6,*) "Energy units (rydberg/hartree/ev):"
-       WRITE(6,*) "rydberg"
-       WRITE(6,*) "Angular momentum of local component (0=s,1=p,2=d..)"
-       WRITE(6,"(I2)") upf_in%lloc
-       WRITE(6,*) "NLRULE override (1) VMC/DMC (2) config gen (0 ==> &
+       WRITE(unout_,*) "Converted Pseudopotential in REAL space for ", upf_in%psd
+       WRITE(unout_,*) "Atomic number and pseudo-charge"
+       WRITE(unout_,"(I3,F8.2)") atomic_number( upf_in%psd ),upf_in%zp
+       WRITE(unout_,*) "Energy units (rydberg/hartree/ev):"
+       WRITE(unout_,*) "rydberg"
+       WRITE(unout_,*) "Angular momentum of local component (0=s,1=p,2=d..)"
+       WRITE(unout_,"(I2)") upf_in%lloc
+       WRITE(unout_,*) "NLRULE override (1) VMC/DMC (2) config gen (0 ==> &
             &input/default VALUE)"
-       WRITE(6,*) "0 0"
-       WRITE(6,*) "Number of grid points"
-       WRITE(6,*) grid%mesh
-       WRITE(6,*) "R(i) in atomic units"
-       WRITE(6, "(T4,E22.15)") grid%r(:)
+       WRITE(unout_,*) "0 0"
+       WRITE(unout_,*) "Number of grid points"
+       WRITE(unout_,*) grid%mesh
+       WRITE(unout_,*) "R(i) in atomic units"
+       WRITE(unout_, "(T4,E22.15)") grid%r(:)
 
        lp1 = size ( vnl, 2 )
        DO i=1,lp1
-          WRITE(6, "(A,I1,A)") 'r*potential (L=',i-1,') in Ry'
-          WRITE(6, "(T4,E22.15)") vnl(:,i)
+          WRITE(unout_, "(A,I1,A)") 'r*potential (L=',i-1,') in Ry'
+          WRITE(unout_, "(T4,E22.15)") vnl(:,i)
        ENDDO
 
      END SUBROUTINE write_casino_tab
