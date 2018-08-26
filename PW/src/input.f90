@@ -1178,15 +1178,9 @@ SUBROUTINE iosys()
   emaxpos_ = emaxpos
   eopreg_  = eopreg
   eamp_    = eamp
-  dfftp%nr1     = nr1
-  dfftp%nr2     = nr2
-  dfftp%nr3     = nr3
   ecfixed_ = ecfixed
   qcutz_   = qcutz
   q2sigma_ = q2sigma
-  dffts%nr1    = nr1s
-  dffts%nr2    = nr2s
-  dffts%nr3    = nr3s
   degauss_ = degauss
   !
   tot_charge_        = tot_charge
@@ -1577,6 +1571,24 @@ SUBROUTINE iosys()
   !
   CALL readpp ( input_dft, .FALSE., ecutwfc_pp, ecutrho_pp )
   CALL set_cutoff ( ecutwfc, ecutrho, ecutwfc_pp, ecutrho_pp )
+  !
+  ! ... ensure that smooth and dense grid coincide when ecutrho=4*ecutwfc
+  ! ... even when the dense grid is set from input and the smooth grid is not
+  !
+  dfftp%nr1    = nr1
+  dfftp%nr2    = nr2
+  dfftp%nr3    = nr3
+  IF ( ( nr1 /= 0 .AND. nr2 /= 0 .AND. nr3 /= 0 ) .AND. &
+       ( nr1s== 0 .AND. nr2s== 0 .AND. nr3s== 0 ) .AND. &
+       ( ecutrho > (4.0_dp+eps8)*ecutwfc ) ) THEN
+     dffts%nr1 = nr1
+     dffts%nr2 = nr2
+     dffts%nr3 = nr3
+  ELSE
+     dffts%nr1 = nr1s
+     dffts%nr2 = nr2s
+     dffts%nr3 = nr3s
+  END IF
   !
   ! ... set parameters of hybrid functionals
   !

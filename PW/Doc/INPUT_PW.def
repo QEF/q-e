@@ -854,13 +854,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
        var use_all_frac -type LOGICAL { 
            default { .FALSE. }
            info {
-               if (.TRUE.) do not discard symmetry operations with an
-               associated fractionary translation that does not send the
-               real-space FFT grid into itself. These operations are 
-               incompatible with real-space symmetrization but not with the
-               new G-space symmetrization. BEWARE: do not use for phonons
-               and for hybrid functionals! Both still use symmetrization
-               in real space.
+               if (.FALSE.) force real-space FFT grids to be commensurate with
+               fractionary translations of non-symmorphic symmetry operations,
+               if present (e.g.: if a fractional translation (0,0,c/4) exists, 
+               the FFT dimension along the c axis must be multiple of 4).
+               if (.TRUE.) do not impose any constraints to FFT grids, even in
+               the presence of non-symmorphic symmetry operations. 
+               BEWARE: use_all_frac=.TRUE. may lead to wrong results for
+               hybrid functionals and phonon calculations. Both cases use 
+               symmetrization in real space that works for non-symmorphic 
+               operations only if the real-space FFT grids are commensurate.
           }
       }
 

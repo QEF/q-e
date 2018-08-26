@@ -48,7 +48,7 @@ SUBROUTINE run_pwscf ( exit_status )
   USE fft_base,         ONLY : dfftp
   USE qmmm,             ONLY : qmmm_initialization, qmmm_shutdown, &
                                qmmm_update_positions, qmmm_update_forces
-  USE qexsd_module,     ONLY:   qexsd_set_status
+  USE qexsd_module,     ONLY : qexsd_set_status
   !
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
@@ -273,13 +273,8 @@ SUBROUTINE reset_gvectors ( )
   USE io_global,  ONLY : stdout
   USE cellmd,     ONLY : lmovecell
   USE basis,      ONLY : starting_wfc, starting_pot
-  USE cell_base,  ONLY : at, bg
   USE fft_base,   ONLY : dfftp
   USE fft_base,   ONLY : dffts
-  USE fft_types,  ONLY : fft_type_allocate
-  USE gvect,      ONLY : gcutm
-  USE gvecs,      ONLY : gcutms
-  USE mp_bands,   ONLY : intra_bgrp_comm, nyfft
   USE control_flags, ONLY : lbfgs, lmd
   IMPLICIT NONE
   !
@@ -301,12 +296,10 @@ SUBROUTINE reset_gvectors ( )
   if (trim(starting_wfc) == 'file') starting_wfc = 'atomic+random'
   starting_pot='atomic'
   !
-  ! ... re-set and re-calculate FFT grid 
+  ! ... re-set FFT grids
   !
   dfftp%nr1=0; dfftp%nr2=0; dfftp%nr3=0
-  CALL fft_type_allocate (dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft)
   dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
-  CALL fft_type_allocate (dffts, at, bg, gcutms,intra_bgrp_comm, nyfft=nyfft)
   !
   CALL init_run()
   !
