@@ -23,7 +23,8 @@ subroutine add_zstar_ue (imode0, npe)
   USE qpoint,   ONLY: nksq
   USE eqv,      ONLY: dpsi, dvpsi
   USE efield_mod, ONLY: zstarue0_rec
-  USE units_ph,   ONLY : iudwf, lrdwf, iuwfc, lrwfc
+  USE units_ph,   ONLY : iudwf, lrdwf
+  USE units_lr,   ONLY : iuwfc, lrwfc
   USE control_lr, ONLY : nbnd_occ
 
   implicit none

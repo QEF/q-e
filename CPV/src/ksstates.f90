@@ -74,9 +74,8 @@ CONTAINS
       SUBROUTINE print_all_states( ctot, iupdwn_tot, nupdwn_tot )
 
         USE kinds,            ONLY : DP
-        USE mp_global,        ONLY : intra_bgrp_comm
-        USE io_global,        ONLY : ionode
-        USE io_global,        ONLY : stdout
+        USE mp_bands,         ONLY : intra_bgrp_comm
+        USE io_global,        ONLY : ionode, stdout
         USE electrons_base,   ONLY : nupdwn, iupdwn, nspin
 
         IMPLICIT NONE
@@ -93,6 +92,7 @@ CONTAINS
         CHARACTER(LEN=10), DIMENSION(2) :: spin_name
         CHARACTER (LEN=6), EXTERNAL :: int_to_char
 
+        CALL errore('print_all_states','unused since a long time, please check',1)
         IF( tksout ) THEN
 
           IF (ionode) THEN
@@ -137,46 +137,56 @@ CONTAINS
 
         USE kinds
         USE mp, ONLY: mp_sum
-        USE io_global, ONLY: ionode, ionode_id
-        USE io_global, ONLY: stdout
-        USE gvecw, ONLY: ngw
-        USE fft_base, ONLY: dfftp, dffts, dfftp
-        USE fft_helper_subroutines, ONLY: c2psi_gamma
+        USE io_global, ONLY: ionode, ionode_id, stdout
+        USE fft_base, ONLY: dfftp, dffts
         USE fft_interfaces, ONLY: invfft
-        USE xml_io_base, ONLY: write_rho
-        USE mp_global,       ONLY: intra_bgrp_comm, inter_bgrp_comm
-
+        USE fft_helper_subroutines, ONLY: c2psi_gamma
+        USE fft_rho, ONLY: rho_r2g
+        USE mp_bands, ONLY: intra_bgrp_comm, inter_bgrp_comm, my_bgrp_id,&
+             root_bgrp_id, root_bgrp
+        USE gvect, ONLY: ig_l2g, mill, ecutrho
+        USE io_base, ONLY: write_rhog
+ 
         IMPLICIT NONE
 
         COMPLEX(DP),      INTENT(IN) :: c(:)
         CHARACTER(LEN=*), INTENT(IN) :: file_name
-        REAL(DP),    ALLOCATABLE :: rpsi2(:)
-        COMPLEX(DP), ALLOCATABLE :: psi(:)
+        COMPLEX(DP), ALLOCATABLE :: psi(:), rhog(:,:)
+        REAL(DP), ALLOCATABLE :: rhor(:,:)
         INTEGER   ::  i
+        ! FIXME: reciprocal lattice vectors
+        REAL(DP) :: bogus1(3), bogus2(3), bogus3(3)
         REAL(DP) :: charge
 
-        ALLOCATE( psi( dfftp%nnr ) )
-        ALLOCATE( rpsi2( dfftp%nnr ) )
+        ALLOCATE( rhor(dfftp%nnr,1), psi(dfftp%nnr) )
 
         CALL c2psi_gamma( dffts, psi, c )
         CALL invfft( 'Wave', psi, dffts )
 
+        ! FIXME: not sure things will work in presence of a double grid
         DO i = 1, dfftp%nnr
-           rpsi2( i ) = DBLE( psi( i ) )**2
+           rhor( i,1 ) = DBLE( psi( i ) )**2
         END DO
-        charge = SUM( rpsi2 )
-
-        ! FIXME: will append "charge_density" to file_name !
-        CALL write_rho( file_name, rpsi2, 1)
-        
+        charge = SUM( rhor )
         CALL mp_sum( charge, intra_bgrp_comm )
+
+        DEALLOCATE( psi )
+        ALLOCATE( rhog(dfftp%ngm,1) )
+        CALL rho_r2g( dfftp, rhor, rhog )
+        DEALLOCATE ( rhor )
+
+        ! Only the first band group collects and writes
+        IF ( my_bgrp_id == root_bgrp_id ) CALL write_rhog &
+                ( file_name, root_bgrp, intra_bgrp_comm, &
+                bogus1, bogus2, bogus3, .true., &
+                mill, ig_l2g, rhog, ecutrho )
 
         IF ( ionode ) THEN
           WRITE( stdout,'(3X,A15," integrated charge : ",F14.5)')  &
      &      TRIM(file_name), charge / DBLE(dfftp%nr1*dfftp%nr2*dfftp%nr3)
         END IF
 
-        DEALLOCATE( rpsi2, psi )
+        DEALLOCATE( rhog )
         ! ...
         RETURN
         ! ...

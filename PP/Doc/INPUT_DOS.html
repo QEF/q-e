@@ -58,11 +58,11 @@
    <p><a href="#idm3">INTRODUCTION</a></p>
    <p><a href="#idm8">&amp;DOS</a></p>
 <blockquote>
-<a href="#idm9">prefix</a> | <a href="#idm12">outdir</a> | <a href="#idm16">ngauss</a> | <a href="#idm20">degauss</a> | <a href="#idm23">Emin</a> | <a href="#idm24">Emax</a> | <a href="#idm27">DeltaE</a> | <a href="#idm29">fildos</a>
+<a href="#idm9">prefix</a> | <a href="#idm12">outdir</a> | <a href="#idm16">bz_sum</a> | <a href="#idm26">ngauss</a> | <a href="#idm30">degauss</a> | <a href="#idm33">Emin</a> | <a href="#idm34">Emax</a> | <a href="#idm37">DeltaE</a> | <a href="#idm39">fildos</a>
 </blockquote>
-   <p><a href="#idm33">Notes</a></p>
-<blockquote><a href="#idm34">Output</a></blockquote>
-<blockquote><a href="#idm38">Important !</a></blockquote>
+   <p><a href="#idm43">Notes</a></p>
+<blockquote><a href="#idm44">Output</a></blockquote>
+<blockquote><a href="#idm48">Important !</a></blockquote>
 </blockquote>
 </blockquote>
    <blockquote>
@@ -120,7 +120,56 @@ directory containing the input data, i.e. the same as in pw.x
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm16"></a><a name="ngauss"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm16"></a><a name="bz_sum"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">bz_sum</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+'smearing' if degauss in given in input 'smearing',
+                        options read from the xml data file otherwise.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote>
+<pre style="margin-bottom: -1em;"> Keyword selecting  the method for BZ summation. Available options are:
+            </pre>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'smearing'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+integration using gaussian smearing. In fact currently
+any string not related to tetrahedra defaults to smearing;
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'tetrahedra'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Tetrahedron method, Bloechl's version:
+P.E. Bloechl, <a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.49.16223">PRB 49, 16223 (1994)</a>
+Requires uniform grid of k-points, to be
+automatically generated in pw.x.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'tetrahedra_lin'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Original linear tetrahedron method.
+To be used only as a reference;
+the optimized tetrahedron method is more efficient.
+            </pre></dd>
+</dl>
+<dl style="margin-left: 1.5em;">
+<dt><tt><span class="flag">'tetrahedra_opt'</span> :</tt></dt>
+<dd><pre style="margin-top: 0em; margin-bottom: -1em;">
+Optimized tetrahedron method:
+see M. Kawamura, <a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.89.094515">PRB 89, 094515 (2014)</a>.
+            </pre></dd>
+</dl>
+</blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm26"></a><a name="ngauss"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ngauss</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -148,7 +197,7 @@ Type of gaussian broadening:
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm20"></a><a name="degauss"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm30"></a><a name="degauss"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">degauss</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -162,7 +211,7 @@ gaussian broadening, Ry (not eV!)
       <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
-<a name="idm23"></a><a name="Emin"></a>Emin, <a name="idm24"></a><a name="Emax"></a>Emax</th>
+<a name="idm33"></a><a name="Emin"></a>Emin, <a name="idm34"></a><a name="Emax"></a>Emax</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
 </tr>
 <tr>
@@ -177,7 +226,7 @@ value of the gaussian smearing if present, will be used.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm27"></a><a name="DeltaE"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm37"></a><a name="DeltaE"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">DeltaE</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -187,7 +236,7 @@ energy grid step (eV)
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm29"></a><a name="fildos"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm39"></a><a name="fildos"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">fildos</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -205,15 +254,15 @@ output file containing DOS(E)
    </td></tr></tbody></table></td></tr>
 </table>
    <blockquote>
-<a name="idm33"><h3>Notes</h3></a>
+<a name="idm43"><h3>Notes</h3></a>
       <blockquote>
-<a name="idm34"><h4>Output</h4></a>
+<a name="idm44"><h4>Output</h4></a>
          <blockquote><pre>
 The total DOS (states/eV plotted vs <i>E</i> in eV) is written to file <a href="#fildos">fildos</a>
          </pre></blockquote>
       </blockquote>
       <blockquote>
-<a name="idm38"><h4>Important !</h4></a>
+<a name="idm48"><h4>Important !</h4></a>
          <blockquote><pre>
 The tetrahedron method is used if
 
@@ -241,7 +290,7 @@ Gaussian broadening is used in all other cases:
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Fri Jun 22 17:11:35 CEST 2018.
+	  This file has been created by helpdoc utility on Tue Aug 14 10:43:55 CEST 2018.
 	</small>
 </body>
 </html>

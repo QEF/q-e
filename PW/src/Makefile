@@ -4,9 +4,8 @@ include ../../make.inc
 
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS) \
-          $(MOD_FLAG)../../KS_Solvers/Davidson \
-          $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../dft-d3/
+
 PWOBJS = \
 pwscf.o 
 
@@ -96,9 +95,9 @@ gk_sort.o \
 gradcorr.o \
 gweights.o \
 g2_kin.o \
+hs_1psi.o \
 h_epsi_her_apply.o \
 h_epsi_her_set.o \
-h_1psi.o \
 h_psi.o \
 h_psi_meta.o \
 hinit0.o \
@@ -162,7 +161,6 @@ potinit.o \
 print_clock_pw.o \
 print_ks_energies.o \
 punch.o \
-pw_restart.o \
 pw_restart_new.o \
 add_qexsd_step.o \
 pw_init_qexsd_input.o \
@@ -173,7 +171,6 @@ pw2casino_write.o \
 qvan2.o \
 rdiagh.o \
 read_conf_from_file.o \
-read_file.o \
 read_file_new.o \
 realus.o \
 remove_atomic_rho.o \
@@ -246,7 +243,8 @@ wannier_clean.o \
 wannier_occ.o \
 wannier_enrg.o
 
-QEMODS=../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a ../../KS_Solvers/CG/libcg.a \
+QEMODS=../../Modules/libqemod.a \
+       ../../KS_Solvers/libks_solvers.a \
        ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 
 TLDEPS=bindir mods libs liblapack libblas dftd3

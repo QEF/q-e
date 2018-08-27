@@ -941,18 +941,22 @@ MODULE qes_read_module
     tmp_node_list => getElementsByTagname(xml_node, "convergence_info")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:outputType","convergence_info: wrong number of occurrences")
+           CALL infomsg("qes_read:outputType","convergence_info: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:outputType","convergence_info: wrong number of occurrences",10)
+           CALL errore("qes_read:outputType","convergence_info: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL qes_read_convergence_info(tmp_node, obj%convergence_info, ierr )
+    IF (tmp_node_list_size>0) THEN
+      obj%convergence_info_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL qes_read_convergence_info(tmp_node, obj%convergence_info, ierr )
+    ELSE
+       obj%convergence_info_ispresent = .FALSE.
+    END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "algorithmic_info")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -4577,25 +4581,57 @@ MODULE qes_read_module
     tmp_node_list => getElementsByTagname(xml_node, "real_space_q")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:electron_controlType","real_space_q: wrong number of occurrences")
+           CALL infomsg("qes_read:electron_controlType","real_space_q: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:electron_controlType","real_space_q: wrong number of occurrences",10)
+           CALL errore("qes_read:electron_controlType","real_space_q: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%real_space_q, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
-          CALL infomsg("qes_read:electron_controlType","error reading real_space_q")
-          ierr = ierr + 1
-       ELSE 
-          CALL errore ("qes_read:electron_controlType","error reading real_space_q",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%real_space_q_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%real_space_q , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:electron_controlType","error reading real_space_q")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:electron_controlType","error reading real_space_q",10)
+         END IF
+      END IF
+    ELSE
+       obj%real_space_q_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "real_space_beta")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:electron_controlType","real_space_beta: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:electron_controlType","real_space_beta: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%real_space_beta_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%real_space_beta , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:electron_controlType","error reading real_space_beta")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:electron_controlType","error reading real_space_beta",10)
+         END IF
+      END IF
+    ELSE
+       obj%real_space_beta_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "tq_smoothing")
@@ -4720,6 +4756,34 @@ MODULE qes_read_module
       END IF
     ELSE
        obj%diago_cg_maxiter_ispresent = .FALSE.
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "diago_ppcg_maxiter")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:electron_controlType","diago_ppcg_maxiter: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:electron_controlType","diago_ppcg_maxiter: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%diago_ppcg_maxiter_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%diago_ppcg_maxiter , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:electron_controlType","error reading diago_ppcg_maxiter")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:electron_controlType","error reading diago_ppcg_maxiter",10)
+         END IF
+      END IF
+    ELSE
+       obj%diago_ppcg_maxiter_ispresent = .FALSE.
     END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "diago_david_ndim")
@@ -7997,6 +8061,30 @@ MODULE qes_read_module
     !
     !
     !
+    tmp_node_list => getElementsByTagname(xml_node, "convergence_achieved")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:scf_convType","convergence_achieved: wrong number of occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:scf_convType","convergence_achieved: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%convergence_achieved, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN 
+          CALL infomsg("qes_read:scf_convType","error reading convergence_achieved")
+          ierr = ierr + 1
+       ELSE 
+          CALL errore ("qes_read:scf_convType","error reading convergence_achieved",10)
+       END IF
+    END IF
+    !
     tmp_node_list => getElementsByTagname(xml_node, "n_scf_steps")
     tmp_node_list_size = getLength(tmp_node_list)
     !
@@ -8066,6 +8154,30 @@ MODULE qes_read_module
     obj%tagname = getTagName(xml_node)
     !
     !
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "convergence_achieved")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:opt_convType","convergence_achieved: wrong number of occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:opt_convType","convergence_achieved: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%convergence_achieved, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN 
+          CALL infomsg("qes_read:opt_convType","error reading convergence_achieved")
+          ierr = ierr + 1
+       ELSE 
+          CALL errore ("qes_read:opt_convType","error reading convergence_achieved",10)
+       END IF
+    END IF
     !
     tmp_node_list => getElementsByTagname(xml_node, "n_opt_steps")
     tmp_node_list_size = getLength(tmp_node_list)
@@ -8158,6 +8270,30 @@ MODULE qes_read_module
           ierr = ierr + 1
        ELSE 
           CALL errore ("qes_read:algorithmic_infoType","error reading real_space_q",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "real_space_beta")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:algorithmic_infoType","real_space_beta: wrong number of occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:algorithmic_infoType","real_space_beta: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%real_space_beta, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN 
+          CALL infomsg("qes_read:algorithmic_infoType","error reading real_space_beta")
+          ierr = ierr + 1
+       ELSE 
+          CALL errore ("qes_read:algorithmic_infoType","error reading real_space_beta",10)
        END IF
     END IF
     !

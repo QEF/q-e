@@ -48,6 +48,7 @@ lr_apply_liouvillian.o : ../../Modules/becmod.o
 lr_apply_liouvillian.o : ../../Modules/cell_base.o
 lr_apply_liouvillian.o : ../../Modules/control_flags.o
 lr_apply_liouvillian.o : ../../Modules/fft_base.o
+lr_apply_liouvillian.o : ../../Modules/funct.o
 lr_apply_liouvillian.o : ../../Modules/io_global.o
 lr_apply_liouvillian.o : ../../Modules/ions_base.o
 lr_apply_liouvillian.o : ../../Modules/kind.o
@@ -414,8 +415,6 @@ lr_readin.o : ../../Modules/io_global.o
 lr_readin.o : ../../Modules/kind.o
 lr_readin.o : ../../Modules/mp_bands.o
 lr_readin.o : ../../Modules/mp_global.o
-lr_readin.o : ../../Modules/mp_images.o
-lr_readin.o : ../../Modules/mp_world.o
 lr_readin.o : ../../Modules/noncol.o
 lr_readin.o : ../../Modules/paw_variables.o
 lr_readin.o : ../../Modules/recvec.o
@@ -430,7 +429,6 @@ lr_readin.o : ../../PW/src/pwcom.o
 lr_readin.o : ../../PW/src/realus.o
 lr_readin.o : ../../PW/src/scf_mod.o
 lr_readin.o : ../../UtilXlib/mp.o
-lr_readin.o : ../../iotk/src/iotk_module.o
 lr_readin.o : lr_charg_resp.o
 lr_readin.o : lr_dav_variables.o
 lr_readin.o : lr_variables.o
@@ -453,6 +451,7 @@ lr_run_nscf.o : ../../Modules/cell_base.o
 lr_run_nscf.o : ../../Modules/control_flags.o
 lr_run_nscf.o : ../../Modules/fft_base.o
 lr_run_nscf.o : ../../Modules/io_files.o
+lr_run_nscf.o : ../../Modules/io_global.o
 lr_run_nscf.o : ../../Modules/mp_bands.o
 lr_run_nscf.o : ../../Modules/recvec.o
 lr_run_nscf.o : ../../PW/src/atomic_wfc_mod.o

@@ -25,7 +25,8 @@ subroutine dvpsi_e2
   USE fft_interfaces,  ONLY : fft_interpolate
   USE scf,             ONLY : rho
   USE qpoint,          ONLY : nksq
-  USE units_ph,        ONLY : lrdrho, iudrho, lrdwf, iudwf, lrwfc, iuwfc
+  USE units_ph,        ONLY : lrdrho, iudrho, lrdwf, iudwf
+  USE units_lr,        ONLY : iuwfc, lrwfc
   USE control_lr,      ONLY : nbnd_occ
   USE ramanm,          ONLY : lrba2, iuba2, lrchf, iuchf, a1j, a2j
   USE mp_pools,        ONLY : my_pool_id, inter_pool_comm

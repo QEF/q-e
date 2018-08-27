@@ -66,6 +66,8 @@ SUBROUTINE c_bands( iter )
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
   ELSE IF ( isolve == 1 ) THEN
      WRITE( stdout, '(5X,"CG style diagonalization")')
+  ELSE IF ( isolve == 2 ) THEN
+     WRITE( stdout, '(5X,"PPCG style diagonalization")')
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   END IF
@@ -141,6 +143,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! ... Two types of iterative diagonalizations are currently used:
   ! ... a) Davidson algorithm (all-band)
   ! ... b) Conjugate Gradient (band-by-band)
+  ! ... b) Projected Preconditioned Conjugate Gradient (block)
   ! ...
   ! ... internal procedures :
   !
@@ -158,7 +161,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE gvect,                ONLY : gstart
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, btype
-  USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, &
+  USE control_flags,        ONLY : ethr, lscf, max_cg_iter, max_ppcg_iter, isolve, &
                                    gamma_only, use_para_diag
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions, ONLY : evc
@@ -179,7 +182,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   REAL (KIND=DP), INTENT(INOUT) :: avg_iter
   !
-  REAL (KIND=DP) :: cg_iter
+  REAL (KIND=DP) :: cg_iter, ppcg_iter
   ! (weighted) number of iterations in Conjugate-Gradient
   INTEGER :: npw, ig, dav_iter, ntry, notconv
   ! number of iterations in Davidson
@@ -190,6 +193,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   LOGICAL :: lrot
   ! .TRUE. if the wfc have already be rotated
   !
+  integer, parameter :: sbsize = 5, rrstep = 7 ! block dimensions used in PPCG 
+  !
 ! Davidson diagonalization uses these external routines on groups of nvec bands
   external h_psi, s_psi, g_psi
 ! subroutine h_psi(npwx,npw,nvec,psi,hpsi)  computes H*psi
@@ -197,10 +202,14 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 ! subroutine g_psi(npwx,npw,nvec,psi,eig)   computes G*psi -> psi
 !------------------------------------------------------------------------
 ! CG diagonalization uses these external routines on a single band
-   external h_1psi, s_1psi
-!  subroutine h_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
-!  subroutine s_1psi(npwx,npw,psi,spsi)  computes S*psi (if needed)
+   external hs_1psi, s_1psi
+!  subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
+!  subroutine s_1psi(npwx,npw,psi,spsi)        computes S*psi (if needed)
 ! In addition to the above ithe initial wfc rotation uses h_psi, and s_psi
+!------------------------------------------------------------------------
+! PPCG diagonalization uses these external routines on groups of bands
+! subroutine h_psi(npwx,npw,nvec,psi,hpsi)  computes H*psi
+! subroutine s_psi(npwx,npw,nvec,psi,spsi)  computes S*psi (if needed)
 
   ALLOCATE( h_diag( npwx, npol ), STAT=ierr )
   IF( ierr /= 0 ) &
@@ -262,9 +271,9 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    IF ( isolve == 1 ) THEN
+    IF ( isolve == 1 .OR. isolve == 2 ) THEN
        !
-       ! ... Conjugate-Gradient diagonalization
+       ! ... (Projected Preconditioned) Conjugate-Gradient diagonalization
        !
        ! ... h_diag is the precondition matrix
        !
@@ -288,11 +297,22 @@ CONTAINS
              !
           END IF
           !
-          CALL rcgdiagg( h_1psi, s_1psi, h_diag, &
+          IF ( isolve == 1 ) THEN
+             CALL rcgdiagg( hs_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
+             !
+             avg_iter = avg_iter + cg_iter
+             !
+          ELSE
+             CALL ppcg_gamma( h_psi, s_psi, okvan, h_diag, &
+                         npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
+                         0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter  )
+             !
+             avg_iter = avg_iter + ppcg_iter
+             !
+          END IF
           !
-          avg_iter = avg_iter + cg_iter
           !
           ntry = ntry + 1
           !
@@ -332,7 +352,7 @@ CONTAINS
              CALL regterg (  h_psi, s_psi, okvan, g_psi, &
                          npw, npwx, nbnd, nbndx, evc, ethr, &
                          et(1,ik), btype(1,ik), notconv, lrot, dav_iter ) !    BEWARE gstart has been removed from call
-          END IF
+          ENDIF
           !
           avg_iter = avg_iter + dav_iter
           !
@@ -396,10 +416,10 @@ CONTAINS
        !
     END IF
     !
-    !write (*,*) ' current isolve value ( 1 CG, 2 Davidson)', isolve; FLUSH(6)
-    IF ( isolve == 1 ) THEN
+    !write (*,*) ' current isolve value ( 0 Davidson, 1 CG, 2 PPCG)', isolve; FLUSH(6)
+    IF ( isolve == 1 .OR. isolve == 2) THEN
        !
-       ! ... Conjugate-Gradient diagonalization
+       ! ... (Projected Preconditioned) Conjugate-Gradient diagonalization
        !
        ! ... h_diag is the precondition matrix
        !
@@ -426,12 +446,22 @@ CONTAINS
              !
           END IF
           !
-          CALL ccgdiagg( h_1psi, s_1psi, h_diag, &
+          IF ( isolve == 1) then
+             CALL ccgdiagg( hs_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
-          !
-          avg_iter = avg_iter + cg_iter
-          !
+             !
+             avg_iter = avg_iter + cg_iter
+             !
+          ELSE
+! BEWARE npol should be added to the arguments
+             CALL ppcg_k( h_psi, s_psi, okvan, h_diag, &
+                         npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
+                         0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter)
+             !
+             avg_iter = avg_iter + ppcg_iter
+             !
+          END IF
           ntry = ntry + 1
           !
           ! ... exit condition
@@ -629,6 +659,8 @@ SUBROUTINE c_bands_nscf( )
      WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
   ELSE IF ( isolve == 1 ) THEN
      WRITE( stdout, '(5X,"CG style diagonalization")')
+  ELSE IF ( isolve == 2 ) THEN
+     WRITE( stdout, '(5X,"PPCG style diagonalization")')
   ELSE
      CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
   END IF

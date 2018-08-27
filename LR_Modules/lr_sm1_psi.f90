@@ -79,7 +79,7 @@ CONTAINS
     USE becmod,   ONLY : bec_type,becp,calbec
     USE realus,   ONLY : real_space, invfft_orbital_gamma, initialisation_level, &
                          fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
-                         v_loc_psir, s_psir_gamma, real_space_debug
+                         v_loc_psir, s_psir_gamma
     USE lrus,     ONLY : bbg
     !
     IMPLICIT NONE
@@ -205,7 +205,7 @@ CONTAINS
     ! and put the result in becp.
     ! becp(ikb,jbnd) = \sum_G vkb^*(ikb,G) psi(G,jbnd) = <beta|psi>
     !
-    IF (real_space_debug>3) THEN 
+    IF (real_space) THEN 
        !
        DO ibnd=1,m,2
           CALL invfft_orbital_gamma(psi,ibnd,m)

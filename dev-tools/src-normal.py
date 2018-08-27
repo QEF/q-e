@@ -9,7 +9,7 @@
 #   b) remove trailing space
 #   c) normalize multiword keywords
 #   d) normalize capitalization of keywords and intrinsics
-#   d) replace old relational operators (.eq., .gt., etc.) by new ones (==, >, etc.)
+#   e) replace old relational operators (.eq., .gt., etc.) by new ones (==, >, etc.)
 # The script skips comments and strings within the code
 
 import sys,re

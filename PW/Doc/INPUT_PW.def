@@ -854,13 +854,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
        var use_all_frac -type LOGICAL { 
            default { .FALSE. }
            info {
-               if (.TRUE.) do not discard symmetry operations with an
-               associated fractionary translation that does not send the
-               real-space FFT grid into itself. These operations are 
-               incompatible with real-space symmetrization but not with the
-               new G-space symmetrization. BEWARE: do not use for phonons
-               and for hybrid functionals! Both still use symmetrization
-               in real space.
+               if (.FALSE.) force real-space FFT grids to be commensurate with
+               fractionary translations of non-symmorphic symmetry operations,
+               if present (e.g.: if a fractional translation (0,0,c/4) exists, 
+               the FFT dimension along the c axis must be multiple of 4).
+               if (.TRUE.) do not impose any constraints to FFT grids, even in
+               the presence of non-symmorphic symmetry operations. 
+               BEWARE: use_all_frac=.TRUE. may lead to wrong results for
+               hybrid functionals and phonon calculations. Both cases use 
+               symmetrization in real space that works for non-symmorphic 
+               operations only if the real-space FFT grids are commensurate.
           }
       }
 
@@ -1174,7 +1177,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                 PRB 84, 115108 (2011).
             }
         }
-        var Hubbard_J(i,ityp) { 
+        multidimension  Hubbard_J  -start 1,1 -end 3,ntyp -indexes i,ityp -type REAL { 
             default { 0.D0 for all species }
             info {
                 Hubbard_J(i,ityp): J parameters (eV) for species ityp, 
@@ -1188,15 +1191,18 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
         
-        var starting_ns_eigenvalue(m,ispin,I) -type REAL { 
+        multidimension  starting_ns_eigenvalue  -indexes m,ispin,ityp -start 1,1,1 -end 2*lmax+1,nspin\ or\ npol,ntyp  -type REAL { 
             default { -1.d0 that means NOT SET }
             info {
                 In the first iteration of an DFT+U run it overwrites
                 the m-th eigenvalue of the ns occupation matrix for the
-                ispin component of atomic species I. Leave unchanged
-                eigenvalues that are not set. This is useful to suggest
-                the desired orbital occupations when the default choice
-                takes another path.
+                ispin component of atomic species ityp. 
+                For the noncolin case the ispin index runs up to npol. 
+                The value lmax  is given by the maximum angular momentum 
+                number to which the Hubbard U is applied. 
+                Leave unchanged eigenvalues that are not set. 
+                This is useful to suggest the desired orbital occupations 
+                when the default choice takes another path.
             }
         }
 
@@ -2087,11 +2093,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
         var tqr -type LOGICAL { 
             default { .FALSE. }
             info {
-                If .true., use the real-space algorithm for augmentation
-                charges in ultrasoft pseudopotentials.
-                Must faster execution of ultrasoft-related calculations,
-                but numerically less accurate than the default algorithm.
-                Use with care and after testing!
+                If .true., use a real-space algorithm for augmentation
+                charges of ultrasoft pseudopotentials and PAWsets.
+                Faster but numerically less accurate than the default
+		G-space algorithm. Use with care and after testing!
+            }
+        }
+
+        var real_space -type LOGICAL { 
+            default { .FALSE. }
+            info {
+                If .true., exploit real-space localization to compute
+		matrix elements for nonlocal projectors. Faster and in
+		principle better scaling than the default G-space algorithm,
+                but numerically less accurate, may lead to some loss of
+		translational invariance. Use with care and after testing!
             }
         }
     }

@@ -180,7 +180,7 @@ CONTAINS
     ! gamma_only case
     !  
     USE becmod, ONLY : becp,  calbec
-    USE realus, ONLY : real_space, real_space_debug, invfft_orbital_gamma, &
+    USE realus, ONLY : real_space, invfft_orbital_gamma, &
                        fwfft_orbital_gamma, calbec_rs_gamma,  s_psir_gamma
     use gvect,  only : gstart
 
@@ -211,7 +211,7 @@ CONTAINS
     !
     !    And apply S again
     !
-    IF (real_space_debug >6 ) THEN
+    IF (real_space ) THEN
        DO ibnd=1,m,2
           CALL invfft_orbital_gamma(hpsi,ibnd,m)
           CALL calbec_rs_gamma(ibnd,m,becp%r)

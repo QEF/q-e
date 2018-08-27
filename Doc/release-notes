@@ -1,9 +1,30 @@
+New in development version:
+  * XDM now works also for USPP and norm-conserving PP
+
+Problems fixed in development version:
+  * Printout of wall time was sometimes incorrect (courtesy Daniel Pinkal)
+  * 'make install' and 'make -j' cases fixed (maybe)
+  * The restart option in turboEELS (turbo_eels.x) with ultrasoft
+    pseudopotentials was not working.
+  * bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
+
 Incompatible changes in development version:
+  * Non-symmorphic operations are always allowed and the FFT grid is made
+    commensurate. Meaning and usage of input variable "use_all_frac" changed.
+  * Old format (-D__OLDXML) deleted. Everything should work as before but some
+    exotic options might have problems. The following utilities no longer work:
+    - cppp.x (was reading old format only)
+    - importexport.x (use hdf5 for portable data)
+    - bgw2pw.x (was writing old format only)
+  * Several routines moved from PHonon/PH to LR_Modules
   * Module "wavefunctions_module" renamed "wavefunctions"
 
+Known problems in development version:
+  * Frequent "dexx is negative" errors with hybrid functionals
+
 New in 6.3 version:
-  * New implementation, using  a more robust algorithm for the Wigner-Size construction in  EPW. 
-    (Samuel Ponce and Carla Verdi) 
+  * New implementation, using  a more robust algorithm for the Wigner-Seitz 
+    construction in EPW (Samuel Ponce and Carla Verdi) 
   * New application for optical spectra computation using optimized basis sets 
    (Paolo Umari, Nicola Marzari and Giovanni Prandini).  
 
@@ -29,7 +50,7 @@ New in 6.3 version:
          Support for exclude bands
          Calculation of velocity beyond the local approximation (experimental)
 
-Problems fixed in development version:
+Problems fixed in 6.3 version:
 
   * Stress with hybrid functionals and Gamma point was grossly wrong
     (5ed148646)
@@ -84,6 +105,11 @@ Problems fixed in development version:
     containing "&" in the header section (Dec.20, 2017)
 
   * PWscf in "manypw" mode wasn't working due to a bad IF (Dec.12, 2017)
+
+Known problems in 6.3 version:
+
+  * CP does not compile if the old XML format is enabled (-D__OLDXML)
+  * the 'make install' and 'make -j' commands do not work
 
 Incompatible changes in 6.3  version:
 

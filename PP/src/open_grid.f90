@@ -219,13 +219,6 @@ PROGRAM open_grid
   calculation = 'bands'
   k_points = "automatic"
   CALL init_start_k(nk1,nk2,nk3, k1, k2, k3, "automatic",nks/nspin_mag, xk, wk)
-#if defined(__OLDXML)
-#else
-  !
-  ! HACK: rebuild input structure, this uses unallocated stuff
-  !print*, nk1, nk2, nk3, k1, k2, k3, k_points
-  !CALL pw_init_qexsd_input(qexsd_input_obj, obj_tagname="input")
-#endif
   !
   ! Restore EXX variables
   use_ace = use_ace_back

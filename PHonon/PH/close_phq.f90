@@ -18,8 +18,9 @@ SUBROUTINE close_phq( flag )
   USE io_global,     ONLY : ionode, stdout
   USE buffers,       ONLY : close_buffer
   USE uspp,          ONLY : okvan
-  USE units_ph,      ONLY : iuwfc, iudwf, iubar, iudrhous, iuebar, iudrho, &
+  USE units_ph,      ONLY : iudwf, iubar, iudrhous, iuebar, iudrho, &
                             iudvscf, iucom, iudvkb3, iuint3paw, iudyn
+  USE units_lr,      ONLY : iuwfc
   USE control_ph,    ONLY : zue, epsil, only_wfc
   USE recover_mod,   ONLY : clean_recover
   USE output,        ONLY : fildrho, fildvscf

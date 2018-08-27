@@ -602,6 +602,16 @@ prior to compilation of a2fmod.o - {\tt make} will take care of this.}
 resulting from many years of experiments on many different machines.
 Handle with care: what works for you may break other cases.
 
+{\bf BEWARE 2:} parallel make (\texttt{make -j N}) works only if all
+needed dependencies are in place. Note that parallel make does not 
+necessarily execute targets in the order they appear, e.g.: if you have
+\begin{verbatim}
+all : a b c d
+\end{verbatim}
+and "d" depends upon "a", that dependency must be explicitly present
+in the Makefiles, or else parallel make will not work (or will work 
+only erratically).
+
 \subsubsection{Preprocessing}
 
 \label{SubSec:CPP}
@@ -1137,7 +1147,7 @@ Solutions:
 \item use binary I/O for large records
 \item exploit the file system for organizing data
 \item use XML
-\item use a small specialized library (iotk) to read, parse, write
+\item use a specialized library (FoX) to read, parse, write
 \item ensure the possibility to convert to a portable formatted file
 \end{itemize}
 Integration with other packages:
@@ -1225,6 +1235,8 @@ example:
 in this order (some compilers complain if you put the second line
 before the first).
 \end{itemize}
+The \texttt{dev-tools/} directory contains some useful tools for developers;
+see the \texttt{dev-tools/README.md} file.
 
 \subsection{Adding or modifying input variables}
 
@@ -1304,10 +1316,10 @@ for serious bugs.
 
 Development can proceed in different ways:
 \begin{enumerate}
-\item Via ``merge'' requests from a private repository 
-	({\em recommended})
-\item Via ``merge'' requests from a branch
-	({\em not recommended})
+\item Via ``merge'' requests from a branch in the developer's repository 
+      forked from the q-e repository ({\em recommended})
+\item Via ``merge'' requests from a branch of the q-e repository
+      ({\em not recommended})
 \item Directly into the ``develop'' branch
 \end{enumerate}
 The first option is the recommended one. Register on GitLab and {\em save
@@ -1343,10 +1355,10 @@ Beware! you may need to manually merge files that have been modified both
 by you and in the repository.
 The stash can be cleared using \texttt{git stash clear}.
 
-%Note: it is good practice to use \verb|git fetch| before a pull, as in, e.g.:
-%\begin{quote}
-%  \verb|git fetch  git@gitlab.com:QEF/q-e.git develop|
-%\end{quote}
+Note: if you do not change sources but only documentation, tests, examples,
+add \verb|[skip ci]| in the commit message. This prevents execution of 
+automatic compilation on GitLab (that sometimes fails for no good reason,
+blocking a subsequent merge request).
 
 You may repeat the procedure above, adding more commits to your local copy.
 Unlike in svn, you need to explicitly {\em push} (publish) them to the remote

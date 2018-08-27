@@ -6,10 +6,6 @@ include ../../make.inc
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../pw4gww $(MOD_FLAG)../../PW/src 
 
-#location of needed libraries
-LIBOBJS= ../../iotk/src/libiotk.a  \
-         ../../clib/clib.a 
-
 SIMPLEIPOBJS = \
 simple_ip_objects.o \
 start_end.o \
@@ -20,13 +16,14 @@ diagonalization.o \
 dielectric.o  
 
 
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a \
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
+        ../../KS_Solvers/libks_solvers.a \
 	../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 
 LIBMIN= 
 
-TLDEPS=bindir mods libs libiotk pw
+TLDEPS=pwlibs
 
 all : tldeps simple_ip.x  libsimple_ip.a
 

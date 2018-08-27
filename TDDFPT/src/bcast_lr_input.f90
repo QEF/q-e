@@ -15,7 +15,7 @@ SUBROUTINE bcast_lr_input
 
   USE lr_variables
   USE lr_dav_variables
-  USE realus,              ONLY: real_space, real_space_debug
+  USE realus,              ONLY: real_space
   USE mp,                  ONLY: mp_bcast, mp_barrier
   USE io_files,            ONLY: tmp_dir, prefix, wfc_dir
   USE control_flags,       ONLY: tqr, tddfpt
@@ -46,7 +46,6 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (ltammd, ionode_id, world_comm )
   CALL mp_bcast (pseudo_hermitian, ionode_id, world_comm )
   CALL mp_bcast (real_space, ionode_id, world_comm )
-  CALL mp_bcast (real_space_debug, ionode_id, world_comm )
   CALL mp_bcast (tqr, ionode_id, world_comm )
   CALL mp_bcast (test_case_no, ionode_id, world_comm )
   CALL mp_bcast (omeg, ionode_id, world_comm )

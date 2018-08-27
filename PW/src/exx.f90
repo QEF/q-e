@@ -103,6 +103,7 @@ MODULE exx
     USE recvec_subs,  ONLY : ggen, ggens
     USE fft_base,     ONLY : smap
     USE fft_types,    ONLY : fft_type_init
+    USE symm_base,    ONLY : fft_fact
     USE mp_exx,       ONLY : nproc_egrp, negrp, intra_egrp_comm
     USE mp_bands,     ONLY : nproc_bgrp, intra_bgrp_comm, nyfft
     !
@@ -160,7 +161,8 @@ MODULE exx
        !
        lpara = ( nproc_bgrp > 1 )
        CALL fft_type_init( dfftt, smap, "rho", gamma_only, lpara, &
-            intra_bgrp_comm, at, bg, gcutmt, gcutmt/gkcut, nyfft=nyfft )
+            intra_bgrp_comm, at, bg, gcutmt, gcutmt/gkcut, &
+            fft_fact=fft_fact, nyfft=nyfft )
        CALL ggens( dfftt, gamma_only, at, g, gg, mill, gcutmt, ngmt, gt, ggt )
        gstart_t = gstart
        npwt = n_plane_waves (ecutwfc/tpiba2, nks, xk, gt, ngmt)
@@ -173,7 +175,8 @@ MODULE exx
             negrp
        lpara = ( nproc_egrp > 1 )
        CALL fft_type_init( dfftt, smap_exx, "rho", gamma_only, lpara, &
-            intra_egrp_comm, at, bg, gcutmt, gcutmt/gkcut, nyfft=nyfft )
+            intra_egrp_comm, at, bg, gcutmt, gcutmt/gkcut, &
+            fft_fact=fft_fact, nyfft=nyfft )
        ngmt = dfftt%ngm
        ngmt_g = ngmt
        CALL mp_sum( ngmt_g, intra_egrp_comm )

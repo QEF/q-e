@@ -52,7 +52,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
                                    & fwfft_orbital_gamma,&
                                    & calbec_rs_gamma, newq_r, &
                                    & add_vuspsir_gamma, v_loc_psir,   &
-                                   & s_psir_gamma, real_space_debug,  &
+                                   & s_psir_gamma, &
                                    & betasave, box_beta, maxbox_beta
   USE dfunct,               ONLY : newq
   USE control_flags,        ONLY : tqr
@@ -62,6 +62,7 @@ SUBROUTINE lr_apply_liouvillian( evc1, evc1_new, interaction )
   USE becmod,               ONLY : bec_type, becp, calbec
   USE lr_exx_kernel
   USE dv_of_drho_lr
+  USE funct,                ONLY : start_exx, stop_exx
   !
   IMPLICIT NONE
   !
@@ -440,7 +441,7 @@ CONTAINS
              CALL lr_exx_apply_revc_int(psic, ibnd, nbnd,1)
           ENDIF
           !
-          IF (real_space_debug > 7 .and. okvan .and. nkb > 0) THEN
+          IF (real_space .and. okvan .and. nkb > 0) THEN
           !THE REAL SPACE PART (modified from s_psi)
                   !fac = sqrt(omega)
                   !
@@ -513,7 +514,7 @@ CONTAINS
 #endif
        IF (dffts%has_task_groups) DEALLOCATE (tg_dvrss)
        !
-       IF( nkb > 0 .and. okvan .and. real_space_debug <= 7) THEN
+       IF( nkb > 0 .and. okvan .and. .not.real_space) THEN
           !The non real_space part
           CALL dgemm( 'N', 'N', 2*ngk(1), nbnd, nkb, 1.d0, vkb, &
                2*npwx, becp2, nkb, 1.d0, evc1_new, 2*npwx )
@@ -529,13 +530,19 @@ CONTAINS
     ! The kinetic energy g2kin was already computed when
     ! calling the routine lr_solve_e.
     !
+    ! vexx is already computed in lr_exx_kernel
+    !
+    IF (lr_exx) CALL stop_exx()
+    !
     ! Compute sevc1_new = H*evc1
     !
     CALL h_psi(npwx,ngk(1),nbnd,evc1(1,1,1),sevc1_new(1,1,1))
     !
+    IF (lr_exx) CALL start_exx()
+    !
     ! Compute spsi1 = S*evc1 
     !
-    IF (real_space_debug > 9 ) THEN
+    IF (real_space) THEN
         DO ibnd = 1,nbnd,2
            CALL invfft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
            CALL s_psir_gamma(ibnd,nbnd)

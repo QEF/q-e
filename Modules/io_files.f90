@@ -12,6 +12,8 @@ MODULE io_files
   USE parameters, ONLY: ntypx
   USE kinds,      ONLY: dp
   USE io_global,  ONLY: ionode, ionode_id, stdout
+  USE mp,         ONLY : mp_barrier, mp_bcast, mp_sum
+  USE mp_images,  ONLY : me_image, intra_image_comm, nproc_image
   !
   ! ... I/O related variables: file names, units, utilities
   ! ... IMPORTANT: when directory names are set, they must always end with "/"
@@ -20,7 +22,7 @@ MODULE io_files
   !
   SAVE
   PUBLIC :: create_directory, check_tempdir, clean_tempdir, check_file_exist, &
-       delete_if_present, check_writable
+       delete_if_present, check_writable, restart_dir, check_restartfile
   !
   ! ... directory for all temporary files
   CHARACTER(len=256) :: tmp_dir = './'
@@ -42,20 +44,14 @@ MODULE io_files
   CHARACTER(len=256) :: pseudo_dir_cur = ' '
   CHARACTER(len=256) :: psfile( ntypx ) = 'UPF'
   !
-  CHARACTER(len=256) :: qexml_version = ' '       ! the format of the current qexml datafile 
-  LOGICAL            :: qexml_version_init = .FALSE.  ! whether the fmt has been read or not
-  !
-!
   CHARACTER(LEN=256) :: qexsd_fmt = ' ', qexsd_version = ' '
   LOGICAL            :: qexsd_init = .FALSE. 
-!
+  ! ... next two variables obsolete?
   CHARACTER(LEN=256) :: input_drho = ' '          ! name of the file with the input drho
   CHARACTER(LEN=256) :: output_drho = ' '         ! name of the file with the output drho
   !
   CHARACTER(LEN=5 ), PARAMETER :: crash_file  = 'CRASH'
   CHARACTER (LEN=261) :: exit_file = 'os.EXIT' ! file required for a soft exit  
-  !
-  CHARACTER (LEN=13), PARAMETER :: xmlpun      = 'data-file.xml'
   !
   CHARACTER (LEN=20), PARAMETER :: xmlpun_schema = 'data-file-schema.xml'
   !
@@ -110,8 +106,6 @@ CONTAINS
     !------------------------------------------------------------------------
     !
     USE wrappers,  ONLY : f_mkdir_safe
-    USE mp,        ONLY : mp_barrier, mp_bcast
-    USE mp_images, ONLY : me_image, intra_image_comm
     !
     CHARACTER(LEN=*), INTENT(IN) :: dirname
     !
@@ -156,8 +150,6 @@ CONTAINS
     ! ...    pfs = .t. if tmp_dir visible from all procs of an image
     !
     USE wrappers,      ONLY : f_mkdir_safe
-    USE mp_images,     ONLY : intra_image_comm, nproc_image, me_image
-    USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
     !
     IMPLICIT NONE
     !
@@ -220,9 +212,6 @@ CONTAINS
   !------------------------------------------------------------------------
   FUNCTION check_file_exist( filename )
     !------------------------------------------------------------------------
-    !
-    USE mp,        ONLY : mp_bcast
-    USE mp_images, ONLY : intra_image_comm
     !
     IMPLICIT NONE
     !
@@ -314,7 +303,70 @@ CONTAINS
     !
     !-----------------------------------------------------------------------
   END FUNCTION check_writable 
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  !
+  !
+  !------------------------------------------------------------------------
+  FUNCTION restart_dir( outdir, runit )
+    !------------------------------------------------------------------------
+    !
+    ! CP specific
+    CHARACTER(LEN=256)           :: restart_dir
+    CHARACTER(LEN=*), INTENT(IN) :: outdir
+    INTEGER,          INTENT(IN) :: runit
+    !
+    CHARACTER(LEN=256)         :: dirname
+    INTEGER                    :: strlen
+    CHARACTER(LEN=6), EXTERNAL :: int_to_char
+    !
+    ! ... main restart directory
+    !
+    dirname = TRIM( prefix ) // '_' // TRIM( int_to_char( runit ) )// '.save/'
+    !
+    IF ( LEN( outdir ) > 1 ) THEN
+       !
+       strlen = INDEX( outdir, ' ' ) - 1
+       !
+       dirname = outdir(1:strlen) // '/' // dirname
+       !
+    END IF
+    !
+    restart_dir = TRIM( dirname )
+    !
+    RETURN
+    !
+    END FUNCTION restart_dir
+    !
+    !------------------------------------------------------------------------
+    FUNCTION check_restartfile( outdir, ndr )
+      !------------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL                      :: check_restartfile
+      INTEGER,          INTENT(IN) :: ndr
+      CHARACTER(LEN=*), INTENT(IN) :: outdir
+      CHARACTER(LEN=256)           :: filename
+      LOGICAL                      :: lval
+      !
+      !
+      filename = restart_dir( outdir, ndr )
+      !
+      IF ( ionode ) THEN
+         !
+         filename = TRIM( filename ) // '/' // TRIM( xmlpun_schema )
+         !
+         INQUIRE( FILE = TRIM( filename ), EXIST = lval )
+         !
+      END IF
+      !
+      CALL mp_bcast( lval, ionode_id, intra_image_comm )
+      !
+      check_restartfile = lval
+      !
+      RETURN
+      !
+    END FUNCTION check_restartfile
 !
 !-----------------------------------------------------------------------
 subroutine diropn (unit, extension, recl, exst, tmp_dir_)

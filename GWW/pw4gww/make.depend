@@ -304,7 +304,6 @@ pw4gww.o : ../../PW/src/ldaU.o
 pw4gww.o : ../../PW/src/pwcom.o
 pw4gww.o : ../../PW/src/scf_mod.o
 pw4gww.o : ../../UtilXlib/mp.o
-pw4gww.o : ../../iotk/src/iotk_module.o
 pw4gww.o : exchange_custom.o
 realus.o : ../../Modules/cell_base.o
 realus.o : ../../Modules/control_flags.o

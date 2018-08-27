@@ -1,9 +1,6 @@
 subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   !-----------------------------------------------------------------------
   !
-  use iotk_module
-
-
   use kinds,          ONLY : DP 
   use pwcom  
   use cell_base,      ONLY : tpiba2, bg
@@ -55,7 +52,6 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   real(DP) :: wfc_scal 
   logical :: twf0, twfm
-  character(iotk_attlenx) :: attr
   complex(DP), allocatable :: sevc (:,:)
 
   call start_clock('read_export')

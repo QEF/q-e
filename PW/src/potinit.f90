@@ -38,7 +38,6 @@ SUBROUTINE potinit()
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, v, vrs, kedtau
   USE funct,                ONLY : dft_is_meta
-  USE wavefunctions, ONLY : psic
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth, &
                                    niter_with_fixed_ns
@@ -49,12 +48,8 @@ SUBROUTINE potinit()
   USE mp_bands ,            ONLY : intra_bgrp_comm, root_bgrp
   USE io_global,            ONLY : ionode, ionode_id
   USE io_rho_xml,           ONLY : read_scf
-#if defined(__OLDXML)
-  USE xml_io_base,          ONLY : read_rho
-#else
   USE io_base,              ONLY : read_rhog
-  USE fft_rho,              ONLY : rho_g2r
-#endif
+  USE fft_rho,              ONLY : rho_g2r, rho_r2g
   !
   USE uspp,                 ONLY : becsum
   USE paw_variables,        ONLY : okpaw, ddd_PAW
@@ -68,41 +63,32 @@ SUBROUTINE potinit()
   REAL(DP)              :: fact
   INTEGER               :: is
   LOGICAL               :: exst 
-  CHARACTER(LEN=256)    :: dirname, filename
+  CHARACTER(LEN=320)    :: filename
   !
   CALL start_clock('potinit')
   !
-  dirname = TRIM(tmp_dir) // TRIM (prefix) // postfix
+  filename = TRIM(tmp_dir) // TRIM (prefix) // postfix // 'charge-density'
 #if defined __HDF5
-  filename = TRIM(dirname) // 'charge-density.hdf5'
+  exst     =  check_file_exist( TRIM(filename) // '.hdf5' )
 #else 
-  filename = TRIM(dirname) // 'charge-density.dat'
+  exst     =  check_file_exist( TRIM(filename) // '.dat' )
 #endif
-  exst     =  check_file_exist( TRIM(filename) )
   !
   IF ( starting_pot == 'file' .AND. exst ) THEN
      !
      ! ... Cases a) and b): the charge density is read from file
-     ! ... this also reads rho%ns if lda+U and rho%bec if PAW
+     ! ... this also reads rho%ns if lda+U, rho%bec if PAW, rho%kin if metaGGA
      !
      IF ( .NOT.lforcet ) THEN
         CALL read_scf ( rho, nspin, gamma_only )
-#if !defined (__OLDXML)
-        CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
-#endif
      ELSE
         !
         ! ... 'force theorem' calculation of MAE: read rho only from previous
         ! ... lsda calculation, set noncolinear magnetization from angles
         !
-#if defined (__OLDXML)
-        CALL read_rho ( dirname, rho%of_r, 2 )
-#else
-        CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
+        CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, rho%of_g, gamma_only )
-        CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
-#endif
-        CALL nc_magnetization_from_lsda ( dfftp%nnr, nspin, rho%of_r )
+        CALL nc_magnetization_from_lsda ( dfftp%ngm, nspin, rho%of_g )
      END IF
      !
      IF ( lscf ) THEN
@@ -130,7 +116,7 @@ SUBROUTINE potinit()
      WRITE( UNIT = stdout, &
             FMT = '(/5X,"Initial potential from superposition of free atoms")' )
      !
-     CALL atomic_rho( rho%of_r, nspin )
+     CALL atomic_rho_g( rho%of_g, nspin )
 
      ! ... in the lda+U case set the initial value of ns
      IF (lda_plus_u) THEN
@@ -151,36 +137,27 @@ SUBROUTINE potinit()
         IF ( nspin > 1 ) CALL errore &
              ( 'potinit', 'spin polarization not allowed in drho', 1 )
         !
-#if defined (__OLDXML)
-        CALL read_rho ( dirname, v%of_r, 1, input_drho )
-#else
-        CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
+        filename = TRIM(tmp_dir) // TRIM (prefix) // postfix // input_drho
+        CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
              ig_l2g, nspin, v%of_g, gamma_only )
-        CALL rho_g2r ( dfftp, v%of_g, v%of_r )
-#endif
         !
         WRITE( UNIT = stdout, &
                FMT = '(/5X,"a scf correction to at. rho is read from",A)' ) &
-            TRIM( input_drho )
+            TRIM( filename )
         !
-        rho%of_r = rho%of_r + v%of_r
+        rho%of_g = rho%of_g + v%of_g
         !
      END IF
      !
   END IF
   !
-  ! ... check the integral of the starting charge
+  ! ... check the integral of the starting charge, renormalize if needed
   !
-  IF ( nspin == 2 ) THEN
-     !
-     charge = SUM ( rho%of_r(:,1:nspin) )*omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
-     !
-  ELSE
-     !
-     charge = SUM ( rho%of_r(:,1) )*omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
-     !
+  charge = 0.D0
+  IF ( gstart == 2 ) THEN
+     charge = omega*REAL( rho%of_g(1,1) )
+     IF ( nspin == 2 ) charge = charge + omega*REAL( rho%of_g(1,2) )
   END IF
-  !
   CALL mp_sum(  charge , intra_bgrp_comm )
   !
   IF ( lscf .AND. ABS( charge - nelec ) > ( 1.D-7 * charge ) ) THEN
@@ -188,13 +165,16 @@ SUBROUTINE potinit()
      IF ( charge > 1.D-8 .AND. nat > 0 ) THEN
         WRITE( stdout, '(/,5X,"starting charge ",F10.5, &
                          & ", renormalised to ",F10.5)') charge, nelec
-        rho%of_r = rho%of_r / charge * nelec
+        rho%of_g = rho%of_g / charge * nelec
      ELSE 
         WRITE( stdout, '(/,5X,"Starting from uniform charge")')
-        IF ( nspin == 2 ) THEN
-           rho%of_r(:,1:nspin) = nelec / omega / nspin
-        ELSE
-           rho%of_r(:,1) = nelec / omega
+        rho%of_g(:,1:nspin) = (0.0_dp,0.0_dp)
+        IF ( gstart == 2 ) THEN
+           IF ( nspin == 2 ) THEN
+              rho%of_g(1,1:nspin) = nelec / omega / nspin
+           ELSE
+              rho%of_g(1,1) = nelec / omega
+           END IF
         END IF
      ENDIF
      !
@@ -204,34 +184,25 @@ SUBROUTINE potinit()
      !
   END IF
   !
-  ! ... bring starting rho to G-space
+  ! ... bring starting rho from G- to R-space
   !
-  DO is = 1, nspin
-     !
-     psic(:) = rho%of_r(:,is)
-     !
-     CALL fwfft ('Rho', psic, dfftp)
-     !
-     rho%of_g(:,is) = psic(dfftp%nl(:))
-     !
-  END DO
+  CALL rho_g2r (dfftp, rho%of_g, rho%of_r)
   !
-  if ( dft_is_meta()) then
-     ! ... define a starting (TF) guess for rho%kin_r and rho%kin_g
-     fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)
+  IF  ( dft_is_meta() ) THEN
+     IF (starting_pot /= 'file') THEN
+        ! ... define a starting (TF) guess for rho%kin_r from rho%of_r
+        fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)
+        DO is = 1, nspin
+           rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
+        END DO
+        ! ... bring it to g-space
+        CALL rho_r2g (dfftp, rho%kin_r, rho%kin_g)
+     ELSE
+        ! ... rho%kin was read from file in G-space, bring it to R-space
+        CALL rho_g2r (dfftp, rho%kin_g, rho%kin_r)
+     ENDIF
      !
-     ! ... for obscure reasons this starting guess doesn't seem much better
-     ! ... (and sometimes it is much worse) than starting from zero
-     !
-     !!! fact = 0.0_dp
-     DO is = 1, nspin
-        if (starting_pot /= 'file') rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
-        psic(:) = rho%kin_r(:,is)
-        CALL fwfft ('Rho', psic, dfftp)
-        rho%kin_g(:,is) = psic(dfftp%nl(:))
-     END DO
-     !
-  end if
+  END IF
   !
   ! ... plugin contribution to local potential
   !
@@ -273,7 +244,7 @@ SUBROUTINE potinit()
 END SUBROUTINE potinit
 !
 !-------------
-SUBROUTINE nc_magnetization_from_lsda ( nnr, nspin, rho )
+SUBROUTINE nc_magnetization_from_lsda ( ngm, nspin, rho )
   !-------------
   !
   USE kinds,     ONLY: dp
@@ -282,8 +253,8 @@ SUBROUTINE nc_magnetization_from_lsda ( nnr, nspin, rho )
   USE noncollin_module, ONLY: angle1, angle2
   !
   IMPLICIT NONE
-  INTEGER, INTENT (in):: nnr, nspin
-  REAL(dp), INTENT (inout):: rho(nnr,nspin)
+  INTEGER, INTENT (in):: ngm, nspin
+  COMPLEX(dp), INTENT (inout):: rho(ngm,nspin)
   !---  
   !  set up noncollinear m_x,y,z from collinear m_z (AlexS) 
   !
@@ -293,19 +264,10 @@ SUBROUTINE nc_magnetization_from_lsda ( nnr, nspin, rho )
        angle1(1)/PI*180.d0, angle2(1)/PI*180.d0 
   WRITE(stdout,*) '-----------'
   !
-#if defined(__OLDXML)
-  ! On input, rho(1)=rho_up, rho(2)=rho_down
-  ! Set rho(1)=rho_tot, rho(3)=rho_up-rho_down=magnetization
-  ! 
-  rho(:,4) = rho(:,1)-rho(:,2)
-  rho(:,1) = rho(:,1)+rho(:,2)
-#endif
-  !
   ! now set rho(2)=magn*sin(theta)*cos(phi)   x
   !         rho(3)=magn*sin(theta)*sin(phi)   y
   !         rho(4)=magn*cos(theta)            z
   !
-  !rho(:,4) = rho(:,3)*cos(angle1(1))
   rho(:,2) = rho(:,4)*sin(angle1(1))
   rho(:,3) = rho(:,2)*sin(angle2(1))
   rho(:,4) = rho(:,4)*cos(angle1(1))

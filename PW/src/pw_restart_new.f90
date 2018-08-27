@@ -39,7 +39,6 @@ MODULE pw_restart_new
        pw_readschema_file, init_vars_from_schema, read_collected_to_evc
   !
   CONTAINS
-#if !defined(__OLDXML)
     !------------------------------------------------------------------------
     SUBROUTINE pw_write_schema( )
       !------------------------------------------------------------------------
@@ -120,6 +119,7 @@ MODULE pw_restart_new
       USE qexsd_input,          ONLY : qexsd_init_k_points_ibz, qexsd_init_occupations, qexsd_init_smearing
       USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
       USE io_files,             ONLY : pseudo_dir
+      USE control_flags,        ONLY : conv_elec, conv_ions 
       !
       IMPLICIT NONE
       !
@@ -147,6 +147,9 @@ MODULE pw_restart_new
       REAL(DP),POINTER    :: degauss_, demet_, efield_corr, potstat_corr, &
                                  gatefield_corr, bp_el_pol(:), bp_ion_pol(:) 
       REAL(DP),TARGET     :: temp(20)
+      LOGICAL, POINTER    :: optimization_has_converged => NULL() 
+      LOGICAL, TARGET     :: conv_opt  
+      LOGICAL             :: scf_has_converged 
       INTEGER             :: itemp = 1
       NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr, bp_el_pol, bp_ion_pol)
       !
@@ -186,7 +189,7 @@ MODULE pw_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ))
+         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), 'PWSCF' )
          output%tagname="output"
          output%lwrite = .TRUE.
          output%lread  = .TRUE.
@@ -195,34 +198,39 @@ MODULE pw_restart_new
 ! ... CONVERGENCE_INFO
 !-------------------------------------------------------------------------------
          SELECT CASE (TRIM( calculation )) 
-            CASE ( "relax","vc-relax" ,"md")
-                opt_conv_ispresent = .TRUE.
+            CASE ( "relax","vc-relax" )
+                conv_opt = conv_ions  
+                optimization_has_converged  => conv_opt
                 IF (TRIM( ion_dynamics) == 'bfgs' ) THEN 
                     n_opt_steps = bfgs_get_n_iter('bfgs_iter ') 
                 ELSE 
                     n_opt_steps = istep 
                 END IF 
+                scf_has_converged = conv_elec 
+                n_scf_steps = n_scf_steps
             CASE ("nscf", "bands" )
-                opt_conv_ispresent = .FALSE.
                 n_opt_steps = 0
+                scf_has_converged = .FALSE. 
                 n_scf_steps_ = 1
             CASE default
-                opt_conv_ispresent = .FALSE.
                 n_opt_steps        = 0 
                 n_scf_steps_ = n_scf_steps
          END SELECT
          ! 
             call qexsd_init_convergence_info(output%convergence_info,   &
+                        SCf_HAS_CONVERGED = scf_has_converged, &
+                        OPTIMIZATION_HAS_CONVERGED = optimization_has_converged,& 
                         N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error,&
-                        OPT_CONV_ISPRESENT = opt_conv_ispresent,        &
                         N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
+            output%convergence_info_ispresent = .TRUE.
          !
+            
 !-------------------------------------------------------------------------------
 ! ... ALGORITHMIC_INFO
 !-------------------------------------------------------------------------------
          !
          CALL qexsd_init_algorithmic_info(output%algorithmic_info, &
-              real_space_q=real_space, uspp=okvan, paw=okpaw)
+              REAL_SPACE_BETA = real_space, REAL_SPACE_Q=tqr , USPP=okvan, PAW=okpaw)
          !
 !-------------------------------------------------------------------------------
 ! ... ATOMIC_SPECIES
@@ -989,14 +997,12 @@ MODULE pw_restart_new
          CALL readschema_header( gen_info )
       END IF 
       IF ( ldim ) THEN
-         !         ! 
-
          ! 
-         CALL readschema_dim(par_info, output_obj%atomic_species, output_obj%atomic_structure, output_obj%symmetries, &
-                             output_obj%basis_set, output_obj%band_structure ) 
-         CALL readschema_kdim(output_obj%symmetries,  output_obj%band_structure )
-
-                                                                                                           
+         CALL readschema_dim(par_info, output_obj%atomic_species, &
+              output_obj%atomic_structure, output_obj%symmetries, &
+              output_obj%basis_set, output_obj%band_structure ) 
+         CALL readschema_kdim(output_obj%symmetries, output_obj%band_structure )
+         !
       ENDIF
       !
       IF ( lcell ) THEN
@@ -1063,9 +1069,6 @@ MODULE pw_restart_new
       IF ( lefield .AND. lvalid_input ) CALL readschema_efield ( input_obj%electric_field ) 
       !
       IF ( lexx .AND. output_obj%dft%hybrid_ispresent  ) CALL readschema_exx ( output_obj%dft%hybrid )
-      !
-      !
-      !
       !
       RETURN
       !
@@ -2139,60 +2142,5 @@ MODULE pw_restart_new
       CALL start_exx() 
     END SUBROUTINE  readschema_exx 
     !-----------------------------------------------------------------------------------  
-#else
-    SUBROUTINE pw_write_schema()
-       IMPLICIT NONE
-       CONTINUE
-    END SUBROUTINE pw_write_schema
-    ! 
-    SUBROUTINE pw_write_binaries()
-      IMPLICIT NONE
-      CONTINUE
-    END SUBROUTINE pw_write_binaries
-    !    
-    SUBROUTINE pw_readschema_file(ierr, restart_output, restart_input, &
-         restart_parallel_info, restart_general_info)
-      !------------------------------------------------------------------------
-      IMPLICIT NONE 
-      ! 
-      INTEGER                                          :: ierr
-      TYPE( output_type ),OPTIONAL,      INTENT(OUT)   :: restart_output
-      TYPE(input_type),OPTIONAL,         INTENT(OUT)   :: restart_input
-      TYPE(parallel_info_type),OPTIONAL, INTENT(OUT)   :: restart_parallel_info
-      TYPE(general_info_type ),OPTIONAL, INTENT(OUT)   :: restart_general_info
-      ! 
-      CONTINUE
-    END SUBROUTINE pw_readschema_file
-    !
-    SUBROUTINE read_collected_to_evc( dirname )
-      !------------------------------------------------------------------------
-      !
-      ! ... This routines reads wavefunctions from the new file format and
-      ! ... writes them into the old format
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
-      !
-      CONTINUE 
-   END SUBROUTINE read_collected_to_evc
-   !
-   SUBROUTINE init_vars_from_schema( what, ierr, output_obj, par_info, gen_info, input_obj )
-      !------------------------------------------------------------------------
-      !
-      USE qes_types_module,     ONLY : input_type, output_type, &
-                                       general_info_type, parallel_info_type    
-!      !
-      IMPLICIT NONE
-!      !
-      CHARACTER(LEN=*), INTENT(IN)           :: what
-      TYPE ( output_type), INTENT(IN)        :: output_obj
-      TYPE ( parallel_info_type), INTENT(IN) :: par_info
-      TYPE ( general_info_type ), INTENT(IN) :: gen_info
-      INTEGER,INTENT (OUT)                   :: ierr 
-      TYPE ( input_type ), OPTIONAL, INTENT(IN)        :: input_obj
-      !
-      CONTINUE
-    END SUBROUTINE init_vars_from_schema
-#endif
+
   END MODULE pw_restart_new

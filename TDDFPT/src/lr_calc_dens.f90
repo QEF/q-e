@@ -349,10 +349,9 @@ CONTAINS
     USE lr_variables,        ONLY : becp_1, tg_revc0
     USE io_global,           ONLY : stdout
     USE realus,              ONLY : real_space, invfft_orbital_gamma,&
-                                    & initialisation_level,&
-                                    & calbec_rs_gamma,&
-                                    & add_vuspsir_gamma, v_loc_psir,&
-                                    & real_space_debug 
+                                    initialisation_level,&
+                                    calbec_rs_gamma,&
+                                    add_vuspsir_gamma, v_loc_psir
     USE mp_global,           ONLY : ibnd_start, ibnd_end, inter_bgrp_comm, &
                                     me_bgrp, me_pool
     USE mp,                  ONLY : mp_sum
@@ -459,7 +458,7 @@ CONTAINS
           ! Notice that betapointlist() is called in lr_readin at the
           ! very beginning.
           !
-          IF ( real_space_debug > 6 .AND. okvan) THEN
+          IF ( real_space .AND. okvan) THEN
              ! The rbecp term
              CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
              !
@@ -493,7 +492,7 @@ CONTAINS
        scal = 0.0d0
        becsum(:,:,:) = 0.0d0
        !
-       IF ( real_space_debug <= 6) THEN 
+       IF ( .NOT.real_space ) THEN 
           ! In real space, the value is calculated above
           CALL calbec(ngk(1), vkb, evc1(:,:,1), becp)
           !

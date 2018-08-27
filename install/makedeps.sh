@@ -12,7 +12,7 @@ TOPDIR=`pwd`
 if test $# = 0
 then
     dirs=" LAXlib FFTXlib UtilXlib Modules clib LR_Modules upftools \
-           KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG \
+           KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG KS_Solvers/PPCG \
            PW/src CPV/src PW/tools upftools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/FD atomic/src \
            XSpectra/src ACFDT/src NEB/src TDDFPT/src \
@@ -71,8 +71,8 @@ for dir in $dirs; do
 	atomic/src | GWW/gww )
 	     DEPENDS="$DEPEND2" ;;
 	PW/src | CPV/src )
-	     DEPENDS="$DEPEND2 ../../KS_Solvers/Davidson ../../KS_Solvers/CG ../../dft-d3" ;;
-	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG )
+	     DEPENDS="$DEPEND2 ../../KS_Solvers/Davidson ../../KS_Solvers/CG ../../KS_Solvers/PPCG ../../dft-d3" ;;
+	KS_Solvers/Davidson | KS_Solvers/Davidson_RCI | KS_Solvers/CG | KS_Solvers/PPCG )
 	     DEPENDS="$DEPEND3" ;;
 	PW/tools | PP/src | PWCOND/src | GWW/pw4gww | NEB/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
@@ -140,6 +140,13 @@ for dir in $dirs; do
         fi
 
         if test "$DIR" = "KS_Solvers/CG"
+        then
+
+            sed '/@elpa1@/d' make.depend > make.depend.tmp
+            sed '/@ifcore@/d' make.depend.tmp > make.depend
+        fi
+
+        if test "$DIR" = "KS_Solvers/PPCG"
         then
 
             sed '/@elpa1@/d' make.depend > make.depend.tmp

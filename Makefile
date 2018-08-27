@@ -69,35 +69,35 @@ default :
 # If "|| exit 1" is not present, the error code from make in subdirectories
 # is not returned and make goes on even if compilation has failed
 
-pw : bindir libs mods libdavid libcg dftd3
+pw : pwlibs
 	if test -d PW ; then \
 	( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-cp : bindir libs mods libdavid libcg
+cp : bindir libs mods
 	if test -d CPV ; then \
 	( cd CPV ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-ph : pw lrmods
+ph : phlibs
 	if test -d PHonon; then \
-	(cd PHonon; $(MAKE) all || exit 1) ; fi
+	( cd PHonon; $(MAKE) all || exit 1) ; fi
 
-neb : pw
+neb : pwlibs
 	if test -d NEB; then \
-  (cd NEB; $(MAKE) all || exit 1) ; fi
+	( cd NEB; $(MAKE) all || exit 1) ; fi
 
-tddfpt : pw
+tddfpt : phlibs
 	if test -d TDDFPT; then \
-	(cd TDDFPT; $(MAKE) all || exit 1) ; fi
+	( cd TDDFPT; $(MAKE) all || exit 1) ; fi
 
-pp : pw
+pp : pwlibs
 	if test -d PP ; then \
 	( cd PP ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-pwcond : pp
+pwcond : pwlibs
 	if test -d PWCOND ; then \
 	( cd PWCOND ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-acfdt : ph
+acfdt : phlibs
 	if test -d ACFDT ; then \
 	( cd ACFDT ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -105,17 +105,17 @@ acfdt : ph
 gww:
 	@echo '"make gww" is obsolete, use "make gwl" instead '
 
-gwl : ph
+gwl : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-gipaw : pw
+gipaw : pwlibs
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-d3q : ph
+d3q : phlibs
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-ld1 : bindir libs mods libdavid libcg
+ld1 : bindir libs mods
 	if test -d atomic ; then \
 	( cd atomic ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -123,11 +123,11 @@ upf : libs mods
 	if test -d upftools ; then \
 	( cd upftools ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-pw_export : pw
+pw_export : pwlibs
 	if test -d PP ; then \
 	( cd PP ; $(MAKE) TLDEPS= pw_export.x || exit 1 ) ; fi
 
-xspectra : pw
+xspectra : pwlibs
 	if test -d XSpectra ; then \
 	( cd XSpectra ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
@@ -135,7 +135,7 @@ couple : pw cp
 	if test -d COUPLE ; then \
 	( cd COUPLE ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-epw: ph
+epw: phlibs
 	if test -d EPW ; then \
 	( cd EPW ; $(MAKE) all || exit 1; \
 		cd ../bin; ln -fs ../EPW/bin/epw.x . ); fi
@@ -160,17 +160,27 @@ all   : pwall cp ld1 upf tddfpt xspectra gwl
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
 
+pwlibs: bindir libs mods libks_solvers dftd3
+	if test -d PW ; then \
+	( cd PW ; $(MAKE) pw-lib || exit 1) ; fi
+
+phlibs: pwlibs lrmods
+	if test -d PHonon; then \
+	( cd PHonon; $(MAKE) ph-lib || exit 1) ; fi
+
+gwwlib : phlibs
+	if test -d GWW ; then \
+	( cd GWW ; $(MAKE) gwwa || exit 1 ) ; fi
+
+pw4gwwlib : phlibs
+	if test -d GWW ; then \
+	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
+
 mods : libiotk libfox libutil libla libfft
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
-libdavid_rci : libs libutil libla
-	( cd KS_Solvers/Davidson_RCI ; $(MAKE) TLDEPS= all || exit 1 )
-
-libdavid : libs libutil libla
-	( cd KS_Solvers/Davidson ; $(MAKE) TLDEPS= all || exit 1 )
-
-libcg : libs libutil libla
-	( cd KS_Solvers/CG ; $(MAKE) TLDEPS= all || exit 1 )
+libks_solvers : libs libutil libla
+	( cd KS_Solvers ; $(MAKE) TLDEPS= all || exit 1 )
 
 libla : liblapack libutil libcuda
 	( cd LAXlib ; $(MAKE) TLDEPS= all || exit 1 )
@@ -184,7 +194,7 @@ libutil :
 libs :
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
 
-lrmods : libs libutil libla libfft
+lrmods : mods pwlibs
 	( cd LR_Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 dftd3 : mods
@@ -291,8 +301,7 @@ test-suite: pw cp
 clean : 
 	touch make.inc 
 	for dir in \
-		CPV LAXlib FFTXlib UtilXlib Modules PP PW EPW \
-                KS_Solvers/CG KS_Solvers/Davidson KS_Solvers/Davidson_RCI \
+		CPV LAXlib FFTXlib UtilXlib Modules PP PW EPW KS_Solvers \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic clib LR_Modules pwtools upftools \
 		dev-tools extlibs Environ TDDFPT PHonon GWW \

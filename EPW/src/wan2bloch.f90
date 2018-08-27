@@ -1069,6 +1069,8 @@
     !
     INTEGER :: ir
     !! Real space WS index
+    INTEGER :: irn
+    !! Combined WS and atom index  
     INTEGER :: ir_start
     !! Starting ir for this cores
     INTEGER :: ir_stop
@@ -1091,10 +1093,10 @@
     !
     REAL(kind=DP) :: rdotk
     !! Exponential for the FT
-    !
+    ! 
     COMPLEX(kind=DP) :: eptmp( nbnd, nbnd, nrr_k, nmodes)
     !! Temporary matrix to store el-ph
-    COMPLEX(kind=DP) :: cfac(nat, nrr_g)
+    COMPLEX(kind=DP) :: cfac(nat,nrr_g)
     !! Factor for the FT
     COMPLEX(kind=DP), ALLOCATABLE :: epmatw( :,:,:,:)
     !! El-ph matrix elements
@@ -1111,46 +1113,59 @@
     !  g~(R_e,q') is epmatf(nmodes, nmodes, ik )
     !  every pool works with its own subset of k points on the fine grid
     !
-    CALL para_bounds(ir_start, ir_stop, nrr_g)
+    ! SP: Because nrr_g can be quite small, we do a combined parallelization
+    !     on WS vector and atoms  
+    CALL para_bounds(ir_start, ir_stop, nrr_g * nat)
     !
     eptmp(:,:,:,:) = czero
     cfac(:,:) = czero
     !
-    DO ir = ir_start, ir_stop
+    DO irn = ir_start, ir_stop
+      ir = (irn-1)/nat + 1
+      na = MOD(irn-1,nat) +1   
       !   
       ! note xxq is assumed to be already in cryst coord
       !
       rdotk = twopi * dot_product ( xxq, dble(irvec_g(:, ir)) )
-      DO na = 1, nat
-        IF (ndegen_g(ir,na) > 0) &
-          cfac(na,ir) = exp( ci*rdotk ) / dble( ndegen_g(ir,na) )
-      ENDDO
+      IF (ndegen_g(ir,na) > 0) &
+        cfac(na,ir) = exp( ci*rdotk ) / dble( ndegen_g(ir,na) )
     ENDDO
     ! 
     IF (etf_mem == 0) then
       !      
-      DO na = 1, nat
-        Call zgemv( 'n',  nbnd * nbnd * nrr_k * 3, ir_stop - ir_start + 1, cone, &
-               epmatwp(:,:,:,3*(na-1)+1:3*na,ir_start:ir_stop), nbnd * nbnd * nrr_k * 3, &
-               cfac(na,ir_start:ir_stop), 1, czero, eptmp(:,:,:,3*(na-1)+1:3*na), 1 )
+      DO irn = ir_start, ir_stop
+        ir = (irn-1)/nat + 1
+        na = MOD(irn-1,nat) + 1
+        ! 
+        !print*,'irn ',irn, shape(cfac), shape(epmatwp(:,:,:,:,:)), 3*(na-1)+1,3*na, ir
+        CALL ZAXPY(nbnd * nbnd * nrr_k * 3, cfac(na,ir), epmatwp(:,:,:,3*(na-1)+1:3*na,ir), 1, &
+             eptmp(:,:,:,3*(na-1)+1:3*na), 1)
+        !CALL zgemv( 'n',  nbnd * nbnd * nrr_k * 3, ir_stop - ir_start + 1, cone, &
+        !     epmatwp(:,:,:,3*(na-1)+1:3*na,ir_start:ir_stop), nbnd * nbnd * nrr_k * 3, &
+        !     cfac(ir_start:ir_stop), 1, czero, eptmp(:,:,:,3*(na-1)+1:3*na), 1 )
       ENDDO
       !
     ELSE
       !
-      ALLOCATE(epmatw ( nbnd, nbnd, nrr_k, nmodes))
+      !ALLOCATE(epmatw ( nbnd, nbnd, nrr_k, 3))
       !
       !lrepmatw2   = 2 * nbnd * nbnd * nrr_k * nmodes
 #if defined(__MPI)
+      ALLOCATE(epmatw ( nbnd, nbnd, nrr_k, 3))
       ! Although this should almost never be problematic (see explaination below)
       lrepmatw2 = 2_MPI_OFFSET_KIND * INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
                                       INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
                                       INT( nrr_k , kind = MPI_OFFSET_KIND ) * &
-                                      INT( nmodes, kind = MPI_OFFSET_KIND )
+                                      3_MPI_OFFSET_KIND
+                                      !INT( nmodes, kind = MPI_OFFSET_KIND )
 #else
-      lrepmatw2 = INT( 2 * nbnd * nbnd * nrr_k * nmodes, kind = 8)
+      ALLOCATE(epmatw ( nbnd, nbnd, nrr_k, nmodes))
+      lrepmatw2 = INT( 2 * nbnd * nbnd * nrr_k * 3, kind = 8)
 #endif
       ! 
-      DO ir = ir_start, ir_stop
+      DO irn = ir_start, ir_stop
+        ir = (irn-1)/nat + 1
+        na = MOD(irn-1,nat) + 1      
 #if defined(__MPI)
         ! DEBUG: print*,'Process ',my_id,' do ',ir,'/ ',ir_stop
         !
@@ -1160,12 +1175,14 @@
         ! SP: The following needs a small explaination: although lrepmatw is correctly defined as kind 8 bits or 
         !     kind=MPI_OFFSET_KIND, the number "2" and "8" are default kind 4. The other as well. Therefore
         !     if the product is too large, this will crash. The solution (kind help recieved from Ian Bush) is below:
-        lrepmatw = 2_MPI_OFFSET_KIND * INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
-                                       INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
-                                       INT( nrr_k , kind = MPI_OFFSET_KIND ) * &
-                                       INT( nmodes, kind = MPI_OFFSET_KIND ) * &
-                 8_MPI_OFFSET_KIND * ( INT( ir    , kind = MPI_OFFSET_KIND ) - 1_MPI_OFFSET_KIND )
-        !
+        lrepmatw = 2_MPI_OFFSET_KIND * 8_MPI_OFFSET_KIND * &
+                                       INT( nbnd  ,kind=MPI_OFFSET_KIND ) * &
+                                       INT( nbnd  ,kind=MPI_OFFSET_KIND ) * &
+                                       INT( nrr_k ,kind=MPI_OFFSET_KIND ) * &
+                                       ( INT( 3_MPI_OFFSET_KIND * ( na - 1_MPI_OFFSET_KIND) ,kind=MPI_OFFSET_KIND ) + &
+        INT( 3_MPI_OFFSET_KIND * nat ,kind=MPI_OFFSET_KIND ) * ( INT( ir,kind=MPI_OFFSET_KIND ) - 1_MPI_OFFSET_KIND ) )
+
+
         ! SP: mpi seek is used to set the position at which we should start
         ! reading the file. It is given in bits. 
         ! Note : The process can be collective (=blocking) if using MPI_FILE_SET_VIEW & MPI_FILE_READ_ALL
@@ -1177,15 +1194,20 @@
         !CALL MPI_FILE_READ(iunepmatwp2, aux, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
         CALL MPI_FILE_READ(iunepmatwp2, epmatw, lrepmatw2, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE,ierr)
         IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
+        !   
+        !print*,'irn ir na ',irn, ir, na
+        !print*,'lrepmatw ',lrepmatw
+        !print*,'shape epmatw ', shape(epmatw), sum(epmatw)
+        CALL ZAXPY(nbnd * nbnd * nrr_k * 3, cfac(na,ir), epmatw(:,:,:,:), 1, &
+                eptmp(:,:,:,3*(na-1)+1:3*na), 1)        
         ! 
 #else      
         CALL rwepmatw ( epmatw, nbnd, nrr_k, nmodes, ir, iunepmatwp, -1)
-#endif
         !
-        DO na = 1, nat
-          CALL ZAXPY(nbnd * nbnd * nrr_k * 3, cfac(na,ir), epmatw(:,:,:,3*(na-1)+1:3*na), 1, &
-                  eptmp(:,:,:,3*(na-1)+1:3*na), 1)
-        ENDDO
+        CALL ZAXPY(nbnd * nbnd * nrr_k * 3, cfac(na,ir), epmatw(:,:,:,3*(na-1)+1:3*na), 1, &
+                eptmp(:,:,:,3*(na-1)+1:3*na), 1)         
+
+#endif
         ! 
       ENDDO
       DEALLOCATE(epmatw)
@@ -1204,6 +1226,7 @@
     !
     Call zgemm( 'n', 'n', nbnd * nbnd * nrr_k, nmodes, nmodes, cone, eptmp, & 
                 nbnd * nbnd * nrr_k, cuf, nmodes, czero, epmatf, nbnd * nbnd * nrr_k )
+
     !
     CALL stop_clock('ephW2Bp')
     !

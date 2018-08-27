@@ -57,7 +57,7 @@ switch -exact -- $tag {
     format { # todo 
     }
     
-    var - dimension - col - row {
+    var - dimension - multidimension - col - row {
 	if { ! $vargroup && ! $dimensiongroup && ! $colgroup && ! $rowgroup && ! [::tclu::lpresent $mode syntax] } {
 	    if { [printableVarDescription $tree $node] } {
 		printf +--------------------------------------------------------------------\n
@@ -66,7 +66,7 @@ switch -exact -- $tag {
 	}
     }
     
-    vargroup - dimensiongroup - rowgroup - colgroup { # todo
+    vargroup - dimensiongroup - dimensiongroup - rowgroup - colgroup { # todo
 	if { ! [::tclu::lpresent $mode syntax] } {
 	    set $tag 0
 	    if { [printableVarDescription $tree $node] } {

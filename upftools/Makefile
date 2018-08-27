@@ -6,9 +6,9 @@ include ../make.inc
 MODFLAGS= $(BASEMOD_FLAGS)
 
 OBJS = write_upf.o read_upf.o
-QEMODS = ../Modules/libqemod.a ../FFTXlib/libqefft.a ../UtilXlib/libutil.a
+QEMODS = ../Modules/libqemod.a ../FFTXlib/libqefft.a  ../LAXlib/libqela.a   ../UtilXlib/libutil.a 
 
-TLDEPS = mods libs libiotk libfox
+TLDEPS = mods libs libfox
 
 all : tldeps casino2upf.x cpmd2upf.x fhi2upf.x fpmd2upf.x \
      ncpp2upf.x oldcp2upf.x read_upf_tofile.x rrkj2upf.x upf2casino.x \

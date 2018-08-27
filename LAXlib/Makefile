@@ -14,6 +14,8 @@ transto.o \
 distools.o \
 zhpev_drv.o \
 mp_diag.o \
+set_mpi_comm_4_solvers.o \
+export_gstart_2_solvers.o \
 la_param.o
 
 

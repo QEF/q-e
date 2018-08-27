@@ -12,9 +12,6 @@
  
 !----------------------------------------------------------------
 SUBROUTINE add_qexsd_step(i_step)
-#if defined (__OLDXML)
-CONTINUE 
-#else
 !-----------------------------------------------------------------
 !
 !------------------------------------------------------------------------
@@ -27,7 +24,7 @@ USE cell_base,    ONLY: alat, at
 USE ener,         ONLY: etot, eband, ehart, etxc, vtxc, ewld, demet, ef 
 USE klist,        ONLY: degauss, tot_charge
 USE force_mod,    ONLY: force, sigma
-USE control_flags,ONLY: nstep, n_scf_steps, scf_error
+USE control_flags,ONLY: nstep, n_scf_steps, scf_error, conv_elec
 USE fcp_variables,ONLY: fcp_mu, lfcpopt, lfcpdyn 
 USE extfield,     ONLY: gate, etotgatefield, tefield, etotefield   
 !-----------------------------------------------------------------------------
@@ -86,9 +83,8 @@ IF (tefield) THEN
 END IF
 CALL qexsd_step_addstep ( i_step, nstep, nsp, atm, ityp, nat, alat*tau, alat, alat*at(:,1),   &
                           alat*at(:,2), alat*at(:,3), etot/e2, eband/e2, ehart/e2, vtxc/e2, etxc/e2, &
-                          ewld/e2, degauss_ptr, demet_ptr, force/e2, sigma/e2, n_scf_steps, scf_error, &
+                          ewld/e2, degauss_ptr, demet_ptr, force/e2, sigma/e2, conv_elec, n_scf_steps, scf_error, &
                           FCP_FORCE  = fcp_force_ptr , FCP_TOT_CHARGE = fcp_tot_charge_ptr,&
                           GATEFIELD_EN = gatefield_en_ptr) 
-#endif    
 !
 END SUBROUTINE  add_qexsd_step

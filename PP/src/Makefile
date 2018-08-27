@@ -5,8 +5,6 @@ include ../../make.inc
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
-          $(MOD_FLAG)../../KS_Solvers/Davidson \
-          $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../dft-d3/
 
 PPOBJS = \
@@ -50,19 +48,18 @@ write_io_header.o \
 write_hamiltonians.o 
 
 PWOBJS = ../../PW/src/libpw.a
-QEOBJS = ../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a ../../KS_Solvers/CG/libcg.a \
+QEOBJS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
 MODULES = $(PWOBJS) $(QEOBJS)
 
-TLDEPS= bindir mods libs pw
+TLDEPS= pwlibs
 
 all : tldeps open_grid.x average.x bands.x dos.x epsilon.x initial_state.x fs.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw_export.x pw2gw.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
-      pw2bgw.x bgw2pw.x wfck2r.x importexport_binary.x \
-      fermi_velocity.x fermi_proj.x
+      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x
 
 
 libpp.a : $(PPOBJS) 
@@ -134,12 +131,6 @@ pp.x : postproc.o libpp.a $(MODULES) $(LIBOBJS)
 		$(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-importexport_binary.x : importexport_binary.o libpp.a $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		importexport_binary.o libpp.a $(MODULES) \
-		$(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
-
 projwfc.x : projwfc.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		projwfc.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
@@ -200,10 +191,10 @@ pw2bgw.x : pw2bgw.o libpp.a $(MODULES) $(LIBOBJS)
 		pw2bgw.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-bgw2pw.x : bgw2pw.o libpp.a $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		bgw2pw.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+#bgw2pw.x : bgw2pw.o libpp.a $(MODULES) $(LIBOBJS)
+#	$(LD) $(LDFLAGS) -o $@ \
+#		bgw2pw.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+#	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 fs.x : fermisurface.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \

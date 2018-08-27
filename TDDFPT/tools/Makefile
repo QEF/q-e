@@ -4,15 +4,14 @@ include ../../make.inc
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
-          $(MOD_FLAG)../../KS_Solvers/CG \
-          $(MOD_FLAG)../../KS_Solvers/Davidson \
           $(MOD_FLAG)../../LR_Modules
 
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a \
+QEMODS = ../../Modules/libqemod.a \
+         ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 
-TLDEPS=bindir libs pw
+TLDEPS=pwlibs
 
 all : tldeps turbo_spectrum.x
 

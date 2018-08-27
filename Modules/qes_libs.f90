@@ -3119,9 +3119,16 @@ SUBROUTINE qes_write_electron_control(xp, obj)
       CALL xml_NewElement(xp, 'max_nstep')
          CALL xml_addCharacters(xp, obj%max_nstep)
       CALL xml_EndElement(xp, 'max_nstep')
-      CALL xml_NewElement(xp, 'real_space_q' )
+      IF ( obj%real_space_q_ispresent) THEN
+         CALL xml_NewElement(xp, 'real_space_q' )
             CALL xml_addCharacters(xp, obj%real_space_q )    
-      CALL xml_EndElement(xp, 'real_space_q')
+         CALL xml_EndElement(xp, 'real_space_q')
+      END IF
+      IF ( obj%real_space_beta_ispresent) THEN
+         CALL xml_NewElement(xp, 'real_space_beta') 
+            CALL xml_addCharacters(xp, obj%real_space_beta) 
+         CALL xml_EndElement( xp, 'real_space_beta') 
+      END IF 
       CALL xml_NewElement(xp, 'tq_smoothing' )
             CALL xml_addCharacters(xp, obj%tq_smoothing)
       CALL xml_EndElement(xp, 'tq_smoothing')
@@ -3134,17 +3141,24 @@ SUBROUTINE qes_write_electron_control(xp, obj)
       CALL xml_NewElement(xp, 'diago_full_acc' )
             CALL xml_addCharacters(xp, obj%diago_full_acc )
       CALL xml_EndElement(xp, 'diago_full_acc')
-      CALL xml_NewElement(xp, 'diago_cg_maxiter')
-         CALL xml_addCharacters(xp, obj%diago_cg_maxiter)
-      CALL xml_EndElement(xp, 'diago_cg_maxiter')
+      IF (obj%diago_cg_maxiter_ispresent) THEN 
+         CALL xml_NewElement(xp, 'diago_cg_maxiter')
+            CALL xml_addCharacters(xp, obj%diago_cg_maxiter)
+         CALL xml_EndElement(xp, 'diago_cg_maxiter')
+      END IF
+      IF (obj%diago_ppcg_maxiter_ispresent) THEN
+         CALL xml_NewElement(xp, 'diago_ppcg_maxiter')
+            CALL xml_addCharacters(xp, obj%diago_ppcg_maxiter)
+         CALL xml_EndElement(xp, 'diago_ppcg_maxiter')
+      END IF
    CALL xml_EndElement(xp, TRIM(obj%tagname))
    !
 END SUBROUTINE qes_write_electron_control
 
 SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode, &
-                              mixing_beta, conv_thr, mixing_ndim, max_nstep, real_space_q, &
-                              tq_smoothing, tbeta_smoothing, diago_thr_init, &
-                              diago_full_acc, diago_cg_maxiter)
+                              mixing_beta, conv_thr, mixing_ndim, max_nstep, &
+                              tq_smoothing, tbeta_smoothing, diago_thr_init, real_space_q,&
+                              real_space_beta, diago_full_acc, diago_cg_maxiter, diago_ppcg_maxiter)
    IMPLICIT NONE
 
    TYPE(electron_control_type) :: obj
@@ -3156,12 +3170,13 @@ SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode,
    REAL(DP) :: conv_thr
    INTEGER  :: mixing_ndim
    INTEGER  :: max_nstep
-   LOGICAL  :: real_space_q
+   LOGICAL,OPTIONAL :: real_space_q, real_space_beta
    LOGICAL  :: tq_smoothing
    LOGICAL  :: tbeta_smoothing
    REAL(DP) :: diago_thr_init
    LOGICAL  :: diago_full_acc
-   INTEGER  :: diago_cg_maxiter
+   INTEGER,OPTIONAL  :: diago_cg_maxiter
+   INTEGER,OPTIONAL  :: diago_ppcg_maxiter
 
    obj%tagname = TRIM(tagname)
    obj%lwrite   = .TRUE.
@@ -3172,12 +3187,26 @@ SUBROUTINE qes_init_electron_control(obj, tagname, diagonalization, mixing_mode,
    obj%conv_thr = conv_thr
    obj%mixing_ndim = mixing_ndim
    obj%max_nstep = max_nstep
-   obj%real_space_q = real_space_q
+   IF ( PRESENT( real_space_q)) THEN
+      obj%real_space_q_ispresent = .TRUE. 
+      obj%real_space_q = real_space_q
+   END IF
+   IF ( PRESENT( real_space_beta)) THEN 
+      obj%real_space_beta_ispresent = .TRUE. 
+      obj%real_space_beta = real_space_beta 
+   END IF 
    obj%tq_smoothing = tq_smoothing
    obj%tbeta_smoothing = tbeta_smoothing
    obj%diago_thr_init = diago_thr_init
    obj%diago_full_acc = diago_full_acc
-   obj%diago_cg_maxiter = diago_cg_maxiter
+   IF (PRESENT(diago_cg_maxiter)) THEN
+      obj%diago_cg_maxiter_ispresent = .TRUE.
+      obj%diago_cg_maxiter = diago_cg_maxiter
+   END IF
+   IF (PRESENT( diago_ppcg_maxiter)) THEN 
+      obj%diago_ppcg_maxiter_ispresent = .TRUE.
+      obj%diago_ppcg_maxiter = diago_ppcg_maxiter
+   END IF
 
 END SUBROUTINE qes_init_electron_control
 
@@ -4494,6 +4523,9 @@ SUBROUTINE qes_write_scf_conv(xp, obj)
 
    CALL xml_NewElement(xp, TRIM(obj%tagname))
       !
+      CALL xml_NewElement(xp, 'convergence_achieved') 
+         CALL xml_addCharacters(xp, obj%convergence_achieved) 
+      CALL xml_EndElement(xp, 'convergence_achieved') 
       CALL xml_NewElement(xp, 'n_scf_steps')
          CALL xml_addCharacters(xp, obj%n_scf_steps)
       CALL xml_EndElement(xp, 'n_scf_steps')
@@ -4504,18 +4536,20 @@ SUBROUTINE qes_write_scf_conv(xp, obj)
    !
 END SUBROUTINE qes_write_scf_conv
 
-SUBROUTINE qes_init_scf_conv(obj, tagname, n_scf_steps, scf_error)
+SUBROUTINE qes_init_scf_conv(obj, tagname, convergence_achieved, n_scf_steps, scf_error)
    IMPLICIT NONE
 
    TYPE(scf_conv_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
+   LOGICAL  :: convergence_achieved 
    INTEGER  :: n_scf_steps
    REAL(DP) :: scf_error
 
    obj%tagname = TRIM(tagname)
    obj%lwrite   = .TRUE.
    obj%lread    = .TRUE.
+   obj%convergence_achieved = convergence_achieved 
    obj%n_scf_steps = n_scf_steps
    obj%scf_error = scf_error
 
@@ -4546,6 +4580,9 @@ SUBROUTINE qes_write_opt_conv(xp, obj)
 
    CALL xml_NewElement(xp, TRIM(obj%tagname))
       !
+      CALL xml_NewElement(xp, 'convergence_achieved') 
+         CALL xml_addCharacters(xp, obj%convergence_achieved) 
+      CALL xml_EndElement(xp, 'convergence_achieved') 
       CALL xml_NewElement(xp, 'n_opt_steps')
          CALL xml_addCharacters(xp, obj%n_opt_steps)
       CALL xml_EndElement(xp, 'n_opt_steps')
@@ -4556,18 +4593,20 @@ SUBROUTINE qes_write_opt_conv(xp, obj)
    !
 END SUBROUTINE qes_write_opt_conv
 
-SUBROUTINE qes_init_opt_conv(obj, tagname, n_opt_steps, grad_norm)
+SUBROUTINE qes_init_opt_conv(obj, tagname, convergence_achieved, n_opt_steps, grad_norm)
    IMPLICIT NONE
 
    TYPE(opt_conv_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
+   LOGICAL  :: convergence_achieved 
    INTEGER  :: n_opt_steps
    REAL(DP) :: grad_norm
 
    obj%tagname = TRIM(tagname)
    obj%lwrite   = .TRUE.
    obj%lread    = .TRUE.
+   obj%convergence_achieved = convergence_achieved 
    obj%n_opt_steps = n_opt_steps
    obj%grad_norm = grad_norm
 
@@ -4601,6 +4640,9 @@ SUBROUTINE qes_write_algorithmic_info(xp, obj)
       CALL xml_NewElement(xp, 'real_space_q' )
             CALL xml_addCharacters(xp, obj%real_space_q ) 
       CALL xml_EndElement(xp, 'real_space_q')
+      CALL xml_NewElement (xp, 'real_space_beta') 
+         CALL xml_addCharacters(xp, obj%real_space_beta) 
+      CALL xml_EndElement(xp, 'real_space_beta') 
       CALL xml_NewElement(xp, 'uspp' )
             CALL xml_addCharacters(xp, obj%uspp)
       CALL xml_EndElement(xp, 'uspp')
@@ -4611,13 +4653,13 @@ SUBROUTINE qes_write_algorithmic_info(xp, obj)
    !
 END SUBROUTINE qes_write_algorithmic_info
 
-SUBROUTINE qes_init_algorithmic_info(obj, tagname, real_space_q, uspp, paw)
+SUBROUTINE qes_init_algorithmic_info(obj, tagname, real_space_q, real_space_beta, uspp, paw)
    IMPLICIT NONE
 
    TYPE(algorithmic_info_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
-   LOGICAL  :: real_space_q
+   LOGICAL  :: real_space_q, real_space_beta
    LOGICAL  :: uspp
    LOGICAL  :: paw
 
@@ -4625,6 +4667,7 @@ SUBROUTINE qes_init_algorithmic_info(obj, tagname, real_space_q, uspp, paw)
    obj%lwrite   = .TRUE.
    obj%lread    = .TRUE.
    obj%real_space_q = real_space_q
+   obj%real_space_beta = real_space_beta
    obj%uspp = uspp
    obj%paw = paw
 
@@ -5840,21 +5883,20 @@ SUBROUTINE qes_write_convergence_info(xp, obj)
    !
 END SUBROUTINE qes_write_convergence_info
 
-SUBROUTINE qes_init_convergence_info(obj, tagname, scf_conv, opt_conv_ispresent, opt_conv)
+SUBROUTINE qes_init_convergence_info(obj, tagname, scf_conv, opt_conv)
    IMPLICIT NONE
 
    TYPE(convergence_info_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
    TYPE(scf_conv_type) :: scf_conv
-   LOGICAL  :: opt_conv_ispresent
-   TYPE(opt_conv_type) :: opt_conv
+   TYPE(opt_conv_type),OPTIONAL :: opt_conv
 
    obj%tagname = TRIM(tagname)
    obj%lwrite   = .TRUE.
    obj%lread    = .TRUE.
    obj%scf_conv = scf_conv
-   obj%opt_conv_ispresent = opt_conv_ispresent
+   obj%opt_conv_ispresent = PRESENT(opt_conv) 
    IF(obj%opt_conv_ispresent) THEN
       obj%opt_conv = opt_conv
    ENDIF
@@ -6726,7 +6768,7 @@ SUBROUTINE qes_write_output(xp, obj)
 
    CALL xml_NewElement(xp, TRIM(obj%tagname))
       !
-      CALL qes_write_convergence_info(xp, obj%convergence_info)
+      IF ( obj%convergence_info_ispresent )  CALL qes_write_convergence_info(xp, obj%convergence_info)
       !
       CALL qes_write_algorithmic_info(xp, obj%algorithmic_info)
       !
@@ -6796,7 +6838,7 @@ SUBROUTINE qes_init_output(obj, tagname, convergence_info, algorithmic_info, &
    TYPE(output_type) :: obj
    CHARACTER(len=*) :: tagname
    INTEGER  :: i
-   TYPE(convergence_info_type) :: convergence_info
+   TYPE(convergence_info_type),OPTIONAL :: convergence_info
    TYPE(algorithmic_info_type) :: algorithmic_info
    TYPE(atomic_species_type) :: atomic_species
    TYPE(atomic_structure_type) :: atomic_structure
@@ -6823,7 +6865,8 @@ SUBROUTINE qes_init_output(obj, tagname, convergence_info, algorithmic_info, &
    obj%tagname = TRIM(tagname)
    obj%lwrite   = .TRUE.
    obj%lread    = .TRUE.
-   obj%convergence_info = convergence_info
+   obj%convergence_info_ispresent = PRESENT(convergence_info) 
+   IF ( obj%convergence_info_ispresent)  obj%convergence_info = convergence_info
    obj%algorithmic_info = algorithmic_info
    obj%atomic_species = atomic_species
    obj%atomic_structure = atomic_structure

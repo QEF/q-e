@@ -34,10 +34,10 @@ SUBROUTINE lr_read_wf()
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE becmod,               ONLY : bec_type, becp, calbec
   USE realus,               ONLY : real_space, invfft_orbital_gamma,&
-                                 & initialisation_level,&
-                                 & fwfft_orbital_gamma, calbec_rs_gamma,&
-                                 & add_vuspsir_gamma, v_loc_psir,&
-                                 & s_psir_gamma, real_space_debug
+                                   initialisation_level,&
+                                   fwfft_orbital_gamma, calbec_rs_gamma,&
+                                   add_vuspsir_gamma, v_loc_psir,&
+                                   s_psir_gamma
   USE funct,                ONLY : dft_is_hybrid
   USE lr_exx_kernel,        ONLY : lr_exx_revc0_init, lr_exx_alloc, &
                                    lr_exx_restart
@@ -172,7 +172,7 @@ SUBROUTINE normal_read()
         !
         CALL init_us_2(ngk(1),igk_k(:,1),xk(1,1),vkb)
         !
-        IF (real_space_debug>0) THEN
+        IF (real_space) THEN
            !
            DO ibnd = 1, nbnd, 2
               !
@@ -271,9 +271,7 @@ SUBROUTINE normal_read()
      !
   ENDIF
   !
-  ! OBM: Last minute check for real space implementation.
-  !
-  IF ( real_space_debug > 0 .AND. .NOT. gamma_only ) &
+  IF ( real_space .AND. .NOT. gamma_only ) &
            CALL errore( ' iosys ', ' Linear response calculation ' // &
            & 'real space algorithms with k-points not implemented', 1 )
   !
@@ -387,7 +385,7 @@ SUBROUTINE virt_read()
         !
         CALL init_us_2(ngk(1),igk_k(:,1),xk(1,1),vkb)
         !    
-        IF (real_space_debug>0) THEN
+        IF (real_space) THEN
            !
            DO ibnd=1,nbnd,2
               CALL invfft_orbital_gamma(evc_all(:,:,1),ibnd,nbnd)
@@ -532,9 +530,7 @@ SUBROUTINE virt_read()
   DEALLOCATE(sevc_all)
   DEALLOCATE(revc_all)
   !
-  ! OBM: Last minute check for real space implementation.
-  !
-  IF ( real_space_debug > 0 .and. .not. gamma_only ) &
+  IF ( real_space .and. .not. gamma_only ) &
            & CALL errore( ' iosys ', ' Linear response calculation ' // &
            & 'real space algorithms with k-points not implemented', 1 )
   !

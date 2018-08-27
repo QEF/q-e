@@ -11,6 +11,7 @@ bcast_ph_input.o : ../../Modules/wannier_gw.o
 bcast_ph_input.o : ../../PHonon/PH/phcom.o
 bcast_ph_input.o : ../../PHonon/PH/ramanm.o
 bcast_ph_input.o : ../../UtilXlib/mp.o
+close_phq.o : ../../LR_Modules/lrcom.o
 close_phq.o : ../../Modules/control_flags.o
 close_phq.o : ../../Modules/io_global.o
 close_phq.o : ../../Modules/mp_global.o

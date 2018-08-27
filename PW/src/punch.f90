@@ -25,12 +25,8 @@ SUBROUTINE punch( what )
   USE ions_base,            ONLY : nsp
   USE funct,                ONLY : get_inlc
   USE kernel_table,         ONLY : vdw_table_name, kernel_file_name
-#if defined (__OLDXML) 
-  USE pw_restart,           ONLY : pw_writefile
-#else
   USE pw_restart_new,       ONLY : pw_write_schema, pw_write_binaries
   USE qexsd_module,         ONLY : qexsd_reset_steps
-#endif
   USE io_rho_xml,           ONLY : write_scf
   USE a2F,                  ONLY : la2F, a2Fsave
   USE wavefunctions, ONLY : evc
@@ -57,12 +53,6 @@ SUBROUTINE punch( what )
      IF (io_level < 1) CLOSE ( UNIT=iunwfc, STATUS='keep' )
   END IF
   iunpun = 4
-  !
-#if defined(__OLDXML)
-  !
-  CALL pw_writefile( TRIM( what ) )
-  !
-#else
   !
   ! ...New-style I/O with xml schema and (optionally) hdf5 binaries
   !
@@ -115,8 +105,6 @@ SUBROUTINE punch( what )
      END IF  
       !
   END IF
-  !
-#endif
   !
   IF ( la2F ) CALL a2Fsave()
   !
