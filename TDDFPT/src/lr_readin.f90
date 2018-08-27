@@ -69,8 +69,8 @@ SUBROUTINE lr_readin
   !
   NAMELIST / lr_input /   restart, restart_step ,lr_verbosity, prefix, outdir, &
                         & test_case_no, wfcdir, disk_io, max_seconds
-  NAMELIST / lr_control / itermax, ipol, ltammd, real_space, lrpa,   &
-                        & charge_response, tqr, no_hxc, n_ipol, project,      &
+  NAMELIST / lr_control / itermax, ipol, ltammd, lrpa,   &
+                        & charge_response, no_hxc, n_ipol, project,      &
                         & scissor, ecutfock, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
                         & q1, q2, q3, approximation
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
@@ -106,11 +106,9 @@ SUBROUTINE lr_readin
      n_ipol = 1
      no_hxc = .FALSE.
      lrpa = .false.
-     real_space = .FALSE.
      charge_response = 0
      sum_rule = -99
      test_case_no = 0
-     tqr = .FALSE.
      beta_gamma_z_prefix = 'undefined'
      omeg= 0.0_DP
      epsil = 0.0_DP
@@ -321,15 +319,6 @@ SUBROUTINE lr_readin
   !
   outdir = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
   !
-  IF (.NOT.eels) THEN
-     !
-     IF (lr_verbosity > 1) THEN
-        WRITE(stdout,'(5x,"Status of real space flags: TQR=", L5 ,&
-                      &"  REAL_SPACE=", L5)') tqr, real_space
-     ENDIF
-     !
-  ENDIF
-  !
   ! EELS: Create a temporary directory for nscf files, and for
   ! writing of the turboEELS restart files.
   !
@@ -347,6 +336,9 @@ SUBROUTINE lr_readin
   ! lr_run_nscf -> init_run -> hinit0 -> init_igk
   !
   CALL read_file()
+  !
+  IF (.NOT.eels) WRITE(stdout,'(/5x,"Status of real space flags: TQR=", L5 , &
+                      & "  REAL_SPACE=", L5)') tqr, real_space
   !
   !   Set wfc_dir - this is done here because read_file sets wfc_dir = tmp_dir
   !   FIXME:,if wfcdir is not present in input, wfc_dir is set to "undefined"
@@ -556,6 +548,8 @@ CONTAINS
     !
     IF (lsda) CALL errore( 'lr_readin', 'LSDA is not implemented', 1 )
     !
+    IF (real_space)  CALL errore( 'lr_readin', 'real_space=.true. was not tested', 1 )
+    !
     ! EELS-related restrictions
     !
     IF (eels) THEN
@@ -570,7 +564,6 @@ CONTAINS
        !
        IF (project)     CALL errore( 'lr_readin', 'project is not allowed', 1 )
        IF (tqr)         CALL errore( 'lr_readin', 'tqr is not supported', 1 )
-       IF (real_space)  CALL errore( 'lr_readin', 'real_space is not supported', 1 )
        IF (charge_response /= 0) CALL errore( 'lr_readin', 'charge_response /= 0 is not allowed', 1 )
        IF (dft_is_hybrid())    CALL errore( 'lr_readin', 'EXX is not supported', 1 )
        IF (do_comp_mt)  CALL errore( 'lr_readin', 'Martyna-Tuckerman PBC is not supported.', 1 )

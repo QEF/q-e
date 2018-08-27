@@ -50,9 +50,9 @@ SUBROUTINE one_lanczos_step()
                                          charge_response, size_evc, LR_polarization, LR_iteration
     USE uspp,                     ONLY : vkb, nkb, okvan
     USE wvfct,                    ONLY : nbnd, npwx
-    USE control_flags,            ONLY : gamma_only, tqr
+    USE control_flags,            ONLY : gamma_only
     USE becmod,                   ONLY : bec_type, becp, calbec
-    USE realus,                   ONLY : real_space, invfft_orbital_gamma, initialisation_level,    &
+    USE realus,                   ONLY : invfft_orbital_gamma, initialisation_level,    &
                                          fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                          v_loc_psir, s_psir_gamma
     USE charg_resp,               ONLY : w_T_beta_store, w_T, lr_calc_F
@@ -77,11 +77,6 @@ SUBROUTINE one_lanczos_step()
     !
     IF (lr_verbosity > 5) THEN
        WRITE(stdout,'("<lr_lanczos_one_step>")')
-    ENDIF
-    !
-    IF (lr_verbosity > 10) THEN
-       PRINT *, "Real space = ", real_space
-       PRINT *, "TQR = ", tqr
     ENDIF
     !
     ! Memory usage
