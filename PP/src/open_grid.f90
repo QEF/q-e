@@ -156,6 +156,10 @@ PROGRAM open_grid
   xk(:,1:nks) = xkq_collect(:,1:nks)
   wk(1:nks) = 1._dp/DBLE(nks) !/DBLE(nspin_mag)
   npwx = n_plane_waves(gcutw, nks, xk, g, ngm)
+  IF (nspin==2) THEN
+    isk(1:nks/2) = 1
+    isk(nks/2+1:nks) = 2
+  ENDIF
   !
   DEALLOCATE(igk_k, ngk, et, wg)
   ALLOCATE(igk_k(npwx,nks), ngk(nks))
@@ -170,7 +174,7 @@ PROGRAM open_grid
   CALL open_buffer(iunwfc, 'wfc', nwordwfc, +1, exst_mem, exst)
   !
   ! Set the next to true to force non-collected wfcs on output
-!  twfcollect = .false.
+ !twfcollect = .false.
   CALL write_scf(rho, nspin)
   !
   ALLOCATE(psic(dffts%nnr), evx(npol*npwx, nbnd))
@@ -231,6 +235,7 @@ PROGRAM open_grid
   nq3 = nq_back(3)
   CALL dft_force_hybrid(exx_status_back)
   !
+  !twfcollect = .true.
   CALL punch('all')
   !
   ALLOCATE(yk(3,nks))
