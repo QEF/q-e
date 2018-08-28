@@ -390,7 +390,8 @@ CONTAINS
       TYPE(algorithmic_info_type)   :: obj
       LOGICAL,           INTENT(IN) :: real_space_beta, real_space_q, uspp, paw
       !
-      CALL qes_init_algorithmic_info(obj, "algorithmic_info", real_space_beta, real_space_q, uspp, paw)
+      CALL qes_init_algorithmic_info(obj, "algorithmic_info", REAL_SPACE_Q = real_space_q, &
+                                     REAL_SPACE_BETA = real_space_beta, USPP = uspp, PAW = paw)
       !
     END SUBROUTINE qexsd_init_algorithmic_info
     !
