@@ -1,0 +1,36 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='LiCoO2'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/'
+    verbosity='high'
+ /
+ &system
+    ibrav = 5,
+    celldm(1) = 9.3705,
+    celldm(4) = 0.83874,
+    nat = 4, 
+    ntyp = 3,
+    ecutwfc = 50.0
+    ecutrho = 400.0
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'ortho-atomic',
+    Hubbard_U(1) = 1.d-8
+ /
+ &electrons
+    conv_thr =  1.d-15
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+Co  59.0   co_pbesol_v1.2.uspp.F.UPF
+O   16.0   O.pbesol-n-kjpaw_psl.0.1.UPF
+Li   7.0   li_pbesol_v1.4.uspp.F.UPF
+ATOMIC_POSITIONS {crystal}
+ Co  0.0000000000   0.0000000000   0.0000000000
+ O   0.2604885000   0.2604885000   0.2604885000
+ O   0.7395115000   0.7395115000   0.7395115000
+ Li  0.5000000000   0.5000000000   0.5000000000
+K_POINTS {automatic}
+ 2 2 2 0 0 0

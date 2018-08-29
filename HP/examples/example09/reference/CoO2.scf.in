@@ -1,0 +1,41 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='CoO2'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/'
+    verbosity='high'
+ /
+ &system
+    ibrav = 0,
+    nat = 3, 
+    ntyp = 2,
+    ecutwfc = 60.0
+    ecutrho = 480.0
+    nspin = 2
+    starting_magnetization(1) = -0.5,
+    occupations = "smearing",
+    smearing = "mv",
+    degauss = 0.01,
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'ortho-atomic',
+    Hubbard_U(1) = 1.d-8
+ /
+ &electrons
+    conv_thr =  1.d-15
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+Co   58.933195   co_pbe_v1.2.uspp.F.UPF
+O    15.9994     O.pbe-n-kjpaw_psl.0.1.UPF
+ATOMIC_POSITIONS {angstrom}
+Co   0.0000000000     0.0000000000     0.0000000000
+O    1.4062895053     0.8119216244    -0.9358761640
+O    1.4062895053    -0.8119216244     0.9358761640
+CELL_PARAMETERS {angstrom}
+  1.4062895053    -2.4357648733     0.0000000000
+  1.4062895053     2.4357648733     0.0000000000
+  0.0000000000     0.0000000000    15.7312126250
+K_POINTS {automatic}
+ 6 6 1 0 0 0

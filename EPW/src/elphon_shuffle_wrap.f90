@@ -323,7 +323,7 @@
     DO iq_irr = 1, nqc_irr
       xq = xqc_irr(:,iq_irr)
       CALL set_small_group_of_q(nsymq,invsymq,minus_q)
-      CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
+      CALL sgam_lr (at, bg, nsym, s, irt, tau, rtau, nat)
       CALL set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
     ENDDO
   ENDIF ! epwread .and. .not. epbread
@@ -395,7 +395,7 @@
       IF(minus_q) WRITE(stdout, '(10x,a)') "in addition sym. q -> -q+G:"
       ! 
       ! Finally this does some of the above again and also computes rtau...
-      CALL sgam_ph_new(at, bg, nsym, s, irt, tau, rtau, nat)
+      CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
       !
       ! ######################### star of q #########################
       ! 
@@ -420,7 +420,7 @@
         sym (isym) = .true.
       ENDDO
       !
-      CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
+      CALL sgam_lr (at, bg, nsym, s, irt, tau, rtau, nat)
       !
       IF ( .not. allocated(sumr) ) allocate ( sumr(2,3,nat,3) )
       IF (meta_ionode) THEN

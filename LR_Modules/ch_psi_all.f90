@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,15 +22,18 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, igk_k
   USE noncollin_module,     ONLY : noncolin, npol
-  USE eqv,                  ONLY : evq
+  USE eqv,                  ONLY : evq, swfcatomk, swfcatomkpq
   USE qpoint,               ONLY : ikqs
   USE mp_bands,             ONLY : use_bgrp_in_hpsi, inter_bgrp_comm, intra_bgrp_comm
   USE funct,                ONLY : exx_is_active
   USE mp,                   ONLY : mp_sum
   USE control_lr,           ONLY : alpha_pv, nbnd_occ, lgamma
-  !Needed only for TDDFPT
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
+  USE buffers,              ONLY : get_buffer
+  USE io_files,             ONLY : nwordatwfc
+  USE ldaU,                 ONLY : lda_plus_u, copy_U_wfc, lda_plus_u_kind
+  USE units_lr,             ONLY : iuatwfc
 
   IMPLICIT NONE
 
@@ -69,10 +72,38 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   hpsi (:,:) = (0.d0, 0.d0)
   spsi (:,:) = (0.d0, 0.d0)
   !
-  !   compute an action of the Hamiltonian and the S operator
-  !   on the h vector (i.e. H*h and S*h, respectively).
+  current_k = ikqs(ik) ! k+q
   !
-  current_k = ikqs(ik)
+  ! DFT+U initializations
+  !
+  IF (lda_plus_u) THEN
+     !
+     ! Read the atomic orbitals (S*phi) at k+q from file
+     !
+     IF (lgamma) THEN
+        ! q=0
+        CALL get_buffer (swfcatomk, nwordatwfc, iuatwfc, current_k)
+        ! In this case swfcatomkpq is a pointer to swfcatomk
+     ELSE
+        ! q/=0
+        CALL get_buffer (swfcatomkpq, nwordatwfc, iuatwfc, current_k)
+     ENDIF
+     !
+     ! Copy swfcatomkpq to wfcU, because the later is used in the
+     ! routine which computes the Hubbard potential (routine vhpsi,
+     ! which is called by h_psi). Note that wfcU uses the offset offsetU 
+     ! while swfcatomkpq uses the offset oatwfc (see offset_atom_wfc).
+     !
+     CALL copy_U_wfc (swfcatomkpq)
+     !
+     ! Compute the phase factor at k+q
+     !IF (lda_plus_u_kind.EQ.2) CALL phase_factor(ikq)
+     !
+  ENDIF
+  !
+  ! Compute an action of the Hamiltonian and the S operator
+  ! on the h vector (i.e. H*h and S*h, respectively).
+  !
   CALL h_psi (npwx, n, m, h, hpsi)
   CALL s_psi (npwx, n, m, h, spsi)
   !

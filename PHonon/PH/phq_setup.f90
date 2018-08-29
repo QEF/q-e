@@ -228,7 +228,7 @@ subroutine phq_setup
   ! allocate and calculate rtau, the bravais lattice vector associated
   ! to a rotation
   !
-  call sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
+  call sgam_lr (at, bg, nsym, s, irt, tau, rtau, nat)
   !
   !    and calculate the vectors G associated to the symmetry Sq = q + G
   !    if minus_q is true calculate also irotmq and the G associated to Sq=-g+G

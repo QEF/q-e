@@ -1,0 +1,36 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='NiO2'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/'
+    verbosity='high'
+ /
+ &system
+    ibrav = 0,
+    nat = 3, 
+    ntyp = 2,
+    ecutwfc = 45.0
+    ecutrho = 360.0
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'ortho-atomic',
+    Hubbard_U(1) = 1.d-8
+ /
+ &electrons
+    conv_thr =  1.d-15
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+Ni   58.6934  ni_pbe_v1.4.uspp.F.UPF
+O    15.9994  O.pbe-n-kjpaw_psl.0.1.UPF
+ATOMIC_POSITIONS {angstrom}
+Ni   0.0000000000    0.0000000000    10.9412265283
+O    1.4121016725    0.8152772808    10.0006291225
+O    0.0000000000    1.6305545616    11.8818239340
+CELL_PARAMETERS {angstrom}
+  2.8242033451    0.0000000000     0.0000000000
+ -1.4121016725    2.4458318423     0.0000000000
+  0.0000000000    0.0000000000    21.8824530565
+K_POINTS {automatic}
+ 4 4 1 0 0 0

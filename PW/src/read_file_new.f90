@@ -305,6 +305,7 @@ SUBROUTINE read_xml_file ( )
   !
   IF ( lda_plus_u ) THEN
      CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
+     CALL init_at_1()
   ENDIF
   !
   CALL allocate_wfc()
