@@ -33,7 +33,7 @@ SUBROUTINE lr_readin
   USE fixed_occ,           ONLY : tfixed_occ
   USE input_parameters,    ONLY : degauss, nosym, wfcdir, outdir
   USE check_stop,          ONLY : max_seconds
-  USE realus,              ONLY : real_space, init_realspace_vars, qpointlist, &
+  USE realus,              ONLY : real_space, init_realspace_vars, generate_qpointlist, &
                                   betapointlist
   USE funct,               ONLY : dft_is_meta
   USE charg_resp,          ONLY : w_T_prefix, omeg, w_T_npol, epsil
@@ -337,7 +337,8 @@ SUBROUTINE lr_readin
   !
   CALL read_file()
   !
-  IF (.NOT.eels) WRITE(stdout,'(/5x,"Status of real space flags: TQR=", L5 , &
+  IF (.NOT.eels .AND. (tqr .OR. real_space)) &
+     WRITE(stdout,'(/5x,"Status of real space flags: TQR=", L5 , &
                       & "  REAL_SPACE=", L5)') tqr, real_space
   !
   !   Set wfc_dir - this is done here because read_file sets wfc_dir = tmp_dir
@@ -399,7 +400,9 @@ SUBROUTINE lr_readin
   !
   ! I. Timrov: The routine newd was already called in read_file above.
   !
-  CALL newd() !OBM: this is for the ground charge density
+  CALL newd() !OBM: this is for the ground-state charge density
+  !
+  IF (tqr .AND. .NOT.eels) CALL generate_qpointlist()
   !
   IF ( real_space .AND. .NOT.eels) THEN
      !
@@ -548,7 +551,13 @@ CONTAINS
     !
     IF (lsda) CALL errore( 'lr_readin', 'LSDA is not implemented', 1 )
     !
-    IF (real_space)  CALL errore( 'lr_readin', 'real_space=.true. was not tested', 1 )
+    IF (real_space)  THEN
+       IF (eels) THEN
+          CALL errore( 'lr_readin', 'Option real_space=.true. is not implemented', 1 )
+       ELSE
+          CALL errore( 'lr_readin', 'Option real_space=.true. is not tested', 1 )
+       ENDIF
+    ENDIF  
     !
     ! EELS-related restrictions
     !
