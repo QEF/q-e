@@ -15,10 +15,9 @@ SUBROUTINE bcast_lr_input
 
   USE lr_variables
   USE lr_dav_variables
-  USE realus,              ONLY: real_space
   USE mp,                  ONLY: mp_bcast, mp_barrier
   USE io_files,            ONLY: tmp_dir, prefix, wfc_dir
-  USE control_flags,       ONLY: tqr, tddfpt
+  USE control_flags,       ONLY: tddfpt
   USE charg_resp,          ONLY: omeg, w_T_prefix, w_T_npol,epsil
   USE io_global,           ONLY: ionode, ionode_id
   USE mp_global,           ONLY: intra_image_comm
@@ -45,8 +44,6 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (LR_polarization, ionode_id, world_comm )
   CALL mp_bcast (ltammd, ionode_id, world_comm )
   CALL mp_bcast (pseudo_hermitian, ionode_id, world_comm )
-  CALL mp_bcast (real_space, ionode_id, world_comm )
-  CALL mp_bcast (tqr, ionode_id, world_comm )
   CALL mp_bcast (test_case_no, ionode_id, world_comm )
   CALL mp_bcast (omeg, ionode_id, world_comm )
   CALL mp_bcast (epsil, ionode_id, world_comm )
