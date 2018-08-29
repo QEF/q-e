@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on  3Jul2018 at 12:41: 3 
+     Program EPW v.5.0.0 starts on 29Aug2018 at 10:55: 6 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -49,12 +49,12 @@
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
- 
+
      G-vector sticks info
      --------------------
      sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
      Sum         211     211     85                 2109     2109     531
- 
+
 
      --                                                                         
 
@@ -92,11 +92,11 @@
      site n.  atom      mass           positions (a_0 units)
         1        Si  28.0879   tau( 1) = (    0.00000    0.00000    0.00000  )
         2        Si  28.0879   tau( 2) = (    0.25000    0.25000    0.25000  )
- 
-     25 Sym.Ops. (with q -> -q+G )
+
+     49 Sym.Ops. (with q -> -q+G )
 
 
-     G cutoff =  160.0499  (   2109 G-vectors)     FFT grid: ( 18, 18, 18)
+     G cutoff =  160.0499  (   2109 G-vectors)     FFT grid: ( 20, 20, 20)
      number of k points=   64
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0156250
@@ -180,22 +180,22 @@
                 l(8) =   2
                 l(9) =   2
                l(10) =   2
-     EPW          :     0.27s CPU         0.29s WALL
+     EPW          :      0.26s CPU      0.22s WALL
 
-     EPW          :     0.53s CPU         0.55s WALL
+     EPW          :      0.55s CPU      0.34s WALL
 
      No wavefunction gauge setting applied
      -------------------------------------------------------------------
      Wannierization on  4 x  4 x  4 electronic grid
      -------------------------------------------------------------------
- 
+
      Spin CASE ( non-collinear )
- 
+
      Initializing Wannier90
- 
- 
+
+
      Initial Wannier projections
- 
+
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   1
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   1
      (   0.00000   0.00000   0.00000) :  l =  -3 mr =   2
@@ -218,11 +218,11 @@
       - Number of excluded bands is (  0)
       - Number of wannier functions is ( 16)
       - All guiding functions are given 
- 
+
   Reading data about k-point neighbours 
- 
+
       - All neighbours are found 
- 
+
      AMN
       k points =    64 in    1 pools
             1 of   64 on ionode
@@ -289,9 +289,9 @@
            62 of   64 on ionode
            63 of   64 on ionode
            64 of   64 on ionode
- 
+
      AMN calculated
- 
+
      MMN
       k points =    64 in    1 pools
             1 of   64 on ionode
@@ -359,11 +359,11 @@
            63 of   64 on ionode
            64 of   64 on ionode
      MMN calculated
- 
+
      Running Wannier90
- 
+
      Wannier Function centers (cartesian, alat) and spreads (ang):
- 
+
      (   0.04115   0.04115   0.04115) :   2.22692
      (   0.04115   0.04115   0.04115) :   2.22692
      (   0.04115  -0.04115  -0.04115) :   2.22692
@@ -372,54 +372,54 @@
      (  -0.04115   0.04115  -0.04115) :   2.22692
      (  -0.04115  -0.04115   0.04115) :   2.22692
      (  -0.04115  -0.04115   0.04115) :   2.22692
-     (   0.33395   0.33395   0.33395) :   1.84644
-     (   0.33395   0.33395   0.33395) :   1.84644
-     (   0.33395   0.16605   0.16605) :   1.84644
-     (   0.33395   0.16605   0.16605) :   1.84644
-     (   0.16605   0.33395   0.16605) :   1.84644
-     (   0.16605   0.33395   0.16605) :   1.84644
-     (   0.16605   0.16605   0.33395) :   1.84644
-     (   0.16605   0.16605   0.33395) :   1.84644
- 
+     (   0.33395   0.33395   0.33395) :   1.84645
+     (   0.33395   0.33395   0.33395) :   1.84645
+     (   0.33395   0.16605   0.16605) :   1.84645
+     (   0.33395   0.16605   0.16605) :   1.84645
+     (   0.16605   0.33395   0.16605) :   1.84645
+     (   0.16605   0.33395   0.16605) :   1.84645
+     (   0.16605   0.16605   0.33395) :   1.84645
+     (   0.16605   0.16605   0.33395) :   1.84645
+
      -------------------------------------------------------------------
-     WANNIER      :     18.49s CPU     18.91s WALL (       1 calls)
+     WANNIER      :     13.11s CPU     12.08s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
- 
+
 
      Calculating kmap and kgmap
      Progress  kmap: ########################################
      Progress kgmap: ########################################
-     kmaps        :      0.59s CPU      0.64s WALL (       1 calls)
+     kmaps        :      0.11s CPU      0.11s WALL (       1 calls)
 
      Reading interatomic force constants
 
-     IFC last   -0.0032724
+     IFC last   -0.0032828
      Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000024
+     Norm of the difference between old and new force-constants:    0.0000259
      Imposed crystal ASR
 
      Finished reading ifcs
 
      Symmetries of bravais lattice:  48
-     Symmetries of crystal:          24
+     Symmetries of crystal:          48
 
 
      ===================================================================
      irreducible q point #    1
      ===================================================================
 
-     Symmetries of small group of q: 24
+     Symmetries of small group of q: 48
           in addition sym. q -> -q+G:
- 
+
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
      Read dielectric tensor and effective charges
      Imposing acoustic sum rule on the dynamical matrix
      Dyn mat calculated from ifcs
- 
+
         q(    1 ) = (   0.0000000   0.0000000   0.0000000 )
 
 
@@ -427,40 +427,40 @@
      irreducible q point #    2
      ===================================================================
 
-     Symmetries of small group of q:  6
+     Symmetries of small group of q: 12
           in addition sym. q -> -q+G:
- 
+
      Number of q in the star =    4
      List of q in the star:
           1   0.500000000  -0.500000000   0.500000000
-          2  -0.500000000   0.500000000   0.500000000
-          3   0.500000000   0.500000000  -0.500000000
-          4  -0.500000000  -0.500000000  -0.500000000
+          2   0.500000000   0.500000000  -0.500000000
+          3  -0.500000000  -0.500000000  -0.500000000
+          4   0.500000000  -0.500000000  -0.500000000
      Dyn mat calculated from ifcs
- 
+
         q(    2 ) = (   0.5000000  -0.5000000   0.5000000 )
-        q(    3 ) = (  -0.5000000   0.5000000   0.5000000 )
-        q(    4 ) = (   0.5000000   0.5000000  -0.5000000 )
-        q(    5 ) = (  -0.5000000  -0.5000000  -0.5000000 )
+        q(    3 ) = (   0.5000000   0.5000000  -0.5000000 )
+        q(    4 ) = (  -0.5000000  -0.5000000  -0.5000000 )
+        q(    5 ) = (   0.5000000  -0.5000000  -0.5000000 )
 
 
      ===================================================================
      irreducible q point #    3
      ===================================================================
 
-     Symmetries of small group of q:  8
+     Symmetries of small group of q: 16
           in addition sym. q -> -q+G:
- 
+
      Number of q in the star =    3
      List of q in the star:
           1   0.000000000  -1.000000000   0.000000000
-          2   0.000000000   0.000000000  -1.000000000
-          3  -1.000000000   0.000000000   0.000000000
+          2  -1.000000000   0.000000000   0.000000000
+          3   0.000000000   0.000000000   1.000000000
      Dyn mat calculated from ifcs
- 
+
         q(    6 ) = (   0.0000000  -1.0000000   0.0000000 )
-        q(    7 ) = (   0.0000000   0.0000000  -1.0000000 )
-        q(    8 ) = (  -1.0000000   0.0000000   0.0000000 )
+        q(    7 ) = (  -1.0000000   0.0000000   0.0000000 )
+        q(    8 ) = (   0.0000000   0.0000000   1.0000000 )
 
      Writing epmatq on .epb files
 
@@ -478,9 +478,9 @@
 
      Reading interatomic force constants
 
-     IFC last   -0.0032724
+     IFC last   -0.0032828
      Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000024
+     Norm of the difference between old and new force-constants:    0.0000259
      Imposed crystal ASR
 
      Finished reading ifcs
@@ -489,8 +489,8 @@
      Finished reading Wann rep data from file
 
      ===================================================================
-     Memory usage:  VmHWM =        90Mb
-                   VmPeak =       336Mb
+     Memory usage:  VmHWM =        77Mb
+                   VmPeak =       463Mb
      ===================================================================
      
      Using q-mesh file: ./LGX.txt
@@ -515,36 +515,36 @@
      Progression iq (fine) =         50/       100
      Progression iq (fine) =        100/       100
      ===================================================================
-     Memory usage:  VmHWM =        90Mb
-                   VmPeak =       336Mb
+     Memory usage:  VmHWM =        77Mb
+                   VmPeak =       463Mb
      ===================================================================
 
- 
+
      Unfolding on the coarse grid
-     elphon_wrap  :    115.69s CPU    116.41s WALL (       1 calls)
- 
+     elphon_wrap  :    193.79s CPU     98.24s WALL (       1 calls)
+
      INITIALIZATION: 
- 
-     set_drhoc    :      0.19s CPU      0.20s WALL (       9 calls)
-     init_vloc    :      0.01s CPU      0.01s WALL (      10 calls)
-     init_us_1    :      0.16s CPU      0.16s WALL (      10 calls)
- 
- 
+
+     set_drhoc    :      0.54s CPU      0.33s WALL (       9 calls)
+     init_vloc    :      0.02s CPU      0.01s WALL (      10 calls)
+     init_us_1    :      0.20s CPU      0.19s WALL (      10 calls)
+
+
      Electron-Phonon interpolation
-     ephwann      :      6.42s CPU      7.90s WALL (       1 calls)
-     ep-interp    :      5.36s CPU      6.44s WALL (     100 calls)
- 
+     ephwann      :      8.66s CPU      4.82s WALL (       1 calls)
+     ep-interp    :      7.76s CPU      3.88s WALL (     100 calls)
+
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
-     Ham: step 2  :      0.05s CPU      0.09s WALL (       1 calls)
-     ep: step 1   :      0.04s CPU      0.04s WALL (      48 calls)
-     ep: step 2   :      0.17s CPU      0.19s WALL (      48 calls)
-     DynW2B       :      0.00s CPU      0.00s WALL (     100 calls)
-     HamW2B       :      1.93s CPU      1.95s WALL (   20200 calls)
-     ephW2Bp      :      0.71s CPU      1.77s WALL (     100 calls)
- 
- 
+     Ham: step 2  :      0.03s CPU      0.03s WALL (       1 calls)
+     ep: step 1   :      0.01s CPU      0.01s WALL (      48 calls)
+     ep: step 2   :      0.18s CPU      0.18s WALL (      48 calls)
+     DynW2B       :      0.01s CPU      0.00s WALL (     100 calls)
+     HamW2B       :      5.03s CPU      2.42s WALL (   20200 calls)
+     ephW2Bp      :      1.06s CPU      0.68s WALL (     100 calls)
+
+
      Total program execution
-     EPW          :  2m21.14s CPU     2m23.78s WALL
+     EPW          :   3m36.11s CPU   1m55.49s WALL
 
                                                                                           
  Please consider citing:                                                                  
