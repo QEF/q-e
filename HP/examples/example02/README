@@ -1,0 +1,50 @@
+In order to compute U for magnetic insulators one needs to follow
+special procedure. Since we do not know a priori the magnetization
+of the system, we perform a calculation with a finite 
+starting_magnetization (in the range from -1 to +1) which requires 
+to treat the system of interest as a metal (i.e. to use a smearing). 
+However, using the smearing can create problems in the linear-response 
+calculation of U, because in DFPT for metals at q=0 there is a metallic 
+correction which is proportional to the inverse of the DOS at the Fermi 
+level [see Eq.(79) in Rev. Mod. Phys. 73, 515 (2001)]. Therefore, if we 
+treat the system as a fake metal, then the DOS at the Fermi level might 
+be extremely small, which would lead to extremely large shift of the 
+Fermi energy and as a consequence to the numerical divergence of the 
+DFPT calculation. The solution to this problem is the following:
+
+1. Perform a SCF calculation by treating the system as a fake magnetic
+   metal. Namely, specify occupations = 'smearing' and set up some very
+   small broadening parameter, and set up nspin=2 and starting_magnetization.
+   Moreover, use the convergence threshold conv_thr not too small, because 
+   otherwise there might be problems to converge the SCF calculation in 
+   the next step.
+
+2. Perform a SCF calculation by treating the system as a magnetic insulator 
+   using the total magnetization obtained in the previous step. Extract from 
+   the previous calculation the total magnetization and the number of bands 
+   (Kohn-Sham states) and use them in this SCF calculation by using the 
+   keywords tot_magnetization and nbnd, respectively. Some details:
+   - set up the occupations to be fixed (this is the default in QE), namely
+     occupations = 'fixed';
+   - use nspin=2 and tot_magnetization, where the total magnetization must 
+     be extracted from the previous step. The setup of tot_magnetization 
+     is needed in order to let the code specify correctly the occupations 
+     for spin up and spin down electrons (without specifying 
+     tot_magnetization the code will set the number of spin up and spin down 
+     electrons to be equal, which is wrong for ferromagnetic insulators); 
+   - set up the number of bands (nbnd) equal to the number of bands in the
+     previous run [without specifying nbnd in this calculation, the code will 
+     set it to be equal to half the number of electrons, while in the 
+     previous (metallic) calculation the number of bands was determined as 
+     half of the number of electrons plus 20% - this mismatch would lead
+     to numerical problems];
+   - in order to save CPU time in the current SCF calculation it is 
+     recommended to start from the wavefunctions and the potential obtained 
+     in the previous step. To do so specify in the input startingpot='file' 
+     and startingwfc='file'. If you ignore this and try to start the SCF 
+     calculation from scratch, it may happen that the code will not converge 
+     at all (because it would be hard for it to find the ground state and 
+     the correct magnetization starting just from the condition of the 
+     constrained magnetization). 
+
+3. Perform the linear-response calculation of U using the HP code.

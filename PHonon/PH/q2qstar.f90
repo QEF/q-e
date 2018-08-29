@@ -163,7 +163,7 @@ PROGRAM Q2QSTAR
   !
   ! finally this does some of the above again and also computes rtau...
   ALLOCATE(rtau( 3, 48, nat))
-  CALL sgam_ph_new(at, bg, nsym, s, irt, tau, rtau, nat)
+  CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
   !
   ! ######################### star of q #########################
   do na = 1, nat

@@ -1,0 +1,132 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x and hp.x to calculate"
+$ECHO "the Hubbard U parameters for Ni in NiO2 (2D system)."
+
+# set the needed environment variables
+. ../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x hp.x"
+PSEUDO_LIST="ni_pbe_v1.4.uspp.F.UPF O.pbe-n-kjpaw_psl.0.1.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+$ECHO
+$ECHO " Pseudopotentials were selected from the SSSP library:"
+$ECHO " https://www.materialscloud.org/discover/sssp/table/precision\c"
+$ECHO
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+HP_COMMAND="$PARA_PREFIX $BIN_DIR/hp.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as:   $PW_COMMAND"
+$ECHO "  running hp.x as:   $HP_COMMAND"
+$ECHO
+
+PREFIX='NiO2'
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# self-consistent calculation
+cat > $PREFIX.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='$PREFIX'
+    pseudo_dir = '$PSEUDO_DIR/'
+    outdir='$TMP_DIR/'
+    verbosity='high'
+ /
+ &system
+    ibrav = 0,
+    nat = 3, 
+    ntyp = 2,
+    ecutwfc = 45.0
+    ecutrho = 360.0
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'ortho-atomic',
+    Hubbard_U(1) = 1.d-8
+ /
+ &electrons
+    conv_thr =  1.d-15
+    mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+Ni   58.6934  ni_pbe_v1.4.uspp.F.UPF
+O    15.9994  O.pbe-n-kjpaw_psl.0.1.UPF
+ATOMIC_POSITIONS {angstrom}
+Ni   0.0000000000    0.0000000000    10.9412265283
+O    1.4121016725    0.8152772808    10.0006291225
+O    0.0000000000    1.6305545616    11.8818239340
+CELL_PARAMETERS {angstrom}
+  2.8242033451    0.0000000000     0.0000000000
+ -1.4121016725    2.4458318423     0.0000000000
+  0.0000000000    0.0000000000    21.8824530565
+K_POINTS {automatic}
+ 4 4 1 0 0 0
+EOF
+$ECHO "  Running the SCF calculation for $PREFIX..."
+$PW_COMMAND < $PREFIX.scf.in |tee $PREFIX.scf.out
+$ECHO " done"
+
+
+# Perform the linear-response calculation
+cat > $PREFIX.hp.in << EOF
+ &inputhp
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   nq1 = 2, nq2 = 2, nq3 = 1,
+   conv_thr_chi = 1.0d-8,
+   iverbosity = 2
+ /
+EOF
+$ECHO "  Running the linear-response calculation of Hubbard U..."
+$HP_COMMAND < $PREFIX.hp.in |tee $PREFIX.hp.out
+$ECHO " done"

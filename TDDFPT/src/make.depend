@@ -17,16 +17,6 @@ lr_addus_dvpsi.o : ../../Modules/kind.o
 lr_addus_dvpsi.o : ../../Modules/noncol.o
 lr_addus_dvpsi.o : ../../Modules/paw_variables.o
 lr_addus_dvpsi.o : ../../Modules/uspp.o
-lr_addusddens.o : ../../FFTXlib/fft_interfaces.o
-lr_addusddens.o : ../../LR_Modules/lrcom.o
-lr_addusddens.o : ../../Modules/fft_base.o
-lr_addusddens.o : ../../Modules/ions_base.o
-lr_addusddens.o : ../../Modules/kind.o
-lr_addusddens.o : ../../Modules/noncol.o
-lr_addusddens.o : ../../Modules/paw_variables.o
-lr_addusddens.o : ../../Modules/recvec.o
-lr_addusddens.o : ../../Modules/uspp.o
-lr_addusddens.o : ../../Modules/wavefunctions.o
 lr_alloc_init.o : ../../LR_Modules/lrcom.o
 lr_alloc_init.o : ../../Modules/becmod.o
 lr_alloc_init.o : ../../Modules/control_flags.o

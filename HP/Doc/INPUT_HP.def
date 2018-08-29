@@ -1,0 +1,267 @@
+input_description -distribution {Quantum Espresso} -package PWscf -program hp.x {
+
+    toc {}
+
+    intro {
+	@b {Input data format:} { } = optional, [ ] = it depends, # = comment
+
+	@b {Structure of the input data:}
+	===============================================================================
+
+	@b &INPUTHP
+	   ...
+	@b /
+
+    }
+
+    namelist INPUTHP {
+
+        var prefix -type CHARACTER {
+            default { 'pwscf' }
+            info {
+                Prepended to input/output filenames; must be the same 
+                used in the calculation of unperturbed system.
+            }
+        }
+
+        var outdir -type CHARACTER {
+            default {
+                value of the @tt ESPRESSO_TMPDIR environment variable if set;
+                @br current directory ('./') otherwise
+            }
+            info {
+		Directory containing input, output, and scratch files; 
+                must be the same as specified in the calculation of 
+                the unperturbed system.
+            }
+        }
+
+        var iverbosity -type INTEGER {
+            default { 1 }
+            info {
+                = 1 : minimal output
+                = 2 : as above + symmetry matrices, final response matrices chi0 and chi1
+                                 and their inverse matrices, full U matrix
+                = 3 : as above + various detailed info about the NSCF calculation at k and k+q
+                = 4 : as above + response occupation matrices at every iteration and for
+                                 every q point in the star
+            }
+        }
+
+        vargroup -type INTEGER {
+            var nq1
+            var nq2
+            var nq3
+            default { 1,1,1 }
+            info {
+                Parameters of the Monkhorst-Pack grid (no offset).
+                Same meaning as for nk1, nk2, nk3 in the input of pw.x.
+            }
+        }
+
+        var start_q  -type INTEGER {
+            default { 1 }
+            see { last_q, sum_pertq }
+            info {
+                 Computes only the q points from start_q to last_q.
+                 IMPORTANT: start_q must be <= nqs (number of q points found)
+            }
+        }
+
+        var last_q  -type INTEGER {
+            default { number of q points }
+            see { start_q, sum_pertq }
+            info {
+                 Computes only the q points from start_q to last_q.
+                 IMPORTANT: last_q must be <= number of q points
+            }
+        }
+
+        var sum_pertq -type LOGICAL {
+            default { .false. }
+            see { start_q, last_q, perturb_only_atom }
+            info {
+             If it is set to .true. then the code will collect the
+             pieces of the response occupation matrices for all q points. 
+             This variable should be used only when start_q, last_q and
+             perturb_only_atom are used.
+            }
+        }
+
+        var skip_equivalence_q -type LOGICAL {
+            default { .false. }
+            info {
+                If .true. then the code will skip the equivalence
+                analysis of q points, and thus the full grid of q points 
+                will be used. Otherwise the symmetry is used to determine 
+                equivalent q points (star of q), and then perform 
+                calculations only for inequivalent q points.
+            }
+        }
+
+        var at_equiv_criterium -type INTEGER {
+            default { 1 }
+            info {
+                Method of searching for atoms to be perturbed.
+                1 = Find how many inequivalent Hubbard atoms there are
+                    by analyzing the unperturbed occupations.
+                2 = Find how many different types of Hubbard atoms there
+                    are (no use of symmetry). Warning: atoms which
+                    have the same type but which are inequivalent
+                    by symmetry will not be distinguished in this case 
+                    (use option 1 instead).
+                3 = Find how many inequivalent Hubbard atoms
+                    there are using symmetry. Atoms which have the
+                    same type but are not equivalent by symmetry will
+                    be distinguished in this case.
+             }
+        }
+
+        var docc_thr  -type REAL {
+            default { 5.D-5 }
+            info {
+                Threshold for the comparison of the unperturbed occupations
+                which is needed for the selection of atoms which must be perturbed.
+                Can be used only with at_equiv_criterium=1.
+            }
+        }
+
+        var conv_thr_chi  -type REAL {
+            default { 1.D-5 }
+            info {
+                Convergence threshold for the response function chi,
+                which is defined as a trace of the response occupation
+                matrix dns.
+            }
+        }
+
+        var thresh_init  -type REAL {
+            default { 1.D-14 }
+            info {
+                Initial threshold for the solution of the linear system
+                (first iteration). Needed to converge the bare 
+                (non-interacting) response function chi0. The specified
+                value will be multiplied by the number of electrons in 
+                the system.
+            }
+        }
+        
+        var ethr_nscf  -type REAL {
+            default { 1.D-11 }
+            info {
+                Threshold for the convergence of eigenvalues during the 
+                iterative diagonalization of the Hamiltonian in the 
+                non-self-consistent-field (NSCF) calculation at k and k+q points. 
+                Note, this quantity is NOT extensive. 
+            }
+        }
+         
+	var niter_max -type INTEGER { 
+	    default { 100 }
+	    info {
+		Maximum number of iterations in the iterative
+                solution of the linear-response Kohn-Sham equations. 
+	    }
+	}
+
+	var alpha_mix(i)  -type REAL { 
+	    default { alpha_mix(1)=0.3 }
+	    info { 
+		Mixing parameter (for the i-th iteration) for updating 
+                the response SCF potential using the modified Broyden method
+                D.D. Johnson, PRB 38, 12807 (1988).
+	    }
+	}
+
+	var nmix   -type INTEGER { 
+	    default { 4 }
+	    info { 
+                Number of iterations used in potential mixing
+                using the modified Broyden method
+                D.D. Johnson, PRB 38, 12807 (1988).
+            }
+	}
+
+        var background -type CHARACTER {
+            default { 'no' }
+            info {
+              Background for the post-processing calculation of U.
+              'no'      = no background
+              'neutral' = neutralizing background
+            }
+        }
+
+        var postproc_only -type LOGICAL {
+            default { .false. }
+            info { 
+              If .true. perform only a post-processing calculation of U
+              (it is meaningfull only when chi0 and chi were already computed).
+            }
+        }
+
+        var skip_type -type LOGICAL {
+            default { .false. }
+            info {
+              skip_type(i), where i runs over types of atoms. 
+              If skip_type(i)=.true. then no linear-response calculation 
+              will be performed for the i-th atomic type: in this case
+              merge_type(i) must be specified, otherwise the code will stop.
+              This option is useful if your system has atoms of the same
+              type but opposite spin pollarizations (anti-ferromagnetic case).
+              This keyword cannot be used when at_equiv_criterium=1.
+            }
+        }
+
+        var merge_type  -type INTEGER {
+            default { 0 }
+            info { 
+             merge_type(i), where i runs over types of atoms.
+             merge_type(i)=j, will merge type i to type j (useful when nspin=2).
+             Such a merging of types is done only at the post-processing stage.
+             This keyword cannot be used when at_equiv_criterium=1.
+            }
+        }
+
+        var perturb_only_atom -type LOGICAL {
+            default { .false. }
+            see { collect_chi }
+            info {
+             If perturb_only_atom(i)=.true. then only the i-th perturbed atom
+             will be considered in the run. This variable is useful when
+             one wants to split the whole calculation on parts, due to
+             the high computational cost.
+             Note: this variable has a higher priority than skip_atom and
+             skip_type.
+            }
+        }
+
+        var collect_chi -type LOGICAL {
+            default { .false. }
+            see { perturb_only_atom }
+            info {
+             If it is set to .true. then the code will collect the 
+             pieces of the chi0 and chi1 matrices, which must have been
+             produced in previous runs. The code will look for files
+             tmp_dir/HP/prefix.chi.i.dat. Note that all files prefix.chi.i.dat
+             (where i runs over all perturbed atoms) must be placed in one 
+             folder tmp_dir/HP/. See also the variable perturb_only_atom.
+            }
+        }
+
+        var determine_num_pert_only -type LOGICAL {
+            default { .false. }
+            info {
+              If .true. determines number of perturbations (i.e. which
+              atoms will be perturbed) and exits smoothly. 
+            }
+        }
+
+        var max_seconds  -type REAL {
+            default { 1.d7 }
+            info { 
+             Maximum allowed run time before the job stops smoothly. 
+            }
+        }
+
+}  
+}

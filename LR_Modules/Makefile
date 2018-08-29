@@ -36,6 +36,7 @@ set_dbecsum_nc.o \
 set_int3_nc.o \
 smallgq.o \
 lr_sm1_psi.o \
+lr_addusddens.o \
 localdos.o \
 setup_dgc.o \
 compute_vsgga.o \
@@ -43,7 +44,7 @@ setup_dmuxc.o \
 setup_nbnd_occ.o \
 setup_alpha_pv.o \
 set_small_group_of_q.o \
-sgam_ph.o \
+sgam_lr.o \
 star_q.o \
 setqmod.o \
 qdipol_cryst.o \
