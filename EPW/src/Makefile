@@ -22,6 +22,7 @@ EPWOBJS = \
 epwcom.o \
 constants_epw.o \
 io_epw.o \
+io_eliashberg.o \
 elph2.o \
 eliashbergcom.o \
 superconductivity.o \

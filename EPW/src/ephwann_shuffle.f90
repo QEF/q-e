@@ -67,8 +67,7 @@
                             vmebloch2wan, ephbloch2wane, ephbloch2wanp, &
                             ephbloch2wanp_mem
   USE wigner,        ONLY : wigner_seitz_wrap
-  USE superconductivity, ONLY : write_ephmat, count_kpoints, kmesh_fine, &
-                            kqmap_fine
+  USE io_eliashberg, ONLY : write_ephmat, count_kpoints, kmesh_fine, kqmap_fine
   USE transport,     ONLY : transport_coeffs, scattering_rate_q
   USE transport_iter,ONLY : iterativebte
 #ifdef __NAG
