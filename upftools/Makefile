@@ -66,7 +66,7 @@ virtual.x : virtual.o $(OBJS) $(QEMODS) $(LIBOBJS)
 
 virtual_v2.x: virtual_v2.o $(OBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		virtual_v2.o $(OBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		virtual_v2.o $(OBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 
 interpolate.x : interpolate.o $(OBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \

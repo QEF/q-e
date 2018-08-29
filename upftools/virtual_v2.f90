@@ -22,15 +22,19 @@
 !
 ! virtual_v2: supports reading of UPF v2 format
 ! Author: Jingyang Wang (jw598@cornell.edu)
-! WARNING: Currently only works for qe v5.2.0 and below
+! 
 !
 PROGRAM virtual_test
 
   USE pseudo_types, ONLY : pseudo_upf, nullify_pseudo_upf, &
                            deallocate_pseudo_upf
   USE upf_module, ONLY : read_upf
-  USE write_upf_v2_module, ONLY : write_upf_v2
+  USE write_upf_module, ONLY : write_upf
   USE radial_grids, ONLY : radial_grid_type, nullify_radial_grid
+  USE environment, ONLY: environment_start, environment_end
+  USE mp_global, ONLY: mp_startup, mp_global_end
+  USE io_global, ONLY: ionode, stdout
+
 
   !
   IMPLICIT NONE
@@ -44,75 +48,80 @@ PROGRAM virtual_test
   INTEGER :: ios
   TYPE (pseudo_upf) :: upf(2), upf_vca
   TYPE (radial_grid_type) :: grid(2)
+#if defined(__MPI)
+  CALL mp_startup()
+#endif
+  CALL environment_start('VIRTUAL_V2.X') 
+  IF (ionode) THEN 
+     !
+     PRINT '('' '')'                                                                     
+     PRINT '('' Generate the UPF pseudopotential for a virtual atom '')'                 
+     PRINT '('' combining two pseudopootentials in UPF format '')'                       
+     PRINT '('' '')'                                                                     
+     !                                                                                   
+                                                                                         
+     ! Read pseudopotentials                                                             
+     !                                                                                   
+     DO is=1,2                                                                           
+                                                                                         
+       PRINT '(''  Input PP file # '',i2,'' in UPF format > '',$)', is                   
+       READ (5, '(a)', end = 20, err = 20) filein(is)                                    
+                                                                                         
+       !  nullify objects as soon as they are instantiated                               
+                                                                                         
+       CALL nullify_pseudo_upf(upf(is))                                                  
+       CALL nullify_radial_grid(grid(is))                                                
+                                                                                         
+                                                                                         
+                                                                                         
+                                                                                         
+       CALL read_upf(upf(is), GRID = grid(is), IERR = ierr,FILENAME =  TRIM(filein(is))) 
+       !                                                                                 
+       IF (ierr/=0 .AND. ierr/=-1) THEN                                                  
+          print *, ierr                                                                  
+          CALL errore('virtual_test', 'reading pseudo upf', ierr)                        
+       END IF                                                                            
+       CLOSE (unit=iunps)                                                                
+       PRINT '('' '')'                                                                   
+                                                                                         
+     ENDDO                                                                               
+                                                                                         
+     ! Choose mixing parameter x                                                         
+     !                                                                                   
+     PRINT '('' New Pseudo = x '',a,'' + (1-x) '',a)', (trim(filein(is)), is=1,2)        
+   10 CONTINUE                                                                           
+     WRITE(stdout,'('' mixing parameter x [0<x<1] = '')', advance="NO")                       
+     READ (5,*) x                                                                        
+     IF (x<0.d0 .or. x>1)  GOTO 10                                                       
+                                                                                         
+     ! compute virtual crystal approximation                                             
+     !                                                                                   
+     CALL compute_virtual(x, filein, upf(1), upf_vca)                                    
+                                                                                         
+     ! write VCA pseudopotential to file                                                 
+     !                                                                                   
+     fileout='NewPseudo.UPF'                                                             
+     PRINT '("Output PP file in UPF format :  ",a)', fileout                             
+     !                                                                                   
+     CALL write_upf ( TRIM(fileout), upf_vca, SCHEMA='v2')                               
+     !                                                                                   
+     CLOSE(ounps)                                                                        
+     CALL deallocate_pseudo_upf(upf(1))                                                  
+     CALL deallocate_pseudo_upf(upf(2))                                                  
+     !     ----------------------------------------------------------                    
+     WRITE (stdout,"('Pseudopotential successfully written')")                                
+     WRITE (stdout,"('Please review the content of the PP_INFO fields')")                     
+     WRITE (stdout,"('*** Please TEST BEFORE USING !!! ***')")                                
+     !     ----------------------------------------------------------                    
+     !
+   END IF
+  CALL environment_end('VIRTUAL_V2.X')
+#if defined(__MPI) 
+  CALL mp_global_end()
+#endif 
 
-  PRINT '('' '')'
-  PRINT '('' Generate the UPF pseudopotential for a virtual atom '')'
-  PRINT '('' combining two pseudopootentials in UPF format '')'
-  PRINT '('' '')'
-  !
-
-  ! Read pseudopotentials
-  !
-  DO is=1,2
-
-    PRINT '(''  Input PP file # '',i2,'' in UPF format > '',$)', is
-    READ (5, '(a)', end = 20, err = 20) filein(is)
-
-    !  nullify objects as soon as they are instantiated
-
-    CALL nullify_pseudo_upf(upf(is))
-    CALL nullify_radial_grid(grid(is))
-
-    iunps=4
-
-    OPEN(unit=iunps, file=filein(is), status='old', form='formatted', &
-       err=100, iostat=ios)
-100   CALL errore('virtual_test', 'open error on file '//filein(is), ios)
-
-    IF (ios/=0) STOP
-    WRITE (*,*) " IOS= ", ios, is, iunps
-
-    CALL read_upf(upf(is), grid(is), ierr, iunps, filein(is))
-    !
-    IF (ierr/=0 .AND. ierr/=-1) &
-      CALL errore('virtual_test', 'reading pseudo upf', ierr)
-
-    CLOSE (unit=iunps)
-    PRINT '('' '')'
-
-  ENDDO
-
-  ! Choose mixing parameter x
-  !
-  PRINT '('' New Pseudo = x '',a,'' + (1-x) '',a)', (trim(filein(is)), is=1,2)
-10 CONTINUE
-  WRITE(*,'('' mixing parameter x [0<x<1] = '')', advance="NO")
-  READ (5,*) x
-  IF (x<0.d0 .or. x>1)  GOTO 10
-
-  ! compute virtual crystal approximation
-  !
-  CALL compute_virtual(x, filein, upf(1), upf_vca)
-
-  ! write VCA pseudopotential to file
-  !
-  fileout='NewPseudo.UPF'
-  PRINT '("Output PP file in UPF format :  ",a)', fileout
-  ounps=2
-  OPEN(unit=ounps, file=fileout, status='unknown', form='formatted')
-  !
-  CALL write_upf_v2(ounps, upf_vca)
-  !
-  CLOSE(ounps)
-  CALL deallocate_pseudo_upf(upf(1))
-  CALL deallocate_pseudo_upf(upf(2))
-  !     ----------------------------------------------------------
-  WRITE (6,"('Pseudopotential successfully written')")
-  WRITE (6,"('Please review the content of the PP_INFO fields')")
-  WRITE (6,"('*** Please TEST BEFORE USING !!! ***')")
-  !     ----------------------------------------------------------
-  !
-20  STOP
+   STOP
+20 CALL errore ('virtual.x', 'error reading pseudo file', 1)   
 
 END PROGRAM virtual_test
 
@@ -126,7 +135,7 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
 
   IMPLICIT NONE
 
-  INTEGER :: i, j, ib, ijv, ijv2
+  INTEGER :: i, j, ib, ijv, ijv2, prova
   real(8), INTENT(IN) :: x
   CHARACTER (len=256) :: filein(2)
   TYPE (pseudo_upf), INTENT(IN) :: upf(2)
@@ -139,7 +148,7 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
 
   !
   ! All variables to be written into the UPF file
-  ! (UPF = unified pseudopotential format, v.1)
+  ! (UPF = unified pseudopotential format, v.2)
   !
 
   ! pp_info
@@ -197,7 +206,7 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
   !
 
   !pp_header
-  upf_vca%generated  = 'Generated using virtual_v2.x code'
+  upf_vca%generated  = 'Generated using virtual.x code'
   upf_vca%author = 'virtual_v2'
 
   call date_and_tim(day, hour)
@@ -224,7 +233,7 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
   upf_lmax = max(upf(1)%lmax, upf(2)%lmax)
 
   IF ( upf(1)%mesh/=upf(2)%mesh ) THEN
-     WRITE (*,*) " CP 0.1: pseudopotentials have different mesh "
+     WRITE (*,*) " pseudopotentials have different mesh "
      WRITE (*,*) upf(1)%mesh, upf(2)%mesh
      WRITE (*,*) upf(1)%r(1), upf(2)%r(1)
      WRITE (*,*) upf(1)%r(upf(1)%mesh), upf(2)%r(upf(2)%mesh)
@@ -239,8 +248,6 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
   upf_ecutwfc = upf(1)%ecutwfc
   upf_etotps  = upf(1)%etotps
 
-  WRITE (*,*) "upf_nbeta = ", upf_nbeta
-  WRITE (*,*) "upf_vca%nbeta = ", upf_vca%nbeta
 
   ALLOCATE( upf_ocw(upf_ntwfc), upf_elsw(upf_ntwfc), upf_lchiw(upf_ntwfc) )
   upf_ocw(1:upf_ntwfc)  = upf(1)%oc(1:upf_ntwfc)
@@ -259,7 +266,7 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
      ENDIF
   ENDDO
   IF (capel>1.d-6) THEN
-     WRITE (*,*) " CP 0.2: pseudopotentials have different mesh "
+     WRITE (*,*) " pseudopotentials have different mesh "
      WRITE (*,*) "capel = ", capel
      interpolate = .true.
   ENDIF
@@ -411,53 +418,49 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
   
     ALLOCATE( upf_qqq(upf_nbeta,upf_nbeta) )
     upf_qqq(:,:) = 0.d0
-  
+    IF ( upf(1)%q_with_l .NEQV. upf(2)%q_with_l) &
+       CALL errore ( 'virtual.x: ', 'Augmentation charges are written using uncompatible formats',1) 
     IF( upf(1)%q_with_l ) THEN
+       upf_vca%q_with_l = .TRUE. 
        ALLOCATE( upf_qfuncl(upf_mesh, upf_nbeta*(upf_nbeta+1)/2, 0:2*upf(1)%lmax) )
        upf_qfuncl(:,:,:) = 0.d0
     ELSE
+       upf_vca%q_with_l = .FALSE. 
        ALLOCATE( upf_qfunc(upf_mesh, upf_nbeta*(upf_nbeta+1)/2) )
        upf_qfunc(:,:) = 0.d0
     ENDIF
   
-    WRITE (*,*) "pp_qij CP 1 reached."
+    WRITE (*,*) "pp_qij"
   
-    WRITE (*,*) "upf(1)%nbeta = ", upf(1)%nbeta
-    WRITE (*,*) "upf(1)%qqq has shape ", shape(upf(1)%qqq)
-    WRITE (*,*) "upf_qqq has shape ", shape(upf_qqq)
   
     DO i=1,upf(1)%nbeta
        DO j=i,upf(1)%nbeta
           ijv = j * (j-1)/2 + i
           upf_qqq(i,j) = x * upf(1)%qqq(i,j)
   
-          WRITE (*,*) "pp_qij CP 2.1.0 reached for i, j = ", i, j
   
           IF( ALLOCATED(upf_qfuncl) ) THEN
              l1=upf(1)%lll(i)
              l2=upf(1)%lll(j)
              DO l=abs(l1-l2), l1+l2
                 upf_qfuncl(1:upf_mesh,ijv,l) = x * upf(1)%qfuncl(1:upf_mesh,ijv,l)
-                WRITE (*,*) "pp_qij CP 2.1.1 reached for i, j = ", i, j
              ENDDO
           ELSE
              upf_qfunc(1:upf_mesh,ijv) = x * upf(1)%qfunc(1:upf_mesh,ijv)
-             WRITE (*,*) "pp_qij CP 2.1.2 reached for i, j = ", i, j
           ENDIF
   
        ENDDO
     ENDDO
   
-    WRITE (*,*) "pp_qij CP 2.1 reached."
   
     DO i=1,upf(2)%nbeta
        DO j=i,upf(2)%nbeta
           ijv = j * (j-1)/2 + i
+          !ijv  = (upf(1)%nbeta+j)*(upf(1)%nbeta+j-1)/2 + i + upf(1)%nbeta
           upf_qqq(upf(1)%nbeta+i,upf(1)%nbeta+j) = (1.d0-x) * upf(2)%qqq(i,j)
   
           ijv2 = (upf(1)%nbeta+j) * (upf(1)%nbeta+j-1) / 2 + (upf(1)%nbeta+i)
   
-          WRITE (*,*) "pp_qij CP 2.2 reached for i, j = ", i, j
   
           IF( ALLOCATED(upf_qfuncl) ) THEN
              l1=upf(2)%lll(i)
@@ -468,64 +471,31 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
                    aux2(1,1:upf(2)%mesh) = upf(2)%qfuncl(1:upf(2)%mesh,ijv,l)
                    CALL dosplineint( upf(2)%r(1:upf(2)%mesh), aux2, upf_r(1:upf_mesh), aux1 )
                    upf_qfuncl(1:upf_mesh, ijv2, l) = (1.d0-x) * aux1(1,1:upf_mesh)
-                   WRITE (*,*) " done"
-  
-                   IF ((i==1) .AND. (j==1)) THEN
-                     WRITE (*,*) "CP1.1"
-                     WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
-                   ENDIF
-  
+                   WRITE (*,*) " done"  
                 ELSE
                    upf_qfuncl(1:upf_mesh, ijv2, l) = (1.d0-x) * upf(2)%qfuncl(1:upf_mesh,ijv,l)
   
                    IF ((i==1) .AND. (j==1)) THEN
-                     WRITE (*,*) "CP1.2"
-                     WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
                    ENDIF
   
                 ENDIF
              ENDDO
-  
           ELSE
              IF (interpolate) THEN
-                aux2(1,1:upf(2)%mesh) = upf(2)%qfunc(1:upf(2)%mesh,ijv)
+                 aux2(1,1:upf(2)%mesh) = upf(2)%qfunc(1:upf(2)%mesh,ijv)
                 CALL dosplineint( upf(2)%r(1:upf(2)%mesh), aux2, upf_r(1:upf_mesh), aux1 )
-                ! upf(2)%qfunc(1:upf_mesh,i,j) = aux1(1,1:upf_mesh)
                 upf_qfunc(1:upf_mesh, ijv2) = (1.d0-x) * aux1(1,1:upf_mesh)
-  
-                IF ((i==1) .AND. (j==1)) THEN
-                  WRITE (*,*) "CP2.1"
-                  WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
-                ENDIF
-  
              ELSE
                 upf_qfunc(1:upf_mesh, ijv2) = (1.d0-x) * upf(2)%qfunc(1:upf_mesh,ijv)
-  
-                IF ((i==1) .AND. (j==1)) THEN
-                  WRITE (*,*) "CP2.2"
-                  WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
-                ENDIF
-  
              ENDIF
-  
           ENDIF
           ! ! upf_qfunc(1:upf_mesh, upf(1)%nbeta+i, upf(1)%nbeta+j) = (1.d0-x) * qfunc(1:upf_mesh,i,j,2)
-  
-          IF ((i==1) .AND. (j==1)) THEN
-            WRITE (*,*) "ijv = ", ijv
-            WRITE (*,*) "ijv2 = ", ijv2
-            WRITE (*,*) "x = ", x
-            WRITE (*,*) "(1.d0-x) * upf(2)%qfuncl = ", (1.d0-x) * upf(2)%qfuncl(1:10, ijv, 0)
-            WRITE (*,*) "upf_vca%qfuncl = ", upf_qfuncl(1:10, ijv2, 0)
-          ENDIF
-  
        ENDDO
     ENDDO
     !
   
     !pp_qfcoef
     IF (upf_nqf/=0) THEN
-  
        ALLOCATE( upf_qfcoef(upf_nqf,upf_nqlc,upf_nbeta,upf_nbeta) )
        upf_qfcoef(:,:,:,:) = 0.d0
        DO i=1,upf(1)%nbeta
@@ -540,17 +510,13 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
                  (1.d0-x) * upf(2)%qfcoef(1:upf_nqf,1:upf_nqlc,i,j)
           ENDDO
        ENDDO
-  
     ENDIF
     !
-
   ENDIF
 
   !pp_pswfc
   ALLOCATE ( upf_chi(upf_mesh,upf_ntwfc) )
-
   IF (upf(1)%nwfc==upf(2)%nwfc) THEN
-
      DO i=1,upf(2)%nwfc
         IF (interpolate) THEN
            WRITE (*,*) " interpolate chi"
@@ -558,8 +524,7 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
            CALL dosplineint( upf(2)%r(1:upf(2)%mesh), aux2, upf_r(1:upf_mesh), aux1 )
            ! chi(1:upf_mesh,i,2) = aux1(1,1:upf_mesh)
            upf_chi(1:upf_mesh,i) =    x     * upf(1)%chi(1:upf_mesh,i) + &
-                                   (1.d0-x) * aux1(1,1:upf_mesh)
-           WRITE (*,*) " done"
+              (1.d0-x) * aux1 (1,1:upf_mesh) 
         ELSE
         upf_chi(1:upf_mesh,i) =    x     * upf(1)%chi(1:upf_mesh,i) + &
                                 (1.d0-x) * upf(2)%chi(1:upf_mesh,i)          
@@ -567,13 +532,11 @@ SUBROUTINE compute_virtual(x, filein, upf, upf_vca)
         ! Jivtesh - The wavefunctions are calculated to be the average of the
         ! wavefunctions of the two atoms - lines 365-366
      ENDDO
-
   ELSE
      WRITE (*,*) "Number of wavefunctions not the same for the two pseudopotentials"
   ENDIF
   !upf_chi(1:upf_mesh,1:upf_ntwfc) = chi(1:upf_mesh,1:upf_ntwfc,1)
   !
-
   !pp_rhoatm
   ALLOCATE ( upf_rho_at(upf_mesh) )
   IF (interpolate) THEN
