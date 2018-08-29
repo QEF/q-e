@@ -364,6 +364,110 @@
     END SUBROUTINE eliashberg_write_raxis
     ! 
     !-----------------------------------------------------------------------
+    SUBROUTINE eliashberg_write_cont_raxis( itemp, cname )
+    !-----------------------------------------------------------------------
+    !
+    !
+    ! This routine writes to files results from the solutions of the Eliashberg
+    ! equations on the real-axis 
+    !
+    USE kinds,         ONLY : DP
+    USE io_epw,        ONLY : iufilgap
+    USE io_files,      ONLY : prefix
+    USE control_flags, ONLY : iverbosity
+    USE epwcom,        ONLY : nqstep, fsthick, laniso, liso
+    USE eliashbergcom, ONLY : nsw, estemp, ws, gap, Agap, &
+                              Delta, Znorm, ADelta, AZnorm, &
+                              nkfs, nbndfs, ef0, ekfs
+    USE constants_epw, ONLY : kelvin2eV
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: iw, itemp, ik, ibnd
+    REAL(DP) :: temp
+    LOGICAL :: lgap
+    CHARACTER(len=256) :: name1, cname
+    !
+    temp = estemp(itemp) / kelvin2eV
+    !
+    IF ( laniso ) THEN
+       IF ( iverbosity .eq. 2 ) THEN
+          IF ( temp .lt. 10.d0 ) THEN
+             WRITE(name1,'(a,a1,a4,a9,f4.2)') TRIM(prefix), '.', cname, '_aniso_00', temp
+          ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0  ) THEN
+             WRITE(name1,'(a,a1,a4,a8,f5.2)') TRIM(prefix), '.', cname, '_aniso_0', temp
+          ELSEIF ( temp .ge. 100.d0 ) THEN
+             WRITE(name1,'(a,a1,a4,a7,f6.2)') TRIM(prefix), '.', cname, '_aniso_', temp
+          ENDIF
+          OPEN(iufilgap, file=name1, form='formatted')
+          WRITE(iufilgap,'(6a20)') '#        w [eV]', 'Enk-Ef [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]',&
+                                                            'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
+       ENDIF
+       !
+       DO ik = 1, nkfs
+          DO ibnd = 1, nbndfs
+             IF ( abs( ekfs(ibnd,ik) - ef0 ) .lt. fsthick ) THEN
+                lgap = .true.
+                ! DO iw = 1, nsw
+                DO iw = 1, nsw-1   ! FG: this change is to prevent segfault in ws(iw+1) and ADelta(*,*,iw+1)
+                   IF ( lgap .AND. iw .lt. nqstep .AND. real(ADelta(ibnd,ik,iw)) .gt. 0.d0 &
+                        .AND. real(ADelta(ibnd,ik,iw+1)) .gt. 0.d0 &
+                        .AND. ( ws(iw) - real(ADelta(ibnd,ik,iw)) )*( ws(iw+1) - real(ADelta(ibnd,ik,iw+1)) ) .lt. 0.d0 ) THEN
+                      Agap(ibnd,ik,itemp) = (   ( real(ADelta(ibnd,ik,iw))   - ws(iw)   ) * ws(iw+1) &
+                                              - ( real(ADelta(ibnd,ik,iw+1)) - ws(iw+1) ) * ws(iw) ) &
+                                          / ( ( real(ADelta(ibnd,ik,iw)) - ws(iw) ) - ( real(ADelta(ibnd,ik,iw+1)) - ws(iw+1) ) )
+                      lgap = .false.
+                   ENDIF
+                   IF ( iverbosity .eq. 2 ) THEN
+                      WRITE(iufilgap,'(6ES20.10)') ws(iw), ekfs(ibnd,ik)-ef0, &
+                                     real(AZnorm(ibnd,ik,iw)), aimag(AZnorm(ibnd,ik,iw)), &
+                                     real(ADelta(ibnd,ik,iw)), aimag(ADelta(ibnd,ik,iw))
+                   ENDIF
+                ENDDO ! iw
+                IF ( lgap ) &
+                   Agap(ibnd,ik,itemp) = real(ADelta(ibnd,ik,1))
+             ENDIF
+          ENDDO ! ibnd
+       ENDDO ! ik
+       IF ( iverbosity .eq. 2 ) CLOSE(iufilgap)
+       !
+       CALL gap_distribution_FS ( itemp, cname )
+       !
+    ENDIF
+    !
+    ! isotropic case
+    ! SP: Only write isotropic for laniso if user really wants that
+    IF ( ( laniso .AND. iverbosity .eq. 2 ) .OR. liso ) THEN
+       IF ( temp .lt. 10.d0 ) THEN
+          WRITE(name1,'(a,a1,a4,a7,f4.2)') TRIM(prefix), '.', cname, '_iso_00', temp
+       ELSEIF ( temp .ge. 10.d0 .AND. temp .lt. 100.d0  ) THEN
+          WRITE(name1,'(a,a1,a4,a6,f5.2)') TRIM(prefix), '.', cname, '_iso_0', temp
+       ELSEIF ( temp .ge. 100.d0 ) THEN
+          WRITE(name1,'(a,a1,a4,a5,f6.2)') TRIM(prefix), '.', cname, '_iso_', temp
+       ENDIF
+       OPEN(iufilgap, file=name1, form='formatted')
+       WRITE(iufilgap,'(5a20)') 'w [eV]', 'Re[Znorm(w)]', 'Im[Znorm(w)]', 'Re[Delta(w)] [eV]', 'Im[Delta(w)] [eV]'
+       lgap = .true.
+       ! DO iw = 1, nsw
+       DO iw = 1, nsw-1   ! this change is to prevent segfault in Delta(iw+1) and ws(iw+1)
+          IF ( lgap .AND. iw .lt. nqstep .AND. real(Delta(iw)) .gt. 0.d0 .AND. real(Delta(iw+1)) .gt. 0.d0 .AND. &
+               ( ws(iw) - real(Delta(iw)) )*( ws(iw+1) - real(Delta(iw+1)) ) .lt. 0.d0 ) THEN
+             gap(itemp) = ( ( real(Delta(iw)) - ws(iw) ) * ws(iw+1) - ( real(Delta(iw+1)) - ws(iw+1) ) * ws(iw) ) &
+                        / ( ( real(Delta(iw)) - ws(iw) ) - ( real(Delta(iw+1)) - ws(iw+1) ) )
+             lgap = .false.
+          ENDIF
+          WRITE(iufilgap,'(5ES20.10)') ws(iw), real(Znorm(iw)), aimag(Znorm(iw)), &
+                                       real(Delta(iw)), aimag(Delta(iw))
+       ENDDO ! iw
+       CLOSE(iufilgap)
+       IF ( lgap ) &
+          gap(itemp) = real(Delta(1))
+    ENDIF
+    !
+    RETURN
+    !
+    END SUBROUTINE eliashberg_write_cont_raxis
+    !-----------------------------------------------------------------------
     SUBROUTINE read_a2f
     !-----------------------------------------------------------------------
     !!

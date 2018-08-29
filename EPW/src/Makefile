@@ -22,12 +22,12 @@ EPWOBJS = \
 epwcom.o \
 constants_epw.o \
 io_epw.o \
-io_eliashberg.o \
 elph2.o \
 eliashbergcom.o \
-superconductivity_iso.o \
-superconductivity_aniso.o \
 superconductivity.o \
+superconductivity_aniso.o \
+superconductivity_iso.o \
+io_eliashberg.o \
 transportcom.o \
 transport.o \
 transport_iter.o \
