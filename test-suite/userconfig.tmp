@@ -88,9 +88,9 @@ tolerance = ( (1.0e-6, 5.0e-3, 'e1'),
               (2.0e-3, 5.0e-4, 'pi'),
               (1.0e-4, 5.0e-4, 'bcsgap'),
               (1.0e-4, 5.0e-4, 'mobvb'),
-              (1.0e-4, 5.0e-4, 'mobcb'),
-              (1.0   , 4.0e-1, 'mobx'),
-              (1.0   , 1.5e-1, 'mobav'),
+              (9.0e-4, 5.0e-4, 'mobcb'),
+              (10.0   , 4.0e-1, 'mobx'),  # Needs to be tightened up
+              (9.0   , 1.5e-1, 'mobav'),  # Needs to be tightened up
               (1.0e+10, 1.0e+2, 'density'),
               (1.0   , 1.0e-2, 'mobxZ'),
               (1.5e+3, None  , 'indabs'))
