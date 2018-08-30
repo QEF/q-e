@@ -17,8 +17,8 @@ subroutine hp_init()
   USE lsda_mod,      ONLY : nspin
   USE ldaU,          ONLY : Hubbard_lmax, is_hubbard
   USE ldaU_hp,       ONLY : perturbed_atom, chi0, chi, todo_atom,     &
-                            postproc_only, nath, nqsh, nath_sc, code, &
-                            determine_num_pert_only, nq1, nq2, nq3
+                            nath, nqsh, nath_sc, code, nq1, nq2, nq3, &
+                            determine_num_pert_only
   !
   IMPLICIT NONE
   INTEGER :: na, nt
@@ -61,7 +61,7 @@ subroutine hp_init()
   !
   CALL hp_find_inequiv_sites()
   !
-  IF (.NOT.postproc_only .AND. .NOT.determine_num_pert_only) THEN
+  IF (.NOT.determine_num_pert_only) THEN
      !
      ! The first dimension of chi0 and chi runs over all possible 
      ! real+virtual atoms (nath_sc), whereas the second dimension runs over 

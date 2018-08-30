@@ -22,12 +22,12 @@ SUBROUTINE hp_bcast_input ( )
   USE input_parameters, ONLY : max_seconds
   USE io_global,        ONLY : meta_ionode_id
   USE control_lr,       ONLY : lrpa, ethr_nscf
-  USE ldaU_hp,          ONLY : postproc_only, conv_thr_chi, thresh_init,               &
-                               at_equiv_criterium, skip_atom, skip_type, merge_type,   &
-                               background, collect_chi, sum_pertq, perturb_only_atom,  &
+  USE ldaU_hp,          ONLY : conv_thr_chi, thresh_init, find_atpert, skip_atom,      &
+                               skip_type, equiv_type, alpha_mix, start_q, last_q,      &
+                               background, compute_hp, sum_pertq, perturb_only_atom,   &
                                determine_num_pert_only, skip_equivalence_q, niter_max, &
                                disable_type_analysis, docc_thr, num_neigh, lmin, rmax, &
-                               nmix, nq1, nq2, nq3, alpha_mix, start_q, last_q
+                               nmix, nq1, nq2, nq3
   !
   IMPLICIT NONE
   !
@@ -37,10 +37,9 @@ SUBROUTINE hp_bcast_input ( )
   CALL mp_bcast (skip_type, meta_ionode_id, world_comm)
   CALL mp_bcast (perturb_only_atom, meta_ionode_id, world_comm)
   CALL mp_bcast (skip_equivalence_q, meta_ionode_id, world_comm)
-  CALL mp_bcast (merge_type, meta_ionode_id, world_comm)
+  CALL mp_bcast (equiv_type, meta_ionode_id, world_comm)
   CALL mp_bcast (background, meta_ionode_id, world_comm)
-  CALL mp_bcast (postproc_only, meta_ionode_id, world_comm)
-  CALL mp_bcast (collect_chi, meta_ionode_id, world_comm)
+  CALL mp_bcast (compute_hp, meta_ionode_id, world_comm)
   CALL mp_bcast (sum_pertq, meta_ionode_id, world_comm)
   CALL mp_bcast (lrpa, meta_ionode_id, world_comm)
   CALL mp_bcast (determine_num_pert_only, meta_ionode_id, world_comm)
@@ -53,7 +52,7 @@ SUBROUTINE hp_bcast_input ( )
   CALL mp_bcast (nq3, meta_ionode_id, world_comm)
   CALL mp_bcast (start_q, meta_ionode_id, world_comm)
   CALL mp_bcast (last_q, meta_ionode_id, world_comm)
-  CALL mp_bcast (at_equiv_criterium, meta_ionode_id, world_comm)
+  CALL mp_bcast (find_atpert, meta_ionode_id, world_comm)
   CALL mp_bcast (iverbosity, meta_ionode_id, world_comm)
   CALL mp_bcast (niter_max, meta_ionode_id, world_comm)
   CALL mp_bcast (nmix, meta_ionode_id, world_comm)
