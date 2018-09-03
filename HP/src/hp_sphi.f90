@@ -15,7 +15,7 @@ SUBROUTINE hp_sphi
   ! [1] Phys. Rev. B 98, 085127 (2018)
   !
   USE kinds,            ONLY : DP
-  USE io_files,         ONLY : nwordatwfc, tmp_dir 
+  USE io_files,         ONLY : nwordatwfc
   USE basis,            ONLY : natomwfc
   USE klist,            ONLY : xk, ngk, igk_k
   USE wvfct,            ONLY : npwx

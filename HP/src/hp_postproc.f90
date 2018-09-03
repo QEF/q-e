@@ -23,8 +23,8 @@ SUBROUTINE hp_postproc
   USE ldaU,           ONLY : Hubbard_l, Hubbard_lmax, is_hubbard,    &
                              lda_plus_u_kind ! dist_s, ityp_s  DFT+U+V
   USE ldaU_hp,        ONLY : nath, nath_sc, todo_atom, background,   &
-                             skip_type, merge_type, skip_atom,       &
-                             tmp_dir_save, at_equiv_criterium, magn, &
+                             skip_type, equiv_type, skip_atom,       &
+                             tmp_dir_save, find_atpert, magn,        &
                              nath_pert, ityp_new, ntyp_new, atm_new, &
                              num_neigh, lmin, rmax, nq1, nq2, nq3
   !
@@ -78,7 +78,7 @@ SUBROUTINE hp_postproc
   ! then we have to keep track of their total magnetization
   ! in order to be able to distinguish them
   !
-  CALL merge_types_and_determine_spin()
+  CALL equiv_types_and_determine_spin()
   !
   ! Generate the virtual atoms in order 
   ! to mimic a virtual supercell
@@ -224,7 +224,7 @@ SUBROUTINE read_chi
   !
 END SUBROUTINE read_chi
 
-SUBROUTINE merge_types_and_determine_spin
+SUBROUTINE equiv_types_and_determine_spin
   !
   ! If we merge types of atoms (e.g. Ni_up and Ni_down) 
   ! then we have to keep track of their total magnetization
@@ -232,7 +232,7 @@ SUBROUTINE merge_types_and_determine_spin
   !
   IMPLICIT NONE
   !
-  IF ( at_equiv_criterium == 2 .OR. at_equiv_criterium == 3 ) THEN
+  IF ( find_atpert == 2 .OR. find_atpert == 3 ) THEN
      !
      ! If it was requested in the input, re-assign the specific type
      ! to another type (e.g., Ni_down to Ni_up)
@@ -240,7 +240,7 @@ SUBROUTINE merge_types_and_determine_spin
      DO na = 1, nat
         nt = ityp(na)
         IF (is_hubbard(nt) .AND. skip_type(nt)) THEN
-           ityp_new(na) = merge_type(nt)
+           ityp_new(na) = equiv_type(nt)
         ENDIF
      ENDDO
      !
@@ -269,7 +269,7 @@ SUBROUTINE merge_types_and_determine_spin
   !
   RETURN
   !
-END SUBROUTINE merge_types_and_determine_spin
+END SUBROUTINE equiv_types_and_determine_spin
 
 SUBROUTINE gen_virt_atoms
   !
@@ -669,7 +669,7 @@ SUBROUTINE calculate_U()
      ENDDO
   ENDDO
   !
-  IF ( at_equiv_criterium == 1 .AND. ntyp_new > ntyp ) THEN
+  IF ( find_atpert == 1 .AND. ntyp_new > ntyp ) THEN
      WRITE(iunitU,'(2x,"Warning: The Hubbard parameters listed below were computed by treating some")')
      WRITE(iunitU,'(2x,"         equivalent (by type) Hubbard atoms as if they were non-equivalent")')
      WRITE(iunitU,'(2x,"         (when doing the averaging and reconstruction of the response matrices)")')

@@ -15,16 +15,14 @@ MODULE ldaU_hp
   !
   SAVE
   !
-  LOGICAL :: postproc_only,           &     ! If .true. perform only a post-processing 
-                                            ! calculation of Hubbard U
-             skip_type(ntypx),        &     ! If .true. skip the calculation for a specific type 
+  LOGICAL :: skip_type(ntypx),        &     ! If .true. skip the calculation for a specific type 
                                             ! (e.g. Ni_up can be used for Ni_down with some spin 
                                             ! considerations)
              perturb_only_atom(500),  &     ! If perturb_only_atom(i)=.true. perterb only i-th atom
              recalc_sym,              &     ! If .true. we recalculate the number of symmetries
                                             ! of the unperturbed lattice due to the change of 
                                             ! the atomic type of one of the atoms
-             collect_chi,             &     ! If .true. collects all pieces of chi0 and chi
+             compute_hp,              &     ! If .true. collects all pieces of chi0 and chi
              sum_pertq,               &     ! If .true. collects dns0 and dnsscf for all q points
                                             ! (for the specific perturbed atom) and computes their 
                                             ! sum with the phase factor
@@ -36,7 +34,7 @@ MODULE ldaU_hp
                                             ! for a selected atomic site.
                                             ! skip_atom(i), where i runs over atoms. If skip_atom(i)=.true.
                                             ! then no linear-response calculation will be performed for the
-                                            ! i-th atom. This keyword cannot be used when at_equiv_criterium=1.
+                                            ! i-th atom. This keyword cannot be used when find_atpert=1.
                                             ! Warning: Make sure you know what you are doing! This option might
                                             ! be useful in several cases:
                                             ! - Debugging purposes;
@@ -44,7 +42,7 @@ MODULE ldaU_hp
                                             !   is equivalent to some other atom (but the code does not recognizes
                                             !   this from the symmetry analysis). In this case check that there is
                                             !   at least one atom of the same type which was perturbed (this can
-                                            !   happen only when at_equiv_criterium=3), otherwise the post-processing
+                                            !   happen only when find_atpert=3), otherwise the post-processing
                                             !   calculation of U will fail.
              search_sym                     ! If .TRUE. search for the symmetry of q
   !
@@ -63,11 +61,11 @@ MODULE ldaU_hp
                                             ! virtual supercell
              nah_pert,        &             ! Site number of the perturbed Hubbard atom
              nath_pert,       &             ! Number of actual perturbed Hubbard atoms in the primitive cell
-             at_equiv_criterium, &          ! Method of searching for atoms to be perturbed
+             find_atpert,     &             ! Method of searching for atoms to be perturbed
              iter_best,       &             ! Number of the iteration at which the best accuracy
                                             ! for chi was reached
              ntyp_new,        &             ! Maximum number of different types detected in the calculation
-                                            ! (used only when at_equiv_criterium=3)
+                                            ! (used only when find_atpert=3)
              num_neigh,       &             ! Used in the postprocessing: number of nearest neighbors of every atom 
                                             ! which will be written to the file parameters.out 
                                             ! (can be used only with lda_plus_u_kind = 2)      
@@ -84,7 +82,7 @@ MODULE ldaU_hp
              iudvwfc,         &             ! Unit for the perturbing potential * wavefunctions
              lrdvwfc                        ! Length of the record for the perturbing potential * wavefunctions
   !
-  INTEGER :: merge_type(ntypx)              ! merge_type(i)=j, will merge type i to type j 
+  INTEGER :: equiv_type(ntypx)              ! equiv_type(i)=j, will merge type i to type j 
                                             ! (useful when nspin=2)
   !
   CHARACTER(LEN=16)  :: background          ! Background correction
@@ -102,7 +100,7 @@ MODULE ldaU_hp
                                             ! (useful for the analysis when the convergence 
                                             ! is not reached)
               docc_thr,          &          ! Threshold for the comparison of the unperturbed 
-                                            ! occupations (used only with at_equiv_criterium=1 for
+                                            ! occupations (used only with find_atpert=1 for
                                             ! determination of atoms which must be perturbed)
               rmax,              &          ! Maximum distance (in Bohr) between two atoms 
                                             ! to search for neighbors (used only at the 

@@ -31,7 +31,11 @@ DFPT calculation. The solution to this problem is the following:
      is needed in order to let the code specify correctly the occupations 
      for spin up and spin down electrons (without specifying 
      tot_magnetization the code will set the number of spin up and spin down 
-     electrons to be equal, which is wrong for ferromagnetic insulators); 
+     electrons to be equal, which is wrong for ferromagnetic insulators).
+     If tot_magnetization does not have a strict integer value then round it
+     to the strict integer, because non-integer tot_magnetization cannot 
+     be used in the second SCF calculation (the deviation from integer can be
+     due to numerical noise); 
    - set up the number of bands (nbnd) equal to the number of bands in the
      previous run [without specifying nbnd in this calculation, the code will 
      set it to be equal to half the number of electrons, while in the 

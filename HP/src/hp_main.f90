@@ -18,10 +18,9 @@ PROGRAM hp_main
   USE environment,       ONLY : environment_start, environment_end
   USE ions_base,         ONLY : nat, ityp, atm, tau, amass
   USE io_files,          ONLY : tmp_dir
-  USE ldaU_hp,           ONLY : postproc_only, perturbed_atom,             &
-                                collect_chi, sum_pertq, perturb_only_atom, &
-                                determine_num_pert_only, tmp_dir_save,     &
-                                start_q, last_q, nqs, code
+  USE ldaU_hp,           ONLY : perturbed_atom, start_q, last_q, nqs, code, &
+                                compute_hp, sum_pertq, perturb_only_atom,   &
+                                determine_num_pert_only, tmp_dir_save
   !
   IMPLICIT NONE
   !
@@ -57,9 +56,7 @@ PROGRAM hp_main
   !
   CALL hp_summary()
   !
-  IF (collect_chi)   GO TO 100
-  !
-  IF (postproc_only) GO TO 101
+  IF (compute_hp) GO TO 100
   !
   IF (determine_num_pert_only) GO TO 103
   !
@@ -191,7 +188,7 @@ PROGRAM hp_main
      ! (this is needed when various perturbations were
      ! considered not in one single run)
      !
-     IF (collect_chi) CALL hp_read_chi()
+     IF (compute_hp) CALL hp_read_chi()
      !
      ! Write full chi0 and chi to file
      !
@@ -213,8 +210,7 @@ PROGRAM hp_main
   !
   ! Print clocks
   !
-  IF (.NOT.collect_chi .AND. .NOT.sum_pertq .AND. &
-      & .NOT.postproc_only .AND. .NOT.determine_num_pert_only) THEN
+  IF (.NOT.compute_hp .AND. .NOT.sum_pertq .AND. .NOT.determine_num_pert_only) THEN
      WRITE( stdout, * )
      WRITE( stdout, * )  '    PRINTING TIMING FROM PWSCF ROUTINES: '
      CALL print_clock_pw()
