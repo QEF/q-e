@@ -18,7 +18,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE fft_base,      ONLY : dffts
   USE fft_interfaces,ONLY : fwfft, invfft
   USE fft_helper_subroutines
-  USE qe_buffers,    ONLY : qe_buffer
+  USE gbuffers,      ONLY : dev_buf
   !
   IMPLICIT NONE
   !
@@ -58,8 +58,8 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL start_clock ('vloc_psi:tg_gather')
      v_siz =  dffts%nnr_tg
      !
-     CALL qe_buffer%lock_buffer( tg_v_d, v_siz, ierr )
-     CALL qe_buffer%lock_buffer( tg_psic_d, v_siz, ierr )
+     CALL dev_buf%lock_buffer( tg_v_d, v_siz, ierr )
+     CALL dev_buf%lock_buffer( tg_psic_d, v_siz, ierr )
      !
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock ('vloc_psi:tg_gather')
@@ -67,7 +67,7 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      incr = 2 * fftx_ntgrp(dffts)
      !
   ELSE
-     CALL qe_buffer%lock_buffer( psic_d, dffts%nnr * many_fft, ierr )
+     CALL dev_buf%lock_buffer( psic_d, dffts%nnr * many_fft, ierr )
      v_siz = dffts%nnr
   ENDIF
   ! Sync fft data
@@ -289,11 +289,11 @@ SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   !
   IF( use_tg ) THEN
      !
-     CALL qe_buffer%release_buffer( tg_psic_d, ierr )
-     CALL qe_buffer%release_buffer( tg_v_d, ierr )
+     CALL dev_buf%release_buffer( tg_psic_d, ierr )
+     CALL dev_buf%release_buffer( tg_v_d, ierr )
      !
   ELSE
-     CALL qe_buffer%release_buffer( psic_d, ierr )
+     CALL dev_buf%release_buffer( psic_d, ierr )
   END IF
   CALL stop_clock ('vloc_psi')
   !
@@ -323,7 +323,7 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   USE fft_helper_subroutines
   USE wavefunctions, ONLY: psic_h => psic
   !USE wavefunctions_gpum, ONLY: psic_d
-  USE qe_buffers,    ONLY : qe_buffer
+  USE gbuffers,    ONLY : dev_buf
   !
   IMPLICIT NONE
   !
@@ -361,14 +361,14 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
      CALL start_clock ('vloc_psi:tg_gather')
      v_siz =  dffts%nnr_tg
      !
-     CALL qe_buffer%lock_buffer( tg_v_d,    v_siz, ierr )
-     CALL qe_buffer%lock_buffer( tg_psic_d, v_siz, ierr )
+     CALL dev_buf%lock_buffer( tg_v_d,    v_siz, ierr )
+     CALL dev_buf%lock_buffer( tg_psic_d, v_siz, ierr )
      !
      CALL tg_gather_gpu( dffts, v_d, tg_v_d )
      CALL stop_clock ('vloc_psi:tg_gather')
      !
   ELSE
-     CALL qe_buffer%lock_buffer( psic_d, dffts%nnr*many_fft, ierr )
+     CALL dev_buf%lock_buffer( psic_d, dffts%nnr*many_fft, ierr )
      v_siz =  dffts%nnr
   ENDIF
   !
@@ -518,11 +518,11 @@ SUBROUTINE vloc_psi_k_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   !
   IF( use_tg ) THEN
      !
-     CALL qe_buffer%release_buffer( tg_psic_d, ierr )
-     CALL qe_buffer%release_buffer( tg_v_d, ierr )
+     CALL dev_buf%release_buffer( tg_psic_d, ierr )
+     CALL dev_buf%release_buffer( tg_v_d, ierr )
      !
   ELSE
-     CALL qe_buffer%release_buffer( psic_d, ierr )
+     CALL dev_buf%release_buffer( psic_d, ierr )
   ENDIF
   !
   CALL stop_clock ('vloc_psi')
@@ -551,7 +551,6 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
   USE noncollin_module,     ONLY: npol
   USE wavefunctions_gpum,  ONLY: psic_nc_d
   USE fft_helper_subroutines
-  USE qe_buffers,    ONLY : qe_buffer
   !
   IMPLICIT NONE
   !
@@ -601,7 +600,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
 
      incr = fftx_ntgrp(dffts)
   ENDIF
-  !CALL qe_buffer%lock_buffer( dffts_nl_d, size(dffts%nl), ierr )
+  !
   dffts_nl_d => dffts%nl_d
   !
   ! the local potential V_Loc psi. First the psi in real space
@@ -740,7 +739,7 @@ SUBROUTINE vloc_psi_nc_gpu (lda, n, m, psi_d, v_d, hpsi_d)
      DEALLOCATE(tg_v_d, tg_psic_d)
      !
   ENDIF
-  !CALL qe_buffer%release_buffer( dffts_nl_d, ierr )
+  !
   CALL stop_clock ('vloc_psi')
   !
   RETURN

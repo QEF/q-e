@@ -204,7 +204,7 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
   USE la_param,          ONLY : DP
   USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier, mp_max
   USE mp_bands_util,     ONLY : me_bgrp, root_bgrp, intra_bgrp_comm
-!#define __USE_GLOBAL_BUFFER
+#define __USE_GLOBAL_BUFFER
 #if defined(__USE_GLOBAL_BUFFER)
   USE gbuffers,        ONLY : dev=>dev_buf, pin=>pin_buf
   #define VARTYPE POINTER

@@ -191,7 +191,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        ! ... gamma version
        !
        USE mp, ONLY: mp_get_comm_null, mp_circular_shift_left
-       USE qe_buffers, ONLY : qe_buffer
+       USE gbuffers,   ONLY : dev_buf
        USE uspp_gpum,  ONLY : qq_at_d, using_qq_at_d
        !
        IMPLICIT NONE  
@@ -231,7 +231,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
        END IF
        !
-       CALL qe_buffer%lock_buffer(ps_d, (/ nkb, m_max /), ierr)
+       CALL dev_buf%lock_buffer(ps_d, (/ nkb, m_max /), ierr)
        
        IF( ierr /= 0 .and. ierr /= -1 ) &
           CALL errore( ' s_psi_gamma_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
@@ -296,7 +296,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           !
        END IF
        !
-       CALL qe_buffer%release_buffer(ps_d, ierr)
+       CALL dev_buf%release_buffer(ps_d, ierr)
        !
        RETURN
        !
@@ -308,7 +308,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        ! ... k-points version
        !
-       USE qe_buffers, ONLY : qe_buffer
+       USE gbuffers,   ONLY : dev_buf
        USE uspp_gpum,  ONLY : qq_at_d, using_qq_at_d
 
        IMPLICIT NONE
@@ -321,7 +321,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        COMPLEX(DP), DEVICE, POINTER :: ps_d(:,:)
          ! ps = product vkb and psi ; qqc = complex version of qq
        !
-       CALL qe_buffer%lock_buffer(ps_d, (/ nkb, m /), ierr)
+       CALL dev_buf%lock_buffer(ps_d, (/ nkb, m /), ierr)
        !
        IF( ierr /= 0 .and. ierr /= -1 ) &
           CALL errore( ' s_psi_k_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
@@ -338,7 +338,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        ! here we need to use qq_at_d instead of qq_nt_d otherwise real space augmentation brakes!
        !  qq_nt_d would be much faster and works for calculations without real space augmentation
-       CALL qe_buffer%lock_buffer( qqc_d, (/ nhm, nhm, nat/), ierr )
+       CALL dev_buf%lock_buffer( qqc_d, (/ nhm, nhm, nat/), ierr )
        IF( ierr /= 0 .and. ierr /= -1 ) &
           CALL errore( ' s_psi_k_gpu ', ' cannot allocate buffer (qqc_d) ', ABS(ierr) )
 
@@ -363,7 +363,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
              END DO
           END IF
        END DO
-       CALL qe_buffer%release_buffer(qqc_d, ierr)
+       CALL dev_buf%release_buffer(qqc_d, ierr)
        !
        IF ( m == 1 ) THEN
           !
@@ -377,7 +377,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
           !
        END IF
        !
-       CALL qe_buffer%release_buffer(ps_d, ierr)
+       CALL dev_buf%release_buffer(ps_d, ierr)
        !
        RETURN
        !
@@ -390,7 +390,7 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        ! ... k-points noncolinear/spinorbit version
        !
-       USE qe_buffers, ONLY : qe_buffer
+       USE gbuffers,   ONLY : dev_buf
        USE uspp_gpum,  ONLY : qq_at_d, using_qq_at_d, qq_so_d, using_qq_so_d
 
        IMPLICIT NONE
@@ -410,14 +410,14 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        IF ( .not. lspinorb ) CALL using_qq_at_d(0)
        IF ( lspinorb ) CALL using_qq_so_d(0)
 
-       CALL qe_buffer%lock_buffer(ps_d, (/ nkb, npol, m /), ierr)
+       CALL dev_buf%lock_buffer(ps_d, (/ nkb, npol, m /), ierr)
        IF( ierr /= 0 .and. ierr /= -1 ) &
           CALL errore( ' s_psi_nc_gpu ', ' cannot allocate buffer (ps_d) ', ABS(ierr) )
 
        ps_d(1:nkb,1:npol,1:m) = (0.D0,0.D0)
        !
        IF ( .NOT. lspinorb ) THEN
-          CALL qe_buffer%lock_buffer( qqc_d, (/ nhm, nhm, nat /), ierr )
+          CALL dev_buf%lock_buffer( qqc_d, (/ nhm, nhm, nat /), ierr )
           IF( ierr /= 0 .and. ierr /= -1 ) &
              CALL errore( ' s_psi_nc_gpu ', ' cannot allocate buffer (qqc_d) ', ABS(ierr) )
           ! Possibly convert only what's needed??
@@ -466,12 +466,12 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
              END IF
           END IF
        END DO
-       IF ( .NOT. lspinorb ) CALL qe_buffer%release_buffer(qqc_d, ierr)
+       IF ( .NOT. lspinorb ) CALL dev_buf%release_buffer(qqc_d, ierr)
 
        call ZGEMM ('N', 'N', n, m*npol, nkb, (1.d0, 0.d0) , vkb_d, &
           lda, ps_d, nkb, (1.d0, 0.d0) , spsi_d(1,1), lda)
 
-       CALL qe_buffer%release_buffer(ps_d, ierr)
+       CALL dev_buf%release_buffer(ps_d, ierr)
 
        RETURN
 

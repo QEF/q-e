@@ -50,7 +50,7 @@ MODULE LAXlib
     COMPLEX(DP), INTENT(OUT) :: v(ldh,m)
       ! eigenvectors (column-wise)
     LOGICAL, OPTIONAL ::  offload
-      ! optionally evaluate offload on GPU 
+      ! optionally solve the eigenvalue problem on the GPU
     LOGICAL :: loffload
       !
 #if defined(__CUDA)
@@ -66,7 +66,7 @@ MODULE LAXlib
     IF (PRESENT(offload)) loffload = offload
 #endif
     !
-    ! ... always false on CPU cude
+    ! ... always false when compiling without CUDA support
     !
     IF ( loffload ) THEN
 #if defined(__CUDA)
@@ -118,7 +118,7 @@ MODULE LAXlib
     COMPLEX(DP), DEVICE, INTENT(OUT) :: v_d(ldh,n)
       ! eigenvectors (column-wise)
     LOGICAL, OPTIONAL ::  onhost
-      ! optionally evaluate offload on GPU 
+      ! optionally solve the eigenvalue problem on the CPU
     LOGICAL :: lonhost
       !
     COMPLEX(DP), ALLOCATABLE :: v(:,:), h(:,:), s(:,:)
@@ -177,7 +177,7 @@ MODULE LAXlib
     REAL(DP), INTENT(OUT) :: v(ldh,m)
       ! eigenvectors (column-wise)
     LOGICAL, OPTIONAL ::  offload
-      ! optionally evaluate offload on GPU 
+      ! optionally solve the eigenvalue problem on the GPU
     LOGICAL :: loffload
       !
 #if defined(__CUDA)
@@ -193,7 +193,7 @@ MODULE LAXlib
     IF (PRESENT(offload)) loffload = offload
 #endif
     !
-    ! ... always false on CPU cude
+    ! ... always false when compiling without CUDA support
     !
     IF ( loffload ) THEN
 #if defined(__CUDA)
@@ -241,7 +241,7 @@ MODULE LAXlib
     REAL(DP), DEVICE, INTENT(OUT) :: v_d(ldh,n)
       ! eigenvectors (column-wise)
     LOGICAL, OPTIONAL ::  onhost
-      ! optionally evaluate offload on GPU 
+      ! optionally solve the eigenvalue problem on the CPU
     LOGICAL :: lonhost
       !
     REAL(DP), ALLOCATABLE :: v(:,:), h(:,:), s(:,:)
@@ -306,7 +306,7 @@ MODULE LAXlib
     TYPE(la_descriptor), INTENT(IN) :: desc
       !
     LOGICAL, OPTIONAL ::  offload
-      ! optionally evaluate offload on GPU 
+      ! place-holder, offloading on GPU not implemented yet
     LOGICAL :: loffload
 
     CALL prdiaghg( n, h, s, ldh, e, v, desc)
@@ -342,7 +342,7 @@ MODULE LAXlib
     TYPE(la_descriptor), INTENT(IN) :: desc
       !
     LOGICAL, OPTIONAL ::  offload
-      ! optionally evaluate offload on GPU 
+      ! place-holder, offloading on GPU not implemented yet
     LOGICAL :: loffload
 
     CALL pcdiaghg( n, h, s, ldh, e, v, desc)
@@ -379,7 +379,7 @@ MODULE LAXlib
     TYPE(la_descriptor), INTENT(IN) :: desc
       !
     LOGICAL, OPTIONAL ::  onhost
-      ! optionally evaluate offload on CPU, mandatory now 
+      ! place-holder, prdiaghg on GPU not implemented yet
     LOGICAL :: lonhost
       !
     REAL(DP), ALLOCATABLE :: v(:,:), h(:,:), s(:,:)
@@ -421,7 +421,7 @@ MODULE LAXlib
     TYPE(la_descriptor), INTENT(IN) :: desc
       !
     LOGICAL, OPTIONAL ::  onhost
-      ! optionally evaluate offload on CPU, mandatory now
+      ! place-holder, pcdiaghg on GPU not implemented yet
     LOGICAL :: lonhost
       !
     COMPLEX(DP), ALLOCATABLE :: v(:,:), h(:,:), s(:,:)

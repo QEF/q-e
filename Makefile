@@ -173,6 +173,8 @@ libfft :
 	( cd FFTXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libutil : 
+	if test -d GScratch ; then \
+	( cd GScratch ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libs :
@@ -295,6 +297,8 @@ clean :
 		$(MAKE) TLDEPS= clean ) \
 	    fi \
 	done
+	if test -d GScratch ; then \
+	( cd GScratch ; $(MAKE) TLDEPS= clean ) ; fi
 	- @(cd install ; $(MAKE) -f plugins_makefile clean)
 	- @(cd install ; $(MAKE) -f extlibs_makefile clean)
 	- /bin/rm -rf bin/*.x tempdir
