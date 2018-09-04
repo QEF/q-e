@@ -1,0 +1,102 @@
+
+     Program HP v.6.3 starts on 29Aug2018 at 13:36:53 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     8 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       8
+
+     =--------------------------------------------------------------------------=
+
+       Calculation of Hubbard parameters from DFPT; please cite this program as
+
+       I. Timrov, N. Marzari, and M. Cococcioni, Phys. Rev. B 98, 085127 (2018)
+
+     =--------------------------------------------------------------------------=
+
+     Reading data from directory:
+     /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/LiCoO2.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PBESOL ( 1  4 10  8 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+     Message from routine read_upf::
+     Pseudo file /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/O.pbesol-n-kjpaw_psl.0.1.UPF has been successfully fixed on the fly.
+To avoid this message in the future you can permanently fix 
+ your pseudo files following instructions given in: 
+https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md
+               file O.pbesol-n-kjpaw_psl.0.1.UPF: wavefunction(s)  2P renormalized
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         189      94     28                 3658     1285     218
+     Max         190      95     29                 3660     1286     219
+     Sum        1517     755    229                29271    10281    1749
+ 
+
+     Check: negative/imaginary core charge=   -0.000017    0.000000
+ --- in v_hubbard ---
+Hubbard energy    0.0000
+ -------
+ 
+
+     bravais-lattice index     =             5
+     lattice parameter (alat)  =        9.3705 (a.u.)
+     unit-cell volume          =      217.1091 (a.u.)^3
+     number of atoms/cell      =             4
+     number of atomic types    =             3
+     kinetic-energy cut-off    =         50.00 (Ry)
+     charge density cut-off    =        400.00 (Ry)
+     conv. thresh. for NSCF    =       1.0E-11
+     conv. thresh. for chi     =       1.0E-08
+     Input Hubbard parameters (in eV):
+       U ( 1)                     =   1.00000E-08
+       U ( 2)                     =   1.00000E-08
+
+     celldm(1) =  9.37050  celldm(2) =  0.00000  celldm(3) =  0.00000
+     celldm(4) =  0.83874  celldm(5) =  0.00000  celldm(6) =  0.00000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (  0.2840 -0.1639  0.9447 )  
+               a(2) = (  0.0000  0.3279  0.9447 )  
+               a(3) = ( -0.2840 -0.1639  0.9447 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.7608 -1.0166  0.3528 )  
+               b(2) = (  0.0000  2.0333  0.3528 )  
+               b(3) = ( -1.7608 -1.0166  0.3528 )  
+
+     Atoms inside the unit cell (Cartesian axes):
+     site n.  atom      mass           positions (alat units)
+        1      Co     59.0000   tau(  1) = (  0.00000  0.00000  0.00000  )
+        2      O      16.0000   tau(  2) = (  0.00000 -0.00000  0.73827  )
+        3      O      16.0000   tau(  3) = (  0.00000 -0.00000  2.09589  )
+        4      Li      7.0000   tau(  4) = (  0.00000 -0.00000  1.41708  )
+
+     List of  2 atoms which will be perturbed (one at a time):
+
+        1      Co     59.0000   tau( 1) = (  0.00000  0.00000  0.00000  )
+        2      O      16.0000   tau( 2) = (  0.00000 -0.00000  0.73827  )
+
+     Post-processing calculation of Hubbard parameters ...
+
+ 
+     HP           :      0.50s CPU      0.52s WALL
+
+ 
+   This run was terminated on:  13:36:53  29Aug2018            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

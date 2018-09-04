@@ -1,0 +1,48 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='CrI3'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/'
+    verbosity='high'
+ /
+ &system
+    ibrav = 0, 
+    celldm(1) = 14.5533, 
+    nat = 8, 
+    ntyp = 2,
+    ecutwfc = 45.0,
+    ecutrho = 360.0,
+    nbnd = 42
+    occupations = 'fixed'
+    nspin = 2,
+    tot_magnetization = 6.00
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'ortho-atomic',
+    Hubbard_U(1) = 1.d-8    
+ /
+ &electrons
+    conv_thr =  1.d-15
+    mixing_beta = 0.7
+    startingpot = 'file'
+    startingwfc = 'file'
+ /
+ATOMIC_SPECIES
+Cr     51.996    cr_pbesol_v1.5.uspp.F.UPF
+I     126.9045   I.pbesol-n-kjpaw_psl.0.2.UPF
+ATOMIC_POSITIONS {crystal}
+Cr       0.3337100000   0.3337100000   0.3337100000
+Cr       0.6662900000   0.6662900000   0.6662900000
+I        0.7290700000   0.4299600000   0.0777700000
+I        0.2709300000   0.5700400000   0.9222300000
+I        0.5700400000   0.9222300000   0.2709300000
+I        0.4299600000   0.0777700000   0.7290700000
+I        0.0777700000   0.7290700000   0.4299600000
+I        0.9222300000   0.2709300000   0.5700400000
+CELL_PARAMETERS {alat}
+  0.4458362755   0.2574036937   0.8573058695
+ -0.4458362755   0.2574036937   0.8573058695
+  0.0000000000  -0.5148073874   0.8573058695
+K_POINTS {automatic}
+ 2 2 2 0 0 0

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,15 +23,18 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !    file_extension  if present save previous iterations on 
   !                    file 'prefix'.'file_extension'
   !                    otherwise keep everything in memory
+  ! 
   ! On output:
   !    dr2       [(vout-vin)/ndim]^2
   !    vin       mixed potential
   !    vout      vout-vin
   !    conv      true if dr2.le.tr2
-  USE kinds, only : DP
+  !
+  USE kinds,           ONLY : DP
   USE mp_bands,        ONLY : intra_bgrp_comm
   USE mp,              ONLY : mp_sum
   USE io_files,        ONLY : diropn
+  !
   implicit none
   !
   !   First the dummy variables
@@ -61,8 +64,8 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   real(DP) w (maxter), w0
   data w0 / 0.01d0 /, w / maxter * 1.d0 /
   !
-  !
   call start_clock ('mix_pot')
+  !
   if (iter.lt.1) call errore ('mix_potential', 'iter is wrong', 1)
   if (n_iter.gt.maxter) call errore ('mix_potential', 'n_iter too big', 1)
   if (ndim.le.0) call errore ('mix_potential', 'ndim .le. 0', 3)
@@ -72,6 +75,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   do n = 1, ndim
      vout (n) = vout (n) - vin (n)
   enddo
+  !
   dr2 = dnrm2 (ndim, vout, 1) **2
   ndimtot = ndim
   !
@@ -79,8 +83,9 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   call mp_sum (ndimtot, intra_bgrp_comm)
   !
   dr2 = (sqrt (dr2) / ndimtot) **2
-
+  !
   conv = dr2.lt.tr2
+  !
   if (saveonfile) then
      do iunit = 99, 1, - 1
         inquire (unit = iunit, opened = opnd)
@@ -209,7 +214,36 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
      call DCOPY (ndim, vinsave, 1, dv (1, inext), 1)
      deallocate(vinsave)
   endif
+  !
   call stop_clock ('mix_pot')
+  !
   return
+  !
 end subroutine mix_potential
 
+SUBROUTINE setmixout(in1, in2, mix, dvscfout, dbecsum, ndim, flag )
+ !
+ USE kinds,    ONLY : DP
+ USE mp_bands, ONLY : intra_bgrp_comm
+ USE mp,       ONLY : mp_sum
+ !
+ IMPLICIT NONE
+ INTEGER :: in1, in2, flag, ndim, startb, lastb
+ COMPLEX(DP) :: mix(in1+in2), dvscfout(in1), dbecsum(in2)
+ !
+ CALL divide (intra_bgrp_comm, in2, startb, lastb)
+ ndim=lastb-startb+1
+ !
+ IF (flag==-1) THEN
+    mix(1:in1)=dvscfout(1:in1)
+    mix(in1+1:in1+ndim)=dbecsum(startb:lastb)
+ ELSE
+    dvscfout(1:in1)=mix(1:in1)
+    dbecsum=(0.0_DP,0.0_DP)
+    dbecsum(startb:lastb)=mix(in1+1:in1+ndim)
+    CALL mp_sum(dbecsum, intra_bgrp_comm)
+ ENDIF
+ !
+ RETURN
+ !
+END SUBROUTINE setmixout

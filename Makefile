@@ -20,6 +20,7 @@ default :
 	@echo 'where target identifies one or multiple CORE PACKAGES:'
 	@echo '  pw           basic code for scf, structure optimization, MD'
 	@echo '  ph           phonon code, Gamma-only and third-order derivatives'
+	@echo '  hp           calculation of the Hubbard parameters from DFPT'
 	@echo '  pwcond       ballistic conductance'
 	@echo '  neb          code for Nudged Elastic Band method'
 	@echo '  pp           postprocessing programs'
@@ -35,7 +36,7 @@ default :
 	@echo '  gui          Graphical User Interface'
 	@echo '  examples     fetch from web examples for all core packages'
 	@echo '  test-suite   run semi-automated test-suite for regression testing'
-	@echo '  all          same as "make pwall cp ld1 upf tddfpt"'
+	@echo '  all          same as "make pwall cp ld1 upf tddfpt hp"'
 	@echo ' '
 	@echo 'where target identifies one or multiple THIRD-PARTIES PACKAGES:'
 	@echo '  gipaw        NMR and EPR spectra'
@@ -80,6 +81,10 @@ cp : bindir libs mods
 ph : phlibs
 	if test -d PHonon; then \
 	( cd PHonon; $(MAKE) all || exit 1) ; fi
+
+hp : hplibs
+	if test -d HP; then \
+	( cd HP; $(MAKE) all || exit 1) ; fi
 
 neb : pwlibs
 	if test -d NEB; then \
@@ -153,7 +158,7 @@ examples :
 
 pwall : pw neb ph pp pwcond acfdt
 
-all   : pwall cp ld1 upf tddfpt xspectra gwl 
+all   : pwall cp ld1 upf tddfpt hp xspectra gwl 
 
 ###########################################################
 # Auxiliary targets used by main targets:
@@ -167,6 +172,10 @@ pwlibs: bindir libs mods libks_solvers dftd3
 phlibs: pwlibs lrmods
 	if test -d PHonon; then \
 	( cd PHonon; $(MAKE) ph-lib || exit 1) ; fi
+
+hplibs: pwlibs lrmods
+	if test -d HP; then \
+	( cd HP; $(MAKE) hp-lib || exit 1) ; fi
 
 gwwlib : phlibs
 	if test -d GWW ; then \
@@ -304,7 +313,7 @@ clean :
 		CPV LAXlib FFTXlib UtilXlib Modules PP PW EPW KS_Solvers \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic clib LR_Modules pwtools upftools \
-		dev-tools extlibs Environ TDDFPT PHonon GWW \
+		dev-tools extlibs Environ TDDFPT PHonon HP GWW \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
