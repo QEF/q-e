@@ -14,11 +14,11 @@ $ECHO "This example shows how to use pw.x and hp.x to calculate"
 $ECHO "the Hubbard U parameter for Cr in CrI3."
 
 # set the needed environment variables
-. ../environment_variables
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x hp.x"
-PSEUDO_LIST="cr_pbesol_v1.5.uspp.F.UPF I.pbesol-n-kjpaw_psl.0.2.UPF"
+PSEUDO_LIST="Cr.pbesol-spn-kjpaw_psl.1.0.0.UPF I.pbesol-n-kjpaw_psl.1.0.0.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -26,10 +26,6 @@ $ECHO "  pseudo directory:      $PSEUDO_DIR"
 $ECHO "  temporary directory:   $TMP_DIR"
 $ECHO
 $ECHO "  checking that needed directories and files exist...\c"
-$ECHO
-$ECHO " Pseudopotentials were selected from the SSSP library:"
-$ECHO " https://www.materialscloud.org/discover/sssp/table/precision\c"
-$ECHO
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
@@ -52,6 +48,22 @@ for FILE in $BIN_LIST ; do
     if test ! -x $BIN_DIR/$FILE ; then
         $ECHO
         $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
         $ECHO "Aborting"
         exit 1
     fi
@@ -105,8 +117,8 @@ cat > $PREFIX.scf1.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
-Cr     51.996    cr_pbesol_v1.5.uspp.F.UPF
-I     126.9045   I.pbesol-n-kjpaw_psl.0.2.UPF
+Cr     51.996    Cr.pbesol-spn-kjpaw_psl.1.0.0.UPF
+I     126.9045   I.pbesol-n-kjpaw_psl.1.0.0.UPF
 ATOMIC_POSITIONS {crystal}
 Cr       0.3337100000   0.3337100000   0.3337100000
 Cr       0.6662900000   0.6662900000   0.6662900000
@@ -124,7 +136,7 @@ K_POINTS {automatic}
  2 2 2 0 0 0
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX..."
-$PW_COMMAND < $PREFIX.scf1.in |tee $PREFIX.scf1.out
+$PW_COMMAND < $PREFIX.scf1.in > $PREFIX.scf1.out
 $ECHO " done"
 
 # Extract the number of Kohn-Sham states from the previous run
@@ -166,8 +178,8 @@ cat > $PREFIX.scf2.in << EOF
     startingwfc = 'file'
  /
 ATOMIC_SPECIES
-Cr     51.996    cr_pbesol_v1.5.uspp.F.UPF
-I     126.9045   I.pbesol-n-kjpaw_psl.0.2.UPF
+Cr     51.996    Cr.pbesol-spn-kjpaw_psl.1.0.0.UPF
+I     126.9045   I.pbesol-n-kjpaw_psl.1.0.0.UPF
 ATOMIC_POSITIONS {crystal}
 Cr       0.3337100000   0.3337100000   0.3337100000
 Cr       0.6662900000   0.6662900000   0.6662900000
@@ -185,7 +197,7 @@ K_POINTS {automatic}
  2 2 2 0 0 0
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX..."
-$PW_COMMAND < $PREFIX.scf2.in |tee $PREFIX.scf2.out
+$PW_COMMAND < $PREFIX.scf2.in > $PREFIX.scf2.out
 $ECHO " done"
 
 # Perform the linear-response calculation
@@ -199,5 +211,5 @@ cat > $PREFIX.hp.in << EOF
  /
 EOF
 $ECHO "  Running the linear-response calculation of Hubbard U..."
-$HP_COMMAND < $PREFIX.hp.in |tee $PREFIX.hp.out
+$HP_COMMAND < $PREFIX.hp.in > $PREFIX.hp.out
 $ECHO " done"

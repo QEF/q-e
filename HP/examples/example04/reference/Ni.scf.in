@@ -2,8 +2,8 @@
     calculation='scf'
     restart_mode='from_scratch',
     prefix='Ni'
-    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/'
-    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
     verbosity='high'
  /
  &system
@@ -28,7 +28,7 @@
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Ni  58.693  ni_pbesol_v1.4.uspp.F.UPF
+ Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF
 ATOMIC_POSITIONS {crystal}
  Ni   0.0000000000  0.000000000  0.000000000
 K_POINTS {automatic}

@@ -57,57 +57,66 @@ Note : In the PWscf input in the ATOMIC_POSITIONS card you must first
 
 example01:
     This example shows how to calculate the Hubbard U parameter 
-    for Co in LiCoO2 (nonmagnetic insulator) starting from the
-    GGA ground state.
+    for Co 3d states in LiCoO2 (nonmagnetic insulator) starting 
+    from the GGA ground state. This example uses ultrasoft
+    pseudopotentials and the GGA-PBEsol functional.
 
 example02:
     This example shows how to calculate the Hubbard U parameter
-    for Ni in NiO (antiferromagnetic insulator) starting from
-    the GGA-sigma ground state. See also the README file inside
-    of this example.
+    for Ni 3d states in NiO (antiferromagnetic insulator) starting 
+    from the GGA-sigma ground state. This example uses ultrasoft
+    pseudopotentials and the GGA-PBEsol functional. See also 
+    the README file inside of this example. 
 
 example03:
     This example shows how to calculate the Hubbard U parameter
-    for Cr in CrI3 (ferromagnetic insulator) starting from
-    the GGA-sigma ground state. See also the README file inside
-    of example03.
+    for Cr 3d states in CrI3 (ferromagnetic insulator) starting 
+    from the GGA-sigma ground state.  This example uses PAW
+    pseudopotentials and the GGA-PBEsol functional. See also 
+    the README file inside of example02.
 
 example04:
     This example shows how to calculate the Hubbard U parameter
-    for Ni (ferromagnetic metal) starting from the GGA-sigma 
-    ground state.
+    for Ni 3d states in bulk Ni (ferromagnetic metal) starting 
+    from the GGA-sigma ground state. This example uses an ultrasoft
+    pseudopotential and the GGA-PBEsol functional.
 
 example05:
     This example shows how to calculate the Hubbard U parameter
-    for Co in LiCoO2 (non-magnetic insulator) starting from the
-    GGA+U ground state, where U has a finite value.
+    for Co 3d states in LiCoO2 (non-magnetic insulator) starting 
+    from the GGA+U ground state, where U has a finite value.
+    This example uses ultrasoft pseudopotentials and 
+    the GGA-PBEsol functional.
 
 example06:
     This example shows how to calculate Hubbard U parameters
-    for Co and O in LiCoO2 (non-magnetic insulator) starting
-    from the GGA ground state, and by splitting the whole 
+    for Co 3d states and O 2p states in LiCoO2 (non-magnetic insulator) 
+    starting from the GGA ground state, and by splitting the whole 
     calculation on 4 parts: 
     1) The PWscf self-consistent calculation;
     2) The linear-response calculation with a perturbation of Co;
     3) The linear-response calculation with a perturbation of one O;
     4) The final collection of the results (chi0 and chi1) and 
        the postprocessing calculation of U.
+    This example uses ultrasoft pseudopotentials and the GGA-PBEsol functional.
 
 example07:
     This example shows how to calculate Hubbard U parameters
-    for Co and O in LiCoO2 (non-magnetic insulator) starting
-    from the GGA ground state, and by splitting the whole
-    calculation even more than in example07. Namely, the calculation
-    for a specific perturbation can be split on different groups 
-    of q points using the keywords start_q and last_q.
+    for Co 3d states and O 2p states in LiCoO2 (non-magnetic insulator) 
+    starting from the GGA ground state, and by splitting the whole
+    calculation over perturbed atoms and q points using the keywords 
+    start_q and last_q. This example uses ultrasoft pseudopotentials
+    and the GGA-PBEsol functional.
 
 example08:
     This example shows how to calculate the Hubbard U parameter
-    for Ni in NiO2 (2D system, non-magnetic insulator) starting
-    from the GGA ground state and using a non-uniform q-mesh. 
+    for Ni 3d states in NiO2 (2D system, non-magnetic insulator) 
+    starting from the GGA ground state and using a non-uniform q-mesh. 
+    This example uses ultrasoft pseudopotentials and the GGA-PBE functional.
 
 example09:
     This example shows how to calculate the Hubbard U parameter
-    for Co in CoO2 (2D system, magnetic metal) starting
+    for Co 3d states in CoO2 (2D system, magnetic metal) starting
     from the GGA ground state and using a non-uniform q-mesh.
+    This example uses PAW pseudopotentials and the GGA-PBE functional.
 

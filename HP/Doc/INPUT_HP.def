@@ -40,11 +40,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             default { 1 }
             info {
                 = 1 : minimal output
-                = 2 : as above + symmetry matrices, final response matrices chi0 and chi1
-                                 and their inverse matrices, full U matrix
-                = 3 : as above + various detailed info about the NSCF calculation at k and k+q
-                = 4 : as above + response occupation matrices at every iteration and for
-                                 every q point in the star
+                = 2 : as above + symmetry matrices, final response 
+                      matrices chi0 and chi1 and their inverse matrices, 
+                      full U matrix
+                = 3 : as above + various detailed info about the NSCF 
+                      calculation at k and k+q
+                = 4 : as above + response occupation matrices at every 
+                      iteration and for every q point in the star
             }
         }
 
@@ -110,8 +112,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             default { 5.D-5 }
             info {
                 Threshold for a comparison of unperturbed occupations
-                which is needed for the selection of atoms which must be perturbed.
-                Can be used only when find_atpert = 1.
+                which is needed for the selection of atoms which must 
+                be perturbed. Can be used only when find_atpert = 1.
             }
         }
 
@@ -120,11 +122,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             see { equiv_type }
             info {
               skip_type(i), where i runs over types of atoms.
-              If skip_type(i)=.true. then no linear-response calculation
-              will be performed for the i-th atomic type: in this case
-              equiv_type(i) must be specified, otherwise the HP code will stop.
-              This option is useful if the system has atoms of the same
-              type but opposite spin pollarizations (anti-ferromagnetic case).
+              If skip_type(i)=.true. then no linear-response 
+              calculation will be performed for the i-th atomic type: 
+              in this case equiv_type(i) must be specified, otherwise 
+              the HP code will stop. This option is useful if the 
+              system has atoms of the same type but opposite spin 
+              pollarizations (anti-ferromagnetic case).
               This keyword cannot be used when find_atpert = 1.
             }
         }
@@ -134,8 +137,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             see { skip_type }
             info {
              equiv_type(i), where i runs over types of atoms.
-             equiv_type(i)=j, will make type i equivalent to type j (useful when nspin=2).
-             Such a merging of types is done only at the post-processing stage.
+             equiv_type(i)=j, will make type i equivalent to type j 
+             (useful when nspin=2). Such a merging of types is done 
+             only at the post-processing stage.
              This keyword cannot be used when find_atpert = 1.
             }
         }
@@ -144,10 +148,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             default { .false. }
             see { compute_hp }
             info {
-             If perturb_only_atom(i)=.true. then only the i-th atom
-             will be perturbed and considered in the run. This variable 
-             is useful when one wants to split the whole calculation on parts. 
-             Note: this variable has a higher priority than skip_type.
+             If perturb_only_atom(i)=.true. then only the i-th 
+             atom will be perturbed and considered in the run. 
+             This variable is useful when one wants to split 
+             the whole calculation on parts. Note: this variable 
+             has a higher priority than skip_type.
             }
         }
 
@@ -156,8 +161,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             see { last_q, sum_pertq }
             info {
                  Computes only the q points from start_q to last_q.
-                 IMPORTANT: start_q must be smaller or equal to the total
-                 number of q points found.
+                 IMPORTANT: start_q must be smaller or equal to 
+                 the total number of q points found.
             }
         }
 
@@ -166,8 +171,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             see { start_q, sum_pertq }
             info {
                  Computes only the q points from start_q to last_q.
-                 IMPORTANT: last_q must be smaller or equal to the total 
-                 number of q points found.
+                 IMPORTANT: last_q must be smaller or equal to 
+                 the total number of q points found.
             }
         }
 
@@ -175,10 +180,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             default { .false. }
             see { start_q, last_q, perturb_only_atom }
             info {
-             If it is set to .true. then the HP code will collect the
-             pieces of the response occupation matrices for all q points.
-             This variable should be used only when start_q, last_q and
-             perturb_only_atom are used.
+             If it is set to .true. then the HP code will collect
+             pieces of the response occupation matrices for all 
+             q points. This variable should be used only when 
+             start_q, last_q and perturb_only_atom are used.
             }
         }
 
@@ -187,13 +192,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             see { perturb_only_atom }
             info {
              If it is set to .true. then the HP code will collect
-             pieces of the chi0 and chi matrices (which must have been
-             produced in previous runs) and then compute Hubbard parameters. 
-             The HP code will look for files tmp_dir/HP/prefix.chi.i.dat. 
-             Note that all files prefix.chi.i.dat (where i runs over all 
-             perturbed atoms) must be placed in one folder tmp_dir/HP/. 
-             compute_hp=.true. must be used only when the calculation was
-             parallelized over perturbations.
+             pieces of the chi0 and chi matrices (which must have 
+             been produced in previous runs) and then compute 
+             Hubbard parameters. The HP code will look for files 
+             tmp_dir/HP/prefix.chi.i.dat. Note that all files 
+             prefix.chi.i.dat (where i runs over all perturbed 
+             atoms) must be placed in one folder tmp_dir/HP/. 
+             compute_hp=.true. must be used only when the 
+             calculation was parallelized over perturbations.
             }
         }
 
@@ -201,29 +207,29 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
             default { 1.D-5 }
             info {
                 Convergence threshold for the response function chi,
-                which is defined as a trace of the response occupation
-                matrix.
+                which is defined as a trace of the response 
+                occupation matrix.
             }
         }
 
         var thresh_init  -type REAL {
             default { 1.D-14 }
             info {
-                Initial threshold for the solution of the linear system
-                (first iteration). Needed to converge the bare 
-                (non-interacting) response function chi0. The specified
-                value will be multiplied by the number of electrons in 
-                the system.
+                Initial threshold for the solution of the linear 
+                system (first iteration). Needed to converge the 
+                bare (non-interacting) response function chi0. 
+                The specified value will be multiplied by the 
+                number of electrons in the system.
             }
         }
         
         var ethr_nscf  -type REAL {
             default { 1.D-11 }
             info {
-                Threshold for the convergence of eigenvalues during the 
-                iterative diagonalization of the Hamiltonian in the 
-                non-self-consistent-field (NSCF) calculation at k and k+q points. 
-                Note, this quantity is NOT extensive. 
+                Threshold for the convergence of eigenvalues during 
+                the iterative diagonalization of the Hamiltonian in 
+                the non-self-consistent-field (NSCF) calculation at  
+                k and k+q points. Note, this quantity is NOT extensive. 
             }
         }
          
@@ -239,8 +245,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program hp.x 
 	    default { alpha_mix(1)=0.3 }
 	    info { 
 		Mixing parameter (for the i-th iteration) for updating 
-                the response SCF potential using the modified Broyden method
-                D.D. Johnson, PRB 38, 12807 (1988).
+                the response SCF potential using the modified Broyden 
+                method: D.D. Johnson, PRB 38, 12807 (1988).
 	    }
 	}
 

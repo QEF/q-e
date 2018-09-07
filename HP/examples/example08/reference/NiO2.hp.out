@@ -1,5 +1,5 @@
 
-     Program HP v.6.3 starts on 29Aug2018 at 13:41:15 
+     Program HP v.6.3 starts on  7Sep2018 at 10:18:19 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -23,19 +23,14 @@
      =--------------------------------------------------------------------------=
 
      Reading data from directory:
-     /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/NiO2.save/
+     /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/NiO2.save/
 
      IMPORTANT: XC functional enforced from input :
      Exchange-correlation      = PBE ( 1  4  3  4 0 0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
-     Message from routine read_upf::
-     Pseudo file /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/O.pbe-n-kjpaw_psl.0.1.UPF has been successfully fixed on the fly.
-To avoid this message in the future you can permanently fix 
- your pseudo files following instructions given in: 
-https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md
-               file O.pbe-n-kjpaw_psl.0.1.UPF: wavefunction(s)  2P renormalized
+               file Ni.pbe-n-rrkjus_psl.0.1.UPF: wavefunction(s)  3D renormalized
  
      Parallelization info
      --------------------
@@ -45,9 +40,9 @@ https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md
      Sum         703     361    109               117447    41709    7021
  
 
-     Check: negative/imaginary core charge=   -0.000002    0.000000
+     Check: negative core charge=   -0.000022
 
-     negative rho (up, down):  6.216E-04 0.000E+00
+     negative rho (up, down):  6.875E-04 0.000E+00
  --- in v_hubbard ---
 Hubbard energy    0.0000
  -------
@@ -285,101 +280,96 @@ Hubbard energy    0.0000
      Atomic wfc used for the DFT+U projector are orthogonalized
 
      Total time spent up to now is:
-     HP           :      0.61s CPU      0.66s WALL
+     HP           :      0.94s CPU      0.96s WALL
 
       =--------------------------------------------=
              START SOLVING THE LINEAR SYSTEM
       =--------------------------------------------=
 
       atom #  1   q point #   1   iter #   1
-      chi:   1  -0.3292003313
-      Average number of iter. to solve lin. system:   33.2
-      Total CPU time :     1.9 s
+      chi:   1  -0.3260381632
+      Average number of iter. to solve lin. system:   28.2
+      Total CPU time :     1.8 s
 
       atom #  1   q point #   1   iter #   2
-      chi:   1   0.3440341765   residue:    0.6732345078
-      Average number of iter. to solve lin. system:   15.2
-      Total CPU time :     2.7 s
+      chi:   1   0.3169122664   residue:    0.6429504297
+      Average number of iter. to solve lin. system:   12.8
+      Total CPU time :     2.4 s
 
       atom #  1   q point #   1   iter #   3
-      chi:   1  -0.0977728825   residue:    0.4418070591
-      Average number of iter. to solve lin. system:   15.0
-      Total CPU time :     3.5 s
+      chi:   1  -0.0943826070   residue:    0.4112948734
+      Average number of iter. to solve lin. system:   11.8
+      Total CPU time :     3.2 s
 
       atom #  1   q point #   1   iter #   4
-      chi:   1  -0.0891408960   residue:    0.0086319866
-      Average number of iter. to solve lin. system:   15.0
-      Total CPU time :     4.3 s
+      chi:   1  -0.0903511493   residue:    0.0040314576
+      Average number of iter. to solve lin. system:   11.2
+      Total CPU time :     3.9 s
 
       atom #  1   q point #   1   iter #   5
-      chi:   1  -0.0827639570   residue:    0.0063769390
-      Average number of iter. to solve lin. system:   16.0
-      Total CPU time :     5.2 s
+      chi:   1  -0.0866078034   residue:    0.0037433459
+      Average number of iter. to solve lin. system:   12.0
+      Total CPU time :     4.5 s
 
       atom #  1   q point #   1   iter #   6
-      chi:   1  -0.0836986111   residue:    0.0009346541
-      Average number of iter. to solve lin. system:   16.0
-      Total CPU time :     6.1 s
+      chi:   1  -0.0862223031   residue:    0.0003855003
+      Average number of iter. to solve lin. system:   12.8
+      Total CPU time :     5.1 s
 
       atom #  1   q point #   1   iter #   7
-      chi:   1  -0.0836223768   residue:    0.0000762344
-      Average number of iter. to solve lin. system:   17.0
-      Total CPU time :     7.0 s
+      chi:   1  -0.0862189383   residue:    0.0000033648
+      Average number of iter. to solve lin. system:   12.8
+      Total CPU time :     5.8 s
 
       atom #  1   q point #   1   iter #   8
-      chi:   1  -0.0835845548   residue:    0.0000378219
-      Average number of iter. to solve lin. system:   16.8
-      Total CPU time :     7.9 s
+      chi:   1  -0.0862234779   residue:    0.0000045396
+      Average number of iter. to solve lin. system:   12.8
+      Total CPU time :     6.4 s
 
       atom #  1   q point #   1   iter #   9
-      chi:   1  -0.0836102023   residue:    0.0000256475
-      Average number of iter. to solve lin. system:   16.8
-      Total CPU time :     8.9 s
+      chi:   1  -0.0862411535   residue:    0.0000176756
+      Average number of iter. to solve lin. system:   12.2
+      Total CPU time :     6.9 s
 
       atom #  1   q point #   1   iter #  10
-      chi:   1  -0.0836045961   residue:    0.0000056062
-      Average number of iter. to solve lin. system:   15.2
-      Total CPU time :     9.8 s
+      chi:   1  -0.0862383739   residue:    0.0000027795
+      Average number of iter. to solve lin. system:   11.8
+      Total CPU time :     7.5 s
 
       atom #  1   q point #   1   iter #  11
-      chi:   1  -0.0836052005   residue:    0.0000006044
-      Average number of iter. to solve lin. system:   16.0
-      Total CPU time :    10.6 s
+      chi:   1  -0.0862407246   residue:    0.0000023507
+      Average number of iter. to solve lin. system:   12.8
+      Total CPU time :     8.1 s
 
       atom #  1   q point #   1   iter #  12
-      chi:   1  -0.0836037726   residue:    0.0000014280
-      Average number of iter. to solve lin. system:   16.8
-      Total CPU time :    11.5 s
+      chi:   1  -0.0862388858   residue:    0.0000018388
+      Average number of iter. to solve lin. system:   12.2
+      Total CPU time :     8.6 s
 
       atom #  1   q point #   1   iter #  13
-      chi:   1  -0.0836044359   residue:    0.0000006633
-      Average number of iter. to solve lin. system:   16.0
-      Total CPU time :    12.3 s
+      chi:   1  -0.0862392185   residue:    0.0000003328
+      Average number of iter. to solve lin. system:   12.5
+      Total CPU time :     9.2 s
 
       atom #  1   q point #   1   iter #  14
-      chi:   1  -0.0836044853   residue:    0.0000000494
-      Average number of iter. to solve lin. system:   16.0
-      Total CPU time :    13.2 s
+      chi:   1  -0.0862395485   residue:    0.0000003300
+      Average number of iter. to solve lin. system:   12.8
+      Total CPU time :     9.8 s
 
       atom #  1   q point #   1   iter #  15
-      chi:   1  -0.0836045084   residue:    0.0000000231
-      Average number of iter. to solve lin. system:   16.2
-      Total CPU time :    14.0 s
+      chi:   1  -0.0862394127   residue:    0.0000001358
+      Average number of iter. to solve lin. system:   12.0
+      Total CPU time :    10.3 s
 
       atom #  1   q point #   1   iter #  16
-      chi:   1  -0.0836044683   residue:    0.0000000401
-      Average number of iter. to solve lin. system:   17.0
-      Total CPU time :    14.9 s
+      chi:   1  -0.0862393886   residue:    0.0000000241
+      Average number of iter. to solve lin. system:   12.0
+      Total CPU time :    10.9 s
 
       atom #  1   q point #   1   iter #  17
-      chi:   1  -0.0836044859   residue:    0.0000000176
-      Average number of iter. to solve lin. system:   16.5
-      Total CPU time :    15.8 s
-
-      atom #  1   q point #   1   iter #  18
-      chi:   1  -0.0836044769   residue:    0.0000000089
-      Average number of iter. to solve lin. system:   16.0
-      Total CPU time :    16.9 s
+      chi:   1  -0.0862393929   residue:    0.0000000043
+      Average number of iter. to solve lin. system:   13.2
+      Total CPU time :    11.5 s
       
       =--------------------------------------------=
              CONVERGENCE HAS BEEN REACHED
@@ -412,8 +402,8 @@ Hubbard energy    0.0000
      unit-cell volume          =    1020.0352 (a.u.)^3
      number of atoms/cell      =            3
      number of atomic types    =            2
-     number of electrons       =        30.00
-     number of Kohn-Sham states=           15
+     number of electrons       =        22.00
+     number of Kohn-Sham states=           11
      kinetic-energy cutoff     =      45.0000  Ry
      charge density cutoff     =     360.0000  Ry
      Exchange-correlation      = PBE ( 1  4  3  4 0 0)
@@ -433,26 +423,25 @@ Hubbard energy    0.0000
 
 
      PseudoPot. # 1 for Ni read from file:
-     /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/ni_pbe_v1.4.uspp.F.UPF
-     MD5 check sum: 1ee80287db30b12d2bc1f57a5b5d6409
-     Pseudo is Ultrasoft + core correction, Zval = 18.0
-     Generated by new atomic code, or converted to UPF format
-     Using radial grid of  865 points,  6 beta functions with: 
+     /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/Ni.pbe-n-rrkjus_psl.0.1.UPF
+     MD5 check sum: a128b0288b8c2a77f60c629508f0875a
+     Pseudo is Ultrasoft + core correction, Zval = 10.0
+     Generated using "atomic" code by A. Dal Corso v.5.0.2 svn rev. 9415
+     Using radial grid of 1195 points,  6 beta functions with: 
                 l(1) =   0
                 l(2) =   0
                 l(3) =   1
                 l(4) =   1
                 l(5) =   2
                 l(6) =   2
-     Q(r) pseudized with 10 coefficients,  rinner =    0.980   0.980   0.980
-                                                       0.980   0.980
+     Q(r) pseudized with 0 coefficients 
+
 
      PseudoPot. # 2 for O  read from file:
-     /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/O.pbe-n-kjpaw_psl.0.1.UPF
-     MD5 check sum: 3f94a2996a3169367d6eb21d9b593f20
-     Pseudo is Projector augmented-wave + core cor, Zval =  6.0
-     Generated using "atomic" code by A. Dal Corso v.5.0.99 svn rev. 10869
-     Shape of augmentation charge: BESSEL
+     /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/O.pbe-n-rrkjus_psl.0.1.UPF
+     MD5 check sum: 2d9b751e792dc3e2bf7510553724b146
+     Pseudo is Ultrasoft + core correction, Zval =  6.0
+     Generated using "atomic" code by A. Dal Corso v.6.3MaX
      Using radial grid of 1095 points,  4 beta functions with: 
                 l(1) =   0
                 l(2) =   0
@@ -462,7 +451,7 @@ Hubbard energy    0.0000
 
 
      atomic species   valence    mass     pseudopotential
-        Ni            18.00    58.69340     Ni( 1.00)
+        Ni            10.00    58.69340     Ni( 1.00)
         O              6.00    15.99940     O ( 1.00)
 
 
@@ -504,48 +493,47 @@ Hubbard energy    0.0000
 
      Smooth grid:    41709 G-vectors     FFT dimensions: (  24,  24, 180)
 
-     Estimated max dynamical RAM per process >      50.63 MB
+     Estimated max dynamical RAM per process >      50.59 MB
 
-     Estimated total dynamical RAM >     405.01 MB
+     Estimated total dynamical RAM >     404.70 MB
 
-     Check: negative/imaginary core charge=   -0.000002    0.000000
+     Check: negative core charge=   -0.000022
 
      The potential is recalculated from file :
-     /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/HP/NiO2.save/charge-density
+     /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/HP/NiO2.save/charge-density
 
 
-     negative rho (up, down):  6.216E-04 0.000E+00
+     negative rho (up, down):  6.875E-04 0.000E+00
      Number of +U iterations with fixed ns =  0
      Starting occupations:
  --- enter write_ns ---
  LDA+U parameters:
 U( 1)     =  0.00000001
 alpha( 1) =  0.00000000
-atom    1   Tr[ns(na)] =   8.13398
+atom    1   Tr[ns(na)] =   8.13145
     eigenvalues: 
-  0.562  0.562  0.976  0.983  0.983
+  0.558  0.558  0.978  0.986  0.986
     eigenvectors:
   0.000  0.000  1.000  0.000  0.000
   0.490  0.106  0.000  0.019  0.385
   0.106  0.490  0.000  0.385  0.019
-  0.072  0.332  0.000  0.569  0.028
-  0.332  0.072  0.000  0.028  0.569
+  0.072  0.331  0.000  0.569  0.028
+  0.331  0.072  0.000  0.028  0.569
     occupations:
-  0.976  0.000 -0.000  0.000  0.000
-  0.000  0.732  0.000 -0.000 -0.207
- -0.000  0.000  0.732 -0.207  0.000
-  0.000 -0.000 -0.207  0.813 -0.000
-  0.000 -0.207  0.000 -0.000  0.813
-N of occupied +U levels =    8.133979
+  0.978  0.000 -0.000  0.000  0.000
+  0.000  0.730  0.000 -0.000 -0.210
+ -0.000  0.000  0.730 -0.210  0.000
+  0.000 -0.000 -0.210  0.813 -0.000
+  0.000 -0.210  0.000 -0.000  0.813
+N of occupied +U levels =    8.131450
  --- exit write_ns ---
  Atomic wfc used for LDA+U Projector are orthogonalized
-     Starting wfcs are   21 atomic wfcs
-     Checking if some PAW data can be deallocated... 
+     Starting wfcs are   17 atomic wfcs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
 
-     ethr =  1.00E-11,  avg # of iterations = 14.4
+     ethr =  1.00E-11,  avg # of iterations = 15.3
 
      total cpu time spent up to now is       -1.0 secs
 
@@ -553,75 +541,75 @@ N of occupied +U levels =    8.133979
 
           k = 0.0000 0.0000 0.0000 (  5225 PWs)   bands (ev):
 
-  -109.0498 -69.4834 -69.4834 -69.2070 -24.2254 -21.9390 -10.1931 -10.1931
-   -10.0863  -6.9096  -6.9096  -6.1353  -5.8577  -5.8577  -5.0670
+   -24.5643 -22.2762 -10.5226 -10.5226 -10.4238  -7.2656  -7.2656  -6.4438
+    -6.1612  -6.1612  -5.4165
 
           k = 0.0000-0.5774 0.0000 (  5232 PWs)   bands (ev):
 
-  -109.0458 -69.5282 -69.4943 -69.2007 -22.4238 -22.3206 -11.2786  -9.4823
-    -9.3208  -8.4667  -7.4943  -6.5602  -6.5404  -6.4523  -5.8734
+   -22.7789 -22.6530 -11.6129  -9.8100  -9.6604  -8.7974  -7.8186  -6.9159
+    -6.8568  -6.8053  -6.2245
 
           k = 0.0000 0.2887 0.0000 (  5222 PWs)   bands (ev):
 
-  -109.0478 -69.5058 -69.4888 -69.2038 -23.5146 -21.9927 -10.4292  -9.7707
-    -9.4980  -8.6794  -7.7015  -6.2741  -5.6412  -5.5358  -5.2048
+   -23.8612 -22.3276 -10.7658 -10.0979  -9.8295  -9.0108  -8.0408  -6.6144
+    -5.9769  -5.8555  -5.5522
 
           k = 0.0000-0.2887 0.0000 (  5222 PWs)   bands (ev):
 
-  -109.0478 -69.5058 -69.4888 -69.2038 -23.5146 -21.9927 -10.4292  -9.7707
-    -9.4980  -8.6794  -7.7015  -6.2741  -5.6412  -5.5358  -5.2048
+   -23.8612 -22.3276 -10.7658 -10.0979  -9.8295  -9.0108  -8.0408  -6.6144
+    -5.9769  -5.8555  -5.5522
 
           k = 0.0000-0.5774 0.0000 (  5232 PWs)   bands (ev):
 
-  -109.0458 -69.5282 -69.4943 -69.2007 -22.4238 -22.3206 -11.2786  -9.4823
-    -9.3208  -8.4667  -7.4943  -6.5602  -6.5404  -6.4523  -5.8734
+   -22.7789 -22.6530 -11.6129  -9.8100  -9.6604  -8.7974  -7.8186  -6.9159
+    -6.8568  -6.8053  -6.2245
 
           k = 0.0000-1.1547 0.0000 (  5225 PWs)   bands (ev):
 
-  -109.0498 -69.4834 -69.4834 -69.2070 -24.2254 -21.9390 -10.1931 -10.1931
-   -10.0863  -6.9096  -6.9096  -6.1353  -5.8577  -5.8577  -5.0670
+   -24.5643 -22.2762 -10.5226 -10.5226 -10.4238  -7.2656  -7.2656  -6.4438
+    -6.1612  -6.1612  -5.4165
 
           k = 0.2500 0.4330 0.0000 (  5180 PWs)   bands (ev):
 
-  -109.0458 -69.5197 -69.5028 -69.2007 -22.6196 -22.1239 -10.3780 -10.2409
-    -9.2738  -8.5204  -8.2528  -6.8813  -6.3870  -5.9376  -5.2720
+   -22.9694 -22.4610 -10.7089 -10.5854  -9.5983  -8.8467  -8.5873  -7.2094
+    -6.7443  -6.2870  -5.6169
 
           k = 0.2500-0.1443 0.0000 (  5222 PWs)   bands (ev):
 
-  -109.0478 -69.5058 -69.4888 -69.2038 -23.5146 -21.9927 -10.4292  -9.7707
-    -9.4980  -8.6794  -7.7015  -6.2741  -5.6412  -5.5358  -5.2048
+   -23.8612 -22.3276 -10.7658 -10.0979  -9.8295  -9.0108  -8.0408  -6.6144
+    -5.9769  -5.8555  -5.5522
 
           k =-0.2500 0.1443 0.0000 (  5222 PWs)   bands (ev):
 
-  -109.0478 -69.5058 -69.4888 -69.2038 -23.5146 -21.9927 -10.4292  -9.7707
-    -9.4980  -8.6794  -7.7015  -6.2741  -5.6412  -5.5358  -5.2048
+   -23.8612 -22.3276 -10.7658 -10.0979  -9.8295  -9.0108  -8.0408  -6.6144
+    -5.9769  -5.8555  -5.5522
 
           k =-0.2500-0.4330 0.0000 (  5180 PWs)   bands (ev):
 
-  -109.0458 -69.5197 -69.5028 -69.2007 -22.6196 -22.1239 -10.3780 -10.2409
-    -9.2738  -8.5204  -8.2528  -6.8813  -6.3870  -5.9376  -5.2720
+   -22.9694 -22.4610 -10.7089 -10.5854  -9.5983  -8.8467  -8.5873  -7.2094
+    -6.7443  -6.2870  -5.6169
 
           k = 0.5000-0.2887 0.0000 (  5232 PWs)   bands (ev):
 
-  -109.0458 -69.5282 -69.4943 -69.2007 -22.4238 -22.3206 -11.2786  -9.4823
-    -9.3208  -8.4667  -7.4943  -6.5602  -6.5404  -6.4523  -5.8734
+   -22.7789 -22.6530 -11.6129  -9.8100  -9.6604  -8.7974  -7.8186  -6.9159
+    -6.8568  -6.8053  -6.2245
 
           k = 0.5000-0.8660 0.0000 (  5232 PWs)   bands (ev):
 
-  -109.0458 -69.5282 -69.4943 -69.2007 -22.4238 -22.3206 -11.2786  -9.4823
-    -9.3208  -8.4667  -7.4943  -6.5602  -6.5404  -6.4523  -5.8734
+   -22.7789 -22.6530 -11.6129  -9.8100  -9.6604  -8.7974  -7.8186  -6.9159
+    -6.8568  -6.8053  -6.2245
 
           k =-0.5000 0.0000 0.0000 (  5180 PWs)   bands (ev):
 
-  -109.0458 -69.5197 -69.5028 -69.2007 -22.6196 -22.1239 -10.3780 -10.2409
-    -9.2738  -8.5204  -8.2528  -6.8813  -6.3870  -5.9376  -5.2720
+   -22.9694 -22.4610 -10.7089 -10.5854  -9.5983  -8.8467  -8.5873  -7.2094
+    -6.7443  -6.2870  -5.6169
 
           k =-0.5000-0.5774 0.0000 (  5180 PWs)   bands (ev):
 
-  -109.0458 -69.5197 -69.5028 -69.2007 -22.6196 -22.1239 -10.3780 -10.2409
-    -9.2738  -8.5204  -8.2528  -6.8813  -6.3870  -5.9376  -5.2720
+   -22.9694 -22.4610 -10.7089 -10.5854  -9.5983  -8.8467  -8.5873  -7.2094
+    -6.7443  -6.2870  -5.6169
 
-     highest occupied level (ev):    -5.0670
+     highest occupied level (ev):    -5.4165
 
      Writing output data file NiO2.save/
      Done!
@@ -731,106 +719,96 @@ N of occupied +U levels =    8.133979
      Atomic wfc used for the DFT+U projector are orthogonalized
 
      Total time spent up to now is:
-     HP           :     18.48s CPU     18.97s WALL
+     HP           :     12.93s CPU     13.18s WALL
 
       =--------------------------------------------=
              START SOLVING THE LINEAR SYSTEM
       =--------------------------------------------=
 
       atom #  1   q point #   2   iter #   1
-      chi:   1  -0.4407465512
-      Average number of iter. to solve lin. system:   35.3
-      Total CPU time :    21.0 s
+      chi:   1  -0.4321950797
+      Average number of iter. to solve lin. system:   29.9
+      Total CPU time :    14.3 s
 
       atom #  1   q point #   2   iter #   2
-      chi:   1   0.7711511443   residue:    1.2118976955
-      Average number of iter. to solve lin. system:   18.1
-      Total CPU time :    22.1 s
+      chi:   1   0.7097685594   residue:    1.1419636390
+      Average number of iter. to solve lin. system:   14.4
+      Total CPU time :    15.0 s
 
       atom #  1   q point #   2   iter #   3
-      chi:   1  -0.1048109063   residue:    0.8759620506
-      Average number of iter. to solve lin. system:   17.0
-      Total CPU time :    23.2 s
+      chi:   1  -0.0967698594   residue:    0.8065384188
+      Average number of iter. to solve lin. system:   13.1
+      Total CPU time :    15.7 s
 
       atom #  1   q point #   2   iter #   4
-      chi:   1  -0.0976023389   residue:    0.0072085674
-      Average number of iter. to solve lin. system:   17.1
-      Total CPU time :    24.3 s
+      chi:   1  -0.0965547306   residue:    0.0002151289
+      Average number of iter. to solve lin. system:   13.7
+      Total CPU time :    16.5 s
 
       atom #  1   q point #   2   iter #   5
-      chi:   1  -0.0861934524   residue:    0.0114088866
-      Average number of iter. to solve lin. system:   17.9
-      Total CPU time :    25.5 s
+      chi:   1  -0.0927179661   residue:    0.0038367645
+      Average number of iter. to solve lin. system:   13.4
+      Total CPU time :    17.1 s
 
       atom #  1   q point #   2   iter #   6
-      chi:   1  -0.0859962282   residue:    0.0001972242
-      Average number of iter. to solve lin. system:   18.4
-      Total CPU time :    26.6 s
+      chi:   1  -0.0905207582   residue:    0.0021972079
+      Average number of iter. to solve lin. system:   14.6
+      Total CPU time :    17.9 s
 
       atom #  1   q point #   2   iter #   7
-      chi:   1  -0.0879700167   residue:    0.0019737885
-      Average number of iter. to solve lin. system:   17.3
-      Total CPU time :    27.7 s
+      chi:   1  -0.0909511313   residue:    0.0004303731
+      Average number of iter. to solve lin. system:   14.1
+      Total CPU time :    18.6 s
 
       atom #  1   q point #   2   iter #   8
-      chi:   1  -0.0881349218   residue:    0.0001649051
-      Average number of iter. to solve lin. system:   19.6
-      Total CPU time :    29.0 s
+      chi:   1  -0.0909180708   residue:    0.0000330605
+      Average number of iter. to solve lin. system:   13.9
+      Total CPU time :    19.3 s
 
       atom #  1   q point #   2   iter #   9
-      chi:   1  -0.0881022122   residue:    0.0000327095
-      Average number of iter. to solve lin. system:   17.9
-      Total CPU time :    30.2 s
+      chi:   1  -0.0909120531   residue:    0.0000060177
+      Average number of iter. to solve lin. system:   14.6
+      Total CPU time :    20.0 s
 
       atom #  1   q point #   2   iter #  10
-      chi:   1  -0.0881164509   residue:    0.0000142387
-      Average number of iter. to solve lin. system:   19.6
-      Total CPU time :    31.4 s
+      chi:   1  -0.0909077642   residue:    0.0000042888
+      Average number of iter. to solve lin. system:   14.9
+      Total CPU time :    20.8 s
 
       atom #  1   q point #   2   iter #  11
-      chi:   1  -0.0881083888   residue:    0.0000080621
-      Average number of iter. to solve lin. system:   17.7
-      Total CPU time :    32.5 s
+      chi:   1  -0.0909119383   residue:    0.0000041741
+      Average number of iter. to solve lin. system:   13.4
+      Total CPU time :    21.5 s
 
       atom #  1   q point #   2   iter #  12
-      chi:   1  -0.0881112148   residue:    0.0000028259
-      Average number of iter. to solve lin. system:   18.6
-      Total CPU time :    33.7 s
+      chi:   1  -0.0909125025   residue:    0.0000005642
+      Average number of iter. to solve lin. system:   14.3
+      Total CPU time :    22.4 s
 
       atom #  1   q point #   2   iter #  13
-      chi:   1  -0.0881106219   residue:    0.0000005929
-      Average number of iter. to solve lin. system:   18.9
-      Total CPU time :    35.2 s
+      chi:   1  -0.0909122105   residue:    0.0000002921
+      Average number of iter. to solve lin. system:   15.1
+      Total CPU time :    23.2 s
 
       atom #  1   q point #   2   iter #  14
-      chi:   1  -0.0881106858   residue:    0.0000000639
-      Average number of iter. to solve lin. system:   18.7
-      Total CPU time :    36.3 s
+      chi:   1  -0.0909124432   residue:    0.0000002327
+      Average number of iter. to solve lin. system:   13.9
+      Total CPU time :    23.9 s
 
       atom #  1   q point #   2   iter #  15
-      chi:   1  -0.0881105960   residue:    0.0000000898
-      Average number of iter. to solve lin. system:   19.0
-      Total CPU time :    37.5 s
+      chi:   1  -0.0909123936   residue:    0.0000000496
+      Average number of iter. to solve lin. system:   14.9
+      Total CPU time :    24.9 s
 
       atom #  1   q point #   2   iter #  16
-      chi:   1  -0.0881106199   residue:    0.0000000240
-      Average number of iter. to solve lin. system:   18.6
-      Total CPU time :    38.6 s
+      chi:   1  -0.0909124576   residue:    0.0000000640
+      Average number of iter. to solve lin. system:   13.6
+      Total CPU time :    25.5 s
 
       atom #  1   q point #   2   iter #  17
-      chi:   1  -0.0881106312   residue:    0.0000000113
-      Average number of iter. to solve lin. system:   19.1
-      Total CPU time :    39.8 s
-
-      atom #  1   q point #   2   iter #  18
-      chi:   1  -0.0881106200   residue:    0.0000000112
-      Average number of iter. to solve lin. system:   18.9
-      Total CPU time :    40.9 s
-
-      atom #  1   q point #   2   iter #  19
-      chi:   1  -0.0881106264   residue:    0.0000000064
-      Average number of iter. to solve lin. system:   17.9
-      Total CPU time :    42.1 s
+      chi:   1  -0.0909124480   residue:    0.0000000095
+      Average number of iter. to solve lin. system:   13.4
+      Total CPU time :    26.2 s
       
       =--------------------------------------------=
              CONVERGENCE HAS BEEN REACHED
@@ -857,108 +835,104 @@ N of occupied +U levels =    8.133979
  
      PRINTING TIMING FROM PWSCF ROUTINES: 
  
-     init_run     :      0.62s CPU      0.64s WALL (       1 calls)
-     electrons    :      1.30s CPU      1.32s WALL (       1 calls)
+     init_run     :      0.55s CPU      0.55s WALL (       1 calls)
+     electrons    :      1.01s CPU      1.03s WALL (       1 calls)
 
      Called by init_run:
-     wfcinit      :      0.03s CPU      0.03s WALL (       1 calls)
+     wfcinit      :      0.02s CPU      0.02s WALL (       1 calls)
      wfcinit:atom :      0.00s CPU      0.00s WALL (      14 calls)
-     wfcinit:wfcr :      0.12s CPU      0.13s WALL (      14 calls)
-     potinit      :      0.05s CPU      0.05s WALL (       1 calls)
-     hinit0       :      0.30s CPU      0.30s WALL (       1 calls)
+     wfcinit:wfcr :      0.09s CPU      0.09s WALL (      14 calls)
+     potinit      :      0.03s CPU      0.03s WALL (       1 calls)
+     hinit0       :      0.26s CPU      0.26s WALL (       1 calls)
 
      Called by electrons:
-     c_bands      :      1.30s CPU      1.32s WALL (       1 calls)
+     c_bands      :      1.01s CPU      1.03s WALL (       1 calls)
      v_of_rho     :      0.05s CPU      0.05s WALL (       2 calls)
      v_h          :      0.00s CPU      0.00s WALL (       2 calls)
      v_xc         :      0.05s CPU      0.05s WALL (       2 calls)
-     newd         :      0.08s CPU      0.10s WALL (       2 calls)
-     PAW_pot      :      0.03s CPU      0.04s WALL (       2 calls)
+     newd         :      0.10s CPU      0.10s WALL (       2 calls)
 
      Called by c_bands:
-     init_us_2    :      0.07s CPU      0.07s WALL (     262 calls)
-     cegterg      :      1.16s CPU      1.17s WALL (      14 calls)
+     init_us_2    :      0.06s CPU      0.06s WALL (     244 calls)
+     cegterg      :      0.89s CPU      0.91s WALL (      14 calls)
 
      Called by sum_band:
 
      Called by *egterg:
-     h_psi        :     20.72s CPU     21.29s WALL (    6041 calls)
-     s_psi        :      0.90s CPU      0.82s WALL (   12089 calls)
-     g_psi        :      0.01s CPU      0.01s WALL (     202 calls)
-     cdiaghg      :      0.12s CPU      0.12s WALL (     216 calls)
-     cegterg:over :      0.06s CPU      0.06s WALL (     202 calls)
-     cegterg:upda :      0.04s CPU      0.04s WALL (     202 calls)
-     cegterg:last :      0.03s CPU      0.03s WALL (      50 calls)
+     h_psi        :     11.58s CPU     11.88s WALL (    3904 calls)
+     s_psi        :      0.53s CPU      0.49s WALL (    7785 calls)
+     g_psi        :      0.01s CPU      0.01s WALL (     214 calls)
+     cdiaghg      :      0.07s CPU      0.07s WALL (     228 calls)
+     cegterg:over :      0.04s CPU      0.04s WALL (     214 calls)
+     cegterg:upda :      0.02s CPU      0.03s WALL (     214 calls)
+     cegterg:last :      0.02s CPU      0.02s WALL (      60 calls)
 
      Called by h_psi:
-     h_psi:pot    :     20.36s CPU     20.90s WALL (    6041 calls)
-     h_psi:calbec :      0.72s CPU      0.62s WALL (    6041 calls)
-     vloc_psi     :     19.28s CPU     19.83s WALL (    6041 calls)
-     add_vuspsi   :      0.35s CPU      0.43s WALL (    6041 calls)
-     vhpsi        :      0.30s CPU      0.32s WALL (    6041 calls)
+     h_psi:pot    :     11.38s CPU     11.64s WALL (    3904 calls)
+     h_psi:calbec :      0.39s CPU      0.36s WALL (    3904 calls)
+     vloc_psi     :     10.76s CPU     11.01s WALL (    3904 calls)
+     add_vuspsi   :      0.22s CPU      0.25s WALL (    3904 calls)
+     vhpsi        :      0.17s CPU      0.20s WALL (    3904 calls)
 
      General routines
-     calbec       :      1.50s CPU      1.46s WALL (   18346 calls)
-     fft          :      0.70s CPU      0.72s WALL (     589 calls)
-     ffts         :      0.02s CPU      0.02s WALL (      77 calls)
-     fftw         :     19.82s CPU     19.77s WALL (  133764 calls)
-     interpolate  :      0.10s CPU      0.11s WALL (      77 calls)
-     davcio       :      0.48s CPU      0.59s WALL (    7994 calls)
+     calbec       :      0.87s CPU      0.86s WALL (   11887 calls)
+     fft          :      0.87s CPU      0.88s WALL (     544 calls)
+     ffts         :      0.02s CPU      0.02s WALL (      71 calls)
+     fftw         :     11.36s CPU     11.28s WALL (   73492 calls)
+     interpolate  :      0.09s CPU      0.10s WALL (      71 calls)
+     davcio       :      0.27s CPU      0.35s WALL (    5655 calls)
  
      Parallel routines
-     fft_scatt_xy :      2.01s CPU      2.42s WALL (  134430 calls)
-     fft_scatt_yz :      4.81s CPU      4.69s WALL (  134430 calls)
+     fft_scatt_xy :      1.16s CPU      1.34s WALL (   74107 calls)
+     fft_scatt_yz :      3.40s CPU      3.15s WALL (   74107 calls)
 
      Hubbard U routines
-     vhpsi        :      0.30s CPU      0.32s WALL (    6041 calls)
-
-     PAW routines
-     PAW_pot      :      0.03s CPU      0.04s WALL (       2 calls)
+     vhpsi        :      0.17s CPU      0.20s WALL (    3904 calls)
  
-     init_vloc    :      0.09s CPU      0.09s WALL (       2 calls)
-     init_us_1    :      0.18s CPU      0.18s WALL (       2 calls)
-     newd         :      0.08s CPU      0.10s WALL (       2 calls)
-     add_vuspsi   :      0.35s CPU      0.43s WALL (    6041 calls)
+     init_vloc    :      0.11s CPU      0.11s WALL (       2 calls)
+     init_us_1    :      0.14s CPU      0.14s WALL (       2 calls)
+     newd         :      0.10s CPU      0.10s WALL (       2 calls)
+     add_vuspsi   :      0.22s CPU      0.25s WALL (    3904 calls)
  
      PRINTING TIMING FROM HP ROUTINES: 
  
-     hp_setup_q   :      0.04s CPU      0.05s WALL (       2 calls)
-     hp_init_q    :      0.10s CPU      0.10s WALL (       2 calls)
-     hp_solve_lin :     38.34s CPU     39.35s WALL (       2 calls)
-     hp_dvpsi_per :      0.02s CPU      0.02s WALL (     205 calls)
-     hp_dnsq      :      0.04s CPU      0.05s WALL (      37 calls)
-     hp_symdnsq   :      0.00s CPU      0.00s WALL (      37 calls)
+     hp_setup_q   :      0.06s CPU      0.07s WALL (       2 calls)
+     hp_init_q    :      0.06s CPU      0.06s WALL (       2 calls)
+     hp_solve_lin :     23.09s CPU     23.60s WALL (       2 calls)
+     hp_dvpsi_per :      0.01s CPU      0.01s WALL (     187 calls)
+     hp_dnsq      :      0.03s CPU      0.04s WALL (      34 calls)
+     hp_symdnsq   :      0.00s CPU      0.00s WALL (      34 calls)
      hp_dnstot_su :      0.00s CPU      0.00s WALL (       1 calls)
      hp_rotate_dn :      0.00s CPU      0.00s WALL (       4 calls)
      hp_calc_chi  :      0.00s CPU      0.00s WALL (       1 calls)
-     hp_vpsifft   :      0.92s CPU      0.98s WALL (     194 calls)
-     hp_sphi      :      0.03s CPU      0.03s WALL (       2 calls)
-     hp_run_nscf  :      1.93s CPU      1.97s WALL (       1 calls)
-     hp_psymdvscf :      4.05s CPU      4.05s WALL (      37 calls)
+     hp_vpsifft   :      0.66s CPU      0.70s WALL (     176 calls)
+     hp_sphi      :      0.02s CPU      0.02s WALL (       2 calls)
+     hp_run_nscf  :      1.57s CPU      1.59s WALL (       1 calls)
+     hp_psymdvscf :      3.85s CPU      3.85s WALL (      34 calls)
  
      PRINTING TIMING FROM LR MODULE: 
  
-     ortho        :      0.07s CPU      0.08s WALL (     205 calls)
-     cgsolve      :     23.07s CPU     23.69s WALL (     205 calls)
-     ch_psi       :     22.33s CPU     23.01s WALL (    5811 calls)
-     incdrhoscf   :      1.02s CPU      1.08s WALL (     205 calls)
-     dv_of_drho   :      0.70s CPU      0.71s WALL (      37 calls)
-     mix_pot      :      0.15s CPU      0.26s WALL (      37 calls)
-     setup_dgc    :      0.03s CPU      0.03s WALL (       2 calls)
+     ortho        :      0.05s CPU      0.06s WALL (     187 calls)
+     cgsolve      :     12.55s CPU     12.87s WALL (     187 calls)
+     ch_psi       :     12.18s CPU     12.53s WALL (    3662 calls)
+     incdrhoscf   :      0.74s CPU      0.76s WALL (     187 calls)
+     dv_of_drho   :      0.88s CPU      0.88s WALL (      34 calls)
+     mix_pot      :      0.14s CPU      0.23s WALL (      34 calls)
+     setup_dgc    :      0.05s CPU      0.05s WALL (       2 calls)
      setup_dmuxc  :      0.01s CPU      0.01s WALL (       2 calls)
      setup_nbnd_o :      0.00s CPU      0.00s WALL (       2 calls)
-     cft_wave     :      0.86s CPU      0.89s WALL (    5820 calls)
+     cft_wave     :      0.62s CPU      0.64s WALL (    3872 calls)
  
      USPP ROUTINES: 
  
-     newdq        :      2.11s CPU      2.11s WALL (      37 calls)
-     adddvscf     :      0.04s CPU      0.04s WALL (     194 calls)
-     addusdbec    :      0.03s CPU      0.03s WALL (     205 calls)
+     newdq        :      1.98s CPU      1.99s WALL (      34 calls)
+     adddvscf     :      0.03s CPU      0.03s WALL (     176 calls)
+     addusdbec    :      0.03s CPU      0.02s WALL (     187 calls)
  
-     HP           :     40.96s CPU     42.07s WALL
+     HP           :     25.67s CPU     26.21s WALL
 
  
-   This run was terminated on:  13:41:57  29Aug2018            
+   This run was terminated on:  10:18:45   7Sep2018            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
