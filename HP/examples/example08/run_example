@@ -14,11 +14,11 @@ $ECHO "This example shows how to use pw.x and hp.x to calculate"
 $ECHO "the Hubbard U parameters for Ni in NiO2 (2D system)."
 
 # set the needed environment variables
-. ../environment_variables
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x hp.x"
-PSEUDO_LIST="ni_pbe_v1.4.uspp.F.UPF O.pbe-n-kjpaw_psl.0.1.UPF"
+PSEUDO_LIST="Ni.pbe-n-rrkjus_psl.0.1.UPF O.pbe-n-rrkjus_psl.0.1.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -26,10 +26,6 @@ $ECHO "  pseudo directory:      $PSEUDO_DIR"
 $ECHO "  temporary directory:   $TMP_DIR"
 $ECHO
 $ECHO "  checking that needed directories and files exist...\c"
-$ECHO
-$ECHO " Pseudopotentials were selected from the SSSP library:"
-$ECHO " https://www.materialscloud.org/discover/sssp/table/precision\c"
-$ECHO
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
@@ -52,6 +48,22 @@ for FILE in $BIN_LIST ; do
     if test ! -x $BIN_DIR/$FILE ; then
         $ECHO
         $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
         $ECHO "Aborting"
         exit 1
     fi
@@ -99,8 +111,8 @@ cat > $PREFIX.scf.in << EOF
     mixing_beta = 0.3
  /
 ATOMIC_SPECIES
-Ni   58.6934  ni_pbe_v1.4.uspp.F.UPF
-O    15.9994  O.pbe-n-kjpaw_psl.0.1.UPF
+Ni   58.6934  Ni.pbe-n-rrkjus_psl.0.1.UPF
+O    15.9994  O.pbe-n-rrkjus_psl.0.1.UPF
 ATOMIC_POSITIONS {angstrom}
 Ni   0.0000000000    0.0000000000    10.9412265283
 O    1.4121016725    0.8152772808    10.0006291225
@@ -113,7 +125,7 @@ K_POINTS {automatic}
  4 4 1 0 0 0
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX..."
-$PW_COMMAND < $PREFIX.scf.in |tee $PREFIX.scf.out
+$PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out
 $ECHO " done"
 
 
@@ -128,5 +140,5 @@ cat > $PREFIX.hp.in << EOF
  /
 EOF
 $ECHO "  Running the linear-response calculation of Hubbard U..."
-$HP_COMMAND < $PREFIX.hp.in |tee $PREFIX.hp.out
+$HP_COMMAND < $PREFIX.hp.in > $PREFIX.hp.out
 $ECHO " done"

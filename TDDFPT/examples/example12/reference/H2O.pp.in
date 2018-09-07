@@ -1,0 +1,10 @@
+ &inputpp
+ /
+ &plot
+   nfile = 1,
+   iflag = 3,
+   filepp(1) = "/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/drho-of-eign-1",
+   fileout = "drho-of-eign-1.cube",
+   output_format = 6,
+   nx = 70, ny = 70, nz = 20
+/

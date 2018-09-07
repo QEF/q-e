@@ -22,7 +22,6 @@ SUBROUTINE bcast_lr_input
   USE io_global,           ONLY: ionode, ionode_id
   USE mp_global,           ONLY: intra_image_comm
   USE mp_world,            ONLY: world_comm
-  USE exx,                 ONLY: ecutfock
   USE qpoint,              ONLY: xq
   USE control_lr,          ONLY: lrpa
 
@@ -54,7 +53,6 @@ SUBROUTINE bcast_lr_input
   CALL mp_bcast (no_hxc, ionode_id, world_comm )
   CALL mp_bcast (bgz_suffix, ionode_id, world_comm )
   call mp_bcast (scissor, ionode_id, world_comm)
-  CALL mp_bcast (ecutfock, ionode_id, world_comm )
   CALL mp_bcast (d0psi_rs, ionode_id,world_comm )
   CALL mp_bcast (lshift_d0psi, ionode_id,world_comm )
   CALL mp_bcast (tddfpt, ionode_id, world_comm )

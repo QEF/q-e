@@ -2,8 +2,8 @@
     calculation='scf'
     restart_mode='from_scratch',
     prefix='LiCoO2'
-    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/'
-    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
     verbosity='high'
  /
  &system
@@ -24,9 +24,9 @@
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
-Co  59.0   co_pbesol_v1.2.uspp.F.UPF
-O   16.0   O.pbesol-n-kjpaw_psl.0.1.UPF
-Li   7.0   li_pbesol_v1.4.uspp.F.UPF
+Co  59.0   Co.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+O   16.0   O.pbesol-n-rrkjus_psl.0.1.UPF 
+Li   7.0   Li.pbesol-s-rrkjus_psl.0.2.1.UPF 
 ATOMIC_POSITIONS {crystal}
  Co  0.0000000000   0.0000000000   0.0000000000
  O   0.2604885000   0.2604885000   0.2604885000

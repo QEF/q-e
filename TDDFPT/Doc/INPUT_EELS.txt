@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: turbo_eels.x / turboEELS / Quantum Espresso (version: svn)
+Program: turbo_eels.x / turboEELS / Quantum Espresso (version: git)
 ------------------------------------------------------------------------
 
 
@@ -149,4 +149,4 @@ NAMELIST: &lr_control
 ===END OF NAMELIST======================================================
 
 
-This file has been created by helpdoc utility on Fri Jun 22 17:11:55 CEST 2018
+This file has been created by helpdoc utility on Fri Sep 07 12:19:41 CEST 2018

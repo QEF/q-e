@@ -2,8 +2,8 @@
     calculation='scf'
     restart_mode='from_scratch',
     prefix='NiO2'
-    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/'
-    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
     verbosity='high'
  /
  &system
@@ -22,8 +22,8 @@
     mixing_beta = 0.3
  /
 ATOMIC_SPECIES
-Ni   58.6934  ni_pbe_v1.4.uspp.F.UPF
-O    15.9994  O.pbe-n-kjpaw_psl.0.1.UPF
+Ni   58.6934  Ni.pbe-n-rrkjus_psl.0.1.UPF
+O    15.9994  O.pbe-n-rrkjus_psl.0.1.UPF
 ATOMIC_POSITIONS {angstrom}
 Ni   0.0000000000    0.0000000000    10.9412265283
 O    1.4121016725    0.8152772808    10.0006291225

@@ -1254,12 +1254,11 @@ contains
     
     Write(stdout,'(5x,"Now generate the spectrum plot file...")') 
 
-    if(message=="END") filename = trim(prefix)  // ".plot"
-    if(message=="10") filename = trim(prefix)  // ".plot-quasi-conv"
+    if(message=="END") filename = trim(prefix)  // ".plot.dat"
+    if(message=="10") filename = trim(prefix)  // ".plot-quasi-conv.dat"
     OPEN(17,file=filename,status="unknown")
 
-    write(17,'("#",2x,"Energy(Ry)",10x,"total",13x,"X",13x,"Y",13x,"Z")') 
-    write(17,'("#  Broadening is: ",5x,F10.7,5x,"Ry")') broadening
+    write(17,'("#",7x,"Energy(Ry)",12x,"Total",17x,"X",18x,"Y",19x,"Z")') 
     
     nstep=(finish-start)/step+1
     allocate(absorption(nstep,5)) ! Column 1: Energy; 2: Toal; 3,4,5: X,Y,Z
@@ -1550,8 +1549,8 @@ contains
     if(message=="END") filename = trim(prefix)  // ".eigen"
     if(message=="10") filename = trim(prefix)  // ".eigen-quasi-conv"
     OPEN(18,file=filename,status="unknown")
-    write(18,'("#",2x,"Energy(Ry)",10x,"total",13x,"X",13x,"Y",13x,"Z")') 
-    
+    write(18,'("#",7x,"Energy(Ry)",12x,"Total",17x,"X",18x,"Y",19x,"Z")')
+ 
     do ieign=1, num_eign
       write(18,'(5E20.8)') tr_energy(eign_value_order(ieign)),total_chi(ieign),&
                            chi_dav(1,ieign),chi_dav(2,ieign),chi_dav(3,ieign)

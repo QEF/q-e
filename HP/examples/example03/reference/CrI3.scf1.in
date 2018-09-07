@@ -2,8 +2,8 @@
     calculation='scf'
     restart_mode='from_scratch',
     prefix='CrI3'
-    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/'
-    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
     verbosity='high'
  /
  &system
@@ -28,8 +28,8 @@
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
-Cr     51.996    cr_pbesol_v1.5.uspp.F.UPF
-I     126.9045   I.pbesol-n-kjpaw_psl.0.2.UPF
+Cr     51.996    Cr.pbesol-spn-kjpaw_psl.1.0.0.UPF
+I     126.9045   I.pbesol-n-kjpaw_psl.1.0.0.UPF
 ATOMIC_POSITIONS {crystal}
 Cr       0.3337100000   0.3337100000   0.3337100000
 Cr       0.6662900000   0.6662900000   0.6662900000

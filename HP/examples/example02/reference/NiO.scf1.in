@@ -2,8 +2,8 @@
     calculation='scf'
     restart_mode='from_scratch',
     prefix='NiO'
-    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/'
-    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
     verbosity='high'
  /
  &system
@@ -30,9 +30,9 @@
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Ni1  58.693  ni_pbesol_v1.4.uspp.F.UPF
- Ni2  58.693  ni_pbesol_v1.4.uspp.F.UPF
- O    16.000  O.pbesol-n-kjpaw_psl.0.1.UPF
+ Ni1  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF
+ Ni2  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF
+ O    16.000  O.pbesol-n-rrkjus_psl.0.1.UPF
 ATOMIC_POSITIONS {alat}
  Ni1  0.0000000   0.0000000   0.0000000
  Ni2  0.5000000   0.5000000   0.0000000
