@@ -8,9 +8,6 @@
 # Si.bhs		    Au.pz-rrkjus_aewfc.UPF   CorelUSPBE.RRKJ3.UPF
 
 # to be added on web:
-# Si.rel-pbe-rrkj.UPF
-# Ni.rel-pbe-nd-rrkjus.UPF
-# Pt.rel-pbe-n-rrkjus.UPF
 
 \rm -rf Al.pz-vbc.UPF >& /dev/null
 \rm -rf Al.pbe-rrkj.UPF >& /dev/null
@@ -41,6 +38,27 @@
 \rm -rf Au.rel-pz-kjpaw.UPF >& /dev/null
 \rm -rf Pb.pz-d-van.UPF  >& /dev/null
 \rm -rf Ti.pz-sp-van_ak.UPF  >& /dev/null
+\rm -rf C.pbe-n-kjpaw_psl.0.1.UPF >& /dev/null
+\rm -rf O.blyp-vbc.UPFi >& /dev/null >& /dev/null 
+\rm -rf H.blyp-vbc.UPF >& /dev/null >& /dev/null 
+\rm -rf Mg.pz-n-vbc.UPF >& /dev/null >& /dev/null
+\rm -rf B.pz-vbc.UPF >& /dev/null >& /dev/null
+\rm -rf C.pbe-n-rrkjus_psl.0.1.UPF >& /dev/null
+\rm -rf O.blyp-mt.UPF >& /dev/null
+\rm -rf N.pbe-kjpaw.UPF >& /dev/null 
+\rm -rf H.pbe-kjpaw.UPF >& /dev/null
+\rm -rf O.pbe-kjpaw.UPF >& /dev/null
+\rm -rf O.pz-kjpaw.UPFi >& /dev/null
+\rm -rf Ge.pbe-kjpaw.UPF >& /dev/null 
+\rm -rf H.coulomb-ae.UPF >& /dev/null
+\rm -rf C.pbe-van_bm.UPF >& /dev/null
+\rm -rf C.pbe-mt_gipaw.UPF >& /dev/null
 
 \rm -rf *_kernel_table >& /dev/null
+
+
+
+
+
+
 
