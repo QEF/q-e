@@ -30,7 +30,7 @@ PROGRAM plotband
   INTEGER :: nks = 0, nbnd = 0, ios, nlines, n,i,j,ni,nf,nl
   INTEGER :: nks_rap = 0, nbnd_rap = 0
   LOGICAL, ALLOCATABLE :: high_symmetry(:), is_in_range(:), is_in_range_rap(:)
-  CHARACTER(len=256) :: filename, filename1
+  CHARACTER(len=256) :: filename, filename1, filenamegnu
   NAMELIST /plot/ nks, nbnd
   NAMELIST /plot_rap/ nks_rap, nbnd_rap
   INTEGER :: n_interp
@@ -168,7 +168,6 @@ PROGRAM plotband
      !read input string of arbitrary length
      call readline(5,line)
      CALL field_count( nprojwfc, line )
-     write(*,'(i)') nprojwfc
      allocate(atwfclst(nprojwfc))
      atwfclst(:) = -1
      DO nwfc = 1,nprojwfc
@@ -314,6 +313,8 @@ PROGRAM plotband
   !
   WRITE(*,'("output file (gnuplot/xmgr) > ")', advance="NO")
   READ(5,'(a)', end=25, err=25)  filename
+  !save this file name for plotting projected bandst
+  filenamegnu=filename
   IF (filename == ' ' ) THEN
      WRITE(*,'("skipping ...")')
      GOTO 25
@@ -328,8 +329,12 @@ PROGRAM plotband
      ! draw bands
      DO i=1,nbnd
         IF (is_in_range(i)) THEN
-           WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=1,nks)
-           WRITE (2,*)
+          IF (exist_proj) THEN
+            WRITE (2,'(3f10.4)') (kx(n), e(i,n), sumproj(i,n),n=1,nks)
+          ELSE
+            WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=1,nks)
+          ENDIF
+          WRITE (2,*)
         ENDIF
      ENDDO
      CLOSE (unit = 2)
@@ -592,6 +597,42 @@ PROGRAM plotband
   WRITE(*,'("bands in PostScript format written to file ",a)') filename
 30 CONTINUE
 
+  ! generate gnuplot script to directly draw projected band structure
+  IF ((.not.exist_rap) .and. exist_proj) THEN
+    WRITE(*,'(a)', advance="NO") "output file for projected band &
+                                 &(gnuplot script) > "
+    READ(5,'(a)', end=35, err=35)  filename
+    OPEN (unit=1,file=trim(filename),form='formatted',&
+          status='unknown',iostat=ios)
+    WRITE (1,'(a)') '#!gnuplot'
+    WRITE (1,'(a)') 'set terminal postscript portrait &
+                    & enhanced color dashed lw 1 "Times Roman" 12'
+    WRITE (1,'(a)') 'set output "'//trim(filename)//'_projected.ps"'
+    WRITE (1,'(a,f10.4,a)') 'set xrange [0.0:',kx(nks),']'
+    WRITE (1,'(a)') 'unset xtics'
+    WRITE (1,'(a,f12.6,a,f12.6,a)') '#set yrange [',emin,':',emax,']'
+    WRITE (1,'(a,3(f12.6,1x))') 'set ytics ',emin,deltaE,emax
+    WRITE (1,'(a)') 'set ylabel "E - E_{ref} (eV)"'
+    WRITE (1,'(a)') 'set border lw 0.5'
+    WRITE (1,'(a)') "set style arrow 1 nohead front lw 0.5 lc rgb 'black'"
+    DO nl=1,nlines
+      WRITE (1,'(a,f10.4,a,f10.4,a)') 'set arrow from ',kx(point(nl)),&
+                &',graph 0 to ',kx(point(nl)),',graph 1 as 1'
+    ENDDO
+    WRITE (1,'(a,f12.6,a)') &
+                &"plot '"//trim(filenamegnu)//&
+                &"' u 1:($2 - ",eref,"):3 w l palette lw 1 notitle, \"
+    WRITE (1,'(f12.6,a)') &
+                &Ef-eref," lt 2 lw 0.5 lc rgb 'grey50' notitle"
+    CLOSE (unit=1)
+    WRITE (*,'(a)') 'run "gnuplot '//trim(filename)//'" to get "'//&
+                &trim(filename)//'_projected.ps"'
+    WRITE (*,'(a)') 'and/or run "ps2pdf '//trim(filename)//&
+                &'_projected.ps" to get "'//trim(filename)//&
+                &'_projected.pdf"'
+  ENDIF
+
+35 CONTINUE
   STOP
 20 WRITE(*, '("Error reading k-point # ",i4)') n
   STOP
