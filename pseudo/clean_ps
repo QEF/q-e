@@ -53,6 +53,7 @@
 \rm -rf H.coulomb-ae.UPF >& /dev/null
 \rm -rf C.pbe-van_bm.UPF >& /dev/null
 \rm -rf C.pbe-mt_gipaw.UPF >& /dev/null
+\rm -rf Co.rel-pbe-nd-rrkjus.UPF >& /dev/null 
 
 \rm -rf *_kernel_table >& /dev/null
 
