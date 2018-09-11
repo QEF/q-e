@@ -276,6 +276,8 @@ SUBROUTINE reset_gvectors ( )
   USE fft_base,   ONLY : dfftp
   USE fft_base,   ONLY : dffts
   USE control_flags, ONLY : lbfgs, lmd
+  USE funct,         ONLY : dft_is_hybrid
+  USE exx_base,      ONLY : exx_grid_init, exx_mp_init, exx_div_check
   IMPLICIT NONE
   !
   WRITE( UNIT = stdout, FMT = 9110 )
@@ -302,6 +304,12 @@ SUBROUTINE reset_gvectors ( )
   dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
   !
   CALL init_run()
+  IF ( dft_is_hybrid() ) THEN
+     CALL exx_grid_init(REINIT = .TRUE.)
+     CALL exx_mp_init()
+     CALL exx_div_check()
+  ENDIF
+
   !
 9110 FORMAT( /5X,'A final scf calculation at the relaxed structure.' )
 9120 FORMAT(  5X,'The G-vectors are recalculated for the final unit cell'/ &
