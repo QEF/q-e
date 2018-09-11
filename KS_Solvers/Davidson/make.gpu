@@ -3,3 +3,5 @@
 DAVID += \
 cegterg_gpu.o \
 regterg_gpu.o
+
+MODFLAGS += $(MOD_FLAG)../../GScratch

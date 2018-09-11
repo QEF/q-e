@@ -7,7 +7,8 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../src
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
          ../../KS_Solvers/libks_solvers.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
+         ../../GScratch/libgscratch.a
 PWOBJS = ../src/libpw.a
 
 TLDEPS= bindir mods libs pw libfft libla libutil

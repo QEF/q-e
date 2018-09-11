@@ -17,6 +17,11 @@ PWLIBS += \
   add_paw_to_deeq_gpu.o \
   add_vhub_to_deeq_gpu.o
 
+MODFLAGS += \
+         $(MOD_FLAG)../../GScratch
+QEMODS += \
+         ../../GScratch/libgscratch.a 
+
 pwcom_gpu.o : pwcom.o
 a2fmod.o : pwcom_gpu.o
 g_psi_mod_gpu.o : g_psi_mod.o

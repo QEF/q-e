@@ -8,6 +8,9 @@ MODULES += \
   ylmr2_gpu.o \
   splinelib_gpu.o
 
+MODFLAGS += \
+         $(MOD_FLAG)../GScratch
+
 recvec_gpu.o : recvec.o
 uspp_gpu.o : uspp.o
 becmod_gpu.o : becmod.o
