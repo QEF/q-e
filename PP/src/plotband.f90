@@ -52,9 +52,9 @@ PROGRAM plotband
   !!!
   LOGICAL :: exist_proj
   CHARACTER(len=256) :: filename2, field
-  CHARACTER(len=2096) :: line
-  INTEGER, ALLOCATABLE :: atwfclst(:)
+  CHARACTER(len=:), allocatable :: line
   INTEGER :: nat, ntyp, natomwfc, nprojwfc, nwfc, idum
+  integer, allocatable :: atwfclst(:)
   REAL(DP) :: proj, fdum
   REAL(DP), ALLOCATABLE :: sumproj(:,:), p_rap(:,:)
   !!!
@@ -165,9 +165,11 @@ PROGRAM plotband
   !!!
   IF (exist_proj) THEN
      WRITE(*,'("List of atomic wavefunctions: ")', advance="NO")
-     READ (5,'(A)') line
+     !read input string of arbitrary length
+     call readline(5,line)
      CALL field_count( nprojwfc, line )
-     ALLOCATE ( atwfclst(nprojwfc) )
+     write(*,'(i)') nprojwfc
+     allocate(atwfclst(nprojwfc))
      atwfclst(:) = -1
      DO nwfc = 1,nprojwfc
         CALL get_field(nwfc, field, line)
@@ -184,8 +186,8 @@ PROGRAM plotband
            ENDDO
         ENDDO
      ENDDO
+     deallocate(atwfclst)
      CLOSE(22)
-     DEALLOCATE (atwfclst)
   ENDIF
   !!!
 
@@ -720,6 +722,39 @@ SUBROUTINE splint (nspline, xspline, yspline, d2y, nfit, xfit, yfit)
 
   RETURN
 END SUBROUTINE splint
+
+subroutine readline(aunit, inline)
+  IMPLICIT NONE
+  ! read input of arbitrary length, 
+  ! return a string of length at least 256
+  integer, intent(IN) :: aunit
+  character(LEN=:), allocatable, intent(out) :: inline
+  character(LEN=:), allocatable :: tmpline
+  integer, parameter :: line_buf_len=256
+  character(LEN=line_buf_len) :: instr
+  logical :: set
+  integer status, size
+  
+  set = .true.
+  do
+    read(aunit,'(a)',advance='NO',iostat=status, size=size) instr
+    if (set) then
+        tmpline = instr(1:size)
+        set=.false.
+    else
+        tmpline = tmpline // instr(1:size)
+    end if
+    if (IS_IOSTAT_EOR(status)) exit
+  end do
+  ! the inline will have at least one blank at the ending
+  if (len_trim(tmpline) < 256) then
+    instr = tmpline
+    inline = instr
+  else
+    inline = tmpline // ' '
+  endif
+  return
+end subroutine readline
 
 END PROGRAM plotband
 
