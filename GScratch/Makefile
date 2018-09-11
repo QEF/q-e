@@ -7,19 +7,11 @@ MODFLAGS=
 GSCRATCH = tiny_buffer.o \
 gbuffers.o 
 
-all : libgscratch.a move
+all : libgscratch.a
 
 libgscratch.a:  $(GSCRATCH)
 	$(AR) $(ARFLAGS) $@ $?
-#	$(RANLIB) $@  
-
-move:
-	(cp *.mod ../UtilXlib/)
-	(cp libgscratch.a ../UtilXlib/libutil.a)
-
-add:
-	(cp *.mod ../UtilXlib/)
-	(libtool -static -o ../UtilXlib/libutil.a libgscratch.a ../UtilXlib/libutil.a
+	$(RANLIB) $@  
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x

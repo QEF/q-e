@@ -160,7 +160,7 @@ all   : pwall cp ld1 upf tddfpt xspectra gwl
 # compile modules, libraries, directory for binaries, etc
 ###########################################################
 
-mods : libiotk libfox libutil libla libfft
+mods : libiotk libfox libutil libgscratch libla libfft
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libs libutil libla
@@ -173,9 +173,10 @@ libfft :
 	( cd FFTXlib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libutil : 
-	if test -d GScratch ; then \
-	( cd GScratch ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
+libgscratch : 
+	( cd GScratch ; $(MAKE) TLDEPS= all || exit 1 )
 
 libs :
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
