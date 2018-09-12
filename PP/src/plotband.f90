@@ -627,7 +627,7 @@ PROGRAM plotband
     WRITE (1,'(a,f10.4,a)') 'set xrange [0.0:',kx(nks),']'
     WRITE (1,'(a)') 'unset xtics'
     WRITE (1,'(a,f12.6,a,f12.6,a)') '#set yrange [',emin,':',emax,']'
-    WRITE (1,'(a,3(f12.6,1x))') 'set ytics ',emin,deltaE,emax
+    WRITE (1,'(a,3(f12.6,a))') 'set ytics ',emin,',',deltaE,',',emax,' '
     WRITE (1,'(a)') 'set ylabel "E - E_{ref} (eV)"'
     WRITE (1,'(a)') 'set border lw 0.5'
     WRITE (1,'(a)') "set style arrow 1 nohead front lw 0.5 lc rgb 'black'"
