@@ -622,7 +622,7 @@ PROGRAM plotband
           status='unknown',iostat=ios)
     WRITE (1,'(a)') '#!gnuplot'
     WRITE (1,'(a)') 'set terminal postscript portrait &
-                    & enhanced color dashed lw 1 "Times Roman" 12'
+                    & enhanced color dashed lw 1 ",12"'
     WRITE (1,'(a)') 'set output "'//trim(filename)//'_projected.ps"'
     WRITE (1,'(a,f10.4,a)') 'set xrange [0.0:',kx(nks),']'
     WRITE (1,'(a)') 'unset xtics'
