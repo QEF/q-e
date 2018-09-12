@@ -10,6 +10,9 @@ PROGRAM plotband
   ! reads data files produced by "bands.x", produces
   ! * data file ready for plotting with gnuplot, xmgr or the like
   ! * a postscript file that can be directly printed
+  ! for projected band structure, produces
+  ! * a gnuplot script that can be used to generate
+  !   postscript and/or pdf file
   ! Important notice:
   ! - k-points processed by bands.x should be along a continuous path
   ! - no two consecutive k-points should be equal (i.e.: a k-point,
@@ -781,9 +784,12 @@ SUBROUTINE splint (nspline, xspline, yspline, d2y, nfit, xfit, yfit)
 END SUBROUTINE splint
 
 SUBROUTINE readline(aunit, inline)
-  IMPLICIT NONE
   ! read input of arbitrary length,
-  ! return a string of length at least 256
+  ! return a string of length at least 256.
+  ! the returning string will have at least one
+  ! whitespace, to be compatible with field_count()
+  ! Junfeng Qiao (Sep/12/2018)
+  IMPLICIT NONE
   INTEGER, INTENT(in) :: aunit
   CHARACTER(len=:), ALLOCATABLE, INTENT(out) :: inline
   CHARACTER(len=:), ALLOCATABLE :: tmpline
