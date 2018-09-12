@@ -9,10 +9,10 @@ PROGRAM plotband
 
   ! reads data files produced by "bands.x", produces
   ! * data file ready for plotting with gnuplot, xmgr or the like
-  ! * a postscript file that can be directly printed 
+  ! * a postscript file that can be directly printed
   ! Important notice:
   ! - k-points processed by bands.x should be along a continuous path
-  ! - no two consecutive k-points should be equal (i.e.: a k-point, 
+  ! - no two consecutive k-points should be equal (i.e.: a k-point,
   !   e.g. 0,0,0, can appear more than once but not in sequence)
   ! If these rules are violated, unpredictable results may follow
 
@@ -48,13 +48,13 @@ PROGRAM plotband
 
   LOGICAL :: exist_rap
   LOGICAL, ALLOCATABLE :: todo(:,:)
-  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  CHARACTER(len=6), EXTERNAL :: int_to_char
   !!!
   LOGICAL :: exist_proj
   CHARACTER(len=256) :: filename2, field
-  CHARACTER(len=:), allocatable :: line
+  CHARACTER(len=:), ALLOCATABLE :: line
   INTEGER :: nat, ntyp, natomwfc, nprojwfc, nwfc, idum
-  integer, allocatable :: atwfclst(:)
+  INTEGER, ALLOCATABLE :: atwfclst(:)
   REAL(DP) :: proj, fdum
   REAL(DP), ALLOCATABLE :: sumproj(:,:), p_rap(:,:)
   !!!
@@ -166,9 +166,9 @@ PROGRAM plotband
   IF (exist_proj) THEN
      WRITE(*,'("List of atomic wavefunctions: ")', advance="NO")
      !read input string of arbitrary length
-     call readline(5,line)
+     CALL readline(5,line)
      CALL field_count( nprojwfc, line )
-     allocate(atwfclst(nprojwfc))
+     ALLOCATE(atwfclst(nprojwfc))
      atwfclst(:) = -1
      DO nwfc = 1,nprojwfc
         CALL get_field(nwfc, field, line)
@@ -181,11 +181,11 @@ PROGRAM plotband
         DO n=1,nks
            DO ibnd=1,nbnd
               READ(22, '(2i8,f20.10)', ERR=23, IOSTAT=ios) idum,idum,proj
-              IF ( ANY( atwfclst(:) == nwfc ) ) sumproj(ibnd,n) = sumproj(ibnd,n) + proj
+              IF ( any( atwfclst(:) == nwfc ) ) sumproj(ibnd,n) = sumproj(ibnd,n) + proj
            ENDDO
         ENDDO
      ENDDO
-     deallocate(atwfclst)
+     DEALLOCATE(atwfclst)
      CLOSE(22)
   ENDIF
   !!!
@@ -195,7 +195,7 @@ PROGRAM plotband
 !  in the representation file
 !
   DO n=1,nks
-     IF (n==1 .OR. n==nks) THEN
+     IF (n==1 .or. n==nks) THEN
         high_symmetry(n) = .true.
      ELSE
         k1(:) = k(:,n) - k(:,n-1)
@@ -203,7 +203,7 @@ PROGRAM plotband
         ps = ( k1(1)*k2(1) + k1(2)*k2(2) + k1(3)*k2(3) ) / &
          sqrt( k1(1)*k1(1) + k1(2)*k1(2) + k1(3)*k1(3) ) / &
          sqrt( k2(1)*k2(1) + k2(2)*k2(2) + k2(3)*k2(3) )
-        high_symmetry(n) = (ABS(ps-1.d0) >1.0d-4).OR.high_symmetry(n)
+        high_symmetry(n) = (abs(ps-1.d0) >1.0d-4).or.high_symmetry(n)
 !
 !  The gamma point is a high symmetry point
 !
@@ -225,7 +225,7 @@ PROGRAM plotband
 !
 !   A big jump in dxmod is a sign that the point k(:,n) and k(:,n-1)
 !   are quite distant and belong to two different lines. We put them on
-!   the same point in the graph 
+!   the same point in the graph
 !
         kx(n)=kx(n-1)
      ELSEIF (dxmod > 1.d-5) THEN
@@ -319,10 +319,10 @@ PROGRAM plotband
      WRITE(*,'("skipping ...")')
      GOTO 25
   ENDIF
-  IF (.NOT.exist_rap) THEN
+  IF (.not.exist_rap) THEN
 !
 !  Here the symmetry analysis has not been done. So simply save the bands
-!  on output. 
+!  on output.
 !
      OPEN (unit=2,file=filename,form='formatted',status='unknown',&
            iostat=ios)
@@ -367,7 +367,7 @@ PROGRAM plotband
 !   Along this line the symmetry decomposition has not been done.
 !   Plot all the bands as in the standard case
 !
-           filename1=TRIM(filename) // "." // TRIM(int_to_char(ilines))
+           filename1=trim(filename) // "." // trim(int_to_char(ilines))
 
            OPEN (unit=2,file=filename1,form='formatted',status='unknown',&
                 iostat=ios)
@@ -394,12 +394,12 @@ PROGRAM plotband
 !
 !     open a file
 !
-           filename1=TRIM(filename) // "." // TRIM(int_to_char(ilines)) &
-                                   //  "." // TRIM(int_to_char(irap))
+           filename1=trim(filename) // "." // trim(int_to_char(ilines)) &
+                                   //  "." // trim(int_to_char(irap))
            OPEN (unit=2,file=filename1,form='formatted',status='unknown',&
                  iostat=ios)
            IF (ios /= 0) CALL errore("plotband","opening file" &
-                                     //TRIM(filename1),1) 
+                                     //trim(filename1),1)
 !  For each k point along this line selects only the bands which belong
 !  to the irap representation
            nbnd_rapk=100000
@@ -497,7 +497,7 @@ PROGRAM plotband
      WRITE(*,'("stopping ...")')
      GOTO 30
   ENDIF
-  OPEN (unit=1,file=TRIM(filename),form='formatted',status='unknown',&
+  OPEN (unit=1,file=trim(filename),form='formatted',status='unknown',&
        iostat=ios)
   WRITE(*,'("Efermi > ")', advance="NO")
   READ(5,*) Ef
@@ -709,12 +709,12 @@ SUBROUTINE splint (nspline, xspline, yspline, d2y, nfit, xfit, yfit)
   INTEGER :: klo, khi, i
   real :: a, b, h
 
-  if (nspline==2) THEN
-      print *, "n=",nspline,nfit
-      print *, xspline
-      print *, yspline
-      print *, d2y
-   end if
+  IF (nspline==2) THEN
+      PRINT *, "n=",nspline,nfit
+      PRINT *, xspline
+      PRINT *, yspline
+      PRINT *, d2y
+   ENDIF
   klo=1
   DO i=1,nfit
      DO khi=klo+1, nspline
@@ -764,38 +764,38 @@ SUBROUTINE splint (nspline, xspline, yspline, d2y, nfit, xfit, yfit)
   RETURN
 END SUBROUTINE splint
 
-subroutine readline(aunit, inline)
+SUBROUTINE readline(aunit, inline)
   IMPLICIT NONE
-  ! read input of arbitrary length, 
+  ! read input of arbitrary length,
   ! return a string of length at least 256
-  integer, intent(IN) :: aunit
-  character(LEN=:), allocatable, intent(out) :: inline
-  character(LEN=:), allocatable :: tmpline
-  integer, parameter :: line_buf_len=256
-  character(LEN=line_buf_len) :: instr
-  logical :: set
-  integer status, size
-  
+  INTEGER, INTENT(in) :: aunit
+  CHARACTER(len=:), ALLOCATABLE, INTENT(out) :: inline
+  CHARACTER(len=:), ALLOCATABLE :: tmpline
+  INTEGER, PARAMETER :: line_buf_len=256
+  CHARACTER(len=line_buf_len) :: instr
+  LOGICAL :: set
+  INTEGER status, size
+
   set = .true.
-  do
-    read(aunit,'(a)',advance='NO',iostat=status, size=size) instr
-    if (set) then
+  DO
+    READ(aunit,'(a)',advance='NO',iostat=status, size=size) instr
+    IF (set) THEN
         tmpline = instr(1:size)
         set=.false.
-    else
+    ELSE
         tmpline = tmpline // instr(1:size)
-    end if
-    if (IS_IOSTAT_EOR(status)) exit
-  end do
+    ENDIF
+    IF (IS_IOSTAT_EOR(status)) exit
+  ENDDO
   ! the inline will have at least one blank at the ending
-  if (len_trim(tmpline) < 256) then
+  IF (len_trim(tmpline) < 256) THEN
     instr = tmpline
     inline = instr
-  else
+  ELSE
     inline = tmpline // ' '
-  endif
-  return
-end subroutine readline
+  ENDIF
+  RETURN
+END SUBROUTINE readline
 
 END PROGRAM plotband
 
