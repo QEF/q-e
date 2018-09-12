@@ -598,7 +598,8 @@ PROGRAM plotband
 30 CONTINUE
 
   ! generate gnuplot script to directly draw projected band structure
-  IF ((.not.exist_rap) .and. exist_proj) THEN
+  ! Junfeng Qiao (Sep/12/2018)
+  IF (exist_proj) THEN
     WRITE(*,'(a)', advance="NO") "output file for projected band &
                                  &(gnuplot script) > "
     READ(5,'(a)', end=35, err=35)  filename
@@ -619,9 +620,20 @@ PROGRAM plotband
       WRITE (1,'(a,f10.4,a,f10.4,a)') 'set arrow from ',kx(point(nl)),&
                 &',graph 0 to ',kx(point(nl)),',graph 1 as 1'
     ENDDO
-    WRITE (1,'(a,f12.6,a)') &
+    IF (exist_rap) then
+      ! when *.rap file is found, use *.ilines.irap files to 
+      ! plot projected band, is this ok?
+      write (1,'(a)') 'plot \'
+      do nl=1,nlines
+        WRITE (1,'(a,i0,a,f12.6,a)') &
+                &"    '"//trim(filenamegnu)//'.',nl,".1'"//&
+                &" u 1:($2 - ",eref,"):3 w l palette lw 1 notitle, \"
+      enddo
+    else
+      WRITE (1,'(a,f12.6,a)') &
                 &"plot '"//trim(filenamegnu)//&
                 &"' u 1:($2 - ",eref,"):3 w l palette lw 1 notitle, \"
+    endif
     WRITE (1,'(f12.6,a)') &
                 &Ef-eref," lt 2 lw 0.5 lc rgb 'grey50' notitle"
     CLOSE (unit=1)
