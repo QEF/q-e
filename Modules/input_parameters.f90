@@ -1013,7 +1013,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
 !  IONS Namelist Input Parameters
 !=----------------------------------------------------------------------------=!
-!
+
 
         CHARACTER(len=80) :: ion_dynamics = 'none'
           ! set how ions should be moved
@@ -1262,11 +1262,15 @@ MODULE input_parameters
           ! in a ionic steepest descent simulation
 
         REAL(DP) :: press_conv_thr = 0.5_DP
+        
+        LOGICAL :: treinit_gvecs  = .FALSE. 
+          ! if true all the quantities related to fft g vectors are updated at 
+          ! step of variable cell structural optimization 
 
         NAMELIST / cell / cell_parameters, cell_dynamics, cell_velocities, &
                           press, wmass, cell_temperature, temph, fnoseh,   &
                           cell_dofree, greash, cell_factor, cell_nstepe,   &
-                          cell_damping, press_conv_thr
+                          cell_damping, press_conv_thr, treinit_gvecs 
 
 !
 !=----------------------------------------------------------------------------=!!

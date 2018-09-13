@@ -39,7 +39,7 @@ MODULE control_flags
             tnosee, tnosep, tnoseh, tcp, tcap,                               &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
             tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem,    &
-            tfirst, tlast, tprint, trescalee
+            tfirst, tlast, tprint, trescalee 
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
@@ -271,6 +271,9 @@ MODULE control_flags
   ! ... External Forces on Ions
   !
   LOGICAL,          PUBLIC :: textfor = .FALSE.
+
+
+  LOGICAL,          PUBLIC :: treinit_gvecs = .FALSE.
 
   !
   ! ...  end of module-scope declarations
