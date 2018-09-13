@@ -638,6 +638,7 @@ PROGRAM plotband
       WRITE (1,'(a,f10.4,a,f10.4,a)') 'set arrow from ',kx(point(nl)),&
                 &',graph 0 to ',kx(point(nl)),',graph 1 as 1'
     ENDDO
+    WRITE (1,'(a)') "set title '"//trim(filename)//"_projected' noenhanced"
     WRITE (1,'(a,f12.6,a)') &
                 &"plot '"//trim(filenamegnu)//&
                 &"' u 1:($2 - ",eref,"):3 w l palette lw 1 notitle, \"
