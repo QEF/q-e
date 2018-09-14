@@ -704,8 +704,11 @@ can be used to perform binary I/O using the  HDF5 format.
 
 The user may need to install this library, compiling it
 with options \texttt{--enable-fortran}, \texttt{--enable-fortran-2003},
-  and \texttt{--enable-parallel} (see below). These options must be passed
-  to the \configure\ script of the library, not of \qe.
+and \texttt{--enable-parallel} (see below). These options must be passed
+to the \configure\ script of the library, not of \qe. 
+
+One can use either the \texttt{1.10} or \texttt{1.8} version of the library. 
+For the latter the user has to download a version at least as new as \texttt{1.8.16}.    
 
 The path to the root directory of the library (the one containing \texttt{bin/},
 \texttt{include/} and \texttt{lib/} directories) has to be passed to the
@@ -714,6 +717,8 @@ The path to the root directory of the library (the one containing \texttt{bin/},
 It is possible to use a library with disabled parallelism, 
 but one has to add manually the flag \texttt{-D\_\_HDF5\_SERIAL}
 to the \texttt{MANUAL\_DFLAGS} in the \texttt{make.inc} file. 
+
+
 
 The HDF5 packages provided by many LINUX distributions may also work,
 but the configure script fails if includes and libraries are not placed
