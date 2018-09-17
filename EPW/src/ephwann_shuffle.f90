@@ -2078,6 +2078,8 @@
   !! Fermi-Diract occupation
   REAL(KIND=DP) :: ks_exp(nbndsub, nkf)
   !! Exponential of the eigenvalues divided by kBT
+  REAL(KIND=DP) :: ks_expcb(nbndsub, nkf)
+  !! Exponential of the eigenvalues divided by kBT for CB
   REAL(KIND=DP) :: fermi_exp
   !! Fermi level in exponential format
   REAL(KIND=DP) :: rel_err
@@ -2152,8 +2154,6 @@
   !    
   WRITE( stdout, '(5x,"Valence band maximum    = ",f10.6," eV")' )  evbm * ryd2ev
   WRITE( stdout, '(5x,"Conduction band minimum = ",f10.6," eV")' )  ecbm * ryd2ev
-
-
   !WRITE(stdout,*),'evbm ',evbm * ryd2ev
   !WRITE(stdout,*),'ecbm ',ecbm * ryd2ev
   !WRITE(stdout,*),'temp ',temp * ryd2ev
@@ -2173,11 +2173,27 @@
       ENDIF
     ENDDO
   ENDDO
-  ! 
+  !
+  ! Store e^(e_nk/kbT) on each core for the electrons (CBM only)
+  DO ik = 1, nkf
+    DO ibnd = 1, nbndsub
+      ikk = 2 * ik - 1
+      ! Because the number are so large. It does lead to instabilities
+      ! Therefore we rescale everything to the CBM
+      arg = ( etf (ibnd, ikk) - ecbm )/ temp
+      !
+      IF (arg > maxarg) THEN
+        ks_expcb(ibnd,ik) = 1.0d200
+      ELSE
+        ks_expcb(ibnd,ik) = exp (arg)
+      ENDIF
+    ENDDO
+  ENDDO
+  !
   ! Starting bounds energy for the biscection method. The energies are rescaled
   ! to the VBM
-  Elw = 1.0d0
-  Eup = exp (- (ecbm-evbm) / temp)
+  Elw = 1.0d0  ! This is e^0 = 1.0 
+  Eup = 1d-160 ! This is e^(-large) = 0.0 (small)
   !
   ! Intrinsic mobilities (electron and hole concentration are the same)   
   IF (int_mob .AND. .NOT. carrier) THEN
@@ -2196,7 +2212,7 @@
         ! Compute hole carrier concentration
         DO ibnd = 1, ivbm 
           ! Discard very large numbers
-          IF (ks_exp(ibnd,ik) * Ef > 10E30) THEN
+          IF (ks_exp(ibnd,ik) * Ef > 1d60) THEN
             fnk = 0.0d0
           ELSE
             fnk = 1.0d0 / ( ks_exp(ibnd,ik) * Ef  + 1.0d0)  
@@ -2207,7 +2223,7 @@
         ! Compute electron carrier concentration
         DO ibnd = icbm, nbndsub            
           ! Discard very large numbers
-          IF (ks_exp(ibnd,ik) * Ef > 10E30) THEN
+          IF (ks_exp(ibnd,ik) * Ef > 1d60) THEN
             fnk = 0.0d0
           ELSE
             fnk = 1.0d0 / ( ks_exp(ibnd,ik) * Ef  + 1.0d0)
@@ -2237,6 +2253,9 @@
     ENDDO ! iteration
   ENDIF 
   ! 
+  Eup = 1.0d0 ! e^(0) =1
+  Elw = 1.0d80 ! e^large yields fnk = 1
+  ! 
   factor = inv_cell * ( bohr2ang * ang2cm  )**(-3)
   ! Electron doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)   
   IF (ncarrier > 1E5) THEN
@@ -2251,10 +2270,10 @@
         ! Compute electron carrier concentration
         DO ibnd = icbm, nbndsub
           ! Discard very large numbers
-          IF (ks_exp(ibnd,ik) * Ef > 10E30) THEN
+          IF (ks_expcb(ibnd,ik) * Ef > 1d60) THEN
             fnk = 0.0d0
           ELSE
-            fnk = 1.0d0 / ( ks_exp(ibnd,ik) * Ef  + 1.0d0)
+            fnk = 1.0d0 / ( ks_expcb(ibnd,ik) * Ef  + 1.0d0)
           ENDIF
           ! The wkf(ikk) already include a factor 2
           electron_density = electron_density + wkf(ikk) * fnk * factor
@@ -2268,7 +2287,7 @@
       !
       IF (abs (rel_err) < eps) THEN
         fermi_exp = Ef
-        fermicarrier = (- log (fermi_exp) * temp) + evbm
+        fermicarrier = ecbm - ( log (fermi_exp) * temp)
         return
       ELSEIF( (rel_err) > eps) THEN
         Eup = Ef
@@ -2279,6 +2298,9 @@
   ENDIF
   ! 
   ! Hole doped mobilities (Carrier concentration should be larger than 1E5 cm^-3)   
+  Eup = 1d-160 ! e^(-large) = 0.0 (small)
+  Elw = 1.0d0 ! e^0 = 1
+  !    
   IF (ncarrier < -1E5) THEN
     ! Use bisection method
     DO i = 1, maxiter
@@ -2291,7 +2313,7 @@
         ! Compute hole carrier concentration
         DO ibnd = 1, ivbm
           ! Discard very large numbers
-          IF (ks_exp(ibnd,ik) * Ef > 10E30) THEN
+          IF (ks_exp(ibnd,ik) * Ef > 1d60) THEN
             fnk = 0.0d0
           ELSE
             fnk = 1.0d0 / ( ks_exp(ibnd,ik) * Ef  + 1.0d0)
@@ -2319,8 +2341,8 @@
     ENDDO ! iteration
   ENDIF
   ! 
-  fermi_exp = Ef
-  fermicarrier = (- log (fermi_exp) * temp) + evbm
+  !fermi_exp = Ef
+  !fermicarrier = (- log (fermi_exp) * temp) + evbm
   ! 
   WRITE( stdout, '(5x,"Warning: too many iterations in bisection"/ &
        &      5x,"Ef = ",f10.6)' ) fermicarrier * ryd2ev
