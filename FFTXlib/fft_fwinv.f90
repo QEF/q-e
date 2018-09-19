@@ -64,7 +64,7 @@ SUBROUTINE invfft_y( fft_kind, f, dfft, howmany )
      IF( howmany_ /= 1 ) THEN
         CALL fftx_error__( ' invfft ', ' howmany not yet implemented for parallel driver ', 1 )
      END IF
-     
+
      IF( fft_kind == 'Rho' ) THEN
         CALL tg_cft3s( f, dfft, 1 )
      ELSE IF( fft_kind == 'Wave' ) THEN
@@ -78,7 +78,7 @@ SUBROUTINE invfft_y( fft_kind, f, dfft, howmany )
      IF( howmany_ /= 1 ) THEN
         CALL fftx_error__( ' fwfft ', ' howmany not yet implemented for parallel driver ', 1 )
      END IF
-     
+
      IF( fft_kind == 'Rho' ) THEN
         CALL tg_cft3s_2d(f,dfft, 1)
      ELSE IF( fft_kind == 'Wave' ) THEN
@@ -175,7 +175,7 @@ SUBROUTINE fwfft_y( fft_kind, f, dfft, howmany )
      IF( howmany_ /= 1 ) THEN
         CALL fftx_error__( ' fwfft ', ' howmany not yet implemented for parallel driver ', 1 )
      END IF
-     
+
      IF( fft_kind == 'Rho' ) THEN
         CALL tg_cft3s_2d(f,dfft,-1)
      ELSE IF( fft_kind == 'Wave' ) THEN
@@ -317,7 +317,8 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
   USE fft_scalar,    ONLY: cfft3d_gpu, cfft3ds_gpu
   USE fft_smallbox,  ONLY: cft_b, cft_b_omp
   USE fft_parallel,  ONLY: tg_cft3s_gpu, many_cft3s_gpu
-  USE fft_parallel_2d,  ONLY: tg_cft3s_2d_gpu => tg_cft3s_gpu, tg_cft3s_batch_gpu
+  USE fft_parallel_2d,  ONLY: tg_cft3s_2d_gpu => tg_cft3s_gpu, &
+                            & many_cft3s_2d_gpu => many_cft3s_gpu
   USE fft_types,     ONLY: fft_type_descriptor
   USE fft_param,     ONLY: DP
 
@@ -379,12 +380,12 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
      END IF
 
   ELSE IF( dfft%lpara ) THEN
-  
+
      IF( howmany_ /= 1 ) THEN
         IF( fft_kind == 'Rho' ) THEN
-           CALL tg_cft3s_batch_gpu( f_d, dfft, 1,  howmany_)
+           CALL many_cft3s_2d_gpu( f_d, dfft, 1,  howmany_) !Not Implemented Yet
         ELSE IF( fft_kind == 'Wave' ) THEN
-           CALL tg_cft3s_batch_gpu( f_d, dfft, 2, howmany_ )
+           CALL many_cft3s_2d_gpu( f_d, dfft, 2, howmany_ )
         END IF
      ELSE
         IF( fft_kind == 'Rho' ) THEN
@@ -433,7 +434,8 @@ SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
   USE cudafor
   USE fft_scalar,    ONLY: cfft3d_gpu, cfft3ds_gpu
   USE fft_parallel,  ONLY: tg_cft3s_gpu, many_cft3s_gpu
-  USE fft_parallel_2d,  ONLY: tg_cft3s_2d_gpu => tg_cft3s_gpu, tg_cft3s_batch_gpu
+  USE fft_parallel_2d,  ONLY: tg_cft3s_2d_gpu => tg_cft3s_gpu, &
+                              & many_cft3s_2d_gpu => many_cft3s_gpu
   USE fft_types,     ONLY: fft_type_descriptor
   USE fft_param,     ONLY: DP
 
@@ -495,12 +497,12 @@ SUBROUTINE fwfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
      END IF
 
   ELSE IF( dfft%lpara ) THEN
-  
+
      IF( howmany_ /= 1 ) THEN
         IF( fft_kind == 'Rho' ) THEN
-           CALL tg_cft3s_batch_gpu( f_d, dfft, -1,  howmany_)
+           CALL many_cft3s_2d_gpu( f_d, dfft, -1, howmany_)
         ELSE IF( fft_kind == 'Wave' ) THEN
-           CALL tg_cft3s_batch_gpu( f_d, dfft, -2, howmany_ )
+           CALL many_cft3s_2d_gpu( f_d, dfft, -2, howmany_ )
         END IF
      ELSE
         IF( fft_kind == 'Rho' ) THEN

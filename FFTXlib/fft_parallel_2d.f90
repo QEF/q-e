@@ -22,18 +22,15 @@ MODULE fft_parallel_2d
 #ifdef __CUDA
    USE cudafor
 #endif
-
+   !
    USE fft_param
    IMPLICIT NONE
    SAVE
-
+   !
 #ifdef __CUDA
   COMPLEX(DP), PINNED, ALLOCATABLE :: f_h(:), aux_h(:), aux2_h(:)
   COMPLEX(DP), DEVICE, ALLOCATABLE :: aux_d(:), aux2_d(:)
 #endif
-
-
-
 !
 CONTAINS
 !
@@ -74,7 +71,6 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
   USE fft_scalar, ONLY : cft_1z, cft_2xy
   USE scatter_mod_2d,   ONLY : fft_scatter
   USE fft_types,  ONLY : fft_type_descriptor
-
   !
   IMPLICIT NONE
   !
@@ -83,16 +79,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
                                            ! descriptor of fft data layout
   INTEGER, INTENT(in)           :: isgn    ! fft direction
   !
-  ! the following ifdef prevents usage of directive in older ifort versions
   !
-#if defined(__INTEL_COMPILER)
-#if __INTEL_COMPILER  >= 1300
-  ! the following is a workaround for Intel 12.1 bug
-#if __INTEL_COMPILER  < 9999
-!dir$ attributes align: 4096 :: aux
-#endif
-#endif
-#endif
   INTEGER                    :: me_p
   INTEGER                    :: n1, n2, n3, nx1, nx2, nx3
   COMPLEX(DP), ALLOCATABLE   :: aux (:)
@@ -100,7 +87,6 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
   !LOGICAL                    :: use_tg
   !
   !
-  !use_tg = dfft%has_task_groups
   IF (dfft%has_task_groups) CALL fftx_error__( ' tg_cft3s ', ' task groups on large mesh not implemented ', 1 )
   !
   n1  = dfft%nr1
@@ -269,16 +255,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
                                            ! descriptor of fft data layout
   INTEGER, INTENT(in)           :: isgn    ! fft direction
   !
-  ! the following ifdef prevents usage of directive in older ifort versions
   !
-#if defined(__INTEL_COMPILER)
-#if __INTEL_COMPILER  >= 1300
-  ! the following is a workaround for Intel 12.1 bug
-#if __INTEL_COMPILER  < 9999
-!dir$ attributes align: 4096 :: yf, aux
-#endif
-#endif
-#endif
   INTEGER                    :: me_p, istat
   INTEGER                    :: n1, n2, n3, nx1, nx2, nx3
   COMPLEX(DP), ALLOCATABLE   :: yf(:)
@@ -413,7 +390,7 @@ CONTAINS
   !
 END SUBROUTINE tg_cft3s_gpu
 
-SUBROUTINE tg_cft3s_batch_gpu( f_d, dfft, isgn, batchsize )
+SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
   !----------------------------------------------------------------------------
   !
   !! ... isgn = +-1 : parallel 3d fft for rho and for the potential
@@ -492,6 +469,8 @@ SUBROUTINE tg_cft3s_batch_gpu( f_d, dfft, isgn, batchsize )
      nppx = max( nppx, dfft%nr3p ( proc ) )
   ENDDO
   !
+  IF (dfft%nproc <= 1) CALL fftx_error__( ' tg_cft3s_gpu_batch ', ' this subroutine should never be called with nproc= ', dfft%nproc )
+  !
   IF ( isgn > 0 ) THEN
      DO j = 0, batchsize-1, dfft%subbatchsize
        currsize = min(dfft%subbatchsize, batchsize - j)
@@ -506,7 +485,6 @@ SUBROUTINE tg_cft3s_batch_gpu( f_d, dfft, isgn, batchsize )
           !
        ELSE
           !
-
           DO i = 0, currsize - 1
             CALL cft_1z_gpu( f_d((j+i)*dfft%nnr + 1:), dfft%nsw( me_p ), n3, nx3, isgn, aux_d(j*dfft%nnr + i*ncpx*nx3 +1:), dfft%a2a_comp )
           ENDDO
@@ -521,26 +499,16 @@ SUBROUTINE tg_cft3s_batch_gpu( f_d, dfft, isgn, batchsize )
 
        IF (j > 0) i = cudaStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize), 0)
 
-       IF (dfft%nproc > 1) THEN
-         CALL fft_scatter_batch_a_gpu( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
+       CALL fft_scatter_batch_a_gpu( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
          f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
-       !ELSE
-       !  CALL fft_scatter_batch_a_gpu( dfft, aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
-       !  f_h(j*dfft%nnr + 1:), aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
-       ENDIF
 
      ENDDO
 
      DO j = 0, batchsize-1, dfft%subbatchsize
        currsize = min(dfft%subbatchsize, batchsize - j)
 
-       IF (dfft%nproc .ne. 1) THEN
-         CALL fft_scatter_batch_b_gpu( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
+       CALL fft_scatter_batch_b_gpu( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
          f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
-       ELSE
-         CALL fft_scatter_batch_b_gpu( dfft, aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
-         f_h(j*dfft%nnr + 1:), aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
-       ENDIF
 
        IF (currsize == dfft%subbatchsize) THEN
          CALL cft_2xy_gpu( f_d(j*dfft%nnr + 1:), aux_d(j*dfft%nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, dfft%a2a_comp, planes )
@@ -582,32 +550,22 @@ SUBROUTINE tg_cft3s_batch_gpu( f_d, dfft, isgn, batchsize )
          ENDDO
        ENDIF
 
-       if (j > 0) i = cudaStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize), 0)
+       IF (j > 0) i = cudaStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize), 0)
 
-       IF (dfft%nproc .ne. 1) THEN
-         CALL fft_scatter_batch_a_gpu( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
+       CALL fft_scatter_batch_a_gpu( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
          f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
-       ELSE
-         CALL fft_scatter_batch_a_gpu( dfft, aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
-         f_h(j*dfft%nnr + 1:), aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
-       ENDIF
 
      ENDDO
 
      DO j = 0, batchsize-1, dfft%subbatchsize
        currsize = min(dfft%subbatchsize, batchsize - j)
 
-       IF (dfft%nproc > 1) THEN
-         CALL fft_scatter_batch_b_gpu( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
+       CALL fft_scatter_batch_b_gpu( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
          f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
-       !ELSE
-       !  CALL fft_scatter_batch_b_gpu( dfft, aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
-       !  f_h(j*dfft%nnr + 1:), aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
-       ENDIF
+
 
        i = cudaEventRecord(dfft%bevents(j/dfft%subbatchsize + 1), dfft%bstreams(j/dfft%subbatchsize + 1))
        i = cudaStreamWaitEvent(dfft%a2a_comp, dfft%bevents(j/dfft%subbatchsize + 1), 0)
-
 
        DO i = 0, currsize - 1
          CALL cft_1z_gpu( aux_d(j*dfft%nnr + i*ncpx*nx3 + 1:), dfft%nsw( me_p ), n3, nx3, isgn, f_d((j+i)*dfft%nnr + 1:), dfft%a2a_comp )
@@ -623,7 +581,7 @@ SUBROUTINE tg_cft3s_batch_gpu( f_d, dfft, isgn, batchsize )
   RETURN
   !
   !
-END SUBROUTINE tg_cft3s_batch_gpu
+END SUBROUTINE many_cft3s_gpu
 #endif
 !
 

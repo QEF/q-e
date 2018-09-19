@@ -44,7 +44,6 @@ SUBROUTINE fft_scatter_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp
   INTEGER, INTENT(in)           :: nr3x, nxx_, isgn, ncp_ (:), npp_ (:)
   COMPLEX (DP), DEVICE, INTENT(inout)   :: f_in_d (nxx_), f_aux_d (nxx_)
   COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
-!  COMPLEX (DP), allocatable, pinned :: f_in (:), f_aux (:)
   INTEGER :: cuf_i, cuf_j, nswip
   INTEGER :: istat
   INTEGER, POINTER, DEVICE :: p_ismap_d(:)
@@ -110,7 +109,7 @@ SUBROUTINE fft_scatter_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp
 
 #else
         istat = cudaMemcpy2D( f_aux(kdest + 1), nppx, f_in_d(kfrom + 1 ), nr3x, npp_(gproc), ncp_(me), cudaMemcpyDeviceToHost )
-        if( istat ) print *,"ERROR cudaMemcpy2D failed : ",istat
+        if( istat ) CALL fftx_error__("fft_scatter", "ERROR cudaMemcpy2D failed : ", istat)
 #endif
 
         offset = offset + npp_ ( gproc )
@@ -163,7 +162,7 @@ SUBROUTINE fft_scatter_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
 
 #ifndef __GPU_MPI
-        f_in_d(1:sendsiz*dfft%nproc) = f_in(1:sendsiz*dfft%nproc)
+     f_in_d(1:sendsiz*dfft%nproc) = f_in(1:sendsiz*dfft%nproc)
 #endif
 
      !
@@ -322,7 +321,7 @@ SUBROUTINE fft_scatter_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp
 #else
      CALL mpi_alltoall (f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, gcomm, ierr)
 #endif
-  CALL stop_clock ('a2a_bw')
+     CALL stop_clock ('a2a_bw')
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
      !
      !  step one: store contiguously the columns
@@ -515,7 +514,7 @@ SUBROUTINE fft_scatter_gpu_batch ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_au
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
 
 #ifndef __GPU_MPI
-        f_in_d(1:sendsiz*dfft%nproc) = f_in(1:sendsiz*dfft%nproc)
+     f_in_d(1:sendsiz*dfft%nproc) = f_in(1:sendsiz*dfft%nproc)
 #endif
 
      !
@@ -1061,17 +1060,17 @@ SUBROUTINE fft_scatter_batch_b_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_
 
 #ifndef __GPU_MPI
      DO proc = 1, nprocp
-        if (proc .ne. me) then
+        IF (proc .ne. me) THEN
 #ifdef __IPC
-     IF(dfft%IPC_PEER( proc ) .eq. 0) THEN
-          kdest = ( proc - 1 ) * sendsiz
-          istat = cudaMemcpyAsync( f_aux2_d(kdest+1), f_aux2(kdest+1), sendsiz, stream=dfft%bstreams(batch_id) )
-     ENDIF
+           IF(dfft%IPC_PEER( proc ) .eq. 0) THEN
+              kdest = ( proc - 1 ) * sendsiz
+              istat = cudaMemcpyAsync( f_aux2_d(kdest+1), f_aux2(kdest+1), sendsiz, stream=dfft%bstreams(batch_id) )
+           ENDIF
 #else
-          kdest = ( proc - 1 ) * sendsiz
-          istat = cudaMemcpyAsync( f_aux2_d(kdest+1), f_aux2(kdest+1), sendsiz, stream=dfft%bstreams(batch_id) )
+           kdest = ( proc - 1 ) * sendsiz
+           istat = cudaMemcpyAsync( f_aux2_d(kdest+1), f_aux2(kdest+1), sendsiz, stream=dfft%bstreams(batch_id) )
 #endif
-        endif
+        ENDIF
      ENDDO
 #endif
 
