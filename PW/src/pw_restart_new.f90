@@ -852,7 +852,7 @@ MODULE pw_restart_new
       LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
                             lxc, locc, lbz, lbs, lwfc, lheader,          &
                             lsymm, lrho, lefield, ldim, &
-                            lef, lexx, lesm, lpbc, lvalid_input
+                            lef, lexx, lesm, lpbc, lvalid_input, lsymflags
       !
       LOGICAL            :: need_qexml, found, electric_field_ispresent
       INTEGER            :: tmp
@@ -889,6 +889,7 @@ MODULE pw_restart_new
       lesm    = .FALSE.
       lheader = .FALSE.
       lpbc    = .FALSE.  
+      lsymflags = .FALSE.
       !
      
          
@@ -942,6 +943,7 @@ MODULE pw_restart_new
          lbs     = .TRUE.
          lsymm   = .TRUE.
          lefield = .TRUE.
+         lsymflags = .TRUE.
          need_qexml = .TRUE.
          !
       CASE( 'all' )
@@ -961,6 +963,7 @@ MODULE pw_restart_new
          lefield = .TRUE.
          lrho    = .TRUE.
          lpbc    = .TRUE. 
+         lsymflags = .TRUE. 
          need_qexml = .TRUE.
          !
       CASE( 'ef' )
@@ -1036,7 +1039,7 @@ MODULE pw_restart_new
          IF (output_obj%band_structure%wf_collected)  CALL read_collected_to_evc(dirname ) 
       END IF
       IF ( lsymm ) THEN
-         IF ( lvalid_input ) THEN 
+         IF ( lvalid_input .and. lsymflags ) THEN 
             CALL readschema_symmetry (  output_obj%symmetries, output_obj%basis_set, input_obj%symmetry_flags )
          ELSE 
             CALL readschema_symmetry( output_obj%symmetries,output_obj%basis_set) 
@@ -1271,8 +1274,8 @@ MODULE pw_restart_new
       ! 
       USE symm_base,       ONLY : nrot, nsym, invsym, s, ft,ftau, irt, t_rev, &
                                  sname, sr, invs, inverse_s, s_axis_to_cart, &
-                                 time_reversal, no_t_rev
-      USE control_flags,   ONLY : noinv
+                                 time_reversal, no_t_rev, nosym
+      USE control_flags,   ONLY : noinv  
       USE fft_base,        ONLY : dfftp
       USE qes_types_module,ONLY : symmetries_type, symmetry_type, basis_type
       ! 
@@ -1285,7 +1288,9 @@ MODULE pw_restart_new
       ! 
       IF ( PRESENT(flags_obj) ) THEN 
          noinv = flags_obj%noinv
+         nosym = flags_obj%nosym
          no_t_rev = flags_obj%no_t_rev
+         time_reversal = time_reversal .AND. .NOT. noinv 
       ENDIF
       !
       nrot = symms_obj%nrot 
