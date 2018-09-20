@@ -49,6 +49,7 @@ SUBROUTINE run_pwscf ( exit_status )
   USE qmmm,             ONLY : qmmm_initialization, qmmm_shutdown, &
                                qmmm_update_positions, qmmm_update_forces
   USE qexsd_module,     ONLY : qexsd_set_status
+  USE funct,            ONLY : dft_is_hybrid, stop_exx 
   !
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
@@ -192,6 +193,7 @@ SUBROUTINE run_pwscf ( exit_status )
             CALL punch( 'config' )
         END IF
         !
+        IF (dft_is_hybrid() )  CALL stop_exx()
      END IF
      !
      CALL stop_clock( 'ions' ); !write(*,*)' stop ions' ; FLUSH(6)
