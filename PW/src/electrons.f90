@@ -42,7 +42,7 @@ SUBROUTINE electrons()
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : aceinit,exxinit, exxenergy2, exxenergy, exxbuff, &
                                    fock0, fock1, fock2, fock3, dexx, use_ace, local_thr 
-  USE funct,                ONLY : dft_is_hybrid, exx_is_active, stop_exx
+  USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
@@ -279,7 +279,6 @@ SUBROUTINE electrons()
         IF ( dexx < tr2_final ) THEN
            IF ( do_makov_payne ) CALL makov_payne( etot )
            WRITE( stdout, 9101 )
-           CALL stop_exx()
            RETURN
         END IF
         !
