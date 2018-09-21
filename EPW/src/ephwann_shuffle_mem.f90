@@ -42,7 +42,7 @@
                             scattering, nstemp, int_mob, scissor, carrier,      &
                             iterative_bte, longrange, scatread, nqf1, prtgkk,   &
                             nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
-                            specfun_pl
+                            specfun_pl, use_ws
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, eps2, zero, czero, cone, &
                             twopi, ci, kelvin2eV
@@ -158,6 +158,12 @@
   !! Number of WS points for phonons
   INTEGER :: nrr_g
   !! Number of WS points for electron-phonons
+  INTEGER :: dims
+  !! Dims is either nbndsub if use_ws or 1 if not
+  INTEGER :: iw
+  !! Counter on bands when use_ws == .true.
+  INTEGER :: iw2
+  !! Counter on bands when use_ws == .true.
   INTEGER, ALLOCATABLE :: irvec_k(:,:)
   !! integer components of the ir-th Wigner-Seitz grid point in the basis
   !! of the lattice vectors for electrons
@@ -165,12 +171,12 @@
   !! integer components of the ir-th Wigner-Seitz grid point for phonons
   INTEGER, ALLOCATABLE :: irvec_g(:,:)
   !! integer components of the ir-th Wigner-Seitz grid point for electron-phonon
-  INTEGER, ALLOCATABLE :: ndegen_k (:)
+  INTEGER, ALLOCATABLE :: ndegen_k (:,:,:)
   !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
   INTEGER, ALLOCATABLE :: ndegen_q (:,:,:)
   !! Wigner-Seitz weights for the phonon grid that depend on 
   !! atomic positions $R + \tau(nb) - \tau(na)$
-  INTEGER, ALLOCATABLE :: ndegen_g (:,:)
+  INTEGER, ALLOCATABLE :: ndegen_g (:,:,:,:)
   !! Wigner-Seitz weights for the electron-phonon grid that depend on 
   !! atomic positions $R - \tau(na)$
   INTEGER, PARAMETER :: nrwsx=200
@@ -190,6 +196,8 @@
   !! Real-space wigner-Seitz vectors
   REAL(kind=DP) :: atws(3,3)
   !! Maximum vector: at*nq
+  REAL(kind=DP) :: w_centers(3,nbndsub)
+  !! Wannier centers
   REAL(kind=DP), EXTERNAL :: efermig
   !! External function to calculate the fermi energy
   REAL(kind=DP), EXTERNAL :: efermig_seq
@@ -201,6 +209,8 @@
   REAL(kind=DP), ALLOCATABLE :: irvec_r (:,:)
   !! Wigner-Size supercell vectors, store in real instead of integer
   REAL(kind=DP), ALLOCATABLE :: rdotk(:)
+  !! $r\cdot k$
+  REAL(kind=DP), ALLOCATABLE :: rdotk2(:)
   !! $r\cdot k$
   REAL(kind=DP), ALLOCATABLE :: wslen_k(:)
   !! real-space length for electrons, in units of alat
@@ -241,9 +251,9 @@
   !! Rotation matrix for phonons
   COMPLEX(kind=DP), ALLOCATABLE :: bmatf ( :, :)
   !! overlap U_k+q U_k^\dagger in smooth Bloch basis, fine mesh
-  COMPLEX(kind=DP), ALLOCATABLE :: cfac(:)
+  COMPLEX(kind=DP), ALLOCATABLE :: cfac(:,:,:)
   !! Used to store $e^{2\pi r \cdot k}$ exponential 
-  COMPLEX(kind=DP), ALLOCATABLE :: cfacq(:)
+  COMPLEX(kind=DP), ALLOCATABLE :: cfacq(:,:,:)
   !! Used to store $e^{2\pi r \cdot k+q}$ exponential
   COMPLEX(kind=DP), ALLOCATABLE :: eptmp(:,:,:,:)
   !! Temporary el-ph matrices. 
@@ -273,6 +283,8 @@
   !! Eigen-energies on the fine grid collected from all pools in parallel case
   REAL(KIND=DP), EXTERNAL :: fermicarrier
   !! Function that returns the Fermi level so that n=p (if int_mob = .true.)  
+  REAL(KIND=DP) :: dummy(3)
+  !! Dummy variable 
   ! -----------------
   ! 
   IF (nbndsub.ne.nbnd) &
@@ -311,6 +323,7 @@
       READ (crystal,*) ityp
       READ (crystal,*) isk
       READ (crystal,*) noncolin
+      READ (crystal,*) w_centers
       ! 
     ENDIF
     CALL mp_bcast (nat     , ionode_id, inter_pool_comm)
@@ -339,6 +352,8 @@
     CALL mp_bcast (isk     , root_pool, intra_pool_comm)  
     CALL mp_bcast (noncolin, ionode_id, inter_pool_comm)
     CALL mp_bcast (noncolin, root_pool, intra_pool_comm)  
+    CALL mp_bcast (w_centers, ionode_id, inter_pool_comm)
+    CALL mp_bcast (w_centers, root_pool, intra_pool_comm)
     IF (mpime.eq.ionode_id) THEN
       CLOSE(crystal)
     ENDIF
@@ -351,11 +366,27 @@
   ALLOCATE( w2( 3*nat) )
   !
   ! Determine Wigner-Seitz points
+  ! For this we need the Wannier centers
+  ! w_centers is allocated inside loadumat
+  IF (.not. epwread) THEN
+    xxq = 0.d0
+    CALL loadumat( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers )
+  ENDIF
   !
-  ! Inside we allocate irvec_k, irvec_q, irvec_g, ndegen_k, ndegen_q, ndegen_g,
-  !                    wslen_k,  wslen_q,  wslen_g  
-  CALL wigner_seitz_wrap ( nk1, nk2, nk3, nq1, nq2, nq3, irvec_k, irvec_q, irvec_g, &
-                           ndegen_k, ndegen_q, ndegen_g, wslen_k,  wslen_q,  wslen_g )
+  IF (use_ws) THEN
+    ! Use Wannier-centers to contstruct the WS for electonic part and el-ph part
+    ! Use atomic position to contstruct the WS for the phonon part and el-ph part
+    dims = nbndsub
+    CALL wigner_seitz_wrap ( nk1, nk2, nk3, nq1, nq2, nq3, irvec_k, irvec_q, irvec_g, &
+                           ndegen_k, ndegen_q, ndegen_g, wslen_k, wslen_q, wslen_g, w_centers, dims )
+  ELSE
+    ! Center the WS for for electonic part and el-ph part
+    ! Use atomic position to contstruct the WS for the phonon part and el-ph part
+    dims = 1
+    dummy(:) = (/0.0,0.0,0.0/)
+    CALL wigner_seitz_wrap ( nk1, nk2, nk3, nq1, nq2, nq3, irvec_k, irvec_q, irvec_g, &
+                           ndegen_k, ndegen_q, ndegen_g, wslen_k, wslen_q, wslen_g, dummy ,dims )
+  ENDIF
   ! 
   ! Determine the size of the respective WS sets based on the length of the matrices
   nrr_k = SIZE(irvec_k(1,:))
@@ -391,9 +422,9 @@
        CALL diropn (iunepmatwp, 'epmatwp', lrepmatw, exst)
      ENDIF
      !
-     xxq = 0.d0 
-     CALL loadumat &
-          ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband )  
+     !xxq = 0.d0 
+     !CALL loadumat &
+     !     ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband )  
      !
      ! ------------------------------------------------------
      !   Bloch to Wannier transform
@@ -538,65 +569,13 @@
      ALLOCATE ( dmef(3, nbndsub, nbndsub, 2 * nkf) )
   ENDIF
   !
-  ALLOCATE(cfac(nrr_k))
-  ALLOCATE(cfacq(nrr_k))
+  ALLOCATE(cfac(nrr_k,dims,dims))
+  ALLOCATE(cfacq(nrr_k,dims,dims))
   ALLOCATE(rdotk(nrr_k))
+  ALLOCATE(rdotk2(nrr_k))
   ! This is simply because dgemv take only real number (not integer)
   ALLOCATE(irvec_r(3,nrr_k))
   irvec_r = REAL(irvec_k,KIND=dp)
-  ! 
-  ! SP: Create a look-up table for the exponential of the factor. 
-  !     This can only work with homogeneous fine grids.
-  IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
-       (nqf1 >0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen ) THEN
-    ! Make a check   
-    IF ((nqf1>nkf1) .or. (nqf2>nkf2) .or. (nqf3>nkf3)) &
-            CALL errore('The fine q-grid cannot be larger than the fine k-grid',1)   
-    ! Along x
-    DO ikx = -2*nk1, 2*nk1
-      DO ikfx = 0, nkf1-1
-        !rdotk = twopi * ( xk(1)*irvec_kk(1,ir))
-        rdotk_scal = twopi * ( (REAL(ikfx,kind=DP)/nkf1) * ikx )
-        tablex(ikx+2*nk1+1,ikfx+1) = exp( ci*rdotk_scal )  
-      ENDDO
-    ENDDO
-    ! For k+q
-    DO ikx = -2*nk1, 2*nk1
-      DO ikfx = 0, 2*nkf1
-        rdotk_scal = twopi * ( (REAL(ikfx,kind=DP)/nkf1) * ikx )
-        tableqx(ikx+2*nk1+1,ikfx+1) = exp( ci*rdotk_scal )
-      ENDDO
-    ENDDO
-    ! Along y
-    DO ikx = -2*nk2, 2*nk2
-      DO ikfx = 0, nkf2-1
-        rdotk_scal = twopi * ( (REAL(ikfx,kind=DP)/nkf2) * ikx )
-        tabley(ikx+2*nk2+1,ikfx+1) = exp( ci*rdotk_scal )
-      ENDDO
-    ENDDO  
-    ! For k+q
-    DO ikx = -2*nk2, 2*nk2
-      DO ikfx = 0, 2*nkf2
-        rdotk_scal = twopi * ( (REAL(ikfx,kind=DP)/nkf2) * ikx )
-        tableqy(ikx+2*nk2+1,ikfx+1) = exp( ci*rdotk_scal )
-      ENDDO
-    ENDDO
-    ! Along z
-    DO ikx = -2*nk3, 2*nk3
-      DO ikfx = 0, nkf3-1
-        rdotk_scal = twopi * ( (REAL(ikfx,kind=DP)/nkf3) * ikx )
-        tablez(ikx+2*nk3+1,ikfx+1) = exp( ci*rdotk_scal )
-      ENDDO
-    ENDDO
-    ! For k+q
-    DO ikx = -2*nk3, 2*nk3
-      DO ikfx = 0, 2*nkf3
-        rdotk_scal = twopi * ( (REAL(ikfx,kind=DP)/nkf3) * ikx )
-        tableqz(ikx+2*nk3+1,ikfx+1) = exp( ci*rdotk_scal )
-      ENDDO
-    ENDDO
-  ENDIF
-  !
   ! 
   ! ------------------------------------------------------
   ! Hamiltonian : Wannier -> Bloch (preliminary)
@@ -626,10 +605,18 @@
      ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
      ! + optimize the 2\pi r\cdot k with Blas
      CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xxk, 1, 0.0_DP, rdotk, 1 )
-     cfac(:) = exp( ci*rdotk ) / ndegen_k(:)
+     !  
+     DO iw=1, dims
+       DO iw2=1, dims
+         DO ir=1, nrr_k
+           IF (ndegen_k(ir,iw2,iw) > 0 ) &
+             cfac(ir,iw2,iw) = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
+         ENDDO
+       ENDDO
+     ENDDO
      ! 
      CALL hamwan2bloch &
-          ( nbndsub, nrr_k, cufkk, etf (:, ik), chw, cfac)
+          ( nbndsub, nrr_k, cufkk, etf (:, ik), chw, cfac, dims)
      !
      !
   ENDDO
@@ -912,20 +899,20 @@
        ! ...then take into account the mass factors and square-root the frequencies...
        !
        DO nu = 1, nmodes
-          !
-          ! wf are the interpolated eigenfrequencies
-          ! (omega on fine grid)
-          !
-          IF ( w2 (nu) .gt. 0.d0 ) THEN
-             wf(nu,iq) =  sqrt(abs( w2 (nu) ))
-          ELSE
-             wf(nu,iq) = -sqrt(abs( w2 (nu) ))
-          ENDIF
-          !
-          DO mu = 1, nmodes
-             na = (mu - 1) / 3 + 1
-             uf (mu, nu) = uf (mu, nu) / sqrt(amass(ityp(na)))
-          ENDDO
+         !
+         ! wf are the interpolated eigenfrequencies
+         ! (omega on fine grid)
+         !
+         IF ( w2 (nu) .gt. 0.d0 ) THEN
+           wf(nu,iq) =  sqrt(abs( w2 (nu) ))
+         ELSE
+           wf(nu,iq) = -sqrt(abs( w2 (nu) ))
+         ENDIF
+         !
+         DO mu = 1, nmodes
+           na = (mu - 1) / 3 + 1
+           uf (mu, nu) = uf (mu, nu) / sqrt(amass(ityp(na)))
+         ENDDO
        ENDDO
        !
        ! --------------------------------------------------------------
@@ -943,7 +930,7 @@
          !CALL start_clock ( 'cl2' )
          IF (.NOT. longrange) THEN
            CALL ephwan2blochp_mem &
-               (imode, nmodes, xxq, irvec_g, ndegen_g, nrr_g, epmatwef, nbndsub, nrr_k )
+               (imode, nmodes, xxq, irvec_g, ndegen_g, nrr_g, epmatwef, nbndsub, nrr_k, dims )
          ENDIF
          !CALL stop_clock ( 'cl2' )
          !
@@ -968,38 +955,19 @@
            xkk = xkf(:, ikk)
            xkq = xkk + xxq
            !
-           ! SP: Compute the cfac only once here since the same are use in both hamwan2bloch and dmewan2bloch
-           ! + optimize the 2\pi r\cdot k with Blas
-           IF ( (nkf1 >0) .AND. (nkf2 > 0) .AND. (nkf3 > 0) .AND. &
-              (nqf1 > 0) .AND. (nqf2 > 0) .AND. (nqf3 > 0) .AND. .NOT. mp_mesh_k .AND. .NOT. lscreen ) THEN
-             ! We need to use NINT (nearest integer to x) rather than INT
-             xkk1 = NINT(xkk(1)*(nkf1)) + 1
-             xkk2 = NINT(xkk(2)*(nkf2)) + 1
-             xkk3 = NINT(xkk(3)*(nkf3)) + 1
-             xkq1 = NINT(xkq(1)*(nkf1)) + 1
-             xkq2 = NINT(xkq(2)*(nkf2)) + 1
-             xkq3 = NINT(xkq(3)*(nkf3)) + 1
-             ! 
-             ! SP: Look-up table is more effecient than calling the exp function.
-             DO ir = 1, nrr_k
-               cfac(ir) = ( tablex(irvec_k(1,ir)+2*nk1+1,xkk1) *&
-                       tabley(irvec_k(2,ir)+2*nk2+1,xkk2) * tablez(irvec_k(3,ir)+2*nk3+1,xkk3) ) / ndegen_k(ir)
-               cfacq(ir) = ( tableqx(irvec_k(1,ir)+2*nk1+1,xkq1) *&
-                       tableqy(irvec_k(2,ir)+2*nk2+1,xkq2) * tableqz(irvec_k(3,ir)+2*nk3+1,xkq3) ) /  ndegen_k(ir)
+           CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+           CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk2, 1 )
+           !
+           DO iw=1, dims
+             DO iw2=1, dims
+               DO ir = 1, nrr_k
+                 IF (ndegen_k(ir,iw2,iw) > 0) THEN
+                   cfac(ir,iw2,iw)  = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
+                   cfacq(ir,iw2,iw) = exp( ci*rdotk2(ir) ) / ndegen_k(ir,iw2,iw)
+                 ENDIF
+               ENDDO
              ENDDO
-             !DBSP
-             !IF ( (iq == 1) .and. (ik ==12)) THEN
-             !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-             !  cfac1(:) = exp( ci*rdotk(:) ) / ndegen_kk(:)
-             !  CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
-             !  cfacq1(:) = exp( ci*rdotk(:) ) / ndegen_kk(:)
-             !ENDIF
-           ELSE
-             CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-             cfac(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
-             CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
-             cfacq(:) = exp( ci*rdotk(:) ) / ndegen_k(:)
-           ENDIF
+           ENDDO
            !
            ! ------------------------------------------------------        
            ! hamiltonian : Wannier -> Bloch 
@@ -1008,15 +976,15 @@
            ! Kohn-Sham first, then get the rotation matricies for following interp.
            IF (eig_read) THEN
               CALL hamwan2bloch &
-                ( nbndsub, nrr_k, cufkk, etf_ks(:, ikk), chw_ks, cfac)
+                ( nbndsub, nrr_k, cufkk, etf_ks(:, ikk), chw_ks, cfac, dims)
               CALL hamwan2bloch &
-                ( nbndsub, nrr_k, cufkq, etf_ks(:, ikq), chw_ks, cfacq)
+                ( nbndsub, nrr_k, cufkq, etf_ks(:, ikq), chw_ks, cfacq, dims)
            ENDIF
            !
            CALL hamwan2bloch &
-                ( nbndsub, nrr_k, cufkk, etf(:, ikk), chw, cfac)
+                ( nbndsub, nrr_k, cufkk, etf(:, ikk), chw, cfac, dims)
            CALL hamwan2bloch &
-                ( nbndsub, nrr_k, cufkq, etf(:, ikq), chw, cfacq)
+                ( nbndsub, nrr_k, cufkq, etf(:, ikq), chw, cfacq, dims)
            !
            IF (vme) THEN
               !
@@ -1026,14 +994,14 @@
               !
               IF (eig_read) THEN
                  CALL vmewan2bloch &
-                      ( nbndsub, nrr_k, irvec_k, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks, cfac )
+                      ( nbndsub, nrr_k, irvec_k, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks, cfac, dims )
                  CALL vmewan2bloch &
-                      ( nbndsub, nrr_k, irvec_k, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks, cfacq )
+                      ( nbndsub, nrr_k, irvec_k, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks, cfacq, dims )
               ELSE
                  CALL vmewan2bloch &
-                      ( nbndsub, nrr_k, irvec_k, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw, cfac )
+                      ( nbndsub, nrr_k, irvec_k, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw, cfac, dims )
                  CALL vmewan2bloch &
-                      ( nbndsub, nrr_k, irvec_k, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw, cfacq )
+                      ( nbndsub, nrr_k, irvec_k, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw, cfacq, dims )
               ENDIF
            ELSE
               !
@@ -1042,9 +1010,9 @@
               ! ------------------------------------------------------
               !
               CALL dmewan2bloch &
-                   ( nbndsub, nrr_k, cufkk, dmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac)
+                   ( nbndsub, nrr_k, cufkk, dmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), cfac, dims )
               CALL dmewan2bloch &
-                   ( nbndsub, nrr_k, cufkq, dmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfacq)
+                   ( nbndsub, nrr_k, cufkq, dmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), cfacq, dims )
               !
            ENDIF
            !
@@ -1075,7 +1043,7 @@
                ELSE
                  !
                  CALL ephwan2bloch_mem &
-                   ( nbndsub, nrr_k, epmatwef, cufkk, cufkq, epmatf, cfac )
+                   ( nbndsub, nrr_k, epmatwef, cufkk, cufkq, epmatf, cfac, dims )
                  !
                ENDIF
                !

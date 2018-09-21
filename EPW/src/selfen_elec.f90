@@ -290,6 +290,11 @@
                    weight = pi * wqf(iq) * ( (wgkq+wgq)*w0g1 + (one-wgkq+wgq)*w0g2 )
                    !
                    sigmai_all(ibnd,ik+lower_bnd-1) = sigmai_all(ibnd,ik+lower_bnd-1) + g2 * weight
+                   !if(ik+lower_bnd-1==1 .and. ibnd == 1 .and. jbnd==1 .and. imode == 1) THEN
+                   !  print*,'sigmai_all ',sigmai_all(ibnd,ik+lower_bnd-1), g2, weight, wq, ekk
+                   !  print*,'wqf(iq) wgkq wgq w0g1 w0g2', wqf(iq), wgkq, wgq, w0g1, w0g2
+                   !  print*,'ekq degaussw ',ekq, degaussw
+                   !endif
                    !
                    ! Mode-resolved
                    IF (iverbosity == 3) THEN
