@@ -754,9 +754,9 @@ CONTAINS
     ! PBE0/DF0
     IF ( iexch==6 .or. igcx ==8 ) exx_fraction = 0.25_DP
     ! B86BPBEX
-    IF ( iexch==6 .or. igcx ==41 ) exx_fraction = 0.25_DP
+    IF ( iexch==6 .and. igcx ==41 ) exx_fraction = 0.25_DP
     ! BHANDHLYP
-    IF ( iexch==6 .or. igcx ==42 ) exx_fraction = 0.5_DP
+    IF ( iexch==6 .and. igcx ==42 ) exx_fraction = 0.5_DP
     ! HSE
     IF ( igcx ==12 ) THEN
        exx_fraction = 0.25_DP
