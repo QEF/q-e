@@ -15,7 +15,8 @@
       USE parallel_include
 #if defined(__CUDA)
       USE cudafor,        ONLY: cudamemcpy, cudamemcpy2d, &
-                                & cudamemcpydevicetodevice
+                                & cudaMemcpyDeviceToDevice, &
+                                & cudaDeviceSynchronize
 #endif
       !
       IMPLICIT NONE
@@ -2553,6 +2554,20 @@ END SUBROUTINE mp_type_free
 !------------------------------------------------------------------------------!
 !  GPU specific subroutines (Pietro Bonfa')
 !------------------------------------------------------------------------------!
+! Before hacking on the CUDA part remember that:
+!
+! 1. all mp_* interface should be blocking with respect to both MPI and CUDA.
+!    MPI will only wait for completion on the default stream therefore device
+!    synchronization must be enforced.
+! 2. Host -> device memory copies of a memory block of 64 KB or less are
+!    asynchronous in the sense that they may return before the data is actually
+!    available on the GPU. However, the user is still free to change the buffer
+!    as soon as those calls return with no ill effects.
+!    (https://devtalk.nvidia.com/default/topic/471866/cuda-programming-and-performance/host-device-memory-copies-up-to-64-kb-are-asynchronous/)
+! 3. For transfers from device to either pageable or pinned host memory,
+!    the function returns only once the copy has completed.
+! 4. GPU synchronization is always enforced even if no communication takes place.
+!------------------------------------------------------------------------------!
 #ifdef __CUDA
 
 !------------------------------------------------------------------------------!
@@ -2565,20 +2580,22 @@ END SUBROUTINE mp_type_free
         INTEGER :: source
         INTEGER, INTENT(IN) :: gid
         INTEGER :: group
-        INTEGER :: msglen
-
+        INTEGER :: msglen, ierr
+        !
 #if defined(__MPI)
         msglen = 1
         group = gid
 #if defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()  ! This syncs __GPU_MPI case
         CALL bcast_integer_gpu( msg_d, msglen, source, group )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        msg_h = msg_d
+        msg_h = msg_d                   ! This syncs __MPI case
         CALL bcast_integer( msg_h, msglen, source, group )
         msg_d = msg_h
 #endif
-        
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_i1_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2589,18 +2606,22 @@ END SUBROUTINE mp_type_free
         INTEGER, ALLOCATABLE :: msg_h(:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
+        !
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_integer_gpu( msg_d, msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_integer( msg_h, msglen, source, gid )
         msg_d = msg_h; DEALLOCATE( msg_h )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_iv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2611,18 +2632,21 @@ END SUBROUTINE mp_type_free
         INTEGER, ALLOCATABLE :: msg_h(:,:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_integer_gpu( msg_d, msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_integer( msg_h, msglen, source, gid )
         msg_d = msg_h; DEALLOCATE( msg_h )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_im_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2633,19 +2657,22 @@ END SUBROUTINE mp_type_free
 
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_integer_gpu( msg_d, msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
         INTEGER, ALLOCATABLE :: msg_h(:,:,:)
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_integer( msg_h, msglen, source, gid )
         msg_d = msg_h; DEALLOCATE( msg_h )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_it_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2656,18 +2683,21 @@ END SUBROUTINE mp_type_free
         INTEGER, ALLOCATABLE :: msg_h(:,:,:,:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_integer_gpu( msg_d, msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_integer( msg_h, msglen, source, gid )
         msg_d = msg_h; DEALLOCATE( msg_h )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_i4d_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2678,17 +2708,20 @@ END SUBROUTINE mp_type_free
         REAL (DP) :: msg_h
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
         msglen = 1
 #if defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_real_gpu( msg_d, msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        msg_h=msg_d
+        msg_h=msg_d                         ! This syncs __MPI case
         CALL bcast_real( msg_h, msglen, source, gid )
         msg_d = msg_h
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_r1_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2699,18 +2732,21 @@ END SUBROUTINE mp_type_free
         REAL (DP), ALLOCATABLE :: msg_h(:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_real_gpu( msg_d, msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_real( msg_h, msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_rv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2720,19 +2756,22 @@ END SUBROUTINE mp_type_free
         REAL (DP), DEVICE :: msg_d(:,:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_real_gpu( msg_d, msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
         REAL (DP), ALLOCATABLE :: msg_h(:,:)
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_real( msg_h, msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_rm_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2743,18 +2782,21 @@ END SUBROUTINE mp_type_free
         REAL (DP), ALLOCATABLE :: msg_h(:,:,:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_real_gpu( msg_d, msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_real( msg_h, msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_rt_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2765,18 +2807,21 @@ END SUBROUTINE mp_type_free
         REAL (DP), ALLOCATABLE :: msg_h(:,:,:,:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_real_gpu( msg_d, msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_real( msg_h, msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_r4d_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2787,18 +2832,21 @@ END SUBROUTINE mp_type_free
         REAL (DP), ALLOCATABLE :: msg_h(:,:,:,:,:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_real_gpu( msg_d, msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_real( msg_h, msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_r5d_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2809,17 +2857,20 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP) :: msg_h
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
         msglen = 1
 #if defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        msg_h=msg_d
+        msg_h=msg_d                         ! This syncs __MPI case
         CALL bcast_real( msg_h, 2 * msglen, source, gid )
         msg_d = msg_h
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_c1_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2830,18 +2881,21 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), ALLOCATABLE :: msg_h(:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_real( msg_h, 2 * msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_cv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2852,18 +2906,21 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), ALLOCATABLE :: msg_h(:,:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_real( msg_h, 2 * msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_cm_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2874,18 +2931,21 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), ALLOCATABLE :: msg_h(:,:,:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_real( msg_h, 2 * msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_ct_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2896,18 +2956,21 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), ALLOCATABLE :: msg_h(:,:,:,:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_real( msg_h, 2 * msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_c4d_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2918,18 +2981,21 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), ALLOCATABLE :: msg_h(:,:,:,:,:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_real( msg_h, 2 * msglen, source, gid )
         msg_d = msg_h ; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_c5d_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2940,17 +3006,20 @@ END SUBROUTINE mp_type_free
         LOGICAL         :: msg_h
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
         msglen = 1
 #if defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_logical_gpu( msg_d, msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
-        msg_h = msg_d
+        msg_h = msg_d                       ! This syncs __MPI case
         CALL bcast_logical( msg_h, msglen, source, gid )
         msg_d = msg_h
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_l_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2960,19 +3029,22 @@ END SUBROUTINE mp_type_free
         LOGICAL, DEVICE :: msg_d(:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_logical_gpu( msg_d, msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
         LOGICAL, ALLOCATABLE :: msg_h(:)
-        ALLOCATE(msg_h, source=msg_d)
+        ALLOCATE(msg_h, source=msg_d)       ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_logical( msg_h, msglen, source, gid )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_lv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -2982,19 +3054,22 @@ END SUBROUTINE mp_type_free
         LOGICAL, DEVICE :: msg_d(:,:)
         INTEGER, INTENT(IN) :: source
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
         CALL bcast_logical_gpu( msg_d, msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
 #else
         LOGICAL, ALLOCATABLE :: msg_h(:,:)
-        ALLOCATE(msg_h, source=msg_d)
+        ALLOCATE(msg_h, source=msg_d)       ! This syncs __MPI case
         msglen = size(msg_h)
         CALL bcast_logical( msg_h, msglen, source, gid )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_lm_gpu
 !
 !------------------------------------------------------------------------------!
@@ -3004,18 +3079,18 @@ END SUBROUTINE mp_type_free
         INTEGER, INTENT(IN), DEVICE :: msg_sour_d
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, INTENT(IN) :: gid
-        INTEGER :: group
+        INTEGER :: group, ierr
 #if defined(__MPI)
         INTEGER :: istatus(MPI_STATUS_SIZE)
 #endif
-        INTEGER :: ierr, nrcv
+        INTEGER :: nrcv
         INTEGER :: msglen = 1
 
 #if ! defined(__GPU_MPI)
         ! Call CPU implementation
         INTEGER :: msg_dest_h, msg_sour_h
         !
-        msg_dest_h = msg_dest_d; msg_sour_h = msg_sour_d
+        msg_dest_h = msg_dest_d; msg_sour_h = msg_sour_d      ! This syncs __MPI case
         CALL mp_get_i1(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
         msg_dest_d = msg_dest_h
 #else
@@ -3027,7 +3102,9 @@ END SUBROUTINE mp_type_free
         ! processors not taking part in the communication have 0 length message
 
         msglen = 0
-
+        !
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL and __GPU_MPI
+        !
         IF(dest .NE. sour) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
@@ -3053,6 +3130,7 @@ END SUBROUTINE mp_type_free
 #endif
 
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI and __GPU_MPI
         RETURN
       END SUBROUTINE mp_get_i1_gpu
 !
@@ -3073,7 +3151,7 @@ END SUBROUTINE mp_type_free
 #if ! defined(__GPU_MPI)
         INTEGER, ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
         !
-        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d );       ! This syncs __MPI case
         CALL mp_get_iv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
         msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
@@ -3086,7 +3164,9 @@ END SUBROUTINE mp_type_free
         ! processors not taking part in the communication have 0 length message
 
         msglen = 0
-
+        !
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL and __GPU_MPI
+        !
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
@@ -3111,6 +3191,7 @@ END SUBROUTINE mp_type_free
         IF (ierr/=0) CALL mp_stop( 9004 )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI and __GPU_MPI
         RETURN
       END SUBROUTINE mp_get_iv_gpu
 !
@@ -3130,7 +3211,7 @@ END SUBROUTINE mp_type_free
 #if ! defined(__GPU_MPI)
         REAL(DP) :: msg_dest_h, msg_sour_h
         !
-        msg_dest_h=msg_dest_d; msg_sour_h=msg_sour_d
+        msg_dest_h=msg_dest_d; msg_sour_h=msg_sour_d      ! This syncs __MPI case
         CALL mp_get_r1(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
         msg_dest_d = msg_dest_h
 #else
@@ -3141,7 +3222,9 @@ END SUBROUTINE mp_type_free
         ! processors not taking part in the communication have 0 length message
 
         msglen = 0
-
+        !
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL and __GPU_MPI
+        !
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
@@ -3166,6 +3249,7 @@ END SUBROUTINE mp_type_free
         IF (ierr/=0) CALL mp_stop( 9008 )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI and __GPU_MPI
         RETURN
       END SUBROUTINE mp_get_r1_gpu
 !
@@ -3186,7 +3270,7 @@ END SUBROUTINE mp_type_free
 #if ! defined(__GPU_MPI)
         REAL (DP), ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
         !
-        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d );       ! This syncs __MPI case
         CALL mp_get_rv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
         msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
@@ -3199,7 +3283,9 @@ END SUBROUTINE mp_type_free
         ! processors not taking part in the communication have 0 length message
 
         msglen = 0
-
+        !
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL and __GPU_MPI
+        !
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
@@ -3224,6 +3310,7 @@ END SUBROUTINE mp_type_free
         IF (ierr/=0) CALL mp_stop( 9012 )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI and __GPU_MPI
         RETURN
       END SUBROUTINE mp_get_rv_gpu
 !
@@ -3244,11 +3331,10 @@ END SUBROUTINE mp_type_free
 #if ! defined(__GPU_MPI)
         REAL (DP), ALLOCATABLE :: msg_dest_h(:,:), msg_sour_h(:,:)
         !
-        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d );        ! This syncs __MPI case
         CALL mp_get_rm(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
         msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
-        RETURN
 #else
 
 #if defined(__MPI)
@@ -3258,7 +3344,9 @@ END SUBROUTINE mp_type_free
         ! processors not taking part in the communication have 0 length message
 
         msglen = 0
-
+        !
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL and __GPU_MPI
+        !
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
@@ -3287,6 +3375,7 @@ END SUBROUTINE mp_type_free
         IF (ierr/=0) CALL mp_stop( 9016 )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI and __GPU_MPI
         RETURN
       END SUBROUTINE mp_get_rm_gpu
 !
@@ -3307,7 +3396,7 @@ END SUBROUTINE mp_type_free
 #if ! defined(__GPU_MPI)
         COMPLEX (DP), ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
         !
-        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d );         ! This syncs __MPI case
         CALL mp_get_cv(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
         msg_dest_d = msg_dest_h;
         DEALLOCATE(msg_dest_h, msg_sour_h)
@@ -3320,7 +3409,9 @@ END SUBROUTINE mp_type_free
         ! processors not taking part in the communication have 0 length message
 
         msglen = 0
-
+        !
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL and __GPU_MPI
+        !
         IF( dest .NE. sour ) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
@@ -3345,6 +3436,7 @@ END SUBROUTINE mp_type_free
         IF (ierr/=0) CALL mp_stop( 9020 )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI and __GPU_MPI
         RETURN
       END SUBROUTINE mp_get_cv_gpu
 !
@@ -3365,7 +3457,7 @@ END SUBROUTINE mp_type_free
 #if ! defined(__GPU_MPI)
         COMPLEX (DP), ALLOCATABLE :: msg_dest_h(:,:), msg_sour_h(:,:)
         !
-        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d );          ! This syncs __MPI case
         CALL mp_get_cm(msg_dest_h, msg_sour_h, mpime, dest, sour, ip, gid)
         msg_dest_d = msg_dest_h;
         DEALLOCATE(msg_dest_h, msg_sour_h)
@@ -3378,7 +3470,9 @@ END SUBROUTINE mp_type_free
         ! processors not taking part in the communication have 0 length message
 
         msglen = 0
-
+        !
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL and __GPU_MPI
+        !
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
@@ -3406,6 +3500,7 @@ END SUBROUTINE mp_type_free
         IF (ierr/=0) CALL mp_stop( 9024 )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI and __GPU_MPI
         RETURN
       END SUBROUTINE mp_get_cm_gpu
 !
@@ -3426,10 +3521,9 @@ END SUBROUTINE mp_type_free
 #if ! defined(__GPU_MPI)
         INTEGER :: msg_dest_h, msg_sour_h
         !
-        msg_dest_h=msg_dest_d ; msg_sour_h=msg_sour_d 
+        msg_dest_h=msg_dest_d ; msg_sour_h=msg_sour_d           ! This syncs __MPI case
         CALL mp_put_i1(msg_dest_h, msg_sour_h, mpime, sour, dest, ip, gid)
         msg_dest_d = msg_dest_h
-        RETURN
 #else
 
 #if defined(__MPI)
@@ -3439,7 +3533,9 @@ END SUBROUTINE mp_type_free
         ! processors not taking part in the communication have 0 length message
 
         msglen = 0
-
+        !
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL and __GPU_MPI
+        !
         IF(dest .NE. sour) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
@@ -3463,6 +3559,7 @@ END SUBROUTINE mp_type_free
         IF (ierr/=0) CALL mp_stop( 9028 )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI and __GPU_MPI
         RETURN
       END SUBROUTINE mp_put_i1_gpu
 !
@@ -3483,11 +3580,10 @@ END SUBROUTINE mp_type_free
 #if ! defined(__GPU_MPI)
         INTEGER, ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
         !
-        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d );           ! This syncs __MPI case
         CALL mp_put_iv(msg_dest_h, msg_sour_h, mpime, sour, dest, ip, gid)
         msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
-        RETURN
 #else
         !
 #if defined(__MPI)
@@ -3496,7 +3592,9 @@ END SUBROUTINE mp_type_free
         ! processors not taking part in the communication have 0 length message
 
         msglen = 0
-
+        !
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL and __GPU_MPI
+        !
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
@@ -3521,6 +3619,7 @@ END SUBROUTINE mp_type_free
         IF (ierr/=0) CALL mp_stop( 9032 )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI and __GPU_MPI
         RETURN
       END SUBROUTINE mp_put_iv_gpu
 !
@@ -3541,7 +3640,7 @@ END SUBROUTINE mp_type_free
 #if ! defined(__GPU_MPI)
         REAL (DP), ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
         !
-        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d );           ! This syncs __MPI case
         CALL mp_put_rv(msg_dest_h, msg_sour_h, mpime, sour, dest, ip, gid)
         msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
@@ -3553,7 +3652,9 @@ END SUBROUTINE mp_type_free
         ! processors not taking part in the communication have 0 length message
 
         msglen = 0
-
+        !
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL and __GPU_MPI
+        !
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
@@ -3578,6 +3679,7 @@ END SUBROUTINE mp_type_free
         IF (ierr/=0) CALL mp_stop( 9036 )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI and __GPU_MPI
         RETURN
       END SUBROUTINE mp_put_rv_gpu
 !
@@ -3598,7 +3700,7 @@ END SUBROUTINE mp_type_free
 #if ! defined(__GPU_MPI)
         REAL (DP), ALLOCATABLE :: msg_dest_h(:,:), msg_sour_h(:,:)
         !
-        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d );           ! This syncs __MPI case
         CALL mp_put_rm(msg_dest_h, msg_sour_h, mpime, sour, dest, ip, gid)
         msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
@@ -3610,7 +3712,9 @@ END SUBROUTINE mp_type_free
         ! processors not taking part in the communication have 0 length message
 
         msglen = 0
-
+        !
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL and __GPU_MPI
+        !
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
@@ -3638,6 +3742,7 @@ END SUBROUTINE mp_type_free
         IF (ierr/=0) CALL mp_stop( 9040 )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI and __GPU_MPI
         RETURN
       END SUBROUTINE mp_put_rm_gpu
 !
@@ -3658,7 +3763,7 @@ END SUBROUTINE mp_type_free
 #if ! defined(__GPU_MPI)
         COMPLEX (DP), ALLOCATABLE :: msg_dest_h(:), msg_sour_h(:)
         !
-        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d ); 
+        ALLOCATE( msg_dest_h, source=msg_dest_d ); ALLOCATE( msg_sour_h, source=msg_sour_d );           ! This syncs __MPI case
         CALL mp_put_cv(msg_dest_h, msg_sour_h, mpime, sour, dest, ip, gid)
         msg_dest_d = msg_dest_h
         DEALLOCATE(msg_dest_h, msg_sour_h)
@@ -3670,7 +3775,9 @@ END SUBROUTINE mp_type_free
         ! processors not taking part in the communication have 0 length message
 
         msglen = 0
-
+        !
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL and __GPU_MPI
+        !
         IF( dest .NE. sour ) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
@@ -3695,6 +3802,7 @@ END SUBROUTINE mp_type_free
         IF (ierr/=0) CALL mp_stop( 9044 )
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI and __GPU_MPI
         RETURN
       END SUBROUTINE mp_put_cv_gpu
 !
@@ -3706,20 +3814,21 @@ END SUBROUTINE mp_type_free
         INTEGER, INTENT (INOUT), DEVICE :: msg_d
         INTEGER, msg_h
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
-        
         msglen = 1
 #if defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()  ! This syncs __GPU_MPI
         CALL reduce_base_integer_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! No need for final syncronization
 #else
         !
-        msg_h = msg_d
+        msg_h = msg_d                   ! This syncs __MPI case
         CALL reduce_base_integer( msglen, msg_h, gid, -1 )
         msg_d = msg_h
-        RETURN
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_i1_gpu
 !
 !------------------------------------------------------------------------------!
@@ -3729,19 +3838,22 @@ END SUBROUTINE mp_type_free
         INTEGER, INTENT (INOUT), DEVICE :: msg_d(:)
         INTEGER, ALLOCATABLE :: msg_h(:)
         INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
         !
-        INTEGER :: msglen
+        INTEGER :: msglen, ierr
+#if defined(__MPI)
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()  ! This syncs __GPU_MPI
         CALL reduce_base_integer_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! No need for final syncronization
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d ) ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_integer( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_iv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -3751,19 +3863,22 @@ END SUBROUTINE mp_type_free
         INTEGER, INTENT (INOUT), DEVICE :: msg_d(:,:)
         INTEGER, ALLOCATABLE :: msg_h(:,:)
         INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
         !
-        INTEGER :: msglen
+        INTEGER :: msglen, ierr
+#if defined(__MPI)
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()  ! This syncs __GPU_MPI
         CALL reduce_base_integer_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! No need for final syncronization
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d ) ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_integer( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_im_gpu
 !
 !------------------------------------------------------------------------------!
@@ -3773,19 +3888,22 @@ END SUBROUTINE mp_type_free
         INTEGER, INTENT (INOUT), DEVICE :: msg_d(:,:,:)
         INTEGER, ALLOCATABLE :: msg_h(:,:,:)
         INTEGER, INTENT (IN) :: gid
-#if defined(__MPI)
         !
-        INTEGER :: msglen
+        INTEGER :: msglen, ierr
+#if defined(__MPI)
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()  ! This syncs __GPU_MPI
         CALL reduce_base_integer_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! No need for final syncronization
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d ) ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_integer( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_it_gpu
 !
 !------------------------------------------------------------------------------!
@@ -3795,19 +3913,21 @@ END SUBROUTINE mp_type_free
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d
         REAL(DP) :: msg_h
         INTEGER, INTENT (IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
-
         msglen = 1
 #if defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()  ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! No need for final syncronization
 #else
-        msg_h=msg_d 
+        msg_h=msg_d                     ! This syncs __MPI case
         CALL reduce_base_real( msglen, msg_h, gid, -1 )
         msg_d = msg_h
 #endif
-        
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_r1_gpu
 !
 !------------------------------------------------------------------------------!
@@ -3817,19 +3937,22 @@ END SUBROUTINE mp_type_free
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:)
         REAL(DP), ALLOCATABLE :: msg_h(:)
         INTEGER, INTENT (IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
-
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()  ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! No need for final syncronization
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d ) ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_real( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_rv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -3839,19 +3962,22 @@ END SUBROUTINE mp_type_free
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:,:)
         REAL (DP), ALLOCATABLE :: msg_h(:,:)
         INTEGER, INTENT (IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
-
 #if defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()  ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! No need for final syncronization
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d ) ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_real( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_rm_gpu
 !
 !------------------------------------------------------------------------------!
@@ -3863,12 +3989,10 @@ END SUBROUTINE mp_type_free
         REAL (DP), ALLOCATABLE :: res_h(:,:), msg_h(:,:)
         INTEGER,   INTENT (IN) :: root
         INTEGER,   INTENT (IN) :: gid
-#if defined(__MPI)
-        INTEGER :: msglen, ierr, taskid
-
         !
-        
-
+        INTEGER :: msglen, ierr, taskid
+#if defined(__MPI)
+        !
         CALL mpi_comm_rank( gid, taskid, ierr)
         IF( ierr /= 0 ) CALL mp_stop( 9045 )
         !
@@ -3877,20 +4001,20 @@ END SUBROUTINE mp_type_free
            IF( msglen > size(res_d) ) CALL mp_stop( 9046 )
         END IF
 #if  defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_to_gpu( msglen, msg_d, res_d, gid, root )
+        RETURN ! Sync not needed in this case
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         ALLOCATE( res_h(lbound(msg_h,1):ubound(msg_h,1), lbound(msg_h,2):ubound(msg_h,2)));
         CALL reduce_base_real_to( msglen, msg_h, res_h, gid, root )
         res_d = res_h; DEALLOCATE(msg_h, res_h)
 #endif
 
 #else
-        
         res_d = msg_d
-
 #endif
-
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_root_sum_rm_gpu
 !
 !------------------------------------------------------------------------------!
@@ -3902,9 +4026,9 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), ALLOCATABLE          :: res_h(:,:), msg_h(:,:)
         INTEGER,   INTENT (IN)  :: root
         INTEGER,  INTENT (IN) :: gid
-#if defined(__MPI)
+        !
         INTEGER :: msglen, ierr, taskid
-
+#if defined(__MPI)
         msglen = size(msg_d)
 
         CALL mpi_comm_rank( gid, taskid, ierr)
@@ -3914,19 +4038,19 @@ END SUBROUTINE mp_type_free
            IF( msglen > size(res_d) ) CALL mp_stop( 9048 )
         END IF
 #if  defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_to_gpu( 2 * msglen, msg_d, res_d, gid, root )
+        RETURN ! Sync not needed in this case
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         ALLOCATE( res_h(lbound(msg_h,1):ubound(msg_h,1), lbound(msg_h,2):ubound(msg_h,2)));
         CALL reduce_base_real_to( 2 * msglen, msg_h, res_h, gid, root )
         res_d = res_h; DEALLOCATE(msg_h, res_h)
 #endif
 #else
-
         res_d = msg_d
-
 #endif
-
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_root_sum_cm_gpu
 !
 !------------------------------------------------------------------------------!
@@ -3958,19 +4082,20 @@ END SUBROUTINE mp_type_free
         END IF
         !
 #if  defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_to_gpu( msglen, msg_d, res_d, group, root )
+        RETURN ! Sync not needed in this case
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         ALLOCATE( res_h(lbound(msg_h,1):ubound(msg_h,1), lbound(msg_h,2):ubound(msg_h,2)));
         CALL reduce_base_real_to( msglen, msg_h, res_h, gid, root )
         res_d = res_h; DEALLOCATE(msg_h, res_h)
 #endif
         !
-
 #else
         res_d = msg_d
 #endif
-
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_rmm_gpu
 !
 !------------------------------------------------------------------------------!
@@ -3980,18 +4105,21 @@ END SUBROUTINE mp_type_free
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:)
         REAL (DP), ALLOCATABLE :: msg_h(:,:,:)
         INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if  defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_real( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_rt_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4001,18 +4129,22 @@ END SUBROUTINE mp_type_free
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:,:)
         REAL (DP), ALLOCATABLE :: msg_h(:,:,:,:)
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if  defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_real( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_r4d_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4022,17 +4154,21 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d
         COMPLEX (DP) :: msg_h
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
         msglen = 1
 #if  defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        msg_h=msg_d
+        msg_h=msg_d                               ! This syncs __MPI case
         CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
         msg_d = msg_h
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_c1_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4042,18 +4178,22 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:)
         COMPLEX (DP), ALLOCATABLE :: msg_h(:)
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if  defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_cv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4063,18 +4203,21 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:,:)
         COMPLEX (DP), ALLOCATABLE :: msg_h(:,:)
         INTEGER, INTENT (IN) :: gid
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if  defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_cm_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4085,13 +4228,16 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), INTENT (OUT), DEVICE :: res_d(:,:)
         COMPLEX (DP), ALLOCATABLE :: msg_h(:,:), res_h(:,:)
         INTEGER, INTENT (IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if  defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_to_gpu( 2 * msglen, msg_d, res_h, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         msglen = size(msg_h)
         ALLOCATE( res_h(lbound(msg_h,1):ubound(msg_h,1), lbound(msg_h,2):ubound(msg_h,2)));
         CALL reduce_base_real_to( 2 * msglen, msg_h, res_h, gid, -1 )
@@ -4100,6 +4246,7 @@ END SUBROUTINE mp_type_free
 #else
         res_d = msg_d
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_cmm_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4109,19 +4256,22 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:)
         COMPLEX (DP), ALLOCATABLE :: msg_h(:,:,:)
         INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
-        INTEGER :: msglen
-        
+        !
+        INTEGER :: msglen, ierr
+#if defined(__MPI)        
 #if  defined(__GPU_MPI)
         msglen = SIZE(msg_d)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_ct_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4131,18 +4281,22 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:,:)
         COMPLEX (DP),ALLOCATABLE :: msg_h(:,:,:,:)
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if  defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_c4d_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4152,18 +4306,22 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:,:,:)
         COMPLEX (DP), ALLOCATABLE :: msg_h(:,:,:,:,:)
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if  defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_c5d_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4173,18 +4331,22 @@ END SUBROUTINE mp_type_free
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:,:,:)
         REAL (DP), ALLOCATABLE :: msg_h(:,:,:,:,:)
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if  defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_real( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_r5d_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4194,18 +4356,22 @@ END SUBROUTINE mp_type_free
         COMPLEX (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:,:,:,:)
         COMPLEX (DP), ALLOCATABLE :: msg_h(:,:,:,:,:,:)
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if  defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL reduce_base_real_gpu( 2 * msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         msglen = size(msg_h)
         CALL reduce_base_real( 2 * msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_sum_c6d_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4215,17 +4381,21 @@ END SUBROUTINE mp_type_free
         INTEGER, INTENT (INOUT), DEVICE :: msg_d
         INTEGER :: msg_h
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
         msglen = 1
 #if  defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL parallel_max_integer_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        msg_h = msg_d
+        msg_h = msg_d                             ! This syncs __MPI case
         CALL parallel_max_integer( msglen, msg_h, gid, -1 )
         msg_d = msg_h
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_max_i_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4235,18 +4405,22 @@ END SUBROUTINE mp_type_free
         INTEGER, INTENT (INOUT), DEVICE :: msg_d(:)
         INTEGER, ALLOCATABLE :: msg_h(:)
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if  defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
         CALL parallel_max_integer_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
         msglen = size(msg_h)
         CALL parallel_max_integer( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_max_iv_gpu
 !
 !----------------------------------------------------------------------
@@ -4256,17 +4430,21 @@ END SUBROUTINE mp_type_free
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d
         REAL (DP) :: msg_h
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
         msglen = 1
 #if defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
         CALL parallel_max_real_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        msg_h = msg_d
+        msg_h = msg_d                    ! This syncs __MPI case
         CALL parallel_max_real( msglen, msg_h, gid, -1 )
         msg_d = msg_h
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_max_r_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4276,18 +4454,22 @@ END SUBROUTINE mp_type_free
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:)
         REAL (DP), ALLOCATABLE :: msg_h(:)
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if  defined(__GPU_MPI)
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
         CALL parallel_max_real_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )  ! This syncs __MPI case
         msglen = size(msg_h)
         CALL parallel_max_real( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_max_rv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4297,17 +4479,21 @@ END SUBROUTINE mp_type_free
         INTEGER, INTENT (INOUT), DEVICE :: msg_d
         INTEGER  :: msg_h
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
         msglen = 1
 #if  defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
         CALL parallel_min_integer_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        msg_h = msg_d
+        msg_h = msg_d                    ! This syncs __MPI case
         CALL parallel_min_integer( msglen, msg_h, gid, -1 )
         msg_d = msg_h
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_min_i_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4317,18 +4503,22 @@ END SUBROUTINE mp_type_free
         INTEGER, INTENT (INOUT), DEVICE :: msg_d(:)
         INTEGER, ALLOCATABLE :: msg_h(:)
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if  defined(__GPU_MPI)
         msglen = SIZE(msg_d)
+        ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
         CALL parallel_min_integer_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )  ! This syncs __MPI case
         msglen = size(msg_h)
         CALL parallel_min_integer( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_min_iv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4338,17 +4528,21 @@ END SUBROUTINE mp_type_free
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d
         REAL (DP) :: msg_h
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
         msglen = 1
-#if  defined(__GPU_MPI)        
+#if  defined(__GPU_MPI)
+        ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
         CALL parallel_min_real_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        msg_h = msg_d
+        msg_h = msg_d                    ! This syncs __MPI case
         CALL parallel_min_real( msglen, msg_h, gid, -1 )
         msg_d = msg_h
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_min_r_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4358,18 +4552,22 @@ END SUBROUTINE mp_type_free
         REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:)
         REAL (DP), ALLOCATABLE :: msg_h(:)
         INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
 #if defined(__MPI)
-        INTEGER :: msglen
 #if  defined(__GPU_MPI)   
         msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
         CALL parallel_min_real_gpu( msglen, msg_d, gid, -1 )
+        RETURN ! Sync not needed after MPI call
 #else
-        ALLOCATE( msg_h, source=msg_d )
+        ALLOCATE( msg_h, source=msg_d )  ! This syncs __MPI case
         msglen = size(msg_h)
         CALL parallel_min_real( msglen, msg_h, gid, -1 )
         msg_d = msg_h; DEALLOCATE(msg_h)
 #endif
 #endif
+        ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_min_rv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4388,15 +4586,17 @@ END SUBROUTINE mp_type_free
 #if ! defined(__GPU_MPI)
         INTEGER :: mydata_h
         INTEGER, ALLOCATABLE :: alldata_h(:)
-        ALLOCATE( alldata_h, source=alldata_d )
+        ALLOCATE( alldata_h, source=alldata_d ) ! This syncs __MPI
         mydata_h = mydata_d
         CALL mp_gather_i1(mydata_h, alldata_h, root, gid)
         mydata_d = mydata_h; alldata_d = alldata_h
         DEALLOCATE(alldata_h)
 #else
         group = gid
+        ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
         CALL MPI_GATHER(mydata_d, 1, MPI_INTEGER, alldata_d, 1, MPI_INTEGER, root, group, IERR)
         IF (ierr/=0) CALL mp_stop( 9051 )
+        RETURN ! Sync not needed after MPI call
 #endif
 #else
         !alldata_d(1) = mydata_d
@@ -4404,7 +4604,7 @@ END SUBROUTINE mp_type_free
                                             & cudaMemcpyDeviceToDevice )
         IF (ierr/=0) CALL mp_stop( 9052 )
 #endif
-        RETURN
+        ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_gather_i1_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4422,7 +4622,7 @@ END SUBROUTINE mp_type_free
 #if ! defined(__GPU_MPI)
         INTEGER, ALLOCATABLE :: mydata_h(:)
         INTEGER, ALLOCATABLE :: alldata_h(:,:)
-        ALLOCATE( mydata_h, source=mydata_d )
+        ALLOCATE( mydata_h, source=mydata_d )     ! This syncs __MPI
         ALLOCATE( alldata_h, source=alldata_d )
         
         CALL mp_gather_iv(mydata_h, alldata_h, root, gid)
@@ -4432,8 +4632,10 @@ END SUBROUTINE mp_type_free
         msglen = SIZE(mydata_d)
         IF( msglen .NE. SIZE(alldata_d, 1) ) CALL mp_stop( 9053 )
         group = gid
+        ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
         CALL MPI_GATHER(mydata_d, msglen, MPI_INTEGER, alldata_d, msglen, MPI_INTEGER, root, group, IERR)
         IF (ierr/=0) CALL mp_stop( 9054 )
+        RETURN ! Sync not needed after MPI call
 #endif
 #else
         msglen = SIZE(mydata_d)
@@ -4442,7 +4644,7 @@ END SUBROUTINE mp_type_free
         ierr = cudaMemcpy(alldata_d(:,1) , mydata_d(1), msglen, cudaMemcpyDeviceToDevice )
         IF (ierr/=0) CALL mp_stop( 9056 )
 #endif
-        RETURN
+        ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_gather_iv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4461,12 +4663,11 @@ END SUBROUTINE mp_type_free
         REAL(DP), ALLOCATABLE :: mydata_h(:)
         REAL(DP), ALLOCATABLE :: alldata_h(:)
         
-        ALLOCATE(mydata_h, source=mydata_d)
+        ALLOCATE(mydata_h, source=mydata_d)     ! This syncs __MPI
         ALLOCATE(alldata_h, source=alldata_d)
         CALL mp_gatherv_rv( mydata_h, alldata_h, recvcount, displs, root, gid)
         alldata_d = alldata_h ; mydata_d = mydata_h
         DEALLOCATE(alldata_h , mydata_h)
-        RETURN
 #else
 
         group = gid
@@ -4481,9 +4682,11 @@ END SUBROUTINE mp_type_free
         END IF
         IF ( SIZE( mydata_d ) < recvcount( myid + 1 ) ) CALL mp_stop( 9061 )
         !
+        ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
         CALL MPI_GATHERV( mydata_d, recvcount( myid + 1 ), MPI_DOUBLE_PRECISION, &
                          alldata_d, recvcount, displs, MPI_DOUBLE_PRECISION, root, group, ierr )
         IF (ierr/=0) CALL mp_stop( 9062 )
+        RETURN ! Sync not needed after MPI call
 #endif
 #else
         IF ( SIZE( alldata_d ) < recvcount( 1 ) ) CALL mp_stop( 9063 )
@@ -4493,7 +4696,7 @@ END SUBROUTINE mp_type_free
         ierr = cudaMemcpy(alldata_d(1) , mydata_d(1), recvcount( 1 ), cudaMemcpyDeviceToDevice )
         IF (ierr/=0) CALL mp_stop( 9065 )
 #endif
-        RETURN
+        ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_gatherv_rv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4513,12 +4716,11 @@ END SUBROUTINE mp_type_free
         COMPLEX(DP), ALLOCATABLE :: mydata_h(:)
         COMPLEX(DP), ALLOCATABLE :: alldata_h(:)
         
-        ALLOCATE(mydata_h, source=mydata_d)
+        ALLOCATE(mydata_h, source=mydata_d)     ! This syncs __MPI
         ALLOCATE(alldata_h, source=alldata_d)
         CALL mp_gatherv_cv( mydata_h, alldata_h, recvcount, displs, root, gid)
         alldata_d = alldata_h ; mydata_d = mydata_h
         DEALLOCATE(alldata_h , mydata_h)
-        RETURN
 #else
         group = gid
         CALL mpi_comm_size( group, npe, ierr )
@@ -4532,9 +4734,11 @@ END SUBROUTINE mp_type_free
         END IF
         IF ( SIZE( mydata_d ) < recvcount( myid + 1 ) ) CALL mp_stop( 9070 )
         !
+        ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
         CALL MPI_GATHERV( mydata_d, recvcount( myid + 1 ), MPI_DOUBLE_COMPLEX, &
                          alldata_d, recvcount, displs, MPI_DOUBLE_COMPLEX, root, group, ierr )
         IF (ierr/=0) CALL mp_stop( 9071 )
+        RETURN ! Sync not needed after MPI call
 #endif
 #else
         IF ( SIZE( alldata_d ) < recvcount( 1 ) ) CALL mp_stop( 9072 )
@@ -4543,7 +4747,7 @@ END SUBROUTINE mp_type_free
         !alldata( 1:recvcount( 1 ) ) = mydata( 1:recvcount( 1 ) )
         ierr = cudaMemcpy(alldata_d(1) , mydata_d(1), recvcount( 1 ), cudaMemcpyDeviceToDevice )
 #endif
-        RETURN
+        ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_gatherv_cv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4564,7 +4768,7 @@ END SUBROUTINE mp_type_free
         INTEGER, ALLOCATABLE :: mydata_h(:)
         INTEGER, ALLOCATABLE :: alldata_h(:)
         
-        ALLOCATE(mydata_h, source=mydata_d)
+        ALLOCATE(mydata_h, source=mydata_d)     ! This syncs __MPI
         ALLOCATE(alldata_h, source=alldata_d)
         CALL mp_gatherv_iv( mydata_h, alldata_h, recvcount, displs, root, gid)
         alldata_d = alldata_h ; mydata_d = mydata_h
@@ -4582,9 +4786,11 @@ END SUBROUTINE mp_type_free
         END IF
         IF ( SIZE( mydata_d ) < recvcount( myid + 1 ) ) CALL mp_stop( 9078 )
         !
+        ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
         CALL MPI_GATHERV( mydata_d, recvcount( myid + 1 ), MPI_INTEGER, &
                          alldata_d, recvcount, displs, MPI_INTEGER, root, group, ierr )
         IF (ierr/=0) CALL mp_stop( 9079 )
+        RETURN ! Sync not needed after MPI call
 #endif
 #else
         IF ( SIZE( alldata_d ) < recvcount( 1 ) ) CALL mp_stop( 9080 )
@@ -4593,7 +4799,7 @@ END SUBROUTINE mp_type_free
         !alldata( 1:recvcount( 1 ) ) = mydata( 1:recvcount( 1 ) )
         ierr = cudaMemcpy(alldata_d(1) , mydata_d(1), recvcount( 1 ), cudaMemcpyDeviceToDevice )
 #endif
-        RETURN
+        ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_gatherv_iv_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4616,7 +4822,7 @@ END SUBROUTINE mp_type_free
         REAL(DP), ALLOCATABLE :: mydata_h(:,:)
         REAL(DP), ALLOCATABLE :: alldata_h(:,:)
         
-        ALLOCATE(mydata_h, source=mydata_d)
+        ALLOCATE(mydata_h, source=mydata_d)     ! This syncs __MPI
         ALLOCATE(alldata_h, source=alldata_d)
         CALL mp_gatherv_rm( mydata_h, alldata_h, recvcount, displs, root, gid)
         alldata_d = alldata_h ; mydata_d = mydata_h
@@ -4640,12 +4846,14 @@ END SUBROUTINE mp_type_free
         nrecv( 1:npe ) = recvcount( 1:npe ) * SIZE( mydata_d, 1 )
         ndisp( 1:npe ) = displs( 1:npe ) * SIZE( mydata_d, 1 )
         !
+        ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
         CALL MPI_GATHERV( mydata_d, nrecv( myid + 1 ), MPI_DOUBLE_PRECISION, &
                          alldata_d, nrecv, ndisp, MPI_DOUBLE_PRECISION, root, group, ierr )
         IF (ierr/=0) CALL mp_stop( 9088 )
         !
         DEALLOCATE( nrecv, ndisp )
         !
+        RETURN ! Sync not needed after MPI call
 #endif
 #else
         IF ( SIZE( alldata_d, 1 ) /= SIZE( mydata_d, 1 ) ) CALL mp_stop( 9089 )
@@ -4661,7 +4869,7 @@ END SUBROUTINE mp_type_free
 
         IF (ierr/=0) CALL mp_stop( 9092 )
 #endif
-        RETURN
+        ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_gatherv_rm_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4683,12 +4891,11 @@ END SUBROUTINE mp_type_free
         INTEGER, ALLOCATABLE :: mydata_h(:,:)
         INTEGER, ALLOCATABLE :: alldata_h(:,:)
         
-        ALLOCATE(mydata_h, source=mydata_d)
+        ALLOCATE(mydata_h, source=mydata_d)     ! This syncs __MPI
         ALLOCATE(alldata_h, source=alldata_d)
         CALL mp_gatherv_im( mydata_h, alldata_h, recvcount, displs, root, gid)
         alldata_d = alldata_h ; mydata_d = mydata_h
         DEALLOCATE(alldata_h , mydata_h)
-        RETURN
 #else
         group = gid
         CALL mpi_comm_size( group, npe, ierr )
@@ -4708,12 +4915,14 @@ END SUBROUTINE mp_type_free
         nrecv( 1:npe ) = recvcount( 1:npe ) * SIZE( mydata_d, 1 )
         ndisp( 1:npe ) = displs( 1:npe ) * SIZE( mydata_d, 1 )
         !
+        ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
         CALL MPI_GATHERV( mydata_d, nrecv( myid + 1 ), MPI_INTEGER, &
                          alldata_d, nrecv, ndisp, MPI_INTEGER, root, group, ierr )
         IF (ierr/=0) CALL mp_stop( 9099 )
         !
         DEALLOCATE( nrecv, ndisp )
         !
+        RETURN ! Sync not needed after MPI call
 #endif
 #else
         IF ( SIZE( alldata_d, 1 ) /= SIZE( mydata_d, 1 ) ) CALL mp_stop( 9100 )
@@ -4729,7 +4938,7 @@ END SUBROUTINE mp_type_free
         
         IF (ierr/=0) CALL mp_stop( 9103 )
 #endif
-        RETURN
+        ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_gatherv_im_gpu
 !
 !------------------------------------------------------------------------------!
@@ -4746,7 +4955,7 @@ END SUBROUTINE mp_type_free
          COMPLEX(DP), ALLOCATABLE :: sndbuf_h(:,:,:)
          COMPLEX(DP), ALLOCATABLE :: rcvbuf_h(:,:,:)
          
-         ALLOCATE(sndbuf_h, source=sndbuf_d)
+         ALLOCATE(sndbuf_h, source=sndbuf_d)     ! This syncs __MPI
          ALLOCATE(rcvbuf_h, source=rcvbuf_d)
          CALL mp_alltoall_c3d( sndbuf_h, rcvbuf_h, gid )
          sndbuf_d = sndbuf_h ; rcvbuf_d = rcvbuf_h
@@ -4761,370 +4970,387 @@ END SUBROUTINE mp_type_free
          IF ( SIZE( rcvbuf_d, 3 ) < npe ) CALL mp_stop( 9106 )
       
          nsiz = SIZE( sndbuf_d, 1 ) * SIZE( sndbuf_d, 2 )
-      
+         !
+         ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
+         !
          CALL MPI_ALLTOALL( sndbuf_d, nsiz, MPI_DOUBLE_COMPLEX, &
                             rcvbuf_d, nsiz, MPI_DOUBLE_COMPLEX, group, ierr )
       
          IF (ierr/=0) CALL mp_stop( 9107 )
+         RETURN ! Sync not needed after MPI call
+#endif
+#else
+         rcvbuf_d = sndbuf_d
+#endif
+         ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
+      END SUBROUTINE mp_alltoall_c3d_gpu
+!
+!------------------------------------------------------------------------------!
+!
+      SUBROUTINE mp_alltoall_i3d_gpu( sndbuf_d, rcvbuf_d, gid )
+         IMPLICIT NONE
+         INTEGER, DEVICE :: sndbuf_d( :, :, : )
+         INTEGER, DEVICE :: rcvbuf_d( :, :, : )
+         INTEGER, INTENT(IN) :: gid
+         INTEGER :: nsiz, group, ierr, npe
+
+#if defined (__MPI)
+#if ! defined(__GPU_MPI)
+         INTEGER, ALLOCATABLE :: sndbuf_h(:,:,:)
+         INTEGER, ALLOCATABLE :: rcvbuf_h(:,:,:)
+         
+         ALLOCATE(sndbuf_h, source=sndbuf_d)     ! This syncs __MPI
+         ALLOCATE(rcvbuf_h, source=rcvbuf_d)
+         CALL mp_alltoall_i3d( sndbuf_h, rcvbuf_h, gid )
+         sndbuf_d = sndbuf_h ; rcvbuf_d = rcvbuf_h
+         DEALLOCATE(sndbuf_h , rcvbuf_h)
+#else
+         group = gid
+         
+         CALL mpi_comm_size( group, npe, ierr )
+         IF (ierr/=0) CALL mp_stop( 9108 )
+         
+         IF ( SIZE( sndbuf_d, 3 ) < npe ) CALL mp_stop( 9109 )
+         IF ( SIZE( rcvbuf_d, 3 ) < npe ) CALL mp_stop( 9110 )
+         
+         nsiz = SIZE( sndbuf_d, 1 ) * SIZE( sndbuf_d, 2 )
+         !
+         ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
+         !
+         CALL MPI_ALLTOALL( sndbuf_d, nsiz, MPI_INTEGER, &
+                            rcvbuf_d, nsiz, MPI_INTEGER, group, ierr )
+         
+         IF (ierr/=0) CALL mp_stop( 9111 )
+         RETURN ! Sync not needed after MPI call
 #endif
 #else
 
          rcvbuf_d = sndbuf_d
 
 #endif
-
-         RETURN
-      END SUBROUTINE mp_alltoall_c3d_gpu
+         ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
+      END SUBROUTINE mp_alltoall_i3d_gpu
 !
 !------------------------------------------------------------------------------!
 !
-     SUBROUTINE mp_alltoall_i3d_gpu( sndbuf_d, rcvbuf_d, gid )
-        IMPLICIT NONE
-        INTEGER, DEVICE :: sndbuf_d( :, :, : )
-        INTEGER, DEVICE :: rcvbuf_d( :, :, : )
-        INTEGER, INTENT(IN) :: gid
-        INTEGER :: nsiz, group, ierr, npe
+      SUBROUTINE mp_circular_shift_left_i0_gpu( buf_d, itag, gid )
+         IMPLICIT NONE
+         INTEGER, DEVICE :: buf_d
+         INTEGER, INTENT(IN) :: itag
+         INTEGER, INTENT(IN) :: gid
+         INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-        INTEGER, ALLOCATABLE :: sndbuf_h(:,:,:)
-        INTEGER, ALLOCATABLE :: rcvbuf_h(:,:,:)
-        
-        ALLOCATE(sndbuf_h, source=sndbuf_d)
-        ALLOCATE(rcvbuf_h, source=rcvbuf_d)
-        CALL mp_alltoall_i3d( sndbuf_h, rcvbuf_h, gid )
-        sndbuf_d = sndbuf_h ; rcvbuf_d = rcvbuf_h
-        DEALLOCATE(sndbuf_h , rcvbuf_h)
-        RETURN
+         INTEGER :: buf_h
+         buf_h = buf_d     ! This syncs __MPI
+         CALL mp_circular_shift_left_i0( buf_h, itag, gid )
+         buf_d = buf_h
 #else
-        group = gid
-     
-        CALL mpi_comm_size( group, npe, ierr )
-        IF (ierr/=0) CALL mp_stop( 9108 )
-     
-        IF ( SIZE( sndbuf_d, 3 ) < npe ) CALL mp_stop( 9109 )
-        IF ( SIZE( rcvbuf_d, 3 ) < npe ) CALL mp_stop( 9110 )
-     
-        nsiz = SIZE( sndbuf_d, 1 ) * SIZE( sndbuf_d, 2 )
-     
-        CALL MPI_ALLTOALL( sndbuf_d, nsiz, MPI_INTEGER, &
-                           rcvbuf_d, nsiz, MPI_INTEGER, group, ierr )
-
-        IF (ierr/=0) CALL mp_stop( 9111 )
+         INTEGER :: istatus( mpi_status_size )
+         !
+         group = gid
+         !
+         CALL mpi_comm_size( group, npe, ierr )
+         IF (ierr/=0) CALL mp_stop( 9112 )
+         CALL mpi_comm_rank( group, mype, ierr )
+         IF (ierr/=0) CALL mp_stop( 9113 )
+         !
+         sour = mype + 1
+         IF( sour == npe ) sour = 0
+         dest = mype - 1
+         IF( dest == -1 ) dest = npe - 1
+         !
+         ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
+         CALL MPI_Sendrecv_replace( buf_d, 1, MPI_INTEGER, &
+              dest, itag, sour, itag, group, istatus, ierr)
+         !
+         IF (ierr/=0) CALL mp_stop( 9114 )
+         !
+         RETURN ! Sync not needed after MPI call
 #endif
 #else
-
-        rcvbuf_d = sndbuf_d
-
+         ! do nothing
 #endif
-
-        RETURN
-     END SUBROUTINE mp_alltoall_i3d_gpu
+         ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
+      END SUBROUTINE mp_circular_shift_left_i0_gpu
 !
 !------------------------------------------------------------------------------!
 !
-     SUBROUTINE mp_circular_shift_left_i0_gpu( buf_d, itag, gid )
-        IMPLICIT NONE
-        INTEGER, DEVICE :: buf_d
-        INTEGER, INTENT(IN) :: itag
-        INTEGER, INTENT(IN) :: gid
-        INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+      SUBROUTINE mp_circular_shift_left_i1_gpu( buf_d, itag, gid )
+         IMPLICIT NONE
+         INTEGER, DEVICE :: buf_d(:)
+         INTEGER, INTENT(IN) :: itag
+         INTEGER, INTENT(IN) :: gid
+         INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-        INTEGER :: buf_h
-        buf_h = buf_d
-        CALL mp_circular_shift_left_i0( buf_h, itag, gid )
-        buf_d = buf_h
+         INTEGER, ALLOCATABLE :: buf_h(:)
+         ALLOCATE(buf_h, source=buf_d)    ! This syncs __MPI
+         CALL mp_circular_shift_left_i1( buf_h, itag, gid )
+         buf_d = buf_h; DEALLOCATE(buf_h)
 #else
-        INTEGER :: istatus( mpi_status_size )
-        !
-        group = gid
-        !
-        CALL mpi_comm_size( group, npe, ierr )
-        IF (ierr/=0) CALL mp_stop( 9112 )
-        CALL mpi_comm_rank( group, mype, ierr )
-        IF (ierr/=0) CALL mp_stop( 9113 )
-        !
-        sour = mype + 1
-        IF( sour == npe ) sour = 0
-        dest = mype - 1
-        IF( dest == -1 ) dest = npe - 1
-        !
-        CALL MPI_Sendrecv_replace( buf_d, 1, MPI_INTEGER, &
-             dest, itag, sour, itag, group, istatus, ierr)
-        !
-        IF (ierr/=0) CALL mp_stop( 9114 )
-        !
+         INTEGER :: istatus( mpi_status_size )
+         !
+         group = gid
+         !
+         CALL mpi_comm_size( group, npe, ierr )
+         IF (ierr/=0) CALL mp_stop( 9115 )
+         CALL mpi_comm_rank( group, mype, ierr )
+         IF (ierr/=0) CALL mp_stop( 9116 )
+         !
+         sour = mype + 1
+         IF( sour == npe ) sour = 0
+         dest = mype - 1
+         IF( dest == -1 ) dest = npe - 1
+         !
+         ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
+         CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_INTEGER, &
+              dest, itag, sour, itag, group, istatus, ierr)
+         !
+         IF (ierr/=0) CALL mp_stop( 9117 )
+         !
+         RETURN ! Sync not needed after MPI call
 #endif
 #else
-        ! do nothing
+         ! do nothing
 #endif
-        RETURN
-     END SUBROUTINE mp_circular_shift_left_i0_gpu
+         ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
+      END SUBROUTINE mp_circular_shift_left_i1_gpu
 !
 !------------------------------------------------------------------------------!
 !
-     SUBROUTINE mp_circular_shift_left_i1_gpu( buf_d, itag, gid )
-        IMPLICIT NONE
-        INTEGER, DEVICE :: buf_d(:)
-        INTEGER, INTENT(IN) :: itag
-        INTEGER, INTENT(IN) :: gid
-        INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+      SUBROUTINE mp_circular_shift_left_i2_gpu( buf_d, itag, gid )
+         IMPLICIT NONE
+         INTEGER, DEVICE :: buf_d(:,:)
+         INTEGER, INTENT(IN) :: itag
+         INTEGER, INTENT(IN) :: gid
+         INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-        INTEGER, ALLOCATABLE :: buf_h(:)
-        ALLOCATE(buf_h, source=buf_d)
-        CALL mp_circular_shift_left_i1( buf_h, itag, gid )
-        buf_d = buf_h; DEALLOCATE(buf_h)
+         INTEGER, ALLOCATABLE :: buf_h(:,:)
+         ALLOCATE(buf_h, source=buf_d)    ! This syncs __MPI
+         CALL mp_circular_shift_left_i2( buf_h, itag, gid )
+         buf_d = buf_h; DEALLOCATE(buf_h)
 #else
-        INTEGER :: istatus( mpi_status_size )
-        !
-        group = gid
-        !
-        CALL mpi_comm_size( group, npe, ierr )
-        IF (ierr/=0) CALL mp_stop( 9115 )
-        CALL mpi_comm_rank( group, mype, ierr )
-        IF (ierr/=0) CALL mp_stop( 9116 )
-        !
-        sour = mype + 1
-        IF( sour == npe ) sour = 0
-        dest = mype - 1
-        IF( dest == -1 ) dest = npe - 1
-        !
-        CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_INTEGER, &
-             dest, itag, sour, itag, group, istatus, ierr)
-        !
-        IF (ierr/=0) CALL mp_stop( 9117 )
-        !
+         INTEGER :: istatus( mpi_status_size )
+         !
+         group = gid
+         !
+         CALL mpi_comm_size( group, npe, ierr )
+         IF (ierr/=0) CALL mp_stop( 9118 )
+         CALL mpi_comm_rank( group, mype, ierr )
+         IF (ierr/=0) CALL mp_stop( 9119 )
+         !
+         sour = mype + 1
+         IF( sour == npe ) sour = 0
+         dest = mype - 1
+         IF( dest == -1 ) dest = npe - 1
+         !
+         ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
+         CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_INTEGER, &
+              dest, itag, sour, itag, group, istatus, ierr)
+         !
+         IF (ierr/=0) CALL mp_stop( 9120 )
+         !
+         RETURN ! Sync not needed after MPI call
 #endif
 #else
-        ! do nothing
+         ! do nothing
 #endif
-        RETURN
-     END SUBROUTINE mp_circular_shift_left_i1_gpu
+         ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
+      END SUBROUTINE mp_circular_shift_left_i2_gpu
 !
 !------------------------------------------------------------------------------!
 !
-     SUBROUTINE mp_circular_shift_left_i2_gpu( buf_d, itag, gid )
-        IMPLICIT NONE
-        INTEGER, DEVICE :: buf_d(:,:)
-        INTEGER, INTENT(IN) :: itag
-        INTEGER, INTENT(IN) :: gid
-        INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+      SUBROUTINE mp_circular_shift_left_r2d_gpu( buf_d, itag, gid )
+         IMPLICIT NONE
+         REAL(DP), DEVICE :: buf_d( :, : )
+         INTEGER, INTENT(IN) :: itag
+         INTEGER, INTENT(IN) :: gid
+         INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-        INTEGER, ALLOCATABLE :: buf_h(:,:)
-        ALLOCATE(buf_h, source=buf_d)
-        CALL mp_circular_shift_left_i2( buf_h, itag, gid )
-        buf_d = buf_h; DEALLOCATE(buf_h)
+         REAL(DP), ALLOCATABLE :: buf_h(:, :)
+         ALLOCATE(buf_h, source=buf_d)    ! This syncs __MPI
+         CALL mp_circular_shift_left_r2d( buf_h, itag, gid )
+         buf_d = buf_h; DEALLOCATE(buf_h)
 #else
-        INTEGER :: istatus( mpi_status_size )
-        !
-        group = gid
-        !
-        CALL mpi_comm_size( group, npe, ierr )
-        IF (ierr/=0) CALL mp_stop( 9118 )
-        CALL mpi_comm_rank( group, mype, ierr )
-        IF (ierr/=0) CALL mp_stop( 9119 )
-        !
-        sour = mype + 1
-        IF( sour == npe ) sour = 0
-        dest = mype - 1
-        IF( dest == -1 ) dest = npe - 1
-        !
-        CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_INTEGER, &
-             dest, itag, sour, itag, group, istatus, ierr)
-        !
-        IF (ierr/=0) CALL mp_stop( 9120 )
-        !
+         INTEGER :: istatus( mpi_status_size )
+         !
+         group = gid
+         !
+         CALL mpi_comm_size( group, npe, ierr )
+         IF (ierr/=0) CALL mp_stop( 9121 )
+         CALL mpi_comm_rank( group, mype, ierr )
+         IF (ierr/=0) CALL mp_stop( 9122 )
+         !
+         sour = mype + 1
+         IF( sour == npe ) sour = 0
+         dest = mype - 1
+         IF( dest == -1 ) dest = npe - 1
+         !
+         ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
+         CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_DOUBLE_PRECISION, &
+              dest, itag, sour, itag, group, istatus, ierr)
+         !
+         IF (ierr/=0) CALL mp_stop( 9123 )
+         !
+         RETURN ! Sync not needed after MPI call
 #endif
 #else
-        ! do nothing
+         ! do nothing
 #endif
-        RETURN
-     END SUBROUTINE mp_circular_shift_left_i2_gpu
+         ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
+      END SUBROUTINE mp_circular_shift_left_r2d_gpu
 !
 !------------------------------------------------------------------------------!
 !
-     SUBROUTINE mp_circular_shift_left_r2d_gpu( buf_d, itag, gid )
-        IMPLICIT NONE
-        REAL(DP), DEVICE :: buf_d( :, : )
-        INTEGER, INTENT(IN) :: itag
-        INTEGER, INTENT(IN) :: gid
-        INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
+      SUBROUTINE mp_circular_shift_left_c2d_gpu( buf_d, itag, gid )
+         IMPLICIT NONE
+         COMPLEX(DP), DEVICE :: buf_d( :, : )
+         INTEGER, INTENT(IN) :: itag
+         INTEGER, INTENT(IN) :: gid
+         INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-        REAL(DP), ALLOCATABLE :: buf_h(:, :)
-        ALLOCATE(buf_h, source=buf_d)
-        CALL mp_circular_shift_left_r2d( buf_h, itag, gid )
-        buf_d = buf_h; DEALLOCATE(buf_h)
+         COMPLEX(DP), ALLOCATABLE :: buf_h(:, :)
+         ALLOCATE(buf_h, source=buf_d)    ! This syncs __MPI
+         CALL mp_circular_shift_left_c2d( buf_h, itag, gid )
+         buf_d = buf_h; DEALLOCATE(buf_h)
 #else
-        INTEGER :: istatus( mpi_status_size )
-        !
-        group = gid
-        !
-        CALL mpi_comm_size( group, npe, ierr )
-        IF (ierr/=0) CALL mp_stop( 9121 )
-        CALL mpi_comm_rank( group, mype, ierr )
-        IF (ierr/=0) CALL mp_stop( 9122 )
-        !
-        sour = mype + 1
-        IF( sour == npe ) sour = 0
-        dest = mype - 1
-        IF( dest == -1 ) dest = npe - 1
-        !
-        CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_DOUBLE_PRECISION, &
-             dest, itag, sour, itag, group, istatus, ierr)
-        !
-        IF (ierr/=0) CALL mp_stop( 9123 )
-        !
+         INTEGER :: istatus( mpi_status_size )
+         !
+         group = gid
+         !
+         CALL mpi_comm_size( group, npe, ierr )
+         IF (ierr/=0) CALL mp_stop( 9124 )
+         CALL mpi_comm_rank( group, mype, ierr )
+         IF (ierr/=0) CALL mp_stop( 9125 )
+         !
+         sour = mype + 1
+         IF( sour == npe ) sour = 0
+         dest = mype - 1
+         IF( dest == -1 ) dest = npe - 1
+         !
+         ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
+         CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_DOUBLE_COMPLEX, &
+              dest, itag, sour, itag, group, istatus, ierr)
+         !
+         IF (ierr/=0) CALL mp_stop( 9126 )
+         !
+         RETURN ! Sync not needed after MPI call
 #endif
 #else
-        ! do nothing
+         ! do nothing
 #endif
-        RETURN
-     END SUBROUTINE mp_circular_shift_left_r2d_gpu
-!
-!------------------------------------------------------------------------------!
-!
-     SUBROUTINE mp_circular_shift_left_c2d_gpu( buf_d, itag, gid )
-        IMPLICIT NONE
-        COMPLEX(DP), DEVICE :: buf_d( :, : )
-        INTEGER, INTENT(IN) :: itag
-        INTEGER, INTENT(IN) :: gid
-        INTEGER :: nsiz, group, ierr, npe, sour, dest, mype
-
-#if defined (__MPI)
-#if ! defined(__GPU_MPI)
-        COMPLEX(DP), ALLOCATABLE :: buf_h(:, :)
-        ALLOCATE(buf_h, source=buf_d)
-        CALL mp_circular_shift_left_c2d( buf_h, itag, gid )
-        buf_d = buf_h; DEALLOCATE(buf_h)
-#else
-        INTEGER :: istatus( mpi_status_size )
-        !
-        group = gid
-        !
-        CALL mpi_comm_size( group, npe, ierr )
-        IF (ierr/=0) CALL mp_stop( 9124 )
-        CALL mpi_comm_rank( group, mype, ierr )
-        IF (ierr/=0) CALL mp_stop( 9125 )
-        !
-        sour = mype + 1
-        IF( sour == npe ) sour = 0
-        dest = mype - 1
-        IF( dest == -1 ) dest = npe - 1
-        !
-        CALL MPI_Sendrecv_replace( buf_d, SIZE(buf_d), MPI_DOUBLE_COMPLEX, &
-             dest, itag, sour, itag, group, istatus, ierr)
-        !
-        IF (ierr/=0) CALL mp_stop( 9126 )
-        !
-#endif
-#else
-        ! do nothing
-#endif
-        RETURN
-     END SUBROUTINE mp_circular_shift_left_c2d_gpu
+         ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
+      END SUBROUTINE mp_circular_shift_left_c2d_gpu
 
 !------------------------------------------------------------------------------!
 !..mp_gatherv_inplace_cplx_array
 !
 
-     SUBROUTINE mp_gatherv_inplace_cplx_array_gpu(alldata_d, my_column_type, recvcount, displs, root, gid)
-        IMPLICIT NONE
-        COMPLEX(DP), DEVICE :: alldata_d(:,:)
-        INTEGER, INTENT(IN) :: my_column_type
-        INTEGER, INTENT(IN) :: recvcount(:), displs(:)
-        INTEGER, INTENT(IN) :: root, gid
-        INTEGER :: ierr, npe, myid
+      SUBROUTINE mp_gatherv_inplace_cplx_array_gpu(alldata_d, my_column_type, recvcount, displs, root, gid)
+         IMPLICIT NONE
+         COMPLEX(DP), DEVICE :: alldata_d(:,:)
+         INTEGER, INTENT(IN) :: my_column_type
+         INTEGER, INTENT(IN) :: recvcount(:), displs(:)
+         INTEGER, INTENT(IN) :: root, gid
+         INTEGER :: ierr, npe, myid
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-        COMPLEX(DP), ALLOCATABLE :: alldata_h(:, :)
-        ALLOCATE(alldata_h, source=alldata_d)
-        CALL mp_gatherv_inplace_cplx_array(alldata_h, my_column_type, recvcount, displs, root, gid)
-        alldata_d = alldata_h; DEALLOCATE(alldata_h)
+         COMPLEX(DP), ALLOCATABLE :: alldata_h(:, :)
+         ALLOCATE(alldata_h, source=alldata_d)    ! This syncs __MPI
+         CALL mp_gatherv_inplace_cplx_array(alldata_h, my_column_type, recvcount, displs, root, gid)
+         alldata_d = alldata_h; DEALLOCATE(alldata_h)
 #else
-        CALL mpi_comm_size( gid, npe, ierr )
-        IF (ierr/=0) CALL mp_stop( 9127 )
-        CALL mpi_comm_rank( gid, myid, ierr )
-        IF (ierr/=0) CALL mp_stop( 9128 )
-        !
-        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9129 )
-        !
-        IF (myid==root) THEN
-           CALL MPI_GATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
-                             alldata_d, recvcount, displs, my_column_type, root, gid, ierr )
-        ELSE
-           CALL MPI_GATHERV( alldata_d(1,displs(myid+1)+1), recvcount(myid+1), my_column_type, &
-                             MPI_IN_PLACE, recvcount, displs, MPI_DATATYPE_NULL, root, gid, ierr )
-        ENDIF
-        IF (ierr/=0) CALL mp_stop( 9130 )
+         CALL mpi_comm_size( gid, npe, ierr )
+         IF (ierr/=0) CALL mp_stop( 9127 )
+         CALL mpi_comm_rank( gid, myid, ierr )
+         IF (ierr/=0) CALL mp_stop( 9128 )
+         !
+         IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9129 )
+         !
+         ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
+         IF (myid==root) THEN
+            CALL MPI_GATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
+                              alldata_d, recvcount, displs, my_column_type, root, gid, ierr )
+         ELSE
+            CALL MPI_GATHERV( alldata_d(1,displs(myid+1)+1), recvcount(myid+1), my_column_type, &
+                              MPI_IN_PLACE, recvcount, displs, MPI_DATATYPE_NULL, root, gid, ierr )
+         ENDIF
+         !
+         IF (ierr/=0) CALL mp_stop( 9130 )
+         !
+         RETURN ! Sync not needed after MPI call
 #endif
 #endif
-        RETURN
-     END SUBROUTINE mp_gatherv_inplace_cplx_array_gpu
+         ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
+      END SUBROUTINE mp_gatherv_inplace_cplx_array_gpu
 
 !------------------------------------------------------------------------------!
 !..mp_allgatherv_inplace_cplx_array
 !
 
-     SUBROUTINE mp_allgatherv_inplace_cplx_array_gpu(alldata_d, my_element_type, recvcount, displs, gid)
-        IMPLICIT NONE
-        COMPLEX(DP), DEVICE :: alldata_d(:,:)
-        INTEGER, INTENT(IN) :: my_element_type
-        INTEGER, INTENT(IN) :: recvcount(:), displs(:)
-        INTEGER, INTENT(IN) :: gid
-        INTEGER :: ierr, npe, myid
+      SUBROUTINE mp_allgatherv_inplace_cplx_array_gpu(alldata_d, my_element_type, recvcount, displs, gid)
+         IMPLICIT NONE
+         COMPLEX(DP), DEVICE :: alldata_d(:,:)
+         INTEGER, INTENT(IN) :: my_element_type
+         INTEGER, INTENT(IN) :: recvcount(:), displs(:)
+         INTEGER, INTENT(IN) :: gid
+         INTEGER :: ierr, npe, myid
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
-        COMPLEX(DP), ALLOCATABLE :: alldata_h(:, :)
-        ALLOCATE(alldata_h, source=alldata_d)
-        CALL mp_allgatherv_inplace_cplx_array(alldata_h, my_element_type, recvcount, displs, gid)
-        alldata_d = alldata_h; DEALLOCATE(alldata_h)
+         COMPLEX(DP), ALLOCATABLE :: alldata_h(:, :)
+         ALLOCATE(alldata_h, source=alldata_d)! This syncs __MPI
+         CALL mp_allgatherv_inplace_cplx_array(alldata_h, my_element_type, recvcount, displs, gid)
+         alldata_d = alldata_h; DEALLOCATE(alldata_h)
 #else
-        CALL mpi_comm_size( gid, npe, ierr )
-        IF (ierr/=0) CALL mp_stop( 9131 )
-        CALL mpi_comm_rank( gid, myid, ierr )
-        IF (ierr/=0) CALL mp_stop( 9132 )
-        !
-        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9133 )
-        !
-        CALL MPI_ALLGATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
-                             alldata_d, recvcount, displs, my_element_type, gid, ierr )
-        IF (ierr/=0) CALL mp_stop( 9134 )
+         CALL mpi_comm_size( gid, npe, ierr )
+         IF (ierr/=0) CALL mp_stop( 9131 )
+         CALL mpi_comm_rank( gid, myid, ierr )
+         IF (ierr/=0) CALL mp_stop( 9132 )
+         !
+         IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9133 )
+         !
+         ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
+         CALL MPI_ALLGATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
+                              alldata_d, recvcount, displs, my_element_type, gid, ierr )
+         IF (ierr/=0) CALL mp_stop( 9134 )
+         RETURN ! Sync not needed after MPI call
 #endif
 #endif
-        RETURN
-     END SUBROUTINE mp_allgatherv_inplace_cplx_array_gpu
+         ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
+      END SUBROUTINE mp_allgatherv_inplace_cplx_array_gpu
 
-     SUBROUTINE mp_type_create_cplx_column_section_gpu(dummy, start, length, stride, mytype)
-        IMPLICIT NONE
-        !
-        COMPLEX (DP), DEVICE, INTENT(IN) :: dummy
-        INTEGER, INTENT(IN) :: start, length, stride
-        INTEGER, INTENT(OUT) :: mytype
-        !
+      SUBROUTINE mp_type_create_cplx_column_section_gpu(dummy, start, length, stride, mytype)
+         IMPLICIT NONE
+         !
+         COMPLEX (DP), DEVICE, INTENT(IN) :: dummy
+         INTEGER, INTENT(IN) :: start, length, stride
+         INTEGER, INTENT(OUT) :: mytype
+         !
 #if defined(__MPI)
-        INTEGER :: ierr
-        !
-        CALL MPI_TYPE_CREATE_SUBARRAY(1, stride, length, start, MPI_ORDER_FORTRAN,&
-                                      MPI_DOUBLE_COMPLEX, mytype, ierr)
-        IF (ierr/=0) CALL mp_stop( 8081 )
-        CALL MPI_Type_commit(mytype, ierr)
-        IF (ierr/=0) CALL mp_stop( 8082 )
+         INTEGER :: ierr
+         !
+         CALL MPI_TYPE_CREATE_SUBARRAY(1, stride, length, start, MPI_ORDER_FORTRAN,&
+                                       MPI_DOUBLE_COMPLEX, mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8081 )
+         CALL MPI_Type_commit(mytype, ierr)
+         IF (ierr/=0) CALL mp_stop( 8082 )
 #else
-        mytype = 0;
+         mytype = 0;
 #endif
-        !
-        RETURN
-     END SUBROUTINE mp_type_create_cplx_column_section_gpu
+         !
+         RETURN
+      END SUBROUTINE mp_type_create_cplx_column_section_gpu
 
 !------------------------------------------------------------------------------!
 

@@ -55,7 +55,8 @@
 
    SUBROUTINE bcast_real_gpu( array_d, n, root, gid )
         USE util_param, ONLY: DP
-        USE parallel_include  
+        USE parallel_include
+        USE cudafor
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: n, root, gid
         REAL(DP), DEVICE :: array_d( n )
@@ -91,7 +92,10 @@
            END IF
         ENDIF
 
+        GO TO 2 ! Skip sync, already done by MPI call 
 1       CONTINUE
+        ierr = cudaDeviceSynchronize()
+2       CONTINUE
 #if defined __TRACE
         write(*,*) 'BCAST_REAL_GPU OUT'
 #endif
@@ -102,7 +106,8 @@
    END SUBROUTINE bcast_real_gpu
 
    SUBROUTINE bcast_integer_gpu( array_d, n, root, gid )
-        USE parallel_include  
+        USE parallel_include
+        USE cudafor
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: n, root, gid
         INTEGER, DEVICE :: array_d( n )
@@ -138,7 +143,10 @@
               IF( ierr /= 0 ) CALL errore( ' bcast_integer_gpu ', ' error in mpi_bcast 3 ', ierr )
            END IF
         END IF
+        GO TO 2 ! Skip sync, already done by MPI call 
 1       CONTINUE
+        ierr = cudaDeviceSynchronize()
+2       CONTINUE
 #if defined __TRACE
         write(*,*) 'BCAST_INTEGER_GPU OUT'
 #endif
@@ -148,7 +156,8 @@
 
 
    SUBROUTINE bcast_logical_gpu( array_d, n, root, gid )
-        USE parallel_include  
+        USE parallel_include
+        USE cudafor
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: n, root, gid
         LOGICAL, DEVICE :: array_d( n )
@@ -185,7 +194,10 @@
            END IF
         END IF
 
+        GO TO 2 ! Skip sync, already done by MPI call 
 1       CONTINUE
+        ierr = cudaDeviceSynchronize()
+2       CONTINUE
 #if defined __TRACE
         write(*,*) 'BCAST_LOGICAL_GPU OUT'
 #endif
@@ -207,7 +219,8 @@ SUBROUTINE reduce_base_real_gpu( dim, ps_d, comm, root )
   ! ... This version uses a fixed-length buffer of appropriate (?) dim
   !
   USE util_param, ONLY: DP
-  USE parallel_include  
+  USE parallel_include
+  USE cudafor
   !
   IMPLICIT NONE
   !
@@ -241,7 +254,10 @@ SUBROUTINE reduce_base_real_gpu( dim, ps_d, comm, root )
      IF( info /= 0 ) CALL errore( 'reduce_base_real_gpu', 'error in mpi_allreduce 1', info )
   END IF
   !
+  GO TO 2 ! Skip sync, already done by MPI call 
 1 CONTINUE
+  info = cudaDeviceSynchronize()
+2 CONTINUE
   !
 #if defined __TRACE
   write(*,*) 'reduce_base_real_gpu OUT'
@@ -264,7 +280,7 @@ SUBROUTINE reduce_base_real_gpu( dim, ps_d, comm, root )
   !
   USE util_param, ONLY : DP
   USE data_buffer,    ONLY : mp_buff_r_d
-  USE parallel_include  
+  USE parallel_include
   USE cudafor
   !
   IMPLICIT NONE
@@ -346,7 +362,10 @@ SUBROUTINE reduce_base_real_gpu( dim, ps_d, comm, root )
      !
   END IF
   !
+  !! DO NOT skip sync, last step may not be an MPI Call !!
 1 CONTINUE
+  info = cudaDeviceSynchronize()
+2 CONTINUE
   !
 #if defined __TRACE
   write(*,*) 'reduce_base_real_gpu OUT'
@@ -371,7 +390,8 @@ SUBROUTINE reduce_base_integer_gpu( dim, ps_d, comm, root )
   ! ... This version uses a fixed-length buffer of appropriate (?) dim
   !
   USE util_param, ONLY: DP
-  USE parallel_include  
+  USE parallel_include
+  USE cudafor
   !
   IMPLICIT NONE
   !
@@ -405,7 +425,10 @@ SUBROUTINE reduce_base_integer_gpu( dim, ps_d, comm, root )
      IF( info /= 0 ) CALL errore( 'reduce_base_integer_gpu', 'error in mpi_allreduce 1', info )
   END IF
   !
+  GO TO 2 ! Skip sync, already done by MPI call 
 1 CONTINUE
+  info = cudaDeviceSynchronize()
+2 CONTINUE
   !
 #if defined __TRACE
   write(*,*) 'reduce_base_integer_gpu OUT'
@@ -510,7 +533,10 @@ SUBROUTINE reduce_base_integer_gpu( dim, ps_d, comm, root )
      !
   END IF
   !
+  !! DO NOT skip sync, last step may not be an MPI Call !!
 1 CONTINUE
+  info = cudaDeviceSynchronize()
+2 CONTINUE
   !
 #if defined __TRACE
   write(*,*) 'reduce_base_integer_gpu OUT'
@@ -536,6 +562,7 @@ SUBROUTINE reduce_base_real_to_gpu( dim, ps_d, psout_d, comm, root )
   !
   USE util_param, ONLY : DP
   USE parallel_include  
+  USE cudafor
   !
   IMPLICIT NONE
   !
@@ -564,7 +591,7 @@ SUBROUTINE reduce_base_real_to_gpu( dim, ps_d, psout_d, comm, root )
   IF ( dim > 0 .AND. nproc <= 1 ) THEN
      psout_d = ps_d
   END IF
-  IF( dim <= 0 .OR. nproc <= 1 ) GO TO 1 ! go to the end of the subroutine
+  IF( dim <= 0 .OR. nproc <= 1 ) GO TO 1 ! go to the sync and later to the end of the subroutine
   !
   ! ... synchronize processes
   !
@@ -600,7 +627,10 @@ SUBROUTINE reduce_base_real_to_gpu( dim, ps_d, psout_d, comm, root )
      !
   END IF
   !
+  GO TO 2
 1 CONTINUE
+  info = cudaDeviceSynchronize()
+2 CONTINUE
   !
 #if defined __TRACE
   write(*,*) 'reduce_base_real_to_gpu OUT'
@@ -623,7 +653,8 @@ SUBROUTINE reduce_base_integer_to_gpu( dim, ps_d, psout_d, comm, root )
   ! ... This version uses a fixed-length buffer of appropriate (?) length
   !
   USE util_param, ONLY : DP
-  USE parallel_include  
+  USE parallel_include
+  USE cudafor
   !
   IMPLICIT NONE
   !
@@ -652,7 +683,7 @@ SUBROUTINE reduce_base_integer_to_gpu( dim, ps_d, psout_d, comm, root )
   IF ( dim > 0 .AND. nproc <= 1 ) THEN
      psout_d = ps_d
   END IF
-  IF( dim <= 0 .OR. nproc <= 1 ) GO TO 1 ! go to the end of the subroutine
+  IF( dim <= 0 .OR. nproc <= 1 ) GO TO 1 ! go to the sync and later to the end of the subroutine
   !
   ! ... synchronize processes
   !
@@ -688,7 +719,10 @@ SUBROUTINE reduce_base_integer_to_gpu( dim, ps_d, psout_d, comm, root )
      !
   END IF
   !
+  GO TO 2   ! Skip sync, already done by MPI
 1 CONTINUE
+  info = cudaDeviceSynchronize()
+2 CONTINUE
   !
 #if defined __TRACE
   write(*,*) 'reduce_base_integer_to_gpu OUT'
@@ -713,7 +747,7 @@ SUBROUTINE parallel_min_integer_gpu( dim, ps_d, comm, root )
   !
   USE util_param, ONLY : DP
   USE data_buffer, ONLY : buff => mp_buff_i_d
-  USE parallel_include  
+  USE parallel_include
   USE cudafor
   !
   IMPLICIT NONE
@@ -739,7 +773,7 @@ SUBROUTINE parallel_min_integer_gpu( dim, ps_d, comm, root )
   CALL mpi_comm_rank( comm, myid, info )
   IF( info /= 0 ) CALL errore( 'parallel_min_integer_gpu', 'error in mpi_comm_rank', info )
   !
-  IF ( dim <= 0 .OR. nproc <= 1 ) GO TO 1
+  IF ( dim <= 0 .OR. nproc <= 1 ) GO TO 1 ! go to the sync and later to the end of the subroutine
   !
   ! ... synchronize processes
   !
@@ -795,7 +829,10 @@ SUBROUTINE parallel_min_integer_gpu( dim, ps_d, comm, root )
      !
   END IF
   !
+  GO TO 2   ! Skip sync, already done by MPI
 1 CONTINUE
+  info = cudaDeviceSynchronize()
+2 CONTINUE
   !
 #if defined __TRACE
   write(*,*) 'parallel_min_integer_gpu OUT'
@@ -817,7 +854,7 @@ SUBROUTINE parallel_max_integer_gpu( dim, ps_d, comm, root )
   !
   USE util_param, ONLY : DP
   USE data_buffer, ONLY : buff => mp_buff_i_d
-  USE parallel_include  
+  USE parallel_include
   USE cudafor
   !
   IMPLICIT NONE
@@ -842,7 +879,7 @@ SUBROUTINE parallel_max_integer_gpu( dim, ps_d, comm, root )
   CALL mpi_comm_rank( comm, myid, info )
   IF( info /= 0 ) CALL errore( 'parallel_max_integer_gpu', 'error in mpi_comm_rank', info )
   !
-  IF ( dim <= 0 .OR. nproc <= 1 ) GO TO 1
+  IF ( dim <= 0 .OR. nproc <= 1 ) GO TO 1 ! go to the sync and later to the end of the subroutine
   !
   ! ... synchronize processes
   !
@@ -898,7 +935,10 @@ SUBROUTINE parallel_max_integer_gpu( dim, ps_d, comm, root )
      !
   END IF
   !
+  !! DO NOT skip sync, last step may not be an MPI Call !!
 1 CONTINUE
+  info = cudaDeviceSynchronize()
+2 CONTINUE
   !
 #if defined __TRACE
   write(*,*) 'parallel_max_integer_gpu OUT'
@@ -919,7 +959,7 @@ SUBROUTINE parallel_min_real_gpu( dim, ps_d, comm, root )
   !
   USE util_param, ONLY : DP
   USE data_buffer, ONLY : buff => mp_buff_r_d
-  USE parallel_include  
+  USE parallel_include
   USE cudafor
   !
   IMPLICIT NONE
@@ -944,7 +984,7 @@ SUBROUTINE parallel_min_real_gpu( dim, ps_d, comm, root )
   CALL mpi_comm_rank( comm, myid, info )
   IF( info /= 0 ) CALL errore( 'parallel_min_real_gpu', 'error in mpi_comm_rank', info )
   !
-  IF ( dim <= 0 .OR. nproc <= 1 ) GO TO 1
+  IF ( dim <= 0 .OR. nproc <= 1 ) GO TO 1 ! go to the sync and later to the end of the subroutine
   !
   ! ... synchronize processes
   !
@@ -998,7 +1038,10 @@ SUBROUTINE parallel_min_real_gpu( dim, ps_d, comm, root )
      !
   END IF
   !
+  !! DO NOT skip sync, last step may not be an MPI Call !!
 1 CONTINUE
+  info = cudaDeviceSynchronize()
+2 CONTINUE
   !
 #if defined __TRACE
   write(*,*) 'parallel_min_real_gpu OUT'
@@ -1101,7 +1144,10 @@ SUBROUTINE parallel_max_real_gpu( dim, ps_d, comm, root )
      !
   END IF
   !
+  !! DO NOT skip sync, last step may not be an MPI Call !!
 1 CONTINUE
+  info = cudaDeviceSynchronize()
+2 CONTINUE
   !
 #if defined __TRACE
   write(*,*) 'parallel_max_real_gpu OUT'
