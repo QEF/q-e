@@ -4,12 +4,16 @@ New in development version:
     Phys. Rev. B 98, 085127 (2018); arXiv:1805.01805)
   * XDM now works also for USPP and norm-conserving PP
 
-Problems fixed in development version:
-  * Printout of wall time was sometimes incorrect (courtesy Daniel Pinkal)
-  * 'make install' and 'make -j' cases fixed (maybe)
-  * The restart option in turboEELS (turbo_eels.x) with ultrasoft
+Problems fixed in development version (+ = in qe-6.3-backports as well) :
+  * Phonons with option "nosym" wasn't working
+  * Option "noinv" wasn't read from new xml file
+  * Variable-cell optimization with hybrid functionals wasn't working due
+    to missing re-initialization (it also crashed during the final scf step)
+  + Printout of wall time was sometimes incorrect (courtesy Daniel Pinkal)
+  + 'make install' and 'make -j' cases fixed (maybe)
+  + The restart option in turboEELS (turbo_eels.x) with ultrasoft
     pseudopotentials was not working.
-  * bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
+  + bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
 
 Incompatible changes in development version:
   * Non-symmorphic operations are always allowed and the FFT grid is made
