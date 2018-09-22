@@ -2235,7 +2235,8 @@ MODULE exx
                          ir_end = min(ir_start+nblock-1,nrxxs)
                          IF (noncolin) THEN
                             DO ir = ir_start, ir_end
-                               rhoc(ir,ibnd-ibnd_inner_start+1)=(conjg(exxbuff(ir,ibnd-all_start(wegrp)+iexx_start,ikq))*temppsic_nc(ir,1,ii) + &
+                               rhoc(ir,ibnd-ibnd_inner_start+1) = &
+                                 ( conjg(exxbuff(ir,ibnd-all_start(wegrp)+iexx_start,ikq)) * temppsic_nc(ir,1,ii) + &
                                  conjg(exxbuff(nrxxs+ir,ibnd-all_start(wegrp)+iexx_start,ikq))*temppsic_nc(ir,2,ii) ) * omega_inv
                             ENDDO
                          ELSE
