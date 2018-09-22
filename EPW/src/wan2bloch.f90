@@ -1563,7 +1563,9 @@
     USE io_files,         ONLY : prefix, tmp_dir
     USE mp_global,        ONLY : mp_sum
     USE mp_world,         ONLY : world_comm
+    USE io_global,        ONLY : stdout
     USE epwcom,           ONLY : use_ws
+    USE mp_world,      ONLY : mpime
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, &
                                  MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, &
@@ -1679,6 +1681,7 @@
     ENDIF
     ! 
     ALLOCATE(epmatw( nbnd, nbnd, nrr_k))
+    epmatw(:,:,:) = czero
     !
 #if defined(__MPI)  
     lrepmatw2 = 2_MPI_OFFSET_KIND * INT( nbnd  , kind = MPI_OFFSET_KIND ) * &
@@ -1714,6 +1717,8 @@
       IF( ierr /= 0 ) CALL errore( 'ephwan2blochp', 'error in MPI_FILE_READ_ALL',1 )
 #endif    
       ! 
+      !write(stdout,*)'ir  epmatw ',use_ws, ir, sum(epmatw)
+      !IF (mpime==1)  write(999,*),'cpu2 ir  epmatw ',use_ws, ir, sum(epmatw)
       !
       IF (use_ws) THEN
         DO iw2=1, dims
@@ -1724,11 +1729,14 @@
       ELSE 
         CALL ZAXPY( nbnd * nbnd * nrr_k, cfac(ir,1,1), epmatw, 1, epmatf, 1)
       ENDIF
+      !write(stdout,*)'ir cfac(ir,1,1)  epmatf ',ir, cfac(ir,1,1), sum(epmatf)
+      !IF (mpime==1) write(999,*),'cpu2 ir cfac(ir,1,1)  epmatf ',ir, cfac(ir,1,1), sum(epmatf)
       ! 
     ENDDO
     DEALLOCATE(epmatw)
     !
     CALL mp_sum(epmatf, world_comm)
+    ! 
     !
 #if defined(__MPI)  
     CALL MPI_FILE_CLOSE(iunepmatwp2,ierr)

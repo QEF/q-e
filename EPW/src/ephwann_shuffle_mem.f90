@@ -482,7 +482,7 @@
        !
        ! we need the cu again for the k+q points, we generate the map here
        !
-       CALL loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband )
+       CALL loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers )
        !
        DO imode = 1, nmodes
          !
@@ -511,7 +511,7 @@
      CALL mp_barrier(inter_pool_comm)
      !
      IF ( epwwrite ) THEN
-        CALL epw_write(nrr_k, nrr_q, nrr_g)
+        CALL epw_write(nrr_k, nrr_q, nrr_g, w_centers)
         CALL epw_read(nrr_k, nrr_q, nrr_g) 
      ENDIF
      !
@@ -621,7 +621,7 @@
      !
   ENDDO
   !
-  WRITE(6,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
+  WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
   !
   IF( efermi_read ) THEN
      !
@@ -694,7 +694,15 @@
   !
   !
   CALL fermiwindow
+  ! 
+  ! Define it only once for the full run. 
+  CALL fkbounds( nkqtotf/2, lower_bnd, upper_bnd )
   !
+  ! Re-order the k-point according to weather they are in or out of the fshick
+  ! windows
+  IF (iterative_bte .and. mp_mesh_k) THEN
+    CALL load_rebal()
+  ENDIF
   !  xqf must be in crystal coordinates
   !
   ! this loops over the fine mesh of q points.
@@ -763,9 +771,6 @@
       F_SERTAcb(:,:,:,:) = zero
     ENDIF
   ENDIF 
-  ! 
-  ! Define it only once for the full run. 
-  CALL fkbounds( nkqtotf/2, lower_bnd, upper_bnd )
   ! 
   !  Start iteration index
   iter = 1
@@ -928,10 +933,13 @@
          epmatwef(:,:,:) = czero
          !DBSP              
          !CALL start_clock ( 'cl2' )
+         !write(stdout,*) 'imode, nmodes, xxq, SUM(irvec_g), SUM(ndegen_g), nrr_g, nbndsub, nrr_k, dims ',&
+         !       imode, nmodes, xxq, SUM(irvec_g), SUM(ndegen_g), nrr_g, nbndsub, nrr_k, dims
          IF (.NOT. longrange) THEN
            CALL ephwan2blochp_mem &
                (imode, nmodes, xxq, irvec_g, ndegen_g, nrr_g, epmatwef, nbndsub, nrr_k, dims )
          ENDIF
+         !write(stdout,*)'epmatwef ',sum(epmatwef)
          !CALL stop_clock ( 'cl2' )
          !
          !
@@ -1020,6 +1028,7 @@
              ! interpolate only when (k,k+q) both have at least one band 
              ! within a Fermi shell of size fsthick 
              !
+             !IF (ik==2 .and. imode == 1) print*,iq, etf(:, ikk), etf(:, ikq), ef 
              IF ( (( minval ( abs(etf(:, ikk) - ef) ) < fsthick ) .and. & 
                    ( minval ( abs(etf(:, ikq) - ef) ) < fsthick )) ) THEN
                !
@@ -1038,10 +1047,11 @@
                ! 
                IF (longrange) THEN
                  !      
-                 epmatf = czero
+                 epmatf(:,:) = czero
                  !
                ELSE
                  !
+                 epmatf(:,:) = czero
                  CALL ephwan2bloch_mem &
                    ( nbndsub, nrr_k, epmatwef, cufkk, cufkq, epmatf, cfac, dims )
                  !
@@ -1055,7 +1065,7 @@
                    !      
                    CALL cryst_to_cart (1, xxq, bg, 1)
                    CALL rgd_blk_epw_fine_mem(imode, nq1, nq2, nq3, xxq, uf, epmatlrT(:,:,imode,ik), &
-                                         nmodes, epsi, zstar, bmatf, +1.d0)
+                                         nmodes, epsi, zstar, bmatf, one)
                    CALL cryst_to_cart (1, xxq, at, -1)
                    !
                  ENDIF
@@ -1075,16 +1085,16 @@
                    !
                  ENDDO
                ENDDO
+               !IF (ik==2 .and. imode==1 .and. iq==9) print*,'epmatf(ibnd,jbnd) ',sum(epmatf(:,:))
                !if (ik==1) then
                !  print*,'imode eptmp',imode, SUM((REAL(REAL(eptmp(:,:,imode,ik))))**2)+SUM((REAL(AIMAG(eptmp(:,:,imode,ik))))**2)
                !  print*,'epmatwef ',SUM(epmatwef)
                !endif 
-               !if (ik==2) then
-               !  do imode = 1, nmodes
-               !    write(*,*) 'epmatf ',SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
-               !  enddo
-               !endif
-               !
+               !IF (ik==8 .and. iq== 123 .and. imode == 6) THEN
+               !  print*,'epmatf(ibnd,jbnd) ',epmatf(2,:)
+               !  print*,'epmatlrT(:,:,imode,ik) ',epmatlrT(2,:,imode,ik) 
+               !ENDIF
+               ! 
              ENDIF
            ENDIF ! scatread 
            
@@ -1098,6 +1108,7 @@
          CALL zgemm( 'n', 'n', (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1), nmodes, nmodes, cone, eptmp(:,:,:,ik),&
                (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1), uf, nmodes, czero, &
                epf17(:,:,:,ik), (ibndmax-ibndmin+1) * (ibndmax-ibndmin+1) )
+         ! 
        ENDDO
        ! 
        ! After the rotation, add the long-range that is already rotated
@@ -1106,6 +1117,7 @@
            epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,:) = epf17(ibnd-ibndmin+1,jbnd-ibndmin+1,:,:) + epmatlrT(ibnd,jbnd,:,:)
          ENDDO
        ENDDO
+       !
        !
        !
        IF (prtgkk     ) CALL print_gkk( iq )

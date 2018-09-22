@@ -371,9 +371,9 @@
   nrr_k = SIZE(irvec_k(1,:))
   nrr_q = SIZE(irvec_q(1,:))
   nrr_g = SIZE(irvec_g(1,:))
-  print*,'nrr_k ',nrr_k
-  print*,'nrr_q ',nrr_q
-  print*,'nrr_g ',nrr_g
+  write(stdout,*) '  nrr_k ',nrr_k
+  write(stdout,*) '  nrr_q ',nrr_q
+  write(stdout,*) '  nrr_g ',nrr_g
   !
 #ifndef __MPI  
   ! Open like this only in sequential. Otherwize open with MPI-open
@@ -470,7 +470,7 @@
        !
        ! we need the cu again for the k+q points, we generate the map here
        !
-       CALL loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband )
+       CALL loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband, w_centers )
        !
        DO imode = 1, nmodes
          !
@@ -755,6 +755,7 @@
   !
   ! Fine mesh set of g-matrices.  It is large for memory storage
   ALLOCATE ( epf17 (ibndmax-ibndmin+1, ibndmax-ibndmin+1, nmodes, nkf) )
+  epf17(:,:,:,:) = czero 
   ALLOCATE ( etf_all ( nbndsub, nkqtotf ) )
   ALLOCATE ( inv_tau_all (nstemp, ibndmax-ibndmin+1, nkqtotf/2) )
   inv_tau_all(:,:,:) = zero
@@ -902,6 +903,7 @@
     !iter = iter +1
     !
     DO iq = iq_restart, nqf
+       epf17(:,:,:,:) = czero
        !   
        CALL start_clock ( 'ep-interp' )
        !
@@ -1045,6 +1047,7 @@
            ! interpolate only when (k,k+q) both have at least one band 
            ! within a Fermi shell of size fsthick 
            !
+           !IF (ik==2 ) print*,iq, etf(:, ikk), etf(:, ikq), ef 
            IF ( (( minval ( abs(etf(:, ikk) - ef) ) < fsthick ) .and. & 
                  ( minval ( abs(etf(:, ikq) - ef) ) < fsthick )) ) THEN
              !
@@ -1063,10 +1066,11 @@
              ! 
              IF (longrange) THEN
                !      
-               epmatf = czero
+               epmatf(:,:,:) = czero
                !
              ELSE
                !
+               epmatf(:,:,:) = czero
                CALL ephwan2bloch &
                  ( nbndsub, nrr_k, epmatwef, cufkk, cufkq, epmatf, nmodes, cfac, dims )
                !print*,'eptmatf ',sum(epmatf)
@@ -1104,9 +1108,13 @@
              !
              !if (ik==2) then
              !  do imode = 1, nmodes
-             !    write(*,*) 'epmatf ',SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
+             !    write(*,*) 'iq imode epmatf ',iq, imode,& 
+             !          SUM((REAL(REAL(epmatf(:,:,imode))))**2)+SUM((REAL(AIMAG(epmatf(:,:,imode))))**2)
              !  enddo
              !endif
+             !IF (ik==8 .and. iq== 123 ) THEN
+             !  print*,'epmatf(ibnd,jbnd) ',epmatf(2,:,6)
+             !ENDIF
              !
            ENDIF
          ENDIF ! scatread 

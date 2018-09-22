@@ -172,6 +172,8 @@
   !! Fractional translation y
   real(kind=DP) :: ft3
   !! Fractional translation z
+  REAL(kind=DP) :: w_centers(3,nbndsub)
+  !! Wannier centers
   !
   complex(kind=DP) :: eigv (ngm, 48)
   !! $e^{ iGv}$ for 1...nsym (v the fractional translation)
@@ -587,7 +589,7 @@
         !END
         !
         !
-        CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband )
+        CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers )
         !
         ! Calculate overlap U_k+q U_k^\dagger
         IF (lpolar) CALL compute_umn_c ( nbnd, nbndsub, nks, cu, cuq, bmat(:,:,:,nqc) )
@@ -639,7 +641,7 @@
           !
           xq0 = -xq0
           ! 
-          CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband )
+          CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers )
           !
           ! Calculate overlap U_k+q U_k^\dagger
           IF (lpolar) CALL compute_umn_c ( nbnd, nbndsub, nks, cu, cuq, bmat(:,:,:,nqc) )
