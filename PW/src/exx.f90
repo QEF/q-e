@@ -2057,12 +2057,14 @@ MODULE exx
     USE klist,                   ONLY : xk, ngk, nks, nkstot
     USE lsda_mod,                ONLY : lsda, current_spin, isk
     USE mp_pools,                ONLY : inter_pool_comm
-    USE mp_exx,                  ONLY : inter_egrp_comm, intra_egrp_comm, negrp, &
-                                        ibands, nibands, my_egrp_id, max_pairs, &
-                                        egrp_pairs, init_index_over_band, &
-                                        jblock
+    USE mp_exx,                  ONLY : inter_egrp_comm, my_egrp_id, negrp, &
+                                        intra_egrp_comm, me_egrp, &
+                                        max_pairs, egrp_pairs, ibands, nibands, &
+                                        max_ibands, iexx_istart, iexx_iend, &
+                                        all_start, all_end, iexx_start, &
+                                        init_index_over_band, jblock
     USE mp_bands,                ONLY : intra_bgrp_comm
-    USE mp,                      ONLY : mp_sum
+    USE mp,                      ONLY : mp_sum, mp_circular_shift_left
     USE fft_interfaces,          ONLY : fwfft, invfft
     USE gvect,                   ONLY : ecutrho
     USE klist,                   ONLY : wk
@@ -2075,7 +2077,7 @@ MODULE exx
                                         addusxx_r, qvan_init, qvan_clean
     USE exx_base,                ONLY : nqs, xkq_collect, index_xkq, index_xk, &
          coulomb_fac, g2_convolution_all
-    USE exx_band,                ONLY : exxbuff_comm, change_data_structure, &
+    USE exx_band,                ONLY : change_data_structure, &
          transform_evc_to_exx, nwordwfc_exx, igk_exx, evc_exx
     !
     IMPLICIT NONE
@@ -2102,7 +2104,7 @@ MODULE exx
     INTEGER :: intra_bgrp_comm_
     INTEGER :: ii, ialloc, jstart, jend, ipair
     INTEGER :: ijt, njt, jblock_start, jblock_end
-    COMPLEX(DP), ALLOCATABLE :: exxtemp(:,:)
+    INTEGER :: iegrp, wegrp
     !
     CALL init_index_over_band(inter_egrp_comm,nbnd,nbnd)
     !
@@ -2118,8 +2120,6 @@ MODULE exx
     ELSE
        ALLOCATE(temppsic(nrxxs,ialloc))
     ENDIF
-    !
-    ALLOCATE( exxtemp(nrxxs*npol, jblock) )
     !
     energy=0.0_DP
     !
@@ -2198,18 +2198,17 @@ MODULE exx
           CALL g2_convolution_all(dfftt%ngm, gt, xkp, xkq, iq, ikk)
           IF ( okvan .and..not.tqr ) CALL qvan_init (dfftt%ngm, xkq, xkp)
           !
-          njt = nbnd / jblock
-          if (mod(nbnd, jblock) .ne. 0) njt = njt + 1
-          !
+          DO iegrp=1, negrp
+             !
+             ! compute the id of group whose data is currently worked on
+             wegrp = MOD(iegrp+my_egrp_id-1, negrp)+1
+             njt = (all_end(wegrp)-all_start(wegrp)+jblock)/jblock
+             !
           IJT_LOOP : &
           DO ijt=1, njt
              !
-             jblock_start = (ijt - 1) * jblock + 1
-             jblock_end = min(jblock_start+jblock-1,nbnd)
-             !
-             !gather exxbuff for jblock_start:jblock_end
-             call exxbuff_comm( exxbuff, exxtemp, ikq, nrxxs*npol, &
-                     jblock_start,jblock_end)
+             jblock_start = (ijt - 1) * jblock + all_start(wegrp)
+             jblock_end = min(jblock_start+jblock-1,all_end(wegrp))
              !
              JBND_LOOP : &
              DO ii=1, nibands(my_egrp_id+1)
@@ -2250,8 +2249,8 @@ MODULE exx
 !$omp parallel do collapse(2) default(shared) private(ir,ibnd) firstprivate(ibnd_inner_start,ibnd_inner_end)
                    DO ibnd = ibnd_inner_start, ibnd_inner_end
                       DO ir = 1, nrxxs
-                         rhoc(ir,ibnd-ibnd_inner_start+1)=(conjg(exxtemp(ir,ibnd-jblock_start+1))*temppsic_nc(ir,1,ii) + &
-                              conjg(exxtemp(ir+nrxxs,ibnd-jblock_start+1))*temppsic_nc(ir,2,ii) ) * omega_inv
+                         rhoc(ir,ibnd-ibnd_inner_start+1)=(conjg(exxbuff(ir,jbnd-all_start(wegrp)+iexx_start,ikq))*temppsic_nc(ir,1,ii) + &
+                              conjg(exxbuff(nrxxs+ir,jbnd-all_start(wegrp)+iexx_start,ikq))*temppsic_nc(ir,2,ii) ) * omega_inv
                       ENDDO
                    ENDDO
 !$omp end parallel do
@@ -2271,7 +2270,7 @@ MODULE exx
 !DIR$ vector nontemporal (rhoc)
                          DO ir = ir_start, ir_end
                             rhoc(ir,ibnd-ibnd_inner_start+1) = omega_inv * &
-                              conjg(exxtemp(ir,ibnd-jblock_start+1)) * &
+                              conjg(exxbuff(ir,jbnd-all_start(wegrp)+iexx_start,ikq)) * &
                               temppsic(ir,ii)
                          ENDDO
                       ENDDO
@@ -2334,6 +2333,11 @@ MODULE exx
              !
           ENDDO&
           IJT_LOOP
+             ! get the next nbnd/negrp data
+             call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+             !
+          END DO !iegrp
+          !
           IF ( okvan .and..not.tqr ) CALL qvan_clean ( )
        ENDDO &
        IQ_LOOP
@@ -2346,8 +2350,6 @@ MODULE exx
     ELSE
        DEALLOCATE(temppsic)
     ENDIF
-    !
-    DEALLOCATE(exxtemp)
     !
     DEALLOCATE(fac)
     CALL deallocate_bec_type(becpsi)
