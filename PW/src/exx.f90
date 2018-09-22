@@ -2363,8 +2363,8 @@ MODULE exx
          x_gamma_extrapolation, on_double_grid, grid_factor, yukawa,  &
          erfc_scrlen, use_coulomb_vcut_ws, use_coulomb_vcut_spheric,  &
          gau_scrlen, vcut, index_xkq, index_xk, index_sym
-    USE exx_band,             ONLY : exxbuff_comm, exxbuff_comm_gamma, &
-         change_data_structure, transform_evc_to_exx, g_exx, igk_exx,  &
+    USE exx_band,             ONLY : change_data_structure, &
+         transform_evc_to_exx, g_exx, igk_exx,  &
          nwordwfc_exx, evc_exx
     USE coulomb_vcut_module,  ONLY : vcut_get,  vcut_spheric_get
     !
