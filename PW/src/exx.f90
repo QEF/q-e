@@ -1773,8 +1773,6 @@ MODULE exx
     COMPLEX(DP), ALLOCATABLE :: psi_t(:), prod_tot(:)
     REAL(DP),ALLOCATABLE :: temppsic_dble (:)
     REAL(DP),ALLOCATABLE :: temppsic_aimag(:)
-    LOGICAL :: l_fft_doubleband
-    LOGICAL :: l_fft_singleband
     INTEGER :: npw
     INTEGER :: istart, iend, ipair, ii, ialloc
     INTEGER :: ijt, njt, jblock_start, jblock_end
