@@ -1913,7 +1913,7 @@ MODULE exx
                 IBND_LOOP_GAM : &
                 DO ibnd = ibnd_loop_start, iend, 2       !for each band of psi
                    !
-                   exxbuff_index = (jbnd+1)/2-(all_start(wegrp)+1)/2+(iexx_start+1)/2
+                   exxbuff_index = (ibnd+1)/2-(all_start(wegrp)+1)/2+(iexx_start+1)/2
                    !
                    IF ( ibnd < istart ) THEN
                       x1 = 0.0_DP
@@ -2235,13 +2235,13 @@ MODULE exx
                          ir_end = min(ir_start+nblock-1,nrxxs)
                          IF (noncolin) THEN
                             DO ir = ir_start, ir_end
-                               rhoc(ir,ibnd-ibnd_inner_start+1)=(conjg(exxbuff(ir,jbnd-all_start(wegrp)+iexx_start,ikq))*temppsic_nc(ir,1,ii) + &
-                                 conjg(exxbuff(nrxxs+ir,jbnd-all_start(wegrp)+iexx_start,ikq))*temppsic_nc(ir,2,ii) ) * omega_inv
+                               rhoc(ir,ibnd-ibnd_inner_start+1)=(conjg(exxbuff(ir,ibnd-all_start(wegrp)+iexx_start,ikq))*temppsic_nc(ir,1,ii) + &
+                                 conjg(exxbuff(nrxxs+ir,ibnd-all_start(wegrp)+iexx_start,ikq))*temppsic_nc(ir,2,ii) ) * omega_inv
                             ENDDO
                          ELSE
                             DO ir = ir_start, ir_end
                                rhoc(ir,ibnd-ibnd_inner_start+1) = omega_inv * &
-                                 conjg(exxbuff(ir,jbnd-all_start(wegrp)+iexx_start,ikq)) * &
+                                 conjg(exxbuff(ir,ibnd-all_start(wegrp)+iexx_start,ikq)) * &
                                  temppsic(ir,ii)
                             ENDDO
                          ENDIF
