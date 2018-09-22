@@ -89,7 +89,7 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, is, ierr, ibnd, ik
+  INTEGER  :: na, is, ierr, ibnd, ik, nrot_
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
   !
@@ -426,9 +426,15 @@ SUBROUTINE setup()
   IF ( lecrpa ) nosym = .TRUE.
   IF ( lecrpa ) skip_equivalence=.TRUE.
   !
-  ! ... If nosym is true do not use any point-group symmetry
+  ! ... if nosym is true: do not reduce automatic k-point grids to the IBZ
+  ! ... using the symmetries of the lattice (only k <-> -k symmetry is used)
+  ! ... Does not change the number "nrot" of symmetries of the lattice
   !
-  IF ( nosym ) nrot = 1
+  IF ( nosym ) THEN
+     nrot_ = 1
+  ELSE
+     nrot_ = nrot
+  END IF
   !
   ! ... time_reversal = use q=>-q symmetry for k-point generation
   !
@@ -444,20 +450,18 @@ SUBROUTINE setup()
         CALL kpoint_grid_efield (at,bg, npk, &
              k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk, nspin)
         nosym = .TRUE.
-        nrot  = 1
-        nsym  = 1
+        nrot_ = 1
         !
      ELSE IF (lberry ) THEN
         !
-        CALL kp_strings( nppstr, gdir, nrot, s, bg, npk, &
+        CALL kp_strings( nppstr, gdir, nrot_, s, bg, npk, &
                          k1, k2, k3, nk1, nk2, nk3, nkstot, xk, wk )
         nosym = .TRUE.
-        nrot  = 1
-        nsym  = 1
+        nrot_ = 1
         !
      ELSE
         !
-        CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, bg,&
+        CALL kpoint_grid ( nrot_,time_reversal, skip_equivalence, s, t_rev, bg,&
                            npk, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
         !
      END IF
@@ -475,10 +479,8 @@ SUBROUTINE setup()
            allocate(nx_el(nkstot*nspin,3))
         END IF
 
-        ! <AF>
         IF ( gdir<1 .OR. gdir>3 ) CALL errore('setup','invalid gdir value'&
                                   &' (valid values: 1=x, 2=y, 3=z)',10) 
-        !
         DO ik=1,nkstot
            nx_el(ik,gdir)=ik
         END DO
@@ -489,8 +491,7 @@ SUBROUTINE setup()
         nppstr_3d(gdir)=nppstr
         l3dstring=.false.
         nosym = .TRUE.
-        nrot  = 1
-        nsym  = 1
+        nrot_ = 1
         !
      END IF
   END IF
@@ -513,13 +514,17 @@ SUBROUTINE setup()
      !
   END IF
   !
+  ! ... nosym: do not use any point-group symmetry (s(:,:,1) is the identity)
+  !
+  IF ( nosym ) nsym = 1
+  !
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.
   ! ... If some symmetries of the lattice are missing in the crystal,
   ! ... "irreducible_BZ" computes the missing k-points.
   !
   IF ( .NOT. lbands ) THEN
-     CALL irreducible_BZ (nrot, s, nsym, time_reversal, &
+     CALL irreducible_BZ (nrot_, s, nsym, time_reversal, &
                           magnetic_sym, at, bg, npk, nkstot, xk, wk, t_rev)
   ELSE
      one = SUM (wk(1:nkstot))
