@@ -117,7 +117,8 @@ MODULE pw_restart_new
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
       USE bfgs_module,          ONLY : bfgs_get_n_iter
       USE qexsd_module,         ONLY : qexsd_bp_obj, qexsd_start_k_obj
-      USE qexsd_input,          ONLY : qexsd_init_k_points_ibz, qexsd_init_occupations, qexsd_init_smearing
+      USE qexsd_input,          ONLY : qexsd_init_k_points_ibz, &
+              qexsd_init_occupations, qexsd_init_smearing
       USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
       USE io_files,             ONLY : pseudo_dir
       !
@@ -854,7 +855,7 @@ MODULE pw_restart_new
                             lsymm, lrho, lefield, ldim, &
                             lef, lexx, lesm, lpbc, lvalid_input, lsymflags
       !
-      LOGICAL            :: need_qexml, found, electric_field_ispresent
+      LOGICAL            :: found, electric_field_ispresent
       INTEGER            :: tmp
       
       !    
@@ -897,7 +898,6 @@ MODULE pw_restart_new
       CASE( 'header' )
          !
          lheader = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE ( 'wf_collect' ) 
          ! 
@@ -906,18 +906,15 @@ MODULE pw_restart_new
       CASE( 'dim' )
          !
          ldim =       .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'pseudo' )
          !
          lions = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'config' )
          !
          lcell = .TRUE.
          lions = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'rho' )
          !
@@ -927,7 +924,6 @@ MODULE pw_restart_new
          !
          lpw   = .TRUE.
          lwfc  = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'nowave' )
          !
@@ -944,7 +940,6 @@ MODULE pw_restart_new
          lsymm   = .TRUE.
          lefield = .TRUE.
          lsymflags = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'all' )
          !
@@ -964,27 +959,22 @@ MODULE pw_restart_new
          lrho    = .TRUE.
          lpbc    = .TRUE. 
          lsymflags = .TRUE. 
-         need_qexml = .TRUE.
          !
       CASE( 'ef' )
          !
          lef        = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'exx' )
          !
          lexx       = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'esm' )
          !
          lesm       = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'boundary_conditions' )  
          !
          lpbc       = .TRUE.
-         need_qexml = .TRUE.
       END SELECT
       !
       !
@@ -1071,13 +1061,6 @@ MODULE pw_restart_new
       !
       !
       RETURN
-      !
-      ! uncomment to continue execution after an error occurs
-      ! 100 IF (ionode .AND. need_qexml) THEN
-      !        CALL qexml_closefile( 'read', IERR=tmp)
-      !     ENDIF
-      !     RETURN
-      ! comment to continue execution after an error occurs
       !
     END SUBROUTINE init_vars_from_schema
     !-------------------------------------------------------------------------------
@@ -1259,12 +1242,17 @@ MODULE pw_restart_new
     IF ( atomic_structure%alat_ispresent ) alat = atomic_structure%alat 
     tau(:,1:nat) = tau(:,1:nat)/alat  
     ! 
+    ! ... this is where PP files used in the calculation were stored
+    !
+    pseudo_dir_cur = TRIM(dirname)
+    ! 
+    ! ... this is where PP files were originally found (if available)
+    !
     IF ( atomic_species%pseudo_dir_ispresent) THEN 
        pseudo_dir = TRIM(atomic_species%pseudo_dir)
     ELSE 
-       pseudo_dir = TRIM (dirname)
+       pseudo_dir = pseudo_dir_cur
     END IF
-      pseudo_dir_cur = TRIM(pseudo_dir)
     ! 
     END SUBROUTINE readschema_ions
     !  
