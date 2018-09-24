@@ -1,4 +1,7 @@
 New in development version:
+  * New code hp.x to compute Hubbard parameters using density-functional
+    perturbation theory (Iurii Timrov, Nicola Marzari, and Matteo Cococcioni,
+    Phys. Rev. B 98, 085127 (2018); arXiv:1805.01805)
   * XDM now works also for USPP and norm-conserving PP
 
 Problems fixed in development version:

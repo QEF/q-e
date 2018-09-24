@@ -860,7 +860,7 @@ MODULE pw_restart_new
       LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
                             lxc, locc, lbz, lbs, lwfc, lheader,          &
                             lsymm, lrho, lefield, ldim, &
-                            lef, lexx, lesm, lpbc, lvalid_input
+                            lef, lexx, lesm, lpbc, lvalid_input, lalgo
       !
       LOGICAL            :: need_qexml, found, electric_field_ispresent
       INTEGER            :: tmp
@@ -897,6 +897,7 @@ MODULE pw_restart_new
       lesm    = .FALSE.
       lheader = .FALSE.
       lpbc    = .FALSE.  
+      lalgo   = .FALSE. 
       !
      
          
@@ -950,6 +951,7 @@ MODULE pw_restart_new
          lbs     = .TRUE.
          lsymm   = .TRUE.
          lefield = .TRUE.
+         lalgo   = .TRUE. 
          need_qexml = .TRUE.
          !
       CASE( 'all' )
@@ -968,7 +970,8 @@ MODULE pw_restart_new
          lsymm   = .TRUE.
          lefield = .TRUE.
          lrho    = .TRUE.
-         lpbc    = .TRUE. 
+         lpbc    = .TRUE.
+         lalgo   = .TRUE. 
          need_qexml = .TRUE.
          !
       CASE( 'ef' )
@@ -1069,6 +1072,7 @@ MODULE pw_restart_new
       IF ( lefield .AND. lvalid_input ) CALL readschema_efield ( input_obj%electric_field ) 
       !
       IF ( lexx .AND. output_obj%dft%hybrid_ispresent  ) CALL readschema_exx ( output_obj%dft%hybrid )
+      IF ( lalgo ) CALL readschema_algo(output_obj%algorithmic_info ) 
       !
       RETURN
       !
@@ -1956,6 +1960,17 @@ MODULE pw_restart_new
          END IF  
       END DO 
     END SUBROUTINE readschema_band_structure 
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE readschema_algo(algo_obj) 
+       USE control_flags, ONLY: tqr 
+       USE realus,        ONLY: real_space 
+       IMPLICIT NONE 
+       TYPE(algorithmic_info_type),INTENT(IN)   :: algo_obj
+       tqr = algo_obj%real_space_q 
+       real_space = algo_obj%real_space_beta 
+    END SUBROUTINE readschema_algo 
+
     ! 
     !------------------------------------------------------------------------
     SUBROUTINE read_collected_to_evc( dirname )

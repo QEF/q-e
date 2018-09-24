@@ -1,0 +1,68 @@
+ Warning: Only a single CPU will be used!
+
+     Program TDDFPT_PP v.6.3 starts on 29Aug2018 at 12:27:55 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     8 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       8
+
+     Reading    500 Lanczos steps for direction 1
+        500 steps will be considered
+
+
+     Reading    500 Lanczos steps for direction 2
+        500 steps will be considered
+
+
+     Reading    500 Lanczos steps for direction 3
+        500 steps will be considered
+
+
+     Polarization direction:1
+     Lanczos coefficients:
+     Average =    13.26030061
+     Average oscillation amplitude =     0.25919775
+
+     Polarization direction:2
+     Lanczos coefficients:
+     Average =    13.25974521
+     Average oscillation amplitude =     0.25911715
+
+     Polarization direction:3
+     Lanczos coefficients:
+     Average =    13.25942931
+     Average oscillation amplitude =     0.23496246
+
+     Data ready, starting to calculate observables...
+
+     Broadening =      0.01000000 Ry
+
+     Output file name: Benzene.plot_chi.dat
+
+     chi_i_j: dipole polarizability tensor  in units of e^2*a_0^2/energy
+
+     S: oscillator strength in units of 1/energy
+
+     S(\hbar \omega) = 2m/( 3 \pi e^2 \hbar)  \omega sum_j chi_j_j
+
+     S(\hbar \omega) satisfies the f-sum rule:  \int_0^\infty dE S(E) = N_el 
+
+     Functions are reported in \hbar.\omega  Energy unit is (Ry)
+ 
+     TDDFPT_PP    :     10.48s CPU     10.50s WALL
+
+ 
+   This run was terminated on:  12:28: 6  29Aug2018            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

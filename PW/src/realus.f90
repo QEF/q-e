@@ -1143,50 +1143,46 @@ MODULE realus
     END SUBROUTINE newq_r
     !
     !------------------------------------------------------------------------
-    SUBROUTINE addusdens_r(rho)
+    SUBROUTINE addusdens_r( rho )
       !------------------------------------------------------------------------
       !
       ! ... This routine adds to the charge density the part which is due to
-      ! ... the US augmentation.
+      ! ... the US augmentation, in real space
       !
-      USE constants,        ONLY : eps6
       USE ions_base,        ONLY : nat, ityp
-      USE cell_base,        ONLY : omega
       USE lsda_mod,         ONLY : nspin
-      USE klist,            ONLY : nelec
-      USE fft_base,         ONLY : dfftp
       USE uspp,             ONLY : okvan, becsum
       USE uspp_param,       ONLY : upf, nh
-      USE noncollin_module, ONLY : noncolin, nspin_mag, nspin_lsda
-      USE spin_orb,         ONLY : domag
+      USE noncollin_module, ONLY : nspin_mag, nspin_lsda
+      USE fft_interfaces,   ONLY : fwfft
+      USE fft_base,         ONLY : dfftp
+      USE wavefunctions,  ONLY : psic
+      !!!USE fft_rho,          ONLY : rho_r2g
+#if defined (__DEBUG)
+      USE constants,        ONLY : eps6
+      USE klist,            ONLY : nelec
+      USE cell_base,        ONLY : omega
       USE mp_bands,         ONLY : intra_bgrp_comm
       USE mp,               ONLY : mp_sum
       USE gvect,            ONLY : gstart
-      USE fft_base,         ONLY : dfftp
-      USE fft_interfaces,   ONLY : fwfft
-      USE wavefunctions,  ONLY : psic
+#endif
       !
       IMPLICIT NONE
       ! The charge density to be augmented (in G-space)
       COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag) 
-      ! If this is the ground charge density, enable rescaling
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia
       CHARACTER(len=80) :: msg
-      REAL(kind=dp), ALLOCATABLE :: rho_1(:,:) 
+      REAL(kind=dp), ALLOCATABLE :: rhor(:,:) 
       REAL(DP) :: charge
-      REAL(DP) :: tolerance
       !
       !
       IF ( .not. okvan ) RETURN
-      tolerance = 1.d-3
-      ! Charge loss with real-space betas is worse
-      IF ( real_space ) tolerance = 1.d-2
       !
       CALL start_clock( 'addusdens' )
       !
-      ALLOCATE ( rho_1(dfftp%nnr,nspin_mag) )
-      rho_1(:,:) = 0.0_dp
+      ALLOCATE ( rhor(dfftp%nnr,nspin_mag) )
+      rhor(:,:) = 0.0_dp
       DO is = 1, nspin_mag
          !
          DO ia = 1, nat
@@ -1203,7 +1199,7 @@ MODULE realus
                   ijh = ijh + 1
                   DO ir = 1, mbia
                      irb = tabp(ia)%box(ir)
-                     rho_1(irb,is) = rho_1(irb,is) + tabp(ia)%qr(ir,ijh)*becsum(ijh,ia,is)
+                     rhor(irb,is) = rhor(irb,is) + tabp(ia)%qr(ir,ijh)*becsum(ijh,ia,is)
                   ENDDO
                ENDDO
             ENDDO
@@ -1212,33 +1208,34 @@ MODULE realus
       ENDDO
       !
       DO is = 1, nspin_mag
-         psic(:) = rho_1(:,is)
+         psic(:) = rhor(:,is)
          CALL fwfft ('Rho', psic, dfftp)
          rho(:,is) = rho(:,is) + psic(dfftp%nl(:))
       END DO
-      DEALLOCATE ( rho_1 )
+      !!! CALL rho_r2g(dfftp, rhor, rho(:,1:nspin_mag) )
+      !
+      DEALLOCATE ( rhor )
+#if defined (__DEBUG)
       !
       ! ... check the total charge (must not be summed on k-points)
       !
-      !charge = sum( rho_1(:,1:nspin_lsda) )*omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
       IF ( gstart == 2) THEN
          charge = SUM(rho(1,1:nspin_lsda) )*omega
       ELSE
          charge = 0.0_dp
       ENDIF
       CALL mp_sum(  charge , intra_bgrp_comm )
-#if defined (__DEBUG)
-       write (stdout,*) 'charge before rescaling ', charge
-#endif
-       IF ( abs( charge - nelec ) / nelec > eps6 ) THEN
-          !
-          ! ... the error on the charge is too large, stop and complain
-          !
-          WRITE (msg,'("expected ",f10.6,", found ",f10.6)') nelec, charge
-          CALL errore( 'addusdens_r', 'WRONG CHARGE '//trim(msg)//&
-                       ': ions may be overlapping or increase ecutrho', 1 )
+      write (stdout,*) 'charge before rescaling ', charge
+      IF ( abs(charge - nelec) > MAX(eps6,eps6*ABS(nelec)) ) THEN
+         !
+         ! ... the error on the charge is too large, stop and complain
+         !
+         WRITE (msg,'("expected ",f10.6,", found ",f10.6)') nelec, charge
+         CALL errore( 'addusdens_r', 'WRONG CHARGE '//trim(msg)//&
+              ': ions may be overlapping or increase ecutrho', 1 )
       ENDIF
       !
+#endif
       CALL stop_clock( 'addusdens' )
       !
       RETURN

@@ -25,6 +25,9 @@ io_epw.o \
 elph2.o \
 eliashbergcom.o \
 superconductivity.o \
+superconductivity_aniso.o \
+superconductivity_iso.o \
+io_eliashberg.o \
 transportcom.o \
 transport.o \
 transport_iter.o \

@@ -20,7 +20,6 @@
     mixing_mode = 'plain'
     mixing_beta = 0.7
     conv_thr =  1.0d-10
-    !tqr=.true.
  /
 ATOMIC_SPECIES
 C 12.01  C.pz-rrkjus.UPF

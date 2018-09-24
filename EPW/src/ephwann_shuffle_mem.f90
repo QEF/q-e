@@ -68,7 +68,7 @@
                             ephwan2blochp_mem, ephwan2bloch_mem
   USE bloch2wan,     ONLY : hambloch2wan, dmebloch2wan, dynbloch2wan, &
                             vmebloch2wan, ephbloch2wane, ephbloch2wanp_mem
-  USE superconductivity, ONLY : write_ephmat, count_kpoints, kmesh_fine, &
+  USE io_eliashberg, ONLY : write_ephmat, count_kpoints, kmesh_fine, &
                             kqmap_fine
   USE transport,     ONLY : transport_coeffs, scattering_rate_q
   USE transport_iter,ONLY : iterativebte

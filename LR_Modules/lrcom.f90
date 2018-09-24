@@ -47,6 +47,8 @@ MODULE control_lr
   REAL(DP) :: alpha_pv       ! the alpha value for shifting the bands
   LOGICAL  :: lgamma         ! if .TRUE. this is a q=0 computation
   LOGICAL  :: lrpa           ! if .TRUE. uses the Random Phace Approximation
+  REAL(DP) :: ethr_nscf      ! convergence threshol for KS eigenvalues in the
+                             ! NSCF calculation
   !
 END MODULE control_lr
 !
@@ -67,6 +69,10 @@ MODULE eqv
   ! the derivative of the xc potential
   REAL (DP), ALLOCATABLE, TARGET :: vlocq(:,:)  ! ngm, ntyp)
   ! the local potential at q+G
+  !
+  ! These are additional arrays needed for the linear response with DFT+U
+  COMPLEX(DP), ALLOCATABLE, TARGET :: swfcatomk(:,:)  ! S * atomic wfc at k
+  COMPLEX(DP), POINTER :: swfcatomkpq(:,:)            ! S * atomic wfc at k+q 
   !
 END MODULE eqv
 !
@@ -166,7 +172,8 @@ MODULE units_lr
   !
   SAVE
   !
-  INTEGER :: iuwfc, & ! iunit with the wavefunctions
-             lrwfc    ! the length of wavefunction record
+  INTEGER :: iuwfc,   & ! unit for wavefunctions
+             lrwfc,   & ! the length of wavefunction record
+             iuatwfc    ! unit for atomic wavefunctions * S
   !
 END MODULE units_lr
