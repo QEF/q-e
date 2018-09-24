@@ -1,6 +1,6 @@
 New in 6.3 version:
-  * New implementation, using  a more robust algorithm for the Wigner-Size construction in  EPW. 
-    (Samuel Ponce and Carla Verdi) 
+  * New implementation, using  a more robust algorithm for the Wigner-Seitz 
+    construction in EPW (Samuel Ponce and Carla Verdi) 
   * New application for optical spectra computation using optimized basis sets 
    (Paolo Umari, Nicola Marzari and Giovanni Prandini).  
 
@@ -81,6 +81,11 @@ Problems fixed in 6.3 version:
     containing "&" in the header section (Dec.20, 2017)
 
   * PWscf in "manypw" mode wasn't working due to a bad IF (Dec.12, 2017)
+
+Known problems in 6.3 version:
+
+  * CP does not compile if the old XML format is enabled (-D__OLDXML)
+  * the 'make install' and 'make -j' commands do not work
 
 Incompatible changes in 6.3  version:
 
