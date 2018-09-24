@@ -212,7 +212,8 @@ CONTAINS
        !if (.not. allocated(w_T_beta_store)) print *, "aaaaaaaaaaaaaa"
        filename = trim(w_T_prefix) // trim(int_to_char(LR_polarization))
        !
-       WRITE(stdout,'(/,/5x,"Reading Pre-calculated lanczos coefficents from ",A50)') filename
+       WRITE(stdout,'(/,/5x,"Reading pre-calculated Lanczos coefficents from:")') 
+       WRITE(stdout,*) filename
        !
        INQUIRE (file = filename, exist = exst)
        !

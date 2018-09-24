@@ -59,7 +59,7 @@
                             scattering_0rta, longrange, shortrange, scatread, &
                             restart_filq, prtgkk, nel, meff, epsiHEG, lphase, &
                             omegamin, omegamax, omegastep, n_r, lindabs, &
-                            mob_maxiter
+                            mob_maxiter, use_ws
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV
@@ -108,7 +108,7 @@
        wannierize, dis_win_max, dis_win_min, dis_froz_min, dis_froz_max,       &
        num_iter, proj, bands_skipped, wdata, iprint, write_wfn,                &
        wmin, wmax, nw, eps_acustic, a2f, nest_fn, plselfen,                    & 
-       elecselfen, phonselfen,                                                 &
+       elecselfen, phonselfen, use_ws,                                         &
        rand_q, rand_nq, rand_k, rand_nk, specfun_pl,                           &
        nqf1, nqf2, nqf3, nkf1, nkf2, nkf3,                                     &
        mp_mesh_k, mp_mesh_q, filqf, filkf, ephwrite,                           & 
@@ -284,6 +284,7 @@
   ! epsiHEG         : Dielectric constant at zero doping
   ! lphase          : If .true., fix the gauge on the phonon eigenvectors and electronic eigenvectors - DS 
   ! mob_maxiter     : Maximum number of iteration for the IBTE. 
+  ! use_ws          : If .true., use the Wannier-center to create the Wigner-Seitz cell. 
   !  
   ! Added by Manos Kioupakis
   ! omegamin  : Photon energy minimum
@@ -480,6 +481,7 @@
   n_r        = 1.d0
   lindabs    = .false.
   mob_maxiter= 50
+  use_ws     = .false.
   !
   !     reading the namelist inputepw
   !

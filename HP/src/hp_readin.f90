@@ -21,9 +21,8 @@ SUBROUTINE hp_readin()
   USE io_files,         ONLY : tmp_dir, prefix, create_directory
   USE control_flags,    ONLY : iverbosity
   USE control_lr,       ONLY : ethr_nscf, lrpa
-  USE ldaU_hp,          ONLY : postproc_only, conv_thr_chi, thresh_init,               &
-                               at_equiv_criterium, skip_atom, skip_type,               &
-                               merge_type, background, collect_chi, tmp_dir_hp,        &
+  USE ldaU_hp,          ONLY : conv_thr_chi, thresh_init, find_atpert, skip_atom, skip_type, &
+                               equiv_type, background, compute_hp, tmp_dir_hp,         &
                                perturb_only_atom, sum_pertq, determine_num_pert_only,  &
                                skip_equivalence_q, tmp_dir_save, niter_max,            &
                                disable_type_analysis, docc_thr, num_neigh, lmin, rmax, &
@@ -38,12 +37,11 @@ SUBROUTINE hp_readin()
   CHARACTER(LEN=6)    :: int_to_char
   !
   NAMELIST / INPUTHP / prefix, outdir, nq1, nq2, nq3, skip_equivalence_q,             &
-                         conv_thr_chi, skip_atom, skip_type, merge_type, iverbosity,  &
-                         background, thresh_init, at_equiv_criterium, postproc_only,  &
-                         niter_max, alpha_mix, nmix, collect_chi, perturb_only_atom,  &
+                         conv_thr_chi, skip_atom, skip_type, equiv_type, iverbosity,  &
+                         background, thresh_init, find_atpert, max_seconds, rmax,     &
+                         niter_max, alpha_mix, nmix, compute_hp, perturb_only_atom,   &
                          start_q, last_q, sum_pertq, ethr_nscf, num_neigh, lmin,      &
-                         determine_num_pert_only, disable_type_analysis, docc_thr,    &
-                         max_seconds, rmax
+                         determine_num_pert_only, disable_type_analysis, docc_thr
   !
   ! Note: meta_ionode is a single processor that reads the input
   !       Data read from input is subsequently broadcast to all processors
@@ -65,11 +63,10 @@ SUBROUTINE hp_readin()
   skip_equivalence_q      = .FALSE.
   determine_num_pert_only = .FALSE.
   disable_type_analysis   = .FALSE.
-  merge_type(:)      = 0
-  at_equiv_criterium = 1
+  equiv_type(:)      = 0
+  find_atpert        = 1
   background         = 'no'
-  postproc_only      = .FALSE.
-  collect_chi        = .FALSE.
+  compute_hp         = .FALSE.
   sum_pertq          = .FALSE.
   num_neigh          = 6
   lmin               = 2
@@ -121,12 +118,6 @@ SUBROUTINE hp_readin()
   !
   CALL hp_ns_trace()
   !
-  IF (postproc_only) THEN
-     tmp_dir = tmp_dir_hp
-  ELSE
-     tmp_dir = tmp_dir_save
-  ENDIF
-  !
   ! Make sure all the features used in the PWscf calculation 
   ! are actually supported by HP.
   !
@@ -162,8 +153,8 @@ SUBROUTINE input_sanity()
   !
   IF (start_q <= 0 ) CALL errore('hp_readin', ' Wrong start_q ',1)
   !
-  IF (collect_chi .AND. ANY(perturb_only_atom(:))) &
-     CALL errore ('hp_readin', 'collect_chi and perturb_only_atom are not allowed to be true together', 1)
+  IF (compute_hp .AND. ANY(perturb_only_atom(:))) &
+     CALL errore ('hp_readin', 'compute_hp and perturb_only_atom are not allowed to be true together', 1)
   !
   !IF (ANY(is_hubbard_back(:))) &
   !   CALL errore ('hp_readin', 'Calculation of Hubbard parameters with the background is not implemented', 1)

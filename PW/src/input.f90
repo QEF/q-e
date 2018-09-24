@@ -18,7 +18,7 @@ SUBROUTINE iosys()
   USE funct,         ONLY : dft_is_hybrid, dft_has_finite_size_correction, &
                             set_finite_size_volume, get_inlc, get_dft_short
   USE funct,         ONLY: set_exx_fraction, set_screening_parameter
-  USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi
+  USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi  
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             ry_kbar, amu_ry, bohr_radius_angs, eps8
   USE mp_pools,      ONLY : npool
@@ -166,7 +166,8 @@ SUBROUTINE iosys()
                             tbeta_smoothing_  => tbeta_smoothing, &
                             ts_vdw_           => ts_vdw, &
                             lecrpa_           => lecrpa, &
-                            scf_must_converge_=> scf_must_converge
+                            scf_must_converge_=> scf_must_converge, & 
+                            treinit_gvecs_    => treinit_gvecs 
   USE check_stop,    ONLY : max_seconds_ => max_seconds
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
@@ -285,7 +286,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, wmass,  &
                                cell_temperature, cell_factor, press_conv_thr, &
-                               cell_dofree
+                               cell_dofree, treinit_gvecs 
   !
   ! ... WANNIER_NEW namelist
   !
@@ -417,6 +418,7 @@ SUBROUTINE iosys()
      lmd       = .true.
      lmovecell = .true.
      lforce    = .true.
+     treinit_gvecs_ = treinit_gvecs 
      !
      epse =  etot_conv_thr
      epsf =  forc_conv_thr

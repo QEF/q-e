@@ -116,7 +116,8 @@ MODULE pw_restart_new
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
       USE bfgs_module,          ONLY : bfgs_get_n_iter
       USE qexsd_module,         ONLY : qexsd_bp_obj, qexsd_start_k_obj
-      USE qexsd_input,          ONLY : qexsd_init_k_points_ibz, qexsd_init_occupations, qexsd_init_smearing
+      USE qexsd_input,          ONLY : qexsd_init_k_points_ibz, &
+              qexsd_init_occupations, qexsd_init_smearing
       USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
       USE io_files,             ONLY : pseudo_dir
       USE control_flags,        ONLY : conv_elec, conv_ions 
@@ -860,9 +861,9 @@ MODULE pw_restart_new
       LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
                             lxc, locc, lbz, lbs, lwfc, lheader,          &
                             lsymm, lrho, lefield, ldim, &
-                            lef, lexx, lesm, lpbc, lvalid_input, lalgo
+                            lef, lexx, lesm, lpbc, lvalid_input, lalgo, lsymflags 
       !
-      LOGICAL            :: need_qexml, found, electric_field_ispresent
+      LOGICAL            :: found, electric_field_ispresent
       INTEGER            :: tmp
       
       !    
@@ -898,6 +899,7 @@ MODULE pw_restart_new
       lheader = .FALSE.
       lpbc    = .FALSE.  
       lalgo   = .FALSE. 
+      lsymflags =.FALSE. 
       !
      
          
@@ -905,7 +907,6 @@ MODULE pw_restart_new
       CASE( 'header' )
          !
          lheader = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE ( 'wf_collect' ) 
          ! 
@@ -914,18 +915,15 @@ MODULE pw_restart_new
       CASE( 'dim' )
          !
          ldim =       .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'pseudo' )
          !
          lions = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'config' )
          !
          lcell = .TRUE.
          lions = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'rho' )
          !
@@ -935,7 +933,6 @@ MODULE pw_restart_new
          !
          lpw   = .TRUE.
          lwfc  = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'nowave' )
          !
@@ -951,8 +948,8 @@ MODULE pw_restart_new
          lbs     = .TRUE.
          lsymm   = .TRUE.
          lefield = .TRUE.
-         lalgo   = .TRUE. 
-         need_qexml = .TRUE.
+         lalgo   = .TRUE.
+         lsymflags = .TRUE.
          !
       CASE( 'all' )
          !
@@ -972,27 +969,23 @@ MODULE pw_restart_new
          lrho    = .TRUE.
          lpbc    = .TRUE.
          lalgo   = .TRUE. 
-         need_qexml = .TRUE.
+         lsymflags = .TRUE. 
          !
       CASE( 'ef' )
          !
          lef        = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'exx' )
          !
          lexx       = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'esm' )
          !
          lesm       = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'boundary_conditions' )  
          !
          lpbc       = .TRUE.
-         need_qexml = .TRUE.
       END SELECT
       !
       !
@@ -1045,7 +1038,7 @@ MODULE pw_restart_new
          IF (output_obj%band_structure%wf_collected)  CALL read_collected_to_evc(dirname ) 
       END IF
       IF ( lsymm ) THEN
-         IF ( lvalid_input ) THEN 
+         IF ( lvalid_input .and. lsymflags ) THEN 
             CALL readschema_symmetry (  output_obj%symmetries, output_obj%basis_set, input_obj%symmetry_flags )
          ELSE 
             CALL readschema_symmetry( output_obj%symmetries,output_obj%basis_set) 
@@ -1075,13 +1068,6 @@ MODULE pw_restart_new
       IF ( lalgo ) CALL readschema_algo(output_obj%algorithmic_info ) 
       !
       RETURN
-      !
-      ! uncomment to continue execution after an error occurs
-      ! 100 IF (ionode .AND. need_qexml) THEN
-      !        CALL qexml_closefile( 'read', IERR=tmp)
-      !     ENDIF
-      !     RETURN
-      ! comment to continue execution after an error occurs
       !
     END SUBROUTINE init_vars_from_schema
     !-------------------------------------------------------------------------------
@@ -1263,12 +1249,17 @@ MODULE pw_restart_new
     IF ( atomic_structure%alat_ispresent ) alat = atomic_structure%alat 
     tau(:,1:nat) = tau(:,1:nat)/alat  
     ! 
+    ! ... this is where PP files used in the calculation were stored
+    !
+    pseudo_dir_cur = TRIM(dirname)
+    ! 
+    ! ... this is where PP files were originally found (if available)
+    !
     IF ( atomic_species%pseudo_dir_ispresent) THEN 
        pseudo_dir = TRIM(atomic_species%pseudo_dir)
     ELSE 
-       pseudo_dir = TRIM (dirname)
+       pseudo_dir = pseudo_dir_cur
     END IF
-      pseudo_dir_cur = TRIM(pseudo_dir)
     ! 
     END SUBROUTINE readschema_ions
     !  
@@ -1278,8 +1269,8 @@ MODULE pw_restart_new
       ! 
       USE symm_base,       ONLY : nrot, nsym, invsym, s, ft,ftau, irt, t_rev, &
                                  sname, sr, invs, inverse_s, s_axis_to_cart, &
-                                 time_reversal, no_t_rev
-      USE control_flags,   ONLY : noinv
+                                 time_reversal, no_t_rev, nosym
+      USE control_flags,   ONLY : noinv  
       USE fft_base,        ONLY : dfftp
       USE qes_types_module,ONLY : symmetries_type, symmetry_type, basis_type
       ! 
@@ -1292,7 +1283,9 @@ MODULE pw_restart_new
       ! 
       IF ( PRESENT(flags_obj) ) THEN 
          noinv = flags_obj%noinv
+         nosym = flags_obj%nosym
          no_t_rev = flags_obj%no_t_rev
+         time_reversal = time_reversal .AND. .NOT. noinv 
       ENDIF
       !
       nrot = symms_obj%nrot 

@@ -14,11 +14,11 @@ $ECHO "This example shows how to use pw.x and hp.x to calculate"
 $ECHO "the Hubbard U parameters for Co and O in LiCoO2."
 
 # set the needed environment variables
-. ../environment_variables
+. ../../../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x hp.x"
-PSEUDO_LIST="co_pbesol_v1.2.uspp.F.UPF O.pbesol-n-kjpaw_psl.0.1.UPF li_pbesol_v1.4.uspp.F.UPF"
+PSEUDO_LIST="Co.pbesol-spn-rrkjus_psl.0.3.1.UPF O.pbesol-n-rrkjus_psl.0.1.UPF Li.pbesol-s-rrkjus_psl.0.2.1.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -26,10 +26,6 @@ $ECHO "  pseudo directory:      $PSEUDO_DIR"
 $ECHO "  temporary directory:   $TMP_DIR"
 $ECHO
 $ECHO "  checking that needed directories and files exist...\c"
-$ECHO
-$ECHO " Pseudopotentials were selected from the SSSP library:"
-$ECHO " https://www.materialscloud.org/discover/sssp/table/precision\c"
-$ECHO
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
@@ -52,6 +48,22 @@ for FILE in $BIN_LIST ; do
     if test ! -x $BIN_DIR/$FILE ; then
         $ECHO
         $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
         $ECHO "Aborting"
         exit 1
     fi
@@ -102,9 +114,9 @@ cat > $PREFIX.scf.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
-Co  59.0   co_pbesol_v1.2.uspp.F.UPF
-O   16.0   O.pbesol-n-kjpaw_psl.0.1.UPF
-Li   7.0   li_pbesol_v1.4.uspp.F.UPF
+Co  59.0   Co.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+O   16.0   O.pbesol-n-rrkjus_psl.0.1.UPF 
+Li   7.0   Li.pbesol-s-rrkjus_psl.0.2.1.UPF
 ATOMIC_POSITIONS {crystal}
  Co  0.0000000000   0.0000000000   0.0000000000
  O   0.2604885000   0.2604885000   0.2604885000
@@ -114,7 +126,7 @@ K_POINTS {automatic}
  2 2 2 0 0 0
 EOF
 $ECHO "  Running the SCF calculation for $PREFIX..."
-$PW_COMMAND < $PREFIX.scf.in |tee $PREFIX.scf.out
+$PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out
 $ECHO " done"
 
 # Perturbation of Co : calculation for q points from 1 to 3
@@ -131,7 +143,7 @@ cat > $PREFIX.hp.Co.step1.in << EOF
  /
 EOF
 $ECHO "  Running the linear-response calculation of Hubbard U..."
-$HP_COMMAND < $PREFIX.hp.Co.step1.in |tee $PREFIX.hp.Co.step1.out
+$HP_COMMAND < $PREFIX.hp.Co.step1.in > $PREFIX.hp.Co.step1.out
 $ECHO " done"
 
 
@@ -149,7 +161,7 @@ cat > $PREFIX.hp.Co.step2.in << EOF
  /
 EOF
 $ECHO "  Running the linear-response calculation of Hubbard U..."
-$HP_COMMAND < $PREFIX.hp.Co.step2.in |tee $PREFIX.hp.Co.step2.out
+$HP_COMMAND < $PREFIX.hp.Co.step2.in > $PREFIX.hp.Co.step2.out
 $ECHO " done"
 
 
@@ -167,7 +179,7 @@ cat > $PREFIX.hp.Co.step3.in << EOF
  /
 EOF
 $ECHO "  Running the linear-response calculation of Hubbard U..."
-$HP_COMMAND < $PREFIX.hp.Co.step3.in |tee $PREFIX.hp.Co.step3.out
+$HP_COMMAND < $PREFIX.hp.Co.step3.in > $PREFIX.hp.Co.step3.out
 $ECHO " done"
 
 
@@ -185,7 +197,7 @@ cat > $PREFIX.hp.O.step1.in << EOF
  /
 EOF
 $ECHO "  Running the linear-response calculation of Hubbard U..."
-$HP_COMMAND < $PREFIX.hp.O.step1.in |tee $PREFIX.hp.O.step1.out
+$HP_COMMAND < $PREFIX.hp.O.step1.in > $PREFIX.hp.O.step1.out
 $ECHO " done"
 
 
@@ -203,7 +215,7 @@ cat > $PREFIX.hp.O.step2.in << EOF
  /
 EOF
 $ECHO "  Running the linear-response calculation of Hubbard U..."
-$HP_COMMAND < $PREFIX.hp.O.step2.in |tee $PREFIX.hp.O.step2.out
+$HP_COMMAND < $PREFIX.hp.O.step2.in > $PREFIX.hp.O.step2.out
 $ECHO " done"
 
 
@@ -221,7 +233,7 @@ cat > $PREFIX.hp.O.step3.in << EOF
  /
 EOF
 $ECHO "  Running the linear-response calculation of Hubbard U..."
-$HP_COMMAND < $PREFIX.hp.O.step3.in |tee $PREFIX.hp.O.step3.out
+$HP_COMMAND < $PREFIX.hp.O.step3.in > $PREFIX.hp.O.step3.out
 $ECHO " done"
 
 
@@ -234,9 +246,9 @@ cat > $PREFIX.hp.final.in << EOF
    nq1 = 2, nq2 = 2, nq3 = 2,
    conv_thr_chi = 1.0d-8,
    iverbosity = 2
-   collect_chi = .true.
+   compute_hp = .true.
  /
 EOF
 $ECHO "  Running the linear-response calculation of Hubbard U..."
-$HP_COMMAND < $PREFIX.hp.final.in |tee $PREFIX.hp.final.out
+$HP_COMMAND < $PREFIX.hp.final.in > $PREFIX.hp.final.out
 $ECHO " done"

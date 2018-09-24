@@ -1,0 +1,9 @@
+This calculation produces also the files:
+CH4-absorbtive-pol1.cube
+CH4-absorbtive-pol2.cube
+CH4-absorbtive-pol3.cube
+CH4-dispersive-pol1.cube
+CH4-dispersive-pol2.cube
+CH4-dispersive-pol3.cube
+These files are not present here, because they are quite heavy.
+

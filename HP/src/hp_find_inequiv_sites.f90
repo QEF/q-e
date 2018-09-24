@@ -18,8 +18,7 @@ SUBROUTINE hp_find_inequiv_sites()
   USE ions_base,     ONLY : nat, tau, ityp, atm, ntyp => nsp
   USE symm_base,     ONLY : nsym, irt, s
   USE ldaU,          ONLY : is_hubbard
-  USE ldaU_hp,       ONLY : at_equiv_criterium, todo_atom,             &
-                            skip_atom, skip_type, merge_type,          &
+  USE ldaU_hp,       ONLY : find_atpert, todo_atom, skip_atom, skip_type, equiv_type, &
                             perturb_only_atom, ns, nath_pert, atm_new, &
                             ityp_new, ntyp_new, disable_type_analysis
   !
@@ -42,14 +41,14 @@ SUBROUTINE hp_find_inequiv_sites()
   !
   ! Determine which Hubbard atoms must be perturbed
   !
-  IF ( at_equiv_criterium == 1 ) THEN
+  IF ( find_atpert == 1 ) THEN
      CALL select_pert_based_on_occupations()
-  ELSEIF ( at_equiv_criterium == 2 ) THEN
+  ELSEIF ( find_atpert == 2 ) THEN
      CALL select_pert_based_on_type()
-  ELSEIF ( at_equiv_criterium == 3 ) THEN
+  ELSEIF ( find_atpert == 3 ) THEN
      CALL select_pert_based_on_sym()
   ELSE
-     CALL errore ('hp_find_inequiv_sites', 'Not allowed value of at_equiv_criterium', 1)
+     CALL errore ('hp_find_inequiv_sites', 'Not allowed value of find_atpert', 1)
   ENDIF
   !
   ! Check whether there is at least one Hubbard atom which must be perturbed
@@ -58,8 +57,8 @@ SUBROUTINE hp_find_inequiv_sites()
              & 'There are no Hubbard atoms to perturb', 1) 
   !
   DO nt = 1, ntyp
-     IF ( at_equiv_criterium.NE.1 .AND. skip_type(nt) .AND. merge_type(nt)==0 ) &
-      & CALL errore ('hp_find_inequiv_sites', 'merge_type was not specified', 1)
+     IF ( find_atpert.NE.1 .AND. skip_type(nt) .AND. equiv_type(nt)==0 ) &
+      & CALL errore ('hp_find_inequiv_sites', 'equiv_type was not specified', 1)
   ENDDO
   !
   ! If the user requested to skip perturbing some specific atoms
@@ -75,7 +74,7 @@ SUBROUTINE hp_find_inequiv_sites()
      !
      nt = ityp(na)
      !
-     IF ( at_equiv_criterium.NE.1 .AND. todo_atom(na) &
+     IF ( find_atpert.NE.1 .AND. todo_atom(na) &
           & .AND. (skip_atom(na).OR.skip_type(nt)) ) todo_atom(na) = .false.
      !
      ! Consider only one atom  
@@ -119,13 +118,13 @@ SUBROUTINE select_pert_based_on_occupations
   !
   IF (ANY(skip_type(:))) &
       & CALL errore ('hp_find_inequiv_sites', &
-      & 'skip_type must not be setup from the input when at_equiv_criterium=1', 1)
-  IF (ANY(merge_type(:).NE.0)) &
+      & 'skip_type must not be setup from the input when find_atpert=1', 1)
+  IF (ANY(equiv_type(:).NE.0)) &
       & CALL errore ('hp_find_inequiv_sites', &
-      & 'merge_type must not be setup from the input when at_equiv_criterium=1', 1)
+      & 'equiv_type must not be setup from the input when find_atpert=1', 1)
   IF (ANY(skip_atom(:))) &
       & CALL errore ('hp_find_inequiv_sites', &
-      & 'skip_atom cannot be used when at_equiv_criterium=1', 1)
+      & 'skip_atom cannot be used when find_atpert=1', 1)
   !
   ALLOCATE(done_type(ntyp))
   done_type(:) = .false.

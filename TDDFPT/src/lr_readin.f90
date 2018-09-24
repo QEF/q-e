@@ -45,7 +45,6 @@ SUBROUTINE lr_readin
                                   & nproc_bgrp_file, my_image_id
   USE DFUNCT,              ONLY : newd
   USE vlocal,              ONLY : strf
-  USE exx,                 ONLY : ecutfock
   USE martyna_tuckerman,   ONLY : do_comp_mt
   USE esm,                 ONLY : do_comp_esm
   USE qpoint,              ONLY : xq
@@ -71,14 +70,14 @@ SUBROUTINE lr_readin
                         & test_case_no, wfcdir, disk_io, max_seconds
   NAMELIST / lr_control / itermax, ipol, ltammd, lrpa,   &
                         & charge_response, no_hxc, n_ipol, project,      &
-                        & scissor, ecutfock, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
+                        & scissor, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
                         & q1, q2, q3, approximation
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
   namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
                         & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
                         & broadening,print_spectrum,start,finish,step,if_check_orth, if_random_init, &
                         & if_check_her,p_nbnd_occ,p_nbnd_virt,poor_of_ram,poor_of_ram2,max_iter,     &
-                        & ecutfock, conv_assistant,if_dft_spectrum,no_hxc,d0psi_rs,lshift_d0psi,     &
+                        & conv_assistant,if_dft_spectrum,no_hxc,d0psi_rs,lshift_d0psi,               &
                         & lplot_drho, vccouple_shift, ltammd
   !
 #if defined(__MPI)
@@ -117,7 +116,6 @@ SUBROUTINE lr_readin
      project = .FALSE.
      max_seconds = 1.0E+7_DP
      scissor = 0.d0
-     ecutfock = -1d0
      !
      ! For EELS
      !

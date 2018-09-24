@@ -1,5 +1,5 @@
 
-     Program HP v.6.3 starts on 29Aug2018 at 13:39:43 
+     Program HP v.6.3 starts on  6Sep2018 at 18: 6:23 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -23,19 +23,14 @@
      =--------------------------------------------------------------------------=
 
      Reading data from directory:
-     /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/LiCoO2.save/
+     /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/LiCoO2.save/
 
      IMPORTANT: XC functional enforced from input :
      Exchange-correlation      = PBESOL ( 1  4 10  8 0 0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
-     Message from routine read_upf::
-     Pseudo file /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/O.pbesol-n-kjpaw_psl.0.1.UPF has been successfully fixed on the fly.
-To avoid this message in the future you can permanently fix 
- your pseudo files following instructions given in: 
-https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md
-               file O.pbesol-n-kjpaw_psl.0.1.UPF: wavefunction(s)  2P renormalized
+               file Co.pbesol-spn-rrkjus_psl.0.3.1.UPF: wavefunction(s)  3P renormalized
  
      Parallelization info
      --------------------
@@ -45,7 +40,7 @@ https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md
      Sum        1517     755    229                29271    10281    1749
  
 
-     Check: negative/imaginary core charge=   -0.000017    0.000000
+     Check: negative core charge=   -0.000097
  --- in v_hubbard ---
 Hubbard energy    0.0000
  -------
@@ -89,19 +84,14 @@ Hubbard energy    0.0000
         2      O      16.0000   tau( 2) = (  0.00000 -0.00000  0.73827  )
 
      Reading data from directory:
-     /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/tmp/LiCoO2.save/
+     /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/LiCoO2.save/
 
      IMPORTANT: XC functional enforced from input :
      Exchange-correlation      = PBESOL ( 1  4 10  8 0 0)
      Any further DFT definition will be discarded
      Please, verify this is what you really want
 
-     Message from routine read_upf::
-     Pseudo file /scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/HP/examples/pseudo/O.pbesol-n-kjpaw_psl.0.1.UPF has been successfully fixed on the fly.
-To avoid this message in the future you can permanently fix 
- your pseudo files following instructions given in: 
-https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md
-               file O.pbesol-n-kjpaw_psl.0.1.UPF: wavefunction(s)  2P renormalized
+               file Co.pbesol-spn-rrkjus_psl.0.3.1.UPF: wavefunction(s)  3P renormalized
  
      Parallelization info
      --------------------
@@ -111,7 +101,7 @@ https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md
      Sum        1517     755    229                29271    10281    1749
  
 
-     Check: negative/imaginary core charge=   -0.000017    0.000000
+     Check: negative core charge=   -0.000097
  --- in v_hubbard ---
 Hubbard energy    0.0000
  -------
@@ -169,10 +159,10 @@ Hubbard energy    0.0000
      List of q in the star:
           1   0.000000000   0.000000000  -0.529258101
  
-     HP           :      1.00s CPU      1.04s WALL
+     HP           :      1.92s CPU      1.94s WALL
 
  
-   This run was terminated on:  13:39:44  29Aug2018            
+   This run was terminated on:  18: 6:25   6Sep2018            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -23,7 +23,7 @@ SUBROUTINE hp_summary
   USE control_lr,    ONLY : ethr_nscf
   USE ldaU,          ONLY : is_hubbard, Hubbard_U, lda_plus_u_kind ! Hubbard_V 
   USE ldaU_hp,       ONLY : conv_thr_chi, skip_atom, skip_type,  &
-                            todo_atom, at_equiv_criterium, nath_pert
+                            todo_atom, find_atpert, nath_pert
 
   IMPLICIT NONE
   !
@@ -98,7 +98,7 @@ SUBROUTINE hp_summary
   !
   ! Print info about atoms which will not be perterbed (if requested from the input file)
   ! 
-  IF ( at_equiv_criterium.NE.1 .AND. ANY(skip_atom(:)) ) THEN
+  IF ( find_atpert.NE.1 .AND. ANY(skip_atom(:)) ) THEN
      WRITE( stdout, '(/5x,"WARNING: Skipping perturbation of the following atom(s):")')
      DO na = 1, nat
         nt = ityp(na)
