@@ -109,7 +109,7 @@ CONTAINS
                      do m1 = 1, 2 * Hubbard_l(is) + 1
                         do m2 = m1, 2 * Hubbard_l(is) + 1
                            k = k + 1
-                           f1 (k) = ns (m2,m1,iat,isp)
+                           f1 (k) = ns (m2,m1,isp,iat)
                         enddo
                      enddo
                      CALL dspev_drv( 'V', 'L', 2*Hubbard_l(is)+1, f1, &
@@ -155,7 +155,7 @@ CONTAINS
 !
       IMPLICIT NONE
       INTEGER, intent(in) :: is, iat
-      REAL(dp), intent(in) :: dns(ldmx,ldmx,nat,nspin)
+      REAL(dp), intent(in) :: dns(ldmx,ldmx,nspin,nat)
       REAL(dp), intent(inout) :: forceh
 !
       REAL(dp), allocatable   :: lambda(:), f1(:), vet(:,:)
@@ -172,7 +172,7 @@ CONTAINS
             do m1 = 1, 2 * Hubbard_l(is) + 1
                do m2 = m1, 2 * Hubbard_l(is) + 1
                   k = k + 1
-                  f1 (k) = ns (m2,m1,iat,isp)
+                  f1 (k) = ns (m2,m1,isp,iat)
                enddo
             enddo
             CALL dspev_drv( 'V', 'L', 2 * Hubbard_l(is) + 1,&
@@ -182,7 +182,7 @@ CONTAINS
                                    step_value)
             do m1 = 1,2*Hubbard_l(is) + 1
                do m2 = 1,2*Hubbard_l(is) + 1
-                  forceh = forceh + g_value * dns(m1,m2,iat,isp)           &
+                  forceh = forceh + g_value * dns(m1,m2,isp,iat)           &
                                      * vet(m1,2*Hubbard_l(is)+1)           &
                                      * vet(m2,2*Hubbard_l(is)+1)
                end do
