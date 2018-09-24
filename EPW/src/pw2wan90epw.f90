@@ -1596,10 +1596,11 @@ SUBROUTINE write_filukk
   USE io_epw,       ONLY : iuukk
   USE wvfct,        ONLY : nbnd
   USE wannierEPW,   ONLY : n_wannier, iknum, u_mat, u_mat_opt, lwindow, &
-                           excluded_band, num_bands
+                           excluded_band, num_bands, wann_centers
   USE epwcom,       ONLY : filukk
-  USE constants_epw,ONLY : czero
+  USE constants_epw,ONLY : czero, bohr
   USE io_global,    ONLY : meta_ionode
+  USE cell_base,    ONLY : celldm
   !
   IMPLICIT NONE
   !
@@ -1697,6 +1698,11 @@ SUBROUTINE write_filukk
     !
     DO ibnd = 1, nbnd
        WRITE(iuukk,*) excluded_band(ibnd)
+    ENDDO
+    ! 
+    ! Now write the Wannier centers to files
+    DO iw = 1, n_wannier
+      WRITE (iuukk,'(3f12.8)') wann_centers(:,iw)/celldm(1)/bohr
     ENDDO
     !
     CLOSE (iuukk)

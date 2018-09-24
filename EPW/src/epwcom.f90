@@ -246,6 +246,8 @@
   !! if .true. then fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian. 
   LOGICAL :: lindabs
   !! if .true., perform phonon-assisted absorption calculations
+  LOGICAL :: use_ws
+  !! if .true., use Wannier-centers to compute the Wigner-Seitz cell. 
   !
   ! Superconductivity
   LOGICAL :: ephwrite
