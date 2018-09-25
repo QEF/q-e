@@ -1310,8 +1310,8 @@
             ENDDO
           ENDDO
         ELSE
-          CALL ZAXPY(nbnd * nbnd * nrr_k * 3, cfac(na,ir), epmatw(:,:,:,3*(na-1)+1:3*na), 1, &
-                eptmp(:,:,:,3*(na-1)+1:3*na), 1)         
+          CALL ZAXPY(nbnd * nbnd * nrr_k * 3, cfac(na,ir,1,1), &
+              epmatw(:,:,:,3*(na-1)+1:3*na), 1, eptmp(:,:,:,3*(na-1)+1:3*na), 1)
         ENDIF
 
 #endif
