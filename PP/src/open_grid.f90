@@ -14,7 +14,7 @@ PROGRAM open_grid
   USE noncollin_module,   ONLY : noncolin
   USE control_flags,      ONLY : gamma_only, twfcollect
   USE environment,        ONLY : environment_start, environment_end
-  USE symm_base,          ONLY : nrot, nsym, s, t_rev
+  USE symm_base,          ONLY : nrot, nsym, s, t_rev, fft_fact
   USE parameters,         ONLY : npk
   USE exx_base,           ONLY : nq1,nq2,nq3, xkq_collect, &
                                  nkqs, exx_mp_init, index_xk, exx_grid_init 
@@ -130,6 +130,7 @@ PROGRAM open_grid
   exx_status_back = .true.
   CALL dft_force_hybrid(exx_status_back)
   !
+  fft_fact = 1
   nq1 = -1
   nq2 = -1
   nq3 = -1
