@@ -459,7 +459,9 @@ SUBROUTINE sum_band()
        !
        ! ... with distributed <beta|psi>, sum over bands
        !
+       IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL using_becsum(1)
        IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
+       IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL using_ebecsum(1)
        IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL mp_sum( ebecsum, becp%comm )
        !
        IF( use_tg ) THEN
