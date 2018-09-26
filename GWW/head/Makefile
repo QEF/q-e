@@ -1,5 +1,6 @@
+
 # Makefile for head (head.x)
-# 
+#
 # Author G. Stenuit
 #
 include ../../make.inc
@@ -17,19 +18,19 @@ close_phq.o \
 lanczos_k.o \
 openfilq.o \
 phq_readin.o \
-solve_head.o 
+solve_head.o
 
 QEMODS = ../../Modules/libqemod.a \
          ../../KS_Solvers/libks_solvers.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
+         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a \
 	 ../../dft-d3/libdftd3qe.a
 LIBPWPH =  ../../PHonon/PH/libph.a ../..//LR_Modules/liblrmod.a ../../PW/src/libpw.a
 
 LIBMIN= ../minpack/minpacklib.a
 
-TLDEPS= bindir mods libs pw ph 
+TLDEPS= bindir mods libs pw ph
 
-all : tldeps head.x  
+all : tldeps head.x
 
 head.x : head.o $(LIBOBJS) $(HEADOBJS) $(LIBPWPH) $(LIBMIN)
 	$(LD) $(LDFLAGS) -o head.x head.o \

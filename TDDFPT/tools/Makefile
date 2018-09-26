@@ -8,7 +8,7 @@ MODFLAGS= $(BASEMOD_FLAGS) \
 
 QEMODS = ../../Modules/libqemod.a \
          ../../KS_Solvers/libks_solvers.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 
 TLDEPS=bindir libs pw
@@ -27,4 +27,3 @@ tldeps :
 
 clean :
 	rm -f ../bin/turbo_spectrum.x *.x *.o *.mod *_tmp.f90
-

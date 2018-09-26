@@ -46,7 +46,7 @@ qpcorrections.o
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
          ../../KS_Solvers/libks_solvers.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+         ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 PW4GWWOBJ = ../pw4gww/fft_custom.o ../pw4gww/stop_pp.o ../pw4gww/mp_wave_parallel.o
 GWWOBJ = ../gww/libgww.a ../minpack/minpacklib.a
@@ -55,7 +55,7 @@ LIBPWPH =
 #PPOBJ= ../../PP/src/libpp.a
 PPOBJ=
 
-TLDEPS= bindir libs pw ph mods 
+TLDEPS= bindir libs pw ph mods
 
 all : tldeps bse_main.x
 
@@ -63,7 +63,7 @@ bse_main.x : bse_main.o libbse.a  $(BSEOBJS) $(PWOBJS) $(QEMODS) $(LIBPWPH)  $(G
 	$(LD) $(LDFLAGS) -o $@ \
 		bse_main.o libbse.a $(PWOBJS) $(EEOBJS) $(LIBPWPH) $(QEMODS) $(LIBOBJS) $(QELIBS)  $(PW4GWWOBJ) $(GWWOBJ) $(PPOBJ)
 	- ( cd ../../bin ; ln -fs ../GWW/bse/$@ . )
- 
+
 tldeps:
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
@@ -75,6 +75,3 @@ clean :
 	- /bin/rm -f *.x *.o *~ *_tmp.f90 *.d *.mod *.i *.L libbse.a
 
 include make.depend
-
-
-

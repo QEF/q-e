@@ -32,10 +32,10 @@ path_read_namelists_module.o \
 path_to_engine_fix_atom_pos.o \
 path_variables.o \
 set_defaults.o \
-stop_run_path.o 
+stop_run_path.o
 
 QEMODS=../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
-       ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
+       ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 PWOBJS= ../../PW/src/libpw.a
 
 TLDEPS=bindir mods libs liblapack libblas pw

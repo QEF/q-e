@@ -45,11 +45,11 @@ work_function.o \
 write_p_avg.o \
 write_proj.o \
 write_io_header.o \
-write_hamiltonians.o 
+write_hamiltonians.o
 
 PWOBJS = ../../PW/src/libpw.a
 QEOBJS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
 
 MODULES = $(PWOBJS) $(QEOBJS)
 
@@ -62,7 +62,7 @@ all : tldeps open_grid.x average.x bands.x dos.x epsilon.x initial_state.x fs.x 
       pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x
 
 
-libpp.a : $(PPOBJS) 
+libpp.a : $(PPOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
@@ -141,7 +141,7 @@ pw2wannier90.x : pw2wannier90.o libpp.a $(MODULES) $(LIBOBJS)
 		pw2wannier90.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-wfck2r.x : wfck2r.o libpp.a $(MODULES) $(LIBOBJS) 
+wfck2r.x : wfck2r.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		wfck2r.o libpp.a $(MODULES) $(LIBOBJS)  $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
@@ -162,7 +162,7 @@ pw_export.x : pw_export.o libpp.a $(MODULES) $(LIBOBJS)
 		pw_export.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
-sumpdos.x : sumpdos.o 
+sumpdos.x : sumpdos.o
 	$(LD) $(LDFLAGS) -o $@ sumpdos.o $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 

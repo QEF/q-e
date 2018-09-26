@@ -10,7 +10,7 @@ MODFLAGS= $(BASEMOD_FLAGS) \
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
          ../../KS_Solvers/libks_solvers.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
+         ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 PWOBJS = ../../PW/src/libpw.a
 LRMODS = ../../LR_Modules/liblrmod.a
 
@@ -63,7 +63,7 @@ TLDEPS=bindir libs mods lrmods
 
 all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x
 
-libtddfpt.a : $(LROBJS) 
+libtddfpt.a : $(LROBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 

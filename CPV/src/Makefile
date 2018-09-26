@@ -3,7 +3,7 @@
 include	../../make.inc
 
 # location of needed modules and included files (if any)
-MODFLAGS= $(BASEMOD_FLAGS) 
+MODFLAGS= $(BASEMOD_FLAGS)
 
 FOBJS = \
 berryion.o \
@@ -112,12 +112,12 @@ wf.o \
 makov_payne.o
 
 LOBJS = \
-entropy.o 
+entropy.o
 
 QEMODS=../../Modules/libqemod.a
 QEFFT=../../FFTXlib/libqefft.a
 QELA=../../LAXlib/libqela.a
-UTIL=../../UtilXlib/libutil.a
+UTIL=../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
 
 TLDEPS= bindir mods libs
 
@@ -133,7 +133,7 @@ cp.x : cprstart.o libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
 		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/cp.x . )
 
-libcp.a : $(FOBJS) $(LOBJS) 
+libcp.a : $(FOBJS) $(LOBJS)
 	 $(AR) $(ARFLAGS) $@ $?
 	 $(RANLIB) $@
 

@@ -44,11 +44,11 @@ scatter_forw.o \
 summary_band.o \
 summary_tran.o \
 sunitary.o \
-transmit.o 
+transmit.o
 
 PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
+         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a \
 	 ../../dft-d3/libdftd3qe.a
 
 TLDEPS= bindir mods libs pw pp

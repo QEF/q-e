@@ -4,11 +4,11 @@ include ../../make.inc
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
-          $(MOD_FLAG)../pw4gww $(MOD_FLAG)../../PW/src 
+          $(MOD_FLAG)../pw4gww $(MOD_FLAG)../../PW/src
 
 #location of needed libraries
 LIBOBJS= ../../iotk/src/libiotk.a  \
-         ../../clib/clib.a 
+         ../../clib/clib.a
 
 SIMPLEIPOBJS = \
 simple_ip_objects.o \
@@ -17,23 +17,23 @@ input_simple_ip.o \
 tetra_mod1.o \
 interpolation.o \
 diagonalization.o \
-dielectric.o  
+dielectric.o
 
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
         ../../KS_Solvers/libks_solvers.a \
-	../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+	../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 
-LIBMIN= 
+LIBMIN=
 
 TLDEPS=bindir mods libs libiotk pw
 
 all : tldeps simple_ip.x  libsimple_ip.a
 
-simple_ip.x : simple_ip.o $(SIMPLEIPOBJS) $(LIBOBJS) $(PWOBJS) $(QEMODS)  $(LIBMIN) 
+simple_ip.x : simple_ip.o $(SIMPLEIPOBJS) $(LIBOBJS) $(PWOBJS) $(QEMODS)  $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		simple_ip.o $(SIMPLEIPOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(QELIBS) 
+		simple_ip.o $(SIMPLEIPOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../GWW/simple_ip/$@ . )
 
 libsimple_ip.a : $(SIMPLEIPOBJS)
