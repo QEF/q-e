@@ -208,7 +208,6 @@ SUBROUTINE sum_band()
         psic(dffts%nnr+1:) = 0.0_dp
         CALL fwfft ('Rho', psic, dffts)
         rho%kin_g(1:dffts%ngm,is) = psic(dffts%nl(1:dffts%ngm))
-        rho%of_g(dffts%ngm+1:,is) = (0.0_dp,0.0_dp)
      END DO
      !
      IF (.NOT. gamma_only) CALL sym_rho( nspin, rho%kin_g )
@@ -460,7 +459,9 @@ SUBROUTINE sum_band()
        !
        ! ... with distributed <beta|psi>, sum over bands
        !
+       IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL using_becsum(1)
        IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
+       IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL using_ebecsum(1)
        IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL mp_sum( ebecsum, becp%comm )
        !
        IF( use_tg ) THEN

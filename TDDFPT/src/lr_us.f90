@@ -72,13 +72,13 @@ SUBROUTINE lr_apply_s_optical()
     USE control_flags,    ONLY : gamma_only
     USE realus,           ONLY : real_space, invfft_orbital_gamma,           &
                                & fwfft_orbital_gamma, calbec_rs_gamma,       &
-                               & v_loc_psir, real_space_debug, s_psir_gamma
+                               & v_loc_psir, s_psir_gamma
     !
     IMPLICIT NONE   
     !
     IF (gamma_only) THEN
        !
-       IF (real_space_debug>4) THEN 
+       IF (real_space) THEN 
           !
           ! Real space implementation
           ! 

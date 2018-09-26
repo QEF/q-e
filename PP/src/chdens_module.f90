@@ -249,7 +249,7 @@ SUBROUTINE chdens (plot_files,plot_num)
           abs(e2(1)*e3(1) + e2(2)*e3(2) + e2(3)*e3(3)) > 1d-6 )    &
          CALL errore ('chdens', 'e1, e2, e3 are not orthogonal', 1)
 
-     IF ( output_format < 4 .or. output_format > 6 ) &
+     IF ( output_format < 3 .or. output_format > 6 ) &
         CALL errore ('chdens', 'incompatible iflag/output_format', 1)
 
   ELSEIF (iflag  == 4) THEN

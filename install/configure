@@ -718,6 +718,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -754,7 +755,6 @@ with_scalapack
 with_elpa_include
 with_elpa_lib
 with_elpa_version
-enable_xml
 with_hdf5
 enable_signals
 '
@@ -811,6 +811,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1063,6 +1064,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1200,7 +1210,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1353,6 +1363,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1393,7 +1404,6 @@ Optional Features:
   --enable-debug          compile Fortran with debug flags (default: no)
   --enable-pedantic       compile Fortran with pedantic flags (default: no)
   --enable-shared         use shared libraries if available (default: yes)
-  --enable-xml            enable XML output (default: yes)
   --enable-signals        enable signal trapping (default: no)
 
 Optional Packages:
@@ -9717,26 +9727,6 @@ $as_echo "${elpa_libs}" >&6; }
 
 
 
-# Enable XML ...
-
-
-# Check whether --enable-xml was given.
-if test "${enable_xml+set}" = set; then :
-  enableval=$enable_xml; if   test "$enableval" = "yes" ; then
-      use_xml=1
-   else
-      use_xml=0
-   fi
-else
-  use_xml=1
-fi
-
-
-# preprocessing flag for XML
-if test "$use_xml" -eq 0 ; then try_dflags="$try_dflags -D__OLDXML" ; fi
-
-
-
 # Setting HDF5...
 
 
@@ -9915,13 +9905,29 @@ $as_echo "$as_me: WARNING: ***HDF5 Fortran extensions not found" >&2;}
 fi
 
       fi
-
+      if test "$have_hdf5" -eq 1; then
+        version_num=`grep "HDF5 Version" $with_hdf5_path/lib/libhdf5.settings | awk -F ':' '{print $2}'`
+	version_sec_ok=`echo $version_num | awk -F '.' '{print $2 >= 8}'`
+        version_third_ok=`echo $version_num | awk -F '.' '{print $3 >=16}'`
+	if test $version_sec_ok -gt 0; then
+		if test $version_third_ok -eq 0; then
+			 { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&5
+$as_echo "$as_me: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&2;};
+			 have_hdf5=0;
+                fi
+        else
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&5
+$as_echo "$as_me: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&2;};
+                have_hdf5=0;
+        fi
+      fi
 
       if test "$have_hdf5" -eq 1 ; then
          if test -e $with_hdf5_path/bin/h5pfc; then
              hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{$1="";$2="-L"$2; print $0}'`
          elif test -e $with_hdf5_path/bin/h5fc; then
              hdf5_libs=`$with_hdf5_path/bin/h5fc -show | awk -F'-L' '{$1="";$2="-L"$2; print $0}'`
+             try_dflags="$try_dflags -D__HDF5_SERIAL"
          else
           hdf5_libs="-L$with_hdf5_path/lib -lhdf5_fortran -lhdf5 -lrt -lz -ldl -lm -Wl,-rpath -Wl,$with_hdf5_path/lib"
          fi

@@ -49,7 +49,7 @@ QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
 
 LIBMIN= ../minpack/minpacklib.a
 
-TLDEPS=bindir mods libs libiotk 
+TLDEPS=pwlibs
 
 all : tldeps gww.x gww_fit.x libgww.a
 

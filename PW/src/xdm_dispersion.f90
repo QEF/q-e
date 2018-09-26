@@ -87,6 +87,8 @@ CONTAINS
     INTEGER :: i, j, ialloc, nn
     REAL(DP), ALLOCATABLE :: d1y(:), d2y(:)
 
+    CALL start_clock('init_xdm')
+
     ispaw = ALL(upf(1:ntyp)%tpawp)
 
     ! allocate c6, etc.
@@ -149,6 +151,8 @@ CONTAINS
     END DO
     DEALLOCATE(d1y,d2y)
 
+    CALL stop_clock('init_xdm')
+
   END SUBROUTINE init_xdm
 
   SUBROUTINE cleanup_xdm()
@@ -183,7 +187,6 @@ CONTAINS
     USE scf, ONLY: rho
     USE io_global, ONLY: stdout, ionode
     USE fft_base, ONLY : dfftp
-    USE funct, ONLY : get_iexch, get_icorr, get_igcx, get_igcc
     USE cell_base, ONLY : at, alat, omega
     USE ions_base, ONLY: nat, tau, atm, ityp, ntyp => nsp
     USE constants, ONLY: au_gpa
@@ -215,9 +218,11 @@ CONTAINS
     INTEGER :: i3, nn
     REAL(DP) :: for(3,nat), sigma(3,3), sat(3,3)
     INTEGER :: resto, divid, first, last, it
-    INTEGER :: idx, ispin, iexch, icorr, igcx, igcc
+    INTEGER :: idx, ispin
     INTEGER, EXTERNAL :: atomic_number
     REAL(DP) :: iix, iiy, iiz
+
+    CALL start_clock('energy_xdm')
 
     ! initialize
     IF (nspin > 2) CALL errore('energy_xdm','nspin > 2 not implemented',1)
@@ -233,35 +238,7 @@ CONTAINS
     ! See: http://schooner.chem.dal.ca/wiki/XDM#Quantum_ESPRESSO
     ! For functionals not in the list, please contact aoterodelaroza@gmail.com
     IF (a1i==0._DP .AND. a2i==0._DP) THEN
-       iexch = get_iexch()
-       icorr = get_icorr()
-       igcx = get_igcx()
-       igcc = get_igcc()
-       IF (iexch==1 .AND. icorr==4 .AND. igcx==22 .AND. igcc==4) THEN
-          ! B86bPBE
-          a1i = 0.6512_DP
-          a2i = 1.4633_DP
-       ELSE IF (iexch==1 .AND. icorr==4 .AND. igcx==21 .AND. igcc==4) THEN
-          ! PW86PBE
-          a1i = 0.6836_DP
-          a2i = 1.5045_DP
-       ELSE IF (iexch==1 .AND. icorr==4 .AND. igcx==3 .AND. igcc==4) THEN
-          ! PBE
-          a1i = 0.3275_DP
-          a2i = 2.7673_DP
-       ELSE IF (iexch==1 .AND. icorr==3 .AND. igcx==1 .AND. igcc==3) THEN
-          ! BLYP
-          a1i = 0.4502_DP
-          a2i = 1.6210_DP
-       ELSE
-          IF (ionode) THEN
-             WRITE (stdout,'(/"Error: XDM not parametrized for this functional and XDM parameters not given.")')
-             WRITE (stdout,'("For the XDM parametrization list, please visit")')
-             WRITE (stdout,'("  http://schooner.chem.dal.ca/wiki/XDM#Quantum_ESPRESSO")')
-             WRITE (stdout,'("For functionals not in the list, please contact aoterodelaroza@gmail.com"/)')
-          ENDIF
-          CALL errore('energy_xdm','XDM not parametrized for this functional and XDM parameters not given.',1)
-       END IF
+       CALL setxdm_a1a2(a1i,a2i)
     ENDIF
 
     ! Define damping coefficients
@@ -612,6 +589,8 @@ CONTAINS
        WRITE (stdout,*)
     END IF
 
+    CALL stop_clock('energy_xdm')
+
   END FUNCTION energy_xdm
 
   FUNCTION force_xdm(nat) RESULT(fvdw)
@@ -647,6 +626,8 @@ CONTAINS
     INTEGER, ALLOCATABLE :: ienvaux(:), lvecaux(:,:)
     REAL(DP), ALLOCATABLE :: xenvaux(:,:)
     INTEGER, PARAMETER :: menv = 1000, lenv=100
+
+    CALL start_clock('exdm:environ')
 
     ! allocate the initial environment
     nenv = 0
@@ -741,6 +722,8 @@ CONTAINS
     lvecaux(:,1:lsize) = lvec
     CALL move_alloc(lvecaux,lvec)
 
+    CALL stop_clock('exdm:environ')
+
   END SUBROUTINE set_environ
 
   SUBROUTINE PAW_make_ae_charge_xdm(rho,rhoout)
@@ -774,6 +757,8 @@ CONTAINS
     REAL(DP)                :: inv_nr1, inv_nr2, inv_nr3, distsq, g0, g1, g2, r0, r1, rqq
     INTEGER                 :: nkk
     INTEGER, ALLOCATABLE    :: iatom(:)
+
+    CALL start_clock('exdm:paw_charge')
 
     ! Some initialization
     inv_nr1 = 1._DP / DBLE(  dfftp%nr1 )
@@ -908,6 +893,8 @@ CONTAINS
     ENDDO atoms
     DEALLOCATE(rho_lm)
 
+    CALL stop_clock('exdm:paw_charge')
+
   END SUBROUTINE PAW_make_ae_charge_xdm
 
   SUBROUTINE promolecular_rho(rhot,rhoc)
@@ -932,6 +919,8 @@ CONTAINS
     integer :: i, it, nn
     integer :: n, idx, ix, iy, iz, iy0, iz0
     real(DP) :: x(3), xx(3), r, r2, rrho
+
+    CALL start_clock('exdm:rho')
 
     rhot = 0._DP
     rhoc = 0._DP
@@ -973,7 +962,114 @@ CONTAINS
        rhot(n) = MAX(rhot(n),1e-14_DP)
     END DO
 
+    CALL stop_clock('exdm:rho')
+
   END SUBROUTINE promolecular_rho
+
+  ! Set the default a1 and a2 values using the xc flags.
+  SUBROUTINE setxdm_a1a2(a1i,a2i)
+    USE io_global, ONLY: stdout, ionode
+    USE funct, ONLY : get_iexch, get_icorr, get_igcx, get_igcc
+    REAL*8, INTENT(INOUT) :: a1i, a2i
+    
+    INTEGER :: idx, ispin, iexch, icorr, igcx, igcc
+    
+    iexch = get_iexch()
+    icorr = get_icorr()
+    igcx = get_igcx()
+    igcc = get_igcc()
+    IF (iexch==1 .AND. icorr==4 .AND. igcx==22 .AND. igcc==4) THEN
+       ! B86bPBE
+       if (ispaw) then
+          a1i = 0.6512_DP
+          a2i = 1.4633_DP
+       else
+          a1i = 0.7609_DP
+          a2i = 1.1448_DP
+       endif
+    ELSE IF (iexch==1 .AND. icorr==4 .AND. igcx==21 .AND. igcc==4) THEN
+       ! PW86PBE
+       if (ispaw) then
+          a1i = 0.6836_DP
+          a2i = 1.5045_DP
+       else
+          a1i = 0.7659_DP
+          a2i = 1.2617_DP
+       end if
+    ELSE IF (iexch==1 .AND. icorr==4 .AND. igcx==3 .AND. igcc==4) THEN
+       ! PBE
+       if (ispaw) then
+          a1i = 0.3275_DP
+          a2i = 2.7673_DP
+       else
+          a1i = 0.4238_DP
+          a2i = 2.4841_DP
+       end if
+    ELSE IF (iexch==1 .AND. icorr==3 .AND. igcx==1 .AND. igcc==3) THEN
+       ! BLYP
+       if (ispaw) then
+          a1i = 0.4502_DP
+          a2i = 1.6210_DP
+       else
+          a1i = 0.5927_DP
+          a2i = 1.1819_DP
+       end if
+    ELSE IF (iexch==1 .AND. icorr==4 .AND. igcx==12 .AND. igcc==4) THEN
+       ! HSE
+       if (ispaw) then
+          a1i = 0.0000_DP
+          a2i = 4.9281_DP
+       else
+          a1i = 0.0000_DP
+          a2i = 5.0824_DP
+       end if
+    ELSE IF (iexch==6 .AND. icorr==4 .AND. igcx==8 .AND. igcc==4) THEN
+       ! PBE0
+       if (ispaw) then
+          a1i = 0.0000_DP
+          a2i = 4.8431_DP
+       else
+          a1i = 0.0000_DP
+          a2i = 5.1197_DP
+       end if
+    ELSE IF (iexch==7 .AND. icorr==12 .AND. igcx==9 .AND. igcc==7) THEN
+       ! B3LYP
+       if (ispaw) then
+          a1i = 0.5418_DP
+          a2i = 2.1970_DP
+       else
+          a1i = 0.1843_DP
+          a2i = 3.3700_DP
+       end if
+    ELSE IF (iexch==6 .AND. icorr==4 .AND. igcx==41 .AND. igcc==4) THEN
+       ! B86BPBEX (50% hybrid)
+       if (ispaw) then
+          a1i = 0.7180_DP
+          a2i = 2.2449_DP
+       else
+          a1i = 1.2519_DP
+          a2i = 0.7462_DP
+       end if
+    ELSE IF (iexch==6 .AND. icorr==4 .AND. igcx==42 .AND. igcc==3) THEN
+       ! BHAHLYP
+       if (ispaw) then
+          a1i = 0.0000_DP
+          a2i = 4.5645_DP
+       else
+          a1i = 0.0000_DP
+          a2i = 4.7320_DP
+       end if
+    ELSE
+       IF (ionode) THEN
+          WRITE (stdout,'(/"Error: XDM not parametrized for this functional and XDM parameters not given.")')
+          WRITE (stdout,'("For the XDM parametrization list, please visit")')
+          WRITE (stdout,'("  http://schooner.chem.dal.ca/wiki/XDM#Quantum_ESPRESSO")')
+          WRITE (stdout,'("For functionals not in the list, please contact aoterodelaroza@gmail.com"/)')
+       ENDIF
+       CALL errore('energy_xdm','XDM not parametrized for this functional and XDM parameters not given.',1)
+    END IF
+
+  END SUBROUTINE setxdm_a1a2
 
   SUBROUTINE alloc_failed(message)
     ! Error message and horrible death

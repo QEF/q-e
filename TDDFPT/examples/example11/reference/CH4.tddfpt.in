@@ -1,0 +1,20 @@
+ &lr_input
+   prefix = 'CH4',
+   outdir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/',
+   restart = .false.
+ /
+ &lr_dav
+   num_eign = 10,
+   num_init = 20,
+   num_basis_max = 80,
+   residue_conv_thr = 1.0D-4,
+   start  = 0.0,
+   finish = 1.5,
+   step   = 2.0D-4,
+   broadening = 0.005,
+   reference = 0.5,
+   p_nbnd_occ  = 4,
+   p_nbnd_virt = 15,
+   poor_of_ram  = .false.
+   poor_of_ram2 = .false.
+/

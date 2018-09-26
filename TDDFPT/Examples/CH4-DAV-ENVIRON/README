@@ -1,6 +1,0 @@
-In order to run this example using the Environ module, 
-you must modify the TDDFPT/Examples/make.inc : 
-you must use the -environ option with pw.x and turbo_davidson.x
-
-Replace $(PWSCF) by $(PWSCF) -environ
-Replace $(TDDFPT_DAVIDSON) by $(TDDFPT_DAVIDSON) -environ

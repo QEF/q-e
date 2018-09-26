@@ -621,7 +621,10 @@ MODULE qes_types_module
     REAL(DP) :: conv_thr
     INTEGER :: mixing_ndim
     INTEGER :: max_nstep
+    LOGICAL  :: real_space_q_ispresent = .FALSE.
     LOGICAL :: real_space_q
+    LOGICAL  :: real_space_beta_ispresent = .FALSE.
+    LOGICAL :: real_space_beta
     LOGICAL :: tq_smoothing
     LOGICAL :: tbeta_smoothing
     REAL(DP) :: diago_thr_init
@@ -876,6 +879,7 @@ MODULE qes_types_module
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
+    LOGICAL :: convergence_achieved
     INTEGER :: n_scf_steps
     REAL(DP) :: scf_error
     !
@@ -887,6 +891,7 @@ MODULE qes_types_module
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
+    LOGICAL :: convergence_achieved
     INTEGER :: n_opt_steps
     REAL(DP) :: grad_norm
     !
@@ -899,6 +904,7 @@ MODULE qes_types_module
     LOGICAL  :: lread  = .FALSE.
     !
     LOGICAL :: real_space_q
+    LOGICAL :: real_space_beta
     LOGICAL :: uspp
     LOGICAL :: paw
     !
@@ -1293,6 +1299,7 @@ MODULE qes_types_module
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
+    LOGICAL  :: convergence_info_ispresent = .FALSE.
     TYPE(convergence_info_type) :: convergence_info
     TYPE(algorithmic_info_type) :: algorithmic_info
     TYPE(atomic_species_type) :: atomic_species
@@ -1321,4 +1328,3 @@ MODULE qes_types_module
   !
   !
 END MODULE qes_types_module
-

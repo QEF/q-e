@@ -1,0 +1,215 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x and hp.x to calculate"
+$ECHO "the Hubbard U parameter for Cr in CrI3."
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x hp.x"
+PSEUDO_LIST="Cr.pbesol-spn-kjpaw_psl.1.0.0.UPF I.pbesol-n-kjpaw_psl.1.0.0.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+HP_COMMAND="$PARA_PREFIX $BIN_DIR/hp.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as:   $PW_COMMAND"
+$ECHO "  running hp.x as:   $HP_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+PREFIX='CrI3'
+
+# First self-consistent calculation
+cat > $PREFIX.scf1.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='$PREFIX'
+    pseudo_dir = '$PSEUDO_DIR/'
+    outdir='$TMP_DIR/'
+    verbosity='high'
+ /
+ &system
+    ibrav = 0, 
+    celldm(1) = 14.5533, 
+    nat = 8, 
+    ntyp = 2,
+    ecutwfc = 45.0,
+    ecutrho = 360.0,
+    occupations = 'smearing',
+    smearing = 'gauss',
+    degauss = 0.001,
+    nspin = 2,
+    starting_magnetization(1) =  0.5,
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'ortho-atomic',
+    Hubbard_U(1) = 1.d-8
+ /
+ &electrons
+    conv_thr =  1.d-10
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+Cr     51.996    Cr.pbesol-spn-kjpaw_psl.1.0.0.UPF
+I     126.9045   I.pbesol-n-kjpaw_psl.1.0.0.UPF
+ATOMIC_POSITIONS {crystal}
+Cr       0.3337100000   0.3337100000   0.3337100000
+Cr       0.6662900000   0.6662900000   0.6662900000
+I        0.7290700000   0.4299600000   0.0777700000
+I        0.2709300000   0.5700400000   0.9222300000
+I        0.5700400000   0.9222300000   0.2709300000
+I        0.4299600000   0.0777700000   0.7290700000
+I        0.0777700000   0.7290700000   0.4299600000
+I        0.9222300000   0.2709300000   0.5700400000
+CELL_PARAMETERS {alat}
+  0.4458362755   0.2574036937   0.8573058695
+ -0.4458362755   0.2574036937   0.8573058695
+  0.0000000000  -0.5148073874   0.8573058695
+K_POINTS {automatic}
+ 2 2 2 0 0 0
+EOF
+$ECHO "  Running the SCF calculation for $PREFIX..."
+$PW_COMMAND < $PREFIX.scf1.in > $PREFIX.scf1.out
+$ECHO " done"
+
+# Extract the number of Kohn-Sham states from the previous run
+nstates=`grep 'number of Kohn-Sham states' $PREFIX.scf1.out | awk '{print $5}'`
+
+# Extract the value of the total magnetization from the previous run
+totmagn=`grep 'total magnetization' $PREFIX.scf1.out | tail -1 | awk '{print $4}'`
+
+# Second self-consistent calculation
+cat > $PREFIX.scf2.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='$PREFIX'
+    pseudo_dir = '$PSEUDO_DIR/'
+    outdir='$TMP_DIR/'
+    verbosity='high'
+ /
+ &system
+    ibrav = 0, 
+    celldm(1) = 14.5533, 
+    nat = 8, 
+    ntyp = 2,
+    ecutwfc = 45.0,
+    ecutrho = 360.0,
+    nbnd = $nstates
+    occupations = 'fixed'
+    nspin = 2,
+    tot_magnetization = $totmagn
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'ortho-atomic',
+    Hubbard_U(1) = 1.d-8    
+ /
+ &electrons
+    conv_thr =  1.d-15
+    mixing_beta = 0.7
+    startingpot = 'file'
+    startingwfc = 'file'
+ /
+ATOMIC_SPECIES
+Cr     51.996    Cr.pbesol-spn-kjpaw_psl.1.0.0.UPF
+I     126.9045   I.pbesol-n-kjpaw_psl.1.0.0.UPF
+ATOMIC_POSITIONS {crystal}
+Cr       0.3337100000   0.3337100000   0.3337100000
+Cr       0.6662900000   0.6662900000   0.6662900000
+I        0.7290700000   0.4299600000   0.0777700000
+I        0.2709300000   0.5700400000   0.9222300000
+I        0.5700400000   0.9222300000   0.2709300000
+I        0.4299600000   0.0777700000   0.7290700000
+I        0.0777700000   0.7290700000   0.4299600000
+I        0.9222300000   0.2709300000   0.5700400000
+CELL_PARAMETERS {alat}
+  0.4458362755   0.2574036937   0.8573058695
+ -0.4458362755   0.2574036937   0.8573058695
+  0.0000000000  -0.5148073874   0.8573058695
+K_POINTS {automatic}
+ 2 2 2 0 0 0
+EOF
+$ECHO "  Running the SCF calculation for $PREFIX..."
+$PW_COMMAND < $PREFIX.scf2.in > $PREFIX.scf2.out
+$ECHO " done"
+
+# Perform the linear-response calculation
+cat > $PREFIX.hp.in << EOF
+ &inputhp
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   nq1 = 2, nq2 = 2, nq3 = 2,
+   conv_thr_chi = 1.0d-8,
+   iverbosity = 2
+ /
+EOF
+$ECHO "  Running the linear-response calculation of Hubbard U..."
+$HP_COMMAND < $PREFIX.hp.in > $PREFIX.hp.out
+$ECHO " done"

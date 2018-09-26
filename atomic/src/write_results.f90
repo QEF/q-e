@@ -464,8 +464,9 @@ subroutine savetxtv2(filename,x,y)
     ! real(dp) :: data(3, 2)
     ! call savetxt("log.txt", data)
 
-    integer :: s, i
-    open(newunit=s, file=filename, status="replace")
+    integer :: s, i, find_free_unit
+    s = find_free_unit()
+    open(unit=s, file=filename, status="replace")
     do i = 1, size(x, 1)
         write(s, *) x(i), y(i)
     end do

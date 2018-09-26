@@ -2,9 +2,6 @@
 subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   !-----------------------------------------------------------------------
   !
-  use iotk_module
-
-
   use kinds,          ONLY : DP 
   use pwcom  
   use control_flags,  ONLY : gamma_only  
@@ -57,7 +54,6 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   real(DP) :: wfc_scal 
   logical :: twf0, twfm
-  character(iotk_attlenx) :: attr
   complex(DP), allocatable :: sevc (:,:)
 
   CHARACTER(LEN=256) :: outdir

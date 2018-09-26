@@ -1,0 +1,10 @@
+ &inputhp
+   prefix = 'LiCoO2',
+   outdir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/',
+   nq1 = 2, nq2 = 2, nq3 = 2,
+   conv_thr_chi = 1.0d-8,
+   iverbosity = 2
+   perturb_only_atom(2) = .true.
+   start_q = 1
+   last_q  = 3
+ /

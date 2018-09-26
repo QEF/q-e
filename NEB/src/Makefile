@@ -38,7 +38,7 @@ QEMODS=../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
        ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 PWOBJS= ../../PW/src/libpw.a
 
-TLDEPS=bindir mods libs liblapack libblas pw
+TLDEPS=pwlibs
 
 all : tldeps neb.x path_interpolation.x
 

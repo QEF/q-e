@@ -930,7 +930,6 @@ printout_base.o : ../../Modules/kind.o
 printout_base.o : ../../Modules/mp_global.o
 printout_base.o : ../../Modules/mp_images.o
 printout_base.o : ../../UtilXlib/mp.o
-printout_base.o : ../../iotk/src/iotk_module.o
 problem_size.o : ../../Modules/electrons_base.o
 problem_size.o : ../../Modules/fft_base.o
 problem_size.o : ../../Modules/gvecw.o

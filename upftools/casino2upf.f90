@@ -15,8 +15,11 @@ PROGRAM casino2upf
 
   USE casino_pp
   USE write_upf_module, ONLY :  write_upf
-  USE pseudo_types, ONLY : nullify_pseudo_upf, deallocate_pseudo_upf, &
-                           pseudo_upf
+  USE pseudo_types, ONLY : nullify_pseudo_upf, deallocate_pseudo_upf, pseudo_upf
+  USE environment, ONLY: environment_start, environment_end
+  USE mp_global, ONLY: mp_startup, mp_global_end
+  USE io_global, ONLY: ionode, stdout 
+ 
   IMPLICIT NONE
   !
   INTEGER, EXTERNAL :: find_free_unit
@@ -36,55 +39,66 @@ PROGRAM casino2upf
        xmin,           &         !xmin for standard QE grid
        dx                        !dx for Trail and Needs and standard QE
                                  !grid
-  pp_data= 'pp.data'
-  upf_file= 'out.UPF'
+   pp_data= 'pp.data'
+   upf_file= 'out.UPF'
 
-  CALL nullify_pseudo_upf( upf_out )
 
-  WRITE(0,*) 'CASINO2UPF Converter'
+#if defined(__MPI)
+   CALL mp_startup()
+#endif
+   CALL environment_start('CASINO2UPF') 
+   IF (ionode) THEN 
+      CALL nullify_pseudo_upf( upf_out )
 
-  READ(*,inputpp,iostat=ios)
+      WRITE(0,*) 'CASINO2UPF Converter'
 
-  READ(*,*,iostat=ios) nofiles
+      READ(*,inputpp,iostat=ios)
 
-  ALLOCATE(wavefile(nofiles), waveunit(nofiles))
+      READ(*,*,iostat=ios) nofiles
 
-  !Now read in the awfn file names and open the files
+      ALLOCATE(wavefile(nofiles), waveunit(nofiles))
 
-  DO i=1,nofiles
-     READ(*,*,iostat=ios) wavefile(:)
-     waveunit(i)=find_free_unit()
-     OPEN(unit=waveunit(i),file=trim(wavefile(i)),&
-          status='old',form='formatted', iostat=ios)
-     IF (ios /= 0 ) THEN
-        CALL errore ('casino2upf', 'cannot read file', trim(wavefile(i)))
-     ENDIF
-  ENDDO
+      !Now read in the awfn file names and open the files
 
-  pp_unit=find_free_unit()
-  OPEN(unit=pp_unit,file=trim(pp_data),status='old',form='formatted', iostat=ios)
-  IF (ios /= 0 ) THEN
-     CALL errore ('casino2upf', 'cannot read file', trim(wavefile(i)))
-  ENDIF
+      DO i=1,nofiles
+         READ(*,*,iostat=ios) wavefile(:)
+         waveunit(i)=find_free_unit()
+         OPEN(unit=waveunit(i),file=trim(wavefile(i)),&
+         status='old',form='formatted', iostat=ios)
+         IF (ios /= 0 ) THEN
+            CALL errore ('casino2upf', 'cannot read file', trim(wavefile(i)))
+         ENDIF
+      ENDDO
 
-  CALL read_casino(pp_unit,nofiles, waveunit)
+      pp_unit=find_free_unit()
+      OPEN(unit=pp_unit,file=trim(pp_data),status='old',form='formatted', iostat=ios)
+      IF (ios /= 0 ) THEN
+         CALL errore ('casino2upf', 'cannot read file', trim(wavefile(i)))
+      ENDIF
 
-  CLOSE (unit=pp_unit)
-  DO i=1,nofiles
-     CLOSE (waveunit(i))
-  ENDDO
+      CALL read_casino(pp_unit,nofiles, waveunit)
 
-  DEALLOCATE( wavefile, waveunit )
+      CLOSE (unit=pp_unit)
+      DO i=1,nofiles
+         CLOSE (waveunit(i))
+      ENDDO
 
-  ! convert variables read from CASINO format into those needed
-  ! by the upf format - add missing quantities
+      DEALLOCATE( wavefile, waveunit )
 
-  CALL convert_casino(upf_out)
+      ! convert variables read from CASINO format into those needed
+      ! by the upf format - add missing quantities
 
-  PRINT '(''Output PP file in UPF format :  '',a)', upf_file
-  CALL write_upf(filename = TRIM(upf_file), UPF = upf_out, SCHEMA = 'V2') 
-  CALL  deallocate_pseudo_upf( upf_out )
+      CALL convert_casino(upf_out)
 
-  STOP
+      PRINT '(''Output PP file in UPF format :  '',a)', upf_file
+      CALL write_upf(filename = TRIM(upf_file), UPF = upf_out, SCHEMA = 'V2') 
+      CALL  deallocate_pseudo_upf( upf_out )
+   END IF
+   CALL environment_end('CASINO2UPF')
+#if defined(__MPI) 
+   CALL mp_global_end()
+#endif 
+
+   STOP
 
 END PROGRAM casino2upf
