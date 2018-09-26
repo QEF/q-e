@@ -573,6 +573,7 @@ MODULE read_namelists_module
        cell_nstepe = 1
        cell_damping = 0.1_DP
        press_conv_thr = 0.5_DP
+       treinit_gvecs = .FALSE.
        !
        RETURN
        !
@@ -1131,6 +1132,7 @@ MODULE read_namelists_module
        CALL mp_bcast( cell_nstepe,      ionode_id, intra_image_comm )
        CALL mp_bcast( cell_damping,     ionode_id, intra_image_comm )
        CALL mp_bcast( press_conv_thr,   ionode_id, intra_image_comm )
+       CALL mp_bcast( treinit_gvecs,    ionode_id, intra_image_comm )
        !
        RETURN
        !

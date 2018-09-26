@@ -218,7 +218,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      allocate ( ldos ( dfftp%nnr  , nspin_mag) )
      allocate ( ldoss( dffts%nnr , nspin_mag) )
      allocate (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin_mag))
-     call localdos_paw ( ldos , ldoss , becsum1, dos_ef )
+     call localdos ( ldos , ldoss , becsum1, dos_ef )
      IF (.NOT.okpaw) deallocate(becsum1)
   endif
   !
@@ -486,8 +486,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
         call setmixout(npe*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
                     mixout, dvscfout, dbecsum, ndim, -1 )
-        call mix_potential (2*npe*dfftp%nnr*nspin_mag+2*ndim, &
-                         mixout, mixin, &
+        call mix_potential (2*npe*dfftp%nnr*nspin_mag+2*ndim, mixout, mixin, &
                          alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
         call setmixout(npe*dfftp%nnr*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
@@ -600,30 +599,10 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   ENDIF
 
   call stop_clock ('solve_linter')
+
+  RETURN  
+
 END SUBROUTINE solve_linter
-
-
-SUBROUTINE setmixout(in1, in2, mix, dvscfout, dbecsum, ndim, flag )
-USE kinds, ONLY : DP
-USE mp_bands, ONLY : intra_bgrp_comm
-USE mp, ONLY : mp_sum
-IMPLICIT NONE
-INTEGER :: in1, in2, flag, ndim, startb, lastb
-COMPLEX(DP) :: mix(in1+in2), dvscfout(in1), dbecsum(in2)
-
-CALL divide (intra_bgrp_comm, in2, startb, lastb)
-ndim=lastb-startb+1
-
-IF (flag==-1) THEN
-   mix(1:in1)=dvscfout(1:in1)
-   mix(in1+1:in1+ndim)=dbecsum(startb:lastb)
-ELSE
-   dvscfout(1:in1)=mix(1:in1)
-   dbecsum=(0.0_DP,0.0_DP)
-   dbecsum(startb:lastb)=mix(in1+1:in1+ndim)
-   CALL mp_sum(dbecsum, intra_bgrp_comm)
-ENDIF
-END SUBROUTINE setmixout
 
 SUBROUTINE check_all_convt(convt)
   USE mp,        ONLY : mp_sum

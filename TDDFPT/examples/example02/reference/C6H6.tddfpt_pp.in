@@ -1,0 +1,12 @@
+ &lr_input
+   prefix = 'C6H6',
+   outdir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/',
+   itermax0 = 500,
+   itermax  = 10000,
+   extrapolation = "osc",
+   epsil = 0.01,
+   start = 0.00,
+   end   = 3.50,
+   increment = 0.001,
+   ipol = 4
+ /

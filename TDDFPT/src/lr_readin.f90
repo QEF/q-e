@@ -33,14 +33,11 @@ SUBROUTINE lr_readin
   USE fixed_occ,           ONLY : tfixed_occ
   USE input_parameters,    ONLY : degauss, nosym, wfcdir, outdir
   USE check_stop,          ONLY : max_seconds
-  USE realus,              ONLY : real_space, real_space_debug,&
-                                  & init_realspace_vars, qpointlist,&
-                                  & betapointlist
+  USE realus,              ONLY : real_space, init_realspace_vars, generate_qpointlist, &
+                                  betapointlist
   USE funct,               ONLY : dft_is_meta
-  USE iotk_module
   USE charg_resp,          ONLY : w_T_prefix, omeg, w_T_npol, epsil
   USE mp,                  ONLY : mp_bcast
-  USE mp_world,            ONLY : world_comm
   USE mp_global,           ONLY : my_pool_id, intra_image_comm, &
                                   & intra_bgrp_comm, nproc_image, &
                                   & nproc_pool, nproc_pool_file, &
@@ -48,7 +45,6 @@ SUBROUTINE lr_readin
                                   & nproc_bgrp_file, my_image_id
   USE DFUNCT,              ONLY : newd
   USE vlocal,              ONLY : strf
-  USE exx,                 ONLY : ecutfock
   USE martyna_tuckerman,   ONLY : do_comp_mt
   USE esm,                 ONLY : do_comp_esm
   USE qpoint,              ONLY : xq
@@ -68,24 +64,21 @@ SUBROUTINE lr_readin
   ! Specify the amount of I/O activities
   CHARACTER(LEN=6) :: int_to_char
   INTEGER :: ios, iunout, ierr, ipol
-  LOGICAL :: auto_rs
   LOGICAL, EXTERNAL  :: check_para_diag
   !
   NAMELIST / lr_input /   restart, restart_step ,lr_verbosity, prefix, outdir, &
                         & test_case_no, wfcdir, disk_io, max_seconds
-  NAMELIST / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, lrpa,   &
-                        & charge_response, tqr, auto_rs, no_hxc, n_ipol, project,      &
-                        & scissor, ecutfock, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
+  NAMELIST / lr_control / itermax, ipol, ltammd, lrpa,   &
+                        & charge_response, no_hxc, n_ipol, project,      &
+                        & scissor, pseudo_hermitian, d0psi_rs, lshift_d0psi, &
                         & q1, q2, q3, approximation
   NAMELIST / lr_post /    omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil, itermax_int,sum_rule
   namelist / lr_dav /     num_eign, num_init, num_basis_max, residue_conv_thr, precondition,         &
                         & dav_debug, reference,single_pole, sort_contr, diag_of_h, close_pre,        &
                         & broadening,print_spectrum,start,finish,step,if_check_orth, if_random_init, &
                         & if_check_her,p_nbnd_occ,p_nbnd_virt,poor_of_ram,poor_of_ram2,max_iter,     &
-                        & ecutfock, conv_assistant,if_dft_spectrum,no_hxc,d0psi_rs,lshift_d0psi,     &
+                        & conv_assistant,if_dft_spectrum,no_hxc,d0psi_rs,lshift_d0psi,               &
                         & lplot_drho, vccouple_shift, ltammd
-  !
-  auto_rs = .TRUE.
   !
 #if defined(__MPI)
   IF (ionode) THEN
@@ -112,13 +105,9 @@ SUBROUTINE lr_readin
      n_ipol = 1
      no_hxc = .FALSE.
      lrpa = .false.
-     real_space = .FALSE.
-     real_space_debug = 0
      charge_response = 0
      sum_rule = -99
      test_case_no = 0
-     tqr = .FALSE.
-     auto_rs = .TRUE.
      beta_gamma_z_prefix = 'undefined'
      omeg= 0.0_DP
      epsil = 0.0_DP
@@ -127,7 +116,6 @@ SUBROUTINE lr_readin
      project = .FALSE.
      max_seconds = 1.0E+7_DP
      scissor = 0.d0
-     ecutfock = -1d0
      !
      ! For EELS
      !
@@ -320,7 +308,7 @@ SUBROUTINE lr_readin
   ENDIF
   !
   CALL bcast_lr_input
-  CALL mp_bcast(auto_rs, ionode_id, world_comm)
+
 #endif
   !
   ! Required for restart runs as this never gets initialized.
@@ -328,18 +316,6 @@ SUBROUTINE lr_readin
   current_k = 1
   !
   outdir = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
-  !
-  IF (.NOT.eels) THEN
-     !
-     IF (auto_rs) CALL read_rs_status( outdir, tqr, real_space, ierr )
-     IF (real_space) real_space_debug=99
-     IF (real_space_debug > 0) real_space=.TRUE.
-     IF (lr_verbosity > 1) THEN
-        WRITE(stdout,'(5x,"Status of real space flags: TQR=", L5 ,&
-                      &"  REAL_SPACE=", L5)') tqr, real_space
-     ENDIF
-     !
-  ENDIF
   !
   ! EELS: Create a temporary directory for nscf files, and for
   ! writing of the turboEELS restart files.
@@ -358,6 +334,10 @@ SUBROUTINE lr_readin
   ! lr_run_nscf -> init_run -> hinit0 -> init_igk
   !
   CALL read_file()
+  !
+  IF (.NOT.eels .AND. (tqr .OR. real_space)) &
+     WRITE(stdout,'(/5x,"Status of real space flags: TQR=", L5 , &
+                      & "  REAL_SPACE=", L5)') tqr, real_space
   !
   !   Set wfc_dir - this is done here because read_file sets wfc_dir = tmp_dir
   !   FIXME:,if wfcdir is not present in input, wfc_dir is set to "undefined"
@@ -418,9 +398,11 @@ SUBROUTINE lr_readin
   !
   ! I. Timrov: The routine newd was already called in read_file above.
   !
-  CALL newd() !OBM: this is for the ground charge density
+  CALL newd() !OBM: this is for the ground-state charge density
   !
-  IF ( real_space_debug > 0 .AND. .NOT.eels) THEN
+  IF (tqr .AND. .NOT.eels) CALL generate_qpointlist()
+  !
+  IF ( real_space .AND. .NOT.eels) THEN
      !
      WRITE(stdout,'(/5x,"Real space implementation V.1 D190908",1x)')
      ! OBM - correct parellism issues
@@ -567,6 +549,14 @@ CONTAINS
     !
     IF (lsda) CALL errore( 'lr_readin', 'LSDA is not implemented', 1 )
     !
+    IF (real_space)  THEN
+       IF (eels) THEN
+          CALL errore( 'lr_readin', 'Option real_space=.true. is not implemented', 1 )
+       ELSE
+          CALL errore( 'lr_readin', 'Option real_space=.true. is not tested', 1 )
+       ENDIF
+    ENDIF  
+    !
     ! EELS-related restrictions
     !
     IF (eels) THEN
@@ -581,7 +571,6 @@ CONTAINS
        !
        IF (project)     CALL errore( 'lr_readin', 'project is not allowed', 1 )
        IF (tqr)         CALL errore( 'lr_readin', 'tqr is not supported', 1 )
-       IF (real_space)  CALL errore( 'lr_readin', 'real_space is not supported', 1 )
        IF (charge_response /= 0) CALL errore( 'lr_readin', 'charge_response /= 0 is not allowed', 1 )
        IF (dft_is_hybrid())    CALL errore( 'lr_readin', 'EXX is not supported', 1 )
        IF (do_comp_mt)  CALL errore( 'lr_readin', 'Martyna-Tuckerman PBC is not supported.', 1 )
@@ -599,59 +588,4 @@ CONTAINS
     !
   END SUBROUTINE input_sanity
   !
-  !------------------------------------------------------------------------
-  SUBROUTINE read_rs_status( dirname, tqr, real_space, ierr )
-    !------------------------------------------------------------------------
-    !
-    ! This subroutine reads the real space control flags from a PWscf punch card
-    ! OBM 2009 - FIXME: OBSOLETE, doesn not work any longer
-    !
-      USE iotk_module
-      USE io_global,     ONLY : ionode,ionode_id
-      USE io_files,      ONLY : iunpun
-      USE mp,            ONLY : mp_bcast
-      USE mp_images,     ONLY : intra_image_comm
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(len=*), INTENT(in)  :: dirname
-      LOGICAL,          INTENT(out) :: tqr, real_space
-      INTEGER,          INTENT(out) :: ierr
-      !
-      CHARACTER(len=13) :: xmlpun='data-file.xml'
-      !
-      IF ( ionode ) THEN
-          !
-          ! ... look for an empty unit
-          !
-          CALL iotk_free_unit( iunpun, ierr )
-          !
-          CALL errore( 'realus->read_rs_status', 'no free units to read real space flags', ierr )
-          !
-          CALL iotk_open_read( iunpun, FILE = trim( dirname ) // '/' // &
-                            & trim( xmlpun ), IERR = ierr )
-          !
-      ENDIF
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      IF ( ierr > 0 ) RETURN
-      !
-      IF ( ionode ) THEN
-         CALL iotk_scan_begin( iunpun, "CONTROL" )
-         !
-         CALL iotk_scan_dat( iunpun, "Q_REAL_SPACE", tqr )
-         CALL iotk_scan_dat( iunpun, "BETA_REAL_SPACE", real_space )
-         !
-         CALL iotk_scan_end( iunpun, "CONTROL" )
-         !
-         CALL iotk_close_read( iunpun )
-      ENDIF
-      CALL mp_bcast( tqr,  ionode_id, intra_image_comm )
-      CALL mp_bcast( real_space,    ionode_id, intra_image_comm )
-      !
-      RETURN
-      !
-    END SUBROUTINE read_rs_status
-
 END SUBROUTINE lr_readin

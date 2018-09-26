@@ -20,7 +20,6 @@ SUBROUTINE lr_init_nfo()
   USE ions_base,            ONLY : nat, tau
   USE klist,                ONLY : nks,xk,ngk,igk_k
   USE wvfct,                ONLY : nbnd
-  USE realus,               ONLY : real_space
   USE lr_variables,         ONLY : lr_verbosity, eels, size_evc
   USE io_global,            ONLY : stdout
   USE constants,            ONLY : tpi, eps8

@@ -7,7 +7,8 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------------------
-  subroutine loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, exband )
+  subroutine loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq,&
+                        exband, w_centers )
   !----------------------------------------------------------------------------
   !!
   !!   wannier interpolation of e-p vertex:
@@ -24,9 +25,9 @@
   USE epwcom,        ONLY : filukk
   USE constants_epw, ONLY : czero
   USE io_epw,        ONLY : iunukk
-  USE io_global, ONLY : ionode_id, meta_ionode
-  USE mp_global, ONLY : inter_pool_comm
-  USE mp,        ONLY : mp_sum, mp_barrier, mp_bcast
+  USE io_global,     ONLY : ionode_id, meta_ionode
+  USE mp_global,     ONLY : inter_pool_comm
+  USE mp,            ONLY : mp_sum, mp_barrier, mp_bcast
   !
   IMPLICIT NONE
   ! 
@@ -48,6 +49,8 @@
   ! 
   REAL(kind=DP), INTENT (in) :: xxq(3)
   !! the qpoint for folding of U
+  REAL(kind=DP), INTENT(inout) :: w_centers(3,nbndsub)
+  !! Wannier centers
   !
   COMPLEX(kind=DP), INTENT (out) :: cu( nbnd, nbndsub, nks )
   !! U(k) matrix for k-points in the pool
@@ -56,7 +59,7 @@
   ! 
   ! work variables 
   !
-  INTEGER :: ik
+  INTEGER :: ik, iw
   !! Counter of k-point index
   INTEGER :: ibnd
   !! Counter on band index
@@ -102,6 +105,10 @@
     ENDDO
     DO ibnd = 1, nbnd
        READ (iunukk,*) exband(ibnd)
+    ENDDO
+    ! Read the Wannier centers
+    DO iw = 1, nbndsub
+      READ (iunukk,*) w_centers(:,iw)
     ENDDO
     !
     CLOSE ( iunukk )

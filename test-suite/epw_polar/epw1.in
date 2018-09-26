@@ -15,6 +15,7 @@
 
   etf_mem     = 1
   lpolar      = .true.
+  lphase      = .true. 
 
   nbndsub     =  4
   nbndskip    =  0

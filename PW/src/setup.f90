@@ -42,10 +42,6 @@ SUBROUTINE setup()
   USE basis,              ONLY : starting_pot, natomwfc
   USE gvect,              ONLY : gcutm, ecutrho
   USE gvecw,              ONLY : gcutw, ecutwfc
-  USE fft_base,           ONLY : dfftp
-  USE fft_base,           ONLY : dffts
-  USE fft_types,          ONLY : fft_type_init, fft_type_allocate
-  USE fft_base,           ONLY : smap
   USE gvecs,              ONLY : doublegrid, gcutms, dual
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  ltetra, lxkcry, nkstot, &
@@ -60,8 +56,8 @@ SUBROUTINE setup()
   USE ktetra,             ONLY : tetra_type, opt_tetra_init, tetra_init
   USE symm_base,          ONLY : s, t_rev, irt, nrot, nsym, invsym, nosym, &
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
-                                 find_sym, inverse_s, no_t_rev &
-                                 , allfrac, remove_sym
+                                 find_sym, inverse_s, no_t_rev, fft_fact,  &
+                                 allfrac
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, ts_vdw, &
@@ -93,7 +89,7 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, is, ierr, ibnd, ik
+  INTEGER  :: na, is, ierr, ibnd, ik, nrot_
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
   !
@@ -421,21 +417,6 @@ SUBROUTINE setup()
   !
   call check_atoms ( nat, tau, bg )
   !
-  ! ... calculate dimensions of the FFT grid
-  !
-  ! ... if the smooth and dense grid must coincide, ensure that they do
-  ! ... also if dense grid is set from input and smooth grid is not
-  !
-  IF ( ( dfftp%nr1 /= 0 .AND. dfftp%nr2 /= 0 .AND. dfftp%nr3 /= 0 ) .AND. &
-       ( dffts%nr1 == 0 .AND. dffts%nr2 == 0 .AND. dffts%nr3 == 0 ) .AND. &
-       .NOT. doublegrid ) THEN
-     dffts%nr1 = dfftp%nr1
-     dffts%nr2 = dfftp%nr2
-     dffts%nr3 = dfftp%nr3
-  END IF
-  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft )
-  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
-  !
   !  ... generate transformation matrices for the crystal point group
   !  ... First we generate all the symmetry matrices of the Bravais lattice
   !
@@ -446,9 +427,15 @@ SUBROUTINE setup()
   IF ( lecrpa ) nosym = .TRUE.
   IF ( lecrpa ) skip_equivalence=.TRUE.
   !
-  ! ... If nosym is true do not use any point-group symmetry
+  ! ... if nosym is true: do not reduce automatic k-point grids to the IBZ
+  ! ... using the symmetries of the lattice (only k <-> -k symmetry is used)
+  ! ... Does not change the number "nrot" of symmetries of the lattice
   !
-  IF ( nosym ) nrot = 1
+  IF ( nosym ) THEN
+     nrot_ = 1
+  ELSE
+     nrot_ = nrot
+  END IF
   !
   ! ... time_reversal = use q=>-q symmetry for k-point generation
   !
@@ -464,20 +451,18 @@ SUBROUTINE setup()
         CALL kpoint_grid_efield (at,bg, npk, &
              k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk, nspin)
         nosym = .TRUE.
-        nrot  = 1
-        nsym  = 1
+        nrot_ = 1
         !
      ELSE IF (lberry ) THEN
         !
-        CALL kp_strings( nppstr, gdir, nrot, s, bg, npk, &
+        CALL kp_strings( nppstr, gdir, nrot_, s, bg, npk, &
                          k1, k2, k3, nk1, nk2, nk3, nkstot, xk, wk )
         nosym = .TRUE.
-        nrot  = 1
-        nsym  = 1
+        nrot_ = 1
         !
      ELSE
         !
-        CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, bg,&
+        CALL kpoint_grid ( nrot_,time_reversal, skip_equivalence, s, t_rev, bg,&
                            npk, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
         !
      END IF
@@ -495,10 +480,8 @@ SUBROUTINE setup()
            allocate(nx_el(nkstot*nspin,3))
         END IF
 
-        ! <AF>
         IF ( gdir<1 .OR. gdir>3 ) CALL errore('setup','invalid gdir value'&
                                   &' (valid values: 1=x, 2=y, 3=z)',10) 
-        !
         DO ik=1,nkstot
            nx_el(ik,gdir)=ik
         END DO
@@ -509,8 +492,7 @@ SUBROUTINE setup()
         nppstr_3d(gdir)=nppstr
         l3dstring=.false.
         nosym = .TRUE.
-        nrot  = 1
-        nsym  = 1
+        nrot_ = 1
         !
      END IF
   END IF
@@ -527,9 +509,15 @@ SUBROUTINE setup()
      !
      CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate )
      !
-     IF ( .NOT. allfrac ) CALL remove_sym ( dfftp%nr1, dfftp%nr2, dfftp%nr3 )
+     ! ... do not force FFT grid to be commensurate with fractional translations
+     !
+     IF ( allfrac ) fft_fact(:) = 1 
      !
   END IF
+  !
+  ! ... nosym: do not use any point-group symmetry (s(:,:,1) is the identity)
+  !
+  IF ( nosym ) nsym = 1
   !
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.
@@ -537,7 +525,7 @@ SUBROUTINE setup()
   ! ... "irreducible_BZ" computes the missing k-points.
   !
   IF ( .NOT. lbands ) THEN
-     CALL irreducible_BZ (nrot, s, nsym, time_reversal, &
+     CALL irreducible_BZ (nrot_, s, nsym, time_reversal, &
                           magnetic_sym, at, bg, npk, nkstot, xk, wk, t_rev)
   ELSE
      one = SUM (wk(1:nkstot))

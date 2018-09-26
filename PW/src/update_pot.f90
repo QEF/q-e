@@ -354,15 +354,16 @@ SUBROUTINE update_pot()
   !
   IF ( pot_order > 1 .AND. ionode ) THEN
      !
+     ! FIXME: won't work for hdf5
      dirname =  TRIM( tmp_dir ) // TRIM( prefix ) // postfix
-     INQUIRE( FILE = TRIM( dirname ) // 'charge-density.old.dat', &
+     INQUIRE( FILE = TRIM( dirname ) // 'charge-old.dat', &
           EXIST = exists )
      !
      IF ( exists ) THEN
         !
         rho_extr = MIN( 2, history, pot_order )
         !
-        INQUIRE( FILE = TRIM( dirname ) //'charge-density.old2.dat', &
+        INQUIRE( FILE = TRIM( dirname ) //'charge-old2.dat', &
              EXIST = exists )
         !
         IF ( exists ) rho_extr = MIN( 3, history, pot_order )
@@ -385,26 +386,30 @@ END SUBROUTINE update_pot
 SUBROUTINE extrapolate_charge( dirname, rho_extr )
   !----------------------------------------------------------------------------
   !
-  USE constants,            ONLY : eps32
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : omega, bg
   USE ions_base,            ONLY : nat, tau, nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
-  USE gvect,                ONLY : ngm, g, gg, gstart, eigts1, eigts2, eigts3
+  USE control_flags,        ONLY : gamma_only
+  USE gvect,                ONLY : ngm, g, gg, gstart, eigts1, eigts2, eigts3, &
+       mill, ig_l2g
   USE lsda_mod,             ONLY : lsda, nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE ldaU,                 ONLY : eth
-  USE wavefunctions, ONLY : psic
   USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE extfield,             ONLY : etotefield
   USE cellmd,               ONLY : lmovecell, omega_old
   USE vlocal,               ONLY : strf
   USE noncollin_module,     ONLY : noncolin
   USE klist,                ONLY : nelec
-  USE xml_io_base,          ONLY : write_rho, read_rho
   USE paw_variables,        ONLY : okpaw, ddd_paw
   USE paw_onecenter,        ONLY : PAW_potential
+  USE mp_pools,             ONLY : my_pool_id
+  USE mp_bands,             ONLY : my_bgrp_id, root_bgrp_id, root_bgrp, &
+       intra_bgrp_comm
+  USE io_base,              ONLY : write_rhog, read_rhog
+  USE fft_rho,              ONLY : rho_g2r, rho_r2g
   !
   USE gvect_gpum,   ONLY : using_eigts1, using_eigts2, using_eigts3, &
                            using_eigts1_d, using_eigts2_d, using_eigts3_d
@@ -413,9 +418,10 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
   INTEGER, INTENT(IN) :: rho_extr
   CHARACTER(LEN=*), INTENT(IN) :: dirname
   !
-  REAL(DP), ALLOCATABLE :: work(:,:), work1(:,:)
+  COMPLEX (DP), ALLOCATABLE :: work(:,:), work1(:,:)
     ! work  is the difference between rho and atomic rho at time t
     ! work1 is the same thing at time t-dt
+  REAL(DP) :: dum(3) = [0_dp, 0_dp, 0_dp]
   REAL(DP) :: charge
   !
   INTEGER :: is
@@ -427,7 +433,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      IF ( lmovecell ) CALL scale_h()
      !
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                      dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
+          dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
 #if defined(__CUDA)
      ! sync duplicated version
      CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
@@ -453,7 +459,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      !
   ELSE
      ! 
-     ALLOCATE( work( dfftp%nnr, 1 ) )
+     ALLOCATE( work( dfftp%ngm, 1 ) )
      !
      work = 0.D0
      !
@@ -461,34 +467,18 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      ! ... keeping fixed the value of zeta = mag / rho_tot.
      ! ... zeta is set here and put in rho%of_r(:,2) while rho%of_r(:,1) 
      ! ... will contain the total valence charge
+     ! FIXME: half extrapolation is done in G-space, half in real space
      !
      IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, dfftp%nnr, nspin, 1 )
-     !
-     IF ( noncolin ) THEN
-        !
-        DO is = 2, nspin
-           !
-           WHERE( rho%of_r(:,1) > eps32 )
-              !
-              rho%of_r(:,is) = rho%of_r(:,is) / rho%of_r(:,1)
-              !
-           ELSEWHERE
-              !
-              rho%of_r(:,is) = 0.D0
-              !
-           END WHERE
-           !
-        END DO
-        !
-     END IF
+     IF ( noncolin ) CALL rho2mag( rho%of_r, rho_core, dfftp%nnr, nspin, 1 )
      !
      ! ... subtract the old atomic charge density
      !
-     CALL atomic_rho( work, 1 )
+     CALL atomic_rho_g( work, 1 )
      !
-     rho%of_r(:,1) = rho%of_r(:,1) - work(:,1)
-     !
-     IF ( lmovecell ) rho%of_r(:,1) = rho%of_r(:,1) * omega_old
+     rho%of_g(:,1) = rho%of_g(:,1) - work(:,1)
+     IF ( lsda) rho%of_g(:,1) = rho%of_g(:,1) + rho%of_g(:,2)
+     IF ( lmovecell ) rho%of_g(:,1) = rho%of_g(:,1) * omega_old
      !
      ! ... extrapolate the difference between the atomic charge and
      ! ... the self-consistent one
@@ -504,7 +494,14 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
         !
         ! ... no need to save old charge density if no extrapolation is done
         !
-        IF ( pot_order > 1 ) CALL write_rho( dirname, rho%of_r, 1, 'old' )
+        IF ( pot_order > 1 ) THEN
+           ! Write G-space density
+           IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+                CALL write_rhog( TRIM(dirname) // "charge-old", &
+                root_bgrp, intra_bgrp_comm, dum, dum, dum, & 
+                gamma_only, mill, ig_l2g, rho%of_g(:,1:1) )
+           !
+        END IF
         !
      ELSE IF ( rho_extr == 2 ) THEN
         !
@@ -513,54 +510,74 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
         !
         ! ...   oldrho  ->  work
         !
-        CALL read_rho( dirname, work, 1, 'old' )
+        ! Read G-space density
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL read_rhog( TRIM(dirname) // "charge-old", &
+             root_bgrp, intra_bgrp_comm, ig_l2g, 1, work(:,1:1) )
         !
         ! ...   rho%of_r   ->  oldrho
         ! ...   work  ->  oldrho2
+        ! FIXME: rename files instead of rewriting them
         !
-        CALL write_rho( dirname, rho%of_r,  1, 'old' )
-        CALL write_rho( dirname, work, 1, 'old2' )
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL write_rhog( TRIM(dirname) // "charge-old", &
+             root_bgrp, intra_bgrp_comm, dum, dum, dum, & 
+             gamma_only, mill, ig_l2g, rho%of_g(:,1:1) )
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL write_rhog( TRIM(dirname) // "charge-old2", &
+             root_bgrp, intra_bgrp_comm, dum, dum, dum, & 
+             gamma_only, mill, ig_l2g, work(:,1:1) )
         !
         ! ... extrapolation
         !
-        rho%of_r(:,1) = 2.D0*rho%of_r(:,1) - work(:,1)
+        rho%of_g(:,1) = 2.D0*rho%of_g(:,1) - work(:,1)
         !
      ELSE IF ( rho_extr == 3 ) THEN
         !
         WRITE( UNIT = stdout, &
                FMT = '(5X,"second order charge density extrapolation")' )
         !
-        ALLOCATE( work1( dfftp%nnr, 1 ) )
+        ALLOCATE( work1( dfftp%ngm, 1 ) )
         !
         work1 = 0.D0
         !
         ! ...   oldrho2  ->  work1
         ! ...   oldrho   ->  work
         !
-        CALL read_rho( dirname, work1, 1, 'old2' )
-        CALL read_rho( dirname, work,  1, 'old' )
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL read_rhog( TRIM(dirname) // "charge-old2", &
+             root_bgrp, intra_bgrp_comm, ig_l2g, 1, work1(:,1:1) )
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL read_rhog( TRIM(dirname) // "charge-old", &
+             root_bgrp, intra_bgrp_comm, ig_l2g, 1, work(:,1:1) )
         !
         ! ...   rho%of_r   ->  oldrho
         ! ...   work  ->  oldrho2
         !
-        CALL write_rho( dirname, rho%of_r,  1, 'old' )
-        CALL write_rho( dirname, work, 1, 'old2' )
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL write_rhog( TRIM(dirname) // "charge-old", &
+             root_bgrp, intra_bgrp_comm, dum, dum, dum, & 
+             gamma_only, mill, ig_l2g, rho%of_g(:,1:1) )
+        IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+             CALL write_rhog( TRIM(dirname) // "charge-old2", &
+             root_bgrp, intra_bgrp_comm, dum, dum, dum, & 
+             gamma_only, mill, ig_l2g, work(:,1:1) )
         !
-        rho%of_r(:,1) = rho%of_r(:,1) + alpha0*( rho%of_r(:,1) - work(:,1) ) + &
+        rho%of_g(:,1) = rho%of_g(:,1) + alpha0*( rho%of_g(:,1) - work(:,1) ) + &
                                beta0*( work(:,1) - work1(:,1) )
         !
         DEALLOCATE( work1 )
         !
      END IF
      !
-     IF ( lmovecell ) rho%of_r(:,1) = rho%of_r(:,1) / omega
+     IF ( lmovecell ) rho%of_g(:,1) = rho%of_g(:,1) / omega
      !
      ! ... calculate structure factors for the new positions
      !
      IF ( lmovecell ) CALL scale_h()
      !
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                      dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
+          dfftp%nr1, dfftp%nr2, dfftp%nr3, strf, eigts1, eigts2, eigts3 )
 #if defined(__CUDA)
      ! sync duplicated version
      CALL using_eigts1(2);   CALL using_eigts2(2);   CALL using_eigts3(2);
@@ -571,47 +588,24 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      !
      ! ... add atomic charges in the new positions
      !
-     CALL atomic_rho( work, 1 )
+     CALL atomic_rho_g( work, 1 )
      !
-     rho%of_r(:,1) = rho%of_r(:,1) + work(:,1)
+     rho%of_g(:,1) = rho%of_g(:,1) + work(:,1)
+     !
+     ! ... bring extrapolated rho to real space
+     !
+     CALL rho_g2r (dfftp, rho%of_g(:,1:1), rho%of_r(:,1:1))
      !
      ! ... reset up and down charge densities in the LSDA case
      !
      IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, dfftp%nnr, nspin, -1 )
-     !
-     IF ( noncolin ) THEN
-        !
-        DO is = 2, nspin
-           !
-           WHERE( rho%of_r(:,1) > eps32 )
-           !
-              rho%of_r(:,is) = rho%of_r(:,is)*rho%of_r(:,1)
-              !
-           ELSEWHERE
-              !
-              rho%of_r(:,is) = 0.D0
-              !
-           END WHERE
-           !
-        END DO
-        !
-     END IF
+     IF ( noncolin ) CALL rho2mag( rho%of_r, rho_core, dfftp%nnr, nspin,-1 )
      !
      DEALLOCATE( work )
      !
   END IF
   !
-  ! ... bring extrapolated rho to G-space
-  !
-  DO is = 1, nspin
-     !
-     psic(:) = rho%of_r(:,is)
-     !
-     CALL fwfft ('Rho', psic, dfftp)
-     !
-     rho%of_g(:,is) = psic(dfftp%nl(:))
-     !
-  END DO
+  CALL rho_r2g (dfftp, rho%of_r, rho%of_g )
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )

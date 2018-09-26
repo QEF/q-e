@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,7 +30,7 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   USE ions_base,          ONLY : nat, tau, ityp, zv
   USE force_mod,          ONLY : force
   USE basis,              ONLY : natomwfc
-  USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
+  USE klist,              ONLY : xk, wk, nks, degauss, lgauss, &
                                  ltetra, nkstot, qnorm
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
   USE symm_base,          ONLY : s, t_rev, nrot, nsym, time_reversal
@@ -45,8 +45,8 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   USE paw_variables,      ONLY : okpaw
   USE uspp_param,         ONLY : n_atom_wfc
   USE ktetra,             ONLY : tetra, tetra_type, opt_tetra_init
-  USE lr_symm_base, ONLY : nsymq, invsymq, minus_q
-  USE control_lr,   ONLY : lgamma
+  USE lr_symm_base,       ONLY : nsymq, invsymq, minus_q
+  USE control_lr,         ONLY : lgamma, ethr_nscf
   !
   IMPLICIT NONE
   !
@@ -61,9 +61,9 @@ SUBROUTINE setup_nscf ( newgrid, xq, elph_mat )
   !
   IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
   !
-  ! ... threshold for diagonalization ethr - should be good for all cases
+  ! ... threshold for diagonalization ethr
   !
-  ethr= 1.0D-9 / nelec
+  ethr = ethr_nscf
   !
   ! ... variables for iterative diagonalization
   ! ... Davdson: isolve=0, david=4 ; CG: isolve=1, david=1

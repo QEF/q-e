@@ -14,7 +14,7 @@ SUBROUTINE print_clock_lr()
    !
    USE io_global,        ONLY : stdout
    USE mp_world,         ONLY : mpime, root
-   USE realus,           ONLY : real_space,real_space_debug
+   USE realus,           ONLY : real_space
    USE lr_variables,     ONLY : davidson, eels
    USE funct,            ONLY : dft_is_hybrid
    !
@@ -85,7 +85,7 @@ SUBROUTINE print_clock_lr()
       CALL print_clock( 'lr_sm1_psi' )
    ENDIF
    !
-   IF (real_space_debug>0) THEN
+   IF (real_space) THEN
     WRITE( stdout, '(5X,"US routines, RS")' )
     CALL print_clock ( 'realus' )
     CALL print_clock ( 'betapointlist' )

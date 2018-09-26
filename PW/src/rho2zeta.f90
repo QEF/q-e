@@ -79,10 +79,69 @@ SUBROUTINE rho2zeta( rho, rho_core, nrxx, nspin, iop )
      !
      WRITE( stdout , '(5X,"iop = ",I5)' ) iop
      !
-     CALL errore( 'mag2zeta', 'wrong iop', 1 )
+     CALL errore( 'rho2zeta', 'wrong iop', 1 )
      !
   END IF
   !
   RETURN
   !
 END SUBROUTINE rho2zeta
+!
+!----------------------------------------------------------------------------
+SUBROUTINE rho2mag( rho, rho_core, nrxx, nspin, iop )
+  !---------------------------------------------------------------------------
+  ! analogous to rho2zeta, for noncolinear magnetization
+  !
+  USE constants, ONLY : eps32
+  USE io_global, ONLY : stdout
+  USE kinds,     ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, intent(in)    :: iop, nspin, nrxx
+  REAL(DP), intent(in)   :: rho_core(nrxx)
+  REAL(DP), intent(inout):: rho(nrxx,nspin)
+  !
+  INTEGER :: is
+  !
+  IF ( iop == -1 ) THEN
+     !
+     DO is = 2, nspin
+        !
+        WHERE( rho(:,1)+rho_core(:) > eps32 )
+           !
+           rho(:,is) = rho(:,is)*(rho(:,1)+rho_core(:))
+           !
+        ELSEWHERE
+           !
+           rho(:,is) = 0.D0
+              !
+        END WHERE
+        !
+     END DO
+     !
+     ELSE IF ( iop == 1 ) THEN
+        !
+     DO is = 2, nspin
+        !
+        WHERE( rho(:,1)+rho_core(:) > eps32 )
+           !
+           rho(:,is) = rho(:,is) / ( rho(:,1)+rho_core(:) )
+           !
+        ELSEWHERE
+           !
+           rho(:,is) = 0.D0
+           !
+        END WHERE
+        !
+     END DO
+     !
+  ELSE
+     !
+     WRITE( stdout , '(5X,"iop = ",I5)' ) iop
+     !
+     CALL errore( 'rho2mag', 'wrong iop', 1 )
+     !
+  END IF
+  !
+END SUBROUTINE rho2mag

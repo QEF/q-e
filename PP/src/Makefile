@@ -53,7 +53,7 @@ QEOBJS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
 
 MODULES = $(PWOBJS) $(QEOBJS)
 
-TLDEPS= bindir mods libs pw
+TLDEPS= pwlibs
 
 all : tldeps open_grid.x average.x bands.x dos.x epsilon.x initial_state.x fs.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \

@@ -374,7 +374,6 @@ CONTAINS
       !
       ! ... a counter indicating the last successful printout iteration is saved
       !
-      USE iotk_module
       USE io_global, ONLY: ionode, ionode_id
       USE io_files, ONLY : iunpun, create_directory, restart_dir
       USE mp, ONLY: mp_bcast
@@ -396,10 +395,10 @@ CONTAINS
       !
       IF ( ionode ) THEN
          !
-         filename = TRIM( dirname ) // 'print_counter.xml'
+         filename = TRIM( dirname ) // 'print_counter'
          !
-         CALL iotk_open_write( iunpun, FILE = filename, &
-                             & ROOT = "PRINT_COUNTER",  IERR = ierr )
+         OPEN( UNIT = iunpun, FILE = filename, FORM = 'formatted', &
+                 STATUS = 'unknown', IOSTAT = ierr )
          !
       END IF
       !
@@ -410,11 +409,9 @@ CONTAINS
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_write_begin( iunpun, "LAST_SUCCESSFUL_PRINTOUT" )
-         CALL iotk_write_dat(   iunpun, "STEP", iter )
-         CALL iotk_write_end(   iunpun, "LAST_SUCCESSFUL_PRINTOUT" )
+         WRITE ( iunpun, '("LAST SUCCESSFUL PRINTOUT AT STEP:",/,i5 )' ) iter
          !
-         CALL iotk_close_write( iunpun )
+         CLOSE ( iunpun, STATUS = 'keep' )
          !
       END IF
       !
@@ -429,7 +426,6 @@ CONTAINS
       ! ... the counter indicating the last successful printout iteration 
       ! ... is read here
       !
-      USE iotk_module
       USE io_global, ONLY: ionode, ionode_id
       USE io_files, ONLY : iunpun, restart_dir
       USE mp, ONLY: mp_bcast
@@ -449,9 +445,10 @@ CONTAINS
       !
       IF ( ionode ) THEN
          !
-         filename = TRIM( dirname ) // 'print_counter.xml'
+         filename = TRIM( dirname ) // 'print_counter'
          !
-         CALL iotk_open_read( iunpun, FILE = filename, IERR = ierr )
+         OPEN( UNIT = iunpun, FILE = filename, FORM = 'formatted', &
+                 STATUS = 'old', IOSTAT = ierr )
          !
          IF ( ierr > 0 ) THEN
             !
@@ -459,11 +456,10 @@ CONTAINS
             !
          ELSE
             !
-            CALL iotk_scan_begin( iunpun, "LAST_SUCCESSFUL_PRINTOUT" )
-            CALL iotk_scan_dat(   iunpun, "STEP", nprint_nfi )
-            CALL iotk_scan_end(   iunpun, "LAST_SUCCESSFUL_PRINTOUT" )
+            READ ( iunpun, * )
+            READ ( iunpun, * ) nprint_nfi
             !
-            CALL iotk_close_read( iunpun )
+            CLOSE ( iunpun, STATUS = 'keep' )
             !
          END IF
          !

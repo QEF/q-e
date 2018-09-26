@@ -14,13 +14,13 @@ heada: libminpack
 gwwa:
 	( cd gww ; $(MAKE) all || exit 1 )
 
-bsea: gwwa
+bsea: gwwa pw4gwwa
 	( cd bse ; $(MAKE) all || exit 1 )
 
-simplea: 
+simplea: gwwa
 	( cd simple ; $(MAKE) all || exit 1 )
 
-simple_bsea:
+simple_bsea: gwwa
 	( cd simple_bse ; $(MAKE) all || exit 1 )
 
 simple_ipa:

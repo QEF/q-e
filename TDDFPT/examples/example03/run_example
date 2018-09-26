@@ -1,0 +1,170 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x, turbo_lanczos.x, and turbo_spectrum.x"
+$ECHO "to calculate the absorption spectrum of the C6H6 molecule."
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x turbo_lanczos.x turbo_spectrum.x"
+PSEUDO_LIST="H.pz-rrkjus.UPF C.pz-rrkjus.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+TURBO_LANCZOS_COMMAND="$PARA_PREFIX $BIN_DIR/turbo_lanczos.x $PARA_POSTFIX"
+TURBO_SPECTRUM_COMMAND="$PARA_PREFIX $BIN_DIR/turbo_spectrum.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as:              $PW_COMMAND"
+$ECHO "  running turbo_lanczos.x as:   $TURBO_LANCZOS_COMMAND"
+$ECHO "  running turbo_spectrum.x as:  $TURBO_SPECTRUM_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+PREFIX='C6H6'
+
+# self-consistent calculation
+cat > $PREFIX.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='$PREFIX'
+    pseudo_dir = '$PSEUDO_DIR/'
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav = 6,
+    celldm(1) = 32.0,
+    celldm(3) = 0.83,
+    nat = 12,
+    ntyp = 2,
+    ecutwfc = 25,
+    ecutrho = 250,
+ /
+ &electrons
+    conv_thr =  1.0d-10
+    tqr = .true.
+ /
+ATOMIC_SPECIES
+H  1.008  H.pz-rrkjus.UPF
+C 12.011  C.pz-rrkjus.UPF
+ATOMIC_POSITIONS {angstrom}
+C   5.633200899   6.320861303   5.000000000
+C   6.847051545   8.422621957   5.000000000
+C   8.060751351   7.721904557   5.000000000
+C   8.060707879   6.320636665   5.000000000
+C   6.846898786   5.620067381   5.000000000
+C   5.633279551   7.722134449   5.000000000
+H   6.847254360   9.512254789   5.000000000
+H   9.004364510   8.266639340   5.000000000
+H   9.004297495   5.775895755   5.000000000
+H   6.846845929   4.530522778   5.000000000
+H   4.689556006   5.776237709   5.000000000
+H   4.689791688   8.267023318   5.000000000
+K_POINTS {gamma}
+EOF
+$ECHO "  Running the SCF calculation for $PREFIX..."
+$PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out
+$ECHO " done"
+
+
+# Perform the linear-response calculation
+cat > $PREFIX.tddfpt.in << EOF
+ &lr_input
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   restart_step = 250,
+   restart = .false.
+ /
+ &lr_control
+   itermax = 500,
+   ipol = 4
+ /
+EOF
+$ECHO "  Running the TDDFPT calculation for $PREFIX..."
+$TURBO_LANCZOS_COMMAND < $PREFIX.tddfpt.in > $PREFIX.tddfpt.out
+$ECHO " done"
+
+
+# Perform the postprocessing spectrum calculation
+cat > $PREFIX.tddfpt_pp.in << EOF
+ &lr_input
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   itermax0 = 500,
+   itermax  = 10000,
+   extrapolation = "osc",
+   epsil = 0.01,
+   start = 0.00,
+   end   = 3.50,
+   increment = 0.001,
+   ipol = 4
+ /
+EOF
+$ECHO "  Running the postprocessing spectrum calculation for $PREFIX..."
+$TURBO_SPECTRUM_COMMAND < $PREFIX.tddfpt_pp.in > $PREFIX.tddfpt_pp.out
+$ECHO " done"

@@ -46,7 +46,7 @@
 <tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
 <h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
 <h2 style="margin: 10 10 10 15; text-align: left;"> Program:
-	      turbo_lanczos.x / turboTDDFPT / Quantum Espresso<span style="font-weight: normal;"> (version: svn)</span>
+	      turbo_lanczos.x / turboTDDFPT / Quantum Espresso<span style="font-weight: normal;"> (version: git)</span>
 </h2>
 </th></tr>
 <tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
@@ -55,23 +55,23 @@
 <blockquote>
    
    
-   <p><a href="#idm3">INTRODUCTION</a></p>
-   <p><a href="#idm4">&amp;lr_input</a></p>
+   <p><a href="#idm6454144">INTRODUCTION</a></p>
+   <p><a href="#idm6453008">&amp;lr_input</a></p>
 <blockquote>
-<a href="#idm6">title</a> | <a href="#idm9">prefix</a> | <a href="#idm12">outdir</a> | <a href="#idm15">wfcdir</a> | <a href="#idm18">restart</a> | <a href="#idm21">restart_step</a> | <a href="#idm24">lr_verbosity</a> | <a href="#idm27">disk_io</a>
+<a href="#idm6435872">title</a> | <a href="#idm6434080">prefix</a> | <a href="#idm6432208">outdir</a> | <a href="#idm6430320">wfcdir</a> | <a href="#idm6428432">restart</a> | <a href="#idm6426464">restart_step</a> | <a href="#idm6424576">lr_verbosity</a> | <a href="#idm6422736">disk_io</a>
 </blockquote>
-   <p><a href="#idm30">&amp;lr_control</a></p>
+   <p><a href="#idm6420512">&amp;lr_control</a></p>
 <blockquote>
-<a href="#idm31">itermax</a> | <a href="#idm34">ipol</a> | <a href="#idm37">n_ipol</a> | <a href="#idm40">ltammd</a> | <a href="#idm43">no_hxc</a> | <a href="#idm46">lrpa</a> | <a href="#idm49">ecutfock</a> | <a href="#idm52">charge_response</a> | <a href="#idm55">pseudo_hermitian</a> | <a href="#idm58">d0psi_rs</a> | <a href="#idm61">lshift_d0psi</a>
+<a href="#idm6419984">itermax</a> | <a href="#idm6418256">ipol</a> | <a href="#idm6415744">n_ipol</a> | <a href="#idm6413792">ltammd</a> | <a href="#idm6411952">no_hxc</a> | <a href="#idm6410032">lrpa</a> | <a href="#idm6408192">charge_response</a> | <a href="#idm6406224">pseudo_hermitian</a> | <a href="#idm6404288">d0psi_rs</a> | <a href="#idm6402176">lshift_d0psi</a>
 </blockquote>
-   <p><a href="#idm64">&amp;lr_post</a></p>
+   <p><a href="#idm6399616">&amp;lr_post</a></p>
 <blockquote>
-<a href="#idm65">omeg</a> | <a href="#idm68">epsil</a> | <a href="#idm71">beta_gamma_z_prefix</a> | <a href="#idm74">w_T_npol</a> | <a href="#idm77">plot_type</a>
+<a href="#idm6399088">omeg</a> | <a href="#idm6397232">epsil</a> | <a href="#idm6395424">beta_gamma_z_prefix</a> | <a href="#idm6393456">w_T_npol</a> | <a href="#idm6391536">plot_type</a>
 </blockquote>
 </blockquote>
 </blockquote>
    <blockquote>
-<a name="idm3"></a><h3>INTRODUCTION</h3>
+<a name="idm6454144"></a><h3>INTRODUCTION</h3>
 <blockquote><pre>
     Input data format: { } = optional, [ ] = it depends.
 
@@ -100,13 +100,13 @@ Structure of the input data:
  / ]
    </pre></blockquote>
 </blockquote>
-   <a name="idm4"></a><a name="lr_input"></a><table border="0" width="100%" style="margin-bottom: 20;">
+   <a name="idm6453008"></a><a name="lr_input"></a><table border="0" width="100%" style="margin-bottom: 20;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>lr_input</span>
 </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
       <p><b> This namelist is always needed !
       </b></p>
-      <a name="idm6"></a><a name="title"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6435872"></a><a name="title"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">title</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -120,7 +120,7 @@ Structure of the input data:
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm9"></a><a name="prefix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6434080"></a><a name="prefix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">prefix</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -137,7 +137,7 @@ same prefix.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm12"></a><a name="outdir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6432208"></a><a name="outdir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">outdir</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -153,7 +153,7 @@ include the files generated by ground state pw.x run.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm15"></a><a name="wfcdir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6430320"></a><a name="wfcdir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">wfcdir</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -169,7 +169,7 @@ include the files generated by ground state pw.x run.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm18"></a><a name="restart"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6428432"></a><a name="restart"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">restart</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -189,7 +189,7 @@ previous runs.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm21"></a><a name="restart_step"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6426464"></a><a name="restart_step"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">restart_step</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -206,7 +206,7 @@ itermax Lanczos steps.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm24"></a><a name="lr_verbosity"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6424576"></a><a name="lr_verbosity"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lr_verbosity</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -222,7 +222,7 @@ written to standard output.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm27"></a><a name="disk_io"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6422736"></a><a name="disk_io"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">disk_io</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -241,11 +241,11 @@ the 'default' mode.
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
    </td></tr></tbody></table></td></tr>
 </table>
-   <a name="idm30"></a><a name="lr_control"></a><table border="0" width="100%" style="margin-bottom: 20;">
+   <a name="idm6420512"></a><a name="lr_control"></a><table border="0" width="100%" style="margin-bottom: 20;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>lr_control</span>
 </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
-      <a name="idm31"></a><a name="itermax"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6419984"></a><a name="itermax"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">itermax</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -260,7 +260,7 @@ Number of Lanczos iterations to be performed.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm34"></a><a name="ipol"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6418256"></a><a name="ipol"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ipol</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -280,7 +280,7 @@ tensor and the absorption coefficient are computed.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm37"></a><a name="n_ipol"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6415744"></a><a name="n_ipol"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">n_ipol</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -298,7 +298,7 @@ for a given polarization direction.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm40"></a><a name="ltammd"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6413792"></a><a name="ltammd"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ltammd</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -314,7 +314,7 @@ in constructing the Liouvillian.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm43"></a><a name="no_hxc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6411952"></a><a name="no_hxc"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">no_hxc</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -332,7 +332,7 @@ approximation.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm46"></a><a name="lrpa"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6410032"></a><a name="lrpa"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lrpa</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -348,27 +348,7 @@ is used (no exchange and correlation).
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm49"></a><a name="ecutfock"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
-<tr>
-<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ecutfock</th>
-<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
-</tr>
-<tr>
-<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
-<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> ecutrho
-         </td>
-</tr>
-<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
-Kinetic energy cutoff (Ry) for the exact exchange operator in
-EXX type calculations. By default this is the same as ecutrho
-but in some EXX calculations significant speed-up can be found
-by reducing ecutfock, at the expense of some loss in accuracy.
-Currently only implemented for the optimized gamma point only
-calculations.
-         </pre></blockquote></td></tr>
-</table>
-<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm52"></a><a name="charge_response"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6408192"></a><a name="charge_response"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">charge_response</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -386,7 +366,7 @@ presence of the card lr post mandatory.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm55"></a><a name="pseudo_hermitian"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6406224"></a><a name="pseudo_hermitian"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">pseudo_hermitian</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -404,7 +384,7 @@ is used (which is two times slower).
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm58"></a><a name="d0psi_rs"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6404288"></a><a name="d0psi_rs"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">d0psi_rs</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -426,7 +406,7 @@ is allowed only if the system is finite.
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm61"></a><a name="lshift_d0psi"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6402176"></a><a name="lshift_d0psi"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lshift_d0psi</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
@@ -455,11 +435,11 @@ centered wrt the center of the molecule.
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
    </td></tr></tbody></table></td></tr>
 </table>
-   <a name="idm64"></a><a name="lr_post"></a><table border="0" width="100%" style="margin-bottom: 20;">
+   <a name="idm6399616"></a><a name="lr_post"></a><table border="0" width="100%" style="margin-bottom: 20;">
 <tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>lr_post</span>
 </h2></th></tr>
 <tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
-      <a name="idm65"></a><a name="omeg"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6399088"></a><a name="omeg"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">omeg</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -475,7 +455,7 @@ transition energy (in Rydberg units)
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm68"></a><a name="epsil"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6397232"></a><a name="epsil"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">epsil</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
@@ -490,7 +470,7 @@ The broadening/damping term (in Rydberg units).
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm71"></a><a name="beta_gamma_z_prefix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6395424"></a><a name="beta_gamma_z_prefix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">beta_gamma_z_prefix</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
@@ -508,7 +488,7 @@ parameter. The file outdir/beta gamma z prefix.beta gamma z.x
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm74"></a><a name="w_T_npol"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6393456"></a><a name="w_T_npol"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">w_T_npol</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -525,7 +505,7 @@ calculation. It must be set to 3 if in the previous calculation
          </pre></blockquote></td></tr>
 </table>
 <div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
-      <a name="idm77"></a><a name="plot_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+      <a name="idm6391536"></a><a name="plot_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 <tr>
 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">plot_type</th>
 <td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
@@ -550,7 +530,7 @@ the gaussian cube format.
 </td></tr>
 </table>
 <small>
-	  This file has been created by helpdoc utility on Fri Jun 22 17:11:54 CEST 2018.
+	  This file has been created by helpdoc utility on Fri Sep 07 12:19:41 CEST 2018.
 	</small>
 </body>
 </html>

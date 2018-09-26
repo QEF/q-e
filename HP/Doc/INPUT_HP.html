@@ -1,0 +1,536 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- *** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST *** --><meta http-equiv="Content-Style-Type" CONTENT="text/css">
+<style>
+	  body {
+	  background-color:#ffffff;
+	  font:normal 14px/1.8em arial, helvetica, sans-serif;
+	  width:900px;
+	  text-align:justify;
+	  margin: 30 10 10 30;
+	  }
+
+	  h1 {
+	  font-size:24px;
+	  }
+	  
+	  h2 {
+	  font-size:18px;
+	  }
+	  
+	  h3 {
+	  font-size:16px;
+	  }
+	  pre, tt, code {
+	  font-size:14px;
+	  }	  
+	  .syntax, .syntax table {
+	  font-size:14px;
+	  }
+	  span.namelist {
+	  color: #214478;
+	  }
+	  span.card {
+	  color: #782167;
+	  }
+	  span.flag {
+	  color: #008000;
+	  font-weight: bold;
+	  }
+	</style>
+<title>hp.x: input description</title>
+</head>
+<body>
+<a name="__top__"></a><table style="border-width: 0; table-layout: auto; width: 100%; text-align: left; vertical-align: top; background: #00395a;">
+<tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
+<h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
+<h2 style="margin: 10 10 10 15; text-align: left;"> Program:
+	      hp.x / PWscf / Quantum Espresso<span style="font-weight: normal;"> (version: git)</span>
+</h2>
+</th></tr>
+<tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
+   <blockquote style="margin-bottom: 2em;">
+<h3>TABLE OF CONTENTS</h3>
+<blockquote>
+   
+   
+   <p><a href="#idm6454080">INTRODUCTION</a></p>
+   <p><a href="#idm6435680">&amp;INPUTHP</a></p>
+<blockquote>
+<a href="#idm6435152">prefix</a> | <a href="#idm6433200">outdir</a> | <a href="#idm6430448">iverbosity</a> | <a href="#idm6428352">max_seconds</a> | <a href="#idm6426048">nq1</a> | <a href="#idm6425424">nq2</a> | <a href="#idm6424752">nq3</a> | <a href="#idm6423072">skip_equivalence_q</a> | <a href="#idm6421056">determine_num_pert_only</a> | <a href="#idm6418752">find_atpert</a> | <a href="#idm6416352">docc_thr</a> | <a href="#idm6414432">skip_type</a> | <a href="#idm6411856">equiv_type</a> | <a href="#idm6409440">perturb_only_atom</a> | <a href="#idm6407024">start_q</a> | <a href="#idm6404704">last_q</a> | <a href="#idm6402368">sum_pertq</a> | <a href="#idm6399968">compute_hp</a> | <a href="#idm6397328">conv_thr_chi</a> | <a href="#idm6395456">thresh_init</a> | <a href="#idm6393472">ethr_nscf</a> | <a href="#idm6391504">niter_max</a> | <a href="#idm6389648">alpha_mix(i)</a> | <a href="#idm6386944">nmix</a>
+</blockquote>
+</blockquote>
+</blockquote>
+   <blockquote>
+<a name="idm6454080"></a><h3>INTRODUCTION</h3>
+<blockquote><pre>
+<b>Input data format:</b> { } = optional, [ ] = it depends, # = comment
+
+<b>Structure of the input data:</b>
+===============================================================================
+
+<b>&amp;INPUTHP</b>
+   ...
+<b>/</b>
+   </pre></blockquote>
+</blockquote>
+   <a name="idm6435680"></a><a name="INPUTHP"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>INPUTHP</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <a name="idm6435152"></a><a name="prefix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">prefix</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 'pwscf'
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Prepended to input/output filenames; must be the same
+used in the calculation of unperturbed system.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6433200"></a><a name="outdir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">outdir</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+value of the <tt>ESPRESSO_TMPDIR</tt> environment variable if set;
+<br> current directory ('./') otherwise
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Directory containing input, output, and scratch files;
+must be the same as specified in the calculation of
+the unperturbed system.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6430448"></a><a name="iverbosity"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">iverbosity</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+= 1 : minimal output
+= 2 : as above + symmetry matrices, final response
+      matrices chi0 and chi1 and their inverse matrices,
+      full U matrix
+= 3 : as above + various detailed info about the NSCF
+      calculation at k and k+q
+= 4 : as above + response occupation matrices at every
+      iteration and for every q point in the star
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6428352"></a><a name="max_seconds"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">max_seconds</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.d7
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Maximum allowed run time before the job stops smoothly.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
+<a name="idm6426048"></a><a name="nq1"></a>nq1, <a name="idm6425424"></a><a name="nq2"></a>nq2, <a name="idm6424752"></a><a name="nq3"></a>nq3</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1,1,1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Parameters of the Monkhorst-Pack grid (no offset).
+Same meaning as for nk1, nk2, nk3 in the input of pw.x.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6423072"></a><a name="skip_equivalence_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">skip_equivalence_q</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. then the HP code will skip the equivalence
+analysis of q points, and thus the full grid of q points
+will be used. Otherwise the symmetry is used to determine
+equivalent q points (star of q), and then perform
+calculations only for inequivalent q points.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6421056"></a><a name="determine_num_pert_only"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">determine_num_pert_only</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#find_atpert">find_atpert</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .true. determines the number of perturbations
+(i.e. which atoms will be perturbed) and exits smoothly
+without performing any calculation.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6418752"></a><a name="find_atpert"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">find_atpert</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Method for searching of atoms which must be perturbed.
+1 = Find how many inequivalent Hubbard atoms there are
+    by analyzing unperturbed occupations.
+2 = Find how many Hubbard atoms to perturb based on
+    how many different Hubbard atomic types there are.
+    Warning: atoms which have the same type but which
+    are inequivalent by symmetry or which have different
+    occupations will not be distinguished in this case
+    (use option 1 or 3 instead).
+3 = Find how many inequivalent Hubbard atoms
+    there are using symmetry. Atoms which have the
+    same type but are not equivalent by symmetry will
+    be distinguished in this case.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6416352"></a><a name="docc_thr"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">docc_thr</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 5.D-5
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Threshold for a comparison of unperturbed occupations
+which is needed for the selection of atoms which must
+be perturbed. Can be used only when find_atpert = 1.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6414432"></a><a name="skip_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">skip_type</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#equiv_type">equiv_type</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+skip_type(i), where i runs over types of atoms.
+If skip_type(i)=.true. then no linear-response
+calculation will be performed for the i-th atomic type:
+in this case equiv_type(i) must be specified, otherwise
+the HP code will stop. This option is useful if the
+system has atoms of the same type but opposite spin
+pollarizations (anti-ferromagnetic case).
+This keyword cannot be used when find_atpert = 1.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6411856"></a><a name="equiv_type"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">equiv_type</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 0
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#skip_type">skip_type</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+equiv_type(i), where i runs over types of atoms.
+equiv_type(i)=j, will make type i equivalent to type j
+(useful when nspin=2). Such a merging of types is done
+only at the post-processing stage.
+This keyword cannot be used when find_atpert = 1.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6409440"></a><a name="perturb_only_atom"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">perturb_only_atom</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#compute_hp">compute_hp</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If perturb_only_atom(i)=.true. then only the i-th
+atom will be perturbed and considered in the run.
+This variable is useful when one wants to split
+the whole calculation on parts. Note: this variable
+has a higher priority than skip_type.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6407024"></a><a name="start_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">start_q</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+<a href="#last_q">last_q</a>, <a href="#sum_pertq">sum_pertq</a>
+</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Computes only the q points from start_q to last_q.
+IMPORTANT: start_q must be smaller or equal to
+the total number of q points found.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6404704"></a><a name="last_q"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">last_q</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> number of q points
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+<a href="#start_q">start_q</a>, <a href="#sum_pertq">sum_pertq</a>
+</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Computes only the q points from start_q to last_q.
+IMPORTANT: last_q must be smaller or equal to
+the total number of q points found.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6402368"></a><a name="sum_pertq"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">sum_pertq</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+<a href="#start_q">start_q</a>, <a href="#last_q">last_q</a>, <a href="#perturb_only_atom">perturb_only_atom</a>
+</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If it is set to .true. then the HP code will collect
+pieces of the response occupation matrices for all
+q points. This variable should be used only when
+start_q, last_q and perturb_only_atom are used.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6399968"></a><a name="compute_hp"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">compute_hp</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> .false.
+         </td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>See:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "><a href="#perturb_only_atom">perturb_only_atom</a></td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If it is set to .true. then the HP code will collect
+pieces of the chi0 and chi matrices (which must have
+been produced in previous runs) and then compute
+Hubbard parameters. The HP code will look for files
+tmp_dir/HP/prefix.chi.i.dat. Note that all files
+prefix.chi.i.dat (where i runs over all perturbed
+atoms) must be placed in one folder tmp_dir/HP/.
+compute_hp=.true. must be used only when the
+calculation was parallelized over perturbations.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6397328"></a><a name="conv_thr_chi"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">conv_thr_chi</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.D-5
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Convergence threshold for the response function chi,
+which is defined as a trace of the response
+occupation matrix.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6395456"></a><a name="thresh_init"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">thresh_init</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.D-14
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Initial threshold for the solution of the linear
+system (first iteration). Needed to converge the
+bare (non-interacting) response function chi0.
+The specified value will be multiplied by the
+number of electrons in the system.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6393472"></a><a name="ethr_nscf"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ethr_nscf</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 1.D-11
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Threshold for the convergence of eigenvalues during
+the iterative diagonalization of the Hamiltonian in
+the non-self-consistent-field (NSCF) calculation at
+k and k+q points. Note, this quantity is NOT extensive.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6391504"></a><a name="niter_max"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">niter_max</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 100
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Maximum number of iterations in the iterative
+solution of the linear-response Kohn-Sham equations.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6389648"></a><a name="alpha_mix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">alpha_mix(i)</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">REAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> alpha_mix(1)=0.3
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Mixing parameter (for the i-th iteration) for updating
+the response SCF potential using the modified Broyden
+method: D.D. Johnson, <a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.38.12807">PRB 38, 12807 (1988)</a>.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idm6386944"></a><a name="nmix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">nmix</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; "> 4
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Number of iterations used in potential mixing
+using the modified Broyden method
+D.D. Johnson, <a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.38.12807">PRB 38, 12807 (1988)</a>.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+</td></tr>
+</table>
+<small>
+	  This file has been created by helpdoc utility on Fri Sep 07 12:30:30 CEST 2018.
+	</small>
+</body>
+</html>

@@ -93,7 +93,7 @@
      &        ('setup','lda_plus_u calculation but Hubbard_l not set',1)
       !
       ldmx = 2 * Hubbard_lmax + 1
-      allocate(ns(ldmx,ldmx,nat,nspin))
+      allocate(ns(ldmx,ldmx,nspin,nat))
       !
       return
       end subroutine ldaU_init
@@ -172,12 +172,12 @@
                do m1 = 1, 2*Hubbard_l(is) + 1
                   do m2 = m1, 2*Hubbard_l(is) + 1
                      do i = 1,n
-                      ns(m1,m2,iat,ispin(i)) = ns(m1,m2,iat,ispin(i)) + &
+                      ns(m1,m2,ispin(i),iat) = ns(m1,m2,ispin(i),iat) + &
      &                               f(i) * proj(k+m2,i) * proj(k+m1,i)
                      end do
                   end do
                   do m2 = m1+1, 2*Hubbard_l(is) + 1
-                     ns(m2,m1,iat,:) = ns(m1,m2,iat,:)
+                     ns(m2,m1,:,iat) = ns(m1,m2,:,iat)
                   end do
                end do
             end if
@@ -194,10 +194,10 @@
                 do isp = 1,nspin
                    do m1 = 1, 2*Hubbard_l(is) + 1
                      e_hubbard = e_hubbard + 0.5d0 * Hubbard_U(is) *    &
-     &                           ns(m1,m1,iat,isp)
+     &                           ns(m1,m1,isp,iat)
                      do m2 = 1, 2*Hubbard_l(is) + 1
                         e_hubbard = e_hubbard - 0.5d0 * Hubbard_U(is) * &
-     &                              ns(m1,m2,iat,isp) * ns(m2,m1,iat,isp)
+     &                              ns(m1,m2,isp,iat) * ns(m2,m1,isp,iat)
                      end do
                    end do
                 end do
@@ -222,7 +222,7 @@
                      tempsi(m1,i) = proj (offset(is,ia)+m1,i)
                      do m2 = 1, ldim
                         tempsi(m1,i) = tempsi(m1,i) - &
-                                       2.0_dp*ns(m1,m2,iat,ispin(i)) * &
+                                       2.0_dp*ns(m1,m2,ispin(i),iat) * &
                                                proj (offset(is,ia)+m2,i)
                      enddo
                      tempsi(m1,i) = tempsi(m1,i) * Hubbard_U(is)/2.d0*f(i)
@@ -248,7 +248,7 @@
       if ( tfor .or. tprnfor ) then
         call start_clock('new_ns:forc')
         allocate (bp(nhsa,n), dbp(nhsa,nx,3), wdb(nhsa,nwfcU,3))
-        allocate(dns(ldmx,ldmx,nat,nspin))
+        allocate(dns(ldmx,ldmx,nspin,nat))
         allocate (spsi(ngw,n))
 !
         call nlsm1 ( n, 1, nsp, eigr, c, bp )
@@ -280,11 +280,11 @@
                         do isp = 1,nspin
                            do m2 = 1,2*Hubbard_l(is) + 1
                               forceh(ipol,alpha) = forceh(ipol,alpha) -   &
-     &                        Hubbard_U(is) * 0.5d0 * dns(m2,m2,iat,isp)
+     &                        Hubbard_U(is) * 0.5d0 * dns(m2,m2,isp,iat)
                               do m1 = 1,2*Hubbard_l(is) + 1
                                  forceh(ipol,alpha) = forceh(ipol,alpha) + &
-     &                           Hubbard_U(is)*ns(m2,m1,iat,isp)*       &
-     &                           dns(m1,m2,iat,isp)
+     &                           Hubbard_U(is)*ns(m2,m1,isp,iat)*       &
+     &                           dns(m1,m2,isp,iat)
                               end do
                            end do
                         end do
@@ -355,7 +355,7 @@
             if (Hubbard_U(is).ne.0.d0) then
                do isp = 1, nspin
                    do m1 = 1, 2 * Hubbard_l(is) + 1
-                      nsuma = nsuma + ns (m1,m1,iat,isp)
+                      nsuma = nsuma + ns (m1,m1,isp,iat)
                    end do
                end do
                if (nspin.eq.1) nsuma = 2.d0 * nsuma
@@ -369,7 +369,7 @@
                   do m1 = 1, 2 * Hubbard_l(is) + 1
                      do m2 = m1, 2 * Hubbard_l(is) + 1
                         k = k + 1
-                        f1 ( k ) = ns (m2,m1,iat,isp)
+                        f1 ( k ) = ns (m2,m1,isp,iat)
                      enddo
                   enddo
 
@@ -386,7 +386,7 @@
                   end do
                   write(6,*) 'occupations'
                   do m1 = 1, 2*Hubbard_l(is)+1
-                     write (6,'(7(f6.3,1x))') (ns(m1,m2,iat,isp),m2=1,    &
+                     write (6,'(7(f6.3,1x))') (ns(m1,m2,isp,iat),m2=1,    &
      &                     2*Hubbard_l(is)+1)
                   end do
                end do
@@ -428,7 +428,7 @@
       real(DP),     intent(in) :: proj(nwfcU,n)
       complex (DP), intent(in) :: spsi(ngw,n)
 ! output
-      real (DP),   intent(out) :: dns(ldmx,ldmx,nat,nspin)
+      real (DP),   intent(out) :: dns(ldmx,ldmx,nspin,nat)
 !     dns   derivative of ns(:,:,:,:) w.r.t. tau
 !
       integer ibnd,is,i,ia, m1,m2, l, iat, alpha, ldim
@@ -460,14 +460,14 @@
                do m1 = 1, ldim
                   do m2 = m1, ldim
                      do ibnd = nb_s,nb_e
-                        dns(m1,m2,iat,ispin(ibnd)) =                    &
-     &                  dns(m1,m2,iat,ispin(ibnd)) +                    &
+                        dns(m1,m2,ispin(ibnd),iat) =                    &
+     &                  dns(m1,m2,ispin(ibnd),iat) +                    &
      &                   f(ibnd)*REAL(  proj(offset(is,ia)+m1,ibnd) *   &
      &                                (dproj(offset(is,ia)+m2,ibnd))+   &
      &                                 dproj(offset(is,ia)+m1,ibnd) *   &
      &                                 (proj(offset(is,ia)+m2,ibnd)) )
                      end do
-                     dns(m2,m1,iat,:) = dns(m1,m2,iat,:)
+                     dns(m2,m1,:,iat) = dns(m1,m2,:,iat)
                   end do
                end do
             end if
@@ -487,7 +487,7 @@
 !
 ! This routine computes the first derivative of the projection
 ! <\fi^{at}_{I,m1}|S|\psi_{k,v,s}> with respect to the atomic displacement
-! u(alpha,ipol) (we remember that ns_{m1,m2,I,s} = \sum_{k,v}
+! u(alpha,ipol) (we remember that ns_{m1,m2,s,I} = \sum_{k,v}
 ! f_{kv} <\fi^{at}_{I,m1}|S|\psi_{k,v,s}><\psi_{k,v,s}|S|\fi^{at}_{I,m2}>)
 !
       use ions_base, only: na, nat

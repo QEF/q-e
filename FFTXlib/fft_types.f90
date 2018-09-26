@@ -170,8 +170,7 @@ CONTAINS
 
   SUBROUTINE fft_type_allocate( desc, at, bg, gcutm, comm, fft_fact, nyfft  )
   !
-  ! routine that allocate arrays of fft_type_descriptor
-  ! must be called before fft_type_init
+  ! routine allocating arrays of fft_type_descriptor, called by fft_type_init
   !
     TYPE (fft_type_descriptor) :: desc
     REAL(DP), INTENT(IN) :: at(3,3), bg(3,3)
@@ -826,7 +825,7 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_type_init( dfft, smap, pers, lgamma, lpara, comm, at, bg, gcut_in, dual_in, nyfft )
+  SUBROUTINE fft_type_init( dfft, smap, pers, lgamma, lpara, comm, at, bg, gcut_in, dual_in, fft_fact, nyfft )
 
      USE stick_base
 
@@ -840,6 +839,7 @@ CONTAINS
      REAL(DP), INTENT(IN) :: bg(3,3)
      REAL(DP), INTENT(IN) :: at(3,3)
      REAL(DP), OPTIONAL, INTENT(IN) :: dual_in
+     INTEGER, INTENT(IN), OPTIONAL :: fft_fact(3)
      INTEGER, INTENT(IN) :: nyfft
 !
 !    Potential or dual
@@ -887,7 +887,7 @@ CONTAINS
      !write (*,*) 'FFT_TYPE_INIT pers, gkcut,gcut', pers, gkcut, gcut
 
      IF( .NOT. ALLOCATED( dfft%nsp ) ) THEN
-        CALL fft_type_allocate( dfft, at, bg, gcut, comm, nyfft=nyfft )
+        CALL fft_type_allocate( dfft, at, bg, gcut, comm, fft_fact=fft_fact, nyfft=nyfft )
      ELSE
         IF( dfft%comm /= comm ) THEN
            CALL fftx_error__(' fft_type_init ', ' FFT already allocated with a different communicator ', 1 )
@@ -898,8 +898,8 @@ CONTAINS
      dfft%lpara = lpara  !  this descriptor can be either a descriptor for a
                          !  parallel FFT or a serial FFT even in parallel build
 
-     CALL sticks_map_allocate( smap, lgamma, dfft%lpara, dfft%nproc2, dfft%iproc, dfft%iproc2, &
-                                             dfft%nr1, dfft%nr2, dfft%nr3, bg, dfft%comm )
+     CALL sticks_map_allocate( smap, lgamma, dfft%lpara, dfft%nproc2, &
+          dfft%iproc, dfft%iproc2, dfft%nr1, dfft%nr2, dfft%nr3, bg, dfft%comm )
 
      dfft%lgamma = smap%lgamma ! .TRUE. if the grid has Gamma symmetry
 
@@ -916,7 +916,7 @@ CONTAINS
      CALL get_sticks(  smap, gcut,  nstp, sstp, st, nst, ngm )
 
      CALL fft_type_set( dfft, nst, smap%ub, smap%lb, smap%idx, &
-                             smap%ist(:,1), smap%ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+          smap%ist(:,1), smap%ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
 
      dfft%ngw = dfft%nwl( dfft%mype + 1 )
      dfft%ngm = dfft%ngl( dfft%mype + 1 )

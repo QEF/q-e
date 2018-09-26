@@ -18,42 +18,57 @@ PROGRAM fhi2upf
   USE pseudo_types, ONLY : pseudo_upf, nullify_pseudo_upf, &
                            deallocate_pseudo_upf
   USE write_upf_module, ONLY :  write_upf 
+  USE environment, ONLY: environment_start, environment_end
+  USE mp_global, ONLY: mp_startup, mp_global_end
+  USE io_global, ONLY: ionode, stdout  
   !
   IMPLICIT NONE
   TYPE(pseudo_upf) :: upf
   CHARACTER(len=256) filein, fileout
   INTEGER :: ios
   !
-  CALL get_file ( filein )
-  IF ( trim(filein) == ' ') &
-       CALL errore ('fhi2upf', 'usage: fhi2upf "file-to-be-converted"', 1)
-  OPEN ( unit=1, file=filein, status = 'old', form='formatted', iostat=ios )
-  IF ( ios /= 0) CALL errore ('fhi2upf', 'file: '//trim(filein)//' not found', 2)
-  !
-  CALL read_fhi(1)
-  !
-  CLOSE (1)
+#if defined(__MPI)
+   CALL mp_startup()
+#endif
+   CALL environment_start('FHI2UPF') 
+   IF ( ionode) THEN 
+   
+      CALL get_file ( filein )
+      IF ( trim(filein) == ' ') &
+      CALL errore ('fhi2upf', 'usage: fhi2upf "file-to-be-converted"', 1)
+      OPEN ( unit=1, file=filein, status = 'old', form='formatted', iostat=ios )
+      IF ( ios /= 0) CALL errore ('fhi2upf', 'file: '//trim(filein)//' not found', 2)
+      !
+      CALL read_fhi(1)
+      !
+      CLOSE (1)
 
-  ! convert variables read from FHI format into those needed
-  ! by the upf format - add missing quantities
-  !
-  CALL nullify_pseudo_upf ( upf )
-  !
-  CALL convert_fhi (upf)
-  !
-  ! write to file
-  !
-  fileout=trim(filein)//'.UPF'
-  PRINT '(''Output PP file in UPF format :  '',a)', fileout
-  CALL write_upf(FILENAME =  TRIM(fileout), UPF = upf) 
-  CALL deallocate_pseudo_upf ( upf )
-  !     ----------------------------------------------------------
-  WRITE (6,"('Pseudopotential successfully written')")
-  WRITE (6,"('Please review the content of the PP_INFO fields')")
-  WRITE (6,"('*** Please TEST BEFORE USING !!! ***')")
-  !     ----------------------------------------------------------
-  !
-  STOP
+      ! convert variables read from FHI format into those needed
+      ! by the upf format - add missing quantities
+      !
+      CALL nullify_pseudo_upf ( upf )
+      !
+      CALL convert_fhi (upf)
+      !
+      ! write to file
+      !
+      fileout=trim(filein)//'.UPF'
+      PRINT '(''Output PP file in UPF format :  '',a)', fileout
+      CALL write_upf(FILENAME =  TRIM(fileout), UPF = upf) 
+      CALL deallocate_pseudo_upf ( upf )
+      !     ----------------------------------------------------------
+      WRITE (6,"('Pseudopotential successfully written')")
+      WRITE (6,"('Please review the content of the PP_INFO fields')")
+      WRITE (6,"('*** Please TEST BEFORE USING !!! ***')")
+      !     ----------------------------------------------------------
+      !
+   END IF
+   CALL environment_end('FHI2UPF')
+#if defined(__MPI) 
+   CALL mp_global_end()
+#endif 
+
+   STOP
    
 END PROGRAM fhi2upf
 

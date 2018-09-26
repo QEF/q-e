@@ -62,7 +62,6 @@ program gwl_punch
   use io_files,  ONLY : psfile, pseudo_dir
   use io_files,  ONLY : prefix, tmp_dir
   use ions_base, ONLY : ntype => nsp
-  use iotk_module
   use mp_pools, ONLY : kunit
   use mp, ONLY: mp_bcast
   use mp_world, ONLY: world_comm, mpime
@@ -160,7 +159,6 @@ program gwl_punch
   integer :: i, kunittmp, ios
 
   character(len=200) :: pp_file
-  character(len=iotk_attlenx) :: attr
   logical :: found, uspp_spsi, ascii, single_file, raw
 !  INTEGER(i4b), EXTERNAL :: C_MKDIR
  CHARACTER(LEN=256), EXTERNAL :: trimcheck
@@ -512,9 +510,6 @@ end program gwl_punch
 subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   !-----------------------------------------------------------------------
   !
-  use iotk_module
-
-
   use kinds,          ONLY : DP 
   use pwcom  
   USE gvect,          ONLY : ngm, ngm_g, mill, ig_l2g, g
@@ -565,7 +560,6 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   real(DP) :: wfc_scal 
   logical :: twf0, twfm
-  character(iotk_attlenx) :: attr
   complex(DP), allocatable :: sevc (:,:)
 
   write(stdout,*) "nkstot=", nkstot

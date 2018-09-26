@@ -73,7 +73,7 @@ CONTAINS
     USE becmod,         ONLY : bec_type, becp,calbec
     USE realus,         ONLY : real_space, invfft_orbital_gamma, initialisation_level,   &
                              & fwfft_orbital_gamma, calbec_rs_gamma,add_vuspsir_gamma, &
-                             & v_loc_psir, s_psir_gamma, real_space_debug 
+                             & v_loc_psir, s_psir_gamma
     
     IMPLICIT NONE
     REAL(kind=dp) :: prod
@@ -83,7 +83,7 @@ CONTAINS
     !
     IF ( nkb > 0 ) THEN
        !
-       IF (real_space_debug>6) THEN
+       IF (real_space) THEN
           !
           ! real space & nkb > 0
           !
