@@ -422,7 +422,10 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
   ! (Alessandro Curioni) and revised by Carlo Cavazzoni 2007.
   !
   USE fft_scalar, ONLY : cft_1z_gpu, cft_2xy_gpu
-  USE scatter_mod_2d_gpu,   ONLY : fft_scatter_gpu, fft_scatter_batch_a_gpu, fft_scatter_batch_b_gpu
+  USE scatter_mod_2d_gpu,   ONLY : fft_scatter_many_columns_to_planes_send, &
+                                   fft_scatter_many_columns_to_planes_store, &
+                                   fft_scatter_many_planes_to_columns_send, &
+                                   fft_scatter_many_planes_to_columns_store
   USE fft_types,  ONLY : fft_type_descriptor
 
   !
@@ -499,7 +502,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
 
        IF (j > 0) i = cudaStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize), 0)
 
-       CALL fft_scatter_batch_a_gpu( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
+       CALL fft_scatter_many_columns_to_planes_store( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
          f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
 
      ENDDO
@@ -507,7 +510,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
      DO j = 0, batchsize-1, dfft%subbatchsize
        currsize = min(dfft%subbatchsize, batchsize - j)
 
-       CALL fft_scatter_batch_b_gpu( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
+       CALL fft_scatter_many_columns_to_planes_send( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
          f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
 
        IF (currsize == dfft%subbatchsize) THEN
@@ -552,7 +555,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
 
        IF (j > 0) i = cudaStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize), 0)
 
-       CALL fft_scatter_batch_a_gpu( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
+       CALL fft_scatter_many_planes_to_columns_store( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
          f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
 
      ENDDO
@@ -560,7 +563,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
      DO j = 0, batchsize-1, dfft%subbatchsize
        currsize = min(dfft%subbatchsize, batchsize - j)
 
-       CALL fft_scatter_batch_b_gpu( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
+       CALL fft_scatter_many_planes_to_columns_send( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
          f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
 
 
