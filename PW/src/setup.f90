@@ -721,7 +721,7 @@ LOGICAL FUNCTION check_gpu_support( )
   IF (istat == 0) THEN
      check_gpu_support = (gpu_env /= "no")
   ELSE 
-     check_gpu_support = .false.
+     check_gpu_support = .TRUE.
   END IF
   saved_value = check_gpu_support
   !
