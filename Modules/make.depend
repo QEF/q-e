@@ -139,6 +139,7 @@ input_parameters.o : parameters.o
 input_parameters.o : wannier_new.o
 invmat.o : kind.o
 io_base.o : ../UtilXlib/mp.o
+io_base.o : cell_base.o
 io_base.o : io_global.o
 io_base.o : kind.o
 io_base.o : mp_wave.o
