@@ -903,7 +903,8 @@
     !iter = iter +1
     !
     DO iq = iq_restart, nqf
-       epf17(:,:,:,:) = czero
+       ! This needs to be uncommented. 
+       !epf17(:,:,:,:) = czero
        !   
        CALL start_clock ( 'ep-interp' )
        !

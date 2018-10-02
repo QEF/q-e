@@ -5,6 +5,8 @@ New in development version:
   * XDM now works also for USPP and norm-conserving PP
 
 Problems fixed in development version (+ = in qe-6.3-backports as well) :
+  * Atomic occupancies for DFT+U were not correctly written by CP after 
+    switch to new format, due to a mismatch in their definition
   * Phonons with option "nosym" wasn't working
   * Option "noinv" wasn't read from new xml file
   * Variable-cell optimization with hybrid functionals wasn't working due
