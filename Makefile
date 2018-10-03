@@ -85,7 +85,7 @@ neb : pw
 	if test -d NEB; then \
   (cd NEB; $(MAKE) all || exit 1) ; fi
 
-tddfpt : pw
+tddfpt : pw lrmods
 	if test -d TDDFPT; then \
 	(cd TDDFPT; $(MAKE) all || exit 1) ; fi
 
