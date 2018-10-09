@@ -140,7 +140,7 @@ Acceptable values are:
 
 Function and subroutine calls having global variables in their argument
 should be guarded by calls to `using_xxx` with the appropriate argument.
-Obviously calls with argument 0 and 1 must be prepended.
+Obviously calls with argument 0 and 1 must always be prepended.
 
 
 The actual allocation of a duplicated variable happens when `using_xxx_d`

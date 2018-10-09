@@ -34,6 +34,8 @@ SUBROUTINE init_run()
   USE tsvdw_module,       ONLY : tsvdw_initialize
   USE Coul_cut_2D,        ONLY : do_cutoff_2D, cutoff_fact 
   !
+  USE control_flags,      ONLY : use_gpu
+  USE dfunct_gpum,        ONLY : newd_gpu
   USE wvfct_gpum,         ONLY : using_et
   USE gvect_gpum,         ONLY : using_g, using_gg, using_g_d, using_gg_d, &
                                  using_mill, using_mill_d
@@ -129,9 +131,19 @@ SUBROUTINE init_run()
   !
   CALL potinit()
   !
-  CALL newd()
-  !
-  CALL wfcinit()
+  IF ( use_gpu ) THEN
+    !
+    CALL newd_gpu()
+    !
+    CALL wfcinit_gpu()
+    !
+  ELSE
+    !
+    CALL newd()
+    !
+    CALL wfcinit()
+    !
+  END IF
   !
   IF(use_wannier) CALL wannier_init()
   !
