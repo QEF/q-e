@@ -11,7 +11,19 @@ MODULES += \
 MODFLAGS += \
          $(MOD_FLAG)../GScratch
 
-recvec_gpu.o : recvec.o
-uspp_gpu.o : uspp.o
 becmod_gpu.o : becmod.o
+becmod_gpu.o : kind.o
 becmod_subs_gpu.o : becmod_gpu.o
+becmod_subs_gpu.o : control_flags.o
+becmod_subs_gpu.o : kind.o
+becmod_subs_gpu.o : mp_bands.o
+becmod_subs_gpu.o : noncol.o
+becmod_subs_gpu.o : recvec.o
+dylmr2_gpu.o : kind.o
+recvec_gpu.o : kind.o
+recvec_gpu.o : recvec.o
+splinelib_gpu.o : kind.o
+uspp_gpu.o : kind.o
+uspp_gpu.o : uspp.o
+wavefunctions_gpu.o : kind.o
+wavefunctions_gpu.o : wavefunctions.o
