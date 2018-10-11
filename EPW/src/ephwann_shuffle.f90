@@ -71,6 +71,7 @@
   USE transport,     ONLY : transport_coeffs, scattering_rate_q
   USE transport_iter,ONLY : iterativebte
   USE printing,      ONLY : print_gkk
+  USE io_scattering, ONLY : F_read, electron_read, tau_read
 #ifdef __NAG
   USE f90_unix_io,   ONLY : flush
 #endif
@@ -786,6 +787,12 @@
     zi_allcb(:,:,:) = zero
   ENDIF
   !
+  ! Initialization and restart when doing IBTE
+  !IF (iterative_bte) THEN
+  !  IF (epmatkqread) THEN
+  !    CALL iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
+  !  ENDIF
+  !ENDIF 
   IF (iterative_bte) THEN
     ALLOCATE(Fi_all(3,ibndmax-ibndmin+1,nkqtotf/2,nstemp))
     ! Current iterative F(i+1) function
@@ -810,7 +817,7 @@
     ALLOCATE ( s_BZtoIBZ(3,3,nkf1*nkf2*nkf3) )
     BZtoIBZ(:) = 0
     s_BZtoIBZ(:,:,:) = 0
-  ENDIF 
+  ENDIF
   ! 
   !  Start iteration index
   iter = 1

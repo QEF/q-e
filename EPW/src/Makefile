@@ -28,6 +28,7 @@ superconductivity.o \
 superconductivity_aniso.o \
 superconductivity_iso.o \
 io_eliashberg.o \
+io_scattering.o \
 transportcom.o \
 printing.o \
 transport.o \
@@ -96,7 +97,6 @@ wannierEPW.o \
 wannierize.o \
 pw2wan90epw.o \
 wan2bloch.o \
-io_scattering.o \
 system_mem_usage.o
 
 # setphases.o \ : SP: We keep it in case its usefull in the future but now depreciated.

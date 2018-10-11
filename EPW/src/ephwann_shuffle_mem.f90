@@ -73,6 +73,7 @@
   USE transport,     ONLY : transport_coeffs, scattering_rate_q
   USE transport_iter,ONLY : iterativebte
   USE printing,      ONLY : print_gkk
+  USE io_scattering, ONLY : F_read, electron_read, tau_read
 #ifdef __NAG
   USE f90_unix_io,   ONLY : flush
 #endif
