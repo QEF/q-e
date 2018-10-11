@@ -158,6 +158,8 @@
   !! Number of WS points for electron-phonons
   INTEGER :: dims
   !! Dims is either nbndsub if use_ws or 1 if not
+  INTEGER :: dims2
+  !! Dims is either nat if use_ws or 1 if not
   INTEGER :: iw 
   !! Counter on bands when use_ws == .true.
   INTEGER :: iw2
@@ -264,7 +266,7 @@
   ! -----------------
   ! 
   IF (nbndsub.ne.nbnd) &
-       WRITE(stdout, '(/,14x,a,i4)' ) 'band disentanglement is used:  nbndsub = ', nbndsub
+       WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used:  nbndsub = ', nbndsub
   !
   ALLOCATE ( cu ( nbnd, nbndsub, nks), & 
              cuq ( nbnd, nbndsub, nks), & 
@@ -354,26 +356,38 @@
   !                    wslen_k,  wslen_q,  wslen_g  
   IF (use_ws) THEN
     ! Use Wannier-centers to contstruct the WS for electonic part and el-ph part
-    ! Use atomic position to contstruct the WS for the phonon part and el-ph part
-    dims = nbndsub
+    ! Use atomic position to contstruct the WS for the phonon part
+    dims  = nbndsub
+    dims2 = nat
     CALL wigner_seitz_wrap ( nk1, nk2, nk3, nq1, nq2, nq3, irvec_k, irvec_q, irvec_g, &
-                           ndegen_k, ndegen_q, ndegen_g, wslen_k, wslen_q, wslen_g, w_centers, dims )
+                             ndegen_k, ndegen_q, ndegen_g, wslen_k, wslen_q, wslen_g, &
+                             w_centers, dims, tau, dims2 )
   ELSE
-    ! Center the WS for for electonic part and el-ph part
-    ! Use atomic position to contstruct the WS for the phonon part and el-ph part
-    dims = 1
+    ! Center the WS at Gamma for electonic part, the phonon part and el-ph part
+    dims  = 1
+    dims2 = 1
     dummy(:) = (/0.0,0.0,0.0/)
     CALL wigner_seitz_wrap ( nk1, nk2, nk3, nq1, nq2, nq3, irvec_k, irvec_q, irvec_g, &
-                           ndegen_k, ndegen_q, ndegen_g, wslen_k, wslen_q, wslen_g, dummy ,dims )
+                             ndegen_k, ndegen_q, ndegen_g, wslen_k, wslen_q, wslen_g, &
+                             dummy, dims, dummy, dims2 )
   ENDIF
   ! 
   ! Determine the size of the respective WS sets based on the length of the matrices
   nrr_k = SIZE(irvec_k(1,:))
   nrr_q = SIZE(irvec_q(1,:))
   nrr_g = SIZE(irvec_g(1,:))
-  write(stdout,*) '  nrr_k ',nrr_k
-  write(stdout,*) '  nrr_q ',nrr_q
-  write(stdout,*) '  nrr_g ',nrr_g
+  IF (use_ws) THEN 
+    WRITE(stdout, '(5x,a)' )    'Construct the Wigner-Seitz cell using Wannier centers and atomic positions '
+    WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for electrons ',nrr_k
+    WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for phonons ',nrr_q
+    WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for electron-phonon ',nrr_g
+  ELSE
+    WRITE(stdout, '(5x,a)' )    'Use zone-centred Wigner-Seitz cells '
+    WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for electrons ',nrr_k
+    WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for phonons ',nrr_q
+    WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for electron-phonon ',nrr_g
+    WRITE(stdout, '(5x,a)' )    'Results may improve by using use_ws == .true. '
+  ENDIF
   !
 #ifndef __MPI  
   ! Open like this only in sequential. Otherwize open with MPI-open
@@ -948,7 +962,6 @@
            uf (mu, nu) = uf (mu, nu) / sqrt(amass(ityp(na)))
          ENDDO
        ENDDO
-       !print*,'wf ',wf(:,iq)
        !
        ! --------------------------------------------------------------
        ! epmat : Wannier el and Wannier ph -> Wannier el and Bloch ph
@@ -958,7 +971,7 @@
        !CALL start_clock ( 'cl2' )
        IF (.NOT. longrange) THEN
          CALL ephwan2blochp &
-             ( nmodes, xxq, irvec_g, ndegen_g, nrr_g, uf, epmatwef, nbndsub, nrr_k, dims )
+             ( nmodes, xxq, irvec_g, ndegen_g, nrr_g, uf, epmatwef, nbndsub, nrr_k, dims, dims2 )
        ENDIF
        !CALL stop_clock ( 'cl2' )
        !
@@ -986,16 +999,21 @@
          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk2, 1 )
          !
-         DO iw=1, dims
-           DO iw2=1, dims
-             DO ir = 1, nrr_k
-               IF (ndegen_k(ir,iw2,iw) > 0) THEN
-                 cfac(ir,iw2,iw)  = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
-                 cfacq(ir,iw2,iw) = exp( ci*rdotk2(ir) ) / ndegen_k(ir,iw2,iw)
-               ENDIF
+         IF (use_ws) THEN
+           DO iw=1, dims
+             DO iw2=1, dims
+               DO ir = 1, nrr_k
+                 IF (ndegen_k(ir,iw2,iw) > 0) THEN
+                   cfac(ir,iw2,iw)  = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
+                   cfacq(ir,iw2,iw) = exp( ci*rdotk2(ir) ) / ndegen_k(ir,iw2,iw)
+                 ENDIF
+               ENDDO
              ENDDO
            ENDDO
-         ENDDO
+         ELSE 
+           cfac(:,1,1)   = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
+           cfacq(:,1,1)  = exp( ci*rdotk2(:) ) / ndegen_k(:,1,1)
+         ENDIF
          !
          ! ------------------------------------------------------        
          ! hamiltonian : Wannier -> Bloch 
