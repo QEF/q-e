@@ -29,6 +29,7 @@ superconductivity_aniso.o \
 superconductivity_iso.o \
 io_eliashberg.o \
 transportcom.o \
+printing.o \
 transport.o \
 transport_iter.o \
 wigner.o \
@@ -70,8 +71,6 @@ openfilepw.o \
 rgd_blk_epw_fine_mem.o \
 plot_band.o \
 poolgather.o \
-print_clock_epw.o \
-print_gkk.o \
 readdvscf.o \
 readgmap.o \
 readmat_shuffle2.o \

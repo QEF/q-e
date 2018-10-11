@@ -70,6 +70,7 @@
   USE io_eliashberg, ONLY : write_ephmat, count_kpoints, kmesh_fine, kqmap_fine
   USE transport,     ONLY : transport_coeffs, scattering_rate_q
   USE transport_iter,ONLY : iterativebte
+  USE printing,      ONLY : print_gkk
 #ifdef __NAG
   USE f90_unix_io,   ONLY : flush
 #endif
