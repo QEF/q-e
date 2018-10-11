@@ -381,11 +381,13 @@
     WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for electrons ',nrr_k
     WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for phonons ',nrr_q
     WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for electron-phonon ',nrr_g
+    WRITE(stdout, '(5x,a,i8)' ) 'Maximum number of cores for efficient parallelization ',nrr_g * nat
   ELSE
     WRITE(stdout, '(5x,a)' )    'Use zone-centred Wigner-Seitz cells '
     WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for electrons ',nrr_k
     WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for phonons ',nrr_q
     WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for electron-phonon ',nrr_g
+    WRITE(stdout, '(5x,a,i8)' ) 'Maximum number of cores for efficient parallelization ',nrr_g * nmodes
     WRITE(stdout, '(5x,a)' )    'Results may improve by using use_ws == .true. '
   ENDIF
   !

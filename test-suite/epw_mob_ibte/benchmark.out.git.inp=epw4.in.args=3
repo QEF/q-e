@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 29Aug2018 at 11:19:51 
+     Program EPW v.5.0.0 starts on 11Oct2018 at 15:28: 2 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -105,7 +105,12 @@
      Do not need to read .epb files; read .fmt files
 
 
-              band disentanglement is used:  nbndsub =    8
+     Band disentanglement is used:  nbndsub =    8
+     Use zone-centred Wigner-Seitz cells 
+     Number of WS vectors for electrons      279
+     Number of WS vectors for phonons       19
+     Number of WS vectors for electron-phonon       19
+     Results may improve by using use_ws == .true. 
 
      Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
 
@@ -113,9 +118,9 @@
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026123
+     IFC last   -0.0026126
      Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000029
+     Norm of the difference between old and new force-constants:    0.0000020
      Imposed crystal ASR
 
      Finished reading ifcs
@@ -125,7 +130,7 @@
 
      ===================================================================
      Memory usage:  VmHWM =        12Mb
-                   VmPeak =       395Mb
+                   VmPeak =       273Mb
      ===================================================================
      
      Using uniform q-mesh:    7   7   7
@@ -159,19 +164,19 @@
 
      Temperature  400.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660802 eV
      Mobility VB Fermi level   6.861901 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   7.030497 eV
+     Conduction band minimum =   7.660802 eV
+     Mobility CB Fermi level   7.030498 eV
 
      Temperature  500.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660802 eV
      Mobility VB Fermi level   7.013560 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   6.872903 eV
+     Conduction band minimum =   7.660802 eV
+     Mobility CB Fermi level   6.872905 eV
 
      ===================================================================
      Scattering rate
@@ -205,31 +210,31 @@
      Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      6.8619       0.100000E+14       0.520546E-02  x-axis
-                                                   0.520563E-02  y-axis
-                                                   0.132771E-01  z-axis
-                                                   0.789608E-02     avg
-      500.000      7.0136       0.100001E+14       0.299345E-01  x-axis
-                                                   0.299358E-01  y-axis
-                                                   0.735774E-01  z-axis
-                                                   0.444826E-01     avg
+      400.000      6.8619       0.100000E+14       0.478637E-02  x-axis
+                                                   0.478658E-02  y-axis
+                                                   0.115242E-01  z-axis
+                                                   0.703239E-02     avg
+      500.000      7.0136       0.100000E+14       0.274743E-01  x-axis
+                                                   0.274758E-01  y-axis
+                                                   0.637071E-01  z-axis
+                                                   0.395524E-01     avg
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      7.0305       0.999999E+13       0.322637E+02  x-axis
-                                                   0.553591E+02  y-axis
-                                                   0.553592E+02  z-axis
-                                                   0.476607E+02     avg
-      500.000      6.8729       0.999998E+13       0.219319E+02  x-axis
-                                                   0.376152E+02  y-axis
-                                                   0.376152E+02  z-axis
-                                                   0.323874E+02     avg
+      400.000      7.0305       0.100001E+14       0.340694E+02  x-axis
+                                                   0.584587E+02  y-axis
+                                                   0.584588E+02  z-axis
+                                                   0.503290E+02     avg
+      500.000      6.8729       0.100000E+14       0.231476E+02  x-axis
+                                                   0.397038E+02  y-axis
+                                                   0.397039E+02  z-axis
+                                                   0.341851E+02     avg
 
      Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
      Total time so far
-     SCAT         :      1.05s CPU      0.47s WALL (     343 calls)
+     SCAT         :      0.43s CPU      0.43s WALL (     343 calls)
      MOB          :      0.00s CPU      0.00s WALL (       1 calls)
 
 
@@ -239,19 +244,19 @@
 
      Temperature  400.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660802 eV
      Mobility VB Fermi level   6.861901 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   7.030497 eV
+     Conduction band minimum =   7.660802 eV
+     Mobility CB Fermi level   7.030498 eV
 
      Temperature  500.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660802 eV
      Mobility VB Fermi level   7.013560 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   6.872903 eV
+     Conduction band minimum =   7.660802 eV
+     Mobility CB Fermi level   6.872905 eV
      Progression iq (fine) =         50/       343
      Progression iq (fine) =        100/       343
      Progression iq (fine) =        150/       343
@@ -263,33 +268,33 @@
      Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      6.8619       0.100000E+14       0.634143E-02  x-axis
-                                                   0.634191E-02  y-axis
-                                                   0.122478E-01  z-axis
-                                                   0.831036E-02     avg
-                                                     0.8310E-02     Err
-      500.000      7.0136       0.100001E+14       0.366109E-01  x-axis
-                                                   0.366151E-01  y-axis
-                                                   0.681320E-01  z-axis
-                                                   0.471193E-01     avg
-                                                     0.4712E-01     Err
+      400.000      6.8619       0.100000E+14       0.590051E-02  x-axis
+                                                   0.590248E-02  y-axis
+                                                   0.116036E-01  z-axis
+                                                   0.780221E-02     avg
+                                                     0.7802E-02     Err
+      500.000      7.0136       0.100000E+14       0.339718E-01  x-axis
+                                                   0.339864E-01  y-axis
+                                                   0.644797E-01  z-axis
+                                                   0.441460E-01     avg
+                                                     0.4415E-01     Err
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      7.0305       0.999999E+13       0.281521E+02  x-axis
-                                                   0.441781E+02  y-axis
-                                                   0.441786E+02  z-axis
-                                                   0.388363E+02     avg
-                                                     0.3884E+02     Err
-      500.000      6.8729       0.999998E+13       0.192021E+02  x-axis
-                                                   0.300633E+02  y-axis
-                                                   0.300644E+02  z-axis
-                                                   0.264433E+02     avg
-                                                     0.2644E+02     Err
+      400.000      7.0305       0.100001E+14       0.306606E+02  x-axis
+                                                   0.484285E+02  y-axis
+                                                   0.484296E+02  z-axis
+                                                   0.425062E+02     avg
+                                                     0.4251E+02     Err
+      500.000      6.8729       0.100000E+14       0.209085E+02  x-axis
+                                                   0.329592E+02  y-axis
+                                                   0.329615E+02  z-axis
+                                                   0.289430E+02     avg
+                                                     0.2894E+02     Err
      Total time so far
-     MOBITER      :      7.84s CPU      4.26s WALL (       1 calls)
+     MOBITER      :      3.15s CPU      4.22s WALL (       1 calls)
 
 
      Iteration number:         3 
@@ -298,19 +303,19 @@
 
      Temperature  400.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660802 eV
      Mobility VB Fermi level   6.861901 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   7.030497 eV
+     Conduction band minimum =   7.660802 eV
+     Mobility CB Fermi level   7.030498 eV
 
      Temperature  500.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660802 eV
      Mobility VB Fermi level   7.013560 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   6.872903 eV
+     Conduction band minimum =   7.660802 eV
+     Mobility CB Fermi level   6.872905 eV
      Progression iq (fine) =         50/       343
      Progression iq (fine) =        100/       343
      Progression iq (fine) =        150/       343
@@ -322,33 +327,33 @@
      Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      6.8619       0.100000E+14       0.659913E-02  x-axis
-                                                   0.659964E-02  y-axis
-                                                   0.125035E-01  z-axis
-                                                   0.856743E-02     avg
-                                                     0.2571E-03     Err
-      500.000      7.0136       0.100001E+14       0.381548E-01  x-axis
-                                                   0.381592E-01  y-axis
-                                                   0.696337E-01  z-axis
-                                                   0.486492E-01     avg
-                                                     0.1530E-02     Err
+      400.000      6.8619       0.100000E+14       0.644417E-02  x-axis
+                                                   0.644751E-02  y-axis
+                                                   0.118128E-01  z-axis
+                                                   0.823483E-02     avg
+                                                     0.4326E-03     Err
+      500.000      7.0136       0.100000E+14       0.371091E-01  x-axis
+                                                   0.371345E-01  y-axis
+                                                   0.657224E-01  z-axis
+                                                   0.466553E-01     avg
+                                                     0.2509E-02     Err
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      7.0305       0.999999E+13       0.286761E+02  x-axis
-                                                   0.464365E+02  y-axis
-                                                   0.464368E+02  z-axis
-                                                   0.405164E+02     avg
-                                                     0.1680E+01     Err
-      500.000      6.8729       0.999998E+13       0.195420E+02  x-axis
-                                                   0.315799E+02  y-axis
-                                                   0.315808E+02  z-axis
-                                                   0.275676E+02     avg
-                                                     0.1124E+01     Err
+      400.000      7.0305       0.100001E+14       0.310017E+02  x-axis
+                                                   0.501495E+02  y-axis
+                                                   0.501503E+02  z-axis
+                                                   0.437672E+02     avg
+                                                     0.1261E+01     Err
+      500.000      6.8729       0.100000E+14       0.211251E+02  x-axis
+                                                   0.341053E+02  y-axis
+                                                   0.341071E+02  z-axis
+                                                   0.297792E+02     avg
+                                                     0.8362E+00     Err
      Total time so far
-     MOBITER      :     15.21s CPU      8.54s WALL (       2 calls)
+     MOBITER      :      6.21s CPU      8.45s WALL (       2 calls)
 
 
      Iteration number:         4 
@@ -357,19 +362,19 @@
 
      Temperature  400.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660802 eV
      Mobility VB Fermi level   6.861901 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   7.030497 eV
+     Conduction band minimum =   7.660802 eV
+     Mobility CB Fermi level   7.030498 eV
 
      Temperature  500.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660802 eV
      Mobility VB Fermi level   7.013560 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   6.872903 eV
+     Conduction band minimum =   7.660802 eV
+     Mobility CB Fermi level   6.872905 eV
      Progression iq (fine) =         50/       343
      Progression iq (fine) =        100/       343
      Progression iq (fine) =        150/       343
@@ -381,33 +386,33 @@
      Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      6.8619       0.100000E+14       0.665875E-02  x-axis
-                                                   0.665932E-02  y-axis
-                                                   0.125008E-01  z-axis
-                                                   0.860628E-02     avg
-                                                     0.3885E-04     Err
-      500.000      7.0136       0.100001E+14       0.385174E-01  x-axis
-                                                   0.385223E-01  y-axis
-                                                   0.696318E-01  z-axis
-                                                   0.488905E-01     avg
-                                                     0.2413E-03     Err
+      400.000      6.8619       0.100000E+14       0.660118E-02  x-axis
+                                                   0.660483E-02  y-axis
+                                                   0.118134E-01  z-axis
+                                                   0.833980E-02     avg
+                                                     0.1050E-03     Err
+      500.000      7.0136       0.100000E+14       0.380423E-01  x-axis
+                                                   0.380701E-01  y-axis
+                                                   0.657563E-01  z-axis
+                                                   0.472896E-01     avg
+                                                     0.6342E-03     Err
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      7.0305       0.999999E+13       0.286093E+02  x-axis
-                                                   0.459803E+02  y-axis
-                                                   0.459807E+02  z-axis
-                                                   0.401901E+02     avg
-                                                     0.3263E+00     Err
-      500.000      6.8729       0.999998E+13       0.194997E+02  x-axis
-                                                   0.312753E+02  y-axis
-                                                   0.312763E+02  z-axis
-                                                   0.273504E+02     avg
-                                                     0.2171E+00     Err
+      400.000      7.0305       0.100001E+14       0.309675E+02  x-axis
+                                                   0.498542E+02  y-axis
+                                                   0.498551E+02  z-axis
+                                                   0.435590E+02     avg
+                                                     0.2082E+00     Err
+      500.000      6.8729       0.100000E+14       0.211041E+02  x-axis
+                                                   0.339105E+02  y-axis
+                                                   0.339125E+02  z-axis
+                                                   0.296424E+02     avg
+                                                     0.1368E+00     Err
      Total time so far
-     MOBITER      :     22.81s CPU     12.78s WALL (       3 calls)
+     MOBITER      :      9.26s CPU     12.65s WALL (       3 calls)
 
 
      Iteration number:         5 
@@ -416,19 +421,19 @@
 
      Temperature  400.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660802 eV
      Mobility VB Fermi level   6.861901 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   7.030497 eV
+     Conduction band minimum =   7.660802 eV
+     Mobility CB Fermi level   7.030498 eV
 
      Temperature  500.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660802 eV
      Mobility VB Fermi level   7.013560 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   6.872903 eV
+     Conduction band minimum =   7.660802 eV
+     Mobility CB Fermi level   6.872905 eV
      Progression iq (fine) =         50/       343
      Progression iq (fine) =        100/       343
      Progression iq (fine) =        150/       343
@@ -440,33 +445,33 @@
      Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      6.8619       0.100000E+14       0.667205E-02  x-axis
-                                                   0.667263E-02  y-axis
-                                                   0.125082E-01  z-axis
-                                                   0.861761E-02     avg
-                                                     0.1133E-04     Err
-      500.000      7.0136       0.100001E+14       0.386002E-01  x-axis
-                                                   0.386052E-01  y-axis
-                                                   0.696783E-01  z-axis
-                                                   0.489612E-01     avg
-                                                     0.7074E-04     Err
+      400.000      6.8619       0.100000E+14       0.666450E-02  x-axis
+                                                   0.666825E-02  y-axis
+                                                   0.118240E-01  z-axis
+                                                   0.838558E-02     avg
+                                                     0.4578E-04     Err
+      500.000      7.0136       0.100000E+14       0.384180E-01  x-axis
+                                                   0.384467E-01  y-axis
+                                                   0.658280E-01  z-axis
+                                                   0.475642E-01     avg
+                                                     0.2746E-03     Err
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      7.0305       0.999999E+13       0.286178E+02  x-axis
-                                                   0.460724E+02  y-axis
-                                                   0.460728E+02  z-axis
-                                                   0.402544E+02     avg
-                                                     0.6425E-01     Err
-      500.000      6.8729       0.999998E+13       0.195050E+02  x-axis
-                                                   0.313365E+02  y-axis
-                                                   0.313374E+02  z-axis
-                                                   0.273929E+02     avg
-                                                     0.4253E-01     Err
+      400.000      7.0305       0.100001E+14       0.309709E+02  x-axis
+                                                   0.499049E+02  y-axis
+                                                   0.499058E+02  z-axis
+                                                   0.435939E+02     avg
+                                                     0.3491E-01     Err
+      500.000      6.8729       0.100000E+14       0.211062E+02  x-axis
+                                                   0.339436E+02  y-axis
+                                                   0.339456E+02  z-axis
+                                                   0.296651E+02     avg
+                                                     0.2274E-01     Err
      Total time so far
-     MOBITER      :     30.56s CPU     16.98s WALL (       4 calls)
+     MOBITER      :     12.35s CPU     16.89s WALL (       4 calls)
 
 
      Iteration number:         6 
@@ -475,19 +480,19 @@
 
      Temperature  400.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660802 eV
      Mobility VB Fermi level   6.861901 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   7.030497 eV
+     Conduction band minimum =   7.660802 eV
+     Mobility CB Fermi level   7.030498 eV
 
      Temperature  500.000 K
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
+     Conduction band minimum =   7.660802 eV
      Mobility VB Fermi level   7.013560 eV
      Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   6.872903 eV
+     Conduction band minimum =   7.660802 eV
+     Mobility CB Fermi level   6.872905 eV
      Progression iq (fine) =         50/       343
      Progression iq (fine) =        100/       343
      Progression iq (fine) =        150/       343
@@ -499,37 +504,37 @@
      Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      6.8619       0.100000E+14       0.667519E-02  x-axis
-                                                   0.667577E-02  y-axis
-                                                   0.125087E-01  z-axis
-                                                   0.861990E-02     avg
-                                                     0.2292E-05     Err
-      500.000      7.0136       0.100001E+14       0.386200E-01  x-axis
-                                                   0.386250E-01  y-axis
-                                                   0.696826E-01  z-axis
-                                                   0.489759E-01     avg
-                                                     0.1463E-04     Err
+      400.000      6.8619       0.100000E+14       0.668478E-02  x-axis
+                                                   0.668856E-02  y-axis
+                                                   0.118253E-01  z-axis
+                                                   0.839956E-02     avg
+                                                     0.1398E-04     Err
+      500.000      7.0136       0.100000E+14       0.385409E-01  x-axis
+                                                   0.385698E-01  y-axis
+                                                   0.658391E-01  z-axis
+                                                   0.476499E-01     avg
+                                                     0.8572E-04     Err
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      7.0305       0.999999E+13       0.286167E+02  x-axis
-                                                   0.460538E+02  y-axis
-                                                   0.460542E+02  z-axis
-                                                   0.402416E+02     avg
-                                                     0.1277E-01     Err
-      500.000      6.8729       0.999998E+13       0.195043E+02  x-axis
-                                                   0.313242E+02  y-axis
-                                                   0.313251E+02  z-axis
-                                                   0.273845E+02     avg
-                                                     0.8407E-02     Err
+      400.000      7.0305       0.100001E+14       0.309706E+02  x-axis
+                                                   0.498962E+02  y-axis
+                                                   0.498971E+02  z-axis
+                                                   0.435880E+02     avg
+                                                     0.5909E-02     Err
+      500.000      6.8729       0.100000E+14       0.211060E+02  x-axis
+                                                   0.339380E+02  y-axis
+                                                   0.339399E+02  z-axis
+                                                   0.296613E+02     avg
+                                                     0.3816E-02     Err
      Total time so far
-     MOBITER      :     38.13s CPU     21.18s WALL (       5 calls)
+     MOBITER      :     15.43s CPU     21.13s WALL (       5 calls)
 
      ===================================================================
-     Memory usage:  VmHWM =        21Mb
-                   VmPeak =       417Mb
+     Memory usage:  VmHWM =        20Mb
+                   VmPeak =       297Mb
      ===================================================================
 
 
@@ -541,16 +546,16 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :     44.97s CPU     25.02s WALL (       1 calls)
-     ep-interp    :     44.72s CPU     24.81s WALL (    2058 calls)
+     ephwann      :     18.05s CPU     24.91s WALL (       1 calls)
+     ep-interp    :     17.87s CPU     24.73s WALL (    2058 calls)
 
-     DynW2B       :      0.16s CPU      0.09s WALL (    2058 calls)
-     HamW2B       :      6.86s CPU      3.32s WALL (   82360 calls)
-     ephW2Bp      :     14.15s CPU     10.43s WALL (    2058 calls)
+     DynW2B       :      0.04s CPU      0.04s WALL (    2058 calls)
+     HamW2B       :      1.66s CPU      2.01s WALL (   82360 calls)
+     ephW2Bp      :      5.40s CPU     10.95s WALL (    2058 calls)
 
 
      Total program execution
-     EPW          :     44.97s CPU     25.03s WALL
+     EPW          :     18.05s CPU     24.91s WALL
 
                                                                                           
  Please consider citing:                                                                  

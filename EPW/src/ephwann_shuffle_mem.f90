@@ -399,18 +399,20 @@
   nrr_q = SIZE(irvec_q(1,:))
   nrr_g = SIZE(irvec_g(1,:))
   IF (use_ws) THEN
-    WRITE(stdout, '(a)' )   '      '
-    WRITE(stdout, '(a)' )   'Construct the Wigner-Seitz cell using Wannier centers and atomic positions '
-    WRITE(stdout, '(a,i8)' ) 'Number of WS vectors for electrons ',nrr_k
-    WRITE(stdout, '(a,i8)' ) 'Number of WS vectors for phonons ',nrr_q
-    WRITE(stdout, '(a,i8)' ) 'Number of WS vectors for electron-phonon ',nrr_g
+    WRITE(stdout, '(5x,a)' )   '      '
+    WRITE(stdout, '(5x,a)' )   'Construct the Wigner-Seitz cell using Wannier centers and atomic positions '
+    WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for electrons ',nrr_k
+    WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for phonons ',nrr_q
+    WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for electron-phonon ',nrr_g
+    WRITE(stdout, '(5x,a,i8)' ) 'Maximum number of cores for efficient parallelization ',nrr_g * nat 
   ELSE
-    WRITE(stdout, '(a)' )      '      '
-    WRITE(stdout, '(a)' )      'Use zone-centred Wigner-Seitz cells '
-    WRITE(stdout, '(a,i8)' ) 'Number of WS vectors for electrons ',nrr_k
-    WRITE(stdout, '(a,i8)' ) 'Number of WS vectors for phonons ',nrr_q
-    WRITE(stdout, '(a,i8)' ) 'Number of WS vectors for electron-phonon ',nrr_g
-    WRITE(stdout, '(a)' )      'Results may improve by using use_ws == .true. '
+    WRITE(stdout, '(5x,a)' )      '      '
+    WRITE(stdout, '(5x,a)' )      'Use zone-centred Wigner-Seitz cells '
+    WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for electrons ',nrr_k
+    WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for phonons ',nrr_q
+    WRITE(stdout, '(5x,a,i8)' ) 'Number of WS vectors for electron-phonon ',nrr_g
+    WRITE(stdout, '(5x,a,i8)' ) 'Maximum number of cores for efficient parallelization ',nrr_g * nmodes
+    WRITE(stdout, '(5x,a)' )      'Results may improve by using use_ws == .true. '
   ENDIF
   !
 #ifndef __MPI  
