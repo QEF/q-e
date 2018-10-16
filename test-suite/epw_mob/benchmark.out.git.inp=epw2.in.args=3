@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 11Oct2018 at 15: 2:51 
+     Program EPW v.5.0.0 starts on 16Oct2018 at 21:59:43 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -110,6 +110,7 @@
      Number of WS vectors for electrons       93
      Number of WS vectors for phonons       19
      Number of WS vectors for electron-phonon       19
+     Maximum number of cores for efficient parallelization      114
      Results may improve by using use_ws == .true. 
 
      Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
@@ -151,6 +152,13 @@
 
 
      Number of ep-matrix elements per pool :        63000 ~=  492.19 Kb (@ 8 bytes/ DP)
+      
+     A selecq.fmt file was found but re-created because selecqread == .false. 
+     Number selected, total     500     502
+     Number selected, total    1000    1002
+     Number selected, total    1500    1504
+     We only need to compute     1724 q-points
+      
      Applying a scissor shift of   0.70000 eV to the conduction states
 
      Temperature  300.000 K
@@ -202,26 +210,16 @@
      This is computed with respect to the fine Fermi level   6.868910 eV
      Only states between   5.668910 eV and   8.068910 eV will be included
 
-     Progression iq (fine) =         50/      1728
-     Progression iq (fine) =        100/      1728
-     Progression iq (fine) =        150/      1728
-     Progression iq (fine) =        200/      1728
-     Progression iq (fine) =        250/      1728
-     Progression iq (fine) =        300/      1728
-     Progression iq (fine) =        350/      1728
-     Progression iq (fine) =        400/      1728
-     Progression iq (fine) =        450/      1728
-     Progression iq (fine) =        500/      1728
-     Progression iq (fine) =        550/      1728
-     Progression iq (fine) =        600/      1728
-     Progression iq (fine) =        650/      1728
-     Progression iq (fine) =        700/      1728
-     Progression iq (fine) =        750/      1728
-     Progression iq (fine) =        800/      1728
-     Progression iq (fine) =        850/      1728
-     Progression iq (fine) =        900/      1728
-     Progression iq (fine) =        950/      1728
-     Progression iq (fine) =       1000/      1728
+     Progression iq (fine) =        100/      1724
+     Progression iq (fine) =        200/      1724
+     Progression iq (fine) =        300/      1724
+     Progression iq (fine) =        400/      1724
+     Progression iq (fine) =        500/      1724
+     Progression iq (fine) =        600/      1724
+     Progression iq (fine) =        700/      1724
+     Progression iq (fine) =        800/      1724
+     Progression iq (fine) =        900/      1724
+     Progression iq (fine) =       1000/      1724
      Creation of a restart point
 
      ===================================================================
@@ -253,46 +251,41 @@
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      300.000      7.1071       0.999990E+13       0.286506E+04  x-axis
-                                                   0.710706E+04  y-axis
-                                                   0.937790E+04  z-axis
-                                                   0.645000E+04     avg
-      350.000      7.0227       0.100001E+14       0.212170E+04  x-axis
-                                                   0.493524E+04  y-axis
-                                                   0.647248E+04  z-axis
-                                                   0.450981E+04     avg
-      400.000      6.9381       0.999994E+13       0.161191E+04  x-axis
-                                                   0.358362E+04  y-axis
-                                                   0.467551E+04  z-axis
-                                                   0.329034E+04     avg
-      450.000      6.8532       0.999999E+13       0.125256E+04  x-axis
-                                                   0.269457E+04  y-axis
-                                                   0.350011E+04  z-axis
-                                                   0.248242E+04     avg
-      500.000      6.7681       0.999999E+13       0.992880E+03  x-axis
-                                                   0.208381E+04  y-axis
-                                                   0.269661E+04  z-axis
-                                                   0.192443E+04     avg
+      300.000      7.1071       0.999990E+13       0.286045E+04  x-axis
+                                                   0.699015E+04  y-axis
+                                                   0.918492E+04  z-axis
+                                                   0.634517E+04     avg
+      350.000      7.0227       0.100001E+14       0.211705E+04  x-axis
+                                                   0.484592E+04  y-axis
+                                                   0.631992E+04  z-axis
+                                                   0.442763E+04     avg
+      400.000      6.9381       0.999994E+13       0.160746E+04  x-axis
+                                                   0.351474E+04  y-axis
+                                                   0.455431E+04  z-axis
+                                                   0.322550E+04     avg
+      450.000      6.8532       0.999999E+13       0.124845E+04  x-axis
+                                                   0.264069E+04  y-axis
+                                                   0.340280E+04  z-axis
+                                                   0.243065E+04     avg
+      500.000      6.7681       0.999999E+13       0.989132E+03  x-axis
+                                                   0.204102E+04  y-axis
+                                                   0.261750E+04  z-axis
+                                                   0.188255E+04     avg
 
-     Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
+     Note: Mobility are sorted by ascending values and might not correspond
+                                              to the expected (x,y,z) axis.
+
      Total time so far
-     SCAT         :      2.86s CPU      2.88s WALL (    1000 calls)
+     SCAT         :      2.80s CPU      2.81s WALL (    1000 calls)
      MOB          :      0.00s CPU      0.00s WALL (       1 calls)
 
-     Progression iq (fine) =       1050/      1728
-     Progression iq (fine) =       1100/      1728
-     Progression iq (fine) =       1150/      1728
-     Progression iq (fine) =       1200/      1728
-     Progression iq (fine) =       1250/      1728
-     Progression iq (fine) =       1300/      1728
-     Progression iq (fine) =       1350/      1728
-     Progression iq (fine) =       1400/      1728
-     Progression iq (fine) =       1450/      1728
-     Progression iq (fine) =       1500/      1728
-     Progression iq (fine) =       1550/      1728
-     Progression iq (fine) =       1600/      1728
-     Progression iq (fine) =       1650/      1728
-     Progression iq (fine) =       1700/      1728
+     Progression iq (fine) =       1100/      1724
+     Progression iq (fine) =       1200/      1724
+     Progression iq (fine) =       1300/      1724
+     Progression iq (fine) =       1400/      1724
+     Progression iq (fine) =       1500/      1724
+     Progression iq (fine) =       1600/      1724
+     Progression iq (fine) =       1700/      1724
      Temperature  300.000 K
      Average over degenerate eigenstates is performed
      Average over degenerate eigenstates in CB is performed
@@ -375,9 +368,11 @@
                                                    0.121327E+04  z-axis
                                                    0.104362E+04     avg
 
-     Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
+     Note: Mobility are sorted by ascending values and might not correspond
+                                              to the expected (x,y,z) axis.
+
      Total time so far
-     SCAT         :      4.55s CPU      4.57s WALL (    1729 calls)
+     SCAT         :      4.41s CPU      4.43s WALL (    1725 calls)
      MOB          :      0.00s CPU      0.00s WALL (       2 calls)
 
      ===================================================================
@@ -394,16 +389,16 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :     57.56s CPU     65.99s WALL (       1 calls)
-     ep-interp    :     57.39s CPU     65.81s WALL (    1728 calls)
+     ephwann      :     58.11s CPU     66.75s WALL (       1 calls)
+     ep-interp    :     54.75s CPU     63.35s WALL (    1724 calls)
 
-     DynW2B       :      0.05s CPU      0.05s WALL (    1728 calls)
-     HamW2B       :     26.40s CPU     26.97s WALL (  363090 calls)
-     ephW2Bp      :      5.78s CPU     13.20s WALL (    1728 calls)
+     DynW2B       :      0.04s CPU      0.05s WALL (    1724 calls)
+     HamW2B       :     28.40s CPU     29.06s WALL (  404478 calls)
+     ephW2Bp      :      5.26s CPU     12.79s WALL (    1724 calls)
 
 
      Total program execution
-     EPW          :     57.56s CPU   1m 6.00s WALL
+     EPW          :     58.11s CPU   1m 6.76s WALL
 
                                                                                           
  Please consider citing:                                                                  

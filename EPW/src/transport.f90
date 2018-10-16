@@ -24,7 +24,7 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE elph2,         ONLY : nqf, xqf, xkf, chw, etf, nkf
+    USE elph2,         ONLY : nqf, xqf, xkf, chw, etf, nkf, nqtotf
     USE mp_world,      ONLY : mpime, world_comm
     USE mp_global,     ONLY : my_pool_id
     USE io_global,     ONLY : ionode_id, stdout
@@ -106,8 +106,10 @@
         CLOSE(iunselecq)
       ENDIF
       CALL mp_bcast(totq  , ionode_id, world_comm )
+      IF (.NOT. ALLOCATED(selecq)) ALLOCATE(selecq(totq))
+      CALL mp_bcast(nqtot , ionode_id, world_comm )
       CALL mp_bcast(selecq, ionode_id, world_comm )
-      IF (nqtot /= nqf) THEN
+      IF (nqtot /= nqtotf) THEN
         CALL errore( 'qwindow', 'Cannot read from selecq.fmt, the q-point grid or &
  fsthick window are different from read one. Remove the selecq.fmt file and restart. ',1 )
       ENDIF
@@ -170,7 +172,7 @@
       IF (mpime == ionode_id) THEN
         OPEN(unit=iunselecq, file='selecq.fmt')
         WRITE (iunselecq,*) totq    ! Selected number of q-points
-        WRITE (iunselecq,*) nqf     ! Total number of q-points 
+        WRITE (iunselecq,*) nqtotf  ! Total number of q-points 
         WRITE (iunselecq,*) selecq(1:totq)
         CLOSE(iunselecq)
       ENDIF
