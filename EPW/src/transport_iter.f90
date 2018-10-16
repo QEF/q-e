@@ -555,6 +555,8 @@
     wkf_all(:)     = zero
     vkk_all(:,:,:) = zero
     ! 
+    ! SP - The implementation only works with MPI so far
+#ifdef __MPI
     ! Read velocities
     IF (mpime.eq.ionode_id) THEN
       !
@@ -776,6 +778,7 @@
       DEALLOCATE(sparsecb_t)
       ! 
     ENDIF
+#endif  
     ! 
     !----------------------------------------------------------------------------
     END SUBROUTINE iter_restart

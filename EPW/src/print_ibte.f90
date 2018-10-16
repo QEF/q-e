@@ -56,11 +56,11 @@
   !! Fermi level for the temperature itemp
   REAL(KIND=DP), INTENT(IN) :: efcb(nstemp)
   !! Second Fermi level for the temperature itemp. Could be unused (0).
+#if defined(__MPI)  
   INTEGER(kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_tot
   !! Total number of element written to file 
   INTEGER(kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_totcb
   !! Total number of element written to file 
-#if defined(__MPI)  
   INTEGER (kind=MPI_OFFSET_KIND), INTENT(inout) :: lrepmatw2
   !! Offset for that core
   INTEGER (kind=MPI_OFFSET_KIND), INTENT(inout) :: lrepmatw4
@@ -70,13 +70,17 @@
   INTEGER (kind=MPI_OFFSET_KIND), INTENT(inout) :: lrepmatw6
   !! Offset for that core
 #else
-  INTEGER (kind=8), INTENT (inout) :: lrepmatw2
+  INTEGER, INTENT(INOUT) :: ind_tot
+  !! Total number of element written to file 
+  INTEGER, INTENT(INOUT) :: ind_totcb
+  !! Total number of element written to file 
+  INTEGER, INTENT (inout) :: lrepmatw2
   !! Offset for that core
-  INTEGER (kind=i4b), INTENT (inout) :: lrepmatw4
+  INTEGER, INTENT (inout) :: lrepmatw4
   !! Offset for that core
-  INTEGER (kind=8), INTENT (inout) :: lrepmatw5
+  INTEGER, INTENT (inout) :: lrepmatw5
   !! Offset for that core
-  INTEGER (kind=i4b), INTENT (inout) :: lrepmatw6
+  INTEGER, INTENT (inout) :: lrepmatw6
 #endif   
   !
   ! Local variables
@@ -105,11 +109,9 @@
   INTEGER (kind=MPI_OFFSET_KIND) :: lsize
   !! Offset to tell where to start reading the file
 #else
-  INTEGER(kind=8) :: lrepmatw
-  !! 
-  INTEGER(kind=4) :: lrepmatw3
-  !! 
-  INTEGER(kind=8) :: lsize
+  INTEGER :: lrepmatw
+  INTEGER :: lrepmatw3
+  INTEGER :: lsize
   !! Offset to tell where to start reading the file
 #endif
   CHARACTER (len=256) :: filint
@@ -468,6 +470,8 @@
     CALL mp_sum( ind,    world_comm )
     CALL mp_sum( indcb,    world_comm )
     ! 
+    ! SP - IBTE only with if EPW compiled with MPI
+#if defined(__MPI)
     IF ( sum(ind) > 0 ) THEN
       ! 
       IF ( my_pool_id == 0 ) ind_tot = ind_tot + SUM(ind)
@@ -575,6 +579,7 @@
       lrepmatw6 = lrepmatw6 + INT( SUM( indcb(:) ), kind = MPI_OFFSET_KIND ) * 4_MPI_OFFSET_KIND
       ! 
     ENDIF ! indcb
+#endif
     ! 
     ! Save to file restart information in formatted way for possible restart
     IF (my_pool_id == 0) THEN

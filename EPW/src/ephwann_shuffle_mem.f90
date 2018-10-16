@@ -209,12 +209,14 @@
   INTEGER (kind=MPI_OFFSET_KIND) :: lsize
   !! Offset to tell where to start reading the file
 #else
-  INTEGER(kind=8)   :: lrepmatw2
-  INTEGER(kind=i4b) :: lrepmatw4
-  INTEGER(kind=8)   :: lrepmatw5
-  INTEGER(kind=i4b) :: lrepmatw6
+  INTEGER :: ind_tot
+  INTEGER :: ind_totcb
+  INTEGER :: lrepmatw2
+  INTEGER :: lrepmatw4
+  INTEGER :: lrepmatw5
+  INTEGER :: lrepmatw6
   !! Offset to tell where to start reading the file
-  INTEGER(kind=8) :: lsize
+  INTEGER :: lsize
 #endif
   !  
   REAL(kind=DP) :: rdotk_scal
@@ -900,12 +902,21 @@
         CLOSE(iunrestart)
       ENDIF
       CALL mp_bcast(iq_restart, ionode_id, world_comm )
+#if defined(__MPI)
       CALL MPI_BCAST( ind_tot, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
       CALL MPI_BCAST( ind_totcb, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
       CALL MPI_BCAST( lrepmatw2, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
       CALL MPI_BCAST( lrepmatw4, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
       CALL MPI_BCAST( lrepmatw5, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
       CALL MPI_BCAST( lrepmatw6, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
+#else
+      CALL mp_bcast( ind_tot,   ionode_id, world_comm )
+      CALL mp_bcast( ind_totcb, ionode_id, world_comm )
+      CALL mp_bcast( lrepmatw2, ionode_id, world_comm )
+      CALL mp_bcast( lrepmatw4, ionode_id, world_comm )
+      CALL mp_bcast( lrepmatw5, ionode_id, world_comm )
+      CALL mp_bcast( lrepmatw6, ionode_id, world_comm )
+#endif
       IF( ierr /= 0 ) CALL errore( 'ephwann_shuffle', 'error in MPI_BCAST',1 )
       ! 
       ! Now, the iq_restart point has been done, so we need to do the next one 

@@ -134,7 +134,9 @@
     !-----------------------------------------------------------------------
     !
     USE mp_global,        ONLY : my_pool_id, npool
+#if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND
+#endif
     !
     IMPLICIT NONE
     !
@@ -142,7 +144,7 @@
     INTEGER (kind=MPI_OFFSET_KIND), INTENT (in) :: nktot
     !! nktot k-points splited over pools
 #else
-    INTEGER (KIND=8), INTENT (IN)  :: ind_tot
+    INTEGER (KIND=8), INTENT (IN)  :: nktot
     !! nktot k-points splited over pools
 #endif
     INTEGER, INTENT (out) :: lower_bnd

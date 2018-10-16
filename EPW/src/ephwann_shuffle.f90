@@ -24,7 +24,7 @@
   !!  RM - add noncolin case
   !-----------------------------------------------------------------------
   !
-  USE kinds,         ONLY : DP
+  USE kinds,         ONLY : DP, i4b
   USE pwcom,         ONLY : nbnd, nks, nkstot, isk, et, xk, ef,  nelec
   USE cell_base,     ONLY : at, bg, omega, alat
   USE start_k,       ONLY : nk1, nk2, nk3
@@ -208,12 +208,14 @@
   INTEGER (kind=MPI_OFFSET_KIND) :: lsize
   !! Offset to tell where to start reading the file
 #else
-  INTEGER(kind=8)   :: lrepmatw2
-  INTEGER(kind=i4b) :: lrepmatw4
-  INTEGER(kind=8)   :: lrepmatw5
-  INTEGER(kind=i4b) :: lrepmatw6
+  INTEGER :: ind_tot
+  INTEGER :: ind_totcb
+  INTEGER :: lrepmatw2
+  INTEGER :: lrepmatw4
+  INTEGER :: lrepmatw5
+  INTEGER :: lrepmatw6
   !! Offset to tell where to start reading the file
-  INTEGER(kind=8) :: lsize
+  INTEGER :: lsize
 #endif
   !  
   REAL(kind=DP) :: rdotk_scal

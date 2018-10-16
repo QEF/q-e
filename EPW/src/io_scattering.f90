@@ -290,17 +290,17 @@
     INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: lrepmatw6
     !! Offset while writing scattering to files
 #else
-    INTEGER(KIND=8), INTENT(INOUT) :: ind_tot
+    INTEGER, INTENT(INOUT) :: ind_tot
     !! Total number of component for valence band
-    INTEGER(KIND=8), INTENT(INOUT) :: ind_totcb
+    INTEGER, INTENT(INOUT) :: ind_totcb
     !! Total number of component for conduction band
-    INTEGER(KIND=8), INTENT(INOUT) :: lrepmatw2
+    INTEGER, INTENT(INOUT) :: lrepmatw2
     !! Offset while writing scattering to files
-    INTEGER(KIND=8), INTENT(INOUT) :: lrepmatw4
+    INTEGER, INTENT(INOUT) :: lrepmatw4
     !! Offset while writing scattering to files
-    INTEGER(KIND=8), INTENT(INOUT) :: lrepmatw5
+    INTEGER, INTENT(INOUT) :: lrepmatw5
     !! Offset while writing scattering to files
-    INTEGER(KIND=8), INTENT(INOUT) :: lrepmatw6
+    INTEGER, INTENT(INOUT) :: lrepmatw6
     !! Offset while writing scattering to files
 #endif  
     ! 

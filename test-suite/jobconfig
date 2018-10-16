@@ -119,5 +119,6 @@ pw_all = pw_*??
 cp_all = cp_*??
 ph_all = ph_*??
 epw_all = epw_*??
+epw_partial = epw_base epw_trev epw_metal epw_soc epw_super epw_polar epw_pl epw_mob
 tddfpt_all = tddfpt_*??
 _default_ = pw_*?? cp_*?? ph_*?? epw_*?? tddfpt_*??
