@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE spectral_func_q ( iq )
+  SUBROUTINE spectral_func_q ( iqq, iq, totq )
   !-----------------------------------------------------------------------
   !!
   !!  Compute the electron spectral function including the  electron-
@@ -32,16 +32,21 @@
                             efermi_read, fermi_energy
   USE pwcom,         ONLY : nelec, ef, isk
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
-                            epf17, wkf, nkf, nqtotf, wf, wqf, xkf, nkqtotf,&
+                            epf17, wkf, nkf, wf, wqf, xkf, nkqtotf,&
                             esigmar_all, esigmai_all, a_all
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : me_pool, inter_pool_comm
+  USE division,      ONLY : fkbounds
   !
   implicit none
   !
+  INTEGER, INTENT (in) :: iqq
+  !! Current q-point index in selecq  
   INTEGER, INTENT (in) :: iq
   !! Current q-point index  
+  INTEGER, INTENT (in) :: totq
+  !! Total number of q-point in window
   ! 
   ! Local variables
   !
@@ -118,7 +123,7 @@
   !
   dw = ( wmax_specfun - wmin_specfun ) / dble (nw_specfun-1)
   !
-  IF ( iq .eq. 1 ) THEN
+  IF ( iqq == 1 ) THEN
      !
      WRITE(stdout,'(/5x,a)') repeat('=',67)
      WRITE(stdout,'(5x,"Electron Spectral Function in the Migdal Approximation")')
@@ -145,7 +150,7 @@
      !
   ENDIF
   !
-  IF ( iq .eq. 1 ) THEN 
+  IF ( iq == 1 ) THEN 
      WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
      WRITE (stdout,'(a)') ' '
   ENDIF
@@ -157,7 +162,7 @@
   ! find the bounds of k-dependent arrays in the parallel case in each pool
   CALL fkbounds( nksqtotf, lower_bnd, upper_bnd )
   !
-  IF ( iq .eq. 1 ) THEN 
+  IF ( iq == 1 ) THEN 
      IF ( .not. ALLOCATED(esigmar_all) ) ALLOCATE( esigmar_all(ibndmax-ibndmin+1, nksqtotf, nw_specfun) )
      IF ( .not. ALLOCATED(esigmai_all) ) ALLOCATE( esigmai_all(ibndmax-ibndmin+1, nksqtotf, nw_specfun) )
      esigmar_all(:,:,:) = zero
@@ -165,7 +170,7 @@
   ENDIF 
   !
   ! SP: Sum rule added to conserve the number of electron. 
-  IF ( iq .eq. 1 ) THEN
+  IF ( iq == 1 ) THEN
     WRITE (stdout,'(5x,a)') 'The sum rule to conserve the number of electron is enforced.'
     WRITE (stdout,'(5x,a)') 'The self energy is rescaled so that its real part is zero at the Fermi level.'
     WRITE (stdout,'(5x,a)') 'The sum rule replace the explicit calculation of the Debye-Waller term.'
@@ -263,7 +268,7 @@
   !
   ! The k points are distributed among pools: here we collect them
   !
-  IF ( iq .eq. nqtotf ) THEN
+  IF ( iqq == totq ) THEN
     !
     ALLOCATE ( xkf_all      ( 3,       nkqtotf ), &
                etf_all      ( nbndsub, nkqtotf ) )

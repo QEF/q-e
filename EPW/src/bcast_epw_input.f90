@@ -49,7 +49,7 @@
                             restart, restart_freq, prtgkk, nel, meff, epsiHEG, &
                             scatread, restart, restart_freq, restart_filq, &
                             lphase, omegamin, omegamax, omegastep, n_r, lindabs,&
-                            mob_maxiter, use_ws 
+                            mob_maxiter, use_ws, epmatkqread, selecqread 
   USE elph2,         ONLY : elph 
   USE mp,            ONLY : mp_bcast
   USE mp_world,      ONLY : world_comm
@@ -133,6 +133,8 @@
   CALL mp_bcast (lphase          , meta_ionode_id, world_comm)
   CALL mp_bcast (lindabs         , meta_ionode_id, world_comm)
   CALL mp_bcast (use_ws          , meta_ionode_id, world_comm)
+  CALL mp_bcast (epmatkqread     , meta_ionode_id, world_comm)
+  CALL mp_bcast (selecqread      , meta_ionode_id, world_comm)
   !
   ! integers
   !

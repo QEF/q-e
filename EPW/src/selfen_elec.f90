@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE selfen_elec_q ( iq, first_cycle )
+  SUBROUTINE selfen_elec_q ( iqq, iq, totq, first_cycle )
   !-----------------------------------------------------------------------
   !! 
   !!  Compute the imaginary part of the electron self energy due to electron-
@@ -22,7 +22,7 @@
   !!
   !!  This subroutine computes the contribution from phonon iq to all k-points
   !!  The outer loop in ephwann_shuffle.f90 will loop over all iq points
-  !!  The contribution from each iq is summed at the end of this subroutine for iq=nqtotf 
+  !!  The contribution from each iq is summed at the end of this subroutine for iqq=totq
   !!  to recover the per-ik electron self energy
   !!
   !!  RM 24/02/2014
@@ -39,7 +39,7 @@
                             restart, restart_freq
   USE pwcom,         ONLY : ef !, nelec, isk
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
-                            nkf, epf17, nqtotf, wf, wqf, xkf, nkqtotf, &
+                            nkf, epf17, wf, wqf, xkf, nkqtotf, &
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew
   USE transportcom,  ONLY : lower_bnd
   USE control_flags, ONLY : iverbosity
@@ -54,8 +54,12 @@
   !
   LOGICAL, INTENT (INOUT) :: first_cycle
   !! Use to determine weather this is the first cycle after restart 
+  INTEGER, INTENT(IN) :: iqq
+  !! Q-point index from selecq.fmt window
   INTEGER, INTENT(IN) :: iq
-  !! Q-point inde
+  !! Q-point index from full grid
+  INTEGER, INTENT(IN) :: totq
+  !! Total number of q-points from the selecq.fmt grid. 
   !
   ! Local variables 
   !
@@ -334,7 +338,7 @@
         CALL mp_sum(fermicount, inter_pool_comm)
         CALL mp_barrier(inter_pool_comm)
         !
-        CALL electron_write(iq,nqtotf,nksqtotf,sigmar_all,sigmai_all,zi_all)
+        CALL electron_write(iq,totq,nksqtotf,sigmar_all,sigmai_all,zi_all)
         ! 
       ENDIF
     ENDIF 
@@ -342,7 +346,7 @@
   !
   ! The k points are distributed among pools: here we collect them
   !
-  IF ( iq .eq. nqtotf ) THEN
+  IF ( iqq == totq ) THEN
     !
     ALLOCATE ( xkf_all      ( 3,       nkqtotf ), &
                etf_all      ( nbndsub, nkqtotf ) )

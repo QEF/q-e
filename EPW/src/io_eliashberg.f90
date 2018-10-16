@@ -766,6 +766,7 @@
     USE mp_global, ONLY : inter_pool_comm, npool
     USE mp_world,  ONLY : mpime
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
+    USE division,  ONLY : fkbounds
     ! 
     IMPLICIT NONE
     !
@@ -1052,6 +1053,7 @@
     USE constants_epw, ONLY : ryd2ev, zero
     USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
     USE mp_global,     ONLY : inter_pool_comm, npool
+    USE division,      ONLY : fkbounds
     !  
     IMPLICIT NONE
     !
@@ -1200,7 +1202,7 @@
     END SUBROUTINE read_ephmat
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE write_ephmat( iq )
+    SUBROUTINE write_ephmat( iqq, iq, totq )
     !-----------------------------------------------------------------------
     !!
     !!  This subroutine writes the elph matrix elements in a format required 
@@ -1220,17 +1222,22 @@
                            efermi_read, fermi_energy
     USE pwcom,      ONLY : ef 
     USE elph2,      ONLY : etf, ibndmin, ibndmax, nkqf, epf17, wkf, nkf, &
-                           nqtotf, wf, xqf, nkqtotf, efnew 
+                           wf, xqf, nkqtotf, efnew 
     USE eliashbergcom, ONLY : equivk, nkfs, ekfs, wkfs, xkfs, dosef, ixkf, ixkqf, nbndfs
     USE superconductivity, ONLY : mem_size_eliashberg, mem_integer_size_eliashberg
     USE constants_epw, ONLY : ryd2ev, two
     USE mp,         ONLY : mp_barrier, mp_sum
     USE mp_global,  ONLY : inter_pool_comm, my_pool_id, npool
+    USE division,   ONLY : fkbounds
     !
     IMPLICIT NONE
     ! 
+    INTEGER, INTENT (in) :: iqq
+    !! Current q-points from selecq
     INTEGER, INTENT (in) :: iq
     !! Current q-points
+    INTEGER, INTENT (in) :: totq
+    !! Total number of q-point from selecq
     !
     ! Local variables
     !
@@ -1273,9 +1280,9 @@
     ! write phonon frequencies to file
     IF ( my_pool_id == 0 ) THEN
       filfreq = trim(tmp_dir) // trim(prefix) // '.freq' 
-      IF ( iq .eq. 1 ) THEN
+      IF ( iqq == 1 ) THEN
         OPEN(iufilfreq, file = filfreq, form = 'unformatted')
-        WRITE(iufilfreq) nqtotf, nmodes
+        WRITE(iufilfreq) totq, nmodes
         WRITE(iufilfreq) xqf(1,iq), xqf(2,iq), xqf(3,iq)
         DO imode = 1, nmodes
            WRITE(iufilfreq) wf(imode,iq)
@@ -1312,7 +1319,7 @@
     nkftot = nkqtotf / 2 
     CALL fkbounds( nkftot, lower_bnd, upper_bnd )
     !
-    IF (iq.eq.1) THEN
+    IF (iqq == 1) THEN
       !
       ! find fermicount - nr of k-points within the Fermi shell per pool
       ! for mp_mesh_k=true. femicount is the nr of irreducible k-points within the Fermi shell per pool
@@ -1360,7 +1367,7 @@
         CLOSE(iufilegnv)
       ENDIF
       !
-    ENDIF ! iq
+    ENDIF ! iqq
     !
     ! write the e-ph matrix elements in the Bloch representation on the fine mesh
     ! in .ephmat files (one for each pool)
@@ -1371,14 +1378,14 @@
 #else
     filephmat = trim(tmp_dir) // trim(prefix) // '.ephmat'
 #endif
-    IF ( iq .eq. 1 ) THEN 
+    IF ( iqq == 1 ) THEN 
        OPEN(iufileph, file = filephmat, form = 'unformatted')
     ELSE
        OPEN(iufileph, file = filephmat, position='append', form = 'unformatted')
     ENDIF
     !
     !IF ( iq .eq. 1 ) WRITE(iufileph,'(2i7)') my_pool_id+1, fermicount
-    IF ( iq .eq. 1 ) WRITE(iufileph) my_pool_id+1, fermicount
+    IF ( iqq == 1 ) WRITE(iufileph) my_pool_id+1, fermicount
     !
     ! nkf - nr of k-points in the pool (fine mesh)
     ! for mp_mesh_k = true nkf is nr of irreducible k-points in the pool 
@@ -1428,7 +1435,7 @@
     ENDDO ! ik's
     CLOSE(iufileph)
     !
-    IF ( iq .eq. nqtotf ) THEN 
+    IF ( iqq == totq ) THEN 
        IF ( ALLOCATED(ekfs) )   DEALLOCATE(ekfs)
        IF ( ALLOCATED(wkfs) )   DEALLOCATE(wkfs)
        IF ( ALLOCATED(xkfs) )   DEALLOCATE(xkfs)
@@ -1441,7 +1448,7 @@
        CALL mem_size_eliashberg( -imelt )
        !
        ! remove memory allocated for ixkqf 
-       imelt = nqtotf * nkfs
+       imelt = totq * nkfs
        CALL mem_integer_size_eliashberg( -imelt )
        !
        ! remove memory allocated for equivk, ixkf
@@ -1462,7 +1469,7 @@
     END SUBROUTINE write_ephmat
     !                                                                            
     !-----------------------------------------------------------------------
-    SUBROUTINE count_kpoints( iq )
+    SUBROUTINE count_kpoints( iqq )
     !-----------------------------------------------------------------------
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
@@ -1476,7 +1483,7 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT (in) :: iq
+    INTEGER, INTENT (in) :: iqq
     !! Current q-points
     !
     ! Local variables
@@ -1499,7 +1506,7 @@
     !
     REAL(DP), EXTERNAL :: efermig, dos_ef
     ! 
-    IF (iq.eq.1) THEN
+    IF (iqq == 1) THEN
        ! 
        ! Fermi level and corresponding DOS
        !  
@@ -1540,7 +1547,7 @@
        ELSE
           WRITE(stdout,'(5x,a,i9,a,i9)') 'Nr k-points within the Fermi shell = ', nks, ' out of ', nkqtotf / 2
        ENDIF
-    ENDIF ! iq
+    ENDIF ! iqq
     !
     RETURN
     !
@@ -1566,6 +1573,7 @@
     USE mp_global, ONLY : inter_pool_comm, npool
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
     USE mp_world,  ONLY : mpime
+    USE division,  ONLY : fkbounds
     !
     IMPLICIT NONE
     !
@@ -1754,6 +1762,7 @@
     USE mp_global, ONLY : inter_pool_comm
     USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
     USE mp_world,  ONLY : mpime
+    USE division,  ONLY : fkbounds
     ! 
     IMPLICIT NONE
     !

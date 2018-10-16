@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE spectral_func_ph (iq )
+  SUBROUTINE spectral_func_ph ( iqq, iq, totq )
   !-----------------------------------------------------------------------
   !
   !  Compute the imaginary part of the phonon self energy due to electron-
@@ -33,7 +33,7 @@
                         wmax_specfun, nw_specfun
   USE pwcom,     ONLY : nelec, ef, isk
   USE elph2,     ONLY : epf17, ibndmax, ibndmin, etf, &
-                        wkf, xqf, nkqf, nqtotf,   &
+                        wkf, xqf, nkqf, &
                         nkf, wf, a_all, &
                         gammai_all,gammar_all, efnew
   USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, cone, ci
@@ -43,8 +43,12 @@
   !
   implicit none
   !
+  INTEGER, INTENT (in) :: iqq
+  !! Current q-point index from selecq
   INTEGER, INTENT (in) :: iq
   !! Current q-point index 
+  INTEGER, INTENT (in) :: totq
+  !! Total q-points in selecq window
   ! 
   INTEGER :: ik
   !! Counter on the k-point index 
@@ -123,7 +127,7 @@
   !qsquared = (xqf(1,iq)**2 + xqf(2,iq)**2 + xqf(3,iq)**2) * tpiba2
   !epsTF =  (qTF**2 + qsquared) / (qTF**2/eps0 * sin (sqrt(qsquared)*RTF)/(sqrt(qsquared)*RTF)+qsquared)
   !
-  IF ( iq .eq. 1 ) THEN 
+  IF ( iqq == 1 ) THEN 
     WRITE(stdout,'(/5x,a)') repeat('=',67)
     WRITE(stdout,'(5x,"Phonon Spectral Function Self-Energy in the Migdal Approximation (on the fly)")') 
     WRITE(stdout,'(5x,a/)') repeat('=',67)
@@ -134,8 +138,8 @@
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
          'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
     !
-    IF ( .not. ALLOCATED (gammai_all)  )  ALLOCATE( gammai_all (nmodes,nqtotf,nw_specfun) )
-    IF ( .not. ALLOCATED (gammar_all)  )  ALLOCATE( gammar_all (nmodes,nqtotf,nw_specfun) )
+    IF ( .not. ALLOCATED (gammai_all)  )  ALLOCATE( gammai_all (nmodes, totq, nw_specfun) )
+    IF ( .not. ALLOCATED (gammar_all)  )  ALLOCATE( gammar_all (nmodes, totq, nw_specfun) )
     gammar_all(:,:,:)  = zero
     gammai_all(:,:,:)  = zero
     !
@@ -294,10 +298,10 @@
 #endif
      !
      WRITE(stdout,'(5x,a)')
-     IF (.not. ALLOCATED (a_all)) ALLOCATE ( a_all(nw_specfun,nqtotf) )
+     IF (.not. ALLOCATED (a_all)) ALLOCATE ( a_all(nw_specfun, totq) )
      a_all(:,:) = zero
      !
-     IF (iq == 1 ) THEN
+     IF (iqq == 1 ) THEN
        IF (mpime.eq.ionode_id) THEN
          OPEN(unit=iospectral,file='specfun.phon')
          OPEN(unit=iospectral_sup,file='specfun_sup.phon')
@@ -318,7 +322,7 @@
        WRITE(stdout,105) imode, ryd2ev * wq, ryd2mev * gammar_all(imode,iq,1), ryd2mev * gammai_all(imode,iq,1)
      ENDDO 
      WRITE( stdout, '(5x,a,i8,a,i8)' ) &
-      'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nqtotf
+      'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', totq
 
      !
      ! Write to support files
@@ -351,8 +355,8 @@
        !
      ENDDO
      !
-     IF (iq == nqtotf ) THEN
-       IF (mpime.eq.ionode_id) THEN
+     IF (iqq == totq ) THEN
+       IF (mpime == ionode_id) THEN
          CLOSE(iospectral)
          CLOSE(iospectral_sup)
        ENDIF 

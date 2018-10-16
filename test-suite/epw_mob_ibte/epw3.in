@@ -17,9 +17,10 @@
   scattering_serta = .true.
   int_mob     = .true.
   carrier     = .true.
-  ncarrier    =  1E13
+  ncarrier    =  -1E13
   mp_mesh_k   = .false.
   iterative_bte = .true.
+  epmatkqread = .true.
   mob_maxiter = 4
   broyden_beta= 1.0
 

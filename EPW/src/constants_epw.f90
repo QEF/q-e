@@ -64,6 +64,8 @@
   REAL(DP), PARAMETER :: eps16 = 1.0E-16_DP
   REAL(DP), PARAMETER :: eps24 = 1.0E-24_DP
   REAL(DP), PARAMETER :: eps32 = 1.0E-32_DP
+  REAL(DP), PARAMETER :: eps80 = 1.0E-80_DP
+  REAL(DP), PARAMETER :: eps160 = 1.0E-160_DP
   !   
   END MODULE constants_epw
 

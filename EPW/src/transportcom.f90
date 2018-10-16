@@ -18,9 +18,9 @@
   !! lower bound for the k-depend index among the mpi pools
   INTEGER :: upper_bnd
   !! lower bound for the k-depend index among the mpi pools
-  INTEGER, ALLOCATABLE :: ixkqf_tr(:,:)
+  INTEGER, ALLOCATABLE :: ixkqf_tr(:)
   !! Mapping matrix from k+q (where q is full BZ) to IBZ
-  INTEGER, ALLOCATABLE :: s_BZtoIBZ_full(:,:,:,:)
+  INTEGER, ALLOCATABLE :: s_BZtoIBZ_full(:,:,:)
   !! Rotation that brink that k-point from BZ to IBZ
   !
   REAL(kind=DP), ALLOCATABLE :: transp_temp(:), & 

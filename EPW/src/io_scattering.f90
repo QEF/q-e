@@ -15,37 +15,33 @@
   IMPLICIT NONE
   ! 
   CONTAINS
-    !
+    ! 
     !----------------------------------------------------------------------------
-    SUBROUTINE F_write(iter, iq, nqtotf, nktotf, error_h, error_el, second)
+    SUBROUTINE Fin_write(iter, F_in, av_mob_old, elec)
     !----------------------------------------------------------------------------
-    USE kinds,        ONLY : DP
-    USE io_epw,       ONLY : iufilFi_all
-    USE io_files,     ONLY : diropn
-    USE epwcom,       ONLY : nstemp
-    USE mp,           ONLY : mp_barrier
-    USE mp_world,     ONLY : mpime
-    USE io_global,    ONLY : ionode_id
-    USE elph2,        ONLY : F_current, ibndmax, ibndmin, F_currentcb
-    USE transportcom, ONLY : lower_bnd, upper_bnd, mobilityh_save, mobilityel_save
+    USE kinds,         ONLY : DP
+    USE io_epw,        ONLY : iufilFi_all
+    USE io_files,      ONLY : diropn
+    USE epwcom,        ONLY : nstemp
+    USE mp,            ONLY : mp_barrier
+    USE mp_world,      ONLY : mpime
+    USE io_global,     ONLY : ionode_id
+    USE elph2,         ONLY : ibndmax, ibndmin, nkqtotf
+    USE transportcom,  ONLY : lower_bnd, upper_bnd
     USE constants_epw, ONLY : zero
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: iter
     !! Iteration number
-    INTEGER, INTENT(IN) :: iq
-    !! Current q-point
-    INTEGER, INTENT(IN) :: nqtotf
-    !! Total number of q-points
-    INTEGER, INTENT(IN) :: nktotf
-    !! Total number of k-points
-    REAL(kind=DP), INTENT(IN) :: error_h
+    REAL(kind=DP), INTENT(IN) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    !REAL(kind=DP), INTENT(IN) :: F_in(:,:,:,:)
+    !! In solution for iteration i  
+    REAL(kind=DP), INTENT(IN) :: av_mob_old(nstemp)
+    !REAL(kind=DP), INTENT(IN) :: av_mob_old(:)
     !! Error in the hole mobility
-    REAL(kind=DP), INTENT(IN) :: error_el
-    !! Error in the electron mobility
-    LOGICAL, INTENT(IN) :: second
-    !! IF we have two Fermi level
+    LOGICAL, INTENT(IN) :: elec
+    !! IF true we do electron mobility, if false the hole one. 
     ! 
     ! Local variable
     LOGICAL :: exst
@@ -63,89 +59,56 @@
     INTEGER :: itemp
     !! Temperature index
     ! 
-    REAL(KIND=DP) :: aux ( 3 * nstemp * (ibndmax-ibndmin+1) * nktotf + 7 + 2 * nstemp )
+    REAL(KIND=DP) :: aux ( 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1 )
     !! Vector to store the array
     !
     !
-    IF (mpime.eq.ionode_id) THEN
+    exst = .FALSE.
+    aux(:) = zero
+    IF (mpime == ionode_id) THEN
       !
-      lfi_all = 3 * nstemp * (ibndmax-ibndmin+1) * nktotf + 7 + 2 * nstemp
+      lfi_all = 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1
       ! First element is the iteration number
       aux(1) = iter
-      ! Current q-point number 
-      aux(2) = iq -1   ! -1 because we will start at the next one.
-      ! Total number of q-points
-      aux(3) = nqtotf
-      ! Value of the previous h mobility (used for error evaluation)
-      aux(4) = error_h
-      ! Error in the electron mobility
-      aux(5) = error_el
       ! 
-      i = 5
+      i = 1
       DO itemp=1, nstemp
         i = i + 1  
         ! Value of the previous h mobility (used for error evaluation)
-        aux(i) = mobilityh_save(itemp)
+        aux(i) = av_mob_old(itemp)
       ENDDO
       ! 
-      i = 5 + nstemp
+      i = 1 + nstemp 
       DO itemp=1, nstemp
-        i = i + 1  
-        ! Value of the previous el mobility (used for error evaluation)
-        aux(i) = mobilityel_save(itemp)
-      ENDDO
-      !
-      i = 5 + nstemp + nstemp
-      DO itemp=1, nstemp
-        DO ik=1, nktotf
+        DO ik=1, nkqtotf/2
           DO ibnd=1, (ibndmax-ibndmin+1)
             DO idir=1,3
               i = i +1
-              aux(i) = F_current(idir, ibnd, ik, itemp)
+              aux(i) = F_in(idir, ibnd, ik, itemp)
             ENDDO
           ENDDO
         ENDDO
       ENDDO
-      CALL diropn (iufilFi_all, 'F_restart', lfi_all, exst)
-      CALL davcio ( aux, lfi_all, iufilFi_all, 1, +1 )
+      ! 
+      ! Electron mobility
+      IF (elec) THEN
+        CALL diropn (iufilFi_all, 'Fin_restartcb', lfi_all, exst)
+        CALL davcio ( aux, lfi_all, iufilFi_all, 1, +1 )
+      ELSE 
+        CALL diropn (iufilFi_all, 'Fin_restart', lfi_all, exst)
+        CALL davcio ( aux, lfi_all, iufilFi_all, 1, +1 )
+      ENDIF
       CLOSE(iufilFi_all)
       !
-      IF (second) THEN
-        !
-        i = 5 + nstemp + nstemp
-        DO itemp=1, nstemp
-          DO ik=1, nktotf
-            DO ibnd=1, (ibndmax-ibndmin+1)
-              DO idir=1,3
-                i = i +1
-                aux(i) = F_currentcb(idir,ibnd, ik, itemp)
-              ENDDO
-            ENDDO
-          ENDDO
-        ENDDO
-        CALL diropn (iufilFi_all, 'F_restart_CB', lfi_all, exst)
-        CALL davcio ( aux, lfi_all, iufilFi_all, 1, +1 )
-        CLOSE(iufilFi_all)
-        ! 
-      ENDIF
       ! 
     ENDIF
     !
-    ! Make everythin 0 except the range of k-points we are working on
-    IF (lower_bnd > 1 ) F_current(:,:,1:lower_bnd-1,:) = zero
-    IF (upper_bnd < nktotf ) F_current(:,:,upper_bnd+1:nktotf,:) = zero
-    ! 
-    IF (second) THEN
-      IF (lower_bnd > 1 ) F_currentcb(:,:,1:lower_bnd-1,:) = zero
-      IF (upper_bnd < nktotf ) F_currentcb(:,:,upper_bnd+1:nktotf,:) = zero
-    ENDIF
-    ! 
     !----------------------------------------------------------------------------
-    END SUBROUTINE F_write
+    END SUBROUTINE Fin_write
     !----------------------------------------------------------------------------
 
     !----------------------------------------------------------------------------
-    SUBROUTINE F_read(iter, iq, nqtotf, nktotf, error_h, error_el, second)
+    SUBROUTINE Fin_read(iter, F_in, av_mob_old, elec)
     !----------------------------------------------------------------------------
     USE kinds,     ONLY : DP
     USE io_global, ONLY : stdout
@@ -157,26 +120,20 @@
     USE mp_global, ONLY : inter_pool_comm, intra_pool_comm, root_pool
     USE mp_world,  ONLY : mpime
     USE io_global, ONLY : ionode_id
-    USE elph2,        ONLY : F_current, ibndmax, ibndmin, Fi_all, F_currentcb, &
-                             Fi_allcb
-    USE transportcom, ONLY : lower_bnd, upper_bnd, mobilityh_save, mobilityel_save
+    USE elph2,        ONLY : ibndmax, ibndmin, nkqtotf
+    USE transportcom, ONLY : lower_bnd, upper_bnd
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(OUT) :: iter
+    INTEGER, INTENT(INOUT) :: iter
     !! Iteration number
-    INTEGER, INTENT(INOUT) :: iq
-    !! Current q-point
-    INTEGER, INTENT(IN) :: nqtotf
-    !! Total number of q-points
-    INTEGER, INTENT(IN) :: nktotf
-    !! Total number of k-points
-    REAL(kind=DP), INTENT(INOUT) :: error_h
+    REAL(kind=DP), INTENT(INOUT) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    !! In solution for iteration i  
+    REAL(kind=DP), INTENT(INOUT) :: av_mob_old(nstemp)
     !! Error in the hole mobility
-    REAL(kind=DP), INTENT(INOUT) :: error_el
-    !! Error in the electron mobility
-    LOGICAL, INTENT(IN) :: second
-    !! IF we have two Fermi level
+    LOGICAL, INTENT(IN) :: elec
+    !! IF true we do electron mobility, if false the hole one. 
+
     !
     ! Local variable
     LOGICAL :: exst
@@ -198,102 +155,87 @@
     ! 
     CHARACTER (len=256) :: name1
  
-    REAL(KIND=DP) :: aux ( 3 * nstemp * (ibndmax-ibndmin+1) * nktotf + 7 + 2 * nstemp )
+    REAL(KIND=DP) :: aux ( 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1 )
     !! Vector to store the array
     !
     IF (mpime.eq.ionode_id) THEN
       ! 
       ! First inquire if the file exists
+      IF (elec) THEN
 #if defined(__MPI)
-      name1 = trim(tmp_dir) // trim(prefix) // '.F_restart1'
+        name1 = trim(tmp_dir) // trim(prefix) // '.Fin_restartcb1'
 #else
-      name1 = trim(tmp_dir) // trim(prefix) // '.F_restart'
-#endif
-      INQUIRE(file = name1, exist=exst)
-      ! 
-      IF (exst) THEN ! read the file
-        !
-        lfi_all = 3 * nstemp * (ibndmax-ibndmin+1) * nktotf + 7 + 2 * nstemp
-        CALL diropn (iufilFi_all, 'F_restart', lfi_all, exst)
-        CALL davcio ( aux, lfi_all, iufilFi_all, 1, -1 )
-        !
-        ! First element is the iteration number
-        iter = INT( aux(1) ) 
-        ! Current iteration number
-        iq = INT( aux(2) )
-        iq = iq + 1 ! we need to start at the next q
-        ! Total number of q-points
-        nqtotf_read = INT( aux(3) )
-        ! Error in hole mobility
-        error_h = aux(4) 
-        ! Error in electron mobility
-        error_el = aux(5) 
-        ! This is the error of the previous iteration. Therefore when you restart
-        ! from a converged one, you want to be finished. 
-        ! This small substraction wont affect anything. 
-        error_h = error_h -0.5E-2
-        error_el = error_el -0.5E-2
-        !
-        IF ( nqtotf_read /= nqtotf) CALL errore('io_scattering',&
-          &'Error: The current total number of q-point is not the same as the read one. ',1)
-        !
-        i = 5
-        DO itemp=1, nstemp
-          i = i + 1  
-          ! Last value of hole mobility 
-          mobilityh_save(itemp) = aux(i)
-        ENDDO
-        ! 
-        i = 5 + nstemp
-        DO itemp=1, nstemp
-          i = i + 1  
-          ! Last value of electron mobility
-          mobilityel_save(itemp) = aux(i)
-        ENDDO
-        ! 
-        i = 5 + nstemp + nstemp
-        DO itemp=1, nstemp
-          DO ik=1, nktotf
-            DO ibnd=1, (ibndmax-ibndmin+1)
-              DO idir=1,3
-                i = i +1
-                F_current(idir, ibnd, ik, itemp) = aux(i)
-              ENDDO
-            ENDDO
-          ENDDO
-        ENDDO
-        CLOSE(iufilFi_all)
-      ENDIF
-      ! 
-      IF (second) THEN
-        ! 
-        ! First inquire if the file exists
-#if defined(__MPI)
-        name1 = trim(tmp_dir) // trim(prefix) // '.F_restart_CB1'
-#else
-        name1 = trim(tmp_dir) // trim(prefix) // '.F_restart_CB'
+        name1 = trim(tmp_dir) // trim(prefix) // '.Fin_restartcb'
 #endif
         INQUIRE(file = name1, exist=exst)
         ! 
         IF (exst) THEN ! read the file
           !
-          CALL diropn (iufilFi_all, 'F_restart_CB', lfi_all, exst)
+          lfi_all = 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1
+          CALL diropn (iufilFi_all, 'Fin_restartcb', lfi_all, exst)
           CALL davcio ( aux, lfi_all, iufilFi_all, 1, -1 )
           !
-          i = 5 + nstemp + nstemp
+          ! First element is the iteration number
+          iter = INT( aux(1) ) 
+          !
+          i = 1
           DO itemp=1, nstemp
-            DO ik=1, nktotf
+            i = i + 1  
+            ! Last value of hole mobility 
+            av_mob_old(itemp) = aux(i)
+          ENDDO
+          ! 
+          i = 1 + nstemp 
+          DO itemp=1, nstemp
+            DO ik=1, nkqtotf/2
               DO ibnd=1, (ibndmax-ibndmin+1)
                 DO idir=1,3
                   i = i +1
-                  F_currentcb(idir,ibnd, ik, itemp) = aux(i)
+                  F_in(idir, ibnd, ik, itemp) = aux(i)
                 ENDDO
               ENDDO
             ENDDO
           ENDDO
           CLOSE(iufilFi_all)
-        ENDIF ! exist 
-      ENDIF ! second
+        ENDIF
+      ELSE ! hole
+#if defined(__MPI)
+        name1 = trim(tmp_dir) // trim(prefix) // '.Fin_restart1'
+#else
+        name1 = trim(tmp_dir) // trim(prefix) // '.Fin_restart'
+#endif
+        INQUIRE(file = name1, exist=exst)
+        ! 
+        IF (exst) THEN ! read the file
+          !
+          lfi_all = 3 * (ibndmax-ibndmin+1) * (nkqtotf/2) * nstemp + nstemp + 1
+          CALL diropn (iufilFi_all, 'Fin_restart', lfi_all, exst)
+          CALL davcio ( aux, lfi_all, iufilFi_all, 1, -1 )
+          !
+          ! First element is the iteration number
+          iter = INT( aux(1) )
+          !
+          i = 2
+          DO itemp=1, nstemp
+            i = i + 1
+            ! Last value of hole mobility 
+            av_mob_old(itemp) = aux(i)
+          ENDDO
+          ! 
+          i = 2 + nstemp
+          DO itemp=1, nstemp
+            DO ik=1, nkqtotf/2
+              DO ibnd=1, (ibndmax-ibndmin+1)
+                DO idir=1,3
+                  i = i +1
+                  F_in(idir, ibnd, ik, itemp) = aux(i)
+                ENDDO
+              ENDDO
+            ENDDO
+          ENDDO
+          CLOSE(iufilFi_all)
+        ENDIF
+      ENDIF
     ENDIF ! mpime
     ! 
     CALL mp_bcast (exst, ionode_id, inter_pool_comm)
@@ -302,50 +244,124 @@
     IF (exst) THEN
       CALL mp_bcast (iter, ionode_id, inter_pool_comm)
       CALL mp_bcast (iter, root_pool, intra_pool_comm)
-      CALL mp_bcast (iq, ionode_id, inter_pool_comm)
-      CALL mp_bcast (iq, root_pool, intra_pool_comm)
-      CALL mp_bcast (F_current, ionode_id, inter_pool_comm)
-      CALL mp_bcast (F_current, root_pool, intra_pool_comm)
-      IF (second) THEN
-        CALL mp_bcast (F_currentcb, ionode_id, inter_pool_comm)
-        CALL mp_bcast (F_currentcb, root_pool, intra_pool_comm)
-      ENDIF
-      CALL mp_bcast (mobilityh_save, ionode_id, inter_pool_comm)
-      CALL mp_bcast (mobilityh_save, root_pool, intra_pool_comm)
-      CALL mp_bcast (mobilityel_save, ionode_id, inter_pool_comm)
-      CALL mp_bcast (mobilityel_save, root_pool, intra_pool_comm)
-      CALL mp_bcast (error_h, ionode_id, inter_pool_comm)
-      CALL mp_bcast (error_h, root_pool, intra_pool_comm)
-      CALL mp_bcast (error_el, ionode_id, inter_pool_comm)
-      CALL mp_bcast (error_el, root_pool, intra_pool_comm)
+      CALL mp_bcast (F_in, ionode_id, inter_pool_comm)
+      CALL mp_bcast (F_in, root_pool, intra_pool_comm)
+      CALL mp_bcast (av_mob_old, ionode_id, inter_pool_comm)
+      CALL mp_bcast (av_mob_old, root_pool, intra_pool_comm)
       ! 
-      ! The Fi on the commensurate full k-grid is equal to the full
-      ! F_current from the previous read run.
-      Fi_all = F_current
-      CALL mp_bcast (Fi_all, ionode_id, inter_pool_comm)
-      CALL mp_bcast (Fi_all, root_pool, intra_pool_comm)
-      ! 
-      ! Make everythin 0 except the range of k-points we are working on
-      IF (lower_bnd > 1 ) F_current(:,:,1:lower_bnd-1,:) = zero
-      IF (upper_bnd < nktotf ) F_current(:,:,upper_bnd+1:nktotf,:) = zero
-      ! 
-      IF (second) THEN
-        Fi_allcb = F_currentcb
-        CALL mp_bcast (Fi_allcb, ionode_id, inter_pool_comm)
-        CALL mp_bcast (Fi_allcb, root_pool, intra_pool_comm)
-        ! 
-        ! Make everythin 0 except the range of k-points we are working on
-        IF (lower_bnd > 1 ) F_currentcb(:,:,1:lower_bnd-1,:) = zero
-        IF (upper_bnd < nktotf ) F_currentcb(:,:,upper_bnd+1:nktotf,:) = zero
-      ENDIF
-      ! 
-      WRITE(stdout, '(a,i10,a,i10,a,i10)' ) '     Restart from iter: ',iter,' and iq: ',iq,'/',nqtotf
+      WRITE(stdout, '(a,i10)' ) '     Restart from iter: ',iter
     ENDIF ! exists
     !
     !----------------------------------------------------------------------------
-    END SUBROUTINE F_read
+    END SUBROUTINE Fin_read
     !----------------------------------------------------------------------------
-
+    !
+    !----------------------------------------------------------------------------
+    SUBROUTINE iter_open(ind_tot, ind_totcb, lrepmatw2, lrepmatw4, lrepmatw5, lrepmatw6)
+    !----------------------------------------------------------------------------
+    ! 
+    ! This subroutine opens all the files needed to save scattering rates for the IBTE.
+    ! 
+    USE kinds,            ONLY : DP
+    USE io_files,         ONLY : tmp_dir, prefix
+    USE io_epw,           ONLY : iufilibtev_sup, iunepmat, iunsparseq, iunsparsek, &
+                                 iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
+                                 iunsparsekcb, iunrestart, iunsparseicb, iunsparsejcb,&
+                                 iunsparsetcb, iunepmatcb 
+    USE mp_world,         ONLY : world_comm
+#if defined(__MPI)
+    USE parallel_include, ONLY : MPI_MODE_WRONLY, MPI_MODE_CREATE, MPI_INFO_NULL, &
+                                 MPI_OFFSET_KIND
+#endif
+    ! 
+    IMPLICIT NONE
+    !  
+#if defined(__MPI)
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_tot
+    !! Total number of component for valence band
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_totcb
+    !! Total number of component for the conduction band
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: lrepmatw2
+    !! Offset while writing scattering to files
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: lrepmatw4
+    !! Offset while writing scattering to files
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: lrepmatw5
+    !! Offset while writing scattering to files
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: lrepmatw6
+    !! Offset while writing scattering to files
+#else
+    INTEGER(KIND=8), INTENT(INOUT) :: ind_tot
+    !! Total number of component for valence band
+    INTEGER(KIND=8), INTENT(INOUT) :: ind_totcb
+    !! Total number of component for conduction band
+    INTEGER(KIND=8), INTENT(INOUT) :: lrepmatw2
+    !! Offset while writing scattering to files
+    INTEGER(KIND=8), INTENT(INOUT) :: lrepmatw4
+    !! Offset while writing scattering to files
+    INTEGER(KIND=8), INTENT(INOUT) :: lrepmatw5
+    !! Offset while writing scattering to files
+    INTEGER(KIND=8), INTENT(INOUT) :: lrepmatw6
+    !! Offset while writing scattering to files
+#endif  
+    ! 
+    ! Local variables
+    !
+    CHARACTER (len=256) :: filint
+    !! Name of the file to write/read
+    INTEGER :: ierr
+    !! Error index
+    ! 
+#if defined(__MPI)
+    filint = trim(tmp_dir)//trim(prefix)//'.epmatkq1'
+    CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunepmat,ierr)
+    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN X.epmatkq1',1 )
+    !
+    CALL MPI_FILE_OPEN(world_comm, 'sparseq', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparseq,ierr)
+    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparseq',1 )
+    !
+    CALL MPI_FILE_OPEN(world_comm, 'sparsek', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparsek,ierr)
+    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparsek',1 )
+    !
+    CALL MPI_FILE_OPEN(world_comm, 'sparsei', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparsei,ierr)
+    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparsei',1 )
+    !
+    CALL MPI_FILE_OPEN(world_comm, 'sparsej', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparsej,ierr)
+    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparsej',1 )
+    !
+    CALL MPI_FILE_OPEN(world_comm, 'sparset', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparset,ierr)
+    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparset',1 )
+    ! 
+    ! ELECTRONS
+    filint = trim(tmp_dir)//trim(prefix)//'.epmatkqcb1'
+    CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunepmatcb,ierr)
+    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN X.epmatkqcb1',1 )
+    !
+    CALL MPI_FILE_OPEN(world_comm, 'sparseqcb', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparseqcb,ierr)
+    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparseqcb',1 )
+    !
+    CALL MPI_FILE_OPEN(world_comm, 'sparsekcb', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparsekcb,ierr)
+    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparsek',1 )
+    !
+    CALL MPI_FILE_OPEN(world_comm, 'sparseicb', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparseicb,ierr)
+    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparsei',1 )
+    !
+    CALL MPI_FILE_OPEN(world_comm, 'sparsejcb', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparsejcb,ierr)
+    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparsej',1 )
+    !
+    CALL MPI_FILE_OPEN(world_comm, 'sparsetcb', MPI_MODE_WRONLY + MPI_MODE_CREATE,MPI_INFO_NULL,iunsparsetcb,ierr)
+    IF( ierr /= 0 ) CALL errore( 'iter_open', 'error in MPI_FILE_OPEN sparset',1 )
+#endif
+    ind_tot   = 0
+    ind_totcb = 0
+    lrepmatw2 = 0
+    lrepmatw4 = 0
+    lrepmatw5 = 0
+    lrepmatw6 = 0
+    ! 
+    !----------------------------------------------------------------------------
+    END SUBROUTINE iter_open
+    !----------------------------------------------------------------------------    
+    !
     !----------------------------------------------------------------------------
     SUBROUTINE scattering_write(itemp, etemp, ef0, etf_all)
     !----------------------------------------------------------------------------
@@ -541,7 +557,7 @@
     !----------------------------------------------------------------------------
 
     !----------------------------------------------------------------------------
-    SUBROUTINE electron_write(iq,nqtotf,nktotf,sigmar_all,sigmai_all,zi_all)
+    SUBROUTINE electron_write(iq,totq,nktotf,sigmar_all,sigmai_all,zi_all)
     !----------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
@@ -561,7 +577,7 @@
     !
     INTEGER, INTENT(IN) :: iq
     !! Current q-point
-    INTEGER, INTENT(IN) :: nqtotf
+    INTEGER, INTENT(IN) :: totq
     !! Total number of q-points
     INTEGER, INTENT(IN) :: nktotf
     !! Total number of k-points
@@ -590,7 +606,7 @@
       ! First element is the current q-point
       aux(1) = REAL( iq -1, KIND=DP) ! we need to start at the next q
       ! Second element is the total number of q-points
-      aux(2) = REAL( nqtotf, KIND=DP)
+      aux(2) = REAL( totq, KIND=DP)
       !
       i = 2
       ! 
@@ -634,7 +650,7 @@
     !----------------------------------------------------------------------------
 
     !----------------------------------------------------------------------------
-    SUBROUTINE electron_read(iq,nqtotf,nktotf,sigmar_all,sigmai_all,zi_all)
+    SUBROUTINE electron_read(iq,totq,nktotf,sigmar_all,sigmai_all,zi_all)
     !----------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
@@ -656,7 +672,7 @@
     !
     INTEGER, INTENT(INOUT) :: iq
     !! Current q-point
-    INTEGER, INTENT(IN) :: nqtotf
+    INTEGER, INTENT(IN) :: totq
     !! Total number of q-points
     INTEGER, INTENT(IN) :: nktotf
     !! Total number of k-points
@@ -705,7 +721,7 @@
         nqtotf_read = INT( aux(2) )
         !print*, 'iq',iq
         !print*, 'nqtotf_read ',nqtotf_read
-        IF ( nqtotf_read /= nqtotf) CALL errore('io_scattering',&
+        IF ( nqtotf_read /= totq) CALL errore('io_scattering',&
           &'Error: The current total number of q-point is not the same as the read one. ',1)
         ! 
         i = 2
@@ -756,7 +772,7 @@
         zi_all(:,upper_bnd+1:nktotf) = zero
       ENDIF
       ! 
-      WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ',(iq-1),'/',nqtotf
+      WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ',(iq-1),'/',totq
     ENDIF
     ! 
     !----------------------------------------------------------------------------
@@ -764,7 +780,7 @@
     !----------------------------------------------------------------------------
 
     !----------------------------------------------------------------------------
-    SUBROUTINE tau_write(iq,nqtotf,nktotf,second)
+    SUBROUTINE tau_write(iqq,totq,nktotf,second)
     !----------------------------------------------------------------------------
     USE kinds,     ONLY : DP
     USE epwcom,    ONLY : nstemp
@@ -779,9 +795,9 @@
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN) :: iq
-    !! Current q-point
-    INTEGER, INTENT(IN) :: nqtotf
+    INTEGER, INTENT(IN) :: iqq
+    !! q-point from the selected ones within the fstick window. 
+    INTEGER, INTENT(IN) :: totq
     !! Total number of q-points
     INTEGER, INTENT(IN) :: nktotf
     !! Total number of k-points
@@ -809,8 +825,8 @@
       !
       ltau_all = 2 * nstemp * (ibndmax-ibndmin+1) * nktotf +2
       ! First element is the iteration number
-      aux(1) = REAL( iq -1, KIND=DP)   ! -1 because we will start at the next one. 
-      aux(2) = REAL( nqtotf, KIND=DP)
+      aux(1) = REAL( iqq -1, KIND=DP)   ! -1 because we will start at the next one. 
+      aux(2) = REAL( totq, KIND=DP)
       i = 2
       ! 
       DO itemp=1, nstemp
@@ -836,8 +852,8 @@
       ! 
       IF (second) THEN
         ! First element is the iteration number
-        aux(1) = iq -1   ! -1 because we will start at the next one. 
-        aux(2) = nqtotf
+        aux(1) = iqq -1   ! -1 because we will start at the next one. 
+        aux(2) = totq
         i = 2
         ! 
         DO itemp=1, nstemp
@@ -884,7 +900,7 @@
     END SUBROUTINE tau_write
     !----------------------------------------------------------------------------
     !----------------------------------------------------------------------------
-    SUBROUTINE tau_read(iq,nqtotf,nktotf,second)
+    SUBROUTINE tau_read(iqq,totq,nktotf,second)
     !----------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
@@ -904,9 +920,9 @@
     ! Local variable
     LOGICAL :: exst
     !
-    INTEGER, INTENT(INOUT) :: iq
-    !! Current q-point
-    INTEGER, INTENT(IN) :: nqtotf
+    INTEGER, INTENT(INOUT) :: iqq
+    !! Current q-point from selecq.fmt
+    INTEGER, INTENT(IN) :: totq
     !! Total number of q-points
     INTEGER, INTENT(IN) :: nktotf
     !! Total number of k-points
@@ -948,12 +964,12 @@
         CALL davcio ( aux, ltau_all, iufiltau_all, 1, -1 )
         !
         ! First element is the iteration number
-        iq = INT( aux(1) )
-        iq = iq + 1 ! we need to start at the next q
+        iqq = INT( aux(1) )
+        iqq = iqq + 1 ! we need to start at the next q
         nqtotf_read = INT( aux(2) )
         !print*, 'iq',iq
         !print*, 'nqtotf_read ',nqtotf_read
-        IF ( nqtotf_read /= nqtotf) CALL errore('io_scattering',&
+        IF ( nqtotf_read /= totq) CALL errore('io_scattering',&
           &'Error: The current total number of q-point is not the same as the read one. ',1)
         ! 
         i = 2
@@ -993,10 +1009,10 @@
           CALL davcio ( aux, ltau_all, iufiltau_all, 1, -1 )
           !
           ! First element is the iteration number
-          iq = INT( aux(1) )
-          iq = iq + 1 ! we need to start at the next q
+          iqq = INT( aux(1) )
+          iqq = iqq + 1 ! we need to start at the next q
           nqtotf_read = INT( aux(2) )
-          IF ( nqtotf_read /= nqtotf) CALL errore('io_scattering',&
+          IF ( nqtotf_read /= totq) CALL errore('io_scattering',&
             &'Error: The current total number of q-point is not the same as the read one. ',1)
           ! 
           i = 2
@@ -1018,7 +1034,7 @@
             ENDDO
           ENDDO
           CLOSE(iufiltau_all)
-          WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from tau_CB: ',iq,'/',nqtotf 
+          WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from tau_CB: ',iqq,'/',totq 
         ENDIF
         ! 
       ENDIF ! second
@@ -1028,7 +1044,7 @@
     CALL mp_bcast (exst, meta_ionode_id, world_comm)
     !
     IF (exst) THEN
-      CALL mp_bcast (iq,          meta_ionode_id, world_comm)
+      CALL mp_bcast (iqq,          meta_ionode_id, world_comm)
       CALL mp_bcast (inv_tau_all, meta_ionode_id, world_comm)
       CALL mp_bcast (zi_allvb,    meta_ionode_id, world_comm)
       IF (second) CALL mp_bcast (inv_tau_allcb, meta_ionode_id, world_comm)
@@ -1048,7 +1064,7 @@
         IF (upper_bnd < nktotf ) zi_allcb(:,:,upper_bnd+1:nktotf) = zero
       ENDIF 
       ! 
-      WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from tau: ',iq,'/',nqtotf
+      WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from tau: ',iqq,'/',totq
     ENDIF
     ! 
     !----------------------------------------------------------------------------

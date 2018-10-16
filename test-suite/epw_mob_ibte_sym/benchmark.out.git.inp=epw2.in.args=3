@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 16Oct2018 at 14:25:37 
+     Program EPW v.5.0.0 starts on 16Oct2018 at 16: 5:21 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -136,9 +136,9 @@
      
      Using uniform q-mesh:    7   7   7
      Size of q point mesh for interpolation:        343
-     Using uniform k-mesh:    7   7   7
-     Size of k point mesh for interpolation:        686
-     Max number of k points per pool:              686
+     Using uniform MP k-mesh:    7   7   7
+     Size of k point mesh for interpolation:         40
+     Max number of k points per pool:               40
 
      Fermi energy coarse grid =   0.000000 eV
 
@@ -148,11 +148,11 @@
 
      ===================================================================
 
-              ibndmin =     2  ebndmin =     0.189
+              ibndmin =     2  ebndmin =     0.190
               ibndmax =     8  ebndmax =     0.760
 
 
-     Number of ep-matrix elements per pool :       100842 ~=  787.83 Kb (@ 8 bytes/ DP)
+     Number of ep-matrix elements per pool :         5880 ~=   45.94 Kb (@ 8 bytes/ DP)
       
      A selecq.fmt file was found but re-created because selecqread == .false. 
      We only need to compute      343 q-points
@@ -170,10 +170,10 @@
      Temperature  500.000 K
      Valence band maximum    =   6.255486 eV
      Conduction band minimum =   7.660802 eV
-     Mobility VB Fermi level   7.013557 eV
+     Mobility VB Fermi level   7.013560 eV
      Valence band maximum    =   6.255486 eV
      Conduction band minimum =   7.660802 eV
-     Mobility CB Fermi level   6.872901 eV
+     Mobility CB Fermi level   6.872905 eV
 
      ===================================================================
      Scattering rate for IBTE
@@ -189,26 +189,26 @@
      Progression iq (fine) =        100/       343
      Progression iq (fine) =        200/       343
      Progression iq (fine) =        300/       343
-      400.000      6.8619       0.999997E+13
+      400.000      6.8619       0.100000E+14
       500.000      7.0136       0.100000E+14
       
      epmatkqread automatically changed to .true. as all scattering have been computed.
       
-     Number of elements per core      15116
+     Number of elements per core       1846
      Average over degenerate eigenstates is performed
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      7.0305       0.999998E+13       0.414741E+02  x-axis
-                                                   0.414741E+02  y-axis
-                                                   0.680423E+02  z-axis
-                                                   0.503301E+02     avg
-      500.000      6.8729       0.999997E+13       0.281829E+02  x-axis
-                                                   0.281829E+02  y-axis
-                                                   0.462060E+02  z-axis
-                                                   0.341906E+02     avg
+      400.000      7.0305       0.100001E+14       0.340694E+02  x-axis
+                                                   0.584587E+02  y-axis
+                                                   0.584588E+02  z-axis
+                                                   0.503290E+02     avg
+      500.000      6.8729       0.100000E+14       0.231476E+02  x-axis
+                                                   0.397038E+02  y-axis
+                                                   0.397039E+02  z-axis
+                                                   0.341851E+02     avg
       
      ===================================================================
      Start solving iterative Boltzmann Transport Equation
@@ -222,16 +222,16 @@
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      7.0305       0.999998E+13       0.363357E+02  x-axis
-                                                   0.363357E+02  y-axis
-                                                   0.547466E+02  z-axis
-                                                   0.424727E+02     avg
-      500.000      6.8729       0.999997E+13       0.247699E+02  x-axis
-                                                   0.247699E+02  y-axis
-                                                   0.372317E+02  z-axis
-                                                   0.289238E+02     avg
+      400.000      7.0305       0.100001E+14       0.306606E+02  x-axis
+                                                   0.484285E+02  y-axis
+                                                   0.484296E+02  z-axis
+                                                   0.425062E+02     avg
+      500.000      6.8729       0.100000E+14       0.209085E+02  x-axis
+                                                   0.329592E+02  y-axis
+                                                   0.329615E+02  z-axis
+                                                   0.289430E+02     avg
 
-                                                   0.424727E+02     Err
+                                                   0.425062E+02     Err
 
      Iteration number:         2 
 
@@ -240,16 +240,16 @@
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      7.0305       0.999998E+13       0.369723E+02  x-axis
-                                                   0.369723E+02  y-axis
-                                                   0.573447E+02  z-axis
-                                                   0.437631E+02     avg
-      500.000      6.8729       0.999997E+13       0.251833E+02  x-axis
-                                                   0.251833E+02  y-axis
-                                                   0.389751E+02  z-axis
-                                                   0.297806E+02     avg
+      400.000      7.0305       0.100001E+14       0.310017E+02  x-axis
+                                                   0.501495E+02  y-axis
+                                                   0.501503E+02  z-axis
+                                                   0.437672E+02     avg
+      500.000      6.8729       0.100000E+14       0.211251E+02  x-axis
+                                                   0.341053E+02  y-axis
+                                                   0.341071E+02  z-axis
+                                                   0.297792E+02     avg
 
-                                                   0.129044E+01     Err
+                                                   0.126093E+01     Err
 
      Iteration number:         3 
 
@@ -258,16 +258,16 @@
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      7.0305       0.999998E+13       0.368935E+02  x-axis
-                                                   0.368935E+02  y-axis
-                                                   0.568370E+02  z-axis
-                                                   0.435413E+02     avg
-      500.000      6.8729       0.999997E+13       0.251333E+02  x-axis
-                                                   0.251333E+02  y-axis
-                                                   0.386364E+02  z-axis
-                                                   0.296343E+02     avg
+      400.000      7.0305       0.100001E+14       0.309675E+02  x-axis
+                                                   0.498542E+02  y-axis
+                                                   0.498551E+02  z-axis
+                                                   0.435590E+02     avg
+      500.000      6.8729       0.100000E+14       0.211041E+02  x-axis
+                                                   0.339105E+02  y-axis
+                                                   0.339125E+02  z-axis
+                                                   0.296424E+02     avg
 
-                                                   0.221811E+00     Err
+                                                   0.208215E+00     Err
 
      Iteration number:         4 
 
@@ -284,16 +284,16 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :     27.61s CPU     28.99s WALL (       1 calls)
-     ep-interp    :     27.38s CPU     28.76s WALL (     343 calls)
+     ephwann      :      2.58s CPU      3.78s WALL (       1 calls)
+     ep-interp    :      2.37s CPU      3.57s WALL (     343 calls)
 
      DynW2B       :      0.01s CPU      0.01s WALL (     343 calls)
-     HamW2B       :      5.03s CPU      5.11s WALL (  236670 calls)
-     ephW2Bp      :      0.79s CPU      1.83s WALL (     343 calls)
+     HamW2B       :      0.27s CPU      0.33s WALL (   14446 calls)
+     ephW2Bp      :      0.92s CPU      1.89s WALL (     343 calls)
 
 
      Total program execution
-     EPW          :     27.61s CPU     28.99s WALL
+     EPW          :      2.58s CPU      3.78s WALL
 
                                                                                           
  Please consider citing:                                                                  
