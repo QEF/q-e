@@ -48,6 +48,7 @@
   USE mp_global,     ONLY : inter_pool_comm
   USE mp_world,      ONLY : mpime
   USE io_global,     ONLY : ionode_id
+  USE io_scattering, ONLY : electron_write
   !
   implicit none
   !

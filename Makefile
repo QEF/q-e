@@ -282,12 +282,12 @@ links : bindir
 	)
 
 #########################################################
-# 'make install' works based on --with-prefix
-# - If the final directory does not exists it creates it
+# 'make install' works with "configure --prefix=PREFIX"
+# - If the PREFIX directory does not exists it creates it
 #########################################################
 
 install : 
-	@if test -d bin ; then mkdir -p $(PREFIX)/bin ; \
+	@if ! test -d $(PREFIX)/bin ; then mkdir -p $(PREFIX)/bin ; \
 	for x in `find * ! -path "test-suite/*" -name *.x -type f` ; do \
 		cp $$x $(PREFIX)/bin/ ; done ; \
 	fi

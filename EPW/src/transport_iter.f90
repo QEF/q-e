@@ -50,6 +50,7 @@
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_eliashberg, ONLY : kpmq_map
     USE noncollin_module, ONLY : noncolin
+    USE io_scattering, ONLY : F_write
     !
     IMPLICIT NONE
     !

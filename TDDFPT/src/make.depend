@@ -4,8 +4,6 @@ bcast_lr_input.o : ../../Modules/io_files.o
 bcast_lr_input.o : ../../Modules/io_global.o
 bcast_lr_input.o : ../../Modules/mp_global.o
 bcast_lr_input.o : ../../Modules/mp_world.o
-bcast_lr_input.o : ../../PW/src/exx.o
-bcast_lr_input.o : ../../PW/src/realus.o
 bcast_lr_input.o : ../../UtilXlib/mp.o
 bcast_lr_input.o : lr_charg_resp.o
 bcast_lr_input.o : lr_dav_variables.o
@@ -304,7 +302,6 @@ lr_init_nfo.o : ../../Modules/uspp.o
 lr_init_nfo.o : ../../Modules/wavefunctions.o
 lr_init_nfo.o : ../../PW/src/buffers.o
 lr_init_nfo.o : ../../PW/src/pwcom.o
-lr_init_nfo.o : ../../PW/src/realus.o
 lr_init_nfo.o : lr_variables.o
 lr_lanczos.o : ../../LR_Modules/lrcom.o
 lr_lanczos.o : ../../Modules/becmod.o
@@ -391,6 +388,7 @@ lr_read_wf.o : ../../Modules/wavefunctions.o
 lr_read_wf.o : ../../PW/src/buffers.o
 lr_read_wf.o : ../../PW/src/pwcom.o
 lr_read_wf.o : ../../PW/src/realus.o
+lr_read_wf.o : ../../PW/src/symm_base.o
 lr_read_wf.o : lr_exx_kernel.o
 lr_read_wf.o : lr_variables.o
 lr_readin.o : ../../LR_Modules/lrcom.o
@@ -410,7 +408,6 @@ lr_readin.o : ../../Modules/paw_variables.o
 lr_readin.o : ../../Modules/recvec.o
 lr_readin.o : ../../Modules/uspp.o
 lr_readin.o : ../../PW/src/esm.o
-lr_readin.o : ../../PW/src/exx.o
 lr_readin.o : ../../PW/src/io_rho_xml.o
 lr_readin.o : ../../PW/src/ldaU.o
 lr_readin.o : ../../PW/src/martyna_tuckerman.o

@@ -38,6 +38,7 @@
                               eps6
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : world_comm
+    USE io_scattering, ONLY : scattering_write, tau_write, merge_read
     !
     IMPLICIT NONE
     !
@@ -469,7 +470,7 @@
           WRITE(stdout, '(a)' ) '     '
           WRITE(stdout, '(a,i10,a)' ) '     Merge scattering for a total of ',nqtotf+nqtotf_new,' q-points'
           ! 
-          CALL tau_write(iq+nqtotf_new,nqtotf+nqtotf_new,nkqtotf/2)
+          CALL tau_write(iq+nqtotf_new,nqtotf+nqtotf_new,nkqtotf/2, .FALSE.)
           WRITE(stdout, '(a)' ) '     Write to restart file the sum'
           WRITE(stdout, '(a)' ) '     '
           !
@@ -614,6 +615,7 @@
     USE epwcom,    ONLY : mp_mesh_k, nkf1, nkf2, nkf3
     USE constants_epw, ONLY : eps6
     USE noncollin_module, ONLY : noncolin
+    USE io_scattering, ONLY : scattering_read
     !
     IMPLICIT NONE
     ! 
