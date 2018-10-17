@@ -19,6 +19,8 @@ SUBROUTINE rotate_wfc_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
 #if defined(__CUDA)
   USE cudafor
   USE cublas
+#else
+#define cublasDGEMM dgemm
 #endif
   USE cg_param,      ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id, &

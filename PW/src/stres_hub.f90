@@ -139,8 +139,9 @@ SUBROUTINE dndepsilon ( ipol, jpol, ldim, dns )
    USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm, &
                                     me_pool, nproc_pool
    USE mp,                   ONLY : mp_sum
-   USE wavefunctions_gpum, ONLY : using_evc
-   USE becmod_subs_gpum,          ONLY : using_becp_auto
+   USE wavefunctions_gpum,   ONLY : using_evc
+   USE becmod_subs_gpum,     ONLY : using_becp_auto
+   USE uspp_gpum,            ONLY : using_vkb
 
    IMPLICIT NONE
    !
@@ -194,7 +195,9 @@ SUBROUTINE dndepsilon ( ipol, jpol, ldim, dns )
          CALL get_buffer (evc, nwordwfc, iunwfc, ik)
       IF (nks > 1) CALL using_evc(1)
       !
+      CALL using_vkb(2);
       CALL init_us_2 (npw,igk_k(1,ik),xk(1,ik),vkb)
+      CALL using_becp_auto(2);
       CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
       
@@ -311,8 +314,8 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    USE becmod,               ONLY : bec_type, becp, calbec
    USE mp_bands,             ONLY : intra_bgrp_comm
    USE mp,                   ONLY : mp_sum
-   USE wavefunctions_gpum, ONLY : using_evc
-   USE uspp_gpum,                 ONLY : using_qq_at
+   USE wavefunctions_gpum,   ONLY : using_evc
+   USE uspp_gpum,            ONLY : using_qq_at, using_vkb
 
    IMPLICIT NONE
    !
@@ -398,6 +401,7 @@ SUBROUTINE dprojdepsilon_k ( spsi, ik, ipol, jpol, nb_s, nb_e, mykey, dproj )
    ! and here the derivative of the spherical harmonic
    CALL gen_us_dy (ik, xyz(1,ipol), aux1)
 
+   CALL using_vkb(0)
    DO nt=1,ntyp
       ALLOCATE (dbeta(npwx,nh(nt)), dbetapsi(nh(nt),nbnd), betapsi(nh(nt),nbnd), &
                 wfatbeta(nwfcU,nh(nt)), wfatdbeta(nwfcU,nh(nt)) )

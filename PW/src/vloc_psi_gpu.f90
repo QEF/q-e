@@ -5,6 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 
+! Workaround for missing interface
+#if ! defined (__CUDA)
+#define tg_gather_gpu tg_gather
+#endif
 !-----------------------------------------------------------------------
 SUBROUTINE vloc_psi_gamma_gpu(lda, n, m, psi_d, v_d, hpsi_d)
   !-----------------------------------------------------------------------

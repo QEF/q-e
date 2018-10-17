@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-#if defined(__CUDA)
 
 
 
@@ -45,8 +44,11 @@ SUBROUTINE h_psi_gpu( lda, n, m, psi_d, hpsi_d )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)      :: lda, n, m
-  COMPLEX(DP), DEVICE, INTENT(IN)  :: psi_d(lda*npol,m) 
-  COMPLEX(DP), DEVICE, INTENT(OUT) :: hpsi_d(lda*npol,m)
+  COMPLEX(DP), INTENT(IN)  :: psi_d(lda*npol,m)
+  COMPLEX(DP), INTENT(OUT) :: hpsi_d(lda*npol,m)
+#if defined(__CUDA)
+  attributes(DEVICE) :: psi_d, hpsi_d
+#endif
   !
   INTEGER :: m_start, m_end
   INTEGER :: column_type
@@ -131,11 +133,19 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)     :: lda, n, m
-  COMPLEX(DP), DEVICE, INTENT(IN)  :: psi_d(lda*npol,m) 
-  COMPLEX(DP), DEVICE, INTENT(OUT) :: hpsi_d(lda*npol,m)   
+  COMPLEX(DP), INTENT(IN)  :: psi_d(lda*npol,m)
+  COMPLEX(DP), INTENT(OUT) :: hpsi_d(lda*npol,m)
+#if defined(__CUDA)
+  attributes(DEVICE) :: psi_d, hpsi_d
+#endif
   !
+#if defined(__CUDA)
   COMPLEX(DP), ALLOCATABLE, PINNED :: psi_host(:,:)
   COMPLEX(DP), ALLOCATABLE, PINNED :: hpsi_host(:,:)
+#else
+  COMPLEX(DP), ALLOCATABLE :: psi_host(:,:)
+  COMPLEX(DP), ALLOCATABLE :: hpsi_host(:,:)
+#endif
   !
   INTEGER     :: ipol, ibnd, incr, i
   REAL(dp)    :: ee
@@ -339,4 +349,3 @@ SUBROUTINE h_psi__gpu( lda, n, m, psi_d, hpsi_d )
   RETURN
   !
 END SUBROUTINE h_psi__gpu
-#endif

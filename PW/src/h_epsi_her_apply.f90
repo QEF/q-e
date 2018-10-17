@@ -39,7 +39,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   !
-  USE uspp_gpum, ONLY : using_qq_at, using_qq_so
+  USE uspp_gpum, ONLY : using_qq_at, using_qq_so, using_vkb
   !
   implicit none
   INTEGER, INTENT(in) :: pdir!direction on which the polarization is calculated
@@ -94,6 +94,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
             END IF
          END DO
       END DO
+      CALL using_vkb(0)
       CALL calbec ( npw, vkb, psi, becp0, nbande )
   endif
 
@@ -230,6 +231,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
         enddo
      enddo
      call stop_clock('h_eps_van2')
+     CALL using_vkb(0)
      call ZGEMM ('N', 'N', npw, nbnd*npol , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
           npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx)
 !!!
