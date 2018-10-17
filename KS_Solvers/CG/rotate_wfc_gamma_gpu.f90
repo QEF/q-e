@@ -98,8 +98,10 @@ SUBROUTINE rotate_wfc_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   CALL divide(inter_bgrp_comm,nstart,n_start,n_end)
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
-  CALL cublasDGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi_d, npwx2, aux_d(1,n_start), npwx2, 0.D0, hr_d(1,n_start), nstart )
-  IF ( gstart == 2 ) call CGcudaDGER( nstart, my_n, -1.D0, psi_d, npwx2, aux_d(1,n_start), npwx2, hr_d(1,n_start), nstart )
+  CALL cublasDGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi_d, &
+                    npwx2, aux_d(1,n_start), npwx2, 0.D0, hr_d(1,n_start), nstart )
+  IF ( gstart == 2 ) call CGcudaDGER( nstart, my_n, -1.D0, psi_d, &
+                                      npwx2, aux_d(1,n_start), npwx2, hr_d(1,n_start), nstart )
   CALL mp_sum( hr_d, inter_bgrp_comm )
   !
   CALL mp_sum( hr_d, intra_bgrp_comm )
@@ -110,14 +112,18 @@ SUBROUTINE rotate_wfc_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
      CALL s_psi_gpu( npwx, npw, nstart, psi_d, aux_d )
      !
      if (n_start .le. n_end) &
-     CALL cublasDGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi_d, npwx2, aux_d(1,n_start), npwx2, 0.D0, sr_d(1,n_start), nstart )
-     IF ( gstart == 2 ) CALL CGcudaDGER( nstart, my_n, -1.D0, psi_d, npwx2, aux_d(1,n_start), npwx2, sr_d(1,n_start), nstart )
+     CALL cublasDGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi_d, &
+                       npwx2, aux_d(1,n_start), npwx2, 0.D0, sr_d(1,n_start), nstart )
+     IF ( gstart == 2 ) CALL CGcudaDGER( nstart, my_n, -1.D0, psi_d, &
+                                         npwx2, aux_d(1,n_start), npwx2, sr_d(1,n_start), nstart )
      !
   ELSE
      !
      if (n_start .le. n_end) &
-     CALL cublasDGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi_d, npwx2, psi_d(1,n_start), npwx2, 0.D0, sr_d(1,n_start), nstart )
-     IF ( gstart == 2 ) CALL CGcudaDGER( nstart, my_n, -1.D0, psi_d, npwx2, psi_d(1,n_start), npwx2, sr_d(1,n_start), nstart )
+     CALL cublasDGEMM( 'T','N', nstart, my_n, npw2, 2.D0, psi_d, &
+                       npwx2, psi_d(1,n_start), npwx2, 0.D0, sr_d(1,n_start), nstart )
+     IF ( gstart == 2 ) CALL CGcudaDGER( nstart, my_n, -1.D0, psi_d, &
+                                         npwx2, psi_d(1,n_start), npwx2, sr_d(1,n_start), nstart )
      !
   END IF
   CALL mp_sum( sr_d, inter_bgrp_comm )
@@ -141,7 +147,8 @@ SUBROUTINE rotate_wfc_gamma_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   !
   aux_d=(0.D0,0.D0)
   if (n_start .le. n_end) &
-  CALL cublasDGEMM( 'N','N', npw2, nbnd, my_n, 1.D0, psi_d(1,n_start), npwx2, vr_d(n_start,1), nstart, 0.D0, aux_d, npwx2 )
+  CALL cublasDGEMM( 'N','N', npw2, nbnd, my_n, 1.D0, psi_d(1,n_start), &
+                     npwx2, vr_d(n_start,1), nstart, 0.D0, aux_d, npwx2 )
   CALL mp_sum( aux_d, inter_bgrp_comm )
   !
   !$cuf kernel do(2)

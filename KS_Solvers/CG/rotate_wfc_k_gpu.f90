@@ -93,7 +93,8 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   CALL divide(inter_bgrp_comm,nstart,n_start,n_end)
   my_n = n_end - n_start + 1; !write (*,*) nstart,n_start,n_end
   if (n_start .le. n_end) &
-       call ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, kdmx, aux_d(1,n_start), kdmx, (0.D0,0.D0), hc_d(1,n_start), nstart )
+       call ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, &
+                    kdmx, aux_d(1,n_start), kdmx, (0.D0,0.D0), hc_d(1,n_start), nstart )
   CALL mp_sum( hc_d, inter_bgrp_comm )
   !
   CALL mp_sum( hc_d, intra_bgrp_comm )
@@ -103,12 +104,14 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_gpu, s_psi_gpu, overlap, &
      !
      CALL s_psi_gpu( npwx, npw, nstart, psi_d, aux_d )
      if (n_start .le. n_end) &
-          CALL ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, kdmx, aux_d(1,n_start), kdmx, (0.D0,0.D0), sc_d(1,n_start), nstart )
+          CALL ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, &
+                      kdmx, aux_d(1,n_start), kdmx, (0.D0,0.D0), sc_d(1,n_start), nstart )
      !
   ELSE
      !
      if (n_start .le. n_end) &
-          CALL ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, kdmx, psi_d(1,n_start), kdmx, (0.D0,0.D0), sc_d(1,n_start), nstart )
+          CALL ZGEMM( 'C','N', nstart, my_n, kdim, (1.D0,0.D0), psi_d, &
+                      kdmx, psi_d(1,n_start), kdmx, (0.D0,0.D0), sc_d(1,n_start), nstart )
      !
   END IF
   CALL mp_sum( sc_d, inter_bgrp_comm )
@@ -133,7 +136,8 @@ SUBROUTINE rotate_wfc_k_gpu( h_psi_gpu, s_psi_gpu, overlap, &
   !
   aux_d=(0.D0,0.D0)
   if (n_start .le. n_end) &
-       CALL ZGEMM( 'N','N', kdim, nbnd, my_n, (1.D0,0.D0), psi_d(1,n_start), kdmx, vc_d(n_start,1), nstart, (0.D0,0.D0), aux_d, kdmx )
+       CALL ZGEMM( 'N','N', kdim, nbnd, my_n, (1.D0,0.D0), psi_d(1,n_start), &
+                   kdmx, vc_d(n_start,1), nstart, (0.D0,0.D0), aux_d, kdmx )
   CALL mp_sum( aux_d, inter_bgrp_comm )
   !
   !

@@ -2,7 +2,11 @@
 
 CG += \
 rotate_wfc_k_gpu.o \
-rotate_wfc_gamma_gpu.o
+rotate_wfc_gamma_gpu.o \
+rcgdiagg_gpu.o \
+ccgdiagg_gpu.o
 
+ccgdiagg_gpu.o : cg_param.o
+rcgdiagg_gpu.o : cg_param.o
 rotate_wfc_gamma_gpu.o : cg_param.o
 rotate_wfc_k_gpu.o : cg_param.o

@@ -40,14 +40,11 @@ SUBROUTINE rotate_wfc_gpu &
     ! eigenvalues
 #if defined(__CUDA)
   attributes(DEVICE)       :: psi_d, evc_d, e_d
+#endif
   COMPLEX(DP), ALLOCATABLE :: psi_h(:,:), evc_h(:,:)
   REAL(DP), ALLOCATABLE    :: e_h(:)
-#endif
-  EXTERNAL  h_psi,    s_psi
-#if defined(__CUDA)
-  EXTERNAL  h_psi_gpu,    s_psi_gpu
+  EXTERNAL h_psi, s_psi, h_psi_gpu, s_psi_gpu
   !
-#endif
     ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
     ! s_psi(npwx,npw,nvec,spsi)

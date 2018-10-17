@@ -233,6 +233,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
 !------------------------------------------------------------------------
 ! CG diagonalization uses these external routines on a single band
    external hs_1psi, s_1psi
+   external hs_1psi_gpu, s_1psi_gpu
 !  subroutine hs_1psi(npwx,npw,psi,hpsi,spsi)  computes H*psi and S*psi
 !  subroutine s_1psi(npwx,npw,psi,spsi)        computes S*psi (if needed)
 ! In addition to the above ithe initial wfc rotation uses h_psi, and s_psi
@@ -330,22 +331,36 @@ CONTAINS
           !
           IF ( .NOT. lrot ) THEN
              !
-             CALL using_evc(1);  CALL using_et(1); ! et is used as intent(out), set intento=2?
-             CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
+             IF (.not. use_gpu) THEN
+                CALL using_evc(1);  CALL using_et(1); ! et is used as intent(out), set intento=2?
+                CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
+             ELSE
+                CALL using_evc_d(1);  CALL using_et_d(1); ! et is used as intent(out), set intento=2?
+                CALL rotate_wfc_gpu ( npwx, npw, nbnd, gstart, nbnd, evc_d, npol, okvan, evc, et_d(1,ik) )
+             END IF
              !
              avg_iter = avg_iter + 1.D0
              !
           END IF
           !
-          CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
           IF ( isolve == 1 ) THEN
-             CALL rcgdiagg( hs_1psi, s_1psi, h_diag, &
+             IF (.not. use_gpu) THEN
+                CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
+                CALL rcgdiagg( hs_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
+             ELSE
+                CALL using_evc_d(1);  CALL using_et_d(1); CALL using_h_diag_d(0) ! precontidtion has intent(in)
+                CALL rcgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, h_diag_d, &
+                         npwx, npw, nbnd, evc_d, et_d(1,ik), btype(1,ik), &
+                         ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
+             !
+             END IF
              !
              avg_iter = avg_iter + cg_iter
              !
           ELSE
+             CALL using_evc(1);  CALL using_et(1); CALL using_h_diag(0) ! precontidtion has intent(in)
              CALL ppcg_gamma( h_psi, s_psi, okvan, h_diag, &
                          npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                          0.1d0*ethr, max_ppcg_iter, notconv, ppcg_iter, sbsize , rrstep, iter  )
@@ -521,22 +536,35 @@ CONTAINS
           !
           IF ( .NOT. lrot ) THEN
              !
-             CALL using_evc(1); CALL using_et(1);
-             CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
+             IF ( .not. use_gpu ) THEN
+                CALL using_evc(1); CALL using_et(1);
+                CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et(1,ik) )
+             ELSE
+                CALL using_evc_d(1); CALL using_et_d(1);
+                CALL rotate_wfc_gpu ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc_d, et_d(1,ik) )
+             END IF
              !
              avg_iter = avg_iter + 1.D0
              !
           END IF
           !
-          CALL using_evc(1); CALL using_et(1);
           IF ( isolve == 1) then
-             CALL ccgdiagg( hs_1psi, s_1psi, h_diag, &
+             IF ( .not. use_gpu ) THEN
+                CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
+                CALL ccgdiagg( hs_1psi, s_1psi, h_diag, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
                          ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
+             ELSE
+                CALL using_evc_d(1); CALL using_et_d(1); CALL using_h_diag_d(0)
+                CALL ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, h_diag_d, &
+                         npwx, npw, nbnd, npol, evc_d, et_d(1,ik), btype(1,ik), &
+                         ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
+             END IF
              !
              avg_iter = avg_iter + cg_iter
              !
           ELSE
+             CALL using_evc(1); CALL using_et(1); CALL using_h_diag(0)
 ! BEWARE npol should be added to the arguments
              CALL ppcg_k( h_psi, s_psi, okvan, h_diag, &
                          npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
