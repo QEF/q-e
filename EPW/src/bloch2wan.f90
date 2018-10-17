@@ -225,6 +225,7 @@
         WRITE(iudecayH,*) wslen(ir) * celldm (1) * bohr2ang, tmp
         !
       ENDDO
+      !
       ! RMDB
       DO ir = 1, nrr
         DO jbnd = 1, nbndsub
@@ -234,7 +235,8 @@
           ENDDO
         ENDDO
       ENDDO
-      CLOSE(300)
+      !
+      CLOSE(iudecayH)
       !
     ENDIF
     CALL mp_barrier(inter_pool_comm)
@@ -471,11 +473,11 @@
       !DO ir = 1, nrr
       !  DO jbnd = 1, nbndsub
       !    DO ibnd = 1, nbndsub
-      !      WRITE(300,'(5I5,6F12.6)') irvec(:,ir), ibnd, jbnd, cdmew(:,ibnd,jbnd,ir) 
+      !     WRITE(iudecayP,'(5I5,6F12.6)') irvec(:,ir), ibnd, jbnd, cdmew(:,ibnd,jbnd,ir) 
       !    ENDDO
       !  ENDDO
       !ENDDO
-      !
+      !     
       CLOSE(iudecayP)
     ENDIF
     CALL mp_barrier(inter_pool_comm)
@@ -1171,6 +1173,7 @@
         WRITE(iuwane, *) wslen(ir) * celldm(1) * bohr2ang, tmp
         !
       ENDDO
+      !
       ! RMDB
       !DO ir = 1, nrr
       !  DO jbnd = 1, nbndsub
@@ -1179,6 +1182,7 @@
       !    ENDDO
       !  ENDDO
       !ENDDO
+      !
       CLOSE(iuwane)
     ENDIF
     !

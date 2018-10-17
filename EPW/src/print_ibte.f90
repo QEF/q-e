@@ -28,7 +28,7 @@
                             xqf, zi_allvb, zi_allcb, xkf, wkf, dmef, vmef, nqf
   USE transportcom,  ONLY : transp_temp, lower_bnd
   USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, & 
-                            eps6, eps10, bohr2ang, ang2cm
+                            eps6, eps10, bohr2ang, ang2cm, eps4, eps8
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
   USE mp_global,     ONLY : world_comm, my_pool_id, npool
@@ -193,10 +193,6 @@
   !! Compute the approximate theta function. Here computes Fermi-Dirac 
   REAL(KIND=DP), EXTERNAL :: w0gauss
   !! The derivative of wgauss:  an approximation to the delta function  
-  REAL(kind=DP), PARAMETER :: eps = 1.d-4
-  !! Tolerence parameter for the velocity
-  REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
-  !! Tolerence
   REAL(kind=DP) :: carrier_density, fnk, inv_cell
   !  
   inv_cell = 1.0d0/omega
@@ -317,8 +313,8 @@
                 !
                 ! In case of q=\Gamma, then the short-range = the normal g. We therefore 
                 ! need to treat it like the normal g with abs(g).
-                IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
-                   .OR. abs(xqf (3, iq))> eps2 )) THEN
+                IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
+                   .OR. abs(xqf (3, iq))> eps8 )) THEN
                   ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                   !     number, in which case its square will be a negative number. 
                   g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND=DP )
@@ -375,7 +371,7 @@
           !
           ! In this case we are also computing the scattering rate for another Fermi level position
           ! This is used to compute both the electron and hole mobility at the same time.  
-          IF ( ABS(efcb(itemp)) > eps ) THEN
+          IF ( ABS(efcb(itemp)) > eps4 ) THEN
             ! 
             DO ibnd = 1, ibndmax-ibndmin+1
               !
@@ -418,8 +414,8 @@
                   !
                   ! In case of q=\Gamma, then the short-range = the normal g. We therefore 
                   ! need to treat it like the normal g with abs(g).
-                  IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
-                     .OR. abs(xqf (3, iq))> eps2 )) THEN
+                  IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
+                     .OR. abs(xqf (3, iq))> eps8 )) THEN
                     ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                     !     number, in which case its square will be a negative number. 
                     g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND=DP)

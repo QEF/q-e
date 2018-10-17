@@ -43,7 +43,7 @@
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew
   USE transportcom,  ONLY : lower_bnd
   USE control_flags, ONLY : iverbosity
-  USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
+  USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, eps8
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : inter_pool_comm
   USE mp_world,      ONLY : mpime
@@ -135,8 +135,6 @@
   REAL(kind=DP), external :: w0gauss
   !! This function computes the derivative of the Fermi-Dirac function
   !! It is therefore an approximation for a delta function
-  REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
-  !! Tolerence  
   REAL(kind=DP), ALLOCATABLE :: xkf_all(:,:)
   !! Collect k-point coordinate from all pools in parallel case
   REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)
@@ -262,8 +260,8 @@
                    ! with hbar = 1 and M already contained in the eigenmodes
                    ! g2 is Ry^2, wkf must already account for the spin factor
                    !
-                   IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
-                      .OR. abs(xqf (3, iq))> eps2 )) THEN                         
+                   IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
+                      .OR. abs(xqf (3, iq))> eps8 )) THEN                         
                      ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                      !     number, in which case its square will be a negative number. 
                      g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp  )

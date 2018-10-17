@@ -150,7 +150,9 @@ clean:
                 epw_*/*_elcond_* epw_*/fort.* epw_*/decay.* epw_*/scattering_rate* \
                 epw_*/*.fc.* epw_*/*_band.dat epw_*/*F_restart* epw_*/*F_restart_CB* \
                 epw_*/*.mmn epw_*/*.epmatkq* epw_*/*.epmatkqcb* epw_*/sparse* \
-                epw_*/*.Fin_restart* epw_*/*.Fin_restartcb*
+                epw_*/*.Fin_restart* epw_*/*.Fin_restartcb* epw_*/*.acon_iso_* \
+                epw_*/*.imag_aniso* epw_*/*.imag_iso* epw_*/*.pade_* epw_*/*qdos_*
+                
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save
 

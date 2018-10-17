@@ -43,8 +43,8 @@
                             nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
                             specfun_pl, use_ws, epmatkqread, selecqread
   USE noncollin_module, ONLY : noncolin
-  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, eps2, zero, czero, cone, &
-                            twopi, ci, kelvin2eV
+  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, cone,       & 
+                            twopi, ci, kelvin2eV, eps8
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
@@ -249,8 +249,6 @@
   !! External function to calculate the fermi energy
   REAL(kind=DP), EXTERNAL :: efermig_seq
   !! Same but in sequential
-  REAL(kind=DP), PARAMETER :: eps = 0.01/ryd2mev
-  !! Tolerence
   REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)
   !! Eigen-energies on the fine grid collected from all pools in parallel case
   REAL(kind=DP), ALLOCATABLE :: w2 (:)
@@ -927,6 +925,8 @@
   ! -----------------------------------------------------------------------------
   !
   DO iqq = iq_restart, totq
+    ! This needs to be uncommented. 
+    epf17(:,:,:,:) = czero
     ! 
     iq = selecq(iqq)
     !   
@@ -1114,7 +1114,7 @@
               !
               CALL compute_umn_f( nbndsub, cufkk, cufkq, bmatf )
               !
-              IF ( (abs(xxq(1)) > eps) .or. (abs(xxq(2)) > eps) .or. (abs(xxq(3)) > eps) ) THEN
+              IF ( (abs(xxq(1)) > eps8) .or. (abs(xxq(2)) > eps8) .or. (abs(xxq(3)) > eps8) ) THEN
                 !      
                 CALL cryst_to_cart (1, xxq, bg, 1)
                 CALL rgd_blk_epw_fine_mem(imode, nq1, nq2, nq3, xxq, uf, epmatlrT(:,:,imode,ik), &
@@ -1173,12 +1173,12 @@
     IF (specfun_ph ) CALL spectral_func_ph( iqq, iq, totq )
     IF (specfun_pl .and. .not. vme ) CALL spectral_func_pl_q( iqq, iq, totq )
     IF (ephwrite) THEN
-      IF ( iqq == 1 ) THEN 
+      IF ( iq == 1 ) THEN 
         CALL kmesh_fine
         CALL kqmap_fine
       ENDIF
-      CALL write_ephmat( iqq, iq, totq ) 
-      CALL count_kpoints( iqq )
+      CALL write_ephmat( iq ) 
+      CALL count_kpoints( iq )
     ENDIF
     ! 
     ! Conductivity ---------------------------------------------------------

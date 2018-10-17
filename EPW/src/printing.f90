@@ -29,7 +29,7 @@
     USE epwcom,        ONLY : nbndsub
     USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
                               nkf, epf17, xkf, nkqtotf, wf
-    USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero
+    USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, eps8
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
@@ -88,8 +88,6 @@
     !! g vectex accross all pools 
     REAL(kind=DP), ALLOCATABLE :: epc_sym(:,:,:)
     !! Temporary g-vertex for each pool 
-    REAL(kind=DP), PARAMETER :: eps = 0.01/ryd2mev
-    !! Tolerence to be degenerate
     ! 
     ! find the bounds of k-dependent arrays in the parallel case in each pool
     CALL fkbounds( nkqtotf/2, lower_bnd, upper_bnd )
@@ -135,7 +133,7 @@
             n  = 0
             DO mu = 1, nmodes
               w_2 = wf(mu,iq)
-              IF ( abs(w_2-w_1).lt.eps ) THEN
+              IF ( abs(w_2-w_1) < eps8 ) THEN
                 n = n + 1
                 g2 = g2 + epc(ibnd,jbnd,mu,ik+lower_bnd-1)*epc(ibnd,jbnd,mu,ik+lower_bnd-1)
               ENDIF
@@ -155,7 +153,7 @@
             n  = 0
             DO pbnd = 1, ibndmax-ibndmin+1
               w_2 = etf (ibndmin-1+pbnd, ikk)
-              IF ( abs(w_2-w_1).lt.eps ) THEN
+              IF ( abs(w_2-w_1) < eps8 ) THEN
                 n = n + 1
                 g2 = g2 + epc(pbnd,jbnd,nu,ik+lower_bnd-1)*epc(pbnd,jbnd,nu,ik+lower_bnd-1)
               ENDIF
@@ -176,7 +174,7 @@
             n  = 0
             DO pbnd = 1, ibndmax-ibndmin+1
               w_2 = etf(ibndmin-1+pbnd, ikq)
-              IF ( abs(w_2-w_1).lt.eps ) then
+              IF ( abs(w_2-w_1) < eps8 ) then
                 n = n + 1
                 g2 = g2 + epc(ibnd,pbnd,nu,ik+lower_bnd-1)*epc(ibnd,pbnd,nu,ik+lower_bnd-1)
               ENDIF

@@ -136,8 +136,6 @@
   REAL(kind=DP), EXTERNAL :: w0gauss
   !! This function computes the derivative of the Fermi-Dirac function
   !! It is therefore an approximation for a delta function
-  REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
-  !! Tolerence  
   REAL(kind=DP), ALLOCATABLE :: xkf_all(:,:)
   !! Collect k-point coordinate from all pools in parallel case
   REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)

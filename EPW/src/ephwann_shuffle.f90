@@ -42,8 +42,8 @@
                             specfun_pl, lindabs, mob_maxiter, use_ws,           &
                             epmatkqread, selecqread
   USE noncollin_module, ONLY : noncolin
-  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, eps2, zero, czero,       &
-                            twopi, ci, kelvin2eV, eps6
+  USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero,             &
+                            twopi, ci, kelvin2eV, eps6, eps8 
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
@@ -248,8 +248,6 @@
   !! External function to calculate the fermi energy
   REAL(kind=DP), EXTERNAL :: efermig_seq
   !! Same but in sequential
-  REAL(kind=DP), PARAMETER :: eps = 0.01/ryd2mev
-  !! Tolerence
   REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)
   !! Eigen-energies on the fine grid collected from all pools in parallel case
   REAL(kind=DP), ALLOCATABLE :: w2 (:)
@@ -933,12 +931,21 @@
         CLOSE(iunrestart)
       ENDIF
       CALL mp_bcast(iq_restart, ionode_id, world_comm )
+#if defined(__MPI)
       CALL MPI_BCAST( ind_tot,   1, MPI_OFFSET, ionode_id, world_comm, ierr)
       CALL MPI_BCAST( ind_totcb, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
       CALL MPI_BCAST( lrepmatw2, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
       CALL MPI_BCAST( lrepmatw4, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
       CALL MPI_BCAST( lrepmatw5, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
       CALL MPI_BCAST( lrepmatw6, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
+#else
+      CALL mp_bcast( ind_tot,   ionode_id, world_comm )
+      CALL mp_bcast( ind_totcb, ionode_id, world_comm )
+      CALL mp_bcast( lrepmatw2, ionode_id, world_comm )
+      CALL mp_bcast( lrepmatw4, ionode_id, world_comm )
+      CALL mp_bcast( lrepmatw5, ionode_id, world_comm )
+      CALL mp_bcast( lrepmatw6, ionode_id, world_comm )
+#endif
       IF( ierr /= 0 ) CALL errore( 'ephwann_shuffle', 'error in MPI_BCAST',1 )
       ! 
       ! Now, the iq_restart point has been done, so we need to do the next one except if last
@@ -953,7 +960,7 @@
   ! 
   DO iqq = iq_restart, totq
     ! This needs to be uncommented. 
-    !epf17(:,:,:,:) = czero
+    epf17(:,:,:,:) = czero
     ! 
     iq = selecq(iqq)
     !   
@@ -1134,7 +1141,7 @@
             !
             CALL compute_umn_f( nbndsub, cufkk, cufkq, bmatf )
             !
-            IF ( (abs(xxq(1)) > eps) .or. (abs(xxq(2)) > eps) .or. (abs(xxq(3)) > eps) ) THEN
+            IF ( (abs(xxq(1)) > eps8) .or. (abs(xxq(2)) > eps8) .or. (abs(xxq(3)) > eps8) ) THEN
               !      
               CALL cryst_to_cart (1, xxq, bg, 1)
               CALL rgd_blk_epw_fine(nq1, nq2, nq3, xxq, uf, epmatf, &
@@ -1173,12 +1180,12 @@
     IF (specfun_ph ) CALL spectral_func_ph( iqq, iq, totq )
     IF (specfun_pl .and. .not. vme ) CALL spectral_func_pl_q( iqq, iq, totq )
     IF (ephwrite) THEN
-      IF ( iqq == 1 ) THEN 
+      IF ( iq == 1 ) THEN 
          CALL kmesh_fine
          CALL kqmap_fine
       ENDIF
-      CALL write_ephmat( iqq, iq, totq ) 
-      CALL count_kpoints( iqq )
+      CALL write_ephmat( iq ) 
+      CALL count_kpoints( iq )
     ENDIF
     ! 
     IF (.NOT. scatread) THEN
@@ -1205,7 +1212,7 @@
             etf (ibnd, ikq) = etf (ibnd, ikq) + scissor
           ENDDO
         ENDDO
-        IF ( iqq == 1 ) THEN
+        IF ( iq == 1 ) THEN
           WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
         ENDIF
       ENDIF
@@ -1894,9 +1901,9 @@
   !!     Finds the Fermi energy - Gaussian Broadening
   !!     (see Methfessel and Paxton, PRB 40, 3616 (1989 )
   !!
-  USE io_global, ONLY : stdout
-  USE kinds,     ONLY : DP
-  USE constants, ONLY : rytoev
+  USE io_global,     ONLY : stdout
+  USE kinds,         ONLY : DP
+  USE constants_epw, ONLY : ryd2ev, eps10
   !
   implicit none
   !
@@ -1924,7 +1931,6 @@
   !
   ! Local variables
   ! 
-  real(DP), parameter :: eps= 1.0d-10
   integer, parameter :: maxiter = 300
   real(DP) :: Ef, Eup, Elw, sumkup, sumklw, sumkmid
   real(DP), external::  sumkg_seq
@@ -1945,15 +1951,15 @@
   !
   sumkup = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Eup, is, isk)
   sumklw = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Elw, is, isk)
-  if ( (sumkup - nelec) < -eps .or. (sumklw - nelec) > eps )  &
+  if ( (sumkup - nelec) < -eps10 .or. (sumklw - nelec) > eps10 )  &
        call errore ('efermig_seq', 'internal error, cannot bracket Ef', 1)
   DO i = 1, maxiter
     Ef = (Eup + Elw) / 2.d0
     sumkmid = sumkg_seq (et, nbnd, nks, wk, Degauss, Ngauss, Ef, is, isk)
-    if (abs (sumkmid-nelec) < eps) then
+    if (abs (sumkmid-nelec) < eps10) then
        efermig_seq = Ef
        return
-    elseif ( (sumkmid-nelec) < -eps) then
+    elseif ( (sumkmid-nelec) < -eps10) then
        Elw = Ef
     else
        Eup = Ef
@@ -1962,7 +1968,7 @@
   IF (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3)') is
   WRITE( stdout, '(5x,"Warning: too many iterations in bisection"/ &
        &      5x,"Ef = ",f10.6," sumk = ",f10.6," electrons")' ) &
-       Ef * rytoev, sumkmid
+       Ef * ryd2ev, sumkmid
   !
   efermig_seq = Ef
   RETURN
@@ -2121,7 +2127,7 @@
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE elph2,     ONLY : etf, nkf, wkf
-  USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm
+  USE constants_epw, ONLY : ryd2ev, bohr2ang, ang2cm, eps5
   USE noncollin_module, ONLY : noncolin
   USE pwcom,     ONLY : nelec
   USE epwcom,    ONLY : int_mob, nbndsub, ncarrier, &
@@ -2182,8 +2188,6 @@
   !! Electron carrier density
   REAL(DP), PARAMETER :: maxarg = 200.d0
   !! Maximum value for the argument of the exponential
-  REAL(DP), PARAMETER :: eps= 1.0d-5
-  !! Tolerence to be converged [relative]
   ! 
   Ef = 0.0d0
   ! 
@@ -2316,11 +2320,11 @@
 !      WRITE(stdout,*),'electron_density ',electron_density * (1.0d0/omega) * (bohr2ang * ang2cm  )**(-3)
       rel_err = (hole_density-electron_density) / hole_density
       !
-      IF (abs (rel_err) < eps) THEN
+      IF (abs (rel_err) < eps5) THEN
         fermi_exp = Ef
         fermicarrier = (- log (fermi_exp) * temp) + evbm
         return
-      ELSEIF( (rel_err) > eps) THEN
+      ELSEIF( (rel_err) > eps5) THEN
         Elw = Ef                           
       ELSE                                   
         Eup = Ef 
@@ -2360,11 +2364,11 @@
       ! 
       rel_err = (electron_density-ncarrier) / electron_density
       !
-      IF (abs (rel_err) < eps) THEN
+      IF (abs (rel_err) < eps5) THEN
         fermi_exp = Ef
         fermicarrier = ecbm - ( log (fermi_exp) * temp)
         return
-      ELSEIF( (rel_err) > eps) THEN
+      ELSEIF( (rel_err) > eps5) THEN
         Eup = Ef
       ELSE
         Elw = Ef
@@ -2404,11 +2408,11 @@
       ! In this case ncarrier is a negative number
       rel_err = (hole_density-ABS(ncarrier)) / hole_density
       !
-      IF (abs (rel_err) < eps) THEN
+      IF (abs (rel_err) < eps5) THEN
         fermi_exp = Ef
         fermicarrier = (- log (fermi_exp) * temp) + evbm
         return
-      ELSEIF( (rel_err) > eps) THEN
+      ELSEIF( (rel_err) > eps5) THEN
         Elw = Ef
       ELSE
         Eup = Ef

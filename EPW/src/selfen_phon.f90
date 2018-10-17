@@ -37,7 +37,7 @@
   use elph2,      ONLY : epf17, ibndmax, ibndmin, etf, wkf, xqf, wqf, nkqf, &
                          nkf, wf, nkqtotf, xqf, lambda_all, lambda_v_all,   &
                          dmef, vmef, gamma_all,gamma_v_all, efnew
-  USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, eps4, eps6
+  USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, eps4, eps6, eps8
   use mp,         ONLY : mp_barrier, mp_sum
   use mp_global,  ONLY : inter_pool_comm
   !
@@ -153,8 +153,6 @@
   !! It is therefore an approximation for a delta function
   REAL(kind=DP), external :: efermig
   !! Return the fermi energy
-  REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
-  !! Tolerence  
   !  
   IF ( iq == 1 ) THEN 
     WRITE(stdout,'(/5x,a)') repeat('=',67)
@@ -310,8 +308,8 @@
               ! with hbar = 1 and M already contained in the eigenmodes
               ! g2 is Ry^2, wkf must already account for the spin factor
               !
-              IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
-                 .OR. abs(xqf (3, iq))> eps2 )) THEN              
+              IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
+                 .OR. abs(xqf (3, iq))> eps8 )) THEN              
                 ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                 !     number, in which case its square will be a negative number. 
                 g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp ) 

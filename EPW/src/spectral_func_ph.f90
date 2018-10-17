@@ -36,7 +36,7 @@
                         wkf, xqf, nkqf, &
                         nkf, wf, a_all, &
                         gammai_all,gammar_all, efnew
-  USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, cone, ci
+  USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, cone, ci, eps8
   USE mp_world,      ONLY : mpime
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : inter_pool_comm, ionode_id
@@ -114,8 +114,6 @@
   REAL(kind=DP), external :: w0gauss
   !! This function computes the derivative of the Fermi-Dirac function
   !! It is therefore an approximation for a delta function
-  REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
-  !! Tolerence  
   !
   dw = ( wmax_specfun - wmin_specfun ) / dble (nw_specfun-1)
   !
@@ -228,8 +226,8 @@
                ! with hbar = 1 and M already contained in the eigenmodes
                ! g2 is Ry^2, wkf must already account for the spin factor
                !
-               IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
-                  .OR. abs(xqf (3, iq))> eps2 )) THEN
+               IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
+                  .OR. abs(xqf (3, iq))> eps8 )) THEN
                  ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                  !     number, in which case its square will be a negative number. 
                  g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp ) !* epsTF
