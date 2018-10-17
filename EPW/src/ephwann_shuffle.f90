@@ -73,9 +73,6 @@
   USE transport_iter,ONLY : iter_restart
   USE close_epw,     ONLY : iter_close
   USE division,      ONLY : fkbounds
-#ifdef defined(__NAG)
-  USE f90_unix_io,   ONLY : flush
-#endif
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
   USE io_global,     ONLY : ionode_id
   USE mp_global,     ONLY : inter_pool_comm, intra_pool_comm, root_pool

@@ -469,9 +469,9 @@
     INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_totcb
     !! Total number of component for the conduction band
 #else
-    INTEGER(KIND=8), INTENT(INOUT) :: ind_tot
-    !! Total number of component for valence band
-    INTEGER(KIND=8), INTENT(INOUT) :: ind_totcb
+    INTEGER, INTENT(INOUT) :: ind_tot
+    !! Tota number of component for valence band
+    INTEGER, INTENT(INOUT) :: ind_totcb
     !! Total number of component for conduction band
 #endif    
     !
