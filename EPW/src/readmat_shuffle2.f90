@@ -637,13 +637,13 @@
   USE noncollin_module, ONLY : noncolin, nspin_mag
   USE io_dyn_mat2,      ONLY : read_dyn_mat_param, read_dyn_mat_header,&
                                read_dyn_mat, read_ifc_xml, read_ifc_param
-#if defined(__NAG)
-  USE f90_unix_io,ONLY : flush
-#endif
   USE io_global, ONLY : ionode_id
   USE mp,        ONLY : mp_barrier, mp_bcast
   USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, root_pool
   USE mp_world,  ONLY : mpime
+#if defined(__NAG)
+  USE f90_unix_io,    ONLY : flush
+#endif
   !
   implicit none
   !
@@ -659,7 +659,7 @@
   REAL(DP), ALLOCATABLE :: m_loc(:,:)
   !
   WRITE(stdout,'(/5x,"Reading interatomic force constants"/)')
-  CALL FLUSH(6)
+  CALL flush(sdtout)
   ! 
   ! This is important in restart mode as zstar etc has not been allocated
   IF (.NOT. ALLOCATED (zstar) ) ALLOCATE( zstar(3,3,nat) )

@@ -178,7 +178,6 @@
    ! print*,'nind ',nind
    ! print*,'allocated ',ALLOCATED(ixkqf_tr)
    ! print*,'allocated s_BZtoIBZ_full',ALLOCATED(s_BZtoIBZ_full)
-   ! FLUSH(6)
   
     ! Deal with symmetries
     IF (mp_mesh_k) THEN

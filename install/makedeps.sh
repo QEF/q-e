@@ -175,6 +175,18 @@ for dir in $dirs; do
             cp make.depend.tmp make.depend
         fi
 
+        if test "$DIR" = "EPW/src"
+        then
+            sed '/@f90_unix_io@/d' make.depend > make.depend.tmp
+            cp make.depend.tmp make.depend
+            sed '/@f90_unix_env@/d' make.depend > make.depend.tmp
+            cp make.depend.tmp make.depend
+            sed '/@w90_io@/d' make.depend > make.depend.tmp
+            cp make.depend.tmp make.depend
+            sed '/@ifport@/d' make.depend > make.depend.tmp
+            cp make.depend.tmp make.depend
+        fi
+
         rm -f make.depend.tmp
 
         # check for missing dependencies 

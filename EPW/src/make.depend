@@ -185,7 +185,6 @@ elphon_shuffle_wrap.o : elph2.o
 elphon_shuffle_wrap.o : epwcom.o
 elphon_shuffle_wrap.o : io_epw.o
 ephwann_shuffle.o : ../../Modules/cell_base.o
-ephwann_shuffle.o : ../../Modules/constants.o
 ephwann_shuffle.o : ../../Modules/io_files.o
 ephwann_shuffle.o : ../../Modules/io_global.o
 ephwann_shuffle.o : ../../Modules/ions_base.o
@@ -432,11 +431,9 @@ loadumat.o : io_epw.o
 nesting_fn.o : ../../Modules/io_global.o
 nesting_fn.o : ../../Modules/kind.o
 nesting_fn.o : ../../Modules/mp_global.o
-nesting_fn.o : ../../Modules/mp_world.o
 nesting_fn.o : ../../PW/src/pwcom.o
 nesting_fn.o : ../../UtilXlib/mp.o
 nesting_fn.o : constants_epw.o
-nesting_fn.o : division.o
 nesting_fn.o : elph2.o
 nesting_fn.o : epwcom.o
 openfilepw.o : ../../LR_Modules/lrcom.o
@@ -482,6 +479,7 @@ printing.o : ../../Modules/uspp.o
 printing.o : ../../PHonon/PH/phcom.o
 printing.o : ../../UtilXlib/mp.o
 printing.o : constants_epw.o
+printing.o : division.o
 printing.o : elph2.o
 printing.o : epwcom.o
 printing.o : transportcom.o
@@ -728,6 +726,8 @@ superconductivity_iso.o : io_epw.o
 superconductivity_iso.o : superconductivity.o
 system_mem_usage.o : ../../Modules/io_global.o
 system_mem_usage.o : io_epw.o
+test.o : ../../Modules/io_files.o
+test.o : io_scattering.o
 transport.o : ../../Modules/cell_base.o
 transport.o : ../../Modules/io_files.o
 transport.o : ../../Modules/io_global.o

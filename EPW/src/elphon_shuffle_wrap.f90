@@ -370,7 +370,7 @@
       WRITE(stdout,'(//5x,a)') repeat('=',67) 
       WRITE(stdout,'(5x,"irreducible q point # ",i4)') iq_irr
       WRITE(stdout,'(5x,a/)') repeat('=',67) 
-      CALL flush(6)
+      CALL flush(stdout)
       !
       xq = xqc_irr(:,iq_irr)
       !

@@ -73,7 +73,7 @@
   USE transport_iter,ONLY : iter_restart
   USE close_epw,     ONLY : iter_close
   USE division,      ONLY : fkbounds
-#ifdef __NAG
+#ifdef defined(__NAG)
   USE f90_unix_io,   ONLY : flush
 #endif
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_sum
@@ -1703,7 +1703,7 @@
   !! The file exists
   ! 
   WRITE(stdout,'(/5x,"Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file"/)')
-  call flush(6)
+  call flush(stdout)
   ! 
   ! This is important in restart mode as zstar etc has not been allocated
   IF (.NOT. ALLOCATED (zstar) ) ALLOCATE( zstar(3,3,nat) )

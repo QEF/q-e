@@ -29,9 +29,6 @@
                         wkf, xqf, wqf, nkqf, &
                         nkf, nkqtotf, xqf
   USE constants_epw, ONLY : ryd2ev, two
-#if defined(__NAG)
-  USE f90_unix_io,  ONLY : flush
-#endif
   USE mp,        ONLY : mp_barrier,mp_sum
   USE mp_global, ONLY : inter_pool_comm
   !
@@ -172,7 +169,6 @@
        ! 
     WRITE(stdout, 102)  gamma
     WRITE(stdout,'(5x,a/)') repeat('-',67)
-    !CALL FLUSH()
     !
     WRITE( stdout, '(/5x,a,i8,a,i8/)' ) &
       'Number of (k,k+q) pairs on the Fermi surface: ',fermicount, ' out of ', nkqtotf/2

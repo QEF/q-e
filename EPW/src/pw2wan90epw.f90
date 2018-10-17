@@ -748,7 +748,7 @@ SUBROUTINE compute_amn_para
     ik_g = nkq_abs
     !
     WRITE (stdout,'(5x,i8, " of ", i4,a)') ik , nks, ' on ionode'
-    CALL flush(6)
+    CALL flush(stdout)
     ! SP: Replaced by our wrapper to deal with parallel
     CALL readwfc(my_pool_id+1, ik, evc) 
     !
@@ -1197,7 +1197,7 @@ SUBROUTINE compute_mmn_para
      ik_g = nkq_abs
      !
      WRITE (stdout,'(5x,i8, " of ", i4,a)') ik , nks, ' on ionode'
-     CALL flush(6)
+     CALL flush(stdout)
      !
      ! read wfc at k
      CALL readwfc(my_pool_id+1, ik, evc)
