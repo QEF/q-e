@@ -51,6 +51,7 @@ dsygvdx_gpu.o : toolbox.o
 dsytrd_gpu.o : dsymv_gpu.o
 dsytrd_gpu.o : dsytd2_gpu.o
 dsytrd_gpu.o : eigsolve_vars.o
+eigsolve_vars.o : cusolverDn_m.o
 zheevd_gpu.o : eigsolve_vars.o
 zheevd_gpu.o : toolbox.o
 zheevd_gpu.o : zhetrd_gpu.o

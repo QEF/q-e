@@ -887,7 +887,8 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE mp,            ONLY : mp_sum
   USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0
+  USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0, &
+                                        using_becsum, using_ebecsum
   USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
   IMPLICIT NONE
@@ -1052,6 +1053,8 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
               !
               ! copy output from GEMM into desired format
               !
+              CALL using_becsum(1)
+              if (tqr) CALL using_ebecsum(1)
               IF (noncolin .AND. .NOT. upf(np)%has_so) THEN
                  CALL add_becsum_nc (na, np, aux_nc, becsum )
               ELSE IF (noncolin .AND. upf(np)%has_so) THEN

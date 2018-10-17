@@ -17,7 +17,9 @@ PWLIBS += \
   add_paw_to_deeq_gpu.o \
   add_vhub_to_deeq_gpu.o \
   wfcinit_gpu.o \
-  rotate_wfc_gpu.o
+  rotate_wfc_gpu.o \
+  hs_1psi_gpu.o \
+  s_1psi_gpu.o
 
 MODFLAGS += \
          $(MOD_FLAG)../../GScratch
@@ -68,6 +70,8 @@ h_psi_gpu.o : pwcom_gpu.o
 h_psi_gpu.o : realus.o
 h_psi_gpu.o : scf_mod_gpu.o
 hinit1.o : scf_mod_gpu.o
+hs_1psi_gpu.o : bp_mod.o
+hs_1psi_gpu.o : realus.o
 init_at_1.o : pwcom_gpu.o
 init_run.o : newd_gpu.o
 init_run.o : pwcom_gpu.o
@@ -99,6 +103,8 @@ qvan2_gpu.o : pwcom.o
 qvan2_gpu.o : pwcom_gpu.o
 read_file_new.o : pwcom_gpu.o
 realus.o : scf_mod_gpu.o
+s_1psi_gpu.o : pwcom.o
+s_1psi_gpu.o : realus.o
 s_psi_gpu.o : pwcom.o
 s_psi_gpu.o : realus.o
 scale_h.o : pwcom_gpu.o
