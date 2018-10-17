@@ -946,6 +946,7 @@
       ! Now, the iq_restart point has been done, so we need to do the next 
       iq_restart = iq_restart + 1
       WRITE(stdout,'(5x,a,i8,a)')'We restart from ',iq_restart, ' q-points'
+      ! 
     ENDIF ! exst
   ENDIF
   ! -----------------------------------------------------------------------------
@@ -962,8 +963,8 @@
     ! elecselfen = true as nothing happen during the calculation otherwise. 
     !
     IF ( .not. phonselfen) THEN 
-      IF (MOD(iq,100) == 0) THEN
-        WRITE(stdout, '(5x,a,i10,a,i10)' ) 'Progression iq (fine) = ',iq,'/',totq
+      IF (MOD(iqq,100) == 0) THEN
+        WRITE(stdout, '(5x,a,i10,a,i10)' ) 'Progression iq (fine) = ',iqq,'/',totq
       ENDIF
     ENDIF
     !

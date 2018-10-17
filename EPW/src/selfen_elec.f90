@@ -148,7 +148,7 @@
   inv_eptemp0 = 1.0/eptemp
   inv_degaussw = 1.0/degaussw
   !
-  IF ( iq .eq. 1 ) THEN
+  IF ( iqq == 1 ) THEN
     !
     WRITE(stdout,'(/5x,a)') repeat('=',67)
     WRITE(stdout,'(5x,"Electron (Imaginary) Self-Energy in the Migdal Approximation")')
@@ -176,7 +176,7 @@
     !
   ENDIF
   !
-  IF ( iq .eq. 1 ) THEN 
+  IF ( iqq == 1 ) THEN 
      WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
      WRITE (stdout,'(a)') ' '
   ENDIF
@@ -329,8 +329,8 @@
     !
     ! Creation of a restart point
     IF (restart) THEN
-      IF (MOD(iq,restart_freq) == 0) THEN
-        WRITE(stdout, '(a)' ) '     Creation of a restart point'
+      IF (MOD(iqq,restart_freq) == 0) THEN
+        WRITE(stdout, '(a,i10)' ) '     Creation of a restart point at ',iqq
         ! 
         CALL mp_sum( sigmar_all, inter_pool_comm )
         CALL mp_sum( sigmai_all, inter_pool_comm )
@@ -338,7 +338,7 @@
         CALL mp_sum(fermicount, inter_pool_comm)
         CALL mp_barrier(inter_pool_comm)
         !
-        CALL electron_write(iq,totq,nksqtotf,sigmar_all,sigmai_all,zi_all)
+        CALL electron_write(iqq,totq,nksqtotf,sigmar_all,sigmai_all,zi_all)
         ! 
       ENDIF
     ENDIF 

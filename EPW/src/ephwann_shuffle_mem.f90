@@ -936,8 +936,8 @@
     ! elecselfen = true as nothing happen during the calculation otherwise. 
     !
     IF ( .not. phonselfen) THEN 
-      IF (MOD(iq,50) == 0) THEN
-        WRITE(stdout, '(a,i10,a,i10)' ) '     Progression iq (fine) = ',iq,'/',totq
+      IF (MOD(iqq,100) == 0) THEN
+        WRITE(stdout, '(a,i10,a,i10)' ) '     Progression iq (fine) = ',iqq,'/',totq
       ENDIF
     ENDIF
     !

@@ -557,7 +557,7 @@
     !----------------------------------------------------------------------------
 
     !----------------------------------------------------------------------------
-    SUBROUTINE electron_write(iq,totq,nktotf,sigmar_all,sigmai_all,zi_all)
+    SUBROUTINE electron_write(iqq,totq,nktotf,sigmar_all,sigmai_all,zi_all)
     !----------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
@@ -575,7 +575,7 @@
     ! Local variable
     LOGICAL :: exst
     !
-    INTEGER, INTENT(IN) :: iq
+    INTEGER, INTENT(IN) :: iqq
     !! Current q-point
     INTEGER, INTENT(IN) :: totq
     !! Total number of q-points
@@ -604,7 +604,7 @@
       !
       lsigma_all = 3 * (ibndmax-ibndmin+1) * nktotf +2
       ! First element is the current q-point
-      aux(1) = REAL( iq -1, KIND=DP) ! we need to start at the next q
+      aux(1) = REAL( iqq -1, KIND=DP) ! we need to start at the next q
       ! Second element is the total number of q-points
       aux(2) = REAL( totq, KIND=DP)
       !
@@ -650,7 +650,7 @@
     !----------------------------------------------------------------------------
 
     !----------------------------------------------------------------------------
-    SUBROUTINE electron_read(iq,totq,nktotf,sigmar_all,sigmai_all,zi_all)
+    SUBROUTINE electron_read(iqq,totq,nktotf,sigmar_all,sigmai_all,zi_all)
     !----------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
@@ -670,7 +670,7 @@
     ! Local variable
     LOGICAL :: exst
     !
-    INTEGER, INTENT(INOUT) :: iq
+    INTEGER, INTENT(INOUT) :: iqq
     !! Current q-point
     INTEGER, INTENT(IN) :: totq
     !! Total number of q-points
@@ -716,8 +716,8 @@
         CALL davcio ( aux, lsigma_all, iufilsigma_all, 1, -1 )
         !
         ! First element is the iteration number
-        iq = INT( aux(1) )
-        iq = iq + 1 ! we need to start at the next q
+        iqq = INT( aux(1) )
+        iqq = iqq + 1 ! we need to start at the next q
         nqtotf_read = INT( aux(2) )
         !print*, 'iq',iq
         !print*, 'nqtotf_read ',nqtotf_read
@@ -751,8 +751,8 @@
     CALL mp_bcast (exst, root_pool, intra_pool_comm)  
     !
     IF (exst) THEN
-      CALL mp_bcast (iq, ionode_id, inter_pool_comm)
-      CALL mp_bcast (iq, root_pool, intra_pool_comm)
+      CALL mp_bcast (iqq, ionode_id, inter_pool_comm)
+      CALL mp_bcast (iqq, root_pool, intra_pool_comm)
       CALL mp_bcast (sigmar_all, ionode_id, inter_pool_comm)
       CALL mp_bcast (sigmar_all, root_pool, intra_pool_comm)
       CALL mp_bcast (sigmai_all, ionode_id, inter_pool_comm)
@@ -772,7 +772,7 @@
         zi_all(:,upper_bnd+1:nktotf) = zero
       ENDIF
       ! 
-      WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ',(iq-1),'/',totq
+      WRITE(stdout, '(a,i10,a,i10)' ) '     Restart from: ',(iqq),'/',totq
     ENDIF
     ! 
     !----------------------------------------------------------------------------
