@@ -1,19 +1,20 @@
 #!/bin/bash
 
-#. ../environment.sh
-export SOFTWAREPATH=$(pwd)/install
+#modules
 module load cray-hdf5/1.10.2.0
 module load perftools-base
 module load perftools-lite
 
-#step in
-cd q-e
-
+#some parameters
 espresso_version="6.3"
 arch="knl"
 
 #install directory
+export SOFTWAREPATH=$(pwd)/install
 export INSTALLPATH=${SOFTWAREPATH}/${espresso_version}/${arch}
+
+#step in
+cd ../
 
 #clean everything up so that no libraries with wrong arch are around
 compiler=intel
