@@ -708,6 +708,8 @@
     !! Integer variable for I/O control
     INTEGER :: nexband_tmp
     !! Number of excluded bands
+    INTEGER :: nkstot_tmp
+    !! Number of k-point to test
     !
     REAL(kind=DP), ALLOCATABLE :: bvec(:,:,:)
     !! b-vectors connecting each k-point to its nearest neighbors
@@ -771,8 +773,10 @@
       bvec = zero
       wb   = zero
     ELSE
-      READ(iubvec,*) nnb
-      ALLOCATE ( bvec(3,nnb,nkstot), wb(nnb) )
+      READ(iubvec,*) tempfile
+      READ(iubvec,*) nkstot_tmp, nnb
+      IF (nkstot_tmp /= nkstot) CALL errore ('vmebloch2wan','Unexpected number of k-points in .bvec file', 0)
+      ALLOCATE ( bvec(3, nnb, nkstot), wb(nnb) )
       DO ik = 1, nkstot
         DO ib = 1, nnb
           READ(iubvec,*) bvec(:,ib,ik), wb(ib)
