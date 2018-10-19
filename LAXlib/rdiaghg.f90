@@ -218,8 +218,6 @@ SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
   ! Temp arrays to save H and S.
   REAL(DP), ALLOCATABLE, DEVICE :: h_diag_d(:), s_diag_d(:)
   !
-  INTEGER :: i, j
-  !
   CALL start_clock( 'rdiaghg_gpu' )
   !
   ! ... only the first processor diagonalize the matrix
