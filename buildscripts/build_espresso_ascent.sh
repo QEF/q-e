@@ -1,6 +1,8 @@
 #!/bin/bash
 
 #modules
+#very important to load gcc, otherwise cpp will cause issues
+module load gcc/6.4.0
 module load cuda/9.2.148
 module load pgi/18.7
 module load hdf5/1.10.3
@@ -32,7 +34,7 @@ export CC=pgcc
 export CFLAGS="-g -O3 -mp"
 export LDFLAGS="${F90FLAGS}"
 #CPP stuff
-export CPP=cpp
+#export CPP=/sw/ascent/gcc/6.4.0/bin/cpp
 #export CPPFLAGS=
 
 #hdf5

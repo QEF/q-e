@@ -53,42 +53,21 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   s_diag_d = 1.d0
   !
   IF (lspinorb) THEN
-     CALL usnldiag_spinorb_a(npw, h_diag_d, s_diag_d)
-     CALL usnldiag_spinorb_b(npw, h_diag_d, s_diag_d)
+     CALL usnldiag_spinorb()
   ELSEIF (noncolin) THEN
-     CALL usnldiag_noncollinear_a(npw, h_diag_d, s_diag_d)
-     CALL usnldiag_noncollinear_b(npw, h_diag_d, s_diag_d)
+     CALL usnldiag_noncollinear()
   ELSE
-     CALL usnldiag_collinear_a(npw, h_diag_d, s_diag_d)
-     CALL usnldiag_collinear_b(npw, h_diag_d, s_diag_d)
+     CALL usnldiag_collinear()
   END IF
- END SUBROUTINE usnldiag_gpu
- 
   
-  SUBROUTINE usnldiag_collinear_a(npw, h_diag_d, s_diag_d)
+CONTAINS
+  
+  SUBROUTINE usnldiag_collinear()
      USE lsda_mod, ONLY: current_spin
      USE uspp_gpum,  ONLY: deeq_d, vkb_d, qq_at_d
-   USE kinds, ONLY: DP
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-  USE wvfct, ONLY: npwx
-  USE uspp,  ONLY: indv_ijkb0
-  USE uspp_gpum,  ONLY: deeq_d, vkb_d, qq_at_d, qq_so_d, deeq_nc_d
-  USE uspp_param, ONLY: upf, nh, newpseudo
-  USE spin_orb, ONLY: lspinorb
-  USE noncollin_module, ONLY: noncolin, npol
-    
+     
      IMPLICIT NONE
      !
-  INTEGER, INTENT(in) :: npw
-  ! number of plane waves
-  REAL(dp), INTENT(inout) :: h_diag_d (npwx,npol)
-  ! the diagonal part of the hamiltonian
-  REAL(dp), INTENT(out)   :: s_diag_d (npwx,npol)
-  ! the diagonal part of the S matrix
-#if defined(__CUDA)
-  attributes(DEVICE) :: h_diag_d, s_diag_d
-#endif
-
      INTEGER :: ijkb_start, ikb, jkb, ih, jh, na, nt, ig, ipol
      COMPLEX(DP) :: ps1_1, ps1_2, ps2_1, ps2_2, ar, cv
      !
@@ -127,46 +106,6 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
               END IF
            END DO
         ELSE
-        END IF
-     END DO
-  END SUBROUTINE usnldiag_collinear_a
-
-  SUBROUTINE usnldiag_collinear_b(npw, h_diag_d, s_diag_d)
-     USE lsda_mod, ONLY: current_spin
-     USE uspp_gpum,  ONLY: deeq_d, vkb_d, qq_at_d
-  USE kinds, ONLY: DP
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-  USE wvfct, ONLY: npwx
-  USE uspp,  ONLY: indv_ijkb0
-  USE uspp_gpum,  ONLY: deeq_d, vkb_d, qq_at_d, qq_so_d, deeq_nc_d
-  USE uspp_param, ONLY: upf, nh, newpseudo
-  USE spin_orb, ONLY: lspinorb
-  USE noncollin_module, ONLY: noncolin, npol
-     
-     IMPLICIT NONE
-
-  INTEGER, INTENT(in) :: npw
-  ! number of plane waves
-  REAL(dp), INTENT(inout) :: h_diag_d (npwx,npol)
-  ! the diagonal part of the hamiltonian
-  REAL(dp), INTENT(out)   :: s_diag_d (npwx,npol)
-  ! the diagonal part of the S matrix
-#if defined(__CUDA)
-  attributes(DEVICE) :: h_diag_d, s_diag_d
-#endif
-
-     !
-     INTEGER :: ijkb_start, ikb, jkb, ih, jh, na, nt, ig, ipol
-     COMPLEX(DP) :: ps1_1, ps1_2, ps2_1, ps2_2, ar, cv
-     !
-     INTEGER :: nh_
-     REAL(DP) :: sum_h, sum_s
-     !
-     !    multiply on projectors
-     !
-     DO nt = 1, ntyp
-        IF ( upf(nt)%tvanp .or.newpseudo (nt) ) THEN
-        ELSE
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
                    ijkb_start = indv_ijkb0(na)
@@ -192,33 +131,13 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
            END DO
         END IF
      END DO
-  END SUBROUTINE usnldiag_collinear_b
+  END SUBROUTINE usnldiag_collinear
   !
-  SUBROUTINE usnldiag_noncollinear_a(npw, h_diag_d, s_diag_d)
+  SUBROUTINE usnldiag_noncollinear()
      USE lsda_mod, ONLY: current_spin
      USE uspp_gpum,  ONLY: vkb_d, qq_at_d, qq_so_d, deeq_nc_d
-  USE kinds, ONLY: DP
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-  USE wvfct, ONLY: npwx
-  USE uspp,  ONLY: indv_ijkb0
-  USE uspp_gpum,  ONLY: deeq_d, vkb_d, qq_at_d, qq_so_d, deeq_nc_d
-  USE uspp_param, ONLY: upf, nh, newpseudo
-  USE spin_orb, ONLY: lspinorb
-  USE noncollin_module, ONLY: noncolin, npol
      
      IMPLICIT NONE
-
-  INTEGER, INTENT(in) :: npw
-  ! number of plane waves
-  REAL(dp), INTENT(inout) :: h_diag_d (npwx,npol)
-  ! the diagonal part of the hamiltonian
-  REAL(dp), INTENT(out)   :: s_diag_d (npwx,npol)
-  ! the diagonal part of the S matrix
-#if defined(__CUDA)
-  attributes(DEVICE) :: h_diag_d, s_diag_d
-#endif
-
-
      !
      INTEGER :: ijkb_start, ikb, jkb, ih, jh, na, nt, ig, ipol
      COMPLEX(DP) :: ps1_1, ps1_2, ps2_1, ps2_2, ar, cv
@@ -264,47 +183,6 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
               END IF
            END DO
         ELSE
-        END IF
-     END DO
-  END SUBROUTINE usnldiag_noncollinear_a
-  SUBROUTINE usnldiag_noncollinear_b(npw, h_diag_d, s_diag_d)
-     USE lsda_mod, ONLY: current_spin
-     USE uspp_gpum,  ONLY: vkb_d, qq_at_d, qq_so_d, deeq_nc_d
-  USE kinds, ONLY: DP
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-  USE wvfct, ONLY: npwx
-  USE uspp,  ONLY: indv_ijkb0
-  USE uspp_gpum,  ONLY: deeq_d, vkb_d, qq_at_d, qq_so_d, deeq_nc_d
-  USE uspp_param, ONLY: upf, nh, newpseudo
-  USE spin_orb, ONLY: lspinorb
-  USE noncollin_module, ONLY: noncolin, npol
-     
-     IMPLICIT NONE
-
-  INTEGER, INTENT(in) :: npw
-  ! number of plane waves
-  REAL(dp), INTENT(inout) :: h_diag_d (npwx,npol)
-  ! the diagonal part of the hamiltonian
-  REAL(dp), INTENT(out)   :: s_diag_d (npwx,npol)
-  ! the diagonal part of the S matrix
-#if defined(__CUDA)
-  attributes(DEVICE) :: h_diag_d, s_diag_d
-#endif
-
-
-
-     !
-     INTEGER :: ijkb_start, ikb, jkb, ih, jh, na, nt, ig, ipol
-     COMPLEX(DP) :: ps1_1, ps1_2, ps2_1, ps2_2, ar, cv
-     !
-     INTEGER :: nh_
-     REAL(DP) :: sum_h1, sum_h4, sum_s
-     !
-     !    multiply on projectors
-     !
-     DO nt = 1, ntyp
-        IF ( upf(nt)%tvanp .or.newpseudo (nt) ) THEN
-        ELSE
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
                    ijkb_start = indv_ijkb0(na)
@@ -336,33 +214,13 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
            END DO
         END IF
      END DO
-  END SUBROUTINE usnldiag_noncollinear_b
+  END SUBROUTINE usnldiag_noncollinear
   !
-  SUBROUTINE usnldiag_spinorb_a(npw, h_diag_d, s_diag_d)
+  SUBROUTINE usnldiag_spinorb()
      USE lsda_mod, ONLY: current_spin
      USE uspp_gpum,  ONLY: vkb_d, qq_at_d, qq_so_d, deeq_nc_d
-  USE kinds, ONLY: DP
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-  USE wvfct, ONLY: npwx
-  USE uspp,  ONLY: indv_ijkb0
-  USE uspp_gpum,  ONLY: deeq_d, vkb_d, qq_at_d, qq_so_d, deeq_nc_d
-  USE uspp_param, ONLY: upf, nh, newpseudo
-  USE spin_orb, ONLY: lspinorb
-  USE noncollin_module, ONLY: noncolin, npol
 
      IMPLICIT NONE
-
-  INTEGER, INTENT(in) :: npw
-  ! number of plane waves
-  REAL(dp), INTENT(inout) :: h_diag_d (npwx,npol)
-  ! the diagonal part of the hamiltonian
-  REAL(dp), INTENT(out)   :: s_diag_d (npwx,npol)
-  ! the diagonal part of the S matrix
-#if defined(__CUDA)
-  attributes(DEVICE) :: h_diag_d, s_diag_d
-#endif
-
-
      !
      INTEGER :: ijkb_start, ikb, jkb, ih, jh, na, nt, ig, ipol
      COMPLEX(DP) :: ps1_1, ps1_2, ps2_1, ps2_2, ar, cv
@@ -410,47 +268,6 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
               END IF
            END DO
         ELSE
-        END IF
-     END DO
-  END SUBROUTINE usnldiag_spinorb_a
-  SUBROUTINE usnldiag_spinorb_b(npw, h_diag_d, s_diag_d)
-     USE lsda_mod, ONLY: current_spin
-     USE uspp_gpum,  ONLY: vkb_d, qq_at_d, qq_so_d, deeq_nc_d
-  USE kinds, ONLY: DP
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-  USE wvfct, ONLY: npwx
-  USE uspp,  ONLY: indv_ijkb0
-  USE uspp_gpum,  ONLY: deeq_d, vkb_d, qq_at_d, qq_so_d, deeq_nc_d
-  USE uspp_param, ONLY: upf, nh, newpseudo
-  USE spin_orb, ONLY: lspinorb
-  USE noncollin_module, ONLY: noncolin, npol
-
-     IMPLICIT NONE
-
-  INTEGER, INTENT(in) :: npw
-  ! number of plane waves
-  REAL(dp), INTENT(inout) :: h_diag_d (npwx,npol)
-  ! the diagonal part of the hamiltonian
-  REAL(dp), INTENT(out)   :: s_diag_d (npwx,npol)
-  ! the diagonal part of the S matrix
-#if defined(__CUDA)
-  attributes(DEVICE) :: h_diag_d, s_diag_d
-#endif
-
-
-
-     !
-     INTEGER :: ijkb_start, ikb, jkb, ih, jh, na, nt, ig, ipol
-     COMPLEX(DP) :: ps1_1, ps1_2, ps2_1, ps2_2, ar, cv
-     !
-     INTEGER :: nh_
-     REAL(DP) :: sum_h1, sum_h4, sum_s1, sum_s4
-     !
-     !    multiply on projectors
-     !
-     DO nt = 1, ntyp
-        IF ( upf(nt)%tvanp .or.newpseudo (nt) ) THEN
-        ELSE
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
                    ijkb_start = indv_ijkb0(na)
@@ -484,4 +301,5 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
            END DO
         END IF
      END DO
-  END SUBROUTINE usnldiag_spinorb_b
+  END SUBROUTINE usnldiag_spinorb
+END SUBROUTINE usnldiag_gpu
