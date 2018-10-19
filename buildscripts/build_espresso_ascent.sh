@@ -9,7 +9,7 @@ module load hdf5/1.10.3
 
 #some parameters
 espresso_version="6.3"
-arch="v100"
+arch="p9_v100"
 
 #install directory
 export SOFTWAREPATH=$(pwd)/install
