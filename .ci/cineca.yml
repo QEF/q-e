@@ -7,7 +7,7 @@ build:pw:
 
 #### BUILDS ON GALILEO ####
 
-build:intel:
+intel mpi:
   tags: [galileo]
   script:
     - module load intel/pe-xe-2017--binary intelmpi/2017--binary mkl/2017--binary
@@ -15,12 +15,10 @@ build:intel:
     - make -j pw
     - export OMP_NUM_THREADS=4
     - cd test-suite
-    - mkdir -p /tmp/save
     - make clean
     - make run-tests-pw-parallel
-    - rm -r /tmp/save
 
-build:gpu:
+pgi cuda mpi:
   tags: [galileo]
   script:
     - module load profile/global pgi/17.10 mkl/2018--binary cuda/8.0.61
@@ -28,16 +26,30 @@ build:gpu:
     - make -j pw
     - export OMP_NUM_THREADS=4
     - cd test-suite
-    - mkdir -p /tmp/save
     - make clean
     - make run-tests-pw-parallel
-    - rm -r /tmp/save
-    - cd .. && cp PW/src/pw.x ./pwgpu-cuda8-cc35-$CI_COMMIT_SHA.x
+    - cd .. && cp PW/src/pw.x ./pwgpu-mpi-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
   artifacts:
     paths:
-    - pwgpu-cuda8-cc35-$CI_COMMIT_SHA.x
+    - pwgpu-mpi-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
     expire_in: 1 week
-    
+
+pgi cuda serial:
+  tags: [galileo]
+  script:
+    - module load profile/global pgi/17.10 mkl/2018--binary cuda/8.0.61
+    - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=8.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME
+    - make -j pw
+    - export OMP_NUM_THREADS=4
+    - cd test-suite
+    - make clean
+    - make run-tests-pw-serial
+    - cd .. && cp PW/src/pw.x ./pwgpu-serial-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
+  artifacts:
+    paths:
+    - pwgpu-serial-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
+    expire_in: 1 week
+
 #
 ## UtilXlib UnitTesting 
 #build:cudampiomp:
