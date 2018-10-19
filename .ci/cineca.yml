@@ -20,7 +20,7 @@ build:intel:
     - make run-tests-pw-parallel
     - rm -r /tmp/save
 
-build:pgi:
+build:gpu:
   tags: [galileo]
   script:
     - module load profile/global pgi/17.10 mkl/2018--binary cuda/8.0.61
@@ -32,10 +32,10 @@ build:pgi:
     - make clean
     - make run-tests-pw-parallel
     - rm -r /tmp/save
-    - cd .. && cp PW/src/pw.x PW/src/pwgpu-$(CI_COMMIT_REF_NAME)-$(CI_COMMIT_SHA).x
+    - cd .. && cp PW/src/pw.x ./pwgpu-cuda8-cc35-$CI_COMMIT_SHA.x
   artifacts:
     paths:
-    - PW/src/pwgpu-$(CI_COMMIT_REF_NAME)-$(CI_COMMIT_SHA).x
+    - pwgpu-cuda8-cc35-$CI_COMMIT_SHA.x
     expire_in: 1 week
     
 #

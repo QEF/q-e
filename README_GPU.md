@@ -1,3 +1,10 @@
+Quantum ESPRESSO GPU
+====================
+
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+
+This repository contains the up to date GPU accelerated version of QuantumESPRESSO.
+
 Installation
 ============
 
@@ -14,9 +21,30 @@ A template for the configure command is:
 
 where `XX` is the location of the CUDA Toolkit (in HPC environments is 
 generally `$CUDA_HOME`), `YY` is the version of the cuda toolkit and `ZZ`
-is the compute capability of the card. It is generally a good idea to 
-disable scalapack when running small test cases since the serial GPU
-eigensolver can outperform the parallel CPU eigensolver in many circumstances.
+is the compute capability of the card. 
+If you have no idea what these numbers are you may give a try to the
+automatic tool `get_device_props.py`. An example using Slurm is:
+
+```
+$ module load cuda
+$ cd dev-tools
+$ salloc -n1 -t1
+[...]
+salloc: Granted job allocation xxxx
+$ srun python get_device_props.py
+[...]
+Compute capabilities for dev 0: 6.0
+Compute capabilities for dev 1: 6.0
+Compute capabilities for dev 2: 6.0
+Compute capabilities for dev 3: 6.0
+
+ If all compute capabilities match, configure QE with:
+./configure --with-cuda=$CUDA_HOME --with-cuda-cc=60 --with-cuda-runtime=9.2
+```
+
+It is generally a good idea to disable Scalapack when running small test
+cases since the serial GPU eigensolver can outperform the parallel CPU
+eigensolver in many circumstances.
 
 From time to time PGI links to the wrong CUDA libraries anf fails reporting
 a problem in `cusolver` missing `GOmp` (GNU Openmp). The solution to this
