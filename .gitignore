@@ -34,3 +34,4 @@ W90
 archive/wannier90-*tgz
 wannier90-*
 tempdir
+buildscripts/install
