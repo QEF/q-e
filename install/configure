@@ -6413,12 +6413,12 @@ fi
                 ;;
 
         ia64:* )
-                # check for mkl (in several directories)
-                try_libdirs="/opt/intel/Compiler/*/*/mkl/lib/64
-                             /opt/intel/mkl/*/lib/64
-                             /opt/intel/mkl*/lib/64
-                             /opt/intel/mkl/lib"
-                try_libdirs="$libdirs $try_libdirs $ld_library_path"
+                # check for mkl
+                if test "$MKLROOT" == ""
+                then
+                   MKLROOT=/opt/intel/mkl
+                fi
+                try_libdirs="$libdirs $MKLROOT/lib/64 $ld_library_path"
 
                 for dir in none $try_libdirs
                 do
@@ -6639,12 +6639,11 @@ fi
                 ;;
 
         x86_64:* )
-                try_libdirs="/opt/intel/composer*/mkl/lib/intel64
-                             /opt/intel/Compiler/*/*/mkl/lib/em64t
-                             /opt/intel/mkl/*/lib/em64t
-                             /opt/intel/mkl*/lib/em64t
-                             /opt/intel/mkl/lib"
-                try_libdirs="$libdirs $try_libdirs $ld_library_path"
+                if test "$MKLROOT" == ""
+                then
+                   MKLROOT=/opt/intel/mkl
+                fi
+                try_libdirs="$libdirs $MKLROOT/lib/intel64 $ld_library_path"
 
                 for dir in none $try_libdirs
                 do
@@ -6865,13 +6864,12 @@ fi
                 ;;
 
         ia32:* )
-                # check for mkl (in several directories)
-                try_libdirs="/opt/intel/composer*/mkl/lib/ia32
-                             /opt/intel/Compiler/*/*/mkl/lib/32
-                             /opt/intel/mkl/*/lib/32
-                             /opt/intel/mkl*/lib/32
-                             /opt/intel/mkl/lib"
-                try_libdirs="$libdirs $try_libdirs $ld_library_path"
+                # check for mkl
+                if test "$MKLROOT" == ""
+                then
+                   MKLROOT=/opt/intel/mkl
+                fi
+                try_libdirs="$libdirs $MKLROOT/lib/ia32 $ld_library_path"
 
                 for dir in none $try_libdirs
                 do
@@ -8640,12 +8638,12 @@ fi
 
         if test "$have_fft" == "1"
         then
-              try_incdir=""
-              try_incdir="$try_incdir /opt/intel/Compiler/*/*/mkl/include
-                          /opt/intel/mkl/*/include
-                          /opt/intel/mkl*/include"
-              try_incdir="$try_incdir $MKLROOT/include $MKL_INCLUDE $CPATH $FPATH"
-              try_incdir="`echo $try_incdir | sed 's/:/ /g'`"
+              if test "$MKLROOT" == ""
+              then
+                 try_incdir="/opt/intel/mkl/include"
+              else
+                 try_incdir="$MKLROOT/include"
+              fi
               #
               for inc in $try_incdir
               do
