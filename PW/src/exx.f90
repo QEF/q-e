@@ -32,6 +32,9 @@ MODULE exx
   ! x_occupation(nbnd,nkstot) the weight of
   ! auxiliary functions in the density matrix
   REAL(DP),    ALLOCATABLE :: x_occupation(:,:)
+#if defined(__CUDA)
+  REAL(DP),    ALLOCATABLE, DEVICE :: x_occupation_d(:,:)
+#endif
   ! number of bands of auxiliary functions with
   ! at least some x_occupation > eps_occ
   INTEGER :: x_nbnd_occ
@@ -253,6 +256,9 @@ MODULE exx
     IF ( allocated(index_sym) ) DEALLOCATE(index_sym)
     IF ( allocated(rir)       ) DEALLOCATE(rir)
     IF ( allocated(x_occupation) ) DEALLOCATE(x_occupation)
+#if defined (__CUDA)
+    IF ( allocated(x_occupation_d) ) DEALLOCATE(x_occupation_d)
+#endif
     IF ( allocated(xkq_collect ) ) DEALLOCATE(xkq_collect)
     IF ( allocated(exxbuff) ) DEALLOCATE(exxbuff)
     IF ( allocated(locbuff) ) DEALLOCATE(locbuff)
@@ -396,6 +402,9 @@ MODULE exx
                                               dfftt%nr1x,dfftt%nr2x,dfftt%nr3x )
     ! set occupations of wavefunctions used in the calculation of exchange term
     IF( .NOT. ALLOCATED(x_occupation)) ALLOCATE( x_occupation(nbnd,nkstot) )
+#if defined (__CUDA)
+    IF( .NOT. ALLOCATED(x_occupation_d)) ALLOCATE( x_occupation_d(nbnd,nkstot) )
+#endif
     ALLOCATE ( occ(nbnd,nks) )
     DO ik =1,nks
        IF(abs(wk(ik)) > eps_occ ) THEN
@@ -405,6 +414,10 @@ MODULE exx
        ENDIF
     ENDDO
     CALL poolcollect(nbnd, nks, occ, nkstot, x_occupation)
+#if defined (__CUDA)
+    x_occupation_d = x_occupation
+#endif
+
     DEALLOCATE ( occ )
 
     ! find an upper bound to the number of bands with non zero occupation.
@@ -1223,6 +1236,9 @@ MODULE exx
 !DIR$ memory(bandwidth) rhoc, vc
 #endif
     REAL(DP),   ALLOCATABLE :: fac(:), facb(:)
+#if defined(__CUDA)
+    REAL(DP),ALLOCATABLE,DEVICE :: facb_d(:)
+#endif
     INTEGER  :: ibnd, ik, im , ikq, iq, ipol
     INTEGER  :: ir, ig, ir_start, ir_end
     INTEGER  :: irt, nrt, nblock
@@ -1247,6 +1263,9 @@ MODULE exx
     ALLOCATE( fac(dfftt%ngm) )
     nrxxs= dfftt%nnr
     ALLOCATE( facb(nrxxs) )
+#if defined(__CUDA)
+    ALLOCATE( facb_d(nrxxs) )
+#endif
     !
     IF (noncolin) THEN
        ALLOCATE( temppsic_nc(nrxxs,npol,ialloc), result_nc(nrxxs,npol,ialloc) )
@@ -1352,6 +1371,9 @@ MODULE exx
        DO ig = 1, dfftt%ngm
           facb(dfftt%nl(ig)) = coulomb_fac(ig,iq,current_k)
        ENDDO
+#if defined(__CUDA)
+       facb_d = facb
+#endif
        !
        IF ( okvan .and..not.tqr ) CALL qvan_init (dfftt%ngm, xkq, xkp)
        !
@@ -1438,7 +1460,7 @@ MODULE exx
                 DO jbnd=jstart, jend
                    CALL fwfft('Rho', rhoc_d(:,jbnd-jstart+1), dfftt)
                 ENDDO
-                rhoc = rhoc_d
+                !rhoc = rhoc_d
 #else
                 DO jbnd=jstart, jend
                    CALL fwfft('Rho', rhoc(:,jbnd-jstart+1), dfftt)
@@ -1448,6 +1470,7 @@ MODULE exx
                 !
                 !   >>>> add augmentation in G space HERE
                 IF(okvan .and. .not. tqr) THEN
+                   print*, "In bad branch!"
                    DO jbnd=jstart, jend
                       CALL addusxx_g(dfftt, rhoc(:,jbnd-jstart+1), xkq, xkp, &
                       'c', becphi_c=becxx(ikq)%k(:,jbnd),becpsi_c=becpsi%k(:,ibnd))
@@ -1455,6 +1478,17 @@ MODULE exx
                 ENDIF
                 !   >>>> charge done
                 !
+#if defined(__CUDA)
+associate(vc=>vc_d, facb=>facb_d, rhoc=>rhoc_d, x_occupation=>x_occupation_d)
+                !$cuf kernel do (2)
+                DO jbnd=jstart, jend
+                   DO ir = 1, nrxxs
+                         vc(ir,jbnd-jstart+1) = facb(ir) * rhoc(ir,jbnd-jstart+1)*&
+                                                x_occupation(jbnd,ik) * nqs_inv
+                   ENDDO
+                ENDDO
+end associate
+#else
 !call start_collection()
 !$omp parallel do collapse(2) private(ir_start,ir_end)
                 DO irt = 1, nrt
@@ -1470,6 +1504,7 @@ MODULE exx
                 ENDDO
 !$omp end parallel do
 !call stop_collection()
+#endif
                 !
                 ! Add ultrasoft contribution (RECIPROCAL SPACE)
                 ! compute alpha_I,j,k+q = \sum_J \int <beta_J|phi_j,k+q> V_i,j,k,q Q_I,J(r) d3r
@@ -1486,7 +1521,7 @@ MODULE exx
                 CALL invfft ('Rho', pvc, dfftt, howmany=jcount)
 #else
 #if defined (__CUDA)
-                vc_d = vc
+                !vc_d = vc
                 DO jbnd=jstart, jend
                    CALL invfft('Rho', vc_d(:,jbnd-jstart+1), dfftt)
                 ENDDO
@@ -1636,6 +1671,9 @@ MODULE exx
     DEALLOCATE(big_result)
     !
     DEALLOCATE(fac, facb )
+#if defined (__CUDA)
+    DEALLOCATE(facb_d )
+#endif
     !
     IF(okvan) DEALLOCATE( deexx)
     CALL stop_clock( 'vexx_k_fin' )
