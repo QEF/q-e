@@ -60,7 +60,7 @@
   USE mp,            ONLY : mp_barrier, mp_bcast, mp_put,mp_sum
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE wavefunctions,  ONLY: evc
+  USE wavefunctions, ONLY : evc
   USE io_files,      ONLY : diropn, seqopn
   USE wvfct,         ONLY : npwx
   USE pwcom,         ONLY : current_spin, isk, lsda, nbnd, xk, nks
@@ -82,7 +82,8 @@
   USE constants_epw, ONLY : czero, cone, ci 
   USE control_flags, ONLY : iverbosity
   USE klist,         ONLY : nkstot
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
+  USE division,      ONLY : kpointdivision, fkbounds, fkbounds_bnd
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   ! 
   implicit none
   !

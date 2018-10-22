@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 29Aug2018 at 11:19:22 
+     Program EPW v.5.0.0 starts on 16Oct2018 at 14:26: 6 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -105,7 +105,13 @@
      Do not need to read .epb files; read .fmt files
 
 
-              band disentanglement is used:  nbndsub =    8
+     Band disentanglement is used:  nbndsub =    8
+     Use zone-centred Wigner-Seitz cells 
+     Number of WS vectors for electrons      279
+     Number of WS vectors for phonons       19
+     Number of WS vectors for electron-phonon       19
+     Maximum number of cores for efficient parallelization      114
+     Results may improve by using use_ws == .true. 
 
      Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
 
@@ -113,9 +119,9 @@
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026123
+     IFC last   -0.0026126
      Norm of the difference between old and new effective charges:    0.0000000
-     Norm of the difference between old and new force-constants:    0.0000029
+     Norm of the difference between old and new force-constants:    0.0000020
      Imposed crystal ASR
 
      Finished reading ifcs
@@ -125,7 +131,7 @@
 
      ===================================================================
      Memory usage:  VmHWM =        12Mb
-                   VmPeak =       393Mb
+                   VmPeak =       273Mb
      ===================================================================
      
      Using uniform q-mesh:    7   7   7
@@ -147,142 +153,103 @@
 
 
      Number of ep-matrix elements per pool :       100842 ~=  787.83 Kb (@ 8 bytes/ DP)
-     Restart from tau_CB:        343/       343
-     Restart from tau:        343/       343
-     Restart from iter:          3 and iq:        343/       343
+     Number of elements per core      12956
+     Average over degenerate eigenstates is performed
+
+     ===================================================================
+     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
+     ===================================================================
+
+      400.000      6.8619       0.999997E+13       0.465971E-02  x-axis
+                                                   0.568930E-02  y-axis
+                                                   0.878282E-02  z-axis
+                                                   0.637728E-02     avg
+      500.000      7.0136       0.100000E+14       0.267397E-01  x-axis
+                                                   0.328128E-01  y-axis
+                                                   0.498193E-01  z-axis
+                                                   0.364573E-01     avg
       
      ===================================================================
      Start solving iterative Boltzmann Transport Equation
      ===================================================================
 
 
+     Iteration number:         1 
+
+
+     ===================================================================
+     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
+     ===================================================================
+
+      400.000      6.8619       0.999997E+13       0.508748E-02  x-axis
+                                                   0.677962E-02  y-axis
+                                                   0.912891E-02  z-axis
+                                                   0.699867E-02     avg
+      500.000      7.0136       0.100000E+14       0.292498E-01  x-axis
+                                                   0.391414E-01  y-axis
+                                                   0.522029E-01  z-axis
+                                                   0.401980E-01     avg
+
+                                                   0.401980E-01     Err
+
+     Iteration number:         2 
+
+
+     ===================================================================
+     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
+     ===================================================================
+
+      400.000      6.8619       0.999997E+13       0.517573E-02  x-axis
+                                                   0.702124E-02  y-axis
+                                                   0.933232E-02  z-axis
+                                                   0.717643E-02     avg
+      500.000      7.0136       0.100000E+14       0.297767E-01  x-axis
+                                                   0.405594E-01  y-axis
+                                                   0.535011E-01  z-axis
+                                                   0.412791E-01     avg
+
+                                                   0.108106E-02     Err
+
      Iteration number:         3 
 
 
-     Temperature  400.000 K
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility VB Fermi level   6.861901 eV
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   7.030496 eV
-
-     Temperature  500.000 K
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility VB Fermi level   7.013558 eV
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   6.872899 eV
-
      ===================================================================
      Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      6.8619       0.999993E+13       0.612485E-02  x-axis
-                                                   0.740531E-02  y-axis
-                                                   0.102826E-01  z-axis
-                                                   0.793760E-02     avg
-                                                     0.1575E-03     Err
-      500.000      7.0136       0.999995E+13       0.353188E-01  x-axis
-                                                   0.428895E-01  y-axis
-                                                   0.588686E-01  z-axis
-                                                   0.456923E-01     avg
-                                                     0.9498E-03     Err
+      400.000      6.8619       0.999997E+13       0.519435E-02  x-axis
+                                                   0.706249E-02  y-axis
+                                                   0.936655E-02  z-axis
+                                                   0.720779E-02     avg
+      500.000      7.0136       0.100000E+14       0.298890E-01  x-axis
+                                                   0.408072E-01  y-axis
+                                                   0.537310E-01  z-axis
+                                                   0.414757E-01     avg
 
-     ===================================================================
-     Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      7.0305       0.999992E+13       0.342054E+02  x-axis
-                                                   0.342054E+02  y-axis
-                                                   0.531346E+02  z-axis
-                                                   0.405151E+02     avg
-                                                     0.1712E+01     Err
-      500.000      6.8729       0.999991E+13       0.232994E+02  x-axis
-                                                   0.232994E+02  y-axis
-                                                   0.361132E+02  z-axis
-                                                   0.275707E+02     avg
-                                                     0.1147E+01     Err
-     Total time so far
-     MOBITER      :      0.00s CPU      0.00s WALL (       1 calls)
-
+                                                   0.196654E-03     Err
 
      Iteration number:         4 
 
-     Applying a scissor shift of   0.70000 eV to the conduction states
-
-     Temperature  400.000 K
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility VB Fermi level   6.861901 eV
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   7.030496 eV
-
-     Temperature  500.000 K
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility VB Fermi level   7.013558 eV
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660800 eV
-     Mobility CB Fermi level   6.872899 eV
-     Progression iq (fine) =         50/       343
-     Creation of a restart point
-     Progression iq (fine) =        100/       343
-     Creation of a restart point
-     Progression iq (fine) =        150/       343
-     Creation of a restart point
-     Progression iq (fine) =        200/       343
-     Creation of a restart point
-     Progression iq (fine) =        250/       343
-     Creation of a restart point
-     Progression iq (fine) =        300/       343
-     Creation of a restart point
-     Creation of a restart point
 
      ===================================================================
      Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
      ===================================================================
 
-      400.000      6.8619       0.999993E+13       0.614048E-02  x-axis
-                                                   0.743528E-02  y-axis
-                                                   0.102959E-01  z-axis
-                                                   0.795721E-02     avg
-                                                     0.1960E-04     Err
-      500.000      7.0136       0.999995E+13       0.354163E-01  x-axis
-                                                   0.430745E-01  y-axis
-                                                   0.589489E-01  z-axis
-                                                   0.458132E-01     avg
-                                                     0.1209E-03     Err
+      400.000      6.8619       0.999997E+13       0.519833E-02  x-axis
+                                                   0.707076E-02  y-axis
+                                                   0.938236E-02  z-axis
+                                                   0.721715E-02     avg
+      500.000      7.0136       0.100000E+14       0.299135E-01  x-axis
+                                                   0.408575E-01  y-axis
+                                                   0.538368E-01  z-axis
+                                                   0.415360E-01     avg
 
-     ===================================================================
-     Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      7.0305       0.999992E+13       0.340667E+02  x-axis
-                                                   0.340667E+02  y-axis
-                                                   0.523827E+02  z-axis
-                                                   0.401720E+02     avg
-                                                     0.3431E+00     Err
-      500.000      6.8729       0.999991E+13       0.232095E+02  x-axis
-                                                   0.232095E+02  y-axis
-                                                   0.356064E+02  z-axis
-                                                   0.273418E+02     avg
-                                                     0.2289E+00     Err
-     Total time so far
-     MOBITER      :     61.76s CPU     28.01s WALL (       2 calls)
-
+                                                   0.602225E-04     Err
 
      Iteration number:         5 
 
      ===================================================================
      The iteration reached the maximum but did not converge.
-     ===================================================================
-
-     ===================================================================
-     Memory usage:  VmHWM =        24Mb
-                   VmPeak =       421Mb
      ===================================================================
 
 
@@ -294,16 +261,13 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :     62.39s CPU     28.40s WALL (       1 calls)
-     ep-interp    :     62.06s CPU     28.13s WALL (     344 calls)
+     ephwann      :      0.22s CPU      0.22s WALL (       1 calls)
 
-     DynW2B       :      0.03s CPU      0.02s WALL (     344 calls)
-     HamW2B       :     23.01s CPU      9.53s WALL (  236670 calls)
-     ephW2Bp      :      2.40s CPU      1.83s WALL (     344 calls)
+     HamW2B       :      0.01s CPU      0.01s WALL (     686 calls)
 
 
      Total program execution
-     EPW          :   1m 2.39s CPU     28.41s WALL
+     EPW          :      0.22s CPU      0.22s WALL
 
                                                                                           
  Please consider citing:                                                                  

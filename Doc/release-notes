@@ -5,10 +5,12 @@ New in development version:
   * XDM now works also for USPP and norm-conserving PP
 
 Problems fixed in development version (+ = in qe-6.3-backports as well) :
-  * Atomic occupancies for DFT+U were not correctly written by CP after 
+  + Variable-cell optimization wasn't working with Tkatchenko-Scheffler vdW
+  + A few more "make install" and "make -jN" glitches
+  + Atomic occupancies for DFT+U were not correctly written by CP after 
     switch to new format, due to a mismatch in their definition
-  * Phonons with option "nosym" wasn't working
-  * Option "noinv" wasn't read from new xml file
+  + Phonons with option "nosym" wasn't working
+  + Option "noinv" wasn't read from new xml file
   * Variable-cell optimization with hybrid functionals wasn't working due
     to missing re-initialization (it also crashed during the final scf step)
   + Printout of wall time was sometimes incorrect (courtesy Daniel Pinkal)

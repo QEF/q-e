@@ -1,0 +1,123 @@
+!
+! Copyright (C) 2002-2011 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+#define DIMS1D(arr) lbound(arr,1):ubound(arr,1)
+#define DIMS2D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2)
+#define DIMS3D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3)
+#define DIMS4D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3),lbound(arr,4):ubound(arr,4)
+#define DIMS5D(arr) lbound(arr,1):ubound(arr,1),lbound(arr,2):ubound(arr,2),lbound(arr,3):ubound(arr,3),lbound(arr,4):ubound(arr,4),lbound(arr,5):ubound(arr,5)
+!=----------------------------------------------------------------------------=!
+   MODULE {{module_name}}_gpum
+!=----------------------------------------------------------------------------=!
+     USE kinds, ONLY :  DP
+#if defined(__CUDA)
+     USE cudafor
+#endif
+     IMPLICIT NONE
+     SAVE
+     !
+{%- for var in vars %}
+     {{var.type}}, ALLOCATABLE :: {{var.name}}_d({% for n in range(var.dim|int) %}:{% if not loop.last %}, {%endif%}{% endfor %})
+{%- endfor %}
+     !
+#if defined(__CUDA)
+     attributes (DEVICE) :: {% for var in vars %}{{var.name}}_d{% if not loop.last %}, {%endif%}{% endfor %}
+#endif
+{% for var in vars %}
+     LOGICAL :: {{var.name}}_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: {{var.name}}_d_ood = .false.    ! used to flag out of date variables
+{%- endfor %}
+     !
+     CONTAINS
+     !
+{%- for var in vars %}
+     SUBROUTINE using_{{var.name}}(intento, debug_info)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
+         !
+         USE {{module_name}}, ONLY : {{var.name}}
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
+#if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_{{var.name}} ", debug_info, {{var.name}}_ood
+         !
+         IF ({{var.name}}_ood) THEN
+             IF ((.not. allocated({{var.name}}_d)) .and. (intento_ < 2)) THEN
+                CALL errore('using_{{var.name}}_d', 'PANIC: sync of {{var.name}} from {{var.name}}_d with unallocated array. Bye!!', 1)
+                stop
+             END IF
+             IF (.not. allocated({{var.name}})) THEN
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of {{var.name}} with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+                ! IF (intento_ > 0)    {{var.name}}_d_ood = .true.
+             END IF
+             IF (intento_ < 2) THEN
+                print *, "Really copied {{var.name}} D->H"
+                {{var.name}} = {{var.name}}_d
+             END IF
+             {{var.name}}_ood = .false.
+         ENDIF
+         IF (intento_ > 0)    {{var.name}}_d_ood = .true.
+#endif
+     END SUBROUTINE using_{{var.name}}
+     !
+     SUBROUTINE using_{{var.name}}_d(intento, debug_info)
+         !
+         USE {{module_name}}, ONLY : {{var.name}}
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
+#if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_{{var.name}}_d ", debug_info, {{var.name}}_d_ood
+         !
+         IF (.not. allocated({{var.name}})) THEN
+             IF (intento /= 2) print *, "WARNING: sync of {{var.name}}_d with unallocated array and intento /= 2?"
+             IF (allocated({{var.name}}_d)) DEALLOCATE({{var.name}}_d)
+             {{var.name}}_d_ood = .false.
+             RETURN
+         END IF
+         ! here we know that {{var.name}} is allocated, check if size is 0 
+         IF ( SIZE({{var.name}}) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array {{var.name}}_d. If used, code will crash."
+             RETURN
+         END IF
+         !
+         IF ({{var.name}}_d_ood) THEN
+             IF ( allocated({{var.name}}_d) .and. (SIZE({{var.name}}_d)/=SIZE({{var.name}}))) deallocate({{var.name}}_d)
+             IF (.not. allocated({{var.name}}_d)) ALLOCATE({{var.name}}_d(DIMS{{var.dim}}D({{var.name}})))  ! MOLD does not work on all compilers
+             IF (intento < 2) THEN
+                print *, "Really copied {{var.name}} H->D"
+                {{var.name}}_d = {{var.name}}
+             END IF
+             {{var.name}}_d_ood = .false.
+         ENDIF
+         IF (intento > 0)    {{var.name}}_ood = .true.
+#else
+         CALL errore('using_{{var.name}}_d', 'Trying to use device data without device compilated code!', 1)
+#endif
+     END SUBROUTINE using_{{var.name}}_d
+     !
+{%- endfor %}
+     SUBROUTINE deallocate_{{module_name}}_gpu
+{%- for var in vars %}
+       IF( ALLOCATED( {{var.name}}_d ) ) DEALLOCATE( {{var.name}}_d )
+       {{var.name}}_d_ood = .false.
+{%- endfor %}
+     END SUBROUTINE deallocate_{{module_name}}_gpu
+!=----------------------------------------------------------------------------=!
+   END MODULE {{module_name}}_gpum
+!=----------------------------------------------------------------------------=!

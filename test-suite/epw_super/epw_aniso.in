@@ -33,7 +33,7 @@
   eps_acustic = 5.0    ! Lowest boundary for the 
   ephwrite    = .true. ! Writes .ephmat files used when wliasberg = .true.
 
-  fsthick     = 0.4  ! eV
+  fsthick     = 20.0  ! eV
   eptemp      = 300  ! K
   degaussw    = 0.10 ! eV
   degaussq    = 0.5 ! meV
@@ -50,8 +50,8 @@
   wscut = 0.5   ! eV   Upper limit over frequency integration/summation in the Elisashberg eq
 
   nstemp   = 1
-  tempsmin = 25.00
-  tempsmax = 30.00
+  tempsmin = 15.00
+  tempsmax = 20.00
 
   nsiter   = 500
 

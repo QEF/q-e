@@ -186,5 +186,5 @@ QELIBS         = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_
 # wget or curl - useful to download from network
 WGET = @wget@
 
-# Install directory - not currently used
+# Install directory - "make install" copies *.x executables there
 PREFIX = @prefix@
