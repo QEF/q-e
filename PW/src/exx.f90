@@ -1231,6 +1231,8 @@ MODULE exx
     INTEGER :: ijt, njt, jblock_start, jblock_end
     INTEGER :: iegrp, wegrp
     !
+    CALL start_clock( 'vexx_k_setup' )
+    !
     ialloc = nibands(my_egrp_id+1)
     !
     ALLOCATE( fac(dfftt%ngm) )
@@ -1318,10 +1320,12 @@ MODULE exx
     omega_inv = 1.0 / omega
     nqs_inv = 1.0 / nqs
     !
+    CALL stop_clock( 'vexx_k_setup' )
+    CALL start_clock( 'vexx_k_main' )
     !------------------------------------------------------------------------!
     ! Beginning of main loop
     !------------------------------------------------------------------------!
-    DO iq=1, nqs
+    vexxmain: DO iq=1, nqs
        !
        ikq  = index_xkq(current_ik,iq)
        ik   = index_xk(ikq)
@@ -1519,7 +1523,9 @@ MODULE exx
        END DO !iegrp
        !
        IF ( okvan .and..not.tqr ) CALL qvan_clean ()
-    END DO
+    END DO vexxmain
+    CALL stop_clock( 'vexx_k_main' )
+    CALL start_clock( 'vexx_k_fin' )
     !
     !
     !
@@ -1600,6 +1606,7 @@ MODULE exx
     DEALLOCATE(fac, facb )
     !
     IF(okvan) DEALLOCATE( deexx)
+    CALL stop_clock( 'vexx_k_fin' )
     !
     !------------------------------------------------------------------------
   END SUBROUTINE vexx_k
