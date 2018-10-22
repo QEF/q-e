@@ -10,8 +10,8 @@
    MODULE fft_scalar_cuFFT
 !=----------------------------------------------------------------------=!
 #ifdef __CUDA
+#define __CUFFT_ALL_XY_PLANES
        USE fft_param
-!! iso_c_binding provides C_PTR, C_NULL_PTR, C_ASSOCIATED
        USE iso_c_binding
 
        USE cudafor
@@ -211,7 +211,7 @@
      REAL (DP), SAVE :: xyflops( ndims ) = 0.d0
 #endif
 
-#if defined(__FFTW_ALL_XY_PLANES)
+#if defined(__CUFFT_ALL_XY_PLANES)
      INTEGER, SAVE :: cufft_plan_2d( ndims ) = 0
 #else
      INTEGER, SAVE :: cufft_plan_x( ndims ) = 0
@@ -266,7 +266,7 @@
 
      END IF
 
-#if defined(__FFTW_ALL_XY_PLANES)
+#if defined(__CUFFT_ALL_XY_PLANES)
      istat = cufftSetStream(cufft_plan_2d(ip), stream)
 #else
      istat = cufftSetStream(cufft_plan_x(ip), stream)
@@ -286,8 +286,16 @@
         !
         tscale = 1.0_DP / ( nx * ny )
         !
-#if defined(__FFTW_ALL_XY_PLANES)
+#if defined(__CUFFT_ALL_XY_PLANES)
         istat = cufftExecZ2Z( cufft_plan_2d(ip), r_d(1,1,1), r_d(1,1,1), CUFFT_FORWARD )
+!$cuf kernel do(3) <<<*,(16,16,1), 0, stream>>>
+        DO k=1, nzl
+           DO j=1, ldy
+             DO i=1, ldx
+                r_d(i,j,k) = r_d(i,j,k) * tscale
+              END DO
+           END DO
+        END DO
 #else
         istat = cufftExecZ2Z( cufft_plan_x(ip), r_d(1,1,1), r_d(1,1,1), CUFFT_FORWARD )
         if(istat) print *,"error in fftxy fftx istat = ",istat
@@ -327,7 +335,7 @@
      ELSE IF( isign > 0 ) THEN
         !
         !print *,"exec cufft INV",nx,ny,ldx,ldy,nzl
-#if defined(__FFTW_ALL_XY_PLANES)
+#if defined(__CUFFT_ALL_XY_PLANES)
         istat = cufftExecZ2Z( cufft_plan_2d(ip), r_d(1,1,1), r_d(1,1,1), CUFFT_INVERSE )
 #else
 !$cuf kernel do(3) <<<*,(16,16,1), 0, stream>>>
@@ -391,14 +399,16 @@
        !   for this combination of parameters
        found = ( ny == dims(1,ip) ) .AND. ( nx == dims(3,ip) )
        found = found .AND. ( ldx == dims(2,ip) ) .AND.  ( nzl == dims(4,ip) )
+#if ! defined(__CUFFT_ALL_XY_PLANES)
        found = found .AND. ( batch_1 == dims(5,ip) ) .AND. (batch_2 == dims(6,ip) )
+#endif
        IF (found) EXIT
      END DO
      END SUBROUTINE lookup
 
      SUBROUTINE init_plan()
        IMPLICIT NONE
-#if defined(__FFTW_ALL_XY_PLANES)
+#if defined(__CUFFT_ALL_XY_PLANES)
        INTEGER, PARAMETER :: RANK=2
        INTEGER :: FFT_DIM(RANK), DATA_DIM(RANK)
        INTEGER :: STRIDE, DIST, BATCH
@@ -553,7 +563,7 @@
         istat = cufftExecZ2Z( cufft_plan_3d(ip), f_d(1), f_d(1), CUFFT_FORWARD )
 
        tscale = 1.0_DP / DBLE( nx * ny * nz )
-!$cuf kernel do(1) <<<*,*,0,stream>>>
+!$cuf kernel do(1) <<<*,(16,16,1),0,stream>>>
         DO i=1, ldx*ldy*ldz*howmany
            f_d( i ) = f_d( i ) * tscale
         END DO

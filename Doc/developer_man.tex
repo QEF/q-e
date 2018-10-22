@@ -1320,57 +1320,72 @@ Development can proceed in different ways:
       forked from the q-e repository ({\em recommended})
 \item Via ``merge'' requests from a branch of the q-e repository
       ({\em not recommended})
-\item Directly into the ``develop'' branch
+\item Directly into the ``develop'' branch, or in a ``backport'' branch
+  if existing.
 \end{enumerate}
-The first option is the recommended one. Register on GitLab and {\em save
-your public ssh keys} on your GitLab account (in this page:
-\verb|https://gitlab.com/profile/keys|). Then:
+The first option is the recommended one. To start:
 \begin{itemize}
-\item  {\em fork} the QEF/q-e project: point your browser to
+\item Register on gitlab.com, {\em save your public ssh keys}
+  on your GitLab account (in this page: \verb|https://gitlab.com/profile/keys|)
+\item {\em fork} the QEF/q-e project: point your browser to
 	 \verb|https://gitlab.com/QEF/q-e|, use the ``fork'' button
 \item {\em clone} your GitLab fork on your workstation, e.g.:\\
    \verb|git clone git@gitlab.com:<your-username>/q-e.git|
-\item {\em switch} to the ``develop'' branch of your fork
-   (not strictly needed, just to keep the symmetry):
+\item optionally, switch to the ``develop'' branch of your fork
+   (just to keep the symmetry):
    \verb|git checkout --track origin/develop|
 \end{itemize}
-Once you have changed your local copy of the repository,
-you have to {\em commit} (save) those changes:
-\begin{quote}
-  \verb|git add| {\em list-of-changed-or-added-files}\\
-  \verb|git commit |
-\end{quote}
-then you can align the repository to the ``develop'' branch:
+Every time you start to do some work, align your fork to the
+``develop'' branch:
 \begin{quote}
   \verb|git pull  git@gitlab.com:QEF/q-e.git develop| 
 \end{quote}
-If a file is modified both locally and in the repository, a conflict
-will arise. You can use the \texttt{stash} to resolve the conflict:
+then create a new branch and work on it:
+\begin{quote}
+   \verb|git checkout -b| {\em my-new-branch}
+\end{quote}
+(if the branch exists, use \verb|git checkout | {\em my-branch} to
+switch to it. If your local repository contains unsaved changes,
+commit or "stash" them before switching branch).
+
+Once you have made your changes, {\em commit} (save) then:
+\begin{quote}
+  \verb|git add| {\em list-of-changed-or-added-files} , then
+	\verb| git commit | , or \\
+  \verb|git commit| {\em list-of-changed-files}, or \\
+  \verb|git commit -a| (commits all modified files)
+\end{quote}
+Once you are finished with changes, you have to {\em push} (publish)
+to the remote repository:
+\begin{quote}
+  \verb|git push origin | {\em my-new-branch}
+\end{quote}
+or just \verb|git push| if the remote branch  {\em my-new-branch} already
+exists. The reply message should contain a link that allows you to make
+a ``merge request'' (the link works only if you are signed in to gitlab.com).
+You can also use the GitLab web interface to that end.
+The branch may be automatically removed after the merge (set the appropriate
+option if you approve your merge) or using \verb|git branch -d | 
+{\em my-new-branch}.
+
+It may be a good idea to align your branch to the current development
+version before the merge request. If you have modified a file that has
+meanwhile been modified in the repository, a conflict will arise. You
+can use \texttt{git stash} to resolve the conflict:
 \begin{quote}
   \verb|git stash save | (save and remove modified files)\\
   \verb|git pull  ...  | (update files)\\
   \verb|git stash apply| (overwrite with locally modified files)
 \end{quote}
 Beware! you may need to manually merge files that have been modified both 
-by you and in the repository.
-The stash can be cleared using \texttt{git stash clear}.
+by you and in the repository. \texttt{git stash -l} list all stashed
+changes in reverese chronological order. The stash can be cleared using
+\texttt{git stash clear}.
 
 Note: if you do not change sources but only documentation, tests, examples,
 add \verb|[skip ci]| in the commit message. This prevents execution of 
 automatic compilation on GitLab (that sometimes fails for no good reason,
 blocking a subsequent merge request).
-
-You may repeat the procedure above, adding more commits to your local copy.
-Unlike in svn, you need to explicitly {\em push} (publish) them to the remote
-repository with
-\begin{verbatim}
-   git push
-\end{verbatim}
-Your repository (more exactly, the ``develop'' branch of your repository)
-should now contain only the differences you want to apply to the ``develop''
-branch of the official repository. You can use the GitLab web interface to
-do a ``merge request'', that some other developer will review and approve
-(or not).
 
 \subsection{Working directly into the develop branch}
 Only for people knowing what they are doing (or ready to fix the mess in case
@@ -1385,24 +1400,26 @@ they didn't know what they were doing):
 
 \subsection{A few useful commands}
 \begin{itemize}
-\item \texttt{status}: information on the current state of the repository 
-\item \texttt{diff}: difference between the local copy and the repository
-\item  \texttt{fetch}:
+\item \texttt{git status}: information on the current state of the repository 
+(use option \texttt{-uno} to get rid of messages about untracked file)
+\item \texttt{git diff}: difference between the local copy and the repository
+\item  \texttt{git fetch}:
   looks at the remote repository, signals if new files or conflicts are present
   in case the local copy is updated
-\item  \texttt{pull}:
+\item  \texttt{git pull}:
   downloads updates from the remote repository, applies them to the local one.
   If there are conflicts that cannot be easily solved, conflicts are flagged
   and one has to proceed with a manual merge
-\item \texttt{add}: adds files or directories to the "stage area", a pool
+\item \texttt{git add}: adds files or directories to the "stage area", a pool
   of files to be committed
-\item \texttt{commit} commits files in the "stage area". Unlike
+\item \texttt{git commit}: commits files in the "stage area". Unlike
   \texttt{svn commit}, files are committed only in the local repository
-\item \texttt{push} publishes the new commits of the local repository
+\item \texttt{git push}: publishes the new commits of the local repository
   to one or more remote repositories
-\item \texttt{merge} merges two branches (typically the local one and
+\item \texttt{git merge}: merges two branches (typically the local one and
   the remote one). A merge may be easy or complex, depending upon the type of
   conflicts.
+\item \texttt{git branch}: information and operations on branches
 \end{itemize}
 
 \section{The \qe \, test-suite}

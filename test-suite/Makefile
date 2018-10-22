@@ -64,7 +64,7 @@ run-tests-ph-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=ph_all
 
 run-tests-epw-serial : prolog pseudo
-	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
+	env QE_USE_MPI=0 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_partial
 
 run-tests-epw-parallel : prolog pseudo
 	env QE_USE_MPI=1 ${TESTCODE_DIR}/bin/testcode.py --verbose --category=epw_all
@@ -149,7 +149,10 @@ clean:
 		epw_*/specfun.phon epw_*/specfun_sup.phon epw_*/*.tau_restart* \
                 epw_*/*_elcond_* epw_*/fort.* epw_*/decay.* epw_*/scattering_rate* \
                 epw_*/*.fc.* epw_*/*_band.dat epw_*/*F_restart* epw_*/*F_restart_CB* \
-                epw_*/*.mmn 
+                epw_*/*.mmn epw_*/*.epmatkq* epw_*/*.epmatkqcb* epw_*/sparse* \
+                epw_*/*.Fin_restart* epw_*/*.Fin_restartcb* epw_*/*.acon_iso_* \
+                epw_*/*.imag_aniso* epw_*/*.imag_iso* epw_*/*.pade_* epw_*/*qdos_*
+                
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save
 

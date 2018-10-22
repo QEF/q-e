@@ -17,7 +17,173 @@
   CONTAINS
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE scattering_rate_q( iq, ef0, efcb, first_cycle ) 
+    SUBROUTINE qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
+    !-----------------------------------------------------------------------
+    !!
+    !!  This subroutine pre-computes the q-points that falls within the fstichk
+    !!
+    !-----------------------------------------------------------------------
+    USE kinds,         ONLY : DP
+    USE elph2,         ONLY : nqf, xqf, xkf, chw, etf, nkf, nqtotf
+    USE mp_world,      ONLY : mpime, world_comm
+    USE mp_global,     ONLY : my_pool_id
+    USE io_global,     ONLY : ionode_id, stdout
+    USE io_epw,        ONLY : iunselecq
+    USE mp_global,     ONLY : npool
+    USE mp,            ONLY : mp_sum, mp_bcast
+    USE constants_epw, ONLY : twopi, ci
+    USE epwcom,        ONLY : nbndsub, fsthick, use_ws
+    USE pwcom,         ONLY : ef 
+    USE wan2bloch,     ONLY : hamwan2bloch
+    !
+    IMPLICIT NONE
+    !
+    LOGICAL, INTENT(in) :: exst
+    !! If the file exist
+    INTEGER, INTENT(IN) :: nrr_k
+    !! Number of WS points for electrons    
+    INTEGER, INTENT(IN) :: dims
+    !! Dims is either nat if use_ws or 1 if not
+    INTEGER, INTENT(INOUT) :: totq
+    !! Total number of q-points inside fsthick
+    INTEGER, ALLOCATABLE, INTENT(OUT) :: selecq(:)
+    !! List of selected q-points
+    INTEGER, INTENT(IN) :: ndegen_k(nrr_k, dims, dims)
+    !! Wigner-Seitz number of degenerescence (weights) for the electrons grid
+    REAL(kind=DP), INTENT(IN) :: irvec_r(3, nrr_k)
+    !! Wigner-Size supercell vectors, store in real instead of integer
+    COMPLEX(kind=DP), INTENT(OUT) :: cufkk (nbndsub, nbndsub)
+    !! Rotation matrix, fine mesh, points k
+    COMPLEX(kind=DP), INTENT(OUT) :: cufkq (nbndsub, nbndsub)
+    !! the same, for points k+q
+    ! 
+    ! Local variable
+    INTEGER :: ios
+    !! integer variable for I/O control
+    INTEGER :: iq
+    !! Counter on coarse q-point grid    
+    INTEGER :: ik, ikk, ikq
+    !! Counter on coarse k-point grid
+    INTEGER :: found(npool)
+    !! Indicate if a q-point was found within the window
+    INTEGER :: iw
+    !! Counter on bands when use_ws == .true.
+    INTEGER :: iw2
+    !! Counter on bands when use_ws == .true.
+    INTEGER :: ir
+    !! Counter for WS loop
+    INTEGER :: nqtot 
+    !! Total number of q-point for verifications
+    ! 
+    REAL(kind=DP) :: xxq(3)
+    !! Current q-point
+    REAL(kind=DP) :: xkk(3)
+    !! Current k-point on the fine grid
+    REAL(kind=DP) :: xkq(3)
+    !! Current k-point on the fine grid
+    REAL(kind=DP) :: rdotk(nrr_k)
+    !! $r\cdot k$
+    REAL(kind=DP) :: rdotk2(nrr_k)
+    !! $r\cdot k$
+    ! 
+    COMPLEX(kind=DP) :: cfac(nrr_k, dims, dims)
+    !! Used to store $e^{2\pi r \cdot k}$ exponential 
+    COMPLEX(kind=DP) :: cfacq(nrr_k, dims, dims)
+    !! Used to store $e^{2\pi r \cdot k+q}$ exponential
+    ! 
+    !selecq(:) = 0
+    rdotk(:)  = 0
+    rdotk2(:) = 0
+    ! 
+    IF (exst) THEN
+      IF (mpime == ionode_id) THEN
+        OPEN(unit=iunselecq, file='selecq.fmt', status='old', iostat=ios)
+        READ (iunselecq,*) totq
+        ALLOCATE(selecq(totq))
+        selecq(:) = 0
+        READ (iunselecq,*) nqtot
+        READ (iunselecq,*) selecq(:)
+        CLOSE(iunselecq)
+      ENDIF
+      CALL mp_bcast(totq  , ionode_id, world_comm )
+      IF (.NOT. ALLOCATED(selecq)) ALLOCATE(selecq(totq))
+      CALL mp_bcast(nqtot , ionode_id, world_comm )
+      CALL mp_bcast(selecq, ionode_id, world_comm )
+      IF (nqtot /= nqtotf) THEN
+        CALL errore( 'qwindow', 'Cannot read from selecq.fmt, the q-point grid or &
+ fsthick window are different from read one. Remove the selecq.fmt file and restart. ',1 )
+      ENDIF
+      !  
+    ELSE
+      ALLOCATE(selecq(nqf))
+      selecq(:) = 0 
+      !
+      DO iq=1, nqf
+        xxq = xqf (:, iq)
+        ! 
+        found(:) = 0
+        DO ik = 1, nkf
+          ikk = 2 * ik - 1
+          ikq = ikk + 1
+          !
+          xkk = xkf(:, ikk)
+          xkq = xkk + xxq
+          !  
+          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk2, 1 )
+          IF (use_ws) THEN
+            DO iw=1, dims
+              DO iw2=1, dims
+                DO ir = 1, nrr_k
+                  IF (ndegen_k(ir,iw2,iw) > 0) THEN
+                    cfac(ir,iw2,iw)  = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
+                    cfacq(ir,iw2,iw) = exp( ci*rdotk2(ir) ) / ndegen_k(ir,iw2,iw)
+                  ENDIF
+                ENDDO
+              ENDDO
+            ENDDO
+          ELSE
+            cfac(:,1,1)   = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
+            cfacq(:,1,1)  = exp( ci*rdotk2(:) ) / ndegen_k(:,1,1)
+          ENDIF           
+          ! 
+          CALL hamwan2bloch ( nbndsub, nrr_k, cufkk, etf(:, ikk), chw, cfac, dims)
+          CALL hamwan2bloch ( nbndsub, nrr_k, cufkq, etf(:, ikq), chw, cfacq, dims)
+          ! 
+          IF ( (( minval ( abs(etf(:, ikk) - ef) ) < fsthick ) .and. &
+                ( minval ( abs(etf(:, ikq) - ef) ) < fsthick )) ) THEN
+            found(my_pool_id+1) = 1
+            EXIT ! exit the loop 
+          ENDIF
+        ENDDO ! k-loop
+        ! If found on any k-point from the pools
+        CALL mp_sum(found, world_comm)
+        ! 
+        IF (SUM(found) > 0) THEN
+          totq = totq + 1
+          selecq(totq) = iq
+          ! 
+          IF (MOD(totq,500) == 0) THEN
+            WRITE(stdout,'(5x,a,i8,i8)')'Number selected, total',totq,iq
+          ENDIF
+        ENDIF
+        ! 
+      ENDDO
+      IF (mpime == ionode_id) THEN
+        OPEN(unit=iunselecq, file='selecq.fmt')
+        WRITE (iunselecq,*) totq    ! Selected number of q-points
+        WRITE (iunselecq,*) nqtotf  ! Total number of q-points 
+        WRITE (iunselecq,*) selecq(1:totq)
+        CLOSE(iunselecq)
+      ENDIF
+      ! 
+    ENDIF ! exst
+    !----------------------------------------------------------------------- 
+    END SUBROUTINE qwindow
+    !-----------------------------------------------------------------------
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE scattering_rate_q(iqq, iq, totq, ef0, efcb, first_cycle ) 
     !-----------------------------------------------------------------------
     !!
     !!  This subroutine computes the scattering rate (inv_tau)
@@ -35,16 +201,21 @@
                               xqf, zi_allvb, zi_allcb
     USE transportcom,  ONLY : transp_temp, lower_bnd
     USE constants_epw, ONLY : zero, one, two, pi, ryd2mev, kelvin2eV, ryd2ev, & 
-                              eps6
+                              eps6, eps8
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : world_comm
+    USE io_scattering, ONLY : scattering_write, tau_write, merge_read
     !
     IMPLICIT NONE
     !
     LOGICAL, INTENT (INOUT) :: first_cycle
     !! Use to determine weather this is the first cycle after restart 
+    INTEGER, INTENT(IN) :: iqq
+    !! Q-point index from the selected q
     INTEGER, INTENT(IN) :: iq
-    !! Q-point inde
+    !! Q-point index
+    INTEGER, INTENT(IN) :: totq
+    !! Total number of q-points within the fstichk window
     REAL(KIND=DP), INTENT(IN) :: ef0(nstemp)
     !! Fermi level for the temperature itemp
     REAL(KIND=DP), INTENT(IN) :: efcb(nstemp)
@@ -132,12 +303,10 @@
     !! The derivative of wgauss:  an approximation to the delta function  
     REAL(kind=DP), PARAMETER :: eps = 1.d-4
     !! Tolerence parameter for the velocity
-    REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
-    !! Tolerence
     ! 
     CALL start_clock ( 'SCAT' )
     ! 
-    IF ( iq .eq. 1 ) THEN
+    IF ( iqq == 1 ) THEN
       !
       WRITE(stdout,'(/5x,a)') repeat('=',67)
       WRITE(stdout,'(5x,"Scattering rate")')
@@ -258,8 +427,8 @@
                   !
                   ! In case of q=\Gamma, then the short-range = the normal g. We therefore 
                   ! need to treat it like the normal g with abs(g).
-                  IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
-                     .OR. abs(xqf (3, iq))> eps2 )) THEN
+                  IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
+                     .OR. abs(xqf (3, iq))> eps8 )) THEN
                     ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                     !     number, in which case its square will be a negative number. 
                     g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND=DP )
@@ -339,8 +508,8 @@
                     !
                     ! In case of q=\Gamma, then the short-range = the normal g. We therefore 
                     ! need to treat it like the normal g with abs(g).
-                    IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
-                       .OR. abs(xqf (3, iq))> eps2 )) THEN
+                    IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
+                       .OR. abs(xqf (3, iq))> eps8 )) THEN
                       ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                       !     number, in which case its square will be a negative number. 
                       g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp, KIND=DP)
@@ -395,7 +564,7 @@
       !
       ! Creation of a restart point
       IF (restart) THEN
-        IF (MOD(iq,restart_freq) == 0 ) THEN
+        IF (MOD(iqq,restart_freq) == 0 ) THEN
           WRITE(stdout, '(a)' ) '     Creation of a restart point'
           ! 
           ! The mp_sum will aggreage the results on each k-points. 
@@ -410,9 +579,9 @@
           ENDIF
           ! 
           IF ( ABS(efcb(1)) > eps ) THEN
-            CALL tau_write(iq,nqtotf,nkqtotf/2,.TRUE.)
+            CALL tau_write(iqq,totq,nkqtotf/2,.TRUE.)
           ELSE
-            CALL tau_write(iq,nqtotf,nkqtotf/2,.FALSE.)
+            CALL tau_write(iqq,totq,nkqtotf/2,.FALSE.)
           ENDIF
           ! 
           ! Now show intermediate mobility with that amount of q-points
@@ -426,7 +595,7 @@
     !
     ! The k points are distributed among pools: here we collect them
     !
-    IF ( iq .eq. nqtotf ) THEN
+    IF ( iqq == totq ) THEN
       !
       ! The total number of k points
       !
@@ -463,13 +632,13 @@
           ! 
           CALL merge_read( nkqtotf/2, nqtotf_new, inv_tau_all_new ) 
           ! 
-          inv_tau_all(:,:,:) = ( inv_tau_all(:,:,:) * nqtotf &
-                              + inv_tau_all_new(:,:,:) * nqtotf_new ) / (nqtotf+nqtotf_new)
+          inv_tau_all(:,:,:) = ( inv_tau_all(:,:,:) * totq &
+                              + inv_tau_all_new(:,:,:) * nqtotf_new ) / (totq+nqtotf_new)
           !
           WRITE(stdout, '(a)' ) '     '
-          WRITE(stdout, '(a,i10,a)' ) '     Merge scattering for a total of ',nqtotf+nqtotf_new,' q-points'
+          WRITE(stdout, '(a,i10,a)' ) '     Merge scattering for a total of ',totq+nqtotf_new,' q-points'
           ! 
-          CALL tau_write(iq+nqtotf_new,nqtotf+nqtotf_new,nkqtotf/2)
+          CALL tau_write(iqq+nqtotf_new,totq+nqtotf_new,nkqtotf/2, .FALSE.)
           WRITE(stdout, '(a)' ) '     Write to restart file the sum'
           WRITE(stdout, '(a)' ) '     '
           !
@@ -551,18 +720,18 @@
         WRITE(stdout, '(a)' ) '     Creation of the final restart point'
         ! 
         IF ( ABS(efcb(1)) > eps ) THEN
-          CALL tau_write(iq,nqtotf,nkqtotf/2,.TRUE.)
+          CALL tau_write(iqq,totq,nkqtotf/2,.TRUE.)
         ELSE
-          CALL tau_write(iq,nqtotf,nkqtotf/2,.FALSE.)
+          CALL tau_write(iqq,totq,nkqtotf/2,.FALSE.)
         ENDIF
         ! 
       ENDIF ! restart
       ! 
-    ENDIF ! iq 
+    ENDIF ! iqq 
     !
     CALL stop_clock ( 'SCAT' )
     ! DBSP
-    !write(stdout,*),'iq ',iq
+    !write(stdout,*),'iqq ',iqq
     !print*,shape(inv_tau_all)
     !write(stdout,*),'inv_tau_all(1,5:8,21) ',SUM(inv_tau_all(3,5:8,1))
     !write(stdout,*),'inv_tau_all(1,5:8,:) ',SUM(inv_tau_all(3,5:8,:))
@@ -585,35 +754,36 @@
     !!       At the moment we just want mobility_\alpha\alpha so it makes no difference.
     !!
     !-----------------------------------------------------------------------
-    USE kinds,     ONLY : DP
-    USE io_global, ONLY : stdout, meta_ionode_id
-    USE cell_base, ONLY : alat, at, omega
-    USE io_files,  ONLY : prefix 
-    USE io_epw,    ONLY : iufilsigma 
-    USE epwcom,    ONLY : nbndsub, fsthick, & 
-                          system_2d, nstemp, &
-                          int_mob, ncarrier, scatread, &
-                          iterative_bte, vme
-    USE pwcom,     ONLY : ef 
-    USE elph2,     ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, vmef, & 
-                          inv_tau_all, nkqtotf, Fi_all, inv_tau_allcb, &
-                          zi_allvb, zi_allcb, Fi_allcb, BZtoIBZ,       &
-                          s_BZtoIBZ, map_rebal
+    USE kinds,         ONLY : DP
+    USE io_global,     ONLY : stdout, meta_ionode_id
+    USE cell_base,     ONLY : alat, at, omega
+    USE io_files,      ONLY : prefix 
+    USE io_epw,        ONLY : iufilsigma 
+    USE epwcom,        ONLY : nbndsub, fsthick, & 
+                              system_2d, nstemp, &
+                              int_mob, ncarrier, scatread, &
+                              iterative_bte, vme
+    USE pwcom,         ONLY : ef 
+    USE elph2,         ONLY : ibndmax, ibndmin, etf, nkf, wkf, dmef, vmef, & 
+                              inv_tau_all, nkqtotf, inv_tau_allcb,      &
+                              zi_allvb, zi_allcb, map_rebal
     USE transportcom,  ONLY : transp_temp
     USE constants_epw, ONLY : zero, one, bohr2ang, ryd2ev, electron_SI, &
                               kelvin2eV, hbar, Ang2m, hbarJ, ang2cm, czero
-    USE mp,        ONLY : mp_sum
-    USE mp_global, ONLY : world_comm
-    USE mp_world,  ONLY : mpime
+    USE mp,            ONLY : mp_sum, mp_bcast
+    USE mp_global,     ONLY : world_comm
+    USE mp_world,      ONLY : mpime
     ! SP - Uncomment to use symmetries on velocities
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_global,     ONLY : ionode_id
-    USE cell_base, ONLY : bg
-    USE mp,        ONLY : mp_bcast
-    USE mp_global, ONLY : inter_pool_comm
-    USE epwcom,    ONLY : mp_mesh_k, nkf1, nkf2, nkf3
+    USE cell_base,     ONLY : bg
+    USE mp,            ONLY : mp_bcast
+    USE mp_global,     ONLY : inter_pool_comm
+    USE epwcom,        ONLY : mp_mesh_k, nkf1, nkf2, nkf3
     USE constants_epw, ONLY : eps6
     USE noncollin_module, ONLY : noncolin
+    USE io_scattering, ONLY : scattering_read
+    USE division,      ONLY : fkbounds
     !
     IMPLICIT NONE
     ! 
@@ -650,6 +820,10 @@
     !! Number of points in the BZ corresponding to a point in IBZ    
     INTEGER :: BZtoIBZ_tmp(nkf1*nkf2*nkf3)
     !! Temporary mapping
+    INTEGER :: BZtoIBZ(nkf1*nkf2*nkf3)
+    !! BZ to IBZ mapping
+    INTEGER :: s_BZtoIBZ(3,3,nkf1*nkf2*nkf3)
+    !! symmetry 
     ! 
     REAL(KIND=DP) :: ekk
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
@@ -1547,7 +1721,9 @@
           ! 
         ENDDO ! nstemp
         WRITE(stdout,'(5x)')
-        WRITE(stdout,'(5x,"Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.")')
+        WRITE(stdout,'(5x,"Note: Mobility are sorted by ascending values and might not correspond")')
+        WRITE(stdout,'(5x,"                                         to the expected (x,y,z) axis.")')
+        WRITE(stdout,'(5x)')
         !
         IF (mpime .eq. meta_ionode_id) CLOSE(iufilsigma)
         ! 
@@ -1561,38 +1737,6 @@
     CALL print_clock ('MOB')
     WRITE(stdout,'(5x)')
     ! 
-    !! IF IBTE we want the SRTA solution to be the first iteration of IBTE
-    !IF (iterative_bte) THEN
-    !  Fi_all(:,:,:,:) = zero
-    !  IF ( ABS(efcb(1)) > eps ) Fi_allcb(:,:,:,:) = zero
-    !  ! 
-    !  DO itemp = 1, nstemp
-    !    DO ik = 1, nkf
-    !      ikk = 2 * ik - 1
-    !      IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
-    !        DO ibnd = 1, ibndmax-ibndmin+1
-    !          IF ( vme ) THEN
-    !            vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
-    !          ELSE
-    !            vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
-    !          ENDIF
-    !          tau = one / inv_tau_all(itemp,ibnd,ik+lower_bnd-1)
-    !          Fi_all(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau
-    !          IF ( ABS(efcb(itemp)) > eps ) THEN
-    !            tau = one / inv_tau_allcb(itemp,ibnd,ik+lower_bnd-1)
-    !            Fi_allcb(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau 
-    !          ENDIF
-    !          !
-    !        ENDDO
-    !      ENDIF
-    !    ENDDO ! kpoints
-    !    !DBSP
-    !    print*,'itemp ',itemp,' ',sum(Fi_all(:,:,:,itemp)), sum(inv_tau_all)
-    !    print*,'itemp cb',itemp,' ',sum(Fi_allcb(:,:,:,itemp)), sum(inv_tau_allcb)
-    !  ENDDO ! itemp
-    !  CALL mp_sum( Fi_all, world_comm )
-    !  IF ( ABS(efcb(1)) > eps ) CALL mp_sum( Fi_allcb, world_comm )
-    !ENDIF
     !
     RETURN
     !

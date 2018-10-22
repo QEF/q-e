@@ -1,6 +1,6 @@
   !
+  ! Copyright (C) 2016-2019 Samuel Ponce', Roxana Margine, Feliciano Giustino
   ! Copyright (C) 2010-2016 Samuel Ponce', Roxana Margine, Carla Verdi, Feliciano Giustino  
-  ! Copyright (C) 2016-2018 Samuel Ponce'
   ! 
   ! This file is distributed under the terms of the GNU General Public         
   ! License. See the file `LICENSE' in the root directory of the               
@@ -17,7 +17,8 @@
   CONTAINS
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE iterativebte( iter, iq, ef0, efcb, error_h, error_el, first_cycle, first_time ) 
+    SUBROUTINE ibte( nind, etf_all, vkk_all, wkf_all, trans_prob, ef0, &
+                     sparse_q, sparse_k, sparse_i, sparse_j, sparse_t ) 
     !-----------------------------------------------------------------------
     !!
     !!  This subroutine computes the scattering rate with the iterative BTE
@@ -30,47 +31,60 @@
     USE io_global,     ONLY : stdout
     USE cell_base,     ONLY : alat, at, omega, bg
     USE phcom,         ONLY : nmodes
-    USE epwcom,        ONLY : fsthick, & 
+    USE epwcom,        ONLY : fsthick, mob_maxiter,  & 
                               eps_acustic, degaussw, nstemp, & 
                               system_2d, int_mob, ncarrier, restart, restart_freq,&
                               mp_mesh_k, nkf1, nkf2, nkf3, vme, broyden_beta
     USE pwcom,         ONLY : ef 
     USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, wkf, dmef, vmef, & 
-                              wf, wqf, xkf, epf17, nqtotf, nkqtotf, inv_tau_all, xqf, & 
-                              F_current, Fi_all, F_SERTA, F_currentcb, Fi_allcb, &
-                              F_SERTAcb, inv_tau_allcb, BZtoIBZ, s_BZtoIBZ, map_rebal
+                              wf, xkf, epf17, nqtotf, nkqtotf, & 
+                              map_rebal, xqf, wqf, nqf
     USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                               ixkqf_tr, s_BZtoIBZ_full
     USE constants_epw, ONLY : zero, one, two, pi, kelvin2eV, ryd2ev, & 
-                              electron_SI, bohr2ang, ang2cm, hbarJ, eps6
+                              electron_SI, bohr2ang, ang2cm, hbarJ, eps6, eps8, eps10, &
+                              eps2, eps4, eps80, eps160
     USE mp,            ONLY : mp_barrier, mp_sum, mp_bcast
     USE mp_global,     ONLY : inter_pool_comm, world_comm
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE io_eliashberg, ONLY : kpmq_map
+    USE printing,      ONLY : print_serta, print_serta_sym, print_mob, print_mob_sym
+    USE io_scattering, ONLY : Fin_write, Fin_read
     USE noncollin_module, ONLY : noncolin
+    USE io_files,      ONLY : diropn
     !
     IMPLICIT NONE
     !
-    LOGICAL, INTENT (INOUT) :: first_time
-    LOGICAL, INTENT (INOUT) :: first_cycle
-    !! Use to determine weather this is the first cycle after restart
-    INTEGER, INTENT(IN) :: iter
-    !! Iteration number
-    INTEGER, INTENT(IN) :: iq
-    !! Q-point index
+    INTEGER, INTENT(IN) :: nind
+    !! Total number of elements per cpu
+    INTEGER, INTENT(IN) :: sparse_q(nind)
+    !! Q-point mapping index
+    INTEGER, INTENT(IN) :: sparse_k(nind)
+    !! K-point mapping index
+    INTEGER, INTENT(IN) :: sparse_i(nind)
+    !! Band mapping index
+    INTEGER, INTENT(IN) :: sparse_j(nind)
+    !! Band mapping index
+    INTEGER, INTENT(IN) :: sparse_t(nind)
+    !! Temperature mapping index
+    REAL(KIND=DP), INTENT(IN) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    !! Eigenenergies
+    REAL(KIND=DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    !! Velocity of k
+    REAL(KIND=DP), INTENT(IN) :: wkf_all(nkqtotf/2)
+    !! Weight of k
+    REAL(KIND=DP), INTENT(IN) :: trans_prob(nind)
+    !! Transition probability
     REAL(KIND=DP), INTENT(IN) :: ef0(nstemp)
-    !! Fermi level for the temperature itemp
-    REAL(KIND=DP), INTENT(IN) :: efcb(nstemp)
-    !! Second Fermi level for the temperature itemp. Could be unused (0).
-    REAL(KIND=DP), INTENT(out) :: error_h
-    !! Error on the hole mobility made in the last iterative step.
-    REAL(KIND=DP), INTENT(out) :: error_el
-    !! Error on the electron mobility made in the last iterative step.
-    !
+    !! The Fermi level 
+    ! 
     ! Local variables
-    INTEGER :: i, iiq
+    LOGICAL :: exst
+    INTEGER :: iter, ind, ierr
+    !! Iteration number in the IBTE
+    INTEGER :: i, iiq, iq
     !! Cartesian direction index 
     INTEGER :: j
     !! Cartesian direction index 
@@ -104,6 +118,12 @@
     !! Number of points in the BZ corresponding to a point in IBZ 
     INTEGER :: BZtoIBZ_tmp(nkf1*nkf2*nkf3)
     !! Temporary mapping
+    INTEGER :: BZtoIBZ(nkf1*nkf2*nkf3)
+    !! BZ to IBZ mapping
+    INTEGER :: s_BZtoIBZ(3,3,nkf1*nkf2*nkf3)
+    !! symmetry 
+    INTEGER :: n
+    !! Use for averaging
     ! 
     REAL(KIND=DP) :: tau
     !! Relaxation time
@@ -111,933 +131,656 @@
     !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$
     REAL(KIND=DP) :: ekq
     !! Energy relative to Fermi level: $$\varepsilon_{m\mathbf{k+q}}-\varepsilon_F$$
-    REAL(KIND=DP) :: g2
-    !! Electron-phonon matrix elements squared (g2 is Ry^2) 
-    REAL(KIND=DP) :: etemp
-    !! Temperature in Ry (this includes division by kb)
-    REAL(KIND=DP) :: w0g1
-    !! $$ \delta[\varepsilon_{nk} - \varepsilon_{mk+q} + \omega_{q}] $$ 
-    REAL(KIND=DP) :: w0g2 
-    !! $$ \delta[\varepsilon_{nk} - \varepsilon_{mk+q} - \omega_{q}] $$
-    REAL(KIND=DP) :: inv_wq 
-    !! Inverse phonon frequency. Defined for efficiency reasons.
-    REAL(KIND=DP) :: inv_etemp
-    !! Invese temperature inv_etemp = 1/etemp. Defined for efficiency reasons.
-    REAL(KIND=DP) :: g2_tmp 
-    !! Used to set component to 0 if the phonon freq. is too low. This is defined
-    !! for efficiency reasons as if statement should be avoided in inner-most loops.
-    REAL(KIND=DP) :: inv_degaussw
-    !! 1.0/degaussw. Defined for efficiency reasons. 
-    REAL(KIND=DP) :: wq
-    !! Phonon frequency $$\omega_{q\nu}$$ on the fine grid.  
-    REAL(KIND=DP) :: wgq
-    !! Bose-Einstein occupation function $$n_{q\nu}$$
-    REAL(KIND=DP) :: fmkq
-    !! Fermi-Dirac occupation function $$f_{m\mathbf{k+q}}$$
-    REAL(KIND=DP) :: trans_prob
-    !! Transition probability function
     REAL(KIND=DP) :: vkk(3,ibndmax-ibndmin+1)
     !! Electronic velocity $$v_{n\mathbf{k}}$$
-    REAL(KIND=DP) :: dfnk
-    !! Derivative Fermi distribution $$-df_{nk}/dE_{nk}$$
-    REAL(KIND=DP) :: carrier_density
-    !! Carrier density [nb of carrier per unit cell]
-    REAL(KIND=DP) :: fnk
-    !! Fermi-Dirac occupation function
-    REAL(KIND=DP) :: mobility
-    !! Sum of the diagonalized mobilities [cm^2/Vs] 
-    REAL(KIND=DP) :: mobility_xx
-    !! Mobility along the xx axis after diagonalization [cm^2/Vs] 
-    REAL(KIND=DP) :: mobility_yy
-    !! Mobility along the yy axis after diagonalization [cm^2/Vs] 
-    REAL(KIND=DP) :: mobility_zz
-    !! Mobility along the zz axis after diagonalization [cm^2/Vs]
-    REAL(KIND=DP) :: tdf_sigma(9)
-    !! Transport distribution function
-    REAL(KIND=DP) :: Sigma(9,nstemp)
-    !! Electrical conductivity
-    REAL(KIND=DP) :: sigma_up(3,3)
-    !! Conductivity matrix in upper-triangle
-    REAL(KIND=DP) :: sigma_eig(3)
-    !! Eigenvalues from the diagonalized conductivity matrix
-    REAL(KIND=DP) :: sigma_vect(3,3)
-    !! Eigenvectors from the diagonalized conductivity matrix
-    REAL(KIND=DP) :: inv_cell
-    !! Inverse of the volume in [Bohr^{-3}]
     REAL(kind=DP) :: xkf_all(3,nkqtotf)
     !! Collect k-point coordinate (and k+q) from all pools in parallel case
-    REAL(kind=DP) :: xkf_red(3,nkqtotf/2)
-    !! Collect k-point coordinate from all pools in parallel case
-    REAL(kind=DP) :: xxq(3)
-    !! Current q-point 
-    REAL(kind=DP) :: xkk(3)
-    !! Current k-point on the fine grid
-    REAL(kind=DP) :: Fi_cart(3)
-    !! Cartesian Fi_all 
-    REAL(kind=DP) :: Fi_rot(3)
-    !! Rotated Fi_all by the symmetry operation
-    REAL(kind=DP) :: v_rot(3)
-    !! Rotated velocity by the symmetry operation
-    REAL(kind=DP) :: vk_cart(3)
-    !! veloctiy in cartesian coordinate
-    REAL(kind=DP) :: sa(3,3), sb(3,3), sr(3,3)
+    REAL(kind=DP) :: F_SERTA(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    !! SERTA solution
+    REAL(kind=DP) :: F_in(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    !! In solution for iteration i
+    REAL(kind=DP) :: F_out(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    !! In solution for iteration i
+    REAL(kind=DP) :: F_rot(3)
+    !! Rotated Fi_in by the symmetry operation 
+    REAL(kind=DP) :: error(nstemp)
+    !! Error in the hole mobility
+    REAL(kind=DP) :: av_mob_old(nstemp)
+    !! Average hole mobility from previous iteration
+    REAL(kind=DP) :: av_mob(nstemp)
+    !! Average hole mobility
+    REAL(kind=DP) :: tmp(ibndmax-ibndmin+1, nkqtotf/2, nstemp)
+    !REAL(kind=DP) :: tmp2(ibndmax-ibndmin+1, ibndmax-ibndmin+1,nstemp, nkqtotf/2, nqf)
+    REAL(kind=DP) :: tmp2
+    !! Used for the averaging
+    REAL(kind=DP) :: tmp3(ibndmax-ibndmin+1)
+    !! Used for the averaging
+    REAL(kind=DP) :: ekk2
+    !! Use for averaging
+  
     !
-    !
-    REAL(KIND=DP), EXTERNAL :: DDOT
-    !! Dot product function
-    REAL(KIND=DP), EXTERNAL :: efermig
-    !! Function that returns the Fermi energy
-    REAL(KIND=DP), EXTERNAL :: wgauss
-    !! Compute the approximate theta function. Here computes Fermi-Dirac 
-    REAL(KIND=DP), EXTERNAL :: w0gauss
-    !! The derivative of wgauss:  an approximation to the delta function  
     REAL(kind=DP) :: xkf_tmp (3, nkqtotf)
     !! Temporary k-point coordinate (dummy variable)
     REAL(kind=DP) :: wkf_tmp(nkqtotf)
     !! Temporary k-weights (dummy variable)
     ! 
-    CALL start_clock ('MOBITER')
-    !
-    inv_cell = 1.0d0/omega
-    ! for 2d system need to divide by area (vacuum in z-direction)
-    IF ( system_2d ) &
-       inv_cell = inv_cell * at(3,3) * alat
-    !
-    ! 
     ! Gather all the k-point coordinate from all the pools
-    xkf_all(:,:) = zero 
-    xkf_red(:,:) = zero 
-    ! 
+    xkf_all(:,:) = zero
+    av_mob(:)    = zero
 #ifdef __MPI
-    ! 
-    CALL poolgather2 ( 3, nkqtotf, nkqf, xkf, xkf_all) 
+    CALL poolgather2 ( 3, nkqtotf, nkqf, xkf, xkf_all)
 #else
-    !
     xkf_all = xkf
+#endif
     !
-#endif 
-    ! 
-    IF (first_time) THEN
-      first_time = .FALSE.
-      DO itemp = 1, nstemp
-        !   
-        DO ik = 1, nkf
-          !
-          ikk = 2 * ik - 1
-          ikq = ikk + 1
-          ! 
-          IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
-            DO ibnd = 1, ibndmax-ibndmin+1
-              !
-              ! vkk(3,nbnd) - velocity for k
-              IF ( vme ) THEN
-                ! vmef is in units of Ryd * bohr
-                vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
-              ELSE
-                ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
-                ! 1/m  = 2 in Rydberg atomic units
-                ! dmef is in units of 1/a.u. (where a.u. is bohr)
-                ! v_(k,i) is in units of Ryd * a.u.
-                vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd, ikk))
-              ENDIF
-              ! 
-              ! The inverse of SERTA 
-              tau = one / inv_tau_all(itemp,ibnd,ik+lower_bnd-1)
-              F_SERTA(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau
-              !
-              ! In this case we are also computing the scattering rate for another Fermi level position
-              ! This is used to compute both the electron and hole mobility at the same time.  
-              IF ( ABS(efcb(itemp)) > eps6 ) THEN
-                tau = one / inv_tau_allcb(1,ibnd,ik+lower_bnd-1)
-                F_SERTAcb(:,ibnd,ik+lower_bnd-1,itemp) = vkk(:,ibnd) * tau
-              ENDIF
-              !
-            ENDDO ! ibnd
-          ENDIF
-        ENDDO ! ik 
-      ENDDO ! itemp
+   ! print*,'mp_mesh_k ',mp_mesh_k
+   ! print*,'mpime ',mpime
+   ! print*,'nind ',nind
+   ! print*,'allocated ',ALLOCATED(ixkqf_tr)
+   ! print*,'allocated s_BZtoIBZ_full',ALLOCATED(s_BZtoIBZ_full)
+  
+    ! Deal with symmetries
+    IF (mp_mesh_k) THEN
+      ALLOCATE(ixkqf_tr(nind), STAT=ierr)
+      ALLOCATE(s_BZtoIBZ_full(3,3,nind), STAT=ierr)
+      BZtoIBZ(:) = 0
+      s_BZtoIBZ(:,:,:) = 0
+      ixkqf_tr(:) = 0
+      !call move_alloc(test1, s_BZtoIBZ_full)
+      s_BZtoIBZ_full(:,:,:) = 0
       ! 
-      Fi_all = F_SERTA
-      CALL mp_sum( Fi_all, world_comm )
-      IF ( ABS(efcb(1)) > eps6 ) THEN
-        Fi_allcb = F_SERTAcb 
-        CALL mp_sum( Fi_allcb, world_comm )
+      IF ( mpime .eq. ionode_id ) THEN
+        ! 
+        CALL set_sym_bl( )
+        !
+        ! What we get from this call is BZtoIBZ
+        CALL kpoint_grid_epw ( nrot, time_reversal, .false., s, t_rev, bg, nkf1*nkf2*nkf3, &
+                   nkf1,nkf2,nkf3, nkqtotf_tmp, xkf_tmp, wkf_tmp,BZtoIBZ,s_BZtoIBZ)
+        ! 
+        BZtoIBZ_tmp(:) = 0
+        DO ikbz=1, nkf1*nkf2*nkf3
+          BZtoIBZ_tmp(ikbz) = map_rebal( BZtoIBZ( ikbz ) )
+        ENDDO
+        BZtoIBZ(:) = BZtoIBZ_tmp(:)
+        ! 
+      ENDIF ! mpime
+      CALL mp_bcast( s_BZtoIBZ, ionode_id, inter_pool_comm )
+      CALL mp_bcast( BZtoIBZ, ionode_id, inter_pool_comm )
+      ! 
+      DO ind=1, nind
+        iq    = sparse_q( ind )
+        ik    = sparse_k( ind )
+        !print*,'ind ik ',ind, ik
+        ! 
+        CALL kpmq_map( xkf_all(:, 2*ik-1 ), xqf (:, iq), +1, nkq_abs )
+        s_BZtoIBZ_full(:,:,ind) = s_BZtoIBZ(:,:,nkq_abs)
+        ixkqf_tr(ind) = BZtoIBZ(nkq_abs)
+        !print*,'ind iq ik ixkqf_tr ',ind, iq, ik, ixkqf_tr(ind), s_BZtoIBZ_full(1,1,ind)
+      ENDDO
+      ! 
+    ENDIF
+    !
+    ! First computes the SERTA solution as the first step of the IBTE
+    F_SERTA(:,:,:,:) = zero
+    tmp(:,:,:) = zero
+    !tmp2(:,:,:,:,:) = zero
+    ! 
+    DO ind=1, nind
+      iq    = sparse_q( ind )
+      ik    = sparse_k( ind )
+      ibnd  = sparse_i( ind )
+      jbnd  = sparse_j( ind )
+      itemp = sparse_t( ind )
+      ! 
+      tmp(ibnd, ik, itemp) = tmp(ibnd, ik, itemp)  + trans_prob(ind)
+      !tmp2(jbnd, ibnd, itemp, ik, iq)  = trans_prob(ind)
+  
+      !IF (ik==2 .and. ibnd ==2 .and. itemp ==2) print*,'ind tmp ', ind, tmp(ibnd, ik, itemp)
+  
+      !IF (ik==2) print*,ind, trans_prob(ind)
+      !print*,'ind iq ik ibnd jbnd itemp ',ind, iq, ik, ibnd, jbnd, itemp
+      !print*,'tmp ',tmp(ibnd, ik, itemp)
+    ENDDO
+    !print*,'ind=10, iq==1, ik==2, ibnd=2, jbnd=2, itemp==1 ', trans_prob(10)
+    ! 
+    CALL mp_sum(tmp, world_comm)
+    ! 
+    ! Average over degenerate eigenstates:
+    WRITE(stdout,'(5x,"Average over degenerate eigenstates is performed")')
+    ! 
+    tmp3(:) = zero
+    DO itemp=1, nstemp
+      DO ik = 1, nkqtotf/2
+        ! 
+        DO ibnd = 1, ibndmax-ibndmin+1
+          ekk = etf_all (ibndmin-1+ibnd, ik)
+          n = 0
+          tmp2 = 0.0_DP
+          DO jbnd = 1, ibndmax-ibndmin+1
+            ekk2 = etf_all (ibndmin-1+jbnd, ik)
+            IF ( ABS(ekk2-ekk) < eps6 ) THEN
+              n = n + 1
+              tmp2 =  tmp2 + tmp(ibnd,ik,itemp)
+            ENDIF
+            ! 
+          ENDDO ! jbnd
+          tmp3(ibnd) = tmp2 / float(n)
+          !
+        ENDDO ! ibnd
+         tmp(:,ik,itemp) = tmp3(:)
+        ! 
+      ENDDO ! nkqtotf  
+    ENDDO ! itemp
+    ! 
+    !
+    DO itemp=1, nstemp 
+      DO ik=1, nkqtotf/2
+        DO ibnd=1, ibndmax-ibndmin+1
+          IF ( ABS(tmp(ibnd, ik, itemp)) > eps160 ) THEN
+            F_SERTA(:, ibnd, ik, itemp) = vkk_all(:,ibnd,ik) / ( two * tmp(ibnd,ik,itemp) )  
+          ENDIF
+        ENDDO
+        !IF (itemp==2) print*,'ik ',ik, SUM(F_SERTA(:,:,ik,2)), SUM(vkk_all(:,:,ik))
+      ENDDO
+    ENDDO
+    !  
+    !print*,'F_SERTA ',SUM(F_SERTA)
+    !print*,'trans_prob ',trans_prob(1:5)
+    !print*,'F_SERTA before ',F_SERTA(:,1,1,1)
+    ! Now compute and print the electron and hole mobility of SERTA
+    IF (mp_mesh_k) THEN
+      ! Use k-point symmetry
+      CALL print_serta_sym(F_SERTA, BZtoIBZ, s_BZtoIBZ, vkk_all, etf_all, wkf_all, ef0)
+    ELSE 
+      ! No symmetry
+      CALL print_serta(F_SERTA, vkk_all, etf_all, wkf_all, ef0)
+    ENDIF
+    !STOP
+    !print*,'F_SERTA after ',F_SERTA(:,1,1,1)
+    ! 
+    ! NOW solve IBTE
+  
+    ! Read from file
+    iter = 1
+    F_in(:,:,:,:) = zero
+    IF (ncarrier > 1E5) THEN
+      CALL Fin_read(iter, F_in, av_mob_old, .TRUE.)
+    ENDIF
+    ! 
+    IF (ncarrier < -1E5) THEN
+      CALL Fin_read(iter, F_in, av_mob_old, .FALSE.)
+    ENDIF
+    !write(*,*)'F_in ',sum(F_in)
+    !write(*,*)'av_mob_old ',av_mob_old
+    ! 
+    ! If it is the first time, put to SERTA
+    IF (iter == 1) THEN
+      F_in(:,:,:,:) = F_SERTA(:,:,:,:)
+      av_mob_old(:) = 0.0
+    ENDIF
+    ! 
+    F_out(:,:,:,:) = zero
+    error(:) = 1000
+    ! 
+    ! Now compute the Iterative solution for electron or hole
+    WRITE(stdout,'(5x,a)') ' '
+    WRITE(stdout,'(5x,a)') repeat('=',67)
+    WRITE(stdout,'(5x,"Start solving iterative Boltzmann Transport Equation")')
+    WRITE(stdout,'(5x,a/)') repeat('=',67)
+    !  
+    DO WHILE (MAXVAL(error) > eps6)  
+      WRITE(stdout,'(/5x,"Iteration number:", i10," "/)') iter
+      ! 
+      IF (iter > mob_maxiter) THEN
+        WRITE(stdout,'(5x,a)') repeat('=',67)
+        WRITE(stdout,'(5x,"The iteration reached the maximum but did not converge.")')
+        WRITE(stdout,'(5x,a/)') repeat('=',67)
+        exit
       ENDIF
       ! 
       IF (mp_mesh_k) THEN
-        IF ( .not. ALLOCATED(ixkqf_tr) ) ALLOCATE(ixkqf_tr(nkf,nqtotf))
-        IF ( .not. ALLOCATED(s_BZtoIBZ_full) ) ALLOCATE(s_BZtoIBZ_full(3,3,nkf,nqtotf))
-        ixkqf_tr(:,:) = 0
-        s_BZtoIBZ_full(:,:,:,:) = 0
-        ! 
-        IF ( mpime .eq. ionode_id ) THEN
-          ! 
-          CALL set_sym_bl( )
-          !
-          ! What we get from this call is BZtoIBZ
-          CALL kpoint_grid_epw ( nrot, time_reversal, .false., s, t_rev, bg, nkf1*nkf2*nkf3, &
-                     nkf1,nkf2,nkf3, nkqtotf_tmp, xkf_tmp, wkf_tmp,BZtoIBZ,s_BZtoIBZ)
-          ! 
-          DO ik = 1, nkqtotf/2
-            ikk = 2 * ik - 1
-            xkf_red(:,ik) = xkf_all(:,ikk)
-          ENDDO 
+        ! Use k-point symmetry
+        DO ind=1, nind
           !  
-          BZtoIBZ_tmp(:) = 0
-          DO ikbz=1, nkf1*nkf2*nkf3
-            BZtoIBZ_tmp(ikbz) = map_rebal( BZtoIBZ( ikbz ) )
-          ENDDO
-          BZtoIBZ(:) = BZtoIBZ_tmp(:)
+          F_rot(:) = zero
+          iq    = sparse_q( ind )
+          ik    = sparse_k( ind )
+          ibnd  = sparse_i( ind )
+          jbnd  = sparse_j( ind )
+          itemp = sparse_t( ind )
           ! 
-        ENDIF ! mpime
-        CALL mp_bcast( xkf_red, ionode_id, inter_pool_comm )
-        CALL mp_bcast( s_BZtoIBZ, ionode_id, inter_pool_comm )
-        CALL mp_bcast( BZtoIBZ, ionode_id, inter_pool_comm )
-        ! 
-        DO ik = 1, nkf
-          !
-          DO iiq=1, nqtotf
-            ! 
-            CALL kpmq_map( xkf_red(:,ik+lower_bnd-1), xqf (:, iiq), +1, nkq_abs )
-            ! 
-            ! We want to map k+q onto the full fine k and keep the symm that bring
-            ! that point onto the IBZ one.
-            s_BZtoIBZ_full(:,:,ik,iiq) = s_BZtoIBZ(:,:,nkq_abs)  
-            !
-            ixkqf_tr(ik,iiq) = BZtoIBZ(nkq_abs) 
-            ! 
-          ENDDO ! q-loop
-        ENDDO ! k-loop
-      ENDIF ! mp_mesh_k
-      ! 
-    ENDIF ! first_time
-    ! 
-    !print*,'Start iterative -----------------', iq
-    !print*,'Fi_all ',SUM(Fi_all)
-    !print*,'Fi_allcb ',SUM(Fi_allcb)
-    !print*,'F_current ',sum(F_current)
-    !print*,'F_currentcb ',sum(F_currentcb)
-    !print*,'F_SERTA ',sum(F_SERTA)
-    !print*,'F_SERTAcb ',sum(F_SERTAcb)
-    !
-    ! In the case of a restart do not add the first step
-    IF (first_cycle) THEN
-      first_cycle = .FALSE.
-    ELSE
-      DO itemp = 1, nstemp
-        etemp = transp_temp(itemp)
-        inv_etemp = 1.0/etemp
-        inv_degaussw = 1.0/degaussw
-        ! 
-        IF(mp_mesh_k) THEN ! Use IBZ k-point grid
-          !
-          DO ik = 1, nkf
-            !
-            ikk = 2 * ik - 1
-            ikq = ikk + 1
-            ! 
-            ! We are not consistent with ef from ephwann_shuffle but it should not 
-            ! matter if fstick is large enough.
-            IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-                 ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
-              !
-              DO imode = 1, nmodes
-                !
-                ! the phonon frequency and bose occupation
-                wq = wf (imode, iq)
-                !
-                ! SP : Avoid if statement in inner loops
-                ! the coupling from Gamma acoustic phonons is negligible
-                IF ( wq .gt. eps_acustic ) THEN
-                  inv_wq = 1.0/( two * wq )
-                  wgq    = wgauss( -wq*inv_etemp, -99)
-                  wgq    = wgq / ( one - two * wgq )
-                  g2_tmp = 1.0
-                ELSE
-                  inv_wq = 0.0
-                  wgq    = 0.0
-                  g2_tmp = 0.0
-                ENDIF
-                !
-                DO ibnd = 1, ibndmax-ibndmin+1
-                  !
-                  !  energy at k (relative to Ef)
-                  ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
-                  !
-                  DO jbnd = 1, ibndmax-ibndmin+1
-                    !
-                    !  energy and fermi occupation at k+q
-                    ekq = etf (ibndmin-1+jbnd, ikq) - ef0(itemp)
-                    fmkq = wgauss( -ekq*inv_etemp, -99)
-                    !
-                    ! here we take into account the zero-point sqrt(hbar/2M\omega)
-                    ! with hbar = 1 and M already contained in the eigenmodes
-                    ! g2 is Ry^2, wkf must already account for the spin factor
-                    !
-                    g2 = (abs(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq * g2_tmp
-                    !
-                    ! delta[E_k - E_k+q + w_q] and delta[E_k - E_k+q - w_q]
-                    w0g1 = w0gauss( (ekk-ekq+wq) * inv_degaussw, 0) * inv_degaussw
-                    w0g2 = w0gauss( (ekk-ekq-wq) * inv_degaussw, 0) * inv_degaussw
-                    !
-                    trans_prob = pi * wqf(iq) * g2 * & 
-                                 ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
-                    !
-                    CALL cryst_to_cart(1,Fi_all(:,jbnd,ixkqf_tr(ik,iq),itemp),at,-1)
-  
-                    CALL dgemv( 'n', 3, 3, 1.d0,&
-                        REAL(s_BZtoIBZ_full(:,:,ik,iq), kind=DP), 3, Fi_all(:,jbnd,ixkqf_tr(ik,iq),itemp),1 ,0.d0 , Fi_rot(:), 1 )       
-                    CALL cryst_to_cart(1,Fi_all(:,jbnd,ixkqf_tr(ik,iq),itemp),bg,1)
-                    CALL cryst_to_cart(1,Fi_rot,bg,1)
-                    ! 
-                    F_current(:,ibnd,ik+lower_bnd-1,itemp) = F_current(:,ibnd,ik+lower_bnd-1,itemp) +&
-                                 two * trans_prob * Fi_rot
-                    ! 
-                  ENDDO !jbnd
-                  !
-                  IF ( ABS(efcb(itemp)) > eps6 ) THEN
-                    ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
-                    !
-                    DO jbnd = 1, ibndmax-ibndmin+1
-                      !
-                      !  energy and fermi occupation at k+q
-                      ekq = etf (ibndmin-1+jbnd, ikq) - efcb(itemp)
-                      fmkq = wgauss( -ekq*inv_etemp, -99)
-                      !
-                      ! here we take into account the zero-point sqrt(hbar/2M\omega)
-                      ! with hbar = 1 and M already contained in the eigenmodes
-                      ! g2 is Ry^2, wkf must already account for the spin factor
-                      !
-                      g2 = (abs(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq * g2_tmp
-                      !
-                      ! delta[E_k - E_k+q + w_q] and delta[E_k - E_k+q - w_q]
-                      w0g1 = w0gauss( (ekk-ekq+wq) * inv_degaussw, 0) * inv_degaussw
-                      w0g2 = w0gauss( (ekk-ekq-wq) * inv_degaussw, 0) * inv_degaussw
-                      !
-                      trans_prob = pi * wqf(iq) * g2 * &
-                                   ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
-                      !
-                      CALL cryst_to_cart(1,Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),at,-1)
-
-                      CALL dgemv( 'n', 3, 3, 1.d0,&
-                          REAL(s_BZtoIBZ_full(:,:,ik,iq), kind=DP), 3, &
-                          Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),1 ,0.d0 , Fi_rot(:), 1 )
-                      CALL cryst_to_cart(1,Fi_allcb(:,jbnd,ixkqf_tr(ik,iq),itemp),bg,1)
-                      CALL cryst_to_cart(1,Fi_rot,bg,1)
-                      ! 
-                      F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) = F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) +&
-                                   two * trans_prob * Fi_rot
-                      ! 
-                    ENDDO !jbnd
-                    ! 
-                  ENDIF !  efcb
-                  !
-                ENDDO !ibnd
-                !
-              ENDDO !imode
-              !
-            ENDIF ! endif  fsthick
-            !
-          ENDDO ! end loop on k
+          !print*,'before F_in ',ind,F_in(:, jbnd, ixkqf_tr(ind), itemp)
+          CALL cryst_to_cart(1,F_in(:, jbnd, ixkqf_tr(ind), itemp), at, -1)
+          !print*,'after F_in ',ind,F_in(:, jbnd, ixkqf_tr(ind), itemp)
+          CALL dgemv( 'n', 3, 3, 1.d0,&
+             REAL(s_BZtoIBZ_full(:,:,ind), kind=DP), 3, F_in(:, jbnd, ixkqf_tr(ind), itemp),1 ,0.d0 , F_rot(:), 1 )
+          !print*,'before F_rot ',ind, F_rot
+          CALL cryst_to_cart(1, F_in(:, jbnd, ixkqf_tr(ind), itemp), bg, 1)
+          CALL cryst_to_cart(1,F_rot,bg,1)
+     
+          !print*,'after F_rot ',ind,F_rot(:) 
+          F_out(:, ibnd, ik, itemp) = F_out(:, ibnd, ik, itemp) + two * trans_prob(ind) * F_rot(:)
           ! 
-        ELSE ! Now the case with FULL k-point grid. 
-          ! We need to recast xkf_all with only the full k point (not all k and k+q)
-          DO ik = 1, nkqtotf/2
-            ikk = 2 * ik - 1
-            xkf_red(:,ik) = xkf_all(:,ikk)
-          ENDDO
-          ! We do some code dupplication wrt to above to avoid branching in a loop.
+        ENDDO
+      ELSE
+        DO ind=1, nind
+          !  
+          iq    = sparse_q( ind )
+          ik    = sparse_k( ind )
+          ibnd  = sparse_i( ind )
+          jbnd  = sparse_j( ind )
+          itemp = sparse_t( ind )
+          ! We need F_in at k+q point
+          CALL kpmq_map( xkf_all(:, 2*ik-1 ), xqf (:, iq), +1, nkq_abs )  
           ! 
-          DO ik = 1, nkf
-            !
-            ikk = 2 * ik - 1
-            ikq = ikk + 1
-            ! 
-            ! We need to find F_{mk+q}^i (Fi_all). The grids need to be commensurate !
-            !CALL ktokpmq ( xk (:, ik), xq, +1, ipool, nkq, nkq_abs )
-            xxq = xqf (:, iq)
-            xkk = xkf (:, ikk)
-            CALL cryst_to_cart (1, xkk, bg, +1)
-            CALL cryst_to_cart (1, xxq, bg, +1)
-  
-            !xkq = xkk + xxq
-            !
-            ! Note: In this case, Fi_all contains all the k-point across all pools. 
-            ! Therefore in the call below, ipool and nkq are dummy variable.
-            ! We only want the global index for k+q ==> nkq_abs  
-            CALL ktokpmq_fine ( xkf_red ,xkk, xxq, +1, ipool, nkq, nkq_abs )
-            ! 
-            ! We are not consistent with ef from ephwann_shuffle but it should not 
-            ! matter if fstick is large enough.
-            IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
-                 ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
-              !
-              DO imode = 1, nmodes
-                !
-                ! the phonon frequency and bose occupation
-                wq = wf (imode, iq)
-                !
-                ! SP : Avoid if statement in inner loops
-                ! the coupling from Gamma acoustic phonons is negligible
-                IF ( wq .gt. eps_acustic ) THEN
-                  inv_wq = 1.0/( two * wq )
-                  wgq    = wgauss( -wq*inv_etemp, -99)
-                  wgq    = wgq / ( one - two * wgq )
-                  g2_tmp = 1.0
-                ELSE
-                  inv_wq = 0.0
-                  wgq    = 0.0
-                  g2_tmp = 0.0
-                ENDIF
-                !
-                DO ibnd = 1, ibndmax-ibndmin+1
-                  !
-                  !  energy at k (relative to Ef)
-                  ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
-                  !
-                  DO jbnd = 1, ibndmax-ibndmin+1
-                    !
-                    !  energy and fermi occupation at k+q
-                    ekq = etf (ibndmin-1+jbnd, ikq) - ef0(itemp)
-                    fmkq = wgauss( -ekq*inv_etemp, -99)
-                    !
-                    ! here we take into account the zero-point sqrt(hbar/2M\omega)
-                    ! with hbar = 1 and M already contained in the eigenmodes
-                    ! g2 is Ry^2, wkf must already account for the spin factor
-                    !
-                    g2 = (abs(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq * g2_tmp
-                    !
-                    ! delta[E_k - E_k+q + w_q] and delta[E_k - E_k+q - w_q]
-                    w0g1 = w0gauss( (ekk-ekq+wq) * inv_degaussw, 0) * inv_degaussw
-                    w0g2 = w0gauss( (ekk-ekq-wq) * inv_degaussw, 0) * inv_degaussw
-                    !
-                    trans_prob = pi * wqf(iq) * g2 * &
-                                 ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
-                    !
-                    ! IBTE
-                    F_current(:,ibnd,ik+lower_bnd-1,itemp) = F_current(:,ibnd,ik+lower_bnd-1,itemp) +&
-                                                          two * trans_prob * Fi_all(:,jbnd,nkq_abs,itemp)
-                    ! 
-                  ENDDO !jbnd
-                  !
-                  IF ( ABS(efcb(itemp)) > eps6 ) THEN
-                    !  energy at k (relative to Ef)
-                    ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
-                    !
-                    DO jbnd = 1, ibndmax-ibndmin+1
-                      !
-                      !  energy and fermi occupation at k+q
-                      ekq = etf (ibndmin-1+jbnd, ikq) - efcb(itemp)
-                      fmkq = wgauss( -ekq*inv_etemp, -99)
-                      !
-                      ! here we take into account the zero-point sqrt(hbar/2M\omega)
-                      ! with hbar = 1 and M already contained in the eigenmodes
-                      ! g2 is Ry^2, wkf must already account for the spin factor
-                      !
-                      g2 = (abs(epf17(jbnd, ibnd, imode, ik))**two) * inv_wq * g2_tmp
-                      !
-                      ! delta[E_k - E_k+q + w_q] and delta[E_k - E_k+q - w_q]
-                      w0g1 = w0gauss( (ekk-ekq+wq) * inv_degaussw, 0) * inv_degaussw
-                      w0g2 = w0gauss( (ekk-ekq-wq) * inv_degaussw, 0) * inv_degaussw
-                      !
-                      trans_prob = pi * wqf(iq) * g2 * &
-                                   ( (fmkq+wgq)*w0g1 + (one-fmkq+wgq)*w0g2 )
-                      !
-                      ! IBTE
-                      F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) = F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) +&
-                                                            two * trans_prob * Fi_allcb(:,jbnd,nkq_abs,itemp)
-                      ! 
-                    ENDDO !jbnd
-                    !
-                  ENDIF
-                  ! 
-                ENDDO !ibnd
-                !
-              ENDDO !imode
-              !
-            ENDIF ! endif  fsthick
-            !
-          ENDDO ! end loop on k
-          !
-        ENDIF ! mp_mesh_k
-        !
-      ENDDO ! itemp 
-      !  
-      ! Creation of a restart point
-      IF (restart) THEN
-        IF ( MOD(iq,restart_freq) == 0 .or. iq == nqtotf ) THEN
-          WRITE(stdout, '(a)' ) '     Creation of a restart point'
-          ! 
-          ! The mp_sum will aggreage the results on each k-points. 
-          CALL mp_sum( F_current, inter_pool_comm )
-          !
-          IF ( ABS(efcb(1)) > eps6 ) THEN
-            CALL mp_sum( F_currentcb, inter_pool_comm)
-            CALL F_write(iter, iq, nqtotf, nkqtotf/2, error_h, error_el, .TRUE.)
-          ELSE
-            CALL F_write(iter, iq, nqtotf, nkqtotf/2, error_h, error_el, .FALSE.)
-          ENDIF
-          ! 
-        ENDIF
+          F_out(:, ibnd, ik, itemp) = F_out(:, ibnd, ik, itemp) + two * trans_prob(ind) * F_in(:, jbnd, nkq_abs, itemp)
+          !  
+        ENDDO
       ENDIF
-      !
-    ENDIF ! first_cycle
-    !  
-    ! 
-    ! The k points are distributed among pools: here we collect them
-    !
-    IF ( iq .eq. nqtotf ) THEN
-      !
+      ! 
+      CALL mp_sum(F_out, world_comm)  
+      ! 
       DO itemp = 1, nstemp
-        DO ik = 1, nkf
-          ikk = 2 * ik - 1
-          IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
-            DO ibnd = 1, ibndmax-ibndmin+1
-              tau = one / inv_tau_all(itemp,ibnd,ik+lower_bnd-1)
-              F_current(:,ibnd,ik+lower_bnd-1,itemp) = F_SERTA(:,ibnd,ik+lower_bnd-1,itemp) +&
-                                                    tau * F_current(:,ibnd,ik+lower_bnd-1,itemp)
-              IF ( ABS(efcb(itemp)) > eps6 ) THEN
-                tau = one / inv_tau_allcb(itemp,ibnd,ik+lower_bnd-1)
-                F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) = F_SERTAcb(:,ibnd,ik+lower_bnd-1,itemp) +&
-                                                    tau * F_currentcb(:,ibnd,ik+lower_bnd-1,itemp) 
-              ENDIF 
-            ENDDO
-          ENDIF
+        DO ik = 1, nkqtotf/2
+          DO ibnd = 1, ibndmax-ibndmin+1
+            IF ( ABS(tmp(ibnd, ik, itemp)) > eps160 ) THEN
+              F_out(:, ibnd, ik, itemp) = F_SERTA(:, ibnd, ik, itemp) +&
+                               F_out(:, ibnd, ik, itemp) / ( two * tmp(ibnd, ik, itemp) )
+            ENDIF
+          ENDDO
         ENDDO
       ENDDO
-      !
-      CALL mp_sum( F_current, inter_pool_comm )
-      IF ( ABS(efcb(1)) > eps6 ) CALL mp_sum( F_currentcb, inter_pool_comm )
-      !
-      ! The next Fi is equal to the current Fi+1 F_current. 
-      ! Addition of possible linear mixing
-      Fi_all = (1.0 - broyden_beta ) * Fi_all + broyden_beta * F_current
-      ! 
-      F_current = zero
-      ! 
-      IF ( ABS(efcb(1)) > eps6 ) THEN
-        Fi_allcb = F_currentcb
-        F_currentcb = zero
+      !  
+      IF (mp_mesh_k) THEN
+        CALL print_mob_sym(F_out, BZtoIBZ, s_BZtoIBZ, vkk_all, etf_all, wkf_all, ef0, av_mob) 
+      ELSE 
+        CALL print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, av_mob) 
       ENDIF
+      ! 
+      ! Computes the error
+      DO itemp = 1, nstemp
+        error(itemp) = ABS( av_mob(itemp) - av_mob_old(itemp) ) 
+      ENDDO
+      av_mob_old = av_mob
+      WRITE(stdout,'(a)')
+      WRITE(stdout,'(45x, 1E18.6, a)') MAXVAL(error), '     Err'
       !
-      ! From the F, we compute the HOLE conductivity
-      IF (int_mob .OR. (ncarrier < -1E5)) THEN
-        WRITE(stdout,'(/5x,a)') repeat('=',67)
-        WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
-        WRITE(stdout,'(5x,a/)') repeat('=',67)
-        ! 
-        DO itemp = 1, nstemp
-          etemp = transp_temp(itemp) 
-          ! 
-          IF ( itemp .eq. 1 ) THEN
-            Sigma(:,:)   = zero
-            tdf_sigma(:) = zero
-          ENDIF
-          !
-          DO ik = 1, nkf
-            ikk = 2 * ik - 1
-            IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
-              !  
-              DO ibnd = 1, ibndmax-ibndmin+1
-                ! This selects only valence bands for hole conduction
-                IF (etf (ibndmin-1+ibnd, ikk) < ef0(itemp) ) THEN
-                  !
-                  tdf_sigma(:) = zero  
-                  IF ( vme ) THEN 
-                    vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
-                  ELSE
-                    vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
-                  ENDIF
-                  ! 
-                  ! Use k-point symmetries.  
-                  IF (mp_mesh_k) THEN
-                    !
-                    vk_cart(:) = vkk(:,ibnd)
-                    Fi_cart(:) = Fi_all(:,ibnd,ik+lower_bnd-1,itemp)
-                    ! 
-                    ! Loop on full BZ 
-                    nb = 0
-                    DO ikbz=1, nkf1*nkf2*nkf3
-                      ! If the k-point from the full BZ is related by a symmetry operation 
-                      ! to the current k-point, then take it.  
-                      IF (BZtoIBZ(ikbz) == ik+lower_bnd-1) THEN
-                        nb = nb + 1
-                        ! Transform the symmetry matrix from Crystal to cartesian
-                        sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
-                        sb = matmul ( bg, sa )
-                        sr (:,:) = matmul ( at, transpose (sb) )
-                        CALL dgemv( 'n', 3, 3, 1.d0,&
-                          sr, 3, vk_cart(:),1 ,0.d0 , v_rot(:), 1 )
-                        ! 
-                        CALL dgemv( 'n', 3, 3, 1.d0,&
-                          sr, 3, Fi_cart(:),1 ,0.d0 , Fi_rot(:), 1 )
-                        !
-                        ij = 0
-                        DO j = 1, 3
-                          DO i = 1, 3
-                            ij = ij + 1
-                            ! The factor two in the weight at the end is to account for spin
-                            IF (noncolin) THEN
-                              tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 1.0 / (nkf1*nkf2*nkf3)
-                            ELSE
-                              tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 2.0 / (nkf1*nkf2*nkf3)
-                            ENDIF
-                          ENDDO
-                        ENDDO
-                      ENDIF
-                    ENDDO ! ikbz 
-                    IF (noncolin) THEN
-                      IF (ABS(nb*1.0/(nkf1*nkf2*nkf3) - wkf(ikk)) > eps6) THEN
-                        CALL errore ('transport', &
-                               &' The number of kpoint in the IBZ is not equal to the weight', 1)
-                      ENDIF
-                    ELSE
-                      IF (ABS(nb*2.0/(nkf1*nkf2*nkf3) - wkf(ikk)) > eps6) THEN
-                        CALL errore ('transport', &
-                               &' The number of kpoint in the IBZ is not equal to the weight', 1)
-                      ENDIF
-                    ENDIF
-                  ! withtout symmetries
-                  ELSE
-                    ! 
-                    ij = 0
-                    DO j = 1, 3
-                      DO i = 1, 3
-                        ij = ij + 1
-                        tdf_sigma(ij) = vkk(i,ibnd) * Fi_all(j,ibnd,ik+lower_bnd-1,itemp) * wkf(ikk)
-                      ENDDO
-                    ENDDO
-                    !
-                  ENDIF ! mp_mesh_k
-                  ! 
-                  !  energy at k (relative to Ef)
-                  ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
-                  !  
-                  ! derivative Fermi distribution
-                  ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-                  dfnk = w0gauss( ekk / etemp, -99 ) / etemp          
-                  !
-                  ! electrical conductivity
-                  Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
-                ENDIF
-              ENDDO ! iband
-            ENDIF ! fsthick
-          ENDDO ! ik
-          !
-          ! The k points are distributed among pools: here we collect them
-          !
-          CALL mp_sum( Sigma(:,:), inter_pool_comm )
-          CALL mp_barrier(inter_pool_comm)
-          !
-          carrier_density = 0.0
-          ! 
-          DO ik = 1, nkf
-            ikk = 2 * ik - 1
-            DO ibnd = 1, ibndmax-ibndmin+1
-              ! This selects only valence bands for hole conduction
-              IF (etf (ibndmin-1+ibnd, ikk) < ef0(itemp) ) THEN
-                !  energy at k (relative to Ef)
-                ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
-                fnk = wgauss( -ekk / etemp, -99)
-                ! The wkf(ikk) already include a factor 2
-                carrier_density = carrier_density + wkf(ikk) * (1.0d0 - fnk )
-              ENDIF
-            ENDDO
-          ENDDO
-          ! 
-          CALL mp_sum( carrier_density, inter_pool_comm )
-          CALL mp_barrier(inter_pool_comm)
-          ! 
-          sigma_up(:,:) = zero
-          sigma_up(1,1) = Sigma(1,itemp)
-          sigma_up(1,2) = Sigma(2,itemp)
-          sigma_up(1,3) = Sigma(3,itemp)
-          sigma_up(2,1) = Sigma(4,itemp)
-          sigma_up(2,2) = Sigma(5,itemp)
-          sigma_up(2,3) = Sigma(6,itemp)
-          sigma_up(3,1) = Sigma(7,itemp)
-          sigma_up(3,2) = Sigma(8,itemp)
-          sigma_up(3,3) = Sigma(9,itemp)
-          !
-          ! Diagonalize the conductivity matrix
-          CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
-          !
-          mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm  )**2)  /( carrier_density * hbarJ)
-          mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm  )**2)  /( carrier_density * hbarJ)
-          mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm  )**2)  /( carrier_density * hbarJ)
-          mobility = (mobility_xx+mobility_yy+mobility_zz)/3
-          ! carrier_density in cm^-1
-          carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm  )**(-3)         
-          WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev /kelvin2eV, &
-                        ef0(itemp)*ryd2ev,  carrier_density, mobility_xx, '  x-axis'
-          WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
-          WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
-          WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
-          ! 
-          error_h = ABS(mobility-mobilityh_save(itemp))
-          mobilityh_save(itemp) = mobility
-          WRITE(stdout,'(47x, 1E16.4, a)') error_h, '     Err'
-          !
-        ENDDO ! itemp
-      ENDIF ! holes mobility
-      ! From the F, we compute the ELECTRON conductivity
-      IF (int_mob .OR. (ncarrier > 1E5)) THEN
-        WRITE(stdout,'(/5x,a)') repeat('=',67)
-        WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]")')
-        WRITE(stdout,'(5x,a/)') repeat('=',67)
-        ! 
-        Sigma(:,:)   = zero
-        tdf_sigma(:) = zero 
-        DO itemp = 1, nstemp
-          etemp = transp_temp(itemp)
-          !
-          DO ik = 1, nkf
-            ikk = 2 * ik - 1
-            IF ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) THEN
-              DO ibnd = 1, ibndmax-ibndmin+1
-                IF ( ABS(efcb(itemp)) < eps6 ) THEN ! Case with 1 Fermi level
-                  ! This selects only conduction bands for electron conduction
-                  IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp) ) THEN
-                    tdf_sigma(:) = zero
-                    IF ( vme ) THEN 
-                      vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
-                    ELSE
-                      vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
-                    ENDIF
-                    ! Use k-point symmetries.  
-                    IF (mp_mesh_k) THEN
-                      !
-                      vk_cart(:) = vkk(:,ibnd)
-                      Fi_cart(:) = Fi_all(:,ibnd,ik+lower_bnd-1,itemp)
-                      ! 
-                      ! Loop on full BZ 
-                      nb = 0
-                      DO ikbz=1, nkf1*nkf2*nkf3
-                        ! If the k-point from the full BZ is related by a symmetry operation 
-                        ! to the current k-point, then take it.  
-                        IF (BZtoIBZ(ikbz) == ik+lower_bnd-1) THEN
-                          nb = nb + 1
-                          ! Transform the symmetry matrix from Crystal to cartesian
-                          sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
-                          sb = matmul ( bg, sa )
-                          sr (:,:) = matmul ( at, transpose (sb) )
-                          CALL dgemv( 'n', 3, 3, 1.d0,&
-                            sr, 3, vk_cart(:),1 ,0.d0 , v_rot(:), 1 )
-                          ! 
-                          CALL dgemv( 'n', 3, 3, 1.d0,&
-                            sr, 3, Fi_cart(:),1 ,0.d0 , Fi_rot(:), 1 )
-                          !
-                          ij = 0
-                          DO j = 1, 3
-                            DO i = 1, 3
-                              ij = ij + 1
-                              ! The factor two in the weight at the end is to account for spin
-                              IF (noncolin) THEN
-                                tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 1.0 / (nkf1*nkf2*nkf3)
-                              ELSE
-                                tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 2.0 / (nkf1*nkf2*nkf3)
-                              ENDIF
-                            ENDDO
-                          ENDDO
-                        ENDIF
-                      ENDDO ! ikbz 
-                      IF (noncolin) THEN
-                        IF (ABS(nb*1.0/(nkf1*nkf2*nkf3) - wkf(ikk)) > eps6) THEN
-                          CALL errore ('transport', & 
-                                 &' The number of kpoint in the IBZ is not equal to the weight', 1)
-                        ENDIF
-                      ELSE
-                        IF (ABS(nb*2.0/(nkf1*nkf2*nkf3) - wkf(ikk)) > eps6) THEN
-                          CALL errore ('transport', & 
-                                 &' The number of kpoint in the IBZ is not equal to the weight', 1)
-                        ENDIF
-                      ENDIF
-                    ! withtout symmetries
-                    ELSE
-                      ! 
-                      ij = 0
-                      DO j = 1, 3
-                        DO i = 1, 3
-                          ij = ij + 1
-                          tdf_sigma(ij) = vkk(i,ibnd) * Fi_all(j,ibnd,ik+lower_bnd-1,itemp) * wkf(ikk)
-                        ENDDO
-                      ENDDO
-                      !
-                    ENDIF ! mp_mesh_k
-                    ! 
-                    !  energy at k (relative to Ef)
-                    ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
-                    !  
-                    ! derivative Fermi distribution
-                    ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-                    dfnk = w0gauss( ekk / etemp, -99 ) / etemp          
-                    !
-                    ! electrical conductivity
-                    Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
-                    !
-                  ENDIF
-                ELSE ! In this case we have 2 Fermi level
-                  IF (etf (ibndmin-1+ibnd, ikk) > efcb(itemp) ) THEN
-                    tdf_sigma(:) = zero
-                    IF ( vme ) THEN
-                      vkk(:,ibnd) = REAL (vmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
-                    ELSE
-                      vkk(:,ibnd) = 2.0 * REAL (dmef (:, ibndmin-1+ibnd, ibndmin-1+ibnd,ikk))
-                    ENDIF
-                    ! 
-                    ! Use k-point symmetries.  
-                    IF (mp_mesh_k) THEN
-                      !
-                      vk_cart(:) = vkk(:,ibnd)
-                      Fi_cart(:) = Fi_all(:,ibnd,ik+lower_bnd-1,itemp)
-                      ! 
-                      ! Loop on full BZ 
-                      nb = 0
-                      DO ikbz=1, nkf1*nkf2*nkf3
-                        ! If the k-point from the full BZ is related by a symmetry operation 
-                        ! to the current k-point, then take it.  
-                        IF (BZtoIBZ(ikbz) == ik+lower_bnd-1) THEN
-                          nb = nb + 1
-                          ! Transform the symmetry matrix from Crystal to cartesian
-                          sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
-                          sb = matmul ( bg, sa )
-                          sr (:,:) = matmul ( at, transpose (sb) )
-                          CALL dgemv( 'n', 3, 3, 1.d0,&
-                            sr, 3, vk_cart(:),1 ,0.d0 , v_rot(:), 1 )
-                          ! 
-                          CALL dgemv( 'n', 3, 3, 1.d0,&
-                            sr, 3, Fi_cart(:),1 ,0.d0 , Fi_rot(:), 1 )
-                          !
-                          ij = 0
-                          DO j = 1, 3
-                            DO i = 1, 3
-                              ij = ij + 1
-                              ! The factor two in the weight at the end is to account for spin
-                              IF (noncolin) THEN
-                                tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 1.0 / (nkf1*nkf2*nkf3)
-                              ELSE
-                                tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 2.0 / (nkf1*nkf2*nkf3)
-                              ENDIF
-                            ENDDO
-                          ENDDO
-                        ENDIF
-                      ENDDO ! ikbz 
-                      IF (noncolin) THEN
-                        IF (ABS(nb*1.0/(nkf1*nkf2*nkf3) - wkf(ikk)) > eps6) THEN
-                          CALL errore ('transport', & 
-                                 &' The number of kpoint in the IBZ is not equal to the weight', 1)
-                        ENDIF
-                      ELSE
-                        IF (ABS(nb*2.0/(nkf1*nkf2*nkf3) - wkf(ikk)) > eps6) THEN
-                          CALL errore ('transport', & 
-                                 &' The number of kpoint in the IBZ is not equal to the weight', 1)
-                        ENDIF
-                      ENDIF
-                    ! withtout symmetries
-                    ELSE
-                      ! 
-                      ij = 0
-                      DO j = 1, 3
-                        DO i = 1, 3
-                          ij = ij + 1
-                          tdf_sigma(ij) = vkk(i,ibnd) * Fi_all(j,ibnd,ik+lower_bnd-1,itemp) * wkf(ikk)
-                        ENDDO
-                      ENDDO
-                      !
-                    ENDIF ! mp_mesh_k
-                    !
-                    !  energy at k (relative to Ef)
-                    ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
-                    !  
-                    ! derivative Fermi distribution
-                    ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
-                    dfnk = w0gauss( ekk / etemp, -99 ) / etemp
-                    !
-                    ! electrical conductivity
-                    Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
-                    !
-                  ENDIF ! efcb
-                ENDIF 
-              ENDDO ! iband
-            ENDIF ! fsthick
-          ENDDO ! ik
-          !
-          ! The k points are distributed among pools: here we collect them
-          !
-          CALL mp_sum( Sigma(:,:), inter_pool_comm )
-          CALL mp_barrier(inter_pool_comm)
-          ! 
-          carrier_density = 0.0
-          ! 
-          DO ik = 1, nkf
-            ikk = 2 * ik - 1
-            DO ibnd = 1, ibndmax-ibndmin+1
-              ! This selects only valence bands for hole conduction
-              IF ( ABS(efcb(itemp)) < eps6 ) THEN
-                IF (etf (ibndmin-1+ibnd, ikk) > ef0(itemp) ) THEN
-                  !  energy at k (relative to Ef)
-                  ekk = etf (ibndmin-1+ibnd, ikk) - ef0(itemp)
-                  fnk = wgauss( -ekk / etemp, -99)
-                  ! The wkf(ikk) already include a factor 2
-                  carrier_density = carrier_density + wkf(ikk) * fnk
-                ENDIF
-              ELSE
-                IF (etf (ibndmin-1+ibnd, ikk) > efcb(itemp) ) THEN
-                  !  energy at k (relative to Ef)
-                  ekk = etf (ibndmin-1+ibnd, ikk) - efcb(itemp)
-                  fnk = wgauss( -ekk / etemp, -99)
-                  ! The wkf(ikk) already include a factor 2
-                  carrier_density = carrier_density + wkf(ikk) * fnk
-                ENDIF
-              ENDIF
-            ENDDO
-          ENDDO
-          ! 
-          CALL mp_sum( carrier_density, inter_pool_comm )
-          CALL mp_barrier(inter_pool_comm)
-          sigma_up(:,:) = zero
-          sigma_up(1,1) = Sigma(1,itemp)
-          sigma_up(1,2) = Sigma(2,itemp)
-          sigma_up(1,3) = Sigma(3,itemp)
-          sigma_up(2,1) = Sigma(4,itemp)
-          sigma_up(2,2) = Sigma(5,itemp)
-          sigma_up(2,3) = Sigma(6,itemp)
-          sigma_up(3,1) = Sigma(7,itemp)
-          sigma_up(3,2) = Sigma(8,itemp)
-          sigma_up(3,3) = Sigma(9,itemp)
-          !
-          ! Diagonalize the conductivity matrix
-          CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
-          !
-          mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm  )**2)  /( carrier_density * hbarJ)
-          mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm  )**2)  /( carrier_density * hbarJ)
-          mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm  )**2)  /( carrier_density * hbarJ)
-          mobility = (mobility_xx+mobility_yy+mobility_zz)/3
-          ! carrier_density in cm^-1
-          carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm  )**(-3)         
-          WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev / kelvin2eV,&
-                                                           efcb(itemp)*ryd2ev, carrier_density, mobility_xx, '  x-axis'
-          WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
-          WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
-          WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
-          error_el = ABS(mobility-mobilityel_save(itemp))
-          mobilityel_save(itemp) = mobility
-          WRITE(stdout,'(47x, 1E16.4, a)') error_el, '     Err'
-          ! 
-        ENDDO ! itemp
-      ENDIF ! Electron mobility
-      ! Timing
-      CALL stop_clock ('MOBITER')
-      WRITE( stdout,  * ) '    Total time so far'
-      CALL print_clock ('MOBITER')
-      WRITE(stdout,'(5x)')
-      !
-    ENDIF ! iq == nq
+      ! Save F_in
+      ! Full mixing 
+      !F_in = F_out
+      ! Linear mixing
+      F_in = (1.0 - broyden_beta ) * F_in + broyden_beta * F_out 
+      F_out = zero
+      ! 
+      iter = iter + 1
+      ! 
+      ! Save F_in to file:
+      IF (ncarrier > 1E5) THEN 
+        CALL Fin_write(iter, F_in, av_mob_old, .TRUE.) 
+      ENDIF
+      ! 
+      IF (ncarrier < -1E5) THEN 
+        CALL Fin_write(iter, F_in, av_mob_old, .FALSE.) 
+      ENDIF
+      ! 
+      ! 
+    ENDDO ! end of while loop
     ! 
     RETURN
     !
     ! ---------------------------------------------------------------------------
-    END SUBROUTINE iterativebte
+    END SUBROUTINE ibte
+    !----------------------------------------------------------------------------
+    !
+    !----------------------------------------------------------------------------
+    SUBROUTINE iter_restart(etf_all, wkf_all, vkk_all, ind_tot, ind_totcb, ef0, efcb)
+    !----------------------------------------------------------------------------
+    !  
+    ! This subroutine opens all the required files to restart an IBTE calculation
+    ! then call the ibte subroutine to perform the iterations. 
+    ! This routine requires that the scattering rates have been computed previously. 
+    !  
+    ! ----------------------------------------------------------------------------
+    USE kinds,            ONLY : DP, i4b
+    USE elph2,            ONLY : nkqtotf, ibndmin, ibndmax
+    USE mp_world,         ONLY : mpime, world_comm
+    USE io_global,        ONLY : ionode_id, stdout
+    USE io_files,         ONLY : tmp_dir, prefix
+    USE epwcom,           ONLY : nstemp, ncarrier
+    USE constants_epw,    ONLY : zero
+    USE io_epw,           ONLY : iufilibtev_sup, iunepmat, iunsparseq, iunsparsek, &
+                                 iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
+                                 iunsparsekcb, iunrestart, iunsparseicb, iunsparsejcb,&
+                                 iunsparsetcb, iunepmatcb
+    USE transportcom,     ONLY : lower_bnd, upper_bnd
+    USE mp,               ONLY : mp_bcast
+    USE division,         ONLY : fkbounds2
+#if defined(__MPI)
+    USE parallel_include, ONLY : MPI_OFFSET, MPI_MODE_RDONLY, MPI_INFO_NULL, &
+                                 MPI_SEEK_SET, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, &
+                                 MPI_OFFSET_KIND, MPI_INTEGER4
+#endif    
+    !
+    IMPLICIT NONE
+    ! 
+#if defined(__MPI)
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_tot
+    !! Total number of component for valence band
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT(INOUT) :: ind_totcb
+    !! Total number of component for the conduction band
+#else
+    INTEGER, INTENT(INOUT) :: ind_tot
+    !! Tota number of component for valence band
+    INTEGER, INTENT(INOUT) :: ind_totcb
+    !! Total number of component for conduction band
+#endif    
+    !
+    REAL(kind=DP), INTENT(INOUT) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    !! Eigen-energies on the fine grid collected from all pools in parallel case
+    REAL(kind=DP), INTENT(INOUT) :: wkf_all(nkqtotf/2)
+    !! k-point weights from all the cpu
+    REAL(kind=DP), INTENT(INOUT) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    !! velocity from all the k-points
+    REAL(KIND=DP), INTENT(INOUT) :: ef0(nstemp)
+    !! Fermi level for the temperature itemp     
+    REAL(KIND=DP), INTENT(INOUT) :: efcb(nstemp)
+    !! Fermi level for the temperature itemp for cb band    
+    ! 
+    ! Local variables
+    !
+    CHARACTER (len=256) :: filint
+    !! Name of the file to write/read    
+    ! 
+    INTEGER :: ierr
+    !! Error status
+    INTEGER :: ik
+    !! K-point
+    INTEGER :: ios
+    !! IO error message
+    INTEGER :: itemp
+    !! Temperature index
+    INTEGER :: ibnd
+    !! Counter on bandA
+    INTEGER :: iktmp
+    !! Dummy counter for k-points
+    INTEGER :: ibtmp
+    !! Dummy counter for bands
+    INTEGER :: nind
+    !! Number of local elements per cores. 
+    INTEGER(kind=i4b), ALLOCATABLE :: sparse_q( : )
+    !! Index mapping for q-points
+    INTEGER(kind=i4b), ALLOCATABLE :: sparse_k( : )
+    !! Index mapping for k-points
+    INTEGER(kind=i4b), ALLOCATABLE :: sparse_i( : )
+    !! Index mapping for i bands
+    INTEGER(kind=i4b), ALLOCATABLE :: sparse_j( : )
+    !! Index mapping for j bands
+    INTEGER(kind=i4b), ALLOCATABLE :: sparse_t( : )
+    !! Index mapping for temperature 
+    INTEGER(kind=i4b), ALLOCATABLE :: sparsecb_q( : )
+    !! Index mapping for q-points for cb
+    INTEGER(kind=i4b), ALLOCATABLE :: sparsecb_k( : )
+    !! Index mapping for k-points for cb
+    INTEGER(kind=i4b), ALLOCATABLE :: sparsecb_i( : )
+    !! Index mapping for i bands for cb
+    INTEGER(kind=i4b), ALLOCATABLE :: sparsecb_j( : )
+    !! Index mapping for j bands for cb
+    INTEGER(kind=i4b), ALLOCATABLE :: sparsecb_t( : )
+    !! Index mapping for temperature for cb
+#if defined(__MPI)
+    INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw2
+    !! Local core offset for reading
+    INTEGER (kind=MPI_OFFSET_KIND) :: lrepmatw4
+    !! Local core offset for reading
+    INTEGER (kind=MPI_OFFSET_KIND) :: lsize
+    !! Offset to tell where to start reading the file
+#else
+    INTEGER (kind=8) :: lrepmatw2
+    !! Local core offset for reading
+    INTEGER (kind=i4b) :: lrepmatw4
+    !! Local core offset for reading
+    INTEGER (kind=8) :: lsize
+    !! Offset to tell where to start reading the file
+#endif
+    ! 
+    REAL(kind=DP) :: dum1
+    !! Dummy variable
+    REAL(kind=DP), ALLOCATABLE :: trans_prob(:)
+    !! Transition probabilities
+    REAL(kind=DP), ALLOCATABLE :: trans_probcb(:)
+    !! Transition probabilities for cb    
+    ! 
+    etf_all(:,:)   = zero
+    wkf_all(:)     = zero
+    vkk_all(:,:,:) = zero
+    ! 
+    ! SP - The implementation only works with MPI so far
+#ifdef __MPI
+    ! Read velocities
+    IF (mpime.eq.ionode_id) THEN
+      !
+      OPEN(unit=iufilibtev_sup,file='IBTEvel_sup.fmt',status='old',iostat=ios)
+      READ(iufilibtev_sup,'(a)')
+      READ(iufilibtev_sup,*) ind_tot, ind_totcb
+      READ(iufilibtev_sup,'(a)')
+      DO itemp=1, nstemp
+        READ(iufilibtev_sup,*) dum1, ef0(itemp), efcb(itemp)
+      ENDDO
+      READ(iufilibtev_sup,'(a)')
+      ! 
+      DO ik = 1, nkqtotf/2
+        DO ibnd = 1, ibndmax-ibndmin+1
+          READ(iufilibtev_sup,*) iktmp, ibtmp, vkk_all(:,ibnd,ik), etf_all(ibnd,ik), wkf_all(ik)
+        ENDDO
+      ENDDO
+      !  
+    ENDIF
+    ! 
+    CALL MPI_BCAST( ind_tot, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
+    CALL MPI_BCAST( ind_totcb, 1, MPI_OFFSET, ionode_id, world_comm, ierr)
+    CALL mp_bcast (ef0, ionode_id, world_comm)
+    CALL mp_bcast (efcb, ionode_id, world_comm)
+    CALL mp_bcast (vkk_all, ionode_id, world_comm)
+    CALL mp_bcast (wkf_all, ionode_id, world_comm)
+    CALL mp_bcast (etf_all, ionode_id, world_comm)
+    ! 
+    ! Now choose HOLE OR ELECTRON (the implementation does not support both)
+    ! HOLE
+    IF (ncarrier < -1E5) THEN    
+      ! 
+      ! Split all the matrix elements across all cores. 
+      CALL fkbounds2( ind_tot, lower_bnd, upper_bnd )
+      ! 
+      ! Allocate the local size 
+      nind = upper_bnd - lower_bnd + 1
+      WRITE(stdout,'(5x,a,i10)') 'Number of elements per core ',nind
+      ALLOCATE ( trans_prob ( nind ) )
+      trans_prob(:) = 0.0d0
+      ! 
+      ! Open file containing trans_prob 
+      filint = trim(tmp_dir)//trim(prefix)//'.epmatkq1'
+      CALL MPI_FILE_OPEN(world_comm,filint,MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmat, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN X.epmatkq1',1 )
+      !
+      ! Offset depending on CPU
+      lrepmatw2 = INT( lower_bnd -1, kind = MPI_OFFSET_KIND ) * 8_MPI_OFFSET_KIND
+      ! 
+      ! Size of what we read
+      lsize = INT( nind , kind = MPI_OFFSET_KIND )
+      !
+      CALL MPI_FILE_SEEK(iunepmat, lrepmatw2, MPI_SEEK_SET, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK',1 )
+      CALL MPI_FILE_READ(iunepmat, trans_prob(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_READ',1 )
+      !      
+      ! Now read the sparse matrix mapping
+      CALL MPI_FILE_OPEN(world_comm,'sparseq',MPI_MODE_RDONLY ,MPI_INFO_NULL, iunsparseq, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN sparseq',1 )
+      CALL MPI_FILE_OPEN(world_comm,'sparsek',MPI_MODE_RDONLY ,MPI_INFO_NULL, iunsparsek, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN sparsek',1 )
+      CALL MPI_FILE_OPEN(world_comm,'sparsei',MPI_MODE_RDONLY ,MPI_INFO_NULL, iunsparsei, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN sparsei',1 )
+      CALL MPI_FILE_OPEN(world_comm,'sparsej',MPI_MODE_RDONLY ,MPI_INFO_NULL, iunsparsej, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN sparsej',1 )
+      CALL MPI_FILE_OPEN(world_comm,'sparset',MPI_MODE_RDONLY ,MPI_INFO_NULL, iunsparset, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN sparset',1 )
+      ! 
+      ALLOCATE ( sparse_q ( nind ) )
+      ALLOCATE ( sparse_k ( nind ) )
+      ALLOCATE ( sparse_i ( nind ) )
+      ALLOCATE ( sparse_j ( nind ) )
+      ALLOCATE ( sparse_t ( nind ) )
+      sparse_q(:) = 0.0d0
+      sparse_k(:) = 0.0d0
+      sparse_i(:) = 0.0d0
+      sparse_j(:) = 0.0d0
+      sparse_t(:) = 0.0d0
+      !        
+      lrepmatw4 = INT( lower_bnd - 1, kind = MPI_OFFSET_KIND ) * 4_MPI_OFFSET_KIND
+      !
+      CALL MPI_FILE_SEEK(iunsparseq, lrepmatw4, MPI_SEEK_SET, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK',1 )
+      CALL MPI_FILE_READ(iunsparseq, sparse_q(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_READ',1 )
+      CALL MPI_FILE_SEEK(iunsparsek, lrepmatw4, MPI_SEEK_SET, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK',1 )
+      CALL MPI_FILE_READ(iunsparsek, sparse_k(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_READ',1 )
+      CALL MPI_FILE_SEEK(iunsparsei, lrepmatw4, MPI_SEEK_SET, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK',1 )
+      CALL MPI_FILE_READ(iunsparsei, sparse_i(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_READ',1 )
+      CALL MPI_FILE_SEEK(iunsparsej, lrepmatw4, MPI_SEEK_SET, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK',1 )
+      CALL MPI_FILE_READ(iunsparsej, sparse_j(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_READ',1 )
+      CALL MPI_FILE_SEEK(iunsparset, lrepmatw4, MPI_SEEK_SET, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK',1 )
+      CALL MPI_FILE_READ(iunsparset, sparse_t(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_READ',1 )
+      ! 
+      ! Now call the ibte to solve the BTE iteratively until convergence
+      CALL ibte(nind, etf_all, vkk_all, wkf_all, trans_prob, ef0, sparse_q, sparse_k, sparse_i, sparse_j, sparse_t)
+      ! 
+      CALL MPI_FILE_CLOSE(iunepmat,ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
+      CALL MPI_FILE_CLOSE(iunsparseq,ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
+      CALL MPI_FILE_CLOSE(iunsparsek,ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
+      CALL MPI_FILE_CLOSE(iunsparsei,ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
+      CALL MPI_FILE_CLOSE(iunsparsej,ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
+      CALL MPI_FILE_CLOSE(iunsparset,ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
+      DEALLOCATE(trans_prob)
+      DEALLOCATE(sparse_q)
+      DEALLOCATE(sparse_k)
+      DEALLOCATE(sparse_i)
+      DEALLOCATE(sparse_j)
+      DEALLOCATE(sparse_t) 
+      ! 
+    ENDIF
+    ! Electrons
+    IF (ncarrier > 1E5) THEN
+      ! 
+      CALL fkbounds2( ind_totcb, lower_bnd, upper_bnd )
+      ! Allocate the local size 
+      nind = upper_bnd - lower_bnd + 1
+      WRITE(stdout,'(5x,a,i10)') 'Number of elements per core ',nind
+      ALLOCATE ( trans_probcb ( nind ) )
+      trans_probcb(:) = 0.0d0
+      ! 
+      ! Open file containing trans_prob 
+      filint = trim(tmp_dir)//trim(prefix)//'.epmatkqcb1'
+      CALL MPI_FILE_OPEN(world_comm, filint, MPI_MODE_RDONLY, MPI_INFO_NULL, iunepmatcb, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN X.epmatkq1', 1 )
+      !
+      ! Offset depending on CPU
+      lrepmatw2 = INT( lower_bnd-1, kind = MPI_OFFSET_KIND ) * 8_MPI_OFFSET_KIND
+      ! 
+      ! Size of what we read
+      lsize = INT( nind, kind = MPI_OFFSET_KIND )
+      !
+      CALL MPI_FILE_SEEK(iunepmatcb, lrepmatw2, MPI_SEEK_SET, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK iunepmatcb', 1 )
+      CALL MPI_FILE_READ(iunepmatcb, trans_probcb(:), lsize, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_READ iunepmatcb', 1 )
+      !      
+      ! Now read the sparse matrix mapping
+      CALL MPI_FILE_OPEN(world_comm, 'sparseqcb', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparseqcb, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN sparseqcb', 1 )
+      CALL MPI_FILE_OPEN(world_comm, 'sparsekcb', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsekcb, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN sparsekcb', 1 )
+      CALL MPI_FILE_OPEN(world_comm, 'sparseicb', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparseicb, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN sparseicb', 1 )
+      CALL MPI_FILE_OPEN(world_comm, 'sparsejcb', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsejcb, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN sparsejcb', 1 )
+      CALL MPI_FILE_OPEN(world_comm, 'sparsetcb', MPI_MODE_RDONLY, MPI_INFO_NULL, iunsparsetcb, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN sparsetcb', 1 )    
+      ! 
+      ALLOCATE ( sparsecb_q ( nind ) )
+      ALLOCATE ( sparsecb_k ( nind ) )
+      ALLOCATE ( sparsecb_i ( nind ) )
+      ALLOCATE ( sparsecb_j ( nind ) )
+      ALLOCATE ( sparsecb_t ( nind ) )
+      sparsecb_q(:) = 0.0d0
+      sparsecb_k(:) = 0.0d0
+      sparsecb_i(:) = 0.0d0
+      sparsecb_j(:) = 0.0d0
+      sparsecb_t(:) = 0.0d0
+      !        
+      lrepmatw4 = INT( lower_bnd - 1, kind = MPI_OFFSET_KIND ) * 4_MPI_OFFSET_KIND
+      !
+      CALL MPI_FILE_SEEK(iunsparseqcb, lrepmatw4, MPI_SEEK_SET, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK iunsparseqcb',1 )
+      CALL MPI_FILE_READ(iunsparseqcb, sparsecb_q(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_READ iunsparseqcb',1 )
+      CALL MPI_FILE_SEEK(iunsparsekcb, lrepmatw4, MPI_SEEK_SET, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK iunsparsekcb',1 )
+      CALL MPI_FILE_READ(iunsparsekcb, sparsecb_k(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_READ iunsparsekcb',1 )
+      CALL MPI_FILE_SEEK(iunsparseicb, lrepmatw4, MPI_SEEK_SET, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK iunsparseicb',1 )
+      CALL MPI_FILE_READ(iunsparseicb, sparsecb_i(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_READ iunsparseicb',1 )
+      CALL MPI_FILE_SEEK(iunsparsejcb, lrepmatw4, MPI_SEEK_SET, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK iunsparsejcb',1 )
+      CALL MPI_FILE_READ(iunsparsejcb, sparsecb_j(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_READ iunsparsejcb',1 )
+      CALL MPI_FILE_SEEK(iunsparsetcb, lrepmatw4, MPI_SEEK_SET, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK iunsparsetcb',1 )
+      CALL MPI_FILE_READ(iunsparsetcb, sparsecb_t(:), lsize, MPI_INTEGER4, MPI_STATUS_IGNORE, ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_READ iunsparsetcb',1 )
+      !
+      CALL ibte(nind, etf_all, vkk_all, wkf_all, trans_probcb, efcb, &
+                   sparsecb_q, sparsecb_k, sparsecb_i, sparsecb_j, sparsecb_t)
+      ! 
+      CALL MPI_FILE_CLOSE(iunepmatcb,ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
+      CALL MPI_FILE_CLOSE(iunsparseqcb,ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
+      CALL MPI_FILE_CLOSE(iunsparsekcb,ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
+      CALL MPI_FILE_CLOSE(iunsparseicb,ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
+      CALL MPI_FILE_CLOSE(iunsparsejcb,ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
+      CALL MPI_FILE_CLOSE(iunsparsetcb,ierr)
+      IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_CLOSE',1)
+      DEALLOCATE(trans_probcb)
+      DEALLOCATE(sparsecb_q)
+      DEALLOCATE(sparsecb_k)
+      DEALLOCATE(sparsecb_i)
+      DEALLOCATE(sparsecb_j)
+      DEALLOCATE(sparsecb_t)
+      ! 
+    ENDIF
+#endif  
+    ! 
+    !----------------------------------------------------------------------------
+    END SUBROUTINE iter_restart
     !----------------------------------------------------------------------------
     ! 
   END MODULE transport_iter

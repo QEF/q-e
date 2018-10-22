@@ -19,7 +19,8 @@
     SUBROUTINE wigner_seitz_wrap (nk1, nk2, nk3, nq1, nq2, nq3, &
                                   irvec_k,  irvec_q,  irvec_g,  &
                                   ndegen_k, ndegen_q, ndegen_g, &
-                                  wslen_k,  wslen_q,  wslen_g, w_centers, dims)
+                                  wslen_k,  wslen_q,  wslen_g,  &
+                                  w_centers, dims, tau, nat )
     !-----------------------------------------------------------------
     !!
     !! June 2018 - SP - CV
@@ -55,7 +56,6 @@
     !!
     !-----------------------------------------------------------------
     USE kinds,     ONLY : DP
-    USE ions_base, ONLY : nat, tau
     !
     implicit none
     !
@@ -73,6 +73,8 @@
     !! size of the uniform q mesh
     INTEGER, INTENT (in) :: dims
     !! Number of bands in the Wannier space
+    INTEGER, INTENT (in) :: nat
+    !! Number of atoms
     INTEGER, ALLOCATABLE, INTENT (out) :: irvec_k(:,:)
     !! integer components of the ir-th Wigner-Seitz grid point in the basis
     !! of the lattice vectors for electrons
@@ -96,6 +98,8 @@
     !! real-space length for electron-phonons, in units of alat
     REAL(kind=DP), INTENT(in) :: w_centers(3,dims)
     !! Wannier centers used for the creation of electron and el-ph WS cells
+    REAL(kind=DP), INTENT(in) :: tau(3,dims)
+    !! Atomic position in the unit cell. 
     ! 
     ! Work Variables
     INTEGER :: ir

@@ -1112,10 +1112,6 @@ the parameter BLOCKSIZE to e.g. 131072*1024 when opening files in
 \texttt{iotk/src/iotk\_files.f90} (info by Lorenzo Paulatto,
 Nov. 2010). 
 
-{\bf ifort v.11}: Segmentation faults were reported for the combination
-ifort 11.0.081, MKL 10.1.1.019, OpenMP 1.3.3. The problem disappeared
-with ifort 11.1.056 and MKL 10.2.2.025 (Carlo Nervi, Oct. 2009).
-
 \paragraph{Linux PCs with MKL libraries}
 On Intel CPUs it is very convenient to use Intel MKL libraries
 (freely available at
@@ -1124,7 +1120,10 @@ MKL libraries can be used also with non-Intel compilers.
 They work also for AMD CPU, selecting the appropriate machine-optimized
 libraries, but with reduced performances.
 
-\configure\ should recognize properly installed MKL libraries.
+\configure\ properly detects only recent (v.12 or later) MKL libraries,
+as long as the \$MKLROOT environment variable is set in the current shell.
+Normally this environment variable is set by sourcing the Intel MKL or Intel 
+Parallel Studio environment script.
 By default the non-threaded version of MKL is linked, unless option
 \texttt{configure --with-openmp} is specified. In case of trouble,
 refer to the following web page to find the correct way to link MKL:\\

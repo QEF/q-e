@@ -1,0 +1,13 @@
+--
+&inputph
+  prefix   = 'si',
+  epsil    = .false.,
+  outdir   = './'
+  fildyn   = 'si.dyn',
+  ldisp    = .true.
+  fildvscf = 'dvscf'
+  nq1=2,
+  nq2=2,
+  nq3=2,
+  tr2_ph   =  1.0d-14,
+ /

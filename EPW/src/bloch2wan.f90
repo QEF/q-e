@@ -225,6 +225,7 @@
         WRITE(iudecayH,*) wslen(ir) * celldm (1) * bohr2ang, tmp
         !
       ENDDO
+      !
       ! RMDB
       DO ir = 1, nrr
         DO jbnd = 1, nbndsub
@@ -234,7 +235,8 @@
           ENDDO
         ENDDO
       ENDDO
-      CLOSE(300)
+      !
+      CLOSE(iudecayH)
       !
     ENDIF
     CALL mp_barrier(inter_pool_comm)
@@ -471,11 +473,11 @@
       !DO ir = 1, nrr
       !  DO jbnd = 1, nbndsub
       !    DO ibnd = 1, nbndsub
-      !      WRITE(300,'(5I5,6F12.6)') irvec(:,ir), ibnd, jbnd, cdmew(:,ibnd,jbnd,ir) 
+      !     WRITE(iudecayP,'(5I5,6F12.6)') irvec(:,ir), ibnd, jbnd, cdmew(:,ibnd,jbnd,ir) 
       !    ENDDO
       !  ENDDO
       !ENDDO
-      !
+      !     
       CLOSE(iudecayP)
     ENDIF
     CALL mp_barrier(inter_pool_comm)
@@ -706,6 +708,8 @@
     !! Integer variable for I/O control
     INTEGER :: nexband_tmp
     !! Number of excluded bands
+    INTEGER :: nkstot_tmp
+    !! Number of k-point to test
     !
     REAL(kind=DP), ALLOCATABLE :: bvec(:,:,:)
     !! b-vectors connecting each k-point to its nearest neighbors
@@ -769,8 +773,10 @@
       bvec = zero
       wb   = zero
     ELSE
-      READ(iubvec,*) nnb
-      ALLOCATE ( bvec(3,nnb,nkstot), wb(nnb) )
+      READ(iubvec,*) tempfile
+      READ(iubvec,*) nkstot_tmp, nnb
+      IF (nkstot_tmp /= nkstot) CALL errore ('vmebloch2wan','Unexpected number of k-points in .bvec file', 0)
+      ALLOCATE ( bvec(3, nnb, nkstot), wb(nnb) )
       DO ik = 1, nkstot
         DO ib = 1, nnb
           READ(iubvec,*) bvec(:,ib,ik), wb(ib)
@@ -1171,6 +1177,7 @@
         WRITE(iuwane, *) wslen(ir) * celldm(1) * bohr2ang, tmp
         !
       ENDDO
+      !
       ! RMDB
       !DO ir = 1, nrr
       !  DO jbnd = 1, nbndsub
@@ -1179,6 +1186,7 @@
       !    ENDDO
       !  ENDDO
       !ENDDO
+      !
       CLOSE(iuwane)
     ENDIF
     !
