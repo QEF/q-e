@@ -1205,9 +1205,18 @@ MODULE exx
     !
     COMPLEX(DP),ALLOCATABLE :: deexx(:,:)
     COMPLEX(DP),ALLOCATABLE,TARGET :: rhoc(:,:), vc(:,:)
+#if defined(__CUDA)
+    attributes(PINNED) :: rhoc, vc
+#endif
+
 #if defined(__USE_MANY_FFT)
     COMPLEX(DP),POINTER :: prhoc(:), pvc(:)
 #endif
+
+#if defined(__CUDA)
+    COMPLEX(DP),ALLOCATABLE,TARGET,DEVICE :: rhoc_d(:,:), vc_d(:,:)
+#endif
+
 #if defined(__USE_INTEL_HBM_DIRECTIVES)
 !DIR$ ATTRIBUTES FASTMEM :: rhoc, vc
 #elif defined(__USE_CRAY_HBM_DIRECTIVES)
@@ -1255,6 +1264,10 @@ MODULE exx
     !
     !allocate arrays for rhoc and vc
     ALLOCATE(rhoc(nrxxs,jblock), vc(nrxxs,jblock))
+#if defined(__CUDA)
+    ALLOCATE(rhoc_d(nrxxs,jblock), vc_d(nrxxs,jblock))
+#endif
+
 #if defined(__USE_MANY_FFT)
     prhoc(1:nrxxs*jblock) => rhoc(:,:)
     pvc(1:nrxxs*jblock) => vc(:,:)
@@ -1420,9 +1433,17 @@ MODULE exx
 #if defined(__USE_MANY_FFT)
                 CALL fwfft ('Rho', prhoc, dfftt, howmany=jcount)
 #else
+#if defined (__CUDA)
+                rhoc_d = rhoc
+                DO jbnd=jstart, jend
+                   CALL fwfft('Rho', rhoc_d(:,jbnd-jstart+1), dfftt)
+                ENDDO
+                rhoc = rhoc_d
+#else
                 DO jbnd=jstart, jend
                    CALL fwfft('Rho', rhoc(:,jbnd-jstart+1), dfftt)
                 ENDDO
+#endif
 #endif
                 !
                 !   >>>> add augmentation in G space HERE
@@ -1464,9 +1485,17 @@ MODULE exx
                 !fft many
                 CALL invfft ('Rho', pvc, dfftt, howmany=jcount)
 #else
+#if defined (__CUDA)
+                vc_d = vc
+                DO jbnd=jstart, jend
+                   CALL invfft('Rho', vc_d(:,jbnd-jstart+1), dfftt)
+                ENDDO
+                vc = vc_d
+#else
                 DO jbnd=jstart, jend
                    CALL invfft('Rho', vc(:,jbnd-jstart+1), dfftt)
                 ENDDO
+#endif
 #endif
                 !
                 ! Add ultrasoft contribution (REAL SPACE)
@@ -1563,6 +1592,9 @@ MODULE exx
     !
     !deallocate temporary arrays
     DEALLOCATE(rhoc, vc)
+#if defined(__CUDA)
+    DEALLOCATE(rhoc_d, vc_d)
+#endif
     !
     !sum result
     CALL result_sum(n*npol, m, big_result)
