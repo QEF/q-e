@@ -55,6 +55,7 @@ sed -i 's|^HDF5_LIB =|HDF5_LIB = -L${HDF5_DIR}/lib -lhdf5|g' make.inc
 
 #clean up
 make clean
+rm -r ${INSTALLPATH}
 
 #build crap
 make -j 8 pwall
