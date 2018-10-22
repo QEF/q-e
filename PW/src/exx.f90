@@ -42,6 +42,9 @@ MODULE exx
   ! 
   ! Buffers: temporary (complex) buffer for wfc storage
   COMPLEX(DP), ALLOCATABLE :: exxbuff(:,:,:)
+#if defined(__CUDA)
+  COMPLEX(DP), ALLOCATABLE, DEVICE :: exxbuff_d(:,:,:)
+#endif
   ! temporary (real) buffer for wfc storage
   REAL(DP), ALLOCATABLE    :: locbuff(:,:,:)
   ! buffer for matrix of localization integrals
@@ -261,6 +264,9 @@ MODULE exx
 #endif
     IF ( allocated(xkq_collect ) ) DEALLOCATE(xkq_collect)
     IF ( allocated(exxbuff) ) DEALLOCATE(exxbuff)
+#if defined(__CUDA)
+    IF ( allocated(exxbuff_d) ) DEALLOCATE(exxbuff_d)
+#endif
     IF ( allocated(locbuff) ) DEALLOCATE(locbuff)
     IF ( allocated(locmat) )  DEALLOCATE(locmat)
     IF ( allocated(xi) )      DEALLOCATE(xi)
@@ -463,6 +469,9 @@ MODULE exx
             ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nks))
          ELSE
             ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nkqs))
+#if defined(__CUDA)
+            ALLOCATE( exxbuff_d(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nkqs))
+#endif
          END IF
       END IF
     END IF
@@ -736,6 +745,9 @@ MODULE exx
     !
     CALL change_data_structure(.FALSE.)
     !
+#if defined(__CUDA)
+    exxbuff_d=exxbuff
+#endif
     CALL stop_clock ('exxinit')
     !
     !-----------------------------------------------------------------------
@@ -1208,12 +1220,18 @@ MODULE exx
     !
     ! local variables
     COMPLEX(DP),ALLOCATABLE :: temppsic(:,:), result(:,:)
+#if defined(__CUDA)
+    COMPLEX(DP),ALLOCATABLE,DEVICE :: temppsic_d(:,:)
+#endif
 #if defined(__USE_INTEL_HBM_DIRECTIVES)
 !DIR$ ATTRIBUTES FASTMEM :: result
 #elif defined(__USE_CRAY_HBM_DIRECTIVES)
 !DIR$ memory(bandwidth) result
 #endif
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:,:),result_nc(:,:,:)
+#if defined(__CUDA)
+    COMPLEX(DP),ALLOCATABLE,DEVICE :: temppsic_nc_d(:,:,:)
+#endif
     INTEGER          :: request_send, request_recv
     !
     COMPLEX(DP),ALLOCATABLE :: deexx(:,:)
@@ -1255,7 +1273,7 @@ MODULE exx
     INTEGER :: ialloc, ending_im
     INTEGER :: ijt, njt, jblock_start, jblock_end
     INTEGER :: iegrp, wegrp
-    !
+    INTEGER :: all_start_tmp
     CALL start_clock( 'vexx_k_setup' )
     !
     ialloc = nibands(my_egrp_id+1)
@@ -1269,8 +1287,14 @@ MODULE exx
     !
     IF (noncolin) THEN
        ALLOCATE( temppsic_nc(nrxxs,npol,ialloc), result_nc(nrxxs,npol,ialloc) )
+#if defined(__CUDA)
+       ALLOCATE( temppsic_nc_d(nrxxs,npol,ialloc))
+#endif
     ELSE
        ALLOCATE( temppsic(nrxxs,ialloc), result(nrxxs,ialloc) )
+#if defined(__CUDA)
+       ALLOCATE( temppsic_d(nrxxs,ialloc))
+#endif
     ENDIF
     !
     IF(okvan) ALLOCATE(deexx(nkb,ialloc))
@@ -1321,6 +1345,9 @@ MODULE exx
           CALL invfft ('Wave', temppsic_nc(:,1,ii), dfftt)
           CALL invfft ('Wave', temppsic_nc(:,2,ii), dfftt)
           !
+#if defined(__CUDA)
+       temppsic_nc_d = temppsic_nc
+#endif
        ELSE
           !
 !$omp parallel do  default(shared), private(ig)
@@ -1332,6 +1359,9 @@ MODULE exx
           CALL invfft ('Wave', temppsic(:,ii), dfftt)
           !
        END IF
+#if defined(__CUDA)
+       temppsic_d = temppsic
+#endif
        !
        IF (noncolin) THEN
 !$omp parallel do default(shared) firstprivate(nrxxs) private(ir)
@@ -1422,6 +1452,28 @@ MODULE exx
                 nblock=2048
                 nrt = (nrxxs+nblock-1)/nblock
                 !
+#if defined(__CUDA)
+associate(rhoc=>rhoc_d, exxbuff=>exxbuff_d, temppsic_nc=>temppsic_nc_d,temppsic=>temppsic_d)
+                all_start_tmp=all_start(wegrp)
+                !$cuf kernel do (2)
+                DO jbnd=jstart, jend
+                   DO ir = 1, nrxxs
+
+                     IF (noncolin) THEN
+                       rhoc(ir,jbnd-jstart+1) = &
+                       (conjg(exxbuff(ir,jbnd-all_start_tmp+iexx_start,ikq))*temppsic_nc(ir,1,ii) +&
+                       conjg(exxbuff(nrxxs+ir,jbnd-all_start_tmp+iexx_start,ikq))*temppsic_nc(ir,2,ii)) * omega_inv
+                     ELSE
+
+                       rhoc(ir,jbnd-jstart+1) = &
+                       conjg(exxbuff(ir,jbnd-all_start_tmp+iexx_start,ikq))*temppsic(ir,ii)* omega_inv
+                     ENDIF
+
+                   ENDDO
+                ENDDO
+end associate
+#else
+
 !$omp parallel do collapse(2) private(ir_start,ir_end)
                 DO irt = 1, nrt
                    DO jbnd=jstart, jend
@@ -1443,6 +1495,7 @@ MODULE exx
                    ENDDO
                 ENDDO
 !$omp end parallel do
+#endif
                 !
                 !   >>>> add augmentation in REAL space HERE
                 IF(okvan .and. tqr) THEN ! augment the "charge" in real space
@@ -1456,7 +1509,7 @@ MODULE exx
                 CALL fwfft ('Rho', prhoc, dfftt, howmany=jcount)
 #else
 #if defined (__CUDA)
-                rhoc_d = rhoc
+                !rhoc_d = rhoc
                 DO jbnd=jstart, jend
                    CALL fwfft('Rho', rhoc_d(:,jbnd-jstart+1), dfftt)
                 ENDDO
@@ -1673,6 +1726,12 @@ end associate
     DEALLOCATE(fac, facb )
 #if defined (__CUDA)
     DEALLOCATE(facb_d )
+    IF (noncolin) THEN
+       DEALLOCATE(temppsic_nc_d)
+    ELSE
+       DEALLOCATE(temppsic_d)
+    ENDIF
+
 #endif
     !
     IF(okvan) DEALLOCATE( deexx)
