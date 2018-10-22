@@ -3,10 +3,11 @@
 #  The following PPs are not on the web and are not removed. The others
 #  are.
 #
-# HUSPBE.RRKJ3              O_US.van                 Rhs.pbe-rrkjus_lb.UPF
-# H_US.van                  Pt.rel-pbe-n-rrkjus.UPF  Si.bhs
-# Ni.rel-pbe-nd-rrkjus.UPF  Rh.pbe-rrkjus_lb.UPF     Si.rel-pbe-rrkj.UPF
-# Au.pz-rrkjus_aewfc.UPF
+# HUSPBE.RRKJ3              O_US.van		     H_US.van
+# Rh.pbe-rrkjus_lb.UPF      Rhs.pbe-rrkjus_lb.UPF
+# Si.bhs		    Au.pz-rrkjus_aewfc.UPF   CorelUSPBE.RRKJ3.UPF
+
+# to be added on web:
 
 \rm -rf Al.pz-vbc.UPF >& /dev/null
 \rm -rf Al.pbe-rrkj.UPF >& /dev/null
@@ -19,6 +20,7 @@
 \rm -rf Fe.rel-pbe-kjpaw.UPF >& /dev/null
 \rm -rf Si.pz-vbc.UPF >& /dev/null
 \rm -rf Si.pbe-rrkj.UPF >& /dev/null
+\rm -rf Si.rel-pbe-rrkj.UPF >& /dev/null
 \rm -rf C.pz-rrkjus.UPF >& /dev/null
 \rm -rf C.pz-kjpaw.UPF >& /dev/null
 \rm -rf C.pz-vbc.UPF >& /dev/null
@@ -32,12 +34,31 @@
 \rm -rf O.pz-rrkjus.UPF >& /dev/null
 \rm -rf O.pz-van_ak.UPF >& /dev/null
 \rm -rf Pt.rel-pz-n-rrkjus.UPF >& /dev/null
+\rm -rf Pt.rel-pbe-n-rrkjus.UPF >& /dev/null
 \rm -rf Au.rel-pz-kjpaw.UPF >& /dev/null
 \rm -rf Pb.pz-d-van.UPF  >& /dev/null
 \rm -rf Ti.pz-sp-van_ak.UPF  >& /dev/null
+\rm -rf C.pbe-n-kjpaw_psl.0.1.UPF >& /dev/null
+\rm -rf O.blyp-vbc.UPFi >& /dev/null >& /dev/null 
+\rm -rf H.blyp-vbc.UPF >& /dev/null >& /dev/null 
+\rm -rf Mg.pz-n-vbc.UPF >& /dev/null >& /dev/null
+\rm -rf B.pz-vbc.UPF >& /dev/null >& /dev/null
+\rm -rf C.pbe-n-rrkjus_psl.0.1.UPF >& /dev/null
+\rm -rf O.blyp-mt.UPF >& /dev/null
+\rm -rf N.pbe-kjpaw.UPF >& /dev/null 
+\rm -rf H.pbe-kjpaw.UPF >& /dev/null
+\rm -rf O.pbe-kjpaw.UPF >& /dev/null
+\rm -rf O.pz-kjpaw.UPFi >& /dev/null
+\rm -rf Ge.pbe-kjpaw.UPF >& /dev/null 
+\rm -rf H.coulomb-ae.UPF >& /dev/null
+\rm -rf C.pbe-van_bm.UPF >& /dev/null
+\rm -rf C.pbe-mt_gipaw.UPF >& /dev/null
+\rm -rf Co.rel-pbe-nd-rrkjus.UPF >& /dev/null 
+
+\rm -rf *_kernel_table >& /dev/null
 
 
-\rm -rf vdW_kernel_table >& /dev/null
+
 
 
 

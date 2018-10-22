@@ -1,48 +1,101 @@
-# UtilXlib UnitTesting 
-build:cudampiomp:
-  tags: [galileo]
+build:pw:
+  tags: [docker]
+  image: espressofoundation/ubuntu:latest
   script:
-    - module load profile/advanced pgi/17.10 cuda/8.0.61
-    - ./configure --enable-openmp
-    - cd UtilXlib/tests
-    - bash compile_and_run_tests.sh -smcn
-
-build:intelmpiomp:
-  tags: [galileo]
-  script:
-    - module load profile/advanced intel intelmpi
-    - ./configure --enable-openmp
-    - cd UtilXlib/tests
-    - bash compile_and_run_tests.sh -sm
-
-build:cudampi:
-  tags: [galileo]
-  script:
-    - module load profile/advanced pgi/17.10 cuda/8.0.61
     - ./configure
-    - cd UtilXlib/tests
-    - bash compile_and_run_tests.sh -smcn
-
-build:intelmpi:
-  tags: [galileo]
-  script:
-    - module load profile/advanced intel intelmpi
-    - ./configure
-    - cd UtilXlib/tests
-    - bash compile_and_run_tests.sh -sm
+    - make pw
 
 #### BUILDS ON GALILEO ####
 
-build:laxlib-unittest:
+intel mpi:
   tags: [galileo]
   script:
-    - module load profile/advanced pgi/17.10 cuda/8.0.61
-    - ./configure && make pw
-    - cd LAXlib/tests
-    - make clean && make
-    - for file in ./*.x; do mpirun -np 4 ./$file; done
-    - cd ../../
-    - ./configure --disable-parallel && make clean && make pw
-    - cd LAXlib/tests
-    - make clean && make
-    - for file in ./*.x; do ./$file; done
+    - module load intel/pe-xe-2017--binary intelmpi/2017--binary mkl/2017--binary
+    - ./configure --enable-openmp
+    - make -j pw
+    - export OMP_NUM_THREADS=4
+    - cd test-suite
+    - make clean
+    - make run-tests-pw-parallel
+
+pgi cuda mpi:
+  tags: [galileo]
+  script:
+    - module load profile/global pgi/17.10 mkl/2018--binary cuda/8.0.61
+    - ./configure --enable-openmp --with-cuda-runtime=8.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME --with-scalapack=no
+    - make -j pw
+    - export OMP_NUM_THREADS=4
+    - cd test-suite
+    - make clean
+    - make run-tests-pw-parallel
+    - cd .. && cp PW/src/pw.x ./pwgpu-mpi-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
+  artifacts:
+    paths:
+    - pwgpu-mpi-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
+    expire_in: 1 week
+
+pgi cuda serial:
+  tags: [galileo]
+  script:
+    - module load profile/global pgi/17.10 mkl/2018--binary cuda/8.0.61
+    - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=8.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME
+    - make -j pw
+    - export OMP_NUM_THREADS=4
+    - cd test-suite
+    - make clean
+    - make run-tests-pw-serial
+    - cd .. && cp PW/src/pw.x ./pwgpu-serial-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
+  artifacts:
+    paths:
+    - pwgpu-serial-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
+    expire_in: 1 week
+
+#
+## UtilXlib UnitTesting 
+#build:cudampiomp:
+#  tags: [galileo]
+#  script:
+#    - module load profile/advanced pgi/17.10 cuda/8.0.61
+#    - ./configure --enable-openmp
+#    - cd UtilXlib/tests
+#    - bash compile_and_run_tests.sh -smcn
+#
+#build:intelmpiomp:
+#  tags: [galileo]
+#  script:
+#    - module load profile/advanced intel intelmpi
+#    - ./configure --enable-openmp
+#    - cd UtilXlib/tests
+#    - bash compile_and_run_tests.sh -sm
+#
+#build:cudampi:
+#  tags: [galileo]
+#  script:
+#    - module load profile/advanced pgi/17.10 cuda/8.0.61
+#    - ./configure
+#    - cd UtilXlib/tests
+#    - bash compile_and_run_tests.sh -smcn
+#
+#build:intelmpi:
+#  tags: [galileo]
+#  script:
+#    - module load profile/advanced intel intelmpi
+#    - ./configure
+#    - cd UtilXlib/tests
+#    - bash compile_and_run_tests.sh -sm
+#
+##### BUILDS ON GALILEO ####
+#
+#build:laxlib-unittest:
+#  tags: [galileo]
+#  script:
+#    - module load profile/advanced pgi/17.10 cuda/8.0.61
+#    - ./configure && make pw
+#    - cd LAXlib/tests
+#    - make clean && make
+#    - for file in ./*.x; do mpirun -np 4 ./$file; done
+#    - cd ../../
+#    - ./configure --disable-parallel && make clean && make pw
+#    - cd LAXlib/tests
+#    - make clean && make
+#    - for file in ./*.x; do ./$file; done

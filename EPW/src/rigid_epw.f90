@@ -415,8 +415,8 @@ SUBROUTINE rgd_blk_epw_fine(nq1,nq2,nq3,q,uq,epmat,nmodes,epsil,zeu,bmat,signe)
             zaq=g1*zeu(1,ipol,na)+g2*zeu(2,ipol,na)+g3*zeu(3,ipol,na)
             !
             DO imode=1, nmodes
-              CALL zaxpy(nbndsub**2,facq * zaq * uq(3*(na-1)+ipol,imode), bmat(:,:),1, epmat(:,:,imode),1)
-              CALL zaxpy(nbndsub**2,facq * zaq * uq(3*(na-1)+ipol,imode), bmat(:,:),1, epmatl(:,:,imode),1)
+              CALL zaxpy(nbndsub**2, facq * zaq * uq(3*(na-1)+ipol,imode), bmat(:,:),1, epmat(:,:,imode),1)
+              CALL zaxpy(nbndsub**2, facq * zaq * uq(3*(na-1)+ipol,imode), bmat(:,:),1, epmatl(:,:,imode),1)
             ENDDO
             !
           ENDDO !ipol

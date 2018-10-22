@@ -6,10 +6,13 @@ include ../../make.inc
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../pw4gww $(MOD_FLAG)../../PW/src
 
-#location of needed libraries
-LIBOBJS= ../../iotk/src/libiotk.a  \
-         ../../clib/clib.a
+#<<<<<<< HEAD
+##location of needed libraries
+#LIBOBJS= ../../iotk/src/libiotk.a  \
+#         ../../clib/clib.a
 
+#=======
+#>>>>>>> 40cae61e51e5d23399a72a97ff6a42645c3af4a3
 SIMPLEIPOBJS = \
 simple_ip_objects.o \
 start_end.o \
@@ -27,7 +30,7 @@ PWOBJS = ../../PW/src/libpw.a
 
 LIBMIN=
 
-TLDEPS=bindir mods libs libiotk pw
+TLDEPS=pwlibs
 
 all : tldeps simple_ip.x  libsimple_ip.a
 

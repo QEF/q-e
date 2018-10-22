@@ -217,7 +217,6 @@ SUBROUTINE sum_band_gpu()
         psic(dffts%nnr+1:) = 0.0_dp
         CALL fwfft ('Rho', psic, dffts)
         rho%kin_g(1:dffts%ngm,is) = psic(dffts%nl(1:dffts%ngm))
-        rho%of_g(dffts%ngm+1:,is) = (0.0_dp,0.0_dp)
      END DO
      !
      IF (.NOT. gamma_only) CALL sym_rho( nspin, rho%kin_g )

@@ -43,7 +43,6 @@ lr_exx_kernel.o \
 lr_calc_dens_eels.o \
 lr_calc_dens_eels_nc.o \
 lr_apply_liouvillian_eels.o \
-lr_addusddens.o \
 lr_addus_dvpsi.o \
 lr_run_nscf.o \
 lr_setup_nscf.o \
@@ -59,7 +58,7 @@ lr_test_restart.o\
 lr_dav_debug.o\
 plugin_tddfpt_potential.o
 
-TLDEPS=bindir libs mods lrmods
+TLDEPS=phlibs
 
 all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x
 

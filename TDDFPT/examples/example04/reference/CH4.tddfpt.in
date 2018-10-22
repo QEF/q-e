@@ -1,0 +1,11 @@
+ &lr_input
+   prefix = 'CH4',
+   outdir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/',
+   restart_step = 250,
+   restart = .false.
+ /
+ &lr_control
+   itermax = 500,
+   ipol = 4,
+   d0psi_rs = .true.
+ /

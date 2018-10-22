@@ -208,7 +208,6 @@ SUBROUTINE sum_band()
         psic(dffts%nnr+1:) = 0.0_dp
         CALL fwfft ('Rho', psic, dffts)
         rho%kin_g(1:dffts%ngm,is) = psic(dffts%nl(1:dffts%ngm))
-        rho%of_g(dffts%ngm+1:,is) = (0.0_dp,0.0_dp)
      END DO
      !
      IF (.NOT. gamma_only) CALL sym_rho( nspin, rho%kin_g )
@@ -460,7 +459,9 @@ SUBROUTINE sum_band()
        !
        ! ... with distributed <beta|psi>, sum over bands
        !
+       IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL using_becsum(1)
        IF( okvan .AND. becp%comm /= mp_get_comm_null() ) CALL mp_sum( becsum, becp%comm )
+       IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL using_ebecsum(1)
        IF( okvan .AND. becp%comm /= mp_get_comm_null() .and. tqr ) CALL mp_sum( ebecsum, becp%comm )
        !
        IF( use_tg ) THEN
@@ -886,7 +887,8 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
   USE mp,            ONLY : mp_sum
   USE wavefunctions_gpum, ONLY : using_evc
   USE wvfct_gpum,                ONLY : using_et
-  USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0
+  USE uspp_gpum,                 ONLY : using_vkb, using_indv_ijkb0, &
+                                        using_becsum, using_ebecsum
   USE becmod_subs_gpum,          ONLY : using_becp_auto
   !
   IMPLICIT NONE
@@ -1051,6 +1053,8 @@ SUBROUTINE sum_bec ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd )
               !
               ! copy output from GEMM into desired format
               !
+              CALL using_becsum(1)
+              if (tqr) CALL using_ebecsum(1)
               IF (noncolin .AND. .NOT. upf(np)%has_so) THEN
                  CALL add_becsum_nc (na, np, aux_nc, becsum )
               ELSE IF (noncolin .AND. upf(np)%has_so) THEN

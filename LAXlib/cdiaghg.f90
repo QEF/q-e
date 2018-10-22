@@ -207,9 +207,9 @@ SUBROUTINE cdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
 #define __USE_GLOBAL_BUFFER
 #if defined(__USE_GLOBAL_BUFFER)
   USE gbuffers,        ONLY : dev=>dev_buf, pin=>pin_buf
-  #define VARTYPE POINTER
+#define VARTYPE POINTER
 #else
-  #define VARTYPE ALLOCATABLE
+#define VARTYPE ALLOCATABLE
 #endif
   !
   IMPLICIT NONE

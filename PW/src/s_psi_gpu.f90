@@ -7,8 +7,9 @@
 !
 !
 !----------------------------------------------------------------------------
-#if defined(__CUDA)
-
+#if ! defined (__CUDA)
+#define cublasDGEMM DGEMM
+#endif
 !@njs: s_psi, psi, spsi, s_psi_, s_psi_k, s_psi_gamma, s_psi_nc
 SUBROUTINE s_psi_gpu( lda, n, m, psi_d, spsi_d )
   !----------------------------------------------------------------------------
@@ -33,7 +34,9 @@ SUBROUTINE s_psi_gpu( lda, n, m, psi_d, spsi_d )
   ! --- if suitable and required, calls old S\psi routine s_psi_
   ! --- See comments in h_psi.f90 about band parallelization
   !
+#if defined(__CUDA)
   USE cudafor
+#endif
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : npol
   USE funct,            ONLY : exx_is_active
@@ -43,8 +46,11 @@ SUBROUTINE s_psi_gpu( lda, n, m, psi_d, spsi_d )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: lda, n, m
-  COMPLEX(DP), DEVICE, INTENT(IN) :: psi_d(lda*npol,m)
-  COMPLEX(DP), DEVICE, INTENT(OUT)::spsi_d(lda*npol,m)
+  COMPLEX(DP), INTENT(IN) :: psi_d(lda*npol,m)
+  COMPLEX(DP), INTENT(OUT)::spsi_d(lda*npol,m)
+#if defined(__CUDA)
+  attributes(DEVICE) :: psi_d, spsi_d
+#endif
   !
   INTEGER     :: m_start, m_end, i
   !
@@ -89,8 +95,10 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   !
   ! ...    spsi  S*psi
   !
+#if defined (__CUDA)
   USE cudafor
   USE cublas
+#endif
   USE kinds,      ONLY : DP
   USE becmod_gpum,ONLY : becp_d
   USE uspp,       ONLY : nkb, okvan, indv_ijkb0
@@ -109,11 +117,17 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: lda, n, m
-  COMPLEX(DP), DEVICE, INTENT(IN) :: psi_d(lda*npol,m)
-  COMPLEX(DP), DEVICE, INTENT(OUT)::spsi_d(lda*npol,m)
+  COMPLEX(DP), INTENT(IN) :: psi_d(lda*npol,m)
+  COMPLEX(DP), INTENT(OUT)::spsi_d(lda*npol,m)
+#if defined(__CUDA)
+  attributes(DEVICE) :: psi_d, spsi_d
   !
   COMPLEX(DP), PINNED, ALLOCATABLE :: psi_host(:,:)
   COMPLEX(DP), PINNED, ALLOCATABLE ::spsi_host(:,:)
+#else
+  COMPLEX(DP), ALLOCATABLE :: psi_host(:,:)
+  COMPLEX(DP), ALLOCATABLE ::spsi_host(:,:)
+#endif
   !
   INTEGER :: ibnd
   !
@@ -204,7 +218,10 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
          ! data distribution indexes
        INTEGER, EXTERNAL :: ldim_block, gind_block
          ! data distribution functions
-       REAL(DP),    DEVICE, POINTER :: ps_d(:,:)
+       REAL(DP), POINTER :: ps_d(:,:)
+#if defined(__CUDA)
+       attributes(DEVICE) :: ps_d
+#endif
          ! the product vkb and psi
        !
        CALL using_vkb_d(0)
@@ -317,8 +334,11 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        INTEGER :: ikb, jkb, ih, jh, na, nt, ibnd, ierr
          ! counters
-       COMPLEX(DP), DEVICE, POINTER :: qqc_d(:,:,:)
-       COMPLEX(DP), DEVICE, POINTER :: ps_d(:,:)
+       COMPLEX(DP), POINTER :: qqc_d(:,:,:)
+       COMPLEX(DP), POINTER :: ps_d(:,:)
+#if defined(__CUDA)
+       attributes(DEVICE) :: ps_d, qqc_d
+#endif
          ! ps = product vkb and psi ; qqc = complex version of qq
        !
        CALL dev_buf%lock_buffer(ps_d, (/ nkb, m /), ierr)
@@ -399,8 +419,11 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
        !
        INTEGER :: ikb, jkb, ih, jh, na, nt, ibnd, ipol, ierr
        ! counters
-       COMPLEX(DP), DEVICE, POINTER :: ps_d(:,:,:)
-       COMPLEX(DP), DEVICE, POINTER :: qqc_d(:,:,:)
+       COMPLEX(DP), POINTER :: ps_d(:,:,:)
+       COMPLEX(DP), POINTER :: qqc_d(:,:,:)
+#if defined(__CUDA)
+       attributes(DEVICE) :: ps_d, qqc_d
+#endif
        ! the product vkb and psi
        !
        ! sync if needed
@@ -478,4 +501,4 @@ SUBROUTINE s_psi__gpu( lda, n, m, psi_d, spsi_d )
     END SUBROUTINE s_psi_nc_gpu
 
 END SUBROUTINE s_psi__gpu
-#endif
+

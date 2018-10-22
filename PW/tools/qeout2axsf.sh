@@ -30,7 +30,7 @@ string=$( cat ${filename} | awk -v code=${code} -v alat=${alat} ' \
 BEGIN{ \
   iter = 0 ; \
   done = 0 ; \
-  b2a  = 0.529177 ; \
+  b2a  = 0.52917720859 ; \
   if ( code == "PW" ) { runt = b2a*alat } \
   if ( code == "CP" ) { runt = b2a } \
 } \
@@ -57,7 +57,7 @@ cat ${filename} | awk -v runt=${runt} -v nat=${nat} \
                        -v alat=${alat} -v niter=${niter} ' \
 BEGIN{ \
   iter = 0 ; \
-  b2a  = 0.529177 ; \
+  b2a  = 0.52917720859 ; \
   printf "ANIMSTEPS %5d\n", niter ; \
   printf "CRYSTAL\n" ; \
   printf "PRIMVEC\n" ; \

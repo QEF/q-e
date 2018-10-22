@@ -41,7 +41,7 @@ SUBROUTINE electrons()
                                    lambda, report
   USE uspp,                 ONLY : okvan
   USE exx,                  ONLY : aceinit,exxinit, exxenergy2, exxenergy, exxbuff, &
-                                   fock0, fock1, fock2, fock3, dexx, use_ace, local_thr
+                                   fock0, fock1, fock2, fock3, dexx, use_ace, local_thr 
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
   USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
   !

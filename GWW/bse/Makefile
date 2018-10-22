@@ -50,18 +50,18 @@ QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
 PWOBJS = ../../PW/src/libpw.a
 PW4GWWOBJ = ../pw4gww/fft_custom.o ../pw4gww/stop_pp.o ../pw4gww/mp_wave_parallel.o
 GWWOBJ = ../gww/libgww.a ../minpack/minpacklib.a
-#LIBPWPH =  ../../PHonon/Gamma/libcg.a
-LIBPWPH =
-#PPOBJ= ../../PP/src/libpp.a
-PPOBJ=
 
-TLDEPS= bindir libs pw ph mods
+#<<<<<<< HEAD
+#TLDEPS= bindir libs pw ph mods
+#=======
+TLDEPS= pwlibs gwwlib pw4gwwlib
+#>>>>>>> 40cae61e51e5d23399a72a97ff6a42645c3af4a3
 
 all : tldeps bse_main.x
 
-bse_main.x : bse_main.o libbse.a  $(BSEOBJS) $(PWOBJS) $(QEMODS) $(LIBPWPH)  $(GWWOBJ) $(PPOBJ)
+bse_main.x : bse_main.o libbse.a  $(BSEOBJS) $(PWOBJS) $(QEMODS) $(GWWOBJ)
 	$(LD) $(LDFLAGS) -o $@ \
-		bse_main.o libbse.a $(PWOBJS) $(EEOBJS) $(LIBPWPH) $(QEMODS) $(LIBOBJS) $(QELIBS)  $(PW4GWWOBJ) $(GWWOBJ) $(PPOBJ)
+		bse_main.o libbse.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)  $(PW4GWWOBJ) $(GWWOBJ)
 	- ( cd ../../bin ; ln -fs ../GWW/bse/$@ . )
 
 tldeps:

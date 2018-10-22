@@ -48,7 +48,7 @@
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
-    USE superconductivity, ONLY : kpmq_map
+    USE io_eliashberg, ONLY : kpmq_map
     USE noncollin_module, ONLY : noncolin
     !
     IMPLICIT NONE

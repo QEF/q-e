@@ -11,7 +11,7 @@ QEMODS = ../../Modules/libqemod.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 
-TLDEPS=bindir libs pw
+TLDEPS=pwlibs
 
 all : tldeps turbo_spectrum.x
 

@@ -73,15 +73,15 @@ CONTAINS
     END IF
 #endif
     !
-    CALL mp_start( nproc, mpime, world_comm )
-    !
     CALL mp_count_nodes ( nnode, color, key, world_comm )
-
+    !
 #if defined(__CUDA)
     ierr = cudaGetDeviceCount( ndev )
     ierr = cudaSetDevice(mod(key, ndev))
     print *, "MPI ", key, " on node ", color, " is using GPU: ", mod(key, ndev)
 #endif
+    !
+    CALL mp_start( nproc, mpime, world_comm )
     !
     !
     ! ... meta_ionode is true if this processor is the root processor

@@ -18,7 +18,7 @@ if [ ! -f $1.cell ]; then
 fi
 
 #
-# 1 Bohr = 0.529177249 Angstrom
+# 1 Bohr = 0.52917720859 Angstrom
 #
 
 awk -v FILE="$1" '

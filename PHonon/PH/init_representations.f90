@@ -69,7 +69,7 @@ subroutine init_representations()
 !
 !    calculate rtau with the new symmetry order
 !
-     CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
+     CALL sgam_lr (at, bg, nsym, s, irt, tau, rtau, nat)
 !
 !    and calculate the vectors G associated to the symmetry Sq = q + G
 !    if minus_q is true calculate also irotmq and the G associated to Sq=-g+G

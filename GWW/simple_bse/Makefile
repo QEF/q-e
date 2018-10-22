@@ -6,10 +6,13 @@ include ../../make.inc
 MODFLAGS= $(BASEMOD_FLAGS) \
 	$(MOD_FLAG)../../GWW/gww
 
-#location of needed libraries
-LIBOBJS= ../../iotk/src/libiotk.a  \
-	../../clib/clib.a
-
+#<<<<<<< HEAD
+##location of needed libraries
+#LIBOBJS= ../../iotk/src/libiotk.a  \
+#	../../clib/clib.a
+#
+#=======
+#>>>>>>> 40cae61e51e5d23399a72a97ff6a42645c3af4a3
 EXCOBJS = \
 simple_object.o \
 start_end.o \
@@ -23,16 +26,15 @@ spectrum.o \
 lanczos.o \
 build_eemat.o
 
-
-
-
-#QEMODS = ../../Modules/libqemod.a   ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a \
-	 ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
 	../../KS_Solvers/libks_solvers.a \
         ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
 
-TLDEPS=bindir mods libs libiotk
+#<<<<<<< HEAD
+#TLDEPS=bindir mods libs libiotk
+#=======
+TLDEPS=bindir mods libs gwwlib
+#>>>>>>> 40cae61e51e5d23399a72a97ff6a42645c3af4a3
 
 all : tldeps simple_bse.x  libsimple_exc.a
 

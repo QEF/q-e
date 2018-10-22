@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -39,8 +39,9 @@ SUBROUTINE run_nscf(do_band, iq)
   USE mp_bands,        ONLY : intra_bgrp_comm, nyfft
   USE mp_pools,        ONLY : kunit
   USE lr_symm_base,    ONLY : minus_q, nsymq, invsymq
+  USE control_lr,      ONLY : ethr_nscf
   USE qpoint,          ONLY : xq
-  USE klist,           ONLY : qnorm 
+  USE klist,           ONLY : qnorm, nelec 
   USE el_phon,         ONLY : elph_mat
   !
   IMPLICIT NONE
@@ -83,17 +84,22 @@ SUBROUTINE run_nscf(do_band, iq)
   !
   wfc_dir=tmp_dir_phq
   tmp_dir=tmp_dir_phq
+  !
   ! ... Setting the values for the nscf run
   !
-  startingconfig    = 'input'
-  starting_pot      = 'file'
-  starting_wfc      = 'atomic'
-  restart = ext_restart
-  conv_ions=.true.
+  startingconfig = 'input'
+  starting_pot   = 'file'
+  starting_wfc   = 'atomic'
+  restart        = ext_restart
+  conv_ions      = .true.
+  ethr_nscf      = 1.0D-9 / nelec 
+  ! threshold for diagonalization ethr_nscf - should be good for all cases
   !
-  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft )
+  CALL fft_type_allocate ( dfftp, at, bg, gcutm,  intra_bgrp_comm, nyfft=nyfft )
   CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
+  !
   CALL setup_nscf ( newgrid, xq, elph_mat )
+  !
   CALL init_run()
   !
 !!!!!!!!!!!!!!!!!!!!!!!! ACFDT TEST !!!!!!!!!!!!!!!!

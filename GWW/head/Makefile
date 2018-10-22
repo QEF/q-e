@@ -28,7 +28,11 @@ LIBPWPH =  ../../PHonon/PH/libph.a ../..//LR_Modules/liblrmod.a ../../PW/src/lib
 
 LIBMIN= ../minpack/minpacklib.a
 
-TLDEPS= bindir mods libs pw ph
+#<<<<<<< HEAD
+#TLDEPS= bindir mods libs pw ph
+#=======
+TLDEPS= phlibs 
+#>>>>>>> 40cae61e51e5d23399a72a97ff6a42645c3af4a3
 
 all : tldeps head.x
 
