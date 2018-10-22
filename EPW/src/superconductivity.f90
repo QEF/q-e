@@ -512,8 +512,9 @@
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : max_memlt
     USE eliashbergcom, ONLY : nkfs, nbndfs, nsiw, nqfs, limag_fly, memlt_pool
-    USE mp_global, ONLY : inter_pool_comm, my_pool_id
-    USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id
+    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
+    USE division,      ONLY : fkbounds
     ! 
     IMPLICIT NONE
     !
@@ -548,34 +549,34 @@
     CALL mp_barrier(inter_pool_comm)
     !
     IF ( maxval(memlt_pool(:)) .gt. max_memlt ) THEN
-       WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of required memory per pool :", &
-            " ~= ", maxval(memlt_pool(:)), " Gb"
-       limag_fly = .true.
-       !
-       ! remove memory required for AKeri 
-       ! imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:)) * nbndfs**2 * ( 2 * nsiw(itemp) )
-       ! RM - avoid problems when imelt is greater than (2^31)-1 (singed long integer)
-       !
-       imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:))
-       rmelt = dble(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
-       imelt = nbndfs**2 * ( 2 * nsiw(itemp) )
-       rmelt = dble(imelt) * rmelt
-       rmelt = - rmelt + memlt_pool(my_pool_id+1)
-       !
-       memlt_pool(:) = 0.d0
-       memlt_pool(my_pool_id+1) = rmelt
-       !
-    ! collect contributions from all pools
-    CALL mp_sum( memlt_pool, inter_pool_comm )
-    CALL mp_barrier(inter_pool_comm)
-  
+      WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of required memory per pool :", &
+           " ~= ", maxval(memlt_pool(:)), " Gb"
+      limag_fly = .true.
+      !
+      ! remove memory required for AKeri 
+      ! imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:)) * nbndfs**2 * ( 2 * nsiw(itemp) )
+      ! RM - avoid problems when imelt is greater than (2^31)-1 (singed long integer)
+      !
+      imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:))
+      rmelt = dble(imelt) * 8.d0 / 1073741824.d0 ! 8 bytes per number, value in Gb
+      imelt = nbndfs**2 * ( 2 * nsiw(itemp) )
+      rmelt = dble(imelt) * rmelt
+      rmelt = - rmelt + memlt_pool(my_pool_id+1)
+      !
+      memlt_pool(:) = 0.d0
+      memlt_pool(my_pool_id+1) = rmelt
+      !
+      ! collect contributions from all pools
+      CALL mp_sum( memlt_pool, inter_pool_comm )
+      CALL mp_barrier(inter_pool_comm)
+      ! 
     ENDIF
     !
     IF ( limag_fly ) THEN
-       WRITE(stdout,'(/,5x,a/)') "AKeri is calculated on the fly since its size exceedes max_memlt"
+      WRITE(stdout,'(/,5x,a/)') "AKeri is calculated on the fly since its size exceedes max_memlt"
     ELSE
-       WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of allocated memory per pool :", &
-            " ~= ", maxval(memlt_pool(:)), " Gb"
+      WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of allocated memory per pool :", &
+           " ~= ", maxval(memlt_pool(:)), " Gb"
     ENDIF
     !
     RETURN
@@ -594,8 +595,9 @@
     USE io_global,     ONLY : stdout
     USE epwcom,        ONLY : nqstep, max_memlt
     USE eliashbergcom, ONLY : nkfs, nbndfs, nqfs, lacon_fly, memlt_pool
-    USE mp_global, ONLY : inter_pool_comm, my_pool_id
-    USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
+    USE mp_global,     ONLY : inter_pool_comm, my_pool_id
+    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
+    USE division,      ONLY : fkbounds
     ! 
     IMPLICIT NONE
     !
@@ -624,20 +626,20 @@
     CALL mp_barrier(inter_pool_comm)
     !
     IF ( maxval(memlt_pool(:)) .gt. max_memlt ) THEN
-       WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of required memory per pool :", &
-            " ~= ", maxval(memlt_pool(:)), " Gb"
-       lacon_fly = .true.
-       !
-       ! remove memory required for a2fij
-       imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:)) * nbndfs**2 * nqstep
-       CALL mem_size_eliashberg( -imelt )
+      WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of required memory per pool :", &
+           " ~= ", maxval(memlt_pool(:)), " Gb"
+      lacon_fly = .true.
+      !
+      ! remove memory required for a2fij
+      imelt = ( upper_bnd - lower_bnd + 1 ) * maxval(nqfs(:)) * nbndfs**2 * nqstep
+      CALL mem_size_eliashberg( -imelt )
     ENDIF
     !
     IF ( lacon_fly ) THEN
-       WRITE(stdout,'(/,5x,a/)') "a2fij is calculated on the fly since its size exceedes max_memlt"
+      WRITE(stdout,'(/,5x,a/)') "a2fij is calculated on the fly since its size exceedes max_memlt"
     ELSE
-       WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of allocated memory per pool :", &
-            " ~= ", maxval(memlt_pool(:)), " Gb"
+      WRITE(stdout,'(/,5x,a,a,f9.4,a)') "Size of allocated memory per pool :", &
+           " ~= ", maxval(memlt_pool(:)), " Gb"
     ENDIF
     !
     RETURN

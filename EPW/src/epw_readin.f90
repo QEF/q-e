@@ -59,7 +59,7 @@
                             scattering_0rta, longrange, shortrange, scatread, &
                             restart_filq, prtgkk, nel, meff, epsiHEG, lphase, &
                             omegamin, omegamax, omegastep, n_r, lindabs, &
-                            mob_maxiter, use_ws
+                            mob_maxiter, use_ws, epmatkqread, selecqread
   USE elph2,         ONLY : elph
   USE start_k,       ONLY : nk1, nk2, nk3
   USE constants_epw, ONLY : ryd2mev, ryd2ev, ev2cmm1, kelvin2eV
@@ -104,7 +104,7 @@
        filukk, filukq, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,   &
        eig_read, wepexst, epexst, vme,                                         &
        degaussw, fsthick, eptemp,  nsmear, delta_smear,                        &
-       dvscf_dir, ngaussw,                                                     &
+       dvscf_dir, ngaussw, epmatkqread, selecqread,                            &
        wannierize, dis_win_max, dis_win_min, dis_froz_min, dis_froz_max,       &
        num_iter, proj, bands_skipped, wdata, iprint, write_wfn,                &
        wmin, wmax, nw, eps_acustic, a2f, nest_fn, plselfen,                    & 
@@ -285,6 +285,8 @@
   ! lphase          : If .true., fix the gauge on the phonon eigenvectors and electronic eigenvectors - DS 
   ! mob_maxiter     : Maximum number of iteration for the IBTE. 
   ! use_ws          : If .true., use the Wannier-center to create the Wigner-Seitz cell. 
+  ! epmatkqread     : If .true., restart an IBTE calculation from scattering written to files. 
+  ! selecqread      : If .true., restart from the selecq.fmt file
   !  
   ! Added by Manos Kioupakis
   ! omegamin  : Photon energy minimum
@@ -482,6 +484,8 @@
   lindabs    = .false.
   mob_maxiter= 50
   use_ws     = .false.
+  epmatkqread = .false.
+  selecqread = .false.
   !
   !     reading the namelist inputepw
   !

@@ -260,6 +260,7 @@
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
     USE io_eliashberg, ONLY : eliashberg_write_iaxis
+    USE division,      ONLY : fkbounds
     ! 
     IMPLICIT NONE
     !
@@ -515,11 +516,12 @@
     USE superconductivity_iso, ONLY : gamma_acont
     USE superconductivity, ONLY : mem_size_eliashberg, eliashberg_memlt_aniso_acon
     USE constants_epw, ONLY : pi, ci, zero, czero, cone
-    USE io_global, ONLY : ionode_id
-    USE mp_global, ONLY : inter_pool_comm
-    USE mp_world,  ONLY : mpime
-    USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
+    USE io_global,     ONLY : ionode_id
+    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_world,      ONLY : mpime
+    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
     USE io_eliashberg, ONLY : eliashberg_write_raxis
+    USE division,      ONLY : fkbounds
     ! 
     IMPLICIT NONE
     !
@@ -796,11 +798,12 @@
                               wkfs, dosef, w0g, nkfs, nbndfs, ef0, ekfs
     USE superconductivity, ONLY : pade_coeff, pade_eval, mem_size_eliashberg
     USE constants_epw, ONLY : cone, ci, zero, czero
-    USE io_global, ONLY : ionode_id
-    USE mp_global, ONLY : inter_pool_comm
-    USE mp_world,  ONLY : mpime
-    USE mp,        ONLY : mp_bcast, mp_barrier, mp_sum
+    USE io_global,     ONLY : ionode_id
+    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_world,      ONLY : mpime
+    USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
     USE io_eliashberg, ONLY : eliashberg_write_raxis
+    USE division,      ONLY : fkbounds
     ! 
     IMPLICIT NONE
     !
@@ -964,6 +967,7 @@
     USE epwcom,        ONLY : fsthick
     USE eliashbergcom, ONLY : nkfs, nbndfs, nsiw, estemp, AKeri, ekfs, ef0, ixkqf, ixqfs, nqfs
     USE constants_epw, ONLY : pi, zero 
+    USE division,      ONLY : fkbounds
     ! 
     IMPLICIT NONE
     !
@@ -1133,6 +1137,7 @@
     USE superconductivity, ONLY : mem_size_eliashberg
     USE constants_epw, ONLY : zero
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
+    USE division,      ONLY : fkbounds
     !      
     IMPLICIT NONE
     !
@@ -1339,6 +1344,7 @@
     USE eliashbergcom, ONLY : nkfs, nbndfs, g2, a2fij, ixkqf, ixqfs, nqfs, ekfs, ef0, & 
                               dosef, wsph
     USE constants_epw, ONLY : zero
+    USE division,      ONLY : fkbounds
     ! 
     IMPLICIT NONE
     !
@@ -1422,6 +1428,7 @@
     USE mp_global,     ONLY : inter_pool_comm, my_pool_id, npool
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
+    USE division,      ONLY : fkbounds
     ! 
     IMPLICIT NONE
     !

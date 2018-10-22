@@ -132,12 +132,12 @@ then
 
         if test "$have_fft" == "1" 
         then
-              try_incdir=""
-              try_incdir="$try_incdir /opt/intel/Compiler/*/*/mkl/include
-                          /opt/intel/mkl/*/include
-                          /opt/intel/mkl*/include"
-              try_incdir="$try_incdir $MKLROOT/include $MKL_INCLUDE $CPATH $FPATH"
-              try_incdir="`echo $try_incdir | sed 's/:/ /g'`"
+              if test "$MKLROOT" == ""
+              then
+                 try_incdir="/opt/intel/mkl/include"
+              else
+                 try_incdir="$MKLROOT/include"
+              fi
               # 
               for inc in $try_incdir
               do

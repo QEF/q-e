@@ -23,7 +23,7 @@
   USE elph2,         ONLY : epmatq, zstar, epsi, bmat
   USE epwcom,        ONLY : lpolar
   USE modes,         ONLY : nmodes
-  USE constants_epw, ONLY : cone, czero, one, ryd2mev
+  USE constants_epw, ONLY : cone, czero, one, ryd2mev, eps8
   USE pwcom,         ONLY : nbnd, nks
   USE ions_base,     ONLY : amass, ityp
   USE phcom,         ONLY : nq1, nq2, nq3
@@ -65,7 +65,6 @@
   !
   REAL(kind=DP) :: massfac
   !! square root of mass 
-  REAL(kind=DP), parameter :: eps = 0.01/ryd2mev
   !
   COMPLEX(kind=DP) :: eptmp( nmodes)
   !! temporary e-p matrix elements
@@ -178,7 +177,7 @@
                    epmatq_opt(ibnd, jbnd, ik, :), 1, czero, eptmp, 1 )
         !
         IF (lpolar) THEN
-          IF ( (abs(xq(1)).gt.eps) .or. (abs(xq(2)).gt.eps) .or. (abs(xq(3)).gt.eps) ) THEN
+          IF ( (abs(xq(1)) > eps8) .or. (abs(xq(2)) > eps8) .or. (abs(xq(3)) > eps8) ) THEN
             CALL rgd_blk_epw (nq1, nq2, nq3, xq, cz2t, eptmp, &
                      nmodes, epsi, zstar, bmat(ibnd,jbnd,ik,iq), -one)
           ENDIF
