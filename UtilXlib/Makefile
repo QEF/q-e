@@ -11,6 +11,7 @@ data_buffer.o \
 error_handler.o \
 find_free_unit.o \
 fletcher32_mod.o \
+nvtx.o \
 mem_counter.o \
 mp.o \
 mp_base.o \

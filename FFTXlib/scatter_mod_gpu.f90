@@ -79,7 +79,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   !    f_in  contains the output Y columns.
   !
   USE cudafor
-  USE nvtx
+  !USE nvtx
   USE fftx_buffers, ONLY : cpu_buffer
   IMPLICIT NONE
 
@@ -100,7 +100,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   INTEGER :: sh(desc%nproc2), rh(desc%nproc2)
 #endif
   !
-  CALL nvtxStartRangeAsync("fft_scatter_xy_gpu", isgn + 5)
+  !CALL nvtxStartRangeAsync("fft_scatter_xy_gpu", isgn + 5)
   !
   me2    = desc%mype2 + 1
   nproc2 = desc%nproc2 ; if ( abs(isgn) == 3 ) nproc2 = 1 
@@ -317,7 +317,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
 
   ENDIF
   !
-  CALL nvtxEndRangeAsync()
+  !CALL nvtxEndRangeAsync()
   DEALLOCATE ( ncp_ )
   CALL cpu_buffer%release_buffer(f_in, ierr)
   CALL cpu_buffer%release_buffer(f_aux, ierr)
@@ -367,7 +367,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   !    f_in  contains the output Z columns.
   !
   USE cudafor
-  USE nvtx
+  !USE nvtx
   USE fftx_buffers, ONLY : cpu_buffer
   IMPLICIT NONE
 
@@ -390,7 +390,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   INTEGER :: sh(desc%nproc3), rh(desc%nproc3)
 #endif
   TYPE(cudaEvent) :: zero_event
-  CALL nvtxStartRangeAsync("fft_scatter_yz_gpu", isgn + 5)
+  !CALL nvtxStartRangeAsync("fft_scatter_yz_gpu", isgn + 5)
   ierr = cudaEventCreate( zero_event )
   !
   me     = desc%mype  + 1
@@ -644,7 +644,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   DEALLOCATE ( ncp_ ) ! , f_aux, f_in)
   CALL cpu_buffer%release_buffer(f_in, ierr)
   CALL cpu_buffer%release_buffer(f_aux, ierr)
-  CALL nvtxEndRangeAsync()
+  !CALL nvtxEndRangeAsync()
   CALL stop_clock ('fft_scatt_yz')
 
 #endif
@@ -823,7 +823,7 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
   !    f_in  contains the output Z columns.
   !
   USE cudafor
-  USE nvtx
+  !USE nvtx
   USE fftx_buffers, ONLY : cpu_buffer
   IMPLICIT NONE
 
@@ -845,7 +845,7 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
 #if defined(__NON_BLOCKING_SCATTER)
   INTEGER :: sh(desc%nproc3), rh(desc%nproc3)
 #endif
-  CALL nvtxStartRangeAsync("fft_scatter_many_yz_gpu", isgn + 5)
+  !CALL nvtxStartRangeAsync("fft_scatter_many_yz_gpu", isgn + 5)
 
 
   !
@@ -1022,7 +1022,7 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
   DEALLOCATE ( ncp_ ) ! , f_aux, f_in)
   CALL cpu_buffer%release_buffer(f_in, ierr)
   CALL cpu_buffer%release_buffer(f_aux, ierr)
-  CALL nvtxEndRangeAsync()
+  !CALL nvtxEndRangeAsync()
   CALL stop_clock ('fft_scatt_yz')
 
 #endif

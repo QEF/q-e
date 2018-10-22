@@ -193,7 +193,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
   ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
   !
   USE cudafor
-  USE nvtx
+  !USE nvtx
   USE fftx_buffers,   ONLY : gpu_buffer
   USE fft_scalar,     ONLY : cft_1z_gpu
   USE scatter_mod_gpu,ONLY : fft_scatter_xy_gpu, fft_scatter_yz_gpu, fft_scatter_tg_gpu
@@ -240,7 +240,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
   CALL gpu_buffer%lock_buffer(aux_d, nnr_, ierr);
   !
   IF ( isgn > 0 ) THEN  ! G -> R
-     CALL nvtxStartRangeAsync("tg_cft3s_gpu G->R", 1)
+     !CALL nvtxStartRangeAsync("tg_cft3s_gpu G->R", 1)
      if (isgn==+3) then 
         call fft_scatter_tg_opt_gpu ( dfft, f_d, aux_d, nnr_, isgn, stream)
         CALL cft_1z_gpu( aux_d, nsticks_z, n3, nx3, isgn, f_d, stream )
@@ -260,11 +260,11 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
             f_d(i) = (0.0_DP,0.0_DP)
         end do
      endif
-     CALL nvtxEndRangeAsync()
+     !CALL nvtxEndRangeAsync()
      !
   ELSE                  ! R -> G
      !
-     CALL nvtxStartRangeAsync("tg_cft3s_gpu R->G", 2)
+     !CALL nvtxStartRangeAsync("tg_cft3s_gpu R->G", 2)
      CALL cft_1z_gpu( f_d, nsticks_x, n1, nx1, isgn, aux_d, stream )
      CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn, stream )
      CALL cft_1z_gpu( f_d, nsticks_y, n2, nx2, isgn, aux_d, stream )
@@ -292,7 +292,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
            end do
         endif
      endif
-     CALL nvtxEndRangeAsync()
+     !CALL nvtxEndRangeAsync()
   ENDIF
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
   !
@@ -340,7 +340,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
   !
   USE cudafor
-  USE nvtx
+  !USE nvtx
   USE fftx_buffers,   ONLY : gpu_buffer
   USE fft_scalar,     ONLY : cft_1z_gpu
   USE scatter_mod_gpu,ONLY : aux_d => aux_d_workaround_d
@@ -402,7 +402,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   END DO
   !
   IF ( isgn > 0 ) THEN  ! G -> R
-     CALL nvtxStartRangeAsync("many_cft3s_gpu G->R", 1)
+     !CALL nvtxStartRangeAsync("many_cft3s_gpu G->R", 1)
      DO i = 0, howmany-1
         CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_z, n3, nx3, isgn, aux_d(nx3*nsticks_zx*i+1:), streams(i+1))
      END DO
@@ -426,11 +426,11 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
         endif
      END DO
      !
-     CALL nvtxEndRangeAsync()
+     !CALL nvtxEndRangeAsync()
      !
   ELSE                  ! R -> G
      !
-     CALL nvtxStartRangeAsync("many_cft3s_gpu R->G", 2)
+     !CALL nvtxStartRangeAsync("many_cft3s_gpu R->G", 2)
      DO i = 0, howmany-1
         CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_x, n1, nx1, isgn, aux_d(i*nnr_+1:), streams(i+1) )
         !
@@ -453,7 +453,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
             end do
         endif
      END DO
-     CALL nvtxEndRangeAsync()
+     !CALL nvtxEndRangeAsync()
   ENDIF
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
   !
