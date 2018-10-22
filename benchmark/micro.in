@@ -1,0 +1,58 @@
+&control
+prefix = 'titania'
+calculation = 'scf'
+restart_mode = 'from_scratch'
+wf_collect = .false.
+disk_io = 'none'
+tstress = .false.
+tprnfor = .false.
+outdir = './'
+wfcdir = './'
+pseudo_dir = './'
+/
+&system
+ibrav = 0
+celldm(1) = 8.7671
+nat = 12
+ntyp = 2
+nbnd = 192
+ecutwfc = 80
+input_dft = 'pbe0'
+nqx1 = 1
+nqx2 = 1
+nqx3 = 1
+exxdiv_treatment = 'gygi-baldereschi'
+/
+&electrons
+startingwfc='atomic'
+electron_maxstep = 20
+conv_thr = 1.0d5
+mixing_mode = 'plain'
+mixing_beta = 0.7
+mixing_ndim = 8
+diagonalization = 'david'
+diago_david_ndim = 4
+diago_full_acc = .true.
+/
+CELL_PARAMETERS
+2.0 0.0 0.0
+0.0 1.0 0.0
+0.0 0.0 0.638588
+ATOMIC_SPECIES
+Ti 47.867 Ti.pbe.UPF
+O 15.9994 O.pbe.UPF
+ATOMIC_POSITIONS crystal
+Ti 0.0 0.0 0.0
+Ti 0.25 0.5 0.5
+O 0.15254385 0.3050877 0.0
+O -0.15254385 -0.3050877 0.0
+O 0.40254385 0.1949123 0.5
+O 0.09745615 0.8050877 0.5
+Ti 0.5 0.0 0.0
+Ti 0.75 0.5 0.5
+O 0.65254385 0.3050877 0.0
+O 0.34745615 -0.3050877 0.0
+O 0.90254385 0.1949123 0.5
+O 0.59745615 0.8050877 0.5
+K_POINTS automatic
+1 1 1 1 1 1
