@@ -76,7 +76,7 @@ SUBROUTINE invfft_y( fft_kind, f, dfft, howmany )
   ELSE IF( dfft%lpara ) THEN
 
      IF( howmany_ /= 1 ) THEN
-        CALL fftx_error__( ' fwfft ', ' howmany not yet implemented for parallel driver ', 1 )
+        CALL fftx_error__( ' invfft ', ' howmany not yet implemented for parallel driver ', 1 )
      END IF
 
      IF( fft_kind == 'Rho' ) THEN
@@ -383,7 +383,7 @@ SUBROUTINE invfft_y_gpu( fft_kind, f_d, dfft, howmany, stream )
 
      IF( howmany_ /= 1 ) THEN
         IF( fft_kind == 'Rho' ) THEN
-           CALL many_cft3s_2d_gpu( f_d, dfft, 1,  howmany_) !Not Implemented Yet
+           CALL many_cft3s_2d_gpu( f_d, dfft, 1,  howmany_)
         ELSE IF( fft_kind == 'Wave' ) THEN
            CALL many_cft3s_2d_gpu( f_d, dfft, 2, howmany_ )
         END IF
