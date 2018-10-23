@@ -1388,30 +1388,30 @@ MODULE exx
           !
        END IF
 #endif
+    END DO
 
-       !
 #if defined (__CUDA)
-       IF (noncolin) THEN
-          result_nc_d(:,:,ii) = 0.0_DP
-       ELSE
-          result_d(:,ii) = 0.0_DP
-       ENDIF
+    IF (noncolin) THEN
+       result_nc_d = 0.0_DP
+    ELSE
+       result_d = 0.0_DP
+    ENDIF
 #else
+    DO ii=1, nibands(my_egrp_id+1)
        IF (noncolin) THEN
-!$omp parallel do default(shared) firstprivate(nrxxs) private(ir)
+          !$omp parallel do default(shared) firstprivate(nrxxs) private(ir)
           DO ir=1,nrxxs
              result_nc(ir,1,ii) = 0.0_DP
              result_nc(ir,2,ii) = 0.0_DP
           ENDDO
        ELSE
-!$omp parallel do default(shared) firstprivate(nrxxs) private(ir)
+          !$omp parallel do default(shared) firstprivate(nrxxs) private(ir)
           DO ir=1,nrxxs
              result(ir,ii) = 0.0_DP
           ENDDO
        END IF
-       !
-#endif
     END DO
+#endif
 
 #if defined (__CUDA)
     ! no longer need psi_d
