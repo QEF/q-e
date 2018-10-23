@@ -984,18 +984,28 @@
     ! dH~(k')    is chf_a( nbnd, nbnd, 2*ik-1 )
     ! dH~(k'+q') is chf_a( nbnd, nbnd, 2*ik   )
     !
-    DO ir = 1, nrr
-      !
-      ! convert irvec from reduce to cartesian coordinates
-      ! multiply by alat since the crystal axis 'at' are in 
-      ! cart. coords. in units of a_0
-      irvec_tmp(:) = alat * matmul( at, dble(irvec(:,ir)) )
-      DO ipol = 1, 3
-        chf_a(ipol,:,:) = chf_a(ipol,:,:) + &
-              ci * irvec_tmp(ipol) * cfac(ir,:,:) * chw(:,:,ir)
+    IF (use_ws) THEN
+      DO ir = 1, nrr
+        !
+        ! convert irvec from reduce to cartesian coordinates
+        ! multiply by alat since the crystal axis 'at' are in 
+        ! cart. coords. in units of a_0
+        irvec_tmp(:) = alat * matmul( at, dble(irvec(:,ir)) )
+        DO ipol = 1, 3
+          chf_a(ipol,:,:) = chf_a(ipol,:,:) + &
+                ci * irvec_tmp(ipol) * cfac(ir,:,:) * chw(:,:,ir)
+        ENDDO
+        !
       ENDDO
-      !
-    ENDDO
+    ELSE
+      DO ir = 1, nrr
+        irvec_tmp(:) = alat * matmul( at, dble(irvec(:,ir)) )
+        DO ipol = 1, 3
+          chf_a(ipol,:,:) = chf_a(ipol,:,:) + &
+                ci * irvec_tmp(ipol) * cfac(ir,1,1) * chw(:,:,ir)
+        ENDDO
+      ENDDO
+    ENDIF
     !
     !----------------------------------------------------------
     !  STEP 4: un-rotate to Bloch space, fine grid
