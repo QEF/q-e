@@ -395,14 +395,8 @@ then
                    try_dflags="$try_dflags -D__LINUX_ESSL"
 		fi
                 ;;
-	mac686:ifort* )
-                #This solution is tested with MacOs 10.6 and Intel 11.1
-                #..and now MacOs 10.8.3 and Intel 13 
-                try_libdirs="/Developer/opt/intel/Compiler/*/*/Frameworks/mkl/lib/universal
-                             /opt/intel/Compiler/*/*/Frameworks/mkl/lib/universal
-                             /opt/intel/mkl*/lib/em64t
-                             /opt/intel/mkl/lib"
-		try_libdirs="$libdirs $try_libdirs $ld_library_path"
+	mac686:* )
+		try_libdirs="$libdirs /opt/intel/mkl/lib $ld_library_path"
 
 		for dir in none $try_libdirs
 		do
@@ -417,8 +411,7 @@ then
 			FFLAGS="$test_fflags"
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
 			LIBS=""
-                        # First, a by-the-apple-book search of MKL... >10.2 requires multiple libraries
-                        # 64 bit is buggy as of 11.1.088
+                        #
                         if test "$use_openmp" -eq 0; then
                         AC_SEARCH_LIBS(dgemm, mkl_intel,
                                        have_blas=1 have_mkl=1
@@ -434,7 +427,7 @@ then
                                        echo "MKL not found",
                                        -lmkl_intel_thread -lmkl_core -openmp -lpthread)
 			fi
-                        # 32 bit
+                        #
                         if test "$ac_cv_search_dgemm" != "no"
                         then break ; fi
       		done
