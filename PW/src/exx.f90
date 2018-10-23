@@ -1347,9 +1347,6 @@ MODULE exx
           CALL invfft ('Wave', temppsic_nc(:,1,ii), dfftt)
           CALL invfft ('Wave', temppsic_nc(:,2,ii), dfftt)
           !
-#if defined(__CUDA)
-       temppsic_nc_d = temppsic_nc
-#endif
        ELSE
           !
 !$omp parallel do  default(shared), private(ig)
@@ -1361,9 +1358,6 @@ MODULE exx
           CALL invfft ('Wave', temppsic(:,ii), dfftt)
           !
        END IF
-#if defined(__CUDA)
-       temppsic_d = temppsic
-#endif
        !
 #if defined (__CUDA)
        IF (noncolin) THEN
@@ -1387,6 +1381,15 @@ MODULE exx
        !
 #endif
     END DO
+
+#if defined(__CUDA)
+    !upload changed data  
+    IF (noncolin) THEN
+       temppsic_nc_d = temppsic_nc
+    ELSE
+       temppsic_d = temppsic
+    ENDIF
+#endif
     !
     !precompute these guys
     omega_inv = 1.0 / omega

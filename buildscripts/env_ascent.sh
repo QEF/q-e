@@ -20,12 +20,13 @@ export CPATH=
 export FC=pgf90
 export F90=pgf90
 export MPIF90=mpif90
-export FCFLAGS="-g -O3 -mp -Mpreprocess"
+export FCFLAGS="-g -O3 -mp -Mpreprocess -D__PROFILE"
 export F90FLAGS="${FCFLAGS}"
 export MPIf90FLAGS="${F90FLAGS}"
 export CC=pgcc
-export CFLAGS="-g -O3 -mp"
+export CFLAGS="-g -O3 -mp -D__PROFILE"
 export LDFLAGS="${F90FLAGS}"
+export NVCCFLAGS="-lineinfo"
 
 #hdf5
 export HDF5_DIR=${OLCF_HDF5_ROOT}
