@@ -1205,6 +1205,13 @@ MODULE exx
     !
     !
     IMPLICIT NONE
+
+#if defined(__CUDA)
+#define DEV_ATTRIBUTES , DEVICE
+#else
+#define DEV_ATTRIBUTES 
+#endif
+
     !
     INTEGER                  :: lda, n, m
     COMPLEX(DP)              :: psi(:,:)
@@ -1216,13 +1223,8 @@ MODULE exx
     !
 
     ! local variables
-#if defined(__CUDA)
-    COMPLEX(DP),ALLOCATABLE,DEVICE :: temppsic_d(:,:)
-    COMPLEX(DP),ALLOCATABLE,DEVICE :: temppsic_nc_d(:,:,:)
-#else
-    COMPLEX(DP),ALLOCATABLE :: temppsic(:,:)
-    COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:,:)
-#endif
+    COMPLEX(DP),ALLOCATABLE DEV_ATTRIBUTES :: temppsic(:,:)
+    COMPLEX(DP),ALLOCATABLE DEV_ATTRIBUTES :: temppsic_nc(:,:,:)
 
     COMPLEX(DP),ALLOCATABLE :: result(:,:), result_nc(:,:,:)
 #if defined(__CUDA)
@@ -1285,18 +1287,20 @@ MODULE exx
 
     IF (noncolin) THEN
 #if defined(__CUDA)
-       ALLOCATE( temppsic_nc_d(nrxxs,npol,ialloc), result_nc_d(nrxxs,npol,ialloc))
-#else
-       ALLOCATE( temppsic_nc(nrxxs,npol,ialloc) )
+       ALLOCATE( result_nc_d(nrxxs,npol,ialloc) )
 #endif
        ALLOCATE( result_nc(nrxxs,npol,ialloc) )
+
+       !temppsic knows where it is
+       ALLOCATE( temppsic_nc(nrxxs,npol,ialloc) )
     ELSE
-       ALLOCATE( result(nrxxs,ialloc) )
 #if defined(__CUDA)
-       ALLOCATE( temppsic_d(nrxxs,ialloc), result_d(nrxxs,ialloc) )
-#else
-       ALLOCATE( temppsic(nrxxs,ialloc) )
+       ALLOCATE( result_d(nrxxs,ialloc) )
 #endif
+       ALLOCATE( result(nrxxs,ialloc) )
+       
+       !temppsic knows
+       ALLOCATE( temppsic(nrxxs,ialloc) )
     ENDIF
     !
     IF(okvan) ALLOCATE(deexx(nkb,ialloc))
@@ -1314,10 +1318,10 @@ MODULE exx
     ALLOCATE(rhoc(nrxxs,jblock), vc(nrxxs,jblock))
 
 
-#if defined(__USE_MANY_FFT)
-    prhoc(1:nrxxs*jblock) => rhoc(:,:)
-    pvc(1:nrxxs*jblock) => vc(:,:)
-#endif
+!#if defined(__USE_MANY_FFT)
+!    prhoc(1:nrxxs*jblock) => rhoc(:,:)
+!    pvc(1:nrxxs*jblock) => vc(:,:)
+!#endif
     !
 
     DO ii=1, nibands(my_egrp_id+1)
@@ -1328,39 +1332,35 @@ MODULE exx
        !
        IF(okvan) deexx(:,ii) = 0._DP
        !
-#if defined(__CUDA)
-       IF (noncolin) THEN
-          temppsic_nc_d(:,:,ii) = 0._DP
-       ELSE
-          temppsic_d(:,ii) = 0._DP
-       ENDIF
-#else
        IF (noncolin) THEN
           temppsic_nc(:,:,ii) = 0._DP
        ELSE
+#if defined(__CUDA)
+          temppsic(:,ii) = 0._DP
+#else
 !$omp parallel do  default(shared), private(ir) firstprivate(nrxxs)
           DO ir = 1, nrxxs
              temppsic(ir,ii) = 0._DP
           ENDDO
-       END IF
 #endif
+       END IF
 
 #if defined(__CUDA)
        !
        IF (noncolin) THEN
           !$cuf kernel do (1)
           DO ig = 1, n
-             temppsic_nc_d(dfftt__nl(igk_exx_d(ig,current_k)),1,ii) = psi_d(ig,ii)
-             temppsic_nc_d(dfftt__nl(igk_exx_d(ig,current_k)),2,ii) = psi_d(npwx+ig,ii)
+             temppsic_nc(dfftt__nl(igk_exx_d(ig,current_k)),1,ii) = psi_d(ig,ii)
+             temppsic_nc(dfftt__nl(igk_exx_d(ig,current_k)),2,ii) = psi_d(npwx+ig,ii)
           ENDDO
-          CALL invfft ('Wave', temppsic_nc_d(:,1,ii), dfftt)
-          CALL invfft ('Wave', temppsic_nc_d(:,2,ii), dfftt)
+          CALL invfft ('Wave', temppsic_nc(:,1,ii), dfftt)
+          CALL invfft ('Wave', temppsic_nc(:,2,ii), dfftt)
        ELSE
           !$cuf kernel do (1)
           DO ig = 1, n
-             temppsic_d( dfftt__nl(igk_exx_d(ig,current_k)), ii ) = psi_d(ig,ii)
+             temppsic( dfftt__nl(igk_exx_d(ig,current_k)), ii ) = psi_d(ig,ii)
           ENDDO
-          CALL invfft ('Wave', temppsic_d(:,ii), dfftt)
+          CALL invfft ('Wave', temppsic(:,ii), dfftt)
        END IF
 #else
        !
@@ -1494,7 +1494,7 @@ MODULE exx
                 nrt = (nrxxs+nblock-1)/nblock
                 !
 #if defined(__CUDA)
-associate(rhoc=>rhoc_d, exxbuff=>exxbuff_d, temppsic_nc=>temppsic_nc_d,temppsic=>temppsic_d)
+associate(rhoc=>rhoc_d, exxbuff=>exxbuff_d)
                 all_start_tmp=all_start(wegrp)
                 !$cuf kernel do (2)
                 DO jbnd=jstart, jend
@@ -1546,9 +1546,9 @@ end associate
                 ENDIF
                 !
                 !   >>>> brings it to G-space
-#if defined(__USE_MANY_FFT)
-                CALL fwfft ('Rho', prhoc, dfftt, howmany=jcount)
-#else
+!#if defined(__USE_MANY_FFT)
+!                CALL fwfft ('Rho', prhoc, dfftt, howmany=jcount)
+!#else
 #if defined (__CUDA)
                 !rhoc_d = rhoc
                 DO jbnd=jstart, jend
@@ -1560,7 +1560,7 @@ end associate
                    CALL fwfft('Rho', rhoc(:,jbnd-jstart+1), dfftt)
                 ENDDO
 #endif
-#endif
+!#endif
                 !
                 !   >>>> add augmentation in G space HERE
                 IF(okvan .and. .not. tqr) THEN
@@ -1616,10 +1616,10 @@ end associate
                 ENDIF
                 !
                 !brings back v in real space
-#if defined(__USE_MANY_FFT)
-                !fft many
-                CALL invfft ('Rho', pvc, dfftt, howmany=jcount)
-#else
+!#if defined(__USE_MANY_FFT)
+!                !fft many
+!                CALL invfft ('Rho', pvc, dfftt, howmany=jcount)
+!#else
 #if defined (__CUDA)
                 DO jbnd=jstart, jend
                    CALL invfft('Rho', vc_d(:,jbnd-jstart+1), dfftt)
@@ -1629,7 +1629,7 @@ end associate
                    CALL invfft('Rho', vc(:,jbnd-jstart+1), dfftt)
                 ENDDO
 #endif
-#endif
+!#endif
                 !
                 ! Add ultrasoft contribution (REAL SPACE)
                 IF(okvan .and. tqr) THEN
@@ -1813,19 +1813,11 @@ end associate
 #endif
     DEALLOCATE(fac, facb )
 
-#if defined (__CUDA)
-    IF (noncolin) THEN
-       DEALLOCATE(temppsic_nc_d)
-    ELSE
-       DEALLOCATE(temppsic_d)
-    ENDIF
-#else
     IF (noncolin) THEN
        DEALLOCATE(temppsic_nc)
     ELSE
        DEALLOCATE(temppsic)
     ENDIF
-#endif
 
 #if defined (__CUDA)
     IF (noncolin) THEN
