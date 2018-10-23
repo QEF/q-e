@@ -1215,6 +1215,9 @@ MODULE exx
     !
     INTEGER                  :: lda, n, m
     COMPLEX(DP)              :: psi(lda*npol,max_ibands)
+!#if defined(__CUDA)
+!    COMPLEX(DP),ALLOCATABLE,DEVICE :: psi_d(:,:)
+!#endif
     COMPLEX(DP)              :: hpsi(lda*npol,max_ibands)
     TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
     !
@@ -1270,13 +1273,17 @@ MODULE exx
     INTEGER :: iegrp, wegrp
     INTEGER :: all_start_tmp
     CALL start_clock( 'vexx_k_setup' )
-    !
+
+    write(*,*) "LDA: ", lda
+    write(*,*) "nrxxs: ", nrxxs
+
     ialloc = nibands(my_egrp_id+1)
     !
     ALLOCATE( fac(dfftt%ngm) )
     nrxxs= dfftt%nnr
     ALLOCATE( facb(nrxxs) )
 #if defined(__CUDA)
+    !ALLOCATE( psi_d(lda*npol,max_ibands) )
     ALLOCATE( facb_d(nrxxs) )
 #endif
     !
@@ -1583,7 +1590,6 @@ end associate
                 CALL invfft ('Rho', pvc, dfftt, howmany=jcount)
 #else
 #if defined (__CUDA)
-                !vc_d = vc
                 DO jbnd=jstart, jend
                    CALL invfft('Rho', vc_d(:,jbnd-jstart+1), dfftt)
                 ENDDO
@@ -1622,8 +1628,6 @@ end associate
                 !
                 !accumulates over bands and k points
                 !
-
-                !vc = vc_d
 
 #if defined(__CUDA)    
 associate(exxbuff=>exxbuff_d, result_nc=>result_nc_d, result=>result_d, vc=>vc_d)
