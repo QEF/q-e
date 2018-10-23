@@ -970,10 +970,10 @@ NAMELIST: &ELECTRONS
                                previous run
                    'change_step' : restart simulation using electronic velocities of the
                                previous run, with rescaling due to the timestep change.
-                               specify the old step via tolp as in
+                               specify the old step via "tolp" as in
                                tolp = 'old_time_step_value' in au.
                                Note that you may want to specify
-                                ion_velocities = 'change_step'
+                               "ion_velocities" = 'change_step'
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1145,15 +1145,15 @@ NAMELIST: &IONS
                                    from the restart file
                    'change_step' : restart the simulation with atomic velocities read
                                    from the restart file, with rescaling due to the
-                                   timestep change, specify the old step via tolp
+                                   timestep change, specify the old step via "tolp"
                                    as in tolp = 'old_time_step_value' in au.
                                    Note that you may want to specify
-                                    electron_velocities = 'change_step'
+                                   electron_velocities = 'change_step'
                    'random'      : start the simulation with random atomic velocities
+                                   (see also variable "tempw")
                    'from_input'  : restart the simulation with atomic velocities read
                                    from standard input - see card 'ATOMIC_VELOCITIES'
-                                   BEWARE: works only if restart_mode='from_scratch',
-                                   tested only with electrons_dynamics='cg'
+                                   BEWARE: tested only with electrons_dynamics='cg'
                    'zero'        : restart the simulation with atomic velocities set
                                    to zero
    +--------------------------------------------------------------------
@@ -1266,8 +1266,8 @@ NAMELIST: &IONS
    Default:        100.D0
    Description:    tolerance (in Kelvin) of the rescaling. When ionic temperature
                    differs from "tempw" more than "tolp" apply rescaling.
-                   meaningful only with " ion_temperature = 'rescaling' "
-                   and with ion_velocities='change_step', where it specifies
+                   meaningful only with "ion_temperature" = 'rescaling'
+                   or with "ion_velocities"='change_step', where it specifies
                    the old timestep
    +--------------------------------------------------------------------
    
@@ -2076,7 +2076,7 @@ CARD: ATOMIC_VELOCITIES { a.u }
    OPTIONAL CARD, READS VELOCITIES FROM STANDARD INPUT
    
    when starting with ion_velocities="from_input" it is convenient
-   to perform few steps (~5-10) with a smaller time step (0.5 a.u.).
+   to perform a few steps (~5-10) with a small time step (0.5 a.u.).
    The velocities must be expressed using the same length units
    indicated in the card ATOMIC_POSITIONS, divided by time
    in atomic units.
@@ -2490,4 +2490,4 @@ CARD: AUTOPILOT
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Thu Jun 28 16:36:13 CEST 2018
+This file has been created by helpdoc utility on Tue Oct 23 15:42:16 CEST 2018
