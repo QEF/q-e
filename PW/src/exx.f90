@@ -1207,7 +1207,7 @@ MODULE exx
     IMPLICIT NONE
     !
     INTEGER                  :: lda, n, m
-    COMPLEX(DP)              :: psi(lda*npol,max_ibands)
+    COMPLEX(DP)              :: psi(:,:)
 #if defined(__CUDA)
     COMPLEX(DP),ALLOCATABLE,DEVICE :: psi_d(:,:)
 #endif
@@ -1278,7 +1278,7 @@ MODULE exx
     nrxxs= dfftt%nnr
     ALLOCATE( facb(nrxxs) )
 #if defined(__CUDA)
-    ALLOCATE( psi_d(lda*npol,max_ibands) )
+    ALLOCATE( psi_d, source=psi )
     ALLOCATE( facb_d(nrxxs) )
 #endif
     !
@@ -1319,11 +1319,6 @@ MODULE exx
     pvc(1:nrxxs*jblock) => vc(:,:)
 #endif
     !
-
-    !upload psi
-#if defined(__CUDA)
-    psi_d = psi
-#endif
 
     DO ii=1, nibands(my_egrp_id+1)
        !
@@ -1417,6 +1412,11 @@ MODULE exx
        !
 #endif
     END DO
+
+#if defined (__CUDA)
+    ! no longer need psi_d
+    DEALLOCATE(psi_d)
+#endif
 
     !
     !precompute these guys
