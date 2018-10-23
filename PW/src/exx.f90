@@ -1214,6 +1214,7 @@ MODULE exx
     COMPLEX(DP)              :: hpsi(lda*npol,max_ibands)
     TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
     !
+
     ! local variables
 #if defined(__CUDA)
     COMPLEX(DP),ALLOCATABLE,DEVICE :: temppsic_d(:,:)
@@ -1222,6 +1223,7 @@ MODULE exx
     COMPLEX(DP),ALLOCATABLE :: temppsic(:,:)
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:,:)
 #endif
+
     COMPLEX(DP),ALLOCATABLE :: result(:,:), result_nc(:,:,:)
 #if defined(__CUDA)
     COMPLEX(DP),ALLOCATABLE,DEVICE :: result_d(:,:), result_nc_d(:,:,:)
@@ -1233,13 +1235,12 @@ MODULE exx
 
 #if defined(__CUDA)
     COMPLEX(DP),ALLOCATABLE,TARGET,DEVICE :: rhoc_d(:,:), vc_d(:,:)
-#else
+#endif
     COMPLEX(DP),ALLOCATABLE,TARGET :: rhoc(:,:), vc(:,:)
-#endif
 
-#if defined(__USE_MANY_FFT)
-    COMPLEX(DP),POINTER :: prhoc(:), pvc(:)
-#endif
+!#if defined(__USE_MANY_FFT)
+!    COMPLEX(DP),POINTER :: prhoc(:), pvc(:)
+!#endif
 
 
     REAL(DP),   ALLOCATABLE :: fac(:), facb(:)
