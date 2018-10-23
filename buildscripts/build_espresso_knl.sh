@@ -2,8 +2,8 @@
 
 #modules
 module load cray-hdf5/1.10.2.0
-module load perftools-base
-module load perftools-lite
+#module load perftools-base
+#module load perftools-lite
 
 #some parameters
 espresso_version="6.3"
@@ -44,7 +44,7 @@ sed -i 's|^HDF5_LIB =|HDF5_LIB = -L${HDF5_DIR}/lib -lhdf5|g' make.inc
 make clean
 
 #build crap
-make pwall
+make -j8 pw
 #make want
 #make gipaw
 #make d3q

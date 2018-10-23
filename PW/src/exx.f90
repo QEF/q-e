@@ -1221,16 +1221,11 @@ MODULE exx
     ! local variables
     COMPLEX(DP),ALLOCATABLE :: temppsic(:,:), result(:,:)
 #if defined(__CUDA)
-    COMPLEX(DP),ALLOCATABLE,DEVICE :: temppsic_d(:,:)
-#endif
-#if defined(__USE_INTEL_HBM_DIRECTIVES)
-!DIR$ ATTRIBUTES FASTMEM :: result
-#elif defined(__USE_CRAY_HBM_DIRECTIVES)
-!DIR$ memory(bandwidth) result
+    COMPLEX(DP),ALLOCATABLE,DEVICE :: temppsic_d(:,:), result_d(:,:)
 #endif
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:,:),result_nc(:,:,:)
 #if defined(__CUDA)
-    COMPLEX(DP),ALLOCATABLE,DEVICE :: temppsic_nc_d(:,:,:)
+    COMPLEX(DP),ALLOCATABLE,DEVICE :: temppsic_nc_d(:,:,:), result_nc_d(:,:,:)
 #endif
     INTEGER          :: request_send, request_recv
     !
@@ -1288,12 +1283,12 @@ MODULE exx
     IF (noncolin) THEN
        ALLOCATE( temppsic_nc(nrxxs,npol,ialloc), result_nc(nrxxs,npol,ialloc) )
 #if defined(__CUDA)
-       ALLOCATE( temppsic_nc_d(nrxxs,npol,ialloc))
+       ALLOCATE( temppsic_nc_d(nrxxs,npol,ialloc), result_nc_d(nrxxs,npol,ialloc))
 #endif
     ELSE
        ALLOCATE( temppsic(nrxxs,ialloc), result(nrxxs,ialloc) )
 #if defined(__CUDA)
-       ALLOCATE( temppsic_d(nrxxs,ialloc))
+       ALLOCATE( temppsic_d(nrxxs,ialloc), result_d(nrxxs,ialloc) )
 #endif
     ENDIF
     !
@@ -1363,6 +1358,13 @@ MODULE exx
        temppsic_d = temppsic
 #endif
        !
+#if defined (__CUDA)
+       IF (noncolin) THEN
+          result_nc_d(:,:,ii) = 0.0_DP
+       ELSE
+          result_d(:,ii) = 0.0_DP
+       ENDIF
+#else
        IF (noncolin) THEN
 !$omp parallel do default(shared) firstprivate(nrxxs) private(ir)
           DO ir=1,nrxxs
@@ -1376,6 +1378,7 @@ MODULE exx
           ENDDO
        END IF
        !
+#endif
     END DO
     !
     !precompute these guys
@@ -1562,10 +1565,16 @@ end associate
                 ! Add ultrasoft contribution (RECIPROCAL SPACE)
                 ! compute alpha_I,j,k+q = \sum_J \int <beta_J|phi_j,k+q> V_i,j,k,q Q_I,J(r) d3r
                 IF(okvan .and. .not. tqr) THEN
+#if defined (__CUDA)
+                   vc = vc_d
+#endif
                    DO jbnd=jstart, jend
                       CALL newdxx_g(dfftt, vc(:,jbnd-jstart+1), xkq, xkp, 'c',&
                                     deexx(:,ii), becphi_c=becxx(ikq)%k(:,jbnd))
                    ENDDO
+#if defined (__CUDA)
+                   vc_d = vc
+#endif
                 ENDIF
                 !
                 !brings back v in real space
@@ -1578,7 +1587,6 @@ end associate
                 DO jbnd=jstart, jend
                    CALL invfft('Rho', vc_d(:,jbnd-jstart+1), dfftt)
                 ENDDO
-                vc = vc_d
 #else
                 DO jbnd=jstart, jend
                    CALL invfft('Rho', vc(:,jbnd-jstart+1), dfftt)
@@ -1588,20 +1596,54 @@ end associate
                 !
                 ! Add ultrasoft contribution (REAL SPACE)
                 IF(okvan .and. tqr) THEN
+#if defined(__CUDA)
+                   vc = vc_d
+#endif
                    DO jbnd=jstart, jend
                       CALL newdxx_r(dfftt, vc(:,jbnd-jstart+1), becxx(ikq)%k(:,jbnd),deexx(:,ii))
                    ENDDO
+#if defined(__CUDA)
+                   vc_d = vc
+#endif
                 ENDIF
                 !
                 ! Add PAW one-center contribution
                 IF(okpaw) THEN
+#if defined(__CUDA)
+                   vc = vc_d
+#endif
                    DO jbnd=jstart, jend
                       CALL PAW_newdxx(x_occupation(jbnd,ik)/nqs, becxx(ikq)%k(:,jbnd), becpsi%k(:,ibnd), deexx(:,ii))
                    ENDDO
+#if defined(__CUDA)
+                   vc_d = vc
+#endif
                 ENDIF
                 !
                 !accumulates over bands and k points
                 !
+
+                !vc = vc_d
+
+#if defined(__CUDA)    
+associate(exxbuff=>exxbuff_d, result_nc=>result_nc_d, result=>result_d, vc=>vc_d)
+                all_start_tmp=all_start(wegrp)
+                DO jbnd=jstart, jend
+                   !$cuf kernel do (1)
+                   DO ir = 1, nrxxs
+                      IF (noncolin) THEN
+                         result_nc(ir,1,ii) = result_nc(ir,1,ii) &
+                              + vc(ir,jbnd-jstart+1) * exxbuff(ir,jbnd-all_start_tmp+iexx_start,ikq)
+                         result_nc(ir,2,ii) = result_nc(ir,2,ii) &
+                              + vc(ir,jbnd-jstart+1) * exxbuff(ir+nrxxs,jbnd-all_start_tmp+iexx_start,ikq)
+                      ELSE
+                         result(ir,ii) = result(ir,ii) &
+                              + vc(ir,jbnd-jstart+1)*exxbuff(ir,jbnd-all_start_tmp+iexx_start,ikq)
+                      ENDIF
+                   ENDDO
+                ENDDO
+end associate
+#else
 !call start_collection()
 !$omp parallel do private(ir_start,ir_end)
                 DO irt = 1, nrt
@@ -1626,6 +1668,8 @@ end associate
                 ENDDO
 !$omp end parallel do
 !call stop_collection()
+#endif
+
                 !
                 !----------------------------------------------------------------------!
                 !INNER LOOP END
@@ -1641,6 +1685,15 @@ end associate
        !
        IF ( okvan .and..not.tqr ) CALL qvan_clean ()
     END DO vexxmain
+
+#if defined(__CUDA)
+    IF (noncolin) THEN
+       result_nc = result_nc_d
+    ELSE
+       result = result_d
+    ENDIF
+#endif
+
     CALL stop_clock( 'vexx_k_main' )
     CALL start_clock( 'vexx_k_fin' )
     !
@@ -1724,14 +1777,14 @@ end associate
     DEALLOCATE(big_result)
     !
     DEALLOCATE(fac, facb )
-#if defined (__CUDA)
-    DEALLOCATE(facb_d )
-    IF (noncolin) THEN
-       DEALLOCATE(temppsic_nc_d)
-    ELSE
-       DEALLOCATE(temppsic_d)
-    ENDIF
 
+#if defined (__CUDA)
+    IF (noncolin) THEN
+       DEALLOCATE(temppsic_nc_d, result_nc_d)
+    ELSE
+       DEALLOCATE(temppsic_d, result_d)
+    ENDIF
+    DEALLOCATE(facb_d)
 #endif
     !
     IF(okvan) DEALLOCATE( deexx)
