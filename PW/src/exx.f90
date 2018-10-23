@@ -50,12 +50,7 @@ MODULE exx
   ! buffer for matrix of localization integrals
   REAL(DP), ALLOCATABLE    :: locmat(:,:,:)
   !
-#if defined(__USE_INTEL_HBM_DIRECTIVES)
-!DIR$ ATTRIBUTES FASTMEM :: exxbuff
-#elif defined(__USE_CRAY_HBM_DIRECTIVES)
-!DIR$ memory(bandwidth) exxbuff
-#endif
-  !
+
   LOGICAL :: use_ace        !  true: Use Lin Lin's ACE method
                             !  false: do not use ACE, use old algorithm instead
   COMPLEX(DP), ALLOCATABLE :: xi(:,:,:)  ! ACE projectors
@@ -76,7 +71,7 @@ MODULE exx
   !
   ! custom fft grid and related G-vectors
   !
-  TYPE ( fft_type_descriptor ) :: dfftt 
+  TYPE ( fft_type_descriptor ) :: dfftt
   LOGICAL :: exx_fft_initialized = .FALSE.
   ! G^2 in custom grid
   REAL(kind=DP), DIMENSION(:), POINTER :: ggt
@@ -336,11 +331,6 @@ MODULE exx
     INTEGER :: ipol, jpol
     REAL(dp), ALLOCATABLE   :: occ(:,:)
     COMPLEX(DP),ALLOCATABLE :: temppsic(:)
-#if defined(__USE_INTEL_HBM_DIRECTIVES)
-!DIR$ ATTRIBUTES FASTMEM :: temppsic
-#elif defined(__USE_CRAY_HBM_DIRECTIVES)
-!DIR$ memory(bandwidth) temppsic
-#endif
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:), psic_nc(:,:)
     COMPLEX(DP),ALLOCATABLE :: psic_exx(:)
     INTEGER :: nxxs, nrxxs
@@ -1208,6 +1198,9 @@ MODULE exx
     USE exx_base,       ONLY : nqs, xkq_collect, index_xkq, index_xk, &
          coulomb_fac, g2_convolution_all
     USE exx_band,       ONLY : result_sum, igk_exx
+#if defined(__CUDA)
+    USE exx_band,       ONLY : igk_exx_d
+#endif
     USE io_global,      ONLY : stdout
     !
     !
@@ -1215,42 +1208,40 @@ MODULE exx
     !
     INTEGER                  :: lda, n, m
     COMPLEX(DP)              :: psi(lda*npol,max_ibands)
-!#if defined(__CUDA)
-!    COMPLEX(DP),ALLOCATABLE,DEVICE :: psi_d(:,:)
-!#endif
+#if defined(__CUDA)
+    COMPLEX(DP),ALLOCATABLE,DEVICE :: psi_d(:,:)
+#endif
     COMPLEX(DP)              :: hpsi(lda*npol,max_ibands)
     TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
     !
     ! local variables
-    COMPLEX(DP),ALLOCATABLE :: temppsic(:,:), result(:,:)
 #if defined(__CUDA)
-    COMPLEX(DP),ALLOCATABLE,DEVICE :: temppsic_d(:,:), result_d(:,:)
+    COMPLEX(DP),ALLOCATABLE,DEVICE :: temppsic_d(:,:)
+    COMPLEX(DP),ALLOCATABLE,DEVICE :: temppsic_nc_d(:,:,:)
+#else
+    COMPLEX(DP),ALLOCATABLE :: temppsic(:,:)
+    COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:,:)
 #endif
-    COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:,:),result_nc(:,:,:)
+    COMPLEX(DP),ALLOCATABLE :: result(:,:), result_nc(:,:,:)
 #if defined(__CUDA)
-    COMPLEX(DP),ALLOCATABLE,DEVICE :: temppsic_nc_d(:,:,:), result_nc_d(:,:,:)
+    COMPLEX(DP),ALLOCATABLE,DEVICE :: result_d(:,:), result_nc_d(:,:,:)
 #endif
+
     INTEGER          :: request_send, request_recv
     !
     COMPLEX(DP),ALLOCATABLE :: deexx(:,:)
-    COMPLEX(DP),ALLOCATABLE,TARGET :: rhoc(:,:), vc(:,:)
+
 #if defined(__CUDA)
-    attributes(PINNED) :: rhoc, vc
+    COMPLEX(DP),ALLOCATABLE,TARGET,DEVICE :: rhoc_d(:,:), vc_d(:,:)
+#else
+    COMPLEX(DP),ALLOCATABLE,TARGET :: rhoc(:,:), vc(:,:)
 #endif
 
 #if defined(__USE_MANY_FFT)
     COMPLEX(DP),POINTER :: prhoc(:), pvc(:)
 #endif
 
-#if defined(__CUDA)
-    COMPLEX(DP),ALLOCATABLE,TARGET,DEVICE :: rhoc_d(:,:), vc_d(:,:)
-#endif
 
-#if defined(__USE_INTEL_HBM_DIRECTIVES)
-!DIR$ ATTRIBUTES FASTMEM :: rhoc, vc
-#elif defined(__USE_CRAY_HBM_DIRECTIVES)
-!DIR$ memory(bandwidth) rhoc, vc
-#endif
     REAL(DP),   ALLOCATABLE :: fac(:), facb(:)
 #if defined(__CUDA)
     REAL(DP),ALLOCATABLE,DEVICE :: facb_d(:)
@@ -1272,10 +1263,13 @@ MODULE exx
     INTEGER :: ijt, njt, jblock_start, jblock_end
     INTEGER :: iegrp, wegrp
     INTEGER :: all_start_tmp
+    !hack around PGI bug
+#if defined(__CUDA)
+    INTEGER, POINTER, DEVICE :: dfftt__nl(:)
+    dfftt__nl=>dfftt%nl_d
+#endif
     CALL start_clock( 'vexx_k_setup' )
 
-    write(*,*) "LDA: ", lda
-    write(*,*) "nrxxs: ", nrxxs
 
     ialloc = nibands(my_egrp_id+1)
     !
@@ -1283,19 +1277,24 @@ MODULE exx
     nrxxs= dfftt%nnr
     ALLOCATE( facb(nrxxs) )
 #if defined(__CUDA)
-    !ALLOCATE( psi_d(lda*npol,max_ibands) )
+    ALLOCATE( psi_d(lda*npol,max_ibands) )
     ALLOCATE( facb_d(nrxxs) )
 #endif
     !
+
     IF (noncolin) THEN
-       ALLOCATE( temppsic_nc(nrxxs,npol,ialloc), result_nc(nrxxs,npol,ialloc) )
 #if defined(__CUDA)
        ALLOCATE( temppsic_nc_d(nrxxs,npol,ialloc), result_nc_d(nrxxs,npol,ialloc))
+#else
+       ALLOCATE( temppsic_nc(nrxxs,npol,ialloc) )
 #endif
+       ALLOCATE( result_nc(nrxxs,npol,ialloc) )
     ELSE
-       ALLOCATE( temppsic(nrxxs,ialloc), result(nrxxs,ialloc) )
+       ALLOCATE( result(nrxxs,ialloc) )
 #if defined(__CUDA)
        ALLOCATE( temppsic_d(nrxxs,ialloc), result_d(nrxxs,ialloc) )
+#else
+       ALLOCATE( temppsic(nrxxs,ialloc) )
 #endif
     ENDIF
     !
@@ -1308,16 +1307,23 @@ MODULE exx
     big_result = 0.0_DP
     !
     !allocate arrays for rhoc and vc
-    ALLOCATE(rhoc(nrxxs,jblock), vc(nrxxs,jblock))
 #if defined(__CUDA)
     ALLOCATE(rhoc_d(nrxxs,jblock), vc_d(nrxxs,jblock))
 #endif
+    ALLOCATE(rhoc(nrxxs,jblock), vc(nrxxs,jblock))
+
 
 #if defined(__USE_MANY_FFT)
     prhoc(1:nrxxs*jblock) => rhoc(:,:)
     pvc(1:nrxxs*jblock) => vc(:,:)
 #endif
     !
+
+    !upload psi
+#if defined(__CUDA)
+    psi_d = psi
+#endif
+
     DO ii=1, nibands(my_egrp_id+1)
        !
        ibnd = ibands(ii,my_egrp_id+1)
@@ -1326,6 +1332,13 @@ MODULE exx
        !
        IF(okvan) deexx(:,ii) = 0._DP
        !
+#if defined(__CUDA)
+       IF (noncolin) THEN
+          temppsic_nc_d(:,:,ii) = 0._DP
+       ELSE
+          temppsic_d(:,ii) = 0._DP
+       ENDIF
+#else
        IF (noncolin) THEN
           temppsic_nc(:,:,ii) = 0._DP
        ELSE
@@ -1334,6 +1347,26 @@ MODULE exx
              temppsic(ir,ii) = 0._DP
           ENDDO
        END IF
+#endif
+
+#if defined(__CUDA)
+       !
+       IF (noncolin) THEN
+          !$cuf kernel do (1)
+          DO ig = 1, n
+             temppsic_nc_d(dfftt__nl(igk_exx_d(ig,current_k)),1,ii) = psi_d(ig,ii)
+             temppsic_nc_d(dfftt__nl(igk_exx_d(ig,current_k)),2,ii) = psi_d(npwx+ig,ii)
+          ENDDO
+          CALL invfft ('Wave', temppsic_nc_d(:,1,ii), dfftt)
+          CALL invfft ('Wave', temppsic_nc_d(:,2,ii), dfftt)
+       ELSE
+          !$cuf kernel do (1)
+          DO ig = 1, n
+             temppsic_d( dfftt__nl(igk_exx_d(ig,current_k)), ii ) = psi_d(ig,ii)
+          ENDDO
+          CALL invfft ('Wave', temppsic_d(:,ii), dfftt)
+       END IF
+#else
        !
        IF (noncolin) THEN
           !
@@ -1358,6 +1391,8 @@ MODULE exx
           CALL invfft ('Wave', temppsic(:,ii), dfftt)
           !
        END IF
+#endif
+
        !
 #if defined (__CUDA)
        IF (noncolin) THEN
@@ -1382,14 +1417,6 @@ MODULE exx
 #endif
     END DO
 
-#if defined(__CUDA)
-    !upload changed data  
-    IF (noncolin) THEN
-       temppsic_nc_d = temppsic_nc
-    ELSE
-       temppsic_d = temppsic
-    ENDIF
-#endif
     !
     !precompute these guys
     omega_inv = 1.0 / omega
@@ -1776,23 +1803,41 @@ end associate
        END IF
     END IF
     !
-    IF (noncolin) THEN
-       DEALLOCATE(temppsic_nc, result_nc)
-    ELSE
-       DEALLOCATE(temppsic, result)
-    ENDIF
+
+    !these need to be deallocated anyhow
     DEALLOCATE(big_result)
     !
+#if defined (__CUDA)
+    DEALLOCATE(facb_d)
+#endif
     DEALLOCATE(fac, facb )
 
 #if defined (__CUDA)
     IF (noncolin) THEN
-       DEALLOCATE(temppsic_nc_d, result_nc_d)
+       DEALLOCATE(temppsic_nc_d)
     ELSE
-       DEALLOCATE(temppsic_d, result_d)
+       DEALLOCATE(temppsic_d)
     ENDIF
-    DEALLOCATE(facb_d)
+#else
+    IF (noncolin) THEN
+       DEALLOCATE(temppsic_nc)
+    ELSE
+       DEALLOCATE(temppsic)
+    ENDIF
 #endif
+
+#if defined (__CUDA)
+    IF (noncolin) THEN
+       DEALLOCATE(result_nc_d)
+    ELSE
+       DEALLOCATE(result_d)
+    ENDIF
+#endif
+    IF (noncolin) THEN
+       DEALLOCATE( result_nc )
+    ELSE
+       DEALLOCATE( result )
+    ENDIF
     !
     IF(okvan) DEALLOCATE( deexx)
     CALL stop_clock( 'vexx_k_fin' )

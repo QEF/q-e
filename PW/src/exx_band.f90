@@ -29,6 +29,9 @@ MODULE exx_band
   INTEGER :: lda_original, n_original
   INTEGER :: nwordwfc_exx
   INTEGER, ALLOCATABLE :: igk_exx(:,:)
+#if defined(__CUDA)
+  INTEGER, ALLOCATABLE, DEVICE :: igk_exx_d(:,:)
+#endif
   !
   ! mapping for the data structure conversion
   !
@@ -114,6 +117,14 @@ MODULE exx_band
           ALLOCATE( igk_exx( npwx, nks ) )
           igk_exx = igk_k
        END IF
+#if defined(__CUDA)
+       IF(.not.allocated(igk_exx_d)) THEN
+          !ALLOCATE( igk_exx_d( npwx, nks ) )
+          !igk_exx_d = igk_k
+          ALLOCATE( igk_exx_d, source=igk_exx )
+       END IF
+#endif
+
        !
        ! get the wfc buffer is used
        !
@@ -1161,6 +1172,10 @@ MODULE exx_band
           !
        END IF
        DEALLOCATE( work_space )
+#if defined(__CUDA)
+       ALLOCATE(igk_exx_d(npwx,nks))
+       igk_exx_d = igk_exx
+#endif
     END IF
     !
     ! generate ngl and igtongl
