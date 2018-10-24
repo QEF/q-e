@@ -843,7 +843,7 @@ MODULE exx
     USE mp_exx,         ONLY : inter_egrp_comm, my_egrp_id, &
                                intra_egrp_comm, me_egrp, &
                                negrp, max_pairs, egrp_pairs, ibands, nibands, &
-                               iexx_istart, iexx_iend, &
+                               iexx_istart, iexx_istart_d,iexx_iend, &
                                all_start, all_end, iexx_start, jblock
     USE mp,             ONLY : mp_sum, mp_barrier, mp_circular_shift_left
     USE uspp,           ONLY : nkb, okvan
@@ -1205,6 +1205,7 @@ MODULE exx
          coulomb_fac, g2_convolution_all
     USE exx_band,       ONLY : result_sum, igk_exx
 #if defined(__CUDA)
+    USE mp_exx,         ONLY : iexx_istart_d
     USE exx_band,       ONLY : igk_exx_d
 #endif
     USE io_global,      ONLY : stdout
@@ -1223,7 +1224,8 @@ MODULE exx
     COMPLEX(DP)              :: psi(:,:)
     COMPLEX(DP)              :: hpsi(:,:)
 #if defined(__CUDA)
-    COMPLEX(DP),ALLOCATABLE,DEVICE :: psi_d(:,:)
+    COMPLEX(DP),ALLOCATABLE, DEVICE :: psi_d(:,:)
+    COMPLEX(DP),ALLOCATABLE, DEVICE :: hpsi_d(:,:)
 #endif
     TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
     !
@@ -1266,6 +1268,9 @@ MODULE exx
     INTEGER, EXTERNAL :: global_kpoint_index
     DOUBLE PRECISION :: max, tempx
     COMPLEX(DP), ALLOCATABLE :: big_result(:,:)
+#if defined(__CUDA)
+    COMPLEX(DP), ALLOCATABLE,DEVICE :: big_result_d(:,:)
+#endif
     INTEGER :: ir_out, ipair, jbnd
     INTEGER :: ii, jstart, jend, jcount, jind
     INTEGER :: ialloc, ending_im
@@ -1287,6 +1292,7 @@ MODULE exx
     ALLOCATE( facb(nrxxs) )
 #if defined(__CUDA)
     ALLOCATE( psi_d, source=psi )
+    ALLOCATE( hpsi_d, source=hpsi )
     ALLOCATE( facb_d(nrxxs) )
 #endif
     !
@@ -1315,7 +1321,9 @@ MODULE exx
     xkp = xk(:,current_k)
     !
     allocate(big_result(n*npol,m))
+    allocate(big_result_d(n*npol,m))
     big_result = 0.0_DP
+    big_result_d = 0.0_DP
     !
     !allocate arrays for rhoc and vc
 #if defined(__CUDA)
@@ -1552,9 +1560,6 @@ end associate
                 ENDIF
                 !
                 !   >>>> brings it to G-space
-!#if defined(__USE_MANY_FFT)
-!                CALL fwfft ('Rho', prhoc, dfftt, howmany=jcount)
-!#else
 #if defined (__CUDA)
                 !rhoc_d = rhoc
                 DO jbnd=jstart, jend
@@ -1566,7 +1571,6 @@ end associate
                    CALL fwfft('Rho', rhoc(:,jbnd-jstart+1), dfftt)
                 ENDDO
 #endif
-!#endif
                 !
                 !   >>>> add augmentation in G space HERE
                 IF(okvan .and. .not. tqr) THEN
@@ -1727,13 +1731,14 @@ end associate
        IF ( okvan .and..not.tqr ) CALL qvan_clean ()
     END DO vexxmain
 
-#if defined(__CUDA)
-    IF (noncolin) THEN
-       result_nc = result_nc_d
-    ELSE
-       result = result_d
-    ENDIF
-#endif
+!move this down to after the vexx_k_fin
+!#if defined(__CUDA)
+!    IF (noncolin) THEN
+!       result_nc = result_nc_d
+!    ELSE
+!       result = result_d
+!    ENDIF
+!#endif
 
     CALL stop_clock( 'vexx_k_main' )
     CALL start_clock( 'vexx_k_fin' )
@@ -1750,6 +1755,27 @@ end associate
           CALL mp_sum(deexx(:,ii),intra_egrp_comm)
        ENDIF
        !
+#if defined(__CUDA) 
+       !big_result_d=big_result !already initialized along with the big_result=1.0D0
+       IF (noncolin) THEN
+          !brings back result in G-space
+          CALL fwfft ('Wave', result_nc_d(:,1,ii), dfftt)
+          CALL fwfft ('Wave', result_nc_d(:,2,ii), dfftt)
+          !$cuf kernel do (1)
+          DO ig = 1, n
+             big_result_d(ig,ibnd) = big_result_d(ig,ibnd) - exxalfa*result_nc_d(dfftt__nl(igk_exx_d(ig,current_k)),1,ii)
+             big_result_d(n+ig,ibnd) = big_result_d(n+ig,ibnd) - exxalfa*result_nc_d(dfftt__nl(igk_exx_d(ig,current_k)),2,ii)
+          ENDDO
+       ELSE
+          !
+          CALL fwfft ('Wave', result_d(:,ii), dfftt)
+          !$cuf kernel do (1)
+          DO ig = 1, n
+             big_result_d(ig,ibnd) = big_result_d(ig,ibnd) - exxalfa*result_d(dfftt__nl(igk_exx_d(ig,current_k)),ii)
+          ENDDO
+       ENDIF
+       big_result(:,ibnd) = big_result_d(:,ibnd)
+#else
        IF (noncolin) THEN
           !brings back result in G-space
           CALL fwfft ('Wave', result_nc(:,1,ii), dfftt)
@@ -1758,20 +1784,28 @@ end associate
              big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result_nc(dfftt%nl(igk_exx(ig,current_k)),1,ii)
              big_result(n+ig,ibnd) = big_result(n+ig,ibnd) - exxalfa*result_nc(dfftt%nl(igk_exx(ig,current_k)),2,ii)
           ENDDO
-       ELSE
-          !
+      ELSE    
           CALL fwfft ('Wave', result(:,ii), dfftt)
           DO ig = 1, n
              big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result(dfftt%nl(igk_exx(ig,current_k)),ii)
           ENDDO
-       ENDIF
-       !
-       ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
+
+      ENDIF
+#endif
+
        IF(okvan) CALL add_nlxx_pot (lda, big_result(:,ibnd), xkp, n, igk_exx(:,current_k),&
             deexx(:,ii), eps_occ, exxalfa)
        !
     END DO
     !
+#if defined(__CUDA)
+    IF (noncolin) THEN
+       result_nc = result_nc_d
+    ELSE
+       result = result_d
+    ENDIF
+#endif
+       ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
     !deallocate temporary arrays
     DEALLOCATE(rhoc, vc)
 #if defined(__CUDA)
@@ -1780,12 +1814,38 @@ end associate
     !
     !sum result
     CALL result_sum(n*npol, m, big_result)
+#if defined(__CUDA)
+    big_result_d = big_result
+#endif
     IF (iexx_istart(my_egrp_id+1).gt.0) THEN
        IF (negrp == 1) then
           ending_im = m
        ELSE
           ending_im = iexx_iend(my_egrp_id+1) - iexx_istart(my_egrp_id+1) + 1
        END IF
+
+       !hpsi_d=hpsi 
+       iexx_istart_d=iexx_istart
+#if defined(__CUDA)
+       IF(noncolin) THEN
+          !$cuf kernel do (2)
+          DO im=1, ending_im
+             DO ig = 1, n
+                hpsi_d(ig,im) = hpsi_d(ig,im) + big_result_d(ig,im+iexx_istart_d(my_egrp_id+1)-1)
+                hpsi_d(lda+ig,im) = hpsi_d(lda+ig,im) + big_result_d(n+ig,im+iexx_istart_d(my_egrp_id+1)-1)
+             ENDDO
+          END DO
+       ELSE
+          !$cuf kernel do (2)
+          DO im=1, ending_im
+             DO ig = 1, n
+                hpsi_d(ig,im) = hpsi_d(ig,im) + big_result_d(ig,im+iexx_istart_d(my_egrp_id+1)-1)
+             ENDDO
+          ENDDO
+       END IF
+    END IF
+    hpsi=hpsi_d
+#else
        IF(noncolin) THEN
           DO im=1, ending_im
 !$omp parallel do default(shared), private(ig) firstprivate(im,n)
@@ -1810,13 +1870,12 @@ end associate
        END IF
     END IF
     !
+#endif
 
     !these need to be deallocated anyhow
     DEALLOCATE(big_result)
-    !
-#if defined (__CUDA)
-    DEALLOCATE(facb_d)
-#endif
+    DEALLOCATE( result )
+
     DEALLOCATE(fac, facb )
 
     IF (noncolin) THEN
@@ -1825,20 +1884,21 @@ end associate
        DEALLOCATE(temppsic)
     ENDIF
 
+    IF(okvan) DEALLOCATE( deexx)
+
 #if defined (__CUDA)
+    DEALLOCATE(big_result_d)
+    DEALLOCATE(facb_d)
+    DEALLOCATE(hpsi_d)
     IF (noncolin) THEN
        DEALLOCATE(result_nc_d)
+       DEALLOCATE( result_nc )
     ELSE
        DEALLOCATE(result_d)
     ENDIF
+    
 #endif
-    IF (noncolin) THEN
-       DEALLOCATE( result_nc )
-    ELSE
-       DEALLOCATE( result )
-    ENDIF
     !
-    IF(okvan) DEALLOCATE( deexx)
     CALL stop_clock( 'vexx_k_fin' )
     !
     !------------------------------------------------------------------------

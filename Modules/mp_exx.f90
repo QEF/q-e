@@ -50,6 +50,11 @@ MODULE mp_exx
   INTEGER, ALLOCATABLE :: iexx_iend(:)   ! ending band index used in the outer loop
   INTEGER, ALLOCATABLE :: all_start(:)   ! starting band inded for the inner loop
   INTEGER, ALLOCATABLE :: all_end(:)     ! ending band index used in the inner loop
+
+#if defined(__CUDA)
+  INTEGER, ALLOCATABLE, DEVICE :: iexx_istart_d(:)
+#endif
+
   INTEGER :: max_contributors
   !
   ! flag for whether the exx part of the calculation is in progress
@@ -159,6 +164,9 @@ CONTAINS
     IF (ALLOCATED(all_start)) THEN
        DEALLOCATE( all_start, all_end )
        DEALLOCATE( iexx_istart, iexx_iend )
+#if defined(__CUDA)
+       DEALLOCATE(iexx_istart_d)
+#endif
     END IF
     ALLOCATE( all_start(negrp) )
     ALLOCATE( all_end(negrp) )
@@ -219,6 +227,11 @@ CONTAINS
     END DO
     max_pairs = CEILING(REAL(nbnd*m)/REAL(negrp))
     n_underloaded = MODULO(max_pairs*negrp-nbnd*m,negrp)
+
+#if defined(__CUDA)
+    !allocate and upload
+    ALLOCATE(iexx_istart_d, source=iexx_istart)
+#endif
     !
     ! allocate arrays
     !
