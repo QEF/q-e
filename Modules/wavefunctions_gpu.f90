@@ -92,7 +92,7 @@
              evc_d_ood = .false.
              RETURN
          END IF
-         ! here we know that evc is allocated, check if size is 0 
+         ! here we know that evc is allocated, check if size is 0
          IF ( SIZE(evc) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array evc_d. If used, code will crash."
              RETURN
@@ -168,7 +168,7 @@
              psic_d_ood = .false.
              RETURN
          END IF
-         ! here we know that psic is allocated, check if size is 0 
+         ! here we know that psic is allocated, check if size is 0
          IF ( SIZE(psic) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array psic_d. If used, code will crash."
              RETURN
@@ -244,7 +244,7 @@
              psic_nc_d_ood = .false.
              RETURN
          END IF
-         ! here we know that psic_nc is allocated, check if size is 0 
+         ! here we know that psic_nc is allocated, check if size is 0
          IF ( SIZE(psic_nc) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array psic_nc_d. If used, code will crash."
              RETURN

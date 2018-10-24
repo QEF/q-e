@@ -22,8 +22,7 @@
      !
      REAL(DP), ALLOCATABLE :: g2kin_d(:)
      REAL(DP), ALLOCATABLE :: et_d(:, :)
-     REAL(DP), ALLOCATABLE :: wg_d(:,:)    ! the weight of each k point and band
-
+     REAL(DP), ALLOCATABLE :: wg_d(:, :)
      !
 #if defined(__CUDA)
      attributes (DEVICE) :: g2kin_d, et_d, wg_d
@@ -33,6 +32,8 @@
      LOGICAL :: g2kin_d_ood = .false.    ! used to flag out of date variables
      LOGICAL :: et_ood = .false.    ! used to flag out of date variables
      LOGICAL :: et_d_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: wg_ood = .false.    ! used to flag out of date variables
+     LOGICAL :: wg_d_ood = .false.    ! used to flag out of date variables
      !
      CONTAINS
      !
@@ -91,7 +92,7 @@
              g2kin_d_ood = .false.
              RETURN
          END IF
-         ! here we know that g2kin is allocated, check if size is 0 
+         ! here we know that g2kin is allocated, check if size is 0
          IF ( SIZE(g2kin) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array g2kin_d. If used, code will crash."
              RETURN
@@ -167,7 +168,7 @@
              et_d_ood = .false.
              RETURN
          END IF
-         ! here we know that et is allocated, check if size is 0 
+         ! here we know that et is allocated, check if size is 0
          IF ( SIZE(et) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array et_d. If used, code will crash."
              RETURN
@@ -188,11 +189,89 @@
 #endif
      END SUBROUTINE using_et_d
      !
+     SUBROUTINE using_wg(intento, debug_info)
+         !
+         ! intento is used to specify what the variable will  be used for :
+         !  0 -> in , the variable needs to be synchronized but won't be changed
+         !  1 -> inout , the variable needs to be synchronized AND will be changed
+         !  2 -> out , NO NEED to synchronize the variable, everything will be overwritten
+         !
+         USE wvfct, ONLY : wg
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
+#if defined(__CUDA)
+         INTEGER :: intento_
+         intento_ = intento
+         !
+         IF (PRESENT(debug_info) ) print *, "using_wg ", debug_info, wg_ood
+         !
+         IF (wg_ood) THEN
+             IF ((.not. allocated(wg_d)) .and. (intento_ < 2)) THEN
+                CALL errore('using_wg_d', 'PANIC: sync of wg from wg_d with unallocated array. Bye!!', 1)
+                stop
+             END IF
+             IF (.not. allocated(wg)) THEN
+                IF (intento_ /= 2) THEN
+                   print *, "WARNING: sync of wg with unallocated array and intento /= 2? Changed to 2!"
+                   intento_ = 2
+                END IF
+                ! IF (intento_ > 0)    wg_d_ood = .true.
+             END IF
+             IF (intento_ < 2) THEN
+                print *, "Really copied wg D->H"
+                wg = wg_d
+             END IF
+             wg_ood = .false.
+         ENDIF
+         IF (intento_ > 0)    wg_d_ood = .true.
+#endif
+     END SUBROUTINE using_wg
+     !
+     SUBROUTINE using_wg_d(intento, debug_info)
+         !
+         USE wvfct, ONLY : wg
+         implicit none
+         INTEGER, INTENT(IN) :: intento
+         CHARACTER(len=*), INTENT(IN), OPTIONAL :: debug_info
+#if defined(__CUDA)
+         !
+         IF (PRESENT(debug_info) ) print *, "using_wg_d ", debug_info, wg_d_ood
+         !
+         IF (.not. allocated(wg)) THEN
+             IF (intento /= 2) print *, "WARNING: sync of wg_d with unallocated array and intento /= 2?"
+             IF (allocated(wg_d)) DEALLOCATE(wg_d)
+             wg_d_ood = .false.
+             RETURN
+         END IF
+         ! here we know that wg is allocated, check if size is 0
+         IF ( SIZE(wg) == 0 ) THEN
+             print *, "Refusing to allocate 0 dimensional array wg_d. If used, code will crash."
+             RETURN
+         END IF
+         !
+         IF (wg_d_ood) THEN
+             IF ( allocated(wg_d) .and. (SIZE(wg_d)/=SIZE(wg))) deallocate(wg_d)
+             IF (.not. allocated(wg_d)) ALLOCATE(wg_d(DIMS2D(wg)))  ! MOLD does not work on all compilers
+             IF (intento < 2) THEN
+                print *, "Really copied wg H->D"
+                wg_d = wg
+             END IF
+             wg_d_ood = .false.
+         ENDIF
+         IF (intento > 0)    wg_ood = .true.
+#else
+         CALL errore('using_wg_d', 'Trying to use device data without device compilated code!', 1)
+#endif
+     END SUBROUTINE using_wg_d
+     !
      SUBROUTINE deallocate_wvfct_gpu
        IF( ALLOCATED( g2kin_d ) ) DEALLOCATE( g2kin_d )
        g2kin_d_ood = .false.
        IF( ALLOCATED( et_d ) ) DEALLOCATE( et_d )
        et_d_ood = .false.
+       IF( ALLOCATED( wg_d ) ) DEALLOCATE( wg_d )
+       wg_d_ood = .false.
      END SUBROUTINE deallocate_wvfct_gpu
 !=----------------------------------------------------------------------------=!
    END MODULE wvfct_gpum
@@ -293,7 +372,7 @@
              qrad_d_ood = .false.
              RETURN
          END IF
-         ! here we know that qrad is allocated, check if size is 0 
+         ! here we know that qrad is allocated, check if size is 0
          IF ( SIZE(qrad) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array qrad_d. If used, code will crash."
              RETURN
@@ -369,7 +448,7 @@
              tab_d_ood = .false.
              RETURN
          END IF
-         ! here we know that tab is allocated, check if size is 0 
+         ! here we know that tab is allocated, check if size is 0
          IF ( SIZE(tab) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array tab_d. If used, code will crash."
              RETURN
@@ -445,7 +524,7 @@
              tab_at_d_ood = .false.
              RETURN
          END IF
-         ! here we know that tab_at is allocated, check if size is 0 
+         ! here we know that tab_at is allocated, check if size is 0
          IF ( SIZE(tab_at) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array tab_at_d. If used, code will crash."
              RETURN
@@ -521,7 +600,7 @@
              tab_d2y_d_ood = .false.
              RETURN
          END IF
-         ! here we know that tab_d2y is allocated, check if size is 0 
+         ! here we know that tab_d2y is allocated, check if size is 0
          IF ( SIZE(tab_d2y) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array tab_d2y_d. If used, code will crash."
              RETURN
@@ -642,7 +721,7 @@
              fcoef_d_ood = .false.
              RETURN
          END IF
-         ! here we know that fcoef is allocated, check if size is 0 
+         ! here we know that fcoef is allocated, check if size is 0
          IF ( SIZE(fcoef) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array fcoef_d. If used, code will crash."
              RETURN
