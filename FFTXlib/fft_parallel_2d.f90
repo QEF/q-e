@@ -441,6 +441,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
   INTEGER                    :: n1, n2, n3, nx1, nx2, nx3, ncpx, nppx, proc
   COMPLEX(DP), ALLOCATABLE   :: yf(:)
   INTEGER                    :: planes( dfft%nr1x )
+  INTEGER                    :: sticks( dfft%nproc  )
   INTEGER(kind = cuda_stream_kind) :: stream  = 0
   !
   !
@@ -468,9 +469,14 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
   ncpx = 0
   nppx = 0
   DO proc = 1, dfft%nproc
-     ncpx = max( ncpx, dfft%nsw ( proc ) )
+     IF ( abs(isgn) == 2 ) ncpx = max( ncpx, dfft%nsw ( proc ) )
+     IF ( abs(isgn) == 1 ) ncpx = max( ncpx, dfft%nsp ( proc ) )
      nppx = max( nppx, dfft%nr3p ( proc ) )
   ENDDO
+  IF ( abs(isgn) == 2 ) sticks = dfft%nsw
+  IF ( abs(isgn) == 1 ) sticks = dfft%nsp
+  !
+  IF ( (abs(isgn) /= 2) .and. (abs(isgn) /= 1) ) CALL fftx_error__( ' tg_cft3s_gpu_batch ', ' isgn /= 2 not implemented ', isgn )
   !
   IF (dfft%nproc <= 1) CALL fftx_error__( ' tg_cft3s_gpu_batch ', ' this subroutine should never be called with nproc= ', dfft%nproc )
   !
@@ -480,30 +486,25 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
        !
        IF ( isgn /= 2 ) THEN
           !
-          CALL fftx_error__( ' tg_cft3s_gpu_batch ', ' isgn /= 2 not implemented ', 1 )
-          !
-          CALL cft_1z_gpu( f_d, dfft%nsp( me_p ), n3, nx3, isgn, aux_d, stream )
-          !
           planes = dfft%iplp
           !
        ELSE
           !
-          DO i = 0, currsize - 1
-            CALL cft_1z_gpu( f_d((j+i)*dfft%nnr + 1:), dfft%nsw( me_p ), n3, nx3, isgn, aux_d(j*dfft%nnr + i*ncpx*nx3 +1:), dfft%a2a_comp )
-          ENDDO
-
-          i = cudaEventRecord(dfft%bevents(j/dfft%subbatchsize + 1), dfft%a2a_comp)
-          i = cudaStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize + 1), 0)
-
-          !
           planes = dfft%iplw
           !
        ENDIF
+       !
+       DO i = 0, currsize - 1
+         CALL cft_1z_gpu( f_d((j+i)*dfft%nnr + 1:), sticks(me_p), n3, nx3, isgn, aux_d(j*dfft%nnr + i*ncpx*nx3 +1:), dfft%a2a_comp )
+       ENDDO
+
+       i = cudaEventRecord(dfft%bevents(j/dfft%subbatchsize + 1), dfft%a2a_comp)
+       i = cudaStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize + 1), 0)
 
        IF (j > 0) i = cudaStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize), 0)
 
        CALL fft_scatter_many_columns_to_planes_store( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
-         f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
+         f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
 
      ENDDO
 
@@ -511,7 +512,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
        currsize = min(dfft%subbatchsize, batchsize - j)
 
        CALL fft_scatter_many_columns_to_planes_send( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
-         f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
+         f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
 
        IF (currsize == dfft%subbatchsize) THEN
          CALL cft_2xy_gpu( f_d(j*dfft%nnr + 1:), aux_d(j*dfft%nnr + 1:), currsize * nppx, n1, n2, nx1, nx2, isgn, dfft%a2a_comp, planes )
@@ -535,7 +536,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
        !
        IF ( isgn /= -2 ) THEN
           !
-          CALL fftx_error__( ' tg_cft3s_gpu_batch ', ' isgn /= -2 not implemented ', 1 )
+          !CALL fftx_error__( ' tg_cft3s_gpu_batch ', ' isgn /= -2 not implemented ', 1 )
           !
           planes = dfft%iplp
           !
@@ -556,7 +557,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
        IF (j > 0) i = cudaStreamWaitEvent(dfft%bstreams(j/dfft%subbatchsize + 1), dfft%bevents(j/dfft%subbatchsize), 0)
 
        CALL fft_scatter_many_planes_to_columns_store( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
-         f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
+         f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
 
      ENDDO
 
@@ -564,14 +565,14 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, batchsize )
        currsize = min(dfft%subbatchsize, batchsize - j)
 
        CALL fft_scatter_many_planes_to_columns_send( dfft, aux_d(j*dfft%nnr + 1:), aux_h(j*dfft%nnr + 1:), nx3, dfft%nnr, f_d(j*dfft%nnr + 1:), &
-         f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), dfft%nsw, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
+         f_h(j*dfft%nnr + 1:), aux2_d(j*dfft%nnr + 1:), aux2_h(j*dfft%nnr + 1:), sticks, dfft%nr3p, isgn, currsize, j/dfft%subbatchsize + 1 )
 
 
        i = cudaEventRecord(dfft%bevents(j/dfft%subbatchsize + 1), dfft%bstreams(j/dfft%subbatchsize + 1))
        i = cudaStreamWaitEvent(dfft%a2a_comp, dfft%bevents(j/dfft%subbatchsize + 1), 0)
 
        DO i = 0, currsize - 1
-         CALL cft_1z_gpu( aux_d(j*dfft%nnr + i*ncpx*nx3 + 1:), dfft%nsw( me_p ), n3, nx3, isgn, f_d((j+i)*dfft%nnr + 1:), dfft%a2a_comp )
+         CALL cft_1z_gpu( aux_d(j*dfft%nnr + i*ncpx*nx3 + 1:), sticks( me_p ), n3, nx3, isgn, f_d((j+i)*dfft%nnr + 1:), dfft%a2a_comp )
        ENDDO
 
      ENDDO
