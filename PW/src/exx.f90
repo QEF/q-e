@@ -4,6 +4,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#if defined(__CUDA)
+#define DEV_ATTRIBUTES , DEVICE
+#else
+#define DEV_ATTRIBUTES
+#endif
+
 !--------------------------------------
 MODULE exx
   !--------------------------------------
@@ -3422,12 +3428,19 @@ USE noncollin_module,     ONLY : npol
 ! do the ACE potential and
 ! (optional) print the ACE matrix representation
 !
-IMPLICIT NONE
+#if defined (__CUDA)
+ use cublas
+#endif 
+  IMPLICIT NONE
   real(DP) :: exxe
   INTEGER :: nnpw,nbnd,i
   COMPLEX(DP) :: phi(npwx*npol,nbnd)
   COMPLEX(DP),OPTIONAL :: vphi(npwx*npol,nbnd)
-  COMPLEX(DP),ALLOCATABLE :: cmexx(:,:), vv(:,:)
+  COMPLEX(DP),ALLOCATABLE DEV_ATTRIBUTES :: cmexx(:,:), vv(:,:)
+#if defined (__CUDA)
+  COMPLEX(DP), ALLOCATABLE,DEVICE :: xi_d(:,:,:)  ! ACE projectors
+  COMPLEX(DP), ALLOCATABLE, DEVICE :: phi_d(:,:)
+#endif
   real*8, PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
 
   CALL start_clock('vexxace')
@@ -3441,19 +3454,32 @@ IMPLICIT NONE
 
 ! do the ACE potential
   ALLOCATE( cmexx(nbndproj,nbnd) )
+#if defined (__CUDA)
+  ALLOCATE( xi_d,source=xi)
+  ALLOCATE( phi_d,source=phi)
+#endif
   cmexx = (Zero,Zero)
 ! <xi|phi>
+#if defined (__CUDA)
+  CALL matcalc_k_gpu(.false.,current_k,npwx*npol,nbndproj,nbnd,xi_d(1,1,current_k),phi_d,cmexx,exxe)
+! |vv> = |vphi> + (-One) * |xi> * <xi|phi>
+  CALL ZGEMM ('N','N',npwx*npol,nbnd,nbndproj,-(One,Zero),xi_d(1,1,current_k),npwx*npol,cmexx,nbndproj,(One,Zero),vv,npwx*npol)
+#else
   CALL matcalc_k('<xi|phi>',.false.,0,current_k,npwx*npol,nbndproj,nbnd,xi(1,1,current_k),phi,cmexx,exxe)
-
 ! |vv> = |vphi> + (-One) * |xi> * <xi|phi>
   CALL ZGEMM ('N','N',npwx*npol,nbnd,nbndproj,-(One,Zero),xi(1,1,current_k),npwx*npol,cmexx,nbndproj,(One,Zero),vv,npwx*npol)
+#endif
 
   IF(domat) THEN
      IF ( nbndproj /= nbnd) THEN
         DEALLOCATE( cmexx )
         ALLOCATE( cmexx(nbnd,nbnd) )
      END IF
+#if defined (__CUDA)
+     CALL matcalc_k_gpu(.true.,current_k,npwx*npol,nbnd,nbnd,phi_d,vv,cmexx,exxe)
+#else
      CALL matcalc_k('ACE',.true.,0,current_k,npwx*npol,nbnd,nbnd,phi,vv,cmexx,exxe)
+#endif
 #if defined(__DEBUG)
     WRITE(stdout,'(3(A,I3),A,I9,A,f12.6)') 'vexxace_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                    ' k=',current_k,' npw=',nnpw, ' Ex(k)=',exxe
@@ -3465,6 +3491,10 @@ IMPLICIT NONE
 
   IF(present(vphi)) vphi = vv
   DEALLOCATE( vv,cmexx )
+#if defined (__CUDA)
+  xi=xi_d
+  DEALLOCATE( xi_d,phi_d)
+#endif
 
   CALL stop_clock('vexxace')
 
