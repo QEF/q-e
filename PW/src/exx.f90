@@ -1802,9 +1802,8 @@ end associate
           ending_im = iexx_iend(my_egrp_id+1) - iexx_istart(my_egrp_id+1) + 1
        END IF
 
-       !hpsi_d=hpsi 
-       iexx_istart_d=iexx_istart
 #if defined(__CUDA)
+       !iexx_istart_d=iexx_istart
        IF(noncolin) THEN
           !$cuf kernel do (2)
           DO im=1, ending_im
