@@ -465,11 +465,17 @@ MODULE exx
             ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nks))
          ELSE
             ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nkqs))
-#if defined(__CUDA)
-            ALLOCATE( exxbuff_d(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nkqs))
-#endif
          END IF
       END IF
+#if defined(__CUDA)
+      IF (.not. allocated(exxbuff_d)) THEN
+         IF (gamma_only) THEN
+            ALLOCATE( exxbuff_d(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nks))
+         ELSE
+            ALLOCATE( exxbuff_d(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nkqs))
+         END IF
+      END IF
+#endif
     END IF
 
     !assign buffer
@@ -741,9 +747,6 @@ MODULE exx
     !
     CALL change_data_structure(.FALSE.)
     !
-#if defined(__CUDA)
-    exxbuff_d=exxbuff
-#endif
     CALL stop_clock ('exxinit')
     !
     !-----------------------------------------------------------------------
@@ -1122,7 +1125,12 @@ MODULE exx
           LOOP_ON_PSI_BANDS
           !
           ! get the next nbnd/negrp data
-          IF (negrp>1) call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+          IF (negrp>1) THEN
+             call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+#if defined(__CUDA)
+          exxbuff_d = exxbuff
+#endif
+          ENDIF
           !
        ENDDO ! iegrp
        IF ( okvan .and..not.tqr ) CALL qvan_clean ()
@@ -1286,6 +1294,10 @@ MODULE exx
     ALLOCATE( psi_d, source=psi )
     ALLOCATE( hpsi_d, source=hpsi )
     ALLOCATE( facb_d(nrxxs) )
+#endif
+    
+#if defined(__CUDA)
+    exxbuff_d = exxbuff
 #endif
     !
 
