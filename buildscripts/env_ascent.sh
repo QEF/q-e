@@ -12,7 +12,8 @@ espresso_version="6.3"
 arch="p9_v100"
 
 #some stuff
-export CUDA_ROOT=${OLCF_PGI_ROOT}/linuxpower/2018/cuda/9.2
+#export CUDA_ROOT=${OLCF_PGI_ROOT}/linuxpower/2018/cuda/9.2
+export CUDA_ROOT=${OLCF_CUDA_ROOT}
 #very important because the crappy pgi module sets it to the wrong value
 export CPATH=
 

@@ -960,12 +960,14 @@ SUBROUTINE fft_scatter_many_columns_to_planes_send ( dfft, f_in_d, f_in, nr3x, n
       DO ip = 1, nprocp
          ioff = dfft%iss( ip )
          nswip = dfft%nsp( ip )
-!$cuf kernel do(2) <<<*,*,0,dfft%a2a_comp>>>
-         DO cuf_j = 1, npp
-            DO cuf_i = 1, nswip
-               it = ( ip - 1 ) * sendsiz + (cuf_i-1)*nppx
-               mc = p_ismap_d( cuf_i + ioff )
-               f_aux_d( mc + ( cuf_j - 1 ) * nnp ) = f_aux2_d( cuf_j + it )
+!$cuf kernel do(3) <<<*,*,0,dfft%a2a_comp>>>
+         DO i = 0, batchsize-1
+            DO cuf_j = 1, npp
+               DO cuf_i = 1, nswip
+                  it = ( ip - 1 ) * sendsiz + (cuf_i-1)*nppx + i*nppx*ncpx
+                  mc = p_ismap_d( cuf_i + ioff )
+                  f_aux_d( mc + ( cuf_j - 1 ) * nnp + i*nnr ) = f_aux2_d( cuf_j + it )
+               ENDDO
             ENDDO
          ENDDO
       ENDDO
@@ -1084,15 +1086,16 @@ SUBROUTINE fft_scatter_many_planes_to_columns_store ( dfft, f_in_d, f_in, nr3x, 
          ip = dest + 1
          ioff = dfft%iss( ip )
          nswip = dfft%nsp( ip )
-!$cuf kernel do(2) <<<*,*,0,dfft%a2a_comp>>>
-         DO cuf_j = 1, npp
-            DO cuf_i = 1, nswip
-               mc = p_ismap_d( cuf_i + ioff )
-               it = ( ip - 1 ) * sendsiz + (cuf_i-1)*nppx
-               f_aux2_d( cuf_j + it ) = f_aux_d( mc + ( cuf_j - 1 ) * nnp )
+!$cuf kernel do(3) <<<*,*,0,dfft%a2a_comp>>>
+         DO i = 0, batchsize-1
+            DO cuf_j = 1, npp
+               DO cuf_i = 1, nswip
+                  mc = p_ismap_d( cuf_i + ioff )
+                  it = ( ip - 1 ) * sendsiz + (cuf_i-1)*nppx + i*nppx*ncpx
+                  f_aux2_d( cuf_j + it ) = f_aux_d( mc + ( cuf_j - 1 ) * nnp + i*nnr )
+               ENDDO
             ENDDO
          ENDDO
-
       ENDDO
 
    ELSE

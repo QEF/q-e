@@ -24,7 +24,7 @@ MODULE exx
   USE noncollin_module,     ONLY : noncolin, npol
   USE io_global,            ONLY : ionode, stdout
   !
-  USE control_flags,        ONLY : gamma_only, tqr
+  USE control_flags,        ONLY : gamma_only, tqr, many_fft
   USE fft_types,            ONLY : fft_type_descriptor
   USE stick_base,           ONLY : sticks_map, sticks_map_deallocate
   !
@@ -843,8 +843,11 @@ MODULE exx
     USE mp_exx,         ONLY : inter_egrp_comm, my_egrp_id, &
                                intra_egrp_comm, me_egrp, &
                                negrp, max_pairs, egrp_pairs, ibands, nibands, &
-                               iexx_istart, iexx_istart_d,iexx_iend, &
+                               iexx_istart, iexx_iend, &
                                all_start, all_end, iexx_start, jblock
+#if defined(__CUDA)
+    USE mp_exx,         ONLY : iexx_istart_d
+#endif
     USE mp,             ONLY : mp_sum, mp_barrier, mp_circular_shift_left
     USE uspp,           ONLY : nkb, okvan
     USE paw_variables,  ONLY : okpaw
@@ -1238,6 +1241,10 @@ MODULE exx
 #endif
     COMPLEX(DP),ALLOCATABLE,TARGET :: rhoc(:,:), vc(:,:)
 
+#if defined(__CUDA)
+    COMPLEX(DP),POINTER,DEVICE :: prhoc_d(:), pvc_d(:)
+#endif
+
     REAL(DP),   ALLOCATABLE :: fac(:), facb(:)
 #if defined(__CUDA)
     REAL(DP),ALLOCATABLE,DEVICE :: facb_d(:)
@@ -1257,7 +1264,7 @@ MODULE exx
     COMPLEX(DP), ALLOCATABLE,DEVICE :: big_result_d(:,:)
 #endif
     INTEGER :: ir_out, ipair, jbnd
-    INTEGER :: ii, jstart, jend, jcount, jind
+    INTEGER :: ii, jstart, jend, jcount, jind, jcurr
     INTEGER :: ialloc, ending_im
     INTEGER :: ijt, njt, jblock_start, jblock_end
     INTEGER :: iegrp, wegrp
@@ -1311,6 +1318,7 @@ MODULE exx
     ALLOCATE(rhoc_d(nrxxs,jblock), vc_d(nrxxs,jblock))
 #endif
     ALLOCATE(rhoc(nrxxs,jblock), vc(nrxxs,jblock))
+
     !
 
     DO ii=1, nibands(my_egrp_id+1)
@@ -1536,11 +1544,12 @@ end associate
                 !
                 !   >>>> brings it to G-space
 #if defined (__CUDA)
-                !rhoc_d = rhoc
-                DO jbnd=jstart, jend
-                   CALL fwfft('Rho', rhoc_d(:,jbnd-jstart+1), dfftt)
+                !
+                DO jbnd=jstart, jend, many_fft
+                  jcurr = min(many_fft, jend-jbnd+1)
+                  prhoc_d(1:nrxxs*jcurr) => rhoc_d(:,jbnd-jstart+1:jbnd-jstart+jcurr)
+                  CALL fwfft ('Rho', prhoc_d, dfftt, howmany=jcurr)
                 ENDDO
-                !rhoc = rhoc_d
 #else
                 DO jbnd=jstart, jend
                    CALL fwfft('Rho', rhoc(:,jbnd-jstart+1), dfftt)
@@ -1606,20 +1615,17 @@ end associate
                 ENDIF
                 !
                 !brings back v in real space
-!#if defined(__USE_MANY_FFT)
-!                !fft many
-!                CALL invfft ('Rho', pvc, dfftt, howmany=jcount)
-!#else
 #if defined (__CUDA)
-                DO jbnd=jstart, jend
-                   CALL invfft('Rho', vc_d(:,jbnd-jstart+1), dfftt)
+                DO jbnd=jstart, jend, many_fft
+                  jcurr = min(many_fft, jend-jbnd+1)
+                  pvc_d(1:nrxxs*jcurr) => vc_d(:,jbnd-jstart+1:jbnd-jstart+jcurr)
+                  CALL invfft ('Rho', pvc_d, dfftt, howmany=jcurr)
                 ENDDO
 #else
                 DO jbnd=jstart, jend
                    CALL invfft('Rho', vc(:,jbnd-jstart+1), dfftt)
                 ENDDO
 #endif
-!#endif
                 !
                 ! Add ultrasoft contribution (REAL SPACE)
                 IF(okvan .and. tqr) THEN
@@ -2342,9 +2348,6 @@ end associate
     COMPLEX(DP), ALLOCATABLE :: temppsic(:,:)
     COMPLEX(DP), ALLOCATABLE :: temppsic_nc(:,:,:)
     COMPLEX(DP), ALLOCATABLE,TARGET :: rhoc(:,:)
-#if defined(__USE_MANY_FFT)
-    COMPLEX(DP), POINTER :: prhoc(:)
-#endif
     REAL(DP),    ALLOCATABLE :: fac(:)
     INTEGER  :: npw, jbnd, ibnd, ibnd_inner_start, ibnd_inner_end, ibnd_inner_count, ik, ikk, ig, ikq, iq, ir
     INTEGER  :: h_ibnd, nrxxs, current_ik, ibnd_loop_start, nblock, nrt, irt, ir_start, ir_end
@@ -2493,9 +2496,6 @@ end associate
                    !
                    !allocate arrays
                    ALLOCATE( rhoc(nrxxs,ibnd_inner_count) )
-#if defined(__USE_MANY_FFT)
-                   prhoc(1:nrxxs*ibnd_inner_count) => rhoc
-#endif 
                    !calculate rho in real space
                    nblock=2048
                    nrt = (nrxxs+nblock-1) / nblock
@@ -2532,13 +2532,10 @@ end associate
                    ENDIF
                    !
                    ! bring rhoc to G-space
-#if defined(__USE_MANY_FFT)
-                   CALL fwfft ('Rho', prhoc, dfftt, howmany=ibnd_inner_count)
-#else
                    DO ibnd=ibnd_inner_start, ibnd_inner_end
                       CALL fwfft('Rho', rhoc(:,ibnd-ibnd_inner_start+1), dfftt)
                    ENDDO
-#endif
+
                    ! augment the "charge" in G space
                    IF(okvan .and. .not. tqr) THEN
                       DO ibnd = ibnd_inner_start, ibnd_inner_end
