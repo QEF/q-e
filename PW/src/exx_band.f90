@@ -1173,8 +1173,7 @@ MODULE exx_band
        END IF
        DEALLOCATE( work_space )
 #if defined(__CUDA)
-       ALLOCATE(igk_exx_d(npwx,nks))
-       igk_exx_d = igk_exx
+       ALLOCATE(igk_exx_d, source=igk_exx)
 #endif
     END IF
     !
