@@ -1215,10 +1215,10 @@ MODULE exx
     !
     INTEGER                  :: lda, n, m
     COMPLEX(DP)              :: psi(:,:)
+    COMPLEX(DP)              :: hpsi(:,:)
 #if defined(__CUDA)
     COMPLEX(DP),ALLOCATABLE,DEVICE :: psi_d(:,:)
 #endif
-    COMPLEX(DP)              :: hpsi(lda*npol,max_ibands)
     TYPE(bec_type), OPTIONAL :: becpsi ! or call a calbec(...psi) instead
     !
 
@@ -1784,12 +1784,12 @@ end associate
           DO im=1, ending_im
 !$omp parallel do default(shared), private(ig) firstprivate(im,n)
              DO ig = 1, n
-                hpsi(ig,im)=hpsi(ig,im) + big_result(ig,im+iexx_istart(my_egrp_id+1)-1)
+                hpsi(ig,im) = hpsi(ig,im) + big_result(ig,im+iexx_istart(my_egrp_id+1)-1)
              ENDDO
 !$omp end parallel do
 !$omp parallel do default(shared), private(ig) firstprivate(im,n)
              DO ig = 1, n
-                hpsi(lda+ig,im)=hpsi(lda+ig,im) + big_result(n+ig,im+iexx_istart(my_egrp_id+1)-1)
+                hpsi(lda+ig,im) = hpsi(lda+ig,im) + big_result(n+ig,im+iexx_istart(my_egrp_id+1)-1)
              ENDDO
 !$omp end parallel do
           END DO
@@ -1797,7 +1797,7 @@ end associate
           DO im=1, ending_im
 !$omp parallel do default(shared), private(ig) firstprivate(im,n)
              DO ig = 1, n
-                hpsi(ig,im)=hpsi(ig,im) + big_result(ig,im+iexx_istart(my_egrp_id+1)-1)
+                hpsi(ig,im) = hpsi(ig,im) + big_result(ig,im+iexx_istart(my_egrp_id+1)-1)
              ENDDO
 !$omp end parallel do
           ENDDO
