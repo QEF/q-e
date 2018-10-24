@@ -1128,7 +1128,7 @@ MODULE exx
           IF (negrp>1) THEN
              call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
 #if defined(__CUDA)
-          exxbuff_d = exxbuff
+             exxbuff_d = exxbuff
 #endif
           ENDIF
           !
@@ -1722,7 +1722,12 @@ end associate
           END DO !IJT
           !
           ! get the next nbnd/negrp data
-          IF (negrp>1) call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+          IF (negrp>1) THEN
+             call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+#if defined(__CUDA)
+             exxbuff_d = exxbuff
+#endif
+          ENDIF
           !
        END DO !iegrp
        !
