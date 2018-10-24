@@ -90,7 +90,7 @@
              {{var.name}}_d_ood = .false.
              RETURN
          END IF
-         ! here we know that {{var.name}} is allocated, check if size is 0 
+         ! here we know that {{var.name}} is allocated, check if size is 0
          IF ( SIZE({{var.name}}) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array {{var.name}}_d. If used, code will crash."
              RETURN

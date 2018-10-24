@@ -147,7 +147,7 @@ SUBROUTINE read_xml_file ( )
   USE mp_images,             ONLY : intra_image_comm
 #endif
   !
-  USE wvfct_gpum,            ONLY : using_et
+  USE wvfct_gpum,            ONLY : using_et, using_wg, using_wg_d
   USE gvect_gpum,            ONLY : using_g, using_gg, using_g_d, using_gg_d, &
                                     using_mill, using_mill_d, &
                                     using_eigts1, using_eigts2, using_eigts3, &
@@ -237,7 +237,7 @@ SUBROUTINE read_xml_file ( )
   !
   nbndx = nbnd
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ) )
-  CALL using_et(1)
+  CALL using_et(1); CALL using_wg(1)
   !
   ! ... here we read all the variables defining the system
   !
@@ -251,7 +251,12 @@ SUBROUTINE read_xml_file ( )
   !
   CALL using_et(1)
   CALL poolscatter( nbnd, nkstot, et, nks, et )
+  CALL using_wg(1)
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
+#if defined(__CUDA)
+  ! Updating wg here. Should not be done and will be removed ASAP.
+  CALL using_wg_d(0)
+#endif
   !
   ! ... check on symmetry
   !

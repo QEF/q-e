@@ -89,7 +89,7 @@
              h_diag_d_ood = .false.
              RETURN
          END IF
-         ! here we know that h_diag is allocated, check if size is 0 
+         ! here we know that h_diag is allocated, check if size is 0
          IF ( SIZE(h_diag) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array h_diag_d. If used, code will crash."
              RETURN
@@ -165,7 +165,7 @@
              s_diag_d_ood = .false.
              RETURN
          END IF
-         ! here we know that s_diag is allocated, check if size is 0 
+         ! here we know that s_diag is allocated, check if size is 0
          IF ( SIZE(s_diag) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array s_diag_d. If used, code will crash."
              RETURN
