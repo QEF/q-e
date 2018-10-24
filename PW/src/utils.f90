@@ -108,7 +108,7 @@ SUBROUTINE matcalc_k_gpu (DoE,ik, ninner, n, m, U, V, mat, ee)
   USE kinds,                ONLY : dp
   USE io_global,ONLY : stdout
   USE wvfct,                ONLY : wg, npwx
-  USE wvfct_gpum,           ONLY : wg_d
+  USE wvfct_gpum,           ONLY : using_wg_d,wg_d
   USE becmod_subs_gpum,     ONLY : calbec_gpu
   USE noncollin_module,     ONLY : noncolin, npol
   IMPLICIT NONE
@@ -136,14 +136,15 @@ SUBROUTINE matcalc_k_gpu (DoE,ik, ninner, n, m, U, V, mat, ee)
   ENDIF
 
   IF(DoE) THEN
-    allocate(wg_d,source=wg)
+    CALL using_wg_d(0)
+    !allocate(wg_d,source=wg)
     IF(n/=m) CALL errore('matcalc','no trace for rectangular matrix.',1)
     ee = 0.0_dp
     !$cuf kernel do (1) 
     DO i = 1,n
       ee = ee + wg_d(i,ik)*DBLE(mat(i,i))
     ENDDO
-    deallocate(wg_d)
+    !deallocate(wg_d)
   ENDIF
 
   CALL stop_clock('matcalc')
