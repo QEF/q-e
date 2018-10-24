@@ -1213,12 +1213,6 @@ MODULE exx
     !
     IMPLICIT NONE
 
-#if defined(__CUDA)
-#define DEV_ATTRIBUTES , DEVICE
-#else
-#define DEV_ATTRIBUTES 
-#endif
-
     !
     INTEGER                  :: lda, n, m
     COMPLEX(DP)              :: psi(:,:)
@@ -1233,11 +1227,7 @@ MODULE exx
     ! local variables
     COMPLEX(DP),ALLOCATABLE DEV_ATTRIBUTES :: temppsic(:,:)
     COMPLEX(DP),ALLOCATABLE DEV_ATTRIBUTES :: temppsic_nc(:,:,:)
-
-    COMPLEX(DP),ALLOCATABLE :: result(:,:), result_nc(:,:,:)
-#if defined(__CUDA)
-    COMPLEX(DP),ALLOCATABLE,DEVICE :: result_d(:,:), result_nc_d(:,:,:)
-#endif
+    COMPLEX(DP),ALLOCATABLE DEV_ATTRIBUTES :: result(:,:), result_nc(:,:,:)
 
     INTEGER          :: request_send, request_recv
     !
@@ -1247,11 +1237,6 @@ MODULE exx
     COMPLEX(DP),ALLOCATABLE,TARGET,DEVICE :: rhoc_d(:,:), vc_d(:,:)
 #endif
     COMPLEX(DP),ALLOCATABLE,TARGET :: rhoc(:,:), vc(:,:)
-
-!#if defined(__USE_MANY_FFT)
-!    COMPLEX(DP),POINTER :: prhoc(:), pvc(:)
-!#endif
-
 
     REAL(DP),   ALLOCATABLE :: fac(:), facb(:)
 #if defined(__CUDA)
@@ -1298,17 +1283,11 @@ MODULE exx
     !
 
     IF (noncolin) THEN
-#if defined(__CUDA)
-       ALLOCATE( result_nc_d(nrxxs,npol,ialloc) )
-#endif
        ALLOCATE( result_nc(nrxxs,npol,ialloc) )
 
        !temppsic knows where it is
        ALLOCATE( temppsic_nc(nrxxs,npol,ialloc) )
     ELSE
-#if defined(__CUDA)
-       ALLOCATE( result_d(nrxxs,ialloc) )
-#endif
        ALLOCATE( result(nrxxs,ialloc) )
        
        !temppsic knows
@@ -1321,21 +1300,17 @@ MODULE exx
     xkp = xk(:,current_k)
     !
     allocate(big_result(n*npol,m))
-    allocate(big_result_d(n*npol,m))
     big_result = 0.0_DP
+#if defined(__CUDA)
+    allocate(big_result_d(n*npol,m))
     big_result_d = 0.0_DP
+#endif
     !
     !allocate arrays for rhoc and vc
 #if defined(__CUDA)
     ALLOCATE(rhoc_d(nrxxs,jblock), vc_d(nrxxs,jblock))
 #endif
     ALLOCATE(rhoc(nrxxs,jblock), vc(nrxxs,jblock))
-
-
-!#if defined(__USE_MANY_FFT)
-!    prhoc(1:nrxxs*jblock) => rhoc(:,:)
-!    pvc(1:nrxxs*jblock) => vc(:,:)
-!#endif
     !
 
     DO ii=1, nibands(my_egrp_id+1)
@@ -1406,9 +1381,9 @@ MODULE exx
 
 #if defined (__CUDA)
     IF (noncolin) THEN
-       result_nc_d = 0.0_DP
+       result_nc = 0.0_DP
     ELSE
-       result_d = 0.0_DP
+       result = 0.0_DP
     ENDIF
 #else
     DO ii=1, nibands(my_egrp_id+1)
@@ -1574,11 +1549,16 @@ end associate
                 !
                 !   >>>> add augmentation in G space HERE
                 IF(okvan .and. .not. tqr) THEN
-                   print*, "In bad branch!"
+#if defined (__CUDA)
+                   rhoc = rhoc_d
+#endif
                    DO jbnd=jstart, jend
                       CALL addusxx_g(dfftt, rhoc(:,jbnd-jstart+1), xkq, xkp, &
                       'c', becphi_c=becxx(ikq)%k(:,jbnd),becpsi_c=becpsi%k(:,ibnd))
                    ENDDO
+#if defined (__CUDA)
+                   rhoc_d = rhoc
+#endif
                 ENDIF
                 !   >>>> charge done
                 !
@@ -1671,7 +1651,7 @@ end associate
                 !
 
 #if defined(__CUDA)    
-associate(exxbuff=>exxbuff_d, result_nc=>result_nc_d, result=>result_d, vc=>vc_d)
+associate(exxbuff=>exxbuff_d, vc=>vc_d)
                 all_start_tmp=all_start(wegrp)
                 DO jbnd=jstart, jend
                    !$cuf kernel do (1)
@@ -1732,13 +1712,6 @@ end associate
     END DO vexxmain
 
 !move this down to after the vexx_k_fin
-!#if defined(__CUDA)
-!    IF (noncolin) THEN
-!       result_nc = result_nc_d
-!    ELSE
-!       result = result_d
-!    ENDIF
-!#endif
 
     CALL stop_clock( 'vexx_k_main' )
     CALL start_clock( 'vexx_k_fin' )
@@ -1759,19 +1732,19 @@ end associate
        !big_result_d=big_result !already initialized along with the big_result=1.0D0
        IF (noncolin) THEN
           !brings back result in G-space
-          CALL fwfft ('Wave', result_nc_d(:,1,ii), dfftt)
-          CALL fwfft ('Wave', result_nc_d(:,2,ii), dfftt)
+          CALL fwfft ('Wave', result_nc(:,1,ii), dfftt)
+          CALL fwfft ('Wave', result_nc(:,2,ii), dfftt)
           !$cuf kernel do (1)
           DO ig = 1, n
-             big_result_d(ig,ibnd) = big_result_d(ig,ibnd) - exxalfa*result_nc_d(dfftt__nl(igk_exx_d(ig,current_k)),1,ii)
-             big_result_d(n+ig,ibnd) = big_result_d(n+ig,ibnd) - exxalfa*result_nc_d(dfftt__nl(igk_exx_d(ig,current_k)),2,ii)
+             big_result_d(ig,ibnd) = big_result_d(ig,ibnd) - exxalfa*result_nc(dfftt__nl(igk_exx_d(ig,current_k)),1,ii)
+             big_result_d(n+ig,ibnd) = big_result_d(n+ig,ibnd) - exxalfa*result_nc(dfftt__nl(igk_exx_d(ig,current_k)),2,ii)
           ENDDO
        ELSE
           !
-          CALL fwfft ('Wave', result_d(:,ii), dfftt)
+          CALL fwfft ('Wave', result(:,ii), dfftt)
           !$cuf kernel do (1)
           DO ig = 1, n
-             big_result_d(ig,ibnd) = big_result_d(ig,ibnd) - exxalfa*result_d(dfftt__nl(igk_exx_d(ig,current_k)),ii)
+             big_result_d(ig,ibnd) = big_result_d(ig,ibnd) - exxalfa*result(dfftt__nl(igk_exx_d(ig,current_k)),ii)
           ENDDO
        ENDIF
        big_result(:,ibnd) = big_result_d(:,ibnd)
@@ -1797,17 +1770,16 @@ end associate
             deexx(:,ii), eps_occ, exxalfa)
        !
     END DO
-    !
-#if defined(__CUDA)
-    IF (noncolin) THEN
-       result_nc = result_nc_d
-    ELSE
-       result = result_d
-    ENDIF
-#endif
-       ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
+
+    ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
     !deallocate temporary arrays
     DEALLOCATE(rhoc, vc)
+    IF (noncolin) THEN
+       DEALLOCATE( result_nc )
+    ELSE
+       DEALLOCATE( result )
+    ENDIF
+
 #if defined(__CUDA)
     DEALLOCATE(rhoc_d, vc_d)
 #endif
@@ -1874,7 +1846,6 @@ end associate
 
     !these need to be deallocated anyhow
     DEALLOCATE(big_result)
-    DEALLOCATE( result )
 
     DEALLOCATE(fac, facb )
 
@@ -1889,14 +1860,7 @@ end associate
 #if defined (__CUDA)
     DEALLOCATE(big_result_d)
     DEALLOCATE(facb_d)
-    DEALLOCATE(hpsi_d)
-    IF (noncolin) THEN
-       DEALLOCATE(result_nc_d)
-       DEALLOCATE( result_nc )
-    ELSE
-       DEALLOCATE(result_d)
-    ENDIF
-    
+    DEALLOCATE(hpsi_d)    
 #endif
     !
     CALL stop_clock( 'vexx_k_fin' )

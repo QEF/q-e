@@ -51,6 +51,7 @@ SUBROUTINE matcalc (label, DoE, PrtMat, ninner, n, m, U, V, mat, ee)
   CALL stop_clock('matcalc')
 
 END SUBROUTINE matcalc
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE matcalc_k (label, DoE, PrtMat, ik, ninner, n, m, U, V, mat, ee)
   !
@@ -101,6 +102,7 @@ SUBROUTINE matcalc_k (label, DoE, PrtMat, ik, ninner, n, m, U, V, mat, ee)
 
 END SUBROUTINE matcalc_k
 
+#if defined(__CUDA)
 SUBROUTINE matcalc_k_gpu (DoE,ik, ninner, n, m, U, V, mat, ee)
   !
   USE kinds,                ONLY : dp
@@ -147,6 +149,7 @@ SUBROUTINE matcalc_k_gpu (DoE,ik, ninner, n, m, U, V, mat, ee)
   CALL stop_clock('matcalc')
 
 END SUBROUTINE matcalc_k_gpu
+#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE MatPrt(label,n,m,A)
