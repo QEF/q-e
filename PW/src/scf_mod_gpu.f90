@@ -86,7 +86,7 @@
              vrs_d_ood = .false.
              RETURN
          END IF
-         ! here we know that vrs is allocated, check if size is 0 
+         ! here we know that vrs is allocated, check if size is 0
          IF ( SIZE(vrs) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array vrs_d. If used, code will crash."
              RETURN

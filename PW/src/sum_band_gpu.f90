@@ -1024,7 +1024,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   !
   ! GPU modules here
   USE wavefunctions_gpum, ONLY : evc_d, using_evc, using_evc_d
-  USE wvfct_gpum,                ONLY : et_d, using_et, using_et_d
+  USE wvfct_gpum,                ONLY : et_d, wg_d, using_et, using_et_d, using_wg_d
   USE uspp_gpum,                 ONLY : using_indv_ijkb0, &
                                         using_becsum, using_ebecsum
   USE becmod_subs_gpum,          ONLY : calbec_gpu, using_becp_auto, using_becp_d_auto
@@ -1053,12 +1053,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
 #if defined(__CUDA)
   attributes(DEVICE) :: becp_d_r_d, becp_d_k_d, becp_d_nc_d
 #endif
-  REAL(DP), ALLOCATABLE :: wg_d(:,:)
-#if defined(__CUDA)
-  attributes(DEVICE) :: wg_d
-#endif
-  !
-  ALLOCATE(wg_d, SOURCE=wg)   !!! OPTIMIZE HERE: move this to duplicated modules?
+  CALL using_wg_d(0)
   CALL using_indv_ijkb0_d(0)
   CALL using_becsum_d(1)
   if (tqr) CALL using_ebecsum_d(1)
@@ -1267,8 +1262,6 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
      END IF
      !
   END DO
-  !
-  DEALLOCATE(wg_d)
   !
   CALL stop_clock( 'sum_band:becsum' )
   !

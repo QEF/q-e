@@ -131,7 +131,7 @@
              indv_d_ood = .false.
              RETURN
          END IF
-         ! here we know that indv is allocated, check if size is 0 
+         ! here we know that indv is allocated, check if size is 0
          IF ( SIZE(indv) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array indv_d. If used, code will crash."
              RETURN
@@ -207,7 +207,7 @@
              nhtol_d_ood = .false.
              RETURN
          END IF
-         ! here we know that nhtol is allocated, check if size is 0 
+         ! here we know that nhtol is allocated, check if size is 0
          IF ( SIZE(nhtol) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array nhtol_d. If used, code will crash."
              RETURN
@@ -283,7 +283,7 @@
              nhtolm_d_ood = .false.
              RETURN
          END IF
-         ! here we know that nhtolm is allocated, check if size is 0 
+         ! here we know that nhtolm is allocated, check if size is 0
          IF ( SIZE(nhtolm) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array nhtolm_d. If used, code will crash."
              RETURN
@@ -359,7 +359,7 @@
              ijtoh_d_ood = .false.
              RETURN
          END IF
-         ! here we know that ijtoh is allocated, check if size is 0 
+         ! here we know that ijtoh is allocated, check if size is 0
          IF ( SIZE(ijtoh) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array ijtoh_d. If used, code will crash."
              RETURN
@@ -435,7 +435,7 @@
              indv_ijkb0_d_ood = .false.
              RETURN
          END IF
-         ! here we know that indv_ijkb0 is allocated, check if size is 0 
+         ! here we know that indv_ijkb0 is allocated, check if size is 0
          IF ( SIZE(indv_ijkb0) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array indv_ijkb0_d. If used, code will crash."
              RETURN
@@ -511,7 +511,7 @@
              vkb_d_ood = .false.
              RETURN
          END IF
-         ! here we know that vkb is allocated, check if size is 0 
+         ! here we know that vkb is allocated, check if size is 0
          IF ( SIZE(vkb) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array vkb_d. If used, code will crash."
              RETURN
@@ -587,7 +587,7 @@
              becsum_d_ood = .false.
              RETURN
          END IF
-         ! here we know that becsum is allocated, check if size is 0 
+         ! here we know that becsum is allocated, check if size is 0
          IF ( SIZE(becsum) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array becsum_d. If used, code will crash."
              RETURN
@@ -663,7 +663,7 @@
              ebecsum_d_ood = .false.
              RETURN
          END IF
-         ! here we know that ebecsum is allocated, check if size is 0 
+         ! here we know that ebecsum is allocated, check if size is 0
          IF ( SIZE(ebecsum) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array ebecsum_d. If used, code will crash."
              RETURN
@@ -739,7 +739,7 @@
              dvan_d_ood = .false.
              RETURN
          END IF
-         ! here we know that dvan is allocated, check if size is 0 
+         ! here we know that dvan is allocated, check if size is 0
          IF ( SIZE(dvan) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array dvan_d. If used, code will crash."
              RETURN
@@ -815,7 +815,7 @@
              deeq_d_ood = .false.
              RETURN
          END IF
-         ! here we know that deeq is allocated, check if size is 0 
+         ! here we know that deeq is allocated, check if size is 0
          IF ( SIZE(deeq) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array deeq_d. If used, code will crash."
              RETURN
@@ -891,7 +891,7 @@
              qq_nt_d_ood = .false.
              RETURN
          END IF
-         ! here we know that qq_nt is allocated, check if size is 0 
+         ! here we know that qq_nt is allocated, check if size is 0
          IF ( SIZE(qq_nt) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array qq_nt_d. If used, code will crash."
              RETURN
@@ -967,7 +967,7 @@
              qq_at_d_ood = .false.
              RETURN
          END IF
-         ! here we know that qq_at is allocated, check if size is 0 
+         ! here we know that qq_at is allocated, check if size is 0
          IF ( SIZE(qq_at) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array qq_at_d. If used, code will crash."
              RETURN
@@ -1043,7 +1043,7 @@
              nhtoj_d_ood = .false.
              RETURN
          END IF
-         ! here we know that nhtoj is allocated, check if size is 0 
+         ! here we know that nhtoj is allocated, check if size is 0
          IF ( SIZE(nhtoj) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array nhtoj_d. If used, code will crash."
              RETURN
@@ -1119,7 +1119,7 @@
              qq_so_d_ood = .false.
              RETURN
          END IF
-         ! here we know that qq_so is allocated, check if size is 0 
+         ! here we know that qq_so is allocated, check if size is 0
          IF ( SIZE(qq_so) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array qq_so_d. If used, code will crash."
              RETURN
@@ -1195,7 +1195,7 @@
              dvan_so_d_ood = .false.
              RETURN
          END IF
-         ! here we know that dvan_so is allocated, check if size is 0 
+         ! here we know that dvan_so is allocated, check if size is 0
          IF ( SIZE(dvan_so) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array dvan_so_d. If used, code will crash."
              RETURN
@@ -1271,7 +1271,7 @@
              deeq_nc_d_ood = .false.
              RETURN
          END IF
-         ! here we know that deeq_nc is allocated, check if size is 0 
+         ! here we know that deeq_nc is allocated, check if size is 0
          IF ( SIZE(deeq_nc) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array deeq_nc_d. If used, code will crash."
              RETURN
