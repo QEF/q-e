@@ -22,9 +22,11 @@
      !
      REAL(DP), ALLOCATABLE :: g2kin_d(:)
      REAL(DP), ALLOCATABLE :: et_d(:, :)
+     REAL(DP), ALLOCATABLE :: wg_d(:,:)    ! the weight of each k point and band
+
      !
 #if defined(__CUDA)
-     attributes (DEVICE) :: g2kin_d, et_d
+     attributes (DEVICE) :: g2kin_d, et_d, wg_d
 #endif
 
      LOGICAL :: g2kin_ood = .false.    ! used to flag out of date variables
