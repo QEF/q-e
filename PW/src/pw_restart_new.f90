@@ -1900,7 +1900,7 @@ MODULE pw_restart_new
       USE wvfct,    ONLY : et, wg, nbnd
       USE ener,     ONLY : ef, ef_up, ef_dw
       USE qes_types_module, ONLY : band_structure_type
-      USE wvfct_gpum,       ONLY : using_et
+      USE wvfct_gpum,       ONLY : using_et, using_wg, using_wg_d
       !
       IMPLICIT NONE
       TYPE ( band_structure_type)         :: band_struct_obj
@@ -1932,7 +1932,7 @@ MODULE pw_restart_new
          ef_up = 0.d0
          ef_dw = 0.d0
       END IF 
-      CALL using_et(1)
+      CALL using_et(1); CALL using_wg(1)
       DO ik =1, band_struct_obj%ndim_ks_energies
          IF ( band_struct_obj%lsda) THEN
             IF ( band_struct_obj%nbnd_up_ispresent .AND. band_struct_obj%nbnd_dw_ispresent) THEN
@@ -1962,7 +1962,10 @@ MODULE pw_restart_new
             et (1:nbnd_,ik) = band_struct_obj%ks_energies(ik)%eigenvalues%vector(1:nbnd_)*e2
             wg (1:nbnd_,ik) = band_struct_obj%ks_energies(ik)%occupations%vector(1:nbnd_)*wk(ik)
          END IF  
-      END DO 
+      END DO
+#if defined(__CUDA)
+      CALL using_wg_d(1)
+#endif
     END SUBROUTINE readschema_band_structure 
     !
     !--------------------------------------------------------------------------

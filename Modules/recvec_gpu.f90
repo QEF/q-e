@@ -101,7 +101,7 @@
              gg_d_ood = .false.
              RETURN
          END IF
-         ! here we know that gg is allocated, check if size is 0 
+         ! here we know that gg is allocated, check if size is 0
          IF ( SIZE(gg) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array gg_d. If used, code will crash."
              RETURN
@@ -177,7 +177,7 @@
              g_d_ood = .false.
              RETURN
          END IF
-         ! here we know that g is allocated, check if size is 0 
+         ! here we know that g is allocated, check if size is 0
          IF ( SIZE(g) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array g_d. If used, code will crash."
              RETURN
@@ -253,7 +253,7 @@
              mill_d_ood = .false.
              RETURN
          END IF
-         ! here we know that mill is allocated, check if size is 0 
+         ! here we know that mill is allocated, check if size is 0
          IF ( SIZE(mill) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array mill_d. If used, code will crash."
              RETURN
@@ -329,7 +329,7 @@
              eigts1_d_ood = .false.
              RETURN
          END IF
-         ! here we know that eigts1 is allocated, check if size is 0 
+         ! here we know that eigts1 is allocated, check if size is 0
          IF ( SIZE(eigts1) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array eigts1_d. If used, code will crash."
              RETURN
@@ -405,7 +405,7 @@
              eigts2_d_ood = .false.
              RETURN
          END IF
-         ! here we know that eigts2 is allocated, check if size is 0 
+         ! here we know that eigts2 is allocated, check if size is 0
          IF ( SIZE(eigts2) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array eigts2_d. If used, code will crash."
              RETURN
@@ -481,7 +481,7 @@
              eigts3_d_ood = .false.
              RETURN
          END IF
-         ! here we know that eigts3 is allocated, check if size is 0 
+         ! here we know that eigts3 is allocated, check if size is 0
          IF ( SIZE(eigts3) == 0 ) THEN
              print *, "Refusing to allocate 0 dimensional array eigts3_d. If used, code will crash."
              RETURN

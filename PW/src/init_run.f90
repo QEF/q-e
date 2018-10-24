@@ -36,7 +36,7 @@ SUBROUTINE init_run()
   !
   USE control_flags,      ONLY : use_gpu
   USE dfunct_gpum,        ONLY : newd_gpu
-  USE wvfct_gpum,         ONLY : using_et
+  USE wvfct_gpum,         ONLY : using_et, using_wg, using_wg_d
   USE gvect_gpum,         ONLY : using_g, using_gg, using_g_d, using_gg_d, &
                                  using_mill, using_mill_d
   !
@@ -114,9 +114,10 @@ SUBROUTINE init_run()
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )
   !
   et(:,:) = 0.D0
-  CALL using_et(1)
+  CALL using_et(2)
   !
   wg(:,:) = 0.D0
+  CALL using_wg(2)
   !
   btype(:,:) = 1
   !
