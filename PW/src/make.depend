@@ -2129,6 +2129,7 @@ utils.o : ../../Modules/io_global.o
 utils.o : ../../Modules/kind.o
 utils.o : ../../Modules/noncol.o
 utils.o : pwcom.o
+utils.o : pwcom_gpu.o
 v_of_rho.o : ../../FFTXlib/fft_interfaces.o
 v_of_rho.o : ../../Modules/cell_base.o
 v_of_rho.o : ../../Modules/constants.o

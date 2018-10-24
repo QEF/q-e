@@ -100,6 +100,54 @@ SUBROUTINE matcalc_k (label, DoE, PrtMat, ik, ninner, n, m, U, V, mat, ee)
   CALL stop_clock('matcalc')
 
 END SUBROUTINE matcalc_k
+
+SUBROUTINE matcalc_k_gpu (DoE,ik, ninner, n, m, U, V, mat, ee)
+  !
+  USE kinds,                ONLY : dp
+  USE io_global,ONLY : stdout
+  USE wvfct,                ONLY : wg, npwx
+  USE wvfct_gpum,           ONLY : wg_d
+  USE becmod_subs_gpum,     ONLY : calbec_gpu
+  USE noncollin_module,     ONLY : noncolin, npol
+  IMPLICIT NONE
+  !
+  ! compute the (n,n) matrix representation <U|V>
+  ! and energy from V (m,n) and U(m,n)
+  !
+  LOGICAL, INTENT(IN) :: DoE
+  INTEGER, INTENT(IN) :: ik, ninner, n, m
+  COMPLEX(dp), INTENT(IN), DEVICE :: U(ninner,n), V(ninner,m)
+  COMPLEX(dp), INTENT(OUT), DEVICE:: mat(n,m)
+  REAL(DP), INTENT(OUT) :: ee
+
+  INTEGER :: i
+
+  CALL start_clock('matcalc')
+
+  mat = (0.0_dp, 0.0_dp)
+  IF(noncolin) THEN
+    noncolin = .false.
+    CALL calbec_gpu(ninner, U, V, mat, m)
+    noncolin = .true.
+  ELSE
+    CALL calbec_gpu(ninner, U, V, mat, m)
+  ENDIF
+
+  IF(DoE) THEN
+    allocate(wg_d,source=wg)
+    IF(n/=m) CALL errore('matcalc','no trace for rectangular matrix.',1)
+    ee = 0.0_dp
+    !$cuf kernel do (1) 
+    DO i = 1,n
+      ee = ee + wg_d(i,ik)*DBLE(mat(i,i))
+    ENDDO
+    deallocate(wg_d)
+  ENDIF
+
+  CALL stop_clock('matcalc')
+
+END SUBROUTINE matcalc_k_gpu
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE MatPrt(label,n,m,A)
   USE kinds, ONLY : dp
