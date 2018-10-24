@@ -22,11 +22,11 @@ if [ "${compiler}" == "intel" ]; then
   export FC=ifort
   export F90=ifort
   export MPIF90=ftn
-  export FCFLAGS="-g -O3 -qopenmp -mkl"
+  export FCFLAGS="-g -O3 -qopenmp -mkl -xMIC-AVX512"
   export F90FLAGS="${FCFLAGS}"
   export MPIf90FLAGS="${F90FLAGS}"
   export CC=icc
-  export CFLAGS="-g -O3 -qopenmp -mkl"
+  export CFLAGS="-g -O3 -qopenmp -mkl -xMIC-AVX512"
   export LDFLAGS="${F90FLAGS} -mkl"
 fi
 
@@ -42,6 +42,7 @@ sed -i 's|^HDF5_LIB =|HDF5_LIB = -L${HDF5_DIR}/lib -lhdf5|g' make.inc
 
 #clean up
 make clean
+rm -r ${INSTALLPATH}
 
 #build crap
 make -j8 pw
