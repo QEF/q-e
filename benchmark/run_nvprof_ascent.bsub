@@ -23,14 +23,19 @@ scratchdir=$(pwd)
 mkdir -p ${scratchdir}
 
 #run
-cat ${LSB_DJOB_HOSTFILE} | sort | uniq | grep -v login | grep -v batch > host_list
+###modify the following 3 lines for your need.
+export TEST_CASE=micro.in  #or small.in
+export USE_HYPERTHREADING=0  # 0 not use Hyperthreading; else use Hyperthreading
 #nprocspn=6
 nprocspn=1
+#
+cat ${LSB_DJOB_HOSTFILE} | sort | uniq | grep -v login | grep -v batch > host_list
 nnodes=$(cat host_list | wc -l)
 nprocs=$(( ${nnodes} * ${nprocspn} ))
+export NNODES=$nnodes  #to pass to the wrapper script
 
 #cp run file
-cp ${installdir}/bin/pw.x ${scratchdir}/
+cp -p ${installdir}/bin/pw.x ${scratchdir}/
 cp ${benchmarkdir}/*.in ${scratchdir}/
 cp ${benchmarkdir}/*.UPF ${scratchdir}/
 
