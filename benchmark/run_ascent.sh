@@ -29,9 +29,9 @@ nnodes=$(cat host_list | wc -l)
 nprocs=$(( ${nnodes} * ${nprocspn} ))
 
 #cp run file
-cp ${installdir}/bin/pw.x ${scratchdir}/
-cp ${benchmarkdir}/*.in ${scratchdir}/
-cp ${benchmarkdir}/*.UPF ${scratchdir}/
+#cp ${installdir}/bin/pw.x ${scratchdir}/
+#cp ${benchmarkdir}/*.in ${scratchdir}/
+#cp ${benchmarkdir}/*.UPF ${scratchdir}/
 
 #cuda mpi args
 cuda_mpi="--smpiargs \"-gpu\""
