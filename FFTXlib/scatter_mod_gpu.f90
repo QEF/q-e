@@ -495,7 +495,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
      !
      !f_aux = (0.0_DP, 0.0_DP) !
      !$cuf kernel do (1) <<<*,*,0,desc%stream_scatter_yz(1)>>>
-     do i = lbound(f_aux_d,1), ubound(f_aux_d,1)
+     do i = 1, desc%my_nr3p*my_nr1p_*desc%nr2x
        f_aux_d(i) = (0.d0, 0.d0)
      end do
      ierr = cudaEventRecord ( zero_event, desc%stream_scatter_yz(1) )

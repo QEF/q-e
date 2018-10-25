@@ -306,7 +306,7 @@ program test_fwinv_gpu
       !
       CALL fwfft( 'Wave' , data_in_d, dfft, howmany=howmany)
       !
-      DO i=0,0
+      DO i=0,howmany-1
         start = i*dfft%nnr
         CALL fwfft( 'Wave' , data_in(1+start:), dfft, 1 )
         aux(start+1:start+dfft%nnr) = data_in_d(start+1:start+dfft%nnr)
