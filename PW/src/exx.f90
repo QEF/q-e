@@ -465,11 +465,17 @@ MODULE exx
             ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nks))
          ELSE
             ALLOCATE( exxbuff(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nkqs))
-#if defined(__CUDA)
-            ALLOCATE( exxbuff_d(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nkqs))
-#endif
          END IF
       END IF
+#if defined(__CUDA)
+      IF (.not. allocated(exxbuff_d)) THEN
+         IF (gamma_only) THEN
+            ALLOCATE( exxbuff_d(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nks))
+         ELSE
+            ALLOCATE( exxbuff_d(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nkqs))
+         END IF
+      END IF
+#endif
     END IF
 
     !assign buffer
@@ -741,9 +747,6 @@ MODULE exx
     !
     CALL change_data_structure(.FALSE.)
     !
-#if defined(__CUDA)
-    exxbuff_d=exxbuff
-#endif
     CALL stop_clock ('exxinit')
     !
     !-----------------------------------------------------------------------
@@ -1122,7 +1125,12 @@ MODULE exx
           LOOP_ON_PSI_BANDS
           !
           ! get the next nbnd/negrp data
-          IF (negrp>1) call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+          IF (negrp>1) THEN
+             call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+#if defined(__CUDA)
+             exxbuff_d = exxbuff
+#endif
+          ENDIF
           !
        ENDDO ! iegrp
        IF ( okvan .and..not.tqr ) CALL qvan_clean ()
@@ -1286,6 +1294,10 @@ MODULE exx
     ALLOCATE( psi_d, source=psi )
     ALLOCATE( hpsi_d, source=hpsi )
     ALLOCATE( facb_d(nrxxs) )
+#endif
+    
+#if defined(__CUDA)
+    exxbuff_d = exxbuff
 #endif
     !
 
@@ -1710,7 +1722,12 @@ end associate
           END DO !IJT
           !
           ! get the next nbnd/negrp data
-          IF (negrp>1) call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+          IF (negrp>1) THEN
+             call mp_circular_shift_left( exxbuff(:,:,ikq), me_egrp, inter_egrp_comm )
+#if defined(__CUDA)
+             exxbuff_d = exxbuff
+#endif
+          ENDIF
           !
        END DO !iegrp
        !
@@ -3391,12 +3408,12 @@ USE noncollin_module,     ONLY : npol
 #endif 
   IMPLICIT NONE
   real(DP) :: exxe
-  INTEGER :: nnpw,nbnd,i
+  INTEGER :: nnpw,nbnd,i,j
   COMPLEX(DP) :: phi(npwx*npol,nbnd)
   COMPLEX(DP),OPTIONAL :: vphi(npwx*npol,nbnd)
   COMPLEX(DP),ALLOCATABLE DEV_ATTRIBUTES :: cmexx(:,:), vv(:,:)
 #if defined (__CUDA)
-  COMPLEX(DP), ALLOCATABLE,DEVICE :: xi_d(:,:,:)  ! ACE projectors
+  COMPLEX(DP), ALLOCATABLE,DEVICE :: xi_d(:,:)  ! ACE projectors
   COMPLEX(DP), ALLOCATABLE, DEVICE :: phi_d(:,:)
 #endif
   real*8, PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
@@ -3413,15 +3430,17 @@ USE noncollin_module,     ONLY : npol
 ! do the ACE potential
   ALLOCATE( cmexx(nbndproj,nbnd) )
 #if defined (__CUDA)
-  ALLOCATE( xi_d,source=xi)
+  ALLOCATE( xi_d(npwx*npol,nbndproj))
+   xi_d=xi(:,:,current_k)
+
   ALLOCATE( phi_d,source=phi)
 #endif
   cmexx = (Zero,Zero)
 ! <xi|phi>
 #if defined (__CUDA)
-  CALL matcalc_k_gpu(.false.,current_k,npwx*npol,nbndproj,nbnd,xi_d(1,1,current_k),phi_d,cmexx,exxe)
+  CALL matcalc_k_gpu(.false.,current_k,npwx*npol,nbndproj,nbnd,xi_d(1,1),phi_d,cmexx,exxe)
 ! |vv> = |vphi> + (-One) * |xi> * <xi|phi>
-  CALL ZGEMM ('N','N',npwx*npol,nbnd,nbndproj,-(One,Zero),xi_d(1,1,current_k),npwx*npol,cmexx,nbndproj,(One,Zero),vv,npwx*npol)
+  CALL ZGEMM ('N','N',npwx*npol,nbnd,nbndproj,-(One,Zero),xi_d(1,1),npwx*npol,cmexx,nbndproj,(One,Zero),vv,npwx*npol)
 #else
   CALL matcalc_k('<xi|phi>',.false.,0,current_k,npwx*npol,nbndproj,nbnd,xi(1,1,current_k),phi,cmexx,exxe)
 ! |vv> = |vphi> + (-One) * |xi> * <xi|phi>
@@ -3450,7 +3469,7 @@ USE noncollin_module,     ONLY : npol
   IF(present(vphi)) vphi = vv
   DEALLOCATE( vv,cmexx )
 #if defined (__CUDA)
-  xi=xi_d
+  xi(:,:,current_k)=xi_d
   DEALLOCATE( xi_d,phi_d)
 #endif
 

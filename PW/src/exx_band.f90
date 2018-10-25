@@ -1104,6 +1104,12 @@ MODULE exx_band
        IF ( .NOT. ALLOCATED(dffts%nl) ) ALLOCATE (dffts%nl(size(nls_exx)))
        IF ( gamma_only .AND. .NOT.ALLOCATED(dfftp%nlm) ) ALLOCATE (dfftp%nlm(size(nlm_exx)))
        IF ( gamma_only .AND. .NOT.ALLOCATED(dffts%nlm) ) ALLOCATE (dffts%nlm(size(nlsm_exx)))
+#if defined(__CUDA)
+       IF ( .NOT. ALLOCATED(dfftp%nl_d) ) ALLOCATE (dfftp%nl_d(size(nl_exx)))
+       IF ( .NOT. ALLOCATED(dffts%nl_d) ) ALLOCATE (dffts%nl_d(size(nls_exx)))
+       IF ( gamma_only .AND. .NOT.ALLOCATED(dfftp%nlm_d) ) ALLOCATE (dfftp%nlm_d(size(nlm_exx)))
+       IF ( gamma_only .AND. .NOT.ALLOCATED(dffts%nlm_d) ) ALLOCATE (dffts%nlm_d(size(nlsm_exx)))
+#endif
        ! end workaround. FIXME: this part of code must disappear ASAP
        dfftp%nl = nl_exx
        dffts%nl = nls_exx
@@ -1132,9 +1138,17 @@ MODULE exx_band
        mill = mill_loc
        dfftp%nl = nl_loc
        dffts%nl = nls_loc
+#if defined(__CUDA)
+       dfftp%nl_d = dfftp%nl
+       dffts%nl_d = dffts%nl
+#endif
        IF( gamma_only ) THEN
           dfftp%nlm = nlm_loc
           dffts%nlm = nlsm_loc
+#if defined(__CUDA)
+          dfftp%nlm_d = dfftp%nlm
+          dffts%nlm_d = dffts%nlm
+#endif
        END IF
        ngm = ngm_loc
        ngm_g = ngm_g_loc
@@ -1173,8 +1187,7 @@ MODULE exx_band
        END IF
        DEALLOCATE( work_space )
 #if defined(__CUDA)
-       ALLOCATE(igk_exx_d(npwx,nks))
-       igk_exx_d = igk_exx
+       ALLOCATE(igk_exx_d, source=igk_exx)
 #endif
     END IF
     !
