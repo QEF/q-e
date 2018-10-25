@@ -24,7 +24,7 @@ mkdir -p ${scratchdir}
 
 #run
 cat ${LSB_DJOB_HOSTFILE} | sort | uniq | grep -v login | grep -v batch > host_list
-nprocspn=6 #6 for all
+nprocspn=4 #6 for all
 nnodes=$(cat host_list | wc -l)
 nprocs=$(( ${nnodes} * ${nprocspn} ))
 
@@ -37,4 +37,5 @@ cp ${benchmarkdir}/*.UPF ${scratchdir}/
 cuda_mpi="--smpiargs \"-gpu\""
 
 #run
-jsrun -n ${nnodes} -g 6 -c 42 -a ${nprocspn} ${cuda_mpi} --bind=proportional-packed:7 --launch_distribution=packed stdbuf -o0 ./run_ascent_wrapper.sh $(pwd) |& tee out.tio2.${LSB_JOBID}
+#jsrun -n ${nnodes} -g 6 -c 42 -a ${nprocspn} ${cuda_mpi} --bind=proportional-packed:$(( 42 / ${nprocspn} )) --launch_distribution=packed stdbuf -o0 ./run_ascent_wrapper.sh $(pwd) |& tee out.tio2.${LSB_JOBID}
+jsrun -n ${nnodes} -g 6 -c 42 -a ${nprocspn} ${cuda_mpi} --bind=none --launch_distribution=packed stdbuf -o0 ./run_ascent_wrapper.sh $(pwd) |& tee out.tio2.${LSB_JOBID}
