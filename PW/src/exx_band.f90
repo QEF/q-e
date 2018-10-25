@@ -119,8 +119,6 @@ MODULE exx_band
        END IF
 #if defined(__CUDA)
        IF(.not.allocated(igk_exx_d)) THEN
-          !ALLOCATE( igk_exx_d( npwx, nks ) )
-          !igk_exx_d = igk_k
           ALLOCATE( igk_exx_d, source=igk_exx )
        END IF
 #endif
