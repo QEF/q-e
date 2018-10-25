@@ -21,12 +21,12 @@ export CPATH=
 export FC=pgf90
 export F90=pgf90
 export MPIF90=mpif90
-export FCFLAGS="-g -O3 -mp -Mpreprocess"
+export FCFLAGS="-g -O3 -mp -Mpreprocess -D__PROFILE -D__GPU_MPI"
 export F90FLAGS="${FCFLAGS}"
 export MPIf90FLAGS="${F90FLAGS}"
-export CPPFLAGS=-D__PROFILE
+#export CPPFLAGS=-D__PROFILE
 export CC=pgcc
-export CFLAGS="-g -O3 -mp"
+export CFLAGS="-g -O3 -mp -Mpreprocess -D__PROFILE -D__GPU_MPI"
 export LDFLAGS="${F90FLAGS}"
 export NVCCFLAGS="-lineinfo"
 

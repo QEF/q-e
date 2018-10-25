@@ -33,7 +33,7 @@ make clean
 rm -r ${INSTALLPATH}
 
 #build crap
-make -j 16 pw 
+make -j 16 pwall 
 #make want
 #make gipaw
 #make d3q

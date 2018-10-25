@@ -20,14 +20,13 @@ pushd ${scratchdir}
 
 #nvprof runs on the first lrank (but OK to run on all lrank, for which each lrank would generate a .nvvp file)
 if [[ ${lrank} == 0 ]];then
-    APP="nvprof -o micro_%h_%p.nvvp ./pw.x -in micro.in -nbgrp ${nnodes}"  
+    APP="nvprof -o ${TEST_CASE}_%h_%p.nvvp ./pw.x -in ${TEST_CASE} -nbgrp ${NNODES}"  
 else
-    APP="./pw.x -in small.in -nbgrp ${nnodes}"
+    APP="./pw.x -in ${TEST_CASE} -nbgrp ${NNODES}"
 fi
 
-use_hyperthreading=0  #0 not use ht; 1 use ht
 
-if [[ $hyperthreading == 0 ]]
+if [[ $USE_HYPERTHREADING == 0 ]]
 then
     case ${lrank} in
     [0])
