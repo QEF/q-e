@@ -3,7 +3,7 @@
 #BSUB -U hackathon
 #BSUB -nnodes 1
 #BSUB -P GEN109
-#BSUB -alloc_flags "nvme"
+#BSUB -alloc_flags "nvme gpumps"
 #BSUB -J tio2_exx
 #BSUB -o out_test.%J
 #BSUB -e out_test.%J
@@ -24,14 +24,17 @@ mkdir -p ${scratchdir}
 
 #run
 cat ${LSB_DJOB_HOSTFILE} | sort | uniq | grep -v login | grep -v batch > host_list
-nprocspn=6
+nprocspn=6 #6 for all
 nnodes=$(cat host_list | wc -l)
 nprocs=$(( ${nnodes} * ${nprocspn} ))
 
 #cp run file
 cp ${installdir}/bin/pw.x ${scratchdir}/
-cp ${benchmarkdir}/.*.in ${scratchdir}/
+cp ${benchmarkdir}/*.in ${scratchdir}/
 cp ${benchmarkdir}/*.UPF ${scratchdir}/
 
+#cuda mpi args
+cuda_mpi="--smpiargs \"-gpu\""
+
 #run
-jsrun -n ${nnodes} -g 6 -c 42 -a ${nprocspn} --bind=proportional-packed:7 --launch_distribution=packed stdbuf -o0 ./run_ascent_wrapper.sh $(pwd) |& tee out.tio2.${LSB_JOBID}
+jsrun -n ${nnodes} -g 6 -c 42 -a ${nprocspn} ${cuda_mpi} --bind=proportional-packed:7 --launch_distribution=packed stdbuf -o0 ./run_ascent_wrapper.sh $(pwd) |& tee out.tio2.${LSB_JOBID}
