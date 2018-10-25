@@ -22,11 +22,11 @@ if [ "${compiler}" == "intel" ]; then
   export FC=ifort
   export F90=ifort
   export MPIF90=ftn
-  export FCFLAGS="-g -O3 -qopenmp -mkl -xMIC-AVX512"
+  export FCFLAGS="-g -O3 -qopenmp -mkl"
   export F90FLAGS="${FCFLAGS}"
   export MPIf90FLAGS="${F90FLAGS}"
   export CC=icc
-  export CFLAGS="-g -O3 -qopenmp -mkl -xMIC-AVX512"
+  export CFLAGS="-g -O3 -qopenmp -mkl"
   export LDFLAGS="${F90FLAGS} -mkl"
 fi
 
@@ -39,6 +39,9 @@ make veryclean
 
 #some makefile hacking
 sed -i 's|^HDF5_LIB =|HDF5_LIB = -L${HDF5_DIR}/lib -lhdf5|g' make.inc
+sed -i 's|^F90FLAGS.*=|F90FLAGS = -xMIC-AVX512|g' make.inc
+sed -i 's|^FFLAGS.*=|FFLAGS = -xMIC-AVX512|g' make.inc
+sed -i 's|^CFLAGS.*=|CFLAGS = -xMIC-AVX512|g' make.inc
 
 #clean up
 make clean
