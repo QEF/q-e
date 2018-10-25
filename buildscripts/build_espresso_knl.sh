@@ -39,9 +39,13 @@ make veryclean
 
 #some makefile hacking
 sed -i 's|^HDF5_LIB =|HDF5_LIB = -L${HDF5_DIR}/lib -lhdf5|g' make.inc
+sed -i 's|^F90FLAGS.*=|F90FLAGS = -xMIC-AVX512|g' make.inc
+sed -i 's|^FFLAGS.*=|FFLAGS = -xMIC-AVX512|g' make.inc
+sed -i 's|^CFLAGS.*=|CFLAGS = -xMIC-AVX512|g' make.inc
 
 #clean up
 make clean
+rm -r ${INSTALLPATH}
 
 #build crap
 make -j8 pw
