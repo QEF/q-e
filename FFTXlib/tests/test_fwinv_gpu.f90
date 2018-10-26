@@ -197,7 +197,7 @@ program test_fwinv_gpu
     CALL fwfft( 'Rho' , data_in_d, dfft, 1 )
     aux = data_in_d
     ! Check
-    CALL test%assert_close( data_in, aux )
+    CALL test%assert_close( data_in(1:dfft%ngm), aux(1:dfft%ngm) )
     !
     CALL fft_desc_finalize(dfft, smap)
     DEALLOCATE(data_in, data_in_d, aux)
