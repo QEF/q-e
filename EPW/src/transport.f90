@@ -24,17 +24,22 @@
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE elph2,         ONLY : nqf, xqf, xkf, chw, etf, nkf, nqtotf
+    USE elph2,         ONLY : nqf, xqf, xkf, chw, etf, nkf, nqtotf, nkqtotf, &
+                              map_rebal
     USE mp_world,      ONLY : mpime, world_comm
     USE mp_global,     ONLY : my_pool_id
     USE io_global,     ONLY : ionode_id, stdout
     USE io_epw,        ONLY : iunselecq
     USE mp_global,     ONLY : npool
     USE mp,            ONLY : mp_sum, mp_bcast
-    USE constants_epw, ONLY : twopi, ci
-    USE epwcom,        ONLY : nbndsub, fsthick, use_ws
+    USE constants_epw, ONLY : twopi, ci, zero
+    USE epwcom,        ONLY : nbndsub, fsthick, use_ws, mp_mesh_k, nkf1, nkf2, &
+                              nkf3, iterative_bte
     USE pwcom,         ONLY : ef 
+    USE cell_base,     ONLY : bg
+    USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE wan2bloch,     ONLY : hamwan2bloch
+    USE io_eliashberg, ONLY : kpmq_map
     !
     IMPLICIT NONE
     !
@@ -74,6 +79,20 @@
     !! Counter for WS loop
     INTEGER :: nqtot 
     !! Total number of q-point for verifications
+    INTEGER :: ind1
+    !! Index of the k point from the full grid.
+    INTEGER :: ind2
+    !! Index of the k+q point from the full grid. 
+    INTEGER :: nkqtotf_tmp
+    !! Temporary k-q points.
+    INTEGER :: ikbz
+    !! k-point index that run on the full BZ
+    INTEGER :: BZtoIBZ_tmp(nkf1*nkf2*nkf3)
+    !! Temporary mapping
+    INTEGER :: BZtoIBZ(nkf1*nkf2*nkf3)
+    !! BZ to IBZ mapping
+    INTEGER :: s_BZtoIBZ(3,3,nkf1*nkf2*nkf3)
+    !! symmetry 
     ! 
     REAL(kind=DP) :: xxq(3)
     !! Current q-point
@@ -85,6 +104,15 @@
     !! $r\cdot k$
     REAL(kind=DP) :: rdotk2(nrr_k)
     !! $r\cdot k$
+    REAL(kind=DP) :: etf_loc(nbndsub, nkf) 
+    !! Eigen-energies all full k-grid.
+    REAL(kind=DP) :: etf_all(nbndsub, nkqtotf/2) 
+    !! Eigen-energies all full k-grid.
+    REAL(kind=DP) :: xkf_tmp (3, nkqtotf)
+    !! Temporary k-point coordinate (dummy variable)
+    REAL(kind=DP) :: wkf_tmp(nkqtotf)
+    !! Temporary k-weights (dummy variable)
+
     ! 
     COMPLEX(kind=DP) :: cfac(nrr_k, dims, dims)
     !! Used to store $e^{2\pi r \cdot k}$ exponential 
@@ -117,44 +145,82 @@
     ELSE
       ALLOCATE(selecq(nqf))
       selecq(:) = 0 
-      !
+      etf_loc(:,:) = zero
+      etf_all(:,:) = zero
+      ! 
+      ! First store eigen energies on full grid.  
+      DO ik = 1, nkf
+        ikk = 2 * ik - 1
+        xkk = xkf(:, ikk)
+        CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+        IF (use_ws) THEN
+          DO iw=1, dims
+            DO iw2=1, dims
+              DO ir = 1, nrr_k
+                IF (ndegen_k(ir,iw2,iw) > 0) THEN
+                  cfac(ir,iw2,iw)  = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
+                ENDIF
+              ENDDO
+            ENDDO
+          ENDDO
+        ELSE
+          cfac(:,1,1)   = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
+        ENDIF        
+        CALL hamwan2bloch ( nbndsub, nrr_k, cufkk, etf_loc(:, ik), chw, cfac, dims)
+      ENDDO
+      CALL poolgather ( nbndsub, nkqtotf/2, nkf, etf_loc, etf_all )
+      ! 
+      ! In case of k-point symmetry
+      IF (mp_mesh_k) THEN
+        BZtoIBZ(:) = 0
+        s_BZtoIBZ(:,:,:) = 0
+        ! 
+        IF ( mpime == ionode_id ) THEN
+          ! 
+          CALL set_sym_bl( )
+          !
+          ! What we get from this call is BZtoIBZ
+          CALL kpoint_grid_epw ( nrot, time_reversal, .false., s, t_rev, bg, nkf1*nkf2*nkf3, &
+                     nkf1,nkf2,nkf3, nkqtotf_tmp, xkf_tmp, wkf_tmp,BZtoIBZ,s_BZtoIBZ)
+          ! 
+          IF (iterative_bte) THEN
+            BZtoIBZ_tmp(:) = 0
+            DO ikbz=1, nkf1*nkf2*nkf3
+              BZtoIBZ_tmp(ikbz) = map_rebal( BZtoIBZ( ikbz ) )
+            ENDDO
+            BZtoIBZ(:) = BZtoIBZ_tmp(:)
+          ENDIF
+          ! 
+        ENDIF ! mpime
+      ENDIF ! mp_mesh_k
+      !  
       DO iq=1, nqf
         xxq = xqf (:, iq)
         ! 
         found(:) = 0
-        DO ik = 1, nkf
+        DO ik = 1, nkf 
           ikk = 2 * ik - 1
-          ikq = ikk + 1
-          !
           xkk = xkf(:, ikk)
           xkq = xkk + xxq
           !  
-          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk2, 1 )
-          IF (use_ws) THEN
-            DO iw=1, dims
-              DO iw2=1, dims
-                DO ir = 1, nrr_k
-                  IF (ndegen_k(ir,iw2,iw) > 0) THEN
-                    cfac(ir,iw2,iw)  = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
-                    cfacq(ir,iw2,iw) = exp( ci*rdotk2(ir) ) / ndegen_k(ir,iw2,iw)
-                  ENDIF
-                ENDDO
-              ENDDO
-            ENDDO
+          CALL kpmq_map( xkk, (/0d0,0d0,0d0/), 1, ind1 ) 
+          CALL kpmq_map( xkk, xxq, 1, ind2 ) 
+          ! 
+          ! Use k-point symmetry
+          IF (mp_mesh_k) THEN
+            IF ( (( minval ( abs(etf_all(:, BZtoIBZ(ind1)) - ef) ) < fsthick ) .and. &
+                  ( minval ( abs(etf_all(:, BZtoIBZ(ind2)) - ef) ) < fsthick )) ) THEN
+              found(my_pool_id+1) = 1
+              EXIT ! exit the loop 
+            ENDIF
           ELSE
-            cfac(:,1,1)   = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
-            cfacq(:,1,1)  = exp( ci*rdotk2(:) ) / ndegen_k(:,1,1)
-          ENDIF           
-          ! 
-          CALL hamwan2bloch ( nbndsub, nrr_k, cufkk, etf(:, ikk), chw, cfac, dims)
-          CALL hamwan2bloch ( nbndsub, nrr_k, cufkq, etf(:, ikq), chw, cfacq, dims)
-          ! 
-          IF ( (( minval ( abs(etf(:, ikk) - ef) ) < fsthick ) .and. &
-                ( minval ( abs(etf(:, ikq) - ef) ) < fsthick )) ) THEN
-            found(my_pool_id+1) = 1
-            EXIT ! exit the loop 
+            IF ( (( minval ( abs(etf_all(:, ind1) - ef) ) < fsthick ) .and. &
+                  ( minval ( abs(etf_all(:, ind2) - ef) ) < fsthick )) ) THEN
+              found(my_pool_id+1) = 1
+              EXIT ! exit the loop 
+            ENDIF
           ENDIF
+          !  
         ENDDO ! k-loop
         ! If found on any k-point from the pools
         CALL mp_sum(found, world_comm)
@@ -170,7 +236,7 @@
         ! 
       ENDDO
       IF (mpime == ionode_id) THEN
-        OPEN(unit=iunselecq, file='selecq.fmt')
+        OPEN(unit=iunselecq, file='selecq.fmt', action='write')
         WRITE (iunselecq,*) totq    ! Selected number of q-points
         WRITE (iunselecq,*) nqtotf  ! Total number of q-points 
         WRITE (iunselecq,*) selecq(1:totq)

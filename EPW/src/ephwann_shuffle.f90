@@ -55,7 +55,7 @@
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,        &
-                            nkqtotf, sigmar_all, zi_allvb, inv_tau_all,         &
+                            sigmar_all, zi_allvb, inv_tau_all,                  &
                             inv_tau_allcb, zi_allcb, exband
   USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                             upper_bnd 
@@ -840,35 +840,46 @@
   ! Determines which q-points falls within the fsthick windows
   ! Store the result in the selecq.fmt file 
   ! If the file exists, automatically restart from the file
+  ! This is only done in the case of homogeneous grids. 
   ! -----------------------------------------------------------------------
   totq = 0
-  ! Check if the file has been pre-computed
-  IF (mpime == ionode_id) THEN
-    INQUIRE(FILE='selecq.fmt',EXIST=exst)
-  ENDIF
-  CALL mp_bcast(exst, ionode_id, world_comm)
   ! 
-  IF (exst) THEN
-    IF (selecqread) THEN
-      WRITE(stdout,'(5x,a)')' '
-      WRITE(stdout,'(5x,a)')'Reading selecq.fmt file. '
-      CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
-    ELSE 
-      WRITE(stdout,'(5x,a)')' '
-      WRITE(stdout,'(5x,a)')'A selecq.fmt file was found but re-created because selecqread == .false. '
-      CALL qwindow(.FALSE., nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
+  IF ( (nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) ) THEN
+    ! 
+    ! Check if the file has been pre-computed
+    IF (mpime == ionode_id) THEN
+      INQUIRE(FILE='selecq.fmt',EXIST=exst)
     ENDIF
-  ELSE ! exst
-    IF (selecqread) THEN
-      CALL errore( 'ephwann_shuffle', 'Variable selecqread == .true. but file selecq.fmt not found.',1 ) 
-    ELSE
-      CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
+    CALL mp_bcast(exst, ionode_id, world_comm)
+    ! 
+    IF (exst) THEN
+      IF (selecqread) THEN
+        WRITE(stdout,'(5x,a)')' '
+        WRITE(stdout,'(5x,a)')'Reading selecq.fmt file. '
+        CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
+      ELSE 
+        WRITE(stdout,'(5x,a)')' '
+        WRITE(stdout,'(5x,a)')'A selecq.fmt file was found but re-created because selecqread == .false. '
+        CALL qwindow(.FALSE., nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
+      ENDIF
+    ELSE ! exst
+      IF (selecqread) THEN
+        CALL errore( 'ephwann_shuffle', 'Variable selecqread == .true. but file selecq.fmt not found.',1 ) 
+      ELSE
+        CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
+      ENDIF
     ENDIF
-  ENDIF
-  ! 
-  ! 
-  WRITE(stdout,'(5x,a,i8,a)')'We only need to compute ',totq, ' q-points'
-  WRITE(stdout,'(5x,a)')' '
+    ! 
+    WRITE(stdout,'(5x,a,i8,a)')'We only need to compute ',totq, ' q-points'
+    WRITE(stdout,'(5x,a)')' '
+  ELSE 
+    ! If Random points or points read from files, then take all. 
+    totq = nqf
+    ALLOCATE(selecq(totq))
+    DO iq = 1, totq
+      selecq(iq) = iq
+    ENDDO
+  ENDIF ! homogeneous grids
   ! 
   ! -----------------------------------------------------------------------
   ! Possible restart during step 1) 
