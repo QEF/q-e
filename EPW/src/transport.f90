@@ -26,11 +26,10 @@
     USE kinds,         ONLY : DP
     USE elph2,         ONLY : nqf, xqf, xkf, chw, etf, nkf, nqtotf, nkqtotf, &
                               map_rebal
-    USE mp_world,      ONLY : mpime, world_comm
-    USE mp_global,     ONLY : my_pool_id
     USE io_global,     ONLY : ionode_id, stdout
     USE io_epw,        ONLY : iunselecq
-    USE mp_global,     ONLY : npool
+    USE mp_global,     ONLY : npool, inter_pool_comm, world_comm, my_pool_id
+    USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_sum, mp_bcast
     USE constants_epw, ONLY : twopi, ci, zero
     USE epwcom,        ONLY : nbndsub, fsthick, use_ws, mp_mesh_k, nkf1, nkf2, &
@@ -192,6 +191,8 @@
           ENDIF
           ! 
         ENDIF ! mpime
+        CALL mp_bcast( BZtoIBZ, ionode_id, inter_pool_comm )
+        ! 
       ENDIF ! mp_mesh_k
       !  
       DO iq=1, nqf
