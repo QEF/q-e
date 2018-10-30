@@ -1,43 +1,47 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-----------------------------------------
+!
+!---------------------------------------------------------------
 subroutine deallocate_phq
-!----------========-----------------------
+!----------------------------------------------------------------
 !
 !  deallocates the variables allocated by allocate_phq
 !
   USE noncollin_module, ONLY : m_loc
-  USE becmod, ONLY: bec_type, becp, deallocate_bec_type
-  USE wavefunctions,  ONLY: evc
-
-  USE ramanm, ONLY: ramtns
-  USE modes, ONLY : tmq, t, npert, u, name_rap_mode, num_rap_mode
-  USE efield_mod, ONLY : zstareu, zstarue, zstarue0, zstareu0, &
-                         zstarue0_rec
-  USE phus, ONLY : int1, int1_nc, int2, int2_so, &
-                   int4, int4_nc, int5, int5_so, becsum_nc, &
-                   becsumort, alphasum, alphasum_nc, &
-                   alphap
-  USE gamma_gamma, ONLY : with_symmetry, has_equivalent, equiv_atoms, &
-                   n_equiv_atoms
-  USE nlcc_ph, ONLY : drc
-  USE units_ph, ONLY : this_dvkb3_is_on_file, this_pcxpsi_is_on_file
-  USE dynmat, ONLY : dyn00, dyn_rec, dyn, w2
-  USE el_phon, ONLY : el_ph_mat
-  USE freq_ph, ONLY : polar
-
+  USE becmod,           ONLY: bec_type, becp, deallocate_bec_type
+  USE wavefunctions,    ONLY: evc
+  USE ramanm,       ONLY: ramtns
+  USE modes,        ONLY : tmq, t, npert, u, name_rap_mode, num_rap_mode
+  USE efield_mod,   ONLY : zstareu, zstarue, zstarue0, zstareu0, &
+                           zstarue0_rec
+  USE phus,         ONLY : int1, int1_nc, int2, int2_so, &
+                           int4, int4_nc, int5, int5_so, becsum_nc, &
+                           becsumort, alphasum, alphasum_nc, &
+                           alphap
+  USE gamma_gamma,  ONLY : with_symmetry, has_equivalent, equiv_atoms, &
+                           n_equiv_atoms
+  USE nlcc_ph,      ONLY : drc
+  USE units_ph,     ONLY : this_dvkb3_is_on_file, this_pcxpsi_is_on_file
+  USE dynmat,       ONLY : dyn00, dyn_rec, dyn, w2, dyn_hub_bare
+  USE el_phon,      ONLY : el_ph_mat
+  USE freq_ph,      ONLY : polar
   USE lrus,         ONLY : int3, int3_nc, int3_paw, becp1, dpqq, dpqq_so
   USE lr_symm_base, ONLY : rtau
   USE gc_lr,        ONLY : grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
                            vsgga, segni
   USE qpoint,       ONLY : eigqts, ikks, ikqs, nksq, xk_col
   USE eqv,          ONLY : dmuxc, vlocq, dpsi, dvpsi, evq
-  USE control_lr,   ONLY : lgamma, nbnd_occ
+  USE control_lr,   ONLY : lgamma, nbnd_occ, ofsbeta
+  USE ldaU,         ONLY : lda_plus_u
+  USE ldaU_ph,      ONLY : dnsbare_all_modes, dnsorth_cart, dnsorth, dnsbare,  &
+                           wfcatomk, swfcatomk, dwfcatomk, sdwfcatomk,         &
+                           wfcatomkpq, dwfcatomkpq, swfcatomkpq, sdwfcatomkpq, &
+                           dvkb, vkbkpq, dvkbkpq
 
   IMPLICIT NONE
   INTEGER :: ik, ipol
@@ -136,5 +140,39 @@ subroutine deallocate_phq
 
   IF (allocated(nbnd_occ))         DEALLOCATE(nbnd_occ)
 
-  return
+  ! DFPT+U
+  IF (lda_plus_u) THEN
+     !
+     if(allocated(wfcatomk))          deallocate (wfcatomk)
+     if(allocated(swfcatomk))         deallocate (swfcatomk)
+     if(allocated(dwfcatomk))         deallocate (dwfcatomk)
+     if(allocated(sdwfcatomk))        deallocate (sdwfcatomk)
+     if(allocated(dvkb))              deallocate (dvkb)
+     if(allocated(ofsbeta))           deallocate (ofsbeta)
+     if(allocated(dnsbare))           deallocate (dnsbare)
+     if(allocated(dnsbare_all_modes)) deallocate (dnsbare_all_modes)
+     if(allocated(dnsorth))           deallocate (dnsorth)
+     if(allocated(dnsorth_cart))      deallocate (dnsorth_cart)     
+     if(allocated(dyn_hub_bare))      deallocate(dyn_hub_bare)
+     !
+     IF (lgamma) THEN
+        if (associated(wfcatomkpq))   nullify(wfcatomkpq)
+        if (associated(swfcatomkpq))  nullify(swfcatomkpq)
+        if (associated(dwfcatomkpq))  nullify(dwfcatomkpq)
+        if (associated(sdwfcatomkpq)) nullify(sdwfcatomkpq)
+        if (associated(vkbkpq))       nullify(vkbkpq)
+        if (associated(dvkbkpq))      nullify(dvkbkpq)
+     ELSE
+        if (associated(wfcatomkpq))   deallocate(wfcatomkpq)
+        if (associated(swfcatomkpq))  deallocate(swfcatomkpq)
+        if (associated(dwfcatomkpq))  deallocate(dwfcatomkpq)
+        if (associated(sdwfcatomkpq)) deallocate(sdwfcatomkpq)
+        if (associated(vkbkpq))       deallocate(vkbkpq)
+        if (associated(dvkbkpq))      deallocate(dvkbkpq)
+     ENDIF
+     !
+  ENDIF
+
+  RETURN
+
 end subroutine deallocate_phq

@@ -22,7 +22,7 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, igk_k
   USE noncollin_module,     ONLY : noncolin, npol
-  USE eqv,                  ONLY : evq, swfcatomk, swfcatomkpq
+  USE eqv,                  ONLY : evq
   USE qpoint,               ONLY : ikqs
   USE mp_bands,             ONLY : use_bgrp_in_hpsi, inter_bgrp_comm, intra_bgrp_comm
   USE funct,                ONLY : exx_is_active
@@ -31,9 +31,9 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions,        ONLY : evc
   USE buffers,              ONLY : get_buffer
-  USE io_files,             ONLY : nwordatwfc
-  USE ldaU,                 ONLY : lda_plus_u, copy_U_wfc, lda_plus_u_kind
-  USE units_lr,             ONLY : iuatwfc
+  USE io_files,             ONLY : nwordwfcU
+  USE ldaU,                 ONLY : lda_plus_u, wfcU, lda_plus_u_kind
+  USE units_lr,             ONLY : iuatswfc
 
   IMPLICIT NONE
 
@@ -56,11 +56,10 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   ! counter on bands
   ! counter on G vetors
 
-  COMPLEX(DP), allocatable :: ps (:,:), hpsi (:,:), spsi (:,:)
+  COMPLEX(DP), ALLOCATABLE :: ps (:,:), hpsi (:,:), spsi (:,:)
   ! scalar products
   ! the product of the Hamiltonian and h
   ! the product of the S matrix and h
-  INTEGER, ALLOCATABLE :: ibuf(:)
 
   CALL start_clock ('ch_psi')
   !
@@ -74,27 +73,16 @@ SUBROUTINE ch_psi_all (n, h, ah, e, ik, m)
   !
   current_k = ikqs(ik) ! k+q
   !
-  ! DFT+U initializations
+  ! DFT+U case
   !
   IF (lda_plus_u) THEN
      !
-     ! Read the atomic orbitals (S*phi) at k+q from file
+     ! Read the atomic orbitals (S*phi) at k+q from the file
+     ! and put the result in wfcU, because it is used
+     ! in vhpsi (via the call of h_psi) to compute the 
+     ! Hubbard potential.
      !
-     IF (lgamma) THEN
-        ! q=0
-        CALL get_buffer (swfcatomk, nwordatwfc, iuatwfc, current_k)
-        ! In this case swfcatomkpq is a pointer to swfcatomk
-     ELSE
-        ! q/=0
-        CALL get_buffer (swfcatomkpq, nwordatwfc, iuatwfc, current_k)
-     ENDIF
-     !
-     ! Copy swfcatomkpq to wfcU, because the later is used in the
-     ! routine which computes the Hubbard potential (routine vhpsi,
-     ! which is called by h_psi). Note that wfcU uses the offset offsetU 
-     ! while swfcatomkpq uses the offset oatwfc (see offset_atom_wfc).
-     !
-     CALL copy_U_wfc (swfcatomkpq)
+     CALL get_buffer (wfcU, nwordwfcU, iuatswfc, current_k)
      !
      ! Compute the phase factor at k+q
      !IF (lda_plus_u_kind.EQ.2) CALL phase_factor(ikq)

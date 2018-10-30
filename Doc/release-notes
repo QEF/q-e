@@ -2,6 +2,11 @@ New in development version:
   * New code hp.x to compute Hubbard parameters using density-functional
     perturbation theory (Iurii Timrov, Nicola Marzari, and Matteo Cococcioni,
     Phys. Rev. B 98, 085127 (2018); arXiv:1805.01805)
+  * The PHonon code contains the implementation of the Hubbard U correction
+    (Andrea Floris, Stefano de Gironcoli, E.K.U. Gross, and Matteo Cococcioni,
+    Phys. Rev. B 84, 161102(R) (2011);
+    Andrea Floris, Iurii Timrov, Burak Himmetoglu, Nicola Marzari, Stefano de Gironcoli,
+    and Matteo Cococcioni, in preparation)
   * XDM now works also for USPP and norm-conserving PP
 
 Problems fixed in development version (+ = in qe-6.3-backports as well) :

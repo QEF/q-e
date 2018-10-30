@@ -25,22 +25,21 @@ subroutine hp_dvpsi_pert (ik)
   ! (evc, swfcatomk, swfcatomkpq must be set)
   !
   USE kinds,                ONLY : DP
-  USE io_files,             ONLY : nwordatwfc
+  USE io_files,             ONLY : nwordwfcU
   USE ions_base,            ONLY : nat, ityp
   USE wavefunctions,        ONLY : evc
   USE klist,                ONLY : ngk
   USE buffers,              ONLY : save_buffer, get_buffer
   USE wvfct,                ONLY : npwx, nbnd
-  USE basis,                ONLY : natomwfc
   USE mp_global,            ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
-  USE eqv,                  ONLY : dvpsi, swfcatomk, swfcatomkpq
+  USE eqv,                  ONLY : dvpsi
   USE qpoint,               ONLY : nksq, ikks, ikqs
-  USE units_lr,             ONLY : iuatwfc
+  USE units_lr,             ONLY : iuatswfc
   USE control_lr,           ONLY : lgamma
-  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, oatwfc
+  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, offsetU, nwfcU
   USE ldaU_hp,              ONLY : nqsh, perturbed_atom, this_pert_is_on_file, &
-                                   iudvwfc, lrdvwfc
+                                   iudvwfc, lrdvwfc, swfcatomk, swfcatomkpq
   !
   IMPLICIT NONE
   !
@@ -79,7 +78,7 @@ subroutine hp_dvpsi_pert (ik)
   ! If this is a first iteration, then dvpsi must be computed
   ! and written on file.
   !
-  ALLOCATE (proj(nbnd, natomwfc))
+  ALLOCATE (proj(nbnd,nwfcU))
   !
   ikk = ikks(ik)
   ikq = ikqs(ik)
@@ -88,9 +87,8 @@ subroutine hp_dvpsi_pert (ik)
   !
   ! Read atomic wfc's : S(k)*phi(k) and S(k+q)*phi(k+q)
   !  
-  CALL get_buffer(swfcatomk, nwordatwfc, iuatwfc, ikk)
-  ! 
-  IF (.NOT.lgamma)  CALL get_buffer(swfcatomkpq, nwordatwfc, iuatwfc, ikq)
+  CALL get_buffer(swfcatomk, nwordwfcU, iuatswfc, ikk)
+  IF (.NOT.lgamma)  CALL get_buffer(swfcatomkpq, nwordwfcU, iuatswfc, ikq)
   !
   ! Calculate proj(ibnd, ihubst) = < S(k)*phi(k,I,m)| psi(ibnd,k) >
   !
@@ -98,7 +96,7 @@ subroutine hp_dvpsi_pert (ik)
      nt = ityp(na)
      IF ( perturbed_atom(na) ) THEN
         DO m = 1, 2 * Hubbard_l(nt) + 1
-           ihubst = oatwfc(na) + m   ! I m index
+           ihubst = offsetU(na) + m   ! I m index
            DO ibnd = 1, nbnd
               proj(ibnd, ihubst) = ZDOTC(npw, swfcatomk(:,ihubst ), 1, evc(:,ibnd), 1)
            ENDDO
@@ -114,7 +112,7 @@ subroutine hp_dvpsi_pert (ik)
      nt = ityp(na)
      IF ( perturbed_atom(na) ) THEN
         DO m = 1, 2 * Hubbard_l(nt) + 1
-           ihubst = oatwfc(na) + m
+           ihubst = offsetU(na) + m
            DO ibnd = 1, nbnd
               DO ig = 1, npwq
                  dvpsi(ig, ibnd) = dvpsi(ig, ibnd) + &

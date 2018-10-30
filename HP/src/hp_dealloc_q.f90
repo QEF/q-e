@@ -20,10 +20,10 @@ SUBROUTINE hp_dealloc_q()
   USE lrus,                ONLY : becp1
   USE gc_lr,               ONLY : grho, gmag, dvxc_rr, dvxc_sr, dvxc_ss, &
                                   & dvxc_s, vsgga, segni
-  USE eqv,                 ONLY : dmuxc, dpsi, dvpsi, evq, &
-                                  swfcatomk, swfcatomkpq
+  USE eqv,                 ONLY : dmuxc, dpsi, dvpsi, evq
   USE control_lr,          ONLY : lgamma, nbnd_occ
-  USE ldaU_hp,             ONLY : this_pert_is_on_file
+  USE ldaU_hp,             ONLY : this_pert_is_on_file, &
+                                  swfcatomk, swfcatomkpq
   !
   IMPLICIT NONE
   INTEGER :: ik

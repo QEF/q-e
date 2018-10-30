@@ -21,9 +21,8 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   !      + the term due to shift of the Fermi energy (only if lmetq0=.true.)
   !
   USE kinds,                ONLY : DP
-  USE io_files,             ONLY : nwordatwfc
+  USE io_files,             ONLY : nwordwfcU
   USE ions_base,            ONLY : nat, ityp
-  USE basis,                ONLY : natomwfc
   USE klist,                ONLY : xk, wk, degauss, ngauss, ngk
   USE wvfct,                ONLY : npwx, wg, nbnd, et 
   USE uspp_param,           ONLY : nh 
@@ -38,14 +37,14 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   USE io_global,            ONLY : stdout
   USE constants,            ONLY : rytoev
   USE control_flags,        ONLY : iverbosity
-  USE eqv,                  ONLY : swfcatomk, swfcatomkpq
   USE qpoint,               ONLY : nksq, ikks, ikqs
-  USE control_lr,           ONLY : lgamma
-  USE units_lr,             ONLY : iuwfc, lrwfc, iuatwfc
+  USE control_lr,           ONLY : lgamma, nbnd_occ
+  USE units_lr,             ONLY : iuwfc, lrwfc, iuatswfc
   USE lr_symm_base,         ONLY : nsymq
-  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, oatwfc
+  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, offsetU, nwfcU
   USE ldaU_hp,              ONLY : conv_thr_chi, trace_dns_tot_old, &
-                                   conv_thr_chi_best, iter_best, iudwfc, lrdwfc
+                                   conv_thr_chi_best, iter_best, iudwfc, lrdwfc, &
+                                   swfcatomk, swfcatomkpq
   USE hp_efermi_shift,      ONLY : def
   !
   IMPLICIT NONE
@@ -65,7 +64,7 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
               ihubst, ihubst1, ihubst2, m, m1, m2, ibnd, is, ldim
   INTEGER :: npw, npwq
   ! number of plane waves at k and k+q
-  COMPLEX(DP), ALLOCATABLE :: dpsi_(:, :), proj1(:,:), proj2(:,:)
+  COMPLEX(DP), ALLOCATABLE :: dpsi(:, :), proj1(:,:), proj2(:,:)
   REAL(DP) :: weight, wdelta, w1
   REAL(DP),    EXTERNAL :: DDOT
   COMPLEX(DP), EXTERNAL :: ZDOTC
@@ -80,20 +79,20 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   !
   ios = 0 
   ! 
-  ALLOCATE (dpsi_ ( npwx, nbnd))
-  ALLOCATE (proj1(nbnd, natomwfc))
-  ALLOCATE (proj2(nbnd, natomwfc))
+  ALLOCATE (dpsi(npwx,nbnd))
+  ALLOCATE (proj1(nbnd,nwfcU))
+  ALLOCATE (proj2(nbnd,nwfcU))
   ALLOCATE (trace_dns_tot(nat))
   ALLOCATE (conv(nat))
   ALLOCATE (diff(nat))
   !
-  dpsi_ = (0.d0, 0.d0) 
+  dpsi = (0.d0, 0.d0) 
   !
   ldim = 2 * Hubbard_lmax + 1
   ! 
   ! At each iteration dnsq is set to zero, because it is recomputed
   !
-  dnsq(:,:,:,:) = (0.0d0, 0.0d0) 
+  dnsq(:,:,:,:) = (0.d0, 0.d0) 
   !
   DO na = 1, nat
      nt = ityp(na)
@@ -119,13 +118,12 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
      !
      ! Read atomic wfc's : S(k)*phi(k) and S(k+q)*phi(k+q) 
      !
-     CALL get_buffer (swfcatomk, nwordatwfc, iuatwfc, ikk)
-     !
-     IF (.NOT. lgamma) CALL get_buffer (swfcatomkpq, nwordatwfc, iuatwfc, ikq)
+     CALL get_buffer (swfcatomk, nwordwfcU, iuatswfc, ikk)
+     IF (.NOT.lgamma) CALL get_buffer (swfcatomkpq, nwordwfcU, iuatswfc, ikq)
      !
      ! At each SCF iteration for each ik read dpsi from file
      !
-     CALL get_buffer (dpsi_, lrdwfc, iudwfc, ik)
+     CALL get_buffer (dpsi, lrdwfc, iudwfc, ik)
      ! 
      ! Loop on Hubbard atoms
      !
@@ -137,14 +135,15 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
            !
            DO m = 1, 2 * Hubbard_l(nt) + 1
               ! 
-              ihubst = oatwfc(na) + m   ! I m index
+              ihubst = offsetU(na) + m   ! I m index
               !
               !  proj1(ibnd, ihubst) = < S(k)*phi(k) | psi(k) >
               !  proj2(ibnd, ihubst) = < S(k+q)*phi(k+q) | dpsi(k+q) > 
-              !                 
-              DO ibnd = 1, nbnd
-                 proj1(ibnd, ihubst) = ZDOTC (npw,  swfcatomk(:,ihubst),   1, evc(:,ibnd),   1)
-                 proj2(ibnd, ihubst) = ZDOTC (npwq, swfcatomkpq(:,ihubst), 1, dpsi_(:,ibnd), 1)
+              ! 
+              !                
+              DO ibnd = 1, nbnd_occ(ikk)
+                 proj1(ibnd, ihubst) = ZDOTC (npw,  swfcatomk(:,ihubst),   1, evc(:,ibnd),  1)
+                 proj2(ibnd, ihubst) = ZDOTC (npwq, swfcatomkpq(:,ihubst), 1, dpsi(:,ibnd), 1)
               ENDDO
               !
            ENDDO 
@@ -166,13 +165,13 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
            !  
            DO m1 = 1, 2 * Hubbard_l(nt) + 1
               !
-              ihubst1 = oatwfc(na) + m1
+              ihubst1 = offsetU(na) + m1
               !
               DO m2 = m1, 2 * Hubbard_l(nt) + 1
                  !          
-                 ihubst2 = oatwfc(na) + m2
+                 ihubst2 = offsetU(na) + m2
                  !
-                 DO ibnd = 1, nbnd
+                 DO ibnd = 1, nbnd_occ(ikk)
                     ! 
                     dnsq(m1, m2, current_spin, na) = dnsq(m1, m2, current_spin, na) +    &
                          wk(ikk) * ( CONJG(proj1(ibnd,ihubst1)) * proj2(ibnd,ihubst2) + &
@@ -337,7 +336,7 @@ SUBROUTINE hp_dnsq (lmetq0, iter, conv_root, dnsq)
   !
   DEALLOCATE (proj1)
   DEALLOCATE (proj2)
-  DEALLOCATE (dpsi_)
+  DEALLOCATE (dpsi)
   DEALLOCATE (trace_dns_tot)
   DEALLOCATE (conv)
   DEALLOCATE (diff)

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -34,7 +34,7 @@ SUBROUTINE phq_readin()
   USE fft_base,      ONLY : dffts
   USE spin_orb,      ONLY : domag
   USE cellmd,        ONLY : lmovecell
-  USE run_info, ONLY : title
+  USE run_info,      ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma_gamma, epsil, &
                             zue, zeu, xmldyn, newgrid,                      &
                             trans, reduce_io, tr2_ph, niter_ph,       &
@@ -53,7 +53,6 @@ SUBROUTINE phq_readin()
   USE io_files,      ONLY : tmp_dir, prefix, postfix, create_directory, &
                             check_tempdir, xmlpun_schema
   USE noncollin_module, ONLY : i_cons, noncolin
-  USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum, twfcollect
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode, ionode_id, stdout
   USE mp_images,     ONLY : nimage, my_image_id, intra_image_comm,   &
@@ -73,12 +72,13 @@ SUBROUTINE phq_readin()
 
   USE qpoint,        ONLY : nksq, xq
   USE control_lr,    ONLY : lgamma, lrpa
-
   ! YAMBO >
   USE YAMBO,         ONLY : elph_yambo,dvscf_yambo
   ! YAMBO <
   USE elph_tetra_mod,ONLY : elph_tetra, lshift_q, in_alpha2f
   USE ktetra,        ONLY : tetra_type
+  USE ldaU,          ONLY : lda_plus_u, U_projection, lda_plus_u_kind
+  USE ldaU_ph,       ONLY : read_dns_bare, d2ns_type 
   !
   IMPLICIT NONE
   !
@@ -186,6 +186,16 @@ SUBROUTINE phq_readin()
   ! q2d, : if .true. the q list define a mesh in a square.
   ! low_directory_check : if .true. only the requested representations
   !                       are searched on file
+  !
+  ! read_dns_bare : If .true. the code tries to read three files in DFPT+U calculations:
+  !                 dnsorth, dnsbare, d2nsbare 
+  ! d2ns_type     : DFPT+U - the 2nd bare derivative of occupation matrices ns 
+  !                 (d2ns_bare matrix). Experimental! This is why it is not documented in Doc.
+  !                 d2ns_type='full': matrix calculated with no approximation. 
+  !                 d2ns_type='fmmp': assume a m <=> m' symmetry. 
+  !                 d2ns_type='diag': if okvan=.true. the matrix is calculated retaining only
+  !                                     for <\beta_J|\phi_I> products where for J==I.   
+  !                 d2ns_type='dmmp': same as 'diag', but also assuming a m <=> m'.
   ! 
   ! Note: meta_ionode is a single processor that reads the input
   !       (ionode is also a single processor but per image)
@@ -300,6 +310,8 @@ SUBROUTINE phq_readin()
       dvscf_star%dir = TRIM(outdir)//"/Rotated_DVSCF/"
   !
   lshift_q = .false.
+  read_dns_bare =.false.
+  d2ns_type = 'full'
   !
   ! ...  reading the namelist inputph
   !
@@ -649,7 +661,9 @@ SUBROUTINE phq_readin()
         WRITE(stdout, '(5x,i3, 3f14.9)') iq, x_q(1,iq), x_q(2,iq), x_q(3,iq)
      END DO
   ENDIF
-
+  !
+  ! DFPT+U: the occupation matrix ns is read via read_file
+  !
   CALL read_file ( )
 
   magnetic_sym=noncolin .AND. domag
@@ -667,8 +681,23 @@ SUBROUTINE phq_readin()
   IF (gamma_only) CALL errore('phq_readin',&
      'cannot start from pw.x data file using Gamma-point tricks',1)
 
-  IF (lda_plus_u) CALL errore('phq_readin',&
-     'The phonon code with LDA+U is not yet available',1)
+  IF (lda_plus_u) THEN
+     ! 
+     WRITE(stdout,'(/5x,a)') "Phonon calculation with DFPT+U; please cite"
+     WRITE(stdout,'(5x,a)')  "A. Floris et al., Phys. Rev. B 84, 161102(R) (2011)"
+     WRITE(stdout,'(5x,a)')  "in publications or presentations arising from this work."
+     ! 
+     IF (U_projection.NE."atomic" .AND. U_projection.NE."ortho-atomic") &
+          CALL errore("phq_readin", &
+          " The phonon code for this U_projection_type is not implemented",1)
+     IF (lda_plus_u_kind.NE.0) CALL errore("phq_readin", &
+          " The phonon code for this lda_plus_u_kind is not implemented",1)
+     IF (elph) CALL errore("phq_readin", &
+          " Electron-phonon with Hubbard U is not supported",1)
+     IF (lraman) CALL errore("phq_readin", &
+          " The phonon code with Raman and Hubbard U is not implemented",1)
+     !
+  ENDIF
 
   IF (ts_vdw) CALL errore('phq_readin',&
      'The phonon code with TS-VdW is not yet available',1)
@@ -725,6 +754,8 @@ SUBROUTINE phq_readin()
        'dvscf_star with image parallelization is not yet available',1)
   IF(drho_star%open.and.nimage>1) CALL errore('phq_readin',&
        'drho_star with image parallelization is not yet available',1)
+
+  IF (lda_plus_u .AND. read_dns_bare .AND. ldisp) lqdir=.TRUE.
 
   IF (.NOT.ldisp) lqdir=.FALSE.
 

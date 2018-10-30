@@ -103,11 +103,11 @@ SUBROUTINE hp_init_q()
      !
   ENDDO
   !
-  ! 3) Calculate and write the S\phi for k and k+q
+  ! 3) Calculate and write to file S\phi for k and k+q
   !
-  CALL hp_sphi()
+  CALL lr_orthoUwfc (.FALSE.)
   !
-  CALL stop_clock( 'hp_init_q' )
+  CALL stop_clock ( 'hp_init_q' )
   !
   RETURN
   !
