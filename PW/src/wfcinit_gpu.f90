@@ -176,17 +176,18 @@ SUBROUTINE init_wfc_gpu ( ik )
   USE constants,            ONLY : tpi
   USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, starting_wfc
-  USE gvect,                ONLY : g, gstart
-  USE klist,                ONLY : xk, ngk, igk_k
+  USE gvect,                ONLY : gstart
+  USE klist,                ONLY : xk, ngk, igk_k, igk_k_d
   USE wvfct,                ONLY : nbnd, npwx
   USE uspp,                 ONLY : nkb, okvan
   USE noncollin_module,     ONLY : npol
-  USE random_numbers,       ONLY : randy
+  USE random_numbers_gpum,  ONLY : randy_vect_gpu=>randy_vect_debug_gpu
   USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, &
                                    nbgrp, root_bgrp_id
   USE mp,                   ONLY : mp_bcast
   USE funct,                ONLY : dft_is_hybrid, stop_exx
   !
+  USE gvect_gpum,           ONLY : g_d
   USE wavefunctions_gpum,   ONLY : evc_d, using_evc_d
   USE wvfct_gpum,           ONLY : et_d, using_et_d
   USE becmod_subs_gpum,     ONLY : using_becp_auto, using_becp_d_auto
@@ -203,8 +204,13 @@ SUBROUTINE init_wfc_gpu ( ik )
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom_d(:,:,:) ! atomic wfcs for initialization (device)
   COMPLEX(DP), ALLOCATABLE :: wfcatom_h(:,:,:) ! atomic wfcs for initialization (host)
+  REAL(DP),    ALLOCATABLE :: randy_d(:) ! data for random
+  !
+  ! Auxiliary variables for CUDA version
+  INTEGER :: rnd_idx, ngk_ik
+  REAL(DP):: xk_1, xk_2, xk_3
 #if defined(__CUDA)
-  attributes(DEVICE) :: etatom_d, wfcatom_d
+  attributes(DEVICE) :: etatom_d, wfcatom_d, randy_d
 #endif
   !
   !
@@ -227,13 +233,19 @@ SUBROUTINE init_wfc_gpu ( ik )
      !
   END IF
   !
-  ALLOCATE( wfcatom_h( npwx, npol, n_starting_wfc ) )
-  !
+  ALLOCATE( wfcatom_d( npwx, npol, n_starting_wfc ) )
+  ALLOCATE(randy_d(2 * n_starting_wfc * npol * ngk(ik)))
+  ! rr =randy(0)   !!!!! REMOVE ME
   IF ( starting_wfc(1:6) == 'atomic' ) THEN
      !
+     ALLOCATE( wfcatom_h( npwx, npol, n_starting_wfc ) )
      CALL start_clock( 'wfcinit:atomic' ); !write(*,*) 'start wfcinit:atomic' ; FLUSH(6)
      CALL atomic_wfc( ik, wfcatom_h )
      CALL stop_clock( 'wfcinit:atomic' ); !write(*,*) 'stop wfcinit:atomic' ; FLUSH(6)
+     !
+     ! Sync to GPU
+     wfcatom_d = wfcatom_h
+     DEALLOCATE( wfcatom_h )
      !
      IF ( starting_wfc == 'atomic+random' .AND. &
          n_starting_wfc == n_starting_atomic_wfc ) THEN
@@ -241,17 +253,22 @@ SUBROUTINE init_wfc_gpu ( ik )
          ! ... in this case, introduce a small randomization of wavefunctions
          ! ... to prevent possible "loss of states"
          !
+         CALL randy_vect_gpu( randy_d, 2 * n_starting_atomic_wfc * npol * ngk(ik) )
+         !
+         ngk_ik  = ngk(ik)
+!$cuf kernel do(3)
          DO ibnd = 1, n_starting_atomic_wfc
             !
             DO ipol = 1, npol
                !
-               DO ig = 1, ngk(ik)
+               DO ig = 1, ngk_ik
                   !
-                  rr  = randy()
-                  arg = tpi * randy()
+                  rnd_idx = 2 * ((ig-1) + ( (ipol-1) + (ibnd-1) * npol ) * ngk_ik) + 1
+                  rr  = randy_d(rnd_idx)
+                  arg = tpi * randy_d(rnd_idx+1)
                   !
-                  wfcatom_h(ig,ipol,ibnd) = wfcatom_h(ig,ipol,ibnd) * &
-                     ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ,kind=DP) ) 
+                  wfcatom_d(ig,ipol,ibnd) = wfcatom_d(ig,ipol,ibnd) * &
+                     ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ,kind=DP) )
                   !
                END DO
                !
@@ -266,38 +283,48 @@ SUBROUTINE init_wfc_gpu ( ik )
   ! ... if not enough atomic wfc are available,
   ! ... fill missing wfcs with random numbers
   !
+  IF (n_starting_atomic_wfc < n_starting_wfc) CALL randy_vect_gpu( randy_d , 2 * (n_starting_wfc-n_starting_atomic_wfc) * npol * ngk(ik) )
+  ngk_ik  = ngk(ik)
+  xk_1 = xk(1,ik); xk_2 = xk(2,ik); xk_3 = xk(3,ik)
+!$cuf kernel do(3)
   DO ibnd = n_starting_atomic_wfc + 1, n_starting_wfc
      !
      DO ipol = 1, npol
-        ! 
-        wfcatom_h(:,ipol,ibnd) = (0.0_dp, 0.0_dp)
         !
-        DO ig = 1, ngk(ik)
+        DO ig = 1, npwx
            !
-           rr  = randy()
-           arg = tpi * randy()
+           IF (ig <= ngk_ik) THEN
+              !
+              rnd_idx = 2 * ((ig-1) + ( (ipol-1) + (ibnd-n_starting_atomic_wfc-1) * npol ) * ngk_ik) + 1
+              rr  = randy_d(rnd_idx)
+              arg = tpi * randy_d(rnd_idx+1)
+              !
+              rr = rr / ( ( xk_1 + g_d(1,igk_k_d(ig,ik)) )**2 + &
+                          ( xk_2 + g_d(2,igk_k_d(ig,ik)) )**2 + &
+                          ( xk_3 + g_d(3,igk_k_d(ig,ik)) )**2 + 1.0_DP )
+              wfcatom_d(ig,ipol,ibnd) = &
+                   CMPLX( rr*COS( arg ), rr*SIN( arg ) ,kind=DP)
+           ELSE
+              wfcatom_d(ig,ipol,ibnd) = (0.0_dp, 0.0_dp)
+           END IF
            !
-           wfcatom_h(ig,ipol,ibnd) = &
-                CMPLX( rr*COS( arg ), rr*SIN( arg ) ,kind=DP) / &
-                       ( ( xk(1,ik) + g(1,igk_k(ig,ik)) )**2 + &
-                         ( xk(2,ik) + g(2,igk_k(ig,ik)) )**2 + &
-                         ( xk(3,ik) + g(3,igk_k(ig,ik)) )**2 + 1.0_DP )
         END DO
         !
      END DO
      !
   END DO
-  
+  !
+  DEALLOCATE( randy_d )
+  !
   ! when band parallelization is active, the first band group distributes
   ! the wfcs to the others making sure all bgrp have the same starting wfc
   ! FIXME: maybe this should be done once evc are computed, not here?
   !
-  IF( nbgrp > 1 ) CALL mp_bcast( wfcatom_h, root_bgrp_id, inter_bgrp_comm )
+  IF( nbgrp > 1 ) CALL mp_bcast( wfcatom_d, root_bgrp_id, inter_bgrp_comm )
   !
   ! ... Diagonalize the Hamiltonian on the basis of atomic wfcs
   !
   ALLOCATE( etatom_d( n_starting_wfc ) )
-  ALLOCATE( wfcatom_d , source=wfcatom_h )
   !
   ! ... Allocate space for <beta|psi>
   !
@@ -337,7 +364,6 @@ SUBROUTINE init_wfc_gpu ( ik )
   CALL using_becp_d_auto (2)
   DEALLOCATE( etatom_d )
   DEALLOCATE( wfcatom_d )
-  DEALLOCATE( wfcatom_h )
   !
   RETURN
   !

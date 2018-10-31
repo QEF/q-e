@@ -6,7 +6,8 @@ MODULES += \
   becmod_subs_gpu.o \
   cuda_subroutines.o \
   ylmr2_gpu.o \
-  splinelib_gpu.o
+  splinelib_gpu.o \
+  random_numbers_gpu.o
 
 MODFLAGS += \
          $(MOD_FLAG)../GScratch
@@ -27,3 +28,5 @@ uspp_gpu.o : kind.o
 uspp_gpu.o : uspp.o
 wavefunctions_gpu.o : kind.o
 wavefunctions_gpu.o : wavefunctions.o
+random_numbers_gpu.o : kind.o
+random_numbers_gpu.o : random_numbers.o
