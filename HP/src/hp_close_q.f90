@@ -16,7 +16,7 @@ SUBROUTINE hp_close_q ( flag )
   !
   USE buffers,        ONLY : close_buffer
   USE control_flags,  ONLY : twfcollect
-  USE units_lr,       ONLY : iuwfc, iuatwfc
+  USE units_lr,       ONLY : iuwfc, iuatswfc
   USE ldaU_hp,        ONLY : iudwfc, iudvwfc
   !
   IMPLICIT NONE
@@ -38,7 +38,7 @@ SUBROUTINE hp_close_q ( flag )
      CALL close_buffer(iudvwfc,'keep')
   ENDIF
   !
-  CALL close_buffer(iuatwfc,'delete')
+  CALL close_buffer(iuatswfc,'delete')
   !
   RETURN
   !

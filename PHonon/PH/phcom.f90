@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -70,6 +70,12 @@ MODULE dynmat
   REAL (DP), ALLOCATABLE :: &
        w2(:)                  ! 3 * nat)
   ! omega^2
+  !
+  ! DFPT+U
+  COMPLEX(DP), ALLOCATABLE :: dyn_hub_bare(:,:) ! (3*nat,*3nat)
+  COMPLEX(DP), ALLOCATABLE :: dyn_hub_scf(:,:)  ! (3*nat,*3nat)
+  ! the bare part of the Hubbard dynamical matrix
+  ! the scf part of the  Hubbard dynamical matrix
   !
 END MODULE dynmat
 !
@@ -308,10 +314,9 @@ MODULE units_ph
        lrcom,     & ! the length  of the bare commutator in US case
        iudvkb3, lrdvkb3, &
        iuint3paw, & ! the unit of the int3_paw coefficients
-       lint3paw     ! the length of the int3_paw coefficients
-  ! the unit with the products
-  ! the length of the products
-
+       lint3paw,  & ! the length of the int3_paw coefficients
+       iundnsscf    ! the unit of dnsscf, for DFPT+U  
+  
   logical, ALLOCATABLE :: this_dvkb3_is_on_file(:), &
                           this_pcxpsi_is_on_file(:,:)
   !
@@ -370,8 +375,55 @@ MODULE grid_irr_iq
                              ! calculated
 END MODULE grid_irr_iq
 
-!
-!
+MODULE ldaU_ph
+  !
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : ntypx
+  !
+  SAVE
+  !
+  ! atomic wfc's at k
+  COMPLEX(DP), ALLOCATABLE, TARGET :: wfcatomk(:,:),      & ! atomic wfc at k
+                                      swfcatomk(:,:),     & ! S * atomic wfc at k
+                                      dwfcatomk(:,:,:),   & ! derivative of atomic wfc at k
+                                      sdwfcatomk(:,:)       ! S * derivative of atomic wfc at k
+  ! atomic wfc's at k+q
+  COMPLEX(DP), POINTER ::             wfcatomkpq(:,:),    & ! atomic wfc at k+q
+                                      swfcatomkpq(:,:),   & ! S * atomic wfc at k+q
+                                      dwfcatomkpq(:,:,:), & ! derivative of atomic wfc at k+q
+                                      sdwfcatomkpq(:,:)     ! S * derivative of atomic wfc at k+q
+  ! 
+  COMPLEX(DP), ALLOCATABLE, TARGET :: dvkb(:,:,:)    ! derivative of beta funtions at k  
+  COMPLEX(DP), POINTER ::             vkbkpq(:,:), & ! beta funtions at k+q
+                                      dvkbkpq(:,:,:) ! derivative of beta funtions at k+q
+  !
+  ! Various arrays for the response occupation matrix
+  COMPLEX(DP), ALLOCATABLE :: dnsbare(:,:,:,:,:,:),         & ! bare derivative of ns
+                              dnsbare_all_modes(:,:,:,:,:), & ! bare derivative of ns for all modes
+                              dnsscf(:,:,:,:,:),            & ! SCF  derivative of ns
+                              dnsscf_all_modes(:,:,:,:,:),  & ! SCF  derivative of ns for all modes
+                              dnsorth(:,:,:,:,:),           & ! valence component of dns
+                              dnsorth_cart(:,:,:,:,:,:)       ! same as above, but in cart. coordinates
+  !
+  COMPLEX (DP), ALLOCATABLE :: proj1(:,:),    &
+                               proj2(:,:),    &
+                               projpb(:,:),   &
+                               projpdb(:,:,:)
+  ! Arrays to store scalar products between vectors
+  ! projpb  = <psi|beta>
+  ! projpdb = <psi|dbeta>
+  !
+  !
+  REAL(DP) :: effU(ntypx)
+  ! effective Hubbard parameter: effU = Hubbard_U - Hubbard_J0
+  LOGICAL  :: read_dns_bare
+  ! if .true. read the first bare derivative of ns from file
+  CHARACTER(LEN=4) :: d2ns_type
+  ! type of approximation to compute the second bare derivative 
+  ! of atomic occupation matrix ns
+  !
+END MODULE ldaU_ph
+
 MODULE phcom
   USE modes
   USE dynmat
@@ -387,4 +439,5 @@ MODULE phcom
   USE gamma_gamma
   USE disp
   USE grid_irr_iq
+  USE ldaU_ph
 END MODULE phcom

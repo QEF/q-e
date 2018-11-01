@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,6 +13,8 @@ subroutine print_clock_ph
   USE uspp,       ONLY : okvan, nlcc_any
   USE control_ph, ONLY : trans, zue, epsil
   USE ramanm,     ONLY : lraman, elop
+  USE ldau,       ONLY : lda_plus_u
+  !
   implicit none
   !
   WRITE( stdout, * )
@@ -143,6 +145,25 @@ subroutine print_clock_ph
 
   call print_clock ('addusddort')
   WRITE( stdout, * )
+  
+  IF (lda_plus_u) THEN
+     call print_clock ('dnsq_bare')
+     call print_clock ('dwfc')
+     call print_clock ('swfc')
+     call print_clock ('delta_sphi')
+     call print_clock ('dnsq_orth')
+     call print_clock ('d2nsq_bare_k')
+     call print_clock ('dnsq_scf')
+     call print_clock ('adddvhubscf')
+     call print_clock ('dynmat_hub_bare')
+     call print_clock ('dvqhub_barepsi_us')
+     call print_clock ('dvqhub_barepsi_us2')
+     call print_clock ('dynmat_hub_scf')
+     call print_clock ('doubleprojqq')
+     call print_clock ('doubleprojqq2')
+     WRITE( stdout, * )
+  ENDIF
+
   WRITE( stdout,  * ) '     General routines'
   call print_clock ('calbec')
   call print_clock ('fft')

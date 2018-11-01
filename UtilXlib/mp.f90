@@ -35,14 +35,15 @@
           mp_bcast_iv, mp_bcast_rv, mp_bcast_cv, mp_bcast_l, mp_bcast_rm, &
           mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_i4d, mp_bcast_rt, mp_bcast_lv, &
           mp_bcast_lm, mp_bcast_r4d, mp_bcast_r5d, mp_bcast_ct,  mp_bcast_c4d,&
-          mp_bcast_c5d
+          mp_bcast_c5d, mp_bcast_c6d
       END INTERFACE
 
       INTERFACE mp_sum
         MODULE PROCEDURE mp_sum_i1, mp_sum_iv, mp_sum_im, mp_sum_it, &
           mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rt, mp_sum_r4d, &
           mp_sum_c1, mp_sum_cv, mp_sum_cm, mp_sum_ct, mp_sum_c4d, &
-          mp_sum_c5d, mp_sum_c6d, mp_sum_rmm, mp_sum_cmm, mp_sum_r5d
+          mp_sum_c5d, mp_sum_c6d, mp_sum_rmm, mp_sum_cmm, mp_sum_r5d, &
+          mp_sum_r6d
       END INTERFACE
 
       INTERFACE mp_root_sum
@@ -537,6 +538,18 @@
         CALL bcast_real( msg, 2 * msglen, source, gid )
 #endif
       END SUBROUTINE mp_bcast_c5d
+
+      SUBROUTINE mp_bcast_c6d(msg,source,gid)
+        IMPLICIT NONE
+        COMPLEX (DP) :: msg(:,:,:,:,:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL bcast_real( msg, 2 * msglen, source, gid )
+#endif
+      END SUBROUTINE mp_bcast_c6d
 
 !
 !------------------------------------------------------------------------------!
@@ -1582,6 +1595,16 @@
       END SUBROUTINE mp_sum_r5d
 
 
+      SUBROUTINE mp_sum_r6d(msg,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT) :: msg(:,:,:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_r6d
 
 !
 !------------------------------------------------------------------------------!

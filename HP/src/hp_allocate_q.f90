@@ -23,12 +23,11 @@ subroutine hp_allocate_q
   USE uspp,                 ONLY : nkb, okvan
   USE qpoint,               ONLY : nksq, eigqts
   USE lrus,                 ONLY : becp1
-  USE eqv,                  ONLY : dpsi, evq, dmuxc, dvpsi, &
-                                   swfcatomk, swfcatomkpq
+  USE eqv,                  ONLY : dpsi, evq, dmuxc, dvpsi
   USE control_lr,           ONLY : lgamma
-  USE basis,                ONLY : natomwfc
-  USE ldaU,                 ONLY : Hubbard_lmax
-  USE ldaU_hp,              ONLY : this_pert_is_on_file
+  USE ldaU,                 ONLY : Hubbard_lmax, nwfcU
+  USE ldaU_hp,              ONLY : this_pert_is_on_file, &
+                                   swfcatomk, swfcatomkpq
   !
   IMPLICIT NONE
   INTEGER :: ik
@@ -56,11 +55,11 @@ subroutine hp_allocate_q
      ENDDO
   ENDIF
   !
-  ALLOCATE (swfcatomk(npwx, natomwfc))     
+  ALLOCATE (swfcatomk(npwx,nwfcU))     
   IF (lgamma) THEN
      swfcatomkpq  => swfcatomk
   ELSE
-     ALLOCATE (swfcatomkpq(npwx, natomwfc))
+     ALLOCATE (swfcatomkpq(npwx,nwfcU))
   ENDIF
   !
   RETURN

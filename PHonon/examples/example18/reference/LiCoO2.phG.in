@@ -1,0 +1,12 @@
+phonons of LiCoO2 at Gamma
+ &inputph
+  prefix = 'LiCoO2',
+  outdir='/scratch/timrov/WORK_DFPT_plus_U/A_PORTING_2018/A_Gitlab/q-e/tempdir/',
+  tr2_ph = 1.0d-14,
+  amass(1) = 58.933194,
+  amass(2) = 15.999,
+  amass(3) =  6.94,
+  epsil = .true.
+  fildyn='LiCoO2.dynG',
+ /
+0.000000000000000   0.000000000000000   0.000000000000000
