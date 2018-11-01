@@ -147,6 +147,7 @@ MODULE dftd3_qe
     tau(:,:) = tau(:,:) / alat
     at(:,:) = at(:,:) / alat
     !    
+    x = 0.d0
     do ata = 1, nat
         z = get_atomic_number(trim(atm(ityp(ata))))
         CALL getc6(maxc,max_elem,this%c6ab,this%mxc, &
