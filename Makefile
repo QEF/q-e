@@ -281,17 +281,16 @@ links : bindir
 	[ -f ../W90/wannier90.x ] &&  ln -fs ../W90/wannier90.x ../bin/wannier90.x ;\
 	)
 
-#########################################################
+#############################################################
 # 'make install' works with "configure --prefix=PREFIX"
-# - If the PREFIX directory does not exists it creates it
-#########################################################
+# - If the PREFIX/bin directory does not exists it creates it
+#############################################################
 
 install : 
-	@if ! test -d $(PREFIX)/bin ; then mkdir -p $(PREFIX)/bin ; \
+	mkdir -p $(PREFIX)/bin ; \
 	for x in `find * ! -path "test-suite/*" -name *.x -type f` ; do \
-		cp $$x $(PREFIX)/bin/ ; done ; \
-	fi
-	@echo 'Quantum ESPRESSO binaries installed in $(PREFIX)/bin'
+		cp -v $$x $(PREFIX)/bin/ ; done
+	@echo -e '\nQuantum ESPRESSO binaries are installed in $(PREFIX)/bin\n'
 
 #########################################################
 # Run test-suite for numerical regression testing
