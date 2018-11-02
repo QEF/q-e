@@ -136,7 +136,7 @@ MODULE exx_band
     ! change the data structure of evc and igk
     !
     lda = npwx
-    n = npwx 
+    n = npwx
     npwx_local = npwx
     IF( .not.allocated(ngk_local) ) allocate(ngk_local(nks))
     ngk_local = ngk
@@ -154,7 +154,7 @@ MODULE exx_band
     END IF
     !
     lda = npwx
-    n = npwx 
+    n = npwx
     npwx_exx = npwx
     IF( .not.allocated(ngk_exx) ) allocate(ngk_exx(nks))
     ngk_exx = ngk
@@ -204,7 +204,7 @@ MODULE exx_band
     Integer, INTENT(in) :: lda
     INTEGER, INTENT(in) :: m
     INTEGER, INTENT(inout) :: n
-    COMPLEX(DP), INTENT(in) :: psi(lda*npol,m) 
+    COMPLEX(DP), INTENT(in) :: psi(lda*npol,m)
     !
     ! change to the EXX data strucutre
     !
@@ -373,7 +373,7 @@ MODULE exx_band
     exx_map = 0
     DO ik = 1, nks
        exx_map(prev_lda_exx(ik)+1:prev_lda_exx(ik)+lda_exx(me_egrp+1,ik),ik) = &
-            ig_l2g(igk_exx(1:lda_exx(me_egrp+1,ik),ik))    
+            ig_l2g(igk_exx(1:lda_exx(me_egrp+1,ik),ik))
     END DO
     CALL mp_sum(exx_map,intra_egrp_comm)
     !
@@ -586,7 +586,7 @@ MODULE exx_band
                    comm_recv_reverse(iproc+1,ik)%indices(count) = ig
                 END IF
              END DO
-             
+
           END DO
        END DO
        !
@@ -663,7 +663,7 @@ MODULE exx_band
     !
     Integer :: lda
     INTEGER :: n, m, m_out
-    COMPLEX(DP) :: psi(npwx_local*npol,m) 
+    COMPLEX(DP) :: psi(npwx_local*npol,m)
     COMPLEX(DP) :: psi_out(npwx_exx*npol,m_out)
     INTEGER, INTENT(in) :: type
 
@@ -761,7 +761,7 @@ MODULE exx_band
 #endif
           END DO
        END DO
-          
+
     END IF
     !
     IF(type.eq.0)THEN
@@ -787,6 +787,37 @@ MODULE exx_band
     !send communication packets
     !
     DO iproc=0, nproc_egrp-1
+
+      !
+      !prepare receive buffers
+      !
+      IF ( comm_recv(iproc+1,current_ik)%size.gt.0) THEN
+#if defined(__MPI)
+         IF (type.eq.0) THEN !psi or hpsi
+            CALL MPI_IRECV( comm_recv(iproc+1,current_ik)%msg, &
+                 comm_recv(iproc+1,current_ik)%size*npol*nibands(my_egrp_id+1), &
+                 MPI_DOUBLE_COMPLEX, &
+                 iproc, 100+me_egrp*nproc_egrp+iproc, &
+                 intra_egrp_comm, request_recv(iproc+1), ierr )
+         ELSE IF (type.eq.1) THEN !evc
+            CALL MPI_IRECV( comm_recv(iproc+1,current_ik)%msg, &
+                 comm_recv(iproc+1,current_ik)%size*npol*m, MPI_DOUBLE_COMPLEX, &
+                 iproc, 100+me_egrp*nproc_egrp+iproc, &
+                 intra_egrp_comm, request_recv(iproc+1), ierr )
+         ELSE IF (type.eq.2) THEN !evc2
+            CALL MPI_IRECV( comm_recv(iproc+1,current_ik)%msg, &
+                 comm_recv(iproc+1,current_ik)%size*npol*(all_end(my_egrp_id+1)-all_start(my_egrp_id+1)+1), &
+                 MPI_DOUBLE_COMPLEX, &
+                 iproc, 100+me_egrp*nproc_egrp+iproc, &
+                 intra_egrp_comm, request_recv(iproc+1), ierr )
+         END IF
+#endif
+         !
+      END IF
+
+      !
+      !now do the actual sends
+      !
        IF ( comm_send(iproc+1,current_ik)%size.gt.0) THEN
           DO i=1, comm_send(iproc+1,current_ik)%size
              ig = comm_send(iproc+1,current_ik)%indices(i)
@@ -795,7 +826,7 @@ MODULE exx_band
              !
              prev = 0
              DO j=1, nproc_pool
-                IF ((prev+lda_local(j,current_ik)).ge.ig) THEN 
+                IF ((prev+lda_local(j,current_ik)).ge.ig) THEN
                    ig = ig - prev
                    exit
                 END IF
@@ -855,34 +886,7 @@ MODULE exx_band
     !
     ! begin receiving the messages
     !
-    DO iproc=0, nproc_egrp-1
-       IF ( comm_recv(iproc+1,current_ik)%size.gt.0) THEN
-          !
-          ! receive the message
-          !
-#if defined(__MPI)
-          IF (type.eq.0) THEN !psi or hpsi
-             CALL MPI_IRECV( comm_recv(iproc+1,current_ik)%msg, &
-                  comm_recv(iproc+1,current_ik)%size*npol*nibands(my_egrp_id+1), &
-                  MPI_DOUBLE_COMPLEX, &
-                  iproc, 100+me_egrp*nproc_egrp+iproc, &
-                  intra_egrp_comm, request_recv(iproc+1), ierr )
-          ELSE IF (type.eq.1) THEN !evc
-             CALL MPI_IRECV( comm_recv(iproc+1,current_ik)%msg, &
-                  comm_recv(iproc+1,current_ik)%size*npol*m, MPI_DOUBLE_COMPLEX, &
-                  iproc, 100+me_egrp*nproc_egrp+iproc, &
-                  intra_egrp_comm, request_recv(iproc+1), ierr )
-          ELSE IF (type.eq.2) THEN !evc2
-             CALL MPI_IRECV( comm_recv(iproc+1,current_ik)%msg, &
-                  comm_recv(iproc+1,current_ik)%size*npol*(all_end(my_egrp_id+1)-all_start(my_egrp_id+1)+1), &
-                  MPI_DOUBLE_COMPLEX, &
-                  iproc, 100+me_egrp*nproc_egrp+iproc, &
-                  intra_egrp_comm, request_recv(iproc+1), ierr )
-          END IF
-#endif
-          !
-       END IF
-    END DO
+
     !
     ! assign psi_out
     !
@@ -1372,6 +1376,35 @@ MODULE exx_band
     prev_lda_exx = sum( lda_exx(1:me_egrp,current_ik) )
     !
     my_bands = iexx_iend(my_egrp_id+1) - iexx_istart(my_egrp_id+1) + 1
+
+    !
+    ! begin with preparing the receive buffers
+    !
+    DO iegrp=1, negrp
+       !
+       IF ( iexx_istart(iegrp).le.0 ) CYCLE
+       !
+       recv_bands = iexx_iend(iegrp) - iexx_istart(iegrp) + 1
+       !
+       DO iproc=0, nproc_egrp-1
+          IF ( comm_recv_reverse(iproc+1,current_ik)%size.gt.0) THEN
+             !
+             !receive the message
+             !
+             tag = 0
+#if defined(__MPI)
+             CALL MPI_IRECV( comm_recv_reverse(iproc+1,current_ik)%msg(:,:,iexx_istart(iegrp)), &
+                  comm_recv_reverse(iproc+1,current_ik)%size*npol*recv_bands, &
+                  MPI_DOUBLE_COMPLEX, &
+                  iproc+(iegrp-1)*nproc_egrp, &
+                  tag, &
+                  intra_pool_comm, request_recv(iproc+1,iegrp), ierr )
+#endif
+             !
+          END IF
+       END DO
+    END DO
+
     !
     ! send communication packets
     !
@@ -1408,33 +1441,7 @@ MODULE exx_band
           END DO
        END DO
     END IF
-    !
-    ! begin receiving the communication packets
-    !
-    DO iegrp=1, negrp
-       !
-       IF ( iexx_istart(iegrp).le.0 ) CYCLE
-       !
-       recv_bands = iexx_iend(iegrp) - iexx_istart(iegrp) + 1
-       !
-       DO iproc=0, nproc_egrp-1
-          IF ( comm_recv_reverse(iproc+1,current_ik)%size.gt.0) THEN
-             !
-             !receive the message
-             !
-             tag = 0
-#if defined(__MPI)
-             CALL MPI_IRECV( comm_recv_reverse(iproc+1,current_ik)%msg(:,:,iexx_istart(iegrp)), &
-                  comm_recv_reverse(iproc+1,current_ik)%size*npol*recv_bands, &
-                  MPI_DOUBLE_COMPLEX, &
-                  iproc+(iegrp-1)*nproc_egrp, &
-                  tag, &
-                  intra_pool_comm, request_recv(iproc+1,iegrp), ierr )
-#endif
-             !
-          END IF
-       END DO
-    END DO
+
     !
     ! assign psi
     !

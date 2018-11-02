@@ -10,7 +10,7 @@
 #execdir=../install/6.3/knl/bin
 
 #some parameters
-rankspernode=4
+rankspernode=8
 totalranks=$(( ${rankspernode} * ${SLURM_NNODES} ))
 
 #openmp stuff
@@ -24,4 +24,4 @@ execdir=../buildscripts/install/6.3/knl/bin
 
 #run
 MPI_RUN="srun -N ${SLURM_NNODES} -n ${totalranks} -c $(( 256 / ${rankspernode} )) --cpu_bind=cores"
-${MPI_RUN} ${execdir}/pw.x -nbgrp ${totalranks} -in small.in
+${MPI_RUN} ${execdir}/pw.x -nbgrp ${totalranks} -in small.in 
