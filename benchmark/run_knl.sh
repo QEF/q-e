@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -q regular
 #SBATCH -A nstaff
-#SBATCH -t 01:00:00
+#SBATCH -t 02:00:00
 #SBATCH -C knl
 #SBATCH -S 2
 
@@ -10,7 +10,7 @@
 #execdir=../install/6.3/knl/bin
 
 #some parameters
-rankspernode=8
+rankspernode=4
 totalranks=$(( ${rankspernode} * ${SLURM_NNODES} ))
 
 #openmp stuff
