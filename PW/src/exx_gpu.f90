@@ -329,6 +329,7 @@ MODULE exx
     COMPLEX(DP),ALLOCATABLE :: temppsic(:)
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:), psic_nc(:,:)
     COMPLEX(DP),ALLOCATABLE :: psic_exx(:)
+    COMPLEX(DP), ALLOCATABLE, DEVICE :: psic_nc_d(:,:)
     INTEGER :: nxxs, nrxxs
 #if defined(__MPI)
     COMPLEX(DP),ALLOCATABLE  :: temppsic_all(:),      psic_all(:)
@@ -456,15 +457,18 @@ MODULE exx
       IF (.not. allocated(exxbuff_d)) THEN
          IF (gamma_only) THEN
             ALLOCATE( exxbuff_d(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nks))
+            ALLOCATE(psic_nc_d(nrxxs, npol))
          ELSE
             ALLOCATE( exxbuff_d(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nkqs))
+            ALLOCATE(psic_nc_d(nrxxs, npol))
          END IF
       END IF
     END IF
 
+!Associate exxbuff to exxbuff_d in order to schedule cuda kernels
+associate(exxbuff=>exxbuff_d)
     !assign buffer
     IF(DoLoc) then
-!$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs,ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
       DO ikq=1,SIZE(locbuff,3)
          DO ibnd=1, x_nbnd_occ
             DO ir=1,nrxxs*npol
@@ -473,7 +477,7 @@ MODULE exx
          ENDDO
       ENDDO
     ELSE
-!$omp parallel do collapse(3) default(shared) firstprivate(npol,nrxxs,nkqs,ibnd_buff_start,ibnd_buff_end) private(ir,ibnd,ikq,ipol)
+      !$cuf kernel do (3) 
       DO ikq=1,SIZE(exxbuff,3)
          DO ibnd=ibnd_buff_start,ibnd_buff_end
             DO ir=1,nrxxs*npol
@@ -484,6 +488,9 @@ MODULE exx
       ! the above loops will replaced with the following line soon
       !CALL threaded_memset(exxbuff, 0.0_DP, nrxxs*npol*SIZE(exxbuff,2)*nkqs*2)
     END IF
+!end associate
+end associate
+exxbuff = exxbuff_d
     !
     !   This is parallelized over pools. Each pool computes only its k-points
     !
@@ -638,23 +645,25 @@ MODULE exx
                    ENDDO
 !$omp end parallel do
 #endif
+psic_nc_d = psic_nc
+associate(exxbuff=>exxbuff_d, psic_nc=>psic_nc_d)
                    IF (index_sym(ikq) > 0 ) THEN
                       ! sym. op. without time reversal: normal case
-!$omp parallel do default(shared) private(ir) firstprivate(ibnd,isym,ikq)
+                      !$cuf kernel do 
                       DO ir=1,nrxxs
                          exxbuff(ir,ibnd,ikq)=psic_nc(ir,1)
                          exxbuff(ir+nrxxs,ibnd,ikq)=psic_nc(ir,2)
                       ENDDO
-!$omp end parallel do
                    ELSE
                       ! sym. op. with time reversal: spin 1->2*, 2->-1*
-!$omp parallel do default(shared) private(ir) firstprivate(ibnd,isym,ikq)
+                      !$cuf kernel do 
                       DO ir=1,nrxxs
                          exxbuff(ir,ibnd,ikq)=CONJG(psic_nc(ir,2))
                          exxbuff(ir+nrxxs,ibnd,ikq)=-CONJG(psic_nc(ir,1))
                       ENDDO
-!$omp end parallel do
                    ENDIF
+end associate
+exxbuff = exxbuff_d
                 ELSE ! noncolinear
 #if defined(__MPI)
                    CALL gather_grid(dfftt,temppsic,temppsic_all)
