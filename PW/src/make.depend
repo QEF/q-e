@@ -278,6 +278,7 @@ clean_pw.o : bp_mod.o
 clean_pw.o : dynamics_module.o
 clean_pw.o : extfield.o
 clean_pw.o : exx.o
+clean_pw.o : exx_gpu.o
 clean_pw.o : ldaU.o
 clean_pw.o : paw_init.o
 clean_pw.o : pwcom.o
@@ -432,6 +433,7 @@ electrons.o : buffers.o
 electrons.o : esm.o
 electrons.o : extfield.o
 electrons.o : exx.o
+electrons.o : exx_gpu.o
 electrons.o : io_rho_xml.o
 electrons.o : ldaU.o
 electrons.o : loc_scdm.o
@@ -507,6 +509,42 @@ exx.o : pwcom.o
 exx.o : realus.o
 exx.o : symm_base.o
 exx.o : us_exx.o
+exx_gpu.o : ../../FFTXlib/fft_interfaces.o
+exx_gpu.o : ../../FFTXlib/fft_types.o
+exx_gpu.o : ../../FFTXlib/scatter_mod.o
+exx_gpu.o : ../../FFTXlib/stick_base.o
+exx_gpu.o : ../../Modules/becmod.o
+exx_gpu.o : ../../Modules/cell_base.o
+exx_gpu.o : ../../Modules/constants.o
+exx_gpu.o : ../../Modules/control_flags.o
+exx_gpu.o : ../../Modules/coulomb_vcut.o
+exx_gpu.o : ../../Modules/fft_base.o
+exx_gpu.o : ../../Modules/funct.o
+exx_gpu.o : ../../Modules/gth.o
+exx_gpu.o : ../../Modules/gvecw.o
+exx_gpu.o : ../../Modules/io_files.o
+exx_gpu.o : ../../Modules/io_global.o
+exx_gpu.o : ../../Modules/ions_base.o
+exx_gpu.o : ../../Modules/kind.o
+exx_gpu.o : ../../Modules/mp_bands.o
+exx_gpu.o : ../../Modules/mp_exx.o
+exx_gpu.o : ../../Modules/mp_pools.o
+exx_gpu.o : ../../Modules/noncol.o
+exx_gpu.o : ../../Modules/paw_variables.o
+exx_gpu.o : ../../Modules/recvec.o
+exx_gpu.o : ../../Modules/recvec_subs.o
+exx_gpu.o : ../../Modules/splinelib.o
+exx_gpu.o : ../../Modules/uspp.o
+exx_gpu.o : ../../Modules/wavefunctions.o
+exx_gpu.o : ../../UtilXlib/mp.o
+exx_gpu.o : buffers.o
+exx_gpu.o : exx_band.o
+exx_gpu.o : exx_base.o
+exx_gpu.o : paw_exx.o
+exx_gpu.o : pwcom.o
+exx_gpu.o : realus.o
+exx_gpu.o : symm_base.o
+exx_gpu.o : us_exx.o
 exx_band.o : ../../FFTXlib/fft_types.o
 exx_band.o : ../../FFTXlib/stick_base.o
 exx_band.o : ../../Modules/cell_base.o
@@ -805,6 +843,7 @@ h_psi.o : ../../Modules/uspp.o
 h_psi.o : ../../UtilXlib/mp.o
 h_psi.o : bp_mod.o
 h_psi.o : exx.o
+h_psi.o : exx_gpu.o
 h_psi.o : ldaU.o
 h_psi.o : pwcom.o
 h_psi.o : realus.o
@@ -840,6 +879,7 @@ hinit1.o : ../../Modules/paw_variables.o
 hinit1.o : ../../Modules/recvec.o
 hinit1.o : ../../Modules/wannier_new.o
 hinit1.o : exx.o
+hinit1.o : exx_gpu.o
 hinit1.o : exx_band.o
 hinit1.o : exx_base.o
 hinit1.o : ldaU.o
@@ -989,6 +1029,7 @@ input.o : dynamics_module.o
 input.o : esm.o
 input.o : extfield.o
 input.o : exx.o
+input.o : exx_gpu.o
 input.o : exx_base.o
 input.o : ldaU.o
 input.o : loc_scdm.o
@@ -1043,6 +1084,7 @@ loc_scdm.o : ../../Modules/mp_bands.o
 loc_scdm.o : ../../Modules/noncol.o
 loc_scdm.o : ../../UtilXlib/mp.o
 loc_scdm.o : exx.o
+loc_scdm.o : exx_gpu.o
 loc_scdm.o : exx_base.o
 loc_scdm.o : pwcom.o
 loc_scdm.o : scf_mod.o
@@ -1108,6 +1150,7 @@ memory_report.o : ../../Modules/uspp.o
 memory_report.o : ../../Modules/wannier_new.o
 memory_report.o : atomic_wfc_mod.o
 memory_report.o : exx.o
+memory_report.o : exx_gpu.o
 memory_report.o : exx_base.o
 memory_report.o : ldaU.o
 memory_report.o : pwcom.o
@@ -1485,6 +1528,7 @@ pw2casino_write.o : ../../Modules/wavefunctions.o
 pw2casino_write.o : ../../UtilXlib/mp.o
 pw2casino_write.o : buffers.o
 pw2casino_write.o : exx.o
+pw2casino_write.o : exx_gpu.o
 pw2casino_write.o : ldaU.o
 pw2casino_write.o : pw2blip.o
 pw2casino_write.o : pwcom.o
@@ -1542,6 +1586,7 @@ pw_restart_new.o : bp_mod.o
 pw_restart_new.o : buffers.o
 pw_restart_new.o : extfield.o
 pw_restart_new.o : exx.o
+pw_restart_new.o : exx_gpu.o
 pw_restart_new.o : exx_base.o
 pw_restart_new.o : io_rho_xml.o
 pw_restart_new.o : ldaU.o
@@ -1689,6 +1734,7 @@ run_pwscf.o : ../../Modules/qexsd.o
 run_pwscf.o : ../../Modules/qmmm.o
 run_pwscf.o : atomic_wfc_mod.o
 run_pwscf.o : exx.o
+run_pwscf.o : exx_gpu.o
 run_pwscf.o : exx_band.o
 run_pwscf.o : exx_base.o
 run_pwscf.o : newd.o
@@ -1732,6 +1778,7 @@ scale_h.o : ../../Modules/mp_bands.o
 scale_h.o : ../../Modules/recvec.o
 scale_h.o : ../../UtilXlib/mp.o
 scale_h.o : exx.o
+scale_h.o : exx_gpu.o
 scale_h.o : exx_base.o
 scale_h.o : pwcom.o
 scale_h.o : start_k.o
@@ -1816,6 +1863,7 @@ setup.o : atomic_wfc_mod.o
 setup.o : bp_mod.o
 setup.o : extfield.o
 setup.o : exx.o
+setup.o : exx_gpu.o
 setup.o : exx_base.o
 setup.o : ldaU.o
 setup.o : pw_restart_new.o
@@ -1973,6 +2021,7 @@ stress.o : ../../dft-d3/dftd3_qe.o
 stress.o : bp_mod.o
 stress.o : esm.o
 stress.o : exx.o
+stress.o : exx_gpu.o
 stress.o : ldaU.o
 stress.o : pwcom.o
 stress.o : scf_mod.o
@@ -2032,6 +2081,7 @@ summary.o : ../../UtilXlib/mp.o
 summary.o : bp_mod.o
 summary.o : esm.o
 summary.o : exx.o
+summary.o : exx_gpu.o
 summary.o : fcp.o
 summary.o : ldaU.o
 summary.o : martyna_tuckerman.o
