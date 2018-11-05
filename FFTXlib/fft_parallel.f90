@@ -161,7 +161,7 @@ END SUBROUTINE tg_cft3s
 !  General purpose driver, GPU version
 !
 !----------------------------------------------------------------------------
-SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
+SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   !----------------------------------------------------------------------------
   !
   !! ... isgn = +-1 : parallel 3d fft for rho and for the potential
@@ -205,7 +205,6 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
   TYPE (fft_type_descriptor), INTENT(in) :: dfft   ! descriptor of fft data layout
   COMPLEX(DP), DEVICE, INTENT(inout)     :: f_d( : ) ! array containing data to be transformed
   INTEGER, INTENT(in)                    :: isgn   ! fft direction (potential: +/-1, wave: +/-2, wave_tg: +/-3)
-  INTEGER, INTENT(in)                    :: howmany ! 
   !
   INTEGER                          :: n1, n2, n3, nx1, nx2, nx3
   INTEGER                          :: nnr_
@@ -373,8 +372,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
      nsticks_x = dfft%my_nr2p * dfft%my_nr3p
      nsticks_y = dfft%nr1p(dfft%mype2+1) * dfft%my_nr3p
      nsticks_z = dfft%nsp(dfft%mype+1)
-     nsticks_z = MAXVAL(dfft%nsp)
-     CALL fftx_error__( ' many_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
+     nsticks_zx = MAXVAL(dfft%nsp)
   else if (abs(isgn) == 2 ) then  ! wave func fft
      nnr_ = dfft%nnr
      nsticks_x = dfft%my_nr2p * dfft%my_nr3p

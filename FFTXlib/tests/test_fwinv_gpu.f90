@@ -318,16 +318,20 @@ program test_fwinv_gpu
     !
     ! Test 2
     !
-    !!!! DEALLOCATE(data_in, data_in_d, aux)
-    !!!! ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
-    !!!! ALLOCATE(data_in_d(dfft%nnr))
-    !!!! CALL fill_random(data_in, data_in_d, dfft%nnr)
-    !!!! !
-    !!!! CALL fwfft( 'Rho' , data_in, dfft, 1 )
-    !!!! CALL fwfft( 'Rho' , data_in_d, dfft, 1 )
-    !!!! aux = data_in_d
-    !!!! ! Check
-    !!!! CALL test%assert_close( data_in, aux )
+    DEALLOCATE(data_in, data_in_d, aux)
+    ALLOCATE(data_in(dfft%nnr*howmany), aux(dfft%nnr))
+    ALLOCATE(data_in_d(dfft%nnr*howmany))
+    !
+    CALL fill_random(data_in, data_in_d, dfft%nnr*howmany)
+    !
+    CALL fwfft( 'Rho' , data_in_d, dfft,  howmany)
+    DO i=0,howmany-1
+      start = i*dfft%nnr
+      CALL fwfft( 'Rho' , data_in(1+start:), dfft, 1 )
+      aux(1:dfft%nnr) = data_in_d(start+1:start+dfft%nnr)
+      ! Check
+      CALL test%assert_close( data_in(start+1:start+dfft%ngm), aux(1:dfft%ngm) )
+    END DO
     !
     CALL fft_desc_finalize(dfft, smap)
     DEALLOCATE(data_in, data_in_d, aux)
@@ -382,25 +386,26 @@ program test_fwinv_gpu
         CALL test%assert_close( data_in(start+1:start+dfft%nnr), aux(start+1:start+dfft%nnr) )
       END DO
     ENDIF
-    !aux = data_in_d
-    ! Check
-    !CALL test%assert_close( data_in, aux )
     !
     ! Test 2
     !
-    !!!!  DEALLOCATE(data_in, data_in_d, aux)
-    !!!!  ALLOCATE(data_in(dfft%nnr), aux(dfft%nnr))
-    !!!!  ALLOCATE(data_in_d(dfft%nnr))
-    !!!!  CALL fill_random(data_in, data_in_d, dfft%nnr)
-    !!!!  !
-    !!!!  CALL invfft( 'Rho' , data_in, dfft, 1 )
-    !!!!  CALL invfft( 'Rho' , data_in_d, dfft, 1 )
-    !!!!  aux = data_in_d
-    !!!!  ! Check
-    !!!!  CALL test%assert_close( data_in, aux )
-    !!!!  !
-    !!!!  CALL fft_desc_finalize(dfft, smap)
-    !!!!  DEALLOCATE(data_in, data_in_d, aux)
+    DEALLOCATE(data_in, data_in_d, aux)
+    ALLOCATE(data_in(dfft%nnr*howmany), aux(dfft%nnr))
+    ALLOCATE(data_in_d(dfft%nnr*howmany))
+    CALL fill_random(data_in, data_in_d, dfft%nnr*howmany)
+    !
+    CALL invfft( 'Rho' , data_in_d, dfft, howmany )
+    !
+    DO i=0,howmany-1
+      start = i*dfft%nnr
+      CALL invfft( 'Rho' , data_in(1+start:), dfft, 1 )
+      aux(1:dfft%nnr) = data_in_d(start+1:start+dfft%nnr)
+      ! Check
+      CALL test%assert_close( data_in(start+1:start+dfft%nnr), aux(1:dfft%nnr) )
+    END DO
+    !
+    CALL fft_desc_finalize(dfft, smap)
+    DEALLOCATE(data_in, data_in_d, aux)
     !
   END SUBROUTINE test_invfft_many_gpu_1
   
