@@ -177,11 +177,13 @@ SUBROUTINE init_wfc_gpu ( ik )
   USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, starting_wfc
   USE gvect,                ONLY : gstart
-  USE klist,                ONLY : xk, ngk, igk_k, igk_k_d
+  USE klist,                ONLY : xk, ngk, igk_k_d
   USE wvfct,                ONLY : nbnd, npwx
   USE uspp,                 ONLY : nkb, okvan
   USE noncollin_module,     ONLY : npol
-  USE random_numbers_gpum,  ONLY : randy_vect_gpu=>randy_vect_debug_gpu
+  USE random_numbers_gpum,  ONLY : randy_vect_gpu ! use '=>randy_vect_debug_gpu'
+                                                  ! to adopt the same (slower) PRNG
+                                                  ! used on the CPU.
   USE mp_bands,             ONLY : intra_bgrp_comm, inter_bgrp_comm, &
                                    nbgrp, root_bgrp_id
   USE mp,                   ONLY : mp_bcast
@@ -235,7 +237,7 @@ SUBROUTINE init_wfc_gpu ( ik )
   !
   ALLOCATE( wfcatom_d( npwx, npol, n_starting_wfc ) )
   ALLOCATE(randy_d(2 * n_starting_wfc * npol * ngk(ik)))
-  ! rr =randy(0)   !!!!! REMOVE ME
+  !
   IF ( starting_wfc(1:6) == 'atomic' ) THEN
      !
      ALLOCATE( wfcatom_h( npwx, npol, n_starting_wfc ) )
@@ -283,7 +285,9 @@ SUBROUTINE init_wfc_gpu ( ik )
   ! ... if not enough atomic wfc are available,
   ! ... fill missing wfcs with random numbers
   !
-  IF (n_starting_atomic_wfc < n_starting_wfc) CALL randy_vect_gpu( randy_d , 2 * (n_starting_wfc-n_starting_atomic_wfc) * npol * ngk(ik) )
+  IF (n_starting_atomic_wfc < n_starting_wfc) &
+     CALL randy_vect_gpu( randy_d , 2 * (n_starting_wfc-n_starting_atomic_wfc) * npol * ngk(ik) )
+  !
   ngk_ik  = ngk(ik)
   xk_1 = xk(1,ik); xk_2 = xk(2,ik); xk_3 = xk(3,ik)
 !$cuf kernel do(3)

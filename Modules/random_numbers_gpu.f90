@@ -51,7 +51,6 @@ MODULE random_numbers_gpum
       INTEGER              :: ist
       INTEGER, SAVE        :: idum=0
 #if defined(__CUDA)
-      attributes(DEVICE)          :: istat
       type(curandGenerator), SAVE :: gen
 
       LOGICAL, SAVE        :: first=.true.
@@ -65,7 +64,7 @@ MODULE random_numbers_gpum
          !
          first = .false.
          ist=curandDestroyGenerator(gen)
-         ist=curandCreateGenerator(gen, CURAND_RNG_PSEUDO_XORWOW) 
+         ist=curandCreateGenerator(gen, CURAND_RNG_PSEUDO_XORWOW) ! or CURAND_RNG_PSEUDO_MRG32k3a
          ist=curandSetPseudoRandomGeneratorSeed(gen, idum)
          !
       END IF
