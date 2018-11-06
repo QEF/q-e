@@ -154,6 +154,8 @@ MODULE fft_types
 #if defined(__CUDA)
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_yz
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_xy
+    INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_many
+    INTEGER                                                   :: nstream_many = 16
 #endif
   END TYPE
 
@@ -178,7 +180,7 @@ CONTAINS
     INTEGER, INTENT(IN), OPTIONAL :: fft_fact(3)
     INTEGER, INTENT(IN), OPTIONAL :: nyfft
     INTEGER, INTENT(in) :: comm ! mype starting from 0
-    INTEGER :: nx, ny, ierr, nzfft
+    INTEGER :: nx, ny, ierr, imany, nzfft
     INTEGER :: mype, root, nproc, nproc2, nproc3, iproc, iproc2, iproc3 ! mype starting from 0
     INTEGER :: color, key, comm2, comm3
      !write (6,*) ' inside fft_type_allocate' ; FLUSH(6)
@@ -285,7 +287,7 @@ CONTAINS
     ALLOCATE( desc%indp_d( desc%nr1x,desc%nproc2 ) ) ; desc%indp_d  = 0
     ALLOCATE( desc%indw_d( desc%nr1x, desc%nproc2 ) ) ; desc%indw_d  = 0
     ALLOCATE( desc%indw_tg_d( desc%nr1x, 1 ) ) ; desc%indw_tg_d  = 0
-    
+    !
     ALLOCATE( desc%nr1p_d(desc%nproc2)) ; desc%nr1p_d  = 0
     ALLOCATE( desc%nr1w_d(desc%nproc2)) ; desc%nr1w_d  = 0
     ALLOCATE( desc%nr1w_tg_d(1) ) ; desc%nr1w_tg_d = 0
@@ -296,14 +298,19 @@ CONTAINS
     ALLOCATE( desc%ismap_d( nx * ny ) ) ; desc%ismap_d = 0
     
     ALLOCATE ( desc%stream_scatter_yz(desc%nproc3) ) ;
-    do iproc = 1, desc%nproc3
+    DO iproc = 1, desc%nproc3
         ierr = cudaStreamCreate(desc%stream_scatter_yz(iproc))
-    end do
-    
+    END DO
+    !
     ALLOCATE ( desc%stream_scatter_xy(desc%nproc2) ) ;
-    do iproc = 1, desc%nproc2
+    DO iproc = 1, desc%nproc2
         ierr = cudaStreamCreate(desc%stream_scatter_xy(iproc))
-    end do
+    END DO
+    !
+    ALLOCATE ( desc%stream_many(desc%nstream_many) ) ;
+    DO imany = 1, desc%nstream_many
+        ierr = cudaStreamCreate(desc%stream_many(imany))
+    END DO
 #endif
 
     incremental_grid_identifier = incremental_grid_identifier + 1
@@ -313,7 +320,7 @@ CONTAINS
 
   SUBROUTINE fft_type_deallocate( desc )
     TYPE (fft_type_descriptor) :: desc
-    INTEGER :: iproc, ierr
+    INTEGER :: iproc, ierr, imany
      !write (6,*) ' inside fft_type_deallocate' ; FLUSH(6)
     IF ( ALLOCATED( desc%nr2p ) )   DEALLOCATE( desc%nr2p )
     IF ( ALLOCATED( desc%nr2p_offset ) )   DEALLOCATE( desc%nr2p_offset )
@@ -378,6 +385,12 @@ CONTAINS
             ierr = cudaStreamDestroy(desc%stream_scatter_xy(iproc))
         end do
         DEALLOCATE(desc%stream_scatter_xy)
+    END IF
+    IF (ALLOCATED(desc%stream_many)) THEN
+        do imany = 1, desc%nstream_many
+            ierr = cudaStreamDestroy(desc%stream_many(imany))
+        end do
+        DEALLOCATE(desc%stream_many)
     END IF
 
     IF ( ALLOCATED( desc%nl_d ) )  DEALLOCATE( desc%nl_d )
