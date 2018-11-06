@@ -984,8 +984,8 @@ CONTAINS
           a1i = 0.6512_DP
           a2i = 1.4633_DP
        else
-          a1i = 0.7609_DP
-          a2i = 1.1448_DP
+          a1i = 0.7767_DP
+          a2i = 1.0937_DP
        endif
     ELSE IF (iexch==1 .AND. icorr==4 .AND. igcx==21 .AND. igcc==4) THEN
        ! PW86PBE
@@ -993,8 +993,8 @@ CONTAINS
           a1i = 0.6836_DP
           a2i = 1.5045_DP
        else
-          a1i = 0.7659_DP
-          a2i = 1.2617_DP
+          a1i = 0.7825_DP
+          a2i = 1.2077_DP
        end if
     ELSE IF (iexch==1 .AND. icorr==4 .AND. igcx==3 .AND. igcc==4) THEN
        ! PBE
@@ -1002,8 +1002,8 @@ CONTAINS
           a1i = 0.3275_DP
           a2i = 2.7673_DP
        else
-          a1i = 0.4238_DP
-          a2i = 2.4841_DP
+          a1i = 0.4283_DP
+          a2i = 2.4690_DP
        end if
     ELSE IF (iexch==1 .AND. icorr==3 .AND. igcx==1 .AND. igcc==3) THEN
        ! BLYP
@@ -1011,53 +1011,53 @@ CONTAINS
           a1i = 0.4502_DP
           a2i = 1.6210_DP
        else
-          a1i = 0.5927_DP
-          a2i = 1.1819_DP
+          a1i = 0.6349_DP
+          a2i = 1.0486_DP
        end if
     ELSE IF (iexch==1 .AND. icorr==4 .AND. igcx==12 .AND. igcc==4) THEN
        ! HSE
        if (ispaw) then
-          a1i = 0.0000_DP
-          a2i = 4.9281_DP
+          a1i = 0.3799_DP
+          a2i = 2.5862_DP
        else
-          a1i = 0.0000_DP
-          a2i = 5.0824_DP
+          a1i = 0.4206_DP
+          a2i = 2.4989_DP
        end if
     ELSE IF (iexch==6 .AND. icorr==4 .AND. igcx==8 .AND. igcc==4) THEN
        ! PBE0
        if (ispaw) then
-          a1i = 0.0000_DP
-          a2i = 4.8431_DP
+          a1i = 0.4616_DP
+          a2i = 2.2913_DP
        else
-          a1i = 0.0000_DP
-          a2i = 5.1197_DP
+          a1i = 0.4590_DP
+          a2i = 2.3581_DP
        end if
     ELSE IF (iexch==7 .AND. icorr==12 .AND. igcx==9 .AND. igcc==7) THEN
        ! B3LYP
        if (ispaw) then
-          a1i = 0.5418_DP
-          a2i = 2.1970_DP
+          a1i = 0.6092_DP
+          a2i = 1.3452_DP
        else
-          a1i = 0.1843_DP
-          a2i = 3.3700_DP
+          a1i = 0.6070_DP
+          a2i = 1.3862_DP
        end if
     ELSE IF (iexch==6 .AND. icorr==4 .AND. igcx==41 .AND. igcc==4) THEN
        ! B86BPBEX (50% hybrid)
        if (ispaw) then
-          a1i = 0.7180_DP
-          a2i = 2.2449_DP
+          a1i = 0.5826_DP
+          a2i = 1.7718_DP
        else
-          a1i = 1.2519_DP
-          a2i = 0.7462_DP
+          a1i = 0.6434_DP
+          a2i = 1.6405_DP
        end if
     ELSE IF (iexch==6 .AND. icorr==4 .AND. igcx==42 .AND. igcc==3) THEN
        ! BHAHLYP
        if (ispaw) then
-          a1i = 0.0000_DP
-          a2i = 4.5645_DP
+          a1i = 0.2998_DP
+          a2i = 2.6953_DP
        else
-          a1i = 0.0000_DP
-          a2i = 4.7320_DP
+          a1i = 0.2292_DP
+          a2i = 2.9698_DP
        end if
     ELSE
        IF (ionode) THEN
