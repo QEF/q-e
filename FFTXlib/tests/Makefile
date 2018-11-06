@@ -15,7 +15,7 @@ all: common $(EXECS)
 common: tester.o utils.o
 
 %.x: %.o
-	$(LD) $(LDFLAGS) $< utils.o tester.o -o $@ ../libqefft.a $(LIBS)
+	$(LD) $(LDFLAGS) $< utils.o tester.o -o $@ ../libqefft.a $(QELIBS)
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L *.x

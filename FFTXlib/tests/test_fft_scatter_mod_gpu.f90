@@ -33,10 +33,14 @@ program test_fft_scatter_mod_gpu
     !
     DO i = 1, mp%n
       IF (MOD(mp%n,i) == 0 ) THEN
+        ! gamma case
         CALL test_fft_scatter_xy_gpu_1(mp, test, .true., i)
+        ! k case
         CALL test_fft_scatter_xy_gpu_1(mp, test, .false., i)
         !
+        ! gamma case
         CALL test_fft_scatter_yz_gpu_1(mp, test, .true., i)
+        ! k case
         CALL test_fft_scatter_yz_gpu_1(mp, test, .false., i)
       END IF
     END DO
@@ -136,15 +140,19 @@ program test_fft_scatter_mod_gpu
     COMPLEX(DP), ALLOCATABLE, DEVICE :: scatter_in_d(:), scatter_out_d(:)
     integer(kind = cuda_stream_kind) :: stream = 0
     integer :: fft_sign = 2
-    integer :: vsiz
+    integer :: vsiz, nr1p_, compare_len, me2
     !
     parallel = mp%n .gt. 1
     
     CALL fft_desc_init(dfft, smap, "wave", gamma_only, parallel, mp%comm, nyfft=ny)
+    me2    = dfft%mype2 + 1
     vsiz = dfft%nnr
+    compare_len = dfft%nr1x * dfft%my_nr2p * dfft%my_nr3p
     if (ny > 1) then
+       ! When using task groups, wave FFTs are not distributed along Y
        fft_sign = 3
        vsiz = dfft%nnr_tg
+       compare_len = dfft%nr1x * dfft%nr2x * dfft%my_nr3p
     end if
     !
     ! Allocate variables
@@ -156,19 +164,24 @@ program test_fft_scatter_mod_gpu
     !
     CALL fft_scatter_xy( dfft, scatter_in, scatter_out, vsiz, fft_sign )
     CALL fft_scatter_xy_gpu( dfft, scatter_in_d, scatter_out_d, vsiz, fft_sign, stream )
-    aux(1:vsiz) = scatter_out_d(1:vsiz)
+    aux(1:compare_len) = scatter_out_d(1:compare_len)
+    !
     ! Check
-    CALL test%assert_close( scatter_out, aux )
+    CALL test%assert_close( scatter_out(1:compare_len), aux(1:compare_len) )
     !
     ! Test 2
     CALL fill_random(scatter_in, scatter_in_d, vsiz)
     !
     CALL fft_scatter_xy( dfft, scatter_out, scatter_in, vsiz, -1*fft_sign )
     CALL fft_scatter_xy_gpu( dfft, scatter_out_d, scatter_in_d, vsiz, -1*fft_sign, stream )
-    aux(1:vsiz) = scatter_out_d(1:vsiz)
+    !
+    compare_len = dfft%nr2x * dfft%nr1w(me2) * dfft%my_nr3p
+    IF (ny > 1) compare_len = dfft%nr2x * dfft%nr1w_tg * dfft%my_nr3p
+    !
+    aux(1:compare_len) = scatter_out_d(1:compare_len)
     ! Check
-    CALL test%assert_close( scatter_out, aux )
-    !!
+    CALL test%assert_close( scatter_out(1:compare_len), aux(1:compare_len) )
+    !
     CALL fft_desc_finalize(dfft, smap)
     DEALLOCATE(scatter_in, scatter_out, aux, scatter_in_d, scatter_out_d)
     !
@@ -199,14 +212,16 @@ program test_fft_scatter_mod_gpu
     COMPLEX(DP), ALLOCATABLE, DEVICE :: scatter_in_d(:), scatter_out_d(:)
     integer(kind = cuda_stream_kind) :: stream = 0
     integer :: fft_sign = 2
-    integer :: vsiz
+    integer :: vsiz, compare_len, my_nr1p_
     !
     parallel = mp%n .gt. 1
     CALL fft_desc_init(dfft, smap, "wave", gamma_only, parallel, mp%comm, nyfft=ny)
-    vsiz = dfft%nnr
+    vsiz     = dfft%nnr
+    my_nr1p_ = count(dfft%ir1w > 0)
     if (ny > 1) then
        fft_sign = 3
        vsiz = dfft%nnr_tg
+       my_nr1p_ = count(dfft%ir1w_tg > 0)
     end if
     !
     ! Allocate variables
@@ -218,18 +233,23 @@ program test_fft_scatter_mod_gpu
     !
     CALL fft_scatter_yz( dfft, scatter_in, scatter_out, vsiz, fft_sign )
     CALL fft_scatter_yz_gpu( dfft, scatter_in_d, scatter_out_d, vsiz, fft_sign )
-    aux(1:vsiz) = scatter_out_d(1:vsiz)
+    ! Set the number of elements that should be strictly equivalent in the
+    ! two implementations.
+    compare_len = dfft%my_nr3p*my_nr1p_*dfft%nr2x
+    aux(1:compare_len) = scatter_out_d(1:compare_len)
     ! Check
-    CALL test%assert_close( scatter_out, aux )
+    CALL test%assert_close( scatter_out(1:compare_len), aux(1:compare_len) )
     !
     ! Test 2
     CALL fill_random(scatter_in, scatter_in_d, vsiz)
     !
     CALL fft_scatter_yz( dfft, scatter_out, scatter_in, vsiz, -1*fft_sign )
     CALL fft_scatter_yz_gpu( dfft, scatter_out_d, scatter_in_d, vsiz, -1*fft_sign )
-    aux(1:vsiz) = scatter_out_d(1:vsiz)
+    !
+    compare_len = dfft%nsw(mp%me+1)*dfft%nr3x
+    aux(1:compare_len) = scatter_out_d(1:compare_len)
     ! Check
-    CALL test%assert_close( scatter_out, aux )
+    CALL test%assert_close( scatter_out(1:compare_len), aux(1:compare_len) )
     !
     CALL fft_desc_finalize(dfft, smap)
     DEALLOCATE(scatter_in, scatter_out, aux, scatter_in_d, scatter_out_d)
@@ -261,7 +281,8 @@ program test_fft_scatter_mod_gpu
     COMPLEX(DP), ALLOCATABLE :: scatter_in(:), scatter_in_cpy(:), scatter_out(:), aux(:)
     COMPLEX(DP), ALLOCATABLE, DEVICE :: scatter_in_d(:), scatter_out_d(:), aux_d(:)
     !                 convenient variables for slices
-    integer :: i, l, start_in, end_in, start_out, end_out, nstick_zx, nx3, vsiz
+    integer :: i, l, start_in, end_in, start_out, end_out, nstick_zx, n3, n3x, vsiz
+    integer :: start_sl, end_sl
     !integer(kind = cuda_stream_kind) :: streams(5)
     !
     parallel = mp%n .gt. 1
@@ -275,7 +296,8 @@ program test_fft_scatter_mod_gpu
     !
     ! How FFT allocates bunches in this case:
     nstick_zx = MAXVAL(dfft%nsw)
-    nx3 = dfft%nr3x
+    n3 = dfft%nr3
+    n3x = dfft%nr3x
     
     ! Test 1
     CALL fill_random(scatter_in, scatter_in_d, vsiz)
@@ -287,29 +309,30 @@ program test_fft_scatter_mod_gpu
        start_in = i*dfft%nnr + 1
        end_in = (i+1)*dfft%nnr
        start_out = start_in
-       end_out = end_in
-       
+       !
+       end_out = (start_out-1) + dfft%my_nr3p*dfft%nr1w(dfft%mype2 +1)*dfft%nr2x
+       !
        CALL fft_scatter_yz( dfft, scatter_in(start_in:end_in), scatter_out(start_out:end_out), dfft%nnr, 2 )
        CALL fft_scatter_yz_gpu( dfft, scatter_in_d(start_in:end_in), scatter_out_d(start_in:end_out), dfft%nnr, 2 )
        aux(start_out:end_out) = scatter_out_d(start_out:end_out)
        ! Check
        CALL test%assert_close( scatter_out(start_out:end_out), aux(start_out:end_out) )
     END DO
-    
+    !
     scatter_in = scatter_in_cpy
     ! Store data as expected in input
     DO i=0,howmany-1
        start_in = i*dfft%nnr + 1
        end_in   = (i+1)*dfft%nnr
-       start_out= i*nstick_zx*nx3+1
-       end_out  = (i+1)*nstick_zx*nx3
-       scatter_in_d( start_out : end_out ) = scatter_in(start_in:start_in+nstick_zx*nx3)
+       start_out= i*nstick_zx*n3x+1
+       end_out  = (i+1)*nstick_zx*n3
+       scatter_in_d( start_out : end_out ) = scatter_in(start_in:start_in+nstick_zx*n3)
     END DO
     CALL fft_scatter_many_yz_gpu ( dfft, scatter_in_d, scatter_out_d, vsiz, 2, howmany )
     
     DO i=0,howmany-1
        start_out = i*dfft%nnr + 1
-       end_out   = (i+1)*dfft%nnr
+       end_out = (start_out-1) + dfft%my_nr3p*dfft%nr1w(dfft%mype2 +1)*dfft%nr2x
        !
        aux(start_out:end_out) = scatter_out_d(start_out:end_out)
        !
@@ -317,38 +340,50 @@ program test_fft_scatter_mod_gpu
     END DO
     !
     !
-    
     ! Test 2
     CALL fill_random(scatter_in, scatter_in_d, vsiz)
     scatter_in_cpy = scatter_in
     !
-    !print *, 'dfft%nnr, nr3, nr2, nr1 : ', dfft%nnr, dfft%nr3, dfft%nr2, dfft%nr1 
     DO i=0,howmany-1
+       ! Input data for fft_scatter_yz call
        start_in = i*dfft%nnr + 1
        end_in = (i+1)*dfft%nnr
+       !
+       ! Where to store output data
        start_out = start_in
-       end_out = end_in       
+       end_out = end_in
        CALL fft_scatter_yz( dfft, scatter_out(start_out:end_out), scatter_in(start_in:end_in),  dfft%nnr, -2 )
        CALL fft_scatter_yz_gpu( dfft, scatter_out_d(start_out:end_out), scatter_in_d(start_in:end_in), dfft%nnr, -2 )
+       !
        aux(start_out:end_out) = scatter_out_d(start_out:end_out)
-       ! Check
+       !
+       ! Check only relevant part
+       end_out = start_out + dfft%nsw(mp%me+1)*n3
        CALL test%assert_close( scatter_out(start_out:end_out), aux(start_out:end_out) )
     END DO
+    !
+    !
+    ! Now repeat the test, but doing all the FFTs in a single shot
     scatter_in_d(1:vsiz) = scatter_in_cpy(1:vsiz)
-
+    !
     CALL fft_scatter_many_yz_gpu ( dfft, scatter_out_d, scatter_in_d, vsiz, -2, howmany )
     
     DO i=0,howmany-1
-       start_out = 1 + i*nstick_zx*nx3
-       end_out   = (i+1)*nstick_zx*nx3
+       ! Extract data from GPU. Data are spaced by nstick_zx*n3x
+       start_out = 1 + i*nstick_zx*n3x
+       end_out   = (i+1)*nstick_zx*n3x
        aux(start_out:end_out) = scatter_out_d(start_out:end_out)
-       
-       end_out  = start_out + dfft%nsw(mp%me+1)*nx3 - 1 ! nstick_zx*nx3 - 1 
-       
+       !
        start_in = i*dfft%nnr + 1
-       end_in   = i*dfft%nnr + dfft%nsw(mp%me+1)*nx3    !nstick_zx*nx3!
-       ! print *, start_in, end_in, start_out, end_out
-       CALL test%assert_close( aux(start_out:end_out), scatter_out(start_in:end_in) )
+       end_in   = i*dfft%nnr + dfft%nsw(mp%me+1)*n3x    !nstick_zx*nx3!
+       !
+       ! Extract only data tofft_scatter_yz compare the two methods. Results from the
+       ! previous call to fft_scatter_yz are separated by nnr, while the
+       ! new results are separated by nstick_zx*n3x. We read start_out
+       ! and add from there dfft%nsw(mp%me+1)*n3x to be compared (don't forget the -1!)
+       start_sl = start_out
+       end_sl   = (start_out - 1) + dfft%nsw(mp%me+1)*n3x
+       CALL test%assert_close( aux(start_sl:end_sl), scatter_out(start_in:end_in) )
     END DO
     !
     CALL fft_desc_finalize(dfft, smap)

@@ -161,7 +161,7 @@ END SUBROUTINE tg_cft3s
 !  General purpose driver, GPU version
 !
 !----------------------------------------------------------------------------
-SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
+SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   !----------------------------------------------------------------------------
   !
   !! ... isgn = +-1 : parallel 3d fft for rho and for the potential
@@ -193,7 +193,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
   ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
   !
   USE cudafor
-  USE nvtx
+  !USE nvtx_fft
   USE fftx_buffers,   ONLY : gpu_buffer
   USE fft_scalar,     ONLY : cft_1z_gpu
   USE scatter_mod_gpu,ONLY : fft_scatter_xy_gpu, fft_scatter_yz_gpu, fft_scatter_tg_gpu
@@ -205,7 +205,6 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
   TYPE (fft_type_descriptor), INTENT(in) :: dfft   ! descriptor of fft data layout
   COMPLEX(DP), DEVICE, INTENT(inout)     :: f_d( : ) ! array containing data to be transformed
   INTEGER, INTENT(in)                    :: isgn   ! fft direction (potential: +/-1, wave: +/-2, wave_tg: +/-3)
-  INTEGER, INTENT(in)                    :: howmany ! 
   !
   INTEGER                          :: n1, n2, n3, nx1, nx2, nx3
   INTEGER                          :: nnr_
@@ -240,7 +239,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
   CALL gpu_buffer%lock_buffer(aux_d, nnr_, ierr);
   !
   IF ( isgn > 0 ) THEN  ! G -> R
-     CALL nvtxStartRangeAsync("tg_cft3s_gpu G->R", 1)
+     !CALL nvtxStartRangeAsync("tg_cft3s_gpu G->R", 1)
      if (isgn==+3) then 
         call fft_scatter_tg_opt_gpu ( dfft, f_d, aux_d, nnr_, isgn, stream)
         CALL cft_1z_gpu( aux_d, nsticks_z, n3, nx3, isgn, f_d, stream )
@@ -260,11 +259,11 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
             f_d(i) = (0.0_DP,0.0_DP)
         end do
      endif
-     CALL nvtxEndRangeAsync()
+     !CALL nvtxEndRangeAsync()
      !
   ELSE                  ! R -> G
      !
-     CALL nvtxStartRangeAsync("tg_cft3s_gpu R->G", 2)
+     !CALL nvtxStartRangeAsync("tg_cft3s_gpu R->G", 2)
      CALL cft_1z_gpu( f_d, nsticks_x, n1, nx1, isgn, aux_d, stream )
      CALL fft_scatter_xy_gpu ( dfft, f_d, aux_d, nnr_, isgn, stream )
      CALL cft_1z_gpu( f_d, nsticks_y, n2, nx2, isgn, aux_d, stream )
@@ -292,7 +291,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn, howmany )
            end do
         endif
      endif
-     CALL nvtxEndRangeAsync()
+     !CALL nvtxEndRangeAsync()
   ENDIF
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
   !
@@ -340,7 +339,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
   !
   USE cudafor
-  USE nvtx
+  !USE nvtx_fft
   USE fftx_buffers,   ONLY : gpu_buffer
   USE fft_scalar,     ONLY : cft_1z_gpu
   USE scatter_mod_gpu,ONLY : aux_d => aux_d_workaround_d
@@ -362,7 +361,8 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   INTEGER                          :: nsticks_zx
   !COMPLEX(DP), POINTER, DEVICE     :: aux_d (:)
   INTEGER                          :: ierr, i, j
-  INTEGER(kind = cuda_stream_kind), ALLOCATABLE :: streams(:)
+  INTEGER(kind = cuda_stream_kind) :: stream
+  INTEGER                          :: nstreams
   !
   !write (6,*) 'enter tg_cft3s ',isgn ; write(6,*) ; FLUSH(6)
   n1  = dfft%nr1  ; n2  = dfft%nr2  ; n3  = dfft%nr3
@@ -373,8 +373,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
      nsticks_x = dfft%my_nr2p * dfft%my_nr3p
      nsticks_y = dfft%nr1p(dfft%mype2+1) * dfft%my_nr3p
      nsticks_z = dfft%nsp(dfft%mype+1)
-     nsticks_z = MAXVAL(dfft%nsp)
-     CALL fftx_error__( ' many_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
+     nsticks_zx = MAXVAL(dfft%nsp)
   else if (abs(isgn) == 2 ) then  ! wave func fft
      nnr_ = dfft%nnr
      nsticks_x = dfft%my_nr2p * dfft%my_nr3p
@@ -394,75 +393,75 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   IF( .not. ALLOCATED( aux_d   ) ) ALLOCATE( aux_d  ( howmany * nnr_ ) )
   !  === end workaround ===
   !
-  !
+  nstreams = dfft%nstream_many
   ierr = cudaDeviceSynchronize()
-  ALLOCATE(streams(howmany))
-  DO i=1,howmany
-      ierr = cudaStreamCreate( streams(i) )
-  END DO
   !
   IF ( isgn > 0 ) THEN  ! G -> R
-     CALL nvtxStartRangeAsync("many_cft3s_gpu G->R", 1)
+     !CALL nvtxStartRangeAsync("many_cft3s_gpu G->R", 1)
      DO i = 0, howmany-1
-        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_z, n3, nx3, isgn, aux_d(nx3*nsticks_zx*i+1:), streams(i+1))
+        stream = dfft%stream_many((mod(i,nstreams)+1))
+        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_z, n3, nx3, isgn, aux_d(nx3*nsticks_zx*i+1:), stream)
      END DO
      !
      ! this brings back data from packed to unpacked
      CALL fft_scatter_many_yz_gpu ( dfft, aux_d(1), f_d(1), howmany*nnr_, isgn, howmany )
      !
      DO i = 0, howmany-1
-        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux_d(i*nnr_+1:), streams(i+1), in_place=.true. )
-        CALL fft_scatter_xy_gpu ( dfft, f_d(i*nnr_+1:), aux_d(i*nnr_+1:), nnr_, isgn, streams(i+1) )
+        stream = dfft%stream_many((mod(i,nstreams)+1))
+        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux_d(i*nnr_+1:), stream, in_place=.true. )
+        CALL fft_scatter_xy_gpu ( dfft, f_d(i*nnr_+1:), aux_d(i*nnr_+1:), nnr_, isgn, stream )
      END DO
      !
      DO i = 0, howmany-1
-        CALL cft_1z_gpu( aux_d(i*nnr_+1:), nsticks_x, n1, nx1, isgn, f_d(i*nnr_+1:), streams(i+1) )
+        stream = dfft%stream_many((mod(i,nstreams)+1))
+        CALL cft_1z_gpu( aux_d(i*nnr_+1:), nsticks_x, n1, nx1, isgn, f_d(i*nnr_+1:), stream )
         ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
         if (nsticks_x*nx1 < nnr_) then
-!$cuf kernel do(1)<<<*,*,0,streams(i+1)>>>
+!$cuf kernel do(1)<<<*,*,0,stream>>>
            do j=nsticks_x*nx1+1, nnr_
                f_d(j+i*nnr_) = (0.0_DP,0.0_DP)
            end do
         endif
      END DO
      !
-     CALL nvtxEndRangeAsync()
+     !CALL nvtxEndRangeAsync()
      !
   ELSE                  ! R -> G
      !
-     CALL nvtxStartRangeAsync("many_cft3s_gpu R->G", 2)
+     !CALL nvtxStartRangeAsync("many_cft3s_gpu R->G", 2)
      DO i = 0, howmany-1
-        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_x, n1, nx1, isgn, aux_d(i*nnr_+1:), streams(i+1) )
+        stream = dfft%stream_many((mod(i,nstreams)+1))
+        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_x, n1, nx1, isgn, aux_d(i*nnr_+1:), stream )
         !
-        CALL fft_scatter_xy_gpu ( dfft, f_d(i*nnr_+1), aux_d(i*nnr_+1), nnr_, isgn, streams(i+1) )
+        CALL fft_scatter_xy_gpu ( dfft, f_d(i*nnr_+1), aux_d(i*nnr_+1), nnr_, isgn, stream )
      END DO
      !
      DO i = 0, howmany-1
-        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux_d(i*nnr_+1:), streams(i+1), in_place=.true. )
+        stream = dfft%stream_many((mod(i,nstreams)+1))
+        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux_d(i*nnr_+1:), stream, in_place=.true. )
      END DO
      !
      CALL fft_scatter_many_yz_gpu ( dfft, aux_d, f_d, howmany*nnr_, isgn, howmany )
      !
      DO i = 0, howmany-1
-        CALL cft_1z_gpu( aux_d(nx3*nsticks_zx*i+1:), nsticks_z, n3, nx3, isgn, f_d(i*nnr_+1:), streams(i+1) )
+        stream = dfft%stream_many((mod(i,nstreams)+1))
+        CALL cft_1z_gpu( aux_d(nx3*nsticks_zx*i+1:), nsticks_z, n3, nx3, isgn, f_d(i*nnr_+1:), stream )
         ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
         if (nsticks_z*nx3 < nnr_) then
-!$cuf kernel do(1)<<<*,*,0,streams(i+1)>>>
+!$cuf kernel do(1)<<<*,*,0,stream>>>
             do j=nsticks_z*nx3+1, nnr_
                 f_d(j+i*nnr_) = (0.0_DP,0.0_DP)
             end do
         endif
      END DO
-     CALL nvtxEndRangeAsync()
+     !CALL nvtxEndRangeAsync()
   ENDIF
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
   !
   !CALL gpu_buffer%release_buffer(aux_d, ierr);
-  DO i=1,howmany
-      ierr = cudaStreamSynchronize( streams(i) )
-      ierr = cudaStreamDestroy( streams(i) )
+  DO i=1,nstreams
+      ierr = cudaStreamSynchronize( dfft%stream_many(i) )
   END DO
-  DEALLOCATE(streams)
   !
   RETURN
 99 format ( 20 ('(',2f12.9,')') )
