@@ -153,7 +153,6 @@ MODULE fft_types
     INTEGER :: grid_id
 #if defined(__CUDA)
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_yz
-    INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_xy
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_many
     INTEGER                                                   :: nstream_many = 16
 #endif
@@ -302,11 +301,6 @@ CONTAINS
         ierr = cudaStreamCreate(desc%stream_scatter_yz(iproc))
     END DO
     !
-    ALLOCATE ( desc%stream_scatter_xy(desc%nproc2) ) ;
-    DO iproc = 1, desc%nproc2
-        ierr = cudaStreamCreate(desc%stream_scatter_xy(iproc))
-    END DO
-    !
     ALLOCATE ( desc%stream_many(desc%nstream_many) ) ;
     DO imany = 1, desc%nstream_many
         ierr = cudaStreamCreate(desc%stream_many(imany))
@@ -379,12 +373,6 @@ CONTAINS
             ierr = cudaStreamDestroy(desc%stream_scatter_yz(iproc))
         end do
         DEALLOCATE(desc%stream_scatter_yz)
-    END IF
-    IF (ALLOCATED(desc%stream_scatter_xy)) THEN
-        do iproc = 1, desc%nproc2
-            ierr = cudaStreamDestroy(desc%stream_scatter_xy(iproc))
-        end do
-        DEALLOCATE(desc%stream_scatter_xy)
     END IF
     IF (ALLOCATED(desc%stream_many)) THEN
         do imany = 1, desc%nstream_many

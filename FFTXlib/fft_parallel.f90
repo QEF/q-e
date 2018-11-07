@@ -361,7 +361,6 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   INTEGER                          :: nsticks_zx
   !COMPLEX(DP), POINTER, DEVICE     :: aux_d (:)
   INTEGER                          :: ierr, i, j
-  INTEGER(kind = cuda_stream_kind) :: stream
   INTEGER                          :: nstreams
   !
   !write (6,*) 'enter tg_cft3s ',isgn ; write(6,*) ; FLUSH(6)
@@ -399,30 +398,36 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   IF ( isgn > 0 ) THEN  ! G -> R
      !CALL nvtxStartRangeAsync("many_cft3s_gpu G->R", 1)
      DO i = 0, howmany-1
-        stream = dfft%stream_many((mod(i,nstreams)+1))
-        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_z, n3, nx3, isgn, aux_d(nx3*nsticks_zx*i+1:), stream)
+        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_z, n3, nx3, isgn, aux_d(nx3*nsticks_zx*i+1:), &
+                         dfft%stream_many((mod(i,nstreams)+1)) )
      END DO
      !
      ! this brings back data from packed to unpacked
      CALL fft_scatter_many_yz_gpu ( dfft, aux_d(1), f_d(1), howmany*nnr_, isgn, howmany )
      !
      DO i = 0, howmany-1
-        stream = dfft%stream_many((mod(i,nstreams)+1))
-        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux_d(i*nnr_+1:), stream, in_place=.true. )
-        CALL fft_scatter_xy_gpu ( dfft, f_d(i*nnr_+1:), aux_d(i*nnr_+1:), nnr_, isgn, stream )
+        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux_d(i*nnr_+1:), &
+                         dfft%stream_many((mod(i,nstreams)+1)), in_place=.true. )
+     END DO
+     DO i = 0, howmany-1
+        CALL fft_scatter_xy_gpu ( dfft, f_d(i*nnr_+1:), aux_d(i*nnr_+1:), nnr_, isgn, &
+                                  dfft%stream_many((mod(i,nstreams)+1)) )
      END DO
      !
      DO i = 0, howmany-1
-        stream = dfft%stream_many((mod(i,nstreams)+1))
-        CALL cft_1z_gpu( aux_d(i*nnr_+1:), nsticks_x, n1, nx1, isgn, f_d(i*nnr_+1:), stream )
-        ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
-        if (nsticks_x*nx1 < nnr_) then
-!$cuf kernel do(1)<<<*,*,0,stream>>>
-           do j=nsticks_x*nx1+1, nnr_
-               f_d(j+i*nnr_) = (0.0_DP,0.0_DP)
-           end do
-        endif
+        CALL cft_1z_gpu( aux_d(i*nnr_+1:), nsticks_x, n1, nx1, isgn, f_d(i*nnr_+1:), &
+                         dfft%stream_many((mod(i,nstreams)+1)) )
      END DO
+     !
+     ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
+     IF (nsticks_x*nx1 < nnr_) THEN
+!$cuf kernel do(2)<<<*,*>>>
+        DO i = 0, howmany-1
+           DO j=nsticks_x*nx1+1, nnr_
+               f_d(j+i*nnr_) = (0.0_DP,0.0_DP)
+           END DO
+        END DO
+     ENDIF
      !
      !CALL nvtxEndRangeAsync()
      !
@@ -430,30 +435,35 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
      !
      !CALL nvtxStartRangeAsync("many_cft3s_gpu R->G", 2)
      DO i = 0, howmany-1
-        stream = dfft%stream_many((mod(i,nstreams)+1))
-        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_x, n1, nx1, isgn, aux_d(i*nnr_+1:), stream )
-        !
-        CALL fft_scatter_xy_gpu ( dfft, f_d(i*nnr_+1), aux_d(i*nnr_+1), nnr_, isgn, stream )
+        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_x, n1, nx1, isgn, aux_d(i*nnr_+1:), &
+                         dfft%stream_many((mod(i,nstreams)+1)) )
+     END DO
+     DO i = 0, howmany-1
+        CALL fft_scatter_xy_gpu ( dfft, f_d(i*nnr_+1), aux_d(i*nnr_+1), nnr_, isgn, &
+                                  dfft%stream_many((mod(i,nstreams)+1)) )
      END DO
      !
      DO i = 0, howmany-1
-        stream = dfft%stream_many((mod(i,nstreams)+1))
-        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux_d(i*nnr_+1:), stream, in_place=.true. )
+        CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux_d(i*nnr_+1:), &
+                         dfft%stream_many((mod(i,nstreams)+1)), in_place=.true. )
      END DO
      !
      CALL fft_scatter_many_yz_gpu ( dfft, aux_d, f_d, howmany*nnr_, isgn, howmany )
      !
      DO i = 0, howmany-1
-        stream = dfft%stream_many((mod(i,nstreams)+1))
-        CALL cft_1z_gpu( aux_d(nx3*nsticks_zx*i+1:), nsticks_z, n3, nx3, isgn, f_d(i*nnr_+1:), stream )
-        ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
-        if (nsticks_z*nx3 < nnr_) then
-!$cuf kernel do(1)<<<*,*,0,stream>>>
-            do j=nsticks_z*nx3+1, nnr_
-                f_d(j+i*nnr_) = (0.0_DP,0.0_DP)
-            end do
-        endif
+        CALL cft_1z_gpu( aux_d(nx3*nsticks_zx*i+1:), nsticks_z, n3, nx3, isgn, f_d(i*nnr_+1:), &
+                         dfft%stream_many((mod(i,nstreams)+1)) )
      END DO
+     !
+     ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
+     IF (nsticks_z*nx3 < nnr_) THEN
+!$cuf kernel do(2)<<<*,*>>>
+        DO i = 0, howmany-1
+           DO j=nsticks_z*nx3+1, nnr_
+                f_d(j+i*nnr_) = (0.0_DP,0.0_DP)
+           END DO
+        END DO
+     ENDIF
      !CALL nvtxEndRangeAsync()
   ENDIF
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
