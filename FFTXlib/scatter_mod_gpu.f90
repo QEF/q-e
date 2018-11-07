@@ -197,7 +197,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
      !
      !f_aux = (0.0_DP, 0.0_DP)
      !$cuf kernel do (1) <<<*,*,0,stream>>>
-     do i = lbound(f_aux_d,1), ubound(f_aux_d,1)
+     do i = 1, nxx_
        f_aux_d(i) = (0.d0, 0.d0)
      end do
      !
@@ -247,8 +247,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
            ENDDO
            !it = it + nr2px
         ENDDO
-        ! Async copy here?
-        
+        !
 #if defined(__NON_BLOCKING_SCATTER)
         IF( nproc2 > 1 ) THEN
           kdest = ( iproc2 - 1 ) * sendsize
@@ -288,7 +287,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
      ! not useless ... clean the array to be returned from the garbage of previous A2A step
      !f_in = (0.0_DP, 0.0_DP) !
      !$cuf kernel do (1) <<<*,*,0,stream>>>
-     do i = lbound(f_in_d,1), ubound(f_in_d,1)
+     do i = 1, nxx_
        f_in_d(i) = (0.d0, 0.d0)
      end do
      !
@@ -868,7 +867,7 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
      print *, "ERRORE, this should never happen!"
   end if
   !
-  CALL start_clock ('fft_scatt_yz')
+  CALL start_clock ('fft_scatt_many_yz')
   !
   ! calculate the message size
   !
@@ -919,7 +918,7 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
      !
      !f_aux = (0.0_DP, 0.0_DP) !
      !$cuf kernel do (1) <<<*,*>>>
-     do i = lbound(f_aux_d,1), ubound(f_aux_d,1)
+     do i = 1, nxx_
        f_aux_d(i) = (0.d0, 0.d0)
      end do
      !
@@ -1021,7 +1020,7 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
   CALL cpu_buffer%release_buffer(f_in, ierr)
   CALL cpu_buffer%release_buffer(f_aux, ierr)
   !CALL nvtxEndRangeAsync()
-  CALL stop_clock ('fft_scatt_yz')
+  CALL stop_clock ('fft_scatt_many_yz')
 
 #endif
 

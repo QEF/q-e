@@ -30,7 +30,7 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   USE david_param,   ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
           nbgrp, my_bgrp_id
-  USE mp,            ONLY : mp_sum, mp_bcast, mp_size
+  USE mp,            ONLY : mp_sum, mp_bcast
   !
   IMPLICIT NONE
   !
@@ -195,9 +195,9 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   if (n_start .le. n_end) &
   CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi_d, kdmx, hpsi_d(1,1,n_start), kdmx, ZERO, hc_d(1,n_start), nvecx )
-  if (mp_size(inter_bgrp_comm)>1) CALL mp_sum( hc_d( :, 1:nbase ), inter_bgrp_comm )
+  CALL mp_sum( hc_d( :, 1:nbase ), inter_bgrp_comm )
   !
-  if (mp_size(intra_bgrp_comm)>1) CALL mp_sum( hc_d( :, 1:nbase ), intra_bgrp_comm )
+  CALL mp_sum( hc_d( :, 1:nbase ), intra_bgrp_comm )
   !
   IF ( uspp ) THEN
      !
@@ -212,9 +212,9 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
                  ZERO, sc_d(1,n_start), nvecx )
      !
   END IF
-  if (mp_size(inter_bgrp_comm)>1) CALL mp_sum( sc_d( :, 1:nbase ), inter_bgrp_comm )
+  CALL mp_sum( sc_d( :, 1:nbase ), inter_bgrp_comm )
   !
-  if (mp_size(intra_bgrp_comm)>1) CALL mp_sum( sc_d( :, 1:nbase ), intra_bgrp_comm )
+  CALL mp_sum( sc_d( :, 1:nbase ), intra_bgrp_comm )
 
   CALL stop_clock( 'cegterg:init' )
   !
@@ -393,8 +393,8 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      CALL ZGEMM( 'C','N', my_n, notcnv, kdim, ONE, psi_d(1,1,n_start), kdmx, hpsi_d(1,1,nb1), kdmx, &
                  ZERO, hc_d(n_start,nb1), nvecx )
-     if (mp_size(inter_bgrp_comm)>1) CALL mp_sum( hc_d( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
-     if (mp_size(intra_bgrp_comm)>1) CALL mp_sum( hc_d( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
+     CALL mp_sum( hc_d( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
+     CALL mp_sum( hc_d( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
      !
      IF ( uspp ) THEN
         !
@@ -407,8 +407,8 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
                      ZERO, sc_d(n_start,nb1), nvecx )
         !
      END IF
-     if (mp_size(inter_bgrp_comm)>1) CALL mp_sum( sc_d( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
-     if (mp_size(intra_bgrp_comm)>1) CALL mp_sum( sc_d( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
+     CALL mp_sum( sc_d( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
+     CALL mp_sum( sc_d( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
      !
      CALL stop_clock( 'cegterg:overlap' )
      !
