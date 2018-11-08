@@ -738,7 +738,7 @@ CONTAINS
     USE uspp_param,    ONLY : nh, nhm, upf
     USE scf,           ONLY : scf_type
     USE fft_base,      ONLY : dfftp
-    USE mp,            ONLY : mp_bcast, mp_sum
+    USE mp,            ONLY : mp_sum
     USE mp_images,     ONLY : intra_image_comm
     USE io_global,     ONLY : ionode_id
     USE splinelib,     ONLY : spline, splint
