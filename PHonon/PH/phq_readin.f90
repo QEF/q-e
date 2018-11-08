@@ -26,7 +26,7 @@ SUBROUTINE phq_readin()
   USE start_k,       ONLY : reset_grid
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, ltetra
   USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir, io_level, &
-                            ts_vdw
+                            ts_vdw, ldftd3, lxdm
   USE funct,         ONLY : dft_is_meta, dft_is_hybrid
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
@@ -701,6 +701,12 @@ SUBROUTINE phq_readin()
 
   IF (ts_vdw) CALL errore('phq_readin',&
      'The phonon code with TS-VdW is not yet available',1)
+  
+  IF (lxdm) CALL errore('phq_readin',&
+     'The phonon code with XDM is not yet available',1)
+  
+  IF (ldftd3) CALL errore('phq_readin',&
+     'The phonon code with Grimme''s DFT-D3 is not yet available',1)
 
   IF ( dft_is_meta() ) CALL errore('phq_readin',&
      'The phonon code with meta-GGA functionals is not yet available',1)

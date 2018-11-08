@@ -331,6 +331,7 @@ open_grid.o : ../../Modules/gvecw.o
 open_grid.o : ../../Modules/input_parameters.o
 open_grid.o : ../../Modules/io_files.o
 open_grid.o : ../../Modules/io_global.o
+open_grid.o : ../../Modules/ions_base.o
 open_grid.o : ../../Modules/kind.o
 open_grid.o : ../../Modules/mp_global.o
 open_grid.o : ../../Modules/mp_world.o
@@ -341,6 +342,7 @@ open_grid.o : ../../Modules/qexsd.o
 open_grid.o : ../../Modules/recvec.o
 open_grid.o : ../../Modules/wavefunctions.o
 open_grid.o : ../../PW/src/buffers.o
+open_grid.o : ../../PW/src/extfield.o
 open_grid.o : ../../PW/src/exx.o
 open_grid.o : ../../PW/src/exx_base.o
 open_grid.o : ../../PW/src/io_rho_xml.o
@@ -563,6 +565,20 @@ pw2bgw.o : ../../PW/src/symm_base.o
 pw2bgw.o : ../../PW/src/symme.o
 pw2bgw.o : ../../UtilXlib/mp.o
 pw2bgw.o : ../../UtilXlib/parallel_include.o
+pw2critic.o : ../../Modules/cell_base.o
+pw2critic.o : ../../Modules/control_flags.o
+pw2critic.o : ../../Modules/environment.o
+pw2critic.o : ../../Modules/fft_base.o
+pw2critic.o : ../../Modules/io_files.o
+pw2critic.o : ../../Modules/io_global.o
+pw2critic.o : ../../Modules/ions_base.o
+pw2critic.o : ../../Modules/mp_global.o
+pw2critic.o : ../../Modules/mp_world.o
+pw2critic.o : ../../Modules/recvec.o
+pw2critic.o : ../../Modules/wavefunctions.o
+pw2critic.o : ../../PW/src/pwcom.o
+pw2critic.o : ../../PW/src/start_k.o
+pw2critic.o : ../../UtilXlib/mp.o
 pw2gw.o : ../../FFTXlib/fft_interfaces.o
 pw2gw.o : ../../Modules/cell_base.o
 pw2gw.o : ../../Modules/constants.o

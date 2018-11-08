@@ -741,6 +741,7 @@ transport.o : constants_epw.o
 transport.o : division.o
 transport.o : elph2.o
 transport.o : epwcom.o
+transport.o : io_eliashberg.o
 transport.o : io_epw.o
 transport.o : io_scattering.o
 transport.o : transportcom.o
