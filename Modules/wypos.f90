@@ -36,7 +36,7 @@ CONTAINS
       tau=1.d5
 
       SELECT CASE (space_group_number)
-         CASE (1, 4, 7, 9, 19, 29, 76, 78, 144, 145, 169, 170)
+         CASE (1, 4, 7, 9, 19, 29, 33, 76, 78, 144, 145, 169, 170)
             ! groups having only one set of positions "Na x y z": do nothing
          CASE (2) !P-1
              CALL wypos_2  ( wp, tau )
