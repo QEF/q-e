@@ -10,6 +10,7 @@ New in development version:
   * XDM now works also for USPP and norm-conserving PP
 
 Problems fixed in development version (+ = in qe-6.3-backports as well) :
+  * Some space groups were missing
   + Variable-cell optimization wasn't working with Tkatchenko-Scheffler vdW
   + A few more "make install" and "make -jN" glitches
   + Atomic occupancies for DFT+U were not correctly written by CP after 
