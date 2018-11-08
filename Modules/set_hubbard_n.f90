@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2010 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -70,10 +70,10 @@ FUNCTION set_hubbard_n( psd ) RESULT( hubbard_n )
         !
         WRITE( stdout, '(/,"psd = ",A,/)' ) psd
         !
-        CALL errore( 'set_hubbard_l', 'pseudopotential not yet inserted', 1 )
+        CALL errore( 'set_hubbard_n', 'pseudopotential not yet inserted', 1 )
         !
   END SELECT
   !
   RETURN  
   !
-END FUNCTION set_Hubbard_n
+END FUNCTION set_hubbard_n

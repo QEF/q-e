@@ -687,8 +687,7 @@ SUBROUTINE phq_readin()
      WRITE(stdout,'(5x,a)')  "A. Floris et al., Phys. Rev. B 84, 161102(R) (2011)"
      WRITE(stdout,'(5x,a)')  "in publications or presentations arising from this work."
      ! 
-     IF (U_projection.NE."atomic" .AND. U_projection.NE."ortho-atomic") &
-          CALL errore("phq_readin", &
+     IF (U_projection.NE."atomic") CALL errore("phq_readin", &
           " The phonon code for this U_projection_type is not implemented",1)
      IF (lda_plus_u_kind.NE.0) CALL errore("phq_readin", &
           " The phonon code for this lda_plus_u_kind is not implemented",1)

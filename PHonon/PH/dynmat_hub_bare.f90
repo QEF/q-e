@@ -142,6 +142,11 @@ SUBROUTINE dynmat_hub_bare
      !   
      DO ik = 1, nksq
         !
+        ! Print information about how much the calculation has advanced
+        ! because it may take really long...
+        !
+        WRITE(stdout,'(5x,"k point #",1x,i5,3x,"out of",1x,i5)') ik, nksq
+        !
         ikk = ikks(ik)
         ikq = ikqs(ik)
         npw = ngk(ikk)
@@ -335,12 +340,6 @@ SUBROUTINE dynmat_hub_bare
            ENDDO ! icart
            !
         ENDDO ! na
-        !
-        ! Print information about how much the calculation has advanced
-        ! because it may take really long...
-        !
-        !WRITE(stdout,'(4x,i4,1x,"%")') INT(ik*100/nksq)
-        WRITE(stdout,'(5x,"k point #",1x,i5,3x,"out of",1x,i5)') ik, nksq
         !
      ENDDO ! ik
      !
