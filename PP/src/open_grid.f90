@@ -11,10 +11,12 @@ PROGRAM open_grid
   USE lsda_mod,   ONLY : nspin, isk
   USE klist,      ONLY : nks, nkstot, xk, wk, igk_k, ngk, qnorm
   USE io_files,   ONLY : prefix, tmp_dir, nwordwfc, iunwfc, diropn
-  USE noncollin_module,   ONLY : noncolin
+  USE noncollin_module,   ONLY : noncolin, m_loc
+  USE spin_orb,           ONLY : domag
   USE control_flags,      ONLY : gamma_only, twfcollect
   USE environment,        ONLY : environment_start, environment_end
-  USE symm_base,          ONLY : nrot, nsym, s, t_rev, fft_fact
+  USE ions_base,          ONLY : nat, tau, ityp
+  USE symm_base,          ONLY : nrot, nsym, s, t_rev, fft_fact, find_sym
   USE parameters,         ONLY : npk
   USE exx_base,           ONLY : nq1,nq2,nq3, xkq_collect, &
                                  nkqs, exx_mp_init, index_xk, exx_grid_init 
@@ -39,6 +41,7 @@ PROGRAM open_grid
   !USE qexsd_input,        ONLY : qexsd_init_k_points_ibz
   USE control_flags,      ONLY : gamma_only, io_level
   USE start_k, ONLY : init_start_k
+  USE extfield,           ONLY : gate
   ! 
   IMPLICIT NONE
   !
@@ -56,7 +59,7 @@ PROGRAM open_grid
   CHARACTER(len=4) :: spin_component
   CHARACTER(len=256) :: outdir
   !INTEGER :: nq(3)
-  LOGICAL :: exst, opnd, exst_mem
+  LOGICAL :: exst, opnd, exst_mem, magnetic_sym
   REAL(DP),ALLOCATABLE :: et0(:,:), wg0(:,:), yk(:,:), wk0(:)
   INTEGER, EXTERNAL  :: n_plane_waves
   COMPLEX(DP),ALLOCATABLE :: psic(:), evx(:,:)
@@ -129,8 +132,10 @@ PROGRAM open_grid
   nq_back = (/ nq1, nq2, nq3 /)
   exx_status_back = .true.
   CALL dft_force_hybrid(exx_status_back)
-  !
-  fft_fact = 1
+
+  magnetic_sym = noncolin .AND. domag 
+  CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate )
+
   nq1 = -1
   nq2 = -1
   nq3 = -1
