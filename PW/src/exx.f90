@@ -3072,7 +3072,7 @@ USE noncollin_module,     ONLY : npol
 IMPLICIT NONE
 INTEGER :: nnpw,nbnd,i
 COMPLEX(DP) :: phi(npwx*npol,nbnd),xitmp(npwx*npol,nbndproj)
-COMPLEX(DP), ALLOCATABLE :: mexx(:,:), mexx0(:,:)
+COMPLEX(DP), ALLOCATABLE :: mexx(:,:)
 real(DP) :: exxe, exxe0
 real(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
 TYPE(bec_type), INTENT(in) :: becpsi
@@ -3082,10 +3082,9 @@ TYPE(bec_type), INTENT(in) :: becpsi
   IF(nbndproj>nbnd) CALL errore('aceinit_k','nbndproj greater than nbnd.',1)
   IF(nbndproj<=0) CALL errore('aceinit_k','nbndproj le 0.',1)
 
-  ALLOCATE( mexx(nbndproj,nbndproj), mexx0(nbndproj,nbndproj) )
+  ALLOCATE( mexx(nbndproj,nbndproj) )
   xitmp = (Zero,Zero)
   mexx  = (Zero,Zero)
-  mexx0 = (Zero,Zero)
 ! |xi> = Vx[phi]|phi>
   CALL vexx(npwx, nnpw, nbndproj, phi, xitmp, becpsi)
 ! mexx = <phi|Vx[phi]|phi>

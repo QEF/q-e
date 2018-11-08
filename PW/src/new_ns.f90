@@ -36,8 +36,8 @@ SUBROUTINE new_ns(ns)
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunhub
   USE buffers,              ONLY : get_buffer
-  USE mp_pools,             ONLY : inter_pool_comm
-  USE mp,                   ONLY : mp_sum
+  USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm, root_pool
+  USE mp,                   ONLY : mp_sum, mp_bcast
   USE becmod,               ONLY : bec_type, calbec, &
                                    allocate_bec_type, deallocate_bec_type
 
@@ -63,7 +63,6 @@ SUBROUTINE new_ns(ns)
   ! Offset of atomic wavefunctions initialized in setup and stored in offsetU
   !
   nr (:,:,:,:) = 0.d0
-  ns (:,:,:,:) = 0.d0
   !
   !    we start a loop on k points
   !
@@ -133,6 +132,7 @@ SUBROUTINE new_ns(ns)
   ENDDO
 
   ! symmetrize the quantities nr -> ns
+  ns (:,:,:,:) = 0.d0
   DO na = 1, nat  
      nt = ityp (na)  
      IF ( is_hubbard(nt) ) THEN  
@@ -171,6 +171,7 @@ SUBROUTINE new_ns(ns)
         ENDDO
      ENDIF
   ENDDO
+  DEALLOCATE ( nr )
 
   ! Now we make the matrix ns(m1,m2) strictly hermitean
   DO na = 1, nat  
@@ -196,7 +197,9 @@ SUBROUTINE new_ns(ns)
      ENDIF 
   ENDDO
 
-  DEALLOCATE ( nr )
+  ! the following broadcast ensures consistency on different processors
+  ! of the same pool
+  CALL mp_bcast( ns, root_pool, intra_pool_comm )
   CALL stop_clock('new_ns')
 
   RETURN
@@ -299,8 +302,8 @@ SUBROUTINE new_ns_nc(ns)
   USE io_files,             ONLY : nwordwfc, iunwfc, nwordwfcU, iunhub
   USE buffers,              ONLY : get_buffer
   USE mp_bands,             ONLY : intra_bgrp_comm
-  USE mp_pools,             ONLY : inter_pool_comm
-  USE mp,                   ONLY : mp_sum
+  USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm, root_pool
+  USE mp,                   ONLY : mp_sum, mp_bcast
 
   IMPLICIT NONE
   !
@@ -514,6 +517,9 @@ loopisym:     do isym = 1, nsym
   ENDDO
 !--
   DEALLOCATE ( nr, nr1 )
+  ! the following broadcast ensures consistency on different processors
+  ! of the same pool
+  CALL mp_bcast( ns, root_pool, intra_pool_comm )
   CALL stop_clock('new_ns')
 
   RETURN
