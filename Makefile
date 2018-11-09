@@ -268,10 +268,9 @@ links : bindir
 #########################################################
 
 install : 
-	@if ! test -d $(PREFIX)/bin ; then mkdir -p $(PREFIX)/bin ; \
+	@if ! test -d $(PREFIX)/bin ; then mkdir -p $(PREFIX)/bin ; fi
 	for x in `find * ! -path "test-suite/*" -name *.x -type f` ; do \
-		cp $$x $(PREFIX)/bin/ ; done ; \
-	fi
+		cp $$x $(PREFIX)/bin/ ; done
 	@echo 'Quantum ESPRESSO binaries installed in $(PREFIX)/bin'
 
 #########################################################
