@@ -8,7 +8,7 @@
 PROGRAM do_ppacf
   !-----------------------------------------------------------------------
   !
-  ! ... This routine computes the coupling constant dependancy of
+  ! ... This routine computes the coupling constant dependency of
   !     exchange correlation potential
   ! ... E_{xc,\lambda}, \lambda \in [0:1]
   !     and the spatial distribution of exchange correlation energy 

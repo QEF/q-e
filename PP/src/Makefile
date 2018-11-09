@@ -60,7 +60,7 @@ TLDEPS= pwlibs
 
 all : tldeps open_grid.x average.x bands.x dos.x epsilon.x initial_state.x fs.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
-      pawplot.x sumpdos.x pw2wannier90.x pw2critic.x pw_export.x pw2gw.x \
+      pawplot.x sumpdos.x pw2wannier90.x pw2critic.x pw2gw.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
       pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x
 
@@ -163,11 +163,6 @@ initial_state.x : initial_state.o libpp.a $(MODULES) $(LIBOBJS)
 pw2gw.x : pw2gw.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		pw2gw.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
-
-pw_export.x : pw_export.o libpp.a $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		pw_export.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 sumpdos.x : sumpdos.o 
