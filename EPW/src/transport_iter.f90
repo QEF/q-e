@@ -474,6 +474,7 @@
     USE transportcom,     ONLY : lower_bnd, upper_bnd
     USE mp,               ONLY : mp_bcast
     USE division,         ONLY : fkbounds2
+    USE symm_base,        ONLY : nrot
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET, MPI_MODE_RDONLY, MPI_INFO_NULL, &
                                  MPI_SEEK_SET, MPI_DOUBLE_PRECISION, MPI_STATUS_IGNORE, &
@@ -602,6 +603,8 @@
     CALL mp_bcast (vkk_all, ionode_id, world_comm)
     CALL mp_bcast (wkf_all, ionode_id, world_comm)
     CALL mp_bcast (etf_all, ionode_id, world_comm)
+    !! We need to bcast the number of symmetry as it is only on master so far. 
+    CALL mp_bcast (nrot, ionode_id, world_comm)
     ! 
     ! Now choose HOLE OR ELECTRON (the implementation does not support both)
     ! HOLE
