@@ -247,7 +247,7 @@
     ! 
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE print_serta_sym( F_SERTA, BZtoIBZ, s_BZtoIBZ, vkk_all, etf_all, wkf_all, ef0) 
+    SUBROUTINE print_serta_sym( F_SERTA, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0) 
     !-----------------------------------------------------------------------
     !!
     !!  This subroutine prints the SERTA mobility using k-point symmetry.
@@ -261,7 +261,8 @@
     USE elph2,         ONLY : nkf, ibndmax, ibndmin, nkqtotf 
     USE transportcom,  ONLY : lower_bnd, transp_temp
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
-                               electron_SI, bohr2ang, ang2cm, hbarJ
+                              electron_SI, bohr2ang, ang2cm, hbarJ
+    USE symm_base,     ONLY : nrot
     USE noncollin_module, ONLY : noncolin
     USE mp_global,     ONLY : world_comm, my_pool_id
     USE mp,            ONLY : mp_sum
@@ -272,6 +273,8 @@
     !! BZ to IBZ mapping
     INTEGER, INTENT(in) :: s_BZtoIBZ(3,3,nkf1*nkf2*nkf3)
     !! Corresponding symmetry matrix
+    INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot,nkqtotf/2)
+    !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(kind=DP), INTENT(in) :: F_SERTA(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)  
     !! SERTA solution 
     REAL(KIND=DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
@@ -365,11 +368,12 @@
               tdf_sigma(:) = zero
               vk_cart(:) = vkk_all(:,ibnd, ik)
               Fi_cart(:) = F_SERTA(:, ibnd, ik, itemp)
-              ! Loop on full BZ
-              nb = 0
-              DO ikbz=1, nkf1*nkf2*nkf3
-                IF (BZtoIBZ(ikbz) == ik) THEN
-                  nb = nb + 1
+              !
+              ! Loop on the point equivalent by symmetry in the full BZ
+              DO nb=1, nrot
+                IF (BZtoIBZ_mat(nb,ik) > 0 ) THEN 
+                  ikbz = BZtoIBZ_mat(nb,ik)
+                  ! 
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
                   sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
@@ -481,11 +485,11 @@
               tdf_sigma(:) = zero
               vk_cart(:) = vkk_all(:,ibnd, ik)
               Fi_cart(:) = F_SERTA(:, ibnd, ik, itemp) 
-              ! Loop on full BZ
-              nb = 0
-              DO ikbz=1, nkf1*nkf2*nkf3
-                IF (BZtoIBZ(ikbz) == ik) THEN
-                  nb = nb + 1
+              ! 
+              ! Loop on the point equivalent by symmetry in the full BZ
+              DO nb=1, nrot
+                IF (BZtoIBZ_mat(nb,ik) > 0 ) THEN
+                  ikbz = BZtoIBZ_mat(nb,ik)
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
                   sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
@@ -839,7 +843,7 @@
     !-----------------------------------------------------------------------
     !  
     !-----------------------------------------------------------------------
-    SUBROUTINE print_mob_sym( F_out, BZtoIBZ, s_BZtoIBZ, vkk_all, etf_all, wkf_all, ef0, av_mob) 
+    SUBROUTINE print_mob_sym( F_out, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, av_mob) 
     !-----------------------------------------------------------------------
     !!
     !!  This subroutine prints the mobility using k-point symmetry ( electron or hole )
@@ -853,7 +857,8 @@
     USE elph2,         ONLY : nkf, ibndmax, ibndmin, nkqtotf 
     USE transportcom,  ONLY : lower_bnd, transp_temp
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
-                               electron_SI, bohr2ang, ang2cm, hbarJ
+                              electron_SI, bohr2ang, ang2cm, hbarJ
+    USE symm_base,     ONLY : nrot
     USE noncollin_module, ONLY : noncolin
     USE mp_global,     ONLY : world_comm
     USE mp,            ONLY : mp_sum
@@ -864,6 +869,8 @@
     !! BZ to IBZ mapping
     INTEGER, INTENT(in) :: s_BZtoIBZ(3,3,nkf1*nkf2*nkf3)
     !! Corresponding symmetry matrix
+    INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot,nkqtotf/2)
+    !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(kind=DP), INTENT(in) :: F_out(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)  
     !! SERTA solution 
     REAL(KIND=DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
@@ -959,11 +966,12 @@
               tdf_sigma(:) = zero
               vk_cart(:) = vkk_all(:,ibnd, ik)
               Fi_cart(:) = F_out(:, ibnd, ik, itemp)
-              ! Loop on full BZ
-              nb = 0
-              DO ikbz=1, nkf1*nkf2*nkf3
-                IF (BZtoIBZ(ikbz) == ik) THEN
-                  nb = nb + 1
+              ! 
+              ! Loop on the point equivalent by symmetry in the full BZ
+              DO nb=1, nrot
+                IF (BZtoIBZ_mat(nb,ik) > 0 ) THEN
+                  ikbz = BZtoIBZ_mat(nb,ik)
+                  ! 
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
                   sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
@@ -1069,11 +1077,12 @@
               tdf_sigma(:) = zero
               vk_cart(:) = vkk_all(:, ibnd, ik)
               Fi_cart(:) = F_out(:, ibnd, ik, itemp)
-              ! Loop on full BZ
-              nb = 0
-              DO ikbz=1, nkf1*nkf2*nkf3
-                IF (BZtoIBZ(ikbz) == ik) THEN
-                  nb = nb + 1
+              ! 
+              ! Loop on the point equivalent by symmetry in the full BZ
+              DO nb=1, nrot
+                IF (BZtoIBZ_mat(nb,ik) > 0 ) THEN
+                  ikbz = BZtoIBZ_mat(nb,ik)
+                  ! 
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
                   sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )

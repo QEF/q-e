@@ -121,7 +121,13 @@
     INTEGER :: BZtoIBZ(nkf1*nkf2*nkf3)
     !! BZ to IBZ mapping
     INTEGER :: s_BZtoIBZ(3,3,nkf1*nkf2*nkf3)
-    !! symmetry 
+    !! symmetry matrix for each k-point from the full BZ
+    INTEGER :: BZtoIBZ_mat(nrot,nkqtotf/2)
+    !! For a given k-point in the IBZ gives the k-point index
+    !! of all the k-point in the full BZ that are connected to the current 
+    !! one by symmetry. nrot is the max number of symmetry 
+    INTEGER :: nsym(nkqtotf/2)
+    !! Temporary matrix used to count how many symmetry for that k-point
     INTEGER :: n
     !! Use for averaging
     ! 
@@ -178,16 +184,20 @@
    ! print*,'nind ',nind
    ! print*,'allocated ',ALLOCATED(ixkqf_tr)
    ! print*,'allocated s_BZtoIBZ_full',ALLOCATED(s_BZtoIBZ_full)
-  
     ! Deal with symmetries
     IF (mp_mesh_k) THEN
       ALLOCATE(ixkqf_tr(nind), STAT=ierr)
       ALLOCATE(s_BZtoIBZ_full(3,3,nind), STAT=ierr)
+      ! For a given k-point in the IBZ gives the k-point index
+      ! of all the k-point in the full BZ that are connected to the current 
+      ! one by symmetry. nrot is the max number of symmetry 
       BZtoIBZ(:) = 0
       s_BZtoIBZ(:,:,:) = 0
       ixkqf_tr(:) = 0
       !call move_alloc(test1, s_BZtoIBZ_full)
       s_BZtoIBZ_full(:,:,:) = 0
+      BZtoIBZ_mat(:,:) = 0 
+      nsym(:) = 0
       ! 
       IF ( mpime .eq. ionode_id ) THEN
         ! 
@@ -203,9 +213,18 @@
         ENDDO
         BZtoIBZ(:) = BZtoIBZ_tmp(:)
         ! 
+        ! Now create the mapping matrix
+        DO ikbz=1, nkf1*nkf2*nkf3
+          ik = BZtoIBZ(ikbz)
+          nsym(ik) = nsym(ik) + 1 
+          BZtoIBZ_mat( nsym(ik), ik) = ikbz
+        ENDDO  
+        ! 
       ENDIF ! mpime
-      CALL mp_bcast( s_BZtoIBZ, ionode_id, inter_pool_comm )
-      CALL mp_bcast( BZtoIBZ, ionode_id, inter_pool_comm )
+      ! 
+      CALL mp_bcast( s_BZtoIBZ,   ionode_id, inter_pool_comm )
+      CALL mp_bcast( BZtoIBZ,     ionode_id, inter_pool_comm )
+      CALL mp_bcast( BZtoIBZ_mat, ionode_id, inter_pool_comm )
       ! 
       DO ind=1, nind
         iq    = sparse_q( ind )
@@ -290,7 +309,7 @@
     ! Now compute and print the electron and hole mobility of SERTA
     IF (mp_mesh_k) THEN
       ! Use k-point symmetry
-      CALL print_serta_sym(F_SERTA, BZtoIBZ, s_BZtoIBZ, vkk_all, etf_all, wkf_all, ef0)
+      CALL print_serta_sym(F_SERTA, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0)
     ELSE 
       ! No symmetry
       CALL print_serta(F_SERTA, vkk_all, etf_all, wkf_all, ef0)
@@ -392,7 +411,7 @@
       ENDDO
       !  
       IF (mp_mesh_k) THEN
-        CALL print_mob_sym(F_out, BZtoIBZ, s_BZtoIBZ, vkk_all, etf_all, wkf_all, ef0, av_mob) 
+        CALL print_mob_sym(F_out, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, av_mob) 
       ELSE 
         CALL print_mob(F_out, vkk_all, etf_all, wkf_all, ef0, av_mob) 
       ENDIF
