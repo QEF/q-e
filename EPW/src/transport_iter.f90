@@ -225,6 +225,8 @@
       CALL mp_bcast( s_BZtoIBZ,   ionode_id, inter_pool_comm )
       CALL mp_bcast( BZtoIBZ,     ionode_id, inter_pool_comm )
       CALL mp_bcast( BZtoIBZ_mat, ionode_id, inter_pool_comm )
+      !
+      WRITE(stdout,'(5x,"Symmetry mapping finished")')
       ! 
       DO ind=1, nind
         iq    = sparse_q( ind )
@@ -471,7 +473,6 @@
                                  iunsparsei, iunsparsej, iunsparset, iunsparseqcb, &
                                  iunsparsekcb, iunrestart, iunsparseicb, iunsparsejcb,&
                                  iunsparsetcb, iunepmatcb
-    USE transportcom,     ONLY : lower_bnd, upper_bnd
     USE mp,               ONLY : mp_bcast
     USE division,         ONLY : fkbounds2
     USE symm_base,        ONLY : nrot
@@ -554,6 +555,10 @@
     !! Local core offset for reading
     INTEGER (kind=MPI_OFFSET_KIND) :: lsize
     !! Offset to tell where to start reading the file
+    INTEGER (kind=MPI_OFFSET_KIND) :: lower_bnd
+    !! start for current CPU
+    INTEGER (kind=MPI_OFFSET_KIND) :: upper_bnd
+    !! end for current CPU
 #else
     INTEGER (kind=8) :: lrepmatw2
     !! Local core offset for reading
@@ -561,6 +566,10 @@
     !! Local core offset for reading
     INTEGER (kind=8) :: lsize
     !! Offset to tell where to start reading the file
+    INTEGER (kind=8) :: lower_bnd
+    !! start for current CPU
+    INTEGER (kind=8) :: upper_bnd
+    !! end for current CPU
 #endif
     ! 
     REAL(kind=DP) :: dum1
@@ -625,7 +634,7 @@
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN X.epmatkq1',1 )
       !
       ! Offset depending on CPU
-      lrepmatw2 = INT( lower_bnd -1, kind = MPI_OFFSET_KIND ) * 8_MPI_OFFSET_KIND
+      lrepmatw2 = INT( lower_bnd - 1_MPI_OFFSET_KIND, kind = MPI_OFFSET_KIND ) * 8_MPI_OFFSET_KIND
       ! 
       ! Size of what we read
       lsize = INT( nind , kind = MPI_OFFSET_KIND )
@@ -658,7 +667,7 @@
       sparse_j(:) = 0.0d0
       sparse_t(:) = 0.0d0
       !        
-      lrepmatw4 = INT( lower_bnd - 1, kind = MPI_OFFSET_KIND ) * 4_MPI_OFFSET_KIND
+      lrepmatw4 = INT( lower_bnd - 1_MPI_OFFSET_KIND, kind = MPI_OFFSET_KIND ) * 4_MPI_OFFSET_KIND
       !
       CALL MPI_FILE_SEEK(iunsparseq, lrepmatw4, MPI_SEEK_SET, ierr)
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK',1 )
@@ -720,7 +729,7 @@
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_OPEN X.epmatkq1', 1 )
       !
       ! Offset depending on CPU
-      lrepmatw2 = INT( lower_bnd-1, kind = MPI_OFFSET_KIND ) * 8_MPI_OFFSET_KIND
+      lrepmatw2 = INT( lower_bnd - 1_MPI_OFFSET_KIND, kind = MPI_OFFSET_KIND ) * 8_MPI_OFFSET_KIND
       ! 
       ! Size of what we read
       lsize = INT( nind, kind = MPI_OFFSET_KIND )
@@ -753,7 +762,7 @@
       sparsecb_j(:) = 0.0d0
       sparsecb_t(:) = 0.0d0
       !        
-      lrepmatw4 = INT( lower_bnd - 1, kind = MPI_OFFSET_KIND ) * 4_MPI_OFFSET_KIND
+      lrepmatw4 = INT( lower_bnd - 1_MPI_OFFSET_KIND, kind = MPI_OFFSET_KIND ) * 4_MPI_OFFSET_KIND
       !
       CALL MPI_FILE_SEEK(iunsparseqcb, lrepmatw4, MPI_SEEK_SET, ierr)
       IF( ierr /= 0 ) CALL errore( 'iter_restart', 'error in MPI_FILE_SEEK iunsparseqcb',1 )
