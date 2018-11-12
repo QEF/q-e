@@ -42,13 +42,13 @@ MODULE cuda_util
     !
     IMPLICIT NONE
     !
-    REAL(DP), INTENT(OUT) :: array_out(:)
+    REAL(DP), INTENT(INOUT) :: array_out(:)
     REAL(DP), INTENT(IN) :: array_in(:)
     INTEGER, INTENT(IN) ::  range1(2)
     !
-  #if defined(__CUDA)
+#if defined(__CUDA)
     attributes(DEVICE) :: array_out, array_in
-  #endif
+#endif
     !
     INTEGER :: i1, d1s, d1e
     !
@@ -61,17 +61,18 @@ MODULE cuda_util
     ENDDO
     !
   END SUBROUTINE cuf_memcpy_r1d
+  !
   SUBROUTINE cuf_memcpy_r2d(array_out, array_in, range1, range2 )
     !
     IMPLICIT NONE
     !
-    REAL(DP), INTENT(OUT) :: array_out(:,:)
+    REAL(DP), INTENT(INOUT) :: array_out(:,:)
     REAL(DP), INTENT(IN) :: array_in(:,:)
     INTEGER, INTENT(IN) ::  range1(2), range2(2)
     !
-  #if defined(__CUDA)
+#if defined(__CUDA)
     attributes(DEVICE) :: array_out, array_in
-  #endif
+#endif
     !
     INTEGER :: i1, d1s, d1e
     INTEGER :: i2, d2s, d2e
@@ -89,17 +90,18 @@ MODULE cuda_util
     ENDDO
     !
   END SUBROUTINE cuf_memcpy_r2d
+  !
   SUBROUTINE cuf_memcpy_r3d(array_out, array_in, range1, range2, range3 )
     !
     IMPLICIT NONE
     !
-    REAL(DP), INTENT(OUT) :: array_out(:,:,:)
+    REAL(DP), INTENT(INOUT) :: array_out(:,:,:)
     REAL(DP), INTENT(IN) :: array_in(:,:,:)
     INTEGER, INTENT(IN) ::  range1(2), range2(2), range3(2)
     !
-  #if defined(__CUDA)
+#if defined(__CUDA)
     attributes(DEVICE) :: array_out, array_in
-  #endif
+#endif
     !
     INTEGER :: i1, d1s, d1e
     INTEGER :: i2, d2s, d2e
@@ -122,17 +124,18 @@ MODULE cuda_util
     ENDDO
     !
   END SUBROUTINE cuf_memcpy_r3d
+  !
   SUBROUTINE cuf_memcpy_c1d(array_out, array_in, range1 )
     !
     IMPLICIT NONE
     !
-    COMPLEX(DP), INTENT(OUT) :: array_out(:)
+    COMPLEX(DP), INTENT(INOUT) :: array_out(:)
     COMPLEX(DP), INTENT(IN) :: array_in(:)
     INTEGER, INTENT(IN) ::  range1(2)
     !
-  #if defined(__CUDA)
+#if defined(__CUDA)
     attributes(DEVICE) :: array_out, array_in
-  #endif
+#endif
     !
     INTEGER :: i1, d1s, d1e
     !
@@ -145,17 +148,18 @@ MODULE cuda_util
     ENDDO
     !
   END SUBROUTINE cuf_memcpy_c1d
+  !
   SUBROUTINE cuf_memcpy_c2d(array_out, array_in, range1, range2 )
     !
     IMPLICIT NONE
     !
-    COMPLEX(DP), INTENT(OUT) :: array_out(:,:)
+    COMPLEX(DP), INTENT(INOUT) :: array_out(:,:)
     COMPLEX(DP), INTENT(IN) :: array_in(:,:)
     INTEGER, INTENT(IN) ::  range1(2), range2(2)
     !
-  #if defined(__CUDA)
+#if defined(__CUDA)
     attributes(DEVICE) :: array_out, array_in
-  #endif
+#endif
     !
     INTEGER :: i1, d1s, d1e
     INTEGER :: i2, d2s, d2e
@@ -173,17 +177,18 @@ MODULE cuda_util
     ENDDO
     !
   END SUBROUTINE cuf_memcpy_c2d
+  !
   SUBROUTINE cuf_memcpy_c3d(array_out, array_in, range1, range2, range3 )
     !
     IMPLICIT NONE
     !
-    COMPLEX(DP), INTENT(OUT) :: array_out(:,:,:)
+    COMPLEX(DP), INTENT(INOUT) :: array_out(:,:,:)
     COMPLEX(DP), INTENT(IN) :: array_in(:,:,:)
     INTEGER, INTENT(IN) ::  range1(2), range2(2), range3(2)
     !
-  #if defined(__CUDA)
+#if defined(__CUDA)
     attributes(DEVICE) :: array_out, array_in
-  #endif
+#endif
     !
     INTEGER :: i1, d1s, d1e
     INTEGER :: i2, d2s, d2e
@@ -207,17 +212,18 @@ MODULE cuda_util
     !
   END SUBROUTINE cuf_memcpy_c3d
   !
+  !
   SUBROUTINE cuf_memset_r1d(array_out, val, range1 )
     !
     IMPLICIT NONE
     !
-    REAL(DP), INTENT(OUT) :: array_out(:)
+    REAL(DP), INTENT(INOUT) :: array_out(:)
     REAL(DP), INTENT(IN) :: val
     INTEGER, INTENT(IN) ::  range1(2)
     !
-  #if defined(__CUDA)
+#if defined(__CUDA)
     attributes(DEVICE) :: array_out
-  #endif
+#endif
     !
     INTEGER :: i1, d1s, d1e
     !
@@ -230,17 +236,18 @@ MODULE cuda_util
     ENDDO
     !
   END SUBROUTINE cuf_memset_r1d
+  !
   SUBROUTINE cuf_memset_r2d(array_out, val, range1, range2 )
     !
     IMPLICIT NONE
     !
-    REAL(DP), INTENT(OUT) :: array_out(:,:)
+    REAL(DP), INTENT(INOUT) :: array_out(:,:)
     REAL(DP), INTENT(IN) :: val
     INTEGER, INTENT(IN) ::  range1(2), range2(2)
     !
-  #if defined(__CUDA)
+#if defined(__CUDA)
     attributes(DEVICE) :: array_out
-  #endif
+#endif
     !
     INTEGER :: i1, d1s, d1e
     INTEGER :: i2, d2s, d2e
@@ -258,17 +265,18 @@ MODULE cuda_util
     ENDDO
     !
   END SUBROUTINE cuf_memset_r2d
+  !
   SUBROUTINE cuf_memset_r3d(array_out, val, range1, range2, range3 )
     !
     IMPLICIT NONE
     !
-    REAL(DP), INTENT(OUT) :: array_out(:,:,:)
+    REAL(DP), INTENT(INOUT) :: array_out(:,:,:)
     REAL(DP), INTENT(IN) :: val
     INTEGER, INTENT(IN) ::  range1(2), range2(2), range3(2)
     !
-  #if defined(__CUDA)
+#if defined(__CUDA)
     attributes(DEVICE) :: array_out
-  #endif
+#endif
     !
     INTEGER :: i1, d1s, d1e
     INTEGER :: i2, d2s, d2e
@@ -291,17 +299,18 @@ MODULE cuda_util
     ENDDO
     !
   END SUBROUTINE cuf_memset_r3d
+  !
   SUBROUTINE cuf_memset_c1d(array_out, val, range1 )
     !
     IMPLICIT NONE
     !
-    COMPLEX(DP), INTENT(OUT) :: array_out(:)
+    COMPLEX(DP), INTENT(INOUT) :: array_out(:)
     COMPLEX(DP), INTENT(IN) :: val
     INTEGER, INTENT(IN) ::  range1(2)
     !
-  #if defined(__CUDA)
+#if defined(__CUDA)
     attributes(DEVICE) :: array_out
-  #endif
+#endif
     !
     INTEGER :: i1, d1s, d1e
     !
@@ -314,17 +323,18 @@ MODULE cuda_util
     ENDDO
     !
   END SUBROUTINE cuf_memset_c1d
+  !
   SUBROUTINE cuf_memset_c2d(array_out, val, range1, range2 )
     !
     IMPLICIT NONE
     !
-    COMPLEX(DP), INTENT(OUT) :: array_out(:,:)
+    COMPLEX(DP), INTENT(INOUT) :: array_out(:,:)
     COMPLEX(DP), INTENT(IN) :: val
     INTEGER, INTENT(IN) ::  range1(2), range2(2)
     !
-  #if defined(__CUDA)
+#if defined(__CUDA)
     attributes(DEVICE) :: array_out
-  #endif
+#endif
     !
     INTEGER :: i1, d1s, d1e
     INTEGER :: i2, d2s, d2e
@@ -342,17 +352,18 @@ MODULE cuda_util
     ENDDO
     !
   END SUBROUTINE cuf_memset_c2d
+  !
   SUBROUTINE cuf_memset_c3d(array_out, val, range1, range2, range3 )
     !
     IMPLICIT NONE
     !
-    COMPLEX(DP), INTENT(OUT) :: array_out(:,:,:)
+    COMPLEX(DP), INTENT(INOUT) :: array_out(:,:,:)
     COMPLEX(DP), INTENT(IN) :: val
     INTEGER, INTENT(IN) ::  range1(2), range2(2), range3(2)
     !
-  #if defined(__CUDA)
+#if defined(__CUDA)
     attributes(DEVICE) :: array_out
-  #endif
+#endif
     !
     INTEGER :: i1, d1s, d1e
     INTEGER :: i2, d2s, d2e
@@ -375,6 +386,7 @@ MODULE cuda_util
     ENDDO
     !
   END SUBROUTINE cuf_memset_c3d
+  !
 END MODULE cuda_util
 !
 !
@@ -414,13 +426,13 @@ END MODULE cuda_util
 !        !
 !        IMPLICIT NONE
 !        !
-!        {{t}}(DP), INTENT(OUT) :: array_out({% for dd in range(d) %}:{% if not loop.last %}, {%- endif %}{% endfor %})
+!        {{t}}(DP), INTENT(INOUT) :: array_out({% for dd in range(d) %}:{% if not loop.last %}, {%- endif %}{% endfor %})
 !        {{t}}(DP), INTENT(IN) :: array_in({% for dd in range(d) %}:{% if not loop.last %}, {%- endif %}{% endfor %})
 !        INTEGER, INTENT(IN) :: {% for dd in range(d) %} {{ "range%s(2)"|format(dd+1) }}{% if not loop.last %}, {%- endif %}{% endfor %}
 !        !
-!      #if defined(__CUDA)
+!    #if defined(__CUDA)
 !        attributes(DEVICE) :: array_out, array_in
-!      #endif
+!    #endif
 !        !
 !    {%- for dd in range(d) %}
 !        INTEGER :: i{{dd+1}}, d{{dd+1}}s, d{{dd+1}}e
@@ -441,6 +453,7 @@ END MODULE cuda_util
 !    {%- endfor %}
 !        !
 !      END SUBROUTINE cuf_memcpy_{{t[0]|lower}}{{d}}d
+!      !
 !    {%- endfor %}
 !    {%- endfor %}
 !      !
@@ -450,13 +463,13 @@ END MODULE cuda_util
 !        !
 !        IMPLICIT NONE
 !        !
-!        {{t}}(DP), INTENT(OUT) :: array_out({% for dd in range(d) %}:{% if not loop.last %}, {%- endif %}{% endfor %})
+!        {{t}}(DP), INTENT(INOUT) :: array_out({% for dd in range(d) %}:{% if not loop.last %}, {%- endif %}{% endfor %})
 !        {{t}}(DP), INTENT(IN) :: val
 !        INTEGER, INTENT(IN) :: {% for dd in range(d) %} {{ "range%s(2)"|format(dd+1) }}{% if not loop.last %}, {%- endif %}{% endfor %}
 !        !
-!      #if defined(__CUDA)
+!    #if defined(__CUDA)
 !        attributes(DEVICE) :: array_out
-!      #endif
+!    #endif
 !        !
 !    {%- for dd in range(d) %}
 !        INTEGER :: i{{dd+1}}, d{{dd+1}}s, d{{dd+1}}e
@@ -477,6 +490,7 @@ END MODULE cuda_util
 !    {%- endfor %}
 !        !
 !      END SUBROUTINE cuf_memset_{{t[0]|lower}}{{d}}d
+!      !
 !    {%- endfor %}
 !    {%- endfor %}
 !    END MODULE cuda_util
