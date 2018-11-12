@@ -336,11 +336,18 @@ approach (Fermi Golden Rule). See file \texttt{Doc/INPUT\_pw2gw.html}
 for input data documentation, directory \texttt{pw2gw\_example/}
 for an example of usage.
 
-Code \texttt{open\_grid.x} writes Kohn-Sham orbitals in real space
-for the complete (not symmetry-reduced) k-point grid.
+Code \texttt{open\_grid.x} writes Kohn-Sham orbitals for the complete
+k-point grid (not symetry-independent points only) in real space.
+Useful for further processing. It can be used to generate the
+Kohn-Sham state data required in \texttt{pw2wannier.x} and Wannier90
+from the initial SCF calculation, bypassing the non-SCF calculation
+step.
 
-Code \texttt{pw2critic.x} is an interface to
-the CRITIC2 code by Alberto Otero-de-la-Roza. 
+Code \texttt{pw2critic.x} is an interface to the CRITIC2 code by
+Alberto Otero-de-la-Roza. This program creates a \texttt{pwc} file
+containing the Kohn-Sham orbitals from an SCF calculation (or from the
+output of \texttt{open\_grid.x}). These orbitals are used for
+post-processing in CRITIC2.
 
 Code \texttt{pw\_export.f90}, no longer compiled by default and obsolete,
 is an interface to other codes, documented in \texttt{Doc/INPUT\_pw\_export.*}.
@@ -357,10 +364,6 @@ See \texttt{PP/Doc/INPUT\_PPACF.html}.
 Code \texttt{wfck2r.x} converts Kohn-Sham orbitals from reciprocal to real 
 space. It is a useful starting point if you need to access wavefunctions
 and perform postprocessing operations that are not implemented in \qe.
-
-Code \texttt{open\_grid.x} writes Kohn-Sham orbitals for the complete
-k-point grid (not symetry-independent points only) in real space.
-Useful for further processing.
 
 Code \texttt{epsilon.x} calculates RPA frequency-dependent complex dielectric 
 function. Documentation is in file \texttt{Doc/eps\_man.tex}.
