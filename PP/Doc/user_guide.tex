@@ -74,6 +74,10 @@ The \PostProc\ package was originally developed by Stefano Baroni,
 Stefano de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi 
 (Univ. Udine), and many others. We mention in particular: 
 \begin{itemize}
+\item Yang Jiao, Elsebeth Schr\"oder, Per Hyldgaard (Chalmers) for the
+  \texttt{ppacf.x} code;
+\item Alberto Otero-de-la-Roza for the \texttt{pw2critic.x} utility;
+\item Junfeng Qiao for improvements to \texttt{plotband.x};
 \item Olivia Pulci, Adriano Mosca Conte, Davide Grassano (RomaII)
       for the \texttt{pw2gw} utility;
 \item Cyrille Barreteau and Alexander Smogunov (CEA) for 
@@ -324,7 +328,7 @@ Codes \texttt{pw2bgw.x} and \texttt{bgw2pw.x} convert data files from
 \pwx\ to a format suitable for usage by the Berkeley GW code, and vice
 versa. See files \texttt{Doc/INPUT\_pw2bgw.*} and \texttt{Doc/INPUT\_bgw2pw.*}
 for input data documentation. NOTE: \texttt{bgw2pw.x} works only with the
-"old" I/O format.
+"old" and no longer supported I/O format.
 
 Code \texttt{pw2gw.x} converts data files from \pwx\ to a format suitable 
 for usage by another GW code, computes optical properties in single-particle 
@@ -332,16 +336,31 @@ approach (Fermi Golden Rule). See file \texttt{Doc/INPUT\_pw2gw.html}
 for input data documentation, directory \texttt{pw2gw\_example/}
 for an example of usage.
 
-Code \texttt{pw\_export.x}, not compiled by default, is an interface
-to other codes, documented in \texttt{Doc/INPUT\_pw\_export.*}
-Code \texttt{qexml.x}, not compiled by default, is a template that
-is useful to follow when wrting interfaces.
+Code \texttt{open\_grid.x} writes Kohn-Sham orbitals in real space
+for the complete (not symmetry-reduced) k-point grid.
+
+Code \texttt{pw2critic.x} is an interface to
+the CRITIC2 code by Alberto Otero-de-la-Roza. 
+
+Code \texttt{pw\_export.f90}, no longer compiled by default and obsolete,
+is an interface to other codes, documented in \texttt{Doc/INPUT\_pw\_export.*}.
 
 \subsection{Other tools}
+
+Code \texttt{ppacf.x} computes the coupling constant dependency of the
+exchange correlation potential $E_{xc,\lambda}, \lambda \in [0:1]$
+and the spatial distribution of the exchange-correlation energy density
+and kinetic correlation energy density according to:
+Y. Jiao, E. Schr\"oder, and P. Hyldgaard, Phys. Rev. B 97, 085115 (2018).
+See \texttt{PP/Doc/INPUT\_PPACF.html}.
 
 Code \texttt{wfck2r.x} converts Kohn-Sham orbitals from reciprocal to real 
 space. It is a useful starting point if you need to access wavefunctions
 and perform postprocessing operations that are not implemented in \qe.
+
+Code \texttt{open\_grid.x} writes Kohn-Sham orbitals for the complete
+k-point grid (not symetry-independent points only) in real space.
+Useful for further processing.
 
 Code \texttt{epsilon.x} calculates RPA frequency-dependent complex dielectric 
 function. Documentation is in file \texttt{Doc/eps\_man.tex}.

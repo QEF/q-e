@@ -71,6 +71,8 @@ integer :: vdw_type = 1
 private
 public  :: xc_vdW_DF, xc_vdW_DF_spin, stress_vdW_DF, interpolate_kernel, &
            vdw_type, initialize_spline_interpolation
+public  :: vdW_energy, get_potential
+public  :: Fs, kF, saturate_q, spline_interpolation
 
 CONTAINS
 
