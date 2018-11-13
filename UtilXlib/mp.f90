@@ -5417,9 +5417,18 @@ END SUBROUTINE mp_type_free
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
          COMPLEX(DP), ALLOCATABLE :: alldata_h(:, :)
+         !
+         ! Avoid unnecessary communications on __MPI
+         IF ( mp_size(gid) == 1 ) THEN
+           ierr = cudaDeviceSynchronize()
+           RETURN
+         END IF
+         !
          ALLOCATE(alldata_h, source=alldata_d)    ! This syncs __MPI
          CALL mp_gatherv_inplace_cplx_array(alldata_h, my_column_type, recvcount, displs, root, gid)
          alldata_d = alldata_h; DEALLOCATE(alldata_h)
+         ierr = cudaDeviceSynchronize()   ! This syncs in case of small data chunks
+         RETURN
 #else
          CALL mpi_comm_size( gid, npe, ierr )
          IF (ierr/=0) CALL mp_stop( 9127 )
@@ -5442,7 +5451,7 @@ END SUBROUTINE mp_type_free
          RETURN ! Sync not needed after MPI call
 #endif
 #endif
-         ierr = cudaDeviceSynchronize()   ! This syncs SERIAL, __MPI
+         ierr = cudaDeviceSynchronize()   ! This syncs SERIAL
       END SUBROUTINE mp_gatherv_inplace_cplx_array_gpu
 
 !------------------------------------------------------------------------------!
@@ -5460,9 +5469,18 @@ END SUBROUTINE mp_type_free
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
          COMPLEX(DP), ALLOCATABLE :: alldata_h(:, :)
+         !
+         ! Avoid unnecessary communications on __MPI
+         IF ( mp_size(gid) == 1 ) THEN
+           ierr = cudaDeviceSynchronize()
+           RETURN
+         END IF
+         !
          ALLOCATE(alldata_h, source=alldata_d)! This syncs __MPI
          CALL mp_allgatherv_inplace_cplx_array(alldata_h, my_element_type, recvcount, displs, gid)
          alldata_d = alldata_h; DEALLOCATE(alldata_h)
+         ierr = cudaDeviceSynchronize()   ! This syncs in case of small data chunks
+         RETURN
 #else
          CALL mpi_comm_size( gid, npe, ierr )
          IF (ierr/=0) CALL mp_stop( 9131 )

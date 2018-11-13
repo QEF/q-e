@@ -9,7 +9,7 @@
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 
-FUNCTION cgDdot( n, A, incx, B, incy) result( res )
+FUNCTION KSDdot( n, A, incx, B, incy) result( res )
   !
   USE cg_param,       ONLY : DP
 #if defined(__CUDA)
@@ -38,7 +38,7 @@ FUNCTION cgDdot( n, A, incx, B, incy) result( res )
   !
   RETURN
   !
-END FUNCTION cgDdot
+END FUNCTION KSDdot
 
 ! define __VERBOSE to print a message after each eigenvalue is computed
 !
@@ -103,7 +103,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
   !
   ! ... external functions
   !
-  REAL (DP), EXTERNAL :: cgddot
+  REAL (DP), EXTERNAL :: ksDdot
   EXTERNAL  hs_1psi_gpu, s_1psi_gpu
   ! hs_1psi( npwx, npw, psi, hpsi, spsi )
   ! s_1psi( npwx, npw, psi, spsi )
@@ -231,7 +231,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
      !
      ! ... NB:  ddot(2*npw,a,1,b,1) = REAL( zdotc(npw,a,1,b,1) )
      !
-     e(m) = cgDdot( kdim2, psi_d(1,m), 1, hpsi_d, 1 )
+     e(m) = ksDdot( kdim2, psi_d(1,m), 1, hpsi_d, 1 )
      !
      CALL mp_sum( e(m), intra_bgrp_comm )
      !
@@ -250,8 +250,8 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
         !
         ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
         !
-        es(1) = cgddot( kdim2, spsi_d(1), 1, g_d(1), 1 )
-        es(2) = cgddot( kdim2, spsi_d(1), 1, ppsi_d(1), 1 )
+        es(1) = ksDdot( kdim2, spsi_d(1), 1, g_d(1), 1 )
+        es(2) = ksDdot( kdim2, spsi_d(1), 1, ppsi_d(1), 1 )
         !
         CALL mp_sum( es , intra_bgrp_comm )
         !
@@ -297,7 +297,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
            !
            ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
            !
-           gg1 = cgDdot( kdim2, g_d(1), 1, g0_d(1), 1 )
+           gg1 = ksDdot( kdim2, g_d(1), 1, g0_d(1), 1 )
            !
            CALL mp_sum( gg1, intra_bgrp_comm )
            !
@@ -310,7 +310,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
            g0_d(i) = scg_d(i) * precondition_d(i)
         END DO
         !
-        gg = cgDdot( kdim2, g_d(1), 1, g0_d(1), 1 )
+        gg = ksDdot( kdim2, g_d(1), 1, g0_d(1), 1 )
         !
         CALL mp_sum( gg, intra_bgrp_comm )
         !
@@ -361,7 +361,7 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
         !
         CALL hs_1psi_gpu( npwx, npw, cg_d(1), ppsi_d(1), scg_d(1) )
         !
-        cg0 = cgddot( kdim2, cg_d(1), 1, scg_d(1), 1 )
+        cg0 = ksDdot( kdim2, cg_d(1), 1, scg_d(1), 1 )
         !
         CALL mp_sum(  cg0 , intra_bgrp_comm )
         !
@@ -375,11 +375,11 @@ SUBROUTINE ccgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
         ! ... so that the result is correctly normalized :
         ! ...                           <y(t)|P^2S|y(t)> = 1
         !
-        a0 = 2.D0 *  cgddot( kdim2, psi_d(1,m), 1, ppsi_d(1), 1 ) / cg0
+        a0 = 2.D0 *  ksDdot( kdim2, psi_d(1,m), 1, ppsi_d(1), 1 ) / cg0
         !
         CALL mp_sum(  a0 , intra_bgrp_comm )
         !
-        b0 = cgddot( kdim2, cg_d(1), 1, ppsi_d(1), 1 ) / cg0**2
+        b0 = ksDdot( kdim2, cg_d(1), 1, ppsi_d(1), 1 ) / cg0**2
         !
         CALL mp_sum(  b0 , intra_bgrp_comm )
         !
