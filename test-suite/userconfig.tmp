@@ -6,7 +6,7 @@ run_cmd_template = tc.program tc.input tc.output tc.error
 tolerance = ( (8.0e-4, 1.0e-4, 'e1'),
               (5.0e+0, 1.0e+1, 'n1'),
               (1.0e-3, 1.5e+0, 'f1'),
-              (9.0e-1, 5.8e-2, 'p1'),
+              (9.0e-1, 5.0e-2, 'p1'),
               (1.0e-2, 1.0e-2, 'ef1'),
               (1.0e-2, 1.0e-2, 'eh1'),
               (1.0e-2, 5.0e-2, 'el1'),
