@@ -106,6 +106,8 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   attributes(DEVICE) :: hc_d, sc_d, vc_d, ew_d, psi_d, hpsi_d, spsi_d
 #endif
   !
+  REAL(DP), EXTERNAL :: KSddot
+  !
   EXTERNAL  h_psi_gpu,    s_psi_gpu,    g_psi_gpu
     ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
@@ -203,7 +205,8 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
   !
   if (n_start .le. n_end) &
-  CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi_d, kdmx, hpsi_d(1,1,n_start), kdmx, ZERO, hc_d(1,n_start), nvecx )
+  CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi_d, kdmx, hpsi_d(1,1,n_start), &
+              kdmx, ZERO, hc_d(1,n_start), nvecx )
   !
   if (n_start .le. n_end) then
      !
@@ -382,12 +385,12 @@ SUBROUTINE cegterg_gpu( h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
         !
         IF ( npol == 1 ) THEN
            !
-           ew_host(n) = DBLE(cublasZdotc( npw, psi_d(1,1,nbn), 1, psi_d(1,1,nbn), 1 )) ! DBLE(aux1)
+           ew_host(n) = KSDdot( 2*npw, psi_d(1,1,nbn), 1, psi_d(1,1,nbn), 1 )
            !
         ELSE
            !
-           ew_host(n) = DBLE(cublasZdotc( npw, psi_d(1,1,nbn), 1, psi_d(1,1,nbn), 1 ) + &
-                        cublasZdotc( npw, psi_d(1,2,nbn), 1, psi_d(1,2,nbn), 1 ))
+           ew_host(n) = KSDdot( 2*npw, psi_d(1,1,nbn), 1, psi_d(1,1,nbn), 1 ) + &
+                        KSDdot( 2*npw, psi_d(1,2,nbn), 1, psi_d(1,2,nbn), 1 )
            !
         END IF
         !
