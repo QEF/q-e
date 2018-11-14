@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE selfen_phon_q (iq )
+  SUBROUTINE selfen_phon_q ( iqq, iq, totq )
   !-----------------------------------------------------------------------
   !!
   !!  compute the imaginary part of the phonon self energy due to electron-
@@ -29,24 +29,26 @@
   USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   use phcom,      ONLY : nmodes
-  use epwcom,     ONLY : nbndsub, fsthick, &
-                         eptemp, ngaussw, degaussw, shortrange, &
+  use epwcom,     ONLY : nbndsub, fsthick, efermi_read, fermi_energy,  &
+                         eptemp, ngaussw, degaussw, shortrange,        &
                          nsmear, delta_smear, eps_acustic, specfun_ph, &
-                         efermi_read, fermi_energy, delta_approx, vme
+                         delta_approx, vme
   use pwcom,      ONLY : nelec, ef, isk
-  use elph2,      ONLY : epf17, ibndmax, ibndmin, etf, &
-                         wkf, xqf, wqf, nkqf, nqtotf,   &
-                         nkf, wf, nkqtotf, xqf, &
-                         lambda_all, lambda_v_all, &
+  use elph2,      ONLY : epf17, ibndmax, ibndmin, etf, wkf, xqf, wqf, nkqf, &
+                         nkf, wf, nkqtotf, xqf, lambda_all, lambda_v_all,   &
                          dmef, vmef, gamma_all,gamma_v_all, efnew
-  USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, eps4, eps6
+  USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, pi, eps4, eps6, eps8
   use mp,         ONLY : mp_barrier, mp_sum
   use mp_global,  ONLY : inter_pool_comm
   !
   implicit none
   !
+  INTEGER, INTENT (in) :: iqq
+  !! Current q-point index from the selecq
   INTEGER, INTENT (in) :: iq
   !! Current q-point index
+  INTEGER, INTENT (in) :: totq
+  !! Total number of q-points in selecq.fmt
   ! 
   ! Local variables 
   !
@@ -151,10 +153,8 @@
   !! It is therefore an approximation for a delta function
   REAL(kind=DP), external :: efermig
   !! Return the fermi energy
-  REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
-  !! Tolerence  
   !  
-  IF ( iq .eq. 1 ) THEN 
+  IF ( iq == 1 ) THEN 
     WRITE(stdout,'(/5x,a)') repeat('=',67)
     WRITE(stdout,'(5x,"Phonon (Imaginary) Self-Energy in the Migdal Approximation")') 
     WRITE(stdout,'(5x,a/)') repeat('=',67)
@@ -165,12 +165,12 @@
     WRITE(stdout, '(/5x,a,f10.6,a)' ) &
          'Golden Rule strictly enforced with T = ',eptemp * ryd2ev, ' eV'
     !
-    IF ( .not. ALLOCATED (lambda_all) )    ALLOCATE( lambda_all  (nmodes, nqtotf, nsmear) )
-    IF ( .not. ALLOCATED (lambda_v_all) )  ALLOCATE( lambda_v_all(nmodes, nqtotf, nsmear) )
+    IF ( .not. ALLOCATED (lambda_all) )   ALLOCATE( lambda_all  (nmodes, totq, nsmear) )
+    IF ( .not. ALLOCATED (lambda_v_all) ) ALLOCATE( lambda_v_all(nmodes, totq, nsmear) )
     lambda_all(:,:,:)   = zero
     lambda_v_all(:,:,:) = zero
-    IF ( .not. ALLOCATED (gamma_all) )    ALLOCATE( gamma_all  (nmodes,nqtotf,nsmear) )
-    IF ( .not. ALLOCATED (gamma_v_all) )  ALLOCATE( gamma_v_all(nmodes,nqtotf,nsmear) )
+    IF ( .not. ALLOCATED (gamma_all) )    ALLOCATE( gamma_all  (nmodes, totq, nsmear) )
+    IF ( .not. ALLOCATED (gamma_v_all) )  ALLOCATE( gamma_v_all(nmodes, totq, nsmear) )
     gamma_all(:,:,:)   = zero
     gamma_v_all(:,:,:) = zero
     !
@@ -207,7 +207,7 @@
     !  N(Ef) in the equation for lambda is the DOS per spin
     dosef = dosef / two
     !
-    IF ( iq .eq. 1 ) THEN 
+    IF ( iq == 1 ) THEN 
       WRITE (stdout, 100) degaussw0 * ryd2ev, ngaussw
       WRITE (stdout, 101) dosef / ryd2ev, ef0 * ryd2ev
       !WRITE (stdout, 101) dosef / ryd2ev, ef  * ryd2ev
@@ -308,8 +308,8 @@
               ! with hbar = 1 and M already contained in the eigenmodes
               ! g2 is Ry^2, wkf must already account for the spin factor
               !
-              IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
-                 .OR. abs(xqf (3, iq))> eps2 )) THEN              
+              IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
+                 .OR. abs(xqf (3, iq))> eps8 )) THEN              
                 ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                 !     number, in which case its square will be a negative number. 
                 g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp ) 

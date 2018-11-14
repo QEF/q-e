@@ -23,6 +23,7 @@ epwcom.o \
 constants_epw.o \
 io_epw.o \
 elph2.o \
+division.o \
 eliashbergcom.o \
 superconductivity.o \
 superconductivity_aniso.o \
@@ -30,6 +31,7 @@ superconductivity_iso.o \
 io_eliashberg.o \
 io_scattering.o \
 transportcom.o \
+close_epw.o \
 printing.o \
 transport.o \
 transport_iter.o \
@@ -39,9 +41,7 @@ allocate_epwq.o \
 bcast_epw_input.o \
 bloch2wan.o \
 broyden.o \
-close_epw.o \
 createkmap.o \
-deallocate_epw.o \
 dvanqq2.o \
 dvqpsi_us3.o \
 dvqpsi_us_only3.o \
@@ -60,7 +60,6 @@ gmap_sym.o \
 indabs.o \
 io_dyn_mat2.o \
 kfold.o \
-kpointdivision.o \
 kpoint_grid_epw.o \
 ktokpmq.o \
 loadkmesh.o \
@@ -72,6 +71,7 @@ openfilepw.o \
 rgd_blk_epw_fine_mem.o \
 plot_band.o \
 poolgather.o \
+print_ibte.o \
 readdvscf.o \
 readgmap.o \
 readmat_shuffle2.o \

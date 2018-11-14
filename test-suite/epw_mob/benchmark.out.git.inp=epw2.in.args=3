@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 11Oct2018 at 15: 2:51 
+     Program EPW v.5.0.0 starts on 29Oct2018 at 15:52:11 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -110,6 +110,7 @@
      Number of WS vectors for electrons       93
      Number of WS vectors for phonons       19
      Number of WS vectors for electron-phonon       19
+     Maximum number of cores for efficient parallelization      114
      Results may improve by using use_ws == .true. 
 
      Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
@@ -202,25 +203,15 @@
      This is computed with respect to the fine Fermi level   6.868910 eV
      Only states between   5.668910 eV and   8.068910 eV will be included
 
-     Progression iq (fine) =         50/      1728
      Progression iq (fine) =        100/      1728
-     Progression iq (fine) =        150/      1728
      Progression iq (fine) =        200/      1728
-     Progression iq (fine) =        250/      1728
      Progression iq (fine) =        300/      1728
-     Progression iq (fine) =        350/      1728
      Progression iq (fine) =        400/      1728
-     Progression iq (fine) =        450/      1728
      Progression iq (fine) =        500/      1728
-     Progression iq (fine) =        550/      1728
      Progression iq (fine) =        600/      1728
-     Progression iq (fine) =        650/      1728
      Progression iq (fine) =        700/      1728
-     Progression iq (fine) =        750/      1728
      Progression iq (fine) =        800/      1728
-     Progression iq (fine) =        850/      1728
      Progression iq (fine) =        900/      1728
-     Progression iq (fine) =        950/      1728
      Progression iq (fine) =       1000/      1728
      Creation of a restart point
 
@@ -274,24 +265,19 @@
                                                    0.269661E+04  z-axis
                                                    0.192443E+04     avg
 
-     Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
+     Note: Mobility are sorted by ascending values and might not correspond
+                                              to the expected (x,y,z) axis.
+
      Total time so far
-     SCAT         :      2.86s CPU      2.88s WALL (    1000 calls)
+     SCAT         :      2.77s CPU      2.77s WALL (    1000 calls)
      MOB          :      0.00s CPU      0.00s WALL (       1 calls)
 
-     Progression iq (fine) =       1050/      1728
      Progression iq (fine) =       1100/      1728
-     Progression iq (fine) =       1150/      1728
      Progression iq (fine) =       1200/      1728
-     Progression iq (fine) =       1250/      1728
      Progression iq (fine) =       1300/      1728
-     Progression iq (fine) =       1350/      1728
      Progression iq (fine) =       1400/      1728
-     Progression iq (fine) =       1450/      1728
      Progression iq (fine) =       1500/      1728
-     Progression iq (fine) =       1550/      1728
      Progression iq (fine) =       1600/      1728
-     Progression iq (fine) =       1650/      1728
      Progression iq (fine) =       1700/      1728
      Temperature  300.000 K
      Average over degenerate eigenstates is performed
@@ -375,9 +361,11 @@
                                                    0.121327E+04  z-axis
                                                    0.104362E+04     avg
 
-     Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
+     Note: Mobility are sorted by ascending values and might not correspond
+                                              to the expected (x,y,z) axis.
+
      Total time so far
-     SCAT         :      4.55s CPU      4.57s WALL (    1729 calls)
+     SCAT         :      4.38s CPU      4.38s WALL (    1729 calls)
      MOB          :      0.00s CPU      0.00s WALL (       2 calls)
 
      ===================================================================
@@ -394,16 +382,16 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :     57.56s CPU     65.99s WALL (       1 calls)
-     ep-interp    :     57.39s CPU     65.81s WALL (    1728 calls)
+     ephwann      :     55.54s CPU     63.28s WALL (       1 calls)
+     ep-interp    :     55.24s CPU     62.99s WALL (    1728 calls)
 
-     DynW2B       :      0.05s CPU      0.05s WALL (    1728 calls)
-     HamW2B       :     26.40s CPU     26.97s WALL (  363090 calls)
-     ephW2Bp      :      5.78s CPU     13.20s WALL (    1728 calls)
+     DynW2B       :      0.04s CPU      0.05s WALL (    1728 calls)
+     HamW2B       :     25.49s CPU     26.06s WALL (  363090 calls)
+     ephW2Bp      :      5.52s CPU     12.30s WALL (    1728 calls)
 
 
      Total program execution
-     EPW          :     57.56s CPU   1m 6.00s WALL
+     EPW          :     55.54s CPU   1m 3.28s WALL
 
                                                                                           
  Please consider citing:                                                                  

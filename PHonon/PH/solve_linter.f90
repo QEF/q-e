@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,19 +14,24 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !    defines the change of the wavefunction due to a lattice distorsion
   !    It performs the following tasks:
   !     a) computes the bare potential term Delta V | psi >
-  !        and an additional term in the case of US pseudopotentials
-  !     b) adds to it the screening term Delta V_{SCF} | psi >
+  !        and an additional term in the case of US pseudopotentials.
+  !        If lda_plus_u=.true. compute also the bare potential
+  !        term Delta V_hub | psi >.
+  !     b) adds to it the screening term Delta V_{SCF} | psi >.
+  !        If lda_plus_u=.true. compute also the SCF part
+  !        of the response Hubbard potential.
   !     c) applies P_c^+ (orthogonalization to valence states)
   !     d) calls cgsolve_all to solve the linear system
   !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
+  !     f) If lda_plus_u=.true. compute also the response occupation
+  !        matrices dnsscf
   !
-
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : prefix, diropn
   USE check_stop,           ONLY : check_stop_now
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE constants,            ONLY : degspin
   USE cell_base,            ONLY : at, tpiba2
   USE klist,                ONLY : ltetra, lgauss, degauss, ngauss, &
@@ -57,7 +62,6 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE output,               ONLY : fildrho, fildvscf
   USE phus,                 ONLY : becsumort
   USE modes,                ONLY : npertx, npert, u, t, tmq
-
   USE recover_mod,          ONLY : read_rec, write_rec
   ! used to write fildrho:
   USE dfile_autoname,       ONLY : dfile_name
@@ -67,15 +71,15 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   USE mp_bands,             ONLY : intra_bgrp_comm, ntask_groups, me_bgrp
   USE mp,                   ONLY : mp_sum
   USE efermi_shift,         ONLY : ef_shift, ef_shift_paw,  def
-
-  USE lrus,         ONLY : int3_paw
-  USE lr_symm_base, ONLY : irotmq, minus_q, nsymq, rtau
-  USE eqv,          ONLY : dvpsi, dpsi, evq
-  USE qpoint,       ONLY : xq, nksq, ikks, ikqs
-  USE control_lr,   ONLY : alpha_pv, nbnd_occ, lgamma
+  USE lrus,                 ONLY : int3_paw
+  USE lr_symm_base,         ONLY : irotmq, minus_q, nsymq, rtau
+  USE eqv,                  ONLY : dvpsi, dpsi, evq
+  USE qpoint,               ONLY : xq, nksq, ikks, ikqs
+  USE control_lr,           ONLY : alpha_pv, nbnd_occ, lgamma
   USE dv_of_drho_lr
   USE fft_helper_subroutines
-  USE fft_interfaces, ONLY : fft_interpolate
+  USE fft_interfaces,       ONLY : fft_interpolate
+  USE ldaU,                 ONLY : lda_plus_u
 
   implicit none
 
@@ -232,14 +236,20 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !   The outside loop is over the iterations
   !
   do kter = 1, niter_ph
+     !
      iter = kter + iter0
-
      ltaver = 0
-
      lintercall = 0
+     !
      drhoscf(:,:,:) = (0.d0, 0.d0)
      dbecsum(:,:,:,:) = (0.d0, 0.d0)
      IF (noncolin) dbecsum_nc = (0.d0, 0.d0)
+     !
+     ! DFPT+U: at each ph iteration calculate dnsscf,
+     ! i.e. the scf variation of the occupation matrix ns.
+     !
+     IF (lda_plus_u .AND. (iter.NE.1)) &
+        CALL dnsq_scf (npe, lmetq0, imode0, irr, .true.)
      !
      do ik = 1, nksq
         !
@@ -320,13 +330,27 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
               !  V_{eff} on the bare change of the potential
               !
               call adddvscf (ipert, ik)
+              !
+              ! DFPT+U: add to dvpsi the scf part of the response
+              ! Hubbard potential dV_hub
+              !
+              if (lda_plus_u) call adddvhubscf (ipert, ik)
+              !
            else
               !
-              !  At the first iteration dvbare_q*psi_kpoint is calculated
-              !  and written to file
+              ! At the first iteration dvbare_q*psi_kpoint is calculated
+              ! and written to file.
               !
               call dvqpsi_us (ik, u (1, mode),.false. )
+              !
+              ! DFPT+U: At the first ph iteration the bare perturbed 
+              ! Hubbard potential dvbare_hub_q * psi_kpoint 
+              ! is calculated and added to dvpsi.
+              !
+              if (lda_plus_u) call dvqhub_barepsi_us (ik, u(1,mode))
+              !
               call save_buffer (dvpsi, lrbar, iubar, nrec)
+              !
            endif
            !
            ! Ortogonalize dvpsi to valence states: ps = <evq|dvpsi>

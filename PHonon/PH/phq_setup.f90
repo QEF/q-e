@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -52,16 +52,16 @@ subroutine phq_setup
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp
   USE cell_base,     ONLY : at, bg
-  USE io_global,     ONLY : ionode
+  USE io_global,     ONLY : ionode, stdout
   USE io_files,      ONLY : tmp_dir
   USE klist,         ONLY : xk, nks, nkstot
   USE lsda_mod,      ONLY : nspin, starting_magnetization
   USE scf,           ONLY : v, vrs, vltot, kedtau
   USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm
-  USE gvecs,       ONLY : doublegrid
+  USE gvecs,         ONLY : doublegrid
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
-                            sr, invs, inverse_s
+                            sr, invs, inverse_s, d1, d2, d3
   USE uspp_param,    ONLY : upf
   USE uspp,          ONLY : nlcc_any
   USE spin_orb,      ONLY : domag
@@ -87,24 +87,24 @@ subroutine phq_setup
   USE funct,         ONLY : dft_is_gradient
   USE ramanm,        ONLY : lraman, elop, ramtns, eloptns, done_lraman, &
                             done_elop
-
   USE mp_pools,      ONLY : inter_pool_comm, npool
-  !
   USE acfdtest,      ONLY : acfdt_is_active, acfdt_num_der
   USE elph_tetra_mod, ONLY : elph_tetra
   USE wvfct,         ONLY : nbnd, et
   USE ener,          ONLY : ef
   USE mp,            ONLY : mp_max, mp_min
-
   USE lr_symm_base,  ONLY : gi, gimq, irotmq, minus_q, invsymq, nsymq, rtau
   USE qpoint,        ONLY : xq, xk_col
   USE control_lr,    ONLY : lgamma
+  USE ldaU,          ONLY : lda_plus_u, Hubbard_U, Hubbard_J0
+  USE ldaU_ph,       ONLY : effU
+  USE constants,     ONLY : rytoev
 
   implicit none
 
   real(DP) :: sr_is(3,3,48)
 
-  integer :: isym, jsym, irot, ik, ibnd, ipol, &
+  integer :: isym, jsym, irot, ik, ibnd, ipol, nah, &
        mu, nu, imode0, irr, ipert, na, it, nt, nsym_is, last_irr_eff
   ! counters
 
@@ -410,6 +410,34 @@ subroutine phq_setup
      !
   END IF
   !
+  ! DFPT+U 
+  !
+  IF (lda_plus_u) THEN
+     !
+     ! Define effU     
+     !
+     effU = 0.d0
+     DO nah = 1, nat
+        nt = ityp(nah)
+        ! For U only calculations
+        effU(nt) = Hubbard_U(nt)
+        ! When there is also Hubbard_J0/=0
+        IF (Hubbard_J0(nt).NE.0.d0) &
+           effU(nt) = Hubbard_U(nt) - Hubbard_J0(nt)
+     ENDDO
+     !
+     ! Initialize d1, d2, d3 to rotate the spherical harmonics
+     !
+     CALL d_matrix (d1, d2, d3)
+     ! 
+     ! Calculate the offset of beta functions for all atoms. 
+     !
+     CALL setup_offset_beta()
+     !
+  ENDIF
+  !
   CALL stop_clock ('phq_setup')
+  !
   RETURN
+  !
 END SUBROUTINE phq_setup

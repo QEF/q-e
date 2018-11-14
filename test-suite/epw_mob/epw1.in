@@ -44,7 +44,7 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  fsthick     = 1.0 ! eV 
+  fsthick     = 1.2 ! eV 
   eptemp      = 1 ! K 
   degaussw    = 0.01 ! eV
 

@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 11Oct2018 at 15:26: 1 
+     Program EPW v.5.0.0 starts on 16Oct2018 at 14:25:37 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -110,6 +110,7 @@
      Number of WS vectors for electrons      279
      Number of WS vectors for phonons       19
      Number of WS vectors for electron-phonon       19
+     Maximum number of cores for efficient parallelization      114
      Results may improve by using use_ws == .true. 
 
      Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
@@ -153,13 +154,9 @@
 
      Number of ep-matrix elements per pool :       100842 ~=  787.83 Kb (@ 8 bytes/ DP)
       
-     ===================================================================
-     Start solving iterative Boltzmann Transport Equation
-     ===================================================================
-
-
-     Iteration number:         1 
-
+     A selecq.fmt file was found but re-created because selecqread == .false. 
+     We only need to compute      343 q-points
+      
      Applying a scissor shift of   0.70000 eV to the conduction states
 
      Temperature  400.000 K
@@ -179,244 +176,26 @@
      Mobility CB Fermi level   6.872901 eV
 
      ===================================================================
-     Scattering rate
+     Scattering rate for IBTE
      ===================================================================
 
+     restart and restart_freq inputs deactivated (restart point at every q-points).
+     No intermediate mobility will be shown.
 
      Fermi Surface thickness =   4.000000 eV
      This is computed with respect to the fine Fermi level   6.339674 eV
      Only states between   2.339674 eV and  10.339674 eV will be included
 
-     Progression iq (fine) =         50/       343
-     Creation of a restart point
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      6.8619       0.999997E+13       0.119477E-01  x-axis
-                                                   0.208937E-01  y-axis
-                                                   0.385336E-01  z-axis
-                                                   0.237917E-01     avg
-      500.000      7.0136       0.100000E+14       0.702667E-01  x-axis
-                                                   0.118372E+00  y-axis
-                                                   0.245302E+00  z-axis
-                                                   0.144647E+00     avg
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      7.0305       0.999998E+13       0.184430E+03  x-axis
-                                                   0.222990E+03  y-axis
-                                                   0.380774E+03  z-axis
-                                                   0.262731E+03     avg
-      500.000      6.8729       0.999997E+13       0.125303E+03  x-axis
-                                                   0.151762E+03  y-axis
-                                                   0.261435E+03  z-axis
-                                                   0.179500E+03     avg
-
-     Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
-     Total time so far
-     SCAT         :      1.10s CPU      1.11s WALL (      50 calls)
-     MOB          :      0.00s CPU      0.01s WALL (       1 calls)
-
      Progression iq (fine) =        100/       343
-     Creation of a restart point
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      6.8619       0.999997E+13       0.845545E-02  x-axis
-                                                   0.145166E-01  y-axis
-                                                   0.309025E-01  z-axis
-                                                   0.179582E-01     avg
-      500.000      7.0136       0.100000E+14       0.494488E-01  x-axis
-                                                   0.821013E-01  y-axis
-                                                   0.199056E+00  z-axis
-                                                   0.110202E+00     avg
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      7.0305       0.999998E+13       0.128316E+03  x-axis
-                                                   0.164463E+03  y-axis
-                                                   0.359297E+03  z-axis
-                                                   0.217359E+03     avg
-      500.000      6.8729       0.999997E+13       0.870608E+02  x-axis
-                                                   0.111699E+03  y-axis
-                                                   0.247386E+03  z-axis
-                                                   0.148715E+03     avg
-
-     Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
-     Total time so far
-     SCAT         :      2.20s CPU      2.21s WALL (     101 calls)
-     MOB          :      0.00s CPU      0.01s WALL (       2 calls)
-
-     Progression iq (fine) =        150/       343
-     Creation of a restart point
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      6.8619       0.999997E+13       0.819718E-02  x-axis
-                                                   0.139611E-01  y-axis
-                                                   0.303669E-01  z-axis
-                                                   0.175084E-01     avg
-      500.000      7.0136       0.100000E+14       0.479056E-01  x-axis
-                                                   0.789545E-01  y-axis
-                                                   0.195876E+00  z-axis
-                                                   0.107579E+00     avg
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      7.0305       0.999998E+13       0.128300E+03  x-axis
-                                                   0.164450E+03  y-axis
-                                                   0.359265E+03  z-axis
-                                                   0.217338E+03     avg
-      500.000      6.8729       0.999997E+13       0.869792E+02  x-axis
-                                                   0.111634E+03  y-axis
-                                                   0.247258E+03  z-axis
-                                                   0.148624E+03     avg
-
-     Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
-     Total time so far
-     SCAT         :      3.28s CPU      3.29s WALL (     152 calls)
-     MOB          :      0.00s CPU      0.01s WALL (       3 calls)
-
      Progression iq (fine) =        200/       343
-     Creation of a restart point
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      6.8619       0.999997E+13       0.812795E-02  x-axis
-                                                   0.139130E-01  y-axis
-                                                   0.160512E-01  z-axis
-                                                   0.126974E-01     avg
-      500.000      7.0136       0.100000E+14       0.475174E-01  x-axis
-                                                   0.786928E-01  y-axis
-                                                   0.985153E-01  z-axis
-                                                   0.749085E-01     avg
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      7.0305       0.999998E+13       0.602014E+02  x-axis
-                                                   0.655271E+02  y-axis
-                                                   0.104217E+03  z-axis
-                                                   0.766485E+02     avg
-      500.000      6.8729       0.999997E+13       0.409034E+02  x-axis
-                                                   0.445521E+02  y-axis
-                                                   0.707818E+02  z-axis
-                                                   0.520791E+02     avg
-
-     Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
-     Total time so far
-     SCAT         :      4.38s CPU      4.39s WALL (     203 calls)
-     MOB          :      0.00s CPU      0.01s WALL (       4 calls)
-
-     Progression iq (fine) =        250/       343
-     Creation of a restart point
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      6.8619       0.999997E+13       0.760158E-02  x-axis
-                                                   0.947590E-02  y-axis
-                                                   0.133022E-01  z-axis
-                                                   0.101266E-01     avg
-      500.000      7.0136       0.100000E+14       0.442582E-01  x-axis
-                                                   0.550498E-01  y-axis
-                                                   0.753436E-01  z-axis
-                                                   0.582172E-01     avg
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      7.0305       0.999998E+13       0.439385E+02  x-axis
-                                                   0.525870E+02  y-axis
-                                                   0.814376E+02  z-axis
-                                                   0.593211E+02     avg
-      500.000      6.8729       0.999997E+13       0.298568E+02  x-axis
-                                                   0.356770E+02  y-axis
-                                                   0.552253E+02  z-axis
-                                                   0.402530E+02     avg
-
-     Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
-     Total time so far
-     SCAT         :      5.46s CPU      5.47s WALL (     254 calls)
-     MOB          :      0.00s CPU      0.01s WALL (       5 calls)
-
      Progression iq (fine) =        300/       343
-     Creation of a restart point
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      6.8619       0.999997E+13       0.582870E-02  x-axis
-                                                   0.757065E-02  y-axis
-                                                   0.111759E-01  z-axis
-                                                   0.819175E-02     avg
-      500.000      7.0136       0.100000E+14       0.334968E-01  x-axis
-                                                   0.437302E-01  y-axis
-                                                   0.634060E-01  z-axis
-                                                   0.468777E-01     avg
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      7.0305       0.999998E+13       0.439368E+02  x-axis
-                                                   0.525845E+02  y-axis
-                                                   0.814358E+02  z-axis
-                                                   0.593190E+02     avg
-      500.000      6.8729       0.999997E+13       0.298485E+02  x-axis
-                                                   0.356648E+02  y-axis
-                                                   0.552172E+02  z-axis
-                                                   0.402435E+02     avg
-
-     Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
-     Total time so far
-     SCAT         :      6.54s CPU      6.55s WALL (     305 calls)
-     MOB          :      0.00s CPU      0.01s WALL (       6 calls)
-
-     Temperature  400.000 K
+      400.000      6.8619       0.999997E+13
+      500.000      7.0136       0.100000E+14
+      
+     epmatkqread automatically changed to .true. as all scattering have been computed.
+      
+     Number of elements per core      15116
      Average over degenerate eigenstates is performed
-     Average over degenerate eigenstates in CB is performed
-
-     Writing scattering rate to file
-
-     Temperature  500.000 K
-     Average over degenerate eigenstates is performed
-     Average over degenerate eigenstates in CB is performed
-
-     Writing scattering rate to file
-
-     Creation of the final restart point
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      6.8619       0.999997E+13       0.465971E-02  x-axis
-                                                   0.568930E-02  y-axis
-                                                   0.878282E-02  z-axis
-                                                   0.637728E-02     avg
-      500.000      7.0136       0.100000E+14       0.267397E-01  x-axis
-                                                   0.328128E-01  y-axis
-                                                   0.498193E-01  z-axis
-                                                   0.364573E-01     avg
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
@@ -430,60 +209,14 @@
                                                    0.281829E+02  y-axis
                                                    0.462060E+02  z-axis
                                                    0.341906E+02     avg
-
-     Note: Mobility are sorted by ascending values and might not correspond to the expected (x,y,z) axis.
-     Total time so far
-     SCAT         :      7.48s CPU      7.50s WALL (     349 calls)
-     MOB          :      0.00s CPU      0.01s WALL (       7 calls)
-
-
-     Iteration number:         2 
-
-     Applying a scissor shift of   0.70000 eV to the conduction states
-
-     Temperature  400.000 K
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660802 eV
-     Mobility VB Fermi level   6.861901 eV
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660802 eV
-     Mobility CB Fermi level   7.030498 eV
-
-     Temperature  500.000 K
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660802 eV
-     Mobility VB Fermi level   7.013557 eV
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660802 eV
-     Mobility CB Fermi level   6.872901 eV
-     Progression iq (fine) =         50/       343
-     Creation of a restart point
-     Progression iq (fine) =        100/       343
-     Creation of a restart point
-     Progression iq (fine) =        150/       343
-     Creation of a restart point
-     Progression iq (fine) =        200/       343
-     Creation of a restart point
-     Progression iq (fine) =        250/       343
-     Creation of a restart point
-     Progression iq (fine) =        300/       343
-     Creation of a restart point
-     Creation of a restart point
-
+      
      ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
+     Start solving iterative Boltzmann Transport Equation
      ===================================================================
 
-      400.000      6.8619       0.999997E+13       0.508748E-02  x-axis
-                                                   0.677962E-02  y-axis
-                                                   0.912891E-02  z-axis
-                                                   0.699867E-02     avg
-                                                     0.6999E-02     Err
-      500.000      7.0136       0.100000E+14       0.292498E-01  x-axis
-                                                   0.391414E-01  y-axis
-                                                   0.522029E-01  z-axis
-                                                   0.401980E-01     avg
-                                                     0.4020E-01     Err
+
+     Iteration number:         1 
+
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
@@ -493,63 +226,15 @@
                                                    0.363357E+02  y-axis
                                                    0.547466E+02  z-axis
                                                    0.424727E+02     avg
-                                                     0.4247E+02     Err
       500.000      6.8729       0.999997E+13       0.247699E+02  x-axis
                                                    0.247699E+02  y-axis
                                                    0.372317E+02  z-axis
                                                    0.289238E+02     avg
-                                                     0.2892E+02     Err
-     Total time so far
-     MOBITER      :     28.17s CPU     29.57s WALL (       1 calls)
 
+                                                   0.424727E+02     Err
 
-     Iteration number:         3 
+     Iteration number:         2 
 
-     Applying a scissor shift of   0.70000 eV to the conduction states
-
-     Temperature  400.000 K
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660802 eV
-     Mobility VB Fermi level   6.861901 eV
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660802 eV
-     Mobility CB Fermi level   7.030498 eV
-
-     Temperature  500.000 K
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660802 eV
-     Mobility VB Fermi level   7.013557 eV
-     Valence band maximum    =   6.255486 eV
-     Conduction band minimum =   7.660802 eV
-     Mobility CB Fermi level   6.872901 eV
-     Progression iq (fine) =         50/       343
-     Creation of a restart point
-     Progression iq (fine) =        100/       343
-     Creation of a restart point
-     Progression iq (fine) =        150/       343
-     Creation of a restart point
-     Progression iq (fine) =        200/       343
-     Creation of a restart point
-     Progression iq (fine) =        250/       343
-     Creation of a restart point
-     Progression iq (fine) =        300/       343
-     Creation of a restart point
-     Creation of a restart point
-
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
-
-      400.000      6.8619       0.999997E+13       0.517573E-02  x-axis
-                                                   0.702124E-02  y-axis
-                                                   0.933232E-02  z-axis
-                                                   0.717643E-02     avg
-                                                     0.1778E-03     Err
-      500.000      7.0136       0.100000E+14       0.297767E-01  x-axis
-                                                   0.405594E-01  y-axis
-                                                   0.535011E-01  z-axis
-                                                   0.412791E-01     avg
-                                                     0.1081E-02     Err
 
      ===================================================================
      Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
@@ -559,25 +244,35 @@
                                                    0.369723E+02  y-axis
                                                    0.573447E+02  z-axis
                                                    0.437631E+02     avg
-                                                     0.1290E+01     Err
       500.000      6.8729       0.999997E+13       0.251833E+02  x-axis
                                                    0.251833E+02  y-axis
                                                    0.389751E+02  z-axis
                                                    0.297806E+02     avg
-                                                     0.8567E+00     Err
-     Total time so far
-     MOBITER      :     57.00s CPU     59.83s WALL (       2 calls)
 
+                                                   0.129044E+01     Err
+
+     Iteration number:         3 
+
+
+     ===================================================================
+     Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]
+     ===================================================================
+
+      400.000      7.0305       0.999998E+13       0.368935E+02  x-axis
+                                                   0.368935E+02  y-axis
+                                                   0.568370E+02  z-axis
+                                                   0.435413E+02     avg
+      500.000      6.8729       0.999997E+13       0.251333E+02  x-axis
+                                                   0.251333E+02  y-axis
+                                                   0.386364E+02  z-axis
+                                                   0.296343E+02     avg
+
+                                                   0.221811E+00     Err
 
      Iteration number:         4 
 
      ===================================================================
      The iteration reached the maximum but did not converge.
-     ===================================================================
-
-     ===================================================================
-     Memory usage:  VmHWM =        23Mb
-                   VmPeak =       300Mb
      ===================================================================
 
 
@@ -589,16 +284,16 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :     85.50s CPU     89.77s WALL (       1 calls)
-     ep-interp    :     85.29s CPU     89.55s WALL (    1029 calls)
+     ephwann      :     27.61s CPU     28.99s WALL (       1 calls)
+     ep-interp    :     27.38s CPU     28.76s WALL (     343 calls)
 
-     DynW2B       :      0.03s CPU      0.03s WALL (    1029 calls)
-     HamW2B       :     15.77s CPU     16.12s WALL (  706580 calls)
-     ephW2Bp      :      2.45s CPU      5.50s WALL (    1029 calls)
+     DynW2B       :      0.01s CPU      0.01s WALL (     343 calls)
+     HamW2B       :      5.03s CPU      5.11s WALL (  236670 calls)
+     ephW2Bp      :      0.79s CPU      1.83s WALL (     343 calls)
 
 
      Total program execution
-     EPW          :   1m25.50s CPU   1m29.78s WALL
+     EPW          :     27.61s CPU     28.99s WALL
 
                                                                                           
  Please consider citing:                                                                  

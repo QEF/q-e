@@ -26,6 +26,7 @@
 
   restart    = .true.
   restart_freq = 1000
+  selecqread = .false.
 
   lifc        = .true.
   asr_typ     = 'crystal'

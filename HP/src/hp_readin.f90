@@ -141,7 +141,7 @@ SUBROUTINE input_sanity()
   USE control_flags,    ONLY : twfcollect
   USE mp_global,        ONLY : nproc_pool, nproc_pool_file, &
                                nproc_image_file, nproc_image, nproc_bgrp_file
-  USE ldaU,             ONLY : lda_plus_u, U_projection, lda_plus_u_kind
+  USE ldaU,             ONLY : lda_plus_u, U_projection, lda_plus_u_kind, Hubbard_J0
                                !is_hubbard_back
   !
   IMPLICIT NONE
@@ -158,6 +158,9 @@ SUBROUTINE input_sanity()
   !
   !IF (ANY(is_hubbard_back(:))) &
   !   CALL errore ('hp_readin', 'Calculation of Hubbard parameters with the background is not implemented', 1)
+  !
+  IF (ANY(Hubbard_J0(:).NE.0.d0)) &
+     CALL errore ('hp_readin', 'Hubbard_J0 /= 0 is not allowed.', 1)
   !
   IF (sum_pertq .AND. .NOT.ANY(perturb_only_atom(:))) &
      CALL errore ('hp_readin', 'sum_pertq can be set to .true. only if perturb_only_atom is .true. for some atom', 1)
@@ -187,6 +190,10 @@ SUBROUTINE input_sanity()
   !
   IF (lda_plus_u_kind/=0) CALL errore("hp_readin", &
      & ' The HP code supports only lda_plus_u_kind=0',1)
+  !
+  IF (U_projection.NE."atomic" .AND. U_projection.NE."ortho-atomic") &
+     CALL errore("hp_readin", &
+     " The HP code for this U_projection_type is not implemented",1)
   !
   IF (noncolin) CALL errore('hp_readin','Noncolliner case is not supported',1)
   !

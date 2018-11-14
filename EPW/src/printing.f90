@@ -29,11 +29,12 @@
     USE epwcom,        ONLY : nbndsub
     USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
                               nkf, epf17, xkf, nkqtotf, wf
-    USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero
+    USE constants_epw, ONLY : ryd2mev, ryd2ev, two, zero, eps8
     USE mp,            ONLY : mp_barrier, mp_sum
     USE mp_global,     ONLY : inter_pool_comm
     USE mp_world,      ONLY : mpime
     USE io_global,     ONLY : ionode_id
+    USE division,      ONLY : fkbounds
     !
     implicit none
     !
@@ -87,8 +88,6 @@
     !! g vectex accross all pools 
     REAL(kind=DP), ALLOCATABLE :: epc_sym(:,:,:)
     !! Temporary g-vertex for each pool 
-    REAL(kind=DP), PARAMETER :: eps = 0.01/ryd2mev
-    !! Tolerence to be degenerate
     ! 
     ! find the bounds of k-dependent arrays in the parallel case in each pool
     CALL fkbounds( nkqtotf/2, lower_bnd, upper_bnd )
@@ -134,7 +133,7 @@
             n  = 0
             DO mu = 1, nmodes
               w_2 = wf(mu,iq)
-              IF ( abs(w_2-w_1).lt.eps ) THEN
+              IF ( abs(w_2-w_1) < eps8 ) THEN
                 n = n + 1
                 g2 = g2 + epc(ibnd,jbnd,mu,ik+lower_bnd-1)*epc(ibnd,jbnd,mu,ik+lower_bnd-1)
               ENDIF
@@ -154,7 +153,7 @@
             n  = 0
             DO pbnd = 1, ibndmax-ibndmin+1
               w_2 = etf (ibndmin-1+pbnd, ikk)
-              IF ( abs(w_2-w_1).lt.eps ) THEN
+              IF ( abs(w_2-w_1) < eps8 ) THEN
                 n = n + 1
                 g2 = g2 + epc(pbnd,jbnd,nu,ik+lower_bnd-1)*epc(pbnd,jbnd,nu,ik+lower_bnd-1)
               ENDIF
@@ -175,7 +174,7 @@
             n  = 0
             DO pbnd = 1, ibndmax-ibndmin+1
               w_2 = etf(ibndmin-1+pbnd, ikq)
-              IF ( abs(w_2-w_1).lt.eps ) then
+              IF ( abs(w_2-w_1) < eps8 ) then
                 n = n + 1
                 g2 = g2 + epc(ibnd,pbnd,nu,ik+lower_bnd-1)*epc(ibnd,pbnd,nu,ik+lower_bnd-1)
               ENDIF
@@ -248,10 +247,10 @@
     ! 
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE print_serta( F_SERTA, BZtoIBZ, s_BZtoIBZ, vkk_all, etf_all, wkf_all, ef0) 
+    SUBROUTINE print_serta_sym( F_SERTA, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0) 
     !-----------------------------------------------------------------------
     !!
-    !!  This subroutine prints the mobility
+    !!  This subroutine prints the SERTA mobility using k-point symmetry.
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
@@ -262,7 +261,8 @@
     USE elph2,         ONLY : nkf, ibndmax, ibndmin, nkqtotf 
     USE transportcom,  ONLY : lower_bnd, transp_temp
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
-                               electron_SI, bohr2ang, ang2cm, hbarJ
+                              electron_SI, bohr2ang, ang2cm, hbarJ
+    USE symm_base,     ONLY : nrot
     USE noncollin_module, ONLY : noncolin
     USE mp_global,     ONLY : world_comm, my_pool_id
     USE mp,            ONLY : mp_sum
@@ -273,6 +273,8 @@
     !! BZ to IBZ mapping
     INTEGER, INTENT(in) :: s_BZtoIBZ(3,3,nkf1*nkf2*nkf3)
     !! Corresponding symmetry matrix
+    INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot,nkqtotf/2)
+    !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(kind=DP), INTENT(in) :: F_SERTA(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)  
     !! SERTA solution 
     REAL(KIND=DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
@@ -348,7 +350,6 @@
     !! Compute the approximate theta function. Here computes Fermi-Dirac 
     REAL(KIND=DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function 
-
     !
     inv_cell = 1.0d0/omega
     ! 
@@ -367,11 +368,12 @@
               tdf_sigma(:) = zero
               vk_cart(:) = vkk_all(:,ibnd, ik)
               Fi_cart(:) = F_SERTA(:, ibnd, ik, itemp)
-              ! Loop on full BZ
-              nb = 0
-              DO ikbz=1, nkf1*nkf2*nkf3
-                IF (BZtoIBZ(ikbz) == ik) THEN
-                  nb = nb + 1
+              !
+              ! Loop on the point equivalent by symmetry in the full BZ
+              DO nb=1, nrot
+                IF (BZtoIBZ_mat(nb,ik) > 0 ) THEN 
+                  ikbz = BZtoIBZ_mat(nb,ik)
+                  ! 
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
                   sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
@@ -483,11 +485,11 @@
               tdf_sigma(:) = zero
               vk_cart(:) = vkk_all(:,ibnd, ik)
               Fi_cart(:) = F_SERTA(:, ibnd, ik, itemp) 
-              ! Loop on full BZ
-              nb = 0
-              DO ikbz=1, nkf1*nkf2*nkf3
-                IF (BZtoIBZ(ikbz) == ik) THEN
-                  nb = nb + 1
+              ! 
+              ! Loop on the point equivalent by symmetry in the full BZ
+              DO nb=1, nrot
+                IF (BZtoIBZ_mat(nb,ik) > 0 ) THEN
+                  ikbz = BZtoIBZ_mat(nb,ik)
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
                   sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
@@ -581,14 +583,15 @@
     
     RETURN
     !
-    END SUBROUTINE print_serta
     !-----------------------------------------------------------------------
-    !  
+    END SUBROUTINE print_serta_sym
     !-----------------------------------------------------------------------
-    SUBROUTINE print_mob( F_out, BZtoIBZ, s_BZtoIBZ, vkk_all, etf_all, wkf_all, ef0, av_mob) 
+    ! 
+    !-----------------------------------------------------------------------
+    SUBROUTINE print_serta( F_SERTA, vkk_all, etf_all, wkf_all, ef0) 
     !-----------------------------------------------------------------------
     !!
-    !!  This subroutine prints the mobility ( electron or hole )
+    !!  This subroutine prints the SERTA mobility
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
@@ -601,6 +604,262 @@
     USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
                                electron_SI, bohr2ang, ang2cm, hbarJ
     USE noncollin_module, ONLY : noncolin
+    USE mp_global,     ONLY : world_comm, my_pool_id
+    USE mp,            ONLY : mp_sum
+    !
+    IMPLICIT NONE
+    !
+    REAL(kind=DP), INTENT(in) :: F_SERTA(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)  
+    !! SERTA solution 
+    REAL(KIND=DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    !! Velocity
+    REAL(KIND=DP), INTENT(IN) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    !! Eigenenergies of k
+    REAL(KIND=DP), INTENT(IN) :: wkf_all(nkqtotf/2)
+    !! Weight of k
+    REAL(KIND=DP), INTENT(IN) :: ef0(nstemp)
+    !! The Fermi level 
+
+    ! Local variables
+    INTEGER :: itemp
+    !! temperature index
+    INTEGER :: ik 
+    !! k-point index
+    INTEGER :: ibnd
+    !! band index
+    INTEGER :: ij  
+    !! Combined x,y,z index
+    INTEGER :: i,j
+    !! Cartesian index
+    ! 
+    REAL(KIND=DP) :: etemp
+    !! Temperature in Ry (this includes division by kb)
+    REAL(KIND=DP) :: tdf_sigma(9)
+    !! Transport distribution function
+    REAL(KIND=DP) :: Sigma(9,nstemp)
+    !! Electrical conductivity
+    REAL(KIND=DP) :: ekk
+    !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
+    REAL(KIND=DP) :: dfnk
+    !! Derivative Fermi distribution $$-df_{nk}/dE_{nk}$$
+    REAL(KIND=DP) :: carrier_density
+    !! Carrier density [nb of carrier per unit cell]
+    REAL(KIND=DP) :: fnk
+    !! Fermi-Dirac occupation function
+    REAL(KIND=DP) :: mobility
+    !! Sum of the diagonalized mobilities [cm^2/Vs] 
+    REAL(KIND=DP) :: mobility_xx
+    !! Mobility along the xx axis after diagonalization [cm^2/Vs] 
+    REAL(KIND=DP) :: mobility_yy
+    !! Mobility along the yy axis after diagonalization [cm^2/Vs] 
+    REAL(KIND=DP) :: mobility_zz
+    !! Mobility along the zz axis after diagonalization [cm^2/Vs]
+    REAL(KIND=DP) :: sigma_up(3,3)
+    !! Conductivity matrix in upper-triangle
+    REAL(KIND=DP) :: sigma_eig(3)
+    !! Eigenvalues from the diagonalized conductivity matrix
+    REAL(KIND=DP) :: sigma_vect(3,3)
+    !! Eigenvectors from the diagonalized conductivity matrix
+    REAL(KIND=DP) :: inv_cell
+    !! Inverse of the volume in [Bohr^{-3}]
+    REAL(KIND=DP), EXTERNAL :: wgauss
+    !! Compute the approximate theta function. Here computes Fermi-Dirac 
+    REAL(KIND=DP), EXTERNAL :: w0gauss
+    !! The derivative of wgauss:  an approximation to the delta function 
+
+    !
+    inv_cell = 1.0d0/omega
+    ! 
+    ! Hole
+    IF (ncarrier < -1E5) THEN
+      Sigma(:,:)    = zero
+      ! 
+      WRITE(stdout,'(/5x,a)') repeat('=',67)
+      WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
+      WRITE(stdout,'(5x,a/)') repeat('=',67)
+      DO itemp=1, nstemp
+        etemp = transp_temp(itemp)
+        DO ik=1,  nkqtotf/2
+          DO ibnd = 1, ibndmax-ibndmin+1
+            IF (etf_all (ibnd, ik) < ef0(itemp) ) THEN
+              tdf_sigma(:) = zero
+              ! 
+              ij = 0
+              DO j = 1, 3
+                DO i = 1, 3
+                  ij = ij + 1
+                  tdf_sigma(ij) = vkk_all(i, ibnd, ik) * F_SERTA(j, ibnd, ik, itemp) * wkf_all(ik)
+                ENDDO
+              ENDDO
+              ! 
+              !  energy at k (relative to Ef)
+              ekk = etf_all (ibnd, ik ) - ef0(itemp)
+              !  
+              ! derivative Fermi distribution
+              ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
+              dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+              !
+              ! electrical conductivity
+              Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
+              !
+            ENDIF ! if below Fermi level
+          ENDDO ! ibnd
+        ENDDO ! ik
+      ENDDO ! itemp      
+      ! 
+      DO itemp=1, nstemp
+        etemp = transp_temp(itemp)
+        carrier_density = 0.0
+        ! 
+        DO ik = 1, nkqtotf/2
+          DO ibnd = 1, ibndmax-ibndmin+1
+            ! This selects only valence bands for hole conduction
+            IF (etf_all (ibnd, ik ) < ef0(itemp) ) THEN
+              !  energy at k (relative to Ef)
+              ekk = etf_all (ibnd, ik ) - ef0(itemp)
+              fnk = wgauss( -ekk / etemp, -99)
+              ! The wkf(ikk) already include a factor 2
+              carrier_density = carrier_density + wkf_all(ik ) * (1.0d0 - fnk )
+            ENDIF
+          ENDDO
+        ENDDO
+        ! 
+        sigma_up(:,:) = zero
+        sigma_up(1,1) = Sigma(1,itemp)
+        sigma_up(1,2) = Sigma(2,itemp)
+        sigma_up(1,3) = Sigma(3,itemp)
+        sigma_up(2,1) = Sigma(4,itemp)
+        sigma_up(2,2) = Sigma(5,itemp)
+        sigma_up(2,3) = Sigma(6,itemp)
+        sigma_up(3,1) = Sigma(7,itemp)
+        sigma_up(3,2) = Sigma(8,itemp)
+        sigma_up(3,3) = Sigma(9,itemp)
+        !
+        ! Diagonalize the conductivity matrix
+        CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
+        !
+        mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility = (mobility_xx+mobility_yy+mobility_zz)/3
+        ! carrier_density in cm^-1
+        carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
+        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev/kelvin2eV, &
+                      ef0(itemp)*ryd2ev,  carrier_density, mobility_xx, '  x-axis'
+        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
+        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
+        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
+      ENDDO
+      ! 
+    ENDIF
+    ! 
+    ! Now electron mobility
+    IF (ncarrier > 1E5) THEN
+      ! Needed because of residual values from the hole above
+      Sigma(:,:)    = zero
+      ! 
+      WRITE(stdout,'(/5x,a)') repeat('=',67)
+      WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]")')
+      WRITE(stdout,'(5x,a/)') repeat('=',67)
+      DO itemp=1, nstemp
+        etemp = transp_temp(itemp)
+        DO ik=1,  nkqtotf/2
+          DO ibnd = 1, ibndmax-ibndmin+1
+            IF (etf_all (ibnd, ik) > ef0(itemp) ) THEN
+              tdf_sigma(:) = zero
+              ij = 0
+              DO j = 1, 3
+                DO i = 1, 3
+                  ij = ij + 1
+                  tdf_sigma(ij) = vkk_all(i, ibnd, ik) * F_SERTA(j, ibnd, ik, itemp) * wkf_all(ik)
+                ENDDO
+              ENDDO
+              ! 
+              !  energy at k (relative to Ef)
+              ekk = etf_all (ibnd, ik) - ef0(itemp)
+              !  
+              ! derivative Fermi distribution
+              ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
+              dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+              !
+              ! electrical conductivity
+              Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
+              !
+            ENDIF ! if below Fermi level
+          ENDDO ! ibnd
+        ENDDO ! ik
+      ENDDO ! itemp      
+      !CALL mp_sum( Sigma(:,:), world_comm )
+      DO itemp=1, nstemp
+        etemp = transp_temp(itemp)
+        carrier_density = 0.0
+        ! 
+        DO ik = 1, nkqtotf/2
+          DO ibnd = 1, ibndmax-ibndmin+1
+            ! This selects only valence bands for electron conduction
+            IF (etf_all (ibnd, ik) > ef0(itemp) ) THEN
+              !  energy at k (relative to Ef)
+              ekk = etf_all (ibnd, ik) - ef0(itemp)
+              fnk = wgauss( -ekk / etemp, -99)
+              ! The wkf(ikk) already include a factor 2
+              carrier_density = carrier_density + wkf_all(ik) * fnk
+            ENDIF
+          ENDDO
+        ENDDO
+        !CALL mp_sum( carrier_density, world_comm )
+        ! 
+        sigma_up(:,:) = zero
+        sigma_up(1,1) = Sigma(1,itemp)
+        sigma_up(1,2) = Sigma(2,itemp)
+        sigma_up(1,3) = Sigma(3,itemp)
+        sigma_up(2,1) = Sigma(4,itemp)
+        sigma_up(2,2) = Sigma(5,itemp)
+        sigma_up(2,3) = Sigma(6,itemp)
+        sigma_up(3,1) = Sigma(7,itemp)
+        sigma_up(3,2) = Sigma(8,itemp)
+        sigma_up(3,3) = Sigma(9,itemp)
+        !
+        ! Diagonalize the conductivity matrix
+        CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
+        !
+        mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility = (mobility_xx+mobility_yy+mobility_zz)/3
+        ! carrier_density in cm^-1
+        carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
+        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev/kelvin2eV, &
+                      ef0(itemp)*ryd2ev,  carrier_density, mobility_xx, '  x-axis'
+        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
+        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
+        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
+      ENDDO
+      ! 
+    ENDIF
+    
+    RETURN
+    !
+    END SUBROUTINE print_serta
+    !-----------------------------------------------------------------------
+    !  
+    !-----------------------------------------------------------------------
+    SUBROUTINE print_mob_sym( F_out, BZtoIBZ, s_BZtoIBZ, BZtoIBZ_mat, vkk_all, etf_all, wkf_all, ef0, av_mob) 
+    !-----------------------------------------------------------------------
+    !!
+    !!  This subroutine prints the mobility using k-point symmetry ( electron or hole )
+    !!
+    !-----------------------------------------------------------------------
+    USE kinds,         ONLY : DP
+    USE io_global,     ONLY : stdout
+    USE cell_base,     ONLY : at, omega, bg
+    USE epwcom,        ONLY : int_mob, ncarrier, nstemp, &
+                              nkf1, nkf2, nkf3
+    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nkqtotf 
+    USE transportcom,  ONLY : lower_bnd, transp_temp
+    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
+                              electron_SI, bohr2ang, ang2cm, hbarJ
+    USE symm_base,     ONLY : nrot
+    USE noncollin_module, ONLY : noncolin
     USE mp_global,     ONLY : world_comm
     USE mp,            ONLY : mp_sum
     !
@@ -610,6 +869,8 @@
     !! BZ to IBZ mapping
     INTEGER, INTENT(in) :: s_BZtoIBZ(3,3,nkf1*nkf2*nkf3)
     !! Corresponding symmetry matrix
+    INTEGER, INTENT(in) :: BZtoIBZ_mat(nrot,nkqtotf/2)
+    !! For a given k-point from the IBZ, given the index of all k from full BZ
     REAL(kind=DP), INTENT(in) :: F_out(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)  
     !! SERTA solution 
     REAL(KIND=DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
@@ -705,11 +966,12 @@
               tdf_sigma(:) = zero
               vk_cart(:) = vkk_all(:,ibnd, ik)
               Fi_cart(:) = F_out(:, ibnd, ik, itemp)
-              ! Loop on full BZ
-              nb = 0
-              DO ikbz=1, nkf1*nkf2*nkf3
-                IF (BZtoIBZ(ikbz) == ik) THEN
-                  nb = nb + 1
+              ! 
+              ! Loop on the point equivalent by symmetry in the full BZ
+              DO nb=1, nrot
+                IF (BZtoIBZ_mat(nb,ik) > 0 ) THEN
+                  ikbz = BZtoIBZ_mat(nb,ik)
+                  ! 
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
                   sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
@@ -815,11 +1077,12 @@
               tdf_sigma(:) = zero
               vk_cart(:) = vkk_all(:, ibnd, ik)
               Fi_cart(:) = F_out(:, ibnd, ik, itemp)
-              ! Loop on full BZ
-              nb = 0
-              DO ikbz=1, nkf1*nkf2*nkf3
-                IF (BZtoIBZ(ikbz) == ik) THEN
-                  nb = nb + 1
+              ! 
+              ! Loop on the point equivalent by symmetry in the full BZ
+              DO nb=1, nrot
+                IF (BZtoIBZ_mat(nb,ik) > 0 ) THEN
+                  ikbz = BZtoIBZ_mat(nb,ik)
+                  ! 
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
                   sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
@@ -912,6 +1175,265 @@
     !
     RETURN
     !
+    !-----------------------------------------------------------------------
+    END SUBROUTINE print_mob_sym
+    !-----------------------------------------------------------------------
+    !  
+    !-----------------------------------------------------------------------
+    SUBROUTINE print_mob( F_out, vkk_all, etf_all, wkf_all, ef0, av_mob) 
+    !-----------------------------------------------------------------------
+    !!
+    !!  This subroutine prints the mobility ( electron or hole )
+    !!
+    !-----------------------------------------------------------------------
+    USE kinds,         ONLY : DP
+    USE io_global,     ONLY : stdout
+    USE cell_base,     ONLY : at, omega, bg
+    USE epwcom,        ONLY : int_mob, ncarrier, nstemp, &
+                              nkf1, nkf2, nkf3
+    USE elph2,         ONLY : nkf, ibndmax, ibndmin, nkqtotf 
+    USE transportcom,  ONLY : lower_bnd, transp_temp
+    USE constants_epw, ONLY : zero, two, pi, kelvin2eV, ryd2ev, eps10, &
+                               electron_SI, bohr2ang, ang2cm, hbarJ
+    USE noncollin_module, ONLY : noncolin
+    USE mp_global,     ONLY : world_comm
+    USE mp,            ONLY : mp_sum
+    !
+    IMPLICIT NONE
+    !
+    REAL(kind=DP), INTENT(IN) :: F_out(3, ibndmax-ibndmin+1, nkqtotf/2, nstemp)  
+    !! SERTA solution 
+    REAL(KIND=DP), INTENT(IN) :: vkk_all(3,ibndmax-ibndmin+1,nkqtotf/2)
+    !! Velocity
+    REAL(KIND=DP), INTENT(IN) :: etf_all(ibndmax-ibndmin+1,nkqtotf/2)
+    !! Eigenenergies of k
+    REAL(KIND=DP), INTENT(IN) :: wkf_all(nkqtotf/2)
+    !! Weight of k
+    REAL(KIND=DP), INTENT(IN) :: ef0(nstemp)
+    !! The Fermi level 
+    REAL(KIND=DP), INTENT(INOUT) :: av_mob(nstemp)
+    !! Maximum error for all temperature
+
+    ! Local variables
+    INTEGER :: itemp
+    !! temperature index
+    INTEGER :: ik 
+    !! k-point index
+    INTEGER :: ibnd
+    !! band index
+    INTEGER :: nb 
+    !! Number of points equivalent by sym from BZ to IBTZ
+    INTEGER :: ij  
+    !! Combined x,y,z index
+    INTEGER :: i,j
+    !! Cartesian index
+    ! 
+    REAL(KIND=DP) :: etemp
+    !! Temperature in Ry (this includes division by kb)
+    REAL(KIND=DP) :: tdf_sigma(9)
+    !! Transport distribution function
+    REAL(KIND=DP) :: Sigma(9,nstemp)
+    !! Electrical conductivity
+    REAL(KIND=DP) :: ekk
+    !! Energy relative to Fermi level: $$\varepsilon_{n\mathbf{k}}-\varepsilon_F$$ 
+    REAL(KIND=DP) :: dfnk
+    !! Derivative Fermi distribution $$-df_{nk}/dE_{nk}$$
+    REAL(KIND=DP) :: carrier_density
+    !! Carrier density [nb of carrier per unit cell]
+    REAL(KIND=DP) :: fnk
+    !! Fermi-Dirac occupation function
+    REAL(KIND=DP) :: mobility
+    !! Sum of the diagonalized mobilities [cm^2/Vs] 
+    REAL(KIND=DP) :: mobility_xx
+    !! Mobility along the xx axis after diagonalization [cm^2/Vs] 
+    REAL(KIND=DP) :: mobility_yy
+    !! Mobility along the yy axis after diagonalization [cm^2/Vs] 
+    REAL(KIND=DP) :: mobility_zz
+    !! Mobility along the zz axis after diagonalization [cm^2/Vs]
+    REAL(KIND=DP) :: sigma_up(3,3)
+    !! Conductivity matrix in upper-triangle
+    REAL(KIND=DP) :: sigma_eig(3)
+    !! Eigenvalues from the diagonalized conductivity matrix
+    REAL(KIND=DP) :: sigma_vect(3,3)
+    !! Eigenvectors from the diagonalized conductivity matrix
+    REAL(KIND=DP) :: inv_cell
+    !! Inverse of the volume in [Bohr^{-3}]
+    REAL(KIND=DP), EXTERNAL :: wgauss
+    !! Compute the approximate theta function. Here computes Fermi-Dirac 
+    REAL(KIND=DP), EXTERNAL :: w0gauss
+    !! The derivative of wgauss:  an approximation to the delta function 
+
+    !
+    inv_cell = 1.0d0/omega
+    ! 
+    IF (ncarrier < -1E5) THEN ! If true print hole
+      Sigma(:,:)    = zero
+      ! 
+      WRITE(stdout,'(/5x,a)') repeat('=',67)
+      WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
+      WRITE(stdout,'(5x,a/)') repeat('=',67)
+      DO itemp=1, nstemp
+        etemp = transp_temp(itemp)
+        DO ik=1,  nkqtotf/2
+          DO ibnd = 1, ibndmax-ibndmin+1
+            IF (etf_all (ibnd, ik) < ef0(itemp) ) THEN
+              tdf_sigma(:) = zero
+              ij = 0
+              DO j = 1, 3
+                DO i = 1, 3
+                  ij = ij + 1
+                  tdf_sigma(ij) = vkk_all(i, ibnd, ik) * F_out(j, ibnd, ik, itemp) * wkf_all(ik)
+                ENDDO
+              ENDDO
+              ! 
+              !  energy at k (relative to Ef)
+              ekk = etf_all (ibnd, ik) - ef0(itemp)
+              !  
+              ! derivative Fermi distribution
+              ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
+              dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+              !
+              ! electrical conductivity
+              Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
+              !
+            ENDIF ! if below Fermi level
+          ENDDO ! ibnd
+        ENDDO ! ik
+      ENDDO ! itemp      
+      ! 
+      DO itemp=1, nstemp
+        etemp = transp_temp(itemp)
+        carrier_density = 0.0
+        ! 
+        DO ik = 1, nkqtotf/2
+          DO ibnd = 1, ibndmax-ibndmin+1
+            ! This selects only valence bands for hole conduction
+            IF (etf_all (ibnd, ik) < ef0(itemp) ) THEN
+              !  energy at k (relative to Ef)
+              ekk = etf_all (ibnd, ik) - ef0(itemp)
+              fnk = wgauss( -ekk / etemp, -99)
+              ! The wkf(ikk) already include a factor 2
+              carrier_density = carrier_density + wkf_all(ik) * (1.0d0 - fnk )
+            ENDIF
+          ENDDO
+        ENDDO
+        ! 
+        sigma_up(:,:) = zero
+        sigma_up(1,1) = Sigma(1,itemp)
+        sigma_up(1,2) = Sigma(2,itemp)
+        sigma_up(1,3) = Sigma(3,itemp)
+        sigma_up(2,1) = Sigma(4,itemp)
+        sigma_up(2,2) = Sigma(5,itemp)
+        sigma_up(2,3) = Sigma(6,itemp)
+        sigma_up(3,1) = Sigma(7,itemp)
+        sigma_up(3,2) = Sigma(8,itemp)
+        sigma_up(3,3) = Sigma(9,itemp)
+        !
+        ! Diagonalize the conductivity matrix
+        CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
+        !
+        mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility = (mobility_xx+mobility_yy+mobility_zz)/3
+        ! carrier_density in cm^-1
+        carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
+        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev/kelvin2eV, &
+                      ef0(itemp)*ryd2ev,  carrier_density, mobility_xx, '  x-axis'
+        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
+        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
+        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
+        av_mob(itemp) = mobility
+      ENDDO
+      ! 
+    ! Now electron mobility
+    ENDIF
+    IF (ncarrier > 1E5 ) THEN
+      ! Needed because of residual values from the hole above
+      Sigma(:,:)    = zero
+      ! 
+      WRITE(stdout,'(/5x,a)') repeat('=',67)
+      WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]")')
+      WRITE(stdout,'(5x,a/)') repeat('=',67)
+      DO itemp=1, nstemp
+        etemp = transp_temp(itemp)
+        DO ik=1,  nkqtotf/2
+          DO ibnd = 1, ibndmax-ibndmin+1
+            IF (etf_all (ibnd, ik) > ef0(itemp) ) THEN
+              tdf_sigma(:) = zero
+              ij = 0
+              DO j = 1, 3
+                DO i = 1, 3
+                  ij = ij + 1
+                  tdf_sigma(ij) = vkk_all(i, ibnd, ik) * F_out(j, ibnd, ik, itemp) * wkf_all(ik)
+                ENDDO
+              ENDDO
+              ! 
+              !  energy at k (relative to Ef)
+              ekk = etf_all (ibnd, ik) - ef0(itemp)
+              !  
+              ! derivative Fermi distribution
+              ! (-df_nk/dE_nk) = (f_nk)*(1-f_nk)/ (k_B T) 
+              dfnk = w0gauss( ekk / etemp, -99 ) / etemp
+              !
+              ! electrical conductivity
+              Sigma(:,itemp) = Sigma(:,itemp) + dfnk * tdf_sigma(:)
+              !
+            ENDIF ! if below Fermi level
+          ENDDO ! ibnd
+        ENDDO ! ik
+      ENDDO ! itemp      
+      ! 
+      DO itemp=1, nstemp
+        etemp = transp_temp(itemp)
+        carrier_density = 0.0
+        ! 
+        DO ik = 1, nkqtotf/2
+          DO ibnd = 1, ibndmax-ibndmin+1
+            ! This selects only valence bands for electron conduction
+            IF (etf_all (ibnd, ik) > ef0(itemp) ) THEN
+              !  energy at k (relative to Ef)
+              ekk = etf_all (ibnd, ik) - ef0(itemp)
+              fnk = wgauss( -ekk / etemp, -99)
+              ! The wkf(ikk) already include a factor 2
+              carrier_density = carrier_density + wkf_all(ik) * fnk
+            ENDIF
+          ENDDO
+        ENDDO
+        ! 
+        sigma_up(:,:) = zero
+        sigma_up(1,1) = Sigma(1,itemp)
+        sigma_up(1,2) = Sigma(2,itemp)
+        sigma_up(1,3) = Sigma(3,itemp)
+        sigma_up(2,1) = Sigma(4,itemp)
+        sigma_up(2,2) = Sigma(5,itemp)
+        sigma_up(2,3) = Sigma(6,itemp)
+        sigma_up(3,1) = Sigma(7,itemp)
+        sigma_up(3,2) = Sigma(8,itemp)
+        sigma_up(3,3) = Sigma(9,itemp)
+        !
+        ! Diagonalize the conductivity matrix
+        CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
+        !
+        mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility = (mobility_xx+mobility_yy+mobility_zz)/3
+        ! carrier_density in cm^-1
+        carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
+        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev/kelvin2eV, &
+                      ef0(itemp)*ryd2ev,  carrier_density, mobility_xx, '  x-axis'
+        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
+        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
+        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
+        av_mob(itemp) = mobility
+      ENDDO
+      ! 
+    ENDIF 
+    !
+    RETURN
+    !
+    !-----------------------------------------------------------------------
     END SUBROUTINE print_mob
     !-----------------------------------------------------------------------
     ! 

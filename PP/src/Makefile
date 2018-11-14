@@ -40,16 +40,19 @@ punch_plot.o \
 smallgk.o \
 stm.o \
 stop_pp.o \
+sum_band_kin.o \
 sym_band.o \
 work_function.o \
 write_p_avg.o \
 write_proj.o \
 write_io_header.o \
-write_hamiltonians.o 
+write_hamiltonians.o \
+xc_vdW_scale_mod.o   # added by Yang Jiao
 
 PWOBJS = ../../PW/src/libpw.a
 QEOBJS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
+         ../../dft-d3/libdftd3qe.a
 
 MODULES = $(PWOBJS) $(QEOBJS)
 
@@ -57,9 +60,9 @@ TLDEPS= pwlibs
 
 all : tldeps open_grid.x average.x bands.x dos.x epsilon.x initial_state.x fs.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
-      pawplot.x sumpdos.x pw2wannier90.x pw_export.x pw2gw.x \
+      pawplot.x sumpdos.x pw2wannier90.x pw2critic.x pw2gw.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
-      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x
+      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x
 
 
 libpp.a : $(PPOBJS) 
@@ -141,6 +144,11 @@ pw2wannier90.x : pw2wannier90.o libpp.a $(MODULES) $(LIBOBJS)
 		pw2wannier90.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
+pw2critic.x : pw2critic.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		pw2critic.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
 wfck2r.x : wfck2r.o libpp.a $(MODULES) $(LIBOBJS) 
 	$(LD) $(LDFLAGS) -o $@ \
 		wfck2r.o libpp.a $(MODULES) $(LIBOBJS)  $(QELIBS)
@@ -155,11 +163,6 @@ initial_state.x : initial_state.o libpp.a $(MODULES) $(LIBOBJS)
 pw2gw.x : pw2gw.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		pw2gw.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
-	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
-
-pw_export.x : pw_export.o libpp.a $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		pw_export.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 sumpdos.x : sumpdos.o 
@@ -213,6 +216,12 @@ fermi_velocity.x : fermi_velocity.o libpp.a $(MODULES) $(LIBOBJS)
 fermi_proj.x : fermi_proj.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		fermi_proj.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+# Added by Yang Jiao
+ppacf.x : ppacf.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		ppacf.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 clean :

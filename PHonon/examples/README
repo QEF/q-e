@@ -138,6 +138,10 @@ example17:
     This example shows how to compute the phonon dispersions of two-dimensional
     materials
 
+example18:
+    This example shows how to use pw.x and ph.x to calculate phonon
+    frequencies of LiCoO2 with Hubbard U on Co 3d states.
+
 Additional feature-specific examples:
 
 Partial_example

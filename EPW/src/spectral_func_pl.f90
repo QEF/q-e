@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE spectral_func_pl_q ( iq )
+  SUBROUTINE spectral_func_pl_q ( iqq, iq, totq )
   !-----------------------------------------------------------------------
   !
   !  Compute the electron spectral function including the  electron-
@@ -32,20 +32,29 @@
                             nel, meff, epsiHEG 
   USE pwcom,         ONLY : nelec, ef, isk
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, &
-                            wkf, nkf, nqtotf, wqf, xkf, nkqtotf,&
+                            wkf, nkf, wqf, xkf, nkqtotf,&
                             esigmar_all, esigmai_all, a_all,&
                             xqf, dmef  
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : me_pool, inter_pool_comm 
   USE cell_base,     ONLY : omega, alat, bg
+  USE division,      ONLY : fkbounds
   ! 
   implicit none
+  ! 
+  INTEGER, INTENT(IN) :: iqq
+  !! Q-point index in selecq
+  INTEGER, INTENT(IN) :: iq 
+  !! Q-point index
+  INTEGER, INTENT(IN) :: totq
+  !! Total number of q-points in fsthick window
+ 
   !
   ! variables for collecting data from all pools in parallel case 
   !
-  integer :: iw, ik, ikk, ikq, ibnd, jbnd, iq, fermicount
-  integer :: nksqtotf, lower_bnd, upper_bnd
+  INTEGER :: iw, ik, ikk, ikq, ibnd, jbnd, fermicount
+  INTEGER :: nksqtotf, lower_bnd, upper_bnd
   REAL(kind=DP), external :: efermig, dos_ef, wgauss
   REAL(kind=DP) :: g2, ekk, ekq, wq, ef0, wgq, wgkq, ww, dw, weight
   REAL(kind=DP) :: specfun_sum, esigmar0, tpiba_new
@@ -62,7 +71,7 @@
   !
   dw = ( wmax_specfun - wmin_specfun ) / dble (nw_specfun-1)
   !
-  IF ( iq .eq. 1 ) THEN
+  IF ( iqq == 1 ) THEN
      !
      WRITE(stdout,'(/5x,a)') repeat('=',67)
      WRITE(stdout,'(5x,"Electron Spectral Function in the Migdal Approximation")')
@@ -89,7 +98,7 @@
     !
   ENDIF
   !
-  IF ( iq .eq. 1 ) THEN 
+  IF ( iqq == 1 ) THEN 
      WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
      WRITE (stdout,'(a)') ' '
   ENDIF
@@ -101,7 +110,7 @@
   ! find the bounds of k-dependent arrays in the parallel case in each pool
   CALL fkbounds( nksqtotf, lower_bnd, upper_bnd )
   !
-  IF ( iq .eq. 1 ) THEN 
+  IF ( iqq == 1 ) THEN 
     IF ( .not. ALLOCATED(esigmar_all) ) ALLOCATE( esigmar_all(ibndmax-ibndmin+1, nksqtotf, nw_specfun) )
     IF ( .not. ALLOCATED(esigmai_all) ) ALLOCATE( esigmai_all(ibndmax-ibndmin+1, nksqtotf, nw_specfun) )
     esigmar_all(:,:,:) = zero
@@ -109,7 +118,7 @@
   ENDIF 
   !
   ! SP: Sum rule added to conserve the number of electron. 
-  IF ( iq .eq. 1 ) THEN
+  IF ( iqq == 1 ) THEN
     WRITE (stdout,'(5x,a)') 'The sum rule to conserve the number of electron is enforced.'
     WRITE (stdout,'(5x,a)') 'The self energy is rescaled so that its real part is zero at the Fermi level.'
     WRITE (stdout,'(5x,a)') 'The sum rule replace the explicit calculation of the Debye-Waller term.'
@@ -246,7 +255,7 @@
   !
   ! The k points are distributed among pools: here we collect them
   !
-  IF ( iq .eq. nqtotf ) THEN
+  IF ( iqq == totq ) THEN
     !
     ALLOCATE ( xkf_all      ( 3,       nkqtotf ), &
                etf_all      ( nbndsub, nkqtotf ) )

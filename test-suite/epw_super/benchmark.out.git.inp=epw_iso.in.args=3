@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 11Oct2018 at 15:41:43 
+     Program EPW v.5.0.0 starts on 17Oct2018 at 11:10:25 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -146,7 +146,7 @@
                 l(1) =   0
      EPW          :      0.05s CPU      0.05s WALL
 
-     EPW          :      0.10s CPU      0.10s WALL
+     EPW          :      0.10s CPU      0.11s WALL
 
      No wavefunction gauge setting applied
      -------------------------------------------------------------------
@@ -250,7 +250,7 @@
      (   0.25000   0.43301   0.66488) :   1.07401
 
      -------------------------------------------------------------------
-     WANNIER      :      4.72s CPU      4.78s WALL (       1 calls)
+     WANNIER      :      4.69s CPU      4.69s WALL (       1 calls)
      -------------------------------------------------------------------
 
      Dipole matrix elements calculated
@@ -259,7 +259,7 @@
      Calculating kmap and kgmap
      Progress  kmap: ###########################
      Progress kgmap: ########################################
-     kmaps        :      0.68s CPU      0.69s WALL (       1 calls)
+     kmaps        :      0.65s CPU      0.65s WALL (       1 calls)
      Symmetries of bravais lattice:  24
      Symmetries of crystal:          24
 
@@ -396,6 +396,7 @@
      Number of WS vectors for electrons       39
      Number of WS vectors for phonons       39
      Number of WS vectors for electron-phonon       39
+     Maximum number of cores for efficient parallelization      351
      Results may improve by using use_ws == .true. 
 
      Writing Hamiltonian, Dynamical matrix and EP vertex in Wann rep to file
@@ -425,11 +426,13 @@
 
      ===================================================================
 
-              ibndmin =     3  ebndmin =     0.537
-              ibndmax =     5  ebndmax =     0.588
+              ibndmin =     1  ebndmin =    -0.357
+              ibndmax =     5  ebndmax =     1.152
 
 
-     Number of ep-matrix elements per pool :         2268 ~=   17.72 Kb (@ 8 bytes/ DP)
+     Number of ep-matrix elements per pool :         6300 ~=   49.22 Kb (@ 8 bytes/ DP)
+     We only need to compute      216 q-points
+      
 
      Nr. of irreducible k-points on the uniform grid:        28
 
@@ -439,15 +442,13 @@
 
      Finished mapping k+sign*q onto the fine irreducibe k-mesh
 
-     Nr irreducible k-points within the Fermi shell =         9 out of        28
-     Progression iq (fine) =         50/       216
+     Nr irreducible k-points within the Fermi shell =        28 out of        28
      Progression iq (fine) =        100/       216
-     Progression iq (fine) =        150/       216
      Progression iq (fine) =        200/       216
                   Fermi level (eV) =    0.766449682995321D+01
      DOS(states/spin/eV/Unit Cell) =    0.913425062108237D+00
             Electron smearing (eV) =    0.100000000000000D+00
-                 Fermi window (eV) =    0.400000000000000D+00
+                 Fermi window (eV) =    0.200000000000000D+02
       
      Finished writing .ephmat files
      ===================================================================
@@ -466,15 +467,15 @@
                   Fermi level (eV) =     7.6644968300E+00
      DOS(states/spin/eV/Unit Cell) =     9.1342506211E-01
             Electron smearing (eV) =     1.0000000000E-01
-                 Fermi window (eV) =     4.0000000000E-01
-     Nr irreducible k-points within the Fermi shell =         9 out of        28
-           2 bands within the Fermi window
+                 Fermi window (eV) =     2.0000000000E+01
+     Nr irreducible k-points within the Fermi shell =        28 out of        28
+           5 bands within the Fermi window
 
 
      Finish reading .egnv file 
 
 
-     Max nr of q-points =        78
+     Max nr of q-points =       216
 
 
      Finish reading .ikmap files
@@ -485,53 +486,53 @@
 
      Finish reading .ephmat files 
 
-     lambda_max =             5.1641588   lambda_k_max =             1.5103321
+     lambda_max =           126.3632786   lambda_k_max =             3.2077041
  
-     Electron-phonon coupling strength =    0.9391714
+     Electron-phonon coupling strength =    0.8715788
  
-     Estimated Allen-Dynes Tc =      31.8267931 K for muc =    0.16000
+     Estimated Allen-Dynes Tc =      26.4177675 K for muc =    0.16000
   
-     Estimated BCS superconducting gap =       0.0048270 eV
+     Estimated BCS superconducting gap =       0.0040067 eV
     
-     temp(  1) =     25.00000 K 
+     temp(  1) =     15.00000 K 
     
      Solve isotropic Eliashberg equations on imaginary-axis
     
-     Total number of frequency points nsiw (      1 ) =     37
+     Total number of frequency points nsiw (      1 ) =     62
     
-     iter =      1   error =     2.5777469056E+00   Znormi(1) =     1.9044862194E+00   Deltai(1) =     5.2077514618E-03
-     iter =      2   error =     8.1419343557E-02   Znormi(1) =     1.9041236125E+00   Deltai(1) =     5.3952430847E-03
-     iter =      3   error =     4.8482782338E-02   Znormi(1) =     1.9030263269E+00   Deltai(1) =     5.5956763361E-03
-     iter =      4   error =     2.3624273544E-02   Znormi(1) =     1.9019503148E+00   Deltai(1) =     5.7491038919E-03
-     iter =      5   error =     2.3858771923E-02   Znormi(1) =     1.9010277957E+00   Deltai(1) =     5.8857466656E-03
-     iter =      6   error =     5.0684595553E-02   Znormi(1) =     1.8989444049E+00   Deltai(1) =     6.1852005277E-03
-     iter =      7   error =     2.3098091029E-03   Znormi(1) =     1.8990612775E+00   Deltai(1) =     6.1697400313E-03
+     iter =      1   error =     2.5322786302E+00   Znormi(1) =     1.8425565148E+00   Deltai(1) =     4.4511260668E-03
+     iter =      2   error =     7.6350592879E-02   Znormi(1) =     1.8420086250E+00   Deltai(1) =     4.6843298938E-03
+     iter =      3   error =     4.5214453230E-02   Znormi(1) =     1.8407880676E+00   Deltai(1) =     4.9302785074E-03
+     iter =      4   error =     3.4114375039E-02   Znormi(1) =     1.8396470531E+00   Deltai(1) =     5.1142664866E-03
+     iter =      5   error =     5.1084767495E-02   Znormi(1) =     1.8380345292E+00   Deltai(1) =     5.3737355714E-03
+     iter =      6   error =     3.1593313222E-02   Znormi(1) =     1.8369970920E+00   Deltai(1) =     5.5352742661E-03
+     iter =      7   error =     3.2735364515E-03   Znormi(1) =     1.8371188436E+00   Deltai(1) =     5.5172615936E-03
      Convergence was reached in nsiter =      7
   
      iaxis_imag   :      0.00s CPU      0.00s WALL (       1 calls)
     
      Pade approximant of isotropic Eliashberg equations from imaginary-axis to real-axis
     
-     pade =     30   error =     1.3158216706E+00   Re[Znorm(1)] =     1.9054875506E+00   Re[Delta(1)] =     6.2394750853E-03
+     pade =     50   error =     1.3383837700E+00   Re[Znorm(1)] =     1.8387340136E+00   Re[Delta(1)] =     5.5339316344E-03
   
-     raxis_pade   :      0.00s CPU      0.01s WALL (       1 calls)
+     raxis_pade   :      0.01s CPU      0.01s WALL (       1 calls)
   
     
      Analytic continuation of isotropic Eliashberg equations from imaginary-axis to real-axis
     
      Total number of frequency points nsw =   2000
     
-     iter =      1   error =     1.0014103131E-01   Re[Znorm(1)] =     1.9043708564E+00   Re[Delta(1)] =     6.2151160897E-03
-     iter =      2   error =     1.9770052335E-02   Re[Znorm(1)] =     1.9043715688E+00   Re[Delta(1)] =     6.2151135043E-03
-     iter =      3   error =     9.8299084354E-03   Re[Znorm(1)] =     1.9043718307E+00   Re[Delta(1)] =     6.2151125816E-03
+     iter =      1   error =     1.0679396230E-01   Re[Znorm(1)] =     1.8388939124E+00   Re[Delta(1)] =     5.5362867563E-03
+     iter =      2   error =     1.6731551840E-02   Re[Znorm(1)] =     1.8388939164E+00   Re[Delta(1)] =     5.5362867467E-03
+     iter =      3   error =     9.9244125501E-03   Re[Znorm(1)] =     1.8388939179E+00   Re[Delta(1)] =     5.5362867432E-03
      Convergence was reached in nsiter =      3
  
-     raxis_acon   :      1.20s CPU      1.21s WALL (       1 calls)
+     raxis_acon   :      1.27s CPU      1.27s WALL (       1 calls)
  
-     itemp =   1   total cpu time :     1.2 secs
+     itemp =   1   total cpu time :     1.3 secs
 
      Unfolding on the coarse grid
-     elphon_wrap  :     45.61s CPU     46.36s WALL (       1 calls)
+     elphon_wrap  :     46.19s CPU     46.87s WALL (       1 calls)
 
      INITIALIZATION: 
 
@@ -541,21 +542,21 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.42s CPU      0.46s WALL (       1 calls)
-     ep-interp    :      0.28s CPU      0.30s WALL (     216 calls)
+     ephwann      :      0.70s CPU      0.74s WALL (       1 calls)
+     ep-interp    :      0.55s CPU      0.57s WALL (     216 calls)
 
      Ham: step 1  :      0.00s CPU      0.00s WALL (       1 calls)
      Ham: step 2  :      0.00s CPU      0.00s WALL (       1 calls)
      ep: step 1   :      0.00s CPU      0.00s WALL (     243 calls)
-     ep: step 2   :      0.03s CPU      0.04s WALL (     243 calls)
+     ep: step 2   :      0.04s CPU      0.04s WALL (     243 calls)
      DynW2B       :      0.01s CPU      0.01s WALL (     216 calls)
-     HamW2B       :      0.08s CPU      0.09s WALL (   12152 calls)
-     ephW2Bp      :      0.08s CPU      0.08s WALL (     216 calls)
+     HamW2B       :      0.09s CPU      0.09s WALL (   12584 calls)
+     ephW2Bp      :      0.08s CPU      0.09s WALL (     216 calls)
 
-     ELIASHBERG   :      1.64s CPU      1.67s WALL (       1 calls)
+     ELIASHBERG   :     65.56s CPU     65.58s WALL (       1 calls)
 
      Total program execution
-     EPW          :     52.49s CPU     53.36s WALL
+     EPW          :   1m57.24s CPU   1m57.99s WALL
 
                                                                                           
  Please consider citing:                                                                  
