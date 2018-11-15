@@ -1582,7 +1582,7 @@ SUBROUTINE iosys()
   dfftp%nr3    = nr3
   IF ( ( nr1 /= 0 .AND. nr2 /= 0 .AND. nr3 /= 0 ) .AND. &
        ( nr1s== 0 .AND. nr2s== 0 .AND. nr3s== 0 ) .AND. &
-       ( ecutrho > (4.0_dp+eps8)*ecutwfc ) ) THEN
+       ( ABS(ecutrho -4*ecutwfc)<eps8) ) THEN
      dffts%nr1 = nr1
      dffts%nr2 = nr2
      dffts%nr3 = nr3
