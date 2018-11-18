@@ -99,6 +99,8 @@
   !! Check wheter this is the first cycle after a restart. 
   LOGICAL :: first_time
   !! Check wheter this is the first timeafter a restart. 
+  LOGICAL :: homogeneous
+  !! Check if the k and q grids are homogenous and commensurate.
   !
   CHARACTER (len=256) :: filint
   !! Name of the file to write/read 
@@ -840,46 +842,45 @@
   ! Determines which q-points falls within the fsthick windows
   ! Store the result in the selecq.fmt file 
   ! If the file exists, automatically restart from the file
-  ! This is only done in the case of homogeneous grids. 
   ! -----------------------------------------------------------------------
-  totq = 0
   ! 
-  IF ( (nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) ) THEN
-    ! 
-    ! Check if the file has been pre-computed
-    IF (mpime == ionode_id) THEN
-      INQUIRE(FILE='selecq.fmt',EXIST=exst)
+  ! Check if the grids are homogeneous and commensurate
+  homogeneous = .FALSE.
+  IF ( (nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
+       (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) .AND. &
+       (MOD(nkf1,nqf1) == 0) .AND. (MOD(nkf2,nqf2) == 0) .AND. (MOD(nkf3,nqf3) == 0) ) THEN
+    homogeneous = .TRUE.
+  ELSE
+    homogeneous = .FALSE.
+  ENDIF
+  ! 
+  totq = 0
+  ! Check if the file has been pre-computed
+  IF (mpime == ionode_id) THEN
+    INQUIRE(FILE='selecq.fmt',EXIST=exst)
+  ENDIF
+  CALL mp_bcast(exst, ionode_id, world_comm)
+  ! 
+  IF (exst) THEN
+    IF (selecqread) THEN
+      WRITE(stdout,'(5x,a)')' '
+      WRITE(stdout,'(5x,a)')'Reading selecq.fmt file. '
+      CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
+    ELSE 
+      WRITE(stdout,'(5x,a)')' '
+      WRITE(stdout,'(5x,a)')'A selecq.fmt file was found but re-created because selecqread == .false. '
+      CALL qwindow(.FALSE., nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
     ENDIF
-    CALL mp_bcast(exst, ionode_id, world_comm)
-    ! 
-    IF (exst) THEN
-      IF (selecqread) THEN
-        WRITE(stdout,'(5x,a)')' '
-        WRITE(stdout,'(5x,a)')'Reading selecq.fmt file. '
-        CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
-      ELSE 
-        WRITE(stdout,'(5x,a)')' '
-        WRITE(stdout,'(5x,a)')'A selecq.fmt file was found but re-created because selecqread == .false. '
-        CALL qwindow(.FALSE., nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
-      ENDIF
-    ELSE ! exst
-      IF (selecqread) THEN
-        CALL errore( 'ephwann_shuffle', 'Variable selecqread == .true. but file selecq.fmt not found.',1 ) 
-      ELSE
-        CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
-      ENDIF
+  ELSE ! exst
+    IF (selecqread) THEN
+      CALL errore( 'ephwann_shuffle', 'Variable selecqread == .true. but file selecq.fmt not found.',1 ) 
+    ELSE
+      CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
     ENDIF
-    ! 
-    WRITE(stdout,'(5x,a,i8,a)')'We only need to compute ',totq, ' q-points'
-    WRITE(stdout,'(5x,a)')' '
-  ELSE 
-    ! If Random points or points read from files, then take all. 
-    totq = nqf
-    ALLOCATE(selecq(totq))
-    DO iq = 1, totq
-      selecq(iq) = iq
-    ENDDO
-  ENDIF ! homogeneous grids
+  ENDIF
+  ! 
+  WRITE(stdout,'(5x,a,i8,a)')'We only need to compute ',totq, ' q-points'
+  WRITE(stdout,'(5x,a)')' '
   ! 
   ! -----------------------------------------------------------------------
   ! Possible restart during step 1) 
