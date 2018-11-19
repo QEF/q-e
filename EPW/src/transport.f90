@@ -34,7 +34,7 @@
     USE mp,            ONLY : mp_sum, mp_bcast
     USE constants_epw, ONLY : twopi, ci, zero
     USE epwcom,        ONLY : nbndsub, fsthick, use_ws, mp_mesh_k, nkf1, nkf2, &
-                              nkf3, iterative_bte
+                              nkf3, iterative_bte, restart_freq
     USE pwcom,         ONLY : ef 
     USE cell_base,     ONLY : bg
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
@@ -69,7 +69,7 @@
     !! integer variable for I/O control
     INTEGER :: iq
     !! Counter on coarse q-point grid    
-    INTEGER :: ik, ikk, ikq
+    INTEGER :: ik, ikk, ikq, ikl
     !! Counter on coarse k-point grid
     INTEGER :: found(npool)
     !! Indicate if a q-point was found within the window
@@ -95,6 +95,10 @@
     !! BZ to IBZ mapping
     INTEGER :: s_BZtoIBZ(3,3,nkf1*nkf2*nkf3)
     !! symmetry 
+    INTEGER :: nkloc
+    !! number of k-point selected on that cpu 
+    INTEGER :: kmap(nkf)
+    !! k-point that are selected for that cpu
     ! 
     REAL(kind=DP) :: xxq(3)
     !! Current q-point
@@ -112,6 +116,8 @@
     !! Eigen-energies all full k-grid.
     REAL(kind=DP) :: etf_all(nbndsub, nkqtotf/2) 
     !! Eigen-energies all full k-grid.
+    REAL(kind=DP) :: etf_tmp(nbndsub)
+    !! Temporary Eigen-energies at a give k-point
     REAL(kind=DP) :: xkf_tmp (3, nkqtotf)
     !! Temporary k-point coordinate (dummy variable)
     REAL(kind=DP) :: wkf_tmp(nkqtotf)
@@ -237,57 +243,110 @@
             totq = totq + 1
             selecq(totq) = iq
             ! 
-            IF (MOD(totq,500) == 0) THEN
+            IF (MOD(totq,restart_freq) == 0) THEN
               WRITE(stdout,'(5x,a,i8,i8)')'Number selected, total',totq,iq
             ENDIF
           ENDIF
         ENDDO ! iq
       ELSE ! homogeneous
-        DO iq=1, nqf
-          xxq = xqf (:, iq)
-          found(:) = 0
-          DO ik = 1, nkf
-            ikk = 2 * ik - 1
-            xkk = xkf(:, ikk)
-            xkq = xkk + xxq
-            ! 
-            CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-            CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk2, 1 )
-            IF (use_ws) THEN
+        ! First compute the k-points eigenenergies for efficiency reasons
+        nkloc = 0
+        kmap(:) = 0
+        DO ik = 1, nkf
+          ikk = 2 * ik - 1
+          xkk = xkf(:, ikk)
+          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+          IF (use_ws) THEN
+            DO iw=1, dims
+              DO iw2=1, dims
+                DO ir = 1, nrr_k
+                  IF (ndegen_k(ir,iw2,iw) > 0) THEN
+                    cfac(ir,iw2,iw)  = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
+                  ENDIF
+                ENDDO
+              ENDDO
+            ENDDO
+          ELSE
+            cfac(:,1,1)  = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
+          ENDIF
+          CALL hamwan2bloch ( nbndsub, nrr_k, cufkk, etf_tmp(:), chw, cfac, dims)
+          ! 
+          ! Check for the k-points in this pool
+          IF ( minval ( abs(etf_tmp(:) - ef) ) < fsthick ) THEN
+            nkloc = nkloc + 1
+            kmap(nkloc) = ik
+          ENDIF
+        ENDDO ! k-points
+        ! 
+        ! Now compute the q-loop doing WS separately for efficiency
+        IF (use_ws) THEN
+          DO iq=1, nqf
+            xxq = xqf (:, iq)
+            etf_tmp(:) = zero
+            found(:) = 0
+            DO ikl = 1, nkloc
+              ik = kmap(ikl)
+              ikk = 2 * ik - 1
+              xkk = xkf(:, ikk)
+              xkq = xkk + xxq
+              CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
               DO iw=1, dims
                 DO iw2=1, dims
                   DO ir = 1, nrr_k
                     IF (ndegen_k(ir,iw2,iw) > 0) THEN
-                      cfac(ir,iw2,iw)  = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
-                      cfacq(ir,iw2,iw) = exp( ci*rdotk2(ir) ) / ndegen_k(ir,iw2,iw)
+                      cfacq(ir,iw2,iw) = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
                     ENDIF
                   ENDDO
                 ENDDO
               ENDDO
-            ELSE
-              cfac(:,1,1)  = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
-              cfacq(:,1,1)  = exp( ci*rdotk2(:) ) / ndegen_k(:,1,1)
+              CALL hamwan2bloch ( nbndsub, nrr_k, cufkq, etf_tmp(:), chw, cfacq, dims)
+              ! 
+              IF ( minval ( abs(etf_tmp(:) - ef) ) < fsthick ) THEN
+                found(my_pool_id+1) = 1
+                EXIT ! exit the loop 
+              ENDIF
+            ENDDO ! ik
+            ! If found on any k-point from the pools
+            CALL mp_sum(found, world_comm)
+            IF (SUM(found(:) ) > 0) THEN
+              totq = totq +1
+              selecq(totq) = iq
+              IF (MOD(totq,restart_freq) == 0) THEN
+                WRITE(stdout,'(5x,a,i8,i8)')'Number selected, total',totq,iq
+              ENDIF
             ENDIF
-            CALL hamwan2bloch ( nbndsub, nrr_k, cufkk, etf_loc(:, ik), chw, cfac, dims)
-            CALL hamwan2bloch ( nbndsub, nrr_k, cufkq, etf_locq(:, ik), chw, cfacq, dims)
-            IF ( (( minval ( abs(etf_loc(:, ik) - ef) ) < fsthick ) .and. &
-                  ( minval ( abs(etf_locq(:, ik) - ef) ) < fsthick )) ) THEN
-              found(my_pool_id+1) = 1
-              EXIT ! exit the loop 
+          ENDDO ! iq
+        ELSE ! use_ws
+          DO iq=1, nqf
+            xxq = xqf (:, iq)
+            etf_tmp(:) = zero
+            found(:) = 0
+            DO ikl = 1, nkloc
+              ik = kmap(ikl)
+              ikk = 2 * ik - 1
+              xkk = xkf(:, ikk)
+              xkq = xkk + xxq
+              CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
+              cfacq(:,1,1)  = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
+              CALL hamwan2bloch ( nbndsub, nrr_k, cufkq, etf_tmp(:), chw, cfacq, dims)
+              ! 
+              IF ( minval ( abs(etf_tmp(:) - ef) ) < fsthick ) THEN
+                found(my_pool_id+1) = 1
+                EXIT ! exit the loop 
+              ENDIF
+            ENDDO ! ik
+            ! If found on any k-point from the pools
+            CALL mp_sum(found, world_comm)
+            IF (SUM(found(:) ) > 0) THEN
+              totq = totq +1
+              selecq(totq) = iq
+              IF (MOD(totq,restart_freq) == 0) THEN
+                WRITE(stdout,'(5x,a,i8,i8)')'Number selected, total',totq,iq
+              ENDIF
             ENDIF
-          ENDDO ! ik
-          ! If found on any k-point from the pools
-          CALL mp_sum(found, world_comm)
-          ! 
-          IF (SUM(found) > 0) THEN
-            totq = totq + 1
-            selecq(totq) = iq
-            ! 
-            IF (MOD(totq,500) == 0) THEN
-              WRITE(stdout,'(5x,a,i8,i8)')'Number selected, total',totq,iq
-            ENDIF
-          ENDIF
-        ENDDO ! iq
+          ENDDO ! iq            
+          !
+        ENDIF ! use_ws
       ENDIF ! homogeneous
       !  
       IF (mpime == ionode_id) THEN
