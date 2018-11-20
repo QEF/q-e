@@ -18,9 +18,11 @@ PROGRAM ibrav2cell
   REAL(DP) :: a(3,3), omega, e(3,3), alat
   INTEGER, EXTERNAL :: at2ibrav
   !
+  WRITE(*, '("Enter the lattice vectors (one per line)")')
   READ(*,*) a(:,1)
   READ(*,*) a(:,2)
   READ(*,*) a(:,3)
+  WRITE(*, '(a)') "Enter alat (or 'x' to skip if axis are in bohr)"
   READ(*,*,iostat=ios) alat
   IF(ios/=0) alat=1._dp
   ibrav = at2ibrav (a(:,1), a(:,2), a(:,3))
