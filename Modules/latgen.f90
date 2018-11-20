@@ -728,3 +728,50 @@ SUBROUTINE celldm2abc ( ibrav, celldm, a,b,c,cosab,cosac,cosbc )
   ENDIF
   !
 END SUBROUTINE celldm2abc
+
+SUBROUTINE remake_cell(ibrav, alat, a1,a2,a3)
+  USE kinds, ONLY : DP
+  USE io_global, ONLY : stdout
+  IMPLICIT NONE
+  INTEGER,INTENT(in) :: ibrav
+  REAL(DP),INTENT(inout) :: alat, a1(3),a2(3),a3(3)
+  REAL(DP) :: e1(3), e2(3), e3(3)
+  REAL(DP) :: celldm_internal(6), lat_internal, omega
+!  ibrav = at2ibrav (a(:,1), a(:,2), a(:,3))
+  CALL  at2celldm (ibrav,alat,a1, a2, a3,celldm_internal)
+  WRITE(stdout,'("ibrav = ",i)') ibrav
+  WRITE(stdout,'(" celldm(1) = ",f15.8)') celldm_internal(1)
+  IF( celldm_internal(2) /= 0._dp) WRITE(*,'(" celldm(2) = ",f15.8)') celldm_internal(2)
+  IF( celldm_internal(3) /= 0._dp) WRITE(*,'(" celldm(3) = ",f15.8)') celldm_internal(3)
+  IF( celldm_internal(4) /= 0._dp) WRITE(*,'(" celldm(4) = ",f15.8)') celldm_internal(4)
+  IF( celldm_internal(5) /= 0._dp) WRITE(*,'(" celldm(5) = ",f15.8)') celldm_internal(5)
+  IF( celldm_internal(6) /= 0._dp) WRITE(*,'(" celldm(6) = ",f15.8)') celldm_internal(6)
+  !
+  e1=a1
+  e2=a2
+  e3=a3
+  CALL latgen( ibrav, celldm_internal, a1,a2,a3, omega )
+  !WRITE(*, '("New lattice vectors in bohr:")')
+  !WRITE(*,'(3f15.8)') e(:,1)
+  !WRITE(*,'(3f15.8)') e(:,2)
+  !WRITE(*,'(3f15.8)') e(:,3)
+  WRITE(stdout,'("Input lattice vectors:")')
+  WRITE(stdout,'(3f15.8)') e1
+  WRITE(stdout,'(3f15.8)') e2
+  WRITE(stdout,'(3f15.8)') e3
+  WRITE(stdout,'("New lattice vectors in INITIAL alat:")')
+  WRITE(stdout,'(3f15.8)') a1/alat
+  WRITE(stdout,'(3f15.8)') a2/alat
+  WRITE(stdout,'(3f15.8)') a3/alat
+  WRITE(stdout, '("New lattice vectors in NEW alat (for information only):")')
+  WRITE(stdout,'(3f15.8)') a1/celldm_internal(1)
+  WRITE(stdout,'(3f15.8)') a2/celldm_internal(1)
+  WRITE(stdout,'(3f15.8)') a3/celldm_internal(1)
+  a1=a1/alat
+  a2=a2/alat
+  a3=a3/alat
+  WRITE(*,'("Discrepancy in bohr = ", 3f12.6)') DSQRT(SUM((a1-e1)**2)), DSQRT(SUM((a2-e2)**2)), DSQRT(SUM((a3-e3)**2))
+
+
+END SUBROUTINE
+
