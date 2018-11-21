@@ -1,0 +1,143 @@
+input_description -distribution {Quantum Espresso (version 6.3 with ppacf patch)} -package PWscf -program ppacf.x {
+
+    toc {}
+
+    intro {
+        @b {Purpose of ppacf.x:} 
+        ACF analysis and print files to track signatures of binding
+        (PRB 97, 085115 (2018)).
+
+        For an illustration of how to use this code to set hybrid mixing 
+        value, please refer to JCP 148, 194115 (2018) doi: 10.1063/1.5012870.
+
+        The code reads the output produced by @b pw.x, extracts and calculates
+        $E_{c}^{nl}$, $T_{c}^{nl}$, $E_{c,\lambda}^{LDA}$, $E_{c,\lambda}^{nl}$,
+        $E_{xc,\lambda}$, $T_c^{LDA}$. 
+        If @ref lfock is set to .True., the code also computes the total Fock 
+        exchange value.
+
+        With flag @ref lplot, the codes also out puts files containing spatial 
+        variation in most of these quantities.
+
+
+        The input data of this program is read from standard input or from file
+        and has the following format:
+
+        @b {Structure of the input data:}
+        @b ============================
+
+        @b &PPACF
+        @b     ...
+        @b /
+        
+        Intermediate results can be saved to disk (see variable @ref lplot in @b &PPACF)
+        and later read by pp.x.
+        Since the file with intermediate results is formatted, it can be safely 
+        transferred to a different machine. This also allows plotting of a 
+        linear combination (for instance, energy density differences) by saving 
+        two intermediate files and combining them (see variables in @b &PLOT
+        from pp.x .)
+
+        All output quantities are in ATOMIC (RYDBERG) UNITS unless otherwise 
+        explicitly specified.
+    }
+
+    #
+    # namelist PPACF
+    #
+
+    namelist PPACF {
+
+        var prefix -type CHARACTER {
+            info { 
+                prefix of files saved by program pw.x 
+            }
+        }
+        
+        var outdir -type CHARACTER {
+            info {
+                directory containing the output data from pw.x, i.e. the same as in pw.x
+            }
+            default {
+                value of the @tt ESPRESSO_TMPDIR environment variable if set;
+                current directory ('./') otherwise
+            }
+        }
+        
+        var n_lambda -type INTEGER {
+            info { 
+                Number of fragments in coupling-constant scaling curve. 
+                In the default case, only $\lambda=0$ and $\lambda=1$ ends are calculated.
+
+            }
+            default {
+                1
+            }
+        }
+
+        var lplot -type LOGICAL {
+            info {
+                If .True. print out the spatial distribution of energy density. 
+                prefix.tclda             the LDA component of kinetic-correlation energy density.
+                prefix.tcnl(prefix.tcgc) the non-local (gradient corrected) component of kinetic-correlation energy density.
+                prefix.exlda             the LDA component of exchange energy density.
+                prefix.eclda             the LDA component of correlation energy density.
+                prefix.exgc              the gradient-corrected component of exchange energy density.
+                prefix.ecnl(prefix.ecgc) the non-local(gradient-corrected) component of correlation energy density.
+            }
+            default {
+                .False.
+            }
+        }
+
+        choose {
+            when -test "lplot=.True." {
+                label {
+                    Option for plot (lplot=.True.): 
+                }
+                
+                var ltks -type LOGICAL {
+                    default {
+                        .True. 
+                    }
+                    info {
+                        If .True. also print out
+                        prefix.tks               the Kohn-Sham kinetic energy density. 
+                                                 In case of spin-polarized calculations, prefix.tks1 and prefix.tks2
+                                                 save the spin-up and spin-down components.
+                    }
+                }
+            }
+        }
+
+        var lfock -type LOGICAL {
+            info {
+                If .True. calculate the Fock exchange based on input Kohn-Sham orbitals.
+            }
+            default {
+                .False.
+            }
+        }
+
+        choose {
+            when -test "lfock=.True." {
+                label {
+                    Option for Fock exchange (lfock=.True.):
+                }
+
+                var use_ace -type LOGICAL {
+                    info {
+                        If .True. use Lin Lin's ACE (J. Chem. Theory Comput. 12(5), 2242-2249 (2016), 
+                        doi: 10.1021/acs.jctc.6b00092).
+                    }
+                    default {
+                        .True.
+                    }
+                }
+            }
+        }
+    
+    }
+    # END of namelist PPACF
+
+}
