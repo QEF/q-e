@@ -84,13 +84,10 @@ ppc64-bg | ppc64-bgq )
         ;;
 esac
 
-# check serial Fortran 90 compiler. This must be done before performing
-# the check for the parallel compiler (section below) because option
-# --disable-parallel will do very strange things otherwise. The reason
-# seems to be that autoconf does not repeat all tests for the second
-# occurrence of AC_PROG_FC. So the first occurrence is the one that
-# must always be performed, the second is optional. PG & CC sep.2006
+# check serial Fortran 90 compiler
 
+# clear cached values
+unset FC ac_cv_prog_ac_ct_FC ac_cv_fc_compiler_gnu ac_cv_prog_fc_g
 # use F90 if set
 if test "$f90" = "" ; then f90="$try_f90" ; fi
 AC_PROG_FC($f90)
@@ -102,7 +99,7 @@ if test "$use_parallel" -eq 0 ;
 then
         mpif90=$f90
 else
-        # clear cached values (not sure when and why this is needed)
+# clear cached values
         unset FC ac_cv_prog_ac_ct_FC ac_cv_fc_compiler_gnu ac_cv_prog_fc_g
         if test "$mpif90" = "" ; then 
 	   mpif90="$try_mpif90 $f90"
