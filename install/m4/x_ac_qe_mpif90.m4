@@ -84,40 +84,33 @@ ppc64-bg | ppc64-bgq )
         ;;
 esac
 
-# check serial Fortran 90 compiler. This must be done before performing
-# the check for the parallel compiler (section below) because option
-# --disable-parallel will do very strange things otherwise. The reason
-# seems to be that autoconf does not repeat all tests for the second
-# occurrence of AC_PROG_FC. So the first occurrence is the one that
-# must always be performed, the second is optional. PG & CC sep.2006
+# check Fortran 90 compiler
 
-# use F90 if set
-if test "$f90" = "" ; then f90="$try_f90" ; fi
-AC_PROG_FC($f90)
-f90=$FC
-AC_FC_SRCEXT(f90)
+# clear cached values
+unset FC ac_cv_prog_ac_ct_FC ac_cv_fc_compiler_gnu ac_cv_prog_fc_g
 
-# check parallel Fortran 90 compiler
-if test "$use_parallel" -eq 0 ;
-then
-        mpif90=$f90
+if test "$use_parallel" -eq 0 ; then
+# serial case - use F90 if set
+    	if test "$f90" = "" ; then
+	   mpif90="$try_f90"
+	else
+	   mpif90="$f90"
+	fi
 else
-        # clear cached values (not sure when and why this is needed)
-        unset FC ac_cv_prog_ac_ct_FC ac_cv_fc_compiler_gnu ac_cv_prog_fc_g
+# parallel case - use MPIF90 if set
         if test "$mpif90" = "" ; then 
-	   mpif90="$try_mpif90 $f90"
-           AC_PROG_FC($mpif90)
-        else
-           AC_PROG_FC($mpif90)
+	   mpif90="$try_mpif90 $f90 $try_f90 "
+	fi
+fi
+
+AC_PROG_FC($mpif90)
 # this avoids that an empty MPIF90 field is produced if the corresponding
 # environment variable MPIF90 does not contain an acceptable compiler
-           if test "$FC" = "" ; then 
-		AC_MSG_WARN([MPIF90 not found: using MPIF90 anyway])
-	  	FC=$MPIF90
-	   fi
-        fi
-        mpif90=$FC
+if test "$FC" = "" ; then 
+   AC_MSG_WARN([MPIF90 not found: using MPIF90 anyway])
+   FC=$mpif90
 fi
+mpif90=$FC
 
 # check which compiler does mpif90 wrap
 
@@ -135,11 +128,6 @@ case "$arch" in
                 f90_major_version=`echo $version | cut -d. -f1`
                 echo "${ECHO_T}ifort $f90_major_version"
                 f90_in_mpif90="ifort"
-                # Why so?
-                if test "$f90_major_version" -gt "9"; then
-                   MKL_FLAGS="-static-intel"
-                fi
-
         elif test "$pgf_version" != ""
         then
                 version=`echo $pgf_version | cut -d ' ' -f2`
@@ -164,18 +152,21 @@ case "$arch" in
                 echo "${ECHO_T}unknown, assuming gfortran"
                 f90_in_mpif90="gfortran"
         fi
-        # check if serial and parallel compiler are the same
-        if test "$f90" != "$f90_in_mpif90"; then
-           AC_MSG_WARN([parallel compiler $mpif90 uses $f90_in_mpif90, but serial compiler $f90 was detected])
-           AC_MSG_WARN([assuming F90=$f90_in_mpif90, discarding $f90])
-        fi
-        f90=$f90_in_mpif90
+        # notify if serial and parallel compiler are the same
+	if test "$set_use_parallel" -eq 1 ; then
+	   if test "$mpif90" = "$f90_in_mpif90"; then
+              AC_MSG_WARN([parallel and serial compiler are the same])
+	   fi
+	fi
+	f90=$f90_in_mpif90
         ;;
 esac
+AC_FC_SRCEXT(f90)
 
 echo setting F90... $f90
 echo setting MPIF90... $mpif90
 
+# For cray compiler
 case "$f90" in
 f90 | fc | ftn )
     echo $ECHO_N "checking version wrapped by $f90 command... $ECHO_C"
