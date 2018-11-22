@@ -1649,9 +1649,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
          var dftd3_version -type integer {
            default { 3 }
            info {
-               Version of Grimme implementation of Grimme-D3. Version=3 is Grimme-D3. Version=2
-               is the original Grimme-D2 parametrization. NOTE: not all functionals are
-               parametrized.
+               Version of Grimme implementation of Grimme-D3:
+                  Version=2 is the original Grimme-D2 parametrization
+                  Version=3 is Grimme-D3 (zero damping) 
+                  Version=4 is Grimme-D3 (BJ damping) 
+                  Version=5 is Grimme-D3M (zero damping) 
+                  Version=6 is Grimme-D3M (BJ damping)
+               NOTE: not all functionals are parametrized.
            }
          }
          var dftd3_threebody -type LOGICAL {
