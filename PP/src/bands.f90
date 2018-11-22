@@ -525,7 +525,7 @@ SUBROUTINE punch_plottable_bands ( filband, nks1tot, nks2tot, nkstot, nbnd, &
   IMPLICIT NONE
   CHARACTER(LEN=*), INTENT(IN) :: filband
   INTEGER, INTENT(IN) :: nks1tot, nks2tot, nkstot, nbnd
-  REAL(dp), INTENT(IN) :: xk(3,nkstot), et(nbnd,nks1tot)
+  REAL(dp), INTENT(IN) :: xk(3,nkstot), et(nbnd,nkstot)
   !
   INTEGER, PARAMETER :: max_lines = 100, stdout=6, iunpun0=18
   INTEGER:: ios, i, n, nlines, npoints(max_lines), point(max_lines)
