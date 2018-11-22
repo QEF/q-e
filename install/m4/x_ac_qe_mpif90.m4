@@ -128,11 +128,6 @@ case "$arch" in
                 f90_major_version=`echo $version | cut -d. -f1`
                 echo "${ECHO_T}ifort $f90_major_version"
                 f90_in_mpif90="ifort"
-                # Why so?
-                if test "$f90_major_version" -gt "9"; then
-                   MKL_FLAGS="-static-intel"
-                fi
-
         elif test "$pgf_version" != ""
         then
                 version=`echo $pgf_version | cut -d ' ' -f2`

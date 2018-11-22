@@ -4393,11 +4393,6 @@ case "$arch" in
                 f90_major_version=`echo $version | cut -d. -f1`
                 echo "${ECHO_T}ifort $f90_major_version"
                 f90_in_mpif90="ifort"
-                # Why so?
-                if test "$f90_major_version" -gt "9"; then
-                   MKL_FLAGS="-static-intel"
-                fi
-
         elif test "$pgf_version" != ""
         then
                 version=`echo $pgf_version | cut -d ' ' -f2`
@@ -8126,13 +8121,10 @@ fi
 
 fi
 
-# Check for fftw v3, both native and MKL interfaces
+# Check MKL dfti first, fftw v3 then (both native and MKL interfaces)
 if test "$have_fft" -eq 0
 then
 
-        try_libdirs="/usr/local/lib"
-        try_libdirs="$libdirs $try_libdirs $ld_library_path "
-
         ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -8145,31 +8137,21 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-        #for dir in none $try_libdirs
-        #do
         unset ac_cv_lib_mkl_intel_lp64_DftiComputeForward
-        if test "$dir" = "none"
-        then
-                try_loption=
-        else
-                echo $ECHO_N "in $dir: " $ECHO_C
-                try_loption="-L$dir"
-        fi
 
         CFLAGS="$test_cflags"
         CPPFLAGS="$test_cppflags"
-        LDFLAGS=" $test_ldflags $try_loption"
+        LDFLAGS=" $test_ldflags"
         LIBS="$fft_libs"
-
-        #here we check if dfti explicit calls work
-        #it should work with blas flags
+        # here we check if dfti explicit calls work
+        # it should work with blas flags
         { $as_echo "$as_me:${as_lineno-$LINENO}: checking for DftiComputeForward in -lmkl_intel_lp64" >&5
 $as_echo_n "checking for DftiComputeForward in -lmkl_intel_lp64... " >&6; }
 if ${ac_cv_lib_mkl_intel_lp64_DftiComputeForward+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lmkl_intel_lp64 $blas_libs -lm $MKL_FLAGS $LIBS"
+LIBS="-lmkl_intel_lp64 $blas_libs -lm  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -8281,6 +8263,8 @@ ac_compiler_gnu=$ac_cv_f77_compiler_gnu
 
         if test "$have_fft" -eq 0
         then
+	  try_libdirs="/usr/local/lib"
+          try_libdirs="$libdirs $try_libdirs $ld_library_path "
           for dir in none $try_libdirs
           do
                   unset ac_cv_search_dfftw_execute_dft # clear cached value
@@ -8445,9 +8429,6 @@ fi
                         try_incdir="$FFTW_INCLUDE $FFTW_INC $INCLUDE_PATH $CPATH $FPATH"
                         for inc in $try_incdir
                         do
-                           #AC_LANG_POP([Fortran 77])
-                           #AC_LANG_PUSH([C])
-
                            cat > conftest.$ac_ext <<_ACEOF
 include "fftw3.f03"
 _ACEOF
@@ -8455,10 +8436,6 @@ if ac_fn_f77_try_compile "$LINENO"; then :
   have_fft_include=1
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-
-                           #AC_LANG_POP([C])
-                           #AC_LANG_PUSH([Fortran 77])
-
                            if test "$have_fft_include" -eq 1
                            then
                              try_iflags="$try_iflags -I$inc"
