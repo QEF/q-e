@@ -28,7 +28,7 @@ PROGRAM ibrav2cell
   ibrav = at2ibrav (a(:,1), a(:,2), a(:,3))
   celldm = 0._dp
   CALL  at2celldm (ibrav,alat,a(:,1), a(:,2), a(:,3),celldm)
-  WRITE(*,'("ibrav = ",i)') ibrav
+  WRITE(*,'("ibrav = ",i6)') ibrav
   WRITE(*,'(" celldm(1) = ",f15.8)') celldm(1)
   IF( celldm(2) /= 0._dp) WRITE(*,'(" celldm(2) = ",f15.8)') celldm(2)
   IF( celldm(3) /= 0._dp) WRITE(*,'(" celldm(3) = ",f15.8)') celldm(3)

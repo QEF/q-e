@@ -739,7 +739,7 @@ SUBROUTINE remake_cell(ibrav, alat, a1,a2,a3)
   REAL(DP) :: celldm_internal(6), lat_internal, omega
 !  ibrav = at2ibrav (a(:,1), a(:,2), a(:,3))
   CALL  at2celldm (ibrav,alat,a1, a2, a3,celldm_internal)
-  WRITE(stdout,'("ibrav = ",i)') ibrav
+  WRITE(stdout,'("ibrav = ",i6)') ibrav
   WRITE(stdout,'(" celldm(1) = ",f15.8)') celldm_internal(1)
   IF( celldm_internal(2) /= 0._dp) WRITE(*,'(" celldm(2) = ",f15.8)') celldm_internal(2)
   IF( celldm_internal(3) /= 0._dp) WRITE(*,'(" celldm(3) = ",f15.8)') celldm_internal(3)

@@ -26,7 +26,7 @@ SUBROUTINE move_ions ( idone, ions_status )
   USE io_files,               ONLY : tmp_dir
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : alat, at, bg, omega, cell_force, &
-                                     fix_volume, fix_area
+                                     fix_volume, fix_area, ibrav
   USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, zv, tau, if_pos
   USE symm_base,              ONLY : checkallsym
@@ -123,9 +123,11 @@ SUBROUTINE move_ions ( idone, ions_status )
            ! changes needed only if cell moves
            if (fix_volume) call impose_deviatoric_strain(alat*at, h)
            if (fix_area)   call impose_deviatoric_strain_2d(alat*at, h)
-           at = h /alat  
+           at = h /alat
+           CALL remake_cell(ibrav, alat, at(1,1),at(1,2),at(1,3))  
            CALL recips( at(1,1),at(1,2),at(1,3), bg(1,1),bg(1,2),bg(1,3) )
            CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
+  
         END IF
         !
         CALL cryst_to_cart( nat, pos, at, 1 )
