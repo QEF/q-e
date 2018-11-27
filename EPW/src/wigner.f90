@@ -526,9 +526,9 @@
                     !ndiff(1) = n1 - i1*nc1 + ( tau(1,na) + w_centers(1,iw2) + w_centers(1,iw) ) / 3.d0
                     !ndiff(2) = n2 - i2*nc2 + ( tau(2,na) + w_centers(2,iw2) + w_centers(2,iw) ) / 3.d0
                     !ndiff(3) = n3 - i3*nc3 + ( tau(3,na) + w_centers(3,iw2) + w_centers(3,iw) ) / 3.d0
-                    ndiff(1) = n1 - i1*nc1 + tau(1,na) + ( w_centers(1,iw2) + w_centers(1,iw) ) / 2.d0
-                    ndiff(2) = n2 - i2*nc2 + tau(2,na) + ( w_centers(2,iw2) + w_centers(2,iw) ) / 2.d0
-                    ndiff(3) = n3 - i3*nc3 + tau(3,na) + ( w_centers(3,iw2) + w_centers(3,iw) ) / 2.d0
+                    ndiff(1) = n1 - i1*nc1 + tau(1,na) - ( w_centers(1,iw2) + w_centers(1,iw) ) / 2.d0
+                    ndiff(2) = n2 - i2*nc2 + tau(2,na) - ( w_centers(2,iw2) + w_centers(2,iw) ) / 2.d0
+                    ndiff(3) = n3 - i3*nc3 + tau(3,na) - ( w_centers(3,iw2) + w_centers(3,iw) ) / 2.d0
                     DO ipol = 1, 3
                       DO jpol = 1, 3
                         dist(i) = dist(i) + dble(ndiff(ipol))*adot(ipol,jpol)*dble(ndiff(jpol))

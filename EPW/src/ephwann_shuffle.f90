@@ -624,6 +624,12 @@
   ALLOCATE(irvec_r(3,nrr_k))
   irvec_r = REAL(irvec_k,KIND=dp)
   ! 
+  ! Zeroing everything - initialization is important !
+  cfac(:,:,:)  = czero
+  cfacq(:,:,:) = czero
+  rdotk(:)     = zero 
+  rdotk2(:)    = zero
+  ! 
   ! ------------------------------------------------------
   ! Hamiltonian : Wannier -> Bloch (preliminary)
   ! ------------------------------------------------------

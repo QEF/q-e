@@ -32,7 +32,7 @@
     USE mp_global,     ONLY : npool, inter_pool_comm, world_comm, my_pool_id
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_sum, mp_bcast
-    USE constants_epw, ONLY : twopi, ci, zero, eps6, ryd2ev
+    USE constants_epw, ONLY : twopi, ci, zero, eps6, ryd2ev, czero
     USE epwcom,        ONLY : nbndsub, fsthick, use_ws, mp_mesh_k, nkf1, nkf2, &
                               nkf3, iterative_bte, restart_freq, scissor
     USE noncollin_module, ONLY : noncolin
@@ -135,8 +135,10 @@
     !! Used to store $e^{2\pi r \cdot k+q}$ exponential
     ! 
     !selecq(:) = 0
-    rdotk(:)  = 0
-    rdotk2(:) = 0
+    rdotk(:)     = 0
+    rdotk2(:)    = 0
+    cfac(:,:,:)  = czero
+    cfacq(:,:,:) = czero
     ! 
     IF (exst) THEN
       IF (mpime == ionode_id) THEN
