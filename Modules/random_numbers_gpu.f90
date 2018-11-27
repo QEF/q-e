@@ -29,7 +29,7 @@ MODULE random_numbers_gpum
       call errore('randy','use randy_vect_gpu on GPUs',1)
     END FUNCTION randy_gpu
     !------------------------------------------------------------------------
-    SUBROUTINE randy_vect_gpu ( r, n, irand )
+    SUBROUTINE randy_vect_gpu ( r_d, n, irand )
       !------------------------------------------------------------------------
       !
       ! randy_vect_gpu(r, n, irand): reseed with initial seed idum=irand ( 0 <= irand <= ic, see below)
@@ -41,9 +41,9 @@ MODULE random_numbers_gpum
 #if defined(__CUDA)
       USE curand
 #endif
-      REAL(DP) :: r(n)
+      REAL(DP) :: r_d(n)
 #if defined(__CUDA)
-      attributes(DEVICE) :: r
+      attributes(DEVICE) :: r_d
 #endif
       INTEGER              :: i, n
       INTEGER, optional    :: irand
@@ -69,7 +69,7 @@ MODULE random_numbers_gpum
          !
       END IF
       !
-      ist=curandGenerateUniformDouble(gen,r,n)
+      ist=curandGenerateUniformDouble(gen,r_d,n)
       !
 #else
       ! randy_vect_gpu is not a GPU array in this case
@@ -77,11 +77,11 @@ MODULE random_numbers_gpum
       ! ist means starting index here
       ist = 1
       IF ( present(irand) ) THEN
-         r(1) = randy(irand)
+         r_d(1) = randy(irand)
          ist = 2
       END IF
       DO i = ist, n
-         r(i) = randy()
+         r_d(i) = randy()
       END DO
 #endif
       RETURN
@@ -89,7 +89,7 @@ MODULE random_numbers_gpum
     END SUBROUTINE randy_vect_gpu
     !
     !------------------------------------------------------------------------
-    SUBROUTINE randy_vect_debug_gpu (r, n, irand )
+    SUBROUTINE randy_vect_debug_gpu (r_d, n, irand )
       !------------------------------------------------------------------------
       !
       ! randy_vect_debug_gpu(r, n, irand): reseed with initial seed idum=irand ( 0 <= irand <= ic, see below)
@@ -99,15 +99,14 @@ MODULE random_numbers_gpum
       !
       USE random_numbers, ONLY : randy
       !
-      REAL(DP) :: r(n)
+      REAL(DP) :: r_d(n)
       INTEGER, optional    :: irand
 #if defined(__CUDA)
-      attributes(DEVICE) :: r
+      attributes(DEVICE) :: r_d
 #endif
       INTEGER :: n, i, ist
       REAL(DP), ALLOCATABLE :: aux_v(:)
       !
-      print *, 'Allocation of ', n
       ALLOCATE(aux_v(n))
       !
       ist = 1
@@ -120,7 +119,7 @@ MODULE random_numbers_gpum
          aux_v(i) = randy()
       END DO
       !
-      r(1:n) = aux_v(1:n)
+      r_d(1:n) = aux_v(1:n)
       !
       DEALLOCATE(aux_v)
     END SUBROUTINE randy_vect_debug_gpu
