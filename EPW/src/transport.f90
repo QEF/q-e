@@ -32,10 +32,11 @@
     USE mp_global,     ONLY : npool, inter_pool_comm, world_comm, my_pool_id
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_sum, mp_bcast
-    USE constants_epw, ONLY : twopi, ci, zero
+    USE constants_epw, ONLY : twopi, ci, zero, eps6, ryd2ev
     USE epwcom,        ONLY : nbndsub, fsthick, use_ws, mp_mesh_k, nkf1, nkf2, &
-                              nkf3, iterative_bte, restart_freq
-    USE pwcom,         ONLY : ef 
+                              nkf3, iterative_bte, restart_freq, scissor
+    USE noncollin_module, ONLY : noncolin
+    USE pwcom,         ONLY : ef, nelec 
     USE cell_base,     ONLY : bg
     USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE wan2bloch,     ONLY : hamwan2bloch
@@ -71,6 +72,10 @@
     !! Counter on coarse q-point grid    
     INTEGER :: ik, ikk, ikq, ikl
     !! Counter on coarse k-point grid
+    INTEGER :: icbm
+    !! Index for the CBM
+    INTEGER :: ibnd
+    !! Band index
     INTEGER :: found(npool)
     !! Indicate if a q-point was found within the window
     INTEGER :: iw
@@ -207,6 +212,23 @@
           CALL mp_bcast( BZtoIBZ, ionode_id, inter_pool_comm )
           ! 
         ENDIF ! mp_mesh_k
+        ! 
+        ! Apply a scissor shift to CBM if required by user
+        ! The shift is apply to k and k+q
+        IF (ABS(scissor) > eps6) THEN
+          IF ( noncolin ) THEN
+            icbm = FLOOR(nelec/1.0d0) + 1
+          ELSE
+            icbm = FLOOR(nelec/2.0d0) + 1
+          ENDIF
+          !
+          DO ik = 1, nkqtotf/2
+            DO ibnd = icbm, nbndsub
+              etf_all (ibnd, ik) = etf_all (ibnd, ik) + scissor
+            ENDDO
+          ENDDO
+          WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
+        ENDIF
         !  
         DO iq=1, nqf
           xxq = xqf (:, iq)
@@ -249,6 +271,18 @@
           ENDIF
         ENDDO ! iq
       ELSE ! homogeneous
+        ! 
+        ! Apply a scissor shift to CBM if required by user
+        ! The shift is apply to k and k+q
+        IF (ABS(scissor) > eps6) THEN
+          IF ( noncolin ) THEN
+            icbm = FLOOR(nelec/1.0d0) + 1
+          ELSE
+            icbm = FLOOR(nelec/2.0d0) + 1
+          ENDIF
+          WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
+        ENDIF
+        !  
         ! First compute the k-points eigenenergies for efficiency reasons
         nkloc = 0
         kmap(:) = 0
@@ -271,6 +305,11 @@
           ENDIF
           CALL hamwan2bloch ( nbndsub, nrr_k, cufkk, etf_tmp(:), chw, cfac, dims)
           ! 
+          IF (ABS(scissor) > eps6) THEN
+            DO ibnd = icbm, nbndsub
+              etf_tmp (ibnd) = etf_tmp (ibnd) + scissor
+            ENDDO              
+          ENDIF
           ! Check for the k-points in this pool
           IF ( minval ( abs(etf_tmp(:) - ef) ) < fsthick ) THEN
             nkloc = nkloc + 1
@@ -301,6 +340,12 @@
               ENDDO
               CALL hamwan2bloch ( nbndsub, nrr_k, cufkq, etf_tmp(:), chw, cfacq, dims)
               ! 
+              IF (ABS(scissor) > eps6) THEN
+                DO ibnd = icbm, nbndsub
+                  etf_tmp (ibnd) = etf_tmp (ibnd) + scissor
+                ENDDO
+              ENDIF
+              ! 
               IF ( minval ( abs(etf_tmp(:) - ef) ) < fsthick ) THEN
                 found(my_pool_id+1) = 1
                 EXIT ! exit the loop 
@@ -329,6 +374,12 @@
               CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
               cfacq(:,1,1)  = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
               CALL hamwan2bloch ( nbndsub, nrr_k, cufkq, etf_tmp(:), chw, cfacq, dims)
+              ! 
+              IF (ABS(scissor) > eps6) THEN
+                DO ibnd = icbm, nbndsub
+                  etf_tmp (ibnd) = etf_tmp (ibnd) + scissor
+                ENDDO
+              ENDIF
               ! 
               IF ( minval ( abs(etf_tmp(:) - ef) ) < fsthick ) THEN
                 found(my_pool_id+1) = 1
