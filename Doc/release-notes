@@ -10,6 +10,7 @@ New in development version:
   * XDM now works also for USPP and norm-conserving PP
 
 Problems fixed in development version (+ = in qe-6.3-backports as well) :
+  + Starting with .EXIT file present ("dry run") crashed with new file format
   + Some space groups were missing
   + Random MPI crashes with DFT+U due to small discrepancies between values
     of Hubbard occupancies on different processors
