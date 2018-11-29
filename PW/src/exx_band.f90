@@ -1089,6 +1089,12 @@ MODULE exx_band
        mill = mill_exx
        ! workaround: here dfft?%nl* are unallocated
        ! some compilers go on and allocate, some others crash
+#if defined(__CUDA)
+       IF ( .NOT. ALLOCATED(dfftp%nl) ) ALLOCATE (dfftp%nl_d(size(nl_exx)))
+       IF ( .NOT. ALLOCATED(dffts%nl) ) ALLOCATE (dffts%nl_d(size(nls_exx)))
+       IF ( gamma_only .AND. .NOT.ALLOCATED(dfftp%nlm) ) ALLOCATE (dfftp%nlm_d(size(nlm_exx)))
+       IF ( gamma_only .AND. .NOT.ALLOCATED(dffts%nlm) ) ALLOCATE (dffts%nlm_d(size(nlsm_exx)))
+#endif
        IF ( .NOT. ALLOCATED(dfftp%nl) ) ALLOCATE (dfftp%nl(size(nl_exx)))
        IF ( .NOT. ALLOCATED(dffts%nl) ) ALLOCATE (dffts%nl(size(nls_exx)))
        IF ( gamma_only .AND. .NOT.ALLOCATED(dfftp%nlm) ) ALLOCATE (dfftp%nlm(size(nlm_exx)))
