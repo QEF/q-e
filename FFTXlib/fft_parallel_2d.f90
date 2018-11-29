@@ -118,7 +118,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
      !
      CALL fw_scatter( isgn ) ! forward scatter from stick to planes
      !
-     CALL cft_2xy( f, dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes )
+     CALL cft_2xy( f, dfft%my_nr3p, n1, n2, nx1, nx2, isgn, planes )
      !
   ELSE
      !
@@ -132,7 +132,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn )
         !
      ENDIF
      !
-     CALL cft_2xy( f, dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, planes)
+     CALL cft_2xy( f, dfft%my_nr3p, n1, n2, nx1, nx2, isgn, planes )
      !
      CALL bw_scatter( isgn )
      !
@@ -301,7 +301,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
      !
      CALL fw_scatter_gpu( isgn ) ! forward scatter from stick to planes
      !
-     CALL cft_2xy_gpu( f_d, aux_d, dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, stream, planes )
+     CALL cft_2xy_gpu( f_d, aux_d, dfft%my_nr3p, n1, n2, nx1, nx2, isgn, stream, planes )
      !
   ELSE
      !
@@ -315,7 +315,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
         !
      ENDIF
 
-     CALL cft_2xy_gpu( f_d, aux_d, dfft%nr3p( me_p ), n1, n2, nx1, nx2, isgn, stream, planes)
+     CALL cft_2xy_gpu( f_d, aux_d, dfft%my_nr3p, n1, n2, nx1, nx2, isgn, stream, planes)
      !
      CALL bw_scatter_gpu( isgn )
      !
@@ -324,7 +324,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
      IF ( isgn /= -2 ) THEN
         !
         CALL cft_1z_gpu( aux_d, dfft%nsp( me_p ), n3, nx3, isgn, f_d, stream )
-         !
+        !
      ELSE
         !
         CALL cft_1z_gpu( aux_d, dfft%nsw( me_p ), n3, nx3, isgn, f_d, stream )

@@ -242,9 +242,8 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !
      !  step two: communication
      !
-     
      CALL mpi_alltoall (f_in(1), sendsiz, MPI_DOUBLE_COMPLEX, f_aux(1), sendsiz, MPI_DOUBLE_COMPLEX, dfft%comm, ierr)
-
+     !
      IF( abs(ierr) /= 0 ) CALL fftx_error__ ('fft_scatter', 'info<>0', abs(ierr) )
      !
      !  step one: store contiguously the columns
@@ -252,21 +251,20 @@ SUBROUTINE fft_scatter ( dfft, f_in, nr3x, nxx_, f_aux, ncp_, npp_, isgn )
      !! f_in = 0.0_DP
      !
      offset = 0
-
+     !
      DO proc = 1, nprocp
-        gproc = proc
         !
         kdest = ( proc - 1 ) * sendsiz
         kfrom = offset 
         !
         DO k = 1, ncp_ (me)
-           DO i = 1, npp_ ( gproc )  
+           DO i = 1, npp_ ( proc )
               f_in ( kfrom + i ) = f_aux ( kdest + i )
            ENDDO
            kdest = kdest + nppx
            kfrom = kfrom + nr3x
         ENDDO
-        offset = offset + npp_ ( gproc )
+        offset = offset + npp_ ( proc )
      ENDDO
 
 20   CONTINUE

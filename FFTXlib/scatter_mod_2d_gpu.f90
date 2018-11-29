@@ -243,17 +243,16 @@ SUBROUTINE fft_scatter_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp
 
         ENDDO
      ELSE
-
+        !
         npp  = dfft%nr3p( me )
         nnp  = dfft%nnp
         !
-        ip = 1
-        !
         DO gproc = 1, dfft%nproc
            !
-           ioff = dfft%iss( ip )
+           ioff = dfft%iss( gproc )
            !
-           nswip = dfft%nsw( ip )
+           nswip = dfft%nsw( gproc )
+           !
 !$cuf kernel do(2) <<<*,*>>>
            DO cuf_j = 1, npp
               DO cuf_i = 1, nswip
@@ -267,9 +266,8 @@ SUBROUTINE fft_scatter_gpu ( dfft, f_in_d, f_in, nr3x, nxx_, f_aux_d, f_aux, ncp
               !
            ENDDO
            !
-           ip = ip + 1
-           !
         ENDDO
+        !
      END IF
      !
      IF( nprocp == 1 ) GO TO 20
@@ -1346,23 +1344,6 @@ SUBROUTINE fft_scatter_many_planes_to_columns_send ( dfft, f_in_d, f_in, nr3x, n
    RETURN
 
 END SUBROUTINE fft_scatter_many_planes_to_columns_send
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 !
 !=----------------------------------------------------------------------=!
 END MODULE scatter_mod_2d_gpu
