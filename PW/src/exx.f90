@@ -744,6 +744,9 @@ MODULE exx
     USE paw_variables,  ONLY : okpaw
     USE us_exx,         ONLY : becxx
     USE mp_exx,         ONLY : negrp, inter_egrp_comm, init_index_over_band
+!DEBUG
+    USE mp_exx, ONLY: my_egrp_id
+!DEBUG
     USE wvfct,          ONLY : nbnd
     USE exx_band,       ONLY : transform_psi_to_exx, transform_hpsi_to_local,&
                                psi_exx, hpsi_exx, igk_exx
@@ -760,6 +763,11 @@ MODULE exx
        CALL errore('vexx','becpsi needed for US/PAW case',1)
     CALL start_clock ('vexx')
     !
+
+    !DEBUG
+    write(*,*) "VEXX: ENTER: egrp_id = ",my_egrp_id, ", sum(psi) = ",sum(psi)
+    !DEBUG 
+
     IF(negrp.gt.1)THEN
        CALL init_index_over_band(inter_egrp_comm,nbnd,m)
        !
@@ -768,6 +776,11 @@ MODULE exx
        CALL transform_psi_to_exx(lda,n,m,psi)
        !
     END IF
+
+    !DEBUG
+    write(*,*) "VEXX: AFTER TRANSFORM: egrp_id = ",my_egrp_id, ", sum(psi) = ",sum(psi),"\n"
+    !DEBUG 
+
     !
     ! calculate the EXX contribution to hpsi
     !
@@ -785,6 +798,11 @@ MODULE exx
        END IF
     ENDIF
     !
+
+    !DEBUG
+    write(*,*) "VEXX: BEFORE BACKTRANSFORM: egrp_id = ",my_egrp_id, ", sum(hpsi) = ",sum(hpsi),"\n"
+    !DEBUG  
+
     IF(negrp.gt.1)THEN
        !
        ! transform hpsi to the local data structure
@@ -792,6 +810,11 @@ MODULE exx
        CALL transform_hpsi_to_local(lda,n,m,hpsi)
        !
     END IF
+
+    !DEBUG
+    write(*,*) "VEXX: EXIT: egrp_id = ",my_egrp_id, ", sum(hpsi) = ",sum(hpsi),"\n"
+    !DEBUG   
+
     !
     CALL stop_clock ('vexx')
     !

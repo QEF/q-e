@@ -10,7 +10,7 @@
 #execdir=../install/6.3/knl/bin
 
 #some parameters
-rankspernode=8
+rankspernode=4
 totalranks=$(( ${rankspernode} * ${SLURM_NNODES} ))
 
 #openmp stuff
