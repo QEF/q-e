@@ -62,7 +62,7 @@ SUBROUTINE dnsq_scf (npe, lmetq0, imode0, irr, lflag)
   !
   ! Local variables
   !
-  INTEGER  :: i, j, k, icar, counter, nt, na, l, ina, ih, n,      &
+  INTEGER  :: i, j, k, icar, nt, na, l, ina, ih, n,               &
               ihubst, ihubst1, ihubst2, nah, m, m1, m2, ibnd, is, &
               ipert, nrec, ldim, npw, npwq, ik , ikk, ikq
   COMPLEX(DP), ALLOCATABLE :: dpsi(:,:)

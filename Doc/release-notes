@@ -38,6 +38,9 @@ Incompatible changes in development version:
     - bgw2pw.x (was writing old format only)
   * Several routines moved from PHonon/PH to LR_Modules
   * Module "wavefunctions_module" renamed "wavefunctions"
+  * TDDFPT: the variables ecutfock, tqr, and real_space are no longer input 
+    variables of turbo_lanczos.x and turbo_davidson.x. Instead, they are read 
+    from the XML file produced by pw.x. The variable real_space_debug was removed.
 
 Known problems in development version:
   * Frequent "dexx is negative" errors with hybrid functionals
