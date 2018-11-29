@@ -108,7 +108,7 @@ SUBROUTINE run_pwscf ( exit_status )
      CALL summary()
      CALL memory_report()
      CALL qexsd_set_status(255)
-     CALL punch( 'config' )
+     CALL punch( 'init-config' )
      exit_status = 255
      RETURN
   ENDIF

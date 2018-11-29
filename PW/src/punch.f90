@@ -11,6 +11,12 @@ SUBROUTINE punch( what )
   !
   ! ... This routine is called at the end of the run to save to a file
   ! ... the information needed for further processing (phonon etc.)
+  ! ... what = 'all'          write xml data file, charge density, wavefunctions
+  ! ...                       (for final data)
+  ! ... what = 'config'       write xml data file, charge density
+  ! ...                       (for intermediate or incomplete results)
+  ! ... what = 'init-config'  write xml data file excluding final results
+  ! ...                       (for dry run, can be called at early stages)
   !
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunpun, iunwfc, nwordwfc, diropn, &
@@ -37,7 +43,8 @@ SUBROUTINE punch( what )
   !
   IMPLICIT NONE
   !
-  CHARACTER(LEN=*) :: what
+  CHARACTER(LEN=*), INTENT(IN) :: what
+  !
   LOGICAL :: exst
   CHARACTER(LEN=320) :: cp_source, cp_dest
   INTEGER            :: cp_status, nt, inlc
@@ -70,14 +77,16 @@ SUBROUTINE punch( what )
   !
   CALL create_directory( TRIM( tmp_dir ) // TRIM( prefix ) // postfix )
   !
-  CALL pw_write_schema( )
+  CALL pw_write_schema( what )
   !
   ! ... charge density - also writes rho%ns if lda+U and rho%bec if PAW
   ! ... do not overwrite the scf charge density with a non-scf one
   ! ... (except in the 'force theorem' calculation of MAE where the
   ! ...  charge density differs from the one read from disk)
   !
-  IF ( lscf .OR. lforcet ) CALL write_scf( rho, nspin )
+  IF (TRIM(what) == 'all' .OR. TRIM(what) == 'config' ) THEN
+     IF ( lscf .OR. lforcet ) CALL write_scf( rho, nspin )
+  END IF
   !
   IF (TRIM(what) == 'all') THEN 
      !
