@@ -541,7 +541,7 @@ SUBROUTINE run_wannier
   USE ions_base, ONLY : nat
   USE mp,        ONLY : mp_bcast
   USE mp_world,  ONLY : world_comm
-  USE cell_base, ONLY : celldm
+  USE cell_base, ONLY : alat
   USE io_files,  ONLY : prefix
   USE io_epw,    ONLY : QPeig_read
   USE pwcom,     ONLY : nkstot
@@ -624,7 +624,7 @@ SUBROUTINE run_wannier
   WRITE (stdout,*)
   ! RM - loop is up to n_wannier according to W90/wannierise.F90
   DO iw = 1, n_wannier
-     WRITE (stdout, '(5x,"(",3f10.5,") :  ",f8.5)') wann_centers(:,iw)/celldm(1)/bohr, wann_spreads(iw)
+     WRITE (stdout, '(5x,"(",3f10.5,") :  ",f8.5)') wann_centers(:,iw)/alat/bohr, wann_spreads(iw)
   ENDDO
   WRITE (stdout,*)
   !
@@ -1600,7 +1600,7 @@ SUBROUTINE write_filukk
   USE epwcom,       ONLY : filukk
   USE constants_epw,ONLY : czero, bohr
   USE io_global,    ONLY : meta_ionode
-  USE cell_base,    ONLY : celldm
+  USE cell_base,    ONLY : alat
   !
   IMPLICIT NONE
   !
@@ -1702,7 +1702,7 @@ SUBROUTINE write_filukk
     ! 
     ! Now write the Wannier centers to files
     DO iw = 1, n_wannier
-      WRITE (iuukk,'(3f12.8)') wann_centers(:,iw)/celldm(1)/bohr
+      WRITE (iuukk,'(3f12.8)') wann_centers(:,iw)/alat/bohr
     ENDDO
     !
     CLOSE (iuukk)
