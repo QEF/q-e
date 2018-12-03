@@ -28,7 +28,7 @@ FUNCTION efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   ! internal variables
   real(DP) :: Ef, Eup, Elw, sumkup, sumklw, sumkmid
   real(DP), external::  sumkg
-  integer :: i, kpoint
+  integer :: i, kpoint, Ngauss_
   !
   !      find bounds for the Fermi energy. Very safe choice!
   !
@@ -48,15 +48,27 @@ FUNCTION efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   !
   !      Bisection method
   !
-  sumkup = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Eup, is, isk)
-  sumklw = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Elw, is, isk)
+  ! perform a preliminary determination with the Gaussian broadening
+  ! to safely locate Ef mid-gap in the insulating case
+  !
+  Ngauss_ = 0
+
+1 continue
+
+  sumkup = sumkg (et, nbnd, nks, wk, Degauss, Ngauss_, Eup, is, isk)
+  sumklw = sumkg (et, nbnd, nks, wk, Degauss, Ngauss_, Elw, is, isk)
   if ( (sumkup - nelec) < -eps .or. (sumklw - nelec) > eps )  &
        call errore ('efermig', 'internal error, cannot bracket Ef', 1)
   do i = 1, maxiter
      Ef = (Eup + Elw) / 2.d0
-     sumkmid = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Ef, is, isk)
+     sumkmid = sumkg (et, nbnd, nks, wk, Degauss, Ngauss_, Ef, is, isk)
      if (abs (sumkmid-nelec) < eps) then
         efermig = Ef
+        ! refine the search with the input Ngauss value if not already done
+        if (Ngauss .ne. Ngauss_) then 
+           Elw = Ef - Degauss ; Eup = Ef + Degauss ; Ngauss_ = Ngauss
+           go to 1
+        end if
         return
      elseif ( (sumkmid-nelec) < -eps) then
         Elw = Ef
