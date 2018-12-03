@@ -1045,9 +1045,6 @@
                  nbnd, chf_a_tmp(:,:), nbnd, czero, chf_a(ipol,:,:), nbnd)
     ENDDO
     !DBSP
-    !if (mpime==1) write(902,*)SUM(irvec_tmp), celldm(1), at, SUM(irvec(:,ir))
-    !if (mpime==1) write(902,*) 'celldm',celldm
-    !if (mpime==1) write(902,*) 'celldm',alat
     !if (mpime==1) write(902,*) 'at',at
     !if (mpime==1) write(902,*)SUM(chw)
     !if (mpime==1) write(902,*)SUM(cuf(:,:))
