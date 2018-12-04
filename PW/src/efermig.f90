@@ -51,7 +51,8 @@ FUNCTION efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   ! perform a preliminary determination with the Gaussian broadening
   ! to safely locate Ef mid-gap in the insulating case
   !
-  Ngauss_ = 0
+  !!! Ngauss_ = 0 ! currently disabled
+  Ngauss_ = Ngauss
 
 1 continue
 
