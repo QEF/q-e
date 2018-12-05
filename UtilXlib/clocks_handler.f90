@@ -145,7 +145,7 @@ SUBROUTINE start_clock( label )
 #endif
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
                         t0cpu, t0wall, f_wall, f_tcpu
-  USE nvtx
+  USE nvtx_fft
   !
   IMPLICIT NONE
   !
@@ -219,7 +219,7 @@ SUBROUTINE stop_clock( label )
 #endif
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
                         notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
-  USE nvtx
+  USE nvtx_fft
   !
   IMPLICIT NONE
   !

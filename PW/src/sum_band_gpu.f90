@@ -440,6 +440,7 @@ SUBROUTINE sum_band_gpu()
              END IF
              !
              IF (dft_is_meta() .OR. lxdm) THEN
+                CALL using_evc(0)
                 DO j=1,3
                    psic(:) = ( 0.D0, 0.D0 )
                    !
@@ -551,7 +552,7 @@ SUBROUTINE sum_band_gpu()
        attributes(pinned) :: tg_rho_h, tg_rho_nc_h
 #endif
        !
-       CALL using_evc(0); CALL using_et(0)
+       CALL using_evc(0); CALL using_evc_d(0); CALL using_et(0)
        dffts_nl_d => dffts%nl_d
        !
        !

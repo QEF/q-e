@@ -6,5 +6,10 @@ regterg_gpu.o
 
 MODFLAGS += $(MOD_FLAG)../../GScratch
 
+ifdef PGI_POWER_WORKAROUND
+# Circumvents bug in the Power implementation of PGI compilers
+F90FLAGS:= -O1 $(filter-out -fast,$(F90FLAGS))
+endif
+
 cegterg_gpu.o : david_param.o
 regterg_gpu.o : david_param.o

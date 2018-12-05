@@ -1,6 +1,7 @@
 clocks_handler.o : parallel_include.o
 clocks_handler.o : util_param.o
 clocks_handler.o : nvtx.o
+cuda_util.o : util_param.o
 data_buffer.o : util_param.o
 divide.o : mp.o
 error_handler.o : mp.o

@@ -34,6 +34,24 @@ pgi cuda mpi:
     - pwgpu-mpi-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
     expire_in: 1 week
 
+pgi cuda mpi 185:
+  tags: [galileo]
+  script:
+    - module load profile/global pgi/18.5 mkl/2018--binary cuda/9.0 openmpi/3.1.3--pgi--18.5
+    - ./configure --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME --with-scalapack=no
+    - module rm cuda/9.0             # linking problem with cusolver in PGI 18.5
+    - sed -i 's/DFTI/FFTW/' make.inc # linking problem with mkl in PGI 18.5
+    - make -j pw
+    - export OMP_NUM_THREADS=4
+    - cd test-suite
+    - make clean
+    - make run-tests-pw-parallel
+    - cd .. && cp PW/src/pw.x ./pwgpu-mpi-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
+  artifacts:
+    paths:
+    - pwgpu-mpi-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
+    expire_in: 1 week
+
 pgi cuda serial:
   tags: [galileo]
   script:
@@ -48,6 +66,24 @@ pgi cuda serial:
   artifacts:
     paths:
     - pwgpu-serial-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
+    expire_in: 1 week
+
+pgi cuda serial 185:
+  tags: [galileo]
+  script:
+    - module load profile/global pgi/18.5 mkl/2018--binary cuda/9.0
+    - ./configure --disable-parallel --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=35 --with-cuda=$CUDA_HOME
+    - module rm cuda/9.0             # linking problem with cusolver in PGI 18.5
+    - sed -i 's/DFTI/FFTW/' make.inc # linking problem with mkl in PGI 18.5
+    - make -j pw
+    - export OMP_NUM_THREADS=4
+    - cd test-suite
+    - make clean
+    - make run-tests-pw-serial
+    - cd .. && cp PW/src/pw.x ./pwgpu-serial-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
+  artifacts:
+    paths:
+    - pwgpu-serial-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
     expire_in: 1 week
 
 #

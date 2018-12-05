@@ -1096,8 +1096,22 @@ MODULE exx_band
        g = g_exx
        gg = gg_exx
        mill = mill_exx
+#if defined(__CUDA)
+       ! Sync duplicated data
+       ! All these variables are actually set by ggen which has intent out
+       CALL using_mill(2); CALL using_mill_d(0); ! updates mill indices,
+       CALL using_g(2);    CALL using_g_d(0);    ! g and gg that are used almost only after
+       CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
+                                                 ! This is a trick to avoid checking for sync everywhere.
+#endif
        ! workaround: here dfft?%nl* are unallocated
        ! some compilers go on and allocate, some others crash
+#if defined(__CUDA)
+       IF ( .NOT. ALLOCATED(dfftp%nl) ) ALLOCATE (dfftp%nl_d(size(nl_exx)))
+       IF ( .NOT. ALLOCATED(dffts%nl) ) ALLOCATE (dffts%nl_d(size(nls_exx)))
+       IF ( gamma_only .AND. .NOT.ALLOCATED(dfftp%nlm) ) ALLOCATE (dfftp%nlm_d(size(nlm_exx)))
+       IF ( gamma_only .AND. .NOT.ALLOCATED(dffts%nlm) ) ALLOCATE (dffts%nlm_d(size(nlsm_exx)))
+#endif
        IF ( .NOT. ALLOCATED(dfftp%nl) ) ALLOCATE (dfftp%nl(size(nl_exx)))
        IF ( .NOT. ALLOCATED(dffts%nl) ) ALLOCATE (dffts%nl(size(nls_exx)))
        IF ( gamma_only .AND. .NOT.ALLOCATED(dfftp%nlm) ) ALLOCATE (dfftp%nlm(size(nlm_exx)))
@@ -1134,6 +1148,14 @@ MODULE exx_band
        g = g_loc
        gg = gg_loc
        mill = mill_loc
+#if defined(__CUDA)
+       ! Sync duplicated data
+       ! All these variables are actually set by ggen which has intent out
+       CALL using_mill(2); CALL using_mill_d(0); ! updates mill indices,
+       CALL using_g(2);    CALL using_g_d(0);    ! g and gg that are used almost only after
+       CALL using_gg(2);   CALL using_gg_d(0)    ! a single initialization .
+                                                 ! This is a trick to avoid checking for sync everywhere.
+#endif
        dfftp%nl = nl_loc
        dffts%nl = nls_loc
 #if defined(__CUDA)

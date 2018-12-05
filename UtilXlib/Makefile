@@ -6,7 +6,8 @@ include ../make.inc
 MODFLAGS=$(MOD_FLAG).
 
 UTIL = clocks_handler.o \
-       divide.o \
+cuda_util.o \
+divide.o \
 data_buffer.o \
 error_handler.o \
 find_free_unit.o \
