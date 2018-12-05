@@ -6,11 +6,11 @@
 #SBATCH -S 2
 
 #load modules
-#module load espresso
-#execdir=../install/6.3/knl/bin
+#module load espresso/6.3
+#execdir=/global/common/cori/software/espresso/6.3-scalapack/knl/intel/bin
 
 #some parameters
-rankspernode=8
+rankspernode=4
 totalranks=$(( ${rankspernode} * ${SLURM_NNODES} ))
 
 #openmp stuff
