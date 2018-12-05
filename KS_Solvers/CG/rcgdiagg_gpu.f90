@@ -89,7 +89,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
   !
   ! ... external functions
   !
-  REAL(DP), EXTERNAL :: cgddot
+  REAL(DP), EXTERNAL :: ksDdot
   EXTERNAL  hs_1psi_gpu,    s_1psi_gpu 
   ! hs_1psi( npwx, npw, psi, hpsi, spsi )
   ! s_1psi( npwx, npw, psi, spsi )
@@ -196,7 +196,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
      !
      ! ... NB:  ddot(2*npw,a,1,b,1) = DBLE( zdotc(npw,a,1,b,1) )
      !
-     e(m) = 2.D0 * cgddot( npw2, psi_d(1,m), 1, hpsi_d, 1 )
+     e(m) = 2.D0 * ksDdot( npw2, psi_d(1,m), 1, hpsi_d, 1 )
      !print *, 'e(m)', e(m)
      IF ( gstart == 2 ) THEN
         psi1  = psi_d(1,m)
@@ -222,8 +222,8 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
         !
         ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
         !
-        es(1) = 2.D0 * cgddot( npw2, spsi_d(1), 1, g_d(1), 1 )
-        es(2) = 2.D0 * cgddot( npw2, spsi_d(1), 1, ppsi_d(1), 1 )
+        es(1) = 2.D0 * ksDdot( npw2, spsi_d(1), 1, g_d(1), 1 )
+        es(2) = 2.D0 * ksDdot( npw2, spsi_d(1), 1, ppsi_d(1), 1 )
         !
         IF ( gstart == 2 ) THEN
            !
@@ -282,7 +282,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
            !
            ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
            !
-           gg1 = 2.D0 * cgddot( npw2, g_d(1), 1, g0_d(1), 1 )
+           gg1 = 2.D0 * ksDdot( npw2, g_d(1), 1, g0_d(1), 1 )
            IF ( gstart == 2 ) THEN 
               g1 = g_d(1) ; g01 = g0_d(1)
               gg1 = gg1 - g1 * g01
@@ -304,7 +304,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
           g0_d(i) = g0_d(i) * precondition_d(i)
         end do
         !
-        gg = 2.D0 * cgddot( npw2, g_d(1), 1, g0_d(1), 1 )
+        gg = 2.D0 * ksDdot( npw2, g_d(1), 1, g0_d(1), 1 )
         IF ( gstart == 2 ) THEN 
            g1 = g_d(1) ; g01 = g0_d(1)
            gg = gg - g1*g01
@@ -360,7 +360,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
         !
         CALL hs_1psi_gpu( npwx, npw, cg_d(1), ppsi_d(1), scg_d(1) )
         !
-        cg0 = 2.D0 * cgddot( npw2, cg_d(1), 1, scg_d(1), 1 )
+        cg0 = 2.D0 * ksDdot( npw2, cg_d(1), 1, scg_d(1), 1 )
         IF ( gstart == 2 ) THEN 
            cg1 = cg_d(1) ; scg1 = scg_d(1)
            cg0 = cg0 - cg1*scg1
@@ -378,7 +378,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
         ! ... so that the result is correctly normalized :
         ! ...                           <y(t)|P^2S|y(t)> = 1
         !
-        a0 = 4.D0 * cgddot( npw2, psi_d(1,m), 1, ppsi_d(1), 1 )
+        a0 = 4.D0 * ksDdot( npw2, psi_d(1,m), 1, ppsi_d(1), 1 )
         IF ( gstart == 2 ) THEN 
            psi1 = psi_d(1,m)
            ppsi1 = ppsi_d(1)
@@ -389,7 +389,7 @@ SUBROUTINE rcgdiagg_gpu( hs_1psi_gpu, s_1psi_gpu, precondition_d, &
         !
         CALL mp_sum(  a0 , intra_bgrp_comm )
         !
-        b0 = 2.D0 * cgddot( npw2, cg_d(1), 1, ppsi_d(1), 1 )
+        b0 = 2.D0 * ksDdot( npw2, cg_d(1), 1, ppsi_d(1), 1 )
         IF ( gstart == 2 ) THEN 
            cg1 = cg_d(1)
            ppsi1 = ppsi_d(1)
