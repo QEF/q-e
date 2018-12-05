@@ -2872,7 +2872,7 @@ SUBROUTINE aceinit( exex )
   USE wavefunctions, ONLY : evc
   !
   USE wavefunctions_gpum, ONLY : using_evc
-  USE uspp_gpum,                 ONLY : using_vkb
+  USE uspp_gpum,          ONLY : using_vkb
   !
   IMPLICIT NONE
   !
