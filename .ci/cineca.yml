@@ -52,6 +52,20 @@ pgi cuda mpi 185:
     - pwgpu-mpi-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
     expire_in: 1 week
 
+pgi cuda mpi v100:
+  tags: [v100]
+  script:
+    - module load profile/global pgi/18.5 mkl/2018--binary cuda/9.0 openmpi/3.1.3--pgi--18.5
+    - ./configure --enable-openmp --with-cuda-runtime=9.0 --with-cuda-cc=70 --with-cuda=$CUDA_HOME --with-scalapack=no
+    - module rm cuda/9.0             # linking problem with cusolver in PGI 18.5
+    - sed -i 's/DFTI/FFTW/' make.inc # linking problem with mkl in PGI 18.5
+    - make -j pw
+    - export OMP_NUM_THREADS=4
+    - cd test-suite
+    - sed -i 's/TESTCODE_NPROCS=4/TESTCODE_NPROCS=2/' ENVIRONMENT
+    - make clean
+    - make run-tests-pw-parallel
+
 pgi cuda serial:
   tags: [k80]
   script:
