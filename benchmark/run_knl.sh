@@ -6,8 +6,9 @@
 #SBATCH -S 2
 
 #load modules
-#module load espresso
-#execdir=../install/6.3/knl/bin
+module load espresso/6.3  
+execdir=$(module show espresso |& grep PATH | awk '{print $3}')
+#execdir=../buildscripts/install/6.3/knl/bin
 
 #some parameters
 rankspernode=4
@@ -19,9 +20,6 @@ export OMP_PLACES=threads
 export OMP_PROC_BIND=spread
 export MKL_FAST_MEMORY_LIMIT=0
 
-#executable
-execdir=../buildscripts/install/6.3/knl/bin
-
 #run
 MPI_RUN="srun -N ${SLURM_NNODES} -n ${totalranks} -c $(( 256 / ${rankspernode} )) --cpu_bind=cores"
-${MPI_RUN} ${execdir}/pw.x -nbgrp ${totalranks} -in small.in 
+${MPI_RUN} ${execdir}/pw.x -ndiag 4 -nbgrp ${totalranks} -in small.in 

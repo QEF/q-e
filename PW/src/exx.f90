@@ -745,7 +745,7 @@ MODULE exx
     USE us_exx,         ONLY : becxx
     USE mp_exx,         ONLY : negrp, inter_egrp_comm, init_index_over_band
 !DEBUG
-    USE mp_exx, ONLY: my_egrp_id
+    !USE mp_exx, ONLY: my_egrp_id
 !DEBUG
     USE wvfct,          ONLY : nbnd
     USE exx_band,       ONLY : transform_psi_to_exx, transform_hpsi_to_local,&
@@ -765,7 +765,7 @@ MODULE exx
     !
 
     !DEBUG
-    write(*,*) "VEXX: ENTER: egrp_id = ",my_egrp_id, ", sum(psi) = ",sum(psi)
+    !write(*,*) "VEXX: ENTER: egrp_id = ",my_egrp_id, ", sum(psi) = ",sum(psi)
     !DEBUG 
 
     IF(negrp.gt.1)THEN
@@ -778,7 +778,7 @@ MODULE exx
     END IF
 
     !DEBUG
-    write(*,*) "VEXX: AFTER TRANSFORM: egrp_id = ",my_egrp_id, ", sum(psi) = ",sum(psi),"\n"
+    !write(*,*) "VEXX: AFTER TRANSFORM: egrp_id = ",my_egrp_id, ", sum(psi) = ",sum(psi),"\n"
     !DEBUG 
 
     !
@@ -800,7 +800,7 @@ MODULE exx
     !
 
     !DEBUG
-    write(*,*) "VEXX: BEFORE BACKTRANSFORM: egrp_id = ",my_egrp_id, ", sum(hpsi) = ",sum(hpsi),"\n"
+    !write(*,*) "VEXX: BEFORE BACKTRANSFORM: egrp_id = ",my_egrp_id, ", sum(hpsi) = ",sum(hpsi),"\n"
     !DEBUG  
 
     IF(negrp.gt.1)THEN
@@ -812,7 +812,7 @@ MODULE exx
     END IF
 
     !DEBUG
-    write(*,*) "VEXX: EXIT: egrp_id = ",my_egrp_id, ", sum(hpsi) = ",sum(hpsi),"\n"
+    !write(*,*) "VEXX: EXIT: egrp_id = ",my_egrp_id, ", sum(hpsi) = ",sum(hpsi),"\n"
     !DEBUG   
 
     !
