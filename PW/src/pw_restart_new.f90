@@ -92,7 +92,6 @@ MODULE pw_restart_new
                                        lambda
       USE ions_base,            ONLY : amass
       USE funct,                ONLY : get_dft_short, get_inlc, get_nonlocc_name, dft_is_nonlocc
-      USE kernel_table,         ONLY : vdw_table_name
       USE scf,                  ONLY : rho
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
@@ -1646,6 +1645,10 @@ MODULE pw_restart_new
                 lxdm   = .FALSE.
                 !
            END SELECT
+          ! the following lines set vdw_table_name, if not already set before
+          ! (the latter option, added by Yang Jiao, is useful for postprocessing)
+          ! NOTA BENE: inlc is not used - this part should be simplified and maybe
+          ! moved to somewhere else (e.g. a routine setting the default file name) 
            SELECT CASE ( TRIM (dft_obj%vdW%non_local_term))
              CASE ('vdw1')  
                 inlc = 1
@@ -1662,13 +1665,16 @@ MODULE pw_restart_new
              CASE default 
                 inlc = 0 
           END SELECT
-          IF (inlc == 0 ) THEN 
-             vdw_table_name = ' '
-          ELSE IF ( inlc == 3 ) THEN 
-             vdw_table_name = 'rVV10_kernel_table'
-          ELSE
-             vdw_table_name = 'vdW_kernel_table'
-          END IF 
+          IF ( vdw_table_name == ' ' ) THEN 
+             IF (inlc == 0 ) THEN 
+                vdw_table_name = ''
+             ELSE IF ( inlc == 3 ) THEN 
+                vdw_table_name = 'rVV10_kernel_table'
+             ELSE
+                vdw_table_name = 'vdW_kernel_table'
+             END IF 
+          END IF
+          !
           IF (dft_obj%vdW%london_s6_ispresent ) THEN 
              scal6 = dft_obj%vdW%london_s6
           END IF 

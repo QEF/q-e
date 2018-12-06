@@ -30,7 +30,7 @@ PROGRAM do_ppacf
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : ecutwfc,gcutw
-  USE io_files,             ONLY : prefix,tmp_dir
+  USE io_files,             ONLY : pseudo_dir,prefix,tmp_dir
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE cell_base,            ONLY : omega
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -52,15 +52,20 @@ PROGRAM do_ppacf
   USE funct,                ONLY : set_exx_fraction,set_auxiliary_flags,enforce_input_dft
   USE wvfct,                ONLY : npw, npwx
   USE environment,          ONLY : environment_start, environment_end
-  USE kernel_table,         ONLY : Nqs
+  USE kernel_table,         ONLY : Nqs, vdw_table_name, kernel_file_name
   USE vdW_DF,               ONLY : get_potential, vdW_energy
   USE vdW_DF_scale,         ONLY : xc_vdW_DF_ncc, xc_vdW_DF_spin_ncc, &
                                    get_q0cc_on_grid, get_q0cc_on_grid_spin
+  USE vasp_xml,             ONLY : readxmlfile_vasp
 
   ! 
   IMPLICIT NONE
   !
   LOGICAL :: lplot,ltks,lfock,lecnl_qxln,lecnl_qx
+  INTEGER :: code_num
+  !  From which code to read in the calculation data
+  !  1 Quantum ESPRESSO (default)
+  !  2 VASP
   INTEGER :: icc, ncc
   INTEGER :: n_lambda
   REAL(DP):: rs,rs3,s,q,qx,qc
@@ -68,11 +73,10 @@ PROGRAM do_ppacf
   REAL(DP) :: etcldalambda,etcgclambda,etcnlclambda, etcnl_check,ttcnl_check, tcnl_int
   REAL(DP), ALLOCATABLE :: Ec_nl_ngamma(:)
   REAL(DP) :: etc,etclda,etcgc
-  REAL(DP) :: fclda
   REAL(dp), EXTERNAL :: exxenergyace
   ! !
   INTEGER :: is, ir,iq,ig,icar, nnrtot
-  INTEGER :: iexch,icorr,igcx,igcc
+  INTEGER :: iexch,icorr,igcx,igcc,inlc
   ! counter on mesh points
   ! counter on nspin
   INTEGER  :: ierr,ios
@@ -147,8 +151,8 @@ PROGRAM do_ppacf
   type (scf_type) :: tcnl
   type (scf_type) :: exgc, ecgc, tcgc
 
-  NAMELIST / ppacf / outdir,prefix,n_lambda,lplot,ltks,lfock,use_ace, &
-                     lecnl_qxln,lecnl_qx
+  NAMELIST / ppacf / code_num,outdir,prefix,n_lambda,lplot,ltks,lfock,use_ace, &
+                     pseudo_dir,vdw_table_name,lecnl_qxln,lecnl_qx
 
   !
   ! initialise environment
@@ -161,8 +165,9 @@ PROGRAM do_ppacf
   !
   ! set default values for variables in namelist
   !
+  code_num = 1
   outdir = './'
-  prefix = 'pwscf'
+  prefix = 'ppacf'
   n_lambda = 1
   lplot = .False.
   ltks  = .False.
@@ -186,6 +191,7 @@ PROGRAM do_ppacf
   ! 
   ! Broadcast variables
   !
+  CALL mp_bcast(code_num,ionode_id,world_comm)
   CALL mp_bcast(outdir,ionode_id,world_comm)
   CALL mp_bcast(prefix,ionode_id,world_comm)
   CALL mp_bcast(n_lambda,ionode_id,world_comm)
@@ -195,6 +201,8 @@ PROGRAM do_ppacf
   CALL mp_bcast(lecnl_qxln,ionode_id,world_comm)
   CALL mp_bcast(lecnl_qx,ionode_id,world_comm)
   CALL mp_bcast(dcc,ionode_id,world_comm)
+  CALL mp_bcast(pseudo_dir,ionode_id,world_comm)
+  CALL mp_bcast(vdw_table_name,ionode_id,world_comm)
   ncc=n_lambda 
   WRITE( stdout, '(//5x,"entering subroutine acf ..."/)')
   ! Write out the ppacf information.
@@ -204,15 +212,27 @@ PROGRAM do_ppacf
   ! 
 !  WRITE(stdout,9093) dcc
 
-  tmp_dir=TRIM(outdir) 
-!  CALL read_xml_file_internal(.TRUE.)
-  CALL  read_file()
+  IF (code_num == 1) THEN
+     !
+     tmp_dir=TRIM(outdir) 
+!     CALL read_xml_file_internal(.TRUE.)
+     CALL  read_file()
 
-!  Check exchange correlation functional
-  iexch = get_iexch()
-  icorr = get_icorr()
-  igcx  = get_igcx()
-  igcc  = get_igcc()
+!     Check exchange correlation functional
+     iexch = get_iexch()
+     icorr = get_icorr()
+     igcx  = get_igcx()
+     igcc  = get_igcc()
+  
+  ELSEIF (code_num == 2) THEN
+     !
+     tmp_dir=TRIM(outdir)
+     CALL readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
+     IF(ionode) WRITE(stdout,'(5X,a)') "Read data from VASP output 'vasprun.xml'"
+     ! 
+  ELSE
+     CALL errore ('ppacf', 'code_num not implemented', 1)
+  ENDIF
   
   ALLOCATE(vofrcc(1:dfftp%nnr,1:nspin))
   
@@ -296,6 +316,7 @@ PROGRAM do_ppacf
      etxccc=0._DP
      vofrcc=0._DP
      etx=0._DP
+     etxlda=0._DP
      etxgc=0._DP
      etcldalambda=0._DP
      etcgclambda=0._DP
@@ -632,8 +653,14 @@ PROGRAM do_ppacf
 
 
   IF(lfock .OR. (lplot .AND. ltks)) THEN
-     starting_wfc='file'
-     CALL wfcinit()
+     IF (code_num==1) THEN
+        starting_wfc='file'
+        CALL wfcinit()
+     ELSE IF (code_num==2) THEN
+        CALL errore( 'ppacf', 'wavefunction not implemented for VASP postprocessing', 1)
+     ELSE
+        CALL errore ('ppacf', 'code_num not implemented', 1)
+     END IF
   END IF
 ! Fock exchange energy from readin wavefunctions
 
@@ -678,6 +705,24 @@ PROGRAM do_ppacf
 
 ! output data in 3D
   IF (lplot) THEN
+     IF (code_num==2) THEN
+        IF(nspin==1) THEN
+           filplot=trim(prefix)//'.chg'
+           plot_num=2
+           CALL dcopy(dfftp%nnr, rho%of_r(:,1), 1, vltot, 1)
+           CALL punch_plot (filplot, plot_num, 0.,0.,0.,0.,0.,0,0,0, .False.)
+        ELSEIF(nspin==2) THEN
+           filplot=trim(prefix)//'.chg1'
+           plot_num=2
+           CALL dcopy(dfftp%nnr, rho%of_r(:,1), 1, vltot, 1)
+           CALL punch_plot (filplot, plot_num, 0.,0.,0.,0.,0.,0,0,0, .False.)
+           filplot=trim(prefix)//'.chg2'
+           plot_num=2
+           CALL dcopy(dfftp%nnr, rho%of_r(:,2), 1, vltot, 1)
+           CALL punch_plot (filplot, plot_num, 0.,0.,0.,0.,0.,0,0,0, .False.)
+        END IF
+     END IF
+
      IF (ltks) THEN
         ALLOCATE(kin_r(dfftp%nnr,nspin))
 !        CALL init_run()

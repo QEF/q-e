@@ -42,6 +42,8 @@ stm.o \
 stop_pp.o \
 sum_band_kin.o \
 sym_band.o \
+vasp_read_chgcar_mod.o \
+vasp_xml_module.o \
 work_function.o \
 write_p_avg.o \
 write_proj.o \
