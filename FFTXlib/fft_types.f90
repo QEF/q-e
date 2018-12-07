@@ -304,6 +304,7 @@ CONTAINS
     ALLOCATE ( desc%stream_many(desc%nstream_many) ) ;
     DO imany = 1, desc%nstream_many
         ierr = cudaStreamCreate(desc%stream_many(imany))
+        IF ( ierr /= 0 ) CALL fftx_error__( ' fft_type_allocate ', ' Error creating stream ', imany )
     END DO
 #endif
 
