@@ -3503,7 +3503,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-# Varibles
+# Variables
 NVCC=no
 CUDA_CFLAGS=
 CUDA_LDLIBS=
@@ -4154,6 +4154,10 @@ else
 # parallel case - use MPIF90 if set
         if test "$mpif90" = "" ; then
 	   mpif90="$try_mpif90 $f90 $try_f90 "
+	fi
+    	if test "$f90" != "" ; then
+           { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: F90 value is set to be consistent with value of MPIF90" >&5
+$as_echo "$as_me: WARNING: F90 value is set to be consistent with value of MPIF90" >&2;}
 	fi
 fi
 

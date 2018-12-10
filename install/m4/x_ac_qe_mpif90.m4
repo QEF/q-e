@@ -101,6 +101,9 @@ else
         if test "$mpif90" = "" ; then 
 	   mpif90="$try_mpif90 $f90 $try_f90 "
 	fi
+    	if test "$f90" != "" ; then
+           AC_MSG_WARN([F90 value is set to be consistent with value of MPIF90])
+	fi
 fi
 
 AC_PROG_FC($mpif90)
