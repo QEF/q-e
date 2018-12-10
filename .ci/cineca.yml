@@ -44,6 +44,7 @@ pgi cuda mpi 185:
     - make -j pw
     - export OMP_NUM_THREADS=4
     - cd test-suite
+    - sed -i 's/mpirun -np/srun -n/' run-pw.sh
     - make clean
     - make run-tests-pw-parallel
     - cd .. && cp PW/src/pw.x ./pwgpu-mpi-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
@@ -51,6 +52,7 @@ pgi cuda mpi 185:
     paths:
     - pwgpu-mpi-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
     expire_in: 1 week
+
 
 pgi cuda mpi v100:
   tags: [v100]
@@ -63,6 +65,7 @@ pgi cuda mpi v100:
     - export OMP_NUM_THREADS=4
     - cd test-suite
     - sed -i 's/TESTCODE_NPROCS=4/TESTCODE_NPROCS=2/' ENVIRONMENT
+    - sed -i 's/mpirun -np/srun -n/' run-pw.sh
     - make clean
     - make run-tests-pw-parallel
 
