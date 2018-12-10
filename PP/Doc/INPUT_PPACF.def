@@ -16,6 +16,8 @@ input_description -distribution {Quantum Espresso (version 6.3 with ppacf patch)
         If @ref lfock is set to .True., the code also computes the total Fock 
         exchange value.
 
+        With flag @ref code_num = 2, the codes can read output produced by @b VASP.
+
         With flag @ref lplot, the codes also out puts files containing spatial 
         variation in most of these quantities.
 
@@ -51,6 +53,8 @@ input_description -distribution {Quantum Espresso (version 6.3 with ppacf patch)
         var prefix -type CHARACTER {
             info { 
                 prefix of files saved by program pw.x 
+                prepended to input/output filenames:
+                prefix.ecnl, prefix.tcnl, etc.
             }
         }
         
@@ -134,6 +138,46 @@ input_description -distribution {Quantum Espresso (version 6.3 with ppacf patch)
                         .True.
                     }
                 }
+            }
+        }
+
+        var code_num -type INTEGER {
+            info {
+                Select from which code to read output files.
+                  1 = Quantum ESPRESSO
+                  2 = VASP
+                      The codes will read vasprun.xml and CHGCAR from VASP
+                      calculations. 
+                      Please note that in VASP-based analysis: 
+                      - Core charge is ignored.
+                      - Wavefunction based analysis (Fock exchange energy and 
+                        Kohn-Sham kinetic energy) are not available.
+                      - When @ref lplot = .True., the code will also print out 
+                        charge density in prefix.chg (prefix.chg1 and prefix.chg2 
+                        save the spin-up and spin-down components in case of 
+                        spin-polarized calculations), which can be processed by @b pp.x.
+            }
+            default {
+                1
+            }
+        }
+
+        var pseudo_dir -type CHARACTER {
+            info {
+                Directory containing pseudopotential files (and vdw kernel table).
+            }
+            default {
+                value of the $ESPRESSO_PSEUDO environment variable if set; 
+                '$HOME/espresso/pseudo/' otherwise
+            }
+        }
+
+        var vdw_table_name -type CHARACTER {
+            info {
+                The vdw kernel table (in Quantum ESPRESSO format).
+            }
+            default {
+                "vdW_kernel_table"
             }
         }
     
