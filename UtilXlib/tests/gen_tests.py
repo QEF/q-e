@@ -9,8 +9,9 @@ ranks   =   {'1': '', \
              'm': '(datasize,datasize)', \
              't': '(datasize,datasize,datasize)', \
              '4': '(datasize,datasize,datasize,datasize)', \
-             '5': '(datasize,datasize,datasize,datasize,datasize)'}
-nextr={'1': 'v', 'v': 'm', 'm': 't', 't': '4', '4': '5', '5': ''}
+             '5': '(datasize,datasize,datasize,datasize,datasize)', \
+             '6': '(datasize,datasize,datasize,datasize,datasize,datasize)'}
+nextr={'1': 'v', 'v': 'm', 'm': 't', 't': '4', '4': '5', '5': '', '6': ''}
 compare={'INTEGER': 'equal', 'REAL': 'close', 'REAL(DP)': 'close', 'COMPLEX': 'close', 'COMPLEX(DP)': 'close'}
 
 input_file_names = sys.argv[1:]
