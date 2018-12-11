@@ -9294,20 +9294,20 @@ fi
 hdf5_libs=""
 have_hdf5=0
 
+
 if test "$use_parallel" -ne 0; then
 
   if test "$with_hdf5" -ne 0 && test "$with_hdf5_path" != "yes"; then
 
     # Checking compiler compatibility: GCC >= 4.9
-    if test "x$f90_in_mpif90" = xgfortran &&
-       test "$f90_major_version" -le "4" &&
-       test "$f90_minor_version" -lt "9" ; then
+       if test "x$f90_in_mpif90" = xgfortran &&
+          test "$f90_major_version" -le "4" &&
+          test "$f90_minor_version" -lt "9" ; then
 
       { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
       { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 support requires GNU GFORTRAN >= 4.9 " >&5
 $as_echo "$as_me: WARNING: *** HDF5 support requires GNU GFORTRAN >= 4.9 " >&2;}
-
     else
 
       # Test if it is really installed where it has been specified
@@ -9454,9 +9454,8 @@ fi
       fi
       if test "$have_hdf5" -eq 1; then
         version_num=`grep "HDF5 Version" $with_hdf5_path/lib/libhdf5.settings | awk -F ':' '{print $2}'`
-	version_sec_ok=`echo $version_num | awk -F '.' '{print $2 >= 8}'`
-        version_third_ok=`echo $version_num | awk -F '.' '{print $3 >=16}'`
-	if test $version_sec_ok -gt 0; then
+        version_ok=`echo $version_num | awk -F '.' '{print (($2 >= 10) || ( ($2 == 8) && ($3 >= 16)))}'`
+	if test $version_ok -gt 0; then
 		if test $version_third_ok -eq 0; then
 			 { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&5
 $as_echo "$as_me: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&2;};
@@ -9485,7 +9484,191 @@ $as_echo "$as_me: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&2;}
       hdf5_line="HDF5_LIBS=$hdf5_libs"
     fi
   fi
-#else
+else
+  if test "$with_hdf5" -ne 0 && test "$with_hdf5_path" != "yes"; then
+
+    # Checking compiler compatibility: GCC >= 4.9
+       if test "x$f90" = xgfortran &&
+          test "$f90_major_version" -le "4" &&
+          test "$f90_minor_version" -lt "9" ; then
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 support requires GNU GFORTRAN >= 4.9 " >&5
+$as_echo "$as_me: WARNING: *** HDF5 support requires GNU GFORTRAN >= 4.9 " >&2;}
+    else
+
+      # Test if it is really installed where it has been specified
+      ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+      ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+      if test -e $with_hdf5_path/bin/h5cc ; then
+           h5cc=$with_hdf5_path/bin/h5cc;
+       else
+          h5cc=$CC;
+       fi
+       ac_compile='$h5cc -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+       ac_link='$h5cc -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+
+      try_libdirs="$with_hdf5_path/lib"
+      for dir in $try_libdirs
+      do
+          unset ac_cv_search_H5Fcreate
+
+          if test "$dir" = "none"
+          then
+            try_loption=
+          else
+            try_loption="-L$dir"
+          fi
+
+          FFLAGS="$test_fflags"
+          LDFLAGS="$test_ldflags $try_loption"
+          #LIBS="-lhdf5"
+          LIBS=""
+
+          { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing H5Fcreate" >&5
+$as_echo_n "checking for library containing H5Fcreate... " >&6; }
+if ${ac_cv_search_H5Fcreate+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char H5Fcreate ();
+int
+main ()
+{
+return H5Fcreate ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' hdf5 hdf5_fortran; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_H5Fcreate=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_H5Fcreate+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_H5Fcreate+:} false; then :
+
+else
+  ac_cv_search_H5Fcreate=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_H5Fcreate" >&5
+$as_echo "$ac_cv_search_H5Fcreate" >&6; }
+ac_res=$ac_cv_search_H5Fcreate
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  have_hdf5=1
+fi
+
+
+          if test "$ac_cv_search_H5Fcreate" != "no"
+          then break ; fi
+      done
+
+      ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+      ac_ext=f
+ac_compile='$F77 -c $FFLAGS conftest.$ac_ext >&5'
+ac_link='$F77 -o conftest$ac_exeext $FFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_f77_compiler_gnu
+
+
+      if test "$have_hdf5" -eq 1 ; then
+          as_ac_File=`$as_echo "ac_cv_file_$with_hdf5_path/include/hdf5.mod" | $as_tr_sh`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $with_hdf5_path/include/hdf5.mod" >&5
+$as_echo_n "checking for $with_hdf5_path/include/hdf5.mod... " >&6; }
+if eval \${$as_ac_File+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r "$with_hdf5_path/include/hdf5.mod"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+eval ac_res=\$$as_ac_File
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+if eval test \"x\$"$as_ac_File"\" = x"yes"; then :
+
+else
+
+              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ***HDF5 Fortran extensions not found" >&5
+$as_echo "$as_me: WARNING: ***HDF5 Fortran extensions not found" >&2;}
+              have_hdf5=0
+fi
+
+      fi
+      if test "$have_hdf5" -eq 1; then
+        version_num=`grep "HDF5 Version" $with_hdf5_path/lib/libhdf5.settings | awk -F ':' '{print $2}'`
+        version_ok=`echo $version_num | awk -F '.' '{print (($2 => 10) || ( ($2 == 8) && ($3 >= 16)))}'`
+	if test $version_sec_ok -gt 0; then
+		if test $version_third_ok -eq 0; then
+			 { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&5
+$as_echo "$as_me: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&2;};
+			 have_hdf5=0;
+                fi
+        else
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&5
+$as_echo "$as_me: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&2;};
+                have_hdf5=0;
+        fi
+      fi
+
+      if test "$have_hdf5" -eq 1 ; then
+         if test -e $with_hdf5_path/bin/h5fc; then
+             hdf5_libs=`$with_hdf5_path/bin/h5fc -show | awk -F'-L' '{$1="";$2="-L"$2; print $0}'`
+             try_dflags="$try_dflags -D__HDF5_SERIAL"
+         else
+          hdf5_libs="-L$with_hdf5_path/lib -lhdf5_fortran -lhdf5 -lrt -lz -ldl -lm -Wl,-rpath -Wl,$with_hdf5_path/lib"
+         fi
+         try_iflags="$try_iflags -I$with_hdf5_path/include"
+         try_dflags="$try_dflags -D__HDF5"
+      fi
+
+      hdf5_line="HDF5_LIBS=$hdf5_libs"
+    fi
+  fi
+
 #    AC_MSG_WARN([HDF5 support is for parallel execution only])
 fi
 
