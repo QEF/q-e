@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,41 +7,41 @@
 !
 !--------------------------------------------------------------
 subroutine zstar_eu_us
-!----------===========-----------------------------------------
+  !--------------------------------------------------------------
   !
   ! Calculates the additional part of the Born effective charges
-  ! in the case of USPP
+  ! in the case of USPP.
   !
-  !
-  USE kinds,     ONLY : DP
-  USE mp,        ONLY : mp_sum
-  USE mp_pools,  ONLY : inter_pool_comm
-  USE mp_bands,  ONLY : intra_bgrp_comm
-  USE cell_base, ONLY : omega
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp
-  USE buffers,   ONLY : get_buffer
-  USE klist,     ONLY : xk, wk, ngk, igk_k
-  USE gvecs,     ONLY : doublegrid
-  USE fft_base,  ONLY : dfftp, dffts
-  USE fft_interfaces, ONLY : fft_interpolate
-  USE lsda_mod,  ONLY : nspin, current_spin, isk, lsda
-  USE uspp,      ONLY : okvan, nkb, vkb, nlcc_any
-  USE wvfct,     ONLY : nbnd, npwx
-  USE paw_variables, ONLY : okpaw
+  USE kinds,            ONLY : DP
+  USE mp,               ONLY : mp_sum
+  USE mp_pools,         ONLY : inter_pool_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE cell_base,        ONLY : omega
+  USE ions_base,        ONLY : nat, ntyp => nsp, ityp
+  USE buffers,          ONLY : get_buffer
+  USE klist,            ONLY : xk, wk, ngk, igk_k
+  USE gvecs,            ONLY : doublegrid
+  USE fft_base,         ONLY : dfftp, dffts
+  USE fft_interfaces,   ONLY : fft_interpolate
+  USE lsda_mod,         ONLY : nspin, current_spin, isk, lsda
+  USE uspp,             ONLY : okvan, nkb, vkb, nlcc_any
+  USE wvfct,            ONLY : nbnd, npwx
+  USE paw_variables,    ONLY : okpaw
   USE wavefunctions,    ONLY : evc
   USE uspp_param,       ONLY : upf, nhm, nh
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
-  USE efield_mod, ONLY : zstareu0
-  USE phus,       ONLY : becsumort
-  USE modes,      ONLY : u, npert, nirr
-  USE units_ph,   ONLY : lrdwf, iucom, lrcom, lrebar, iuebar, lrdrhous, &
-                         iudrhous, iudwf
-  USE units_lr,   ONLY : iuwfc, lrwfc
-  USE mp_pools,   ONLY : nproc_pool, npool
-  USE control_lr, ONLY : nbnd_occ
-  USE lrus,       ONLY : int3, int3_paw
-  USE eqv,        ONLY : dvpsi, dpsi
-  USE qpoint,     ONLY : nksq
+  USE efield_mod,       ONLY : zstareu0
+  USE phus,             ONLY : becsumort
+  USE modes,            ONLY : u, npert, nirr
+  USE units_ph,         ONLY : lrdwf, iucom, lrcom, lrebar, iuebar, &
+                               lrdrhous, iudrhous, iudwf
+  USE units_lr,         ONLY : iuwfc, lrwfc
+  USE mp_pools,         ONLY : nproc_pool, npool
+  USE control_lr,       ONLY : nbnd_occ
+  USE lrus,             ONLY : int3, int3_paw
+  USE eqv,              ONLY : dvpsi, dpsi
+  USE qpoint,           ONLY : nksq
+  USE ldaU,             ONLY : lda_plus_u
   USE dv_of_drho_lr
   !
   implicit none
@@ -206,6 +206,12 @@ subroutine zstar_eu_us
 #if defined(__MPI)
               call mp_sum( pdsp, intra_bgrp_comm )
 #endif
+              !
+              ! DFPT+U: add to dvpsi the scf term 
+              ! dV_Hub(is)/dE_jpol|psi(ik)> contributing to 
+              ! the derivative of the eigenvalue w.r.t. E_jpol
+              !
+              if (lda_plus_u) call adddvhubscf (jpol, ik)
               !
               ! add the term of the double summation
               !

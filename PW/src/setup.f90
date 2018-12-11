@@ -36,16 +36,12 @@ SUBROUTINE setup()
   USE constants,          ONLY : eps8, rytoev, fpi, pi, degspin
   USE parameters,         ONLY : npk
   USE io_global,          ONLY : stdout
-  USE io_files,           ONLY : tmp_dir, prefix, xmlpun, delete_if_present
+  USE io_files,           ONLY : tmp_dir, prefix
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, omega
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : starting_pot, natomwfc
   USE gvect,              ONLY : gcutm, ecutrho
   USE gvecw,              ONLY : gcutw, ecutwfc
-  USE fft_base,           ONLY : dfftp
-  USE fft_base,           ONLY : dffts
-  USE fft_types,          ONLY : fft_type_init, fft_type_allocate
-  USE fft_base,           ONLY : smap
   USE gvecs,              ONLY : doublegrid, gcutms, dual
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  ltetra, lxkcry, nkstot, &
@@ -60,8 +56,8 @@ SUBROUTINE setup()
   USE ktetra,             ONLY : tetra_type, opt_tetra_init, tetra_init
   USE symm_base,          ONLY : s, t_rev, irt, nrot, nsym, invsym, nosym, &
                                  d1,d2,d3, time_reversal, sname, set_sym_bl, &
-                                 find_sym, inverse_s, no_t_rev &
-                                 , allfrac, remove_sym
+                                 find_sym, inverse_s, no_t_rev, fft_fact,  &
+                                 allfrac
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, ts_vdw, &
@@ -81,13 +77,9 @@ SUBROUTINE setup()
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, &
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
-#if defined(__OLDXML) 
-  USE pw_restart,         ONLY : pw_readfile
-#else
   USE pw_restart_new,     ONLY : pw_readschema_file, init_vars_from_schema 
   USE qes_libs_module,    ONLY : qes_reset_output, qes_reset_parallel_info, qes_reset_general_info
   USE qes_types_module,   ONLY : output_type, parallel_info_type, general_info_type 
-#endif
   USE exx,                ONLY : ecutfock, nbndproj
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
@@ -97,17 +89,15 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, is, ierr, ibnd, ik
+  INTEGER  :: na, is, ierr, ibnd, ik, nrot_
   LOGICAL  :: magnetic_sym, skip_equivalence=.FALSE.
   REAL(DP) :: iocc, ionic_charge, one
   !
   LOGICAL, EXTERNAL  :: check_para_diag
   !
-#if !defined(__OLDXML)
   TYPE(output_type)                         :: output_obj 
   TYPE(parallel_info_type)                  :: parinfo_obj
   TYPE(general_info_type)                   :: geninfo_obj
-#endif
   !  
 #if defined(__MPI)
   LOGICAL :: lpara = .true.
@@ -168,13 +158,6 @@ SUBROUTINE setup()
   !
   nelec = ionic_charge - tot_charge
   !
-#if defined (__OLDXML)
-  IF ( (lfcpopt .OR. lfcpdyn) .AND. restart ) THEN
-     CALL pw_readfile( 'ef', ierr )
-     tot_charge = ionic_charge - nelec
-  END IF
-  !
-#else 
   IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart )) THEN 
      CALL pw_readschema_file( ierr , output_obj, parinfo_obj, geninfo_obj )
   END IF
@@ -184,7 +167,6 @@ SUBROUTINE setup()
      CALL init_vars_from_schema( 'ef', ierr,  output_obj, parinfo_obj, geninfo_obj)
      tot_charge = ionic_charge - nelec
   END IF 
-#endif
   !
   ! ... magnetism-related quantities
   !
@@ -434,21 +416,6 @@ SUBROUTINE setup()
   !
   call check_atoms ( nat, tau, bg )
   !
-  ! ... calculate dimensions of the FFT grid
-  !
-  ! ... if the smooth and dense grid must coincide, ensure that they do
-  ! ... also if dense grid is set from input and smooth grid is not
-  !
-  IF ( ( dfftp%nr1 /= 0 .AND. dfftp%nr2 /= 0 .AND. dfftp%nr3 /= 0 ) .AND. &
-       ( dffts%nr1 == 0 .AND. dffts%nr2 == 0 .AND. dffts%nr3 == 0 ) .AND. &
-       .NOT. doublegrid ) THEN
-     dffts%nr1 = dfftp%nr1
-     dffts%nr2 = dfftp%nr2
-     dffts%nr3 = dfftp%nr3
-  END IF
-  CALL fft_type_allocate ( dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft )
-  CALL fft_type_allocate ( dffts, at, bg, gcutms, intra_bgrp_comm, nyfft=nyfft)
-  !
   !  ... generate transformation matrices for the crystal point group
   !  ... First we generate all the symmetry matrices of the Bravais lattice
   !
@@ -459,9 +426,15 @@ SUBROUTINE setup()
   IF ( lecrpa ) nosym = .TRUE.
   IF ( lecrpa ) skip_equivalence=.TRUE.
   !
-  ! ... If nosym is true do not use any point-group symmetry
+  ! ... if nosym is true: do not reduce automatic k-point grids to the IBZ
+  ! ... using the symmetries of the lattice (only k <-> -k symmetry is used)
+  ! ... Does not change the number "nrot" of symmetries of the lattice
   !
-  IF ( nosym ) nrot = 1
+  IF ( nosym ) THEN
+     nrot_ = 1
+  ELSE
+     nrot_ = nrot
+  END IF
   !
   ! ... time_reversal = use q=>-q symmetry for k-point generation
   !
@@ -477,20 +450,18 @@ SUBROUTINE setup()
         CALL kpoint_grid_efield (at,bg, npk, &
              k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk, nspin)
         nosym = .TRUE.
-        nrot  = 1
-        nsym  = 1
+        nrot_ = 1
         !
      ELSE IF (lberry ) THEN
         !
-        CALL kp_strings( nppstr, gdir, nrot, s, bg, npk, &
+        CALL kp_strings( nppstr, gdir, nrot_, s, bg, npk, &
                          k1, k2, k3, nk1, nk2, nk3, nkstot, xk, wk )
         nosym = .TRUE.
-        nrot  = 1
-        nsym  = 1
+        nrot_ = 1
         !
      ELSE
         !
-        CALL kpoint_grid ( nrot, time_reversal, skip_equivalence, s, t_rev, bg,&
+        CALL kpoint_grid ( nrot_,time_reversal, skip_equivalence, s, t_rev, bg,&
                            npk, k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
         !
      END IF
@@ -508,10 +479,8 @@ SUBROUTINE setup()
            allocate(nx_el(nkstot*nspin,3))
         END IF
 
-        ! <AF>
         IF ( gdir<1 .OR. gdir>3 ) CALL errore('setup','invalid gdir value'&
                                   &' (valid values: 1=x, 2=y, 3=z)',10) 
-        !
         DO ik=1,nkstot
            nx_el(ik,gdir)=ik
         END DO
@@ -522,8 +491,7 @@ SUBROUTINE setup()
         nppstr_3d(gdir)=nppstr
         l3dstring=.false.
         nosym = .TRUE.
-        nrot  = 1
-        nsym  = 1
+        nrot_ = 1
         !
      END IF
   END IF
@@ -540,9 +508,15 @@ SUBROUTINE setup()
      !
      CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate )
      !
-     IF ( .NOT. allfrac ) CALL remove_sym ( dfftp%nr1, dfftp%nr2, dfftp%nr3 )
+     ! ... do not force FFT grid to be commensurate with fractional translations
+     !
+     IF ( allfrac ) fft_fact(:) = 1 
      !
   END IF
+  !
+  ! ... nosym: do not use any point-group symmetry (s(:,:,1) is the identity)
+  !
+  IF ( nosym ) nsym = 1
   !
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.
@@ -550,7 +524,7 @@ SUBROUTINE setup()
   ! ... "irreducible_BZ" computes the missing k-points.
   !
   IF ( .NOT. lbands ) THEN
-     CALL irreducible_BZ (nrot, s, nsym, time_reversal, &
+     CALL irreducible_BZ (nrot_, s, nsym, time_reversal, &
                           magnetic_sym, at, bg, npk, nkstot, xk, wk, t_rev)
   ELSE
      one = SUM (wk(1:nkstot))
@@ -568,12 +542,7 @@ SUBROUTINE setup()
      !
      ! ... if calculating bands, we read the Fermi energy
      !
-#if defined (__OLDXML)
-     CALL pw_readfile( 'reset', ierr )
-     CALL pw_readfile( 'ef',   ierr )
-#else
      CALL init_vars_from_schema( 'ef',   ierr , output_obj, parinfo_obj, geninfo_obj)
-#endif 
      CALL errore( 'setup ', 'problem reading ef from file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
      !
@@ -592,13 +561,11 @@ SUBROUTINE setup()
      END IF
      !
   END IF
-#if !defined(__OLDXML) 
   IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart ) ) THEN 
      CALL qes_reset_output ( output_obj ) 
      CALL qes_reset_parallel_info ( parinfo_obj ) 
      CALL qes_reset_general_info ( geninfo_obj ) 
   END IF 
-#endif
   !
   !
   IF ( lsda ) THEN

@@ -30,6 +30,7 @@
   USE epwcom,          ONLY : filukk, eliashberg, ep_coupling, epwread, epbread, cumulant
   USE environment,     ONLY : environment_start
   USE elph2,           ONLY : elph 
+  USE close_epw,       ONLY : close_final, deallocate_epw
   ! Flag to perform an electron-phonon calculation. If .true. 
   ! the code will enter in [[elphon_shuffle_wrap]]
   !
@@ -158,7 +159,7 @@ write(stdout,'(a)') "                                                           
     !
     ! ... Close the files
     !
-    CALL close_epw()
+    CALL close_final()
     !
   ENDIF
   ! 

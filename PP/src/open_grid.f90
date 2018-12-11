@@ -11,10 +11,12 @@ PROGRAM open_grid
   USE lsda_mod,   ONLY : nspin, isk
   USE klist,      ONLY : nks, nkstot, xk, wk, igk_k, ngk, qnorm
   USE io_files,   ONLY : prefix, tmp_dir, nwordwfc, iunwfc, diropn
-  USE noncollin_module,   ONLY : noncolin
+  USE noncollin_module,   ONLY : noncolin, m_loc
+  USE spin_orb,           ONLY : domag
   USE control_flags,      ONLY : gamma_only, twfcollect
   USE environment,        ONLY : environment_start, environment_end
-  USE symm_base,          ONLY : nrot, nsym, s, t_rev
+  USE ions_base,          ONLY : nat, tau, ityp
+  USE symm_base,          ONLY : nrot, nsym, s, t_rev, fft_fact, find_sym
   USE parameters,         ONLY : npk
   USE exx_base,           ONLY : nq1,nq2,nq3, xkq_collect, &
                                  nkqs, exx_mp_init, index_xk, exx_grid_init 
@@ -39,6 +41,7 @@ PROGRAM open_grid
   !USE qexsd_input,        ONLY : qexsd_init_k_points_ibz
   USE control_flags,      ONLY : gamma_only, io_level
   USE start_k, ONLY : init_start_k
+  USE extfield,           ONLY : gate
   ! 
   IMPLICIT NONE
   !
@@ -56,7 +59,7 @@ PROGRAM open_grid
   CHARACTER(len=4) :: spin_component
   CHARACTER(len=256) :: outdir
   !INTEGER :: nq(3)
-  LOGICAL :: exst, opnd, exst_mem
+  LOGICAL :: exst, opnd, exst_mem, magnetic_sym
   REAL(DP),ALLOCATABLE :: et0(:,:), wg0(:,:), yk(:,:), wk0(:)
   INTEGER, EXTERNAL  :: n_plane_waves
   COMPLEX(DP),ALLOCATABLE :: psic(:), evx(:,:)
@@ -129,7 +132,10 @@ PROGRAM open_grid
   nq_back = (/ nq1, nq2, nq3 /)
   exx_status_back = .true.
   CALL dft_force_hybrid(exx_status_back)
-  !
+
+  magnetic_sym = noncolin .AND. domag 
+  CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate )
+
   nq1 = -1
   nq2 = -1
   nq3 = -1
@@ -156,6 +162,10 @@ PROGRAM open_grid
   xk(:,1:nks) = xkq_collect(:,1:nks)
   wk(1:nks) = 1._dp/DBLE(nks) !/DBLE(nspin_mag)
   npwx = n_plane_waves(gcutw, nks, xk, g, ngm)
+  IF (nspin==2) THEN
+    isk(1:nks/2) = 1
+    isk(nks/2+1:nks) = 2
+  ENDIF
   !
   DEALLOCATE(igk_k, ngk, et, wg)
   ALLOCATE(igk_k(npwx,nks), ngk(nks))
@@ -170,7 +180,7 @@ PROGRAM open_grid
   CALL open_buffer(iunwfc, 'wfc', nwordwfc, +1, exst_mem, exst)
   !
   ! Set the next to true to force non-collected wfcs on output
-!  twfcollect = .false.
+ !twfcollect = .false.
   CALL write_scf(rho, nspin)
   !
   ALLOCATE(psic(dffts%nnr), evx(npol*npwx, nbnd))
@@ -215,13 +225,6 @@ PROGRAM open_grid
   calculation = 'bands'
   k_points = "automatic"
   CALL init_start_k(nk1,nk2,nk3, k1, k2, k3, "automatic",nks/nspin_mag, xk, wk)
-#if defined(__OLDXML)
-#else
-  !
-  ! HACK: rebuild input structure, this uses unallocated stuff
-  !print*, nk1, nk2, nk3, k1, k2, k3, k_points
-  !CALL pw_init_qexsd_input(qexsd_input_obj, obj_tagname="input")
-#endif
   !
   ! Restore EXX variables
   use_ace = use_ace_back
@@ -231,6 +234,7 @@ PROGRAM open_grid
   nq3 = nq_back(3)
   CALL dft_force_hybrid(exx_status_back)
   !
+  !twfcollect = .true.
   CALL punch('all')
   !
   ALLOCATE(yk(3,nks))

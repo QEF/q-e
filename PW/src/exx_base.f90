@@ -529,10 +529,14 @@ MODULE exx_base
     REAL (dp) :: ft_(3), eps2 = 1.0d-5
     !
     nxxs = nr1x*nr2x*nr3x
-    IF(.not. allocated(rir)) ALLOCATE(rir(nxxs,nsym))
+    IF(.NOT. ALLOCATED(rir)) THEN   
+        ALLOCATE(rir(nxxs,nsym))
+    ELSE IF ((SIZE(rir,1) .NE. nxxs) ) THEN 
+        DEALLOCATE (rir) 
+        ALLOCATE (rir(nxxs,nsym))  
+    END IF  
     rir = 0
     ispresent(1:nsym) = .false.
-
     DO ikq =1,nkqs
        isym = abs(index_sym(ikq))
        IF (.not. ispresent(isym) ) THEN
@@ -554,12 +558,14 @@ MODULE exx_base
           ft_(2) = ft(2,isym)*nr2
           ft_(3) = ft(3,isym)*nr3
           ftau(:) = NINT(ft_(:))
+
           IF ( abs (ft_(1) - ftau(1) ) / nr1 > eps2 .or. &
                abs (ft_(2) - ftau(2) ) / nr2 > eps2 .or. &
                abs (ft_(3) - ftau(3) ) / nr3 > eps2 ) THEN
              CALL infomsg ('exx_set_symm',' EXX smooth grid is not compatible &
                   & with fractional translation: change ecutfock')
           ENDIF
+          
           DO k = 1, nr3
              DO j = 1, nr2
                 DO i = 1, nr1

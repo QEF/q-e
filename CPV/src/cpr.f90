@@ -672,7 +672,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         IF ( tempp > (tempw+tolp) .OR. &
              tempp < (tempw-tolp) .AND. tempp /= 0.D0 ) THEN
            !
-           CALL  ions_vrescal( tcap, tempw, tempp, taup, &
+           CALL  ions_vrescal( .false., tempw, tempp, taup, &
                                tau0, taum, na, nsp, fion, iforce, pmass, delt )
            CALL r_to_s( taup, tausp, na, nsp, ainv ) 
            !

@@ -718,6 +718,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -754,7 +755,6 @@ with_scalapack
 with_elpa_include
 with_elpa_lib
 with_elpa_version
-enable_xml
 with_hdf5
 enable_signals
 '
@@ -811,6 +811,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1063,6 +1064,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1200,7 +1210,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1353,6 +1363,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1393,7 +1404,6 @@ Optional Features:
   --enable-debug          compile Fortran with debug flags (default: no)
   --enable-pedantic       compile Fortran with pedantic flags (default: no)
   --enable-shared         use shared libraries if available (default: yes)
-  --enable-xml            enable XML output (default: yes)
   --enable-signals        enable signal trapping (default: no)
 
 Optional Packages:
@@ -3493,7 +3503,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-# Varibles
+# Variables
 NVCC=no
 CUDA_CFLAGS=
 CUDA_LDLIBS=
@@ -4128,505 +4138,30 @@ $as_echo "$as_me: WARNING: $arch : unsupported architecture?" >&2;}
         ;;
 esac
 
-# check serial Fortran 90 compiler. This must be done before performing
-# the check for the parallel compiler (section below) because option
-# --disable-parallel will do very strange things otherwise. The reason
-# seems to be that autoconf does not repeat all tests for the second
-# occurrence of AC_PROG_FC. So the first occurrence is the one that
-# must always be performed, the second is optional. PG & CC sep.2006
+# check Fortran 90 compiler
 
-# use F90 if set
-if test "$f90" = "" ; then f90="$try_f90" ; fi
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-if test -n "$ac_tool_prefix"; then
-  for ac_prog in $f90
-  do
-    # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
-set dummy $ac_tool_prefix$ac_prog; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_FC+:} false; then :
-  $as_echo_n "(cached) " >&6
+# clear cached values
+unset FC ac_cv_prog_ac_ct_FC ac_cv_fc_compiler_gnu ac_cv_prog_fc_g
+
+if test "$use_parallel" -eq 0 ; then
+# serial case - use F90 if set
+    	if test "$f90" = "" ; then
+	   mpif90="$try_f90"
+	else
+	   mpif90="$f90"
+	fi
 else
-  if test -n "$FC"; then
-  ac_cv_prog_FC="$FC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_FC="$ac_tool_prefix$ac_prog"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-FC=$ac_cv_prog_FC
-if test -n "$FC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $FC" >&5
-$as_echo "$FC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-    test -n "$FC" && break
-  done
-fi
-if test -z "$FC"; then
-  ac_ct_FC=$FC
-  for ac_prog in $f90
-do
-  # Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_ac_ct_FC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$ac_ct_FC"; then
-  ac_cv_prog_ac_ct_FC="$ac_ct_FC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_ac_ct_FC="$ac_prog"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-ac_ct_FC=$ac_cv_prog_ac_ct_FC
-if test -n "$ac_ct_FC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_FC" >&5
-$as_echo "$ac_ct_FC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-  test -n "$ac_ct_FC" && break
-done
-
-  if test "x$ac_ct_FC" = x; then
-    FC=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    FC=$ac_ct_FC
-  fi
-fi
-
-
-# Provide some information about the compiler.
-$as_echo "$as_me:${as_lineno-$LINENO}: checking for Fortran compiler version" >&5
-set X $ac_compile
-ac_compiler=$2
-for ac_option in --version -v -V -qversion; do
-  { { ac_try="$ac_compiler $ac_option >&5"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
-$as_echo "$ac_try_echo"; } >&5
-  (eval "$ac_compiler $ac_option >&5") 2>conftest.err
-  ac_status=$?
-  if test -s conftest.err; then
-    sed '10a\
-... rest of stderr output deleted ...
-         10q' conftest.err >conftest.er1
-    cat conftest.er1 >&5
-  fi
-  rm -f conftest.er1 conftest.err
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }
-done
-rm -f a.out
-
-# If we don't use `.F' as extension, the preprocessor is not run on the
-# input file.  (Note that this only needs to work for GNU compilers.)
-ac_save_ext=$ac_ext
-ac_ext=F
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether we are using the GNU Fortran compiler" >&5
-$as_echo_n "checking whether we are using the GNU Fortran compiler... " >&6; }
-if ${ac_cv_fc_compiler_gnu+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  cat > conftest.$ac_ext <<_ACEOF
-      program main
-#ifndef __GNUC__
-       choke me
-#endif
-
-      end
-_ACEOF
-if ac_fn_fc_try_compile "$LINENO"; then :
-  ac_compiler_gnu=yes
-else
-  ac_compiler_gnu=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-ac_cv_fc_compiler_gnu=$ac_compiler_gnu
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_fc_compiler_gnu" >&5
-$as_echo "$ac_cv_fc_compiler_gnu" >&6; }
-ac_ext=$ac_save_ext
-ac_test_FCFLAGS=${FCFLAGS+set}
-ac_save_FCFLAGS=$FCFLAGS
-FCFLAGS=
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $FC accepts -g" >&5
-$as_echo_n "checking whether $FC accepts -g... " >&6; }
-if ${ac_cv_prog_fc_g+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  FCFLAGS=-g
-cat > conftest.$ac_ext <<_ACEOF
-      program main
-
-      end
-_ACEOF
-if ac_fn_fc_try_compile "$LINENO"; then :
-  ac_cv_prog_fc_g=yes
-else
-  ac_cv_prog_fc_g=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_prog_fc_g" >&5
-$as_echo "$ac_cv_prog_fc_g" >&6; }
-if test "$ac_test_FCFLAGS" = set; then
-  FCFLAGS=$ac_save_FCFLAGS
-elif test $ac_cv_prog_fc_g = yes; then
-  if test "x$ac_cv_fc_compiler_gnu" = xyes; then
-    FCFLAGS="-g -O2"
-  else
-    FCFLAGS="-g"
-  fi
-else
-  if test "x$ac_cv_fc_compiler_gnu" = xyes; then
-    FCFLAGS="-O2"
-  else
-    FCFLAGS=
-  fi
-fi
-
-if test $ac_compiler_gnu = yes; then
-  GFC=yes
-else
-  GFC=
-fi
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-f90=$FC
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Fortran flag to compile .f90 files" >&5
-$as_echo_n "checking for Fortran flag to compile .f90 files... " >&6; }
-if ${ac_cv_fc_srcext_f90+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_ext=f90
-ac_fcflags_srcext_save=$ac_fcflags_srcext
-ac_fcflags_srcext=
-ac_cv_fc_srcext_f90=unknown
-case $ac_ext in #(
-  [fF]77) ac_try=f77;; #(
-  *) ac_try=f95;;
-esac
-for ac_flag in none -qsuffix=f=f90 -Tf "-x $ac_try"; do
-  test "x$ac_flag" != xnone && ac_fcflags_srcext="$ac_flag"
-  cat > conftest.$ac_ext <<_ACEOF
-      program main
-
-      end
-_ACEOF
-if ac_fn_fc_try_compile "$LINENO"; then :
-  ac_cv_fc_srcext_f90=$ac_flag; break
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-done
-rm -f conftest.$ac_objext conftest.f90
-ac_fcflags_srcext=$ac_fcflags_srcext_save
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_fc_srcext_f90" >&5
-$as_echo "$ac_cv_fc_srcext_f90" >&6; }
-if test "x$ac_cv_fc_srcext_f90" = xunknown; then
-  as_fn_error $? "Fortran could not compile .f90 files" "$LINENO" 5
-else
-  ac_fc_srcext=f90
-  if test "x$ac_cv_fc_srcext_f90" = xnone; then
-    ac_fcflags_srcext=""
-    FCFLAGS_f90=""
-  else
-    ac_fcflags_srcext=$ac_cv_fc_srcext_f90
-    FCFLAGS_f90=$ac_cv_fc_srcext_f90
-  fi
-
-
-fi
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-
-# check parallel Fortran 90 compiler
-if test "$use_parallel" -eq 0 ;
-then
-        mpif90=$f90
-else
-        # clear cached values (not sure when and why this is needed)
-        unset FC ac_cv_prog_ac_ct_FC ac_cv_fc_compiler_gnu ac_cv_prog_fc_g
+# parallel case - use MPIF90 if set
         if test "$mpif90" = "" ; then
-	   mpif90="$try_mpif90 $f90"
-           ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-if test -n "$ac_tool_prefix"; then
-  for ac_prog in $mpif90
-  do
-    # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
-set dummy $ac_tool_prefix$ac_prog; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_FC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$FC"; then
-  ac_cv_prog_FC="$FC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_FC="$ac_tool_prefix$ac_prog"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-FC=$ac_cv_prog_FC
-if test -n "$FC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $FC" >&5
-$as_echo "$FC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
+	   mpif90="$try_mpif90 $f90 $try_f90 "
+	fi
+    	if test "$f90" != "" ; then
+           { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: F90 value is set to be consistent with value of MPIF90" >&5
+$as_echo "$as_me: WARNING: F90 value is set to be consistent with value of MPIF90" >&2;}
+	fi
 fi
 
-
-    test -n "$FC" && break
-  done
-fi
-if test -z "$FC"; then
-  ac_ct_FC=$FC
-  for ac_prog in $mpif90
-do
-  # Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_ac_ct_FC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$ac_ct_FC"; then
-  ac_cv_prog_ac_ct_FC="$ac_ct_FC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_ac_ct_FC="$ac_prog"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-ac_ct_FC=$ac_cv_prog_ac_ct_FC
-if test -n "$ac_ct_FC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_FC" >&5
-$as_echo "$ac_ct_FC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-  test -n "$ac_ct_FC" && break
-done
-
-  if test "x$ac_ct_FC" = x; then
-    FC=""
-  else
-    case $cross_compiling:$ac_tool_warned in
-yes:)
-{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
-$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
-ac_tool_warned=yes ;;
-esac
-    FC=$ac_ct_FC
-  fi
-fi
-
-
-# Provide some information about the compiler.
-$as_echo "$as_me:${as_lineno-$LINENO}: checking for Fortran compiler version" >&5
-set X $ac_compile
-ac_compiler=$2
-for ac_option in --version -v -V -qversion; do
-  { { ac_try="$ac_compiler $ac_option >&5"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
-$as_echo "$ac_try_echo"; } >&5
-  (eval "$ac_compiler $ac_option >&5") 2>conftest.err
-  ac_status=$?
-  if test -s conftest.err; then
-    sed '10a\
-... rest of stderr output deleted ...
-         10q' conftest.err >conftest.er1
-    cat conftest.er1 >&5
-  fi
-  rm -f conftest.er1 conftest.err
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; }
-done
-rm -f a.out
-
-# If we don't use `.F' as extension, the preprocessor is not run on the
-# input file.  (Note that this only needs to work for GNU compilers.)
-ac_save_ext=$ac_ext
-ac_ext=F
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether we are using the GNU Fortran compiler" >&5
-$as_echo_n "checking whether we are using the GNU Fortran compiler... " >&6; }
-if ${ac_cv_fc_compiler_gnu+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  cat > conftest.$ac_ext <<_ACEOF
-      program main
-#ifndef __GNUC__
-       choke me
-#endif
-
-      end
-_ACEOF
-if ac_fn_fc_try_compile "$LINENO"; then :
-  ac_compiler_gnu=yes
-else
-  ac_compiler_gnu=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-ac_cv_fc_compiler_gnu=$ac_compiler_gnu
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_fc_compiler_gnu" >&5
-$as_echo "$ac_cv_fc_compiler_gnu" >&6; }
-ac_ext=$ac_save_ext
-ac_test_FCFLAGS=${FCFLAGS+set}
-ac_save_FCFLAGS=$FCFLAGS
-FCFLAGS=
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $FC accepts -g" >&5
-$as_echo_n "checking whether $FC accepts -g... " >&6; }
-if ${ac_cv_prog_fc_g+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  FCFLAGS=-g
-cat > conftest.$ac_ext <<_ACEOF
-      program main
-
-      end
-_ACEOF
-if ac_fn_fc_try_compile "$LINENO"; then :
-  ac_cv_prog_fc_g=yes
-else
-  ac_cv_prog_fc_g=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_prog_fc_g" >&5
-$as_echo "$ac_cv_prog_fc_g" >&6; }
-if test "$ac_test_FCFLAGS" = set; then
-  FCFLAGS=$ac_save_FCFLAGS
-elif test $ac_cv_prog_fc_g = yes; then
-  if test "x$ac_cv_fc_compiler_gnu" = xyes; then
-    FCFLAGS="-g -O2"
-  else
-    FCFLAGS="-g"
-  fi
-else
-  if test "x$ac_cv_fc_compiler_gnu" = xyes; then
-    FCFLAGS="-O2"
-  else
-    FCFLAGS=
-  fi
-fi
-
-if test $ac_compiler_gnu = yes; then
-  GFC=yes
-else
-  GFC=
-fi
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-        else
-           ac_ext=${ac_fc_srcext-f}
+ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
@@ -4839,14 +4374,12 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 # this avoids that an empty MPIF90 field is produced if the corresponding
 # environment variable MPIF90 does not contain an acceptable compiler
-           if test "$FC" = "" ; then
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: MPIF90 not found: using MPIF90 anyway" >&5
+if test "$FC" = "" ; then
+   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: MPIF90 not found: using MPIF90 anyway" >&5
 $as_echo "$as_me: WARNING: MPIF90 not found: using MPIF90 anyway" >&2;}
-	  	FC=$MPIF90
-	   fi
-        fi
-        mpif90=$FC
+   FC=$mpif90
 fi
+mpif90=$FC
 
 # check which compiler does mpif90 wrap
 
@@ -4864,11 +4397,6 @@ case "$arch" in
                 f90_major_version=`echo $version | cut -d. -f1`
                 echo "${ECHO_T}ifort $f90_major_version"
                 f90_in_mpif90="ifort"
-                # Why so?
-                if test "$f90_major_version" -gt "9"; then
-                   MKL_FLAGS="-static-intel"
-                fi
-
         elif test "$pgf_version" != ""
         then
                 version=`echo $pgf_version | cut -d ' ' -f2`
@@ -4893,20 +4421,76 @@ case "$arch" in
                 echo "${ECHO_T}unknown, assuming gfortran"
                 f90_in_mpif90="gfortran"
         fi
-        # check if serial and parallel compiler are the same
-        if test "$f90" != "$f90_in_mpif90"; then
-           { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: parallel compiler $mpif90 uses $f90_in_mpif90, but serial compiler $f90 was detected" >&5
-$as_echo "$as_me: WARNING: parallel compiler $mpif90 uses $f90_in_mpif90, but serial compiler $f90 was detected" >&2;}
-           { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: assuming F90=$f90_in_mpif90, discarding $f90" >&5
-$as_echo "$as_me: WARNING: assuming F90=$f90_in_mpif90, discarding $f90" >&2;}
-        fi
-        f90=$f90_in_mpif90
+        # notify if serial and parallel compiler are the same
+	if test "$set_use_parallel" -eq 1 ; then
+	   if test "$mpif90" = "$f90_in_mpif90"; then
+              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: parallel and serial compiler are the same" >&5
+$as_echo "$as_me: WARNING: parallel and serial compiler are the same" >&2;}
+	   fi
+	fi
+	f90=$f90_in_mpif90
         ;;
 esac
+ac_ext=${ac_fc_srcext-f}
+ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Fortran flag to compile .f90 files" >&5
+$as_echo_n "checking for Fortran flag to compile .f90 files... " >&6; }
+if ${ac_cv_fc_srcext_f90+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_ext=f90
+ac_fcflags_srcext_save=$ac_fcflags_srcext
+ac_fcflags_srcext=
+ac_cv_fc_srcext_f90=unknown
+case $ac_ext in #(
+  [fF]77) ac_try=f77;; #(
+  *) ac_try=f95;;
+esac
+for ac_flag in none -qsuffix=f=f90 -Tf "-x $ac_try"; do
+  test "x$ac_flag" != xnone && ac_fcflags_srcext="$ac_flag"
+  cat > conftest.$ac_ext <<_ACEOF
+      program main
+
+      end
+_ACEOF
+if ac_fn_fc_try_compile "$LINENO"; then :
+  ac_cv_fc_srcext_f90=$ac_flag; break
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+done
+rm -f conftest.$ac_objext conftest.f90
+ac_fcflags_srcext=$ac_fcflags_srcext_save
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_fc_srcext_f90" >&5
+$as_echo "$ac_cv_fc_srcext_f90" >&6; }
+if test "x$ac_cv_fc_srcext_f90" = xunknown; then
+  as_fn_error $? "Fortran could not compile .f90 files" "$LINENO" 5
+else
+  ac_fc_srcext=f90
+  if test "x$ac_cv_fc_srcext_f90" = xnone; then
+    ac_fcflags_srcext=""
+    FCFLAGS_f90=""
+  else
+    ac_fcflags_srcext=$ac_cv_fc_srcext_f90
+    FCFLAGS_f90=$ac_cv_fc_srcext_f90
+  fi
+
+
+fi
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
 
 echo setting F90... $f90
 echo setting MPIF90... $mpif90
 
+# For cray compiler
 case "$f90" in
 f90 | fc | ftn )
     echo $ECHO_N "checking version wrapped by $f90 command... $ECHO_C"
@@ -6403,12 +5987,12 @@ fi
                 ;;
 
         ia64:* )
-                # check for mkl (in several directories)
-                try_libdirs="/opt/intel/Compiler/*/*/mkl/lib/64
-                             /opt/intel/mkl/*/lib/64
-                             /opt/intel/mkl*/lib/64
-                             /opt/intel/mkl/lib"
-                try_libdirs="$libdirs $try_libdirs $ld_library_path"
+                # check for mkl
+                if test "$MKLROOT" == ""
+                then
+                   MKLROOT=/opt/intel/mkl
+                fi
+                try_libdirs="$libdirs $MKLROOT/lib/64 $ld_library_path"
 
                 for dir in none $try_libdirs
                 do
@@ -6629,12 +6213,11 @@ fi
                 ;;
 
         x86_64:* )
-                try_libdirs="/opt/intel/composer*/mkl/lib/intel64
-                             /opt/intel/Compiler/*/*/mkl/lib/em64t
-                             /opt/intel/mkl/*/lib/em64t
-                             /opt/intel/mkl*/lib/em64t
-                             /opt/intel/mkl/lib"
-                try_libdirs="$libdirs $try_libdirs $ld_library_path"
+                if test "$MKLROOT" == ""
+                then
+                   MKLROOT=/opt/intel/mkl
+                fi
+                try_libdirs="$libdirs $MKLROOT/lib/intel64 $ld_library_path"
 
                 for dir in none $try_libdirs
                 do
@@ -6855,13 +6438,12 @@ fi
                 ;;
 
         ia32:* )
-                # check for mkl (in several directories)
-                try_libdirs="/opt/intel/composer*/mkl/lib/ia32
-                             /opt/intel/Compiler/*/*/mkl/lib/32
-                             /opt/intel/mkl/*/lib/32
-                             /opt/intel/mkl*/lib/32
-                             /opt/intel/mkl/lib"
-                try_libdirs="$libdirs $try_libdirs $ld_library_path"
+                # check for mkl
+                if test "$MKLROOT" == ""
+                then
+                   MKLROOT=/opt/intel/mkl
+                fi
+                try_libdirs="$libdirs $MKLROOT/lib/ia32 $ld_library_path"
 
                 for dir in none $try_libdirs
                 do
@@ -7243,14 +6825,8 @@ fi
                    try_dflags="$try_dflags -D__LINUX_ESSL"
 		fi
                 ;;
-	mac686:ifort* )
-                #This solution is tested with MacOs 10.6 and Intel 11.1
-                #..and now MacOs 10.8.3 and Intel 13
-                try_libdirs="/Developer/opt/intel/Compiler/*/*/Frameworks/mkl/lib/universal
-                             /opt/intel/Compiler/*/*/Frameworks/mkl/lib/universal
-                             /opt/intel/mkl*/lib/em64t
-                             /opt/intel/mkl/lib"
-		try_libdirs="$libdirs $try_libdirs $ld_library_path"
+	mac686:* )
+		try_libdirs="$libdirs /opt/intel/mkl/lib $ld_library_path"
 
 		for dir in none $try_libdirs
 		do
@@ -7265,8 +6841,7 @@ fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
 			LIBS=""
-                        # First, a by-the-apple-book search of MKL... >10.2 requires multiple libraries
-                        # 64 bit is buggy as of 11.1.088
+                        #
                         if test "$use_openmp" -eq 0; then
                         { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dgemm" >&5
 $as_echo_n "checking for library containing dgemm... " >&6; }
@@ -7364,7 +6939,7 @@ else
 fi
 
 			fi
-                        # 32 bit
+                        #
                         if test "$ac_cv_search_dgemm" != "no"
                         then break ; fi
       		done
@@ -8550,13 +8125,10 @@ fi
 
 fi
 
-# Check for fftw v3, both native and MKL interfaces
+# Check MKL dfti first, fftw v3 then (both native and MKL interfaces)
 if test "$have_fft" -eq 0
 then
 
-        try_libdirs="/usr/local/lib"
-        try_libdirs="$libdirs $try_libdirs $ld_library_path "
-
         ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -8569,31 +8141,21 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-        #for dir in none $try_libdirs
-        #do
         unset ac_cv_lib_mkl_intel_lp64_DftiComputeForward
-        if test "$dir" = "none"
-        then
-                try_loption=
-        else
-                echo $ECHO_N "in $dir: " $ECHO_C
-                try_loption="-L$dir"
-        fi
 
         CFLAGS="$test_cflags"
         CPPFLAGS="$test_cppflags"
-        LDFLAGS=" $test_ldflags $try_loption"
+        LDFLAGS=" $test_ldflags"
         LIBS="$fft_libs"
-
-        #here we check if dfti explicit calls work
-        #it should work with blas flags
+        # here we check if dfti explicit calls work
+        # it should work with blas flags
         { $as_echo "$as_me:${as_lineno-$LINENO}: checking for DftiComputeForward in -lmkl_intel_lp64" >&5
 $as_echo_n "checking for DftiComputeForward in -lmkl_intel_lp64... " >&6; }
 if ${ac_cv_lib_mkl_intel_lp64_DftiComputeForward+:} false; then :
   $as_echo_n "(cached) " >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lmkl_intel_lp64 $blas_libs -lm $MKL_FLAGS $LIBS"
+LIBS="-lmkl_intel_lp64 $blas_libs -lm  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -8630,12 +8192,12 @@ fi
 
         if test "$have_fft" == "1"
         then
-              try_incdir=""
-              try_incdir="$try_incdir /opt/intel/Compiler/*/*/mkl/include
-                          /opt/intel/mkl/*/include
-                          /opt/intel/mkl*/include"
-              try_incdir="$try_incdir $MKLROOT/include $MKL_INCLUDE $CPATH $FPATH"
-              try_incdir="`echo $try_incdir | sed 's/:/ /g'`"
+              if test "$MKLROOT" == ""
+              then
+                 try_incdir="/opt/intel/mkl/include"
+              else
+                 try_incdir="$MKLROOT/include"
+              fi
               #
               for inc in $try_incdir
               do
@@ -8705,6 +8267,8 @@ ac_compiler_gnu=$ac_cv_f77_compiler_gnu
 
         if test "$have_fft" -eq 0
         then
+	  try_libdirs="/usr/local/lib"
+          try_libdirs="$libdirs $try_libdirs $ld_library_path "
           for dir in none $try_libdirs
           do
                   unset ac_cv_search_dfftw_execute_dft # clear cached value
@@ -8869,9 +8433,6 @@ fi
                         try_incdir="$FFTW_INCLUDE $FFTW_INC $INCLUDE_PATH $CPATH $FPATH"
                         for inc in $try_incdir
                         do
-                           #AC_LANG_POP([Fortran 77])
-                           #AC_LANG_PUSH([C])
-
                            cat > conftest.$ac_ext <<_ACEOF
 include "fftw3.f03"
 _ACEOF
@@ -8879,10 +8440,6 @@ if ac_fn_f77_try_compile "$LINENO"; then :
   have_fft_include=1
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-
-                           #AC_LANG_POP([C])
-                           #AC_LANG_PUSH([Fortran 77])
-
                            if test "$have_fft_include" -eq 1
                            then
                              try_iflags="$try_iflags -I$inc"
@@ -9717,26 +9274,6 @@ $as_echo "${elpa_libs}" >&6; }
 
 
 
-# Enable XML ...
-
-
-# Check whether --enable-xml was given.
-if test "${enable_xml+set}" = set; then :
-  enableval=$enable_xml; if   test "$enableval" = "yes" ; then
-      use_xml=1
-   else
-      use_xml=0
-   fi
-else
-  use_xml=1
-fi
-
-
-# preprocessing flag for XML
-if test "$use_xml" -eq 0 ; then try_dflags="$try_dflags -D__OLDXML" ; fi
-
-
-
 # Setting HDF5...
 
 
@@ -9757,20 +9294,20 @@ fi
 hdf5_libs=""
 have_hdf5=0
 
+
 if test "$use_parallel" -ne 0; then
 
   if test "$with_hdf5" -ne 0 && test "$with_hdf5_path" != "yes"; then
 
     # Checking compiler compatibility: GCC >= 4.9
-    if test "x$f90_in_mpif90" = xgfortran &&
-       test "$f90_major_version" -le "4" &&
-       test "$f90_minor_version" -lt "9" ; then
+       if test "x$f90_in_mpif90" = xgfortran &&
+          test "$f90_major_version" -le "4" &&
+          test "$f90_minor_version" -lt "9" ; then
 
       { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
       { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 support requires GNU GFORTRAN >= 4.9 " >&5
 $as_echo "$as_me: WARNING: *** HDF5 support requires GNU GFORTRAN >= 4.9 " >&2;}
-
     else
 
       # Test if it is really installed where it has been specified
@@ -9915,13 +9452,28 @@ $as_echo "$as_me: WARNING: ***HDF5 Fortran extensions not found" >&2;}
 fi
 
       fi
-
+      if test "$have_hdf5" -eq 1; then
+        version_num=`grep "HDF5 Version" $with_hdf5_path/lib/libhdf5.settings | awk -F ':' '{print $2}'`
+        version_ok=`echo $version_num | awk -F '.' '{print (($2 >= 10) || ( ($2 == 8) && ($3 >= 16)))}'`
+	if test $version_ok -gt 0; then
+		if test $version_third_ok -eq 0; then
+			 { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&5
+$as_echo "$as_me: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&2;};
+			 have_hdf5=0;
+                fi
+        else
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&5
+$as_echo "$as_me: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&2;};
+                have_hdf5=0;
+        fi
+      fi
 
       if test "$have_hdf5" -eq 1 ; then
          if test -e $with_hdf5_path/bin/h5pfc; then
              hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{$1="";$2="-L"$2; print $0}'`
          elif test -e $with_hdf5_path/bin/h5fc; then
              hdf5_libs=`$with_hdf5_path/bin/h5fc -show | awk -F'-L' '{$1="";$2="-L"$2; print $0}'`
+             try_dflags="$try_dflags -D__HDF5_SERIAL"
          else
           hdf5_libs="-L$with_hdf5_path/lib -lhdf5_fortran -lhdf5 -lrt -lz -ldl -lm -Wl,-rpath -Wl,$with_hdf5_path/lib"
          fi
@@ -9932,7 +9484,191 @@ fi
       hdf5_line="HDF5_LIBS=$hdf5_libs"
     fi
   fi
-#else
+else
+  if test "$with_hdf5" -ne 0 && test "$with_hdf5_path" != "yes"; then
+
+    # Checking compiler compatibility: GCC >= 4.9
+       if test "x$f90" = xgfortran &&
+          test "$f90_major_version" -le "4" &&
+          test "$f90_minor_version" -lt "9" ; then
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 support requires GNU GFORTRAN >= 4.9 " >&5
+$as_echo "$as_me: WARNING: *** HDF5 support requires GNU GFORTRAN >= 4.9 " >&2;}
+    else
+
+      # Test if it is really installed where it has been specified
+      ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+      ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+
+      if test -e $with_hdf5_path/bin/h5cc ; then
+           h5cc=$with_hdf5_path/bin/h5cc;
+       else
+          h5cc=$CC;
+       fi
+       ac_compile='$h5cc -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+       ac_link='$h5cc -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+
+      try_libdirs="$with_hdf5_path/lib"
+      for dir in $try_libdirs
+      do
+          unset ac_cv_search_H5Fcreate
+
+          if test "$dir" = "none"
+          then
+            try_loption=
+          else
+            try_loption="-L$dir"
+          fi
+
+          FFLAGS="$test_fflags"
+          LDFLAGS="$test_ldflags $try_loption"
+          #LIBS="-lhdf5"
+          LIBS=""
+
+          { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing H5Fcreate" >&5
+$as_echo_n "checking for library containing H5Fcreate... " >&6; }
+if ${ac_cv_search_H5Fcreate+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char H5Fcreate ();
+int
+main ()
+{
+return H5Fcreate ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' hdf5 hdf5_fortran; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_H5Fcreate=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_H5Fcreate+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_H5Fcreate+:} false; then :
+
+else
+  ac_cv_search_H5Fcreate=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_H5Fcreate" >&5
+$as_echo "$ac_cv_search_H5Fcreate" >&6; }
+ac_res=$ac_cv_search_H5Fcreate
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  have_hdf5=1
+fi
+
+
+          if test "$ac_cv_search_H5Fcreate" != "no"
+          then break ; fi
+      done
+
+      ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+      ac_ext=f
+ac_compile='$F77 -c $FFLAGS conftest.$ac_ext >&5'
+ac_link='$F77 -o conftest$ac_exeext $FFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_f77_compiler_gnu
+
+
+      if test "$have_hdf5" -eq 1 ; then
+          as_ac_File=`$as_echo "ac_cv_file_$with_hdf5_path/include/hdf5.mod" | $as_tr_sh`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $with_hdf5_path/include/hdf5.mod" >&5
+$as_echo_n "checking for $with_hdf5_path/include/hdf5.mod... " >&6; }
+if eval \${$as_ac_File+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r "$with_hdf5_path/include/hdf5.mod"; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+eval ac_res=\$$as_ac_File
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+if eval test \"x\$"$as_ac_File"\" = x"yes"; then :
+
+else
+
+              { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: ***HDF5 Fortran extensions not found" >&5
+$as_echo "$as_me: WARNING: ***HDF5 Fortran extensions not found" >&2;}
+              have_hdf5=0
+fi
+
+      fi
+      if test "$have_hdf5" -eq 1; then
+        version_num=`grep "HDF5 Version" $with_hdf5_path/lib/libhdf5.settings | awk -F ':' '{print $2}'`
+        version_ok=`echo $version_num | awk -F '.' '{print (($2 => 10) || ( ($2 == 8) && ($3 >= 16)))}'`
+	if test $version_sec_ok -gt 0; then
+		if test $version_third_ok -eq 0; then
+			 { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&5
+$as_echo "$as_me: WARNING: *** HDF5 library rejected; version must be >= 1.8.16" >&2;};
+			 have_hdf5=0;
+                fi
+        else
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&5
+$as_echo "$as_me: WARNING: *** HDF5 version must be newer equal to 1.8.16" >&2;};
+                have_hdf5=0;
+        fi
+      fi
+
+      if test "$have_hdf5" -eq 1 ; then
+         if test -e $with_hdf5_path/bin/h5fc; then
+             hdf5_libs=`$with_hdf5_path/bin/h5fc -show | awk -F'-L' '{$1="";$2="-L"$2; print $0}'`
+             try_dflags="$try_dflags -D__HDF5_SERIAL"
+         else
+          hdf5_libs="-L$with_hdf5_path/lib -lhdf5_fortran -lhdf5 -lrt -lz -ldl -lm -Wl,-rpath -Wl,$with_hdf5_path/lib"
+         fi
+         try_iflags="$try_iflags -I$with_hdf5_path/include"
+         try_dflags="$try_dflags -D__HDF5"
+      fi
+
+      hdf5_line="HDF5_LIBS=$hdf5_libs"
+    fi
+  fi
+
 #    AC_MSG_WARN([HDF5 support is for parallel execution only])
 fi
 

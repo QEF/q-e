@@ -5,10 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__OLDXML)
-   SUBROUTINE read_file_dummy()
-   END SUBROUTINE read_file_dummy
-#else
 !----------------------------------------------------------------------------
 SUBROUTINE read_file()
   !----------------------------------------------------------------------------
@@ -92,11 +88,6 @@ SUBROUTINE read_file()
   !
 END SUBROUTINE read_file
 !
-!----------------------------------------------------------------------------
-SUBROUTINE read_xml_file_nobs ( )
-! wrapper, to be removed ASAP
-  CALL read_xml_file ( )
-END SUBROUTINE read_xml_file_nobs
 !----------------------------------------------------------------------------
 SUBROUTINE read_xml_file ( )
   !----------------------------------------------------------------------------
@@ -314,6 +305,7 @@ SUBROUTINE read_xml_file ( )
   !
   IF ( lda_plus_u ) THEN
      CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
+     CALL init_at_1()
   ENDIF
   !
   CALL allocate_wfc()
@@ -321,11 +313,9 @@ SUBROUTINE read_xml_file ( )
   ! ... read the charge density
   !
   CALL read_scf( rho, nspin, gamma_only )
-#if ! defined (__OLDXML)
   ! FIXME: for compatibility. rho was previously read and written in real space
   ! FIXME: now it is in G space - to be removed together with old format
   CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
-#endif
   !
   ! ... re-calculate the local part of the pseudopotential vltot
   ! ... and the core correction charge (if any) - This is done here
@@ -397,4 +387,3 @@ SUBROUTINE read_xml_file ( )
     END SUBROUTINE set_dimensions
     !
   END SUBROUTINE read_xml_file
-#endif

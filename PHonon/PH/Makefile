@@ -19,6 +19,7 @@ addnlcc_zstar_eu_us.o \
 addusddens.o \
 addusddense.o \
 addusdynmat.o \
+adddvhubscf.o \
 allocate_part.o \
 allocate_pert.o \
 allocate_phq.o \
@@ -44,6 +45,10 @@ deallocate_part.o \
 deallocate_phq.o \
 d2ionq.o \
 d2ionq_mm.o \
+d2nsq_bare.o \
+dnsq_bare.o \
+dnsq_orth.o \
+dnsq_scf.o \
 davcio_drho.o \
 dfile_autoname.o \
 dfile_star.o \
@@ -65,6 +70,13 @@ dynmat0.o \
 dynmat_us.o \
 dynmatcc.o \
 dynmatrix.o \
+dynmat_hub_bare.o \
+dynmat_hub_scf.o \
+dwfc.o \
+dvqhub_barepsi_us.o \
+dvqhub_barepsi_us2.o \
+delta_sphi.o \
+dpsi_orth.o \
 ef_shift.o \
 ep_matrix_element_wannier.o \
 elph.o \
@@ -139,6 +151,10 @@ symdynph_gq.o \
 syme.o \
 symm.o \
 symmorphic_or_nzb.o \
+swfc.o \
+syme_dns.o \
+sym_dns.o \
+sym_dns_wrapper.o \
 transform_int_so.o \
 transform_int_nc.o \
 transform_alphasum_nc.o \
@@ -150,6 +166,7 @@ write_qplot_data.o \
 write_matrix.o \
 write_modes.o \
 write_rec.o \
+write_hub.o \
 zstar_eu.o \
 zstar_eu_us.o 
 
@@ -177,11 +194,10 @@ write_eigenvectors.o
 
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a \
-         ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/PPCG/libppcg.a \
+QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 
-TLDEPS= bindir libs mods libdavid libcg lrmods
+TLDEPS= phlibs
 
 all : tldeps libs-ph ph.x dynmat.x matdyn.x q2r.x q2trans.x q2trans_fd.x lambda.x fqha.x q2qstar.x \
 	alpha2f.x epa.x

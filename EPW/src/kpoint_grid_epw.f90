@@ -18,8 +18,9 @@ SUBROUTINE kpoint_grid_epw ( nrot, time_reversal, skip_equivalence, s, t_rev, &
 USE kinds, ONLY: DP
 IMPLICIT NONE
 !
-INTEGER, INTENT(in) :: nrot, npk, nk1, nk2, nk3, &
-                      t_rev(48), s(3,3,48)
+INTEGER, INTENT(in) :: nrot
+!! Number of Bravais symmetry
+INTEGER, INTENT(in) :: npk, nk1, nk2, nk3, t_rev(48), s(3,3,48)
 INTEGER, INTENT(inout) :: s_BZtoIBZ(3,3,nk1*nk2*nk3)
 !! Symeetry matrix that links an point to its IBZ friend.
 INTEGER, INTENT(inout) :: BZtoIBZ (nk1*nk2*nk3)

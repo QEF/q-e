@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -34,7 +34,8 @@ SUBROUTINE phq_init()
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : bg, tpiba, tpiba2, omega
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
-  USE becmod,               ONLY : calbec
+  USE becmod,               ONLY : calbec, becp, allocate_bec_type, &
+                                   deallocate_bec_type
   USE constants,            ONLY : eps8, tpi
   USE gvect,                ONLY : g, ngm
   USE klist,                ONLY : xk, ngk, igk_k
@@ -46,28 +47,28 @@ SUBROUTINE phq_init()
   USE spin_orb,             ONLY : lspinorb
   USE wvfct,                ONLY : npwx, nbnd
   USE gvecw,                ONLY : gcutw
-  USE wavefunctions, ONLY : evc
+  USE wavefunctions,        ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
-  USE uspp,                 ONLY : okvan, vkb, nlcc_any
+  USE uspp,                 ONLY : okvan, vkb, nlcc_any, nkb
   USE uspp_param,           ONLY : upf
   USE m_gth,                ONLY : setlocq_gth
   USE phus,                 ONLY : alphap
   USE nlcc_ph,              ONLY : drc
   USE control_ph,           ONLY : trans, zue, epsil, all_done
   USE units_lr,             ONLY : lrwfc, iuwfc
-  USE mp_bands,            ONLY : intra_bgrp_comm
-  USE mp,                  ONLY : mp_sum
-  USE acfdtest,            ONLY : acfdt_is_active, acfdt_num_der
-  USE el_phon,             ONLY : elph_mat, iunwfcwann, npwq_refolded, &
-                                  kpq,g_kpq,igqg,xk_gamma, lrwfcr
+  USE mp_bands,             ONLY : intra_bgrp_comm
+  USE mp,                   ONLY : mp_sum
+  USE acfdtest,             ONLY : acfdt_is_active, acfdt_num_der
+  USE el_phon,              ONLY : elph_mat, iunwfcwann, npwq_refolded, &
+                                   kpq,g_kpq,igqg,xk_gamma, lrwfcr
   USE wannier_gw,           ONLY : l_head
-  USE Coul_cut_2D,         ONLY : do_cutoff_2D     
-  USE Coul_cut_2D_ph,         ONLY : cutoff_lr_Vlocq , cutoff_fact_qg 
-
+  USE Coul_cut_2D,          ONLY : do_cutoff_2D     
+  USE Coul_cut_2D_ph,       ONLY : cutoff_lr_Vlocq , cutoff_fact_qg 
   USE lrus,                 ONLY : becp1, dpqq, dpqq_so
   USE qpoint,               ONLY : xq, nksq, eigqts, ikks, ikqs
   USE eqv,                  ONLY : vlocq, evq
   USE control_lr,           ONLY : nbnd_occ, lgamma
+  USE ldaU,                 ONLY : lda_plus_u
   !
   IMPLICIT NONE
   !
@@ -260,6 +261,30 @@ SUBROUTINE phq_init()
      IF (lspinorb) CALL compute_qdipol_so(dpqq, dpqq_so)
      CALL qdipol_cryst()
   END IF
+  !
+  ! DFPT+U
+  ! 
+  IF (lda_plus_u)  THEN 
+     !
+     ! Calculate and write to file the atomic orbitals 
+     ! \phi and S\phi at k and k+q
+     ! Note: the array becp will be temporarily used
+     ! in the routine lr_orthoUwfc.
+     !
+     CALL deallocate_bec_type(becp)
+     CALL lr_orthoUwfc (.TRUE.)
+     CALL allocate_bec_type(nkb,nbnd,becp)   
+     !
+     ! Calculate dnsbare, i.e. the bare variation of ns, 
+     ! for all cartesian coordinates
+     !
+     CALL dnsq_bare()
+     !
+     ! Calculate the orthogonality term in the USPP case
+     !
+     IF (okvan) CALL dnsq_orth()
+     !
+  ENDIF
   !
   IF ( trans ) CALL dynmat0_new()
   !

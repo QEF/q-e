@@ -6,24 +6,24 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine remove_atomic_rho
+SUBROUTINE remove_atomic_rho
   !-----------------------------------------------------------------------
-  USE io_global, ONLY: stdout
-  USE io_files, ONLY: output_drho, tmp_dir, prefix, postfix
-  USE kinds, ONLY: DP
-  USE fft_base, ONLY: dfftp
-  USE lsda_mod, ONLY: nspin
-  USE scf, ONLY: rho
-  USE xml_io_base, ONLY : write_rho
-
-  implicit none
-  CHARACTER(LEN=256) :: dirname 
-  real(DP), allocatable :: work (:,:)
-  ! workspace, is the difference between the charge density
-  ! and the superposition of atomic charges
-
-  allocate ( work( dfftp%nnr, 1 ) )
-  work = 0.d0
+  USE kinds,        ONLY: DP
+  USE io_global,    ONLY: stdout
+  USE io_files,     ONLY: output_drho, tmp_dir, prefix, postfix
+  USE control_flags,ONLY: gamma_only
+  USE gvect,        ONLY: ngm, ig_l2g, mill
+  USE lsda_mod,     ONLY: nspin
+  USE scf,          ONLY: rho
+  USE io_base,      ONLY: write_rhog
+  USE mp_pools,     ONLY: my_pool_id
+  USE mp_bands,     ONLY: my_bgrp_id, root_bgrp_id, &
+       root_bgrp, intra_bgrp_comm
+  USE cell_base,    ONLY: bg, tpiba
+  !
+  IMPLICIT NONE
+  CHARACTER(LEN=256) :: filename
+  COMPLEX(DP), ALLOCATABLE :: drhog(:,:)
   !
   IF ( nspin > 1 ) CALL errore &
        ( 'remove_atomic_rho', 'spin polarization not allowed in drho', 1 )
@@ -32,15 +32,17 @@ subroutine remove_atomic_rho
   !
   !     subtract the old atomic charge density
   !
-  call atomic_rho (work, nspin)
+  ALLOCATE ( drhog( ngm, nspin) )
+  CALL atomic_rho_g ( drhog, nspin)
+  drhog = rho%of_g - drhog
   !
-  work = rho%of_r - work
+  filename = TRIM(tmp_dir) // TRIM(prefix) // postfix // output_drho
+  IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+       CALL write_rhog( filename, root_bgrp, intra_bgrp_comm, &
+       bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
+       gamma_only, mill, ig_l2g, drhog )
   !
-  dirname = TRIM(tmp_dir) // TRIM(prefix) // postfix
-  call write_rho ( dirname, work, 1, output_drho )
+  DEALLOCATE(drhog)
   !
-  deallocate(work)
-  return
-
-end subroutine remove_atomic_rho
+END SUBROUTINE remove_atomic_rho
 

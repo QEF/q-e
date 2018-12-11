@@ -1,0 +1,34 @@
+
+This example illustrates how to use pw.x and ph.x to calculate phonon
+frequencies of LiCoO2 with Hubbard U on Co 3d states. Note, the 
+phonon frequencies and other quantities are not converged in this
+example.
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file)
+
+1) make a self-consistent calculation (input=LiCoO2.scf.in,
+   output=LiCoO2.scf.out)
+
+2) make a phonon calculation for gamma point (input=LiCoO2.phG.in,
+   output=LiCoO2.phG.out). Note that outdir and prefix have the same
+   values as in the input for scf calculation. Note that the q-point 
+   (the Gamma point in this case) is read after the namelist inputph. 
+   Dynamical matrix will be saved for further analysis in fildyn (whose
+   default name is 'matdyn', here overwritten to LiCoO2.dynG).
+   Note that epsil=.true. and the response to an electric field and
+   the dielectric constant are also calculated.
+
+   The Gamma point is the ONLY one for which the phonon code can be run
+   directly after the scf run (provided save file was defined).
+   For all other points in the BZ a non-scf preparatory run is needed,
+   as it is shown here for q = (0, 0, 1/4).
+
+3) make a phonon calculation for q = (0, 0, 1/4) (input=LiCoO2.phq.in,
+   output=LiCoO2.phq.in). Note that the q-point is read after the namelist 
+   &inputph. Dynamical matrices will be saved for further analysis in fildyn
+   (whose default name is 'matdyn', here overwritten to LiCoO2.dynq). 
+   The fildyn file contains the dynamical matrices for q-points that
+   are equivalent by symmetry to the q-point given in input, therefore 
+   when calculating phonons in the whole BZ the code needs to be run 
+   only on inequivalent points.

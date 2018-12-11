@@ -48,7 +48,8 @@ SUBROUTINE run_pwscf ( exit_status )
   USE fft_base,         ONLY : dfftp
   USE qmmm,             ONLY : qmmm_initialization, qmmm_shutdown, &
                                qmmm_update_positions, qmmm_update_forces
-  USE qexsd_module,     ONLY:   qexsd_set_status
+  USE qexsd_module,     ONLY : qexsd_set_status
+  USE funct,            ONLY : dft_is_hybrid, stop_exx 
   !
   IMPLICIT NONE
   INTEGER, INTENT(OUT) :: exit_status
@@ -108,7 +109,7 @@ SUBROUTINE run_pwscf ( exit_status )
      CALL summary()
      CALL memory_report()
      CALL qexsd_set_status(255)
-     CALL punch( 'config' )
+     CALL punch( 'init-config' )
      exit_status = 255
      RETURN
   ENDIF
@@ -169,8 +170,6 @@ SUBROUTINE run_pwscf ( exit_status )
      !
      IF ( lstres ) CALL stress ( sigma )
      !
-     ! ... send out forces to MM code in QM/MM run
-     !
      IF ( lmd .OR. lbfgs ) THEN
         !
         if (fix_volume) CALL impose_deviatoric_stress(sigma)
@@ -192,9 +191,12 @@ SUBROUTINE run_pwscf ( exit_status )
             CALL punch( 'config' )
         END IF
         !
+        IF (dft_is_hybrid() )  CALL stop_exx()
      END IF
      !
      CALL stop_clock( 'ions' ); !write(*,*)' stop ions' ; FLUSH(6)
+     !
+     ! ... send out forces to MM code in QM/MM run
      !
      CALL qmmm_update_forces( force, rho%of_r, nspin, dfftp)
      !
@@ -273,14 +275,12 @@ SUBROUTINE reset_gvectors ( )
   USE io_global,  ONLY : stdout
   USE cellmd,     ONLY : lmovecell
   USE basis,      ONLY : starting_wfc, starting_pot
-  USE cell_base,  ONLY : at, bg
   USE fft_base,   ONLY : dfftp
   USE fft_base,   ONLY : dffts
-  USE fft_types,  ONLY : fft_type_allocate
-  USE gvect,      ONLY : gcutm
-  USE gvecs,      ONLY : gcutms
-  USE mp_bands,   ONLY : intra_bgrp_comm, nyfft
   USE control_flags, ONLY : lbfgs, lmd
+  USE funct,         ONLY : dft_is_hybrid
+  USE exx_base,      ONLY : exx_grid_init, exx_mp_init, exx_div_check 
+  USE exx,           ONLY : exx_fft_create
   IMPLICIT NONE
   !
   WRITE( UNIT = stdout, FMT = 9110 )
@@ -301,20 +301,38 @@ SUBROUTINE reset_gvectors ( )
   if (trim(starting_wfc) == 'file') starting_wfc = 'atomic+random'
   starting_pot='atomic'
   !
-  ! ... re-set and re-calculate FFT grid 
+  ! ... re-set FFT grids
   !
   dfftp%nr1=0; dfftp%nr2=0; dfftp%nr3=0
-  CALL fft_type_allocate (dfftp, at, bg, gcutm, intra_bgrp_comm, nyfft=nyfft)
   dffts%nr1=0; dffts%nr2=0; dffts%nr3=0
-  CALL fft_type_allocate (dffts, at, bg, gcutms,intra_bgrp_comm, nyfft=nyfft)
   !
   CALL init_run()
+  IF ( dft_is_hybrid() ) CALL reset_exx() 
+
   !
 9110 FORMAT( /5X,'A final scf calculation at the relaxed structure.' )
 9120 FORMAT(  5X,'The G-vectors are recalculated for the final unit cell'/ &
               5X,'Results may differ from those at the preceding step.' )
   !
 END SUBROUTINE reset_gvectors
+
+SUBROUTINE reset_exx() 
+   USE exx_base,      ONLY : exx_grid_init, exx_mp_init, exx_div_check, coulomb_fac, coulomb_done 
+   USE exx,           ONLY : exx_fft_initialized, dfftt, exx_fft_create, deallocate_exx 
+   USE exx_band,      ONLY : igk_exx 
+   USE fft_types,     ONLY : fft_type_deallocate 
+   ! 
+   IF (ALLOCATED(coulomb_fac) ) DEALLOCATE (coulomb_fac, coulomb_done) 
+   CALL deallocate_exx
+   IF (ALLOCATED(igk_exx)) DEALLOCATE(igk_exx) 
+   dfftt%nr1=0; dfftt%nr2=0; dfftt%nr3=0 
+   CALL fft_type_deallocate(dfftt) 
+
+   CALL exx_grid_init(REINIT = .TRUE.)
+   CALL exx_mp_init()
+   CALL exx_fft_create()
+   CALL exx_div_check()
+END SUBROUTINE reset_exx
 
 SUBROUTINE reset_magn ( )
   !

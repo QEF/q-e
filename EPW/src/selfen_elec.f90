@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE selfen_elec_q ( iq, first_cycle )
+  SUBROUTINE selfen_elec_q ( iqq, iq, totq, first_cycle )
   !-----------------------------------------------------------------------
   !! 
   !!  Compute the imaginary part of the electron self energy due to electron-
@@ -22,7 +22,7 @@
   !!
   !!  This subroutine computes the contribution from phonon iq to all k-points
   !!  The outer loop in ephwann_shuffle.f90 will loop over all iq points
-  !!  The contribution from each iq is summed at the end of this subroutine for iq=nqtotf 
+  !!  The contribution from each iq is summed at the end of this subroutine for iqq=totq
   !!  to recover the per-ik electron self energy
   !!
   !!  RM 24/02/2014
@@ -39,22 +39,27 @@
                             restart, restart_freq
   USE pwcom,         ONLY : ef !, nelec, isk
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
-                            nkf, epf17, nqtotf, wf, wqf, xkf, nkqtotf, &
+                            nkf, epf17, wf, wqf, xkf, nkqtotf, &
                             sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew
   USE transportcom,  ONLY : lower_bnd
   USE control_flags, ONLY : iverbosity
-  USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
+  USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6, eps8
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : inter_pool_comm
   USE mp_world,      ONLY : mpime
   USE io_global,     ONLY : ionode_id
+  USE io_scattering, ONLY : electron_write
   !
   implicit none
   !
   LOGICAL, INTENT (INOUT) :: first_cycle
   !! Use to determine weather this is the first cycle after restart 
+  INTEGER, INTENT(IN) :: iqq
+  !! Q-point index from selecq.fmt window
   INTEGER, INTENT(IN) :: iq
-  !! Q-point inde
+  !! Q-point index from full grid
+  INTEGER, INTENT(IN) :: totq
+  !! Total number of q-points from the selecq.fmt grid. 
   !
   ! Local variables 
   !
@@ -130,8 +135,6 @@
   REAL(kind=DP), external :: w0gauss
   !! This function computes the derivative of the Fermi-Dirac function
   !! It is therefore an approximation for a delta function
-  REAL(kind=DP), PARAMETER :: eps2 = 0.01/ryd2mev
-  !! Tolerence  
   REAL(kind=DP), ALLOCATABLE :: xkf_all(:,:)
   !! Collect k-point coordinate from all pools in parallel case
   REAL(kind=DP), ALLOCATABLE :: etf_all(:,:)
@@ -143,7 +146,7 @@
   inv_eptemp0 = 1.0/eptemp
   inv_degaussw = 1.0/degaussw
   !
-  IF ( iq .eq. 1 ) THEN
+  IF ( iqq == 1 ) THEN
     !
     WRITE(stdout,'(/5x,a)') repeat('=',67)
     WRITE(stdout,'(5x,"Electron (Imaginary) Self-Energy in the Migdal Approximation")')
@@ -171,7 +174,7 @@
     !
   ENDIF
   !
-  IF ( iq .eq. 1 ) THEN 
+  IF ( iqq == 1 ) THEN 
      WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
      WRITE (stdout,'(a)') ' '
   ENDIF
@@ -257,8 +260,8 @@
                    ! with hbar = 1 and M already contained in the eigenmodes
                    ! g2 is Ry^2, wkf must already account for the spin factor
                    !
-                   IF ( shortrange .AND. ( abs(xqf (1, iq))> eps2 .OR. abs(xqf (2, iq))> eps2 &
-                      .OR. abs(xqf (3, iq))> eps2 )) THEN                         
+                   IF ( shortrange .AND. ( abs(xqf (1, iq))> eps8 .OR. abs(xqf (2, iq))> eps8 &
+                      .OR. abs(xqf (3, iq))> eps8 )) THEN                         
                      ! SP: The abs has to be removed. Indeed the epf17 can be a pure imaginary 
                      !     number, in which case its square will be a negative number. 
                      g2 = REAL( (epf17 (jbnd, ibnd, imode, ik)**two)*inv_wq*g2_tmp  )
@@ -290,6 +293,11 @@
                    weight = pi * wqf(iq) * ( (wgkq+wgq)*w0g1 + (one-wgkq+wgq)*w0g2 )
                    !
                    sigmai_all(ibnd,ik+lower_bnd-1) = sigmai_all(ibnd,ik+lower_bnd-1) + g2 * weight
+                   !if(ik+lower_bnd-1==8 .and. ibnd == 1 .and. jbnd == 3 .and. imode == 6) THEN
+                   !  print*,'sigmai_all ',sigmai_all(ibnd,ik+lower_bnd-1), g2, weight, wq, ekk
+                   !  print*,'wqf(iq) wgkq wgq w0g1 w0g2', wqf(iq), wgkq, wgq, w0g1, w0g2
+                   !  print*,'ekq degaussw ',ekq, degaussw
+                   !endif
                    !
                    ! Mode-resolved
                    IF (iverbosity == 3) THEN
@@ -319,8 +327,8 @@
     !
     ! Creation of a restart point
     IF (restart) THEN
-      IF (MOD(iq,restart_freq) == 0) THEN
-        WRITE(stdout, '(a)' ) '     Creation of a restart point'
+      IF (MOD(iqq,restart_freq) == 0) THEN
+        WRITE(stdout, '(a,i10)' ) '     Creation of a restart point at ',iqq
         ! 
         CALL mp_sum( sigmar_all, inter_pool_comm )
         CALL mp_sum( sigmai_all, inter_pool_comm )
@@ -328,7 +336,7 @@
         CALL mp_sum(fermicount, inter_pool_comm)
         CALL mp_barrier(inter_pool_comm)
         !
-        CALL electron_write(iq,nqtotf,nksqtotf,sigmar_all,sigmai_all,zi_all)
+        CALL electron_write(iqq,totq,nksqtotf,sigmar_all,sigmai_all,zi_all)
         ! 
       ENDIF
     ENDIF 
@@ -336,7 +344,7 @@
   !
   ! The k points are distributed among pools: here we collect them
   !
-  IF ( iq .eq. nqtotf ) THEN
+  IF ( iqq == totq ) THEN
     !
     ALLOCATE ( xkf_all      ( 3,       nkqtotf ), &
                etf_all      ( nbndsub, nkqtotf ) )

@@ -1,0 +1,27 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='H2O'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
+    wf_collect = .true.
+ /
+ &system
+    ibrav = 1,
+    celldm(1) = 20,
+    nat = 3,
+    ntyp = 2,
+    ecutwfc = 25,
+    nbnd = 20
+ /
+ &electrons
+    conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+H  1.008  H.pz-vbc.UPF
+O 15.999  O.pz-mt.UPF
+ATOMIC_POSITIONS {angstrom}
+H   6.1301  6.0986  5.35585
+H   4.5815  6.0986  5.35585
+O   5.3558  5.4919  5.35585
+K_POINTS {gamma}

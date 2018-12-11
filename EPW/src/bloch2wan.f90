@@ -28,7 +28,7 @@
     !--------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
-    USE cell_base, ONLY : at, bg, celldm
+    USE cell_base, ONLY : at, bg, alat 
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, zero, ryd2ev
     USE io_global, ONLY : ionode_id
     USE io_epw,    ONLY : iudecayH
@@ -222,9 +222,10 @@
       DO ir = 1, nrr
         !
         tmp =  maxval( abs( chw (:,:,ir)) )
-        WRITE(iudecayH,*) wslen(ir) * celldm (1) * bohr2ang, tmp
+        WRITE(iudecayH,*) wslen(ir) * alat * bohr2ang, tmp
         !
       ENDDO
+      !
       ! RMDB
       DO ir = 1, nrr
         DO jbnd = 1, nbndsub
@@ -234,7 +235,8 @@
           ENDDO
         ENDDO
       ENDDO
-      CLOSE(300)
+      !
+      CLOSE(iudecayH)
       !
     ENDIF
     CALL mp_barrier(inter_pool_comm)
@@ -253,7 +255,7 @@
     !!
     !
     USE kinds,         ONLY : DP
-    USE cell_base,     ONLY : at, bg, celldm
+    USE cell_base,     ONLY : at, bg, alat
     USE elph2,         ONLY : cdmew
     USE io_epw,        ONLY : iudecayP
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone
@@ -463,7 +465,7 @@
       DO ir = 1, nrr
         !
         tmp =  maxval( abs( cdmew(:, :,:,ir)) )
-        WRITE(iudecayP,*) wslen(ir) * celldm(1) * bohr2ang, tmp
+        WRITE(iudecayP,*) wslen(ir) * alat * bohr2ang, tmp
         !
       ENDDO
       !
@@ -471,11 +473,11 @@
       !DO ir = 1, nrr
       !  DO jbnd = 1, nbndsub
       !    DO ibnd = 1, nbndsub
-      !      WRITE(300,'(5I5,6F12.6)') irvec(:,ir), ibnd, jbnd, cdmew(:,ibnd,jbnd,ir) 
+      !     WRITE(iudecayP,'(5I5,6F12.6)') irvec(:,ir), ibnd, jbnd, cdmew(:,ibnd,jbnd,ir) 
       !    ENDDO
       !  ENDDO
       !ENDDO
-      !
+      !     
       CLOSE(iudecayP)
     ENDIF
     CALL mp_barrier(inter_pool_comm)
@@ -501,7 +503,7 @@
     !!
     !
     USE kinds,         ONLY : DP
-    USE cell_base,     ONLY : at, bg, celldm
+    USE cell_base,     ONLY : at, bg, alat
     USE ions_base,     ONLY : nat, tau
     USE phcom,         ONLY : nq1, nq2, nq3
     USE elph2,         ONLY : rdw, epsi, zstar
@@ -603,7 +605,7 @@
       DO ir = 1, nrr
         !
         tmp =  maxval ( abs( rdw(:,:,ir)) )
-        WRITE(iudecaydyn, *) wslen(ir) * celldm(1) * bohr2ang, tmp
+        WRITE(iudecaydyn, *) wslen(ir) * alat * bohr2ang, tmp
         !
       ENDDO
       CLOSE(iudecaydyn)
@@ -625,7 +627,7 @@
     !--------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
-    USE cell_base, ONLY : at, bg, celldm
+    USE cell_base, ONLY : at, bg, alat
     USE elph2,     ONLY : cvmew
     USE constants_epw, ONLY : twopi, one, zero, ci, czero, cone, bohr2ang
     USE io_epw,    ONLY : iummn, iubvec, iudecayv
@@ -706,6 +708,8 @@
     !! Integer variable for I/O control
     INTEGER :: nexband_tmp
     !! Number of excluded bands
+    INTEGER :: nkstot_tmp
+    !! Number of k-point to test
     !
     REAL(kind=DP), ALLOCATABLE :: bvec(:,:,:)
     !! b-vectors connecting each k-point to its nearest neighbors
@@ -769,8 +773,10 @@
       bvec = zero
       wb   = zero
     ELSE
-      READ(iubvec,*) nnb
-      ALLOCATE ( bvec(3,nnb,nkstot), wb(nnb) )
+      READ(iubvec,*) tempfile
+      READ(iubvec,*) nkstot_tmp, nnb
+      IF (nkstot_tmp /= nkstot) CALL errore ('vmebloch2wan','Unexpected number of k-points in .bvec file', 0)
+      ALLOCATE ( bvec(3, nnb, nkstot), wb(nnb) )
       DO ik = 1, nkstot
         DO ib = 1, nnb
           READ(iubvec,*) bvec(:,ib,ik), wb(ib)
@@ -910,7 +916,7 @@
       DO ib = 1, nnb
         !
         ! bring bvec to units of 2piba since xk is cartesian units of 2piba
-        b_tmp(:) = celldm(1) / (twopi) * bvec(:,ib,nkk_abs)
+        b_tmp(:) = alat / (twopi) * bvec(:,ib,nkk_abs)
         CALL ktokpmq ( xk(:,ik), b_tmp(:), +1, ipool, nkb, nkb_abs)
         !
         ! M_mn_utmp(:,:) = matmul( m_mat_opt(:,:,ib,ik), cu_big(:,:,nkb_abs) )
@@ -1002,7 +1008,7 @@
       DO ir = 1, nrr
         !
         tmp =  maxval ( abs( cvmew(:,:,:,ir)) )
-        WRITE(iudecayv, *) wslen(ir) * celldm(1) * bohr2ang, tmp
+        WRITE(iudecayv, *) wslen(ir) * alat * bohr2ang, tmp
         !
       ENDDO
       !
@@ -1037,7 +1043,7 @@
     !-----------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
-    USE cell_base, ONLY : at, bg, celldm
+    USE cell_base, ONLY : at, bg, alat
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone
     USE io_epw,    ONLY : iuwane
     USE io_global, ONLY : ionode_id
@@ -1168,9 +1174,10 @@
       DO ir = 1, nrr
         ! 
         tmp =  maxval ( abs(epmatw(:,:,ir)) ) 
-        WRITE(iuwane, *) wslen(ir) * celldm(1) * bohr2ang, tmp
+        WRITE(iuwane, *) wslen(ir) * alat * bohr2ang, tmp
         !
       ENDDO
+      !
       ! RMDB
       !DO ir = 1, nrr
       !  DO jbnd = 1, nbndsub
@@ -1179,6 +1186,7 @@
       !    ENDDO
       !  ENDDO
       !ENDDO
+      !
       CLOSE(iuwane)
     ENDIF
     !
@@ -1197,7 +1205,7 @@
     !--------------------------------------------------------------------------------
     !
     USE kinds,         ONLY : DP
-    USE cell_base,     ONLY : at, bg, celldm
+    USE cell_base,     ONLY : at, bg, alat
     USE elph2,         ONLY : epmatwp
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
     USE io_epw,        ONLY : iuwanep
@@ -1298,8 +1306,8 @@
           ! rvec1 : electron-electron0 distance
           ! rvec2 : phonon - electron0 distance
           !
-          WRITE(iuwanep, '(5f15.10)') len1 * celldm(1) * bohr2ang, &
-                                  len2 * celldm(1) * bohr2ang, tmp
+          WRITE(iuwanep, '(5f15.10)') len1 * alat * bohr2ang, &
+                                  len2 * alat * bohr2ang, tmp
         ENDDO
         IF (ir.eq.nrr_g) CLOSE(iuwanep)
       ENDIF
@@ -1324,7 +1332,7 @@
     !--------------------------------------------------------------------------------
     !
     USE kinds,         ONLY : DP
-    USE cell_base,     ONLY : at, bg, celldm
+    USE cell_base,     ONLY : at, bg, alat
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
     USE io_epw,        ONLY : iunepmatwe, iunepmatwp, iuwanep
     USE io_global,     ONLY : ionode_id
@@ -1434,8 +1442,8 @@
           ! rvec1 : electron-electron0 distance
           ! rvec2 : phonon - electron0 distance
           !
-          WRITE(iuwanep, '(5f15.10)') len1 * celldm(1) * bohr2ang, &
-                                  len2 * celldm(1) * bohr2ang, tmp
+          WRITE(iuwanep, '(5f15.10)') len1 * alat * bohr2ang, &
+                                  len2 * alat * bohr2ang, tmp
         ENDDO
         IF (ir == nrr_g) CLOSE(iuwanep)
       ENDIF

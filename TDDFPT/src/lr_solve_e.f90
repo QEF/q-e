@@ -35,7 +35,6 @@ SUBROUTINE lr_solve_e
   USE wavefunctions, ONLY : evc
   USE mp_global,            ONLY : inter_pool_comm, intra_bgrp_comm
   USE mp,                   ONLY : mp_max, mp_min, mp_barrier
-  USE realus,               ONLY : real_space, real_space_debug 
   USE control_lr,           ONLY : alpha_pv
   USE qpoint,               ONLY : nksq
   USE noncollin_module,     ONLY : npol

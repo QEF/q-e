@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2009 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,13 +27,14 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi)
   USE klist,           ONLY : xk, igk_k, ngk
   USE gvect,           ONLY : g
   USE wvfct,           ONLY : npwx, nbnd, et
-  USE wavefunctions, ONLY: evc
+  USE wavefunctions,   ONLY : evc
   USE lsda_mod,        ONLY : nspin
   USE noncollin_module,ONLY : noncolin, npol
   USE becmod,          ONLY : becp, bec_type, calbec
   USE uspp,            ONLY : nkb, vkb
   USE uspp_param,      ONLY : nh, nhm
   USE control_flags,   ONLY : gamma_only
+  USE ldaU,            ONLY : lda_plus_u
 
   implicit none
   COMPLEX(DP), INTENT(OUT)    :: dpsi(npwx*npol,nbnd)
@@ -225,9 +226,14 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi)
   IF (nkb > 0) THEN
      deallocate (dvkb1, dvkb)
   END IF
-
+  !
+  ! Compute the commutator between the non-local Hubbard potential
+  ! and the position operator
+  !
+  IF (lda_plus_u) CALL commutator_Vhubx_psi(ik, ipol)
+  !
   111 continue
-
+  !
   call stop_clock ('commutator_Hx_psi')
   return
 end subroutine commutator_Hx_psi

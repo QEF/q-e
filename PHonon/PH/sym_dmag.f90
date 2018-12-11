@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -179,7 +179,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
                  enddo
                  if (sname(irot)(1:3)=='inv') magrot=-magrot
                  if(t_rev(irot).eq.1) magrot=-magrot
-! go back to carthesian coordinates
+! go back to cartesian coordinates
                  do kpol = 1, 3
                     mag(kpol)=at(kpol,1)*magrot(1) + &
                               at(kpol,2)*magrot(2) + &

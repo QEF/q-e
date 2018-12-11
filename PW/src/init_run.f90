@@ -104,8 +104,8 @@ SUBROUTINE init_run()
   btype(:,:) = 1
   !
   IF (ts_vdw) THEN
-    CALL tsvdw_initialize()
-    CALL set_h_ainv()
+     CALL tsvdw_initialize()
+     CALL set_h_ainv()
   END IF
   !
   CALL openfil()

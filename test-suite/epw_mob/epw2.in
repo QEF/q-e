@@ -26,6 +26,7 @@
 
   restart    = .true.
   restart_freq = 1000
+  selecqread = .false.
 
   lifc        = .true.
   asr_typ     = 'crystal'
@@ -59,7 +60,7 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  fsthick     = 1.2 ! eV 
+  fsthick     = 2.0 ! eV 
   eptemp      = 1 ! K 
   degaussw    = 0.05 ! eV
 

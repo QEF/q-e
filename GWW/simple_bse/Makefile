@@ -4,12 +4,7 @@ include ../../make.inc
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
-	$(MOD_FLAG)../../KS_Solvers/CG $(MOD_FLAG)../../KS_Solvers/PPCG $(MOD_FLAG)../../KS_Solvers/Davidson \
 	$(MOD_FLAG)../../GWW/gww 
-
-#location of needed libraries
-LIBOBJS= ../../iotk/src/libiotk.a  \
-	../../clib/clib.a 
 
 EXCOBJS = \
 simple_object.o \
@@ -24,16 +19,11 @@ spectrum.o \
 lanczos.o \
 build_eemat.o
 
-
-
-
-#QEMODS = ../../Modules/libqemod.a   ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a \
-	 ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
-	../../KS_Solvers/CG/libcg.a ../../KS_Solvers/PPCG/libppcg.a ../../KS_Solvers/Davidson/libdavid.a \
+	../../KS_Solvers/libks_solvers.a \
         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
-TLDEPS=bindir mods libs libiotk 
+TLDEPS=bindir mods libs gwwlib
 
 all : tldeps simple_bse.x  libsimple_exc.a
 

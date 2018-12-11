@@ -13,7 +13,7 @@ SUBROUTINE print_clock_pw()
    ! ... it tries to construct the calling tree of the program.
    !
    USE io_global,          ONLY : stdout
-   USE control_flags,      ONLY : isolve, iverbosity, gamma_only
+   USE control_flags,      ONLY : isolve, iverbosity, gamma_only, lxdm
    USE paw_variables,      ONLY : okpaw
    USE uspp,               ONLY : okvan
    USE realus,             ONLY : real_space
@@ -46,6 +46,9 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'realus:tabp' )
    END IF
    CALL print_clock( 'hinit0' )
+   IF (lxdm) THEN
+      CALL print_clock('init_xdm')
+   ENDIF
    !
    WRITE( stdout, '(/5x,"Called by electrons:")' )
    CALL print_clock( 'c_bands' )
@@ -64,6 +67,13 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'vdW_ffts' )
    CALL print_clock( 'vdW_v' )
    
+   IF (lxdm) THEN
+      CALL print_clock('energy_xdm')
+      CALL print_clock('exdm:environ')
+      CALL print_clock('exdm:paw_charge')
+      CALL print_clock('exdm:rho')
+   END IF
+
    !
    WRITE( stdout, '(/5x,"Called by c_bands:")' )
    CALL print_clock( 'init_us_2' )
@@ -161,7 +171,8 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'add_vuspsi' ) ; CALL print_clock ( 'add_vuspsir' )
    CALL print_clock( 'vhpsi' )
    CALL print_clock( 'h_psi_meta' )
-   CALL print_clock( 'h_1psi' )
+   CALL print_clock( 'hs_1psi' )
+   CALL print_clock( 's_1psi' )
    !
    WRITE( stdout, '(/5X,"General routines")' )
    !

@@ -242,8 +242,12 @@
     read (iudyn, '(a)') line
     read (iudyn, '(a)') line
     read (iudyn, * ) ntyp_, nat_, ibrav_, celldm_
-    IF (ntyp.ne.ntyp_.or.nat.ne.nat_.or.ibrav_.ne.ibrav.or.abs ( &
-       celldm_ (1) - celldm (1) ) .gt.1.0d-5) call errore ('readmat2', &
+    ! 
+    ! We stop testing celldm as it can be different between scf and nscf
+    !IF (ntyp.ne.ntyp_.or.nat.ne.nat_.or.ibrav_.ne.ibrav.or.abs ( &
+    !   celldm_ (1) - celldm (1) ) .gt.1.0d-5) call errore ('readmat_shuffle2', &
+    !   'inconsistent data', 1)
+    IF (ntyp.ne.ntyp_.or.nat.ne.nat_.or.ibrav_.ne.ibrav ) call errore ('readmat_shuffle2', &
        'inconsistent data', 1)
     ! 
     !  skip reading of cell parameters here
@@ -262,7 +266,7 @@
     ENDDO
     DO na = 1, nat
        read (iudyn, * ) i, ityp_, tau_
-       IF (na.ne.i.or.ityp_.ne.ityp (na) ) call errore ('readmat2', &
+       IF (na.ne.i.or.ityp_.ne.ityp (na) ) call errore ('readmat_shuffle2', &
           'inconsistent data (names)', 10 + na)
     ENDDO
     !
@@ -630,20 +634,20 @@
   USE elph2,     ONLY : ifc, zstar, epsi
   USE epwcom,    ONLY : asr_typ, dvscf_dir
   USE ions_base, ONLY : nat
-  USE cell_base, ONLY : ibrav, omega, at, bg, celldm
+  USE cell_base, ONLY : ibrav, omega, at, bg, celldm, alat
   USE phcom,     ONLY : nq1, nq2, nq3
   USE io_global, ONLY : stdout
   USE io_epw,    ONLY : iunifc
   USE noncollin_module, ONLY : noncolin, nspin_mag
   USE io_dyn_mat2,      ONLY : read_dyn_mat_param, read_dyn_mat_header,&
                                read_dyn_mat, read_ifc_xml, read_ifc_param
-#if defined(__NAG)
-  USE f90_unix_io,ONLY : flush
-#endif
   USE io_global, ONLY : ionode_id
   USE mp,        ONLY : mp_barrier, mp_bcast
   USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, root_pool
   USE mp_world,  ONLY : mpime
+#if defined(__NAG)
+  USE f90_unix_io,    ONLY : flush
+#endif
   !
   implicit none
   !
@@ -654,12 +658,12 @@
                          idum, ibid, jbid, nabid, nbbid, m1bid, m2bid, m3bid, &
                          ntyp_, nat_, ibrav_, ityp_(nat), nqs
   INTEGER, parameter  :: ntypx = 10
-  REAL(kind=DP)       :: tau_(3,nat), alat, amass2(ntypx)
+  REAL(kind=DP)       :: tau_(3,nat), amass2(ntypx)
   CHARACTER(LEN=3), ALLOCATABLE :: atm(:)
   REAL(DP), ALLOCATABLE :: m_loc(:,:)
   !
   WRITE(stdout,'(/5x,"Reading interatomic force constants"/)')
-  CALL FLUSH(6)
+  CALL flush(stdout)
   ! 
   ! This is important in restart mode as zstar etc has not been allocated
   IF (.NOT. ALLOCATED (zstar) ) ALLOCATE( zstar(3,3,nat) )
@@ -678,7 +682,7 @@
       CALL read_dyn_mat_header(ntyp_, nat_, ibrav, nspin_mag, &
                celldm, at, bg, omega, atm, amass2, &
                tau_, ityp_,  m_loc, nqs, has_zstar, epsi, zstar )
-      alat=celldm(1)
+!      alat=celldm(1)
       call volume(alat,at(1,1),at(1,2),at(1,3),omega)
       CALL read_ifc_param(nq1,nq2,nq3)
       CALL read_ifc_xml(nq1,nq2,nq3,nat_,ifc)

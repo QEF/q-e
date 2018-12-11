@@ -297,12 +297,11 @@ or the file License in the distribution).
 \subsection{Download}
 \label{SubSec:Download}
 
-Presently, \qe\ is distributed in source form.
-% some precompiled executables (binary files) are provided for \texttt{PWgui}.
-Packages for the Debian Linux distribution are however
-made available by \texttt{debichem} developers.
-Stable releases of the \qe\ source package (current version
-is \version) can be downloaded from the links listed in the
+\qe\ is distributed in source form, but selected binary packages
+are also available.
+Stable and development releases of the \qe\ source package
+(current version is \version), as well as available binary
+packages, can be downloaded from the links listed in the
 ``Download'' section of \texttt{www.quantum-espresso.org}.
 
 Uncompress and unpack the base distribution using the command:
@@ -499,7 +498,12 @@ Some environment variables that are relevant to \configure\ are:
 \texttt{(C,F,F90,CPP,LD)FLAGS}& compilation/preprocessor/loader flags\\
 \texttt{LIBDIRS}&     extra directories where to search for libraries\\
 \end{tabular}\\
-(note that ``F90'' is an historical name: we actually use F2003)
+(note that \texttt{F90} is an ``historical'' name -- we actually use
+Fortran 2003 -- and that it should be used only together with option
+\texttt{--disable-parallel}. In fact, the value of F90 must be
+consistent with the parallel Fortran compiler which is determined by 
+\configure\ and stored in the \texttt{MPIF90} variable).
+
 For example, the following command line:
 \begin{verbatim}
      ./configure MPIF90=mpif90 FFLAGS="-O2 -assume byterecl" \
@@ -704,8 +708,11 @@ can be used to perform binary I/O using the  HDF5 format.
 
 The user may need to install this library, compiling it
 with options \texttt{--enable-fortran}, \texttt{--enable-fortran-2003},
-  and \texttt{--enable-parallel} (see below). These options must be passed
-  to the \configure\ script of the library, not of \qe.
+and \texttt{--enable-parallel} (see below). These options must be passed
+to the \configure\ script of the library, not of \qe. 
+
+One can use either the \texttt{1.10} or \texttt{1.8} version of the library. 
+For the latter the user has to download a version at least as new as \texttt{1.8.16}.    
 
 The path to the root directory of the library (the one containing \texttt{bin/},
 \texttt{include/} and \texttt{lib/} directories) has to be passed to the
@@ -714,6 +721,8 @@ The path to the root directory of the library (the one containing \texttt{bin/},
 It is possible to use a library with disabled parallelism, 
 but one has to add manually the flag \texttt{-D\_\_HDF5\_SERIAL}
 to the \texttt{MANUAL\_DFLAGS} in the \texttt{make.inc} file. 
+
+
 
 The HDF5 packages provided by many LINUX distributions may also work,
 but the configure script fails if includes and libraries are not placed
@@ -1108,10 +1117,6 @@ the parameter BLOCKSIZE to e.g. 131072*1024 when opening files in
 \texttt{iotk/src/iotk\_files.f90} (info by Lorenzo Paulatto,
 Nov. 2010). 
 
-{\bf ifort v.11}: Segmentation faults were reported for the combination
-ifort 11.0.081, MKL 10.1.1.019, OpenMP 1.3.3. The problem disappeared
-with ifort 11.1.056 and MKL 10.2.2.025 (Carlo Nervi, Oct. 2009).
-
 \paragraph{Linux PCs with MKL libraries}
 On Intel CPUs it is very convenient to use Intel MKL libraries
 (freely available at
@@ -1120,7 +1125,10 @@ MKL libraries can be used also with non-Intel compilers.
 They work also for AMD CPU, selecting the appropriate machine-optimized
 libraries, but with reduced performances.
 
-\configure\ should recognize properly installed MKL libraries.
+\configure\ properly detects only recent (v.12 or later) MKL libraries,
+as long as the \$MKLROOT environment variable is set in the current shell.
+Normally this environment variable is set by sourcing the Intel MKL or Intel 
+Parallel Studio environment script.
 By default the non-threaded version of MKL is linked, unless option
 \texttt{configure --with-openmp} is specified. In case of trouble,
 refer to the following web page to find the correct way to link MKL:\\
@@ -1196,7 +1204,9 @@ Another option is Cygwin, a UNIX environment which runs under Windows: see\\
 \texttt{http://www.cygwin.com/}. 
 
 Finally, Windows-10 users may enable the Windows Subsystem for Linux
-and install there a Linux distribution.
+(see here:\\
+\texttt{https://docs.microsoft.com/en-us/windows/wsl/install-win10}),
+install a Linux distribution, compile \qe\ as on Linux.
 
 \subsubsection{Mac OS}
 

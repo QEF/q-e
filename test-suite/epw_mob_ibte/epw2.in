@@ -20,6 +20,7 @@
   ncarrier    =  1E13
   mp_mesh_k   = .false.
   iterative_bte = .true.
+  epmatkqread = .false.
   mob_maxiter = 3
   broyden_beta= 1.0
 
@@ -32,6 +33,7 @@
 
   restart      = .true.
   restart_freq = 50
+  selecqread   = .false.
 
   lifc        = .true.
   asr_typ     = 'crystal'
@@ -61,7 +63,6 @@
   wdata(12) = 'conv_window = 4'
   wdata(13) = 'write_hr   = .true.'
   wdata(14) = 'write_rmn  = .true.'
-
 
   elecselfen  = .false.
   phonselfen  = .false.

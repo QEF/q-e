@@ -368,5 +368,107 @@ CONTAINS
 100 FORMAT(3E25.14)
     RETURN
   END SUBROUTINE printout_wfc
-
+    !------------------------------------------------------------------------
+    SUBROUTINE save_print_counter( iter, outdir, wunit )
+      !------------------------------------------------------------------------
+      !
+      ! ... a counter indicating the last successful printout iteration is saved
+      !
+      USE io_global, ONLY: ionode, ionode_id
+      USE io_files, ONLY : iunpun, create_directory, restart_dir
+      USE mp, ONLY: mp_bcast
+      USE mp_images, ONLY : intra_image_comm
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,          INTENT(IN) :: iter
+      CHARACTER(LEN=*), INTENT(IN) :: outdir
+      INTEGER,          INTENT(IN) :: wunit
+      !
+      INTEGER            :: ierr
+      CHARACTER(LEN=256) :: filename, dirname
+      !
+      !
+      dirname = restart_dir( outdir, wunit )
+      !
+      CALL create_directory( TRIM( dirname ) )
+      !
+      IF ( ionode ) THEN
+         !
+         filename = TRIM( dirname ) // 'print_counter'
+         !
+         OPEN( UNIT = iunpun, FILE = filename, FORM = 'formatted', &
+                 STATUS = 'unknown', IOSTAT = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      CALL errore( 'save_print_counter', &
+                   'cannot open restart file for writing', ierr )
+      !
+      IF ( ionode ) THEN
+         !
+         WRITE ( iunpun, '("LAST SUCCESSFUL PRINTOUT AT STEP:",/,i5 )' ) iter
+         !
+         CLOSE ( iunpun, STATUS = 'keep' )
+         !
+      END IF
+      !
+      RETURN
+      !
+    END SUBROUTINE save_print_counter
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE read_print_counter( nprint_nfi, outdir, runit )
+      !------------------------------------------------------------------------
+      !
+      ! ... the counter indicating the last successful printout iteration 
+      ! ... is read here
+      !
+      USE io_global, ONLY: ionode, ionode_id
+      USE io_files, ONLY : iunpun, restart_dir
+      USE mp, ONLY: mp_bcast
+      USE mp_images, ONLY : intra_image_comm
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,          INTENT(OUT) :: nprint_nfi
+      CHARACTER(LEN=*), INTENT(IN)  :: outdir
+      INTEGER,          INTENT(IN)  :: runit
+      !
+      INTEGER            :: ierr
+      CHARACTER(LEN=256) :: filename, dirname
+      !
+      !
+      dirname = restart_dir( outdir, runit )
+      !
+      IF ( ionode ) THEN
+         !
+         filename = TRIM( dirname ) // 'print_counter'
+         !
+         OPEN( UNIT = iunpun, FILE = filename, FORM = 'formatted', &
+                 STATUS = 'old', IOSTAT = ierr )
+         !
+         IF ( ierr > 0 ) THEN
+            !
+            nprint_nfi = -1
+            !
+         ELSE
+            !
+            READ ( iunpun, * )
+            READ ( iunpun, * ) nprint_nfi
+            !
+            CLOSE ( iunpun, STATUS = 'keep' )
+            !
+         END IF
+         !
+      END IF
+      !
+      CALL mp_bcast( nprint_nfi, ionode_id, intra_image_comm )
+      !
+      RETURN
+      !
+    END SUBROUTINE read_print_counter   
+    !
 END MODULE printout_base

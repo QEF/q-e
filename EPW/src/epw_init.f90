@@ -32,7 +32,8 @@
   USE kinds,                ONLY : DP
   USE noncollin_module,     ONLY : noncolin, npol
   USE uspp_param,           ONLY : upf
-  USE phcom,                ONLY : lrwfc, iuwfc, vlocq
+  USE units_lr,             ONLY : lrwfc, iuwfc
+  USE phcom,                ONLY : vlocq
   USE qpoint,               ONLY : xq, eigqts, npwq
   USE nlcc_ph,              ONLY : drc                           
   USE uspp,                 ONLY : nlcc_any

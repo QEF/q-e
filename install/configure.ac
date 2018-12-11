@@ -88,9 +88,6 @@ X_AC_QE_SCALAPACK()
 # Setting ELPA...
 X_AC_QE_ELPA()
 
-# Enable XML ...
-X_AC_QE_XML()
-
 # Setting HDF5...
 X_AC_QE_HDF5()
 

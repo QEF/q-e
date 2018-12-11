@@ -49,6 +49,7 @@ module funct
              get_nonlocc_name
   PUBLIC  :: get_iexch, get_icorr, get_igcx, get_igcc, get_meta, get_inlc
   PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_nonlocc, igcc_is_lyp
+  PUBLIC  :: set_auxiliary_flags
 
   ! additional subroutines/functions for hybrid functionals
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
@@ -109,6 +110,8 @@ module funct
   !              "m06l"  = "nox+noc+m6lx+m6lc" = M06L Meta-GGA
   !              "tb09"  = "sla+pw+tb09+tb09"  = TB09 Meta-GGA
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
+  !              "b86bx" = "pb0x+pw+b86x+pbc"  = B86bPBE hybrid
+  !              "bhahlyp" = "pb0x+pw+b88x+blyp"  = Becke half-and-half LYP
   !              "hse"   = "sla+pw+hse+pbc"    = Heyd-Scuseria-Ernzerhof (HSE 06, see note below)
   !              "b3lyp" = "b3lp+b3lp+b3lp+b3lp"= B3LYP
   !              "b3lypv1r"    = "b3lp+b3lpv1r+b3lp+b3lp"= B3LYP-VWN1-RPA
@@ -195,6 +198,8 @@ module funct
   !              "r860"   rPW86+HF/4 (rw86-0)            igcx =30 reserved PH
   !              "br0"    vdW-DF2-b86r+HF/4 (b86r-0)     igcx =38 reserved PH
   !              "c090"   vdW-DF-c09+HF/4 (c09-0)        igcx =40 reserved PH
+  !              "b86x"   B86b exchange * 0.75           igcx =41
+  !              "b88x"   B88 exchange * 0.50            igcx =42
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -327,7 +332,7 @@ module funct
   real(DP):: finite_size_cell_volume = notset
   logical :: discard_input_dft = .false.
   !
-  integer, parameter:: nxc=8, ncc=10, ngcx=40, ngcc=12, nmeta=6, ncnl=6
+  integer, parameter:: nxc=8, ncc=10, ngcx=42, ngcc=12, nmeta=6, ncnl=6
   character (len=4) :: exc, corr, gradx, gradc, meta, nonlocc
   dimension :: exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0:ngcc), &
                meta(0:nmeta), nonlocc (0:ncnl)
@@ -341,7 +346,8 @@ module funct
                'xxxx', 'C09X', 'SOX', 'xxxx', 'Q2DX', 'GAUP', 'PW86', 'B86B', &
                'OBK8', 'OB86', 'EVX', 'B86R', 'CX13', 'X3LP', &
                'CX0', 'R860', 'xxxx', 'xxxx', 'xxxx', &
-               'xxxx', 'xxxx', 'xxxx', 'xxxx', 'BR0', 'xxxx', 'C090' /
+               'xxxx', 'xxxx', 'xxxx', 'xxxx', 'BR0', 'xxxx', 'C090', &
+               'B86X', 'B88X'/
 
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'NONE',&
                'B3LP', 'PSC', 'PBE', 'xxxx', 'xxxx', 'Q2DC' /
@@ -498,6 +504,14 @@ CONTAINS
     else if ('PBE0'.EQ. TRIM(dftout) ) then
     ! special case : PBE0
        dft_defined = set_dft_values(6,4,8,4,0,0)
+
+    else if ('B86BPBEX'.EQ. TRIM(dftout) ) then
+    ! special case : B86BPBEX
+       dft_defined = set_dft_values(6,4,41,4,0,0)
+
+    else if ('BHAHLYP'.EQ. TRIM(dftout).OR.'BHANDHLYP'.EQ.TRIM(dftout)) then
+    ! special case : B86BPBEX
+       dft_defined = set_dft_values(6,4,42,3,0,0)
 
    else if ('HSE' .EQ. TRIM( dftout) ) then
     ! special case : HSE
@@ -740,6 +754,10 @@ CONTAINS
     islda     = (iexch> 0) .and. (icorr > 0) .and. .not. isgradient
     ! PBE0/DF0
     IF ( iexch==6 .or. igcx ==8 ) exx_fraction = 0.25_DP
+    ! B86BPBEX
+    IF ( iexch==6 .and. igcx ==41 ) exx_fraction = 0.25_DP
+    ! BHANDHLYP
+    IF ( iexch==6 .and. igcx ==42 ) exx_fraction = 0.5_DP
     ! HSE
     IF ( igcx ==12 ) THEN
        exx_fraction = 0.25_DP
@@ -1072,6 +1090,10 @@ CONTAINS
      shortname = 'PBE'
   else if (iexch==6.and.icorr==4.and.igcx==8.and.igcc==4) then
      shortname = 'PBE0'
+  else if (iexch==6.and.icorr==4.and.igcx==41.and.igcc==4) then
+     shortname = 'B86BPBEX'
+  else if (iexch==6.and.icorr==4.and.igcx==42.and.igcc==3) then
+     shortname = 'BHANDHLYP'
   else if (iexch==1.and.icorr==4.and.igcx==4.and.igcc==4) then
      shortname = 'revPBE'
   else if (iexch==1.and.icorr==4.and.igcx==10.and.igcc==8) then
@@ -1689,6 +1711,20 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
          v1x = (1.0_DP - exx_fraction) * v1x
          v2x = (1.0_DP - exx_fraction) * v2x
       end if
+  elseif (igcx == 41) then ! 'B86BPBEX'
+     call becke86b(rho, grho, sx, v1x, v2x)
+     if (exx_started) then
+        sx  = (1.0_DP - exx_fraction) * sx
+        v1x = (1.0_DP - exx_fraction) * v1x
+        v2x = (1.0_DP - exx_fraction) * v2x
+     end if
+  elseif (igcx == 42) then ! 'BHANDHLYP'
+     call becke88(rho, grho, sx, v1x, v2x)
+     if (exx_started) then
+        sx  = (1.0_DP - exx_fraction) * sx
+        v1x = (1.0_DP - exx_fraction) * v1x
+        v2x = (1.0_DP - exx_fraction) * v2x
+     end if
   else
      sx = 0.0_DP
      v1x = 0.0_DP
@@ -2171,6 +2207,58 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
         v2xdw = (1.0_DP - exx_fraction) * v2xdw
      end if
 
+  elseif (igcx == 41) then ! B86X for B86BPBEX hybrid
+     if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
+        call becke86b(2.0_DP * rhoup, 4.0_DP * grhoup2, sxup, v1xup, v2xup)
+     else
+        sxup = 0.0_DP
+        v1xup = 0.0_DP
+        v2xup = 0.0_DP
+     endif
+     if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
+        call becke86b(2.0_DP * rhodw, 4.0_DP * grhodw2, sxdw, v1xdw, v2xdw)
+     else
+        sxdw = 0.0_DP
+        v1xdw = 0.0_DP
+        v2xdw = 0.0_DP
+     endif
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+     if (exx_started) then
+        sx  = (1.0_DP - exx_fraction) * sx
+        v1xup = (1.0_DP - exx_fraction) * v1xup
+        v1xdw = (1.0_DP - exx_fraction) * v1xdw
+        v2xup = (1.0_DP - exx_fraction) * v2xup
+        v2xdw = (1.0_DP - exx_fraction) * v2xdw
+     end if
+
+  elseif (igcx == 42) then ! B88X for BHANDHLYP
+     if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
+        call becke88(2.0_DP * rhoup, 4.0_DP * grhoup2, sxup, v1xup, v2xup)
+     else
+        sxup = 0.0_DP
+        v1xup = 0.0_DP
+        v2xup = 0.0_DP
+     endif
+     if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
+        call becke88(2.0_DP * rhodw, 4.0_DP * grhodw2, sxdw, v1xdw, v2xdw)
+     else
+        sxdw = 0.0_DP
+        v1xdw = 0.0_DP
+        v2xdw = 0.0_DP
+     endif
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+     if (exx_started) then
+        sx  = (1.0_DP - exx_fraction) * sx
+        v1xup = (1.0_DP - exx_fraction) * v1xup
+        v1xdw = (1.0_DP - exx_fraction) * v1xdw
+        v2xup = (1.0_DP - exx_fraction) * v2xup
+        v2xdw = (1.0_DP - exx_fraction) * v2xdw
+     end if
+
   ! case igcx == 5 (HCTH) and 6 (OPTX) not implemented
   ! case igcx == 7 (meta-GGA) must be treated in a separate call to another
   ! routine: needs kinetic energy density in addition to rho and grad rho
@@ -2566,6 +2654,62 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
          endif
          if (rhodw(i) > small .and. sqrt(abs(grhodw2(i))) > small) then
             call c09x (2.0_DP * rhodw(i), 4.0_DP * grhodw2(i), sxdw(i), v1xdw(i), v2xdw(i))
+         else
+            sxdw(i) = 0.0_DP
+            v1xdw(i) = 0.0_DP
+            v2xdw(i) = 0.0_DP
+         endif
+      end do
+      sx = 0.5_DP * (sxup + sxdw)
+      v2xup = 2.0_DP * v2xup
+      v2xdw = 2.0_DP * v2xdw
+      if (exx_started) then
+         sx  = (1.0_DP - exx_fraction) * sx
+         v1xup = (1.0_DP - exx_fraction) * v1xup
+         v1xdw = (1.0_DP - exx_fraction) * v1xdw
+         v2xup = (1.0_DP - exx_fraction) * v2xup
+         v2xdw = (1.0_DP - exx_fraction) * v2xdw
+      end if
+
+   case(41) ! B86X for B86BPBEX hybrid
+      do i=1,length
+         if (rhoup(i) > small .and. sqrt(abs(grhoup2(i))) > small) then
+            call becke86b(2.0_DP * rhoup(i), 4.0_DP * grhoup2(i), sxup(i), v1xup(i), v2xup(i))
+         else
+            sxup(i) = 0.0_DP
+            v1xup(i) = 0.0_DP
+            v2xup(i) = 0.0_DP
+         endif
+         if (rhodw(i) > small .and. sqrt(abs(grhodw2(i))) > small) then
+            call becke86b(2.0_DP * rhodw(i), 4.0_DP * grhodw2(i), sxdw(i), v1xdw(i), v2xdw(i))
+         else
+            sxdw(i) = 0.0_DP
+            v1xdw(i) = 0.0_DP
+            v2xdw(i) = 0.0_DP
+         endif
+      end do
+      sx = 0.5_DP * (sxup + sxdw)
+      v2xup = 2.0_DP * v2xup
+      v2xdw = 2.0_DP * v2xdw
+      if (exx_started) then
+         sx  = (1.0_DP - exx_fraction) * sx
+         v1xup = (1.0_DP - exx_fraction) * v1xup
+         v1xdw = (1.0_DP - exx_fraction) * v1xdw
+         v2xup = (1.0_DP - exx_fraction) * v2xup
+         v2xdw = (1.0_DP - exx_fraction) * v2xdw
+      end if
+
+   case(42) ! B88X for BHANDHLYP
+      do i=1,length
+         if (rhoup(i) > small .and. sqrt(abs(grhoup2(i))) > small) then
+            call becke88(2.0_DP * rhoup(i), 4.0_DP * grhoup2(i), sxup(i), v1xup(i), v2xup(i))
+         else
+            sxup(i) = 0.0_DP
+            v1xup(i) = 0.0_DP
+            v2xup(i) = 0.0_DP
+         endif
+         if (rhodw(i) > small .and. sqrt(abs(grhodw2(i))) > small) then
+            call becke88(2.0_DP * rhodw(i), 4.0_DP * grhodw2(i), sxdw(i), v1xdw(i), v2xdw(i))
          else
             sxdw(i) = 0.0_DP
             v1xdw(i) = 0.0_DP

@@ -754,7 +754,7 @@ PROGRAM matdyn
               END DO
            END DO
            !
-           IF (ionode) WRITE (2, '(ES12.4,1000ES12.4)') E, SUM(DOSofE(1:nat)), DOSofE(1:nat)
+           IF (ionode) WRITE (2, '(2ES18.10,1000ES12.4)') E, SUM(DOSofE(1:nat)), DOSofE(1:nat)
         END DO
         IF (ionode) CLOSE(unit=2)
      END IF  !dos
@@ -2574,7 +2574,7 @@ SUBROUTINE find_representations_mode_q ( nat, ntyp, xq, w2, u, tau, ityp, &
      magnetic_sym=(nspin_mag==4)
      CALL prepare_sym_analysis(nsymq,sr,t_rev,magnetic_sym)
      sym (1:nsym) = .TRUE.
-     CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
+     CALL sgam_lr (at, bg, nsym, s, irt, tau, rtau, nat)
      CALL find_mode_sym_new (u, w2, tau, nat, nsymq, s, sr, irt, xq,    &
              rtau, amass, ntyp, ityp, 1, .FALSE., .FALSE., num_rap_mode, ierr)
 

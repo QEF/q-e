@@ -5,10 +5,6 @@ ev.o : ../../Modules/mp_global.o
 ev.o : ../../Modules/mp_world.o
 ev.o : ../../Modules/random_numbers.o
 ev.o : ../../UtilXlib/mp.o
-ev.o : ev_xml.o
-ev_xml.o : ../../Modules/constants.o
-ev_xml.o : ../../Modules/kind.o
-ev_xml.o : ../../iotk/src/iotk_module.o
 ibrav2cell.o : ../../Modules/kind.o
 kpoints.o : ../../Modules/cell_base.o
 kpoints.o : ../../Modules/kind.o

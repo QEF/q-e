@@ -5,9 +5,6 @@ include ../../make.inc
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
-          $(MOD_FLAG)../../KS_Solvers/Davidson \
-	  $(MOD_FLAG)../../KS_Solvers/CG \
-	  $(MOD_FLAG)../../KS_Solvers/PPCG \
           $(MOD_FLAG)../../PW/src
 
 PW4GWWOBJS = \
@@ -49,14 +46,13 @@ hpsi_pw4gww.o \
 cgsolve_all_gamma.o \
 realus.o 
 
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a \
-         ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/PPCG/libppcg.a \
+QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 
 LIBMIN= ../minpack/minpacklib.a
 
-TLDEPS= bindir libs pw
+TLDEPS= pwlibs
 
 all : tldeps pw4gww.x
 

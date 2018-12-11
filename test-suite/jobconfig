@@ -88,7 +88,11 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'),
 
 [epw_mob_ibte/]
 program = EPW
-inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3'), ('epw4.in', '3')
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3')
+
+[epw_mob_ibte_sym/]
+program = EPW
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('q2r.in', '4'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3'), ('epw2.in', '3'), ('epw3.in', '3')
 
 [tddfpt_CH4/]
 program = TDDFPT
@@ -115,5 +119,6 @@ pw_all = pw_*??
 cp_all = cp_*??
 ph_all = ph_*??
 epw_all = epw_*??
+epw_partial = epw_base epw_trev epw_metal epw_soc epw_super epw_polar epw_pl epw_mob
 tddfpt_all = tddfpt_*??
 _default_ = pw_*?? cp_*?? ph_*?? epw_*?? tddfpt_*??

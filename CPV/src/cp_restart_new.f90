@@ -18,7 +18,6 @@ MODULE cp_restart_new
   ! ... * lambda matrices are read by one processors, broadcast to all others
   !
   USE kinds,     ONLY : DP
-#if !defined(__OLDXML)
   !
   USE qes_types_module
   USE qes_libs_module
@@ -39,14 +38,12 @@ MODULE cp_restart_new
   USE mp,        ONLY : mp_bcast
   USE matrix_inversion
   !
-#endif
   IMPLICIT NONE
   !
   SAVE
   !
   CONTAINS
     !
-#if !defined(__OLDXML)
     !------------------------------------------------------------------------
     SUBROUTINE cp_writefile( ndw, ascii, nfi, simtime, acc, nk, xk,          &
                              wk, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh,   &
@@ -257,7 +254,7 @@ MODULE cp_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ))
+         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), 'CPV' )
          output_obj%tagname="output"
          output_obj%lwrite = .TRUE.
 !-------------------------------------------------------------------------------
@@ -272,20 +269,20 @@ MODULE cp_restart_new
          IF ( lwf ) CALL cp_writecenters ( qexsd_xf, h, wfc)
          !
 !-------------------------------------------------------------------------------
-! ... CONVERGENCE_INFO - TO BE VERIFIED
+! ... CONVERGENCE_INFO - TO BE VERIFIED   
 !-------------------------------------------------------------------------------
-!
+!! @note set lwrite to false for the element P. Delugas 
          CALL qexsd_init_convergence_info(output_obj%convergence_info, &
-              n_scf_steps=0, scf_error=0.0_dp, &
-              opt_conv_ispresent=.FALSE., &
+              scf_has_converged = .FALSE., n_scf_steps=0, scf_error=0.0_dp, &
               n_opt_steps=0, grad_norm=0.0_dp )
+         output_obj%convergence_info%lwrite = .FALSE. 
          !
 !-------------------------------------------------------------------------------
 ! ... ALGORITHMIC_INFO
 !-------------------------------------------------------------------------------
          !
          CALL qexsd_init_algorithmic_info(output_obj%algorithmic_info, &
-              real_space_q=.FALSE., uspp=okvan, paw=.FALSE.)
+              real_space_beta=.FALSE., real_space_q=.FALSE., uspp=okvan, paw=.FALSE.)
          !
 !-------------------------------------------------------------------------------
 ! ... ATOMIC_SPECIES
@@ -461,9 +458,10 @@ MODULE cp_restart_new
         ! To be reconsidered once the old I/O is gone
         ALLOCATE ( rhog(ngm, nspin) )
         CALL rho_r2g (dfftp,rho, rhog)
+        filename = TRIM(dirname) // 'charge-density' 
         ! Only the first band group collects and writes
         IF ( my_bgrp_id == root_bgrp_id ) CALL write_rhog &
-                ( dirname, root_bgrp, intra_bgrp_comm, &
+                ( filename, root_bgrp, intra_bgrp_comm, &
                 tpiba*b1, tpiba*b2, tpiba*b3, gamma_only, &
                 mill, ig_l2g, rhog, ecutrho )
         !
@@ -2028,7 +2026,6 @@ MODULE cp_restart_new
     DEALLOCATE( mrepl )
     !
   END SUBROUTINE cp_read_lambda
-#endif
   !
   !------------------------------------------------------------------------
   SUBROUTINE cp_write_zmat( ndw, mat_z, ierr )

@@ -1,24 +1,23 @@
 !
-! Copyright (C) 2001 - 2012 Quantum ESPRESSO group
+! Copyright (C) 2001 - 2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-  !-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
 subroutine set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
   !-----------------------------------------------------------------------
   !
   ! This routine calculates the possible vectors G associated
   ! to the symmetries of the small group of q: Sq -> q + G
-  ! Furthermore if minus_q and irotmq are set if finds the G for Sq -> -q+G.
-  !
-  !  The dummy variables
+  ! Furthermore if minus_q and irotmq are set it finds the G for Sq -> -q+G.
   !
   USE kinds, ONLY : DP
   USE cell_base, ONLY : bg, at
   USE control_lr, ONLY : lgamma
-  implicit none
+  
+  IMPLICIT NONE
 
   REAL(DP), PARAMETER :: accep=1.e-5_dp
 

@@ -17,6 +17,7 @@ cgsolve_all.o \
 cg_psi.o \
 ch_psi_all.o \
 commutator_Hx_psi.o \
+commutator_Vhubx_psi.o \
 Coul_cut_2D_ph.o \
 check_q_points_sym.o \
 dfpt_tetra_mod.o \
@@ -31,11 +32,13 @@ dv_vdW_DF.o \
 dv_rVV10.o \
 newdq.o \
 orthogonalize.o \
+setup_offset_beta.o \
 setup_nscf.o \
 set_dbecsum_nc.o \
 set_int3_nc.o \
 smallgq.o \
 lr_sm1_psi.o \
+lr_addusddens.o \
 localdos.o \
 setup_dgc.o \
 compute_vsgga.o \
@@ -43,9 +46,10 @@ setup_dmuxc.o \
 setup_nbnd_occ.o \
 setup_alpha_pv.o \
 set_small_group_of_q.o \
-sgam_ph.o \
+sgam_lr.o \
 star_q.o \
 setqmod.o \
+lr_orthoUwfc.o \
 qdipol_cryst.o \
 mode_group.o \
 mix_pot.o \

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,24 +13,25 @@ subroutine addusldos (ldos, becsum1)
   !  This routine adds to the local DOS the part which is due to
   !  the US augmentation.
   !
-  !
-  USE kinds, ONLY : DP
-  USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use fft_base,  only: dfftp
-  use fft_interfaces, only: invfft
-  USE gvect, ONLY : eigts1, eigts2, eigts3, mill, gg, g, ngm
-  USE wavefunctions,  ONLY: psic
-  USE uspp, ONLY: okvan
-  USE uspp_param, ONLY: upf, lmaxq, nh, nhm
+  USE kinds,            ONLY : DP
+  USE ions_base,        ONLY : nat, ityp, ntyp => nsp
+  USE fft_base,         ONLY : dfftp
+  USE fft_interfaces,   ONLY : invfft
+  USE gvect,            ONLY : eigts1, eigts2, eigts3, mill, gg, g, ngm
+  USE wavefunctions,    ONLY : psic
+  USE uspp,             ONLY : okvan
+  USE uspp_param,       ONLY : upf, lmaxq, nh, nhm
   USE noncollin_module, ONLY : nspin_mag
+  
   implicit none
+  
   complex(DP) :: ldos (dfftp%nnr, nspin_mag)
   ! local density of states
 
   real(DP) :: becsum1 ( (nhm * (nhm + 1) ) / 2, nat, nspin_mag)
   ! input: the becsum1 ter
   !
-  !     here the local variables
+  ! here the local variables
   !
 
   integer :: ig, na, nt, ih, jh, ijh, is
@@ -42,6 +43,8 @@ subroutine addusldos (ldos, becsum1)
 
   complex(DP), allocatable :: aux (:,:), qgm (:)
   ! work space
+
+  call start_clock ('addusldos')
 
   allocate (aux ( ngm , nspin_mag))
   allocate (ylmk0(ngm , lmaxq * lmaxq))
@@ -97,5 +100,9 @@ subroutine addusldos (ldos, becsum1)
   deallocate (qgm)
   deallocate (ylmk0)
   deallocate (aux)
+ 
+  call stop_clock ('addusldos')
+ 
   return
+
 end subroutine addusldos

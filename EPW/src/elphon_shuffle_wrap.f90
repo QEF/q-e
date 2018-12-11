@@ -172,6 +172,8 @@
   !! Fractional translation y
   real(kind=DP) :: ft3
   !! Fractional translation z
+  REAL(kind=DP) :: w_centers(3,nbndsub)
+  !! Wannier centers
   !
   complex(kind=DP) :: eigv (ngm, 48)
   !! $e^{ iGv}$ for 1...nsym (v the fractional translation)
@@ -323,7 +325,7 @@
     DO iq_irr = 1, nqc_irr
       xq = xqc_irr(:,iq_irr)
       CALL set_small_group_of_q(nsymq,invsymq,minus_q)
-      CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
+      CALL sgam_lr (at, bg, nsym, s, irt, tau, rtau, nat)
       CALL set_giq (xq,s,nsymq,nsym,irotmq,minus_q,gi,gimq)
     ENDDO
   ENDIF ! epwread .and. .not. epbread
@@ -368,7 +370,7 @@
       WRITE(stdout,'(//5x,a)') repeat('=',67) 
       WRITE(stdout,'(5x,"irreducible q point # ",i4)') iq_irr
       WRITE(stdout,'(5x,a/)') repeat('=',67) 
-      CALL flush(6)
+      CALL flush(stdout)
       !
       xq = xqc_irr(:,iq_irr)
       !
@@ -395,7 +397,7 @@
       IF(minus_q) WRITE(stdout, '(10x,a)') "in addition sym. q -> -q+G:"
       ! 
       ! Finally this does some of the above again and also computes rtau...
-      CALL sgam_ph_new(at, bg, nsym, s, irt, tau, rtau, nat)
+      CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
       !
       ! ######################### star of q #########################
       ! 
@@ -420,7 +422,7 @@
         sym (isym) = .true.
       ENDDO
       !
-      CALL sgam_ph_new (at, bg, nsym, s, irt, tau, rtau, nat)
+      CALL sgam_lr (at, bg, nsym, s, irt, tau, rtau, nat)
       !
       IF ( .not. allocated(sumr) ) allocate ( sumr(2,3,nat,3) )
       IF (meta_ionode) THEN
@@ -587,7 +589,7 @@
         !END
         !
         !
-        CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband )
+        CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers )
         !
         ! Calculate overlap U_k+q U_k^\dagger
         IF (lpolar) CALL compute_umn_c ( nbnd, nbndsub, nks, cu, cuq, bmat(:,:,:,nqc) )
@@ -639,7 +641,7 @@
           !
           xq0 = -xq0
           ! 
-          CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband )
+          CALL loadumat ( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers )
           !
           ! Calculate overlap U_k+q U_k^\dagger
           IF (lpolar) CALL compute_umn_c ( nbnd, nbndsub, nks, cu, cuq, bmat(:,:,:,nqc) )

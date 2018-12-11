@@ -40,15 +40,14 @@
           mp_bcast_iv, mp_bcast_rv, mp_bcast_cv, mp_bcast_l, mp_bcast_rm, &
           mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_i4d, mp_bcast_rt, mp_bcast_lv, &
           mp_bcast_lm, mp_bcast_r4d, mp_bcast_r5d, mp_bcast_ct,  mp_bcast_c4d,&
-          mp_bcast_c5d
+          mp_bcast_c5d, mp_bcast_c6d
 #if defined(__CUDA)
-        ! this code duplication can be done with regex: rexp = re.compile(r"(\b\w+\b)") ; rexp.sub(r'\1_gpu',code_here)
         MODULE PROCEDURE mp_bcast_i1_gpu, mp_bcast_r1_gpu, mp_bcast_c1_gpu, &
           !mp_bcast_z_gpu, mp_bcast_zv_gpu, &
           mp_bcast_iv_gpu, mp_bcast_rv_gpu, mp_bcast_cv_gpu, mp_bcast_l_gpu, mp_bcast_rm_gpu, &
           mp_bcast_cm_gpu, mp_bcast_im_gpu, mp_bcast_it_gpu, mp_bcast_i4d_gpu, mp_bcast_rt_gpu, mp_bcast_lv_gpu, &
           mp_bcast_lm_gpu, mp_bcast_r4d_gpu, mp_bcast_r5d_gpu, mp_bcast_ct_gpu,  mp_bcast_c4d_gpu,&
-          mp_bcast_c5d_gpu
+          mp_bcast_c5d_gpu, mp_bcast_c6d_gpu
 #endif
       END INTERFACE
 
@@ -56,12 +55,14 @@
         MODULE PROCEDURE mp_sum_i1, mp_sum_iv, mp_sum_im, mp_sum_it, &
           mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rt, mp_sum_r4d, &
           mp_sum_c1, mp_sum_cv, mp_sum_cm, mp_sum_ct, mp_sum_c4d, &
-          mp_sum_c5d, mp_sum_c6d, mp_sum_rmm, mp_sum_cmm, mp_sum_r5d
+          mp_sum_c5d, mp_sum_c6d, mp_sum_rmm, mp_sum_cmm, mp_sum_r5d, &
+          mp_sum_r6d
 #if defined(__CUDA)
         MODULE PROCEDURE  mp_sum_i1_gpu, mp_sum_iv_gpu, mp_sum_im_gpu, mp_sum_it_gpu, &
           mp_sum_r1_gpu, mp_sum_rv_gpu, mp_sum_rm_gpu, mp_sum_rt_gpu, mp_sum_r4d_gpu, &
           mp_sum_c1_gpu, mp_sum_cv_gpu, mp_sum_cm_gpu, mp_sum_ct_gpu, mp_sum_c4d_gpu, &
-          mp_sum_c5d_gpu, mp_sum_c6d_gpu, mp_sum_rmm_gpu, mp_sum_cmm_gpu, mp_sum_r5d_gpu
+          mp_sum_c5d_gpu, mp_sum_c6d_gpu, mp_sum_rmm_gpu, mp_sum_cmm_gpu, mp_sum_r5d_gpu, &
+          mp_sum_r6d_gpu
 #endif
       END INTERFACE
 
@@ -606,6 +607,18 @@
         CALL bcast_real( msg, 2 * msglen, source, gid )
 #endif
       END SUBROUTINE mp_bcast_c5d
+
+      SUBROUTINE mp_bcast_c6d(msg,source,gid)
+        IMPLICIT NONE
+        COMPLEX (DP) :: msg(:,:,:,:,:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL bcast_real( msg, 2 * msglen, source, gid )
+#endif
+      END SUBROUTINE mp_bcast_c6d
 
 !
 !------------------------------------------------------------------------------!
@@ -1664,6 +1677,16 @@
       END SUBROUTINE mp_sum_r5d
 
 
+      SUBROUTINE mp_sum_r6d(msg,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT) :: msg(:,:,:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_r6d
 
 !
 !------------------------------------------------------------------------------!
@@ -2997,6 +3020,31 @@ END SUBROUTINE mp_type_free
 #endif
         ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
       END SUBROUTINE mp_bcast_c5d_gpu
+!
+!------------------------------------------------------------------------------!
+!
+      SUBROUTINE mp_bcast_c6d_gpu(msg_d,source,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), DEVICE :: msg_d(:,:,:,:,:,:)
+        COMPLEX (DP), ALLOCATABLE :: msg_h(:,:,:,:,:,:)
+        INTEGER, INTENT(IN) :: source
+        INTEGER, INTENT(IN) :: gid
+        INTEGER :: msglen, ierr
+#if defined(__MPI)
+#if defined(__GPU_MPI)
+        msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()      ! This syncs __GPU_MPI case
+        CALL bcast_real_gpu( msg_d, 2 * msglen, source, gid )
+        RETURN ! Sync done by MPI call (or inside bcast_xxx_gpu)
+#else
+        ALLOCATE( msg_h, source=msg_d )     ! This syncs __MPI case
+        msglen = size(msg_h)
+        CALL bcast_real( msg_h, 2 * msglen, source, gid )
+        msg_d = msg_h ; DEALLOCATE(msg_h)
+#endif
+#endif
+        ierr = cudaDeviceSynchronize()  ! This syncs SERIAL, __MPI
+      END SUBROUTINE mp_bcast_c6d_gpu
 !
 !------------------------------------------------------------------------------!
 !
@@ -4445,6 +4493,37 @@ END SUBROUTINE mp_type_free
 #endif
 #endif
       END SUBROUTINE mp_sum_r5d_gpu
+!
+!------------------------------------------------------------------------------!
+!
+      SUBROUTINE mp_sum_r6d_gpu(msg_d,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT), DEVICE :: msg_d(:,:,:,:,:,:)
+        REAL (DP), ALLOCATABLE :: msg_h(:,:,:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+        !
+        INTEGER :: msglen, ierr
+        ! Avoid unnecessary communications on __MPI and syncs SERIAL
+        IF ( mp_size(gid) == 1 ) THEN
+          ierr = cudaDeviceSynchronize()
+          RETURN
+        END IF
+        !
+#if defined(__MPI)
+#if  defined(__GPU_MPI)
+        msglen = size(msg_d)
+        ierr = cudaDeviceSynchronize()            ! This syncs __GPU_MPI
+        CALL reduce_base_real_gpu( msglen, msg_d, gid, -1 )
+        ! Sync not needed after MPI call
+#else
+        ALLOCATE( msg_h, source=msg_d )           ! This syncs __MPI case
+        msglen = size(msg_h)
+        CALL reduce_base_real( msglen, msg_h, gid, -1 )
+        msg_d = msg_h; DEALLOCATE(msg_h)
+        ierr = cudaDeviceSynchronize()  ! This syncs __MPI for small copies
+#endif
+#endif
+      END SUBROUTINE mp_sum_r6d_gpu
 !
 !------------------------------------------------------------------------------!
 !

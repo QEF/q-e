@@ -14,8 +14,8 @@ then
     dirs=" LAXlib FFTXlib UtilXlib Modules clib LR_Modules upftools \
            KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG KS_Solvers/PPCG \
            PW/src CPV/src PW/tools upftools PP/src PWCOND/src \
-           PHonon/Gamma PHonon/PH PHonon/FD atomic/src \
-           XSpectra/src ACFDT/src NEB/src TDDFPT/src \
+           PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
+           EPW/src XSpectra/src ACFDT/src NEB/src TDDFPT/src \
            GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
 	   GWW/simple_bse GWW/simple_ip" 
           
@@ -76,9 +76,11 @@ for dir in $dirs; do
 	     DEPENDS="$DEPEND3" ;;
 	PW/tools | PP/src | PWCOND/src | GWW/pw4gww | NEB/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src" ;;
-	PHonon/FD | PHonon/PH | PHonon/Gamma | XSpectra/src  | GIPAW/src )
+	PHonon/FD | PHonon/PH | PHonon/Gamma | HP/src | TDDFPT/src | XSpectra/src  | GIPAW/src )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules" ;;
-	GWW/head | TDDFPT/src )
+        EPW/src )
+             DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/LR_Modules $LEVEL2/PHonon/PH $LEVEL2/Modules" ;; 
+	GWW/head )
 	     DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules" ;;	
 	GWW/bse )
 	 DEPENDS="$DEPEND2 $LEVEL2/PW/src $LEVEL2/PHonon/PH $LEVEL2/LR_Modules $LEVEL2/GWW/pw4gww $LEVEL2/GWW/gww" ;;	
@@ -169,6 +171,18 @@ for dir in $dirs; do
         if test "$DIR" = "CPV/src"
         then
             sed '/@f90_unix_proc@/d' make.depend > make.depend.tmp
+            cp make.depend.tmp make.depend
+        fi
+
+        if test "$DIR" = "EPW/src"
+        then
+            sed '/@f90_unix_io@/d' make.depend > make.depend.tmp
+            cp make.depend.tmp make.depend
+            sed '/@f90_unix_env@/d' make.depend > make.depend.tmp
+            cp make.depend.tmp make.depend
+            sed '/@w90_io@/d' make.depend > make.depend.tmp
+            cp make.depend.tmp make.depend
+            sed '/@ifport@/d' make.depend > make.depend.tmp
             cp make.depend.tmp make.depend
         fi
 

@@ -11,6 +11,12 @@ SUBROUTINE punch( what )
   !
   ! ... This routine is called at the end of the run to save to a file
   ! ... the information needed for further processing (phonon etc.)
+  ! ... what = 'all'          write xml data file, charge density, wavefunctions
+  ! ...                       (for final data)
+  ! ... what = 'config'       write xml data file, charge density
+  ! ...                       (for intermediate or incomplete results)
+  ! ... what = 'init-config'  write xml data file excluding final results
+  ! ...                       (for dry run, can be called at early stages)
   !
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunpun, iunwfc, nwordwfc, diropn, &
@@ -25,19 +31,16 @@ SUBROUTINE punch( what )
   USE ions_base,            ONLY : nsp
   USE funct,                ONLY : get_inlc
   USE kernel_table,         ONLY : vdw_table_name, kernel_file_name
-#if defined (__OLDXML) 
-  USE pw_restart,           ONLY : pw_writefile
-#else
   USE pw_restart_new,       ONLY : pw_write_schema, pw_write_binaries
   USE qexsd_module,         ONLY : qexsd_reset_steps
-#endif
   USE io_rho_xml,           ONLY : write_scf
   USE a2F,                  ONLY : la2F, a2Fsave
   USE wavefunctions, ONLY : evc
   !
   IMPLICIT NONE
   !
-  CHARACTER(LEN=*) :: what
+  CHARACTER(LEN=*), INTENT(IN) :: what
+  !
   LOGICAL :: exst
   CHARACTER(LEN=320) :: cp_source, cp_dest
   INTEGER            :: cp_status, nt, inlc
@@ -58,26 +61,22 @@ SUBROUTINE punch( what )
   END IF
   iunpun = 4
   !
-#if defined(__OLDXML)
-  !
-  CALL pw_writefile( TRIM( what ) )
-  !
-#else
-  !
   ! ...New-style I/O with xml schema and (optionally) hdf5 binaries
   !
   ! ... create the main restart directory (if needed)
   !
   CALL create_directory( TRIM( tmp_dir ) // TRIM( prefix ) // postfix )
   !
-  CALL pw_write_schema( )
+  CALL pw_write_schema( what )
   !
   ! ... charge density - also writes rho%ns if lda+U and rho%bec if PAW
   ! ... do not overwrite the scf charge density with a non-scf one
   ! ... (except in the 'force theorem' calculation of MAE where the
   ! ...  charge density differs from the one read from disk)
   !
-  IF ( lscf .OR. lforcet ) CALL write_scf( rho, nspin )
+  IF (TRIM(what) == 'all' .OR. TRIM(what) == 'config' ) THEN
+     IF ( lscf .OR. lforcet ) CALL write_scf( rho, nspin )
+  END IF
   !
   IF (TRIM(what) == 'all') THEN 
      !
@@ -102,9 +101,7 @@ SUBROUTINE punch( what )
              cp_status = f_copy(cp_source, cp_dest)
      END DO
      !
-     ! ... if allocated deallocate  steps 
-     ! 
-     CALL qexsd_reset_steps()
+     ! ... copy kernal table for vdW functionals if needed
      !
      inlc = get_inlc()
      IF ( inlc > 0 ) THEN 
@@ -113,11 +110,15 @@ SUBROUTINE punch( what )
         IF ( TRIM(cp_source) /= TRIM(cp_dest) ) & 
            cp_status = f_copy(cp_source, cp_dest)
      END IF  
-      !
+     !
+     ! ... if allocated, deallocate variables containing info on ionic steps 
+     ! 
+     CALL qexsd_reset_steps()
+     !
   END IF
   !
-#endif
-  !
+  ! ... FIXME: for electron-phonon calculations
+  ! 
   IF ( la2F ) CALL a2Fsave()
   !
   RETURN

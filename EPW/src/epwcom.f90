@@ -246,6 +246,12 @@
   !! if .true. then fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian. 
   LOGICAL :: lindabs
   !! if .true., perform phonon-assisted absorption calculations
+  LOGICAL :: use_ws
+  !! if .true., use Wannier-centers to compute the Wigner-Seitz cell. 
+  LOGICAL :: epmatkqread
+  !! if .true., restart and IBTE calculation from the scattering rates written to files. 
+  LOGICAL :: selecqread
+  !! if .true., restart from the selecq.fmt file
   !
   ! Superconductivity
   LOGICAL :: ephwrite

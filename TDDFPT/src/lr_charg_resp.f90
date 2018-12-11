@@ -212,7 +212,8 @@ CONTAINS
        !if (.not. allocated(w_T_beta_store)) print *, "aaaaaaaaaaaaaa"
        filename = trim(w_T_prefix) // trim(int_to_char(LR_polarization))
        !
-       WRITE(stdout,'(/,/5x,"Reading Pre-calculated lanczos coefficents from ",A50)') filename
+       WRITE(stdout,'(/,/5x,"Reading pre-calculated Lanczos coefficents from:")') 
+       WRITE(stdout,*) filename
        !
        INQUIRE (file = filename, exist = exst)
        !
@@ -639,7 +640,7 @@ CONTAINS
     USE uspp_param,               ONLY : upf, nh
     USE becmod,                   ONLY : becp,calbec
     USE ions_base,                ONLY : ityp,nat,ntyp=>nsp
-    USE realus,                   ONLY : real_space_debug,invfft_orbital_gamma,calbec_rs_gamma
+    USE realus,                   ONLY : real_space,invfft_orbital_gamma,calbec_rs_gamma
     USE gvect,                    ONLY : gstart
     USE klist,                    ONLY : nks, ngk
     USE lr_variables,             ONLY : lr_verbosity, itermax, LR_iteration, LR_polarization, &
@@ -673,7 +674,7 @@ CONTAINS
     ENDIF
     IF (okvan) THEN
        !BECP initialisation for evc1
-       IF (real_space_debug >6) THEN
+       IF (real_space) THEN
           DO ibnd=1,nbnd,2
              CALL invfft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
              CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
@@ -785,7 +786,6 @@ CONTAINS
     USE uspp_param,               ONLY : upf, nh
     USE becmod,                   ONLY : becp,calbec
     USE ions_base,                ONLY : ityp,nat,ntyp=>nsp
-    USE realus,                   ONLY : real_space_debug,invfft_orbital_gamma,calbec_rs_gamma
     USE gvect,                    ONLY : gstart
     USE klist,                    ONLY : nks, ngk
     USE lr_variables,             ONLY : lr_verbosity, itermax, LR_iteration, LR_polarization, &

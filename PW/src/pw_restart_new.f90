@@ -39,10 +39,12 @@ MODULE pw_restart_new
        pw_readschema_file, init_vars_from_schema, read_collected_to_evc
   !
   CONTAINS
-#if !defined(__OLDXML)
     !------------------------------------------------------------------------
-    SUBROUTINE pw_write_schema( )
+    SUBROUTINE pw_write_schema( what )
       !------------------------------------------------------------------------
+      !
+      ! what = 'init-config': write only variables that are known after the 
+      !                       initial steps of initialization (e.g. structure)
       !
       USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
                                        lscf, gamma_only, &
@@ -90,7 +92,6 @@ MODULE pw_restart_new
                                        lambda
       USE ions_base,            ONLY : amass
       USE funct,                ONLY : get_dft_short, get_inlc, get_nonlocc_name, dft_is_nonlocc
-      USE kernel_table,         ONLY : vdw_table_name
       USE scf,                  ONLY : rho
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
@@ -117,13 +118,16 @@ MODULE pw_restart_new
       USE rap_point_group_so,   ONLY : elem_so, nelem_so, name_class_so
       USE bfgs_module,          ONLY : bfgs_get_n_iter
       USE qexsd_module,         ONLY : qexsd_bp_obj, qexsd_start_k_obj
-      USE qexsd_input,          ONLY : qexsd_init_k_points_ibz, qexsd_init_occupations, qexsd_init_smearing
+      USE qexsd_input,          ONLY : qexsd_init_k_points_ibz, &
+              qexsd_init_occupations, qexsd_init_smearing
       USE fcp_variables,        ONLY : lfcpopt, lfcpdyn, fcp_mu  
       USE io_files,             ONLY : pseudo_dir
+      USE control_flags,        ONLY : conv_elec, conv_ions 
       !
       IMPLICIT NONE
       !
-      CHARACTER(15)         :: subname="pw_write_schema"
+      CHARACTER(LEN=*), INTENT(IN) :: what
+      !
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname
       INTEGER               :: i, ig, ngg, ipol
@@ -147,18 +151,22 @@ MODULE pw_restart_new
       REAL(DP),POINTER    :: degauss_, demet_, efield_corr, potstat_corr, &
                                  gatefield_corr, bp_el_pol(:), bp_ion_pol(:) 
       REAL(DP),TARGET     :: temp(20)
+      LOGICAL, POINTER    :: optimization_has_converged => NULL() 
+      LOGICAL, TARGET     :: conv_opt  
+      LOGICAL             :: scf_has_converged 
       INTEGER             :: itemp = 1
       NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr, bp_el_pol, bp_ion_pol)
       !
-      ! PW dimensions need to be properly computed 
-      ! reducing across MPI tasks
+      ! Global PW dimensions need to be properly computed, reducing across MPI tasks
+      ! If local PW dimensions are not available, set to 0
       !
       ALLOCATE( ngk_g( nkstot ) )
-      !
-      ngk_g(1:nks) = ngk(:)
-      CALL mp_sum( ngk_g(1:nks), intra_bgrp_comm )
-      ngk_g(nks+1:nkstot) = 0
-      CALL ipoolrecover( ngk_g, 1, nkstot, nks )
+      ngk_g(:) = 0
+      IF ( ALLOCATED (ngk) ) THEN
+         ngk_g(1:nks) = ngk(:)
+         CALL mp_sum( ngk_g(1:nks), intra_bgrp_comm )
+         CALL ipoolrecover( ngk_g, 1, nkstot, nks )
+      END IF
       ! BEWARE: only the first pool has ngk_g for all k-points
       !
       ! ... compute the maximum number of G vector among all k points
@@ -186,7 +194,7 @@ MODULE pw_restart_new
 ! ... HEADER
 !-------------------------------------------------------------------------------
          !
-         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ))
+         CALL qexsd_openschema(TRIM( dirname ) // TRIM( xmlpun_schema ), 'PWSCF' )
          output%tagname="output"
          output%lwrite = .TRUE.
          output%lread  = .TRUE.
@@ -195,34 +203,39 @@ MODULE pw_restart_new
 ! ... CONVERGENCE_INFO
 !-------------------------------------------------------------------------------
          SELECT CASE (TRIM( calculation )) 
-            CASE ( "relax","vc-relax" ,"md")
-                opt_conv_ispresent = .TRUE.
+            CASE ( "relax","vc-relax" )
+                conv_opt = conv_ions  
+                optimization_has_converged  => conv_opt
                 IF (TRIM( ion_dynamics) == 'bfgs' ) THEN 
                     n_opt_steps = bfgs_get_n_iter('bfgs_iter ') 
                 ELSE 
                     n_opt_steps = istep 
                 END IF 
+                scf_has_converged = conv_elec 
+                n_scf_steps = n_scf_steps
             CASE ("nscf", "bands" )
-                opt_conv_ispresent = .FALSE.
                 n_opt_steps = 0
+                scf_has_converged = .FALSE. 
                 n_scf_steps_ = 1
             CASE default
-                opt_conv_ispresent = .FALSE.
                 n_opt_steps        = 0 
                 n_scf_steps_ = n_scf_steps
          END SELECT
          ! 
             call qexsd_init_convergence_info(output%convergence_info,   &
+                        SCf_HAS_CONVERGED = scf_has_converged, &
+                        OPTIMIZATION_HAS_CONVERGED = optimization_has_converged,& 
                         N_SCF_STEPS = n_scf_steps_, SCF_ERROR=scf_error,&
-                        OPT_CONV_ISPRESENT = opt_conv_ispresent,        &
                         N_OPT_STEPS = n_opt_steps, GRAD_NORM = sumfor)
+            output%convergence_info_ispresent = .TRUE.
          !
+            
 !-------------------------------------------------------------------------------
 ! ... ALGORITHMIC_INFO
 !-------------------------------------------------------------------------------
          !
          CALL qexsd_init_algorithmic_info(output%algorithmic_info, &
-              real_space_q=real_space, uspp=okvan, paw=okpaw)
+              REAL_SPACE_BETA = real_space, REAL_SPACE_Q=tqr , USPP=okvan, PAW=okpaw)
          !
 !-------------------------------------------------------------------------------
 ! ... ATOMIC_SPECIES
@@ -337,13 +350,17 @@ MODULE pw_restart_new
 ! ... BAND STRUCTURE
 !-------------------------------------------------------------------------------------
          !
+         ! skip if not yet computed
+         !
+         IF ( TRIM(what) == "init-config" ) GO TO 10
+         !
          IF (TRIM(input_parameters_occupations) == 'fixed') THEN 
             occupations_are_fixed = .TRUE. 
             IF ( noncolin ) THEN 
                h_band = NINT ( nelec ) 
             ELSE 
                h_band = NINT ( nelec/2.d0 ) 
-            END IF  
+            END IF
             h_energy =MAXVAL (et(h_band, 1:nkstot))
          ELSE 
             occupations_are_fixed = .FALSE. 
@@ -489,10 +506,10 @@ MODULE pw_restart_new
             NULLIFY(dipol_ptr)
          ENDIF
          NULLIFY ( bp_obj_ptr) 
-
 !------------------------------------------------------------------------------------------------
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
+ 10      CONTINUE
          !
          CALL qes_write_output(qexsd_xf,output)
          CALL qes_reset_output(output) 
@@ -852,9 +869,9 @@ MODULE pw_restart_new
       LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
                             lxc, locc, lbz, lbs, lwfc, lheader,          &
                             lsymm, lrho, lefield, ldim, &
-                            lef, lexx, lesm, lpbc, lvalid_input
+                            lef, lexx, lesm, lpbc, lvalid_input, lalgo, lsymflags 
       !
-      LOGICAL            :: need_qexml, found, electric_field_ispresent
+      LOGICAL            :: found, electric_field_ispresent
       INTEGER            :: tmp
       
       !    
@@ -889,6 +906,8 @@ MODULE pw_restart_new
       lesm    = .FALSE.
       lheader = .FALSE.
       lpbc    = .FALSE.  
+      lalgo   = .FALSE. 
+      lsymflags =.FALSE. 
       !
      
          
@@ -896,7 +915,6 @@ MODULE pw_restart_new
       CASE( 'header' )
          !
          lheader = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE ( 'wf_collect' ) 
          ! 
@@ -905,18 +923,15 @@ MODULE pw_restart_new
       CASE( 'dim' )
          !
          ldim =       .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'pseudo' )
          !
          lions = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'config' )
          !
          lcell = .TRUE.
          lions = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'rho' )
          !
@@ -926,7 +941,6 @@ MODULE pw_restart_new
          !
          lpw   = .TRUE.
          lwfc  = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'nowave' )
          !
@@ -942,7 +956,8 @@ MODULE pw_restart_new
          lbs     = .TRUE.
          lsymm   = .TRUE.
          lefield = .TRUE.
-         need_qexml = .TRUE.
+         lalgo   = .TRUE.
+         lsymflags = .TRUE.
          !
       CASE( 'all' )
          !
@@ -960,28 +975,25 @@ MODULE pw_restart_new
          lsymm   = .TRUE.
          lefield = .TRUE.
          lrho    = .TRUE.
-         lpbc    = .TRUE. 
-         need_qexml = .TRUE.
+         lpbc    = .TRUE.
+         lalgo   = .TRUE. 
+         lsymflags = .TRUE. 
          !
       CASE( 'ef' )
          !
          lef        = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'exx' )
          !
          lexx       = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'esm' )
          !
          lesm       = .TRUE.
-         need_qexml = .TRUE.
          !
       CASE( 'boundary_conditions' )  
          !
          lpbc       = .TRUE.
-         need_qexml = .TRUE.
       END SELECT
       !
       !
@@ -989,14 +1001,12 @@ MODULE pw_restart_new
          CALL readschema_header( gen_info )
       END IF 
       IF ( ldim ) THEN
-         !         ! 
-
          ! 
-         CALL readschema_dim(par_info, output_obj%atomic_species, output_obj%atomic_structure, output_obj%symmetries, &
-                             output_obj%basis_set, output_obj%band_structure ) 
-         CALL readschema_kdim(output_obj%symmetries,  output_obj%band_structure )
-
-                                                                                                           
+         CALL readschema_dim(par_info, output_obj%atomic_species, &
+              output_obj%atomic_structure, output_obj%symmetries, &
+              output_obj%basis_set, output_obj%band_structure ) 
+         CALL readschema_kdim(output_obj%symmetries, output_obj%band_structure )
+         !
       ENDIF
       !
       IF ( lcell ) THEN
@@ -1036,7 +1046,7 @@ MODULE pw_restart_new
          IF (output_obj%band_structure%wf_collected)  CALL read_collected_to_evc(dirname ) 
       END IF
       IF ( lsymm ) THEN
-         IF ( lvalid_input ) THEN 
+         IF ( lvalid_input .and. lsymflags ) THEN 
             CALL readschema_symmetry (  output_obj%symmetries, output_obj%basis_set, input_obj%symmetry_flags )
          ELSE 
             CALL readschema_symmetry( output_obj%symmetries,output_obj%basis_set) 
@@ -1063,18 +1073,9 @@ MODULE pw_restart_new
       IF ( lefield .AND. lvalid_input ) CALL readschema_efield ( input_obj%electric_field ) 
       !
       IF ( lexx .AND. output_obj%dft%hybrid_ispresent  ) CALL readschema_exx ( output_obj%dft%hybrid )
-      !
-      !
-      !
+      IF ( lalgo ) CALL readschema_algo(output_obj%algorithmic_info ) 
       !
       RETURN
-      !
-      ! uncomment to continue execution after an error occurs
-      ! 100 IF (ionode .AND. need_qexml) THEN
-      !        CALL qexml_closefile( 'read', IERR=tmp)
-      !     ENDIF
-      !     RETURN
-      ! comment to continue execution after an error occurs
       !
     END SUBROUTINE init_vars_from_schema
     !-------------------------------------------------------------------------------
@@ -1201,7 +1202,7 @@ MODULE pw_restart_new
     !! if ibrav is present, cell parameters were computed by subroutine
     !! "latgen" using ibrav and celldm parameters: recalculate celldm
     !
-    CALL at2celldm (ibrav,1.0_dp,at(:,1),at(:,2),at(:,3),celldm)
+    CALL at2celldm (ibrav,alat,at(:,1),at(:,2),at(:,3),celldm)
     !
     tpiba = tpi/alat
     tpiba2= tpiba**2
@@ -1256,12 +1257,17 @@ MODULE pw_restart_new
     IF ( atomic_structure%alat_ispresent ) alat = atomic_structure%alat 
     tau(:,1:nat) = tau(:,1:nat)/alat  
     ! 
+    ! ... this is where PP files used in the calculation were stored
+    !
+    pseudo_dir_cur = TRIM(dirname)
+    ! 
+    ! ... this is where PP files were originally found (if available)
+    !
     IF ( atomic_species%pseudo_dir_ispresent) THEN 
        pseudo_dir = TRIM(atomic_species%pseudo_dir)
     ELSE 
-       pseudo_dir = TRIM (dirname)
+       pseudo_dir = pseudo_dir_cur
     END IF
-      pseudo_dir_cur = TRIM(pseudo_dir)
     ! 
     END SUBROUTINE readschema_ions
     !  
@@ -1271,8 +1277,8 @@ MODULE pw_restart_new
       ! 
       USE symm_base,       ONLY : nrot, nsym, invsym, s, ft,ftau, irt, t_rev, &
                                  sname, sr, invs, inverse_s, s_axis_to_cart, &
-                                 time_reversal, no_t_rev
-      USE control_flags,   ONLY : noinv
+                                 time_reversal, no_t_rev, nosym
+      USE control_flags,   ONLY : noinv  
       USE fft_base,        ONLY : dfftp
       USE qes_types_module,ONLY : symmetries_type, symmetry_type, basis_type
       ! 
@@ -1285,7 +1291,9 @@ MODULE pw_restart_new
       ! 
       IF ( PRESENT(flags_obj) ) THEN 
          noinv = flags_obj%noinv
+         nosym = flags_obj%nosym
          no_t_rev = flags_obj%no_t_rev
+         time_reversal = time_reversal .AND. .NOT. noinv 
       ENDIF
       !
       nrot = symms_obj%nrot 
@@ -1637,6 +1645,10 @@ MODULE pw_restart_new
                 lxdm   = .FALSE.
                 !
            END SELECT
+          ! the following lines set vdw_table_name, if not already set before
+          ! (the latter option, added by Yang Jiao, is useful for postprocessing)
+          ! NOTA BENE: inlc is not used - this part should be simplified and maybe
+          ! moved to somewhere else (e.g. a routine setting the default file name) 
            SELECT CASE ( TRIM (dft_obj%vdW%non_local_term))
              CASE ('vdw1')  
                 inlc = 1
@@ -1653,13 +1665,16 @@ MODULE pw_restart_new
              CASE default 
                 inlc = 0 
           END SELECT
-          IF (inlc == 0 ) THEN 
-             vdw_table_name = ' '
-          ELSE IF ( inlc == 3 ) THEN 
-             vdw_table_name = 'rVV10_kernel_table'
-          ELSE
-             vdw_table_name = 'vdW_kernel_table'
-          END IF 
+          IF ( vdw_table_name == ' ' ) THEN 
+             IF (inlc == 0 ) THEN 
+                vdw_table_name = ''
+             ELSE IF ( inlc == 3 ) THEN 
+                vdw_table_name = 'rVV10_kernel_table'
+             ELSE
+                vdw_table_name = 'vdW_kernel_table'
+             END IF 
+          END IF
+          !
           IF (dft_obj%vdW%london_s6_ispresent ) THEN 
              scal6 = dft_obj%vdW%london_s6
           END IF 
@@ -1953,6 +1968,17 @@ MODULE pw_restart_new
          END IF  
       END DO 
     END SUBROUTINE readschema_band_structure 
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE readschema_algo(algo_obj) 
+       USE control_flags, ONLY: tqr 
+       USE realus,        ONLY: real_space 
+       IMPLICIT NONE 
+       TYPE(algorithmic_info_type),INTENT(IN)   :: algo_obj
+       tqr = algo_obj%real_space_q 
+       real_space = algo_obj%real_space_beta 
+    END SUBROUTINE readschema_algo 
+
     ! 
     !------------------------------------------------------------------------
     SUBROUTINE read_collected_to_evc( dirname )
@@ -2139,60 +2165,5 @@ MODULE pw_restart_new
       CALL start_exx() 
     END SUBROUTINE  readschema_exx 
     !-----------------------------------------------------------------------------------  
-#else
-    SUBROUTINE pw_write_schema()
-       IMPLICIT NONE
-       CONTINUE
-    END SUBROUTINE pw_write_schema
-    ! 
-    SUBROUTINE pw_write_binaries()
-      IMPLICIT NONE
-      CONTINUE
-    END SUBROUTINE pw_write_binaries
-    !    
-    SUBROUTINE pw_readschema_file(ierr, restart_output, restart_input, &
-         restart_parallel_info, restart_general_info)
-      !------------------------------------------------------------------------
-      IMPLICIT NONE 
-      ! 
-      INTEGER                                          :: ierr
-      TYPE( output_type ),OPTIONAL,      INTENT(OUT)   :: restart_output
-      TYPE(input_type),OPTIONAL,         INTENT(OUT)   :: restart_input
-      TYPE(parallel_info_type),OPTIONAL, INTENT(OUT)   :: restart_parallel_info
-      TYPE(general_info_type ),OPTIONAL, INTENT(OUT)   :: restart_general_info
-      ! 
-      CONTINUE
-    END SUBROUTINE pw_readschema_file
-    !
-    SUBROUTINE read_collected_to_evc( dirname )
-      !------------------------------------------------------------------------
-      !
-      ! ... This routines reads wavefunctions from the new file format and
-      ! ... writes them into the old format
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
-      !
-      CONTINUE 
-   END SUBROUTINE read_collected_to_evc
-   !
-   SUBROUTINE init_vars_from_schema( what, ierr, output_obj, par_info, gen_info, input_obj )
-      !------------------------------------------------------------------------
-      !
-      USE qes_types_module,     ONLY : input_type, output_type, &
-                                       general_info_type, parallel_info_type    
-!      !
-      IMPLICIT NONE
-!      !
-      CHARACTER(LEN=*), INTENT(IN)           :: what
-      TYPE ( output_type), INTENT(IN)        :: output_obj
-      TYPE ( parallel_info_type), INTENT(IN) :: par_info
-      TYPE ( general_info_type ), INTENT(IN) :: gen_info
-      INTEGER,INTENT (OUT)                   :: ierr 
-      TYPE ( input_type ), OPTIONAL, INTENT(IN)        :: input_obj
-      !
-      CONTINUE
-    END SUBROUTINE init_vars_from_schema
-#endif
+
   END MODULE pw_restart_new

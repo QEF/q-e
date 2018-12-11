@@ -7,7 +7,7 @@
 !
 !=----------------------------------------------------------------------------=!
 MODULE write_upf_schema_module
-  !----------------------------------------------------------------------------=!
+  !---------------------------------------------------------------------------=!
   !  this module handles the writing of pseudopotential data
   ! ...   declare modules
   USE kinds,        ONLY: DP
@@ -26,7 +26,7 @@ CONTAINS
   !-------------------------------+
   SUBROUTINE write_upf_schema(xf, upf, conf, u_input)
     !----------------------------+
-    ! Write pseudopotential in UPF format version 2, uses iotk
+    ! Write pseudopotential in UPF format version 2, using FoX
     !
     IMPLICIT NONE
     TYPE(xmlf_t),INTENT(INOUT)  :: xf   ! xmlfile for writing
@@ -110,7 +110,6 @@ CONTAINS
     !
     SUBROUTINE write_info(u, upf, conf, u_input)
       ! Write human-readable header
-      ! The header is written directly, not via iotk
       IMPLICIT NONE
       TYPE(xmlf_t),INTENT(INOUT)  :: u    ! write to xml file u
       TYPE(pseudo_upf),INTENT(IN) :: upf  ! the pseudo data
@@ -529,13 +528,6 @@ CONTAINS
          CALL xml_endElement(u, 'pp_multipoles') 
       ENDIF
       !
-      ! Write polinomial coefficients for Q_ij expansion at small radius
-      !IF ( upf%nqf > 0) THEN
-      !   CALL iotk_write_comment(u, ' polinomial expansion of Q_ij at small radius ')
-      !   CALL iotk_write_dat(u, 'PP_QFCOEF',upf%qfcoef, attr=attr, columns=4)
-      !   CALL iotk_write_dat(u, 'PP_RINNER',upf%rinner, attr=attr, columns=4)
-      !ENDIF
-      !
       ! Write augmentation charge Q_ij
       loop_on_nb: DO nb = 1,upf%nbeta
          ln = upf%lll(nb)
@@ -628,45 +620,6 @@ CONTAINS
    RETURN
  END SUBROUTINE write_pswfc
  !
-! SUBROUTINE write_spin_orb(u, upf)
-!   IMPLICIT NONE
-!   INTEGER,INTENT(IN)           :: u    ! i/o unit
-!   TYPE(pseudo_upf),INTENT(IN)  :: upf  ! the pseudo data
-!   INTEGER :: ierr ! /= 0 if something went wrong
-!
-!   CHARACTER(len=iotk_attlenx) :: attr
-!   !
-!   INTEGER :: nw, nb
-!   !
-!   IF (.not. upf%has_so) RETURN
-!   !
-!   CALL iotk_write_begin(u, 'PP_SPIN_ORB')
-!   !
-!   DO nw = 1,upf%nwfc
-!      CALL iotk_write_attr(attr, 'index', nw, first=.true.)
-!      CALL iotk_write_attr(attr, 'els',   upf%els(nw))
-!      CALL iotk_write_attr(attr, 'nn',    upf%nn(nw))
-!      CALL iotk_write_attr(attr, 'lchi',  upf%lchi(nw))
-!      CALL iotk_write_attr(attr, 'jchi',  upf%jchi(nw))
-!      CALL iotk_write_attr(attr, 'oc',    upf%oc(nw))
-!      CALL iotk_write_empty(u, 'PP_RELWFC'//iotk_index(nw),&
-!           attr=attr)
-!   ENDDO
-!   !
-!   DO nb = 1,upf%nbeta
-!      CALL iotk_write_attr(attr, 'index', nb, first=.true.)
-!      CALL iotk_write_attr(attr, 'lll',   upf%lll(nb))
-!      CALL iotk_write_attr(attr, 'jjj',   upf%jjj(nb))
-!      CALL iotk_write_empty(u, 'PP_RELBETA'//iotk_index(nb),&
-!           attr=attr)
-!   ENDDO
-!   !
-!   CALL iotk_write_end(u, 'PP_SPIN_ORB')
-!   !
-!   RETURN
-! END SUBROUTINE write_spin_orb
- !
-
  SUBROUTINE write_full_wfc(u, upf)
    IMPLICIT NONE
    TYPE(xmlf_t),INTENT(INOUT)      :: u    ! i/o unit descriptor
@@ -857,8 +810,6 @@ CONTAINS
    RETURN
  END SUBROUTINE write_gipaw
  !
- ! Remove '<' and '>' from string, replacing them with '/', necessary
- ! or iotk will complain while read-skipping PP_INFO section.
 END SUBROUTINE write_upf_schema
 
 END MODULE write_upf_schema_module

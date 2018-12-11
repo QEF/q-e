@@ -18,7 +18,7 @@ SUBROUTINE iosys()
   USE funct,         ONLY : dft_is_hybrid, dft_has_finite_size_correction, &
                             set_finite_size_volume, get_inlc, get_dft_short
   USE funct,         ONLY: set_exx_fraction, set_screening_parameter
-  USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi
+  USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi  
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             ry_kbar, amu_ry, bohr_radius_angs, eps8
   USE mp_pools,      ONLY : npool
@@ -166,7 +166,8 @@ SUBROUTINE iosys()
                             tbeta_smoothing_  => tbeta_smoothing, &
                             ts_vdw_           => ts_vdw, &
                             lecrpa_           => lecrpa, &
-                            scf_must_converge_=> scf_must_converge
+                            scf_must_converge_=> scf_must_converge, & 
+                            treinit_gvecs_    => treinit_gvecs 
   USE check_stop,    ONLY : max_seconds_ => max_seconds
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
@@ -285,7 +286,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, wmass,  &
                                cell_temperature, cell_factor, press_conv_thr, &
-                               cell_dofree
+                               cell_dofree, treinit_gvecs 
   !
   ! ... WANNIER_NEW namelist
   !
@@ -417,6 +418,7 @@ SUBROUTINE iosys()
      lmd       = .true.
      lmovecell = .true.
      lforce    = .true.
+     treinit_gvecs_ = treinit_gvecs 
      !
      epse =  etot_conv_thr
      epsf =  forc_conv_thr
@@ -1178,15 +1180,9 @@ SUBROUTINE iosys()
   emaxpos_ = emaxpos
   eopreg_  = eopreg
   eamp_    = eamp
-  dfftp%nr1     = nr1
-  dfftp%nr2     = nr2
-  dfftp%nr3     = nr3
   ecfixed_ = ecfixed
   qcutz_   = qcutz
   q2sigma_ = q2sigma
-  dffts%nr1    = nr1s
-  dffts%nr2    = nr2s
-  dffts%nr3    = nr3s
   degauss_ = degauss
   !
   tot_charge_        = tot_charge
@@ -1577,6 +1573,24 @@ SUBROUTINE iosys()
   !
   CALL readpp ( input_dft, .FALSE., ecutwfc_pp, ecutrho_pp )
   CALL set_cutoff ( ecutwfc, ecutrho, ecutwfc_pp, ecutrho_pp )
+  !
+  ! ... ensure that smooth and dense grid coincide when ecutrho=4*ecutwfc
+  ! ... even when the dense grid is set from input and the smooth grid is not
+  !
+  dfftp%nr1    = nr1
+  dfftp%nr2    = nr2
+  dfftp%nr3    = nr3
+  IF ( ( nr1 /= 0 .AND. nr2 /= 0 .AND. nr3 /= 0 ) .AND. &
+       ( nr1s== 0 .AND. nr2s== 0 .AND. nr3s== 0 ) .AND. &
+       ( ABS(ecutrho -4*ecutwfc)<eps8) ) THEN
+     dffts%nr1 = nr1
+     dffts%nr2 = nr2
+     dffts%nr3 = nr3
+  ELSE
+     dffts%nr1 = nr1s
+     dffts%nr2 = nr2s
+     dffts%nr3 = nr3s
+  END IF
   !
   ! ... set parameters of hybrid functionals
   !
