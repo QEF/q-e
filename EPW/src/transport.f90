@@ -229,7 +229,7 @@
               etf_all (ibnd, ik) = etf_all (ibnd, ik) + scissor
             ENDDO
           ENDDO
-          WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
+          !WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
         ENDIF
         !  
         DO iq=1, nqf
@@ -282,7 +282,7 @@
           ELSE
             icbm = FLOOR(nelec/2.0d0) + 1
           ENDIF
-          WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
+          !WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
         ENDIF
         !  
         ! First compute the k-points eigenenergies for efficiency reasons
@@ -620,7 +620,6 @@
           ! matter if fstick is large enough.
           !IF ( ( minval ( abs(etf (:, ikk) - ef0(itemp)) ) .lt. fsthick ) .AND. &
           !     ( minval ( abs(etf (:, ikq) - ef0(itemp)) ) .lt. fsthick ) ) THEN
-          ! If scissor = 0 then 
           IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
                ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
             !
