@@ -67,10 +67,9 @@ subroutine init_us_1
              lk, mk, vk, kh, lh, ijkb0, na
   integer, external :: sph_ind
   complex(DP) :: coeff, qgm(1)
-  real(DP) :: spinor, ji, jk
-  !
+  real(DP) :: ji, jk, d1
   real(DP), allocatable :: xdata(:)
-  real(DP) :: d1
+  real(DP), EXTERNAL :: spinor
   !
   call start_clock ('init_us_1')
   !

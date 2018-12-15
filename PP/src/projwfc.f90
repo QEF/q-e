@@ -887,7 +887,7 @@ SUBROUTINE projwave_nc(filproj, lsym, lwrite_ovp, lbinary, ef_0 )
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:), work1(:), proj0(:,:)
   ! Some workspace for k-point calculation ...
   REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:), eband_proj(:)
-  REAL(DP) :: psum, fact(2), spinor, compute_mj
+  REAL(DP) :: psum, fact(2), compute_mj
   INTEGER, ALLOCATABLE :: idx(:)
   !
   COMPLEX(DP) :: d12(2, 2, 48), d32(4, 4, 48), d52(6, 6, 48), &

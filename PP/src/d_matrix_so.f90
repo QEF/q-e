@@ -48,7 +48,7 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
   INTEGER :: l, n2, ind, ind1, ind2
   REAL(DP) :: j, ylm(maxm, maxlm), ylms(maxm, maxlm), &
        rl(3,maxm), rrl (maxm), srl(3,maxm), capel
-  REAL(DP) :: Ulall(maxl,maxmj+(maxmj-1),maxmj+(maxmj-1)), spinor, &
+  REAL(DP) :: Ulall(maxl,maxmj+(maxmj-1),maxmj+(maxmj-1)), &
                    Ul1(6,6), Ul1_inv(6,6), Ul3(14,14), Ul3_inv(14,14)
   COMPLEX(DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48), &
                       dy3 (7, 7, 48), dy112 (6, 6, 48), &
@@ -59,6 +59,7 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
                       yl1 (3, 3), yl2(5, 5), yl3(7,7), &
                       yl1_inv (3, 3), yl2_inv(5, 5),  yl3_inv(7, 7),  &
                       Ul1C(6,6), Ul1C_inv(6,6), Ul3C(14,14), Ul3C_inv(14,14)
+  REAL(DP), EXTERNAL :: spinor
   COMPLEX(DP), EXTERNAL :: ZDOTU
   !
   !    Here we find the true symmetries of the crystal
