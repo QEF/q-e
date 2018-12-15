@@ -7,7 +7,7 @@ MODFLAGS= $(BASEMOD_FLAGS)
 
 OBJS = write_upf.o read_upf.o
 QEMODS = ../Modules/libqemod.a ../KS_Solvers/Davidson/libdavid.a ../KS_Solvers/CG/libcg.a  ../FFTXlib/libqefft.a  ../LAXlib/libqela.a   ../UtilXlib/libutil.a 
-
+QELIBS=$(LIBS) 
 TLDEPS = mods libs libiotk libfox
 
 all : tldeps casino2upf.x cpmd2upf.x fhi2upf.x fpmd2upf.x \
