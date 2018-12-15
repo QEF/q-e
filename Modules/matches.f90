@@ -73,7 +73,7 @@ FUNCTION imatches( string1, string2 )
 END FUNCTION imatches
 !
 !
-PURE FUNCTION  match_skipping_spaces ( string1, string2) RESULT(match) 
+PURE  FUNCTION  match_skipping_spaces ( string1, string2) RESULT(match) 
    IMPLICIT NONE 
    CHARACTER(LEN=*),INTENT(IN)  :: string1, string2 
    CHARACTER (len=len(string1)) :: aux1
@@ -98,6 +98,7 @@ PURE FUNCTION  match_skipping_spaces ( string1, string2) RESULT(match)
       end if 
       if (.not. match) exit 
    end do 
+   match = match .and. ( i1 .gt. len(trim(aux1)) .and. i2 .gt. len(trim(aux2)))
 END FUNCTION match_skipping_spaces
 
 !-----------------------------------------------------------------------
