@@ -41,6 +41,13 @@ SUBROUTINE spinsym(d_spin)
   ! counters
   !
   CHARACTER :: isname (64) * 45
+  interface 
+     pure function match_skipping_spaces(st1, st2) result(match) 
+        implicit none 
+        CHARACTER (len=*),intent(in) :: st1, st2
+        logical                      :: match
+    end function match_skipping_spaces
+  end interface 
   !
   ! full name of the rotational part of each symmetry operation
   !
@@ -179,7 +186,7 @@ SUBROUTINE spinsym(d_spin)
   d_spin = (0.d0,0.d0)
   DO i=1,nsym
      DO j=1,64
-        IF ( TRIM ( sname(i) ) == TRIM ( isname(j) ) ) THEN
+        IF ( match_skipping_spaces(sname(i), isname(j) )) THEN
            d_spin(1,1,i)=id_spin(1,1,j)
            d_spin(2,1,i)=id_spin(2,1,j)
            d_spin(1,2,i)=id_spin(1,2,j)
