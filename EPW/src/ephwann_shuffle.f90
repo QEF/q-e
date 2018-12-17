@@ -754,6 +754,19 @@
   ! identify the bands within fsthick from the Fermi level
   ! (in shuffle mode this actually does not depend on q)
   !
+  ! ------------------------------------------------------------
+  ! Apply a possible shift to eigenenergies (applied later)
+  icbm = 0
+  IF (ABS(scissor) > eps6) THEN
+    IF ( noncolin ) THEN
+      icbm = FLOOR(nelec/1.0d0) +1
+    ELSE
+      icbm = FLOOR(nelec/2.0d0) +1
+    ENDIF
+    etf(icbm:nbndsub, :) = etf(icbm:nbndsub, :) + scissor
+    !    
+    WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
+  ENDIF
   !
   CALL fermiwindow
   ! 
@@ -1090,6 +1103,10 @@
            ( nbndsub, nrr_k, cufkk, etf(:, ikk), chw, cfac, dims)
       CALL hamwan2bloch &
            ( nbndsub, nrr_k, cufkq, etf(:, ikq), chw, cfacq, dims)
+      ! 
+      ! Apply a possible scissor shift 
+      etf(icbm:nbndsub, ikk) = etf(icbm:nbndsub, ikk) + scissor
+      etf(icbm:nbndsub, ikq) = etf(icbm:nbndsub, ikq) + scissor
       !
       IF (vme) THEN
          !
@@ -1207,31 +1224,12 @@
       ! 
       ! Indirect absorption ---------------------------------------------------------
       ! If Indirect absortpion, keep unshifted values:
-      IF ( lindabs .AND. .NOT. scattering ) etf_ks(:,:) = etf(:,:)
-      ! 
-      ! Apply a scissor shift to CBM if required by user
-      ! The shift is apply to k and k+q
-      IF (ABS(scissor) > eps6) THEN
-        IF ( noncolin ) THEN
-          icbm = FLOOR(nelec/1.0d0) +1
-        ELSE
-          icbm = FLOOR(nelec/2.0d0) +1
-        ENDIF
-        !
-        DO ik = 1, nkf
-          ikk = 2 * ik - 1
-          ikq = ikk + 1
-          DO ibnd = icbm, nbndsub
-            ! 
-            etf (ibnd, ikk) = etf (ibnd, ikk) + scissor
-            etf (ibnd, ikq) = etf (ibnd, ikq) + scissor
-          ENDDO
-        ENDDO
-        IF ( iq == 1 ) THEN
-          WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
-        ENDIF
+      IF ( lindabs .AND. .NOT. scattering ) THEN
+         etf_ks(:,:) = etf(:,:)
+         ! We remove the scissor 
+         etf_ks(icbm:nbndsub, :) = etf_ks(icbm:nbndsub, :) - scissor
       ENDIF
-      !  
+      ! 
       ! Indirect absorption
       IF ( lindabs .AND. .NOT. scattering )  CALL indabs(iq)  
       ! 
@@ -1276,7 +1274,6 @@
             ! User decide the carrier concentration and choose to only look at VB or CB  
             IF (.NOT. int_mob .AND. carrier) THEN
               ! SP: Determination of the Fermi level for intrinsic or doped carrier 
-              !     One also need to apply scissor before calling it.
               ! 
               ef0(itemp) = fermicarrier( etemp )               
               WRITE(stdout, '(5x,"Mobility Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev
