@@ -253,20 +253,26 @@
 !------------------------------------------------------------------------------!
 !..mp_end
 
-      SUBROUTINE mp_end(groupid)
+      SUBROUTINE mp_end(groupid, cleanup)
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: groupid
+        LOGICAL, OPTIONAL, INTENT(IN) :: cleanup
         INTEGER :: ierr, taskid
+        LOGICAL :: cleanup_
 
         ierr = 0
         taskid = 0
 
 #if defined(__MPI)
         CALL mpi_comm_rank( groupid, taskid, ierr)
-        CALL deallocate_buffers()
+        cleanup_ = .FALSE.
+        IF (PRESENT(cleanup)) cleanup_ = cleanup
+        IF(cleanup_) THEN
+           CALL deallocate_buffers()
 #if defined(__CUDA)
-        CALL deallocate_buffers_gpu()
+           CALL deallocate_buffers_gpu()
 #endif
+        END IF
 #endif
         RETURN
       END SUBROUTINE mp_end

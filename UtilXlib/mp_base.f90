@@ -34,8 +34,10 @@ SUBROUTINE allocate_buffers
     USE data_buffer
     IMPLICIT NONE
     INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
-    !    
-    ALLOCATE(mp_buff_r(maxb), mp_buff_c(maxb), mp_buff_i(maxb))
+    !
+    IF (.NOT. ALLOCATED(mp_buff_r)) ALLOCATE(mp_buff_r(maxb))
+    IF (.NOT. ALLOCATED(mp_buff_c)) ALLOCATE(mp_buff_c(maxb))
+    IF (.NOT. ALLOCATED(mp_buff_i)) ALLOCATE(mp_buff_i(maxb))
     !
 END SUBROUTINE allocate_buffers
 
