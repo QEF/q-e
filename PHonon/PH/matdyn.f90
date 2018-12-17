@@ -754,7 +754,7 @@ PROGRAM matdyn
               END DO
            END DO
            !
-           IF (ionode) WRITE (2, '(ES12.4,1000ES12.4)') E, SUM(DOSofE(1:nat)), DOSofE(1:nat)
+           IF (ionode) WRITE (2, '(2ES18.10,1000ES12.4)') E, SUM(DOSofE(1:nat)), DOSofE(1:nat)
         END DO
         IF (ionode) CLOSE(unit=2)
      END IF  !dos

@@ -126,4 +126,7 @@ MODULE ldaU_hp
   !
   INTEGER, ALLOCATABLE :: ityp_new(:)       ! Types of atoms
   !
+  COMPLEX(DP), ALLOCATABLE, TARGET :: swfcatomk(:,:)  ! S * atomic wfc at k
+  COMPLEX(DP), POINTER :: swfcatomkpq(:,:)            ! S * atomic wfc at k+q
+  !
 END MODULE ldaU_hp

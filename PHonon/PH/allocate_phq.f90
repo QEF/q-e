@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,45 +10,46 @@
 subroutine allocate_phq
   !-----------------------------------------------------------------------
   !
-  ! dynamical allocation of arrays: quantities needed for the linear
+  ! Dynamical allocation of arrays: quantities needed for the linear
   ! response problem
   !
-
-  USE kinds, only : DP
-  USE ions_base, ONLY : nat, ntyp => nsp
-  USE klist, only : nks, nkstot
-  USE wvfct, ONLY : nbnd, npwx
-  USE gvect, ONLY : ngm
-  USE lsda_mod, ONLY : nspin
+  USE kinds,         ONLY : DP
+  USE ions_base,     ONLY : nat, ntyp => nsp
+  USE klist,         ONLY : nks, nkstot
+  USE wvfct,         ONLY : nbnd, npwx
+  USE gvect,         ONLY : ngm
+  USE lsda_mod,      ONLY : nspin
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
-  USE fft_base, ONLY : dfftp
-  USE wavefunctions,  ONLY: evc
-  USE spin_orb, ONLY : lspinorb
-  USE becmod, ONLY: bec_type, becp, allocate_bec_type
-  USE uspp, ONLY: okvan, nkb
+  USE fft_base,      ONLY : dfftp
+  USE wavefunctions, ONLY : evc
+  USE spin_orb,      ONLY : lspinorb
+  USE becmod,        ONLY : bec_type, becp, allocate_bec_type
+  USE uspp,          ONLY : okvan, nkb, vkb
   USE paw_variables, ONLY : okpaw
-  USE uspp_param, ONLY: nhm
-  USE ramanm, ONLY: ramtns, lraman
+  USE uspp_param,    ONLY : nhm
+  USE ramanm,        ONLY : ramtns, lraman
+  USE phus,          ONLY : int1, int1_nc, int2, int2_so, &
+                            int4, int4_nc, int5, int5_so, becsumort, &
+                            alphasum, alphasum_nc, becsum_nc, alphap
+  USE efield_mod,    ONLY : zstareu, zstareu0, zstarue0, zstarue0_rec, zstarue
+  USE units_ph,      ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
+  USE dynmat,        ONLY : dyn00, dyn, dyn_rec, w2
+  USE modes,         ONLY : u, npert, name_rap_mode, num_rap_mode
+  USE el_phon,       ONLY : el_ph_mat, elph
+  USE freq_ph,       ONLY : polar, nfs
+  USE lrus,          ONLY : becp1, dpqq, dpqq_so
+  USE qpoint,        ONLY : nksq, eigqts, xk_col
+  USE eqv,           ONLY : dpsi, evq, vlocq, dmuxc, dvpsi
+  USE lr_symm_base,  ONLY : rtau
+  USE control_lr,    ONLY : lgamma, ofsbeta
+  USE ldaU,          ONLY : lda_plus_u, Hubbard_lmax, nwfcU
+  USE ldaU_ph,       ONLY : dnsbare, dnsorth, dnsbare_all_modes, wfcatomk, &
+                            dwfcatomk, sdwfcatomk, wfcatomkpq, dwfcatomkpq,  &
+                            swfcatomk, swfcatomkpq, sdwfcatomkpq, dvkb, vkbkpq, &
+                            dvkbkpq
 
-  USE phus, ONLY : int1, int1_nc, int2, int2_so, &
-                   int4, int4_nc, int5, int5_so, becsumort, &
-                   alphasum, alphasum_nc, becsum_nc, &
-                   alphap
-  USE efield_mod, ONLY : zstareu, zstareu0, zstarue0, zstarue0_rec, zstarue
-  USE units_ph, ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
-  USE dynmat, ONLY : dyn00, dyn, dyn_rec, w2
-  USE modes, ONLY : u, npert, name_rap_mode, num_rap_mode
-  USE el_phon, ONLY : el_ph_mat, elph
-  USE freq_ph, ONLY : polar, nfs
-
-  USE lrus,         ONLY : becp1, dpqq, dpqq_so
-  USE qpoint,       ONLY : nksq, eigqts, xk_col
-  USE eqv,          ONLY : dpsi, evq, vlocq, dmuxc, dvpsi
-  USE lr_symm_base, ONLY : rtau
-  USE control_lr,   ONLY : lgamma
-
-  implicit none
-  INTEGER :: ik, ipol
+  IMPLICIT NONE
+  INTEGER :: ik, ipol, ldim
   !
   !  allocate space for the quantities needed in the phonon program
   !
@@ -133,5 +134,41 @@ subroutine allocate_phq
     allocate (el_ph_mat( nbnd, nbnd, nksq, 3*nat))
   endif
   allocate ( ramtns (3, 3, 3, nat) )
-  return
+
+  ! DFPT+U
+  IF (lda_plus_u) THEN
+     !
+     ldim = 2 * Hubbard_lmax + 1
+     !
+     ALLOCATE (wfcatomk(npwx,nwfcU))
+     ALLOCATE (swfcatomk(npwx,nwfcU))
+     ALLOCATE (dwfcatomk(npwx,nwfcU,3))
+     ALLOCATE (sdwfcatomk(npwx,nwfcU))
+     ALLOCATE (dvkb(npwx,nkb,3))
+     ALLOCATE (ofsbeta(nat))
+     !
+     ALLOCATE (dnsbare(ldim,ldim,nspin,nat,3,nat))
+     ALLOCATE (dnsbare_all_modes(ldim,ldim,nspin,nat,3*nat))
+     ALLOCATE (dnsorth(ldim,ldim,nspin,nat,3*nat))
+     !
+     IF (lgamma) THEN
+        wfcatomkpq   => wfcatomk
+        swfcatomkpq  => swfcatomk
+        dwfcatomkpq  => dwfcatomk
+        sdwfcatomkpq => sdwfcatomk
+        vkbkpq       => vkb
+        dvkbkpq      => dvkb
+     ELSE
+        ALLOCATE (wfcatomkpq(npwx,nwfcU))
+        ALLOCATE (swfcatomkpq(npwx,nwfcU))
+        ALLOCATE (dwfcatomkpq(npwx,nwfcU,3))
+        ALLOCATE (sdwfcatomkpq(npwx,nwfcU))
+        ALLOCATE (vkbkpq(npwx,nkb))
+        ALLOCATE (dvkbkpq(npwx,nkb,3))
+     ENDIF
+     !
+  ENDIF 
+
+  RETURN
+
 end subroutine allocate_phq

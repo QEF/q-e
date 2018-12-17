@@ -498,7 +498,12 @@ Some environment variables that are relevant to \configure\ are:
 \texttt{(C,F,F90,CPP,LD)FLAGS}& compilation/preprocessor/loader flags\\
 \texttt{LIBDIRS}&     extra directories where to search for libraries\\
 \end{tabular}\\
-(note that ``F90'' is an historical name: we actually use F2003)
+(note that \texttt{F90} is an ``historical'' name -- we actually use
+Fortran 2003 -- and that it should be used only together with option
+\texttt{--disable-parallel}. In fact, the value of F90 must be
+consistent with the parallel Fortran compiler which is determined by 
+\configure\ and stored in the \texttt{MPIF90} variable).
+
 For example, the following command line:
 \begin{verbatim}
      ./configure MPIF90=mpif90 FFLAGS="-O2 -assume byterecl" \

@@ -112,7 +112,7 @@ PROGRAM do_dos
            ltetra = .TRUE. 
            tetra_type = 2 
         CASE default 
-           tetra_type = -5 
+           IF ( .NOT. ltetra) tetra_type = -5 
      END SELECT 
      IF ( ltetra .and. nk1*nk2*nk3 .eq. 0 ) &
         CALL errore ('dos:', 'tetrahedra integration selected on input can only be used with automatic ' //&

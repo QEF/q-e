@@ -78,7 +78,7 @@ CONTAINS
 #endif
     !
     CALL mp_barrier( world_comm )
-    CALL mp_end ( world_comm )
+    CALL mp_end ( world_comm, .true. )
 #if defined(__MPI)
     CALL mpi_finalize(ierr)
     IF (ierr/=0) CALL mp_stop( 8002 )

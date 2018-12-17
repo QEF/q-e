@@ -55,7 +55,7 @@
                             ibndmin, ibndmax, lambda_all, dmec, dmef, vmef,     &
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,        &
-                            nkqtotf, sigmar_all, zi_allvb, inv_tau_all,         &
+                            sigmar_all, zi_allvb, inv_tau_all,                  &
                             inv_tau_allcb, zi_allcb, exband
   USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                             upper_bnd 
@@ -99,6 +99,8 @@
   !! Check wheter this is the first cycle after a restart. 
   LOGICAL :: first_time
   !! Check wheter this is the first timeafter a restart. 
+  LOGICAL :: homogeneous
+  !! Check if the k and q grids are homogenous and commensurate.
   !
   CHARACTER (len=256) :: filint
   !! Name of the file to write/read 
@@ -622,6 +624,12 @@
   ALLOCATE(irvec_r(3,nrr_k))
   irvec_r = REAL(irvec_k,KIND=dp)
   ! 
+  ! Zeroing everything - initialization is important !
+  cfac(:,:,:)  = czero
+  cfacq(:,:,:) = czero
+  rdotk(:)     = zero 
+  rdotk2(:)    = zero
+  ! 
   ! ------------------------------------------------------
   ! Hamiltonian : Wannier -> Bloch (preliminary)
   ! ------------------------------------------------------
@@ -841,6 +849,17 @@
   ! Store the result in the selecq.fmt file 
   ! If the file exists, automatically restart from the file
   ! -----------------------------------------------------------------------
+  ! 
+  ! Check if the grids are homogeneous and commensurate
+  homogeneous = .FALSE.
+  IF ( (nkf1 /= 0) .AND. (nkf2 /= 0) .AND. (nkf3 /= 0) .AND. &
+       (nqf1 /= 0) .AND. (nqf2 /= 0) .AND. (nqf3 /= 0) .AND. &
+       (MOD(nkf1,nqf1) == 0) .AND. (MOD(nkf2,nqf2) == 0) .AND. (MOD(nkf3,nqf3) == 0) ) THEN
+    homogeneous = .TRUE.
+  ELSE
+    homogeneous = .FALSE.
+  ENDIF
+  ! 
   totq = 0
   ! Check if the file has been pre-computed
   IF (mpime == ionode_id) THEN
@@ -852,20 +871,19 @@
     IF (selecqread) THEN
       WRITE(stdout,'(5x,a)')' '
       WRITE(stdout,'(5x,a)')'Reading selecq.fmt file. '
-      CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
+      CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
     ELSE 
       WRITE(stdout,'(5x,a)')' '
       WRITE(stdout,'(5x,a)')'A selecq.fmt file was found but re-created because selecqread == .false. '
-      CALL qwindow(.FALSE., nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
+      CALL qwindow(.FALSE., nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
     ENDIF
   ELSE ! exst
     IF (selecqread) THEN
       CALL errore( 'ephwann_shuffle', 'Variable selecqread == .true. but file selecq.fmt not found.',1 ) 
     ELSE
-      CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
+      CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
     ENDIF
   ENDIF
-  ! 
   ! 
   WRITE(stdout,'(5x,a,i8,a)')'We only need to compute ',totq, ' q-points'
   WRITE(stdout,'(5x,a)')' '
