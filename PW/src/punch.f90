@@ -49,8 +49,6 @@ SUBROUTINE punch( what )
   !
   IF (io_level < 0 ) RETURN
   !
-  CALL using_evc(0)
-  !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
       TRIM( prefix ) // postfix
   !
@@ -59,7 +57,10 @@ SUBROUTINE punch( what )
   !
   IF ( .NOT. twfcollect .AND. nks == 1 ) THEN
      IF (io_level < 1) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+     !
+     CALL using_evc(0)
      CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, 1 )
+     !
      IF (io_level < 1) CLOSE ( UNIT=iunwfc, STATUS='keep' )
   END IF
   iunpun = 4
