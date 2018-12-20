@@ -675,8 +675,6 @@ pw_export.o : ../../PW/src/symm_base.o
 pw_export.o : ../../UtilXlib/mp.o
 pw_export.o : ../../iotk/src/iotk_module.o
 smallgk.o : ../../Modules/kind.o
-spinsym.o : ../../Modules/kind.o
-spinsym.o : ../../PW/src/symm_base.o
 stm.o : ../../FFTXlib/fft_interfaces.o
 stm.o : ../../FFTXlib/scatter_mod.o
 stm.o : ../../Modules/cell_base.o

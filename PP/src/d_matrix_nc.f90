@@ -47,12 +47,8 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
                    yl2_inv(5, 5),  yl3_inv(7, 7), &
                    dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)
   COMPLEX(DP) :: dy012_con(2,2), dy112_con(6,6), dy212_con(10,10), &
-                      dy312_con(14,14), s_spin(2,2,48), delta(14,14)
+                      dy312_con(14,14), s_spin(2,2), delta(14,14)
   COMPLEX(DP), EXTERNAL :: ZDOTU
-  !
-  !    Here we find the true symmetries of the crystal
-  !
-  CALL spinsym( s_spin )
   !
   !  randomly distributed points on a sphere
   !
@@ -97,6 +93,11 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
   !
   DO isym = 1, nsym
      !
+     ! s_spin = rotation matrix for spin components (complex conjugate)
+     !
+     CALL find_u(sr(1,1,isym), s_spin)
+     s_spin(:,:) = CONJG(s_spin(:,:))
+     !
      ! srl(:,m) = rotated rl(:,m) vectors
      !
      srl = matmul (sr(:,:,isym), rl)
@@ -110,7 +111,7 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
      !
      DO m1 = 1, 2
         DO n1 = 1, 2
-           dy012 (m1, n1, isym)= conjg( s_spin (n1, m1, isym) )
+           dy012 (m1, n1, isym)= conjg( s_spin (n1, m1) )
         ENDDO
      ENDDO
      !
@@ -127,7 +128,7 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
            DO m1 = 1, 2
               DO n1 = 1, 2
                  dy112 (m+3*(m1-1), n+3*(n1-1), isym) = &
-                          cmplx(dy1 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1, isym)
+                          cmplx(dy1 (m, n, isym), 0.d0,kind=DP) * s_spin (m1,n1)
               ENDDO
            ENDDO
         ENDDO
@@ -146,7 +147,7 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
            DO m1 = 1, 2
               DO n1 = 1, 2
                  dy212 (m+5*(m1-1), n+5*(n1-1), isym) =   &
-                     cmplx(dy2 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1, isym)
+                     cmplx(dy2 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1)
               ENDDO
            ENDDO
         ENDDO
@@ -165,7 +166,7 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
            DO m1 = 1, 2
               DO n1 = 1, 2
                  dy312 (m+7*(m1-1), n+7*(n1-1), isym) =  &
-                    cmplx(dy3 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1, isym)
+                    cmplx(dy3 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1)
               ENDDO
            ENDDO
         ENDDO
