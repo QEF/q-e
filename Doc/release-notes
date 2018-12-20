@@ -1,3 +1,27 @@
+Known bugs in qe-6.3-backports:
+  * Variable-cell optimization with hybrid functionals wasn't working due
+    to missing re-initialization (it also crashed during the final scf step)
+
+Bugs fixed in qe-6.3-backports:
+  + Some GTH pseudopotentials in analytical form were wrong due to a missing factor
+  + projwfc.x was crashing in spin-orbit case with the new xml file format
+  + Starting with .EXIT file present ("dry run") crashed with new file format
+  + Some space groups were missing
+  + Random MPI crashes with DFT+U due to small discrepancies between values
+    of Hubbard occupancies on different processors
+  + Variable-cell optimization wasn't working with Tkatchenko-Scheffler vdW
+  + A few more "make install" and "make -jN" glitches
+  + Atomic occupancies for DFT+U were not correctly written by CP after 
+    switch to new format, due to a mismatch in their definition
+  + Phonons with option "nosym" wasn't working
+  + Option "noinv" wasn't read from new xml file
+  + Printout of wall time was sometimes incorrect (courtesy Daniel Pinkal)
+  + 'make install' and 'make -j' cases fixed (maybe)
+  + The restart option in turboEELS (turbo_eels.x) with ultrasoft
+    pseudopotentials was not working.
+  + bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
+
+
 New in 6.3 version:
   * New implementation, using  a more robust algorithm for the Wigner-Seitz 
     construction in EPW (Samuel Ponce and Carla Verdi) 
