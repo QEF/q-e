@@ -1,0 +1,17 @@
+&inputsimpleip
+simpleip_in%prefix = 'ag'
+simpleip_in%outdir = '/marconi_scratch/userexternal/pumari00/tmp/'
+simpleip_in%interp_grid(1) = 20
+simpleip_in%interp_grid(2) = 20
+simpleip_in%interp_grid(3) = 20
+simpleip_in%fermi_degauss = 0.02205
+simpleip_in%fermi_ngauss = -1
+simpleip_in%drude_degauss = 0.0142
+simpleip_in%wmin = 0.0 
+simpleip_in%wmax = 0.735
+simpleip_in%nw = 1000
+simpleip_in%inter_broadening = 0.0142	
+simpleip_in%intra_broadening = 0.0142
+simpleip_in%nonlocal_commutator=.false.
+simpleip_in%nonlocal_interpolation=.true.
+/

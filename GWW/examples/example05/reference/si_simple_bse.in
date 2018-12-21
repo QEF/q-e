@@ -1,0 +1,9 @@
+&inputsimple
+simple_in%prefix='si'
+simple_in%outdir='/marconi_scratch/userexternal/pumari00/tmp/'
+simple_in%scissor=0.6
+simple_in%spin_state=1
+simple_in%h_level=3
+simple_in%task=1
+simple_in%lanczos_step=100
+/

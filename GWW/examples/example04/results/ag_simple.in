@@ -1,0 +1,13 @@
+&inputsimple
+prefix='ag'
+outdir='/marconi_scratch/userexternal/pumari00/tmp/'
+calc_mode=1
+num_nbndv=9
+num_val=9
+num_cond=11
+s_bands=0.01
+nkpoints(1)=10
+nkpoints(2)=10
+nkpoints(3)=10
+nonlocal_commutator=.false.
+/
