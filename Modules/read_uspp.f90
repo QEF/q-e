@@ -15,8 +15,6 @@ MODULE read_uspp_module
   USE kinds, ONLY: DP
   USE parameters, ONLY: lmaxx, lqmax
   USE io_global, ONLY: stdout
-  USE funct, ONLY: set_dft_from_name, dft_is_hybrid, dft_is_meta, &
-       set_dft_from_indices
   USE matrix_inversion
   !
   ! Variables above are not modified, variables below are
@@ -163,9 +161,6 @@ CONTAINS
          &     call errore('readvan','Wrong xc in pseudopotential',1)
     ! convert from "our" conventions to Vanderbilt conventions
     call dftname_cp (nint(exfact), upf%dft)
-    call set_dft_from_name( upf%dft )
-    IF ( dft_is_meta() ) &
-         CALL errore( 'readvan ', 'META-GGA not implemented', 1 )
     !
     read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios ) &
          upf%nwfc, upf%mesh, etotpseu
@@ -199,7 +194,9 @@ CONTAINS
        call errore('readvan','keyps not implemented',keyps)
     end if
     upf%tvanp = (keyps == 3)
+    !    for compatibility
     upf%tpawp = .false.
+    upf%tcoulombp = .false.
     !
     !     Read information on the angular momenta, and on Q pseudization
     !     (version > 3.0)
@@ -675,7 +672,6 @@ CONTAINS
     ! See also upf2internals
     !
     write( upf%dft, "('INDEX:',4i1)") iexch,icorr,igcx,igcc
-    call set_dft_from_indices(iexch,icorr,igcx,igcc, 0) ! Cannot read nonlocal in this format
 
     read( iunps, '(2e17.11,i5)') &
          upf%zp, etotps, lmax
