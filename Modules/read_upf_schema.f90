@@ -59,6 +59,8 @@ SUBROUTINE read_upf_schema(pseudo, upf, grid, ierr )             !
    !
    ! Initialize the file
    !
+   ! compatibility
+   upf%is_gth = .false.
    ! header and info elements, check version extract main info  
    header => item ( getElementsByTagname(pseudo, "pp_header" ),0)
    info   => item ( getElementsByTagname(pseudo, "pp_info" ), 0)  

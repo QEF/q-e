@@ -149,7 +149,7 @@ CONTAINS
       CALL destroy(u)
       !
       IF( present(ierr) ) ierr=0
-
+      !
       RETURN
 
 END SUBROUTINE read_upf_v2
@@ -170,6 +170,9 @@ SUBROUTINE read_upf_header(u, upf)
    TYPE(Node), POINTER  :: hdrNode
    CHARACTER(LEN=256)   :: attr
    TYPE(DOMException)   :: ex 
+   !
+   ! GTH analytical format: obviously not true in this case
+   upf%is_gth=.false.
    !
    ! Read HEADER section with some initialization data
    hdrNode  => item( getElementsByTagname(u, 'PP_HEADER'), 0 )  

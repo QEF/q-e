@@ -45,12 +45,12 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   USE mp_images,    ONLY: intra_image_comm
   USE io_global,    ONLY: stdout, ionode
   USE pseudo_types, ONLY: pseudo_upf, nullify_pseudo_upf, deallocate_pseudo_upf
-  USE funct,        ONLY: enforce_input_dft, &
-                          get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
+  USE funct,        ONLY: enforce_input_dft, set_dft_from_name, &
+       set_dft_from_indices, get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
   use radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
   USE wrappers,     ONLY: md5_from_file
   USE upf_module,   ONLY: read_upf
-  USE upf_to_internal,  ONLY: set_pseudo_upf
+  USE upf_to_internal,  ONLY: add_upf_grid, set_upf_q
   USE read_uspp_module, ONLY: readvan, readrrkj
   USE m_gth,            ONLY: readgth
   !
@@ -160,7 +160,6 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !! start reading - check  first if files are readable as xml files,
      !! then as UPF v.2, then as UPF v.1
      !
-     upf(nt)%is_gth=.false.
      if (isupf == -2 .OR. isupf == -1 .OR. isupf == 0) then
         !
         IF( printout_) THEN
@@ -171,7 +170,9 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            END IF
         END IF
         !
-        call set_pseudo_upf (nt, upf(nt))
+        ! reconstruct Q(r) if needed
+        !
+        CALL set_upf_q (upf(nt))
         ! 
         ! UPF is assumed to be multi-projector
         !
@@ -205,14 +206,11 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
                  WRITE( stdout, "(3X,'file type is Vanderbilt US PP')")
               CALL readvan (iunps, nt, upf(nt))
            ENDIF
-           CALL set_pseudo_upf (nt, upf(nt), rgrid(nt))
            !
         elseif ( pseudo_type (psfile (nt) ) == 3 ) then
            newpseudo (nt) = .true.
            !
            CALL readgth (iunps, nt, upf(nt))
-           !
-           CALL set_pseudo_upf (nt, upf(nt), rgrid(nt))
            !
         elseif ( pseudo_type (psfile (nt) ) == 4 ) then
            newpseudo (nt) = .false.
@@ -221,13 +219,15 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            ! 
            call read_ncpp (iunps, nt, upf(nt))
            !
-           CALL set_pseudo_upf (nt, upf(nt), rgrid(nt)) 
-           !
         else
            !
            CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not readable',1)
            !
         endif
+        !
+        ! add grid information, reconstruct Q(r) if needed
+        !
+        CALL add_upf_grid (upf(nt), rgrid(nt))
         !
         ! end of reading
         !
@@ -247,6 +247,16 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      ! ... count US species
      !
      IF (upf(nt)%tvanp) nvb=nvb+1
+     !
+     ! ... set DFT value
+     !
+     if ( upf(nt)%dft(1:6)=='INDEX:') then
+        ! Workaround for RRKJ format
+        read( upf(nt)%dft(7:10), '(4i1)') iexch_, icorr_, igcx_, igcc_
+        call set_dft_from_indices(iexch_, icorr_, igcx_, igcc_, 0)
+     else
+        call set_dft_from_name( upf(nt)%dft )
+     end if
      !
      ! ... Check for DFT consistency - ignored if dft enforced from input
      !

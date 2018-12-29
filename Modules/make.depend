@@ -297,7 +297,6 @@ read_namelists.o : io_global.o
 read_namelists.o : kind.o
 read_namelists.o : mp_images.o
 read_ncpp.o : constants.o
-read_ncpp.o : funct.o
 read_ncpp.o : kind.o
 read_ncpp.o : parameters.o
 read_ncpp.o : pseudo_types.o
@@ -330,7 +329,6 @@ read_upf_v2.o : parser.o
 read_upf_v2.o : pseudo_types.o
 read_upf_v2.o : radial_grids.o
 read_uspp.o : constants.o
-read_uspp.o : funct.o
 read_uspp.o : invmat.o
 read_uspp.o : io_global.o
 read_uspp.o : kind.o
@@ -387,7 +385,6 @@ upf.o : read_upf_schema.o
 upf.o : read_upf_v1.o
 upf.o : read_upf_v2.o
 upf.o : wrappers.o
-upf_to_internal.o : funct.o
 upf_to_internal.o : pseudo_types.o
 upf_to_internal.o : radial_grids.o
 uspp.o : constants.o
