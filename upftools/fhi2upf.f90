@@ -222,7 +222,6 @@ SUBROUTINE convert_fhi (upf)
   !
   USE fhi
   USE pseudo_types, ONLY : pseudo_upf
-  USE funct, ONLY : set_dft_from_name, get_iexch, get_icorr, get_igcx, get_igcc
   USE constants, ONLY : fpi
   !
   IMPLICIT NONE

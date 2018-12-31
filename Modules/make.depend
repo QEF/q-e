@@ -123,7 +123,6 @@ gradutils.o : kind.o
 gradutils.o : recvec.o
 gth.o : cell_base.o
 gth.o : constants.o
-gth.o : funct.o
 gth.o : kind.o
 gth.o : parameters.o
 gth.o : pseudo_types.o

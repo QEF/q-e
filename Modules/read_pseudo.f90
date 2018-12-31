@@ -160,7 +160,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !! start reading - check  first if files are readable as xml files,
      !! then as UPF v.2, then as UPF v.1
      !
-     if (isupf == -2 .OR. isupf == -1 .OR. isupf == 0) then
+     IF (isupf == -2 .OR. isupf == -1 .OR. isupf == 0) THEN
         !
         IF( printout_) THEN
            IF ( isupf == 0 ) THEN
@@ -174,7 +174,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         !
         CALL set_upf_q (upf(nt))
         ! 
-     else
+     ELSE
         !
         OPEN ( UNIT = iunps, FILE = TRIM(file_pseudo), STATUS = 'old', FORM = 'formatted' ) 
         !
@@ -240,13 +240,13 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      ! ... set DFT value
      !
-     if ( upf(nt)%dft(1:6)=='INDEX:') then
+     IF ( upf(nt)%dft(1:6)=='INDEX:') THEN
         ! Workaround for RRKJ format
-        read( upf(nt)%dft(7:10), '(4i1)') iexch_, icorr_, igcx_, igcc_
+        READ( upf(nt)%dft(7:10), '(4i1)') iexch_, icorr_, igcx_, igcc_
         call set_dft_from_indices(iexch_, icorr_, igcx_, igcc_, 0)
-     else
+     ELSE
         call set_dft_from_name( upf(nt)%dft )
-     end if
+     END IF
      !
      ! ... Check for DFT consistency - ignored if dft enforced from input
      !
@@ -269,12 +269,12 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      ! This is used to cut off the numerical noise arising from the
      ! large-r tail in cases like the integration of V_loc-Z/r
      !
-     do ir = 1, rgrid(nt)%mesh
-        if (rgrid(nt)%r(ir) > rcut) then
+     DO ir = 1, rgrid(nt)%mesh
+        IF (rgrid(nt)%r(ir) > rcut) THEN
            msh (nt) = ir
-           goto 5
-        endif
-     enddo
+           GOTO 5
+        END IF
+     END DO
      msh (nt) = rgrid(nt)%mesh 
 5    msh (nt) = 2 * ( (msh (nt) + 1) / 2) - 1
      !
@@ -283,9 +283,9 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      ! check for zero atomic wfc, 
      ! check that (occupied) atomic wfc are properly normalized
      !
-     call check_atwfc_norm(nt)
+     CALL check_atwfc_norm(nt)
      !
-  enddo
+  END DO
   !
   ! more initializations
   !
@@ -301,8 +301,9 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      ecutrho_pp = MAXVAL ( upf(1:ntyp)%ecutrho )
   END IF
   !
-  return
-end subroutine readpp
+  RETURN
+  !
+END SUBROUTINE readpp
 !-----------------------------------------------------------------------
 integer function pseudo_type (psfile)
   !-----------------------------------------------------------------------

@@ -375,8 +375,6 @@ CONTAINS
        USE kinds,        ONLY : dp
        USE pseudo_types, ONLY : pseudo_upf
        USE radial_grids, ONLY : radial_grid_type, deallocate_radial_grid
-       USE funct,        ONLY : set_dft_from_name, get_iexch, get_icorr, &
-                         get_igcx, get_igcc
 
        IMPLICIT NONE
 
