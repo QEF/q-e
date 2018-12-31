@@ -48,12 +48,14 @@ MODULE pseudo_types
      CHARACTER(LEN=80):: date=' '     ! generation date
      CHARACTER(LEN=80):: comment=' '  ! author's comment
      CHARACTER(LEN=2) :: psd=' '      ! Element label
-     CHARACTER(LEN=20) :: typ=' '     ! Pseudo type ( NC or US or PAW)
+     CHARACTER(LEN=20):: typ=' '      ! Pseudo type ( NC or US or PAW)
      CHARACTER(len=6) :: rel=' '      ! relativistic: {no|scalar|full}
      LOGICAL :: tvanp              ! .true. if Ultrasoft
      LOGICAL :: tcoulombp          ! .true. if Coulomb 1/r potential
      LOGICAL :: nlcc               ! Non linear core corrections
      LOGICAL :: is_gth             ! .true. if Goedecker-Teter-Hutter
+     LOGICAL :: is_multiproj       ! .true. if multiple projectors per l
+     ! (for NC PP only; US-PP and PAW are assumed to be multi-projector)
      CHARACTER(LEN=25) :: dft      ! Exch-Corr type
      REAL(DP) :: zp                ! z valence
      REAL(DP) :: etotps            ! total energy
@@ -64,7 +66,7 @@ MODULE pseudo_types
      INTEGER :: lmax               ! maximum l component in beta
      INTEGER :: lmax_rho           ! max l component in charge (should be 2*lmax)
      REAL(DP), POINTER :: vnl(:,:,:) ! vnl(i,l,s) = V(r_i)_{ls}
-     ! only for single-channel NC PP
+     ! (semilocal form) only for single-channel NC PP
      ! Wavefunctions and projectors
      INTEGER :: nwfc               ! number of atomic wavefunctions
      INTEGER :: nbeta              ! number of projectors

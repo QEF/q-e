@@ -477,6 +477,7 @@ printing.o : ../../Modules/mp_world.o
 printing.o : ../../Modules/noncol.o
 printing.o : ../../Modules/uspp.o
 printing.o : ../../PHonon/PH/phcom.o
+printing.o : ../../PW/src/symm_base.o
 printing.o : ../../UtilXlib/mp.o
 printing.o : constants_epw.o
 printing.o : division.o

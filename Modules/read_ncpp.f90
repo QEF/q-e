@@ -237,7 +237,7 @@ subroutine read_ncpp (iunps, np, upf)
   enddo
   deallocate (vnl)
   !
-  ! for compatibility with USPP
+  ! for compatibility with USPP and other formats
   !
   upf%nqf = 0
   upf%nqlc= 0
@@ -245,6 +245,8 @@ subroutine read_ncpp (iunps, np, upf)
   upf%tpawp =.false.
   upf%has_so=.false.
   upf%tcoulombp=.false.
+  upf%is_gth=.false.
+  upf%is_multiproj=.false.
   !
   ! Set additional, not present, variables to dummy values
   allocate(upf%els(upf%nwfc))

@@ -17,10 +17,6 @@ MODULE read_uspp_module
   USE io_global, ONLY: stdout
   USE matrix_inversion
   !
-  ! Variables above are not modified, variables below are
-  !
-  USE uspp_param, ONLY: oldvan
-  !
   IMPLICIT NONE
   SAVE
   PRIVATE
@@ -151,6 +147,11 @@ CONTAINS
     read( iunps, '(a20,3f15.9)', err=100, iostat=ios ) &
          title, upf%zmesh, upf%zp, exfact 
     !
+    ! compatibility
+    upf%is_gth = .false.
+    ! NC-PP in this format are assumed not to be multi-projector
+    upf%is_multiproj = .false.
+    !
     upf%psd = title(1:2)
     !
     if ( upf%zmesh < 1 .or. upf%zmesh > 100.0_DP) &
@@ -159,7 +160,7 @@ CONTAINS
          call errore('readvan','wrong atomic charge read', is )
     if ( exfact < -6 .or. exfact > 6) &
          &     call errore('readvan','Wrong xc in pseudopotential',1)
-    ! convert from "our" conventions to Vanderbilt conventions
+    ! convert from Vanderbilt conventions to "our" conventions 
     call dftname_cp (nint(exfact), upf%dft)
     !
     read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios ) &
@@ -248,7 +249,7 @@ CONTAINS
     !       set the number of angular momentum terms in q_ij to read in
     !
     if (iver(1) == 1) then
-       oldvan(is) = .TRUE.
+       ! oldvan(is) = .TRUE. OBSOLETE
        ! old format: no optimization of q_ij => 3-term taylor series
        upf%nqf=3
        upf%nqlc=5
@@ -653,7 +654,10 @@ CONTAINS
     read( iunps, '(i5)',err=100, iostat=ios ) &
          pseudotype
     upf%tvanp = (pseudotype == 3)
+    upf%is_multiproj = (pseudotype == 2)
     upf%tpawp = .false.
+    ! compatibility
+    upf%is_gth = .false.
 
     if ( upf%tvanp ) then
        upf%generated = &
