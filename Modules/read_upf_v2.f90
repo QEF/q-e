@@ -173,6 +173,8 @@ SUBROUTINE read_upf_header(u, upf)
    !
    ! GTH analytical format: obviously not true in this case
    upf%is_gth=.false.
+   ! PP is assumed to be multi-projector
+   upf%is_multiproj=.true.
    !
    ! Read HEADER section with some initialization data
    hdrNode  => item( getElementsByTagname(u, 'PP_HEADER'), 0 )  

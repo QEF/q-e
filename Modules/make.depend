@@ -334,7 +334,6 @@ read_uspp.o : io_global.o
 read_uspp.o : kind.o
 read_uspp.o : parameters.o
 read_uspp.o : pseudo_types.o
-read_uspp.o : uspp.o
 recips.o : kind.o
 recvec.o : ../UtilXlib/mp.o
 recvec.o : kind.o

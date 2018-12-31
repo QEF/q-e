@@ -218,8 +218,10 @@ subroutine read_pseudo_header (upf, iunps)
   integer :: nw
   character (len=80) :: dummy
   logical, external :: matches
-   ! GTH analytical format: obviously not true in this case
-   upf%is_gth=.false.
+  ! GTH analytical format: obviously not true in this case
+  upf%is_gth=.false.
+  ! PP is assumed to be multi-projector
+  upf%is_multiproj = .true. 
   ! Version number (presently ignored)
   read (iunps, *, err = 100, end = 100) upf%nv , dummy  
   ! Element label

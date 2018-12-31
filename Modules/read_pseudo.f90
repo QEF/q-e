@@ -18,7 +18,7 @@ MODULE read_pseudo_mod
   !
   USE atom,         ONLY: msh, rgrid
   USE ions_base,    ONLY: zv
-  USE uspp_param,   ONLY: upf, newpseudo, oldvan, nvb
+  USE uspp_param,   ONLY: upf, nvb
   USE uspp,         ONLY: okvan, nlcc_any
   !! global variables modified on output 
   ! 
@@ -37,7 +37,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   !! Reads PP files and puts the result into the "upf" structure of module uspp_param
   !! Sets  DFT to input_dft if present, to the value read in PP files otherwise
   !! Sets  number of valence electrons Zv, control variables okvan and nlcc_any,
-  !! compatibility variables newpseudo, oldvan, nvb
+  !! compatibility variable nvb
   !! Optionally returns cutoffs read from PP files into ecutwfc_pp, ecutrho_pp
   !
   USE kinds,        ONLY: DP
@@ -174,10 +174,6 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         !
         CALL set_upf_q (upf(nt))
         ! 
-        ! UPF is assumed to be multi-projector
-        !
-        newpseudo (nt) = .true.
-        !
      else
         !
         OPEN ( UNIT = iunps, FILE = TRIM(file_pseudo), STATUS = 'old', FORM = 'formatted' ) 
@@ -189,41 +185,35 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         !    *.gth           Goedecker-Teter-Hutter NC pseudo    pseudo_type=3
         !    none of the above: PWSCF norm-conserving format     pseudo_type=4
         !
-        if ( pseudo_type (psfile (nt) ) == 1 .or. &
-             pseudo_type (psfile (nt) ) == 2 ) then
+        IF ( pseudo_type (psfile (nt) ) == 1  ) THEN
            !
-           ! PPs produced by Andrea Dal Corso's atomic code are assumed to
-           ! be multiprojector; NCPP produced by Vanderbilt's core are not
-           !    
-           newpseudo (nt) = ( pseudo_type (psfile (nt) ) == 2 )
+           IF( printout_ ) &
+              WRITE( stdout, "(3X,'file type is Vanderbilt US PP')")
+           CALL readvan (iunps, nt, upf(nt))
            !
-           IF ( newpseudo (nt) ) THEN
-              IF( printout_ ) &
-                 WRITE( stdout, "(3X,'file type is RRKJ3')")
-              call readrrkj (iunps, nt, upf(nt))
-           ELSE
-              IF( printout_ ) &
-                 WRITE( stdout, "(3X,'file type is Vanderbilt US PP')")
-              CALL readvan (iunps, nt, upf(nt))
-           ENDIF
+        ELSE IF ( pseudo_type (psfile (nt) ) == 2 ) then
            !
-        elseif ( pseudo_type (psfile (nt) ) == 3 ) then
-           newpseudo (nt) = .true.
+           IF( printout_ ) &
+              WRITE( stdout, "(3X,'file type is RRKJ3')")
+           CALL readrrkj (iunps, nt, upf(nt))
            !
+        ELSE IF ( pseudo_type (psfile (nt) ) == 3 ) THEN
+           !
+           IF( printout_ ) &
+              WRITE( stdout, "(3X,'file type is GTH (analytical)')")
            CALL readgth (iunps, nt, upf(nt))
            !
-        elseif ( pseudo_type (psfile (nt) ) == 4 ) then
-           newpseudo (nt) = .false.
+        ELSE IF ( pseudo_type (psfile (nt) ) == 4 ) THEN
+           !
            IF( printout_ ) &
               WRITE( stdout, "(3X,'file type is old PWscf NC format')")
-           ! 
-           call read_ncpp (iunps, nt, upf(nt))
+           CALL read_ncpp (iunps, nt, upf(nt))
            !
-        else
+        ELSE
            !
            CALL errore('readpp', 'file '//TRIM(file_pseudo)//' not readable',1)
            !
-        endif
+        ENDIF
         !
         ! add grid information, reconstruct Q(r) if needed
         !
@@ -233,7 +223,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         !
         CLOSE (iunps)
         !
-     endif
+     ENDIF
      !
      ! Calculate MD5 checksum for this pseudopotential
      !
