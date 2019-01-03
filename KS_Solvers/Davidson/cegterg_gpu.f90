@@ -909,7 +909,6 @@ SUBROUTINE pcegterg_gpu(h_psi_gpu, s_psi_gpu, uspp, g_psi_gpu, &
   !
   hpsi = ZERO
   psi  = ZERO
-  IF (.not. buffer%is_initialized) CALL buffer%init(4, ierr)
   CALL buffer%lock_buffer(psi_d, (/npwx, npol, nvecx/), ierr)
   CALL buffer%lock_buffer(hpsi_d, (/npwx, npol, nvecx/), ierr)
   CALL buffer%lock_buffer(spsi_d, (/npwx, npol, nvecx/), ierr)
