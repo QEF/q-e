@@ -20,6 +20,7 @@ fhi2upf.o : ../Modules/mp_global.o
 fhi2upf.o : ../Modules/pseudo_types.o
 fhi2upf.o : ../Modules/write_upf.o
 fix_upf.o : ../Modules/emend_upf.o
+fix_upf.o : ../Modules/upf.o
 fix_upf.o : ../Modules/wrappers.o
 fpmd2upf.o : ../Modules/kind.o
 fpmd2upf.o : ../Modules/parameters.o
@@ -38,12 +39,14 @@ read_upf_tofile.o : ../Modules/radial_grids.o
 read_upf_tofile.o : ../Modules/upf.o
 rrkj2upf.o : ../Modules/constants.o
 rrkj2upf.o : write_upf.o
+upf2casino.o : ../Modules/emend_upf.o
 upf2casino.o : ../Modules/environment.o
 upf2casino.o : ../Modules/io_global.o
 upf2casino.o : ../Modules/mp_global.o
 upf2casino.o : ../Modules/pseudo_types.o
 upf2casino.o : ../Modules/radial_grids.o
 upf2casino.o : ../Modules/upf.o
+upf2casino.o : ../Modules/wrappers.o
 upf2casino.o : casino_pp.o
 upf2upf2.o : ../Modules/pseudo_types.o
 upf2upf2.o : ../Modules/radial_grids.o
@@ -51,6 +54,7 @@ upf2upf2.o : ../Modules/read_upf_v1.o
 upf2upf2.o : ../Modules/write_upf.o
 vanderbilt.o : ../Modules/constants.o
 vanderbilt.o : write_upf.o
+virtual_v2.o : ../Modules/emend_upf.o
 virtual_v2.o : ../Modules/environment.o
 virtual_v2.o : ../Modules/funct.o
 virtual_v2.o : ../Modules/io_global.o
@@ -59,4 +63,5 @@ virtual_v2.o : ../Modules/pseudo_types.o
 virtual_v2.o : ../Modules/radial_grids.o
 virtual_v2.o : ../Modules/splinelib.o
 virtual_v2.o : ../Modules/upf.o
+virtual_v2.o : ../Modules/wrappers.o
 virtual_v2.o : ../Modules/write_upf.o

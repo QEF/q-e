@@ -16,7 +16,8 @@ PROGRAM upf_fixer
    !!  of the filename preceding the .UPF extension
    !
    USE wrappers, ONLY: f_copy, f_remove
-   USE emend_upf_module, ONLY: make_emended_upf_copy, check_upf_file
+   USE emend_upf_module, ONLY: make_emended_upf_copy
+   USE upf_module, ONLY : check_upf_file
    IMPLICIT NONE
    CHARACTER(LEN=256)   :: filein, fileout, line 
    INTEGER              :: ios, argc, prefix_len, iarg
@@ -72,7 +73,7 @@ PROGRAM upf_fixer
    ENDIF
    sano =  check_upf_file(TRIM(filein)) 
    IF (.NOT. sano ) THEN 
-      CALL make_emended_upf_copy( filein, './temp.UPF', is_xml)
+      is_xml = make_emended_upf_copy( filein, './temp.UPF' )
       IF ( .NOT. is_xml ) THEN 
          PRINT *, "This file is not in xml format !!!! Stopping"
          STOP
