@@ -54,8 +54,8 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename) !
    !! derived type where is possible to store data on the radial mesh
    INTEGER,INTENT(INOUT) :: ierr
    !! On input:
-   !! ierr=0: return if not a valid xml schema or UPF v.2 file
-   !! ierr=-81: continue if not a valid xml schema or UPF v.2 file
+   !! ierr =0:   return if not a valid xml schema or UPF v.2 file
+   !! ierr/=0: continue if not a valid xml schema or UPF v.2 file
    !! On output:
    !! ierr=0: xml schema, ierr=-1: UPF v.1,  ierr=-2: UPF v.2
    !! ierr>0: error reading PP file
