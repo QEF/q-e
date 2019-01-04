@@ -12,16 +12,16 @@ SUBROUTINE hp_openfil_q()
   !
   ! This subroutine opens all necessary files necessary. 
   !
-  USE io_files,         ONLY : tmp_dir, seqopn, nwordatwfc
+  USE io_files,         ONLY : tmp_dir, seqopn, nwordwfcU
   USE control_flags,    ONLY : io_level
   USE wvfct,            ONLY : nbnd, npwx
   USE io_files,         ONLY : prefix
   USE noncollin_module, ONLY : npol
-  USE basis,            ONLY : natomwfc
   USE buffers,          ONLY : open_buffer
   USE qpoint,           ONLY : nksq
   USE control_lr,       ONLY : lgamma
-  USE units_lr,         ONLY : iuwfc, lrwfc, iuatwfc
+  USE units_lr,         ONLY : iuwfc, lrwfc, iuatswfc
+  USE ldaU,             ONLY : nwfcU
   USE ldaU_hp,          ONLY : recalc_sym, tmp_dir_save, tmp_dir_hp, &
                                iudwfc, lrdwfc, iudvwfc, lrdvwfc
   !
@@ -65,9 +65,9 @@ SUBROUTINE hp_openfil_q()
   !
   ! Open a file to write/read S*phi at k and k+q (atomic wfct's)
   !    
-  iuatwfc  = 23
-  nwordatwfc = npwx * natomwfc * npol
-  CALL open_buffer (iuatwfc, 'satwfc', nwordatwfc, io_level, exst_mem, exst, tmp_dir)
+  iuatswfc  = 23
+  nwordwfcU = npwx * nwfcU * npol
+  CALL open_buffer (iuatswfc, 'satwfc', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
   !
   RETURN
   !

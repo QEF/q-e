@@ -747,11 +747,8 @@ SUBROUTINE v_hubbard(ns, v_hub, eth)
 
        IF (Hubbard_J0(nt).NE.0.d0 .OR. Hubbard_beta(nt).NE.0.d0) THEN
           DO is=1, nspin
-             IF (is .eq. 2) THEN
-                isop = 1
-             ELSE
-                isop = 2
-             END IF
+             isop = 1
+             IF ( nspin == 2 .AND. is == 1) isop = 2
              DO m1 = 1, 2 * Hubbard_l(nt) + 1
                 IF ( is .eq. 1) THEN
                    eth = eth + Hubbard_beta(nt) * ns(m1,m1,is,na)

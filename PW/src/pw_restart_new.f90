@@ -40,8 +40,11 @@ MODULE pw_restart_new
   !
   CONTAINS
     !------------------------------------------------------------------------
-    SUBROUTINE pw_write_schema( )
+    SUBROUTINE pw_write_schema( what )
       !------------------------------------------------------------------------
+      !
+      ! what = 'init-config': write only variables that are known after the 
+      !                       initial steps of initialization (e.g. structure)
       !
       USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
                                        lscf, gamma_only, &
@@ -89,7 +92,6 @@ MODULE pw_restart_new
                                        lambda
       USE ions_base,            ONLY : amass
       USE funct,                ONLY : get_dft_short, get_inlc, get_nonlocc_name, dft_is_nonlocc
-      USE kernel_table,         ONLY : vdw_table_name
       USE scf,                  ONLY : rho
       USE force_mod,            ONLY : lforce, sumfor, force, sigma, lstres
       USE extfield,             ONLY : tefield, dipfield, edir, etotefield, &
@@ -126,7 +128,8 @@ MODULE pw_restart_new
       !
       IMPLICIT NONE
       !
-      CHARACTER(15)         :: subname="pw_write_schema"
+      CHARACTER(LEN=*), INTENT(IN) :: what
+      !
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname
       INTEGER               :: i, ig, ngg, ipol
@@ -156,17 +159,18 @@ MODULE pw_restart_new
       INTEGER             :: itemp = 1
       NULLIFY( degauss_, demet_, efield_corr, potstat_corr, gatefield_corr, bp_el_pol, bp_ion_pol)
       !
-      ! PW dimensions need to be properly computed 
-      ! reducing across MPI tasks
+      ! Global PW dimensions need to be properly computed, reducing across MPI tasks
+      ! If local PW dimensions are not available, set to 0
       !
       CALL using_et(0)
       !
       ALLOCATE( ngk_g( nkstot ) )
-      !
-      ngk_g(1:nks) = ngk(:)
-      CALL mp_sum( ngk_g(1:nks), intra_bgrp_comm )
-      ngk_g(nks+1:nkstot) = 0
-      CALL ipoolrecover( ngk_g, 1, nkstot, nks )
+      ngk_g(:) = 0
+      IF ( ALLOCATED (ngk) ) THEN
+         ngk_g(1:nks) = ngk(:)
+         CALL mp_sum( ngk_g(1:nks), intra_bgrp_comm )
+         CALL ipoolrecover( ngk_g, 1, nkstot, nks )
+      END IF
       ! BEWARE: only the first pool has ngk_g for all k-points
       !
       ! ... compute the maximum number of G vector among all k points
@@ -350,13 +354,17 @@ MODULE pw_restart_new
 ! ... BAND STRUCTURE
 !-------------------------------------------------------------------------------------
          !
+         ! skip if not yet computed
+         !
+         IF ( TRIM(what) == "init-config" ) GO TO 10
+         !
          IF (TRIM(input_parameters_occupations) == 'fixed') THEN 
             occupations_are_fixed = .TRUE. 
             IF ( noncolin ) THEN 
                h_band = NINT ( nelec ) 
             ELSE 
                h_band = NINT ( nelec/2.d0 ) 
-            END IF  
+            END IF
             h_energy =MAXVAL (et(h_band, 1:nkstot))
          ELSE 
             occupations_are_fixed = .FALSE. 
@@ -502,10 +510,10 @@ MODULE pw_restart_new
             NULLIFY(dipol_ptr)
          ENDIF
          NULLIFY ( bp_obj_ptr) 
-
 !------------------------------------------------------------------------------------------------
 ! ... ACTUAL WRITING
 !-------------------------------------------------------------------------------
+ 10      CONTINUE
          !
          CALL qes_write_output(qexsd_xf,output)
          CALL qes_reset_output(output) 
@@ -1203,7 +1211,7 @@ MODULE pw_restart_new
     !! if ibrav is present, cell parameters were computed by subroutine
     !! "latgen" using ibrav and celldm parameters: recalculate celldm
     !
-    CALL at2celldm (ibrav,1.0_dp,at(:,1),at(:,2),at(:,3),celldm)
+    CALL at2celldm (ibrav,alat,at(:,1),at(:,2),at(:,3),celldm)
     !
     tpiba = tpi/alat
     tpiba2= tpiba**2
@@ -1646,6 +1654,10 @@ MODULE pw_restart_new
                 lxdm   = .FALSE.
                 !
            END SELECT
+          ! the following lines set vdw_table_name, if not already set before
+          ! (the latter option, added by Yang Jiao, is useful for postprocessing)
+          ! NOTA BENE: inlc is not used - this part should be simplified and maybe
+          ! moved to somewhere else (e.g. a routine setting the default file name) 
            SELECT CASE ( TRIM (dft_obj%vdW%non_local_term))
              CASE ('vdw1')  
                 inlc = 1
@@ -1662,13 +1674,16 @@ MODULE pw_restart_new
              CASE default 
                 inlc = 0 
           END SELECT
-          IF (inlc == 0 ) THEN 
-             vdw_table_name = ' '
-          ELSE IF ( inlc == 3 ) THEN 
-             vdw_table_name = 'rVV10_kernel_table'
-          ELSE
-             vdw_table_name = 'vdW_kernel_table'
-          END IF 
+          IF ( vdw_table_name == ' ' ) THEN 
+             IF (inlc == 0 ) THEN 
+                vdw_table_name = ''
+             ELSE IF ( inlc == 3 ) THEN 
+                vdw_table_name = 'rVV10_kernel_table'
+             ELSE
+                vdw_table_name = 'vdW_kernel_table'
+             END IF 
+          END IF
+          !
           IF (dft_obj%vdW%london_s6_ispresent ) THEN 
              scal6 = dft_obj%vdW%london_s6
           END IF 

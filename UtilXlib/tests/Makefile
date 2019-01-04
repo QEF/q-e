@@ -22,6 +22,7 @@ SRCS = test_mp_count_nodes.f90 \
        test_mp_bcast_c4d_gpu.f90 \
        test_mp_bcast_c5d_gpu.f90 \
        test_mp_bcast_r5d_gpu.f90 \
+       test_mp_bcast_c6d_gpu.f90 \
        test_mp_bcast_iv_buffer.f90 \
        test_mp_bcast_iv_buffer_gpu.f90 \
        test_mp_bcast_lv_buffer.f90 \

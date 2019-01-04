@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2012 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,35 +8,35 @@
 !-----------------------------------------------------------------------
 subroutine zstar_eu
   !-----------------------------------------------------------------------
-  ! calculate the effective charges Z(E,Us) (E=scf,Us=bare)
+  !
+  ! Calculate the effective charges Z(E,Us) (E=scf,Us=bare)
   !
   ! epsil =.true. is needed for this calculation to be meaningful
   !
   !
-  USE kinds,     ONLY : DP
-  USE cell_base, ONLY : bg
-  USE ions_base, ONLY : nat, zv, ityp
-  USE buffers,   ONLY : get_buffer
-  USE klist,     ONLY : wk, xk, ngk, igk_k
-  USE symme,     ONLY : symtensor
-  USE wvfct,     ONLY : npwx
-  USE uspp,      ONLY : okvan, vkb
+  USE kinds,            ONLY : DP
+  USE cell_base,        ONLY : bg
+  USE ions_base,        ONLY : nat, zv, ityp
+  USE buffers,          ONLY : get_buffer
+  USE klist,            ONLY : wk, xk, ngk, igk_k
+  USE symme,            ONLY : symtensor
+  USE wvfct,            ONLY : npwx
+  USE uspp,             ONLY : okvan, vkb
   use noncollin_module, ONLY : npol
-  USE wavefunctions,  ONLY: evc
-
-  USE modes,     ONLY : u, nirr, npert
-  USE qpoint,    ONLY : npwq, nksq
-  USE eqv,       ONLY : dvpsi, dpsi
-  USE efield_mod,   ONLY : zstareu0, zstareu
-  USE units_ph,  ONLY : iudwf, lrdwf
-  USE units_lr,  ONLY : iuwfc, lrwfc
-  USE control_lr,ONLY : nbnd_occ
-  USE control_ph,ONLY : done_zeu
-  USE ph_restart, ONLY : ph_writefile
-
-  USE mp_pools,              ONLY : inter_pool_comm
-  USE mp_bands,              ONLY : intra_bgrp_comm
-  USE mp,                    ONLY : mp_sum
+  USE wavefunctions,    ONLY : evc
+  USE modes,            ONLY : u, nirr, npert
+  USE qpoint,           ONLY : npwq, nksq
+  USE eqv,              ONLY : dvpsi, dpsi
+  USE efield_mod,       ONLY : zstareu0, zstareu
+  USE units_ph,         ONLY : iudwf, lrdwf
+  USE units_lr,         ONLY : iuwfc, lrwfc
+  USE control_lr,       ONLY : nbnd_occ
+  USE control_ph,       ONLY : done_zeu
+  USE ph_restart,       ONLY : ph_writefile
+  USE mp_pools,         ONLY : inter_pool_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
+  USE mp,               ONLY : mp_sum
+  USE ldaU,             ONLY : lda_plus_u
 
   implicit none
 
@@ -67,6 +67,11 @@ subroutine zstar_eu
            ! recalculate  DeltaV*psi(ion) for mode nu
            !
            call dvqpsi_us (ik, u (1, mode), .not.okvan)
+           !
+           ! DFPT+U: add the bare variation of the Hubbard potential 
+           !
+           IF (lda_plus_u) CALL dvqhub_barepsi_us (ik, u(:,mode))
+           !
            do jpol = 1, 3
               nrec = (jpol - 1) * nksq + ik
               !

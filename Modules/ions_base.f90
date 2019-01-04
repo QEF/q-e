@@ -637,6 +637,56 @@
 
 !------------------------------------------------------------------------------!
 
+  subroutine randvel( tempw, tau0, taum, na, nsp, iforce, &
+                           amass, delt )
+    use constants, only: pi, k_boltzmann_au, amu_au
+    USE random_numbers, ONLY : randy
+    implicit none
+    REAL(DP), intent(out) :: taum(:,:)
+    REAL(DP), intent(in) :: tau0(:,:)
+    REAL(DP), intent(in) :: delt, amass(:), tempw
+    integer, intent(in) :: na(:), nsp
+    integer, intent(in) :: iforce(:,:)
+
+    REAL(DP) :: alfap, qr(3), alfar, gausp
+    REAL(DP) :: dt2by2
+    integer :: i, ia, is, nat, isa
+
+    dt2by2 = 0.5_DP * delt * delt
+    gausp = delt * sqrt( tempw * k_boltzmann_au )
+    nat = SUM( na( 1:nsp ) )
+
+      ! randomize velocities, calculate center of mass vel.
+      do i=1,3
+        qr(i)=0.0_DP
+        isa = 0
+        do is=1,nsp
+          do ia=1,na(is)
+            isa = isa + 1
+            alfar=gausp/sqrt(amass(is)*amu_au)*cos(2.0_DP*pi*randy())*sqrt(-2.0_DP*log(randy()))
+            taum(i,isa)=alfar
+            qr(i)=qr(i)+alfar
+          end do
+        end do
+        qr(i)=qr(i)/nat
+      end do
+      !subtract center of mass velocity
+      isa = 0
+      do is=1,nsp
+        do ia=1,na(is)
+          isa = isa + 1
+          do i=1,3
+            alfar=taum(i,isa)-qr(i)
+            taum(i,isa)=tau0(i,isa)-iforce(i,isa)*     &
+     &                    alfar
+          end do
+        end do
+      end do
+    return
+  end subroutine randvel
+
+!------------------------------------------------------------------------------!
+
   subroutine ions_vrescal( tcap, tempw, tempp, taup, tau0, taum, na, nsp, fion, iforce, &
                            pmass, delt )
     use constants, only: pi, k_boltzmann_au, eps8
@@ -672,6 +722,7 @@
         end do
       end do
     else
+      ! randomize velocities, calculate center of mass vel.
       do i=1,3
         qr(i)=0.0_DP
         isa = 0
@@ -685,6 +736,7 @@
         end do
         qr(i)=qr(i)/nat
       end do
+      !subtract center of mass velocity
       isa = 0
       do is=1,nsp
         do ia=1,na(is)

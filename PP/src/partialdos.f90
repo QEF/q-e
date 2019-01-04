@@ -288,10 +288,10 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
   !
   INTEGER :: ik, ibnd, ind, m, &
        c_tab, nwfc, ne, ie_mid, ie_delta, ie, is, nkseff, ikeff, nspin0
-  REAL(DP) :: etev, delta, Elw, Eup, wkeff, fact(2), spinor
+  REAL(DP) :: etev, delta, Elw, Eup, wkeff, fact(2)
   REAL(DP), ALLOCATABLE :: dostot(:,:), pdos(:,:,:,:), pdostot(:,:,:), &
        ldos(:,:,:)
-  REAL(DP), EXTERNAL :: w0gauss
+  REAL(DP), EXTERNAL :: w0gauss, spinor
   !
   !
   ! find band extrema

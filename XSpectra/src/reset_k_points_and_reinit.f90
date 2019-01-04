@@ -21,7 +21,7 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
   USE ions_base,          ONLY : ntyp => nsp
   USE ldaU,               ONLY : lda_plus_u, init_lda_plus_u
   USE noncollin_module,   ONLY : noncolin
-  USE symm_base,          ONLY : d1, d2, d3
+  USE symm_base,          ONLY : d1, d2, d3, fft_fact
   USE parameters,         ONLY : npk
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
   USE constants,          ONLY : degspin
@@ -43,8 +43,6 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
   startingconfig    = 'input'
   starting_pot      = 'file'
   starting_wfc      = 'atomic'
-
-
   !
   ! ... Set up Hubbard parameters for LDA+U calculation
   !
@@ -54,9 +52,10 @@ SUBROUTINE reset_k_points_and_reinit_nscf()
   !
   IF (lda_plus_u ) CALL d_matrix( d1, d2, d3 )
   !
-  
-
+  ! ... needed in FFT re-initialization
+  !
+  fft_fact(:) = 1
+  ! 
   call init_run()
-
-  
+  !
 end SUBROUTINE reset_k_points_and_reinit_nscf

@@ -7,7 +7,6 @@ hp_allocate_q.o : ../../Modules/ions_base.o
 hp_allocate_q.o : ../../Modules/noncol.o
 hp_allocate_q.o : ../../Modules/uspp.o
 hp_allocate_q.o : ../../Modules/wavefunctions.o
-hp_allocate_q.o : ../../PW/src/atomic_wfc_mod.o
 hp_allocate_q.o : ../../PW/src/ldaU.o
 hp_allocate_q.o : ../../PW/src/pwcom.o
 hp_allocate_q.o : hpcom.o
@@ -61,7 +60,6 @@ hp_dnsq.o : ../../Modules/kind.o
 hp_dnsq.o : ../../Modules/mp_global.o
 hp_dnsq.o : ../../Modules/uspp.o
 hp_dnsq.o : ../../Modules/wavefunctions.o
-hp_dnsq.o : ../../PW/src/atomic_wfc_mod.o
 hp_dnsq.o : ../../PW/src/buffers.o
 hp_dnsq.o : ../../PW/src/ldaU.o
 hp_dnsq.o : ../../PW/src/pwcom.o
@@ -85,7 +83,6 @@ hp_dvpsi_pert.o : ../../Modules/ions_base.o
 hp_dvpsi_pert.o : ../../Modules/kind.o
 hp_dvpsi_pert.o : ../../Modules/mp_global.o
 hp_dvpsi_pert.o : ../../Modules/wavefunctions.o
-hp_dvpsi_pert.o : ../../PW/src/atomic_wfc_mod.o
 hp_dvpsi_pert.o : ../../PW/src/buffers.o
 hp_dvpsi_pert.o : ../../PW/src/ldaU.o
 hp_dvpsi_pert.o : ../../PW/src/pwcom.o
@@ -158,8 +155,8 @@ hp_openfil_q.o : ../../LR_Modules/lrcom.o
 hp_openfil_q.o : ../../Modules/control_flags.o
 hp_openfil_q.o : ../../Modules/io_files.o
 hp_openfil_q.o : ../../Modules/noncol.o
-hp_openfil_q.o : ../../PW/src/atomic_wfc_mod.o
 hp_openfil_q.o : ../../PW/src/buffers.o
+hp_openfil_q.o : ../../PW/src/ldaU.o
 hp_openfil_q.o : ../../PW/src/pwcom.o
 hp_openfil_q.o : hpcom.o
 hp_postproc.o : ../../Modules/cell_base.o
@@ -221,7 +218,6 @@ hp_rotate_dnsq.o : ../../Modules/io_global.o
 hp_rotate_dnsq.o : ../../Modules/ions_base.o
 hp_rotate_dnsq.o : ../../Modules/kind.o
 hp_rotate_dnsq.o : ../../Modules/uspp.o
-hp_rotate_dnsq.o : ../../PW/src/atomic_wfc_mod.o
 hp_rotate_dnsq.o : ../../PW/src/ldaU.o
 hp_rotate_dnsq.o : ../../PW/src/pwcom.o
 hp_rotate_dnsq.o : ../../PW/src/symm_base.o
@@ -280,19 +276,6 @@ hp_solve_linear_system.o : ../../PW/src/scf_mod.o
 hp_solve_linear_system.o : ../../UtilXlib/mp.o
 hp_solve_linear_system.o : hp_efermi_shift.o
 hp_solve_linear_system.o : hpcom.o
-hp_sphi.o : ../../LR_Modules/lrcom.o
-hp_sphi.o : ../../Modules/becmod.o
-hp_sphi.o : ../../Modules/io_files.o
-hp_sphi.o : ../../Modules/io_global.o
-hp_sphi.o : ../../Modules/kind.o
-hp_sphi.o : ../../Modules/mp_global.o
-hp_sphi.o : ../../Modules/noncol.o
-hp_sphi.o : ../../Modules/uspp.o
-hp_sphi.o : ../../PW/src/atomic_wfc_mod.o
-hp_sphi.o : ../../PW/src/buffers.o
-hp_sphi.o : ../../PW/src/ldaU.o
-hp_sphi.o : ../../PW/src/pwcom.o
-hp_sphi.o : ../../UtilXlib/mp.o
 hp_stop_smoothly.o : ../../Modules/environment.o
 hp_stop_smoothly.o : ../../Modules/mp_global.o
 hp_stop_smoothly.o : hpcom.o
@@ -324,7 +307,6 @@ hp_symdnsq.o : ../../Modules/io_global.o
 hp_symdnsq.o : ../../Modules/ions_base.o
 hp_symdnsq.o : ../../Modules/kind.o
 hp_symdnsq.o : ../../Modules/uspp.o
-hp_symdnsq.o : ../../PW/src/atomic_wfc_mod.o
 hp_symdnsq.o : ../../PW/src/ldaU.o
 hp_symdnsq.o : ../../PW/src/pwcom.o
 hp_symdnsq.o : ../../PW/src/symm_base.o

@@ -362,6 +362,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   !COMPLEX(DP), POINTER, DEVICE     :: aux_d (:)
   INTEGER                          :: ierr, i, j
   INTEGER                          :: nstreams
+  INTEGER(kind = cuda_stream_kind) :: stream  = 0 ! cuda_default_stream
   !
   !write (6,*) 'enter tg_cft3s ',isgn ; write(6,*) ; FLUSH(6)
   n1  = dfft%nr1  ; n2  = dfft%nr2  ; n3  = dfft%nr3
@@ -399,7 +400,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
      !CALL nvtxStartRangeAsync("many_cft3s_gpu G->R", 1)
      DO i = 0, howmany-1
         CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_z, n3, nx3, isgn, aux_d(nx3*nsticks_zx*i+1:), &
-                         dfft%stream_many((mod(i,nstreams)+1)) )
+                         stream ) !dfft%stream_many((mod(i,nstreams)+1)) )
      END DO
      !
      ! this brings back data from packed to unpacked
@@ -407,16 +408,16 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
      !
      DO i = 0, howmany-1
         CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux_d(i*nnr_+1:), &
-                         dfft%stream_many((mod(i,nstreams)+1)), in_place=.true. )
+                         stream, in_place=.true. ) ! dfft%stream_many((mod(i,nstreams)+1)), in_place=.true. )
      END DO
      DO i = 0, howmany-1
         CALL fft_scatter_xy_gpu ( dfft, f_d(i*nnr_+1:), aux_d(i*nnr_+1:), nnr_, isgn, &
-                                  dfft%stream_many((mod(i,nstreams)+1)) )
+                                  stream ) ! dfft%stream_many((mod(i,nstreams)+1)) )
      END DO
      !
      DO i = 0, howmany-1
         CALL cft_1z_gpu( aux_d(i*nnr_+1:), nsticks_x, n1, nx1, isgn, f_d(i*nnr_+1:), &
-                         dfft%stream_many((mod(i,nstreams)+1)) )
+                         stream ) ! dfft%stream_many((mod(i,nstreams)+1)) )
      END DO
      !
      ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
@@ -436,23 +437,23 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
      !CALL nvtxStartRangeAsync("many_cft3s_gpu R->G", 2)
      DO i = 0, howmany-1
         CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_x, n1, nx1, isgn, aux_d(i*nnr_+1:), &
-                         dfft%stream_many((mod(i,nstreams)+1)) )
+                         stream ) ! dfft%stream_many((mod(i,nstreams)+1)) )
      END DO
      DO i = 0, howmany-1
         CALL fft_scatter_xy_gpu ( dfft, f_d(i*nnr_+1), aux_d(i*nnr_+1), nnr_, isgn, &
-                                  dfft%stream_many((mod(i,nstreams)+1)) )
+                                  stream ) ! dfft%stream_many((mod(i,nstreams)+1)) )
      END DO
      !
      DO i = 0, howmany-1
         CALL cft_1z_gpu( f_d(i*nnr_+1:), nsticks_y, n2, nx2, isgn, aux_d(i*nnr_+1:), &
-                         dfft%stream_many((mod(i,nstreams)+1)), in_place=.true. )
+                         stream, in_place=.true. ) ! dfft%stream_many((mod(i,nstreams)+1)), in_place=.true. )
      END DO
      !
      CALL fft_scatter_many_yz_gpu ( dfft, aux_d, f_d, howmany*nnr_, isgn, howmany )
      !
      DO i = 0, howmany-1
         CALL cft_1z_gpu( aux_d(nx3*nsticks_zx*i+1:), nsticks_z, n3, nx3, isgn, f_d(i*nnr_+1:), &
-                         dfft%stream_many((mod(i,nstreams)+1)) )
+                         stream ) ! dfft%stream_many((mod(i,nstreams)+1)) )
      END DO
      !
      ! clean garbage beyond the intended dimension. should not be needed but apparently it is !
@@ -469,9 +470,9 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
   !
   !CALL gpu_buffer%release_buffer(aux_d, ierr);
-  DO i=1,nstreams
-      ierr = cudaStreamSynchronize( dfft%stream_many(i) )
-  END DO
+  !DO i=1,nstreams
+  !    ierr = cudaStreamSynchronize( dfft%stream_many(i) )
+  !END DO
   !
   RETURN
 99 format ( 20 ('(',2f12.9,')') )

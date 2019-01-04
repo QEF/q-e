@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,9 +17,10 @@ SUBROUTINE openfilq()
   USE units_ph,        ONLY : iudwf, iubar, iucom, iudvkb3, &
                               iudrhous, iuebar, iudrho, iudyn, iudvscf, &
                               lrdwf, lrbar, lrcom, lrdvkb3, &
-                              lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw
+                              lrdrhous, lrebar, lrdrho, lint3paw, iuint3paw, &
+                              iundnsscf
   USE units_lr,        ONLY : iuwfc, lrwfc
-  USE io_files,        ONLY : tmp_dir, diropn, seqopn
+  USE io_files,        ONLY : tmp_dir, diropn, seqopn, nwordwfcU
   USE control_ph,      ONLY : epsil, zue, ext_recover, trans, &
                               tmp_dir_phq, start_irr, last_irr, xmldyn, &
                               all_done
@@ -45,9 +46,12 @@ SUBROUTINE openfilq()
   USE el_phon,         ONLY : elph, elph_mat, iunwfcwann, lrwfcr
   USE dfile_star,      ONLY : dvscf_star
   USE dfile_autoname,  ONLY : dfile_name
-
   USE qpoint,          ONLY : xq
   USE control_lr,      ONLY : lgamma
+  USE units_lr,        ONLY : iuatwfc, iuatswfc
+  USE modes,           ONLY : nmodes
+  USE ldaU,            ONLY : lda_plus_u, Hubbard_lmax, nwfcU
+  USE ldaU_ph,         ONLY : dnsscf_all_modes
   !
   IMPLICIT NONE
   !
@@ -233,7 +237,59 @@ SUBROUTINE openfilq()
      lrba2 = 2 * nbnd * npwx * npol
      CALL diropn(iuba2, 'ba2', lrba2, exst)
   ENDIF
-
+  !
+  ! Files needed for DFPT+U calculation
+  !
+  IF (lda_plus_u) THEN   
+     !
+     nwordwfcU = npwx * nwfcU * npol
+     !
+     ! The unit iuatwfc contains atomic wfcs at k and k+q
+     !    
+     iuatwfc = 34
+     CALL open_buffer (iuatwfc, 'atwfc', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
+     !
+     ! The unit iuatswfc contains atomic wfcs * S at k and k+q
+     !    
+     iuatswfc = 35
+     CALL open_buffer (iuatswfc, 'satwfc', nwordwfcU, io_level, exst_mem, exst, tmp_dir)
+     !
+     ! Check whether the necessary files for the elph calculation exist 
+     ! and are read correctly
+     !
+     IF (trans.OR.elph) THEN
+        !
+        iundnsscf = 36
+        !
+        IF (ionode) THEN
+           !
+           CALL seqopn (iundnsscf, 'dnsscf', 'formatted', exst)
+           !
+           IF (.NOT.exst .AND. elph) &
+             CALL errore ('openfilq', 'dnsscf file not found, necessary for el-ph calculation, stopping ', 1)
+           ! 
+           IF (exst) THEN
+              !
+              ALLOCATE (dnsscf_all_modes (2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, nmodes))
+              READ(iundnsscf,*,iostat=ios) dnsscf_all_modes
+              REWIND(iundnsscf)
+              !
+              IF (elph .AND. ios.NE.0) &
+                 CALL errore ('openfilq', 'dnsscf file corrupted, necessary for el-ph calculation, stopping ', 1)
+              ! 
+              IF (elph .AND. ios==0) &
+                 WRITE( stdout,*) 'THE DNSSCF MATRIX WAS CORRECTLY READ FROM FILE, NECESSARY FOR ELPH+U'
+              !
+              DEALLOCATE(dnsscf_all_modes)
+              !
+           ENDIF
+           !
+        ENDIF
+        !
+     ENDIF
+     !
+  ENDIF
+  !
   RETURN
   !
 END SUBROUTINE openfilq

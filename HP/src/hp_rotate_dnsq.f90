@@ -21,11 +21,10 @@ SUBROUTINE hp_rotate_dnsq (dnr, dns, isym, sxq)
   USE ions_base,    ONLY : nat, ityp, tau
   USE lsda_mod,     ONLY : nspin
   USE uspp_param,   ONLY : upf
-  USE basis,        ONLY : natomwfc
   USE symm_base,    ONLY : d1, d2, d3, irt, invs
   USE qpoint,       ONLY : xq
   USE lr_symm_base, ONLY : rtau, gi, minus_q, irotmq
-  USE ldaU,         ONLY : Hubbard_lmax, Hubbard_l, is_hubbard
+  USE ldaU,         ONLY : Hubbard_lmax, Hubbard_l, is_hubbard, nwfcU
   USE ldaU_hp,      ONLY : nah_pert
   !
   IMPLICIT NONE
@@ -52,14 +51,14 @@ SUBROUTINE hp_rotate_dnsq (dnr, dns, isym, sxq)
   counter = 0
   DO na = 1, nat
      nt = ityp(na)
+     IF (.NOT.is_hubbard(nt)) CYCLE
      DO n = 1, upf(nt)%nwfc
-        IF (upf(nt)%oc(n) >= 0.d0) THEN
-           l = upf(nt)%lchi(n)
+        l = upf(nt)%lchi(n)
+        IF (upf(nt)%oc(n) >= 0.d0 .AND. l == Hubbard_l(nt)) &
            counter = counter + 2 * l + 1
-        ENDIF
      ENDDO
   ENDDO
-  IF (counter.NE.natomwfc) CALL errore ('hp_rotate_dnsq', 'natomwfc<>counter', 1)
+  IF (counter.NE.nwfcU) CALL errore ('hp_rotate_dnsq', 'nwfcU<>counter', 1)
   !
   ! Rotate the response occupation matrix.
   ! Note: here we perform a rotation using the index

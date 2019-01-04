@@ -22,7 +22,7 @@
   USE epwcom,        ONLY : nbndsub, lrepmatf, shortrange, &
                             fsthick, eptemp, ngaussw, degaussw, &
                             eps_acustic, efermi_read, fermi_energy,&
-                            vme, omegamin, omegamax, omegastep, n_r, scissor
+                            vme, omegamin, omegamax, omegastep, n_r 
   USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, &
                             nkf, epf17, wkf, nqtotf, wf, wqf, xkf, nkqtotf, &
                             sigmar_all, sigmai_all, sigmai_mode, efnew, &
@@ -215,8 +215,8 @@
       DO ibnd = 1, ibndmax-ibndmin+1
         DO jbnd = 1, ibndmax-ibndmin+1
           ! vmef is in units of Ryd * bohr
-          IF (ABS(scissor) > eps6 .AND. &
-              ABS( etf_ks(ibndmin-1+ibnd,ikk)-etf_ks(ibndmin-1+jbnd,ikk)) > eps6 .AND. &
+          !IF (ABS(scissor) > eps6 .AND. &
+          IF(  ABS( etf_ks(ibndmin-1+ibnd,ikk)-etf_ks(ibndmin-1+jbnd,ikk)) > eps6 .AND. &
               ABS( etf_ks(ibndmin-1+ibnd,ikq)-etf_ks(ibndmin-1+jbnd,ikq)) > eps6 ) THEN
             vkk(:,ibnd,jbnd) = vmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikk) &
                              * ( etf(ibndmin-1+ibnd,ikk)    - etf(ibndmin-1+jbnd,ikk) ) & 
@@ -233,8 +233,8 @@
     ELSE
       DO ibnd = 1, ibndmax-ibndmin+1
         DO jbnd = 1, ibndmax-ibndmin+1
-          IF (ABS(scissor) > eps6 .AND. &
-              ABS( etf_ks(ibndmin-1+ibnd,ikk)-etf_ks(ibndmin-1+jbnd,ikk)) > eps6 .AND. &
+          !IF (ABS(scissor) > eps6 .AND. &
+          IF ( ABS( etf_ks(ibndmin-1+ibnd,ikk)-etf_ks(ibndmin-1+jbnd,ikk)) > eps6 .AND. &
               ABS( etf_ks(ibndmin-1+ibnd,ikq)-etf_ks(ibndmin-1+jbnd,ikq)) > eps6 ) THEN
             vkk(:,ibnd,jbnd) = 2.0 * dmef(:, ibndmin-1+ibnd, ibndmin-1+jbnd, ikk) &
                              * ( etf(ibndmin-1+ibnd,ikk)    - etf(ibndmin-1+jbnd,ikk) ) & 

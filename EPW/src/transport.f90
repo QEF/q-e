@@ -17,29 +17,37 @@
   CONTAINS
     ! 
     !-----------------------------------------------------------------------
-    SUBROUTINE qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq)
+    SUBROUTINE qwindow( exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, & 
+                       cufkk, cufkq, homogeneous )
     !-----------------------------------------------------------------------
     !!
     !!  This subroutine pre-computes the q-points that falls within the fstichk
     !!
     !-----------------------------------------------------------------------
     USE kinds,         ONLY : DP
-    USE elph2,         ONLY : nqf, xqf, xkf, chw, etf, nkf, nqtotf
-    USE mp_world,      ONLY : mpime, world_comm
-    USE mp_global,     ONLY : my_pool_id
+    USE elph2,         ONLY : nqf, xqf, xkf, chw, etf, nkf, nqtotf, nkqtotf, &
+                              map_rebal
     USE io_global,     ONLY : ionode_id, stdout
     USE io_epw,        ONLY : iunselecq
-    USE mp_global,     ONLY : npool
+    USE mp_global,     ONLY : npool, inter_pool_comm, world_comm, my_pool_id
+    USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_sum, mp_bcast
-    USE constants_epw, ONLY : twopi, ci
-    USE epwcom,        ONLY : nbndsub, fsthick, use_ws
-    USE pwcom,         ONLY : ef 
+    USE constants_epw, ONLY : twopi, ci, zero, eps6, ryd2ev, czero
+    USE epwcom,        ONLY : nbndsub, fsthick, use_ws, mp_mesh_k, nkf1, nkf2, &
+                              nkf3, iterative_bte, restart_freq, scissor
+    USE noncollin_module, ONLY : noncolin
+    USE pwcom,         ONLY : ef, nelec 
+    USE cell_base,     ONLY : bg
+    USE symm_base,     ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
     USE wan2bloch,     ONLY : hamwan2bloch
+    USE io_eliashberg, ONLY : kpmq_map
     !
     IMPLICIT NONE
     !
     LOGICAL, INTENT(in) :: exst
     !! If the file exist
+    LOGICAL, INTENT(in) :: homogeneous
+    !! Check if the grids are homogeneous and commensurate
     INTEGER, INTENT(IN) :: nrr_k
     !! Number of WS points for electrons    
     INTEGER, INTENT(IN) :: dims
@@ -62,8 +70,12 @@
     !! integer variable for I/O control
     INTEGER :: iq
     !! Counter on coarse q-point grid    
-    INTEGER :: ik, ikk, ikq
+    INTEGER :: ik, ikk, ikq, ikl
     !! Counter on coarse k-point grid
+    INTEGER :: icbm
+    !! Index for the CBM
+    INTEGER :: ibnd
+    !! Band index
     INTEGER :: found(npool)
     !! Indicate if a q-point was found within the window
     INTEGER :: iw
@@ -74,6 +86,24 @@
     !! Counter for WS loop
     INTEGER :: nqtot 
     !! Total number of q-point for verifications
+    INTEGER :: ind1
+    !! Index of the k point from the full grid.
+    INTEGER :: ind2
+    !! Index of the k+q point from the full grid. 
+    INTEGER :: nkqtotf_tmp
+    !! Temporary k-q points.
+    INTEGER :: ikbz
+    !! k-point index that run on the full BZ
+    INTEGER :: BZtoIBZ_tmp(nkf1*nkf2*nkf3)
+    !! Temporary mapping
+    INTEGER :: BZtoIBZ(nkf1*nkf2*nkf3)
+    !! BZ to IBZ mapping
+    INTEGER :: s_BZtoIBZ(3,3,nkf1*nkf2*nkf3)
+    !! symmetry 
+    INTEGER :: nkloc
+    !! number of k-point selected on that cpu 
+    INTEGER :: kmap(nkf)
+    !! k-point that are selected for that cpu
     ! 
     REAL(kind=DP) :: xxq(3)
     !! Current q-point
@@ -85,6 +115,19 @@
     !! $r\cdot k$
     REAL(kind=DP) :: rdotk2(nrr_k)
     !! $r\cdot k$
+    REAL(kind=DP) :: etf_loc(nbndsub, nkf) 
+    !! Eigen-energies all full k-grid.
+    REAL(kind=DP) :: etf_locq(nbndsub, nkf) 
+    !! Eigen-energies all full k-grid.
+    REAL(kind=DP) :: etf_all(nbndsub, nkqtotf/2) 
+    !! Eigen-energies all full k-grid.
+    REAL(kind=DP) :: etf_tmp(nbndsub)
+    !! Temporary Eigen-energies at a give k-point
+    REAL(kind=DP) :: xkf_tmp (3, nkqtotf)
+    !! Temporary k-point coordinate (dummy variable)
+    REAL(kind=DP) :: wkf_tmp(nkqtotf)
+    !! Temporary k-weights (dummy variable)
+
     ! 
     COMPLEX(kind=DP) :: cfac(nrr_k, dims, dims)
     !! Used to store $e^{2\pi r \cdot k}$ exponential 
@@ -92,8 +135,10 @@
     !! Used to store $e^{2\pi r \cdot k+q}$ exponential
     ! 
     !selecq(:) = 0
-    rdotk(:)  = 0
-    rdotk2(:) = 0
+    rdotk(:)     = 0
+    rdotk2(:)    = 0
+    cfac(:,:,:)  = czero
+    cfacq(:,:,:) = czero
     ! 
     IF (exst) THEN
       IF (mpime == ionode_id) THEN
@@ -111,66 +156,254 @@
       CALL mp_bcast(selecq, ionode_id, world_comm )
       IF (nqtot /= nqtotf) THEN
         CALL errore( 'qwindow', 'Cannot read from selecq.fmt, the q-point grid or &
- fsthick window are different from read one. Remove the selecq.fmt file and restart. ',1 )
+          & fsthick window are different from read one. Remove the selecq.fmt file and restart.',1 )
       ENDIF
       !  
     ELSE
       ALLOCATE(selecq(nqf))
       selecq(:) = 0 
-      !
-      DO iq=1, nqf
-        xxq = xqf (:, iq)
-        ! 
-        found(:) = 0
+      etf_loc(:,:)  = zero
+      etf_locq(:,:) = zero
+      etf_all(:,:) = zero
+      ! 
+      IF (homogeneous) THEN
+        ! First store eigen energies on full grid.  
         DO ik = 1, nkf
           ikk = 2 * ik - 1
-          ikq = ikk + 1
-          !
           xkk = xkf(:, ikk)
-          xkq = xkk + xxq
-          !  
           CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
-          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk2, 1 )
           IF (use_ws) THEN
             DO iw=1, dims
               DO iw2=1, dims
                 DO ir = 1, nrr_k
                   IF (ndegen_k(ir,iw2,iw) > 0) THEN
                     cfac(ir,iw2,iw)  = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
-                    cfacq(ir,iw2,iw) = exp( ci*rdotk2(ir) ) / ndegen_k(ir,iw2,iw)
                   ENDIF
                 ENDDO
               ENDDO
             ENDDO
           ELSE
             cfac(:,1,1)   = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
-            cfacq(:,1,1)  = exp( ci*rdotk2(:) ) / ndegen_k(:,1,1)
-          ENDIF           
-          ! 
-          CALL hamwan2bloch ( nbndsub, nrr_k, cufkk, etf(:, ikk), chw, cfac, dims)
-          CALL hamwan2bloch ( nbndsub, nrr_k, cufkq, etf(:, ikq), chw, cfacq, dims)
-          ! 
-          IF ( (( minval ( abs(etf(:, ikk) - ef) ) < fsthick ) .and. &
-                ( minval ( abs(etf(:, ikq) - ef) ) < fsthick )) ) THEN
-            found(my_pool_id+1) = 1
-            EXIT ! exit the loop 
-          ENDIF
-        ENDDO ! k-loop
-        ! If found on any k-point from the pools
-        CALL mp_sum(found, world_comm)
+          ENDIF        
+          CALL hamwan2bloch ( nbndsub, nrr_k, cufkk, etf_loc(:, ik), chw, cfac, dims)
+        ENDDO
+        CALL poolgather ( nbndsub, nkqtotf/2, nkf, etf_loc, etf_all )
         ! 
-        IF (SUM(found) > 0) THEN
-          totq = totq + 1
-          selecq(totq) = iq
+        ! In case of k-point symmetry
+        IF (mp_mesh_k) THEN
+          BZtoIBZ(:) = 0
+          s_BZtoIBZ(:,:,:) = 0
           ! 
-          IF (MOD(totq,500) == 0) THEN
-            WRITE(stdout,'(5x,a,i8,i8)')'Number selected, total',totq,iq
+          IF ( mpime == ionode_id ) THEN
+            ! 
+            CALL set_sym_bl( )
+            !
+            ! What we get from this call is BZtoIBZ
+            CALL kpoint_grid_epw ( nrot, time_reversal, .false., s, t_rev, bg, nkf1*nkf2*nkf3, &
+                       nkf1,nkf2,nkf3, nkqtotf_tmp, xkf_tmp, wkf_tmp,BZtoIBZ,s_BZtoIBZ)
+            ! 
+            IF (iterative_bte) THEN
+              BZtoIBZ_tmp(:) = 0
+              DO ikbz=1, nkf1*nkf2*nkf3
+                BZtoIBZ_tmp(ikbz) = map_rebal( BZtoIBZ( ikbz ) )
+              ENDDO
+              BZtoIBZ(:) = BZtoIBZ_tmp(:)
+            ENDIF
+            ! 
+          ENDIF ! mpime
+          CALL mp_bcast( BZtoIBZ, ionode_id, inter_pool_comm )
+          ! 
+        ENDIF ! mp_mesh_k
+        ! 
+        ! Apply a scissor shift to CBM if required by user
+        ! The shift is apply to k and k+q
+        IF (ABS(scissor) > eps6) THEN
+          IF ( noncolin ) THEN
+            icbm = FLOOR(nelec/1.0d0) + 1
+          ELSE
+            icbm = FLOOR(nelec/2.0d0) + 1
           ENDIF
+          !
+          DO ik = 1, nkqtotf/2
+            DO ibnd = icbm, nbndsub
+              etf_all (ibnd, ik) = etf_all (ibnd, ik) + scissor
+            ENDDO
+          ENDDO
+          !WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
         ENDIF
+        !  
+        DO iq=1, nqf
+          xxq = xqf (:, iq)
+          ! 
+          found(:) = 0
+          DO ik = 1, nkf 
+            ikk = 2 * ik - 1
+            xkk = xkf(:, ikk)
+            xkq = xkk + xxq
+            !  
+            CALL kpmq_map( xkk, (/0d0,0d0,0d0/), 1, ind1 ) 
+            CALL kpmq_map( xkk, xxq, 1, ind2 ) 
+            ! 
+            ! Use k-point symmetry
+            IF (mp_mesh_k) THEN
+              IF ( (( minval ( abs(etf_all(:, BZtoIBZ(ind1)) - ef) ) < fsthick ) .and. &
+                    ( minval ( abs(etf_all(:, BZtoIBZ(ind2)) - ef) ) < fsthick )) ) THEN
+                found(my_pool_id+1) = 1
+                EXIT ! exit the loop 
+              ENDIF
+            ELSE
+              IF ( (( minval ( abs(etf_all(:, ind1) - ef) ) < fsthick ) .and. &
+                    ( minval ( abs(etf_all(:, ind2) - ef) ) < fsthick )) ) THEN
+                found(my_pool_id+1) = 1
+                EXIT ! exit the loop 
+              ENDIF
+            ENDIF
+            !  
+          ENDDO ! k-loop
+          ! If found on any k-point from the pools
+          CALL mp_sum(found, world_comm)
+          ! 
+          IF (SUM(found) > 0) THEN
+            totq = totq + 1
+            selecq(totq) = iq
+            ! 
+            IF (MOD(totq,restart_freq) == 0) THEN
+              WRITE(stdout,'(5x,a,i8,i8)')'Number selected, total',totq,iq
+            ENDIF
+          ENDIF
+        ENDDO ! iq
+      ELSE ! homogeneous
         ! 
-      ENDDO
+        ! Apply a scissor shift to CBM if required by user
+        ! The shift is apply to k and k+q
+        IF (ABS(scissor) > eps6) THEN
+          IF ( noncolin ) THEN
+            icbm = FLOOR(nelec/1.0d0) + 1
+          ELSE
+            icbm = FLOOR(nelec/2.0d0) + 1
+          ENDIF
+          !WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
+        ENDIF
+        !  
+        ! First compute the k-points eigenenergies for efficiency reasons
+        nkloc = 0
+        kmap(:) = 0
+        DO ik = 1, nkf
+          ikk = 2 * ik - 1
+          xkk = xkf(:, ikk)
+          CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkk, 1, 0.0_DP, rdotk, 1 )
+          IF (use_ws) THEN
+            DO iw=1, dims
+              DO iw2=1, dims
+                DO ir = 1, nrr_k
+                  IF (ndegen_k(ir,iw2,iw) > 0) THEN
+                    cfac(ir,iw2,iw)  = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
+                  ENDIF
+                ENDDO
+              ENDDO
+            ENDDO
+          ELSE
+            cfac(:,1,1)  = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
+          ENDIF
+          CALL hamwan2bloch ( nbndsub, nrr_k, cufkk, etf_tmp(:), chw, cfac, dims)
+          ! 
+          IF (ABS(scissor) > eps6) THEN
+            DO ibnd = icbm, nbndsub
+              etf_tmp (ibnd) = etf_tmp (ibnd) + scissor
+            ENDDO              
+          ENDIF
+          ! Check for the k-points in this pool
+          IF ( minval ( abs(etf_tmp(:) - ef) ) < fsthick ) THEN
+            nkloc = nkloc + 1
+            kmap(nkloc) = ik
+          ENDIF
+        ENDDO ! k-points
+        ! 
+        ! Now compute the q-loop doing WS separately for efficiency
+        IF (use_ws) THEN
+          DO iq=1, nqf
+            xxq = xqf (:, iq)
+            etf_tmp(:) = zero
+            found(:) = 0
+            DO ikl = 1, nkloc
+              ik = kmap(ikl)
+              ikk = 2 * ik - 1
+              xkk = xkf(:, ikk)
+              xkq = xkk + xxq
+              CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
+              DO iw=1, dims
+                DO iw2=1, dims
+                  DO ir = 1, nrr_k
+                    IF (ndegen_k(ir,iw2,iw) > 0) THEN
+                      cfacq(ir,iw2,iw) = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
+                    ENDIF
+                  ENDDO
+                ENDDO
+              ENDDO
+              CALL hamwan2bloch ( nbndsub, nrr_k, cufkq, etf_tmp(:), chw, cfacq, dims)
+              ! 
+              IF (ABS(scissor) > eps6) THEN
+                DO ibnd = icbm, nbndsub
+                  etf_tmp (ibnd) = etf_tmp (ibnd) + scissor
+                ENDDO
+              ENDIF
+              ! 
+              IF ( minval ( abs(etf_tmp(:) - ef) ) < fsthick ) THEN
+                found(my_pool_id+1) = 1
+                EXIT ! exit the loop 
+              ENDIF
+            ENDDO ! ik
+            ! If found on any k-point from the pools
+            CALL mp_sum(found, world_comm)
+            IF (SUM(found(:) ) > 0) THEN
+              totq = totq +1
+              selecq(totq) = iq
+              IF (MOD(totq,restart_freq) == 0) THEN
+                WRITE(stdout,'(5x,a,i8,i8)')'Number selected, total',totq,iq
+              ENDIF
+            ENDIF
+          ENDDO ! iq
+        ELSE ! use_ws
+          DO iq=1, nqf
+            xxq = xqf (:, iq)
+            etf_tmp(:) = zero
+            found(:) = 0
+            DO ikl = 1, nkloc
+              ik = kmap(ikl)
+              ikk = 2 * ik - 1
+              xkk = xkf(:, ikk)
+              xkq = xkk + xxq
+              CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkq, 1, 0.0_DP, rdotk, 1 )
+              cfacq(:,1,1)  = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
+              CALL hamwan2bloch ( nbndsub, nrr_k, cufkq, etf_tmp(:), chw, cfacq, dims)
+              ! 
+              IF (ABS(scissor) > eps6) THEN
+                DO ibnd = icbm, nbndsub
+                  etf_tmp (ibnd) = etf_tmp (ibnd) + scissor
+                ENDDO
+              ENDIF
+              ! 
+              IF ( minval ( abs(etf_tmp(:) - ef) ) < fsthick ) THEN
+                found(my_pool_id+1) = 1
+                EXIT ! exit the loop 
+              ENDIF
+            ENDDO ! ik
+            ! If found on any k-point from the pools
+            CALL mp_sum(found, world_comm)
+            IF (SUM(found(:) ) > 0) THEN
+              totq = totq +1
+              selecq(totq) = iq
+              IF (MOD(totq,restart_freq) == 0) THEN
+                WRITE(stdout,'(5x,a,i8,i8)')'Number selected, total',totq,iq
+              ENDIF
+            ENDIF
+          ENDDO ! iq            
+          !
+        ENDIF ! use_ws
+      ENDIF ! homogeneous
+      !  
       IF (mpime == ionode_id) THEN
-        OPEN(unit=iunselecq, file='selecq.fmt')
+        OPEN(unit=iunselecq, file='selecq.fmt', action='write')
         WRITE (iunselecq,*) totq    ! Selected number of q-points
         WRITE (iunselecq,*) nqtotf  ! Total number of q-points 
         WRITE (iunselecq,*) selecq(1:totq)
@@ -387,7 +620,6 @@
           ! matter if fstick is large enough.
           !IF ( ( minval ( abs(etf (:, ikk) - ef0(itemp)) ) .lt. fsthick ) .AND. &
           !     ( minval ( abs(etf (:, ikq) - ef0(itemp)) ) .lt. fsthick ) ) THEN
-          ! If scissor = 0 then 
           IF ( ( minval ( abs(etf (:, ikk) - ef) ) .lt. fsthick ) .AND. &
                ( minval ( abs(etf (:, ikq) - ef) ) .lt. fsthick ) ) THEN
             !
