@@ -672,10 +672,9 @@ CONTAINS
     read( iunps, '(4i5)',err=100, iostat=ios ) &
          iexch, icorr, igcx,  igcc
     !
-    ! workaround to keep track of which dft was read
-    ! See also upf2internals
+    ! workaround to keep track of which dft was read - assuming no vdW, no metaGGA
     !
-    write( upf%dft, "('INDEX:',4i1)") iexch,icorr,igcx,igcc
+    write( upf%dft, "('INDEX:',6i2)") iexch,icorr,igcx,igcc,0,0
 
     read( iunps, '(2e17.11,i5)') &
          upf%zp, etotps, lmax
