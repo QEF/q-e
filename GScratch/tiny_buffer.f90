@@ -166,13 +166,14 @@ contains
     integer :: i
     i = 1
     temp => Head
-    print *, "Buffer status ============"
+    print *, "Buffer status ================="
+    print *, "          n        size Locked"
     DO WHILE (ASSOCIATED(temp))
-        print *, i, SIZE(TemP%space), TemP%locked
+        write (*,'(I12, I12, L7)'), i, SIZE(TemP%space), TemP%locked
         TemP => TemP%Next
         i = i + 1
     END DO
-    print *, "--------------------------"
+    print *, "-------------------------------"
   end subroutine dump_status
   !
   subroutine lock_space(this, d, cloc, info)
@@ -238,7 +239,7 @@ contains
 #if defined(__CUDA)
     cloc = c_devloc(good%space)
 #else
-    cloc = c_loc(good%space)
+    cloc = c_loc(good%space(1))
 #endif
     !
   end subroutine lock_space
@@ -258,6 +259,11 @@ contains
     integer, intent(out)            :: info    
     !
     TYPE(Node), POINTER  :: temp
+#if defined(__CUDA)
+    type(c_devptr) :: clocint
+#else
+    type(c_ptr)            :: clocint
+#endif
     !
     integer :: i
     info = -1
@@ -267,7 +273,8 @@ contains
 #if defined(__CUDA)
         IF ( cloc == c_devloc(TemP%space) ) THEN
 #else
-        IF ( C_ASSOCIATED(cloc, c_loc(TemP%space)) ) THEN
+        clocint = c_loc(TemP%space(1))
+        IF ( C_ASSOCIATED(cloc, clocint) ) THEN
 #endif
             TemP%locked=.false.
             info = 0
@@ -604,7 +611,7 @@ contains
     CALL this%release_space(c_devloc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1))), info)
 #endif
   end subroutine release_buffer_iv
 
@@ -627,7 +634,7 @@ contains
     CALL this%release_space(c_devloc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2))), info)
 #endif
   end subroutine release_buffer_im
 
@@ -650,7 +657,7 @@ contains
     CALL this%release_space(c_devloc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3))), info)
 #endif
   end subroutine release_buffer_it
 
@@ -673,7 +680,7 @@ contains
     CALL this%release_space(c_devloc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1))), info)
 #endif
   end subroutine release_buffer_rv
 
@@ -696,7 +703,7 @@ contains
     CALL this%release_space(c_devloc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2))), info)
 #endif
   end subroutine release_buffer_rm
 
@@ -719,7 +726,7 @@ contains
     CALL this%release_space(c_devloc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3))), info)
 #endif
   end subroutine release_buffer_rt
 
@@ -742,7 +749,7 @@ contains
     CALL this%release_space(c_devloc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1))), info)
 #endif
   end subroutine release_buffer_cv
 
@@ -765,7 +772,7 @@ contains
     CALL this%release_space(c_devloc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2))), info)
 #endif
   end subroutine release_buffer_cm
 
@@ -788,7 +795,7 @@ contains
     CALL this%release_space(c_devloc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3))), info)
 #endif
   end subroutine release_buffer_ct
 
@@ -962,13 +969,14 @@ contains
     integer :: i
     i = 1
     temp => Head
-    print *, "Buffer status ============"
+    print *, "Buffer status ================="
+    print *, "          n        size Locked"
     DO WHILE (ASSOCIATED(temp))
-        print *, i, SIZE(TemP%space), TemP%locked
+        write (*,'(I12, I12, L7)'), i, SIZE(TemP%space), TemP%locked
         TemP => TemP%Next
         i = i + 1
     END DO
-    print *, "--------------------------"
+    print *, "-------------------------------"
   end subroutine dump_status
   !
   subroutine lock_space(this, d, cloc, info)
@@ -1036,7 +1044,7 @@ contains
 #if defined(__CUDA)
     cloc = c_loc(good%space)
 #else
-    cloc = c_loc(good%space)
+    cloc = c_loc(good%space(1))
 #endif
     !
   end subroutine lock_space
@@ -1056,6 +1064,11 @@ contains
     integer, intent(out)            :: info    
     !
     TYPE(Node), POINTER  :: temp
+#if defined(__CUDA)
+    type(c_ptr) :: clocint
+#else
+    type(c_ptr)            :: clocint
+#endif
     !
     integer :: i
     info = -1
@@ -1063,9 +1076,11 @@ contains
     temp => head
     DO WHILE (ASSOCIATED(temp))
 #if defined(__CUDA)
-        IF ( cloc == c_loc(TemP%space) ) THEN
+        clocint = c_loc(TemP%space(1))
+        IF ( C_ASSOCIATED(cloc, clocint) ) THEN
 #else
-        IF ( C_ASSOCIATED(cloc, c_loc(TemP%space)) ) THEN
+        clocint = c_loc(TemP%space(1))
+        IF ( C_ASSOCIATED(cloc, clocint) ) THEN
 #endif
             TemP%locked=.false.
             info = 0
@@ -1392,7 +1407,7 @@ contains
     CALL this%release_space(c_loc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1))), info)
 #endif
   end subroutine release_buffer_iv
 
@@ -1414,7 +1429,7 @@ contains
     CALL this%release_space(c_loc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2))), info)
 #endif
   end subroutine release_buffer_im
 
@@ -1436,7 +1451,7 @@ contains
     CALL this%release_space(c_loc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3))), info)
 #endif
   end subroutine release_buffer_it
 
@@ -1458,7 +1473,7 @@ contains
     CALL this%release_space(c_loc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1))), info)
 #endif
   end subroutine release_buffer_rv
 
@@ -1480,7 +1495,7 @@ contains
     CALL this%release_space(c_loc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2))), info)
 #endif
   end subroutine release_buffer_rm
 
@@ -1502,7 +1517,7 @@ contains
     CALL this%release_space(c_loc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3))), info)
 #endif
   end subroutine release_buffer_rt
 
@@ -1524,7 +1539,7 @@ contains
     CALL this%release_space(c_loc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1))), info)
 #endif
   end subroutine release_buffer_cv
 
@@ -1546,7 +1561,7 @@ contains
     CALL this%release_space(c_loc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2))), info)
 #endif
   end subroutine release_buffer_cm
 
@@ -1568,7 +1583,7 @@ contains
     CALL this%release_space(c_loc(p), info)
 
 #else
-    CALL this%release_space(c_loc(p), info)
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3))), info)
 #endif
   end subroutine release_buffer_ct
 
