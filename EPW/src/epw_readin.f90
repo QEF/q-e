@@ -75,7 +75,7 @@
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
   !
-  implicit none
+  IMPLICIT NONE
   !
 #if ! defined(__NAG)
   integer :: iargc
@@ -97,7 +97,7 @@
   INTEGER :: nk3tmp  
   !! temp vars for saving kgrid info
   LOGICAL, EXTERNAL  :: imatches
-  character(len=256) :: outdir
+  CHARACTER(len=256) :: outdir
   namelist / inputepw / &
        amass, outdir, prefix, iverbosity, time_max, fildvscf,                  &
        elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndskip,  nbndsub,                 &
