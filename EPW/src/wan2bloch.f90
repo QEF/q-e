@@ -881,8 +881,8 @@
     !--------------------------------------------------------------------------
     !
     USE kinds,         ONLY : DP
-    use elph2,         ONLY : cvmew 
-    use cell_base,     ONLY : at, alat
+    USE elph2,         ONLY : cvmew 
+    USE cell_base,     ONLY : at, alat
     USE epwcom,        ONLY : eig_read, use_ws
     USE constants_epw, ONLY : twopi, ci, czero, cone, zero, eps4, bohr2ang
     !   
@@ -1044,14 +1044,6 @@
       CALL zgemm ('n', 'n', nbnd, nbnd, nbnd, cone, cuf(:,:), &
                  nbnd, chf_a_tmp(:,:), nbnd, czero, chf_a(ipol,:,:), nbnd)
     ENDDO
-    !DBSP
-    !if (mpime==1) write(902,*) 'at',at
-    !if (mpime==1) write(902,*)SUM(chw)
-    !if (mpime==1) write(902,*)SUM(cuf(:,:))
-    !if (mpime==1) write(902,*)SUM(vmef(:,:,:))
-    !if (mpime==1) write(902,*)SUM(chf_a_tmp(:,:))
-    !if (mpime==1) write(902,*)SUM(chf_a(:,:,:))
-
     !
     ! velocity matrix elements
     ! [Eqn. 31 of PRB 74, 195118 (2006)]
@@ -1075,20 +1067,6 @@
       ENDDO
     ENDIF
     !
-    ! Satisfy
-    ! Phys. Rev. B 62, 4927-4944 (2000) , Eq. (30)
-    !
-    IF (eig_read) THEN
-      DO ibnd = 1, nbnd
-        DO jbnd = 1, nbnd
-          IF (abs(etf_ks(ibnd) - etf_ks(jbnd)) .gt. eps4) THEN
-            vmef(:,ibnd,jbnd) = vmef(:,ibnd,jbnd) * &
-                   ( etf(ibnd)    - etf(jbnd) )/ &
-                   ( etf_ks(ibnd) - etf_ks(jbnd) )
-          ENDIF
-        ENDDO
-      ENDDO
-    ENDIF
     !
     END SUBROUTINE vmewan2bloch
     !

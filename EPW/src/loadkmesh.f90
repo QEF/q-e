@@ -19,8 +19,8 @@ SUBROUTINE loadkmesh_para
   USE mp_world,  ONLY : mpime 
   USE kinds,     ONLY : DP
   USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, iterative_bte, &
-                        rand_k, rand_nk, mp_mesh_k, system_2d
-  USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf
+                        rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme
+  USE elph2,     ONLY : nkqtotf, nkqf, xkf, wkf, nkf, xkfd, deltaq 
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
   USE io_epw,    ONLY : iunkf
@@ -252,6 +252,27 @@ SUBROUTINE loadkmesh_para
  ALLOCATE(xkf(3,nkqf))
  ALLOCATE(wkf(  nkqf))
  xkf(:,:) = xkf_ (:, lower_bnd:upper_bnd)
+ ! 
+ ! KMB: set coordinates of displaced vectors for indabs
+ IF (vme .AND. eig_read) THEN
+    ALLOCATE( xkfd(3,nkqf,6)) 
+    deltaq = 0.001d0
+    DO ik = 1, nkqf
+       !--bring the k point to cartesian coordinates                                                                                                                           
+       CALL cryst_to_cart ( 1, xkf(:,ik), bg, 1)                                                                                                              
+       xkfd(:,ik,1) = xkf(:,ik) + (/ deltaq, 0.d0, 0.d0 /)
+       xkfd(:,ik,2) = xkf(:,ik) - (/ deltaq, 0.d0, 0.d0 /)
+       xkfd(:,ik,3) = xkf(:,ik) + (/ 0.d0, deltaq, 0.d0 /)
+       xkfd(:,ik,4) = xkf(:,ik) - (/ 0.d0, deltaq, 0.d0 /)
+       xkfd(:,ik,5) = xkf(:,ik) + (/ 0.d0, 0.d0, deltaq /)
+       xkfd(:,ik,6) = xkf(:,ik) - (/ 0.d0, 0.d0, deltaq /)
+       !  bring the k point to crystal coordinates                                                                                                                             
+       CALL cryst_to_cart( 1, xkf(:,ik), at, -1)  
+       DO i = 1, 6
+          CALL cryst_to_cart( 1, xkfd(:,ik,i), at, -1)  
+       END DO
+    ENDDO
+ ENDIF
  IF (noncolin) THEN 
     wkf(  :) = wkf_ ( lower_bnd:upper_bnd)/2.d0
  ELSE
@@ -283,8 +304,8 @@ SUBROUTINE loadkmesh_serial
   USE mp_world,  ONLY : mpime
   USE kinds,     ONLY : DP
   USE epwcom,    ONLY : filkf, nkf1, nkf2, nkf3, &
-                        rand_k, rand_nk, mp_mesh_k, system_2d
-  USE elph2,     ONLY : xkf, wkf, nkqtotf, nkf, nkqf
+                        rand_k, rand_nk, mp_mesh_k, system_2d, eig_read, vme
+  USE elph2,     ONLY : xkf, wkf, nkqtotf, nkf, nkqf, xkfd, deltaq
   USE cell_base, ONLY : at, bg
   USE symm_base, ONLY : s, t_rev, time_reversal, set_sym_bl, nrot
   USE io_epw,    ONLY : iunkf
@@ -458,6 +479,26 @@ SUBROUTINE loadkmesh_serial
   CALL mp_bcast(xkf, ionode_id, inter_pool_comm)
   CALL mp_bcast(wkf, ionode_id, inter_pool_comm)
   !
+  ! KMB: set coordinates of displaced vectors - indabs
+  IF (vme .AND. eig_read) THEN
+    ALLOCATE( xkfd(3,nkqf,6)) 
+    deltaq = 0.001d0
+    DO ik = 1, nkqf
+      ! Bring the k point to cartesian coordinates                                                                                                                           
+      CALL cryst_to_cart ( 1, xkf(:,ik), bg, 1)                                                                                                                           
+      xkfd(:,ik,1) = xkf(:,ik) + (/ deltaq, 0.d0, 0.d0 /)
+      xkfd(:,ik,2) = xkf(:,ik) - (/ deltaq, 0.d0, 0.d0 /)
+      xkfd(:,ik,3) = xkf(:,ik) + (/ 0.d0, deltaq, 0.d0 /)
+      xkfd(:,ik,4) = xkf(:,ik) - (/ 0.d0, deltaq, 0.d0 /)
+      xkfd(:,ik,5) = xkf(:,ik) + (/ 0.d0, 0.d0, deltaq /)
+      xkfd(:,ik,6) = xkf(:,ik) - (/ 0.d0, 0.d0, deltaq /)
+      ! Bring the k point to crystal coordinates                                                                                                                             
+      CALL cryst_to_cart( 1, xkf(:,ik), at, -1)  
+      DO i = 1, 6
+        CALL cryst_to_cart( 1, xkfd(:,ik,i), at, -1)  
+      END DO
+    ENDDO
+  ENDIF
   IF (abs(sum (wkf) - 2.d0) .gt. 1.d-4 ) &
     WRITE(stdout,'(5x,"WARNING: k-point weigths do not add up to 1 [loadkmesh_serial]")') 
   !
