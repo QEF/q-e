@@ -26,7 +26,7 @@ module tb_dev
   !
   private
   !
-  TYPE(Node), POINTER  :: Head
+  TYPE(Node), POINTER  :: Head => null()
   !
   public :: tb_dev_t
   !
@@ -86,6 +86,7 @@ module tb_dev
      procedure, private :: lock_space
      procedure, private :: release_space
      procedure, public  :: dump_status
+     procedure, public  :: print_report
   end type
 
   
@@ -166,15 +167,39 @@ contains
     integer :: i
     i = 1
     temp => Head
-    print *, "Buffer status ================="
-    print *, "          n        size Locked"
+    write (*, *) "Buffer status ================="
+    write (*, *) "          n        size Locked"
     DO WHILE (ASSOCIATED(temp))
-        write (*,'(I12, I12, L7)'), i, SIZE(TemP%space), TemP%locked
+        write (*,'(I12, I12, L7)') i, SIZE(TemP%space), TemP%locked
         TemP => TemP%Next
         i = i + 1
     END DO
-    print *, "-------------------------------"
+    write (*, *) "-------------------------------"
   end subroutine dump_status
+  !
+  subroutine print_report(this, unit)
+    class(tb_dev_t), intent(inout)     :: this     !< The class.
+    INTEGER, OPTIONAL, intent(in)          :: unit
+    !
+    TYPE(Node), POINTER  :: temp
+    integer(kind=LLI) :: tsz
+    integer :: i, l
+    i = 0
+    l = 0
+    tsz = 0
+    temp => Head
+    DO WHILE (ASSOCIATED(temp))
+        tsz = tsz + SIZE(temp%space)
+        if (temp%locked) l = l + 1
+        temp => temp%Next
+        i = i + 1
+    END DO
+    if ( present (unit) ) then
+        write (unit, '("[tb_dev] Currently allocated ", (es12.2), " Mbytes, locked: ", (I4), " /", (I4) )') REAL(tsz)/1048576, l, i
+    else
+        write (*   , '("[tb_dev] Currently allocated ", (es12.2), " Mbytes, locked: ", (I4), " /", (I4) )') REAL(tsz)/1048576, l, i
+    end if
+  end subroutine print_report
   !
   subroutine lock_space(this, d, cloc, info)
     use iso_c_binding
@@ -190,25 +215,27 @@ contains
     !
     integer(kind=LLI) :: r, tsz, sz
     TYPE(Node), POINTER  :: temp, good
-    LOGICAL :: found_one_free
+    INTEGER :: i, good_one_idx
     !
-    r = 0
+    r   = 0
     tsz = 0
+    i   = 1
     !
     ! Find the smallest usable buffer
-    found_one_free = .false.
+    good_one_idx = 0
     temp => Head
     NULLIFY(good)
     DO WHILE (ASSOCIATED(temp))
         sz = SIZE(TemP%space)
         IF ( ( sz >= d ) .and. (TemP%locked .eqv. .false.) ) THEN
-            IF ( found_one_free ) THEN
+            IF ( good_one_idx >= 1 ) THEN
                 IF ( sz - d < r) THEN
                     good => temp
                     r = SIZE(TemP%space) - d
+                    good_one_idx = i
                 END IF
             ELSE
-                found_one_free = .true.
+                good_one_idx = i
                 good => temp
                 r = sz - d
             END IF
@@ -216,12 +243,13 @@ contains
         END IF
         !
         tsz = tsz + sz
+        i = i + 1
         !
         TemP => TemP%Next
     END DO
     !
     ! Allocate a new buffer
-    IF (.not. found_one_free) THEN
+    IF ( good_one_idx == 0 ) THEN
         ALLOCATE (good)
 #if defined(__CUDA)
         ALLOCATE (good%space(d), stat=info)
@@ -231,9 +259,13 @@ contains
         good%Next   => Head
         Head        => good
         tsz         = tsz + d
+        if (this%verbose) write (*, '("[tb_dev] Created new buffer")')
+    ELSE
+        if (this%verbose) write (*, '("[tb_dev] Locked buffer", I4)') good_one_idx
     END IF
     !
-    if (this%verbose) write (*, '("[tb_dev] Currently allocated ", (es12.2), " Mbytes")') REAL(tsz)/1048576 ! 1024/1024
+    if (this%verbose) &
+         write (*, '("[tb_dev] Currently allocated ", (es12.2), " Mbytes")') REAL(tsz)/1048576 ! 1024/1024
     !
     good%locked = .true.
 #if defined(__CUDA)
@@ -283,7 +315,7 @@ contains
         i = i + 1
         TemP => TemP%Next
     END DO
-    if (this%verbose) write (*, '("[tb_dev] buffer released? ", L1, I4)') info == 0, i
+    if (this%verbose) write (*, '("[tb_dev] Released buffer ", I4)') i
   end subroutine release_space
   !
 
@@ -829,7 +861,7 @@ module tb_pin
   !
   private
   !
-  TYPE(Node), POINTER  :: Head
+  TYPE(Node), POINTER  :: Head => null()
   !
   public :: tb_pin_t
   !
@@ -889,6 +921,7 @@ module tb_pin
      procedure, private :: lock_space
      procedure, private :: release_space
      procedure, public  :: dump_status
+     procedure, public  :: print_report
   end type
 
   
@@ -969,15 +1002,39 @@ contains
     integer :: i
     i = 1
     temp => Head
-    print *, "Buffer status ================="
-    print *, "          n        size Locked"
+    write (*, *) "Buffer status ================="
+    write (*, *) "          n        size Locked"
     DO WHILE (ASSOCIATED(temp))
-        write (*,'(I12, I12, L7)'), i, SIZE(TemP%space), TemP%locked
+        write (*,'(I12, I12, L7)') i, SIZE(TemP%space), TemP%locked
         TemP => TemP%Next
         i = i + 1
     END DO
-    print *, "-------------------------------"
+    write (*, *) "-------------------------------"
   end subroutine dump_status
+  !
+  subroutine print_report(this, unit)
+    class(tb_pin_t), intent(inout)     :: this     !< The class.
+    INTEGER, OPTIONAL, intent(in)          :: unit
+    !
+    TYPE(Node), POINTER  :: temp
+    integer(kind=LLI) :: tsz
+    integer :: i, l
+    i = 0
+    l = 0
+    tsz = 0
+    temp => Head
+    DO WHILE (ASSOCIATED(temp))
+        tsz = tsz + SIZE(temp%space)
+        if (temp%locked) l = l + 1
+        temp => temp%Next
+        i = i + 1
+    END DO
+    if ( present (unit) ) then
+        write (unit, '("[tb_pin] Currently allocated ", (es12.2), " Mbytes, locked: ", (I4), " /", (I4) )') REAL(tsz)/1048576, l, i
+    else
+        write (*   , '("[tb_pin] Currently allocated ", (es12.2), " Mbytes, locked: ", (I4), " /", (I4) )') REAL(tsz)/1048576, l, i
+    end if
+  end subroutine print_report
   !
   subroutine lock_space(this, d, cloc, info)
     use iso_c_binding
@@ -993,25 +1050,27 @@ contains
     !
     integer(kind=LLI) :: r, tsz, sz
     TYPE(Node), POINTER  :: temp, good
-    LOGICAL :: found_one_free
+    INTEGER :: i, good_one_idx
     !
-    r = 0
+    r   = 0
     tsz = 0
+    i   = 1
     !
     ! Find the smallest usable buffer
-    found_one_free = .false.
+    good_one_idx = 0
     temp => Head
     NULLIFY(good)
     DO WHILE (ASSOCIATED(temp))
         sz = SIZE(TemP%space)
         IF ( ( sz >= d ) .and. (TemP%locked .eqv. .false.) ) THEN
-            IF ( found_one_free ) THEN
+            IF ( good_one_idx >= 1 ) THEN
                 IF ( sz - d < r) THEN
                     good => temp
                     r = SIZE(TemP%space) - d
+                    good_one_idx = i
                 END IF
             ELSE
-                found_one_free = .true.
+                good_one_idx = i
                 good => temp
                 r = sz - d
             END IF
@@ -1019,12 +1078,13 @@ contains
         END IF
         !
         tsz = tsz + sz
+        i = i + 1
         !
         TemP => TemP%Next
     END DO
     !
     ! Allocate a new buffer
-    IF (.not. found_one_free) THEN
+    IF ( good_one_idx == 0 ) THEN
         ALLOCATE (good)
 #if defined(__CUDA)
         info = cudaMallocHost(cloc, int(d))
@@ -1036,9 +1096,13 @@ contains
         good%Next   => Head
         Head        => good
         tsz         = tsz + d
+        if (this%verbose) write (*, '("[tb_pin] Created new buffer")')
+    ELSE
+        if (this%verbose) write (*, '("[tb_pin] Locked buffer", I4)') good_one_idx
     END IF
     !
-    if (this%verbose) write (*, '("[tb_pin] Currently allocated ", (es12.2), " Mbytes")') REAL(tsz)/1048576 ! 1024/1024
+    if (this%verbose) &
+         write (*, '("[tb_pin] Currently allocated ", (es12.2), " Mbytes")') REAL(tsz)/1048576 ! 1024/1024
     !
     good%locked = .true.
 #if defined(__CUDA)
@@ -1089,7 +1153,7 @@ contains
         i = i + 1
         TemP => TemP%Next
     END DO
-    if (this%verbose) write (*, '("[tb_pin] buffer released? ", L1, I4)') info == 0, i
+    if (this%verbose) write (*, '("[tb_pin] Released buffer ", I4)') i
   end subroutine release_space
   !
 

@@ -417,6 +417,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
   USE wvfct_gpum,           ONLY : using_et
   USE scf_gpum,             ONLY : using_vrs
+  USE gbuffers,             ONLY : dev_buf, pin_buf
   !
   IMPLICIT NONE
   !
@@ -523,6 +524,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
         GO TO 10
      END IF
      iter = iter + 1
+     !
+     IF (use_gpu .and. (iverbosity >= 1) ) CALL dev_buf%print_report(stdout)
+     IF (use_gpu .and. (iverbosity >= 1) ) CALL pin_buf%print_report(stdout)
      !
      WRITE( stdout, 9010 ) iter, ecutwfc, mixing_beta
      !
