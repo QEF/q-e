@@ -19,7 +19,6 @@ chdens_bspline.o \
 compute_ppsi.o \
 compute_sigma_avg.o \
 cube.o \
-spinsym.o \
 dosg.o \
 do_initial_state.o \
 do_shift_ew.o \
@@ -42,6 +41,8 @@ stm.o \
 stop_pp.o \
 sum_band_kin.o \
 sym_band.o \
+vasp_read_chgcar_mod.o \
+vasp_xml_module.o \
 work_function.o \
 write_p_avg.o \
 write_proj.o \

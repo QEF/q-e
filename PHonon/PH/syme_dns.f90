@@ -49,11 +49,11 @@ SUBROUTINE syme_dns (ldim, npe, dns)
      IF (.NOT.is_hubbard(nt)) CYCLE
      DO n = 1, upf(nt)%nwfc
         l = upf(nt)%lchi(n)
-        IF (upf(nt)%oc(n) >= 0.d0 .AND. l == Hubbard_l(nt)) &
+        IF (upf(nt)%oc(n) > 0.d0 .AND. l == Hubbard_l(nt)) &
            counter = counter + 2 * l + 1
      ENDDO
   ENDDO
-  IF (counter.NE.nwfcU) CALL errore ('syme_dns', 'nstart<>counter', 1)
+  IF (counter.NE.nwfcU) CALL errore ('syme_dns', 'nwfcU<>counter', 1)
   !
   ALLOCATE (dnraux(ldim,ldim,nspin,nat,npe))  
   ALLOCATE (dnr(ldim,ldim,nspin,nat,npe))  

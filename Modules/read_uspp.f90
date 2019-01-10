@@ -15,13 +15,7 @@ MODULE read_uspp_module
   USE kinds, ONLY: DP
   USE parameters, ONLY: lmaxx, lqmax
   USE io_global, ONLY: stdout
-  USE funct, ONLY: set_dft_from_name, dft_is_hybrid, dft_is_meta, &
-       set_dft_from_indices
   USE matrix_inversion
-  !
-  ! Variables above are not modified, variables below are
-  !
-  USE uspp_param, ONLY: oldvan
   !
   IMPLICIT NONE
   SAVE
@@ -153,6 +147,11 @@ CONTAINS
     read( iunps, '(a20,3f15.9)', err=100, iostat=ios ) &
          title, upf%zmesh, upf%zp, exfact 
     !
+    ! compatibility
+    upf%is_gth = .false.
+    ! NC-PP in this format are assumed not to be multi-projector
+    upf%is_multiproj = .false.
+    !
     upf%psd = title(1:2)
     !
     if ( upf%zmesh < 1 .or. upf%zmesh > 100.0_DP) &
@@ -161,11 +160,8 @@ CONTAINS
          call errore('readvan','wrong atomic charge read', is )
     if ( exfact < -6 .or. exfact > 6) &
          &     call errore('readvan','Wrong xc in pseudopotential',1)
-    ! convert from "our" conventions to Vanderbilt conventions
+    ! convert from Vanderbilt conventions to "our" conventions 
     call dftname_cp (nint(exfact), upf%dft)
-    call set_dft_from_name( upf%dft )
-    IF ( dft_is_meta() ) &
-         CALL errore( 'readvan ', 'META-GGA not implemented', 1 )
     !
     read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios ) &
          upf%nwfc, upf%mesh, etotpseu
@@ -199,7 +195,9 @@ CONTAINS
        call errore('readvan','keyps not implemented',keyps)
     end if
     upf%tvanp = (keyps == 3)
+    !    for compatibility
     upf%tpawp = .false.
+    upf%tcoulombp = .false.
     !
     !     Read information on the angular momenta, and on Q pseudization
     !     (version > 3.0)
@@ -251,7 +249,7 @@ CONTAINS
     !       set the number of angular momentum terms in q_ij to read in
     !
     if (iver(1) == 1) then
-       oldvan(is) = .TRUE.
+       ! oldvan(is) = .TRUE. OBSOLETE
        ! old format: no optimization of q_ij => 3-term taylor series
        upf%nqf=3
        upf%nqlc=5
@@ -656,7 +654,10 @@ CONTAINS
     read( iunps, '(i5)',err=100, iostat=ios ) &
          pseudotype
     upf%tvanp = (pseudotype == 3)
+    upf%is_multiproj = (pseudotype == 2)
     upf%tpawp = .false.
+    ! compatibility
+    upf%is_gth = .false.
 
     if ( upf%tvanp ) then
        upf%generated = &
@@ -675,7 +676,6 @@ CONTAINS
     ! See also upf2internals
     !
     write( upf%dft, "('INDEX:',4i1)") iexch,icorr,igcx,igcc
-    call set_dft_from_indices(iexch,icorr,igcx,igcc, 0) ! Cannot read nonlocal in this format
 
     read( iunps, '(2e17.11,i5)') &
          upf%zp, etotps, lmax

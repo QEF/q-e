@@ -1,0 +1,49 @@
+&CONTROL
+    calculation = 'nscf'
+    restart_mode = 'from_scratch',
+    pseudo_dir = '/marconi/home/userexternal/pumari00/QE_LAST/develop/GWW/examples/example04/',
+    outdir='/marconi_scratch/userexternal/pumari00/tmp/',    
+    prefix = 'ag',
+    wf_collect = .true.,
+/
+&SYSTEM
+    ibrav=  2, 
+    celldm(1) = 7.85, 
+    nat = 1, 
+    ntyp= 1,
+    ecutwfc = 50.0,
+    occupations = 'smearing',
+    degauss = 0.02,
+    smearing = 'marzari-vanderbilt',
+    nbnd = 20,
+    noinv = .true.,
+    nosym = .true.,
+/
+&ELECTRONS
+    diagonalization='cg',
+    conv_thr = 1.0e-12,
+    mixing_beta = 0.3,
+    diago_full_acc = .true.,
+/
+ATOMIC_SPECIES
+ Ag  196.96657  Ag_ONCV_PBE-1.0.upf
+ATOMIC_POSITIONS alat
+ Ag 0.00 0.00 0.00
+K_POINTS (crystal)
+15
+0.0 0.0 0.0 1.0
+0.0 0.0 0.5 1.0
+0.0 0.5 0.0 1.0
+0.0 0.5 0.5 1.0
+0.5 0.0 0.0 1.0
+0.5 0.0 0.5 1.0
+0.5 0.5 0.0 1.0
+0.5 0.5 0.5 1.0
+0.0 0.0 1.0 1.0
+0.0 1.0 0.0 1.0
+1.0 0.0 0.0 1.0
+1.0 1.0 0.0 1.0
+1.0 0.0 1.0 1.0
+0.0 1.0 1.0 1.0
+1.0 1.0 1.0 1.0
+

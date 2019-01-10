@@ -19,7 +19,7 @@ SUBROUTINE force_us( forcenl )
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g
   USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, indv_ijkb0
-  USE uspp_param,           ONLY : upf, nh, newpseudo, nhm
+  USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE symme,                ONLY : symvector
@@ -230,7 +230,7 @@ SUBROUTINE force_us( forcenl )
                       END IF
                    END DO
                    !
-                   IF ( upf(nt)%tvanp .OR. newpseudo(nt) ) THEN
+                   IF ( upf(nt)%tvanp .OR. upf(nt)%is_multiproj ) THEN
                       DO ih = 1, nh(nt)
                          ikb = ijkb0 + ih
                          !

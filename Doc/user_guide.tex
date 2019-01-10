@@ -498,7 +498,12 @@ Some environment variables that are relevant to \configure\ are:
 \texttt{(C,F,F90,CPP,LD)FLAGS}& compilation/preprocessor/loader flags\\
 \texttt{LIBDIRS}&     extra directories where to search for libraries\\
 \end{tabular}\\
-(note that ``F90'' is an historical name: we actually use F2003)
+(note that \texttt{F90} is an ``historical'' name -- we actually use
+Fortran 2003 -- and that it should be used only together with option
+\texttt{--disable-parallel}. In fact, the value of F90 must be
+consistent with the parallel Fortran compiler which is determined by 
+\configure\ and stored in the \texttt{MPIF90} variable).
+
 For example, the following command line:
 \begin{verbatim}
      ./configure MPIF90=mpif90 FFLAGS="-O2 -assume byterecl" \
@@ -754,10 +759,19 @@ and won't do any extra search.
 \subsection{Compilation}
 \label{SubSec:Compilation}
 
-There are a few adjustable parameters in \texttt{Modules/parameters.f90}.
-The
-present values will work for most cases. All other variables are dynamically
-allocated: you should never need to recompile your code.
+The compiled codes can run with any input: almost all variables are
+dinamically allocated at run-time. Only a few variables have fixed
+dimensions, set in file \texttt{Modules/parameters.f90}:
+\begin{verbatim}
+      ntypx  = 10,     &! max number of different types of atom
+      npsx   = ntypx,  &! max number of different PPs (obsolete)
+      nsx    = ntypx,  &! max number of atomic species (CP)
+      npk    = 40000,  &! max number of k-points
+      lmaxx  = 3,      &! max non local angular momentum (l=0 to lmaxx)
+      lqmax= 2*lmaxx+1  ! max number of angular momenta of Q
+\end{verbatim}
+These values should work for the vast majority of cases. In case you need
+more atomic types or more k-points, edit this file and recompile.
 
 At your choice, you may compile the complete \qe\ suite of programs
 (with \texttt{make all}), or only some specific programs. \texttt{make} with no arguments yields a list of valid compilation targets:

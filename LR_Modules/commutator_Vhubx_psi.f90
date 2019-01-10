@@ -50,7 +50,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   ! polarization (crystal units)
   !
   REAL(DP), PARAMETER :: eps = 1.0d-8
-  INTEGER     :: counter, na, n ,l, nt, nah, ikb , m, m1, m2, ibnd, ib, ig, jkb, i, &
+  INTEGER     :: na, n ,l, nt, nah, ikb , m, m1, m2, ibnd, ib, ig, jkb, i, &
                  ihubst, ihubst1,  ihubst2, icart, op_spin, npw
   REAL(DP)    :: nsaux
   REAL(DP), ALLOCATABLE :: xyz(:,:), gk(:,:), g2k(:)

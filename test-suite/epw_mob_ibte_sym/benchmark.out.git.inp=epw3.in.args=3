@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 16Oct2018 at 16: 5:25 
+     Program EPW v.5.0.0 starts on  8Jan2019 at 13:49:50 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -147,13 +147,15 @@
      Warning: check if difference with Fermi level fine grid makes sense
 
      ===================================================================
+     Applying a scissor shift of   0.70000 eV to the conduction states
 
               ibndmin =     2  ebndmin =     0.190
-              ibndmax =     8  ebndmax =     0.760
+              ibndmax =     7  ebndmax =     0.757
 
 
-     Number of ep-matrix elements per pool :         5880 ~=   45.94 Kb (@ 8 bytes/ DP)
+     Number of ep-matrix elements per pool :         4320 ~=   33.75 Kb (@ 8 bytes/ DP)
      Number of elements per core       1528
+     Symmetry mapping finished
      Average over degenerate eigenstates is performed
 
      ===================================================================

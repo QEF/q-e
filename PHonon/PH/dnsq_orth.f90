@@ -56,11 +56,12 @@ SUBROUTINE dnsq_orth()
   !
   ! Local variables
   !
-  INTEGER :: i, j, k, ios, icart, counter, nt, na, l, ina, ih, n,      &
+  INTEGER :: i, j, k, ios, icart, nt, na, l, ina, ih, n,               &
              ihubst, ihubst1, ihubst2, nah, m, m1, m2, ibnd, jbnd, is, &
              iat, ic, nti, ibeta, imode, na_icart, ldim, iundnsorth,   &
              npw, npwq, ik, ikk, ikq
-  COMPLEX(DP), ALLOCATABLE :: dpqq(:), dpqq1(:), sum_dpqq(:,:), wgg(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: dpqq(:), dpqq1(:), sum_dpqq(:,:)
+  REAL(DP), ALLOCATABLE :: wgg(:,:,:)
   LOGICAL :: exst 
   COMPLEX(DP), EXTERNAL :: ZDOTC
   !

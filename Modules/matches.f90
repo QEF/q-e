@@ -72,6 +72,35 @@ FUNCTION imatches( string1, string2 )
   !
 END FUNCTION imatches
 !
+!
+PURE  FUNCTION  match_skipping_spaces ( string1, string2) RESULT(match) 
+   IMPLICIT NONE 
+   CHARACTER(LEN=*),INTENT(IN)  :: string1, string2 
+   CHARACTER (len=len(string1)) :: aux1
+   CHARACTER (len=len(string2)) :: aux2 
+   LOGICAL                      :: match 
+   !
+   INTEGER                      :: i1, i2 
+   match = .TRUE. 
+   aux1 = trim(string1) 
+   aux2 = trim(string2)
+   i1 = 1
+   i2 = 1
+   do 
+      if(i1 .gt. len(aux1) .or. i2 .gt. len(aux2)) exit
+      if (aux1(i1:i1) .ne. ' ' .and. aux2(i2:i2) .ne. ' ') then 
+         match = match .and. (aux1(i1:i1) .eq. aux2(i2:i2))  
+         i1 = i1 + 1
+         i2 = i2 + 1 
+      else 
+         if ( aux1(i1:i1) .eq. ' ') i1 = i1+1 
+         if ( aux2(i2:i2) .eq. ' ') i2 = i2+1 
+      end if 
+      if (.not. match) exit 
+   end do 
+   match = match .and. ( i1 .gt. len(trim(aux1)) .and. i2 .gt. len(trim(aux2)))
+END FUNCTION match_skipping_spaces
+
 !-----------------------------------------------------------------------
 SUBROUTINE remove_comments_from_string( string )  
   !-----------------------------------------------------------------------

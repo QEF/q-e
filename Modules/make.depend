@@ -123,7 +123,6 @@ gradutils.o : kind.o
 gradutils.o : recvec.o
 gth.o : cell_base.o
 gth.o : constants.o
-gth.o : funct.o
 gth.o : kind.o
 gth.o : parameters.o
 gth.o : pseudo_types.o
@@ -297,7 +296,6 @@ read_namelists.o : io_global.o
 read_namelists.o : kind.o
 read_namelists.o : mp_images.o
 read_ncpp.o : constants.o
-read_ncpp.o : funct.o
 read_ncpp.o : kind.o
 read_ncpp.o : parameters.o
 read_ncpp.o : pseudo_types.o
@@ -330,13 +328,11 @@ read_upf_v2.o : parser.o
 read_upf_v2.o : pseudo_types.o
 read_upf_v2.o : radial_grids.o
 read_uspp.o : constants.o
-read_uspp.o : funct.o
 read_uspp.o : invmat.o
 read_uspp.o : io_global.o
 read_uspp.o : kind.o
 read_uspp.o : parameters.o
 read_uspp.o : pseudo_types.o
-read_uspp.o : uspp.o
 recips.o : kind.o
 recvec.o : ../UtilXlib/mp.o
 recvec.o : kind.o
@@ -387,7 +383,6 @@ upf.o : read_upf_schema.o
 upf.o : read_upf_v1.o
 upf.o : read_upf_v2.o
 upf.o : wrappers.o
-upf_to_internal.o : funct.o
 upf_to_internal.o : pseudo_types.o
 upf_to_internal.o : radial_grids.o
 uspp.o : constants.o

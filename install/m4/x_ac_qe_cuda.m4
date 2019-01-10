@@ -29,7 +29,7 @@
 
 AC_DEFUN([X_AC_QE_CUDA], [
 
-# Varibles
+# Variables
 NVCC=no
 CUDA_CFLAGS=
 CUDA_LDLIBS=

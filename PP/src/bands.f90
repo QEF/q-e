@@ -163,14 +163,13 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   USE mp,                   ONLY : mp_bcast
   USE mp_world,             ONLY : world_comm
   USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
-                                   deallocate_bec_type
+                                   deallocate_bec_type, becp
 
   IMPLICIT NONE
   CHARACTER (len=*) :: filband
   INTEGER, INTENT(IN) :: spin_component
   LOGICAL, INTENT(IN) :: lsigma(4), no_overlap
 
-  TYPE(bec_type):: becp
   ! becp   : <psi|beta> at current  k-point
   INTEGER :: ibnd, jbnd, i, ik, ig, ig1, ig2, ipol, npw, ngmax, jmax
   INTEGER :: nks1tot, nks2tot, nks1, nks2

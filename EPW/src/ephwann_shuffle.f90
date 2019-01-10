@@ -56,7 +56,7 @@
                             sigmai_all, sigmai_mode, gamma_all, epsi, zstar,    &
                             efnew, sigmar_all, zi_all, nkqtotf, eps_rpa,        &
                             sigmar_all, zi_allvb, inv_tau_all,                  &
-                            inv_tau_allcb, zi_allcb, exband
+                            inv_tau_allcb, zi_allcb, exband, xkfd, etfd, etfd_ks
   USE transportcom,  ONLY : transp_temp, mobilityh_save, mobilityel_save, lower_bnd, &
                             upper_bnd 
   USE wan2bloch,     ONLY : dmewan2bloch, hamwan2bloch, dynwan2bloch,           &
@@ -177,6 +177,8 @@
   !! Index of the CBM
   INTEGER :: totq
   !! Total number of q-points within the fsthick window. 
+  INTEGER :: icounter
+  !! Integer counter for displaced points
   INTEGER, ALLOCATABLE :: irvec_k(:,:)
   !! integer components of the ir-th Wigner-Seitz grid point in the basis
   !! of the lattice vectors for electrons
@@ -288,6 +290,10 @@
   !! Used to store $e^{2\pi r \cdot k}$ exponential 
   COMPLEX(kind=DP), ALLOCATABLE :: cfacq(:,:,:)
   !! Used to store $e^{2\pi r \cdot k+q}$ exponential
+  COMPLEX(kind=DP), ALLOCATABLE :: cfacd(:,:,:,:)
+  !! Used to store $e^{2\pi r \cdot k}$ exponential of displaced vector 
+  COMPLEX(kind=DP), ALLOCATABLE :: cfacqd(:,:,:,:)
+  !! Used to store $e^{2\pi r \cdot k+q}$ exponential of dispaced vector
   ! 
   IF (nbndsub.ne.nbnd) &
        WRITE(stdout, '(/,5x,a,i4)' ) 'Band disentanglement is used:  nbndsub = ', nbndsub
@@ -618,11 +624,26 @@
   !
   ALLOCATE(cfac(nrr_k,dims,dims))
   ALLOCATE(cfacq(nrr_k,dims,dims))
+  IF ( vme .AND. eig_read ) THEN
+    ALLOCATE(cfacd(nrr_k,dims,dims,6))
+    ALLOCATE(cfacqd(nrr_k,dims,dims,6))
+    ALLOCATE(etfd(nbndsub,nkqf,6))
+    ALLOCATE(etfd_ks(nbndsub,nkqf,6))
+    etfd    = zero
+    etfd_ks = zero
+  ENDIF
+
   ALLOCATE(rdotk(nrr_k))
   ALLOCATE(rdotk2(nrr_k))
   ! This is simply because dgemv take only real number (not integer)
   ALLOCATE(irvec_r(3,nrr_k))
   irvec_r = REAL(irvec_k,KIND=dp)
+  ! 
+  ! Zeroing everything - initialization is important !
+  cfac(:,:,:)  = czero
+  cfacq(:,:,:) = czero
+  rdotk(:)     = zero 
+  rdotk2(:)    = zero
   ! 
   ! ------------------------------------------------------
   ! Hamiltonian : Wannier -> Bloch (preliminary)
@@ -748,6 +769,19 @@
   ! identify the bands within fsthick from the Fermi level
   ! (in shuffle mode this actually does not depend on q)
   !
+  ! ------------------------------------------------------------
+  ! Apply a possible shift to eigenenergies (applied later)
+  icbm = 0
+  IF (ABS(scissor) > eps6) THEN
+    IF ( noncolin ) THEN
+      icbm = FLOOR(nelec/1.0d0) +1
+    ELSE
+      icbm = FLOOR(nelec/2.0d0) +1
+    ENDIF
+    etf(icbm:nbndsub, :) = etf(icbm:nbndsub, :) + scissor
+    !    
+    WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
+  ENDIF
   !
   CALL fermiwindow
   ! 
@@ -1084,6 +1118,10 @@
            ( nbndsub, nrr_k, cufkk, etf(:, ikk), chw, cfac, dims)
       CALL hamwan2bloch &
            ( nbndsub, nrr_k, cufkq, etf(:, ikq), chw, cfacq, dims)
+      ! 
+      ! Apply a possible scissor shift 
+      etf(icbm:nbndsub, ikk) = etf(icbm:nbndsub, ikk) + scissor
+      etf(icbm:nbndsub, ikq) = etf(icbm:nbndsub, ikq) + scissor
       !
       IF (vme) THEN
          !
@@ -1092,15 +1130,82 @@
          ! ------------------------------------------------------
          !
          IF (eig_read) THEN
-            CALL vmewan2bloch &
-                 ( nbndsub, nrr_k, irvec_k, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks, cfac, dims )
-            CALL vmewan2bloch &
-                 ( nbndsub, nrr_k, irvec_k, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks, cfacq, dims )
-         ELSE
-            CALL vmewan2bloch &
-                 ( nbndsub, nrr_k, irvec_k, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw, cfac, dims )
-            CALL vmewan2bloch &
-                 ( nbndsub, nrr_k, irvec_k, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw, cfacq, dims )
+           ! Use for indirect absorption - Kyle and Emmanouil Kioupakis --------------------------------
+           DO icounter = 1, 6
+             CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikk,icounter), 1, 0.0_DP, rdotk, 1 )
+             CALL dgemv('t', 3, nrr_k, twopi, irvec_r, 3, xkfd(:,ikq,icounter), 1, 0.0_DP, rdotk2, 1 )
+             IF (use_ws) THEN
+               DO iw=1, dims
+                 DO iw2=1, dims
+                   DO ir = 1, nrr_k
+                     IF (ndegen_k(ir,iw2,iw) > 0) THEN
+                       cfacd(ir,iw2,iw,icounter)  = exp( ci*rdotk(ir) ) / ndegen_k(ir,iw2,iw)
+                       cfacqd(ir,iw2,iw,icounter) = exp( ci*rdotk2(ir) ) / ndegen_k(ir,iw2,iw)
+                     ENDIF
+                   ENDDO
+                 ENDDO
+               ENDDO
+             ELSE
+               cfacd(:,1,1,icounter)   = exp( ci*rdotk(:) ) / ndegen_k(:,1,1)
+               cfacqd(:,1,1,icounter)  = exp( ci*rdotk2(:) ) / ndegen_k(:,1,1)
+             ENDIF
+             ! 
+             CALL hamwan2bloch &
+                  ( nbndsub, nrr_k, cufkk, etfd(:, ikk,icounter), chw, cfacd, dims)
+             CALL hamwan2bloch &
+                  ( nbndsub, nrr_k, cufkq, etfd(:, ikq,icounter), chw, cfacqd, dims)
+             CALL hamwan2bloch &
+                  ( nbndsub, nrr_k, cufkk, etfd_ks(:, ikk,icounter), chw_ks, cfacd, dims)
+             CALL hamwan2bloch &
+                  ( nbndsub, nrr_k, cufkq, etfd_ks(:, ikq,icounter), chw_ks, cfacqd, dims)
+           ENDDO ! icounter
+           ! ----------------------------------------------------------------------------------------- 
+           CALL vmewan2bloch &
+                ( nbndsub, nrr_k, irvec_k, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw_ks, cfac, dims )
+           CALL vmewan2bloch &
+                ( nbndsub, nrr_k, irvec_k, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw_ks, cfacq, dims )
+           ! 
+           ! To Satisfy Phys. Rev. B 62, 4927-4944 (2000) , Eq. (30)
+           DO ibnd = 1, nbnd
+             DO jbnd = 1, nbnd
+               IF (abs(etfd_ks(ibnd,ikk,1) - etfd_ks(jbnd,ikk,2)) .gt. eps6) THEN
+                  vmef(1,ibnd,jbnd,ikk) = vmef(1,ibnd,jbnd,ikk) * &
+                       ( etfd(ibnd,ikk,1)    - etfd(jbnd,ikk,2) )/ &
+                       ( etfd_ks(ibnd,ikk,1) - etfd_ks(jbnd,ikk,2) )
+               ENDIF
+               IF (abs(etfd_ks(ibnd,ikk,3) - etfd_ks(jbnd,ikk,4)) .gt. eps6) THEN
+                  vmef(2,ibnd,jbnd,ikk) = vmef(2,ibnd,jbnd,ikk) * &
+                       ( etfd(ibnd,ikk,3)    - etfd(jbnd,ikk,4) )/ &
+                       ( etfd_ks(ibnd,ikk,3) - etfd_ks(jbnd,ikk,4) )
+               ENDIF
+               IF (abs(etfd_ks(ibnd,ikk,5) - etfd_ks(jbnd,ikk,6)) .gt. eps6) THEN
+                  vmef(3,ibnd,jbnd,ikk) = vmef(3,ibnd,jbnd,ikk) * &
+                       ( etfd(ibnd,ikk,5)    - etfd(jbnd,ikk,6) )/ &
+                       ( etfd_ks(ibnd,ikk,5) - etfd_ks(jbnd,ikk,6) )
+               ENDIF
+               IF (abs(etfd_ks(ibnd,ikq,1) - etfd_ks(jbnd,ikq,2)) .gt. eps6) THEN
+                  vmef(1,ibnd,jbnd,ikq) = vmef(1,ibnd,jbnd,ikq) * &
+                       ( etfd(ibnd,ikq,1)    - etfd(jbnd,ikq,2) )/ &
+                       ( etfd_ks(ibnd,ikq,1) - etfd_ks(jbnd,ikq,2) )
+               ENDIF
+               IF (abs(etfd_ks(ibnd,ikq,3) - etfd_ks(jbnd,ikq,4)) .gt. eps6) THEN
+                  vmef(2,ibnd,jbnd,ikq) = vmef(2,ibnd,jbnd,ikq) * &
+                       ( etfd(ibnd,ikq,3)    - etfd(jbnd,ikq,4) )/ &
+                       ( etfd_ks(ibnd,ikq,3) - etfd_ks(jbnd,ikq,4) )
+               ENDIF
+               IF (abs(etfd_ks(ibnd,ikq,5) - etfd_ks(jbnd,ikq,6)) .gt. eps6) THEN
+                  vmef(3,ibnd,jbnd,ikq) = vmef(3,ibnd,jbnd,ikq) * &
+                       ( etfd(ibnd,ikq,5)    - etfd(jbnd,ikq,6) )/ &
+                       ( etfd_ks(ibnd,ikq,5) - etfd_ks(jbnd,ikq,6) )
+               ENDIF
+             ENDDO
+           ENDDO
+           ! 
+         ELSE ! eig_read
+           CALL vmewan2bloch &
+                ( nbndsub, nrr_k, irvec_k, cufkk, vmef(:,:,:, ikk), etf(:,ikk), etf_ks(:,ikk), chw, cfac, dims )
+           CALL vmewan2bloch &
+                ( nbndsub, nrr_k, irvec_k, cufkq, vmef(:,:,:, ikq), etf(:,ikq), etf_ks(:,ikq), chw, cfacq, dims )
          ENDIF
       ELSE
          !
@@ -1201,31 +1306,12 @@
       ! 
       ! Indirect absorption ---------------------------------------------------------
       ! If Indirect absortpion, keep unshifted values:
-      IF ( lindabs .AND. .NOT. scattering ) etf_ks(:,:) = etf(:,:)
-      ! 
-      ! Apply a scissor shift to CBM if required by user
-      ! The shift is apply to k and k+q
-      IF (ABS(scissor) > eps6) THEN
-        IF ( noncolin ) THEN
-          icbm = FLOOR(nelec/1.0d0) +1
-        ELSE
-          icbm = FLOOR(nelec/2.0d0) +1
-        ENDIF
-        !
-        DO ik = 1, nkf
-          ikk = 2 * ik - 1
-          ikq = ikk + 1
-          DO ibnd = icbm, nbndsub
-            ! 
-            etf (ibnd, ikk) = etf (ibnd, ikk) + scissor
-            etf (ibnd, ikq) = etf (ibnd, ikq) + scissor
-          ENDDO
-        ENDDO
-        IF ( iq == 1 ) THEN
-          WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
-        ENDIF
+      IF ( lindabs .AND. .NOT. scattering ) THEN
+         etf_ks(:,:) = etf(:,:)
+         ! We remove the scissor 
+         etf_ks(icbm:nbndsub, :) = etf_ks(icbm:nbndsub, :) - scissor
       ENDIF
-      !  
+      ! 
       ! Indirect absorption
       IF ( lindabs .AND. .NOT. scattering )  CALL indabs(iq)  
       ! 
@@ -1270,7 +1356,6 @@
             ! User decide the carrier concentration and choose to only look at VB or CB  
             IF (.NOT. int_mob .AND. carrier) THEN
               ! SP: Determination of the Fermi level for intrinsic or doped carrier 
-              !     One also need to apply scissor before calling it.
               ! 
               ef0(itemp) = fermicarrier( etemp )               
               WRITE(stdout, '(5x,"Mobility Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev

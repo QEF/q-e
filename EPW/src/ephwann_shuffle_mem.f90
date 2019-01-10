@@ -44,7 +44,7 @@
                             specfun_pl, use_ws, epmatkqread, selecqread
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero, cone,       & 
-                            twopi, ci, kelvin2eV, eps8
+                            twopi, ci, kelvin2eV, eps8, eps6
   USE io_files,      ONLY : prefix, diropn, tmp_dir
   USE io_global,     ONLY : stdout, ionode
   USE io_epw,        ONLY : lambda_phself, linewidth_phself, iunepmatwe,        &
@@ -717,6 +717,19 @@
   ! identify the bands within fsthick from the Fermi level
   ! (in shuffle mode this actually does not depend on q)
   !
+  ! ------------------------------------------------------------
+  ! Apply a possible shift to eigenenergies (applied later)
+  icbm = 0
+  IF (ABS(scissor) > eps6) THEN
+    IF ( noncolin ) THEN
+      icbm = FLOOR(nelec/1.0d0) +1
+    ELSE
+      icbm = FLOOR(nelec/2.0d0) +1
+    ENDIF
+    etf(icbm:nbndsub, :) = etf(icbm:nbndsub, :) + scissor
+    !    
+    WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
+  ENDIF
   !
   CALL fermiwindow
   ! 
@@ -933,6 +946,7 @@
     ENDIF ! exst
   ENDIF
   ! -----------------------------------------------------------------------------
+  ! -----------------------------------------------------------------------------
   !
   DO iqq = iq_restart, totq
     ! This needs to be uncommented. 
@@ -1056,6 +1070,11 @@
              ( nbndsub, nrr_k, cufkk, etf(:, ikk), chw, cfac, dims)
         CALL hamwan2bloch &
              ( nbndsub, nrr_k, cufkq, etf(:, ikq), chw, cfacq, dims)
+        ! 
+        ! Apply a possible scissor shift 
+        etf(icbm:nbndsub, ikk) = etf(icbm:nbndsub, ikk) + scissor
+        etf(icbm:nbndsub, ikq) = etf(icbm:nbndsub, ikq) + scissor
+
         !
         IF (vme) THEN
            !
@@ -1195,28 +1214,6 @@
     !IF (scattering) CALL scattering_rate_q( iq )
     IF (.NOT. scatread) THEN
       IF (scattering) THEN
-        ! Apply a scissor shift to CBM if required by user
-        ! The shift is apply to k and k+q
-        !IF (scissor > 0.000001) THEN
-        IF (ABS(scissor) > 0.000001) THEN
-          IF ( noncolin ) THEN
-            icbm = FLOOR(nelec/1.0d0) +1
-          ELSE
-            icbm = FLOOR(nelec/2.0d0) +1
-          ENDIF
-          !
-          DO ik = 1, nkf
-            ikk = 2 * ik - 1
-            ikq = ikk + 1
-            DO ibnd = icbm, nbndsub
-              etf (ibnd, ikk) = etf (ibnd, ikk) + scissor
-              etf (ibnd, ikq) = etf (ibnd, ikq) + scissor
-            ENDDO
-          ENDDO
-          IF ( iqq == 1 ) THEN
-            WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the conduction states")' ) scissor * ryd2ev
-          ENDIF
-        ENDIF
         !   
         ! If we want to compute intrinsic mobilities, call fermicarrier to 
         ! correctly positionned the ef0 level.

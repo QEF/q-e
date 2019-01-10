@@ -641,7 +641,8 @@ PROGRAM plotband
     WRITE (1,'(a)') "set title '"//trim(filename)//"_projected' noenhanced"
     WRITE (1,'(a,f12.6,a)') &
                 &"plot '"//trim(filenamegnu)//&
-                &"' u 1:($2 - ",eref,"):3 w l palette lw 1 notitle, \"
+                &"' u 1:($2 - ",eref,"):3 w l palette lw 1 notitle, "//CHAR(91)
+        ! char(91) = backslash; syntax "something \" confuses the PGI compiler
     WRITE (1,'(f12.6,a)') &
                 &Ef-eref," lt 2 lw 0.5 lc rgb 'grey50' notitle"
     CLOSE (unit=1)
