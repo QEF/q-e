@@ -63,9 +63,9 @@ PROGRAM upf_fixer
       ENDIF
    ELSE
       IF ( INDEX(TRIM(filein),'.UPF' ) > 0) THEN 
-         prefix_len = INDEX(TRIM(filein),'.UPF' )
+         prefix_len = INDEX(TRIM(filein),'.UPF' ) - 1
       ELSE IF (INDEX(TRIM(filein),'.upf') > 0 ) THEN
-         prefix_len = INDEX(TRIM(filein),'.upf') 
+         prefix_len = INDEX(TRIM(filein),'.upf') - 1
       ELSE 
          prefix_len = LEN(TRIM(filein)) 
       ENDIF

@@ -163,7 +163,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      IF (isupf ==-81 ) THEN
         IF ( ionode ) THEN
            is_xml = make_emended_upf_copy( TRIM(file_pseudo), &
-                TRIM(tmp_dir)//TRIM(file_pseudo) )  
+                TRIM(tmp_dir)//TRIM(psfile(nt)) )  
         END IF
         !
         !! error -81 may mean that file contains offending characters
@@ -174,16 +174,16 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         IF (is_xml) THEN
            !
            CALL  read_upf(upf(nt), rgrid(nt), isupf, &
-                filename = TRIM(tmp_dir)//file_pseudo )
+                filename = TRIM(tmp_dir)//psfile(nt) )
            !! then try again to read from the corrected file 
-           WRITE ( msg, '(A)') 'Pseudo file '// trim(file_pseudo) // ' has been fixed on the fly.' &
+           WRITE ( msg, '(A)') 'Pseudo file '// trim(psfile(nt)) // ' has been fixed on the fly.' &
                 // new_line('a') // 'To avoid this message in the future, permanently fix ' &
                 // new_line('a') // ' your pseudo files following these instructions: ' &
                 // new_line('a') // 'https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
            CALL infomsg('read_upf:', trim(msg) )    
         END IF
         !
-        IF (ionode) ios = f_remove(TRIM(tmp_dir)//TRIM(file_pseudo) )
+        IF (ionode) ios = f_remove(TRIM(tmp_dir)//TRIM(psfile(nt)) )
         !
      END IF
      !
