@@ -379,23 +379,30 @@ END SUBROUTINE latgen
 SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
   !-----------------------------------------------------------------------
   !
-  !     Returns celldm parameters computed from lattice vectors a1,a2,a3 
-  !     If Bravais lattice index ibrav=0, only celldm(1) is set to alat.
-  !     See latgen for definition of celldm and lattice vectors.
-  !     a1, a2, a3, ibrav, alat are not modified
+  !     Returns celldm parameters from lattice vectors
+  !     Tries to guess ibrav if not specified (ibrav=0)
+  !     See latgen for definition of celldm and lattice vectors
   !
   USE kinds, ONLY: DP
   IMPLICIT NONE
   INTEGER, INTENT(in) :: ibrav
-  REAL(DP), INTENT(in) :: alat, a1(3), a2(3), a3(3)
-  REAL(DP), INTENT(out) :: celldm(6)
+  real(DP), INTENT(in) :: alat, a1(3), a2(3), a3(3)
+  real(DP), INTENT(out) :: celldm(6)
+  INTEGER :: jbrav
   INTEGER, EXTERNAL :: at2ibrav
   !
   celldm = 0.d0
+  jbrav = 0
   !
-  SELECT CASE  ( ibrav )
-  CASE (0)
-     celldm(1) = alat
+  IF ( ibrav == 0 ) THEN
+     jbrav= at2ibrav (a1, a2, a3)
+     IF ( jbrav == 0 ) CALL infomsg('at2celldm', &
+          'could not determine ibrav for lattice vectors')
+  ELSE
+     jbrav = ibrav
+  ENDIF
+
+  SELECT CASE  ( jbrav )
   CASE (1)
      celldm(1) = sqrt( dot_product (a1,a1) )
   CASE (2)
@@ -439,7 +446,7 @@ SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
      celldm(1) = sqrt( dot_product (a1,a1) )
      celldm(2) = sqrt( dot_product(a2(:),a2(:)) ) / celldm(1)
      celldm(3) = sqrt( dot_product(a3(:),a3(:)) ) / celldm(1)
-     IF ( ibrav == 12 ) THEN
+     IF ( jbrav == 12 ) THEN
         celldm(4) = dot_product(a1(:),a2(:)) / celldm(1) / &
              sqrt(dot_product(a2(:),a2(:)))
      ELSE
@@ -461,7 +468,7 @@ SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
      celldm(5) = a3(1)/a1(1)/celldm(3)/2.0_dp
      !celldm(5) = DOT_PRODUCT(a1(:),a3(:)) / &
      !     SQRT(DOT_PRODUCT(a1(:),a1(:)) * DOT_PRODUCT(a3(:),a3(:)))
-  CASE (14)
+  CASE (0,14)
      celldm(1) = sqrt(dot_product(a1(:),a1(:)))
      celldm(2) = sqrt( dot_product(a2(:),a2(:))) / celldm(1)
      celldm(3) = sqrt( dot_product(a3(:),a3(:))) / celldm(1)
@@ -474,6 +481,8 @@ SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
   CASE DEFAULT
      CALL infomsg('at2celldm', 'wrong ibrav?')
   END SELECT
+  !
+  IF ( alat > 0.0_dp) celldm(1) = celldm(1)*alat
   !
 END SUBROUTINE at2celldm
 !
