@@ -76,7 +76,6 @@ readdvscf.o \
 readgmap.o \
 readmat_shuffle2.o \
 readwfc.o \
-refold.o \
 rigid_epw.o \
 rotate_eigenm.o \
 rotate_epmat.o \
@@ -85,7 +84,6 @@ selfen_phon.o \
 selfen_pl.o \
 set_ndnmbr.o \
 setphases_wrap.o \
-sgama2.o \
 sort.o \
 spectral_cumulant.o \
 spectral_func.o \

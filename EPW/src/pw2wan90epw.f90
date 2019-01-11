@@ -1704,7 +1704,9 @@ SUBROUTINE write_filukk
     ! 
     ! Now write the Wannier centers to files
     DO iw = 1, n_wannier
-      WRITE (iuukk,'(3f12.8)') wann_centers(:,iw)/alat/bohr
+      ! SP : Need more precision other WS are not determined properly. 
+      !WRITE (iuukk,'(3f12.8)') wann_centers(:,iw)/alat/bohr
+      WRITE (iuukk,'(3E22.12)') wann_centers(:,iw)/alat/bohr
     ENDDO
     !
     CLOSE (iuukk)

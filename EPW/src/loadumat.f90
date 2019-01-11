@@ -136,6 +136,7 @@
   CALL mp_bcast(lwin_big, ionode_id, inter_pool_comm)
   CALL mp_bcast(lwinq_big, ionode_id, inter_pool_comm)
   CALL mp_bcast(exband, ionode_id, inter_pool_comm)
+  CALL mp_bcast(w_centers, ionode_id, inter_pool_comm)
   !
   CALL ckbounds(ik_start, ik_stop)
   IF ( (ik_stop-ik_start+1) .ne. nks) CALL errore('loadumat',"Improper parallel ukk load",1)
