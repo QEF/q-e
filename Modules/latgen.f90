@@ -379,30 +379,23 @@ END SUBROUTINE latgen
 SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
   !-----------------------------------------------------------------------
   !
-  !     Returns celldm parameters from lattice vectors
-  !     Tries to guess ibrav if not specified (ibrav=0)
-  !     See latgen for definition of celldm and lattice vectors
+  !     Returns celldm parameters computed from lattice vectors a1,a2,a3 
+  !     If Bravais lattice index ibrav=0, only celldm(1) is set to alat.
+  !     See latgen for definition of celldm and lattice vectors.
+  !     a1, a2, a3, ibrav, alat are not modified
   !
   USE kinds, ONLY: DP
   IMPLICIT NONE
   INTEGER, INTENT(in) :: ibrav
-  real(DP), INTENT(in) :: alat, a1(3), a2(3), a3(3)
-  real(DP), INTENT(out) :: celldm(6)
-  INTEGER :: jbrav
+  REAL(DP), INTENT(in) :: alat, a1(3), a2(3), a3(3)
+  REAL(DP), INTENT(out) :: celldm(6)
   INTEGER, EXTERNAL :: at2ibrav
   !
   celldm = 0.d0
-  jbrav = 0
   !
-  IF ( ibrav == 0 ) THEN
-     jbrav= at2ibrav (a1, a2, a3)
-     IF ( jbrav == 0 ) CALL infomsg('at2celldm', &
-          'could not determine ibrav for lattice vectors')
-  ELSE
-     jbrav = ibrav
-  ENDIF
-
-  SELECT CASE  ( jbrav )
+  SELECT CASE  ( ibrav )
+  CASE (0)
+     celldm(1) = alat
   CASE (1)
      celldm(1) = sqrt( dot_product (a1,a1) )
   CASE (2)
@@ -446,7 +439,7 @@ SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
      celldm(1) = sqrt( dot_product (a1,a1) )
      celldm(2) = sqrt( dot_product(a2(:),a2(:)) ) / celldm(1)
      celldm(3) = sqrt( dot_product(a3(:),a3(:)) ) / celldm(1)
-     IF ( jbrav == 12 ) THEN
+     IF ( ibrav == 12 ) THEN
         celldm(4) = dot_product(a1(:),a2(:)) / celldm(1) / &
              sqrt(dot_product(a2(:),a2(:)))
      ELSE
@@ -468,7 +461,7 @@ SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
      celldm(5) = a3(1)/a1(1)/celldm(3)/2.0_dp
      !celldm(5) = DOT_PRODUCT(a1(:),a3(:)) / &
      !     SQRT(DOT_PRODUCT(a1(:),a1(:)) * DOT_PRODUCT(a3(:),a3(:)))
-  CASE (0,14)
+  CASE (14)
      celldm(1) = sqrt(dot_product(a1(:),a1(:)))
      celldm(2) = sqrt( dot_product(a2(:),a2(:))) / celldm(1)
      celldm(3) = sqrt( dot_product(a3(:),a3(:))) / celldm(1)
@@ -481,8 +474,6 @@ SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
   CASE DEFAULT
      CALL infomsg('at2celldm', 'wrong ibrav?')
   END SELECT
-  !
-  IF ( alat > 0.0_dp) celldm(1) = celldm(1)*alat
   !
 END SUBROUTINE at2celldm
 !
@@ -737,15 +728,20 @@ SUBROUTINE remake_cell(ibrav, alat, a1,a2,a3)
   REAL(DP),INTENT(inout) :: alat, a1(3),a2(3),a3(3)
   REAL(DP) :: e1(3), e2(3), e3(3)
   REAL(DP) :: celldm_internal(6), lat_internal, omega
+  ! Better not to do the following, or it may cause problems with ibrav=0 from input
+  IF(ibrav==0)THEN
+    WRITE(stdout,'(a)') "WARNING! With ibrav=0, cell_dofree='ibrav' does not have any effect. "
+    RETURN
+  ENDIF
 !  ibrav = at2ibrav (a(:,1), a(:,2), a(:,3))
   CALL  at2celldm (ibrav,alat,a1, a2, a3,celldm_internal)
   WRITE(stdout,'("ibrav = ",i6)') ibrav
-  WRITE(stdout,'(" celldm(1) = ",f15.8)') celldm_internal(1)
-  IF( celldm_internal(2) /= 0._dp) WRITE(*,'(" celldm(2) = ",f15.8)') celldm_internal(2)
-  IF( celldm_internal(3) /= 0._dp) WRITE(*,'(" celldm(3) = ",f15.8)') celldm_internal(3)
-  IF( celldm_internal(4) /= 0._dp) WRITE(*,'(" celldm(4) = ",f15.8)') celldm_internal(4)
-  IF( celldm_internal(5) /= 0._dp) WRITE(*,'(" celldm(5) = ",f15.8)') celldm_internal(5)
-  IF( celldm_internal(6) /= 0._dp) WRITE(*,'(" celldm(6) = ",f15.8)') celldm_internal(6)
+  WRITE(stdout,'(" celldm(1) = ",f15.8)') celldm_internal(1)*alat
+  IF( celldm_internal(2) /= 0._dp) WRITE(stdout,'(" celldm(2) = ",f15.8)') celldm_internal(2)
+  IF( celldm_internal(3) /= 0._dp) WRITE(stdout,'(" celldm(3) = ",f15.8)') celldm_internal(3)
+  IF( celldm_internal(4) /= 0._dp) WRITE(stdout,'(" celldm(4) = ",f15.8)') celldm_internal(4)
+  IF( celldm_internal(5) /= 0._dp) WRITE(stdout,'(" celldm(5) = ",f15.8)') celldm_internal(5)
+  IF( celldm_internal(6) /= 0._dp) WRITE(stdout,'(" celldm(6) = ",f15.8)') celldm_internal(6)
   !
   e1=a1
   e2=a2
@@ -760,16 +756,16 @@ SUBROUTINE remake_cell(ibrav, alat, a1,a2,a3)
   WRITE(stdout,'(3f15.8)') e2
   WRITE(stdout,'(3f15.8)') e3
   WRITE(stdout,'("New lattice vectors in INITIAL alat:")')
-  WRITE(stdout,'(3f15.8)') a1/alat
-  WRITE(stdout,'(3f15.8)') a2/alat
-  WRITE(stdout,'(3f15.8)') a3/alat
+  WRITE(stdout,'(3f15.8)') a1
+  WRITE(stdout,'(3f15.8)') a2
+  WRITE(stdout,'(3f15.8)') a3
   WRITE(stdout, '("New lattice vectors in NEW alat (for information only):")')
   WRITE(stdout,'(3f15.8)') a1/celldm_internal(1)
   WRITE(stdout,'(3f15.8)') a2/celldm_internal(1)
   WRITE(stdout,'(3f15.8)') a3/celldm_internal(1)
-  a1=a1/alat
-  a2=a2/alat
-  a3=a3/alat
+  a1=a1 !/alat
+  a2=a2 !/alat
+  a3=a3 !/alat
   WRITE(*,'("Discrepancy in bohr = ", 3f12.6)') DSQRT(SUM((a1-e1)**2)), DSQRT(SUM((a2-e2)**2)), DSQRT(SUM((a3-e3)**2))
 
 
