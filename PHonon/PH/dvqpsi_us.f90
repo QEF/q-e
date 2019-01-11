@@ -43,35 +43,54 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
 
   USE Coul_cut_2D, ONLY: do_cutoff_2D  
   USE Coul_cut_2D_ph, ONLY : cutoff_localq
-  implicit none
+  ! 
+  IMPLICIT NONE
   !
   !   The dummy variables
   !
-  integer, intent(in) :: ik
-  ! input: the k point
-  complex(DP) :: uact (3 * nat)
-  ! input: the pattern of displacements
-  logical :: addnlcc
-  !
+  INTEGER, INTENT(in) :: ik
+  !! input: the k point
+  COMPLEX(DP) :: uact (3 * nat)
+  !! input: the pattern of displacements
+  LOGICAL :: addnlcc
+  !!
+  ! 
   !   And the local variables
   !
-
-  integer :: npw, npwq, na, mu, ikq, ikk, iks, ig, nt, ibnd, ir, is, ip
-  ! counter on atoms
-  ! counter on modes
-  ! the point k
-  ! counter on G vectors
-  ! the type of atom
-  ! counter on bands
-  ! counter on real mesh
-
+  INTEGER ::  na  
+  !! counter on atoms
+  INTEGER :: mu
+  !! counter on modes
+  INTEGER :: npw
+  !! Number of pw
+  INTEGER :: ikk
+  !! the point k
+  INTEGER :: npwq
+  !! Number of q
+  INTEGER :: ikq
+  !! k-q index
+  INTEGER :: iks
+  !!
+  INTEGER :: ig
+  !! counter on G vectors
+  INTEGER :: nt
+  !! the type of atom
+  INTEGER :: ibnd
+  !! counter on bands
+  INTEGER :: ir 
+  !! counter on real mesh
+  INTEGER :: is
+  !! 
+  INTEGER :: ip
+  !!
+  ! 
   complex(DP) :: gtau, gu, fact, u1, u2, u3, gu0
   complex(DP) , allocatable, target :: aux (:)
   complex(DP) , allocatable :: aux1 (:), aux2 (:)
   complex(DP) , pointer :: auxs (:)
   REAL(DP) :: fac
   COMPLEX(DP), ALLOCATABLE :: drhoc(:)
-
+  ! 
   call start_clock ('dvqpsi_us')
   if (nlcc_any.and.addnlcc) then
      allocate (drhoc( dfftp%nnr))
@@ -86,6 +105,11 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   !    reciprocal space while the product with the wavefunction is done in
   !    real space
   !
+  ikk = ikks(ik)
+  ikq = ikqs(ik)
+  npw = ngk(ikk)
+  npwq= ngk(ikq)
+  ! 
   dvpsi(:,:) = (0.d0, 0.d0)
   aux1(:) = (0.d0, 0.d0)
   do na = 1, nat
@@ -114,77 +138,73 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   !
   ! add NLCC when present
   !
-   if (nlcc_any.and.addnlcc) then
-      drhoc(:) = (0.d0, 0.d0)
-      do na = 1,nat
-         fact = tpiba*(0.d0,-1.d0)*eigqts(na)
-         mu = 3*(na-1)
-         if (abs(uact(mu+1))+abs(uact(mu+2))  &
-                         +abs(uact(mu+3)).gt.1.0d-12) then
-            nt=ityp(na)
-            u1 = uact(mu+1)
-            u2 = uact(mu+2)
-            u3 = uact(mu+3)
-            gu0 = xq(1)*u1 +xq(2)*u2+xq(3)*u3
-            if (upf(nt)%nlcc) then
-               do ig = 1,ngm
-                  gtau = eigts1(mill(1,ig),na)*   &
-                         eigts2(mill(2,ig),na)*   &
-                         eigts3(mill(3,ig),na)
-                  gu = gu0+g(1,ig)*u1+g(2,ig)*u2+g(3,ig)*u3
-                  drhoc(dfftp%nl(ig))=drhoc(dfftp%nl(ig))+drc(ig,nt)*gu*fact*gtau
-               enddo
-            endif
-         endif
-      enddo
-      CALL invfft ('Rho', drhoc, dfftp)
-      if (.not.lsda) then
-         do ir=1,dfftp%nnr
-            aux(ir) = drhoc(ir) * dmuxc(ir,1,1)
-         end do
-      else
-         is=isk(ikk)
-         do ir=1,dfftp%nnr
-            aux(ir) = drhoc(ir) * 0.5d0 *  &
-                 (dmuxc(ir,is,1)+dmuxc(ir,is,2))
-         enddo
-      endif
+  if (nlcc_any.and.addnlcc) then
+     drhoc(:) = (0.d0, 0.d0)
+     do na = 1,nat
+        fact = tpiba*(0.d0,-1.d0)*eigqts(na)
+        mu = 3*(na-1)
+        if (abs(uact(mu+1))+abs(uact(mu+2))  &
+                        +abs(uact(mu+3)).gt.1.0d-12) then
+           nt=ityp(na)
+           u1 = uact(mu+1)
+           u2 = uact(mu+2)
+           u3 = uact(mu+3)
+           gu0 = xq(1)*u1 +xq(2)*u2+xq(3)*u3
+           if (upf(nt)%nlcc) then
+              do ig = 1,ngm
+                 gtau = eigts1(mill(1,ig),na)*   &
+                        eigts2(mill(2,ig),na)*   &
+                        eigts3(mill(3,ig),na)
+                 gu = gu0+g(1,ig)*u1+g(2,ig)*u2+g(3,ig)*u3
+                 drhoc(dfftp%nl(ig))=drhoc(dfftp%nl(ig))+drc(ig,nt)*gu*fact*gtau
+              enddo
+           endif
+        endif
+     enddo
+     CALL invfft ('Rho', drhoc, dfftp)
+     if (.not.lsda) then
+        do ir=1,dfftp%nnr
+           aux(ir) = drhoc(ir) * dmuxc(ir,1,1)
+        end do
+     else
+        is=isk(ikk)
+        do ir=1,dfftp%nnr
+           aux(ir) = drhoc(ir) * 0.5d0 *  &
+                (dmuxc(ir,is,1)+dmuxc(ir,is,2))
+        enddo
+     endif
 
-      fac = 1.d0 / DBLE (nspin_lsda)
-      DO is = 1, nspin_lsda
-         rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core
-      END DO
+     fac = 1.d0 / DBLE (nspin_lsda)
+     DO is = 1, nspin_lsda
+        rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core
+     END DO
 
-      IF ( dft_is_gradient() ) &
-         CALL dgradcorr (dfftp, rho%of_r, grho, &
-               dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, drhoc,&
-               1, nspin_gga, g, aux)
+     IF ( dft_is_gradient() ) &
+        CALL dgradcorr (dfftp, rho%of_r, grho, &
+              dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, drhoc,&
+              1, nspin_gga, g, aux)
 
-      IF (dft_is_nonlocc()) &
-         CALL dnonloccorr(rho%of_r, drhoc, xq, aux)
+     IF (dft_is_nonlocc()) &
+        CALL dnonloccorr(rho%of_r, drhoc, xq, aux)
 
-      DO is = 1, nspin_lsda
-         rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core
-      END DO
+     DO is = 1, nspin_lsda
+        rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core
+     END DO
 
-      CALL fwfft ('Rho', aux, dfftp)
+     CALL fwfft ('Rho', aux, dfftp)
 ! 
-!   This is needed also when the smooth and the thick grids coincide to
-!   cut the potential at the cut-off
+!  This is needed also when the smooth and the thick grids coincide to
+!  cut the potential at the cut-off
 !
-      auxs(:) = (0.d0, 0.d0)
-      do ig=1,ngms
-         auxs(dffts%nl(ig)) = aux(dfftp%nl(ig))
-      enddo
-      aux1(:) = aux1(:) + auxs(:)
-   endif
+     auxs(:) = (0.d0, 0.d0)
+     do ig=1,ngms
+        auxs(dffts%nl(ig)) = aux(dfftp%nl(ig))
+     enddo
+     aux1(:) = aux1(:) + auxs(:)
+  endif
   !
   ! Now we compute dV_loc/dtau in real space
   !
-  ikk = ikks(ik)
-  ikq = ikqs(ik)
-  npw = ngk(ikk)
-  npwq= ngk(ikq)
   CALL invfft ('Rho', aux1, dffts)
   do ibnd = 1, nbnd
      do ip=1,npol
