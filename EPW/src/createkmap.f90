@@ -109,14 +109,14 @@
     !
     ng0vec = 0
     DO ig1 = -2, 2
-     DO ig2 = -2, 2
-      DO ig3 = -2, 2
-         ng0vec = ng0vec + 1
-         g0vec_all(1,ng0vec) = ig1
-         g0vec_all(2,ng0vec) = ig2
-         g0vec_all(3,ng0vec) = ig3
+      DO ig2 = -2, 2
+        DO ig3 = -2, 2
+          ng0vec = ng0vec + 1
+          g0vec_all(1,ng0vec) = ig1
+          g0vec_all(2,ng0vec) = ig2
+          g0vec_all(3,ng0vec) = ig3
+        ENDDO
       ENDDO
-     ENDDO
     ENDDO
     !
     !  bring all the k points from cartesian to crystal coordinates
@@ -370,7 +370,7 @@
   SUBROUTINE createkmap_pw2
   !-------------------------------------------------------------------------
   !!
-  !! Creates the first instances of [prefix].kmap and [prefix].kgmap. 
+  !! Creates the first instance of [prefix].kgmap. 
   !!
   !-------------------------------------------------------------------------
   USE kinds,         ONLY : DP
@@ -513,12 +513,6 @@
   ngm = 0
   ngm_local = 0
   !
-  !    Set the total number of FFT mesh points and and initial value of gg.
-  !    The choice of gcutm is due to the fact that we have to order the
-  !    vectors after computing them
-  !
-  gg(:) = gcutm + 1.d0
-  !
   !    and computes all the g vectors inside a sphere
   !
   ALLOCATE( mill_unsorted(3,ngm_save) )
@@ -531,6 +525,12 @@
   ALLOCATE( itoj(ngm_max) )
   ALLOCATE( g(3,ngm_max) )
   ALLOCATE( gg(ngm_max) )
+  !
+  !    Set the total number of FFT mesh points and and initial value of gg.
+  !    The choice of gcutm is due to the fact that we have to order the
+  !    vectors after computing them
+  !
+  gg(:) = gcutm + 1.d0
   !
   g2sort_g(:) = 1.0d20
   !
@@ -602,7 +602,7 @@
   !  
   ngm = 0
   !
-  ngloop: DO ng = 1, ngm_max
+  DO ng = 1, ngm_max
      !
      IF ( g2l(igsrt(ng))>0 ) THEN
         ! fetch the indices
@@ -617,7 +617,7 @@
         g(1:3,ngm) = i * bg(:,1) + j * bg(:,2) + k * bg(:,3)
         gg(ngm) = sum(g(1:3,ngm)**2)
      ENDIF
-  ENDDO ngloop
+  ENDDO !ngloop
   DEALLOCATE( g2l )
   !
   IF (ngm /= ngm_save) &

@@ -740,9 +740,9 @@
      IF (amass (it) <= 0.d0) CALL errore ('epw_readin', 'Wrong masses', it)
   ENDDO
   ! 
-! No k+q anymore, can we cut?
-  IF (mod (nks, 2) .ne.0) CALL errore ('epw_readin', &
-      'k-points are odd', 0)
+  ! No k+q anymore, can we cut?
+  !IF (mod (nks, 2) .ne.0) CALL errore ('epw_readin', &
+  !    'k-points are odd', 0)
   !
   !  broadcast the values of nq1, nq2, nq3
   !
