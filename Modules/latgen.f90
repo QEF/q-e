@@ -380,7 +380,8 @@ SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
   !-----------------------------------------------------------------------
   !
   !     Returns celldm parameters computed from lattice vectors a1,a2,a3 
-  !     If Bravais lattice index ibrav=0, only celldm(1) is set to alat (it is multiplied by alat at the end).
+  !     a1, a2, a3 are in "alat" units
+  !     If Bravais lattice index ibrav=0, only celldm(1) is set to alat
   !     See latgen for definition of celldm and lattice vectors.
   !     a1, a2, a3, ibrav, alat are not modified
   !
@@ -389,13 +390,12 @@ SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
   INTEGER, INTENT(in) :: ibrav
   REAL(DP), INTENT(in) :: alat, a1(3), a2(3), a3(3)
   REAL(DP), INTENT(out) :: celldm(6)
-  INTEGER, EXTERNAL :: at2ibrav
   !
   celldm = 0.d0
   !
   SELECT CASE  ( ibrav )
   CASE (0)
-     celldm(1) = 1._dp !alat
+     celldm(1) = 1.0_dp
   CASE (1)
      celldm(1) = sqrt( dot_product (a1,a1) )
   CASE (2)
@@ -732,7 +732,7 @@ SUBROUTINE remake_cell(ibrav, alat, a1,a2,a3)
   REAL(DP) :: celldm_internal(6), lat_internal, omega
   ! Better not to do the following, or it may cause problems with ibrav=0 from input
 !  ibrav = at2ibrav (a(:,1), a(:,2), a(:,3))
-  ! INstead, let's print a warning and do nothing:
+  ! Instead, let's print a warning and do nothing:
   IF(ibrav==0)THEN
     WRITE(stdout,'(a)') "WARNING! With ibrav=0, cell_dofree='ibrav' does not have any effect. "
     RETURN

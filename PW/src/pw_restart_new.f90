@@ -1198,6 +1198,8 @@ MODULE pw_restart_new
     at(:,1) =  atomic_structure%cell%a1
     at(:,2) =  atomic_structure%cell%a2
     at(:,3) =  atomic_structure%cell%a3
+    !! crystal axis are brought into "alat" units
+    at = at / alat
     !
     !! if ibrav is present, cell parameters were computed by subroutine
     !! "latgen" using ibrav and celldm parameters: recalculate celldm
@@ -1206,8 +1208,6 @@ MODULE pw_restart_new
     !
     tpiba = tpi/alat
     tpiba2= tpiba**2
-    !! crystal axis are brought into "alat" units
-    at = at / alat
     CALL volume (alat,at(:,1),at(:,2),at(:,3),omega)
     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
 
