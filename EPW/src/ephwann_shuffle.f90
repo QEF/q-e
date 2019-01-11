@@ -40,7 +40,7 @@
                             iterative_bte, longrange, scatread, nqf1, prtgkk,   &
                             nqf2, nqf3, mp_mesh_k, restart, ncarrier, plselfen, &
                             specfun_pl, lindabs, mob_maxiter, use_ws,           &
-                            epmatkqread, selecqread
+                            epmatkqread, selecqread, restart_freq
   USE noncollin_module, ONLY : noncolin
   USE constants_epw, ONLY : ryd2ev, ryd2mev, one, two, zero, czero,             &
                             twopi, ci, kelvin2eV, eps6, eps8 
@@ -1013,7 +1013,7 @@
     ! elecselfen = true as nothing happen during the calculation otherwise. 
     !
     IF ( .not. phonselfen) THEN 
-      IF (MOD(iqq,100) == 0) THEN
+      IF (MOD(iqq,restart_freq) == 0) THEN
         WRITE(stdout, '(5x,a,i10,a,i10)' ) 'Progression iq (fine) = ',iqq,'/',totq
       ENDIF
     ENDIF
