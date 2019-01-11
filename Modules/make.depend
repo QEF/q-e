@@ -302,6 +302,7 @@ read_ncpp.o : pseudo_types.o
 read_pseudo.o : ../UtilXlib/mp.o
 read_pseudo.o : atom.o
 read_pseudo.o : constants.o
+read_pseudo.o : emend_upf.o
 read_pseudo.o : funct.o
 read_pseudo.o : gth.o
 read_pseudo.o : io_files.o
@@ -371,18 +372,12 @@ tsvdw.o : kind.o
 tsvdw.o : mp_bands.o
 tsvdw.o : mp_images.o
 tsvdw.o : uspp.o
-upf.o : ../UtilXlib/mp.o
-upf.o : emend_upf.o
-upf.o : io_files.o
-upf.o : io_global.o
 upf.o : kind.o
-upf.o : mp_images.o
 upf.o : pseudo_types.o
 upf.o : radial_grids.o
 upf.o : read_upf_schema.o
 upf.o : read_upf_v1.o
 upf.o : read_upf_v2.o
-upf.o : wrappers.o
 upf_to_internal.o : pseudo_types.o
 upf_to_internal.o : radial_grids.o
 uspp.o : constants.o

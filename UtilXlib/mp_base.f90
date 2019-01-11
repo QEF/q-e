@@ -27,6 +27,30 @@
 
 !=----------------------------------------------------------------------------=!
 !
+! These routines allocate buffer spaces used in reduce_base_real_gpu.
+! These should be in data_buffer.f90 but need to be here becouse size is
+! depends on the __MSGSIZ_MAX definition
+SUBROUTINE allocate_buffers
+    USE data_buffer
+    IMPLICIT NONE
+    INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
+    !
+    IF (.NOT. ALLOCATED(mp_buff_r)) ALLOCATE(mp_buff_r(maxb))
+    IF (.NOT. ALLOCATED(mp_buff_c)) ALLOCATE(mp_buff_c(maxb))
+    IF (.NOT. ALLOCATED(mp_buff_i)) ALLOCATE(mp_buff_i(maxb))
+    !
+END SUBROUTINE allocate_buffers
+
+SUBROUTINE deallocate_buffers
+    USE data_buffer
+    IMPLICIT NONE
+    !
+    DEALLOCATE(mp_buff_r, mp_buff_c, mp_buff_i)
+    !
+END SUBROUTINE deallocate_buffers
+
+!=----------------------------------------------------------------------------=!
+!
 
 SUBROUTINE mp_synchronize( gid )
    USE parallel_include  
@@ -255,6 +279,7 @@ SUBROUTINE reduce_base_real( dim, ps, comm, root )
   ! ... This version uses a fixed-length buffer of appropriate (?) dim
   !
   USE util_param, ONLY : DP
+  USE data_buffer, ONLY: buff => mp_buff_r
   USE parallel_include  
   !
   IMPLICIT NONE
@@ -270,9 +295,6 @@ SUBROUTINE reduce_base_real( dim, ps, comm, root )
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
   !
-  REAL(DP) :: buff(maxb)  
-  ! the use of the common here could help the transfer of data to the network device
-  COMMON / mp_base_real / buff
   !
 #if defined __TRACE
   write(*,*) 'reduce_base_real IN'
@@ -409,6 +431,7 @@ SUBROUTINE reduce_base_integer( dim, ps, comm, root )
   ! ... This version uses a fixed-length buffer of appropriate (?) dim
   !
   USE util_param, ONLY : DP
+  USE data_buffer, ONLY : buff => mp_buff_i
   USE parallel_include  
   !
   IMPLICIT NONE
@@ -423,9 +446,6 @@ SUBROUTINE reduce_base_integer( dim, ps, comm, root )
   !
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
-  !
-  INTEGER :: buff(maxb)  
-  COMMON / mp_base_integer / buff
   !
 #if defined __TRACE
   write(*,*) 'reduce_base_integer IN'
@@ -687,6 +707,7 @@ SUBROUTINE parallel_min_integer( dim, ps, comm, root )
   ! ... This version uses a fixed-length buffer of appropriate (?) dim
   !
   USE util_param, ONLY : DP
+  USE data_buffer, ONLY : buff => mp_buff_i
   USE parallel_include  
   !
   IMPLICIT NONE
@@ -701,9 +722,6 @@ SUBROUTINE parallel_min_integer( dim, ps, comm, root )
   !
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
-  !
-  INTEGER :: buff(maxb)  
-  COMMON / mp_base_integer / buff
   !
 #if defined __TRACE
   write(*,*) 'parallel_min_integer IN'
@@ -783,7 +801,8 @@ SUBROUTINE parallel_max_integer( dim, ps, comm, root )
   ! ... compute the maximum of a distributed variable ps(dim) over the processors.
   ! ... This version uses a fixed-length buffer of appropriate (?) dim
   !
-  USE util_param, ONLY : DP
+  USE util_param,  ONLY : DP
+  USE data_buffer, ONLY : buff => mp_buff_i
   USE parallel_include  
   !
   IMPLICIT NONE
@@ -798,9 +817,6 @@ SUBROUTINE parallel_max_integer( dim, ps, comm, root )
   !
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
-  !
-  INTEGER :: buff(maxb)  
-  COMMON / mp_base_integer / buff
   !
 #if defined __TRACE
   write(*,*) 'parallel_max_integer IN'
@@ -879,6 +895,7 @@ SUBROUTINE parallel_min_real( dim, ps, comm, root )
   ! ... This version uses a fixed-length buffer of appropriate (?) dim
   !
   USE util_param, ONLY : DP
+  USE data_buffer, ONLY : buff => mp_buff_r
   USE parallel_include  
   !
   IMPLICIT NONE
@@ -893,9 +910,6 @@ SUBROUTINE parallel_min_real( dim, ps, comm, root )
   !
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
-  !
-  REAL(DP) :: buff(maxb)  
-  COMMON / mp_base_real / buff
   !
 #if defined __TRACE
   write(*,*) 'parallel_min_real IN'
@@ -974,6 +988,7 @@ SUBROUTINE parallel_max_real( dim, ps, comm, root )
   ! ... This version uses a fixed-length buffer of appropriate (?) dim
   !
   USE util_param, ONLY : DP
+  USE data_buffer, ONLY : buff => mp_buff_r
   USE parallel_include  
   !
   IMPLICIT NONE
@@ -988,9 +1003,6 @@ SUBROUTINE parallel_max_real( dim, ps, comm, root )
   !
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
-  !
-  REAL(DP) :: buff(maxb)  
-  COMMON / mp_base_real / buff
   !
 #if defined __TRACE
   write(*,*) 'parallel_max_real IN'
