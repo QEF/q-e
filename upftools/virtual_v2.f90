@@ -29,12 +29,13 @@ PROGRAM virtual_test
   USE pseudo_types, ONLY : pseudo_upf, nullify_pseudo_upf, &
                            deallocate_pseudo_upf
   USE upf_module, ONLY : read_upf
+  USE emend_upf_module, ONLY: make_emended_upf_copy
+  USE wrappers, ONLY: f_remove
   USE write_upf_module, ONLY : write_upf
   USE radial_grids, ONLY : radial_grid_type, nullify_radial_grid
   USE environment, ONLY: environment_start, environment_end
   USE mp_global, ONLY: mp_startup, mp_global_end
   USE io_global, ONLY: ionode, stdout
-
 
   !
   IMPLICIT NONE
@@ -48,6 +49,7 @@ PROGRAM virtual_test
   INTEGER :: ios
   TYPE (pseudo_upf) :: upf(2), upf_vca
   TYPE (radial_grid_type) :: grid(2)
+  LOGICAL :: is_xml
 #if defined(__MPI)
   CALL mp_startup()
 #endif
@@ -65,18 +67,19 @@ PROGRAM virtual_test
      DO is=1,2                                                                           
                                                                                          
        PRINT '(''  Input PP file # '',i2,'' in UPF format > '',$)', is                   
-       READ (5, '(a)', end = 20, err = 20) filein(is)                                    
-                                                                                         
-       !  nullify objects as soon as they are instantiated                               
-                                                                                         
+       READ (5, '(a)', end = 20, err = 20) filein(is)
+
+       !  nullify objects as soon as they are instantiated
+       
        CALL nullify_pseudo_upf(upf(is))                                                  
-       CALL nullify_radial_grid(grid(is))                                                
-                                                                                         
-                                                                                         
-                                                                                         
-                                                                                         
-       CALL read_upf(upf(is), GRID = grid(is), IERR = ierr,FILENAME =  TRIM(filein(is))) 
-       !                                                                                 
+       CALL nullify_radial_grid(grid(is))                                                                                         
+       CALL read_upf(upf(is), GRID = grid(is), IERR = ierr, FILENAME = TRIM(filein(is)))
+       IF (ierr ==-81 ) THEN
+          IF (ionode) is_xml = make_emended_upf_copy( TRIM(filein(is)), 'tmp.upf' )
+          CALL  read_upf(upf(is), GRID = grid(is), IERR = ierr, FILENAME = 'tmp.upf' )
+          IF (ionode) ios = f_remove('tmp.upf' )
+       END IF
+       
        IF (ierr/=0 .AND. ierr/=-1) THEN                                                  
           print *, ierr                                                                  
           CALL errore('virtual_test', 'reading pseudo upf', ierr)                        
