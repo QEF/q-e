@@ -114,6 +114,10 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   !
   ! add NLCC when present
   !
+  ikk = ikks(ik)
+  ikq = ikqs(ik)
+  npw = ngk(ikk)
+  npwq= ngk(ikq)
    if (nlcc_any.and.addnlcc) then
       drhoc(:) = (0.d0, 0.d0)
       do na = 1,nat
@@ -181,10 +185,6 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   !
   ! Now we compute dV_loc/dtau in real space
   !
-  ikk = ikks(ik)
-  ikq = ikqs(ik)
-  npw = ngk(ikk)
-  npwq= ngk(ikq)
   CALL invfft ('Rho', aux1, dffts)
   do ibnd = 1, nbnd
      do ip=1,npol
