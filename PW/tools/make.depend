@@ -1,3 +1,4 @@
+cell2ibrav.o : ../../Modules/kind.o
 ev.o : ../../Modules/constants.o
 ev.o : ../../Modules/io_global.o
 ev.o : ../../Modules/kind.o

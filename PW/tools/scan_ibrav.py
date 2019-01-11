@@ -139,6 +139,7 @@ def make_namelist(ibrav,p):
     celldm(6) ={celldm6}
   /
   """
+#  print systemnl.format(**replacements)
   return systemnl.format(**replacements)
 
 def constraint(p):
@@ -166,8 +167,11 @@ def cell_stdin():
 def compute_cell(namelist):
   from numpy import isnan
   output,error = run_command(ibrav2cell_x,namelist)
+  output_lines = output.splitlines()
+  output_cell = output_lines[-3]+output_lines[-2]+output_lines[-1]
+#  print output_cell
   try:
-    at = map(float, output.split())
+    at = map(float, output_cell.split())
   except ValueError:
     at = [0,0,0, 0,0,0, 0,0,0]
   if any(isnan(at)):
@@ -201,6 +205,4 @@ def recompute(p, options):
   return norm(at1-at0)
 
 main()
-
-
 
