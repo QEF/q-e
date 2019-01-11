@@ -57,6 +57,7 @@ PROGRAM upf2casino
       ENDIF
       fileout = filein(1:prefix_len) //'out'
 
+      ios = 0
       CALL read_upf( upf_in, IERR = ios, GRID = grid, FILENAME = TRIM(filein)  )
       IF (ios ==-81 ) THEN
          IF (ionode) is_xml = make_emended_upf_copy( TRIM(filein), 'tmp.upf' )
