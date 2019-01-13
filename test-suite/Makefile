@@ -151,7 +151,8 @@ clean:
                 epw_*/*.fc.* epw_*/*_band.dat epw_*/*F_restart* epw_*/*F_restart_CB* \
                 epw_*/*.mmn epw_*/*.epmatkq* epw_*/*.epmatkqcb* epw_*/sparse* \
                 epw_*/*.Fin_restart* epw_*/*.Fin_restartcb* epw_*/*.acon_iso_* \
-                epw_*/*.imag_aniso* epw_*/*.imag_iso* epw_*/*.pade_* epw_*/*qdos_*
+                epw_*/*.imag_aniso* epw_*/*.imag_iso* epw_*/*.pade_* epw_*/*qdos_* \
+                epw_*/epsilon2_indabs.dat epw_*/epsilon2_indabs_lorenz.dat
                 
 # Special cases for EPW
 	@rm -rf epw_base/save epw_super/save
