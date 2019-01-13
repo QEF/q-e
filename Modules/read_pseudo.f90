@@ -175,12 +175,19 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            !
            CALL  read_upf(upf(nt), rgrid(nt), isupf, &
                 filename = TRIM(tmp_dir)//psfile(nt) )
-           !! then try again to read from the corrected file 
+           !! try again to read from the corrected file 
            WRITE ( msg, '(A)') 'Pseudo file '// trim(psfile(nt)) // ' has been fixed on the fly.' &
                 // new_line('a') // 'To avoid this message in the future, permanently fix ' &
                 // new_line('a') // ' your pseudo files following these instructions: ' &
                 // new_line('a') // 'https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
            CALL infomsg('read_upf:', trim(msg) )    
+        ELSE
+           !
+           OPEN ( UNIT = iunps, FILE = TRIM(file_pseudo), STATUS = 'old', FORM = 'formatted' ) 
+           CALL  read_upf(upf(nt), rgrid(nt), isupf, UNIT = iunps )
+           !! try to read UPF v.1 file
+           CLOSE (iunps)
+           !
         END IF
         !
         IF (ionode) ios = f_remove(TRIM(tmp_dir)//TRIM(psfile(nt)) )

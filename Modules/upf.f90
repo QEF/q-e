@@ -31,7 +31,7 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename) !
    !! Derived-type variable *upf* and optionally *grid* store in output the 
    !! data read from file. 
    !! If unit number is provided with the *unit* argument, only UPF v1 format
-   !! is chhecked; the PP file must be opened and closed outside the routine.  
+   !! is checked; the PP file must be opened and closed outside the routine.  
    !! Otherwise the *filename* argument must be given, file is opened and closed
    !! inside the routine, all formats will be  checked. 
    !! @Note last revision: 01-01-2019 PG - upf fix moved out from here
