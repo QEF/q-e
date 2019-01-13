@@ -6,12 +6,14 @@
 #SBATCH -S 2
 
 #load modules
+module unload craype-haswell
+module load craype-mic-knl
 module load espresso/6.3  
-execdir=$(module show espresso |& grep PATH | awk '{print $3}')
+execdir=$(module show espresso/6.3 |& grep PATH | awk '{print $3}')
 #execdir=../buildscripts/install/6.3/knl/bin
 
 #some parameters
-rankspernode=4
+rankspernode=8
 totalranks=$(( ${rankspernode} * ${SLURM_NNODES} ))
 
 #openmp stuff
@@ -22,4 +24,4 @@ export MKL_FAST_MEMORY_LIMIT=0
 
 #run
 MPI_RUN="srun -N ${SLURM_NNODES} -n ${totalranks} -c $(( 256 / ${rankspernode} )) --cpu_bind=cores"
-${MPI_RUN} ${execdir}/pw.x -ndiag 4 -nbgrp ${totalranks} -in small.in 
+${MPI_RUN} ${execdir}/pw.x -ndiag ${totalranks} -nbgrp ${totalranks} -in small.in 

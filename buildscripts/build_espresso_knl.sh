@@ -12,6 +12,7 @@ arch="knl"
 #install directory
 export SOFTWAREPATH=$(pwd)/install
 export INSTALLPATH=${SOFTWAREPATH}/${espresso_version}/${arch}
+export scalapackflags="${MKLROOT}/lib/intel64/libmkl_scalapack_lp64.a -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_intel_thread.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_blacs_intelmpi_lp64.a -Wl,--end-group -liomp5 -lpthread -lm -ldl"
 
 #step in
 cd ../
@@ -39,11 +40,12 @@ make veryclean
             --with-hdf5=${HDF5_DIR}/lib
 
 #some makefile hacking
-sed -i 's|^HDF5_LIB =|HDF5_LIB = -L${HDF5_DIR}/lib -lhdf5|g' make.inc
-sed -i 's|^F90FLAGS.*=|F90FLAGS = -xMIC-AVX512|g' make.inc
-sed -i 's|^FFLAGS.*=|FFLAGS = -xMIC-AVX512|g' make.inc
-sed -i 's|^CFLAGS.*=|CFLAGS = -xMIC-AVX512|g' make.inc
-
+sed -i "s|^HDF5_LIB =|HDF5_LIB = -L${HDF5_DIR}/lib -lhdf5|g" make.inc
+sed -i "s|^F90FLAGS.*=|F90FLAGS = -xMIC-AVX512|g" make.inc
+sed -i "s|^FFLAGS.*=|FFLAGS = -xMIC-AVX512|g" make.inc
+sed -i "s|^CFLAGS.*=|CFLAGS = -xMIC-AVX512|g" make.inc
+sed -i "s|^MANUAL_DFLAGS  =|MANUAL_DFLAGS  = -D__SCALAPACK|g" make.inc
+sed -i "s|^SCALAPACK_LIBS =|SCALAPACK_LIBS = ${scalapackflags}|g" make.inc
 
 #clean up
 make clean
