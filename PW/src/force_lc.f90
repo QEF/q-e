@@ -8,7 +8,7 @@
 !
 !----------------------------------------------------------------------
 subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
-     igtongl, g, rho, nl, nspin, gstart, gamma_only, vloc, forcelc)
+     igtongl, g, rho, nl, gstart, gamma_only, vloc, forcelc)
   !----------------------------------------------------------------------
   !
   USE kinds
@@ -23,11 +23,10 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   !
   !   first the dummy variables
   !
-  integer, intent(in) :: nat, ngm, nspin, ngl, gstart, &
+  integer, intent(in) :: nat, ngm, ngl, gstart, &
                          igtongl (ngm), nl (ngm), ityp (nat)
   ! nat:    number of atoms in the cell
   ! ngm:    number of G vectors
-  ! nspin:  number of spin polarizations
   ! ngl:    number of shells
   ! igtongl correspondence G <-> shell of G
   ! nl:     correspondence fft mesh <-> G vec
@@ -36,7 +35,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   logical, intent(in) :: gamma_only
 
   real(DP), intent(in) :: tau (3, nat), g (3, ngm), vloc (ngl, * ), &
-       rho (dfftp%nnr, nspin), alat, omega
+       rho (dfftp%nnr), alat, omega
   ! tau:  coordinates of the atoms
   ! g:    coordinates of G vectors
   ! vloc: local potential
@@ -60,11 +59,9 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   ! F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i
   !
   allocate (aux(dfftp%nnr))
-  if ( nspin == 2) then
-      aux(:) = CMPLX( rho(:,1)+rho(:,2), 0.0_dp, kind=dp )
-  else
-      aux(:) = CMPLX( rho(:,1), 0.0_dp, kind=dp )
-  end if
+  !
+  aux(:) = CMPLX( rho(:), 0.0_dp, kind=dp )
+  !
   CALL fwfft ('Rho', aux, dfftp)
   !
   !    aux contains now  n(G)

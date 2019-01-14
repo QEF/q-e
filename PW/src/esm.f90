@@ -526,11 +526,7 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng)+1
      IF (n3<1) n3 = n3 + dfftp%nr3
-     if (nspin == 2) then
-        rg3 = rhog(ng,1)+rhog(ng,2)
-     else
-        rg3 = rhog(ng,1)
-     endif
+     rg3 = rhog(ng,1)
      rhog3(n3,ng_2d)=rg3
      if ( gamma_only .and. n1==0 .and. n2==0 ) then
         n3 = -mill(3,ng)+1
@@ -738,11 +734,7 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng)+1
      IF (n3<1) n3 = n3 + dfftp%nr3    
-     if (nspin == 2) then
-        rg3 = rhog(ng,1)+rhog(ng,2)
-     else
-        rg3 = rhog(ng,1)
-     endif
+     rg3 = rhog(ng,1)
      rhog3(n3,ng_2d)=rg3
      if ( gamma_only .and. n1==0 .and. n2==0 ) then
         n3 = -mill(3,ng)+1
@@ -963,11 +955,7 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng)+1
      IF (n3<1) n3 = n3 + dfftp%nr3    
-     if (nspin == 2) then
-        rg3 = rhog(ng,1)+rhog(ng,2)
-     else
-        rg3 = rhog(ng,1)
-     endif
+     rg3 = rhog(ng,1)
      rhog3(n3,ng_2d)=rg3
      if ( gamma_only .and. n1==0 .and. n2==0 ) then
         n3 = -mill(3,ng)+1
@@ -1182,11 +1170,7 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng)+1
      IF (n3<1) n3 = n3 + dfftp%nr3    
-     if (nspin == 2) then
-        rg3 = rhog(ng,1)+rhog(ng,2)
-     else
-        rg3 = rhog(ng,1)
-     endif
+     rg3 = rhog(ng,1)
      rhog3(n3,ng_2d)=rg3
      if ( gamma_only .and. n1==0 .and. n2==0 ) then
         n3 = -mill(3,ng)+1
@@ -1541,12 +1525,7 @@ END SUBROUTINE esm_hartree_bc4
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig,1)
        rhog3(igz,igp) = rg3
 
        ! expand function symmetrically to gz<0
@@ -1841,12 +1820,7 @@ END SUBROUTINE esm_hartree_bc4
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig,1)
        rhog3(igz,igp) = rg3
 
        ! expand function symmetrically to gz<0
@@ -2194,12 +2168,7 @@ END SUBROUTINE esm_hartree_bc4
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig,1)
        rhog3(igz,igp) = rg3
 
        ! expand function symmetrically to gz<0
@@ -4553,12 +4522,7 @@ END SUBROUTINE esm_local_bc4
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig,1)
        rhog3(igz,igp) = rg3
 
        if( gamma_only .and. iga==0 .and. igb==0 ) then
@@ -4815,12 +4779,7 @@ END SUBROUTINE esm_local_bc4
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig,1)
        rhog3(igz,igp) = rg3
 
        if( gamma_only .and. iga==0 .and. igb==0 ) then
@@ -5108,12 +5067,7 @@ END SUBROUTINE esm_local_bc4
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig,1)
        rhog3(igz,igp) = rg3
           
        if( gamma_only .and. iga==0 .and. igb==0 ) then
@@ -6980,7 +6934,6 @@ END SUBROUTINE esm_force_lc_bc4
 SUBROUTINE esm_printpot( rhog )
     use kinds,         only : DP
     use gvect,         only : ngm, mill, igtongl
-    use lsda_mod,      only : nspin
     use constants,     only : pi, sqrtpm1, tpi, fpi, e2
     use constants,     only : AUTOEV, BOHR_RADIUS_ANGS
     use cell_base,     only : omega, alat, at, tpiba, bg
@@ -6992,7 +6945,7 @@ SUBROUTINE esm_printpot( rhog )
     USE io_files,      only : prefix, tmp_dir
     implicit none
 
-    complex(DP), intent(in) :: rhog(ngm,nspin)   !  n(G)
+    complex(DP), intent(in) :: rhog(ngm)   !  n(G)
 
     integer :: ig, iga, igb, igz, iz, ia
     real(DP) :: L, S, z0, z1, z, gz, alpha, salp
@@ -7035,12 +6988,7 @@ SUBROUTINE esm_printpot( rhog )
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig)
        rho0g(igz) = rg3
 
        if( gamma_only .and. iga==0 .and. igb==0 ) then

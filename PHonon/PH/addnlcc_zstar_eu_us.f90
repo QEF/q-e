@@ -12,7 +12,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
   USE kinds, ONLY : DP
   USE funct, only : dft_is_gradient, dft_is_nonlocc
-  USE scf, only : rho, rho_core
+  USE scf, only : rho, rho_core, rhoz_or_updw
   USE cell_base, ONLY : omega
   USE gvect, ONLY : ngm, g
   USE fft_base, ONLY : dfftp
@@ -59,9 +59,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            dvaux = (0.0_dp,0.0_dp)
            CALL addcore (mode, drhoc)
 
-           DO is = 1, nspin_lsda
-              rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core
-           END DO
+           rho%of_r(:,1) = rho%of_r(:,1) + rho_core
 
            DO is = 1, nspin_mag
               DO is1 = 1, nspin_mag
@@ -77,16 +75,28 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            ! its contribution. grho contains already the core charge
            !
 
-           IF ( dft_is_gradient() ) &
-                CALL dgradcorr (dfftp, rho%of_r, grho, &
-                    dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf (1,1,ipol),&
-                    nspin_mag, nspin_gga, g, dvaux)
-           if (dft_is_nonlocc()) &
-                call dnonloccorr(rho%of_r, drhoscf (1, 1, ipol), xq, dvaux)
-
-           DO is = 1, nspin_lsda
-              rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core
-           END DO
+           IF ( dft_is_gradient() ) THEN
+              !^
+              IF (nspin_lsda == 2) CALL rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
+              !
+              CALL dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
+                   dvxc_s, xq, drhoscf(1,1,ipol), nspin_mag, nspin_gga, g, dvaux)
+              !
+              IF (nspin_lsda == 2) call rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
+              !^
+           ENDIF
+           !
+           IF (dft_is_nonlocc()) THEN
+              !^
+              IF (nspin_lsda == 2) CALL rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
+              !
+              CALL dnonloccorr(rho%of_r, drhoscf (1, 1, ipol), xq, dvaux)
+              !
+              IF (nspin_lsda == 2) CALL rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
+              !^
+           ENDIF
+           !
+           rho%of_r(:,1) = rho%of_r(:,1) - rho_core
 
            DO is = 1, nspin_lsda
               zstareu0(ipol,mode) = zstareu0(ipol,mode) -                  &

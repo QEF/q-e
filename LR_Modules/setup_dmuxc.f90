@@ -35,8 +35,8 @@ SUBROUTINE setup_dmuxc
   !
   IF (lsda) THEN
      DO ir = 1, dfftp%nnr
-        rhoup = rho%of_r (ir, 1) + 0.5d0 * rho_core (ir)
-        rhodw = rho%of_r (ir, 2) + 0.5d0 * rho_core (ir)
+        rhoup = ( rho%of_r(ir, 1) + rho%of_r(ir, 2) + rho_core(ir) ) * 0.5d0
+        rhodw = ( rho%of_r(ir, 1) - rho%of_r(ir, 2) + rho_core(ir) ) * 0.5d0
         CALL dmxc_spin (rhoup, rhodw, dmuxc(ir,1,1), dmuxc(ir,2,1), &
                                       dmuxc(ir,1,2), dmuxc(ir,2,2) )
      ENDDO
