@@ -14,18 +14,16 @@ cd ../
 
 #install directory
 export INSTALLPATH=${SOFTWAREPATH}/${espresso_version}/${arch}
-export LD_LIBRARY_PATH=${mpipath}/lib:${LD_LIBRARY_PATH}
-export PATH=${mpipath}/bin:${PATH}
 
 #clean everything up so that no libraries with wrong arch are around
 export FC=pgf90
-export FCFLAGS="-g -O3 -mp -Mpreprocess -pgf90libs -I${MKLROOT}/include -tp=skylake"
+export FCFLAGS="-g -O2 -mp -Mpreprocess -pgf90libs -I${MKLROOT}/include -tp=skylake"
 export F90=pgf90
 export F90FLAGS="${FCFLAGS}"
 export MPIF90=mpif90
 export MPIf90FLAGS="${F90FLAGS}"
 export CC=pgcc
-export CFLAGS="-g -O3 -mp -I${MKLROOT}/include -tp=skylake"
+export CFLAGS="-g -O2 -mp -I${MKLROOT}/include -tp=skylake"
 export LDFLAGS="${F90FLAGS}"
 
 #ompi stuff
@@ -45,8 +43,9 @@ make veryclean
 #some makefile hacking
 #sed -i 's|^HDF5_LIB =|HDF5_LIB = -L${HDF5_DIR}/lib -lhdf5|g' make.inc
 #sed -i "s|^MANUAL_DFLAGS  =|MANUAL_DFLAGS  = -D__SCALAPACK|g" make.inc
-sed -i "s|^BLAS_LIBS      = ./*$|BLAS_LIBS      = -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64  -lmkl_core -lmkl_pgi_thread"
+#sed -i "s|^BLAS_LIBS      = ./*$|BLAS_LIBS      = -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64  -lmkl_core -lmkl_pgi_thread|g" make.inc
 sed -i "s|-D__DFTI|-D__FFTW|g" make.inc
+sed -i "s|^FOX_FLAGS = -fast |FOX_FLAGS = -O0 |g" make.inc
 
 #clean up
 make clean
@@ -59,7 +58,8 @@ make -j8 pw
 #make epw
 
 #install
-make install
+mkdir -p ${INSTALLPATH}/bin
+cp PW/src/*.x ${INSTALLPATH}/bin/
 
 #copy pseudo-dir:
 cp -r pseudo ${INSTALLPATH}/
