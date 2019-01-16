@@ -83,15 +83,15 @@ CONTAINS
   RETURN
   END SUBROUTINE wg_corr_loc
 !----------------------------------------------------------------------------
-  SUBROUTINE wg_corr_force( lnuclei, omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, nspin, &
+  SUBROUTINE wg_corr_force( lnuclei, omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, &
                             rho, force )
 !----------------------------------------------------------------------------
   USE cell_base, ONLY : tpiba
   USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
-  INTEGER, INTENT(IN) :: nat, ntyp, ityp(nat), ngm, nspin
+  INTEGER, INTENT(IN) :: nat, ntyp, ityp(nat), ngm
   REAL(DP), INTENT(IN) :: omega, zv(ntyp), tau(3,nat), g(3,ngm)
-  COMPLEX(DP), INTENT(IN) :: strf(ngm,ntyp), rho(ngm,nspin)
+  COMPLEX(DP), INTENT(IN) :: strf(ngm,ntyp), rho(ngm)
   LOGICAL, INTENT(IN) :: lnuclei
   ! this variable is used in wg_corr_force to select if
   ! corr should be done on rho and nuclei or only on rho
@@ -105,9 +105,8 @@ CONTAINS
   !
   allocate ( v(ngm) )
   do ig=1,ngm
-     rho_tot = rho(ig,1)
+     rho_tot = rho(ig)
      if(lnuclei) rho_tot = rho_tot - SUM(zv(1:ntyp)*strf(ig,1:ntyp)) / omega
-     if (nspin==2) rho_tot = rho_tot + rho(ig,2)
      v(ig) = e2 * wg_corr(ig) * rho_tot
   end do
   force(:,:) = 0._dp

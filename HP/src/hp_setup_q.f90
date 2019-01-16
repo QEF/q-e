@@ -51,7 +51,7 @@ SUBROUTINE hp_setup_q()
   USE cell_base,        ONLY : at, bg
   USE io_global,        ONLY : stdout
   USE lsda_mod,         ONLY : nspin
-  USE scf,              ONLY : v, vrs, vltot, rho, kedtau
+  USE scf,              ONLY : v, vrs, vltot, rho, kedtau, rhoz_or_updw
   USE fft_base,         ONLY : dfftp
   USE gvect,            ONLY : ngm
   USE gvecs,            ONLY : doublegrid
@@ -95,7 +95,13 @@ SUBROUTINE hp_setup_q()
   !
   ! 5) Setup gradient correction stuff
   !
+  !^
+  IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', 'rhoz_updw' )
+  !
   CALL setup_dgc()
+  !
+  IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', 'updw_rhoz' )
+  !^
   !
   ! 6) Compute the inverse of each matrix of the crystal symmetry group
   !

@@ -26,7 +26,7 @@ SUBROUTINE sum_band()
   USE fixed_occ,            ONLY : one_atom_occupations
   USE ldaU,                 ONLY : lda_plus_U
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE scf,                  ONLY : rho
+  USE scf,                  ONLY : rho, rhoz_or_updw
   USE symme,                ONLY : sym_rho
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
@@ -212,7 +212,12 @@ SUBROUTINE sum_band()
      END DO
      !
   END IF
-  !
+  !^
+  IF (nspin == 2) THEN
+     CALL rhoz_or_updw( rho, 'r_and_g', 'updw_rhoz' )
+     IF (lda_plus_u.AND.(.NOT.noncolin)) CALL rhoz_or_updw( rho, 'hub_ns', 'updw_rhoz' )
+  ENDIF
+  !^
   CALL stop_clock( 'sum_band' )
   !
   RETURN

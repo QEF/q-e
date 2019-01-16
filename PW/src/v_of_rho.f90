@@ -22,14 +22,15 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE ions_base,        ONLY : nat, tau
   USE ldaU,             ONLY : lda_plus_U 
   USE funct,            ONLY : dft_is_meta, get_meta
-  USE scf,              ONLY : scf_type
+  USE scf,              ONLY : scf_type, rhoz_or_updw
   USE cell_base,        ONLY : alat
+  USE lsda_mod,         ONLY : nspin
   USE control_flags,    ONLY : ts_vdw
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
   !
   IMPLICIT NONE
   !
-  TYPE(scf_type), INTENT(IN) :: rho  ! the valence charge
+  TYPE(scf_type), INTENT(INOUT) :: rho  ! the valence charge
   TYPE(scf_type), INTENT(INOUT) :: v ! the scf (Hxc) potential 
   !!!!!!!!!!!!!!!!! NB: NOTE that in F90 derived data type must be INOUT and 
   !!!!!!!!!!!!!!!!! not just OUT because otherwise their allocatable or pointer
@@ -51,42 +52,19 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
   CALL start_clock( 'v_of_rho' )
   !
+  !^
+  IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', 'rhoz_updw' )
+  !
   ! ... calculate exchange-correlation potential
   !
-  !
-  if (dft_is_meta() .and. (get_meta() /= 4)) then
-     call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
-  else
+  IF (dft_is_meta() .and. (get_meta() /= 4)) then
+     CALL v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
+  ELSE
      CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
-  endif
-  !
-  !
-  ! ... add a magnetic field  (if any)
-  !
-  CALL add_bfield( v%of_r, rho%of_r )
-  !
-  ! ... calculate hartree potential
-  !
-  CALL v_h( rho%of_g, ehart, charge, v%of_r )
-  !
-  ! ... LDA+U: build up Hubbard potential 
-  !
-  if (lda_plus_u) then
-     if(noncolin) then
-        call v_hubbard_nc(rho%ns_nc,v%ns_nc,eth)
-     else
-        call v_hubbard(rho%ns,v%ns,eth)
-     endif
-  endif
-  !
-  ! ... add an electric field
-  ! 
-  DO is = 1, nspin_lsda
-     CALL add_efield(v%of_r(1,is), etotefield, rho%of_r, .false. )
-  END DO
+  ENDIF
   !
   ! ... add Tkatchenko-Scheffler potential (factor 2: Ha -> Ry)
-  ! 
+  !
   IF (ts_vdw) THEN
      CALL tsvdw_calculate(tau*alat,rho%of_r)
      DO is = 1, nspin_lsda
@@ -95,6 +73,33 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
         END DO
      END DO
   END IF
+  !
+  IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', 'updw_rhoz' )
+  !^
+  !
+  ! ... add a magnetic field  (if any)
+  !
+  CALL add_bfield( v%of_r, rho%of_r )
+  !
+  ! ... calculate hartree potential
+  !
+  CALL v_h( rho%of_g(:,1), ehart, charge, v%of_r )
+  !
+  ! ... LDA+U: build up Hubbard potential 
+  !
+  IF (lda_plus_u) then
+     IF (noncolin) then
+        CALL v_hubbard_nc(rho%ns_nc,v%ns_nc,eth)
+     ELSE
+        CALL v_hubbard(rho%ns,v%ns,eth)
+     ENDIF
+  ENDIF
+  !
+  ! ... add an electric field
+  ! 
+  DO is = 1, nspin_lsda
+     CALL add_efield(v%of_r(1,is), etotefield, rho%of_r(:,1), .false. )
+  END DO
   !
   CALL stop_clock( 'v_of_rho' )
   !
@@ -554,7 +559,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), INTENT(IN)  :: rhog(ngm,nspin)
+  COMPLEX(DP), INTENT(IN)  :: rhog(ngm)
   REAL(DP),  INTENT(INOUT) :: v(dfftp%nnr,nspin)
   REAL(DP),    INTENT(OUT) :: ehart, charge
   !
@@ -572,9 +577,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !
   IF ( gstart == 2 ) THEN
      !
-     charge = omega*REAL( rhog(1,1) )
-     !
-     IF ( nspin == 2 ) charge = charge + omega*REAL( rhog(1,2) )
+     charge = omega*REAL( rhog(1) )
      !
   END IF
   !
@@ -594,22 +597,15 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      aux1(:,:) = 0.D0
      !
      IF (do_cutoff_2D) THEN  !TS
-        CALL cutoff_hartree(rhog, aux1, ehart)
+        CALL cutoff_hartree(rhog(:), aux1, ehart)
      ELSE
 !$omp parallel do private( fac, rgtot_re, rgtot_im ), reduction(+:ehart)
         DO ig = gstart, ngm
            !
            fac = 1.D0 / gg(ig) 
            !
-           rgtot_re = REAL(  rhog(ig,1) )
-           rgtot_im = AIMAG( rhog(ig,1) )
-           !
-           IF ( nspin == 2 ) THEN
-              !
-              rgtot_re = rgtot_re + REAL(  rhog(ig,2) )
-              rgtot_im = rgtot_im + AIMAG( rhog(ig,2) )
-              !
-           END IF
+           rgtot_re = REAL(  rhog(ig) )
+           rgtot_im = AIMAG( rhog(ig) )
            !
            ehart = ehart + ( rgtot_re**2 + rgtot_im**2 ) * fac
            !
@@ -638,8 +634,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      ! 
      if (do_comp_mt) then
         ALLOCATE( vaux( ngm ), rgtot(ngm) )
-        rgtot(:) = rhog(:,1)
-        if (nspin==2) rgtot(:) = rgtot(:) + rhog(:,2)
+        rgtot(:) = rhog(:)
         CALL wg_corr_h (omega, ngm, rgtot, vaux, eh_corr)
         aux1(1,1:ngm) = aux1(1,1:ngm) + REAL( vaux(1:ngm))
         aux1(2,1:ngm) = aux1(2,1:ngm) + AIMAG(vaux(1:ngm))
@@ -704,79 +699,85 @@ SUBROUTINE v_hubbard(ns, v_hub, eth)
 
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN)  :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) 
+  REAL(DP), INTENT(INOUT)  :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) 
   REAL(DP), INTENT(OUT) :: v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) 
   REAL(DP), INTENT(OUT) :: eth
-  REAL(DP) :: n_tot, n_spin, eth_dc, eth_u, mag2, effU
+  REAL(DP) :: n_tot, n_spin, eth_dc, eth_u, mag2, effU, sgn(2)
   INTEGER :: is, isop, is1, na, nt, m1, m2, m3, m4
   REAL(DP),    ALLOCATABLE :: u_matrix(:,:,:,:)
 
   ALLOCATE( u_matrix(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, 2*Hubbard_lmax+1, 2*Hubbard_lmax+1) )
-
+  !
   eth    = 0.d0
   eth_dc = 0.d0
   eth_u  = 0.d0
-
+  sgn(1) = 1.d0 ;  sgn(2) = -1.d0
+  !
   v_hub(:,:,:,:) = 0.d0
-
-  if (lda_plus_u_kind.eq.0) then
-
+  !
+  IF (lda_plus_u_kind == 0) THEN
+    !
     DO na = 1, nat
        nt = ityp (na)
-       IF (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) THEN
-          IF (Hubbard_J0(nt).NE.0.d0) THEN
+       IF (Hubbard_U(nt) /= 0.d0 .OR. Hubbard_alpha(nt) /= 0.d0) THEN
+          !
+          IF (Hubbard_J0(nt) /= 0.d0) THEN
              effU = Hubbard_U(nt) - Hubbard_J0(nt)
           ELSE
              effU = Hubbard_U(nt)
-          END IF  
+          END IF
+          !
           DO is = 1, nspin
+             !
              DO m1 = 1, 2 * Hubbard_l(nt) + 1
+                !
                 eth = eth + ( Hubbard_alpha(nt) + 0.5D0 * effU ) * &
-                              ns(m1,m1,is,na)
+                            ( ns(m1,m1,1,na) + sgn(is)*ns(m1,m1,nspin,na) )*0.5D0
+                
                 v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + &
                             ( Hubbard_alpha(nt) + 0.5D0 * effU )
+                !
                 DO m2 = 1, 2 * Hubbard_l(nt) + 1
-                   eth = eth - 0.5D0 * effU * &
-                                       ns(m2,m1,is,na)* ns(m1,m2,is,na)
-                   v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
-                                        effU * ns(m2,m1,is,na)
+                   !
+                   eth = eth - 0.125D0*effU*( ns(m2,m1,1,na) + sgn(is)*ns(m2,m1,nspin,na) ) * &
+                                            ( ns(m1,m2,1,na) + sgn(is)*ns(m1,m2,nspin,na) )
+                   !
+                   v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - effU * &
+                                         ( ns(m2,m1,1,na) + sgn(is)*ns(m2,m1,nspin,na) )*0.5D0
                 ENDDO
              ENDDO
           ENDDO
        ENDIF
-
-       IF (Hubbard_J0(nt).NE.0.d0 .OR. Hubbard_beta(nt).NE.0.d0) THEN
+       !
+       IF (Hubbard_J0(nt) /= 0.d0 .OR. Hubbard_beta(nt) /= 0.d0) THEN
           DO is=1, nspin
+             !
              isop = 1
              IF ( nspin == 2 .AND. is == 1) isop = 2
+             !          
              DO m1 = 1, 2 * Hubbard_l(nt) + 1
-                IF ( is .eq. 1) THEN
-                   eth = eth + Hubbard_beta(nt) * ns(m1,m1,is,na)
-                   v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + Hubbard_beta(nt)
-                   DO m2 = 1, 2 * Hubbard_l(nt) + 1
-                      eth = eth + 0.5D0 * Hubbard_J0(nt) * &
-                            ns(m2,m1,is,na)* ns(m1,m2,isop,na)
-                      v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) + &
-                                           Hubbard_J0(nt) * ns(m2,m1,isop,na)
-                   END DO
-                ELSE IF (is .eq. 2) THEN
-                   eth = eth - Hubbard_beta(nt) * ns(m1,m1,is,na)
-                   v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) - Hubbard_beta(nt)
-                   DO m2 = 1, 2 * Hubbard_l(nt) + 1
-                      eth = eth + 0.5D0 * Hubbard_J0(nt) * &
-                            ns(m2,m1,is,na) * ns(m1,m2,isop,na)
-                      v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) + &
-                                           Hubbard_J0(nt) * ns(m2,m1,isop,na)
-                   END DO
-                END IF
+                !
+                eth = eth + sgn(is) * Hubbard_beta(nt) * &
+                                     ( ns(m1,m1,1,na) + sgn(is)*ns(m1,m1,nspin,na) ) * 0.5D0
+                !
+                v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + sgn(is)*Hubbard_beta(nt)
+                !
+                DO m2 = 1, 2 * Hubbard_l(nt) + 1
+                   !
+                   eth = eth + 0.125D0*Hubbard_J0(nt) * ( ns(m2,m1,1,na) + sgn(is)*ns(m2,m1,nspin,na) )* &
+                                                        ( ns(m1,m2,1,na) + sgn(isop)*ns(m1,m2,nspin,na) )
+                   !
+                   v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) + Hubbard_J0(nt) * &
+                                         ( ns(m2,m1,1,na) + sgn(isop)*ns(m2,m1,nspin,na) ) * 0.5D0
+                END DO
              END DO
           END DO
        END IF
-        
+       !
     END DO
-
-    IF (nspin.EQ.1) eth = 2.d0 * eth
-
+    !
+    IF (nspin == 1) eth = 2.d0 * eth
+    !
 !-- output of hubbard energies:
     IF ( iverbosity > 0 ) THEN
       write(stdout,*) '--- in v_hubbard ---'
@@ -784,95 +785,91 @@ SUBROUTINE v_hubbard(ns, v_hub, eth)
       write(stdout,*) '-------'
     ENDIF
 !--
-
-  else
-
+    !
+  ELSE
+    !
     DO na = 1, nat
        nt = ityp (na)
-       IF (Hubbard_U(nt).NE.0.d0) THEN
-
-!       initialize U(m1,m2,m3,m4) matrix 
-          call hubbard_matrix (Hubbard_lmax, Hubbard_l(nt), Hubbard_U(nt), &
+       IF (Hubbard_U(nt) /= 0.d0) THEN
+          !
+!         initialize U(m1,m2,m3,m4) matrix 
+          CALL hubbard_matrix (Hubbard_lmax, Hubbard_l(nt), Hubbard_U(nt), &
                                Hubbard_J(1,nt), u_matrix)
-
+          !
 !---      total N and M^2 for DC (double counting) term
           n_tot = 0.d0
-          do is = 1, nspin
-            do m1 = 1, 2 * Hubbard_l(nt) + 1
-              n_tot = n_tot + ns(m1,m1,is,na)
-            enddo
-          enddo
-          if (nspin.eq.1) n_tot = 2.d0 * n_tot
-
+          !
+          DO m1 = 1, 2 * Hubbard_l(nt) + 1
+            n_tot = n_tot + ns(m1,m1,1,na)
+          ENDDO
+          IF ( nspin == 1 ) n_tot = 2.d0 * n_tot
+          !
           mag2  = 0.d0
-          if (nspin.eq.2) then
-            do m1 = 1, 2 * Hubbard_l(nt) + 1
-              mag2 = mag2 + ns(m1,m1,1,na) - ns(m1,m1,2,na)
-            enddo
-          endif
+          IF ( nspin == 2 ) THEN
+            DO m1 = 1, 2 * Hubbard_l(nt) + 1
+              mag2 = mag2 + ns(m1,m1,2,na)
+            ENDDO
+          ENDIF
           mag2  = mag2**2
-!---
-
+!---      !
+          !
 !---      hubbard energy: DC term
-
+          !
           eth_dc = eth_dc + 0.5d0*( Hubbard_U(nt)*n_tot*(n_tot-1.d0) -       &
                                     Hubbard_J(1,nt)*n_tot*(0.5d0*n_tot-1.d0) - &
                                     0.5d0*Hubbard_J(1,nt)*mag2 )
-!--
+!--       !
           DO is = 1, nspin
-
+            !
 !---        n_spin = up/down N
-
+            !
             n_spin = 0.d0
             do m1 = 1, 2 * Hubbard_l(nt) + 1
-              n_spin = n_spin + ns(m1,m1,is,na)
+              n_spin = n_spin + ( ns(m1,m1,1,na) + sgn(is)*ns(m1,m1,nspin,na) ) * 0.5D0
             enddo
 !---
-
+            !
             DO m1 = 1, 2 * Hubbard_l(nt) + 1
-
+              !
 !             hubbard potential: DC contribution  
-
+              ! 
               v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + Hubbard_J(1,nt)*n_spin + &
                       0.5d0*(Hubbard_U(nt)-Hubbard_J(1,nt)) - Hubbard_U(nt)*n_tot
-
+              !
 !             +U contributions 
-
+              !
               DO m2 = 1, 2 * Hubbard_l(nt) + 1
-                do m3 = 1, 2 * Hubbard_l(nt) + 1
-                  do m4 = 1, 2 * Hubbard_l(nt) + 1
-
-                    if (nspin.eq.1) then
-                      v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) + &
-                                           2.d0*u_matrix(m1,m3,m2,m4)*ns(m3,m4,is,na)
-                    else
-                      do is1 = 1, nspin
-                         v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) + &
-                                          u_matrix(m1,m3,m2,m4)*ns(m3,m4,is1,na)
-                      enddo
-                    endif
-
-                    v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
-                                      u_matrix(m1,m3,m4,m2) * ns(m3,m4,is,na)
-
-                    eth_u = eth_u + 0.5d0*(                            &
-                              ( u_matrix(m1,m2,m3,m4)-u_matrix(m1,m2,m4,m3) )*  &
-                              ns(m1,m3,is,na)*ns(m2,m4,is,na)                +  &
-                       u_matrix(m1,m2,m3,m4)*ns(m1,m3,is,na)*ns(m2,m4,nspin+1-is,na) )
-
-                  enddo
-                enddo
+                DO m3 = 1, 2 * Hubbard_l(nt) + 1
+                  DO m4 = 1, 2 * Hubbard_l(nt) + 1
+                    !
+                    DO is1 = 1, nspin
+                       v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) &
+                                           + REAL( MOD(nspin,2)+1 ) * u_matrix(m1,m3,m2,m4) * &
+                                           ( ns(m3,m4,1,na) + sgn(is1)*ns(m3,m4,nspin,na) ) * 0.5D0
+                    ENDDO
+                    !
+                    v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - u_matrix(m1,m3,m4,m2) * &
+                                      ( ns(m3,m4,1,na) + sgn(is)*ns(m3,m4,nspin,na) ) * 0.5D0
+                    !
+                    eth_u = eth_u + 0.125d0*( &
+                              ( u_matrix(m1,m2,m3,m4) - u_matrix(m1,m2,m4,m3) ) *  &
+                              ( ns(m1,m3,1,na) + sgn(is)*ns(m1,m3,nspin,na)   ) *  &
+                              ( ns(m2,m4,1,na) + sgn(is)*ns(m2,m4,nspin,na) ) + u_matrix(m1,m2,m3,m4) * &
+                              ( ns(m1,m3,1,na) + sgn(is)*ns(m1,m3,nspin,na) ) * &
+                              ( ns(m2,m4,1,na) + sgn(nspin+1-is)*ns(m2,m4,nspin,na) ) )
+                  ENDDO
+                ENDDO
               ENDDO
             ENDDO
 
           ENDDO
 
-       endif
-    enddo
-
-    if (nspin.eq.1) eth_u = 2.d0 * eth_u
+       ENDIF
+    ENDDO
+    !
+    IF ( nspin == 1 ) eth_u = 2.d0 * eth_u
     eth = eth_u - eth_dc
-
+    !
 !-- output of hubbard energies:
     IF ( iverbosity > 0 ) THEN
       write(stdout,*) '--- in v_hubbard ---'
@@ -880,17 +877,17 @@ SUBROUTINE v_hubbard(ns, v_hub, eth)
       write(stdout,*) '-------'
     ENDIF
 !--
-
-  endif
-
+  !
+  ENDIF
+  !
   DEALLOCATE (u_matrix)
   RETURN
-
+  !
 END SUBROUTINE v_hubbard
 !-------------------------------------
 
-!-------------------------------------
 SUBROUTINE v_hubbard_nc(ns, v_hub, eth)
+  !-------------------------------------
   !
   ! Noncollinear version of v_hubbard.
   !
@@ -1101,8 +1098,8 @@ SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
   !
   ! ... compute VH(r) from n(G) 
   !
-  CALL v_h( rhog, ehart, charge, v )
-  DEALLOCATE( rhog )
+  CALL v_h( rhog(:,1), ehart, charge, v )    !^ ---wrong input rhog (CPV). Will be adjusted
+  DEALLOCATE( rhog )                         !^ ---before the next merge.
   !
   RETURN
   !

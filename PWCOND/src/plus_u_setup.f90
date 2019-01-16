@@ -14,6 +14,7 @@ subroutine plus_u_setup(natih, lsr)
   use radial_grids,     ONLY : ndmx
   USE ions_base,        ONLY : nat, ityp, ntyp => nsp, atm
   USE cell_base,        ONLY : alat
+  USE lsda_mod,         ONLY : nspin
   use uspp_param,       only : nhm, upf 
   USE io_global,        ONLY : stdout
   USE cond,             ONLY : norbs, nocrosl, noinss, nocrosr, tblms, taunews, &
@@ -26,7 +27,7 @@ subroutine plus_u_setup(natih, lsr)
                            natih(2,norbs), lll, kkbeta
   integer, allocatable  :: ind(:,:), tblms_new(:,:), cross_new(:,:)   
   real(DP), parameter   :: epswfc=1.d-4, eps=1.d-8
-  REAL(DP)              :: r1, beta1, beta2, norm, ledge, redge 
+  REAL(DP)              :: r1, beta1, beta2, norm, ledge, redge, sgn
   REAL(DP), ALLOCATABLE :: bphi(:,:), rsph(:), taunews_new(:,:),  &
                            gi(:), zpseus_new(:,:,:)
  
@@ -64,6 +65,7 @@ subroutine plus_u_setup(natih, lsr)
   bphi(:,:) = 0.d0
   rsph(:) = 0.d0
   ind(:,:) = 0
+  sgn = dble(2*mod(iofspin,2)-1)
 
 !--
 ! Calculate the total number of orbitals (beta + U WF's) 
@@ -233,7 +235,8 @@ subroutine plus_u_setup(natih, lsr)
         if (tblms(3,iwfc).eq.lll) then
           do iwfc1 = ind(1,iorb), iorb
             if (tblms(3,iwfc1).eq.lll) then
-             r1 = -2.d0*rho%ns(tblms(4,iwfc),tblms(4,iwfc1),iofspin,na) 
+             r1 = -( rho%ns(tblms(4,iwfc),tblms(4,iwfc1),1,na) + sgn* &
+                             rho%ns(tblms(4,iwfc),tblms(4,iwfc1),nspin,na) )
              if (tblms(4,iwfc).eq.tblms(4,iwfc1)) r1 = r1 + 1.d0
              zpseus_new(1,iwfc-iorb+iorb1,iwfc1-iorb+iorb1) = &
               zpseus_new(1,iwfc-iorb+iorb1,iwfc1-iorb+iorb1) + &
@@ -251,7 +254,8 @@ subroutine plus_u_setup(natih, lsr)
       do iwfc = ind(1,iorb), iorb
         if (tblms(3,iwfc).eq.lll) then
           do iwfc1 = 1, ldim
-            r1 = -2.d0*rho%ns(tblms(4,iwfc),iwfc1,iofspin,na) 
+            r1 = -( rho%ns(tblms(4,iwfc),iwfc1,1,na) + sgn* &
+                                 rho%ns(tblms(4,iwfc),iwfc1,nspin,na) ) 
             if (tblms(4,iwfc).eq.iwfc1) r1 = r1 + 1.d0
             zpseus_new(1,iwfc-iorb+iorb1,iorb1+iwfc1) =   &
              0.5d0*Hubbard_U(it)*bphi(tblms(2,iwfc),it)*r1    
@@ -276,8 +280,9 @@ subroutine plus_u_setup(natih, lsr)
 !
       do iwfc = 1, ldim
         do iwfc1 = 1, ldim
-          zpseus_new(1,iorb1+iwfc,iorb1+iwfc1) = &
-           - Hubbard_U(it) * rho%ns(iwfc,iwfc1,iofspin,na)   
+           zpseus_new(1,iorb1+iwfc,iorb1+iwfc1) = &
+           - Hubbard_U(it) * ( rho%ns(iwfc,iwfc1,1,na) +sgn* &
+           rho%ns(iwfc,iwfc1,nspin,na) )*0.5d0
         enddo
         zpseus_new(1,iorb1+iwfc,iorb1+iwfc) =   &
           zpseus_new(1,iorb1+iwfc,iorb1+iwfc) + 0.5d0*Hubbard_U(it)  

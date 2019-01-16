@@ -122,6 +122,7 @@ MODULE realus_scatt
 
    INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, nspin0, mbia, nhnt, iqs
    REAL(DP) :: becsum_orig(nhm*(nhm+1)/2,nat,nspin)
+   REAL(DP) :: rho_add
 
    IF (.NOT.okvan) RETURN
 
@@ -143,9 +144,15 @@ MODULE realus_scatt
                  irb = tabp(ia)%box(ir)
                  iqs = iqs + 1
                  if(orig_or_copy(ir,ia).eq.1) then
-                  rho%of_r(irb,is) = rho%of_r(irb,is) + tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*becsum_orig(ijh,ia,is)
+                    rho_add=tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*becsum_orig(ijh,ia,is)
                  else
-                  rho%of_r(irb,is) = rho%of_r(irb,is) + tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*becsum(ijh,ia,is)
+                    rho_add=tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*becsum(ijh,ia,is)
+                 endif
+                 if (nspin /= 2) then
+                    rho%of_r(irb,is) = rho%of_r(irb,is) + rho_add
+                 else
+                    rho%of_r(irb,1) = rho%of_r(irb,1) + rho_add
+                    rho%of_r(irb,2) = rho%of_r(irb,2) + DBLE(1-is/2*2) * rho_add
                  endif
               ENDDO
            ENDDO
