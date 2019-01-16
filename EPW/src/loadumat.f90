@@ -7,8 +7,8 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------------------
-  subroutine loadumat ( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq,&
-                        exband, w_centers )
+  SUBROUTINE loadumat( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq,&
+                       exband, w_centers )
   !----------------------------------------------------------------------------
   !!
   !!   wannier interpolation of e-p vertex:
@@ -31,11 +31,11 @@
   !
   IMPLICIT NONE
   ! 
-  LOGICAL, INTENT (out) :: lwin( nbnd, nks )
+  LOGICAL, INTENT (out) :: lwin(nbnd,nks)
   !! Band windows at k
-  LOGICAL, INTENT (out) :: lwinq( nbnd, nks )
+  LOGICAL, INTENT (out) :: lwinq(nbnd,nks)
   !! Band windows at k+q
-  LOGICAL, INTENT (out) :: exband( nbnd )
+  LOGICAL, INTENT (out) :: exband(nbnd)
   !! Band excluded
   !
   INTEGER, INTENT (in) :: nbnd
@@ -72,14 +72,14 @@
   INTEGER :: ik_stop
   !! Index of last k-point in the pool
   !
-  COMPLEX(kind=DP) :: cu_big ( nbnd, nbndsub, nkstot)
+  COMPLEX(kind=DP) :: cu_big(nbnd, nbndsub, nkstot)
   !! U(k) matrix for all k-points
-  COMPLEX(kind=DP) :: cuq_big ( nbnd, nbndsub, nkstot)
+  COMPLEX(kind=DP) :: cuq_big(nbnd, nbndsub, nkstot)
   !! U(k+q) matrix for all k+q-points
   !
-  LOGICAL :: lwin_big( nbnd, nkstot )
+  LOGICAL :: lwin_big(nbnd,nkstot)
   !! .true. if the band ibnd lies within the outer window at k-point ik
-  LOGICAL :: lwinq_big( nbnd, nkstot )
+  LOGICAL :: lwinq_big(nbnd,nkstot)
   !! .true. if the band ibnd lies within the outer window at k+qpoint ikq
   !
   cu_big = czero
@@ -88,30 +88,30 @@
     !
     ! first proc read rotation matrix (coarse mesh) from file
     !
-    OPEN ( unit = iunukk, file = filukk, status = 'old', form = 'formatted',iostat=ios)
-    IF (ios /=0) call errore ('loadumat', 'error opening ukk file',iunukk)
+    OPEN(iunukk, file = filukk, status = 'old', form = 'formatted',iostat=ios)
+    IF (ios /=0) CALL errore ('loadumat', 'error opening ukk file',iunukk)
     !
     DO ik = 1, nkstot
       DO ibnd = 1, nbnd
         DO jbnd = 1, nbndsub
-           READ(iunukk, *) cu_big (ibnd, jbnd, ik)
+           READ(iunukk,*) cu_big(ibnd, jbnd, ik)
         ENDDO
       ENDDO
     ENDDO
     DO ik = 1, nkstot
        DO ibnd = 1, nbnd
-          READ (iunukk,*) lwin_big(ibnd,ik)
+          READ(iunukk,*) lwin_big(ibnd,ik)
        ENDDO
     ENDDO
     DO ibnd = 1, nbnd
-       READ (iunukk,*) exband(ibnd)
+       READ(iunukk,*) exband(ibnd)
     ENDDO
     ! Read the Wannier centers
     DO iw = 1, nbndsub
-      READ (iunukk,*) w_centers(:,iw)
+      READ(iunukk,*) w_centers(:,iw)
     ENDDO
     !
-    CLOSE ( iunukk )
+    CLOSE(iunukk)
     !
     !  generate U(k+q) through the map 
     !
@@ -121,28 +121,29 @@
     !
     !  generates kmap(ik) for this xxq
     !
-    CALL createkmap2 ( xxq )
+    CALL createkmap2( xxq )
     !
     !  and we generate the matrix for the q-displaced mesh
     !
     DO ik = 1, nkstot
-       cuq_big (:, :, ik) = cu_big (:, :, kmap(ik) )
-       lwinq_big (:, ik) = lwin_big (:, kmap(ik) )
+      cuq_big(:, :, ik) = cu_big(:, :, kmap(ik))
+      lwinq_big(:, ik) = lwin_big(:, kmap(ik))
     ENDDO
     !
   ENDIF
-  CALL mp_bcast (cu_big, ionode_id, inter_pool_comm)
-  CALL mp_bcast (cuq_big, ionode_id, inter_pool_comm)   
-  CALL mp_bcast (lwin_big, ionode_id, inter_pool_comm)
-  CALL mp_bcast (lwinq_big, ionode_id, inter_pool_comm)
-  CALL mp_bcast (exband, ionode_id, inter_pool_comm)
+  CALL mp_bcast(cu_big, ionode_id, inter_pool_comm)
+  CALL mp_bcast(cuq_big, ionode_id, inter_pool_comm)   
+  CALL mp_bcast(lwin_big, ionode_id, inter_pool_comm)
+  CALL mp_bcast(lwinq_big, ionode_id, inter_pool_comm)
+  CALL mp_bcast(exband, ionode_id, inter_pool_comm)
+  CALL mp_bcast(w_centers, ionode_id, inter_pool_comm)
   !
   CALL ckbounds(ik_start, ik_stop)
-  IF ( (ik_stop-ik_start+1) .ne. nks) call errore('loadumat',"Improper parallel ukk load",1)
-  cu = cu_big (:, :, ik_start:ik_stop)
-  cuq = cuq_big (:, :, ik_start:ik_stop)
-  lwin = lwin_big (:, ik_start:ik_stop)
-  lwinq = lwin_big (:, ik_start:ik_stop)
+  IF ( (ik_stop-ik_start+1) .ne. nks) CALL errore('loadumat',"Improper parallel ukk load",1)
+  cu = cu_big(:, :, ik_start:ik_stop)
+  cuq = cuq_big(:, :, ik_start:ik_stop)
+  lwin = lwin_big(:, ik_start:ik_stop)
+  lwinq = lwin_big(:, ik_start:ik_stop)
   !
- end subroutine loadumat
+ END SUBROUTINE loadumat
 

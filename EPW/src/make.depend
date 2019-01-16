@@ -551,9 +551,6 @@ readwfc.o : ../../Modules/kind.o
 readwfc.o : ../../Modules/mp_global.o
 readwfc.o : ../../Modules/noncol.o
 readwfc.o : ../../PW/src/pwcom.o
-refold.o : ../../Modules/io_global.o
-refold.o : io_epw.o
-refold.o : kfold.o
 rgd_blk_epw_fine_mem.o : ../../Modules/cell_base.o
 rgd_blk_epw_fine_mem.o : ../../Modules/ions_base.o
 rgd_blk_epw_fine_mem.o : ../../Modules/kind.o
@@ -634,10 +631,8 @@ setphases_wrap.o : ../../Modules/mp_global.o
 setphases_wrap.o : ../../PW/src/pwcom.o
 setphases_wrap.o : ../../UtilXlib/mp.o
 setphases_wrap.o : elph2.o
-sgama2.o : ../../Modules/constants.o
-sgama2.o : ../../Modules/io_global.o
-sgama2.o : ../../Modules/kind.o
 sort.o : ../../Modules/kind.o
+spectral_cumulant.o : ../../FFTXlib/fft_scalar.o
 spectral_cumulant.o : ../../Modules/io_global.o
 spectral_cumulant.o : ../../Modules/kind.o
 spectral_cumulant.o : constants_epw.o

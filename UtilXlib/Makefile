@@ -6,13 +6,16 @@ include ../make.inc
 MODFLAGS=$(MOD_FLAG).
 
 UTIL = clocks_handler.o \
-       divide.o \
+cuda_util.o \
+divide.o \
+data_buffer.o \
 error_handler.o \
 find_free_unit.o \
 fletcher32_mod.o \
 mem_counter.o \
 mp.o \
 mp_base.o \
+mp_base_gpu.o \
 mp_bands_util.o \
 parallel_include.o \
 util_param.o \

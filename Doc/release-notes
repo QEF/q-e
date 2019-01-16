@@ -10,7 +10,8 @@ New in development version:
   * XDM now works also for USPP and norm-conserving PP
 
 Problems fixed in development version (+ = in qe-6.3-backports as well) :
-  + GTH pseudopotentials in analytical form wrongly comouted in some cases
+  + index not correctly initialized in LSDA phonon with core corrections 
+  + GTH pseudopotentials in analytical form wrongly computed in some cases
   + projwfc.x not working with new xml format in noncolinear/spinorbit case 
   + Starting with .EXIT file present ("dry run") crashed with new file format
   + Some space groups were missing

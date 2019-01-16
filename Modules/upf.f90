@@ -20,7 +20,7 @@
       !
       IMPLICIT NONE
       PRIVATE
-      PUBLIC :: read_upf, scan_begin, scan_end
+      PUBLIC :: read_upf, check_upf_file, scan_begin, scan_end
       !
       CONTAINS
 
@@ -31,23 +31,18 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename) !
    !! Derived-type variable *upf* and optionally *grid* store in output the 
    !! data read from file. 
    !! If unit number is provided with the *unit* argument, only UPF v1 format
-   !! is chhecked; the PP file must be opened and closed outside the routine.  
+   !! is checked; the PP file must be opened and closed outside the routine.  
    !! Otherwise the *filename* argument must be given, file is opened and closed
    !! inside the routine, all formats will be  checked. 
-   !! @Note last revision: 11-05-2018 OG - removed xml_only
+   !! @Note last revision: 01-01-2019 PG - upf fix moved out from here
+   !! @Note last revision: 11-05-2018 PG - removed xml_only
    !
    USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
    USE read_upf_v1_module,ONLY: read_upf_v1
    USE read_upf_v2_module,ONLY: read_upf_v2
    USE read_upf_schema_module ,ONLY: read_upf_schema
-   USE mp,           ONLY: mp_bcast, mp_sum
-   USE mp_images,    ONLY: intra_image_comm, my_image_id
-   USE io_global,    ONLY: ionode, ionode_id, stdout
-   USE io_files,     ONLY: tmp_dir
-   USE FoX_DOM,      ONLY: Node, domException, parseFile, getFirstChild, getExceptionCode,&
-                              getTagName    
-   USE wrappers,     ONLY: f_remove
-   USE emend_upf_module, ONLY: make_emended_upf_copy
+   USE FoX_DOM,      ONLY: Node, domException, parseFile, getFirstChild, &
+        getExceptionCode, getTagName    
    IMPLICIT NONE
    INTEGER,INTENT(IN), OPTIONAL            :: unit
    !! i/o unit:    
@@ -57,19 +52,22 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename) !
    !! the derived type storing the pseudo data
    TYPE(radial_grid_type),OPTIONAL,INTENT(INOUT),TARGET :: grid
    !! derived type where is possible to store data on the radial mesh
-   INTEGER,INTENT(OUT) :: ierr
+   INTEGER,INTENT(INOUT) :: ierr
+   !! On input:
+   !! ierr =0:   return if not a valid xml schema or UPF v.2 file
+   !! ierr/=0: continue if not a valid xml schema or UPF v.2 file
+   !! On output:
    !! ierr=0: xml schema, ierr=-1: UPF v.1,  ierr=-2: UPF v.2
    !! ierr>0: error reading PP file
+   !! ierr=-81: error reading PP file, possibly UPF fix needed
    !
    TYPE(Node),POINTER :: u,doc     
    INTEGER            :: u_temp,&    ! i/o unit in case of upf v1
                          iun, ferr  
    TYPE(DOMException) :: ex 
    INTEGER, EXTERNAL  :: find_free_unit
-   CHARACTER(LEN=256) :: temp_upf_file
-   CHARACTER(LEN=1024) :: msg
-   LOGICAL             :: should_be_xml
 
+   ferr = ierr
    ierr = 0
    IF ( present ( unit ) ) THEN 
       REWIND (unit) 
@@ -81,32 +79,9 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename) !
    ELSE IF (PRESENT(filename) ) THEN
       doc => parseFile(TRIM(filename), EX = ex )
       ierr = getExceptionCode( ex )
-      IF ( ierr ==  81 ) THEN 
-         WRITE(temp_upf_file, '("tmp_",I0,".UPF")') my_image_id  
-         IF ( ionode ) THEN
-            CALL make_emended_upf_copy( TRIM(filename), TRIM(tmp_dir)//trim(temp_upf_file), should_be_xml)  
-         END IF
-         CALL mp_bcast ( should_be_xml, ionode_id, intra_image_comm)     
-         IF ( should_be_xml) THEN 
-            doc => parseFile(TRIM(tmp_dir)//trim(temp_upf_file), EX = ex, IOSTAT = ferr )
-            ierr = getExceptionCode( ex ) 
-            CALL mp_sum(ferr,intra_image_comm) 
-            IF ( ferr /= 0 ) THEN 
-               WRITE (msg, '(A)')  'Failure while trying to fix '//trim(filename) // '.'// new_line('a') // &
-                                    'For fixing manually UPF files see: '// new_line('a') // &
-                                    'https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
-               CALL errore('read_upf: ', TRIM(msg), ferr ) 
-            ELSE 
-               WRITE ( msg, '(A)') 'Pseudo file '// trim(filename) // ' has been successfully fixed on the fly.' &
-                              // new_line('a') // 'To avoid this message in the future you can permanently fix ' &
-                              // new_line('a') // ' your pseudo files following instructions given in: ' &
-                              // new_line('a') // 'https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
-               CALL infomsg('read_upf:', trim(msg) )    
-            END IF
-         END IF
-         ! 
-         IF (ionode) ferr = f_remove(TRIM(tmp_dir)//TRIM(temp_upf_file) )
-         temp_upf_file=""
+      IF ( ferr == 0 .AND. ierr ==  81 ) THEN
+         ierr = -81
+         RETURN
       END IF
       IF ( ierr == 0 ) THEN 
          u => getFirstChild(doc) 
@@ -139,6 +114,34 @@ SUBROUTINE read_upf(upf, grid, ierr, unit,  filename) !
    END IF
    !
  END SUBROUTINE read_upf
+
+FUNCTION check_upf_file(filename, errcode) RESULT(ok)
+   !! checks whether the upf file filename is compliant with xml syntax
+   !! the error code returned by the checking routine may optionally be 
+   !! written in the errorcode argument
+   USE FoX_dom,   ONLY: Node, DOMException, parseFile, getExceptionCode                  
+   IMPLICIT NONE
+   CHARACTER(LEN=*),INTENT(IN)   :: filename
+   !! name of the upf file being checked 
+   INTEGER,OPTIONAL,INTENT(OUT)  :: errcode
+   !! if present contains the error code returnd by the upf check
+   LOGICAL                       :: ok 
+   !!  if true the upf file is compliant to xml syntax
+   !
+   TYPE(Node),POINTER    :: doc 
+   TYPE(DOMException)    :: dom_ex
+   INTEGER               :: ierr 
+   doc => parseFile(TRIM(filename), EX = dom_ex) 
+   ierr = getExceptionCode(dom_ex) 
+   IF (PRESENT(errcode)) errcode=ierr 
+   IF (ierr /= 0 ) THEN
+      ok = .FALSE.
+   ELSE
+      ok =.TRUE.
+   ENDIF 
+   !
+END FUNCTION check_upf_file
+
 !=----------------------------------------------------------------------------=!
       END MODULE upf_module
 !=----------------------------------------------------------------------------=!
