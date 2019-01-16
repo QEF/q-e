@@ -172,14 +172,14 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
   !
   ! Print initial info ...
   IF (print_info >= 1)  THEN
-     WRITE(stdout, '("Ethr: ",1pD9.2,", npw: ", I10, ", nbnd: ", I10, " , "   &
-                "maxter: ",I5, ", sbsize:  ", I10,", nsb: ", I10 ,", nact: ", I10, ", trtol: ", 1pD9.2 )')  &
+     WRITE(stdout, '("Ethr: ",1pD9.2,", npw: ", I10, ", nbnd: ", I10, " , ",   &
+              &  "maxter: ",I5, ", sbsize:  ", I10,", nsb: ", I10 ,", nact: ", I10, ", trtol: ", 1pD9.2 )')  &
                 ethr, npw, nbnd, maxter, sbsize, nsb, nact, trtol
      IF (print_info == 3) THEN
         CALL print_rnrm
         WRITE(stdout,'("Res. norm:  ", 1pD9.2)') res_array(iter)
      END IF
-     CALL flush( stdout )
+     FLUSH( stdout )
   END IF
   !
   !---Begin the main loop
@@ -738,7 +738,7 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
           CALL print_rnrm
           WRITE(stdout,'("Res. norm:  ", 1pD9.2)') res_array(iter)
        END IF
-       CALL flush( stdout )
+       FLUSH( stdout )
     END IF
     !
     total_iter = iter
@@ -787,7 +787,7 @@ SUBROUTINE ppcg_gamma( h_psi, s_psi, overlap, precondition, &
  IF (print_info >= 1) THEN
     WRITE(stdout, *) '-----------PPCG result summary ...  ----------------'
     WRITE(stdout, '("avg_iter: ", f6.2,  ", notconv: ", I5)') avg_iter, notconv
-    CALL flush( stdout )
+    FLUSH( stdout )
  END IF
  !
  CALL deallocate_all
