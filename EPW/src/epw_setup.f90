@@ -24,7 +24,7 @@
   USE io_files,      ONLY : tmp_dir
   USE klist,         ONLY : xk, nks, nkstot
   USE lsda_mod,      ONLY : nspin, starting_magnetization
-  USE scf,           ONLY : v, vrs, vltot, rho, kedtau
+  USE scf,           ONLY : v, vrs, vltot, rho, kedtau, rhoz_or_updw
   USE gvect,         ONLY : ngm
   USE symm_base,     ONLY : nsym, s, irt, t_rev, time_reversal, invs, sr, &
                             inverse_s
@@ -125,7 +125,13 @@
   !
   ! 3.1) Setup all gradient correction stuff
   !
+  !^
+  IF ( nspin == 2 ) CALL rhoz_or_updw( rho, 'r_and_g', 'rhoz_updw' )
+  !  
   CALL setup_dgc
+  !
+  IF ( nspin == 2 ) CALL rhoz_or_updw( rho, 'r_and_g', 'updw_rhoz' )
+  !^
   !
   ! 4) Computes the inverse of each matrix of the crystal symmetry group
   !

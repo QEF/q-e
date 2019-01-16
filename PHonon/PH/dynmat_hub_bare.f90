@@ -74,7 +74,7 @@ SUBROUTINE dynmat_hub_bare
              na_icart, nap_jcart, na_icar, m1, m2, op_spin, isi, &
              imode, jmode, ldim, ik, ikk, ikq, icar, ibnd, &
              ios, iund2nsbare, npw, npwq
-  REAL(DP)    :: nsaux
+  REAL(DP)    :: nsaux, sgn
   COMPLEX(DP) :: dnsaux1, dnsaux2, d2ns_bare_aux, d2ns_bare_k, work
   LOGICAL :: exst
   COMPLEX(DP), ALLOCATABLE :: d2ns_bare(:,:,:,:,:,:), dynwrk(:,:)  
@@ -452,11 +452,14 @@ SUBROUTINE dynmat_hub_bare
                     !       
                     DO is = 1, nspin
                        !      
+                       sgn = REAL( 2*MOD(is,2) - 1 )
+                       !
                        DO m1 = 1, 2*Hubbard_l(nt) + 1
                           !
                           DO m2 = 1, 2*Hubbard_l(nt) + 1
                              !      
-                             nsaux = rho%ns(m1, m2, is, nah)
+                             nsaux = ( rho%ns(m1, m2, 1, nah) + sgn * &
+                                                          rho%ns(m1, m2, nspin, nah) )*0.5d0
                              !      
                              ! dnsbare matrix is symmetric i.e. dnsbare(m1,m2) = dnsbare(m2,m1) 
                              ! (when keeping only the terms in u and neglecting the ones in u*)
@@ -498,17 +501,15 @@ SUBROUTINE dynmat_hub_bare
                     !      
                     DO is = 1, nspin
                        !      
-                       IF ((is==1) .AND. (nspin==2)) THEN
-                          isi = 2
-                       ELSE 
-                          isi = 1
-                       ENDIF
+                       isi = nspin/is
+                       sgn = REAL( 2*MOD(isi,2) - 1 )
                        !
                        DO m1 = 1, 2*Hubbard_l(nt) + 1
                           !
                           DO m2 = 1, 2*Hubbard_l(nt) + 1
                              !      
-                             nsaux = rho%ns(m1, m2, isi, nah)
+                             nsaux = ( rho%ns(m1, m2, 1, nah) + sgn * &
+                                                           rho%ns(m1, m2, nspin, nah) )*0.5d0
                              !      
                              ! dnsbare matrix is symmetric i.e. dnsbare(m1,m2) = dnsbare(m2,m1) 
                              ! (when keeping only the terms in u and neglecting the ones in u*)

@@ -83,7 +83,8 @@ subroutine write_ns
         nsuma = 0.d0
         do is = 1, nspin
            do m1 = 1, ldim
-              nsuma(is) = nsuma(is) + rho%ns (m1, m1, is, na)
+              nsuma(is) = nsuma(is) + ( rho%ns (m1, m1, 1, na) + DBLE(2*MOD(is,2)-1) * &
+                                                    rho%ns (m1, m1, nspin, na) )*0.5d0
            enddo
            nsum = nsum + nsuma(is)
         enddo
@@ -99,7 +100,8 @@ subroutine write_ns
         do is = 1, nspin
            do m1 = 1, ldim
               do m2 = 1, ldim
-                 f (m1, m2) = rho%ns (m1, m2, is, na)
+                 f (m1, m2) = ( rho%ns(m1,m2,1,na) + DBLE(2*MOD(is,2)-1) * &
+                                               rho%ns(m1,m2,nspin,na) )*0.5d0
               enddo
            enddo
            call cdiagh(ldim, f, ldmx, lambda, vet)

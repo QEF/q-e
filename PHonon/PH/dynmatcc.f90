@@ -20,7 +20,7 @@ subroutine dynmatcc
   USE fft_interfaces, ONLY : fwfft
   USE gvect,     ONLY : ngm, g
   USE lsda_mod,  ONLY : nspin
-  use scf,       ONLY : rho, rho_core, rhog_core
+  use scf,       ONLY : rho, rho_core, rhog_core, rhoz_or_updw
   USE modes,     ONLY : u
   USE qpoint,    ONLY : xq
   USE nlcc_ph,   ONLY : drc
@@ -49,9 +49,13 @@ subroutine dynmatcc
   !
   allocate (vxc( dfftp%nnr))
   allocate (v  ( dfftp%nnr , nspin))
+  !^
+  CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
   !
   call v_xc (rho, rho_core, rhog_core, etxcd, vtxcd, v)
   !
+  CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz') 
+  !^
   if (nspin == 1 .OR. nspin==4) then
      is=1
      do ir = 1, dfftp%nnr

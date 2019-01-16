@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?iotk version="1.2.0"?>
+<?iotk file_version="1.0"?>
+<?iotk binary="F"?>
+<?iotk qe_syntax="F"?>
+<Root>
+  <STATUS_PH>
+    <STOPPED_IN type="character" size="1" len="10">
+dynmatrix.
+    </STOPPED_IN>
+    <RECOVER_CODE type="integer" size="1">
+        30
+    </RECOVER_CODE>
+    <CURRENT_Q type="integer" size="1">
+         1
+    </CURRENT_Q>
+    <CURRENT_IU type="integer" size="1">
+         1
+    </CURRENT_IU>
+  </STATUS_PH>
+</Root>
+
