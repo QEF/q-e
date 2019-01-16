@@ -2,7 +2,7 @@
     calculation     = 'nscf'
     prefix          = 'pb'
     wf_collect      = .false.
-    pseudo_dir      = './'
+    pseudo_dir      = '../../pseudo/'
     outdir          = './'
  /
  &system

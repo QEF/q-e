@@ -12,7 +12,7 @@ MODULE read_pseudo_mod
   !! read pseudopotential files and store the data on internal variables of the 
   !! program. Note that all processors read the same file!
   !
-  USE io_files,     ONLY: pseudo_dir, pseudo_dir_cur, psfile
+  USE io_files,     ONLY: pseudo_dir, pseudo_dir_cur, psfile, tmp_dir
   USE ions_base,    ONLY: ntyp => nsp
   !! global variables  required on input 
   !
@@ -43,13 +43,14 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   USE kinds,        ONLY: DP
   USE mp,           ONLY: mp_bcast, mp_sum
   USE mp_images,    ONLY: intra_image_comm
-  USE io_global,    ONLY: stdout, ionode
+  USE io_global,    ONLY: stdout, ionode, ionode_id
   USE pseudo_types, ONLY: pseudo_upf, nullify_pseudo_upf, deallocate_pseudo_upf
   USE funct,        ONLY: enforce_input_dft, set_dft_from_name, &
-       set_dft_from_indices, get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
+       get_iexch, get_icorr, get_igcx, get_igcc, get_inlc
   use radial_grids, ONLY: deallocate_radial_grid, nullify_radial_grid
-  USE wrappers,     ONLY: md5_from_file
+  USE wrappers,     ONLY: md5_from_file, f_remove
   USE upf_module,   ONLY: read_upf
+  USE emend_upf_module, ONLY: make_emended_upf_copy
   USE upf_to_internal,  ONLY: add_upf_grid, set_upf_q
   USE read_uspp_module, ONLY: readvan, readrrkj
   USE m_gth,            ONLY: readgth
@@ -64,7 +65,8 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   ! 2D Coulomb cutoff: modify this (at your own risks) if problems with cutoff 
   ! being smaller than pseudo rcut. original value=10.0
   CHARACTER(len=256) :: file_pseudo ! file name complete with path
-  LOGICAL :: printout_ = .FALSE., exst
+  CHARACTER(len=256) :: msg
+  LOGICAL :: printout_ = .FALSE., exst, is_xml
   INTEGER :: iunps, isupf, nt, nb, ir, ios
   INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_
   !
@@ -102,8 +104,6 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      CALL nullify_pseudo_upf( upf( nt ) )
   end do
   !
-  IF (input_dft /='none') CALL enforce_input_dft (input_dft)
-  !
   IF ( PRESENT(printout) ) THEN
      printout_ = printout .AND. ionode
   END IF
@@ -112,8 +112,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
                    &    3X,'----------------------------------' )" )
   END IF
   !
-  nvb = 0
-  do nt = 1, ntyp
+  DO nt = 1, ntyp
      !
      ! variables not necessary for USPP, but necessary for PAW;
      ! will be read from file if it is a PAW dataset.
@@ -155,10 +154,45 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
                        & ' from file :',/,3X,A)") nt, TRIM(file_pseudo)
      END IF
      !
+     isupf = 0
      CALL  read_upf(upf(nt), rgrid(nt), isupf, filename = file_pseudo )
      !
      !! start reading - check  first if files are readable as xml files,
      !! then as UPF v.2, then as UPF v.1
+     !
+     IF (isupf ==-81 ) THEN
+        IF ( ionode ) THEN
+           is_xml = make_emended_upf_copy( TRIM(file_pseudo), &
+                TRIM(tmp_dir)//TRIM(psfile(nt)) )  
+        END IF
+        !
+        !! error -81 may mean that file contains offending characters
+        !! fix and write file to tmp_dir (done by a single processor)
+        !
+        CALL mp_bcast (is_xml,ionode_id,intra_image_comm)
+        !
+        IF (is_xml) THEN
+           !
+           CALL  read_upf(upf(nt), rgrid(nt), isupf, &
+                filename = TRIM(tmp_dir)//psfile(nt) )
+           !! try again to read from the corrected file 
+           WRITE ( msg, '(A)') 'Pseudo file '// trim(psfile(nt)) // ' has been fixed on the fly.' &
+                // new_line('a') // 'To avoid this message in the future, permanently fix ' &
+                // new_line('a') // ' your pseudo files following these instructions: ' &
+                // new_line('a') // 'https://gitlab.com/QEF/q-e/blob/master/upftools/how_to_fix_upf.md'
+           CALL infomsg('read_upf:', trim(msg) )    
+        ELSE
+           !
+           OPEN ( UNIT = iunps, FILE = TRIM(file_pseudo), STATUS = 'old', FORM = 'formatted' ) 
+           CALL  read_upf(upf(nt), rgrid(nt), isupf, UNIT = iunps )
+           !! try to read UPF v.1 file
+           CLOSE (iunps)
+           !
+        END IF
+        !
+        IF (ionode) ios = f_remove(TRIM(tmp_dir)//TRIM(psfile(nt)) )
+        !
+     END IF
      !
      IF (isupf == -2 .OR. isupf == -1 .OR. isupf == 0) THEN
         !
@@ -179,31 +213,32 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         OPEN ( UNIT = iunps, FILE = TRIM(file_pseudo), STATUS = 'old', FORM = 'formatted' ) 
         !
         !     The type of the pseudopotential is determined by the file name:
-        !    *.upf or *.UPF  UPF format                          pseudo_type=0
-        !    *.vdb or *.van  Vanderbilt US pseudopotential code  pseudo_type=1
-        !    *.RRKJ3         Andrea's   US new code              pseudo_type=2
-        !    *.gth           Goedecker-Teter-Hutter NC pseudo    pseudo_type=3
-        !    none of the above: PWSCF norm-conserving format     pseudo_type=4
+        !    *.xml or *.XML  UPF format with schema              pp_format=0
+        !    *.upf or *.UPF  UPF format                          pp_format=1
+        !    *.vdb or *.van  Vanderbilt US pseudopotential code  pp_format=2
+        !    *.gth           Goedecker-Teter-Hutter NC pseudo    pp_format=3
+        !    *.RRKJ3         Andrea's   US new code              pp_format=4
+        !    none of the above: PWSCF norm-conserving format     pp_format=5
         !
-        IF ( pseudo_type (psfile (nt) ) == 1  ) THEN
+        IF ( pp_format (psfile (nt) ) == 2  ) THEN
            !
            IF( printout_ ) &
               WRITE( stdout, "(3X,'file type is Vanderbilt US PP')")
            CALL readvan (iunps, nt, upf(nt))
            !
-        ELSE IF ( pseudo_type (psfile (nt) ) == 2 ) then
-           !
-           IF( printout_ ) &
-              WRITE( stdout, "(3X,'file type is RRKJ3')")
-           CALL readrrkj (iunps, nt, upf(nt))
-           !
-        ELSE IF ( pseudo_type (psfile (nt) ) == 3 ) THEN
+        ELSE IF ( pp_format (psfile (nt) ) == 3 ) THEN
            !
            IF( printout_ ) &
               WRITE( stdout, "(3X,'file type is GTH (analytical)')")
            CALL readgth (iunps, nt, upf(nt))
            !
-        ELSE IF ( pseudo_type (psfile (nt) ) == 4 ) THEN
+        ELSE IF ( pp_format (psfile (nt) ) == 4 ) THEN
+           !
+           IF( printout_ ) &
+              WRITE( stdout, "(3X,'file type is RRKJ3')")
+           CALL readrrkj (iunps, nt, upf(nt))
+           !
+        ELSE IF ( pp_format (psfile (nt) ) == 5 ) THEN
            !
            IF( printout_ ) &
               WRITE( stdout, "(3X,'file type is old PWscf NC format')")
@@ -229,6 +264,15 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      CALL md5_from_file(file_pseudo, upf(nt)%md5_cksum)
      !
+  END DO
+  !
+  ! end of PP reading - now set uo some variables
+  !
+  IF (input_dft /='none') CALL enforce_input_dft (input_dft)
+  !
+  nvb = 0
+  DO nt = 1, ntyp
+     !
      ! ... Zv = valence charge of the (pseudo-)atom, read from PP files,
      ! ... is set equal to Zp = pseudo-charge of the pseudopotential
      !
@@ -240,13 +284,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      ! ... set DFT value
      !
-     IF ( upf(nt)%dft(1:6)=='INDEX:') THEN
-        ! Workaround for RRKJ format
-        READ( upf(nt)%dft(7:10), '(4i1)') iexch_, icorr_, igcx_, igcc_
-        call set_dft_from_indices(iexch_, icorr_, igcx_, igcc_, 0)
-     ELSE
-        call set_dft_from_name( upf(nt)%dft )
-     END IF
+     CALL set_dft_from_name( upf(nt)%dft )
      !
      ! ... Check for DFT consistency - ignored if dft enforced from input
      !
@@ -301,33 +339,32 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      ecutrho_pp = MAXVAL ( upf(1:ntyp)%ecutrho )
   END IF
   !
-  RETURN
-  !
 END SUBROUTINE readpp
+!
 !-----------------------------------------------------------------------
-integer function pseudo_type (psfile)
+INTEGER FUNCTION pp_format (psfile)
   !-----------------------------------------------------------------------
-  implicit none
-  character (len=*) :: psfile
-  integer :: l
+  IMPLICIT NONE
+  CHARACTER (LEN=*) :: psfile
+  INTEGER :: l
   !
-  l = len_trim (psfile)
-  pseudo_type = 4
-  if (l > 3) then
-     if (psfile (l-3:l) .eq.'.upf'.or.psfile (l-3:l) .eq.'.UPF') &
-        pseudo_type = 0
-     if (psfile (l-3:l) .eq.'.vdb'.or.psfile (l-3:l) .eq.'.van') &
-        pseudo_type = 1
-     if (l > 5) then
-        if (psfile (l-5:l) .eq.'.RRKJ3') pseudo_type = 2
-     end if
-     if (psfile (l-3:l) .eq.'.gth') pseudo_type = 3
-  end if
+  l = LEN_TRIM (psfile)
+  pp_format = 5
+  IF (l > 3) THEN
+     IF (psfile (l-3:l) =='.xml' .OR. psfile (l-3:l) =='.XML') THEN
+        pp_format = 0
+     ELSE IF (psfile (l-3:l) =='.upf' .OR. psfile (l-3:l) =='.UPF') THEN
+        pp_format = 1
+     ELSE IF (psfile (l-3:l) =='.vdb' .OR. psfile (l-3:l) =='.van') THEN
+        pp_format = 2
+     ELSE IF (psfile (l-3:l) =='.gth') THEN
+        pp_format = 3
+     ELSE IF (l > 5) THEN
+        If (psfile (l-5:l) =='.RRKJ3') pp_format = 4
+     END IF
+  END IF
   !
-  return
-
-end function pseudo_type
-
+END FUNCTION pp_format
 !---------------------------------------------------------------
 SUBROUTINE check_atwfc_norm(nt)
   !---------------------------------------------------------------

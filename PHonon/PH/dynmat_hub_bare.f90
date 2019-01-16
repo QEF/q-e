@@ -520,7 +520,7 @@ SUBROUTINE dynmat_hub_bare
                              ! DO NOT include the delta_m1m2 contribution  
                              ! Note the sign change            
                              !
-                             work = work + nsaux *  d2ns_bare_aux + &
+                             work = work + nsaux *  d2ns_bare_aux &
                                          + dnsaux1 * CONJG(dnsaux2) 
                              ! 
                           ENDDO ! m2
