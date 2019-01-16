@@ -196,7 +196,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ELSEIF (plot_num == 11) THEN
 
      raux(:) = vltot(:)
-     CALL v_h (rho%of_g, ehart, charge, raux)
+     CALL v_h (rho%of_g(:,1), ehart, charge, raux)
      IF (tefield.and.dipfield) CALL add_efield(raux,dummy,rho%of_r,.true.)
 
   ELSEIF (plot_num == 12) THEN

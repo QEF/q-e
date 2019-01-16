@@ -99,13 +99,13 @@ subroutine stress ( sigma )
   !^  
   !
   IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN ! for ESM stress
-     call esm_stres_loclong( sigmaloclong, rho%of_g ) ! long range part
+     call esm_stres_loclong( sigmaloclong, rho%of_g(:,1) ) ! long range part
      sigmaloc(:,:) = sigmaloc(:,:) + sigmaloclong(:,:)
   END IF
   !
   !  hartree contribution - for ESM stress
   !
-  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) )  call esm_stres_har( sigmahar, rho%of_g )
+  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) )  call esm_stres_har( sigmahar, rho%of_g(:,1) )
   !
   !  add meta-GGA contribution 
   !
