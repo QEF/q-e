@@ -61,6 +61,7 @@ SUBROUTINE addusdens_g_gpu(rho)
   USE mp,                   ONLY : mp_sum
   !
   USE uspp_gpum,            ONLY : becsum_d, using_becsum_d
+  USE gbuffers,             ONLY : dev_buf, pin_buf
   !
   IMPLICIT NONE
   !
@@ -73,16 +74,16 @@ SUBROUTINE addusdens_g_gpu(rho)
   INTEGER :: ig, na, nt, ih, jh, ijh, is, nab, nb, nij
   ! counters
 
-  REAL(DP), ALLOCATABLE :: tbecsum_d(:,:,:)
+  REAL(DP), POINTER :: tbecsum_d(:,:,:)
   ! \sum_kv <\psi_kv|\beta_l><beta_m|\psi_kv> for each species of atoms
-  REAL(DP), ALLOCATABLE :: qmod_d (:), ylmk0_d (:,:)
+  REAL(DP), POINTER :: qmod_d (:), ylmk0_d (:,:)
   ! modulus of G, spherical harmonics
-  COMPLEX(DP), ALLOCATABLE :: skk_d(:,:), aux2_d(:,:)
+  COMPLEX(DP), POINTER :: skk_d(:,:), aux2_d(:,:)
   ! structure factors, US contribution to rho
-  COMPLEX(DP), ALLOCATABLE ::  aux_d (:,:), qgm_d(:)
-  COMPLEX(DP), ALLOCATABLE ::  aux_h (:,:)
+  COMPLEX(DP), POINTER ::  aux_d (:,:), qgm_d(:)
+  COMPLEX(DP), POINTER ::  aux_h (:,:)
   ! work space for rho(G,nspin), Fourier transform of q
-  INTEGER :: ij, im
+  INTEGER :: ij, im, ierr
 #if defined(__CUDA)
   attributes(device) :: tbecsum_d, qmod_d, ylmk0_d, skk_d, &
                         aux2_d, aux_d, qgm_d
@@ -92,8 +93,8 @@ SUBROUTINE addusdens_g_gpu(rho)
 
   CALL start_clock ('addusdens')
   !
-  ALLOCATE (aux_d (ngm, nspin_mag) )
-  ALLOCATE (aux_h (ngm, nspin_mag) )
+  CALL dev_buf%lock_buffer(aux_d, (/ ngm, nspin_mag /), ierr ) !ALLOCATE (aux_d (ngm, nspin_mag) )
+  CALL pin_buf%lock_buffer(aux_h, (/ ngm, nspin_mag /), ierr ) !ALLOCATE (aux_h (ngm, nspin_mag) )
   !
   aux_d (:,:) = (0.d0, 0.d0)
   !
@@ -110,8 +111,12 @@ SUBROUTINE addusdens_g_gpu(rho)
   ! Sync becsum if needed
   CALL using_becsum_d(0)
   !
-  ALLOCATE (qmod_d(ngm_l), qgm_d(ngm_l) )
-  ALLOCATE (ylmk0_d(ngm_l, lmaxq * lmaxq) )
+  !ALLOCATE (qmod_d(ngm_l), qgm_d(ngm_l) )
+  !ALLOCATE (ylmk0_d(ngm_l, lmaxq * lmaxq) )
+  CALL dev_buf%lock_buffer(ylmk0_d, (/ ngm_l, lmaxq * lmaxq /), ierr )
+  CALL dev_buf%lock_buffer(qmod_d, ngm_l, ierr )
+  CALL dev_buf%lock_buffer(qgm_d, ngm_l, ierr )
+  CALL dev_buf%dump_status()
 
   CALL ylmr2_gpu (lmaxq * lmaxq, ngm_l, g_d(1,ngm_s), gg_d(ngm_s), ylmk0_d)
   
@@ -134,7 +139,10 @@ SUBROUTINE addusdens_g_gpu(rho)
            IF ( ityp(na) == nt ) nab = nab + 1
         ENDDO
         !
-        ALLOCATE ( skk_d(ngm_l,nab), tbecsum_d(nij,nab,nspin_mag), aux2_d(ngm_l,nij) )
+        !ALLOCATE ( skk_d(ngm_l,nab), tbecsum_d(nij,nab,nspin_mag), aux2_d(ngm_l,nij) )
+        CALL dev_buf%lock_buffer(skk_d, (/ ngm_l,nab /), ierr)
+        CALL dev_buf%lock_buffer(tbecsum_d, (/ nij,nab,nspin_mag /), ierr )
+        CALL dev_buf%lock_buffer(aux2_d, (/ ngm_l,nij /), ierr )
         !
         nb = 0
         DO na = 1, nat
@@ -175,12 +183,18 @@ SUBROUTINE addusdens_g_gpu(rho)
              ENDDO
            ENDDO
         ENDDO
-        DEALLOCATE (aux2_d, tbecsum_d, skk_d )
+        !DEALLOCATE (aux2_d, tbecsum_d, skk_d )
+        CALL dev_buf%release_buffer(skk_d, ierr)
+        CALL dev_buf%release_buffer(tbecsum_d, ierr)
+        CALL dev_buf%release_buffer(aux2_d, ierr)
      ENDIF
   ENDDO
   !
-  DEALLOCATE (ylmk0_d)
-  DEALLOCATE (qgm_d, qmod_d)
+  !DEALLOCATE (ylmk0_d)
+  !DEALLOCATE (qgm_d, qmod_d)
+  CALL dev_buf%release_buffer(ylmk0_d, ierr)
+  CALL dev_buf%release_buffer(qgm_d, ierr)
+  CALL dev_buf%release_buffer(qmod_d, ierr)
   !
   10 CONTINUE
   !
@@ -191,7 +205,9 @@ SUBROUTINE addusdens_g_gpu(rho)
   !
   rho(:,:) = rho(:,:) + aux_h (:,:)
   !
-  DEALLOCATE (aux_h, aux_d)
+  !DEALLOCATE (aux_h, aux_d)
+  CALL pin_buf%release_buffer(aux_h, ierr)
+  CALL dev_buf%release_buffer(aux_d, ierr)
   !
   CALL stop_clock ('addusdens')
   RETURN
