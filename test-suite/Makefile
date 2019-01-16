@@ -35,6 +35,7 @@ prolog :
 pseudo :
 	@./check_pseudo.sh pw_
 	@./check_pseudo.sh cp_
+	@./check_pseudo.sh epw_
 
 run-tests : run-tests-serial
 
