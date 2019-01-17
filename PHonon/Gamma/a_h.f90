@@ -15,7 +15,7 @@ SUBROUTINE A_h(npw,e,h,ah)
   USE lsda_mod, ONLY : current_spin, nspin
   USE wvfct, ONLY: nbnd, npwx, g2kin
   USE wavefunctions,  ONLY: evc, psic
-  USE scf,      ONLY : vrs, rho, rhoz_or_updw
+  USE scf,      ONLY : vrs, rho
   USE fft_base, ONLY : dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
   USE gvect,    ONLY : gstart, g, gg
@@ -121,15 +121,11 @@ SUBROUTINE A_h(npw,e,h,ah)
   !
   CALL start_clock('dgradcorr')
   IF (dft_is_gradient() ) THEN
-     !^
-     IF (nspin == 2) CALL rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
      !
      CALL dgradcor1  &
          (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,  &
           drho, dpsic, nspin, g, dv)
      !
-     IF (nspin == 2) CALL rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
-     !^    
   ENDIF
   CALL stop_clock('dgradcorr')
   NULLIFY(dpsic)

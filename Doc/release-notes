@@ -18,7 +18,6 @@ Problems fixed in development version (+ = in qe-6.3-backports as well) :
   + Random MPI crashes with DFT+U due to small discrepancies between values
     of Hubbard occupancies on different processors
   + Variable-cell optimization wasn't working with Tkatchenko-Scheffler vdW
-  + A few more "make install" and "make -jN" glitches
   + Atomic occupancies for DFT+U were not correctly written by CP after 
     switch to new format, due to a mismatch in their definition
   + Phonons with option "nosym" wasn't working
@@ -26,18 +25,20 @@ Problems fixed in development version (+ = in qe-6.3-backports as well) :
   * Variable-cell optimization with hybrid functionals wasn't working due
     to missing re-initialization (it also crashed during the final scf step)
   + Printout of wall time was sometimes incorrect (courtesy Daniel Pinkal)
-  + 'make install' and 'make -j' cases fixed (maybe)
+  + 'make install' and 'make -jN' cases fixed (maybe)
   + The restart option in turboEELS (turbo_eels.x) with ultrasoft
     pseudopotentials was not working.
   + bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
 
 Incompatible changes in development version:
+  * Charge density in the LSDA case is stored as (up+down, up-down) and no longer 
+    as (up,down). Output data format is unchanged to (up+down, up-down)
   * Non-symmorphic operations are always allowed and the FFT grid is made
     commensurate. Meaning and usage of input variable "use_all_frac" changed.
   * Old format (-D__OLDXML) deleted. Everything should work as before but some
     exotic options might have problems. The following utilities no longer work:
     - cppp.x (was reading old format only)
-    - importexport.x (use hdf5 for portable data)
+    - importexport.x (superseded by hdf5 for portable binaries)
     - bgw2pw.x (was writing old format only)
   * Several routines moved from PHonon/PH to LR_Modules
   * Module "wavefunctions_module" renamed "wavefunctions"

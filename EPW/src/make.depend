@@ -61,9 +61,10 @@ close_epw.o : epwcom.o
 close_epw.o : io_epw.o
 close_epw.o : transportcom.o
 constants_epw.o : ../../Modules/kind.o
+createkmap.o : ../../FFTXlib/fft_ggen.o
+createkmap.o : ../../FFTXlib/fft_types.o
 createkmap.o : ../../Modules/cell_base.o
 createkmap.o : ../../Modules/constants.o
-createkmap.o : ../../Modules/control_flags.o
 createkmap.o : ../../Modules/fft_base.o
 createkmap.o : ../../Modules/io_files.o
 createkmap.o : ../../Modules/io_global.o
@@ -74,8 +75,10 @@ createkmap.o : ../../Modules/recvec.o
 createkmap.o : ../../PW/src/pwcom.o
 createkmap.o : ../../PW/src/start_k.o
 createkmap.o : ../../UtilXlib/mp.o
+createkmap.o : constants_epw.o
 createkmap.o : elph2.o
 createkmap.o : epwcom.o
+createkmap.o : io_epw.o
 createkmap.o : kfold.o
 division.o : ../../Modules/mp_global.o
 division.o : ../../Modules/mp_images.o
@@ -95,6 +98,7 @@ dvanqq2.o : ../../PHonon/PH/phcom.o
 dvanqq2.o : ../../PW/src/pwcom.o
 dvanqq2.o : ../../PW/src/scf_mod.o
 dvanqq2.o : ../../UtilXlib/mp.o
+dvanqq2.o : constants_epw.o
 dvqpsi_us3.o : ../../FFTXlib/fft_interfaces.o
 dvqpsi_us3.o : ../../LR_Modules/lrcom.o
 dvqpsi_us3.o : ../../Modules/cell_base.o
@@ -255,8 +259,7 @@ epw_init.o : ../../Modules/atom.o
 epw_init.o : ../../Modules/becmod.o
 epw_init.o : ../../Modules/cell_base.o
 epw_init.o : ../../Modules/constants.o
-epw_init.o : ../../Modules/fft_base.o
-epw_init.o : ../../Modules/gvecw.o
+epw_init.o : ../../Modules/gth.o
 epw_init.o : ../../Modules/ions_base.o
 epw_init.o : ../../Modules/kind.o
 epw_init.o : ../../Modules/mp_global.o
@@ -267,6 +270,7 @@ epw_init.o : ../../Modules/wavefunctions.o
 epw_init.o : ../../PHonon/PH/phcom.o
 epw_init.o : ../../PW/src/pwcom.o
 epw_init.o : ../../UtilXlib/mp.o
+epw_init.o : constants_epw.o
 epw_init.o : elph2.o
 epw_readin.o : ../../LR_Modules/lrcom.o
 epw_readin.o : ../../Modules/check_stop.o
@@ -286,7 +290,6 @@ epw_readin.o : elph2.o
 epw_readin.o : epwcom.o
 epw_setup.o : ../../LR_Modules/lrcom.o
 epw_setup.o : ../../Modules/cell_base.o
-epw_setup.o : ../../Modules/constants.o
 epw_setup.o : ../../Modules/control_flags.o
 epw_setup.o : ../../Modules/fft_base.o
 epw_setup.o : ../../Modules/funct.o
@@ -310,15 +313,16 @@ epw_setup.o : epwcom.o
 epw_setup.o : transportcom.o
 epw_summary.o : ../../LR_Modules/lrcom.o
 epw_summary.o : ../../Modules/cell_base.o
+epw_summary.o : ../../Modules/constants.o
 epw_summary.o : ../../Modules/control_flags.o
 epw_summary.o : ../../Modules/fft_base.o
 epw_summary.o : ../../Modules/funct.o
 epw_summary.o : ../../Modules/gvecw.o
 epw_summary.o : ../../Modules/io_global.o
 epw_summary.o : ../../Modules/ions_base.o
+epw_summary.o : ../../Modules/kind.o
 epw_summary.o : ../../Modules/noncol.o
 epw_summary.o : ../../Modules/recvec.o
-epw_summary.o : ../../PHonon/PH/phcom.o
 epw_summary.o : ../../PW/src/pwcom.o
 epw_summary.o : ../../PW/src/symm_base.o
 epw_summary.o : epwcom.o
@@ -389,7 +393,6 @@ ktokpmq.o : ../../Modules/mp_images.o
 ktokpmq.o : ../../PW/src/pwcom.o
 ktokpmq.o : ../../PW/src/start_k.o
 ktokpmq.o : ../../UtilXlib/mp.o
-ktokpmq.o : elph2.o
 ktokpmq.o : epwcom.o
 load_rebal.o : ../../Modules/io_global.o
 load_rebal.o : ../../Modules/kind.o
@@ -440,6 +443,7 @@ openfilepw.o : ../../LR_Modules/lrcom.o
 openfilepw.o : ../../Modules/fft_base.o
 openfilepw.o : ../../Modules/io_files.o
 openfilepw.o : ../../Modules/noncol.o
+openfilepw.o : ../../Modules/uspp.o
 openfilepw.o : ../../PHonon/PH/phcom.o
 openfilepw.o : ../../PW/src/pwcom.o
 plot_band.o : ../../Modules/cell_base.o
