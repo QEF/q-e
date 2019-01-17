@@ -150,9 +150,8 @@
       WRITE(stdout, '(/6x,"isym = ",i2,5x,a45/)') isymq, sname (isym)
       IF (noncolin.and.domag) &
          WRITE(stdout,'(1x, "Time Reversal",i3)') t_rev(isym) 
-      
-      IF (ftau (1, isym) .ne.0.or.ftau (2, isym) .ne.0.or.ftau (3, &
-          isym) .ne.0) THEN
+      !  
+      IF (ftau(1,isym).ne.0 .OR. ftau(2,isym).ne.0 .OR. ftau(3,isym).ne.0) THEN
         ft1 = at(1,1) * ftau(1,isym) / dfftp%nr1 & 
             + at(1,2) * ftau(2,isym) / dfftp%nr2 & 
             + at(1,3) * ftau(3,isym) / dfftp%nr3

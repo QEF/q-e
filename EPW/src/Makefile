@@ -37,6 +37,7 @@ transport.o \
 transport_iter.o \
 wigner.o \
 a2f.o \
+adddvscf2.o \
 allocate_epwq.o \
 bcast_epw_input.o \
 bloch2wan.o \
@@ -67,6 +68,7 @@ loadqmesh.o \
 loadumat.o \
 load_rebal.o \
 nesting_fn.o \
+newdq2.o \
 openfilepw.o \
 rgd_blk_epw_fine_mem.o \
 plot_band.o \

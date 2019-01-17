@@ -19,7 +19,7 @@
   USE io_global,     ONLY : stdout, ionode_id
   USE io_epw,        ONLY : iuindabs
   USE phcom,         ONLY : nmodes
-  USE epwcom,        ONLY : nbndsub, lrepmatf, shortrange, &
+  USE epwcom,        ONLY : nbndsub, shortrange, &
                             fsthick, eptemp, ngaussw, degaussw, &
                             eps_acustic, efermi_read, fermi_energy,&
                             vme, omegamin, omegamax, omegastep, n_r, scissor, eig_read

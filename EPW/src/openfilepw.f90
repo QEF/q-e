@@ -8,7 +8,7 @@
   !                                                                            
   ! Adapted from the code PH/openfilq - Quantum-ESPRESSO group                
   !-----------------------------------------------------------------------
-  subroutine openfilepw
+  SUBROUTINE openfilepw
   !-----------------------------------------------------------------------
   !!
   !!     This subroutine opens all the files necessary for the EPW
@@ -22,15 +22,11 @@
   USE units_lr,         ONLY : iuwfc, lrwfc
   USE wvfct,            ONLY : nbnd, npwx
   USE noncollin_module, ONLY : npol, nspin_mag
-  USE units_ph,         ONLY : lrdrho, lrdrhous
+  USE units_ph,         ONLY : lrdrho
   USE fft_base,         ONLY : dfftp
   USE uspp,             ONLY : okvan
   !
   IMPLICIT NONE
-  !
-  INTEGER, EXTERNAL :: find_free_unit
-  !! integer variable for I/O control
-  ! used for extracting the fildvscf0 directory
   !
   LOGICAL :: exst
   !! logical variable to check file existe
@@ -47,15 +43,6 @@
   !   file for setting unitary gauges of eigenstates
   !
   lrdrho = 2 * dfftp%nr1x *dfftp%nr2x *dfftp%nr3x * nspin_mag
-  !
-  ! RM - The file should be opened in the same place as fildvscf?
-  ! RM - I need to see if we need this file.?
-  !
-  !   open a file with the static change of the charge
-  !
-  IF (okvan) THEN
-    lrdrhous =  dfftp%nnr * nspin_mag
-  ENDIF
   !
   RETURN
   !

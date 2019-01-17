@@ -13,16 +13,7 @@
   !!  This subroutine is called from elphon_shuffle_wrap for each
   !!  nq1*nq2*nq3 phonon on the coarse mesh.    
   !!
-  !!  obsolete: 
-  !!  variables for folding of the k+q mesh into the kmesh 
-  !!  there may be at most 9 different G_0 to refold k+q into k
-  !!  of the first BZ (including G_0=0)
-  !!  [actually there are 3^3=27 translations but for a fixed q only
-  !!   2^3=8 out of these 27 are possible since q has a definite direction]
-  !!
-  !!  new:
-  !!  I need all q-vectors in the same run, so I consider all the
-  !!  125 possibilities by setting ng0vec = 125 in ../PW/set_kplusq.f90 
+  !!  It folds the k+q mesh into the k mesh using 5^3 G_0 translations 
   !!
   !!  SP - 2016 - iverbosity cannot be tested here. Generates Tb of data ... 
   !
@@ -49,7 +40,7 @@
   INTEGER :: ik
   !! k-point index
   INTEGER :: jk
-  !! other k-point index
+  !! k-point index
   INTEGER :: i
   !! Index of the k+q on the k-grid
   INTEGER :: j
@@ -102,10 +93,6 @@
                   abs(yy-nint(yy)) .le. eps5 .AND. &
                   abs(zz-nint(zz)) .le. eps5
     IF (.not.in_the_list) CALL errore('createkmap','q-vec not commensurate',1)
-    !
-    ! previously the 27 possible translations
-    ! now we have 125 possibilities for LSCO, because the unit cell is far from cubic... sob!
-    ! ng0vec must be redefined 
     !
     ng0vec = 0
     DO ig1 = -2, 2
@@ -310,9 +297,9 @@
     xx_c(ik) = xk(1,ik) * nk1
     yy_c(ik) = xk(2,ik) * nk2
     zz_c(ik) = xk(3,ik) * nk3
-    in_the_list = abs(xx-nint(xx)).le.eps5 .and. &
-                  abs(yy-nint(yy)).le.eps5 .and. &
-                  abs(zz-nint(zz)).le.eps5
+    in_the_list = abs(xx_c(ik)-nint(xx_c(ik))) .le. eps5 .AND. &
+                  abs(yy_c(ik)-nint(yy_c(ik))) .le. eps5 .AND. &
+                  abs(zz_c(ik)-nint(zz_c(ik))) .le. eps5
     IF (.not.in_the_list) CALL errore('createkmap2','is this a uniform k-mesh?',1)
     !
     IF ( (xx_c(ik) .lt. -eps5) .OR. (yy_c(ik) .lt. -eps5) .OR. (zz_c(ik) .lt. -eps5) ) &
@@ -328,9 +315,9 @@
     xx = xkq(1,ik) * nk1
     yy = xkq(2,ik) * nk2
     zz = xkq(3,ik) * nk3
-    in_the_list = abs(xx-nint(xx)).le.eps5 .and. &
-                  abs(yy-nint(yy)).le.eps5 .and. &
-                  abs(zz-nint(zz)).le.eps5
+    in_the_list = abs(xx-nint(xx)) .le. eps5 .AND. &
+                  abs(yy-nint(yy)) .le. eps5 .AND. &
+                  abs(zz-nint(zz)) .le. eps5
     IF (.not.in_the_list) CALL errore('createkmap2','k+q does not fall on k-grid',1)
     !
     !  find the index of this k+q in the k-grid
@@ -433,16 +420,16 @@
   !! itoj(i) returns the index of the G-vector in the sorted list 
   !! that was at i-th position in the unsorted list
   !
-  REAL(KIND=DP) :: xx, yy, zz
-  !
-  REAL(DP), ALLOCATABLE :: gg(:)
+  REAL(kind=DP) :: xx, yy, zz
+  !! k-point in crystal coords. in multiple of nk1, nk2, nk3
+  REAL(kind=DP), ALLOCATABLE :: gg(:)
   !! G^2 in increasing order
-  REAL(DP), ALLOCATABLE :: g(:,:)
+  REAL(kind=DP), ALLOCATABLE :: g(:,:)
   !! G-vectors cartesian components in increasing order of G^2
-  REAL(DP), ALLOCATABLE :: g2sort_g(:)
+  REAL(kind=DP), ALLOCATABLE :: g2sort_g(:)
   !! G-vectors for the current processor
-  REAL(DP) :: tx(3), ty(3), t(3)
-  REAL(DP), ALLOCATABLE :: tt(:)
+  REAL(kind=DP) :: tx(3), ty(3), t(3)
+  REAL(kind=DP), ALLOCATABLE :: tt(:)
   !
   LOGICAL :: in_the_list
   !! Variable in the list
@@ -638,7 +625,7 @@
   CALL mp_barrier(inter_pool_comm)
   CALL mp_barrier(inter_image_comm)
   !
-  DEALLOCATE( ig_l2g, mill, igsrt, jtoi, itoj, g, gg )
+  DEALLOCATE( ig_l2g, mill, mill_unsorted, igsrt, jtoi, itoj, g, gg )
   !
   RETURN
   !
@@ -693,10 +680,9 @@
   INTEGER :: ig1_use, ig2_use, ig2_guess, notfound, guess_skip
   !! Temporary G-vectors indices
   INTEGER :: indold, indnew
-  !! Counter on G_0 vectors Indices for writing to file
+  !! Counter on G_0 vectors indices for writing to file
   !
   LOGICAL :: tfound
-  !
   !
   ALLOCATE( gmap(ngm_g,ng0vec) )
   gmap(:,:) = 0
@@ -713,8 +699,6 @@
     indnew = nint( dble(ig0) / dble(ng0vec) * 40 )
     IF (indnew.ne.indold) WRITE(stdout,'(a)',advance='no') '#'
     indold = indnew
-    !
-    !
     !
     notfound = 0
     DO ig1 = 1, ngm_g
@@ -786,11 +770,6 @@
   IF (iukgmap .ne. stdout) CLOSE(iukgmap)
   WRITE(stdout,*)
   !
-  end subroutine refold
-
-
-
-
-
-
-
+  RETURN
+  !
+  END SUBROUTINE refold
