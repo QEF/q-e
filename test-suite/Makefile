@@ -160,6 +160,7 @@ clean:
 
 # Special case EPW
 	@rm -rf epw_trev/save	
+	@rm -rf epw_trev_uspp/save	
 	@rm -f userconfig
 
 # Calling 'purge' means remove all reference outputs... be careful!

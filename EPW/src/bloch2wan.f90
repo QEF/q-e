@@ -91,9 +91,9 @@
     !! $$\mathbf{r}\cdot\mathbf{k}
     REAL(kind=DP) :: tmp
     !! Maximum value of the real space Hamiltonian
-    REAL(kind=dp) :: et_opt(nbnd,nks)
+    REAL(kind=DP) :: et_opt(nbnd,nks)
     !! hamiltonian eigenvalues within the outer window in the first ndimwin(ik) entries
-    REAL(kind=dp) :: et_tmp(nbnd,nks)
+    REAL(kind=DP) :: et_tmp(nbnd,nks)
     !! temporary array for hamiltonian eigenvalues 
     !
     COMPLEX(kind=DP) :: chs(nbndsub, nbndsub, nks)
@@ -264,7 +264,7 @@
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_barrier, mp_sum
     ! 
-    implicit none
+    IMPLICIT NONE
     !
     !  input variables
     !
@@ -459,7 +459,7 @@
     ! Check spatial decay of Dipole in Wannier basis
     ! the unit in r-space is angstrom
     !
-    IF (mpime.eq.ionode_id) then
+    IF (mpime.eq.ionode_id) THEN
       OPEN(unit=iudecayP,file='decay.P')
       WRITE(iudecayP, '(/3x,a/)') '#Spatial decay of dipole in Wannier basis'
       DO ir = 1, nrr
@@ -515,7 +515,7 @@
     USE mp,            ONLY : mp_barrier
     USE mp_global,     ONLY : inter_pool_comm
     ! 
-    implicit none
+    IMPLICIT NONE
     !
     !  input variables
     !
@@ -636,7 +636,9 @@
     USE mp_global, ONLY : inter_pool_comm, my_pool_id
     USE mp,        ONLY : mp_barrier, mp_sum
     USE mp_world,  ONLY : mpime
-    implicit none
+    USE division,  ONLY : fkbounds
+    !
+    IMPLICIT NONE
     !
     !  input variables
     !
@@ -750,7 +752,7 @@
     !
     ! setup rotation matrix - we need access to all for the k+b
     cu_big = czero
-    CALL ckbounds(ikstart, ikstop)
+    CALL fkbounds(nkstot, ikstart, ikstop)
     cu_big(:,:,ikstart:ikstop) = cu(:,:,:)
     CALL mp_sum(cu_big,inter_pool_comm)
     !
@@ -1050,7 +1052,8 @@
     USE mp_global, ONLY : inter_pool_comm
     USE mp       , ONLY : mp_sum 
     USE mp_world,  ONLY : mpime
-    implicit none
+    ! 
+    IMPLICIT NONE
     !
     !  input variables
     !
@@ -1213,7 +1216,7 @@
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
     ! 
-    implicit none
+    IMPLICIT NONE
     !
     !  Input variables 
     !
@@ -1338,7 +1341,8 @@
     USE io_global,     ONLY : ionode_id
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
-    implicit none
+    !
+    IMPLICIT NONE
     !
     !  input variables - note irvec is dimensioned with nrr_k 
     !                    (which is assumed to be larger than nrr_q)
@@ -1359,7 +1363,7 @@
     !! Coordinates of real space vector 
     !
     REAL(kind=DP), INTENT(in) :: xk(3, nq)
-    !! Kpoint coordinates (cartesian in units of 2piba) 
+    !! K-point coordinates (cartesian in units of 2piba) 
     ! 
     COMPLEX(kind=DP), INTENT(in) :: epmatwe (nbnd, nbnd, nrr_k, nmodes)
     !! EP matrix in electron-wannier representation and phonon bloch representation

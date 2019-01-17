@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !--------------------------------------------------------
-  subroutine readwfc ( ipool, recn, evc0 )
+  SUBROUTINE readwfc( ipool, recn, evc0 )
   !--------------------------------------------------------
   !
   !  open wfc files as direct access, read, and close again
@@ -16,37 +16,41 @@
   ! Imported the noncolinear case implemented by xlzhang
   !
   !-------------------------------------------------------------
-  USE io_files, ONLY : prefix, tmp_dir
-  USE units_lr, ONLY : lrwfc, iuwfc
-  USE kinds,    ONLY : DP
-  USE wvfct,    ONLY : npwx
-  USE pwcom,    ONLY : nbnd
-  USE noncollin_module,ONLY : npol
-  USE mp_global,ONLY : nproc_pool, me_pool
-  USE mp_global,ONLY : npool
-  !
-  implicit none
-  integer :: recn, ipool
-  !  kpoint number
-  !  poolfile to be read (not used in serial case)
-  complex(kind=DP) :: evc0 ( npwx*npol, nbnd )
-  character (len=3) :: nd_nmbr0
-  ! node number for shuffle
-  !
-  integer :: unf_recl, ios
-  character (len=256) :: tempfile
-
-  !
-  !  open the wfc file, read and close
-  !
-  CALL set_ndnmbr ( ipool, me_pool, nproc_pool, npool, nd_nmbr0)
-  !
 #if defined (__ALPHA)
-#  define DIRECT_IO_FACTOR 2    
+#  define DIRECT_IO_FACTOR 2
 # else
 #  define DIRECT_IO_FACTOR 8
 #endif
-
+  !
+  USE kinds,    ONLY : DP
+  USE io_files, ONLY : prefix, tmp_dir
+  USE units_lr, ONLY : lrwfc, iuwfc
+  USE wvfct,    ONLY : npwx
+  USE pwcom,    ONLY : nbnd
+  USE noncollin_module, ONLY : npol
+  USE mp_global,        ONLY : nproc_pool, me_pool, npool
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in) :: recn
+  !! kpoint number
+  INTEGER, INTENT(in) :: ipool
+  !! poolfile number to be read (not used in serial case)
+  !
+  COMPLEX(DP), INTENT(out) :: evc0(npwx*npol,nbnd)
+  !! wavefunction is read from file
+  !
+  ! Local variables
+  !
+  INTEGER :: unf_recl, ios
+  CHARACTER(len=256) :: tempfile
+  CHARACTER(len=3) :: nd_nmbr0
+  ! file number for shuffle
+  !
+  !  open the wfc file, read and close
+  !
+  CALL set_ndnmbr( ipool, me_pool, nproc_pool, npool, nd_nmbr0 )
+  !
 #if defined(__MPI)
   tempfile = trim(tmp_dir) // trim(prefix) // '.wfc' // nd_nmbr0
 # else
@@ -54,12 +58,12 @@
 #endif
   unf_recl = DIRECT_IO_FACTOR * lrwfc
   !
-  open  (iuwfc, file = tempfile, form = 'unformatted', &
-          access = 'direct', iostat=ios, recl = unf_recl)
-  IF (ios /= 0) call errore ('readwfc', 'error opening wfc file', iuwfc)
-  read  (iuwfc, rec = recn) evc0
-  close (iuwfc, status = 'keep')
+  OPEN(iuwfc, file = tempfile, form = 'unformatted', &
+       access = 'direct', iostat = ios, recl = unf_recl)
+  IF (ios /= 0) CALL errore('readwfc', 'error opening wfc file', iuwfc)
+  READ (iuwfc, rec = recn) evc0
+  CLOSE(iuwfc, status = 'keep')
   !
+  RETURN
   !
-  end subroutine readwfc
-
+  END SUBROUTINE readwfc
