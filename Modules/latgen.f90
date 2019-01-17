@@ -380,7 +380,8 @@ SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
   !-----------------------------------------------------------------------
   !
   !     Returns celldm parameters computed from lattice vectors a1,a2,a3 
-  !     If Bravais lattice index ibrav=0, only celldm(1) is set to alat.
+  !     a1, a2, a3 are in "alat" units
+  !     If Bravais lattice index ibrav=0, only celldm(1) is set to alat
   !     See latgen for definition of celldm and lattice vectors.
   !     a1, a2, a3, ibrav, alat are not modified
   !
@@ -389,13 +390,12 @@ SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
   INTEGER, INTENT(in) :: ibrav
   REAL(DP), INTENT(in) :: alat, a1(3), a2(3), a3(3)
   REAL(DP), INTENT(out) :: celldm(6)
-  INTEGER, EXTERNAL :: at2ibrav
   !
   celldm = 0.d0
   !
   SELECT CASE  ( ibrav )
   CASE (0)
-     celldm(1) = alat
+     celldm(1) = 1.0_dp
   CASE (1)
      celldm(1) = sqrt( dot_product (a1,a1) )
   CASE (2)
@@ -474,6 +474,8 @@ SUBROUTINE at2celldm (ibrav,alat,a1,a2,a3,celldm)
   CASE DEFAULT
      CALL infomsg('at2celldm', 'wrong ibrav?')
   END SELECT
+  !
+  celldm(1) = celldm(1) * alat
   !
 END SUBROUTINE at2celldm
 !
@@ -719,3 +721,57 @@ SUBROUTINE celldm2abc ( ibrav, celldm, a,b,c,cosab,cosac,cosbc )
   ENDIF
   !
 END SUBROUTINE celldm2abc
+
+SUBROUTINE remake_cell(ibrav, alat, a1,a2,a3)
+  USE kinds, ONLY : DP
+  USE io_global, ONLY : stdout
+  IMPLICIT NONE
+  INTEGER,INTENT(in) :: ibrav
+  REAL(DP),INTENT(inout) :: alat, a1(3),a2(3),a3(3)
+  REAL(DP) :: e1(3), e2(3), e3(3)
+  REAL(DP) :: celldm_internal(6), lat_internal, omega
+  ! Better not to do the following, or it may cause problems with ibrav=0 from input
+!  ibrav = at2ibrav (a(:,1), a(:,2), a(:,3))
+  ! Instead, let's print a warning and do nothing:
+  IF(ibrav==0)THEN
+    WRITE(stdout,'(a)') "WARNING! With ibrav=0, cell_dofree='ibrav' does not have any effect. "
+    RETURN
+  ENDIF
+  !
+  CALL  at2celldm (ibrav,alat,a1, a2, a3,celldm_internal)
+  WRITE(stdout,'("ibrav = ",i6)') ibrav
+  WRITE(stdout,'(" celldm(1) = ",f15.8)') celldm_internal(1)
+  IF( celldm_internal(2) /= 0._dp) WRITE(stdout,'(" celldm(2) = ",f15.8)') celldm_internal(2)
+  IF( celldm_internal(3) /= 0._dp) WRITE(stdout,'(" celldm(3) = ",f15.8)') celldm_internal(3)
+  IF( celldm_internal(4) /= 0._dp) WRITE(stdout,'(" celldm(4) = ",f15.8)') celldm_internal(4)
+  IF( celldm_internal(5) /= 0._dp) WRITE(stdout,'(" celldm(5) = ",f15.8)') celldm_internal(5)
+  IF( celldm_internal(6) /= 0._dp) WRITE(stdout,'(" celldm(6) = ",f15.8)') celldm_internal(6)
+  !
+  e1=a1
+  e2=a2
+  e3=a3
+  CALL latgen( ibrav, celldm_internal, a1,a2,a3, omega )
+  !WRITE(*, '("New lattice vectors in bohr:")')
+  !WRITE(*,'(3f15.8)') e(:,1)
+  !WRITE(*,'(3f15.8)') e(:,2)
+  !WRITE(*,'(3f15.8)') e(:,3)
+  WRITE(stdout,'("Input lattice vectors:")')
+  WRITE(stdout,'(3f15.8)') e1
+  WRITE(stdout,'(3f15.8)') e2
+  WRITE(stdout,'(3f15.8)') e3
+  WRITE(stdout,'("New lattice vectors in INITIAL alat:")')
+  WRITE(stdout,'(3f15.8)') a1/alat
+  WRITE(stdout,'(3f15.8)') a2/alat
+  WRITE(stdout,'(3f15.8)') a3/alat
+  WRITE(stdout, '("New lattice vectors in NEW alat (for information only):")')
+  WRITE(stdout,'(3f15.8)') a1/celldm_internal(1)
+  WRITE(stdout,'(3f15.8)') a2/celldm_internal(1)
+  WRITE(stdout,'(3f15.8)') a3/celldm_internal(1)
+  a1=a1/alat
+  a2=a2/alat
+  a3=a3/alat
+  WRITE(*,'("Discrepancy in bohr = ", 3f12.6)') DSQRT(SUM((a1-e1)**2)), DSQRT(SUM((a2-e2)**2)), DSQRT(SUM((a3-e3)**2))
+
+
+END SUBROUTINE
+

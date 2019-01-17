@@ -185,7 +185,7 @@
       USE cell_base,          ONLY : tpiba, tpiba2
       USE splines,            ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
       USE pseudo_base,        ONLY : formfn, formfa
-      USE uspp_param,         only : upf, oldvan
+      USE uspp_param,         only : upf
       USE control_flags,      only : tpre
       use gvect, ONLY : gg, gstart
       USE cp_interfaces,      ONLY : compute_xgtab
@@ -234,7 +234,7 @@
 
          call formfn( rgrid(is)%r, rgrid(is)%rab, &
                       upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), &
-                      xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, mmx, oldvan(is),&
+                      xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, mmx, &
                       tpre, vps_sp(is)%y, vps0(is), dvps_sp(is)%y )
          ! obsolete BHS format
          !call formfa( vps_sp(is)%y, dvps_sp(is)%y, rc1(is), rc2(is), &
@@ -335,7 +335,7 @@
       !
       USE kinds,      ONLY : DP
       USE ions_base,  ONLY : nsp
-      USE uspp_param, ONLY : upf, nh, nhm, oldvan
+      USE uspp_param, ONLY : upf, nh, nhm
       USE atom,       ONLY : rgrid
       USE uspp,       ONLY : nhtol, indv
       USE betax,      only : refg, betagx, mmx, dbetagx
@@ -370,7 +370,7 @@
             l = nhtol(iv,is)
             !
 !$omp parallel default(none), private( dfint, djl, fint, jl, il, xg, ir ), &
-!$omp shared( tpre, nr, mmx, refg, l, is, rgrid, upf, indv, iv, betagx, dbetagx, oldvan )
+!$omp shared( tpre, nr, mmx, refg, l, is, rgrid, upf, indv, iv, betagx, dbetagx )
             if ( tpre ) then
                allocate( dfint( nr ) )
                allocate( djl  ( nr ) )
@@ -397,22 +397,14 @@
                   fint(ir) = rgrid(is)%r(ir) * jl(ir) * &
                              upf(is)%beta( ir, indv(iv,is) ) 
                end do
-               if (oldvan(is)) then
-                  call herman_skillman_int(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
-               else
-                  call simpson_cp90(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
-               endif
+               call simpson_cp90(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
                ! 
                if(tpre) then
                   do ir = 1, nr
                      dfint(ir) = rgrid(is)%r(ir) * djl(ir) * &
                                  upf(is)%beta( ir, indv(iv,is) )
                   end do
-                  if (oldvan(is)) then
-                     call herman_skillman_int(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
-                  else
-                     call simpson_cp90(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
-                  end if
+                  call simpson_cp90(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
                endif
                !
             end do interp_tab
@@ -451,7 +443,7 @@
       USE kinds,         ONLY : DP
       use io_global,     only : stdout
       USE ions_base,     ONLY : nsp
-      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq, oldvan, ish, nvb
+      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq, ish, nvb
       USE atom,          ONLY : rgrid
       USE uspp,          ONLY : indv
       USE betax,         only : refg, qradx, mmx, dqradx
@@ -498,7 +490,7 @@
          do l = 1, upf(is)%nqlc
             !
 !$omp parallel default(none), private( djl, dfint, fint, jl, il, iv, jv, ijv, xg, ir ), &
-!$omp shared( tpre, nr, mmx, refg, rgrid, l, upf, qrl, oldvan, qradx, dqradx, is )
+!$omp shared( tpre, nr, mmx, refg, rgrid, l, upf, qrl, qradx, dqradx, is )
             IF ( tpre ) THEN
                ALLOCATE( djl  ( nr ) )
                ALLOCATE( dfint( nr ) )
@@ -529,25 +521,15 @@
                      do ir = 1, nr
                         fint( ir ) = qrl( ir, ijv, l ) * jl( ir )
                      end do
-                     if (oldvan(is)) then
-                        call herman_skillman_int &
+                     call simpson_cp90 &
                              (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
-                     else
-                        call simpson_cp90 &
-                             (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
-                     end if
                      !
                      if( tpre ) then
                         do ir = 1, nr
                            dfint(ir) = qrl(ir,ijv,l) * djl(ir)
                         end do
-                        if ( oldvan(is) ) then
-                           call herman_skillman_int &
+                        call simpson_cp90 &
                                 (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
-                        else
-                           call simpson_cp90 &
-                                (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
-                        end if
                      end if
                      !
                   end do
@@ -592,7 +574,7 @@
       USE kinds,         ONLY : DP
       use io_global,  only: stdout
       USE ions_base,  ONLY: nsp
-      USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq, oldvan
+      USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq
       use uspp_param, only: lmaxkb, ish, nvb
       USE atom,       ONLY: rgrid
       USE uspp,       ONLY: indv
@@ -686,25 +668,15 @@
                      do ir = 1, nr
                         fint( ir ) = qrl( ir, ijv, l ) * jl( ir )
                      end do
-                     if (oldvan(is)) then
-                        call herman_skillman_int &
+                     call simpson_cp90 &
                              (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
-                     else
-                        call simpson_cp90 &
-                             (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
-                     end if
                      !
                      if( tpre ) then
                         do ir = 1, nr
                            dfint(ir) = qrl(ir,ijv,l) * djl(ir)
                         end do
-                        if ( oldvan(is) ) then
-                           call herman_skillman_int &
+                        call simpson_cp90 &
                                 (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
-                        else
-                           call simpson_cp90 &
-                                (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
-                        end if
                      end if
                      !
                   end do
@@ -1198,7 +1170,7 @@
       USE io_global,     only : stdout
       USE gvecw,         only : ngw
       USE ions_base,     only : nsp
-      USE uspp_param,    only : upf, lmaxq, lmaxkb, nh, nhm, oldvan
+      USE uspp_param,    only : upf, lmaxq, lmaxkb, nh, nhm
       USE uspp,          only : qq_nt, nhtolm, beta, nhtol, indv, dbeta
       USE cell_base,     only : ainv, omega, tpiba2, tpiba
       USE atom,          ONLY : rgrid
@@ -1261,22 +1233,14 @@
                   fint(ir) = rgrid(is)%r(ir) * jl(ir) * &
                              upf(is)%beta( ir, indv(iv,is) )
                end do
-               if (oldvan(is)) then
-                  call herman_skillman_int(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
-               else
-                  call simpson_cp90(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
-               endif
+               call simpson_cp90(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
                ! 
                if(tpre) then
                   do ir = 1, nr
                      dfint(ir) = rgrid(is)%r(ir) * djl(ir) * &
                                  upf(is)%beta( ir, indv(iv,is) )
                   end do
-                  if (oldvan(is)) then
-                     call herman_skillman_int(nr,dfint,rgrid(ir)%rab,dbetagx(il,iv,is))
-                  else
-                     call simpson_cp90(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
-                  end if
+                  call simpson_cp90(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
                endif
                !
             end do

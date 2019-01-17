@@ -152,7 +152,7 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
   USE mp_world,  ONLY : world_comm, mpime, nproc
   USE mp_wave,   ONLY : mergewf
   USE parallel_include
-  USE scf,       ONLY : rho, rho_core, rhog_core
+  USE scf,       ONLY : rho, rho_core, rhog_core, rhoz_or_updw
   USE ener,      ONLY : etxc, vtxc
 
   USE uspp_param, ONLY : upf, nh
@@ -790,7 +790,13 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
      OPEN (UNIT=313,FILE="vxcdiag.dat",STATUS="UNKNOWN")
      WRITE(313,*) "#         K            BND          <Vxc>"
      ALLOCATE ( vxc(dfftp%nnr,nspin) )
+     !^
+     IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
+     !
      CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
+     !
+     IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
+     !^
      DO ik=1,nkpt
         npw = ngk(ik)
         CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )

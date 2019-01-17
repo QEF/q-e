@@ -66,7 +66,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !
   REAL(DP),INTENT(INOUT) :: vpoten(dfftp%nnr)! ef is added to this potential
   REAL(DP),INTENT(INOUT) :: etotefield       ! contribution to etot due to ef
-  REAL(DP),INTENT(IN)    :: rho(dfftp%nnr,nspin) ! the density whose dipole is computed
+  REAL(DP),INTENT(IN)    :: rho(dfftp%nnr) ! the density whose dipole is computed
   LOGICAL,INTENT(IN)     :: iflag ! set to true to force recalculation of field
   !
   ! local variables

@@ -36,7 +36,7 @@ SUBROUTINE cg_setup
   INTEGER :: i, l, nt, ik
   LOGICAL :: exst
   CHARACTER (len=256) :: filint
-  REAL(DP) :: rhotot
+  REAL(DP) :: rhotot, sgn
   INTEGER       :: ndr, kunittmp, ierr
   REAL(DP) :: edum(1,1), wdum(1,1)
   !
@@ -86,9 +86,10 @@ SUBROUTINE cg_setup
   !
   !  derivative of the xc potential
   !
+  sgn = DBLE(2*MOD(current_spin,2)-1)
   dmuxc(:) = 0.d0
   DO i = 1,dfftp%nnr
-     rhotot = rho%of_r(i,current_spin)+rho_core(i)
+     rhotot = ( rho%of_r(i,1) + sgn*rho%of_r(i,nspin) )*0.5d0 + rho_core(i)
      IF ( rhotot> 1.d-30 ) dmuxc(i)= dmxc( rhotot)
      IF ( rhotot<-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)
   ENDDO

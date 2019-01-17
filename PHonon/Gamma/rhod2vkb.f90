@@ -16,7 +16,7 @@ SUBROUTINE rhod2vkb(dyn0)
   USE constants, ONLY: tpi
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp
   USE cell_base, ONLY : tpiba2, tpiba, omega
-  USE lsda_mod,  ONLY : current_spin
+  USE lsda_mod,  ONLY : nspin, current_spin
   USE gvect,  ONLY : ngm, g, igtongl
   USE gvecw,  ONLY: gcutw
   USE wvfct,  ONLY: nbnd, npwx
@@ -38,7 +38,7 @@ SUBROUTINE rhod2vkb(dyn0)
   !
   INTEGER :: npw, i, ih, ibnd, na, nt, nu_i,nu_j,mu_i,mu_j, ir, ng, jkb, ik, &
        ipol, jpol, ijpol
-  real(DP) :: weight, fac, gtau
+  real(DP) :: weight, fac, gtau, sgn
   real(DP), ALLOCATABLE :: dynloc(:,:), dynkb(:,:)
   COMPLEX(DP), ALLOCATABLE :: dvkb(:,:)
   real (DP), ALLOCATABLE :: becp(:,:), becp1(:,:,:), becp2(:,:,:)
@@ -49,8 +49,9 @@ SUBROUTINE rhod2vkb(dyn0)
   !
   ALLOCATE  ( dynloc( 3*nat, nmodes))
   dynloc (:,:) = 0.d0
+  sgn = DBLE(2*MOD(current_spin,2)-1)
   DO ir = 1,dfftp%nnr
-     psic(ir) = rho%of_r(ir,current_spin)
+     psic(ir) = ( rho%of_r(ir,1) + sgn*rho%of_r(ir,nspin) )*0.5d0
   ENDDO
   CALL fwfft ('Rho', psic, dfftp)
   DO nu_i = 1,nmodes

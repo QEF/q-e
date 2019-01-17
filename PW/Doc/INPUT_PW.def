@@ -2537,6 +2537,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		    Select which of the cell parameters should be moved:
 		}                
                 opt -val 'all'          { all axis and angles are moved }
+                opt -val 'ibrav'        { all axis and angles are moved, but the lattice but be representable with the initial ibrav choice }
                 opt -val 'x'            { only the x component of axis 1 (v1_x) is moved }
                 opt -val 'y'            { only the y component of axis 2 (v2_y) is moved }
                 opt -val 'z'            { only the z component of axis 3 (v3_z) is moved }

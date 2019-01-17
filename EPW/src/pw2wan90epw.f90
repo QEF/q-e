@@ -146,10 +146,10 @@ SUBROUTINE setup_nnkp (  )
   USE constants_epw,    ONLY : bohr
   USE mp_global,        ONLY : intra_pool_comm, mp_sum
   USE epwcom,           ONLY : nbndskip
-!  USE w90_PARAMETERs,   ONLY : postproc_setup
   USE w90_io,           ONLY : post_proc_flag
   ! 
   IMPLICIT NONE
+  ! 
   REAL(DP) :: g_(3)
   !! Temporary vector G_k+b, g_(:) = g_kpb(:,ik,ib) 
   REAL(DP) :: gg_
@@ -272,11 +272,11 @@ SUBROUTINE setup_nnkp (  )
   ALLOCATE( excluded_band(nbnd) )
 
   ! real lattice (Cartesians, Angstrom)
-  rlatt(:,:) = transpose(at(:,:))*alat*bohr
+  rlatt(:,:) = transpose(at(:,:)) * alat * bohr
   ! reciprocal lattice (Cartesians, Angstrom)
-  glatt(:,:) = transpose(bg(:,:))*tpi/(alat*bohr)
+  glatt(:,:) = transpose(bg(:,:)) * tpi / ( alat * bohr )
   ! atom co-ordinates in Cartesian co-ords and Angstrom units
-  atcart(:,:) = tau(:,:)*bohr*alat
+  atcart(:,:) = tau(:,:) * bohr * alat
   ! atom symbols
   DO ia = 1, nat
      type = ityp(ia)
@@ -543,7 +543,7 @@ SUBROUTINE run_wannier
   USE mp_world,  ONLY : world_comm
   USE cell_base, ONLY : alat
   USE io_files,  ONLY : prefix
-  USE io_epw,    ONLY : QPeig_read
+  USE io_epw,    ONLY : iuqpeig
   USE pwcom,     ONLY : nkstot
   USE wannierEPW,ONLY : u_mat, lwindow, wann_centers, wann_spreads, eigval,  &
                         n_wannier, spreads, nnb, rlatt, glatt, kpt_latt,     &
@@ -583,16 +583,16 @@ SUBROUTINE run_wannier
       WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
            nbnd, ",", nkstot,")"
       tempfile=trim(prefix)//'.eig'
-      OPEN(QPeig_read, file=tempfile, form='formatted', action='read', iostat=ios)
+      OPEN(iuqpeig, file=tempfile, form='formatted', action='read', iostat=ios)
       IF (ios /= 0) CALL errore ('run_wannier','error opening' // tempfile, 1)
-      READ (QPeig_read,'(a)') line
+      READ (iuqpeig,'(a)') line
       DO ik = 1, nkstot
         ! We do not save the k-point for the moment ==> should be read and
         ! tested against the current one  
-        READ (QPeig_read,'(a)') line
-        READ (QPeig_read,*) eigval (:,ik)
+        READ (iuqpeig,'(a)') line
+        READ (iuqpeig,*) eigval (:,ik)
       ENDDO
-      CLOSE(QPeig_read)
+      CLOSE(iuqpeig)
     ENDIF
 
 ! SP : This file is not used for now. Only required to build the UNK file
@@ -1125,13 +1125,13 @@ SUBROUTINE compute_mmn_para
   !   USPP
   !
   IF (any_uspp) THEN
-     CALL init_us_1
-     CALL allocate_bec_type ( nkb, nbnd, becp )
-     IF (noncolin) THEN
-        ALLOCATE ( becp2_nc(nkb,2,nbnd) )
-     ELSE
-        ALLOCATE ( becp2(nkb,nbnd) )
-     ENDIF
+    CALL init_us_1
+    CALL allocate_bec_type( nkb, nbnd, becp )
+    IF (noncolin) THEN
+      ALLOCATE( becp2_nc(nkb,2,nbnd) )
+    ELSE
+      ALLOCATE( becp2(nkb,nbnd) )
+    ENDIF
   ENDIF
   !
   !     qb is  FT of Q(r)
@@ -1143,16 +1143,18 @@ SUBROUTINE compute_mmn_para
   !
   ind = 0
   DO ik = 1, iknum ! loop over k-points
-     DO ib = 1, nnb ! loop over nearest neighbours for each k-point
-        ind = ind + 1
-        ikp = kpb(ik,ib) 
-        !
-        g_(:) = REAL( g_kpb(:,ik,ib) )
-        ! bring g_ to cartesian
-        CALL cryst_to_cart (1, g_, bg, 1)
-        dxk(:,ind) = xktot(:,ikp) + g_(:) - xktot(:,ik) 
-        qg(ind) = dxk(1,ind)*dxk(1,ind)+dxk(2,ind)*dxk(2,ind)+dxk(3,ind)*dxk(3,ind)
-     ENDDO
+    DO ib = 1, nnb ! loop over nearest neighbours for each k-point
+      ind = ind + 1
+      ikp = kpb(ik,ib) 
+      !
+      g_(:) = REAL( g_kpb(:,ik,ib) )
+      ! bring g_ to cartesian
+      CALL cryst_to_cart(1, g_, bg, 1)
+      dxk(:,ind) = xktot(:,ikp) + g_(:) - xktot(:,ik) 
+      qg(ind) = dxk(1,ind) * dxk(1,ind) + & 
+                dxk(2,ind) * dxk(2,ind) + & 
+                dxk(3,ind) * dxk(3,ind)
+    ENDDO
   ENDDO
   !
   !  USPP
@@ -1238,15 +1240,15 @@ SUBROUTINE compute_mmn_para
            CALL init_us_2 (npwq, igkq, xk(1,ikp), vkb)
            ! below we compute the product of beta functions with |psi>
            IF (noncolin) THEN
-              CALL calbec ( npwq, vkb, evcq, becp2_nc )
-
+              CALL calbec( npwq, vkb, evcq, becp2_nc )
+              !
               IF (lspinorb) THEN
                  qq_so = czero
-                 CALL transform_qq_so(qb(:,:,:,ind), qq_so)
+                 CALL transform_qq_so( qb(:,:,:,ind), qq_so)
               ENDIF
-
+              !
            ELSE
-              CALL calbec ( npwq, vkb, evcq, becp2 )
+              CALL calbec( npwq, vkb, evcq, becp2 )
            ENDIF
         ENDIF
         !
@@ -1288,7 +1290,7 @@ SUBROUTINE compute_mmn_para
                                    DO n = 1, nbnd
                                       IF (excluded_band(n)) CYCLE
                                       Mkb(m,n) = Mkb(m,n) + phase1 * qb(ih,jh,nt,ind) * &
-                                       conjg( becp%k(ikb,m) ) *becp2(jkb,n)
+                                       conjg( becp%k(ikb,m) ) * becp2(jkb,n)
 
                                    ENDDO
                                 ENDIF
@@ -1405,7 +1407,7 @@ SUBROUTINE compute_mmn_para
           !
           DO n = 1, nbnd
             DO m = 1, nbnd
-              WRITE (iummn,*) m_mat_tmp(m,n,ib,ik)
+              WRITE(iummn,*) m_mat_tmp(m,n,ib,ik)
             ENDDO
           ENDDO
           !
@@ -1702,7 +1704,9 @@ SUBROUTINE write_filukk
     ! 
     ! Now write the Wannier centers to files
     DO iw = 1, n_wannier
-      WRITE (iuukk,'(3f12.8)') wann_centers(:,iw)/alat/bohr
+      ! SP : Need more precision other WS are not determined properly. 
+      !WRITE (iuukk,'(3f12.8)') wann_centers(:,iw)/alat/bohr
+      WRITE (iuukk,'(3E22.12)') wann_centers(:,iw)/alat/bohr
     ENDDO
     !
     CLOSE (iuukk)

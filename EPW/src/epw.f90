@@ -18,7 +18,7 @@
   !! calls [[wann_run]] and [[elphon_shuffle_wrap]]
   !!
   !! @Note
-  !! 8/14/08 lnscf is unnecessary, as is nqs,iq_start
+  !! 8/14/08 lnscf is unnecessary, as is nqs, iq_start
   !!
   USE io_global,       ONLY : stdout, ionode
   USE mp,              ONLY : mp_bcast, mp_barrier
@@ -34,8 +34,7 @@
   ! Flag to perform an electron-phonon calculation. If .true. 
   ! the code will enter in [[elphon_shuffle_wrap]]
   !
-  !
-  implicit none
+  IMPLICIT NONE
   !
   CHARACTER (LEN=12)   :: code = 'EPW'
   !! Name of the program
@@ -91,14 +90,14 @@ write(stdout,'(a)') "                                                           
   CALL allocate_epwq
 
   IF ( epwread .AND. .NOT. epbread ) THEN
-      write(stdout,'(a)') "                      "
-      write(stdout,'(a)') "     ------------------------------------------------------------------------ "
-      write(stdout,'(a)') "                   RESTART - RESTART - RESTART - RESTART                         "
-      write(stdout,'(a)') "     Restart is done without reading PWSCF save file.                  "
-      write(stdout,'(a)') "     Be aware that some consistency checks are therefore not done.                  "
-      write(stdout,'(a)') "     ------------------------------------------------------------------------ "
-      write(stdout,'(a)') "                      "
-      CALL epw_setup_restart
+    write(stdout,'(a)') "                      "
+    write(stdout,'(a)') "     ------------------------------------------------------------------------ "
+    write(stdout,'(a)') "                   RESTART - RESTART - RESTART - RESTART                         "
+    write(stdout,'(a)') "     Restart is done without reading PWSCF save file.                  "
+    write(stdout,'(a)') "     Be aware that some consistency checks are therefore not done.                  "
+    write(stdout,'(a)') "     ------------------------------------------------------------------------ "
+    write(stdout,'(a)') "                      "
+    CALL epw_setup_restart
   ELSE
     CALL epw_setup
   ENDIF
@@ -108,48 +107,48 @@ write(stdout,'(a)') "                                                           
   CALL epw_summary
   !
   IF ( ep_coupling ) THEN 
-     !
-     ! In case of restart with arbitrary number of cores.
-     IF ( epwread .and. .not. epbread ) THEN
-       continue
-     ELSE 
-       CALL openfilepw
-     ENDIF
-     !
-     CALL print_clock( 'EPW' )
-     !
-     IF ( epwread .and. .not. epbread ) THEN
-       continue      
-     ELSE
-       CALL epw_init(.true.)
-     ENDIF
-     !
-     CALL print_clock( 'EPW' )
-     !
-     !  Generates the perturbation matrix which fixes the gauge of 
-     !  the calculated wavefunctions
-     !
-     CALL setphases_wrap
-     !
-     IF (wannierize) THEN
-        !
-        !  Create U(k, k') localization matrix 
-        !      
-        CALL wann_run
-     ELSE
-        !
-        ! Read Wannier matrix from a previous run
-        !
-        WRITE(stdout,'(/,5x,a,/,3a,/,5x,a,/)') repeat('-',67), '     Using ', &
-             trim(filukk) , ' from disk', repeat('-',67) 
-     ENDIF
-     !
-     IF ( elph ) THEN
-        !
-        CALL dvanqq2()
-        !
-        CALL elphon_shuffle_wrap()
-        !
+    !
+    ! In case of restart with arbitrary number of cores.
+    IF ( epwread .and. .not. epbread ) THEN
+      CONTINUE
+    ELSE 
+      CALL openfilepw
+    ENDIF
+    !
+    CALL print_clock( 'EPW' )
+    !
+    IF ( epwread .and. .not. epbread ) THEN
+      CONTINUE      
+    ELSE
+      CALL epw_init(.true.)
+    ENDIF
+    !
+    CALL print_clock( 'EPW' )
+    !
+    !  Generates the perturbation matrix which fixes the gauge of 
+    !  the calculated wavefunctions
+    !
+    CALL setphases_wrap
+    !
+    IF (wannierize) THEN
+      !
+      !  Create U(k, k') localization matrix 
+      !      
+      CALL wann_run
+    ELSE
+      !
+      ! Read Wannier matrix from a previous run
+      !
+      WRITE(stdout,'(/,5x,a,/,3a,/,5x,a,/)') repeat('-',67), '     Using ', &
+           trim(filukk) , ' from disk', repeat('-',67) 
+    ENDIF
+    !
+    IF ( elph ) THEN
+      !
+      CALL dvanqq2()
+      !
+      CALL elphon_shuffle_wrap()
+      !
     ENDIF
     !
     ! ... cleanup of the variables
@@ -164,11 +163,11 @@ write(stdout,'(a)') "                                                           
   ENDIF
   ! 
   IF ( cumulant .and. ionode ) THEN
-     CALL spectral_cumulant()
+    CALL spectral_cumulant()
   ENDIF
   !
   IF ( eliashberg ) THEN
-     CALL eliashberg_eqs()
+    CALL eliashberg_eqs()
   ENDIF
   !
   ! ... Print statistics and exit gracefully    
