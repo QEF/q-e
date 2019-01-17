@@ -13,7 +13,7 @@ SUBROUTINE cg_setup
   USE kinds,      ONLY: DP
   USE cell_base,  ONLY: bg
   USE ions_base,  ONLY: nat, ntyp => nsp, ityp, tau, amass
-  USE scf,        ONLY: rho, rho_core, v, vltot, vrs, kedtau, rhoz_or_updw
+  USE scf,        ONLY: rho, rho_core, v, vltot, vrs, kedtau
   USE uspp,       ONLY: vkb, nlcc_any
   USE uspp_param, ONLY: upf
   USE mp_global,  ONLY: kunit
@@ -95,13 +95,9 @@ SUBROUTINE cg_setup
   ENDDO
   !
   !  initialize data needed for gradient corrections
-  !^
-  IF (nspin == 2) CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
   !
   CALL cg_setupdgc
   !
-  IF (nspin == 2) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
-  !^
   iunres=88
   !
   !   open the wavefunction file (already existing)

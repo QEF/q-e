@@ -31,6 +31,8 @@ Problems fixed in development version (+ = in qe-6.3-backports as well) :
   + bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
 
 Incompatible changes in development version:
+  * Charge density in the LSDA case is stored as (up+down, up-down) and no longer 
+    as (up,down). Output data format is unchanged to (up+down, up-down)
   * Non-symmorphic operations are always allowed and the FFT grid is made
     commensurate. Meaning and usage of input variable "use_all_frac" changed.
   * Old format (-D__OLDXML) deleted. Everything should work as before but some

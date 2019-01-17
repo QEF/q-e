@@ -418,7 +418,7 @@ SUBROUTINE cg_neweps
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
-  USE scf,       ONLY : rho, rho_core, rhoz_or_updw
+  USE scf,       ONLY : rho, rho_core
   USE lsda_mod,  ONLY : nspin, current_spin
   USE funct,     ONLY : dmxc
   USE cgcom
@@ -443,13 +443,9 @@ SUBROUTINE cg_neweps
   ENDDO
   !
   !  re-initialize data needed for gradient corrections
-  !^
-  IF (nspin == 2) CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
   !
   CALL cg_setupdgc
   !
-  IF (nspin == 2) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
-  !^
   !   calculate linear response to macroscopic fields
   !
   CALL macro
