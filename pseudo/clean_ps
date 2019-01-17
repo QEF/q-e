@@ -8,7 +8,6 @@ tobesaved="HUSPBE.RRKJ3          \
 	   Rhs.pbe-rrkjus_lb.UPF \
 	   Si.bhs	         \
 	   Au.pz-rrkjus_aewfc.UPF\
-	   CorelUSPBE.RRKJ3.UPF  \
 	   C.UPF C_3.98148.UPF   \
 	   pb_s.UPF              \
 	   Si_r.upf              "
@@ -17,7 +16,6 @@ tobesaved="HUSPBE.RRKJ3          \
 # HUSPBE.RRKJ3, O_US.van, H_US.van, Si.bhs, C.UPF : old formats
 # Au.pz-rrkjus_aewfc.UPF : contains all-electron wavefunctions
 # Rh.pbe-rrkjus_lb.UPF, Rhs.pbe-rrkjus_lb.UPF : core-hole PPs
-# CorelUSPBE.RRKJ3.UPF: fully relativistic
 # C_3.98148.UPF : B-C VCA pseudopotential, for slightly B-doped C systems
 # pb_s.UPF  Si_r.upf : fully relativistic
 
