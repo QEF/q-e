@@ -160,11 +160,13 @@ SUBROUTINE sum_band()
      ! ... becsum is summed over bands (if bgrp_parallelization is done)
      ! ... and over k-points (but it is not symmetrized)
      !
+     CALL using_becsum(1)
      CALL mp_sum(becsum, inter_bgrp_comm )
      CALL mp_sum(becsum, inter_pool_comm )
      !
      ! ... same for ebecsum, a correction to becsum (?) in real space
      !
+     IF (tqr) CALL using_ebecsum(1)
      IF (tqr) CALL mp_sum(ebecsum, inter_pool_comm )
      IF (tqr) CALL mp_sum(ebecsum, inter_bgrp_comm )
      !
@@ -413,6 +415,7 @@ SUBROUTINE sum_band()
              END IF
              !
              IF (dft_is_meta() .OR. lxdm) THEN
+                CALL using_evc(0)
                 DO j=1,3
                    psic(:) = ( 0.D0, 0.D0 )
                    !
