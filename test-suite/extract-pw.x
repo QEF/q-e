@@ -22,7 +22,7 @@ band=`sed -n "/bands (ev)/{n;n;p}" $fname | awk '{print $1; print $2; print $3; 
 
 # NSCF
 ef1=`grep Fermi $fname | head -$max_iter | awk '{print $5}'`
-eh1=`grep "highest occupied" $fname | awk '{print $5}'`
+eh1=`grep "highest occupied" $fname | tail -1 | awk '{print $5}'`
 tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
 
 # extract geometry after relaxation
