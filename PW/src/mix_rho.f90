@@ -567,7 +567,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      IF ( dr2_best < target ) THEN
         !
-        !$omp parallel private(rrho,rmag)
+        !$omp parallel
            !$omp do
            DO ig = 1, ngm0
               drho%of_g(ig,1) = vbest(ig)

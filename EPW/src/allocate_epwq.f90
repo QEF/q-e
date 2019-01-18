@@ -17,8 +17,8 @@
   !! response problem
   !!
   !! RM - Nov/Dec - 2014 - Imported the noncolinear case implemented by xlzhang
-  !! SP - 2016 - Update for QE 5
-  !! RM - Dec 2018 - Updated based on QE 6.3
+  !! SP - 2016 - Updated for QE 5
+  !! RM - Jan 2019 - Updated based on QE 6.3
   !!
   USE ions_base,    ONLY : nat, ntyp => nsp
   USE pwcom,        ONLY : npwx, nbnd, nspin
@@ -36,7 +36,6 @@
   USE becmod,       ONLY : becp, allocate_bec_type
   USE uspp_param,   ONLY : nhm
   USE uspp,         ONLY : okvan, nkb
-  USE units_ph,     ONLY : this_dvkb3_is_on_file, this_pcxpsi_is_on_file
   USE modes,        ONLY : u, npert, name_rap_mode, num_rap_mode
   USE klist,        ONLY : nks
   USE fft_base,     ONLY : dfftp
@@ -45,8 +44,6 @@
   ! 
   IMPLICIT NONE
   !  
-  ! SP: Had to add these allocations becaue they are now private in QE 5.0.
-  !     See private 'becp_nc' variable from espresso/Modules/becmod.f90. 
   INTEGER :: ik
   !! k-point
   INTEGER :: ipol
@@ -56,7 +53,7 @@
   !
   ALLOCATE (evq(npwx*npol, nbnd))
   ALLOCATE (dpsi ( npwx*npol, nbnd))
-  ALLOCATE( transp_temp(nstemp) )
+  ALLOCATE (transp_temp(nstemp))
   !
   ALLOCATE (vlocq(ngm, ntyp))   
   ! SP: nrxx is not used in QE 5 ==> tg_nnr is the maximum among nnr
@@ -69,7 +66,8 @@
   !     nnr_tg = local number of grid elements for task group FFT ( ~nr1*nr2*nr3/proc3 )  
   !           --> tg = task group    
   !     ALLOCATE (dmuxc ( dffts%nnr, nspin, nspin))    
-  ALLOCATE (dmuxc( dfftp%nnr, nspin_mag, nspin_mag))
+  !
+  ALLOCATE (dmuxc(dfftp%nnr, nspin_mag, nspin_mag))
   ALLOCATE (eigqts(nat))    
   ALLOCATE (rtau(3, 48, nat))    
   ALLOCATE (u(3 * nat, 3 * nat))    
@@ -82,31 +80,27 @@
     ALLOCATE (int4(nhm * (nhm + 1)/2, 3, 3, nat, nspin_mag))    
     ALLOCATE (int5(nhm * (nhm + 1)/2, 3, 3, nat , nat))    
     IF (noncolin) THEN
-      ALLOCATE(int1_nc(nhm, nhm, 3, nat, nspin))
-      ALLOCATE(int4_nc(nhm, nhm, 3, 3, nat, nspin))
-      ALLOCATE(becsum_nc(nhm*(nhm+1)/2, nat, npol, npol))
-      ALLOCATE(alphasum_nc(nhm*(nhm+1)/2, 3, nat, npol, npol))
+      ALLOCATE (int1_nc(nhm, nhm, 3, nat, nspin))
+      ALLOCATE (int4_nc(nhm, nhm, 3, 3, nat, nspin))
+      ALLOCATE (becsum_nc(nhm*(nhm+1)/2, nat, npol, npol))
+      ALLOCATE (alphasum_nc(nhm*(nhm+1)/2, 3, nat, npol, npol))
       IF (lspinorb) THEN
-        ALLOCATE(int2_so(nhm, nhm, 3, nat, nat, nspin))
-        ALLOCATE(int5_so(nhm, nhm, 3, 3, nat, nat, nspin))
+        ALLOCATE (int2_so(nhm, nhm, 3, nat, nat, nspin))
+        ALLOCATE (int5_so(nhm, nhm, 3, 3, nat, nat, nspin))
       ENDIF
     ENDIF ! noncolin
-    ALLOCATE (alphasum (nhm * (nhm + 1)/2, 3, nat , nspin_mag))    
-    ALLOCATE (this_dvkb3_is_on_file(nks))    
-    this_dvkb3_is_on_file(:) = .false.
+    ALLOCATE (alphasum(nhm * (nhm + 1)/2, 3, nat, nspin_mag))    
   ENDIF
-  ALLOCATE (this_pcxpsi_is_on_file(nks,3))
-  this_pcxpsi_is_on_file(:,:) = .false.
   !
   ALLOCATE (becp1(nks))
   ALLOCATE (alphap(3,nks))
   ! 
   DO ik = 1, nks
-     CALL allocate_bec_type(nkb, nbnd, becp1(ik))
-     DO ipol = 1, 3
-        CALL allocate_bec_type(nkb, nbnd, alphap(ipol,ik))
-     ENDDO
-  END DO
+    CALL allocate_bec_type(nkb, nbnd, becp1(ik))
+    DO ipol = 1, 3
+      CALL allocate_bec_type(nkb, nbnd, alphap(ipol,ik))
+    ENDDO
+  ENDDO
   CALL allocate_bec_type(nkb, nbnd, becp)
   ! 
   IF (elph) ALLOCATE (el_ph_mat(nbnd, nbnd, nks, 3*nat))    

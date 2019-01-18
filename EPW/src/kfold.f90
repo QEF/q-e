@@ -12,18 +12,18 @@
   !
   ! ... The variables for folding the k+q gris back into the k grid
   ! 
-  USE kinds,      ONLY : DP 
+  USE kinds, ONLY : DP 
   !
   INTEGER :: g0vec_all(3,125)
   !! G-vectors needed to fold the k+q grid into the k grid 
   INTEGER :: ng0vec           
   !! number of inequivalent such translations (125)
-  INTEGER, ALLOCATABLE ::  shift (:)
+  INTEGER, ALLOCATABLE :: shift(:)
   !! for every k+q, index of the G_0-vector needed to fold k+q into k+q+G0 
-  INTEGER, ALLOCATABLE ::  gmap(:,:)        
+  INTEGER, ALLOCATABLE :: gmap(:,:)        
   !! the map G --> G-G_0 in the large (density) set, for every G_0 (125 at most)
-  REAL(kind=DP) :: g0vec_all_r(3,125)
-  !! G-vectors needed to fold the k+q grid into the k grid, cartesian coord. - LSCO fix
+  !
+  REAL(DP) :: g0vec_all_r(3,125)
+  !! G-vectors needed to fold the k+q grid into the k grid, cartesian coord. 
   !
   END MODULE kfold
-

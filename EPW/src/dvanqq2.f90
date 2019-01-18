@@ -17,7 +17,7 @@
   !! This routine calculates two integrals of the Q functions and
   !! its derivatives with c V_loc and V_eff which are used
   !! to compute term dV_bare/dtau * psi  in addusdvqpsi.
-  !! The result is stored in int1,int2. The routine is called
+  !! The result is stored in int1, int2, int4, int5. The routine is called
   !! for each q in nqc. 
   !! 
   !! RM - Nov/Dec 2014 
@@ -188,7 +188,7 @@
                       IF (jpol >= ipol) THEN
                          DO ig = 1, ngm
                             aux3(ig) = aux5(ig) * &
-                                        ( g(jpol,ig) + xq(jpol) )
+                                     ( g(jpol,ig) + xq(jpol) )
                          ENDDO
                          int5(ijh,ipol,jpol,na,nb) = &
                              CONJG(fact) * tpiba2 * omega * &
@@ -253,8 +253,8 @@
   ENDDO
   CALL mp_sum(int1, intra_pool_comm)
   CALL mp_sum(int2, intra_pool_comm)
-  call mp_sum(int4, intra_pool_comm)
-  call mp_sum(int5, intra_pool_comm)
+  CALL mp_sum(int4, intra_pool_comm)
+  CALL mp_sum(int5, intra_pool_comm)
   IF (noncolin) THEN
     CALL set_int12_nc(0)
     int4_nc = czero
@@ -292,4 +292,4 @@
   CALL stop_clock ('dvanqq2')
   RETURN
   ! 
-END SUBROUTINE dvanqq2
+  END SUBROUTINE dvanqq2

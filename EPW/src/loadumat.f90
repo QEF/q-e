@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !----------------------------------------------------------------------------
-  SUBROUTINE loadumat( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq,&
+  SUBROUTINE loadumat( nbnd, nbndsub, nks, nkstot, xxq, cu, cuq, lwin, lwinq, &
                        exband, w_centers )
   !----------------------------------------------------------------------------
   !!
@@ -28,39 +28,42 @@
   USE io_global,     ONLY : ionode_id, meta_ionode
   USE mp_global,     ONLY : inter_pool_comm
   USE mp,            ONLY : mp_sum, mp_barrier, mp_bcast
+  USE division,      ONLY : fkbounds
   !
   IMPLICIT NONE
   ! 
-  LOGICAL, INTENT (out) :: lwin(nbnd,nks)
+  LOGICAL, INTENT(out) :: lwin(nbnd,nks)
   !! Band windows at k
-  LOGICAL, INTENT (out) :: lwinq(nbnd,nks)
+  LOGICAL, INTENT(out) :: lwinq(nbnd,nks)
   !! Band windows at k+q
-  LOGICAL, INTENT (out) :: exband(nbnd)
+  LOGICAL, INTENT(out) :: exband(nbnd)
   !! Band excluded
   !
-  INTEGER, INTENT (in) :: nbnd
+  INTEGER, INTENT(in) :: nbnd
   !! Number of bands
-  INTEGER, INTENT (in) :: nbndsub
+  INTEGER, INTENT(in) :: nbndsub
   !! number of bands in the optimal subspace
-  INTEGER, INTENT (in) :: nks
+  INTEGER, INTENT(in) :: nks
   !! number of kpoints 
-  INTEGER, INTENT (in) :: nkstot
+  INTEGER, INTENT(in) :: nkstot
   !! total number of kpoints across pools
   ! 
-  REAL(kind=DP), INTENT (in) :: xxq(3)
+  REAL(kind=DP), INTENT(in) :: xxq(3)
   !! the qpoint for folding of U
   REAL(kind=DP), INTENT(inout) :: w_centers(3,nbndsub)
   !! Wannier centers
   !
-  COMPLEX(kind=DP), INTENT (out) :: cu( nbnd, nbndsub, nks )
+  COMPLEX(kind=DP), INTENT(out) :: cu(nbnd, nbndsub, nks)
   !! U(k) matrix for k-points in the pool
-  COMPLEX(kind=DP), INTENT (out) :: cuq( nbnd, nbndsub, nks )
+  COMPLEX(kind=DP), INTENT(out) :: cuq(nbnd, nbndsub, nks)
   !! U(k+q) matrix for k+q-points in the pool
   ! 
   ! work variables 
   !
-  INTEGER :: ik, iw
+  INTEGER :: ik
   !! Counter of k-point index
+  INTEGER :: iw
+  !! Counter on Wannier centers
   INTEGER :: ibnd
   !! Counter on band index
   INTEGER :: jbnd
@@ -88,8 +91,8 @@
     !
     ! first proc read rotation matrix (coarse mesh) from file
     !
-    OPEN(iunukk, file = filukk, status = 'old', form = 'formatted',iostat=ios)
-    IF (ios /=0) CALL errore ('loadumat', 'error opening ukk file',iunukk)
+    OPEN(iunukk, file=filukk, status='old', form='formatted', iostat=ios)
+    IF (ios /=0) CALL errore('loadumat', 'error opening ukk file', iunukk)
     !
     DO ik = 1, nkstot
       DO ibnd = 1, nbnd
@@ -131,6 +134,7 @@
     ENDDO
     !
   ENDIF
+  !
   CALL mp_bcast(cu_big, ionode_id, inter_pool_comm)
   CALL mp_bcast(cuq_big, ionode_id, inter_pool_comm)   
   CALL mp_bcast(lwin_big, ionode_id, inter_pool_comm)
@@ -138,12 +142,16 @@
   CALL mp_bcast(exband, ionode_id, inter_pool_comm)
   CALL mp_bcast(w_centers, ionode_id, inter_pool_comm)
   !
-  CALL ckbounds(ik_start, ik_stop)
-  IF ( (ik_stop-ik_start+1) .ne. nks) CALL errore('loadumat',"Improper parallel ukk load",1)
+  CALL fkbounds(nkstot, ik_start, ik_stop)
+  !
+  IF ( (ik_stop-ik_start+1) .ne. nks ) & 
+    CALL errore('loadumat',"Improper parallel ukk load",1)
+  !
   cu = cu_big(:, :, ik_start:ik_stop)
   cuq = cuq_big(:, :, ik_start:ik_stop)
   lwin = lwin_big(:, ik_start:ik_stop)
   lwinq = lwin_big(:, ik_start:ik_stop)
   !
- END SUBROUTINE loadumat
-
+  RETURN
+  !
+  END SUBROUTINE loadumat
