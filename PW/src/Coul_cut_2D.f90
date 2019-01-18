@@ -166,11 +166,10 @@ subroutine cutoff_hartree (rhog, aux1, ehart)
   !
   USE kinds
   USE gvect,     ONLY : ngm, gg , gstart
-  USE lsda_mod,  ONLY : nspin
   USE io_global, ONLY : stdout
   implicit none
   ! 
-  COMPLEX(DP), INTENT(IN):: rhog(ngm,nspin)
+  COMPLEX(DP), INTENT(IN):: rhog(ngm)
   REAL(DP), INTENT(INOUT):: aux1( 2, ngm )
   REAL(DP),    INTENT(INOUT) :: ehart
   ! input : local potential
@@ -186,15 +185,8 @@ subroutine cutoff_hartree (rhog, aux1, ehart)
      !
      fac = 1.D0 / gg(ig)* cutoff_2D(ig)
      !
-     rgtot_re = REAL(  rhog(ig,1) )
-     rgtot_im = AIMAG( rhog(ig,1) )
-     !
-     IF ( nspin == 2 ) THEN
-        !
-        rgtot_re = rgtot_re + REAL(  rhog(ig,2) )
-        rgtot_im = rgtot_im + AIMAG( rhog(ig,2) )
-        !
-     END IF
+     rgtot_re = REAL(  rhog(ig) )
+     rgtot_im = AIMAG( rhog(ig) )
      !
      ehart = ehart + ( rgtot_re**2 + rgtot_im**2 ) * fac
      !

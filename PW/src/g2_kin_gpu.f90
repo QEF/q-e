@@ -23,7 +23,6 @@ SUBROUTINE g2_kin_gpu ( ik )
   IMPLICIT NONE
   !
   INTEGER, INTENT (IN) :: ik
-#if defined(__CUDA)
   !
   ! ... local variables
   !
@@ -62,7 +61,4 @@ SUBROUTINE g2_kin_gpu ( ik )
   !
   RETURN
   !
-#else
-  CALL errore('g2_kin_gpu', 'Trying to use device subroutine but code was not compiled with device support!', 1)
-#endif
 END SUBROUTINE g2_kin_gpu

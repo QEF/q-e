@@ -19,7 +19,6 @@ chdens_bspline.o \
 compute_ppsi.o \
 compute_sigma_avg.o \
 cube.o \
-spinsym.o \
 dosg.o \
 do_initial_state.o \
 do_shift_ew.o \

@@ -27,8 +27,7 @@ p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 
 # NSCF
 ef1=`grep "the Fermi energy is" $fname | awk '{print $5}'`
-eh1=`grep "highest occupied" $fname | awk '{print $7}'`
-el1=`grep "highest occupied" $fname | awk '{print $8}'`
+eh1=`grep "highest occupied" $fname | awk '{print $5}'`
 tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
 
 # PH
@@ -245,11 +244,6 @@ fi
 if test "$eh1" != ""; then
         echo eh1
         for x in $eh1; do echo $x; done
-fi
-
-if test "$el1" != ""; then
-        echo el1
-        for x in $el1; do echo $x; done
 fi
 
 if test "$tf1" != ""; then

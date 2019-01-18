@@ -11,7 +11,7 @@ PROGRAM open_grid
   USE lsda_mod,   ONLY : nspin, isk
   USE klist,      ONLY : nks, nkstot, xk, wk, igk_k, ngk, qnorm
   USE io_files,   ONLY : prefix, tmp_dir, nwordwfc, iunwfc, diropn
-  USE noncollin_module,   ONLY : noncolin, m_loc
+  USE noncollin_module,   ONLY : noncolin, m_loc, angle1, angle2
   USE spin_orb,           ONLY : domag
   USE control_flags,      ONLY : gamma_only, twfcollect
   USE environment,        ONLY : environment_start, environment_end
@@ -28,7 +28,7 @@ PROGRAM open_grid
   USE wavefunctions, ONLY : evc
   USE buffers,            ONLY : save_buffer, open_buffer, close_buffer
   USE scf,                ONLY : rho
-  USE lsda_mod,           ONLY : nspin, lsda
+  USE lsda_mod,           ONLY : nspin, lsda, starting_magnetization
   USE io_rho_xml,         ONLY : write_scf
   USE input_parameters,   ONLY : nk1, nk2, nk3, k1, k2, k3, k_points, &
                               occupations, calculation !, nkstot,
@@ -55,7 +55,7 @@ PROGRAM open_grid
   !
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
   !
-  INTEGER :: ios, ik, ibnd, ik_idx, ik_idx_kpt, ik_idx_exx, is
+  INTEGER :: ios, ik, ibnd, ik_idx, ik_idx_kpt, ik_idx_exx, is, na
   CHARACTER(len=4) :: spin_component
   CHARACTER(len=256) :: outdir
   !INTEGER :: nq(3)
@@ -134,6 +134,17 @@ PROGRAM open_grid
   CALL dft_force_hybrid(exx_status_back)
 
   magnetic_sym = noncolin .AND. domag 
+  ALLOCATE(m_loc(3,nat))
+  IF (noncolin.and.domag) THEN
+     DO na = 1, nat
+        m_loc(1,na) = starting_magnetization(ityp(na)) * &
+                      SIN( angle1(ityp(na)) ) * COS( angle2(ityp(na)) )
+        m_loc(2,na) = starting_magnetization(ityp(na)) * &
+                      SIN( angle1(ityp(na)) ) * SIN( angle2(ityp(na)) )
+        m_loc(3,na) = starting_magnetization(ityp(na)) * &
+                      COS( angle1(ityp(na)) )
+     ENDDO
+  ENDIF
   CALL find_sym ( nat, tau, ityp, magnetic_sym, m_loc, gate )
 
   nq1 = -1

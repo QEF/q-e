@@ -97,9 +97,7 @@ SUBROUTINE dynmat_us()
 
   !
   rhog (:) = (0.d0, 0.d0)
-  DO is = 1, nspin_lsda
-     rhog (:) = rhog (:) + CMPLX(rho%of_r(:, is), 0.d0,kind=DP)
-  ENDDO
+  rhog (:) = CMPLX(rho%of_r(:, 1), 0.d0,kind=DP)
 
   CALL fwfft ('Rho', rhog, dfftp)
   !

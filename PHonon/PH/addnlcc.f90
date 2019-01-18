@@ -15,7 +15,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   USE ions_base, ONLY : nat
   use funct, only : dft_is_gradient, dft_is_nonlocc
   USE cell_base, ONLY : omega
-  use scf, only : rho, rho_core
+  use scf, only : rho, rho_core, rhoz_or_updw
   USE gvect, ONLY : g, ngm
   USE fft_base, ONLY : dfftp
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
@@ -73,9 +73,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
 !
 ! add core charge to the density
 !
-  DO is=1,nspin_lsda
-     rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core(:)
-  ENDDO
+  rho%of_r(:,1) = rho%of_r(:,1) + rho_core(:)
 !
 !  Compute the change of xc potential due to the perturbation
 !
@@ -98,11 +96,26 @@ subroutine addnlcc (imode0, drhoscf, npe)
      ! add gradient correction to xc, NB: if nlcc is true we need to add here
      ! its contribution. grho contains already the core charge
      !
-     if ( dft_is_gradient() ) &
-          call dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
+     if ( dft_is_gradient() ) then
+        !^
+        if (nspin_lsda == 2) call rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
+        !
+        call dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
           dvxc_s, xq, drhoscf (1, 1, ipert), nspin_mag, nspin_gga, g, dvaux)
-     if (dft_is_nonlocc()) &
-       call dnonloccorr(rho%of_r, drhoscf (1, 1, ipert), xq, dvaux)
+        !
+        if (nspin_lsda == 2) call rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
+        !^
+     endif
+     !
+     if (dft_is_nonlocc()) then
+        !^
+        if (nspin_lsda == 2) call rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
+        !
+        call dnonloccorr(rho%of_r, drhoscf (1, 1, ipert), xq, dvaux)
+        !
+        if (nspin_lsda == 2) call rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
+        !^
+     endif
 
      do is = 1, nspin_lsda
         call daxpy (2 * dfftp%nnr, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)
@@ -120,9 +133,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
         enddo
      enddo
   enddo
-  DO is=1,nspin_lsda
-     rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core(:)
-  ENDDO
+  !
+  rho%of_r(:,1) = rho%of_r(:,1) - rho_core(:)
   !
   ! collect contributions from all r/G points.
   !

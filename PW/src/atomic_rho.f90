@@ -16,12 +16,12 @@ SUBROUTINE atomic_rho_g (rhocg, nspina)
   ! (may differ from nspin because in some cases the total charge only
   !  is needed, even in a LSDA calculation)
   ! if nspina = 1 the total atomic charge density is calculated
-  ! if nspina = 2 the spin up and spin down atomic charge densities are
-  !               calculated assuming an uniform atomic spin-polarization
-  !               equal to starting_magnetization(nt)
-  ! if nspina = 4 noncollinear case. The total density is calculated
-  !               in the first component and the magnetization vector 
-  !               in the other three.
+  ! if nspina = 2 collinear case. The total density is calculated
+  !               in the first component and the magnetization in 
+  !               the second.
+  ! if nspina = 4 noncollinear case. Total density in the first
+  !               component and magnetization vector in the
+  !               other three.
   !
   ! On output:
   ! rhocg(ngm,nspina) (complex) contains G-space components of the
@@ -48,6 +48,7 @@ SUBROUTINE atomic_rho_g (rhocg, nspina)
   !
   REAL(DP) :: rhoneg, rhoima, rhoscale, gx
   REAL(DP), ALLOCATABLE :: rhocgnt (:), aux (:)
+  REAL(DP) :: angular(nspina)
   INTEGER :: ir, is, ig, igl, nt, ndm
   !
   ! allocate work space 
@@ -91,43 +92,25 @@ SUBROUTINE atomic_rho_g (rhocg, nspina)
         rhoscale = 1.0_dp
      ENDIF
      !
-     IF (nspina == 1) THEN
-        DO ig = 1, ngm
-           rhocg(ig,1) = rhocg(ig,1) + &
-                         strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig)) / omega
+     !^
+     rhocg(:,1) = rhocg(:,1) + &
+                strf(:,nt) * rhoscale * rhocgnt(igtongl(:)) / omega
+     !
+     IF ( nspina >= 2 ) THEN
+        !
+        angular(1) = 1._dp
+        IF ( nspina == 4 ) THEN
+           angular(1) = sin(angle1(nt))*cos(angle2(nt))
+           angular(2) = sin(angle1(nt))*sin(angle2(nt))
+           angular(3) = cos(angle1(nt))
+        ENDIF
+        !
+        DO is = 2, nspina
+           rhocg(:,is) =  rhocg(:,is) + &
+                            starting_magnetization(nt) * angular(is-1) * &
+                            strf(:,nt) * rhoscale * rhocgnt(igtongl(:)) / omega
         ENDDO
-     ELSE IF (nspina == 2) THEN
-        DO ig = 1, ngm
-           rhocg(ig,1) = rhocg(ig,1) + &
-                         0.5_dp * ( 1.0_dp + starting_magnetization(nt) ) * &
-                         strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig)) / omega
-           rhocg(ig,2) = rhocg(ig,2) + &
-                         0.5d0 * ( 1.0_dp - starting_magnetization(nt) ) * &
-                         strf(ig,nt) * rhoscale * rhocgnt(igtongl(ig)) / omega
-        ENDDO
-     ELSE
-!
-!    Noncolinear case
-!
-        DO ig = 1,ngm
-           rhocg(ig,1) = rhocg(ig,1) + &
-                strf(ig,nt)*rhoscale*rhocgnt(igtongl(ig))/omega
-
-           ! Now, the rotated value for the magnetization
-
-           rhocg(ig,2) = rhocg(ig,2) + &
-                starting_magnetization(nt)* &
-                sin(angle1(nt))*cos(angle2(nt))* &
-                strf(ig,nt)*rhoscale*rhocgnt(igtongl(ig))/omega
-           rhocg(ig,3) = rhocg(ig,3) + &
-                starting_magnetization(nt)* &
-                sin(angle1(nt))*sin(angle2(nt))* &
-                strf(ig,nt)*rhoscale*rhocgnt(igtongl(ig))/omega
-           rhocg(ig,4) = rhocg(ig,4) + &
-                starting_magnetization(nt)* &
-                cos(angle1(nt))* &
-                strf(ig,nt)*rhoscale*rhocgnt(igtongl(ig))/omega
-        END DO
+        !
      ENDIF
   ENDDO
 

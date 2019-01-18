@@ -717,7 +717,7 @@ subroutine formf( tfirst, eself )
   use ions_base,       ONLY : rcmax, zv, nsp, na
   use local_pseudo,    ONLY : vps, vps0, rhops, dvps, drhops
   use atom,            ONLY : rgrid
-  use uspp_param,      ONLY : upf, oldvan
+  use uspp_param,      ONLY : upf
   use pseudo_base,     ONLY : compute_rhops, formfn, formfa, compute_eself
   use pseudopotential, ONLY : tpstab, vps_sp, dvps_sp
   use splines,         ONLY : spline
@@ -772,7 +772,7 @@ subroutine formf( tfirst, eself )
 
         call formfn( rgrid(is)%r, rgrid(is)%rab, &
                      upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), gg, &
-                     omega, tpiba2, rgrid(is)%mesh, dffts%ngm, oldvan(is), tpre, &
+                     omega, tpiba2, rgrid(is)%mesh, dffts%ngm, tpre, &
                      vps(:,is), vps0(is), dvps(:,is) )
 
 ! obsolete BHS form

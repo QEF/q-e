@@ -26,7 +26,7 @@ SUBROUTINE sum_band()
   USE fixed_occ,            ONLY : one_atom_occupations
   USE ldaU,                 ONLY : lda_plus_U
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE scf,                  ONLY : rho
+  USE scf,                  ONLY : rho, rhoz_or_updw
   USE symme,                ONLY : sym_rho
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE buffers,              ONLY : get_buffer
@@ -160,11 +160,13 @@ SUBROUTINE sum_band()
      ! ... becsum is summed over bands (if bgrp_parallelization is done)
      ! ... and over k-points (but it is not symmetrized)
      !
+     CALL using_becsum(1)
      CALL mp_sum(becsum, inter_bgrp_comm )
      CALL mp_sum(becsum, inter_pool_comm )
      !
      ! ... same for ebecsum, a correction to becsum (?) in real space
      !
+     IF (tqr) CALL using_ebecsum(1)
      IF (tqr) CALL mp_sum(ebecsum, inter_pool_comm )
      IF (tqr) CALL mp_sum(ebecsum, inter_bgrp_comm )
      !
@@ -221,7 +223,12 @@ SUBROUTINE sum_band()
      END DO
      !
   END IF
-  !
+  !^
+  IF (nspin == 2) THEN
+     CALL rhoz_or_updw( rho, 'r_and_g', 'updw_rhoz' )
+     IF (lda_plus_u.AND.(.NOT.noncolin)) CALL rhoz_or_updw( rho, 'hub_ns', 'updw_rhoz' )
+  ENDIF
+  !^
   CALL stop_clock( 'sum_band' )
   !
   RETURN
@@ -408,6 +415,7 @@ SUBROUTINE sum_band()
              END IF
              !
              IF (dft_is_meta() .OR. lxdm) THEN
+                CALL using_evc(0)
                 DO j=1,3
                    psic(:) = ( 0.D0, 0.D0 )
                    !
