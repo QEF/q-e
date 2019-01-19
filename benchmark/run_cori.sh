@@ -20,7 +20,7 @@ export OMP_PROC_BIND=spread
 export MKL_FAST_MEMORY_LIMIT=0
 
 #executable
-execdir=../buildscripts/install/6.3/knl/pgi/bin
+execdir=../buildscripts/install/6.3/knl/intel/bin
 
 #run
 MPI_RUN="srun -N ${SLURM_NNODES} -n ${totalranks} -c $(( 256 / ${rankspernode} )) --cpu_bind=cores"

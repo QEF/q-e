@@ -6,6 +6,7 @@
 #important variables
 espresso_version="6.3"
 arch="v100"
+compiler="pgi"
 #scalapackflags="-L${MKLROOT}/lib/intel64 -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_pgi_thread -lmkl_core -lmkl_blacs_openmpi_lp64 -pgf90libs -mp -lpthread -lm -ldl"
 export SOFTWAREPATH=$(pwd)/install
 
@@ -16,15 +17,15 @@ cd ../
 export INSTALLPATH=${SOFTWAREPATH}/${espresso_version}/${arch}
 
 #clean everything up so that no libraries with wrong arch are around
-export FC=pgf90
-export FCFLAGS="-g -O0 -mp -Mpreprocess -pgf90libs -I${MKLROOT}/include"
-export F90=pgf90
-export F90FLAGS="${FCFLAGS}"
-export MPIF90=pgf90 #mpif90
-export MPIf90FLAGS="${F90FLAGS}"
-export CC=pgcc
-export CFLAGS="-g -O0 -mp -I${MKLROOT}/include"
-export LDFLAGS="${F90FLAGS}"
+fc=pgf90
+fcflags="-g -O0 -mp -Mpreprocess -pgf90libs -I${MKLROOT}/include"
+f90=pgf90
+f90flags="${FCFLAGS}"
+mpif90=mpif90
+mpif90flags="${F90FLAGS}"
+cc=pgcc
+cflags="-g -O0 -mp -I${MKLROOT}/include"
+ldflags="${F90FLAGS}"
 
 #ompi stuff
 export OMPI_CC=pgcc
@@ -32,6 +33,7 @@ export OMPI_FC=pgf90
 
 #configure
 make veryclean
+FC=${fc} F90=${f90} MPIF90=${mpif90} CC=${cc} \
 ./configure --prefix=${INSTALLPATH} \
             --enable-openmp \
             --with-cuda=${CUDA_ROOT} \
@@ -44,7 +46,6 @@ make veryclean
 #sed -i "s|^MANUAL_DFLAGS  =|MANUAL_DFLAGS  = -D__SCALAPACK|g" make.inc
 #sed -i "s|^BLAS_LIBS      = ./*$|BLAS_LIBS      = -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64  -lmkl_core -lmkl_pgi_thread|g" make.inc
 sed -i "s|-D__DFTI|-D__FFTW|g" make.inc
-sed -i "s|^FOX_FLAGS = -fast |FOX_FLAGS = -O0 |g" make.inc
 
 #clean up
 make clean
