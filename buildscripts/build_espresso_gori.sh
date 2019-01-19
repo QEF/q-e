@@ -14,7 +14,7 @@ export SOFTWAREPATH=$(pwd)/install
 cd ../
 
 #install directory
-export INSTALLPATH=${SOFTWAREPATH}/${espresso_version}/${arch}
+export INSTALLPATH=${SOFTWAREPATH}/${espresso_version}/${arch}/${compiler}
 
 #clean everything up so that no libraries with wrong arch are around
 fc=pgf90
@@ -46,6 +46,7 @@ FC=${fc} F90=${f90} MPIF90=${mpif90} CC=${cc} \
 #sed -i "s|^MANUAL_DFLAGS  =|MANUAL_DFLAGS  = -D__SCALAPACK|g" make.inc
 #sed -i "s|^BLAS_LIBS      = ./*$|BLAS_LIBS      = -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64  -lmkl_core -lmkl_pgi_thread|g" make.inc
 sed -i "s|-D__DFTI|-D__FFTW|g" make.inc
+
 
 #clean up
 make clean

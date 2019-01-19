@@ -9,11 +9,11 @@
 . ../buildscripts/env_gori.sh
 
 #set up env
-execdir=../buildscripts/install/6.3/v100/bin
+execdir=../buildscripts/install/6.3/v100/pgi/bin
 mpidir=/global/homes/t/tkurth/src/openmpi_ucx/install_pgi/ompi
 
 #some parameters
-rankspernode=8
+rankspernode=1
 totalranks=$(( ${rankspernode} * ${SLURM_NNODES} ))
 
 #openmp stuff
