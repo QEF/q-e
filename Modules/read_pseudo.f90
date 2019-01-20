@@ -65,7 +65,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
   ! 2D Coulomb cutoff: modify this (at your own risks) if problems with cutoff 
   ! being smaller than pseudo rcut. original value=10.0
   CHARACTER(len=256) :: file_pseudo ! file name complete with path
-  CHARACTER(len=256) :: msg
+  CHARACTER(len=256) :: file_fixed, msg
   LOGICAL :: printout_ = .FALSE., exst, is_xml
   INTEGER :: iunps, isupf, nt, nb, ir, ios
   INTEGER :: iexch_, icorr_, igcx_, igcc_, inlc_
@@ -162,8 +162,10 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !
      IF (isupf ==-81 ) THEN
         IF ( ionode ) THEN
-           is_xml = make_emended_upf_copy( TRIM(file_pseudo), &
-                TRIM(tmp_dir)//TRIM(psfile(nt)) )  
+           file_fixed = TRIM(tmp_dir)//TRIM(psfile(nt))//'_'
+           !! the underscore is added to distinguish this "fixed" file 
+           !! from the original one, in case the latter is in tmp_dir
+           is_xml = make_emended_upf_copy( file_pseudo, file_fixed )  
         END IF
         !
         !! error -81 may mean that file contains offending characters
@@ -173,8 +175,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         !
         IF (is_xml) THEN
            !
-           CALL  read_upf(upf(nt), rgrid(nt), isupf, &
-                filename = TRIM(tmp_dir)//psfile(nt) )
+           CALL  read_upf(upf(nt), rgrid(nt), isupf, filename = TRIM(file_fixed) )
            !! try again to read from the corrected file 
            WRITE ( msg, '(A)') 'Pseudo file '// trim(psfile(nt)) // ' has been fixed on the fly.' &
                 // new_line('a') // 'To avoid this message in the future, permanently fix ' &
@@ -183,14 +184,14 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
            CALL infomsg('read_upf:', trim(msg) )    
         ELSE
            !
-           OPEN ( UNIT = iunps, FILE = TRIM(file_pseudo), STATUS = 'old', FORM = 'formatted' ) 
+           OPEN ( UNIT = iunps, FILE = file_pseudo, STATUS = 'old', FORM = 'formatted' ) 
            CALL  read_upf(upf(nt), rgrid(nt), isupf, UNIT = iunps )
            !! try to read UPF v.1 file
            CLOSE (iunps)
            !
         END IF
         !
-        IF (ionode) ios = f_remove(TRIM(tmp_dir)//TRIM(psfile(nt)) )
+        IF (ionode) ios = f_remove( file_fixed )
         !
      END IF
      !
