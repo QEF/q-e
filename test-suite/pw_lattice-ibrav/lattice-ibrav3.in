@@ -8,7 +8,7 @@
     nbnd = 4,
     ecutwfc = 25.0
  /
- &electrons
+ &electrons conv_thr = 1.d-8
  /
 ATOMIC_SPECIES
  H 1.0008   H.pz-vbc.UPF
