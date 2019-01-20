@@ -47,7 +47,7 @@ dqvan2.o : pwcom_gpu.o
 electrons.o : newd_gpu.o
 electrons.o : pwcom_gpu.o
 electrons.o : scf_mod_gpu.o
-exx.o : pwcom_gpu.o
+exx_gpu.o : pwcom_gpu.o
 force_us.o : pwcom_gpu.o
 g2_kin.o : pwcom_gpu.o
 g2_kin_gpu.o : pwcom.o
@@ -63,7 +63,7 @@ gen_us_dy.o : pwcom_gpu.o
 h_psi.o : pwcom_gpu.o
 h_psi.o : scf_mod_gpu.o
 h_psi_gpu.o : bp_mod.o
-h_psi_gpu.o : exx.o
+h_psi_gpu.o : exx_gpu.o
 h_psi_gpu.o : ldaU.o
 h_psi_gpu.o : pwcom.o
 h_psi_gpu.o : pwcom_gpu.o

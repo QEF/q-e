@@ -30,7 +30,7 @@ lrank=$(($PMIX_RANK%6))
 pushd ${scratchdir}
 
 NVPROF="nvprof -f -o micro_multifft.nvvp"
-APP="./pw.x -in small.in -nbgrp 1"
+APP="./pw.x -in large.in -nbgrp 1"
 
 
 case ${lrank} in
