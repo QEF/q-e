@@ -1,4 +1,5 @@
 New in development version:
+  * EPW works with ultrasoft pseudopotentials (F. Giustino, S. Poncé, R. Margine)
   * New code hp.x to compute Hubbard parameters using density-functional
     perturbation theory (Iurii Timrov, Nicola Marzari, and Matteo Cococcioni,
     Phys. Rev. B 98, 085127 (2018); arXiv:1805.01805)
