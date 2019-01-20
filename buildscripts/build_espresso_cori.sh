@@ -3,7 +3,7 @@
 #some parameters
 espresso_version="6.3"
 arch="knl"
-compiler="pgi"
+compiler="intel"
 
 #install directory
 export SOFTWAREPATH=$(pwd)/install
