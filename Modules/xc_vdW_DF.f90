@@ -554,6 +554,7 @@ CONTAINS
                                                                * potential_up  (i_grid)    &
                  + e2 * grid_cell_volume * (rho_valence(i_grid,1) - rho_valence(i_grid,2)) &
                                                                * potential_down(i_grid)
+  end do
 
   deallocate( potential_up, potential_down, q0, grad_rho, grad_rho_up, &
               grad_rho_down, dq0_drho_up, dq0_drho_down, thetas, &
