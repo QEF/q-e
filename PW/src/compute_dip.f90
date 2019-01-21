@@ -103,7 +103,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN)  :: emaxpos, eopreg
-  REAL(DP), INTENT(IN), DIMENSION(dfftp%nnr,nspin) :: charge
+  REAL(DP), INTENT(IN), DIMENSION(dfftp%nnr) :: charge
   INTEGER, INTENT(IN)  :: edir
   REAL(DP), INTENT(OUT) ::  e_dipole
   !
@@ -157,9 +157,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
      if (edir.eq.2) sawarg = DBLE(j)/DBLE(dfftp%nr2)
      if (edir.eq.3) sawarg = DBLE(k)/DBLE(dfftp%nr3)
 
-     rhoir = charge(ir,1)
-     !
-     IF ( nspin == 2 ) rhoir = rhoir + charge(ir,2)
+     rhoir = charge(ir)
 
      e_dipole = e_dipole + rhoir * saw(emaxpos,eopreg, sawarg) &
                       * (alat/bmod) * (fpi/(dfftp%nr1*dfftp%nr2*dfftp%nr3))

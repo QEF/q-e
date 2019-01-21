@@ -44,6 +44,7 @@ subroutine import_upf ( )
   !
   ! upf%grid => rgrid  is be associated in read_upf
   !
+  ierr = 1
   call read_upf(upf, rgrid, ierr, filename = file_pseudo)
   !
   if (ierr>0) &

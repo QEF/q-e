@@ -278,7 +278,6 @@ IMPLICIT NONE
 ! interpolate density to the exx grid
   allocate( temp(dfftp%nnr))
   temp(:) = rho%of_r(:,1)
-  IF ( nspin == 2 ) temp(:) = temp(:) + rho%of_r(:,2) 
   Call fft_interpolate(dfftp, temp, dfftt, den)
   deallocate( temp ) 
 

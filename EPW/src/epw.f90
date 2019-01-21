@@ -18,7 +18,7 @@
   !! calls [[wann_run]] and [[elphon_shuffle_wrap]]
   !!
   !! @Note
-  !! 8/14/08 lnscf is unnecessary, as is nqs,iq_start
+  !! 8/14/08 lnscf is unnecessary, as is nqs, iq_start
   !!
   USE io_global,       ONLY : stdout, ionode
   USE mp,              ONLY : mp_bcast, mp_barrier
@@ -34,8 +34,7 @@
   ! Flag to perform an electron-phonon calculation. If .true. 
   ! the code will enter in [[elphon_shuffle_wrap]]
   !
-  !
-  implicit none
+  IMPLICIT NONE
   !
   CHARACTER (LEN=12)   :: code = 'EPW'
   !! Name of the program
@@ -52,34 +51,34 @@
   !
   ! Display the logo
   IF (mpime.eq.ionode_id) then
-write(stdout,'(a)') "                                                                                      "
-write(stdout,'(a)') "                                       ``:oss/                                        "
-write(stdout,'(a)') "                           `.+s+.     .+ys--yh+     `./ss+.                           "
-write(stdout,'(a)') "                          -sh//yy+`   +yy   +yy    -+h+-oyy                           "
-write(stdout,'(a)') "                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           "
-write(stdout,'(a)') "                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  "
-write(stdout,'(a)') "               `/+ssys+-` `sh+      `                   oys`   .:osyo`                "
-write(stdout,'(a)') "               -yh- ./syyooyo`                          .sys+/oyo--yh/                "
-write(stdout,'(a)') "               `yy+    .-:-.                             `-/+/:`  -sh-                "
-write(stdout,'(a)') "                /yh.                                              oys                 "
-write(stdout,'(a)') "          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             "
-write(stdout,'(a)') "       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        "
-write(stdout,'(a)') "       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       "
-write(stdout,'(a)') "       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        "
-write(stdout,'(a)') "        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        "
-write(stdout,'(a)') "         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          "
-write(stdout,'(a)') "          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           "
-write(stdout,'(a)') "    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      "
-write(stdout,'(a)') "   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   "
-write(stdout,'(a)') "   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   "
-write(stdout,'(a)') "   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   "
-write(stdout,'(a)') "   -yh-        ````````````````    `````````              ``        ``          oys   "
-write(stdout,'(a)') "   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   "
-write(stdout,'(a)') "   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   "
-write(stdout,'(a)') "                                                                                      "
-write(stdout,'(a)') "  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 "
-write(stdout,'(a)') "                                                Comput. Phys. Commun. 209, 116 (2016) "
-write(stdout,'(a)') "                                                                                      "
+    WRITE(stdout,'(a)') "                                                                                      "
+    WRITE(stdout,'(a)') "                                       ``:oss/                                        "
+    WRITE(stdout,'(a)') "                           `.+s+.     .+ys--yh+     `./ss+.                           "
+    WRITE(stdout,'(a)') "                          -sh//yy+`   +yy   +yy    -+h+-oyy                           "
+    WRITE(stdout,'(a)') "                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           "
+    WRITE(stdout,'(a)') "                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  "
+    WRITE(stdout,'(a)') "               `/+ssys+-` `sh+      `                   oys`   .:osyo`                "
+    WRITE(stdout,'(a)') "               -yh- ./syyooyo`                          .sys+/oyo--yh/                "
+    WRITE(stdout,'(a)') "               `yy+    .-:-.                             `-/+/:`  -sh-                "
+    WRITE(stdout,'(a)') "                /yh.                                              oys                 "
+    WRITE(stdout,'(a)') "          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             "
+    WRITE(stdout,'(a)') "       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        "
+    WRITE(stdout,'(a)') "       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       "
+    WRITE(stdout,'(a)') "       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        "
+    WRITE(stdout,'(a)') "        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        "
+    WRITE(stdout,'(a)') "         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          "
+    WRITE(stdout,'(a)') "          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           "
+    WRITE(stdout,'(a)') "    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      "
+    WRITE(stdout,'(a)') "   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   "
+    WRITE(stdout,'(a)') "   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   "
+    WRITE(stdout,'(a)') "   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   "
+    WRITE(stdout,'(a)') "   -yh-        ````````````````    `````````              ``        ``          oys   "
+    WRITE(stdout,'(a)') "   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   "
+    WRITE(stdout,'(a)') "   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   "
+    WRITE(stdout,'(a)') "                                                                                      "
+    WRITE(stdout,'(a)') "  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 "
+    WRITE(stdout,'(a)') "                                                Comput. Phys. Commun. 209, 116 (2016) "
+    WRITE(stdout,'(a)') "                                                                                      "
   ENDIF
   !
   CALL environment_start ( code )
@@ -89,16 +88,16 @@ write(stdout,'(a)') "                                                           
   CALL epw_readin
   !
   CALL allocate_epwq
-
+  !
   IF ( epwread .AND. .NOT. epbread ) THEN
-      write(stdout,'(a)') "                      "
-      write(stdout,'(a)') "     ------------------------------------------------------------------------ "
-      write(stdout,'(a)') "                   RESTART - RESTART - RESTART - RESTART                         "
-      write(stdout,'(a)') "     Restart is done without reading PWSCF save file.                  "
-      write(stdout,'(a)') "     Be aware that some consistency checks are therefore not done.                  "
-      write(stdout,'(a)') "     ------------------------------------------------------------------------ "
-      write(stdout,'(a)') "                      "
-      CALL epw_setup_restart
+    WRITE(stdout,'(a)') "                      "
+    WRITE(stdout,'(a)') "     ------------------------------------------------------------------------ "
+    WRITE(stdout,'(a)') "                   RESTART - RESTART - RESTART - RESTART                         "
+    WRITE(stdout,'(a)') "     Restart is done without reading PWSCF save file.                  "
+    WRITE(stdout,'(a)') "     Be aware that some consistency checks are therefore not done.                  "
+    WRITE(stdout,'(a)') "     ------------------------------------------------------------------------ "
+    WRITE(stdout,'(a)') "                      "
+    CALL epw_setup_restart
   ELSE
     CALL epw_setup
   ENDIF
@@ -108,48 +107,48 @@ write(stdout,'(a)') "                                                           
   CALL epw_summary
   !
   IF ( ep_coupling ) THEN 
-     !
-     ! In case of restart with arbitrary number of cores.
-     IF ( epwread .and. .not. epbread ) THEN
-       continue
-     ELSE 
-       CALL openfilepw
-     ENDIF
-     !
-     CALL print_clock( 'EPW' )
-     !
-     IF ( epwread .and. .not. epbread ) THEN
-       continue      
-     ELSE
-       CALL epw_init(.true.)
-     ENDIF
-     !
-     CALL print_clock( 'EPW' )
-     !
-     !  Generates the perturbation matrix which fixes the gauge of 
-     !  the calculated wavefunctions
-     !
-     CALL setphases_wrap
-     !
-     IF (wannierize) THEN
-        !
-        !  Create U(k, k') localization matrix 
-        !      
-        CALL wann_run
-     ELSE
-        !
-        ! Read Wannier matrix from a previous run
-        !
-        WRITE(stdout,'(/,5x,a,/,3a,/,5x,a,/)') repeat('-',67), '     Using ', &
-             trim(filukk) , ' from disk', repeat('-',67) 
-     ENDIF
-     !
-     IF ( elph ) THEN
-        !
-        CALL dvanqq2()
-        !
-        CALL elphon_shuffle_wrap()
-        !
+    !
+    ! In case of restart with arbitrary number of cores.
+    IF ( epwread .AND. .NOT. epbread ) THEN
+      CONTINUE
+    ELSE 
+      CALL openfilepw
+    ENDIF
+    !
+    CALL print_clock( 'EPW' )
+    !
+    IF ( epwread .AND. .NOT. epbread ) THEN
+      CONTINUE      
+    ELSE
+      CALL epw_init(.true.)
+    ENDIF
+    !
+    CALL print_clock( 'EPW' )
+    !
+    !  Generates the perturbation matrix which fixes the gauge of 
+    !  the calculated wavefunctions
+    !
+    CALL setphases_wrap
+    !
+    IF (wannierize) THEN
+      !
+      !  Create U(k, k') localization matrix 
+      !      
+      CALL wann_run
+    ELSE
+      !
+      ! Read Wannier matrix from a previous run
+      !
+      WRITE(stdout,'(/,5x,a,/,3a,/,5x,a,/)') repeat('-',67), '     Using ', &
+           trim(filukk) , ' from disk', repeat('-',67) 
+    ENDIF
+    !
+    IF ( elph ) THEN
+      !
+      CALL dvanqq2()
+      !
+      CALL elphon_shuffle_wrap()
+      !
     ENDIF
     !
     ! ... cleanup of the variables
@@ -164,11 +163,11 @@ write(stdout,'(a)') "                                                           
   ENDIF
   ! 
   IF ( cumulant .and. ionode ) THEN
-     CALL spectral_cumulant()
+    CALL spectral_cumulant()
   ENDIF
   !
   IF ( eliashberg ) THEN
-     CALL eliashberg_eqs()
+    CALL eliashberg_eqs()
   ENDIF
   !
   ! ... Print statistics and exit gracefully    

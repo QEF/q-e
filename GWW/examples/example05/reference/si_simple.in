@@ -1,0 +1,16 @@
+&inputsimple
+prefix='si'
+outdir='/marconi_scratch/userexternal/pumari00/tmp/'
+calc_mode=0
+num_nbndv=16
+num_val=16     
+num_cond=24
+s_bands=0.1
+s_product=1.0
+nkpoints(1)=2
+nkpoints(2)=2
+nkpoints(3)=2
+w_type=0
+l_truncated_coulomb=.false.
+numpw=100
+/

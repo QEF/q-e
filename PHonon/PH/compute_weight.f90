@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,17 +12,18 @@ subroutine compute_weight (wgg)
   !
   !     This routine implements Eq.B19 of Ref.[1]. It computes the
   !     weight to give to the v,v' terms in the orthogonality term.
+  !     The weights are computed for each k point.
   !     [1] PRB 64, 235118 (2001).
   !
-
-  USE kinds, ONLY : DP
-  USE klist, ONLY : wk, lgauss, degauss, ngauss, ltetra
-  USE ener,  ONLY : ef
-  USE wvfct, ONLY : nbnd, wg, et
-  USE paw_variables, ONLY : okpaw
-  USE qpoint, ONLY : nksq, ikks, ikqs
-  USE control_ph, ONLY : rec_code_read
+  USE kinds,          ONLY : DP
+  USE klist,          ONLY : wk, lgauss, degauss, ngauss, ltetra
+  USE ener,           ONLY : ef
+  USE wvfct,          ONLY : nbnd, wg, et
+  USE paw_variables,  ONLY : okpaw
+  USE qpoint,         ONLY : nksq, ikks, ikqs
+  USE control_ph,     ONLY : rec_code_read
   USE dfpt_tetra_mod, ONLY : dfpt_tetra_ttheta
+  USE ldaU,           ONLY : lda_plus_u
   !
   implicit none
 
@@ -36,10 +37,14 @@ subroutine compute_weight (wgg)
   real(DP), external :: wgauss
   real(DP), parameter :: eps = 1.0d-12
   !
-  !     the weights are computed for each k point ...
+  ! DFPT+U: in the recover case the weights have to be computed in
+  !         the routine dyn_hub_scf routine. 
   !
-  if (rec_code_read >= -20.AND..NOT.okpaw) return
-
+  IF (lda_plus_u) GO TO 100
+  !
+  IF ((rec_code_read >= -20) .AND. (.NOT.okpaw)) RETURN
+  !
+100 CONTINUE
   !
   IF(ltetra) THEN
      !

@@ -9,10 +9,13 @@ PROGRAM plotband
 
   ! reads data files produced by "bands.x", produces
   ! * data file ready for plotting with gnuplot, xmgr or the like
-  ! * a postscript file that can be directly printed 
+  ! * a postscript file that can be directly printed
+  ! for projected band structure, produces
+  ! * a gnuplot script that can be used to generate
+  !   postscript and/or pdf file
   ! Important notice:
   ! - k-points processed by bands.x should be along a continuous path
-  ! - no two consecutive k-points should be equal (i.e.: a k-point, 
+  ! - no two consecutive k-points should be equal (i.e.: a k-point,
   !   e.g. 0,0,0, can appear more than once but not in sequence)
   ! If these rules are violated, unpredictable results may follow
 
@@ -30,7 +33,7 @@ PROGRAM plotband
   INTEGER :: nks = 0, nbnd = 0, ios, nlines, n,i,j,ni,nf,nl
   INTEGER :: nks_rap = 0, nbnd_rap = 0
   LOGICAL, ALLOCATABLE :: high_symmetry(:), is_in_range(:), is_in_range_rap(:)
-  CHARACTER(len=256) :: filename, filename1
+  CHARACTER(len=256) :: filename, filename1, filenamegnu
   NAMELIST /plot/ nks, nbnd
   NAMELIST /plot_rap/ nks_rap, nbnd_rap
   INTEGER :: n_interp
@@ -48,13 +51,13 @@ PROGRAM plotband
 
   LOGICAL :: exist_rap
   LOGICAL, ALLOCATABLE :: todo(:,:)
-  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  CHARACTER(len=6), EXTERNAL :: int_to_char
   !!!
   LOGICAL :: exist_proj
   CHARACTER(len=256) :: filename2, field
-  CHARACTER(len=2096) :: line
-  INTEGER, ALLOCATABLE :: atwfclst(:)
+  CHARACTER(len=:), ALLOCATABLE :: line
   INTEGER :: nat, ntyp, natomwfc, nprojwfc, nwfc, idum
+  INTEGER, ALLOCATABLE :: atwfclst(:)
   REAL(DP) :: proj, fdum
   REAL(DP), ALLOCATABLE :: sumproj(:,:), p_rap(:,:)
   !!!
@@ -165,9 +168,10 @@ PROGRAM plotband
   !!!
   IF (exist_proj) THEN
      WRITE(*,'("List of atomic wavefunctions: ")', advance="NO")
-     READ (5,'(A)') line
+     !read input string of arbitrary length
+     CALL readline(5,line)
      CALL field_count( nprojwfc, line )
-     ALLOCATE ( atwfclst(nprojwfc) )
+     ALLOCATE(atwfclst(nprojwfc))
      atwfclst(:) = -1
      DO nwfc = 1,nprojwfc
         CALL get_field(nwfc, field, line)
@@ -180,12 +184,12 @@ PROGRAM plotband
         DO n=1,nks
            DO ibnd=1,nbnd
               READ(22, '(2i8,f20.10)', ERR=23, IOSTAT=ios) idum,idum,proj
-              IF ( ANY( atwfclst(:) == nwfc ) ) sumproj(ibnd,n) = sumproj(ibnd,n) + proj
+              IF ( any( atwfclst(:) == nwfc ) ) sumproj(ibnd,n) = sumproj(ibnd,n) + proj
            ENDDO
         ENDDO
      ENDDO
+     DEALLOCATE(atwfclst)
      CLOSE(22)
-     DEALLOCATE (atwfclst)
   ENDIF
   !!!
 
@@ -194,7 +198,7 @@ PROGRAM plotband
 !  in the representation file
 !
   DO n=1,nks
-     IF (n==1 .OR. n==nks) THEN
+     IF (n==1 .or. n==nks) THEN
         high_symmetry(n) = .true.
      ELSE
         k1(:) = k(:,n) - k(:,n-1)
@@ -202,7 +206,7 @@ PROGRAM plotband
         ps = ( k1(1)*k2(1) + k1(2)*k2(2) + k1(3)*k2(3) ) / &
          sqrt( k1(1)*k1(1) + k1(2)*k1(2) + k1(3)*k1(3) ) / &
          sqrt( k2(1)*k2(1) + k2(2)*k2(2) + k2(3)*k2(3) )
-        high_symmetry(n) = (ABS(ps-1.d0) >1.0d-4).OR.high_symmetry(n)
+        high_symmetry(n) = (abs(ps-1.d0) >1.0d-4).or.high_symmetry(n)
 !
 !  The gamma point is a high symmetry point
 !
@@ -224,7 +228,7 @@ PROGRAM plotband
 !
 !   A big jump in dxmod is a sign that the point k(:,n) and k(:,n-1)
 !   are quite distant and belong to two different lines. We put them on
-!   the same point in the graph 
+!   the same point in the graph
 !
         kx(n)=kx(n-1)
      ELSEIF (dxmod > 1.d-5) THEN
@@ -312,22 +316,28 @@ PROGRAM plotband
   !
   WRITE(*,'("output file (gnuplot/xmgr) > ")', advance="NO")
   READ(5,'(a)', end=25, err=25)  filename
+  !save this file name for plotting projected bandst
+  filenamegnu=filename
   IF (filename == ' ' ) THEN
      WRITE(*,'("skipping ...")')
      GOTO 25
   ENDIF
-  IF (.NOT.exist_rap) THEN
+  IF (.not.exist_rap) THEN
 !
 !  Here the symmetry analysis has not been done. So simply save the bands
-!  on output. 
+!  on output.
 !
      OPEN (unit=2,file=filename,form='formatted',status='unknown',&
            iostat=ios)
      ! draw bands
      DO i=1,nbnd
         IF (is_in_range(i)) THEN
-           WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=1,nks)
-           WRITE (2,*)
+          IF (exist_proj) THEN
+            WRITE (2,'(3f10.4)') (kx(n), e(i,n), sumproj(i,n),n=1,nks)
+          ELSE
+            WRITE (2,'(2f10.4)') (kx(n), e(i,n),n=1,nks)
+          ENDIF
+          WRITE (2,*)
         ENDIF
      ENDDO
      CLOSE (unit = 2)
@@ -360,7 +370,7 @@ PROGRAM plotband
 !   Along this line the symmetry decomposition has not been done.
 !   Plot all the bands as in the standard case
 !
-           filename1=TRIM(filename) // "." // TRIM(int_to_char(ilines))
+           filename1=trim(filename) // "." // trim(int_to_char(ilines))
 
            OPEN (unit=2,file=filename1,form='formatted',status='unknown',&
                 iostat=ios)
@@ -387,12 +397,12 @@ PROGRAM plotband
 !
 !     open a file
 !
-           filename1=TRIM(filename) // "." // TRIM(int_to_char(ilines)) &
-                                   //  "." // TRIM(int_to_char(irap))
+           filename1=trim(filename) // "." // trim(int_to_char(ilines)) &
+                                   //  "." // trim(int_to_char(irap))
            OPEN (unit=2,file=filename1,form='formatted',status='unknown',&
                  iostat=ios)
            IF (ios /= 0) CALL errore("plotband","opening file" &
-                                     //TRIM(filename1),1) 
+                                     //trim(filename1),1)
 !  For each k point along this line selects only the bands which belong
 !  to the irap representation
            nbnd_rapk=100000
@@ -468,6 +478,21 @@ PROGRAM plotband
            ENDIF
         ENDDO
      ENDDO
+
+      ! if *.proj file is found, we also simply safe the data,
+      ! for the plotting of projected band. / Junfeng Qiao
+      IF (exist_proj) THEN
+        OPEN (unit=2,file=filename,form='formatted',status='unknown',&
+              iostat=ios)
+        ! draw bands
+        DO i=1,nbnd
+          IF (is_in_range(i)) THEN
+            WRITE (2,'(3f10.4)') (kx(n), e(i,n), sumproj(i,n),n=1,nks)
+            WRITE (2,*)
+          ENDIF
+        ENDDO
+        CLOSE (unit = 2)
+      ENDIF
   ENDIF
   WRITE(*,'("bands in gnuplot/xmgr format written to file ",a)') filename
   !
@@ -490,7 +515,7 @@ PROGRAM plotband
      WRITE(*,'("stopping ...")')
      GOTO 30
   ENDIF
-  OPEN (unit=1,file=TRIM(filename),form='formatted',status='unknown',&
+  OPEN (unit=1,file=trim(filename),form='formatted',status='unknown',&
        iostat=ios)
   WRITE(*,'("Efermi > ")', advance="NO")
   READ(5,*) Ef
@@ -590,6 +615,45 @@ PROGRAM plotband
   WRITE(*,'("bands in PostScript format written to file ",a)') filename
 30 CONTINUE
 
+  ! generate gnuplot script to directly draw projected band structure
+  ! Junfeng Qiao (Sep/12/2018)
+  IF (exist_proj) THEN
+    WRITE(*,'(a)', advance="NO") "output file for projected band &
+                                 &(gnuplot script) > "
+    READ(5,'(a)', end=35, err=35)  filename
+    OPEN (unit=1,file=trim(filename),form='formatted',&
+          status='unknown',iostat=ios)
+    WRITE (1,'(a)') '#!gnuplot'
+    WRITE (1,'(a)') 'set terminal postscript portrait &
+                    & enhanced color dashed lw 1 ",12"'
+    WRITE (1,'(a)') 'set output "'//trim(filename)//'_projected.ps"'
+    WRITE (1,'(a,f10.4,a)') 'set xrange [0.0:',kx(nks),']'
+    WRITE (1,'(a)') 'unset xtics'
+    WRITE (1,'(a,f12.6,a,f12.6,a)') '#set yrange [',emin,':',emax,']'
+    WRITE (1,'(a,3(f12.6,a))') 'set ytics ',emin,',',deltaE,',',emax,' '
+    WRITE (1,'(a)') 'set ylabel "E - E_{ref} (eV)"'
+    WRITE (1,'(a)') 'set border lw 0.5'
+    WRITE (1,'(a)') "set style arrow 1 nohead front lw 0.5 lc rgb 'black'"
+    DO nl=1,nlines
+      WRITE (1,'(a,f10.4,a,f10.4,a)') 'set arrow from ',kx(point(nl)),&
+                &',graph 0 to ',kx(point(nl)),',graph 1 as 1'
+    ENDDO
+    WRITE (1,'(a)') "set title '"//trim(filename)//"_projected' noenhanced"
+    WRITE (1,'(a,f12.6,a)') &
+                &"plot '"//trim(filenamegnu)//&
+                &"' u 1:($2 - ",eref,"):3 w l palette lw 1 notitle, "//CHAR(91)
+        ! char(91) = backslash; syntax "something \" confuses the PGI compiler
+    WRITE (1,'(f12.6,a)') &
+                &Ef-eref," lt 2 lw 0.5 lc rgb 'grey50' notitle"
+    CLOSE (unit=1)
+    WRITE (*,'(a)') 'run "gnuplot '//trim(filename)//'" to get "'//&
+                &trim(filename)//'_projected.ps"'
+    WRITE (*,'(a)') 'and/or run "ps2pdf '//trim(filename)//&
+                &'_projected.ps" to get "'//trim(filename)//&
+                &'_projected.pdf"'
+  ENDIF
+
+35 CONTINUE
   STOP
 20 WRITE(*, '("Error reading k-point # ",i4)') n
   STOP
@@ -666,12 +730,12 @@ SUBROUTINE splint (nspline, xspline, yspline, d2y, nfit, xfit, yfit)
   INTEGER :: klo, khi, i
   real :: a, b, h
 
-  if (nspline==2) THEN
-      print *, "n=",nspline,nfit
-      print *, xspline
-      print *, yspline
-      print *, d2y
-   end if
+  IF (nspline==2) THEN
+      PRINT *, "n=",nspline,nfit
+      PRINT *, xspline
+      PRINT *, yspline
+      PRINT *, d2y
+   ENDIF
   klo=1
   DO i=1,nfit
      DO khi=klo+1, nspline
@@ -720,6 +784,42 @@ SUBROUTINE splint (nspline, xspline, yspline, d2y, nfit, xfit, yfit)
 
   RETURN
 END SUBROUTINE splint
+
+SUBROUTINE readline(aunit, inline)
+  ! read input of arbitrary length,
+  ! return a string of length at least 256.
+  ! the returning string will have at least one
+  ! whitespace, to be compatible with field_count()
+  ! Junfeng Qiao (Sep/12/2018)
+  IMPLICIT NONE
+  INTEGER, INTENT(in) :: aunit
+  CHARACTER(len=:), ALLOCATABLE, INTENT(out) :: inline
+  CHARACTER(len=:), ALLOCATABLE :: tmpline
+  INTEGER, PARAMETER :: line_buf_len=256
+  CHARACTER(len=line_buf_len) :: instr
+  LOGICAL :: set
+  INTEGER status, size
+
+  set = .true.
+  DO
+    READ(aunit,'(a)',advance='NO',iostat=status, size=size) instr
+    IF (set) THEN
+        tmpline = instr(1:size)
+        set=.false.
+    ELSE
+        tmpline = tmpline // instr(1:size)
+    ENDIF
+    IF (IS_IOSTAT_EOR(status)) exit
+  ENDDO
+  ! the inline will have at least one blank at the ending
+  IF (len_trim(tmpline) < 256) THEN
+    instr = tmpline
+    inline = instr
+  ELSE
+    inline = tmpline // ' '
+  ENDIF
+  RETURN
+END SUBROUTINE readline
 
 END PROGRAM plotband
 

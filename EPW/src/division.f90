@@ -143,14 +143,18 @@
 #if defined(__MPI)
     INTEGER (kind=MPI_OFFSET_KIND), INTENT (in) :: nktot
     !! nktot k-points splited over pools
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT (out) :: lower_bnd
+    !! Lower kpt bounds for that image pool 
+    INTEGER (kind=MPI_OFFSET_KIND), INTENT (out) :: upper_bnd
+    !! Upper kpt for that image pool
 #else
     INTEGER (KIND=8), INTENT (IN)  :: nktot
     !! nktot k-points splited over pools
-#endif
-    INTEGER, INTENT (out) :: lower_bnd
+    INTEGER (KIND=8), INTENT (out) :: lower_bnd
     !! Lower kpt bounds for that image pool 
-    INTEGER, INTENT (out) :: upper_bnd
+    INTEGER (KIND=8), INTENT (out) :: upper_bnd
     !! Upper kpt for that image pool
+#endif
     !
 #if defined(__MPI)
     !

@@ -115,7 +115,10 @@ We quote in particular:
   \item Mitsuaki Kawamura (U.Tokyo) for implementation of the optimized
   tetrahedron method in phonon and electron-phonon calculations;
   \item Thibault Sohier, Matteo Calandra, Francesco Mauri, for 
-	phonons in two-dimensional systems.
+	phonons in two-dimensional systems;
+  \item Andrea Floris, Iurii Timrov, Burak Himmetoglu, Stefano de Gironcoli, 
+        Nicola Marzari, and Matteo Cococcioni, for phonons using 
+        Hubbard-corrected DFPT (DFPT+$U$).
 \end{itemize}
 
 The \texttt{PlotPhon} and \texttt{QHA} packages were contribute by the
@@ -364,10 +367,23 @@ The extension of DFPT to two dimensional crystals,
 in particular gated two-dimensional heterostructure,
 s described in the following paper:
 
-T. Sohier, M. Calandra, and F. Mauri, Phys. Rev. B 96, 075448 (2017),
+T. Sohier, M. Calandra, and F. Mauri, Phys. Rev. B {\bf 96}, 075448 (2017),
 https://doi.org/10.1103/PhysRevB.96.075448
 
 See example  \verb|PHonon/example/example17/|.
+
+\subsection{Phonons from DFPT+$U$}
+
+The extension of DFPT to inlcude Hubbard $U$ correction is described
+in the following papers:
+
+A.~Floris, S.~de~Gironcoli, E.~K.~U.~Gross, M.~Cococcioni, Phys. Rev. B {\bf 84}, 
+161102(R), (2011);
+
+A.~Floris, I.~Timrov, B.~Himmetoglu, N.~Marzari, S.~de~Gironcoli, and M.~Cococcioni, 
+in preparation.
+
+See example  \verb|PHonon/example/example18/|.
 
 \section{Parallelism}
 \label{Sec:para}

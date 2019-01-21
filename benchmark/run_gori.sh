@@ -13,7 +13,7 @@ execdir=../buildscripts/install/6.3/v100/pgi/bin
 mpidir=/global/homes/t/tkurth/src/openmpi_ucx/install_pgi/ompi
 
 #some parameters
-rankspernode=3
+rankspernode=4
 totalranks=$(( ${rankspernode} * ${SLURM_NNODES} ))
 
 #openmp stuff
@@ -26,7 +26,7 @@ export PGI_TERM='trace'
 
 #run commands
 MPI_RUN="srun --mpi=pmi2 -N ${SLURM_NNODES} -n ${totalranks} -c $(( 40 / ${rankspernode} )) --cpu_bind=sockets"
-cmd="${execdir}/pw.x -ndiag ${totalranks} -nbgrp ${totalranks} -in small.in"
+cmd="${execdir}/pw.x -nbgrp ${totalranks} -in small.in"
 
 #run
 echo ${cmd}

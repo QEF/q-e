@@ -26,10 +26,6 @@ MODULE uspp_param
   INTEGER :: &
        lmaxkb,               &! max angular momentum
        lmaxq                  ! max angular momentum + 1 for Q functions
-  LOGICAL :: &
-       newpseudo(npsx),      &! if .TRUE. multiple projectors are allowed
-       oldvan(npsx)           ! old version of Vanderbilt PPs, using 
-                              ! Herman-Skillman grid - obsolescent
   INTEGER :: &
        nvb,                  &! number of species with Vanderbilt PPs (CPV)
        ish(npsx)              ! for each specie the index of the first beta 

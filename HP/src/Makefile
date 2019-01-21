@@ -48,7 +48,6 @@ hp_setup_q.o \
 hp_summary.o \
 hp_summary_q.o \
 hp_stop_smoothly.o \
-hp_sphi.o \
 hp_write_chi.o \
 hp_write_chi_full.o \
 hp_write_dnsq.o 

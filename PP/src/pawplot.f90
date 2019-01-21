@@ -274,12 +274,13 @@ PROGRAM PAWplot
   ELSE
      IF (spin_component == 0) THEN
         rhog (:) = rho%of_g(:,1)
-        DO is = 2, nspin
-           rhog(:) = rhog (:) + rho%of_g(:,is)
-        ENDDO
      ELSE
-        IF (nspin == 2) current_spin = spin_component
-        rhog (:) = rho%of_g(:,current_spin)
+        IF (nspin == 2) THEN
+           rhog (:) = ( rho%of_g(:,1) + REAL(1-2*(spin_component/2)) * &
+                                                   rho%of_g(:,2) )*0.5d0
+        ELSE
+           rhog (:) = rho%of_g(:,current_spin)
+        ENDIF
      ENDIF
   ENDIF
   !

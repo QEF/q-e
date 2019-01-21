@@ -37,7 +37,9 @@
        IMPLICIT NONE
        INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
        !    
-       ALLOCATE(mp_buff_r_d(maxb), mp_buff_c_d(maxb), mp_buff_i_d(maxb))
+       IF (.NOT. ALLOCATED(mp_buff_r_d)) ALLOCATE(mp_buff_r_d(maxb))
+       IF (.NOT. ALLOCATED(mp_buff_c_d)) ALLOCATE(mp_buff_c_d(maxb))
+       IF (.NOT. ALLOCATED(mp_buff_i_d)) ALLOCATE(mp_buff_i_d(maxb))
        !
    END SUBROUTINE allocate_buffers_gpu
    

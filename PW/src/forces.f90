@@ -105,7 +105,7 @@ SUBROUTINE forces()
   ! ... The local contribution
   !
   CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-                 g, rho%of_r, dfftp%nl, nspin, gstart, gamma_only, vloc, &
+                 g, rho%of_r(:,1), dfftp%nl, gstart, gamma_only, vloc, &
                  forcelc )
   !
   ! ... The NLCC contribution
@@ -167,7 +167,7 @@ SUBROUTINE forces()
     !
     ALLOCATE ( force_mt ( 3 , nat ) )
     CALL wg_corr_force( .true.,omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, &
-                        nspin, rho%of_g, force_mt )
+                        rho%of_g(:,1), force_mt )
   END IF
   !
   ! ... call void routine for user define/ plugin patches on internal forces

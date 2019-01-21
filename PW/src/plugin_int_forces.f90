@@ -68,7 +68,7 @@ SUBROUTINE external_wg_corr_force( rhor, force )
   deallocate(auxr)
   !
   call wg_corr_force(.false.,omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, &
-                     1, auxg, force)
+                     auxg, force)
   !
   deallocate(auxg)
   !

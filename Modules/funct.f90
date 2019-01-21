@@ -49,6 +49,7 @@ module funct
              get_nonlocc_name
   PUBLIC  :: get_iexch, get_icorr, get_igcx, get_igcc, get_meta, get_inlc
   PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid, dft_is_nonlocc, igcc_is_lyp
+  PUBLIC  :: set_auxiliary_flags
 
   ! additional subroutines/functions for hybrid functionals
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
@@ -366,7 +367,7 @@ CONTAINS
     !-----------------------------------------------------------------------
     !
     ! translates a string containing the exchange-correlation name
-    ! into internal indices iexch, icorr, igcx, igcc
+    ! into internal indices iexch, icorr, igcx, igcc, inlc, imeta
     !
     implicit none
     character(len=*), intent(in) :: dft_
@@ -376,7 +377,7 @@ CONTAINS
     character (len=1), external :: capital
     integer ::  save_iexch, save_icorr, save_igcx, save_igcc, save_meta, save_inlc
     !
-    ! Exit if discard_input_dft
+    ! Exit if set to discard further input dft
     !
     if ( discard_input_dft ) return
     !
@@ -635,6 +636,12 @@ CONTAINS
      ! Special case vdW-DF-Z
         call errore('set_dft_from_name','functional not yet implemented',1)
 
+     ELSE IF ( 'INDEX:' ==  dftout(1:6)) THEN
+     ! Special case for old RRKJ format, containing indices instead of label
+        READ( dftout(7:18), '(6i2)') iexch, icorr, igcx, igcc, inlc, imeta
+        dft_defined = set_dft_values(iexch, icorr, igcx, igcc, inlc, imeta)
+        dftout = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
+             &//gradc (igcc) //'-'// nonlocc(inlc)
     END IF
 
     !

@@ -15,8 +15,7 @@ then
            KS_Solvers/Davidson KS_Solvers/Davidson_RCI KS_Solvers/CG KS_Solvers/PPCG \
            PW/src CPV/src PW/tools upftools PP/src PWCOND/src \
            PHonon/Gamma PHonon/PH PHonon/FD HP/src atomic/src \
-           EPW/src \ 
-           XSpectra/src ACFDT/src NEB/src TDDFPT/src \
+           EPW/src XSpectra/src ACFDT/src NEB/src TDDFPT/src \
            GWW/pw4gww GWW/gww GWW/head GWW/bse GWW/simple \
 	   GWW/simple_bse GWW/simple_ip" 
           
@@ -126,7 +125,7 @@ for dir in $dirs; do
         if test "$DIR" = "UtilXlib"
         then
             sed '/@elpa1@/d' make.depend > make.depend.tmp
-            sed '/@ifcore@/d' make.depend.tmp > make.depend
+            sed '/@ifcore@/d;/@cudafor@/d' make.depend.tmp > make.depend
         fi
 
         if test "$DIR" = "KS_Solvers/Davidson"

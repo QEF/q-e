@@ -2,11 +2,22 @@ New in development version:
   * New code hp.x to compute Hubbard parameters using density-functional
     perturbation theory (Iurii Timrov, Nicola Marzari, and Matteo Cococcioni,
     Phys. Rev. B 98, 085127 (2018); arXiv:1805.01805)
+  * The PHonon code contains the implementation of the Hubbard U correction
+    (Andrea Floris, Stefano de Gironcoli, E.K.U. Gross, and Matteo Cococcioni,
+    Phys. Rev. B 84, 161102(R) (2011);
+    Andrea Floris, Iurii Timrov, Burak Himmetoglu, Nicola Marzari, Stefano de Gironcoli,
+    and Matteo Cococcioni, in preparation)
   * XDM now works also for USPP and norm-conserving PP
 
 Problems fixed in development version (+ = in qe-6.3-backports as well) :
+  + index not correctly initialized in LSDA phonon with core corrections 
+  + GTH pseudopotentials in analytical form wrongly computed in some cases
+  + projwfc.x not working with new xml format in noncolinear/spinorbit case 
+  + Starting with .EXIT file present ("dry run") crashed with new file format
+  + Some space groups were missing
+  + Random MPI crashes with DFT+U due to small discrepancies between values
+    of Hubbard occupancies on different processors
   + Variable-cell optimization wasn't working with Tkatchenko-Scheffler vdW
-  + A few more "make install" and "make -jN" glitches
   + Atomic occupancies for DFT+U were not correctly written by CP after 
     switch to new format, due to a mismatch in their definition
   + Phonons with option "nosym" wasn't working
@@ -14,21 +25,26 @@ Problems fixed in development version (+ = in qe-6.3-backports as well) :
   * Variable-cell optimization with hybrid functionals wasn't working due
     to missing re-initialization (it also crashed during the final scf step)
   + Printout of wall time was sometimes incorrect (courtesy Daniel Pinkal)
-  + 'make install' and 'make -j' cases fixed (maybe)
+  + 'make install' and 'make -jN' cases fixed (maybe)
   + The restart option in turboEELS (turbo_eels.x) with ultrasoft
     pseudopotentials was not working.
   + bad format in upf%comment when writing the PP_INFO section of UPF v2 PPs
 
 Incompatible changes in development version:
+  * Charge density in the LSDA case is stored as (up+down, up-down) and no longer 
+    as (up,down). Output data format is unchanged to (up+down, up-down)
   * Non-symmorphic operations are always allowed and the FFT grid is made
     commensurate. Meaning and usage of input variable "use_all_frac" changed.
   * Old format (-D__OLDXML) deleted. Everything should work as before but some
     exotic options might have problems. The following utilities no longer work:
     - cppp.x (was reading old format only)
-    - importexport.x (use hdf5 for portable data)
+    - importexport.x (superseded by hdf5 for portable binaries)
     - bgw2pw.x (was writing old format only)
   * Several routines moved from PHonon/PH to LR_Modules
   * Module "wavefunctions_module" renamed "wavefunctions"
+  * TDDFPT: the variables ecutfock, tqr, and real_space are no longer input 
+    variables of turbo_lanczos.x and turbo_davidson.x. Instead, they are read 
+    from the XML file produced by pw.x. The variable real_space_debug was removed.
 
 Known problems in development version:
   * Frequent "dexx is negative" errors with hybrid functionals

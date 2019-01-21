@@ -27,6 +27,7 @@ subroutine init_ns
    implicit none
 
    real(DP) :: totoc
+   real(DP) :: ns_updw(2)
    real(DP), external :: hubbard_occ
 
    integer :: ldim, na, nt, is, m1, majs, mins
@@ -54,18 +55,27 @@ subroutine init_ns
          if (.not.nm) then  
             if (totoc.gt.ldim) then  
                do m1 = 1, ldim  
-                  rho%ns (m1, m1, majs, na) = 1.d0  
-                  rho%ns (m1, m1, mins, na) = (totoc - ldim) / ldim
+                  ns_updw(majs) = 1.d0
+                  ns_updw(mins) = (totoc - ldim) / ldim
+                  rho%ns(m1, m1, 1, na) = ns_updw(1) + ns_updw(2)
+                  rho%ns(m1, m1, 2, na) = ns_updw(1) - ns_updw(2)
                enddo  
             else  
                do m1 = 1, ldim  
-                  rho%ns (m1, m1, majs, na) = totoc / ldim
+                  ns_updw(majs) = totoc / ldim
+                  ns_updw(mins) = 0.d0
+                  rho%ns(m1, m1, 1, na) = ns_updw(1) + ns_updw(2)
+                  if (nspin == 2) rho%ns(m1, m1, 2, na) = ns_updw(1) - ns_updw(2)
                enddo  
             endif  
          else  
             do is = 1,nspin
                do m1 = 1, ldim  
-                  rho%ns (m1, m1, is, na) = totoc /  2.d0 / ldim
+                  rho%ns (m1, m1, 1, na) = totoc / 2.d0 / ldim
+                  if (nspin == 2) then
+                     rho%ns (m1, m1, 1, na) = rho%ns (m1, m1, 1, na) * 2.d0
+                     rho%ns (m1, m1, 2, na) = 0.d0
+                  endif
                enddo  
             enddo  
          endif  

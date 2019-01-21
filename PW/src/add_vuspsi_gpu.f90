@@ -74,6 +74,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        !-----------------------------------------------------------------------
        !
        USE mp, ONLY: mp_get_comm_null, mp_circular_shift_left
+       USE gbuffers, ONLY : dev_buf
        !
 #if defined(__CUDA)
        USE cudafor
@@ -82,7 +83,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        !
        IMPLICIT NONE
        INTEGER, EXTERNAL :: ldim_block, gind_block
-       REAL(DP), ALLOCATABLE :: ps_d (:,:)
+       REAL(DP), POINTER :: ps_d (:,:)
        INTEGER :: ierr
        INTEGER :: nproc, mype, m_loc, m_begin, ibnd_loc, icyc, icur_blk, m_max
        ! counters
@@ -118,9 +119,10 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
           IF( ( m_begin + m_loc - 1 ) > m ) m_loc = m - m_begin + 1
        END IF
        !
-       ALLOCATE (ps_d (nkb,m_max), STAT=ierr )
+       CALL dev_buf%lock_buffer(ps_d, (/ nkb, m_max /), ierr ) !ALLOCATE (ps_d (nkb,m_max), STAT=ierr )
+       !
        IF( ierr /= 0 ) &
-          CALL errore( ' add_vuspsi_gamma ', ' cannot allocate ps ', ABS(ierr) )
+          CALL errore( ' add_vuspsi_gamma ', ' cannot allocate ps_d ', ABS(ierr) )
        !
        ps_d(:,:) = 0.D0
        !
@@ -185,7 +187,7 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
           END DO
        END IF
        !
-       DEALLOCATE (ps_d)
+       CALL dev_buf%release_buffer(ps_d, ierr) ! DEALLOCATE (ps_d)
        !
        RETURN
        !
@@ -201,8 +203,10 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        USE cudafor
        USE cublas
 #endif
+       USE gbuffers, ONLY : dev_buf
+       !
        IMPLICIT NONE
-       COMPLEX(DP), ALLOCATABLE :: ps_d (:,:), deeaux_d (:,:)  ! OPTIMIZE HERE: move this to buffers ?
+       COMPLEX(DP), POINTER :: ps_d (:,:), deeaux_d (:,:)
        INTEGER :: ierr
        ! counters
        INTEGER :: i, j, k, jkb, ikb, ih, jh, na, nt, ibnd, nhnt
@@ -218,11 +222,14 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        CALL using_deeq_d(0)
        CALL using_becp_k_d(0)
        !
-       ALLOCATE (ps_d (nkb,m), STAT=ierr )
+       CALL dev_buf%lock_buffer(ps_d, (/ nkb,m /), ierr ) ! ALLOCATE (ps_d (nkb,m), STAT=ierr )
        IF( ierr /= 0 ) &
-          CALL errore( ' add_vuspsi_k ', ' cannot allocate ps ', ABS( ierr ) )
+          CALL errore( ' add_vuspsi_k ', ' cannot allocate ps_d ', ABS( ierr ) )
        !
-       ALLOCATE ( deeaux_d(nhm, nhm) )
+       CALL dev_buf%lock_buffer(deeaux_d, (/ nhm, nhm /), ierr ) !ALLOCATE ( deeaux_d(nhm, nhm) )
+       IF( ierr /= 0 ) &
+          CALL errore( ' add_vuspsi_k ', ' cannot allocate deeaux_d ', ABS( ierr ) )
+       !
        DO nt = 1, ntyp
           !
           IF ( nh(nt) == 0 ) CYCLE
@@ -254,12 +261,12 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
           END DO
           !
        END DO
-       DEALLOCATE (deeaux_d)
+       CALL dev_buf%release_buffer(deeaux_d, ierr) ! DEALLOCATE (deeaux_d)
        !
        CALL ZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ) , vkb_d, &
                    lda, ps_d, nkb, ( 1.D0, 0.D0 ) , hpsi_d, lda )
        !
-       DEALLOCATE (ps_d)
+       CALL dev_buf%release_buffer(ps_d, ierr) !DEALLOCATE (ps_d)
        !
        RETURN
        !
@@ -274,9 +281,10 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        USE cudafor
        USE cublas
 #endif
+       USE gbuffers,      ONLY : dev_buf
        USE becmod_gpum,   ONLY : becp_d
        IMPLICIT NONE
-       COMPLEX(DP), ALLOCATABLE :: ps_d (:,:,:)  ! use buffer here, move this to buffer here
+       COMPLEX(DP), POINTER :: ps_d (:,:,:)
        INTEGER :: ierr
        ! counters
        INTEGER :: na, nt, ibnd
@@ -292,13 +300,13 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        CALL using_deeq_nc_d(0)
        CALL using_becp_nc_d(0)
        !
-       ALLOCATE (ps_d( nkb, npol, m), STAT=ierr )
-       
-       
-       IF( ierr /= 0 ) &
-          CALL errore( ' add_vuspsi_nc ', ' error allocating ps ', ABS( ierr ) )
+       ! ALLOCATE (ps_d( nkb, npol, m), STAT=ierr )
+       CALL dev_buf%lock_buffer(ps_d, (/ nkb, npol, m /), ierr )
        !
-       !  OPTIMIZE HERE: use buffers and possibly streamline
+       IF( ierr /= 0 ) &
+          CALL errore( ' add_vuspsi_nc ', ' error allocating ps_d ', ABS( ierr ) )
+       !
+       !  OPTIMIZE HERE: possibly streamline
        !
        DO nt = 1, ntyp
           !
@@ -359,11 +367,10 @@ SUBROUTINE add_vuspsi_gpu( lda, n, m, hpsi_d )
        call ZGEMM ('N', 'N', n, m*npol, nkb, ( 1.D0, 0.D0 ) , vkb_d, &
                    lda, ps_d, nkb, ( 1.D0, 0.D0 ) , hpsi_d, lda )
        !
-       DEALLOCATE (ps_d)
+       CALL dev_buf%release_buffer(ps_d, ierr ) ! DEALLOCATE (ps_d)
        !
        RETURN
        !
      END SUBROUTINE add_vuspsi_nc_gpu
-     !  
-     !  
+     !
 END SUBROUTINE add_vuspsi_gpu

@@ -20,7 +20,7 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
   USE wvfct, ONLY: npwx
   USE uspp,  ONLY: indv_ijkb0
   USE uspp_gpum,  ONLY: deeq_d, vkb_d, qq_at_d, qq_so_d, deeq_nc_d
-  USE uspp_param, ONLY: upf, nh, newpseudo
+  USE uspp_param, ONLY: upf, nh
   USE spin_orb, ONLY: lspinorb
   USE noncollin_module, ONLY: noncolin, npol
   !
@@ -98,7 +98,7 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
      !    multiply on projectors
      !
      DO nt = 1, ntyp
-        IF ( upf(nt)%tvanp .or.newpseudo (nt) ) THEN
+        IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
                    ijkb_start = indv_ijkb0(na)
@@ -229,7 +229,7 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
      !    multiply on projectors
      !
      DO nt = 1, ntyp
-        IF ( upf(nt)%tvanp .or.newpseudo (nt) ) THEN
+        IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
                    ijkb_start = indv_ijkb0(na)
@@ -373,7 +373,7 @@ SUBROUTINE usnldiag_gpu (npw, h_diag_d, s_diag_d)
      !    multiply on projectors
      !
      DO nt = 1, ntyp
-        IF ( upf(nt)%tvanp .or.newpseudo (nt) ) THEN
+        IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
            DO na = 1, nat
               IF (ityp (na) == nt) THEN
                    ijkb_start = indv_ijkb0(na)

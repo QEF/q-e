@@ -21,7 +21,7 @@ SUBROUTINE add_shift_cc (shift_cc)
   USE gvect, ONLY: ngm, gstart, g, gg, ngl, gl, igtongl
   USE ener, ONLY: etxc, vtxc
   USE lsda_mod, ONLY: nspin
-  USE scf, ONLY: rho, rho_core, rhog_core
+  USE scf, ONLY: rho, rho_core, rhog_core, rhoz_or_updw
   USE control_flags, ONLY: gamma_only
   USE wavefunctions,    ONLY : psic
   USE mp_global,  ONLY : intra_pool_comm
@@ -62,9 +62,13 @@ SUBROUTINE add_shift_cc (shift_cc)
   !
   ALLOCATE ( vxc(dfftp%nnr,nspin), shift_(nat) )
   shift_(:) = 0.d0
+  !^
+  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
   !
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
   !
+  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
+  !^
   IF (nspin==1) THEN
      DO ir = 1, dfftp%nnr
         psic (ir) = vxc (ir, 1)

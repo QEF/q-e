@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -276,45 +276,50 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !      Calculation of the electron-phonon matrix elements el_ph_mat
   !         <\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)>
   !      Original routine written by Francesco Mauri
+  !      Modified by A. Floris and I. Timrov to include Hubbard U (01.10.2018)
   !
-  USE kinds, ONLY : DP
-  USE fft_base, ONLY : dffts
-  USE wavefunctions,  ONLY: evc
-  USE buffers,  ONLY : get_buffer
-  USE klist, ONLY: xk, ngk, igk_k
-  USE lsda_mod, ONLY: lsda, current_spin, isk
+  USE kinds,      ONLY : DP
+  USE fft_base,   ONLY : dffts
+  USE ions_base,  ONLY : nat, ityp
+  USE control_flags,  ONLY : iverbosity
+  USE wavefunctions,  ONLY : evc
+  USE buffers,    ONLY : get_buffer
+  USE klist,      ONLY : xk, ngk, igk_k
+  USE lsda_mod,   ONLY : lsda, current_spin, isk, nspin
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
-  USE wvfct, ONLY: nbnd, npwx
-  USE buffers, ONLY : get_buffer
-  USE uspp, ONLY : vkb
-  USE el_phon, ONLY : el_ph_mat, el_ph_mat_rec, el_ph_mat_rec_col, &
-                      comp_elph, done_elph, elph_nbnd_min, elph_nbnd_max
-  USE modes, ONLY : u
-  USE units_ph,   ONLY : iubar, lrbar
+  USE wvfct,      ONLY : nbnd, npwx
+  USE buffers,    ONLY : get_buffer
+  USE uspp,       ONLY : vkb
+  USE el_phon,    ONLY : el_ph_mat, el_ph_mat_rec, el_ph_mat_rec_col, &
+                         comp_elph, done_elph, elph_nbnd_min, elph_nbnd_max
+  USE modes,      ONLY : u, nmodes
+  USE units_ph,   ONLY : iubar, lrbar, iundnsscf
   USE units_lr,   ONLY : iuwfc, lrwfc
   USE control_ph, ONLY : trans, current_iq
   USE ph_restart, ONLY : ph_writefile
   USE spin_orb,   ONLY : domag
-  USE mp_bands,   ONLY: intra_bgrp_comm, ntask_groups
-  USE mp_pools,   ONLY: npool
-  USE mp,        ONLY: mp_sum
+  USE mp_bands,   ONLY : intra_bgrp_comm, ntask_groups
+  USE mp_pools,   ONLY : npool
+  USE mp,         ONLY : mp_sum, mp_bcast
+  USE mp_world,   ONLY : world_comm
   USE elph_tetra_mod, ONLY : elph_tetra
-
   USE eqv,        ONLY : dvpsi, evq
   USE qpoint,     ONLY : nksq, ikks, ikqs, nksqtot
   USE control_lr, ONLY : lgamma
   USE fft_helper_subroutines
+  USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax
+  USE ldaU_ph,    ONLY : dnsscf_all_modes, dnsscf
+  USE io_global,  ONLY : ionode, ionode_id
 
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: irr, npe, imode0
   COMPLEX(DP), INTENT(IN) :: dvscfins (dffts%nnr, nspin_mag, npe)
   ! LOCAL variables
-  INTEGER :: npw, npwq
-  INTEGER :: nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
-       ipol, ios, ierr
+  INTEGER :: npw, npwq, nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
+             ipol, ios, ierr
   COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:), tg_dv(:,:), &
-       tg_psic(:,:), aux2(:,:)
+                               tg_psic(:,:), aux2(:,:)
   INTEGER :: v_siz, incr
   COMPLEX(DP), EXTERNAL :: zdotc
   integer :: ibnd_fst, ibnd_lst
@@ -341,6 +346,29 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
      ALLOCATE( tg_psic( v_siz, npol ) )
      incr = fftx_ntgrp(dffts)
+     !
+  ENDIF
+  !
+  ! DFPT+U case
+  !
+  IF (lda_plus_u) THEN
+     !
+     ! Allocate and re-read dnsscf_all_modes from file 
+     !
+     ALLOCATE (dnsscf_all_modes(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, nmodes))
+     dnsscf_all_modes = (0.d0, 0.d0)
+     IF (ionode) READ(iundnsscf,*) dnsscf_all_modes
+     CALL mp_bcast(dnsscf_all_modes, ionode_id, world_comm)
+     REWIND(iundnsscf)
+     !  
+     ! Check whether the re-read is correct
+     !
+     IF (iverbosity==1) CALL elphel_read_dnsscf_check() 
+     !
+     ! Allocate dnsscf
+     !
+     ALLOCATE (dnsscf(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, npe))
+     dnsscf = (0.d0, 0.d0)
      !
   ENDIF
   !
@@ -383,6 +411,11 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            mode = imode0 + ipert
            ! FIXME: .false. or .true. ???
            CALL dvqpsi_us (ik, u (1, mode), .FALSE. )
+           !
+           ! DFPT+U: calculate the bare derivative of the Hubbard potential in el-ph
+           !
+           IF (lda_plus_u) CALL dvqhub_barepsi_us (ik, u(1,mode)) 
+           !
         ENDIF
         !
         ! calculate dvscf_q*psi_k
@@ -412,8 +445,15 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            ENDIF
         ENDDO
         dvpsi=dvpsi+aux2
-
+        !
         CALL adddvscf (ipert, ik)
+        !
+        ! DFPT+U: add to dvpsi the scf part of the perturbed Hubbard potential 
+        !
+        IF (lda_plus_u) THEN
+           dnsscf(:,:,:,:,ipert) = dnsscf_all_modes(:,:,:,:,mode)
+           CALL adddvhubscf (ipert, ik)
+        ENDIF
         !
         ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
         !
@@ -463,10 +503,93 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
      DEALLOCATE( tg_psic )
   ENDIF
   !
+  IF (lda_plus_u) THEN
+     DEALLOCATE (dnsscf_all_modes)
+     DEALLOCATE (dnsscf)
+  ENDIF
+  !
   RETURN
+  !
 END SUBROUTINE elphel
 !
-!-----------------------------------------------------------------------
+!------------------------------------------------------------------------
+SUBROUTINE elphel_read_dnsscf_check()
+  !
+  ! DFPT+U: This subroutine checks whether dnsscf_all_modes was 
+  !         read correctly from file.
+  !
+  USE kinds,      ONLY : DP
+  USE ions_base,  ONLY : nat, ityp
+  USE modes,      ONLY : u, nmodes
+  USE lsda_mod,   ONLY : nspin
+  USE ldaU,       ONLY : Hubbard_l, is_hubbard, Hubbard_lmax
+  USE ldaU_ph,    ONLY : dnsscf_all_modes
+  USE io_global,  ONLY : stdout
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), ALLOCATABLE :: dnsscf_all_modes_cart(:,:,:,:,:)
+  INTEGER :: na_icart, nah, is, m1, m2, na, icart, nt, na_icar, imode
+  !
+  ALLOCATE(dnsscf_all_modes_cart (2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, nmodes))
+  dnsscf_all_modes_cart = (0.d0, 0.d0)
+  !
+  ! Transform dnsscf_all_modes from pattern to cartesian coordinates
+  !
+  DO na_icart = 1, 3*nat
+     DO imode = 1, nmodes
+        DO nah = 1, nat
+           nt = ityp(nah)
+           IF (is_hubbard(nt)) THEN
+              DO is = 1, nspin
+                 DO m1 = 1, 2*Hubbard_l(nt) + 1
+                    DO m2 = 1, 2*Hubbard_l(nt) + 1
+                       !
+                       dnsscf_all_modes_cart (m1, m2, is, nah, na_icart) = &
+                              dnsscf_all_modes_cart (m1, m2, is, nah, na_icart) + &
+                              dnsscf_all_modes (m1, m2, is, nah, imode) * &
+                              CONJG(u(na_icart,imode))
+                       !
+                    ENDDO
+                 ENDDO
+              ENDDO
+           ENDIF
+        ENDDO
+     ENDDO
+  ENDDO
+  !
+  ! Write dnsscf in cartesian coordinates
+  !
+  WRITE(stdout,*)
+  WRITE(stdout,*) 'DNS_SCF SYMMETRIZED IN CARTESIAN COORDINATES'
+  !
+  DO na = 1, nat
+     DO icart = 1, 3
+        WRITE( stdout,'(a,1x,i2,2x,a,1x,i2)') 'displaced atom L =', na, 'ipol=', icart
+        na_icart = 3*(na-1) + icart
+        DO nah = 1, nat
+           nt = ityp(nah)
+           IF (is_hubbard(nt)) THEN
+              DO is = 1, nspin
+                 WRITE(stdout,'(a,1x,i2,2x,a,1x,i2)') ' Hubbard atom', nah, 'spin', is
+                 DO m1 = 1, 2*Hubbard_l(nt) + 1
+                    WRITE(stdout,'(14(f15.10,1x))') dnsscf_all_modes_cart (m1,:,is,nah,na_icart)
+                 ENDDO
+              ENDDO
+           ENDIF
+        ENDDO
+     ENDDO
+  ENDDO
+  WRITE(stdout,*)
+  ! 
+  DEALLOCATE(dnsscf_all_modes_cart) 
+  !
+  RETURN
+  !
+END SUBROUTINE elphel_read_dnsscf_check
+!------------------------------------------------------------------------
+
+!------------------------------------------------------------------------
 SUBROUTINE elphsum ( )
   !-----------------------------------------------------------------------
   !

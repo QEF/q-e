@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,13 +19,15 @@ SUBROUTINE close_phq( flag )
   USE buffers,       ONLY : close_buffer
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iudwf, iubar, iudrhous, iuebar, iudrho, &
-                            iudvscf, iucom, iudvkb3, iuint3paw, iudyn
-  USE units_lr,      ONLY : iuwfc
+                            iudvscf, iucom, iudvkb3, iuint3paw, iudyn, &
+                            iundnsscf
+  USE units_lr,      ONLY : iuwfc, iuatwfc, iuatswfc
   USE control_ph,    ONLY : zue, epsil, only_wfc
   USE recover_mod,   ONLY : clean_recover
   USE output,        ONLY : fildrho, fildvscf
   USE ramanm,        ONLY : lraman, elop, iuchf, iud2w, iuba2
   USE el_phon,       ONLY : elph_mat,iunwfcwann
+  USE ldaU,          ONLY : lda_plus_u
   !
   IMPLICIT NONE
   !
@@ -108,6 +110,13 @@ SUBROUTINE close_phq( flag )
      INQUIRE( UNIT=iudyn, OPENED=opnd )
      IF (opnd) CLOSE( UNIT = iudyn, STATUS = 'KEEP' )
   END IF
+  !
+  ! DFPT+U
+  IF (lda_plus_u) THEN
+     CALL close_buffer(iuatwfc,'delete')
+     CALL close_buffer(iuatswfc,'delete')
+     CLOSE( UNIT = iundnsscf, STATUS = 'KEEP' )
+  ENDIF
   !
   RETURN
   !

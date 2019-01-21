@@ -1,0 +1,315 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- *** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST *** --><meta http-equiv="Content-Style-Type" CONTENT="text/css">
+<style>
+	  body {
+	  background-color:#ffffff;
+	  font:normal 14px/1.8em arial, helvetica, sans-serif;
+	  width:900px;
+	  text-align:justify;
+	  margin: 30 10 10 30;
+	  }
+
+	  h1 {
+	  font-size:24px;
+	  }
+	  
+	  h2 {
+	  font-size:18px;
+	  }
+	  
+	  h3 {
+	  font-size:16px;
+	  }
+	  pre, tt, code {
+	  font-size:14px;
+	  }	  
+	  .syntax, .syntax table {
+	  font-size:14px;
+	  }
+	  span.namelist {
+	  color: #214478;
+	  }
+	  span.card {
+	  color: #782167;
+	  }
+	  span.flag {
+	  color: #008000;
+	  font-weight: bold;
+	  }
+	</style>
+<title>ppacf.x: input description</title>
+</head>
+<body>
+<a name="__top__"></a><table style="border-width: 0; table-layout: auto; width: 100%; text-align: left; vertical-align: top; background: #00395a;">
+<tr><th style="margin: 3 3 3 10; background: #005789; background: linear-gradient(rgba(0,87,137,1),rgba(0,119,189,1)); color: #ffffee; ">
+<h1 style="margin: 10 10 10 15; text-align: left;"> Input File Description </h1>
+<h2 style="margin: 10 10 10 15; text-align: left;"> Program:
+	      ppacf.x / PWscf / Quantum Espresso (version 6.3 with ppacf patch)</h2>
+</th></tr>
+<tr><td style="padding: 10 3 3 3; background: #ffffff; color: #222222; ">
+   <blockquote style="margin-bottom: 2em;">
+<h3>TABLE OF CONTENTS</h3>
+<blockquote>
+   
+   
+   <p><a href="#idp140399436887352">INTRODUCTION</a></p>
+   <p><a href="#idp140399436895992">&amp;PPACF</a></p>
+<blockquote>
+<a href="#idp140399436896488">prefix</a> | <a href="#idp140399436897928">outdir</a> | <a href="#idp140399436900184">n_lambda</a> | <a href="#idp140399436901976">lplot</a> | <a href="#idp140399436905464">ltks</a> | <a href="#idp140399436907688">lfock</a> | <a href="#idp140399436910648">use_ace</a> | <a href="#idp140399436913496">code_num</a> | <a href="#idp140399436916552">pseudo_dir</a> | <a href="#idp140399436918392">vdw_table_name</a>
+</blockquote>
+</blockquote>
+</blockquote>
+   <blockquote>
+<a name="idp140399436887352"></a><h3>INTRODUCTION</h3>
+<blockquote><pre>
+<b>Purpose of ppacf.x:</b>
+ACF analysis and print files to track signatures of binding
+(<a href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.97.085115">PRB 97, 085115 (2018)</a>).
+
+For an illustration of how to use this code to set hybrid mixing
+value, please refer to JCP 148, 194115 (2018) <a href="http://dx.doi.org/10.1063/1.5012870">doi: 10.1063/1.5012870</a>.
+
+The code reads the output produced by <b>pw.x,</b> extracts and calculates
+$E_{c}^{nl}$, $T_{c}^{nl}$, $E_{c,\lambda}^{LDA}$, $E_{c,\lambda}^{nl}$,
+$E_{xc,\lambda}$, $T_c^{LDA}$.
+If <a href="#lfock">lfock</a> is set to .True., the code also computes the total Fock
+exchange value.
+
+With flag <a href="#code_num">code_num</a> = 2, the codes can read output produced by <b>VASP.</b>
+
+With flag <a href="#lplot">lplot</a>, the codes also out puts files containing spatial
+variation in most of these quantities.
+
+
+The input data of this program is read from standard input or from file
+and has the following format:
+
+<b>Structure of the input data:</b>
+<b>============================</b>
+
+<b>&amp;PPACF</b>
+<b>...</b>
+<b>/</b>
+
+Intermediate results can be saved to disk (see variable <a href="#lplot">lplot</a> in <b>&amp;PPACF)</b>
+and later read by pp.x.
+Since the file with intermediate results is formatted, it can be safely
+transferred to a different machine. This also allows plotting of a
+linear combination (for instance, energy density differences) by saving
+two intermediate files and combining them (see variables in <b>&amp;PLOT</b>
+from pp.x .)
+
+All output quantities are in ATOMIC (RYDBERG) UNITS unless otherwise
+explicitly specified.
+   </pre></blockquote>
+</blockquote>
+   <a name="idp140399436895992"></a><a name="PPACF"></a><table border="0" width="100%" style="margin-bottom: 20;">
+<tr><th bgcolor="#ddcba6"><h2 style="margin: 10 10 10 15; text-align: left;"> Namelist: <span class="namelist"><span style="font-weight:normal">&amp;</span>PPACF</span>
+</h2></th></tr>
+<tr><td style="text-align: left; background: #ffebc6; padding: 5 5 5 30; "><table style="border-color: #505087; border-style: solid; border-width: 0; margin-bottom: 10; table-layout: auto; width: 800;"><tbody><tr><td>
+      <a name="idp140399436896488"></a><a name="prefix"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">prefix</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+prefix of files saved by program pw.x
+prepended to input/output filenames:
+prefix.ecnl, prefix.tcnl, etc.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idp140399436897928"></a><a name="outdir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">outdir</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+value of the <tt>ESPRESSO_TMPDIR</tt> environment variable if set;
+current directory ('./') otherwise
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+directory containing the output data from pw.x, i.e. the same as in pw.x
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idp140399436900184"></a><a name="n_lambda"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">n_lambda</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Number of fragments in coupling-constant scaling curve.
+In the default case, only $\lambda=0$ and $\lambda=1$ ends are calculated.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idp140399436901976"></a><a name="lplot"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lplot</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+.False.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .True. print out the spatial distribution of energy density.
+prefix.tclda             the LDA component of kinetic-correlation energy density.
+prefix.tcnl(prefix.tcgc) the non-local (gradient corrected) component of kinetic-correlation energy density.
+prefix.exlda             the LDA component of exchange energy density.
+prefix.eclda             the LDA component of correlation energy density.
+prefix.exgc              the gradient-corrected component of exchange energy density.
+prefix.ecnl(prefix.ecgc) the non-local(gradient-corrected) component of correlation energy density.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
+<b>IF </b><tt><em>lplot=.True.</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+            <p><b>
+Option for plot (lplot=.True.):
+            </b></p>
+            <a name="idp140399436905464"></a><a name="ltks"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">ltks</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+.True.
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .True. also print out
+prefix.tks               the Kohn-Sham kinetic energy density.
+                         In case of spin-polarized calculations, prefix.tks1 and prefix.tks2
+                         save the spin-up and spin-down components.
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         </td></tr></table></blockquote>
+</td></tr></table>
+      <a name="idp140399436907688"></a><a name="lfock"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">lfock</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+.False.
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .True. calculate the Fock exchange based on input Kohn-Sham orbitals.
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; width: 100%; padding: 5 5 0 5"><tr><td>
+<b>IF </b><tt><em>lfock=.True.</em> :</tt><blockquote><table style="border-color: #bb9977; border-style: solid; border-width: 3; margin-bottom: 10; table-layout: auto; background-color: #FFddbb; width: 100%; padding: 5 5 0 30"><tr><td>
+            <p><b>
+Option for Fock exchange (lfock=.True.):
+            </b></p>
+            <a name="idp140399436910648"></a><a name="use_ace"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">use_ace</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">LOGICAL</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+.True.
+               </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+If .True. use Lin Lin's ACE (J. Chem. Theory Comput. 12(5), 2242-2249 (2016),
+<a href="http://dx.doi.org/10.1021/acs.jctc.6b00092">doi: 10.1021/acs.jctc.6b00092</a>).
+               </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+         </td></tr></table></blockquote>
+</td></tr></table>
+      <a name="idp140399436913496"></a><a name="code_num"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">code_num</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+1
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Select from which code to read output files.
+  1 = Quantum ESPRESSO
+  2 = VASP
+      The codes will read vasprun.xml and CHGCAR from VASP
+      calculations.
+      Please note that in VASP-based analysis:
+      - Core charge is ignored.
+      - Wavefunction based analysis (Fock exchange energy and
+        Kohn-Sham kinetic energy) are not available.
+      - When <a href="#lplot">lplot</a> = .True., the code will also print out
+        charge density in prefix.chg (prefix.chg1 and prefix.chg2
+        save the spin-up and spin-down components in case of
+        spin-polarized calculations), which can be processed by <b>pp.x.</b>
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idp140399436916552"></a><a name="pseudo_dir"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">pseudo_dir</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+value of the $ESPRESSO_PSEUDO environment variable if set;
+'$HOME/espresso/pseudo/' otherwise
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+Directory containing pseudopotential files (and vdw kernel table).
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+      <a name="idp140399436918392"></a><a name="vdw_table_name"></a><table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
+<tr>
+<th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">vdw_table_name</th>
+<td style="text-align: left; vertical-align: top; background: #ffffc3; padding: 2 2 2 5; ">CHARACTER</td>
+</tr>
+<tr>
+<td style="text-align: right; vertical-align: top; background: #ffffc3; padding: 2 10 2 10; "><i>Default:</i></td>
+<td style="text-align: left;  vertical-align: top; background: #fff3d9; padding: 2 2 2 5; ">
+"vdW_kernel_table"
+         </td>
+</tr>
+<tr><td align="left" valign="top" colspan="2"><blockquote><pre style="margin-bottom: -1em;">
+The vdw kernel table (in Quantum ESPRESSO format).
+         </pre></blockquote></td></tr>
+</table>
+<div align="right" style="margin-bottom: 5;">[<a href="#__top__">Back to Top</a>]</div>
+   </td></tr></tbody></table></td></tr>
+</table>
+</td></tr>
+</table>
+<small>
+	  This file has been created by helpdoc utility.
+	</small>
+</body>
+</html>

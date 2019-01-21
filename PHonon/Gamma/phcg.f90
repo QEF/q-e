@@ -419,14 +419,14 @@ SUBROUTINE cg_neweps
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
-  USE lsda_mod,  ONLY : current_spin
+  USE lsda_mod,  ONLY : nspin, current_spin
   USE funct,     ONLY : dmxc
   USE cgcom
   !
   IMPLICIT NONE
 
   INTEGER :: i, j
-  REAL(DP) :: rhotot, chi(3,3)
+  REAL(DP) :: rhotot, sgn, chi(3,3)
   !
   !  recalculate self-consistent potential etc
   !
@@ -434,9 +434,10 @@ SUBROUTINE cg_neweps
   !
   !  new derivative of the xc potential
   !
+  sgn = DBLE(2*MOD(current_spin,2)-1)
   dmuxc(:) = 0.d0
   DO i = 1,dfftp%nnr
-     rhotot = rho%of_r(i,current_spin)+rho_core(i)
+     rhotot = ( rho%of_r(i,1) + sgn*rho%of_r(i,nspin) )*0.5d0 + rho_core(i)
      IF ( rhotot> 1.d-30 ) dmuxc(i)= dmxc( rhotot)
      IF ( rhotot<-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)
   ENDDO

@@ -37,7 +37,6 @@ SUBROUTINE hp_print_clock
   CALL print_clock ('hp_calc_chi')
   CALL print_clock ('hp_postproc')
   CALL print_clock ('hp_vpsifft')
-  CALL print_clock ('hp_sphi')
   CALL print_clock ('hp_ef_shift')
   CALL print_clock ('hp_run_nscf')
   !
@@ -61,6 +60,7 @@ SUBROUTINE hp_print_clock
   CALL print_clock ('setup_dgc')
   CALL print_clock ('setup_dmuxc')
   CALL print_clock ('setup_nbnd_occ')
+  CALL print_clock ('lr_orthoUwfc')
   IF (dffts%has_task_groups) THEN
      CALL print_clock ('cft_wave_tg')
   ELSE

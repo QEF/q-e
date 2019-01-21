@@ -34,7 +34,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, &
                                    nkstot, ngk, igk_k
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE scf,                  ONLY : rho
+  USE scf,                  ONLY : rho, rhoz_or_updw
   USE symme,                ONLY : sym_rho, sym_rho_init, sym_rho_deallocate
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : upf, nh, nhm
@@ -65,7 +65,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   ! counters
   INTEGER :: ir, is, ig, ibnd, ik, irm, isup, isdw, ipol, kkb, is1, is2
 
-  REAL(DP) :: w, w1, modulus, wg_max
+  REAL(DP) :: w, w1, modulus, wg_max, rho_iter
   REAL(DP), ALLOCATABLE :: rbecp(:,:), segno(:), maxmod(:)
   COMPLEX(DP), ALLOCATABLE :: becp(:,:),  &
                                    becp_nc(:,:,:), be1(:,:), be2(:,:)
@@ -239,10 +239,10 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
                     ENDDO
                  ENDDO
               ELSE
-                 DO ir=1,dffts%nnr
-                    rho%of_r(ir,current_spin)=rho%of_r(ir,current_spin) + &
-                      w1 * (dble( psic (ir) ) **2 + aimag (psic (ir) ) **2)
-                 ENDDO
+                 rho_iter = w1 * ( dble( psic (ir) ) **2 + aimag ( psic (ir) ) **2 )
+                 !
+                 rho%of_r(ir,1) = rho%of_r(ir,1) + rho_iter
+                 IF (nspin == 2) rho%of_r(ir,2) = rho%of_r(ir,2) + rho_iter * dble(1-current_spin/2*2 )
               ENDIF
         !
         !    If we have a US pseudopotential we compute here the becsum term
@@ -367,29 +367,27 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
      ENDIF
   ENDIF
   IF (doublegrid) THEN
-     IF (noncolin) THEN
-       CALL fft_interpolate(dffts, rho%of_r(:,1), dfftp, rho%of_r(:,1) )
-     ELSE
-       DO is = 1, nspin
-         CALL fft_interpolate(dffts, rho%of_r(:, is), dfftp, rho%of_r(:, is))
-       ENDDO
-     ENDIF
+     CALL fft_interpolate(dffts, rho%of_r(:,1), dfftp, rho%of_r(:,1) )
   ENDIF
   !
   !    Here we add the US contribution to the charge
   !
+  !^
+  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
+  !
   CALL addusdens(rho%of_r(:,:))
+  !
+  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
+  !^
   !
   IF (nspin == 1 .or. nspin==4) THEN
      is = 1
      dos(:) = rho%of_r (:, is)
   ELSE
      IF ( iflag==3 .and. (spin_component==1 .or. spin_component==2 ) ) THEN
-        dos(:) = rho%of_r (:, spin_component)
+        dos(:) = ( rho%of_r (:,1) + dble(1-spin_component/2*2) * rho%of_r(:,2) ) * 0.5d0
      ELSE
-        isup = 1
-        isdw = 2
-        dos(:) = rho%of_r (:, isup) + rho%of_r (:, isdw)
+        dos(:) = rho%of_r (:, 1)
      ENDIF
   ENDIF
   IF (lsign) THEN
@@ -410,7 +408,13 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   CALL fwfft ('Rho', psic, dfftp)
   rho%of_g(:,1) = psic(dfftp%nl(:))
   !
+  !^
+  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'only_g', 'rhoz_updw')
+  !
   CALL sym_rho (1, rho%of_g)
+  !
+  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'only_g', 'updw_rhoz')
+  !^
   !
   psic(:) = (0.0_dp, 0.0_dp)
   psic(dfftp%nl(:)) = rho%of_g(:,1)
