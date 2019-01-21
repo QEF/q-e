@@ -20,7 +20,7 @@ subroutine stress ( sigma )
   USE fft_base,      ONLY : dfftp
   USE ldaU,          ONLY : lda_plus_u, U_projection
   USE lsda_mod,      ONLY : nspin
-  USE scf,           ONLY : rho, rho_core, rhog_core, rhoz_or_updw
+  USE scf,           ONLY : rho, rho_core, rhog_core
   USE control_flags, ONLY : iverbosity, gamma_only, llondon, ldftd3, lxdm, ts_vdw
   USE noncollin_module, ONLY : noncolin
   USE funct,         ONLY : dft_is_meta, dft_is_gradient
@@ -76,8 +76,6 @@ subroutine stress ( sigma )
   !  hartree contribution
   !
   IF (.not.( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) )) call stres_har(sigmahar)
-  !^
-  IF (nspin == 2) CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
   !
   !  xc contribution (diagonal)
   !
@@ -95,10 +93,7 @@ subroutine stress ( sigma )
   !
   call stres_cc (sigmaxcc)
   !
-  IF (nspin == 2) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
-  !^  
-  !
-  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN ! for ESM stress
+  IF ( do_comp_esm .and. ( esm_bc .ne. 'pbc' ) ) THEN  ! for ESM stress
      call esm_stres_loclong( sigmaloclong, rho%of_g(:,1) ) ! long range part
      sigmaloc(:,:) = sigmaloc(:,:) + sigmaloclong(:,:)
   END IF
@@ -177,14 +172,8 @@ subroutine stress ( sigma )
   !
   !   DFT-non_local contribution
   !
-  !^
-  IF (nspin == 2) CALL rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
-  !
   sigma_nonloc_dft (:,:) = 0.d0
-  call stres_nonloc_dft(rho%of_r, rho_core, nspin, sigma_nonloc_dft)
-  !
-  IF (nspin == 2) CALL rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
-  !^  
+  call stres_nonloc_dft(rho%of_r(:,1), rho_core, nspin, sigma_nonloc_dft)  
   !
   ! SUM
   !

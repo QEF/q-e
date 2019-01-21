@@ -705,9 +705,8 @@ END FUNCTION ns_ddot
   !
   SUBROUTINE rhoz_or_updw( rho, sp, dir )
   !--------------------------------------------------------------------------
-  ! ... Converts rho_up/dw into rho_tot and m_z if dir='updw_rhoz' and 
-  ! ... vice versa if dir='rhoz_updw'.
-  ! ... (When conversion will be full, it should become almost useless) 
+  ! ... Converts rho(up,dw) into rho(up+dw,up-dw) if dir='->rhoz' and
+  ! ... vice versa if dir='->updw'.
   !
   USE gvect,  ONLY : ngm
   !
@@ -721,11 +720,11 @@ END FUNCTION ns_ddot
   IF ( nspin /= 2 ) RETURN
   !
   vi = 0._dp
-  IF (dir == 'rhoz_updw')  vi = 0.5_dp
-  IF (dir == 'updw_rhoz')  vi = 1.0_dp
+  IF (dir == '->updw')  vi = 0.5_dp
+  IF (dir == '->rhoz')  vi = 1.0_dp
   IF (vi  == 0._dp)  CALL errore( 'rhoz_or_updw', 'wrong input', 1 )
   !
-  IF ( sp=='only_r' .or. sp=='r_and_g' ) THEN
+  IF ( sp /= 'only_g' ) THEN
 !   !$omp parallel do
      DO ir = 1, dfftp%nnr  
         rho%of_r(ir,1) = ( rho%of_r(ir,1) + rho%of_r(ir,nspin) ) * vi
@@ -733,17 +732,13 @@ END FUNCTION ns_ddot
      ENDDO
 !   !$omp end parallel do
   ENDIF
-  IF ( sp=='only_g' .or. sp=='r_and_g' ) THEN
-!   !$omp parallel do    
+  IF ( sp /= 'only_r' ) THEN
+!   !$omp parallel do
      DO ir = 1, ngm
         rho%of_g(ir,1) = ( rho%of_g(ir,1) + rho%of_g(ir,nspin) ) * vi
         rho%of_g(ir,nspin) = rho%of_g(ir,1) - rho%of_g(ir,nspin) * vi * 2._dp
      ENDDO
 !   !$omp end parallel do  
-  ENDIF
-  IF ( sp=='hub_ns' ) THEN
-     rho%ns(:,:,1,:) = ( rho%ns(:,:,1,:) + rho%ns(:,:,2,:) ) * vi
-     rho%ns(:,:,2,:) = rho%ns(:,:,1,:) - rho%ns(:,:,2,:) * vi * 2._dp
   ENDIF
   !
   RETURN

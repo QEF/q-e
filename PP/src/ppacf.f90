@@ -46,7 +46,7 @@ PROGRAM do_ppacf
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : scf_type,create_scf_type,destroy_scf_type
   USE scf,                  ONLY : scf_type_COPY
-  USE scf,                  ONLY : rho, rho_core, rhog_core, vltot, rhoz_or_updw
+  USE scf,                  ONLY : rho, rho_core, rhog_core, vltot
   USE funct,                ONLY : xc,xc_spin,gcxc,gcx_spin,gcc_spin,dft_is_nonlocc,nlc
   USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE funct,                ONLY : set_exx_fraction,set_auxiliary_flags,enforce_input_dft
@@ -246,13 +246,9 @@ PROGRAM do_ppacf
      etxcccnl=0._DP
      vtxcccnl=0._DP
      vofrcc=0._DP
-     !^
-     IF ( nspin==2 ) CALL rhoz_or_updw( rho, 'only_r', 'rhoz_updw' )
      !
      CALL nlc( rho%of_r, rho_core, nspin, etxcccnl, vtxcccnl, vofrcc )
      !
-     IF ( nspin==2 ) CALL rhoz_or_updw( rho, 'only_r', 'updw_rhoz' )
-     !^
      CALL mp_sum(  etxcccnl , intra_bgrp_comm )
   END IF
   !
@@ -284,7 +280,7 @@ PROGRAM do_ppacf
   !
   IF (nspin == 1) THEN
      tot_rho(:)=rhoout(:,1)
-  ELSEIF(nspin==2) THEN          !^ rhoout is up/dw (for now)
+  ELSEIF(nspin==2) THEN          ! rhoout is (up,down)
      tot_rho(:)=rhoout(:,1)+rhoout(:,2)
   ELSE
      CALL errore ('ppacf','vdW-DF not available for noncollinear spin case',1)

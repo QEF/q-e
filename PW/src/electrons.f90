@@ -810,17 +810,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
      END IF
      !
      ! calculate the xdm energy contribution with converged density
-     if (lxdm .and. conv_elec) then
-        !^
-        IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', 'rhoz_updw' )
-        !
+     IF (lxdm .and. conv_elec) THEN
         exdm = energy_xdm()  
-        !
-        IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', 'updw_rhoz' )
-        !^
         etot = etot + exdm
         hwf_energy = hwf_energy + exdm
-     end if
+     END IF
      IF (ts_vdw) THEN
         ! factor 2 converts from Ha to Ry units
         etot = etot + 2.0d0*EtsvdW
@@ -997,13 +991,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
        IMPLICIT NONE
        REAL(DP) :: delta_e, delta_e_hub
        INTEGER  :: ir
-       !^
+       !
        delta_e = 0._dp
        IF ( nspin==2 ) THEN
           !
           DO ir = 1,dfftp%nnr
-            delta_e = delta_e - ( rho%of_r(ir,1) + rho%of_r(ir,2) ) * v%of_r(ir,1) &  !^up
-                              - ( rho%of_r(ir,1) - rho%of_r(ir,2) ) * v%of_r(ir,2)    !^dw
+            delta_e = delta_e - ( rho%of_r(ir,1) + rho%of_r(ir,2) ) * v%of_r(ir,1) &  ! up
+                              - ( rho%of_r(ir,1) - rho%of_r(ir,2) ) * v%of_r(ir,2)    ! dw
           ENDDO 
           delta_e = 0.5_dp*delta_e
           !
@@ -1023,8 +1017,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
            delta_e_hub = - SUM (rho%ns_nc(:,:,:,:)*v%ns_nc(:,:,:,:))
            delta_e = delta_e + delta_e_hub
          else
-           delta_e_hub = - SUM( (rho%ns(:,:,1,:)+rho%ns(:,:,nspin,:))*v%ns(:,:,1,:) + &           !up +
-                                 (rho%ns(:,:,1,:)-rho%ns(:,:,nspin,:))*v%ns(:,:,nspin,:) )*0.5d0  !down
+           delta_e_hub = - SUM (rho%ns(:,:,:,:)*v%ns(:,:,:,:))
            if (nspin==1) delta_e_hub = 2.d0 * delta_e_hub
            delta_e = delta_e + delta_e_hub
          endif
@@ -1049,10 +1042,9 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
        USE funct,  ONLY : dft_is_meta
        IMPLICIT NONE
-       REAL(DP) :: delta_escf, delta_escf_hub
-       REAL(DP) :: rho_dif(2)
+       REAL(DP) :: delta_escf, delta_escf_hub, rho_dif(2)
        INTEGER  :: ir
-       !^
+       !
        delta_escf=0._dp
        IF ( nspin==2 ) THEN
           !
@@ -1077,24 +1069,19 @@ SUBROUTINE electrons_scf ( printout, exxen )
        !
        CALL mp_sum( delta_escf, intra_bgrp_comm )
        !
-       if (lda_plus_u) then
-         if (noncolin) then
+       IF ( lda_plus_u ) THEN
+         IF ( noncolin ) THEN
            delta_escf_hub = -SUM((rhoin%ns_nc(:,:,:,:)-rho%ns_nc(:,:,:,:))*v%ns_nc(:,:,:,:))
            delta_escf = delta_escf + delta_escf_hub
-         else
-           !
-           delta_escf_hub = -SUM( (rhoin%ns(:,:,1,:) + rhoin%ns(:,:,nspin,:) - &    !up
-                                   (  rho%ns(:,:,1,:) +   rho%ns(:,:,nspin,:)) )*v%ns(:,:,1,:) + & 
-                                   (rhoin%ns(:,:,1,:) - rhoin%ns(:,:,nspin,:) - &    !down
-                                   (  rho%ns(:,:,1,:) -   rho%ns(:,:,nspin,:)) )*v%ns(:,:,nspin,:) )
-           !
-           if (nspin==1) delta_escf_hub = 2.d0 * delta_escf_hub
-           delta_escf = delta_escf + delta_escf_hub * 0.5d0
-         endif
-       end if
+         ELSE
+           delta_escf_hub = -SUM((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v%ns(:,:,:,:))
+           IF ( nspin==1 ) delta_escf_hub = 2.d0 * delta_escf_hub
+           delta_escf = delta_escf + delta_escf_hub
+         ENDIF
+       ENDIF
 
-       IF (okpaw) delta_escf = delta_escf - &
-                               SUM(ddd_paw(:,:,:)*(rhoin%bec(:,:,:)-rho%bec(:,:,:)))
+       IF ( okpaw ) delta_escf = delta_escf - &
+                                 SUM(ddd_paw(:,:,:)*(rhoin%bec(:,:,:)-rho%bec(:,:,:)))
 
        RETURN
        !

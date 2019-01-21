@@ -212,12 +212,12 @@ SUBROUTINE sum_band()
      END DO
      !
   END IF
-  !^
-  IF (nspin == 2) THEN
-     CALL rhoz_or_updw( rho, 'r_and_g', 'updw_rhoz' )
-     IF (lda_plus_u.AND.(.NOT.noncolin)) CALL rhoz_or_updw( rho, 'hub_ns', 'updw_rhoz' )
-  ENDIF
-  !^
+  !
+  ! ... if LSDA rho%of_r and rho%of_g are converted from (up,dw) to
+  ! ... (up+dw,up-dw) format.
+  !
+  IF ( nspin == 2 ) CALL rhoz_or_updw( rho, 'r_and_g', '->rhoz' )
+  !
   CALL stop_clock( 'sum_band' )
   !
   RETURN

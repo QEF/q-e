@@ -117,7 +117,23 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
         CALL start_clock( 'ts_vdw' )
         ALLOCATE (stmp(3,nat))
         stmp(:,:) = tau0(:,ind_bck(:))
-        CALL tsvdw_calculate(stmp,rhor)
+        !
+        !^^ ... TEMPORARY FIX (newlsda) ...
+        IF ( nspin==2 ) THEN
+           rhor(:,1) = rhor(:,1) + rhor(:,2) 
+           rhor(:,2) = rhor(:,1) - rhor(:,2)*2._dp
+        ENDIF
+        !^^.......................
+        !
+        CALL tsvdw_calculate(stmp,rhor(:,1), nspin)
+        !
+        !^^ ... TEMPORARY FIX ...
+        IF ( nspin==2 ) THEN
+           rhor(:,1) = ( rhor(:,1) + rhor(:,2) )*0.5_dp
+           rhor(:,2) = rhor(:,1) - rhor(:,2)
+        ENDIF
+        !^^.......................
+        !
         DEALLOCATE (stmp)
         CALL stop_clock( 'ts_vdw' )
         !
@@ -385,14 +401,29 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
              END DO
              denlc(:,:) = 0.0_dp
              inlc = get_inlc()
-
+             !
+             !^^ ... TEMPORARY FIX (newlsda) ...
+             IF ( nspin==2 ) THEN
+                rhosave(:,1) = rhosave(:,1) + rhosave(:,2) 
+                rhosave(:,2) = rhosave(:,1) - rhosave(:,2)*2._dp
+             ENDIF
+             !^^.......................
+             !   
              if (inlc==1 .or. inlc==2) then
                if (nspin>2) call errore('stres_vdW_DF', 'vdW+DF non implemented in spin polarized calculations',1)
-               CALL stress_vdW_DF(rhosave, rhocsave, nspin, denlc )
+               CALL stress_vdW_DF(rhosave(:,1), rhocsave, nspin, denlc )
              elseif (inlc == 3) then
                if (nspin>2) call errore('stress_rVV10', 'rVV10 non implemented with nspin>2',1)
-               CALL stress_rVV10(rhosave, rhocsave, nspin, denlc )
+               CALL stress_rVV10(rhosave(:,1), rhocsave, nspin, denlc )
              end if
+             !
+             !^^ ... TEMPORARY FIX ...
+             IF ( nspin==2 ) THEN
+                rhosave(:,1) = ( rhosave(:,1) + rhosave(:,2) )*0.5_dp
+                rhosave(:,2) = rhosave(:,1) - rhosave(:,2)
+             ENDIF
+             !^^.......................
+             !
              dxc(:,:) = dxc(:,:) - omega/e2 * MATMUL(denlc,TRANSPOSE(ainv))
          END IF
          DEALLOCATE ( rhocsave, rhosave )

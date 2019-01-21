@@ -21,7 +21,7 @@ subroutine force_cc (forcecc)
   USE gvect,                ONLY : ngm, gstart, g, gg, ngl, gl, igtongl
   USE ener,                 ONLY : etxc, vtxc
   USE lsda_mod,             ONLY : nspin
-  USE scf,                  ONLY : rho, rho_core, rhog_core, rhoz_or_updw
+  USE scf,                  ONLY : rho, rho_core, rhog_core
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin
   USE wavefunctions, ONLY : psic
@@ -64,11 +64,7 @@ subroutine force_cc (forcecc)
   !
   allocate ( vxc(dfftp%nnr,nspin) )
   !
-  IF (nspin == 2) CALL rhoz_or_updw(rho, 'r_and_g', 'rhoz_updw')
-  !
   call v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
-  !
-  IF (nspin == 2) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
   !
   psic=(0.0_DP,0.0_DP)
   if (nspin == 1 .or. nspin == 4) then
