@@ -452,7 +452,7 @@ SUBROUTINE dynmat_hub_bare
                     !       
                     DO is = 1, nspin
                        !      
-                       sgn = REAL( 2*MOD(is,2) - 1 )
+                       sgn = DBLE( 2*MOD(is,2) - 1 )
                        !
                        DO m1 = 1, 2*Hubbard_l(nt) + 1
                           !
@@ -502,7 +502,7 @@ SUBROUTINE dynmat_hub_bare
                     DO is = 1, nspin
                        !      
                        isi = nspin/is
-                       sgn = REAL( 2*MOD(isi,2) - 1 )
+                       sgn = DBLE( 2*MOD(isi,2) - 1 )
                        !
                        DO m1 = 1, 2*Hubbard_l(nt) + 1
                           !

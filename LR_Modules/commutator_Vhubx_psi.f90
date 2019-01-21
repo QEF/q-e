@@ -262,7 +262,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                   !
                   trm = (0.d0, 0.d0)
                   ! 
-                  sgn= REAL( 2*MOD(current_spin,2)-1 )
+                  sgn = DBLE( 2*MOD(current_spin,2)-1 )
                   nsaux = ( rho%ns(m1, m2, 1, nah) + sgn*rho%ns(m1, m2, nspin, nah) )*0.5d0
                   !
                   DO ibnd = 1, nbnd_occ(ik)
@@ -323,7 +323,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                      !
                      trm = (0.d0, 0.d0)
                      ! 
-                     sgn = REAL( 2*MOD(op_spin,2)-1 )
+                     sgn = DBLE( 2*MOD(op_spin,2)-1 )
                      nsaux = ( rho%ns(m1, m2, 1, nah) + sgn*rho%ns(m1, m2, nspin, nah) )*0.5d0
                      !
                      DO ibnd = 1, nbnd_occ(ik)
