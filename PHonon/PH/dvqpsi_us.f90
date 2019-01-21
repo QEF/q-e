@@ -88,7 +88,6 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   complex(DP) , allocatable, target :: aux (:)
   complex(DP) , allocatable :: aux1 (:), aux2 (:)
   complex(DP) , pointer :: auxs (:)
-  REAL(DP) :: fac
   COMPLEX(DP), ALLOCATABLE :: drhoc(:)
   ! 
   call start_clock ('dvqpsi_us')
@@ -173,8 +172,6 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
                 (dmuxc(ir,is,1)+dmuxc(ir,is,2))
         enddo
      endif
-
-     fac = 1.d0 / DBLE (nspin_lsda)
 
      rho%of_r(:,1) = rho%of_r(:,1) + rho_core
 
