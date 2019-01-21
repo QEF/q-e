@@ -608,29 +608,19 @@ FUNCTION ns_ddot( rho1, rho2 )
      IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 ) THEN
         m1 = 2 * Hubbard_l(nt) + 1
         m2 = 2 * Hubbard_l(nt) + 1
-        !
-        IF ( nspin == 1 ) THEN
-           !
-           ns_ddot = ns_ddot + Hubbard_U(nt) * &
-                  SUM( rho1%ns(:m1,:m2,:nspin,na)*rho2%ns(:m1,:m2,:nspin,na) )
-           !       
-        ELSEIF ( nspin == 2 ) THEN
-           !
-           ns_ddot= ns_ddot + 0.125D0 * Hubbard_U(nt) * SUM( &
-                      ( rho1%ns(:m1,:m2,1,na)+rho1%ns(:m1,:m2,2,na) )*  &
-                      ( rho2%ns(:m1,:m2,1,na)+rho2%ns(:m1,:m2,2,na) ) + &
-                      ( rho1%ns(:m1,:m2,1,na)-rho1%ns(:m1,:m2,2,na) )*  &
-                      ( rho2%ns(:m1,:m2,1,na)-rho2%ns(:m1,:m2,2,na) ) )
-           !
-        ELSEIF ( nspin == 4 ) THEN
-           !
-           ns_ddot = ns_ddot + 0.5D0 * Hubbard_U(nt) * &
+
+        if (nspin.eq.4) then
+          ns_ddot = ns_ddot + 0.5D0 * Hubbard_U(nt) * &
                   SUM( CONJG(rho1%ns_nc(:m1,:m2,:nspin,na))*rho2%ns_nc(:m1,:m2,:nspin,na) )
-           !
-        ENDIF
-        !
+        else
+          ns_ddot = ns_ddot + 0.5D0 * Hubbard_U(nt) * &
+                  SUM( rho1%ns(:m1,:m2,:nspin,na)*rho2%ns(:m1,:m2,:nspin,na) )
+        endif
+
      END IF
   END DO
+  !
+  IF ( nspin == 1 ) ns_ddot = 2.D0*ns_ddot
   !
   RETURN
   !
