@@ -1912,7 +1912,6 @@ stres_loc.o : ../../Modules/gth.o
 stres_loc.o : ../../Modules/ions_base.o
 stres_loc.o : ../../Modules/kind.o
 stres_loc.o : ../../Modules/mp_bands.o
-stres_loc.o : ../../Modules/noncol.o
 stres_loc.o : ../../Modules/recvec.o
 stres_loc.o : ../../Modules/uspp.o
 stres_loc.o : ../../Modules/wavefunctions.o
