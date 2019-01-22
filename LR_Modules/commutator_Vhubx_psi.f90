@@ -322,12 +322,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                      !
                      trm = (0.d0, 0.d0)
                      ! 
-<<<<<<< HEAD
-                     sgn = DBLE( 2*MOD(op_spin,2)-1 )
-                     nsaux = ( rho%ns(m1, m2, 1, nah) + sgn*rho%ns(m1, m2, nspin, nah) )*0.5d0
-=======
                      nsaux = rho%ns(m1, m2, op_spin, nah)
->>>>>>> e531186d9efa95660209cc95ecc5cc250a489ca1
                      !
                      DO ibnd = 1, nbnd_occ(ik)
                         trm(:,ibnd) = aux_1234(:) * proj1(ibnd,ihubst2)  + & ! term_1234
