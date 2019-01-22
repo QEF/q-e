@@ -5,9 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------
-SUBROUTINE addusdens(rho)
+SUBROUTINE addusdens(rho,lsda_format)
   !----------------------------------------------------------------------
   !
   ! ... Add US contribution to the charge density to rho(G)
@@ -20,13 +19,19 @@ SUBROUTINE addusdens(rho)
   !
   IMPLICIT NONE
   !
-  !
   COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
+  CHARACTER(len=*), OPTIONAL      :: lsda_format
+  INTEGER :: sw_lsda
+  
+  sw_lsda = 0
+  IF ( present(lsda_format) .and. nspin_mag==2 ) THEN
+    IF (lsda_format == 'rho-mz') sw_lsda = 1
+  ENDIF
   !
   IF ( tqr ) THEN
-     CALL addusdens_r(rho)
+     CALL addusdens_r(rho,sw_lsda)
   ELSE
-     CALL addusdens_g(rho)
+     CALL addusdens_g(rho,sw_lsda)
   ENDIF
   !
   RETURN
@@ -34,7 +39,7 @@ SUBROUTINE addusdens(rho)
 END SUBROUTINE addusdens
 !
 !----------------------------------------------------------------------
-SUBROUTINE addusdens_g(rho)
+SUBROUTINE addusdens_g(rho, sw_lsda)
   !----------------------------------------------------------------------
   !
   !  This routine adds to the charge density rho(G) in reciprocal space
@@ -56,6 +61,7 @@ SUBROUTINE addusdens_g(rho)
   IMPLICIT NONE
   !
   COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
+  INTEGER, INTENT(in) :: sw_lsda
   !
   !     here the local variables
   !
@@ -63,7 +69,6 @@ SUBROUTINE addusdens_g(rho)
   ! starting/ending indices, local number of G-vectors
   INTEGER :: ig, na, nt, ih, jh, ijh, is, nab, nb, nij
   ! counters
-
   REAL(DP), ALLOCATABLE :: tbecsum(:,:,:)
   ! \sum_kv <\psi_kv|\beta_l><beta_m|\psi_kv> for each species of atoms
   REAL(DP), ALLOCATABLE :: qmod (:), ylmk0 (:,:)
@@ -159,7 +164,12 @@ SUBROUTINE addusdens_g(rho)
   !
   !     add aux to the charge density in reciprocal space
   !
-  rho(:,:) = rho(:,:) + aux (:,:)
+  IF (sw_lsda == 0) THEN
+    rho(:,:) = rho(:,:) + aux(:,:)
+  ELSE
+    rho(:,1) = rho(:,1) + aux(:,1) + aux(:,2)
+    rho(:,2) = rho(:,2) + aux(:,1) - aux(:,2)
+  ENDIF
   !
   DEALLOCATE (aux)
   !

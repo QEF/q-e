@@ -14,7 +14,7 @@ subroutine ns_adj
    USE kinds,     ONLY : DP
    USE ions_base, ONLY : nat, ntyp => nsp, ityp
    USE ldaU,      ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, starting_ns
-   USE scf,       ONLY : rho, rhoz_or_updw
+   USE scf,       ONLY : rho
    USE lsda_mod,  ONLY : nspin
    USE noncollin_module, ONLY : noncolin, npol
    USE io_global, ONLY : stdout
@@ -74,8 +74,7 @@ subroutine ns_adj
          end do
 
        else
-         !^
-         IF (nspin == 2) call rhoz_or_updw(rho, 'hub_ns', 'rhoz_updw')
+         !
          do is = 1, nspin
             do m1 = 1, ldim
                do m2 = 1, ldim 
@@ -97,8 +96,7 @@ subroutine ns_adj
                enddo
             enddo
          enddo
-         IF (nspin == 2) call rhoz_or_updw(rho, 'hub_ns', 'updw_rhoz')
-         !^
+         !
        endif 
 
       endif

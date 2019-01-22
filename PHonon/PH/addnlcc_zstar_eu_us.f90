@@ -12,7 +12,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
   USE kinds, ONLY : DP
   USE funct, only : dft_is_gradient, dft_is_nonlocc
-  USE scf, only : rho, rho_core, rhoz_or_updw
+  USE scf, only : rho, rho_core
   USE cell_base, ONLY : omega
   USE gvect, ONLY : ngm, g
   USE fft_base, ONLY : dfftp
@@ -74,30 +74,15 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            ! add gradient correction to xc, NB: if nlcc is true we need to add here
            ! its contribution. grho contains already the core charge
            !
-
-           IF ( dft_is_gradient() ) THEN
-              !^
-              IF (nspin_lsda == 2) CALL rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
-              !
-              CALL dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
-                   dvxc_s, xq, drhoscf(1,1,ipol), nspin_mag, nspin_gga, g, dvaux)
-              !
-              IF (nspin_lsda == 2) call rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
-              !^
-           ENDIF
+           IF ( dft_is_gradient() ) CALL dgradcorr( dfftp, rho%of_r, grho, dvxc_rr, &
+                                   dvxc_sr, dvxc_ss, dvxc_s, xq, drhoscf(1,1,ipol), &
+                                   nspin_mag, nspin_gga, g, dvaux )
            !
-           IF (dft_is_nonlocc()) THEN
-              !^
-              IF (nspin_lsda == 2) CALL rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
-              !
-              CALL dnonloccorr(rho%of_r, drhoscf (1, 1, ipol), xq, dvaux)
-              !
-              IF (nspin_lsda == 2) CALL rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
-              !^
-           ENDIF
+           IF (dft_is_nonlocc()) CALL dnonloccorr( rho%of_r, drhoscf(1, 1, ipol), &
+                                                  xq, dvaux )
            !
            rho%of_r(:,1) = rho%of_r(:,1) - rho_core
-
+           !
            DO is = 1, nspin_lsda
               zstareu0(ipol,mode) = zstareu0(ipol,mode) -                  &
                    omega * fac / REAL(nrtot, DP) *         &

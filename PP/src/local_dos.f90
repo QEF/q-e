@@ -34,7 +34,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, &
                                    nkstot, ngk, igk_k
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE scf,                  ONLY : rho, rhoz_or_updw
+  USE scf,                  ONLY : rho
   USE symme,                ONLY : sym_rho, sym_rho_init, sym_rho_deallocate
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : upf, nh, nhm
@@ -372,13 +372,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !
   !    Here we add the US contribution to the charge
   !
-  !^
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'only_r', 'rhoz_updw')
-  !
-  CALL addusdens(rho%of_r(:,:))
-  !
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'only_r', 'updw_rhoz')
-  !^
+  CALL addusdens(rho%of_r(:,:), 'rho-mz')
   !
   IF (nspin == 1 .or. nspin==4) THEN
      is = 1
@@ -408,13 +402,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   CALL fwfft ('Rho', psic, dfftp)
   rho%of_g(:,1) = psic(dfftp%nl(:))
   !
-  !^
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'only_g', 'rhoz_updw')
-  !
   CALL sym_rho (1, rho%of_g)
-  !
-  IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'only_g', 'updw_rhoz')
-  !^
   !
   psic(:) = (0.0_dp, 0.0_dp)
   psic(dfftp%nl(:)) = rho%of_g(:,1)

@@ -148,14 +148,26 @@ SUBROUTINE PAW_make_ae_charge(rho,withcore)
             !
             ! prepare spherical harmonics
             CALL ylmr2( i%l**2, 1, posi, distsq, ylm_posi )
-            DO is = 1,nspin
-               DO lm = 1, i%l**2
-                  ! do interpolation
-                  rho%of_r(ir,is)= rho%of_r(ir,is) + ylm_posi(1,lm) &
-                       * splint(g(i%t)%r(:) , rho_lm(:,lm,is), &
-                       wsp_lm(:,lm,is), sqrt(distsq) )
+            IF ( nspin/=2 ) THEN
+               DO is = 1,nspin
+                  DO lm = 1, i%l**2
+                     ! do interpolation
+                     rho%of_r(ir,is)= rho%of_r(ir,is) + ylm_posi(1,lm) &
+                          * splint(g(i%t)%r(:) , rho_lm(:,lm,is), &
+                          wsp_lm(:,lm,is), sqrt(distsq) )
+                  ENDDO
                ENDDO
-            ENDDO
+            ELSE
+              DO lm = 1, i%l**2
+                     ! do interpolation
+                     rho%of_r(ir,1)= rho%of_r(ir,is) + ylm_posi(1,lm) &
+                          * splint(g(i%t)%r(:) , rho_lm(:,lm,is), &
+                          wsp_lm(:,lm,is), sqrt(distsq) )
+                     rho%of_r(ir,2)= rho%of_r(ir,is) + ylm_posi(1,lm)*(2*mod(is,2)-1) &
+                          * splint(g(i%t)%r(:) , rho_lm(:,lm,is), &
+                          wsp_lm(:,lm,is), sqrt(distsq) )
+              ENDDO
+            ENDIF
          ENDDO rsp_point
          !
          DEALLOCATE(rho_lm, ylm_posi, wsp_lm)

@@ -32,7 +32,7 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
   USE control_lr,    ONLY : lgamma, ofsbeta
   USE units_lr,      ONLY : iuatwfc, iuatswfc
   USE uspp_param,    ONLY : nh
-  USE lsda_mod,      ONLY : nspin, lsda, current_spin, isk
+  USE lsda_mod,      ONLY : lsda, current_spin, isk
   USE wavefunctions, ONLY : evc
   USE eqv,           ONLY : dvpsi
   USE scf,           ONLY : rho
@@ -52,11 +52,8 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
   !
   COMPLEX(DP), ALLOCATABLE :: dqsphi(:,:), dmqsphi(:,:), dwfcatom_(:), dvqi(:,:), &
                               dvqi_orth(:,:), dvqi_orth_lm(:,:), aux1(:), aux2(:)
-  COMPLEX(DP) :: rhons_m1m2
-  
   INTEGER :: i, j, k, icart, na, nt, l, ih, n, mu, ig, npw, npwq, &
              ihubst, ihubst1, ihubst2, nah, m, m1, m2, ibnd, op_spin, ikk, ikq, ibeta
-  REAL(DP) :: sgn_cs, sgn_op
   COMPLEX(DP), EXTERNAL :: ZDOTC
   !
   CALL start_clock( 'dvqhub_barepsi_us2' )
@@ -90,8 +87,6 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
   ELSE        
      op_spin = 1
   ENDIF
-  sgn_cs = DBLE(2*MOD(current_spin,2)-1)
-  sgn_op = DBLE(2*MOD(op_spin,2)-1)
   !
   ! Compute beta functions at k and k+q     
   !
@@ -250,12 +245,10 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
                     DO m2 = 1, 2*Hubbard_l(nt)+1
                        !   
                        ihubst2 = offsetU(nah) + m2
-                       !
-                       rhons_m1m2 = ( rho%ns(m1,m2,1,nah) + sgn_cs * &
-                                                        rho%ns(m1,m2,nspin,nah) )*0.5d0
+                       !   
                        DO ig = 1, npwq          
                           !      
-                          aux1(ig) = rhons_m1m2 * &
+                          aux1(ig) = rho%ns(m1,m2,current_spin,nah) * &
                                      ( dqsphi(ig,ihubst1) * proj1(ibnd,ihubst2)      + &
                                        dqsphi(ig,ihubst2) * proj1(ibnd,ihubst1)      + &
                                        swfcatomkpq(ig,ihubst1) * proj2(ibnd,ihubst2) + &
@@ -271,13 +264,13 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
                           !     
                           DO ig = 1, npwq   
                              !   
-                             aux1(ig) = rhons_m1m2 * &
+                             aux1(ig) = rho%ns(m1,m2,current_spin,nah) * &
                                         ( dqsphi(ig,ihubst2) * proj1(ibnd,ihubst1) + &
                                           swfcatomkpq(ig,ihubst2) * proj2(ibnd,ihubst1) )
                              !   
                              dvqi_orth(ig,ibnd) = dvqi_orth(ig,ibnd) - aux1(ig) 
                              !   
-                             aux1(ig) = rhons_m1m2 * &
+                             aux1(ig) = rho%ns(m1,m2,current_spin,nah) * &
                                         ( dqsphi(ig,ihubst1) * proj1(ibnd,ihubst2) + & 
                                           swfcatomkpq(ig,ihubst1) * proj2(ibnd,ihubst2) )  
                              !
@@ -340,12 +333,10 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
                     DO m2 = 1, 2*Hubbard_l(nt)+1
                        !   
                        ihubst2 = offsetU(nah) + m2
-                       !
-                       rhons_m1m2 = ( rho%ns(m1,m2,1,nah) + sgn_op * &
-                                                       rho%ns(m1,m2,nspin,nah) )*0.5d0
+                       !   
                        DO ig = 1, npwq
                           !          
-                          aux1(ig) = rhons_m1m2 * &
+                          aux1(ig) = rho%ns(m1,m2,op_spin,nah) * &
                                      ( dqsphi(ig,ihubst1) * proj1(ibnd,ihubst2)      + &
                                        dqsphi(ig,ihubst2) * proj1(ibnd,ihubst1)      + &
                                        swfcatomkpq(ig,ihubst1) * proj2(ibnd,ihubst2) + &
@@ -363,13 +354,13 @@ SUBROUTINE dvqhub_barepsi_us2 (ik, dvqhbar, dvqhbar_orth, dvqhbar_orth_lm)
                           !   
                           DO ig = 1, npwq   
                              !    
-                             aux1(ig) = rhons_m1m2 * & 
+                             aux1(ig) = rho%ns(m1,m2,op_spin,nah) * &
                                         ( dqsphi(ig,ihubst2) * proj1(ibnd,ihubst1) + &
                                           swfcatomkpq(ig,ihubst2) * proj2(ibnd,ihubst1) )
                              !   
                              dvqi_orth(ig,ibnd) = dvqi_orth(ig,ibnd) + aux1(ig) ! sign change
                              !   
-                             aux1(ig) = rhons_m1m2 * & 
+                             aux1(ig) = rho%ns(m1,m2,op_spin,nah) * &
                                         ( dqsphi(ig,ihubst1) * proj1(ibnd,ihubst2) + &   
                                           swfcatomkpq(ig,ihubst1) * proj2(ibnd,ihubst2) )
                              !          
