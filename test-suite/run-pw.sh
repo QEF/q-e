@@ -9,7 +9,9 @@
 # of the present distribution.
 
 if [ $QE_USE_MPI == 1 ]; then
-  export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
+  #. /project/projectdirs/mpccc/tkurth/NESAP2/q-e/buildscripts/env_gori.sh
+  #export PARA_PREFIX="srun --mpi=pmi2 -c $(( 40 / ${TESTCODE_NPROCS} )) --cpu_bind=sockets -n ${TESTCODE_NPROCS}"
+  export PARA_PREFIX="srun -c $(( 64 / ${TESTCODE_NPROCS} )) --cpu_bind=cores -n ${TESTCODE_NPROCS}" 
   export PARA_POSTFIX=" "
 else
   unset PARA_PREFIX
