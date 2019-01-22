@@ -361,7 +361,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                    create_scf_type, destroy_scf_type, &
                                    open_mix_file, close_mix_file, &
                                    rho, rho_core, rhog_core, v, vltot, vrs, &
-                                   kedtau, vnew, rhoz_or_updw
+                                   kedtau, vnew
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, conv_elec, &
                                    restart, io_level, do_makov_payne,  &

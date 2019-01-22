@@ -14,7 +14,6 @@ subroutine plus_u_setup(natih, lsr)
   use radial_grids,     ONLY : ndmx
   USE ions_base,        ONLY : nat, ityp, ntyp => nsp, atm
   USE cell_base,        ONLY : alat
-  USE lsda_mod,         ONLY : nspin
   use uspp_param,       only : nhm, upf 
   USE io_global,        ONLY : stdout
   USE cond,             ONLY : norbs, nocrosl, noinss, nocrosr, tblms, taunews, &

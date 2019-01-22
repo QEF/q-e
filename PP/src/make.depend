@@ -756,7 +756,6 @@ vasp_read_chgcar_mod.o : ../../Modules/wavefunctions.o
 vasp_read_chgcar_mod.o : ../../PW/src/pwcom.o
 vasp_read_chgcar_mod.o : ../../PW/src/scf_mod.o
 vasp_read_chgcar_mod.o : ../../UtilXlib/mp.o
-vasp_read_chgcar_mod.o : ../../iotk/src/iotk_module.o
 vasp_xml_module.o : ../../FFTXlib/fft_interfaces.o
 vasp_xml_module.o : ../../FFTXlib/fft_support.o
 vasp_xml_module.o : ../../FFTXlib/fft_types.o
