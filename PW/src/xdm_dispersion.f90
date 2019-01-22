@@ -184,7 +184,7 @@ CONTAINS
     ! runs. In addition, forces and stresses are saved for subsequent calls to force_xdm
     ! and stress_xdm.
     USE control_flags, ONLY: lbfgs, lmd
-    USE scf, ONLY: rho
+    USE scf, ONLY: rho, rhoz_or_updw
     USE io_global, ONLY: stdout, ionode
     USE fft_base, ONLY : dfftp
     USE cell_base, ONLY : at, alat, omega
@@ -230,6 +230,9 @@ CONTAINS
     fsave = 0._DP
     ssave = 0._DP
     atb = at * alat
+    !
+    ! for convenience rho is converted in (up,down) format, if LSDA
+    IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', '->updw' )
 
     ! do we need to recalculate the coefficients?
     docalc = .NOT.saved .OR. .NOT.(lbfgs .OR. lmd)
@@ -559,7 +562,9 @@ CONTAINS
     DO nn = 6, 10
        CALL mp_sum(ehadd(nn),intra_image_comm)
     ENDDO
-
+    !
+    IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', '->rhoz' )
+    !
     ! Convert to Ry
     evdw = evdw * 2
     for = for * 2

@@ -460,10 +460,21 @@ MODULE cp_restart_new
         CALL rho_r2g (dfftp,rho, rhog)
         filename = TRIM(dirname) // 'charge-density' 
         ! Only the first band group collects and writes
-        IF ( my_bgrp_id == root_bgrp_id ) CALL write_rhog &
+        
+        IF ( my_bgrp_id == root_bgrp_id ) THEN
+           !
+           !^^ ... TEMPORARY FIX (newlsda) ...
+           IF ( lsda ) THEN
+              rhog(:,1) = rhog(:,1) + rhog(:,2) 
+              rhog(:,2) = rhog(:,1) - rhog(:,2)*2._dp
+           ENDIF
+           !^^.......................
+           !      
+           CALL write_rhog &
                 ( filename, root_bgrp, intra_bgrp_comm, &
                 tpiba*b1, tpiba*b2, tpiba*b3, gamma_only, &
                 mill, ig_l2g, rhog, ecutrho )
+        ENDIF
         !
         DEALLOCATE ( rhog )
      END IF

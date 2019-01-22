@@ -1143,7 +1143,7 @@ MODULE realus
     END SUBROUTINE newq_r
     !
     !------------------------------------------------------------------------
-    SUBROUTINE addusdens_r( rho )
+    SUBROUTINE addusdens_r( rho, sw_lsda )
       !------------------------------------------------------------------------
       !
       ! ... This routine adds to the charge density the part which is due to
@@ -1169,17 +1169,20 @@ MODULE realus
       !
       IMPLICIT NONE
       ! The charge density to be augmented (in G-space)
-      COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag) 
+      COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
+      INTEGER, INTENT(in) :: sw_lsda
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia
       CHARACTER(len=80) :: msg
       REAL(kind=dp), ALLOCATABLE :: rhor(:,:) 
-      REAL(DP) :: charge
+      REAL(DP) :: charge, sgn(2)
       !
       !
       IF ( .not. okvan ) RETURN
       !
       CALL start_clock( 'addusdens' )
+      !
+      sgn(1)=1._dp  ;   sgn(2)=-1._dp
       !
       ALLOCATE ( rhor(dfftp%nnr,nspin_mag) )
       rhor(:,:) = 0.0_dp
@@ -1207,10 +1210,16 @@ MODULE realus
          !
       ENDDO
       !
+      !
       DO is = 1, nspin_mag
          psic(:) = rhor(:,is)
          CALL fwfft ('Rho', psic, dfftp)
-         rho(:,is) = rho(:,is) + psic(dfftp%nl(:))
+         IF (sw_lsda == 0) THEN
+            rho(:,is) = rho(:,is) + psic(dfftp%nl(:))
+         ELSE
+            rho(:,1) = rho(:,1) + psic(dfftp%nl(:))
+            rho(:,2) = rho(:,2) + sgn(is)*psic(dfftp%nl(:))
+         ENDIF
       END DO
       !!! CALL rho_r2g(dfftp, rhor, rho(:,1:nspin_mag) )
       !
@@ -1220,7 +1229,11 @@ MODULE realus
       ! ... check the total charge (must not be summed on k-points)
       !
       IF ( gstart == 2) THEN
-         charge = SUM(rho(1,1:nspin_lsda) )*omega
+         IF (sw_lsda == 0) THEN
+            charge = SUM(rho(1,1:nspin_lsda) )*omega
+         ELSE
+            charge = SUM( rho(1,1) )*omega
+         ENDIF
       ELSE
          charge = 0.0_dp
       ENDIF
