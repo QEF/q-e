@@ -105,9 +105,6 @@ SUBROUTINE dvqhub_barepsi_us (ik, uact)
      op_spin = 1
   ENDIF
   !
-  sgn_cs = DBLE(2*MOD(current_spin,2)-1)
-  sgn_op = DBLE(2*MOD(op_spin,2)-1)
-  !
   ! Compute the beta function at k and put the result in vkb_
   !
   IF (.NOT.lgamma) THEN   
