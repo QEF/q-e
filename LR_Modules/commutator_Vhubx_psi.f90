@@ -52,7 +52,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   REAL(DP), PARAMETER :: eps = 1.0d-8
   INTEGER     :: na, n ,l, nt, nah, ikb , m, m1, m2, ibnd, ib, ig, jkb, i, &
                  ihubst, ihubst1,  ihubst2, icart, op_spin, npw
-  REAL(DP)    :: nsaux, sgn
+  REAL(DP)    :: nsaux
   REAL(DP), ALLOCATABLE :: xyz(:,:), gk(:,:), g2k(:)
   COMPLEX(DP), ALLOCATABLE :: dkwfcbessel(:,:), dkwfcylmr(:,:), dkwfcatomk(:,:),   &
                  dpqq26(:,:), dpqq38(:,:), dpqq47(:,:), dkvkbbessel(:,:),          &
@@ -262,8 +262,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                   !
                   trm = (0.d0, 0.d0)
                   ! 
-                  sgn= REAL( 2*MOD(current_spin,2)-1 )
-                  nsaux = ( rho%ns(m1, m2, 1, nah) + sgn*rho%ns(m1, m2, nspin, nah) )*0.5d0
+                  nsaux = rho%ns(m1, m2, current_spin, nah)
                   !
                   DO ibnd = 1, nbnd_occ(ik)
                      trm(:,ibnd) = aux_1234(:) * proj1(ibnd,ihubst2)  + &     ! term_1234
@@ -323,8 +322,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
                      !
                      trm = (0.d0, 0.d0)
                      ! 
-                     sgn = REAL( 2*MOD(op_spin,2)-1 )
-                     nsaux = ( rho%ns(m1, m2, 1, nah) + sgn*rho%ns(m1, m2, nspin, nah) )*0.5d0
+                     nsaux = rho%ns(m1, m2, op_spin, nah)
                      !
                      DO ibnd = 1, nbnd_occ(ik)
                         trm(:,ibnd) = aux_1234(:) * proj1(ibnd,ihubst2)  + & ! term_1234
