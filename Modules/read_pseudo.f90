@@ -175,6 +175,7 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
         !
         IF (is_xml) THEN
            !
+           CALL mp_bcast(file_fixed, ionode_id, intra_image_comm) 
            CALL  read_upf(upf(nt), rgrid(nt), isupf, filename = TRIM(file_fixed) )
            !! try again to read from the corrected file 
            WRITE ( msg, '(A)') 'Pseudo file '// trim(psfile(nt)) // ' has been fixed on the fly.' &
