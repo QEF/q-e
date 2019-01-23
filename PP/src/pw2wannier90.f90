@@ -82,6 +82,7 @@ module wannier
    real(DP), allocatable    :: eigval(:,:)
    logical                  :: old_spinor_proj  ! for compatability for nnkp files prior to W90v2.0
    integer,allocatable :: rir(:,:)
+   logical,allocatable :: zerophase(:,:)
 end module wannier
 !
 
@@ -604,9 +605,14 @@ SUBROUTINE setup_nnkp
   nnb=max(nnbx,nnb)
 
   ALLOCATE( ig_(iknum,nnb), ig_check(iknum,nnb) )
+  ALLOCATE( zerophase(iknum,nnb) )
+  zerophase = .false.
 
   DO ik=1, iknum
      DO ib = 1, nnb
+        IF ( (g_kpb(1,ik,ib).eq.0) .and.  &
+             (g_kpb(2,ik,ib).eq.0) .and.  &
+             (g_kpb(3,ik,ib).eq.0) ) zerophase(ik,ib) = .true.
         g_(:) = REAL( g_kpb(:,ik,ib) )
         CALL cryst_to_cart (1, g_, bg, 1)
         gg_ = g_(1)*g_(1) + g_(2)*g_(2) + g_(3)*g_(3)
@@ -1022,6 +1028,8 @@ SUBROUTINE read_nnkp
   !
   ALLOCATE ( kpb(iknum,nnbx), g_kpb(3,iknum,nnbx),&
              ig_(iknum,nnbx), ig_check(iknum,nnbx) )
+  ALLOCATE( zerophase(iknum,nnbx) )
+  zerophase = .false.
 
   !  read data about neighbours
   WRITE(stdout,*)
@@ -1042,6 +1050,9 @@ SUBROUTINE read_nnkp
 
   DO ik=1, iknum
      DO ib = 1, nnb
+        IF ( (g_kpb(1,ik,ib).eq.0) .and.  &
+             (g_kpb(2,ik,ib).eq.0) .and.  &
+             (g_kpb(3,ik,ib).eq.0) ) zerophase(ik,ib) = .true.
         g_(:) = REAL( g_kpb(:,ik,ib) )
         CALL cryst_to_cart (1, g_, bg, 1)
         gg_ = g_(1)*g_(1) + g_(2)*g_(2) + g_(3)*g_(3)
@@ -1938,7 +1949,7 @@ SUBROUTINE compute_mmn
                                becp2(:,:), Mkb(:,:), aux_nc(:,:), becp2_nc(:,:,:)
    real(DP), ALLOCATABLE    :: rbecp2(:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:), qq_so(:,:,:,:)
-   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:), workg(:)
+   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:)
    COMPLEX(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: arg, g_(3)
    CHARACTER (len=9)        :: cdate,ctime
@@ -1992,32 +2003,27 @@ SUBROUTINE compute_mmn
       ELSE
          ALLOCATE ( becp2(nkb,nbnd) )
       ENDIF
-   ENDIF
-   !
-   !     qb is  FT of Q(r)
-   !
-   nbt = nnb * iknum
-   !
-   ALLOCATE( qg(nbt) )
-   ALLOCATE (dxk(3,nbt))
-   !
-   ind = 0
-   DO ik=1,iknum
-      DO ib=1,nnb
-         ind = ind + 1
-         ikp = kpb(ik,ib)
-         !
-         g_(:) = REAL( g_kpb(:,ik,ib) )
-         CALL cryst_to_cart (1, g_, bg, 1)
-         dxk(:,ind) = xk(:,ikp) +g_(:) - xk(:,ik)
-         qg(ind) = dxk(1,ind)*dxk(1,ind)+dxk(2,ind)*dxk(2,ind)+dxk(3,ind)*dxk(3,ind)
+      !
+      !     qb is  FT of Q(r)
+      !
+      nbt = nnb * iknum
+      !
+      ALLOCATE( qg(nbt) )
+      ALLOCATE (dxk(3,nbt))
+      !
+      ind = 0
+      DO ik=1,iknum
+         DO ib=1,nnb
+            ind = ind + 1
+            ikp = kpb(ik,ib)
+            !
+            g_(:) = REAL( g_kpb(:,ik,ib) )
+            CALL cryst_to_cart (1, g_, bg, 1)
+            dxk(:,ind) = xk(:,ikp) +g_(:) - xk(:,ik)
+            qg(ind) = dxk(1,ind)*dxk(1,ind)+dxk(2,ind)*dxk(2,ind)+dxk(3,ind)*dxk(3,ind)
+         ENDDO
+!         write (stdout,'(i3,12f8.4)')  ik, qg((ik-1)*nnb+1:ik*nnb)
       ENDDO
-!      write (stdout,'(i3,12f8.4)')  ik, qg((ik-1)*nnb+1:ik*nnb)
-   ENDDO
-   !
-   !  USPP
-   !
-   IF(any_uspp) THEN
 
       ALLOCATE( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
       ALLOCATE( qb (nhm, nhm, ntyp, nbt) )
@@ -2044,7 +2050,6 @@ SUBROUTINE compute_mmn
    WRITE(stdout,'(a,i8)') '  MMN: iknum = ',iknum
    !
    ALLOCATE( Mkb(nbnd,nbnd) )
-   ALLOCATE( workg(npwx) )
    !
    ind = 0
    DO ik=1,iknum
@@ -2076,9 +2081,11 @@ SUBROUTINE compute_mmn
             CALL davcio (evcq, 2*nwordwfc, iunwfc, ikpevcq, -1 )
 !         end if
 ! compute the phase
-         phase(:) = (0.d0,0.d0)
-         IF ( ig_(ik,ib)>0) phase( dffts%nl(ig_(ik,ib)) ) = (1.d0,0.d0)
-         CALL invfft ('Wave', phase, dffts)
+         IF (.not.zerophase(ik,ib)) THEN
+            phase(:) = (0.d0,0.d0)
+            IF ( ig_(ik,ib)>0) phase( dffts%nl(ig_(ik,ib)) ) = (1.d0,0.d0)
+            CALL invfft ('Wave', phase, dffts)
+         ENDIF
          !
          !  USPP
          !
@@ -2184,19 +2191,23 @@ SUBROUTINE compute_mmn
                   istart=(ipol-1)*npwx+1
                   iend=istart+npw-1
                   psic_nc(dffts%nl (igk_k(1:npw,ik) ),ipol ) = evc(istart:iend, m)
-                  CALL invfft ('Wave', psic_nc(:,ipol), dffts)
-                  psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * &
+		  IF (.not.zerophase(ik,ib)) THEN
+                     CALL invfft ('Wave', psic_nc(:,ipol), dffts)
+                     psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * &
                                                  phase(1:dffts%nnr)
-                  CALL fwfft ('Wave', psic_nc(:,ipol), dffts)
+                     CALL fwfft ('Wave', psic_nc(:,ipol), dffts)
+                  ENDIF
                   aux_nc(1:npwq,ipol) = psic_nc(dffts%nl (igk_k(1:npwq,ikp)),ipol )
                ENDDO
             ELSE
                psic(:) = (0.d0, 0.d0)
                psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw, m)
                IF(gamma_only) psic(dffts%nlm(igk_k(1:npw,ik) ) ) = conjg(evc (1:npw, m))
-               CALL invfft ('Wave', psic, dffts)
-               psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
-               CALL fwfft ('Wave', psic, dffts)
+               IF (.not.zerophase(ik,ib)) THEN
+                  CALL invfft ('Wave', psic, dffts)
+                  psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
+                  CALL fwfft ('Wave', psic, dffts)
+               ENDIF
                aux(1:npwq)  = psic(dffts%nl (igk_k(1:npwq,ikp) ) )
             ENDIF
             IF(gamma_only) THEN
@@ -2258,12 +2269,12 @@ SUBROUTINE compute_mmn
 
       ENDDO !ib
    ENDDO  !ik
-   DEALLOCATE(workg)
    
    IF (ionode .and. wan_mode=='standalone') CLOSE (iun_mmn)
 
    IF (gamma_only) DEALLOCATE(aux2)
-   DEALLOCATE (Mkb, dxk, phase)
+   DEALLOCATE (Mkb, phase)
+   IF (any_uspp) DEALLOCATE (dxk)
    IF(noncolin) THEN
       DEALLOCATE(aux_nc)
    ELSE
