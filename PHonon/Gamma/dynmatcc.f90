@@ -15,7 +15,6 @@ SUBROUTINE dynmatcc(dyncc)
   USE atom,       ONLY : rgrid
   USE constants,  ONLY : tpi
   USE cell_base,  ONLY : omega, tpiba2
-  USE lsda_mod,   ONLY : nspin
   USE ener,       ONLY : etxc, vtxc
   USE uspp_param, ONLY : upf
   USE fft_base,   ONLY : dfftp
