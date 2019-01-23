@@ -1143,7 +1143,7 @@ MODULE realus
     END SUBROUTINE newq_r
     !
     !------------------------------------------------------------------------
-    SUBROUTINE addusdens_r( rho, sw_lsda )
+    SUBROUTINE addusdens_r( rho )
       !------------------------------------------------------------------------
       !
       ! ... This routine adds to the charge density the part which is due to
@@ -1157,7 +1157,6 @@ MODULE realus
       USE fft_interfaces,   ONLY : fwfft
       USE fft_base,         ONLY : dfftp
       USE wavefunctions,  ONLY : psic
-      !!!USE fft_rho,          ONLY : rho_r2g
 #if defined (__DEBUG)
       USE constants,        ONLY : eps6
       USE klist,            ONLY : nelec
@@ -1170,19 +1169,16 @@ MODULE realus
       IMPLICIT NONE
       ! The charge density to be augmented (in G-space)
       COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
-      INTEGER, INTENT(in) :: sw_lsda
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia
       CHARACTER(len=80) :: msg
       REAL(kind=dp), ALLOCATABLE :: rhor(:,:) 
-      REAL(DP) :: charge, sgn(2)
+      REAL(kind=dp) :: charge
       !
       !
       IF ( .not. okvan ) RETURN
       !
       CALL start_clock( 'addusdens' )
-      !
-      sgn(1)=1._dp  ;   sgn(2)=-1._dp
       !
       ALLOCATE ( rhor(dfftp%nnr,nspin_mag) )
       rhor(:,:) = 0.0_dp
@@ -1214,14 +1210,8 @@ MODULE realus
       DO is = 1, nspin_mag
          psic(:) = rhor(:,is)
          CALL fwfft ('Rho', psic, dfftp)
-         IF (sw_lsda == 0) THEN
-            rho(:,is) = rho(:,is) + psic(dfftp%nl(:))
-         ELSE
-            rho(:,1) = rho(:,1) + psic(dfftp%nl(:))
-            rho(:,2) = rho(:,2) + sgn(is)*psic(dfftp%nl(:))
-         ENDIF
+         rho(:,is) = rho(:,is) + psic(dfftp%nl(:))
       END DO
-      !!! CALL rho_r2g(dfftp, rhor, rho(:,1:nspin_mag) )
       !
       DEALLOCATE ( rhor )
 #if defined (__DEBUG)
@@ -1229,11 +1219,7 @@ MODULE realus
       ! ... check the total charge (must not be summed on k-points)
       !
       IF ( gstart == 2) THEN
-         IF (sw_lsda == 0) THEN
-            charge = SUM(rho(1,1:nspin_lsda) )*omega
-         ELSE
-            charge = SUM( rho(1,1) )*omega
-         ENDIF
+         charge = SUM(rho(1,1:nspin_lsda) )*omega
       ELSE
          charge = 0.0_dp
       ENDIF
