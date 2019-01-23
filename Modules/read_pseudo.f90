@@ -161,21 +161,17 @@ SUBROUTINE readpp ( input_dft, printout, ecutwfc_pp, ecutrho_pp )
      !! then as UPF v.2, then as UPF v.1
      !
      IF (isupf ==-81 ) THEN
-        IF ( ionode ) THEN
-           file_fixed = TRIM(tmp_dir)//TRIM(psfile(nt))//'_'
-           !! the underscore is added to distinguish this "fixed" file 
-           !! from the original one, in case the latter is in tmp_dir
-           is_xml = make_emended_upf_copy( file_pseudo, file_fixed )  
-        END IF
-        !
         !! error -81 may mean that file contains offending characters
         !! fix and write file to tmp_dir (done by a single processor)
+        file_fixed = TRIM(tmp_dir)//TRIM(psfile(nt))//'_'
+        !! the underscore is added to distinguish this "fixed" file 
+        !! from the original one, in case the latter is in tmp_dir
         !
+        IF ( ionode ) is_xml = make_emended_upf_copy( file_pseudo, file_fixed ) 
         CALL mp_bcast (is_xml,ionode_id,intra_image_comm)
         !
         IF (is_xml) THEN
            !
-           CALL mp_bcast(file_fixed, ionode_id, intra_image_comm) 
            CALL  read_upf(upf(nt), rgrid(nt), isupf, filename = TRIM(file_fixed) )
            !! try again to read from the corrected file 
            WRITE ( msg, '(A)') 'Pseudo file '// trim(psfile(nt)) // ' has been fixed on the fly.' &
