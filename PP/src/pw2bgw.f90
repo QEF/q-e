@@ -727,6 +727,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
 
   npw_g = MAXVAL ( igk_l2g ( :, : ) )
   CALL mp_max( npw_g, intra_pool_comm )
+  CALL mp_max( npw_g, inter_pool_comm )
 
   npwx_g = MAXVAL ( ngk_g ( : ) )
 
@@ -809,6 +810,9 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
       ENDDO
     ENDIF
     CALL mp_sum( itmp, intra_bgrp_comm )
+    !XXX
+    CALL mp_sum( itmp, inter_pool_comm )
+    !XXX
     ngg = 0
     DO ig = 1, npw_g
       IF ( itmp ( ig ) .EQ. ig ) THEN
