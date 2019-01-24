@@ -118,15 +118,13 @@ SUBROUTINE vofrho_x( nfi, rhor, drhor, rhog, drhog, rhos, rhoc, tfirst, &
         ALLOCATE (stmp(3,nat), rhocsave(dfftp%nnr) )
         stmp(:,:) = tau0(:,ind_bck(:))
         !
-        !^^ ... TEMPORARY FIX (newlsda) ...
         IF ( nspin==2 ) THEN
            rhocsave(:) = rhor(:,1) + rhor(:,2) 
         ELSE
            rhocsave(:) = rhor(:,1)
         ENDIF
-        !^^.......................
         !
-        CALL tsvdw_calculate(stmp,rhocsave, nspin)
+        CALL tsvdw_calculate(stmp,rhocsave)
         !
         DEALLOCATE (rhocsave,stmp)
         CALL stop_clock( 'ts_vdw' )

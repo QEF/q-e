@@ -8,11 +8,11 @@
 !----------------------------------------------------------------------------
 SUBROUTINE rho2zeta( rho, rho_core, nrxx, nspin, iop )
   !---------------------------------------------------------------------------
-  ! ... if ( iopi == 1 )  it transforms rho(*,2:nspin) in zeta:
+  ! ... if ( iopi == 1 )  it transforms rho(:,2:nspin) into zeta:
   !
-  ! ...         rho(*,2:nspin) = rho(*,2:nspin) / rho_tot(*) = zeta(*,2:nspin)
+  ! ...         rho(:,2:nspin) = rho(:,2:nspin) / rho_tot(:) = zeta(:,2:nspin)
   !
-  ! ... if ( iopi == -1)  it does the opposit transformation
+  ! ... if ( iopi == -1)  it does the opposite transformation
   !
   USE constants, ONLY : eps32
   USE io_global, ONLY : stdout

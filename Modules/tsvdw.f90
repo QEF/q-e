@@ -591,7 +591,7 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   !
   !--------------------------------------------------------------------------------------------------------------
-  SUBROUTINE tsvdw_calculate(tauin, rhor, nspin)
+  SUBROUTINE tsvdw_calculate(tauin, rhor)
   !--------------------------------------------------------------------------------------------------------------
   ! TS-vdW Management Code: Manages entire calculation of TS-vdW energy, wavefunction forces, and ion forces via
   ! calls to PRIVATE subroutines below (called in each MD step). The calls to tsvdw_initialize and tsvdw_finalize
@@ -603,7 +603,6 @@ PRIVATE :: GetVdWParam
   ! I/O variables
   !
   REAL(DP), INTENT(IN) :: rhor(:)
-  INTEGER, INTENT(IN) :: nspin
   REAL(DP) :: tauin(3,nat)
   !
   ! Parallel initialization...
@@ -620,7 +619,7 @@ PRIVATE :: GetVdWParam
   !
   ! Obtain molecular charge density given on the real-space mesh...
   !
-  CALL tsvdw_rhotot( rhor, nspin )
+  CALL tsvdw_rhotot( rhor )
   !
   ! Determine spherical atomic integration domains and atom overlap (bit array)...
   ! Compute molecular pro-density (superposition of atomic densities) on the real-space mesh...
@@ -970,13 +969,12 @@ PRIVATE :: GetVdWParam
   !--------------------------------------------------------------------------------------------------------------
   !
   !--------------------------------------------------------------------------------------------------------------
-  SUBROUTINE tsvdw_rhotot( rhor, nspin )
+  SUBROUTINE tsvdw_rhotot( rhor )
   !--------------------------------------------------------------------------------------------------------------
   !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(IN) :: rhor(:)
-  INTEGER, INTENT(IN)  :: nspin
   !
   ! Local variables
   !
@@ -988,7 +986,6 @@ PRIVATE :: GetVdWParam
   ! Initialization of rhotot array (local copy of the real-space charge density)...
   !
   ALLOCATE(rhotot(nr1*nr2*nr3)); rhotot=0.0_DP
-  IF ( nspin < 1 .OR.  nspin > 2 ) CALL errore ('tsvdw','invalid nspin',1)
 #if defined(__MPI)
   !
   ! Initialization of rhor_tmp temporary buffers...
