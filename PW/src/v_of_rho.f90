@@ -24,7 +24,6 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE funct,            ONLY : dft_is_meta, get_meta
   USE scf,              ONLY : scf_type
   USE cell_base,        ONLY : alat
-  USE lsda_mod,         ONLY : nspin
   USE control_flags,    ONLY : ts_vdw
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
   !
