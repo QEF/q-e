@@ -24,14 +24,9 @@
         USE fft_param
 
         IMPLICIT NONE
-
-
         SAVE
 
         PRIVATE
-
-        COMPLEX(DP), ALLOCATABLE, DEVICE     :: aux_d_workaround_d (:)
-        PUBLIC :: aux_d_workaround_d
         !
         PUBLIC :: fft_type_descriptor
         PUBLIC :: fft_scatter_xy_gpu, fft_scatter_yz_gpu, fft_scatter_tg_gpu, &
@@ -80,7 +75,8 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   !
   USE cudafor
   !USE nvtx_fft
-  USE fftx_buffers, ONLY : cpu_buffer
+  USE fft_buffers, ONLY : check_buffers_size, f_in => pin_space_scatter_in, &
+                          f_aux=>pin_space_scatter_out
   IMPLICIT NONE
 
   TYPE (fft_type_descriptor), INTENT(in) :: desc
@@ -90,7 +86,6 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
 
 #if defined(__MPI)
   !
-  COMPLEX (DP), POINTER    :: f_in(:), f_aux(:)
   INTEGER :: ierr, me2, nproc2, iproc2, ncpx, my_nr2p, nr2px, ip, ip0
   INTEGER :: i, it, j, k, kfrom, kdest, offset, ioff, mc, m1, m3, i1, icompact, sendsize, aux
   INTEGER, ALLOCATABLE :: ncp_(:)
@@ -138,9 +133,8 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   
   sendsize = ncpx * nr2px       ! dimension of the scattered chunks (safe value)
   !
-  ! allocate host copy of f_in and f_aux
-  CALL cpu_buffer%lock_buffer(f_in, nxx_, ierr)
-  CALL cpu_buffer%lock_buffer(f_aux, nxx_, ierr)
+  ! check host copy allocation of f_in and f_aux
+  CALL check_buffers_size(desc)
   !
   ierr = 0
   IF (isgn.gt.0) THEN
@@ -318,8 +312,6 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   !
   !CALL nvtxEndRangeAsync()
   DEALLOCATE ( ncp_ )
-  CALL cpu_buffer%release_buffer(f_in, ierr)
-  CALL cpu_buffer%release_buffer(f_aux, ierr)
   CALL stop_clock ('fft_scatt_xy')
 
 #endif
@@ -367,7 +359,8 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   !
   USE cudafor
   !USE nvtx_fft
-  USE fftx_buffers, ONLY : cpu_buffer
+  USE fft_buffers, ONLY : check_buffers_size, f_in => pin_space_scatter_in, &
+                          f_aux=>pin_space_scatter_out
   IMPLICIT NONE
 
   TYPE (fft_type_descriptor), INTENT(in) :: desc
@@ -376,7 +369,6 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 !  INTEGER(kind=cuda_stream_kind), INTENT(IN) :: stream ! cuda stream for the execution
 
 #if defined(__MPI)
-  COMPLEX (DP),    POINTER :: f_in(:), f_aux(:)
   INTEGER, DEVICE, POINTER :: desc_ismap_d(:)
   !
   INTEGER :: ierr, me, me2, me2_start, me2_end, me3, nproc3, iproc3, ncpx, nr3px, ip, ip0
@@ -428,9 +420,8 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   
   sendsize = ncpx * nr3px       ! dimension of the scattered chunks
   
-  ! allocate host copy of f_in and f_aux
-  CALL cpu_buffer%lock_buffer(f_in, nxx_, ierr)
-  CALL cpu_buffer%lock_buffer(f_aux, nxx_, ierr)
+  ! check host copy allocation of f_in and f_aux
+  CALL check_buffers_size(desc)
   desc_ismap_d => desc%ismap_d
 
   ierr = 0
@@ -640,9 +631,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 
   ENDIF
 
-  DEALLOCATE ( ncp_ ) ! , f_aux, f_in)
-  CALL cpu_buffer%release_buffer(f_in, ierr)
-  CALL cpu_buffer%release_buffer(f_aux, ierr)
+  DEALLOCATE ( ncp_ )
   !CALL nvtxEndRangeAsync()
   CALL stop_clock ('fft_scatt_yz')
 
@@ -669,13 +658,13 @@ SUBROUTINE fft_scatter_tg_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   !    f_aux is used as working array, may contain garbage in output
   !
   USE cudafor
-  USE fftx_buffers, ONLY : cpu_buffer
+  USE fft_buffers, ONLY : check_buffers_size, f_in => pin_space_scatter_in, &
+                          f_aux=>pin_space_scatter_out
   IMPLICIT NONE
 
   TYPE (fft_type_descriptor), INTENT(in) :: desc
   INTEGER, INTENT(in)                    :: nxx_, isgn
   COMPLEX (DP), DEVICE, INTENT(inout)    :: f_in_d (nxx_), f_aux_d (nxx_)
-  COMPLEX (DP), POINTER              :: f_in(:), f_aux(:)
   INTEGER(kind=cuda_stream_kind), INTENT(IN) :: stream ! cuda stream for the execution
 
   INTEGER :: ierr
@@ -683,9 +672,8 @@ SUBROUTINE fft_scatter_tg_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   CALL start_clock ('fft_scatt_tg')
 
   if ( abs (isgn) /= 3 ) call fftx_error__ ('fft_scatter_tg', 'wrong call', 1 )
-  ! get pinned memory buffers for ALLTOALL
-  CALL cpu_buffer%lock_buffer(f_in, nxx_, ierr);
-  CALL cpu_buffer%lock_buffer(f_aux, nxx_, ierr);
+  ! get pinned memory buffers for ALLTOALL, check allocation
+  CALL check_buffers_size(desc)
 #if defined(__MPI)
   ! == OPTIMIZE, replace this with overlapped comunication on host and device, 
   ! or possibly use GPU MPI?
@@ -710,8 +698,6 @@ SUBROUTINE fft_scatter_tg_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   !ierr = cudaStreamSynchronize(stream)
 #endif
   !
-  CALL cpu_buffer%release_buffer(f_in, ierr);
-  CALL cpu_buffer%release_buffer(f_aux, ierr);
   CALL stop_clock ('fft_scatt_tg')
   RETURN
 99 format ( 20 ('(',2f12.9,')') )
@@ -733,14 +719,14 @@ SUBROUTINE fft_scatter_tg_opt_gpu ( desc, f_in_d, f_out_d, nxx_, isgn, stream )
   !    f_out contains the output data
   !
   USE cudafor
-  USE fftx_buffers, ONLY : cpu_buffer
+  USE fft_buffers, ONLY : check_buffers_size, f_in => pin_space_scatter_in, &
+                          f_out=>pin_space_scatter_out
   IMPLICIT NONE
 
   TYPE (fft_type_descriptor), INTENT(in) :: desc
   INTEGER, INTENT(in)                    :: nxx_, isgn
   COMPLEX (DP), DEVICE, INTENT(inout)    :: f_in_d (nxx_), f_out_d (nxx_)
   INTEGER(kind=cuda_stream_kind), INTENT(IN) :: stream ! cuda stream for the execution
-  COMPLEX (DP), POINTER                  :: f_in(:), f_out(:)
 
   INTEGER :: ierr
 
@@ -748,9 +734,8 @@ SUBROUTINE fft_scatter_tg_opt_gpu ( desc, f_in_d, f_out_d, nxx_, isgn, stream )
 
   if ( abs (isgn) /= 3 ) call fftx_error__ ('fft_scatter_tg', 'wrong call', 1 )
   !
-  CALL cpu_buffer%lock_buffer(f_in, nxx_, ierr);
-  CALL cpu_buffer%lock_buffer(f_out, nxx_, ierr);
-  !f_in(1:nxx_) = f_in_d(1:nxx_)
+  ! check host copy allocation of f_in and f_aux
+  CALL check_buffers_size(desc)
   ierr = cudaMemcpyAsync( f_in, f_in_d, nxx_, cudaMemcpyDeviceToHost, stream )
   ierr = cudaStreamSynchronize(stream)
 #if defined(__MPI)
@@ -773,8 +758,6 @@ SUBROUTINE fft_scatter_tg_opt_gpu ( desc, f_in_d, f_out_d, nxx_, isgn, stream )
   ierr = cudaMemcpyAsync( f_out_d, f_out, nxx_, cudaMemcpyHostToDevice, stream )
   !ierr = cudaStreamSynchronize(stream)
   !
-  CALL cpu_buffer%release_buffer(f_in, ierr);
-  CALL cpu_buffer%release_buffer(f_out, ierr);
   CALL stop_clock ('fft_scatt_tg')
 
   RETURN
@@ -823,7 +806,8 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
   !
   USE cudafor
   !USE nvtx_fft
-  USE fftx_buffers, ONLY : cpu_buffer
+  USE fft_buffers, ONLY : check_buffers_size, f_in => pin_space_scatter_in, &
+                          f_aux=>pin_space_scatter_out
   IMPLICIT NONE
 
   TYPE (fft_type_descriptor), INTENT(in) :: desc
@@ -832,7 +816,6 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
   INTEGER, INTENT(IN)                    :: howmany
 
 #if defined(__MPI)
-  COMPLEX (DP),    POINTER :: f_in(:), f_aux(:)
   INTEGER, DEVICE, POINTER :: desc_ismap_d(:)
   !
   INTEGER :: ierr, me, me2, me3, nproc3, iproc3, ncpx, nr3px, ip, ip0, me2_start, me2_end
@@ -873,12 +856,11 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
   !
   nr3px = MAXVAL ( desc%nr3p )  ! maximum number of Z values to be exchanged
   ncpx  = MAXVAL ( ncp_ )       ! maximum number of Z columns to be exchanged
-  
+  !
   sendsize = howmany * ncpx * nr3px       ! dimension of the scattered chunks
-  
-  ! allocate host copy of f_in and f_aux
-  CALL cpu_buffer%lock_buffer(f_in, nxx_, ierr)
-  CALL cpu_buffer%lock_buffer(f_aux, nxx_, ierr)
+  !
+  ! check dimensions of f_in and f_aux
+  CALL check_buffers_size(desc, howmany)
   desc_ismap_d => desc%ismap_d
   !
   ierr = 0
@@ -1016,9 +998,7 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
 
   ENDIF
 
-  DEALLOCATE ( ncp_ ) ! , f_aux, f_in)
-  CALL cpu_buffer%release_buffer(f_in, ierr)
-  CALL cpu_buffer%release_buffer(f_aux, ierr)
+  DEALLOCATE ( ncp_ )
   !CALL nvtxEndRangeAsync()
   CALL stop_clock ('fft_scatt_many_yz')
 

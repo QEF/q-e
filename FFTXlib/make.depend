@@ -1,3 +1,5 @@
+fft_buffers.o : fft_param.o
+fft_buffers.o : fft_types.o
 fft_error.o : fft_param.o
 fft_fwinv.o : fft_parallel.o
 fft_fwinv.o : fft_param.o
@@ -15,7 +17,7 @@ fft_interfaces.o : fft_types.o
 fft_interpolate.o : fft_interfaces.o
 fft_interpolate.o : fft_param.o
 fft_interpolate.o : fft_types.o
-fft_parallel.o : fbuf2.o
+fft_parallel.o : fft_buffers.o
 fft_parallel.o : fft_param.o
 fft_parallel.o : fft_scalar.o
 fft_parallel.o : fft_types.o
@@ -42,13 +44,12 @@ fft_scalar.o : fft_scalar.cuFFT.o
 fft_smallbox.o : fftw_interfaces.o
 fft_smallbox_type.o : fft_types.o
 fft_support.o : fft_param.o
-fft_types.o : fbuf2.o
 fft_types.o : fft_param.o
 fft_types.o : fft_support.o
 fft_types.o : stick_base.o
 scatter_mod.o : fft_param.o
 scatter_mod.o : fft_types.o
-scatter_mod_gpu.o : fbuf2.o
+scatter_mod_gpu.o : fft_buffers.o
 scatter_mod_gpu.o : fft_param.o
 scatter_mod_gpu.o : fft_types.o
 scatter_mod_gpu.o : nvtx.o

@@ -194,7 +194,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   !
   USE cudafor
   !USE nvtx_fft
-  USE fftx_buffers,   ONLY : gpu_buffer
+  USE fft_buffers,    ONLY : check_buffers_size, aux_d => dev_space_fftparallel
   USE fft_scalar,     ONLY : cft_1z_gpu
   USE scatter_mod_gpu,ONLY : fft_scatter_xy_gpu, fft_scatter_yz_gpu, fft_scatter_tg_gpu
   USE scatter_mod_gpu,ONLY : fft_scatter_tg_opt_gpu
@@ -209,7 +209,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   INTEGER                          :: n1, n2, n3, nx1, nx2, nx3
   INTEGER                          :: nnr_
   INTEGER                          :: nsticks_x, nsticks_y, nsticks_z
-  COMPLEX(DP), POINTER, DEVICE     :: aux_d (:)
+  !COMPLEX(DP), POINTER, DEVICE     :: aux_d (:)
   INTEGER                          :: ierr, i
   INTEGER(kind = cuda_stream_kind) :: stream  = 0
   !
@@ -236,7 +236,7 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
      CALL fftx_error__( ' tg_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
   end if
   !
-  CALL gpu_buffer%lock_buffer(aux_d, nnr_, ierr);
+  CALL check_buffers_size( dfft )
   !
   IF ( isgn > 0 ) THEN  ! G -> R
      !CALL nvtxStartRangeAsync("tg_cft3s_gpu G->R", 1)
@@ -295,8 +295,6 @@ SUBROUTINE tg_cft3s_gpu( f_d, dfft, isgn )
   ENDIF
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
   !
-  CALL gpu_buffer%release_buffer(aux_d, ierr);
-  !
   !if (.true.) stop
   RETURN
 99 format ( 20 ('(',2f12.9,')') )
@@ -340,9 +338,8 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   !
   USE cudafor
   !USE nvtx_fft
-  USE fftx_buffers,   ONLY : gpu_buffer
+  USE fft_buffers,    ONLY : check_buffers_size, aux_d => dev_space_fftparallel
   USE fft_scalar,     ONLY : cft_1z_gpu
-  USE scatter_mod_gpu,ONLY : aux_d => aux_d_workaround_d
   USE scatter_mod_gpu,ONLY : fft_scatter_xy_gpu, fft_scatter_yz_gpu, &
                               & fft_scatter_tg_gpu, fft_scatter_many_yz_gpu, &
                               & fft_scatter_tg_opt_gpu
@@ -386,12 +383,7 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
      CALL fftx_error__( ' many_cft3s', ' wrong value of isgn ', 10+abs(isgn) )
   end if
   !
-  !  === workaround ===
-  ! Replacing this: CALL gpu_buffer%lock_buffer(aux_d, nnr_ * howmany, ierr)
-  !  with:
-  IF( ALLOCATED( aux_d   ) .and. SIZE( aux_d   ) < howmany * nnr_ ) DEALLOCATE( aux_d   )
-  IF( .not. ALLOCATED( aux_d   ) ) ALLOCATE( aux_d  ( howmany * nnr_ ) )
-  !  === end workaround ===
+  CALL check_buffers_size( dfft, howmany )
   !
   nstreams = dfft%nstream_many
   ierr = cudaDeviceSynchronize()
@@ -469,7 +461,6 @@ SUBROUTINE many_cft3s_gpu( f_d, dfft, isgn, howmany )
   ENDIF
   !write (6,99) f_d(1:400); write(6,*); FLUSH(6)
   !
-  !CALL gpu_buffer%release_buffer(aux_d, ierr);
   !DO i=1,nstreams
   !    ierr = cudaStreamSynchronize( dfft%stream_many(i) )
   !END DO

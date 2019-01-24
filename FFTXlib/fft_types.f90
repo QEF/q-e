@@ -19,7 +19,6 @@ MODULE fft_types
 
 #if defined(__CUDA)
   USE cudafor
-  USE fftx_buffers, ONLY : cpu_buffer, gpu_buffer
 #endif
   USE fft_support, ONLY : good_fft_order, good_fft_dimension
   USE fft_param
