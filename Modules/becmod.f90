@@ -34,6 +34,7 @@ MODULE becmod
   END TYPE bec_type
   !
   TYPE (bec_type) :: becp  ! <beta|psi>
+  TYPE (bec_type) :: becp2  ! <beta|psi>
 
   PRIVATE
   !
@@ -50,7 +51,7 @@ MODULE becmod
   END INTERFACE
   !
   PUBLIC :: bec_type, becp, allocate_bec_type, deallocate_bec_type, calbec, &
-            beccopy, becscal, is_allocated_bec_type
+            beccopy, becscal, is_allocated_bec_type, becp2
   !
 CONTAINS
   !-----------------------------------------------------------------------

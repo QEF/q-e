@@ -565,10 +565,11 @@
   SUBROUTINE run_wannier
   !-----------------------------------------------------------------------
   !
-  USE io_global, ONLY : stdout, meta_ionode_id, meta_ionode
+  USE io_global, ONLY : stdout, meta_ionode_id, meta_ionode, ionode_id
   USE ions_base, ONLY : nat
   USE mp,        ONLY : mp_bcast
-  USE mp_world,  ONLY : world_comm
+  USE mp_world,  ONLY : world_comm, mpime
+  USE mp_global, ONLY : inter_pool_comm
   USE cell_base, ONLY : alat
   USE io_files,  ONLY : prefix
   USE io_epw,    ONLY : iuqpeig
@@ -579,7 +580,7 @@
                         atcart, m_mat, mp_grid
   USE epwcom,    ONLY : eig_read
   USE wvfct,     ONLY : nbnd
-  USE constants_epw, ONLY : czero, bohr
+  USE constants_epw, ONLY : czero, bohr, zero
   !
   IMPLICIT NONE
   ! 
@@ -602,10 +603,13 @@
   ALLOCATE(wann_centers(3,n_wannier))
   ALLOCATE(wann_spreads(n_wannier))
   !
-  u_mat = czero
-  u_mat_opt = czero
+  u_mat(:,:,:)     = czero
+  u_mat_opt(:,:,:) = czero
+  wann_centers(:,:)= zero
+  wann_spreads(:)  = zero
+  lwindow(:,:)     = .FALSE.
   !
-  IF (meta_ionode) THEN
+  IF (mpime .eq. ionode_id) THEN
     ! read in external eigenvalues, e.g.  GW
     IF (eig_read) THEN
       WRITE (stdout,'(5x,a,i5,a,i5,a)') "Reading external electronic eigenvalues (", &
@@ -629,6 +633,29 @@
 !      WRITE(iummn) m_mat
 !      CLOSE(iummn)
 
+    print*,'seedname2 ',seedname2
+    print*,'mp_grid ',mp_grid
+    print*,'iknum ',iknum
+    print*,'rlatt ',rlatt
+    print*,'glatt, ',glatt
+    print*,'kpt_latt, ',kpt_latt
+    print*,'num_bands ',num_bands
+    print*,'n_wannier ',n_wannier
+    print*,'nnb ',nnb
+    print*,'nat ',nat
+    print*,'atsym ',atsym
+    print*,'atcart ',atcart
+    print*,'m_mat ',SUM(m_mat)
+    print*,'a_mat ',SUM(a_mat)
+    print*,' eigval ', eigval
+    print*,'u_mat ',u_mat
+    print*,'u_mat_opt ',u_mat_opt
+    print*,'lwindow ',lwindow
+    print*,'wann_centers ',wann_centers
+    print*,'wann_spreads ',wann_spreads
+    print*,'spreads ',spreads
+
+
     CALL wannier_run(seedname2, mp_grid, iknum,   &              ! input
                      rlatt, glatt, kpt_latt, num_bands,       &  ! input
                      n_wannier, nnb, nat, atsym,              &  ! input
@@ -637,12 +664,18 @@
                      wann_spreads, spreads)                      ! output
   ENDIF
   !
-  CALL mp_bcast(u_mat,        meta_ionode_id, world_comm)
-  CALL mp_bcast(u_mat_opt,    meta_ionode_id, world_comm)
-  CALL mp_bcast(lwindow,      meta_ionode_id, world_comm)
-  CALL mp_bcast(wann_centers, meta_ionode_id, world_comm)
-  CALL mp_bcast(wann_spreads, meta_ionode_id, world_comm)
-  CALL mp_bcast(spreads,      meta_ionode_id, world_comm)
+  !CALL mp_bcast(u_mat,        meta_ionode_id, world_comm)
+  !CALL mp_bcast(u_mat_opt,    meta_ionode_id, world_comm)
+  !CALL mp_bcast(lwindow,      meta_ionode_id, world_comm)
+  !CALL mp_bcast(wann_centers, meta_ionode_id, world_comm)
+  !CALL mp_bcast(wann_spreads, meta_ionode_id, world_comm)
+  !CALL mp_bcast(spreads,      meta_ionode_id, world_comm)
+  CALL mp_bcast(u_mat,        ionode_id, inter_pool_comm)
+  CALL mp_bcast(u_mat_opt,    ionode_id, inter_pool_comm)
+  CALL mp_bcast(lwindow,      ionode_id, inter_pool_comm)
+  CALL mp_bcast(wann_centers, ionode_id, inter_pool_comm)
+  CALL mp_bcast(wann_spreads, ionode_id, inter_pool_comm)
+  CALL mp_bcast(spreads,      ionode_id, inter_pool_comm)
   !
   !
   ! output the results of the wannierization
@@ -1016,7 +1049,7 @@
   USE uspp,            ONLY : nkb, vkb
   USE uspp_param,      ONLY : upf, lmaxq, nh, nhm
   USE becmod,          ONLY : becp, calbec, allocate_bec_type, & 
-                              deallocate_bec_type
+                              deallocate_bec_type, bec_type!, becp2
   USE noncollin_module,ONLY : noncolin, npol
   USE spin_orb,        ONLY : lspinorb
   USE wannierEPW,      ONLY : m_mat, num_bands, nnb, iknum, g_kpb, kpb, ig_, &
@@ -1026,8 +1059,9 @@
 #if defined(__NAG)
   USE f90_unix_io,     ONLY : flush
 #endif
-  USE mp,              ONLY : mp_sum
+  USE mp,              ONLY : mp_sum, mp_barrier
   USE mp_global,       ONLY : my_pool_id, npool, intra_pool_comm, inter_pool_comm
+  USE mp_world,        ONLY : mpime
   ! 
   IMPLICIT NONE
   !
@@ -1159,6 +1193,10 @@
   !
   zero_vect = zero
   m_mat = czero
+  !DBSP
+  vkb = czero
+  IF (mpime .ne. 0) write(901,*)  ' m_mat start ', sum(m_mat)
+  IF (mpime .ne. 0) write(901,*)  ' sum vkb ',sum(vkb) 
   !
   mmn_tot = iknum * nnb * nbnd * nbnd
   !
@@ -1172,6 +1210,8 @@
     ELSE
       ALLOCATE( becp2(nkb,nbnd) )
     ENDIF
+     becp2(:,:) = czero
+    !call allocate_bec_type ( nkb, nbnd, becp2)
   ENDIF
   !
   !     qb is  FT of Q(r)
@@ -1232,6 +1272,7 @@
   CALL ktokpmq( xk(:, 1), zero_vect, +1, ipool, nkq, nkq_abs )
   ind0 = (nkq_abs-1) * nnb
   !
+  IF (mpime .ne. 0) write(901,*)  ' m_mat start 2', sum(m_mat)
   ind = ind0
   DO ik = 1, nks 
     ! returns in-pool index nkq and absolute index nkq_abs of xk
@@ -1253,6 +1294,7 @@
       CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
       ! below we compute the product of beta functions with |psi>
       CALL calbec( npw, vkb, evc, becp ) 
+      IF (mpime .ne. 0) write(901,*)  ' sum vkb 11',sum(vkb) 
     ENDIF
     !
     !
@@ -1277,7 +1319,16 @@
       !  USPP
       !
       IF (any_uspp) THEN
+        IF (mpime .ne. 0) write(901,*)'npwq sum(igk_k(:,1)) ',npwq, sum(igk_k(:,1)), shape(igk_k(:,1))
+        IF (mpime .ne. 0) write(901,*)'igkq ',sum(igkq), shape(igkq), igkq
+        IF (mpime .ne. 0) write(901,*)'ikp ',ikp
+        IF (mpime .ne. 0) write(901,*)'xk(1,ikp) ',xk(1,ikp)
+        vkb = czero
+        IF (mpime .ne. 0) write(901,*)  ' sum vkb just before',sum(vkb)
         CALL init_us_2( npwq, igkq, xk(1,ikp), vkb )
+        !CALL init_us_2( npwq, igk_k(1,ikp), xk(1,ikp), vkb )
+        
+        IF (mpime .ne. 0) write(901,*)  ' sum vkb init us 2',sum(vkb)
         ! below we compute the product of beta functions with |psi>
         IF (noncolin) THEN
           CALL calbec( npwq, vkb, evcq, becp2_nc )
@@ -1288,9 +1339,15 @@
           ENDIF
           !
         ELSE
+          IF (mpime .ne. 0) write(901,*)  'becp2 before npwq ',sum(becp2), npwq
+          !IF (mpime .ne. 0) write(901,*) 'vkb ',vkb
+          !IF (mpime .ne. 0) write(901,*) 'evcq' ,evcq 
+          IF (mpime .ne. 0) write(901,*) 'sum vkb  and evcq', sum(vkb), sum(evcq)
           CALL calbec( npwq, vkb, evcq, becp2 )
+          IF (mpime .ne. 0) write(901,*)  'becp2 after ',sum(becp2)
         ENDIF
       ENDIF
+
       !
       Mkb(:,:) = czero
       !
@@ -1331,6 +1388,25 @@
                           IF (excluded_band(n)) CYCLE
                           Mkb(m,n) = Mkb(m,n) + phase1 * qb(ih,jh,nt,ind) * &
                                      conjg( becp%k(ikb,m) ) * becp2(jkb,n)
+                                     !conjg( becp%k(ikb,m) ) * becp2%k(jkb,n)
+                          print*,'nt ',nt
+                          print*,'na ',na
+                          print*,'jh ih m', jh, ih, m
+                          print*, 'n ',n
+                          print*,'Mkb(m,n) ',Mkb(m,n)
+                          print*,'phase1 ',phase1
+                          print*,'qb(ih,jh,nt,ind) ',qb(ih,jh,nt,ind)
+                          print*,'becp%k(ikb,m) ',becp%k(ikb,m)
+                          print*,'becp2(jkb,n) ',becp2(jkb,n)
+                          IF (mpime .ne. 0) write(901,*)  'nt ',nt
+                          IF (mpime .ne. 0) write(901,*)  'na ',na
+                          IF (mpime .ne. 0) write(901,*)  'jh ih m', jh, ih, m
+                          IF (mpime .ne. 0) write(901,*)   'n jkb nkb',n, jkb, nkb
+                          IF (mpime .ne. 0) write(901,*)  'Mkb(m,n) ',Mkb(m,n)
+                          IF (mpime .ne. 0) write(901,*)  'phase1 ',phase1
+                          IF (mpime .ne. 0) write(901,*)  'qb(ih,jh,nt,ind) ',qb(ih,jh,nt,ind)
+                          IF (mpime .ne. 0) write(901,*) 'becp%k(ikb,m) ',becp%k(ikb,m)
+                          IF (mpime .ne. 0) write(901,*) 'becp2(jkb,n) ',becp2(jkb,n)
                         ENDDO
                       ENDIF
                     ENDDO ! m
@@ -1395,11 +1471,13 @@
             mmn = zdotc( npwq, aux, 1, evcq(1,n), 1 )
             CALL mp_sum(mmn, intra_pool_comm)
             Mkb(m,n) = mmn + Mkb(m,n)
+            IF (mpime .ne. 0) write(901,*)  'n Mkb(m,n) ',n, Mkb(m,n)
             !  aa = aa + abs(mmn)**2
           ENDDO
         ENDIF
       ENDDO   ! m
       !
+      IF (mpime .ne. 0) write(901,*)  'm_mat just before ', sum(m_mat), shape(m_mat)
       ibnd_n = 0
       DO n = 1, nbnd
         IF (excluded_band(n)) CYCLE
@@ -1409,13 +1487,26 @@
           IF (excluded_band(m)) CYCLE
           ibnd_m = ibnd_m + 1
           m_mat(ibnd_m,ibnd_n,ib,ik_g) = Mkb(m,n)
+          IF (mpime .ne. 0) write(901,*)  'ibnd_m,ibnd_n,ib,ik_g ',ibnd_m,ibnd_n,ib,ik_g
+          IF (mpime .ne. 0) write(901,*) 'Mkb(m,n) ',Mkb(m,n) 
+          IF (mpime .ne. 0) write(901,*)  'n m m_mat ',n, m, sum(m_mat) 
         ENDDO
       ENDDO
       !
     ENDDO !ib
   ENDDO !ik
   !
+  IF (mpime == 0) write(900,*)'m_mat in MNM before --- ',sum(m_mat), shape(m_mat)
+  IF (mpime .ne. 0) write(901,*)'m_mat in MNM before --- ',sum(m_mat), shape(m_mat)
+  CALL FLUSH()
+  call mp_barrier(inter_pool_comm)
+  print*,'mpime ',mpime
+  print*,'m_mat in MNM --- before ',sum(m_mat), shape(m_mat)
   CALL mp_sum(m_mat, inter_pool_comm)
+  IF (mpime == 0) write(900,*)'m_mat in MNM after --- ',sum(m_mat), shape(m_mat)
+  IF (mpime .ne. 0) write(901,*)'m_mat in MNM after --- ',sum(m_mat), shape(m_mat)
+  print*,'m_mat in MNM --- ',sum(m_mat), shape(m_mat)
+
   !
   ! RM - write mmn to file
   IF (meta_ionode) THEN
@@ -1468,6 +1559,7 @@
     DEALLOCATE(qb)
     DEALLOCATE(qq_so)
     CALL deallocate_bec_type( becp )
+    !CALL deallocate_bec_type( becp2 )
     IF (noncolin) THEN
       DEALLOCATE(becp2_nc)
     ELSE

@@ -32,7 +32,7 @@
   degaussw    = 0.05
   
   filqf       = 'pathq.dat'
-  filkf       = 'path.dat'
+  filkf       = 'pathq.dat'
 
   nk1         = 3
   nk2         = 3
