@@ -120,7 +120,7 @@ MODULE read_namelists_module
        lelfield = .FALSE.
        lorbm = .FALSE.
        nberrycyc  = 1
-       lkpoint_dir = .TRUE.
+       lkpoint_dir = .FALSE.
        lecrpa   = .FALSE.   
        tqmmm = .FALSE.
        !
