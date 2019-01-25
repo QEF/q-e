@@ -252,10 +252,7 @@ PROGRAM do_ppacf
      CALL mp_sum(  etxcccnl , intra_bgrp_comm )
   END IF
   !
-  ! ... add gradiend corrections (if any)
-  !
-  if (nspin==4) CALL errore ('ppacf', 'Noncollinear not implemented', 1)
-  fac = 1.D0 / DBLE( nspin )
+  ! ... add gradient corrections (if any)
   !
   ALLOCATE( grho( 3, dfftp%nnr, nspin) )
   ALLOCATE( rhoout( dfftp%nnr, nspin) )
@@ -263,12 +260,13 @@ PROGRAM do_ppacf
   ALLOCATE( rhogsum( ngm, nspin ) )
   !
   ! ... calculate the gradient of rho + rho_core in real space
+  ! ... note: input rho is (tot,magn), output rhoout, grho are (up,down)
   !
-  !
+  fac = 1.D0 / DBLE( nspin )
   !
   DO is = 1, nspin
      !
-     indx = DBLE( nspin/2 * (1-2*(is/2)) )
+     indx = DBLE( nspin/2 * (1-2*(is/2)) ) ! +1 if is=1, -1 if is=2
      rhoout(:,is)  = fac * ( rho_core(:)  + rho%of_r(:,1) + indx * rho%of_r(:,2) )
      rhogsum(:,is) = fac * ( rhog_core(:) + rho%of_g(:,1) + indx * rho%of_g(:,2) )
      !
@@ -280,7 +278,7 @@ PROGRAM do_ppacf
   !
   IF (nspin == 1) THEN
      tot_rho(:)=rhoout(:,1)
-  ELSEIF(nspin==2) THEN          ! rhoout is (up,down)
+  ELSEIF(nspin==2) THEN
      tot_rho(:)=rhoout(:,1)+rhoout(:,2)
   ELSE
      CALL errore ('ppacf','vdW-DF not available for noncollinear spin case',1)
