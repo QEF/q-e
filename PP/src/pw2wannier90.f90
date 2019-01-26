@@ -101,7 +101,7 @@ PROGRAM pw2wannier90
   USE klist,      ONLY : nkstot
   USE io_files,   ONLY : prefix, tmp_dir
   USE noncollin_module, ONLY : noncolin
-  USE control_flags,    ONLY : gamma_only, twfcollect
+  USE control_flags,    ONLY : gamma_only
   USE environment,ONLY : environment_start, environment_end
   USE wannier
   !
@@ -218,12 +218,6 @@ PROGRAM pw2wannier90
   !
   IF (noncolin.and.gamma_only) CALL errore('pw2wannier90',&
        'Non-collinear and gamma_only not implemented',1)
-  !
-  ! Here we trap restarts from a different number of nodes.
-  !
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
-     CALL errore('pw2wannier90', &
-     'pw.x run on a different number of procs/pools. Use wf_collect=.true.',1)
   !
   SELECT CASE ( trim( spin_component ) )
   CASE ( 'up' )

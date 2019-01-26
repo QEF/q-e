@@ -53,7 +53,7 @@ SUBROUTINE phq_readin()
   USE io_files,      ONLY : tmp_dir, prefix, postfix, create_directory, &
                             check_tempdir, xmlpun_schema
   USE noncollin_module, ONLY : i_cons, noncolin
-  USE control_flags, ONLY : iverbosity, modenum, twfcollect
+  USE control_flags, ONLY : iverbosity, modenum
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode, ionode_id, stdout
   USE mp_images,     ONLY : nimage, my_image_id, intra_image_comm,   &
                             me_image, nproc_image
@@ -730,17 +730,6 @@ SUBROUTINE phq_readin()
 
   IF (reduce_io) io_level=0
 
-  IF (nproc_image /= nproc_image_file .and. .not. twfcollect  .AND. .NOT. in_alpha2f)  &
-     CALL errore('phq_readin',&
-     'pw.x run with a different number of processors. Use wf_collect=.true.',1)
-
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect .AND. .NOT. in_alpha2f)  &
-     CALL errore('phq_readin',&
-     'pw.x run with a different number of pools. Use wf_collect=.true.',1)
-  !
-  IF (nproc_bgrp_file /= nproc_bgrp .AND. .NOT. twfcollect .AND. .NOT. in_alpha2f) &
-     CALL errore('phq_readin','pw.x run with different band parallelization',1)
-  
   if(elph_mat.and.fildvscf.eq.' ') call errore('phq_readin',&
        'el-ph with wannier requires fildvscf',1)
 

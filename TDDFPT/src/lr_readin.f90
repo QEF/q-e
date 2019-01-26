@@ -18,8 +18,7 @@ SUBROUTINE lr_readin
   USE kinds,               ONLY : DP
   USE io_files,            ONLY : tmp_dir, prefix, wfc_dir, create_directory
   USE lsda_mod,            ONLY : current_spin, nspin, isk, lsda
-  USE control_flags,       ONLY : twfcollect,use_para_diag, &
-                                  & tqr, lkpoint_dir, gamma_only, &
+  USE control_flags,       ONLY : use_para_diag, tqr, lkpoint_dir, gamma_only,&
                                   & do_makov_payne
   USE scf,                 ONLY : vltot, v, vrs, vnew, &
                                   & destroy_scf_type, rho
@@ -195,10 +194,6 @@ SUBROUTINE lr_readin
      ENDIF
      !
      ! The status of the real space flags should be read manually
-     !
-     ! Do not mess with already present wfc structure
-     !
-     twfcollect = .FALSE.
      !
      ! Set-up all the dir and suffix variables.
      !
@@ -500,23 +495,6 @@ CONTAINS
        IF (.NOT. gamma_only ) CALL errore('lr_readin', 'k-point algorithm is not tested yet',1)
        !
     ENDIF
-    !
-    !  Check that either we have the same number of procs as the initial PWscf run
-    !  OR that the wavefunctions were gathered into one file at the end of
-    !  the PWscf run.
-    !
-    IF (nproc_image /= nproc_image_file .AND. .NOT. twfcollect)  &
-         CALL errore('lr_readin',&
-         & 'pw.x run with a different number of processors. &
-         & Use wf_collect=.true.',1)
-    IF (nproc_pool /= nproc_pool_file .AND. .NOT. twfcollect)  &
-         CALL errore('lr_readin',&
-         & 'pw.x run with a different number of pools. &
-         & Use wf_collect=.true.',1)
-    IF (nproc_bgrp /= nproc_bgrp_file .AND. .NOT. twfcollect)  &
-         CALL errore('lr_readin',&
-         & 'pw.x run with a different number of band groups. &
-         & Use wf_collect=.true.',1)
     !
     ! No taskgroups and EXX.
     !

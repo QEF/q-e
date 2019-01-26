@@ -43,7 +43,6 @@ MODULE control_flags
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
-  PUBLIC :: twfcollect
   PUBLIC :: lkpoint_dir
   !
   ! ...   declare execution control variables
@@ -76,7 +75,6 @@ MODULE control_flags
   LOGICAL :: timing        = .FALSE. ! print out timing information
   LOGICAL :: memchk        = .FALSE. ! check for memory leakage
   LOGICAL :: tscreen       = .FALSE. ! Use screened coulomb potentials for cluster calculations
-  LOGICAL :: twfcollect    = .TRUE.  ! Collect wave function in the restart file at the end of run.
   LOGICAL :: lkpoint_dir   = .FALSE. ! save each k point in a different directory
   LOGICAL :: force_pairing = .FALSE. ! Force pairing
   LOGICAL :: lecrpa        = .FALSE. ! RPA correlation energy request

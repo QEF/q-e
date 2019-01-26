@@ -3,6 +3,7 @@
 ! Program written by Yang Jiao,  Oct 2016, GPL, No warranties.
 !
 !    Oct 2018, adapted to QE6.3
+!    Jan 2019, adapted to change in rho from (up,down) to (tot,magn)
 !
 !-----------------------------------------------------------------------
 PROGRAM do_ppacf
@@ -187,6 +188,7 @@ PROGRAM do_ppacf
      READ (5, ppacf, iostat = ios) 
      !
   ENDIF
+  IF (nspin == 4) CALL errore ('ppacf','noncollinear spin not implemented',1)
 !!!!!!!!!!!!!!!!!! READ IN DATA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! 
   ! Broadcast variables
@@ -280,8 +282,6 @@ PROGRAM do_ppacf
      tot_rho(:)=rhoout(:,1)
   ELSEIF(nspin==2) THEN
      tot_rho(:)=rhoout(:,1)+rhoout(:,2)
-  ELSE
-     CALL errore ('ppacf','vdW-DF not available for noncollinear spin case',1)
   END IF
   !
   CALL create_scf_type(exlda)

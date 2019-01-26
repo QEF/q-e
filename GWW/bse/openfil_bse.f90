@@ -3,7 +3,6 @@ SUBROUTINE openfil_bse()
 ! ... This routine opens all files needed to the self consistent run,
 ! ... sets various file names, units, record lengths
   USE wvfct,          ONLY : nbnd, npwx
-  use control_flags,  ONLY:  twfcollect
   USE io_files,       ONLY : prefix, iunwfc, nwordwfc,nwordatwfc, diropn
   USE noncollin_module, ONLY : npol
   USE basis,            ONLY : natomwfc
@@ -17,8 +16,6 @@ SUBROUTINE openfil_bse()
   !
   LOGICAL       :: exst
   !
-  !
-  twfcollect=.false.
   !
   ! ... nwordwfc is the record length for the direct-access file
   ! ... containing wavefunctions

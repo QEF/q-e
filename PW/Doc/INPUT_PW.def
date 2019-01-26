@@ -164,7 +164,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                         The resulting format is portable to a different number
                         of processor, or different kind of parallelization
 
-                .FALSE. do not collect wavefunctions, leave them in temporary
+                .FALSE. OBSOLETE - NO LONGER IMPLEMENTED
+                        do not collect wavefunctions, leave them in temporary
                         local files (one per processor). The resulting format
                         is readable only on the same number of processors and
                         with the same kind of parallelization used to write it.
