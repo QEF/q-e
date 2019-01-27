@@ -25,7 +25,6 @@
   USE klist,         ONLY : nks 
   USE lsda_mod,      ONLY : lsda
   USE fixed_occ,     ONLY : tfixed_occ
-  USE check_stop,    ONLY : time_max => max_seconds
   USE qpoint,        ONLY : xq
   USE disp,          ONLY : nq1, nq2, nq3
   USE output,        ONLY : fildvscf, fildrho
@@ -70,6 +69,7 @@
   USE constants,     ONLY : AMU_RY
   USE mp_global,     ONLY : my_pool_id, me_pool
   USE io_global,     ONLY : meta_ionode, meta_ionode_id
+  USE io_epw,        ONLY : iunkf, iunqf
 #if defined(__NAG)
   USE F90_UNIX_ENV,  ONLY : iargc, getarg
 #endif
@@ -98,7 +98,7 @@
   LOGICAL, EXTERNAL  :: imatches
   CHARACTER(len=256) :: outdir
   namelist / inputepw / &
-       amass, outdir, prefix, iverbosity, time_max, fildvscf,                  &
+       amass, outdir, prefix, iverbosity, fildvscf,                            &
        elph, nq1, nq2, nq3, nk1, nk2, nk3, nbndskip,  nbndsub,                 &
        filukk, filukq, epbread, epbwrite, epwread, epwwrite, etf_mem, kmaps,   &
        eig_read, wepexst, epexst, vme,                                         &
@@ -131,7 +131,6 @@
   ! iverbosity   : verbosity control
   ! outdir   : directory where input, output, temporary files reside
   ! elph     : if true calculate electron-phonon coefficients
-  ! time_max : maximum cputime for this run
   ! prefix   : the prefix of files produced by pwscf
   ! fildvscf : output file containing deltavsc
   ! fildrho  : output file containing deltarho
@@ -369,7 +368,6 @@
   etf_mem      = 1 
 !  fildvscf0    = ' '
   ngaussw      = 1
-  time_max     = 10000000.d0
   outdir       = '.'
   dvscf_dir    = '.'
   prefix       = 'pwscf'
@@ -509,7 +507,6 @@
        & 'Wrong number of nsmears',1)
   IF (iverbosity.ne.0 .and. iverbosity.ne.1 .and. iverbosity.ne.2 .and. iverbosity.ne.3) & 
      CALL errore ('epw_readin', ' Wrong  iverbosity ', 1)
-  IF (time_max .lt. 1.d0) CALL errore ('epw_readin', ' Wrong time_max', 1)
 !  IF (tphases .and. fildvscf0.eq.' ') CALL errore ('epw_readin', &
 !       &' tphases requires fildvscf0', 1)
   IF (epbread .and. epbwrite) CALL errore ('epw_readin', &
@@ -570,32 +567,44 @@
                 &'You should define either filqf or nqf when band_plot = .true.',1)
   IF ( filkf .ne. ' ' .AND. .NOT. efermi_read ) CALL errore('epw_readin', &
       &'WARNING: if k-points are along a line, then efermi_read=.true. and fermi_energy must be given in the input file',-1)
-  IF ( scattering .AND. nstemp < 1 ) CALL errore('epw_init', &
+  IF ( scattering .AND. nstemp < 1 ) CALL errore('epw_readin', &
        'wrong number of nstemp',1)
   IF ( scattering .AND. maxval(temps(:)) > 0.d0 .AND. tempsmin > 0.d0 .AND. tempsmax > 0.d0 ) &
-       CALL errore('epw_init', 'define either (tempsmin and tempsmax) or temps(:)',1)
+       CALL errore('epw_readin', 'define either (tempsmin and tempsmax) or temps(:)',1)
   IF ( scattering .AND. tempsmax < tempsmin ) &
-       CALL errore('epw_init', 'tempsmax should be greater than tempsmin',1)
+       CALL errore('epw_readin', 'tempsmax should be greater than tempsmin',1)
 !  IF ( int_mob .AND. efermi_read)  CALL errore('epw_init', &
 !       'Fermi level can not be set (efermi_read) when computing intrinsic mobilities',1)
 !  IF ( int_mob .AND. (ABS(ncarrier) > 1E+5) )  CALL errore('epw_init', &
 !       'You cannot compute intrinsic mobilities and doped mobilities at the same time',1)
-  IF ( (ABS(ncarrier) > 1E+5) .AND. .NOT. carrier ) CALL errore('epw_init', &
+  IF ( (ABS(ncarrier) > 1E+5) .AND. .NOT. carrier ) CALL errore('epw_readin', &
        'carrier must be .true. if you specify ncarrier.',1)
-  IF ( carrier .AND. (ABS(ncarrier) < 1E+5) )  CALL errore('epw_init', &
+  IF ( carrier .AND. (ABS(ncarrier) < 1E+5) )  CALL errore('epw_readin', &
        'The absolute value of the doping carrier concentration must be larger than 1E5 cm^-3',1)
 !  IF ( (iterative_bte .AND. scattering_serta) .OR. (iterative_bte .AND.scattering_0rta)  ) CALL errore('epw_init', &
 !       'You should first do a run in the SRTA to get the initial scattering_rate files.',1)
-  IF ( (longrange .OR. shortrange) .AND. (.NOT. lpolar)) CALL errore('epw_init',&
+  IF ( (longrange .OR. shortrange) .AND. (.NOT. lpolar)) CALL errore('epw_readin',&
        &'Error: longrange or shortrange can only be true if lpolar is true as well.',1)
   IF ( longrange .AND. shortrange) CALL errore('epw_init',&
        &'Error: longrange and shortrange cannot be both true.',1)
-  IF ( epwread .AND. .NOT. kmaps .AND. .NOT. epbread) CALL errore('epw_init',&
+  IF ( epwread .AND. .NOT. kmaps .AND. .NOT. epbread) CALL errore('epw_readin',&
        &'Error: kmaps has to be true for a restart run. ',1)
-  IF ( .not. epwread .AND. .NOT. epwwrite) CALL errore('epw_init',&
+  IF ( .not. epwread .AND. .NOT. epwwrite) CALL errore('epw_readin',&
        &'Error: Either epwread or epwwrite needs to be true. ',1)
-  IF ( lscreen .AND. etf_mem == 2) CALL errore('epw_init',&
+  IF ( lscreen .AND. etf_mem == 2) CALL errore('epw_readin',&
        &'Error: lscreen not implemented with etf_mem=2 ',1)
+  ! Make sure the files exists
+  IF ( filkf .ne. ' ' ) THEN
+    OPEN( unit = iunkf, file = filkf, status = 'old', form = 'formatted',err=100, iostat=ios)
+100 CALL errore('epw_readin','opening file '//filkf,abs(ios))
+    CLOSE(iunkf)
+  ENDIF
+  IF ( filqf .ne. ' ' ) THEN
+    OPEN( unit = iunqf, file = filqf, status = 'old', form = 'formatted',err=101, iostat=ios)
+101 CALL errore('epw_readin','opening file '//filqf,abs(ios))
+    CLOSE(iunqf)
+  ENDIF  
+
 !#ifndef __MPI
 !  IF ( etf_mem == 2 ) CALL errore('epw_init','Error: etf_mem == 2 only works with MPI.',1)
 !#endif
