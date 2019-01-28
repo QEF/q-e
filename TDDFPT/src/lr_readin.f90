@@ -18,7 +18,7 @@ SUBROUTINE lr_readin
   USE kinds,               ONLY : DP
   USE io_files,            ONLY : tmp_dir, prefix, wfc_dir, create_directory
   USE lsda_mod,            ONLY : current_spin, nspin, isk, lsda
-  USE control_flags,       ONLY : use_para_diag, tqr, lkpoint_dir, gamma_only,&
+  USE control_flags,       ONLY : use_para_diag, tqr, gamma_only,&
                                   & do_makov_payne
   USE scf,                 ONLY : vltot, v, vrs, vnew, &
                                   & destroy_scf_type, rho
@@ -350,11 +350,6 @@ SUBROUTINE lr_readin
      ! Needed for the nscf calculation.
      !
      IF (.NOT.restart) CALL write_scf( rho, nspin )
-     !
-     ! If a band structure calculation needs to be done, do not open a file
-     ! for k point (PH/phq_readin.f90)
-     !
-     lkpoint_dir = .FALSE.
      !
   ENDIF
   !

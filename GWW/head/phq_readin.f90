@@ -28,7 +28,7 @@ SUBROUTINE phq_readin()
   USE input_parameters, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE start_k,       ONLY : reset_grid
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, ltetra
-  USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir
+  USE control_flags, ONLY : gamma_only, tqr, restart
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
@@ -544,7 +544,6 @@ SUBROUTINE phq_readin()
   ! for k point
   !
   IF (reduce_io) io_level=0
-  lkpoint_dir=.FALSE.
   restart = recover
   !
   !  set masses to values read from input, if available;
