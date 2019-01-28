@@ -30,7 +30,6 @@ PROGRAM do_projwfc
   USE environment,ONLY : environment_start, environment_end
   USE wvfct,      ONLY : et, nbnd
   USE basis,      ONLY : natomwfc
-  USE control_flags, ONLY: twfcollect
   USE paw_variables, ONLY : okpaw
   ! following modules needed for generation of tetrahedra
   USE ktetra,     ONLY : tetra, tetra_type, opt_tetra_init
@@ -146,10 +145,6 @@ PROGRAM do_projwfc
     IF ( tdosinboxes ) CALL errore ('projwfc','incompatible options',2)
   END IF
   IF ( lforcet .AND. tdosinboxes ) CALL errore ('projwfc','incompatible options',3)
-  !
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
-     CALL errore('projwfc',&
-     'pw.x run with a different number of procs/pools. Use wf_collect=.true.',1)
   !
   ! More initializations
   !

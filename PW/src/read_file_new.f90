@@ -26,7 +26,6 @@ SUBROUTINE read_file()
   USE dfunct,               ONLY : newd
   USE ldaU,                 ONLY : lda_plus_u, U_projection
   USE pw_restart_new,       ONLY : read_collected_to_evc
-  USE control_flags,        ONLY : twfcollect
   USE io_files,             ONLY : tmp_dir, prefix, postfix
   USE control_flags,        ONLY : io_level
   USE klist,                ONLY : init_igk
@@ -63,7 +62,7 @@ SUBROUTINE read_file()
   !
   CALL init_igk ( npwx, ngm, g, gcutw ) 
   !
-  IF ( twfcollect )  CALL read_collected_to_evc ( TRIM ( dirname )) 
+  CALL read_collected_to_evc ( TRIM ( dirname )) 
   !
   ! ... Assorted initialization: pseudopotentials, PAW
   ! ... Not sure which ones (if any) should be done here

@@ -150,7 +150,7 @@ SUBROUTINE iosys()
   USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, tr2, imix, gamma_only,&
                             nmix, iverbosity, smallmem, niter, &
                             io_level, ethr, lscf, lbfgs, lmd, &
-                            lbands, lconstrain, restart, twfcollect, &
+                            lbands, lconstrain, restart, &
                             llondon, ldftd3, do_makov_payne, lxdm, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
@@ -548,7 +548,6 @@ SUBROUTINE iosys()
   ! ... define memory- and disk-related internal switches
   !
   smallmem = ( TRIM( memory ) == 'small' )
-  twfcollect = wf_collect
   !
   ! ... Set Values for electron and bands
   !
@@ -874,10 +873,6 @@ SUBROUTINE iosys()
   CASE ( 'none' )
      !
      io_level = -1
-     IF ( twfcollect ) THEN
-        CALL infomsg('iosys', 'minimal I/O required, wf_collect reset to FALSE')
-        twfcollect= .false.
-     ENDIF
      !
   CASE DEFAULT
      !

@@ -16,7 +16,7 @@ PROGRAM do_bands
   USE io_files,  ONLY : prefix, tmp_dir
   USE mp_global, ONLY : npool, nproc_pool, nproc_file, &
                         nproc_pool_file, mp_startup
-  USE control_flags, ONLY : twfcollect, gamma_only
+  USE control_flags, ONLY : gamma_only
   USE environment,   ONLY : environment_start, environment_end
   USE wvfct,     ONLY : nbnd
   USE klist,     ONLY : nkstot, two_fermi_energies
@@ -110,9 +110,6 @@ PROGRAM do_bands
   CALL read_file()
   !
   IF (gamma_only) CALL errore('bands','gamma_only case not implemented',1)
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
-     CALL errore('bands',&
-     'pw.x run with a different number of procs/pools. Use wf_collect=.true.',1)
   IF (two_fermi_energies.or.i_cons /= 0) &
      CALL errore('bands',&
      'The bands code with constrained magnetization has not been tested',1)

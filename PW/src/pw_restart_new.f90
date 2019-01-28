@@ -46,7 +46,7 @@ MODULE pw_restart_new
       ! what = 'init-config': write only variables that are known after the 
       !                       initial steps of initialization (e.g. structure)
       !
-      USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
+      USE control_flags,        ONLY : istep, conv_ions, &
                                        lscf, gamma_only, &
                                        tqr, tq_smoothing, tbeta_smoothing, &
                                        noinv, smallmem, &
@@ -390,14 +390,14 @@ MODULE pw_restart_new
             CALL qexsd_init_band_structure(  output%band_structure,lsda,noncolin,lspinorb, nbnd, nbnd,      &
                    nelec, natomwfc, occupations_are_fixed, h_energy,two_fermi_energies, [ef_up,ef_dw],      &
                    et,wg,nkstot,xk,ngk_g,wk, STARTING_KPOINTS = qexsd_start_k_obj,                          &
-                   OCCUPATION_KIND = qexsd_occ_obj, WF_COLLECTED = twfcollect, SMEARING = qexsd_smear_obj )
+                   OCCUPATION_KIND = qexsd_occ_obj, WF_COLLECTED = .true. , SMEARING = qexsd_smear_obj )
 
             CALL qes_reset_smearing(qexsd_smear_obj)
          ELSE     
             CALL  qexsd_init_band_structure(output%band_structure,lsda,noncolin,lspinorb, nbnd, nbnd, nelec,& 
                                 natomwfc, occupations_are_fixed, h_energy,two_fermi_energies, [ef_up,ef_dw],&
                                 et,wg,nkstot,xk,ngk_g,wk, STARTING_KPOINTS = qexsd_start_k_obj,             &
-                                OCCUPATION_KIND = qexsd_occ_obj, WF_COLLECTED = twfcollect)
+                                OCCUPATION_KIND = qexsd_occ_obj, WF_COLLECTED = .true. )
          END IF 
          CALL qes_reset_k_points_ibz(qexsd_start_k_obj)
          CALL qes_reset_occupations(qexsd_occ_obj)
@@ -849,7 +849,6 @@ MODULE pw_restart_new
     SUBROUTINE init_vars_from_schema( what, ierr, output_obj, par_info, gen_info, input_obj )
       !------------------------------------------------------------------------
       !
-      USE control_flags,        ONLY : twfcollect
       USE io_rho_xml,           ONLY : read_scf
       USE scf,                  ONLY : rho
       USE lsda_mod,             ONLY : nspin
@@ -915,10 +914,6 @@ MODULE pw_restart_new
       CASE( 'header' )
          !
          lheader = .TRUE.
-         !
-      CASE ( 'wf_collect' ) 
-         ! 
-         twfcollect = output_obj%band_structure%wf_collected 
          !
       CASE( 'dim' )
          !
@@ -1014,7 +1009,6 @@ MODULE pw_restart_new
       END IF
       !
       IF ( lpw ) THEN
-         twfcollect = output_obj%band_structure%wf_collected
          CALL readschema_planewaves( output_obj%basis_set) 
       END IF
       IF ( lions ) THEN
@@ -1041,8 +1035,6 @@ MODULE pw_restart_new
          CALL readschema_band_structure( output_obj%band_structure )
       END IF
       IF ( lwfc ) THEN
-         !
-         twfcollect = output_obj%band_structure%wf_collected
          IF (output_obj%band_structure%wf_collected)  CALL read_collected_to_evc(dirname ) 
       END IF
       IF ( lsymm ) THEN
@@ -1987,7 +1979,7 @@ MODULE pw_restart_new
       ! ... This routines reads wavefunctions from the new file format and
       ! ... writes them into the old format
       !
-      USE control_flags,        ONLY : twfcollect, gamma_only
+      USE control_flags,        ONLY : gamma_only
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nks, xk, ngk, igk_k
       USE wvfct,                ONLY : npwx, g2kin, et, wg, nbnd
@@ -2017,8 +2009,6 @@ MODULE pw_restart_new
       LOGICAL              :: opnd, ionode_k
       REAL(DP)             :: scalef, xk_(3), b1(3), b2(3), b3(3)
 
-      !
-      IF ( .NOT. twfcollect ) RETURN 
       !
       iks = global_kpoint_index (nkstot, 1)
       ike = iks + nks - 1

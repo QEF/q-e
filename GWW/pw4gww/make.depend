@@ -209,7 +209,6 @@ o_rinitcgg.o : ../../Modules/kind.o
 o_rinitcgg.o : ../../Modules/mp_world.o
 o_rinitcgg.o : ../../Modules/recvec.o
 o_rinitcgg.o : ../../UtilXlib/mp.o
-openfil_pw4gww.o : ../../Modules/control_flags.o
 openfil_pw4gww.o : ../../Modules/io_files.o
 openfil_pw4gww.o : ../../Modules/ions_base.o
 openfil_pw4gww.o : ../../Modules/kind.o
@@ -374,7 +373,6 @@ semicore_read.o : ../../PW/src/pwcom.o
 semicore_read.o : ../../UtilXlib/mp.o
 start_pw4gww.o : ../../Modules/environment.o
 start_pw4gww.o : ../../Modules/mp_global.o
-stop_pp.o : ../../Modules/control_flags.o
 stop_pp.o : ../../Modules/io_files.o
 stop_pp.o : ../../Modules/mp_global.o
 stop_pp.o : ../../UtilXlib/parallel_include.o

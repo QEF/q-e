@@ -45,7 +45,6 @@ fd_ifc.o : ../../PW/src/pwcom.o
 fd_ifc.o : ../../PW/src/symm_base.o
 fd_ifc.o : ../../PW/src/symme.o
 fd_ifc.o : ../../UtilXlib/mp.o
-stop_pp.o : ../../Modules/control_flags.o
 stop_pp.o : ../../Modules/io_files.o
 stop_pp.o : ../../Modules/mp_global.o
 stop_pp.o : ../../UtilXlib/parallel_include.o

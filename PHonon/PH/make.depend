@@ -207,7 +207,6 @@ clean_pw_ph.o : phcom.o
 clean_pw_ph.o : save_ph_input.o
 clinear.o : ../../Modules/kind.o
 close_phq.o : ../../LR_Modules/lrcom.o
-close_phq.o : ../../Modules/control_flags.o
 close_phq.o : ../../Modules/io_global.o
 close_phq.o : ../../Modules/paw_variables.o
 close_phq.o : ../../Modules/uspp.o

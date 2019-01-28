@@ -231,13 +231,12 @@ MODULE input_parameters
         INTEGER  :: nberrycyc = 1
           !number of covergence cycles on electric field
 
-        LOGICAL :: wf_collect = .false.
+        LOGICAL :: wf_collect = .true.
           ! This flag controls the way wavefunctions are stored to disk:
           !  .TRUE.  collect wavefunctions from all processors, store them
           !          into a single restart file on a single processors
           !  .FALSE. do not collect wavefunctions, store them into distributed
-          !          files
-          ! Only for PW and only in the parallel case
+          !          files - NO LONGER IMPLEMENTED SINCE v.6.3
 
         LOGICAL :: saverho = .true.
           ! This flag controls the saving of charge density in CP codes:
@@ -269,8 +268,6 @@ MODULE input_parameters
           !                     even if they are slower than the default
           ! if memory = 'large' then QE tries to use (when implemented) algorithms using more memory
           !                     to enhance performance.
-
-          ! if .TRUE., perform exact exchange calculation using Wannier functions (X. Wu et al., Phys. Rev. B. 79, 085102 (2009))
 
         LOGICAL  :: lfcpopt = .FALSE. ! FCP optimisation switch
         LOGICAL  :: lfcpdyn = .FALSE. ! FCP thermostat enabled if .true.

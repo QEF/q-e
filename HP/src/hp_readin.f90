@@ -138,7 +138,6 @@ SUBROUTINE input_sanity()
   USE fixed_occ,        ONLY : tfixed_occ
   USE cellmd,           ONLY : lmovecell
   USE noncollin_module, ONLY : i_cons, noncolin
-  USE control_flags,    ONLY : twfcollect
   USE mp_global,        ONLY : nproc_pool, nproc_pool_file, &
                                nproc_image_file, nproc_image, nproc_bgrp_file
   USE ldaU,             ONLY : lda_plus_u, U_projection, lda_plus_u_kind, Hubbard_J0
@@ -198,12 +197,6 @@ SUBROUTINE input_sanity()
   IF (noncolin) CALL errore('hp_readin','Noncolliner case is not supported',1)
   !
   IF (lmovecell) CALL errore('hp_readin','The HP code is not working after vc-relax',1)
-  !
-  IF (nproc_image /= nproc_image_file .and. .not. twfcollect) CALL errore('hp_readin', &
-     & 'pw.x run with a different number of processors. Use wf_collect=.true.',1)
-  !
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  CALL errore('hp_readin', &
-     & 'pw.x run with a different number of pools. Use wf_collect=.true.',1)
   !
   IF (nproc_bgrp_file /= nproc_pool_file) CALL errore('hp_readin', &
      & 'band parallelization is not implemented in HP',1)
