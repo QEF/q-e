@@ -8,10 +8,9 @@ PROGRAM open_grid
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
   USE cell_base,  ONLY : at, bg, tpiba2, alat
-  USE lsda_mod,   ONLY : nspin, isk
   USE klist,      ONLY : nks, nkstot, xk, wk, igk_k, ngk, qnorm
   USE io_files,   ONLY : prefix, tmp_dir, nwordwfc, iunwfc, diropn
-  USE noncollin_module,   ONLY : noncolin, m_loc, angle1, angle2
+  USE noncollin_module,   ONLY : noncolin, m_loc, angle1, angle2, nspin_lsda
   USE spin_orb,           ONLY : domag
   USE control_flags,      ONLY : gamma_only, twfcollect
   USE environment,        ONLY : environment_start, environment_end
@@ -28,7 +27,7 @@ PROGRAM open_grid
   USE wavefunctions, ONLY : evc
   USE buffers,            ONLY : save_buffer, open_buffer, close_buffer
   USE scf,                ONLY : rho
-  USE lsda_mod,           ONLY : nspin, lsda, starting_magnetization
+  USE lsda_mod,           ONLY : nspin, isk, lsda, starting_magnetization
   USE io_rho_xml,         ONLY : write_scf
   USE input_parameters,   ONLY : nk1, nk2, nk3, k1, k2, k3, k_points, &
                               occupations, calculation !, nkstot,
@@ -178,12 +177,12 @@ PROGRAM open_grid
     isk(nks/2+1:nks) = 2
   ENDIF
   !
-  DEALLOCATE(igk_k, ngk, et, wg)
-  ALLOCATE(igk_k(npwx,nks), ngk(nks))
+  DEALLOCATE(igk_k, ngk, et, wg, g2kin)
+  ALLOCATE(igk_k(npwx,nks), ngk(nks), g2kin(npwx))
   ALLOCATE(et(nbnd,nks), wg(nbnd,nks))
   !
   DEALLOCATE(evc)
-  ALLOCATE(evc(npwx,nbnd))
+  ALLOCATE(evc(npwx*npol,nbnd))
   !
   prefix = TRIM(prefix)//"_open"
   nwordwfc = nbnd * npwx * npol
@@ -195,6 +194,7 @@ PROGRAM open_grid
   CALL write_scf(rho, nspin)
   !
   ALLOCATE(psic(dffts%nnr), evx(npol*npwx, nbnd))
+ 
   DO ik = 1, nks !/nspin_mag
   !DO is = 1, nspin_mag
     ik_idx_kpt = ik !+ (is-1)*(nks/nspin_mag) !(ik-1)*nspin_mag + is
@@ -209,6 +209,8 @@ PROGRAM open_grid
 !     print*, size(exxbuff,1), size(exxbuff,2), nwordwfc, npwx, &
 !             dffts%nnr
     DO ibnd = 1, nbnd
+      evx = 0._dp
+      psic = 0._dp
       psic(1:dffts%nnr) = exxbuff(1:dffts%nnr,ibnd,ik_idx_exx)
       CALL fwfft('Wave', psic, dffts)
       evx(1:ngk(ik_idx_kpt),ibnd) = psic(dffts%nl(igk_k(1:ngk(ik_idx_kpt),ik_idx_kpt)))
@@ -245,7 +247,7 @@ PROGRAM open_grid
   nq3 = nq_back(3)
   CALL dft_force_hybrid(exx_status_back)
   !
-  !twfcollect = .true.
+  !twfcollect = .false.
   CALL punch('all')
   !
   ALLOCATE(yk(3,nks))
@@ -256,8 +258,8 @@ PROGRAM open_grid
   WRITE(stdout,'(5x,a,3i4)') "Shift:     ", k1,k2,k3
   WRITE(stdout,'(5x,a)') "List to be put in the .win file of wannier90: &
                           &(already in crystal/fractionary coordinates):"
-    
-  DO ik = 1, nks/nspin_mag
+
+  DO ik = 1, nks/nspin_lsda
     WRITE(stdout,'(3f21.15,3x,f13.10)') yk(:,ik), wk(ik)
   ENDDO
   DEALLOCATE(yk)
