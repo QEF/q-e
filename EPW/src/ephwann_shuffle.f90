@@ -372,6 +372,12 @@
   ENDIF
   !
   ALLOCATE( w2( 3*nat) )
+  ! 
+  IF (lpolar) THEN
+    WRITE(stdout, '(/,5x,a)' ) 'Computes the analytic long-range interaction for polar materials [lpolar]'
+    WRITE(stdout, '(5x,a)' )   ' '
+  ENDIF
+
   !
   ! Determine Wigner-Seitz points
   ! 

@@ -36,9 +36,7 @@ hp_check_type.o : ../../Modules/noncol.o
 hp_check_type.o : ../../PW/src/symm_base.o
 hp_check_type.o : hpcom.o
 hp_clean_q.o : ../../LR_Modules/lrcom.o
-hp_clean_q.o : ../../Modules/control_flags.o
 hp_close_q.o : ../../LR_Modules/lrcom.o
-hp_close_q.o : ../../Modules/control_flags.o
 hp_close_q.o : ../../PW/src/buffers.o
 hp_close_q.o : hpcom.o
 hp_dealloc_1.o : ../../LR_Modules/lrcom.o

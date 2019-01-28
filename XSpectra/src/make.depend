@@ -117,7 +117,6 @@ plot_xanes_cross_sections.o : ../../UtilXlib/mp.o
 plot_xanes_cross_sections.o : xspectra_mod.o
 radin_mod.o : ../../Modules/kind.o
 read_input_and_bcast.o : ../../Modules/cell_base.o
-read_input_and_bcast.o : ../../Modules/control_flags.o
 read_input_and_bcast.o : ../../Modules/io_files.o
 read_input_and_bcast.o : ../../Modules/io_global.o
 read_input_and_bcast.o : ../../Modules/kind.o

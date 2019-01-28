@@ -351,7 +351,6 @@ open_grid.o : ../../PW/src/scf_mod.o
 open_grid.o : ../../PW/src/start_k.o
 open_grid.o : ../../PW/src/symm_base.o
 open_grid.o : ../../UtilXlib/mp.o
-openfil_pp.o : ../../Modules/control_flags.o
 openfil_pp.o : ../../Modules/io_files.o
 openfil_pp.o : ../../Modules/kind.o
 openfil_pp.o : ../../Modules/noncol.o
@@ -442,7 +441,6 @@ poormanwannier.o : ../../PW/src/symm_base.o
 poormanwannier.o : ../../UtilXlib/mp.o
 postproc.o : ../../Modules/cell_base.o
 postproc.o : ../../Modules/constants.o
-postproc.o : ../../Modules/control_flags.o
 postproc.o : ../../Modules/environment.o
 postproc.o : ../../Modules/fft_base.o
 postproc.o : ../../Modules/io_files.o
@@ -694,7 +692,6 @@ stm.o : ../../PW/src/pwcom.o
 stm.o : ../../PW/src/scf_mod.o
 stm.o : ../../PW/src/symme.o
 stm.o : ../../UtilXlib/mp.o
-stop_pp.o : ../../Modules/control_flags.o
 stop_pp.o : ../../Modules/io_files.o
 stop_pp.o : ../../Modules/mp_global.o
 sum_band_kin.o : ../../FFTXlib/fft_helper_subroutines.o
