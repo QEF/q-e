@@ -13,10 +13,11 @@ SUBROUTINE punch( what )
   ! ... the information needed for further processing (phonon etc.)
   ! ... what = 'all'          write xml data file, charge density, wavefunctions
   ! ...                       (for final data)
-  ! ... what = 'config'       write xml data file, charge density (plis wavefunctions
-  ! ...                       for nks = 1 in plain binary format, see comments below)
+  ! ... what = 'config'       write xml data file and charge density; also,
+  !                           for nks=1, wavefunctions in plain binary format
+  !                           (see why in comments below)
   ! ...                       (for intermediate or incomplete results)
-  ! ... what = 'init-config'  write xml data file excluding final results
+  ! ... what = 'init-config'  write xml data file only excluding final results
   ! ...                       (for dry run, can be called at early stages)
   !
   USE io_global,            ONLY : stdout, ionode
@@ -42,7 +43,7 @@ SUBROUTINE punch( what )
   !
   CHARACTER(LEN=*), INTENT(IN) :: what
   !
-  LOGICAL :: exst
+  LOGICAL :: exst, wf_collect
   CHARACTER(LEN=320) :: cp_source, cp_dest
   INTEGER            :: cp_status, nt, inlc
   !
@@ -59,7 +60,10 @@ SUBROUTINE punch( what )
   !
   CALL create_directory( TRIM( tmp_dir ) // TRIM( prefix ) // postfix )
   !
-  CALL pw_write_schema( what )
+  ! ... wf_collect keeps track whether wfcs are written in inal format
+  !
+  wf_collect = ( TRIM(what) == 'all' )
+  CALL pw_write_schema( what, wf_collect )
   !
   ! ... charge density - also writes rho%ns if lda+U and rho%bec if PAW
   ! ... do not overwrite the scf charge density with a non-scf one

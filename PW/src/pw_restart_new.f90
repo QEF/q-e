@@ -40,11 +40,15 @@ MODULE pw_restart_new
   !
   CONTAINS
     !------------------------------------------------------------------------
-    SUBROUTINE pw_write_schema( what )
+    SUBROUTINE pw_write_schema( what, wf_collect )
       !------------------------------------------------------------------------
       !
       ! what = 'init-config': write only variables that are known after the 
       !                       initial steps of initialization (e.g. structure)
+      ! wf_collect = T  if final wavefunctions in portable format are written,
+      !              F  if wavefunctions are either not written or are written 
+      !                 in binary non-portable form (for checkpointing)
+      !                 NB: wavefunctions are not written here in any case
       !
       USE control_flags,        ONLY : istep, conv_ions, &
                                        lscf, gamma_only, &
@@ -127,6 +131,7 @@ MODULE pw_restart_new
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN) :: what
+      LOGICAL, INTENT(IN) :: wf_collect
       !
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname
@@ -390,14 +395,14 @@ MODULE pw_restart_new
             CALL qexsd_init_band_structure(  output%band_structure,lsda,noncolin,lspinorb, nbnd, nbnd,      &
                    nelec, natomwfc, occupations_are_fixed, h_energy,two_fermi_energies, [ef_up,ef_dw],      &
                    et,wg,nkstot,xk,ngk_g,wk, STARTING_KPOINTS = qexsd_start_k_obj,                          &
-                   OCCUPATION_KIND = qexsd_occ_obj, WF_COLLECTED = .true. , SMEARING = qexsd_smear_obj )
+                   OCCUPATION_KIND = qexsd_occ_obj, WF_COLLECTED = wf_collect , SMEARING = qexsd_smear_obj )
 
             CALL qes_reset_smearing(qexsd_smear_obj)
          ELSE     
             CALL  qexsd_init_band_structure(output%band_structure,lsda,noncolin,lspinorb, nbnd, nbnd, nelec,& 
                                 natomwfc, occupations_are_fixed, h_energy,two_fermi_energies, [ef_up,ef_dw],&
                                 et,wg,nkstot,xk,ngk_g,wk, STARTING_KPOINTS = qexsd_start_k_obj,             &
-                                OCCUPATION_KIND = qexsd_occ_obj, WF_COLLECTED = .true. )
+                                OCCUPATION_KIND = qexsd_occ_obj, WF_COLLECTED = wf_collect )
          END IF 
          CALL qes_reset_k_points_ibz(qexsd_start_k_obj)
          CALL qes_reset_occupations(qexsd_occ_obj)
