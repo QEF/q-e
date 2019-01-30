@@ -160,7 +160,6 @@ SUBROUTINE iosys()
                             nstep_            => nstep, &
                             iprint_           => iprint, &
                             noinv_            => noinv, &
-                            lkpoint_dir_      => lkpoint_dir, &
                             tqr_              => tqr, &
                             tq_smoothing_     => tq_smoothing, &
                             tbeta_smoothing_  => tbeta_smoothing, &
@@ -219,7 +218,7 @@ SUBROUTINE iosys()
                                wfcdir, prefix, etot_conv_thr, forc_conv_thr,   &
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
-                               nberrycyc, lkpoint_dir, efield_cart, lecrpa,    &
+                               nberrycyc, efield_cart, lecrpa,                 &
                                vdw_table_name, memory, max_seconds, tqmmm,     &
                                efield_phase, gate
 
@@ -1149,7 +1148,6 @@ SUBROUTINE iosys()
   tbeta_smoothing_ = tbeta_smoothing
   !
   title_      = title
-  lkpoint_dir_=lkpoint_dir
   dt_         = dt
   tefield_    = tefield
   dipfield_   = dipfield

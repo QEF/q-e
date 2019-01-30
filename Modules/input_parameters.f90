@@ -246,7 +246,7 @@ MODULE input_parameters
         LOGICAL :: tabps = .false. ! for ab-initio pressure and/or surface
                                    ! calculations
 
-        LOGICAL :: lkpoint_dir = .true. ! opens a directory for each k point
+        LOGICAL :: lkpoint_dir = .false. ! obsolete, for compatibility
 
         LOGICAL :: use_wannier = .false. ! use or not Wannier functions
 
