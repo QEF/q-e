@@ -60,7 +60,7 @@ SUBROUTINE punch( what )
   !
   CALL create_directory( TRIM( tmp_dir ) // TRIM( prefix ) // postfix )
   !
-  ! ... wf_collect keeps track whether wfcs are written in inal format
+  ! ... wf_collect keeps track whether wfcs are written in portable format
   !
   wf_collect = ( TRIM(what) == 'all' )
   CALL pw_write_schema( what, wf_collect )

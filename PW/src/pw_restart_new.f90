@@ -46,7 +46,7 @@ MODULE pw_restart_new
       ! what = 'init-config': write only variables that are known after the 
       !                       initial steps of initialization (e.g. structure)
       ! wf_collect = T  if final wavefunctions in portable format are written,
-      !              F  if wavefunctions are either not written or are written 
+      !              F  if wavefunctions are either not written or are written
       !                 in binary non-portable form (for checkpointing)
       !                 NB: wavefunctions are not written here in any case
       !
