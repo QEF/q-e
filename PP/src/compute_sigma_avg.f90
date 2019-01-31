@@ -23,7 +23,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
   USE gvecs,                ONLY : doublegrid
   USE scf,                  ONLY : rho
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE mp_global,            ONLY : me_pool, intra_bgrp_comm
+  USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE fft_base,             ONLY : dffts, dfftp
   USE fft_interfaces,       ONLY : invfft, fft_interpolate

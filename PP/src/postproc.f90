@@ -31,11 +31,10 @@ SUBROUTINE extract (plot_files,plot_num)
   USE vlocal,    ONLY : strf
   USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
-  USE mp_global,     ONLY : nproc_pool, nproc_file, nproc_pool_file
   USE noncollin_module, ONLY : i_cons
   USE paw_variables, ONLY : okpaw
   USE mp,        ONLY : mp_bcast
-  USE mp_world,  ONLY : world_comm
+  USE mp_images, ONLY : intra_image_comm
   USE constants, ONLY : rytoev
   USE parameters, ONLY : npk
   USE io_global, ONLY : stdout
@@ -98,27 +97,27 @@ SUBROUTINE extract (plot_files,plot_num)
      !
   ENDIF
   !
-  CALL mp_bcast (ios, ionode_id, world_comm)
+  CALL mp_bcast (ios, ionode_id, intra_image_comm)
   !
   IF ( ios /= 0) CALL errore ('postproc', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
-  CALL mp_bcast( prefix, ionode_id, world_comm )
-  CALL mp_bcast( plot_num, ionode_id, world_comm )
-  CALL mp_bcast( sample_bias, ionode_id, world_comm )
-  CALL mp_bcast( spin_component, ionode_id, world_comm )
-  CALL mp_bcast( z, ionode_id, world_comm )
-  CALL mp_bcast( dz, ionode_id, world_comm )
-  CALL mp_bcast( emin, ionode_id, world_comm )
-  CALL mp_bcast( emax, ionode_id, world_comm )
-  CALL mp_bcast( degauss_ldos, ionode_id, world_comm )
-  CALL mp_bcast( delta_e, ionode_id, world_comm )
-  CALL mp_bcast( kband, ionode_id, world_comm )
-  CALL mp_bcast( kpoint, ionode_id, world_comm )
-  CALL mp_bcast( filplot, ionode_id, world_comm )
-  CALL mp_bcast( lsign, ionode_id, world_comm )
+  CALL mp_bcast( tmp_dir, ionode_id, intra_image_comm )
+  CALL mp_bcast( prefix, ionode_id, intra_image_comm )
+  CALL mp_bcast( plot_num, ionode_id, intra_image_comm )
+  CALL mp_bcast( sample_bias, ionode_id, intra_image_comm )
+  CALL mp_bcast( spin_component, ionode_id, intra_image_comm )
+  CALL mp_bcast( z, ionode_id, intra_image_comm )
+  CALL mp_bcast( dz, ionode_id, intra_image_comm )
+  CALL mp_bcast( emin, ionode_id, intra_image_comm )
+  CALL mp_bcast( emax, ionode_id, intra_image_comm )
+  CALL mp_bcast( degauss_ldos, ionode_id, intra_image_comm )
+  CALL mp_bcast( delta_e, ionode_id, intra_image_comm )
+  CALL mp_bcast( kband, ionode_id, intra_image_comm )
+  CALL mp_bcast( kpoint, ionode_id, intra_image_comm )
+  CALL mp_bcast( filplot, ionode_id, intra_image_comm )
+  CALL mp_bcast( lsign, ionode_id, intra_image_comm )
   !
   ! no task specified: do nothing and return
   !

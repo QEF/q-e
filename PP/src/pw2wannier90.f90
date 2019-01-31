@@ -93,7 +93,8 @@ PROGRAM pw2wannier90
   !------------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout, ionode, ionode_id
-  USE mp_global,  ONLY : mp_startup, npool, nproc_pool, nproc_pool_file
+  USE mp_global,  ONLY : mp_startup
+  USE mp_pools,   ONLY : npool
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
   USE cell_base,  ONLY : at, bg
@@ -464,7 +465,7 @@ SUBROUTINE setup_nnkp
   USE ions_base, ONLY : nat, tau, ityp, atm
   USE klist,     ONLY : xk
   USE mp,        ONLY : mp_bcast, mp_sum
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_pools,  ONLY : intra_pool_comm
   USE mp_world,  ONLY : world_comm
   USE wvfct,     ONLY : nbnd,npwx
   USE control_flags,    ONLY : gamma_only
@@ -745,7 +746,7 @@ SUBROUTINE read_nnkp
   USE gvect,     ONLY : g, gg
   USE klist,     ONLY : nkstot, xk
   USE mp,        ONLY : mp_bcast, mp_sum
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_pools,  ONLY : intra_pool_comm
   USE mp_world,  ONLY : world_comm
   USE wvfct,     ONLY : npwx, nbnd
   USE noncollin_module, ONLY : noncolin
@@ -1241,9 +1242,9 @@ SUBROUTINE compute_dmn
    USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
-   USE mp_global,       ONLY : intra_pool_comm
+   USE mp_pools,        ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum, mp_bcast
-   USE mp_world,        ONLY : world_comm, nproc
+   USE mp_world,        ONLY : world_comm
    USE noncollin_module,ONLY : noncolin, npol
    USE gvecw,           ONLY : gcutw
    USE wannier
@@ -1923,7 +1924,7 @@ SUBROUTINE compute_mmn
    USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
-   USE mp_global,       ONLY : intra_pool_comm
+   USE mp_pools,        ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
    USE spin_orb,             ONLY : lspinorb
@@ -2318,7 +2319,7 @@ SUBROUTINE compute_spin
    USE uspp_param,      ONLY : upf, nh, lmaxq
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
-   USE mp_global,       ONLY : intra_pool_comm
+   USE mp_pools,        ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
    USE gvecw,           ONLY : gcutw
@@ -2560,7 +2561,7 @@ SUBROUTINE compute_orb
    USE uspp_param,      ONLY : upf, nh, lmaxq
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
-   USE mp_global,       ONLY : intra_pool_comm
+   USE mp_pools,        ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
    USE gvecw,           ONLY : gcutw
@@ -2978,7 +2979,7 @@ SUBROUTINE compute_amn
    USE wannier
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
    USE uspp_param,      ONLY : upf
-   USE mp_global,       ONLY : intra_pool_comm
+   USE mp_pools,        ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
    USE gvecw,           ONLY : gcutw
@@ -3646,7 +3647,7 @@ SUBROUTINE generate_guiding_functions(ik)
    USE klist,      ONLY : xk, ngk, igk_k
    USE cell_base, ONLY : bg
    USE mp, ONLY : mp_sum
-   USE mp_global, ONLY : intra_pool_comm
+   USE mp_pools,  ONLY : intra_pool_comm
 
    IMPLICIT NONE
 
@@ -4019,7 +4020,7 @@ END SUBROUTINE write_plot
 
 SUBROUTINE write_parity
 
-   USE mp_global,            ONLY : intra_pool_comm
+   USE mp_pools,             ONLY : intra_pool_comm
    USE mp_world,             ONLY : mpime, nproc
    USE mp,                   ONLY : mp_sum
    USE io_global,            ONLY : stdout, ionode

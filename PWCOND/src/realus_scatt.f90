@@ -26,7 +26,6 @@ MODULE realus_scatt
    USE realus,           ONLY : qpointlist, tabp, boxrad
    USE uspp,             ONLY : okvan
    USE uspp_param,       ONLY : upf
-   USE mp_global,        ONLY : me_pool
    USE fft_base,         ONLY : dfftp
 
    IMPLICIT NONE

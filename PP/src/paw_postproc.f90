@@ -21,7 +21,6 @@ SUBROUTINE PAW_make_ae_charge(rho,withcore)
    USE uspp_param,        ONLY : nh, nhm, upf
    USE scf,               ONLY : scf_type
    USE fft_base,          ONLY : dfftp
-   USE mp_global,         ONLY : me_pool
    USE splinelib,         ONLY : spline, splint
    USE cell_base,         ONLY : at, bg, alat
 

@@ -39,7 +39,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   USE gvect,          ONLY : g 
   USE scf,            ONLY : rho
   USE mp,             ONLY : mp_sum
-  USE mp_global,      ONLY : intra_pool_comm
+  USE mp_pools,       ONLY : intra_pool_comm
   USE units_lr,       ONLY : iuatwfc, iuatswfc
   USE buffers,        ONLY : get_buffer
   !
@@ -396,7 +396,7 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
     USE uspp,       ONLY : qq_nt, nkb
     USE wvfct,      ONLY : npwx
     USE mp,         ONLY : mp_sum
-    USE mp_global,  ONLY : intra_pool_comm
+    USE mp_pools,   ONLY : intra_pool_comm
     USE control_lr, ONLY : ofsbeta
     !    
     IMPLICIT NONE

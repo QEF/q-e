@@ -22,8 +22,8 @@ PROGRAM pmw
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE io_files,   ONLY : prefix, tmp_dir
   USE mp,         ONLY : mp_bcast
-  USE mp_world,   ONLY : world_comm
-  USE mp_global,  ONLY : mp_startup, nproc_pool, nproc_pool_file
+  USE mp_images,  ONLY : intra_image_comm
+  USE mp_global,  ONLY : mp_startup
   USE environment, ONLY : environment_start, environment_end
   USE wvfct,      ONLY : nbnd
   USE ldaU,       ONLY : lda_plus_U
@@ -72,29 +72,23 @@ PROGRAM pmw
      !
   ENDIF
   !
-  CALL mp_bcast( ios, ionode_id, world_comm )
+  CALL mp_bcast( ios, ionode_id, intra_image_comm )
   IF ( ios/=0 ) CALL errore ('pmwannier', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
-  CALL mp_bcast( prefix, ionode_id, world_comm )
-  CALL mp_bcast( first_band, ionode_id, world_comm )
-  CALL mp_bcast( last_band, ionode_id, world_comm )
-  CALL mp_bcast( min_energy, ionode_id, world_comm )
-  CALL mp_bcast( max_energy, ionode_id, world_comm )
-  CALL mp_bcast( sigma, ionode_id, world_comm )
-  CALL mp_bcast( writepp, ionode_id, world_comm )
+  CALL mp_bcast( tmp_dir, ionode_id, intra_image_comm )
+  CALL mp_bcast( prefix, ionode_id, intra_image_comm )
+  CALL mp_bcast( first_band, ionode_id, intra_image_comm )
+  CALL mp_bcast( last_band, ionode_id, intra_image_comm )
+  CALL mp_bcast( min_energy, ionode_id, intra_image_comm )
+  CALL mp_bcast( max_energy, ionode_id, intra_image_comm )
+  CALL mp_bcast( sigma, ionode_id, intra_image_comm )
+  CALL mp_bcast( writepp, ionode_id, intra_image_comm )
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
   CALL read_file ( )
-  !
-  ! Here we trap restarts from a different number of nodes.
-  !
-  IF (nproc_pool /= nproc_pool_file)  &
-     CALL errore('pmw', &
-     'pw.x run on a different number of procs/pools', nproc_pool_file)
   !
   ! Check on correctness and consistency of the input
   !
