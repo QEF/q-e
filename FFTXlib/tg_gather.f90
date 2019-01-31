@@ -103,8 +103,17 @@ SUBROUTINE tg_gather_gpu( dffts, v_d, tg_v_d )
   REAL(DP), ALLOCATABLE :: tg_v_mpi(:)
   INTEGER :: nxyp, ir3, off, tg_off
   INTEGER :: i, nsiz, ierr
+  INTEGER :: nr1x, nr2x, my_nr2p, my_i0r2p
 
-  nxyp   = dffts%nr1x*dffts%my_nr2p
+  nxyp     = dffts%nr1x*dffts%my_nr2p
+
+  ! This mapping improves readability but, most importantly, it is needed
+  ! in the cuf kernels (as of PGI 18.10) since otherwise, when variables from
+  ! `dffts` appear in the body of do loops, the compiler generates incorrect GPU code.
+  nr1x     = dffts%nr1x
+  nr2x     = dffts%nr2x
+  my_nr2p  = dffts%my_nr2p
+  my_i0r2p = dffts%my_i0r2p
   !
   !  The potential in v is distributed so that each Z-plane is shared among nproc2 processors.
   !  We collect the data of whole planes in tg_v to be used with task group distributed wfcs.
@@ -113,8 +122,8 @@ SUBROUTINE tg_gather_gpu( dffts, v_d, tg_v_d )
 !$cuf kernel do(2) <<<*,*>>>
   do ir3 =1, dffts%my_nr3p
      do i=1, nxyp
-        off    = dffts%nr1x*dffts%my_nr2p*(ir3-1)
-        tg_off = dffts%nr1x*dffts%nr2x   *(ir3-1) + dffts%nr1x*dffts%my_i0r2p
+        off    = nr1x*my_nr2p*(ir3-1)
+        tg_off = nr1x*nr2x   *(ir3-1) + nr1x*my_i0r2p
         tg_v_d(tg_off + i) = v_d(off+i)
      end do
   end do
@@ -156,8 +165,17 @@ SUBROUTINE tg_cgather_gpu( dffts, v_d, tg_v_d )
   COMPLEX(DP), ALLOCATABLE :: tg_v_mpi(:)
   INTEGER :: nxyp, ir3, off, tg_off
   INTEGER :: i, nsiz, ierr
+  INTEGER :: nr1x, nr2x, my_nr2p, my_i0r2p
 
-  nxyp   = dffts%nr1x*dffts%my_nr2p
+  nxyp     = dffts%nr1x*dffts%my_nr2p
+
+  ! This mapping improves readability but, most importantly, it is needed
+  ! in the cuf kernels (as of PGI 18.10) since otherwise, when variables from
+  ! `dffts` appear in the body of do loops, the compiler generates incorrect GPU code.
+  nr1x     = dffts%nr1x
+  nr2x     = dffts%nr2x
+  my_nr2p  = dffts%my_nr2p
+  my_i0r2p = dffts%my_i0r2p
   !
   !  The potential in v is distributed so that each Z-plane is shared among nproc2 processors.
   !  We collect the data of whole planes in tg_v to be used with task group distributed wfcs.
@@ -166,8 +184,8 @@ SUBROUTINE tg_cgather_gpu( dffts, v_d, tg_v_d )
 !$cuf kernel do(2) <<<*,*>>>
   do ir3 =1, dffts%my_nr3p
      do i=1, nxyp
-        off    = dffts%nr1x*dffts%my_nr2p*(ir3-1)
-        tg_off = dffts%nr1x*dffts%nr2x   *(ir3-1) + dffts%nr1x*dffts%my_i0r2p
+        off    = nr1x*my_nr2p*(ir3-1)
+        tg_off = nr1x*nr2x   *(ir3-1) + nr1x*my_i0r2p
         tg_v_d(tg_off + i) = v_d(off+i)
      end do
   end do

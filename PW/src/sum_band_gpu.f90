@@ -1050,7 +1050,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   attributes(DEVICE) :: becsum_nc_d, auxk1_d, auxk2_d, aux_nc_d
   attributes(DEVICE) :: auxg_d, aux_gk_d, aux_egk_d
 #endif
-  INTEGER :: ibnd, ibnd_loc, nbnd_loc  ! counters on bands
+  INTEGER :: ibnd, ibnd_loc, nbnd_loc, ibnd_begin  ! counters on bands
   INTEGER :: npw, ikb, jkb, ih, jh, ijh, na, np, is, js, nhnt
   ! counters on beta functions, atoms, atom types, spin, and auxiliary vars
   !
@@ -1062,7 +1062,7 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
   CALL using_wg_d(0)
   CALL using_indv_ijkb0_d(0)
   CALL using_becsum_d(1)
-  if (tqr) CALL using_ebecsum_d(1)
+  IF (tqr) CALL using_ebecsum_d(1)
   !
   npw = ngk(ik)
   IF ( .NOT. real_space ) THEN
@@ -1151,11 +1151,12 @@ SUBROUTINE sum_bec_gpu ( ik, current_spin, ibnd_start, ibnd_end, this_bgrp_nbnd 
               ELSE IF ( gamma_only ) THEN
                  !
                  becp_d_r_d => becp_d%r_d
+                 ibnd_begin = becp_d%ibnd_begin
 !$cuf kernel do(2)
                 DO ih = 1, nhnt
                     DO ibnd_loc = 1, nbnd_loc
                        ikb = indv_ijkb0_d(na) + ih
-                       ibnd = ibnd_loc + becp_d%ibnd_begin - 1
+                       ibnd = ibnd_loc + ibnd_begin - 1
                        auxg_d(ibnd_loc,ih) = becp_d_r_d(ikb,ibnd_loc) * wg_d(ibnd,ik)
                     END DO
                  END DO

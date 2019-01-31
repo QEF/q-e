@@ -86,7 +86,7 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
 
 #if defined(__MPI)
   !
-  INTEGER :: ierr, me2, nproc2, iproc2, ncpx, my_nr2p, nr2px, ip, ip0
+  INTEGER :: ierr, me2, nproc2, iproc2, ncpx, nr1x, my_nr2p, nr2px, ip, ip0
   INTEGER :: i, it, j, k, kfrom, kdest, offset, ioff, mc, m1, m3, i1, icompact, sendsize, aux
   INTEGER, ALLOCATABLE :: ncp_(:)
   INTEGER, POINTER, DEVICE :: nr1p__d(:), indx_d(:,:)
@@ -99,6 +99,11 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
   !
   me2    = desc%mype2 + 1
   nproc2 = desc%nproc2 ; if ( abs(isgn) == 3 ) nproc2 = 1 
+
+  ! This mapping improves readability but, most importantly, it is needed
+  ! in the cuf kernels (as of PGI 18.10) since otherwise, when variables from
+  ! `desc` appear in the body of the do loops, the compiler generates incorrect GPU code.
+  nr1x   = desc%nr1x
 
   ! allocate auxiliary array for columns distribution
   ALLOCATE ( ncp_(nproc2))
@@ -191,9 +196,9 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
      !
      !f_aux = (0.0_DP, 0.0_DP)
      !$cuf kernel do (1) <<<*,*,0,stream>>>
-     do i = 1, nxx_
+     DO i = 1, nxx_
        f_aux_d(i) = (0.d0, 0.d0)
-     end do
+     END DO
      !
      DO iproc2 = 1, nproc2
 #if defined(__NON_BLOCKING_SCATTER)
@@ -212,11 +217,11 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
               m3 = (i-1)/nr1p__d(iproc2)+1
               i1 = mod(i-1,nr1p__d(iproc2))+1
               m1 = indx_d(i1,iproc2)
-              icompact = m1 + (m3-1)*desc%nr1x*my_nr2p + (j-1)*desc%nr1x
-           ! old do loop started here
-              !f_aux( m1 + (j-1)*desc%nr1x + (m3-1)*desc%nr1x*my_nr2p ) = f_in( j + it )
+              icompact = m1 + (m3-1)*nr1x*my_nr2p + (j-1)*nr1x
+              ! old do loop started here
+              !f_aux( m1 + (j-1)*nr1x + (m3-1)*nr1x*my_nr2p ) = f_in( j + it )
               f_aux_d( icompact ) = f_in_d( j + it )
-              !icompact = icompact + desc%nr1x
+              !icompact = icompact + nr1x
            ENDDO
            !it = it + nr2px
         ENDDO
@@ -233,11 +238,11 @@ SUBROUTINE fft_scatter_xy_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, stream )
            DO j = 1, my_nr2p
               it = ( iproc2 - 1 ) * sendsize + (i-1)*nr2px
               m3 = (i-1)/nr1p__d(iproc2)+1 ; i1  = mod(i-1,nr1p__d(iproc2))+1 ;  m1 = indx_d(i1,iproc2)
-              icompact = m1 + (m3-1)*desc%nr1x*my_nr2p + (j-1)*desc%nr1x
+              icompact = m1 + (m3-1)*nr1x*my_nr2p + (j-1)*nr1x
            !DO j = 1, my_nr2p
-              !f_in( j + it ) = f_aux( m1 + (j-1)*desc%nr1x + (m3-1)*desc%nr1x*my_nr2p )
+              !f_in( j + it ) = f_aux( m1 + (j-1)*nr1x + (m3-1)*nr1x*my_nr2p )
               f_in_d( j + it ) = f_aux_d( icompact )
-           !   icompact = icompact + desc%nr1x
+           !   icompact = icompact + nr1x
            ENDDO
            !it = it + nr2px
         ENDDO
@@ -372,6 +377,7 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   INTEGER, DEVICE, POINTER :: desc_ismap_d(:)
   !
   INTEGER :: ierr, me, me2, me2_start, me2_end, me3, nproc3, iproc3, ncpx, nr3px, ip, ip0
+  INTEGER :: nr1x, nr2x, nr3, nr3x
   INTEGER :: i, it, it0, k, kfrom, kdest, offset, ioff, mc, m1, m2, i1,  sendsize, aux
   INTEGER, ALLOCATABLE :: ncp_(:)
   INTEGER, DEVICE, POINTER :: ir1p__d(:)
@@ -388,6 +394,14 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
   me2    = desc%mype2 + 1
   me3    = desc%mype3 + 1
   nproc3 = desc%nproc3
+
+  ! This mapping improves readability but, most importantly, it is needed
+  ! in the cuf kernels (as of PGI 18.10) since otherwise, when variables from
+  ! `desc` appear in the body of the do loops, the compiler generates incorrect GPU code.
+  nr1x   = desc%nr1x
+  nr2x   = desc%nr2x
+  nr3    = desc%nr3
+  nr3x   = desc%nr3x
 
   ! allocate auxiliary array for columns distribution
   ALLOCATE ( ncp_( desc%nproc) )
@@ -447,9 +461,9 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
         !      kfrom = kfrom + desc%nr3x
         !   ENDDO
 
-           ierr = cudaMemcpy2DAsync( f_aux(kdest + 1), nr3px, f_in_d(kfrom + 1 ), desc%nr3x, desc%nr3p( iproc3 ), ncp_(ip), cudaMemcpyDeviceToHost, desc%stream_scatter_yz(iproc3) )
+           ierr = cudaMemcpy2DAsync( f_aux(kdest + 1), nr3px, f_in_d(kfrom + 1 ), nr3x, desc%nr3p( iproc3 ), ncp_(ip), cudaMemcpyDeviceToHost, desc%stream_scatter_yz(iproc3) )
            kdest = kdest + nr3px*ncp_ (ip)
-           kfrom = kfrom + desc%nr3x*ncp_ (ip)
+           kfrom = kfrom + nr3x*ncp_ (ip)
         ENDDO
         offset = offset + desc%nr3p( iproc3 )
      ENDDO
@@ -484,20 +498,20 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
 10   CONTINUE
      !
      !f_aux = (0.0_DP, 0.0_DP) !
-     !$cuf kernel do (1) <<<*,*,0,desc%stream_scatter_yz(1)>>>
-     do i = 1, desc%my_nr3p*my_nr1p_*desc%nr2x
+!$cuf kernel do (1) <<<*,*,0,desc%stream_scatter_yz(1)>>>
+     DO i = 1, desc%my_nr3p*my_nr1p_*nr2x
        f_aux_d(i) = (0.d0, 0.d0)
-     end do
+     END DO
      ierr = cudaEventRecord ( zero_event, desc%stream_scatter_yz(1) )
      !
      DO iproc3 = 1, desc%nproc3
         it0 = ( iproc3 - 1 ) * sendsize
 #if defined(__NON_BLOCKING_SCATTER)
-        if (nproc3 > 1) then
-           call mpi_wait( rh(iproc3), MPI_STATUSES_IGNORE, ierr )
-           call mpi_wait( sh(iproc3), MPI_STATUSES_IGNORE, ierr )
+        IF (nproc3 > 1) THEN
+           CALL mpi_wait( rh(iproc3), MPI_STATUSES_IGNORE, ierr )
+           CALL mpi_wait( sh(iproc3), MPI_STATUSES_IGNORE, ierr )
            ierr = cudaMemcpyAsync( f_in_d(it0+1), f_in(it0+1), sendsize, cudaMemcpyHostToDevice, desc%stream_scatter_yz(iproc3)  )
-        end if
+        END IF
 #endif
         IF (iproc3 == 2) ierr = cudaEventSynchronize( zero_event )
         DO me2 = me2_start, me2_end
@@ -509,8 +523,8 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
               DO k = 1, desc%my_nr3p
                  it = it0 + (i-1)*nr3px
                  mc = desc_ismap_d( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
-                 m1 = mod (mc-1,desc%nr1x) + 1 ; m2 = (mc-1)/desc%nr1x + 1 
-                 i1 = m2 + ( ir1p__d(m1) - 1 ) * desc%nr2x + (k-1)*desc%nr2x*my_nr1p_
+                 m1 = mod (mc-1,nr1x) + 1 ; m2 = (mc-1)/nr1x + 1
+                 i1 = m2 + ( ir1p__d(m1) - 1 ) * nr2x + (k-1)*nr2x*my_nr1p_
               
                  f_aux_d( i1 ) = f_in_d( k + it )
                  !i1 = i1 + desc%nr2x*my_nr1p_
@@ -535,8 +549,8 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
               DO k = 1, desc%my_nr3p
                  it = it0 + (i-1)*nr3px
                  mc = desc_ismap_d( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
-                 m1 = mod (mc-1,desc%nr1x) + 1 ; m2 = (mc-1)/desc%nr1x + 1 
-                 i1 = m2 + ( ir1p__d(m1) - 1 ) * desc%nr2x + (k-1)*(desc%nr2x * my_nr1p_)
+                 m1 = mod (mc-1,nr1x) + 1 ; m2 = (mc-1)/nr1x + 1
+                 i1 = m2 + ( ir1p__d(m1) - 1 ) * nr2x + (k-1)*(nr2x * my_nr1p_)
               
                  f_in_d( k + it ) = f_aux_d( i1 )
                  !i1 = i1 + desc%nr2x * my_nr1p_
@@ -602,9 +616,9 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
         !      kdest = kdest + nr3px
         !      kfrom = kfrom + desc%nr3x
         !   ENDDO
-          ierr = cudaMemcpy2DAsync( f_in_d(kfrom +1 ), desc%nr3x, f_aux(kdest + 1), nr3px, desc%nr3p( iproc3 ), ncp_ (ip), cudaMemcpyHostToDevice, desc%stream_scatter_yz(iproc3) )
+          ierr = cudaMemcpy2DAsync( f_in_d(kfrom +1 ), nr3x, f_aux(kdest + 1), nr3px, desc%nr3p( iproc3 ), ncp_ (ip), cudaMemcpyHostToDevice, desc%stream_scatter_yz(iproc3) )
           kdest = kdest + nr3px*ncp_ (ip)
-          kfrom = kfrom + desc%nr3x*ncp_ (ip)
+          kfrom = kfrom + nr3x*ncp_ (ip)
         ENDDO
         offset = offset + desc%nr3p( iproc3 )
      ENDDO
@@ -616,12 +630,12 @@ SUBROUTINE fft_scatter_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn )
      
      ! clean extra array elements in each stick
      
-     IF( desc%nr3x /= desc%nr3 ) THEN
+     IF( nr3x /= nr3 ) THEN
        aux = ncp_ ( desc%mype+1 ) 
 !$cuf kernel do(2) <<<*,*>>>
        DO k = 1, aux
-          DO i = desc%nr3, desc%nr3x
-             f_in_d( (k-1)*desc%nr3x + i ) = 0.0d0 
+          DO i = nr3, nr3x
+             f_in_d( (k-1)*nr3x + i ) = (0.d0, 0.d0)
           END DO
        END DO
      END IF
@@ -819,6 +833,7 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
   INTEGER, DEVICE, POINTER :: desc_ismap_d(:)
   !
   INTEGER :: ierr, me, me2, me3, nproc3, iproc3, ncpx, nr3px, ip, ip0, me2_start, me2_end
+  INTEGER :: nr1x, nr2x, nr3, nr3x, nnr
   INTEGER :: i, j, it, it0, k, kfrom, kdest, offset, ioff, mc, m1, m2, i1,  sendsize, aux
   INTEGER, ALLOCATABLE :: ncp_(:)
   INTEGER, DEVICE, POINTER :: ir1p__d(:)
@@ -833,6 +848,15 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
   me2    = desc%mype2 + 1
   me3    = desc%mype3 + 1
   nproc3 = desc%nproc3
+
+  ! This mapping improves readability but, most importantly, it is needed
+  ! in the cuf kernels (as of PGI 18.10) since otherwise, when variables from
+  ! `desc` appear in the body of the do loops, the compiler generates incorrect GPU code.
+  nr1x   = desc%nr1x
+  nr2x   = desc%nr2x
+  nr3    = desc%nr3
+  nr3x   = desc%nr3x
+  nnr    = desc%nnr
 
   ! allocate auxiliary array for columns distribution
   ALLOCATE ( ncp_( desc%nproc) )
@@ -877,7 +901,7 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
         kdest = ( iproc3 - 1 ) * sendsize
         kfrom = offset
         !
-        ierr = cudaMemcpy2D( f_aux(kdest + 1), nr3px, f_in_d(kfrom + 1 ), desc%nr3x, desc%nr3p( iproc3 ), howmany*ncpx, cudaMemcpyDeviceToHost)
+        ierr = cudaMemcpy2D( f_aux(kdest + 1), nr3px, f_in_d(kfrom + 1 ), nr3x, desc%nr3p( iproc3 ), howmany*ncpx, cudaMemcpyDeviceToHost)
         !
         offset = offset + desc%nr3p( iproc3 )
      ENDDO
@@ -916,11 +940,11 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
               DO k = 1, desc%my_nr3p
                  it = it0 + (i-1)*nr3px + j*ncpx*nr3px !desc%nnr !aux*nr3px
                  mc = desc_ismap_d( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
-                 m1 = mod (mc-1,desc%nr1x) + 1 ; m2 = (mc-1)/desc%nr1x + 1 
-                 i1 = m2 + ( ir1p__d(m1) - 1 ) * desc%nr2x + (k-1)*desc%nr2x*my_nr1p_
+                 m1 = mod (mc-1,nr1x) + 1 ; m2 = (mc-1)/nr1x + 1
+                 i1 = m2 + ( ir1p__d(m1) - 1 ) * nr2x + (k-1)*nr2x*my_nr1p_
               
-                 f_aux_d( i1 + j*desc%nnr ) = f_in_d( k + it )
-                 !i1 = i1 + desc%nr2x*my_nr1p_
+                 f_aux_d( i1 + j*nnr ) = f_in_d( k + it )
+                 !i1 = i1 + nr2x*my_nr1p_
               ENDDO
            ENDDO
            !it0 = it0 + ncp_( ip )*nr3px
@@ -943,10 +967,10 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
               DO k = 1, desc%my_nr3p
                  it = it0 + (i-1)*nr3px + j*ncpx*nr3px
                  mc = desc_ismap_d( i + ioff ) ! this is  m1+(m2-1)*nr1x  of the  current pencil
-                 m1 = mod (mc-1,desc%nr1x) + 1 ; m2 = (mc-1)/desc%nr1x + 1 
-                 i1 = m2 + ( ir1p__d(m1) - 1 ) * desc%nr2x + (k-1)*(desc%nr2x * my_nr1p_)
+                 m1 = mod (mc-1,nr1x) + 1 ; m2 = (mc-1)/nr1x + 1
+                 i1 = m2 + ( ir1p__d(m1) - 1 ) * nr2x + (k-1)*(nr2x * my_nr1p_)
               
-                 f_in_d( k + it ) = f_aux_d( i1  + j*desc%nnr )
+                 f_in_d( k + it ) = f_aux_d( i1  + j*nnr )
                  !i1 = i1 + desc%nr2x * my_nr1p_
               ENDDO
               !it = it + nr3px
@@ -975,20 +999,20 @@ SUBROUTINE fft_scatter_many_yz_gpu ( desc, f_in_d, f_aux_d, nxx_, isgn, howmany 
      DO iproc3 = 1, nproc3
         kdest = ( iproc3 - 1 ) * sendsize     
         kfrom = offset
-        ierr = cudaMemcpy2D( f_in_d(kfrom +1 ), desc%nr3x, f_aux(kdest + 1), nr3px, desc%nr3p( iproc3 ), howmany * ncpx, cudaMemcpyHostToDevice)
+        ierr = cudaMemcpy2D( f_in_d(kfrom +1 ), nr3x, f_aux(kdest + 1), nr3px, desc%nr3p( iproc3 ), howmany * ncpx, cudaMemcpyHostToDevice)
         !
         offset = offset + desc%nr3p( iproc3 )
      ENDDO
 
      ! clean extra array elements in each stick
 
-     IF( desc%nr3x /= desc%nr3 ) THEN
+     IF( nr3x /= nr3 ) THEN
        aux = ncp_ ( desc%mype+1 )
 !$cuf kernel do(3) <<<*,*>>>
        DO j=0, howmany-1
           DO k = 1, aux
-             DO i = desc%nr3, desc%nr3x
-                f_in_d( j*ncpx*desc%nr3x + (k-1)*desc%nr3x + i) = 0.0d0
+             DO i = nr3, nr3x
+                f_in_d( j*ncpx*nr3x + (k-1)*nr3x + i) = 0.0d0
              END DO
           END DO
        END DO
