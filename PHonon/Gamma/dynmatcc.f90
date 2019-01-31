@@ -23,7 +23,7 @@ SUBROUTINE dynmatcc(dyncc)
   USE scf,        ONLY : rho, rho_core, rhog_core
   USE wavefunctions,  ONLY: psic
   USE cgcom
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
 
   IMPLICIT NONE

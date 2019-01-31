@@ -57,10 +57,7 @@ SUBROUTINE phq_readin()
   USE io_global,     ONLY : meta_ionode, meta_ionode_id, ionode, ionode_id, stdout
   USE mp_images,     ONLY : nimage, my_image_id, intra_image_comm,   &
                             me_image, nproc_image
-  USE mp_global,     ONLY : nproc_pool_file, &
-                            nproc_bgrp_file, nproc_image_file
-  USE mp_pools,      ONLY : nproc_pool, npool 
-  USE mp_bands,      ONLY : nproc_bgrp, ntask_groups
+  USE mp_pools,      ONLY : npool
   USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE freq_ph,       ONLY : fpol, fiu, nfs

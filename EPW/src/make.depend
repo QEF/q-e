@@ -290,7 +290,6 @@ epw_init.o : ../../UtilXlib/mp.o
 epw_init.o : constants_epw.o
 epw_init.o : elph2.o
 epw_readin.o : ../../LR_Modules/lrcom.o
-epw_readin.o : ../../Modules/check_stop.o
 epw_readin.o : ../../Modules/constants.o
 epw_readin.o : ../../Modules/control_flags.o
 epw_readin.o : ../../Modules/io_files.o
@@ -305,6 +304,7 @@ epw_readin.o : ../../UtilXlib/mp.o
 epw_readin.o : constants_epw.o
 epw_readin.o : elph2.o
 epw_readin.o : epwcom.o
+epw_readin.o : io_epw.o
 epw_setup.o : ../../LR_Modules/lrcom.o
 epw_setup.o : ../../Modules/cell_base.o
 epw_setup.o : ../../Modules/control_flags.o

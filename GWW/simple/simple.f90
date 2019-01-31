@@ -9,7 +9,8 @@ program simple
   use io_files,  ONLY : prefix, tmp_dir
   use io_files,  ONLY : psfile, pseudo_dir
   use io_global, ONLY : stdout, ionode, ionode_id
-  USE mp_global,     ONLY: mp_startup,kunit
+  USE mp_global, ONLY: mp_startup
+  USE mp_pools, ONLY : kunit
   use mp_world, ONLY: mpime, world_comm 
   USE environment,   ONLY: environment_start
   USE mp, ONLY : mp_bcast

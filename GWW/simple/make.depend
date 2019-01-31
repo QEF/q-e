@@ -95,7 +95,7 @@ read_export.o : ../../Modules/io_files.o
 read_export.o : ../../Modules/io_global.o
 read_export.o : ../../Modules/ions_base.o
 read_export.o : ../../Modules/kind.o
-read_export.o : ../../Modules/mp_global.o
+read_export.o : ../../Modules/mp_pools.o
 read_export.o : ../../Modules/mp_world.o
 read_export.o : ../../Modules/recvec.o
 read_export.o : ../../Modules/uspp.o
@@ -110,6 +110,7 @@ simple.o : ../../Modules/fft_base.o
 simple.o : ../../Modules/io_files.o
 simple.o : ../../Modules/io_global.o
 simple.o : ../../Modules/mp_global.o
+simple.o : ../../Modules/mp_pools.o
 simple.o : ../../Modules/mp_world.o
 simple.o : ../../Modules/recvec.o
 simple.o : ../../Modules/uspp.o
