@@ -221,8 +221,8 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  USE kinds,     ONLY : DP
  USE constants, ONLY : tpi
  USE noncollin_module, ONLY : noncolin, npol
- use lsda_mod,  only : nspin
- USE mp_global, ONLY : nproc_pool, me_pool, intra_pool_comm
+ use lsda_mod,  ONLy : nspin
+ USE mp_pools,  ONLY : intra_pool_comm
  USE mp,        ONLY : mp_sum
  USE fft_base,  ONLY : dffts, dfftp
  USE scatter_mod, ONLY : gather_grid

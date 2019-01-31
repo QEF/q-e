@@ -452,7 +452,6 @@ esm.o : ../../Modules/io_global.o
 esm.o : ../../Modules/ions_base.o
 esm.o : ../../Modules/kind.o
 esm.o : ../../Modules/mp_bands.o
-esm.o : ../../Modules/mp_global.o
 esm.o : ../../Modules/recvec.o
 esm.o : ../../UtilXlib/mp.o
 esm.o : pwcom.o
@@ -1275,11 +1274,8 @@ paw_exx.o : ../../Modules/constants.o
 paw_exx.o : ../../Modules/io_global.o
 paw_exx.o : ../../Modules/ions_base.o
 paw_exx.o : ../../Modules/kind.o
-paw_exx.o : ../../Modules/mp_global.o
-paw_exx.o : ../../Modules/mp_images.o
 paw_exx.o : ../../Modules/paw_variables.o
 paw_exx.o : ../../Modules/uspp.o
-paw_exx.o : ../../UtilXlib/mp.o
 paw_exx.o : paw_onecenter.o
 paw_exx.o : pwcom.o
 paw_init.o : ../../Modules/atom.o
@@ -1667,8 +1663,9 @@ run_driver.o : ../../Modules/fsockets.o
 run_driver.o : ../../Modules/io_files.o
 run_driver.o : ../../Modules/io_global.o
 run_driver.o : ../../Modules/ions_base.o
-run_driver.o : ../../Modules/mp_global.o
+run_driver.o : ../../Modules/mp_images.o
 run_driver.o : ../../Modules/parameters.o
+run_driver.o : ../../UtilXlib/mp.o
 run_driver.o : pwcom.o
 run_driver.o : update_pot.o
 run_pwscf.o : ../../FFTXlib/fft_types.o

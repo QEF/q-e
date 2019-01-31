@@ -37,7 +37,7 @@ SUBROUTINE lr_orthoUwfc (lflag)
   USE buffers,          ONLY : save_buffer
   USE io_global,        ONLY : stdout
   USE mp,               ONLY : mp_sum
-  USE mp_global,        ONLY : intra_pool_comm
+  USE mp_pools,         ONLY : intra_pool_comm
   USE noncollin_module, ONLY : noncolin, npol
   USE qpoint,           ONLY : nksq, ikks, ikqs
   USE control_lr,       ONLY : lgamma

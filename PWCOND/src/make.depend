@@ -18,7 +18,7 @@ cond_out.o : condcom.o
 cond_restart.o : ../../Modules/io_files.o
 cond_restart.o : ../../Modules/io_global.o
 cond_restart.o : ../../Modules/kind.o
-cond_restart.o : ../../Modules/mp_global.o
+cond_restart.o : ../../Modules/mp_images.o
 cond_restart.o : ../../Modules/parser.o
 cond_restart.o : ../../Modules/version.o
 cond_restart.o : ../../UtilXlib/mp.o
@@ -37,7 +37,8 @@ do_cond.o : ../../Modules/io_files.o
 do_cond.o : ../../Modules/io_global.o
 do_cond.o : ../../Modules/ions_base.o
 do_cond.o : ../../Modules/mp_global.o
-do_cond.o : ../../Modules/mp_world.o
+do_cond.o : ../../Modules/mp_images.o
+do_cond.o : ../../Modules/mp_pools.o
 do_cond.o : ../../Modules/noncol.o
 do_cond.o : ../../Modules/paw_variables.o
 do_cond.o : ../../Modules/recvec.o
@@ -106,7 +107,6 @@ openfil_cond.o : ../../Modules/control_flags.o
 openfil_cond.o : ../../Modules/io_files.o
 openfil_cond.o : ../../Modules/io_global.o
 openfil_cond.o : ../../Modules/kind.o
-openfil_cond.o : ../../Modules/mp_global.o
 openfil_cond.o : ../../Modules/noncol.o
 openfil_cond.o : ../../PW/src/buffers.o
 openfil_cond.o : ../../PW/src/pwcom.o
@@ -141,7 +141,6 @@ realus_scatt.o : ../../Modules/constants.o
 realus_scatt.o : ../../Modules/fft_base.o
 realus_scatt.o : ../../Modules/ions_base.o
 realus_scatt.o : ../../Modules/kind.o
-realus_scatt.o : ../../Modules/mp_global.o
 realus_scatt.o : ../../Modules/noncol.o
 realus_scatt.o : ../../Modules/uspp.o
 realus_scatt.o : ../../PW/src/pwcom.o
@@ -169,7 +168,7 @@ scat_states_plot.o : ../../Modules/fft_base.o
 scat_states_plot.o : ../../Modules/io_global.o
 scat_states_plot.o : ../../Modules/ions_base.o
 scat_states_plot.o : ../../Modules/kind.o
-scat_states_plot.o : ../../Modules/mp_global.o
+scat_states_plot.o : ../../Modules/mp_pools.o
 scat_states_plot.o : ../../Modules/noncol.o
 scat_states_plot.o : ../../Modules/splinelib.o
 scat_states_plot.o : ../../Modules/uspp.o
@@ -180,7 +179,7 @@ scat_states_plot.o : condcom.o
 scat_states_plot.o : realus_scatt.o
 scatter_forw.o : ../../Modules/cell_base.o
 scatter_forw.o : ../../Modules/constants.o
-scatter_forw.o : ../../Modules/mp_global.o
+scatter_forw.o : ../../Modules/mp_pools.o
 scatter_forw.o : ../../Modules/noncol.o
 scatter_forw.o : ../../Modules/parameters.o
 scatter_forw.o : ../../Modules/radial_grids.o

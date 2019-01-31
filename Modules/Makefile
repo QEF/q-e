@@ -117,7 +117,7 @@ wypos.o \
 zdotc_wrapper.o  \
 zvscal.o 
 
-# list of subrooutines and functions (not modules) previously found in flib/
+# list of subroutines and functions (not modules) previously found in flib/
 
 OBJS = \
 atomic_number.o \

@@ -4,9 +4,10 @@ PROGRAM open_grid
   !
   USE kinds, ONLY : DP
   USE io_global,  ONLY : stdout, ionode, ionode_id
-  USE mp_global,  ONLY : mp_startup, npool, nproc_pool, nproc_pool_file
+  USE mp_global,  ONLY : mp_startup
+  USE mp_images,  ONLY : intra_image_comm
+  USE mp_pools,   ONLY : npool
   USE mp,         ONLY : mp_bcast
-  USE mp_world,   ONLY : world_comm
   USE cell_base,  ONLY : at, bg, tpiba2, alat
   USE klist,      ONLY : nks, nkstot, xk, wk, igk_k, ngk, qnorm
   USE io_files,   ONLY : prefix, tmp_dir, nwordwfc, iunwfc, diropn
@@ -97,10 +98,10 @@ PROGRAM open_grid
   ENDIF
   !
   !
-  CALL mp_bcast(outdir,ionode_id, world_comm)
-  CALL mp_bcast(tmp_dir,ionode_id, world_comm)
-  CALL mp_bcast(prefix,ionode_id, world_comm)
-  !CALL mp_bcast(nq,ionode_id, world_comm)
+  CALL mp_bcast(outdir,ionode_id, intra_image_comm)
+  CALL mp_bcast(tmp_dir,ionode_id, intra_image_comm)
+  CALL mp_bcast(prefix,ionode_id, intra_image_comm)
+  !CALL mp_bcast(nq,ionode_id, intra_image_comm)
   !
   WRITE(stdout,*)
   WRITE(stdout,*) ' Reading nscf_save data'

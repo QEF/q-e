@@ -13,7 +13,7 @@ MODULE ph_rVV10
   USE constants,         ONLY : pi, e2
   USE kernel_table,      ONLY : q_mesh, Nr_points, Nqs, r_max
   USE mp,                ONLY : mp_bcast, mp_sum, mp_barrier
-  USE mp_global,         ONLY : me_pool, nproc_pool, intra_pool_comm, root_pool
+  USE mp_pools,          ONLY : me_pool, nproc_pool, intra_pool_comm, root_pool
   USE io_global,         ONLY : ionode
   USE fft_base,          ONLY : dfftp
   USE fft_interfaces,    ONLY : fwfft, invfft 
