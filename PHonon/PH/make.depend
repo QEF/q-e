@@ -307,7 +307,7 @@ d2nsq_bare.o : ../../LR_Modules/lrcom.o
 d2nsq_bare.o : ../../Modules/io_global.o
 d2nsq_bare.o : ../../Modules/ions_base.o
 d2nsq_bare.o : ../../Modules/kind.o
-d2nsq_bare.o : ../../Modules/mp_global.o
+d2nsq_bare.o : ../../Modules/mp_pools.o
 d2nsq_bare.o : ../../Modules/uspp.o
 d2nsq_bare.o : ../../Modules/wavefunctions.o
 d2nsq_bare.o : ../../PW/src/ldaU.o
@@ -336,7 +336,7 @@ delta_sphi.o : ../../LR_Modules/lrcom.o
 delta_sphi.o : ../../Modules/io_global.o
 delta_sphi.o : ../../Modules/ions_base.o
 delta_sphi.o : ../../Modules/kind.o
-delta_sphi.o : ../../Modules/mp_global.o
+delta_sphi.o : ../../Modules/mp_pools.o
 delta_sphi.o : ../../Modules/uspp.o
 delta_sphi.o : ../../PW/src/ldaU.o
 delta_sphi.o : ../../PW/src/pwcom.o
@@ -423,8 +423,7 @@ dnsq_orth.o : ../../Modules/io_files.o
 dnsq_orth.o : ../../Modules/io_global.o
 dnsq_orth.o : ../../Modules/ions_base.o
 dnsq_orth.o : ../../Modules/kind.o
-dnsq_orth.o : ../../Modules/mp_global.o
-dnsq_orth.o : ../../Modules/mp_images.o
+dnsq_orth.o : ../../Modules/mp_pools.o
 dnsq_orth.o : ../../Modules/mp_world.o
 dnsq_orth.o : ../../Modules/uspp.o
 dnsq_orth.o : ../../Modules/wavefunctions.o
@@ -685,7 +684,7 @@ dynmat_hub_bare.o : ../../Modules/io_files.o
 dynmat_hub_bare.o : ../../Modules/io_global.o
 dynmat_hub_bare.o : ../../Modules/ions_base.o
 dynmat_hub_bare.o : ../../Modules/kind.o
-dynmat_hub_bare.o : ../../Modules/mp_global.o
+dynmat_hub_bare.o : ../../Modules/mp_pools.o
 dynmat_hub_bare.o : ../../Modules/mp_world.o
 dynmat_hub_bare.o : ../../Modules/uspp.o
 dynmat_hub_bare.o : ../../Modules/wavefunctions.o
@@ -1008,7 +1007,7 @@ obsolete.o : ../../Modules/control_flags.o
 obsolete.o : ../../Modules/io_global.o
 obsolete.o : ../../Modules/ions_base.o
 obsolete.o : ../../Modules/kind.o
-obsolete.o : ../../Modules/mp_global.o
+obsolete.o : ../../Modules/mp_images.o
 obsolete.o : ../../Modules/noncol.o
 obsolete.o : ../../Modules/random_numbers.o
 obsolete.o : ../../Modules/recvec.o
@@ -1124,8 +1123,6 @@ phq_readin.o : ../../Modules/io_files.o
 phq_readin.o : ../../Modules/io_global.o
 phq_readin.o : ../../Modules/ions_base.o
 phq_readin.o : ../../Modules/kind.o
-phq_readin.o : ../../Modules/mp_bands.o
-phq_readin.o : ../../Modules/mp_global.o
 phq_readin.o : ../../Modules/mp_images.o
 phq_readin.o : ../../Modules/mp_pools.o
 phq_readin.o : ../../Modules/mp_world.o

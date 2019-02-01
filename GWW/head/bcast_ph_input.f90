@@ -20,7 +20,6 @@ subroutine bcast_ph_input ( )
 
   use mp, only: mp_bcast
   use mp_world, only: world_comm
-  USE mp_global, only : intra_image_comm
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
                          niter_ph, lnoloc, alpha_mix, tr2_ph, recover, &
                          ldisp,  reduce_io, zue, zeu, epsil, trans

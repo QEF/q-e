@@ -50,8 +50,8 @@ SUBROUTINE dynmat_hub_bare
   USE control_flags, ONLY : iverbosity
   USE d2nsq_bare_module
   USE scf,           ONLY : rho
-  USE mp_global,     ONLY : intra_pool_comm, inter_pool_comm       
   USE mp,            ONLY : mp_sum, mp_bcast
+  USE mp_pools,      ONLY : intra_pool_comm, inter_pool_comm       
   USE mp_world,      ONLY : world_comm
   USE io_files,      ONLY : seqopn
   USE buffers,       ONLY : get_buffer
