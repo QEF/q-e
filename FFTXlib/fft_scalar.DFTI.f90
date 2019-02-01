@@ -77,11 +77,16 @@
      LOGICAL, SAVE :: dfti_first = .TRUE.
      INTEGER :: dfti_status = 0
      !
-     ! Starting from MKL 2019 it is no longer possible to define "empty" plans,
-     !  i.e. plans with 0 FFTs. Just return immediately in this case.
+     ! Check dimensions and corner cases.
+     !
      IF ( nsl <= 0 ) THEN
+
        IF ( nsl < 0 ) CALL fftx_error__(" fft_scalar: cft_1z ", " nsl out of range ", nsl)
+
+       ! Starting from MKL 2019 it is no longer possible to define "empty" plans,
+       ! i.e. plans with 0 FFTs. Just return immediately in this case.
        RETURN
+
      END IF
      !
      !   Here initialize table only if necessary
