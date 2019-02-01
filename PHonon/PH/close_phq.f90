@@ -35,7 +35,7 @@ SUBROUTINE close_phq( flag )
   !
   IF (only_wfc) RETURN
   !
-  CALL close_buffer(iuwfc,'delete')
+  CALL close_buffer(iuwfc,'keep')
   !
   IF (flag) THEN
      CALL close_buffer(iudwf,'delete')
