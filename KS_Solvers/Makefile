@@ -3,35 +3,35 @@ sinclude ../make.inc
 
 default: all
 
-all: libks_solvers.a
+all: libdavid_rci libdavid libcg libppcg libparo libnewsolver libks_solvers.a
 
-libks_solvers.a: libdavid_rci libdavid libcg libppcg libparo libnewsolver
+libks_solvers.a: Davidson_RCI/*.o Davidson/*.o CG/*.o PPCG/*.o # ParO/*.o NewSolver/*.o ... 
 	$(AR) $(ARFLAGS) $@ */*.o       
 	$(RANLIB) $@    
 
 libdavid_rci : 
 	if test -d Davidson_RCI ; then \
-	( cd Davidson_RCI ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
+	( cd Davidson_RCI ; $(MAKE) all || exit 1 ) ; fi
 
 libdavid : 
 	if test -d Davidson ; then \
-        ( cd Davidson ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
+        ( cd Davidson ; $(MAKE) all || exit 1 ) ; fi
 
 libcg : 
 	if test -d CG ; then \
-        ( cd CG ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
+        ( cd CG ; $(MAKE) all || exit 1 ) ; fi
 
 libppcg : 
 	if test -d PPCG ; then \
-        ( cd PPCG ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
+        ( cd PPCG ; $(MAKE) all || exit 1 ) ; fi
 
 libparo : 
 	if test -d ParO ; then \
-        ( cd ParO ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
+        ( cd ParO ; $(MAKE) all || exit 1 ) ; fi
 
 libnewsolver : 
 	if test -d NewSolver ; then \
-        ( cd NewSolver ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
+        ( cd NewSolver ; $(MAKE) all || exit 1 ) ; fi
 
 clean : 
 	if test -d Davidson_RCI ; then ( cd Davidson_RCI ; $(MAKE) clean ) ; fi
