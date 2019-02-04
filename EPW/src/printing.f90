@@ -331,7 +331,9 @@
     REAL(KIND=DP) :: fnk
     !! Fermi-Dirac occupation function
     REAL(KIND=DP) :: mobility
-    !! Sum of the diagonalized mobilities [cm^2/Vs] 
+    !! Sum of the diagonal mobilities [cm^2/Vs] 
+    REAL(KIND=DP) :: mobility_od
+    !! Sum of the off-diagonal mobilities [cm^2/Vs] 
     REAL(KIND=DP) :: mobility_xx
     !! Mobility along the xx axis after diagonalization [cm^2/Vs] 
     REAL(KIND=DP) :: mobility_yy
@@ -350,16 +352,19 @@
     !! Compute the approximate theta function. Here computes Fermi-Dirac 
     REAL(KIND=DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function 
-    !
+    REAL(KIND=DP) :: Fi_check(3, nstemp)
+    !! Sum rule on population
     inv_cell = 1.0d0/omega
     ! 
+    Fi_check(:,:) = zero
     ! Hole
     IF (ncarrier < -1E5) THEN
       Sigma(:,:)    = zero
       ! 
-      WRITE(stdout,'(/5x,a)') repeat('=',67)
-      WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') repeat('=',67)
+      WRITE(stdout,'(/5x,a)') repeat('=',71)
+      WRITE(stdout,'(5x,"  Temp     Fermi   Hole density  Population SR      Hole mobility ")')
+      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]")')
+      WRITE(stdout,'(5x,a/)') repeat('=',71)
       DO itemp=1, nstemp
         etemp = transp_temp(itemp)
         DO ik=1,  nkqtotf/2
@@ -376,9 +381,11 @@
                   ! 
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
-                  sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
-                  sb = matmul ( bg, sa )
-                  sr (:,:) = matmul ( at, transpose (sb) )
+                  sa (:,:) = DBLE ( s_BZtoIBZ(:,:,ikbz) )
+                  sb       = MATMUL ( bg, sa )
+                  sr (:,:) = MATMUL ( at, TRANSPOSE (sb) )
+                  sr       = TRANSPOSE(sr) 
+                  !
                   CALL dgemv( 'n', 3, 3, 1.d0,&
                     sr, 3, vk_cart(:),1 ,0.d0 , v_rot(:), 1 )
                   ! 
@@ -400,7 +407,9 @@
                       ENDIF
                     ENDDO
                   ENDDO
-                ENDIF ! BZ
+                  !
+                  Fi_check(:,itemp) = Fi_check(:,itemp) + Fi_rot(:)
+                ENDIF ! BZ 
               ENDDO ! ikb
               ! 
               !  energy at k (relative to Ef)
@@ -450,21 +459,21 @@
         sigma_up(3,1) = Sigma(7,itemp)
         sigma_up(3,2) = Sigma(8,itemp)
         sigma_up(3,3) = Sigma(9,itemp)
-        !
-        ! Diagonalize the conductivity matrix
-        CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
-        !
-        mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        ! 
+        mobility_xx  = ( sigma_up(1,1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_yy  = ( sigma_up(2,2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_zz  = ( sigma_up(3,3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
         mobility = (mobility_xx+mobility_yy+mobility_zz)/3
+        mobility_od = ( ( sigma_up(1,2) + sigma_up(1,3) + sigma_up(2,1) + sigma_up(2,3) + sigma_up(3,1) + sigma_up(3,2) ) &
+                        * electron_SI * ( bohr2ang * ang2cm)**2)  /( 6.0d0 * carrier_density * hbarJ)
         ! carrier_density in cm^-1
         carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
-        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev/kelvin2eV, &
-                      ef0(itemp)*ryd2ev,  carrier_density, mobility_xx, '  x-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
+        WRITE(stdout,'(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 1E16.6, a)') etemp * ryd2ev/kelvin2eV, &
+                      ef0(itemp)*ryd2ev,  carrier_density, SUM(Fi_check(:,itemp)), mobility_xx, '    x-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_yy, '    y-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_zz, '    z-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility,    '       avg'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_od, '  off-diag'
       ENDDO
       ! 
     ENDIF
@@ -474,9 +483,10 @@
       ! Needed because of residual values from the hole above
       Sigma(:,:)    = zero
       ! 
-      WRITE(stdout,'(/5x,a)') repeat('=',67)
-      WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') repeat('=',67)
+      WRITE(stdout,'(/5x,a)') repeat('=',71)
+      WRITE(stdout,'(5x,"  Temp     Fermi   Elec density  Population SR      Elec mobility ")')
+      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]")')
+      WRITE(stdout,'(5x,a/)') repeat('=',71)
       DO itemp=1, nstemp
         etemp = transp_temp(itemp)
         DO ik=1,  nkqtotf/2
@@ -492,9 +502,10 @@
                   ikbz = BZtoIBZ_mat(nb,ik)
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
-                  sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
-                  sb = matmul ( bg, sa )
-                  sr (:,:) = matmul ( at, transpose (sb) )
+                  sa (:,:) = DBLE ( s_BZtoIBZ(:,:,ikbz) )
+                  sb       = MATMUL ( bg, sa )
+                  sr (:,:) = MATMUL ( at, TRANSPOSE (sb) )
+                  sr       = TRANSPOSE(sr)
                   CALL dgemv( 'n', 3, 3, 1.d0,&
                     sr, 3, vk_cart(:),1 ,0.d0 , v_rot(:), 1 )
                   ! 
@@ -516,6 +527,8 @@
                       ENDIF
                     ENDDO
                   ENDDO
+                  !
+                  Fi_check(:,itemp) = Fi_check(:,itemp) + Fi_rot(:)
                 ENDIF ! BZ
               ENDDO ! ikb
               ! 
@@ -563,20 +576,20 @@
         sigma_up(3,2) = Sigma(8,itemp)
         sigma_up(3,3) = Sigma(9,itemp)
         !
-        ! Diagonalize the conductivity matrix
-        CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
-        !
-        mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_xx  = ( sigma_up(1,1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_yy  = ( sigma_up(2,2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_zz  = ( sigma_up(3,3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
         mobility = (mobility_xx+mobility_yy+mobility_zz)/3
+        mobility_od = ( ( sigma_up(1,2) + sigma_up(1,3) + sigma_up(2,1) + sigma_up(2,3) + sigma_up(3,1) + sigma_up(3,2) ) &
+                        * electron_SI * ( bohr2ang * ang2cm)**2)  /( 6.0d0 * carrier_density * hbarJ)
         ! carrier_density in cm^-1
         carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
-        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev/kelvin2eV, &
-                      ef0(itemp)*ryd2ev,  carrier_density, mobility_xx, '  x-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
+        WRITE(stdout,'(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 1E16.6, a)') etemp * ryd2ev/kelvin2eV, &
+                      ef0(itemp)*ryd2ev,  carrier_density, SUM(Fi_check(:,itemp)), mobility_xx, '    x-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_yy, '    y-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_zz, '    z-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility,    '       avg'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_od, '  off-diag'
       ENDDO
       ! 
     ENDIF
@@ -647,7 +660,9 @@
     REAL(KIND=DP) :: fnk
     !! Fermi-Dirac occupation function
     REAL(KIND=DP) :: mobility
-    !! Sum of the diagonalized mobilities [cm^2/Vs] 
+    !! Sum of the diagonal mobilities [cm^2/Vs] 
+    REAL(KIND=DP) :: mobility_od
+    !! Sum of the off-diagonal mobilities [cm^2/Vs] 
     REAL(KIND=DP) :: mobility_xx
     !! Mobility along the xx axis after diagonalization [cm^2/Vs] 
     REAL(KIND=DP) :: mobility_yy
@@ -662,6 +677,8 @@
     !! Eigenvectors from the diagonalized conductivity matrix
     REAL(KIND=DP) :: inv_cell
     !! Inverse of the volume in [Bohr^{-3}]
+    REAL(KIND=DP) :: Fi_check(3,nstemp)
+    !! Sum rule on population
     REAL(KIND=DP), EXTERNAL :: wgauss
     !! Compute the approximate theta function. Here computes Fermi-Dirac 
     REAL(KIND=DP), EXTERNAL :: w0gauss
@@ -669,14 +686,16 @@
 
     !
     inv_cell = 1.0d0/omega
+    Fi_check(:,:) = zero
     ! 
     ! Hole
     IF (ncarrier < -1E5) THEN
       Sigma(:,:)    = zero
       ! 
-      WRITE(stdout,'(/5x,a)') repeat('=',67)
-      WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') repeat('=',67)
+      WRITE(stdout,'(/5x,a)') repeat('=',71)
+      WRITE(stdout,'(5x,"  Temp     Fermi   Hole density  Population SR      Hole mobility ")')
+      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]")')
+      WRITE(stdout,'(5x,a/)') repeat('=',71)
       DO itemp=1, nstemp
         etemp = transp_temp(itemp)
         DO ik=1,  nkqtotf/2
@@ -691,6 +710,7 @@
                   tdf_sigma(ij) = vkk_all(i, ibnd, ik) * F_SERTA(j, ibnd, ik, itemp) * wkf_all(ik)
                 ENDDO
               ENDDO
+              Fi_check(:,itemp) = Fi_check(:,itemp) + F_SERTA(:, ibnd, ik, itemp)
               ! 
               !  energy at k (relative to Ef)
               ekk = etf_all (ibnd, ik ) - ef0(itemp)
@@ -736,19 +756,25 @@
         sigma_up(3,3) = Sigma(9,itemp)
         !
         ! Diagonalize the conductivity matrix
-        CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
+        !CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
         !
-        mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        !mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        !mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        !mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_xx  = ( sigma_up(1,1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_yy  = ( sigma_up(2,2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_zz  = ( sigma_up(3,3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
         mobility = (mobility_xx+mobility_yy+mobility_zz)/3
+        mobility_od = ( ( sigma_up(1,2) + sigma_up(1,3) + sigma_up(2,1) + sigma_up(2,3) + sigma_up(3,1) + sigma_up(3,2) ) &
+                        * electron_SI * ( bohr2ang * ang2cm)**2)  /( 6.0d0 * carrier_density * hbarJ)
         ! carrier_density in cm^-1
         carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
-        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev/kelvin2eV, &
-                      ef0(itemp)*ryd2ev,  carrier_density, mobility_xx, '  x-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
+        WRITE(stdout,'(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 1E16.6, a)') etemp * ryd2ev/kelvin2eV, &
+                      ef0(itemp)*ryd2ev,  carrier_density, SUM(Fi_check(:,itemp)), mobility_xx, '    x-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_yy, '    y-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_zz, '    z-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility,    '       avg'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_od, '  off-diag'
       ENDDO
       ! 
     ENDIF
@@ -758,9 +784,10 @@
       ! Needed because of residual values from the hole above
       Sigma(:,:)    = zero
       ! 
-      WRITE(stdout,'(/5x,a)') repeat('=',67)
-      WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') repeat('=',67)
+      WRITE(stdout,'(/5x,a)') repeat('=',71)
+      WRITE(stdout,'(5x,"  Temp     Fermi   Elec density  Population SR      Elec mobility ")')
+      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]")')
+      WRITE(stdout,'(5x,a/)') repeat('=',71)
       DO itemp=1, nstemp
         etemp = transp_temp(itemp)
         DO ik=1,  nkqtotf/2
@@ -774,6 +801,7 @@
                   tdf_sigma(ij) = vkk_all(i, ibnd, ik) * F_SERTA(j, ibnd, ik, itemp) * wkf_all(ik)
                 ENDDO
               ENDDO
+              Fi_check(:,itemp) = Fi_check(:,itemp) + F_SERTA(:, ibnd, ik, itemp)
               ! 
               !  energy at k (relative to Ef)
               ekk = etf_all (ibnd, ik) - ef0(itemp)
@@ -820,19 +848,22 @@
         sigma_up(3,3) = Sigma(9,itemp)
         !
         ! Diagonalize the conductivity matrix
-        CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
+        !CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
         !
-        mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_xx  = ( sigma_up(1,1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_yy  = ( sigma_up(2,2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_zz  = ( sigma_up(3,3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
         mobility = (mobility_xx+mobility_yy+mobility_zz)/3
+        mobility_od = ( ( sigma_up(1,2) + sigma_up(1,3) + sigma_up(2,1) + sigma_up(2,3) + sigma_up(3,1) + sigma_up(3,2) ) &
+                        * electron_SI * ( bohr2ang * ang2cm)**2)  /( 6.0d0 * carrier_density * hbarJ)
         ! carrier_density in cm^-1
         carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
-        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev/kelvin2eV, &
-                      ef0(itemp)*ryd2ev,  carrier_density, mobility_xx, '  x-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
+        WRITE(stdout,'(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 1E16.6, a)') etemp * ryd2ev/kelvin2eV, &
+                      ef0(itemp)*ryd2ev,  carrier_density, SUM(Fi_check(:,itemp)), mobility_xx, '    x-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_yy, '    y-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_zz, '    z-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility,    '       avg'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_od, '  off-diag'
       ENDDO
       ! 
     ENDIF
@@ -908,6 +939,8 @@
     !! Electrical conductivity
     REAL(kind=DP) :: Fi_cart(3)
     !! Cartesian Fi_all 
+    REAL(kind=DP) :: Fi_check(3,nstemp)
+    !! Check that \Sum_k Fi = (0,0,0)
     REAL(kind=DP) :: Fi_rot(3)
     !! Rotated Fi_all by the symmetry operation
     REAL(kind=DP) :: v_rot(3)
@@ -929,7 +962,9 @@
     REAL(KIND=DP) :: fnk
     !! Fermi-Dirac occupation function
     REAL(KIND=DP) :: mobility
-    !! Sum of the diagonalized mobilities [cm^2/Vs] 
+    !! Sum of the diagonal mobilities [cm^2/Vs] 
+    REAL(KIND=DP) :: mobility_od
+    !! Sum of the off-diagonal mobilities [cm^2/Vs]
     REAL(KIND=DP) :: mobility_xx
     !! Mobility along the xx axis after diagonalization [cm^2/Vs] 
     REAL(KIND=DP) :: mobility_yy
@@ -949,15 +984,17 @@
     REAL(KIND=DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function 
 
+    Fi_check(:,:) = zero
     !
     inv_cell = 1.0d0/omega
     ! 
     IF (ncarrier < -1E5) THEN ! If true print hole
       Sigma(:,:)    = zero
       ! 
-      WRITE(stdout,'(/5x,a)') repeat('=',67)
-      WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') repeat('=',67)
+      WRITE(stdout,'(/5x,a)') repeat('=',71)
+      WRITE(stdout,'(5x,"  Temp     Fermi   Hole density  Population SR      Hole mobility ")')
+      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]")')
+      WRITE(stdout,'(5x,a/)') repeat('=',71)
       DO itemp=1, nstemp
         etemp = transp_temp(itemp)
         DO ik=1,  nkqtotf/2
@@ -974,9 +1011,11 @@
                   ! 
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
-                  sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
-                  sb = matmul ( bg, sa )
-                  sr (:,:) = matmul ( at, transpose (sb) )
+                  sa (:,:) = DBLE ( s_BZtoIBZ(:,:,ikbz) )
+                  sb       = MATMUL ( bg, sa )
+                  sr (:,:) = MATMUL ( at, TRANSPOSE (sb) )
+                  sr       = TRANSPOSE(sr)
+                  ! 
                   CALL dgemv( 'n', 3, 3, 1.d0,&
                     sr, 3, vk_cart(:),1 ,0.d0 , v_rot(:), 1 )
                   ! 
@@ -996,6 +1035,8 @@
                       ENDIF
                     ENDDO
                   ENDDO
+                  !
+                  Fi_check(:,itemp) = Fi_check(:,itemp) + Fi_rot(:) 
                 ENDIF ! BZ
               ENDDO ! ikb
               ! 
@@ -1043,20 +1084,20 @@
         sigma_up(3,2) = Sigma(8,itemp)
         sigma_up(3,3) = Sigma(9,itemp)
         !
-        ! Diagonalize the conductivity matrix
-        CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
-        !
-        mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility = (mobility_xx+mobility_yy+mobility_zz)/3
+        mobility_xx  = ( sigma_up(1,1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_yy  = ( sigma_up(2,2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_zz  = ( sigma_up(3,3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility     = ( mobility_xx + mobility_yy + mobility_zz ) / 3.0d0
+        mobility_od  = ( ( sigma_up(1,2) + sigma_up(1,3) + sigma_up(2,1) + sigma_up(2,3) + sigma_up(3,1) + sigma_up(3,2) ) &
+                        * electron_SI * ( bohr2ang * ang2cm)**2)  / ( 6.0d0 * carrier_density * hbarJ)
         ! carrier_density in cm^-1
         carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
-        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev/kelvin2eV, &
-                      ef0(itemp)*ryd2ev,  carrier_density, mobility_xx, '  x-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
+        WRITE(stdout,'(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 1E16.6, a)') etemp * ryd2ev/kelvin2eV, &
+                      ef0(itemp)*ryd2ev,  carrier_density, SUM(Fi_check(:,itemp)), mobility_xx, '    x-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_yy, '    y-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_zz, '    z-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility,    '       avg'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_od, '  off-diag'
         av_mob(itemp) = mobility
       ENDDO
       ! 
@@ -1066,9 +1107,10 @@
       ! Needed because of residual values from the hole above
       Sigma(:,:)    = zero
       ! 
-      WRITE(stdout,'(/5x,a)') repeat('=',67)
-      WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') repeat('=',67)
+      WRITE(stdout,'(/5x,a)') repeat('=',71)
+      WRITE(stdout,'(5x,"  Temp     Fermi   Elec density  Population SR      Elec mobility ")')
+      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]")')
+      WRITE(stdout,'(5x,a/)') repeat('=',71)
       DO itemp=1, nstemp
         etemp = transp_temp(itemp)
         DO ik=1,  nkqtotf/2
@@ -1085,9 +1127,11 @@
                   ! 
                   ! Transform the symmetry matrix from Crystal to
                   ! cartesian
-                  sa (:,:) = dble ( s_BZtoIBZ(:,:,ikbz) )
-                  sb = matmul ( bg, sa )
-                  sr (:,:) = matmul ( at, transpose (sb) )
+                  sa (:,:) = DBLE ( s_BZtoIBZ(:,:,ikbz) )
+                  sb       = MATMUL ( bg, sa )
+                  sr (:,:) = MATMUL ( at, TRANSPOSE (sb) )
+                  sr       = TRANSPOSE(sr)
+                  ! 
                   CALL dgemv( 'n', 3, 3, 1.d0,&
                     sr, 3, vk_cart(:),1 ,0.d0 , v_rot(:), 1 )
                   ! 
@@ -1106,7 +1150,9 @@
                         tdf_sigma(ij) = tdf_sigma(ij) + ( v_rot(i) * Fi_rot(j) ) * 2.0 / (nkf1*nkf2*nkf3)
                       ENDIF
                     ENDDO
-                  ENDDO
+                  ENDDO 
+                  !
+                  Fi_check(:,itemp) = Fi_check(:,itemp) + Fi_rot(:) 
                 ENDIF ! BZ
               ENDDO ! ikb
               ! 
@@ -1154,20 +1200,20 @@
         sigma_up(3,2) = Sigma(8,itemp)
         sigma_up(3,3) = Sigma(9,itemp)
         !
-        ! Diagonalize the conductivity matrix
-        CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
-        !
-        mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility = (mobility_xx+mobility_yy+mobility_zz)/3
+        mobility_xx  = ( sigma_up(1,1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_yy  = ( sigma_up(2,2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_zz  = ( sigma_up(3,3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility     = ( mobility_xx + mobility_yy + mobility_zz ) / 3.0d0
+        mobility_od  = ( ( sigma_up(1,2) + sigma_up(1,3) + sigma_up(2,1) + sigma_up(2,3) + sigma_up(3,1) + sigma_up(3,2) ) &
+                        * electron_SI * ( bohr2ang * ang2cm)**2)  /( 6.0d0 * carrier_density * hbarJ)
         ! carrier_density in cm^-1
         carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
-        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev/kelvin2eV, &
-                      ef0(itemp)*ryd2ev,  carrier_density, mobility_xx, '  x-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
+        WRITE(stdout,'(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 1E16.6, a)') etemp * ryd2ev/kelvin2eV, &
+                      ef0(itemp)*ryd2ev,  carrier_density, SUM(Fi_check(:,itemp)), mobility_xx, '    x-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_yy, '    y-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_zz, '    z-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility,    '       avg'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_od, '  off-diag'
         av_mob(itemp) = mobility
       ENDDO
       ! 
@@ -1242,8 +1288,12 @@
     !! Carrier density [nb of carrier per unit cell]
     REAL(KIND=DP) :: fnk
     !! Fermi-Dirac occupation function
+    REAL(kind=DP) :: Fi_check(3, nstemp)
+    !! Check that \Sum_k Fi = (0,0,0)
     REAL(KIND=DP) :: mobility
-    !! Sum of the diagonalized mobilities [cm^2/Vs] 
+    !! Sum of the diagonal mobilities [cm^2/Vs] 
+    REAL(KIND=DP) :: mobility_od
+    !! Sum of the off-diagonal mobilities [cm^2/Vs]
     REAL(KIND=DP) :: mobility_xx
     !! Mobility along the xx axis after diagonalization [cm^2/Vs] 
     REAL(KIND=DP) :: mobility_yy
@@ -1263,15 +1313,17 @@
     REAL(KIND=DP), EXTERNAL :: w0gauss
     !! The derivative of wgauss:  an approximation to the delta function 
 
+    Fi_check(:,:) = zero
     !
     inv_cell = 1.0d0/omega
     ! 
     IF (ncarrier < -1E5) THEN ! If true print hole
       Sigma(:,:)    = zero
       ! 
-      WRITE(stdout,'(/5x,a)') repeat('=',67)
-      WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') repeat('=',67)
+      WRITE(stdout,'(/5x,a)') repeat('=',71)
+      WRITE(stdout,'(5x,"  Temp     Fermi   Hole density  Population SR      Hole mobility ")')
+      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]")')
+      WRITE(stdout,'(5x,a/)') repeat('=',71)
       DO itemp=1, nstemp
         etemp = transp_temp(itemp)
         DO ik=1,  nkqtotf/2
@@ -1285,6 +1337,7 @@
                   tdf_sigma(ij) = vkk_all(i, ibnd, ik) * F_out(j, ibnd, ik, itemp) * wkf_all(ik)
                 ENDDO
               ENDDO
+              Fi_check(:,itemp) = Fi_check(:,itemp) + F_out(:, ibnd, ik, itemp)
               ! 
               !  energy at k (relative to Ef)
               ekk = etf_all (ibnd, ik) - ef0(itemp)
@@ -1330,19 +1383,22 @@
         sigma_up(3,3) = Sigma(9,itemp)
         !
         ! Diagonalize the conductivity matrix
-        CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
+        !CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
         !
-        mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility = (mobility_xx+mobility_yy+mobility_zz)/3
+        mobility_xx  = ( sigma_up(1,1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_yy  = ( sigma_up(2,2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_zz  = ( sigma_up(3,3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility     = ( mobility_xx + mobility_yy + mobility_zz ) / 3.0d0
+        mobility_od  = ( ( sigma_up(1,2) + sigma_up(1,3) + sigma_up(2,1) + sigma_up(2,3) + sigma_up(3,1) + sigma_up(3,2) ) &
+                        * electron_SI * ( bohr2ang * ang2cm)**2)  /( 6.0d0 * carrier_density * hbarJ)
         ! carrier_density in cm^-1
         carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
-        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev/kelvin2eV, &
-                      ef0(itemp)*ryd2ev,  carrier_density, mobility_xx, '  x-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
+        WRITE(stdout,'(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 1E16.6, a)') etemp * ryd2ev/kelvin2eV, &
+                      ef0(itemp)*ryd2ev,  carrier_density, SUM(Fi_check(:,itemp)), mobility_xx, '    x-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_yy, '    y-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_zz, '    z-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility,    '       avg'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_od, '  off-diag'
         av_mob(itemp) = mobility
       ENDDO
       ! 
@@ -1352,9 +1408,10 @@
       ! Needed because of residual values from the hole above
       Sigma(:,:)    = zero
       ! 
-      WRITE(stdout,'(/5x,a)') repeat('=',67)
-      WRITE(stdout,'(5x,"Temp [K]  Fermi [eV]  Elec density [cm^-3]  Elec mobility [cm^2/Vs]")')
-      WRITE(stdout,'(5x,a/)') repeat('=',67)
+      WRITE(stdout,'(/5x,a)') repeat('=',71)
+      WRITE(stdout,'(5x,"  Temp     Fermi   Elec density  Population SR      Elec mobility ")')
+      WRITE(stdout,'(5x,"   [K]      [eV]     [cm^-3]      [e per cell]        [cm^2/Vs]")')
+      WRITE(stdout,'(5x,a/)') repeat('=',71)
       DO itemp=1, nstemp
         etemp = transp_temp(itemp)
         DO ik=1,  nkqtotf/2
@@ -1368,6 +1425,7 @@
                   tdf_sigma(ij) = vkk_all(i, ibnd, ik) * F_out(j, ibnd, ik, itemp) * wkf_all(ik)
                 ENDDO
               ENDDO
+              Fi_check(:,itemp) = Fi_check(:,itemp) + F_out(:, ibnd, ik, itemp) 
               ! 
               !  energy at k (relative to Ef)
               ekk = etf_all (ibnd, ik) - ef0(itemp)
@@ -1413,19 +1471,22 @@
         sigma_up(3,3) = Sigma(9,itemp)
         !
         ! Diagonalize the conductivity matrix
-        CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
+        !CALL rdiagh(3,sigma_up,3,sigma_eig,sigma_vect)
         !
-        mobility_xx  = ( sigma_eig(1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_yy  = ( sigma_eig(2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility_zz  = ( sigma_eig(3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
-        mobility = (mobility_xx+mobility_yy+mobility_zz)/3
+        mobility_xx  = ( sigma_up(1,1) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_yy  = ( sigma_up(2,2) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility_zz  = ( sigma_up(3,3) * electron_SI * ( bohr2ang * ang2cm)**2)  /( carrier_density * hbarJ)
+        mobility     = ( mobility_xx + mobility_yy + mobility_zz ) / 3.0d0
+        mobility_od  = ( ( sigma_up(1,2) + sigma_up(1,3) + sigma_up(2,1) + sigma_up(2,3) + sigma_up(3,1) + sigma_up(3,2) ) &
+                        * electron_SI * ( bohr2ang * ang2cm)**2)  /( 6.0d0 * carrier_density * hbarJ)
         ! carrier_density in cm^-1
         carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
-        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6, 1E19.6, a)') etemp * ryd2ev/kelvin2eV, &
-                      ef0(itemp)*ryd2ev,  carrier_density, mobility_xx, '  x-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_yy, '  y-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility_zz, '  z-axis'
-        WRITE(stdout,'(45x, 1E18.6, a)') mobility, '     avg'
+        WRITE(stdout,'(5x, 1f8.3, 1f9.4, 1E14.5, 1E14.5, 1E16.6, a)') etemp * ryd2ev/kelvin2eV, &
+                      ef0(itemp)*ryd2ev,  carrier_density, SUM(Fi_check(:,itemp)), mobility_xx, '    x-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_yy, '    y-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_zz, '    z-axis'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility,    '       avg'
+        WRITE(stdout,'(50x, 1E16.6, a)') mobility_od, '  off-diag'
         av_mob(itemp) = mobility
       ENDDO
       ! 
@@ -1459,11 +1520,11 @@
     CALL print_clock ('epq_init')
     WRITE( stdout, * )
     CALL print_clock ('epq_init')
-    IF (nlcc_any) call print_clock ('set_drhoc')
+    IF (nlcc_any) CALL print_clock ('set_drhoc')
     CALL print_clock ('init_vloc')
     CALL print_clock ('init_us_1')
     CALL print_clock ('newd')
-    CALL print_clock ('dvanqq')
+    CALL print_clock ('dvanqq2')
     CALL print_clock ('drho')
     WRITE( stdout, * )
     !

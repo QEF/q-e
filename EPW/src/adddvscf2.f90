@@ -67,9 +67,9 @@
   INTEGER ::  ijs
   !! Counter on combined is and js polarization
   !
-  COMPLEX(DP) :: sumA
+  COMPLEX(kind=DP) :: sum_k
   !! auxiliary sum variable
-  COMPLEX(DP) :: sum_nc(npol)
+  COMPLEX(kind=DP) :: sum_nc(npol)
   !! auxiliary sum variable non-collinear case
   !
   IF (.not.okvan) RETURN
@@ -87,12 +87,12 @@
           !   we multiply the integral for the becp term and the beta_n
           !
           DO ibnd = lower_band, upper_band
-            do ih = 1, nh(nt)
+            DO ih = 1, nh(nt)
                ikb = ijkb0 + ih
                IF (noncolin) THEN
                  sum_nc = czero
                ELSE
-                 sumA = czero
+                 sum_k = czero
                ENDIF
                DO jh = 1, nh(nt)
                  jkb = ijkb0 + jh
@@ -106,7 +106,7 @@
                      ENDDO
                    ENDDO
                  ELSE
-                   sumA = sumA + int3(ih,jh,na,current_spin,ipert) * &
+                   sum_k = sum_k + int3(ih,jh,na,current_spin,ipert) * &
                                becp1(ik)%k(jkb,ibnd)
                  ENDIF
                ENDDO
@@ -114,7 +114,7 @@
                   CALL zaxpy( npwq, sum_nc(1), vkb(1,ikb), 1, dvpsi(1,ibnd), 1 )
                   CALL zaxpy( npwq, sum_nc(2), vkb(1,ikb), 1, dvpsi(1+npwx,ibnd), 1 )
                ELSE
-                  CALL zaxpy( npwq, sumA, vkb(1,ikb), 1, dvpsi(1,ibnd), 1 )
+                  CALL zaxpy( npwq, sum_k, vkb(1,ikb), 1, dvpsi(1,ibnd), 1 )
                ENDIF
             ENDDO
           ENDDO

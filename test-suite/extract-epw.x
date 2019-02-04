@@ -65,7 +65,7 @@ pi=`grep "Re[Pi]=" $fname | awk '{print $4; print $7; print $10}'`
 mobvb=`grep "Mobility VB Fermi level" $fname | awk '{print $5}'`
 mobcb=`grep "Mobility CB Fermi level" $fname | awk '{print $5}'`
 density=`grep " x-axis" $fname | awk '{print $1; print $2; print $3}'`
-mobx=`grep " x-axis" $fname | awk '{print $4}'`
+mobx=`grep " x-axis" $fname | awk '{print $5}'`
 mobav=`grep "   avg" $fname | awk '{print $1}'`
 mobxZ=`grep " x-axis [Z]" $fname | awk '{print $1; print $2; print $3; print $4}'`
 indabs=`grep "  (cm-1)" $fname | awk '{print $1; print $2; print $3; print $4}'` 
