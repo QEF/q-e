@@ -120,6 +120,11 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ! from the response charge density.
      !
      CALL dv_of_drho (dvrsc, .false.)
+     !
+     ! USPP: Compute the integral of the HXC response potential with the Q function.
+     ! Input : dvrsc = V_HXC(r), Output: int3 = \int V_HXC(r) * Q_nm(r) dr 
+     ! See Eq.(B22) in Ref. A. Dal Corso, PRB 64, 235118 (2001)
+     !
      IF (okvan) CALL newdq(dvrsc, 1)
      !
      ! Interpolation of the HXC potential from the thick mesh 
@@ -226,19 +231,9 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
         ENDDO
         !
         ! In the case of US pseudopotentials there is an additional term.
-        ! See second term in Eq.(11) in J. Chem. Phys. 127, 164106 (2007)
+        ! See the second term in Eq.(11) in J. Chem. Phys. 127, 164106 (2007).
         !
-        IF (okvan) THEN
-           !
-           ! Compute the integral of the HXC response potential with the Q function.
-           ! Input : dvrsc = V_HXC(r)
-           ! Output: int3 = \int V_HXC(r) * Q_nm(r) dr 
-           ! See Eq.(B22) in Ref. A. Dal Corso, PRB 64, 235118 (2001)
-           !
-           !
-           CALL adddvscf(1, ik) 
-           !
-        ENDIF
+        IF (okvan) CALL adddvscf(1, ik) 
         !
         ! Ortogonalize dvpsi to valence states.
         ! Apply -P_c^+, and then change the sign, because we need P_c^+.
