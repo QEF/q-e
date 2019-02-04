@@ -21,7 +21,7 @@ PPCG/ppcg_k.o
 # add here other objects, e.g. ParO/*.o NewSolver/*.o
 
 libks_solvers.a: $(ALLOBJS)
-	$(AR) $(ARFLAGS) $@ */*.o
+	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
 libdavid_rci : 
