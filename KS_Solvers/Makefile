@@ -5,9 +5,24 @@ default: all
 
 all: libdavid_rci libdavid libcg libppcg libparo libnewsolver libks_solvers.a
 
-libks_solvers.a: Davidson_RCI/*.o Davidson/*.o CG/*.o PPCG/*.o # ParO/*.o NewSolver/*.o ... 
-	$(AR) $(ARFLAGS) $@ */*.o       
-	$(RANLIB) $@    
+ALLOBJS = \
+Davidson/david_param.o \
+Davidson/cegterg.o \
+Davidson/regterg.o \
+Davidson_RCI/david_rci.o \
+CG/cg_param.o \
+CG/ccgdiagg.o \
+CG/rcgdiagg.o \
+CG/rotate_wfc_gamma.o \
+CG/rotate_wfc_k.o \
+PPCG/ppcg_param.o \
+PPCG/ppcg_gamma.o \
+PPCG/ppcg_k.o
+# add here other objects, e.g. ParO/*.o NewSolver/*.o
+
+libks_solvers.a: $(ALLOBJS)
+	$(AR) $(ARFLAGS) $@ */*.o
+	$(RANLIB) $@
 
 libdavid_rci : 
 	if test -d Davidson_RCI ; then \
