@@ -136,7 +136,7 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: nlm(:)   ! with gamma sym. position of -G vec in the FFT grid
 
     INTEGER, POINTER DEV_ATTRIBUTES :: nl_d(:)    ! duplication of the variables defined above
-    INTEGER, POINTER DEV_ATTRIBUTES :: nlm_d(:)   ! 
+    INTEGER, POINTER DEV_ATTRIBUTES :: nlm_d(:)   !
     !
     ! task group ALLTOALL communication layout
     INTEGER, ALLOCATABLE :: tg_snd(:) ! number of elements to be sent in task group redistribution
@@ -145,6 +145,7 @@ MODULE fft_types
     INTEGER, ALLOCATABLE :: tg_rdsp(:)! receive displacement for task group A2A communicattion
     !
     LOGICAL :: has_task_groups = .FALSE.
+    LOGICAL :: use_pencil_decomposition = .FALSE.
     !
     CHARACTER(len=12):: rho_clock_label  = ' '
     CHARACTER(len=12):: wave_clock_label = ' '
@@ -154,6 +155,18 @@ MODULE fft_types
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_scatter_yz
     INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: stream_many
     INTEGER                                                   :: nstream_many = 16
+
+    INTEGER(kind=cuda_stream_kind) :: a2a_comp
+    INTEGER(kind=cuda_stream_kind), allocatable, dimension(:) :: bstreams
+    TYPE(cudaEvent), allocatable, dimension(:) :: bevents
+
+    INTEGER              :: batchsize = 16    ! how many ffts to batch together
+    INTEGER              :: subbatchsize = 4  ! size of subbatch for pipelining
+
+#if defined(__IPC)
+    INTEGER :: IPC_PEER(16)          ! This is used for IPC that is not imlpemented yet.
+#endif
+    INTEGER, ALLOCATABLE :: srh(:,:) ! Isend/recv handles by subbatch
 #endif
   END TYPE
 
@@ -179,6 +192,7 @@ CONTAINS
     INTEGER, INTENT(IN), OPTIONAL :: nyfft
     INTEGER, INTENT(in) :: comm ! mype starting from 0
     INTEGER :: nx, ny, ierr, imany, nzfft
+    INTEGER :: i, nsubbatches
     INTEGER :: mype, root, nproc, nproc2, nproc3, iproc, iproc2, iproc3 ! mype starting from 0
     INTEGER :: color, key, comm2, comm3
      !write (6,*) ' inside fft_type_allocate' ; FLUSH(6)
@@ -305,6 +319,19 @@ CONTAINS
         ierr = cudaStreamCreate(desc%stream_many(imany))
         IF ( ierr /= 0 ) CALL fftx_error__( ' fft_type_allocate ', ' Error creating stream ', imany )
     END DO
+
+    ierr = cudaStreamCreate( desc%a2a_comp )
+
+    nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
+
+    ALLOCATE( desc%bstreams( nsubbatches ) )
+    ALLOCATE( desc%bevents( nsubbatches ) )
+    DO i = 1, nsubbatches
+      ierr = cudaStreamCreate( desc%bstreams(i) )
+      ierr = cudaEventCreate( desc%bevents(i) )
+    ENDDO
+    ALLOCATE( desc%srh(2*nproc, nsubbatches))
+
 #endif
 
     incremental_grid_identifier = incremental_grid_identifier + 1
@@ -315,6 +342,7 @@ CONTAINS
   SUBROUTINE fft_type_deallocate( desc )
     TYPE (fft_type_descriptor) :: desc
     INTEGER :: iproc, ierr, imany
+    INTEGER :: i, nsubbatches
      !write (6,*) ' inside fft_type_deallocate' ; FLUSH(6)
     IF ( ALLOCATED( desc%nr2p ) )   DEALLOCATE( desc%nr2p )
     IF ( ALLOCATED( desc%nr2p_offset ) )   DEALLOCATE( desc%nr2p_offset )
@@ -383,6 +411,20 @@ CONTAINS
 
     IF ( ALLOCATED( desc%nl_d ) )  DEALLOCATE( desc%nl_d )
     IF ( ALLOCATED( desc%nlm_d ) ) DEALLOCATE( desc%nlm_d )
+    !
+    ! SLAB decomposition
+    IF ( ALLOCATED( desc%srh ) )   DEALLOCATE( desc%srh )
+    ierr = cudaStreamDestroy( desc%a2a_comp )
+
+    nsubbatches = ceiling(real(desc%batchsize)/desc%subbatchsize)
+    DO i = 1, nsubbatches
+      ierr = cudaStreamDestroy( desc%bstreams(i) )
+      ierr = cudaEventDestroy( desc%bevents(i) )
+    ENDDO
+
+    DEALLOCATE( desc%bstreams )
+    DEALLOCATE( desc%bevents )
+
 #endif
 
     desc%comm  = MPI_COMM_NULL 
@@ -511,6 +553,10 @@ CONTAINS
 
     IF( size( desc%iplp ) < ( nr1x ) .or. size( desc%iplw ) < ( nr1x ) ) &
       CALL fftx_error__( ' fft_type_set ', ' wrong descriptor dimensions, ipl ', 5 )
+
+    IF( desc%my_nr3p == 0 .and. ( .not. desc%use_pencil_decomposition ) ) &
+      CALL fftx_error__( ' fft_type_set ', &
+                         ' there are processes with no planes. Use pencil decomposition (-pd .true.) ', 6 )
 
     !
     !  1. Temporarily store in the array "desc%isind" the index of the processor
@@ -826,7 +872,7 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE fft_type_init( dfft, smap, pers, lgamma, lpara, comm, at, bg, gcut_in, dual_in, fft_fact, nyfft )
+  SUBROUTINE fft_type_init( dfft, smap, pers, lgamma, lpara, comm, at, bg, gcut_in, dual_in, fft_fact, nyfft, use_pd )
 
      USE stick_base
 
@@ -842,6 +888,7 @@ CONTAINS
      REAL(DP), OPTIONAL, INTENT(IN) :: dual_in
      INTEGER, INTENT(IN), OPTIONAL :: fft_fact(3)
      INTEGER, INTENT(IN) :: nyfft
+     LOGICAL, OPTIONAL, INTENT(IN) :: use_pd ! whether to use pencil decomposition
 !
 !    Potential or dual
 !
@@ -895,6 +942,9 @@ CONTAINS
         END IF
      END IF
 
+     IF ( PRESENT (use_pd) ) dfft%use_pencil_decomposition = use_pd
+     IF ( ( .not. dfft%use_pencil_decomposition ) .and. ( nyfft > 1 ) ) &
+        CALL fftx_error__(' fft_type_init ', ' Slab decomposition and task groups not implemented. ', 1 )
 
      dfft%lpara = lpara  !  this descriptor can be either a descriptor for a
                          !  parallel FFT or a serial FFT even in parallel build
@@ -932,7 +982,6 @@ CONTAINS
      IF( dfft%ngm /= ngm ) THEN
         CALL fftx_error__(' fft_type_init ', ' wrong ngm ', 1 )
      END IF
-
 
      DEALLOCATE( st )
      DEALLOCATE( stw )

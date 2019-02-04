@@ -4,7 +4,9 @@ include ../make.inc
 
 FFTX = \
 scatter_mod.o  \
+scatter_mod_2d.o  \
 scatter_mod_gpu.o  \
+scatter_mod_2d_gpu.o  \
 fft_ggen.o  \
 fft_fwinv.o  \
 fft_scalar.o  \
@@ -17,6 +19,7 @@ fftw_interfaces.o  \
 fft_scalar.FFTW3.o  \
 fft_scalar.SX6.o  \
 fft_parallel.o  \
+fft_parallel_2d.o  \
 fft_interfaces.o  \
 fft_interpolate.o \
 stick_base.o  \

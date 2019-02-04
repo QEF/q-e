@@ -19,6 +19,8 @@ intel mpi:
     - sed -i "s/TESTCODE_NPROCS=4/TESTCODE_NPROCS=$SLURM_NTASKS/" ENVIRONMENT
     - make clean
     - make run-tests-pw-parallel
+    - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
+    - make clean && make run-tests-pw-parallel
 
 pgi cuda mpi:
   tags: [k80]
@@ -32,6 +34,8 @@ pgi cuda mpi:
     - sed -i "s/TESTCODE_NPROCS=4/TESTCODE_NPROCS=$SLURM_NTASKS/" ENVIRONMENT
     - make clean
     - make run-tests-pw-parallel
+    - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
+    - make clean && make run-tests-pw-parallel
     - cd .. && cp PW/src/pw.x ./pwgpu-mpi-cuda8-cc35-${CI_COMMIT_SHA:0:8}.x
   artifacts:
     paths:
@@ -53,6 +57,8 @@ pgi cuda mpi 185:
     - sed -i 's/mpirun -np/srun -n/' run-pw.sh
     - make clean
     - make run-tests-pw-parallel
+    - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
+    - make clean && make run-tests-pw-parallel
     - cd .. && cp PW/src/pw.x ./pwgpu-mpi-cuda9-cc35-${CI_COMMIT_SHA:0:8}.x
   artifacts:
     paths:
@@ -75,6 +81,8 @@ pgi cuda mpi v100:
     - sed -i 's/mpirun -np/srun -n/' run-pw.sh
     - make clean
     - make run-tests-pw-parallel
+    - sed -i 's/export PARA_POSTFIX=" "/export PARA_POSTFIX=" -pd=.true."/g' run-pw.sh
+    - make clean && make run-tests-pw-parallel
 
 pgi cuda serial:
   tags: [k80]

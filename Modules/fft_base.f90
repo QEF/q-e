@@ -91,6 +91,9 @@
           ENDIF
 
           IF(ionode) WRITE( stdout,*)
+          IF ( .not. dffts%use_pencil_decomposition ) WRITE( stdout,'(5X, "Using Slab Decomposition")')
+          IF (       dffts%use_pencil_decomposition ) WRITE( stdout, '(5X, "Using Pencil Decomposition")')
+          IF(ionode) WRITE( stdout,*)
 
           RETURN
         END SUBROUTINE fft_base_info

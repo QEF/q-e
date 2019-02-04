@@ -25,9 +25,10 @@ SUBROUTINE data_structure( gamma_only )
   USE gvecs,      ONLY : gcutms, gvecs_init, doublegrid
   USE gvecw,      ONLY : gcutw, gkcut
   USE io_global,  ONLY : stdout, ionode
-  ! FIXME: find a better way to transmit these two variables, or remove them
+  ! FIXME: find a better way to transmit these three variables, or remove them
   USE realus,     ONLY : real_space
   USE symm_base,  ONLY : fft_fact
+  USE command_line_options, ONLY: pencil_decomposition_
   !
   IMPLICIT NONE
   LOGICAL, INTENT(in) :: gamma_only
@@ -64,9 +65,9 @@ SUBROUTINE data_structure( gamma_only )
   ! task group are disabled if real_space calculation of calbec is used
   dffts%has_task_groups = (ntask_groups >1) .and. .not. real_space
   CALL fft_type_init( dffts, smap, "wave", gamma_only, lpara, intra_bgrp_comm,&
-       at, bg, gkcut, gcutms/gkcut, fft_fact=fft_fact, nyfft=nyfft )
+       at, bg, gkcut, gcutms/gkcut, fft_fact=fft_fact, nyfft=nyfft, use_pd=pencil_decomposition_ )
   CALL fft_type_init( dfftp, smap, "rho" , gamma_only, lpara, intra_bgrp_comm,&
-       at, bg, gcutm , 4.d0, fft_fact=fft_fact, nyfft=nyfft )
+       at, bg, gcutm , 4.d0, fft_fact=fft_fact, nyfft=nyfft, use_pd=pencil_decomposition_ )
   ! define the clock labels ( this enables the corresponding fft too ! )
   dffts%rho_clock_label='ffts' ; dffts%wave_clock_label='fftw'
   dfftp%rho_clock_label='fft'
