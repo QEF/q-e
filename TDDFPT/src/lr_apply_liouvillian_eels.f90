@@ -120,6 +120,7 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
      ! from the response charge density.
      !
      CALL dv_of_drho (dvrsc, .false.)
+     IF (okvan) CALL newdq(dvrsc, 1)
      !
      ! Interpolation of the HXC potential from the thick mesh 
      ! to a smoother mesh (if doublegrid=.true.)
@@ -234,7 +235,6 @@ SUBROUTINE lr_apply_liouvillian_eels ( evc1, evc1_new, interaction )
            ! Output: int3 = \int V_HXC(r) * Q_nm(r) dr 
            ! See Eq.(B22) in Ref. A. Dal Corso, PRB 64, 235118 (2001)
            !
-           CALL newdq(dvrsc, 1)
            !
            CALL adddvscf(1, ik) 
            !
