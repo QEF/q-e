@@ -154,23 +154,23 @@
   !! Absolute index of k+q-point
   !
   ! Local variables for rotating the wavefunctions (in order to use q in the irr wedge)
-  REAL(DP) :: xktmp(3)
+  REAL(kind=DP) :: xkqtmp(3)
   !! Temporary k+q vector for KB projectors 
-  REAL(DP) :: sxk(3)
-  !!
-  REAL(DP) :: g0vec_all_r(3,125)
+  REAL(kind=DP) :: sxk(3)
+  !! Rotated k-point xk
+  REAL(kind=DP) :: g0vec_all_r(3,125)
   !! G_0 vectors needed to fold the k+q grid into the k grid, cartesian coord.
-  REAL(DP) :: zero_vect(3)
+  REAL(kind=DP) :: zero_vect(3)
   !! Temporary zero vector 
   ! 
-  COMPLEX(DP), ALLOCATABLE :: aux1(:,:), aux2(:,:), aux3(:,:)
-  COMPLEX(DP), ALLOCATABLE :: eptmp(:,:), elphmat(:,:,:)
+  COMPLEX(kind=DP), ALLOCATABLE :: aux1(:,:), aux2(:,:), aux3(:,:)
+  COMPLEX(kind=DP), ALLOCATABLE :: eptmp(:,:), elphmat(:,:,:)
   !! arrays for e-ph matrix elements 
   !
 !DBSP - NAG complains ...
-  COMPLEX(DP), EXTERNAL :: ZDOTC
+  COMPLEX(kind=DP), EXTERNAL :: zdotc
 !DBSP
-!  REAL(kind=DP) :: b,c
+!  REAL(kind=DP) :: b, c, d
 !END
   !
   IF ( .not. ALLOCATED(elphmat) ) ALLOCATE( elphmat(nbnd, nbnd, npe) ) 
@@ -221,8 +221,9 @@
      IF (lsda) current_spin = isk(ik)
      elphmat(:,:,:) = czero
 !DBSP
-!     c = 0
-!     b = 0
+!     b = zero
+!     c = zero
+!     d = zero
 !END
      !
      ! find index, and possibly pool, of k+q 
@@ -285,7 +286,7 @@
      umatq(:,:,ik) = umat_all(:,:,nkq_abs)
      !
      ! the k-vector needed for the KB projectors
-     xktmp = xkq(:,ik)
+     xkqtmp = xkq(:,ik)
      !
      ! --------------------------------------------------
      !   Fourier translation of the G-sphere igkq
@@ -306,7 +307,7 @@
      !  (this is needed in the calculation of the KB terms
      !  for nonlocal pseudos)
      !
-     xktmp = xkq(:,ik) - g0vec_all_r(:,shift(ik+ik0))
+     xkqtmp = xkq(:,ik) - g0vec_all_r(:,shift(ik+ik0))
      !
      ! ---------------------------------------------------------------------
      ! phase factor arising from fractional traslations
@@ -371,8 +372,8 @@
      ! now we generate vkb on the igkq() set because dvpsi is needed on that set
      ! we need S(k)+q_0 in the KB projector: total momentum transfer must be q_0
      !
-     xktmp = sxk + xq0
-     CALL init_us_2( npwq, igkq, xktmp, vkb )
+     xkqtmp = sxk + xq0
+     CALL init_us_2( npwq, igkq, xkqtmp, vkb )
      !
      ! --------------------------------------------------
      !   Calculation of the matrix element
@@ -382,15 +383,15 @@
         !
         !  recalculate dvbare_q*psi_k 
         !  the call to dvqpsi_us3 differs from the old one to dvqpsi_us 
-        !  only the xktmp passed. 
+        !  only the xkqtmp passed. 
         !
         !  we have to use the first q in the star in the dvqpsi_us3 call below (xq0)
         !  
         mode = imode0 + ipert
         IF (timerev) THEN
-          CALL dvqpsi_us3( ik, CONJG(u(:,mode)), .false., xktmp, xq0 )
+          CALL dvqpsi_us3( ik, conjg(u(:,mode)), .false., xkqtmp, xq0 )
         ELSE
-          CALL dvqpsi_us3( ik, u(:,mode), .false., xktmp, xq0 )
+          CALL dvqpsi_us3( ik, u(:,mode), .false., xkqtmp, xq0 )
         ENDIF
 !DBSP 
 !        b = b+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
@@ -404,7 +405,7 @@
         DO ibnd = lower_band, upper_band
           CALL invfft_wave(npw, igk, evc(:,ibnd), aux1)
           IF (timerev) THEN
-            CALL apply_dpot(dffts%nnr, aux1, CONJG(dvscfins(:,:,ipert)), current_spin)
+            CALL apply_dpot(dffts%nnr, aux1, conjg(dvscfins(:,:,ipert)), current_spin)
           ELSE
             CALL apply_dpot(dffts%nnr, aux1, dvscfins(:,:,ipert), current_spin)
           ENDIF
@@ -412,10 +413,13 @@
         ENDDO
         dvpsi = dvpsi + aux3
         !
-        CALL adddvscf2( ipert, ik )
-        !
 !DBSP
-        !c = c+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
+!        c = c+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
+!END
+        !
+        CALL adddvscf2( ipert, ik )
+!DBRM
+!        d = c+SUM((REAL(REAL(dvpsi(:,:))))**2)+SUM((REAL(AIMAG(dvpsi(:,:))))**2)
 !END
         !
         ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
@@ -424,10 +428,10 @@
         DO ibnd =lower_band, upper_band
            DO jbnd = 1, nbnd
               elphmat(jbnd,ibnd,ipert) = &
-                    ZDOTC( npwq, evq(1,jbnd), 1, dvpsi(1,ibnd), 1 )
+                    zdotc( npwq, evq(1,jbnd), 1, dvpsi(1,ibnd), 1 )
               IF (noncolin) &
                  elphmat(jbnd,ibnd,ipert) = elphmat(jbnd,ibnd,ipert) + &
-                    ZDOTC( npwq, evq(npwx+1,jbnd), 1, dvpsi(npwx+1,ibnd), 1 )
+                    zdotc( npwq, evq(npwx+1,jbnd), 1, dvpsi(npwx+1,ibnd), 1 )
            ENDDO
         ENDDO
      ENDDO
@@ -439,7 +443,8 @@
 !     IF (ik==2) THEN
 !       write(*,*)'SUM dvpsi b ', b
 !       write(*,*)'SUM dvpsi c ', c
-!       write(*,*)'elphmat(:,:,:)**2',SUM((REAL(REAL(elphmat(:,:,:))))**2)+SUM((REAL(AIMAG(elphmat(:,:,:))))**2)
+!       write(*,*)'SUM dvpsi d ', d
+!       write(*,*)'elphmat(:,:,:)**2', SUM((REAL(REAL(elphmat(:,:,:))))**2)+SUM((REAL(AIMAG(elphmat(:,:,:))))**2)
 !     ENDIF
 !END
      !
@@ -498,8 +503,8 @@
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: npw, igk(npwx)
-  COMPLEX(DP), INTENT(inout) :: evc(npwx*npol, nbnd)
-  COMPLEX(DP), INTENT(in) :: eigv1(ngm), eig0v
+  COMPLEX(kind=DP), INTENT(inout) :: evc(npwx*npol, nbnd)
+  COMPLEX(kind=DP), INTENT(in) :: eigv1(ngm), eig0v
   !
   INTEGER :: ig
   !! Counter on G-vectors
@@ -529,11 +534,15 @@
   !
   IMPLICIT NONE
   !
+  REAL(kind=DP), INTENT(in) :: x(3)
+  !! Input x
   INTEGER, INTENT(in) :: s(3,3)
-  REAL(DP), INTENT(in) :: x(3)
-  REAL(DP), INTENT(out) :: sx(3)
+  !! Symmetry matrix
+  REAL(kind=DP), INTENT(out) :: sx(3)
+  !! Output rotated x
   !
   REAL(DP) :: xcrys(3)
+  !! x in cartesian coords
   INTEGER :: i
   !
   xcrys = x

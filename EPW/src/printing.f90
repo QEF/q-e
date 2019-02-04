@@ -1520,11 +1520,11 @@
     CALL print_clock ('epq_init')
     WRITE( stdout, * )
     CALL print_clock ('epq_init')
-    IF (nlcc_any) call print_clock ('set_drhoc')
+    IF (nlcc_any) CALL print_clock ('set_drhoc')
     CALL print_clock ('init_vloc')
     CALL print_clock ('init_us_1')
     CALL print_clock ('newd')
-    CALL print_clock ('dvanqq')
+    CALL print_clock ('dvanqq2')
     CALL print_clock ('drho')
     WRITE( stdout, * )
     !
