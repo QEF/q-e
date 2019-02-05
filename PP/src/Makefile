@@ -52,8 +52,9 @@ xc_vdW_scale_mod.o   # added by Yang Jiao
 
 PWOBJS = ../../PW/src/libpw.a
 QEOBJS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
+         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a \
          ../../dft-d3/libdftd3qe.a
+
 
 MODULES = $(PWOBJS) $(QEOBJS)
 
@@ -66,7 +67,7 @@ all : tldeps open_grid.x average.x bands.x dos.x epsilon.x initial_state.x fs.x 
       pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x
 
 
-libpp.a : $(PPOBJS) 
+libpp.a : $(PPOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 

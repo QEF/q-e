@@ -29,19 +29,19 @@ XOBJS = \
 ./check_orthogonality_k_epsilon.o \
 ./assign_paw_radii_to_species.o \
 ./io_routines.o \
-./xanes_quadrupole.o 
+./xanes_quadrupole.o
 
 GIPAWOBJS=./paw_gipaw.o \
 ./gipaw_module.o \
 ./init_gipaw_1.o \
 ./init_gipaw_2.o
 
-MANIP_XS_OBJ=./gaunt_mod.o 
-             
+MANIP_XS_OBJ=./gaunt_mod.o
+
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
          ../../KS_Solvers/libks_solvers.a \
-	 ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
-PWOBJS = ../../PW/src/libpw.a 
+	 ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
+PWOBJS = ../../PW/src/libpw.a
 
 TLDEPS = bindir libs pw
 
@@ -57,11 +57,11 @@ spectra_correction.x : spectra_correction.o $(MANIP_XS_OBJ) $(QEMODS) $(PWOBJS)
                 $(LDFLAGS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
 
-molecularnexafs.x : molecularnexafs.o 
+molecularnexafs.x : molecularnexafs.o
 	$(MPIF90) -o $@  molecularnexafs.o $(LDFLAGS)
 	- ( cd ../../bin ; ln -fs ../XSpectra/src/$@ . )
 
-tldeps : 
+tldeps :
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :

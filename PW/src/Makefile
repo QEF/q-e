@@ -74,6 +74,7 @@ extfield.o \
 exx_base.o \
 exx_band.o \
 exx.o \
+exx_gpu.o \
 fcp.o \
 find_group.o \
 forces_bp_efield.o \

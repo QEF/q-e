@@ -40,16 +40,20 @@ self_energy.o \
 self_energy_storage.o \
 start_end.o \
 times_gw.o \
-vcprim.o 
+vcprim.o
 
 
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
          ../../KS_Solvers/libks_solvers.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+         ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a
 
 LIBMIN= ../minpack/minpacklib.a
 
+#<<<<<<< HEAD
+#TLDEPS=bindir mods libs libiotk
+#=======
 TLDEPS=pwlibs
+#>>>>>>> 40cae61e51e5d23399a72a97ff6a42645c3af4a3
 
 all : tldeps gww.x gww_fit.x libgww.a
 

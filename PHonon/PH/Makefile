@@ -168,7 +168,7 @@ write_modes.o \
 write_rec.o \
 write_hub.o \
 zstar_eu.o \
-zstar_eu_us.o 
+zstar_eu_us.o
 
 RAMANOBJS =    \
 psyme2.o   \
@@ -195,7 +195,7 @@ write_eigenvectors.o
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a
 QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
-         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
+         ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../GScratch/libgscratch.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 
 TLDEPS= phlibs
 
@@ -267,7 +267,7 @@ tldeps :
 	if test -n "$(TLDEPS)" ; then \
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
-libph.a : $(PHOBJS) $(RAMANOBJS) 
+libph.a : $(PHOBJS) $(RAMANOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
