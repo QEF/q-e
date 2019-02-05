@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------
 SUBROUTINE addusdens_gpu(rho)
   !----------------------------------------------------------------------
@@ -19,7 +18,6 @@ SUBROUTINE addusdens_gpu(rho)
   USE kinds,                ONLY : DP
   !
   IMPLICIT NONE
-  !
   !
   COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
   !

@@ -22,7 +22,7 @@ SUBROUTINE sum_band_gpu()
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE fft_base,             ONLY : dfftp, dffts
-  USE fft_interfaces,       ONLY : fwfft, invfft, fft_interpolate
+  USE fft_interfaces,       ONLY : fwfft, invfft
   USE gvect,                ONLY : ngm, g
   USE gvecs,                ONLY : doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k, igk_k_d
@@ -37,7 +37,7 @@ SUBROUTINE sum_band_gpu()
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions,        ONLY : evc, psic
   USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
-  USE spin_orb,             ONLY : lspinorb, domag
+  USE spin_orb,             ONLY : lspinorb, domag, fcoef
   USE wvfct,                ONLY : nbnd, npwx, wg, et, btype
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : inter_bgrp_comm, intra_bgrp_comm, nbgrp
@@ -230,12 +230,12 @@ SUBROUTINE sum_band_gpu()
      END DO
      !
   END IF
-  !^
-  IF (nspin == 2) THEN
-     CALL rhoz_or_updw( rho, 'r_and_g', 'updw_rhoz' )
-     IF (lda_plus_u.AND.(.NOT.noncolin)) CALL rhoz_or_updw( rho, 'hub_ns', 'updw_rhoz' )
-  ENDIF
-  !^
+  !
+  ! ... if LSDA rho%of_r and rho%of_g are converted from (up,dw) to
+  ! ... (up+dw,up-dw) format.
+  !
+  IF ( nspin == 2 ) CALL rhoz_or_updw( rho, 'r_and_g', '->rhoz' )
+  !
   CALL stop_clock( 'sum_band' )
   !
   RETURN
