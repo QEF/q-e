@@ -1,6 +1,13 @@
 # Makefile for  KS_Solvers
 sinclude ../make.inc
 
+# the following directive prevents execution of this makefiile in parallel
+# Problem is, libks_solvers.a depends upon all libdavid libcg etc, but if
+# those dependencies are added explicitly to libks_solvers.a, the library
+# is relinked every time, forcing relinking of many executables; if not, 
+# parallel make may execute libks_solvers.a before all other lib* complete 
+.NOTPARALLEL :
+
 default: all
 
 all: libdavid_rci libdavid libcg libppcg libparo libnewsolver libks_solvers.a

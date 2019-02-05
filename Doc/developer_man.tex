@@ -1371,6 +1371,11 @@ The branch may be automatically removed after the merge (set the appropriate
 option if you approve your merge) or using \verb|git branch -d | 
 {\em my-new-branch}.
 
+Note: if a merge request is pending and you push further changes to the
+branch to be merged, the merge request will be automatically updated.
+If this is not what you want, commit to a different branch, or wait
+until the merge is done.
+
 It may be a good idea to align your branch to the current development
 version before the merge request. If you have modified a file that has
 meanwhile been modified in the repository, a conflict will arise. You
@@ -1382,7 +1387,7 @@ can use \texttt{git stash} to resolve the conflict:
 \end{quote}
 Beware! you may need to manually merge files that have been modified both 
 by you and in the repository. \texttt{git stash -l} list all stashed
-changes in reverese chronological order. The stash can be cleared using
+changes in reverse chronological order. The stash can be cleared using
 \texttt{git stash clear}.
 
 Note: if you do not change sources but only documentation, tests, examples,
@@ -1390,15 +1395,18 @@ add \verb|[skip ci]| in the commit message. This prevents execution of
 automatic compilation on GitLab (that sometimes fails for no good reason,
 blocking a subsequent merge request).
 
+Note: a commit message containing \verb|[fixes issue #N]| should 
+automatically mark issue N to as solved once it is merged.
+
 \subsection{Working directly into the develop branch}
-Only for people knowing what they are doing (or ready to fix the mess in case
-they didn't know what they were doing):
+NOT RECOMMENDED - only for people knowing what they are doing 
+(or ready to fix the mess in case they didn't know what they were doing):
 \begin{itemize}
 \item \verb|git clone git@gitlab.com:QEF/q-e.git| if not already done
 \item Ensure you switch to the ``develop'' branch:
   \verb|git checkout --track origin/develop|
 \item Work on it as in the previous subsection
-\item When you are ready, \verb|git push|
+\item When you are ready, commit and push.
 \end{itemize}
 
 \subsection{A few useful commands}
