@@ -704,7 +704,7 @@ LOGICAL FUNCTION check_gpu_support( )
   USE io_global,        ONLY : stdout, ionode, ionode_id
   !
   IMPLICIT NONE
-
+  !
   LOGICAL, SAVE :: first = .TRUE.
   LOGICAL, SAVE :: saved_value = .FALSE.
   CHARACTER(len=255) :: gpu_env
@@ -724,13 +724,6 @@ LOGICAL FUNCTION check_gpu_support( )
      check_gpu_support = .TRUE.
   END IF
   saved_value = check_gpu_support
-  !
-  IF ( ionode ) THEN
-     !
-     IF (check_gpu_support) WRITE( stdout, '(/,5X,"GPU acceleration is ACTIVE.",/)' )
-     IF (.not. check_gpu_support) WRITE( stdout, '(/,5X,"GPU acceleration is NOT ACTIVE.",/)' )
-     !
-  END IF
   !
 #else
   check_gpu_support = .FALSE.

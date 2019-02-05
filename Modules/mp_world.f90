@@ -78,7 +78,9 @@ CONTAINS
 #if defined(__CUDA)
     ierr = cudaGetDeviceCount( ndev )
     ierr = cudaSetDevice(mod(key, ndev))
-    print *, "MPI ", key, " on node ", color, " is using GPU: ", mod(key, ndev)
+#if defined(__DEBUG)
+    write(*,*) "MPI ", key, " on node ", color, " is using GPU: ", mod(key, ndev)
+#endif
 #endif
     !
     CALL mp_start( nproc, mpime, world_comm )
