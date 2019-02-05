@@ -31,8 +31,7 @@ subroutine stres_har (sigmahar)
   integer :: ig, l, m
 
   sigmahar(:,:) = 0.d0
-  psic (:) = (0.d0, 0.d0)
-  call daxpy (dfftp%nnr, 1.d0, rho%of_r (1, 1), 1, psic, 2)
+  psic (:) = CMPLX (rho%of_r(:,1), KIND=dp)
 
   CALL fwfft ('Rho', psic, dfftp)
   ! psic contains now the charge density in G space

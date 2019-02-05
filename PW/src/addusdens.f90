@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------
 SUBROUTINE addusdens(rho)
   !----------------------------------------------------------------------
@@ -19,7 +18,6 @@ SUBROUTINE addusdens(rho)
   USE kinds,                ONLY : DP
   !
   IMPLICIT NONE
-  !
   !
   COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
   !
@@ -65,7 +63,6 @@ SUBROUTINE addusdens_g(rho)
   ! starting/ending indices, local number of G-vectors
   INTEGER :: ig, na, nt, ih, jh, ijh, is, nab, nb, nij
   ! counters
-
   REAL(DP), ALLOCATABLE :: tbecsum(:,:,:)
   ! \sum_kv <\psi_kv|\beta_l><beta_m|\psi_kv> for each species of atoms
   REAL(DP), ALLOCATABLE :: qmod (:), ylmk0 (:,:)
@@ -163,7 +160,7 @@ SUBROUTINE addusdens_g(rho)
   !
   !     add aux to the charge density in reciprocal space
   !
-  rho(:,:) = rho(:,:) + aux (:,:)
+  rho(:,:) = rho(:,:) + aux(:,:)
   !
   DEALLOCATE (aux)
   !

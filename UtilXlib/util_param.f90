@@ -8,13 +8,7 @@
 !
 MODULE util_param
 
-#if defined(__MPI)
-#if defined(__MPI_MODULE)
-  USE mpi
-#else
-  INCLUDE 'mpif.h'
-#endif
-#endif
+  USE parallel_include
   
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
   INTEGER, PARAMETER :: stdout = 6    ! unit connected to standard output

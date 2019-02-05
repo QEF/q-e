@@ -19,7 +19,7 @@ gipaw_module.o : ../../Modules/io_files.o
 gipaw_module.o : ../../Modules/io_global.o
 gipaw_module.o : ../../Modules/ions_base.o
 gipaw_module.o : ../../Modules/kind.o
-gipaw_module.o : ../../Modules/mp_global.o
+gipaw_module.o : ../../Modules/mp_pools.o
 gipaw_module.o : ../../Modules/mp_world.o
 gipaw_module.o : ../../Modules/noncol.o
 gipaw_module.o : ../../Modules/parameters.o
@@ -41,7 +41,7 @@ init_gipaw_1.o : ../../Modules/invmat.o
 init_gipaw_1.o : ../../Modules/io_global.o
 init_gipaw_1.o : ../../Modules/ions_base.o
 init_gipaw_1.o : ../../Modules/kind.o
-init_gipaw_1.o : ../../Modules/mp_global.o
+init_gipaw_1.o : ../../Modules/mp_pools.o
 init_gipaw_1.o : ../../Modules/parameters.o
 init_gipaw_1.o : ../../Modules/splinelib.o
 init_gipaw_1.o : ../../Modules/uspp.o
@@ -66,13 +66,13 @@ io_routines.o : ../../PW/src/pwcom.o
 io_routines.o : gaunt_mod.o
 io_routines.o : xspectra_mod.o
 ipoolscatter.o : ../../Modules/kind.o
-ipoolscatter.o : ../../Modules/mp_global.o
+ipoolscatter.o : ../../Modules/mp_pools.o
 ipoolscatter.o : ../../UtilXlib/mp.o
 lanczos.o : ../../Modules/becmod.o
 lanczos.o : ../../Modules/constants.o
 lanczos.o : ../../Modules/io_global.o
 lanczos.o : ../../Modules/kind.o
-lanczos.o : ../../Modules/mp_global.o
+lanczos.o : ../../Modules/mp_pools.o
 lanczos.o : ../../Modules/uspp.o
 lanczos.o : ../../PW/src/pwcom.o
 lanczos.o : ../../UtilXlib/mp.o
@@ -81,7 +81,7 @@ lr_sm1_psi.o : ../../Modules/becmod.o
 lr_sm1_psi.o : ../../Modules/control_flags.o
 lr_sm1_psi.o : ../../Modules/ions_base.o
 lr_sm1_psi.o : ../../Modules/kind.o
-lr_sm1_psi.o : ../../Modules/mp_global.o
+lr_sm1_psi.o : ../../Modules/mp_pools.o
 lr_sm1_psi.o : ../../Modules/recvec.o
 lr_sm1_psi.o : ../../Modules/uspp.o
 lr_sm1_psi.o : ../../PW/src/ldaU.o
@@ -110,14 +110,13 @@ paw_gipaw.o : ../../Modules/read_upf_v1.o
 plot_xanes_cross_sections.o : ../../Modules/constants.o
 plot_xanes_cross_sections.o : ../../Modules/io_global.o
 plot_xanes_cross_sections.o : ../../Modules/kind.o
-plot_xanes_cross_sections.o : ../../Modules/mp_global.o
+plot_xanes_cross_sections.o : ../../Modules/mp_pools.o
 plot_xanes_cross_sections.o : ../../Modules/uspp.o
 plot_xanes_cross_sections.o : ../../PW/src/pwcom.o
 plot_xanes_cross_sections.o : ../../UtilXlib/mp.o
 plot_xanes_cross_sections.o : xspectra_mod.o
 radin_mod.o : ../../Modules/kind.o
 read_input_and_bcast.o : ../../Modules/cell_base.o
-read_input_and_bcast.o : ../../Modules/control_flags.o
 read_input_and_bcast.o : ../../Modules/io_files.o
 read_input_and_bcast.o : ../../Modules/io_global.o
 read_input_and_bcast.o : ../../Modules/kind.o
@@ -193,7 +192,7 @@ xanes_dipole_general_edge.o : ../../Modules/gvecw.o
 xanes_dipole_general_edge.o : ../../Modules/io_global.o
 xanes_dipole_general_edge.o : ../../Modules/ions_base.o
 xanes_dipole_general_edge.o : ../../Modules/kind.o
-xanes_dipole_general_edge.o : ../../Modules/mp_global.o
+xanes_dipole_general_edge.o : ../../Modules/mp_images.o
 xanes_dipole_general_edge.o : ../../Modules/mp_pools.o
 xanes_dipole_general_edge.o : ../../Modules/parameters.o
 xanes_dipole_general_edge.o : ../../Modules/radial_grids.o

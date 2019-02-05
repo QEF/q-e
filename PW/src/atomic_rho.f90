@@ -92,7 +92,7 @@ SUBROUTINE atomic_rho_g (rhocg, nspina)
         rhoscale = 1.0_dp
      ENDIF
      !
-     !^
+     !
      rhocg(:,1) = rhocg(:,1) + &
                 strf(:,nt) * rhoscale * rhocgnt(igtongl(:)) / omega
      !

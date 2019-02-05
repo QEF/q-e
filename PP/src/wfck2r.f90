@@ -38,12 +38,13 @@ PROGRAM wfck2r
   !
   USE kinds, ONLY : DP
   USE io_files,  ONLY : prefix, tmp_dir, diropn
-  USE mp_global, ONLY : npool, mp_startup,  intra_image_comm
   USE wvfct,     ONLY : nbnd, npwx, et, wg
   USE klist,     ONLY : xk, nks, ngk, igk_k, wk
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast, mp_barrier
-  USE mp_world,  ONLY : world_comm
+  USE mp_global, ONLY : mp_startup
+  USE mp_images, ONLY : intra_image_comm
+  USE mp_pools,  ONLY : npool
   USE wavefunctions, ONLY : evc
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE gvect, ONLY : ngm, g 
@@ -101,13 +102,13 @@ PROGRAM wfck2r
   ! ... Broadcast variables
   !
 
-  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
-  CALL mp_bcast( prefix, ionode_id, world_comm )
-  CALL mp_bcast( first_k, ionode_id, world_comm )
-  CALL mp_bcast( last_k, ionode_id, world_comm )
-  CALL mp_bcast( first_band, ionode_id, world_comm )
-  CALL mp_bcast( last_band, ionode_id, world_comm )
-  CALL mp_bcast( loctave, ionode_id, world_comm )
+  CALL mp_bcast( tmp_dir, ionode_id, intra_image_comm )
+  CALL mp_bcast( prefix, ionode_id, intra_image_comm )
+  CALL mp_bcast( first_k, ionode_id, intra_image_comm )
+  CALL mp_bcast( last_k, ionode_id, intra_image_comm )
+  CALL mp_bcast( first_band, ionode_id, intra_image_comm )
+  CALL mp_bcast( last_band, ionode_id, intra_image_comm )
+  CALL mp_bcast( loctave, ionode_id, intra_image_comm )
 
   !
   !   Now allocate space for pwscf variables, read and check them.

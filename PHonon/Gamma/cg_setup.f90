@@ -16,7 +16,6 @@ SUBROUTINE cg_setup
   USE scf,        ONLY: rho, rho_core, v, vltot, vrs, kedtau
   USE uspp,       ONLY: vkb, nlcc_any
   USE uspp_param, ONLY: upf
-  USE mp_global,  ONLY: kunit
   USE wavefunctions,  ONLY: evc
   USE io_files,   ONLY: prefix, iunpun, iunres, diropn
   USE funct,      ONLY: dft_is_gradient, dmxc
@@ -36,8 +35,8 @@ SUBROUTINE cg_setup
   INTEGER :: i, l, nt, ik
   LOGICAL :: exst
   CHARACTER (len=256) :: filint
-  REAL(DP) :: rhotot, sgn
-  INTEGER       :: ndr, kunittmp, ierr
+  REAL(DP) :: rhotot
+  INTEGER       :: ndr, ierr
   REAL(DP) :: edum(1,1), wdum(1,1)
   !
   CALL start_clock('cg_setup')
@@ -84,12 +83,11 @@ SUBROUTINE cg_setup
   !
   CALL newd
   !
-  !  derivative of the xc potential
+  !  derivative of the xc potential - NOT IMPLEMENTED FOR LSDA
   !
-  sgn = DBLE(2*MOD(current_spin,2)-1)
   dmuxc(:) = 0.d0
   DO i = 1,dfftp%nnr
-     rhotot = ( rho%of_r(i,1) + sgn*rho%of_r(i,nspin) )*0.5d0 + rho_core(i)
+     rhotot = rho%of_r(i,1) + rho_core(i)
      IF ( rhotot> 1.d-30 ) dmuxc(i)= dmxc( rhotot)
      IF ( rhotot<-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)
   ENDDO

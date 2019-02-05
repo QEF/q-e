@@ -2897,9 +2897,9 @@ subroutine nlc (rho_valence, rho_core, nspin, enl, vnl, v)
 
   elseif (inlc == 3) then
       if(imeta == 0) then
-        call xc_rVV10 (rho_valence, rho_core, nspin, enl, vnl, v)
+        call xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v)
       else
-        call xc_rVV10 (rho_valence, rho_core, nspin, enl, vnl, v, 15.7_dp)
+        call xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v, 15.7_dp)
       endif
   else
      enl = 0.0_DP

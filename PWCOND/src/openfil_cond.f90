@@ -19,7 +19,6 @@ SUBROUTINE openfil_cond()
                                nwordwfc, nwordatwfc, iunefield, &
                                iunefieldm, iunefieldp
   USE noncollin_module, ONLY : npol
-  USE mp_global,        ONLY : kunit
   USE buffers,          ONLY : open_buffer
   USE control_flags,    ONLY : io_level
   !

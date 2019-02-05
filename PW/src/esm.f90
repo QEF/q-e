@@ -489,7 +489,7 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
   USE gvect,            ONLY : ngm, mill
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   USE fft_scalar,       ONLY : cft_1z
@@ -697,7 +697,7 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
   USE gvect,            ONLY : ngm, mill
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   USE fft_scalar,       ONLY : cft_1z
@@ -917,7 +917,7 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
   USE gvect,            ONLY : ngm, mill
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   USE fft_scalar,       ONLY : cft_1z
@@ -1127,7 +1127,7 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
   USE gvect,            ONLY : ngm, mill
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   USE fft_scalar,       ONLY : cft_1z
@@ -1463,7 +1463,7 @@ END SUBROUTINE esm_hartree_bc4
     use control_flags, only : gamma_only
     use fft_base,      only : dfftp
     use fft_scalar,    only : cft_1z
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
@@ -1757,7 +1757,7 @@ END SUBROUTINE esm_hartree_bc4
     use control_flags, only : gamma_only
     use fft_base,      only : dfftp
     use fft_scalar,    only : cft_1z
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
@@ -2100,7 +2100,7 @@ END SUBROUTINE esm_hartree_bc4
     use control_flags, only : gamma_only
     use fft_base,      only : dfftp
     use fft_scalar,    only : cft_1z
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
@@ -2493,7 +2493,7 @@ SUBROUTINE esm_ewaldr_pbc ( alpha_g, ewr )
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE control_flags,    ONLY : iverbosity
   USE mp,               ONLY : mp_rank, mp_size
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
 
   implicit none
   real(DP), intent(in)  :: alpha_g
@@ -2560,7 +2560,7 @@ SUBROUTINE esm_ewaldr_bc4 ( alpha_g, ewr )
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE control_flags,    ONLY : iverbosity
   USE mp,               ONLY : mp_rank, mp_size
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
 
   implicit none
   real(DP), intent(in)  :: alpha_g
@@ -3280,7 +3280,7 @@ END SUBROUTINE esm_ewaldg_bc4
     use ions_base,     only : zv, nat, tau, ityp
     use control_flags, only : gamma_only
     use gvect,         only : gstart
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
@@ -3419,7 +3419,7 @@ END SUBROUTINE esm_ewaldg_bc4
     use ions_base,     only : zv, nat, tau, ityp
     use control_flags, only : gamma_only
     use gvect,         only : gstart
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
@@ -3581,7 +3581,7 @@ END SUBROUTINE esm_ewaldg_bc4
     use ions_base,     only : zv, nat, tau, ityp
     use control_flags, only : gamma_only
     use gvect,         only : gstart
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
@@ -4465,7 +4465,7 @@ END SUBROUTINE esm_local_bc4
     use control_flags, only : gamma_only
     use fft_base,      only : dfftp
     use fft_scalar,    only : cft_1z
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
@@ -4722,7 +4722,7 @@ END SUBROUTINE esm_local_bc4
     use control_flags, only : gamma_only
     use fft_base,      only : dfftp
     use fft_scalar,    only : cft_1z
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
@@ -5007,7 +5007,7 @@ END SUBROUTINE esm_local_bc4
     use control_flags, only : gamma_only
     use fft_base,      only : dfftp
     use fft_scalar,    only : cft_1z
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
@@ -5335,7 +5335,7 @@ SUBROUTINE esm_force_ewr_pbc ( alpha_g, forceion )
   USE cell_base,        ONLY : alat, at, bg
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE mp,               ONLY : mp_rank, mp_size
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
 
   implicit none
   integer               :: na, nb, nr, nrm, ip, np
@@ -5399,7 +5399,7 @@ SUBROUTINE esm_force_ewr_bc4 ( alpha_g, forceion )
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE control_flags,    ONLY : iverbosity
   USE mp,               ONLY : mp_rank, mp_size
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
 
   implicit none
   integer               :: na, nb, nr, nrm, ipol, ip, np

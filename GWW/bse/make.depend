@@ -207,7 +207,6 @@ lanczos.o : bse_basic_structure.o
 lanczos.o : bse_wannier.o
 lanczos.o : contract_w_exc.o
 lanczos.o : exciton.o
-openfil_bse.o : ../../Modules/control_flags.o
 openfil_bse.o : ../../Modules/io_files.o
 openfil_bse.o : ../../Modules/ions_base.o
 openfil_bse.o : ../../Modules/noncol.o

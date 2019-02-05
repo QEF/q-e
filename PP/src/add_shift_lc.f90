@@ -15,8 +15,8 @@ SUBROUTINE add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   USE constants, ONLY : tpi
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE mp_global,  ONLY : intra_pool_comm
-  USE mp,         ONLY : mp_sum
+  USE mp_pools,  ONLY : intra_pool_comm
+  USE mp,        ONLY : mp_sum
 
   IMPLICIT NONE
   !

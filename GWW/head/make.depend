@@ -4,7 +4,6 @@ bcast_ph_input.o : ../../Modules/control_flags.o
 bcast_ph_input.o : ../../Modules/io_files.o
 bcast_ph_input.o : ../../Modules/io_global.o
 bcast_ph_input.o : ../../Modules/ions_base.o
-bcast_ph_input.o : ../../Modules/mp_global.o
 bcast_ph_input.o : ../../Modules/mp_world.o
 bcast_ph_input.o : ../../Modules/run_info.o
 bcast_ph_input.o : ../../Modules/wannier_gw.o
@@ -12,9 +11,7 @@ bcast_ph_input.o : ../../PHonon/PH/phcom.o
 bcast_ph_input.o : ../../PHonon/PH/ramanm.o
 bcast_ph_input.o : ../../UtilXlib/mp.o
 close_phq.o : ../../LR_Modules/lrcom.o
-close_phq.o : ../../Modules/control_flags.o
 close_phq.o : ../../Modules/io_global.o
-close_phq.o : ../../Modules/mp_global.o
 close_phq.o : ../../Modules/uspp.o
 close_phq.o : ../../Modules/wannier_gw.o
 close_phq.o : ../../PHonon/PH/phcom.o
@@ -50,7 +47,7 @@ openfilq.o : ../../Modules/fft_base.o
 openfilq.o : ../../Modules/io_files.o
 openfilq.o : ../../Modules/io_global.o
 openfilq.o : ../../Modules/kind.o
-openfilq.o : ../../Modules/mp_global.o
+openfilq.o : ../../Modules/mp_pools.o
 openfilq.o : ../../Modules/noncol.o
 openfilq.o : ../../Modules/uspp.o
 openfilq.o : ../../Modules/wannier_gw.o

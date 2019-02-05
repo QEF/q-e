@@ -10,7 +10,7 @@
   ! adapted from PH/dvqpsi_us_only (QE)
   !
   !----------------------------------------------------------------------
-  subroutine dvqpsi_us_only3( ik, uact, xxk )
+  subroutine dvqpsi_us_only3( ik, uact, xxkq )
   !----------------------------------------------------------------------
   !!
   !! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -41,11 +41,11 @@
   IMPLICIT NONE
   !
   INTEGER, INTENT(in) :: ik
-  !! Input: the k point
-  REAL(kind=DP), INTENT(in) :: xxk(3) 
-  !! input: the k point (cartesian coordinates)
-  COMPLEX(kind=DP), INTENT(in) :: uact (3 * nat)
-  !! input: the pattern of displacements
+  !! the k point
+  REAL(kind=DP), INTENT(in) :: xxkq(3) 
+  !! the k+q point (cartesian coordinates)
+  COMPLEX(kind=DP), INTENT(in) :: uact(3 * nat)
+  !! the pattern of displacements
   !
   ! Local variables
   !
@@ -84,10 +84,10 @@
   INTEGER ::  ijs
   !! Counter on combined is and js polarization
   !
-  REAL(DP), ALLOCATABLE :: deff(:,:,:)
+  REAL(kind=DP), ALLOCATABLE :: deff(:,:,:)
   !
-  COMPLEX(DP), ALLOCATABLE :: ps1(:,:), ps2(:,:,:), aux(:), deff_nc(:,:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: ps1_nc(:,:,:), ps2_nc(:,:,:,:)
+  COMPLEX(kind=DP), ALLOCATABLE :: ps1(:,:), ps2(:,:,:), aux(:), deff_nc(:,:,:,:)
+  COMPLEX(kind=DP), ALLOCATABLE :: ps1_nc(:,:,:), ps2_nc(:,:,:,:)
   !
   LOGICAL :: ok
   ! 
@@ -124,16 +124,14 @@
     ijkb0 = 0
     DO nt = 1, ntyp
       DO na = 1, nat
-        IF (ityp (na) .eq. nt) THEN
+        IF (ityp(na) .eq. nt) THEN
           mu = 3 * (na - 1)
           DO ih = 1, nh(nt)
             ikb = ijkb0 + ih
             DO jh = 1, nh(nt)
               jkb = ijkb0 + jh
               DO ipol = 1, 3
-                IF ( abs( uact(mu + 1) ) + &
-                    abs( uact(mu + 2) ) + &
-                    abs( uact(mu + 3) ) > eps12 ) THEN
+                IF ( abs( uact(mu+1) ) + abs( uact(mu+2) ) + abs( uact(mu+3) ) > eps12 ) THEN
                   IF (noncolin) THEN
                     ijs = 0
                     DO is = 1, npol
@@ -155,52 +153,52 @@
                         deff(ih,jh,na) * becp1(ik)%k(jkb,ibnd) * &
                         (0.d0,-1.d0) * uact(mu+ipol) * tpiba
                   ENDIF
-                  IF (okvan) THEN
-                    IF (noncolin) THEN
-                      ijs = 0
-                      DO is = 1, npol
-                        DO js = 1, npol
-                          ijs = ijs + 1
-                          ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
-                             int1_nc(ih,jh,ipol,na,ijs) * &
-                             becp1(ik)%nc(jkb,js,ibnd) * uact(mu+ipol)
-                        ENDDO
-                      ENDDO
-                    ELSE
-                      ps1(ikb,ibnd) = ps1(ikb, ibnd) + &
-                          int1(ih,jh,ipol,na,current_spin) * &
-                          becp1(ik)%k(jkb,ibnd) * uact(mu +ipol)
-                    ENDIF
-                  ENDIF
+!                  IF (okvan) THEN
+!                    IF (noncolin) THEN
+!                      ijs = 0
+!                      DO is = 1, npol
+!                        DO js = 1, npol
+!                          ijs = ijs + 1
+!                          ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
+!                             int1_nc(ih,jh,ipol,na,ijs) * &
+!                             becp1(ik)%nc(jkb,js,ibnd) * uact(mu+ipol)
+!                        ENDDO
+!                      ENDDO
+!                    ELSE
+!                      ps1(ikb,ibnd) = ps1(ikb, ibnd) + &
+!                          int1(ih,jh,ipol,na,current_spin) * &
+!                          becp1(ik)%k(jkb,ibnd) * uact(mu+ipol)
+!                    ENDIF
+!                  ENDIF ! okvan
                 ENDIF  ! uact>0
-                IF (okvan) THEN
-                  DO nb = 1, nat
-                    nu = 3 * (nb - 1)
-                    IF (noncolin) THEN
-                      IF (lspinorb) THEN
-                        ijs = 0
-                        DO is = 1, npol
-                          DO js = 1, npol
-                            ijs = ijs + 1
-                            ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
-                               int2_so(ih,jh,ipol,nb,na,ijs) * &
-                               becp1(ik)%nc(jkb,js,ibnd) * uact(nu+ipol)
-                          ENDDO
-                        ENDDO
-                      ELSE
-                        DO is = 1, npol
-                          ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
-                             int2(ih,jh,ipol,nb,na) * &
-                             becp1(ik)%nc(jkb,is,ibnd) * uact(nu+ipol)
-                        ENDDO
-                      ENDIF
-                    ELSE
-                      ps1(ikb,ibnd) = ps1(ikb,ibnd) + &
-                          int2(ih,jh,ipol,nb,na) * &
-                          becp1(ik)%k(jkb,ibnd) * uact(nu+ipol)
-                    ENDIF
-                  ENDDO
-                ENDIF  ! okvan
+!                IF (okvan) THEN
+!                  DO nb = 1, nat
+!                    nu = 3 * (nb - 1)
+!                    IF (noncolin) THEN
+!                      IF (lspinorb) THEN
+!                        ijs = 0
+!                        DO is = 1, npol
+!                          DO js = 1, npol
+!                            ijs = ijs + 1
+!                            ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
+!                               int2_so(ih,jh,ipol,nb,na,ijs) * &
+!                               becp1(ik)%nc(jkb,js,ibnd) * uact(nu+ipol)
+!                          ENDDO
+!                        ENDDO
+!                      ELSE
+!                        DO is = 1, npol
+!                          ps1_nc(ikb,is,ibnd) = ps1_nc(ikb,is,ibnd) + &
+!                             int2(ih,jh,ipol,nb,na) * &
+!                             becp1(ik)%nc(jkb,is,ibnd) * uact(nu+ipol)
+!                        ENDDO
+!                      ENDIF
+!                    ELSE
+!                      ps1(ikb,ibnd) = ps1(ikb,ibnd) + &
+!                          int2(ih,jh,ipol,nb,na) * &
+!                          becp1(ik)%k(jkb,ibnd) * uact(nu+ipol)
+!                    ENDIF
+!                  ENDDO
+!                ENDIF  ! okvan
               ENDDO ! ipol
             ENDDO ! jh
           ENDDO ! ih
@@ -241,7 +239,7 @@
         DO ig = 1, npwq
           igg = igkq(ig)
           !aux(ig) =  vkb(ig,ikb) * ( xk(ipol,ikq) + g(ipol,igg) )
-          aux(ig) = vkb(ig,ikb) * ( xxk(ipol) + g(ipol,igg) )
+          aux(ig) = vkb(ig,ikb) * ( xxkq(ipol) + g(ipol,igg) )
         ENDDO
         DO ibnd = lower_band, upper_band
           IF (noncolin) THEN

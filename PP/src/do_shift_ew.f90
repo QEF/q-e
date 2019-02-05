@@ -17,7 +17,7 @@ SUBROUTINE do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : tpi, e2
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_pools,  ONLY : intra_pool_comm
   USE mp, ONLY : mp_sum
   IMPLICIT NONE
   !

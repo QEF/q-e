@@ -26,7 +26,7 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   USE cell_base,         ONLY : tpiba2, omega
   USE noncollin_module,  ONLY : nspin_lsda, nspin_mag, nspin_gga
   USE funct,             ONLY : dft_is_gradient, dft_is_nonlocc
-  USE scf,               ONLY : rho, rho_core, rhoz_or_updw
+  USE scf,               ONLY : rho, rho_core
   USE uspp,              ONLY : nlcc_any
   USE control_flags,     ONLY : gamma_only
   USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
@@ -96,27 +96,11 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   ! NB: If nlcc=.true. we need to add here its contribution. 
   ! grho contains already the core charge
   !
-  if ( dft_is_gradient() ) then
-     !^
-     IF (nspin_lsda == 2) CALL rhoz_or_updw( rho, 'only_r', 'rhoz_updw' )
-     !
-     call dgradcorr &
-     (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-     dvscf, nspin_mag, nspin_gga, g, dvaux)
-     !
-     IF (nspin_lsda == 2) CALL rhoz_or_updw( rho, 'only_r', 'updw_rhoz' )
-     !^
-  endif     
+  if ( dft_is_gradient() ) call dgradcorr(dfftp, rho%of_r, grho, dvxc_rr, &
+                                dvxc_sr, dvxc_ss, dvxc_s, xq, dvscf, &
+                                nspin_mag, nspin_gga, g, dvaux) 
   !
-  if (dft_is_nonlocc()) then
-     !^
-     IF (nspin_lsda == 2) CALL rhoz_or_updw( rho, 'only_r', 'rhoz_updw' )
-     !
-     call dnonloccorr(rho%of_r, dvscf, xq, dvaux)
-     !
-     IF (nspin_lsda == 2) CALL rhoz_or_updw( rho, 'only_r', 'updw_rhoz' )
-     !^
-  endif
+  if ( dft_is_nonlocc() )  call dnonloccorr(rho%of_r, dvscf, xq, dvaux)
   !
   if (nlcc_any.and.add_nlcc) then
      rho%of_r(:, 1) = rho%of_r(:, 1) - rho_core (:)

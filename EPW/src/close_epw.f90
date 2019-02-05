@@ -104,9 +104,7 @@
     !!  Imported the noncolinear case implemented by xlzhang
     !!
     !----------------------------------------------------------------------
-    USE phcom,             ONLY : alphap, alphasum, alphasum_nc, &
-                                  becsum_nc, dmuxc, dpsi,&
-                                  drc, dpsi, dyn, evq, dvpsi,&
+    USE phcom,             ONLY : alphap, dmuxc, drc, dyn, evq, dvpsi, &
                                   int5, vlocq, int2_so, int5_so
     USE lrus,              ONLY : becp1, int3, int3_nc
     USE phus,              ONLY : int1, int1_nc, int2, int4, int4_nc
@@ -154,7 +152,6 @@
       IF(ASSOCIATED(igkq)) DEALLOCATE(igkq)
       !
       IF(ALLOCATED(dvpsi)) DEALLOCATE (dvpsi)    
-      IF(ALLOCATED(dpsi)) DEALLOCATE ( dpsi)    
       !
       IF(ALLOCATED(vlocq)) DEALLOCATE (vlocq)
       IF(ALLOCATED(dmuxc)) DEALLOCATE (dmuxc)
@@ -178,28 +175,25 @@
       IF(ALLOCATED(int1_nc)) DEALLOCATE(int1_nc)
       IF(ALLOCATED(int3_nc)) DEALLOCATE(int3_nc)
       IF(ALLOCATED(int4_nc)) DEALLOCATE(int4_nc)
-      IF(ALLOCATED(becsum_nc)) DEALLOCATE(becsum_nc)
-      IF(ALLOCATED(alphasum_nc)) DEALLOCATE(alphasum_nc)
       IF(ALLOCATED(int2_so)) DEALLOCATE(int2_so)
       IF(ALLOCATED(int5_so)) DEALLOCATE(int5_so)
-      IF(ALLOCATED(alphasum)) DEALLOCATE (alphasum)
       ! 
-      if(allocated(alphap)) then
-         do ik=1,nks
-            do ipol=1,3
-               call deallocate_bec_type ( alphap(ipol,ik) )
-            enddo
-         end do
-         deallocate (alphap)
-      endif
-      if(allocated(becp1))  then
-         do ik=1,size(becp1)
-            call deallocate_bec_type ( becp1(ik) )
-         end do
-         deallocate(becp1)
-      end if
-      call deallocate_bec_type ( becp )
-    
+      IF (allocated(alphap)) THEN
+        DO ik = 1, nks
+          DO ipol = 1, 3
+            CALL deallocate_bec_type( alphap(ipol,ik) )
+          ENDDO
+        ENDDO
+        DEALLOCATE(alphap)
+      ENDIF
+      IF (allocated(becp1)) THEN
+        DO ik = 1, size(becp1)
+          CALL deallocate_bec_type( becp1(ik) )
+        ENDDO
+        DEALLOCATE(becp1)
+      ENDIF
+      CALL deallocate_bec_type ( becp )
+      !
       IF(ALLOCATED(nbnd_occ))  DEALLOCATE(nbnd_occ)
       IF(ALLOCATED(m_loc))     DEALLOCATE(m_loc)
       !

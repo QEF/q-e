@@ -477,8 +477,8 @@ CONTAINS
   ! it is only non-zero for pseudopotentials with non-local core
   ! corrections.
 
-  rho_up    = rho_valence(:,1) + 0.5D0*rho_core(:)
-  rho_down  = rho_valence(:,2) + 0.5D0*rho_core(:)
+  rho_up    = ( rho_valence(:,1) + rho_valence(:,2) + rho_core(:) )*0.5D0
+  rho_down  = ( rho_valence(:,1) - rho_valence(:,2) + rho_core(:) )*0.5D0
   total_rho = rho_up + rho_down
 
 #if defined (__SPIN_BALANCED)
@@ -550,10 +550,11 @@ CONTAINS
   grid_cell_volume = omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
 
   do i_grid = 1, dfftp%nnr
-     vtxc = vtxc + e2 * grid_cell_volume * rho_valence(i_grid,1) * potential_up  (i_grid) &
-                 + e2 * grid_cell_volume * rho_valence(i_grid,2) * potential_down(i_grid)
+     vtxc = vtxc + e2 * grid_cell_volume * (rho_valence(i_grid,1) + &
+          rho_valence(i_grid,2)) * 0.5_dp * potential_up  (i_grid)  &
+                 + e2 * grid_cell_volume * (rho_valence(i_grid,1) - &
+          rho_valence(i_grid,2)) * 0.5_dp * potential_down(i_grid)
   end do
-
 
   deallocate( potential_up, potential_down, q0, grad_rho, grad_rho_up, &
               grad_rho_down, dq0_drho_up, dq0_drho_down, thetas, &
@@ -1543,7 +1544,7 @@ CONTAINS
 
   implicit none
 
-  real(dp), intent(IN)     :: rho_valence(:,:)       !
+  real(dp), intent(IN)     :: rho_valence(:)         !
   real(dp), intent(IN)     :: rho_core(:)            ! Input variables
   integer,  intent(IN)     :: nspin                  !
   real(dp), intent(inout)  :: sigma(3,3)             !
@@ -1597,11 +1598,11 @@ CONTAINS
   ! --------------------------------------------------------------------
   ! Charge
 
-  total_rho = rho_valence(:,1) + rho_core(:)
+  total_rho = rho_valence(:) + rho_core(:)
 #if defined (__SPIN_BALANCED)
-  if ( nspin == 2 ) then
-     total_rho = rho_valence(:,2) + total_rho(:)
-  end if
+  !if ( nspin == 2 ) then
+  !   total_rho = rho_valence(:,2) + total_rho(:)
+  !end if
 #endif
 
 

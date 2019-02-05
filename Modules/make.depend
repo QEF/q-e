@@ -161,6 +161,7 @@ kernel_table.o : io_files.o
 kernel_table.o : kind.o
 kernel_table.o : wrappers.o
 latgen.o : constants.o
+latgen.o : io_global.o
 latgen.o : kind.o
 linpack.o : kind.o
 lsda_functionals.o : constants.o
@@ -227,7 +228,7 @@ pseudo_types.o : kind.o
 pseudo_types.o : radial_grids.o
 pw_dot.o : ../UtilXlib/mp.o
 pw_dot.o : kind.o
-pw_dot.o : mp_global.o
+pw_dot.o : mp_pools.o
 pw_dot.o : recvec.o
 qeh5_module.o : kind.o
 qes_libs.o : kind.o
@@ -265,7 +266,7 @@ qmmm.o : input_parameters.o
 qmmm.o : io_global.o
 qmmm.o : ions_base.o
 qmmm.o : kind.o
-qmmm.o : mp_global.o
+qmmm.o : mp_pools.o
 qmmm.o : mp_world.o
 radial_gradients.o : kind.o
 radial_grids.o : constants.o

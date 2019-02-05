@@ -34,9 +34,9 @@
   filqf       = 'pathq.dat'
   filkf       = 'path.dat'
 
-  nk1         = 6
-  nk2         = 6
-  nk3         = 6
+  nk1         = 3
+  nk2         = 3
+  nk3         = 3
   nq1         = 3
   nq2         = 3
   nq3         = 3

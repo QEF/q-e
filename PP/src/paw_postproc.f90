@@ -21,7 +21,6 @@ SUBROUTINE PAW_make_ae_charge(rho,withcore)
    USE uspp_param,        ONLY : nh, nhm, upf
    USE scf,               ONLY : scf_type
    USE fft_base,          ONLY : dfftp
-   USE mp_global,         ONLY : me_pool
    USE splinelib,         ONLY : spline, splint
    USE cell_base,         ONLY : at, bg, alat
 
@@ -36,7 +35,7 @@ SUBROUTINE PAW_make_ae_charge(rho,withcore)
    INTEGER                 :: ia
    REAL(DP),ALLOCATABLE    :: wsp_lm(:,:,:), ylm_posi(:,:), d1y(:), d2y(:)
    REAL(DP),ALLOCATABLE    :: rho_lm(:,:,:), rho_lm_ae(:,:,:), rho_lm_ps(:,:,:)
-   REAL(DP)                :: posi(3), first, second
+   REAL(DP)                :: posi(3), first, second, rhoup, rhodw
    REAL(DP)                :: inv_nr1, inv_nr2, inv_nr3, distsq
 
    ! Some initialization
@@ -148,14 +147,30 @@ SUBROUTINE PAW_make_ae_charge(rho,withcore)
             !
             ! prepare spherical harmonics
             CALL ylmr2( i%l**2, 1, posi, distsq, ylm_posi )
-            DO is = 1,nspin
+            IF ( nspin/=2 ) THEN
+               DO is = 1,nspin
+                  DO lm = 1, i%l**2
+                     ! do interpolation - distsq depends upon ir
+                     rho%of_r(ir,is)= rho%of_r(ir,is) + ylm_posi(1,lm) &
+                          * splint(g(i%t)%r(:) , rho_lm(:,lm,is), &
+                          wsp_lm(:,lm,is), sqrt(distsq) )
+                  ENDDO
+               ENDDO
+            ELSE
                DO lm = 1, i%l**2
                   ! do interpolation
-                  rho%of_r(ir,is)= rho%of_r(ir,is) + ylm_posi(1,lm) &
-                       * splint(g(i%t)%r(:) , rho_lm(:,lm,is), &
+                  is = 1
+                  rhoup = splint(g(i%t)%r(:) , rho_lm(:,lm,is), &
                        wsp_lm(:,lm,is), sqrt(distsq) )
+                  is = 2
+                  rhodw = splint(g(i%t)%r(:) , rho_lm(:,lm,is), &
+                       wsp_lm(:,lm,is), sqrt(distsq) )
+                  rho%of_r(ir,1)= rho%of_r(ir,1) + ylm_posi(1,lm) * &
+                       (rhoup + rhodw)
+                  rho%of_r(ir,2)= rho%of_r(ir,2) + ylm_posi(1,lm) * &
+                       (rhoup - rhodw)
                ENDDO
-            ENDDO
+            ENDIF
          ENDDO rsp_point
          !
          DEALLOCATE(rho_lm, ylm_posi, wsp_lm)

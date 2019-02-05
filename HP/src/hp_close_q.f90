@@ -15,7 +15,6 @@ SUBROUTINE hp_close_q ( flag )
   ! or during execution with flag=.FALSE. (does not remove 'recover')
   !
   USE buffers,        ONLY : close_buffer
-  USE control_flags,  ONLY : twfcollect
   USE units_lr,       ONLY : iuwfc, iuatswfc
   USE ldaU_hp,        ONLY : iudwfc, iudvwfc
   !
@@ -24,11 +23,7 @@ SUBROUTINE hp_close_q ( flag )
   LOGICAL, INTENT(IN) :: flag
   LOGICAL :: opnd
   !
-  IF ( twfcollect ) THEN
-     CALL close_buffer(iuwfc,'delete')
-  ELSE
-     CALL close_buffer(iuwfc,'keep')
-  ENDIF
+  CALL close_buffer(iuwfc,'delete')
   !
   IF (flag) THEN
      CALL close_buffer(iudwfc,'delete')

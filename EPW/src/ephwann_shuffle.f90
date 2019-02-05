@@ -372,6 +372,12 @@
   ENDIF
   !
   ALLOCATE( w2( 3*nat) )
+  ! 
+  IF (lpolar) THEN
+    WRITE(stdout, '(/,5x,a)' ) 'Computes the analytic long-range interaction for polar materials [lpolar]'
+    WRITE(stdout, '(5x,a)' )   ' '
+  ENDIF
+
   !
   ! Determine Wigner-Seitz points
   ! 
@@ -889,32 +895,46 @@
   ENDIF
   ! 
   totq = 0
-  ! Check if the file has been pre-computed
-  IF (mpime == ionode_id) THEN
-    INQUIRE(FILE='selecq.fmt',EXIST=exst)
-  ENDIF
-  CALL mp_bcast(exst, ionode_id, world_comm)
-  ! 
-  IF (exst) THEN
-    IF (selecqread) THEN
-      WRITE(stdout,'(5x,a)')' '
-      WRITE(stdout,'(5x,a)')'Reading selecq.fmt file. '
-      CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
-    ELSE 
-      WRITE(stdout,'(5x,a)')' '
-      WRITE(stdout,'(5x,a)')'A selecq.fmt file was found but re-created because selecqread == .false. '
-      CALL qwindow(.FALSE., nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
+  !  
+  ! Check if we are doing Superconductivity
+  ! If Eliashberg, then do not use fewer q-points within the fsthick window. 
+  IF (ephwrite) THEN
+    ! 
+    totq = nqf
+    ALLOCATE( selecq(nqf) )
+    DO iq=1,nqf
+      selecq(iq) = iq
+    ENDDO
+    !
+  ELSE ! ephwrite
+    ! Check if the file has been pre-computed
+    IF (mpime == ionode_id) THEN
+      INQUIRE(FILE='selecq.fmt',EXIST=exst)
     ENDIF
-  ELSE ! exst
-    IF (selecqread) THEN
-      CALL errore( 'ephwann_shuffle', 'Variable selecqread == .true. but file selecq.fmt not found.',1 ) 
-    ELSE
-      CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
+    CALL mp_bcast(exst, ionode_id, world_comm)
+    ! 
+    IF (exst) THEN
+      IF (selecqread) THEN
+        WRITE(stdout,'(5x,a)')' '
+        WRITE(stdout,'(5x,a)')'Reading selecq.fmt file. '
+        CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
+      ELSE 
+        WRITE(stdout,'(5x,a)')' '
+        WRITE(stdout,'(5x,a)')'A selecq.fmt file was found but re-created because selecqread == .false. '
+        CALL qwindow(.FALSE., nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
+      ENDIF
+    ELSE ! exst
+      IF (selecqread) THEN
+        CALL errore( 'ephwann_shuffle', 'Variable selecqread == .true. but file selecq.fmt not found.',1 ) 
+      ELSE
+        CALL qwindow(exst, nrr_k, dims, totq, selecq, irvec_r, ndegen_k, cufkk, cufkq, homogeneous)
+      ENDIF
     ENDIF
-  ENDIF
-  ! 
-  WRITE(stdout,'(5x,a,i8,a)')'We only need to compute ',totq, ' q-points'
-  WRITE(stdout,'(5x,a)')' '
+    ! 
+    WRITE(stdout,'(5x,a,i8,a)')'We only need to compute ',totq, ' q-points'
+    WRITE(stdout,'(5x,a)')' '
+    ! 
+  ENDIF ! ephwrite
   ! 
   ! -----------------------------------------------------------------------
   ! Possible restart during step 1) 
@@ -1357,10 +1377,18 @@
             IF (.NOT. int_mob .AND. carrier) THEN
               ! SP: Determination of the Fermi level for intrinsic or doped carrier 
               ! 
-              ef0(itemp) = fermicarrier( etemp )               
-              WRITE(stdout, '(5x,"Mobility Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev
-              ! We only compute 1 Fermi level so we do not need the other
-              efcb(itemp) = 0
+              ! VB only
+              IF ( ncarrier < 0.0 ) THEN
+                ef0(itemp) = fermicarrier( etemp )               
+                WRITE(stdout, '(5x,"Mobility VB Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev
+                ! We only compute 1 Fermi level so we do not need the other
+                efcb(itemp) = 0
+              ELSE ! CB 
+                efcb(itemp) = fermicarrier( etemp )               
+                WRITE(stdout, '(5x,"Mobility CB Fermi level ",f10.6," eV")' )  efcb(itemp) * ryd2ev
+                ! We only compute 1 Fermi level so we do not need the other
+                ef0(itemp) = 0
+              ENDIF
               ! 
             ENDIF
             ! 

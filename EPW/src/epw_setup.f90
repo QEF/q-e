@@ -126,7 +126,7 @@
   ! 3.1) Setup all gradient correction stuff
   !
   CALL setup_dgc
-  !
+  !  
   ! 4) Computes the inverse of each matrix of the crystal symmetry group
   !
   CALL inverse_s()

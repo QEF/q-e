@@ -18,7 +18,7 @@ SUBROUTINE lanczos (a,b,npw,psi,ncalcv,terminator)
                        xemax,&
                        xgamma,&
                        xerror
-  USE mp_global, ONLY: intra_pool_comm  
+  USE mp_pools,  ONLY: intra_pool_comm  
   USE mp,        ONLY: mp_sum
   USE io_global, ONLY: stdout
 
@@ -218,7 +218,7 @@ SUBROUTINE lanczos_uspp (a,b,npw,psi,ncalcv,terminator)
                        xemax,&
                        xgamma,&
                        xerror
-  USE mp_global, ONLY: intra_pool_comm
+  USE mp_pools,  ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
   USE io_global, ONLY: stdout
 
