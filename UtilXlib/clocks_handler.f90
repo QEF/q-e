@@ -145,7 +145,6 @@ SUBROUTINE start_clock( label )
 #endif
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
                         t0cpu, t0wall, f_wall, f_tcpu
-  USE nvtx_fft
   !
   IMPLICIT NONE
   !
@@ -180,8 +179,6 @@ SUBROUTINE start_clock( label )
         ELSE
            t0cpu(n) = f_tcpu()
            t0wall(n)= f_wall()
-
-           call nvtxStartRange(label_, n)
         ENDIF
         !
         RETURN
@@ -219,7 +216,6 @@ SUBROUTINE stop_clock( label )
 #endif
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
                         notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
-  USE nvtx_fft
   !
   IMPLICIT NONE
   !
@@ -259,8 +255,6 @@ SUBROUTINE stop_clock( label )
            t0cpu(n)     = notrunning
            t0wall(n)    = notrunning
            called(n)    = called(n) + 1
-
-           call nvtxEndRange
            !
         ENDIF
         !

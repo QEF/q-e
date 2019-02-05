@@ -32,8 +32,7 @@ fft_types.o \
 tg_gather.o \
 fft_helper_subroutines.o \
 fft_param.o \
-fft_buffers.o \
-nvtx.o
+fft_buffers.o 
 
 
 all : libqefft.a
