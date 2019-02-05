@@ -31,8 +31,9 @@ SUBROUTINE read_file()
   USE klist,                ONLY : init_igk
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
-  !
+  USE qes_types_module,     ONLY : output_type
   IMPLICIT NONE 
+  TYPE ( output_type) :: output_obj 
   INTEGER :: ierr
   LOGICAL :: exst
   CHARACTER( LEN=256 )  :: dirname
@@ -62,7 +63,10 @@ SUBROUTINE read_file()
   !
   CALL init_igk ( npwx, ngm, g, gcutw ) 
   !
-  CALL read_collected_to_evc ( TRIM ( dirname )) 
+  ! ... FIXME: this should be taken out from here
+  !
+  IF (output_obj%band_structure%wf_collected) &
+       CALL read_collected_to_evc(dirname) 
   !
   ! ... Assorted initialization: pseudopotentials, PAW
   ! ... Not sure which ones (if any) should be done here
