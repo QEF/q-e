@@ -366,13 +366,15 @@ PROGRAM fermisurface
   USE mp_global,  ONLY : mp_startup
   USE environment,ONLY : environment_start, environment_end
   !
+  LOGICAL :: dummy
+  !
   ! initialise environment
   !
   CALL mp_startup ( )
   CALL environment_start ( 'FERMI' )
   !
   CALL read_input_fs ( )
-  CALL read_xml_file ( )
+  CALL read_xml_file ( dummy )
   CALL fill_fs_grid ( )
   IF ( ionode ) CALL write_xcrysden_fs ( )
   !
