@@ -63,6 +63,7 @@ gen_us_dy.o : pwcom_gpu.o
 h_psi.o : pwcom_gpu.o
 h_psi.o : scf_mod_gpu.o
 h_psi_gpu.o : bp_mod.o
+h_psi_gpu.o : exx.o
 h_psi_gpu.o : exx_gpu.o
 h_psi_gpu.o : ldaU.o
 h_psi_gpu.o : pwcom.o
