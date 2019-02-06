@@ -172,8 +172,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
 #endif
-  IF ( PRESENT(wfc_is_collected) ) &
-     wfc_is_collected = output_obj%band_structure%wf_collected
+  wfc_is_collected = output_obj%band_structure%wf_collected
   ! ... first we get the version of the qexml file
   !     if not already read
   !
