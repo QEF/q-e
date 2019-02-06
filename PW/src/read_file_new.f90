@@ -147,7 +147,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
 #endif
   !
   IMPLICIT NONE
-  LOGICAL, INTENT(OUT), OPTIONAL :: wfc_is_collected
+  LOGICAL, INTENT(OUT) :: wfc_is_collected
 
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge

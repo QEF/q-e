@@ -50,7 +50,7 @@ SUBROUTINE extract (plot_files,plot_num)
        (/ '  ', '_X', '_Y', '_Z' /)
 
   INTEGER :: kpoint(2), kband(2), spin_component(3), ios
-  LOGICAL :: lsign, needwf
+  LOGICAL :: lsign, needwf, dummy
 
   REAL(DP) :: emin, emax, sample_bias, z, dz
   
@@ -148,7 +148,7 @@ SUBROUTINE extract (plot_files,plot_num)
      CALL read_file ( )
      CALL openfil_pp ( )
   ELSE
-     CALL read_xml_file ( )
+     CALL read_xml_file ( dummy )
   END IF
   !
   IF ( ( two_fermi_energies .or. i_cons /= 0) .and. &
