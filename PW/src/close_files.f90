@@ -29,9 +29,9 @@ SUBROUTINE close_files(lflag)
   !
   LOGICAL :: opnd
   !
-  !  ... close buffer/file containing wavefunctions: discard
+  !  ... close buffer/file containing wavefunctions
   !
-  IF ( lflag .AND. (io_level < 0) ) THEN
+  IF ( lflag .AND. (io_level <= 0) ) THEN
      CALL close_buffer ( iunwfc, 'DELETE' )
   ELSE
      CALL close_buffer ( iunwfc, 'KEEP' )
