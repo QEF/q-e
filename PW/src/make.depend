@@ -489,6 +489,7 @@ exx.o : ../../Modules/ions_base.o
 exx.o : ../../Modules/kind.o
 exx.o : ../../Modules/mp_bands.o
 exx.o : ../../Modules/mp_exx.o
+exx.o : ../../Modules/mp_orthopools.o
 exx.o : ../../Modules/mp_pools.o
 exx.o : ../../Modules/noncol.o
 exx.o : ../../Modules/paw_variables.o
@@ -539,6 +540,7 @@ exx_base.o : ../../Modules/io_global.o
 exx_base.o : ../../Modules/kind.o
 exx_base.o : ../../Modules/mp_exx.o
 exx_base.o : ../../Modules/mp_images.o
+exx_base.o : ../../Modules/mp_orthopools.o
 exx_base.o : ../../Modules/mp_pools.o
 exx_base.o : ../../Modules/noncol.o
 exx_base.o : ../../Modules/recvec.o
@@ -1550,9 +1552,14 @@ pw_restart_new.o : tetra.o
 pw_restart_new.o : xdm_dispersion.o
 pwcom.o : ../../Modules/kind.o
 pwcom.o : ../../Modules/parameters.o
+pwscf.o : ../../LAXlib/mp_diag.o
 pwscf.o : ../../Modules/command_line_options.o
 pwscf.o : ../../Modules/environment.o
+pwscf.o : ../../Modules/mp_bands.o
+pwscf.o : ../../Modules/mp_exx.o
 pwscf.o : ../../Modules/mp_global.o
+pwscf.o : ../../Modules/mp_pools.o
+pwscf.o : ../../Modules/mp_world.o
 pwscf.o : ../../Modules/read_input.o
 qvan2.o : ../../Modules/kind.o
 qvan2.o : ../../Modules/uspp.o

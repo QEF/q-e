@@ -39,7 +39,8 @@
       USE fft_base,       ONLY: dfftp, dffts
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: stdout, ionode, ionode_id
-      USE mp_global,      ONLY: intra_bgrp_comm, leg_ortho
+      USE mp_bands,       ONLY: intra_bgrp_comm
+      USE mp_diag,        ONLY: leg_ortho
       USE dener
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq, nlcc_any

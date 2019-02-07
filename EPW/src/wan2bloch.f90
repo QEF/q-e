@@ -1082,7 +1082,7 @@
     USE elph2,            ONLY : epmatwp
     USE constants_epw,    ONLY : twopi, ci, czero, cone
     USE io_epw,           ONLY : iunepmatwp, iunepmatwp2
-    USE mp_global,        ONLY : mp_sum
+    USE mp,               ONLY : mp_sum
     USE mp_world,         ONLY : world_comm
 #if defined(__MPI)
     USE parallel_include, ONLY : MPI_OFFSET_KIND, MPI_SEEK_SET, &
@@ -1588,7 +1588,7 @@
     USE kinds,            ONLY : DP
     USE constants_epw,    ONLY : twopi, ci, czero
     USE io_files,         ONLY : prefix, tmp_dir
-    USE mp_global,        ONLY : mp_sum
+    USE mp,               ONLY : mp_sum
     USE mp_world,         ONLY : world_comm
     USE io_global,        ONLY : stdout
     USE epwcom,           ONLY : use_ws
