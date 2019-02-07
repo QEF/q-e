@@ -1084,6 +1084,7 @@ phescf.o : ramanm.o
 phescf.o : write_hub.o
 phonon.o : ../../LAXlib/mp_diag.o
 phonon.o : ../../Modules/check_stop.o
+phonon.o : ../../Modules/command_line_options.o
 phonon.o : ../../Modules/environment.o
 phonon.o : ../../Modules/mp_bands.o
 phonon.o : ../../Modules/mp_global.o
@@ -1593,7 +1594,6 @@ solve_linter.o : write_rec.o
 stop_ph.o : ../../Modules/environment.o
 stop_ph.o : ../../Modules/kind.o
 stop_ph.o : ../../Modules/mp_global.o
-stop_ph.o : ../../Modules/mp_images.o
 stop_ph.o : ph_restart.o
 stop_ph.o : save_ph_input.o
 summarize.o : ../../LR_Modules/lrcom.o

@@ -489,7 +489,6 @@ exx.o : ../../Modules/ions_base.o
 exx.o : ../../Modules/kind.o
 exx.o : ../../Modules/mp_bands.o
 exx.o : ../../Modules/mp_exx.o
-exx.o : ../../Modules/mp_orthopools.o
 exx.o : ../../Modules/mp_pools.o
 exx.o : ../../Modules/noncol.o
 exx.o : ../../Modules/paw_variables.o
@@ -540,7 +539,6 @@ exx_base.o : ../../Modules/io_global.o
 exx_base.o : ../../Modules/kind.o
 exx_base.o : ../../Modules/mp_exx.o
 exx_base.o : ../../Modules/mp_images.o
-exx_base.o : ../../Modules/mp_orthopools.o
 exx_base.o : ../../Modules/mp_pools.o
 exx_base.o : ../../Modules/noncol.o
 exx_base.o : ../../Modules/recvec.o

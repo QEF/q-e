@@ -193,15 +193,11 @@ mp_global.o : command_line_options.o
 mp_global.o : mp_bands.o
 mp_global.o : mp_exx.o
 mp_global.o : mp_images.o
-mp_global.o : mp_orthopools.o
 mp_global.o : mp_pools.o
 mp_global.o : mp_world.o
 mp_images.o : ../UtilXlib/mp.o
 mp_images.o : ../UtilXlib/parallel_include.o
 mp_images.o : io_global.o
-mp_orthopools.o : ../UtilXlib/mp.o
-mp_orthopools.o : ../UtilXlib/parallel_include.o
-mp_orthopools.o : mp_pools.o
 mp_pools.o : ../UtilXlib/mp.o
 mp_pools.o : ../UtilXlib/parallel_include.o
 mp_wave.o : ../UtilXlib/parallel_include.o
