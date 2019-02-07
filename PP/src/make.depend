@@ -790,7 +790,6 @@ vasp_xml_module.o : ../../PW/src/Coul_cut_2D.o
 vasp_xml_module.o : ../../PW/src/esm.o
 vasp_xml_module.o : ../../PW/src/extfield.o
 vasp_xml_module.o : ../../PW/src/io_rho_xml.o
-vasp_xml_module.o : ../../PW/src/ldaU.o
 vasp_xml_module.o : ../../PW/src/paw_init.o
 vasp_xml_module.o : ../../PW/src/pw_restart_new.o
 vasp_xml_module.o : ../../PW/src/pwcom.o

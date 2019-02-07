@@ -22,7 +22,7 @@
   !
   USE kinds,     ONLY : DP
   USE mp,        ONLY : mp_barrier, mp_sum
-  USE mp_global, ONLY : my_pool_id, npool, inter_pool_comm
+  USE mp_pools,  ONLY : my_pool_id, npool, inter_pool_comm
   USE ions_base, ONLY : nat
   USE pwcom,     ONLY : nbnd, nks, nkstot
   USE gvect,     ONLY : ngm

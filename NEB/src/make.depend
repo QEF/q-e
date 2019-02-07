@@ -8,7 +8,7 @@ compute_scf.o : ../../Modules/io_files.o
 compute_scf.o : ../../Modules/io_global.o
 compute_scf.o : ../../Modules/ions_base.o
 compute_scf.o : ../../Modules/kind.o
-compute_scf.o : ../../Modules/mp_global.o
+compute_scf.o : ../../Modules/mp_images.o
 compute_scf.o : ../../Modules/mp_world.o
 compute_scf.o : ../../PW/src/atomic_wfc_mod.o
 compute_scf.o : ../../PW/src/pwcom.o
