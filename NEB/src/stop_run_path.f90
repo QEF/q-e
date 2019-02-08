@@ -41,6 +41,7 @@ SUBROUTINE stop_run_path( lflag )
   CALL path_deallocation()
   IF ( lfcpopt ) CALL fcp_opt_deallocation()
   !
+  CALL unset_mpi_comm_4_solvers()
   CALL mp_global_end()
   !
   IF ( .not. lflag ) THEN

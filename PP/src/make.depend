@@ -496,6 +496,7 @@ projwfc.o : ../../LAXlib/zhpev_drv.o
 projwfc.o : ../../Modules/atom.o
 projwfc.o : ../../Modules/becmod.o
 projwfc.o : ../../Modules/cell_base.o
+projwfc.o : ../../Modules/command_line_options.o
 projwfc.o : ../../Modules/constants.o
 projwfc.o : ../../Modules/control_flags.o
 projwfc.o : ../../Modules/environment.o
@@ -505,9 +506,11 @@ projwfc.o : ../../Modules/io_files.o
 projwfc.o : ../../Modules/io_global.o
 projwfc.o : ../../Modules/ions_base.o
 projwfc.o : ../../Modules/kind.o
+projwfc.o : ../../Modules/mp_bands.o
 projwfc.o : ../../Modules/mp_global.o
 projwfc.o : ../../Modules/mp_images.o
 projwfc.o : ../../Modules/mp_pools.o
+projwfc.o : ../../Modules/mp_world.o
 projwfc.o : ../../Modules/noncol.o
 projwfc.o : ../../Modules/parameters.o
 projwfc.o : ../../Modules/paw_variables.o
@@ -790,7 +793,6 @@ vasp_xml_module.o : ../../PW/src/Coul_cut_2D.o
 vasp_xml_module.o : ../../PW/src/esm.o
 vasp_xml_module.o : ../../PW/src/extfield.o
 vasp_xml_module.o : ../../PW/src/io_rho_xml.o
-vasp_xml_module.o : ../../PW/src/ldaU.o
 vasp_xml_module.o : ../../PW/src/paw_init.o
 vasp_xml_module.o : ../../PW/src/pw_restart_new.o
 vasp_xml_module.o : ../../PW/src/pwcom.o

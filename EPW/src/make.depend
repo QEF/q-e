@@ -170,7 +170,6 @@ elphon_shuffle.o : ../../Modules/fft_base.o
 elphon_shuffle.o : ../../Modules/ions_base.o
 elphon_shuffle.o : ../../Modules/kind.o
 elphon_shuffle.o : ../../Modules/mp_global.o
-elphon_shuffle.o : ../../Modules/mp_images.o
 elphon_shuffle.o : ../../Modules/noncol.o
 elphon_shuffle.o : ../../Modules/recvec.o
 elphon_shuffle.o : ../../Modules/uspp.o
@@ -533,6 +532,7 @@ pw2wan90epw.o : ../../Modules/io_global.o
 pw2wan90epw.o : ../../Modules/ions_base.o
 pw2wan90epw.o : ../../Modules/kind.o
 pw2wan90epw.o : ../../Modules/mp_global.o
+pw2wan90epw.o : ../../Modules/mp_pools.o
 pw2wan90epw.o : ../../Modules/mp_world.o
 pw2wan90epw.o : ../../Modules/noncol.o
 pw2wan90epw.o : ../../Modules/random_numbers.o
@@ -804,10 +804,10 @@ wan2bloch.o : ../../Modules/io_files.o
 wan2bloch.o : ../../Modules/io_global.o
 wan2bloch.o : ../../Modules/ions_base.o
 wan2bloch.o : ../../Modules/kind.o
-wan2bloch.o : ../../Modules/mp_global.o
 wan2bloch.o : ../../Modules/mp_world.o
 wan2bloch.o : ../../PHonon/PH/phcom.o
 wan2bloch.o : ../../PHonon/PH/rigid.o
+wan2bloch.o : ../../UtilXlib/mp.o
 wan2bloch.o : ../../UtilXlib/parallel_include.o
 wan2bloch.o : constants_epw.o
 wan2bloch.o : elph2.o

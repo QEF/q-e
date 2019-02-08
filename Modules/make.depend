@@ -187,7 +187,6 @@ mp_exx.o : ../UtilXlib/mp.o
 mp_exx.o : ../UtilXlib/parallel_include.o
 mp_exx.o : io_global.o
 mp_exx.o : mp_bands.o
-mp_global.o : ../LAXlib/mp_diag.o
 mp_global.o : ../UtilXlib/mp.o
 mp_global.o : ../UtilXlib/parallel_include.o
 mp_global.o : command_line_options.o
