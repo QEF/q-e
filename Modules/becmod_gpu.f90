@@ -12,7 +12,8 @@
 !=----------------------------------------------------------------------------=!
    MODULE becmod_gpum
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY :  DP
+     USE kinds,         ONLY : DP
+     USE control_flags, ONLY : iverbosity
 #if defined(__CUDA)
      USE cudafor
 #endif
@@ -87,7 +88,7 @@
                 END IF
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied becp%r D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied becp%r D->H"
                 becp%r = becp_d%r_d
              END IF
              ! ALWAYS update auxiliary variables
@@ -143,7 +144,7 @@
              IF ( allocated(becp_d%r_d) .and. (SIZE(becp_d%r_d)/=SIZE(becp%r))) deallocate(becp_d%r_d)
              IF (.not. allocated(becp_d%r_d)) ALLOCATE(becp_d%r_d(DIMS2D(becp%r)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied becp%r H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied becp%r H->D"
                 becp_d%r_d = becp%r
              END IF
              ! ALWAYS update auxiliary variables
@@ -192,7 +193,7 @@
                 END IF
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied becp%k D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied becp%k D->H"
                 becp%k = becp_d%k_d
              END IF
              ! ALWAYS update auxiliary variables
@@ -248,7 +249,7 @@
              IF ( allocated(becp_d%k_d) .and. (SIZE(becp_d%k_d)/=SIZE(becp%k))) deallocate(becp_d%k_d)
              IF (.not. allocated(becp_d%k_d)) ALLOCATE(becp_d%k_d(DIMS2D(becp%k)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied becp%k H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied becp%k H->D"
                 becp_d%k_d = becp%k
              END IF
              ! ALWAYS update auxiliary variables
@@ -297,7 +298,7 @@
                 END IF
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied becp%nc D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied becp%nc D->H"
                 becp%nc = becp_d%nc_d
              END IF
              ! ALWAYS update auxiliary variables
@@ -353,7 +354,7 @@
              IF ( allocated(becp_d%nc_d) .and. (SIZE(becp_d%nc_d)/=SIZE(becp%nc))) deallocate(becp_d%nc_d)
              IF (.not. allocated(becp_d%nc_d)) ALLOCATE(becp_d%nc_d(DIMS3D(becp%nc)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied becp%nc H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied becp%nc H->D"
                 becp_d%nc_d = becp%nc
              END IF
              ! ALWAYS update auxiliary variables

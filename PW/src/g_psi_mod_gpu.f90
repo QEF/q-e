@@ -13,7 +13,8 @@
 !=----------------------------------------------------------------------------=!
    MODULE g_psi_mod_gpum
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY :  DP
+     USE kinds,         ONLY : DP
+     USE control_flags, ONLY : iverbosity
 #if defined(__CUDA)
      USE cudafor
 #endif
@@ -64,7 +65,7 @@
                 ! IF (intento_ > 0)    h_diag_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied h_diag D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied h_diag D->H"
                 h_diag = h_diag_d
              END IF
              h_diag_ood = .false.
@@ -99,7 +100,7 @@
              IF ( allocated(h_diag_d) .and. (SIZE(h_diag_d)/=SIZE(h_diag))) deallocate(h_diag_d)
              IF (.not. allocated(h_diag_d)) ALLOCATE(h_diag_d(DIMS2D(h_diag)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied h_diag H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied h_diag H->D"
                 h_diag_d = h_diag
              END IF
              h_diag_d_ood = .false.
@@ -140,7 +141,7 @@
                 ! IF (intento_ > 0)    s_diag_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied s_diag D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied s_diag D->H"
                 s_diag = s_diag_d
              END IF
              s_diag_ood = .false.
@@ -175,7 +176,7 @@
              IF ( allocated(s_diag_d) .and. (SIZE(s_diag_d)/=SIZE(s_diag))) deallocate(s_diag_d)
              IF (.not. allocated(s_diag_d)) ALLOCATE(s_diag_d(DIMS2D(s_diag)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied s_diag H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied s_diag H->D"
                 s_diag_d = s_diag
              END IF
              s_diag_d_ood = .false.

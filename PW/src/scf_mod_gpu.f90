@@ -13,7 +13,8 @@
 !=----------------------------------------------------------------------------=!
    MODULE scf_gpum
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY :  DP
+     USE kinds,         ONLY : DP
+     USE control_flags, ONLY : iverbosity
 #if defined(__CUDA)
      USE cudafor
 #endif
@@ -61,7 +62,7 @@
                 ! IF (intento_ > 0)    vrs_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied vrs D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied vrs D->H"
                 vrs = vrs_d
              END IF
              vrs_ood = .false.
@@ -96,7 +97,7 @@
              IF ( allocated(vrs_d) .and. (SIZE(vrs_d)/=SIZE(vrs))) deallocate(vrs_d)
              IF (.not. allocated(vrs_d)) ALLOCATE(vrs_d(DIMS2D(vrs)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied vrs H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied vrs H->D"
                 vrs_d = vrs
              END IF
              vrs_d_ood = .false.

@@ -13,7 +13,8 @@
 !=----------------------------------------------------------------------------=!
    MODULE wvfct_gpum
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY :  DP
+     USE kinds,         ONLY : DP
+     USE control_flags, ONLY : iverbosity
 #if defined(__CUDA)
      USE cudafor
 #endif
@@ -67,7 +68,7 @@
                 ! IF (intento_ > 0)    g2kin_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied g2kin D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied g2kin D->H"
                 g2kin = g2kin_d
              END IF
              g2kin_ood = .false.
@@ -102,7 +103,7 @@
              IF ( allocated(g2kin_d) .and. (SIZE(g2kin_d)/=SIZE(g2kin))) deallocate(g2kin_d)
              IF (.not. allocated(g2kin_d)) ALLOCATE(g2kin_d(DIMS1D(g2kin)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied g2kin H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied g2kin H->D"
                 g2kin_d = g2kin
              END IF
              g2kin_d_ood = .false.
@@ -143,7 +144,7 @@
                 ! IF (intento_ > 0)    et_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied et D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied et D->H"
                 et = et_d
              END IF
              et_ood = .false.
@@ -178,7 +179,7 @@
              IF ( allocated(et_d) .and. (SIZE(et_d)/=SIZE(et))) deallocate(et_d)
              IF (.not. allocated(et_d)) ALLOCATE(et_d(DIMS2D(et)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied et H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied et H->D"
                 et_d = et
              END IF
              et_d_ood = .false.
@@ -219,7 +220,7 @@
                 ! IF (intento_ > 0)    wg_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied wg D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied wg D->H"
                 wg = wg_d
              END IF
              wg_ood = .false.
@@ -254,7 +255,7 @@
              IF ( allocated(wg_d) .and. (SIZE(wg_d)/=SIZE(wg))) deallocate(wg_d)
              IF (.not. allocated(wg_d)) ALLOCATE(wg_d(DIMS2D(wg)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied wg H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied wg H->D"
                 wg_d = wg
              END IF
              wg_d_ood = .false.
@@ -290,7 +291,8 @@
 !=----------------------------------------------------------------------------=!
    MODULE us_gpum
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY :  DP
+     USE kinds,         ONLY : DP
+     USE control_flags, ONLY : iverbosity
 #if defined(__CUDA)
      USE cudafor
 #endif
@@ -347,7 +349,7 @@
                 ! IF (intento_ > 0)    qrad_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied qrad D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied qrad D->H"
                 qrad = qrad_d
              END IF
              qrad_ood = .false.
@@ -382,7 +384,7 @@
              IF ( allocated(qrad_d) .and. (SIZE(qrad_d)/=SIZE(qrad))) deallocate(qrad_d)
              IF (.not. allocated(qrad_d)) ALLOCATE(qrad_d(DIMS4D(qrad)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied qrad H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied qrad H->D"
                 qrad_d = qrad
              END IF
              qrad_d_ood = .false.
@@ -423,7 +425,7 @@
                 ! IF (intento_ > 0)    tab_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied tab D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied tab D->H"
                 tab = tab_d
              END IF
              tab_ood = .false.
@@ -458,7 +460,7 @@
              IF ( allocated(tab_d) .and. (SIZE(tab_d)/=SIZE(tab))) deallocate(tab_d)
              IF (.not. allocated(tab_d)) ALLOCATE(tab_d(DIMS3D(tab)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied tab H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied tab H->D"
                 tab_d = tab
              END IF
              tab_d_ood = .false.
@@ -499,7 +501,7 @@
                 ! IF (intento_ > 0)    tab_at_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied tab_at D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied tab_at D->H"
                 tab_at = tab_at_d
              END IF
              tab_at_ood = .false.
@@ -534,7 +536,7 @@
              IF ( allocated(tab_at_d) .and. (SIZE(tab_at_d)/=SIZE(tab_at))) deallocate(tab_at_d)
              IF (.not. allocated(tab_at_d)) ALLOCATE(tab_at_d(DIMS3D(tab_at)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied tab_at H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied tab_at H->D"
                 tab_at_d = tab_at
              END IF
              tab_at_d_ood = .false.
@@ -575,7 +577,7 @@
                 ! IF (intento_ > 0)    tab_d2y_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied tab_d2y D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied tab_d2y D->H"
                 tab_d2y = tab_d2y_d
              END IF
              tab_d2y_ood = .false.
@@ -610,7 +612,7 @@
              IF ( allocated(tab_d2y_d) .and. (SIZE(tab_d2y_d)/=SIZE(tab_d2y))) deallocate(tab_d2y_d)
              IF (.not. allocated(tab_d2y_d)) ALLOCATE(tab_d2y_d(DIMS3D(tab_d2y)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied tab_d2y H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied tab_d2y H->D"
                 tab_d2y_d = tab_d2y
              END IF
              tab_d2y_d_ood = .false.
@@ -648,7 +650,8 @@
 !=----------------------------------------------------------------------------=!
    MODULE spin_orb_gpum
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY :  DP
+     USE kinds,         ONLY : DP
+     USE control_flags, ONLY : iverbosity
 #if defined(__CUDA)
      USE cudafor
 #endif
@@ -696,7 +699,7 @@
                 ! IF (intento_ > 0)    fcoef_d_ood = .true.
              END IF
              IF (intento_ < 2) THEN
-                print *, "Really copied fcoef D->H"
+                IF ( iverbosity > 0 ) print *, "Really copied fcoef D->H"
                 fcoef = fcoef_d
              END IF
              fcoef_ood = .false.
@@ -731,7 +734,7 @@
              IF ( allocated(fcoef_d) .and. (SIZE(fcoef_d)/=SIZE(fcoef))) deallocate(fcoef_d)
              IF (.not. allocated(fcoef_d)) ALLOCATE(fcoef_d(DIMS5D(fcoef)))  ! MOLD does not work on all compilers
              IF (intento < 2) THEN
-                print *, "Really copied fcoef H->D"
+                IF ( iverbosity > 0 ) print *, "Really copied fcoef H->D"
                 fcoef_d = fcoef
              END IF
              fcoef_d_ood = .false.
