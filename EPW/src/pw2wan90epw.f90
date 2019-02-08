@@ -136,7 +136,7 @@
   USE cell_base, ONLY : at, bg, alat
   USE gvect,     ONLY : g, gg
   USE ions_base, ONLY : nat, tau, ityp, atm
-  USE mp,        ONLY : mp_bcast
+  USE mp,        ONLY : mp_bcast, mp_sum
   USE wvfct,     ONLY : nbnd, npwx
   USE wannierEPW, ONLY : num_nnmax, mp_grid, atcart, atsym, kpb, g_kpb, &
                          center_w, alpha_w, l_w, mr_w, r_w, zaxis,      &
@@ -146,7 +146,7 @@
                          spin_eig, spin_qaxis, zerophase
   USE noncollin_module, ONLY : noncolin
   USE constants_epw,    ONLY : bohr
-  USE mp_global,        ONLY : intra_pool_comm, mp_sum
+  USE mp_pools,         ONLY : intra_pool_comm
   USE epwcom,           ONLY : nbndskip
   USE w90_io,           ONLY : post_proc_flag
   ! 

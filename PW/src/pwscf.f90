@@ -36,8 +36,13 @@ PROGRAM pwscf
   !!
   USE environment,       ONLY : environment_start
   USE mp_global,         ONLY : mp_startup
+  USE mp_world,          ONLY : world_comm
+  USE mp_pools,          ONLY : intra_pool_comm
+  USE mp_bands,          ONLY : intra_bgrp_comm, inter_bgrp_comm
+  USE mp_diag,           ONLY : mp_start_diag
+  USE mp_exx,            ONLY : negrp
   USE read_input,        ONLY : read_input_file
-  USE command_line_options, ONLY: input_file_, command_line
+  USE command_line_options, ONLY: input_file_, command_line, ndiag_
   !
   IMPLICIT NONE
   CHARACTER(len=256) :: srvaddress
@@ -46,12 +51,28 @@ PROGRAM pwscf
   !! Get the address of the server 
   INTEGER :: exit_status
   !! Status at exit
-  LOGICAL :: use_images
+  LOGICAL :: use_images, do_diag_in_band_group = .true.
   !! true if running "manypw.x"
   LOGICAL, external :: matches
   !! checks if first string is contained in the second
   !
-  CALL mp_startup ( start_images=.true., diag_in_band_group = .true. )
+  CALL mp_startup ( start_images=.true.)
+  !
+  IF( negrp > 1 .OR. do_diag_in_band_group ) THEN
+     ! used to be the default : one diag group per bgrp
+     ! with strict hierarchy: POOL > BAND > DIAG
+     ! if using exx groups from mp_exx still use this diag method
+     CALL mp_start_diag ( ndiag_, world_comm, intra_bgrp_comm, &
+          do_distr_diag_inside_bgrp_ = .true. )
+  ELSE
+     ! new default: one diag group per pool ( individual k-point level )
+     ! with band group and diag group both being children of POOL comm
+     CALL mp_start_diag ( ndiag_, world_comm, intra_pool_comm, &
+          do_distr_diag_inside_bgrp_ = .false. )
+  END IF
+  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
+       inter_bgrp_comm )
+  !
   CALL environment_start ( 'PWSCF' )
   !
   ! ... Check if running standalone or in "driver" mode
