@@ -12,8 +12,7 @@ SUBROUTINE from_scratch( )
     USE control_flags,        ONLY : tranp, trane, iverbosity, tpre, tv0rd, &
                                      tfor, thdyn, &
                                      lwf, tprnfor, tortho, amprp, ampre,  &
-                                     tsde, ortho_eps, ortho_max, &
-                                     force_pairing
+                                     tsde, force_pairing
     USE ions_positions,       ONLY : taus, tau0, tausm, vels, velsm, fion, fionm
     USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, vel_srt
     USE ions_base,            ONLY : cdmi, nat, iforce
@@ -55,7 +54,7 @@ SUBROUTINE from_scratch( )
                                      sfac, eigr, taub, irb, eigrb, bec_bgrp, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
                                      vpot, ht0, edft, becdr_bgrp, dbec, drhor, drhog
-    USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm, inter_bgrp_comm, nbgrp, me_bgrp
+    USE mp_global,            ONLY : inter_bgrp_comm, nbgrp, me_bgrp
     USE mp,                   ONLY : mp_sum
     USE matrix_inversion
     !

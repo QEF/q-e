@@ -38,7 +38,7 @@ SUBROUTINE read_file()
   IMPLICIT NONE 
   TYPE ( output_type) :: output_obj 
   INTEGER :: ierr
-  LOGICAL :: exst
+  LOGICAL :: exst, wfc_is_collected
   CHARACTER( LEN=256 )  :: dirname
   !
   !
@@ -50,7 +50,7 @@ SUBROUTINE read_file()
   IF ( ionode ) WRITE( stdout, '(/,5x,A,/,5x,A)') &
      'Reading data from directory:', TRIM( dirname )
   !
-  CALL read_xml_file ( )
+  CALL read_xml_file ( wfc_is_collected )
   !
   ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
   ! ... have been written to tmp_dir, not to a different directory!
@@ -68,8 +68,7 @@ SUBROUTINE read_file()
   !
   ! ... FIXME: this should be taken out from here
   !
-  IF (output_obj%band_structure%wf_collected) &
-       CALL read_collected_to_evc(dirname) 
+  IF ( wfc_is_collected ) CALL read_collected_to_evc(dirname) 
   !
   ! ... Assorted initialization: pseudopotentials, PAW
   ! ... Not sure which ones (if any) should be done here
@@ -96,7 +95,7 @@ SUBROUTINE read_file()
 END SUBROUTINE read_file
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_xml_file ( )
+SUBROUTINE read_xml_file ( wfc_is_collected )
   !----------------------------------------------------------------------------
   !
   ! ... This routine allocates space for all quantities already computed
@@ -158,6 +157,7 @@ SUBROUTINE read_xml_file ( )
                                     using_eigts1_d, using_eigts2_d, using_eigts3_d
   !
   IMPLICIT NONE
+  LOGICAL, INTENT(OUT) :: wfc_is_collected
 
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
@@ -182,6 +182,7 @@ SUBROUTINE read_xml_file ( )
   CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
 #endif
+  wfc_is_collected = output_obj%band_structure%wf_collected
   ! ... first we get the version of the qexml file
   !     if not already read
   !

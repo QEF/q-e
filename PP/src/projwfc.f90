@@ -17,18 +17,22 @@ PROGRAM do_projwfc
   ! IMPORTANT: since v.5 namelist name is &projwfc and no longer &inputpp
   !
   USE parameters, ONLY : npk
-  USE io_global,  ONLY : stdout, ionode, ionode_id
   USE constants,  ONLY : rytoev
   USE kinds,      ONLY : DP
   USE klist,      ONLY : nks, nkstot, xk, degauss, ngauss, lgauss, ltetra
   USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir
   USE noncollin_module, ONLY : noncolin
-  USE mp,         ONLY : mp_bcast
-  USE spin_orb,   ONLY : lforcet
-  USE mp_global,  ONLY : mp_startup
-  USE mp_images,  ONLY : intra_image_comm
-  USE mp_diag,    ONLY : nproc_ortho
+  USE io_global,  ONLY : stdout, ionode, ionode_id
   USE environment,ONLY : environment_start, environment_end
+  USE mp,         ONLY : mp_bcast
+  USE mp_global,  ONLY : mp_startup
+  USE mp_world,   ONLY : world_comm
+  USE mp_images,  ONLY : intra_image_comm
+  USE mp_pools,   ONLY : intra_pool_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm, inter_bgrp_comm
+  USE mp_diag,    ONLY : mp_start_diag, nproc_ortho
+  USE command_line_options, ONLY : ndiag_
+  USE spin_orb,   ONLY : lforcet
   USE wvfct,      ONLY : et, nbnd
   USE basis,      ONLY : natomwfc
   USE paw_variables, ONLY : okpaw
@@ -60,9 +64,12 @@ PROGRAM do_projwfc
   !
   ! initialise environment
   !
-#if defined(__MPI)
   CALL mp_startup ( )
-#endif
+  CALL mp_start_diag ( ndiag_, world_comm, intra_bgrp_comm, &
+          do_distr_diag_inside_bgrp_ = .true. )
+  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
+       inter_bgrp_comm )
+  !
   CALL environment_start ( 'PROJWFC' )
   !
   !   set default values for variables in namelist
@@ -236,6 +243,7 @@ PROGRAM do_projwfc
      ENDIF
   ENDIF
   !
+  CALL unset_mpi_comm_4_solvers()
   CALL environment_end ( 'PROJWFC' )
   !
   CALL stop_pp
