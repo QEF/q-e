@@ -169,7 +169,7 @@ elphon_shuffle.o : ../../LR_Modules/lrcom.o
 elphon_shuffle.o : ../../Modules/fft_base.o
 elphon_shuffle.o : ../../Modules/ions_base.o
 elphon_shuffle.o : ../../Modules/kind.o
-elphon_shuffle.o : ../../Modules/mp_global.o
+elphon_shuffle.o : ../../Modules/mp_pools.o
 elphon_shuffle.o : ../../Modules/noncol.o
 elphon_shuffle.o : ../../Modules/recvec.o
 elphon_shuffle.o : ../../Modules/uspp.o

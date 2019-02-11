@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.3}
+\def\version{6.4}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -728,6 +728,13 @@ The HDF5 packages provided by many LINUX distributions may also work,
 but the configure script fails if includes and libraries are not placed
 under the same root directory. In this case the user should manually set
 the correct paths in the \texttt{make.inc} file.
+
+\paragraph{LIBXC}
+\qe\ can use \texttt{libxc} libraries. You need to compile \texttt{libxc}
+first. Then, look for "libxc" in \texttt{make.inc} and follow the 
+instructions. Note that currently only a (small) subset of functionals 
+implemented in \texttt{libxc} can be used and that the \libxc}-enabled 
+version cannot use functionals from \qe. This will change in the future.
 
 \paragraph{Other libraries}
 \qe\ can use the MASS vector math
