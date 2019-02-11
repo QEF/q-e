@@ -34,6 +34,7 @@ SUBROUTINE forces()
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, atm
   USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm, gstart, ngl, igtongl, g, gg, gcutm
+  USE gvect_gpum,    ONLY : g_d
   USE lsda_mod,      ONLY : nspin
   USE symme,         ONLY : symvector
   USE vlocal,        ONLY : strf, vloc
@@ -57,6 +58,8 @@ SUBROUTINE forces()
   USE tsvdw_module,  ONLY : FtsvdW
   USE esm,           ONLY : do_comp_esm, esm_bc, esm_force_ew
   USE qmmm,          ONLY : qmmm_mode
+  USE control_flags, ONLY : use_gpu
+  USE gbuffers,      ONLY : dev_buf
   !
   IMPLICIT NONE
   !
@@ -88,6 +91,14 @@ SUBROUTINE forces()
   INTEGER :: atnum(1:nat)
   REAL(DP) :: stress_dftd3(3,3)
   !
+  ! TODO: get rid of this !!!! Use standard method for duplicated global data
+  REAL(DP), POINTER :: vloc_d (:, :)
+  INTEGER, POINTER  :: igtongl_d(:)
+  INTEGER :: ierr
+#if defined(__CUDA)
+  attributes(DEVICE) :: vloc_d, igtongl_d
+#endif
+  !
   !
   CALL start_clock( 'forces' )
   !
@@ -100,13 +111,26 @@ SUBROUTINE forces()
   !
   ! ... The nonlocal contribution is computed here
   !
-  CALL force_us( forcenl )
+  IF (.not. use_gpu) CALL force_us( forcenl )
+  IF (      use_gpu) CALL force_us_gpu( forcenl )
   !
   ! ... The local contribution
   !
+  IF (.not. use_gpu) & ! On the CPU
   CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
                  g, rho%of_r(:,1), dfftp%nl, gstart, gamma_only, vloc, &
                  forcelc )
+  IF (      use_gpu) THEN ! On the GPU
+    ! move these data to the GPU
+    CALL dev_buf%lock_buffer(igtongl_d, ngm, ierr)
+    CALL dev_buf%lock_buffer(vloc_d, (/ ngl, ntyp /) , ierr)
+    igtongl_d = igtongl; vloc_d = vloc
+    CALL force_lc_gpu( nat, tau, ityp, alat, omega, ngm, ngl, igtongl_d, &
+                  g_d, rho%of_r(:,1), dfftp%nl_d, gstart, gamma_only, vloc_d, &
+                  forcelc )
+    CALL dev_buf%release_buffer(igtongl_d, ierr)
+    CALL dev_buf%release_buffer(vloc_d, ierr)
+  END IF
   !
   ! ... The NLCC contribution
   !
