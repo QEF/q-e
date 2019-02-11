@@ -472,6 +472,10 @@ to update files \texttt{make.depend} in the various subdirectories.\\
 NOTA BENE 2: \texttt{make.inc} used to be called \texttt{make.sys}
 until v.6.0. The change of name is due to frequent problems with mailers
 assuming that whatever ends in \texttt{.sys} is a suspect virus.
+NOTA BENE 3: if you interrupt \make\ and you start it again later, it
+may fail (this will happen for sure if iinterrupted while unpacking and 
+compiling the FoX library). If so, run \texttt{make clean} before
+running \make\ again.
 
 You should always be able to compile the \qe\ suite
 of programs without having to edit any of the generated files. However you
