@@ -279,8 +279,8 @@ SUBROUTINE rdiaghg_gpu( n, m, h_d, s_d, ldh, e_d, v_d )
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors
   !
-  CALL mp_bcast( e_d, root_bgrp, intra_bgrp_comm )
-  CALL mp_bcast( v_d, root_bgrp, intra_bgrp_comm )
+  CALL mp_bcast( e_d(1:n), root_bgrp, intra_bgrp_comm )
+  CALL mp_bcast( v_d(1:ldh, 1:m), root_bgrp, intra_bgrp_comm )
   !
   CALL stop_clock( 'rdiaghg_gpu' )
   !
