@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on 16Oct2018 at 14:26: 6 
+     Program EPW v.5.0.0 starts on  4Feb2019 at 17:28:16 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -57,9 +57,6 @@
      number of atomic types    =            0
      kinetic-energy cut-off    =       0.0000  Ry
      charge density cut-off    =       0.0000  Ry
-     convergence threshold     =      0.0E+00
-     beta                      =       0.0000
-     number of iterations used =            0
      Exchange-correlation      = not set (-1 -1 -1 -1-1-1)
 
 
@@ -119,7 +116,7 @@
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026126
+     IFC last   -0.0026114
      Norm of the difference between old and new effective charges:    0.0000000
      Norm of the difference between old and new force-constants:    0.0000020
      Imposed crystal ASR
@@ -131,7 +128,7 @@
 
      ===================================================================
      Memory usage:  VmHWM =        12Mb
-                   VmPeak =       273Mb
+                   VmPeak =       272Mb
      ===================================================================
      
      Using uniform q-mesh:    7   7   7
@@ -147,27 +144,31 @@
      Warning: check if difference with Fermi level fine grid makes sense
 
      ===================================================================
+     Applying a scissor shift of   0.70000 eV to the conduction states
 
               ibndmin =     2  ebndmin =     0.189
-              ibndmax =     8  ebndmax =     0.760
+              ibndmax =     7  ebndmax =     0.757
 
 
-     Number of ep-matrix elements per pool :       100842 ~=  787.83 Kb (@ 8 bytes/ DP)
-     Number of elements per core      12956
+     Number of ep-matrix elements per pool :        74088 ~=  578.81 Kb (@ 8 bytes/ DP)
+     Number of elements per core      12954
      Average over degenerate eigenstates is performed
 
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
+     =======================================================================
+       Temp     Fermi   Hole density  Population SR      Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
+     =======================================================================
 
-      400.000      6.8619       0.999997E+13       0.465971E-02  x-axis
-                                                   0.568930E-02  y-axis
-                                                   0.878282E-02  z-axis
-                                                   0.637728E-02     avg
-      500.000      7.0136       0.100000E+14       0.267397E-01  x-axis
-                                                   0.328128E-01  y-axis
-                                                   0.498193E-01  z-axis
-                                                   0.364573E-01     avg
+      400.000   6.8619   0.10000E+14  -0.10477E-02    0.645429E-02    x-axis
+                                                      0.604609E-02    y-axis
+                                                      0.640811E-02    z-axis
+                                                      0.630283E-02       avg
+                                                      0.123986E-02  off-diag
+      500.000   7.0136   0.10000E+14  -0.85381E-03    0.369117E-01    x-axis
+                                                      0.345039E-01    y-axis
+                                                      0.366393E-01    z-axis
+                                                      0.360183E-01       avg
+                                                      0.689981E-02  off-diag
       
      ===================================================================
      Start solving iterative Boltzmann Transport Equation
@@ -177,74 +178,86 @@
      Iteration number:         1 
 
 
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
+     =======================================================================
+       Temp     Fermi   Hole density  Population SR      Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
+     =======================================================================
 
-      400.000      6.8619       0.999997E+13       0.508748E-02  x-axis
-                                                   0.677962E-02  y-axis
-                                                   0.912891E-02  z-axis
-                                                   0.699867E-02     avg
-      500.000      7.0136       0.100000E+14       0.292498E-01  x-axis
-                                                   0.391414E-01  y-axis
-                                                   0.522029E-01  z-axis
-                                                   0.401980E-01     avg
+      400.000   6.8619   0.10000E+14  -0.36873E-02    0.712541E-02    x-axis
+                                                      0.645458E-02    y-axis
+                                                      0.704945E-02    z-axis
+                                                      0.687648E-02       avg
+                                                      0.112611E-02  off-diag
+      500.000   7.0136   0.10000E+14  -0.30259E-02    0.409393E-01    x-axis
+                                                      0.370176E-01    y-axis
+                                                      0.404953E-01    z-axis
+                                                      0.394841E-01       avg
+                                                      0.635892E-02  off-diag
 
-                                                   0.401980E-01     Err
+                                                   0.394841E-01     Err
 
      Iteration number:         2 
 
 
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
+     =======================================================================
+       Temp     Fermi   Hole density  Population SR      Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
+     =======================================================================
 
-      400.000      6.8619       0.999997E+13       0.517573E-02  x-axis
-                                                   0.702124E-02  y-axis
-                                                   0.933232E-02  z-axis
-                                                   0.717643E-02     avg
-      500.000      7.0136       0.100000E+14       0.297767E-01  x-axis
-                                                   0.405594E-01  y-axis
-                                                   0.535011E-01  z-axis
-                                                   0.412791E-01     avg
+      400.000   6.8619   0.10000E+14  -0.63873E-02    0.731226E-02    x-axis
+                                                      0.658337E-02    y-axis
+                                                      0.722937E-02    z-axis
+                                                      0.704167E-02       avg
+                                                      0.114523E-02  off-diag
+      500.000   7.0136   0.10000E+14  -0.52318E-02    0.420729E-01    x-axis
+                                                      0.378142E-01    y-axis
+                                                      0.415886E-01    z-axis
+                                                      0.404919E-01       avg
+                                                      0.650415E-02  off-diag
 
-                                                   0.108106E-02     Err
+                                                   0.100781E-02     Err
 
      Iteration number:         3 
 
 
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
+     =======================================================================
+       Temp     Fermi   Hole density  Population SR      Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
+     =======================================================================
 
-      400.000      6.8619       0.999997E+13       0.519435E-02  x-axis
-                                                   0.706249E-02  y-axis
-                                                   0.936655E-02  z-axis
-                                                   0.720779E-02     avg
-      500.000      7.0136       0.100000E+14       0.298890E-01  x-axis
-                                                   0.408072E-01  y-axis
-                                                   0.537310E-01  z-axis
-                                                   0.414757E-01     avg
+      400.000   6.8619   0.10000E+14  -0.94420E-02    0.734367E-02    x-axis
+                                                      0.660763E-02    y-axis
+                                                      0.725976E-02    z-axis
+                                                      0.707036E-02       avg
+                                                      0.114800E-02  off-diag
+      500.000   7.0136   0.10000E+14  -0.77442E-02    0.422701E-01    x-axis
+                                                      0.379682E-01    y-axis
+                                                      0.417797E-01    z-axis
+                                                      0.406727E-01       avg
+                                                      0.652873E-02  off-diag
 
-                                                   0.196654E-03     Err
+                                                   0.180780E-03     Err
 
      Iteration number:         4 
 
 
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
+     =======================================================================
+       Temp     Fermi   Hole density  Population SR      Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
+     =======================================================================
 
-      400.000      6.8619       0.999997E+13       0.519833E-02  x-axis
-                                                   0.707076E-02  y-axis
-                                                   0.938236E-02  z-axis
-                                                   0.721715E-02     avg
-      500.000      7.0136       0.100000E+14       0.299135E-01  x-axis
-                                                   0.408575E-01  y-axis
-                                                   0.538368E-01  z-axis
-                                                   0.415360E-01     avg
+      400.000   6.8619   0.10000E+14  -0.12410E-01    0.735295E-02    x-axis
+                                                      0.661568E-02    y-axis
+                                                      0.726883E-02    z-axis
+                                                      0.707915E-02       avg
+                                                      0.115151E-02  off-diag
+      500.000   7.0136   0.10000E+14  -0.10176E-01    0.423299E-01    x-axis
+                                                      0.380206E-01    y-axis
+                                                      0.418382E-01    z-axis
+                                                      0.407296E-01       avg
+                                                      0.655320E-02  off-diag
 
-                                                   0.602225E-04     Err
+                                                   0.569005E-04     Err
 
      Iteration number:         5 
 
@@ -261,13 +274,13 @@
 
 
      Electron-Phonon interpolation
-     ephwann      :      0.22s CPU      0.22s WALL (       1 calls)
+     ephwann      :      0.23s CPU      0.24s WALL (       1 calls)
 
-     HamW2B       :      0.01s CPU      0.01s WALL (     686 calls)
+     HamW2B       :      0.01s CPU      0.02s WALL (     686 calls)
 
 
      Total program execution
-     EPW          :      0.22s CPU      0.22s WALL
+     EPW          :      0.23s CPU      0.24s WALL
 
                                                                                           
  Please consider citing:                                                                  

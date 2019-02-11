@@ -63,7 +63,6 @@ PROGRAM X_Spectra
        cut_nmeml,&      ! size of the memory of the values of the green function, lower side
        cut_occ_states  ! true if you want tou remove occupied states from the spectrum
 
-  USE control_flags,   ONLY : twfcollect
   !<CG>
   USE gamma_variable_mod, ONLY : gamma_value, gamma_energy, &
                                  gamma_lines, gamma_tab, gamma_points, &
@@ -434,7 +433,6 @@ SUBROUTINE stop_xspectra
   !
   ! Synchronize processes before stopping. This is a copy of stop_pp.
   !
-  USE control_flags, ONLY: twfcollect
   USE io_files, ONLY: iunwfc
   USE mp_global, ONLY: mp_global_end
   !
@@ -445,13 +443,7 @@ SUBROUTINE stop_xspectra
 
   INQUIRE ( iunwfc, opened = op )
 
-  IF ( op ) THEN
-     IF (twfcollect) THEN
-        CLOSE (unit = iunwfc, status = 'delete')
-     ELSE
-        CLOSE (unit = iunwfc, status = 'keep')
-     ENDIF
-  ENDIF
+  IF ( op ) CLOSE (unit = iunwfc, status = 'delete')
 
   CALL mp_global_end()
 

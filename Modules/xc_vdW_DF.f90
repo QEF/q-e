@@ -550,10 +550,10 @@ CONTAINS
   grid_cell_volume = omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
 
   do i_grid = 1, dfftp%nnr
-     vtxc = vtxc + e2 * grid_cell_volume * (rho_valence(i_grid,1) + rho_valence(i_grid,2)) &
-                                                               * potential_up  (i_grid)    &
-                 + e2 * grid_cell_volume * (rho_valence(i_grid,1) - rho_valence(i_grid,2)) &
-                                                               * potential_down(i_grid)
+     vtxc = vtxc + e2 * grid_cell_volume * (rho_valence(i_grid,1) + &
+          rho_valence(i_grid,2)) * 0.5_dp * potential_up  (i_grid)  &
+                 + e2 * grid_cell_volume * (rho_valence(i_grid,1) - &
+          rho_valence(i_grid,2)) * 0.5_dp * potential_down(i_grid)
   end do
 
   deallocate( potential_up, potential_down, q0, grad_rho, grad_rho_up, &

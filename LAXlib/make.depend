@@ -9,6 +9,7 @@ dspev_drv.o : la_param.o
 dspev_drv.o : la_types.o
 export_gstart_2_solvers.o : ../UtilXlib/mp_bands_util.o
 la_error.o : la_param.o
+la_param.o : ../UtilXlib/parallel_include.o
 mp_diag.o : ../UtilXlib/mp.o
 mp_diag.o : ../UtilXlib/parallel_include.o
 ptoolkit.o : dspev_drv.o

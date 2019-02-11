@@ -36,7 +36,6 @@ SUBROUTINE allocate_buffers
     INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
     !
     IF (.NOT. ALLOCATED(mp_buff_r)) ALLOCATE(mp_buff_r(maxb))
-    IF (.NOT. ALLOCATED(mp_buff_c)) ALLOCATE(mp_buff_c(maxb))
     IF (.NOT. ALLOCATED(mp_buff_i)) ALLOCATE(mp_buff_i(maxb))
     !
 END SUBROUTINE allocate_buffers
@@ -45,7 +44,7 @@ SUBROUTINE deallocate_buffers
     USE data_buffer
     IMPLICIT NONE
     !
-    DEALLOCATE(mp_buff_r, mp_buff_c, mp_buff_i)
+    DEALLOCATE(mp_buff_r, mp_buff_i)
     !
 END SUBROUTINE deallocate_buffers
 

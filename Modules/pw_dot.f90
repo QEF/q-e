@@ -12,10 +12,10 @@ SUBROUTINE pw_dot(sum_over_nodes,n,m,a,lda,b,ldb,c)
   !  calculate m dot products c_i = real( a^*_ij b_ji )
   !  using half G vectors or half PWs
   !
-  USE kinds, ONLY: DP
-  USE gvect, ONLY: gstart
-  USE mp_global,  ONLY : intra_pool_comm
-  USE mp,         ONLY : mp_sum
+  USE kinds,    ONLY: DP
+  USE gvect,    ONLY: gstart
+  USE mp_pools, ONLY: intra_pool_comm
+  USE mp,       ONLY: mp_sum
   IMPLICIT NONE
   ! input
   INTEGER :: n, m, lda, ldb

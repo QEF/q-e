@@ -14,7 +14,7 @@ SUBROUTINE lr_run_nscf( )
   !
   ! Created by Iurii Timrov (2013)
   !
-  USE control_flags,   ONLY : conv_ions, twfcollect, restart
+  USE control_flags,   ONLY : conv_ions, restart
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
   USE io_global,       ONLY : stdout
@@ -75,7 +75,6 @@ SUBROUTINE lr_run_nscf( )
   !
   ! Save information for further processing
   !
-  twfcollect = .FALSE.
   CALL punch( 'all' ) 
   !
   CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )

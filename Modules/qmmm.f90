@@ -10,8 +10,8 @@ MODULE qmmm
   !==---------------------------------------------------------------------==!
   USE io_global,        ONLY : ionode, ionode_id, stdout
   USE mp_world,         ONLY : world_comm
-  USE mp_global,        ONLY : me_pool, intra_pool_comm ! added
-  USE mp,               ONLY : mp_bcast, mp_barrier, mp_abort, mp_sum ! added
+  USE mp_pools,         ONLY : intra_pool_comm
+  USE mp,               ONLY : mp_bcast, mp_barrier, mp_abort, mp_sum
   USE kinds,            ONLY : DP
   USE parallel_include
   IMPLICIT NONE

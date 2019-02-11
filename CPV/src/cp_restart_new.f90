@@ -55,9 +55,8 @@ MODULE cp_restart_new
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, trhow, &
-                                           tksw, twfcollect, do_makov_payne, &
-                                           smallmem, llondon, lxdm, ts_vdw,  &
-                                           tfor, tpre
+                                           tksw, do_makov_payne, smallmem,   &
+                                           llondon, lxdm, ts_vdw, tfor, tpre
       USE control_flags,            ONLY : lwfpbe0nscf, lwfnscf, lwf ! Lingzhu Kong
       USE constants,                ONLY : e2
       USE parameters,               ONLY : ntypx
@@ -355,7 +354,7 @@ MODULE cp_restart_new
               .false., [0.0_dp,0.0_dp], et, ftmp, nspin, xk, [ngw_g], wk_,&
               STARTING_KPOINTS = input_obj%k_points_IBZ, &
               OCCUPATION_KIND = input_obj%bands%occupations, &
-              WF_COLLECTED = twfcollect)
+              WF_COLLECTED = .true. )
          CALL qes_reset_bands(input_obj%bands)
          CALL qes_reset_k_points_IBZ(input_obj%k_points_IBZ)
 !-------------------------------------------------------------------------------
@@ -506,7 +505,7 @@ MODULE cp_restart_new
       USE FoX_dom,                  ONLY : parseFile, destroy, item, getElementsByTagname,&
                                            Node
       USE control_flags,            ONLY : gamma_only, force_pairing, llondon,&
-                                           ts_vdw, lxdm, iverbosity, twfcollect, lwf
+                                           ts_vdw, lxdm, iverbosity, lwf
       USE io_files,                 ONLY : iunwfc, nwordwfc, diropn
       USE run_info,                 ONLY : title
       USE gvect,                    ONLY : ngm

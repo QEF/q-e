@@ -7,7 +7,7 @@ calculate_wing.o : ../../Modules/fft_base.o
 calculate_wing.o : ../../Modules/io_files.o
 calculate_wing.o : ../../Modules/io_global.o
 calculate_wing.o : ../../Modules/kind.o
-calculate_wing.o : ../../Modules/mp_global.o
+calculate_wing.o : ../../Modules/mp_pools.o
 calculate_wing.o : ../../Modules/mp_wave.o
 calculate_wing.o : ../../Modules/mp_world.o
 calculate_wing.o : ../../Modules/recvec.o
@@ -16,7 +16,7 @@ calculate_wing.o : ../../PW/src/pwcom.o
 calculate_wing.o : ../../UtilXlib/mp.o
 cgsolve_all_gamma.o : ../../Modules/control_flags.o
 cgsolve_all_gamma.o : ../../Modules/kind.o
-cgsolve_all_gamma.o : ../../Modules/mp_global.o
+cgsolve_all_gamma.o : ../../Modules/mp_pools.o
 cgsolve_all_gamma.o : ../../Modules/recvec.o
 cgsolve_all_gamma.o : ../../UtilXlib/mp.o
 contour_terms.o : ../../Modules/io_files.o
@@ -38,7 +38,6 @@ dft_exchange.o : ../../Modules/io_files.o
 dft_exchange.o : ../../Modules/io_global.o
 dft_exchange.o : ../../Modules/ions_base.o
 dft_exchange.o : ../../Modules/kind.o
-dft_exchange.o : ../../Modules/mp_global.o
 dft_exchange.o : ../../Modules/mp_world.o
 dft_exchange.o : ../../Modules/recvec.o
 dft_exchange.o : ../../Modules/uspp.o
@@ -86,7 +85,6 @@ exchange_custom.o : ../../Modules/gvecw.o
 exchange_custom.o : ../../Modules/io_files.o
 exchange_custom.o : ../../Modules/io_global.o
 exchange_custom.o : ../../Modules/kind.o
-exchange_custom.o : ../../Modules/mp_global.o
 exchange_custom.o : ../../Modules/mp_pools.o
 exchange_custom.o : ../../Modules/mp_wave.o
 exchange_custom.o : ../../Modules/mp_world.o
@@ -128,8 +126,7 @@ fft_custom.o : ../../Modules/control_flags.o
 fft_custom.o : ../../Modules/fft_base.o
 fft_custom.o : ../../Modules/io_global.o
 fft_custom.o : ../../Modules/kind.o
-fft_custom.o : ../../Modules/mp_global.o
-fft_custom.o : ../../Modules/mp_world.o
+fft_custom.o : ../../Modules/mp_pools.o
 fft_custom.o : ../../Modules/recvec.o
 fft_custom.o : ../../PW/src/pwcom.o
 fft_custom.o : ../../UtilXlib/mp.o
@@ -160,7 +157,7 @@ matrix_wannier_gamma.o : ../../Modules/io_files.o
 matrix_wannier_gamma.o : ../../Modules/io_global.o
 matrix_wannier_gamma.o : ../../Modules/ions_base.o
 matrix_wannier_gamma.o : ../../Modules/kind.o
-matrix_wannier_gamma.o : ../../Modules/mp_global.o
+matrix_wannier_gamma.o : ../../Modules/mp_pools.o
 matrix_wannier_gamma.o : ../../Modules/mp_world.o
 matrix_wannier_gamma.o : ../../Modules/recvec.o
 matrix_wannier_gamma.o : ../../Modules/uspp.o
@@ -178,7 +175,6 @@ o_1psi.o : ../../Modules/fft_base.o
 o_1psi.o : ../../Modules/io_files.o
 o_1psi.o : ../../Modules/io_global.o
 o_1psi.o : ../../Modules/kind.o
-o_1psi.o : ../../Modules/mp_global.o
 o_1psi.o : ../../Modules/mp_world.o
 o_1psi.o : ../../Modules/random_numbers.o
 o_1psi.o : ../../Modules/recvec.o
@@ -209,7 +205,6 @@ o_rinitcgg.o : ../../Modules/kind.o
 o_rinitcgg.o : ../../Modules/mp_world.o
 o_rinitcgg.o : ../../Modules/recvec.o
 o_rinitcgg.o : ../../UtilXlib/mp.o
-openfil_pw4gww.o : ../../Modules/control_flags.o
 openfil_pw4gww.o : ../../Modules/io_files.o
 openfil_pw4gww.o : ../../Modules/ions_base.o
 openfil_pw4gww.o : ../../Modules/kind.o
@@ -364,7 +359,7 @@ semicore_read.o : ../../Modules/fft_base.o
 semicore_read.o : ../../Modules/io_files.o
 semicore_read.o : ../../Modules/io_global.o
 semicore_read.o : ../../Modules/kind.o
-semicore_read.o : ../../Modules/mp_global.o
+semicore_read.o : ../../Modules/mp_pools.o
 semicore_read.o : ../../Modules/mp_wave.o
 semicore_read.o : ../../Modules/mp_world.o
 semicore_read.o : ../../Modules/recvec.o
@@ -374,7 +369,6 @@ semicore_read.o : ../../PW/src/pwcom.o
 semicore_read.o : ../../UtilXlib/mp.o
 start_pw4gww.o : ../../Modules/environment.o
 start_pw4gww.o : ../../Modules/mp_global.o
-stop_pp.o : ../../Modules/control_flags.o
 stop_pp.o : ../../Modules/io_files.o
 stop_pp.o : ../../Modules/mp_global.o
 stop_pp.o : ../../UtilXlib/parallel_include.o

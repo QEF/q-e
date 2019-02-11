@@ -32,8 +32,9 @@ SUBROUTINE do_cond(done)
   !!!
   USE noncollin_module, ONLY : noncolin, i_cons
   USE io_global, ONLY : stdout, ionode, ionode_id
-  USE mp_global, ONLY : mp_startup, npool
-  USE mp_world,  ONLY : world_comm, nproc
+  USE mp_global, ONLY : mp_startup
+  USE mp_pools,  ONLY : npool
+  USE mp_images, ONLY : intra_image_comm, nproc_image
   USE paw_onecenter,      ONLY : PAW_potential
   USE paw_variables,      ONLY : okpaw, ddd_PAW
   USE mp
@@ -188,8 +189,8 @@ SUBROUTINE do_cond(done)
 
 #if defined(__MPI)
    IF (npool > 1) CALL errore('pwcond','pools not implemented',npool)
-   ik = IAND ( nproc, nproc-1 )
-   IF ( nproc /= 1 .AND. ik /= 0 ) &
+   ik = IAND ( nproc_image, nproc_image-1 )
+   IF ( nproc_image /= 1 .AND. ik /= 0 ) &
        CALL errore('pwcond','you should use 2^N number of CPUs',1)
 #endif
 
@@ -203,53 +204,53 @@ SUBROUTINE do_cond(done)
 !
 ! ... Broadcast variables
 !
-  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
-  CALL mp_bcast( prefixt, ionode_id, world_comm )
-  CALL mp_bcast( prefixl, ionode_id, world_comm )
-  CALL mp_bcast( prefixs, ionode_id, world_comm )
-  CALL mp_bcast( prefixr, ionode_id, world_comm )
-  CALL mp_bcast( band_file, ionode_id, world_comm )
-  CALL mp_bcast( tran_file, ionode_id, world_comm )
-  CALL mp_bcast( fil_loc, ionode_id, world_comm )
-  CALL mp_bcast( save_file, ionode_id, world_comm )
-  CALL mp_bcast( loop_ek, ionode_id, world_comm )
-  CALL mp_bcast( lwrite_loc, ionode_id, world_comm )
-  CALL mp_bcast( lread_loc, ionode_id, world_comm )
-  CALL mp_bcast( lwrite_cond, ionode_id, world_comm )
-  CALL mp_bcast( lread_cond, ionode_id, world_comm )
+  CALL mp_bcast( tmp_dir, ionode_id, intra_image_comm )
+  CALL mp_bcast( prefixt, ionode_id, intra_image_comm )
+  CALL mp_bcast( prefixl, ionode_id, intra_image_comm )
+  CALL mp_bcast( prefixs, ionode_id, intra_image_comm )
+  CALL mp_bcast( prefixr, ionode_id, intra_image_comm )
+  CALL mp_bcast( band_file, ionode_id, intra_image_comm )
+  CALL mp_bcast( tran_file, ionode_id, intra_image_comm )
+  CALL mp_bcast( fil_loc, ionode_id, intra_image_comm )
+  CALL mp_bcast( save_file, ionode_id, intra_image_comm )
+  CALL mp_bcast( loop_ek, ionode_id, intra_image_comm )
+  CALL mp_bcast( lwrite_loc, ionode_id, intra_image_comm )
+  CALL mp_bcast( lread_loc, ionode_id, intra_image_comm )
+  CALL mp_bcast( lwrite_cond, ionode_id, intra_image_comm )
+  CALL mp_bcast( lread_cond, ionode_id, intra_image_comm )
   !!! RECOVER
-  CALL mp_bcast( tran_prefix, ionode_id, world_comm )
-  CALL mp_bcast( max_seconds, ionode_id, world_comm )
-  CALL mp_bcast( recover, ionode_id, world_comm )
+  CALL mp_bcast( tran_prefix, ionode_id, intra_image_comm )
+  CALL mp_bcast( max_seconds, ionode_id, intra_image_comm )
+  CALL mp_bcast( recover, ionode_id, intra_image_comm )
   !!!
-  CALL mp_bcast( ikind, ionode_id, world_comm )
-  CALL mp_bcast( iofspin, ionode_id, world_comm )
-  CALL mp_bcast( orbj_in, ionode_id, world_comm )
-  CALL mp_bcast( orbj_fin, ionode_id, world_comm )
-  CALL mp_bcast( llocal, ionode_id, world_comm )
-  CALL mp_bcast( tk_plot, ionode_id, world_comm )
-  CALL mp_bcast( lorb, ionode_id, world_comm )
-  CALL mp_bcast( lorb3d, ionode_id, world_comm )
-  CALL mp_bcast( lcharge, ionode_id, world_comm )
-  CALL mp_bcast( bdl, ionode_id, world_comm )
-  CALL mp_bcast( bds, ionode_id, world_comm )
-  CALL mp_bcast( bdr, ionode_id, world_comm )
-  CALL mp_bcast( nz1, ionode_id, world_comm )
-  CALL mp_bcast( energy0, ionode_id, world_comm )
-  CALL mp_bcast( denergy, ionode_id, world_comm )
-  CALL mp_bcast( ecut2d, ionode_id, world_comm )
-  CALL mp_bcast( start_e, ionode_id, world_comm )
-  CALL mp_bcast( last_e, ionode_id, world_comm )
-  CALL mp_bcast( ewind, ionode_id, world_comm )
-  CALL mp_bcast( epsproj, ionode_id, world_comm )
-  CALL mp_bcast( delgep, ionode_id, world_comm )
-  CALL mp_bcast( cutplot, ionode_id, world_comm )
-  CALL mp_bcast( nkpts, ionode_id, world_comm )
-  CALL mp_bcast( nenergy, ionode_id, world_comm )
-  CALL mp_bcast( nk1ts, ionode_id, world_comm )
-  CALL mp_bcast( nk2ts, ionode_id, world_comm )
-  CALL mp_bcast( k1ts, ionode_id, world_comm )
-  CALL mp_bcast( k2ts, ionode_id, world_comm )
+  CALL mp_bcast( ikind, ionode_id, intra_image_comm )
+  CALL mp_bcast( iofspin, ionode_id, intra_image_comm )
+  CALL mp_bcast( orbj_in, ionode_id, intra_image_comm )
+  CALL mp_bcast( orbj_fin, ionode_id, intra_image_comm )
+  CALL mp_bcast( llocal, ionode_id, intra_image_comm )
+  CALL mp_bcast( tk_plot, ionode_id, intra_image_comm )
+  CALL mp_bcast( lorb, ionode_id, intra_image_comm )
+  CALL mp_bcast( lorb3d, ionode_id, intra_image_comm )
+  CALL mp_bcast( lcharge, ionode_id, intra_image_comm )
+  CALL mp_bcast( bdl, ionode_id, intra_image_comm )
+  CALL mp_bcast( bds, ionode_id, intra_image_comm )
+  CALL mp_bcast( bdr, ionode_id, intra_image_comm )
+  CALL mp_bcast( nz1, ionode_id, intra_image_comm )
+  CALL mp_bcast( energy0, ionode_id, intra_image_comm )
+  CALL mp_bcast( denergy, ionode_id, intra_image_comm )
+  CALL mp_bcast( ecut2d, ionode_id, intra_image_comm )
+  CALL mp_bcast( start_e, ionode_id, intra_image_comm )
+  CALL mp_bcast( last_e, ionode_id, intra_image_comm )
+  CALL mp_bcast( ewind, ionode_id, intra_image_comm )
+  CALL mp_bcast( epsproj, ionode_id, intra_image_comm )
+  CALL mp_bcast( delgep, ionode_id, intra_image_comm )
+  CALL mp_bcast( cutplot, ionode_id, intra_image_comm )
+  CALL mp_bcast( nkpts, ionode_id, intra_image_comm )
+  CALL mp_bcast( nenergy, ionode_id, intra_image_comm )
+  CALL mp_bcast( nk1ts, ionode_id, intra_image_comm )
+  CALL mp_bcast( nk2ts, ionode_id, intra_image_comm )
+  CALL mp_bcast( k1ts, ionode_id, intra_image_comm )
+  CALL mp_bcast( k2ts, ionode_id, intra_image_comm )
 
   IF ( .NOT. ionode ) THEN
      IF (nkpts>0) THEN
@@ -263,11 +264,11 @@ SUBROUTINE do_cond(done)
      ALLOCATE( tran_tot(nenergy) )
   ENDIF
   IF (nkpts>0) THEN
-     CALL mp_bcast( xyk, ionode_id, world_comm )
-     CALL mp_bcast( wkpt, ionode_id, world_comm )
+     CALL mp_bcast( xyk, ionode_id, intra_image_comm )
+     CALL mp_bcast( wkpt, ionode_id, intra_image_comm )
   ENDIF
-  CALL mp_bcast( earr, ionode_id, world_comm )
-  CALL mp_bcast( tran_tot, ionode_id, world_comm )
+  CALL mp_bcast( earr, ionode_id, intra_image_comm )
+  CALL mp_bcast( tran_tot, ionode_id, intra_image_comm )
 
 
 !
@@ -386,9 +387,9 @@ IF (nkpts==0) THEN
          xyk(2,ik)=xk(2,ik)
       ENDDO
    ENDIF
-   CALL mp_bcast( nkpts, ionode_id, world_comm )
-   CALL mp_bcast( xyk, ionode_id, world_comm )
-   CALL mp_bcast( wkpt, ionode_id, world_comm )
+   CALL mp_bcast( nkpts, ionode_id, intra_image_comm )
+   CALL mp_bcast( xyk, ionode_id, intra_image_comm )
+   CALL mp_bcast( wkpt, ionode_id, intra_image_comm )
 ELSE
    tk_plot = 0
 ENDIF
@@ -405,8 +406,8 @@ ELSE
    start_k = 1
    last_k = nkpts
 ENDIF
-CALL mp_bcast( start_k, ionode_id, world_comm )
-CALL mp_bcast( last_k, ionode_id, world_comm )
+CALL mp_bcast( start_k, ionode_id, intra_image_comm )
+CALL mp_bcast( last_k, ionode_id, intra_image_comm )
 
   !!! RECOVER
   ! Simple restart mechanism for transmission calculations
@@ -494,7 +495,7 @@ CALL mp_bcast( last_k, ionode_id, world_comm )
          IF ( ios .EQ. 0 ) THEN
             WRITE(stdout,'(a24, 2f12.7,/)') 'E-Ef(ev), T = ',earr(ien),tk
             tran_tot(ien) = tran_tot(ien) + wkpt(ik)*tk
-            !CALL mp_bcast( tran_tot(ien), ionode_id, world_comm )
+            !CALL mp_bcast( tran_tot(ien), ionode_id, intra_image_comm )
             CYCLE
          ! if not, do the actual calculation
          ELSE

@@ -28,7 +28,7 @@ SUBROUTINE rhod2vkb(dyn0)
   USE uspp_param, ONLY: nh
   USE becmod, ONLY: calbec
   USE cgcom
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
   USE fft_base, ONLY : dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft

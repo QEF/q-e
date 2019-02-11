@@ -44,9 +44,9 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE io_files,             ONLY : iunwfc, nwordwfc
-  USE mp_global,            ONLY : me_pool, nproc_pool, my_pool_id, npool
+  USE mp_pools,             ONLY : me_pool, nproc_pool, my_pool_id, npool, &
+                                   inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
-  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE becmod,               ONLY : calbec
   IMPLICIT NONE
   !

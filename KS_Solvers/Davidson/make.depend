@@ -4,6 +4,7 @@ cegterg.o : ../../LAXlib/ptoolkit.o
 cegterg.o : ../../UtilXlib/mp.o
 cegterg.o : ../../UtilXlib/mp_bands_util.o
 cegterg.o : david_param.o
+david_param.o : ../../UtilXlib/parallel_include.o
 regterg.o : ../../LAXlib/la_types.o
 regterg.o : ../../LAXlib/mp_diag.o
 regterg.o : ../../LAXlib/ptoolkit.o

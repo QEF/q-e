@@ -18,3 +18,4 @@ mp_base_gpu.o : data_buffer.o
 mp_base_gpu.o : parallel_include.o
 mp_base_gpu.o : util_param.o
 thread_util.o : util_param.o
+util_param.o : parallel_include.o

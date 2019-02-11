@@ -117,14 +117,20 @@ compare-epw : prolog
 	${TESTCODE_DIR}/bin/testcode.py --category=epw_all  --verbose compare 2>&1 | tee out.EPW.`date +%Y%m%d_%H%M%S`
 
 clean:
+# output files
 	@for x in `find pw_* -name "test*"`; do rm -rf $$x; done
 	@for x in `find ph_* -name "test*"`; do rm -rf $$x; done
 	@for x in `find cp_* -name "test*"`; do rm -rf $$x; done
 	@for x in `find epw_* -name "test*"`; do rm -rf $$x; done
+# error files
 	@for x in `find pw_* -name "CRASH"`; do rm -rf $$x; done
 	@for x in `find ph_* -name "CRASH*"`; do rm -rf $$x; done
 	@for x in `find cp_* -name "CRASH"`; do rm -rf $$x; done
 	@for x in `find epw_* -name "CRASH"`; do rm -rf $$x; done
+# pwscf data files
+	@rm -rf pw_*/pwscf.* ph_*/pwscf.* epw_*/pwscf.*
+# cp data files
+	@rm -rf cp_si/si_*.* co_o2/o2_*.* cp_h2o/h2o_*.* cp_sio2/sio2_*.*
 # Special case for 'pw_vc-relax' test-case
 	@rm -f pw_vc-relax/ave pw_vc-relax/e pw_vc-relax/tv pw_vc-relax/p pw_vc-relax/eal pw_vc-relax/avec
 # Special case for 'noexe_langevin' test-case

@@ -19,7 +19,6 @@ SUBROUTINE openfil_pw4gww()
   !
   USE kinds,          ONLY : DP
   USE wvfct,          ONLY : nbnd, npwx
-  use control_flags,  ONLY:  twfcollect
   USE io_files,       ONLY : prefix, tmp_dir, iunwfc, nwordwfc, iunsat, nwordatwfc, diropn
   USE noncollin_module, ONLY : npol
   USE ldaU,             ONLY : lda_plus_u
@@ -32,8 +31,6 @@ SUBROUTINE openfil_pw4gww()
   !
   LOGICAL       :: exst
   !
-  !
-  twfcollect=.false.
   !
   ! ... nwordwfc is the record length for the direct-access file
   ! ... containing wavefunctions

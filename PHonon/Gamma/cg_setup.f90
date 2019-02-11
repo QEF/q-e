@@ -16,7 +16,6 @@ SUBROUTINE cg_setup
   USE scf,        ONLY: rho, rho_core, v, vltot, vrs, kedtau
   USE uspp,       ONLY: vkb, nlcc_any
   USE uspp_param, ONLY: upf
-  USE mp_global,  ONLY: kunit
   USE wavefunctions,  ONLY: evc
   USE io_files,   ONLY: prefix, iunpun, iunres, diropn
   USE funct,      ONLY: dft_is_gradient, dmxc
@@ -37,7 +36,7 @@ SUBROUTINE cg_setup
   LOGICAL :: exst
   CHARACTER (len=256) :: filint
   REAL(DP) :: rhotot
-  INTEGER       :: ndr, kunittmp, ierr
+  INTEGER       :: ndr, ierr
   REAL(DP) :: edum(1,1), wdum(1,1)
   !
   CALL start_clock('cg_setup')

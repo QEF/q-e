@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.3}
+\def\version{6.4}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -729,6 +729,13 @@ but the configure script fails if includes and libraries are not placed
 under the same root directory. In this case the user should manually set
 the correct paths in the \texttt{make.inc} file.
 
+\paragraph{LIBXC}
+\qe\ can use \texttt{libxc} libraries. You need to compile \texttt{libxc}
+first. Then, look for "libxc" in \texttt{make.inc} and follow the 
+instructions. Note that currently only a (small) subset of functionals 
+implemented in \texttt{libxc} can be used and that the \libxc}-enabled 
+version cannot use functionals from \qe. This will change in the future.
+
 \paragraph{Other libraries}
 \qe\ can use the MASS vector math
 library from IBM, if available (only on machines with XLF compiler:
@@ -1423,6 +1430,15 @@ that writes them to disk, in a single file,
 using a format that doesn't depend upon
 the number of processors or their distribution.
 This is the default since v.6.2 for final data.
+\item ``portable'': as above, but data can be 
+copied to and read from a different machines
+(this is not guaranteed with Fortran binary files).
+Requires compilation with \verb|-D__HDF5|
+preprocessing option and HDF% libraries.
+\end{itemize}
+There is a third format, no longer used for final
+data but used for scratch and restart files:
+\begin{itemize}
 \item ``distributed'': each processor
 writes its own slice to disk in its internal
 format to a different file.
@@ -1436,10 +1452,7 @@ processors (i.e., you cannot use local scratch
 directories: there is presently no way to ensure
 that the distribution of processes across
 processors will follow the same pattern
-for different jobs). The distributed format for
-final data requires compilation with \verb|-D__OLDXML|
-preprocessing option and will be removed
-in the next releases.
+for different jobs).
 \end{itemize}
 
 The directory for data is specified in input variables
@@ -1461,7 +1474,7 @@ and writes to it) but you may run into trouble anyway if you
 need to access your files that are scattered in an unpredictable
 way across disks residing on different nodes.
 
-You can use input variable \texttt{disk\_io} to reduce the the
+You can use input variable \texttt{disk\_io} to vary the
 amount of I/O done by \pwx. Since v.5.1, the dafault value is
 \texttt{disk\_io='low'}, so the code will store wavefunctions
 into RAM and not on disk during the calculation. Specify
@@ -1469,9 +1482,9 @@ into RAM and not on disk during the calculation. Specify
 and you run into trouble with memory; choose \texttt{disk\_io='none'}
 if you do not need to keep final data files.
 
-For very large \cpx\ runs, you may consider using
-\texttt{wf\_collect=.false.}, \texttt{memory='small'} and
-\texttt{saverho=.false.} to reduce I/O to the strict minimum.
+% For very large \cpx\ runs, you may consider using
+% \texttt{wf\_collect=.false.}, \texttt{memory='small'} and
+% \texttt{saverho=.false.} to reduce I/O to the strict minimum.
 
 \subsection{Tricks and problems}
 \label{SubSec:badpara}

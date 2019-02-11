@@ -25,7 +25,7 @@ subroutine init_gipaw_1
   USE uspp,        ONLY : ap, aainit
   USE atom,        ONLY : rgrid, msh
   USE io_global,   ONLY : stdout
-  USE mp_global,   ONLY : intra_pool_comm
+  USE mp_pools,    ONLY : intra_pool_comm
   USE mp,          ONLY : mp_sum
   USE matrix_inversion
   !

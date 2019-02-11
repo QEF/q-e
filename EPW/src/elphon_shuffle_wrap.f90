@@ -455,15 +455,12 @@
       !
       minus_q = (iswitch .gt. -3)  
       !
-!      ! Initialize vlocq for the current irreducible q-point
-!      CALL epw_init(.false.)
-      !
       !  loop over the q points of the star
       !
       DO iq = 1, nq
         ! SP: First the vlocq needs to be initialized properly with the first
         !     q in the star
-        xq = xq0         
+        xq = xq0        
         CALL epw_init(.false.)
         !
         ! retrieve the q in the star
@@ -655,15 +652,14 @@
           !
           CALL createkmap( xq )
           !
-          xq0 = -xq0
-          ! 
           CALL loadumat( nbnd, nbndsub, nks, nkstot, xq, cu, cuq, lwin, lwinq, exband, w_centers )
           !
           ! Calculate overlap U_k+q U_k^\dagger
           IF (lpolar) CALL compute_umn_c( nbnd, nbndsub, nks, cu, cuq, bmat(:,:,:,nqc) )
           !
-          CALL elphon_shuffle( iq_irr, nqc_irr, nqc, gmapsym, eigv, isym, xq0, .true. )
+          xq0 = -xq0
           !
+          CALL elphon_shuffle( iq_irr, nqc_irr, nqc, gmapsym, eigv, isym, xq0, .true. )
           !  bring epmatq in the mode representation of iq_first, 
           !  and then in the cartesian representation of iq
           !
@@ -795,20 +791,20 @@
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(in):: x(3)
+  REAL(kind=DP), INTENT(in) :: x(3)
   !! Input x
   INTEGER, INTENT(in) :: s(3,3)
   !! Symmetry matrix
-  REAL(DP), INTENT(out):: sx(3)
-  !! Output rotated one. 
+  REAL(kind=DP), INTENT(out) :: sx(3)
+  !! Output rotated x 
   !
   ! Local Variable
   INTEGER :: i
   !
   DO i = 1, 3
-     sx (i) = dble( s(i,1) ) * x(1) &
-            + dble( s(i,2) ) * x(2) &
-            + dble( s(i,3) ) * x(3)
+     sx(i) = dble( s(i,1) ) * x(1) &
+           + dble( s(i,2) ) * x(2) &
+           + dble( s(i,3) ) * x(3)
   ENDDO
   !
   RETURN
@@ -824,12 +820,12 @@
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(in) :: x(3)
+  REAL(kind=DP), INTENT(in) :: x(3)
   !! input: input vector
-  REAL(DP), INTENT(in) :: y(3)
+  REAL(kind=DP), INTENT(in) :: y(3)
   !! input: second input vector
-  REAL(DP) :: accep
-  !! acceptance PARAMETER
+  REAL(kind=DP) :: accep
+  !! acceptance parameter
   PARAMETER (accep = 1.0d-5)
   !
   eqvect_strict = abs( x(1)-y(1) ) .lt. accep .AND. &
@@ -853,13 +849,22 @@
   ! 
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN)  :: current_iq
+  INTEGER, INTENT(in) :: current_iq
   !! Current q-point 
-  INTEGER, INTENT(IN)  :: iunpun
+  INTEGER, INTENT(in) :: iunpun
   !! Current q-point 
-  INTEGER, INTENT(OUT) :: ierr
+  INTEGER, INTENT(out) :: ierr
   !! Error
-  INTEGER              :: imode0, imode, irr, ipert, iq 
+  !
+  ! Local variables
+  INTEGER :: imode0, imode
+  !! Counter on modes
+  INTEGER :: irr
+  !! Counter on irreducible representations
+  INTEGER :: ipert
+  !! Counter on perturbations at each irr
+  INTEGER :: iq
+  !! Current q-point 
   !
   ierr = 0
   IF (meta_ionode) THEN
