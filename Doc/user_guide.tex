@@ -734,10 +734,12 @@ under the same root directory. In this case the user should manually set
 the correct paths in the \texttt{make.inc} file.
 
 \paragraph{LIBXC}
-\qe\ can use \texttt{libxc} libraries. You need to compile \texttt{libxc}
-first. Then, look for "libxc" in \texttt{make.inc} and follow the 
-instructions. Note that currently only a (small) subset of functionals 
-implemented in \texttt{libxc} can be used and that the \libxc}-enabled 
+\qe\ can use \texttt{libxc} libraries. You need to install \texttt{libxc}
+first, then: \verb|configure --with-libxc --with-libxc-prefix=DIR --with-libxc-include=DIR2|,
+where DIR is the directory where libxc is installed, DIR2 the directory 
+where libxc Fortran headers are. You may look for "libxc" in \texttt{make.inc} 
+in case of trouble. Note that currently only a (small) subset of functionals 
+implemented in \texttt{libxc} can be used and that the \texttt{libxc}-enabled 
 version cannot use functionals from \qe. This will change in the future.
 
 \paragraph{Other libraries}
@@ -1083,8 +1085,8 @@ or read the man page of gfortran under the flag \texttt{-ff2c}.
 
 If your code crashes during a call to \texttt{zdotc},
 try to recompile \qe\ using the internal BLAS and LAPACK
-routines (using the \texttt{--with-internal-blas} and
-\texttt{--with-internal-lapack} parameters of the configure script)
+routines (using i\configure\ options \texttt{--with-internal-blas} and
+\texttt{--with-internal-lapack})
 to see if the problem disappears; or, add the \texttt{-ff2c} flag"
 (info by Giovanni Pizzi, Jan. 2013).
 
