@@ -125,7 +125,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
   USE pw_restart_new,       ONLY :  pw_readschema_file, init_vars_from_schema 
   USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type, input_type
-  USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_input, qes_reset_general_info, qes_reset_parallel_info 
+  USE qes_libs_module,      ONLY :  qes_reset
   USE io_rho_xml,           ONLY : read_scf
   USE fft_rho,              ONLY : rho_g2r
   USE read_pseudo_mod,      ONLY : readpp
@@ -350,10 +350,10 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
   !
-  CALL qes_reset_output ( output_obj )  
-  CALL qes_reset_general_info ( geninfo_obj ) 
-  CALL qes_reset_parallel_info ( parinfo_obj ) 
-  IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset_input ( input_obj) 
+  CALL qes_reset  ( output_obj )
+  CALL qes_reset  ( geninfo_obj )
+  CALL qes_reset  ( parinfo_obj )
+  IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset ( input_obj) 
   ! 
   RETURN
   !

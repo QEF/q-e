@@ -281,6 +281,8 @@ MODULE read_namelists_module
        xdm = .FALSE.
        xdm_a1 = 0.0_DP
        xdm_a2 = 0.0_DP
+       dftd3_version = 3
+       dftd3_threebody = .TRUE.
        !
        ! ... ESM
        !
