@@ -16,9 +16,6 @@ MODULE qes_types_module
   !
   IMPLICIT NONE
   !
-  PUBLIC 
-  PRIVATE   DP
-
   TYPE :: xml_format_type
     !
     CHARACTER(len=100) :: tagname
@@ -96,6 +93,7 @@ MODULE qes_types_module
     !
     CHARACTER(len=256) :: specie
     CHARACTER(len=256) :: label
+    LOGICAL :: label_ispresent = .FALSE.
     !
     REAL(DP) :: HubbardCommon
     !
@@ -384,6 +382,20 @@ MODULE qes_types_module
     !
   END TYPE parallel_info_type
   !
+  TYPE :: clock_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: label
+    INTEGER :: calls
+    LOGICAL :: calls_ispresent = .FALSE.
+    REAL(DP) :: cpu
+    REAL(DP) :: wall
+    !
+  END TYPE clock_type
+  !
   TYPE :: control_variables_type
     !
     CHARACTER(len=100) :: tagname
@@ -473,12 +485,19 @@ MODULE qes_types_module
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
+    LOGICAL  :: qpoint_grid_ispresent = .FALSE.
     TYPE(qpoint_grid_type) :: qpoint_grid
+    LOGICAL  :: ecutfock_ispresent = .FALSE.
     REAL(DP) :: ecutfock
+    LOGICAL  :: exx_fraction_ispresent = .FALSE.
     REAL(DP) :: exx_fraction
+    LOGICAL  :: screening_parameter_ispresent = .FALSE.
     REAL(DP) :: screening_parameter
+    LOGICAL  :: exxdiv_treatment_ispresent = .FALSE.
     CHARACTER(len=256) :: exxdiv_treatment
+    LOGICAL  :: x_gamma_extrapolation_ispresent = .FALSE.
     LOGICAL :: x_gamma_extrapolation
+    LOGICAL  :: ecutvcut_ispresent = .FALSE.
     REAL(DP) :: ecutvcut
     !
   END TYPE hybrid_type
@@ -523,9 +542,18 @@ MODULE qes_types_module
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
+    LOGICAL  :: vdw_corr_ispresent = .FALSE.
     CHARACTER(len=256) :: vdw_corr
+    LOGICAL  :: dftd3_version_ispresent = .FALSE.
+    INTEGER :: dftd3_version
+    LOGICAL  :: dftd3_threebody_ispresent = .FALSE.
+    LOGICAL :: dftd3_threebody
     LOGICAL  :: non_local_term_ispresent = .FALSE.
     CHARACTER(len=256) :: non_local_term
+    LOGICAL  :: functional_ispresent = .FALSE.
+    CHARACTER(len=256) :: functional
+    LOGICAL  :: total_energy_term_ispresent = .FALSE.
+    REAL(DP) :: total_energy_term
     LOGICAL  :: london_s6_ispresent = .FALSE.
     REAL(DP) :: london_s6
     LOGICAL  :: ts_vdw_econv_thr_ispresent = .FALSE.
@@ -904,6 +932,7 @@ MODULE qes_types_module
     LOGICAL  :: lread  = .FALSE.
     !
     LOGICAL :: real_space_q
+    LOGICAL  :: real_space_beta_ispresent = .FALSE.
     LOGICAL :: real_space_beta
     LOGICAL :: uspp
     LOGICAL :: paw
@@ -975,6 +1004,8 @@ MODULE qes_types_module
     REAL(DP) :: potentiostat_contr
     LOGICAL  :: gatefield_contr_ispresent = .FALSE.
     REAL(DP) :: gatefield_contr
+    LOGICAL  :: vdW_term_ispresent = .FALSE.
+    REAL(DP) :: vdW_term
     !
   END TYPE total_energy_type
   !
@@ -990,6 +1021,19 @@ MODULE qes_types_module
     TYPE(vector_type) :: occupations
     !
   END TYPE ks_energies_type
+  !
+  TYPE :: timing_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    TYPE(clock_type) :: total
+    LOGICAL  :: partial_ispresent = .FALSE.
+    TYPE(clock_type), DIMENSION(:), ALLOCATABLE :: partial
+    INTEGER   :: ndim_partial
+    !
+  END TYPE timing_type
   !
   TYPE :: atomic_species_type
     !
@@ -1193,6 +1237,7 @@ MODULE qes_types_module
     LOGICAL :: lsda
     LOGICAL :: noncolin
     LOGICAL :: spinorbit
+    LOGICAL  :: nbnd_ispresent = .FALSE.
     INTEGER :: nbnd
     LOGICAL  :: nbnd_up_ispresent = .FALSE.
     INTEGER :: nbnd_up
@@ -1325,6 +1370,35 @@ MODULE qes_types_module
     REAL(DP) :: FCP_tot_charge
     !
   END TYPE output_type
+  !
+  TYPE :: espresso_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: Units
+    LOGICAL :: Units_ispresent = .FALSE.
+    LOGICAL  :: general_info_ispresent = .FALSE.
+    TYPE(general_info_type) :: general_info
+    LOGICAL  :: parallel_info_ispresent = .FALSE.
+    TYPE(parallel_info_type) :: parallel_info
+    TYPE(input_type) :: input
+    LOGICAL  :: step_ispresent = .FALSE.
+    TYPE(step_type), DIMENSION(:), ALLOCATABLE :: step
+    INTEGER   :: ndim_step
+    LOGICAL  :: output_ispresent = .FALSE.
+    TYPE(output_type) :: output
+    LOGICAL  :: status_ispresent = .FALSE.
+    INTEGER :: status
+    LOGICAL  :: cputime_ispresent = .FALSE.
+    INTEGER :: cputime
+    LOGICAL  :: timing_info_ispresent = .FALSE.
+    TYPE(timing_type) :: timing_info
+    LOGICAL  :: closed_ispresent = .FALSE.
+    TYPE(closed_type) :: closed
+    !
+  END TYPE espresso_type
   !
   !
 END MODULE qes_types_module

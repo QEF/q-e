@@ -31,7 +31,7 @@ SUBROUTINE wfcinit()
   USE wannier_new,          ONLY : use_wannier
   USE pw_restart_new,       ONLY : pw_readschema_file, read_collected_to_evc 
   USE qes_types_module,     ONLY : output_type
-  USE qes_libs_module,      ONLY : qes_reset_output
+  USE qes_libs_module,      ONLY : qes_reset
   !
   IMPLICIT NONE
   !
@@ -78,7 +78,7 @@ SUBROUTINE wfcinit()
            END IF
         END IF
      END IF 
-     CALL qes_reset_output ( output_obj ) 
+     CALL qes_reset  ( output_obj )
   END IF
   !
   ! ... state what will happen
