@@ -77,7 +77,17 @@
      LOGICAL, SAVE :: dfti_first = .TRUE.
      INTEGER :: dfti_status = 0
      !
-     CALL check_dims()
+     ! Check dimensions and corner cases.
+     !
+     IF ( nsl <= 0 ) THEN
+
+       IF ( nsl < 0 ) CALL fftx_error__(" fft_scalar: cft_1z ", " nsl out of range ", nsl)
+
+       ! Starting from MKL 2019 it is no longer possible to define "empty" plans,
+       ! i.e. plans with 0 FFTs. Just return immediately in this case.
+       RETURN
+
+     END IF
      !
      !   Here initialize table only if necessary
      !
@@ -117,12 +127,6 @@
      RETURN
 
    CONTAINS !=------------------------------------------------=!
-
-     SUBROUTINE check_dims()
-     IF( nsl < 0 ) THEN
-       CALL fftx_error__(" fft_scalar: cft_1z ", " nsl out of range ", nsl)
-     END IF
-     END SUBROUTINE check_dims
 
      SUBROUTINE lookup()
      IF( dfti_first ) THEN
