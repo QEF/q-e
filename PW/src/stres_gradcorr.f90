@@ -15,7 +15,7 @@ subroutine stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
   USE noncollin_module, ONLY : noncolin
   use funct,            ONLY : gcxc, gcx_spin, gcc_spin, gcc_spin_more, &
                                dft_is_gradient, dft_is_meta, get_igcc, &
-                               tau_xc, tau_xc_spin
+                               tau_xc, tau_xc_spin, get_meta
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_types,        ONLY : fft_type_descriptor
@@ -95,7 +95,7 @@ subroutine stres_gradcorr( rho, rhog, rho_core, rhog_core, kedtau, nspin, &
            ! routine computing v1x and v2x is different for GGA and meta-GGA
            ! FIXME : inefficient implementation
            !
-           if ( dft_is_meta() ) then
+           if ( dft_is_meta() .and. get_meta() /= 4 ) then
               !
               kedtau(k,1) = kedtau(k,1) / e2
               call tau_xc (rho(k,1), grho2(1),kedtau(k,1), sx, sc, v1x, v2x,v3x,v1c,v2c,v3c)
