@@ -1576,7 +1576,6 @@ read_conf_from_file.o : ../../Modules/qes_types_module.o
 read_conf_from_file.o : pw_restart_new.o
 read_file_new.o : ../../FFTXlib/fft_interfaces.o
 read_file_new.o : ../../FFTXlib/fft_types.o
-read_file_new.o : ../../Modules/bcast_qes_module.o
 read_file_new.o : ../../Modules/cell_base.o
 read_file_new.o : ../../Modules/constants.o
 read_file_new.o : ../../Modules/control_flags.o
@@ -1593,6 +1592,7 @@ read_file_new.o : ../../Modules/mp_bands.o
 read_file_new.o : ../../Modules/mp_images.o
 read_file_new.o : ../../Modules/noncol.o
 read_file_new.o : ../../Modules/paw_variables.o
+read_file_new.o : ../../Modules/qes_bcast_module.o
 read_file_new.o : ../../Modules/qes_libs_module.o
 read_file_new.o : ../../Modules/qes_types_module.o
 read_file_new.o : ../../Modules/read_pseudo.o
