@@ -32,7 +32,7 @@ SUBROUTINE force_us_gpu( forcenl )
   USE buffers,              ONLY : get_buffer
   USE becmod,               ONLY : calbec, becp, bec_type, allocate_bec_type, &
                                    deallocate_bec_type
-  USE becmod_gpum,          ONLY : becp_d
+  USE becmod_gpum,          ONLY : becp_d, bec_type_d
   USE becmod_subs_gpum,     ONLY : using_becp_d_auto, calbec_gpu
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp_bands,             ONLY : intra_bgrp_comm
@@ -42,21 +42,22 @@ SUBROUTINE force_us_gpu( forcenl )
   USE wvfct_gpum,           ONLY : using_et
   USE uspp_gpum,            ONLY : using_vkb, using_indv_ijkb0, using_qq_at, &
                                    using_deeq
-  USE becmod_subs_gpum,     ONLY : using_becp_auto
+  USE becmod_subs_gpum,     ONLY : using_becp_auto, allocate_bec_type_gpu, &
+                                    synchronize_bec_type_gpu
   USE gbuffers,             ONLY : dev_buf
   !
   IMPLICIT NONE
   !
   REAL(DP), INTENT(OUT) :: forcenl(3,nat) ! the nonlocal contribution
   !
-  COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)   ! contains g*|beta>
   COMPLEX(DP), POINTER     :: vkb1_d(:,:)   ! contains g*|beta>
 #if defined(__CUDA)
   attributes(DEVICE) :: vkb1_d
 #endif
   COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
   REAL(DP), ALLOCATABLE :: deff(:,:,:)
-  TYPE(bec_type) :: dbecp                 ! contains <dbeta|psi>
+  TYPE(bec_type)   :: dbecp                 ! contains <dbeta|psi>
+  TYPE(bec_type_d) :: dbecp_d               ! contains <dbeta|psi>
   INTEGER    :: npw, ik, ipol, ig, jkb
   INTEGER    :: ierr
   !
@@ -65,8 +66,8 @@ SUBROUTINE force_us_gpu( forcenl )
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm )
   CALL using_becp_auto(2)
   CALL allocate_bec_type ( nkb, nbnd, dbecp, intra_bgrp_comm )
+  CALL allocate_bec_type_gpu ( nkb, nbnd, dbecp_d, intra_bgrp_comm )
   !
-  ALLOCATE( vkb1( npwx, nkb ) )   
   CALL dev_buf%lock_buffer( vkb1_d, (/ npwx, nkb /), ierr )
   IF (noncolin) then
      ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
@@ -75,7 +76,7 @@ SUBROUTINE force_us_gpu( forcenl )
   ENDIF
   !
   ! ... the forces are a sum over the K points and over the bands
-  !   
+  !
   CALL using_evc_d(0)
   !
   DO ik = 1, nks
@@ -94,7 +95,7 @@ SUBROUTINE force_us_gpu( forcenl )
      CALL using_evc_d(0); CALL using_vkb_d(0); CALL using_becp_d_auto(2)
      CALL calbec_gpu ( npw, vkb_d, evc_d, becp_d )
      !
-     CALL using_evc(0); CALL using_becp_auto(0);
+     CALL using_evc_d(0); CALL using_becp_auto(0);
      DO ipol = 1, 3
 !$cuf kernel do(2) <<<*,*>>>
         DO jkb = 1, nkb
@@ -103,8 +104,8 @@ SUBROUTINE force_us_gpu( forcenl )
            END DO
         END DO
         !
-        vkb1 = vkb1_d ! Do calbec with GPU?
-        CALL calbec ( npw, vkb1, evc, dbecp )
+        CALL calbec_gpu ( npw, vkb1_d, evc_d, dbecp_d )
+        CALL synchronize_bec_type_gpu(dbecp_d, dbecp, 'h')
         !
         IF ( gamma_only ) THEN
            !
@@ -129,7 +130,6 @@ SUBROUTINE force_us_gpu( forcenl )
      DEALLOCATE( deff )
   ENDIF
   CALL dev_buf%release_buffer( vkb1_d, ierr )
-  DEALLOCATE( vkb1 )
   CALL deallocate_bec_type ( dbecp ) 
   CALL deallocate_bec_type ( becp )
   CALL using_becp_auto(2)
