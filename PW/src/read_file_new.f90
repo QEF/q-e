@@ -142,7 +142,7 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
 #if defined(__BEOWULF)
   USE io_global,             ONLY : ionode, ionode_id
-  USE bcast_qes_types_module,ONLY : qes_bcast 
+  USE qes_bcast_module       ONLY : qes_bcast
   USE mp_images,             ONLY : intra_image_comm
 #endif
   !
