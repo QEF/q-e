@@ -639,6 +639,8 @@ mpi_line
 mpi_libs
 mass_line
 mass_libs
+libxc_line
+LIBS_LIBXC
 fft_line
 fft_libs
 EGREP
@@ -751,6 +753,9 @@ enable_debug
 enable_pedantic
 enable_shared
 with_netlib
+with_libxc
+with_libxc_prefix
+with_libxc_include
 with_scalapack
 with_elpa_include
 with_elpa_lib
@@ -1414,6 +1419,12 @@ Optional Packages:
                           [default=35]
   --with-cuda-runtime=VAL CUDA runtime (Pascal: 8.0, Volta: 9.0) [default=8.0]
   --with-netlib           compile with Netlib LAPACK and BLAS (default: no)
+  --with-libxc            (yes|no) Use libXC for some XC functionals (default:
+                          no)
+  --with-libxc-prefix=DIR Directory where libxc was installed.
+  --with-libxc-include=DIR
+                          Directory where libxc Fortran headers were
+                          installed.
   --with-scalapack        (yes|no|intel) Use scalapack if available. Set to
                           "intel" to use Intel MPI and blacs (default: use
                           openMPI)
@@ -1927,6 +1938,52 @@ $as_echo "$ac_res" >&6; }
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
 } # ac_fn_c_check_header_compile
+
+# ac_fn_fc_try_link LINENO
+# ------------------------
+# Try to link conftest.$ac_ext, and return whether this succeeded.
+ac_fn_fc_try_link ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  rm -f conftest.$ac_objext conftest$ac_exeext
+  if { { ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
+$as_echo "$ac_try_echo"; } >&5
+  (eval "$ac_link") 2>conftest.err
+  ac_status=$?
+  if test -s conftest.err; then
+    grep -v '^ *+' conftest.err >conftest.er1
+    cat conftest.er1 >&5
+    mv -f conftest.er1 conftest.err
+  fi
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; } && {
+	 test -z "$ac_fc_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext && {
+	 test "$cross_compiling" = yes ||
+	 test -x conftest$ac_exeext
+       }; then :
+  ac_retval=0
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_retval=1
+fi
+  # Delete the IPA/IPO (Inter Procedural Analysis/Optimization) information
+  # created by the PGI compiler (conftest_ipa8_conftest.oo), as it would
+  # interfere with the next link command; also delete a directory that is
+  # left behind by Apple's compiler.  We do this before executing the actions.
+  rm -rf conftest.dSYM conftest_ipa8_conftest.oo
+  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
+  as_fn_set_status $ac_retval
+
+} # ac_fn_fc_try_link
 cat >config.log <<_ACEOF
 This file contains any messages produced by compilers while
 running configure, to aid debugging if configure makes a mistake.
@@ -8477,6 +8534,133 @@ fi
 
 
 
+
+# Setting libxc...
+
+acx_libxc_ok=no
+
+
+# Check whether --with-libxc was given.
+if test "${with_libxc+set}" = set; then :
+  withval=$with_libxc; if  test "$withval" = "no" ; then
+      with_libxc=0
+   else
+      with_libxc=1
+   fi
+else
+  with_libxc=0
+
+fi
+
+
+
+# Check whether --with-libxc-prefix was given.
+if test "${with_libxc_prefix+set}" = set; then :
+  withval=$with_libxc_prefix;
+fi
+
+
+# Check whether --with-libxc-include was given.
+if test "${with_libxc_include+set}" = set; then :
+  withval=$with_libxc_include;
+fi
+
+
+if test "$with_libxc" -ne 0; then
+
+if test x"$FCFLAGS_LIBXC" = x; then
+  case $with_libxc_prefix in
+    "") FCFLAGS_LIBXC="$imod/usr/include" ;;
+    *)  FCFLAGS_LIBXC="$imod$with_libxc_prefix/include" ;;
+  esac
+fi
+
+case $with_libxc_include in
+  "") ;;
+  *)  FCFLAGS_LIBXC="$imod$with_libxc_include" ;;
+esac
+
+acx_libxc_save_LIBS="$LIBS"
+acx_libxc_save_FCFLAGS="$FCFLAGS"
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libxc" >&5
+$as_echo_n "checking for libxc... " >&6; }
+ac_ext=${ac_fc_srcext-f}
+ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+
+FCFLAGS="$FCFLAGS_LIBXC $acx_libxc_save_FCFLAGS"
+
+testprog="      program main
+
+  use xc_f90_lib_m
+  implicit none
+  integer :: major
+  integer :: minor
+  integer :: micro
+  call xc_f90_version(major, minor, micro)
+      end"
+
+if test ! -z "$LIBS_LIBXC"; then
+  LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
+  cat > conftest.$ac_ext <<_ACEOF
+$testprog
+_ACEOF
+if ac_fn_fc_try_link "$LINENO"; then :
+  acx_libxc_ok=yes
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+fi
+
+if test ! -z "$with_libxc_prefix"; then
+  if test x"$acx_libxc_ok" = xno; then
+    LIBS_LIBXC="-L$with_libxc_prefix/lib -lxcf90 -lxc"
+    LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
+    cat > conftest.$ac_ext <<_ACEOF
+$testprog
+_ACEOF
+if ac_fn_fc_try_link "$LINENO"; then :
+  acx_libxc_ok=yes
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+  fi
+else
+  LIBS_LIBXC="-lxcf90 -lxc"
+  LIBS="$LIBS_LIBXC $acx_libxc_save_LIBS"
+  cat > conftest.$ac_ext <<_ACEOF
+$testprog
+_ACEOF
+if ac_fn_fc_try_link "$LINENO"; then :
+  acx_libxc_ok=yes
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $acx_libxc_ok ($FCFLAGS_LIBXC $LIBS_LIBXC)" >&5
+$as_echo "$acx_libxc_ok ($FCFLAGS_LIBXC $LIBS_LIBXC)" >&6; }
+
+libxc_line="@delete@"
+if test x"$acx_libxc_ok" = xyes; then
+  try_dflags="$try_dflags -D__LIBXC"
+  try_iflags="$try_iflags $FCFLAGS_LIBXC"
+
+  libxc_line="LIBXC_LIBS= $LIBS_LIBXC"
+
+else
+  as_fn_error $? "Could not find required libxc library." "$LINENO" 5
+fi
+
+ac_ext=f
+ac_compile='$F77 -c $FFLAGS conftest.$ac_ext >&5'
+ac_link='$F77 -o conftest$ac_exeext $FFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_f77_compiler_gnu
+
+
+fi
 
 # Checking for IBM MASS library...
 

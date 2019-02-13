@@ -508,7 +508,7 @@ MODULE input_parameters
           ! london_s6 = default global scaling parameter for PBE
           ! london_c6 = user specified atomic C6 coefficients
           ! london_rvdw = user specified atomic vdw radii
-        REAL ( DP ) :: london_s6   =   0.75_DP , &
+        REAL ( DP ) :: london_s6   =   0.75_DP ,&
                        london_rcut = 200.00_DP , &
                        london_c6( nsx ) = -1.0_DP, &
                        london_rvdw( nsx ) = -1.0_DP

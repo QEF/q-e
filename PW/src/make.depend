@@ -186,7 +186,7 @@ bp_c_phase.o : ../../Modules/ions_base.o
 bp_c_phase.o : ../../Modules/kind.o
 bp_c_phase.o : ../../Modules/mp_bands.o
 bp_c_phase.o : ../../Modules/noncol.o
-bp_c_phase.o : ../../Modules/qes_libs.o
+bp_c_phase.o : ../../Modules/qes_libs_module.o
 bp_c_phase.o : ../../Modules/qexsd.o
 bp_c_phase.o : ../../Modules/recvec.o
 bp_c_phase.o : ../../Modules/uspp.o
@@ -968,7 +968,7 @@ input.o : ../../Modules/kind.o
 input.o : ../../Modules/mm_dispersion.o
 input.o : ../../Modules/mp_pools.o
 input.o : ../../Modules/noncol.o
-input.o : ../../Modules/qes_types.o
+input.o : ../../Modules/qes_types_module.o
 input.o : ../../Modules/qexsd.o
 input.o : ../../Modules/qmmm.o
 input.o : ../../Modules/read_namelists.o
@@ -1493,8 +1493,8 @@ pw_init_qexsd_input.o : ../../Modules/input_parameters.o
 pw_init_qexsd_input.o : ../../Modules/ions_base.o
 pw_init_qexsd_input.o : ../../Modules/kind.o
 pw_init_qexsd_input.o : ../../Modules/parameters.o
-pw_init_qexsd_input.o : ../../Modules/qes_libs.o
-pw_init_qexsd_input.o : ../../Modules/qes_types.o
+pw_init_qexsd_input.o : ../../Modules/qes_libs_module.o
+pw_init_qexsd_input.o : ../../Modules/qes_types_module.o
 pw_init_qexsd_input.o : ../../Modules/qexsd.o
 pw_init_qexsd_input.o : ../../Modules/qexsd_input.o
 pw_init_qexsd_input.o : ../../Modules/uspp.o
@@ -1521,9 +1521,12 @@ pw_restart_new.o : ../../Modules/mp_global.o
 pw_restart_new.o : ../../Modules/mp_pools.o
 pw_restart_new.o : ../../Modules/noncol.o
 pw_restart_new.o : ../../Modules/paw_variables.o
-pw_restart_new.o : ../../Modules/qes_libs.o
+pw_restart_new.o : ../../Modules/qes_init_module.o
+pw_restart_new.o : ../../Modules/qes_libs_module.o
 pw_restart_new.o : ../../Modules/qes_read_module.o
-pw_restart_new.o : ../../Modules/qes_types.o
+pw_restart_new.o : ../../Modules/qes_reset_module.o
+pw_restart_new.o : ../../Modules/qes_types_module.o
+pw_restart_new.o : ../../Modules/qes_write_module.o
 pw_restart_new.o : ../../Modules/qexsd.o
 pw_restart_new.o : ../../Modules/qexsd_input.o
 pw_restart_new.o : ../../Modules/recvec.o
@@ -1568,8 +1571,8 @@ rdiagh.o : ../../UtilXlib/mp.o
 read_conf_from_file.o : ../../Modules/io_files.o
 read_conf_from_file.o : ../../Modules/io_global.o
 read_conf_from_file.o : ../../Modules/kind.o
-read_conf_from_file.o : ../../Modules/qes_libs.o
-read_conf_from_file.o : ../../Modules/qes_types.o
+read_conf_from_file.o : ../../Modules/qes_libs_module.o
+read_conf_from_file.o : ../../Modules/qes_types_module.o
 read_conf_from_file.o : pw_restart_new.o
 read_file_new.o : ../../FFTXlib/fft_interfaces.o
 read_file_new.o : ../../FFTXlib/fft_types.o
@@ -1590,8 +1593,8 @@ read_file_new.o : ../../Modules/mp_bands.o
 read_file_new.o : ../../Modules/mp_images.o
 read_file_new.o : ../../Modules/noncol.o
 read_file_new.o : ../../Modules/paw_variables.o
-read_file_new.o : ../../Modules/qes_libs.o
-read_file_new.o : ../../Modules/qes_types.o
+read_file_new.o : ../../Modules/qes_libs_module.o
+read_file_new.o : ../../Modules/qes_types_module.o
 read_file_new.o : ../../Modules/read_pseudo.o
 read_file_new.o : ../../Modules/recvec.o
 read_file_new.o : ../../Modules/recvec_subs.o
@@ -1810,8 +1813,8 @@ setup.o : ../../Modules/mp_pools.o
 setup.o : ../../Modules/noncol.o
 setup.o : ../../Modules/parameters.o
 setup.o : ../../Modules/paw_variables.o
-setup.o : ../../Modules/qes_libs.o
-setup.o : ../../Modules/qes_types.o
+setup.o : ../../Modules/qes_libs_module.o
+setup.o : ../../Modules/qes_types_module.o
 setup.o : ../../Modules/recvec.o
 setup.o : ../../Modules/uspp.o
 setup.o : atomic_wfc_mod.o
@@ -2253,8 +2256,8 @@ wfcinit.o : ../../Modules/io_global.o
 wfcinit.o : ../../Modules/kind.o
 wfcinit.o : ../../Modules/mp_bands.o
 wfcinit.o : ../../Modules/noncol.o
-wfcinit.o : ../../Modules/qes_libs.o
-wfcinit.o : ../../Modules/qes_types.o
+wfcinit.o : ../../Modules/qes_libs_module.o
+wfcinit.o : ../../Modules/qes_types_module.o
 wfcinit.o : ../../Modules/random_numbers.o
 wfcinit.o : ../../Modules/recvec.o
 wfcinit.o : ../../Modules/uspp.o

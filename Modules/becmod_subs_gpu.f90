@@ -41,6 +41,7 @@ MODULE becmod_subs_gpum
   !
   PUBLIC :: allocate_bec_type_gpu, deallocate_bec_type_gpu, calbec_gpu, &
             beccopy_gpu, becscal_gpu, is_allocated_bec_type_gpu, &
+            synchronize_bec_type_gpu, &
             using_becp_auto, using_becp_d_auto
   !
 CONTAINS
@@ -354,59 +355,150 @@ CONTAINS
   !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE allocate_bec_type_gpu ( )
+  SUBROUTINE allocate_bec_type_gpu ( nkb, nbnd, bec_d, comm )
     !-----------------------------------------------------------------------
-    USE becmod_gpum, ONLY : using_becp_r, using_becp_r_d
-    USE becmod_gpum, ONLY : using_becp_k, using_becp_k_d
-    USE becmod_gpum, ONLY : using_becp_nc, using_becp_nc_d
+    USE mp, ONLY: mp_size, mp_rank, mp_get_comm_null
+    USE cuda_util, ONLY :cuf_memset
     IMPLICIT NONE
+    TYPE (bec_type_d) :: bec_d
+    INTEGER, INTENT (in) :: nkb, nbnd
+    INTEGER, INTENT (in), OPTIONAL :: comm
+    INTEGER :: ierr, nbnd_siz
+    INTEGER, EXTERNAL :: ldim_block, gind_block
+    !
+    nbnd_siz = nbnd
+    bec_d%comm = mp_get_comm_null()
+    bec_d%nbnd = nbnd
+    bec_d%mype = 0
+    bec_d%nproc = 1
+    bec_d%nbnd_loc = nbnd
+    bec_d%ibnd_begin = 1
+    !
+    IF( PRESENT( comm ) .AND. gamma_only .AND. smallmem ) THEN
+       bec_d%comm = comm
+       bec_d%nproc = mp_size( comm )
+       IF( bec_d%nproc > 1 ) THEN
+          nbnd_siz   = nbnd / bec_d%nproc
+          IF( MOD( nbnd, bec_d%nproc ) /= 0 ) nbnd_siz = nbnd_siz + 1
+          bec_d%mype  = mp_rank( bec_d%comm )
+          bec_d%nbnd_loc   = ldim_block( bec_d%nbnd , bec_d%nproc, bec_d%mype )
+          bec_d%ibnd_begin = gind_block( 1,  bec_d%nbnd, bec_d%nproc, bec_d%mype )
+       END IF
+    END IF
     !
     IF ( gamma_only ) THEN
        !
-       CALL using_becp_r(2); CALL using_becp_r_d(0)
+       ALLOCATE( bec_d%r_d( nkb, nbnd_siz ), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' allocate_bec_type ', ' cannot allocate bec_d%r ', ABS(ierr) )
+       !
+       CALL cuf_memset(bec_d%r_d, 0.0D0, (/1,nkb/),(/1, nbnd_siz/))
        !
     ELSEIF ( noncolin) THEN
        !
-       CALL using_becp_nc(2); CALL using_becp_nc_d(0)
+       ALLOCATE( bec_d%nc_d( nkb, npol, nbnd_siz ), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' allocate_bec_type ', ' cannot allocate bec_d%nc ', ABS(ierr) )
+       !
+       CALL cuf_memset(bec_d%nc_d, (0.0D0,0.0D0), (/1, nkb/), (/1, npol/), (/1, nbnd_siz/))
        !
     ELSE
        !
-       CALL using_becp_k(2); CALL using_becp_k_d(0)
+       ALLOCATE( bec_d%k_d( nkb, nbnd_siz ), STAT=ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( ' allocate_bec_type ', ' cannot allocate bec_d%k ', ABS(ierr) )
+       !
+       CALL cuf_memset(bec_d%k_d, (0.0D0,0.0D0), (/1, nkb/), (/1, npol/))
        !
     ENDIF
     !
     RETURN
     !
   END SUBROUTINE allocate_bec_type_gpu
+  !-----------------------------------------------------------------------
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE deallocate_bec_type_gpu ( )
+  SUBROUTINE deallocate_bec_type_gpu (bec_d)
     !-----------------------------------------------------------------------
     !
-    USE becmod_gpum, ONLY : using_becp_r, using_becp_r_d
-    USE becmod_gpum, ONLY : using_becp_k, using_becp_k_d
-    USE becmod_gpum, ONLY : using_becp_nc, using_becp_nc_d
+    USE mp, ONLY: mp_get_comm_null
     IMPLICIT NONE
+    TYPE (bec_type_d) :: bec_d
     !
+    bec_d%comm = mp_get_comm_null()
+    bec_d%nbnd = 0
+    !
+    IF (allocated(bec_d%r_d))  DEALLOCATE(bec_d%r_d)
+    IF (allocated(bec_d%nc_d)) DEALLOCATE(bec_d%nc_d)
+    IF (allocated(bec_d%k_d))  DEALLOCATE(bec_d%k_d)
+    !
+    RETURN
+    !
+  END SUBROUTINE deallocate_bec_type_gpu
+  !-----------------------------------------------------------------------
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE 	synchronize_bec_type_gpu (bec_d, bec, what)
+    !-----------------------------------------------------------------------
+    !
+    ! ... Updates a device or host version of a bec_type variable.
+    ! ... Direction 'h' updates host version, direction 'd' the device
+    ! ... version.
+    !
+    USE mp, ONLY: mp_get_comm_null
+    USE becmod, ONLY : bec_type
+    IMPLICIT NONE
+    TYPE (bec_type_d) :: bec_d
+    TYPE (bec_type) :: bec
+    CHARACTER, INTENT(IN) :: what
     !
     IF ( gamma_only ) THEN
        !
-       CALL using_becp_r(2); CALL using_becp_r_d(0)
+       IF (.not. (allocated(bec_d%r_d) .and. allocated(bec%r))) &
+          CALL errore('becmod_gpu', 'Unallocated array',1)
+       SELECT CASE(what)
+        CASE('d')
+          bec_d%r_d = bec%r
+        CASE('h')
+          bec%r     = bec_d%r_d
+        CASE DEFAULT
+          CALL errore('becmod_gpu', 'Invalid command',2)
+       END SELECT
        !
     ELSEIF ( noncolin) THEN
        !
-       CALL using_becp_nc(2); CALL using_becp_nc_d(0)
+       IF (.not. (allocated(bec_d%nc_d) .and. allocated(bec%nc))) &
+          CALL errore('becmod_gpu', 'Unallocated array',3)
+       SELECT CASE(what)
+        CASE('d')
+          bec_d%nc_d = bec%nc
+        CASE('h')
+          bec%nc     = bec_d%nc_d
+        CASE DEFAULT
+          CALL errore('becmod_gpu', 'Invalid command',4)
+       END SELECT
        !
     ELSE
        !
-       CALL using_becp_k(2); CALL using_becp_k_d(0)
+       IF (.not. (allocated(bec_d%k_d) .and. allocated(bec%k))) &
+          CALL errore('becmod_gpu', 'Unallocated array',5)
+       SELECT CASE(what)
+        CASE('d')
+          bec_d%k_d = bec%k
+        CASE('h')
+          bec%k     = bec_d%k_d
+        CASE DEFAULT
+          CALL errore('becmod_gpu', 'Invalid command',6)
+       END SELECT
        !
     ENDIF
     !
     RETURN
     !
-  END SUBROUTINE deallocate_bec_type_gpu
-
+  END SUBROUTINE 	synchronize_bec_type_gpu
+  !-----------------------------------------------------------------------
+  !
+  !-----------------------------------------------------------------------
   SUBROUTINE beccopy_gpu(bec, bec1, nkb, nbnd)
 #if defined(__CUDA)
     USE cudafor
