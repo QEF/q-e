@@ -16,7 +16,7 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   USE io_files,       ONLY : tmp_dir, prefix, postfix
   USE pw_restart_new,    ONLY  : pw_readschema_file, init_vars_from_schema
   USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type
-  USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_general_info, qes_reset_parallel_info 
+  USE qes_libs_module,      ONLY :  qes_reset
   !
   IMPLICIT NONE
   !
@@ -40,9 +40,9 @@ FUNCTION read_config_from_file(nat, at_old, omega_old, lmovecell, at, bg, &
   CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj)
   IF (ierr == 0 ) THEN 
      CALL init_vars_from_schema ( 'config', ierr, output_obj, parinfo_obj, geninfo_obj ) 
-     CALL qes_reset_output(output_obj) 
-     CALL qes_reset_parallel_info (parinfo_obj) 
-     CALL qes_reset_general_info  (geninfo_obj) 
+     CALL qes_reset (output_obj)
+     CALL qes_reset  (parinfo_obj)
+     CALL qes_reset  (geninfo_obj)
   END IF 
   !
   IF ( ierr > 0 ) THEN

@@ -14,8 +14,8 @@
 !  crashes when message exceeds a given size, so we need
 !  to break down MPI communications in smaller pieces
 !
-#define __MSGSIZ_MAX 100000
-#define __BCAST_MSGSIZ_MAX 100000
+#define __MSGSIZ_MAX 2000000
+#define __BCAST_MSGSIZ_MAX_GPU huge(n)
 
 !  Some implementation of MPI (OpenMPI) if it is not well tuned for the given
 !  network hardware (InfiniBand) tend to lose performance or get stuck inside
@@ -38,7 +38,6 @@
        INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
        !    
        IF (.NOT. ALLOCATED(mp_buff_r_d)) ALLOCATE(mp_buff_r_d(maxb))
-       IF (.NOT. ALLOCATED(mp_buff_c_d)) ALLOCATE(mp_buff_c_d(maxb))
        IF (.NOT. ALLOCATED(mp_buff_i_d)) ALLOCATE(mp_buff_i_d(maxb))
        !
    END SUBROUTINE allocate_buffers_gpu
@@ -47,7 +46,7 @@
        USE data_buffer
        IMPLICIT NONE
        !
-       DEALLOCATE(mp_buff_r_d, mp_buff_c_d, mp_buff_i_d)
+       DEALLOCATE(mp_buff_r_d, mp_buff_i_d)
        !
    END SUBROUTINE deallocate_buffers_gpu
 
@@ -63,7 +62,7 @@
         INTEGER, INTENT(IN) :: n, root, gid
         REAL(DP), DEVICE :: array_d( n )
 #if defined __MPI
-        INTEGER :: msgsiz_max = __BCAST_MSGSIZ_MAX
+        INTEGER :: msgsiz_max = __BCAST_MSGSIZ_MAX_GPU
         INTEGER :: nblk, blksiz, iblk, istart, ierr
 
 #if defined __TRACE

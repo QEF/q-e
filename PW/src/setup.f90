@@ -78,7 +78,7 @@ SUBROUTINE setup()
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
   USE pw_restart_new,     ONLY : pw_readschema_file, init_vars_from_schema 
-  USE qes_libs_module,    ONLY : qes_reset_output, qes_reset_parallel_info, qes_reset_general_info
+  USE qes_libs_module,    ONLY : qes_reset
   USE qes_types_module,   ONLY : output_type, parallel_info_type, general_info_type 
   USE exx,                ONLY : ecutfock, nbndproj
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
@@ -563,9 +563,9 @@ SUBROUTINE setup()
      !
   END IF
   IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart ) ) THEN 
-     CALL qes_reset_output ( output_obj ) 
-     CALL qes_reset_parallel_info ( parinfo_obj ) 
-     CALL qes_reset_general_info ( geninfo_obj ) 
+     CALL qes_reset  ( output_obj )
+     CALL qes_reset  ( parinfo_obj )
+     CALL qes_reset  ( geninfo_obj )
   END IF 
   !
   !
