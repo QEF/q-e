@@ -135,7 +135,8 @@ MODULE pw_restart_new
       USE control_flags,        ONLY : conv_elec, conv_ions, ldftd3
       USE input_parameters,     ONLY :  ts_vdw_econv_thr, ts_vdw_isolated
       !
-      USE wvfct_gpum,           ONLY : using_et
+      USE wvfct_gpum,           ONLY : using_et, using_wg
+      USE wavefunctions_gpum,   ONLY : using_evc
       !
       IMPLICIT NONE
       !
@@ -196,6 +197,8 @@ MODULE pw_restart_new
       ! If local PW dimensions are not available, set to 0
       !
       CALL using_et(0)
+      CALL using_wg(0)
+      CALL using_evc(0)
       !
       ALLOCATE( ngk_g( nkstot ) )
       ngk_g(:) = 0
@@ -682,8 +685,8 @@ MODULE pw_restart_new
       USE mp_pools,             ONLY : intra_pool_comm, inter_pool_comm
       USE mp_bands,             ONLY : my_bgrp_id, root_bgrp, intra_bgrp_comm,&
                                        root_bgrp_id, nbgrp
-      USE wavefunctions_gpum, ONLY : using_evc
-      USE wvfct_gpum,                ONLY : using_et
+      USE wavefunctions_gpum,   ONLY : using_evc
+      USE wvfct_gpum,           ONLY : using_et
       !
       IMPLICIT NONE
       !
