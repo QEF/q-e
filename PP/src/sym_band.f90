@@ -1060,8 +1060,8 @@ SUBROUTINE find_nks1nks2(firstk,lastk,nks1tot,nks1,nks2tot,nks2,spin_component)
   !  by the  current pool.
   !
   USE lsda_mod, ONLY : nspin
-  USE klist,  ONLY : nks, nkstot
-  USE mp_global, ONLY : my_pool_id, npool, kunit
+  USE klist,    ONLY : nks, nkstot
+  USE mp_pools, ONLY : my_pool_id, npool, kunit
 
   IMPLICIT NONE
   INTEGER, INTENT(out) :: nks1tot,nks1,nks2tot,nks2

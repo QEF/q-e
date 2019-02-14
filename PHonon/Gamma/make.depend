@@ -33,7 +33,6 @@ cg_setup.o : ../../Modules/gvecw.o
 cg_setup.o : ../../Modules/io_files.o
 cg_setup.o : ../../Modules/ions_base.o
 cg_setup.o : ../../Modules/kind.o
-cg_setup.o : ../../Modules/mp_global.o
 cg_setup.o : ../../Modules/recvec.o
 cg_setup.o : ../../Modules/uspp.o
 cg_setup.o : ../../Modules/wavefunctions.o
@@ -57,7 +56,7 @@ cgsolve.o : ../../Modules/kind.o
 d2ion.o : ../../Modules/constants.o
 d2ion.o : ../../Modules/io_global.o
 d2ion.o : ../../Modules/kind.o
-d2ion.o : ../../Modules/mp_global.o
+d2ion.o : ../../Modules/mp_pools.o
 d2ion.o : ../../UtilXlib/mp.o
 dgradcorr.o : ../../FFTXlib/fft_types.o
 dgradcorr.o : ../../Modules/kind.o
@@ -65,11 +64,11 @@ dielec.o : ../../Modules/cell_base.o
 dielec.o : ../../Modules/constants.o
 dielec.o : ../../Modules/io_files.o
 dielec.o : ../../Modules/ions_base.o
-dielec.o : ../../Modules/mp_global.o
+dielec.o : ../../Modules/mp_pools.o
 dielec.o : ../../PW/src/pwcom.o
 dielec.o : ../../UtilXlib/mp.o
 dielec.o : cgcom.o
-drhodv.o : ../../Modules/mp_global.o
+drhodv.o : ../../Modules/mp_pools.o
 drhodv.o : ../../PW/src/pwcom.o
 drhodv.o : ../../UtilXlib/mp.o
 drhodv.o : cgcom.o
@@ -112,7 +111,7 @@ dynmatcc.o : ../../Modules/constants.o
 dynmatcc.o : ../../Modules/fft_base.o
 dynmatcc.o : ../../Modules/ions_base.o
 dynmatcc.o : ../../Modules/kind.o
-dynmatcc.o : ../../Modules/mp_global.o
+dynmatcc.o : ../../Modules/mp_pools.o
 dynmatcc.o : ../../Modules/recvec.o
 dynmatcc.o : ../../Modules/uspp.o
 dynmatcc.o : ../../Modules/wavefunctions.o
@@ -164,7 +163,7 @@ rhod2vkb.o : ../../Modules/fft_base.o
 rhod2vkb.o : ../../Modules/gvecw.o
 rhod2vkb.o : ../../Modules/ions_base.o
 rhod2vkb.o : ../../Modules/kind.o
-rhod2vkb.o : ../../Modules/mp_global.o
+rhod2vkb.o : ../../Modules/mp_pools.o
 rhod2vkb.o : ../../Modules/recvec.o
 rhod2vkb.o : ../../Modules/uspp.o
 rhod2vkb.o : ../../Modules/wavefunctions.o

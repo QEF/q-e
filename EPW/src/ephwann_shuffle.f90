@@ -1377,10 +1377,18 @@
             IF (.NOT. int_mob .AND. carrier) THEN
               ! SP: Determination of the Fermi level for intrinsic or doped carrier 
               ! 
-              ef0(itemp) = fermicarrier( etemp )               
-              WRITE(stdout, '(5x,"Mobility Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev
-              ! We only compute 1 Fermi level so we do not need the other
-              efcb(itemp) = 0
+              ! VB only
+              IF ( ncarrier < 0.0 ) THEN
+                ef0(itemp) = fermicarrier( etemp )               
+                WRITE(stdout, '(5x,"Mobility VB Fermi level ",f10.6," eV")' )  ef0(itemp) * ryd2ev
+                ! We only compute 1 Fermi level so we do not need the other
+                efcb(itemp) = 0
+              ELSE ! CB 
+                efcb(itemp) = fermicarrier( etemp )               
+                WRITE(stdout, '(5x,"Mobility CB Fermi level ",f10.6," eV")' )  efcb(itemp) * ryd2ev
+                ! We only compute 1 Fermi level so we do not need the other
+                ef0(itemp) = 0
+              ENDIF
               ! 
             ENDIF
             ! 

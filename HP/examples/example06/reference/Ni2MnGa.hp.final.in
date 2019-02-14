@@ -1,0 +1,7 @@
+ &inputhp
+   prefix = 'Ni2MnGa',
+   outdir = '/scratch/timrov/WORK_DFPT_plus_U/A_PORTING_2018/A_Gitlab/A_my_Gitlab_08.11.2018/q-e/tempdir/',
+   nq1 = 2, nq2 = 2, nq3 = 2,
+   compute_hp = .true.
+   iverbosity = 2
+ /

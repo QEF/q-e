@@ -13,15 +13,17 @@ SUBROUTINE punch( what )
   ! ... the information needed for further processing (phonon etc.)
   ! ... what = 'all'          write xml data file, charge density, wavefunctions
   ! ...                       (for final data)
-  ! ... what = 'config'       write xml data file, charge density
+  ! ... what = 'config'       write xml data file and charge density; also,
+  !                           for nks=1, wavefunctions in plain binary format
+  !                           (see why in comments below)
   ! ...                       (for intermediate or incomplete results)
-  ! ... what = 'init-config'  write xml data file excluding final results
+  ! ... what = 'init-config'  write xml data file only excluding final results
   ! ...                       (for dry run, can be called at early stages)
   !
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunpun, iunwfc, nwordwfc, diropn, &
        tmp_dir, prefix, postfix, create_directory
-  USE control_flags,        ONLY : io_level, twfcollect, io_level, lscf
+  USE control_flags,        ONLY : io_level, lscf
   USE klist,                ONLY : nks
   USE io_files,             ONLY : xmlpun_schema, psfile, pseudo_dir
   USE wrappers,             ONLY : f_copy
@@ -41,7 +43,7 @@ SUBROUTINE punch( what )
   !
   CHARACTER(LEN=*), INTENT(IN) :: what
   !
-  LOGICAL :: exst
+  LOGICAL :: exst, wf_collect
   CHARACTER(LEN=320) :: cp_source, cp_dest
   INTEGER            :: cp_status, nt, inlc
   !
@@ -50,15 +52,6 @@ SUBROUTINE punch( what )
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
       TRIM( prefix ) // postfix
-  !
-  ! ... if wavefunctions are stored in "distributed" format,
-  ! ... save here wavefunctions to file if never saved before
-  !
-  IF ( .NOT. twfcollect .AND. nks == 1 ) THEN
-     IF (io_level < 1) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
-     CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, 1 )
-     IF (io_level < 1) CLOSE ( UNIT=iunwfc, STATUS='keep' )
-  END IF
   iunpun = 4
   !
   ! ...New-style I/O with xml schema and (optionally) hdf5 binaries
@@ -67,7 +60,10 @@ SUBROUTINE punch( what )
   !
   CALL create_directory( TRIM( tmp_dir ) // TRIM( prefix ) // postfix )
   !
-  CALL pw_write_schema( what )
+  ! ... wf_collect keeps track whether wfcs are written in portable format
+  !
+  wf_collect = ( TRIM(what) == 'all' )
+  CALL pw_write_schema( what, wf_collect )
   !
   ! ... charge density - also writes rho%ns if lda+U and rho%bec if PAW
   ! ... do not overwrite the scf charge density with a non-scf one
@@ -90,7 +86,7 @@ SUBROUTINE punch( what )
      !
      ! ... wavefunctions in "collected" format - also G- and k+G-vectors
      !
-     IF ( twfcollect ) CALL pw_write_binaries( )
+     CALL pw_write_binaries( )
      !
      ! ... copy pseudopotential files into the .save directory
      !
@@ -115,9 +111,20 @@ SUBROUTINE punch( what )
      ! 
      CALL qexsd_reset_steps()
      !
+  ELSE IF ( TRIM(what) == 'config' .AND.  nks == 1 ) THEN
+     !
+     ! ... here we are stopping an incomplete calculations - wavefunctions are 
+     ! ... stored in buffers and saved when buffers are closed. For 1 k-point 
+     ! ... however there is no buffer: wavefunctions must be saved to file here
+     !
+     IF (io_level < 1) CALL diropn( iunwfc, 'wfc', 2*nwordwfc, exst )
+     CALL davcio ( evc, 2*nwordwfc, iunwfc, nks, 1 )
+     IF (io_level < 1) CLOSE ( UNIT=iunwfc, STATUS='keep' )
+     CALL infomsg('punch','wavefunctions written to file')
+     !
   END IF
   !
-  ! ... FIXME: for electron-phonon calculations
+  ! ... FIXME: for electron-phonon calculations - data should be read from xml file!
   ! 
   IF ( la2F ) CALL a2Fsave()
   !

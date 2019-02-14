@@ -169,8 +169,7 @@ elphon_shuffle.o : ../../LR_Modules/lrcom.o
 elphon_shuffle.o : ../../Modules/fft_base.o
 elphon_shuffle.o : ../../Modules/ions_base.o
 elphon_shuffle.o : ../../Modules/kind.o
-elphon_shuffle.o : ../../Modules/mp_global.o
-elphon_shuffle.o : ../../Modules/mp_images.o
+elphon_shuffle.o : ../../Modules/mp_pools.o
 elphon_shuffle.o : ../../Modules/noncol.o
 elphon_shuffle.o : ../../Modules/recvec.o
 elphon_shuffle.o : ../../Modules/uspp.o
@@ -290,7 +289,6 @@ epw_init.o : ../../UtilXlib/mp.o
 epw_init.o : constants_epw.o
 epw_init.o : elph2.o
 epw_readin.o : ../../LR_Modules/lrcom.o
-epw_readin.o : ../../Modules/check_stop.o
 epw_readin.o : ../../Modules/constants.o
 epw_readin.o : ../../Modules/control_flags.o
 epw_readin.o : ../../Modules/io_files.o
@@ -305,6 +303,7 @@ epw_readin.o : ../../UtilXlib/mp.o
 epw_readin.o : constants_epw.o
 epw_readin.o : elph2.o
 epw_readin.o : epwcom.o
+epw_readin.o : io_epw.o
 epw_setup.o : ../../LR_Modules/lrcom.o
 epw_setup.o : ../../Modules/cell_base.o
 epw_setup.o : ../../Modules/control_flags.o
@@ -533,6 +532,7 @@ pw2wan90epw.o : ../../Modules/io_global.o
 pw2wan90epw.o : ../../Modules/ions_base.o
 pw2wan90epw.o : ../../Modules/kind.o
 pw2wan90epw.o : ../../Modules/mp_global.o
+pw2wan90epw.o : ../../Modules/mp_pools.o
 pw2wan90epw.o : ../../Modules/mp_world.o
 pw2wan90epw.o : ../../Modules/noncol.o
 pw2wan90epw.o : ../../Modules/random_numbers.o
@@ -804,10 +804,10 @@ wan2bloch.o : ../../Modules/io_files.o
 wan2bloch.o : ../../Modules/io_global.o
 wan2bloch.o : ../../Modules/ions_base.o
 wan2bloch.o : ../../Modules/kind.o
-wan2bloch.o : ../../Modules/mp_global.o
 wan2bloch.o : ../../Modules/mp_world.o
 wan2bloch.o : ../../PHonon/PH/phcom.o
 wan2bloch.o : ../../PHonon/PH/rigid.o
+wan2bloch.o : ../../UtilXlib/mp.o
 wan2bloch.o : ../../UtilXlib/parallel_include.o
 wan2bloch.o : constants_epw.o
 wan2bloch.o : elph2.o

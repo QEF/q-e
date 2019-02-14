@@ -13,7 +13,7 @@ SUBROUTINE openfilq()
   ! ... calculation.
   !
   USE kinds,           ONLY : DP
-  USE control_flags,   ONLY : io_level, modenum, twfcollect
+  USE control_flags,   ONLY : io_level, modenum
   USE units_ph,        ONLY : iudwf, iubar, iucom, iudvkb3, &
                               iudrhous, iuebar, iudrho, iudyn, iudvscf, &
                               lrdwf, lrbar, lrcom, lrdvkb3, &
@@ -36,7 +36,6 @@ SUBROUTINE openfilq()
   USE io_files,        ONLY : prefix
   USE noncollin_module,ONLY : npol, nspin_mag
   USE paw_variables,   ONLY : okpaw
-  USE control_flags,   ONLY : twfcollect
   USE mp_bands,        ONLY : me_bgrp
   USE io_global,       ONLY : ionode,stdout
   USE buffers,         ONLY : open_buffer, close_buffer
@@ -91,11 +90,7 @@ SUBROUTINE openfilq()
   CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
   IF (.NOT.exst.AND..NOT.exst_mem.and..not.all_done) THEN
      tmp_dir = tmp_dir_phq
-     !FIXME in case the starting computation has been done twfcollect=.true.
-     ! run_nscf saves the wave functions in tmp_dir_phq and not in tmp_dir 
-     ! we have to find a way to have them in the same place in both cases
-     ! not now because release is tomorrow (29 june 2018). Dirty fix if
-     ! open_buffer fails in tmp_dir go back to tmp_dir_phq and try again. 
+     !FIXME Dirty fix for obscure case, likely obsolete?
      CALL close_buffer(iuwfc, 'delete') 
      CALL open_buffer (iuwfc, 'wfc', lrwfc, io_level, exst_mem, exst, tmp_dir)
      IF (.NOT.exst.AND..NOT.exst_mem) CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)

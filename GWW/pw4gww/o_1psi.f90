@@ -22,7 +22,6 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
   USE constants, ONLY : pi
   USE kinds,     ONLY : DP
   USE gvect,     ONLY : gstart
-  USE mp_global, ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE mp_world,  ONLY : world_comm
   USE fft_base,  ONLY : dffts

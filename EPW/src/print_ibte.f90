@@ -20,8 +20,8 @@
   USE io_global,     ONLY : stdout
   USE phcom,         ONLY : nmodes
   USE epwcom,        ONLY : nbndsub, fsthick, eps_acustic, degaussw, & 
-                            nstemp, scattering_serta, scattering_0rta, shortrange,&
-                            restart, restart_freq, restart_filq, vme
+                            nstemp, scattering_serta, scattering_0rta, shortrange, &
+                            restart, restart_freq, restart_filq, vme, ncarrier
   USE pwcom,         ONLY : ef
   USE elph2,         ONLY : ibndmax, ibndmin, etf, nkqf, nkf, dmef, vmef, wf, wqf, & 
                             epf17, nkqtotf, inv_tau_all, inv_tau_allcb, &
@@ -640,22 +640,41 @@
       etemp = transp_temp(itemp)
       carrier_density = 0.0
       ! 
-      DO ik = 1, nkf
-        DO ibnd = 1, ibndmax-ibndmin+1
-          ! This selects only valence bands for hole conduction
-          IF (etf_all (ibnd, ik+lower_bnd-1 ) < ef0(itemp) ) THEN
-            !  energy at k (relative to Ef)
-            ekk = etf_all (ibnd, ik+lower_bnd-1 ) - ef0(itemp)
-            fnk = wgauss( -ekk / etemp, -99)
-            ! The wkf(ikk) already include a factor 2
-            carrier_density = carrier_density + wkf_all(ik+lower_bnd-1 ) * (1.0d0 - fnk )
-          ENDIF
+      IF ( ncarrier < 0.0 ) THEN ! VB
+        DO ik = 1, nkf
+          DO ibnd = 1, ibndmax-ibndmin+1
+            ! This selects only valence bands for hole conduction
+            IF (etf_all (ibnd, ik+lower_bnd-1 ) < ef0(itemp) ) THEN
+              !  energy at k (relative to Ef)
+              ekk = etf_all (ibnd, ik+lower_bnd-1 ) - ef0(itemp)
+              fnk = wgauss( -ekk / etemp, -99)
+              ! The wkf(ikk) already include a factor 2
+              carrier_density = carrier_density + wkf_all(ik+lower_bnd-1 ) * (1.0d0 - fnk )
+            ENDIF
+          ENDDO
         ENDDO
-      ENDDO
-      CALL mp_sum( carrier_density, world_comm )
-      carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
-      WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp *ryd2ev/kelvin2eV, &
-                    ef0(itemp)*ryd2ev,  carrier_density
+        CALL mp_sum( carrier_density, world_comm )
+        carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
+        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp *ryd2ev/kelvin2eV, &
+                      ef0(itemp)*ryd2ev,  carrier_density
+      ELSE ! CB
+        DO ik = 1, nkf
+          DO ibnd = 1, ibndmax-ibndmin+1
+            ! This selects only valence bands for hole conduction
+            IF (etf_all (ibnd, ik+lower_bnd-1 ) > efcb(itemp) ) THEN
+              !  energy at k (relative to Ef)
+              ekk = etf_all (ibnd, ik+lower_bnd-1 ) - efcb(itemp)
+              fnk = wgauss( -ekk / etemp, -99)
+              ! The wkf(ikk) already include a factor 2
+              carrier_density = carrier_density + wkf_all(ik+lower_bnd-1 ) *  fnk
+            ENDIF
+          ENDDO
+        ENDDO
+        CALL mp_sum( carrier_density, world_comm )
+        carrier_density = carrier_density * inv_cell * ( bohr2ang * ang2cm)**(-3)
+        WRITE(stdout,'(5x, 1f8.3, 1f12.4, 1E19.6)') etemp *ryd2ev/kelvin2eV, &
+                      efcb(itemp)*ryd2ev,  carrier_density
+      ENDIF ! ncarrier
     ENDDO
     ! 
   ENDIF ! iqq

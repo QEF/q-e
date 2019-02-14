@@ -33,9 +33,9 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   USE becmod,          ONLY : becp, allocate_bec_type, deallocate_bec_type !CG
   USE scf,             ONLY : vltot, vrs, v, kedtau
   USE gvecs,           ONLY : doublegrid
-  USE mp_global,       ONLY : intra_pool_comm, root_pool, world_comm
   USE mp,              ONLY : mp_sum, mp_bcast, mp_barrier !CG
-  USE mp_pools,        ONLY : npool
+  USE mp_images,       ONLY : intra_image_comm
+  USE mp_pools,        ONLY : npool, intra_pool_comm, root_pool
   USE io_global,       ONLY : ionode
 
   USE xspectra,        ONLY : edge, n_lanczos, xiabs, xang_mom, xniter, &
@@ -611,8 +611,8 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
         WRITE( stdout,'(" total cpu time spent 4 is ",F9.2," secs")') timenow
         
      ENDDO  !on k points
-     CALL mp_barrier(world_comm)
-     CALL mp_sum(nunfinished, world_comm)
+     CALL mp_barrier(intra_image_comm)
+     CALL mp_sum(nunfinished, intra_image_comm)
 
 !     WRITE(6,'(3f16.8)') ((a(jloop,i_lanczos,ik),jloop=1,ncalcv(i_lanczos,ik)),ik=1,1)
 !     write(stdout,*)
@@ -624,7 +624,7 @@ SUBROUTINE xanes_dipole_general_edge(a,b,ncalcv,nl_init, xnorm,core_wfn,paw_ilto
   ! Array deallocation
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
   
-  CALL mp_barrier(world_comm)
+  CALL mp_barrier(intra_image_comm)
   
 
   IF (nunfinished >= 1) THEN 

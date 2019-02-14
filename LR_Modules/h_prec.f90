@@ -23,7 +23,7 @@ subroutine h_prec (ik, evq, h_diag)
   USE gvect,      ONLY : gstart
   USE control_lr, ONLY : nbnd_occ
   USE mp,         ONLY : mp_sum
-  USE mp_global,  ONLY : intra_bgrp_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
   !

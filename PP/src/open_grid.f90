@@ -4,15 +4,16 @@ PROGRAM open_grid
   !
   USE kinds, ONLY : DP
   USE io_global,  ONLY : stdout, ionode, ionode_id
-  USE mp_global,  ONLY : mp_startup, npool, nproc_pool, nproc_pool_file
+  USE mp_global,  ONLY : mp_startup
+  USE mp_images,  ONLY : intra_image_comm
+  USE mp_pools,   ONLY : npool
   USE mp,         ONLY : mp_bcast
-  USE mp_world,   ONLY : world_comm
   USE cell_base,  ONLY : at, bg, tpiba2, alat
   USE klist,      ONLY : nks, nkstot, xk, wk, igk_k, ngk, qnorm
   USE io_files,   ONLY : prefix, tmp_dir, nwordwfc, iunwfc, diropn
   USE noncollin_module,   ONLY : noncolin, m_loc, angle1, angle2, nspin_lsda
   USE spin_orb,           ONLY : domag
-  USE control_flags,      ONLY : gamma_only, twfcollect
+  USE control_flags,      ONLY : gamma_only
   USE environment,        ONLY : environment_start, environment_end
   USE ions_base,          ONLY : nat, tau, ityp
   USE symm_base,          ONLY : nrot, nsym, s, t_rev, fft_fact, find_sym
@@ -97,10 +98,10 @@ PROGRAM open_grid
   ENDIF
   !
   !
-  CALL mp_bcast(outdir,ionode_id, world_comm)
-  CALL mp_bcast(tmp_dir,ionode_id, world_comm)
-  CALL mp_bcast(prefix,ionode_id, world_comm)
-  !CALL mp_bcast(nq,ionode_id, world_comm)
+  CALL mp_bcast(outdir,ionode_id, intra_image_comm)
+  CALL mp_bcast(tmp_dir,ionode_id, intra_image_comm)
+  CALL mp_bcast(prefix,ionode_id, intra_image_comm)
+  !CALL mp_bcast(nq,ionode_id, intra_image_comm)
   !
   WRITE(stdout,*)
   WRITE(stdout,*) ' Reading nscf_save data'
@@ -108,22 +109,12 @@ PROGRAM open_grid
   !print*, "initial", nks, nkstot
   CALL open_buffer(iunwfc, 'wfc', nwordwfc, io_level, exst_mem, exst)
   !
-!  twfcollect = .false.
-  !
   WRITE(stdout,*)
   IF ( npool > 1 .and. nspin_mag>1) CALL errore( 'open_grid', &
       'pools+spin not implemented, use wf_collect instead', npool )
   !
   IF(gamma_only) CALL errore("open_grid", &
       "not implemented, and pointless, for gamma-only",1)
-  !
-  ! Here we trap restarts from a different number of nodes.
-  !
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
-     CALL errore('open_grid', &
-     'pw.x run on a different number of procs/pools. Use wf_collect=.true.',1)
-  !
-!  CALL openfil_pp()
   !
   ! Store some variables related to exx to be put back before writing
   use_ace_back = use_ace
@@ -189,8 +180,6 @@ PROGRAM open_grid
   !WRITE(stdout,*) ' Nwordwfc:', nwordwfc, nbnd, npwx, npol
   CALL open_buffer(iunwfc, 'wfc', nwordwfc, +1, exst_mem, exst)
   !
-  ! Set the next to true to force non-collected wfcs on output
- !twfcollect = .false.
   CALL write_scf(rho, nspin)
   !
   ALLOCATE(psic(dffts%nnr), evx(npol*npwx, nbnd))
@@ -246,7 +235,6 @@ PROGRAM open_grid
   nq3 = nq_back(3)
   CALL dft_force_hybrid(exx_status_back)
   !
-  !twfcollect = .false.
   CALL punch('all')
   !
   ALLOCATE(yk(3,nks))

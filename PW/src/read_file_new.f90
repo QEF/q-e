@@ -26,16 +26,16 @@ SUBROUTINE read_file()
   USE dfunct,               ONLY : newd
   USE ldaU,                 ONLY : lda_plus_u, U_projection
   USE pw_restart_new,       ONLY : read_collected_to_evc
-  USE control_flags,        ONLY : twfcollect
   USE io_files,             ONLY : tmp_dir, prefix, postfix
   USE control_flags,        ONLY : io_level
   USE klist,                ONLY : init_igk
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
-  !
+  USE qes_types_module,     ONLY : output_type
   IMPLICIT NONE 
+  TYPE ( output_type) :: output_obj 
   INTEGER :: ierr
-  LOGICAL :: exst
+  LOGICAL :: exst, wfc_is_collected
   CHARACTER( LEN=256 )  :: dirname
   !
   !
@@ -47,7 +47,7 @@ SUBROUTINE read_file()
   IF ( ionode ) WRITE( stdout, '(/,5x,A,/,5x,A)') &
      'Reading data from directory:', TRIM( dirname )
   !
-  CALL read_xml_file ( )
+  CALL read_xml_file ( wfc_is_collected )
   !
   ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
   ! ... have been written to tmp_dir, not to a different directory!
@@ -63,7 +63,9 @@ SUBROUTINE read_file()
   !
   CALL init_igk ( npwx, ngm, g, gcutw ) 
   !
-  IF ( twfcollect )  CALL read_collected_to_evc ( TRIM ( dirname )) 
+  ! ... FIXME: this should be taken out from here
+  !
+  IF ( wfc_is_collected ) CALL read_collected_to_evc(dirname) 
   !
   ! ... Assorted initialization: pseudopotentials, PAW
   ! ... Not sure which ones (if any) should be done here
@@ -89,7 +91,7 @@ SUBROUTINE read_file()
 END SUBROUTINE read_file
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_xml_file ( )
+SUBROUTINE read_xml_file ( wfc_is_collected )
   !----------------------------------------------------------------------------
   !
   ! ... This routine allocates space for all quantities already computed
@@ -123,7 +125,7 @@ SUBROUTINE read_xml_file ( )
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
   USE pw_restart_new,       ONLY :  pw_readschema_file, init_vars_from_schema 
   USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type, input_type
-  USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_input, qes_reset_general_info, qes_reset_parallel_info 
+  USE qes_libs_module,      ONLY :  qes_reset
   USE io_rho_xml,           ONLY : read_scf
   USE fft_rho,              ONLY : rho_g2r
   USE read_pseudo_mod,      ONLY : readpp
@@ -140,11 +142,12 @@ SUBROUTINE read_xml_file ( )
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
 #if defined(__BEOWULF)
   USE io_global,             ONLY : ionode, ionode_id
-  USE bcast_qes_types_module,ONLY : qes_bcast 
+  USE qes_bcast_module       ONLY : qes_bcast
   USE mp_images,             ONLY : intra_image_comm
 #endif
   !
   IMPLICIT NONE
+  LOGICAL, INTENT(OUT) :: wfc_is_collected
 
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
@@ -169,6 +172,7 @@ SUBROUTINE read_xml_file ( )
   CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
 #endif
+  wfc_is_collected = output_obj%band_structure%wf_collected
   ! ... first we get the version of the qexml file
   !     if not already read
   !
@@ -346,10 +350,10 @@ SUBROUTINE read_xml_file ( )
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
   !
-  CALL qes_reset_output ( output_obj )  
-  CALL qes_reset_general_info ( geninfo_obj ) 
-  CALL qes_reset_parallel_info ( parinfo_obj ) 
-  IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset_input ( input_obj) 
+  CALL qes_reset  ( output_obj )
+  CALL qes_reset  ( geninfo_obj )
+  CALL qes_reset  ( parinfo_obj )
+  IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset ( input_obj) 
   ! 
   RETURN
   !

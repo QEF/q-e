@@ -11,7 +11,7 @@ SUBROUTINE hp_run_nscf (do_band)
   !
   ! This is the main driver of the PWscf program called from the HP code.
   !
-  USE control_flags,   ONLY : conv_ions, twfcollect, restart, iverbosity
+  USE control_flags,   ONLY : conv_ions, restart, iverbosity
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE io_files,        ONLY : prefix, tmp_dir, wfc_dir, seqopn
   USE lsda_mod,        ONLY : nspin
@@ -75,10 +75,8 @@ SUBROUTINE hp_run_nscf (do_band)
   !
   CALL init_run()
   !
-  IF (do_band) CALL non_scf()
-  !
   IF (do_band) THEN
-     twfcollect = .FALSE.
+     CALL non_scf()
      CALL punch( 'all' )
   ENDIF
   !

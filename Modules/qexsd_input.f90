@@ -42,6 +42,7 @@ MODULE qexsd_input
   REAL(DP),INTENT(IN)                  :: max_seconds,etot_conv_thr,forc_conv_thr,&
                                           press_conv_thr   
   INTEGER,INTENT(IN)                   :: iprint, nstep
+  OPTIONAL                             :: nstep
   !
   !
   CHARACTER(LEN=*),PARAMETER           :: TAGNAME='control_variables'
@@ -61,29 +62,14 @@ MODULE qexsd_input
      disk_io_value=TRIM(disk_io)
   END IF
   !
-  SELECT CASE ( TRIM (calculation)) 
-    CASE ('scf', 'nscf', 'bands') 
-       IF ( nstep == 1) THEN 
-          nstep_ispresent = .FALSE. 
-       ELSE 
-          nstep_ispresent = .TRUE. 
-       END IF 
-   CASE DEFAULT 
-       IF ( nstep == 50 ) THEN 
-          nstep_ispresent = .FALSE. 
-       ELSE 
-          nstep_ispresent = .TRUE.
-       END IF 
-  END SELECT 
   !
-  CALL qes_init_control_variables(obj,tagname,title=title,calculation=calculation,&
-                                  restart_mode=restart_mode,prefix=prefix,        &
-                                  pseudo_dir=pseudo_dir,outdir=outdir,disk_io=disk_io_value,&
+  CALL qes_init (obj,tagname,title=TRIM(title),calculation=TRIM(calculation),&
+                                  restart_mode=TRIM(restart_mode),prefix=TRIM(prefix),        &
+                                  pseudo_dir=TRIM(pseudo_dir),outdir=TRIM(outdir),disk_io=TRIM(disk_io_value),&
                                   verbosity=TRIM(verbosity_value),stress=stress,forces=forces,    &
                                   wf_collect=wf_collect,max_seconds=int_max_seconds,  &
                                   etot_conv_thr=etot_conv_thr,forc_conv_thr=forc_conv_thr, &
-                                  press_conv_thr=press_conv_thr,print_every=iprint, NSTEP = nstep, &
-                                  NSTEP_ISPRESENT = nstep_ispresent )
+                                  press_conv_thr=press_conv_thr,print_every=iprint, NSTEP = nstep )
 
   END SUBROUTINE qexsd_init_control_variables
   !
@@ -98,7 +84,7 @@ MODULE qexsd_input
   !
   CHARACTER(LEN=*),PARAMETER      :: TAGNAME="spin"
   
-  CALL qes_init_spin(obj,TAGNAME,lsda=lsda,noncolin=noncolin,spinorbit=spinorbit)
+  CALL qes_init (obj,TAGNAME,lsda=lsda,noncolin=noncolin,spinorbit=spinorbit)
   
   END SUBROUTINE qexsd_init_spin  
   !
@@ -110,26 +96,24 @@ MODULE qexsd_input
   IMPLICIT NONE
   ! 
   TYPE ( bands_type)                           :: obj
-  INTEGER,INTENT(IN)                           :: nbnd,nspin
+  INTEGER,OPTIONAL, INTENT(IN)                 :: nbnd 
+  INTEGER,INTENT(IN)                           :: nspin
   CHARACTER(LEN=*),INTENT(IN)                  :: occupations,smearing
-  REAL(DP),INTENT(IN)                          :: degauss,tot_charge
+  REAL(DP),INTENT(IN)                          :: degauss 
   REAL(DP),DIMENSION(:),OPTIONAL,INTENT(IN)    :: input_occupations, input_occupations_minority
-  REAL(DP),OPTIONAL,INTENT(IN)                 :: tot_mag
+  REAL(DP),OPTIONAL,INTENT(IN)                 :: tot_mag, tot_charge 
   !
   CHARACTER(25)                                :: smearing_local
   INTEGER                                      :: spin_degeneracy, inpOcc_size = 0
   CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="bands"
-  TYPE(smearing_type)                          :: smearing_obj
+  TYPE(smearing_type),POINTER                  :: smearing_obj => NULL()
   TYPE(occupations_type)                       :: occup_obj
   TYPE(inputoccupations_type),ALLOCATABLE      :: inpOcc_objs(:)
   LOGICAL                                      :: tot_mag_ispresent = .FALSE., &
                                                   inp_occ_arepresent = .FALSE.
   ! 
-  IF (TRIM(occupations) .NE. "smearing")  THEN
-     CALL qes_init_smearing ( smearing_obj, "smearing", degauss=0.d0, smearing="")
-     smearing_obj%lread  = .FALSE.
-     smearing_obj%lwrite = .FALSE.
-  ELSE
+  IF (TRIM(occupations) .EQ. "smearing")  THEN
+     ALLOCATE(smearing_obj) 
      SELECT CASE (TRIM  (smearing))
        CASE ("gaussian", "gauss")
            smearing_local="gaussian"
@@ -140,18 +124,11 @@ MODULE qexsd_input
        CASE ('fermi-dirac', 'f-d', 'fd') 
            smearing_local="fd"
      END SELECT 
-     CALL qes_init_smearing(smearing_obj,"smearing",degauss=degauss,smearing=smearing_local)
+     CALL qes_init (smearing_obj,"smearing",degauss=degauss,smearing=smearing_local)
   END IF
-  IF (nspin .GT. 1) THEN 
-     spin_degeneracy = 1
-  ELSE 
-     spin_degeneracy = 2
-  END IF
-  CALL  qes_init_occupations(occup_obj, "occupations", spin= spin_degeneracy, & 
-                              spin_ispresent =.FALSE., occupations = TRIM(occupations))
+  CALL  qes_init (occup_obj, "occupations", occupations = TRIM(occupations))
   !
   IF (PRESENT(input_occupations) ) THEN 
-     inp_occ_arepresent = .TRUE.
      SELECT CASE ( nspin)
        CASE (2) 
           inpOcc_size=2
@@ -160,31 +137,26 @@ MODULE qexsd_input
      END SELECT
      ALLOCATE (inpOcc_objs(inpOcc_size))
      IF ( inpOcc_size .GT. 1) THEN 
-        CALL qes_init_inputOccupations( inpOcc_objs(1),"input_occupations", 1, &
-                  REAL(spin_degeneracy,KIND=DP),input_occupations(2:nbnd) ) 
-        CALL qes_init_inputOccupations( inpOcc_objs(2),"input_occupations", 2, & 
-                  REAL(spin_degeneracy,KIND=DP) , input_occupations_minority(2:nbnd))
+        CALL qes_init ( inpOcc_objs(1),"input_occupations", ISPIN = 1, &
+                  SPIN_FACTOR = 1._DP, INPUTOCCUPATIONS = input_occupations(2:nbnd) ) 
+        CALL qes_init ( inpOcc_objs(2),"input_occupations", 2, & 
+                  SPIN_FACTOR = 1._DP , INPUTOCCUPATIONS = input_occupations_minority(2:nbnd))
      ELSE 
-        CALL qes_init_inputOccupations( inpOcc_objs(1),"input_occupations", 1,            &
-                                        REAL(spin_degeneracy,KIND=DP) , input_occupations(2:nbnd) )   
+        CALL qes_init ( inpOcc_objs(1),"input_occupations", ISPIN = 1, SPIN_FACTOR = 2._DP , &
+                                                                 INPUTOCCUPATIONS = input_occupations(2:nbnd) )   
      END IF
-  ELSE 
-     ALLOCATE (inpOcc_objs(0))
-     inpOcc_size = 0
   END IF
-  !
-  IF (PRESENT ( tot_mag)) tot_mag_ispresent = .TRUE.
-        
-  CALL qes_init_bands(obj,TAGNAME,NBND_ISPRESENT=(nbnd .GT. 0), NBND = nbnd, SMEARING_ISPRESENT = smearing_obj%lread,&
-                      SMEARING = smearing_obj, TOT_CHARGE_ISPRESENT=.TRUE., TOT_CHARGE = tot_charge,                 &
-                      TOT_MAGNETIZATION_ISPRESENT = tot_mag_ispresent, TOT_MAGNETIZATION = tot_mag,                  & 
-                      OCCUPATIONS=occup_obj, INPUTOCCUPATIONS_ISPRESENT=inp_occ_arepresent,                          &
-                      NDIM_INPUTOCCUPATIONS= inpOcc_size, INPUTOCCUPATIONS = inpOcc_objs)
-  CALL qes_reset_smearing(smearing_obj)
-  CALL qes_reset_occupations(occup_obj)
-  IF (inp_occ_arepresent) THEN 
-     CALL qes_reset_inputoccupations(inpocc_objs(1))
-     IF (inpOcc_size .GT. 1 ) CALL qes_reset_inputoccupations(inpocc_objs(2))
+  ! 
+  CALL qes_init (obj, TAGNAME, NBND = nbnd, SMEARING = smearing_obj, TOT_CHARGE = tot_charge, &
+                      TOT_MAGNETIZATION = tot_mag, OCCUPATIONS=occup_obj, INPUTOCCUPATIONS = inpOcc_objs )
+  IF (ASSOCIATED(smearing_obj)) THEN 
+      CALL qes_reset (smearing_obj)
+      DEALLOCATE ( smearing_obj) 
+  END IF 
+  CALL qes_reset (occup_obj)
+  IF (ALLOCATED(inpOcc_objs)) THEN 
+     CALL qes_reset (inpocc_objs(1))
+     IF (inpOcc_size .GT. 1 ) CALL qes_reset (inpocc_objs(2))
      DEALLOCATE (inpocc_objs)
   END IF
   !
@@ -192,57 +164,52 @@ MODULE qexsd_input
   !
   !
   !--------------------------------------------------------------------------------------------------------------------
-  SUBROUTINE qexsd_init_basis(obj,k_points,ecutwfc,ecutrho,nr1,nr2,nr3,nr1s,nr2s,nr3s,nr1b,nr2b,nr3b)
+  SUBROUTINE qexsd_init_basis(obj,k_points,ecutwfc,ecutrho,nr,nrs,nrb)
   !--------------------------------------------------------------------------------------------------------------------
   !
   IMPLICIT NONE
   !
-  TYPE (basis_type)                         :: obj
-  CHARACTER(LEN=*),INTENT(IN)               :: k_points
-  REAL(DP),INTENT(IN)                       :: ecutwfc,ecutrho
-  INTEGER,INTENT(IN)                        :: nr1,nr2,nr3,nr1s,nr2s,nr3s,nr1b,nr2b,nr3b
+  TYPE (basis_type)                 :: obj
+  CHARACTER(LEN=*),INTENT(IN)       :: k_points
+  REAL(DP),INTENT(IN)               :: ecutwfc 
+  REAL(DP),OPTIONAL,INTENT(IN)      :: ecutrho
+  INTEGER,OPTIONAL,INTENT(IN)       :: nr(:), nrs(:), nrb(:) 
   ! 
-  TYPE(basisSetItem_type)                  :: grid_obj,smooth_grid_obj,box_obj
-  CHARACTER(LEN=*),PARAMETER                :: TAGNAME="basis",FFT_GRID="fft_grid",FFT_SMOOTH="fft_smooth",&
-                                               FFT_BOX="fft_box"
-  LOGICAL                                   :: fft_grid_ispresent=.FALSE.,&
-                                               fft_smooth_ispresent=.FALSE.,&
-                                               fft_box_ispresent   = .FALSE., &
-                                               gamma_only=.FALSE., ecutrho_ispresent=.FALSE.
-  IF( ( nr1 .NE. 0 ) .AND. ( nr2 .NE. 0 ) .AND. ( nr3 .NE. 0 )) THEN
-    fft_grid_ispresent=.TRUE.
-    CALL qes_init_basisSetItem(grid_obj,FFT_GRID,nr1,nr2,nr3,"grid set in input")
+  TYPE(basisSetItem_type),POINTER   :: grid_obj => NULL(), smooth_grid_obj => NULL(), box_obj => NULL()
+  CHARACTER(LEN=*),PARAMETER        :: TAGNAME="basis",FFT_GRID="fft_grid",FFT_SMOOTH="fft_smooth", FFT_BOX="fft_box"
+  LOGICAL                           :: gamma_only=.FALSE. 
+  !
+  IF ( PRESENT(nr)) THEN
+    ALLOCATE(grid_obj) 
+    CALL qes_init (grid_obj,FFT_GRID,nr(1),nr(2),nr(3),"grid set in input")
   END IF
   ! 
-  IF( ( nr1s .NE. 0 ) .AND. ( nr2s .NE. 0 ) .AND. ( nr3s .NE. 0 )) THEN
-    fft_smooth_ispresent=.TRUE.
-    CALL qes_init_basisSetItem(smooth_grid_obj,FFT_SMOOTH,nr1s,nr2s,nr3s,"grid set in input")
+  IF( PRESENT(nrs)) THEN
+    ALLOCATE(smooth_grid_obj)
+    CALL qes_init (smooth_grid_obj,FFT_SMOOTH,nrs(1),nrs(2),nrs(3),"grid set in input")
   END IF
   ! 
-  IF( ( nr1b .NE. 0 ) .AND. ( nr2b .NE. 0 ) .AND. ( nr3b .NE. 0 )) THEN
-    fft_box_ispresent=.TRUE.
-    CALL qes_init_basisSetItem(box_obj,FFT_BOX,nr1b,nr2b,nr3b,"grid set in input")
+  IF( PRESENT(nrb)) THEN
+    ALLOCATE(box_obj) 
+    CALL qes_init (box_obj,FFT_BOX,nrb(1),nrb(2),nrb(3),"grid set in input")
   END IF
   ! 
   IF (TRIM(k_points) .EQ. "gamma" ) gamma_only=.TRUE.
-  IF (ecutrho .GT. 4.d0*ecutwfc) ecutrho_ispresent=.TRUE. 
 
-  CALL qes_init_basis(obj,TAGNAME,gamma_only_ispresent=gamma_only,gamma_only=gamma_only,ecutwfc=ecutwfc,               &
-                      ecutrho=ecutrho,ecutrho_ispresent=ecutrho_ispresent,fft_grid_ispresent=fft_grid_ispresent,       &
-                      fft_grid=grid_obj,fft_smooth_ispresent=fft_smooth_ispresent,fft_smooth=smooth_grid_obj,           &
-                      fft_box=box_obj,fft_box_ispresent=fft_box_ispresent)
+  CALL qes_init (obj,TAGNAME, GAMMA_ONLY=gamma_only,ECUTWFC=ecutwfc, ECUTRHO=ecutrho, FFT_GRID=grid_obj, &
+                                                                    FFT_SMOOTH=smooth_grid_obj, FFT_BOX=box_obj)
   !
-  IF (fft_grid_ispresent)   CALL  qes_reset_basisSetItem( grid_obj )
-  IF (fft_smooth_ispresent) CALL  qes_reset_basisSetItem( smooth_grid_obj )
-  IF ( fft_box_ispresent )  CALL  qes_reset_basisSetItem( box_obj )
+  IF (ASSOCIATED(grid_obj))        CALL  qes_reset( grid_obj )
+  IF (ASSOCIATED(smooth_grid_obj)) CALL  qes_reset( smooth_grid_obj )
+  IF (ASSOCIATED(box_obj))         CALL  qes_reset( box_obj )
   ! 
   !
   !
   END SUBROUTINE qexsd_init_basis
   !-------------------------------------------------------------------------------------------
   SUBROUTINE qexsd_init_electron_control( obj,diagonalization,mixing_mode,mixing_beta,&
-                                          conv_thr, mixing_ndim, max_nstep, tqr,tq_smoothing, &
-                                          tbeta_smoothing, & 
+                                          conv_thr, mixing_ndim, max_nstep, tqr, real_space, &
+                                          tq_smoothing, tbeta_smoothing, & 
                                           diago_thr_init, diago_full_acc, &
                                           diago_cg_maxiter, diago_ppcg_maxiter, diago_david_ndim)
   !-------------------------------------------------------------------------------------------
@@ -254,17 +221,17 @@ MODULE qexsd_input
   REAL(DP),INTENT(IN)                     :: mixing_beta, conv_thr, diago_thr_init
   INTEGER,INTENT(IN)                      :: mixing_ndim,max_nstep, diago_cg_maxiter, &
                                              diago_ppcg_maxiter, diago_david_ndim
-  LOGICAL,INTENT(IN)                      :: diago_full_acc,tqr, tq_smoothing, tbeta_smoothing
+  LOGICAL,OPTIONAL,INTENT(IN)             :: diago_full_acc,tqr, real_space, tq_smoothing, tbeta_smoothing
   !
   CHARACTER(LEN=*),PARAMETER              :: TAGNAME="electron_control"
   !
-  CALL qes_init_electron_control(obj,TAGNAME,diagonalization=diagonalization,&
-                                mixing_mode=mixing_mode,mixing_beta=mixing_beta,&
-                                conv_thr=conv_thr,mixing_ndim=mixing_ndim,max_nstep=max_nstep,&
-                                tq_smoothing= tq_smoothing, tbeta_smoothing = tbeta_smoothing,& 
-                                real_space_q=tqr,diago_thr_init=diago_thr_init,& 
-                                diago_full_acc=diago_full_acc,diago_cg_maxiter=diago_cg_maxiter, &
-                                diago_ppcg_maxiter=diago_ppcg_maxiter)
+  CALL qes_init (obj,TAGNAME, DIAGONALIZATION=diagonalization,&
+                                MIXING_MODE=mixing_mode,MIXING_BETA=mixing_beta,&
+                                CONV_THR=conv_thr,MIXING_NDIM=mixing_ndim,MAX_NSTEP=max_nstep,&
+                                TQ_SMOOTHING= tq_smoothing, TBETA_SMOOTHING = tbeta_smoothing,& 
+                                REAL_SPACE_Q=tqr, REAL_SPACE_BETA = real_space, DIAGO_THR_INIT=diago_thr_init,& 
+                                DIAGO_FULL_ACC=diago_full_acc,DIAGO_CG_MAXITER=diago_cg_maxiter, &
+                                DIAGO_PPCG_MAXITER=diago_ppcg_maxiter)
    !
    END SUBROUTINE qexsd_init_electron_control
    !
@@ -282,14 +249,16 @@ MODULE qexsd_input
    LOGICAL,INTENT(IN)                   :: ibrav_lattice
    !
    CHARACTER(LEN=*),PARAMETER           :: TAGNAME="k_points_IBZ"
-   TYPE(monkhorst_pack_type)            :: mpack_obj
+   TYPE(monkhorst_pack_type),POINTER    :: mpack_obj_pt => NULL() 
+   TYPE(monkhorst_pack_type),TARGET     :: mpack_obj_ 
    TYPE(k_point_type),ALLOCATABLE       :: kp_obj(:)
-   TYPE (k_point_type)                  :: dummy_kpobj(1)
    LOGICAL                              :: mpack_ispresent,kp_ispresent
    CHARACTER(LEN=100)                   :: kind_of_grid
-   INTEGER                              :: kdim,ik,jk,kcount
+   INTEGER                              :: ik,jk,kcount
    REAL(DP),DIMENSION(3)                :: my_xk
    REAL(DP)                             :: scale_factor
+   INTEGER, POINTER                     :: kdim_opt => NULL()
+   INTEGER, TARGET                      :: kdim 
    !
   
    IF (TRIM(k_points).EQ."automatic") THEN 
@@ -299,13 +268,10 @@ MODULE qexsd_input
       ELSE
          kind_of_grid="Uniform grid with offset"
       END IF
-      CALL qes_init_monkhorst_pack(mpack_obj,"monkhorst_pack",nk1,nk2,nk3,&
-                                   s1,s2,s3,kind_of_grid)
-      CALL qes_init_k_points_IBZ(obj,TAGNAME,monkhorst_pack_ispresent=.TRUE.,&
-                                 monkhorst_pack=mpack_obj,nk_ispresent=.FALSE.,&
-                                 nk=0,k_point_ispresent=.FALSE.,ndim_k_point=0,k_point=dummy_kpobj)
-      CALL qes_reset_monkhorst_pack(mpack_obj)
+      CALL qes_init (mpack_obj_,"monkhorst_pack",nk1,nk2,nk3, s1,s2,s3,kind_of_grid)
+      mpack_obj_pt => mpack_obj_
    ELSE
+      kdim_opt => kdim 
       IF ( ibrav_lattice ) THEN 
          scale_factor = 1.d0
       ELSE 
@@ -317,15 +283,13 @@ MODULE qexsd_input
           kdim=NINT(sum(wk(1:nk-1)))+1
           ALLOCATE (kp_obj(kdim))
           kcount=1
-          CALL qes_init_k_point(kp_obj(kcount),"k_point",1.d0,.TRUE.,LABEL= "", LABEL_ISPRESENT=.FALSE., &
-                                K_POINT = xk(:,1))
+          CALL qes_init (kp_obj(kcount),"k_point", WEIGHT = 1.d0, K_POINT = xk(:,1))
           kcount=kcount+1
           DO ik=1,nk-1
              DO jk=1,NINT(wk(ik))
                 my_xk=xk(:,ik)+(DBLE(jk)/wk(ik))*(xk(:,ik+1)-xk(:,ik))
                 my_xk=my_xk*scale_factor
-                CALL qes_init_k_point(kp_obj(kcount),"k_point",1.d0,.TRUE.,LABEL="", LABEL_ISPRESENT = .FALSE., &
-                                      K_POINT = my_xk)
+                CALL qes_init (kp_obj(kcount),"k_point",WEIGHT = 1.d0, K_POINT = my_xk)
                 kcount=kcount+1
              END DO
           END DO
@@ -334,17 +298,21 @@ MODULE qexsd_input
           ALLOCATE  (kp_obj(kdim))      
           DO ik=1,kdim
              my_xk=xk(:,ik)*scale_factor
-             CALL qes_init_k_point(kp_obj(ik),"k_point",wk(ik),.TRUE.,label="",label_ispresent=.FALSE.,K_POINT=my_xk)
+             CALL qes_init (kp_obj(ik),"k_point", WEIGHT = wk(ik),K_POINT=my_xk)
           END DO
       END IF
-      CALL qes_init_k_points_IBZ(obj,TAGNAME,monkhorst_pack_ispresent=.FALSE.,&
-                                 monkhorst_pack=mpack_obj,nk_ispresent=.TRUE.,nk=kdim,&
-                                 k_point_ispresent=.TRUE.,ndim_k_point=kdim,k_point=kp_obj)
-      DO ik = 1,kdim
-         CALL qes_reset_k_point(kp_obj(ik))
-      END DO
-      DEALLOCATE (kp_obj)
    END IF    
+   CALL qes_init (obj, TAGNAME, MONKHORST_PACK = mpack_obj_pt, NK = kdim_opt , K_POINT = kp_obj) 
+   IF (ASSOCIATED (mpack_obj_pt)) THEN 
+      CALL qes_reset (mpack_obj_)
+      mpack_obj_pt => NULL() 
+   ELSE  IF (ALLOCATED(kp_obj)) THEN 
+      DO ik = 1, kdim 
+         CALL qes_reset(kp_obj(ik))
+      END DO 
+      DEALLOCATE (kp_obj) ! this line is redundant because kp_obj is a local allocatable   
+   END IF 
+   
    END SUBROUTINE qexsd_init_k_points_ibz
    !
    ! 
@@ -361,43 +329,41 @@ MODULE qexsd_input
    TYPE (ion_control_type)                 :: obj
    CHARACTER(LEN=*),INTENT(IN)             :: ion_dynamics,pot_extrapolation,wfc_extrapolation,&
                                               ion_temperature
-   REAL(DP),INTENT(IN)                     :: upscale,tempw,tolp,delta_t,trust_radius_min,trust_radius_max,&
+   REAL(DP),OPTIONAL,INTENT(IN)            :: upscale, tempw,tolp,delta_t,trust_radius_min,trust_radius_max,&
                                               trust_radius_init,w_1,w_2
    INTEGER,INTENT(IN)                      :: nraise,bfgs_ndim
    REAL(DP),INTENT(IN)                     :: dt
-   LOGICAL,INTENT(IN)                      :: remove_rigid_rot,refold_pos
+   LOGICAL,OPTIONAL,INTENT(IN)             :: remove_rigid_rot,refold_pos
    !
    !
-   TYPE(md_type)                           :: md_obj
-   TYPE(bfgs_type)                         :: bfgs_obj
+   TYPE(md_type),POINTER                   :: md_obj =>NULL()
+   TYPE(bfgs_type),POINTER                 :: bfgs_obj => NULL() 
    CHARACTER(LEN=*),PARAMETER              :: TAGNAME="ion_control"
    LOGICAL                                 :: bfgs_ispresent,md_ispresent
    ! 
    !
    IF (TRIM(ion_dynamics)=="bfgs") THEN
-      bfgs_ispresent=.TRUE.
-      md_ispresent=  .FALSE.
-      CALL qes_init_bfgs(bfgs_obj,"bfgs",ndim=bfgs_ndim,trust_radius_min=trust_radius_min,&
+      ALLOCATE (bfgs_obj) 
+      CALL qes_init (bfgs_obj,"bfgs",ndim=bfgs_ndim,trust_radius_min=trust_radius_min,&
                          trust_radius_max=trust_radius_max,trust_radius_init=trust_radius_init,&
                          w1=w_1,w2=w_2)
    ELSE IF(TRIM(ion_dynamics)=="verlet" .OR. TRIM(ion_dynamics)=="langevin" .OR. &
            TRIM(ion_dynamics) == "langevin-smc" ) THEN
-      bfgs_ispresent=.FALSE.
-      md_ispresent=.TRUE.
-      CALL qes_init_md(md_obj,"md",pot_extrapolation=pot_extrapolation,&
+      ALLOCATE(md_obj) 
+      CALL qes_init (md_obj,"md",pot_extrapolation=pot_extrapolation,&
                       wfc_extrapolation=wfc_extrapolation,ion_temperature=ion_temperature,&
                       tolp=tolp,timestep=dt,deltaT=delta_t,nraise=nraise,tempw=tempw)
-   ELSE
-      bfgs_ispresent=.FALSE.
-      md_ispresent  =.FALSE.
    END IF 
-   CALL qes_init_ion_control(obj,TAGNAME,ion_dynamics=TRIM(ion_dynamics),upscale_ispresent=bfgs_ispresent,&
-                             upscale=upscale,remove_rigid_rot_ispresent=.true.,&
-                             remove_rigid_rot=remove_rigid_rot,refold_pos_ispresent=.TRUE.,&
-                             refold_pos=refold_pos,bfgs_ispresent=bfgs_ispresent,bfgs=bfgs_obj,&
-                             md_ispresent=md_ispresent,md=md_obj)
-   IF (bfgs_ispresent) CALL qes_reset_bfgs(bfgs_obj)
-   IF (md_ispresent)   CALL qes_reset_md(md_obj)
+   CALL qes_init (obj,TAGNAME,ion_dynamics=TRIM(ion_dynamics), UPSCALE=upscale, REMOVE_RIGID_ROT=remove_rigid_rot,&
+                  REFOLD_POS=refold_pos, BFGS=bfgs_obj, MD=md_obj)
+   IF (ASSOCIATED(bfgs_obj)) THEN 
+      CALL qes_reset (bfgs_obj)
+      DEALLOCATE(bfgs_obj) 
+   END IF 
+   IF (ASSOCIATED(md_obj)) THEN   
+      CALL qes_reset (md_obj)
+      DEALLOCATE (md_obj) 
+   END IF 
    !
    END SUBROUTINE qexsd_init_ion_control
    !
@@ -417,40 +383,33 @@ MODULE qexsd_input
    INTEGER,DIMENSION(3,3)                       :: my_forceh    
    !
    LOGICAL                                      :: fix_volume=.FALSE.,&
-                                                   fix_volume_ispresent=.FALSE.,&
                                                    fix_area=.FALSE.,&
-                                                   fix_area_ispresent=.FALSE.,&
-                                                   isotropic=.FALSE.,&
-                                                   isotropic_ispresent=.FALSE.,&
-                                                   free_cell_ispresent=.TRUE.
+                                                   isotropic=.FALSE. 
    INTEGER                                      :: i,j
-   TYPE(integerMatrix_type)                     :: free_cell_obj
+   TYPE(integerMatrix_type),TARGET              :: free_cell_obj
+   TYPE(integerMatrix_type),POINTER             :: free_cell_ptr => NULL()  
    !
-   FORALL (i=1:3,j=1:3) my_forceh(i,j) = iforceh(i,j)
-   IF (TRIM(cell_dofree)=='default') THEN
-      free_cell_ispresent=.FALSE.
-      my_forceh=1
-   ELSE IF (TRIM(cell_dofree)=='all' ) THEN 
-      my_forceh=1
-   ELSE IF (TRIM(cell_dofree)=='shape') THEN 
-      fix_volume=.TRUE.
-      fix_volume_ispresent=.TRUE.
-   ELSE IF ( TRIM(cell_dofree)=='2Dshape') THEN 
-      fix_area = .TRUE.
-      fix_area_ispresent=.TRUE.
-   ELSE IF (TRIM(cell_dofree)=='volume') THEN
-      isotropic=.TRUE.
-      isotropic_ispresent=.TRUE.  
-   END IF
-   IF (free_cell_ispresent) CALL  qes_init_integerMatrix(free_cell_obj,"free_cell",[3,3],my_forceh )
+   IF (ANY(iforceh /= 1)) THEN 
+      free_cell_ptr => free_cell_obj
+      FORALL (i=1:3,j=1:3) my_forceh(i,j) = iforceh(i,j)
+   END IF 
+   SELECT CASE  (TRIM(cell_dofree))
+      CASE ('all') 
+         my_forceh = 1 
+      CASE ('shape') 
+         fix_volume = .TRUE.
+      CASE ('2Dshape') 
+         fix_area = .TRUE.
+      CASE ('volume') 
+         isotropic = .TRUE. 
+      !CASE default 
+         !NULLIFY ( free_cell_ptr) 
+   END SELECT  
+   IF (ASSOCIATED (free_cell_ptr)) CALL  qes_init (free_cell_obj,"free_cell",[3,3],my_forceh, ORDER = 'F' )
    !
-   CALL qes_init_cell_control(obj,TAGNAME, PRESSURE = pressure, CELL_DYNAMICS=cell_dynamics, WMASS_ISPRESENT=.TRUE.,&
-                              WMASS=wmass, CELL_FACTOR_ISPRESENT=.TRUE., CELL_FACTOR=cell_factor,&
-                              FIX_VOLUME_ISPRESENT=fix_volume_ispresent,FIX_VOLUME=fix_volume,&
-                              FIX_AREA_ISPRESENT=fix_area_ispresent, FIX_AREA=fix_area,& 
-                              ISOTROPIC_ISPRESENT=isotropic_ispresent,ISOTROPIC=isotropic,&
-                              FREE_CELL_ISPRESENT=free_cell_ispresent, FREE_CELL=free_cell_obj)
-   IF( free_cell_ispresent ) CALL qes_reset_integerMatrix(free_cell_obj)
+   CALL qes_init (obj,TAGNAME, PRESSURE = pressure, CELL_DYNAMICS=cell_dynamics, WMASS=wmass, CELL_FACTOR=cell_factor,&
+                  FIX_VOLUME=fix_volume, FIX_AREA=fix_area, ISOTROPIC=isotropic, FREE_CELL=free_cell_ptr)
+   IF( ASSOCIATED(free_cell_ptr))   CALL qes_reset (free_cell_obj)
    END SUBROUTINE  qexsd_init_cell_control
    !
    !
@@ -466,7 +425,7 @@ MODULE qexsd_input
                                                         force_symmorphic,use_all_frac
    ! 
    CHARACTER(LEN=*),PARAMETER                        :: TAGNAME="symmetry_flags"
-   CALL qes_init_symmetry_flags(obj,TAGNAME,nosym=nosym,nosym_evc=nosym_evc,noinv=noinv,&
+   CALL qes_init (obj,TAGNAME,nosym=nosym,nosym_evc=nosym_evc,noinv=noinv,&
                                 no_t_rev=no_t_rev,force_symmorphic=force_symmorphic,&
                                 use_all_frac=use_all_frac)
    ! 
@@ -487,26 +446,20 @@ MODULE qexsd_input
    INTEGER,OPTIONAL,INTENT(IN)                  :: esm_nfit
    REAL(DP),OPTIONAL,INTENT(IN)                 :: esm_w,esm_efield
    ! 
-   TYPE (esm_type)                              :: esm_obj
-   LOGICAL                                      :: esm_ispresent = .FALSE., fcp_opt_ispresent = .TRUE., &
-                                                   fcp_mu_ispresent = .FALSE. , fcp_opt_ = .FALSE.
-   REAL(DP)                                     :: fcp_mu_ = 0.d0  
+   TYPE (esm_type),POINTER                      :: esm_obj => NULL() 
+   LOGICAL                                      :: esm_ispresent = .FALSE.
    CHARACTER(LEN=*),PARAMETER                   :: TAGNAME="boundary_conditions"
    !
    IF ( TRIM(assume_isolated) .EQ. "esm" ) THEN 
       esm_ispresent = .TRUE. 
-      CALL qes_init_esm(esm_obj,"esm",bc=TRIM(esm_bc),nfit=esm_nfit,w=esm_w,efield=esm_efield)
-      IF ( PRESENT(fcp_opt) ) THEN 
-          fcp_opt_ = fcp_opt
-          fcp_mu_ispresent = .TRUE. 
-          IF ( fcp_opt_ .AND. PRESENT ( fcp_mu)) fcp_mu_ = fcp_mu
-      END IF 
+      ALLOCATE(esm_obj) 
+      CALL qes_init (esm_obj,"esm",bc=TRIM(esm_bc),nfit=esm_nfit,w=esm_w,efield=esm_efield)
    END IF 
-   CALL qes_init_boundary_conditions(obj,TAGNAME,ASSUME_ISOLATED =assume_isolated, &
-                                     FCP_OPT_ISPRESENT = fcp_opt_ispresent, FCP_OPT= fcp_opt_, &
-                                     FCP_MU_ISPRESENT = fcp_mu_ispresent, FCP_MU = fcp_mu_, &  
-                                     ESM_ISPRESENT = esm_ispresent, ESM = esm_obj)
-   IF ( esm_ispresent ) CALL qes_reset_esm(esm_obj)
+   CALL qes_init (obj,TAGNAME,ASSUME_ISOLATED =assume_isolated, FCP_OPT= fcp_opt, FCP_MU = fcp_mu, ESM = esm_obj)
+   IF ( esm_ispresent ) THEN
+      CALL qes_reset (esm_obj)
+      DEALLOCATE(esm_obj) 
+   END IF 
    END SUBROUTINE qexsd_init_boundary_conditions
    ! 
    !
@@ -520,7 +473,7 @@ MODULE qexsd_input
    REAL(DP),INTENT(IN)                           :: ecfixed,qcutz,q2sigma
    ! 
    CHARACTER(LEN=*),PARAMETER                    :: TAGNAME="ekin_functional"
-   CALL qes_init_ekin_functional(obj,TAGNAME,ecfixed=ecfixed,qcutz=qcutz,q2sigma=q2sigma)
+   CALL qes_init (obj,TAGNAME,ecfixed=ecfixed,qcutz=qcutz,q2sigma=q2sigma)
    END SUBROUTINE qexsd_init_ekin_functional
    !
    ! 
@@ -533,7 +486,7 @@ MODULE qexsd_input
    ! 
    CHARACTER(LEN=*),PARAMETER                  :: TAGNAME="external_atomic_forces"
    !
-   CALL qes_init_matrix(obj,TAGNAME,[3,nat],mat=extfor )
+   CALL qes_init (obj,TAGNAME,[3,nat],mat=extfor, order = 'F' )
    END SUBROUTINE qexsd_init_external_atomic_forces
    !
    !     
@@ -549,7 +502,7 @@ MODULE qexsd_input
    CHARACTER(LEN=*),PARAMETER           :: TAGNAME = "free_positions" 
    REAL(DP),DIMENSION(:,:),ALLOCATABLE  :: free_positions
    ! 
-   CALL qes_init_integerMatrix(obj,TAGNAME,[3,nat], int_mat=if_pos )
+   CALL qes_init (obj,TAGNAME,DIMS = [3,nat], MAT = if_pos, ORDER = 'F' )
    END SUBROUTINE qexsd_init_free_positions
    ! 
    !----------------------------------------------------------------------------------
@@ -569,7 +522,7 @@ MODULE qexsd_input
       xdim=3
       ydim=nat
    END IF
-   CALL qes_init_matrix(obj,TAGNAME,[xdim,ydim],rd_vel )
+   CALL qes_init (obj,TAGNAME,[xdim,ydim],rd_vel )
    END SUBROUTINE qexsd_init_starting_atomic_velocities
    ! 
    !-------------------------------------------------------------------------------------
@@ -588,9 +541,8 @@ MODULE qexsd_input
    REAL(DP),DIMENSION(3)                      :: target_magnetization=0.d0
    ! 
    IF (PRESENT(fixed_magnetization)) target_magnetization=fixed_magnetization
-   CALL  qes_init_spin_constraints(obj,TAGNAME,spin_constraints=TRIM(constrained_magnetization),&
-                                   target_magnetization_ispresent=PRESENT(fixed_magnetization), &
-                                   target_magnetization=target_magnetization,lagrange_multiplier=lambda)
+   CALL  qes_init (obj,TAGNAME,SPIN_CONSTRAINTS=TRIM(constrained_magnetization),&
+                                   TARGET_MAGNETIZATION=fixed_magnetization ,LAGRANGE_MULTIPLIER=lambda)
    END SUBROUTINE qexsd_init_spin_constraints
    !
    ! 
@@ -602,7 +554,8 @@ MODULE qexsd_input
    IMPLICIT NONE
    ! 
    TYPE (electric_field_type)                   :: obj
-   LOGICAL,INTENT(IN)                           :: tefield,lelfield,dipfield,lberry
+   LOGICAL,INTENT(IN)                           :: tefield,lelfield, lberry
+   LOGICAL,OPTIONAL,INTENT(IN)                  :: dipfield  
    INTEGER,INTENT(IN),OPTIONAL                  :: edir,gdir,nberrycyc,nppstr
    REAL(DP),INTENT(IN),OPTIONAL                 :: emaxpos,eopreg,eamp
    REAL(DP),INTENT(IN),OPTIONAL                 :: efield
@@ -614,73 +567,38 @@ MODULE qexsd_input
                                                    SAWTOOTH="sawtooth_potential",&
                                                    HOMOGENEOUS="homogenous_field",&
                                                    BERRYPHASE="Berry_Phase"
-   REAL(DP)                                     :: emaxpos_loc=0.d0,eopreg_loc=0.d0,electric_field_amplitude=0.d0
-   REAL(DP),DIMENSION(3)                        :: efield_cart_loc=0.d0
-   INTEGER                                      :: electric_field_direction,nberrycyc_loc=0,nppstr_loc=0
+   REAL(DP),POINTER                             :: efield_cart_loc(:)=>NULL(), electric_field_amplitude=>NULL() 
+   INTEGER,POINTER                              :: electric_field_direction => NULL() 
    CHARACTER(LEN=256)                           :: electric_potential
-   LOGICAL                                      :: dir_ispresent=.FALSE., amp_ispresent= .FALSE.,&
-                                                   nberrycyc_ispresent=.FALSE.,nppstr_ispresent=.FALSE., &
-                                                   electric_field_ispresent = .FALSE.
    LOGICAL                                      :: gate_, block_
    REAL(DP)                                     :: block_1_, block_2_, block_3_
    TYPE(gate_settings_type),TARGET              :: gata_settings_obj
-   TYPE(gate_settings_type),POINTER             :: gata_settings_ptr
+   TYPE(gate_settings_type),POINTER             :: gata_settings_ptr => NULL() 
+   TARGET                                       :: eamp, edir, efield, gdir 
    ! 
    electric_potential = "none"
    IF (tefield) THEN  
       electric_potential=SAWTOOTH
-      emaxpos_loc=emaxpos
-      eopreg_loc=eopreg
-      electric_field_amplitude=eamp
-      electric_field_direction=edir
-      dir_ispresent=.TRUE.
-      amp_ispresent=.TRUE.
+      electric_field_amplitude=>eamp
+      electric_field_direction=>edir
    ELSE  IF (lelfield) THEN
       electric_potential=HOMOGENEOUS
-      nberrycyc_loc = nberrycyc
-      nberrycyc_ispresent = .TRUE.
-      nppstr_loc = nppstr
-      nppstr_ispresent = .TRUE.
-      IF (PRESENT(efield_cart)) THEN 
-         efield_cart_loc=efield_cart
-         electric_field_ispresent = .TRUE.
-      END IF
-      IF (PRESENT(efield)) THEN
-         electric_field_amplitude = efield
-         amp_ispresent = .TRUE.
-      END IF
-      IF ( gdir .GT. 0 ) THEN 
-         dir_ispresent = .TRUE. 
-         electric_field_direction = gdir
-      END IF       
+      IF (PRESENT(efield)) electric_field_amplitude => efield
+      IF ( gdir .GT. 0 )  electric_field_direction  => gdir
    ELSE IF (lberry) THEN
       electric_potential=BERRYPHASE
-      nberrycyc_loc=nberrycyc
-      nppstr_ispresent = .TRUE.
-      nppstr_loc = nppstr
-      IF ( gdir .GT. 0) THEN 
-         dir_ispresent=.TRUE.
-         electric_field_direction = gdir
-      END IF
+      IF ( gdir .GT. 0) electric_field_direction    =>  gdir
    END IF  
    IF (PRESENT (gate)) THEN 
       gata_settings_ptr => gata_settings_obj 
-      CALL qes_init_gate_settings(gata_settings_obj, "gate_settings", gate, zgate, relaxz,&
+      CALL qes_init (gata_settings_obj, "gate_settings", gate, zgate, relaxz,&
          block, block_1, block_2, block_height ) 
    END IF 
-   CALL  qes_init_electric_field( obj, TAGNAME, electric_potential=electric_potential,        &
-                                dipole_correction_ispresent=dipfield, dipole_correction = dipfield, &
-                                electric_field_direction_ispresent= dir_ispresent, &
-                                electric_field_direction=electric_field_direction,&
-                                potential_max_position_ispresent=tefield, potential_max_position=emaxpos_loc,  &
-                                potential_decrease_width = eopreg_loc, potential_decrease_width_ispresent=tefield,  &
-                                electric_field_amplitude=electric_field_amplitude, &                
-                                electric_field_amplitude_ispresent=amp_ispresent, &
-                                electric_field_vector = efield_cart_loc,                                     &
-                                electric_field_vector_ispresent= electric_field_ispresent, &
-                                n_berry_cycles_ispresent=nberrycyc_ispresent,n_berry_cycles=nberrycyc_loc,&
-                                nk_per_string_ispresent=nppstr_ispresent,nk_per_string=nppstr_loc, &
-                                gate_settings = gata_settings_obj)
+   CALL  qes_init ( obj, TAGNAME, electric_potential=electric_potential, dipole_correction = dipfield,   &
+                    electric_field_direction=electric_field_direction, potential_max_position = emaxpos, &
+                    potential_decrease_width = eopreg, electric_field_amplitude=electric_field_amplitude,&                
+                    electric_field_vector = efield_cart, n_berry_cycles=nberrycyc, nk_per_string=nppstr, &
+                    gate_settings = gata_settings_obj)
    END SUBROUTINE qexsd_init_electric_field_input
    !
    !----------------------------------------------------------------------------------------------------------
@@ -705,13 +623,12 @@ MODULE qexsd_input
    !
    ALLOCATE (constr_objs(nconstr))
    DO iconstr=1,nconstr
-      CALL qes_init_atomic_constraint(constr_objs(iconstr),"atomic_constraint", constr_parms=constr(:,iconstr),&
+      CALL qes_init (constr_objs(iconstr),"atomic_constraint", constr_parms=constr(:,iconstr),&
                                      constr_type=TRIM(constr_type(iconstr)),constr_target=constr_target(iconstr))
    END DO
-   CALL    qes_init_atomic_constraints(obj,TAGNAME,num_of_constraints=nconstr,ndim_atomic_constraint=nconstr,   &
-                                          atomic_constraint=constr_objs,tolerance=constr_tol)
+   CALL    qes_init (obj,TAGNAME, num_of_constraints=nconstr, atomic_constraint=constr_objs,tolerance=constr_tol)
    DO iconstr=1,nconstr
-      CALL qes_reset_atomic_constraint(constr_objs(iconstr))
+      CALL qes_reset (constr_objs(iconstr))
    END DO
    DEALLOCATE (constr_objs)
    END SUBROUTINE qexsd_init_atomic_constraints
@@ -732,8 +649,7 @@ MODULE qexsd_input
      ELSE 
         spin_degeneracy = 2
      END IF
-     CALL  qes_init_occupations(obj, "occupations", spin= spin_degeneracy, & 
-                              spin_ispresent =.FALSE., occupations = TRIM(occupations))
+     CALL  qes_init (obj, "occupations", occupations = TRIM(occupations))
    END SUBROUTINE qexsd_init_occupations
    !
    !---------------------------------------------------------
@@ -759,7 +675,7 @@ MODULE qexsd_input
         CASE default
             smearing_local='not set'
       END SELECT 
-      CALL qes_init_smearing(obj,"smearing",degauss=degauss,smearing=smearing_local)
+      CALL qes_init (obj,"smearing",degauss=degauss,smearing=smearing_local)
       !
       END SUBROUTINE qexsd_init_smearing
       !--------------------------------------------------------------------------------------------

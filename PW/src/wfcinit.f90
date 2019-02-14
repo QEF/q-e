@@ -18,7 +18,7 @@ SUBROUTINE wfcinit()
   USE basis,                ONLY : natomwfc, starting_wfc
   USE bp,                   ONLY : lelfield
   USE klist,                ONLY : xk, nks, ngk, igk_k
-  USE control_flags,        ONLY : io_level, lscf, twfcollect 
+  USE control_flags,        ONLY : io_level, lscf
   USE fixed_occ,            ONLY : one_atom_occupations
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE lsda_mod,             ONLY : lsda, current_spin, isk
@@ -31,7 +31,7 @@ SUBROUTINE wfcinit()
   USE wannier_new,          ONLY : use_wannier
   USE pw_restart_new,       ONLY : pw_readschema_file, read_collected_to_evc 
   USE qes_types_module,     ONLY : output_type
-  USE qes_libs_module,      ONLY : qes_reset_output
+  USE qes_libs_module,      ONLY : qes_reset
   !
   IMPLICIT NONE
   !
@@ -62,7 +62,7 @@ SUBROUTINE wfcinit()
            CALL read_collected_to_evc(dirname )
         ELSE IF ( .NOT. exst_file) THEN
            WRITE( stdout, '(5X,"Cannot read wfcs: file not found")' )
-          starting_wfc = 'atomic+random'
+           starting_wfc = 'atomic+random'
         ELSE
         !
         ! ... wavefunctions are read from file (or buffer) not here but
@@ -78,7 +78,7 @@ SUBROUTINE wfcinit()
            END IF
         END IF
      END IF 
-     CALL qes_reset_output ( output_obj ) 
+     CALL qes_reset  ( output_obj )
   END IF
   !
   ! ... state what will happen

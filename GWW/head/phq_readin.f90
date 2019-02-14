@@ -28,7 +28,7 @@ SUBROUTINE phq_readin()
   USE input_parameters, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE start_k,       ONLY : reset_grid
   USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies, ltetra
-  USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir
+  USE control_flags, ONLY : gamma_only, tqr, restart
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
@@ -50,7 +50,7 @@ SUBROUTINE phq_readin()
   USE io_files,      ONLY : tmp_dir, prefix, create_directory
   USE noncollin_module, ONLY : i_cons, noncolin
   USE ldaU,          ONLY : lda_plus_u
-  USE control_flags, ONLY : iverbosity, modenum, twfcollect,io_level
+  USE control_flags, ONLY : iverbosity, modenum, io_level
   USE io_global,     ONLY : ionode, stdout
   USE mp_global,     ONLY : nproc_pool_file, nproc_image_file, &
                             ntask_groups_file, nproc_bgrp_file
@@ -495,14 +495,6 @@ SUBROUTINE phq_readin()
   IF (lmovecell) CALL errore('phq_readin', &
       'The phonon code is not working after vc-relax',1)
 
-  IF (nproc_image /= nproc_image_file .and. .not. twfcollect)  &
-     CALL errore('phq_readin',&
-     'pw.x run with a different number of processors. Use wf_collect=.true.',1)
-
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
-     CALL errore('phq_readin',&
-     'pw.x run with a different number of pools. Use wf_collect=.true.',1)
-
   IF (ntask_groups > 1) &
      CALL errore('phq_readin','task_groups not available in phonon',1)
 
@@ -552,7 +544,6 @@ SUBROUTINE phq_readin()
   ! for k point
   !
   IF (reduce_io) io_level=0
-  lkpoint_dir=.FALSE.
   restart = recover
   !
   !  set masses to values read from input, if available;

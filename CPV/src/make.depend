@@ -140,9 +140,9 @@ cp_restart_new.o : ../../Modules/mp_global.o
 cp_restart_new.o : ../../Modules/mp_images.o
 cp_restart_new.o : ../../Modules/mp_pools.o
 cp_restart_new.o : ../../Modules/parameters.o
-cp_restart_new.o : ../../Modules/qes_libs.o
+cp_restart_new.o : ../../Modules/qes_libs_module.o
 cp_restart_new.o : ../../Modules/qes_read_module.o
-cp_restart_new.o : ../../Modules/qes_types.o
+cp_restart_new.o : ../../Modules/qes_types_module.o
 cp_restart_new.o : ../../Modules/qexsd.o
 cp_restart_new.o : ../../Modules/qexsd_input.o
 cp_restart_new.o : ../../Modules/recvec.o
@@ -249,12 +249,16 @@ cpr.o : wannier.o
 cpr_loop.o : ../../Modules/ions_base.o
 cpr_loop.o : ../../Modules/kind.o
 cpr_mod.o : ../../Modules/kind.o
+cprstart.o : ../../LAXlib/mp_diag.o
 cprstart.o : ../../Modules/check_stop.o
 cprstart.o : ../../Modules/command_line_options.o
 cprstart.o : ../../Modules/environment.o
 cprstart.o : ../../Modules/io_global.o
+cprstart.o : ../../Modules/mp_bands.o
 cprstart.o : ../../Modules/mp_global.o
 cprstart.o : ../../Modules/mp_images.o
+cprstart.o : ../../Modules/mp_pools.o
+cprstart.o : ../../Modules/mp_world.o
 cprstart.o : ../../Modules/read_input.o
 cprstart.o : input.o
 dealloc.o : ../../FFTXlib/fft_smallbox_type.o
@@ -567,6 +571,7 @@ init_run.o : wannier_base.o
 init_run.o : wave_types.o
 inner_loop_cold.o : ../../LAXlib/dspev_drv.o
 inner_loop_cold.o : ../../LAXlib/la_types.o
+inner_loop_cold.o : ../../LAXlib/mp_diag.o
 inner_loop_cold.o : ../../Modules/cell_base.o
 inner_loop_cold.o : ../../Modules/electrons_base.o
 inner_loop_cold.o : ../../Modules/fft_base.o
@@ -574,6 +579,7 @@ inner_loop_cold.o : ../../Modules/gvecw.o
 inner_loop_cold.o : ../../Modules/io_global.o
 inner_loop_cold.o : ../../Modules/ions_base.o
 inner_loop_cold.o : ../../Modules/kind.o
+inner_loop_cold.o : ../../Modules/mp_bands.o
 inner_loop_cold.o : ../../Modules/mp_global.o
 inner_loop_cold.o : ../../Modules/recvec.o
 inner_loop_cold.o : ../../Modules/uspp.o
@@ -672,10 +678,11 @@ ldaUpen.o : ../../Modules/ions_base.o
 ldaUpen.o : ../../Modules/kind.o
 ldaUpen.o : ldaU_cp.o
 mainvar.o : ../../LAXlib/la_types.o
+mainvar.o : ../../LAXlib/mp_diag.o
 mainvar.o : ../../Modules/cell_base.o
 mainvar.o : ../../Modules/funct.o
 mainvar.o : ../../Modules/kind.o
-mainvar.o : ../../Modules/mp_global.o
+mainvar.o : ../../Modules/mp_bands.o
 mainvar.o : ../../UtilXlib/mp.o
 mainvar.o : energies.o
 mainvar.o : modules.o
@@ -803,7 +810,6 @@ ortho_base.o : ../../Modules/io_global.o
 ortho_base.o : ../../Modules/ions_base.o
 ortho_base.o : ../../Modules/kind.o
 ortho_base.o : ../../Modules/mp_bands.o
-ortho_base.o : ../../Modules/mp_global.o
 ortho_base.o : ../../Modules/mp_images.o
 ortho_base.o : ../../Modules/mp_world.o
 ortho_base.o : ../../Modules/recvec.o
