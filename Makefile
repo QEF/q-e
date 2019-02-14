@@ -128,10 +128,6 @@ upf : libs mods
 	if test -d upftools ; then \
 	( cd upftools ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-pw_export : pwlibs
-	if test -d PP ; then \
-	( cd PP ; $(MAKE) TLDEPS= pw_export.x || exit 1 ) ; fi
-
 xspectra : pwlibs
 	if test -d XSpectra ; then \
 	( cd XSpectra ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
@@ -257,7 +253,7 @@ plumed:
 west: pw
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-SternheimerGW: pw lrmods 
+SternheimerGW: lrmods 
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
