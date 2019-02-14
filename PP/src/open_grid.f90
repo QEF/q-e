@@ -12,7 +12,7 @@ PROGRAM open_grid
   USE io_files,   ONLY : prefix, tmp_dir, nwordwfc, iunwfc, diropn
   USE noncollin_module,   ONLY : noncolin, m_loc, angle1, angle2, nspin_lsda
   USE spin_orb,           ONLY : domag
-  USE control_flags,      ONLY : gamma_only, twfcollect
+  USE control_flags,      ONLY : gamma_only !, twfcollect
   USE environment,        ONLY : environment_start, environment_end
   USE ions_base,          ONLY : nat, tau, ityp
   USE symm_base,          ONLY : nrot, nsym, s, t_rev, fft_fact, find_sym
@@ -119,9 +119,9 @@ PROGRAM open_grid
   !
   ! Here we trap restarts from a different number of nodes.
   !
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
-     CALL errore('open_grid', &
-     'pw.x run on a different number of procs/pools. Use wf_collect=.true.',1)
+!  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
+!     CALL errore('open_grid', &
+!     'pw.x run on a different number of procs/pools. Use wf_collect=.true.',1)
   !
 !  CALL openfil_pp()
   !
