@@ -188,7 +188,7 @@ CONTAINS
    if (okpaw)         rho_m%bec = rho_s%bec
    
    if (dipfield) then
-      CALL compute_el_dip(emaxpos, eopreg, edir, rho_s%of_r,e_dipole)
+      CALL compute_el_dip(emaxpos, eopreg, edir, rho_s%of_r(:,1), e_dipole)
       rho_m%el_dipole = e_dipole
    endif
    
@@ -453,47 +453,26 @@ CONTAINS
   fac = e2 * fpi / tpiba2
   !
   rho_ddot = 0.D0
-  
-  IF ( nspin == 1 ) THEN
+  !
+  DO ig = gstart, gf
      !
-     DO ig = gstart, gf
-        !
-        rho_ddot = rho_ddot + &
-                   REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1), DP ) / gg(ig)
-        !
-     END DO
+     rho_ddot = rho_ddot + &
+                REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1), DP ) / gg(ig)
      !
-     rho_ddot = fac*rho_ddot
+  END DO
+  !
+  rho_ddot = fac*rho_ddot
+  !
+  IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
+  !
+  IF ( nspin >= 2 )  THEN
      !
-     IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
-     !
-  ELSE IF ( nspin == 2 ) THEN
-     !
-     ! ... first the charge
-     !
-     DO ig = gstart, gf
-        !
-        rho_ddot = rho_ddot + &
-                   REAL( CONJG( rho1%of_g(ig,1)+rho1%of_g(ig,2) ) * &
-                              ( rho2%of_g(ig,1)+rho2%of_g(ig,2) ), DP ) / gg(ig)
-        !
-     END DO
-     !
-     rho_ddot = fac*rho_ddot
-     !
-     IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
-     !
-     ! ... then the magnetization
-     !
-     fac = e2 * fpi / tpi**2  ! lambda = 1 a.u.
-     !
-     ! ... G=0 term
+     fac = e2*fpi / tpi**2  ! lambda=1 a.u.
      !
      IF ( gstart == 2 ) THEN
         !
         rho_ddot = rho_ddot + &
-                   fac * REAL( CONJG( rho1%of_g(1,1) - rho1%of_g(1,2) ) * &
-                                    ( rho2%of_g(1,1) - rho2%of_g(1,2) ), DP )
+                fac * SUM( REAL( CONJG( rho1%of_g(1,2:nspin))*(rho2%of_g(1,2:nspin) ), DP ) )
         !
      END IF
      !
@@ -502,48 +481,9 @@ CONTAINS
      DO ig = gstart, gf
         !
         rho_ddot = rho_ddot + &
-                   fac * REAL( CONJG( rho1%of_g(ig,1) - rho1%of_g(ig,2) ) * &
-                                    ( rho2%of_g(ig,1) - rho2%of_g(ig,2) ), DP )
-        !
+                fac * SUM( REAL( CONJG( rho1%of_g(ig,2:nspin))*(rho2%of_g(ig,2:nspin) ), DP ) )
+     !
      END DO
-     !
-  ELSE IF ( nspin == 4 ) THEN
-     !
-     DO ig = gstart, gf
-        !
-        rho_ddot = rho_ddot + &
-                   REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1), DP ) / gg(ig)
-        !
-     END DO
-     !
-     rho_ddot = fac*rho_ddot
-     !
-     IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
-     !
-     IF (domag) THEN
-        fac = e2*fpi / (tpi**2)  ! lambda=1 a.u.
-        !
-        IF ( gstart == 2 ) THEN
-           !
-           rho_ddot = rho_ddot + &
-                   fac * ( REAL( CONJG( rho1%of_g(1,2))*(rho2%of_g(1,2) ),DP ) + &
-                           REAL( CONJG( rho1%of_g(1,3))*(rho2%of_g(1,3) ),DP ) + &
-                           REAL( CONJG( rho1%of_g(1,4))*(rho2%of_g(1,4) ),DP ) )
-           !
-        END IF
-        !
-        IF ( gamma_only ) fac = 2.D0 * fac
-        !
-        DO ig = gstart, gf
-           !
-           rho_ddot = rho_ddot + &
-                   fac *( REAL( CONJG( rho1%of_g(ig,2))*(rho2%of_g(ig,2) ), DP ) + &
-                          REAL( CONJG( rho1%of_g(ig,3))*(rho2%of_g(ig,3) ), DP ) + &
-                          REAL( CONJG( rho1%of_g(ig,4))*(rho2%of_g(ig,4) ), DP ) )
-           !
-        END DO
-        !
-     END IF
      !
   END IF
   !
@@ -593,11 +533,30 @@ FUNCTION tauk_ddot( rho1, rho2, gf )
   !
 !  write (*,*) rho1%kin_g(1:4,1)
 !  if (.true. ) stop
-  IF ( nspin == 1 ) THEN
+  !
+  DO ig = gstart, gf
+     tauk_ddot = tauk_ddot + &
+                 REAL( CONJG( rho1%kin_g(ig,1) )*rho2%kin_g(ig,1) ) 
+  END DO
+  !
+  IF ( nspin==1 .and. gamma_only ) tauk_ddot = 2.D0 * tauk_ddot
+  !
+  ! ... G=0 term
+  !
+  IF ( gstart == 2 ) THEN
+     !
+     tauk_ddot = tauk_ddot + &
+                 REAL( CONJG( rho1%kin_g(1,1) ) * rho2%kin_g(1,1) )
+     !
+  END IF
+  !
+  IF ( nspin >= 2 ) THEN
      !
      DO ig = gstart, gf
+        !
         tauk_ddot = tauk_ddot + &
-                    REAL( CONJG( rho1%kin_g(ig,1) )*rho2%kin_g(ig,1) ) 
+                SUM( REAL( CONJG( rho1%kin_g(1,2:nspin))*(rho2%kin_g(1,2:nspin) ), DP ) )
+        !
      END DO
      !
      IF ( gamma_only ) tauk_ddot = 2.D0 * tauk_ddot
@@ -607,56 +566,10 @@ FUNCTION tauk_ddot( rho1, rho2, gf )
      IF ( gstart == 2 ) THEN
         !
         tauk_ddot = tauk_ddot + &
-                    REAL( CONJG( rho1%kin_g(1,1) ) * rho2%kin_g(1,1) )
+                SUM( REAL( CONJG( rho1%kin_g(1,1:nspin))*(rho2%kin_g(1,1:nspin) ), DP ) )
         !
      END IF
-     !
-  ELSE IF ( nspin == 2 ) THEN
-     !
-     DO ig = gstart, gf
-        !
-        tauk_ddot = tauk_ddot + &
-                         ( REAL( CONJG(rho1%kin_g(ig,1))*rho2%kin_g(ig,1) ) + &
-                           REAL( CONJG(rho1%kin_g(ig,2))*rho2%kin_g(ig,2) ) )
-        !
-     END DO
-     !
-     IF ( gamma_only ) tauk_ddot = 2.D0 * tauk_ddot
-     !
-     ! ... G=0 term
-     !
-     IF ( gstart == 2 ) THEN
-        !
-        tauk_ddot = tauk_ddot + &
-                         ( REAL( CONJG( rho1%kin_g(1,1))*rho2%kin_g(1,1) ) + &
-                           REAL( CONJG( rho1%kin_g(1,2))*rho2%kin_g(1,2) ) )
-        !
-     END IF
-     tauk_ddot = 0.5D0 *  tauk_ddot 
-     !
-  ELSE IF ( nspin == 4 ) THEN
-     !
-     DO ig = gstart, gf
-        !
-        tauk_ddot = tauk_ddot + &
-                         ( REAL( CONJG(rho1%kin_g(ig,1))*rho2%kin_g(ig,1) ) + &
-                           REAL( CONJG(rho1%kin_g(ig,2))*rho2%kin_g(ig,2) ) + &
-                           REAL( CONJG(rho1%kin_g(ig,3))*rho2%kin_g(ig,3) ) + &
-                           REAL( CONJG(rho1%kin_g(ig,4))*rho2%kin_g(ig,4) ) )
-        !
-     END DO
-     !
-     IF ( gamma_only ) tauk_ddot = 2.D0 * tauk_ddot
-     !
-     IF ( gstart == 2 ) THEN
-        !
-        tauk_ddot = tauk_ddot + &
-                         ( REAL( CONJG( rho1%kin_g(1,1))*rho2%kin_g(1,1) ) + &
-                           REAL( CONJG( rho1%kin_g(1,2))*rho2%kin_g(1,2) ) + &
-                           REAL( CONJG( rho1%kin_g(1,3))*rho2%kin_g(1,3) ) + &
-                           REAL( CONJG( rho1%kin_g(1,4))*rho2%kin_g(1,4) ) )
-        !
-     END IF
+     IF ( nspin == 2 ) tauk_ddot = 0.5D0 *  tauk_ddot 
      !
   END IF
   !
@@ -779,5 +692,48 @@ END FUNCTION ns_ddot
   IF ( okpaw )        CALL mp_bcast ( rho%bec,   root, comm )
   !
   END SUBROUTINE
- !
+  !
+  SUBROUTINE rhoz_or_updw( rho, sp, dir )
+  !--------------------------------------------------------------------------
+  ! ... Converts rho(up,dw) into rho(up+dw,up-dw) if dir='->rhoz' and
+  ! ... vice versa if dir='->updw'.
+  !
+  USE gvect,  ONLY : ngm
+  !
+  IMPLICIT NONE
+  !
+  type(scf_type), INTENT(INOUT) :: rho
+  CHARACTER(len=*), INTENT(IN) :: dir, sp
+  INTEGER :: ir
+  REAL(DP) :: vi
+  !
+  IF ( nspin /= 2 ) RETURN
+  !
+  vi = 0._dp
+  IF (dir == '->updw')  vi = 0.5_dp
+  IF (dir == '->rhoz')  vi = 1.0_dp
+  IF (vi  == 0._dp)  CALL errore( 'rhoz_or_updw', 'wrong input', 1 )
+  !
+  IF ( sp /= 'only_g' ) THEN
+!   !$omp parallel do
+     DO ir = 1, dfftp%nnr  
+        rho%of_r(ir,1) = ( rho%of_r(ir,1) + rho%of_r(ir,nspin) ) * vi
+        rho%of_r(ir,nspin) = rho%of_r(ir,1) - rho%of_r(ir,nspin) * vi * 2._dp
+     ENDDO
+!   !$omp end parallel do
+  ENDIF
+  IF ( sp /= 'only_r' ) THEN
+!   !$omp parallel do
+     DO ir = 1, ngm
+        rho%of_g(ir,1) = ( rho%of_g(ir,1) + rho%of_g(ir,nspin) ) * vi
+        rho%of_g(ir,nspin) = rho%of_g(ir,1) - rho%of_g(ir,nspin) * vi * 2._dp
+     ENDDO
+!   !$omp end parallel do  
+  ENDIF
+  !
+  RETURN
+  !
+  END SUBROUTINE
+  !
+  !
 END MODULE scf

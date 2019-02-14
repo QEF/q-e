@@ -41,7 +41,7 @@ SUBROUTINE delta_sphi (ikk, ikq, na, icart, nah, ihubst, wfcatomk_, wfcatomkpq_,
   USE uspp,       ONLY : nkb, qq_nt, okvan
   USE ldaU,       ONLY : nwfcU
   USE wvfct,      ONLY : npwx
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum 
   USE klist,      ONLY : ngk
   USE io_global,  ONLY : stdout

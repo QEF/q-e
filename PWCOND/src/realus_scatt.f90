@@ -26,7 +26,6 @@ MODULE realus_scatt
    USE realus,           ONLY : qpointlist, tabp, boxrad
    USE uspp,             ONLY : okvan
    USE uspp_param,       ONLY : upf
-   USE mp_global,        ONLY : me_pool
    USE fft_base,         ONLY : dfftp
 
    IMPLICIT NONE
@@ -142,11 +141,11 @@ MODULE realus_scatt
               DO ir = 1, mbia
                  irb = tabp(ia)%box(ir)
                  iqs = iqs + 1
-                 if(orig_or_copy(ir,ia).eq.1) then
+                 IF (orig_or_copy(ir,ia) == 1) THEN
                   rho%of_r(irb,is) = rho%of_r(irb,is) + tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*becsum_orig(ijh,ia,is)
-                 else
+                 ELSE
                   rho%of_r(irb,is) = rho%of_r(irb,is) + tabp(ia)%qr(ir,ijtoh(ih,jh,nt))*becsum(ijh,ia,is)
-                 endif
+                 ENDIF
               ENDDO
            ENDDO
         ENDDO

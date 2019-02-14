@@ -14,7 +14,6 @@ MODULE vasp_read_chgcar
   ! ... tested on VASP.5.3.3
   !
   !
-  USE iotk_module
   USE kinds, ONLY : DP
   !
 !  USE io_files,      ONLY : iunpun

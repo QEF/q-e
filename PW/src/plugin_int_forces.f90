@@ -68,7 +68,7 @@ SUBROUTINE external_wg_corr_force( rhor, force )
   deallocate(auxr)
   !
   call wg_corr_force(.false.,omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, &
-                     1, auxg, force)
+                     auxg, force)
   !
   deallocate(auxg)
   !
@@ -100,7 +100,7 @@ SUBROUTINE external_force_lc( rhor, force )
   ! ... Local variables
   !
   CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-       g, rhor, dfftp%nl, nspin, gstart, gamma_only, vloc, force )
+       g, rhor(:,1), dfftp%nl, gstart, gamma_only, vloc, force )
   !
   RETURN
   !

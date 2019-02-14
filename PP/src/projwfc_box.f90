@@ -40,7 +40,7 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
   USE fft_base,             ONLY : dfftp
   USE scatter_mod,          ONLY : scatter_grid
   USE fft_interfaces,       ONLY : invfft
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_pools,             ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
 !
   !
@@ -186,9 +186,6 @@ SUBROUTINE projwave_boxes( filpdos, filproj, n_proj_boxes, irmin, irmax, plotbox
      CALL DCOPY (dfftp%nnr, rho%of_r, 1, raux, 1)
   ELSE
      CALL DCOPY (dfftp%nnr, rho%of_r (1, 1), 1, raux, 1)
-     DO is = 2, nspin
-        CALL DAXPY (dfftp%nnr, 1.d0, rho%of_r (1, is), 1, raux, 1)
-     ENDDO
   ENDIF
   !
   ! B2. Integrate the charge

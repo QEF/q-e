@@ -68,7 +68,7 @@
   LOGICAL :: symmorphic_or_nzb
   !!
   !
-  CALL start_clock ('epw_setup')
+  CALL start_clock('epw_setup')
   !
   ! 0) Set up list of kpoints in crystal coordinates
   !
@@ -88,7 +88,7 @@
     ! check that the k-mesh was defined in the positive region of 1st BZ
     !
     IF ( xx_c .lt. -eps5 .or. yy_c .lt. -eps5 .or. zz_c .lt. -eps5 ) &
-       call errore('epw_setup','coarse k-mesh needs to be strictly positive in 1st BZ',1)
+      CALL errore('epw_setup','coarse k-mesh needs to be strictly positive in 1st BZ',1)
     !
   ENDDO
   !
@@ -105,7 +105,7 @@
   !      needed in sgama 
   !
   IF (.not.ALLOCATED(m_loc)) ALLOCATE(m_loc(3, nat))
-  IF (noncolin .and. domag) THEN
+  IF (noncolin .AND. domag) THEN
     DO na = 1, nat
       !
       m_loc(1,na) = starting_magnetization(ityp(na)) * &
@@ -126,7 +126,7 @@
   ! 3.1) Setup all gradient correction stuff
   !
   CALL setup_dgc
-  !
+  !  
   ! 4) Computes the inverse of each matrix of the crystal symmetry group
   !
   CALL inverse_s()
@@ -158,7 +158,7 @@
     minus_q = .FALSE.
   ENDIF
   !
-  ! allocate and calculate rtau, the bravais lattice vector associated
+  ! allocate and calculate rtau, the Bravais lattice vector associated
   ! to a rotation
   !
   CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
@@ -206,9 +206,9 @@
     ENDIF
   ENDIF
   ! We have to bcast here because before it has not been allocated
-  CALL mp_bcast (transp_temp, ionode_id, world_comm)    !  
+  CALL mp_bcast(transp_temp, ionode_id, world_comm)    !  
   ! 
-  CALL stop_clock ('epw_setup')
+  CALL stop_clock('epw_setup')
   RETURN
   !
   END SUBROUTINE epw_setup

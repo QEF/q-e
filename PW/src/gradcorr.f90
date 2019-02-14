@@ -39,7 +39,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
 
   COMPLEX(DP), ALLOCATABLE :: rhogsum(:,:)
   !
-  REAL(DP) :: grho2(2), sx, sc, v1x, v2x, v1c, v2c, &
+  REAL(DP) :: grho2(2), sgn(2), sx, sc, v1x, v2x, v1c, v2c, &
               v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw , &
               etxcgc, vtxcgc, segno, arho, fac, zeta, rh, grh2, amag 
   REAL(DP) :: v2cup, v2cdw,  v2cud, rup, rdw, &
@@ -57,6 +57,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   if (nspin==4) nspin0=1
   if (nspin==4.and.domag) nspin0=2
   fac = 1.D0 / DBLE( nspin0 )
+  sgn(1) = 1.D0 ;  sgn(2) = -1.D0
   !
   ALLOCATE(    h( 3, dfftp%nnr, nspin0) )
   ALLOCATE( grho( 3, dfftp%nnr, nspin0) )
@@ -90,13 +91,17 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      END DO
   ELSE
      !
-     rhoout(:,1:nspin0)  = rho(:,1:nspin0)
-     rhogsum(:,1:nspin0) = rhog(:,1:nspin0)
+     ! ... for convenience rhoout and rhogsum are in (up,down) format, if LSDA
+     !
+     DO is = 1, nspin0
+       rhoout(:,is)  = (  rho(:,1) + sgn(is) *  rho(:,nspin0) ) * 0.5D0
+       rhogsum(:,is) = ( rhog(:,1) + sgn(is) * rhog(:,nspin0) ) * 0.5D0
+     ENDDO
      !
   ENDIF
   DO is = 1, nspin0
      !
-     rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
+     rhoout(:,is)  = fac *  rho_core(:) +  rhoout(:,is)
      rhogsum(:,is) = fac * rhog_core(:) + rhogsum(:,is)
      !
      CALL fft_gradient_g2r( dfftp, rhogsum(1,is), g, grho(1,1,is) )

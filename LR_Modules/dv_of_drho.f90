@@ -78,8 +78,8 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   fac = 1.d0 / DBLE (nspin_lsda)
   !
   if (nlcc_any.and.add_nlcc) then
+     rho%of_r(:, 1) = rho%of_r(:, 1) + rho_core (:)
      do is = 1, nspin_lsda
-        rho%of_r(:, is) = rho%of_r(:, is) + fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
      enddo
   endif
@@ -96,17 +96,15 @@ subroutine dv_of_drho (dvscf, add_nlcc, drhoc)
   ! NB: If nlcc=.true. we need to add here its contribution. 
   ! grho contains already the core charge
   !
-  if ( dft_is_gradient() ) call dgradcorr &
-       (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-       dvscf, nspin_mag, nspin_gga, g, dvaux)
+  if ( dft_is_gradient() ) call dgradcorr(dfftp, rho%of_r, grho, dvxc_rr, &
+                                dvxc_sr, dvxc_ss, dvxc_s, xq, dvscf, &
+                                nspin_mag, nspin_gga, g, dvaux) 
   !
-  if (dft_is_nonlocc()) then
-     call dnonloccorr(rho%of_r, dvscf, xq, dvaux)
-  endif
-
+  if ( dft_is_nonlocc() )  call dnonloccorr(rho%of_r, dvscf, xq, dvaux)
+  !
   if (nlcc_any.and.add_nlcc) then
+     rho%of_r(:, 1) = rho%of_r(:, 1) - rho_core (:)
      do is = 1, nspin_lsda
-        rho%of_r(:, is) = rho%of_r(:, is) - fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) - fac * drhoc (:)
      enddo
   endif

@@ -36,7 +36,7 @@ SUBROUTINE hp_solve_linear_system (na, iq)
   USE paw_variables,        ONLY : okpaw
   USE paw_onecenter,        ONLY : paw_dpotential
   USE paw_symmetry,         ONLY : paw_dusymmetrize, paw_dumqsymmetrize
-  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_pools,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
   USE hp_efermi_shift,      ONLY : hp_ef_shift, def
   USE eqv,                  ONLY : dvpsi, dpsi, evq

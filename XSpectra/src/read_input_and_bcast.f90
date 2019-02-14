@@ -22,7 +22,6 @@ subroutine read_input_and_bcast(filerecon, r_paw)
   USE mp,              ONLY : mp_bcast, mp_sum             !parallelization
   USE mp_world,        ONLY : nproc, world_comm
   USE parameters,      ONLY : ntypx,lmaxx,lqmax
-  USE control_flags, ONLY : twfcollect
   USE klist, ONLY : nelup, neldw, nelec
 
   IMPLICIT NONE
@@ -58,7 +57,6 @@ subroutine read_input_and_bcast(filerecon, r_paw)
        xcheck_conv, &
        show_status, &
        nelup,neldw, &
-       wf_collect,&
        U_projection_type,&
        time_limit,&
        restart_mode,&
@@ -193,8 +191,6 @@ subroutine read_input_and_bcast(filerecon, r_paw)
   CALL mp_bcast( xe0,  ionode_id, world_comm )
   CALL mp_bcast( cut_occ_states, ionode_id, world_comm )
   CALL mp_bcast( terminator, ionode_id, world_comm )
-  CALL mp_bcast( wf_collect, ionode_id, world_comm )
-  CALL mp_bcast( twfcollect, ionode_id, world_comm )
   CALL mp_bcast( xanes_file,  ionode_id, world_comm )
 
   CALL mp_bcast( U_projection_type, ionode_id, world_comm )
@@ -237,19 +233,6 @@ subroutine read_input_and_bcast(filerecon, r_paw)
      xang_mom=2                    !so it is not necessary to specify xang_mom
      calculation='xanes'
   ENDIF
-
-
-
-
-  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  ! $   check on wfcollect
-  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-  IF(xread_wf.AND.wf_collect) THEN
-     CALL errore ('main','incompatibility xread_wf and wf_collect',1)
-  ENDIF
-
-  twfcollect=wf_collect
 
   IF(trim(adjustl(edge)).NE.'K'.AND. &
        trim(adjustl(edge)).NE.'L1'.AND. &

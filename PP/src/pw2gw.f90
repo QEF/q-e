@@ -31,8 +31,8 @@ PROGRAM pw2gw
   USE io_files,   ONLY : prefix, tmp_dir
   USE io_global,  ONLY : ionode, ionode_id
   USE mp,         ONLY : mp_bcast
-  USE mp_world,   ONLY : world_comm, nproc
   USE mp_global,  ONLY : mp_startup
+  USE mp_images,  ONLY : intra_image_comm
   USE mp_pools,   ONLY : kunit
   USE environment,ONLY : environment_start, environment_end
   USE us,         ONLY : spline_ps
@@ -81,21 +81,21 @@ PROGRAM pw2gw
      !
   ENDIF
   !
-  CALL mp_bcast( ios, ionode_id, world_comm )
+  CALL mp_bcast( ios, ionode_id, intra_image_comm )
   IF (ios /= 0)   CALL errore('pw2gw', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !
-  CALL mp_bcast( prefix, ionode_id, world_comm )
-  CALL mp_bcast(tmp_dir, ionode_id, world_comm )
-  CALL mp_bcast( what, ionode_id, world_comm )
-  CALL mp_bcast( use_gmaps, ionode_id, world_comm )
-  CALL mp_bcast( qplda, ionode_id, world_comm )
-  CALL mp_bcast( vkb, ionode_id, world_comm )
-  CALL mp_bcast( vxcdiag, ionode_id, world_comm )
-  CALL mp_bcast( Emin, ionode_id, world_comm )
-  CALL mp_bcast( Emax, ionode_id, world_comm )
-  CALL mp_bcast( DeltaE, ionode_id, world_comm )
+  CALL mp_bcast( prefix, ionode_id, intra_image_comm )
+  CALL mp_bcast(tmp_dir, ionode_id, intra_image_comm )
+  CALL mp_bcast( what, ionode_id, intra_image_comm )
+  CALL mp_bcast( use_gmaps, ionode_id, intra_image_comm )
+  CALL mp_bcast( qplda, ionode_id, intra_image_comm )
+  CALL mp_bcast( vkb, ionode_id, intra_image_comm )
+  CALL mp_bcast( vxcdiag, ionode_id, intra_image_comm )
+  CALL mp_bcast( Emin, ionode_id, intra_image_comm )
+  CALL mp_bcast( Emax, ionode_id, intra_image_comm )
+  CALL mp_bcast( DeltaE, ionode_id, intra_image_comm )
 
   !
 
@@ -104,7 +104,7 @@ PROGRAM pw2gw
   CALL read_file
   CALL openfil_pp
   !
-  CALL mp_bcast(spline_ps, ionode_id, world_comm)
+  CALL mp_bcast(spline_ps, ionode_id, intra_image_comm)
 #if defined __MPI
   kunittmp = kunit
 #else
@@ -146,10 +146,11 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
   USE lsda_mod,      ONLY : nspin
   USE io_files,      ONLY : nwordwfc, iunwfc
   USE wavefunctions, ONLY : evc, psic
-  USE mp_global, ONLY : intra_image_comm, npool
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_sum , mp_max
-  USE mp_world,  ONLY : world_comm, mpime, nproc
+  USE mp_pools,  ONLY : npool
+  USE mp_images, ONLY : intra_image_comm
+  USE mp_world,  ONLY : mpime, nproc
   USE mp_wave,   ONLY : mergewf
   USE parallel_include
   USE scf,       ONLY : rho, rho_core, rhog_core
@@ -366,12 +367,12 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
   ENDDO
 
   igwxx = maxval( ig_l2g( 1:ngw ) )
-  CALL mp_max( igwxx, world_comm )
+  CALL mp_max( igwxx, intra_image_comm )
   IF (ionode) WRITE(*,*) "NDIMCP = ", igwxx
 
   igwx_p = 0
   igwx_p( mpime + 1 ) = igwx
-  CALL mp_sum( igwx_p, world_comm )
+  CALL mp_sum( igwx_p, intra_image_comm )
 
   IF( mpime == 0 ) THEN
      !
@@ -756,7 +757,7 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
                     ENDIF
                  ENDDO
 
-                 CALL mp_sum( rhotwx, world_comm )
+                 CALL mp_sum( rhotwx, intra_image_comm )
 
                  IF (mpime == 0) THEN
                     rrhotwx(1)=tpiba2* real(rhotwx(1)*conjg(rhotwx(1)))
@@ -790,7 +791,9 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
      OPEN (UNIT=313,FILE="vxcdiag.dat",STATUS="UNKNOWN")
      WRITE(313,*) "#         K            BND          <Vxc>"
      ALLOCATE ( vxc(dfftp%nnr,nspin) )
+     !
      CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
+     !
      DO ik=1,nkpt
         npw = ngk(ik)
         CALL davcio( evc, 2*nwordwfc, iunwfc, ik, -1 )
@@ -810,7 +813,7 @@ SUBROUTINE compute_gw( omegamin, omegamax, d_omega, use_gmaps, qplda, vkb, vxcdi
            ENDDO
    ! PG: this is the correct integral - 27/8/2010
            vxcdiag = vxcdiag * rytoev / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
-           CALL mp_sum( vxcdiag, world_comm ) !, intra_pool_comm )
+           CALL mp_sum( vxcdiag, intra_image_comm ) !, intra_pool_comm )
            ! ONLY FOR DEBUG!
            !IF (norma /= 1.0) THEN
            !   WRITE(*,*) "norma =", norma
@@ -904,10 +907,10 @@ SUBROUTINE write_gmaps ( kunit)
   USE wavefunctions,  ONLY : evc
   USE io_files,  ONLY : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc
   USE io_global, ONLY : ionode
-  USE mp_images, ONLY : my_image_id
-  USE mp_global, ONLY : nproc_pool, my_pool_id, my_image_id, intra_pool_comm
+  USE mp_images, ONLY : intra_image_comm, my_image_id
+  USE mp_pools,  ONLY : nproc_pool, my_pool_id, intra_pool_comm
   USE mp,        ONLY : mp_sum, mp_max
-  USE mp_world,  ONLY : world_comm, nproc, mpime
+  USE mp_world,  ONLY : nproc, mpime
 
 
   IMPLICIT NONE
@@ -968,11 +971,11 @@ SUBROUTINE write_gmaps ( kunit)
   ALLOCATE( ngk_gw( nkstot/nspin ) )
   ngk_g = 0
   ngk_g( iks:ike ) = ngk( 1:nks )
-  CALL mp_sum( ngk_g, world_comm )
+  CALL mp_sum( ngk_g, intra_image_comm )
 
   ! compute the Maximum G vector index among all G+k an processors
   npw_g = maxval( ig_l2g(:) ) ! ( igk_l2g(:,:) )
-  CALL mp_max( npw_g, world_comm )
+  CALL mp_max( npw_g, intra_image_comm )
 
   ! compute the Maximum number of G vector among all k points
   npwx_g = maxval( ngk_g( 1:nkstot ) )
@@ -989,7 +992,7 @@ SUBROUTINE write_gmaps ( kunit)
         itmp( ig_l2g( ig ), 1 ) = ig_l2g( ig )
       ENDDO
     ENDIF
-    CALL mp_sum( itmp, world_comm )
+    CALL mp_sum( itmp, intra_image_comm )
     ngg = 0
     DO  ig = 1, npw_g
       IF( itmp( ig, 1 ) == ig ) THEN

@@ -419,7 +419,6 @@ SUBROUTINE cg_neweps
   USE ions_base, ONLY : nat, tau
   USE fft_base,  ONLY : dfftp
   USE scf,       ONLY : rho, rho_core
-  USE lsda_mod,  ONLY : current_spin
   USE funct,     ONLY : dmxc
   USE cgcom
   !
@@ -432,11 +431,11 @@ SUBROUTINE cg_neweps
   !
   CALL newscf
   !
-  !  new derivative of the xc potential
+  !  new derivative of the xc potential - NOT IMPLEMENTED FOR LSDA
   !
   dmuxc(:) = 0.d0
   DO i = 1,dfftp%nnr
-     rhotot = rho%of_r(i,current_spin)+rho_core(i)
+     rhotot = rho%of_r(i,1) + rho_core(i)
      IF ( rhotot> 1.d-30 ) dmuxc(i)= dmxc( rhotot)
      IF ( rhotot<-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)
   ENDDO

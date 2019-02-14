@@ -321,7 +321,7 @@ CONTAINS
                               read_recon, set_paw_upf
     USE symm_base,     ONLY : nsym, s
     USE uspp_param,    ONLY : upf
-    USE mp_global,     ONLY : inter_pool_comm
+    USE mp_pools,      ONLY : inter_pool_comm
     USE mp,            ONLY : mp_max, mp_min
     USE dfunct,                 only : newd
 

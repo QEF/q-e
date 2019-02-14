@@ -13,7 +13,6 @@ SUBROUTINE close_phq( flag )
   ! ... Called at the end of the run with flag=.TRUE. (removes 'recover')
   ! ... or during execution with flag=.FALSE. (does not remove 'recover')
   !
-  USE control_flags, ONLY : twfcollect
   USE paw_variables, ONLY : okpaw
   USE io_global,     ONLY : ionode, stdout
   USE buffers,       ONLY : close_buffer
@@ -36,15 +35,7 @@ SUBROUTINE close_phq( flag )
   !
   IF (only_wfc) RETURN
   !
-  IF ( twfcollect ) THEN
-     !
-     CALL close_buffer(iuwfc,'delete')
-     !
-  ELSE
-     !
-     CALL close_buffer(iuwfc,'keep')
-     !
-  END IF
+  CALL close_buffer(iuwfc,'keep')
   !
   IF (flag) THEN
      CALL close_buffer(iudwf,'delete')

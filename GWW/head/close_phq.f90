@@ -16,8 +16,6 @@ SUBROUTINE close_phq( flag )
   ! ... Called at the end of the run with flag=.TRUE. (removes 'recover')
   ! ... or during execution with flag=.FALSE. (does not remove 'recover')
   !
-  USE control_flags, ONLY : twfcollect
-  USE mp_global,     ONLY : me_pool
   USE io_global,     ONLY : ionode, stdout
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iudwf, iubar, iudrhous, iuebar, iudrho, &
@@ -35,15 +33,7 @@ SUBROUTINE close_phq( flag )
   LOGICAL :: exst
   !
   !
-  IF ( twfcollect ) THEN
-     !
-     CLOSE( UNIT = iuwfc, STATUS = 'DELETE' )
-     !
-  ELSE
-     !
-     CLOSE( UNIT = iuwfc, STATUS = 'KEEP' )
-     !
-  END IF
+  CLOSE( UNIT = iuwfc, STATUS = 'DELETE' )
   !
   IF (flag) THEN
      CLOSE( UNIT = iudwf, STATUS = 'DELETE' )

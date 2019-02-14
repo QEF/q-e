@@ -3,6 +3,7 @@
 ! Program written by Yang Jiao,  Oct 2016, GPL, No warranties.
 !
 !    Oct 2018, adapted to QE6.3
+!    Jan 2019, adapted to change in rho from (up,down) to (tot,magn)
 !
 !-----------------------------------------------------------------------
 PROGRAM do_ppacf
@@ -46,7 +47,7 @@ PROGRAM do_ppacf
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : scf_type,create_scf_type,destroy_scf_type
   USE scf,                  ONLY : scf_type_COPY
-  USE scf,                  ONLY : rho, rho_core, rhog_core,vltot
+  USE scf,                  ONLY : rho, rho_core, rhog_core, vltot
   USE funct,                ONLY : xc,xc_spin,gcxc,gcx_spin,gcc_spin,dft_is_nonlocc,nlc
   USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE funct,                ONLY : set_exx_fraction,set_auxiliary_flags,enforce_input_dft
@@ -93,7 +94,7 @@ PROGRAM do_ppacf
   REAL(DP) :: etxccc,etxcccnl,etxcccnlp,etxcccnlm,vtxccc,vtxccc_buf,vtxcccnl 
   REAL(DP) :: grho2(2),sx, sc,scp,scm, v1x, v2x, v1c, v2c, &
               v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw,  &
-              etxcgc, vtxcgc, segno, fac, zeta, rh, grh2, amag 
+              etxcgc, vtxcgc, segno, fac, zeta, rh, grh2, amag, indx
   real(dp) :: dq0_dq                              ! The derivative of the saturated
   real(dp) :: grid_cell_volume
   REAL(DP), ALLOCATABLE :: q0(:)
@@ -187,6 +188,7 @@ PROGRAM do_ppacf
      READ (5, ppacf, iostat = ios) 
      !
   ENDIF
+  IF (nspin == 4) CALL errore ('ppacf','noncollinear spin not implemented',1)
 !!!!!!!!!!!!!!!!!! READ IN DATA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! 
   ! Broadcast variables
@@ -246,16 +248,13 @@ PROGRAM do_ppacf
      etxcccnl=0._DP
      vtxcccnl=0._DP
      vofrcc=0._DP
+     !
      CALL nlc( rho%of_r, rho_core, nspin, etxcccnl, vtxcccnl, vofrcc )
+     !
      CALL mp_sum(  etxcccnl , intra_bgrp_comm )
   END IF
   !
-   
-  !
-  ! ... add gradiend corrections (if any)
-  !
-  if (nspin==4) CALL errore ('ppacf', 'Noncollinear not implemented', 1)
-  fac = 1.D0 / DBLE( nspin )
+  ! ... add gradient corrections (if any)
   !
   ALLOCATE( grho( 3, dfftp%nnr, nspin) )
   ALLOCATE( rhoout( dfftp%nnr, nspin) )
@@ -263,13 +262,15 @@ PROGRAM do_ppacf
   ALLOCATE( rhogsum( ngm, nspin ) )
   !
   ! ... calculate the gradient of rho + rho_core in real space
+  ! ... note: input rho is (tot,magn), output rhoout, grho are (up,down)
   !
-  !
+  fac = 1.D0 / DBLE( nspin )
   !
   DO is = 1, nspin
      !
-     rhoout(:,is)  = fac * rho_core(:)  + rho%of_r(:,is)  
-     rhogsum(:,is) = fac * rhog_core(:) + rho%of_g(:,is)
+     indx = DBLE( nspin/2 * (1-2*(is/2)) ) ! +1 if is=1, -1 if is=2
+     rhoout(:,is)  = fac * ( rho_core(:)  + rho%of_r(:,1) + indx * rho%of_r(:,2) )
+     rhogsum(:,is) = fac * ( rhog_core(:) + rho%of_g(:,1) + indx * rho%of_g(:,2) )
      !
      CALL fft_gradient_g2r( dfftp, rhogsum(1,is), g, grho(1,1,is))
      !
@@ -281,8 +282,6 @@ PROGRAM do_ppacf
      tot_rho(:)=rhoout(:,1)
   ELSEIF(nspin==2) THEN
      tot_rho(:)=rhoout(:,1)+rhoout(:,2)
-  ELSE
-     CALL errore ('ppacf','vdW-DF not available for noncollinear spin case',1)
   END IF
   !
   CALL create_scf_type(exlda)
@@ -403,11 +402,11 @@ PROGRAM do_ppacf
      ! ... spin-polarized case
      !
      DO ir = 1, dfftp%nnr
-        rhox = rho%of_r(ir,1) + rho%of_r(ir,2) + rho_core(ir)
+        rhox = rho%of_r(ir,1) + rho_core(ir)
         arhox = ABS( rhox )
         IF (arhox > vanishing_charge) THEN
            rs = pi34 /arhox**third
-           zeta = (rho%of_r(ir,1)-rho%of_r(ir,2))/arhox
+           zeta = rho%of_r(ir,2)/arhox
            IF( ABS( zeta ) > 1.D0 ) zeta = SIGN(1.D0, zeta)
            IF(iexch==1) THEN
               CALL slater_spin (arhox, zeta, ex, vx(1), vx(2))

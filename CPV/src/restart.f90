@@ -27,7 +27,7 @@
       USE io_files,         ONLY: tmp_dir
       USE ensemble_dft,     ONLY: tens
       USE mp,               ONLY: mp_bcast
-      USE control_flags,    ONLY: tksw, ndw, io_level, twfcollect
+      USE control_flags,    ONLY: tksw, ndw, io_level
       USE electrons_module, ONLY: collect_c
       USE descriptors,      ONLY: la_descriptor
       USE gvecw,            ONLY: ngw

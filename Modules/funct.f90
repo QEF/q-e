@@ -376,6 +376,7 @@ CONTAINS
     logical :: dft_defined = .false.
     character (len=1), external :: capital
     integer ::  save_iexch, save_icorr, save_igcx, save_igcc, save_meta, save_inlc
+    logical :: force_meta_gga = .false.
     !
     ! Exit if set to discard further input dft
     !
@@ -403,6 +404,11 @@ CONTAINS
     ! Note: comparison is done via exact matching
     ! ----------------------------------------------
     !
+    ! special case : activate null meta-GGA to permit non-SCF calculations with meta-GGAs
+    if (index(trim(dftout),'+META') .ne. 0) then
+        force_meta_gga = .true.
+        dftout = dftout(1:index(dftout,'+META')-1)
+    endif
     ! special cases : PZ  (LDA is equivalent to PZ)
     IF (('PZ' .EQ. TRIM(dftout) ).OR.('LDA' .EQ. TRIM(dftout) )) THEN
        dft_defined = set_dft_values(1,1,0,0,0,0)
@@ -599,50 +605,44 @@ CONTAINS
     else IF ('TB09'.EQ. TRIM(dftout) ) THEN
        dft_defined = set_dft_values(0,0,0,0,0,3)
 
-   ! special case : SCAN Meta GGA
+    ! special case : SCAN Meta GGA
     else if ( 'SCAN' .EQ. TRIM(dftout) ) THEN
        dft_defined = set_dft_values(0,0,0,0,0,5)
 
-     ! special case : SCAN0
-      else IF ('SCAN0'.EQ. TRIM(dftout ) ) THEN
-        dft_defined = set_dft_values(0,0,0,0,0,6)
+    ! special case : SCAN0
+    else IF ('SCAN0'.EQ. TRIM(dftout ) ) THEN
+       dft_defined = set_dft_values(0,0,0,0,0,6)
 
-    ! special case : PZ/LDA + null meta-GGA
-    else IF (('PZ+META'.EQ. TRIM(dftout)) .or. ('LDA+META'.EQ. TRIM(dftout)) ) THEN
-       dft_defined = set_dft_values(1,1,0,0,0,4)
-
-    ! special case : PBE + null meta-GGA
-    else IF ('PBE+META'.EQ. TRIM(dftout) ) THEN
-       dft_defined = set_dft_values(1,4,3,4,0,4)
-
-      else if ('REV-VDW-DF2' .EQ. TRIM(dftout) ) then
+    else if ('REV-VDW-DF2' .EQ. TRIM(dftout) ) then
         call errore('set_dft_from_name','obsolete XC label, use VDW-DF2-B86R',1)
 
-     else if ('VDW-DF3' .EQ. TRIM(dftout) ) then
+    else if ('VDW-DF3' .EQ. TRIM(dftout) ) then
         call errore('set_dft_from_name','obsolete XC label, use VDW-DF-OBK8',1)
 
-     else if ('VDW-DF4'.EQ.TRIM(dftout) .OR. 'OPTB86B-VDW'.EQ.TRIM(dftout) ) then
+    else if ('VDW-DF4'.EQ.TRIM(dftout) .OR. 'OPTB86B-VDW'.EQ.TRIM(dftout) ) then
         call errore('set_dft_from_name','obsolete XC label, use VDW-DF-OB86',1)
 
-     else if ('VDW-DF-X' .EQ. TRIM(dftout) ) then
+    else if ('VDW-DF-X' .EQ. TRIM(dftout) ) then
      ! Special case vdW-DF-X
         call errore('set_dft_from_name','functional not yet implemented',1)
 
-     else if ('VDW-DF-Y' .EQ. TRIM(dftout) ) then
+    else if ('VDW-DF-Y' .EQ. TRIM(dftout) ) then
      ! Special case vdW-DF-Y
         call errore('set_dft_from_name','functional not yet implemented',1)
 
-     else if ('VDW-DF-Z' .EQ. TRIM(dftout) ) then
+    else if ('VDW-DF-Z' .EQ. TRIM(dftout) ) then
      ! Special case vdW-DF-Z
         call errore('set_dft_from_name','functional not yet implemented',1)
 
-     ELSE IF ( 'INDEX:' ==  dftout(1:6)) THEN
+    ELSE IF ( 'INDEX:' ==  dftout(1:6)) THEN
      ! Special case for old RRKJ format, containing indices instead of label
         READ( dftout(7:18), '(6i2)') iexch, icorr, igcx, igcc, inlc, imeta
         dft_defined = set_dft_values(iexch, icorr, igcx, igcc, inlc, imeta)
         dftout = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
              &//gradc (igcc) //'-'// nonlocc(inlc)
     END IF
+    
+    if (force_meta_gga) imeta = 4  ! null meta-GGA
 
     !
     ! ----------------------------------------------------------------
@@ -1214,6 +1214,10 @@ subroutine write_dft_name
         &  " (",I2,3I3,2I2,")")') TRIM( dft ), iexch,icorr,igcx,igcc,inlc,imeta
    IF ( get_exx_fraction() > 0.0_dp ) WRITE( stdout, &
         '(5X,"EXX-fraction              =",F12.2)') get_exx_fraction()
+#ifdef __LIBXC
+   call get_libxc_version
+   write( stdout, '(5X,"Using LIBXC version       = ",3I4)') libxc_major, libxc_minor, libxc_micro
+#endif
    return
 end subroutine write_dft_name
 
@@ -2897,9 +2901,9 @@ subroutine nlc (rho_valence, rho_core, nspin, enl, vnl, v)
 
   elseif (inlc == 3) then
       if(imeta == 0) then
-        call xc_rVV10 (rho_valence, rho_core, nspin, enl, vnl, v)
+        call xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v)
       else
-        call xc_rVV10 (rho_valence, rho_core, nspin, enl, vnl, v, 15.7_dp)
+        call xc_rVV10 (rho_valence(:,1), rho_core, nspin, enl, vnl, v, 15.7_dp)
       endif
   else
      enl = 0.0_DP
@@ -2946,6 +2950,14 @@ subroutine tau_xc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
      call  tb09cxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
   elseif (imeta == 4) then
      ! do nothing
+     ex = 0.d0
+     ec = 0.d0
+     v1x = 0.d0
+     v2x = 0.d0
+     v3x = 0.d0
+     v1c = 0.d0
+     v2c = 0.d0
+     v3c = 0.d0
   elseif (imeta == 5) then
      call  SCANcxc (rho, grho, tau, ex, ec, v1x, v2x, v3x, v1c, v2c, v3c)
   else

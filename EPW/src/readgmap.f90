@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !--------------------------------------------------------------
-  subroutine readgmap ( nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd) 
+  SUBROUTINE readgmap( nkstot, ngxx, ng0vec, g0vec_all_r, lower_bnd ) 
   !--------------------------------------------------------------
   !!
   !!  read map of G vectors G -> G-G_0 for a given q point
@@ -15,37 +15,49 @@
   !!    
   !!
   !--------------------------------------------------------------
-  USE mp_global,ONLY : inter_pool_comm, world_comm
-  USE mp,       ONLY : mp_bcast,mp_max,mp_min
-  use io_global,ONLY : meta_ionode, meta_ionode_id
   USE kinds,    ONLY : DP
+  USE mp_global,ONLY : inter_pool_comm, world_comm
+  USE mp,       ONLY : mp_bcast, mp_max
+  use io_global,ONLY : meta_ionode, meta_ionode_id
   use io_epw,   ONLY : iukgmap, iukmap
   use pwcom,    ONLY : nks
   use elph2,    ONLY : shift, gmap, igk_k_all, ngk_all
   USE io_files, ONLY : prefix
-  implicit none
+  !
+  IMPLICIT NONE
   !
   ! variables for folding of k+q grid
   !
-  INTEGER, INTENT (in) :: nkstot
-  !! Total number of k and q points
-  INTEGER, INTENT (inout) :: ngxx
-  !! kpoint blocks (k points of all pools)
-  INTEGER, INTENT (out) :: ng0vec
-  !! 
-  INTEGER, INTENT (in) :: lower_bnd
+  INTEGER, INTENT(in) :: nkstot
+  !! Total number of k-points
+  INTEGER, INTENT(out) :: ngxx
+  !! Maximum number of G-vectors over all pools
+  INTEGER, INTENT(out) :: ng0vec
+  !! Number of G_0 vectors
+  INTEGER, INTENT(in) :: lower_bnd
   !! Lower bound for the k-parallellization
   ! 
-  REAL(kind=DP), INTENT (out) :: g0vec_all_r(3,125)
-  !! G-vectors needed to fold the k+q grid into the k grid, cartesian coord.
+  REAL(kind=DP), INTENT(out) :: g0vec_all_r(3,125)
+  !! G_0 vectors needed to fold the k+q grid into the k grid, cartesian coord.
   !
   !  work variables
   !
-  integer :: ik, ik1, ishift, ig0, ig, itmp
-  integer :: ios
-  real(kind=DP) :: tmp
+  INTEGER :: ik
+  !! Counter on k-points 
+  INTEGER :: ik1, itmp
+  !! Temporary indeces when reading kmap and kgmap files
+  INTEGER :: ig0
+  !! Counter on G_0 vectors
+  INTEGER :: ishift
+  !! Counter on G_0 vectors
+  INTEGER :: ig
+  !! Counter on G vectors
+  INTEGER :: ios
+  !! Integer variable for I/O control
   !
-  allocate ( shift(nkstot) )
+  REAL(DP) :: tmp
+  !
+  ALLOCATE( shift(nkstot) )
   !
   !  OBSOLETE: now we read directly the igkq to get the proper ngxx
   !
@@ -66,26 +78,26 @@
   ngxx = 0
   DO ik = 1, nks
     !
-    IF (maxval(igk_k_all(1:ngk_all(ik+lower_bnd-1),ik+lower_bnd-1)) > ngxx)&
-           & ngxx = maxval(igk_k_all(1:ngk_all(ik+lower_bnd-1),ik+lower_bnd-1))
+    IF ( maxval(igk_k_all(1:ngk_all(ik+lower_bnd-1),ik+lower_bnd-1)) > ngxx ) &
+      ngxx = maxval(igk_k_all(1:ngk_all(ik+lower_bnd-1),ik+lower_bnd-1))
     !
   ENDDO
   !
 #if defined(__MPI)
-  tmp = dble (ngxx)
-  CALL mp_max(tmp,inter_pool_comm)  
-  ngxx = nint (tmp)
+  tmp = dble(ngxx)
+  CALL mp_max( tmp, inter_pool_comm )  
+  ngxx = nint(tmp)
 #endif
   !
-  IF (meta_ionode) then
+  IF (meta_ionode) THEN
     !
-    open ( unit = iukgmap, file = trim(prefix)//'.kgmap', form = 'formatted',status='old',iostat=ios)
-    IF (ios /=0) call errore ('readgmap', 'error opening kgmap file',iukgmap)
+    OPEN(iukgmap, file=trim(prefix)//'.kgmap', form='formatted', status='old', iostat=ios)
+    IF (ios /=0) CALL errore('readgmap', 'error opening kgmap file', iukgmap)
     !
     DO ik = 1, nkstot
-      read (iukgmap,*) ik1, shift (ik1)
+      READ(iukgmap,*) ik1, shift(ik1)
     ENDDO
-    read (iukgmap,*) ng0vec
+    READ(iukgmap,*) ng0vec
     !
     !  the following seems crazy but I make it for compatibility
     !  with versions up to 2.1.5:
@@ -95,16 +107,16 @@
     !  shift for a specific q-point)
     !
     !  since createkmap.f90 has regenerated the shifts for the
-    !  present kpoint I read them again in kmap.dat. The above 
-    !  'fake' readin is because the gmap appears *after* the
+    !  present k-point I read them again in kmap.dat. The above 
+    !  'fake' reading is because the gmap appears *after* the
     !  wrong kmap.
     !
-    open ( unit = iukmap, file = trim(prefix)//'.kmap', form = 'formatted',status='old',iostat=ios)
-    IF (ios /= 0) call errore ('readgmap', 'error opening kmap file', iukmap)
+    OPEN(iukmap, file=trim(prefix)//'.kmap', form='formatted', status='old', iostat=ios)
+    IF (ios /= 0) CALL errore ('readgmap', 'error opening kmap file', iukmap)
     DO ik = 1, nkstot
-      read (iukmap,*) ik1, itmp, shift (ik1)
+      READ(iukmap,*) ik1, itmp, shift(ik1)
     ENDDO
-    close (iukmap) 
+    CLOSE(iukmap) 
     !
   ENDIF
   !
@@ -112,21 +124,21 @@
   !
   CALL mp_bcast( ng0vec, meta_ionode_id, world_comm )
   !
-  allocate ( gmap (ngxx * ng0vec) )
+  ALLOCATE( gmap(ngxx * ng0vec) )
   !
-  IF (meta_ionode) then
+  IF (meta_ionode) THEN
      !
     DO ig0 = 1, ng0vec
-      read (iukgmap,*) g0vec_all_r (:,ig0)
+      READ(iukgmap,*) g0vec_all_r(:,ig0)
     ENDDO
     DO ig = 1, ngxx
       ! 
       ! at variance with the nscf calculation, here gmap is read as a vector,
       ! 
-      read (iukgmap,*) (gmap ( ng0vec * ( ig - 1 ) + ishift ), ishift = 1, ng0vec)
+      READ(iukgmap,*) ( gmap(ng0vec * ( ig - 1 ) + ishift), ishift = 1, ng0vec )
     ENDDO
     !
-    close (iukgmap)
+    CLOSE(iukgmap)
     !
   ENDIF
   !
@@ -136,5 +148,4 @@
   CALL mp_bcast( shift, meta_ionode_id, world_comm )
   CALL mp_bcast( gmap, meta_ionode_id, world_comm )
   !
-  end subroutine readgmap
-
+  END SUBROUTINE readgmap

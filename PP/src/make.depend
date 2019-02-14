@@ -6,7 +6,7 @@ add_shift_cc.o : ../../Modules/control_flags.o
 add_shift_cc.o : ../../Modules/fft_base.o
 add_shift_cc.o : ../../Modules/ions_base.o
 add_shift_cc.o : ../../Modules/kind.o
-add_shift_cc.o : ../../Modules/mp_global.o
+add_shift_cc.o : ../../Modules/mp_pools.o
 add_shift_cc.o : ../../Modules/recvec.o
 add_shift_cc.o : ../../Modules/uspp.o
 add_shift_cc.o : ../../Modules/wavefunctions.o
@@ -17,7 +17,7 @@ add_shift_lc.o : ../../FFTXlib/fft_interfaces.o
 add_shift_lc.o : ../../Modules/constants.o
 add_shift_lc.o : ../../Modules/fft_base.o
 add_shift_lc.o : ../../Modules/kind.o
-add_shift_lc.o : ../../Modules/mp_global.o
+add_shift_lc.o : ../../Modules/mp_pools.o
 add_shift_lc.o : ../../UtilXlib/mp.o
 add_shift_us.o : ../../Modules/becmod.o
 add_shift_us.o : ../../Modules/cell_base.o
@@ -25,7 +25,7 @@ add_shift_us.o : ../../Modules/control_flags.o
 add_shift_us.o : ../../Modules/io_files.o
 add_shift_us.o : ../../Modules/ions_base.o
 add_shift_us.o : ../../Modules/kind.o
-add_shift_us.o : ../../Modules/mp_global.o
+add_shift_us.o : ../../Modules/mp_pools.o
 add_shift_us.o : ../../Modules/recvec.o
 add_shift_us.o : ../../Modules/uspp.o
 add_shift_us.o : ../../Modules/wavefunctions.o
@@ -36,7 +36,7 @@ addusdens1d.o : ../../Modules/cell_base.o
 addusdens1d.o : ../../Modules/fft_base.o
 addusdens1d.o : ../../Modules/ions_base.o
 addusdens1d.o : ../../Modules/kind.o
-addusdens1d.o : ../../Modules/mp_global.o
+addusdens1d.o : ../../Modules/mp_bands.o
 addusdens1d.o : ../../Modules/recvec.o
 addusdens1d.o : ../../Modules/uspp.o
 addusdens1d.o : ../../PW/src/pwcom.o
@@ -79,7 +79,8 @@ bands.o : ../../Modules/io_global.o
 bands.o : ../../Modules/ions_base.o
 bands.o : ../../Modules/kind.o
 bands.o : ../../Modules/mp_global.o
-bands.o : ../../Modules/mp_world.o
+bands.o : ../../Modules/mp_images.o
+bands.o : ../../Modules/mp_pools.o
 bands.o : ../../Modules/noncol.o
 bands.o : ../../Modules/recvec.o
 bands.o : ../../Modules/uspp.o
@@ -129,7 +130,7 @@ compute_sigma_avg.o : ../../Modules/cell_base.o
 compute_sigma_avg.o : ../../Modules/fft_base.o
 compute_sigma_avg.o : ../../Modules/ions_base.o
 compute_sigma_avg.o : ../../Modules/kind.o
-compute_sigma_avg.o : ../../Modules/mp_global.o
+compute_sigma_avg.o : ../../Modules/mp_bands.o
 compute_sigma_avg.o : ../../Modules/noncol.o
 compute_sigma_avg.o : ../../Modules/recvec.o
 compute_sigma_avg.o : ../../Modules/uspp.o
@@ -168,7 +169,7 @@ do_initial_state.o : ../../PW/src/scf_mod.o
 do_initial_state.o : ../../PW/src/symme.o
 do_shift_ew.o : ../../Modules/constants.o
 do_shift_ew.o : ../../Modules/kind.o
-do_shift_ew.o : ../../Modules/mp_global.o
+do_shift_ew.o : ../../Modules/mp_pools.o
 do_shift_ew.o : ../../UtilXlib/mp.o
 dos.o : ../../Modules/cell_base.o
 dos.o : ../../Modules/constants.o
@@ -205,8 +206,10 @@ epsilon.o : ../../Modules/environment.o
 epsilon.o : ../../Modules/io_files.o
 epsilon.o : ../../Modules/io_global.o
 epsilon.o : ../../Modules/kind.o
+epsilon.o : ../../Modules/mp_bands.o
 epsilon.o : ../../Modules/mp_global.o
-epsilon.o : ../../Modules/mp_world.o
+epsilon.o : ../../Modules/mp_images.o
+epsilon.o : ../../Modules/mp_pools.o
 epsilon.o : ../../Modules/recvec.o
 epsilon.o : ../../Modules/uspp.o
 epsilon.o : ../../Modules/wavefunctions.o
@@ -278,7 +281,7 @@ local_dos.o : ../../Modules/fft_base.o
 local_dos.o : ../../Modules/io_files.o
 local_dos.o : ../../Modules/ions_base.o
 local_dos.o : ../../Modules/kind.o
-local_dos.o : ../../Modules/mp_global.o
+local_dos.o : ../../Modules/mp_pools.o
 local_dos.o : ../../Modules/noncol.o
 local_dos.o : ../../Modules/recvec.o
 local_dos.o : ../../Modules/uspp.o
@@ -334,10 +337,11 @@ open_grid.o : ../../Modules/io_global.o
 open_grid.o : ../../Modules/ions_base.o
 open_grid.o : ../../Modules/kind.o
 open_grid.o : ../../Modules/mp_global.o
-open_grid.o : ../../Modules/mp_world.o
+open_grid.o : ../../Modules/mp_images.o
+open_grid.o : ../../Modules/mp_pools.o
 open_grid.o : ../../Modules/noncol.o
 open_grid.o : ../../Modules/parameters.o
-open_grid.o : ../../Modules/qes_types.o
+open_grid.o : ../../Modules/qes_types_module.o
 open_grid.o : ../../Modules/qexsd.o
 open_grid.o : ../../Modules/recvec.o
 open_grid.o : ../../Modules/wavefunctions.o
@@ -351,7 +355,6 @@ open_grid.o : ../../PW/src/scf_mod.o
 open_grid.o : ../../PW/src/start_k.o
 open_grid.o : ../../PW/src/symm_base.o
 open_grid.o : ../../UtilXlib/mp.o
-openfil_pp.o : ../../Modules/control_flags.o
 openfil_pp.o : ../../Modules/io_files.o
 openfil_pp.o : ../../Modules/kind.o
 openfil_pp.o : ../../Modules/noncol.o
@@ -371,7 +374,6 @@ paw_postproc.o : ../../Modules/constants.o
 paw_postproc.o : ../../Modules/fft_base.o
 paw_postproc.o : ../../Modules/ions_base.o
 paw_postproc.o : ../../Modules/kind.o
-paw_postproc.o : ../../Modules/mp_global.o
 paw_postproc.o : ../../Modules/paw_variables.o
 paw_postproc.o : ../../Modules/splinelib.o
 paw_postproc.o : ../../Modules/uspp.o
@@ -389,6 +391,7 @@ pawplot.o : ../../Modules/io_global.o
 pawplot.o : ../../Modules/ions_base.o
 pawplot.o : ../../Modules/kind.o
 pawplot.o : ../../Modules/mp_global.o
+pawplot.o : ../../Modules/mp_pools.o
 pawplot.o : ../../Modules/mp_world.o
 pawplot.o : ../../Modules/noncol.o
 pawplot.o : ../../Modules/paw_variables.o
@@ -429,8 +432,8 @@ poormanwannier.o : ../../Modules/io_global.o
 poormanwannier.o : ../../Modules/ions_base.o
 poormanwannier.o : ../../Modules/kind.o
 poormanwannier.o : ../../Modules/mp_global.o
+poormanwannier.o : ../../Modules/mp_images.o
 poormanwannier.o : ../../Modules/mp_pools.o
-poormanwannier.o : ../../Modules/mp_world.o
 poormanwannier.o : ../../Modules/noncol.o
 poormanwannier.o : ../../Modules/recvec.o
 poormanwannier.o : ../../Modules/uspp.o
@@ -442,7 +445,6 @@ poormanwannier.o : ../../PW/src/symm_base.o
 poormanwannier.o : ../../UtilXlib/mp.o
 postproc.o : ../../Modules/cell_base.o
 postproc.o : ../../Modules/constants.o
-postproc.o : ../../Modules/control_flags.o
 postproc.o : ../../Modules/environment.o
 postproc.o : ../../Modules/fft_base.o
 postproc.o : ../../Modules/io_files.o
@@ -450,7 +452,7 @@ postproc.o : ../../Modules/io_global.o
 postproc.o : ../../Modules/ions_base.o
 postproc.o : ../../Modules/kind.o
 postproc.o : ../../Modules/mp_global.o
-postproc.o : ../../Modules/mp_world.o
+postproc.o : ../../Modules/mp_images.o
 postproc.o : ../../Modules/noncol.o
 postproc.o : ../../Modules/parameters.o
 postproc.o : ../../Modules/paw_variables.o
@@ -488,11 +490,13 @@ projections_mod.o : ../../Modules/noncol.o
 projections_mod.o : ../../Modules/uspp.o
 projections_mod.o : ../../PW/src/pwcom.o
 projwfc.o : ../../LAXlib/la_types.o
+projwfc.o : ../../LAXlib/mp_diag.o
 projwfc.o : ../../LAXlib/ptoolkit.o
 projwfc.o : ../../LAXlib/zhpev_drv.o
 projwfc.o : ../../Modules/atom.o
 projwfc.o : ../../Modules/becmod.o
 projwfc.o : ../../Modules/cell_base.o
+projwfc.o : ../../Modules/command_line_options.o
 projwfc.o : ../../Modules/constants.o
 projwfc.o : ../../Modules/control_flags.o
 projwfc.o : ../../Modules/environment.o
@@ -502,7 +506,9 @@ projwfc.o : ../../Modules/io_files.o
 projwfc.o : ../../Modules/io_global.o
 projwfc.o : ../../Modules/ions_base.o
 projwfc.o : ../../Modules/kind.o
+projwfc.o : ../../Modules/mp_bands.o
 projwfc.o : ../../Modules/mp_global.o
+projwfc.o : ../../Modules/mp_images.o
 projwfc.o : ../../Modules/mp_pools.o
 projwfc.o : ../../Modules/mp_world.o
 projwfc.o : ../../Modules/noncol.o
@@ -532,7 +538,7 @@ projwfc_box.o : ../../Modules/io_files.o
 projwfc_box.o : ../../Modules/io_global.o
 projwfc_box.o : ../../Modules/ions_base.o
 projwfc_box.o : ../../Modules/kind.o
-projwfc_box.o : ../../Modules/mp_global.o
+projwfc_box.o : ../../Modules/mp_pools.o
 projwfc_box.o : ../../Modules/noncol.o
 projwfc_box.o : ../../Modules/recvec.o
 projwfc_box.o : ../../Modules/run_info.o
@@ -643,6 +649,7 @@ pw2wannier90.o : ../../Modules/io_global.o
 pw2wannier90.o : ../../Modules/ions_base.o
 pw2wannier90.o : ../../Modules/kind.o
 pw2wannier90.o : ../../Modules/mp_global.o
+pw2wannier90.o : ../../Modules/mp_pools.o
 pw2wannier90.o : ../../Modules/mp_world.o
 pw2wannier90.o : ../../Modules/noncol.o
 pw2wannier90.o : ../../Modules/random_numbers.o
@@ -687,14 +694,13 @@ stm.o : ../../Modules/fft_base.o
 stm.o : ../../Modules/io_files.o
 stm.o : ../../Modules/io_global.o
 stm.o : ../../Modules/kind.o
-stm.o : ../../Modules/mp_global.o
+stm.o : ../../Modules/mp_pools.o
 stm.o : ../../Modules/recvec.o
 stm.o : ../../Modules/wavefunctions.o
 stm.o : ../../PW/src/pwcom.o
 stm.o : ../../PW/src/scf_mod.o
 stm.o : ../../PW/src/symme.o
 stm.o : ../../UtilXlib/mp.o
-stop_pp.o : ../../Modules/control_flags.o
 stop_pp.o : ../../Modules/io_files.o
 stop_pp.o : ../../Modules/mp_global.o
 sum_band_kin.o : ../../FFTXlib/fft_helper_subroutines.o
@@ -732,8 +738,8 @@ sym_band.o : ../../Modules/io_global.o
 sym_band.o : ../../Modules/ions_base.o
 sym_band.o : ../../Modules/kind.o
 sym_band.o : ../../Modules/mp_bands.o
-sym_band.o : ../../Modules/mp_global.o
 sym_band.o : ../../Modules/mp_images.o
+sym_band.o : ../../Modules/mp_pools.o
 sym_band.o : ../../Modules/noncol.o
 sym_band.o : ../../Modules/recvec.o
 sym_band.o : ../../Modules/uspp.o
@@ -756,7 +762,6 @@ vasp_read_chgcar_mod.o : ../../Modules/wavefunctions.o
 vasp_read_chgcar_mod.o : ../../PW/src/pwcom.o
 vasp_read_chgcar_mod.o : ../../PW/src/scf_mod.o
 vasp_read_chgcar_mod.o : ../../UtilXlib/mp.o
-vasp_read_chgcar_mod.o : ../../iotk/src/iotk_module.o
 vasp_xml_module.o : ../../FFTXlib/fft_interfaces.o
 vasp_xml_module.o : ../../FFTXlib/fft_support.o
 vasp_xml_module.o : ../../FFTXlib/fft_types.o
@@ -776,8 +781,8 @@ vasp_xml_module.o : ../../Modules/mp_bands.o
 vasp_xml_module.o : ../../Modules/mp_global.o
 vasp_xml_module.o : ../../Modules/noncol.o
 vasp_xml_module.o : ../../Modules/paw_variables.o
-vasp_xml_module.o : ../../Modules/qes_libs.o
-vasp_xml_module.o : ../../Modules/qes_types.o
+vasp_xml_module.o : ../../Modules/qes_libs_module.o
+vasp_xml_module.o : ../../Modules/qes_types_module.o
 vasp_xml_module.o : ../../Modules/read_pseudo.o
 vasp_xml_module.o : ../../Modules/recvec.o
 vasp_xml_module.o : ../../Modules/recvec_subs.o
@@ -788,7 +793,6 @@ vasp_xml_module.o : ../../PW/src/Coul_cut_2D.o
 vasp_xml_module.o : ../../PW/src/esm.o
 vasp_xml_module.o : ../../PW/src/extfield.o
 vasp_xml_module.o : ../../PW/src/io_rho_xml.o
-vasp_xml_module.o : ../../PW/src/ldaU.o
 vasp_xml_module.o : ../../PW/src/paw_init.o
 vasp_xml_module.o : ../../PW/src/pw_restart_new.o
 vasp_xml_module.o : ../../PW/src/pwcom.o
@@ -836,7 +840,8 @@ wfck2r.o : ../../Modules/io_files.o
 wfck2r.o : ../../Modules/io_global.o
 wfck2r.o : ../../Modules/kind.o
 wfck2r.o : ../../Modules/mp_global.o
-wfck2r.o : ../../Modules/mp_world.o
+wfck2r.o : ../../Modules/mp_images.o
+wfck2r.o : ../../Modules/mp_pools.o
 wfck2r.o : ../../Modules/noncol.o
 wfck2r.o : ../../Modules/recvec.o
 wfck2r.o : ../../Modules/wavefunctions.o

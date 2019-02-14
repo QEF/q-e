@@ -1,3 +1,4 @@
+david_param.o : ../../UtilXlib/parallel_include.o
 david_rci.o : ../../UtilXlib/mp.o
 david_rci.o : ../../UtilXlib/mp_bands_util.o
 david_rci.o : david_param.o

@@ -88,7 +88,6 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
   complex(DP) , allocatable, target :: aux (:)
   complex(DP) , allocatable :: aux1 (:), aux2 (:)
   complex(DP) , pointer :: auxs (:)
-  REAL(DP) :: fac
   COMPLEX(DP), ALLOCATABLE :: drhoc(:)
   ! 
   call start_clock ('dvqpsi_us')
@@ -174,22 +173,14 @@ subroutine dvqpsi_us (ik, uact, addnlcc)
         enddo
      endif
 
-     fac = 1.d0 / DBLE (nspin_lsda)
-     DO is = 1, nspin_lsda
-        rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core
-     END DO
+     rho%of_r(:,1) = rho%of_r(:,1) + rho_core
 
-     IF ( dft_is_gradient() ) &
-        CALL dgradcorr (dfftp, rho%of_r, grho, &
-              dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, drhoc,&
-              1, nspin_gga, g, aux)
+     IF ( dft_is_gradient() ) CALL dgradcorr (dfftp, rho%of_r, grho, dvxc_rr, &
+                    dvxc_sr, dvxc_ss, dvxc_s, xq, drhoc, 1, nspin_gga, g, aux)       
 
-     IF (dft_is_nonlocc()) &
-        CALL dnonloccorr(rho%of_r, drhoc, xq, aux)
+     IF (dft_is_nonlocc()) CALL dnonloccorr(rho%of_r, drhoc, xq, aux)
 
-     DO is = 1, nspin_lsda
-        rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core
-     END DO
+     rho%of_r(:,1) = rho%of_r(:,1) - rho_core
 
      CALL fwfft ('Rho', aux, dfftp)
 ! 

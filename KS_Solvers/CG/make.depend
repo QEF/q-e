@@ -1,6 +1,7 @@
 ccgdiagg.o : ../../UtilXlib/mp.o
 ccgdiagg.o : ../../UtilXlib/mp_bands_util.o
 ccgdiagg.o : cg_param.o
+cg_param.o : ../../UtilXlib/parallel_include.o
 rcgdiagg.o : ../../UtilXlib/mp.o
 rcgdiagg.o : ../../UtilXlib/mp_bands_util.o
 rcgdiagg.o : cg_param.o

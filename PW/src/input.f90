@@ -150,7 +150,7 @@ SUBROUTINE iosys()
   USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, tr2, imix, gamma_only,&
                             nmix, iverbosity, smallmem, niter, &
                             io_level, ethr, lscf, lbfgs, lmd, &
-                            lbands, lconstrain, restart, twfcollect, &
+                            lbands, lconstrain, restart, &
                             llondon, ldftd3, do_makov_payne, lxdm, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
@@ -160,7 +160,6 @@ SUBROUTINE iosys()
                             nstep_            => nstep, &
                             iprint_           => iprint, &
                             noinv_            => noinv, &
-                            lkpoint_dir_      => lkpoint_dir, &
                             tqr_              => tqr, &
                             tq_smoothing_     => tq_smoothing, &
                             tbeta_smoothing_  => tbeta_smoothing, &
@@ -219,7 +218,7 @@ SUBROUTINE iosys()
                                wfcdir, prefix, etot_conv_thr, forc_conv_thr,   &
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
-                               nberrycyc, lkpoint_dir, efield_cart, lecrpa,    &
+                               nberrycyc, efield_cart, lecrpa,                 &
                                vdw_table_name, memory, max_seconds, tqmmm,     &
                                efield_phase, gate
 
@@ -548,7 +547,6 @@ SUBROUTINE iosys()
   ! ... define memory- and disk-related internal switches
   !
   smallmem = ( TRIM( memory ) == 'small' )
-  twfcollect = wf_collect
   !
   ! ... Set Values for electron and bands
   !
@@ -874,10 +872,6 @@ SUBROUTINE iosys()
   CASE ( 'none' )
      !
      io_level = -1
-     IF ( twfcollect ) THEN
-        CALL infomsg('iosys', 'minimal I/O required, wf_collect reset to FALSE')
-        twfcollect= .false.
-     ENDIF
      !
   CASE DEFAULT
      !
@@ -1154,7 +1148,6 @@ SUBROUTINE iosys()
   tbeta_smoothing_ = tbeta_smoothing
   !
   title_      = title
-  lkpoint_dir_=lkpoint_dir
   dt_         = dt
   tefield_    = tefield
   dipfield_   = dipfield

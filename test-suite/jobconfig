@@ -62,6 +62,10 @@ inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.i
 program = EPW
 inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw.in', '3')
 
+[epw_trev_uspp/]
+program = EPW
+inputs_args = ('scf.in', '1'), ('ph.in', '2'), ('scf.in', '1'), ('nscf.in', '1'), ('epw1.in', '3')
+
 [epw_metal/]
 program = EPW
 inputs_args = ('scf_epw.in', '1'), ('nscf_epw.in', '1'), ('epw.in', '3'), ('epw2.in', '3')
@@ -119,6 +123,6 @@ pw_all = pw_*??
 cp_all = cp_*??
 ph_all = ph_*??
 epw_all = epw_*??
-epw_partial = epw_base epw_trev epw_metal epw_soc epw_super epw_polar epw_pl epw_mob
+epw_partial = epw_base epw_trev epw_trev_uspp epw_metal epw_soc epw_super epw_polar epw_pl epw_mob 
 tddfpt_all = tddfpt_*??
 _default_ = pw_*?? cp_*?? ph_*?? epw_*?? tddfpt_*??

@@ -156,7 +156,6 @@ SUBROUTINE potinit()
   charge = 0.D0
   IF ( gstart == 2 ) THEN
      charge = omega*REAL( rho%of_g(1,1) )
-     IF ( nspin == 2 ) charge = charge + omega*REAL( rho%of_g(1,2) )
   END IF
   CALL mp_sum(  charge , intra_bgrp_comm )
   !
@@ -169,13 +168,7 @@ SUBROUTINE potinit()
      ELSE 
         WRITE( stdout, '(/,5X,"Starting from uniform charge")')
         rho%of_g(:,1:nspin) = (0.0_dp,0.0_dp)
-        IF ( gstart == 2 ) THEN
-           IF ( nspin == 2 ) THEN
-              rho%of_g(1,1:nspin) = nelec / omega / nspin
-           ELSE
-              rho%of_g(1,1) = nelec / omega
-           END IF
-        END IF
+        IF ( gstart == 2 ) rho%of_g(1,1) = nelec / omega
      ENDIF
      !
   ELSE IF ( .NOT. lscf .AND. ABS( charge - nelec ) > (1.D-3 * charge ) ) THEN
@@ -191,10 +184,15 @@ SUBROUTINE potinit()
   IF  ( dft_is_meta() ) THEN
      IF (starting_pot /= 'file') THEN
         ! ... define a starting (TF) guess for rho%kin_r from rho%of_r
+        ! ... to be verified for LSDA: rho is (tot,magn), rho_kin is (up,down)
         fact = (3.d0/5.d0)*(3.d0*pi*pi)**(2.0/3.0)
         DO is = 1, nspin
            rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
         END DO
+        !if (nspin==2) then
+        !     rho%kin_r(:,1) = fact * abs(rho%of_r(:,1)+rho%of_r(:,2))**(5.0/3.0)/2.0
+        !     rho%kin_r(:,2) = fact * abs(rho%of_r(:,1)-rho%of_r(:,2))**(5.0/3.0)/2.0
+        !endif
         ! ... bring it to g-space
         CALL rho_r2g (dfftp, rho%kin_r, rho%kin_g)
      ELSE

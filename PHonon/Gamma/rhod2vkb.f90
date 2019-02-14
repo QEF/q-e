@@ -11,12 +11,12 @@ SUBROUTINE rhod2vkb(dyn0)
   !----------------------------------------------------------------------
   !
   !  calculate the electronic term: <psi|V''|psi>  of the dynamical matrix
+  !  NOT IMPLEMENTED FOR LSDA
   !
   USE kinds, ONLY: dp
   USE constants, ONLY: tpi
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp
   USE cell_base, ONLY : tpiba2, tpiba, omega
-  USE lsda_mod,  ONLY : current_spin
   USE gvect,  ONLY : ngm, g, igtongl
   USE gvecw,  ONLY: gcutw
   USE wvfct,  ONLY: nbnd, npwx
@@ -28,7 +28,7 @@ SUBROUTINE rhod2vkb(dyn0)
   USE uspp_param, ONLY: nh
   USE becmod, ONLY: calbec
   USE cgcom
-  USE mp_global,  ONLY : intra_pool_comm
+  USE mp_pools,   ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
   USE fft_base, ONLY : dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
@@ -50,7 +50,7 @@ SUBROUTINE rhod2vkb(dyn0)
   ALLOCATE  ( dynloc( 3*nat, nmodes))
   dynloc (:,:) = 0.d0
   DO ir = 1,dfftp%nnr
-     psic(ir) = rho%of_r(ir,current_spin)
+     psic(ir) = rho%of_r(ir,1)
   ENDDO
   CALL fwfft ('Rho', psic, dfftp)
   DO nu_i = 1,nmodes

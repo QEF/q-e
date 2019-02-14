@@ -74,7 +74,7 @@ subroutine ns_adj
          end do
 
        else
-
+         !
          do is = 1, nspin
             do m1 = 1, ldim
                do m2 = 1, ldim 
@@ -96,7 +96,7 @@ subroutine ns_adj
                enddo
             enddo
          enddo
-
+         !
        endif 
 
       endif
