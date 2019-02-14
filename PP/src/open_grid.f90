@@ -6,7 +6,7 @@ PROGRAM open_grid
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE mp_global,  ONLY : mp_startup
   USE mp_images,  ONLY : intra_image_comm
-  USE mp_pools,   ONLY : npools
+  USE mp_pools,   ONLY : npool
   USE mp,         ONLY : mp_bcast
   USE cell_base,  ONLY : at, bg, tpiba2, alat
   USE klist,      ONLY : nks, nkstot, xk, wk, igk_k, ngk, qnorm
@@ -110,7 +110,7 @@ PROGRAM open_grid
   !
   WRITE(stdout,*)
   IF ( npool > 1 .and. nspin_mag>1) CALL errore( 'open_grid', &
-      'pools+spin not implemented, use wf_collect instead', npool )
+      'pools+spin not implemented, run this tool with only on pool', npool )
   !
   IF(gamma_only) CALL errore("open_grid", &
       "not implemented, and pointless, for gamma-only",1)
