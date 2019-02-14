@@ -206,11 +206,9 @@ PROGRAM open_grid
     !
     CALL gk_sort (xk(:,ik_idx_kpt), ngm, g, ecutwfc / tpiba2, &
                   ngk(ik_idx_kpt), igk_k(:,ik_idx_kpt), g2kin)
-!     print*, size(exxbuff,1), size(exxbuff,2), nwordwfc, npwx, &
-!             dffts%nnr
+!    write(*,'("dims:",99i6)') size(exxbuff,1), size(exxbuff,2), nwordwfc, npwx,  dffts%nnr, ngk(ik_idx_kpt)
+    evx(:,:) = 0._dp
     DO ibnd = 1, nbnd
-      evx = 0._dp
-      psic = 0._dp
       psic(1:dffts%nnr) = exxbuff(1:dffts%nnr,ibnd,ik_idx_exx)
       CALL fwfft('Wave', psic, dffts)
       evx(1:ngk(ik_idx_kpt),ibnd) = psic(dffts%nl(igk_k(1:ngk(ik_idx_kpt),ik_idx_kpt)))
@@ -237,7 +235,8 @@ PROGRAM open_grid
   nk3 = nq3
   calculation = 'bands'
   k_points = "automatic"
-  CALL init_start_k(nk1,nk2,nk3, k1, k2, k3, "automatic",nks/nspin_mag, xk, wk)
+  !CALL init_start_k(nk1,nk2,nk3, k1, k2, k3, "automatic",nks/nspin_mag, xk, wk)
+  CALL init_start_k(nk1,nk2,nk3, k1, k2, k3, "automatic",nks/nspin_lsda, xk, wk)
   !
   ! Restore EXX variables
   use_ace = use_ace_back
