@@ -177,7 +177,7 @@ PROGRAM open_grid
   nwordwfc = nbnd * npwx * npol
   CALL open_buffer(iunwfc, 'wfc', nwordwfc, +1, exst_mem, exst)
   !
-  ! Set the next to true to force non-collected wfcs on output
+  ! Write everything again with the new prefix
   CALL write_scf(rho, nspin)
   !
   ALLOCATE(psic(dffts%nnr), evx(npol*npwx, nbnd))
