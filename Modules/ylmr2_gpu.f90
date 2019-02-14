@@ -138,7 +138,7 @@ subroutine ylmr2_gpu(lmax2, ng, g_d, gg_d, ylm_d)
   attributes(device):: g_d,gg_d,ylm_d
 #endif
   !
-#if defined(__USE_CUDA_KERNELS)
+#if defined(__USE_CUDA_KERNELS) && defined(__CUDA)
   !
   ! CUDA Fortran Kernel implementation. Optimizes the use of Q_d (see below)
   !

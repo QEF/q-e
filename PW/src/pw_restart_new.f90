@@ -764,8 +764,8 @@ MODULE pw_restart_new
          !
          ! ... read wavefunctions - do not read if already in memory (nsk==1)
          !
+         IF ( nks > 1 ) CALL using_evc(2)
          IF ( nks > 1 ) CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-         IF ( nks > 1 ) CALL using_evc(0)
          !
          IF ( nspin == 2 ) THEN
             !
@@ -786,6 +786,7 @@ MODULE pw_restart_new
          ! ... Only the first band group of each pool writes
          ! ... No warranty it works for more than one band group
          !
+         IF ( my_bgrp_id == root_bgrp_id ) CALL using_evc(0)
          IF ( my_bgrp_id == root_bgrp_id ) CALL write_wfc( iunpun, &
               filename, root_bgrp, intra_bgrp_comm, ik_g, tpiba*xk(:,ik), &
               ispin, nspin, evc, npw_g, gamma_only, nbnd, &
@@ -2166,8 +2167,6 @@ MODULE pw_restart_new
       REAL(DP)             :: scalef, xk_(3), b1(3), b2(3), b3(3)
  
       !
-      CALL using_evc(1) ! Maybe set to out (i.e. 2) ?
-      !
       iks = global_kpoint_index (nkstot, 1)
       ike = iks + nks - 1
       !
@@ -2222,6 +2221,7 @@ MODULE pw_restart_new
          CALL gk_l2gmap_kdip( npw_g, ngk_g(ik_g), ngk(ik), igk_l2g, &
                               igk_l2g_kdip )
          !
+         CALL using_evc(2)
          evc=(0.0_DP, 0.0_DP)
          !
          IF ( nspin == 2 ) THEN
@@ -2239,10 +2239,10 @@ MODULE pw_restart_new
             !
          ENDIF
          !
+         CALL using_evc(2)
          CALL read_wfc( iunpun, filename, root_bgrp, intra_bgrp_comm, &
               ik_g, xk_, ispin, npol_, evc, npw_g, gamma_only, nbnd_, &
               igk_l2g_kdip(:), ngk(ik), b1, b2, b3, mill_k, scalef )
-         ! CALL using_evc(1) !here may be needed if this function will ever be ported
          !
          ! ... here one should check for consistency between what is read
          ! ... and what is expected
@@ -2252,7 +2252,8 @@ MODULE pw_restart_new
                  & I6," bands were read from file")')  nbnd, nbnd_  
             CALL errore ('pw_restart - read_collected_to_evc', msg, 1 )
          END IF
-         ! CALL using_evc(2) !here may be needed if this function will ever be ported
+         !
+         CALL using_evc(0)
          CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
          ! 
       END DO k_points_loop
