@@ -110,7 +110,7 @@ PROGRAM open_grid
   !
   WRITE(stdout,*)
   IF ( npool > 1 .and. nspin_mag>1) CALL errore( 'open_grid', &
-      'pools+spin not implemented, run this tool with only on pool', npool )
+      'pools+spin not implemented, run this tool with only one pool', npool )
   !
   IF(gamma_only) CALL errore("open_grid", &
       "not implemented, and pointless, for gamma-only",1)
