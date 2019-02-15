@@ -162,7 +162,7 @@ w0gauss.o \
 w1gauss.o \
 deviatoric.o
 
-TLDEPS=libfft
+TLDEPS=libiotk libfox libutil libla libfft
 
 all : libqemod.a
 
