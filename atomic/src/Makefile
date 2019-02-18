@@ -109,7 +109,7 @@ parameters.o
 
 QEMODS=../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../UtilXlib/libutil.a
 
-TLDEPS= bindir mods libs
+TLDEPS= bindir libs mods
 
 all: tldeps ld1.x
 

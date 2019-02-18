@@ -249,7 +249,7 @@ QEMODS=../../Modules/libqemod.a \
 
 -include make.gpu
 
-TLDEPS=bindir mods libs liblapack libblas dftd3
+TLDEPS= bindir libs mods libks_solvers dftd3
 
 all : tldeps pw.x generate_vdW_kernel_table.x generate_rVV10_kernel_table.x
 

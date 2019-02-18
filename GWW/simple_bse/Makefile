@@ -23,7 +23,7 @@ QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
 	../../KS_Solvers/libks_solvers.a \
         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 
-TLDEPS=bindir mods libs gwwlib
+TLDEPS=bindir libs mods gwwlib
 
 all : tldeps simple_bse.x  libsimple_exc.a
 

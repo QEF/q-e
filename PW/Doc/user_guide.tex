@@ -1354,9 +1354,10 @@ you may not find all the symmetries you expect because:
 \item the number of significant figures in the atomic positions is not
   large enough. In file \texttt{PW/src/eqvect.f90}, the variable \texttt{accep} is used to
   decide whether a rotation is a symmetry operation. Its current value
-  ($10^{-5}$) is quite strict: a rotated atom must coincide with
+  ($10^{-5}$), set in module \texttt{PW/src/symm\_base.f90}, 
+  is quite strict: a rotated atom must coincide with
   another atom to 5 significant digits. You may change the value of
-  accep and recompile. 
+  \texttt{accep} and recompile. 
 \item they are not acceptable symmetry operations of the Bravais
   lattice. This is the case for C$_{60}$, for instance: the $I_h$
   icosahedral group of C$_{60}$ contains 5-fold rotations that are
