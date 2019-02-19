@@ -10211,6 +10211,34 @@ MODULE qes_read_module
        obj%highestOccupiedLevel_ispresent = .FALSE.
     END IF
     !
+    tmp_node_list => getElementsByTagname(xml_node, "lowestUnoccupiedLevel")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:band_structureType","lowestUnoccupiedLevel: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:band_structureType","lowestUnoccupiedLevel: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%lowestUnoccupiedLevel_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%lowestUnoccupiedLevel , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:band_structureType","error reading lowestUnoccupiedLevel")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:band_structureType","error reading lowestUnoccupiedLevel",10)
+         END IF
+      END IF
+    ELSE
+       obj%lowestUnoccupiedLevel_ispresent = .FALSE.
+    END IF
+    !
     tmp_node_list => getElementsByTagname(xml_node, "two_fermi_energies")
     tmp_node_list_size = getLength(tmp_node_list)
     !
