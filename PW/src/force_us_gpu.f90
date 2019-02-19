@@ -56,8 +56,8 @@ SUBROUTINE force_us_gpu( forcenl )
 #endif
   COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
   REAL(DP), ALLOCATABLE :: deff(:,:,:)
-  TYPE(bec_type)   :: dbecp                 ! contains <dbeta|psi>
-  TYPE(bec_type_d) :: dbecp_d               ! contains <dbeta|psi>
+  TYPE(bec_type)           :: dbecp                 ! contains <dbeta|psi>
+  TYPE(bec_type_d), TARGET :: dbecp_d               ! contains <dbeta|psi>
   INTEGER    :: npw, ik, ipol, ig, jkb
   INTEGER    :: ierr
   !
@@ -160,11 +160,25 @@ SUBROUTINE force_us_gpu( forcenl )
        !
        ! ... calculation at gamma
        !
+       USE cublas
+       USE uspp_gpum,            ONLY : qq_at_d, using_qq_at_d, deeq_d, using_deeq_d
+       USE wvfct_gpum,           ONLY : wg_d, using_wg_d, et_d, using_et_d
        IMPLICIT NONE
        !
        REAL(DP) :: forcenl(3,nat)
-       REAL(DP), ALLOCATABLE :: aux(:,:)
+       REAL(DP), POINTER :: aux_d(:,:)
+#if defined(__CUDA)
+       attributes(DEVICE) :: aux_d
+#endif
        INTEGER ::  nt, na, ibnd, ibnd_loc, ih, jh, ijkb0 ! counters
+       !
+       ! CUDA Fortran workarounds
+       INTEGER :: nh_nt, becp_ibnd_begin
+       REAL(DP), POINTER :: dbecp_d_r_d(:,:), becp_d_r_d(:,:)
+       REAL(DP) :: forcenl_ipol
+#if defined(__CUDA)
+       attributes(DEVICE) :: dbecp_d_r_d, becp_d_r_d
+#endif
        !
        ! ... Important notice about parallelization over the band group of processors:
        ! ... 1) internally, "calbec" parallelises on plane waves over the band group
@@ -173,48 +187,60 @@ SUBROUTINE force_us_gpu( forcenl )
        ! ... 3) the band group is subsequently used to parallelize over bands
        !
        !
-       CALL using_et(0)
+       CALL using_et_d(0)
+       CALL using_wg_d(0)
        CALL using_indv_ijkb0(0)
+       CALL using_deeq_d(0)
        CALL using_deeq(0)
-       CALL using_qq_at(0)
+       CALL using_qq_at_d(0)
+       !!!!! CHECK becp (set above)
+       becp_ibnd_begin = becp%ibnd_begin
+
+       dbecp_d_r_d => dbecp_d%r_d
+       becp_d_r_d  => becp_d%r_d
 
        DO nt = 1, ntyp
           IF ( nh(nt) == 0 ) CYCLE
-          ALLOCATE ( aux(nh(nt),becp%nbnd_loc) )
+          CALL dev_buf%lock_buffer(aux_d, (/nh(nt),becp_d%nbnd_loc/), ierr ) !ALLOCATE ( aux(nh(nt),becp%nbnd_loc) )
+          nh_nt = nh(nt)
+          
           DO na = 1, nat
              IF ( ityp(na) == nt ) THEN
                 ijkb0 = indv_ijkb0(na)
                 ! this is \sum_j q_{ij} <beta_j|psi>
-                CALL DGEMM ('N','N', nh(nt), becp%nbnd_loc, nh(nt), &
-                     1.0_dp, qq_at(1,1,na), nhm, becp%r(ijkb0+1,1),&
-                     nkb, 0.0_dp, aux, nh(nt) )
+                CALL DGEMM ('N','N', nh(nt), becp_d%nbnd_loc, nh(nt), &
+                     1.0_dp, qq_at_d(1,1,na), nhm, becp_d%r_d(ijkb0+1,1),&
+                     nkb, 0.0_dp, aux_d, nh(nt) )
                 ! multiply by -\epsilon_n
-!$omp parallel do default(shared) private(ibnd_loc,ibnd,ih)
-                DO ih = 1, nh(nt)
-                   DO ibnd_loc = 1, becp%nbnd_loc
-                      ibnd = ibnd_loc + becp%ibnd_begin - 1
-                      aux(ih,ibnd_loc) = - et(ibnd,ik) * aux(ih,ibnd_loc)
+!$cuf kernel do(2)
+                DO ih = 1, nh_nt
+                   DO ibnd_loc = 1, becp_d%nbnd_loc
+                      ibnd = ibnd_loc + becp_ibnd_begin - 1
+                      aux_d(ih,ibnd_loc) = - et_d(ibnd,ik) * aux_d(ih,ibnd_loc)
                    END DO
                 END DO
-!$omp end parallel do
+
                 ! add  \sum_j d_{ij} <beta_j|psi>
-                CALL DGEMM ('N','N', nh(nt), becp%nbnd_loc, nh(nt), &
-                     1.0_dp, deeq(1,1,na,current_spin), nhm, &
-                     becp%r(ijkb0+1,1), nkb, 1.0_dp, aux, nh(nt) )
-!$omp parallel do default(shared) private(ibnd_loc,ibnd,ih) reduction(-:forcenl)
-                DO ih = 1, nh(nt)
-                   DO ibnd_loc = 1, becp%nbnd_loc
-                      ibnd = ibnd_loc + becp%ibnd_begin - 1
-                      forcenl(ipol,na) = forcenl(ipol,na) - &
-                           2.0_dp * tpiba * aux(ih,ibnd_loc) * &
-                           dbecp%r(ijkb0+ih,ibnd_loc) * wg(ibnd,ik)
+                CALL DGEMM ('N','N', nh(nt), becp_d%nbnd_loc, nh(nt), &
+                     1.0_dp, deeq_d(1,1,na,current_spin), nhm, &
+                     becp_d%r_d(ijkb0+1,1), nkb, 1.0_dp, aux_d, nh(nt) )
+
+                ! Auxiliary variable to perform the reduction with cuf kernels
+                forcenl_ipol = 0.0_dp
+!$cuf kernel do(2)
+                DO ih = 1, nh_nt
+                   DO ibnd_loc = 1, becp_d%nbnd_loc
+                      ibnd = ibnd_loc + becp_ibnd_begin - 1
+                      forcenl_ipol = forcenl_ipol - &
+                           2.0_dp * tpiba * aux_d(ih,ibnd_loc) * &
+                           dbecp_d_r_d(ijkb0+ih,ibnd_loc) * wg_d(ibnd,ik)
                    END DO
                 END DO
-!$omp end parallel do
+                forcenl(ipol,na) = forcenl_ipol
                 !
              END IF
           END DO
-          DEALLOCATE (aux)
+          CALL dev_buf%release_buffer(aux_d, ierr)
        END DO
        !
      END SUBROUTINE force_us_gamma_gpu
