@@ -45,43 +45,55 @@ module tb_dev
                         lock_buffer_iv, &           !< Releases a integer vector buffer
                         lock_buffer_im, &           !< Releases a integer matrix buffer
                         lock_buffer_it, &           !< Releases a integer tensor buffer
+                        lock_buffer_if, &           !< Releases a integer four_dimensional buffer
                         lock_buffer_rv, &           !< Releases a real(DP) vector buffer
                         lock_buffer_rm, &           !< Releases a real(DP) matrix buffer
                         lock_buffer_rt, &           !< Releases a real(DP) tensor buffer
+                        lock_buffer_rf, &           !< Releases a real(DP) four_dimensional buffer
                         lock_buffer_cv, &           !< Releases a complex(DP) vector buffer
                         lock_buffer_cm, &           !< Releases a complex(DP) matrix buffer
-                        lock_buffer_ct           !< Releases a complex(DP) tensor buffer
+                        lock_buffer_ct, &           !< Releases a complex(DP) tensor buffer
+                        lock_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
      !
      procedure, private :: lock_buffer_iv           !< Releases a integer vector buffer
      procedure, private :: lock_buffer_im           !< Releases a integer matrix buffer
      procedure, private :: lock_buffer_it           !< Releases a integer tensor buffer
+     procedure, private :: lock_buffer_if           !< Releases a integer four_dimensional buffer
      procedure, private :: lock_buffer_rv           !< Releases a real(DP) vector buffer
      procedure, private :: lock_buffer_rm           !< Releases a real(DP) matrix buffer
      procedure, private :: lock_buffer_rt           !< Releases a real(DP) tensor buffer
+     procedure, private :: lock_buffer_rf           !< Releases a real(DP) four_dimensional buffer
      procedure, private :: lock_buffer_cv           !< Releases a complex(DP) vector buffer
      procedure, private :: lock_buffer_cm           !< Releases a complex(DP) matrix buffer
      procedure, private :: lock_buffer_ct           !< Releases a complex(DP) tensor buffer
+     procedure, private :: lock_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
      !
      generic, public :: release_buffer => &
                         release_buffer_iv, &        !< Releases a integer vector buffer
                         release_buffer_im, &        !< Releases a integer matrix buffer
                         release_buffer_it, &        !< Releases a integer tensor buffer
+                        release_buffer_if, &        !< Releases a integer four_dimensional buffer
                         release_buffer_rv, &        !< Releases a real(DP) vector buffer
                         release_buffer_rm, &        !< Releases a real(DP) matrix buffer
                         release_buffer_rt, &        !< Releases a real(DP) tensor buffer
+                        release_buffer_rf, &        !< Releases a real(DP) four_dimensional buffer
                         release_buffer_cv, &        !< Releases a complex(DP) vector buffer
                         release_buffer_cm, &        !< Releases a complex(DP) matrix buffer
-                        release_buffer_ct        !< Releases a complex(DP) tensor buffer
+                        release_buffer_ct, &        !< Releases a complex(DP) tensor buffer
+                        release_buffer_cf        !< Releases a complex(DP) four_dimensional buffer
      !
      procedure, private :: release_buffer_iv           !< Releases a integer vector buffer
      procedure, private :: release_buffer_im           !< Releases a integer matrix buffer
      procedure, private :: release_buffer_it           !< Releases a integer tensor buffer
+     procedure, private :: release_buffer_if           !< Releases a integer four_dimensional buffer
      procedure, private :: release_buffer_rv           !< Releases a real(DP) vector buffer
      procedure, private :: release_buffer_rm           !< Releases a real(DP) matrix buffer
      procedure, private :: release_buffer_rt           !< Releases a real(DP) tensor buffer
+     procedure, private :: release_buffer_rf           !< Releases a real(DP) four_dimensional buffer
      procedure, private :: release_buffer_cv           !< Releases a complex(DP) vector buffer
      procedure, private :: release_buffer_cm           !< Releases a complex(DP) matrix buffer
      procedure, private :: release_buffer_ct           !< Releases a complex(DP) tensor buffer
+     procedure, private :: release_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
      !
      procedure, private :: lock_space
      procedure, private :: release_space
@@ -420,6 +432,39 @@ contains
 
   end subroutine lock_buffer_it
 
+  !> Get or allocate a buffer for an integer four_dimensional.
+  subroutine lock_buffer_if(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:,:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    integer :: dummy
+    !
+    d = PRODUCT(fsize)*SIZEOF(dummy)
+    !
+    CALL this%lock_space(d, cloc, info)
+    CALL c_f_pointer( cloc, p, fsize )
+
+  end subroutine lock_buffer_if
+
   !> Get or allocate a buffer for an real(DP) vector.
   subroutine lock_buffer_rv(this, p, vsize_, info)
 #if defined(__CUDA)
@@ -520,6 +565,39 @@ contains
     CALL c_f_pointer( cloc, p, tsize )
 
   end subroutine lock_buffer_rt
+
+  !> Get or allocate a buffer for an real(DP) four_dimensional.
+  subroutine lock_buffer_rf(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:,:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    real(DP) :: dummy
+    !
+    d = PRODUCT(fsize)*SIZEOF(dummy)
+    !
+    CALL this%lock_space(d, cloc, info)
+    CALL c_f_pointer( cloc, p, fsize )
+
+  end subroutine lock_buffer_rf
 
   !> Get or allocate a buffer for an complex(DP) vector.
   subroutine lock_buffer_cv(this, p, vsize_, info)
@@ -622,6 +700,39 @@ contains
 
   end subroutine lock_buffer_ct
 
+  !> Get or allocate a buffer for an complex(DP) four_dimensional.
+  subroutine lock_buffer_cf(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:,:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_devptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    complex(DP) :: dummy
+    !
+    d = PRODUCT(fsize)*SIZEOF(dummy)
+    !
+    CALL this%lock_space(d, cloc, info)
+    CALL c_f_pointer( cloc, p, fsize )
+
+  end subroutine lock_buffer_cf
+
   !
 
   !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
@@ -694,6 +805,29 @@ contains
   end subroutine release_buffer_it
 
   !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_if(this, p, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(inout) :: p(:,:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+
+#if defined(__CUDA)
+
+    CALL this%release_space(c_devloc(p), info)
+
+#else
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3),  lbound(p, 4))), info)
+#endif
+  end subroutine release_buffer_if
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
   subroutine release_buffer_rv(this, p, info)
 #if defined(__CUDA)
     use cudafor
@@ -761,6 +895,29 @@ contains
     CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3))), info)
 #endif
   end subroutine release_buffer_rt
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_rf(this, p, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(inout) :: p(:,:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+
+#if defined(__CUDA)
+
+    CALL this%release_space(c_devloc(p), info)
+
+#else
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3),  lbound(p, 4))), info)
+#endif
+  end subroutine release_buffer_rf
 
   !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
   subroutine release_buffer_cv(this, p, info)
@@ -831,6 +988,29 @@ contains
 #endif
   end subroutine release_buffer_ct
 
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_cf(this, p, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_dev_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(inout) :: p(:,:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+#if defined(__CUDA)
+    attributes(device) :: p
+#endif
+
+#if defined(__CUDA)
+
+    CALL this%release_space(c_devloc(p), info)
+
+#else
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3),  lbound(p, 4))), info)
+#endif
+  end subroutine release_buffer_cf
+
 
 
 end module tb_dev! This file is part of FBUF - Fortran BUFfers For Accelerators
@@ -880,43 +1060,55 @@ module tb_pin
                         lock_buffer_iv, &           !< Releases a integer vector buffer
                         lock_buffer_im, &           !< Releases a integer matrix buffer
                         lock_buffer_it, &           !< Releases a integer tensor buffer
+                        lock_buffer_if, &           !< Releases a integer four_dimensional buffer
                         lock_buffer_rv, &           !< Releases a real(DP) vector buffer
                         lock_buffer_rm, &           !< Releases a real(DP) matrix buffer
                         lock_buffer_rt, &           !< Releases a real(DP) tensor buffer
+                        lock_buffer_rf, &           !< Releases a real(DP) four_dimensional buffer
                         lock_buffer_cv, &           !< Releases a complex(DP) vector buffer
                         lock_buffer_cm, &           !< Releases a complex(DP) matrix buffer
-                        lock_buffer_ct           !< Releases a complex(DP) tensor buffer
+                        lock_buffer_ct, &           !< Releases a complex(DP) tensor buffer
+                        lock_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
      !
      procedure, private :: lock_buffer_iv           !< Releases a integer vector buffer
      procedure, private :: lock_buffer_im           !< Releases a integer matrix buffer
      procedure, private :: lock_buffer_it           !< Releases a integer tensor buffer
+     procedure, private :: lock_buffer_if           !< Releases a integer four_dimensional buffer
      procedure, private :: lock_buffer_rv           !< Releases a real(DP) vector buffer
      procedure, private :: lock_buffer_rm           !< Releases a real(DP) matrix buffer
      procedure, private :: lock_buffer_rt           !< Releases a real(DP) tensor buffer
+     procedure, private :: lock_buffer_rf           !< Releases a real(DP) four_dimensional buffer
      procedure, private :: lock_buffer_cv           !< Releases a complex(DP) vector buffer
      procedure, private :: lock_buffer_cm           !< Releases a complex(DP) matrix buffer
      procedure, private :: lock_buffer_ct           !< Releases a complex(DP) tensor buffer
+     procedure, private :: lock_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
      !
      generic, public :: release_buffer => &
                         release_buffer_iv, &        !< Releases a integer vector buffer
                         release_buffer_im, &        !< Releases a integer matrix buffer
                         release_buffer_it, &        !< Releases a integer tensor buffer
+                        release_buffer_if, &        !< Releases a integer four_dimensional buffer
                         release_buffer_rv, &        !< Releases a real(DP) vector buffer
                         release_buffer_rm, &        !< Releases a real(DP) matrix buffer
                         release_buffer_rt, &        !< Releases a real(DP) tensor buffer
+                        release_buffer_rf, &        !< Releases a real(DP) four_dimensional buffer
                         release_buffer_cv, &        !< Releases a complex(DP) vector buffer
                         release_buffer_cm, &        !< Releases a complex(DP) matrix buffer
-                        release_buffer_ct        !< Releases a complex(DP) tensor buffer
+                        release_buffer_ct, &        !< Releases a complex(DP) tensor buffer
+                        release_buffer_cf        !< Releases a complex(DP) four_dimensional buffer
      !
      procedure, private :: release_buffer_iv           !< Releases a integer vector buffer
      procedure, private :: release_buffer_im           !< Releases a integer matrix buffer
      procedure, private :: release_buffer_it           !< Releases a integer tensor buffer
+     procedure, private :: release_buffer_if           !< Releases a integer four_dimensional buffer
      procedure, private :: release_buffer_rv           !< Releases a real(DP) vector buffer
      procedure, private :: release_buffer_rm           !< Releases a real(DP) matrix buffer
      procedure, private :: release_buffer_rt           !< Releases a real(DP) tensor buffer
+     procedure, private :: release_buffer_rf           !< Releases a real(DP) four_dimensional buffer
      procedure, private :: release_buffer_cv           !< Releases a complex(DP) vector buffer
      procedure, private :: release_buffer_cm           !< Releases a complex(DP) matrix buffer
      procedure, private :: release_buffer_ct           !< Releases a complex(DP) tensor buffer
+     procedure, private :: release_buffer_cf           !< Releases a complex(DP) four_dimensional buffer
      !
      procedure, private :: lock_space
      procedure, private :: release_space
@@ -1255,6 +1447,38 @@ contains
 
   end subroutine lock_buffer_it
 
+  !> Get or allocate a buffer for an integer four_dimensional.
+  subroutine lock_buffer_if(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(out) :: p(:,:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    integer :: dummy
+    !
+    d = PRODUCT(fsize)*SIZEOF(dummy)
+    !
+    CALL this%lock_space(d, cloc, info)
+    CALL c_f_pointer( cloc, p, fsize )
+
+  end subroutine lock_buffer_if
+
   !> Get or allocate a buffer for an real(DP) vector.
   subroutine lock_buffer_rv(this, p, vsize_, info)
 #if defined(__CUDA)
@@ -1352,6 +1576,38 @@ contains
     CALL c_f_pointer( cloc, p, tsize )
 
   end subroutine lock_buffer_rt
+
+  !> Get or allocate a buffer for an real(DP) four_dimensional.
+  subroutine lock_buffer_rf(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(out) :: p(:,:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    real(DP) :: dummy
+    !
+    d = PRODUCT(fsize)*SIZEOF(dummy)
+    !
+    CALL this%lock_space(d, cloc, info)
+    CALL c_f_pointer( cloc, p, fsize )
+
+  end subroutine lock_buffer_rf
 
   !> Get or allocate a buffer for an complex(DP) vector.
   subroutine lock_buffer_cv(this, p, vsize_, info)
@@ -1451,6 +1707,38 @@ contains
 
   end subroutine lock_buffer_ct
 
+  !> Get or allocate a buffer for an complex(DP) four_dimensional.
+  subroutine lock_buffer_cf(this, p, fsize, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(out) :: p(:,:,:,:)   !< Pointer possibly set to access buffer
+    integer,       intent(in) :: fsize(4)   !< four_dimensional dimension
+    integer,       intent(out) :: info    !<  0: ok
+                                          !< -1: no buffers left, allocating space
+                                          !< -2: unexpected error, no memory left
+                                          !< other values come form allocate stat
+#if defined(__CUDA)
+#endif
+    integer(kind=LLI) :: d
+#if defined(__CUDA)
+    type(c_ptr) :: cloc
+#else
+    type(c_ptr) :: cloc
+#endif
+    !
+    complex(DP) :: dummy
+    !
+    d = PRODUCT(fsize)*SIZEOF(dummy)
+    !
+    CALL this%lock_space(d, cloc, info)
+    CALL c_f_pointer( cloc, p, fsize )
+
+  end subroutine lock_buffer_cf
+
   !
 
   !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
@@ -1520,6 +1808,28 @@ contains
   end subroutine release_buffer_it
 
   !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_if(this, p, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    integer, pointer, intent(inout) :: p(:,:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+#if defined(__CUDA)
+#endif
+
+#if defined(__CUDA)
+
+    CALL this%release_space(c_loc(p), info)
+
+#else
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3),  lbound(p, 4))), info)
+#endif
+  end subroutine release_buffer_if
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
   subroutine release_buffer_rv(this, p, info)
 #if defined(__CUDA)
     use cudafor
@@ -1586,6 +1896,28 @@ contains
   end subroutine release_buffer_rt
 
   !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_rf(this, p, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    real(DP), pointer, intent(inout) :: p(:,:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+#if defined(__CUDA)
+#endif
+
+#if defined(__CUDA)
+
+    CALL this%release_space(c_loc(p), info)
+
+#else
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3),  lbound(p, 4))), info)
+#endif
+  end subroutine release_buffer_rf
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
   subroutine release_buffer_cv(this, p, info)
 #if defined(__CUDA)
     use cudafor
@@ -1650,6 +1982,28 @@ contains
     CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3))), info)
 #endif
   end subroutine release_buffer_ct
+
+  !> Release the buffer corresponding to pointer p, if associated with a buffer. Otherwise just deallocates.
+  subroutine release_buffer_cf(this, p, info)
+#if defined(__CUDA)
+    use cudafor
+#endif
+    use iso_c_binding
+    implicit none
+    class(tb_pin_t), intent(inout)  :: this     !< The class.
+    complex(DP), pointer, intent(inout) :: p(:,:,:,:)   !< Pointer possibly pointing to buffer space
+    integer, intent(out)            :: info
+#if defined(__CUDA)
+#endif
+
+#if defined(__CUDA)
+
+    CALL this%release_space(c_loc(p), info)
+
+#else
+    CALL this%release_space(c_loc(p( lbound(p, 1),  lbound(p, 2),  lbound(p, 3),  lbound(p, 4))), info)
+#endif
+  end subroutine release_buffer_cf
 
 
 
