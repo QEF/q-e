@@ -343,7 +343,7 @@ PROGRAM molecularpdos
                  WRITE (12,'(i5," ")', advance="NO") iksum
               ENDIF
               WRITE(12,'(i11," ")', advance="NO") ibnd_part
-              WRITE(12,'(f7.3)', advance="NO") etev*rytoev
+              WRITE(12,'(f8.3)', advance="NO") etev*rytoev
               DO is=1,nspin
                  WRITE(12,'(e11.3)', advance="NO") mopdos(ibnd_part,ie,is,iksum)
               END DO
@@ -386,7 +386,7 @@ PROGRAM molecularpdos
            IF (kresolveddos) THEN
               WRITE (13,'(i5," ")', advance="NO") iksum
            ENDIF
-           WRITE(13,'(f7.3)', advance="NO") etev*rytoev
+           WRITE(13,'(f8.3)', advance="NO") etev*rytoev
            DO is=1,nspin
               WRITE(13,'(e11.3)', advance="NO") mopdostot(ie,is,iksum)
            END DO
