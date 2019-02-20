@@ -95,7 +95,7 @@ SUBROUTINE force_us_gpu( forcenl )
      CALL using_evc_d(0); CALL using_vkb_d(0); CALL using_becp_d_auto(2)
      CALL calbec_gpu ( npw, vkb_d, evc_d, becp_d )
      !
-     CALL using_evc_d(0); CALL using_becp_auto(0);
+     CALL using_evc_d(0)
      DO ipol = 1, 3
 !$cuf kernel do(2) <<<*,*>>>
         DO jkb = 1, nkb
@@ -160,7 +160,9 @@ SUBROUTINE force_us_gpu( forcenl )
        !
        ! ... calculation at gamma
        !
+#if defined(__CUDA)
        USE cublas
+#endif
        USE uspp_gpum,            ONLY : qq_at_d, using_qq_at_d, deeq_d, using_deeq_d
        USE wvfct_gpum,           ONLY : wg_d, using_wg_d, et_d, using_et_d
        IMPLICIT NONE
@@ -173,7 +175,7 @@ SUBROUTINE force_us_gpu( forcenl )
        INTEGER ::  nt, na, ibnd, ibnd_loc, ih, jh, ijkb0 ! counters
        !
        ! CUDA Fortran workarounds
-       INTEGER :: nh_nt, becp_ibnd_begin
+       INTEGER :: nh_nt, becp_d_ibnd_begin, becp_d_nbnd_loc
        REAL(DP), POINTER :: dbecp_d_r_d(:,:), becp_d_r_d(:,:)
        REAL(DP) :: forcenl_ipol
 #if defined(__CUDA)
@@ -194,7 +196,8 @@ SUBROUTINE force_us_gpu( forcenl )
        CALL using_deeq(0)
        CALL using_qq_at_d(0)
        !!!!! CHECK becp (set above)
-       becp_ibnd_begin = becp%ibnd_begin
+       becp_d_ibnd_begin = becp_d%ibnd_begin
+       becp_d_nbnd_loc = becp_d%nbnd_loc
 
        dbecp_d_r_d => dbecp_d%r_d
        becp_d_r_d  => becp_d%r_d
@@ -214,8 +217,8 @@ SUBROUTINE force_us_gpu( forcenl )
                 ! multiply by -\epsilon_n
 !$cuf kernel do(2)
                 DO ih = 1, nh_nt
-                   DO ibnd_loc = 1, becp_d%nbnd_loc
-                      ibnd = ibnd_loc + becp_ibnd_begin - 1
+                   DO ibnd_loc = 1, becp_d_nbnd_loc
+                      ibnd = ibnd_loc + becp_d_ibnd_begin - 1
                       aux_d(ih,ibnd_loc) = - et_d(ibnd,ik) * aux_d(ih,ibnd_loc)
                    END DO
                 END DO
@@ -229,14 +232,14 @@ SUBROUTINE force_us_gpu( forcenl )
                 forcenl_ipol = 0.0_dp
 !$cuf kernel do(2)
                 DO ih = 1, nh_nt
-                   DO ibnd_loc = 1, becp_d%nbnd_loc
-                      ibnd = ibnd_loc + becp_ibnd_begin - 1
+                   DO ibnd_loc = 1, becp_d_nbnd_loc
+                      ibnd = ibnd_loc + becp_d_ibnd_begin - 1
                       forcenl_ipol = forcenl_ipol - &
                            2.0_dp * tpiba * aux_d(ih,ibnd_loc) * &
                            dbecp_d_r_d(ijkb0+ih,ibnd_loc) * wg_d(ibnd,ik)
                    END DO
                 END DO
-                forcenl(ipol,na) = forcenl_ipol
+                forcenl(ipol,na) = forcenl(ipol,na) + forcenl_ipol
                 !
              END IF
           END DO
@@ -258,6 +261,7 @@ SUBROUTINE force_us_gpu( forcenl )
        !
        CALL using_et(0)
        CALL using_indv_ijkb0(0)
+       CALL using_becp_auto(0);
        DO ibnd = 1, nbnd
           IF (noncolin) THEN
              CALL compute_deff_nc(deff_nc,et(ibnd,ik))
