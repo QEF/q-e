@@ -1211,8 +1211,9 @@ MODULE qes_init_module
     obj%order = order 
     
     length = 1
+    obj%rank = SIZE(shape(Hubbard_ns))
+    ALLOCATE ( obj%dims(obj%rank))
     obj%dims = shape(Hubbard_ns)
-    obj%rank = SIZE(obj%dims)
     DO i = 1, obj%rank
       length = length * obj%dims(i)
     END DO
