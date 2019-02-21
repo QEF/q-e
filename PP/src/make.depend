@@ -87,6 +87,7 @@ bands.o : ../../Modules/uspp.o
 bands.o : ../../Modules/wavefunctions.o
 bands.o : ../../PW/src/pwcom.o
 bands.o : ../../UtilXlib/mp.o
+benchmark_libxc.o : ../../Modules/xc_lda_lsda_drivers.o
 cft.o : ../../Modules/kind.o
 chdens_bspline.o : ../../Modules/bspline.o
 chdens_bspline.o : ../../Modules/cell_base.o
@@ -475,6 +476,7 @@ ppacf.o : ../../Modules/mp_bands.o
 ppacf.o : ../../Modules/mp_global.o
 ppacf.o : ../../Modules/mp_world.o
 ppacf.o : ../../Modules/recvec.o
+ppacf.o : ../../Modules/xc_lda_lsda_drivers.o
 ppacf.o : ../../Modules/xc_vdW_DF.o
 ppacf.o : ../../PW/src/atomic_wfc_mod.o
 ppacf.o : ../../PW/src/exx.o

@@ -4,507 +4,6 @@
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!-----------------------------------------------------------------------
-!
-!-----------------------------------------------------------------------
-subroutine slater (rs, ex, vx)
-  !-----------------------------------------------------------------------
-  !        Slater exchange with alpha=2/3
-  !
-  USE kinds, ONLY : DP
-#if defined(__LIBXC)
-  use xc_f90_types_m
-  use xc_f90_lib_m
-#endif
-  implicit none
-  real(dp), intent(in) :: rs
-  real(dp), intent(out):: ex, vx
-#if defined(__LIBXC)  
-  real(dp):: rho 
-  real(dp), parameter :: pi34 = 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
-  integer :: func_id = 1  ! Slater Exchange
-  integer :: size = 1
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info
-  
-  rho = (pi34/rs)**3
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
-  call xc_f90_lda_exc_vxc(xc_func, size, rho ,ex, vx)  
-  call xc_f90_func_end(xc_func)  
-#else
-  real(dp), parameter  :: f= -0.687247939924714d0, alpha = 2.0d0/3.0d0
-  ! f = -9/8*(3/2pi)^(2/3)
-  !
-  ex = f * alpha / rs
-  vx = 4.d0 / 3.d0 * f * alpha / rs
-#endif
-  !
-  return
-end subroutine slater
-!
-!-----------------------------------------------------------------------
-subroutine slater1(rs, ex, vx)
-  !-----------------------------------------------------------------------
-  !        Slater exchange with alpha=1, corresponding to -1.374/r_s Ry
-  !        used to recover old results
-  !
-  USE kinds, ONLY : DP
-  implicit none
-  real(DP) :: rs, ex, vx
-  real(DP), parameter  :: f= -0.687247939924714d0, alpha = 1.0d0
-  !
-  ex = f * alpha / rs
-  vx = 4.d0 / 3.d0 * f * alpha / rs
-  !
-  return
-end subroutine slater1
-!
-!-----------------------------------------------------------------------
-subroutine slater_rxc (rs, ex, vx)
-  !-----------------------------------------------------------------------
-  !        Slater exchange with alpha=2/3 and Relativistic exchange
-  !
-  USE kinds, ONLY : DP
-  USE constants, ONLY : pi, c_au
-  IMPLICIT none
-  real (DP):: rs, ex, vx
-  !
-  real(DP), PARAMETER :: ZERO=0.D0, ONE=1.D0, PFIVE=.5D0, &
-       OPF=1.5D0 !, C014=0.014D0
-  real (DP):: trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, xp, &
-       beta, sb, alb, c014
-  !
-  TRD = ONE/3.d0
-  FTRD = 4.d0*TRD
-  TFTM = 2**FTRD-2.d0
-  A0 = (4.d0/(9.d0*PI))**TRD
-  C014= 1.0_DP/a0/c_au
-  
-  !      X-alpha parameter:
-  ALP = 2.d0 * TRD
-  
-  Z = ZERO
-  FZ = ZERO
-  FZP = ZERO
-  
-  VXP = -3.d0*ALP/(2.d0*PI*A0*RS)
-  XP = 3.d0*VXP/4.d0
-  BETA = C014/RS
-  SB = SQRT(1.d0+BETA*BETA)
-  ALB = LOG(BETA+SB)
-  VXP = VXP * (-PFIVE + OPF * ALB / (BETA*SB))
-  XP = XP * (ONE-OPF*((BETA*SB-ALB)/BETA**2)**2)
-  !  VXF = 2**TRD*VXP
-  !  EXF = 2**TRD*XP
-  VX = VXP
-  EX = XP
-END SUBROUTINE slater_rxc
-
-!
-!-----------------------------------------------------------------------
-  subroutine slaterKZK (rs, ex, vx, vol)
-  !-----------------------------------------------------------------------
-  !        Slater exchange with alpha=2/3, Kwee, Zhang and Krakauer KE
-  !        correction
-  !
-  USE kinds, ONLY : DP
-  implicit none
-  real(DP) :: rs, ex, vx, dL, vol, ga, pi, a0
-  real(DP), parameter  ::  a1 = -2.2037d0, &
-              a2 = 0.4710d0, a3 = -0.015d0, ry2h = 0.5d0
-  real(DP), parameter  :: f= -0.687247939924714d0, alpha = 2.0d0/3.0d0
-  ! f = -9/8*(3/2pi)^(2/3)
-  !
-  pi = 4.d0 * atan(1.d0)
-  a0 = f * alpha * 2.d0
-
-  dL = vol**(1.d0/3.d0)
-  ga = 0.5d0 * dL *(3.d0 /pi)**(1.d0/3.d0)
-  !
-  if ( rs .le. ga) then
-   ex = a0 / rs + a1 * rs / dL**2.d0 + a2 * rs**2.d0 / dL**3.d0
-   vx = (4.d0 * a0 / rs + 2.d0 * a1 * rs / dL**2.d0 + &
-        a2 * rs**2.d0 / dL**3.d0 ) / 3.d0
-  else
-    ex = a0 / ga + a1 * ga / dL**2.d0 + a2 * ga**2.d0 / dL**3.d0 ! solids
-    vx = ex
-!   ex = a3 * dL**5.d0 / rs**6.d0     ! molecules
-!   vx = 3.d0 * ex  
-  endif
-
-  ex = ry2h * ex    ! Ry to Hartree
-  vx = ry2h * vx
-  !
-  return
-end subroutine slaterKZK
-!
-!-----------------------------------------------------------------------
-subroutine pz (rs, iflag, ec, vc)
-  !-----------------------------------------------------------------------
-  !     LDA parameterization from Monte Carlo data
-  !     iflag=1: J.P. Perdew and A. Zunger, PRB 23, 5048 (1981)
-  !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
-  !
-  USE kinds, ONLY : DP
-#if defined(__LIBXC)
-  use xc_f90_types_m
-  use xc_f90_lib_m
-#endif
-  implicit none
-  real(dp), intent(in) :: rs
-  real(dp), intent(out):: ec, vc
-  integer, intent(in)  :: iflag
-#if defined(__LIBXC)
-  real(dp):: rho 
-  real(dp), parameter :: pi34 = 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
-  integer :: func_id = 9   ! Perdew & Zunger
-    integer :: size = 1
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info
-
-  if (iflag.eq.1)  func_id = 9   ! Perdew & Zunger
-  if (iflag.eq.2)  func_id = 11  ! Ortiz & Ballone (PZ)
-
-  rho = (pi34/rs)**3
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
-  call xc_f90_lda_exc_vxc(xc_func, size, rho, ec, vc)  
-  call xc_f90_func_end(xc_func)  
-#else
-  real(DP) :: a (2), b (2), c (2), d (2), gc (2), b1 (2), b2 (2)
-  real(DP) :: lnrs, rs12, ox, dox
-  !
-  data a / 0.0311d0, 0.031091d0 /, b / -0.048d0, -0.046644d0 /, &
-       c / 0.0020d0, 0.00419d0 /, d / -0.0116d0, -0.00983d0 /
-  data gc / -0.1423d0, -0.103756d0 /, b1 / 1.0529d0, 0.56371d0 /, &
-       b2 / 0.3334d0, 0.27358d0 /
-  !
-  if (rs.lt.1.0d0) then
-     ! high density formula
-     lnrs = log (rs)
-     ec = a (iflag) * lnrs + b (iflag) + c (iflag) * rs * lnrs + d ( &
-          iflag) * rs
-     vc = a (iflag) * lnrs + (b (iflag) - a (iflag) / 3.d0) + 2.d0 / &
-          3.d0 * c (iflag) * rs * lnrs + (2.d0 * d (iflag) - c (iflag) ) &
-          / 3.d0 * rs
-  else
-     ! interpolation formula
-     rs12 = sqrt (rs)
-     ox = 1.d0 + b1 (iflag) * rs12 + b2 (iflag) * rs
-     dox = 1.d0 + 7.d0 / 6.d0 * b1 (iflag) * rs12 + 4.d0 / 3.d0 * &
-          b2 (iflag) * rs
-     ec = gc (iflag) / ox
-     vc = ec * dox / ox
-  endif
-#endif
-  !
-  return
-end subroutine pz
-!
-!-----------------------------------------------------------------------
-subroutine pzKZK (rs, ec, vc, vol)
-  !-----------------------------------------------------------------------
-  !     LDA parameterization from Monte Carlo data
-  !     iflag=1: J.P. Perdew and A. Zunger, PRB 23, 5048 (1981)
-  !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
-  !
-  USE kinds, ONLY : DP
-  implicit none
-  real(DP) :: rs, ec, vc, ec0 (2), vc0(2), ec0p 
-  integer :: iflag, kr
-  !
-  real(DP) :: a (2), b (2), c (2), d (2), gc (2), b1 (2), b2 (2)
-  real(DP) :: lnrs, rs12, ox, dox, lnrsk, rsk
-  real(DP) :: a1, grs, g1, g2, g3, g4, dL, vol, gh, gl, grsp
-  real(DP) :: f3, f2, f1, f0, pi
-  real(DP) :: D1, D2, D3, P1, P2, ry2h
-  !
-  data a / 0.0311_dp, 0.031091_dp /, b / -0.048_dp, -0.046644_dp /, &
-       c / 0.0020_dp, 0.00419_dp /, d / -0.0116_dp, -0.00983_dp /
-  data gc / -0.1423_dp, -0.103756_dp /, b1 / 1.0529_dp, 0.56371_dp /, &
-       b2 / 0.3334_dp, 0.27358_dp /
-  data a1 / -2.2037_dp/, g1 / 0.1182_dp/, g2 / 1.1656_dp/, g3 / -5.2884_dp/, &
-       g4 / -1.1233_dp /
-  data ry2h / 0.5_dp /
-  !
-  iflag = 1
-  pi = 4.d0 * atan(1.d0)
-  dL = vol**(1.d0/3.d0)
-  gh = 0.5d0 * dL / (2.d0 * pi)**(1.d0/3.d0)
-  gl = dL * (3.d0 / 2.d0 / pi)**(1.d0/3.d0)
-
-  rsk = gh
-  do kr = 1, 2
-  lnrsk = log (rsk)
-  if (rsk.lt.1.0d0) then
-     ! high density formula
-    ec0(kr) = a(iflag) *lnrsk + b(iflag) + c(iflag) * rsk * lnrsk + d( &
-          iflag) * rsk
-    vc0(kr) = a(iflag) * lnrsk + (b(iflag) - a(iflag) / 3.d0) + 2.d0 / &
-      3.d0 * c (iflag) * rsk * lnrsk + (2.d0 * d (iflag) - c (iflag) ) &
-          / 3.d0 * rsk
-  else
-     ! interpolation formula
-     rs12 = sqrt (rsk)
-     ox = 1.d0 + b1 (iflag) * rs12 + b2 (iflag) * rsk
-     dox = 1.d0 + 7.d0 / 6.d0 * b1 (iflag) * rs12 + 4.d0 / 3.d0 * &
-          b2 (iflag) * rsk
-     ec0(kr) = gc (iflag) / ox
-     vc0(kr) = ec0(kr) * dox / ox
-  endif
-  !
-   grs  = g1 * rsk * lnrsk + g2 * rsk + g3 * rsk**1.5d0 + g4 * rsk**2.d0
-   grsp = g1 * lnrsk + g1 + g2 + 1.5d0 * g3 * rsk**0.5d0 + & 
-        2.d0 * g4 * rsk
-   ec0(kr)  = ec0(kr) + (-a1 * rsk / dL**2.d0 + grs / dL**3.d0) * ry2h
-   vc0(kr)  = vc0(kr) + (-2.d0 * a1 * rsk / dL**2.d0 / 3.d0 + &
-           grs / dL**3.d0 -  grsp * rsk / 3.d0 / dL**3.d0) * ry2h
-  !
-  rsk = rs
-  enddo
-
-  lnrs = log (rs)
-  if (rs .le. gh) then
-   ec = ec0(2)
-   vc = vc0(2)
-  else
-     if ( rs .le. gl) then
-        ec0p = 3.d0 * (ec0(1) - vc0(1)) / gh
-        P1 = 3.d0 *  ec0(1) - gh * ec0p
-        P2 = ec0p
-        D1 = gl - gh
-        D2 = gl**2.d0 - gh**2.d0
-        D3 = gl**3.d0 - gh**3.d0
-        f2 = 2.d0 * gl**2.d0 * P2 * D1 + D2 * P1
-        f2 = f2 / (-(2.d0*gl*D1)**2.d0 + 4.d0*gl*D1*D2 - D2**2.d0 )
-        f3 = - (P2 + 2.d0*D1*f2) / (3.d0 * D2)
-        f1 = - (P1 + D2 * f2) / (2.d0 * D1)
-        f0 = - gl * (gl * f2 + 2.d0 * f1) / 3.d0
-        !
-        ec = f3 * rs**3.d0 + f2 * rs**2.d0 + f1 * rs + f0
-        vc = f2 * rs**2.d0 / 3.d0 + f1 * 2.d0 * rs / 3.d0 + f0
-     else
-        ec = 0.d0
-        vc = 0.d0
-     endif
-    endif
-  !
-  return
-end subroutine pzKZK
-!
-!-----------------------------------------------------------------------
-subroutine vwn (rs, ec, vc)
-  !-----------------------------------------------------------------------
-  !     S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
-  !
-  USE kinds, ONLY : DP
-  implicit none
-  real(DP) :: rs, ec, vc
-  real(DP) :: a, b, c, x0
-  parameter (a = 0.0310907d0, b = 3.72744d0, c = 12.9352d0, x0 = -0.10498d0)
-  real(DP) :: q, f1, f2, f3, rs12, fx, qx, tx, tt
-  !
-  q = sqrt (4.d0 * c - b * b)
-  f1 = 2.d0 * b / q
-  f2 = b * x0 / (x0 * x0 + b * x0 + c)
-  f3 = 2.d0 * (2.d0 * x0 + b) / q
-  rs12 = sqrt (rs)
-  fx = rs + b * rs12 + c
-  qx = atan (q / (2.d0 * rs12 + b) )
-  ec = a * (log (rs / fx) + f1 * qx - f2 * (log ( (rs12 - x0) **2 / &
-       fx) + f3 * qx) )
-  tx = 2.d0 * rs12 + b
-  tt = tx * tx + q * q
-  vc = ec - rs12 * a / 6.d0 * (2.d0 / rs12 - tx / fx - 4.d0 * b / &
-       tt - f2 * (2.d0 / (rs12 - x0) - tx / fx - 4.d0 * (2.d0 * x0 + b) &
-       / tt) )
-  !
-  return
-end subroutine vwn
-
-!-----------------------------------------------------------------------
-subroutine vwn1_rpa (rs, ec, vc)
-  !-----------------------------------------------------------------------
-  !     S.H. Vosko, L. Wilk, and M. Nusair, Can. J. Phys. 58, 1200 (1980)
-  !
-  USE kinds, ONLY : DP
-  implicit none
-  real(DP) :: rs, ec, vc
-  real(DP) :: a, b, c, x0
-  parameter (a = 0.0310907_dp, b = 13.0720_dp, c = 42.7198_dp, x0 = -0.409286_dp)
-  real(DP) :: q, f1, f2, f3, rs12, fx, qx, tx, tt
-  !
-  q = sqrt (4.d0 * c - b * b)
-  f1 = 2.d0 * b / q
-  f2 = b * x0 / (x0 * x0 + b * x0 + c)
-  f3 = 2.d0 * (2.d0 * x0 + b) / q
-  rs12 = sqrt (rs)
-  fx = rs + b * rs12 + c
-  qx = atan (q / (2.d0 * rs12 + b) )
-  ec = a * (log (rs / fx) + f1 * qx - f2 * (log ( (rs12 - x0) **2 / &
-       fx) + f3 * qx) )
-  tx = 2.d0 * rs12 + b
-  tt = tx * tx + q * q
-  vc = ec - rs12 * a / 6.d0 * (2.d0 / rs12 - tx / fx - 4.d0 * b / &
-       tt - f2 * (2.d0 / (rs12 - x0) - tx / fx - 4.d0 * (2.d0 * x0 + b) &
-       / tt) )
-  !
-  return
-end subroutine vwn1_rpa
-
-!-----------------------------------------------------------------------
-subroutine lyp (rs, ec, vc)
-  !-----------------------------------------------------------------------
-  !     C. Lee, W. Yang, and R.G. Parr, PRB 37, 785 (1988)
-  !     LDA part only
-  !
-  USE kinds, ONLY : DP
-  implicit none
-  real(DP) :: rs, ec, vc
-  real(DP) :: a, b, c, d, pi43
-  parameter (a = 0.04918d0, b = 0.132d0 * 2.87123400018819108d0)
-  ! pi43 = (4pi/3)^(1/3)
-  parameter (pi43 = 1.61199195401647d0, c = 0.2533d0 * pi43, d = &
-       0.349d0 * pi43)
-  real(DP) :: ecrs, ox
-  !
-  ecrs = b * exp ( - c * rs)
-  ox = 1.d0 / (1.d0 + d * rs)
-  ec = - a * ox * (1.d0 + ecrs)
-  vc = ec - rs / 3.d0 * a * ox * (d * ox + ecrs * (d * ox + c) )
-  !
-  return
-end subroutine lyp
-!
-!-----------------------------------------------------------------------
-subroutine pw (rs, iflag, ec, vc)
-  !-----------------------------------------------------------------------
-  !     iflag=1: J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
-  !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
-  !
-  USE kinds, ONLY : DP
-#if defined(__LIBXC)
-  use xc_f90_types_m
-  use xc_f90_lib_m
-#endif
-  implicit none
-  real(dp), intent(in) :: rs
-  real(dp), intent(out):: ec, vc
-  integer, intent(in) :: iflag 
-#if defined(__LIBXC)
-  real(dp):: rho 
-  real(dp), parameter :: pi34 = 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
-  integer :: func_id = 12   ! Perdew & Zunger
-  integer :: size = 1
-  TYPE(xc_f90_pointer_t) :: xc_func
-  TYPE(xc_f90_pointer_t) :: xc_info
-
-  if (iflag.eq.1)  func_id = 12  ! Perdew & Wang
-  if (iflag.eq.2)  func_id = 14  ! Ortiz & Ballone (PW)
-
-  rho =  (pi34/rs)**3
-  call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)    
-  call xc_f90_lda_exc_vxc(xc_func,size , rho, ec, vc)
-  call xc_f90_func_end(xc_func)  
-#else
-  real(DP) :: a, b1, b2, c0, c1, c2, c3, d0, d1
-  parameter (a = 0.031091d0, b1 = 7.5957d0, b2 = 3.5876d0, c0 = a, &
-       c1 = 0.046644d0, c2 = 0.00664d0, c3 = 0.01043d0, d0 = 0.4335d0, &
-       d1 = 1.4408d0)
-  real(DP) :: lnrs, rs12, rs32, rs2, om, dom, olog
-  real(DP) :: a1 (2), b3 (2), b4 (2)
-  data a1 / 0.21370d0, 0.026481d0 /, b3 / 1.6382d0, -0.46647d0 /, &
-       b4 / 0.49294d0, 0.13354d0 /
-  !
-  ! high- and low-density formulae implemented but not used in PW case
-  ! (reason: inconsistencies in PBE/PW91 functionals)
-  !
-  if (rs.lt.1d0.and.iflag.eq.2) then
-     ! high density formula
-     lnrs = log (rs)
-     ec = c0 * lnrs - c1 + c2 * rs * lnrs - c3 * rs
-     vc = c0 * lnrs - (c1 + c0 / 3.d0) + 2.d0 / 3.d0 * c2 * rs * &
-          lnrs - (2.d0 * c3 + c2) / 3.d0 * rs
-  elseif (rs.gt.100.d0.and.iflag.eq.2) then
-     ! low density formula
-     ec = - d0 / rs + d1 / rs**1.5d0
-     vc = - 4.d0 / 3.d0 * d0 / rs + 1.5d0 * d1 / rs**1.5d0
-  else
-     ! interpolation formula
-     rs12 = sqrt (rs)
-     rs32 = rs * rs12
-     rs2 = rs**2
-     om = 2.d0 * a * (b1 * rs12 + b2 * rs + b3 (iflag) * rs32 + b4 ( &
-          iflag) * rs2)
-     dom = 2.d0 * a * (0.5d0 * b1 * rs12 + b2 * rs + 1.5d0 * b3 ( &
-          iflag) * rs32 + 2.d0 * b4 (iflag) * rs2)
-     olog = log (1.d0 + 1.0d0 / om)
-     ec = - 2.d0 * a * (1.d0 + a1 (iflag) * rs) * olog
-     vc = - 2.d0 * a * (1.d0 + 2.d0 / 3.d0 * a1 (iflag) * rs) &
-          * olog - 2.d0 / 3.d0 * a * (1.d0 + a1 (iflag) * rs) * dom / &
-          (om * (om + 1.d0) )
-  endif
-#endif
-  return
-end subroutine pw
-!
-!-----------------------------------------------------------------------
-subroutine wignerc(rs, ec, vc)
-  !-----------------------------------------------------------------------
-  !        Wigner correlation
-  !
-  USE kinds, ONLY : DP
-  implicit none
-  real(DP) :: rs, ec, vc
-  real(DP) :: pi34, rho13
-  parameter (pi34 = 0.6203504908994d0)
-  ! pi34=(3/4pi)^(1/3), rho13=rho^(1/3)
-  !
-  rho13 = pi34 / rs
-  vc = - rho13 * ( (0.943656d0 + 8.8963d0 * rho13) / (1.d0 + &
-       12.57d0 * rho13) **2)
-  ec = - 0.738d0 * rho13 * (0.959d0 / (1.d0 + 12.57d0 * rho13) )
-  !
-  return
-end subroutine wignerc
-!
-!-----------------------------------------------------------------------
-subroutine hl (rs, ec, vc)
-  !-----------------------------------------------------------------------
-  !     L. Hedin and  B.I. Lundqvist,  J. Phys. C 4, 2064 (1971)
-  !
-  USE kinds, ONLY : DP
-  implicit none
-  real(DP) :: rs, ec, vc
-  real(DP) :: a, x
-  !
-  a = log (1.0d0 + 21.d0 / rs)
-  x = rs / 21.0d0
-  ec = a + (x**3 * a - x * x) + x / 2.d0 - 1.0d0 / 3.0d0
-  ec = - 0.0225d0 * ec
-  vc = - 0.0225d0 * a
-  !
-  return
-end subroutine hl
-!
-!-----------------------------------------------------------------------
-subroutine gl (rs, ec, vc)
-  !-----------------------------------------------------------------------
-  !  O. Gunnarsson and B. I. Lundqvist, PRB 13, 4274 (1976)
-  !
-  USE kinds, ONLY : DP
-  implicit none
-  real(DP) :: rs, vc, ec
-  real(DP) :: c, r, x
-  parameter (c = 0.0333d0, r = 11.4d0)
-  ! c=0.0203, r=15.9 for the paramagnetic case
-  !
-  x = rs / r
-  vc = - c * log (1.d0 + 1.d0 / x)
-  ec = - c * ( (1.d0 + x**3) * log (1.d0 + 1.d0 / x) - 1.0d0 / &
-       3.0d0 + x * (0.5d0 - x) )
-  !
-  return
-end subroutine gl
 !
 !-----------------------------------------------------------------------
 subroutine becke86b(rho, grho, sx, v1x, v2x)
@@ -942,16 +441,18 @@ subroutine glyp (rho, grho, sc, v1c, v2c)
 end subroutine glyp
 !
 !-----------------------------------------------------------------------
-subroutine ggac (rho, grho, sc, v1c, v2c)
+subroutine ggac( rho, grho, sc, v1c, v2c )
   !-----------------------------------------------------------------------
   ! Perdew-Wang GGA (PW91) correlation part
   !
   USE kinds, ONLY : DP
   implicit none
+  integer,  parameter :: length=1           !^^^ PROVISIONAL (xc-lib)
+  real(DP), dimension(length) :: rs, ec, vc
   real(DP) :: rho, grho, sc, v1c, v2c
   real(DP) :: al, pa, pb, pc, pd, cx, cxc0, cc0
   parameter (al = 0.09d0, pa = 0.023266d0, pb = 7.389d-6, pc = &
-       8.723d0, pd = 0.472d0)
+               8.723d0, pd = 0.472d0)
   parameter (cx = -0.001667d0, cxc0 = 0.002568d0, cc0 = - cx + cxc0)
   real(DP) :: third, pi34, nu, be, xkf, xks
   parameter (third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0)
@@ -959,38 +460,40 @@ subroutine ggac (rho, grho, sc, v1c, v2c)
   parameter (xkf = 1.919158292677513d0, xks = 1.128379167095513d0)
   ! pi34=(3/4pi)^(1/3),  nu=(16/pi)*(3 pi^2)^(1/3)
   ! xkf=(9 pi/4)^(1/3), xks= sqrt(4/pi)
-  real(DP) :: kf, ks, rs, rs2, rs3, ec, vc, t, expe, af, bf, y, xy, &
+  real(DP) :: kf, ks, rs2, rs3, t, expe, af, bf, y, xy, &
        qy, s1
   real(DP) :: h0, dh0, ddh0, ee, cn, dcn, cna, dcna, cnb, dcnb, h1, &
        dh1, ddh1
   !
-  rs = pi34 / rho**third
-  rs2 = rs * rs
-  rs3 = rs * rs2
-  call pw (rs, 1, ec, vc)
-  kf = xkf / rs
-  ks = xks * sqrt (kf)
-  t = sqrt (grho) / (2.d0 * ks * rho)
-  expe = exp ( - 2.d0 * al * ec / (be * be) )
+  rs(1) = pi34 / rho**third
+  rs2 = rs(1) * rs(1)
+  rs3 = rs(1) * rs2
+  !
+  call pw( length, rs, 1, ec, vc )
+  !
+  kf = xkf / rs(1)
+  ks = xks * sqrt(kf)
+  t = sqrt(grho) / (2.d0 * ks * rho)
+  expe = exp( - 2.d0 * al * ec(1) / (be * be) )
   af = 2.d0 * al / be * (1.d0 / (expe-1.d0) )
-  bf = expe * (vc - ec)
+  bf = expe * (vc(1) - ec(1))
   y = af * t * t
   xy = (1.d0 + y) / (1.d0 + y + y * y)
   qy = y * y * (2.d0 + y) / (1.d0 + y + y * y) **2
   s1 = 1.d0 + 2.d0 * al / be * t * t * xy
-  h0 = be * be / (2.d0 * al) * log (s1)
+  h0 = be * be / (2.d0 * al) * log(s1)
   dh0 = be * t * t / s1 * ( - 7.d0 / 3.d0 * xy - qy * (af * bf / &
        be-7.d0 / 3.d0) )
   ddh0 = be / (2.d0 * ks * ks * rho) * (xy - qy) / s1
   ee = - 100.d0 * (ks / kf * t) **2
-  cna = cxc0 + pa * rs + pb * rs2
-  dcna = pa * rs + 2.d0 * pb * rs2
-  cnb = 1.d0 + pc * rs + pd * rs2 + 1.d4 * pb * rs3
-  dcnb = pc * rs + 2.d0 * pd * rs2 + 3.d4 * pb * rs3
+  cna = cxc0 + pa * rs(1) + pb * rs2
+  dcna = pa * rs(1) + 2.d0 * pb * rs2
+  cnb = 1.d0 + pc * rs(1) + pd * rs2 + 1.d4 * pb * rs3
+  dcnb = pc * rs(1) + 2.d0 * pd * rs2 + 3.d4 * pb * rs3
   cn = cna / cnb - cx
   dcn = dcna / cnb - cna * dcnb / (cnb * cnb)
-  h1 = nu * (cn - cc0 - 3.d0 / 7.d0 * cx) * t * t * exp (ee)
-  dh1 = - third * (h1 * (7.d0 + 8.d0 * ee) + nu * t * t * exp (ee) &
+  h1 = nu * (cn - cc0 - 3.d0 / 7.d0 * cx) * t * t * exp(ee)
+  dh1 = - third * (h1 * (7.d0 + 8.d0 * ee) + nu * t * t * exp(ee) &
        * dcn)
   ddh1 = 2.d0 * h1 * (1.d0 + ee) * rho / grho
   sc = rho * (h0 + h1)
@@ -1001,7 +504,7 @@ subroutine ggac (rho, grho, sc, v1c, v2c)
 end subroutine ggac
 !
 !---------------------------------------------------------------
-subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
+subroutine pbex(rho, grho, iflag, sx, v1x, v2x)
   !---------------------------------------------------------------
   !
   ! PBE exchange (without Slater exchange):
@@ -1155,7 +658,7 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
 end subroutine pbex
 !
 !---------------------------------------------------------------
-subroutine pbex_vec (rho, grho, iflag, sx, v1x, v2x, length, small)
+subroutine pbex_vec(rho, grho, iflag, sx, v1x, v2x, length, small)
   !---------------------------------------------------------------
   !
   ! PBE exchange (without Slater exchange):
@@ -1221,7 +724,7 @@ subroutine pbex_vec (rho, grho, iflag, sx, v1x, v2x, length, small)
 end subroutine pbex_vec
 !
 !---------------------------------------------------------------
-subroutine pbec (rho, grho, iflag, sc, v1c, v2c)
+subroutine pbec(rho, grho, iflag, sc, v1c, v2c)
   !---------------------------------------------------------------
   !
   ! PBE correlation (without LDA part)
@@ -1265,23 +768,28 @@ subroutine pbec (rho, grho, iflag, sc, v1c, v2c)
 
 #else
   real(DP), parameter :: ga = 0.0310906908696548950_dp
-  real(DP) :: be (3)
+  real(DP) :: be(3)
 !             pbe           pbesol   pbeq2d
   data be / 0.06672455060314922_dp, 0.046_dp, 0.06672455060314922_dp/
   real(DP), parameter :: third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0
   real(DP), parameter :: xkf = 1.919158292677513d0, xks = 1.128379167095513d0
   ! pi34=(3/4pi)^(1/3), xkf=(9 pi/4)^(1/3), xks= sqrt(4/pi)
-  real(DP) :: kf, ks, rs, ec, vc, t, expe, af, bf, y, xy, qy
+  integer, parameter :: length=1                !^^^ PROVISIONAL
+  real(DP), dimension(length) :: rs, ec, vc
+  !
+  real(DP) :: kf, ks, t, expe, af, bf, y, xy, qy
   real(DP) :: s1, h0, dh0, ddh0, sc2D, v1c2D, v2c2D
   !
-  rs = pi34 / rho**third
-  call pw (rs, 1, ec, vc)
-  kf = xkf / rs
+  rs(1) = pi34 / rho**third
+  !
+  call pw( length, rs, 1, ec, vc )
+  !
+  kf = xkf / rs(1)
   ks = xks * sqrt (kf)
   t = sqrt (grho) / (2.d0 * ks * rho)
-  expe = exp ( - ec / ga)
+  expe = exp ( - ec(1) / ga)
   af = be(iflag) / ga * (1.d0 / (expe-1.d0) )
-  bf = expe * (vc - ec)
+  bf = expe * (vc(1) - ec(1))
   y = af * t * t
   xy = (1.d0 + y) / (1.d0 + y + y * y)
   qy = y * y * (2.d0 + y) / (1.d0 + y + y * y) **2
@@ -1845,7 +1353,7 @@ subroutine wcx (rho, grho, sx, v1x, v2x)
 end subroutine wcx
 !
 !-----------------------------------------------------------------------
-function dpz (rs, iflg)
+function dpz(rs, iflg)
   !-----------------------------------------------------------------------
   !  derivative of the correlation potential with respect to local density
   !  Perdew and Zunger parameterization of the Ceperley-Alder functional
@@ -1855,7 +1363,7 @@ function dpz (rs, iflg)
   !
   implicit none
   !
-  real(DP), intent (in) :: rs
+  real(DP), intent(in) :: rs
   integer, intent(in) :: iflg
   real(DP) :: dpz
   !

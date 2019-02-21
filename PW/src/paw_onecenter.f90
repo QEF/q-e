@@ -408,7 +408,8 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     USE uspp_param,             ONLY : upf
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE funct,                  ONLY : dft_is_gradient, evxc_t_vec, xc_spin
+    USE funct,                  ONLY : dft_is_gradient, init_lda_xc
+    USE xc_lda_lsda,            ONLY : xc, xc_spin
     USE constants,              ONLY : fpi ! REMOVE
 
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
@@ -429,10 +430,15 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     !
     INTEGER               :: ix,k               ! counters on directions and radial grid
     INTEGER               :: lsd                ! switch for local spin density
-    REAL(DP)              :: arho, amag, zeta, ex, ec, vx(2), vc(2), vs
-    INTEGER               :: kpol
+    REAL(DP)              :: vs
+    INTEGER               :: kpol 
     INTEGER               :: mytid, ntids
-
+    !
+    REAL(DP), ALLOCATABLE :: arho(:), zeta(:), amag(:)
+    REAL(DP), ALLOCATABLE :: ex(:), ec(:)
+    REAL(DP), ALLOCATABLE :: vx(:,:), vc(:,:)
+    REAL(DP), PARAMETER   :: eps = 1.e-30_dp
+    !
 #if defined(_OPENMP)
     INTEGER, EXTERNAL     :: omp_get_thread_num, omp_get_num_threads
 #endif
@@ -446,6 +452,8 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
        ALLOCATE(g_rad(i%m,rad(i%t)%nx,nspin))
        g_rad = 0.0_DP
     ENDIF
+    !
+    CALL init_lda_xc()
     !
 !$omp parallel default(private), &
 !$omp shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid,nspin,g,lsd,nspin_mag,with_small_so,g_rad)
@@ -461,6 +469,14 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     rho_loc = 0._dp
     !
     ALLOCATE( rho_rad(i%m,nspin_mag) ) 
+    !
+    ALLOCATE( arho(i%m) )
+    ALLOCATE( zeta(i%m) )
+    ALLOCATE( amag(i%m) )
+    ALLOCATE( ex(i%m) )
+    ALLOCATE( ec(i%m) )
+    ALLOCATE( vx(i%m,2) )
+    ALLOCATE( vc(i%m,2) )
     !
     IF (present(energy)) THEN
 !$omp single
@@ -485,29 +501,33 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
         !
         IF ( nspin_mag ==4 ) THEN
            IF (with_small_so.AND.i%ae==1) CALL add_small_mag(i,ix,rho_rad)
+           !
+           !
            DO k=1,i%m
               rho_loc(k,1:nspin) = rho_rad(k,1:nspin)*g(i%t)%rm2(k)
-              arho = rho_loc(k,1)+rho_core(k)
-              amag = SQRT(rho_loc(k,2)**2+rho_loc(k,3)**2+rho_loc(k,4)**2)
-              arho = ABS( arho )
-              IF ( arho > eps12 ) THEN
-                 zeta = amag / arho
-                 IF ( ABS( zeta ) > 1.D0 ) zeta = SIGN( 1.D0, zeta )
-                 CALL xc_spin( arho, zeta, ex, ec, vx(1), vx(2), vc(1), vc(2) )
-                 IF (present(energy)) &
-                    e_rad(k) = e2*(ex+ec)*(rho_rad(k,1)+rho_core(k)*g(i%t)%r2(k))
-                 vs = e2*0.5D0*( vx(1) + vc(1) - vx(2) - vc(2) )
-                 v_rad(k,ix,1) = e2*(0.5D0*( vx(1) + vc(1) + vx(2) + vc(2)))
-                 IF ( amag > eps12 ) THEN
-                    v_rad(k,ix,2:4) =  vs * rho_loc(k,2:4) / amag
-                 ELSE
-                    v_rad(k,ix,2:4)=0.0_DP
-                 ENDIF
+              amag(k) = SQRT(rho_loc(k,2)**2+rho_loc(k,3)**2+rho_loc(k,4)**2)
+              arho(k) = ABS( rho_loc(k,1)+rho_core(k) )
+              IF ( arho(k) > eps12 ) THEN
+                 zeta(k) = amag(k) / arho(k)
+                 IF ( ABS( zeta(k) ) > 1.D0 ) zeta(k) = SIGN( 1.D0, zeta(k) )
+              ENDIF
+           ENDDO
+           !
+           CALL xc_spin( i%m, arho, zeta, ex, ec, vx, vc )
+           !
+           DO k=1,i%m
+              IF (present(energy)) &
+                  e_rad(k) = e2*(ex(k)+ec(k))*(rho_rad(k,1)+rho_core(k)*g(i%t)%r2(k))
+              vs = e2*0.5D0*( vx(k,1) + vc(k,1) - vx(k,2) - vc(k,2) )
+              v_rad(k,ix,1) = e2*(0.5D0*( vx(k,1) + vc(k,1) + vx(k,2) + vc(k,2)))
+              IF ( amag(k) > eps12 ) THEN
+                 v_rad(k,ix,2:4) =  vs * rho_loc(k,2:4) / amag(k)
               ELSE
-                 v_rad(k,ix,:)=0.0_DP
-                 IF (present(energy)) e_rad(k)=0.0_DP
-              END IF
-           END DO
+                 v_rad(k,ix,2:4)=0.0_DP
+              ENDIF
+           ENDDO
+           !
+           !
            IF (with_small_so) CALL compute_g(i,ix,v_rad,g_rad)
         ELSEIF (nspin==2) THEN
            DO k = 1,i%m
@@ -522,22 +542,51 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
         !
         ! Integrate to obtain the energy
         !
-        IF (present(energy)) THEN
-           IF (nspin_mag <= 2 ) THEN
-              CALL evxc_t_vec(rho_loc, rho_core, lsd, i%m, v_rad(:,ix,:), e_rad)
+        IF (nspin_mag <= 2 ) THEN
+           !
+           !
+           IF (lsd==0) THEN
+             !
+             arho = ABS( rho_loc(:,1)+rho_core )
+             !
+             CALL xc( i%m, arho, ex, ec, vx(:,1), vc(:,1) )
+             !
+             v_rad(:,ix,1) = e2*( vx(:,1) + vc(:,1) )
+             if (present(energy)) e_rad = e2*( ex + ec )
+             !
+           ELSE
+             !
+             zeta=0.0_DP
+             DO k = 1, i%m
+                arho(k) = ABS( rho_loc(k,1)+rho_loc(k,2)+rho_core(k) )
+                IF ( arho(k) > eps ) THEN
+                  zeta(k) = (rho_loc(k,1)-rho_loc(k,2)) / arho(k)
+                  IF ( ABS(zeta(k)) > 1.D0 ) zeta(k) = SIGN( 1.D0, zeta(k) )
+                ENDIF
+             ENDDO
+             !
+             CALL xc_spin( i%m, arho, zeta, ex, ec, vx, vc )
+             !
+             v_rad(:,ix,:) = e2*( vx(:,:) + vc(:,:) )
+             if (present(energy)) e_rad(:) = e2*( ex(:) + ec(:) )
+             !
+           ENDIF
+           !
+           IF (present(energy)) THEN
               IF ( nspin_mag < 2 ) THEN
                  e_rad = e_rad * ( rho_rad(:,1) + rho_core*g(i%t)%r2 )
               ELSE IF (nspin_mag == 2) THEN
                  e_rad = e_rad *(rho_rad(:,1)+rho_rad(:,2)+rho_core*g(i%t)%r2 )
-              END IF
-           END IF
-           ! Integrate to obtain the energy
+              END If
+           ENDIF
+           !
+        ENDIF
+        ! Integrate to obtain the energy
+        IF (present(energy)) THEN
            CALL simpson(i%m, e_rad, g(i%t)%rab, e)
            e_of_tid(mytid) = e_of_tid(mytid) + e * rad(i%t)%ww(ix)
-        ELSE
-           IF (nspin_mag <= 2) &
-              CALL evxc_t_vec(rho_loc, rho_core, lsd, i%m, v_rad(:,ix,:))
         ENDIF
+        !
     ENDDO
 !$omp end do nowait
 
@@ -545,9 +594,18 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
 
     DEALLOCATE( rho_rad ) 
     DEALLOCATE( rho_loc ) 
-
+    !
+    DEALLOCATE( arho )
+    DEALLOCATE( zeta )
+    DEALLOCATE( amag )
+    DEALLOCATE( ex )
+    DEALLOCATE( ec )
+    DEALLOCATE( vx )
+    DEALLOCATE( vc )
+    !
 !$omp end parallel
-
+    !
+    !
     IF(present(energy)) THEN
        energy = sum(e_of_tid)
        DEALLOCATE(e_of_tid)

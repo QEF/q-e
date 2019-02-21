@@ -14,43 +14,53 @@ subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
   !  LSDA approximation
   !
   use kinds, only : DP
-  use funct, only : xc, xc_spin
+  use funct, only : init_lda_xc
+  use xc_lda_lsda, only: xc, xc_spin
   implicit none
   integer, intent(in)  :: lsd ! 1 in the LSDA case, 0 otherwise
   real(DP), intent(in) :: rho(2), rhoc ! the system density
-  real(DP), intent(out):: exc, vxc(2) 
-  real(DP):: arho, zeta, vx(2), vc(2), ex, ec
+  real(DP), intent(out):: exc, vxc(2)
+  !
+  integer,  parameter :: length=1                 !^^^ PROVISIONAL (xc-lib)
+  real(DP), dimension(length) :: arho, zeta, ex, ec
+  REAL(DP), dimension(length,2) :: vx, vc
   !
   real(DP), parameter :: e2=2.0_dp, eps=1.e-30_dp
-
+  !
   vxc(1) = 0.0_dp
-  exc = 0.0_dp
-
-  if (lsd.eq.0) then
+  exc    = 0.0_dp
+  !
+  call init_lda_xc()
+  !
+  if (lsd == 0) then
      !
      !     LDA case
      !
-     arho = abs(rho(1) + rhoc)
-     if (arho.gt.eps) then      
-        call xc(arho, ex, ec, vx(1), vc(1))
-        vxc(1) = e2*(vx(1)+vc(1))
-        exc   = e2 *(ex+ec)
+     arho(1) = abs(rho(1) + rhoc)
+     if (arho(1) > eps) then
+        !
+        call xc( length, arho ,ex, ec, vx(:,1), vc(:,1) )
+        !
+        vxc(1) = e2 * ( vx(1,1) + vc(1,1) )
+        exc    = e2 * ( ex(1)   + ec(1)   )
      endif
   else
      !
      !     LSDA case
      !
      vxc(2)=0.0_dp
-     arho = abs(rho(1)+rho(2)+rhoc)
-     if (arho.gt.eps) then      
-        zeta = (rho(1)-rho(2)) / arho
+     arho(1) = abs(rho(1)+rho(2)+rhoc)
+     if (arho(1) > eps) then      
+        zeta(1) = (rho(1)-rho(2)) / arho(1)
         ! zeta has to stay between -1 and 1, but can get a little
         ! out the bound during the first iterations.
-        if (abs(zeta).gt.1.0_dp) zeta = sign(1._dp, zeta)
-        call xc_spin(arho,zeta,ex,ec,vx(1),vx(2),vc(1),vc(2))
-        vxc(1) = e2*(vx(1)+vc(1))
-        vxc(2) = e2*(vx(2)+vc(2))
-        exc    = e2*(ex+ec)
+        if (abs(zeta(1)) > 1.0_dp) zeta(1) = sign(1._dp, zeta(1))
+        !
+        CALL xc_spin( length, arho, zeta, ex, ec, vx, vc )
+        !
+        vxc(1) = e2 * ( vx(1,1) + vc(1,1) )
+        vxc(2) = e2 * ( vx(1,2) + vc(1,2) )
+        exc    = e2 * ( ex(1)   + ec(1)   )
      endif
   endif
 
@@ -72,7 +82,7 @@ subroutine vxcgc ( ndm, mesh, nspin, r, r2, rho, rhoc, vgc, egc, &
   !
   use kinds, only : DP
   use constants, only : fpi, e2
-  use funct, only : gcxc, gcx_spin, gcc_spin, dft_is_meta, xc
+  use funct, only : gcxc, gcx_spin, gcc_spin, dft_is_meta
   implicit none
   integer,  intent(in) :: ndm,mesh,nspin,iflag
   real(DP), intent(in) :: r(mesh), r2(mesh), rho(ndm,2), rhoc(ndm)

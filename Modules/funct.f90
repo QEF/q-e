@@ -63,14 +63,15 @@ module funct
   PUBLIC  :: init_dft_exxrpa, enforce_dft_exxrpa
 
   ! driver subroutines computing XC
-  PUBLIC  :: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
+  PUBLIC  :: init_lda_xc
+  PUBLIC  :: gcxc, gcx_spin, gcc_spin, gcc_spin_more
   PUBLIC  :: tau_xc , tau_xc_spin, dmxc, dmxc_spin, dmxc_nc
   PUBLIC  :: tau_xc_array, tau_xc_array_spin
   PUBLIC  :: dgcxc, dgcxc_spin
   PUBLIC  :: d3gcxc
   PUBLIC  :: nlc
   ! vector XC driver
-  PUBLIC  :: evxc_t_vec, gcx_spin_vec
+  PUBLIC  :: gcx_spin_vec
   !
   ! PRIVATE variables defining the DFT functional
   !
@@ -1034,7 +1035,15 @@ CONTAINS
      finite_size_cell_volume_set = .TRUE.
   end subroutine set_finite_size_volume
   !-----------------------------------------------------------------------
-
+  !
+  subroutine get_finite_size_cell_volume( is_present, volume )
+     logical,  intent(out) :: is_present
+     real(dp), intent(out) :: volume
+     is_present = finite_size_cell_volume_set
+     volume = -1.d0
+     if (is_present) volume = finite_size_cell_volume
+  end subroutine get_finite_size_cell_volume
+  !
   !-----------------------------------------------------------------------
   subroutine set_dft_from_indices(iexch_,icorr_,igcx_,igcc_, inlc_)
      integer :: iexch_, icorr_, igcx_, igcc_, inlc_
@@ -1220,366 +1229,36 @@ subroutine write_dft_name
 #endif
    return
 end subroutine write_dft_name
-
 !
-!-----------------------------------------------------------------------
-!-------  LDA DRIVERS --------------------------------------------------
-!-----------------------------------------------------------------------
 !
-!-----------------------------------------------------------------------
-subroutine xc (rho, ex, ec, vx, vc)
-  !-----------------------------------------------------------------------
-  !     lda exchange and correlation functionals - Hartree a.u.
-  !
-  !     exchange   :  Slater, relativistic Slater
-  !     correlation:  Ceperley-Alder (Perdew-Zunger parameters)
-  !                   Vosko-Wilk-Nusair
-  !                   Lee-Yang-Parr
-  !                   Perdew-Wang
-  !                   Wigner
-  !                   Hedin-Lundqvist
-  !                   Ortiz-Ballone (Perdew-Zunger formula)
-  !                   Ortiz-Ballone (Perdew-Wang formula)
-  !                   Gunnarsson-Lundqvist
-  !
-  !     input : rho=rho(r)
-  !     definitions: E_x = \int E_x(rho) dr, E_x(rho) = rho\epsilon_c(rho)
-  !                  same for correlation
-  !     output: ex = \epsilon_x(rho) ( NOT E_x(rho) )
-  !             vx = dE_x(rho)/drho  ( NOT d\epsilon_x(rho)/drho )
-  !             ec, vc as above for correlation
-  !
-  implicit none
-
-  real(DP) :: rho, ec, vc, ex, vx
-  real(DP) :: ec__, vc__
-  !
-  real(DP), parameter :: small = 1.E-10_DP,  third = 1.0_DP / 3.0_DP, &
-       pi34 = 0.6203504908994_DP  ! pi34=(3/4pi)^(1/3)
-  real(DP) :: rs
-  !
-  if (rho <= small) then
-     ec = 0.0_DP
-     vc = 0.0_DP
-     ex = 0.0_DP
-     vx = 0.0_DP
-     return
-  else
-     rs = pi34 / rho**third
-     ! rs as in the theory of metals: rs=(3/(4pi rho))^(1/3)
-  endif
-  !..exchange
-  if (iexch == 1) THEN             !  'sla'
-     call slater (rs, ex, vx)
-  ELSEIF (iexch == 2) THEN         !  'sl1'
-     call slater1(rs, ex, vx)
-  ELSEIF (iexch == 3) THEN         !  'rxc'
-     CALL slater_rxc(rs, ex, vx)
-  ELSEIF ((iexch == 4).or.(iexch==5)) THEN  ! 'oep','hf'
-     IF (exx_started) then
-        ex = 0.0_DP
-        vx = 0.0_DP
-     else
-        call slater (rs, ex, vx)
-     endif
-  ELSEIF (iexch == 6) THEN         !  'pb0x'  or 'DF-cx-0', or DF2-0
-     CALL slater(rs, ex, vx)
-     if (exx_started) then
-        ex = (1.0_DP - exx_fraction) * ex
-        vx = (1.0_DP - exx_fraction) * vx
-     end if
-  ELSEIF (iexch == 7) THEN         !  'B3LYP'
-     CALL slater(rs, ex, vx)
-     if (exx_started) then
-        ex = (1.0_DP - exx_fraction) * ex
-        vx = (1.0_DP - exx_fraction) * vx
-     end if
-  ELSEIF (iexch == 8) THEN         !  'sla+kzk'
-     if (.NOT. finite_size_cell_volume_set) call errore ('XC',&
-          'finite size corrected exchange used w/o initialization',1)
-     call slaterKZK (rs, ex, vx, finite_size_cell_volume)
-     !
-  ELSEIF (iexch == 9) THEN         !  'X3LYP'
-     CALL slater(rs, ex, vx)
-     if (exx_started) then
-      ex = (1.0_DP - exx_fraction) * ex
-      vx = (1.0_DP - exx_fraction) * vx
-     end if
-  else
-     ex = 0.0_DP
-     vx = 0.0_DP
-  endif
-  !..correlation
-  if (icorr == 1) then
-     call pz (rs, 1, ec, vc)
-  elseif (icorr == 2) then
-     call vwn (rs, ec, vc)
-  elseif (icorr == 3) then
-     call lyp (rs, ec, vc)
-  elseif (icorr == 4) then
-     call pw (rs, 1, ec, vc)
-  elseif (icorr == 5) then
-     call wignerc(rs, ec, vc)
-  elseif (icorr == 6) then
-     call hl (rs, ec, vc)
-  elseif (icorr == 7) then
-     call pz (rs, 2, ec, vc)
-  elseif (icorr == 8) then
-     call pw (rs, 2, ec, vc)
-  elseif (icorr == 9) then
-     call gl (rs, ec, vc)
-  elseif (icorr ==10) then
-     if (.NOT. finite_size_cell_volume_set) call errore ('XC',&
-          'finite size corrected correlation used w/o initialization',1)
-     call pzKZK (rs, ec, vc, finite_size_cell_volume)
-  elseif (icorr ==11) then
-     call vwn1_rpa (rs, ec, vc)
-  elseif (icorr ==12) then  ! 'B3LYP'
-     call vwn (rs, ec, vc)
-     ec = 0.19_DP * ec
-     vc = 0.19_DP * vc
-     call lyp( rs, ec__, vc__ )
-     ec = ec + 0.81_DP * ec__
-     vc = vc + 0.81_DP * vc__
-  elseif (icorr ==13) then  ! 'B3LYP-V1R'
-     call vwn1_rpa (rs, ec, vc)
-     ec = 0.19_DP * ec
-     vc = 0.19_DP * vc
-     call lyp( rs, ec__, vc__ )
-     ec = ec + 0.81_DP * ec__
-     vc = vc + 0.81_DP * vc__
-  elseif (icorr ==14) then  ! 'X3LYP'
-     call vwn1_rpa (rs, ec, vc)
-     ec = 0.129_DP * ec
-     vc = 0.129_DP * vc
-     call lyp( rs, ec__, vc__ )
-     ec = ec + 0.871_DP * ec__
-     vc = vc + 0.871_DP * vc__
-  else
-     ec = 0.0_DP
-     vc = 0.0_DP
-  endif
-  !
-  return
-end subroutine xc
-!!!!!!!!!!!!!!SPIN
-!-----------------------------------------------------------------------
-subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
-  !-----------------------------------------------------------------------
-  !     lsd exchange and correlation functionals - Hartree a.u.
-  !
-  !     exchange  :  Slater (alpha=2/3)
-  !     correlation: Ceperley & Alder (Perdew-Zunger parameters)
-  !                  Perdew & Wang
-  !
-  !     input : rho = rhoup(r)+rhodw(r)
-  !             zeta=(rhoup(r)-rhodw(r))/rho
-  !
-  implicit none
-
-  real(DP) :: rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw
-  real(DP) :: ec__, vcup__, vcdw__
-  !
-  real(DP), parameter :: small= 1.E-10_DP, third = 1.0_DP/3.0_DP, &
-       pi34= 0.6203504908994_DP ! pi34=(3/4pi)^(1/3)
-  real(DP) :: rs
-  !
-  if (rho <= small) then
-     ec = 0.0_DP
-     vcup = 0.0_DP
-     vcdw = 0.0_DP
-     ex = 0.0_DP
-     vxup = 0.0_DP
-     vxdw = 0.0_DP
-     return
-  else
-     rs = pi34 / rho**third
-  endif
-  !..exchange
-  IF (iexch == 1) THEN      ! 'sla'
-     call slater_spin (rho, zeta, ex, vxup, vxdw)
-  ELSEIF (iexch == 2) THEN  ! 'sl1'
-     call slater1_spin (rho, zeta, ex, vxup, vxdw)
-  ELSEIF (iexch == 3) THEN  ! 'rxc'
-     call slater_rxc_spin ( rho, zeta, ex, vxup, vxdw )
-  ELSEIF ((iexch == 4).or.(iexch==5)) THEN  ! 'oep','hf'
-     IF (exx_started) then
-        ex   = 0.0_DP
-        vxup = 0.0_DP
-        vxdw = 0.0_DP
-     else
-        call slater_spin (rho, zeta, ex, vxup, vxdw)
-     endif
-  ELSEIF (iexch == 6) THEN  ! 'pb0x'
-     call slater_spin (rho, zeta, ex, vxup, vxdw)
-     if (exx_started) then
-        ex   = (1.0_DP - exx_fraction) * ex
-        vxup = (1.0_DP - exx_fraction) * vxup
-        vxdw = (1.0_DP - exx_fraction) * vxdw
-     end if
-  ELSEIF (iexch == 7) THEN  ! 'B3LYP'
-     call slater_spin (rho, zeta, ex, vxup, vxdw)
-     if (exx_started) then
-      ex   = (1.0_DP - exx_fraction) * ex
-      vxup = (1.0_DP - exx_fraction) * vxup
-      vxdw = (1.0_DP - exx_fraction) * vxdw
-     end if
-  ELSEIF (iexch == 9) THEN  ! 'X3LYP'
-     call slater_spin (rho, zeta, ex, vxup, vxdw)
-     if (exx_started) then
-        ex   = (1.0_DP - exx_fraction) * ex
-        vxup = (1.0_DP - exx_fraction) * vxup
-        vxdw = (1.0_DP - exx_fraction) * vxdw
-     end if
-  ELSE
-     ex = 0.0_DP
-     vxup = 0.0_DP
-     vxdw = 0.0_DP
-  ENDIF
-  !..correlation
-  if (icorr == 0) then
-     ec = 0.0_DP
-     vcup = 0.0_DP
-     vcdw = 0.0_DP
-  elseif (icorr == 1) then
-     call pz_spin (rs, zeta, ec, vcup, vcdw)
-  elseif (icorr == 2) then
-     call vwn_spin (rs, zeta, ec, vcup, vcdw)
-  elseif (icorr == 3) then
-     call lsd_lyp (rho, zeta, ec, vcup, vcdw) ! from CP/FPMD (more_functionals)
-  elseif (icorr == 4) then
-     call pw_spin (rs, zeta, ec, vcup, vcdw)
-  elseif (icorr == 12) then ! 'B3LYP'
-     call vwn_spin (rs, zeta, ec, vcup, vcdw)
-     ec = 0.19_DP * ec
-     vcup = 0.19_DP * vcup
-     vcdw = 0.19_DP * vcdw
-     call lsd_lyp (rho, zeta, ec__, vcup__, vcdw__) ! from CP/FPMD (more_functionals)
-     ec = ec + 0.81_DP * ec__
-     vcup = vcup + 0.81_DP * vcup__
-     vcdw = vcdw + 0.81_DP * vcdw__
-  elseif (icorr == 13) then   ! 'B3LYP-V1R'
-     call vwn1_rpa_spin (rs, zeta, ec, vcup, vcdw)
-     ec = 0.19_DP * ec
-     vcup = 0.19_DP * vcup
-     vcdw = 0.19_DP * vcdw
-     call lsd_lyp (rho, zeta, ec__, vcup__, vcdw__) ! from CP/FPMD (more_functionals)
-     ec = ec + 0.81_DP * ec__
-     vcup = vcup + 0.81_DP * vcup__
-     vcdw = vcdw + 0.81_DP * vcdw__
-  elseif (icorr == 14) then   ! 'X3LYP
-    call vwn1_rpa_spin (rs, zeta, ec, vcup, vcdw)
-    ec = 0.129_DP * ec
-    vcup = 0.129_DP * vcup
-    vcdw = 0.129_DP * vcdw
-    call lsd_lyp (rho, zeta, ec__, vcup__, vcdw__) ! from CP/FPMD (more_functionals)
-    ec = ec + 0.871_DP * ec__
-    vcup = vcup + 0.871_DP * vcup__
-    vcdw = vcdw + 0.871_DP * vcdw__
-  else
-     call errore ('lsda_functional (xc_spin)', 'not implemented', icorr)
-  endif
-  !
-  return
-end subroutine xc_spin
+SUBROUTINE init_lda_xc()
+   !
+   !  passes the functional indexes (and the exx and size_cell parameters)
+   !  to the module xc_lda_lsda.
+   !
+   USE kinds,               ONLY: DP
+   USE xc_lda_lsda,         ONLY: iexch_l, icorr_l, &
+                                  exx_started_l, is_there_finite_size_corr, &
+                                  exx_fraction_l, finite_size_cell_volume_l
+   !
+   IMPLICIT NONE
+   !
+   ! exchange-correlation indexes
+   iexch_l = get_iexch()
+   icorr_l = get_icorr()
+   !
+   ! hybrid exchange vars
+   exx_started_l  = exx_is_active()
+   exx_fraction_l = 0._DP
+   IF ( exx_started ) exx_fraction_l = get_exx_fraction()
+   !
+   ! finite size correction vars
+   CALL get_finite_size_cell_volume( is_there_finite_size_corr, finite_size_cell_volume_l )
+   !
+   RETURN
+   !
+END SUBROUTINE
 !
-!-----------------------------------------------------------------------
-subroutine xc_spin_vec (rho, zeta, length, evx, evc)
-  !-----------------------------------------------------------------------
-  !     lsd exchange and correlation functionals - Hartree a.u.
-  !
-  !     exchange  :  Slater (alpha=2/3)
-  !     correlation: Ceperley & Alder (Perdew-Zunger parameters)
-  !                  Perdew & Wang
-  !
-  !     input : rho = rhoup(r)+rhodw(r)
-  !             zeta=(rhoup(r)-rhodw(r))/rho
-  !
-  implicit none
-
-  integer, intent(in)   :: length
-  real(DP), intent(in)  :: rho(length), zeta(length)
-  real(DP), intent(out) :: evx(length,3), evc(length,3)
-  !
-  real(DP), parameter :: small= 1.E-10_DP, third = 1.0_DP/3.0_DP, &
-       pi34= 0.6203504908994_DP ! pi34=(3/4pi)^(1/3)
-  !
-  integer  :: i
-  logical  :: comp_energy_loc
-  real(DP) :: rs(length)
-  !
-  !..exchange
-  select case (iexch)
-  case(1)            ! 'sla'
-     call slater_spin_vec (rho, zeta, evx, length)
-  case(2)            ! 'sl1'
-     do i=1,length
-        call slater1_spin (rho(i), zeta(i), evx(i,3), evx(i,1), evx(i,2))
-     end do
-  case(3)            ! 'rxc'
-     do i=1,length
-        call slater_rxc_spin (rho(i), zeta(i), evx(i,3), evx(i,1), evx(i,2))
-     end do
-  case(4,5)          ! 'oep','hf'
-     if (exx_started) then
-        evx = 0.0_DP
-     else
-        call slater_spin_vec (rho, zeta, evx, length)
-     endif
-  case(6)            ! 'pb0x'
-     call slater_spin_vec (rho, zeta, evx, length)
-     if (exx_started) then
-        evx = (1.0_DP - exx_fraction) * evx
-     end if
-  case(7)            ! 'B3LYP'
-     call slater_spin_vec (rho, zeta, evx, length)
-     if (exx_started) then
-        evx = 0.8_DP * evx
-     end if
-  case default
-     evx = 0.0_DP
-  end select
-
-  !..correlation
-  where (rho.gt.small)
-     rs = pi34 / rho**third
-  elsewhere
-     rs = 1.0_DP ! just a sane default, results are discarded anyway
-  end where
-
-  select case(icorr)
-  case (0)
-     evc = 0.0_DP
-  case (1)
-     do i=1,length
-        call pz_spin (rs(i), zeta(i), evc(i,3), evc(i,1), evc(i,2))
-     end do
-  case (2)
-     do i=1,length
-        call vwn_spin (rs(i), zeta(i), evc(i,3), evc(i,1), evc(i,2))
-     end do
-  case(3)
-     do i=1,length
-        call lsd_lyp (rho(i), zeta(i), evc(i,3), evc(i,1), evc(i,2)) ! from CP/FPMD (more_functionals)
-     end do
-  case(4)
-     call pw_spin_vec (rs, zeta, evc, length)
-  case default
-     call errore ('lsda_functional (xc_spin_vec)', 'not implemented', icorr)
-  end select
-  !
-  where (rho.le.small)
-     evx(:,1) = 0.0_DP
-     evc(:,1) = 0.0_DP
-
-     evx(:,2) = 0.0_DP
-     evc(:,2) = 0.0_DP
-
-     evx(:,3) = 0.0_DP
-     evc(:,3) = 0.0_DP
-  end where
-  !
-end subroutine xc_spin_vec
 !
 !-----------------------------------------------------------------------
 !------- GRADIENT CORRECTIONS DRIVERS ----------------------------------
@@ -3190,27 +2869,34 @@ end subroutine tau_xc_array_spin
 !-----------------------------------------------------------------------
 !
       !-----------------------------------------------------------------------
-      function dmxc (rho)
+      function dmxc( rho )
         !-----------------------------------------------------------------------
         !
         !  derivative of the xc potential with respect to the local density
         !
+        use xc_lda_lsda,  only: xc
         !
         implicit none
         !
         real(DP), intent(in) :: rho
         ! input: the charge density ( positive )
+        !
         real(DP) :: dmxc
         ! output: the derivative of the xc potential
         !
         ! local variables
         !
-        real(DP) :: dr, vxp, vcp, vxm, vcm, vx, ex, ec, rs
+        integer, parameter :: length=1                 !^^^ PROVISIONAL 
+        real(DP), dimension(length) :: rho_v, rs, ex, vx, ec, vc
+        real(DP), dimension(length) :: vxp, vcp, vxm, vcm
+        real(DP) :: dr
         real(DP), external :: dpz
         integer :: iflg
         !
         real(DP), parameter :: small = 1.E-30_DP, e2 = 2.0_DP, &
              pi34 = 0.75_DP / 3.141592653589793_DP, third = 1.0_DP /3.0_DP
+        !
+        call init_lda_xc()
         !
         dmxc = 0.0_DP
         if (rho < small) then
@@ -3220,22 +2906,29 @@ end subroutine tau_xc_array_spin
         !    first case: analytical derivatives available
         !
         if (get_iexch() == 1 .and. get_icorr() == 1) then
-           rs = (pi34 / rho) **third
+           rs = (pi34 / rho)**third
+           !
            !..exchange
-           call slater (rs, ex, vx)
-           dmxc = vx / (3.0_DP * rho)
+           call slater(length, rs, ex, vx)
+           dmxc = vx(1) / (3.0_DP * rho)
+           !
            !..correlation
            iflg = 2
-           if (rs < 1.0_DP) iflg = 1
-           dmxc = dmxc + dpz (rs, iflg)
+           if (rs(1) < 1.0_DP) iflg = 1
+           dmxc = dmxc + dpz(rs, iflg)
         else
            !
            !     second case: numerical derivatives
            !
-           dr = min (1.E-6_DP, 1.E-4_DP * rho)
-           call xc (rho + dr, ex, ec, vxp, vcp)
-           call xc (rho - dr, ex, ec, vxm, vcm)
-           dmxc = (vxp + vcp - vxm - vcm) / (2.0_DP * dr)
+           dr = min(1.E-6_DP, 1.E-4_DP * rho)
+           !
+           rho_v=rho+dr
+           call xc(length, rho_v, ex, ec, vxp, vcp)
+           !
+           rho_v=rho-dr
+           call xc(length, rho_v, ex, ec, vxm, vcm)
+           !
+           dmxc = (vxp(1) + vcp(1) - vxm(1) - vcm(1)) / (2.0_DP * dr)
         endif
         !
         ! bring to rydberg units
@@ -3246,25 +2939,33 @@ end subroutine tau_xc_array_spin
       end function dmxc
       !
       !-----------------------------------------------------------------------
-      subroutine dmxc_spin (rhoup, rhodw, dmuxc_uu, dmuxc_ud, dmuxc_du, &
-           dmuxc_dd)
+      subroutine dmxc_spin( rhoup, rhodw, dmuxc_uu, dmuxc_ud, dmuxc_du, &
+           dmuxc_dd )
       !-----------------------------------------------------------------------
         !  derivative of the xc potential with respect to the local density
         !  spin-polarized case
+        !
+        USE xc_lda_lsda,    only : xc_spin
         !
         implicit none
         !
         real(DP), intent(in) :: rhoup, rhodw
         ! input: spin-up and spin-down charge density
+        !
         real(DP), intent(out) :: dmuxc_uu, dmuxc_ud, dmuxc_du, dmuxc_dd
         ! output: up-up, up-down, down-up, down-down derivatives of the
         ! XC functional
         !
         ! local variables
         !
-        real(DP) :: rhotot, rs, zeta, fz, fz1, fz2, ex, vx, ecu, ecp, vcu, &
-             vcp, dmcu, dmcp, aa, bb, cc, dr, dz, ec, vxupm, vxdwm, vcupm, &
-             vcdwm, rho, vxupp, vxdwp, vcupp, vcdwp, zeta_eff
+        integer, parameter :: length=1                  !^^^ PROVISIONAL
+        real(DP), dimension(length) :: zeta_v, rho_v, rs, ex, vx, ec, vc
+        real(DP), dimension(length) :: ecu, vcu, ecp, vcp
+        real(DP), dimension(length,2) :: vxm_s, vcm_s, vxp_s, vcp_s
+        !
+        real(DP) :: rho, zeta, rhotot, fz, fz1, fz2, &
+             dmcu, dmcp, aa, bb, cc, dr, dz, zeta_eff 
+        !
         real(DP), external :: dpz, dpz_polarized
         integer :: iflg
         !
@@ -3277,6 +2978,8 @@ end subroutine tau_xc_array_spin
         dmuxc_ud = 0.0_DP
         dmuxc_dd = 0.0_DP
         !
+        call init_lda_xc()
+        !
         rhotot = rhoup + rhodw
         if (rhotot <= small) return
         zeta = (rhoup - rhodw) / rhotot
@@ -3287,29 +2990,36 @@ end subroutine tau_xc_array_spin
            !    first case: analytical derivative available
            !
            !..exchange
-           rs = (pi34 / (2.0_DP * rhoup) ) **third
-           call slater (rs, ex, vx)
-           dmuxc_uu = vx / (3.0_DP * rhoup)
-           rs = (pi34 / (2.0_DP * rhodw) ) **third
-           call slater (rs, ex, vx)
-           dmuxc_dd = vx / (3.0_DP * rhodw)
+           rs(1) = (pi34 / (2.0_DP * rhoup) )**third
+           call slater( length, rs, ex, vx )
+           !
+           dmuxc_uu = vx(1) / (3.0_DP * rhoup)
+           rs(1) = (pi34 / (2.0_DP * rhodw))**third
+           call slater( length, rs, ex, vx )
+           !
+           dmuxc_dd = vx(1) / (3.0_DP * rhodw)
            !..correlation
-           rs = (pi34 / rhotot) **third
+           rs(1) = (pi34 / rhotot)**third
            iflg = 2
-           if (rs < 1.0_DP) iflg = 1
-           dmcu = dpz (rs, iflg)
-           dmcp = dpz_polarized (rs, iflg)
-           call pz (rs, 1, ecu, vcu)
-           call pz_polarized (rs, ecp, vcp)
-           fz = ( (1.0_DP + zeta) **p43 + (1.0_DP - zeta) **p43 - 2.0_DP) &
+           if (rs(1) < 1.0_DP) iflg = 1
+           !
+           dmcu = dpz( rs(1), iflg )
+           dmcp = dpz_polarized( rs(1), iflg )
+           !
+           call pz( length, rs, 1, ecu, vcu )
+           call pz_polarized( length, rs, ecp, vcp )
+           !
+           fz  = ( (1.0_DP + zeta) **p43 + (1.0_DP - zeta) **p43 - 2.0_DP) &
                 / (2.0_DP**p43 - 2.0_DP)
            fz1 = p43 * ( (1.0_DP + zeta) **third- (1.0_DP - zeta) **third) &
                 / (2.0_DP**p43 - 2.0_DP)
            fz2 = p49 * ( (1.0_DP + zeta) **m23 + (1.0_DP - zeta) **m23) &
                 / (2.0_DP**p43 - 2.0_DP)
+           !
            aa = dmcu + fz * (dmcp - dmcu)
-           bb = 2.0_DP * fz1 * (vcp - vcu - (ecp - ecu) ) / rhotot
-           cc = fz2 * (ecp - ecu) / rhotot
+           bb = 2.0_DP * fz1 * (vcp(1) - vcu(1) - (ecp(1) - ecu(1)) ) / rhotot
+           cc = fz2 * (ecp(1) - ecu(1)) / rhotot
+           !
            dmuxc_uu = dmuxc_uu + aa + (1.0_DP - zeta) * bb + (1.0_DP - zeta)**2 * cc
            dmuxc_du = dmuxc_du + aa + ( - zeta) * bb + (zeta**2 - 1.0_DP) * cc
            dmuxc_ud = dmuxc_du
@@ -3317,13 +3027,20 @@ end subroutine tau_xc_array_spin
 
         else
 
-           rho = rhoup + rhodw
+           rho= rhoup+rhodw
            dr = min (1.E-6_DP, 1.E-4_DP * rho)
-           call xc_spin (rho - dr, zeta, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
-           call xc_spin (rho + dr, zeta, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
-           dmuxc_uu = (vxupp + vcupp - vxupm - vcupm) / (2.0_DP * dr)
+           !
+           rho_v(1) = rho-dr
+           zeta_v(1)= zeta
+           CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxm_s, vcm_s )
+           !
+           rho_v(1) = rho+dr
+           zeta_v(1)= zeta
+           CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxp_s, vcp_s )
+           !
+           dmuxc_uu = (vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) / (2.0_DP * dr)
            dmuxc_ud = dmuxc_uu
-           dmuxc_dd = (vxdwp + vcdwp - vxdwm - vcdwm) / (2.0_DP * dr)
+           dmuxc_dd = (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)) / (2.0_DP * dr)
            dmuxc_du = dmuxc_dd
            ! dz = min (1.d-6, 1.d-4 * abs (zeta) )
            dz = 1.E-6_DP
@@ -3332,16 +3049,22 @@ end subroutine tau_xc_array_spin
 !          smaller zeta
 !
            zeta_eff = SIGN( MIN( ABS( zeta ), ( 1.0_DP - 2.0_DP*dz ) ) , zeta )
-
-           call xc_spin (rho, zeta_eff - dz, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
-           call xc_spin (rho, zeta_eff + dz, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
-           dmuxc_uu = dmuxc_uu + (vxupp + vcupp - vxupm - vcupm) * &
+           !
+           rho_v(1) = rho
+           zeta_v(1)= zeta_eff-dz
+           CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxm_s, vcm_s )
+           !
+           rho_v(1) = rho
+           zeta_v(1)= zeta_eff+dz
+           CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxp_s, vcp_s )
+           !
+           dmuxc_uu = dmuxc_uu + (vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) * &
                 (1.0_DP - zeta) / rho / (2.0_DP * dz)
-           dmuxc_ud = dmuxc_ud- (vxupp + vcupp - vxupm - vcupm) * &
+           dmuxc_ud = dmuxc_ud - (vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) * &
                 (1.0_DP + zeta) / rho / (2.0_DP * dz)
-           dmuxc_du = dmuxc_du + (vxdwp + vcdwp - vxdwm - vcdwm) * &
+           dmuxc_du = dmuxc_du + (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)) * &
                 (1.0_DP - zeta) / rho / (2.0_DP * dz)
-           dmuxc_dd = dmuxc_dd- (vxdwp + vcdwp - vxdwm - vcdwm) * &
+           dmuxc_dd = dmuxc_dd - (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)) * &
                 (1.0_DP + zeta) / rho / (2.0_DP * dz)
         endif
         !
@@ -3357,11 +3080,13 @@ end subroutine tau_xc_array_spin
       end subroutine dmxc_spin
 
       !-----------------------------------------------------------------------
-      subroutine dmxc_nc (rho, mx, my, mz, dmuxc)
+      subroutine dmxc_nc( rho, mx, my, mz, dmuxc )
       !-----------------------------------------------------------------------
         !  derivative of the xc potential with respect to the local density
         !  and magnetization
         !  non colinear case
+        !
+        use xc_lda_lsda, only : xc_spin
         !
         implicit none
         !
@@ -3372,36 +3097,59 @@ end subroutine tau_xc_array_spin
         !
         ! local variables
         !
-        REAL(DP) :: zeta, ex, ec, dr, dz, vxupm, vxdwm, vcupm, &
-              vcdwm, vxupp, vxdwp, vcupp, vcdwp, vxup, vxdw, vcup, vcdw
+        integer, parameter :: length = 1  !^^^ PROVISIONAL
+        !
+        real(DP), dimension(length) :: zeta_v, rho_v, rs, ex, vx, ec, vc
+        real(DP), dimension(length) :: ecu, vcu, ecp, vcp
+        real(DP), dimension(length,2) :: vx_s, vc_s, vxm_s, vcm_s, vxp_s, vcp_s
+        !
+        REAL(DP) :: zeta, dr, dz
+        !
         REAL(DP) :: amag, vs, dvxc_rho, dvxc_mx, dvxc_my, dvxc_mz,  &
                     dbx_rho, dbx_mx, dbx_my, dbx_mz, dby_rho, dby_mx, &
                     dby_my, dby_mz, dbz_rho, dbz_mx, dbz_my, dbz_mz, zeta_eff
+        !
         REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP
         !
         !
         dmuxc = 0.0_DP
         !
+        call init_lda_xc()
+        !
+        !
         IF (rho <= small) RETURN
-        amag = sqrt(mx**2+my**2+mz**2)
+        !
+        amag = sqrt(mx**2 + my**2 + mz**2)
         zeta = amag / rho
-
-        IF (abs (zeta) > 1.0_DP) RETURN
-        CALL xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
-        vs=0.5_DP*(vxup+vcup-vxdw-vcdw)
-
+        !
+        IF (abs(zeta) > 1.0_DP) RETURN
+        !
+        rho_v(1) = rho
+        zeta_v(1)= zeta
+        CALL xc_spin( length, rho_v, zeta_v, ex, ec, vx_s, vc_s )
+        !
+        vs = 0.5_DP*( vx_s(1,1)+vc_s(1,1)-vx_s(1,2)-vc_s(1,2) )
+        !
         dr = min (1.E-6_DP, 1.E-4_DP * rho)
-        CALL xc_spin (rho - dr, zeta, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
-        CALL xc_spin (rho + dr, zeta, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
-        dvxc_rho = ((vxupp + vcupp - vxupm - vcupm)+     &
-                    (vxdwp + vcdwp - vxdwm - vcdwm)) / (4.0_DP * dr)
+        !
+        rho_v(1) = rho-dr
+        zeta_v(1)= zeta
+        CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxm_s, vcm_s )
+        !
+        rho_v(1) = rho+dr
+        zeta_v(1)= zeta
+        CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxp_s, vcp_s )
+        !
+        dvxc_rho = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))+     &
+                    (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2))) / (4.0_DP * dr)
+        !
         IF (amag > 1.E-10_DP) THEN
-           dbx_rho  = ((vxupp + vcupp - vxupm - vcupm)-     &
-                       (vxdwp + vcdwp - vxdwm - vcdwm))* mx / (4.0_DP*dr*amag)
-           dby_rho  = ((vxupp + vcupp - vxupm - vcupm)-     &
-                       (vxdwp + vcdwp - vxdwm - vcdwm))* my / (4.0_DP*dr*amag)
-           dbz_rho  = ((vxupp + vcupp - vxupm - vcupm)-     &
-                       (vxdwp + vcdwp - vxdwm - vcdwm))* mz / (4.0_DP*dr*amag)
+           dbx_rho  = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))-     &
+                       (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))* mx / (4.0_DP*dr*amag)
+           dby_rho  = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))-     &
+                       (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))* my / (4.0_DP*dr*amag)
+           dbz_rho  = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))-     &
+                       (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))* mz / (4.0_DP*dr*amag)
 !           dz = min (1.d-6, 1.d-4 * abs (zeta) )
            dz = 1.0E-6_DP
 !
@@ -3409,49 +3157,54 @@ end subroutine tau_xc_array_spin
 !          smaller zeta
 !
            zeta_eff = SIGN( MIN( ABS( zeta ), ( 1.0_DP - 2.0_DP*dz ) ) , zeta )
-
-           CALL xc_spin (rho, zeta_eff - dz, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
-           CALL xc_spin (rho, zeta_eff + dz, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
-
+           !
+           rho_v(1) = rho
+           zeta_v(1)= zeta_eff-dz
+           CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxm_s, vcm_s )
+           !
+           rho_v(1) = rho
+           zeta_v(1)= zeta_eff+dz
+           CALL xc_spin( length, rho_v, zeta_v, ex, ec, vxp_s, vcp_s )
+           !
 !  The variables are rho and m, so zeta depends on rho
 !
-           dvxc_rho=dvxc_rho- ((vxupp + vcupp - vxupm - vcupm)+     &
-                         (vxdwp + vcdwp - vxdwm - vcdwm))*zeta/rho/(4.0_DP * dz)
-           dbx_rho  = dbx_rho-((vxupp + vcupp - vxupm - vcupm)-     &
-                    (vxdwp + vcdwp - vxdwm - vcdwm))*mx*zeta/rho/(4.0_DP*dz*amag)
-           dby_rho  = dby_rho-((vxupp + vcupp - vxupm - vcupm)-     &
-                    (vxdwp + vcdwp - vxdwm - vcdwm))*my*zeta/rho/(4.0_DP*dz*amag)
-           dbz_rho  = dbz_rho-((vxupp + vcupp - vxupm - vcupm)-     &
-                    (vxdwp + vcdwp - vxdwm - vcdwm))*mz*zeta/rho/(4.0_DP*dz*amag)
+           dvxc_rho=dvxc_rho- ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))+     &
+                         (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*zeta/rho/(4.0_DP * dz)
+           dbx_rho  = dbx_rho-((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))-     &
+                    (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mx*zeta/rho/(4.0_DP*dz*amag)
+           dby_rho  = dby_rho-((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))-     &
+                    (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*my*zeta/rho/(4.0_DP*dz*amag)
+           dbz_rho  = dbz_rho-((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1))-     &
+                    (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mz*zeta/rho/(4.0_DP*dz*amag)
 !
 ! here the derivatives with respect to m
 !
-           dvxc_mx = ((vxupp + vcupp - vxupm - vcupm) + &
-                      (vxdwp + vcdwp - vxdwm - vcdwm))*mx/rho/(4.0_DP*dz*amag)
-           dvxc_my = ((vxupp + vcupp - vxupm - vcupm) + &
-                      (vxdwp + vcdwp - vxdwm - vcdwm))*my/rho/(4.0_DP*dz*amag)
-           dvxc_mz = ((vxupp + vcupp - vxupm - vcupm) + &
-                      (vxdwp + vcdwp - vxdwm - vcdwm))*mz/rho/(4.0_DP*dz*amag)
-           dbx_mx  = (((vxupp + vcupp - vxupm - vcupm) -                 &
-                      (vxdwp + vcdwp - vxdwm - vcdwm))*mx**2*amag/rho/       &
+           dvxc_mx = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) + &
+                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mx/rho/(4.0_DP*dz*amag)
+           dvxc_my = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) + &
+                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*my/rho/(4.0_DP*dz*amag)
+           dvxc_mz = ((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) + &
+                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mz/rho/(4.0_DP*dz*amag)
+           dbx_mx  = (((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) -                 &
+                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mx**2*amag/rho/       &
                       (4.0_DP*dz) + vs*(my**2+mz**2))/amag**3
-           dbx_my  = (((vxupp + vcupp - vxupm - vcupm) -                 &
-                      (vxdwp + vcdwp - vxdwm - vcdwm))*mx*my*amag/rho/       &
+           dbx_my  = (((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) -                 &
+                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mx*my*amag/rho/       &
                       (4.0_DP*dz) - vs*(mx*my))/amag**3
-           dbx_mz  = (((vxupp + vcupp - vxupm - vcupm) -                 &
-                      (vxdwp + vcdwp - vxdwm - vcdwm))*mx*mz*amag/rho/       &
+           dbx_mz  = (((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) -                 &
+                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mx*mz*amag/rho/       &
                       (4.0_DP*dz) - vs*(mx*mz))/amag**3
            dby_mx  = dbx_my
-           dby_my  = (((vxupp + vcupp - vxupm - vcupm) -                 &
-                      (vxdwp + vcdwp - vxdwm - vcdwm))*my**2*amag/rho/       &
+           dby_my  = (((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) -                 &
+                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*my**2*amag/rho/       &
                       (4.0_DP*dz) + vs*(mx**2+mz**2))/amag**3
-           dby_mz  = (((vxupp + vcupp - vxupm - vcupm) -                 &
-                      (vxdwp + vcdwp - vxdwm - vcdwm))*my*mz*amag/rho/  &
+           dby_mz  = (((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) -                 &
+                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*my*mz*amag/rho/  &
                       (4.0_DP*dz) - vs*(my*mz))/amag**3
            dbz_mx  = dbx_mz
            dbz_my  = dby_mz
-           dbz_mz  = (((vxupp + vcupp - vxupm - vcupm) -                 &
-                      (vxdwp + vcdwp - vxdwm - vcdwm))*mz**2*amag/rho/       &
+           dbz_mz  = (((vxp_s(1,1) + vcp_s(1,1) - vxm_s(1,1) - vcm_s(1,1)) -                 &
+                      (vxp_s(1,2) + vcp_s(1,2) - vxm_s(1,2) - vcm_s(1,2)))*mz**2*amag/rho/       &
                       (4.0_DP*dz) + vs*(mx**2+my**2))/amag**3
            dmuxc(1,1)=dvxc_rho
            dmuxc(1,2)=dvxc_mx
@@ -3480,6 +3233,7 @@ end subroutine tau_xc_array_spin
         RETURN
 
       end subroutine dmxc_nc
+      !
       !
       !-----------------------------------------------------------------------
       subroutine dgcxc (r, s2, vrrx, vsrx, vssx, vrrc, vsrc, vssc)
@@ -3730,72 +3484,8 @@ end subroutine tau_xc_array_spin
     return
     !
   end subroutine d3gcxc
-!
-!-----------------------------------------------------------------------
-!------- VECTOR AND GENERAL XC DRIVERS -------------------------------
-!-----------------------------------------------------------------------
-!
-
-subroutine evxc_t_vec(rho,rhoc,lsd,length,vxc,exc)
-  !---------------------------------------------------------------
   !
-  !  this function returns the XC potential in LDA or LSDA approximation
   !
-  integer,  intent(in)  :: lsd, length
-  real(DP), intent(in)  :: rho(length,2), rhoc(length)
-  real(DP), intent(out), optional :: vxc(length,2)
-  real(DP), intent(out), optional :: exc(length)
-  !
-  real(DP) :: arho
-  real(DP) :: arhoV(length), zetaV(length)
-  real(DP) :: evx(length,3), evc(length,3)
-  real(DP) :: ex, ec, vx, vc
-  !
-  integer :: i
-  real(DP), parameter :: e2 = 2.0_dp, eps = 1.e-30_dp
-
-  if (lsd.eq.0) then
-     !
-     !     LDA case
-     !
-     do i=1,length
-        arho = abs(rho(i,1)+rhoc(i))
-        if (arho.gt.eps) then
-           call xc(arho,ex,ec,vx,vc)
-        else
-           ex = 0.0_dp
-           ec = 0.0_dp
-           vx = 0.0_dp
-           vc = 0.0_dp
-        end if
-        if (present(vxc)) vxc(i,1) = e2*(vx+vc)
-        if (present(exc)) exc(i) = e2*(ex+ec)
-     end do
-  else
-     !
-     !     LSDA case
-     !
-     arhoV = abs(rho(:,1)+rho(:,2)+rhoc(:))
-     where (arhoV.gt.eps)
-        zetaV = (rho(:,1)-rho(:,2)) / arhoV
-     elsewhere
-        zetaV = 0.0_DP ! just a sane default, results are discarded anyway
-     end where
-     ! zeta has to stay between -1 and 1, but can get a little
-     ! out of bound during the first iterations.
-     zetaV = min( 1.0_DP, zetaV)
-     zetaV = max(-1.0_DP, zetaV)
-     call xc_spin_vec(arhoV, zetaV, length, evx, evc)
-     if (present(vxc)) then
-        vxc(:,1) = e2*(evx(:,1) + evc(:,1))
-        vxc(:,2) = e2*(evx(:,2) + evc(:,2))
-     end if
-     if (present(exc)) exc = e2*(evx(:,3)+evc(:,3))
-  end if
-
-end subroutine evxc_t_vec
-
-
 #if defined(__LIBXC)
   subroutine get_libxc_version
      implicit none
