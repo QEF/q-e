@@ -19,7 +19,8 @@ PWLIBS += \
   wfcinit_gpu.o \
   rotate_wfc_gpu.o \
   hs_1psi_gpu.o \
-  s_1psi_gpu.o
+  s_1psi_gpu.o \
+  utils_gpu.o
 
 MODFLAGS += \
          $(MOD_FLAG)../../GScratch
@@ -47,7 +48,6 @@ dqvan2.o : pwcom_gpu.o
 electrons.o : newd_gpu.o
 electrons.o : pwcom_gpu.o
 electrons.o : scf_mod_gpu.o
-exx_gpu.o : pwcom_gpu.o
 force_us.o : pwcom_gpu.o
 g2_kin.o : pwcom_gpu.o
 g2_kin_gpu.o : pwcom.o
