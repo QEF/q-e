@@ -29,8 +29,9 @@ MODULE exx_band
   INTEGER :: lda_original, n_original
   INTEGER :: nwordwfc_exx
   INTEGER, ALLOCATABLE :: igk_exx(:,:)
+  INTEGER, ALLOCATABLE :: igk_exx_d(:,:)
 #if defined(__CUDA)
-  INTEGER, ALLOCATABLE, DEVICE :: igk_exx_d(:,:)
+  attributes(DEVICE) :: igk_exx_d
 #endif
   !
   ! mapping for the data structure conversion
