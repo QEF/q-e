@@ -51,8 +51,9 @@ MODULE mp_exx
   INTEGER, ALLOCATABLE :: all_start(:)   ! starting band inded for the inner loop
   INTEGER, ALLOCATABLE :: all_end(:)     ! ending band index used in the inner loop
 
+  INTEGER, ALLOCATABLE :: iexx_istart_d(:)
 #if defined(__CUDA)
-  INTEGER, ALLOCATABLE, DEVICE :: iexx_istart_d(:)
+  attributes(DEVICE) :: iexx_istart_d
 #endif
 
   INTEGER :: max_contributors

@@ -131,6 +131,7 @@ tetra.o : pwcom_gpu.o
 usnldiag_gpu.o : pwcom.o
 usnldiag_gpu.o : pwcom.o
 usnldiag_gpu.o : pwcom.o
+utils_gpu.o : pwcom_gpu.o
 vloc_psi_gpu.o : pwcom.o
 vloc_psi_gpu.o : pwcom.o
 vloc_psi_gpu.o : pwcom.o
