@@ -42,11 +42,16 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   REAL(DP)               :: q
   INTEGER                :: npw, i
   !
+  INTEGER, PARAMETER     :: blocksize = 256
+  INTEGER                :: iblock,numblock
+  !chunking parameters
+  !
   !
   IF ( nkb == 0 ) RETURN
   !
   IF ( lsda ) current_spin = isk(ik)
   npw = ngk(ik)
+  numblock  = (npw+blocksize-1)/blocksize
   IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
   !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm ) 
@@ -462,7 +467,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                                       work2_nc(1,is),1)
                          END DO
                       ELSE
-                         CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
+                         numblock  = (npw+blocksize-1)/blocksize
+                         DO iblock=1,numblock
+                            CALL zaxpy( MIN(blocksize,(npw-(iblock-1)*blocksize)), ps, &
+                                       dvkb((iblock-1)*blocksize+1,ikb), 1, &
+                                       work2((iblock-1)*blocksize+1), 1 )
+                         END DO
                       END IF
                    END DO
                    ijkb0 = ijkb0 + nh(np)
