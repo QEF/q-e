@@ -306,7 +306,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        ! ... local variables
        !
-       INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, &
+       INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, ipw, &
                                         ikb, jkb, ih, jh, ijkb0, is, js, ijs
        REAL(DP)                 :: fac, xyz (3, 3), evps, ddot
        COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
@@ -417,6 +417,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              work2 = (0.D0,0.D0)
              CALL compute_deff(deff,et(ibnd,ik))
           ENDIF
+          !$omp parallel private(ijkb0, ikb, ijs, ps_nc, ps, jkb)
           ijkb0 = 0
           DO np = 1, ntyp
              DO na = 1, nat
@@ -467,18 +468,20 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                                       work2_nc(1,is),1)
                          END DO
                       ELSE
-                         numblock  = (npw+blocksize-1)/blocksize
-                         DO iblock=1,numblock
-                            CALL zaxpy( MIN(blocksize,(npw-(iblock-1)*blocksize)), ps, &
-                                       dvkb((iblock-1)*blocksize+1,ikb), 1, &
-                                       work2((iblock-1)*blocksize+1), 1 )
+                         !$omp do
+                         DO iblock = 1, numblock
+                            DO ipw = (iblock-1)*blocksize+1, MIN(iblock*blocksize, npw)
+                               work2(ipw) = ps * dvkb(ipw, ikb) + work2(ipw)
+                            END DO
                          END DO
+                         !$omp end do nowait
                       END IF
                    END DO
                    ijkb0 = ijkb0 + nh(np)
                 END IF
              END DO
           END DO
+          !$omp end parallel
           DO ipol = 1, 3
              DO jpol = 1, ipol
                 IF (noncolin) THEN
