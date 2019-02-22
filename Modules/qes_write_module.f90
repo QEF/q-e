@@ -2337,6 +2337,11 @@ MODULE qes_write_module
            CALL xml_addCharacters(xp, obj%highestOccupiedLevel, fmt='s16')
         CALL xml_EndElement(xp, "highestOccupiedLevel")
      END IF
+     IF (obj%lowestUnoccupiedLevel_ispresent) THEN
+        CALL xml_NewElement(xp, "lowestUnoccupiedLevel")
+           CALL xml_addCharacters(xp, obj%lowestUnoccupiedLevel, fmt='s16')
+        CALL xml_EndElement(xp, "lowestUnoccupiedLevel")
+     END IF
      IF (obj%two_fermi_energies_ispresent) THEN
         CALL xml_NewElement(xp, "two_fermi_energies")
            CALL xml_addCharacters(xp, obj%two_fermi_energies, fmt='s16')
