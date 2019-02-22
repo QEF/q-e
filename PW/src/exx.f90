@@ -331,6 +331,7 @@ MODULE exx
     USE wavefunctions_gpum, ONLY : using_evc
     USE uspp_gpum,          ONLY : using_vkb ! is this needed?
     USE cuda_util,          ONLY : cuf_memset
+    USE gbuffers,           ONLY : dev_buf
     !
     IMPLICIT NONE
     INTEGER :: ik,ibnd, i, j, k, ir, isym, ikq, ig
@@ -344,9 +345,9 @@ MODULE exx
 !DIR$ memory(bandwidth) temppsic
 #endif
     COMPLEX(DP),ALLOCATABLE :: temppsic_nc(:,:), psic_nc(:,:)
-    COMPLEX(DP),ALLOCATABLE :: psic_nc_d(:,:)
+    COMPLEX(DP),POINTER     :: psic_nc_d(:,:)
 #if defined(__CUDA)
-    attributes(DEVICE) :: psic_nc_d
+    attributes(DEVICE)      :: psic_nc_d
 #endif
     COMPLEX(DP),ALLOCATABLE :: psic_exx(:)
     INTEGER :: nxxs, nrxxs
@@ -360,6 +361,7 @@ MODULE exx
     INTEGER :: ibnd_start_new, ibnd_end_new, max_buff_bands_per_egrp
     INTEGER :: ibnd_exx, evc_offset
     LOGICAL :: DoLoc 
+    INTEGER :: ierr
     !
     CALL start_clock ('exxinit')
     IF ( Doloc ) THEN
@@ -477,10 +479,8 @@ MODULE exx
       IF (.not. allocated(exxbuff_d) .and. use_gpu) THEN
          IF (gamma_only) THEN
             ALLOCATE( exxbuff_d(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nks))
-            ALLOCATE(psic_nc_d(nrxxs, npol))
          ELSE
             ALLOCATE( exxbuff_d(nrxxs*npol, ibnd_buff_start:ibnd_buff_start+max_buff_bands_per_egrp-1, nkqs))
-            ALLOCATE(psic_nc_d(nrxxs, npol))
          END IF
       END IF
     END IF
@@ -667,6 +667,7 @@ MODULE exx
 !$omp end parallel do
 #endif
                    !
+                   IF (use_gpu) CALL dev_buf%lock_buffer(psic_nc_d, (/nrxxs, npol/), ierr)
                    IF (use_gpu) psic_nc_d = psic_nc
                    !
                    IF (index_sym(ikq) > 0 ) THEN
@@ -708,6 +709,7 @@ MODULE exx
 !$omp end parallel do
                       ENDIF
                    ENDIF
+                IF (use_gpu) CALL dev_buf%release_buffer(psic_nc_d, ierr)
                 IF (use_gpu) exxbuff = exxbuff_d
                 ELSE ! noncolinear
 #if defined(__MPI)
