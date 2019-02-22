@@ -27,7 +27,7 @@
                                                 Comput. Phys. Commun. 209, 116 (2016) 
                                                                                       
 
-     Program EPW v.5.0.0 starts on  8Jan2019 at 13:49:50 
+     Program EPW v.5.0.0 starts on  4Feb2019 at 17:23:48 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -57,9 +57,6 @@
      number of atomic types    =            0
      kinetic-energy cut-off    =       0.0000  Ry
      charge density cut-off    =       0.0000  Ry
-     convergence threshold     =      0.0E+00
-     beta                      =       0.0000
-     number of iterations used =            0
      Exchange-correlation      = not set (-1 -1 -1 -1-1-1)
 
 
@@ -119,7 +116,7 @@
      Reading interatomic force constants
 
      Read Z* and epsilon
-     IFC last   -0.0026126
+     IFC last   -0.0026114
      Norm of the difference between old and new effective charges:    0.0000000
      Norm of the difference between old and new force-constants:    0.0000020
      Imposed crystal ASR
@@ -131,7 +128,7 @@
 
      ===================================================================
      Memory usage:  VmHWM =        12Mb
-                   VmPeak =       273Mb
+                   VmPeak =       272Mb
      ===================================================================
      
      Using uniform q-mesh:    7   7   7
@@ -158,18 +155,21 @@
      Symmetry mapping finished
      Average over degenerate eigenstates is performed
 
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
+     =======================================================================
+       Temp     Fermi   Hole density  Population SR      Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
+     =======================================================================
 
-      400.000      6.8619       0.100000E+14       0.478637E-02  x-axis
-                                                   0.478658E-02  y-axis
-                                                   0.115242E-01  z-axis
-                                                   0.703239E-02     avg
-      500.000      7.0136       0.100000E+14       0.274743E-01  x-axis
-                                                   0.274758E-01  y-axis
-                                                   0.637071E-01  z-axis
-                                                   0.395524E-01     avg
+      400.000   6.8619   0.10000E+14  -0.37838E-05    0.478644E-02    x-axis
+                                                      0.115236E-01    y-axis
+                                                      0.478645E-02    z-axis
+                                                      0.703217E-02       avg
+                                                      0.157115E-04  off-diag
+      500.000   7.0136   0.10000E+14  -0.32700E-05    0.274751E-01    x-axis
+                                                      0.637035E-01    y-axis
+                                                      0.274751E-01    z-axis
+                                                      0.395512E-01       avg
+                                                      0.100271E-03  off-diag
       
      ===================================================================
      Start solving iterative Boltzmann Transport Equation
@@ -179,74 +179,86 @@
      Iteration number:         1 
 
 
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
+     =======================================================================
+       Temp     Fermi   Hole density  Population SR      Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
+     =======================================================================
 
-      400.000      6.8619       0.100000E+14       0.590051E-02  x-axis
-                                                   0.590248E-02  y-axis
-                                                   0.116036E-01  z-axis
-                                                   0.780221E-02     avg
-      500.000      7.0136       0.100000E+14       0.339718E-01  x-axis
-                                                   0.339864E-01  y-axis
-                                                   0.644797E-01  z-axis
-                                                   0.441460E-01     avg
+      400.000   6.8619   0.10000E+14  -0.75702E-05    0.613183E-02    x-axis
+                                                      0.101815E-01    y-axis
+                                                      0.613185E-02    z-axis
+                                                      0.748171E-02       avg
+                                                      0.462857E-04  off-diag
+      500.000   7.0136   0.10000E+14  -0.65421E-05    0.352955E-01    x-axis
+                                                      0.566236E-01    y-axis
+                                                      0.352956E-01    z-axis
+                                                      0.424049E-01       avg
+                                                      0.290986E-03  off-diag
 
-                                                   0.441460E-01     Err
+                                                   0.424049E-01     Err
 
      Iteration number:         2 
 
 
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
+     =======================================================================
+       Temp     Fermi   Hole density  Population SR      Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
+     =======================================================================
 
-      400.000      6.8619       0.100000E+14       0.644417E-02  x-axis
-                                                   0.644751E-02  y-axis
-                                                   0.118128E-01  z-axis
-                                                   0.823483E-02     avg
-      500.000      7.0136       0.100000E+14       0.371091E-01  x-axis
-                                                   0.371345E-01  y-axis
-                                                   0.657224E-01  z-axis
-                                                   0.466553E-01     avg
+      400.000   6.8619   0.10000E+14  -0.11357E-04    0.661586E-02    x-axis
+                                                      0.103562E-01    y-axis
+                                                      0.661588E-02    z-axis
+                                                      0.786265E-02       avg
+                                                      0.478162E-04  off-diag
+      500.000   7.0136   0.10000E+14  -0.98144E-05    0.381083E-01    x-axis
+                                                      0.576816E-01    y-axis
+                                                      0.381084E-01    z-axis
+                                                      0.446328E-01       avg
+                                                      0.301483E-03  off-diag
 
-                                                   0.250937E-02     Err
+                                                   0.222789E-02     Err
 
      Iteration number:         3 
 
 
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
+     =======================================================================
+       Temp     Fermi   Hole density  Population SR      Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
+     =======================================================================
 
-      400.000      6.8619       0.100000E+14       0.660118E-02  x-axis
-                                                   0.660483E-02  y-axis
-                                                   0.118134E-01  z-axis
-                                                   0.833980E-02     avg
-      500.000      7.0136       0.100000E+14       0.380423E-01  x-axis
-                                                   0.380701E-01  y-axis
-                                                   0.657563E-01  z-axis
-                                                   0.472896E-01     avg
+      400.000   6.8619   0.10000E+14  -0.15144E-04    0.677192E-02    x-axis
+                                                      0.103508E-01    y-axis
+                                                      0.677194E-02    z-axis
+                                                      0.796489E-02       avg
+                                                      0.484122E-04  off-diag
+      500.000   7.0136   0.10000E+14  -0.13086E-04    0.390317E-01    x-axis
+                                                      0.576726E-01    y-axis
+                                                      0.390318E-01    z-axis
+                                                      0.452454E-01       avg
+                                                      0.304995E-03  off-diag
 
-                                                   0.634249E-03     Err
+                                                   0.612607E-03     Err
 
      Iteration number:         4 
 
 
-     ===================================================================
-     Temp [K]  Fermi [eV]  Hole density [cm^-3]  Hole mobility [cm^2/Vs]
-     ===================================================================
+     =======================================================================
+       Temp     Fermi   Hole density  Population SR      Hole mobility 
+        [K]      [eV]     [cm^-3]      [h per cell]        [cm^2/Vs]
+     =======================================================================
 
-      400.000      6.8619       0.100000E+14       0.666450E-02  x-axis
-                                                   0.666825E-02  y-axis
-                                                   0.118240E-01  z-axis
-                                                   0.838558E-02     avg
-      500.000      7.0136       0.100000E+14       0.384180E-01  x-axis
-                                                   0.384467E-01  y-axis
-                                                   0.658280E-01  z-axis
-                                                   0.475642E-01     avg
+      400.000   6.8619   0.10000E+14  -0.18930E-04    0.682645E-02    x-axis
+                                                      0.103546E-01    y-axis
+                                                      0.682647E-02    z-axis
+                                                      0.800252E-02       avg
+                                                      0.483707E-04  off-diag
+      500.000   7.0136   0.10000E+14  -0.16358E-04    0.393568E-01    x-axis
+                                                      0.577063E-01    y-axis
+                                                      0.393569E-01    z-axis
+                                                      0.454733E-01       avg
+                                                      0.304725E-03  off-diag
 
-                                                   0.274620E-03     Err
+                                                   0.227943E-03     Err
 
      Iteration number:         5 
 

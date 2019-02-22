@@ -23,6 +23,7 @@ band=`sed -n "/bands (ev)/{n;n;p}" $fname | awk '{print $1; print $2; print $3; 
 # NSCF
 ef1=`grep Fermi $fname | head -$max_iter | awk '{print $5}'`
 eh1=`grep "highest occupied" $fname | tail -1 | awk '{print $5}'`
+ehl1=`grep "highest occupied, lowest unoccupied" $fname | tail -1 | awk '{print $7; print $8}'`
 tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
 
 # extract geometry after relaxation
@@ -66,6 +67,11 @@ fi
 if test "$eh1" != ""; then
         echo eh1
         for x in $eh1; do echo $x; done
+fi
+
+if test "$ehl1" != ""; then
+        echo ehl1
+        for x in $ehl1; do echo $x; done
 fi
 
 if test "$band" != ""; then
