@@ -16,7 +16,6 @@
  tprnfor=.false.
  tstress=.false.
  verbosity='high'
- wf_collect=.false.
 /
 &SYSTEM
  degauss=0.01
