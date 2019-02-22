@@ -943,7 +943,7 @@ MODULE exx_band
     USE cellmd,         ONLY : lmovecell
     USE wvfct,          ONLY : npwx
     USE gvect,          ONLY : gcutm, ig_l2g, g, gg, ngm, ngm_g, mill, &
-                               gstart, gvect_init, deallocate_gvect_exx
+                               gstart, gvect_init, deallocate_gvect_exx, gshells
     USE gvecs,          ONLY : gcutms, ngms, ngms_g, gvecs_init
     USE gvecw,          ONLY : gkcut, ecutwfc, gcutw
     USE klist,          ONLY : xk, nks, ngk
