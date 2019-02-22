@@ -1251,6 +1251,8 @@ MODULE qes_types_module
     REAL(DP) :: fermi_energy
     LOGICAL  :: highestOccupiedLevel_ispresent = .FALSE.
     REAL(DP) :: highestOccupiedLevel
+    LOGICAL  :: lowestUnoccupiedLevel_ispresent = .FALSE.
+    REAL(DP) :: lowestUnoccupiedLevel
     LOGICAL  :: two_fermi_energies_ispresent = .FALSE.
     REAL(DP), DIMENSION(2) :: two_fermi_energies
     TYPE(k_points_IBZ_type) :: starting_k_points

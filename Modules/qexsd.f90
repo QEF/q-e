@@ -1107,7 +1107,7 @@ CONTAINS
                    NKS = ndim_ks_energies, OCCUPATIONS_KIND = occupations_kind, KS_ENERGIES = ks_objs,      &
                    NBND_UP = nbnd_up_opt, NBND_DW = nbnd_dw_opt, NUM_OF_ATOMIC_WFC = n_wfc_at,              &
                    FERMI_ENERGY = fermi_energy, HIGHESTOCCUPIEDLEVEL = homo,  TWO_FERMI_ENERGIES = ef_updw, & 
-                   SMEARING = smearing)
+                   SMEARING = smearing, LOWESTUNOCCUPIEDLEVEL = lumo)
     DO ik=1,ndim_ks_energies
        CALL qes_reset(ks_objs(ik))
     END DO

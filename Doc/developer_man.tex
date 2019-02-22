@@ -548,7 +548,7 @@ a package directory and not from top level. In the top-level Makefile,
 TLDEPS is set to an empty string (TLDEPS=) and transmitted to Makefiles
 in the subdirectories. These contain a target "tldeps" that does nothing
 if TLDEPS is empty (i.e. executing from the top level); it goes to the
-top-level directory and executes TLDEPS ortherwise. TLDEPS in subdirectory
+top-level directory and executes TLDEPS otherwise. TLDEPS in subdirectory
 Makefiles must be set to the same dependencies of the intended target
 (e.g. pw.x in the following example) in the top-level Makefile.
 }

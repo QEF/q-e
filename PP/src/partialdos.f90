@@ -218,7 +218,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
                  WRITE (4,'(i5," ")', advance="NO") ik
               ENDIF
               etev = Emin + ie * DeltaE
-              WRITE (4,'(f7.3,2e11.3,14e11.3)') etev*rytoev,  &
+              WRITE (4,'(f8.3,2e11.3,14e11.3)') etev*rytoev,  &
                    (ldos(ie,is,ik), is=1,nspin), &
                    ((pdos(ie,nwfc+m-1,is,ik), is=1,nspin), &
                    m=1,2*nlmchi(nwfc)%l+1)
@@ -246,7 +246,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, kresolveddos, filpdos)
            WRITE (4,'(i5," ")', advance="NO") ik
         ENDIF
         etev = Emin + ie * DeltaE
-        WRITE (4,'(f7.3,4e11.3)') etev*rytoev, (dostot(ie,is,ik), is=1,nspin), &
+        WRITE (4,'(f8.3,4e11.3)') etev*rytoev, (dostot(ie,is,ik), is=1,nspin), &
              (pdostot(ie,is,ik), is=1,nspin)
      ENDDO
      IF (kresolveddos) WRITE (4,*)
@@ -510,10 +510,10 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
                  ENDIF
                  etev = Emin + ie * DeltaE
                  IF (abs(nlmchi(nwfc)%jj-nlmchi(nwfc)%l-0.5d0)<1.d-8) THEN
-                    WRITE (4,'(f7.3,2e11.3,14e11.3)') etev*rytoev, ldos(ie,1,ik), &
+                    WRITE (4,'(f8.3,2e11.3,14e11.3)') etev*rytoev, ldos(ie,1,ik), &
                          (pdos(ie,nwfc+ind-1,1,ik), ind=1,2*nlmchi(nwfc)%l+2)
                  ELSEIF (abs(nlmchi(nwfc)%jj-nlmchi(nwfc)%l+0.5d0)<1.d-8) THEN
-                    WRITE (4,'(f7.3,2e11.3,14e11.3)') etev*rytoev, ldos(ie,1,ik), &
+                    WRITE (4,'(f8.3,2e11.3,14e11.3)') etev*rytoev, ldos(ie,1,ik), &
                          (pdos(ie,nwfc+ind-1,1,ik), ind=1,2*nlmchi(nwfc)%l)
                  ENDIF
               ENDDO
@@ -535,7 +535,7 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
                     WRITE (4,'(i5," ")', advance="NO") ik
                  ENDIF
                  etev = Emin + ie * DeltaE
-                 WRITE (4,'(f7.3,2e11.3,14e11.3)') etev*rytoev,  &
+                 WRITE (4,'(f8.3,2e11.3,14e11.3)') etev*rytoev,  &
                       (ldos(ie,is,ik), is=1,nspin0), &
                       ((pdos(ie,nwfc+ind-1+(is-1)*(2*nlmchi(nwfc)%l+1),is,ik), is=1,nspin0), &
                       ind=1,2*nlmchi(nwfc)%l+1)
@@ -564,7 +564,7 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, kresolveddos, filpdos)
            WRITE (4,'(i5," ")', advance="NO") ik
         ENDIF
         etev = Emin + ie * DeltaE
-        WRITE (4,'(f7.3,4e11.3)') etev*rytoev, dostot(ie,ik), &
+        WRITE (4,'(f8.3,4e11.3)') etev*rytoev, dostot(ie,ik), &
              (pdostot(ie,is,ik), is=1,nspin0)
      ENDDO
      IF (kresolveddos) WRITE (4,*)

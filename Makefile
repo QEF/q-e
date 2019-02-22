@@ -80,19 +80,19 @@ cp : bindir libs mods
 
 ph : phlibs
 	if test -d PHonon; then \
-	( cd PHonon; $(MAKE) all || exit 1) ; fi
+	( cd PHonon; $(MAKE) TLDEPS= all || exit 1) ; fi
 
 hp : hplibs
 	if test -d HP; then \
-	( cd HP; $(MAKE) all || exit 1) ; fi
+	( cd HP; $(MAKE) TLDEPS= all || exit 1) ; fi
 
 neb : pwlibs
 	if test -d NEB; then \
-	( cd NEB; $(MAKE) all || exit 1) ; fi
+	( cd NEB; $(MAKE) TLDEPS= all || exit 1) ; fi
 
 tddfpt : phlibs
 	if test -d TDDFPT; then \
-	( cd TDDFPT; $(MAKE) all || exit 1) ; fi
+	( cd TDDFPT; $(MAKE) TLDEPS= all || exit 1) ; fi
 
 pp : pwlibs
 	if test -d PP ; then \

@@ -1574,6 +1574,7 @@ MODULE qes_reset_module
     obj%num_of_atomic_wfc_ispresent = .FALSE.
     obj%fermi_energy_ispresent = .FALSE.
     obj%highestOccupiedLevel_ispresent = .FALSE.
+    obj%lowestUnoccupiedLevel_ispresent = .FALSE.
     obj%two_fermi_energies_ispresent = .FALSE.
     CALL qes_reset_k_points_IBZ(obj%starting_k_points)
     CALL qes_reset_occupations(obj%occupations_kind)
