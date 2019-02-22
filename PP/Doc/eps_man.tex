@@ -30,8 +30,7 @@ $^{3}$ \emph{High Performance Computing Department, CINECA Consorzio Interuniver
 \section{Introduction}
 Epsilon.x is a post processing code of $PW_{SCF}$. Starting from DFT eigenvalues and eigenvectors,
 epsilon.x provides the real and imaginary parts of the dielectric tensor or the joint density of states, it works both in serial and
-parallel mode, also pool parallelization is supported. As all the others post processing codes, epsilon.x must run with the same number of
-in pw.x input file.   
+parallel mode, also pool parallelization is supported.
 Epsilon.x doesn't support the reduction of the k-points grid into the irreducible Brillouin zone, so the previous PW runs must be
 performed with a uniform k-points grid and all k-points weights must be equal to each other, i.e. in the k-points card the k-points
 coordinates must be given manually in \emph{crystal} or \emph{alat} or \emph{bohr}, but not with the \emph{automatic} option. Also the
