@@ -527,7 +527,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                 work2 = (0.D0,0.D0)
                 CALL compute_deff(deff,et(ibnd,ik))
              ENDIF
-
+             !$omp parallel private(ijkb0, ikb, ijs, ps_nc, ps, jkb)
              ijkb0 = 0
              DO np = 1, ntyp
                 DO na = 1, nat
@@ -574,17 +574,29 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                          END IF
                          IF (noncolin) THEN
                             DO is=1,npol
-                               CALL zaxpy(npw,ps_nc(is),dvkb(1,ikb),1, &
-                                          work2_nc(1,is),1)
+                               !$omp do
+                               DO iblock = 1, numblock
+                                  DO ipw = (iblock-1)*blocksize+1, MIN(iblock*blocksize, npw)
+                                     work2_nc(ipw,is) = ps_nc(is) * dvkb(ipw, ikb) + work2_nc(ipw,is)
+                                  END DO
+                               END DO
+                               !$omp end do nowait
                             END DO
                          ELSE
-                            CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
+                            !$omp do
+                            DO iblock = 1, numblock
+                               DO ipw = (iblock-1)*blocksize+1, MIN(iblock*blocksize, npw)
+                                  work2(ipw) = ps * dvkb(ipw, ikb) + work2(ipw)
+                               END DO
+                            END DO
+                            !$omp end do nowait
                          END IF
                       END DO
                       ijkb0 = ijkb0 + nh(np)
                    END IF
                 END DO
              END DO
+             !$omp end parallel
              DO jpol = 1, ipol
                 IF (noncolin) THEN
                    DO i = 1, npw
