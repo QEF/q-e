@@ -44,8 +44,8 @@
      REAL(DP), POINTER, PROTECTED            :: gl(:)
      INTEGER, ALLOCATABLE, TARGET, PROTECTED :: igtongl(:)
      ! Duplicate of the above variables (new style duplication).
-     REAL(DP), POINTER,                      :: gl_d(:)
-     INTEGER, ALLOCATABLE, TARGET,           :: igtongl_d(:)
+     REAL(DP), POINTER                       :: gl_d(:)
+     INTEGER, ALLOCATABLE, TARGET            :: igtongl_d(:)
 #if defined(__CUDA)
      attributes(DEVICE) :: gl_d, igtongl_d
 #endif
