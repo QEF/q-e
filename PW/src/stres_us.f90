@@ -464,8 +464,15 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       END IF
                       IF (noncolin) THEN
                          DO is=1,npol
-                            CALL zaxpy(npw,ps_nc(is),dvkb(1,ikb),1,&
-                                                      work2_nc(1,is),1)
+                         !   CALL zaxpy(npw,ps_nc(is),dvkb(1,ikb),1,&
+                         !                             work2_nc(1,is),1)
+                            !$omp do
+                            DO iblock = 1, numblock
+                               DO ipw = (iblock-1)*blocksize+1, MIN(iblock*blocksize, npw)
+                                  work2_nc(ipw,is) = ps_nc(is) * dvkb(ipw, ikb) + work2_nc(ipw,is)
+                               END DO
+                            END DO
+                            !$omp end do nowait
                          END DO
                       ELSE
                          !$omp do
