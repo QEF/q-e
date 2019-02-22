@@ -24,6 +24,7 @@ becmod_subs_gpu.o : recvec.o
 dylmr2_gpu.o : kind.o
 random_numbers_gpu.o : kind.o
 random_numbers_gpu.o : random_numbers.o
+recvec.o : control_flags.o
 recvec_gpu.o : control_flags.o
 recvec_gpu.o : kind.o
 recvec_gpu.o : recvec.o

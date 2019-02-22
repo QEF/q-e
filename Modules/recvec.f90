@@ -43,6 +43,12 @@
      !
      REAL(DP), POINTER, PROTECTED            :: gl(:)
      INTEGER, ALLOCATABLE, TARGET, PROTECTED :: igtongl(:)
+     ! Duplicate of the above variables (new style duplication).
+     REAL(DP), POINTER,                      :: gl_d(:)
+     INTEGER, ALLOCATABLE, TARGET,           :: igtongl_d(:)
+#if defined(__CUDA)
+     attributes(DEVICE) :: gl_d, igtongl_d
+#endif
      !
      !     G-vectors cartesian components ( in units tpiba =(2pi/a)  )
      !
@@ -143,6 +149,7 @@
         !
         USE kinds,              ONLY : DP
         USE constants,          ONLY : eps8
+        USE control_flags,      ONLY : use_gpu
         !
         IMPLICIT NONE
         !
@@ -185,6 +192,8 @@
            IF (igl /= ngl) CALL errore ('gshells', 'igl <> ngl', ngl)
 
         ENDIF
+        IF (use_gpu)      gl_d = gl
+        IF (use_gpu) igtongl_d = igtongl
      END SUBROUTINE gshells
 !=----------------------------------------------------------------------------=!
    END MODULE gvect
