@@ -124,7 +124,7 @@ cat > Fe.scf_pbe.in << EOF
  /
 ATOMIC_SPECIES
 Fe  0.0    Fe.rel-pbe-kjpaw.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
 Fe  0.0000000   0.00000000   0.0  
 K_POINTS AUTOMATIC
 8 8 8 1 1 1 
@@ -166,7 +166,7 @@ cat > Fe.band_pbe.in << EOF
  /
 ATOMIC_SPECIES
 Fe  0.0    Fe.rel-pbe-kjpaw.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
 Fe  0.0000000   0.00000000   0.0  
 K_POINTS tpiba_b
 3

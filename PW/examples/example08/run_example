@@ -107,7 +107,7 @@ FeO Wustite in LDA
     conv_thr =  1.0d-6
     mixing_fixed_ns = 0
  /
-CELL_PARAMETERS
+CELL_PARAMETERS alat
 0.50 0.50 1.00
 0.50 1.00 0.50
 1.00 0.50 0.50
@@ -162,7 +162,7 @@ FeO Wustite whithin LDA+U using standard initial ns matrices
     conv_thr =  1.0d-6
     mixing_fixed_ns = 0
  /
-CELL_PARAMETERS
+CELL_PARAMETERS alat
 0.50 0.50 1.00
 0.50 1.00 0.50
 1.00 0.50 0.50
@@ -218,7 +218,7 @@ FeO Wustite whithin LDA+U with user-defined ns initial matrices
     conv_thr =  1.0d-6
     mixing_fixed_ns = 0
  /
-CELL_PARAMETERS
+CELL_PARAMETERS alat
 0.50 0.50 1.00
 0.50 1.00 0.50
 1.00 0.50 0.50
