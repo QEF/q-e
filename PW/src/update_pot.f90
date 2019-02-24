@@ -448,8 +448,6 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      ! 
      ALLOCATE( work( dfftp%ngm, 1 ) )
      !
-     work = 0.D0
-     !
      ! ... in the lsda case the magnetization will follow rigidly the density
      ! ... keeping fixed the value of zeta = mag / rho_tot.
      ! ... zeta is set here and put in rho%of_r(:,2) while rho%of_r(:,1) 
