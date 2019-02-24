@@ -59,7 +59,8 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_cg( )
   CALL deallocate_core()
   CALL deallocate_uspp()
-  CALL deallocate_gvect()
+  CALL deallocate_gvect(.TRUE.) ! Value .true. is hard coded in init.f90:195,
+                                !  here it prevents double free of gg variable.
   CALL deallocate_gvecw()
   CALL deallocate_smallbox_gvec( )
   CALL deallocate_local_pseudo()

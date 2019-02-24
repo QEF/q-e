@@ -31,7 +31,7 @@
       USE recvec_subs,          ONLY: ggen, ggens
       USE gvect,                ONLY: mill_g, eigts1,eigts2,eigts3, g, gg, &
                                       ecutrho, gcutm, gvect_init, mill, &
-                                      ig_l2g, gstart, ngm, ngm_g
+                                      ig_l2g, gstart, ngm, ngm_g, gshells
       use gvecs,                only: gcutms, gvecs_init, ngms
       use gvecw,                only: gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY: ggenb

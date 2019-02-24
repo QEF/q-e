@@ -474,7 +474,9 @@ MODULE pw_restart_new
          IF (TRIM(input_parameters_occupations) == 'fixed') THEN 
             occupations_are_fixed = .TRUE.
             CALL get_homo_lumo( h_energy, lumo_tmp)
+            h_energy = h_energy/e2
             IF ( lumo_tmp .LT. 1.d+6 ) THEN
+                lumo_tmp = lumo_tmp/e2
                 lumo_energy => lumo_tmp
             END IF
          ELSE 
@@ -494,6 +496,19 @@ MODULE pw_restart_new
             CALL qexsd_init_occupations ( qexsd_occ_obj, input_parameters_occupations, nspin)
          END IF 
          qexsd_occ_obj%tagname = 'occupations_kind' 
+         IF ( two_fermi_energies ) THEN
+            ALLOCATE ( ef_updw (2) )
+               IF (TRIM(input_parameters_occupations) == 'fixed') THEN  
+                  ef_updw(1)  = MAXVAL(et(INT(nelup),1:nkstot/2))/e2
+                  ef_updw (2)  = MAXVAL(et(INT(neldw),nkstot/2+1:nkstot))/e2 
+               ELSE 
+                  ef_updw = [ef_up/e2, ef_dw/e2]
+               END IF
+         ELSE
+                ef_targ = ef/e2
+                ef_point => ef_targ
+         END IF
+
 
          IF (TRIM(input_parameters_occupations) == 'smearing' ) THEN
             IF (TRIM(qexsd_input_obj%tagname) == 'input') THEN 
@@ -502,13 +517,6 @@ MODULE pw_restart_new
                CALL qexsd_init_smearing(qexsd_smear_obj, smearing, degauss)
             END IF  
             !  
-            IF ( two_fermi_energies ) THEN
-                ALLOCATE ( ef_updw (2) )
-                ef_updw = [ef_up/e2, ef_dw/e2]
-            ELSE
-                ef_targ = ef/e2
-                ef_point => ef_targ
-            END IF
             CALL qexsd_init_band_structure(  output%band_structure,lsda,noncolin,lspinorb, nelec, natomwfc, &
                                  et, wg, nkstot, xk, ngk_g, wk, SMEARING = qexsd_smear_obj,  &
                                  STARTING_KPOINTS = qexsd_start_k_obj, OCCUPATIONS_KIND = qexsd_occ_obj, &
@@ -518,7 +526,8 @@ MODULE pw_restart_new
             CALL  qexsd_init_band_structure(output%band_structure,lsda, noncolin,lspinorb, nelec, natomwfc, &
                                 et, wg, nkstot, xk, ngk_g, wk, &
                                 STARTING_KPOINTS =  qexsd_start_k_obj, OCCUPATIONS_KIND = qexsd_occ_obj,&
-                                WF_COLLECTED = wf_collect , NBND = nbnd, HOMO = h_energy, LUMO = lumo_energy )
+                                WF_COLLECTED = wf_collect , NBND = nbnd, HOMO = h_energy, LUMO = lumo_energy , &
+                                EF_UPDW = ef_updw )
          END IF 
          CALL qes_reset (qexsd_start_k_obj)
          CALL qes_reset (qexsd_occ_obj)

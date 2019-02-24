@@ -1211,8 +1211,9 @@ MODULE qes_init_module
     obj%order = order 
     
     length = 1
+    obj%rank = SIZE(shape(Hubbard_ns))
+    ALLOCATE ( obj%dims(obj%rank))
     obj%dims = shape(Hubbard_ns)
-    obj%rank = SIZE(obj%dims)
     DO i = 1, obj%rank
       length = length * obj%dims(i)
     END DO
@@ -2898,7 +2899,7 @@ MODULE qes_init_module
   SUBROUTINE qes_init_band_structure(obj, tagname, lsda, noncolin, spinorbit, nelec, wf_collected,&
                                     starting_k_points, nks, occupations_kind, ks_energies, nbnd,&
                                     nbnd_up, nbnd_dw, num_of_atomic_wfc, fermi_energy, highestOccupiedLevel,&
-                                    two_fermi_energies, smearing)
+                                    lowestUnoccupiedLevel, two_fermi_energies, smearing)
     !
     IMPLICIT NONE
     !
@@ -2915,6 +2916,7 @@ MODULE qes_init_module
     LOGICAL,INTENT(IN) :: wf_collected
     REAL(DP),OPTIONAL,INTENT(IN) :: fermi_energy
     REAL(DP),OPTIONAL,INTENT(IN) :: highestOccupiedLevel
+    REAL(DP),OPTIONAL,INTENT(IN) :: lowestUnoccupiedLevel
     REAL(DP), DIMENSION(2),OPTIONAL,INTENT(IN) :: two_fermi_energies
     TYPE(k_points_IBZ_type),INTENT(IN) :: starting_k_points
     INTEGER,INTENT(IN) :: nks
@@ -2966,6 +2968,12 @@ MODULE qes_init_module
       obj%highestOccupiedLevel = highestOccupiedLevel
     ELSE 
       obj%highestOccupiedLevel_ispresent = .FALSE.
+    END IF
+    IF ( PRESENT(lowestUnoccupiedLevel)) THEN 
+      obj%lowestUnoccupiedLevel_ispresent = .TRUE. 
+      obj%lowestUnoccupiedLevel = lowestUnoccupiedLevel
+    ELSE 
+      obj%lowestUnoccupiedLevel_ispresent = .FALSE.
     END IF
     IF ( PRESENT(two_fermi_energies)) THEN 
       obj%two_fermi_energies_ispresent = .TRUE. 
