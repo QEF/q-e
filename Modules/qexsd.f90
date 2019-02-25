@@ -1405,7 +1405,8 @@ CONTAINS
     CHARACTER(10)                                     :: mod_string
     LOGICAL                                           :: spin_is = .FALSE. 
     !
-    ALLOCATE (ion_pol_obj(nat), str_pol_obj(nat)) 
+    ALLOCATE (ion_pol_obj(nat))
+    ALLOCATE (str_pol_obj(nstring))
     DO iat =1, nat 
        WRITE(mod_string,'("(mod" ,I1,")")') mod_ion(iat) 
        CALL qes_init (ion_phase,"phase", modulus = TRIM(mod_string), phase = pdl_ion(iat) )
