@@ -42,16 +42,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   REAL(DP)               :: q
   INTEGER                :: npw, i
   !
-  INTEGER, PARAMETER     :: blocksize = 256
-  INTEGER                :: iblock,numblock
-  !chunking parameters
-  !
   !
   IF ( nkb == 0 ) RETURN
   !
   IF ( lsda ) current_spin = isk(ik)
   npw = ngk(ik)
-  numblock  = (npw+blocksize-1)/blocksize
   IF ( nks > 1 ) CALL init_us_2( npw, igk_k(1,ik), xk(1,ik), vkb )
   !
   CALL allocate_bec_type ( nkb, nbnd, becp, intra_bgrp_comm ) 
@@ -465,19 +460,15 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       IF (noncolin) THEN
                          DO is=1,npol
                             !$omp do
-                            DO iblock = 1, numblock
-                               DO ipw = (iblock-1)*blocksize+1, MIN(iblock*blocksize, npw)
-                                  work2_nc(ipw,is) = ps_nc(is) * dvkb(ipw, ikb) + work2_nc(ipw,is)
-                               END DO
+                            DO ipw = 1, npw
+                               work2_nc(ipw,is) = ps_nc(is) * dvkb(ipw, ikb) + work2_nc(ipw,is)
                             END DO
                             !$omp end do nowait
                          END DO
                       ELSE
                          !$omp do
-                         DO iblock = 1, numblock
-                            DO ipw = (iblock-1)*blocksize+1, MIN(iblock*blocksize, npw)
-                               work2(ipw) = ps * dvkb(ipw, ikb) + work2(ipw)
-                            END DO
+                         DO ipw = 1, npw
+                            work2(ipw) = ps * dvkb(ipw, ikb) + work2(ipw)
                          END DO
                          !$omp end do nowait
                       END IF
@@ -575,19 +566,15 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                          IF (noncolin) THEN
                             DO is=1,npol
                                !$omp do
-                               DO iblock = 1, numblock
-                                  DO ipw = (iblock-1)*blocksize+1, MIN(iblock*blocksize, npw)
-                                     work2_nc(ipw,is) = ps_nc(is) * dvkb(ipw, ikb) + work2_nc(ipw,is)
-                                  END DO
+                               DO ipw = 1, npw
+                                  work2_nc(ipw,is) = ps_nc(is) * dvkb(ipw, ikb) + work2_nc(ipw,is)
                                END DO
                                !$omp end do nowait
                             END DO
                          ELSE
                             !$omp do
-                            DO iblock = 1, numblock
-                               DO ipw = (iblock-1)*blocksize+1, MIN(iblock*blocksize, npw)
-                                  work2(ipw) = ps * dvkb(ipw, ikb) + work2(ipw)
-                               END DO
+                            DO ipw = 1, npw
+                               work2(ipw) = ps * dvkb(ipw, ikb) + work2(ipw)
                             END DO
                             !$omp end do nowait
                          END IF
