@@ -37,11 +37,10 @@ if test "$1" = "vdw6.in" ; then
 fi
 
 if test "$1" = "plugin-pw2casino_1.in" ; then
-  export PARA_POSTFIX=" --pw2casino"
-  echo "llalalalall"
+  export PARA_POSTFIX="$PARA_POSTFIX --pw2casino"
 fi
 if test "$1" = "plugin-pw2casino_2.in" ; then
-  export PARA_POSTFIX=" --pw2casino"
+  export PARA_POSTFIX="$PARA_POSTFIX --pw2casino"
 fi
 
 # echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_POSTFIX} -input $1 > $2 2> $3"
