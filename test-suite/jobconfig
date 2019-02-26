@@ -30,6 +30,10 @@ inputs_args = ('noncolin.in' ,''), ('noncolin-1.in' ,''), ('noncolin-2.in' ,''),
 program = PW
 inputs_args = ('paw-atom.in', ''), ('paw-atom_l=2.in', ''), ('paw-atom_lda.in',''), ('paw-atom_spin.in',''), ('paw-atom_spin_lda.in',''), ('paw-atom_tqr.in',''), ('paw-bfgs.in',''), ('paw-vcbfgs.in','')
 
+[pw_plugins/]
+program = PW
+inputs_args = ('plugin-pw2casino_1.in', '1'), ('plugin-pw2casino_2.in', '1')
+
 [pw_scf/]
 program = PW
 inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-cg.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,'')
