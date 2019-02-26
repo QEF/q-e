@@ -32,7 +32,7 @@ inputs_args = ('paw-atom.in', ''), ('paw-atom_l=2.in', ''), ('paw-atom_lda.in','
 
 [pw_scf/]
 program = PW
-inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-cg.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,''), ('scf-wf_collect.in' ,'')
+inputs_args = ('scf.in' ,''), ('scf-1.in' ,''), ('scf-2.in' ,''), ('scf-allfrac.in' ,''), ('scf-cg.in' ,''), ('scf-disk_io.in' ,''), ('scf-disk_io-1.in' ,''), ('scf-disk_io-2.in' ,''), ('scf-gamma.in' ,''), ('scf-k0.in' ,''), ('scf-kauto.in' ,''), ('scf-kcrys.in' ,''), ('scf-mixing_TF.in' ,''), ('scf-mixing_beta.in' ,''), ('scf-mixing_localTF.in' ,''), ('scf-mixing_ndim.in' ,''), ('scf-ncpp.in' ,''), ('scf-nofrac.in' ,''), ('scf-occ.in' ,'')
 
 [pw_spinorbit/]
 program = PW
