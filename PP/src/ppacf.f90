@@ -692,7 +692,7 @@ PROGRAM do_ppacf
   CALL exxinit(.FALSE.)
   
   IF ( use_ace) THEN
-     CALL aceinit (DOLOC = (local_thr)) 
+     CALL aceinit (DOLOC = (local_thr > 0._DP)) 
      fock2 = exxenergyace()
   ELSE
      fock2 = exxenergy2()
