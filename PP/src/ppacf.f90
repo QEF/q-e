@@ -39,7 +39,7 @@ PROGRAM do_ppacf
   USE mp_global,            ONLY : mp_startup
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE exx,                  ONLY : exxinit, exxenergy2, fock2, ecutfock, & 
-                                   use_ace, aceinit
+                                   use_ace, aceinit, local_thr
   USE exx_base,             ONLY : exx_grid_init, exx_mp_init, exx_div_check,exxdiv_treatment
   USE exx_base,             ONLY : nq1, nq2, nq3
   USE fft_base,             ONLY : dfftp
@@ -692,7 +692,7 @@ PROGRAM do_ppacf
   CALL exxinit(.FALSE.)
   
   IF ( use_ace) THEN
-     CALL aceinit ( ) 
+     CALL aceinit (DOLOC = (local_thr)) 
      fock2 = exxenergyace()
   ELSE
      fock2 = exxenergy2()

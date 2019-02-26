@@ -654,12 +654,13 @@ CONTAINS
 
     !------------------------------------------------------------------------
     SUBROUTINE qexsd_init_hybrid ( obj, dft_is_hybrid, nq1, nq2, nq3, ecutfock, exx_fraction, screening_parameter,&
-                                   exxdiv_treatment, x_gamma_extrapolation, ecutvcut ) 
+                                   exxdiv_treatment, x_gamma_extrapolation, ecutvcut, local_thr ) 
          IMPLICIT NONE 
          TYPE (hybrid_type),INTENT(INOUT)        :: obj 
          LOGICAL,INTENT(IN)                      :: dft_is_hybrid 
          INTEGER,OPTIONAL, INTENT(IN)            :: nq1, nq2, nq3 
-         REAL(DP),OPTIONAL,INTENT(IN)            :: ecutfock, exx_fraction, screening_parameter, ecutvcut 
+         REAL(DP),OPTIONAL,INTENT(IN)            :: ecutfock, exx_fraction, screening_parameter, ecutvcut,&
+                                                    local_thr
          CHARACTER(LEN=*), INTENT(IN)            :: exxdiv_treatment 
          LOGICAL,OPTIONAL,INTENT(IN)             :: x_gamma_extrapolation 
          ! 
@@ -673,7 +674,8 @@ CONTAINS
          END IF 
          !
          CALL qes_init ( obj, "hybrid", qpoint_grid_opt, ecutfock, exx_fraction, &
-                        screening_parameter, exxdiv_treatment, x_gamma_extrapolation, ecutvcut)
+                        screening_parameter, exxdiv_treatment, x_gamma_extrapolation, ecutvcut,&
+                        local_thr )
          !
          IF (ASSOCIATED (qpoint_grid_opt)) CALL qes_reset (qpoint_grid_opt)
          !
