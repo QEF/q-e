@@ -313,14 +313,13 @@ CONTAINS
 
 
 !  IF( use_task_groups ) THEN
-  IF(.false.) THEN !ATTENZIONE
     !
     !  Initialize task groups.
     !  Note that this call modify dffts adding task group data.
     !
-    CALL task_groups_init( fc%dfftt )
+!    CALL task_groups_init( fc%dfftt ) FIXME: nonexistent
     !
-  ENDIF
+!  ENDIF
 
 
 CONTAINS

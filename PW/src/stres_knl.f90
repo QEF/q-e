@@ -36,9 +36,8 @@ subroutine stres_knl (sigmanlc, sigmakin)
   integer :: npw, ik, l, m, i, ibnd, is
   !
   CALL using_evc(0)
-  !
-  allocate (gk(  3, npwx))    
-  allocate (kfac(   npwx))    
+  allocate (gk(npwx,3))
+  allocate (kfac(npwx))
 
   sigmanlc(:,:) =0.d0
   sigmakin(:,:) =0.d0
@@ -52,11 +51,11 @@ subroutine stres_knl (sigmanlc, sigmakin)
      if (nks > 1) CALL using_evc(2)
      npw = ngk(ik)
      do i = 1, npw
-        gk (1, i) = (xk (1, ik) + g (1, igk_k(i,ik) ) ) * tpiba
-        gk (2, i) = (xk (2, ik) + g (2, igk_k(i,ik) ) ) * tpiba
-        gk (3, i) = (xk (3, ik) + g (3, igk_k(i,ik) ) ) * tpiba
+        gk (i, 1) = (xk (1, ik) + g (1, igk_k(i,ik) ) ) * tpiba
+        gk (i, 2) = (xk (2, ik) + g (2, igk_k(i,ik) ) ) * tpiba
+        gk (i, 3) = (xk (3, ik) + g (3, igk_k(i,ik) ) ) * tpiba
         if (qcutz.gt.0.d0) then
-           gk2 = gk (1, i) **2 + gk (2, i) **2 + gk (3, i) **2
+           gk2 = gk (i, 1) **2 + gk (i, 2) **2 + gk (i, 3) **2
            arg = ( (gk2 - ecfixed) / q2sigma) **2
            kfac (i) = 1.d0 + qcutz / q2sigma * twobysqrtpi * exp ( - arg)
         endif
@@ -70,12 +69,12 @@ subroutine stres_knl (sigmanlc, sigmakin)
               do i = 1, npw
                  if (noncolin) then
                     sigmakin (l, m) = sigmakin (l, m) + wg (ibnd, ik) * &
-                     gk (l, i) * gk (m, i) * kfac (i) * &
+                     gk (i, l) * gk (i, m) * kfac (i) * &
                      ( DBLE (CONJG(evc(i     ,ibnd))*evc(i     ,ibnd)) + &
                        DBLE (CONJG(evc(i+npwx,ibnd))*evc(i+npwx,ibnd)))
                  else
                     sigmakin (l, m) = sigmakin (l, m) + wg (ibnd, ik) * &
-                        gk (l, i) * gk (m, i) * kfac (i) * &
+                        gk (i, l) * gk (i, m) * kfac (i) * &
                           DBLE (CONJG(evc (i, ibnd) ) * evc (i, ibnd) )
                  end if
               enddo

@@ -111,7 +111,7 @@ cat > ch4.scf.in << EOF
 ATOMIC_SPECIES
  C  12.0107   C.pz-vbc.UPF
  H  1.00794   H.pz-vbc.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  C  0.00  0.00  0.00
  H  $pos   $pos   $pos
  H  $pos  -$pos  -$pos

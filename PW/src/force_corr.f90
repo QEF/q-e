@@ -41,7 +41,7 @@ subroutine force_corr (forcescc)
   ! work space
   real(DP) ::  gx, arg, fact
   ! temp factors
-  integer :: ir, isup, isdw, ig, nt, na, ipol, ndm
+  integer :: ir, isup, isdw, ig, nt, na, ndm
   ! counters
   !
   ! vnew is V_out - V_in, psic is the temp space
@@ -55,9 +55,7 @@ subroutine force_corr (forcescc)
   end if
   !
   ndm = MAXVAL ( msh(1:ntyp) )
-  allocate ( aux(ndm), rhocgnt(ngl) )
-
-  forcescc(:,:) = 0.d0
+  allocate ( rhocgnt(ngl) )
 
   CALL fwfft ('Rho', psic, dfftp)
 
@@ -67,10 +65,14 @@ subroutine force_corr (forcescc)
      fact = 1.d0
   end if
 
+!$omp parallel private(aux, gx, arg)
+  allocate ( aux(ndm) )
+  !
   do nt = 1, ntyp
      !
      ! Here we compute the G.ne.0 term
      !
+!$omp do
      do ig = gstart, ngl
         gx = sqrt (gl (ig) ) * tpiba
         do ir = 1, msh (nt)
@@ -83,24 +85,29 @@ subroutine force_corr (forcescc)
         enddo
         call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (ig) )
      enddo
+!$omp end do
+     !
+!$omp do
      do na = 1, nat
         if (nt.eq.ityp (na) ) then
+           forcescc (1:3, na) = 0.0_DP
            do ig = gstart, ngm
               arg = (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
                    + g (3, ig) * tau (3, na) ) * tpi
-              do ipol = 1, 3
-                 forcescc (ipol, na) = forcescc (ipol, na) + fact * &
+              forcescc (1:3, na) = forcescc (1:3, na) + fact * &
                       rhocgnt (igtongl(ig) ) * CMPLX(sin(arg),cos(arg),kind=DP) * &
-                      g(ipol,ig) * tpiba * CONJG(psic(dfftp%nl(ig)))
-              enddo
+                      g(1:3,ig) * tpiba * CONJG(psic(dfftp%nl(ig)))
            enddo
         endif
      enddo
+!$omp end do
   enddo
+  deallocate ( aux )
+!$omp end parallel
   !
   call mp_sum(  forcescc, intra_bgrp_comm )
   !
-  deallocate ( aux, rhocgnt )
+  deallocate ( rhocgnt )
 
   return
 end subroutine force_corr

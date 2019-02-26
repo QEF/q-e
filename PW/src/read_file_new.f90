@@ -105,7 +105,8 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, nsp, ityp, tau, extfor
-  USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav
+  USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav, &
+                                   set_h_ainv
   USE force_mod,            ONLY : force
   USE klist,                ONLY : nkstot, nks, xk, wk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
@@ -127,9 +128,9 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
-  USE pw_restart_new,       ONLY :  pw_readschema_file, init_vars_from_schema 
-  USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type, input_type
-  USE qes_libs_module,      ONLY :  qes_reset
+  USE pw_restart_new,       ONLY : pw_readschema_file, init_vars_from_schema 
+  USE qes_types_module,     ONLY : output_type, parallel_info_type, general_info_type, input_type
+  USE qes_libs_module,      ONLY : qes_reset
   USE io_rho_xml,           ONLY : read_scf
   USE fft_rho,              ONLY : rho_g2r
   USE read_pseudo_mod,      ONLY : readpp
@@ -138,12 +139,13 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   USE paw_variables,        ONLY : okpaw, ddd_PAW
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u
-  USE control_flags,        ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only, ts_vdw
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
   USE esm,                  ONLY : do_comp_esm, esm_init
   USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
+  USE tsvdw_module,         ONLY : tsvdw_initialize
 #if defined(__BEOWULF)
   USE io_global,             ONLY : ionode, ionode_id
   USE qes_bcast_module       ONLY : qes_bcast
@@ -377,9 +379,15 @@ SUBROUTINE read_xml_file ( wfc_is_collected )
   !
   ! ... recalculate the potential
   !
+  IF ( ts_vdw) THEN
+     ! CALL tsvdw_initialize()
+     ! CALL set_h_ainv()
+     CALL infomsg('read_file_new','*** vdW-TS term will be missing in potential ***')
+     ts_vdw = .false.
+  END IF
+  !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
-  !
   !
   CALL qes_reset  ( output_obj )
   CALL qes_reset  ( geninfo_obj )

@@ -335,10 +335,10 @@ subroutine wfc_basis
 
              do ipol=0,npol-1
                 grids(1:dffts%nnr)=dble(cwfc(1+ipol*dffts%nnr:dffts%nnr+ipol*dffts%nnr))
-                call interpolate (gridd, grids, 1)
+                !call interpolate (gridd, grids, 1) FIXME: nonexistent
                 rwfc(1+ipol*dfftp%nnr:dfftp%nnr+ipol*dfftp%nnr,ii)=gridd(1:dfftp%nnr)
                 grids(1:dffts%nnr)=dimag(cwfc(1+ipol*dffts%nnr:dffts%nnr+ipol*dffts%nnr))
-                call interpolate (gridd, grids, 1)
+                !call interpolate (gridd, grids, 1) FIXME: nonexistent
                 rwfc(1+ipol*dfftp%nnr:dfftp%nnr+ipol*dfftp%nnr,ii)=rwfc(1+ipol*dfftp%nnr:dfftp%nnr+ipol*dfftp%nnr,ii)&
                      &+(0.d0,1.d0)*gridd(1:dfftp%nnr)
              enddo
@@ -425,10 +425,10 @@ subroutine wfc_basis
 
                 do ipol=0,npol-1
                    grids(1:dffts%nnr)=dble(cwfc(1+ipol*dffts%nnr:dffts%nnr+ipol*dffts%nnr))
-                   call interpolate (gridd, grids, 1)
+                   !call interpolate (gridd, grids, 1) FIXME: nonexistent
                    rwfc(1+ipol*dfftp%nnr:dfftp%nnr+ipol*dfftp%nnr,ii)=gridd(1:dfftp%nnr)
                    grids(1:dffts%nnr)=dimag(cwfc(1+ipol*dffts%nnr:dffts%nnr+ipol*dffts%nnr))
-                   call interpolate (gridd, grids, 1)
+                   !call interpolate (gridd, grids, 1) FIXME: nonexistent
                    rwfc(1+ipol*dfftp%nnr:dfftp%nnr+ipol*dfftp%nnr,ii)=rwfc(1+ipol*dfftp%nnr:dfftp%nnr+ipol*dfftp%nnr,ii)&
                         &+(0.d0,1.d0)*gridd(1:dfftp%nnr)
                 enddo
@@ -449,10 +449,10 @@ subroutine wfc_basis
 
                 do ipol=0,npol-1
                    grids(1:dffts%nnr)=dble(cwfc(1+ipol*dffts%nnr:dffts%nnr+ipol*dffts%nnr))
-                   call interpolate (gridd, grids, 1)
+                   !call interpolate (gridd, grids, 1) FIXME: nonexistent
                    rwfc(1+ipol*dfftp%nnr:dfftp%nnr+ipol*dfftp%nnr,jj)=gridd(1:dfftp%nnr)
                    grids(1:dffts%nnr)=dimag(cwfc(1+ipol*dffts%nnr:dffts%nnr+ipol*dffts%nnr))
-                   call interpolate (gridd, grids, 1)
+                   !call interpolate (gridd, grids, 1) FIXME: nonexistent
                    rwfc(1+ipol*dfftp%nnr:dfftp%nnr+ipol*dfftp%nnr,jj)=rwfc(1+ipol*dfftp%nnr:dfftp%nnr+ipol*dfftp%nnr,jj)&
                         &+(0.d0,1.d0)*gridd(1:dfftp%nnr)
                 enddo

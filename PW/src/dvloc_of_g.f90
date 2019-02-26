@@ -60,7 +60,6 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   ! In order to perform the Fourier transform, a term erf(r)/r is
   ! subtracted in real space and added again in G space
 
-  allocate (aux( mesh))    
   allocate (aux1( mesh))    
   !
   !   This is the part of the integrand function
@@ -69,6 +68,12 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   do i = 1, msh
      aux1 (i) = r (i) * vloc_at (i) + zp * e2 * qe_erf (r (i) )
   enddo
+  !
+!$omp parallel private(aux, gx, vlcp, g2a)
+  !
+  allocate (aux( mesh))
+  !
+!$omp do
   do igl = igl0, ngl
      gx = sqrt (gl (igl) * tpiba2)
      !
@@ -96,8 +101,11 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
      END IF
      dvloc (igl) = vlcp
   enddo
-  deallocate (aux1)
+!$omp end do nowait
   deallocate (aux)
+!$omp end parallel
+  !
+  deallocate (aux1)
 
   return
 end subroutine dvloc_of_g
