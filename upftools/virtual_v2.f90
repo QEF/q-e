@@ -86,9 +86,9 @@ PROGRAM virtual_test
           PRINT *, ierr
           CALL errore('virtual_test', 'reading pseudo upf', ierr)
        ENDIF
-       CLOSE (unit=iunps)
        PRINT '('' '')'
-
+       IF ( TRIM(upf(is)%typ) == 'PAW') CALL errore('virtual_v2.x: ', &
+                                                     'Use of PAW is not implemented', 1) 
      ENDDO
      ! CHECK Z-valence 
      IF ( upf(1)%zp /= upf(2)%zp ) WRITE (stdout, *) "CAUTION !!! "//& 
