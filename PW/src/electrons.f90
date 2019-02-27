@@ -51,6 +51,7 @@ SUBROUTINE electrons()
   USE paw_symmetry,         ONLY : PAW_symmetrize_ddd
   USE ions_base,            ONLY : nat
   USE loc_scdm,             ONLY : use_scdm, localize_orbitals
+  USE loc_scdm_k,           ONLY : localize_orbitals_k
   !
   USE wvfct_gpum,           ONLY : using_et, using_wg, using_wg_d
   USE scf_gpum,             ONLY : using_vrs
@@ -124,12 +125,16 @@ SUBROUTINE electrons()
            ! ... initialize stuff for exx
            first = .false.
            CALL exxinit(DoLoc)
-           IF( DoLoc ) CALL localize_orbitals( )
+           IF( DoLoc.and.gamma_only) THEN
+             CALL localize_orbitals( )
+           ELSE IF (DoLoc) THEN
+             CALL localize_orbitals_k( )
+           END IF 
            ! FIXME: ugly hack, overwrites exxbuffer from exxinit
            CALL seqopn (iunres, 'restart_exx', 'unformatted', exst)
            IF (exst) READ (iunres, iostat=ios) exxbuff
            IF (ios /= 0) WRITE(stdout,'(5x,"Error in EXX restart!")')
-           IF (use_ace) CALL aceinit ( )
+           IF (use_ace) CALL aceinit ( DoLoc )
            !
            CALL v_of_rho( rho, rho_core, rhog_core, &
                ehart, etxc, vtxc, eth, etotefield, charge, v)
@@ -189,9 +194,13 @@ SUBROUTINE electrons()
         ! then calculate exchange energy (will be useful at next step)
         !
         CALL exxinit(DoLoc)
-        IF( DoLoc ) CALL localize_orbitals( )
+        IF( DoLoc.and.gamma_only) THEN
+          CALL localize_orbitals( )
+        ELSE IF (DoLoc) THEN
+          CALL localize_orbitals_k( )
+        END IF 
         IF (use_ace) THEN
-           CALL aceinit ( ) 
+           CALL aceinit ( DoLoc ) 
            fock2 = exxenergyace()
         ELSE
            fock2 = exxenergy2()
@@ -225,8 +234,12 @@ SUBROUTINE electrons()
         ! Set new orbitals for the calculation of the exchange term
         !
         CALL exxinit(DoLoc)
-        IF( DoLoc ) CALL localize_orbitals( )
-        IF (use_ace) CALL aceinit ( fock3 )
+        IF( DoLoc.and.gamma_only) THEN
+          CALL localize_orbitals( )
+        ELSE IF (DoLoc) THEN
+          CALL localize_orbitals_k( )
+        END IF 
+        IF (use_ace) CALL aceinit ( DoLoc, fock3 )
         !
         ! fock2 is the exchange energy calculated for orbitals at step n,
         !       using orbitals at step n in the expression of exchange 
