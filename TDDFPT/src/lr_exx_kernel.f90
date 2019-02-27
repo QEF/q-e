@@ -39,7 +39,7 @@ MODULE lr_exx_kernel
   USE wavefunctions,          ONLY : psic
   USE cell_base,              ONLY : omega
   USE exx_base,               ONLY : g2_convolution
-  USE exx,                    ONLY : exxalfa, npwt, gt, dfftt
+  USE exx,                    ONLY : exxalfa, npwt, gt, dfftt 
 
 
   REAL(kind=dp),    PUBLIC, ALLOCATABLE :: revc_int(:,:)
@@ -72,7 +72,7 @@ CONTAINS
                            exx_div_check
      ! FIXME: are these variable useful?
      USE exx,       ONLY : fock0, exxenergy2, local_thr, use_ace
-     USE exx,       ONLY : exxinit, aceinit, exx_gvec_reinit
+     USE exx,       ONLY : exxinit, aceinit, exx_gvec_reinit 
 
      IMPLICIT NONE
      LOGICAL, INTENT(in) :: set_ace
@@ -89,9 +89,9 @@ CONTAINS
      CALL start_exx()
      CALL weights()
      ! FIXME: is this useful ?
-     IF(local_thr.gt.0.0d0) Call errore('exx_restart','SCDM with restart NYI',1)
+     IF(local_thr.gt.0.0d0) CALL errore('exx_restart','SCDM with restart NYI',1)
      CALL exxinit(.false.)
-     IF (use_ace) CALL aceinit ( )
+     IF (use_ace) CALL aceinit ( DOLOC = .FALSE. )
      ! FIXME: are these variable useful?
      fock0 = exxenergy2()
      !
