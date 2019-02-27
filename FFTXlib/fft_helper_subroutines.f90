@@ -350,21 +350,26 @@ CONTAINS
      !  c array: stores the Fourier expansion coefficients
      !     Loop for all local g-vectors (ngw)
      IF( PRESENT(ca) ) THEN
-        do ig = 1, desc%ngm
-           psi( desc%nlm( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ))
-           psi( desc%nl( ig ) ) = c( ig ) + ci * ca( ig )
-        end do
-     ELSE
-        IF( desc%ngm == desc%ngl( desc%mype + 1 ) ) THEN
-           DO ig = 1, desc%ngm
-              psi( desc%nl( ig ) ) = c( ig )
-           END DO
+        IF( desc%lgamma ) THEN
+           do ig = 1, desc%ngm
+              psi( desc%nlm( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ))
+              psi( desc%nl( ig ) ) = c( ig ) + ci * ca( ig )
+           end do
         ELSE
-           !  Gamma symmetry
+           do ig = 1, desc%ngm
+              psi( desc%nl( ig ) ) = c( ig ) + ci * ca( ig )
+           end do
+        END IF
+     ELSE
+        IF( desc%lgamma ) THEN
            do ig = 1, desc%ngm
               psi( desc%nlm( ig ) ) = CONJG( c( ig ) )
               psi( desc%nl( ig ) ) = c( ig )
            end do
+        ELSE
+           DO ig = 1, desc%ngm
+              psi( desc%nl( ig ) ) = c( ig )
+           END DO
         END IF
      END IF
   END SUBROUTINE

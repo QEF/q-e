@@ -6,10 +6,28 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 ! -----------------------------------------------------------------
-! This program reads the prefix.wfc in G-space written by QE and 
-! writes it in real space prefix.wfc_r.
+! This program reads wavefunctions in G-space written by QE,
+! re-writes then in real space
 ! Warning: The wfc is written out in real space on the smooth
 ! grid, as such it occupies much more disk space then that in G-space.
+!
+! input: a namelist like 
+! &inputpp
+!   prefix='MgB2',
+!   outdir='./tmp',
+! /
+! with "prefix" and "outdir" as in the scf/nscf/band calculation. 
+! A file "prefix".wfc_r1 will be created in "outdir" with wfcs in real space
+! The code prints on screen the dimension of the grid and of the wavefunctions
+
+! Other namelist variables
+! To select a subset of k-points and bands (by default, everything is written):
+!        * first_k
+!        * last_k
+!        * first_band
+!        * last_band
+! To create a file that is readable by octave (false by default):
+!        * loctave=.true.
 !
 ! Program written by Matteo Calandra.
 ! Modified by D. Ceresoli (2017)
@@ -20,13 +38,14 @@ PROGRAM wfck2r
   !
   USE kinds, ONLY : DP
   USE io_files,  ONLY : prefix, tmp_dir, diropn
-  USE mp_global, ONLY : npool, mp_startup,  intra_image_comm
-  USE wvfct,     ONLY : nbnd, npwx
-  USE klist,     ONLY : xk, nks, ngk, igk_k
+  USE wvfct,     ONLY : nbnd, npwx, et, wg
+  USE klist,     ONLY : xk, nks, ngk, igk_k, wk
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast, mp_barrier
-  USE mp_world,  ONLY : world_comm
-  USE wavefunctions_module, ONLY : evc
+  USE mp_global, ONLY : mp_startup
+  USE mp_images, ONLY : intra_image_comm
+  USE mp_pools,  ONLY : npool
+  USE wavefunctions, ONLY : evc
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE gvect, ONLY : ngm, g 
   USE noncollin_module, ONLY : npol, noncolin
@@ -34,7 +53,7 @@ PROGRAM wfck2r
   USE fft_base,  only : dffts
   USE scatter_mod,  only : gather_grid
   USE fft_interfaces, ONLY : invfft
-
+  USE ener, ONLY: efermi => ef
   !
   IMPLICIT NONE
   CHARACTER (len=256) :: outdir
@@ -44,9 +63,9 @@ PROGRAM wfck2r
   LOGICAL            :: exst
   COMPLEX(DP), ALLOCATABLE :: evc_r(:,:), dist_evc_r(:,:)
   INTEGER :: first_k, last_k, first_band, last_band
-  LOGICAL :: lmatlab
+  LOGICAL :: loctave
 
-  NAMELIST / inputpp / outdir, prefix, first_k, last_k, first_band, last_band, lmatlab
+  NAMELIST / inputpp / outdir, prefix, first_k, last_k, first_band, last_band, loctave
 
 
   !
@@ -83,13 +102,13 @@ PROGRAM wfck2r
   ! ... Broadcast variables
   !
 
-  CALL mp_bcast( tmp_dir, ionode_id, world_comm )
-  CALL mp_bcast( prefix, ionode_id, world_comm )
-  CALL mp_bcast( first_k, ionode_id, world_comm )
-  CALL mp_bcast( last_k, ionode_id, world_comm )
-  CALL mp_bcast( first_band, ionode_id, world_comm )
-  CALL mp_bcast( last_band, ionode_id, world_comm )
-  CALL mp_bcast( lmatlab, ionode_id, world_comm )
+  CALL mp_bcast( tmp_dir, ionode_id, intra_image_comm )
+  CALL mp_bcast( prefix, ionode_id, intra_image_comm )
+  CALL mp_bcast( first_k, ionode_id, intra_image_comm )
+  CALL mp_bcast( last_k, ionode_id, intra_image_comm )
+  CALL mp_bcast( first_band, ionode_id, intra_image_comm )
+  CALL mp_bcast( last_band, ionode_id, intra_image_comm )
+  CALL mp_bcast( loctave, ionode_id, intra_image_comm )
 
   !
   !   Now allocate space for pwscf variables, read and check them.
@@ -122,11 +141,44 @@ PROGRAM wfck2r
 !define lrwfcr
 !
   IF (ionode) CALL diropn (iuwfcr, filename, lrwfcr, exst)
-  IF (lmatlab .and. ionode) then
+  IF (loctave .and. ionode) then
      open(unit=iuwfcr+1, file='wfck2r.mat', status='unknown', form='formatted')
      write(iuwfcr+1,'(A)') '# created by wfck2r.x of Quantum-Espresso'
+     ! Fermi energy
+     write(iuwfcr+1,'("# name: ",A,/,"# type: scalar",/,E20.10,//)') 'efermi', efermi
+     ! k-points
      write(iuwfcr+1,'("# name: ",A,/,"# type: scalar",/,I4,//)') 'nkpoints', (last_k-first_k+1)
+     write(iuwfcr+1,'("# name: ",A,/,"# type: matrix")') 'xk'
+     write(iuwfcr+1,'("# rows: ",I5)') last_k-first_k+1
+     write(iuwfcr+1,'("# columns: ",I5)') 3
+     do ik = first_k, last_k
+        write(iuwfcr+1,'(E20.12)') (xk(i,ik), i=1,3)
+     enddo
+     write(iuwfcr+1,*)
+     write(iuwfcr+1,'("# name: ",A,/,"# type: matrix")') 'wk'
+     write(iuwfcr+1,'("# rows: ",I5)') last_k-first_k+1
+     write(iuwfcr+1,'("# columns: ",I5)') 1
+     do ik = first_k, last_k
+        write(iuwfcr+1,'(E20.12)') wk(ik)
+     enddo
+     write(iuwfcr+1,*)
+     ! bands
      write(iuwfcr+1,'("# name: ",A,/,"# type: scalar",/,I4,//)') 'nbands', (last_band-first_band+1)
+     write(iuwfcr+1,'("# name: ",A,/,"# type: matrix")') 'eigs'
+     write(iuwfcr+1,'("# rows: ",I5)') last_k-first_k+1
+     write(iuwfcr+1,'("# columns: ",I5)') last_band-first_band+1
+     do i = first_band, last_band
+        write(iuwfcr+1,'(E20.12)') (et(i,ik), ik=first_k,last_k)
+     enddo
+     write(iuwfcr+1,*)
+     write(iuwfcr+1,'("# name: ",A,/,"# type: matrix")') 'occup'
+     write(iuwfcr+1,'("# rows: ",I5)') last_k-first_k+1
+     write(iuwfcr+1,'("# columns: ",I5)') last_band-first_band+1
+     do i = first_band, last_band
+        write(iuwfcr+1,'(E20.12)') (wg(i,ik)/wk(ik), ik=first_k,last_k)
+     enddo
+     write(iuwfcr+1,*)
+     ! FFT mesh
      write(iuwfcr+1,'("# name: ",A,/,"# type: scalar",/,I3,//)') 'nr1x', dffts%nr1x
      write(iuwfcr+1,'("# name: ",A,/,"# type: scalar",/,I3,//)') 'nr2x', dffts%nr2x
      write(iuwfcr+1,'("# name: ",A,/,"# type: scalar",/,I3,//)') 'nr3x', dffts%nr3x
@@ -173,7 +225,8 @@ PROGRAM wfck2r
 #endif
 
         if (ionode) call davcio (dist_evc_r, lrwfcr, iuwfcr, (ik-1)*nbnd+ibnd, +1)
-        if (ionode .and. lmatlab) write(iuwfcr+1,'(E20.14,4X,E20.14)') (dist_evc_r(i,1), i=1,dffts%nr1x*dffts%nr2x*dffts%nr3x)
+        if (ionode .and. loctave) write(iuwfcr+1,'("(",E20.12,",",E20.12,")")') &
+                                  (dist_evc_r(i,1), i=1,dffts%nr1x*dffts%nr2x*dffts%nr3x)
      enddo
         
      !
@@ -183,7 +236,7 @@ PROGRAM wfck2r
   enddo
 
   if (ionode) close(iuwfcr)
-  if (lmatlab .and. ionode) close(iuwfcr+1)
+  if (loctave .and. ionode) close(iuwfcr+1)
   DEALLOCATE (evc_r)
 
   CALL environment_end ( 'WFCK2R' )

@@ -98,12 +98,13 @@ MODULE autopilot
   ! dynamically during the course of a simulation. There are many 
   ! parameters which govern a simulation, yet only these are allowed 
   ! to be changed using the event rule mechanism.
-  ! Each of these tables are ytped according to their variable 
+  ! Each of these tables are typed according to their variable 
   ! and begin with event_
 
   !     &CONTROL
   INTEGER   :: rule_isave(max_event_step)
   INTEGER   :: rule_iprint(max_event_step)
+  LOGICAL   :: rule_tprint(max_event_step)
   REAL(DP) :: rule_dt(max_event_step)
   !     &SYSTEM
 
@@ -111,6 +112,7 @@ MODULE autopilot
   REAL(DP)         :: rule_emass(max_event_step)
   CHARACTER(LEN=80) :: rule_electron_dynamics(max_event_step)
   REAL(DP)         :: rule_electron_damping(max_event_step)
+  CHARACTER(LEN=80) :: rule_electron_orthogonalization(max_event_step)
 
 
   !     &IONS
@@ -131,6 +133,7 @@ MODULE autopilot
   !     &CONTROL
   LOGICAL :: event_isave(max_event_step)           
   LOGICAL :: event_iprint(max_event_step)          
+  LOGICAL :: event_tprint(max_event_step)
   LOGICAL :: event_dt(max_event_step)              
   !     &SYSTEM
 
@@ -138,6 +141,7 @@ MODULE autopilot
   LOGICAL :: event_emass(max_event_step)   
   LOGICAL :: event_electron_dynamics(max_event_step)   
   LOGICAL :: event_electron_damping(max_event_step)
+  LOGICAL :: event_electron_orthogonalization(max_event_step)
 
   !     &IONS
   LOGICAL :: event_ion_dynamics(max_event_step)   
@@ -153,12 +157,18 @@ MODULE autopilot
   PRIVATE
   PUBLIC :: auto_check, init_autopilot, card_autopilot, add_rule, & 
        & assign_rule, restart_p, max_event_step, event_index, event_step, rule_isave, &
-       & rule_iprint, rule_dt, rule_emass, rule_electron_dynamics, rule_electron_damping, &
+       & rule_iprint, &
+       & rule_tprint, &
+       & rule_dt, rule_emass, rule_electron_dynamics, rule_electron_damping, &
        & rule_ion_dynamics, rule_ion_damping, rule_ion_temperature, rule_tempw, &
-       & event_isave, event_iprint, event_dt, event_emass, &
+       & rule_electron_orthogonalization, &
+       & event_isave, event_iprint, &
+       & event_tprint, &
+       & event_dt, event_emass, &
        & event_electron_dynamics, event_electron_damping, event_ion_dynamics, &
        & current_nfi, pilot_p, pilot_unit, pause_p,auto_error, parse_mailbox, &
-       & event_ion_damping, event_ion_temperature, event_tempw
+       & event_ion_damping, event_ion_temperature, event_tempw, &
+       & event_electron_orthogonalization
 
 CONTAINS
 
@@ -271,12 +281,15 @@ CONTAINS
     !     &CONTROL
     event_isave(:)            = .false.
     event_iprint(:)           = .false.
+    event_tprint(:)           = .false.
     event_dt(:)               = .false.
     !     &SYSTEM
     !     &ELECTRONS
     event_emass(:)             = .false.
     event_electron_dynamics(:) = .false.
     event_electron_damping(:)  = .false.
+    event_electron_orthogonalization(:) = .false.
+
 
     !     &IONS
     event_ion_dynamics(:)      = .false.
@@ -288,6 +301,7 @@ CONTAINS
 
     rule_isave(:)             = 0
     rule_iprint(:)            = 0
+    rule_tprint(:)            = .FALSE.
     rule_dt(:)                = 0.0_DP
     rule_emass(:)             = 0.0_DP
     rule_electron_dynamics(:) = 'NONE'
@@ -656,6 +670,7 @@ CONTAINS
     CHARACTER(LEN=32) :: var
     CHARACTER(LEN=32) :: value
     INTEGER   :: int_value
+    LOGICAL   :: logical_value
     REAL      :: real_value
     REAL(DP) :: realDP_value
     LOGICAL   :: assigned
@@ -682,6 +697,10 @@ CONTAINS
        read(value, *) int_value
        rule_iprint(event)  = int_value
        event_iprint(event) = .true.
+    ELSEIF ( matches( "TPRINT", var ) ) THEN
+       read(value, *) logical_value
+       rule_tprint(event)  = logical_value
+       event_tprint(event) = .true.
     ELSEIF ( matches( "DT", var ) ) THEN
        read(value, *) real_value
        rule_dt(event)  = real_value
@@ -693,8 +712,9 @@ CONTAINS
        event_emass(event) = .true.
     ELSEIF ( matches( "ELECTRON_DYNAMICS", var ) ) THEN
        read(value, *) value
-       if ((value .ne. 'SD') .and. (value .ne. 'VERLET') .and. (value .ne. 'DAMP') .and. (value .ne. 'NONE')) then
-          call auto_error(' autopilot ',' unknown electron_dynamics '//trim(value) )
+       if ((value .ne. 'SD') .and. (value .ne. 'VERLET') .and. (value .ne. 'DAMP') &
+         .and. (value .ne. 'NONE') .and. (value .ne. 'CG') ) then
+          call auto_error(' autopilot ',' unknown electron_dynamics '//trim(value) ) 
           assigned = .FALSE.
           go to 40
        endif
@@ -713,6 +733,15 @@ CONTAINS
        endif
        rule_ion_dynamics(event)  = value
        event_ion_dynamics(event) = .true.
+    ELSEIF ( matches( "ORTHOGONALIZATION", var) ) THEN
+       read(value, *) value
+       if ( (value .ne. 'ORTHO') .and. (value .ne. 'GRAM-SCHMIDT') ) then
+          call auto_error(' autopilot ',' unknown orthogonalization '//trim(value) )
+          assigned = .false.
+          go to 40
+       endif
+       rule_electron_orthogonalization(event) = value
+       event_electron_orthogonalization(event) = .true.
     ELSEIF ( matches( "ION_DAMPING", var ) ) THEN
        read(value, *) realDP_value
        rule_ion_damping(event)  = realDP_value

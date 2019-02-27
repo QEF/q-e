@@ -26,7 +26,7 @@ SUBROUTINE local_dos1d (ik, kband, plan)
   USE klist, ONLY: ngk, igk_k
   USE noncollin_module, ONLY: noncolin, npol
   USE spin_orb, ONLY: lspinorb, fcoef
-  USE wavefunctions_module,  ONLY: evc, psic, psic_nc
+  USE wavefunctions,  ONLY: evc, psic, psic_nc
   USE becmod, ONLY: bec_type, becp
   IMPLICIT NONE
   !

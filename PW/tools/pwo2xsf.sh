@@ -166,7 +166,7 @@ BEGIN {
   nat=0; 
   opt_coor_found=0; 
   error_status=0;
-  bohr=0.529177
+  bohr=0.52917720859
 }
 
 
@@ -344,7 +344,7 @@ function make_error(message,status) {
 
 
 BEGIN {
-  bohr=0.529177;
+  bohr=0.52917720859;
   istep=1;
   error_status=0;
   if (nvec>1 || (nvec==1 && ncoor==2)) {

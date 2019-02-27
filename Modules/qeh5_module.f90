@@ -1057,20 +1057,15 @@ END SUBROUTINE finalize_hdf5
      IF (ALLOCATED(dataspace%count ) ) DEALLOCATE (dataspace%count) 
      IF (ALLOCATED(dataspace%stride) ) DEALLOCATE (dataspace%stride) 
      IF (ALLOCATED(dataspace%block ) ) DEALLOCATE (dataspace%block) 
-     ALLOCATE ( dataspace%offset(rank), dataspace%count(rank), dataspace%stride(rank), dataspace%block(rank) )
+     ALLOCATE ( dataspace%offset(rank), dataspace%count(rank))
+     IF (PRESENT(block) ) ALLOCATE ( dataspace%block(rank))
+     IF (PRESENT(stride)) ALLOCATE ( dataspace%stride(rank)) 
+
      !
      dataspace%offset(1:rank) = offset(1:rank) * 1_HSIZE_T
      dataspace%count (1:rank) = count (1:rank) * 1_HSIZE_T   
-     IF (PRESENT(stride) )  THEN
-        dataspace%stride(1:rank) = stride(1:rank) * 1_HSIZE_T
-     ELSE 
-        dataspace%stride(1:rank)  =  1_HSIZE_T
-     END IF 
-     IF (PRESENT( block ) ) THEN 
-        dataspace%block (1:rank) = block (1:rank) * 1_HSIZE_T
-     ELSE 
-        dataspace%block (1:rank)  =  1_HSIZE_T
-     END IF
+     IF (PRESENT(stride) )  dataspace%stride(1:rank) = stride(1:rank) * 1_HSIZE_T
+     IF (PRESENT( block ) ) dataspace%block (1:rank) = block (1:rank) * 1_HSIZE_T
      CALL H5Sselect_hyperslab_f( dataspace%id,  H5S_SELECT_SET_F, dataspace%offset, dataspace%count, &
                                  ierr, dataspace%stride, dataspace%block )    
   END SUBROUTINE set_hyperslab

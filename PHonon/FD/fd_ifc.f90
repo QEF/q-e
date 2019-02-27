@@ -248,7 +248,7 @@ end do
 
 allocate (force0(3,natx))
 
-de=de/0.529177 ! de is read in A and used in bohr.
+de=de/bohr_radius_angs ! de is read in A and used in bohr.
 
 ! read forces for null displacements (residual)
 

@@ -19,7 +19,7 @@ SUBROUTINE solve_e
   USE gvect,     ONLY : g
   USE klist,     ONLY : xk, ngk
   USE wvfct,     ONLY : nbnd, npwx, g2kin, et
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE cgcom
   !
   IMPLICIT NONE

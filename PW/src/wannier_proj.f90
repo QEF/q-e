@@ -23,7 +23,7 @@ subroutine wannier_proj(ik, wan_func)
   USE basis,            ONLY : swfcatom
   USE control_flags,    ONLY : gamma_only
   USE uspp_param,       ONLY : upf 
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE gvect,                ONLY : gstart
   USE noncollin_module, ONLY : npol
   USE buffers,          ONLY : get_buffer, save_buffer

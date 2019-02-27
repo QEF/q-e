@@ -141,6 +141,7 @@ MODULE input
                                nstep_      => nstep
      USE control_flags, ONLY : tsde_          => tsde, &
                                tzeroe_        => tzeroe, &
+                               trescalee_     => trescalee, &
                                trhor_         => trhor, &
                                trhow_         => trhow, &
                                tksw_          => tksw,  &
@@ -175,7 +176,7 @@ MODULE input
      USE control_flags, ONLY : remove_rigid_rot_ => remove_rigid_rot
      USE control_flags, ONLY : iesr_ => iesr
      USE control_flags, ONLY : textfor
-     USE control_flags, ONLY : do_makov_payne, twfcollect
+     USE control_flags, ONLY : do_makov_payne
      USE control_flags, ONLY : lwf, lwfnscf, lwfpbe0nscf
      USE control_flags, ONLY : smallmem
      USE control_flags, ONLY : tconvthrs
@@ -240,7 +241,7 @@ MODULE input
      ! ... define memory- and disk-related internal switches
      !
      smallmem = ( TRIM( memory ) == 'small' )
-     twfcollect = wf_collect
+     IF (smallmem) CALL errore('init', "memory='small' no longer implemented",1)
      !
      ! Options for isolated system
      SELECT CASE( TRIM( assume_isolated ) )
@@ -468,6 +469,9 @@ MODULE input
           tzeroe_ = .FALSE.
         CASE ('zero')
           tzeroe_ = .TRUE.
+        CASE ('change_step')
+          tzeroe_=.FALSE.
+          trescalee_ = .TRUE.
         CASE DEFAULT
           CALL errore(' control_flags ',' unknown electron_velocities '//TRIM(electron_velocities), 1 )
       END SELECT

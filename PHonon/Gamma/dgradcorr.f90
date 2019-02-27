@@ -46,12 +46,12 @@ SUBROUTINE dgradcor1 (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
      CALL fft_gradient_g2r (dfft, drhoc(1, is), g, gdrho (1,1,is) )
   ENDDO
   DO k = 1, dfft%nnr
-     grho2 = grho(1, k, 1)**2 + grho(2, k, 1)**2 + grho(3, k, 1)**2
      IF (nspin==1) THEN
         !
         !    LDA case
         !
-        IF (abs (rho (k, 1) ) >epsr.and.grho2>epsg) THEN
+        grho2 = grho(1, k, 1)**2 + grho(2, k, 1)**2 + grho(3, k, 1)**2
+        IF (abs (rho (k, 1) ) >epsr .and. grho2>epsg ) THEN
            s1 = grho (1, k, 1) * gdrho (1, k, 1) + &
                 grho (2, k, 1) * gdrho (2, k, 1) + &
                 grho (3, k, 1) * gdrho (3, k, 1)
@@ -116,8 +116,7 @@ SUBROUTINE dgradcor1 (dfft, rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
         ENDDO
         DO is = 1, nspin
            DO js = 1, nspin
-              dvxc (k, is) = dvxc (k, is) + dvxc_rr (k, is, js) * drho (k, &
-                   js)
+              dvxc (k, is) = dvxc (k, is) + dvxc_rr (k, is, js) * drho (k, js)
               DO ipol = 1, 3
                  h (ipol, k, is) = h (ipol, k, is) + &
                       dvxc_s (k, is, js) * gdrho(ipol, k, js)

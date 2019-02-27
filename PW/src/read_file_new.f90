@@ -5,10 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__OLDXML)
-   SUBROUTINE read_file_dummy()
-   END SUBROUTINE read_file_dummy
-#else
 !----------------------------------------------------------------------------
 SUBROUTINE read_file()
   !----------------------------------------------------------------------------
@@ -30,16 +26,16 @@ SUBROUTINE read_file()
   USE dfunct,               ONLY : newd
   USE ldaU,                 ONLY : lda_plus_u, U_projection
   USE pw_restart_new,       ONLY : read_collected_to_evc
-  USE control_flags,        ONLY : twfcollect
-  USE io_files,             ONLY : tmp_dir, prefix
+  USE io_files,             ONLY : tmp_dir, prefix, postfix
   USE control_flags,        ONLY : io_level
   USE klist,                ONLY : init_igk
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : gcutw
-  !
+  USE qes_types_module,     ONLY : output_type
   IMPLICIT NONE 
+  TYPE ( output_type) :: output_obj 
   INTEGER :: ierr
-  LOGICAL :: exst
+  LOGICAL :: exst, wfc_is_collected
   CHARACTER( LEN=256 )  :: dirname
   !
   !
@@ -47,11 +43,11 @@ SUBROUTINE read_file()
   !
   ! ... Read the contents of the xml data file
   !
-  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/'
+  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // postfix
   IF ( ionode ) WRITE( stdout, '(/,5x,A,/,5x,A)') &
      'Reading data from directory:', TRIM( dirname )
   !
-  CALL read_xml_file ( )
+  CALL read_xml_file ( wfc_is_collected )
   !
   ! ... Open unit iunwfc, for Kohn-Sham orbitals - we assume that wfcs
   ! ... have been written to tmp_dir, not to a different directory!
@@ -67,7 +63,9 @@ SUBROUTINE read_file()
   !
   CALL init_igk ( npwx, ngm, g, gcutw ) 
   !
-  IF ( twfcollect )  CALL read_collected_to_evc ( TRIM ( dirname )) 
+  ! ... FIXME: this should be taken out from here
+  !
+  IF ( wfc_is_collected ) CALL read_collected_to_evc(dirname) 
   !
   ! ... Assorted initialization: pseudopotentials, PAW
   ! ... Not sure which ones (if any) should be done here
@@ -93,12 +91,7 @@ SUBROUTINE read_file()
 END SUBROUTINE read_file
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_xml_file_nobs ( )
-! wrapper, to be removed ASAP
-  CALL read_xml_file ( )
-END SUBROUTINE read_xml_file_nobs
-!----------------------------------------------------------------------------
-SUBROUTINE read_xml_file ( )
+SUBROUTINE read_xml_file ( wfc_is_collected )
   !----------------------------------------------------------------------------
   !
   ! ... This routine allocates space for all quantities already computed
@@ -108,7 +101,8 @@ SUBROUTINE read_xml_file ( )
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, nsp, ityp, tau, extfor
-  USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav
+  USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav, &
+                                   set_h_ainv
   USE force_mod,            ONLY : force
   USE klist,                ONLY : nkstot, nks, xk, wk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
@@ -121,18 +115,18 @@ SUBROUTINE read_xml_file ( )
   USE fft_types,            ONLY : fft_type_allocate
   USE recvec_subs,          ONLY : ggen, ggens
   USE gvect,                ONLY : gg, ngm, g, gcutm, mill, ngm_g, ig_l2g, &
-                                   eigts1, eigts2, eigts3, gstart
+                                   eigts1, eigts2, eigts3, gstart, gshells
   USE fft_base,             ONLY : dfftp, dffts
   USE gvecs,                ONLY : ngms, gcutms 
   USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
-  USE pw_restart_new,       ONLY :  pw_readschema_file, init_vars_from_schema 
-  USE qes_types_module,     ONLY :  output_type, parallel_info_type, general_info_type, input_type
-  USE qes_libs_module,      ONLY :  qes_reset_output, qes_reset_input, qes_reset_general_info, qes_reset_parallel_info 
+  USE pw_restart_new,       ONLY : pw_readschema_file, init_vars_from_schema 
+  USE qes_types_module,     ONLY : output_type, parallel_info_type, general_info_type, input_type
+  USE qes_libs_module,      ONLY : qes_reset
   USE io_rho_xml,           ONLY : read_scf
   USE fft_rho,              ONLY : rho_g2r
   USE read_pseudo_mod,      ONLY : readpp
@@ -141,19 +135,21 @@ SUBROUTINE read_xml_file ( )
   USE paw_variables,        ONLY : okpaw, ddd_PAW
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE ldaU,                 ONLY : lda_plus_u, eth, init_lda_plus_u
-  USE control_flags,        ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only, ts_vdw
   USE funct,                ONLY : get_inlc, get_dft_name
   USE kernel_table,         ONLY : initialize_kernel_table
   USE esm,                  ONLY : do_comp_esm, esm_init
   USE mp_bands,             ONLY : intra_bgrp_comm, nyfft
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_fact 
+  USE tsvdw_module,         ONLY : tsvdw_initialize
 #if defined(__BEOWULF)
   USE io_global,             ONLY : ionode, ionode_id
-  USE bcast_qes_types_module,ONLY : qes_bcast 
+  USE qes_bcast_module       ONLY : qes_bcast
   USE mp_images,             ONLY : intra_image_comm
 #endif
   !
   IMPLICIT NONE
+  LOGICAL, INTENT(OUT) :: wfc_is_collected
 
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr, inlc
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
@@ -178,6 +174,7 @@ SUBROUTINE read_xml_file ( )
   CALL pw_readschema_file ( ierr, output_obj, parinfo_obj, geninfo_obj, input_obj)
   IF ( ierr /= 0 ) CALL errore ( 'read_schema', 'unable to read xml file', ierr ) 
 #endif
+  wfc_is_collected = output_obj%band_structure%wf_collected
   ! ... first we get the version of the qexml file
   !     if not already read
   !
@@ -314,18 +311,17 @@ SUBROUTINE read_xml_file ( )
   !
   IF ( lda_plus_u ) THEN
      CALL init_lda_plus_u ( upf(1:nsp)%psd, noncolin )
+     CALL init_at_1()
   ENDIF
   !
   CALL allocate_wfc()
   !
   ! ... read the charge density
   !
-  CALL read_scf( rho, nspin )
-#if ! defined (__OLDXML)
+  CALL read_scf( rho, nspin, gamma_only )
   ! FIXME: for compatibility. rho was previously read and written in real space
   ! FIXME: now it is in G space - to be removed together with old format
   CALL rho_g2r ( dfftp, rho%of_g, rho%of_r )
-#endif
   !
   ! ... re-calculate the local part of the pseudopotential vltot
   ! ... and the core correction charge (if any) - This is done here
@@ -352,14 +348,20 @@ SUBROUTINE read_xml_file ( )
   !
   ! ... recalculate the potential
   !
+  IF ( ts_vdw) THEN
+     ! CALL tsvdw_initialize()
+     ! CALL set_h_ainv()
+     CALL infomsg('read_file_new','*** vdW-TS term will be missing in potential ***')
+     ts_vdw = .false.
+  END IF
+  !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
-  !
-  CALL qes_reset_output ( output_obj )  
-  CALL qes_reset_general_info ( geninfo_obj ) 
-  CALL qes_reset_parallel_info ( parinfo_obj ) 
-  IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset_input ( input_obj) 
+  CALL qes_reset  ( output_obj )
+  CALL qes_reset  ( geninfo_obj )
+  CALL qes_reset  ( parinfo_obj )
+  IF ( TRIM(input_obj%tagname) == "input") CALL qes_reset ( input_obj) 
   ! 
   RETURN
   !
@@ -397,4 +399,3 @@ SUBROUTINE read_xml_file ( )
     END SUBROUTINE set_dimensions
     !
   END SUBROUTINE read_xml_file
-#endif

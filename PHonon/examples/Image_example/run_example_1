@@ -90,6 +90,7 @@ if [ "$GP_COMMAND" = "" ]; then
 fi
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running ph.x with images as: $PH_IMAGE_COMMAND"
 $ECHO "  running ph.x as: $PH_COMMAND"
 $ECHO "  running q2r.x as:    $Q2R_COMMAND"
 $ECHO "  running matdyn.x as: $MATDYN_COMMAND"

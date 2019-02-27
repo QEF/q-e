@@ -5,11 +5,7 @@ include ../../make.inc
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
-          $(MOD_FLAG)../../KS_Solvers/Davidson \
-          $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../dft-d3/
-
-IFLAGS=
 
 NEBOBJS = \
 neb.o \
@@ -38,22 +34,22 @@ path_variables.o \
 set_defaults.o \
 stop_run_path.o 
 
-QEMODS=../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a ../../KS_Solvers/CG/libcg.a \
+QEMODS=../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
        ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 PWOBJS= ../../PW/src/libpw.a
 
-TLDEPS=bindir mods libs liblapack libblas pw
+TLDEPS=pwlibs
 
 all : tldeps neb.x path_interpolation.x
 
 neb.x : $(NEBOBJS) libneb.a $(LIBOBJS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	$(NEBOBJS) libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	$(NEBOBJS) libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin; ln -fs ../NEB/src/$@ . )
 
 path_interpolation.x : path_interpolation.o libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-	path_interpolation.o libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	path_interpolation.o libneb.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../NEB/src/$@ . )
 
 libneb.a : $(NEBLIBS)

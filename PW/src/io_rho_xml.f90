@@ -12,10 +12,7 @@ MODULE io_rho_xml
   !
   USE kinds,       ONLY : DP
   USE io_files,    ONLY : create_directory
-  USE xml_io_base, ONLY : write_rho, read_rho
-#if !defined (__OLDXML)
   USE io_base,     ONLY : write_rhog, read_rhog
-#endif
   !
   PRIVATE
   PUBLIC :: write_scf, read_scf
@@ -37,7 +34,7 @@ MODULE io_rho_xml
       USE cell_base,        ONLY : bg, tpiba
       USE gvect,            ONLY : ig_l2g, mill
       USE control_flags,    ONLY : gamma_only
-      USE io_files,         ONLY : seqopn, tmp_dir, prefix
+      USE io_files,         ONLY : seqopn, tmp_dir, prefix, postfix
       USE io_global,        ONLY : ionode, ionode_id, stdout
       USE mp_pools,         ONLY : my_pool_id
       USE mp_bands,         ONLY : my_bgrp_id, root_bgrp_id, &
@@ -55,8 +52,7 @@ MODULE io_rho_xml
       INTEGER :: nspin_, iunocc, iunpaw, ierr
       INTEGER, EXTERNAL :: find_free_unit
 
-      ! Use the equivalent routine to write real space density
-      dirname = TRIM(tmp_dir) // TRIM(prefix) // '.save/'
+      dirname = TRIM(tmp_dir) // TRIM(prefix) // postfix
       CALL create_directory( dirname )
       ! in the following case do not read or write polarization
       IF ( noncolin .AND. .NOT.domag ) THEN
@@ -64,14 +60,22 @@ MODULE io_rho_xml
       ELSE
          nspin_ = nspin
       ENDIF
-#if defined (__OLDXML)
-      CALL write_rho ( dirname, rho%of_r, nspin_ )
-#else
+      ! Write G-space density
       IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
-           CALL write_rhog( dirname, root_bgrp, intra_bgrp_comm, &
+           CALL write_rhog( TRIM(dirname) // "charge-density", &
+           root_bgrp, intra_bgrp_comm, &
            bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
            gamma_only, mill, ig_l2g, rho%of_g(:,1:nspin_) )
-#endif
+      !
+      ! Write kinetic energy density density
+      IF ( dft_is_meta() ) THEN 
+         IF ( my_pool_id == 0 .AND. my_bgrp_id == root_bgrp_id ) &
+              CALL write_rhog( TRIM(dirname) // "ekin-density", &
+              root_bgrp, intra_bgrp_comm, &
+              bg(:,1)*tpiba, bg(:,2)*tpiba, bg(:,3)*tpiba, &
+              gamma_only, mill, ig_l2g, rho%kin_g(:,1:nspin_) )
+         WRITE(stdout,'(5x,"Writing meta-gga kinetic term")')
+      ENDIF
 
       ! Then write the other terms to separate files
 
@@ -79,7 +83,8 @@ MODULE io_rho_xml
          !
          iunocc = find_free_unit ()
          IF ( ionode ) THEN
-            CALL seqopn( iunocc, 'save/occup.txt', 'FORMATTED', lexist )
+            ! postfix(2:6) = without the dot (seqopn already adds it)
+            CALL seqopn( iunocc, postfix(2:6)//'occup.txt', 'FORMATTED', lexist )
             if (noncolin) then
               WRITE( iunocc, * , iostat = ierr) rho%ns_nc
             else
@@ -98,7 +103,8 @@ MODULE io_rho_xml
          !
          iunpaw = find_free_unit ()
          IF ( ionode ) THEN
-            CALL seqopn( iunpaw, 'save/paw.txt', 'FORMATTED', lexist )
+            ! postfix(2:6) = without the dot (seqopn already adds it)
+            CALL seqopn( iunpaw, postfix(2:6)//'paw.txt', 'FORMATTED', lexist )
             WRITE( iunpaw, * , iostat = ierr) rho%bec
          END IF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
@@ -108,11 +114,6 @@ MODULE io_rho_xml
          ENDIF
          !
       END IF
-      !
-      IF ( dft_is_meta() ) THEN
-         WRITE(stdout,'(5x,"Writing meta-gga kinetic term")')
-          CALL write_rho ( dirname, rho%kin_r, nspin, 'kin' )
-      ENDIF
 
       RETURN
     END SUBROUTINE write_scf
@@ -126,7 +127,7 @@ MODULE io_rho_xml
       USE spin_orb,         ONLY : domag
       USE gvect,            ONLY : ig_l2g
       USE funct,            ONLY : dft_is_meta
-      USE io_files,         ONLY : seqopn, prefix, tmp_dir
+      USE io_files,         ONLY : seqopn, prefix, tmp_dir, postfix
       USE io_global,        ONLY : ionode, ionode_id, stdout
       USE mp_bands,         ONLY : root_bgrp, intra_bgrp_comm
       USE mp_images,        ONLY : intra_image_comm
@@ -142,21 +143,27 @@ MODULE io_rho_xml
       INTEGER :: nspin_, iunocc, iunpaw, ierr
       INTEGER, EXTERNAL :: find_free_unit
 
-      dirname = TRIM(tmp_dir) // TRIM(prefix) // '.save/'
+      dirname = TRIM(tmp_dir) // TRIM(prefix) // postfix
       ! in the following case do not read or write polarization
       IF ( noncolin .AND. .NOT.domag ) THEN
          nspin_=1
       ELSE
          nspin_=nspin
       ENDIF
-#if defined (__OLDXML)
-      CALL read_rho ( dirname, rho%of_r, nspin_ )
-#else
-      CALL read_rhog( dirname, root_bgrp, intra_bgrp_comm, &
+      ! read charge density
+      CALL read_rhog( TRIM(dirname) // "charge-density", &
+           root_bgrp, intra_bgrp_comm, &
            ig_l2g, nspin_, rho%of_g, gamma_only )
-#endif
       IF ( nspin > nspin_) rho%of_r(:,nspin_+1:nspin) = (0.0_dp, 0.0_dp)
       !
+      ! read kinetic energy density
+      IF ( dft_is_meta() ) THEN
+         CALL read_rhog( TRIM(dirname) // "ekin-density", &
+           root_bgrp, intra_bgrp_comm, &
+           ig_l2g, nspin_, rho%kin_g, gamma_only )
+         WRITE(stdout,'(5x,"Reading meta-gga kinetic term")')
+      END IF
+
       IF ( lda_plus_u ) THEN
          !
          ! The occupations ns also need to be read in order to build up
@@ -164,7 +171,8 @@ MODULE io_rho_xml
          !
          iunocc = find_free_unit ()
          IF ( ionode ) THEN
-            CALL seqopn( iunocc, 'save/occup.txt', 'FORMATTED', lexist )
+            ! postfix(2:6) = without the dot (seqopn already adds it)
+            CALL seqopn( iunocc, postfix(2:6)//'occup.txt', 'FORMATTED', lexist )
             if (noncolin) then
               READ( UNIT = iunocc, FMT = *, iostat = ierr ) rho%ns_nc
             else
@@ -198,7 +206,8 @@ MODULE io_rho_xml
          !
          iunpaw = find_free_unit ()
          IF ( ionode ) THEN
-            CALL seqopn( iunpaw, 'save/paw.txt', 'FORMATTED', lexist )
+            ! postfix(2:6) = without the dot (seqopn already adds it)
+            CALL seqopn( iunpaw, postfix(2:6)//'paw.txt', 'FORMATTED', lexist )
             READ( UNIT = iunpaw, FMT = *, iostat=ierr ) rho%bec
          END IF
          CALL mp_bcast( ierr, ionode_id, intra_image_comm )
@@ -212,11 +221,6 @@ MODULE io_rho_xml
          !
       END IF
       !
-      IF ( dft_is_meta() ) THEN
-         WRITE(stdout,'(5x,"Reading meta-gga kinetic term")')
-         CALL read_rho( dirname, rho%kin_r, nspin, 'kin' )
-      END IF
-
       RETURN
     END SUBROUTINE read_scf
     !

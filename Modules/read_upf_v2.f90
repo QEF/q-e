@@ -149,7 +149,7 @@ CONTAINS
       CALL destroy(u)
       !
       IF( present(ierr) ) ierr=0
-
+      !
       RETURN
 
 END SUBROUTINE read_upf_v2
@@ -161,7 +161,7 @@ SUBROUTINE read_upf_header(u, upf)
    INTEGER                     :: ierr, ios  ! /= 0 if something went wrong
    CHARACTER(len=256) :: dft_buffer     ! needed to allow the string defining the
                                         ! DFT flavor to be longer than upf%dft 
-                                        ! (currntly 25) without getting iotk upset. 
+                                        ! (currently 25)
                                         ! An error message is issued if trimmed 
                                         ! dft_buffer exceeds upf%dft size.
    INTEGER :: len_buffer
@@ -170,6 +170,11 @@ SUBROUTINE read_upf_header(u, upf)
    TYPE(Node), POINTER  :: hdrNode
    CHARACTER(LEN=256)   :: attr
    TYPE(DOMException)   :: ex 
+   !
+   ! GTH analytical format: obviously not true in this case
+   upf%is_gth=.false.
+   ! PP is assumed to be multi-projector
+   upf%is_multiproj=.true.
    !
    ! Read HEADER section with some initialization data
    hdrNode  => item( getElementsByTagname(u, 'PP_HEADER'), 0 )  
@@ -472,7 +477,6 @@ SUBROUTINE read_upf_header(u, upf)
       ! Read the hamiltonian terms D_ij
       locNode => item( getElementsByTagname(nlcNode, 'PP_DIJ'),0)    
       CALL extractDataContent(locNode, upf%dion)
-      !   CALL iotk_scan_attr(attr, 'non_zero_elements', upf%nd)
       !
       ! Read the augmentation charge section
       augmentation : &
@@ -644,7 +648,7 @@ SUBROUTINE read_upf_header(u, upf)
          IF ( hasAttribute(locNode, 'n')) THEN 
             CALL extractDataAttribute(locNode, 'n',             upf%nchi(nw)) 
          ELSE 
-             upf%nchi = upf%lchi(nw)-1 
+             upf%nchi(nw) = upf%lchi(nw)-1 
          END IF
          IF ( hasAttribute(locNode, 'pseudo_energy') ) THEN 
             CALL extractDataAttribute(locNode, 'pseudo_energy', upf%epseu(nw) ) 

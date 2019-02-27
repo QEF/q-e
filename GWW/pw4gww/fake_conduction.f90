@@ -36,7 +36,7 @@ CONTAINS
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE wvfct,    ONLY : g2kin, npwx, npw, nbnd, et, wg
    USE gvecw,    ONLY : ecutwfc
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_pools, ONLY : intra_pool_comm
    USE mp_world, ONLY: world_comm, mpime, nproc
@@ -1419,7 +1419,7 @@ subroutine fake_conduction_wannier_real( cutoff, s_cutoff )
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE wvfct,    ONLY : g2kin, npwx, npw, nbnd, et
    USE gvecw,    ONLY : ecutwfc
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
    USE mp_pools, ONLY : intra_pool_comm
@@ -2167,7 +2167,7 @@ end subroutine fake_conduction_wannier_real
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE wvfct,    ONLY : g2kin, npwx, npw, nbnd, et, wg
    USE gvecw,    ONLY : ecutwfc
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
    USE mp_pools, ONLY : intra_pool_comm

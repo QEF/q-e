@@ -77,7 +77,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter,&
   LOGICAL, INTENT(OUT) :: &
     conv          ! .true. if the convergence has been reached
 
-  type(scf_type), intent(in)    :: input_rhout
+  type(scf_type), intent(inout) :: input_rhout
   type(scf_type), intent(inout) :: rhoin
   !
   ! ... Here the local variables
@@ -328,39 +328,21 @@ SUBROUTINE approx_screening( drho )
   USE cell_base,     ONLY : omega, tpiba2
   USE gvect,         ONLY : gg, ngm
   USE klist,         ONLY : nelec
-  USE lsda_mod,      ONLY : nspin
   USE control_flags, ONLY : ngm0
   USE scf,           ONLY : mix_type
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   !
   IMPLICIT NONE  
   !
   type (mix_type), intent(INOUT) :: drho ! (in/out)
   !
-  REAL(DP) :: rrho, rmag, rs, agg0
-  INTEGER  :: ig, is
+  REAL(DP) :: rs, agg0
   !
   rs = ( 3.D0 * omega / fpi / nelec )**( 1.D0 / 3.D0 )
   !
   agg0 = ( 12.D0 / pi )**( 2.D0 / 3.D0 ) / tpiba2 / rs
   !
-  IF ( nspin == 1 .OR. nspin == 4 ) THEN
-     !
-     drho%of_g(:ngm0,1) =  drho%of_g(:ngm0,1) * gg(:ngm0) / (gg(:ngm0)+agg0)
-     !
-  ELSE IF ( nspin == 2 ) THEN
-     !
-     DO ig = 1, ngm0
-        !
-        rrho = ( drho%of_g(ig,1) + drho%of_g(ig,2) ) * gg(ig) / (gg(ig)+agg0)
-        rmag = ( drho%of_g(ig,1) - drho%of_g(ig,2) )
-        !
-        drho%of_g(ig,1) =  0.5D0*( rrho + rmag )
-        drho%of_g(ig,2) =  0.5D0*( rrho - rmag )
-        !
-     END DO
-     !
-  END IF
+  drho%of_g(:ngm0,1) =  drho%of_g(:ngm0,1) * gg(:ngm0) / (gg(:ngm0)+agg0)
   !
   RETURN
   !
@@ -376,9 +358,8 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE constants,            ONLY : e2, pi, tpi, fpi, eps8, eps32
   USE cell_base,            ONLY : omega, tpiba2
   USE gvect,                ONLY : gg, ngm
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE klist,                ONLY : nelec
-  USE lsda_mod,             ONLY : nspin
   USE control_flags,        ONLY : ngm0, gamma_only
   USE scf,                  ONLY : mix_type, local_tf_ddot
   USE mp,                   ONLY : mp_sum
@@ -396,7 +377,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   INTEGER :: &
     iwork(mmx), i, j, m, info, is
   REAL(DP) :: &
-    rs, avg_rsm1, target, dr2_best
+    avg_rsm1, target, dr2_best
   REAL(DP) :: &
     aa(mmx,mmx), invaa(mmx,mmx), bb(mmx), work(mmx), vec(mmx), agg0
   COMPLEX(DP), ALLOCATABLE :: &
@@ -408,24 +389,8 @@ SUBROUTINE approx_screening2( drho, rhobest )
   REAL(DP), ALLOCATABLE :: &
     alpha(:)     ! alpha(dffts%nnr)
   !
-  COMPLEX(DP)         :: rrho, rmag
   INTEGER             :: ir, ig
   REAL(DP), PARAMETER :: one_third = 1.D0 / 3.D0
-  !
-  !
-  IF ( nspin == 2 ) THEN
-     !
-     DO ig = 1, ngm0
-        !
-        rrho = drho%of_g(ig,1) + drho%of_g(ig,2)
-        rmag = drho%of_g(ig,1) - drho%of_g(ig,2)
-        !        
-        drho%of_g(ig,1) = rrho
-        drho%of_g(ig,2) = rmag
-        !
-     END DO
-     !
-  END IF
   !
   target = 0.D0
   !
@@ -435,50 +400,38 @@ SUBROUTINE approx_screening2( drho, rhobest )
   ALLOCATE( v( ngm0, mmx ), &
             w( ngm0, mmx ), dv( ngm0 ), vbest( ngm0 ), wbest( ngm0 ) )
   !
-  v(:,:)   = ZERO
-  w(:,:)   = ZERO
-  dv(:)    = ZERO
-  vbest(:) = ZERO
-  wbest(:) = ZERO
+  !$omp parallel
+     !
+     CALL threaded_barrier_memset(psic, 0.0_DP, dffts%nnr*2)
+     !$omp do
+     DO ig = 1, ngm0
+        psic(dffts%nl(ig)) = rhobest%of_g(ig,1)
+     ENDDO
+     !$omp end do nowait
+     !
+  !$omp end parallel
   !
   ! ... calculate alpha from density
   !
-  psic(:) = ZERO
-  !
-  IF ( nspin == 2 ) THEN
-     !
-     psic(dffts%nl(:ngm0)) = ( rhobest%of_g(:ngm0,1) + rhobest%of_g(:ngm0,2) )
-     !
-  ELSE
-     !
-     psic(dffts%nl(:ngm0)) = rhobest%of_g(:ngm0,1)
-     !
-  END IF
-  !
-  IF ( gamma_only ) psic(dffts%nlm(:ngm0)) = CONJG( psic(dffts%nl(:ngm0)) )
-  !
   CALL invfft ('Rho', psic, dffts)
-  !
-  alpha(:) = REAL( psic(1:dffts%nnr) )
   !
   avg_rsm1 = 0.D0
   !
+  !$omp parallel do reduction(+:avg_rsm1)
   DO ir = 1, dffts%nnr
-     !
-     alpha(ir) = ABS( alpha(ir) )
+     alpha(ir) = ABS( REAL( psic(ir) ) )
      !
      IF ( alpha(ir) > eps32 ) THEN
         !
-        rs        = ( 3.D0 / fpi / alpha(ir) )**one_third
-        avg_rsm1  = avg_rsm1 + 1.D0 / rs
-        alpha(ir) = rs
+        alpha(ir) = ( 3.D0 / fpi / alpha(ir) )**one_third
+        avg_rsm1  = avg_rsm1 + 1.D0 / alpha(ir)
         !
      END IF   
      !
+     alpha(ir) = 3.D0 * ( tpi / 3.D0 )**( 5.D0 / 3.D0 ) * alpha(ir)
+     !
   END DO
-  !
-  alpha = 3.D0 * ( tpi / 3.D0 )**( 5.D0 / 3.D0 ) * alpha
-  rs       = ( 3.D0 * omega / fpi / nelec )**one_third
+  !$omp end parallel do
   !
   CALL mp_sum( avg_rsm1 , intra_bgrp_comm )
   avg_rsm1 = ( dffts%nr1*dffts%nr2*dffts%nr3 ) / avg_rsm1
@@ -486,20 +439,39 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   ! ... calculate deltaV and the first correction vector
   !
-  psic(:) = ZERO
-  !
-  psic(dffts%nl(:ngm0)) = drho%of_g(:ngm0,1)
-  !
-  IF ( gamma_only ) psic(dffts%nlm(:ngm0)) = CONJG( psic(dffts%nl(:ngm0)) )
+  !$omp parallel
+     CALL threaded_barrier_memset(psic, 0.0_DP, dffts%nnr*2)
+     !$omp do
+     DO ig = 1, ngm0
+        psic(dffts%nl(ig)) = drho%of_g(ig,1)
+     ENDDO
+     !$omp end do nowait
+     !
+     IF ( gamma_only ) THEN
+        !$omp do
+        DO ig = 1, ngm0
+           psic(dffts%nlm(ig)) = CONJG( psic(dffts%nl(ig)) )
+        ENDDO
+        !$omp end do nowait
+     ENDIF
+  !$omp end parallel
   !
   CALL invfft ('Rho', psic, dffts)
   !
-  psic(:dffts%nnr) = psic(:dffts%nnr) * alpha(:)
+  !$omp parallel do
+  DO ir = 1, dffts%nnr
+     psic(ir) = psic(ir) * alpha(ir)
+  ENDDO
+  !$omp end parallel do
   !
   CALL fwfft ('Rho', psic, dffts)
   !
-  dv(:) = psic(dffts%nl(:ngm0)) * gg(:ngm0) * tpiba2
-  v(:,1)= psic(dffts%nl(:ngm0)) * gg(:ngm0) / ( gg(:ngm0) + agg0 )
+  !$omp parallel do
+  DO ig = 1, ngm0
+     dv(ig) = psic(dffts%nl(ig)) * gg(ig) * tpiba2
+     v(ig,1)= psic(dffts%nl(ig)) * gg(ig) / ( gg(ig) + agg0 )
+  ENDDO
+  !$omp end parallel do
   !
   m       = 1
   aa(:,:) = 0.D0
@@ -509,21 +481,41 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      ! ... generate the vector w
      !     
-     w(:,m) = fpi * e2 * v(:,m)
-     !
-     psic(:) = ZERO
-     !
-     psic(dffts%nl(:ngm0)) = v(:,m)
-     !
-     IF ( gamma_only ) psic(dffts%nlm(:ngm0)) = CONJG( psic(dffts%nl(:ngm0)) )
+     !$omp parallel
+        CALL threaded_barrier_memset(psic, 0.0_DP, dffts%nnr*2)
+        !$omp do
+        DO ig = 1, ngm0
+           !
+           w(ig,m) = fpi * e2 * v(ig,m)
+           !
+           psic(dffts%nl(ig)) = v(ig,m)
+        ENDDO
+        !$omp end do nowait
+        !
+        IF ( gamma_only ) THEN
+           !$omp do
+           DO ig = 1, ngm0
+              psic(dffts%nlm(ig)) = CONJG( psic(dffts%nl(ig)) )
+           ENDDO
+           !$omp end do nowait
+        ENDIF
+     !$omp end parallel
      !
      CALL invfft ('Rho', psic, dffts)
      !
-     psic(:dffts%nnr) = psic(:dffts%nnr) * alpha(:)
+     !$omp parallel do
+     DO ir = 1, dffts%nnr
+        psic(ir) = psic(ir) * alpha(ir)
+     ENDDO
+     !$omp end parallel do
      !
      CALL fwfft ('Rho', psic, dffts)
      !
-     w(:,m) = w(:,m) + gg(:ngm0) * tpiba2 * psic(dffts%nl(:ngm0))
+     !$omp parallel do
+     DO ig = 1, ngm0
+        w(ig,m) = w(ig,m) + gg(ig) * tpiba2 * psic(dffts%nl(ig))
+     ENDDO
+     !$omp end parallel do
      !
      ! ... build the linear system
      !
@@ -551,15 +543,23 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      FORALL( i = 1:m ) vec(i) = SUM( invaa(i,:)*bb(:) )
      !
-     vbest(:) = ZERO
-     wbest(:) = dv(:)
-     !
-     DO i = 1, m
+     !$omp parallel
+        !$omp do
+        DO ig = 1, ngm0
+           vbest(ig) = ZERO
+           wbest(ig) = dv(ig)
+        ENDDO
+        !$omp end do nowait
         !
-        vbest = vbest + vec(i) * v(:,i)
-        wbest = wbest - vec(i) * w(:,i)
-        !
-     END DO
+        DO i = 1, m
+           !$omp do
+           DO ig = 1, ngm0
+              vbest(ig) = vbest(ig) + vec(i) * v(ig,i)
+              wbest(ig) = wbest(ig) - vec(i) * w(ig,i)
+           ENDDO
+           !$omp end do nowait
+        END DO
+     !$omp end parallel
      !
      dr2_best = local_tf_ddot( wbest, wbest, ngm0 )
      !
@@ -567,21 +567,14 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      IF ( dr2_best < target ) THEN
         !
-        drho%of_g(:ngm0,1) = vbest(:)
-        !
-        IF ( nspin == 2 ) THEN
-           !
+        !$omp parallel
+           !$omp do
            DO ig = 1, ngm0
-              !
-              rrho = drho%of_g(ig,1)
-              rmag = drho%of_g(ig,2)
-              !
-              drho%of_g(ig,1) = 0.5D0 * ( rrho + rmag )
-              drho%of_g(ig,2) = 0.5D0 * ( rrho - rmag )
-              !
-           END DO
+              drho%of_g(ig,1) = vbest(ig)
+           ENDDO
+           !$omp end do nowait
            !
-        END IF
+        !$omp end parallel
         !
         DEALLOCATE( alpha, v, w, dv, vbest, wbest )
         !
@@ -591,7 +584,11 @@ SUBROUTINE approx_screening2( drho, rhobest )
         !
         m = 1
         !
-        v(:,m)  = vbest(:)
+        !$omp parallel do
+        DO ig = 1, ngm0
+           v(ig,m)  = vbest(ig)
+        ENDDO
+        !$omp end parallel do
         aa(:,:) = 0.D0
         bb(:)   = 0.D0
         !
@@ -601,7 +598,11 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      m = m + 1
      !
-     v(:,m) = wbest(:) / ( gg(:ngm0) + agg0 )
+     !$omp parallel do
+     DO ig = 1, ngm0
+        v(ig,m) = wbest(ig) / ( gg(ig) + agg0 )
+     ENDDO
+     !$omp end parallel do
      !
   END DO repeat_loop
   !

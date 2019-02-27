@@ -19,13 +19,14 @@ subroutine dvpsi_e2
   USE klist,           ONLY : wk, ngk
   USE gvecs,           ONLY : doublegrid
   USE wvfct,           ONLY : npwx, nbnd
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   USE buffers,         ONLY : get_buffer
   USE fft_base,        ONLY : dfftp, dffts
   USE fft_interfaces,  ONLY : fft_interpolate
   USE scf,             ONLY : rho
   USE qpoint,          ONLY : nksq
-  USE units_ph,        ONLY : lrdrho, iudrho, lrdwf, iudwf, lrwfc, iuwfc
+  USE units_ph,        ONLY : lrdrho, iudrho, lrdwf, iudwf
+  USE units_lr,        ONLY : iuwfc, lrwfc
   USE control_lr,      ONLY : nbnd_occ
   USE ramanm,          ONLY : lrba2, iuba2, lrchf, iuchf, a1j, a2j
   USE mp_pools,        ONLY : my_pool_id, inter_pool_comm

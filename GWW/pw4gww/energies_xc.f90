@@ -88,7 +88,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        !
        ! ... k-points version
        !
-       USE wavefunctions_module, ONLY : psic
+       USE wavefunctions, ONLY : psic
        USE becmod,  ONLY : becp
        !
        IMPLICIT NONE
@@ -111,13 +111,13 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        ! ... the local potential V_Loc psi. First the psi in real space
 !set exchange and correlation potential
           if(.not.allocated(psic)) write(stdout,*) 'psic not allocated'
+      !
        if (dft_is_meta()) then
 !         call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
       else
          CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vr )
       endif
-
-
+      !
        do is=1,nspin
           vrs(:,is)=vr(:,is)
           if(doublegrid) call fft_interpolate(dfftp, vrs(:,is),dffts,vrs(:,is)) ! interpolate from dense to smooth
@@ -206,7 +206,7 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
                                &l_scissor,scissor,num_nbndv,num_nbnds
       ! USE realus,  ONLY : adduspos_gamma_r
        USE wvfct,    ONLY : npwx,npw,nbnd, et,g2kin
-       USE wavefunctions_module, ONLY : evc
+       USE wavefunctions, ONLY : evc
        USE klist,                ONLY : xk
        USE mp, ONLY : mp_sum
        USE mp_world, ONLY : world_comm
@@ -357,14 +357,13 @@ SUBROUTINE energies_xc( lda, n, m, psi, e_xc, e_h,ispin )
        if(.not.allocated(vr)) write(stdout,*) 'vr not allocated'
        allocate(rho_fake_core(dfftp%nnr))
        rho_fake_core(:)=0.d0
-
+       !
        if (dft_is_meta()) then
       !    call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
        else
           CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, vr )
        endif
-
-
+       !
      deallocate(rho_fake_core)
 
 

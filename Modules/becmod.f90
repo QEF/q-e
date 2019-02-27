@@ -165,7 +165,7 @@ CONTAINS
     npwx= size (beta, 1)
     IF ( npwx /= size (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
     IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
-#ifdef DEBUG
+#if defined(DEBUG)
     WRITE (*,*) 'calbec gamma'
     WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 2)
 #endif
@@ -226,7 +226,7 @@ CONTAINS
     ELSE
         m = size ( psi, 2)
     ENDIF
-#ifdef DEBUG
+#if defined(DEBUG)
     WRITE (*,*) 'calbec k'
     WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 2)
 #endif
@@ -287,7 +287,7 @@ CONTAINS
         m = size ( psi, 2)
     ENDIF
     npol= size (betapsi, 2)
-#ifdef DEBUG
+#if defined(DEBUG)
     WRITE (*,*) 'calbec nc'
     WRITE (*,*)  nkb,  size (betapsi,1) , m , size (betapsi, 3)
 #endif

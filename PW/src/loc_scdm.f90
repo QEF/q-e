@@ -12,17 +12,25 @@ MODULE loc_scdm
   ! Variables and subroutines for localizing molecular orbitals based
   ! on a modified SCDM approach. Original SCDM method:
   ! A. Damle, L. Lin, L. Ying: J. Chem. Theory Comput. 2015, 11, 1463
+  ! Ivan Carnimeo: SCDM has been implemented with a parallel prescreening algorithm 
+  !                in order to save CPU time and memory for large grids 
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE exx,                  ONLY : dfftt, locbuff, locmat
+  USE exx,                  ONLY : dfftt, x_nbnd_occ, locbuff, locmat
+  USE exx_base,             ONLY : nkqs
 
   IMPLICIT NONE
   SAVE
   LOGICAL ::  use_scdm=.false. ! if .true. enable Lin Lin's SCDM localization
                                ! currently implemented only within ACE formalism
+  INTEGER, ALLOCATABLE :: fragments(:) ! fragment list for dipole moments 
   REAL(DP) :: scdm_den, scdm_grd 
-  REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Three=2.0d0
+  REAL(DP), PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Three=3.0d0
+  integer :: n_scdm
+  integer :: iscdm=0 ! counter for QRCP/SVD 
+  complex(DP), allocatable :: locbuff_G(:,:,:) ! buffer for localized orbitals in G-space
+                                               ! (MD only)
 
  CONTAINS
   !
@@ -31,32 +39,150 @@ MODULE loc_scdm
 SUBROUTINE localize_orbitals( )
   !
   ! Driver for SCDM orbital localization 
+  !         iscdm/nscdm ... control whether the localization is done via SCDM
+  !                         (QR decomposition) or with orbital alignment (SVD)
+  !         SCDM_PGG ... perform SCDM localization using the parallel
+  !                      prescreening algorithm
+  !         measure_localization ... compute the absolute overlap integrals 
+  !                                  required by vexx_loc in exx.f90 
+  !                                  and put them in locmat 
   !
-  USE noncollin_module,  ONLY : npol
-  USE wvfct,             ONLY : nbnd
-  USE control_flags,     ONLY : gamma_only
-  USE exx,               ONLY : x_occupation
-  USE exx_base,          ONLY : nkqs
+  USE noncollin_module,     ONLY : npol
+  USE wvfct,                ONLY : nbnd, npwx, current_k
+  USE exx,                  ONLY : x_occupation
+  USE wavefunctions,        ONLY : evc
+  USE lsda_mod,             ONLY : current_spin, lsda, isk
+  USE klist,                ONLY : nks, xk, ngk, igk_k
+  USE io_files,             ONLY : nwordwfc, iunwfc
+  USE buffers,              ONLY : get_buffer
+  USE control_flags,        ONLY : lmd
+  USE funct,                ONLY : dft_is_hybrid
   !   
   implicit none
-  integer :: NGrid, ikq, NBands
+  integer :: NGrid, ikq, NBands, npw
+  real(DP) :: tmp
+  real(DP), allocatable :: MatQ(:,:)
+  complex(DP), allocatable :: evcbuff(:,:), MatC(:,:)
   character(len=1) :: HowTo
+  Logical :: QRCP
   
-  if(.not.gamma_only) CALL errore('localize_orbitals', 'k-points NYI.',1)    
+  call start_clock('localization')
+
+  IF( lmd.and.(dft_is_hybrid()).and.(n_scdm.ne.1) ) &
+         Call errore('localize_orbitals','MD+exx+nscdm NYI',1)
+
+  QRCP = iscdm.eq.0.or.(mod(iscdm,n_scdm).eq.0) ! if .false. localize with SVD
+
+  write(stdout,'(A,I10,A)') 'QRCP every ',n_scdm, ' steps.'
+  write(stdout,'(A,I6,A,L)')  'localize_orbitals: iscdm=',iscdm,' QRCP=',QRCP
 
   NGrid = dfftt%nnr * npol
-  HowTo = 'G'  ! How to compute the absolute overlap integrals
+
+! HowTo = 'R'  ! Compute the absolute overlap integrals in R-space (exact but
+               ! EXTREMELY slow)
+  HowTo = 'G'  ! How to compute the absolute overlap integrals (approx but fast)
+
+  locmat = One ! initialized to one because the absolute overlaps between                         
+               ! occupied and virtual orbitals are assumed always large 
+               ! and all ov integrals will be computed by vexx_loc
+
+  IF(.not.allocated(locbuff_G)) allocate( locbuff_G(npwx*npol, nbnd ,nks) )
 
   DO ikq = 1, nkqs
+    npw = ngk (ikq)
+    current_k = ikq
     NBands = int(sum(x_occupation(:,ikq)))
+    allocate( MatQ(NBands,NBands), MatC(NBands,NBands), evcbuff(npwx*npol, nbnd)   )
+    IF ( lsda ) current_spin = isk(ikq) 
+    IF ( nks > 1 ) CALL get_buffer(evc, nwordwfc, iunwfc, ikq)
+    locmat(:,:,ikq) = One
+    CALL measure_localization(HowTo,NBands,ikq)  ! compute: 
+                                                 ! the matrix of absolute overlap integrals
+                                                 ! average spread of the localized functions
+!   Call AbsOv_histogram(ikq,NBands,'hist1.dat')
+    IF(QRCP) THEN 
+      CALL SCDM_PGG(locbuff(1,1,ikq), NGrid, NBands)  ! localization with SCDM in R-space
+      CALL wave_to_G(locbuff(1,1,ikq), locbuff_G(1,1,ikq), NGrid, NBands) ! bring the localized functions to G-space
+    END IF
+!   FROM HERE: align the orbitals in evc (step n) to the orbitals in locbuff_G (step n-1)
+!   MatQ contains the overlap between orbitals in evc and orbitals in locbuff_G  
+    Call matcalc ('<Psi2|W1>',   .false.,   0, npw, NBands, NBands, locbuff_G(1,1,ikq), evc, MatQ, tmp)
+    Call MatCheck(MatQ, NBands)  ! Orthonormalization check
+    Call PTSVD(MatQ, NBands)  ! SVD of MatQ
+    MatC = (One,Zero)*MatQ
+!   align the orbitals in evc rotating them with the unitary matrix in MatC 
+    Call ZGEMM('N','T',npw,NBands,NBands,One,evc,npw,MatC,NBands,Zero,evcbuff,npw) 
+    CALL matcalc('<W(t)|W(t)>-',.false.,0,npw,NBands,NBands,locbuff_G(1,1,ikq),evcbuff,MatQ,tmp)
+    Call MatCheck(MatQ, NBands) ! Orthonormalization check 
+!   TO HERE: align the orbitals in evc (step n) to the orbitals in locbuff_G (step n-1)
+
+!   IF(QRCP) just delete locbuff_G. 
+    IF(.not.QRCP) THEN  ! save locbuff_G for the next iteration  
+      CALL wave_to_R(evcbuff, locbuff(1,1,1), NGrid, NBands)
+      locbuff_G(1:npwx*npol,1:nbnd,ikq) = evcbuff  ! save the orbitals at step n for later use at step n+1
+    END IF
+    deallocate( MatQ, MatC, evcbuff )
+
     locmat(:,:,ikq) = One
     CALL measure_localization(HowTo,NBands,ikq)
-    CALL SCDM_PGG(locbuff(1,1,ikq), NGrid, NBands)
-    locmat(:,:,ikq) = One
-    CALL measure_localization(HowTo,NBands,ikq)
+!   Call AbsOv_histogram(ikq,NBands,'hist2.dat')
+
   END DO
 
+  iscdm = iscdm + 1 
+
+  call stop_clock('localization')
+
 END SUBROUTINE localize_orbitals
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE AbsOv_histogram(iik,n,filename) 
+!
+!  Print the distribution of absolute overlap integrals (as an histogram)
+!  in the range [0,1] with NHist intervals
+!  WARNING: HUGE amount of integrals, use only for VERY small systems
+!
+implicit none
+  character(len=*), INTENT(IN) :: filename
+  INTEGER, INTENT(IN) :: n, iik
+  INTEGER :: i,j,k, NHist
+  INTEGER,  ALLOCATABLE :: histogram(:)
+  REAL(DP), ALLOCATABLE :: XHist(:)
+  REAL(DP) :: xstart, xstep, integral
+  integer :: io_histogram
+  integer, external :: find_free_unit
+
+  NHist = 1000
+  xstep = One/float(NHist)
+  xstart = One/float(NHist)/Two
+  write(stdout,'(A,I7,2(A,f12.6))') 'NHist  = ', NHist , ' xstep = ', xstep, ' xstart = ', xstart
+  ALLOCATE(histogram(NHist),XHist(NHist))
+  XHist = Zero
+  histogram = 0
+  do k = 1, NHist 
+    XHist(k) = xstart + float(k-1)*xstep 
+  end do  
+  do i = 1, n 
+    do j = 1, n
+      integral = locmat(i,j,iik)
+      if(integral.lt.Zero) then 
+        Call errore('AbsOv_histogram','Abs. Ov. < 0 found.',1)
+      else
+        do k = 1, NHist 
+          IF(integral.ge.(XHist(k)-xstart).and.integral.lt.(XHist(k)+xstart)) &
+               histogram(k)=histogram(k)+1
+        end do 
+      end if 
+    end do 
+  end do 
+  io_histogram = find_free_unit()
+  open(io_histogram,file=filename,status='unknown')
+  do k = 1, NHist
+    write(io_histogram,'(f12.6,2I10)') XHist(k), histogram(k)
+  end do 
+  close(io_histogram)
+  DEALLOCATE(histogram,XHist)
+
+END SUBROUTINE AbsOv_histogram
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE measure_localization(CFlag, NBands, IKK) 
 USE noncollin_module,  ONLY : npol
@@ -80,9 +206,9 @@ implicit none
   ALLOCATE( Mat(NBands,NBands), CenterPBC(3,NBands) )
 
   IF(CFlag.eq.'R') then 
-    Call AbsOvR(NBands, IKK, Mat) 
-  ELSEIF(CFlag.eq.'G') then 
-    call AbsOvG(NBands, IKK, Mat) 
+    Call AbsOvR(NBands, IKK, Mat)  ! exact but slow
+  ELSEIF(CFlag.eq.'G') then     
+    call AbsOvG(NBands, IKK, Mat)  ! approx but fast (default)
   ELSE
     call errore('measure_localization','Wrong CFlag',1)
   END IF 
@@ -196,6 +322,7 @@ SUBROUTINE SCDM_PGG(psi, NGrid, NBands)
 USE mp_bands,          ONLY : nproc_bgrp
 !
 ! density matrix localization (I/O in psi)
+! (Gamma version)
 !
 IMPLICIT NONE
   INTEGER,  INTENT(IN)    :: NGrid, NBands
@@ -206,8 +333,6 @@ IMPLICIT NONE
   REAL(DP), ALLOCATABLE :: den(:), grad_den(:,:)
   INTEGER  :: nptot
   REAL(DP) :: ThrDen, ThrGrd
-
-  call start_clock('localization')
 
   write(stdout,'(5X,A)') ' ' 
   write(stdout,'(5X,A)') 'SCDM localization with prescreening'
@@ -254,8 +379,6 @@ IMPLICIT NONE
   deallocate( QRbuff, mat, pivot, list )
   write(stdout,'(7X,A)') 'SCDM-PGG done ' 
 
-  call stop_clock('localization')
-
 END SUBROUTINE SCDM_PGG
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE scdm_thresholds( den, grad_den, ThrDen, ThrGrd )
@@ -278,7 +401,6 @@ IMPLICIT NONE
 ! interpolate density to the exx grid
   allocate( temp(dfftp%nnr))
   temp(:) = rho%of_r(:,1)
-  IF ( nspin == 2 ) temp(:) = temp(:) + rho%of_r(:,2) 
   Call fft_interpolate(dfftp, temp, dfftt, den)
   deallocate( temp ) 
 
@@ -302,9 +424,9 @@ IMPLICIT NONE
   call mp_sum(charge,intra_bgrp_comm)
   call mp_max(DenMax,intra_bgrp_comm)
   DenAve = DenAve / dble(nxtot)
-  write(stdout,'(7x,A,f12.6)') 'Charge  = ', charge
-  write(stdout,'(7x,A,f12.6)') 'DenAve  = ', DenAve 
-  write(stdout,'(7x,A,f12.6)') 'DenMax  = ', DenMax 
+! write(stdout,'(7x,A,f12.6)') 'Charge  = ', charge
+! write(stdout,'(7x,A,f12.6)') 'DenAve  = ', DenAve 
+! write(stdout,'(7x,A,f12.6)') 'DenMax  = ', DenMax 
 
 ! gradient on the exx grid 
   call fft_gradient_r2r ( dfftt, den, gt, grad_den )
@@ -321,14 +443,14 @@ IMPLICIT NONE
   call mp_sum(charge,intra_bgrp_comm)
   call mp_max(GrdMax,intra_bgrp_comm)
   GrdAve = GrdAve / dble(nxtot)
-  write(stdout,'(7X,A,f12.6)') 'GradTot = ', charge
-  write(stdout,'(7X,A,f12.6)') 'GrdAve  = ', GrdAve 
-  write(stdout,'(7X,A,f12.6)') 'GrdMax  = ', GrdMax 
+! write(stdout,'(7X,A,f12.6)') 'GradTot = ', charge
+! write(stdout,'(7X,A,f12.6)') 'GrdAve  = ', GrdAve 
+! write(stdout,'(7X,A,f12.6)') 'GrdMax  = ', GrdMax 
 
   ThrDen = scdm_den * DenAve  
   ThrGrd = scdm_grd * GrdAve  
-  write(stdout,'(7x,2(A,f12.6))') 'scdm_den = ', scdm_den, ' scdm_grd = ',scdm_grd
-  write(stdout,'(7x,2(A,f12.6))') 'ThrDen   = ', ThrDen,   ' ThrGrd   = ',ThrGrd  
+! write(stdout,'(7x,2(A,f12.6))') 'scdm_den = ', scdm_den, ' scdm_grd = ',scdm_grd
+! write(stdout,'(7x,2(A,f12.6))') 'ThrDen   = ', ThrDen,   ' ThrGrd   = ',ThrGrd  
 
 END SUBROUTINE scdm_thresholds
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -391,8 +513,8 @@ IMPLICIT NONE
   call mp_sum(nptot,intra_bgrp_comm)
   if(nptot.le.0) call errore('SCDM_PGG', 'No points prescreened. Loose the thresholds', 1) 
   call mp_sum(cpu_npt,intra_bgrp_comm)
-  write(stdout,'(7X,2(A,I8))')  'Max npt = ', maxval(cpu_npt(:)), ' Min npt = ', minval(cpu_npt(:))
-  write(stdout,'(7X,2(A,I10))') 'Reduced matrix, allocate: ', nptot, ' out of ', dfftt%nr1x *dfftt%nr2x *dfftt%nr3x
+! write(stdout,'(7X,2(A,I8))')  'Max npt = ', maxval(cpu_npt(:)), ' Min npt = ', minval(cpu_npt(:))
+! write(stdout,'(7X,2(A,I10))') 'Reduced matrix, allocate: ', nptot, ' out of ', dfftt%nr1x *dfftt%nr2x *dfftt%nr3x
 
 END SUBROUTINE scdm_points
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -454,6 +576,76 @@ IMPLICIT NONE
   deallocate( tau, work, small )
 
 END SUBROUTINE scdm_prescreening
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE wave_to_R(psiG, psiR, NGrid, NBands) 
+USE cell_base,         ONLY : omega 
+USE kinds,             ONLY : DP
+USE fft_interfaces,    ONLY : fwfft, invfft
+USE wvfct,             ONLY : npwx
+USE exx,               ONLY : npwt
+implicit none
+  integer :: NGrid, NBands, ir, jbnd, ig
+  real(DP), intent(out) :: psiR(NGrid, NBands)
+  real(DP) :: tmp
+  complex(DP), intent(in) :: psiG(npwx, NBands)
+  complex(DP), allocatable :: buffer(:)
+  real(DP), allocatable :: Mat(:,:)
+
+  write(stdout,'(A)') 'Wave to R '
+
+! psiG functions to R-space 
+  allocate( buffer(NGrid) )
+  psiR = Zero
+  DO jbnd = 1, NBands 
+    buffer = (Zero,Zero)
+    DO ig=1,npwt
+       buffer(dfftt%nl (ig)) = psiG(ig,jbnd)
+       buffer(dfftt%nlm(ig)) = conjg( psiG(ig,jbnd) )
+    ENDDO
+    CALL invfft( 'Wave' , buffer, dfftt )
+    psiR(1:NGrid,jbnd) = dble(buffer(1:NGrid))
+  ENDDO
+  deallocate ( buffer )
+! allocate( buffer(NGrid), Mat(NBands,NBands) )
+! tmp = One/dble(NGrid)
+! CALL DGEMM( 'T' , 'N' , NBands, NBands, NGrid, tmp, PsiR, NGrid, PsiR, NGrid, Zero, Mat, NBands) 
+! Call MatPrt('check',NBands,NBands,MAt)
+! deallocate ( Mat )
+
+END SUBROUTINE wave_to_R 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE wave_to_G(psiR, psiG, NGrid, NBands) 
+USE noncollin_module,     ONLY : npol
+USE kinds,                ONLY : DP
+USE fft_interfaces,       ONLY : fwfft, invfft
+USE wvfct,                ONLY : npwx
+implicit none
+  integer :: NGrid, NBands, jbnd, ig
+  real(DP), intent(in) :: psiR(NGrid, NBands)
+  real(DP) :: tmp
+  complex(DP), intent(out) :: psiG(npwx*npol, NBands)
+  complex(DP), allocatable :: buffer(:)
+  real(DP), allocatable :: Mat(:,:)
+
+  write(stdout,'(A)') 'Wave to G '
+
+! psiR functions to G-space 
+  allocate( buffer(NGrid) )
+  buffer = (Zero,Zero)
+  psiG = (Zero,Zero) 
+  DO jbnd = 1, NBands 
+    buffer(:) = dble(psiR(:,jbnd)) + (Zero,One)*Zero
+    CALL fwfft( 'Wave' , buffer, dfftt )
+    DO ig = 1, npwx
+      psiG(ig,jbnd) = buffer(dfftt%nl(ig))
+    ENDDO
+  ENDDO
+  deallocate ( buffer )
+  allocate( Mat(NBands,NBands) )
+  CALL matcalc('Check',.true.,1,npwx,NBands,NBands,psiG,psiG,Mat,tmp)
+  deallocate ( Mat )
+
+END SUBROUTINE wave_to_G 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END MODULE loc_scdm 
 !-----------------------------------------------------------------------

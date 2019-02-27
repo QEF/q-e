@@ -38,6 +38,7 @@ MODULE us_exx
                                                ! two bands stored per stripe 
   COMPLEX(DP),ALLOCATABLE :: qgm(:,:)          ! used in addusxx_g and newdxx_g
                                                ! pre-computed projectors
+  INTEGER, ALLOCATABLE :: nij_type(:)             ! (ih,jh) pairs offset for all atom types
 
  CONTAINS ! ~~+~~---//--~~~-+
   !
@@ -86,8 +87,10 @@ MODULE us_exx
     !
     ! nij = number of (ih,jh) pairs for all atom types
     !
+    ALLOCATE( nij_type(ntyp) )
     nij = 0
     DO nt = 1, ntyp
+       nij_type(nt) = nij
        IF ( upf(nt)%tvanp ) nij = nij + (nh(nt)*(nh(nt)+1))/2
     END DO
     ALLOCATE ( qgm(ngms,nij) )
@@ -125,6 +128,7 @@ MODULE us_exx
   !-----------------------------------------------------------------------
     !
     DEALLOCATE (qgm)
+    DEALLOCATE (nij_type)
     !
   END SUBROUTINE qvan_clean
   !
@@ -166,6 +170,9 @@ MODULE us_exx
     COMPLEX(DP) :: becfac_c
     REAL(DP) :: arg, becfac_r
     LOGICAL :: add_complex, add_real, add_imaginary
+    ! cache blocking parameters
+    INTEGER, PARAMETER :: blocksize = 256
+    INTEGER :: iblock, numblock, realblocksize, offset
     !
     IF(.not.okvan) RETURN
     CALL start_clock( 'addusxx' )
@@ -185,7 +192,6 @@ MODULE us_exx
          ( add_imaginary.AND.(.NOT. PRESENT(becphi_r) .OR. .NOT. PRESENT(becpsi_r) ) ) )    &
        CALL errore('addusxx_g', 'called with incorrect arguments', 2 )
     !
-    ALLOCATE( aux1(ngms), aux2(ngms) )
     ALLOCATE(eigqts(nat))
     !
     DO na = 1, nat
@@ -193,14 +199,28 @@ MODULE us_exx
       eigqts(na) = CMPLX( COS(arg), -SIN(arg), kind=DP)
     END DO
     !
-    nij = 0
+    ! setting cache blocking size
+    numblock  = (ngms+blocksize-1)/blocksize
+    !
+    !$omp parallel private(aux1,aux2,nij,offset,realblocksize,ijkb0,ikb,jkb)
+    !
+    ALLOCATE( aux1(blocksize), aux2(blocksize) )
+    !
     DO nt = 1, ntyp
        !
        IF ( upf(nt)%tvanp ) THEN
           !
-          DO na = 1, nat
+          nij = nij_type(nt)
+          !
+          !$omp do
+          DO iblock = 1, numblock
              !
-             IF (ityp(na)==nt) THEN
+             DO na = 1, nat
+                !
+                IF (ityp(na).ne.nt) CYCLE
+                !
+                offset = (iblock-1)*blocksize
+                realblocksize = MIN(ngms-offset,blocksize)
                 !
                 ! ijkb0 points to the manifold of beta functions for atom na
                 !
@@ -213,75 +233,57 @@ MODULE us_exx
                    DO jh = 1, nh(nt)
                       jkb = ijkb0 + jh
                       IF ( add_complex ) THEN
-!$omp parallel do default(shared) private(ig)
-                         DO ig = 1, ngms
-                            aux1(ig) = aux1(ig) + qgm(ig,nij+ijtoh(ih,jh,nt)) * &
-                                 becpsi_c(jkb)
-                         ENDDO
-!$omp end parallel do
+                         aux1(1:realblocksize) = aux1(1:realblocksize) &
+                                               + qgm(offset+1:offset+realblocksize,nij+ijtoh(ih,jh,nt)) &
+                                                 * becpsi_c(jkb)
                       ELSE
-!$omp parallel do default(shared) private(ig)
-                         DO ig = 1, ngms
-                            aux1(ig) = aux1(ig) + qgm(ig,nij+ijtoh(ih,jh,nt)) * &
-                                 becpsi_r(jkb)
-                         ENDDO
-!$omp end parallel do
+                         aux1(1:realblocksize) = aux1(1:realblocksize) &
+                                               + qgm(offset+1:offset+realblocksize,nij+ijtoh(ih,jh,nt)) &
+                                                 * becpsi_r(jkb)
                       END IF
                    END DO
                    IF ( add_complex ) THEN
-!$omp parallel do default(shared) private(ig)
-                      DO ig = 1,ngms
-                         aux2(ig) = aux2(ig) + aux1(ig) * CONJG(becphi_c(ikb))
-                      ENDDO
-!$omp end parallel do
+                      aux2(1:realblocksize) = aux2(1:realblocksize) &
+                                            + aux1(1:realblocksize) * CONJG(becphi_c(ikb))
                    ELSE
-!$omp parallel do default(shared) private(ig)
-                      DO ig = 1,ngms
-                         aux2(ig) = aux2(ig) + aux1(ig) * becphi_r(ikb)
-                      ENDDO
-!$omp end parallel do
+                      aux2(1:realblocksize) = aux2(1:realblocksize) &
+                                            + aux1(1:realblocksize) * becphi_r(ikb)
                    END IF
                 END DO
-!$omp parallel do default(shared) private(ig)
-                DO ig = 1, ngms
-                   aux2(ig) = aux2(ig) * eigqts(na) * &
-                                 eigts1 (mill (1,ig), na) * &
-                                 eigts2 (mill (2,ig), na) * &
-                                 eigts3 (mill (3,ig), na)
-                ENDDO
-!$omp end parallel do
+                !
+                aux2(1:realblocksize) = aux2(1:realblocksize) * eigqts(na) * &
+                              eigts1 (mill (1,offset+1:offset+realblocksize), na) * &
+                              eigts2 (mill (2,offset+1:offset+realblocksize), na) * &
+                              eigts3 (mill (3,offset+1:offset+realblocksize), na)
                 IF ( add_complex ) THEN
-                   DO ig = 1, ngms
-                      rhoc(dfftt%nl(ig)) = rhoc(dfftt%nl(ig)) + aux2(ig)
-                   END DO
+                   rhoc(dfftt%nl(offset+1:offset+realblocksize)) = rhoc(dfftt%nl(offset+1:offset+realblocksize)) &
+                                                                 + aux2(1:realblocksize)
                 ELSE IF ( add_real ) THEN
-                   DO ig = 1, ngms
-                      rhoc(dfftt%nl(ig)) = rhoc(dfftt%nl(ig)) + aux2(ig)
-                   ENDDO
-                   DO ig = gstart, ngms
-                      rhoc(dfftt%nlm(ig)) = rhoc(dfftt%nlm(ig)) &
-                                               + CONJG(aux2(ig))
-                   ENDDO
+                   rhoc(dfftt%nl(offset+1:offset+realblocksize)) = rhoc(dfftt%nl(offset+1:offset+realblocksize)) &
+                                                                 + aux2(1:realblocksize)
+                   IF ( gstart==2 .AND. iblock==1 ) aux2(1) = (0.0_dp,0.0_dp)
+                   rhoc(dfftt%nlm(offset+1:offset+realblocksize)) = rhoc(dfftt%nlm(offset+1:offset+realblocksize)) &
+                                                                  + CONJG(aux2(1:realblocksize))
                 ELSE IF ( add_imaginary ) THEN
-                   DO ig = 1, ngms
-                      rhoc(dfftt%nl(ig)) = rhoc(dfftt%nl(ig)) &
-                                              + (0.0_dp,1.0_dp) * aux2(ig)
-                   ENDDO
-                   DO ig = gstart, ngms
-                      rhoc(dfftt%nlm(ig)) = rhoc(dfftt%nlm(ig)) &
-                                             + (0.0_dp,1.0_dp)* CONJG(aux2(ig))
-                   ENDDO
+                   rhoc(dfftt%nl(offset+1:offset+realblocksize)) = rhoc(dfftt%nl(offset+1:offset+realblocksize)) &
+                                                                 + (0.0_dp,1.0_dp) * aux2(1:realblocksize)
+                   IF ( gstart==2 .AND. iblock==1 ) aux2(1) = (0.0_dp,0.0_dp)
+                   rhoc(dfftt%nlm(offset+1:offset+realblocksize)) = rhoc(dfftt%nlm(offset+1:offset+realblocksize)) &
+                                                                  + (0.0_dp,1.0_dp)* CONJG(aux2(1:realblocksize))
                 ENDIF
-             ENDIF
-          ENDDO   ! nat
-          !
-          nij = nij + (nh(nt)*(nh(nt)+1))/2
+             ENDDO ! nat
+          ENDDO   ! block
+          !$omp end do nowait
           !
        END IF
        !
     ENDDO   ! nt
     !
-    DEALLOCATE( eigqts, aux2, aux1)
+    DEALLOCATE( aux2, aux1 )
+    !
+    !$omp end parallel
+    !
+    DEALLOCATE( eigqts )
     !
     CALL stop_clock( 'addusxx' )
     !
@@ -327,7 +329,7 @@ MODULE us_exx
     CHARACTER(LEN=1), INTENT(IN) :: flag
     !
     ! ... local variables
-    INTEGER :: ngms, ig, ikb, jkb, ijkb0, ih, jh, na, nt, nij
+    INTEGER :: ngms, ig, ikb, jkb, ijkb0, ih, jh, na, ina, nt, nij
     REAL(DP) :: fact
     COMPLEX(DP), EXTERNAL :: zdotc
     !
@@ -336,6 +338,9 @@ MODULE us_exx
     COMPLEX(DP) :: fp, fm
     REAL(DP) :: arg
     LOGICAL :: add_complex, add_real, add_imaginary
+    ! cache blocking parameters
+    INTEGER, PARAMETER :: blocksize = 256
+    INTEGER :: iblock, numblock, realblocksize, offset
     !
     IF(.not.okvan) RETURN
     !
@@ -356,7 +361,7 @@ MODULE us_exx
     !
     CALL start_clock( 'newdxx' )
     !
-    ALLOCATE(aux1(ngms), aux2(ngms), auxvc( ngms))
+    ALLOCATE( auxvc(ngms) )
     ALLOCATE(eigqts(nat))
     !
     DO na = 1, nat
@@ -368,7 +373,6 @@ MODULE us_exx
     ! select real or imaginary part if so desired
     ! fact=2 to account for G and -G components
     !
-    auxvc = (0._dp, 0._dp)
     IF ( add_complex ) THEN
        auxvc(1:ngms) = vc(dfftt%nl(1:ngms) )
        fact=omega
@@ -388,63 +392,68 @@ MODULE us_exx
        fact=2.0_dp*omega
     END IF 
     !
-    nij = 0
-    DO nt = 1, ntyp
-       !
-       IF ( upf(nt)%tvanp ) THEN
-          !
-          DO na = 1, nat
-             !
-             IF (ityp(na)==nt) THEN
-                !
-                ! ijkb0 points to the manifold of beta functions for atom na
-                !
-                ijkb0 = indv_ijkb0(na) 
-                !
-!$omp parallel do default(shared) private(ig)
-                DO ig = 1, ngms
-                   aux2(ig) = CONJG( auxvc(ig) ) * eigqts(na) * &
-                              eigts1(mill(1,ig), na) * &
-                              eigts2(mill(2,ig), na) * &
-                              eigts3(mill(3,ig), na)
-                END DO
-!$omp end parallel do
-                DO ih = 1, nh(nt)
-                   ikb = ijkb0 + ih
-                   aux1(:) = (0.0_dp, 0.0_dp)
-                   DO jh = 1, nh(nt)
-                      jkb = ijkb0 + jh
-                      IF ( gamma_only ) THEN
-!$omp parallel do default(shared) private(ig)
-                         DO ig = 1, ngms
-                            aux1(ig) = aux1(ig) + becphi_r(jkb) * &
-                                 CONJG( qgm(ig,nij+ijtoh(ih,jh,nt)) )
-                         ENDDO
-!$omp end parallel do
-                      ELSE
-!$omp parallel do default(shared) private(ig)
-                         DO ig = 1, ngms
-                            aux1(ig) = aux1(ig) + becphi_c(jkb) * &
-                                 CONJG( qgm(ig,nij+ijtoh(ih,jh,nt)) )
-                         ENDDO
-!$omp end parallel do
-                      END IF
-                   END DO
-                   !
-                   deexx(ikb) = deexx(ikb) + fact*zdotc(ngms, aux2, 1, aux1, 1)
-                   IF( gamma_only .AND. gstart == 2 ) &
-                        deexx(ikb) =  deexx(ikb) - omega*CONJG (aux2(1))*aux1(1)
-                ENDDO
-             ENDIF
-             !
-          ENDDO  ! nat
-          !
-          nij = nij + (nh(nt)*(nh(nt)+1))/2
-          !
-       END IF
-    ENDDO
+    ! setting cache blocking size
+    numblock  = (ngms+blocksize-1)/blocksize
     !
-    DEALLOCATE( eigqts, auxvc, aux2, aux1)
+    !$omp parallel private(aux1,aux2,nij,offset,realblocksize,ijkb0,ikb,jkb,nt)
+    !
+    ALLOCATE( aux1(blocksize), aux2(blocksize) )
+    !
+    ! Note: cache blocking is more efficient when atoms are grouped by specie (see history)
+    ! However, it requires atom sorting info available in ion_base which requires consistent fixing.
+    !
+    DO iblock = 1, numblock
+       !
+       offset = (iblock-1)*blocksize
+       realblocksize = MIN(ngms-offset,blocksize)
+       !
+       !$omp do
+       DO na = 1, nat
+          !
+          nt = ityp(na)
+          !
+          IF ( upf(nt)%tvanp ) THEN
+             !
+             nij = nij_type(nt)
+             !
+             ! ijkb0 points to the manifold of beta functions for atom na
+             !
+             ijkb0 = indv_ijkb0(na)
+             !
+             aux2(1:realblocksize) = CONJG( auxvc(offset+1:offset+realblocksize) ) * eigqts(na) * &
+                        eigts1(mill(1,offset+1:offset+realblocksize), na) * &
+                        eigts2(mill(2,offset+1:offset+realblocksize), na) * &
+                        eigts3(mill(3,offset+1:offset+realblocksize), na)
+             DO ih = 1, nh(nt)
+                ikb = ijkb0 + ih
+                aux1(:) = (0.0_dp, 0.0_dp)
+                DO jh = 1, nh(nt)
+                   jkb = ijkb0 + jh
+                   IF ( gamma_only ) THEN
+                      aux1(1:realblocksize) = aux1(1:realblocksize) + becphi_r(jkb) * &
+                           CONJG( qgm(offset+1:offset+realblocksize,nij+ijtoh(ih,jh,nt)) )
+                   ELSE
+                      aux1(1:realblocksize) = aux1(1:realblocksize) + becphi_c(jkb) * &
+                           CONJG( qgm(offset+1:offset+realblocksize,nij+ijtoh(ih,jh,nt)) )
+                   END IF
+                END DO
+                !
+                deexx(ikb) = deexx(ikb) + fact*zdotc(realblocksize, aux2, 1, aux1, 1)
+                IF( gamma_only .AND. gstart == 2 .AND. iblock == 1 ) &
+                     deexx(ikb) =  deexx(ikb) - omega*CONJG (aux2(1))*aux1(1)
+             ENDDO
+          ENDIF
+          !
+       ENDDO ! nat
+       !$omp end do nowait
+       !
+    ENDDO ! block
+    !
+    DEALLOCATE( aux2, aux1 )
+    !
+    !$omp end parallel
+    !
+    DEALLOCATE( eigqts, auxvc )
     CALL stop_clock( 'newdxx' )
     !
     RETURN

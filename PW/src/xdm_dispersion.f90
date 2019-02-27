@@ -21,6 +21,9 @@ module xdm_module
   PUBLIC :: stress_xdm  ! fetch the stresses calculated by energy_xdm
   PUBLIC :: cleanup_xdm ! deallocate arrays
 
+  ! is this a PAW calculation?
+  LOGICAL :: ispaw
+  
   ! atomic environments
   INTEGER :: nenv
   REAL(DP), ALLOCATABLE :: xenv(:,:)
@@ -40,9 +43,9 @@ module xdm_module
   ! have moments been computed before?
   LOGICAL :: saved = .FALSE.
 
-  ! a1 and a2 coefficients, with defaults for pw86pbe
-  REAL(DP) :: a1i = 0.6836_DP
-  REAL(DP) :: a2i = 1.5045_DP
+  ! a1 and a2 coefficients
+  REAL(DP) :: a1i = 0.0_DP
+  REAL(DP) :: a2i = 0.0_DP
 
   ! radial atomic densities
   REAL(DP), ALLOCATABLE :: rfree(:,:), w2free(:,:), rmaxg2(:)
@@ -84,8 +87,9 @@ CONTAINS
     INTEGER :: i, j, ialloc, nn
     REAL(DP), ALLOCATABLE :: d1y(:), d2y(:)
 
-    IF ( .NOT. ALL (upf(1:ntyp)%tpawp) ) &
-       CALL errore("init_xdm","XDM only implemented for PAW",1)
+    CALL start_clock('init_xdm')
+
+    ispaw = ALL(upf(1:ntyp)%tpawp)
 
     ! allocate c6, etc.
     ALLOCATE(cx(nat,nat,2:4),rvdw(nat,nat),STAT=ialloc)
@@ -108,24 +112,34 @@ CONTAINS
     IF (ialloc /= 0) CALL alloc_failed("rcore")
     DO i = 1, ntyp
        nn = msh(i)
-       rfree(1:nn,i) = upf(i)%rho_at(1:nn) / (fpi*rgrid(i)%r(1:nn)**2) + upf(i)%paw%ae_rho_atc(1:nn)
+       IF (ispaw) THEN
+          rfree(1:nn,i) = upf(i)%rho_at(1:nn) / (fpi*rgrid(i)%r(1:nn)**2) + upf(i)%paw%ae_rho_atc(1:nn)
+       ELSE
+          rfree(1:nn,i) = upf(i)%rho_at(1:nn) / (fpi*rgrid(i)%r(1:nn)**2)
+       END IF
        CALL radial_gradient(rfree(1:nn,i),d1y(1:nn),rgrid(i)%r(1:nn),nn,1)
        CALL radial_gradient(d1y(1:nn),d2y(1:nn),rgrid(i)%r(1:nn),nn,1)
        CALL spline(rgrid(i)%r(1:nn),rfree(1:nn,i),d1y(1),d2y(1),w2free(1:nn,i))
        rmaxg2(i) = rgrid(i)%r(nn)**2
 
-       rcore(1:nn,i) = upf(i)%paw%ae_rho_atc(1:nn)
-       CALL radial_gradient(rcore(1:nn,i),d1y(1:nn),rgrid(i)%r(1:nn),nn,1)
-       CALL radial_gradient(d1y(1:nn),d2y(1:nn),rgrid(i)%r(1:nn),nn,1)
-       CALL spline(rgrid(i)%r(1:nn),rcore(1:nn,i),d1y(1),d2y(1),w2core(1:nn,i))
-       if (rcore(1,i) > 1e-8_DP) then
-          DO j = nn, 1, -1
-             IF (rcore(j,i) > 1e-8_DP) EXIT
-          END DO
-       else
-          j = 1
-       end if
-       rmaxcore2(i) = rgrid(i)%r(j)**2
+       IF (ispaw) THEN
+          rcore(1:nn,i) = upf(i)%paw%ae_rho_atc(1:nn)
+          CALL radial_gradient(rcore(1:nn,i),d1y(1:nn),rgrid(i)%r(1:nn),nn,1)
+          CALL radial_gradient(d1y(1:nn),d2y(1:nn),rgrid(i)%r(1:nn),nn,1)
+          CALL spline(rgrid(i)%r(1:nn),rcore(1:nn,i),d1y(1),d2y(1),w2core(1:nn,i))
+          if (rcore(1,i) > 1e-8_DP) then
+             DO j = nn, 1, -1
+                IF (rcore(j,i) > 1e-8_DP) EXIT
+             END DO
+          ELSE
+             j = 1
+          END IF
+          rmaxcore2(i) = rgrid(i)%r(j)**2
+       ELSE
+          rcore(1:nn,i) = 0._DP
+          w2core(1:nn,i) = 0._DP
+          rmaxcore2(i) = rmaxg2(i)
+       END IF
     END DO
 
     ! free volumes
@@ -136,6 +150,8 @@ CONTAINS
        CALL simpson(nn,d1y,rgrid(i)%rab(1:nn),afree(i))
     END DO
     DEALLOCATE(d1y,d2y)
+
+    CALL stop_clock('init_xdm')
 
   END SUBROUTINE init_xdm
 
@@ -168,7 +184,7 @@ CONTAINS
     ! runs. In addition, forces and stresses are saved for subsequent calls to force_xdm
     ! and stress_xdm.
     USE control_flags, ONLY: lbfgs, lmd
-    USE scf, ONLY: rho
+    USE scf, ONLY: rho, rhoz_or_updw
     USE io_global, ONLY: stdout, ionode
     USE fft_base, ONLY : dfftp
     USE cell_base, ONLY : at, alat, omega
@@ -178,8 +194,8 @@ CONTAINS
     USE atom, ONLY: msh, rgrid
     USE splinelib, ONLY : splint
     USE mp_images, ONLY : me_image, nproc_image, intra_image_comm
-    USE mp_pools,  ONLY : me_pool
     USE mp, ONLY : mp_sum
+    USE mp_bands, ONLY : intra_bgrp_comm
 
     REAL(DP) :: evdw
 
@@ -204,8 +220,9 @@ CONTAINS
     INTEGER :: resto, divid, first, last, it
     INTEGER :: idx, ispin
     INTEGER, EXTERNAL :: atomic_number
+    REAL(DP) :: iix, iiy, iiz
 
-    real*8 :: iix, iiy, iiz
+    CALL start_clock('energy_xdm')
 
     ! initialize
     IF (nspin > 2) CALL errore('energy_xdm','nspin > 2 not implemented',1)
@@ -213,9 +230,19 @@ CONTAINS
     fsave = 0._DP
     ssave = 0._DP
     atb = at * alat
+    !
+    ! for convenience rho is converted in (up,down) format, if LSDA
+    IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', '->updw' )
 
     ! do we need to recalculate the coefficients?
     docalc = .NOT.saved .OR. .NOT.(lbfgs .OR. lmd)
+
+    ! Set the coefficients if none are given in the input
+    ! See: http://schooner.chem.dal.ca/wiki/XDM#Quantum_ESPRESSO
+    ! For functionals not in the list, please contact aoterodelaroza@gmail.com
+    IF (a1i==0._DP .AND. a2i==0._DP) THEN
+       CALL setxdm_a1a2(a1i,a2i)
+    ENDIF
 
     ! Define damping coefficients
     a1 = a1i
@@ -242,8 +269,15 @@ CONTAINS
        ! all-electron density
        ALLOCATE(rhoae(dfftp%nnr),STAT=ialloc)
        IF (ialloc /= 0) CALL alloc_failed("rhoae")
-       CALL PAW_make_ae_charge_xdm(rho,rhoae)
-       rhoae = (rhoae + rhocor) / REAL(nspin,DP)
+       IF (ispaw) THEN
+          CALL PAW_make_ae_charge_xdm(rho,rhoae)
+          rhoae = (rhoae + rhocor) / REAL(nspin,DP)
+       ELSE
+          rhoae = 0._DP
+          DO i = 1, nspin
+             rhoae = rho%of_r(:,i)
+          END DO
+       ENDIF
 
        ! don't need the core anymore
        DEALLOCATE(rhocor)
@@ -373,10 +407,9 @@ CONTAINS
              END DO ! n
           END DO ! iat
        END DO ! ispin
-#if defined(__MPI)
-       CALL mp_sum(avol,intra_image_comm)
-       CALL mp_sum(ml,intra_image_comm)
-#endif
+       CALL mp_sum(avol,intra_bgrp_comm)
+       CALL mp_sum(ml,intra_bgrp_comm)
+
        avol = avol * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
        ml = ml * omega / (dfftp%nr1*dfftp%nr2*dfftp%nr3)
 
@@ -523,15 +556,15 @@ CONTAINS
     sigma = -0.5_DP * sigma / omega
     ehadd = -0.5_DP * ehadd
 
-#if defined(__MPI)
     CALL mp_sum(evdw,intra_image_comm)
     CALL mp_sum(for,intra_image_comm)
     CALL mp_sum(sigma,intra_image_comm)
     DO nn = 6, 10
        CALL mp_sum(ehadd(nn),intra_image_comm)
     ENDDO
-#endif
-
+    !
+    IF (nspin == 2) CALL rhoz_or_updw( rho, 'r_and_g', '->rhoz' )
+    !
     ! Convert to Ry
     evdw = evdw * 2
     for = for * 2
@@ -560,6 +593,8 @@ CONTAINS
        WRITE (stdout,'("                    ",1p,3(E20.12,1X)," ")') 0.5_DP*sigma(3,:)*au_gpa
        WRITE (stdout,*)
     END IF
+
+    CALL stop_clock('energy_xdm')
 
   END FUNCTION energy_xdm
 
@@ -596,6 +631,8 @@ CONTAINS
     INTEGER, ALLOCATABLE :: ienvaux(:), lvecaux(:,:)
     REAL(DP), ALLOCATABLE :: xenvaux(:,:)
     INTEGER, PARAMETER :: menv = 1000, lenv=100
+
+    CALL start_clock('exdm:environ')
 
     ! allocate the initial environment
     nenv = 0
@@ -690,6 +727,8 @@ CONTAINS
     lvecaux(:,1:lsize) = lvec
     CALL move_alloc(lvecaux,lvec)
 
+    CALL stop_clock('exdm:environ')
+
   END SUBROUTINE set_environ
 
   SUBROUTINE PAW_make_ae_charge_xdm(rho,rhoout)
@@ -704,8 +743,7 @@ CONTAINS
     USE uspp_param,    ONLY : nh, nhm, upf
     USE scf,           ONLY : scf_type
     USE fft_base,      ONLY : dfftp
-    USE mp,            ONLY : mp_bcast, mp_sum
-    USE mp_pools,      ONLY : me_pool
+    USE mp,            ONLY : mp_sum
     USE mp_images,     ONLY : intra_image_comm
     USE io_global,     ONLY : ionode_id
     USE splinelib,     ONLY : spline, splint
@@ -724,6 +762,8 @@ CONTAINS
     REAL(DP)                :: inv_nr1, inv_nr2, inv_nr3, distsq, g0, g1, g2, r0, r1, rqq
     INTEGER                 :: nkk
     INTEGER, ALLOCATABLE    :: iatom(:)
+
+    CALL start_clock('exdm:paw_charge')
 
     ! Some initialization
     inv_nr1 = 1._DP / DBLE(  dfftp%nr1 )
@@ -858,6 +898,8 @@ CONTAINS
     ENDDO atoms
     DEALLOCATE(rho_lm)
 
+    CALL stop_clock('exdm:paw_charge')
+
   END SUBROUTINE PAW_make_ae_charge_xdm
 
   SUBROUTINE promolecular_rho(rhot,rhoc)
@@ -874,15 +916,16 @@ CONTAINS
     USE fft_base,  ONLY : dfftp
     USE splinelib, ONLY : splint
     use cell_base, ONLY : alat
-    USE mp_pools,  ONLY : me_pool
     implicit none
 
-    real(DP), intent(out) :: rhoc(dfftp%nnr) ! core density in the real-space grid
-    real(DP), intent(out) :: rhot(dfftp%nnr) ! core density in the real-space grid
+    real(DP), intent(out) :: rhoc(dfftp%nnr) ! sum of core densities in the real-space grid
+    real(DP), intent(out) :: rhot(dfftp%nnr) ! all-electron sum of atomic densities in the real-space grid
 
     integer :: i, it, nn
     integer :: n, idx, ix, iy, iz, iy0, iz0
     real(DP) :: x(3), xx(3), r, r2, rrho
+
+    CALL start_clock('exdm:rho')
 
     rhot = 0._DP
     rhoc = 0._DP
@@ -915,14 +958,123 @@ CONTAINS
           rrho = splint(rgrid(it)%r(1:nn),rfree(1:nn,it),w2free(1:nn,it),r)
           rhot(n) = rhot(n) + rrho
 
-          IF (r2 > rmaxcore2(it)) CYCLE
-          rrho = splint(rgrid(it)%r(1:nn),rcore(1:nn,it),w2core(1:nn,it),r)
-          rhoc(n) = rhoc(n) + rrho
+          IF (ispaw) THEN
+             IF (r2 > rmaxcore2(it)) CYCLE
+             rrho = splint(rgrid(it)%r(1:nn),rcore(1:nn,it),w2core(1:nn,it),r)
+             rhoc(n) = rhoc(n) + rrho
+          END IF
        END DO
        rhot(n) = MAX(rhot(n),1e-14_DP)
     END DO
 
+    CALL stop_clock('exdm:rho')
+
   END SUBROUTINE promolecular_rho
+
+  ! Set the default a1 and a2 values using the xc flags.
+  SUBROUTINE setxdm_a1a2(a1i,a2i)
+    USE io_global, ONLY: stdout, ionode
+    USE funct, ONLY : get_iexch, get_icorr, get_igcx, get_igcc
+    REAL*8, INTENT(INOUT) :: a1i, a2i
+    
+    INTEGER :: idx, ispin, iexch, icorr, igcx, igcc
+    
+    iexch = get_iexch()
+    icorr = get_icorr()
+    igcx = get_igcx()
+    igcc = get_igcc()
+    IF (iexch==1 .AND. icorr==4 .AND. igcx==22 .AND. igcc==4) THEN
+       ! B86bPBE
+       if (ispaw) then
+          a1i = 0.6512_DP
+          a2i = 1.4633_DP
+       else
+          a1i = 0.7767_DP
+          a2i = 1.0937_DP
+       endif
+    ELSE IF (iexch==1 .AND. icorr==4 .AND. igcx==21 .AND. igcc==4) THEN
+       ! PW86PBE
+       if (ispaw) then
+          a1i = 0.6836_DP
+          a2i = 1.5045_DP
+       else
+          a1i = 0.7825_DP
+          a2i = 1.2077_DP
+       end if
+    ELSE IF (iexch==1 .AND. icorr==4 .AND. igcx==3 .AND. igcc==4) THEN
+       ! PBE
+       if (ispaw) then
+          a1i = 0.3275_DP
+          a2i = 2.7673_DP
+       else
+          a1i = 0.4283_DP
+          a2i = 2.4690_DP
+       end if
+    ELSE IF (iexch==1 .AND. icorr==3 .AND. igcx==1 .AND. igcc==3) THEN
+       ! BLYP
+       if (ispaw) then
+          a1i = 0.4502_DP
+          a2i = 1.6210_DP
+       else
+          a1i = 0.6349_DP
+          a2i = 1.0486_DP
+       end if
+    ELSE IF (iexch==1 .AND. icorr==4 .AND. igcx==12 .AND. igcc==4) THEN
+       ! HSE
+       if (ispaw) then
+          a1i = 0.3799_DP
+          a2i = 2.5862_DP
+       else
+          a1i = 0.4206_DP
+          a2i = 2.4989_DP
+       end if
+    ELSE IF (iexch==6 .AND. icorr==4 .AND. igcx==8 .AND. igcc==4) THEN
+       ! PBE0
+       if (ispaw) then
+          a1i = 0.4616_DP
+          a2i = 2.2913_DP
+       else
+          a1i = 0.4590_DP
+          a2i = 2.3581_DP
+       end if
+    ELSE IF (iexch==7 .AND. icorr==12 .AND. igcx==9 .AND. igcc==7) THEN
+       ! B3LYP
+       if (ispaw) then
+          a1i = 0.6092_DP
+          a2i = 1.3452_DP
+       else
+          a1i = 0.6070_DP
+          a2i = 1.3862_DP
+       end if
+    ELSE IF (iexch==6 .AND. icorr==4 .AND. igcx==41 .AND. igcc==4) THEN
+       ! B86BPBEX (50% hybrid)
+       if (ispaw) then
+          a1i = 0.5826_DP
+          a2i = 1.7718_DP
+       else
+          a1i = 0.6434_DP
+          a2i = 1.6405_DP
+       end if
+    ELSE IF (iexch==6 .AND. icorr==4 .AND. igcx==42 .AND. igcc==3) THEN
+       ! BHAHLYP
+       if (ispaw) then
+          a1i = 0.2998_DP
+          a2i = 2.6953_DP
+       else
+          a1i = 0.2292_DP
+          a2i = 2.9698_DP
+       end if
+    ELSE
+       IF (ionode) THEN
+          WRITE (stdout,'(/"Error: XDM not parametrized for this functional and XDM parameters not given.")')
+          WRITE (stdout,'("For the XDM parametrization list, please visit")')
+          WRITE (stdout,'("  http://schooner.chem.dal.ca/wiki/XDM#Quantum_ESPRESSO")')
+          WRITE (stdout,'("For functionals not in the list, please contact aoterodelaroza@gmail.com"/)')
+       ENDIF
+       CALL errore('energy_xdm','XDM not parametrized for this functional and XDM parameters not given.',1)
+    END IF
+
+  END SUBROUTINE setxdm_a1a2
 
   SUBROUTINE alloc_failed(message)
     ! Error message and horrible death

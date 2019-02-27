@@ -23,7 +23,7 @@
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE wvfct,                ONLY : wg
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : omega
   !
@@ -121,7 +121,7 @@
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE wvfct,                ONLY : wg
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE cell_base,            ONLY : omega
   !
   IMPLICIT NONE
@@ -203,7 +203,7 @@
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE wvfct,                ONLY : wg
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE cell_base,            ONLY : omega
   !
   USE mp_bands,             ONLY : intra_bgrp_comm

@@ -30,8 +30,6 @@
   phonselfen  = .false.
   a2f         = .false.
 
-  parallel_k  = .true.
-  parallel_q  = .false.
 
   fsthick     = 3.0
   eptemp      = 300.0

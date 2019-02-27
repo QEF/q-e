@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -276,44 +276,50 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
   !      Calculation of the electron-phonon matrix elements el_ph_mat
   !         <\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)>
   !      Original routine written by Francesco Mauri
+  !      Modified by A. Floris and I. Timrov to include Hubbard U (01.10.2018)
   !
-  USE kinds, ONLY : DP
-  USE fft_base, ONLY : dffts
-  USE wavefunctions_module,  ONLY: evc
-  USE buffers,  ONLY : get_buffer
-  USE klist, ONLY: xk, ngk, igk_k
-  USE lsda_mod, ONLY: lsda, current_spin, isk
+  USE kinds,      ONLY : DP
+  USE fft_base,   ONLY : dffts
+  USE ions_base,  ONLY : nat, ityp
+  USE control_flags,  ONLY : iverbosity
+  USE wavefunctions,  ONLY : evc
+  USE buffers,    ONLY : get_buffer
+  USE klist,      ONLY : xk, ngk, igk_k
+  USE lsda_mod,   ONLY : lsda, current_spin, isk, nspin
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
-  USE wvfct, ONLY: nbnd, npwx
-  USE buffers, ONLY : get_buffer
-  USE uspp, ONLY : vkb
-  USE el_phon, ONLY : el_ph_mat, el_ph_mat_rec, el_ph_mat_rec_col, &
-                      comp_elph, done_elph, elph_nbnd_min, elph_nbnd_max
-  USE modes, ONLY : u
-  USE units_ph, ONLY : iubar, lrbar, lrwfc, iuwfc
+  USE wvfct,      ONLY : nbnd, npwx
+  USE buffers,    ONLY : get_buffer
+  USE uspp,       ONLY : vkb
+  USE el_phon,    ONLY : el_ph_mat, el_ph_mat_rec, el_ph_mat_rec_col, &
+                         comp_elph, done_elph, elph_nbnd_min, elph_nbnd_max
+  USE modes,      ONLY : u, nmodes
+  USE units_ph,   ONLY : iubar, lrbar, iundnsscf
+  USE units_lr,   ONLY : iuwfc, lrwfc
   USE control_ph, ONLY : trans, current_iq
   USE ph_restart, ONLY : ph_writefile
   USE spin_orb,   ONLY : domag
-  USE mp_bands,   ONLY: intra_bgrp_comm, ntask_groups
-  USE mp_pools,   ONLY: npool
-  USE mp,        ONLY: mp_sum
+  USE mp_bands,   ONLY : intra_bgrp_comm, ntask_groups
+  USE mp_pools,   ONLY : npool
+  USE mp,         ONLY : mp_sum, mp_bcast
+  USE mp_world,   ONLY : world_comm
   USE elph_tetra_mod, ONLY : elph_tetra
-
   USE eqv,        ONLY : dvpsi, evq
   USE qpoint,     ONLY : nksq, ikks, ikqs, nksqtot
   USE control_lr, ONLY : lgamma
   USE fft_helper_subroutines
+  USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax
+  USE ldaU_ph,    ONLY : dnsscf_all_modes, dnsscf
+  USE io_global,  ONLY : ionode, ionode_id
 
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: irr, npe, imode0
   COMPLEX(DP), INTENT(IN) :: dvscfins (dffts%nnr, nspin_mag, npe)
   ! LOCAL variables
-  INTEGER :: npw, npwq
-  INTEGER :: nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
-       ipol, ios, ierr
+  INTEGER :: npw, npwq, nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
+             ipol, ios, ierr
   COMPLEX(DP) , ALLOCATABLE :: aux1 (:,:), elphmat (:,:,:), tg_dv(:,:), &
-       tg_psic(:,:), aux2(:,:)
+                               tg_psic(:,:), aux2(:,:)
   INTEGER :: v_siz, incr
   COMPLEX(DP), EXTERNAL :: zdotc
   integer :: ibnd_fst, ibnd_lst
@@ -340,6 +346,29 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
      ALLOCATE( tg_dv   ( v_siz, nspin_mag ) )
      ALLOCATE( tg_psic( v_siz, npol ) )
      incr = fftx_ntgrp(dffts)
+     !
+  ENDIF
+  !
+  ! DFPT+U case
+  !
+  IF (lda_plus_u) THEN
+     !
+     ! Allocate and re-read dnsscf_all_modes from file 
+     !
+     ALLOCATE (dnsscf_all_modes(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, nmodes))
+     dnsscf_all_modes = (0.d0, 0.d0)
+     IF (ionode) READ(iundnsscf,*) dnsscf_all_modes
+     CALL mp_bcast(dnsscf_all_modes, ionode_id, world_comm)
+     REWIND(iundnsscf)
+     !  
+     ! Check whether the re-read is correct
+     !
+     IF (iverbosity==1) CALL elphel_read_dnsscf_check() 
+     !
+     ! Allocate dnsscf
+     !
+     ALLOCATE (dnsscf(2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, npe))
+     dnsscf = (0.d0, 0.d0)
      !
   ENDIF
   !
@@ -382,6 +411,11 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            mode = imode0 + ipert
            ! FIXME: .false. or .true. ???
            CALL dvqpsi_us (ik, u (1, mode), .FALSE. )
+           !
+           ! DFPT+U: calculate the bare derivative of the Hubbard potential in el-ph
+           !
+           IF (lda_plus_u) CALL dvqhub_barepsi_us (ik, u(1,mode)) 
+           !
         ENDIF
         !
         ! calculate dvscf_q*psi_k
@@ -411,8 +445,15 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
            ENDIF
         ENDDO
         dvpsi=dvpsi+aux2
-
+        !
         CALL adddvscf (ipert, ik)
+        !
+        ! DFPT+U: add to dvpsi the scf part of the perturbed Hubbard potential 
+        !
+        IF (lda_plus_u) THEN
+           dnsscf(:,:,:,:,ipert) = dnsscf_all_modes(:,:,:,:,mode)
+           CALL adddvhubscf (ipert, ik)
+        ENDIF
         !
         ! calculate elphmat(j,i)=<psi_{k+q,j}|dvscf_q*psi_{k,i}> for this pertur
         !
@@ -462,10 +503,93 @@ SUBROUTINE elphel (irr, npe, imode0, dvscfins)
      DEALLOCATE( tg_psic )
   ENDIF
   !
+  IF (lda_plus_u) THEN
+     DEALLOCATE (dnsscf_all_modes)
+     DEALLOCATE (dnsscf)
+  ENDIF
+  !
   RETURN
+  !
 END SUBROUTINE elphel
 !
-!-----------------------------------------------------------------------
+!------------------------------------------------------------------------
+SUBROUTINE elphel_read_dnsscf_check()
+  !
+  ! DFPT+U: This subroutine checks whether dnsscf_all_modes was 
+  !         read correctly from file.
+  !
+  USE kinds,      ONLY : DP
+  USE ions_base,  ONLY : nat, ityp
+  USE modes,      ONLY : u, nmodes
+  USE lsda_mod,   ONLY : nspin
+  USE ldaU,       ONLY : Hubbard_l, is_hubbard, Hubbard_lmax
+  USE ldaU_ph,    ONLY : dnsscf_all_modes
+  USE io_global,  ONLY : stdout
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), ALLOCATABLE :: dnsscf_all_modes_cart(:,:,:,:,:)
+  INTEGER :: na_icart, nah, is, m1, m2, na, icart, nt, na_icar, imode
+  !
+  ALLOCATE(dnsscf_all_modes_cart (2*Hubbard_lmax+1, 2*Hubbard_lmax+1, nspin, nat, nmodes))
+  dnsscf_all_modes_cart = (0.d0, 0.d0)
+  !
+  ! Transform dnsscf_all_modes from pattern to cartesian coordinates
+  !
+  DO na_icart = 1, 3*nat
+     DO imode = 1, nmodes
+        DO nah = 1, nat
+           nt = ityp(nah)
+           IF (is_hubbard(nt)) THEN
+              DO is = 1, nspin
+                 DO m1 = 1, 2*Hubbard_l(nt) + 1
+                    DO m2 = 1, 2*Hubbard_l(nt) + 1
+                       !
+                       dnsscf_all_modes_cart (m1, m2, is, nah, na_icart) = &
+                              dnsscf_all_modes_cart (m1, m2, is, nah, na_icart) + &
+                              dnsscf_all_modes (m1, m2, is, nah, imode) * &
+                              CONJG(u(na_icart,imode))
+                       !
+                    ENDDO
+                 ENDDO
+              ENDDO
+           ENDIF
+        ENDDO
+     ENDDO
+  ENDDO
+  !
+  ! Write dnsscf in cartesian coordinates
+  !
+  WRITE(stdout,*)
+  WRITE(stdout,*) 'DNS_SCF SYMMETRIZED IN CARTESIAN COORDINATES'
+  !
+  DO na = 1, nat
+     DO icart = 1, 3
+        WRITE( stdout,'(a,1x,i2,2x,a,1x,i2)') 'displaced atom L =', na, 'ipol=', icart
+        na_icart = 3*(na-1) + icart
+        DO nah = 1, nat
+           nt = ityp(nah)
+           IF (is_hubbard(nt)) THEN
+              DO is = 1, nspin
+                 WRITE(stdout,'(a,1x,i2,2x,a,1x,i2)') ' Hubbard atom', nah, 'spin', is
+                 DO m1 = 1, 2*Hubbard_l(nt) + 1
+                    WRITE(stdout,'(14(f15.10,1x))') dnsscf_all_modes_cart (m1,:,is,nah,na_icart)
+                 ENDDO
+              ENDDO
+           ENDIF
+        ENDDO
+     ENDDO
+  ENDDO
+  WRITE(stdout,*)
+  ! 
+  DEALLOCATE(dnsscf_all_modes_cart) 
+  !
+  RETURN
+  !
+END SUBROUTINE elphel_read_dnsscf_check
+!------------------------------------------------------------------------
+
+!------------------------------------------------------------------------
 SUBROUTINE elphsum ( )
   !-----------------------------------------------------------------------
   !
@@ -1138,6 +1262,300 @@ SUBROUTINE elphsum_simple
      
 
 END SUBROUTINE elphsum_simple
+   
+!-----------------------------------------------------------------------
+SUBROUTINE elphfil_epa(iq)
+  !-----------------------------------------------------------------------
+  !
+  !      EPA (electron-phonon-averaged) approximation
+  !      Writes electron-phonon matrix elements to a file
+  !      Written by Georgy Samsonidze on 2015-01-28
+  !
+  !      Adv. Energy Mater. 2018, 1800246
+  !      doi:10.1002/aenm.201800246
+  !      https://doi.org/10.1002/aenm.201800246
+  !
+  !-----------------------------------------------------------------------
+  USE cell_base, ONLY : ibrav, alat, omega, tpiba, at, bg
+  USE disp, ONLY : nq1, nq2, nq3, nqs, x_q, wq, lgamma_iq
+  USE dynmat, ONLY : dyn, w2
+  USE el_phon, ONLY : el_ph_mat, done_elph
+  USE fft_base, ONLY : dfftp, dffts, dfftb
+  USE gvect, ONLY : ngm_g, ecutrho
+  USE io_global, ONLY : ionode, ionode_id
+  USE ions_base, ONLY : nat, nsp, atm, ityp, tau
+  USE kinds, ONLY : DP
+  USE klist, ONLY : xk, wk, nelec, nks, nkstot, ngk
+  USE lsda_mod, ONLY : nspin, isk
+  USE modes, ONLY : nirr, nmodes, npert, npertx, u, t, tmq, &
+       name_rap_mode, num_rap_mode
+  USE lr_symm_base, ONLY : irgq, nsymq, irotmq, rtau, gi, gimq, &
+       minus_q, invsymq
+  USE mp, ONLY : mp_bcast, mp_sum
+  USE mp_images, ONLY : intra_image_comm
+  USE mp_pools, ONLY : npool, intra_pool_comm
+  USE qpoint, ONLY : nksq, nksqtot, ikks, ikqs, eigqts
+  USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
+  USE symm_base, ONLY : s, invs, ftau, nrot, nsym, nsym_ns, &
+       nsym_na, ft, sr, sname, t_rev, irt, time_reversal, &
+       invsym, nofrac, allfrac, nosym, nosym_evc, no_t_rev
+  USE wvfct, ONLY : nbnd, et, wg
+  USE gvecw, ONLY : ecutwfc
+  USE io_files, ONLY : prefix
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: iq
+
+  INTEGER :: iuelph, ios, irr, ii, jj, kk, ll
+  character :: cdate*9, ctime*9, sdate*32, stime*32, &
+       stitle*32, myaccess*10, mystatus*7
+  CHARACTER(LEN=80) :: filelph
+
+  REAL(DP), ALLOCATABLE :: xk_collect(:,:), wk_collect(:)
+  REAL(DP), ALLOCATABLE :: et_collect(:,:), wg_collect(:,:)
+  INTEGER, ALLOCATABLE :: ngk_collect(:)
+  INTEGER, ALLOCATABLE :: ikks_collect(:), ikqs_collect(:)
+  COMPLEX(DP), ALLOCATABLE :: el_ph_mat_collect(:,:,:,:)
+
+  INTEGER, EXTERNAL :: find_free_unit, atomic_number
+
+  filelph = TRIM(prefix) // '.epa.k'
+
+  DO irr = 1, nirr
+     IF (.NOT. done_elph(irr)) RETURN
+  ENDDO
+
+  IF (iq .EQ. 1) THEN
+     myaccess = 'sequential'
+     mystatus = 'replace'
+  ELSE
+     myaccess = 'append'
+     mystatus = 'old'
+  ENDIF
+  IF (ionode) THEN
+     iuelph = find_free_unit()
+     OPEN(unit = iuelph, file = TRIM(filelph), form = 'unformatted', &
+          access = myaccess, status = mystatus, iostat = ios)
+  ELSE
+     iuelph = 0
+  ENDIF
+  CALL mp_bcast(ios, ionode_id, intra_image_comm)
+  CALL errore('elphfil_epa', 'opening file ' // filelph, ABS(ios))
+
+  IF (iq .EQ. 1) THEN
+     CALL date_and_tim(cdate, ctime)
+     WRITE(sdate, '(A2,"-",A3,"-",A4,21X)') cdate(1:2), cdate(3:5), cdate(6:9)
+     WRITE(stime, '(A8,24X)') ctime(1:8)
+     WRITE(stitle, '("EPA-Complex",21X)')
+     CALL cryst_to_cart(nqs, x_q, at, -1)
+     ! write header
+     IF (ionode) THEN
+        WRITE(iuelph) stitle, sdate, stime
+        WRITE(iuelph) ibrav, nat, nsp, nrot, nsym, nsym_ns, nsym_na, &
+             ngm_g, nspin, nbnd, nmodes, nqs
+        WRITE(iuelph) nq1, nq2, nq3, nk1, nk2, nk3, k1, k2, k3
+        WRITE(iuelph) time_reversal, invsym, nofrac, allfrac, nosym, &
+             nosym_evc, no_t_rev
+        WRITE(iuelph) alat, omega, tpiba, nelec, ecutrho, ecutwfc
+        WRITE(iuelph) dfftp%nr1, dfftp%nr2, dfftp%nr3
+        WRITE(iuelph) dffts%nr1, dffts%nr2, dffts%nr3
+        WRITE(iuelph) dfftb%nr1, dfftb%nr2, dfftb%nr3
+        WRITE(iuelph) ((at(ii, jj), ii = 1, 3), jj = 1, 3)
+        WRITE(iuelph) ((bg(ii, jj), ii = 1, 3), jj = 1, 3)
+        WRITE(iuelph) (atomic_number(atm(ii)), ii = 1, nsp)
+        WRITE(iuelph) (ityp(ii), ii = 1, nat)
+        WRITE(iuelph) ((tau(ii, jj), ii = 1, 3), jj = 1, nat)
+        WRITE(iuelph) ((x_q(ii, jj), ii = 1, 3), jj = 1, nqs)
+        WRITE(iuelph) (wq(ii), ii = 1, nqs)
+        WRITE(iuelph) (lgamma_iq(ii), ii = 1, nqs)
+     ENDIF
+     CALL cryst_to_cart(nqs, x_q, bg, 1)
+  ENDIF
+
+  ! collect data for current q-point
+  ALLOCATE(xk_collect(3, nkstot))
+  ALLOCATE(wk_collect(nkstot))
+  ALLOCATE(et_collect(nbnd, nkstot))
+  ALLOCATE(wg_collect(nbnd, nkstot))
+  ALLOCATE(ngk_collect(nkstot))
+  ALLOCATE(ikks_collect(nksqtot))
+  ALLOCATE(ikqs_collect(nksqtot))
+  ALLOCATE(el_ph_mat_collect(nbnd, nbnd, nksqtot, nmodes))
+  IF (npool > 1) THEN
+     CALL poolcollect(3, nks, xk, nkstot, xk_collect)
+     CALL poolcollect(1, nks, wk, nkstot, wk_collect)
+     CALL poolcollect(nbnd, nks, et, nkstot, et_collect)
+     CALL poolcollect(nbnd, nks, wg, nkstot, wg_collect)
+     CALL ipoolcollect(1, nks, ngk, nkstot, ngk_collect)
+     CALL jpoolcollect(1, nksq, ikks, nksqtot, ikks_collect)
+     CALL jpoolcollect(1, nksq, ikqs, nksqtot, ikqs_collect)
+     CALL el_ph_collect(nmodes, el_ph_mat, el_ph_mat_collect, nksqtot, nksq)
+  ELSE
+     xk_collect(1:3, 1:nks) = xk(1:3, 1:nks)
+     wk_collect(1:nks) = wk(1:nks)
+     et_collect(1:nbnd, 1:nks) = et(1:nbnd, 1:nks)
+     wg_collect(1:nbnd, 1:nks) = wg(1:nbnd, 1:nks)
+     ngk_collect(1:nks) = ngk(1:nks)
+     ikks_collect(1:nksq) = ikks(1:nksq)
+     ikqs_collect(1:nksq) = ikqs(1:nksq)
+     el_ph_mat_collect(1:nbnd, 1:nbnd, 1:nksq, 1:nmodes) = &
+          el_ph_mat(1:nbnd, 1:nbnd, 1:nksq, 1:nmodes)
+  ENDIF
+  CALL cryst_to_cart(nkstot, xk_collect, at, -1)
+  ! write data for current q-point
+  IF (ionode) THEN
+     WRITE(iuelph) nsymq, irotmq, nirr, npertx, nkstot, nksqtot
+     WRITE(iuelph) minus_q, invsymq
+     WRITE(iuelph) (irgq(ii), ii = 1, 48)
+     WRITE(iuelph) (npert(ii), ii = 1, nmodes)
+     WRITE(iuelph) (((rtau(ii, jj, kk), ii = 1, 3), jj = 1, 48), &
+          kk = 1, nat)
+     WRITE(iuelph) ((gi(ii, jj), ii = 1, 3), jj = 1, 48)
+     WRITE(iuelph) (gimq(ii), ii = 1, 3)
+     WRITE(iuelph) ((u(ii, jj), ii = 1, nmodes), jj = 1, nmodes)
+     WRITE(iuelph) ((((t(ii, jj, kk, ll), ii = 1, npertx), &
+          jj = 1, npertx), kk = 1, 48), ll = 1, nmodes)
+     WRITE(iuelph) (((tmq(ii, jj, kk), ii = 1, npertx), &
+          jj = 1, npertx), kk = 1, nmodes)
+     WRITE(iuelph) (name_rap_mode(ii), ii = 1, nmodes)
+     WRITE(iuelph) (num_rap_mode(ii), ii = 1, nmodes)
+     WRITE(iuelph) (((s(ii, jj, kk), ii = 1, 3), jj = 1, 3), kk = 1, 48)
+     WRITE(iuelph) (invs(ii), ii = 1, 48)
+     WRITE(iuelph) ((ftau(ii, jj), ii = 1, 3), jj = 1, 48)
+     WRITE(iuelph) ((ft(ii, jj), ii = 1, 3), jj = 1, 48)
+     WRITE(iuelph) (((sr(ii, jj, kk), ii = 1, 3), jj = 1, 3), kk = 1, 48)
+     WRITE(iuelph) (sname(ii), ii = 1, 48)
+     WRITE(iuelph) (t_rev(ii), ii = 1, 48)
+     WRITE(iuelph) ((irt(ii, jj), ii = 1, 48), jj = 1, nat)
+     WRITE(iuelph) ((xk_collect(ii, jj), ii = 1, 3), jj = 1, nkstot)
+     WRITE(iuelph) (wk_collect(ii), ii = 1, nkstot)
+     WRITE(iuelph) ((et_collect(ii, jj), ii = 1, nbnd), jj = 1, nkstot)
+     WRITE(iuelph) ((wg_collect(ii, jj), ii = 1, nbnd), jj = 1, nkstot)
+     WRITE(iuelph) (isk(ii), ii = 1, nkstot)
+     WRITE(iuelph) (ngk_collect(ii), ii = 1, nkstot)
+     WRITE(iuelph) (ikks_collect(ii), ii = 1, nksqtot)
+     WRITE(iuelph) (ikqs_collect(ii), ii = 1, nksqtot)
+     WRITE(iuelph) (eigqts(ii), ii = 1, nat)
+     WRITE(iuelph) (w2(ii), ii = 1, nmodes)
+     WRITE(iuelph) ((dyn(ii, jj), ii = 1, nmodes), jj = 1, nmodes)
+     WRITE(iuelph) ((((el_ph_mat_collect(ii, jj, kk, ll), ii = 1, nbnd), &
+          jj = 1, nbnd), kk = 1, nksqtot), ll = 1, nmodes)
+     CLOSE (unit = iuelph, status = 'keep')
+  ENDIF
+  CALL cryst_to_cart(nkstot, xk_collect, bg, 1)
+  DEALLOCATE(xk_collect)
+  DEALLOCATE(wk_collect)
+  DEALLOCATE(et_collect)
+  DEALLOCATE(wg_collect)
+  DEALLOCATE(ngk_collect)
+  DEALLOCATE(ikks_collect)
+  DEALLOCATE(ikqs_collect)
+  DEALLOCATE(el_ph_mat_collect)
+
+  RETURN
+
+END SUBROUTINE elphfil_epa
+   
+!----------------------------------------------------------------------------
+SUBROUTINE ipoolcollect( length, nks, f_in, nkstot, f_out )
+  !----------------------------------------------------------------------------
+  !
+  ! ... as poolcollect, for an integer vector
+  !
+  USE mp_pools,  ONLY : my_pool_id, npool, kunit, &
+                        inter_pool_comm, intra_pool_comm
+  USE mp,        ONLY : mp_sum
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: length, nks, nkstot
+  ! first dimension of arrays
+  ! number of k-points per pool
+  ! total number of k-points
+  INTEGER, INTENT(IN)  :: f_in (length,nks)
+  ! pool-distributed function
+  INTEGER, INTENT(OUT) :: f_out(length,nkstot)
+  ! pool-collected function
+  !
+  INTEGER :: nbase, rest, nks1
+  !
+  nks1    = kunit * ( nkstot / kunit / npool )
+  !
+  rest = ( nkstot - nks1 * npool ) / kunit
+  !
+  IF ( ( my_pool_id + 1 ) <= rest ) nks1 = nks1 + kunit
+  !
+  IF (nks1.ne.nks) &
+     call errore('ipoolcollect','inconsistent number of k-points',1)
+  !
+  ! ... calculates nbase = the position in the list of the first point that
+  ! ...                    belong to this npool - 1
+  !
+  nbase = nks * my_pool_id
+  !
+  IF ( ( my_pool_id + 1 ) > rest ) nbase = nbase + rest * kunit
+  !
+  ! copy the original points in the correct position of the list
+  !
+  f_out=0
+  f_out(:,nbase+1:nbase+nks) = f_in(:,1:nks)
+  !
+  CALL mp_sum( f_out, inter_pool_comm )
+  !
+  RETURN
+  !
+END SUBROUTINE ipoolcollect
+
+!----------------------------------------------------------------------------
+SUBROUTINE jpoolcollect( length, nks, f_in, nkstot, f_out )
+  !----------------------------------------------------------------------------
+  !
+  ! ... as ipoolcollect, without kunit and with an index shift
+  !
+  USE mp_pools,  ONLY : my_pool_id, npool, kunit, &
+                        inter_pool_comm, intra_pool_comm
+  USE mp,        ONLY : mp_sum
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: length, nks, nkstot
+  ! first dimension of arrays
+  ! number of k-points per pool
+  ! total number of k-points
+  INTEGER, INTENT(IN)  :: f_in (length,nks)
+  ! pool-distributed function
+  INTEGER, INTENT(OUT) :: f_out(length,nkstot)
+  ! pool-collected function
+  !
+  INTEGER :: nbase, rest, nks1
+  !
+  nks1    = ( nkstot / npool )
+  !
+  rest = ( nkstot - nks1 * npool )
+  !
+  IF ( ( my_pool_id + 1 ) <= rest ) nks1 = nks1 + 1
+  !
+  IF (nks1.ne.nks) &
+     call errore('jpoolcollect','inconsistent number of k-points',1)
+  !
+  ! ... calculates nbase = the position in the list of the first point that
+  ! ...                    belong to this npool - 1
+  !
+  nbase = nks * my_pool_id
+  !
+  IF ( ( my_pool_id + 1 ) > rest ) nbase = nbase + rest
+  !
+  ! copy the original points in the correct position of the list
+  !
+  f_out=0
+  f_out(:,nbase+1:nbase+nks) = f_in(:,1:nks) + nbase * kunit
+  !
+  CALL mp_sum( f_out, inter_pool_comm )
+  !
+  RETURN
+  !
+END SUBROUTINE jpoolcollect
    
 !-----------------------------------------------------------------------
 FUNCTION dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)

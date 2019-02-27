@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -37,7 +37,7 @@ SUBROUTINE lr_sm1_psi (recalculate, ik, lda, n, m, psi, spsi)
   USE uspp_param,       ONLY : nh, upf
   USE ions_base,        ONLY : ityp,nat,ntyp=>nsp
   USE mp,               ONLY : mp_sum
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE noncollin_module, ONLY : noncolin, npol
   USE matrix_inversion
   !
@@ -79,7 +79,7 @@ CONTAINS
     USE becmod,   ONLY : bec_type,becp,calbec
     USE realus,   ONLY : real_space, invfft_orbital_gamma, initialisation_level, &
                          fwfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
-                         v_loc_psir, s_psir_gamma, real_space_debug
+                         v_loc_psir, s_psir_gamma
     USE lrus,     ONLY : bbg
     !
     IMPLICIT NONE
@@ -205,7 +205,7 @@ CONTAINS
     ! and put the result in becp.
     ! becp(ikb,jbnd) = \sum_G vkb^*(ikb,G) psi(G,jbnd) = <beta|psi>
     !
-    IF (real_space_debug>3) THEN 
+    IF (real_space) THEN 
        !
        DO ibnd=1,m,2
           CALL invfft_orbital_gamma(psi,ibnd,m)
@@ -455,7 +455,7 @@ SUBROUTINE lr_sm1_psiq (recalculate, ik, lda, n, m, psi, spsi)
   USE ions_base,        ONLY : ityp,nat,ntyp=>nsp
   USE becmod,           ONLY : bec_type, becp, calbec
   USE mp,               ONLY : mp_sum
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE matrix_inversion
   !

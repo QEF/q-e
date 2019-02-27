@@ -98,11 +98,10 @@
   ! nkfs : nr. of irreducible k-points within the Fermi shell on the fine mesh
   ! nbndfs  : nr. of electronic bands within the Fermi shell
   !
-  INTEGER, ALLOCATABLE :: equivk(:), ixkff(:), ixkf(:), ixkqf(:,:), ixqfs(:,:), nqfs(:)
+  INTEGER, ALLOCATABLE :: ixkff(:), ixkf(:), ixkqf(:,:), ixqfs(:,:), nqfs(:)
   !
   ! nkf = nr of irreducible k-points on the fine grid, if mp_mesh_k = .true.
   ! nkf = total nr of k-points on the fine grid,       otherwise
-  ! equivk : index of equivalent k-points on the fine k-grid equivk(nkf)
   ! ixkff : index of k-point on the full k-grid ixkff(nkftot)
   ! ixkf : index of k-point on the irreducible k-grid within the Fermi shell ixkf(nkf)
   ! ixkqf : index k+q or k-q on the irreducilble k-grid within the Fermi shell ixkqf(nkfs,nqftot)

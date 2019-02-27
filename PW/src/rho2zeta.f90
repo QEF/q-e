@@ -8,14 +8,11 @@
 !----------------------------------------------------------------------------
 SUBROUTINE rho2zeta( rho, rho_core, nrxx, nspin, iop )
   !---------------------------------------------------------------------------
+  ! ... if ( iopi == 1 )  it transforms rho(:,2:nspin) into zeta:
   !
-  ! ... if ( iopi == 1 )  transform the spin up spin down charge density 
-  ! ...                   rho(*,is) into :
+  ! ...         rho(:,2:nspin) = rho(:,2:nspin) / rho_tot(:) = zeta(:,2:nspin)
   !
-  ! ...                      rho(*,1) = ( rho_up + rho_dw ) and
-  ! ...                      rho(*,2) = ( rho_up - rho_dw ) / rho_tot = zeta
-  !
-  ! ... if ( iopi == -1)  do the opposit transformation
+  ! ... if ( iopi == -1)  it does the opposite transformation
   !
   USE constants, ONLY : eps32
   USE io_global, ONLY : stdout
@@ -23,55 +20,43 @@ SUBROUTINE rho2zeta( rho, rho_core, nrxx, nspin, iop )
   !
   IMPLICIT NONE
   !
-  INTEGER :: iop, nspin, nrxx, ir
-    ! the input option
-    ! the number of spin polarizations
-    ! the fft grid dimension
-    ! the counter for fft grid
-  REAL(DP) :: rho(nrxx,nspin), rho_core(nrxx), &
-                   rho_up, rho_dw, zeta, rhox
-    ! the scf charge density
-    ! the core charge density
-    ! auxiliary variable for rho up
-    ! auxiliary variable for rho dw
-    ! auxiliary variable for zeta
-    ! auxiliary variable for total rho
+  INTEGER, intent(in)    :: iop, nspin, nrxx
+  REAL(DP), intent(in)   :: rho_core(nrxx)
+  REAL(DP), intent(inout):: rho(nrxx,nspin)
   !
+  INTEGER :: is
   !
-  IF ( nspin == 1 ) RETURN
+  IF ( nspin == 1 ) RETURN  
   !
-  IF ( iop == 1 ) THEN
+  IF ( iop == -1 ) THEN
      !
-     DO ir = 1, nrxx
+     DO is = 2, nspin
         !
-        rhox = rho(ir,1) + rho(ir,2) + rho_core(ir)
-        !
-        IF ( rhox > eps32 ) THEN
+        WHERE( rho(:,1)+rho_core(:) > eps32 )
            !
-           zeta = ( rho(ir,1) - rho(ir,2) ) / rhox
+           rho(:,is) = rho(:,is)*(rho(:,1)+rho_core(:))
            !
-        ELSE
+        ELSEWHERE
            !
-           zeta = 0.D0
-           !
-        END IF
-        !
-        rho(ir,1) = rho(ir,1) + rho(ir,2)
-        rho(ir,2) = zeta
+           rho(:,is) = 0.D0
+              !
+        END WHERE
         !
      END DO
      !
-  ELSE IF ( iop == - 1 ) THEN
-     !
-     DO ir = 1, nrxx
+  ELSE IF ( iop == 1 ) THEN
         !
-        rhox = rho(ir,1) + rho_core(ir)
+     DO is = 2, nspin
         !
-        rho_up = 0.5D0 * ( rho(ir,1) + rho(ir,2) * rhox )
-        rho_dw = 0.5D0 * ( rho(ir,1) - rho(ir,2) * rhox )
-        !
-        rho(ir,1) = rho_up
-        rho(ir,2) = rho_dw
+        WHERE( rho(:,1)+rho_core(:) > eps32 )
+           !
+           rho(:,is) = rho(:,is) / ( rho(:,1)+rho_core(:) )
+           !
+        ELSEWHERE
+           !
+           rho(:,is) = 0.D0
+           !
+        END WHERE
         !
      END DO
      !
@@ -79,10 +64,8 @@ SUBROUTINE rho2zeta( rho, rho_core, nrxx, nspin, iop )
      !
      WRITE( stdout , '(5X,"iop = ",I5)' ) iop
      !
-     CALL errore( 'mag2zeta', 'wrong iop', 1 )
+     CALL errore( 'rho2zeta', 'wrong iop', 1 )
      !
   END IF
-  !
-  RETURN
   !
 END SUBROUTINE rho2zeta

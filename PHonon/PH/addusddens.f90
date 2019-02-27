@@ -33,7 +33,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   USE uspp,     ONLY : okvan, becsum
   USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  USE wavefunctions_module,  ONLY: psic
+  USE wavefunctions,  ONLY: psic
   USE buffers,    ONLY : get_buffer
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   USE paw_variables, ONLY : okpaw

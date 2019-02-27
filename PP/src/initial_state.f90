@@ -21,7 +21,7 @@ PROGRAM initial_state
   USE ions_base,  ONLY : nat
   USE klist,      ONLY : nks, xk, igk_k, ngk
   USE uspp,       ONLY : nkb, vkb
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE parameters, ONLY : ntypx
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm

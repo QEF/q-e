@@ -185,7 +185,7 @@
 
 !-----------------------------------------------------------------------
       subroutine formfn( r, rab, vloc_at, zv, rcmax, g, omega, &
-                         tpiba2, mesh, ngs, oldvan, tpre, vps, dv0, dvps )
+                         tpiba2, mesh, ngs, tpre, vps, dv0, dvps )
 !-----------------------------------------------------------------------
 !
         !computes the form factors of pseudopotential (vps),
@@ -198,7 +198,6 @@
         implicit none
         integer,   intent(in)  :: ngs
         integer,   intent(in)  :: mesh
-        logical,   intent(in)  :: oldvan
         logical,   intent(in)  :: tpre
         real(DP), intent(in)  ::  g( ngs )
         real(DP), intent(in)  ::  r( mesh )
@@ -244,7 +243,7 @@
         ! ...  reproduce the results from other PW codes
         !
 !$omp parallel default(none) private( ig, xg, ir, f, df ) &
-!$omp          shared( irmax, r, rcmax, mesh, oldvan, rab, dv0, tpiba2, g, ngs, vscr, tpre, zv, figl, vps, dvps, omega, dfigl )
+!$omp          shared( irmax, r, rcmax, mesh, rab, dv0, tpiba2, g, ngs, vscr, tpre, zv, figl, vps, dvps, omega, dfigl )
 
         allocate( f(mesh) )
         if (tpre) then
@@ -258,14 +257,10 @@
         END DO
 
 !$omp master
-        IF ( oldvan ) THEN
-           CALL herman_skillman_int( mesh, f, rab, dv0 )
-        ELSE
-           CALL simpson_cp90( mesh, f, rab, dv0 )
-        END IF
+        ! obsolete: IF ( oldvan ) CALL herman_skillman_int( mesh, f, rab, dv0 )
+        CALL simpson_cp90( mesh, f, rab, dv0 )
 !$omp end master
         !
-
 !$omp do
         do ig = 1, ngs
           xg = sqrt( g(ig) * tpiba2 )
@@ -286,13 +281,8 @@
               end if
             end do
             !
-            if ( oldvan ) then
-              call herman_skillman_int( mesh, f, rab, figl(ig) )
-              if(tpre) call herman_skillman_int( mesh, df, rab, dfigl(ig) )
-            else
-              call simpson_cp90( mesh, f, rab,  figl(ig) )
-              if(tpre) call simpson_cp90( mesh, df, rab, dfigl(ig) )
-            end if
+            call simpson_cp90( mesh, f, rab,  figl(ig) )
+            if(tpre) call simpson_cp90( mesh, df, rab, dfigl(ig) )
             !
           else
             !
@@ -305,13 +295,8 @@
               endif
             end do
             !
-            if ( oldvan ) then
-              call herman_skillman_int( mesh, f, rab(1), figl(ig) )
-              if(tpre) call herman_skillman_int( mesh, df, rab(1), dfigl(ig) )
-            else
-              call simpson_cp90(mesh,f,rab(1),figl(ig))
-              if(tpre) call simpson_cp90(mesh,df,rab(1),dfigl(ig))
-            end if
+            call simpson_cp90(mesh,f,rab(1),figl(ig))
+            if(tpre) call simpson_cp90(mesh,df,rab(1),dfigl(ig))
             !
           end if
         end do

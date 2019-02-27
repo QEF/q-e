@@ -14,7 +14,7 @@ SUBROUTINE init_run()
   USE wvfct,              ONLY : nbnd, et, wg, btype
   USE control_flags,      ONLY : lmd, gamma_only, smallmem, ts_vdw
   USE gvect,              ONLY : g, gg, mill, gcutm, ig_l2g, ngm, ngm_g, &
-       gstart ! to be comunicated to the Solvers if gamma_only
+                                 gshells, gstart ! to be comunicated to the Solvers if gamma_only
   USE gvecs,              ONLY : gcutms, ngms
   USE cell_base,          ONLY : at, bg, set_h_ainv
   USE cellmd,             ONLY : lmovecell
@@ -67,7 +67,7 @@ SUBROUTINE init_run()
   CALL ggens( dffts, gamma_only, at, g, gg, mill, gcutms, ngms )
   if (gamma_only) THEN
      ! ... Solvers need to know gstart
-     call export_gstart_2_cg(gstart); call export_gstart_2_davidson(gstart)
+     call export_gstart_2_solvers(gstart)
   END IF
   !
   IF (do_comp_esm) CALL esm_init()
@@ -104,8 +104,8 @@ SUBROUTINE init_run()
   btype(:,:) = 1
   !
   IF (ts_vdw) THEN
-    CALL tsvdw_initialize()
-    CALL set_h_ainv()
+     CALL tsvdw_initialize()
+     CALL set_h_ainv()
   END IF
   !
   CALL openfil()

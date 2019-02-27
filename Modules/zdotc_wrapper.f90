@@ -17,7 +17,7 @@ FUNCTION zdotc_wrapper(n,a,ia,b,ib) RESULT(c)
    COMPLEX(dp), INTENT(in) :: a(*), b(*)
    INTEGER, INTENT(in):: n,ia,ib
    COMPLEX(dp) :: c
-#ifdef zdotc
+#if defined(zdotc)
 #undef zdotc
    CALL zdotc(c,n,a,ia,b,ib)
 #else

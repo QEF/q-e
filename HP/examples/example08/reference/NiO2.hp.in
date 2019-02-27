@@ -1,0 +1,7 @@
+ &inputhp
+   prefix = 'NiO2',
+   outdir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/',
+   nq1 = 2, nq2 = 2, nq3 = 1,
+   conv_thr_chi = 1.0d-8,
+   iverbosity = 2
+ /

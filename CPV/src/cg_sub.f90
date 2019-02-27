@@ -12,6 +12,8 @@
       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, fion, ema0bg, becdr, &
       lambdap, lambda, nlam, vpot, c0, cm, phi, dbec,l_cprestart  )
 
+!! please see https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.64.1045
+
       use kinds, only: dp
       use control_flags, only: tpre, iverbosity, tfor, tprnfor
 
@@ -31,7 +33,7 @@
       use cell_base, only: omega, alat, tpiba2
       use local_pseudo, only: vps, rhops
       use io_global,                ONLY : stdout, ionode, ionode_id
-      use mp_global,                ONLY : intra_bgrp_comm, np_ortho, me_ortho, ortho_comm
+      use mp_global,                ONLY : intra_bgrp_comm
       use dener
       use constants,                only : pi, au_gpa
       USE io_files,                 ONLY : tmp_dir, prefix
@@ -158,6 +160,7 @@
          write(stdout,*) 'PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES'
       
 !set tpa preconditioning
+!eq. 5.16 of https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.64.1045
 
       call  emass_precond_tpa( ema0bg, tpiba2, emass_cutoff )
      

@@ -24,7 +24,7 @@ subroutine pola_basis_lanczos(n_set,nstates,numpw, nsteps,ispin)
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE wvfct,     ONLY : npwx, npw, nbnd
    USE gvecw,     ONLY : ecutwfc
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
    USE mp_pools, ONLY : intra_pool_comm
@@ -541,7 +541,7 @@ subroutine pc_operator(state,ispin,l_cond)
    USE kinds,    ONLY : DP
    USE gvect
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv,num_nbnds
@@ -591,7 +591,7 @@ subroutine pc_operator_t(state,evc_t,ispin, fc)
    USE kinds,    ONLY : DP
    USE gvect
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv
@@ -641,7 +641,7 @@ subroutine lanczos_state(zstates, nstates, itype, nsteps,istate,ispin)
   USE constants, ONLY : e2, pi, tpi, fpi
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE wvfct,    ONLY : g2kin, npwx, npw, nbnd
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world, ONLY : mpime, nproc, world_comm
   USE gvecs,              ONLY : doublegrid
@@ -1290,7 +1290,7 @@ subroutine global_pola_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
   USE wvfct,    ONLY : npwx, npw, nbnd
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world, ONLY : world_comm
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE gvect
   USE gvecs,              ONLY : doublegrid
   USE fft_base,             ONLY : dfftp, dffts
@@ -1940,7 +1940,7 @@ subroutine pc_operator_test(state)
    USE kinds,    ONLY : DP
    USE gvect
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv
@@ -1974,7 +1974,7 @@ subroutine pc_operator_t_m(numpw,state,evc_t,ispin,fc)
    USE kinds,    ONLY : DP
    USE gvect
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv
@@ -2025,7 +2025,7 @@ subroutine pc_operator_t_r(numpw,state,evc_r,ispin,fc)
    USE kinds,    ONLY : DP
    USE gvect
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm
    USE wannier_gw, ONLY : num_nbndv
@@ -2080,7 +2080,7 @@ subroutine  h_psi_self( lda, n, m, psi, hpsi )
   USE kinds,    ONLY : DP
   USE gvect,    ONLY : gstart
   USE wvfct,    ONLY : npwx, npw, nbnd,et
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE wannier_gw, ONLY : n_gw_states, ene_gw, delta_self
   USE mp, ONLY : mp_sum
   USE mp_world, ONLY : world_comm
@@ -2138,7 +2138,7 @@ subroutine  h_psi_scissor( ispin,lda, n, m, psi, hpsi )
   USE kinds,    ONLY : DP
   USE gvect,    ONLY : gstart
   USE wvfct,    ONLY : npwx, npw, nbnd,et
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE wannier_gw, ONLY : num_nbndv,scissor
   USE mp, ONLY : mp_sum
   USE mp_world, ONLY : world_comm
@@ -2195,7 +2195,7 @@ subroutine pola_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE wvfct,    ONLY : npwx, npw, nbnd
    USE gvecw,     ONLY : ecutwfc
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_pools, ONLY : intra_pool_comm
    USE mp_world, ONLY : world_comm, mpime, nproc

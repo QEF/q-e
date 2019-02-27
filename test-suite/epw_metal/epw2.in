@@ -43,8 +43,6 @@
   lifc        = .true.
   asr_typ     = 'crystal'
 
-  parallel_k  = .true.
-  parallel_q  = .false.
 
   fsthick     = 6 ! eV
   eptemp      = 300 ! K

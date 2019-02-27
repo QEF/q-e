@@ -1,0 +1,30 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='CH4'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
+ /
+ &system
+    ibrav = 1,
+    celldm(1) = 20,
+    nat = 5,
+    ntyp = 2,
+    ecutwfc = 25,
+    ecutfock = 25,
+    nbnd = 20,
+    input_dft = 'B3LYP'
+ /
+ &electrons
+    conv_thr =  1.0d-10
+ /
+ATOMIC_SPECIES
+H  1.008  H.blyp-vbc.UPF
+C 12.011  C.blyp-mt.UPF
+ATOMIC_POSITIONS {angstrom}
+C   0.000000000   0.000000000   0.000000000
+H   0.642814093   0.642814093   0.642814093
+H  -0.642814093  -0.642814093   0.642814093
+H   0.642814093  -0.642814093  -0.642814093
+H  -0.642814093   0.642814093  -0.642814093
+K_POINTS {gamma}

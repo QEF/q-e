@@ -29,7 +29,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE uspp_param, ONLY: nh
    USE io_global, ONLY: stdout, ionode, ionode_id
    USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc, prefix, tmp_dir, seqopn
-   USE wavefunctions_module, ONLY : evc
+   USE wavefunctions, ONLY : evc
    USE funct, ONLY : dft_is_meta
    USE mp_pools, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
    USE mp_bands, ONLY: intra_bgrp_comm

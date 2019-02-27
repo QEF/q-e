@@ -22,8 +22,8 @@ MODULE london_module
   SAVE
   !
   !
-  REAL ( DP ) , ALLOCATABLE :: C6_i  ( : ) ,     &
-                               R_vdw ( : ) ,     &
+  REAL(DP)                  :: C6_i(nsx) 
+  REAL ( DP ) , ALLOCATABLE :: R_vdw ( : ) ,     &
                                C6_ij ( : , : ) , &
                                R_sum ( : , : ) , &
                                r     ( : , : ) , &
@@ -196,8 +196,7 @@ MODULE london_module
          !
          ! and some buffers on ionode
          !
-         ALLOCATE ( C6_i  ( ntyp ) , &
-                    R_vdw ( ntyp )   )
+         ALLOCATE ( R_vdw ( ntyp )   )
          !
          ! here we initialize parameters to unphysical values
          !
@@ -256,9 +255,9 @@ MODULE london_module
            !
          END DO
          !
-         WRITE ( stdout ,'( /, 5X, "-------------------------------------" , &
-                          & /, 5X, "Parameters for Dispersion Correction:" , &
-                          & /, 5X, "-------------------------------------" , &
+         WRITE ( stdout ,'( /, 5X, "-------------------------------------------------" , &
+                          & /, 5X, "Parameters for Dispersion (Grimme-D2) Correction:" , &
+                          & /, 5X, "-------------------------------------------------" , &
                           & /, 5X, "  atom      VdW radius       C_6     " , / )' )
          DO ata = 1 , ntyp
             !
@@ -269,7 +268,7 @@ MODULE london_module
          !
          ! ... atomic parameters are deallocated
          !
-         DEALLOCATE ( C6_i , R_vdw )
+         DEALLOCATE ( R_vdw )
          !
          ! ... cutoff radius in alat units
          !
@@ -734,7 +733,6 @@ MODULE london_module
    !
    IMPLICIT NONE
    !
-   IF ( ALLOCATED ( C6_i  ) ) DEALLOCATE ( C6_i  )
    IF ( ALLOCATED ( R_vdw ) ) DEALLOCATE ( R_vdw )
    IF ( ALLOCATED ( C6_ij ) ) DEALLOCATE ( C6_ij )
    IF ( ALLOCATED ( R_sum ) ) DEALLOCATE ( R_sum )

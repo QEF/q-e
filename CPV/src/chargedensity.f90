@@ -64,13 +64,8 @@
       USE wannier_base,       ONLY: iwf
       USE exx_module,         ONLY: rhopr 
       USE input_parameters,   ONLY: tcpbo ! BS
-      ! USE scatter_mod,        ONLY: fft_scatter_tg_opt, maps_sticks_to_3d
-#if defined (__OLDXML)
-      USE xml_io_base,        ONLY: read_rho, restart_dir
-#else
       USE io_base,            ONLY: read_rhog
-#endif      
-      USE io_files,           ONLY: tmp_dir, prefix
+      USE io_files,           ONLY: tmp_dir, prefix, postfix
       USE fft_rho
       USE fft_helper_subroutines, ONLY: c2psi_gamma
       !
@@ -105,7 +100,7 @@
 #endif
       COMPLEX(DP), ALLOCATABLE :: psis(:)
       REAL(DP), ALLOCATABLE :: drhovan(:,:,:,:,:)
-      CHARACTER(LEN=256) :: dirname
+      CHARACTER(LEN=320) :: filename
 
       LOGICAL, SAVE :: first = .TRUE.
       LOGICAL :: ttstress
@@ -186,17 +181,20 @@
          ! FIXME: the beginning, the potential computed and no longer updated.
          !
          IF( first ) THEN
-#if defined (__OLDXML)
-            dirname = restart_dir( tmp_dir, ndr )
-            CALL read_rho( dirname, rhor, nspin )
-#else
             CALL errore('rhoofr','option trhor unverified, please report',1)
-            WRITE(dirname,'(A,A,"_",I2,".save/")') &
-                 TRIM(tmp_dir), TRIM(prefix), ndr
-            CALL read_rhog ( dirname, root_bgrp, intra_bgrp_comm, &
+            WRITE(filename,'(A,A,"_",I2,A,"charge-density")') &
+                 TRIM(tmp_dir), TRIM(prefix), ndr,postfix
+            CALL read_rhog ( filename, root_bgrp, intra_bgrp_comm, &
                  ig_l2g, nspin, rhog )
+            !
+            !^^ ... TEMPORARY FIX  (newlsda) ...
+            IF ( nspin==2 ) THEN
+               rhog(:,1) = ( rhog(:,1) + rhog(:,2) )*0.5d0
+               rhog(:,2) = rhog(:,1) - rhog(:,2)
+            ENDIF
+            !^^.......................
+            !
             CALL rho_g2r ( dfftp, rhog, rhor )
-#endif
             rhopr = rhor
             first = .FALSE.
          ELSE

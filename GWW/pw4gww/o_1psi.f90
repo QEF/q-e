@@ -22,7 +22,6 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
   USE constants, ONLY : pi
   USE kinds,     ONLY : DP
   USE gvect,     ONLY : gstart
-  USE mp_global, ONLY : intra_bgrp_comm
   USE mp,        ONLY : mp_sum
   USE mp_world,  ONLY : world_comm
   USE fft_base,  ONLY : dffts
@@ -124,7 +123,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
-     !CALL h_1psi( npwx, npw, psi(1,m), hpsi, spsi )
+     !CALL hs_1psi( npwx, npw, psi(1,m), hpsi, spsi )
      call o_1psi_gamma( numv, v_states, psi(1,m), hpsi,.false.,hdiag, ptype,fcw_number,fcw_state,fcw_mat,ethr)
      spsi(1:npw)=psi(1:npw,m)
      
@@ -253,7 +252,7 @@ SUBROUTINE o_rcgdiagg( npwx, npw, nbnd, psi, e, precondition, &
         !
         ! ... |scg> is S|cg>
         !
-        !CALL h_1psi( npwx, npw, cg(1), ppsi(1), scg(1) )
+        !CALL hs_1psi( npwx, npw, cg(1), ppsi(1), scg(1) )
         call o_1psi_gamma( numv, v_states, cg, ppsi,.false.,hdiag, ptype,fcw_number,fcw_state,fcw_mat,ethr)
         sca=0.d0
         do ig=1,npw
@@ -436,7 +435,7 @@ SUBROUTINE o_1psi_gamma( numv, v_states, psi, opsi,l_freq,hdiag, ptype,fcw_numbe
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE wvfct,    ONLY : g2kin, npwx, npw, nbnd, et
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
    USE gvecs,              ONLY : doublegrid
@@ -822,7 +821,7 @@ SUBROUTINE evc_to_real(numv, v_states)
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE gvecs,              ONLY : doublegrid
    USE fft_base,             ONLY : dfftp, dffts
    USE fft_interfaces,       ONLY : fwfft, invfft
@@ -867,7 +866,7 @@ SUBROUTINE o_basis_init(numpw,o_basis,numv,v_states,cutoff, ptype,fcw_number,fcw
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE kinds,    ONLY : DP
   USE wvfct,    ONLY : g2kin, npwx, npw, nbnd
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE gvecs,              ONLY : doublegrid
   USE constants, ONLY : tpi
   USE random_numbers, ONLY : randy
@@ -956,9 +955,9 @@ SUBROUTINE o_basis_init(numpw,o_basis,numv,v_states,cutoff, ptype,fcw_number,fcw
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE gvecs,              ONLY : doublegrid
-   USE wavefunctions_module, ONLY : psic
+   USE wavefunctions, ONLY : psic
    USE io_files,  ONLY : diropn, prefix
    USE gvect,     ONLY : ngm, gg,gstart
    USE cell_base, ONLY: tpiba2
@@ -1041,7 +1040,7 @@ SUBROUTINE o_1psi_gamma_real( numv, v_states, psi, opsi)
    USE constants, ONLY : e2, pi, tpi, fpi
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : mpime, world_comm
    USE gvecs,              ONLY : doublegrid
@@ -1122,9 +1121,9 @@ END SUBROUTINE o_1psi_gamma_real
    USE io_global,            ONLY : stdout, ionode, ionode_id
    USE kinds,    ONLY : DP
    USE wvfct,    ONLY : npwx, npw, nbnd
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE gvecs,              ONLY : doublegrid
-   USE wavefunctions_module, ONLY : psic
+   USE wavefunctions, ONLY : psic
    USE io_files,  ONLY : prefix, tmp_dir, diropn
    USE gvect,     ONLY : ngm, gg,gstart
    USE cell_base, ONLY: tpiba2

@@ -15,7 +15,7 @@ SUBROUTINE solve_ph ( )
   USE mp_world,              ONLY : world_comm
   USE mp,                    ONLY : mp_bcast
   USE uspp,                  ONLY : nkb
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE becmod,                ONLY : bec_type, becp, calbec, &
                                     allocate_bec_type, deallocate_bec_type
   USE klist,                 ONLY : xk, ngk

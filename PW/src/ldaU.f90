@@ -97,7 +97,7 @@ CONTAINS
             & 'full LDA+U not implemented with pseudo projection type', 1 )
        !
        IF (noncolin) THEN
-          ALLOCATE( d_spin_ldau(2,2,48) )
+          IF ( .NOT. ALLOCATED (d_spin_ldau) ) ALLOCATE( d_spin_ldau(2,2,48) )
           call comp_dspinldau ()
        END IF
        
@@ -136,13 +136,13 @@ CONTAINS
          CALL errore( 'init_lda_plus_u', 'Hubbard_l should not be > 3 ', 1 )
 
     ! compute index of atomic wfcs used as projectors
-    IF ( .NOT.allocated(oatwfc)) ALLOCATE ( oatwfc(nat) )
+    IF ( .NOT.ALLOCATED(oatwfc)) ALLOCATE ( oatwfc(nat) )
     CALL offset_atom_wfc ( .false., oatwfc, nwfcU )
     ! nwfcU is set to natomwfc by the routine above
     IF ( nwfcU .NE.natomwfc ) &
          CALL errore ('offset_atom_wfc', 'wrong number of wavefunctions', 1)
     ! for each atom, compute index of its projectors (among projectors only)
-    IF ( .NOT.allocated(offsetU)) ALLOCATE ( offsetU(nat) )
+    IF ( .NOT.ALLOCATED(offsetU)) ALLOCATE ( offsetU(nat) )
     CALL offset_atom_wfc ( .true., offsetU, nwfcU )
     !
   END SUBROUTINE init_lda_plus_u
@@ -156,6 +156,7 @@ CONTAINS
      IF ( ALLOCATED( offsetU ) )    DEALLOCATE( offsetU )
      IF ( ALLOCATED( q_ae ) )       DEALLOCATE( q_ae )
      IF ( ALLOCATED( q_ps ) )       DEALLOCATE( q_ps )
+     IF ( ALLOCATED( d_spin_ldau )) DEALLOCATE( d_spin_ldau )
   END IF
   IF ( ALLOCATED( wfcU ) )       DEALLOCATE( wfcU )
   !

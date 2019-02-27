@@ -245,7 +245,7 @@ CONTAINS
                                              TRANSPOSE(h) ) ) ) / omega
           conv_bfgs = conv_bfgs .AND. ( cell_error < cell_thr ) 
 #undef DEBUG
-#ifdef DEBUG
+#if defined(DEBUG)
            write (*,'(3f15.10)') TRANSPOSE ( RESHAPE( grad(n-8:n), (/ 3, 3 /) ) )
            write (*,*)
            write (*,'(3f15.10)') TRANSPOSE(h)
@@ -259,6 +259,8 @@ CONTAINS
       !
       ! ... converged (or useless to go on): quick return
       !
+      IF ( .NOT. conv_bfgs .AND. ( tr_min_hit > 1 ) ) CALL infomsg( 'bfgs',&
+              'history already reset at previous step: stopping' )
       conv_bfgs = conv_bfgs .OR. ( tr_min_hit > 1 )
       IF ( conv_bfgs ) GOTO 1000
       !

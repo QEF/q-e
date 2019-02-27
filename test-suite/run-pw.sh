@@ -8,8 +8,6 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-#include ${ESPRESSO_ROOT}/test-suite/ENVIRONMENT
-
 if [ $QE_USE_MPI == 1 ]; then
   export PARA_PREFIX="mpirun -np ${TESTCODE_NPROCS}"
   export PARA_POSTFIX=" "
@@ -36,6 +34,13 @@ if test "$1" = "vdw6.in" ; then
       mv rVV10_kernel_table ${ESPRESSO_PSEUDO}/
       echo "kernel table generated in ${ESPRESSO_PSEUDO}/rVV10_kernel_table"
    fi
+fi
+
+if test "$1" = "plugin-pw2casino_1.in" ; then
+  export PARA_POSTFIX="$PARA_POSTFIX --pw2casino"
+fi
+if test "$1" = "plugin-pw2casino_2.in" ; then
+  export PARA_POSTFIX="$PARA_POSTFIX --pw2casino"
 fi
 
 # echo "${PARA_PREFIX} ${ESPRESSO_ROOT}/bin/pw.x ${PARA_POSTFIX} -input $1 > $2 2> $3"

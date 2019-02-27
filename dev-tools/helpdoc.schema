@@ -188,6 +188,16 @@ element dimension {
 
     ref varTags
 }
+
+element multidimension {
+    ident 
+    attribute type   { word }
+    attribute indexes { clist }
+    attribute start  { clist }
+    attribute end    { clist} 
+
+    ref varTags
+} 
 element dimensiongroup {
     attribute type  { word }
     attribute start { word }
@@ -199,7 +209,17 @@ element dimensiongroup {
     }
 }
 
+element multidimensiongroup {
+    attribute type { word }
+    attribute indexes  { clist }
+    attribute start    { clist }
+    attribute end      { clist } 
 
+    interleave {
+       + { ref multidimension }
+       ref varTags
+    }
+}  
 element table {
     ident
     

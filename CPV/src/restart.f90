@@ -18,11 +18,7 @@
       USE kinds,            ONLY: DP
       USE ions_base,        ONLY: nsp, na, cdmi, taui
       USE cell_base,        ONLY: s_to_r
-#if defined (__OLDXML)
-      USE cp_restart,       ONLY: cp_writefile
-#else
       USE cp_restart_new,   ONLY: cp_writefile
-#endif
       USE cp_restart_new,   ONLY: cp_write_zmat
       USE cp_interfaces,    ONLY: set_evtot, set_eitot, c_bgrp_expand, &
            c_bgrp_pack
@@ -31,7 +27,7 @@
       USE io_files,         ONLY: tmp_dir
       USE ensemble_dft,     ONLY: tens
       USE mp,               ONLY: mp_bcast
-      USE control_flags,    ONLY: tksw, ndw, io_level, twfcollect
+      USE control_flags,    ONLY: tksw, ndw, io_level
       USE electrons_module, ONLY: collect_c
       USE descriptors,      ONLY: la_descriptor
       USE gvecw,            ONLY: ngw
@@ -129,11 +125,7 @@
       USE electrons_base, ONLY : nbnd, nbsp, nspin, nupdwn, iupdwn, keep_occ, nbspx
       USE gvecw,          ONLY : ngw
       USE ions_base,      ONLY : nsp, na, cdmi, taui
-#if defined (__OLDXML)
-      USE cp_restart,       ONLY: cp_readfile, cp_read_cell, cp_read_wfc
-#else
       USE cp_restart_new,   ONLY: cp_readfile, cp_read_cell, cp_read_wfc
-#endif
       USE cp_restart_new, ONLY : cp_read_zmat
       USE ensemble_dft,   ONLY : tens
       USE autopilot,      ONLY : event_step, event_index, max_event_step

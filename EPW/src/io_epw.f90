@@ -24,18 +24,23 @@
   PUBLIC :: lambda_phself, linewidth_phself, linewidth_elself, iospectral, &
             iua2ffil, iudosfil, iufillambda, iuqdos, iufe, iufilker, &
             iufilgap, iospectral_sup, iua2ftrfil, iufilgapFS, iufillambdaFS, &
-            iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, QPeig_read, iures
+            iospectral_cum, iuwanep, iuwane, iunukk, iudvscf, iuqpeig, iures
   PUBLIC :: epwdata, iundmedata, iunvmedata, iunksdata, iudyn, iukgmap, iuepb,&
             iufilfreq, iufilegnv, iufileph, iufilkqmap, &
             iufilikmap, iueig, iunepmatwp, iunepmatwe, iunkf, iunqf, &
             iufileig, iukmap, crystal, iunifc, iunimem, iunepmatwp2
-  PUBLIC :: iuwinfil, iun_plot, iuukk, iuprojfil !, iummn
+  PUBLIC :: iuwinfil, iun_plot, iuukk, iuprojfil, iudecayH, iudecayP, &
+            iudecaydyn, iudecayv, iummn, iubvec
   PUBLIC :: iufilsigma, iufilseebeck, iufilkappael, iufilkappa, iufilscatt_rate,&
             iufilFi_all, iufilsigma_all, iufiltau_all, iuindabs
+  PUBLIC :: iunsparseq, iunsparsek, iunsparsei, iunsparsej, iunsparset, iunselecq, &
+            iunsparseqcb, iunsparsekcb, iunsparseicb, iunsparsejcb, iunsparsetcb, &
+            iunrestart, iufilibtev_sup, iunepmat, iunepmatcb
+
   !
   ! Output of physically relevant quantities (60-100)
   !    
-  INTEGER :: QPeig_read      = 59  ! Reading qp eigenenergies from file  
+  INTEGER :: iuqpeig         = 59  ! Reading quasi-particle eigenenergies from file  
   INTEGER :: lambda_phself   = 60  ! Lambda factor of the phonon self-energy
                                    ! [lambda.phself] 
   INTEGER :: linewidth_phself= 61  ! Imaginary part of the phonon self-energy
@@ -100,17 +105,38 @@
   INTEGER :: epwdata         = 124  ! EPW data [epwdata.fmt] 
   INTEGER :: iundmedata      = 125  ! Dipole matrix in wannier basis [dmedata.fmt]
   INTEGER :: iunepmatwp2     = 126  ! Opening the epmatwp file
+  INTEGER :: iufilibtev_sup  = 127  ! Files containing velocities for IBTE
+  INTEGER :: iunsparseq      = 128  ! Q-mapping for IBTE
+  INTEGER :: iunsparsek      = 129  ! K-mapping for IBTE
+  INTEGER :: iunsparsei      = 130  ! i band mapping for IBTE
+  INTEGER :: iunsparsej      = 131  ! j band mapping for IBTE
+  INTEGER :: iunsparset      = 132  ! temperature mapping for IBTE
+  INTEGER :: iunsparseqcb    = 133  ! Q-mapping for IBTE of conduction band
+  INTEGER :: iunsparsekcb    = 134  ! K-mapping for IBTE for conduction band
+  INTEGER :: iunsparseicb    = 135  ! i band mapping for IBTE for conduction band
+  INTEGER :: iunsparsejcb    = 136  ! j band mapping for IBTE for conduction band
+  INTEGER :: iunsparsetcb    = 137  ! temperature mapping for IBTE for conduction band
+  INTEGER :: iunselecq       = 138  ! file containing q-point inside the fsthick windows
+  INTEGER :: iunrestart      = 139  ! restart file during writing of IBTE scattering elements
+  INTEGER :: iunepmat        = 140  ! Opening the epmatkq files
+  INTEGER :: iunepmatcb      = 141  ! Opening the epmatkqcb file
+
   !
   ! Output quantites related to Wannier (201-250)
   !  
   INTEGER :: iuwinfil        = 201  ! Wannier projectors and other quantities
 ! SP : Not used for now but could be in the future. Would require the amn as well.
-!  INTEGER :: iummn           = 202  ! Overlap of the cell periodic part of the Bloch 
+  INTEGER :: iummn           = 202  ! Overlap of the cell periodic part of the Bloch 
                                     ! states <u_nmk|u_nk+b>
   INTEGER :: iun_plot        = 203  ! UNK file (needed by Wannier90 for plotting the 
                                     ! real space Wannier functions)
   INTEGER :: iuukk           = 204  ! Final ukk rotation matrix (the big U!)
   INTEGER :: iuprojfil       = 205  ! Unit for projector [.projw90]  
+  INTEGER :: iudecayH        = 206  ! Hamiltonian decay in real space
+  INTEGER :: iudecayP        = 207  ! Dipole decay in real space
+  INTEGER :: iudecaydyn      = 208  ! Dynamical matrix decay in real space
+  INTEGER :: iudecayv        = 209  ! Velocity matrix decay in real space
+  INTEGER :: iubvec          = 206  ! b-vectors and their weight wb
   !
   ! Output quantites related to transport (251-300)
   INTEGER :: iufilsigma      = 251 ! Electrical conductivity

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -39,7 +39,7 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
                                      & n_ipol, becp1_virt, rho_1c,&
                                      & lr_exx
   USE lsda_mod,               ONLY : current_spin, isk
-  USE wavefunctions_module,   ONLY : psic
+  USE wavefunctions,   ONLY : psic
   USE wvfct,                  ONLY : nbnd, et, wg, npwx
   USE control_flags,          ONLY : gamma_only
   USE uspp,                   ONLY : vkb, nkb, okvan, qq_nt, becsum
@@ -73,12 +73,13 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   ! Local variables
   !
   INTEGER       :: ir, ik, ibnd, jbnd, ig, ijkb0, np, na
-  INTEGER       :: ijh,ih,jh,ikb,jkb ,ispin 
+  INTEGER       :: ijh,ih,jh,ikb,jkb,is
   INTEGER       :: i, j, k, l
   REAL(kind=dp) :: w1, w2, scal, rho_sum
   ! These are temporary buffers for the response 
   REAL(kind=dp), ALLOCATABLE :: rho_sum_resp_x(:), rho_sum_resp_y(:),&
                               & rho_sum_resp_z(:)  
+  COMPLEX(kind=dp), ALLOCATABLE :: rhoaux(:,:)
   CHARACTER(len=256) :: tempfile, filename
   !
   IF (lr_verbosity > 5) THEN
@@ -88,12 +89,12 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   CALL start_clock('lr_calc_dens')
   !
   ALLOCATE( psic(dfftp%nnr) )
-  psic(:)    = (0.0d0,0.0d0)
+  psic(:) = (0.0d0, 0.0d0)
   !
   IF (gamma_only) THEN
-     rho_1(:,:) =  0.0d0
+     rho_1(:,:) = 0.0d0
   ELSE
-     rho_1c(:,:) =  0.0d0
+     rho_1c(:,:) = (0.0d0, 0.0d0)
   ENDIF
   !
   IF (gamma_only) THEN
@@ -122,10 +123,42 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
      !
   ENDIF
   !
-  ! Here we add the Ultrasoft contribution to the charge density
-  ! response. 
+  ! Here we add the ultrasoft contribution to the charge density response. 
   !
-  IF (okvan) CALL addusdens(rho_1)
+  IF (okvan) THEN
+     ! 
+     ALLOCATE(rhoaux(dfftp%nnr,nspin_mag))
+     !
+     ! Compute the US part of the response charge density in G-space
+     ! and put the result in rhoaux
+     !
+     rhoaux(:,:) = (0.0d0, 0.0d0)
+     CALL addusdens(rhoaux)
+     !
+     DO is = 1, nspin_mag
+        !
+        ! FFT of the US part of the response charge density 
+        ! from G-space to R-space
+        !
+        psic(:) = (0.d0, 0.d0)
+        psic( dfftp%nl(:) ) = rhoaux(:,is)
+        IF ( gamma_only ) psic( dfftp%nlm(:) ) = CONJG(rhoaux(:,is))
+        CALL invfft ('Rho', psic, dfftp)
+        !
+        ! Sum up the normal and the US parts of the response charge density
+        ! in R-space
+        !
+        IF (gamma_only) THEN
+           rho_1(:,is)  = rho_1(:,is) + DBLE(psic(:))
+        ELSE
+           rho_1c(:,is) = rho_1c(:,is) + psic(:)
+        ENDIF
+        !
+     ENDDO
+     !
+     DEALLOCATE(rhoaux)
+     !
+  ENDIF
   !
   ! The psic workspace can present a memory bottleneck
   !
@@ -143,10 +176,10 @@ SUBROUTINE lr_calc_dens( evc1, response_calc )
   !
   IF (lr_verbosity > 0) THEN
      ! 
-     DO ispin = 1, nspin_mag
+     DO is = 1, nspin_mag
         !
         rho_sum = 0.0d0
-        rho_sum = SUM(rho_1(:,ispin))
+        rho_sum = SUM(rho_1(:,is))
         !
 #if defined(__MPI)
         CALL mp_sum(rho_sum, intra_bgrp_comm )
@@ -316,10 +349,9 @@ CONTAINS
     USE lr_variables,        ONLY : becp_1, tg_revc0
     USE io_global,           ONLY : stdout
     USE realus,              ONLY : real_space, invfft_orbital_gamma,&
-                                    & initialisation_level,&
-                                    & calbec_rs_gamma,&
-                                    & add_vuspsir_gamma, v_loc_psir,&
-                                    & real_space_debug 
+                                    initialisation_level,&
+                                    calbec_rs_gamma,&
+                                    add_vuspsir_gamma, v_loc_psir
     USE mp_global,           ONLY : ibnd_start, ibnd_end, inter_bgrp_comm, &
                                     me_bgrp, me_pool
     USE mp,                  ONLY : mp_sum
@@ -426,7 +458,7 @@ CONTAINS
           ! Notice that betapointlist() is called in lr_readin at the
           ! very beginning.
           !
-          IF ( real_space_debug > 6 .AND. okvan) THEN
+          IF ( real_space .AND. okvan) THEN
              ! The rbecp term
              CALL calbec_rs_gamma(ibnd,nbnd,becp%r)
              !
@@ -460,7 +492,7 @@ CONTAINS
        scal = 0.0d0
        becsum(:,:,:) = 0.0d0
        !
-       IF ( real_space_debug <= 6) THEN 
+       IF ( .NOT.real_space ) THEN 
           ! In real space, the value is calculated above
           CALL calbec(ngk(1), vkb, evc1(:,:,1), becp)
           !

@@ -1,0 +1,17 @@
+The calculation of Hubbard parameters using hp.x is based on 
+density-functional perturbation theory (DFPT):
+I. Timrov, N. Marzari and M. Cococcioni, 
+"Hubbard parameters from density-functional perturbation theory", 
+Phys. Rev. B 98, 085127 (2018); arXiv:1805.01805
+
+The DFPT approach (as the linear-response cDFT approach) has a limitation: 
+it is applicable only to open-shell systems. For more details see 
+K. Yu and E.A. Carter, J. Chem. Phys. 140, 121105 (2014).
+
+Self-consistent calculation of Hubbard parameters can be performed using DFPT 
+with the same strategy as explained in H. Hsu et al., Phys. Rev. B 79, 125124 (2009).
+
+Example of the application of the HP code:
+C. Ricca, I. Timrov, M. Cococcioni, N. Marzari, and U. Aschauer,
+"Self-consistent site-dependent DFT+U study of stoichiometric and defective SrMnO3",
+accepted to Phys. Rev. B (2019); arXiv:1811.10858

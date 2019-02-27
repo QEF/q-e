@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2010 Quantum ESPRESSO group
+! Copyright (C) 2003-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -58,7 +58,6 @@ PROGRAM ev
 !!
       USE kinds, ONLY: DP
       USE constants, ONLY: bohr_radius_angs, ry_kbar
-      USE ev_xml,    ONLY : write_evdata_xml
       USE mp_global, ONLY : mp_startup, mp_global_end
       USE mp_world,  ONLY : world_comm
       USE mp,        ONLY : mp_bcast
@@ -460,3 +459,119 @@ PROGRAM ev
 
       RETURN
     END FUNCTION keane
+!-----------------------------------------------------------------------
+    SUBROUTINE write_evdata_xml &
+        (npt,fac,v0,etot,efit,istat,par,npar,emin,chisq,filout, ierr)
+!-----------------------------------------------------------------------
+!
+  USE kinds,     ONLY : dp
+  USE constants, ONLY : ry_kbar, bohr_radius_angs
+  IMPLICIT NONE
+  INTEGER, INTENT(in) :: npt, istat, npar
+  REAL(DP), INTENT(in):: v0(npt), etot(npt), efit(npt), emin, chisq, fac
+  REAL(DP), INTENT(in):: par(npar)
+  CHARACTER(len=256), INTENT(IN) :: filout
+  INTEGER, INTENT(out) :: ierr
+  !
+  INTEGER :: iunout = 11
+  REAL(DP) :: p(npt), volume(2), a0(2), alldata(6,npt)
+  INTEGER :: i, iun
+  CHARACTER(len=256) :: filename
+  REAL(DP), EXTERNAL :: birch, keane
+
+  IF (filout/=' ') THEN
+     filename = TRIM(filout) // '.xml'
+  ELSE
+     filename = 'ev.xml'
+  ENDIF
+  !
+  ! ... open XML descriptor
+  !
+  OPEN ( UNIT=iunout, FILE = TRIM( filename ), FORM='formatted', IOSTAT = ierr )
+  IF ( ierr /= 0 ) THEN
+     WRITE (6,*) 'Failed opening file ' // TRIM(filename)
+     RETURN
+  END IF
+
+  WRITE (iunout,'("<xml>")')
+  WRITE (iunout,'("<EQUATIONS_OF_STATE>")')
+  WRITE (iunout,'("<EQUATION_TYPE>")')
+  IF (istat==1) THEN
+     WRITE (iunout,'("Birch 1st order")')
+  ELSEIF (istat==2) THEN
+     WRITE (iunout,'("Birch 2nd order")')
+  ELSEIF (istat==3) THEN
+     WRITE (iunout,'("Keane")')
+  ELSEIF (istat==4) THEN
+     WRITE (iunout,'("Murnaghan")')
+  ENDIF
+  WRITE (iunout,'("</EQUATION_TYPE>")')
+  WRITE (iunout,'("<CHI_SQUARE>")')
+  WRITE (iunout,'(1pe25.12)') chisq
+  WRITE (iunout,'("</CHI_SQUARE>")')
+  WRITE (iunout,'("</EQUATIONS_OF_STATE>")')
+
+  IF (istat==1 .or. istat==2) THEN
+     DO i=1,npt
+        p(i)=birch(v0(i)/par(1),par(2),par(3),par(4))
+     ENDDO
+  ELSE
+     DO i=1,npt
+        p(i)=keane(v0(i)/par(1),par(2),par(3),par(4))
+     ENDDO
+  ENDIF
+
+  DO i=1,npt
+     alldata (1,i) = v0(i)
+     alldata (2,i) = etot(i) 
+     alldata (3,i) = efit(i)
+     alldata (4,i) = etot(i) - efit(i)
+     alldata (5,i) = p(i) 
+     alldata (6,i) = etot(i) + p(i) * v0(i) / ry_kbar
+  ENDDO
+
+  WRITE (iunout,'("<EQUATIONS_PARAMETERS>")')
+
+  volume(1)=par(1)
+  volume(2)=par(1)*bohr_radius_angs**3
+  WRITE (iunout, '("<EQUILIBRIUM_VOLUME_AU_A>")')
+  WRITE (iunout, '(2(1pe25.15))') volume(:)
+  WRITE (iunout, '("</EQUILIBRIUM_VOLUME_AU_A>")')
+  WRITE (iunout, '("<BULK_MODULUS_KBAR>")')
+  WRITE (iunout, '(1pe25.15)') par(2)
+  WRITE (iunout, '("</BULK_MODULUS_KBAR>")')
+  WRITE (iunout, '("<DERIVATIVE_BULK_MODULUS>")')
+  WRITE (iunout, '(1pe25.15)') par(3)
+  WRITE (iunout, '("</DERIVATIVE_BULK_MODULUS>")')
+  WRITE (iunout, '("<SECOND_DERIVATIVE_BULK_MODULUS>")')
+  WRITE (iunout, '(1pe25.15)') par(4)
+  WRITE (iunout, '("</SECOND_DERIVATIVE_BULK_MODULUS>")')
+  WRITE (iunout, '("<MINIMUM_ENERGY_RY>")')
+  WRITE (iunout, '(1pe25.15)') emin
+  WRITE (iunout, '("</MINIMUM_ENERGY_RY>")')
+  WRITE (iunout, '("<CELL_FACTOR>")')
+  WRITE (iunout, '(1pe25.15)') fac
+  WRITE (iunout, '("</CELL_FACTOR>")')
+  IF (fac /= 0.0_DP) THEN
+     a0(1) = (par(1)/fac)**(1d0/3d0)
+     a0(2) = (par(1)/fac)**(1d0/3d0) * bohr_radius_angs
+     WRITE (iunout, '("<CELL_PARAMETER_AU_A>")')
+     WRITE (iunout, '(2(1pe25.15))') a0
+     WRITE (iunout, '("</CELL_PARAMETER_AU_A>")')
+  ENDIF
+  WRITE (iunout,'("</EQUATIONS_PARAMETERS>")')
+
+  WRITE (iunout,'("<FIT_CHECK>")')
+  WRITE (iunout,'("<NUMBER_OF_DATA>")')
+  WRITE (iunout,'(i8)') npt
+  WRITE (iunout,'("</NUMBER_OF_DATA>")')
+  WRITE (iunout,'("<VOL_ENE_EFIT_DELTA_P_GIBBS>")')
+  WRITE (iunout,'(6(1pe25.15))') alldata(:,:)
+  WRITE (iunout,'("</VOL_ENE_EFIT_DELTA_P_GIBBS>")')
+
+  WRITE (iunout,'("</FIT_CHECK>")')
+  CLOSE (unit=iunout, status='keep')
+  
+  RETURN
+END SUBROUTINE write_evdata_xml
+

@@ -166,7 +166,7 @@ SUBROUTINE c_phase
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk, igk_k, ngk
    USE wvfct,                ONLY : npwx, nbnd, wg
-   USE wavefunctions_module, ONLY : evc
+   USE wavefunctions, ONLY : evc
    USE bp,                   ONLY : gdir, nppstr, mapgm_global, pdl_tot
    USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                     deallocate_bec_type
@@ -174,7 +174,8 @@ SUBROUTINE c_phase
    USE spin_orb,             ONLY : lspinorb
    USE mp_bands,             ONLY : intra_bgrp_comm, nproc_bgrp
    USE mp,                   ONLY : mp_sum
-   USE qexsd_module,         ONLY : qexsd_init_berryPhaseOutput, qexsd_bp_obj
+   USE qes_libs_module,      ONLY : qes_reset
+   USE qexsd_module,         ONLY : qexsd_init_berryPhaseOutput,  qexsd_bp_obj
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
 
@@ -959,6 +960,7 @@ SUBROUTINE c_phase
 ! Here we write all output information in a berry_phase_type variable to print
 ! them in the XML output  P.D. april 2016
 !------------------------------------------------------------------------------
+  CALL qes_reset (qexsd_bp_obj )   
   CALL qexsd_init_berryPhaseOutput(qexsd_bp_obj, gpar, gvec, nppstr, nkort, xk, pdl_ion, mod_ion,  &
                                   pdl_ion_tot, mod_ion_tot, nstring, pdl_elec , mod_elec, wstring, &
                                   pdl_elec_up, mod_elec_up, pdl_elec_dw, mod_elec_dw, pdl_elec_tot,&

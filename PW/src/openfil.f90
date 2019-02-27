@@ -26,9 +26,9 @@ SUBROUTINE openfil()
   USE noncollin_module, ONLY : npol
   USE bp,               ONLY : lelfield
   USE wannier_new,      ONLY : use_wannier
-#if defined(__HDF5) && defined(__OLDXML)
+#if defined(__HDF5) && defined(__MPI) 
   USE hdf5_qe,          ONLY : initialize_hdf5
-#endif
+#endif 
   !
   IMPLICIT NONE
   !
@@ -59,7 +59,7 @@ SUBROUTINE openfil()
       CALL open_buffer( iunefieldp, 'ewfcp', nwordwfc, io_level, exst )
   END IF
   !
-#if defined(__HDF5) && defined(__OLDXML)
+#if defined(__HDF5) && defined(__MPI) 
   ! calls h5open_f mandatory in any application using hdf5
   CALL initialize_hdf5()
 #endif 

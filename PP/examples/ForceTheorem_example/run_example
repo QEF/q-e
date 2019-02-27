@@ -17,7 +17,7 @@ $ECHO "the Magnetic Anisotropy Energy in Co using the Force Theorem"
 . ../../../environment_variables
 # required executables and pseudopotentials
 BIN_LIST="pw.x projwfc.x"
-PSEUDO_LIST="Co.pbe-nd-rrkjus.UPF  CorelUSPBE.RRKJ3.UPF"
+PSEUDO_LIST="Co.pbe-nd-rrkjus.UPF  Co.rel-pbe-nd-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -120,16 +120,12 @@ check_failure $?
 $ECHO " done"
 
 $ECHO "  create SOC folders and copy there SR density and spin moment...\c"
-mkdir $TMP_DIR/par.save
-mkdir $TMP_DIR/per.save
+mkdir -p $TMP_DIR/par.save
+mkdir -p $TMP_DIR/per.save
 cp $TMP_DIR/sr.save/data-file*.xml $TMP_DIR/par.save/
 cp $TMP_DIR/sr.save/charge-density.dat $TMP_DIR/par.save/
-# next line for old format
-cp $TMP_DIR/sr.save/spin-polarization.dat $TMP_DIR/par.save/
 cp $TMP_DIR/sr.save/data-file*.xml $TMP_DIR/per.save/
 cp $TMP_DIR/sr.save/charge-density.dat $TMP_DIR/per.save/
-# next line for old format
-cp $TMP_DIR/sr.save/spin-polarization.dat $TMP_DIR/per.save/
 
 
 # NSCF run with SOC for parallel configuration 
@@ -141,7 +137,6 @@ cat > par.in << EOF
     outdir = '$TMP_DIR/',
     prefix='par'
     verbosity = 'high'
-    wf_collect = .true.
  /
  &system
     ibrav = 4,
@@ -171,7 +166,7 @@ cat > par.in << EOF
  &ions
  /
 ATOMIC_SPECIES
-Co 58.933  CorelUSPBE.RRKJ3.UPF
+Co 58.933  Co.rel-pbe-nd-rrkjus.UPF
 ATOMIC_POSITIONS {angstrom}
 Co       1.249798200   0.721571500   0.000000000
 Co       0.000000000   0.000000000   2.019286000
@@ -193,7 +188,6 @@ cat > per.in << EOF
     outdir = '$TMP_DIR/',
     prefix='per'
     verbosity = 'high'
-    wf_collect = .true.
  /
  &system
     ibrav = 4,
@@ -223,7 +217,7 @@ cat > per.in << EOF
  &ions
  /
 ATOMIC_SPECIES
-Co 58.933  CorelUSPBE.RRKJ3.UPF
+Co 58.933  Co.rel-pbe-nd-rrkjus.UPF
 ATOMIC_POSITIONS {angstrom}
 Co       1.249798200   0.721571500   0.000000000
 Co       0.000000000   0.000000000   2.019286000

@@ -62,12 +62,12 @@ MODULE exchange_custom
 !experimental version work just with factor 1/2
 
       USE io_global, ONLY : stdout, ionode,ionode_id
-      USE mp_global, ONLY : me_pool,intra_pool_comm
+      USE mp_pools,  ONLY : me_pool,intra_pool_comm
       USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
       USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
-      USE wavefunctions_module, ONLY : psic
+      USE wavefunctions, ONLY : psic
       USE mp, ONLY : mp_sum
-      USE mp_world, ONLY : world_comm, nproc
+      USE mp_world, ONLY : nproc
       USE wvfct,    ONLY : npwx, npw, wg
       USE gvect
       USE mp_wave, ONLY : mergewf,splitwf
@@ -793,10 +793,10 @@ MODULE exchange_custom
 !experimental version work just with factor 1/2
 
       USE io_global, ONLY : stdout, ionode,ionode_id
-      USE mp_global, ONLY : me_pool,intra_pool_comm
+      USE mp_pools,  ONLY : me_pool,intra_pool_comm
       USE cell_base, ONLY : at, alat, tpiba, omega, tpiba2,bg
       USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
-      USE wavefunctions_module, ONLY : psic
+      USE wavefunctions, ONLY : psic
       USE mp,        ONLY : mp_sum
       USE mp_world,  ONLY : world_comm, nproc
       USE wvfct,     ONLY : npwx, npw
@@ -1132,8 +1132,8 @@ MODULE exchange_custom
       USE gvecw, ONLY : ecutwfc
       USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
       USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
-      USE wavefunctions_module, ONLY : psic
-      USE mp_global, ONLY : intra_pool_comm, me_pool
+      USE wavefunctions, ONLY : psic
+      USE mp_pools,  ONLY : intra_pool_comm, me_pool
       USE gvect
       USE mp_wave, ONLY : mergewf,splitwf
       USE mp, ONLY : mp_barrier, mp_sum
@@ -1468,7 +1468,7 @@ MODULE exchange_custom
       USE wvfct,     ONLY : npwx, npw, nbnd
       USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2,bg
       USE constants, ONLY : e2, pi, tpi, fpi, RYTOEV
-      USE wavefunctions_module, ONLY : psic
+      USE wavefunctions, ONLY : psic
       USE gvect
       USE mp_pools,  ONLY : intra_pool_comm
       USE mp_world,  ONLY : mpime, nproc
@@ -1658,7 +1658,7 @@ MODULE exchange_custom
     FUNCTION exchange_energy_fast(exx_cus,exxalpha)
 
       USE wvfct,    ONLY : npwx, npw, nbnd
-      USE wavefunctions_module, ONLY : evc
+      USE wavefunctions, ONLY : evc
       USE mp, ONLY : mp_sum
       USE mp_world, ONLY : world_comm
       USE gvect, ONLY : gstart

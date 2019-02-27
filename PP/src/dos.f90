@@ -43,12 +43,14 @@ PROGRAM do_dos
   !
   CHARACTER(len=256) :: fildos, outdir
   CHARACTER(LEN=33) :: fermi_str
-  REAL(DP) :: E, DOSofE (2), DOSint, DeltaE, Emin, Emax, &
+  CHARACTER(LEN=20) :: bz_sum
+  REAL(DP) :: E, DOSofE (2), DOSint (2), DeltaE, Emin, Emax, &
               degauss1, E_unset=1000000.d0
   INTEGER :: nks2, n, ndos, ngauss1, ios
+  LOGICAL :: dummy
 
   NAMELIST /dos/ outdir, prefix, fildos, degauss, ngauss, &
-       Emin, Emax, DeltaE
+       Emin, Emax, DeltaE, bz_sum
   !
   ! initialise environment
   !
@@ -72,6 +74,7 @@ PROGRAM do_dos
      DeltaE = 0.01d0
      ngauss = 0
      degauss= 0.d0
+     bz_sum = "" 
      !
      CALL input_from_file ( )
      !
@@ -92,14 +95,30 @@ PROGRAM do_dos
   CALL mp_bcast( tmp_dir, ionode_id, world_comm )
   CALL mp_bcast( prefix, ionode_id, world_comm )
   !
-  CALL read_xml_file( )
+  CALL read_xml_file( dummy )
   !
   IF ( ionode ) THEN
      !
      IF (nks /= nkstot) &
         CALL errore ('dos', 'pools not implemented, or incorrect file read', 1)
      !
-     IF (degauss1/=0.d0) THEN
+     SELECT CASE (TRIM(bz_sum)) 
+        CASE ('tetrahedra', 'TETRAHEDRA') 
+           ltetra = .TRUE. 
+           tetra_type = 0 
+        CASE ('tetrahedra_lin' ) 
+           ltetra = .TRUE. 
+           tetra_type = 1 
+        CASE ('tetrahedra_opt' , 'TETRAHEDRA_OPT') 
+           ltetra = .TRUE. 
+           tetra_type = 2 
+        CASE default 
+           IF ( .NOT. ltetra) tetra_type = -5 
+     END SELECT 
+     IF ( ltetra .and. nk1*nk2*nk3 .eq. 0 ) &
+        CALL errore ('dos:', 'tetrahedra integration selected on input can only be used with automatic ' //&
+                              'uniform k_point meshes.', tetra_type + 1) 
+     IF (degauss1/=0.d0 .and. tetra_type < 0 ) THEN
         degauss=degauss1
         ngauss =ngauss1
         WRITE( stdout,'(/5x,"Gaussian broadening (read from input): ",&
@@ -157,7 +176,7 @@ PROGRAM do_dos
         Emin = Emin/rytoev
      END IF
      IF ( Emax  == E_unset ) THEN
-        Emax = MINVAL ( et(nbnd, 1:nks) )
+        Emax = MAXVAL ( et(nbnd, 1:nks) )
         IF ( degauss > 0.0_dp ) Emax = Emax + 3.0_dp * degauss
      ELSE 
         Emax = Emax/rytoev
@@ -170,9 +189,9 @@ PROGRAM do_dos
      IF ( fildos == ' ' ) fildos = trim(prefix)//'.dos'
      OPEN (unit = 4, file = fildos, status = 'unknown', form = 'formatted')
      IF ( two_fermi_energies ) THEN
-        WRITE(fermi_str,'(" EFermi = ",2f7.3," eV")') ef_up*rytoev, ef_dw*rytoev
+        WRITE(fermi_str,'(" EFermi = ",2f8.3," eV")') ef_up*rytoev, ef_dw*rytoev
      ELSE
-        WRITE(fermi_str,'(" EFermi = ",f7.3," eV")') ef*rytoev
+        WRITE(fermi_str,'(" EFermi = ",f8.3," eV")') ef*rytoev
      ENDIF
 
      IF (nspin==1.or.nspin==4) THEN
@@ -186,19 +205,23 @@ PROGRAM do_dos
         E = Emin + (n - 1) * DeltaE
         IF (ltetra) THEN
            IF (tetra_type == 0) THEN
-              CALL tetra_dos_t( et, nspin, nbnd, nks, E, DOSofE)
+              CALL tetra_dos_t( et, nspin, nbnd, nks, E, DOSofE, dosint)
            ELSE
-              CALL opt_tetra_dos_t( et, nspin, nbnd, nks, E, DOSofE)
+              CALL opt_tetra_dos_t( et, nspin, nbnd, nks, E, DOSofE, dosint)
            END IF
         ELSE
            CALL dos_g(et,nspin,nbnd, nks,wk,degauss,ngauss, E, DOSofE)
         ENDIF
         IF (nspin==1.or.nspin==4) THEN
-           DOSint = DOSint + DOSofE (1) * DeltaE
-           WRITE (4, '(f8.3,2e12.4)') E * rytoev, DOSofE(1)/rytoev, DOSint
+           IF ( .not. ltetra ) DOSint(1)  = DOSint(1) + DOSofE (1) * DeltaE
+           WRITE (4, '(f8.3,2e12.4)') E * rytoev, DOSofE(1)/rytoev, DOSint(1) 
         ELSE
-           DOSint = DOSint + (DOSofE (1) + DOSofE (2) ) * DeltaE
-           WRITE (4, '(f8.3,3e12.4)') E * rytoev, DOSofE/rytoev, DOSint
+           IF ( .not. ltetra )  THEN 
+               DOSint(1) = DOSint(1) + (DOSofE (1) + DOSofE (2) ) * DeltaE
+               WRITE (4, '(f8.3,3e12.4)') E * rytoev, DOSofE/rytoev, DOSint(1)
+           ELSE
+               WRITE (4, '(f8.3,3e12.4)') E * rytoev, DOSofE/rytoev, DOSint(1)+DOSint(2) 
+           END IF
         ENDIF
      ENDDO
 

@@ -80,7 +80,7 @@ MODULE exx_band
     USE io_files,             ONLY : nwordwfc, iunwfc, iunwfc_exx
     USE klist,                ONLY : nks, ngk, igk_k
     USE uspp,                 ONLY : nkb, vkb
-    USE wavefunctions_module, ONLY : evc
+    USE wavefunctions, ONLY : evc
     USE control_flags,        ONLY : io_level
     USE buffers,              ONLY : open_buffer, get_buffer, save_buffer
     USE mp_exx,               ONLY : max_ibands, negrp
@@ -943,7 +943,7 @@ MODULE exx_band
     USE cellmd,         ONLY : lmovecell
     USE wvfct,          ONLY : npwx
     USE gvect,          ONLY : gcutm, ig_l2g, g, gg, ngm, ngm_g, mill, &
-                               gstart, gvect_init, deallocate_gvect_exx
+                               gstart, gvect_init, deallocate_gvect_exx, gshells
     USE gvecs,          ONLY : gcutms, ngms, ngms_g, gvecs_init
     USE gvecw,          ONLY : gkcut, ecutwfc, gcutw
     USE klist,          ONLY : xk, nks, ngk
@@ -1429,129 +1429,6 @@ MODULE exx_band
     !
     !-----------------------------------------------------------------------
   END SUBROUTINE transform_to_local
-  !-----------------------------------------------------------------------
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE exxbuff_comm(exxbuff,exxtemp,ikq,lda,jstart,jend)
-  !-----------------------------------------------------------------------
-    USE mp_exx,               ONLY : my_egrp_id, inter_egrp_comm, jblock, &
-                                     all_end, negrp
-    USE mp,             ONLY : mp_bcast
-    USE parallel_include
-    COMPLEX(DP), intent(in)    :: exxbuff(:,:,:)
-    COMPLEX(DP), intent(inout) :: exxtemp(lda,jend-jstart+1)
-    INTEGER, intent(in) :: ikq, lda, jstart, jend
-    INTEGER :: jbnd, iegrp, ierr, request_exxbuff(jend-jstart+1)
-#if defined(__MPI)
-    INTEGER :: istatus(MPI_STATUS_SIZE)
-#endif
-
-    DO jbnd=jstart, jend
-       !determine which band group has this value of exxbuff
-       DO iegrp=1, negrp
-          IF(all_end(iegrp) >= jbnd) exit
-       END DO
-
-       IF (iegrp == my_egrp_id+1) THEN
-          exxtemp(:,jbnd-jstart+1) = exxbuff(:,jbnd,ikq)
-       END IF
-
-#if defined(__MPI_NONBLOCKING)
-       CALL MPI_IBCAST(exxtemp(:,jbnd-jstart+1), &
-            lda, &
-            MPI_DOUBLE_COMPLEX, &
-            iegrp-1, &
-            inter_egrp_comm, &
-            request_exxbuff(jbnd-jstart+1), ierr)
-#elif defined(__MPI)
-       CALL mp_bcast(exxtemp(:,jbnd-jstart+1),iegrp-1,inter_egrp_comm)
-#endif
-    END DO
-
-    DO jbnd=jstart, jend
-#if defined(__MPI_NONBLOCKING)
-       CALL MPI_WAIT(request_exxbuff(jbnd-jstart+1), istatus, ierr)
-#endif
-    END DO
-
-  !
-  !-----------------------------------------------------------------------
-  END SUBROUTINE exxbuff_comm
-  !-----------------------------------------------------------------------
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE exxbuff_comm_gamma(exxbuff,exxtemp,ikq,lda,jstart,jend,jlength)
-  !-----------------------------------------------------------------------
-    USE mp_exx,               ONLY : my_egrp_id, inter_egrp_comm, jblock, &
-                                     all_end, negrp
-    USE mp,             ONLY : mp_bcast
-    USE parallel_include
-    COMPLEX(DP), intent(in)    :: exxbuff(:,:,:)
-    COMPLEX(DP), intent(inout) :: exxtemp(lda*npol,jlength)
-    INTEGER, intent(in) :: ikq, lda, jstart, jend, jlength
-    INTEGER :: jbnd, iegrp, ierr, request_exxbuff(jend-jstart+1), ir
-#if defined(__MPI)
-    INTEGER :: istatus(MPI_STATUS_SIZE)
-#endif
-    REAL(DP), ALLOCATABLE :: work(:,:)
-
-    CALL start_clock ('comm_buff')
-
-    ALLOCATE ( work(lda*npol,jend-jstart+1) )
-    DO jbnd=jstart, jend
-       !determine which band group has this value of exxbuff
-       DO iegrp=1, negrp
-          IF(all_end(iegrp) >= jbnd) exit
-       END DO
-
-       IF (iegrp == my_egrp_id+1) THEN
-!          exxtemp(:,jbnd-jstart+1) = exxbuff(:,jbnd,ikq)
-          IF( MOD(jbnd,2) == 1 ) THEN
-             work(:,jbnd-jstart+1) = REAL(exxbuff(:,jbnd/2+1,ikq))
-          ELSE
-             work(:,jbnd-jstart+1) = AIMAG(exxbuff(:,jbnd/2,ikq))
-          END IF
-       END IF
-
-#if defined(__MPI_NONBLOCKING)
-       CALL MPI_IBCAST(work(:,jbnd-jstart+1), &
-            lda*npol, &
-            MPI_DOUBLE_PRECISION, &
-            iegrp-1, &
-            inter_egrp_comm, &
-            request_exxbuff(jbnd-jstart+1), ierr)
-#elif defined(__MPI)
-       CALL mp_bcast(work(:,jbnd-jstart+1),iegrp-1,inter_egrp_comm)
-#endif
-    END DO
-
-    DO jbnd=jstart, jend
-#if defined(__MPI_NONBLOCKING)
-       CALL MPI_WAIT(request_exxbuff(jbnd-jstart+1), istatus, ierr)
-#endif
-    END DO
-    DO jbnd=jstart, jend, 2
-       IF (jbnd < jend) THEN
-          ! two real bands can be coupled into a single complex one
-          DO ir=1, lda*npol
-             exxtemp(ir,1+(jbnd-jstart+1)/2) = CMPLX( work(ir,jbnd-jstart+1),&
-                                                      work(ir,jbnd-jstart+2),&
-                                                      KIND=dp )
-          END DO
-       ELSE
-          ! case of lone last band
-          DO ir=1, lda*npol
-             exxtemp(ir,1+(jbnd-jstart+1)/2) = CMPLX( work(ir,jbnd-jstart+1),&
-                                                      0.0_dp, KIND=dp )
-          END DO
-       ENDIF
-    END DO
-    DEALLOCATE ( work )
-
-    CALL stop_clock ('comm_buff')
-  !
-  !-----------------------------------------------------------------------
-  END SUBROUTINE exxbuff_comm_gamma
   !-----------------------------------------------------------------------
 
 END MODULE exx_band

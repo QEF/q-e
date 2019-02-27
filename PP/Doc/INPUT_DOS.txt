@@ -1,0 +1,164 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: dos.x / PWscf / Quantum Espresso (version: svn)
+------------------------------------------------------------------------
+
+
+Purpose of dos.x:
+    calculates the Density of States (DOS)
+    (separated into up and down components for DSDA)
+
+
+Structure of the input data:
+============================
+
+   &DOS
+     ...
+   /
+
+IMPORTANT: since v.5 namelist name is &DOS and no longer &INPUTPP
+
+
+
+========================================================================
+NAMELIST: &DOS
+
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           CHARACTER
+   Default:        'pwscf'
+   Description:    prefix of input file produced by pw.x
+                   (wavefunctions are not needed)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           CHARACTER
+   Description:    directory containing the input data, i.e. the same as in pw.x
+   Default:        value of the ESPRESSO_TMPDIR environment variable if set;
+                   current directory ('./') otherwise
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       bz_sum
+   
+   Type:           CHARACTER
+   Description:   
+                   Keyword selecting  the method for BZ summation. Available options are:
+    
+                   'smearing' :
+                        integration using gaussian smearing. In fact currently
+                        any string not related to tetrahedra defaults to smearing;
+    
+                   'tetrahedra' :
+                        Tetrahedron method, Bloechl's version:
+                        P.E. Bloechl, PRB 49, 16223 (1994)
+                        Requires uniform grid of k-points, to be
+                        automatically generated in pw.x.
+    
+                   'tetrahedra_lin' :
+                        Original linear tetrahedron method.
+                        To be used only as a reference;
+                        the optimized tetrahedron method is more efficient.
+    
+                   'tetrahedra_opt' :
+                        Optimized tetrahedron method:
+                        see M. Kawamura, PRB 89, 094515 (2014).
+   Default:        'smearing' if degauss in given in input 'smearing',
+                                           options read from the xml data file otherwise.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ngauss
+   
+   Type:           INTEGER
+   Default:        0
+   Status:         optional
+   Description:    Type of gaussian broadening:
+                   
+                       =  0  Simple Gaussian (default)
+                   
+                       =  1  Methfessel-Paxton of order 1
+                   
+                       = -1  Marzari-Vanderbilt "cold smearing"
+                   
+                       =-99  Fermi-Dirac function
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       degauss
+   
+   Type:           REAL
+   Description:    gaussian broadening, Ry (not eV!)
+                   (see below)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variables:      Emin, Emax
+   
+   Type:           REAL
+   Default:        band extrema
+   Description:    min, max energy (eV) for DOS plot. If unspecified, the
+                   lower and/or upper band value, plus/minus 3 times the
+                   value of the gaussian smearing if present, will be used.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       DeltaE
+   
+   Type:           REAL
+   Description:    energy grid step (eV)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fildos
+   
+   Type:           CHARACTER
+   Default:        '"prefix".dos'
+   Description:    output file containing DOS(E)
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+
+:::: Notes
+
+   
+   ::: Output
+   
+      The total DOS (states/eV plotted vs E in eV) is written to file "fildos"
+      
+
+   
+   ::: Important !
+   
+      The tetrahedron method is used if
+      
+          - the input data file has been produced by pw.x using the option
+            occupations='tetrahedra', AND
+      
+          - a value for degauss is not given as input to namelist &dos
+      
+      
+      Gaussian broadening is used in all other cases:
+      
+          - if "degauss" is set to some value in namelist &DOS, that value
+            (and the optional value for "ngauss") is used
+      
+          - if "degauss" is NOT set to any value in namelist &DOS, the
+            value of "degauss" and of "ngauss" are read from the input data
+            file (they will be the same used in the pw.x calculations)
+      
+          - if "degauss" is NOT set to any value in namelist &DOS, AND
+            there is no value of "degauss" and of "ngauss" in the input data
+            file, "degauss"="DeltaE" (in Ry) and "ngauss"=0 will be used
+      
+
+
+This file has been created by helpdoc utility on Tue Aug 14 10:43:55 CEST 2018

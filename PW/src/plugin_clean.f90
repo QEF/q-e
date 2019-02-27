@@ -4,7 +4,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine plugin_clean(lflag)
+subroutine plugin_clean(prog,lflag)
 !
 ! This routine is used for cleaning calls
 ! from plugins
@@ -15,8 +15,9 @@ USE plugin_flags
 ! ***Environ MODULES BEGIN***
 ! ***Environ MODULES END***
 !
-implicit none
+IMPLICIT NONE
 !
+CHARACTER(LEN=*), INTENT(IN) :: prog
 LOGICAL, INTENT(IN) :: lflag
 !
 ! ***Environ VARIABLES BEGIN***

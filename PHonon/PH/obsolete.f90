@@ -158,14 +158,14 @@ subroutine set_irr (nat, at, bg, xq, s, sr, tau, ntyp, ityp, ftau, invs, nsym, &
 !     April 1997: parallel stuff added (SdG)
 !
   USE io_global,  ONLY : stdout
-  USE kinds, only : DP
+  USE kinds, ONLY : DP
   USE constants, ONLY: tpi
   USE random_numbers, ONLY : randy
   USE rap_point_group, ONLY : name_rap
 #if defined(__MPI)
-  use mp, only: mp_bcast
-  use io_global, only : ionode_id
-  use mp_global, only : intra_image_comm
+  USE mp, ONLY: mp_bcast
+  USE io_global, ONLY : ionode_id
+  USE mp_images, ONLY : intra_image_comm
 #endif
   implicit none
 !
@@ -761,7 +761,7 @@ subroutine set_irr_sym (nat, at, bg, xq, s, rtau, irt, &
   USE constants, ONLY: tpi
 
   USE mp, ONLY: mp_bcast
-  USE mp_global, ONLY : intra_image_comm
+  USE mp_images, ONLY : intra_image_comm
   USE io_global, ONLY : ionode_id
   implicit none
 !

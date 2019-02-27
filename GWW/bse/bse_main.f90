@@ -9,7 +9,7 @@ USE wvfct,     ONLY : nbnd, et, npwx
 USE gvecw,              ONLY : ecutwfc
 USE gvecs,              ONLY : doublegrid
 use pwcom
-USE wavefunctions_module, ONLY : evc
+USE wavefunctions, ONLY : evc
 use mp, ONLY: mp_bcast
 USE mp_world, ONLY : world_comm
 USE fft_base,             ONLY : dfftp

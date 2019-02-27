@@ -22,7 +22,7 @@ SUBROUTINE compute_becsum ( iflag )
   USE buffers,              ONLY : get_buffer
   USE scf,                  ONLY : rho
   USE uspp,                 ONLY : nkb, vkb, becsum, okvan
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE noncollin_module,     ONLY : noncolin
   USE wvfct,                ONLY : nbnd, npwx, wg
   USE mp_pools,             ONLY : inter_pool_comm

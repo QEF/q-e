@@ -414,6 +414,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
             }
         }
 
+        var read_dns_bare -type LOGICAL {
+            default { .false. }
+            info {
+                If .true. the PH code tries to read three files in the DFPT+U 
+                calculation: dns_orth, dns_bare, d2ns_bare.
+                dns_orth and dns_bare are the first-order variations of
+                the occupation matrix, while d2ns_bare is the second-order
+                variation of the occupation matrix. These matrices are 
+                computed only once during the DFPT+U calculation. However,
+                their calculation (especially of d2ns_bare) is computationally
+                expensive, this is why they are written to file and then can be
+                read (e.g. for restart) in order to save time.
+            }
+        }
+
 	group {
 	    label { Specification of irreducible representation }
 

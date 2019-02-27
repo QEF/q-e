@@ -15,7 +15,7 @@ subroutine scale_h
   !
   USE kinds,      ONLY : dp
   USE io_global,  ONLY : stdout
-  USE cell_base,  ONLY : bg, omega
+  USE cell_base,  ONLY : bg, omega, set_h_ainv
   USE cellmd,     ONLY : at_old, omega_old
   USE constants,  ONLY : eps8
   USE gvect,      ONLY : g, gg, ngm
@@ -95,6 +95,8 @@ subroutine scale_h
      CALL exx_mp_init( )
      CALL exx_gvec_reinit( at_old )
   END IF
+  ! for ts-vdw
+  CALL set_h_ainv()
   !
   return
 end subroutine scale_h

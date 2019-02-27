@@ -148,8 +148,6 @@ SUBROUTINE loadqmesh_para
  CALL mp_bcast(xqf_, ionode_id, inter_pool_comm)
  CALL mp_bcast(wqf_, ionode_id, inter_pool_comm)
  !
- !CALL FLUSH()
- ! 
 #else
  !
  ! In serial the definitions are much easier 

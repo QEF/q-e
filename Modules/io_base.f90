@@ -402,12 +402,12 @@ MODULE io_base
     END SUBROUTINE read_wfc
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_rhog ( dirname, root_in_group, intra_group_comm, &
+    SUBROUTINE write_rhog ( filename, root_in_group, intra_group_comm, &
          b1, b2, b3, gamma_only, mill, ig_l2g, rho, ecutrho )
       !------------------------------------------------------------------------
       !! Collects rho(G), distributed on "intra_group_comm", writes it
-      !! together with related information to file 'charge-density.*'
-      !! (* = dat if fortran binary, * = hdf5 if HDF5) in directory "dirname"
+      !! together with related information to file "filename".*
+      !! (* = dat if fortran binary, * = hdf5 if HDF5)
       !! Processor "root_in_group" collects data and writes to file
       !
       USE mp,                   ONLY : mp_sum, mp_bcast, mp_size, mp_rank
@@ -418,8 +418,8 @@ MODULE io_base
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
-      !! directory name where file is written - must end by '/'
+      CHARACTER(LEN=*), INTENT(IN) :: filename
+      !! name of file written (to which a suffix is added)
       INTEGER,            INTENT(IN) :: root_in_group
       !! root processor that collects and writes
       INTEGER,            INTENT(IN) :: intra_group_comm
@@ -450,7 +450,6 @@ MODULE io_base
       LOGICAL                  :: ionode_in_group
       INTEGER                  :: ngm, nspin, ngm_g, igwx
       INTEGER                  :: iun, ns, ig, ierr
-      CHARACTER(LEN=320)       :: filename
       !
 #if defined __HDF5
       TYPE (qeh5_file)          ::  h5file
@@ -482,13 +481,12 @@ MODULE io_base
       ngm_g = ngm
       CALL mp_sum( ngm_g, intra_group_comm )
       !
-      filename = TRIM( dirname ) // 'charge-density.dat'
       ierr = 0
 #if defined (__HDF5)
       IF ( ionode_in_group ) CALL qeh5_openfile(h5file, FILE = &
-           TRIM(dirname)//'charge-density.hdf5', ACTION = 'write', ERROR = ierr) 
+           TRIM(filename)//'.hdf5', ACTION = 'write', ERROR = ierr) 
 #else
-      IF ( ionode_in_group ) OPEN ( UNIT = iun, FILE = TRIM( filename ), &
+      IF ( ionode_in_group ) OPEN ( UNIT = iun, FILE = TRIM(filename)//'.dat', &
                 FORM = 'unformatted', STATUS = 'unknown', iostat = ierr )
 #endif
       CALL mp_bcast( ierr, root_in_group, intra_group_comm )
@@ -563,22 +561,9 @@ MODULE io_base
       !
       DO ns = 1, nspin
          !
-         ! Workaround for LSDA, while waiting for much-needed harmonization:
-         ! we have rhoup and rhodw, we write rhotot=up+dw and rhodif=up-dw
-         ! 
-         IF ( ns == 1 .AND. nspin == 2 ) THEN
-            DO ig = 1, ngm
-               rhoaux(ig) = rho(ig,ns) + rho(ig,ns+1)
-            END DO
-         ELSE IF ( ns == 2 .AND. nspin == 2 ) THEN
-            DO ig = 1, ngm
-               rhoaux(ig) = rho(ig,ns-1) - rho(ig,ns)
-            END DO
-        ELSE
-            DO ig = 1, ngm
+         DO ig = 1, ngm
                rhoaux(ig) = rho(ig,ns)
-            END DO
-         END IF
+         END DO
          !
          rho_g = 0
          CALL mergewf( rhoaux, rho_g, ngm, ig_l2g, me_in_group, &
@@ -615,26 +600,27 @@ MODULE io_base
     END SUBROUTINE write_rhog
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_rhog ( dirname, root_in_group, intra_group_comm, &
+    SUBROUTINE read_rhog ( filename, root_in_group, intra_group_comm, &
          ig_l2g, nspin, rho, gamma_only )
       !------------------------------------------------------------------------
-      !! Read and distribute rho(G) from file  'charge-density.*' 
+      !! Read and distribute rho(G) from file  "filename".* 
       !! (* = dat if fortran binary, * = hdf5 if HDF5)
       !! Processor "root_in_group" reads from file, distributes to
       !! all processors in the intra_group_comm communicator 
       !
       USE mp,         ONLY : mp_size, mp_rank, mp_bcast
       USE mp_wave,    ONLY : splitwf
+      USE gvect,      ONLY : ngm_g
       !
 #if defined (__HDF5) 
       USE qeh5_base_module
 #endif
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
-      !! directory name where file is read - must end by '/'
+      CHARACTER(LEN=*), INTENT(IN) :: filename
+      !! name of file read (to which a suffix is added)
       INTEGER,          INTENT(IN) :: root_in_group
-      !! root processor that reads and sirtibutes
+      !! root processor that reads and distributes
       INTEGER,          INTENT(IN) :: intra_group_comm
       !! rho(G) is distributed over this group of processors
       INTEGER,          INTENT(IN) :: ig_l2g(:)
@@ -648,13 +634,13 @@ MODULE io_base
       !
       COMPLEX(dp), ALLOCATABLE :: rho_g(:)
       COMPLEX(dp), ALLOCATABLE :: rhoaux(:)
-      COMPLEX(dp)              :: rhoup, rhodw
       REAL(dp)                 :: b1(3), b2(3), b3(3)
-      INTEGER                  :: ngm, nspin_, ngm_g, isup, isdw
-      INTEGER                  :: iun, mill_dum, ns, ig, ierr
+      INTEGER                  :: ngm, nspin_, isup, isdw
+      INTEGER                  :: iun, ns, ig, ierr
       INTEGER                  :: me_in_group, nproc_in_group
-      LOGICAL                  :: ionode_in_group, gamma_only_
-      CHARACTER(LEN=320)       :: filename
+      LOGICAL                  :: ionode_in_group, gamma_only_, readmill
+      INTEGER                  :: ngm_g_
+      INTEGER, ALLOCATABLE     :: mill_g(:,:)
       !
 #if defined __HDF5
       TYPE ( qeh5_file)       :: h5file
@@ -662,21 +648,18 @@ MODULE io_base
       CHARACTER(LEN=10)       :: tempchar, datasets(4)
       !
       IF (nspin <= 2) THEN 
-        datasets(1:2) =["rhotot_g  ", "rhodiff_g "]
+         datasets(1:2) =["rhotot_g  ", "rhodiff_g "]
       ELSE
-        datasets(1)  = "rhotot_g"
-        datasets(2)  = "m_x"
-        datasets(3)  = "m_y"
-        datasets(4)  = "m_z"
-      END IF 
-      filename = TRIM( dirname ) // 'charge-density.hdf5'
-#else 
-      filename = TRIM( dirname ) // 'charge-density.dat'
+         datasets(1)  = "rhotot_g"
+         datasets(2)  = "m_x"
+         datasets(3)  = "m_y"
+         datasets(4)  = "m_z"
+      END IF
 #endif 
       !
       ngm  = SIZE (rho, 1)
       IF (ngm /= SIZE (ig_l2g, 1) ) &
-         CALL errore('read_rhog', 'inconsistent input dimensions', 1)
+           CALL errore('read_rhog', 'inconsistent input dimensions', 1)
       !
       iun  = 4
       ierr = 0
@@ -687,24 +670,25 @@ MODULE io_base
       !
       IF ( ionode_in_group ) THEN
 #if defined (__HDF5) 
-         CALL qeh5_openfile(h5file, TRIM(filename), ACTION = 'read', error = ierr)
+         CALL qeh5_openfile(h5file, TRIM(filename)//'.hdf5', ACTION = 'read', &
+              error = ierr)
          CALL qeh5_read_attribute (h5file%id, "gamma_only", tempchar, MAXLEN = len(tempchar)  )
-         CALL qeh5_read_attribute (h5file%id, "ngm_g", ngm_g ) 
+         CALL qeh5_read_attribute (h5file%id, "ngm_g", ngm_g_ ) 
          CALL qeh5_read_attribute (h5file%id, "nspin", nspin_)  
          SELECT CASE (TRIM(tempchar) )  
-            CASE ('.true.', '.TRUE.' ) 
-                gamma_only_ = .TRUE.
-            CASE DEFAULT
-                gamma_only_ = .FALSE.
-         END SELECT    
+         CASE ('.true.', '.TRUE.' ) 
+            gamma_only_ = .TRUE.
+         CASE DEFAULT
+            gamma_only_ = .FALSE.
+         END SELECT
 #else
-         OPEN ( UNIT = iun, FILE = TRIM( filename ), &
+         OPEN ( UNIT = iun, FILE = TRIM( filename ) // '.dat', &
               FORM = 'unformatted', STATUS = 'old', iostat = ierr )
          IF ( ierr /= 0 ) THEN
             ierr = 1
             GO TO 10
          END IF
-         READ (iun, iostat=ierr) gamma_only_, ngm_g, nspin_
+         READ (iun, iostat=ierr) gamma_only_, ngm_g_, nspin_
          IF ( ierr /= 0 ) THEN
             ierr = 2
             GO TO 10
@@ -718,31 +702,39 @@ MODULE io_base
       CALL mp_bcast( ierr, root_in_group, intra_group_comm )
       IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
            & // TRIM( filename ), ierr )
-      CALL mp_bcast( ngm_g, root_in_group, intra_group_comm )
+      CALL mp_bcast( ngm_g_, root_in_group, intra_group_comm )
       CALL mp_bcast( nspin_, root_in_group, intra_group_comm )
+      CALL mp_bcast( gamma_only_, root_in_group, intra_group_comm )
       !
-      IF ( PRESENT(gamma_only) ) THEN
-         CALL mp_bcast( gamma_only_, root_in_group, intra_group_comm )
-         IF ( gamma_only .NEQV. gamma_only_ ) THEN
-            WRITE(6,'(/," *** read rho(G) for half G-sphere,", &
-                   & " complete rho(G) required: unsupported case")')
-           WRITE(6,'(" *** Do not use Gamma tricks to generate rho(G),", &
-                   &" or, use the old file format")')
-            CALL errore ( 'read_rhog','See above, case not yet implemented', 1)
-         END IF
-      END IF
       IF ( nspin > nspin_ ) &
          CALL infomsg('read_rhog', 'some spin components not found')
       IF ( ngm_g < MAXVAL (ig_l2g(:)) ) &
-           CALL infomsg('read_rhog', 'some G-vectors are missing' )
+           CALL infomsg('read_rhog', 'some G-vectors are missing, zero-padding' )
       !
-      ! ... skip record containing G-vector indices
+      ! ... if required and if there is a mismatch between input gamma tricks
+      ! ... and gamma tricks read from file: allocate and read Miller indices
       !
-      IF ( ionode_in_group ) THEN
+      readmill = PRESENT(gamma_only) 
+      IF ( readmill ) readmill = ( gamma_only .NEQV. gamma_only_ ) 
+      !
+      IF (readmill .AND. ionode_in_group) THEN
+         ALLOCATE (mill_g(3,ngm_g_))
+#if defined (__HDF5)
+         CALL qeh5_open_dataset( h5file, h5dset_mill, &
+              NAME = "MillerIndices", ACTION = 'read', ERROR = ierr)
+         IF (readmill)  CALL qeh5_read_dataset ( mill_g , h5dset_mill )
+         CALL qeh5_close ( h5dset_mill )
+#else
+         READ (iun, iostat=ierr) mill_g(1:3,1:ngm_g_)
+#endif
+      ELSE
+         ALLOCATE (mill_g(1,1))
 #if !defined(__HDF5)
-         READ (iun, iostat=ierr) mill_dum
+         ! .. skip record containing G-vector indices
+         IF ( ionode_in_group) READ (iun, iostat=ierr) mill_g(1,1)
 #endif
       END IF
+      !
       CALL mp_bcast( ierr, root_in_group, intra_group_comm )
       IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
            & // TRIM( filename ), 2 )
@@ -751,13 +743,13 @@ MODULE io_base
       ! ... of the charge density (one spin at the time to save memory)
       !
       IF ( ionode_in_group ) THEN
-         ALLOCATE( rho_g( ngm_g ) )
+         ALLOCATE( rho_g(MAX(ngm_g_,ngm_g)) )
       ELSE
          ALLOCATE( rho_g( 1 ) )
       END IF
       ALLOCATE (rhoaux(ngm))
       !
-      DO ns = 1, nspin
+      DO ns = 1, nspin_
          !
          IF ( ionode_in_group ) THEN
 #if defined(__HDF5)
@@ -765,29 +757,30 @@ MODULE io_base
             CALL qeh5_read_dataset ( rho_g , h5dset_rho_g )
             CALL qeh5_close ( h5dset_rho_g )  
 #else 
-            READ (iun, iostat=ierr) rho_g(1:ngm_g)
+            READ (iun, iostat=ierr) rho_g(1:ngm_g_)
 #endif
+            IF ( ngm_g > ngm_g_) rho_g(ngm_g_+1:ngm_g) = cmplx(0.d0,0.d0, KIND = DP) 
          END IF
          CALL mp_bcast( ierr, root_in_group, intra_group_comm )
          IF ( ierr > 0 ) CALL errore ( 'read_rhog','error reading file ' &
               & // TRIM( filename ), 2+ns )
+         !
+         ! ... Convert charge from full G-vector to half G-vector format
+         !
+         IF ( readmill ) CALL charge_k_to_g (ngm_g_, rho_g, mill_g, &
+              root_in_group,intra_group_comm, gamma_only)
          !
          CALL splitwf( rhoaux, rho_g, ngm, ig_l2g, me_in_group, &
               nproc_in_group, root_in_group, intra_group_comm )
          DO ig = 1, ngm
             rho(ig,ns) = rhoaux(ig)
          END DO
-         !
-         ! Workaround for LSDA, while waiting for much-needed harmonization:
-         ! if file contains rhotot=up+dw and rhodif=up-dw (nspin_=2), and
-         ! if we want rhoup and rho down (nspin=2), convert 
          ! 
-         IF ( nspin_ == 2 .AND. nspin == 2 .AND. ns == 2 ) THEN
-            DO ig = 1, ngm
-               rhoup = (rho(ig,ns-1) + rhoaux(ig)) / 2.0_dp
-               rhodw = (rho(ig,ns-1) - rhoaux(ig)) / 2.0_dp
-               rho(ig,ns-1)= rhoup
-               rho(ig,ns  )= rhodw
+         IF ( nspin_ == 2 .AND. nspin == 4 .AND. ns == 2) THEN 
+            DO ig = 1, ngm 
+               rho(ig, 4 ) = rho(ig, 2) 
+               rho(ig, 2 ) = cmplx(0.d0,0.d0, KIND = DP) 
+               rho(ig, 3 ) = cmplx(0.d0,0.d0, KIND = DP)
             END DO
          END IF
       END DO
@@ -800,9 +793,144 @@ MODULE io_base
       !
       DEALLOCATE( rhoaux )
       DEALLOCATE( rho_g )
+      IF (ALLOCATED(mill_g))  DEALLOCATE( mill_g )
       !
       RETURN
       !
     END SUBROUTINE read_rhog
     !
+    SUBROUTINE charge_k_to_g ( ngm_g_file, rho_g, mill_g_file, root_in_group, &
+         intra_group_comm , this_run_is_gamma_only)
+   !
+   ! this routine reorders G-vectors for the charge density on global mesh
+   ! from the k case to the gamma-only one
+   !
+      USE io_global,     ONLY : stdout
+      USE gvect,         ONLY : ngm, ngm_g, ig_l2g, mill, igtongl, ngl, gl
+      USE mp,            ONLY : mp_size,mp_rank
+      USE mp_wave,       ONLY : mergewf, mergekg
+     
+      IMPLICIT NONE
+      INTEGER, INTENT(in) :: intra_group_comm,root_in_group
+      INTEGER, INTENT(in) :: ngm_g_file  
+      !! number of g vectors found in file 
+      INTEGER, INTENT(in) :: mill_g_file(:,:)
+      COMPLEX(kind=DP), INTENT(inout) :: rho_g(:)!relative to k case  in input, gamma case in output
+      LOGICAL, OPTIONAL, INTENT(in) :: this_run_is_gamma_only 
+      INTEGER                  :: me_in_group, npr
+      COMPLEX(kind=DP), ALLOCATABLE :: rho_aux(:)
+      LOGICAL                  :: ionode_in_group
+      INTEGER :: nproc_in_group
+      INTEGER, ALLOCATABLE :: mill_g(:,:)
+      
+      INTEGER :: ig, jg, minus_g_file(3), startjg 
+      IF ( .NOT. PRESENT (this_run_is_gamma_only) ) RETURN 
+      IF ( this_run_is_gamma_only) THEN 
+         call infomsg('read_rhog','Conversion: K charge Gamma charge') 
+      ELSE 
+         call infomsg ('read_rhog', 'Conversion: Gamma charge to K charge') 
+      ENDIF 
+
+      me_in_group     = mp_rank( intra_group_comm )
+      nproc_in_group  = mp_size( intra_group_comm )
+      ionode_in_group = ( me_in_group == root_in_group )
+
+      IF(ionode_in_group) THEN
+         allocate(rho_aux(MAX(ngm_g_file, ngm_g) ))
+         allocate(mill_g(3,ngm_g))
+         rho_aux(1:ngm_g_file)=rho_g(1:ngm_g_file)
+      ELSE
+         allocate(rho_aux(1))
+         allocate(mill_g(1,1))
+      ENDIF
+
+      CALL mergekg( mill, mill_g, ngm, ig_l2g, me_in_group, &
+           nproc_in_group, root_in_group, intra_group_comm )
+
+      IF(ionode_in_group) THEN
+         rho_g(:)= cmplx(0.d0, 0.d0,KIND = DP) 
+         IF ( this_run_is_gamma_only ) THEN 
+            ig = 1 
+            DO jg=1,ngm_g_file
+               if(  mill_g(1,ig)==mill_g_file(1,jg) .and. &
+                  mill_g(2,ig)==mill_g_file(2,jg) .and. &
+                  mill_g(3,ig)==mill_g_file(3,jg) ) then
+                  rho_g(ig)=rho_aux(jg)
+                  ig = ig + 1 
+               endif
+               IF ( ig .GE. ngm_g ) EXIT  
+            END DO
+         ELSE ! this run uses full fft mesh 
+            ig = 1 
+            DO jg = 1, ngm_g
+               if (  mill_g (1,jg) == mill_g_file(1,ig) .and. &
+                     mill_g (2,jg) == mill_g_file(2,ig) .and. &
+                     mill_g (3,jg) == mill_g_file(3,ig) )  then 
+                  !
+                  rho_g(jg) = rho_aux(ig) 
+                  ig = ig + 1 
+               end if 
+               if ( ig .GE. ngm_g_file ) EXIT 
+            END DO 
+            ig = 1 
+            minus_g_file = minus_g(ig) 
+            startjg = 1 
+            igloop: DO 
+            DO jg = startjg, ngm_g  
+                if ( mill_g (1,jg) == minus_g_file(1) .and. &
+                     mill_g (2,jg) == minus_g_file(2) .and. &
+                     mill_g (3,jg) == minus_g_file(3)  )  then 
+                  !
+                  rho_g(jg) = dconjg(rho_aux(ig))
+                  ig = ig + 1 
+                  if ( ig .le. ngm_g_file) minus_g_file = minus_g(ig) 
+               end if 
+               if ( ig .GT. ngm_g_file ) EXIT igloop               
+            END DO 
+            startjg = update_startjg(ig, igtongl(startjg))
+            END DO igloop 
+         END IF
+      ENDIF
+        
+      deallocate(rho_aux,mill_g)
+      
+      return
+      CONTAINS 
+         function minus_g  (imill) result ( minus_mill) 
+            implicit none
+            integer   :: minus_mill(3)  
+            integer   :: ipol, imill 
+            if ( mill_g_file(1,imill) > 0  ) then 
+               minus_mill  = mill_g_file(:,imill)*[-1,1,1]
+            else if (mill_g_file(1,imill)   == 0 .and. mill_g_file(2,imill)  > 0 ) then 
+               minus_mill  = mill_g_file(:,imill) * [ 0, -1, 1]
+            else if ( mill_g_file(1,imill) == 0 .and. mill_g_file(2,imill) == 0 .and. mill_g_file(3,imill) > 0 ) then 
+               minus_mill  = mill_g_file(:,imill) * [0, 0, -1] 
+            else 
+               minus_mill = mill_g_file(:,imill) 
+            endif 
+         end function minus_g 
+
+
+         function  update_startjg(igsearching, startigl)  result(start) 
+            USE cell_base,   ONLY: bg 
+            implicit none
+            integer               :: start
+            integer,intent(in)    :: igsearching, startigl 
+            integer                 :: igl
+            real(8)                 :: g(3), gg 
+            
+            g = bg(:,1)*mill_g_file(1,igsearching)+bg(:,2)*mill_g_file(2,igsearching) &
+              + bg(:,3)*mill_g_file(3,igsearching) 
+            gg = (g(1)*g(1)+g(2)*g(2)+g(3)*g(3)) 
+            do igl = startigl, ngl 
+               if (abs(gg-gl(igl)) .lt. 1.d-6 ) exit 
+            end do 
+            do  start = startigl, ngm 
+               if ( igtongl(start) == igl) exit 
+            end do 
+         end function  update_startjg
+    END SUBROUTINE charge_k_to_g
+    !
   END MODULE io_base
+

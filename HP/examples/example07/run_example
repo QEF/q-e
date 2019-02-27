@@ -1,0 +1,257 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x and hp.x to calculate"
+$ECHO "the Hubbard U parameters for Ni and Mn in Ni2MnGa."
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x hp.x"
+PSEUDO_LIST="Ni.pbesol-n-rrkjus_psl.0.1.UPF Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF Ga.pbesol-dn-rrkjus_psl.0.2.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+HP_COMMAND="$PARA_PREFIX $BIN_DIR/hp.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as:   $PW_COMMAND"
+$ECHO "  running hp.x as:   $HP_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+PREFIX='Ni2MnGa'
+
+# The PWscf self-consistent calculation
+cat > $PREFIX.scf.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='$PREFIX'
+    pseudo_dir = '$PSEUDO_DIR/'
+    outdir='$TMP_DIR/'
+    verbosity='high'
+ /
+ &system
+    ibrav = 7,
+    celldm(1) = 7.80,
+    celldm(3) = 1.4142136,
+    nat = 4, 
+    ntyp = 3,
+    ecutwfc = 50.0
+    ecutrho = 400.0
+    occupations ='smearing',
+    smearing ='mv'
+    degauss = 0.01,
+    nspin = 2,
+    starting_magnetization(1) = 0.5
+    starting_magnetization(2) = 0.5
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'ortho-atomic',
+    Hubbard_U(1) = 1.d-8
+    Hubbard_U(2) = 1.d-8
+ /
+ &electrons
+    conv_thr =  1.d-15
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Mn  54.938  Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF 
+ Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF 
+ Ga  69.723  Ga.pbesol-dn-rrkjus_psl.0.2.UPF
+ATOMIC_POSITIONS {crystal}
+ Mn 0.0000000000   0.0000000000   0.0000000000
+ Ni 0.5000000000   0.7500000000   0.2500000000 
+ Ni 0.5000000000   0.2500000000   0.7500000000 
+ Ga 0.0000000000   0.5000000000   0.5000000000
+K_POINTS {automatic}
+ 4 4 4 0 0 0
+EOF
+$ECHO "  Running the SCF calculation for $PREFIX..."
+$PW_COMMAND < $PREFIX.scf.in > $PREFIX.scf.out
+$ECHO " done"
+
+# Perturbation of Mn : calculation for q points from 1 to 2
+cat > $PREFIX.hp.Mn.step1.in << EOF
+ &inputhp
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   nq1 = 2, nq2 = 2, nq3 = 2,
+   conv_thr_chi = 1.0d-8,
+   iverbosity = 2
+   perturb_only_atom(1) = .true.
+   start_q = 1
+   last_q  = 2
+ /
+EOF
+$ECHO "  Running the linear-response calculation of Hubbard U..."
+$HP_COMMAND < $PREFIX.hp.Mn.step1.in > $PREFIX.hp.Mn.step1.out
+$ECHO " done"
+
+
+# Perturbation of Mn : calculation for q points from 3 to 4
+cat > $PREFIX.hp.Mn.step2.in << EOF
+ &inputhp
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   nq1 = 2, nq2 = 2, nq3 = 2,
+   conv_thr_chi = 1.0d-8,
+   iverbosity = 2
+   perturb_only_atom(1) = .true.
+   start_q = 3
+   last_q  = 4
+ /
+EOF
+$ECHO "  Running the linear-response calculation of Hubbard U..."
+$HP_COMMAND < $PREFIX.hp.Mn.step2.in > $PREFIX.hp.Mn.step2.out
+$ECHO " done"
+
+
+# Perturbation of Mn : collection of q points from 1 to 4
+# and calculation of one column in chi0 and chi
+cat > $PREFIX.hp.Mn.step3.in << EOF
+ &inputhp
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   nq1 = 2, nq2 = 2, nq3 = 2,
+   iverbosity = 2
+   perturb_only_atom(1) = .true.
+   sum_pertq = .true.
+ /
+EOF
+$ECHO "  Running the linear-response calculation of Hubbard U..."
+$HP_COMMAND < $PREFIX.hp.Mn.step3.in > $PREFIX.hp.Mn.step3.out
+$ECHO " done"
+
+
+# Perturbation of one Ni : calculation for q points from 1 to 2
+cat > $PREFIX.hp.Ni.step1.in << EOF
+ &inputhp
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   nq1 = 2, nq2 = 2, nq3 = 2,
+   conv_thr_chi = 1.0d-8,
+   iverbosity = 2
+   perturb_only_atom(2) = .true.
+   start_q = 1
+   last_q  = 2
+ /
+EOF
+$ECHO "  Running the linear-response calculation of Hubbard U..."
+$HP_COMMAND < $PREFIX.hp.Ni.step1.in > $PREFIX.hp.Ni.step1.out
+$ECHO " done"
+
+
+# Perturbation of one Ni : calculation for q points from 3 to 4
+cat > $PREFIX.hp.Ni.step2.in << EOF
+ &inputhp
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   nq1 = 2, nq2 = 2, nq3 = 2,
+   conv_thr_chi = 1.0d-8,
+   iverbosity = 2
+   perturb_only_atom(2) = .true.
+   start_q = 3
+   last_q  = 4
+ /
+EOF
+$ECHO "  Running the linear-response calculation of Hubbard U..."
+$HP_COMMAND < $PREFIX.hp.Ni.step2.in > $PREFIX.hp.Ni.step2.out
+$ECHO " done"
+
+
+# Perturbation of one Ni : collection of q points from 1 to 4
+# and calculation of one column in chi0 and chi
+cat > $PREFIX.hp.Ni.step3.in << EOF
+ &inputhp
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   nq1 = 2, nq2 = 2, nq3 = 2,
+   iverbosity = 2
+   perturb_only_atom(2) = .true.
+   sum_pertq = .true.
+ /
+EOF
+$ECHO "  Running the linear-response calculation of Hubbard U..."
+$HP_COMMAND < $PREFIX.hp.Ni.step3.in > $PREFIX.hp.Ni.step3.out
+$ECHO " done"
+
+
+# Final step: collect all pieces of the response matrices 
+# chi0 and chi1, invert them and calculate U for Mn and Ni
+cat > $PREFIX.hp.final.in << EOF
+ &inputhp
+   prefix = '$PREFIX',
+   outdir = '$TMP_DIR/',
+   nq1 = 2, nq2 = 2, nq3 = 2,
+   iverbosity = 2
+   compute_hp = .true.
+ /
+EOF
+$ECHO "  Running the linear-response calculation of Hubbard U..."
+$HP_COMMAND < $PREFIX.hp.final.in > $PREFIX.hp.final.out
+$ECHO " done"

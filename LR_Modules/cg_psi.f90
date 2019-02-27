@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,9 +10,8 @@
 subroutine cg_psi (lda, n, m, psi, h_diag)
   !-----------------------------------------------------------------
   !
-  !    This routine gives a preconditioning to the linear system solver.
-  !    The preconditioning is diagonal in reciprocal space
-  !
+  !  This routine gives a preconditioning to the linear system solver.
+  !  The preconditioning is diagonal in reciprocal space
   !
   USE kinds, only : DP
   USE noncollin_module, only : noncolin, npol
@@ -45,5 +44,7 @@ subroutine cg_psi (lda, n, m, psi, h_diag)
         enddo
      enddo
   END IF
+  !
   return
+  !
 end subroutine cg_psi

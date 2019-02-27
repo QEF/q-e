@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -44,9 +44,12 @@ MODULE control_lr
   SAVE
   !
   INTEGER, ALLOCATABLE :: nbnd_occ(:)  ! occupied bands in metals
+  INTEGER, ALLOCATABLE :: ofsbeta(:)   ! for each atom gives the offset of beta functions 
   REAL(DP) :: alpha_pv       ! the alpha value for shifting the bands
   LOGICAL  :: lgamma         ! if .TRUE. this is a q=0 computation
   LOGICAL  :: lrpa           ! if .TRUE. uses the Random Phace Approximation
+  REAL(DP) :: ethr_nscf      ! convergence threshol for KS eigenvalues in the
+                             ! NSCF calculation
   !
 END MODULE control_lr
 !
@@ -157,3 +160,18 @@ MODULE lrus
   ! localized on atoms N and P.
   !
 END MODULE lrus
+!
+MODULE units_lr
+  !
+  USE kinds,  ONLY : DP
+  !
+  ! ... These are the units used in the linear response calculations
+  !
+  SAVE
+  !
+  INTEGER :: iuwfc,   & ! unit for wavefunctions
+             lrwfc,   & ! the length of wavefunction record
+             iuatwfc, & ! unit for atomic wavefunctions
+             iuatswfc   ! unit for atomic wavefunctions * S
+  !
+END MODULE units_lr

@@ -24,9 +24,10 @@ subroutine raman_mat
   USE symme,    ONLY : symtensor3
   USE uspp,     ONLY : nkb, vkb
   USE wvfct,    ONLY : npwx, nbnd
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE phus,     ONLY : alphap
-  USE units_ph, ONLY : lrdwf, iudwf, lrwfc, iuwfc
+  USE units_ph, ONLY : lrdwf, iudwf
+  USE units_lr, ONLY : iuwfc, lrwfc
   USE ramanm,   ONLY : ramtns, jab, a1j, a2j, lrd2w, iud2w
 
   USE lrus,     ONLY : becp1

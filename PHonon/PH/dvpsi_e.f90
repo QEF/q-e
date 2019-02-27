@@ -22,7 +22,7 @@ subroutine dvpsi_e (ik, ipol)
   USE klist,           ONLY : xk, ngk, igk_k
   USE gvect,           ONLY : g
   USE wvfct,           ONLY : npwx, nbnd, g2kin, et
-  USE wavefunctions_module, ONLY: evc
+  USE wavefunctions, ONLY: evc
   USE buffers,         ONLY : save_buffer, get_buffer
   USE noncollin_module,ONLY : noncolin, npol
   USE becmod,          ONLY : bec_type, becp, calbec, &

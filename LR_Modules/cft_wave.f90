@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2016 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -44,6 +44,8 @@ SUBROUTINE cft_wave (ik, evc_g, evc_r, isw)
   !
   INTEGER :: ig, ikk, ikq, npw, npwq
 
+  CALL start_clock ('cft_wave')
+
   IF (isw == 1) THEN
      ikk = ikks(ik) ! points to k+G indices
      npw = ngk(ikk) 
@@ -53,9 +55,13 @@ SUBROUTINE cft_wave (ik, evc_g, evc_r, isw)
      npwq= ngk(ikq)
      CALL fwfft_wave (npwq, igk_k (1,ikq), evc_g, evc_r )
   ELSE
-     CALL  errore (' cft_wave',' Wrong value for isw',1)
+     CALL  errore ('cft_wave',' Wrong value for isw',1)
   ENDIF
+ 
+  CALL stop_clock ('cft_wave')
+ 
   RETURN
+
 END SUBROUTINE cft_wave
 
 SUBROUTINE fwfft_wave (npwq, igkq, evc_g, evc_r )
@@ -151,6 +157,8 @@ SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
 
   INTEGER :: ig, ikk, ikq, ioff, idx, npw, npwq, ntgrp, right_inc
 
+  CALL start_clock ('cft_wave_tg')
+
   ntgrp = fftx_ntgrp( dffts )
   CALL tg_get_recip_inc( dffts, right_inc )
 
@@ -209,8 +217,10 @@ SUBROUTINE cft_wave_tg (ik, evc_g, evc_r, isw, v_size, ibnd, nbnd_occ)
         !
      ENDDO
   ELSE
-     CALL  errore (' cft_wave_tg',' Wrong value for isw',1)
+     CALL  errore ('cft_wave_tg',' Wrong value for isw',1)
   ENDIF
+
+  CALL stop_clock ('cft_wave_tg')
 
   RETURN
 END SUBROUTINE cft_wave_tg

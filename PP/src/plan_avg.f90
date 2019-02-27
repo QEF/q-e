@@ -161,7 +161,7 @@ SUBROUTINE do_plan_avg (averag, plan, ninter)
   USE lsda_mod, ONLY: lsda, current_spin, isk
   USE uspp, ONLY: vkb, nkb
   USE wvfct, ONLY: npwx, nbnd, wg
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions,  ONLY: evc
   USE noncollin_module, ONLY : noncolin, npol
   USE io_files, ONLY: iunwfc, nwordwfc
   USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type

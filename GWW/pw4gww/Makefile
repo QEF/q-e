@@ -3,13 +3,8 @@
 
 include ../../make.inc
 
-# location of include files
-IFLAGS=-I../../include
-
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
-          $(MOD_FLAG)../../KS_Solvers/Davidson \
-	  $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../PW/src
 
 PW4GWWOBJS = \
@@ -51,19 +46,19 @@ hpsi_pw4gww.o \
 cgsolve_all_gamma.o \
 realus.o 
 
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a ../../KS_Solvers/CG/libcg.a \
+QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 
 LIBMIN= ../minpack/minpacklib.a
 
-TLDEPS= bindir libs pw
+TLDEPS= phlibs
 
 all : tldeps pw4gww.x
 
 pw4gww.x : pw4gww.o libpw4gww.a  $(PW4GWWOBJS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) 
 	$(LD) $(LDFLAGS) -o $@ \
-	pw4gww.o libpw4gww.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(LIBS)
+	pw4gww.o libpw4gww.a $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBMIN) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )
 
 tldeps :

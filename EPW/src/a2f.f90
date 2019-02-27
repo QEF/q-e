@@ -215,7 +215,7 @@
     ! but not always. You might want to check this. 
     ! 
     n = 8.0 / omega
-    print*,'omega ',omega
+    !print*,'omega ',omega
     WRITE (iures, '(a)') '# Temperature [K]                Resistivity [micro Ohm cm] for different Phonon smearing (meV)        '  
     WRITE (iures, '("#     ", 15f12.7)') ( (degaussq+(ismear-1)*delta_qsmear)*ryd2mev,ismear=1,nqsmear )
     DO ismear = 1, nqsmear

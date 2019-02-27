@@ -56,10 +56,12 @@ subroutine ld1_writeout
   if (ionode)  then 
       if ( oldformat ) then 
          open(unit=iunps, file=trim(file_pseudopw), status='unknown',  form='formatted', err=50, iostat=ios)
+      else 
+         ios = 0 
       end if
    end if
 50  call mp_bcast(ios, ionode_id, world_comm)
-  call errore('ld1_writeout','opening file_pseudopw',abs(ios))
+  call errore('ld1_writeout','opening '//trim(file_pseudopw) ,abs(ios))
 
   if (ionode) then
      if (oldformat) then

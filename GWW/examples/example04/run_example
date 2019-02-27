@@ -1,0 +1,227 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use pw.x, simple.x and simple_ip.x to calculate"
+$ECHO "the IP optical properties of bulk Ag"
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x simple.x simple_ip.x"
+PSEUDO_LIST="Ag_ONCV_PBE-1.0.upf"
+
+PSEUDO_DIR=$EXAMPLE_DIR
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+       $ECHO
+       $ECHO "Downloading $FILE to $PSEUDO_DIR...\c"
+            $WGET $PSEUDO_DIR/$FILE $NETWORK_PSEUDO/$FILE 2> /dev/null
+    fi
+    if test $? != 0; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x "
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+SIMPLE_COMMAND="$PARA_PREFIX $BIN_DIR/simple.x "
+$ECHO "  running simple.x as: $SIMPLE_COMMAND"
+SIMPLEIP_COMMAND="$PARA_PREFIX $BIN_DIR/simple_ip.x "
+$ECHO "  running simple_ip.x as: $SIMPLEIP_COMMAND"
+$ECHO
+
+    # self-consistent calculation
+    cat > ag_scf.in << EOF
+&CONTROL
+    calculation = 'scf'
+    restart_mode = 'from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'    
+    prefix = 'ag',
+/
+&SYSTEM
+    ibrav=  2, 
+    celldm(1) = 7.85, 
+    nat = 1, 
+    ntyp= 1,
+    ecutwfc = 50.0,
+    occupations = 'smearing',
+    degauss = 0.02,
+    smearing = 'marzari-vanderbilt',
+/
+&ELECTRONS
+    conv_thr = 1D-12,  
+    mixing_beta = 0.3,
+/
+ATOMIC_SPECIES
+ Ag  196.96657   Ag_ONCV_PBE-1.0.upf
+ATOMIC_POSITIONS alat
+ Ag 0.00 0.00 0.00
+K_POINTS automatic
+ 12 12 12  0 0 0
+
+EOF
+    $ECHO "  running the scf calculation for Ag...\c"
+    $PW_COMMAND < ag_scf.in > ag_scf.out
+    check_failure $?
+    $ECHO " done"
+
+
+    # non self-consistent calculation
+    cat > ag_nscf.in << EOF
+&CONTROL
+    calculation = 'nscf'
+    restart_mode = 'from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',    
+    prefix = 'ag',
+/
+&SYSTEM
+    ibrav=  2, 
+    celldm(1) = 7.85, 
+    nat = 1, 
+    ntyp= 1,
+    ecutwfc = 50.0,
+    occupations = 'smearing',
+    degauss = 0.02,
+    smearing = 'marzari-vanderbilt',
+    nbnd = 20,
+    noinv = .true.,
+    nosym = .true.,
+/
+&ELECTRONS
+    diagonalization='cg',
+    conv_thr = 1.0e-12,
+    mixing_beta = 0.3,
+    diago_full_acc = .true.,
+/
+ATOMIC_SPECIES
+ Ag  196.96657  Ag_ONCV_PBE-1.0.upf
+ATOMIC_POSITIONS alat
+ Ag 0.00 0.00 0.00
+K_POINTS (crystal)
+15
+0.0 0.0 0.0 1.0
+0.0 0.0 0.5 1.0
+0.0 0.5 0.0 1.0
+0.0 0.5 0.5 1.0
+0.5 0.0 0.0 1.0
+0.5 0.0 0.5 1.0
+0.5 0.5 0.0 1.0
+0.5 0.5 0.5 1.0
+0.0 0.0 1.0 1.0
+0.0 1.0 0.0 1.0
+1.0 0.0 0.0 1.0
+1.0 1.0 0.0 1.0
+1.0 0.0 1.0 1.0
+0.0 1.0 1.0 1.0
+1.0 1.0 1.0 1.0
+
+EOF
+    $ECHO "  running the nscf calculation for Ag...\c"
+    $PW_COMMAND < ag_nscf.in > ag_nscf.out
+    check_failure $?
+    $ECHO " done"
+
+    # simple calculation
+    cat > ag_simple.in << EOF
+&inputsimple
+prefix='ag'
+outdir='$TMP_DIR/'
+calc_mode=1
+num_nbndv=9
+num_val=9
+num_cond=11
+s_bands=0.01
+nkpoints(1)=10
+nkpoints(2)=10
+nkpoints(3)=10
+nonlocal_commutator=.false.
+/
+EOF
+    $ECHO "  running the simple calculation for Ag...\c"
+    $SIMPLE_COMMAND < ag_simple.in > ag_simple.out
+    check_failure $?
+    $ECHO " done"
+
+    # simple_ip calculation
+    cat > ag_simple_ip.in << EOF
+&inputsimpleip
+simpleip_in%prefix = 'ag'
+simpleip_in%outdir = '$TMP_DIR/'
+simpleip_in%interp_grid(1) = 20
+simpleip_in%interp_grid(2) = 20
+simpleip_in%interp_grid(3) = 20
+simpleip_in%fermi_degauss = 0.02205
+simpleip_in%fermi_ngauss = -1
+simpleip_in%drude_degauss = 0.0142
+simpleip_in%wmin = 0.0 
+simpleip_in%wmax = 0.735
+simpleip_in%nw = 1000
+simpleip_in%inter_broadening = 0.0142	
+simpleip_in%intra_broadening = 0.0142
+simpleip_in%nonlocal_commutator=.false.
+simpleip_in%nonlocal_interpolation=.true.
+/
+EOF
+    $ECHO "  running the simple_ip calculation for Ag...\c"
+    $SIMPLEIP_COMMAND < ag_simple_ip.in > ag_simple_ip.out
+    check_failure $?
+    $ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"

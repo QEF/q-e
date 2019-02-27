@@ -48,8 +48,7 @@ module dftd3_common
   ! values >5 might lead to bumps in the potential
   real(wp), parameter :: k3 = -4.
 
-
-  real(wp), parameter :: autoang =0.52917726d0
+  real(wp), parameter :: autoang = 0.52917720859_wp ! aligned to NIST data
   real(wp), parameter :: autokcal = 627.509541d0
   real(wp), parameter :: autoev = 27.21138505
   ! J/mol nm^6 - > au

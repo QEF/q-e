@@ -108,10 +108,6 @@ MODULE lr_variables
   !
   LOGICAL :: davidson = .false.           
   !
-#if defined(__ENVIRON)
-  CHARACTER(len=80) :: assume_isolated = 'none'
-#endif
-  !
   ! lr_input
   !
   LOGICAL :: restart            ! .true. if the calculation is a restart run

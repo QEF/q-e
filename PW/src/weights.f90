@@ -184,7 +184,7 @@ SUBROUTINE weights_only ()
   USE wvfct,                ONLY : nbnd, wg, et
   USE mp_images,            ONLY : intra_image_comm
   USE mp_pools,             ONLY : inter_pool_comm
-  USE mp,                   ONLY : mp_bcast, mp_sum
+  USE mp,                   ONLY : mp_sum
   USE io_global,            ONLY : ionode, ionode_id
   !
   IMPLICIT NONE

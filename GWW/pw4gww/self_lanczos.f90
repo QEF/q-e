@@ -24,7 +24,7 @@ subroutine self_basis_lanczos(n_set,nstates,numpw, nsteps,ispin,lfull,nfull)
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE wvfct,     ONLY : npwx, npw, nbnd
    USE gvecw,     ONLY : ecutwfc
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
    USE mp_pools, ONLY : intra_pool_comm
@@ -565,7 +565,7 @@ subroutine global_self_lanczos(nstates,nstates_eff,threshold,nglobal,nsteps,nump
   USE wvfct,    ONLY : npwx, npw, nbnd
   USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
   USE mp_world, ONLY : world_comm, mpime,nproc
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE gvect
   USE gvecs,              ONLY : doublegrid
   USE klist,    ONLY : igk_k
@@ -1176,7 +1176,7 @@ subroutine self_basis_lanczos_real(n_set,nstates,numpw, nsteps,ispin)
    USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
    USE wvfct,     ONLY : npwx, npw, nbnd
    USE gvecw,     ONLY : ecutwfc
-   USE wavefunctions_module, ONLY : evc, psic
+   USE wavefunctions, ONLY : evc, psic
    USE mp, ONLY : mp_sum, mp_barrier, mp_bcast
    USE mp_world, ONLY : world_comm, mpime, nproc
    USE mp_pools, ONLY : intra_pool_comm

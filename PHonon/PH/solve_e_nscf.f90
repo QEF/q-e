@@ -23,7 +23,7 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   USE buffers,               ONLY : get_buffer
   USE gvect,                 ONLY : g
   USE wvfct,                 ONLY : et
-  USE wavefunctions_module,  ONLY : evc
+  USE wavefunctions,  ONLY : evc
   USE eqv,                   ONLY : dpsi, dvpsi
   USE units_ph,              ONLY : this_pcxpsi_is_on_file, lrdwf, iudwf
   USE qpoint,                ONLY : nksq

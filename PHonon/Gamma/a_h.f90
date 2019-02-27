@@ -14,7 +14,7 @@ SUBROUTINE A_h(npw,e,h,ah)
   USE uspp,     ONLY : vkb, nkb
   USE lsda_mod, ONLY : current_spin, nspin
   USE wvfct, ONLY: nbnd, npwx, g2kin
-  USE wavefunctions_module,  ONLY: evc, psic
+  USE wavefunctions,  ONLY: evc, psic
   USE scf,      ONLY : vrs, rho
   USE fft_base, ONLY : dffts, dfftp
   USE fft_interfaces, ONLY : fwfft, invfft
@@ -120,9 +120,13 @@ SUBROUTINE A_h(npw,e,h,ah)
   !  add gradient correction contribution (if any)
   !
   CALL start_clock('dgradcorr')
-  IF (dft_is_gradient() ) CALL dgradcor1  &
-       (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,            &
-        drho, dpsic, nspin, g, dv)
+  IF (dft_is_gradient() ) THEN
+     !
+     CALL dgradcor1  &
+         (dfftp, rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,  &
+          drho, dpsic, nspin, g, dv)
+     !
+  ENDIF
   CALL stop_clock('dgradcorr')
   NULLIFY(dpsic)
   NULLIFY (drho)

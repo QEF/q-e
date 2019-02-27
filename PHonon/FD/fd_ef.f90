@@ -125,7 +125,7 @@ program fd_raman
     WRITE( stdout, '(/,5x,"Atomic coordiantes")')                                                  
     WRITE( stdout, '(5x,"site n.     atom                  positions (Angs)")')
     WRITE( stdout, '(6x,i4,8x,a6," tau(",i4,") = (",3f12.7,"  )")') &
-      (na, atm(ityp(na)), na, (tau(ipol,na)*alat*0.5291772, ipol=1,3), na=1,nat)
+      (na, atm(ityp(na)), na, (tau(ipol,na)*alat*bohr_radius_angs, ipol=1,3), na=1,nat)
 
     !symmetries
     IF (verbose) THEN

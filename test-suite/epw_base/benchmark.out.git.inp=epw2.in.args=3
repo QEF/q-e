@@ -1,0 +1,2136 @@
+                                                                                      
+                                       ``:oss/                                        
+                           `.+s+.     .+ys--yh+     `./ss+.                           
+                          -sh//yy+`   +yy   +yy    -+h+-oyy                           
+                          -yh- .oyy/.-sh.   .syo-.:sy-  /yh                           
+                 `.-.`    `yh+   -oyyyo.     `/syys:    oys      `.`                  
+               `/+ssys+-` `sh+      `                   oys`   .:osyo`                
+               -yh- ./syyooyo`                          .sys+/oyo--yh/                
+               `yy+    .-:-.                             `-/+/:`  -sh-                
+                /yh.                                              oys                 
+          ``..---hho---------`   .---------..`      `.-----.`    -hd+---.             
+       `./osmNMMMMMMMMMMMMMMMs. +NNMMMMMMMMNNmh+.   yNMMMMMNm-  oNMMMMMNmo++:`        
+       +sy--/sdMMMhyyyyyyyNMMh- .oyNMMmyyyyyhNMMm+` -yMMMdyyo:` .oyyNMMNhs+syy`       
+       -yy/   /MMM+.`-+/``mMMy-   `mMMh:`````.dMMN:` `MMMy-`-dhhy```mMMy:``+hs        
+        -yy+` /MMMo:-mMM+`-oo/.    mMMh:     `dMMN/`  dMMm:`dMMMMy..MMMo-.+yo`        
+         .sys`/MMMMNNMMMs-         mMMmyooooymMMNo:   oMMM/sMMMMMM++MMN//oh:          
+          `sh+/MMMhyyMMMs- `-`     mMMMMMMMMMNmy+-`   -MMMhMMMsmMMmdMMd/yy+           
+    `-/+++oyy-/MMM+.`/hh/.`mNm:`   mMMd+/////:-.`      NMMMMMd/:NMMMMMy:/yyo/:.`      
+   +os+//:-..-oMMMo:--:::-/MMMo. .-mMMd+---`           hMMMMN+. oMMMMMo. `-+osyso:`   
+   syo     `mNMMMMMNNNNNNNNMMMo.oNNMMMMMNNNN:`         +MMMMs:`  dMMMN/`     ``:syo   
+   /yh`     :syyyyyyyyyyyyyyyy+.`+syyyyyyyyo:`         .oyys:`   .oyys:`        +yh   
+   -yh-        ````````````````    `````````              ``        ``          oys   
+   -+h/------------------------::::::::://////++++++++++++++++++++++///////::::/yd:   
+   shdddddddddddddddddddddddddddddhhhhhhhhyyyyyssssssssssssssssyyyyyyyhhhhhhhddddh`   
+                                                                                      
+  S. Ponce, E. R. Margine, C. Verdi, and F. Giustino,                                 
+                                                Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                      
+
+     Program EPW v.5.0.0 starts on 11Oct2018 at 14:35:19 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     4 processors
+
+     MPI processes distributed on     1 nodes
+     K-points division:     npool     =       4
+                      
+     ------------------------------------------------------------------------ 
+                   RESTART - RESTART - RESTART - RESTART                         
+     Restart is done without reading PWSCF save file.                  
+     Be aware that some consistency checks are therefore not done.                  
+     ------------------------------------------------------------------------ 
+                      
+
+     --                                                                         
+
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
+     convergence threshold     =      0.0E+00
+     beta                      =       0.0000
+     number of iterations used =            0
+     Exchange-correlation      = not set (-1 -1 -1 -1-1-1)
+
+
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+
+
+     No symmetry!
+
+     G cutoff =    0.0000  (      0 G-vectors)     FFT grid: (  0,  0,  0)
+     number of k points=    0
+                       cart. coord. in units 2pi/a_0
+     EPW          :      0.00s CPU      0.00s WALL
+
+     EPW          :      0.00s CPU      0.00s WALL
+
+     No wavefunction gauge setting applied
+
+     -------------------------------------------------------------------
+     Using ./diam.ukk from disk
+     -------------------------------------------------------------------
+
+
+     Using kmap and kgmap from disk
+
+     Do not need to read .epb files; read .fmt files
+
+
+              band disentanglement is used:  nbndsub =    4
+     Use zone-centred Wigner-Seitz cells 
+     Number of WS vectors for electrons       43
+     Number of WS vectors for phonons       43
+     Number of WS vectors for electron-phonon       43
+     Results may improve by using use_ws == .true. 
+
+     Reading Hamiltonian, Dynamical matrix and EP vertex in Wann rep from file
+
+
+     Finished reading Wann rep data from file
+
+     ===================================================================
+     Memory usage:  VmHWM =        16Mb
+                   VmPeak =       406Mb
+     ===================================================================
+     
+     Using uniform q-mesh:    6   6   6
+     Size of q point mesh for interpolation:        216
+     Using uniform k-mesh:    6   6   6
+     Size of k point mesh for interpolation:        432
+     Max number of k points per pool:              108
+
+     Fermi energy coarse grid =  14.009584 eV
+
+     Fermi energy is calculated from the fine k-mesh: Ef =  13.576273 eV
+
+     Warning: check if difference with Fermi level fine grid makes sense
+
+     ===================================================================
+
+              ibndmin =     1  ebndmin =    -0.074
+              ibndmax =     4  ebndmax =     1.021
+
+
+     Number of ep-matrix elements per pool :         5184 ~=   40.50 Kb (@ 8 bytes/ DP)
+
+     ===================================================================
+     Nesting Function in the double delta approx
+     ===================================================================
+
+
+     Fermi Surface thickness =  15.000000 eV
+
+     Golden Rule strictly enforced with T =   0.025852 eV
+     Gaussian Broadening:   1.000 eV, ngauss=   1
+     DOS =  0.055485 states/spin/eV/Unit Cell at Ef= 13.576273 eV
+
+     iq =     1 coord.:   0.00000  0.00000  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.168757E+02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =     2 coord.:   0.00000  0.00000  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.825271E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =     3 coord.:   0.00000  0.00000  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.183684E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =     4 coord.:   0.00000  0.00000  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.952080E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =     5 coord.:   0.00000  0.00000  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.183684E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =     6 coord.:   0.00000  0.00000  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.825271E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =     7 coord.:   0.00000  0.16667  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.825271E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =     8 coord.:   0.00000  0.16667  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.692556E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =     9 coord.:   0.00000  0.16667  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    10 coord.:   0.00000  0.16667  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    11 coord.:   0.00000  0.16667  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770917E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    12 coord.:   0.00000  0.16667  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.453799E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    13 coord.:   0.00000  0.33333  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.183684E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    14 coord.:   0.00000  0.33333  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    15 coord.:   0.00000  0.33333  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.394969E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    16 coord.:   0.00000  0.33333  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    17 coord.:   0.00000  0.33333  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.930709E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    18 coord.:   0.00000  0.33333  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770917E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    19 coord.:   0.00000  0.50000  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.952080E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    20 coord.:   0.00000  0.50000  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    21 coord.:   0.00000  0.50000  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    22 coord.:   0.00000  0.50000  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.161656E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    23 coord.:   0.00000  0.50000  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    24 coord.:   0.00000  0.50000  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    25 coord.:   0.00000  0.66667  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.183684E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    26 coord.:   0.00000  0.66667  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770917E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    27 coord.:   0.00000  0.66667  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.930709E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    28 coord.:   0.00000  0.66667  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    29 coord.:   0.00000  0.66667  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.394969E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    30 coord.:   0.00000  0.66667  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    31 coord.:   0.00000  0.83333  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.825271E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    32 coord.:   0.00000  0.83333  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.453799E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    33 coord.:   0.00000  0.83333  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770917E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    34 coord.:   0.00000  0.83333  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    35 coord.:   0.00000  0.83333  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    36 coord.:   0.00000  0.83333  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.692556E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    37 coord.:   0.16667  0.00000  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.825271E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    38 coord.:   0.16667  0.00000  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.692556E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    39 coord.:   0.16667  0.00000  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    40 coord.:   0.16667  0.00000  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    41 coord.:   0.16667  0.00000  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770916E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    42 coord.:   0.16667  0.00000  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.453799E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    43 coord.:   0.16667  0.16667  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.692556E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    44 coord.:   0.16667  0.16667  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.825271E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    45 coord.:   0.16667  0.16667  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.453799E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    46 coord.:   0.16667  0.16667  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770916E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    47 coord.:   0.16667  0.16667  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    48 coord.:   0.16667  0.16667  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    49 coord.:   0.16667  0.33333  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+     Progression iq (fine) =         50/       216
+
+     iq =    50 coord.:   0.16667  0.33333  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.453799E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    51 coord.:   0.16667  0.33333  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    52 coord.:   0.16667  0.33333  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    53 coord.:   0.16667  0.33333  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    54 coord.:   0.16667  0.33333  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    55 coord.:   0.16667  0.50000  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    56 coord.:   0.16667  0.50000  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770917E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    57 coord.:   0.16667  0.50000  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    58 coord.:   0.16667  0.50000  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    59 coord.:   0.16667  0.50000  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.150201E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    60 coord.:   0.16667  0.50000  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    61 coord.:   0.16667  0.66667  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770917E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    62 coord.:   0.16667  0.66667  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    63 coord.:   0.16667  0.66667  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    64 coord.:   0.16667  0.66667  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.150201E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    65 coord.:   0.16667  0.66667  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    66 coord.:   0.16667  0.66667  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    67 coord.:   0.16667  0.83333  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.453799E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    68 coord.:   0.16667  0.83333  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    69 coord.:   0.16667  0.83333  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    70 coord.:   0.16667  0.83333  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    71 coord.:   0.16667  0.83333  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    72 coord.:   0.16667  0.83333  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    73 coord.:   0.33333  0.00000  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.183684E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    74 coord.:   0.33333  0.00000  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    75 coord.:   0.33333  0.00000  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.394969E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    76 coord.:   0.33333  0.00000  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    77 coord.:   0.33333  0.00000  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.930709E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    78 coord.:   0.33333  0.00000  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770916E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    79 coord.:   0.33333  0.16667  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    80 coord.:   0.33333  0.16667  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.453799E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    81 coord.:   0.33333  0.16667  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    82 coord.:   0.33333  0.16667  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    83 coord.:   0.33333  0.16667  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    84 coord.:   0.33333  0.16667  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    85 coord.:   0.33333  0.33333  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.394969E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    86 coord.:   0.33333  0.33333  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    87 coord.:   0.33333  0.33333  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.183684E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    88 coord.:   0.33333  0.33333  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770916E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    89 coord.:   0.33333  0.33333  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.930709E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    90 coord.:   0.33333  0.33333  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    91 coord.:   0.33333  0.50000  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    92 coord.:   0.33333  0.50000  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    93 coord.:   0.33333  0.50000  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770917E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    94 coord.:   0.33333  0.50000  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    95 coord.:   0.33333  0.50000  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    96 coord.:   0.33333  0.50000  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.150201E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    97 coord.:   0.33333  0.66667  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.930709E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    98 coord.:   0.33333  0.66667  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =    99 coord.:   0.33333  0.66667  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.930709E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+     Progression iq (fine) =        100/       216
+
+     iq =   100 coord.:   0.33333  0.66667  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   101 coord.:   0.33333  0.66667  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.930709E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   102 coord.:   0.33333  0.66667  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   103 coord.:   0.33333  0.83333  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770917E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   104 coord.:   0.33333  0.83333  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   105 coord.:   0.33333  0.83333  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   106 coord.:   0.33333  0.83333  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.150201E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   107 coord.:   0.33333  0.83333  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   108 coord.:   0.33333  0.83333  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   109 coord.:   0.50000  0.00000  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.952080E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   110 coord.:   0.50000  0.00000  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   111 coord.:   0.50000  0.00000  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   112 coord.:   0.50000  0.00000  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.161656E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   113 coord.:   0.50000  0.00000  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   114 coord.:   0.50000  0.00000  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   115 coord.:   0.50000  0.16667  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   116 coord.:   0.50000  0.16667  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770916E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   117 coord.:   0.50000  0.16667  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   118 coord.:   0.50000  0.16667  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   119 coord.:   0.50000  0.16667  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.150201E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   120 coord.:   0.50000  0.16667  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   121 coord.:   0.50000  0.33333  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   122 coord.:   0.50000  0.33333  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   123 coord.:   0.50000  0.33333  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770916E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   124 coord.:   0.50000  0.33333  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   125 coord.:   0.50000  0.33333  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   126 coord.:   0.50000  0.33333  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.150201E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   127 coord.:   0.50000  0.50000  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.161656E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   128 coord.:   0.50000  0.50000  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   129 coord.:   0.50000  0.50000  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   130 coord.:   0.50000  0.50000  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.952080E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   131 coord.:   0.50000  0.50000  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   132 coord.:   0.50000  0.50000  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   133 coord.:   0.50000  0.66667  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   134 coord.:   0.50000  0.66667  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.150201E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   135 coord.:   0.50000  0.66667  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   136 coord.:   0.50000  0.66667  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   137 coord.:   0.50000  0.66667  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770916E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   138 coord.:   0.50000  0.66667  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   139 coord.:   0.50000  0.83333  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   140 coord.:   0.50000  0.83333  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   141 coord.:   0.50000  0.83333  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.150201E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   142 coord.:   0.50000  0.83333  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   143 coord.:   0.50000  0.83333  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   144 coord.:   0.50000  0.83333  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770916E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   145 coord.:   0.66667  0.00000  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.183684E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   146 coord.:   0.66667  0.00000  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770916E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   147 coord.:   0.66667  0.00000  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.930709E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   148 coord.:   0.66667  0.00000  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   149 coord.:   0.66667  0.00000  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.394969E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+     Progression iq (fine) =        150/       216
+
+     iq =   150 coord.:   0.66667  0.00000  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   151 coord.:   0.66667  0.16667  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770917E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   152 coord.:   0.66667  0.16667  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   153 coord.:   0.66667  0.16667  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   154 coord.:   0.66667  0.16667  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.150201E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   155 coord.:   0.66667  0.16667  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   156 coord.:   0.66667  0.16667  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   157 coord.:   0.66667  0.33333  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.930709E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   158 coord.:   0.66667  0.33333  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   159 coord.:   0.66667  0.33333  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.930709E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   160 coord.:   0.66667  0.33333  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   161 coord.:   0.66667  0.33333  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.930709E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   162 coord.:   0.66667  0.33333  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   163 coord.:   0.66667  0.50000  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   164 coord.:   0.66667  0.50000  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.150201E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   165 coord.:   0.66667  0.50000  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   166 coord.:   0.66667  0.50000  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   167 coord.:   0.66667  0.50000  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770917E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   168 coord.:   0.66667  0.50000  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   169 coord.:   0.66667  0.66667  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.394969E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   170 coord.:   0.66667  0.66667  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   171 coord.:   0.66667  0.66667  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.930709E-01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   172 coord.:   0.66667  0.66667  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770916E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   173 coord.:   0.66667  0.66667  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.183684E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   174 coord.:   0.66667  0.66667  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   175 coord.:   0.66667  0.83333  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   176 coord.:   0.66667  0.83333  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   177 coord.:   0.66667  0.83333  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   178 coord.:   0.66667  0.83333  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   179 coord.:   0.66667  0.83333  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   180 coord.:   0.66667  0.83333  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.453799E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   181 coord.:   0.83333  0.00000  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.825271E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   182 coord.:   0.83333  0.00000  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.453799E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   183 coord.:   0.83333  0.00000  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770916E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   184 coord.:   0.83333  0.00000  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   185 coord.:   0.83333  0.00000  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   186 coord.:   0.83333  0.00000  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.692556E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   187 coord.:   0.83333  0.16667  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.453799E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   188 coord.:   0.83333  0.16667  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   189 coord.:   0.83333  0.16667  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   190 coord.:   0.83333  0.16667  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   191 coord.:   0.83333  0.16667  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   192 coord.:   0.83333  0.16667  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   193 coord.:   0.83333  0.33333  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770917E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   194 coord.:   0.83333  0.33333  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   195 coord.:   0.83333  0.33333  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   196 coord.:   0.83333  0.33333  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.150201E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   197 coord.:   0.83333  0.33333  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   198 coord.:   0.83333  0.33333  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   199 coord.:   0.83333  0.50000  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+     Progression iq (fine) =        200/       216
+
+     iq =   200 coord.:   0.83333  0.50000  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   201 coord.:   0.83333  0.50000  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.150201E-04 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   202 coord.:   0.83333  0.50000  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.255005E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   203 coord.:   0.83333  0.50000  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   204 coord.:   0.83333  0.50000  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770917E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   205 coord.:   0.83333  0.66667  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   206 coord.:   0.83333  0.66667  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   207 coord.:   0.83333  0.66667  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.244504E-02 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   208 coord.:   0.83333  0.66667  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.129393E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   209 coord.:   0.83333  0.66667  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   210 coord.:   0.83333  0.66667  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.453799E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   211 coord.:   0.83333  0.83333  0.00000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.692556E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   212 coord.:   0.83333  0.83333  0.16667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.189444E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   213 coord.:   0.83333  0.83333  0.33333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.203246E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   214 coord.:   0.83333  0.83333  0.50000 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.770916E+00 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   215 coord.:   0.83333  0.83333  0.66667 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.453799E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+
+     iq =   216 coord.:   0.83333  0.83333  0.83333 wt:   0.00463
+     -------------------------------------------------------------------
+      Nesting function (q)=   0.825271E+01 [Adimensional]
+     -------------------------------------------------------------------
+
+
+     Number of (k,k+q) pairs on the Fermi surface:      216 out of      216
+
+     ===================================================================
+     Memory usage:  VmHWM =        19Mb
+                   VmPeak =       438Mb
+     ===================================================================
+
+
+     Unfolding on the coarse grid
+     elphon_wrap  :      0.00s CPU      0.00s WALL (       1 calls)
+
+     INITIALIZATION: 
+
+
+
+     Electron-Phonon interpolation
+     ephwann      :      0.64s CPU      0.68s WALL (       1 calls)
+     ep-interp    :      0.56s CPU      0.60s WALL (     216 calls)
+
+     DynW2B       :      0.00s CPU      0.00s WALL (     216 calls)
+     HamW2B       :      0.11s CPU      0.11s WALL (   23436 calls)
+     ephW2Bp      :      0.03s CPU      0.03s WALL (     216 calls)
+
+
+     Total program execution
+     EPW          :      0.64s CPU      0.68s WALL
+
+                                                                                          
+ Please consider citing:                                                                  
+ S. Ponce, E. R. Margine, C. Verdi and F. Giustino, Comput. Phys. Commun. 209, 116 (2016) 
+                                                                                          
+ In addition, if you used anisotropic Eliashberg superconductivity please cite:           
+              E. R. Margine and F. Giustino, Phys. Rev. B 87, 024505 (2013)               
+              if you used transport properties (scattering rates, mobility) please cite:  
+              S. Ponce, E. R. Margine and F. Giustino, Phys. Rev. B 97, 121201 (2018)     

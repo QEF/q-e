@@ -1,12 +1,12 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2018 Quantum ESPRESSO Foundation
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
+SUBROUTINE dqvan2 (ih, jh, np, ipol, ngy, g, qmod, ylmk0, dylmk0, dqg )
   !-----------------------------------------------------------------------
   !
   !    This routine computes the derivatives of the fourier transform of
@@ -18,36 +18,30 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   !     dq(g,i,j) = sum_lm (-i)^l ap(lm,i,j) *
   !                ( yr_lm(g^) dqrad(g,l,i,j) + dyr_lm(g^) qrad(g,l,i,j))
   !
-  !     here the dummy variables
-  !
   USE kinds, ONLY: DP
-  USE gvect, ONLY: g
   USE us, ONLY: dq, qrad
   USE uspp_param, ONLY: lmaxq, nbetam
   USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
-  implicit none
-  integer :: ngy, ih, jh, np, ipol
-  ! input: the number of G vectors to compute
-  ! input: the first index of Q
-  ! input: the second index of Q
-  ! input: the number of the pseudopotential
-  ! input: the polarization of the derivative
-
-  real(DP) :: ylmk0 (ngy, lmaxq * lmaxq), dylmk0 (ngy, lmaxq * lmaxq), &
-       qmod (ngy)
-  ! the spherical harmonics
-  ! the spherical harmonics derivetives
-  ! input: moduli of the q+g vectors
-  complex(DP) :: dqg (ngy)
-  ! output: the fourier transform of interest
   !
-  !     here the local variables
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: ngy, ih, jh, np, ipol
+  ! ngy: the number of G vectors to compute
+  ! ih : first index of Q(ih,jh)
+  ! jh : second index of Q(ih,jh)
+  ! np : pseudopotential index
+  ! ipol:the polarization of the derivative
+  REAL(DP), INTENT(IN) ::  g(3,ngy), qmod (ngy), ylmk0 (ngy, lmaxq*lmaxq), &
+       dylmk0 (ngy, lmaxq * lmaxq)
+  ! g: G vectors
+  ! qmod: moduli of q+G vectors
+  ! ylmk0: spherical harmonics
+  ! dylmk0: derivetives of spherical harmonics
+  COMPLEX(DP), INTENT(OUT) :: dqg (ngy)
+  ! the fourier transform of interest
   !
-
-  complex(DP) :: sig
+  COMPLEX(DP) :: sig
   ! (-i)^L
-
-  integer :: nb, mb, ijv, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3
+  INTEGER :: nb, mb, ijv, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3
   ! the atomic index corresponding to ih
   ! the atomic index corresponding to jh
   ! combined index (nb,mb)
@@ -59,7 +53,7 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   ! the possible LM's compatible with ih,j
   ! counters for interpolation table
 
-  real(DP) :: sixth, dqi, qm, px, ux, vx, wx, uvx, pwx, work, work1, qm1
+  REAL(DP) :: sixth, dqi, qm, px, ux, vx, wx, uvx, pwx, work, work1, qm1
   ! 1 divided by six
   ! 1 divided dq
   ! qmod/dq
@@ -74,45 +68,45 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   dqi = 1 / dq
   nb = indv (ih, np)
   mb = indv (jh, np)
-  if (nb.ge.mb) then
+  IF (nb >= mb) THEN
      ijv = nb * (nb - 1) / 2 + mb
-  else
+  ELSE
      ijv = mb * (mb - 1) / 2 + nb
-  endif
+  ENDIF
   ivl = nhtolm (ih, np)
   jvl = nhtolm (jh, np)
 
-  if (nb > nbetam .OR. mb > nbetam) &
-       call errore (' dqvan2 ', ' wrong dimensions (1)', MAX(nb,mb))
-  if (ivl > nlx .OR. jvl > nlx) &
-       call errore (' dqvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
+  IF (nb > nbetam .or. mb > nbetam) &
+       CALL errore (' dqvan2 ', ' wrong dimensions (1)', max(nb,mb))
+  IF (ivl > nlx .or. jvl > nlx) &
+       CALL errore (' dqvan2 ', ' wrong dimensions (2)', max(ivl,jvl))
 
-  dqg(:) = (0.d0,0.d0) 
+  dqg(:) = (0.d0,0.d0)
   !
   !    and make the sum over the non zero LM
   !
-  do lm = 1, lpx (ivl, jvl)
+  DO lm = 1, lpx (ivl, jvl)
      lp = lpl (ivl, jvl, lm)
      !
      !     extraction of angular momentum l from lp:
      !
-     if (lp.eq.1) then
+     IF (lp==1) THEN
         l = 1
-     elseif ( (lp.ge.2) .and. (lp.le.4) ) then
+     ELSEIF ( (lp>=2) .and. (lp<=4) ) THEN
         l = 2
-     elseif ( (lp.ge.5) .and. (lp.le.9) ) then
+     ELSEIF ( (lp>=5) .and. (lp<=9) ) THEN
         l = 3
-     elseif ( (lp.ge.10) .and. (lp.le.16) ) then
+     ELSEIF ( (lp>=10) .and. (lp<=16) ) THEN
         l = 4
-     elseif ( (lp.ge.17) .and. (lp.le.25) ) then
+     ELSEIF ( (lp>=17) .and. (lp<=25) ) THEN
         l = 5
-     elseif ( (lp.ge.26) .and. (lp.le.36) ) then
+     ELSEIF ( (lp>=26) .and. (lp<=36) ) THEN
         l = 6
-     elseif ( (lp.ge.37) .and. (lp.le.49) ) then
+     ELSEIF ( (lp>=37) .and. (lp<=49) ) THEN
         l = 7
-     else
-        call errore (' dqvan2 ', ' lp.gt.49 ', lp)
-     endif
+     ELSE
+        CALL errore (' dqvan2 ', ' lp.gt.49 ', lp)
+     ENDIF
 
      sig = (0.d0, -1.d0) ** (l - 1)
      sig = sig * ap (lp, ivl, jvl)
@@ -120,12 +114,12 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
      qm1 = -1.0_dp !  any number smaller than qmod(1)
      !
 !$OMP PARALLEL DO DEFAULT(SHARED) PRIVATE(qm,px,ux,vx,wx,i0,i1,i2,i3,uvx,pwx,work,work1)
-     do ig = 1, ngy
+     DO ig = 1, ngy
         !
         ! calculate quantites depending on the module of G only when needed
         !
 #if !defined(_OPENMP)
-        IF ( ABS( qmod(ig) - qm1 ) > 1.0D-6 ) THEN
+        IF ( abs( qmod(ig) - qm1 ) > 1.0D-6 ) THEN
 #endif
            qm = qmod (ig) * dqi
            px = qm - int (qm)
@@ -153,17 +147,17 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
 
 #if !defined(_OPENMP)
            qm1 = qmod(ig)
-        END IF
+        ENDIF
 #endif
 
         dqg (ig) = dqg (ig) + sig * dylmk0 (ig, lp) * work
-        if (qmod (ig) > 1.d-9) dqg (ig) = dqg (ig) + &
+        IF (qmod (ig) > 1.d-9) dqg (ig) = dqg (ig) + &
             sig * ylmk0 (ig, lp) * work1 * g (ipol, ig) / qmod (ig)
-     enddo
+     ENDDO
 !$OMP END PARALLEL DO
 
-  enddo
-  return
+  ENDDO
+  RETURN
 
-end subroutine dqvan2
+END SUBROUTINE dqvan2
 

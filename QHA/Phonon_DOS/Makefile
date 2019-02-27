@@ -17,10 +17,10 @@ OBJ2 =	tetra.o k_brillouin.o generate_tetra.o  det3.o det4.o
 all:	tetra phdos
 
 tetra:	$(OBJ2)
-	$(LD) -o $(TET) $(OBJ2) $(LIBS) 
+	$(LD) -o $(TET) $(OBJ2) $(QELIBS) 
 
 phdos:	$(OBJ1)
-	$(LD) $(OBJ1) $(LIBS) -o $(DOS)
+	$(LD) $(OBJ1) $(QELIBS) -o $(DOS)
 
 .f.o : 
 	$(FC) $(FFLAGS) -c  $<

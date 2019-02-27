@@ -102,7 +102,7 @@ SUBROUTINE ioneb()
   END SELECT
   !
 !
-! check da mettere dopo iosys del pw
+! check to move after call to iosys in PW
 !
 !     IF( io_level < 0) CALL errore ( 'ioneb', &
 !                       'NEB, SMD do not work with "disk_io" set to "none"', 1)
@@ -210,7 +210,7 @@ SUBROUTINE verify_neb_tmpdir( tmp_dir )
   !
   USE wrappers,         ONLY : f_mkdir
   USE path_input_parameters_module, ONLY : restart_mode
-  USE io_files,         ONLY : prefix, xmlpun, check_tempdir, delete_if_present
+  USE io_files,         ONLY : prefix, check_tempdir, delete_if_present
   USE path_variables,   ONLY : num_of_images
   USE mp_world,         ONLY : world_comm, mpime, nproc
   USE io_global,        ONLY : meta_ionode

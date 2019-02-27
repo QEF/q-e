@@ -40,7 +40,7 @@ CONTAINS
 !!                                       |  xc_rVV10   |
 !!                                       |_____________|
 
-  SUBROUTINE xc_rVV10(rho_valence, rho_core, nspin, etxc, vtxc, v)
+  SUBROUTINE xc_rVV10(rho_valence, rho_core, nspin, etxc, vtxc, v, b_value_)
     
     !! Modules to include
     !! -------------------------------------------------------------------------
@@ -53,10 +53,11 @@ CONTAINS
     !! Local variables
     !! ----------------------------------------------------------------------------------
     !                                               _
-    real(dp), intent(IN) :: rho_valence(:,:)       !
+    real(dp), intent(IN) :: rho_valence(:)         !     
     real(dp), intent(IN) :: rho_core(:)            !  PWSCF input variables 
     INTEGER,  INTENT(IN) :: nspin                  !
     real(dp), intent(inout) :: etxc, vtxc, v(:,:)  !_  
+    real(DP),optional,intent(in) :: b_value_
    
     
     integer :: i_grid, theta_i, i_proc, I      
@@ -84,6 +85,8 @@ CONTAINS
     !call errore('xc_rVV10','rVV10 functional not implemented for spin polarized runs', size(rho_valence,2)-1)
     if (nspin>2) call errore('xc_vdW_DF','vdW functional not implemented for nspin > 2', nspin)
 
+    if(present(b_value_)) b_value = b_value_
+    
     !! --------------------------------------------------------------------------------------------------------
 
     call start_clock( 'rVV10' )
@@ -126,12 +129,8 @@ CONTAINS
  
     !! ---------------------------------------------------------------------------------------
     !! Add together the valence and core charge densities to get the total charge density    
-    !total_rho = rho_valence(:,1) + rho_core(:)
-    if (nspin == 2) then
-      total_rho = rho_valence(:,1) + rho_valence(:,2) + rho_core(:)
-    else
-      total_rho = rho_valence(:,1) + rho_core(:)
-    endif
+    !
+    total_rho = rho_valence(:) + rho_core(:)
 
     !! -------------------------------------------------------------------------
     !! Here we calculate the gradient in reciprocal space using FFT
@@ -204,13 +203,8 @@ CONTAINS
     grid_cell_volume = omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)  
  
     do i_grid = 1, dfftp%nnr
-       vtxc = vtxc + grid_cell_volume*rho_valence(i_grid,1)*potential(i_grid)
+       vtxc = vtxc + grid_cell_volume*rho_valence(i_grid)*potential(i_grid)
     end do
-    if (nspin==2) then
-       do i_grid = 1, dfftp%nnr
-          vtxc = vtxc + grid_cell_volume*rho_valence(i_grid,2)*potential(i_grid)
-       end do
-    endif
 
     deallocate(potential)  
 
@@ -237,7 +231,7 @@ CONTAINS
 
       implicit none
 
-      real(dp), intent(IN) :: rho_valence(:,:)           !
+      real(dp), intent(IN) :: rho_valence(:)             !
       real(dp), intent(IN) :: rho_core(:)                ! Input variables 
       INTEGER,  INTENT(IN) :: nspin
       real(dp), intent(inout) :: sigma(3,3)              !  
@@ -279,13 +273,7 @@ CONTAINS
       !! ---------------------------------------------------------------------------------------
       !! Charge
       !! ---------------------------------------------------------------------------------------
-
-      !total_rho = rho_valence(:,1) + rho_core(:)
-      if (nspin == 2) then
-        total_rho = rho_valence(:,1) + rho_valence(:,2) + rho_core(:)
-      else
-        total_rho = rho_valence(:,1) + rho_core(:)
-      endif
+      total_rho = rho_valence(:) + rho_core(:)
 
       !! -------------------------------------------------------------------------
       !! Here we calculate the gradient in reciprocal space using FFT

@@ -31,7 +31,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE uspp,                 ONLY : nkb, vkb
   USE spin_orb,             ONLY : domag
   USE noncollin_module,     ONLY : noncolin
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id, stdout
   USE mp,                   ONLY : mp_bcast
   USE mp_images,            ONLY : intra_image_comm
@@ -1060,8 +1060,8 @@ SUBROUTINE find_nks1nks2(firstk,lastk,nks1tot,nks1,nks2tot,nks2,spin_component)
   !  by the  current pool.
   !
   USE lsda_mod, ONLY : nspin
-  USE klist,  ONLY : nks, nkstot
-  USE mp_global, ONLY : my_pool_id, npool, kunit
+  USE klist,    ONLY : nks, nkstot
+  USE mp_pools, ONLY : my_pool_id, npool, kunit
 
   IMPLICIT NONE
   INTEGER, INTENT(out) :: nks1tot,nks1,nks2tot,nks2

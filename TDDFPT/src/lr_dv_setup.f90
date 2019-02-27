@@ -24,7 +24,7 @@ SUBROUTINE lr_dv_setup
   USE eqv,                   ONLY : dmuxc
   USE lr_variables,          ONLY : lr_exx
   USE funct,                 ONLY : dft_is_gradient, exx_is_active
-  USE wavefunctions_module,  ONLY : psic
+  USE wavefunctions,  ONLY : psic
   !
   IMPLICIT NONE
   !

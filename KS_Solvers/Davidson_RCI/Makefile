@@ -6,7 +6,6 @@ include ../../make.inc
 MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../UtilXlib $(MOD_FLAG).
 
 DAVID_RCI = david_rci.o \
-set_mpi_comm_4_davidson.o \
 david_param.o
 
 all : libdavid_rci.a

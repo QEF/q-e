@@ -240,7 +240,8 @@
                fi = -0.5d0*f(i+idx-1)
                fip = -0.5d0*f(i+idx)
             endif
-            CALL fftx_psi2c_gamma( dffts, psi(eig_offset+1:eig_offset+inc), df(igno:igno+ngw), da(igno:igno+ngw))
+            CALL fftx_psi2c_gamma( dffts, psi(eig_offset+1:eig_offset+inc), &
+                                   df(igno:igno+ngw-1), da(igno:igno+ngw-1))
             IF( dffts%has_task_groups ) THEN
                DO ig=1,ngw
                   df(ig+igno-1)= fi *(tpiba2 * g2kin(ig) * c(ig,idx+i-1) + df(ig+igno-1))

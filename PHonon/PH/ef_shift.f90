@@ -22,7 +22,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
 
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE cell_base,            ONLY : omega
   USE fft_base,             ONLY : dfftp, dffts
   USE fft_interfaces,       ONLY : fwfft, invfft
@@ -37,7 +37,8 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE qpoint,               ONLY : nksq
   USE control_lr,           ONLY : nbnd_occ
   USE control_ph,           ONLY : lgamma_gamma
-  USE units_ph,             ONLY : lrwfc, iuwfc, lrdwf, iudwf
+  USE units_ph,             ONLY : lrdwf, iudwf
+  USE units_lr,             ONLY : iuwfc, lrwfc
   USE eqv,                  ONLY : dpsi
   USE modes,                ONLY : npert
   USE mp_bands,             ONLY : intra_bgrp_comm
@@ -171,7 +172,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
   USE ions_base,            ONLY : nat
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE cell_base,            ONLY : omega
   USE buffers,              ONLY : get_buffer, save_buffer
   USE fft_base,             ONLY : dfftp, dffts
@@ -182,12 +183,12 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   USE wvfct,                ONLY : npwx, et
   USE klist,                ONLY : degauss, ngauss, ngk, ltetra
   USE ener,                 ONLY : ef
-! modules from phcom
   USE qpoint,               ONLY : nksq
   USE control_lr,           ONLY : nbnd_occ
   USE control_ph,           ONLY : lgamma_gamma
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag
-  USE units_ph,             ONLY : lrwfc, iuwfc, lrdwf, iudwf
+  USE units_ph,             ONLY : lrdwf, iudwf
+  USE units_lr,             ONLY : iuwfc, lrwfc 
   USE eqv,                  ONLY : dpsi
   USE modes,                ONLY : npert
   USE mp_bands,             ONLY : intra_bgrp_comm

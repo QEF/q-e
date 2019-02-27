@@ -1,0 +1,586 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: pp.x / PWscf / Quantum Espresso (version: svn)
+------------------------------------------------------------------------
+
+
+Purpose of pp.x: data analysis and plotting.
+
+The code performs two steps:
+
+(1) reads the output produced by pw.x, extracts and calculates
+    the desired quantity/quantities (rho, V, ...)
+
+(2) writes the desired quantity to file in a suitable format for
+    various types of plotting and various plotting programs
+
+The input data of this program is read from standard input
+or from file and has the following format:
+
+NAMELIST &INPUTPP
+   containing the variables for step (1), followed by
+
+NAMELIST &PLOT
+   containing the variables for step (2)
+
+The two steps can be performed independently. In order to perform
+only step (2), leave namelist &INPUTPP blank. In order to perform
+only step (1), do not specify namelist &PLOT
+
+Intermediate results from step 1 can be saved to disk (see
+variable "filplot" in &INPUTPP) and later read in step 2.
+Since the file with intermediate results is formatted, it
+can be safely transferred to a different machine. This
+also allows plotting of a linear combination (for instance,
+charge differences) by saving two intermediate files and
+combining them (see variables "weight" and "filepp" in &PLOT)
+
+All output quantities are in ATOMIC (RYDBERG) UNITS unless
+otherwise explicitly specified.
+
+
+
+========================================================================
+NAMELIST: &INPUTPP
+
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           CHARACTER
+   Description:    prefix of files saved by program pw.x
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           CHARACTER
+   Description:    directory containing the input data, i.e. the same as in pw.x
+   Default:        value of the ESPRESSO_TMPDIR environment variable if set;
+                   current directory ('./') otherwise
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       filplot
+   
+   Type:           CHARACTER
+   Description:    file "filplot" contains the quantity selected by plot_num
+                   (can be saved for further processing)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       plot_num
+   
+   Type:           INTEGER
+   Description:    Selects what to save in filplot:
+                   
+                      0  = electron (pseudo-)charge density
+                   
+                      1  = total potential V_bare + V_H + V_xc
+                   
+                      2  = local ionic potential V_bare
+                   
+                      3  = local density of states at specific energy or grid of energies
+                           (number of states per volume, in bohr^3, per energy unit, in Ry)
+                   
+                      4  = local density of electronic entropy
+                   
+                      5  = STM images
+                           Tersoff and Hamann, PRB 31, 805 (1985)
+                   
+                      6  = spin polarization (rho(up)-rho(down))
+                   
+                      7  = contribution of selected wavefunction(s) to the
+                           (pseudo-)charge density. For norm-conserving PPs,
+                           |psi|^2 (psi=selected wavefunction). Noncollinear case:
+                           contribution of the given state to the charge or
+                           to the magnetization along the direction indicated
+                           by spin_component (0 = charge, 1 = x, 2 = y, 3 = z )
+                   
+                      8  = electron localization function (ELF)
+                   
+                      9  = charge density minus superposition of atomic densities
+                   
+                      10 = integrated local density of states (ILDOS)
+                           from "emin" to "emax" (emin, emax in eV)
+                           if "emax" is not specified, "emax"=E_fermi
+                   
+                      11 = the V_bare + V_H potential
+                   
+                      12 = the sawtooth electric field potential (if present)
+                   
+                      13 = the noncollinear magnetization.
+                   
+                      17 = all-electron valence charge density
+                           can be performed for PAW calculations only
+                           requires a very dense real-space grid!
+                   
+                      18 = The exchange and correlation magnetic field in the noncollinear case
+                   
+                      19 = Reduced density gradient
+                           ( J. Chem. Theory Comput. 7, 625 (2011), doi:10.1021/ct100641a )
+                           Set the isosurface between 0.3 and 0.6 to plot the
+                           non-covalent interactions (see also plot_num = 20)
+                   
+                      20 = Product of the electron density (charge) and the second
+                           eigenvalue of the electron-density Hessian matrix;
+                           used to colorize the RDG plot (plot_num = 19)
+                   
+                      21 = all-electron charge density (valence+core).
+                           For PAW calculations only; requires a very dense real-space grid.
+   +--------------------------------------------------------------------
+   
+   ________________________________________________________________________
+   * IF plot_num=0 : 
+   
+      OPTIONS FOR TOTAL CHARGE (PLOT_NUM=0):
+      
+      +--------------------------------------------------------------------
+      Variable:       spin_component
+      
+      Type:           INTEGER
+      Default:        0
+      Description:    0 = total charge (default value),
+                      1 = spin up charge,
+                      2 = spin down charge.
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF plot_num=1 : 
+   
+      OPTIONS FOR TOTAL POTENTIAL (PLOT_NUM=1):
+      
+      +--------------------------------------------------------------------
+      Variable:       spin_component
+      
+      Type:           INTEGER
+      Default:        0
+      Description:    0 = spin averaged potential (default value),
+                      1 = spin up potential,
+                      2 = spin down potential.
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF plot_num=3 : 
+   
+      OPTIONS FOR LDOS (PLOT_NUM=3):
+      LDOS IS PLOTTED ON GRID [EMIN, EMAX] WITH SPACING DELTA_E.
+      
+      +--------------------------------------------------------------------
+      Variable:       emin
+      
+      Type:           REAL
+      Default:        e_fermi
+      Description:    lower boundary of energy grid (in eV).
+                      
+                      Defaults to Fermi energy.
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       emax
+      
+      Type:           REAL
+      Status:         OPTIONAL
+      Description:    upper boundary of energy grid (in eV).
+                      
+                      If not specified, LDOS is computed just for energy "emin"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       delta_e
+      
+      Type:           REAL
+      Default:        0.1
+      Status:         OPTIONAL
+      Description:    spacing of energy grid (in eV).
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       degauss_ldos
+      
+      Type:           REAL
+      Default:        degauss (converted to eV)
+      Status:         OPTIONAL
+      Description:    broadening of energy levels for LDOS (in eV).
+                      
+                      Defaults to broadening degauss specified for electronic smearing
+                      in pw.x calculation.
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF plot_num=5 : 
+   
+      OPTIONS FOR STM IMAGES (PLOT_NUM=5):
+      
+      +--------------------------------------------------------------------
+      Variable:       sample_bias
+      
+      Type:           REAL
+      Description:    the bias of the sample (Ry) in stm images
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF plot_num=7 : 
+   
+      OPTIONS FOR |PSI|^2 (PLOT_NUM=7):
+      
+      +--------------------------------------------------------------------
+      Variable:       kpoint(i), i=1,2
+      
+      Type:           INTEGER
+      Description:    Unpolarized and noncollinear case:
+                              k-point(s) to be plotted
+                      LSDA:
+                              k-point(s) and spin polarization to be plotted
+                              (spin-up and spin-down correspond to different k-points!)
+                      
+                      To plot a single kpoint ikpt, specify kpoint=ikpt or kpoint(1)=ikpt
+                      To plot a range of kpoints [imin, imax], specify kpoint(1)=imin and kpoint(2)=imax
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       kband(i), i=1,2
+      
+      Type:           INTEGER
+      Description:    Band(s) to be plotted.
+                      
+                      To plot a single band ibnd, specify kband=ibnd or kband(1)=ibnd
+                      To plot a range of bands [imin, imax], specify kband(1)=imin and kband(2)=imax
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       lsign
+      
+      Type:           LOGICAL
+      Description:    if true and k point is Gamma, plot |psi|^2 sign(psi)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       spin_component(i), i=1,2
+      
+      Type:           INTEGER
+      Default:        0
+      Status:         OPTIONAL
+      Description:    Noncollinear case only:
+                      plot the contribution of the given state(s) to the charge
+                      or to the magnetization along the direction(s) indicated
+                      by spin_component:
+                              0 = charge (default),
+                              1 = x,
+                              2 = y,
+                              3 = z.
+                      
+                      Ignored in unpolarized or LSDA case
+                      
+                      To plot a single component ispin, specify spin_component=ispin or spin_component(1)=ispin
+                      To plot a range of components [imin, imax], specify spin_component(1)=imin and spin_component(2)=imax
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF plot_num=10 : 
+   
+      OPTIONS FOR ILDOS (PLOT_NUM=10):
+      
+      +--------------------------------------------------------------------
+      Variable:       emin
+      
+      Type:           REAL
+      Description:    lower energy boundary (in eV)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       emax
+      
+      Type:           REAL
+      Description:    upper energy boundary (in eV),
+                      i.e. compute ILDOS from "emin" to "emax"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       spin_component
+      
+      Type:           INTEGER
+      Default:        0
+      Description:    for LSDA case only: plot the contribution to ILDOS of
+                      0 = spin-up + spin-down (default)
+                      1 = spin-up   only
+                      2 = spin-down only
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF plot_num=13 : 
+   
+      OPTIONS FOR NONCOLLINEAR MAGNETIZATION (PLOT_NUM=13):
+      
+      +--------------------------------------------------------------------
+      Variable:       spin_component
+      
+      Type:           INTEGER
+      Default:        0
+      Description:    0 = absolute value (default value)
+                      1 = x component of the magnetization
+                      2 = y component of the magnetization
+                      3 = z component of the magnetization
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF plot_num=17 : 
+   
+      OPTIONS FOR RECONSTRUCTED CHARGE DENSITY (PLOT_NUM=17):
+      
+      +--------------------------------------------------------------------
+      Variable:       spin_component
+      
+      Type:           INTEGER
+      Default:        0
+      Description:    0 = total charge (default value),
+                      1 = spin up charge,
+                      2 = spin down charge.
+      +--------------------------------------------------------------------
+      
+       
+   ENDIF
+   ________________________________________________________________________
+   
+===END OF NAMELIST======================================================
+
+
+========================================================================
+NAMELIST: &PLOT
+
+   +--------------------------------------------------------------------
+   Variable:       nfile
+   
+   Type:           INTEGER
+   Default:        1
+   Status:         OPTIONAL
+   Description:    the number of data files to read
+   +--------------------------------------------------------------------
+   
+   ///---
+      +--------------------------------------------------------------------
+      Variable:       filepp(i), i=1,nfile
+      
+      Type:           CHARACTER
+      Default:        filepp(1)=filplot
+      Description:    nfile = 1 : file containing the quantity to be plotted
+                      nfile > 1 : see "weight"
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       weight(i), i=1,nfile
+      
+      Type:           REAL
+      Default:        weight(1)=1.0
+      Description:    weighing factors: assuming that rho(i) is the quantity
+                      read from filepp(i), the quantity that will be plotted is:
+                      
+                      weight(1)*rho(1) + weight(2)*rho(2) + weight(3)*rho(3) + ...
+      +--------------------------------------------------------------------
+      
+      BEWARE: atomic coordinates are read from the first file;
+              if their number is different for different files,
+              the first file must have the largest number of atoms
+      
+   \\\---
+   
+   +--------------------------------------------------------------------
+   Variable:       iflag
+   
+   Type:           INTEGER
+   Description:    0 = 1D plot of the spherical average
+                   1 = 1D plot
+                   2 = 2D plot
+                   3 = 3D plot
+                   4 = 2D polar plot on a sphere
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       output_format
+   
+   Type:           INTEGER
+   Description:    (ignored on 1D plot)
+                   
+                   0  = format suitable for gnuplot   (1D)
+                   
+                   1  = obsolete format no longer supported
+                   
+                   2  = format suitable for plotrho   (2D)
+                   
+                   3  = format suitable for XCRYSDEN  (2D or user-supplied 3D region)
+                   
+                   4  = obsolete format no longer supported
+                   
+                   5  = format suitable for XCRYSDEN  (3D, using entire FFT grid)
+                   
+                   6  = format as gaussian cube file  (3D)
+                        (can be read by many programs)
+                   
+                   7  = format suitable for gnuplot   (2D) x, y, f(x,y)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fileout
+   
+   Type:           CHARACTER
+   Default:        standard output
+   Description:    name of the file to which the plot is written
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       interpolation
+   
+   Type:           CHARACTER
+   Default:        'fourier'
+   Description:   
+                   Type of interpolation:
+                        'fourier'
+    
+                   'bspline' :
+                        (EXPERIMENTAL)
+   +--------------------------------------------------------------------
+   
+   ________________________________________________________________________
+   * IF iflag = 0 or 1 : 
+   
+      THE FOLLOWING VARIABLES ARE REQUIRED:
+      
+      +--------------------------------------------------------------------
+      Variable:       e1(i), i=1,3
+      
+      Type:           REAL
+      Description:    3D vector which determines the plotting line (in alat units)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       x0(i), i=1,3
+      
+      Type:           REAL
+      Description:    3D vector, origin of the line (in alat units)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       nx
+      
+      Type:           INTEGER
+      Description:    number of points in the line:
+                      
+                      rho(i) = rho( x0 + e1 * (i-1)/(nx-1) ), i=1, nx
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF iflag = 2 : 
+   
+      THE FOLLOWING VARIABLES ARE REQUIRED:
+      
+      +--------------------------------------------------------------------
+      Variables:      e1(i), e2(i), i=1,3
+      
+      Type:           REAL
+      Description:    3D vectors which determine the plotting plane (in alat units)
+                      
+                      BEWARE: @b e1 and @b e2 must be orthogonal
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       x0(i), i=1,3
+      
+      Type:           REAL
+      Description:    3D vector, origin of the plane (in alat units)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      nx, ny
+      
+      Type:           INTEGER
+      Description:    Number of points in the plane:
+                      
+                      rho(i,j) = rho( x0 + e1 * (i-1)/(nx-1)
+                                      + e2 * (j-1)/(ny-1) ), i=1,nx ; j=1,ny
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF iflag = 3 : 
+   
+      THE FOLLOWING VARIABLES ARE OPTIONAL:
+      
+      +--------------------------------------------------------------------
+      Variables:      e1(i), e2(i), e3(i), i=1,3
+      
+      Type:           REAL
+      Description:    3D vectors which determine the plotting parallelepiped
+                      (if present, must be orthogonal)
+                      
+                      @ref e1, @ref e2, and @ref e3 are in alat units !
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variable:       x0(i), i=1,3
+      
+      Type:           REAL
+      Description:    3D vector, origin of the parallelepiped
+                      
+                      "x0" is in alat units !
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      nx, ny, nz
+      
+      Type:           INTEGER
+      Description:    Number of points in the parallelepiped:
+                      
+                      rho(i,j,k) = rho( x0 + e1 * (i-1)/nx
+                                        + e2 * (j-1)/ny
+                                        + e3 * (k-1)/nz ),
+                                   i = 1, nx ; j = 1, ny ; k = 1, nz
+                      
+                      - If @ref output_format = 3 (XCRYSDEN), the above variables
+                        are used to determine the grid to plot.
+                      
+                      - If @ref output_format = 5 (XCRYSDEN), the above variables
+                        are ignored, the entire FFT grid is written in the
+                        XCRYSDEN format - works for any crystal axis (VERY FAST)
+                      
+                      - If @ref e1, @ref e2, @ref e3, @ref x0 are present,
+                        and @ref e1, @ref e2, @ref e3 are parallel to xyz
+                        and parallel to crystal axis, a subset of the FFT
+                        grid that approximately covers the parallelepiped
+                        defined by @ref e1, @ref e2, @ref e3, @ref x0, is
+                        written - untested, might be obsolete
+                      
+                      - Otherwise, the required 3D grid is generated from the
+                        Fourier components (may be VERY slow)
+      +--------------------------------------------------------------------
+      
+       
+   * ELSE IF iflag = 4 : 
+   
+      THE FOLLOWING VARIABLES ARE REQUIRED:
+      
+      +--------------------------------------------------------------------
+      Variable:       radius
+      
+      Type:           REAL
+      Description:    Radius of the sphere (alat units), centered at (0,0,0)
+      +--------------------------------------------------------------------
+      
+      +--------------------------------------------------------------------
+      Variables:      nx, ny
+      
+      Type:           INTEGER
+      Description:    Number of points in the polar plane:
+                      
+                      phi(i)   = 2 pi * (i - 1)/(nx-1), i=1, nx
+                      theta(j) =   pi * (j - 1)/(ny-1), j=1, ny
+      +--------------------------------------------------------------------
+      
+       
+   ENDIF
+   ________________________________________________________________________
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Tue Jul 17 15:42:19 CEST 2018

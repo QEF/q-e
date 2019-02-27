@@ -141,7 +141,7 @@
          dcurr = dprev + dist
          dprev = dcurr
          WRITE(iufileig,'(10x,3f10.6)') xkf_all(:,ikk)
-         WRITE(iufileig,'(1000f14.8)') (etf_all(ibnd,ikk)*ryd2ev, ibnd=1,nbndsub)
+         WRITE(iufileig,'(1000f20.12)') (etf_all(ibnd,ikk)*ryd2ev, ibnd=1,nbndsub)
          !WRITE(iufileig,'(1000f10.6)') dcurr, (etf_all(ibnd,ikk)*ryd2ev, ibnd=1,nbndsub)
          !
       ENDDO

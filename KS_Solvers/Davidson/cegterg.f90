@@ -23,8 +23,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   !
   USE david_param,   ONLY : DP
   USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, root_bgrp_id,&
-          nbgrp, my_bgrp_id
-  USE mp,            ONLY : mp_sum, mp_bcast
+                            nbgrp, my_bgrp_id
+  USE mp,            ONLY : mp_sum, mp_gather, mp_bcast, mp_size,&
+                            mp_type_create_column_section, mp_type_free
   !
   IMPLICIT NONE
   !
@@ -35,6 +36,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
     ! maximum dimension of the reduced basis set :
     !    (the basis set is refreshed when its dimension would exceed nvecx)
     ! umber of spin polarizations
+  INTEGER, PARAMETER :: blocksize = 256
+  INTEGER :: numblock
+    ! chunking parameters
   COMPLEX(DP), INTENT(INOUT) :: evc(npwx,npol,nvec)
     !  evc contains the  refined estimates of the eigenvectors  
   REAL(DP), INTENT(IN) :: ethr
@@ -58,13 +62,15 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   INTEGER, PARAMETER :: maxter = 20
     ! maximum number of iterations
   !
-  INTEGER :: kter, nbase, np, kdim, kdmx, n, m, nb1, nbn
+  INTEGER :: kter, nbase, np, kdim, kdmx, n, m, ipol, nb1, nbn
     ! counter on iterations
     ! dimension of the reduced basis
     ! counter on the reduced basis vectors
     ! adapted npw and npwx
     ! do-loop counters
   INTEGER :: n_start, n_end, my_n
+  INTEGER :: column_section_type
+    ! defines a column section for communication
   INTEGER :: ierr
   COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
     ! Hamiltonian on the reduced basis
@@ -80,6 +86,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
     ! true if the root is converged
   REAL(DP) :: empty_ethr 
     ! threshold for empty bands
+  INTEGER, ALLOCATABLE :: recv_counts(:), displs(:)
+    ! receive counts and memory offsets
   !
   REAL(DP), EXTERNAL :: ddot
   !
@@ -113,6 +121,9 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
   END IF
   !
+  ! compute the number of chuncks
+  numblock  = (npw+blocksize-1)/blocksize
+  !
   ALLOCATE(  psi( npwx, npol, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate psi ', ABS(ierr) )
@@ -141,16 +152,13 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   ALLOCATE( conv( nvec ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' cegterg ',' cannot allocate conv ', ABS(ierr) )
+  ALLOCATE( recv_counts(mp_size(inter_bgrp_comm)), displs(mp_size(inter_bgrp_comm)) )
   !
   notcnv = nvec
   nbase  = nvec
   conv   = .FALSE.
   !
-  IF ( uspp ) spsi = ZERO
-  !
-  hpsi = ZERO
-  psi  = ZERO
-  psi(:,:,1:nvec) = evc(:,:,1:nvec)
+  CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -164,17 +172,16 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
   ! ... space vc contains the eigenvectors of hc
   !
   CALL start_clock( 'cegterg:init' )
-  hc(:,:) = ZERO
-  sc(:,:) = ZERO
-  vc(:,:) = ZERO
   !
-  CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
+  CALL divide_all(inter_bgrp_comm,nbase,n_start,n_end,recv_counts,displs)
+  CALL mp_type_create_column_section(sc(1,1), 0, nbase, nvecx, column_section_type)
   my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
+  !
   if (n_start .le. n_end) &
   CALL ZGEMM( 'C','N', nbase, my_n, kdim, ONE, psi, kdmx, hpsi(1,1,n_start), kdmx, ZERO, hc(1,n_start), nvecx )
-  CALL mp_sum( hc( :, 1:nbase ), inter_bgrp_comm )
   !
-  CALL mp_sum( hc( :, 1:nbase ), intra_bgrp_comm )
+  if (n_start .le. n_end) CALL mp_sum( hc( 1:nbase, n_start:n_end ), intra_bgrp_comm )
+  CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
   !
   IF ( uspp ) THEN
      !
@@ -189,12 +196,33 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
                  ZERO, sc(1,n_start), nvecx )
      !
   END IF
-  CALL mp_sum( sc( :, 1:nbase ), inter_bgrp_comm )
   !
-  CALL mp_sum( sc( :, 1:nbase ), intra_bgrp_comm )
+  if (n_start .le. n_end) CALL mp_sum( sc( 1:nbase, n_start:n_end ), intra_bgrp_comm )
+  CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+  !
+  CALL mp_type_free( column_section_type )
+  !
+  DO n = 1, nbase
+     !
+     ! ... the diagonal of hc and sc must be strictly real
+     !
+     hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
+     sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
+     !
+     DO m = n + 1, nbase
+        !
+        hc(n,m) = CONJG( hc(m,n) )
+        sc(n,m) = CONJG( sc(m,n) )
+        !
+     END DO
+     !
+  END DO
+  !
   CALL stop_clock( 'cegterg:init' )
   !
   IF ( lrot ) THEN
+     !
+     vc(1:nbase,1:nbase) = ZERO
      !
      DO n = 1, nbase
         !
@@ -203,6 +231,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         vc(n,n) = ONE
         !
      END DO
+     !
+     CALL mp_bcast( e, root_bgrp_id, inter_bgrp_comm )
      !
   ELSE
      !
@@ -260,7 +290,6 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
-     psi(:,:,nb1:nbase+notcnv)=ZERO
      IF ( uspp ) THEN
         !
         if (n_start .le. n_end) &
@@ -276,16 +305,24 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      END IF
 ! NB: must not call mp_sum over inter_bgrp_comm here because it is done later to the full correction
      !
-     DO np = 1, notcnv
-        !
-        psi(:,:,nbase+np) = - ew(nbase+np)*psi(:,:,nbase+np)
-        !
+     !$omp parallel do collapse(3)
+     DO n = 1, notcnv
+        DO ipol = 1, npol
+           DO m = 1, numblock
+              psi((m-1)*blocksize+1:MIN(npw, m*blocksize),ipol,nbase+n) = &
+                 - ew(nbase+n)*psi((m-1)*blocksize+1:MIN(npw, m*blocksize),ipol,nbase+n)
+           END DO
+        END DO
      END DO
+     !$omp end parallel do
      !
      if (n_start .le. n_end) &
      CALL ZGEMM( 'N','N', kdim, notcnv, my_n, ONE, hpsi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
                  ONE, psi(1,1,nb1), kdmx )
      CALL mp_sum( psi(:,:,nb1:nbase+notcnv), inter_bgrp_comm )
+     !
+     ! clean up garbage if there is any
+     IF (npw < npwx) psi(npw+1:npwx,:,nb1:nbase+notcnv) = ZERO
      !
      CALL stop_clock( 'cegterg:update' )
      !
@@ -318,11 +355,16 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
      !
+     !$omp parallel do collapse(3)
      DO n = 1, notcnv
-        !
-        psi(:,:,nbase+n) = psi(:,:,nbase+n) / SQRT( ew(n) )
-        !
+        DO ipol = 1, npol
+           DO m = 1, numblock
+              psi((m-1)*blocksize+1:MIN(npw, m*blocksize),ipol,nbase+n) = &
+                 psi((m-1)*blocksize+1:MIN(npw, m*blocksize),ipol,nbase+n) / SQRT( ew(n) )
+           END DO
+        END DO
      END DO
+     !$omp end parallel do
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
@@ -334,32 +376,34 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      CALL start_clock( 'cegterg:overlap' )
      !
-     hc( :, nb1:nb1+notcnv-1 )=ZERO
-     CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
+     CALL divide_all(inter_bgrp_comm,nbase+notcnv,n_start,n_end,recv_counts,displs)
+     CALL mp_type_create_column_section(sc(1,1), nbase, notcnv, nvecx, column_section_type)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
-     CALL ZGEMM( 'C','N', my_n, notcnv, kdim, ONE, psi(1,1,n_start), kdmx, hpsi(1,1,nb1), kdmx, &
-                 ZERO, hc(n_start,nb1), nvecx )
-     CALL mp_sum( hc( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
-     CALL mp_sum( hc( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
+     CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, hpsi(1,1,nb1), kdmx, psi(1,1,n_start), kdmx, &
+                 ZERO, hc(nb1,n_start), nvecx )
      !
-     sc( :, nb1:nb1+notcnv-1 )=ZERO
+     if (n_start .le. n_end) CALL mp_sum( hc( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
+     CALL mp_gather( hc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+     !
      CALL divide(inter_bgrp_comm,nbase+notcnv,n_start,n_end)
      my_n = n_end - n_start + 1; !write (*,*) nbase+notcnv,n_start,n_end
      IF ( uspp ) THEN
         !
-        CALL ZGEMM( 'C','N', my_n, notcnv, kdim, ONE, psi(1,1,n_start), kdmx, spsi(1,1,nb1), kdmx, &
-                    ZERO, sc(n_start,nb1), nvecx )
+        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, spsi(1,1,nb1), kdmx, psi(1,1,n_start), kdmx, &
+                    ZERO, sc(nb1,n_start), nvecx )
         !     
      ELSE
         !
-        CALL ZGEMM( 'C','N', my_n, notcnv, kdim, ONE, psi(1,1,n_start), kdmx, psi(1,1,nb1), kdmx, &
-                     ZERO, sc(n_start,nb1), nvecx )
+        CALL ZGEMM( 'C','N', notcnv, my_n, kdim, ONE, psi(1,1,nb1), kdmx, psi(1,1,n_start), kdmx, &
+                    ZERO, sc(nb1,n_start), nvecx )
         !
      END IF
-     CALL mp_sum( sc( :, nb1:nb1+notcnv-1 ), inter_bgrp_comm )
      !
-     CALL mp_sum( sc( :, nb1:nb1+notcnv-1 ), intra_bgrp_comm )
+     if (n_start .le. n_end) CALL mp_sum( sc( nb1:nbase+notcnv, n_start:n_end ), intra_bgrp_comm )
+     CALL mp_gather( sc, column_section_type, recv_counts, displs, root_bgrp_id, inter_bgrp_comm )
+     !
+     CALL mp_type_free( column_section_type )
      !
      CALL stop_clock( 'cegterg:overlap' )
      !
@@ -367,15 +411,17 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
      DO n = 1, nbase
         !
-        ! ... the diagonal of hc and sc must be strictly real 
+        ! ... the diagonal of hc and sc must be strictly real
         !
-        hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
-        sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
+        IF( n>=nb1 ) THEN
+           hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
+           sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
+        ENDIF
         !
-        DO m = n + 1, nbase
+        DO m = MAX(n+1,nb1), nbase
            !
-           hc(m,n) = CONJG( hc(n,m) )
-           sc(m,n) = CONJG( sc(n,m) )
+           hc(n,m) = CONJG( hc(m,n) )
+           sc(n,m) = CONJG( sc(m,n) )
            !
         END DO
         !
@@ -422,7 +468,6 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
         CALL start_clock( 'cegterg:last' )
         !
-        evc = ZERO
         CALL divide(inter_bgrp_comm,nbase,n_start,n_end)
         my_n = n_end - n_start + 1; !write (*,*) nbase,n_start,n_end
         CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, psi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
@@ -452,37 +497,32 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        psi(:,:,1:nvec) = evc(:,:,1:nvec)
+        CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
         !
         IF ( uspp ) THEN
            !
-           psi(:,:,nvec+1:nvec+nvec) = ZERO
            CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, spsi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
                        ZERO, psi(1,1,nvec+1), kdmx)
-           CALL mp_sum( psi(:,:,nvec+1:nvec+nvec), inter_bgrp_comm )
-           !
-           spsi(:,:,1:nvec) = psi(:,:,nvec+1:nvec+nvec)
+           CALL threaded_memcpy(spsi, psi(1,1,nvec+1), nvec*npol*npwx*2)
+           CALL mp_sum( spsi(:,:,1:nvec), inter_bgrp_comm )
            !
         END IF
         !
-        psi(:,:,nvec+1:nvec+nvec) = ZERO
         CALL ZGEMM( 'N','N', kdim, nvec, my_n, ONE, hpsi(1,1,n_start), kdmx, vc(n_start,1), nvecx, &
                     ZERO, psi(1,1,nvec+1), kdmx )
-        CALL mp_sum( psi(:,:,nvec+1:nvec+nvec), inter_bgrp_comm )
-        !
-        hpsi(:,:,1:nvec) = psi(:,:,nvec+1:nvec+nvec)
+        CALL threaded_memcpy(hpsi, psi(1,1,nvec+1), nvec*npol*npwx*2)
+        CALL mp_sum( hpsi(:,:,1:nvec), inter_bgrp_comm )
         !
         ! ... refresh the reduced hamiltonian 
         !
         nbase = nvec
         !
-        hc(:,1:nbase) = ZERO
-        sc(:,1:nbase) = ZERO
-        vc(:,1:nbase) = ZERO
+        hc(1:nbase,1:nbase) = ZERO
+        sc(1:nbase,1:nbase) = ZERO
+        vc(1:nbase,1:nbase) = ZERO
         !
         DO n = 1, nbase
            !
-!           hc(n,n) = REAL( e(n) )
            hc(n,n) = CMPLX( e(n), 0.0_DP ,kind=DP)
            !
            sc(n,n) = ONE
@@ -496,6 +536,8 @@ SUBROUTINE cegterg( h_psi, s_psi, uspp, g_psi, &
      !
   END DO iterate
   !
+  DEALLOCATE( recv_counts )
+  DEALLOCATE( displs )
   DEALLOCATE( conv )
   DEALLOCATE( ew )
   DEALLOCATE( vc )
@@ -542,7 +584,8 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
                                  ortho_parent_comm, ortho_cntx, do_distr_diag_inside_bgrp
   USE descriptors,      ONLY : la_descriptor, descla_init , descla_local_dims
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst
-  USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
+  USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier, &
+                               mp_size, mp_type_free, mp_allgather
   !
   IMPLICIT NONE
   !
@@ -553,6 +596,9 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
     ! maximum dimension of the reduced basis set
     !    (the basis set is refreshed when its dimension would exceed nvecx)
     ! number of spin polarizations
+  INTEGER, PARAMETER :: blocksize = 256
+  INTEGER :: numblock
+    ! chunking parameters
   COMPLEX(DP), INTENT(INOUT) :: evc(npwx,npol,nvec)
     !  evc   contains the  refined estimates of the eigenvectors
   REAL(DP), INTENT(IN) :: ethr
@@ -575,7 +621,7 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   INTEGER, PARAMETER :: maxter = 20
     ! maximum number of iterations
   !
-  INTEGER :: kter, nbase, np, kdim, kdmx, n, nb1, nbn
+  INTEGER :: kter, nbase, np, kdim, kdmx, n, m, ipol, nb1, nbn
     ! counter on iterations
     ! dimension of the reduced basis
     ! counter on the reduced basis vectors
@@ -639,7 +685,10 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
      kdmx = npwx*npol
      !
   END IF
-
+  !
+  ! compute the number of chuncks
+  numblock  = (npw+blocksize-1)/blocksize
+  !
   ALLOCATE(  psi( npwx, npol, nvecx ), STAT=ierr )
   IF( ierr /= 0 ) &
      CALL errore( ' pcegterg ',' cannot allocate psi ', ABS(ierr) )
@@ -723,11 +772,7 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
   nbase  = nvec
   conv   = .FALSE.
   !
-  IF ( uspp ) spsi = ZERO
-  !
-  hpsi = ZERO
-  psi  = ZERO
-  psi(:,:,1:nvec) = evc(:,:,1:nvec)
+  CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -830,11 +875,16 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
      !
      CALL mp_sum( ew( 1:notcnv ), intra_bgrp_comm )
      !
+     !$omp parallel do collapse(3)
      DO n = 1, notcnv
-        !
-        psi(:,:,nbase+n) = psi(:,:,nbase+n) / SQRT( ew(n) )
-        !
+        DO ipol = 1, npol
+           DO m = 1, numblock
+              psi((m-1)*blocksize+1:MIN(npw, m*blocksize),ipol,nbase+n) = &
+                 psi((m-1)*blocksize+1:MIN(npw, m*blocksize),ipol,nbase+n) / SQRT( ew(n) )
+           END DO
+        END DO
      END DO
+     !$omp end parallel do
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
@@ -967,7 +1017,7 @@ SUBROUTINE pcegterg(h_psi, s_psi, uspp, g_psi, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        psi(:,:,1:nvec) = evc(:,:,1:nvec)
+        CALL threaded_memcpy(psi, evc, nvec*npol*npwx*2)
         !
         IF ( uspp ) THEN
            !
@@ -1145,7 +1195,7 @@ CONTAINS
   SUBROUTINE hpsi_dot_v()
      !
      INTEGER :: ipc, ipr
-     INTEGER :: nr, ir, ic, notcl, root, np
+     INTEGER :: nr, ir, ic, notcl, root, np, ipol, ib
      COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
      COMPLEX(DP), ALLOCATABLE :: ptmp( :, :, : )
      COMPLEX(DP) :: beta
@@ -1158,7 +1208,7 @@ CONTAINS
         IF( notcnv_ip( ipc ) > 0 ) THEN
 
            notcl = notcnv_ip( ipc )
-           ic    = ic_notcnv( ipc ) 
+           ic    = ic_notcnv( ipc )
 
            beta = ZERO
 
@@ -1174,7 +1224,7 @@ CONTAINS
               END IF
 
               CALL mp_bcast( vtmp(:,1:notcl), root, ortho_parent_comm )
-              ! 
+              !
               IF ( uspp ) THEN
                  !
                  CALL ZGEMM( 'N', 'N', kdim, notcl, nr, ONE, &
@@ -1194,11 +1244,22 @@ CONTAINS
 
            END DO
 
+           !$omp parallel do collapse(3)
            DO np = 1, notcl
-              !
-              psi(:,:,nbase+np+ic-1) = ptmp(:,:,np) - ew(nbase+np+ic-1) * psi(:,:,nbase+np+ic-1)
-              !
+              DO ipol = 1, npol
+                 DO ib = 1, numblock
+                    !
+                    psi((ib-1)*blocksize+1:MIN(npw, ib*blocksize),ipol,nbase+np+ic-1) = &
+                       ptmp((ib-1)*blocksize+1:MIN(npw, ib*blocksize),ipol,np) &
+                       - ew(nbase+np+ic-1) * psi((ib-1)*blocksize+1:MIN(npw, ib*blocksize),ipol,nbase+np+ic-1)
+                    !
+                 END DO
+              END DO
            END DO
+           !$omp end parallel do
+           !
+           ! clean up garbage if there is any
+           IF (npw < npwx) psi(npw+1:npwx,:,nbase+ic:nbase+notcl+ic-1) = ZERO
            !
         END IF
         !
@@ -1320,7 +1381,7 @@ CONTAINS
         !
      END DO
      !
-     spsi(:,:,1:nvec) = psi(:,:,nvec+1:nvec+nvec)
+     CALL threaded_memcpy(spsi, psi(1,1,nvec+1), nvec*npol*npwx*2)
      !
      DEALLOCATE( vtmp )
 
@@ -1381,9 +1442,9 @@ CONTAINS
      END DO
      !
      DEALLOCATE( vtmp )
-
-     hpsi(:,:,1:nvec) = psi(:,:,nvec+1:nvec+nvec)
-
+     !
+     CALL threaded_memcpy(hpsi, psi(1,1,nvec+1), nvec*npol*npwx*2)
+     !
      RETURN
   END SUBROUTINE refresh_hpsi
   !
@@ -1461,7 +1522,7 @@ CONTAINS
         ic = irc_ip( ipc )
         !
         IF( ic+nc-1 >= nb1 ) THEN
-
+           !
            nc = MIN( nc, ic+nc-1 - nb1 + 1 )
            IF( ic >= nb1 ) THEN
               ii = ic
@@ -1470,7 +1531,10 @@ CONTAINS
               ii = nb1
               icc = nb1-ic+1
            END IF
-
+           !
+           ! icc to nc is the local index of the unconverged bands
+           ! ii is the global index of the first unconverged bands
+           !
            DO ipr = 1, ipc ! desc%npr use symmetry
               !
               nr = nrc_ip( ipr )

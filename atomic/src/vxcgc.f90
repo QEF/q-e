@@ -16,25 +16,25 @@ subroutine vxc_t(lsd,rho,rhoc,exc,vxc)
   use kinds, only : DP
   use funct, only : xc, xc_spin
   implicit none
-  integer, intent(in)  :: lsd
-  real(DP), intent(in) :: rho(2), rhoc
-  real(DP), intent(out):: exc, vxc(2)
+  integer, intent(in)  :: lsd ! 1 in the LSDA case, 0 otherwise
+  real(DP), intent(in) :: rho(2), rhoc ! the system density
+  real(DP), intent(out):: exc, vxc(2) 
   real(DP):: arho, zeta, vx(2), vc(2), ex, ec
   !
   real(DP), parameter :: e2=2.0_dp, eps=1.e-30_dp
 
-  vxc(1)=0.0_dp
-  exc=0.0_dp
+  vxc(1) = 0.0_dp
+  exc = 0.0_dp
 
   if (lsd.eq.0) then
      !
      !     LDA case
      !
-     arho=abs(rho(1)+rhoc)
+     arho = abs(rho(1) + rhoc)
      if (arho.gt.eps) then      
-        call xc(arho,ex,ec,vx(1),vc(1))
-        vxc(1)=e2*(vx(1)+vc(1))
-        exc   =e2*(ex+ec)
+        call xc(arho, ex, ec, vx(1), vc(1))
+        vxc(1) = e2*(vx(1)+vc(1))
+        exc   = e2 *(ex+ec)
      endif
   else
      !

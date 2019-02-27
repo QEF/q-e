@@ -18,13 +18,11 @@ subroutine stres_loc (sigmaloc)
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : ngm, gstart, g, ngl, gl, igtongl
-  USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho
   USE vlocal,               ONLY : strf, vloc
   USE control_flags,        ONLY : gamma_only
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE uspp_param,           ONLY : upf
-  USE noncollin_module,     ONLY : nspin_lsda
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   USE Coul_cut_2D,          ONLY : do_cutoff_2D, cutoff_stres_evloc, cutoff_stres_sigmaloc 
@@ -34,7 +32,7 @@ subroutine stres_loc (sigmaloc)
   real(DP) :: sigmaloc (3, 3)
   real(DP) , allocatable :: dvloc(:)
   real(DP) :: evloc, fact
-  integer :: ng, nt, l, m, is
+  integer :: ng, nt, l, m
   ! counter on g vectors
   ! counter on atomic type
   ! counter on angular momentum
@@ -42,10 +40,7 @@ subroutine stres_loc (sigmaloc)
 
   allocate(dvloc(ngl))
   sigmaloc(:,:) = 0.d0
-  psic(:)=(0.d0,0.d0)
-  do is = 1, nspin_lsda
-     call daxpy (dfftp%nnr, 1.d0, rho%of_r (1, is), 1, psic, 2)
-  enddo
+  psic(:) = CMPLX(rho%of_r(:,1), KIND=dp)
 
   CALL fwfft ('Rho', psic, dfftp)
   ! psic contains now the charge density in G space

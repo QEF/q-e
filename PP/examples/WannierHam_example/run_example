@@ -95,7 +95,7 @@ cat > NiO.scf.in << EOF
     &electrons
      conv_thr =  1.0d-5
     /
-    CELL_PARAMETERS
+    CELL_PARAMETERS alat
      0.0 0.5 0.5
      0.5 0.0 0.5
      0.5 0.5 0.0
@@ -120,7 +120,6 @@ cat > NiO.nscf.in << EOF
      prefix='NiO',
      pseudo_dir = '$PSEUDO_DIR/',
      outdir='$TMP_DIR/',
-     wf_collect=.true.
     /
     &system
      ibrav=0, celldm(1)=7.92664836, 
@@ -134,7 +133,7 @@ cat > NiO.nscf.in << EOF
     /
     &electrons
     /
-    CELL_PARAMETERS
+    CELL_PARAMETERS alat
      0.0 0.5 0.5
      0.5 0.0 0.5
      0.5 0.5 0.0

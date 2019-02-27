@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -86,7 +86,7 @@ subroutine cgsolve_all (ch_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !
   !  here the local variables
   !
-  integer, parameter :: maxter = 200
+  integer, parameter :: maxter = 400
   ! the maximum number of iterations
   integer :: iter, ibnd, ibnd_, lbnd
   ! counters on iteration, bands

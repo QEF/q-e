@@ -1,0 +1,48 @@
+--
+&inputepw
+  prefix      = 'sic'
+  amass(1)    = 28.0855
+  amass(2)    = 12.0107
+  outdir      = './'
+  dvscf_dir   = './save'
+
+  elph        = .true.
+  kmaps       = .false.
+  epbwrite    = .true.
+  epbread     = .false.
+  epwwrite    = .true.
+  epwread     = .false.
+  lpolar      = .true.
+
+  wannierize  = .true.
+  nbndsub     =  4
+  nbndskip    =  0
+  num_iter    = 300
+  proj(1)     = 'Si:sp3'   
+
+  use_ws      = .true. 
+
+  elecselfen  = .false.
+  phonselfen  = .false.
+  a2f         = .false.
+  prtgkk      = .true.
+
+  fsthick     = 7.0 
+  eptemp      = 20 
+  degaussw    = 0.05
+  
+  filqf       = 'pathq.dat'
+  filkf       = 'path.dat'
+
+  nk1         = 3
+  nk2         = 3
+  nk3         = 3
+  nq1         = 3
+  nq2         = 3
+  nq3         = 3
+ /
+   4
+   0.000000000000000E+00   0.000000000000000E+00   0.000000000000000E+00
+  -0.333333333333333E+00   0.333333333333333E+00  -0.333333333333333E+00
+   0.000000000000000E+00   0.666666666666667E+00   0.000000000000000E+00
+   0.666666666666667E+00   0.000000000000000E+00   0.666666666666667E+00

@@ -1,0 +1,228 @@
+*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***
+
+------------------------------------------------------------------------
+INPUT FILE DESCRIPTION
+
+Program: cppp.x / CP / Quantum Espresso (version: svn)
+------------------------------------------------------------------------
+
+
+=============================================================================
+                            CP Post-Processing code (cppp.x)
+=============================================================================
+
+The cppp.x code is an utility that can be used to extract data from the CP
+restart and CP trajectory files.
+
+INPUT:
+=====
+
+the program read the input parameters from the standard input or from
+any other file specified through the usual "-input" command line flag.
+The input parameters, in the input file, should be specified in the inputpp
+namelist follow:
+
+&INPUTPP
+  ...
+  cppp_input_parameter
+  ...
+/
+
+
+
+========================================================================
+NAMELIST: &INPUTPP
+
+   +--------------------------------------------------------------------
+   Variable:       prefix
+   
+   Type:           CHARACTER
+   Default:        'cp'
+   Description:    basename prepended to cp.x output filenames: cp.evp, cp.pos ....
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       fileout
+   
+   Type:           CHARACTER
+   Default:        'out'
+   Description:    basename of the cppp.x output files
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       output
+   
+   Type:           CHARACTER
+   Default:        'xsf'
+   Description:    a string describing the output format to be performed,
+                   allowed values: 'xsf', 'grd', 'xyz'
+                   
+                       xsf     xcrysden format
+                       grd     GRD gaussian 3D grid format
+                       xyz     XMOL format
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       outdir
+   
+   Type:           CHARACTER
+   Default:        './'
+   Description:    directory containing the CP trajectory files (.evp .pos .cel ...)
+                   and restart files ( .save ) to be processed
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lcharge
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    This logical flag control the processing of charge density.
+                   
+                      .TRUE.  generate output file containing charge density.
+                              The file format is controlled by the "output" parameter
+                   
+                      .FALSE. do not generate charge density file
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lforces
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    This logical flag control the processing of forces.
+                   
+                       .TRUE.  extract forces from trajectory files and write
+                               them to xcrysden file
+                   
+                       .FALSE. do not proces forces
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ldynamics
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    This logical flag control the processing of atoms trajectory.
+                   
+                       .TRUE.  process CP trajectory files and generate a trajectory
+                               file for xcrysden (.axsf)
+                   
+                       .FALSE. do not process trajectory
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lpdb
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    This logical flag control the generation of a pdb file.
+                   
+                       .TRUE.  generate a pdb file containing positions and cell
+                               of the simulated system
+                   
+                       .FALSE. do not generate pdb file
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lrotation
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    This logical flag control the rotation of the cell
+                   
+                       .TRUE.  rotate the system cell in space in order to have
+                               the a lattice parameter laying on the x axis,
+                               the b lattice parameter laying on the xy plane
+                   
+                       .FALSE. do not rotate cell
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variables:      ns1, ns2, ns3
+   
+   Type:           INTEGER
+   Default:        0
+   Description:    Dimensions of the charge density 3D grid.
+                   
+                   If ns1, ns2, ns3 are 0 or not specified, the dimensions
+                   of the grid in the CP run are assumed; otherwise chargedensity
+                   is re-sampled on the GRID specified with ns1,ns2,ns3
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variables:      np1, np2, np3
+   
+   Type:           INTEGER
+   Default:        1
+   Description:    Number of replicas of atomic positions along cell parameters.
+                   
+                   If ns1, ns2, ns3 are 1 or not specified, cppp.x do not
+                   replicate atomi positions in space.
+                   
+                   If ns1 ns2 ns3 are > 1 cppp.x replicate the positions along
+                   a ns1 times, along b ns2 times and along c ns3 times.
+                   the atomic positions used in the simunation.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       nframes
+   
+   Type:           INTEGER
+   Default:        1
+   Description:    number of MD step to be read to build the trajectory
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       ndr
+   
+   Type:           INTEGER
+   Default:        51
+   Description:    CP restart file number to post process
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       atomic_number(i), i=1,ntyp
+   
+   Type:           INTEGER
+   Default:        1
+   Description:    Specify the atomic number of the species in CP trajectory and
+                   restart file.
+                   
+                   atomic_number(1)  specify the atomic number of the first specie
+                   atomic_number(2)  specify the atomic number of the second specie
+                   ....
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       charge_density
+   
+   Type:           CHARACTER
+   Default:        'full'
+   Description:    specify the component of the charge density to plot,
+                   allowed values:
+                   
+                   'full'   print the full electronic charge
+                   'spin'   print the spin polarization (for LSD calculations)
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       state
+   
+   Type:           CHARACTER
+   Default:        ' '
+   Description:    specify the Kohn-Sham state to plot, example: 'KS_1'
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       lbinary
+   
+   Type:           LOGICAL
+   Default:        .TRUE.
+   Description:    specify the file format of the wave function files
+                   to be read and plotted
+   +--------------------------------------------------------------------
+   
+===END OF NAMELIST======================================================
+
+
+This file has been created by helpdoc utility on Fri Jun 22 17:10:59 CEST 2018

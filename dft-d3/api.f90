@@ -109,13 +109,15 @@ contains
     allocate(this%mxc(max_elem))
     call copyc6("", maxc, max_elem, this%c6ab, this%mxc, minc6, minc6list, &
         & maxc6, maxc6list)
+    ! local variables deallocated (QE 2018)
+    deallocate(maxc6list)
+    deallocate(minc6list)
     this%rthr = input%cutoff**2
     this%cn_thr = input%cutoff_cn**2
     allocate(this%r0ab(max_elem, max_elem))
     call setr0ab(max_elem, autoang, this%r0ab)
 
   end subroutine dftd3_init
-    
     
   !> Sets the parameter for the dftd3 calculator by choosing a functional.
   !!
@@ -130,9 +132,10 @@ contains
     logical, intent(in) :: tz
 
     this%version = version
+
     call setfuncpar(func, this%version, tz, this%s6, this%rs6, this%s18, &
         & this%rs18, this%alp)
-    
+
   end subroutine dftd3_set_functional
 
 

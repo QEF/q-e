@@ -21,7 +21,7 @@ SUBROUTINE compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE cell_base,            ONLY : tpiba
   USE io_global,            ONLY : stdout
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE wvfct,                ONLY : et, nbnd, npwx
   USE uspp,                 ONLY : nkb, vkb, deeq, qq_nt, qq_so, deeq_nc, okvan
   USE spin_orb,             ONLY : lspinorb

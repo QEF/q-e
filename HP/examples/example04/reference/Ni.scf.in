@@ -1,0 +1,35 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='Ni'
+    pseudo_dir = '/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/pseudo/'
+    outdir='/scratch/timrov/WORK_Hubbard/Z_git/work2_QE_fork/q-e/tempdir/'
+    verbosity='high'
+ /
+ &system
+    ibrav = 2, 
+    celldm(1) = 6.48, 
+    nat = 1, 
+    ntyp = 1,
+    ecutwfc = 50.0,
+    ecutrho = 400.0,
+    occupations = 'smearing',
+    smearing = 'mv',
+    degauss = 0.02,
+    nspin = 2,
+    starting_magnetization(1) = 0.5,
+    lda_plus_u = .true.,
+    lda_plus_u_kind = 0,
+    U_projection_type = 'ortho-atomic',
+    Hubbard_U(1) = 1.d-8
+ /
+ &electrons
+    conv_thr =  1.d-15
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Ni  58.693  Ni.pbesol-n-rrkjus_psl.0.1.UPF
+ATOMIC_POSITIONS {crystal}
+ Ni   0.0000000000  0.000000000  0.000000000
+K_POINTS {automatic}
+ 2 2 2 0 0 0

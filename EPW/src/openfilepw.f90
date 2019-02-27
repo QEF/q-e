@@ -8,7 +8,7 @@
   !                                                                            
   ! Adapted from the code PH/openfilq - Quantum-ESPRESSO group                
   !-----------------------------------------------------------------------
-  subroutine openfilepw
+  SUBROUTINE openfilepw
   !-----------------------------------------------------------------------
   !!
   !!     This subroutine opens all the files necessary for the EPW
@@ -18,51 +18,32 @@
   !! Imported the noncolinear case implemented by xlzhang
   !!
   !-----------------------------------------------------------------------
-  use io_files,         ONLY : prefix, diropn, seqopn
-  use units_ph,         ONLY : iuwfc
-  ! nwordwfc is the record length for the direct-access file containing
-  ! wavefunctions
+  USE io_files,         ONLY : prefix, diropn, seqopn
+  USE units_lr,         ONLY : iuwfc, lrwfc
   USE wvfct,            ONLY : nbnd, npwx
-  USE noncollin_module, ONLY : npol,nspin_mag
-  use phcom,            ONLY : lrwfc, lrdrho
+  USE noncollin_module, ONLY : npol, nspin_mag
+  USE units_ph,         ONLY : lrdrho
   USE fft_base,         ONLY : dfftp
+  USE uspp,             ONLY : okvan
   !
-  implicit none
-  INTEGER, EXTERNAL :: find_free_unit
-  ! integer variable for I/O control
-  ! used for extracting the fildvscf0 directory
-  logical :: exst
-  ! logical variable to check file existe
-  ! logical variable to check file exists in memory
+  IMPLICIT NONE
   !
-  IF (len_trim(prefix) == 0) call errore ('openfilepw', 'wrong prefix', 1)
+  LOGICAL :: exst
+  !! logical variable to check file existe
+  !
+  IF (len_trim(prefix) == 0) CALL errore('openfilepw', 'wrong prefix', 1)
   !
   !     The file with the wavefunctions
   !
   iuwfc = 20 
   lrwfc = 2 * nbnd * npwx * npol 
-  CALL diropn(iuwfc,'wfc',lrwfc,exst) 
+  CALL diropn(iuwfc, 'wfc', lrwfc, exst) 
   IF (.not. exst) CALL errore ('openfilepw','file '//TRIM( prefix )//'.wfc'//' not found',1)
   !
   !   file for setting unitary gauges of eigenstates
   !
-  ! RM - nspin corresponds to nspin_mag according to QE5.0.3
-  !    - this will have to change when we move to QE5.0.3 
-  !
   lrdrho = 2 * dfftp%nr1x *dfftp%nr2x *dfftp%nr3x * nspin_mag
-  !IF (fildvscf0 .eq. fildvscf) THEN
-  !   iudvscf0 = iudvscf
-  !ELSE
-  !   iudvscf0 = find_free_unit()
-  !   IF ( me_pool == 0 .and. tphases) THEN
-  !      tmp_dir_save=tmp_dir 
-  !      spot=INDEX(fildvscf0,'/',.true.)
-  !      tmp_dir=fildvscf0(1:spot) 
-  !      CALL diropn (iudvscf0, 'dvscf', lrdrho, exst)
-  !      tmp_dir=tmp_dir_save
-  !   END IF
-  !ENDIF
   !
   RETURN
   !
-  end subroutine openfilepw
+  END SUBROUTINE openfilepw

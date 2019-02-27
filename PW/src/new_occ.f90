@@ -25,7 +25,7 @@ SUBROUTINE new_evc()
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE control_flags,        ONLY : gamma_only, iverbosity
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
   USE gvect,                ONLY : gstart
   USE io_files,             ONLY : nwordwfc, iunwfc, nwordatwfc, iunsat

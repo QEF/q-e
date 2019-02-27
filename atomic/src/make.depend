@@ -185,6 +185,10 @@ intref.o : ../../Modules/kind.o
 intref.o : ../../Modules/radial_grids.o
 inward.o : ../../Modules/kind.o
 inward.o : ../../Modules/radial_grids.o
+kli.o : ../../Modules/kind.o
+kli.o : ../../Modules/radial_grids.o
+kli.o : ld1inc.o
+kli.o : parameters.o
 ld1.o : ../../Modules/command_line_options.o
 ld1.o : ../../Modules/environment.o
 ld1.o : ../../Modules/mp_global.o
@@ -236,6 +240,7 @@ new_potential.o : ../../Modules/constants.o
 new_potential.o : ../../Modules/funct.o
 new_potential.o : ../../Modules/kind.o
 new_potential.o : ../../Modules/radial_grids.o
+new_potential.o : kli.o
 new_potential.o : ld1inc.o
 newd_at.o : ../../Modules/kind.o
 newd_at.o : ../../Modules/radial_grids.o

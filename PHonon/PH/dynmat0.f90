@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,13 +15,11 @@ subroutine dynmat0_new
   !     for computing respectively the electronic part and
   !     the ionic part
   !
-  !
-  !
   USE kinds,         ONLY : DP
-  USE ions_base, ONLY : nat,ntyp => nsp, ityp, zv, tau
-  USE cell_base, ONLY: alat, omega, at, bg
-  USE gvect, ONLY: g, gg, ngm, gcutm
-  USE symm_base, ONLY: irt, s, invs
+  USE ions_base,     ONLY : nat,ntyp => nsp, ityp, zv, tau
+  USE cell_base,     ONLY : alat, omega, at, bg
+  USE gvect,         ONLY : g, gg, ngm, gcutm
+  USE symm_base,     ONLY : irt, s, invs
   USE control_flags, ONLY : modenum, llondon
   USE ph_restart,    ONLY : ph_writefile
   USE control_ph,    ONLY : rec_code_read, current_iq
@@ -31,6 +29,7 @@ subroutine dynmat0_new
   USE dynmat,        ONLY : dyn, dyn00, dyn_rec
   USE london_module, ONLY : init_london, dealloca_london
   USE lr_symm_base,  ONLY : minus_q, irotmq, nsymq, rtau
+  USE ldaU,          ONLY : lda_plus_u
 
   implicit none
 
@@ -67,6 +66,10 @@ subroutine dynmat0_new
   !   Add non-linear core-correction (NLCC) contribution (if any)
   !
   call dynmatcc()
+  !
+  ! DFPT+U: calculate the bare Hubbard dynamical matrix
+  !
+  IF (lda_plus_u) CALL dynmat_hub_bare()
   !
   !   Symmetrizes the dynamical matrix w.r.t. the small group of q and of
   !   mode. This is done here, because this part of the dynmical matrix is

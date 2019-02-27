@@ -48,19 +48,13 @@
       !
       call mp_sum( auxrholoc( 0:nat, 1:nspin), intra_bgrp_comm )
       !     
-      fact =  omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
-      if (nspin.eq.2) then
-         rholoc(1:nat)   = (auxrholoc(1:nat,1)+auxrholoc(1:nat,2)) * fact
-         magloc(1,1:nat) = (auxrholoc(1:nat,1)-auxrholoc(1:nat,2)) * fact
-      else
-         rholoc(1:nat) = auxrholoc(1:nat,1) * fact
-         if (noncolin) then
-            do ipol=1,3
-               magloc(ipol,1:nat) = auxrholoc(1:nat,ipol+1) * fact
-            end do
-         end if
-      endif
-!
+      fact = omega/(dfftp%nr1*dfftp%nr2*dfftp%nr3)
+      rholoc(1:nat) = auxrholoc(1:nat,1) * fact
+      !
+      do ipol=1,nspin-1
+         magloc(ipol,1:nat) = auxrholoc(1:nat,ipol+1) * fact
+      end do
+      !
       deallocate (auxrholoc)
 
       end subroutine get_locals

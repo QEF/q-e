@@ -38,21 +38,27 @@ MODULE control_flags
             timing, memchk, trane, dt_old, ampre, tranp, amprp,              &
             tnosee, tnosep, tnoseh, tcp, tcap,                               &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
-            tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem
+            tscreen, gamma_only, force_pairing, lecrpa, tddfpt, smallmem,    &
+            tfirst, tlast, tprint, trescalee 
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tksw, trhor, thdyn, trhow
-  PUBLIC :: twfcollect
-  PUBLIC :: lkpoint_dir
   !
   ! ...   declare execution control variables
   !
   LOGICAL :: trhor     = .FALSE. ! read rho from unit 47 (only cp, seldom used)
   LOGICAL :: trhow     = .FALSE. ! CP code, write rho to restart dir
   LOGICAL :: tksw      = .FALSE. ! CP: write Kohn-Sham states to restart dir
+  LOGICAL :: tfirst    = .TRUE.  ! CP: true if first iteration after restart
+  LOGICAL :: tlast     = .FALSE. ! CP: true if last iteration before ending
+  LOGICAL :: tprint    = .FALSE. ! CP: set to true when calculation of time
+                                 !     derivatives of wave functions must be 
+                                 !     computed via projection on occupied
+                                 !     manifold 
   !
   LOGICAL :: tsde          = .FALSE. ! electronic steepest descent
   LOGICAL :: tzeroe        = .FALSE. ! set to zero the electronic velocities
+  LOGICAL :: trescalee     = .FALSE. ! rescale the electronics velocities
   LOGICAL :: tfor          = .FALSE. ! move the ions ( calculate forces )
   LOGICAL :: tsdp          = .FALSE. ! ionic steepest descent
   LOGICAL :: tzerop        = .FALSE. ! set to zero the ionic velocities
@@ -68,8 +74,6 @@ MODULE control_flags
   LOGICAL :: timing        = .FALSE. ! print out timing information
   LOGICAL :: memchk        = .FALSE. ! check for memory leakage
   LOGICAL :: tscreen       = .FALSE. ! Use screened coulomb potentials for cluster calculations
-  LOGICAL :: twfcollect    = .FALSE. ! Collect wave function in the restart file at the end of run.
-  LOGICAL :: lkpoint_dir   = .TRUE.  ! save each k point in a different directory
   LOGICAL :: force_pairing = .FALSE. ! Force pairing
   LOGICAL :: lecrpa        = .FALSE. ! RPA correlation energy request
   LOGICAL :: tddfpt        = .FALSE. ! use TDDFPT specific tweaks when using the Environ plugin
@@ -194,9 +198,10 @@ MODULE control_flags
   REAL(DP), PUBLIC  :: &
     ethr               ! the convergence threshold for eigenvalues
   INTEGER, PUBLIC :: &
-    isolve,           &! Davidson or CG or ParO diagonalization
+    isolve,           &! index selecting Davidson,  CG , PPCG or ParO diagonalization
     david,            &! max dimension of subspace in Davidson diagonalization
-    max_cg_iter        ! maximum number of iterations in a CG call
+    max_cg_iter,      &! maximum number of iterations in a CG call
+    max_ppcg_iter      ! maximum number of iterations in a PPCG call
   LOGICAL, PUBLIC :: &
     diago_full_acc = .FALSE. ! if true,  empty eigenvalues have the same
                              ! accuracy of the occupied ones
@@ -262,6 +267,9 @@ MODULE control_flags
   ! ... External Forces on Ions
   !
   LOGICAL,          PUBLIC :: textfor = .FALSE.
+
+
+  LOGICAL,          PUBLIC :: treinit_gvecs = .FALSE.
 
   !
   ! ...  end of module-scope declarations

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-! A small utility that read the first q from a dynamical matrix file (either xml or plain text),
+! A small utility that reads the first q from a dynamical matrix file (either xml or plain text),
 ! recomputes the system symmetry (starting from the lattice) and generates the star of q.
 !
 ! Useful for debugging and for producing the star of the wannier-phonon code output.
@@ -144,6 +144,11 @@ PROGRAM Q2QSTAR
   WRITE(stdout, '(5x,a,i3)') "Symmetries of bravais lattice: ", nrot
   !
   ! ~~~~~~~~ setup crystal symmetry ~~~~~~~~ 
+  IF(.not.allocated(m_loc))  THEN
+    ALLOCATE(m_loc(3,nat))
+    m_loc = 0._dp
+  ENDIF
+  
   CALL find_sym ( nat, tau, ityp, .false., m_loc )
   WRITE(stdout, '(5x,a,i3)') "Symmetries of crystal:         ", nsym
   !
@@ -163,7 +168,7 @@ PROGRAM Q2QSTAR
   !
   ! finally this does some of the above again and also computes rtau...
   ALLOCATE(rtau( 3, 48, nat))
-  CALL sgam_ph_new(at, bg, nsym, s, irt, tau, rtau, nat)
+  CALL sgam_lr(at, bg, nsym, s, irt, tau, rtau, nat)
   !
   ! ######################### star of q #########################
   do na = 1, nat

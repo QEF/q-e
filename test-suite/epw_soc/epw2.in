@@ -43,8 +43,6 @@
   phonselfen  = .true.
   a2f         = .true.
 
-  parallel_k  = .true.
-  parallel_q  = .false.
 
   fsthick     = 20 ! eV
   eptemp      = 500 ! K

@@ -533,7 +533,7 @@ SUBROUTINE sgam_at ( nat, tau, ityp, sym, no_z_inv)
                  ! commensurate with FFT grids 
                  DO i = 1, 3
                     IF ( ABS (ft_(i)) > eps2 ) THEN
-                       nfrac = NINT(1.0_dp/ft_(i)) 
+                       nfrac = NINT(1.0_dp/ABS(ft_(i)))
                     ELSE
                        nfrac = 0
                     END IF

@@ -6,9 +6,9 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-AC_INIT(ESPRESSO, 6.2, , espresso)
+AC_INIT(ESPRESSO, 6.3, , espresso)
 
-AC_PREREQ(2.60)
+AC_PREREQ(2.64)
 AC_CONFIG_MACRO_DIR([m4/])
 
 # Initialize variables, filling with one comes from the environment...
@@ -34,6 +34,9 @@ X_AC_QE_AR()
 
 # Checking OpenMP...
 X_AC_QE_OPENMP()
+
+# Checking OpenMP...
+X_AC_QE_CUDA()
 
 # Checking MPIF90...
 X_AC_QE_MPIF90()
@@ -73,6 +76,9 @@ X_AC_QE_LAPACK()
 # Checking for FFT...
 X_AC_QE_FFT()
 
+# Setting libxc...
+ACX_LIBXC()
+
 # Checking for IBM MASS library...
 X_AC_QE_MASS()
 
@@ -84,9 +90,6 @@ X_AC_QE_SCALAPACK()
 
 # Setting ELPA...
 X_AC_QE_ELPA()
-
-# Enable XML ...
-X_AC_QE_XML()
 
 # Setting HDF5...
 X_AC_QE_HDF5()

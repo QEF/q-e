@@ -26,7 +26,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : upf, nh, nhm
-  USE wavefunctions_module, ONLY : evc, psic_nc
+  USE wavefunctions, ONLY : evc, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE wvfct,                ONLY : nbnd, npwx

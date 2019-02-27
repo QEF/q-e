@@ -8,8 +8,6 @@ MODFLAGS= $(MOD_FLAG) ../../ELPA/src $(MOD_FLAG) ../../LAXlib $(MOD_FLAG) ../../
 CG = \
 ccgdiagg.o \
 rcgdiagg.o \
-export_gstart_2_cg.o \
-set_mpi_comm_4_cg.o \
 cg_param.o \
 rotate_wfc_gamma.o \
 rotate_wfc_k.o 

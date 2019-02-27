@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2015 Quantum ESPRESSO group
+! Copyright (C) 2001-2018 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,8 +8,9 @@
 !-----------------------------------------------------------------------
 PROGRAM lr_calculate_spectrum
   !---------------------------------------------------------------------
-  ! ... calculates the spectrum
-  ! ... by solving tridiagonal problem for each value of omega
+  !
+  ! Calculates the spectrum by solving tridiagonal problem for each value 
+  ! of the frequency omega
   !
   ! Modified by Osman Baris Malcioglu (2008)
   ! Modified by Xiaochuan Ge (2013)
@@ -28,14 +29,6 @@ PROGRAM lr_calculate_spectrum
   IMPLICIT NONE
   !
   CHARACTER(len=256), EXTERNAL :: trimcheck
-  !
-  ! Constants
-  !
-  !  integer,  parameter :: dp=kind(0.d0)
-  !  real(dp), parameter :: pi=3.14159265d0
-  !  real(dp), parameter :: ry=13.6056981d0
-  !  real(dp), parameter :: ev2nm=1239.84172
-  !  real(dp), parameter :: ry2nm=91.1266519
   !
   ! User controlled variables
   !
@@ -283,6 +276,10 @@ PROGRAM lr_calculate_spectrum
         filename1 = trim(prefix) // ".plot_eps.dat"
         WRITE (stdout,'(/5x,"Output file name for the inverse and direct &
                          &dielectric function: ",A20)') filename1
+     ELSE
+        filename1 = trim(prefix) // ".plot_S.dat"
+        WRITE (stdout,'(/5x,"Output file name for the oscillator strength S &
+                         & ",A20)') filename1
      ENDIF
      !
      IF (.not. eels) WRITE(stdout,'(/,5x,"chi_i_j: dipole polarizability tensor &
@@ -350,7 +347,7 @@ PROGRAM lr_calculate_spectrum
         ! 
         OPEN(18,file=filename1,status="unknown")
         !
-        WRITE(18,'("#",8x,"Frequency (eV)",11x,"Re(1/eps)",12x, &
+        WRITE(18,'("#",8x,"\hbar \omega(eV)",11x,"Re(1/eps)",12x, &
                       & "-Im(1/eps)",15x,"Re(eps)",16x,"Im(eps)")')
         !
         ! Calculation of the inverse dielectric function at finite q.
@@ -367,6 +364,18 @@ PROGRAM lr_calculate_spectrum
         factor_eels = (4.0d0*pi/(modulus_q**2)) * (2.0d0*rytoev/volume)
         !
         start_save = start
+        !
+     ELSEIF (.NOT.eels .AND. n_ipol==3) THEN
+        !
+        OPEN(18,file=filename1,status="unknown")
+        !
+        IF (units == 0) THEN
+           WRITE(18,'("#",10x,"\hbar \omega(Ry)",4x,"Oscillator strength")')
+        ELSEIF (units == 1) THEN
+           WRITE(18,'("#",10x,"\hbar \omega(eV)",4x,"Oscillator strength")')
+        ELSEIF (units == 2) THEN
+           WRITE(18,'("#",10x,"wavelength(nm)",4x,"Oscillator strength")')
+        ENDIF
         !
      ENDIF
      !
@@ -411,18 +420,11 @@ PROGRAM lr_calculate_spectrum
      ! Header of the output plot file
      !
      IF (units == 0) THEN
-        WRITE (17,'("#Chi is reported as CHI_(i)_(j) \hbar \omega (Ry) &
-                      & Re(chi) (e^2*a_0^2/Ry) Im(chi) (e^2*a_0^2/Ry) ")')
+        WRITE (17,'("#",16x,"\hbar \omega(Ry)",5x,"Re(chi) (e^2*a_0^2/Ry)",x,"Im(chi) (e^2*a_0^2/Ry)")')
      ELSEIF (units == 1) THEN
-        WRITE (17,'("#Chi is reported as CHI_(i)_(j) \hbar \omega (eV) &
-                      & Re(chi) (e^2*a_0^2/eV) Im(chi) (e^2*a_0^2/eV) ")')
+        WRITE (17,'("#",16x,"\hbar \omega(eV)",5x,"Re(chi) (e^2*a_0^2/eV)",x,"Im(chi) (e^2*a_0^2/eV)")')
      ELSEIF (units == 2) THEN
-        WRITE (17,'("#Chi is reported as CHI_(i)_(j) wavelength (nm) &
-                      & Re(chi) (e^2*a_0^2/eV) Im(chi) (e^2*a_0^2/eV) ")')
-     ENDIF
-     !
-     IF (n_ipol == 3) THEN
-        WRITE(17,'("# S(E) satisfies the sum rule ")' )
+        WRITE (17,'("#",16x,"wavelength(nm)",5x,"Re(chi) (e^2*a_0^2/eV)",x,"Im(chi) (e^2*a_0^2/eV)")')
      ENDIF
      !
      ! Start a loop on frequency
@@ -446,7 +448,7 @@ PROGRAM lr_calculate_spectrum
      !
      ! In order to gain speed, we perform the first step seperately
      !
-     IF (verbosity > 0 .and. n_ipol == 3) THEN 
+     IF (n_ipol == 3) THEN 
         !
         ! Calculation of the susceptibility
         !
@@ -480,7 +482,7 @@ PROGRAM lr_calculate_spectrum
         !
         ! alpha is ready
         !
-        WRITE(17,'(5x,"S(E)=",2x,2(e21.15,2x))') start, alpha_temp(3)
+        WRITE(18,'(5x,2x,2(e21.15,2x))') start, alpha_temp(3)
         !
         ! This is for the f-sum rule
         !
@@ -589,7 +591,7 @@ PROGRAM lr_calculate_spectrum
         !
         ! alpha is ready
         !
-        WRITE(17,'(5x,"S(E)=",2x,2(e21.15,2x))') start, alpha_temp(3)
+        WRITE(18,'(5x,2x,2(e21.15,2x))') start, alpha_temp(3)
         !
         IF (verbosity > 0 ) THEN
            IF ( is_peak(omega(3),alpha_temp(3))) &
@@ -630,7 +632,7 @@ PROGRAM lr_calculate_spectrum
      !
      ! In order to gain speed, we perform the last step seperately
      !
-     IF (verbosity > 0 .and. n_ipol == 3) THEN
+     IF (n_ipol == 3) THEN
         !
         ! Units conversion
         !
@@ -674,7 +676,7 @@ PROGRAM lr_calculate_spectrum
         !
         ! alpha is ready 
         !
-        WRITE(17,'(5x,"S(E)=",2x,2(e21.15,2x))') start, alpha_temp(3)
+        WRITE(18,'(5x,2x,2(e21.15,2x))') start, alpha_temp(3)
         !
         ! alpha is ready
         !
@@ -683,6 +685,7 @@ PROGRAM lr_calculate_spectrum
      ENDIF
      !
      CLOSE(17)
+     IF (.NOT.eels .AND. n_ipol==3) CLOSE(18)
      IF (eels .and. units==1) CLOSE(18)
      !
      IF ( n_ipol==3 .and. verbosity >4 ) THEN
@@ -1418,12 +1421,11 @@ SUBROUTINE spectrum_david()
   !
 521 CLOSE(18)
   !
-  filename = trim(prefix)//".plot"
+  filename = trim(prefix)//".plot.dat"
   !
   OPEN(17,file=filename,status="unknown")
-  !  
-  WRITE(17,'("#",2x,"Energy(Ry)",10x,"total",13x,"X",13x,"Y",13x,"Z")')
-  WRITE(17,'("#  Broadening is: ",5x,F10.7,5x,"Ry")') epsil
+  !
+  write(17,'("#",7x,"Energy(Ry)",12x,"Total",17x,"X",18x,"Y",19x,"Z")')  
   !    
   istep = 1
   !

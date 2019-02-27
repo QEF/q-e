@@ -37,7 +37,6 @@ MODULE realus
   !General
   LOGICAL               :: real_space = .false.
   ! if true perform calculations in real space
-  INTEGER               :: real_space_debug = 0 ! FIXME: must disappear
   INTEGER               :: initialisation_level
   ! init_realspace_vars sets this to 3; qpointlist adds 5; betapointlist adds 7
   ! so the value should be 15 if the real space routine is initialised properly
@@ -73,7 +72,7 @@ MODULE realus
   PUBLIC :: generate_qpointlist, qpointlist, addusdens_r, newq_r, &
        addusforce_r, addusstress_r, real_space_dq, deallocate_realsp
   ! variables for real-space beta, followed by routines
-  PUBLIC :: real_space, initialisation_level, real_space_debug, &
+  PUBLIC :: real_space, initialisation_level, &
        tg_psic, betasave, maxbox_beta, box_beta
   PUBLIC :: betapointlist, init_realspace_vars, v_loc_psir, v_loc_psir_inplace
   PUBLIC :: invfft_orbital_gamma, fwfft_orbital_gamma, s_psir_gamma, &
@@ -140,16 +139,6 @@ MODULE realus
      ENDIF
      !
      initialisation_level = initialisation_level + 7
-     IF (real_space_debug > 20 .and. real_space_debug < 30) THEN
-       real_space=.false.
-       IF (tqr) THEN
-         tqr = .false.
-         WRITE(stdout,'("Debug level forced tqr to be set false")')
-       ELSE
-         WRITE(stdout,'("tqr was already set false")')
-       ENDIF
-       real_space_debug=real_space_debug-20
-     ENDIF
 
     END SUBROUTINE init_realspace_vars
     !------------------------------------------------------------------------
@@ -347,7 +336,7 @@ MODULE realus
                   distsq = posi(1)**2 + posi(2)**2 + posi(3)**2
                   IF ( distsq < boxradsq_ia ) THEN
                      ! compute fft index ir from ii,jj,kk
-                     ir = 1 + ii + jj * dfft%nr1x + kk * dfft%nr1x * dfft%nr2x
+                     ir = 1 + ii + jj * dfft%nr1x + kk * dfft%nr1x * dfft%my_nr2p
                      !
                      mbia = mbia + 1
                      IF( mbia > roughestimate ) CALL errore('qpointlist', 'rough-estimate is too rough', 3)
@@ -916,7 +905,7 @@ MODULE realus
                   distsq = posi(1)**2 + posi(2)**2 + posi(3)**2
                   IF ( distsq < boxradsq_ia ) THEN
                      ! compute fft index ir from ii,jj,kk
-                     ir = 1 + ii + jj * dffts%nr1x + kk * dffts%nr1x * dffts%nr2x
+                     ir = 1 + ii + jj * dffts%nr1x + kk * dffts%nr1x * dffts%my_nr2p
                      !
                      mbia = maxbox_beta(ia) + 1
                      !
@@ -939,8 +928,10 @@ MODULE realus
       !
       ! ... now store them in a more convenient place
       !
+      IF ( allocated( xyz_beta ) )     DEALLOCATE( xyz_beta )
       IF ( allocated( box_beta ) )     DEALLOCATE( box_beta )
       IF ( allocated( boxdist_beta ) ) DEALLOCATE( boxdist_beta )
+      IF ( allocated( xkphase ) )      DEALLOCATE( xkphase )
       !
       ALLOCATE( xyz_beta ( 3, goodestimate, nat ) )
       ALLOCATE( box_beta    ( goodestimate, nat ) )
@@ -1152,50 +1143,45 @@ MODULE realus
     END SUBROUTINE newq_r
     !
     !------------------------------------------------------------------------
-    SUBROUTINE addusdens_r(rho)
+    SUBROUTINE addusdens_r( rho )
       !------------------------------------------------------------------------
       !
       ! ... This routine adds to the charge density the part which is due to
-      ! ... the US augmentation.
+      ! ... the US augmentation, in real space
       !
-      USE constants,        ONLY : eps6
       USE ions_base,        ONLY : nat, ityp
-      USE cell_base,        ONLY : omega
       USE lsda_mod,         ONLY : nspin
-      USE klist,            ONLY : nelec
-      USE fft_base,         ONLY : dfftp
       USE uspp,             ONLY : okvan, becsum
       USE uspp_param,       ONLY : upf, nh
-      USE noncollin_module, ONLY : noncolin, nspin_mag, nspin_lsda
-      USE spin_orb,         ONLY : domag
+      USE noncollin_module, ONLY : nspin_mag, nspin_lsda
+      USE fft_interfaces,   ONLY : fwfft
+      USE fft_base,         ONLY : dfftp
+      USE wavefunctions,  ONLY : psic
+#if defined (__DEBUG)
+      USE constants,        ONLY : eps6
+      USE klist,            ONLY : nelec
+      USE cell_base,        ONLY : omega
       USE mp_bands,         ONLY : intra_bgrp_comm
       USE mp,               ONLY : mp_sum
       USE gvect,            ONLY : gstart
-      USE fft_base,         ONLY : dfftp
-      USE fft_interfaces,   ONLY : fwfft
-      USE wavefunctions_module,  ONLY : psic
+#endif
       !
       IMPLICIT NONE
       ! The charge density to be augmented (in G-space)
-      COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag) 
-      ! If this is the ground charge density, enable rescaling
+      COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia
       CHARACTER(len=80) :: msg
-      REAL(kind=dp), ALLOCATABLE :: rho_1(:,:) 
-      REAL(DP) :: charge
-      REAL(DP) :: tolerance
+      REAL(kind=dp), ALLOCATABLE :: rhor(:,:) 
+      REAL(kind=dp) :: charge
       !
       !
       IF ( .not. okvan ) RETURN
-      tolerance = 1.d-3
-      ! Charge loss with real-space betas is worse
-      IF ( real_space ) tolerance = 1.d-2
       !
       CALL start_clock( 'addusdens' )
       !
-      ALLOCATE ( rho_1(dfftp%nnr,nspin_mag) )
-      rho_1(:,:) = 0.0_dp
+      ALLOCATE ( rhor(dfftp%nnr,nspin_mag) )
+      rhor(:,:) = 0.0_dp
       DO is = 1, nspin_mag
          !
          DO ia = 1, nat
@@ -1212,7 +1198,7 @@ MODULE realus
                   ijh = ijh + 1
                   DO ir = 1, mbia
                      irb = tabp(ia)%box(ir)
-                     rho_1(irb,is) = rho_1(irb,is) + tabp(ia)%qr(ir,ijh)*becsum(ijh,ia,is)
+                     rhor(irb,is) = rhor(irb,is) + tabp(ia)%qr(ir,ijh)*becsum(ijh,ia,is)
                   ENDDO
                ENDDO
             ENDDO
@@ -1220,34 +1206,35 @@ MODULE realus
          !
       ENDDO
       !
+      !
       DO is = 1, nspin_mag
-         psic(:) = rho_1(:,is)
+         psic(:) = rhor(:,is)
          CALL fwfft ('Rho', psic, dfftp)
          rho(:,is) = rho(:,is) + psic(dfftp%nl(:))
       END DO
-      DEALLOCATE ( rho_1 )
+      !
+      DEALLOCATE ( rhor )
+#if defined (__DEBUG)
       !
       ! ... check the total charge (must not be summed on k-points)
       !
-      !charge = sum( rho_1(:,1:nspin_lsda) )*omega / ( dfftp%nr1*dfftp%nr2*dfftp%nr3 )
       IF ( gstart == 2) THEN
          charge = SUM(rho(1,1:nspin_lsda) )*omega
       ELSE
          charge = 0.0_dp
       ENDIF
       CALL mp_sum(  charge , intra_bgrp_comm )
-#if defined (__DEBUG)
-       write (stdout,*) 'charge before rescaling ', charge
-#endif
-       IF ( abs( charge - nelec ) / nelec > eps6 ) THEN
-          !
-          ! ... the error on the charge is too large, stop and complain
-          !
-          WRITE (msg,'("expected ",f10.6,", found ",f10.6)') nelec, charge
-          CALL errore( 'addusdens_r', 'WRONG CHARGE '//trim(msg)//&
-                       ': ions may be overlapping or increase ecutrho', 1 )
+      write (stdout,*) 'charge before rescaling ', charge
+      IF ( abs(charge - nelec) > MAX(eps6,eps6*ABS(nelec)) ) THEN
+         !
+         ! ... the error on the charge is too large, stop and complain
+         !
+         WRITE (msg,'("expected ",f10.6,", found ",f10.6)') nelec, charge
+         CALL errore( 'addusdens_r', 'WRONG CHARGE '//trim(msg)//&
+              ': ions may be overlapping or increase ecutrho', 1 )
       ENDIF
       !
+#endif
       CALL stop_clock( 'addusdens' )
       !
       RETURN
@@ -1468,7 +1455,7 @@ MODULE realus
   ! WARNING: For the sake of speed, there are no checks performed in this routine, check beforehand!
     USE kinds,                 ONLY : DP
     USE cell_base,             ONLY : omega
-    USE wavefunctions_module,  ONLY : psic
+    USE wavefunctions,  ONLY : psic
     USE ions_base,             ONLY : nat, nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
     USE fft_base,              ONLY : dffts
@@ -1574,7 +1561,7 @@ MODULE realus
     USE kinds,                 ONLY : DP
     USE wvfct,                 ONLY : current_k
     USE cell_base,             ONLY : omega
-    USE wavefunctions_module,  ONLY : psic
+    USE wavefunctions,  ONLY : psic
     USE ions_base,             ONLY : nat, nsp, ityp
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
@@ -1654,7 +1641,7 @@ MODULE realus
 
       USE kinds,                  ONLY : DP
       USE cell_base,              ONLY : omega
-      USE wavefunctions_module,   ONLY : psic
+      USE wavefunctions,   ONLY : psic
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh
       USE lsda_mod,               ONLY : current_spin
@@ -1737,7 +1724,7 @@ MODULE realus
       USE kinds,                  ONLY : DP
       USE wvfct,                  ONLY : current_k
       USE cell_base,              ONLY : omega
-      USE wavefunctions_module,   ONLY : psic
+      USE wavefunctions,   ONLY : psic
       USE ions_base,              ONLY : nat, nsp, ityp
       USE uspp_param,             ONLY : nh
       USE lsda_mod,               ONLY : current_spin
@@ -1825,7 +1812,7 @@ MODULE realus
 
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : omega
-  USE wavefunctions_module,   ONLY : psic
+  USE wavefunctions,   ONLY : psic
   USE ions_base,              ONLY : nat, nsp, ityp
   USE uspp_param,             ONLY : nh
   USE lsda_mod,               ONLY : current_spin
@@ -1927,7 +1914,7 @@ MODULE realus
   USE kinds,                  ONLY : DP
   USE wvfct,                  ONLY : current_k
   USE cell_base,              ONLY : omega
-  USE wavefunctions_module,   ONLY : psic
+  USE wavefunctions,   ONLY : psic
   USE ions_base,              ONLY : nat, nsp, ityp
   USE uspp_param,             ONLY : nh
   USE lsda_mod,               ONLY : current_spin
@@ -2018,7 +2005,7 @@ MODULE realus
   ! last: index of the last band you want to transform (usually the total number 
   !       of bands but can be different in band parallelization)
   !
-    USE wavefunctions_module, &
+    USE wavefunctions, &
                        ONLY : psic
     USE gvecs,         ONLY : doublegrid
     USE klist,         ONLY : ngk, igk_k
@@ -2133,7 +2120,7 @@ MODULE realus
   ! last: index of the last band you want to transform (usually the total number 
   !       of bands but can be different in band parallelization)
   !
-    USE wavefunctions_module, &
+    USE wavefunctions, &
                        ONLY : psic
     USE klist,         ONLY : ngk, igk_k
     USE gvecs,         ONLY : doublegrid
@@ -2243,7 +2230,7 @@ MODULE realus
     !  current_k  variable  must contain the index of the desired kpoint
     !
     USE kinds,                    ONLY : DP
-    USE wavefunctions_module,     ONLY : psic
+    USE wavefunctions,     ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
     USE wvfct,                    ONLY : current_k
     USE gvecs,                    ONLY : doublegrid
@@ -2329,7 +2316,7 @@ MODULE realus
     !
     !  current_k  variable  must contain the index of the desired kpoint
     !
-    USE wavefunctions_module,     ONLY : psic
+    USE wavefunctions,     ONLY : psic
     USE klist,                    ONLY : ngk, igk_k
     USE wvfct,                    ONLY : current_k
     USE gvecs,                    ONLY : doublegrid
@@ -2403,7 +2390,7 @@ MODULE realus
     ! modified for real space implementation
     ! OBM 241008
     !
-    USE wavefunctions_module, &
+    USE wavefunctions, &
                        ONLY : psic
     USE gvecs,         ONLY : doublegrid
     USE kinds,         ONLY : DP
@@ -2451,7 +2438,7 @@ MODULE realus
     ! Therefore must be the first term to be considered whn building hpsi
     ! SdG 290716
     !
-    USE wavefunctions_module, &
+    USE wavefunctions, &
                        ONLY : psic
     USE gvecs,         ONLY : doublegrid
     USE kinds,         ONLY : DP

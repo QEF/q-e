@@ -31,7 +31,7 @@
       USE recvec_subs,          ONLY: ggen, ggens
       USE gvect,                ONLY: mill_g, eigts1,eigts2,eigts3, g, gg, &
                                       ecutrho, gcutm, gvect_init, mill, &
-                                      ig_l2g, gstart, ngm, ngm_g
+                                      ig_l2g, gstart, ngm, ngm_g, gshells
       use gvecs,                only: gcutms, gvecs_init, ngms
       use gvecw,                only: gkcut, gvecw_init, g2kin_init
       USE smallbox_subs,        ONLY: ggenb
@@ -286,11 +286,7 @@
       use cell_base,        only: at, alat, r_to_s, cell_init, deth
       use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init
       USE ions_positions,   ONLY: allocate_ions_positions, tau0, taus
-#if defined (__OLDXML)
-      use cp_restart,       only: cp_read_cell
-#else
       use cp_restart_new,   only: cp_read_cell
-#endif
       USE fft_base,         ONLY: dfftb
       USE fft_smallbox_type,      ONLY: fft_box_allocate
       USE cp_main_variables,ONLY: ht0, htm, taub

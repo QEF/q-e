@@ -3,11 +3,7 @@
 include	../../make.inc
 
 # location of needed modules and included files (if any)
-MODFLAGS= $(BASEMOD_FLAGS) \
-          $(MOD_FLAG)../../KS_Solvers/CG \
-          $(MOD_FLAG)../../KS_Solvers/Davidson
-
-#IFLAGS=
+MODFLAGS= $(BASEMOD_FLAGS) 
 
 FOBJS = \
 berryion.o \
@@ -20,7 +16,6 @@ chargedensity.o \
 cp_autopilot.o \
 cp_emass.o \
 cp_interfaces.o \
-cp_restart.o \
 cp_restart_new.o \
 cplib.o \
 cpr_mod.o \
@@ -121,21 +116,21 @@ entropy.o
 
 QEMODS=../../Modules/libqemod.a
 QEFFT=../../FFTXlib/libqefft.a
-QELA=../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a ../../LAXlib/libqela.a
+QELA=../../LAXlib/libqela.a
 UTIL=../../UtilXlib/libutil.a
 
-TLDEPS= bindir mods libs libiotk
+TLDEPS= bindir libs mods
 
-all : tldeps libcp.a manycp.x cp.x cppp.x wfdd.x
+all : tldeps libcp.a manycp.x cp.x wfdd.x #cppp.x
 
 manycp.x : manycp.o libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o manycp.x manycp.o \
-		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(LIBS)
+		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/manycp.x . )
 
 cp.x : cprstart.o libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o cp.x cprstart.o \
-		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(LIBS)
+		libcp.a $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/cp.x . )
 
 libcp.a : $(FOBJS) $(LOBJS) 
@@ -148,12 +143,12 @@ cpver.h :
 	echo "CHARACTER(LEN=70), PARAMETER :: version_date = '"`date`"'" \
 		> cpver.h
 
-cppp.x : fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(LIBS)
-	- (cd ../../bin ; ln -fs ../CPV/src/cppp.x . )
+#cppp.x : fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS)
+#	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
+#	- (cd ../../bin ; ln -fs ../CPV/src/cppp.x . )
 
 wfdd.x : wfdd.o
-	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ wfdd.o $(QEMODS) $(QEFFT) $(QELA) $(UTIL) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../CPV/src/$@ . )
 
 tldeps :

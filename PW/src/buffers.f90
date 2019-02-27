@@ -570,7 +570,7 @@ contains
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: nword, unit, nrec
-    COMPLEX(DP), INTENT(IN) :: vect(nword)
+    COMPLEX(DP), INTENT(INOUT) :: vect(nword)
     INTEGER :: ierr
     !
     ierr = buiol_check_unit (unit)

@@ -2,18 +2,15 @@
 
 include ../../make.inc
 
-IFLAGS         = -I../../include
-
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../../PW/src \
-          $(MOD_FLAG)../../KS_Solvers/CG \
-          $(MOD_FLAG)../../KS_Solvers/Davidson \
           $(MOD_FLAG)../../dft-d3 \
           $(MOD_FLAG)../../LR_Modules
 
-QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a ../../KS_Solvers/Davidson/libdavid.a ../../KS_Solvers/CG/libcg.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
+         ../../KS_Solvers/libks_solvers.a \
+         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 PWOBJS = ../../PW/src/libpw.a
 LRMODS = ../../LR_Modules/liblrmod.a
 
@@ -46,7 +43,6 @@ lr_exx_kernel.o \
 lr_calc_dens_eels.o \
 lr_calc_dens_eels_nc.o \
 lr_apply_liouvillian_eels.o \
-lr_addusddens.o \
 lr_addus_dvpsi.o \
 lr_run_nscf.o \
 lr_setup_nscf.o \
@@ -59,9 +55,10 @@ lr_dav_variables.o\
 lr_dav_routines.o\
 lr_us.o\
 lr_test_restart.o\
-lr_dav_debug.o
+lr_dav_debug.o\
+plugin_tddfpt_potential.o
 
-TLDEPS=bindir libs pw-lib libfft libla lrmods
+TLDEPS=phlibs
 
 all : tldeps libtddfpt.a turbo_lanczos.x turbo_davidson.x turbo_eels.x
 
@@ -71,19 +68,19 @@ libtddfpt.a : $(LROBJS)
 
 turbo_lanczos.x : lr_main.o libtddfpt.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		lr_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		lr_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
 turbo_davidson.x : lr_dav_main.o libtddfpt.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		lr_dav_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		lr_dav_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
 turbo_eels.x : lr_eels_main.o libtddfpt.a $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-                lr_eels_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+                lr_eels_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 

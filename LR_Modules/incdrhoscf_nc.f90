@@ -23,7 +23,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum, dpsi)
   USE noncollin_module,     ONLY : npol, nspin_mag
   USE uspp_param,           ONLY : nhm
   USE wvfct,                ONLY : npwx, nbnd
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE klist,                ONLY : ngk,igk_k
   USE qpoint,               ONLY : ikks, ikqs
   USE control_lr,           ONLY : nbnd_occ

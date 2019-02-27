@@ -7,7 +7,7 @@
   ! present distribution, or http://www.gnu.org/copyleft.gpl.txt .             
   !                                                                            
   !-----------------------------------------------------------------------
-  SUBROUTINE selfen_pl_q ( iq )
+  SUBROUTINE selfen_pl_q ( iqq, iq, totq )
   !-----------------------------------------------------------------------
   !
   !  Compute the imaginary part of the electron self energy due to electron-
@@ -28,22 +28,30 @@
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE io_epw,        ONLY : linewidth_elself
-  USE epwcom,        ONLY : nbndsub, fsthick, eptemp, ngaussw, degaussw, &
-                            efermi_read, fermi_energy, & 
+  USE epwcom,        ONLY : nbndsub, fsthick, eptemp, ngaussw,  &
+                            efermi_read, fermi_energy, degaussw,& 
                             nel, meff, epsiHEG 
   USE pwcom,         ONLY : ef
-  USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, &
-                            nkf, nqtotf, wqf, xkf, nkqtotf, &
-                            sigmar_all, sigmai_all, sigmai_mode, zi_all, efnew, & 
-                            xqf, dmef  
+  USE elph2,         ONLY : etf, ibndmin, ibndmax, nkqf, xqf, dmef, &
+                            nkf, wqf, xkf, nkqtotf, efnew,  &
+                            sigmar_all, sigmai_all, sigmai_mode, zi_all
   USE constants_epw, ONLY : ryd2mev, one, ryd2ev, two, zero, pi, ci, eps6
   USE mp,            ONLY : mp_barrier, mp_sum
   USE mp_global,     ONLY : inter_pool_comm 
   use cell_base,     ONLY : omega, alat, bg
+  USE division,      ONLY : fkbounds
   ! 
   implicit none
   !
-  INTEGER :: ik, ikk, ikq, ibnd, jbnd, iq, fermicount
+  INTEGER, INTENT (IN) :: iqq
+  !! Q-index from the selected q
+  INTEGER, INTENT (IN) :: iq 
+  !! Q-index from the global q
+  INTEGER, INTENT (IN) :: totq
+  !! Number of q-points in selecq window
+  ! 
+  ! Local varialbes
+  INTEGER :: ik, ikk, ikq, ibnd, jbnd, fermicount
   INTEGER :: nksqtotf, lower_bnd, upper_bnd
   INTEGER :: n
   !! Integer for the degenerate average over eigenstates
@@ -79,7 +87,7 @@
   inv_eptemp0  = 1.0/eptemp
   inv_degaussw = 1.0/degaussw
   !
-  IF ( iq .eq. 1 ) THEN
+  IF ( iqq == 1 ) THEN
      !
      WRITE(stdout,'(/5x,a)') repeat('=',67)
      WRITE(stdout,'(5x,"Electron-plasmon Self-Energy in the Migdal Approximation")')
@@ -107,7 +115,7 @@
     !
   ENDIF
   !
-  IF ( iq .eq. 1 ) THEN 
+  IF ( iqq == 1 ) THEN 
     WRITE (stdout, 100) degaussw * ryd2ev, ngaussw
     WRITE (stdout,'(a)') ' '
   ENDIF
@@ -154,7 +162,7 @@
   CALL get_eps_mahan (qin,rs,kF,eps0) ! qin should be in atomic units for Mahan formula
   deltaeps = -(1.d0/(epsiHEG+eps0-1.d0)-1.d0/epsiHEG)
   !
-  IF (iq .EQ. 1) THEN 
+  IF (iqq == 1) THEN 
     WRITE(stdout,'(12x," nel       = ", E15.10)') nel
     WRITE(stdout,'(12x," meff      = ", E15.10)') meff
     WRITE(stdout,'(12x," rs        = ", E15.10)') rs
@@ -337,7 +345,7 @@
   !
   ! The k points are distributed among pools: here we collect them
   !
-  IF ( iq .eq. nqtotf ) THEN
+  IF ( iqq == totq ) THEN
      !
      ALLOCATE ( xkf_all      ( 3,       nkqtotf ), &
                 etf_all      ( nbndsub, nkqtotf ) )

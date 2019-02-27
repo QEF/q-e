@@ -25,7 +25,7 @@ SUBROUTINE deallocate_modules_var()
   USE local_pseudo,         ONLY : deallocate_local_pseudo
   USE qgb_mod,              ONLY : deallocate_qgb_mod
   USE betax,                ONLY : deallocate_betax
-  USE wavefunctions_module, ONLY : deallocate_wavefunctions
+  USE wavefunctions, ONLY : deallocate_wavefunctions
   USE wannier_module,       ONLY : deallocate_wannier
   USE fft_types,            ONLY : fft_type_descriptor, fft_type_deallocate
   USE fft_smallbox_type,    ONLY : fft_box_deallocate
@@ -59,7 +59,8 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_cg( )
   CALL deallocate_core()
   CALL deallocate_uspp()
-  CALL deallocate_gvect()
+  CALL deallocate_gvect(.TRUE.) ! Value .true. is hard coded in init.f90:195,
+                                !  here it prevents double free of gg variable.
   CALL deallocate_gvecw()
   CALL deallocate_smallbox_gvec( )
   CALL deallocate_local_pseudo()

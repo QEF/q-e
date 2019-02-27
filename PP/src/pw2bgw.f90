@@ -427,7 +427,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
   USE mp_bands, ONLY : intra_bgrp_comm, nbgrp
   USE start_k, ONLY : nk1, nk2, nk3, k1, k2, k3
   USE symm_base, ONLY : s, ftau, nsym
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE wvfct, ONLY : npwx, nbnd, et, wg
   USE gvecw, ONLY : ecutwfc
   USE matrix_inversion
@@ -727,6 +727,7 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
 
   npw_g = MAXVAL ( igk_l2g ( :, : ) )
   CALL mp_max( npw_g, intra_pool_comm )
+  CALL mp_max( npw_g, inter_pool_comm )
 
   npwx_g = MAXVAL ( ngk_g ( : ) )
 
@@ -809,6 +810,9 @@ SUBROUTINE write_wfng ( output_file_name, real_or_complex, symm_type, &
       ENDDO
     ENDIF
     CALL mp_sum( itmp, intra_bgrp_comm )
+    !XXX
+    CALL mp_sum( itmp, inter_pool_comm )
+    !XXX
     ngg = 0
     DO ig = 1, npw_g
       IF ( itmp ( ig ) .EQ. ig ) THEN
@@ -1222,7 +1226,7 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type, &
   USE lsda_mod, ONLY : nspin
   USE mp, ONLY : mp_sum
   USE mp_bands, ONLY : intra_bgrp_comm
-  USE scf, ONLY : rho
+  USE scf, ONLY : rho, rhoz_or_updw
   USE symm_base, ONLY : s, ftau, nsym
   USE matrix_inversion
 
@@ -1345,7 +1349,9 @@ SUBROUTINE write_rhog ( output_file_name, real_or_complex, symm_type, &
 
   IF ( rhog_nvmin .NE. 0 .AND. rhog_nvmax .NE. 0 ) &
     CALL calc_rhog ( rhog_nvmin, rhog_nvmax )
-
+    !
+    IF ( nspin==2 ) CALL rhoz_or_updw(rho, 'r_and_g', 'updw_rhoz')
+    !
   ALLOCATE ( g_g ( nd, ng_g ) )
   ALLOCATE ( rhog_g ( ng_g, ns ) )
 
@@ -1435,7 +1441,7 @@ SUBROUTINE calc_rhog (rhog_nvmin, rhog_nvmax)
   USE noncollin_module, ONLY : nspin_mag
   USE scf, ONLY : rho
   USE symme, ONLY : sym_rho, sym_rho_init
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE wvfct, ONLY : wg
 
   IMPLICIT NONE
@@ -1508,7 +1514,7 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
   USE symm_base, ONLY : s, ftau, nsym
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE matrix_inversion
 
   IMPLICIT NONE
@@ -1654,7 +1660,9 @@ SUBROUTINE write_vxcg ( output_file_name, real_or_complex, symm_type, &
     rho_core ( : ) = 0.0D0
     rhog_core ( : ) = ( 0.0D0, 0.0D0 )
   ENDIF
+  !
   CALL v_xc ( rho, rho_core, rhog_core, etxc, vtxc, vxcr_g )
+  !
   DO is = 1, ns
     DO ir = 1, nr
       psic ( ir ) = CMPLX ( vxcr_g ( ir, is ), 0.0D0, KIND=dp )
@@ -1719,7 +1727,7 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core )
   USE mp, ONLY : mp_sum
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
 
   IMPLICIT NONE
 
@@ -1751,7 +1759,9 @@ SUBROUTINE write_vxc0 ( output_file_name, vxc_zero_rho_core )
     rho_core ( : ) = 0.0D0
     rhog_core ( : ) = ( 0.0D0, 0.0D0 )
   ENDIF
+  !
   CALL v_xc ( rho, rho_core, rhog_core, etxc, vtxc, vxcr_g )
+  !
   DO is = 1, ns
     DO ir = 1, nr
       psic ( ir ) = CMPLX ( vxcr_g ( ir, is ), 0.0D0, KIND=dp )
@@ -1813,7 +1823,7 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE wvfct, ONLY : nbnd
 
   IMPLICIT NONE
@@ -1878,8 +1888,9 @@ SUBROUTINE write_vxc_r (output_file_name, diag_nmin, diag_nmax, &
     rho_core ( : ) = 0.0D0
     rhog_core ( : ) = ( 0.0D0, 0.0D0 )
   ENDIF
+  !
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)
-
+  !
   DO ik = iks, ike
     npw = ngk ( ik - iks + 1 )
     CALL davcio (evc, 2*nwordwfc, iunwfc, ik - iks + 1, -1)
@@ -2000,7 +2011,7 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
   USE mp_pools, ONLY : inter_pool_comm
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : rho, rho_core, rhog_core
-  USE wavefunctions_module, ONLY : evc, psic
+  USE wavefunctions, ONLY : evc, psic
   USE wvfct, ONLY : npwx, nbnd
 
   IMPLICIT NONE
@@ -2066,8 +2077,9 @@ SUBROUTINE write_vxc_g (output_file_name, diag_nmin, diag_nmax, &
     rho_core ( : ) = 0.0D0
     rhog_core ( : ) = ( 0.0D0, 0.0D0 )
   ENDIF
+  !
   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxcr)
-
+  !
   DO ik = iks, ike
     ikk = ik - iks + 1
     npw = ngk ( ik - iks + 1 )
@@ -2207,7 +2219,7 @@ SUBROUTINE write_vscg ( output_file_name, real_or_complex, symm_type )
   USE mp_bands, ONLY : intra_bgrp_comm
   USE scf, ONLY : vltot, v
   USE symm_base, ONLY : s, ftau, nsym
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE matrix_inversion
 
   IMPLICIT NONE

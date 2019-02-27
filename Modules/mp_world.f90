@@ -9,10 +9,7 @@
 MODULE mp_world
   !----------------------------------------------------------------------------
   !
-  USE mp, ONLY : mp_barrier, mp_start, mp_end, mp_stop 
-#if !defined(__GFORTRAN__) || ((__GNUC__>4) || ((__GNUC__==4) && (__GNUC_MINOR__>=8)))
-  USE mp, ONLY : mp_count_nodes
-#endif
+  USE mp, ONLY : mp_barrier, mp_start, mp_end, mp_stop, mp_count_nodes 
   USE io_global, ONLY : meta_ionode_id, meta_ionode
   !
   USE parallel_include

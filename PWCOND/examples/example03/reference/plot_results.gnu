@@ -33,18 +33,18 @@ pause -1  "Hit return to continue"
 
 ## extract the number of channels
 ! echo "# channels" > nch.tmp
-! grep Nchannels COatAuwire.cond.out  | cut -d\= -f2 >> nch.tmp
+! grep Nchannels COatAuwire.cond.out  | cut -d= -f2 >> nch.tmp
 ! echo "# channels" > nchU.tmp
-! grep Nchannels COatAuwireU.cond.out | cut -d\= -f2 >> nchU.tmp
+! grep Nchannels COatAuwireU.cond.out | cut -d= -f2 >> nchU.tmp
 
 #2. compare the ballistic transmission for CO@Au chain
 set xlabel 'E - E_F  (eV)'
 set ylabel 'Transmittance'
 set arrow from 0,graph 0 to 0,graph 1 as 1
 set xrange [-1.0:1.0]
-plot 'trans.AuwireCO'  u 1:(0.5*$2) w lp ls 11 title 'T(U=0)', \
+plot 'trans.AuwireCO'  u 1:2 w lp ls 11 title 'T(U=0)', \
      '< paste trans.AuwireCO nch.tmp'  u 1:3 w lp ls 12 title 'N(U=0)', \
-     'transU.AuwireCO' u 1:(0.5*$2) w lp ls 21 title 'T(U=3)',\
+     'transU.AuwireCO' u 1:2 w lp ls 21 title 'T(U=3)',\
      '< paste transU.AuwireCO nchU.tmp'  u 1:3 w lp ls 22 title 'N(U=3)'
 
 

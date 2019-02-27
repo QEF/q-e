@@ -60,6 +60,8 @@
   !! If 0 calculates the Lindhard screening, if 1 the Thomas-Fermi screening
   INTEGER :: bnd_cum
   !! band index for which the cumulant calculation is done
+  INTEGER :: mob_maxiter
+  !! Maximum number of iteration for the IBTE
   !
   ! Superconductivity
   INTEGER :: nswfc
@@ -196,10 +198,6 @@
   !! if .TRUE. calculate plasmon spectral function
   LOGICAL :: wannierize
   !! if .TRUE. run the wannier90 code
-  LOGICAL :: parallel_k
-  !! if .TRUE. scatter the electron k-points on the fine mesh among pools (not q)
-  LOGICAL :: parallel_q
-  !! if .TRUE. scatter the phonon q-points on the fine mesh among pools (not k)
   LOGICAL :: a2f
   !! if .TRUE. calculate Eliashberg spectral electron function from selfen_phon
   LOGICAL :: write_wfn
@@ -248,6 +246,12 @@
   !! if .true. then fix the gauge when diagonalizing the interpolated dynamical matrix and electronic Hamiltonian. 
   LOGICAL :: lindabs
   !! if .true., perform phonon-assisted absorption calculations
+  LOGICAL :: use_ws
+  !! if .true., use Wannier-centers to compute the Wigner-Seitz cell. 
+  LOGICAL :: epmatkqread
+  !! if .true., restart and IBTE calculation from the scattering rates written to files. 
+  LOGICAL :: selecqread
+  !! if .true., restart from the selecq.fmt file
   !
   ! Superconductivity
   LOGICAL :: ephwrite
@@ -299,8 +303,13 @@
   !! directory for .dvscf and .dyn files (wannier interpolation)
   CHARACTER(len=80) :: fileig 
   !! output file for the electron-phonon coefficients
-  CHARACTER(len=256), dimension(200) :: proj, wdata 
-  !! projections and any extra info for W90 
+  CHARACTER(len=256), dimension(200) :: proj 
+  !! projections for W90 
+  CHARACTER(len=256) :: bands_skipped
+  !! k-point independent list of bands excluded from the calculation 
+  !! of overlap and projection matrices in W90
+  CHARACTER(len=256), dimension(200) :: wdata
+  !! any extra info for W90
   CHARACTER(LEN=75) :: title 
   !! ...  title of the simulation  
   CHARACTER(LEN=10)  :: asr_typ
@@ -322,23 +331,6 @@ MODULE klist_epw
   REAL(DP) :: xk_cryst(3,npk) ! List of all kpoints in crystal coordinates
   ! 
 END MODULE klist_epw
-!
-MODULE units_epw
-  !!
-  !! ... the units of the files and the record lengths
-  !!
-  SAVE
-  !
-  INTEGER :: lrepmatf
-  !INTEGER :: iudvscf0
-  !
-  ! iudvscf0: the unit where the delta Vscf is read to generate the fake perturbation 
-  ! lrepmatf: the length of the record for the electron-phonon matrix
-  !
-  logical, ALLOCATABLE :: this_dvkb3_is_on_file(:), &
-                          this_pcxpsi_is_on_file(:,:)
-  !
-END MODULE units_epw
 !
 !
 MODULE output_epw
@@ -366,7 +358,6 @@ END MODULE output_epw
 !
 MODULE epwcom
   USE control_epw
-  USE units_epw
   USE output_epw
   USE klist_epw
 END MODULE epwcom

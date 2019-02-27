@@ -19,7 +19,7 @@ USE io_global, ONLY : stdout, ionode, ionode_id
 USE mp_world, ONLY : mpime, nproc
 USE mp_pools, ONLY: intra_pool_comm
 USE mp_world,             ONLY : world_comm
-USE wavefunctions_module, ONLY :  psic
+USE wavefunctions, ONLY :  psic
 USE mp,          ONLY :mp_barrier
 
 !USE io_files,         ONLY : find_free_unit

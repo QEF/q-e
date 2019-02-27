@@ -57,7 +57,8 @@ CONTAINS
   INTEGER, INTENT(IN):: nks, nsym, t_rev(48), s(3,3,48), npk, &
                         k1, k2, k3, nk1, nk2, nk3
   LOGICAL, INTENT (IN) :: time_reversal
-  real(DP), INTENT(IN) :: at(3,3), bg(3,3), xk(3,npk)
+  real(DP), INTENT(IN) :: at(3,3), bg(3,3)
+  real(DP), INTENT(INOUT) :: xk(3,npk)
   !
   real(DP) :: xkr(3), deltap(3), deltam(3)
   real(DP), PARAMETER:: eps=1.0d-5
@@ -235,7 +236,9 @@ CONTAINS
   !
   REAL(dp),INTENT(IN) :: &
        & at(3,3), & ! Direct lattice vectors [Bohr]
-       & bg(3,3), & ! Reciplocal lattice vectors [2 pi / a]
+       & bg(3,3)    ! Reciplocal lattice vectors [2 pi / a]
+  !
+  REAL(dp),INTENT(INOUT) :: &
        & xk(3,npk)  ! k points [2 pi / a]
   !
   REAL(dp),PARAMETER :: eps = 1e-5_dp
@@ -866,7 +869,7 @@ SUBROUTINE opt_tetra_weights_only(nks, nspin, nbnd, ntetra, tetra, et, ef, wg, i
 END SUBROUTINE opt_tetra_weights_only
 !
 !--------------------------------------------------------------------
-subroutine tetra_dos_t (et, nspin, nbnd, nks, e, dost)
+subroutine tetra_dos_t (et, nspin, nbnd, nks, e, dost, dosint)
   !------------------------------------------------------------------
   !
   USE kinds, only : DP
@@ -875,6 +878,7 @@ subroutine tetra_dos_t (et, nspin, nbnd, nks, e, dost)
 
   real(DP), intent(in) :: et (nbnd, nks), e
   REAL(dp), INTENT(OUT):: dost (2)
+  REAL(dp),OPTIONAL,INTENT(OUT)  :: dosint(2)
   !
   integer :: itetra (4), nk, ns, nt, ibnd, i
   real(DP) :: etetra (4), e1, e2, e3, e4
@@ -887,6 +891,7 @@ subroutine tetra_dos_t (et, nspin, nbnd, nks, e, dost)
   endif
   do ns = 1, nspin0
      dost (ns) = 0.d0
+     if (present(dosint)) dosint(ns) = 0.d0
      !
      ! nk is used to select k-points with up (ns=1) or down (ns=2) spin
      !
@@ -907,16 +912,25 @@ subroutine tetra_dos_t (et, nspin, nbnd, nks, e, dost)
            e2 = etetra (2)
            e3 = etetra (3)
            e4 = etetra (4)
-           if (e.lt.e4.and.e.ge.e3) then
+           if (e.ge.e4 ) then 
+              if (present(dosint)) dosint(ns) = dosint(ns) + (1.d0 / ntetra) 
+           else if (e.lt.e4.and.e.ge.e3) then
               dost (ns) = dost (ns) + 1.d0 / ntetra * (3.0d0 * (e4 - e) **2 / &
                    (e4 - e1) / (e4 - e2) / (e4 - e3) )
+              if (present(dosint)) dosint(ns) = dosint(ns) + &
+                 (1.d0/ntetra) * ( 1.d0 - ( e4 - e)**3/((e4 - e1)*(e4 - e2)*(e4 - e3))) 
            elseif (e.lt.e3.and.e.ge.e2) then
               dost (ns) = dost (ns) + 1.d0 / ntetra / (e3 - e1) / (e4 - e1) &
                    * (3.0d0 * (e2 - e1) + 6.0d0 * (e-e2) - 3.0d0 * (e3 - e1 + e4 - e2) &
                    / (e3 - e2) / (e4 - e2) * (e-e2) **2)
-           elseif (e.lt.e2.and.e.gt.e1) then
-              dost (ns) = dost (ns) + 1.d0 / ntetra * 3.0d0 * (e-e1) **2 / &
+              if (present(dosint)) dosint(ns) = dosint(ns) + (1.d0/ntetra) / (e3 - e1) / (e4 - e1) * &
+                        ( (e2 -e1)**2 + 3.d0 * (e2 - e1) *(e - e2) +3.d0*(e - e2)**2 - & 
+                        (e3 - e1 +e4 -e2 ) / (e3 - e2 ) / (e4 - e2) * (e - e2) **3)
+           elseif (e.lt.e2.and.e.gt.e1) then 
+              dost (ns) = dost (ns) + (1.d0 / ntetra) * 3.0d0 * (e-e1) **2 / &
                    (e2 - e1) / (e3 - e1) / (e4 - e1)
+              if ( present(dosint)) &
+                 dosint(ns) = dosint(ns) + (1.d0/ntetra) * ((e -e1)**3)/(e2 -e1)/(e3-e1)/(e4-e1) 
            endif
         enddo
 
@@ -926,6 +940,7 @@ subroutine tetra_dos_t (et, nspin, nbnd, nks, e, dost)
      ! noncollinear calculations 
 
      if ( nspin == 1 ) dost (ns) = dost (ns) * 2.d0
+     if (present(dosint) .and. nspin==1) dosint(ns) = dosint(ns) *2.d0 
 
   enddo
   return
@@ -934,13 +949,14 @@ end subroutine tetra_dos_t
 ! Optimized tetrahedron method
 !
 !--------------------------------------------------------------------
-SUBROUTINE opt_tetra_dos_t (et, nspin, nbnd, nks, e, dost)
+SUBROUTINE opt_tetra_dos_t (et, nspin, nbnd, nks, e, dost, dosint)
   !------------------------------------------------------------------
   !
   implicit none
   integer :: nspin, nbnd, nks
 
   real(DP) :: et (nbnd, nks), e, dost (2)
+  real(DP),OPTIONAL   :: dosint(2) 
   integer :: itetra (4), nk, ns, nt, ibnd, i
 
   real(DP) :: etetra (4), e1, e2, e3, e4
@@ -953,6 +969,7 @@ SUBROUTINE opt_tetra_dos_t (et, nspin, nbnd, nks, e, dost)
   endif
   do ns = 1, nspin0
      dost (ns) = 0.d0
+     if (present(dosint)) dosint(ns) = 0.d0
      !
      ! nk is used to select k-points with up (ns=1) or down (ns=2) spin
      !
@@ -974,16 +991,25 @@ SUBROUTINE opt_tetra_dos_t (et, nspin, nbnd, nks, e, dost)
            e2 = etetra (2)
            e3 = etetra (3)
            e4 = etetra (4)
-           if (e.lt.e4.and.e.ge.e3) then
+           if (e.ge.e4 ) then 
+              if (present(dosint)) dosint(ns) = dosint(ns) + (1.d0 / ntetra) 
+           else if (e.lt.e4.and.e.ge.e3) then
               dost (ns) = dost (ns) + 1.d0 / ntetra * (3.0d0 * (e4 - e) **2 / &
                    (e4 - e1) / (e4 - e2) / (e4 - e3) )
+              if (present(dosint)) dosint(ns) = dosint(ns) + &
+                 (1.d0/ntetra) * ( 1.d0 - ( e4 - e)**3/((e4 - e1)*(e4 - e2)*(e4 - e3))) 
            elseif (e.lt.e3.and.e.ge.e2) then
               dost (ns) = dost (ns) + 1.d0 / ntetra / (e3 - e1) / (e4 - e1) &
                    * (3.0d0 * (e2 - e1) + 6.0d0 * (e-e2) - 3.0d0 * (e3 - e1 + e4 - e2) &
                    / (e3 - e2) / (e4 - e2) * (e-e2) **2)
+              if (present(dosint)) dosint(ns) = dosint(ns) + (1.d0/ntetra) / (e3 - e1) / (e4 - e1) * &
+                        ( (e2 -e1)**2 + 3.d0 * (e2 - e1) *(e - e2) +3.d0*(e - e2)**2 - & 
+                        (e3 - e1 +e4 -e2 ) / (e3 - e2 ) / (e4 - e2) * (e - e2) **3)
            elseif (e.lt.e2.and.e.gt.e1) then
               dost (ns) = dost (ns) + 1.d0 / ntetra * 3.0d0 * (e-e1) **2 / &
                    (e2 - e1) / (e3 - e1) / (e4 - e1)
+           if ( present(dosint)) &
+                 dosint(ns) = dosint(ns) + (1.d0/ntetra) * ((e -e1)**3)/(e2 -e1)/(e3-e1)/(e4-e1) 
            endif
         enddo
 
@@ -992,8 +1018,10 @@ SUBROUTINE opt_tetra_dos_t (et, nspin, nbnd, nks, e, dost)
      ! add correct spin normalization : 2 for LDA, 1 for LSDA or
      ! noncollinear calculations 
 
-     if ( nspin == 1 ) dost (ns) = dost (ns) * 2.d0
-
+     if ( nspin == 1 ) then 
+        dost (ns) = dost (ns) * 2.d0
+        if (present(dosint)) dosint(ns) = dosint(ns) * 2.d0 
+     end if
   enddo
   return
 end SUBROUTINE opt_tetra_dos_t

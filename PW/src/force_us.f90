@@ -19,11 +19,11 @@ SUBROUTINE force_us( forcenl )
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g
   USE uspp,                 ONLY : nkb, vkb, qq_at, deeq, qq_so, deeq_nc, indv_ijkb0
-  USE uspp_param,           ONLY : upf, nh, newpseudo, nhm
+  USE uspp_param,           ONLY : upf, nh, nhm
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE symme,                ONLY : symvector
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE noncollin_module,     ONLY : npol, noncolin
   USE spin_orb,             ONLY : lspinorb
   USE io_files,             ONLY : iunwfc, nwordwfc
@@ -71,13 +71,13 @@ SUBROUTINE force_us( forcenl )
      CALL calbec ( npw, vkb, evc, becp )
      !
      DO ipol = 1, 3
+!$omp parallel do collapse(2) private(ig)
         DO jkb = 1, nkb
-!$omp parallel do default(shared) private(ig)
            do ig = 1, npw
               vkb1(ig,jkb) = vkb(ig,jkb) * (0.D0,-1.D0) * g(ipol,igk_k(ig,ik))
            END DO
-!$omp end parallel do
         END DO
+!$omp end parallel do
         !
         CALL calbec ( npw, vkb1, evc, dbecp )
         !
@@ -230,7 +230,7 @@ SUBROUTINE force_us( forcenl )
                       END IF
                    END DO
                    !
-                   IF ( upf(nt)%tvanp .OR. newpseudo(nt) ) THEN
+                   IF ( upf(nt)%tvanp .OR. upf(nt)%is_multiproj ) THEN
                       DO ih = 1, nh(nt)
                          ikb = ijkb0 + ih
                          !

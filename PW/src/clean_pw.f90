@@ -24,12 +24,10 @@ SUBROUTINE clean_pw( lflag )
   USE basis,                ONLY : swfcatom
   USE cellmd,               ONLY : lmovecell
   USE ions_base,            ONLY : deallocate_ions_base
-  USE gvect,                ONLY : g, gg, gl, igtongl, mill, &
-                                   eigts1, eigts2, eigts3
   USE fixed_occ,            ONLY : f_inp
   USE ktetra,               ONLY : deallocate_tetra
   USE klist,                ONLY : deallocate_igk
-  USE gvect,                ONLY : ig_l2g
+  USE gvect,                ONLY : deallocate_gvect
   USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : g2kin, et, wg, btype
   USE force_mod,            ONLY : force
@@ -37,7 +35,7 @@ SUBROUTINE clean_pw( lflag )
                                    vrs, kedtau, destroy_scf_type, vnew
   USE symm_base,            ONLY : irt
   USE symme,                ONLY : sym_rho_deallocate
-  USE wavefunctions_module, ONLY : evc, psic, psic_nc
+  USE wavefunctions, ONLY : evc, psic, psic_nc
   USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
   USE uspp_param,           ONLY : upf
@@ -66,6 +64,7 @@ SUBROUTINE clean_pw( lflag )
   !
   USE control_flags,        ONLY : ts_vdw
   USE tsvdw_module,         ONLY : tsvdw_finalize
+  USE dftd3_qe,             ONLY : dftd3_clean
   !
   IMPLICIT NONE
   !
@@ -95,6 +94,7 @@ SUBROUTINE clean_pw( lflag )
      !
      CALL dealloca_london()
      CALL cleanup_xdm()
+     CALL dftd3_clean()
      CALL deallocate_constraint()
      CALL deallocate_tetra ( )
      !
@@ -106,21 +106,14 @@ SUBROUTINE clean_pw( lflag )
   !
   IF ( ALLOCATED( f_inp ) .and. lflag )      DEALLOCATE( f_inp )
   !
-  ! ... arrays allocated in ggen.f90
+  ! ... arrays in gvect module
   !
-  IF ( ALLOCATED( ig_l2g ) )     DEALLOCATE( ig_l2g )
-  IF ( .NOT. lmovecell ) THEN
-     IF ( ASSOCIATED( gl ) )     DEALLOCATE ( gl )
-  END IF
+  CALL deallocate_gvect(lmovecell)
   !
   CALL sym_rho_deallocate ( )
   !
   ! ... arrays allocated in allocate_fft.f90 ( and never deallocated )
   !
-  IF ( ALLOCATED( g ) )          DEALLOCATE( g )
-  IF ( ALLOCATED( gg ) )         DEALLOCATE( gg )
-  IF ( ALLOCATED( igtongl ) )    DEALLOCATE( igtongl )  
-  IF ( ALLOCATED( mill ) )       DEALLOCATE( mill )
   call destroy_scf_type(rho)
   call destroy_scf_type(v)
   call destroy_scf_type(vnew)
@@ -141,9 +134,6 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( cutoff_2D ) )  DEALLOCATE( cutoff_2D )
   IF ( ALLOCATED( lr_Vloc ) )    DEALLOCATE( lr_Vloc )
   IF ( ALLOCATED( strf ) )       DEALLOCATE( strf )
-  IF ( ALLOCATED( eigts1 ) )     DEALLOCATE( eigts1 )
-  IF ( ALLOCATED( eigts2 ) )     DEALLOCATE( eigts2 )
-  IF ( ALLOCATED( eigts3 ) )     DEALLOCATE( eigts3 )
   !
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
@@ -210,7 +200,7 @@ SUBROUTINE clean_pw( lflag )
   !
   IF (ts_vdw) CALL tsvdw_finalize()
   !
-  CALL plugin_clean( lflag )
+  CALL plugin_clean( 'PW', lflag )
   !
   RETURN
   !

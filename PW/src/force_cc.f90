@@ -24,7 +24,7 @@ subroutine force_cc (forcecc)
   USE scf,                  ONLY : rho, rho_core, rhog_core
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin
-  USE wavefunctions_module, ONLY : psic
+  USE wavefunctions, ONLY : psic
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp,                   ONLY : mp_sum
   !
@@ -35,7 +35,7 @@ subroutine force_cc (forcecc)
   real(DP) :: forcecc (3, nat)
   ! output: the local forces on atoms
 
-  integer :: ipol, ig, ir, nt, na
+  integer :: ig, ir, nt, na
   ! counter on polarizations
   ! counter on G vectors
   ! counter on FFT grid points
@@ -91,19 +91,19 @@ subroutine force_cc (forcecc)
 
         call drhoc (ngl, gl, omega, tpiba2, msh(nt), rgrid(nt)%r,&
              rgrid(nt)%rab, upf(nt)%rho_atc, rhocg)
+!$omp parallel do private(arg)
         do na = 1, nat
            if (nt.eq.ityp (na) ) then
               do ig = gstart, ngm
                  arg = (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
                       + g (3, ig) * tau (3, na) ) * tpi
-                 do ipol = 1, 3
-                    forcecc (ipol, na) = forcecc (ipol, na) + tpiba * omega * &
+                 forcecc (1:3, na) = forcecc (1:3, na) + tpiba * omega * &
                          rhocg (igtongl (ig) ) * CONJG(psic (dfftp%nl (ig) ) ) * &
-                         CMPLX( sin (arg), cos (arg) ,kind=DP) * g (ipol, ig) * fact
-                 enddo
+                         CMPLX( sin (arg), cos (arg), kind=DP) * g (1:3, ig) * fact
               enddo
            endif
         enddo
+!$omp end parallel do
      endif
   enddo
   !

@@ -15,16 +15,16 @@
      USE io_global,             ONLY : stdout, ionode,ionode_id
      USE io_files,              ONLY : diropn,prefix, tmp_dir
      use pwcom
-     USE wavefunctions_module,  ONLY : evc
+     USE wavefunctions,  ONLY : evc
      USE kinds,                 ONLY : DP
      USE gvect,                 ONLY : g, ig_l2g, gstart
      USE mp,           ONLY : mp_sum, mp_barrier, mp_bcast
-     USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
+     USE mp_pools,              ONLY : inter_pool_comm, intra_pool_comm
      USE mp_wave, ONLY : mergewf,splitwf
      USE mp_world, ONLY : mpime, nproc, world_comm
      USE fft_base,             ONLY : dfftp, dffts
      USE fft_interfaces,       ONLY : fwfft, invfft
-     USE wavefunctions_module, ONLY : psic
+     USE wavefunctions, ONLY : psic
      USE wvfct,    ONLY : et
      USE lsda_mod,             ONLY : nspin
      USE wannier_gw,           ONLY : max_ngm, l_truncated_coulomb,vg_q,truncation_radius

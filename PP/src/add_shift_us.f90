@@ -20,11 +20,11 @@ SUBROUTINE add_shift_us( shift_nl )
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : g, ngm
   USE uspp,                 ONLY : nkb, vkb, qq_nt, deeq
-  USE uspp_param,           ONLY : upf, nh, newpseudo
+  USE uspp_param,           ONLY : upf, nh
   USE wvfct,                ONLY : nbnd, wg, et
   USE lsda_mod,             ONLY : lsda, isk
   USE symme,                ONLY : symscalar
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE becmod,               ONLY : calbec
   !
@@ -56,8 +56,8 @@ SUBROUTINE add_shift_us( shift_nl )
        !
        ! ... calculation at gamma
        !
-       USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
-       USE mp,                   ONLY: mp_sum
+       USE mp_pools,            ONLY: inter_pool_comm, intra_pool_comm
+       USE mp,                  ONLY: mp_sum
 
        IMPLICIT NONE
        !
@@ -99,7 +99,7 @@ SUBROUTINE add_shift_us( shift_nl )
                                       rbecp(ikb,ibnd) * rbecp(ikb,ibnd)
                       ENDDO
                       !
-                      IF ( upf(nt)%tvanp .or. newpseudo(nt) ) THEN
+                      IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
                          !
                          ! ... in US case there is a contribution for jh<>ih.
                          ! ... We use here the symmetry in the interchange
@@ -146,8 +146,8 @@ SUBROUTINE add_shift_us( shift_nl )
      SUBROUTINE add_shift_us_k()
        !-----------------------------------------------------------------------
        !
-       USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
-       USE mp,                   ONLY: mp_sum
+       USE mp_pools,            ONLY: inter_pool_comm, intra_pool_comm
+       USE mp,                  ONLY: mp_sum
 
        IMPLICIT NONE
        !
@@ -190,7 +190,7 @@ SUBROUTINE add_shift_us( shift_nl )
                                                    becp(ikb,ibnd) )
                       ENDDO
                       !
-                      IF ( upf(nt)%tvanp .or. newpseudo(nt) ) THEN
+                      IF ( upf(nt)%tvanp .or. upf(nt)%is_multiproj ) THEN
                          !
                          ! ... in US case there is a contribution for jh<>ih.
                          ! ... We use here the symmetry in the interchange

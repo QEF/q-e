@@ -125,8 +125,6 @@ SUBROUTINE fft_qgradient (dfft, a, xq, g, ga)
   INTEGER  :: n, ipol
   COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
 
-  IF ( dfft%lgamma ) CALL errore( 'fft_qgradient', &
-       'not to be called with Gamma tricks', 1 )
   ALLOCATE (gaux(dfft%nnr))
   ALLOCATE (aux (dfft%nnr))
 
@@ -140,6 +138,7 @@ SUBROUTINE fft_qgradient (dfft, a, xq, g, ga)
      DO n = 1, dfft%ngm
         gaux(dfft%nl(n)) = CMPLX( 0.0_dp, xq (ipol) + g(ipol,n), kind=DP ) * &
              aux (dfft%nl(n))
+        IF ( dfft%lgamma ) gaux(dfft%nlm(n)) = CONJG( gaux (dfft%nl(n)) )
      END DO
      ! bring back to R-space, (\grad_ipol a)(r) ...
 
@@ -391,8 +390,6 @@ SUBROUTINE fft_qgraddot ( dfft, a, xq, g, da)
   INTEGER :: n, ipol
   COMPLEX(DP), allocatable :: aux (:)
 
-  IF ( dfft%lgamma ) CALL errore( 'fft_qgraddot', &
-       'not to be called with Gamma tricks', 1 )
   ALLOCATE (aux (dfft%nnr))
   da(:) = (0.0_dp, 0.0_dp)
   DO ipol = 1, 3
@@ -408,6 +405,11 @@ SUBROUTINE fft_qgraddot ( dfft, a, xq, g, da)
              CMPLX(0.0_dp, xq (ipol) + g (ipol, n),kind=DP) * aux(dfft%nl(n))
      END DO
   END DO
+  IF ( dfft%lgamma ) THEN
+     DO n = 1, dfft%ngm
+        da (dfft%nlm(n)) = CONJG( da (dfft%nl(n)) )
+     END DO
+  END IF
   !  bring back to R-space, (\grad_ipol a)(r) ...
   CALL invfft ('Rho', da, dfft)
   ! ...add the factor 2\pi/a  missing in the definition of q+G

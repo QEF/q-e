@@ -20,7 +20,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, dpsi)
   USE fft_interfaces,       ONLY : invfft
   USE wvfct,                ONLY : npwx, nbnd
   USE uspp_param,           ONLY : nhm
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions, ONLY : evc
   USE klist,                ONLY : ngk,igk_k
   USE qpoint,               ONLY : ikks, ikqs
   USE control_lr,           ONLY : nbnd_occ

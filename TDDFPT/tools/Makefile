@@ -1,25 +1,23 @@
 # Makefile for TDDFPT tools
 
 include ../../make.inc
-IFLAGS         = -I../../include
 
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
-          $(MOD_FLAG)../../KS_Solvers/CG \
-          $(MOD_FLAG)../../KS_Solvers/Davidson \
           $(MOD_FLAG)../../LR_Modules
 
-QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/CG/libcg.a ../../KS_Solvers/Davidson/libdavid.a \
+QEMODS = ../../Modules/libqemod.a \
+         ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
 PWOBJS = ../../PW/src/libpw.a
 
-TLDEPS=bindir libs pw
+TLDEPS=pwlibs
 
 all : tldeps turbo_spectrum.x
 
 turbo_spectrum.x : tddfpt_calculate_spectrum.o $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
-	tddfpt_calculate_spectrum.o $(QEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
+	tddfpt_calculate_spectrum.o $(QEMODS) $(PWOBJS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/tools/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../tools/$@ . ); fi
 
