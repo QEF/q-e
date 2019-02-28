@@ -60,6 +60,7 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=20) ::    temp_string 
        !
        !
        IF ( prog == 'PW' ) THEN
@@ -105,6 +106,10 @@ MODULE read_namelists_module
           pseudo_dir = TRIM( pseudo_dir ) // '/espresso/pseudo/'
        END IF
        !
+       ! ... max number of md steps added to the xml file. Needs to be limited for very long 
+       !     md simulations 
+       CALL get_environment_variable('MAX_XML_STEPS', temp_string) 
+            IF ( TRIM(temp_string) .NE.  ' ')  READ(temp_string, *) max_xml_steps 
        refg          = 0.05_DP
        max_seconds   = 1.E+7_DP
        ekin_conv_thr = 1.E-6_DP
