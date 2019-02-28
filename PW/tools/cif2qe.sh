@@ -472,7 +472,7 @@ if (SG==2) {
    cell_px[2]=c*cos(betar)
    cell_py[2]=c*(cos(alphar)-cos(betar)*cos(gammar))/sin(gammar)
    cell_pz[2]=c*sqrt(1.0 - cos(alphar)^2 - cos(betar)^2 - cos(gammar)^2 + 2*cos(alphar)*cos(betar)*cos(gammar))/sin(gammar)
-   print "\nCELL_PARAMETERS"
+   print "\nCELL_PARAMETERS {bohr}"
    for (i=0; i<3; i++) printf "  %19.14f   %19.14f   %19.14f\n", cell_px[i]/bohr, cell_py[i]/bohr, cell_pz[i]/bohr;
  }
  print "\n\n"

@@ -165,7 +165,8 @@ NAMELIST: &CONTROL
                            The resulting format is portable to a different number
                            of processor, or different kind of parallelization
                    
-                   .FALSE. do not collect wavefunctions, leave them in temporary
+                   .FALSE. OBSOLETE - NO LONGER IMPLEMENTED
+                           do not collect wavefunctions, leave them in temporary
                            local files (one per processor). The resulting format
                            is readable only on the same number of processors and
                            with the same kind of parallelization used to write it.
@@ -868,13 +869,16 @@ NAMELIST: &SYSTEM
    
    Type:           LOGICAL
    Default:        .FALSE.
-   Description:    if (.TRUE.) do not discard symmetry operations with an
-                   associated fractionary translation that does not send the
-                   real-space FFT grid into itself. These operations are
-                   incompatible with real-space symmetrization but not with the
-                   new G-space symmetrization. BEWARE: do not use for phonons
-                   and for hybrid functionals! Both still use symmetrization
-                   in real space.
+   Description:    if (.FALSE.) force real-space FFT grids to be commensurate with
+                   fractionary translations of non-symmorphic symmetry operations,
+                   if present (e.g.: if a fractional translation (0,0,c/4) exists,
+                   the FFT dimension along the c axis must be multiple of 4).
+                   if (.TRUE.) do not impose any constraints to FFT grids, even in
+                   the presence of non-symmorphic symmetry operations.
+                   BEWARE: use_all_frac=.TRUE. may lead to wrong results for
+                   hybrid functionals and phonon calculations. Both cases use
+                   symmetrization in real space that works for non-symmorphic
+                   operations only if the real-space FFT grids are commensurate.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1145,6 +1149,18 @@ NAMELIST: &SYSTEM
                    
                    Currently this defaults to the size of the k-point mesh used.
                    In QE =< 5.0.2 it defaulted to nqx1=nqx2=nqx3=1.
+   +--------------------------------------------------------------------
+   
+   +--------------------------------------------------------------------
+   Variable:       localization_thr
+   
+   Type:           REAL
+   Default:        0.0
+   Description:    Overlap threshold over which the exchange integral over a pair of localized orbitals
+                   is included in the evaluation of EXX operator. Any value greater than 0.0 triggers
+                   the SCDM localization and the evaluation on EXX using the localized orbitals.
+                   Very small value of the threshold should yield the same result as the default EXX
+                   evaluation
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -1710,9 +1726,13 @@ NAMELIST: &SYSTEM
    
    Type:           integer
    Default:        3
-   Description:    Version of Grimme implementation of Grimme-D3. Version=3 is Grimme-D3. Version=2
-                   is the original Grimme-D2 parametrization. NOTE: not all functionals are
-                   parametrized.
+   Description:    Version of Grimme implementation of Grimme-D3:
+                      Version=2 is the original Grimme-D2 parametrization
+                      Version=3 is Grimme-D3 (zero damping)
+                      Version=4 is Grimme-D3 (BJ damping)
+                      Version=5 is Grimme-D3M (zero damping)
+                      Version=6 is Grimme-D3M (BJ damping)
+                   NOTE: not all functionals are parametrized.
    +--------------------------------------------------------------------
    
    +--------------------------------------------------------------------
@@ -2652,6 +2672,9 @@ NAMELIST: &CELL
                    'all' :
                         all axis and angles are moved
     
+                   'ibrav' :
+                        all axis and angles are moved, but the lattice but be representable with the initial ibrav choice
+    
                    'x' :
                         only the x component of axis 1 (v1_x) is moved
     
@@ -3300,4 +3323,4 @@ CARD: ATOMIC_FORCES
 ===END OF CARD==========================================================
 
 
-This file has been created by helpdoc utility on Tue Aug 21 17:08:53 CEST 2018
+This file has been created by helpdoc utility on Wed Feb 27 11:34:54 CET 2019

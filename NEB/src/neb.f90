@@ -111,6 +111,7 @@ PROGRAM neb
   !
   CALL search_mep()
   !
+  CALL unset_mpi_comm_4_solvers()
   CALL stop_run_path( conv_path )
   !
   STOP

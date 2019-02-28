@@ -729,6 +729,11 @@ MODULE qes_write_module
            CALL xml_addCharacters(xp, obj%ecutvcut, fmt='s16')
         CALL xml_EndElement(xp, "ecutvcut")
      END IF
+     IF (obj%localization_threshold_ispresent) THEN
+        CALL xml_NewElement(xp, "localization_threshold")
+           CALL xml_addCharacters(xp, obj%localization_threshold, fmt='s16')
+        CALL xml_EndElement(xp, "localization_threshold")
+     END IF
      CALL xml_EndElement(xp, TRIM(obj%tagname))
    END SUBROUTINE qes_write_hybrid
 

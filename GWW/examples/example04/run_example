@@ -124,7 +124,6 @@ EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',    
     prefix = 'ag',
-    wf_collect = .true.,
 /
 &SYSTEM
     ibrav=  2, 

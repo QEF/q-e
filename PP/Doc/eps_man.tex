@@ -30,9 +30,7 @@ $^{3}$ \emph{High Performance Computing Department, CINECA Consorzio Interuniver
 \section{Introduction}
 Epsilon.x is a post processing code of $PW_{SCF}$. Starting from DFT eigenvalues and eigenvectors,
 epsilon.x provides the real and imaginary parts of the dielectric tensor or the joint density of states, it works both in serial and
-parallel mode, also pool parallelization is supported. As all the others post processing codes, epsilon.x must run with the same number of
-processors of the previews parallel PW runs, to avoid this constrain set the variable WF\_COLLECT=.TRUE.
-in pw.x input file.   
+parallel mode, also pool parallelization is supported.
 Epsilon.x doesn't support the reduction of the k-points grid into the irreducible Brillouin zone, so the previous PW runs must be
 performed with a uniform k-points grid and all k-points weights must be equal to each other, i.e. in the k-points card the k-points
 coordinates must be given manually in \emph{crystal} or \emph{alat} or \emph{bohr}, but not with the \emph{automatic} option. Also the
@@ -235,7 +233,7 @@ the double index reveals the tensorial nature of $\epsilon_{2}(\omega)$, while $
 factor of the single particle Bloch function obtained by the PW's DFT calculation.
 In all the cases illustrated above the non-local contribution due to the pseudopotential is neglected, actually the
 correction to the matrix element that take into account the non-local part of the Hamiltonian it's not implemented.
-From the previews definition of the imaginary part of the dielectric function it is easy to see that even the local-field
+From the previous definition of the imaginary part of the dielectric function it is easy to see that even the local-field
 contributions are not implemented.\\
 PW works on a plane wave set so the Bloch functions of the matrix element (\ref{nos}) are decomposed as follow:
 \begin{equation}

@@ -1116,6 +1116,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
             }
         }
 
+        var localization_thr -type REAL {
+		default {0.0 } 
+		info { 	
+                       Overlap threshold over which the exchange integral over a pair of localized orbitals 
+                       is included in the evaluation of EXX operator. Any value greater than 0.0 triggers 
+                       the SCDM localization and the evaluation on EXX using the localized orbitals.
+                       Very small value of the threshold should yield the same result as the default EXX 
+                       evaluation } 
+	} 
+
         var lda_plus_u -type LOGICAL { 
             default { .FALSE. }
             status {

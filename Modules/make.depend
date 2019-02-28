@@ -6,10 +6,6 @@ autopilot.o : kind.o
 autopilot.o : mp_world.o
 autopilot.o : parser.o
 basic_algebra_routines.o : kind.o
-bcast_qes_module.o : ../UtilXlib/mp.o
-bcast_qes_module.o : io_global.o
-bcast_qes_module.o : kind.o
-bcast_qes_module.o : qes_types_module.o
 becmod.o : ../UtilXlib/mp.o
 becmod.o : control_flags.o
 becmod.o : kind.o
@@ -96,7 +92,6 @@ fft_rho.o : ../FFTXlib/fft_interfaces.o
 fft_rho.o : ../FFTXlib/fft_types.o
 fft_rho.o : control_flags.o
 fft_rho.o : kind.o
-fox_as_iotk.o : kind.o
 fox_init_module.o : ../UtilXlib/mp.o
 fox_init_module.o : io_global.o
 fox_init_module.o : mp_images.o
@@ -180,8 +175,6 @@ mm_dispersion.o : ions_base.o
 mm_dispersion.o : kind.o
 mm_dispersion.o : mp_images.o
 mm_dispersion.o : parameters.o
-mod_qes_input_reader.o : ../UtilXlib/mp.o
-mod_qes_input_reader.o : qes_libs_module.o
 more_functionals.o : constants.o
 more_functionals.o : kind.o
 mp_bands.o : ../UtilXlib/mp.o
@@ -350,13 +343,13 @@ read_uspp.o : parameters.o
 read_uspp.o : pseudo_types.o
 recips.o : kind.o
 recvec.o : ../UtilXlib/mp.o
+recvec.o : constants.o
 recvec.o : kind.o
 recvec_subs.o : ../FFTXlib/fft_ggen.o
 recvec_subs.o : ../FFTXlib/fft_types.o
 recvec_subs.o : ../UtilXlib/mp.o
 recvec_subs.o : constants.o
 recvec_subs.o : kind.o
-recvec_subs.o : recvec.o
 remove_tot_torque.o : kind.o
 rgen.o : kind.o
 set_hubbard_l.o : io_global.o

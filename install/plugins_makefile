@@ -97,7 +97,7 @@ uncompress-w90:
 
 configure-w90: 
 	cd ../W90 ; \
-	if (test -e ../install/make_wannier90.sys) || (test -d ../W90); then \
+	if (test -e ../install/make_wannier90.inc) || (test -d ../W90); then \
 	(cp ../install/make_wannier90.inc ../W90/make.inc); fi 
 	touch ./configure-w90
 

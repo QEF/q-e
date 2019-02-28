@@ -12,7 +12,6 @@ nosym=.true.
 noinv=.true.
 integration='smearing'
 degauss=0.01
-wf_collect=.true.  (if you run parallel job)
 in &control namelist
 
 From nscf calculation we need eigenvalues and eigenvectors of full Hamiltonian on every k-point and the Fermi energy (for Wannier functions occupation calculation).

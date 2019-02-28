@@ -116,7 +116,7 @@ cat > pt.tet.in << EOF
  /
 ATOMIC_SPECIES
  Pt 0.0  Pt.rel-pz-n-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Pt 0.  0.  0.
  Pt 0.5 0.5 0.7071
 K_POINTS (automatic)
@@ -176,7 +176,7 @@ cat > pt4.in << EOF
  /
 ATOMIC_SPECIES
  Pt 0.0   Pt.rel-pz-n-rrkjus.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Pt 0.  0.  0.
  Pt 0.5 0.5 0.7071
  Pt 0.  0.  1.4142

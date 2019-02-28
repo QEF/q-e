@@ -74,7 +74,7 @@ subroutine drhoc (ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, rhocg)
      call simpson (mesh, aux, rab, rhocg1)
      rhocg (igl) = fpi * rhocg1 / omega
   enddo
-!$omp end do
+!$omp end do nowait
   deallocate(aux)
   !
 !$omp end parallel

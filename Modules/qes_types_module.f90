@@ -499,6 +499,8 @@ MODULE qes_types_module
     LOGICAL :: x_gamma_extrapolation
     LOGICAL  :: ecutvcut_ispresent = .FALSE.
     REAL(DP) :: ecutvcut
+    LOGICAL  :: localization_threshold_ispresent = .FALSE.
+    REAL(DP) :: localization_threshold
     !
   END TYPE hybrid_type
   !

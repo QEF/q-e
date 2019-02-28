@@ -212,9 +212,6 @@ U_projection_type character(len=16)			       DEFAULT='atomic'
 		  type of projection for DFT+U calculations
 		  (see the PWscf input file for more info)
 
-wf_collect    	 logical				        DEFAULT=.false.
-		 must be true if wf_collect is enabled in the scf calculation
-
 time_limit       integer                                          DEFAULT=1.d8
                  time in seconds before stopping the calculation.
                  If XSpectra stops because of the time limit, 

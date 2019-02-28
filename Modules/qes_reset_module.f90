@@ -561,6 +561,7 @@ MODULE qes_reset_module
     obj%exxdiv_treatment_ispresent = .FALSE.
     obj%x_gamma_extrapolation_ispresent = .FALSE.
     obj%ecutvcut_ispresent = .FALSE.
+    obj%localization_threshold_ispresent = .FALSE.
     !
   END SUBROUTINE qes_reset_hybrid
   !

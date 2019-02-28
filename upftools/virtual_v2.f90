@@ -49,7 +49,7 @@ PROGRAM virtual_test
   INTEGER :: ios
   TYPE (pseudo_upf) :: upf(2), upf_vca
   TYPE (radial_grid_type) :: grid(2)
-  LOGICAL :: is_xml
+  LOGICAL :: is_xml, exst 
 #if defined(__MPI)
   CALL mp_startup()
 #endif
@@ -73,6 +73,8 @@ PROGRAM virtual_test
 
        CALL nullify_pseudo_upf(upf(is))
        CALL nullify_radial_grid(grid(is))
+       INQUIRE ( FILE = TRIM(filein(is)), EXIST = exst )  
+       IF (.NOT. exst ) CALL errore ( 'virtual_v2.x: ', TRIM(filein(is)) // ' not found', 5)  
        ierr = 0
        CALL read_upf(upf(is), GRID = grid(is), IERR = ierr, FILENAME = trim(filein(is)))
        IF (ierr ==-81 ) THEN
@@ -80,15 +82,21 @@ PROGRAM virtual_test
           CALL  read_upf(upf(is), GRID = grid(is), IERR = ierr, FILENAME = 'tmp.upf' )
           IF (ionode) ios = f_remove('tmp.upf' )
        ENDIF
-
-       IF (ierr/=0 .and. ierr/=-1) THEN
+       IF ( ALL([0,-1,-2] /= ierr)) THEN
           PRINT *, ierr
           CALL errore('virtual_test', 'reading pseudo upf', ierr)
        ENDIF
-       CLOSE (unit=iunps)
        PRINT '('' '')'
-
+       IF ( TRIM(upf(is)%typ) == 'PAW') CALL errore('virtual_v2.x: ', &
+                                                     'Use of PAW is not implemented', 1) 
      ENDDO
+     ! CHECK Z-valence 
+     IF ( upf(1)%zp /= upf(2)%zp ) WRITE (stdout, *) "CAUTION !!! "//& 
+       "You are mixing pseudos with different number of electrons in valence"
+     IF (upf(1)%lmax /= upf(2)%lmax ) WRITE ( stdout, *) "CAUTION !!! " //& 
+      " You are mixing pseudos that  act on different angular momenta " 
+     IF ( upf(1)%nbeta /= upf(2)%nbeta ) WRITE ( stdout, *) "CAUTION !!! " //&
+      " You are mixing pseudos with a different number of projectors " 
 
      ! Choose mixing parameter x
      !
