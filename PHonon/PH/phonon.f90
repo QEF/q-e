@@ -101,6 +101,7 @@ PROGRAM phonon
   ENDIF
   ! YAMBO <
   !
+  CALL unset_mpi_comm_4_solvers()
   CALL stop_smoothly_ph( .TRUE. )
   !
   STOP

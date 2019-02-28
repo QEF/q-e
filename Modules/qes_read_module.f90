@@ -3168,6 +3168,34 @@ MODULE qes_read_module
        obj%ecutvcut_ispresent = .FALSE.
     END IF
     !
+    tmp_node_list => getElementsByTagname(xml_node, "localization_threshold")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size > 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:hybridType","localization_threshold: too many occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:hybridType","localization_threshold: too many occurrences",10)
+        END IF
+    END IF
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%localization_threshold_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%localization_threshold , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:hybridType","error reading localization_threshold")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:hybridType","error reading localization_threshold",10)
+         END IF
+      END IF
+    ELSE
+       obj%localization_threshold_ispresent = .FALSE.
+    END IF
+    !
     !
     obj%lwrite = .TRUE.
     !

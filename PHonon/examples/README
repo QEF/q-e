@@ -139,8 +139,8 @@ example17:
     materials
 
 example18:
-    This example shows how to use pw.x and ph.x to calculate phonon
-    frequencies of LiCoO2 with Hubbard U on Co 3d states.
+    This example shows how to use pw.x and ph.x to calculate phonon frequencies
+    of LiCoO2 with Hubbard U on Co 3d states (experimental stage).
 
 Additional feature-specific examples:
 

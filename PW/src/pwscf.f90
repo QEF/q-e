@@ -107,6 +107,7 @@ PROGRAM pwscf
      !
   END IF
   !
+  CALL unset_mpi_comm_4_solvers()
   CALL stop_run( exit_status )
   CALL do_stop( exit_status )
   !

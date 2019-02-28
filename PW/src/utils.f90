@@ -86,9 +86,10 @@ SUBROUTINE matcalc_k (label, DoE, PrtMat, ik, ninner, n, m, U, V, mat, ee)
     CALL calbec(ninner, U, V, mat, m)
   ENDIF
 
+  IF( PrtMat > 1 ) CALL matprt_k(string//label,n,m,mat)
+
   IF(DoE) THEN
     IF(n/=m) CALL errore('matcalc','no trace for rectangular matrix.',1)
-    IF( PrtMat > 1 ) CALL matprt_k(string//label,n,m,mat)
     string = 'E-'
     ee = 0.0_dp
     DO i = 1,n
@@ -218,7 +219,7 @@ SUBROUTINE invchol(n,A)
   CALL errinfo('DTRTRI','inversion failed in invchol.',INFO)
 
 END SUBROUTINE invchol
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE invchol_k(n,A)
   USE kinds, ONLY : dp
   IMPLICIT NONE
@@ -236,9 +237,9 @@ SUBROUTINE invchol_k(n,A)
   INFO = -1
   CALL ZTRTRI( 'L', 'N', n, A, n, INFO )
   CALL errinfo('ZTRTRI','inversion failed in invchol.',INFO)
+  Call MatSymm_k('L','L',A, n)
 
 END SUBROUTINE invchol_k
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE errinfo(routine,message,INFO)
   IMPLICIT NONE
@@ -326,6 +327,80 @@ IMPLICIT NONE
 
 END SUBROUTINE MatSymm  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MatSymm_k( MShape, How, Mat, n )
+USE kinds, ONLY : dp
+!
+! Symmetrize the (square) matrix Mat
+!       How    = 'U'  ... copying the upper block into the lower block
+!                'L'  ... copying the lower block into the upper block
+!                'S'  ... averaging 
+!
+!       MShape = 'U'  ... return the Upper Triangular (Zeros in Lower)
+!                'L'  ... return the Lower Triangular (Zeros in Upper)
+!                'S'  ... return the Square symmetric matrix
+!
+IMPLICIT NONE
+  INTEGER :: n, i, j 
+  COMPLEX(DP) ::  Mat(n,n) 
+  COMPLEX(DP), ALLOCATABLE :: MatT(:,:)
+  REAL(DP), PARAMETER :: Zero=0.0d0, Two=2.0d0
+  CHARACTER(LEN=1) :: How, MShape
+
+  ALLOCATE( MatT(n,n) )
+ 
+! Properly fill the lower triangular of MatT
+  MatT = (Zero,Zero) 
+  IF(How.eq.'L') then ! use lower
+    do i = 1, n
+      MatT(i,i) = Mat(i,i)
+      do j = i+1, n 
+        MatT(j,i) = Mat(j,i)
+      end do        
+    end do        
+  ELSE IF( How.eq.'U' ) then ! use upper
+    do i = 1, n
+      MatT(i,i) = Mat(i,i)
+      do j = i+1, n
+        MatT(j,i) = Mat(i,j)
+      end do        
+    end do        
+  ELSE IF( How.eq.'S' ) then ! use average 
+    do i = 1, n
+      MatT(i,i) = Mat(i,i)
+      do j = i+1, n
+        MatT(j,i) = (Mat(i,j) + Mat(j,i))  / Two
+      end do        
+    end do        
+  ELSE
+    Call errore('MatSymm_k','Wrong How in MatSymm_k.',1)
+  END IF 
+
+! Properly copy the results in Mat
+  Mat = (Zero,Zero) 
+  IF(MShape.eq.'L') then ! return lower 
+    Mat=MatT
+  ELSE IF(MShape.eq.'U') then ! return upper 
+    do i = 1, n
+      Mat(i,i) = MatT(i,i)
+      do j = i+1, n
+        Mat(i,j) = MatT(j,i)   
+      end do        
+    end do        
+  ELSE IF(MShape.eq.'S') then ! return square
+    Mat=MatT
+    do i = 1, n
+      do j = i+1, n
+        Mat(i,j) = MatT(j,i)   
+      end do        
+    end do        
+  ELSE
+    Call errore('MatSymm_k','Wrong MShape in MatSymm_k.',1)
+  END IF 
+
+  DEALLOCATE( MatT )
+
+END SUBROUTINE MatSymm_k
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE MatTrp( Mat, n )
 USE kinds, ONLY : dp
 !
@@ -346,4 +421,63 @@ IMPLICIT NONE
   end do        
 
 END SUBROUTINE MatTrp  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE MatCheck(Mat, n)
+USE kinds, ONLY : dp
+USE io_global,ONLY : stdout
+!
+! Check how much the (square) matrix Mat differs from the identity 
+!
+implicit none
+    INTEGER :: n, i, j 
+    REAL(DP) ::  Mat(n,n)
+    REAL(DP) :: tmp, MaxDiag, MaxOff, SumDiag, SumOff
+
+    MaxDiag = 0.0d0
+    MaxOff  = 0.0d0
+    SumDiag = 0.0d0
+    SumOff  = 0.0d0
+    do i = 1, n 
+      tmp = Mat(i,i)
+      SumDiag = SumDiag + abs(tmp)
+      IF(abs(1.0d0-tmp).gt.MaxDiag) MaxDiag = abs(1.0d0-tmp)    
+      do j = 1, i-1 
+        tmp = Mat(i,j)
+        SumOff  = SumOff  + abs(tmp) 
+        IF(abs(tmp).gt.0.0d0) MaxOff = abs(tmp)    
+      end do  
+    end do  
+    write(stdout,'(A,f12.6)') 'MaxDiag =', MaxDiag
+    write(stdout,'(A,f12.6)') 'MaxOff  =', MaxOff 
+    write(stdout,'(2(A,f12.6))') 'SumDiag =', SumDiag, ' cfr ', dble(n) 
+    write(stdout,'(2(A,f12.6))') 'SumOff  =', SumOff , ' cfr ', 0.0d0
+ 
+END SUBROUTINE MatCheck 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE PTSVD(Mat, m)
+USE kinds,         ONLY : dp
+USE io_global,     ONLY : stdout
+!
+!   Given a (square) matrix Mat, 
+!   return the orthogonal matrix U*V(T) in Mat via SVD
+! 
+IMPLICIT NONE
+    INTEGER, INTENT(IN) :: m
+    REAL(DP), INTENT(INOUT) :: Mat(m, m)
+    REAL(DP), ALLOCATABLE :: SVDS(:), SVDU(:,:), SVDVT(:,:), work(:) 
+    INTEGER :: lwork, INFO
+    
+    lwork = 5*m    
+    allocate( SVDS(m), SVDU(m,m), SVDVT(m,m), work(lwork) )
+    INFO = -1
+    Call DGESVD( 'A', 'A', m, m, mat, m, &
+                    SVDS, SVDU, m, SVDVT, m, work, lwork, INFO )    
+    CALL errinfo('DGESVD','SVD failed in localize_orbitals.',INFO)
+    write(stdout,'(A,f12.6)') 'Sum of singular values: ',sum(SVDS(:))
+    Call DGEMM('N','N',m,m,m,1.0d0,SVDU,m,SVDVT,m,0.0d0,mat,m)
+    Call DGEMM('N','T',m,m,m,1.0d0,mat,m,mat,m,0.0d0,SVDU,m)
+    write(stdout,'(A,f12.6)') 'Orthogonality check: ',sum(SVDU(:,:))
+    deallocate( SVDS, SVDU, SVDVT, work )
+
+END SUBROUTINE PTSVD
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

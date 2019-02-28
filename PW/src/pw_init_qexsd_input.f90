@@ -22,7 +22,7 @@
                                 atm => atom_label, psfile => atom_pfile, amass => atom_mass, starting_magnetization,  &
                                 angle1, angle2, ip_nat => nat, ip_nspin => nspin, ip_ityp => sp_pos, ip_tau => rd_pos,&
                                 ip_atomic_positions => atomic_positions, lspinorb, ip_nqx1 => nqx1, ip_nqx2 => nqx2,  &
-                                ip_nqx3 => nqx3, ip_ecutfock => ecutfock, ip_ecutvcut => ecutvcut,                    &
+                                ip_nqx3 => nqx3, ip_ecutfock => ecutfock, ip_ecutvcut => ecutvcut, localization_thr,  &
                                 screening_parameter, exx_fraction, x_gamma_extrapolation, exxdiv_treatment,           &
                                 ip_lda_plus_u=>lda_plus_u, ip_lda_plus_u_kind => lda_plus_u_kind,                     & 
                                 ip_hubbard_u => hubbard_u, ip_hubbard_j0 => hubbard_j0,                               &
@@ -104,11 +104,11 @@
   TYPE(dftU_type),POINTER                  ::  dftU_
   TYPE(vdW_type),POINTER                   ::  vdW_
   REAL(DP),TARGET                          ::  xdm_a1_, xdm_a2_, lond_s6_, lond_rcut_, ts_vdw_econv_thr_,&
-                                               scr_par_, exx_frc_, ecutvcut_, ecut_fock_    
+                                               scr_par_, exx_frc_, ecutvcut_, ecut_fock_, loc_thr_     
   REAL(DP),POINTER                         ::  xdm_a1_pt=>NULL(), xdm_a2_pt=>NULL(), lond_s6_pt=>NULL(), &
                                                lond_rcut_pt=>NULL(), ts_vdw_econv_thr_pt=>NULL(),& 
                                                ecut_fock_opt=>NULL(), scr_par_opt=>NULL(), exx_frc_opt=>NULL(), &
-                                               ecutvcut_opt=>NULL() 
+                                               ecutvcut_opt=>NULL(), loc_thr_p => NULL()  
   LOGICAL,TARGET                           ::  empirical_vdw, ts_vdw_isolated_, dftd3_threebody_
   LOGICAL,POINTER                          ::  ts_vdw_isolated_pt=>NULL(), dftd3_threebody_pt=>NULL()
   INTEGER,TARGET                           :: dftd3_version_, spin_ns, nbnd_tg, nq1_tg, nq2_tg, nq3_tg  
@@ -205,10 +205,15 @@
         nq2_pt => nq2_tg
         nq3_pt => nq3_tg
      END IF 
+     IF (localization_thr .GT. 0._DP) THEN 
+        loc_thr_ = localization_thr
+        loc_thr_p => loc_thr_ 
+     END IF 
      CALL qexsd_init_hybrid(hybrid_, dft_is_hybrid, NQ1 = ip_nqx1, NQ2= ip_nqx2, NQ3=ip_nqx3,&
                             ECUTFOCK = ecut_fock_opt, EXX_FRACTION = exx_frc_opt,          &
                             SCREENING_PARAMETER = scr_par_opt,  EXXDIV_TREATMENT = exxdiv_treatment,&
-                            X_GAMMA_EXTRAPOLATION = x_gamma_extrapolation, ECUTVCUT = ecutvcut_opt)
+                            X_GAMMA_EXTRAPOLATION = x_gamma_extrapolation, ECUTVCUT = ecutvcut_opt, &
+                            LOCAL_THR = loc_thr_p )
   END IF
   dft_is_nonlocc=get_dft_is_nonlocc()
   vdw_corr_ = vdw_corr

@@ -439,6 +439,7 @@ MODULE input_parameters
         REAL(DP) :: ecutfock = -1.d0
           ! variables used in Lin Lin's ACE and SCDM
         REAL(DP) :: localization_thr = 0.0_dp, scdmden=1.0d0, scdmgrd=1.0d0
+        INTEGER  :: nscdm = 1        
         INTEGER  :: n_proj  = 0
         LOGICAL  :: scdm=.FALSE.
         LOGICAL  :: ace=.TRUE.
@@ -621,7 +622,7 @@ MODULE input_parameters
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
              nqx1, nqx2, nqx3, ecutfock, localization_thr, scdm, ace,         &
-             scdmden, scdmgrd, n_proj,                                        &
+             scdmden, scdmgrd, nscdm, n_proj,                                        &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter, ref_alat,                     &
              noncolin, lspinorb, starting_spin_angle, lambda, angle1, angle2, &
