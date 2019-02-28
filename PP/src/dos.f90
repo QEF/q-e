@@ -47,6 +47,7 @@ PROGRAM do_dos
   REAL(DP) :: E, DOSofE (2), DOSint (2), DeltaE, Emin, Emax, &
               degauss1, E_unset=1000000.d0
   INTEGER :: nks2, n, ndos, ngauss1, ios
+  LOGICAL :: dummy
 
   NAMELIST /dos/ outdir, prefix, fildos, degauss, ngauss, &
        Emin, Emax, DeltaE, bz_sum
@@ -94,7 +95,7 @@ PROGRAM do_dos
   CALL mp_bcast( tmp_dir, ionode_id, world_comm )
   CALL mp_bcast( prefix, ionode_id, world_comm )
   !
-  CALL read_xml_file( )
+  CALL read_xml_file( dummy )
   !
   IF ( ionode ) THEN
      !
@@ -112,7 +113,7 @@ PROGRAM do_dos
            ltetra = .TRUE. 
            tetra_type = 2 
         CASE default 
-           tetra_type = -5 
+           IF ( .NOT. ltetra) tetra_type = -5 
      END SELECT 
      IF ( ltetra .and. nk1*nk2*nk3 .eq. 0 ) &
         CALL errore ('dos:', 'tetrahedra integration selected on input can only be used with automatic ' //&
@@ -188,9 +189,9 @@ PROGRAM do_dos
      IF ( fildos == ' ' ) fildos = trim(prefix)//'.dos'
      OPEN (unit = 4, file = fildos, status = 'unknown', form = 'formatted')
      IF ( two_fermi_energies ) THEN
-        WRITE(fermi_str,'(" EFermi = ",2f7.3," eV")') ef_up*rytoev, ef_dw*rytoev
+        WRITE(fermi_str,'(" EFermi = ",2f8.3," eV")') ef_up*rytoev, ef_dw*rytoev
      ELSE
-        WRITE(fermi_str,'(" EFermi = ",f7.3," eV")') ef*rytoev
+        WRITE(fermi_str,'(" EFermi = ",f8.3," eV")') ef*rytoev
      ENDIF
 
      IF (nspin==1.or.nspin==4) THEN

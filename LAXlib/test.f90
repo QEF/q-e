@@ -142,7 +142,9 @@ program lax_test
     write(6,*)
     write(6,*) 'matrix size = ', n, ' x ', n
     write(6,*) 'num. procs  = ', npes
+#if defined(_OPENMP)
     write(6,*) 'thr x proc  = ', omp_get_max_threads()
+#endif
     write(6,*)
 
   endif

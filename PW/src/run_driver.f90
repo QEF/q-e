@@ -13,7 +13,8 @@ SUBROUTINE run_driver ( srvaddress, exit_status )
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE check_stop,       ONLY : check_stop_init
-  USE mp_global,        ONLY : mp_bcast, mp_global_end, intra_image_comm
+  USE mp,               ONLY : mp_bcast
+  USE mp_images,        ONLY : intra_image_comm
   USE control_flags,    ONLY : gamma_only, conv_elec, istep, ethr, lscf, lmd
   USE cellmd,           ONLY : lmovecell
   USE force_mod,        ONLY : lforce, lstres

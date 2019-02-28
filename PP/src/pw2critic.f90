@@ -45,7 +45,7 @@ PROGRAM pw2critic
   USE klist, ONLY : nkstot, ngk, igk_k, wk, xk
   USE fft_base, ONLY: dffts, dfftp
   USE io_files, ONLY : prefix, tmp_dir, nwordwfc, iunwfc
-  USE control_flags, ONLY : gamma_only, twfcollect
+  USE control_flags, ONLY : gamma_only
   USE environment, ONLY : environment_start, environment_end
   USE start_k, ONLY : nk1, nk2, nk3
   IMPLICIT NONE
@@ -90,8 +90,6 @@ PROGRAM pw2critic
 
   ! read the calculation info
   CALL read_file()
-  if (.not.twfcollect) &
-     CALL errore('pw2critic','pw2critic requires wf_collect=.true. in the nscf calculation', 1)
   CALL openfil_pp()
   IF (nspin > 2) &
      CALL errore('pw2critic','nspin > 2 not implemented',1)

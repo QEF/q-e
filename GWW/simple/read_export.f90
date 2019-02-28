@@ -17,9 +17,8 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use io_files,       ONLY : pseudo_dir, psfile
   use io_global,      ONLY : ionode, stdout
   USE ions_base,      ONLY : atm, nat, ityp, tau, nsp
-  use mp_global,      ONLY :  nproc_pool
-  use mp_global,      ONLY : my_pool_id, intra_pool_comm, inter_pool_comm
-  USE mp_world, ONLY : world_comm, mpime,nproc
+  use mp_pools,       ONLY : nproc_pool, my_pool_id, intra_pool_comm, inter_pool_comm
+  USE mp_world, ONLY : world_comm, nproc
   use mp,             ONLY : mp_sum, mp_max
   use ldaU,           ONLY :  lda_plus_u
   USE gvecw,     ONLY : ecutwfc

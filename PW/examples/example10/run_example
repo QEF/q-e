@@ -101,7 +101,7 @@ cat > si.scf.efield.in << EOF
  /
 ATOMIC_SPECIES
  Si  28.086 Si.pbe-rrkj.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Si -0.125 -0.125 -0.125
  Si  0.375  0.375 -0.125
  Si  0.375 -0.125  0.375
@@ -142,7 +142,7 @@ cat > si.scf.efield2.in << EOF
  /
 ATOMIC_SPECIES
  Si  28.086 Si.pbe-rrkj.UPF
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS alat
  Si -0.125 -0.125 -0.125
  Si  0.375  0.375 -0.125
  Si  0.375 -0.125  0.375

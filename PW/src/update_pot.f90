@@ -448,23 +448,20 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      ! 
      ALLOCATE( work( dfftp%ngm, 1 ) )
      !
-     work = 0.D0
-     !
      ! ... in the lsda case the magnetization will follow rigidly the density
      ! ... keeping fixed the value of zeta = mag / rho_tot.
      ! ... zeta is set here and put in rho%of_r(:,2) while rho%of_r(:,1) 
-     ! ... will contain the total valence charge
+     ! ... contains the total valence charge
      ! FIXME: half extrapolation is done in G-space, half in real space
      !
-     IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, dfftp%nnr, nspin, 1 )
-     IF ( noncolin ) CALL rho2mag( rho%of_r, rho_core, dfftp%nnr, nspin, 1 )
+     IF ( lsda .or. noncolin ) CALL rho2zeta( rho%of_r, rho_core, dfftp%nnr, nspin, 1 )
      !
      ! ... subtract the old atomic charge density
      !
      CALL atomic_rho_g( work, 1 )
      !
      rho%of_g(:,1) = rho%of_g(:,1) - work(:,1)
-     IF ( lsda) rho%of_g(:,1) = rho%of_g(:,1) + rho%of_g(:,2)
+     !
      IF ( lmovecell ) rho%of_g(:,1) = rho%of_g(:,1) * omega_old
      !
      ! ... extrapolate the difference between the atomic charge and
@@ -580,8 +577,7 @@ SUBROUTINE extrapolate_charge( dirname, rho_extr )
      !
      ! ... reset up and down charge densities in the LSDA case
      !
-     IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, dfftp%nnr, nspin, -1 )
-     IF ( noncolin ) CALL rho2mag( rho%of_r, rho_core, dfftp%nnr, nspin,-1 )
+     IF ( lsda .or. noncolin ) CALL rho2zeta( rho%of_r, rho_core, dfftp%nnr, nspin, -1 )
      !
      DEALLOCATE( work )
      !

@@ -5,7 +5,7 @@
 # of the License. See the file `License' in the root directory
 # of the present distribution.
 
-TEST-SUITE  v6.1
+TEST-SUITE  v6.4
 ------------------
 
 Type 'make' for the list of possible options. Currently only PW, CP, PH, EPW
@@ -247,7 +247,7 @@ The following features of the code are tested:
 - davidson and cg diagonalizations
 - simple, TF, local-TF mixing, ndim=4,8
 - Gamma, automatic, list of k-points (tpiba, crystal, tpiba_b)
-- wf_collect, disk_io, force_symmorphic, use_all_frac options
+- disk_io, force_symmorphic, use_all_frac options
 - stress with k-points and at Gamma
 - non-scf calculation
 - old "ncpp" format for pseudopotentials

@@ -14,7 +14,9 @@
 
 ! ...   declare modules
         USE kinds,        ONLY: DP
-        USE radial_grids, ONLY: allocate_radial_grid
+        USE radial_grids, ONLY: allocate_radial_grid, radial_grid_type
+        USE pseudo_types, ONLY : pseudo_upf
+!
         IMPLICIT NONE
         SAVE
         PRIVATE
@@ -22,16 +24,13 @@
       CONTAINS
 !
 !---------------------------------------------------------------------
-subroutine read_upf_v1 (iunps, upf, grid, ierr, header_only)
+SUBROUTINE read_upf_v1 (iunps, upf, grid, ierr, header_only)
   !---------------------------------------------------------------------
   !
   !   read pseudopotential "upf" in the Unified Pseudopotential Format
   !   from unit "iunps" - return error code in "ierr" (success: ierr=0)
   !
-  use pseudo_types
-  use radial_grids, only : radial_grid_type
-  !
-  implicit none
+  IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: iunps
   INTEGER, INTENT(OUT) :: ierr 
@@ -41,9 +40,9 @@ subroutine read_upf_v1 (iunps, upf, grid, ierr, header_only)
   !
   !     Local variables
   !
-  integer :: ios
-  character (len=80) :: dummy  
-  logical, external :: matches
+  INTEGER :: ios
+  CHARACTER (len=80) :: dummy  
+  LOGICAL, EXTERNAL :: matches
   !
   ! Prepare the pointers
   ! CALL nullify_pseudo_upf( upf ) should be nullified when instantiated
@@ -211,9 +210,6 @@ end subroutine scan_end
 subroutine read_pseudo_header (upf, iunps)  
   !---------------------------------------------------------------------
   !
-  USE pseudo_types, ONLY: pseudo_upf
-  USE kinds
-
   implicit none
   !
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
@@ -222,7 +218,10 @@ subroutine read_pseudo_header (upf, iunps)
   integer :: nw
   character (len=80) :: dummy
   logical, external :: matches
-
+  ! GTH analytical format: obviously not true in this case
+  upf%is_gth=.false.
+  ! PP is assumed to be multi-projector
+  upf%is_multiproj = .true. 
   ! Version number (presently ignored)
   read (iunps, *, err = 100, end = 100) upf%nv , dummy  
   ! Element label
@@ -283,9 +282,6 @@ end subroutine read_pseudo_header
 subroutine read_pseudo_mesh (upf, iunps)  
   !---------------------------------------------------------------------
   !
-  USE kinds
-  USE pseudo_types, ONLY: pseudo_upf
-
   implicit none
   !
   integer :: iunps  
@@ -322,9 +318,6 @@ end subroutine read_pseudo_mesh
 subroutine read_pseudo_nlcc (upf, iunps)
   !---------------------------------------------------------------------
   !
-  USE kinds
-  USE pseudo_types, ONLY: pseudo_upf
-
   implicit none
   !
   integer :: iunps  
@@ -347,9 +340,6 @@ end subroutine read_pseudo_nlcc
 subroutine read_pseudo_local (upf, iunps)
   !---------------------------------------------------------------------
   !
-  USE kinds
-  USE pseudo_types, ONLY: pseudo_upf
-
   implicit none
   !
   integer :: iunps  
@@ -373,9 +363,6 @@ end subroutine read_pseudo_local
 subroutine read_pseudo_nl (upf, iunps)  
   !---------------------------------------------------------------------
   !
-  USE kinds
-  USE pseudo_types, ONLY: pseudo_upf
-
   implicit none
   !
   integer :: iunps  
@@ -537,9 +524,6 @@ end subroutine read_pseudo_nl
 subroutine read_pseudo_pswfc (upf, iunps)  
   !---------------------------------------------------------------------
   !
-  USE kinds  
-  USE pseudo_types, ONLY: pseudo_upf
-  !
   implicit none
   !
   integer :: iunps
@@ -563,9 +547,6 @@ end subroutine read_pseudo_pswfc
 !---------------------------------------------------------------------
 subroutine read_pseudo_rhoatom (upf, iunps)  
   !---------------------------------------------------------------------
-  !
-  USE kinds 
-  USE pseudo_types, ONLY: pseudo_upf
   !
   implicit none
   !
@@ -591,8 +572,6 @@ subroutine read_pseudo_addinfo (upf, iunps)
 !     and the total angular momentum jjj of the beta and jchi of the
 !     wave-functions.
 !
-  USE pseudo_types, ONLY: pseudo_upf
-  USE kinds
   implicit none
   integer :: iunps
   
@@ -642,9 +621,6 @@ end subroutine read_pseudo_addinfo
 SUBROUTINE read_pseudo_gipaw ( upf, iunps )
   !---------------------------------------------------------------------
   !
-  USE kinds
-  USE pseudo_types, ONLY : pseudo_upf
-  !
   implicit none
   !
   INTEGER :: iunps
@@ -672,9 +648,6 @@ END SUBROUTINE read_pseudo_gipaw
 !---------------------------------------------------------------------
 SUBROUTINE read_pseudo_gipaw_core_orbitals ( upf, iunps )
   !---------------------------------------------------------------------
-  !
-  USE kinds
-  USE pseudo_types, ONLY : pseudo_upf
   !
   IMPLICIT NONE
   !
@@ -714,9 +687,6 @@ END SUBROUTINE read_pseudo_gipaw_core_orbitals
 SUBROUTINE read_pseudo_gipaw_local ( upf, iunps )
   !---------------------------------------------------------------------
   !
-  USE kinds
-  USE pseudo_types, ONLY : pseudo_upf
-  !
   IMPLICIT NONE
   !
   INTEGER :: iunps
@@ -753,9 +723,6 @@ END SUBROUTINE read_pseudo_gipaw_local
 !---------------------------------------------------------------------
 SUBROUTINE read_pseudo_gipaw_orbitals ( upf, iunps )
   !---------------------------------------------------------------------
-  !
-  USE kinds
-  USE pseudo_types, ONLY : pseudo_upf
   !
   IMPLICIT NONE
   !
@@ -803,9 +770,6 @@ END SUBROUTINE read_pseudo_gipaw_orbitals
 subroutine read_pseudo_ppinfo (upf, iunps)  
   !---------------------------------------------------------------------
   !
-  USE pseudo_types, ONLY: pseudo_upf
-  USE kinds, ONLY : dp
-
   implicit none
   !
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
@@ -831,7 +795,6 @@ subroutine read_pseudo_ppinfo (upf, iunps)
   END SUBROUTINE read_pseudo_ppinfo
 
   SUBROUTINE set_coulomb_nonlocal(upf)
-  USE pseudo_types, ONLY : pseudo_upf
   IMPLICIT NONE
   TYPE(pseudo_upf) :: upf
 

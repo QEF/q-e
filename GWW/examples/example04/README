@@ -1,0 +1,19 @@
+
+To run the example do:
+
+./run_example
+
+Computes the optical properties of bulk silver at the independent particle level with the optimal basis method
+
+
+Output files produced by simple_ip.x:
+
+ag.dos_broadening.dat      -->    Density of states
+ag.jdos.dat                -->    Joint density of states
+ag.eps_inter_im.dat        -->    Imaginary part of the interband contribution to the dielectric function computed along x, y and z
+ag.eps_inter_re.dat        -->    Real part of the interband contribution to the dielectric function computed along x, y and z
+ag.eps_tot_im.dat          -->    Imaginary part of the full dielectric function (interband+intraband) computed along x, y and z
+ag.eps_tot_re.dat          -->    Real part of the full dielectric function (interband+intraband) computed along x, y and z
+ag.eels.dat                -->    Electron energy loss spectrum computed along x, y and z 
+ag.optical_constants.dat   -->    Real and imaginary part of the full dielectric function, refractive index, extinction coefficient, reflectivity
+                                  (averaged over the three directions x, y and z)

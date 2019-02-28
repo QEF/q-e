@@ -32,8 +32,7 @@ SUBROUTINE openfilq()
   USE uspp,           ONLY : nkb, okvan
   USE io_files,       ONLY : prefix,tmp_dir, diropn,seqopn
   USE noncollin_module, ONLY : npol, nspin_mag
-  USE control_flags,  ONLY : twfcollect
-  USE mp_global,      ONLY : me_pool
+  USE mp_pools,       ONLY : me_pool
   USE io_global,      ONLY : ionode
   USE ramanm, ONLY: lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   USE wannier_gw,     ONLY : l_head

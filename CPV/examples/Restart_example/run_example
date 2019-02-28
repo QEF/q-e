@@ -145,7 +145,6 @@ cat >  sio2.pw.restart.in << EOF
     prefix = 'cp_91'
     pseudo_dir='$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
-    wf_collect = .true.
  /
  &system
     ibrav=8, celldm(1)=9.28990, celldm(2)=1.73206, celldm(3)=1.09955,

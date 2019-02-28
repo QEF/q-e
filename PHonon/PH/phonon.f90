@@ -43,8 +43,13 @@ PROGRAM phonon
   USE control_ph,      ONLY : bands_computed, qplot
   USE check_stop,      ONLY : check_stop_init
   USE ph_restart,      ONLY : ph_writefile
-  USE mp_global,       ONLY : mp_startup
   USE environment,     ONLY : environment_start
+  USE mp_global,       ONLY : mp_startup
+  USE mp_world,        ONLY : world_comm
+  USE mp_pools,        ONLY : intra_pool_comm
+  USE mp_bands,        ONLY : intra_bgrp_comm, inter_bgrp_comm
+  USE mp_diag,         ONLY : mp_start_diag
+  USE command_line_options,  ONLY : input_file_, ndiag_
   ! YAMBO >
   USE YAMBO,           ONLY : elph_yambo,dvscf_yambo
   ! YAMBO <
@@ -59,6 +64,10 @@ PROGRAM phonon
   ! Initialize MPI, clocks, print initial messages
   !
   CALL mp_startup ( start_images=.true. )
+  CALL mp_start_diag ( ndiag_, world_comm, intra_bgrp_comm, &
+       do_distr_diag_inside_bgrp_ = .true. )
+  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
+       inter_bgrp_comm )
   CALL environment_start ( code )
   !
   ! ... and begin with the initialization part
@@ -92,6 +101,7 @@ PROGRAM phonon
   ENDIF
   ! YAMBO <
   !
+  CALL unset_mpi_comm_4_solvers()
   CALL stop_smoothly_ph( .TRUE. )
   !
   STOP

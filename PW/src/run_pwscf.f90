@@ -36,7 +36,7 @@ SUBROUTINE run_pwscf ( exit_status )
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE cell_base,        ONLY : fix_volume, fix_area
-  USE control_flags,    ONLY : conv_elec, gamma_only, ethr, lscf, twfcollect
+  USE control_flags,    ONLY : conv_elec, gamma_only, ethr, lscf
   USE control_flags,    ONLY : conv_ions, istep, nstep, restart, lmd, lbfgs
   USE command_line_options, ONLY : command_line
   USE force_mod,        ONLY : lforce, lstres, sigma, force
@@ -109,7 +109,7 @@ SUBROUTINE run_pwscf ( exit_status )
      CALL summary()
      CALL memory_report()
      CALL qexsd_set_status(255)
-     CALL punch( 'config' )
+     CALL punch( 'init-config' )
      exit_status = 255
      RETURN
   ENDIF
@@ -139,8 +139,6 @@ SUBROUTINE run_pwscf ( exit_status )
         IF ( check_stop_now() ) exit_status = 255
         IF ( .NOT. conv_elec )  exit_status =  2
         CALL qexsd_set_status(exit_status)
-        ! workaround for the case of a single k-point
-        twfcollect = .FALSE.
         CALL punch( 'config' )
         RETURN
      ENDIF

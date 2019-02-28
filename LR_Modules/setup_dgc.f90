@@ -20,9 +20,9 @@ subroutine setup_dgc
   USE fft_interfaces,       ONLY : fwfft
   USE gvect,                ONLY : ngm, g
   USE spin_orb,             ONLY : domag
-  USE scf,                  ONLY : rho, rho_core, rhog_core
+  USE scf,                  ONLY : rho, rho_core, rhog_core, rhoz_or_updw
   USE noncollin_module,     ONLY : noncolin, ux, nspin_gga, nspin_mag
-  USE wavefunctions, ONLY : psic
+  USE wavefunctions,        ONLY : psic
   USE kinds,                ONLY : DP
   USE funct,                ONLY : dft_is_gradient, gcxc, gcx_spin, &
                                    gcc_spin, dgcxc, dgcxc_spin
@@ -36,7 +36,7 @@ subroutine setup_dgc
        v1x, v2x, v1c, v2c, vrrx, vsrx, vssx, vrrc, vsrc, vssc, v1xup, &
        v1xdw, v2xup, v2xdw, v1cup, v1cdw, vrrxup, vrrxdw, vrsxup, vrsxdw, &
        vssxup, vssxdw, vrrcup, vrrcdw, vrscup, vrscdw, vrzcup, vrzcdw,   &
-       amag, seg, seg0
+       amag, seg, seg0, sgn(2)
   COMPLEX(DP), ALLOCATABLE :: rhogout(:,:)
   real(DP), allocatable :: rhoout(:,:)
   real (DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
@@ -64,6 +64,7 @@ subroutine setup_dgc
   dvxc_ss(:,:,:) = 0.d0
   dvxc_s (:,:,:) = 0.d0
   grho   (:,:,:) = 0.d0
+  sgn(1)=1.d0  ;   sgn(2)=-1.d0
   !
   !    add rho_core
   !
@@ -86,20 +87,28 @@ subroutine setup_dgc
      END DO
      DEALLOCATE(rhogout)
   ELSE
+     !
+     ! for convenience, if LSDA, rhoout is kept in (up,down) format
+     !
      do is = 1, nspin_gga
-        rhoout(:,is)  =  rho%of_r(:,is)
+        rhoout(:,is) = ( rho%of_r(:,1) + sgn(is)*rho%of_r(:,nspin_gga) )*0.5d0
      enddo
+     !
+     ! if LSDA rho%of_g is temporarily converted in (up,down) format
+     !
+     call rhoz_or_updw(rho, 'only_g', '->updw')
+     !
      if (nlcc_any) then
         do is = 1, nspin_gga
-           rhoout(:,is)  = fac * rho_core(:)  + rho%of_r(:,is)
+           rhoout(:,is)   = fac * rho_core(:)  + rhoout(:,is)
            rho%of_g(:,is) = fac * rhog_core(:) + rho%of_g(:,is)
         enddo
      endif
+     !
      do is = 1, nspin_gga
         call fft_gradient_g2r (dfftp, rho%of_g (1, is), g, grho (1, 1, is) )
      enddo
   END IF
-
 
   do k = 1, dfftp%nnr
      grho2 (1) = grho (1, k, 1) **2 + grho (2, k, 1) **2 + grho (3, k, 1) **2
@@ -167,6 +176,9 @@ subroutine setup_dgc
            rho%of_g(:,is) = rho%of_g(:,is) - fac * rhog_core(:)
         enddo
      endif
+     !
+     CALL rhoz_or_updw(rho, 'only_g', '->rhoz')
+     !
   endif
 
   DEALLOCATE(rhoout)

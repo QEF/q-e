@@ -7,18 +7,21 @@ MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../src
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
          ../../KS_Solvers/libks_solvers.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a
+         ../../UtilXlib/libutil.a
 PWOBJS = ../src/libpw.a
 
 TLDEPS= pwlibs
 
-all : tldeps ev.x kpoints.x pwi2xsf.x ibrav2cell.x
+all : tldeps ev.x kpoints.x pwi2xsf.x ibrav2cell.x cell2ibrav.x
 
 ibrav2cell.x : ibrav2cell.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		ibrav2cell.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
-	- ( cd ../../bin ; ln -fs ../PW/tools/cell2ibrav.py cell2ibrav.x )
+cell2ibrav.x : cell2ibrav.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		cell2ibrav.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
 
 ev.x : ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \

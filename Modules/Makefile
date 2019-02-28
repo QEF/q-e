@@ -102,10 +102,14 @@ ws_base.o \
 xc_vdW_DF.o \
 xc_rVV10.o \
 io_base.o \
-qes_types.o \
-qes_libs.o  \
+qes_types_module.o \
+qes_libs_module.o  \
+qes_write_module.o \
 qes_read_module.o \
-bcast_qes_module.o \
+qes_reset_module.o \
+qes_init_module.o \
+qes_read_module.o \
+qes_bcast_module.o \
 qexsd.o   \
 qexsd_input.o \
 hdf5_qe.o\
@@ -117,7 +121,7 @@ wypos.o \
 zdotc_wrapper.o  \
 zvscal.o 
 
-# list of subrooutines and functions (not modules) previously found in flib/
+# list of subroutines and functions (not modules) previously found in flib/
 
 OBJS = \
 atomic_number.o \
@@ -158,7 +162,7 @@ w0gauss.o \
 w1gauss.o \
 deviatoric.o
 
-TLDEPS=libfft
+TLDEPS=libiotk libfox libutil libla libfft
 
 all : libqemod.a
 

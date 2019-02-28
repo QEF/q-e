@@ -295,7 +295,8 @@ input_description -distribution {Quantum Espresso} -package CP -program cp.x {
 	var memory -type CHARACTER { 
 	    default { 'default' }
 	    info {
-               'small': memory-saving tricks are implemented. Currently:
+               'small': NO LONGER IMPLEMENTED SINCE v.6.3
+                        memory-saving tricks are implemented. Currently:
                         - the G-vectors are sorted only locally, not globally
                         - they are not collected and written to file
                         For large systems, the memory and time gain is sizable

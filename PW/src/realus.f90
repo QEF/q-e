@@ -1157,7 +1157,6 @@ MODULE realus
       USE fft_interfaces,   ONLY : fwfft
       USE fft_base,         ONLY : dfftp
       USE wavefunctions,  ONLY : psic
-      !!!USE fft_rho,          ONLY : rho_r2g
 #if defined (__DEBUG)
       USE constants,        ONLY : eps6
       USE klist,            ONLY : nelec
@@ -1169,12 +1168,12 @@ MODULE realus
       !
       IMPLICIT NONE
       ! The charge density to be augmented (in G-space)
-      COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag) 
+      COMPLEX(kind=dp), INTENT(inout) :: rho(dfftp%ngm,nspin_mag)
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia
       CHARACTER(len=80) :: msg
       REAL(kind=dp), ALLOCATABLE :: rhor(:,:) 
-      REAL(DP) :: charge
+      REAL(kind=dp) :: charge
       !
       !
       IF ( .not. okvan ) RETURN
@@ -1207,12 +1206,12 @@ MODULE realus
          !
       ENDDO
       !
+      !
       DO is = 1, nspin_mag
          psic(:) = rhor(:,is)
          CALL fwfft ('Rho', psic, dfftp)
          rho(:,is) = rho(:,is) + psic(dfftp%nl(:))
       END DO
-      !!! CALL rho_r2g(dfftp, rhor, rho(:,1:nspin_mag) )
       !
       DEALLOCATE ( rhor )
 #if defined (__DEBUG)

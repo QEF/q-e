@@ -50,7 +50,7 @@ SUBROUTINE makov_payne( etot )
   !
   x0(:) = x0(:) / zvtot
   !
-  CALL compute_dipole( dfftp%nnr, nspin, rho%of_r, x0, e_dipole, e_quadrupole )
+  CALL compute_dipole( dfftp%nnr, rho%of_r(:,1), x0, e_dipole, e_quadrupole )
   !
   CALL write_dipole( etot, x0, e_dipole, e_quadrupole, qq )
   !
@@ -254,13 +254,6 @@ SUBROUTINE vacuum_level( x0, zion )
      rgtot_re = REAL(  rho%of_g(ig,1) )
      rgtot_im = AIMAG( rho%of_g(ig,1) )
      !
-     IF ( nspin == 2 ) THEN
-        !
-        rgtot_re = rgtot_re + REAL(  rho%of_g(ig,2) )
-        rgtot_im = rgtot_im + AIMAG( rho%of_g(ig,2) )
-        !
-     END IF
-     !
      vg(ig) = vg(ig) + CMPLX( rgtot_re, rgtot_im ,kind=DP)*fac
      !
   END DO
@@ -320,8 +313,6 @@ SUBROUTINE vacuum_level( x0, zion )
         !
         vgig = vg(ig)
         qgig = rho%of_g(ig,1)
-        !
-        IF ( nspin == 2 ) qgig = qgig + rho%of_g(ig,2)
         !
         ! ... add the phase factor corresponding to the translation of the
         ! ... origin by x0 (notice that x0 is in alat units)

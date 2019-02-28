@@ -59,7 +59,7 @@ SUBROUTINE setup()
                                  find_sym, inverse_s, no_t_rev, fft_fact,  &
                                  allfrac
   USE wvfct,              ONLY : nbnd, nbndx
-  USE control_flags,      ONLY : tr2, ethr, lscf, lmd, david, lecrpa,  &
+  USE control_flags,      ONLY : tr2, ethr, lscf, lbfgs, lmd, david, lecrpa,  &
                                  isolve, niter, noinv, ts_vdw, &
                                  lbands, use_para_diag, gamma_only, &
                                  restart
@@ -78,7 +78,7 @@ SUBROUTINE setup()
                                  angle1, angle2, bfield, ux, nspin_lsda, &
                                  nspin_gga, nspin_mag
   USE pw_restart_new,     ONLY : pw_readschema_file, init_vars_from_schema 
-  USE qes_libs_module,    ONLY : qes_reset_output, qes_reset_parallel_info, qes_reset_general_info
+  USE qes_libs_module,    ONLY : qes_reset
   USE qes_types_module,   ONLY : output_type, parallel_info_type, general_info_type 
   USE exx,                ONLY : ecutfock, nbndproj
   USE exx_base,           ONLY : exx_grid_init, exx_mp_init, exx_div_check
@@ -131,10 +131,11 @@ SUBROUTINE setup()
                          'hybrid XC not allowed in non-scf calculations', 1 )
      IF ( ANY (upf(1:ntyp)%nlcc) ) CALL infomsg( 'setup ', 'BEWARE:' // &
                & ' nonlinear core correction is not consistent with hybrid XC')
-     !IF (okpaw) CALL errore('setup','PAW and hybrid XC not tested',1)
      IF (okvan) THEN
         IF (ecutfock /= 4*ecutwfc) CALL infomsg &
            ('setup','Warning: US/PAW use ecutfock=4*ecutwfc, ecutfock ignored')
+        IF ( lmd .OR. lbfgs ) CALL errore &
+           ('setup','forces for hybrid functionals + US/PAW not implemented')
         IF ( noncolin ) CALL errore &
            ('setup','Noncolinear hybrid XC for USPP not implemented',1)
      END IF
@@ -562,9 +563,9 @@ SUBROUTINE setup()
      !
   END IF
   IF ( lbands .OR. ( (lfcpopt .OR. lfcpdyn ) .AND. restart ) ) THEN 
-     CALL qes_reset_output ( output_obj ) 
-     CALL qes_reset_parallel_info ( parinfo_obj ) 
-     CALL qes_reset_general_info ( geninfo_obj ) 
+     CALL qes_reset  ( output_obj )
+     CALL qes_reset  ( parinfo_obj )
+     CALL qes_reset  ( geninfo_obj )
   END IF 
   !
   !

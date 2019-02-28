@@ -185,6 +185,7 @@ save_in_cbands.o \
 save_in_electrons.o \
 scale_h.o \
 loc_scdm.o \
+loc_scdm_k.o \
 scf_mod.o \
 set_kplusq.o \
 set_kup_and_kdw.o \
@@ -247,7 +248,7 @@ QEMODS=../../Modules/libqemod.a \
        ../../KS_Solvers/libks_solvers.a \
        ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
 
-TLDEPS=bindir mods libs liblapack libblas dftd3
+TLDEPS= bindir libs mods libks_solvers dftd3
 
 all : tldeps pw.x generate_vdW_kernel_table.x generate_rVV10_kernel_table.x
 

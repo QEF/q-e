@@ -39,7 +39,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   USE gvect,          ONLY : g 
   USE scf,            ONLY : rho
   USE mp,             ONLY : mp_sum
-  USE mp_global,      ONLY : intra_pool_comm
+  USE mp_pools,       ONLY : intra_pool_comm
   USE units_lr,       ONLY : iuatwfc, iuatswfc
   USE buffers,        ONLY : get_buffer
   !
@@ -50,7 +50,7 @@ SUBROUTINE commutator_Vhubx_psi(ik, ipol)
   ! polarization (crystal units)
   !
   REAL(DP), PARAMETER :: eps = 1.0d-8
-  INTEGER     :: counter, na, n ,l, nt, nah, ikb , m, m1, m2, ibnd, ib, ig, jkb, i, &
+  INTEGER     :: na, n ,l, nt, nah, ikb , m, m1, m2, ibnd, ib, ig, jkb, i, &
                  ihubst, ihubst1,  ihubst2, icart, op_spin, npw
   REAL(DP)    :: nsaux
   REAL(DP), ALLOCATABLE :: xyz(:,:), gk(:,:), g2k(:)
@@ -396,7 +396,7 @@ SUBROUTINE vecqqproj (npw, vec1, vec2, vec3, dpqq)
     USE uspp,       ONLY : qq_nt, nkb
     USE wvfct,      ONLY : npwx
     USE mp,         ONLY : mp_sum
-    USE mp_global,  ONLY : intra_pool_comm
+    USE mp_pools,   ONLY : intra_pool_comm
     USE control_lr, ONLY : ofsbeta
     !    
     IMPLICIT NONE

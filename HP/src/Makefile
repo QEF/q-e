@@ -1,7 +1,7 @@
 # Makefile for HP
 
 include ../../make.inc
-	
+
 # location of needed modules and included files (if any)
 MODFLAGS= $(BASEMOD_FLAGS) \
 	  $(MOD_FLAG)../../PW/src \
@@ -67,7 +67,7 @@ hp.x : hp_main.o libhp.a $(PWOBJS) $(LRMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ hp_main.o libhp.a \
 		$(LRMODS) $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../HP/src/hp.x . )
-	
+
 tldeps :
 	if test -n "$(TLDEPS)" ; then \
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi

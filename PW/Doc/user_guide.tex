@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.3}
+\def\version{6.4}
 \def\PWscf{\texttt{PWscf}}
 \def\qe{{\sc Quantum ESPRESSO}}
 
@@ -48,7 +48,9 @@ This guide covers the usage of the \PWscf\
 a core component of the \qe\ distribution.
 Further documentation, beyond what is provided 
 in this guide, can be found in the directory
-\texttt{PW/Doc/}, containing a copy of this guide.
+\texttt{PW/Doc/}
+{\em (note: all directories are relative to the installation
+directory)}, containing a copy of this guide.
 
 {\em Important notice: due to the lack of time and of manpower, this
 manual is only partially updated and may contain outdated information.}
@@ -58,8 +60,7 @@ that \PWscf\ describes and the methods it implements.
 It also assumes  that you have already installed,
 or know how to install, \qe. If not, please read
 the general User's Guide for \qe, found in 
-directory \texttt{Doc/} two levels above the 
-one containing this guide; or consult the web site:\\
+directory \texttt{Doc/}; or consult the web site:\\
 \texttt{http://www.quantum-espresso.org}.
 
 People who want to modify or contribute to 
@@ -82,6 +83,9 @@ In particular:
   the modern theory of polarization (Berry Phases);
   \item modern theory of orbital magnetization;
   \item free-energy surface calculation at fixed cell through meta-dynamics, if patched with PLUMED.
+  \item Effective Screening Medium (ESM) method
+  \item self-consistent continuum solvation (SCCS) model, if patched with
+    ENVIRON (\texttt{http://www.quantum-environment.org/}),
 \end{itemize}
 All of the above works for both insulators and metals, 
 in any crystal structure, for many exchange-correlation (XC) functionals
@@ -93,6 +97,7 @@ or Projector Augmented Waves (PAW) method.
 Noncollinear magnetism and spin-orbit interactions 
 are also implemented.  An implementation of finite electric 
 fields with a sawtooth potential in a supercell is also available.
+
 Please note that NEB calculations are no longer performed by \pwx,
 but are instead carried out by \texttt{neb.x} (see main user guide), 
 a dedicated code for path optimization which can use \PWscf\ as 
@@ -191,17 +196,22 @@ general documentation (User's Guide) for \qe.
 Typing \texttt{make pw} from the main \qe\ directory or
 \texttt{make} from the \texttt{PW/} subdirectory produces
 the \pwx\ executable in \texttt{PW/src} and a link to the
-\texttt{bin/} directory. In addition, several utility
-programs, and related links in \texttt{bin/}, are produced 
-in \texttt{PW/tools}:
-
+\texttt{bin/} directory. In addition, the following utility
+programs, and related links in \texttt{bin/}, are produced
+in \texttt{PW/src}:
 \begin{itemize}
-\item  \texttt{PW/tools/dist.x} reads input data for \PWscf,
+\item  \texttt{dist.x} symbolic link to \pwx: reads input data for \PWscf,
 calculates distances and angles between atoms in a cell,
-taking into account periodicity 
-\item  \texttt{PW/tools/ev.x} fits energy-vs-volume data to an equation of state
-\item  \texttt{PW/tools/kpoints.x} produces lists of k-points
-\item  \texttt{PW/tools/pwi2xsf.sh},  \texttt{pwo2xsf.sh} process respectively 
+taking into account periodicity
+\item  \texttt{generate\_vdW\_kernel\_table.x},
+  \texttt{generate\_rVV10\_kernel\_table.x}: produce kernel tables for
+  vdW-DF nonlocal functionals
+\end{itemize}
+and in \texttt{PW/tools}:
+\begin{itemize}
+\item  \texttt{ev.x} fits energy-vs-volume data to an equation of state
+\item  \texttt{kpoints.x} produces lists of k-points
+\item  \texttt{pwi2xsf.sh},  \texttt{pwo2xsf.sh} process respectively 
   input and output files (not data files!) for \pwx\ and \texttt{neb.x} 
   (the latter, courtesy of Pietro Bonf\`a) and produce an XSF-formatted file
   suitable for plotting with XCrySDen:
@@ -209,8 +219,8 @@ taking into account periodicity
   molecular structure visualization program.
   BEWARE: the  \texttt{pwi2xsf.sh} shell script requires the
   \texttt{pwi2xsf.x} executables to be located somewhere in your PATH. 
-\item  \texttt{PW/tools/bs.awk},  \texttt{PW/tools/mv.awk} are scripts that process the output of \pwx\ (not
-data files!). Usage: 
+\item (obsolescent) \texttt{bs.awk},  \texttt{mv.awk} are scripts that
+  process the output of \pwx\ (not data files!). Usage: 
 \begin{verbatim}
          awk -f bs.awk < my-pw-file > myfile.bs
          awk -f mv.awk < my-pw-file > myfile.mv
@@ -218,12 +228,12 @@ data files!). Usage:
 The files so produced are suitable for use with  \texttt{xbs}, a very simple
 X-windows utility to display molecules, available at:\\
  \texttt{http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}
-\item  \texttt{PW/tools/cif2qe.sh}: script converting from CIF 
+\item  \texttt{cif2qe.sh}: script converting from CIF 
 (Crystallographic Information File) to a format suitable for \qe.
 Courtesy of Carlo Nervi (Univ. Torino, Italy).
 \end{itemize}
-Documentation for the auxiliary codes can be found in the codes
-themselves, e.g. in the header of files.
+Documentation for most auxiliary codes can be found in the codes
+themselves, e.g. in the header of source files.
 
 \newpage\section{Using \PWscf}
 
@@ -231,14 +241,14 @@ Input files for \texttt{pw.x} may be either written by hand
 or produced via the \texttt{PWgui} graphical interface by Anton Kokalj, 
 included in the \qe\ distribution. See \texttt{PWgui-x.y.z/INSTALL}
 (where x.y.z is the version number) for more info on \texttt{PWgui}, 
-or \texttt{GUI/README} if you are using SVN sources.
+or \texttt{GUI/README} if you are using sources from the repository.
     
-You may take the tests and examples distributed 
-with \qe\ as templates for writing your own input files.
-In the following, whenever we mention "Example N", we refer to those. 
-Input files are those in the \texttt{results/} subdirectories, with names ending
-with \texttt{.in} 
-(they will appear after you have run the examples).
+You may take the tests (in \texttt{test-suite/}) and examples
+(in \texttt{PW/examples/}) distributed with \qe\ as templates for
+writing your own input files. You may find input files (typically
+with names ending with \texttt{.in}) either in \texttt{test-suite/pw\_*/}
+or in the various \texttt{PW/examples/*/results/} subdirectories,
+after you have run the examples. All examples contain a README file.
 
 \subsection{Input data}
 
@@ -260,27 +270,27 @@ in namelist \&CONTROL. Most variables in namelists have default values. Only
 the following variables in \&SYSTEM must always be specified:
 
 \begin{tabular}{lll}
-      \texttt{ibrav} & (integer)& Bravais-lattice index\\
-      \texttt{celldm} &(real, dimension 6)& crystallographic constants\\
       \texttt{nat} &(integer)& number of atoms in the unit cell\\
       \texttt{ntyp} &(integer)& number of types of atoms in the unit cell\\
       \texttt{ecutwfc} &(real)& kinetic energy cutoff (Ry) for wavefunctions.
 \end{tabular}    \\
-For metallic systems, you have to specify how metallicity is treated
-in
-variable \texttt{occupations}. If you choose \texttt{occupations='smearing'},
-you have
+plus the variables needed to describe the crystal structure, e.g.:
+\begin{tabular}{lll}
+      \texttt{ibrav} & (integer)& Bravais-lattice index\\
+      \texttt{celldm} &(real, dimension 6)& crystallographic constants
+\end{tabular}    \\
+Alternative ways to input structural data are described in files
+\texttt{PW/Doc/INPUT\_PW.*}. For metallic systems, you have to specify
+how metallicity is treated in variable \texttt{occupations}.
+If you choose \texttt{occupations='smearing'}, you have
 to specify the smearing type \texttt{smearing} and the smearing width 
 \texttt{degauss}. Spin-polarized systems are as a rule treated as metallic 
 system, unless the total magnetization, \texttt{tot\_magnetization}
 is set to a fixed value, or if occupation numbers are fixed
 (\texttt{occupations='from input'} and card OCCUPATIONS).
     
-Explanations for the meaning of variables \texttt{ibrav} and \texttt{celldm},
-as well as on alternative ways to input structural data,
-are in files \texttt{PW/Doc/INPUT\_PW.txt} and \texttt{PW/Doc/INPUT\_PW.html}. 
-These files are the reference for input data and describe a large number
-of other variables as well. Almost all variables have default 
+Detailed explanations of the meaning of all variables are found in files
+\texttt{PW/Doc/INPUT\_PW.*}. Almost all variables have default 
 values, which may or may not fit your needs.
 
 Comment lines in namelists can be introduced by a "!", exactly as in fortran 
@@ -302,7 +312,7 @@ See the files mentioned above for details on the available ``cards''.
 Comments lines in ``cards'' can be introduced by either a ``!'' or a ``\#''
 character in the first position of a line.
  
-Note about k points: The k-point grid can be either automatically generated 
+Note about k-points: The k-point grid can be either automatically generated 
 or manually provided as a list of k-points and a weight in the Irreducible
 Brillouin Zone only of the Bravais lattice of the crystal. The code will 
 generate (unless instructed not to do so: see variable \texttt{nosym}) all
@@ -313,35 +323,27 @@ of Monkhorst and Pack.
 
 \subsection{Data files}
 
-The output data files are written in the directory \texttt{outdir/prefix.save}, as specified by variables
-\texttt{outdir} and \texttt{prefix} 
-(a string that is prepended
-to all file names, whose default value is: \texttt{prefix='pwscf'}). \texttt{outdir} can be specified
-as well in environment variable ESPRESSO\_TMPDIR. The \texttt{iotk}
-toolkit is used to write the file in a XML format, whose definition can
-be found in the Developer Manual. In order to use the data directory
-on a different machine, you should convert the binary files to formatted,
-transfer them, convert them back to unformatted as in the following 
-example:
-\begin{verbatim}
-  $bindir/iotk convert -t outdir/prefix.save/charge-density.dat myfile.txt
-  [ transfer file to the other machine ]
-  $bindir/iotk convert -b myfile.txt outdir/prefix.save/charge-density.dat
-\end{verbatim}
-If you need wavefunctions as well, you must to set the \pwx\ option 
-\texttt{wf\_collect} to \texttt{.true.}. In such case, wavefunction files 
-are found in directories \texttt{outdir/prefix.save/K*}, one per k-point.
-You should do the conversion for all of them.\\
-IMPORTANT NOTICE: starting with v.6, a new I/O system will replace the 
-current one. 
+The output data files are written in the directory \texttt{outdir/prefix.save},
+as specified in variable \texttt{prefix} (a string that is prepended
+to all file names, whose default value is \texttt{prefix='pwscf'}).
+\texttt{outdir} is specified via environment variable
+\texttt{ESPRESSO\_TMPDIR}. The usage of variable \texttt{outdir} is
+still possible but {\em deprecated}. The \texttt{FoX} library is used
+to write a ``head'' data file in a XML format. This file has a ``schema''
+that can be found on \texttt{http://www.quantum-espresso.org/ns/qes/qes-1.0}.
+See the Developer Manual for its contents. The data directory contains
+binary files that are not guaranteed to be readable on different machines.
+If you need file portability, compile the code with HDF5 (see the general
+User Guide).
 
-The execution stops if you create a file \texttt{prefix.EXIT} either
+The execution stops if you create an ``EXIT'' file \texttt{prefix.EXIT} either
 in the working directory (i.e. where the program is executed), or in
 the  \texttt{outdir} directory. Note that with some versions of MPI,
 the working directory  is the directory where the executable is! 
 The advantage of this procedure is that all files are properly closed, 
 whereas  just killing the process may leave data and output files in 
-an unusable state.
+an unusable state. If you start the execution with the EXIT file already
+in place, the code will stop after initialization. This is useful to have a quick check of the correctness of the input.
 
 \subsection{Electronic structure calculations}
 \paragraph{Single-point (fixed-ion) SCF calculation} 
@@ -350,12 +352,14 @@ Namelists \&IONS and \&CELL will be ignored. For LSDA spin-polarized
 calculations (that is: with a fixed quantization axis for magnetization),
 set \texttt{nspin=2}. Note that the number of k-points will be internally
 doubled (one set of k-points for spin-up, one set for spin-down).
-See Example 01.
+See example 1 (that is: \texttt{PW/examples/example01}).
+
 
 \paragraph{Band structure calculation}
 First perform a SCF calculation as above;
-then do a non-SCF calculation with the desired k-point grid and 
-number \texttt{nbnd} of bands. 
+then do a non-SCF calculation (at fixed potential, computed in the
+previous step) with the desired k-point grid and  number \texttt{nbnd}
+of bands. 
 Use \texttt{calculation='bands'} if you are interested in calculating
 only the Kohn-Sham states for the given set of k-points
 (e.g. along symmetry lines: see for instance
@@ -367,13 +371,12 @@ For DOS calculations you should choose \texttt{occupations='tetrahedra'},
 together with an automatically generated uniform k-point grid 
 (card K\_POINTS with option ``automatic'').
 Specify \texttt{nosym=.true.} to avoid generation of additional k-points in
-low symmetry cases. Variables \texttt{prefix} and \texttt{outdir}, which determine
+low symmetry cases. Variables \texttt{prefix} and \texttt{outdir}, which
+determine
 the names of input or output files, should be the same in the two runs.
-See Examples 01, 06, 07,
+See examples 1, 6, 7.
 
-NOTA BENE:  Since v.4.1, both atomic positions
-and the scf
-potential are read from the data file so that consistency is guaranteed.
+NOTA BENE: atomic positions are read from the data file of the scf step.
 
 \paragraph{Noncollinear magnetization, spin-orbit interactions}
 
@@ -384,26 +387,25 @@ spin-orbit calculations:
       \texttt{lspinorb}\\
       \texttt{starting\_magnetization} (one for each type of atoms)
 \end{quote}
-To make a spin-orbit calculation \texttt{noncolin} must be true. 
+To make a spin-orbit calculation both \texttt{noncolin} and
+\texttt{lspinorb} must be true. Furthermore you must use fully
+relativistic pseudopotentials at least for one atom. If all
+pseudopotentials are scalar-relativistic, the calculation is
+noncollinear but there is no spin-orbit coupling.
+
 If \texttt{starting\_magnetization} is set to zero (or not given) 
 the code makes a spin-orbit calculation without spin magnetization 
 (it assumes that time reversal symmetry holds and it does not calculate 
 the magnetization). The states are still two-component spinors but the
 total magnetization is zero. 
 
-If \texttt{starting\_magnetization} is different from zero, it makes a 
+If \texttt{starting\_magnetization} is different from zero, the code makes a 
 noncollinear spin polarized calculation with spin-orbit interaction. The 
 final spin magnetization might be zero or different from zero depending 
 on the system. Note that the code will look only for symmetries that leave
 the starting magnetization unchanged.
 
-Furthermore to make a spin-orbit calculation you must use fully
-relativistic pseudopotentials at least for the atoms in which you
-think that spin-orbit interaction is large. If all the pseudopotentials 
-are scalar
-relativistic the calculation becomes equivalent to a noncollinear
-calculation without spin orbit. (Andrea Dal Corso, 2007-07-27)
-See Example 06 for noncollinear magnetism, Example 07 (and references
+See example 6 for noncollinear magnetism, example 7 (and references
 quoted therein) for spin-orbit interactions.
 
 \paragraph{DFT+U}
@@ -417,29 +419,31 @@ the angular momentum and the occupancy of the orbitals with
 the Hubbard correction. If your Hubbard-corrected atoms are not
 there, you need to edit these files and to recompile.
 
-See Example 08 and its README.
+See example 8 and its README.
 
 \paragraph{Dispersion Interactions (DFT-D)}
 For DFT-D (DFT + semiempirical dispersion interactions), see the
-description of input variables \texttt{london*}, sample files
-\texttt{PW/tests/vdw.*}, and the comments in source file
-\texttt{Modules/mm\_dispersion.f90}.
+description of input variable \texttt{vdw\_corr} and related
+input variables; sample input files can be found in
+\texttt{test-suite/pw\_vdw/vdw-d*.in}. For DFT-D2, see also the
+comments in source file \texttt{Modules/mm\_dispersion.f90}.
+For DFT-D3, see the README in the \texttt{dft-d3/} directory.
 
 \paragraph{Hartree-Fock and Hybrid functionals}
 
-Since v.5.0, calculations in the Hartree-Fock approximation, or using 
-hybrid XC functionals that include some Hartree-Fock exchange, no longer
-require a special preprocessing before compilation.
-See \texttt{EXX\_example/} and its README file.
+Hybrid functionals do not require anything special to be done,
+but note that: 1) they are much slower than plain GGA calculations,
+2) non-scf and band calculations are not presently implemented, and
+3) there are no pseudopotentials generated for hybrid functionals.
+See \texttt{EXX\_example/} and its README file, and tests
+\texttt{pw\_b3lyp}, \texttt{pw\_pbe}, \texttt{pw\_hse}.
 
 \paragraph{Dispersion interaction with non-local functional (vdW-DF)}
-See example \texttt{vdwDF\_example} 
-and references
-quoted in file \texttt{README} therein.
+See example \texttt{vdwDF\_example}, references quoted in file
+\texttt{README} therein, tests \texttt{pw\_vdW}.
 
 \paragraph{Polarization via Berry Phase}
-See Example 04, its file README, 
-the documentation in the header of 
+See example 4, its file README,  the documentation in the header of 
 \texttt{PW/src/bp\_c\_phase.f90}. 
 
 \paragraph{Finite electric fields}
@@ -466,24 +470,24 @@ is present (\texttt{lelfield=.true.}) only Kubo terms are computed
 \paragraph{Structural optimization}
 For fixed-cell optimization, specify \texttt{calculation='relax'} and 
 add namelist \&IONS. All options for a single SCF calculation apply, 
-plus a few others. You
-may follow a structural optimization with a non-SCF band-structure
-calculation (since v.4.1, you do not need any longer to update the 
-atomic positions in the input file for non scf calculation).\\
-See Example 02.
+plus a few others. You may follow a structural optimization with a
+non-SCF band-structure calculation. See example 2.
 
 \paragraph{Molecular Dynamics} 
-Specify \texttt{calculation='md'}, the time step \texttt{dt}, and possibly the number of MD stops \texttt{nstep}.
-Use variable \texttt{ion\_dynamics} in namelist \&IONS for a fine-grained control
-of the kind of dynamics. Other options for setting the initial
-temperature and for thermalization using velocity rescaling are
-available. Remember: this is MD on the electronic ground state, not
+Specify \texttt{calculation='md'}, the time step \texttt{dt},
+and possibly the number of MD stops \texttt{nstep}.
+Use variable \texttt{ion\_dynamics} in namelist \&IONS
+for a fine-grained control of the kind of dynamics.
+Other options for setting the initial temperature
+and for thermalization using velocity rescaling are available.
+Remember: this is MD on the electronic ground state, not
 Car-Parrinello MD.
-See Example 03.
+See example 3.
 
 \paragraph{Free-energy surface calculations}
 
-Once \PWscf\ is patched with the \texttt{PLUMED} plug-in, it is possible to 
+Once \PWscf\ is patched with the \texttt{PLUMED} plug-in
+(only v.1.3), it is possible to 
 use most PLUMED functionalities by running \PWscf\ as: 
 \texttt{./pw.x -plumed} plus the other usual \PWscf\ arguments.
 The input file for \texttt{PLUMED} must be found in the specified 
@@ -491,29 +495,25 @@ The input file for \texttt{PLUMED} must be found in the specified
 
 \paragraph{Variable-cell optimization}
 
-Since v.4.2 the newer BFGS algorithm covers the case of variable-cell
-optimization as well. Note however that variable-cell calculations
-(both optimization and dynamics) are performed with plane waves and 
-G-vectors {\em calculated for the starting cell}. This means that if 
-you re-run a self-consistent calculation for the final cell and atomic 
-positions using the same cutoff \texttt{ecutwfc} (and/or \texttt{ecutrho} 
-if applicable), you may not find exactly the same results, unless your
-final and initial cells are very similar, or unless your cutoff(s) are very
-high. In order to provide a further check, a last step is performed in
-which a scf calculation is performed for the converged structure, with
-plane waves and G-vectors {\em calculated for the final cell}. Small 
-differences between the two last steps are thus to be expected and give
-an estimate of the reliability of the variable-cell optimization.
-If you get a large difference, you are likely quite far from convergence
-in the plane-wave basis set and you need to increase the cutoff(s).
+Variable-cell calculations (both optimization and dynamics) are performed
+with plane waves and G-vectors {\em calculated for the starting cell}.
+Inly the last step, after convergence has been achieved, is performed
+for the converged structure, with plane waves and G-vectors
+{\em calculated for the final cell}. Small differences between the
+two last steps are thus to be expected and give an estimate of the
+convergence of the variable-cell optimization with respect to the
+plane-wave basis. A large difference means that you are far from
+convergence in the plane-wave basis set and you need to increase the
+cutoff(s) \texttt{ecutwfc} and/or (if applicable) \texttt{ecutrho}.
 
 \paragraph{Variable-cell molecular dynamics}
 
 "A common mistake many new users make is to set the time step \texttt{dt}
 improperly to the same order of magnitude as for CP algorithm, or
 not setting \texttt{dt} at all. This will produce a ``not evolving dynamics''.
-Good values for the original RMW (RM Wentzcovitch) dynamics are 
-\texttt{dt} $ = 50 \div 70$. The choice of the cell mass is a delicate matter. An
+Good values for the original RMW (Wentzcovitch) dynamics are 
+\texttt{dt} $ = 50 \div 70$. The choice of the cell mass is a
+delicate matter. An
 off-optimal mass will make convergence slower. Too small masses, as
 well as too long time steps, can make the algorithm unstable. A good
 cell mass will make the oscillation times for internal degrees of
@@ -1352,11 +1352,12 @@ Assuming that your coordinates are correct (please carefully check!),
 you may not find all the symmetries you expect because:
 \begin{itemize}
 \item the number of significant figures in the atomic positions is not
-  large enough. In file \texttt{PW/eqvect.f90}, the variable \texttt{accep} is used to
+  large enough. In file \texttt{PW/src/eqvect.f90}, the variable \texttt{accep} is used to
   decide whether a rotation is a symmetry operation. Its current value
-  ($10^{-5}$) is quite strict: a rotated atom must coincide with
+  ($10^{-5}$), set in module \texttt{PW/src/symm\_base.f90}, 
+  is quite strict: a rotated atom must coincide with
   another atom to 5 significant digits. You may change the value of
-  accep and recompile. 
+  \texttt{accep} and recompile. 
 \item they are not acceptable symmetry operations of the Bravais
   lattice. This is the case for C$_{60}$, for instance: the $I_h$
   icosahedral group of C$_{60}$ contains 5-fold rotations that are

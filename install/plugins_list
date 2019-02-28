@@ -27,16 +27,16 @@ YAMBO=yambo-stable
 YAMBO_URL=http://www.yambo-code.org/files/yambo-stable-latest.tar.gz
 #
 # Package maintainer: 
-W90=wannier90-2.1.0
-W90_URL=http://www.wannier.org/code/$(W90).tar.gz
+W90=wannier90-3.0.0
+W90_URL=https://github.com/wannier-developers/wannier90/archive/v3.0.0.tar.gz
 #
 # Package maintainer: Layla Martin-Samos
 SAX=sax-2.0.3
 SAX_URL=$(URL)$(SAX).tar.gz
 #
 # Package maintainer: Davide Ceresoli
-GIPAW=qe-gipaw-6.3
-GIPAW_URL=https://github.com/dceresoli/qe-gipaw/archive/6.3.tar.gz
+GIPAW=qe-gipaw-6.4
+GIPAW_URL=https://github.com/dceresoli/qe-gipaw/archive/6.4.tar.gz
 #
 # Package maintainer: Layla Martin-Samos
 PLUMED=plumed-1.3-qe

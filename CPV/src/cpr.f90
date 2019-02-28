@@ -110,8 +110,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE orthogonalize_base,       ONLY : updatc
   USE control_flags,            ONLY : force_pairing, tprint
   USE mp,                       ONLY : mp_bcast, mp_sum
-  USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, np_ortho, &
-                                       me_ortho, ortho_comm, &
+  USE mp_global,                ONLY : root_bgrp, intra_bgrp_comm, &
                                        me_bgrp, inter_bgrp_comm, nbgrp, me_image
   USE ldaU_cp,                  ONLY : lda_plus_u, vupsi
   USE fft_base,                 ONLY : dfftp, dffts

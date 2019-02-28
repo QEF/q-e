@@ -321,6 +321,30 @@ SUBROUTINE print_clock( label )
 END SUBROUTINE print_clock
 !
 !----------------------------------------------------------------------------
+FUNCTION get_cpu_and_wall( n) result (t) 
+  !--------------------------------------------------------------------------
+  !
+  USE util_param, ONLY : DP 
+  USE mytime,     ONLY : clock_label, cputime, walltime, mpi_per_thread, &
+                         notrunning, called, t0cpu, t0wall, f_wall, f_tcpu
+  IMPLICIT NONE 
+  ! 
+  INTEGER  :: n 
+  REAL(DP) :: t(2)  
+  !
+  IF (t0cpu(n) == notrunning ) THEN 
+     t(1) = cputime(n)
+     t(2)  = walltime(n)
+   ELSE 
+     t(1)   = cputime(n) + f_tcpu() - t0cpu(n)
+     t(2)   = walltime(n)+ f_wall() - t0wall(n)
+   END IF 
+#if defined(PRINT_AVG_CPU_TIME_PER_THREAD)
+  ! rescale the elapsed cpu time on a per-thread basis
+  t(1)    = t(1)  * mpi_per_thread
+#endif
+END FUNCTION get_cpu_and_wall      
+!----------------------------------------------------------------------------
 SUBROUTINE print_this_clock( n )
   !----------------------------------------------------------------------------
   !

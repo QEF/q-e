@@ -23,7 +23,7 @@ SUBROUTINE addusdens1d (plan, prho)
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum
   USE uspp_param, ONLY: upf, lmaxq, nh
-  USE mp_global,  ONLY : intra_bgrp_comm
+  USE mp_bands,   ONLY : intra_bgrp_comm
   USE mp,         ONLY : mp_sum
 
   !

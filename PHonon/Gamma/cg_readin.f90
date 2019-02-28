@@ -18,6 +18,7 @@ SUBROUTINE cg_readin()
   USE uspp,      ONLY: okvan
   USE io_files,  ONLY: tmp_dir, prefix
   USE io_global, ONLY: ionode, ionode_id
+  USE lsda_mod,  ONLY: lsda
   USE noncollin_module, ONLY: noncolin
   USE mp_bands,  ONLY: nbgrp, ntask_groups
   USE mp,        ONLY: mp_bcast
@@ -87,6 +88,7 @@ SUBROUTINE cg_readin()
   !
   CALL read_file
 
+  IF (lsda) CALL errore('cg_readin','LSDA not available',1)
   IF (noncolin) CALL errore('cg_readin','noncolinear version not available',1)
   !
   !  various checks

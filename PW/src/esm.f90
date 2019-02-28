@@ -68,11 +68,10 @@ MODULE esm
      subroutine esm_hartree( rhog, ehart, aux )
         USE kinds,    ONLY : DP
         USE gvect,    ONLY : ngm
-        USE lsda_mod, ONLY : nspin
         USE fft_base, ONLY : dfftp
         IMPLICIT NONE
         real(DP)    :: ehart             !  Hartree energy
-        complex(DP) :: rhog(ngm,nspin)   !  n(G)
+        complex(DP) :: rhog(ngm)         !  n(G)
         complex(DP) :: aux(dfftp%nnr)    !  v_h(G)
 
         if( esm_bc == 'pbc' ) then
@@ -223,10 +222,9 @@ MODULE esm
   subroutine esm_stres_har( sigmahar, rhog )
     USE kinds,    ONLY : DP
     USE gvect,    ONLY : ngm
-    USE lsda_mod, ONLY : nspin
     IMPLICIT NONE
     real(DP), intent(out)   :: sigmahar(3,3)
-    complex(DP), intent(in) :: rhog(ngm,nspin)   !  n(G)
+    complex(DP), intent(in) :: rhog(ngm)   !  n(G)
 
     select case( esm_bc )
     case( 'pbc' )
@@ -301,10 +299,9 @@ MODULE esm
   subroutine esm_stres_loclong( sigmaloclong, rhog )
     USE kinds,    ONLY : DP
     USE gvect,    ONLY : ngm
-    USE lsda_mod, ONLY : nspin
     IMPLICIT NONE
     real(DP), intent(out)   :: sigmaloclong(3,3)
-    complex(DP), intent(in) :: rhog(ngm,nspin)   !  n(G)
+    complex(DP), intent(in) :: rhog(ngm)   !  n(G)
 
     select case( esm_bc )
     case( 'pbc' )
@@ -476,11 +473,10 @@ END SUBROUTINE esm_ggen_2d
 !-----------------------------------------------------------------------
 SUBROUTINE esm_hartree_pbc (rhog, ehart, aux)
   USE gvect,    ONLY : ngm
-  USE lsda_mod, ONLY : nspin
   USE fft_base, ONLY : dfftp
   IMPLICIT NONE
   real(DP)    :: ehart             !  Hartree energy
-  complex(DP) :: rhog(ngm,nspin)   !  n(G)
+  complex(DP) :: rhog(ngm)   !  n(G)
   complex(DP) :: aux(dfftp%nnr)    !  v_h(G)
   
   stop 'esm_hartree must not be called for esm_bc = pbc'
@@ -491,10 +487,9 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
 
   USE constants,        ONLY : tpi, fpi, e2
   USE gvect,            ONLY : ngm, mill
-  USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   USE fft_scalar,       ONLY : cft_1z
@@ -503,7 +498,7 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
   IMPLICIT NONE
   !
   real(DP)                 :: ehart             !  Hartree energy
-  complex(DP)              :: rhog(ngm,nspin)   !  n(G)      
+  complex(DP)              :: rhog(ngm)         !  n(G)
   complex(DP)              :: aux(dfftp%nnr)    !  v_h(G)   
   !
   !    here the local variables
@@ -526,11 +521,7 @@ SUBROUTINE esm_hartree_bc1(rhog, ehart, aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng)+1
      IF (n3<1) n3 = n3 + dfftp%nr3
-     if (nspin == 2) then
-        rg3 = rhog(ng,1)+rhog(ng,2)
-     else
-        rg3 = rhog(ng,1)
-     endif
+     rg3 = rhog(ng)
      rhog3(n3,ng_2d)=rg3
      if ( gamma_only .and. n1==0 .and. n2==0 ) then
         n3 = -mill(3,ng)+1
@@ -704,10 +695,9 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
 
   USE constants,        ONLY : tpi, fpi, e2
   USE gvect,            ONLY : ngm, mill
-  USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   USE fft_scalar,       ONLY : cft_1z
@@ -715,7 +705,7 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
   IMPLICIT NONE
   !
   real(DP)                 :: ehart             !  Hartree energy
-  complex(DP)              :: rhog(ngm,nspin)   !  n(G)
+  complex(DP)              :: rhog(ngm)         !  n(G)
   complex(DP)              :: aux(dfftp%nnr)    !  v_h(G)
   !
   !    here the local variables
@@ -738,11 +728,7 @@ SUBROUTINE esm_hartree_bc2 (rhog, ehart, aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng)+1
      IF (n3<1) n3 = n3 + dfftp%nr3    
-     if (nspin == 2) then
-        rg3 = rhog(ng,1)+rhog(ng,2)
-     else
-        rg3 = rhog(ng,1)
-     endif
+     rg3 = rhog(ng)
      rhog3(n3,ng_2d)=rg3
      if ( gamma_only .and. n1==0 .and. n2==0 ) then
         n3 = -mill(3,ng)+1
@@ -929,10 +915,9 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
 
   USE constants,        ONLY : tpi, fpi, e2
   USE gvect,            ONLY : ngm, mill
-  USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   USE fft_scalar,       ONLY : cft_1z
@@ -940,7 +925,7 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
   IMPLICIT NONE
   !
   real(DP)                 :: ehart             !  Hartree energy
-  complex(DP)              :: rhog(ngm,nspin)   !  n(G)
+  complex(DP)              :: rhog(ngm)         !  n(G)
   complex(DP)              :: aux(dfftp%nnr)    !  v_h(G)
   !
   !    here the local variables
@@ -963,11 +948,7 @@ SUBROUTINE esm_hartree_bc3 (rhog, ehart, aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng)+1
      IF (n3<1) n3 = n3 + dfftp%nr3    
-     if (nspin == 2) then
-        rg3 = rhog(ng,1)+rhog(ng,2)
-     else
-        rg3 = rhog(ng,1)
-     endif
+     rg3 = rhog(ng)
      rhog3(n3,ng_2d)=rg3
      if ( gamma_only .and. n1==0 .and. n2==0 ) then
         n3 = -mill(3,ng)+1
@@ -1144,10 +1125,9 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
 
   USE constants,        ONLY : pi, tpi, fpi, e2
   USE gvect,            ONLY : ngm, mill
-  USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat, tpiba2, at, bg
   USE control_flags,    ONLY : gamma_only
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   USE fft_base,         ONLY : dfftp
   USE fft_scalar,       ONLY : cft_1z
@@ -1155,7 +1135,7 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
   IMPLICIT NONE
   !
   real(DP)                 :: ehart             !  Hartree energy
-  complex(DP)              :: rhog(ngm,nspin)   !  n(G)
+  complex(DP)              :: rhog(ngm)         !  n(G)
   complex(DP)              :: aux(dfftp%nnr)    !  v_h(G)
   !
   !    here the local variables
@@ -1182,11 +1162,7 @@ SUBROUTINE esm_hartree_bc4 (rhog, ehart, aux)
      ng_2d = imill_2d(n1,n2)
      n3 = mill(3,ng)+1
      IF (n3<1) n3 = n3 + dfftp%nr3    
-     if (nspin == 2) then
-        rg3 = rhog(ng,1)+rhog(ng,2)
-     else
-        rg3 = rhog(ng,1)
-     endif
+     rg3 = rhog(ng)
      rhog3(n3,ng_2d)=rg3
      if ( gamma_only .and. n1==0 .and. n2==0 ) then
         n3 = -mill(3,ng)+1
@@ -1482,18 +1458,17 @@ END SUBROUTINE esm_hartree_bc4
   subroutine esm_stres_har_bc1( sigmahar, rhog )
     use kinds,         only : DP
     use gvect,         only : ngm, mill
-    use lsda_mod,      only : nspin
     use constants,     only : tpi, fpi, e2
     use cell_base,     only : omega, alat, at, tpiba, bg
     use control_flags, only : gamma_only
     use fft_base,      only : dfftp
     use fft_scalar,    only : cft_1z
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
     real(DP), intent(out)   :: sigmahar(3,3)
-    complex(DP), intent(in) :: rhog(ngm,nspin)   !  n(G)
+    complex(DP), intent(in) :: rhog(ngm)   !  n(G)
 
     integer :: ig, iga, igb, igz, igp, la, mu, iz
     real(DP) :: L, S, z0, z
@@ -1541,12 +1516,7 @@ END SUBROUTINE esm_hartree_bc4
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig)
        rhog3(igz,igp) = rg3
 
        ! expand function symmetrically to gz<0
@@ -1782,18 +1752,17 @@ END SUBROUTINE esm_hartree_bc4
   subroutine esm_stres_har_bc2( sigmahar, rhog )
     use kinds,         only : DP
     use gvect,         only : ngm, mill
-    use lsda_mod,      only : nspin
     use constants,     only : tpi, fpi, e2
     use cell_base,     only : omega, alat, at, tpiba, bg
     use control_flags, only : gamma_only
     use fft_base,      only : dfftp
     use fft_scalar,    only : cft_1z
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
     real(DP), intent(out)   :: sigmahar(3,3)
-    complex(DP), intent(in) :: rhog(ngm,nspin)   !  n(G)
+    complex(DP), intent(in) :: rhog(ngm)   !  n(G)
 
     integer :: ig, iga, igb, igz, igp, la, mu, iz
     real(DP) :: L, S, z0, z1, z
@@ -1841,12 +1810,7 @@ END SUBROUTINE esm_hartree_bc4
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig)
        rhog3(igz,igp) = rg3
 
        ! expand function symmetrically to gz<0
@@ -2131,18 +2095,17 @@ END SUBROUTINE esm_hartree_bc4
   subroutine esm_stres_har_bc3( sigmahar, rhog )
     use kinds,         only : DP
     use gvect,         only : ngm, mill
-    use lsda_mod,      only : nspin
     use constants,     only : tpi, fpi, e2
     use cell_base,     only : omega, alat, at, tpiba, bg
     use control_flags, only : gamma_only
     use fft_base,      only : dfftp
     use fft_scalar,    only : cft_1z
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
     real(DP), intent(out)   :: sigmahar(3,3)
-    complex(DP), intent(in) :: rhog(ngm,nspin)   !  n(G)
+    complex(DP), intent(in) :: rhog(ngm)   !  n(G)
 
     integer :: ig, iga, igb, igz, igp, la, mu, iz
     real(DP) :: L, S, z0, z1, z
@@ -2194,12 +2157,7 @@ END SUBROUTINE esm_hartree_bc4
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig)
        rhog3(igz,igp) = rg3
 
        ! expand function symmetrically to gz<0
@@ -2535,7 +2493,7 @@ SUBROUTINE esm_ewaldr_pbc ( alpha_g, ewr )
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE control_flags,    ONLY : iverbosity
   USE mp,               ONLY : mp_rank, mp_size
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
 
   implicit none
   real(DP), intent(in)  :: alpha_g
@@ -2602,7 +2560,7 @@ SUBROUTINE esm_ewaldr_bc4 ( alpha_g, ewr )
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE control_flags,    ONLY : iverbosity
   USE mp,               ONLY : mp_rank, mp_size
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
 
   implicit none
   real(DP), intent(in)  :: alpha_g
@@ -3322,7 +3280,7 @@ END SUBROUTINE esm_ewaldg_bc4
     use ions_base,     only : zv, nat, tau, ityp
     use control_flags, only : gamma_only
     use gvect,         only : gstart
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
@@ -3461,7 +3419,7 @@ END SUBROUTINE esm_ewaldg_bc4
     use ions_base,     only : zv, nat, tau, ityp
     use control_flags, only : gamma_only
     use gvect,         only : gstart
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
@@ -3623,7 +3581,7 @@ END SUBROUTINE esm_ewaldg_bc4
     use ions_base,     only : zv, nat, tau, ityp
     use control_flags, only : gamma_only
     use gvect,         only : gstart
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
@@ -4501,19 +4459,18 @@ END SUBROUTINE esm_local_bc4
   subroutine esm_stres_loclong_bc1( sigmaloclong, rhog )
     use kinds,         only : DP
     use gvect,         only : ngm, mill
-    use lsda_mod,      only : nspin
     use constants,     only : pi, sqrtpm1, tpi, fpi, e2
     use cell_base,     only : omega, alat, at, tpiba, bg
     use ions_base,     only : zv, nat, tau, ityp
     use control_flags, only : gamma_only
     use fft_base,      only : dfftp
     use fft_scalar,    only : cft_1z
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
     real(DP), intent(out) :: sigmaloclong(3,3)
-    complex(DP) :: rhog(ngm,nspin)   !  n(G)
+    complex(DP) :: rhog(ngm)   !  n(G)
 
     integer  :: ig, iga, igb, igz, igp, la, mu, iz, ia
     real(DP) :: L, S, z0, alpha, salp, z
@@ -4553,12 +4510,7 @@ END SUBROUTINE esm_local_bc4
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig)
        rhog3(igz,igp) = rg3
 
        if( gamma_only .and. iga==0 .and. igb==0 ) then
@@ -4764,19 +4716,18 @@ END SUBROUTINE esm_local_bc4
   subroutine esm_stres_loclong_bc2( sigmaloclong, rhog )
     use kinds,         only : DP
     use gvect,         only : ngm, mill
-    use lsda_mod,      only : nspin
     use constants,     only : pi, sqrtpm1, tpi, fpi, e2
     use cell_base,     only : omega, alat, at, tpiba, bg
     use ions_base,     only : zv, nat, tau, ityp
     use control_flags, only : gamma_only
     use fft_base,      only : dfftp
     use fft_scalar,    only : cft_1z
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
     real(DP), intent(out) :: sigmaloclong(3,3)
-    complex(DP) :: rhog(ngm,nspin)   !  n(G)
+    complex(DP) :: rhog(ngm)   !  n(G)
 
     integer  :: ig, iga, igb, igz, igp, la, mu, iz, ia
     real(DP) :: L, S, z0, z1, alpha, salp, z
@@ -4815,12 +4766,7 @@ END SUBROUTINE esm_local_bc4
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig)
        rhog3(igz,igp) = rg3
 
        if( gamma_only .and. iga==0 .and. igb==0 ) then
@@ -5055,19 +5001,18 @@ END SUBROUTINE esm_local_bc4
   subroutine esm_stres_loclong_bc3( sigmaloclong, rhog )
     use kinds,         only : DP
     use gvect,         only : ngm, mill
-    use lsda_mod,      only : nspin
     use constants,     only : pi, sqrtpm1, tpi, fpi, e2
     use cell_base,     only : omega, alat, at, tpiba, bg
     use ions_base,     only : zv, nat, tau, ityp
     use control_flags, only : gamma_only
     use fft_base,      only : dfftp
     use fft_scalar,    only : cft_1z
-    use mp_global,     only : intra_bgrp_comm
+    use mp_bands,      only : intra_bgrp_comm
     use mp,            only : mp_sum
     implicit none
 
     real(DP), intent(out) :: sigmaloclong(3,3)
-    complex(DP) :: rhog(ngm,nspin)   !  n(G)
+    complex(DP) :: rhog(ngm)   !  n(G)
 
     integer  :: ig, iga, igb, igz, igp, la, mu, iz, ia
     real(DP) :: L, S, z0, z1, alpha, salp, z
@@ -5108,12 +5053,7 @@ END SUBROUTINE esm_local_bc4
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig)
        rhog3(igz,igp) = rg3
           
        if( gamma_only .and. iga==0 .and. igb==0 ) then
@@ -5395,7 +5335,7 @@ SUBROUTINE esm_force_ewr_pbc ( alpha_g, forceion )
   USE cell_base,        ONLY : alat, at, bg
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE mp,               ONLY : mp_rank, mp_size
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
 
   implicit none
   integer               :: na, nb, nr, nrm, ip, np
@@ -5459,7 +5399,7 @@ SUBROUTINE esm_force_ewr_bc4 ( alpha_g, forceion )
   USE ions_base,        ONLY : zv, nat, tau, ityp
   USE control_flags,    ONLY : iverbosity
   USE mp,               ONLY : mp_rank, mp_size
-  USE mp_global,        ONLY : intra_bgrp_comm
+  USE mp_bands,         ONLY : intra_bgrp_comm
 
   implicit none
   integer               :: na, nb, nr, nrm, ipol, ip, np
@@ -6980,7 +6920,6 @@ END SUBROUTINE esm_force_lc_bc4
 SUBROUTINE esm_printpot( rhog )
     use kinds,         only : DP
     use gvect,         only : ngm, mill, igtongl
-    use lsda_mod,      only : nspin
     use constants,     only : pi, sqrtpm1, tpi, fpi, e2
     use constants,     only : AUTOEV, BOHR_RADIUS_ANGS
     use cell_base,     only : omega, alat, at, tpiba, bg
@@ -6992,7 +6931,7 @@ SUBROUTINE esm_printpot( rhog )
     USE io_files,      only : prefix, tmp_dir
     implicit none
 
-    complex(DP), intent(in) :: rhog(ngm,nspin)   !  n(G)
+    complex(DP), intent(in) :: rhog(ngm)   !  n(G)
 
     integer :: ig, iga, igb, igz, iz, ia
     real(DP) :: L, S, z0, z1, z, gz, alpha, salp
@@ -7035,12 +6974,7 @@ SUBROUTINE esm_printpot( rhog )
        if( igz<1 ) then
           igz = igz + dfftp%nr3
        end if
-
-       if( nspin == 2 ) then
-          rg3 = rhog(ig,1) + rhog(ig,2)
-       else
-          rg3 = rhog(ig,1)
-       endif
+       rg3 = rhog(ig)
        rho0g(igz) = rg3
 
        if( gamma_only .and. iga==0 .and. igb==0 ) then

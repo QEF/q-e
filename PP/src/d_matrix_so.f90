@@ -48,22 +48,19 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
   INTEGER :: l, n2, ind, ind1, ind2
   REAL(DP) :: j, ylm(maxm, maxlm), ylms(maxm, maxlm), &
        rl(3,maxm), rrl (maxm), srl(3,maxm), capel
-  REAL(DP) :: Ulall(maxl,maxmj+(maxmj-1),maxmj+(maxmj-1)), spinor, &
+  REAL(DP) :: Ulall(maxl,maxmj+(maxmj-1),maxmj+(maxmj-1)), &
                    Ul1(6,6), Ul1_inv(6,6), Ul3(14,14), Ul3_inv(14,14)
   COMPLEX(DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48), &
                       dy3 (7, 7, 48), dy112 (6, 6, 48), &
                       dy212 (10, 10, 48), dy312 (14, 14, 48), &
                       d12_con(2,2), d32_con(4,4), d52_con(6,6), d72_con(8,8), &
-                      s_spin(2,2,48), delta(8,8)
+                      s_spin(2,2), delta(8,8)
   COMPLEX(DP) :: ylm_compl(maxm, maxlm), ylms_compl(maxm, maxlm), &
                       yl1 (3, 3), yl2(5, 5), yl3(7,7), &
                       yl1_inv (3, 3), yl2_inv(5, 5),  yl3_inv(7, 7),  &
                       Ul1C(6,6), Ul1C_inv(6,6), Ul3C(14,14), Ul3C_inv(14,14)
+  REAL(DP), EXTERNAL :: spinor
   COMPLEX(DP), EXTERNAL :: ZDOTU
-  !
-  !    Here we find the true symmetries of the crystal
-  !
-  CALL spinsym( s_spin )
   !
   ! Transformation matrices from the | l m s s_z > basis to the
   ! | j mj l s > basis in the l-subspace
@@ -174,6 +171,11 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
   !
   DO isym = 1, nsym
      !
+     ! s_spin = rotation matrix for spin components (complex conjugate)
+     !
+     CALL find_u(sr(1,1,isym), s_spin)
+     s_spin(:,:) = CONJG(s_spin(:,:))
+     !
      ! srl(:,m) = rotated rl(:,m) vectors
      !
      srl = matmul (sr(:,:,isym), rl)
@@ -210,7 +212,7 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
            DO m1 = 1, 2
               DO n1 = 1, 2
                  dy112 (2*(m-1)+m1, 2*(n-1)+n1, isym) = dy1 (m, n, isym) &
-                                            * s_spin (m1, n1, isym)
+                                            * s_spin (m1, n1)
               ENDDO
            ENDDO
         ENDDO
@@ -241,7 +243,7 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
            DO m1 = 1, 2
               DO n1 = 1, 2
                  dy312 (2*(m-1)+m1, 2*(n-1)+n1, isym) = dy3 (m, n, isym) &
-                                            * s_spin (m1, n1, isym)
+                                            * s_spin (m1, n1)
               ENDDO
            ENDDO
         ENDDO

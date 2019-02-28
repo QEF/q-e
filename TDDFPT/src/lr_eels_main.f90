@@ -27,14 +27,19 @@ PROGRAM lr_eels_main
   USE global_version,        ONLY : version_number
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY : environment_start
-  USE mp_global,             ONLY : nimage, mp_startup, inter_bgrp_comm, &
-                                    ibnd_start, ibnd_end
+  USE mp_global,             ONLY : mp_startup
+  USE mp_world,              ONLY : world_comm
+  USE mp_pools,              ONLY : intra_pool_comm
+  USE mp_bands,              ONLY : intra_bgrp_comm, inter_bgrp_comm, &
+                                    ntask_groups
+  USE mp_bands_TDDFPT,       ONLY : ibnd_start, ibnd_end
+  USE mp_diag,               ONLY : mp_start_diag
+  USE command_line_options,  ONLY : ndiag_
   USE wvfct,                 ONLY : nbnd
-  USE wavefunctions,  ONLY : psic
+  USE wavefunctions,         ONLY : psic
   USE check_stop,            ONLY : check_stop_now, check_stop_init
   USE fft_base,              ONLY : dffts
   USE uspp,                  ONLY : okvan
-  USE mp_bands,              ONLY : ntask_groups
   USE wrappers,              ONLY : memstat
   !
   IMPLICIT NONE
@@ -49,9 +54,11 @@ PROGRAM lr_eels_main
   !
   pol_index = 1
   !
-#if defined(__MPI)
   CALL mp_startup ( )
-#endif
+  CALL mp_start_diag ( ndiag_, world_comm, intra_bgrp_comm, &
+       do_distr_diag_inside_bgrp_ = .true. )
+  CALL set_mpi_comm_4_solvers( intra_pool_comm, intra_bgrp_comm, &
+       inter_bgrp_comm )
   !
   CALL environment_start ( code2 )
   !
@@ -216,6 +223,7 @@ PROGRAM lr_eels_main
   !
   CALL print_clock_lr()
   !
+  CALL unset_mpi_comm_4_solvers()
   CALL stop_lr( .TRUE. )
   !
   IF (lr_verbosity > 5) THEN

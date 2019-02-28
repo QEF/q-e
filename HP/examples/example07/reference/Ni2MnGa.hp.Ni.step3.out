@@ -1,0 +1,178 @@
+
+     Program HP v.6.3 starts on  4Feb2019 at 15:49:50 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     8 processors
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       8
+
+     =--------------------------------------------------------------------------=
+
+       Calculation of Hubbard parameters from DFPT; please cite this program as
+
+       I. Timrov, N. Marzari, and M. Cococcioni, Phys. Rev. B 98, 085127 (2018)
+
+     =--------------------------------------------------------------------------=
+
+     Reading data from directory:
+     /scratch/timrov/WORK_DFPT_plus_U/A_PORTING_2018/A_Gitlab/A_my_Gitlab_08.11.2018/q-e/tempdir/Ni2MnGa.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PBESOL ( 1  4 10  8 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF: wavefunction(s)  3D renormalized
+               file Ni.pbesol-n-rrkjus_psl.0.1.UPF: wavefunction(s)  3D renormalized
+               file Ga.pbesol-dn-rrkjus_psl.0.2.UPF: wavefunction(s)  4S 3D renormalized
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         207     105     33                 5652     2016     371
+     Max         208     106     35                 5656     2019     372
+     Sum        1663     847    271                45239    16145    2975
+ 
+     Generating pointlists ...
+     new r_m :   0.2526 (alat units)  1.9703 (a.u.) for type    1
+     new r_m :   0.2526 (alat units)  1.9703 (a.u.) for type    2
+     new r_m :   0.2526 (alat units)  1.9703 (a.u.) for type    3
+
+     Check: negative core charge=   -0.000006
+ --- in v_hubbard ---
+Hubbard energy    0.0000
+ -------
+ 
+
+     bravais-lattice index     =             7
+     lattice parameter (alat)  =        7.8000 (a.u.)
+     unit-cell volume          =      335.5589 (a.u.)^3
+     number of atoms/cell      =             4
+     number of atomic types    =             3
+     kinetic-energy cut-off    =         50.00 (Ry)
+     charge density cut-off    =        400.00 (Ry)
+     conv. thresh. for NSCF    =       1.0E-11
+     conv. thresh. for chi     =       1.0E-05
+     Input Hubbard parameters (in eV):
+       U ( 1)                     =   1.00000E-08
+       U ( 2)                     =   1.00000E-08
+
+     celldm(1) =  7.80000  celldm(2) =  0.00000  celldm(3) =  1.41421
+     celldm(4) =  0.00000  celldm(5) =  0.00000  celldm(6) =  0.00000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (  0.5000 -0.5000  0.7071 )  
+               a(2) = (  0.5000  0.5000  0.7071 )  
+               a(3) = ( -0.5000 -0.5000  0.7071 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.0000 -1.0000  0.0000 )  
+               b(2) = (  0.0000  1.0000  0.7071 )  
+               b(3) = ( -1.0000  0.0000  0.7071 )  
+
+     Atoms inside the unit cell (Cartesian axes):
+     site n.  atom      mass           positions (alat units)
+        1      Mn     54.9380   tau(  1) = (  0.00000  0.00000  0.00000  )
+        2      Ni     58.6930   tau(  2) = (  0.50000  0.00000  1.06066  )
+        3      Ni     58.6930   tau(  3) = (  0.00000 -0.50000  1.06066  )
+        4      Ga     69.7230   tau(  4) = (  0.00000  0.00000  0.70711  )
+
+     Atom which will be perturbed:
+
+        2      Ni     58.6930   tau( 2) = (  0.50000  0.00000  1.06066  )
+
+     Reading data from directory:
+     /scratch/timrov/WORK_DFPT_plus_U/A_PORTING_2018/A_Gitlab/A_my_Gitlab_08.11.2018/q-e/tempdir/Ni2MnGa.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PBESOL ( 1  4 10  8 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+               file Mn.pbesol-spn-rrkjus_psl.0.3.1.UPF: wavefunction(s)  3D renormalized
+               file Ni.pbesol-n-rrkjus_psl.0.1.UPF: wavefunction(s)  3D renormalized
+               file Ga.pbesol-dn-rrkjus_psl.0.2.UPF: wavefunction(s)  4S 3D renormalized
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         207     105     33                 5652     2016     371
+     Max         208     106     35                 5656     2019     372
+     Sum        1663     847    271                45239    16145    2975
+ 
+     Generating pointlists ...
+
+     Check: negative core charge=   -0.000006
+ --- in v_hubbard ---
+Hubbard energy    0.0000
+ -------
+ 
+     =====================================================================
+
+                          PERTURBED ATOM #    2
+
+     site n.  atom      mass           positions (alat units)
+        2      Ni     58.6930   tau( 2) = (  0.50000  0.00000  1.06066  )
+ 
+     =====================================================================
+
+     The perturbed atom has a type which is not unique!
+     Changing the type of the perturbed atom and recomputing the symmetries...
+     The number of symmetries is reduced :
+     nsym =  8  nsym_PWscf = 16
+     Changing the type of the perturbed atom back to its original type...
+
+
+     The grid of q-points ( 2, 2, 2)  (  4 q-points ) :
+       N       xq(1)         xq(2)         xq(3)       wq
+       1   0.000000000   0.000000000   0.000000000   0.125000000
+       2   0.500000000   0.000000000  -0.353553381   0.500000000
+       3   0.500000000  -0.500000000  -0.707106762   0.250000000
+       4   0.000000000   0.000000000  -0.707106762   0.125000000
+
+     Computing the sum over q of the response occupation matrices...
+
+     q #   1 =  0.000000000   0.000000000   0.000000000
+ 
+     Number of q in the star =    1
+     List of q in the star:
+          1   0.000000000   0.000000000   0.000000000
+
+     q #   2 =  0.500000000   0.000000000  -0.353553381
+ 
+     Number of q in the star =    4
+     List of q in the star:
+          1   0.500000000   0.000000000  -0.353553381
+          2   0.000000000   0.500000000   0.353553381
+          3   0.000000000  -0.500000000   0.353553381
+          4  -0.500000000   0.000000000  -0.353553381
+
+     q #   3 =  0.500000000  -0.500000000  -0.707106762
+ 
+     Number of q in the star =    2
+     List of q in the star:
+          1   0.500000000  -0.500000000  -0.707106762
+          2   0.500000000   0.500000000  -0.707106762
+
+     q #   4 =  0.000000000   0.000000000  -0.707106762
+ 
+     Number of q in the star =    1
+     List of q in the star:
+          1   0.000000000   0.000000000  -0.707106762
+ 
+     HP           :      2.85s CPU      2.89s WALL
+
+ 
+   This run was terminated on:  15:49:53   4Feb2019            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

@@ -56,7 +56,7 @@ subroutine phq_setup
   USE io_files,      ONLY : tmp_dir
   USE klist,         ONLY : xk, nks, nkstot
   USE lsda_mod,      ONLY : nspin, starting_magnetization
-  USE scf,           ONLY : v, vrs, vltot, kedtau
+  USE scf,           ONLY : v, vrs, vltot, kedtau, rho
   USE fft_base,      ONLY : dfftp
   USE gvect,         ONLY : ngm
   USE gvecs,         ONLY : doublegrid

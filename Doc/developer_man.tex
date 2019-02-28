@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.3}
+\def\version{6.4}
 \def\QE{{\sc Quantum ESPRESSO}}
 \def\qe{QE}
 \textwidth = 17cm
@@ -453,28 +453,28 @@ default :
 \end{verbatim}
 {\em If no target specified, ask for one, giving a list of possibilities}
 \begin{verbatim}
-pw : bindir libfft libdavid libcg libla libutil mods liblapack libs libiotk dftd3
+pw : pwlibs
     if test -d PW ; then \
     ( cd PW ; $(MAKE) TLDEPS= all || exit 1) ; fi
 
 \end{verbatim}
-{\em Target {\tt pw}: first check the list of dependencies, bindir etc.,
+{\em Target {\tt pw}: first check the list of dependencies ({\tt pwlib} in this case), 
   do what is needed; then go into {\tt PW/} and give command
-  {\tt make all} (with empty value of TLDEPS: this is likely no longer needed).
-  Note the use of {\tt exit 1}, which is required to forward
+  {\tt make all}. Note the use of {\tt exit 1}, which is required to forward
 the exit status of the sub-directory make to this makefile, since the section
 in parenthesis is run in a subshell and the {\tt if / fi} block will otherwise
 ``hide'' its return status and ``make'' will continue in case of errors. }
+  See below for the meaning of TLDEPS.
 \begin{verbatim}
-gipaw : pw
+gipaw : pwlibs
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 \end{verbatim}
-{\em Target {\tt gipaw}: do target pw, then go into directory
+{\em Target {\tt gipaw}: do target {\tt pwlibs}, then go into directory
 {\tt install/}, execute {\tt make gipaw} using {\tt plugins\_makefile}
 as Makefile. This will check if GIPAW is there, download from the network
 if not, compile and link it}
 \begin{verbatim}
-libblas : touch-dummy
+libblas :
      cd install ; $(MAKE) -f extlibs_makefile $@
 \end{verbatim}
 {\em Target {\tt libblas}: this is an external library, that may or may
@@ -501,7 +501,7 @@ pwtools: pw
 \end{verbatim}
 {\em Target {\tt pw}: go into {\tt src/} if it exists, and (apart
 from \texttt{make} wizardry) give command {\tt make pw}. It is important
-to note that {\tt pwtools} has to depend on {\tt pw} or else this
+that {\tt pwtools} explicitly depends upon {\tt pw} or else this
 makefile will break when calling parallel make using {\tt make -j\# }
 Other targets are quite similar: go into a subdirectory, e.g.
 {\tt Doc/} and '{\tt make} something', e.g. {\tt make clean}.}
@@ -516,8 +516,6 @@ include ../../make.inc
 {\em Contains machine- and \qe-specific definitions}
 \begin{verbatim}
 MODFLAGS= $(BASEMOD_FLAGS) \
-          $(MOD_FLAG)../../KS_Solvers/Davidson \
-          $(MOD_FLAG)../../KS_Solvers/CG \
           $(MOD_FLAG)../../dft-d3/
 \end{verbatim}
     {\em Location of needed modules, used in  \texttt{make.inc};
@@ -536,17 +534,26 @@ wannier_enrg.o
 {\em List of objects - add here new objects, or delete from this list. Do not
 forget the backslash! It ensure continuation of the line}
 \begin{verbatim}
-QEMODS=../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a .....
+QEMODS=../../Modules/libqemod.a \
+       ../../KS_Solvers/libks_solvers.a \
+       ...
 \end{verbatim}
 {\em F95 module objects needed for compiling and linking}
 \begin{verbatim}
-TLDEPS=bindir mods libs liblapack libblas libenviron
+TLDEPS=bindir libs mods libks_solvers dftd3
 \end{verbatim}
 {\em TLDEPS=Top-Level DEPendencieS: a machinery to ensure proper
 compilation with correct dependencies also if compiling from inside
-a package directory and not from top level}
+a package directory and not from top level. In the top-level Makefile,
+TLDEPS is set to an empty string (TLDEPS=) and transmitted to Makefiles
+in the subdirectories. These contain a target "tldeps" that does nothing
+if TLDEPS is empty (i.e. executing from the top level); it goes to the
+top-level directory and executes TLDEPS otherwise. TLDEPS in subdirectory
+Makefiles must be set to the same dependencies of the intended target
+(e.g. pw.x in the following example) in the top-level Makefile.
+}
 \begin{verbatim}
-all : tldeps pw.x generate_vdW_kernel_table.x
+all : tldeps pw.x generate_vdW_kernel_table.x ...
 \end{verbatim}
 {\em Targets that will be build - add here new executables}
 \begin{verbatim}
@@ -1355,6 +1362,9 @@ Once you have made your changes, {\em commit} (save) then:
   \verb|git commit| {\em list-of-changed-files}, or \\
   \verb|git commit -a| (commits all modified files)
 \end{quote}
+Please when committing BE EXTREMELY CAREFUL not to add files that do 
+not belong to the repository, e.g.: data files, executables, objects.
+These files MUST NOT BE COMMITTED.
 Once you are finished with changes, you have to {\em push} (publish)
 to the remote repository:
 \begin{quote}
@@ -1368,6 +1378,11 @@ The branch may be automatically removed after the merge (set the appropriate
 option if you approve your merge) or using \verb|git branch -d | 
 {\em my-new-branch}.
 
+Note: if a merge request is pending and you push further changes to the
+branch to be merged, the merge request will be automatically updated.
+If this is not what you want, commit to a different branch, or wait
+until the merge is done.
+
 It may be a good idea to align your branch to the current development
 version before the merge request. If you have modified a file that has
 meanwhile been modified in the repository, a conflict will arise. You
@@ -1379,7 +1394,7 @@ can use \texttt{git stash} to resolve the conflict:
 \end{quote}
 Beware! you may need to manually merge files that have been modified both 
 by you and in the repository. \texttt{git stash -l} list all stashed
-changes in reverese chronological order. The stash can be cleared using
+changes in reverse chronological order. The stash can be cleared using
 \texttt{git stash clear}.
 
 Note: if you do not change sources but only documentation, tests, examples,
@@ -1387,15 +1402,18 @@ add \verb|[skip ci]| in the commit message. This prevents execution of
 automatic compilation on GitLab (that sometimes fails for no good reason,
 blocking a subsequent merge request).
 
+Note: a commit message containing \verb|[fixes issue #N]| should 
+automatically mark issue N to as solved once it is merged.
+
 \subsection{Working directly into the develop branch}
-Only for people knowing what they are doing (or ready to fix the mess in case
-they didn't know what they were doing):
+NOT RECOMMENDED - only for people knowing what they are doing 
+(or ready to fix the mess in case they didn't know what they were doing):
 \begin{itemize}
 \item \verb|git clone git@gitlab.com:QEF/q-e.git| if not already done
 \item Ensure you switch to the ``develop'' branch:
   \verb|git checkout --track origin/develop|
 \item Work on it as in the previous subsection
-\item When you are ready, \verb|git push|
+\item When you are ready, commit and push.
 \end{itemize}
 
 \subsection{A few useful commands}
@@ -1638,7 +1656,7 @@ others.  In that case, define them as "\$(FFLAGS) -something\_else".
 
 - "try\_fflags\_noopt": flags for Fortran 77 with all optimizations
 turned off: this is usually "-O0".
-These flags used to be needed to compile flib/dlamch.f; likely obsolete
+These flags used to be needed to compile LAPACK dlamch.f; likely obsolete
 
 - "try\_ldflags": flags for the linking phase (not including the list
 of libraries: this is decided later).

@@ -28,7 +28,7 @@
     !--------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
-    USE cell_base, ONLY : at, bg, celldm
+    USE cell_base, ONLY : at, bg, alat 
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, zero, ryd2ev
     USE io_global, ONLY : ionode_id
     USE io_epw,    ONLY : iudecayH
@@ -91,9 +91,9 @@
     !! $$\mathbf{r}\cdot\mathbf{k}
     REAL(kind=DP) :: tmp
     !! Maximum value of the real space Hamiltonian
-    REAL(kind=dp) :: et_opt(nbnd,nks)
+    REAL(kind=DP) :: et_opt(nbnd,nks)
     !! hamiltonian eigenvalues within the outer window in the first ndimwin(ik) entries
-    REAL(kind=dp) :: et_tmp(nbnd,nks)
+    REAL(kind=DP) :: et_tmp(nbnd,nks)
     !! temporary array for hamiltonian eigenvalues 
     !
     COMPLEX(kind=DP) :: chs(nbndsub, nbndsub, nks)
@@ -222,7 +222,7 @@
       DO ir = 1, nrr
         !
         tmp =  maxval( abs( chw (:,:,ir)) )
-        WRITE(iudecayH,*) wslen(ir) * celldm (1) * bohr2ang, tmp
+        WRITE(iudecayH,*) wslen(ir) * alat * bohr2ang, tmp
         !
       ENDDO
       !
@@ -255,7 +255,7 @@
     !!
     !
     USE kinds,         ONLY : DP
-    USE cell_base,     ONLY : at, bg, celldm
+    USE cell_base,     ONLY : at, bg, alat
     USE elph2,         ONLY : cdmew
     USE io_epw,        ONLY : iudecayP
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone
@@ -264,7 +264,7 @@
     USE mp_world,      ONLY : mpime
     USE mp,            ONLY : mp_barrier, mp_sum
     ! 
-    implicit none
+    IMPLICIT NONE
     !
     !  input variables
     !
@@ -459,13 +459,13 @@
     ! Check spatial decay of Dipole in Wannier basis
     ! the unit in r-space is angstrom
     !
-    IF (mpime.eq.ionode_id) then
+    IF (mpime.eq.ionode_id) THEN
       OPEN(unit=iudecayP,file='decay.P')
       WRITE(iudecayP, '(/3x,a/)') '#Spatial decay of dipole in Wannier basis'
       DO ir = 1, nrr
         !
         tmp =  maxval( abs( cdmew(:, :,:,ir)) )
-        WRITE(iudecayP,*) wslen(ir) * celldm(1) * bohr2ang, tmp
+        WRITE(iudecayP,*) wslen(ir) * alat * bohr2ang, tmp
         !
       ENDDO
       !
@@ -503,7 +503,7 @@
     !!
     !
     USE kinds,         ONLY : DP
-    USE cell_base,     ONLY : at, bg, celldm
+    USE cell_base,     ONLY : at, bg, alat
     USE ions_base,     ONLY : nat, tau
     USE phcom,         ONLY : nq1, nq2, nq3
     USE elph2,         ONLY : rdw, epsi, zstar
@@ -515,7 +515,7 @@
     USE mp,            ONLY : mp_barrier
     USE mp_global,     ONLY : inter_pool_comm
     ! 
-    implicit none
+    IMPLICIT NONE
     !
     !  input variables
     !
@@ -605,7 +605,7 @@
       DO ir = 1, nrr
         !
         tmp =  maxval ( abs( rdw(:,:,ir)) )
-        WRITE(iudecaydyn, *) wslen(ir) * celldm(1) * bohr2ang, tmp
+        WRITE(iudecaydyn, *) wslen(ir) * alat * bohr2ang, tmp
         !
       ENDDO
       CLOSE(iudecaydyn)
@@ -627,7 +627,7 @@
     !--------------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
-    USE cell_base, ONLY : at, bg, celldm
+    USE cell_base, ONLY : at, bg, alat
     USE elph2,     ONLY : cvmew
     USE constants_epw, ONLY : twopi, one, zero, ci, czero, cone, bohr2ang
     USE io_epw,    ONLY : iummn, iubvec, iudecayv
@@ -636,7 +636,9 @@
     USE mp_global, ONLY : inter_pool_comm, my_pool_id
     USE mp,        ONLY : mp_barrier, mp_sum
     USE mp_world,  ONLY : mpime
-    implicit none
+    USE division,  ONLY : fkbounds
+    !
+    IMPLICIT NONE
     !
     !  input variables
     !
@@ -750,7 +752,7 @@
     !
     ! setup rotation matrix - we need access to all for the k+b
     cu_big = czero
-    CALL ckbounds(ikstart, ikstop)
+    CALL fkbounds(nkstot, ikstart, ikstop)
     cu_big(:,:,ikstart:ikstop) = cu(:,:,:)
     CALL mp_sum(cu_big,inter_pool_comm)
     !
@@ -916,7 +918,7 @@
       DO ib = 1, nnb
         !
         ! bring bvec to units of 2piba since xk is cartesian units of 2piba
-        b_tmp(:) = celldm(1) / (twopi) * bvec(:,ib,nkk_abs)
+        b_tmp(:) = alat / (twopi) * bvec(:,ib,nkk_abs)
         CALL ktokpmq ( xk(:,ik), b_tmp(:), +1, ipool, nkb, nkb_abs)
         !
         ! M_mn_utmp(:,:) = matmul( m_mat_opt(:,:,ib,ik), cu_big(:,:,nkb_abs) )
@@ -1008,7 +1010,7 @@
       DO ir = 1, nrr
         !
         tmp =  maxval ( abs( cvmew(:,:,:,ir)) )
-        WRITE(iudecayv, *) wslen(ir) * celldm(1) * bohr2ang, tmp
+        WRITE(iudecayv, *) wslen(ir) * alat * bohr2ang, tmp
         !
       ENDDO
       !
@@ -1043,14 +1045,15 @@
     !-----------------------------------------------------------------------
     !
     USE kinds,     ONLY : DP
-    USE cell_base, ONLY : at, bg, celldm
+    USE cell_base, ONLY : at, bg, alat
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero, cone
     USE io_epw,    ONLY : iuwane
     USE io_global, ONLY : ionode_id
     USE mp_global, ONLY : inter_pool_comm
     USE mp       , ONLY : mp_sum 
     USE mp_world,  ONLY : mpime
-    implicit none
+    ! 
+    IMPLICIT NONE
     !
     !  input variables
     !
@@ -1174,7 +1177,7 @@
       DO ir = 1, nrr
         ! 
         tmp =  maxval ( abs(epmatw(:,:,ir)) ) 
-        WRITE(iuwane, *) wslen(ir) * celldm(1) * bohr2ang, tmp
+        WRITE(iuwane, *) wslen(ir) * alat * bohr2ang, tmp
         !
       ENDDO
       !
@@ -1205,7 +1208,7 @@
     !--------------------------------------------------------------------------------
     !
     USE kinds,         ONLY : DP
-    USE cell_base,     ONLY : at, bg, celldm
+    USE cell_base,     ONLY : at, bg, alat
     USE elph2,         ONLY : epmatwp
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
     USE io_epw,        ONLY : iuwanep
@@ -1213,7 +1216,7 @@
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
     ! 
-    implicit none
+    IMPLICIT NONE
     !
     !  Input variables 
     !
@@ -1306,8 +1309,8 @@
           ! rvec1 : electron-electron0 distance
           ! rvec2 : phonon - electron0 distance
           !
-          WRITE(iuwanep, '(5f15.10)') len1 * celldm(1) * bohr2ang, &
-                                  len2 * celldm(1) * bohr2ang, tmp
+          WRITE(iuwanep, '(5f15.10)') len1 * alat * bohr2ang, &
+                                  len2 * alat * bohr2ang, tmp
         ENDDO
         IF (ir.eq.nrr_g) CLOSE(iuwanep)
       ENDIF
@@ -1332,13 +1335,14 @@
     !--------------------------------------------------------------------------------
     !
     USE kinds,         ONLY : DP
-    USE cell_base,     ONLY : at, bg, celldm
+    USE cell_base,     ONLY : at, bg, alat
     USE constants_epw, ONLY : bohr2ang, twopi, ci, czero
     USE io_epw,        ONLY : iunepmatwe, iunepmatwp, iuwanep
     USE io_global,     ONLY : ionode_id
     USE mp,            ONLY : mp_barrier
     USE mp_world,      ONLY : mpime
-    implicit none
+    !
+    IMPLICIT NONE
     !
     !  input variables - note irvec is dimensioned with nrr_k 
     !                    (which is assumed to be larger than nrr_q)
@@ -1359,7 +1363,7 @@
     !! Coordinates of real space vector 
     !
     REAL(kind=DP), INTENT(in) :: xk(3, nq)
-    !! Kpoint coordinates (cartesian in units of 2piba) 
+    !! K-point coordinates (cartesian in units of 2piba) 
     ! 
     COMPLEX(kind=DP), INTENT(in) :: epmatwe (nbnd, nbnd, nrr_k, nmodes)
     !! EP matrix in electron-wannier representation and phonon bloch representation
@@ -1442,8 +1446,8 @@
           ! rvec1 : electron-electron0 distance
           ! rvec2 : phonon - electron0 distance
           !
-          WRITE(iuwanep, '(5f15.10)') len1 * celldm(1) * bohr2ang, &
-                                  len2 * celldm(1) * bohr2ang, tmp
+          WRITE(iuwanep, '(5f15.10)') len1 * alat * bohr2ang, &
+                                  len2 * alat * bohr2ang, tmp
         ENDDO
         IF (ir == nrr_g) CLOSE(iuwanep)
       ENDIF

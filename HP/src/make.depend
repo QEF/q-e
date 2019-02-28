@@ -36,9 +36,7 @@ hp_check_type.o : ../../Modules/noncol.o
 hp_check_type.o : ../../PW/src/symm_base.o
 hp_check_type.o : hpcom.o
 hp_clean_q.o : ../../LR_Modules/lrcom.o
-hp_clean_q.o : ../../Modules/control_flags.o
 hp_close_q.o : ../../LR_Modules/lrcom.o
-hp_close_q.o : ../../Modules/control_flags.o
 hp_close_q.o : ../../PW/src/buffers.o
 hp_close_q.o : hpcom.o
 hp_dealloc_1.o : ../../LR_Modules/lrcom.o
@@ -57,7 +55,7 @@ hp_dnsq.o : ../../Modules/io_files.o
 hp_dnsq.o : ../../Modules/io_global.o
 hp_dnsq.o : ../../Modules/ions_base.o
 hp_dnsq.o : ../../Modules/kind.o
-hp_dnsq.o : ../../Modules/mp_global.o
+hp_dnsq.o : ../../Modules/mp_pools.o
 hp_dnsq.o : ../../Modules/uspp.o
 hp_dnsq.o : ../../Modules/wavefunctions.o
 hp_dnsq.o : ../../PW/src/buffers.o
@@ -81,7 +79,7 @@ hp_dvpsi_pert.o : ../../LR_Modules/lrcom.o
 hp_dvpsi_pert.o : ../../Modules/io_files.o
 hp_dvpsi_pert.o : ../../Modules/ions_base.o
 hp_dvpsi_pert.o : ../../Modules/kind.o
-hp_dvpsi_pert.o : ../../Modules/mp_global.o
+hp_dvpsi_pert.o : ../../Modules/mp_pools.o
 hp_dvpsi_pert.o : ../../Modules/wavefunctions.o
 hp_dvpsi_pert.o : ../../PW/src/buffers.o
 hp_dvpsi_pert.o : ../../PW/src/ldaU.o
@@ -137,13 +135,18 @@ hp_load_q.o : ../../LR_Modules/lrcom.o
 hp_load_q.o : ../../Modules/io_global.o
 hp_load_q.o : ../../PW/src/pwcom.o
 hp_load_q.o : hpcom.o
+hp_main.o : ../../LAXlib/mp_diag.o
 hp_main.o : ../../Modules/check_stop.o
+hp_main.o : ../../Modules/command_line_options.o
 hp_main.o : ../../Modules/environment.o
 hp_main.o : ../../Modules/io_files.o
 hp_main.o : ../../Modules/io_global.o
 hp_main.o : ../../Modules/ions_base.o
 hp_main.o : ../../Modules/kind.o
+hp_main.o : ../../Modules/mp_bands.o
 hp_main.o : ../../Modules/mp_global.o
+hp_main.o : ../../Modules/mp_pools.o
+hp_main.o : ../../Modules/mp_world.o
 hp_main.o : hpcom.o
 hp_ns_trace.o : ../../Modules/ions_base.o
 hp_ns_trace.o : ../../Modules/kind.o
@@ -205,7 +208,7 @@ hp_readin.o : ../../Modules/input_parameters.o
 hp_readin.o : ../../Modules/io_files.o
 hp_readin.o : ../../Modules/io_global.o
 hp_readin.o : ../../Modules/kind.o
-hp_readin.o : ../../Modules/mp_global.o
+hp_readin.o : ../../Modules/mp_bands.o
 hp_readin.o : ../../Modules/mp_world.o
 hp_readin.o : ../../Modules/noncol.o
 hp_readin.o : ../../PW/src/ldaU.o
@@ -262,7 +265,7 @@ hp_solve_linear_system.o : ../../Modules/fft_base.o
 hp_solve_linear_system.o : ../../Modules/io_global.o
 hp_solve_linear_system.o : ../../Modules/ions_base.o
 hp_solve_linear_system.o : ../../Modules/kind.o
-hp_solve_linear_system.o : ../../Modules/mp_global.o
+hp_solve_linear_system.o : ../../Modules/mp_pools.o
 hp_solve_linear_system.o : ../../Modules/noncol.o
 hp_solve_linear_system.o : ../../Modules/paw_variables.o
 hp_solve_linear_system.o : ../../Modules/recvec.o

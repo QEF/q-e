@@ -14,7 +14,8 @@ PROGRAM upf2casino
   !     Convert a pseudopotential written in UPF
   !     format to CASINO tabulated format
 
-  USE upf_module
+  USE emend_upf_module, ONLY: make_emended_upf_copy
+  USE wrappers, ONLY: f_remove
   USE radial_grids, ONLY : radial_grid_type, deallocate_radial_grid, &
        & nullify_radial_grid
   USE pseudo_types, ONLY : pseudo_upf, nullify_pseudo_upf, deallocate_pseudo_upf
@@ -29,6 +30,7 @@ PROGRAM upf2casino
   TYPE(pseudo_upf) :: upf_in
   CHARACTER(LEN=256)  :: filein, fileout
   TYPE(radial_grid_type) :: grid
+  LOGICAL :: is_xml
 
   CALL nullify_pseudo_upf ( upf_in )
   CALL nullify_radial_grid ( grid )
@@ -42,7 +44,7 @@ PROGRAM upf2casino
       WRITE(0,*) 'output printed in pp.out'
       WRITE(0,*) 'All pseudopotential files generated should be &
        &thoroughly checked.'
-      WRITE(0,*) 'In paticular make sure the local channel chosen&
+      WRITE(0,*) 'In particular make sure the local channel chosen&
        & in the CASINO pp file is what you expected.'
 
       CALL get_file ( filein ) 
@@ -55,7 +57,14 @@ PROGRAM upf2casino
       ENDIF
       fileout = filein(1:prefix_len) //'out'
 
-      CALL read_upf( upf_in, IERR = ios, GRID = grid, FILENAME = TRIM(filein)  )  
+      ios = 0
+      CALL read_upf( upf_in, IERR = ios, GRID = grid, FILENAME = TRIM(filein)  )
+      IF (ios ==-81 ) THEN
+         IF (ionode) is_xml = make_emended_upf_copy( TRIM(filein), 'tmp.upf' )
+         CALL  read_upf(upf_in,  IERR = ios, GRID = grid, FILENAME = 'tmp.upf' )
+         IF (ionode) ios = f_remove('tmp.upf' )
+      END IF
+  
       IF (upf_in%typ /= 'NC') THEN
          WRITE(0,*) ''
          WRITE(0,*) 'WRONG PSEUDOPOTENTIAL!'

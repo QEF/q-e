@@ -17,7 +17,6 @@ subroutine stres_har (sigmahar)
   USE fft_base,  ONLY : dfftp
   USE fft_interfaces,ONLY : fwfft
   USE gvect,     ONLY: ngm, gstart, g, gg
-  USE lsda_mod,  ONLY: nspin
   USE scf,       ONLY: rho
   USE control_flags,        ONLY: gamma_only
   USE wavefunctions, ONLY : psic
@@ -29,15 +28,10 @@ subroutine stres_har (sigmahar)
   !
   real(DP) :: sigmahar (3, 3), shart, g2
   real(DP), parameter :: eps = 1.d-8
-  integer :: is, ig, l, m, nspin0
+  integer :: ig, l, m
 
   sigmahar(:,:) = 0.d0
-  psic (:) = (0.d0, 0.d0)
-  nspin0=nspin
-  if (nspin==4) nspin0=1
-  do is = 1, nspin0
-     call daxpy (dfftp%nnr, 1.d0, rho%of_r (1, is), 1, psic, 2)
-  enddo
+  psic (:) = CMPLX (rho%of_r(:,1), KIND=dp)
 
   CALL fwfft ('Rho', psic, dfftp)
   ! psic contains now the charge density in G space

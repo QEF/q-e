@@ -3,6 +3,7 @@
 ! Program written by Yang Jiao,  Oct 2016, GPL, No warranties.
 !
 !    Oct 2018, adapted to QE6.3
+!    Jan 2019, adapted to change in rho from (up,down) to (tot,magn)
 !
 !-----------------------------------------------------------------------
 PROGRAM do_ppacf
@@ -30,7 +31,7 @@ PROGRAM do_ppacf
   USE klist,                ONLY : nks, xk, ngk, igk_k
   USE gvect,                ONLY : ngm, g
   USE gvecw,                ONLY : ecutwfc,gcutw
-  USE io_files,             ONLY : prefix,tmp_dir
+  USE io_files,             ONLY : pseudo_dir,prefix,tmp_dir
   USE io_global,            ONLY : stdout, ionode, ionode_id
   USE cell_base,            ONLY : omega
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -38,7 +39,7 @@ PROGRAM do_ppacf
   USE mp_global,            ONLY : mp_startup
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE exx,                  ONLY : exxinit, exxenergy2, fock2, ecutfock, & 
-                                   use_ace, aceinit
+                                   use_ace, aceinit, local_thr
   USE exx_base,             ONLY : exx_grid_init, exx_mp_init, exx_div_check,exxdiv_treatment
   USE exx_base,             ONLY : nq1, nq2, nq3
   USE fft_base,             ONLY : dfftp
@@ -46,21 +47,26 @@ PROGRAM do_ppacf
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : scf_type,create_scf_type,destroy_scf_type
   USE scf,                  ONLY : scf_type_COPY
-  USE scf,                  ONLY : rho, rho_core, rhog_core,vltot
+  USE scf,                  ONLY : rho, rho_core, rhog_core, vltot
   USE funct,                ONLY : xc,xc_spin,gcxc,gcx_spin,gcc_spin,dft_is_nonlocc,nlc
   USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE funct,                ONLY : set_exx_fraction,set_auxiliary_flags,enforce_input_dft
   USE wvfct,                ONLY : npw, npwx
   USE environment,          ONLY : environment_start, environment_end
-  USE kernel_table,         ONLY : Nqs
+  USE kernel_table,         ONLY : Nqs, vdw_table_name, kernel_file_name
   USE vdW_DF,               ONLY : get_potential, vdW_energy
   USE vdW_DF_scale,         ONLY : xc_vdW_DF_ncc, xc_vdW_DF_spin_ncc, &
                                    get_q0cc_on_grid, get_q0cc_on_grid_spin
+  USE vasp_xml,             ONLY : readxmlfile_vasp
 
   ! 
   IMPLICIT NONE
   !
   LOGICAL :: lplot,ltks,lfock,lecnl_qxln,lecnl_qx
+  INTEGER :: code_num
+  !  From which code to read in the calculation data
+  !  1 Quantum ESPRESSO (default)
+  !  2 VASP
   INTEGER :: icc, ncc
   INTEGER :: n_lambda
   REAL(DP):: rs,rs3,s,q,qx,qc
@@ -68,11 +74,10 @@ PROGRAM do_ppacf
   REAL(DP) :: etcldalambda,etcgclambda,etcnlclambda, etcnl_check,ttcnl_check, tcnl_int
   REAL(DP), ALLOCATABLE :: Ec_nl_ngamma(:)
   REAL(DP) :: etc,etclda,etcgc
-  REAL(DP) :: fclda
   REAL(dp), EXTERNAL :: exxenergyace
   ! !
   INTEGER :: is, ir,iq,ig,icar, nnrtot
-  INTEGER :: iexch,icorr,igcx,igcc
+  INTEGER :: iexch,icorr,igcx,igcc,inlc
   ! counter on mesh points
   ! counter on nspin
   INTEGER  :: ierr,ios
@@ -89,7 +94,7 @@ PROGRAM do_ppacf
   REAL(DP) :: etxccc,etxcccnl,etxcccnlp,etxcccnlm,vtxccc,vtxccc_buf,vtxcccnl 
   REAL(DP) :: grho2(2),sx, sc,scp,scm, v1x, v2x, v1c, v2c, &
               v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw,  &
-              etxcgc, vtxcgc, segno, fac, zeta, rh, grh2, amag 
+              etxcgc, vtxcgc, segno, fac, zeta, rh, grh2, amag, indx
   real(dp) :: dq0_dq                              ! The derivative of the saturated
   real(dp) :: grid_cell_volume
   REAL(DP), ALLOCATABLE :: q0(:)
@@ -147,8 +152,8 @@ PROGRAM do_ppacf
   type (scf_type) :: tcnl
   type (scf_type) :: exgc, ecgc, tcgc
 
-  NAMELIST / ppacf / outdir,prefix,n_lambda,lplot,ltks,lfock,use_ace, &
-                     lecnl_qxln,lecnl_qx
+  NAMELIST / ppacf / code_num,outdir,prefix,n_lambda,lplot,ltks,lfock,use_ace, &
+                     pseudo_dir,vdw_table_name,lecnl_qxln,lecnl_qx
 
   !
   ! initialise environment
@@ -161,8 +166,9 @@ PROGRAM do_ppacf
   !
   ! set default values for variables in namelist
   !
+  code_num = 1
   outdir = './'
-  prefix = 'pwscf'
+  prefix = 'ppacf'
   n_lambda = 1
   lplot = .False.
   ltks  = .False.
@@ -182,10 +188,12 @@ PROGRAM do_ppacf
      READ (5, ppacf, iostat = ios) 
      !
   ENDIF
+  IF (nspin == 4) CALL errore ('ppacf','noncollinear spin not implemented',1)
 !!!!!!!!!!!!!!!!!! READ IN DATA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! 
   ! Broadcast variables
   !
+  CALL mp_bcast(code_num,ionode_id,world_comm)
   CALL mp_bcast(outdir,ionode_id,world_comm)
   CALL mp_bcast(prefix,ionode_id,world_comm)
   CALL mp_bcast(n_lambda,ionode_id,world_comm)
@@ -195,6 +203,8 @@ PROGRAM do_ppacf
   CALL mp_bcast(lecnl_qxln,ionode_id,world_comm)
   CALL mp_bcast(lecnl_qx,ionode_id,world_comm)
   CALL mp_bcast(dcc,ionode_id,world_comm)
+  CALL mp_bcast(pseudo_dir,ionode_id,world_comm)
+  CALL mp_bcast(vdw_table_name,ionode_id,world_comm)
   ncc=n_lambda 
   WRITE( stdout, '(//5x,"entering subroutine acf ..."/)')
   ! Write out the ppacf information.
@@ -204,15 +214,27 @@ PROGRAM do_ppacf
   ! 
 !  WRITE(stdout,9093) dcc
 
-  tmp_dir=TRIM(outdir) 
-!  CALL read_xml_file_internal(.TRUE.)
-  CALL  read_file()
+  IF (code_num == 1) THEN
+     !
+     tmp_dir=TRIM(outdir) 
+!     CALL read_xml_file_internal(.TRUE.)
+     CALL  read_file()
 
-!  Check exchange correlation functional
-  iexch = get_iexch()
-  icorr = get_icorr()
-  igcx  = get_igcx()
-  igcc  = get_igcc()
+!     Check exchange correlation functional
+     iexch = get_iexch()
+     icorr = get_icorr()
+     igcx  = get_igcx()
+     igcc  = get_igcc()
+  
+  ELSEIF (code_num == 2) THEN
+     !
+     tmp_dir=TRIM(outdir)
+     CALL readxmlfile_vasp(iexch,icorr,igcx,igcc,inlc,ierr)
+     IF(ionode) WRITE(stdout,'(5X,a)') "Read data from VASP output 'vasprun.xml'"
+     ! 
+  ELSE
+     CALL errore ('ppacf', 'code_num not implemented', 1)
+  ENDIF
   
   ALLOCATE(vofrcc(1:dfftp%nnr,1:nspin))
   
@@ -226,16 +248,13 @@ PROGRAM do_ppacf
      etxcccnl=0._DP
      vtxcccnl=0._DP
      vofrcc=0._DP
+     !
      CALL nlc( rho%of_r, rho_core, nspin, etxcccnl, vtxcccnl, vofrcc )
+     !
      CALL mp_sum(  etxcccnl , intra_bgrp_comm )
   END IF
   !
-   
-  !
-  ! ... add gradiend corrections (if any)
-  !
-  if (nspin==4) CALL errore ('ppacf', 'Noncollinear not implemented', 1)
-  fac = 1.D0 / DBLE( nspin )
+  ! ... add gradient corrections (if any)
   !
   ALLOCATE( grho( 3, dfftp%nnr, nspin) )
   ALLOCATE( rhoout( dfftp%nnr, nspin) )
@@ -243,13 +262,15 @@ PROGRAM do_ppacf
   ALLOCATE( rhogsum( ngm, nspin ) )
   !
   ! ... calculate the gradient of rho + rho_core in real space
+  ! ... note: input rho is (tot,magn), output rhoout, grho are (up,down)
   !
-  !
+  fac = 1.D0 / DBLE( nspin )
   !
   DO is = 1, nspin
      !
-     rhoout(:,is)  = fac * rho_core(:)  + rho%of_r(:,is)  
-     rhogsum(:,is) = fac * rhog_core(:) + rho%of_g(:,is)
+     indx = DBLE( nspin/2 * (1-2*(is/2)) ) ! +1 if is=1, -1 if is=2
+     rhoout(:,is)  = fac * ( rho_core(:)  + rho%of_r(:,1) + indx * rho%of_r(:,2) )
+     rhogsum(:,is) = fac * ( rhog_core(:) + rho%of_g(:,1) + indx * rho%of_g(:,2) )
      !
      CALL fft_gradient_g2r( dfftp, rhogsum(1,is), g, grho(1,1,is))
      !
@@ -261,8 +282,6 @@ PROGRAM do_ppacf
      tot_rho(:)=rhoout(:,1)
   ELSEIF(nspin==2) THEN
      tot_rho(:)=rhoout(:,1)+rhoout(:,2)
-  ELSE
-     CALL errore ('ppacf','vdW-DF not available for noncollinear spin case',1)
   END IF
   !
   CALL create_scf_type(exlda)
@@ -296,6 +315,7 @@ PROGRAM do_ppacf
      etxccc=0._DP
      vofrcc=0._DP
      etx=0._DP
+     etxlda=0._DP
      etxgc=0._DP
      etcldalambda=0._DP
      etcgclambda=0._DP
@@ -382,11 +402,11 @@ PROGRAM do_ppacf
      ! ... spin-polarized case
      !
      DO ir = 1, dfftp%nnr
-        rhox = rho%of_r(ir,1) + rho%of_r(ir,2) + rho_core(ir)
+        rhox = rho%of_r(ir,1) + rho_core(ir)
         arhox = ABS( rhox )
         IF (arhox > vanishing_charge) THEN
            rs = pi34 /arhox**third
-           zeta = (rho%of_r(ir,1)-rho%of_r(ir,2))/arhox
+           zeta = rho%of_r(ir,2)/arhox
            IF( ABS( zeta ) > 1.D0 ) zeta = SIGN(1.D0, zeta)
            IF(iexch==1) THEN
               CALL slater_spin (arhox, zeta, ex, vx(1), vx(2))
@@ -632,8 +652,14 @@ PROGRAM do_ppacf
 
 
   IF(lfock .OR. (lplot .AND. ltks)) THEN
-     starting_wfc='file'
-     CALL wfcinit()
+     IF (code_num==1) THEN
+        starting_wfc='file'
+        CALL wfcinit()
+     ELSE IF (code_num==2) THEN
+        CALL errore( 'ppacf', 'wavefunction not implemented for VASP postprocessing', 1)
+     ELSE
+        CALL errore ('ppacf', 'code_num not implemented', 1)
+     END IF
   END IF
 ! Fock exchange energy from readin wavefunctions
 
@@ -666,7 +692,7 @@ PROGRAM do_ppacf
   CALL exxinit(.FALSE.)
   
   IF ( use_ace) THEN
-     CALL aceinit ( ) 
+     CALL aceinit (DOLOC = (local_thr > 0._DP)) 
      fock2 = exxenergyace()
   ELSE
      fock2 = exxenergy2()
@@ -678,6 +704,24 @@ PROGRAM do_ppacf
 
 ! output data in 3D
   IF (lplot) THEN
+     IF (code_num==2) THEN
+        IF(nspin==1) THEN
+           filplot=trim(prefix)//'.chg'
+           plot_num=2
+           CALL dcopy(dfftp%nnr, rho%of_r(:,1), 1, vltot, 1)
+           CALL punch_plot (filplot, plot_num, 0.,0.,0.,0.,0.,0,0,0, .False.)
+        ELSEIF(nspin==2) THEN
+           filplot=trim(prefix)//'.chg1'
+           plot_num=2
+           CALL dcopy(dfftp%nnr, rho%of_r(:,1), 1, vltot, 1)
+           CALL punch_plot (filplot, plot_num, 0.,0.,0.,0.,0.,0,0,0, .False.)
+           filplot=trim(prefix)//'.chg2'
+           plot_num=2
+           CALL dcopy(dfftp%nnr, rho%of_r(:,2), 1, vltot, 1)
+           CALL punch_plot (filplot, plot_num, 0.,0.,0.,0.,0.,0,0,0, .False.)
+        END IF
+     END IF
+
      IF (ltks) THEN
         ALLOCATE(kin_r(dfftp%nnr,nspin))
 !        CALL init_run()

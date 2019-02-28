@@ -136,7 +136,7 @@ SUBROUTINE iosys()
                             ecutvcut_         => ecutvcut
   USE exx,          ONLY:   ecutfock_         => ecutfock, &
                             use_ace, nbndproj, local_thr 
-  USE loc_scdm,      ONLY : use_scdm, scdm_den, scdm_grd 
+  USE loc_scdm,      ONLY : use_scdm, scdm_den, scdm_grd, n_scdm
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
@@ -150,7 +150,7 @@ SUBROUTINE iosys()
   USE control_flags, ONLY : isolve, max_cg_iter, max_ppcg_iter, david, tr2, imix, gamma_only,&
                             nmix, iverbosity, smallmem, niter, &
                             io_level, ethr, lscf, lbfgs, lmd, &
-                            lbands, lconstrain, restart, twfcollect, &
+                            lbands, lconstrain, restart, &
                             llondon, ldftd3, do_makov_payne, lxdm, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
@@ -160,7 +160,6 @@ SUBROUTINE iosys()
                             nstep_            => nstep, &
                             iprint_           => iprint, &
                             noinv_            => noinv, &
-                            lkpoint_dir_      => lkpoint_dir, &
                             tqr_              => tqr, &
                             tq_smoothing_     => tq_smoothing, &
                             tbeta_smoothing_  => tbeta_smoothing, &
@@ -219,7 +218,7 @@ SUBROUTINE iosys()
                                wfcdir, prefix, etot_conv_thr, forc_conv_thr,   &
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
                                gdir, nppstr, wf_collect,lelfield,lorbm,efield, &
-                               nberrycyc, lkpoint_dir, efield_cart, lecrpa,    &
+                               nberrycyc, efield_cart, lecrpa,                 &
                                vdw_table_name, memory, max_seconds, tqmmm,     &
                                efield_phase, gate
 
@@ -242,7 +241,7 @@ SUBROUTINE iosys()
                                exxdiv_treatment, yukawa, ecutvcut,          &
                                exx_fraction, screening_parameter, ecutfock, &
                                gau_parameter, localization_thr, scdm, ace,    &
-                               scdmden, scdmgrd, n_proj,                      & 
+                               scdmden, scdmgrd, nscdm, n_proj,                & 
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
@@ -548,7 +547,6 @@ SUBROUTINE iosys()
   ! ... define memory- and disk-related internal switches
   !
   smallmem = ( TRIM( memory ) == 'small' )
-  twfcollect = wf_collect
   !
   ! ... Set Values for electron and bands
   !
@@ -874,10 +872,6 @@ SUBROUTINE iosys()
   CASE ( 'none' )
      !
      io_level = -1
-     IF ( twfcollect ) THEN
-        CALL infomsg('iosys', 'minimal I/O required, wf_collect reset to FALSE')
-        twfcollect= .false.
-     ENDIF
      !
   CASE DEFAULT
      !
@@ -1154,7 +1148,6 @@ SUBROUTINE iosys()
   tbeta_smoothing_ = tbeta_smoothing
   !
   title_      = title
-  lkpoint_dir_=lkpoint_dir
   dt_         = dt
   tefield_    = tefield
   dipfield_   = dipfield
@@ -1609,12 +1602,9 @@ SUBROUTINE iosys()
   use_scdm  = scdm
   scdm_den = scdmden
   scdm_grd = scdmgrd
-  IF ( local_thr > 0.0_dp .AND. .NOT. gamma_only) &
-     CALL errore('input','localization for k-points not implemented',1)
+  n_scdm   = nscdm   
   IF ( local_thr > 0.0_dp .AND. .NOT. use_ace ) &
      CALL errore('input','localization without ACE not implemented',1)
-! IF ( local_thr > 0.0_dp .AND. nspin > 1 ) &
-!    CALL errore('input','spin-polarized localization not implemented',1)
   IF ( use_scdm ) CALL errore('input','use_scdm not yet implemented',1)
   !
   IF(ecutfock <= 0.0_DP) THEN
@@ -1697,7 +1687,9 @@ SUBROUTINE iosys()
   !
   ! ... End of reading input parameters
   !
+#if ! defined (__INTEL_COMPILER) || (__INTEL_COMPILER >= 1300) 
   CALL pw_init_qexsd_input(qexsd_input_obj, obj_tagname="input")
+#endif
   CALL deallocate_input_parameters ()  
   !
   max_seconds_ = max_seconds

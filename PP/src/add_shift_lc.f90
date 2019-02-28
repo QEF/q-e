@@ -15,8 +15,8 @@ SUBROUTINE add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   USE constants, ONLY : tpi
   USE fft_base,  ONLY: dfftp
   USE fft_interfaces, ONLY : fwfft
-  USE mp_global,  ONLY : intra_pool_comm
-  USE mp,         ONLY : mp_sum
+  USE mp_pools,  ONLY : intra_pool_comm
+  USE mp,        ONLY : mp_sum
 
   IMPLICIT NONE
   !
@@ -60,12 +60,9 @@ SUBROUTINE add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   !
   ALLOCATE (aux(nrxx), shift_(nat) )
   shift_(:) = 0.d0
-
-  IF (nspin==2) THEN
-     aux(:) = CMPLX ( rho(:,1)+rho(:,2), 0.0_dp, KIND=dp )
-  ELSE
-     aux(:) = CMPLX ( rho(:,1), 0.0_dp, KIND=dp )
-  END IF
+  
+  aux(:) = CMPLX ( rho(:,1), 0.0_dp, KIND=dp )
+  
   CALL fwfft ('Rho', aux, dfftp)
   !
   !    aux contains now  n(G)

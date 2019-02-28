@@ -27,8 +27,8 @@ p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 
 # NSCF
 ef1=`grep "the Fermi energy is" $fname | awk '{print $5}'`
-eh1=`grep "highest occupied" $fname | awk '{print $7}'`
-el1=`grep "highest occupied" $fname | awk '{print $8}'`
+eh1=`grep "highest occupied" $fname | tail -1 | awk '{print $5}'`
+ehl1=`grep "highest occupied, lowest unoccupied" $fname | tail -1 | awk '{print $7; print $8}'`
 tf1=`grep " P = " $fname | head -1 | awk '{printf "%7.5f", $3}'`
 
 # PH
@@ -65,7 +65,7 @@ pi=`grep "Re[Pi]=" $fname | awk '{print $4; print $7; print $10}'`
 mobvb=`grep "Mobility VB Fermi level" $fname | awk '{print $5}'`
 mobcb=`grep "Mobility CB Fermi level" $fname | awk '{print $5}'`
 density=`grep " x-axis" $fname | awk '{print $1; print $2; print $3}'`
-mobx=`grep " x-axis" $fname | awk '{print $4}'`
+mobx=`grep " x-axis" $fname | awk '{print $5}'`
 mobav=`grep "   avg" $fname | awk '{print $1}'`
 mobxZ=`grep " x-axis [Z]" $fname | awk '{print $1; print $2; print $3; print $4}'`
 indabs=`grep "  (cm-1)" $fname | awk '{print $1; print $2; print $3; print $4}'` 
@@ -247,9 +247,9 @@ if test "$eh1" != ""; then
         for x in $eh1; do echo $x; done
 fi
 
-if test "$el1" != ""; then
-        echo el1
-        for x in $el1; do echo $x; done
+if test "$ehl1" != ""; then
+        echo ehl1
+        for x in $ehl1; do echo $x; done
 fi
 
 if test "$tf1" != ""; then

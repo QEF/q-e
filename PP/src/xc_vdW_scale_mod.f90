@@ -229,8 +229,8 @@ CONTAINS
   ! it is only non-zero for pseudopotentials with non-local core
   ! corrections.
 
-  rho_up    = rho%of_r(:,1) + 0.5D0*rho_core(:)
-  rho_down  = rho%of_r(:,2) + 0.5D0*rho_core(:)
+  rho_up    = ( rho%of_r(:,1) + rho%of_r(:,2) + rho_core(:) ) * 0.5_dp
+  rho_down  = ( rho%of_r(:,1) - rho%of_r(:,2) + rho_core(:) ) * 0.5_dp
   total_rho = rho_up + rho_down
 
 #if defined (__SPIN_BALANCED)

@@ -561,22 +561,9 @@ MODULE io_base
       !
       DO ns = 1, nspin
          !
-         ! Workaround for LSDA, while waiting for much-needed harmonization:
-         ! we have rhoup and rhodw, we write rhotot=up+dw and rhodif=up-dw
-         ! 
-         IF ( ns == 1 .AND. nspin == 2 ) THEN
-            DO ig = 1, ngm
-               rhoaux(ig) = rho(ig,ns) + rho(ig,ns+1)
-            END DO
-         ELSE IF ( ns == 2 .AND. nspin == 2 ) THEN
-            DO ig = 1, ngm
-               rhoaux(ig) = rho(ig,ns-1) - rho(ig,ns)
-            END DO
-        ELSE
-            DO ig = 1, ngm
+         DO ig = 1, ngm
                rhoaux(ig) = rho(ig,ns)
-            END DO
-         END IF
+         END DO
          !
          rho_g = 0
          CALL mergewf( rhoaux, rho_g, ngm, ig_l2g, me_in_group, &
@@ -633,7 +620,7 @@ MODULE io_base
       CHARACTER(LEN=*), INTENT(IN) :: filename
       !! name of file read (to which a suffix is added)
       INTEGER,          INTENT(IN) :: root_in_group
-      !! root processor that reads and sirtibutes
+      !! root processor that reads and distributes
       INTEGER,          INTENT(IN) :: intra_group_comm
       !! rho(G) is distributed over this group of processors
       INTEGER,          INTENT(IN) :: ig_l2g(:)
@@ -647,7 +634,6 @@ MODULE io_base
       !
       COMPLEX(dp), ALLOCATABLE :: rho_g(:)
       COMPLEX(dp), ALLOCATABLE :: rhoaux(:)
-      COMPLEX(dp)              :: rhoup, rhodw
       REAL(dp)                 :: b1(3), b2(3), b3(3)
       INTEGER                  :: ngm, nspin_, isup, isdw
       INTEGER                  :: iun, ns, ig, ierr
@@ -789,19 +775,8 @@ MODULE io_base
          DO ig = 1, ngm
             rho(ig,ns) = rhoaux(ig)
          END DO
-         !
-         ! Workaround for LSDA, while waiting for much-needed harmonization:
-         ! if file contains rhotot=up+dw and rhodif=up-dw (nspin_=2), and
-         ! if we want rhoup and rho down (nspin=2), convert 
          ! 
-         IF ( nspin_ == 2 .AND. nspin == 2 .AND. ns == 2 ) THEN
-            DO ig = 1, ngm
-               rhoup = (rho(ig,ns-1) + rhoaux(ig)) / 2.0_dp
-               rhodw = (rho(ig,ns-1) - rhoaux(ig)) / 2.0_dp
-               rho(ig,ns-1)= rhoup
-               rho(ig,ns  )= rhodw
-            END DO
-         ELSE IF ( nspin_ == 2 .AND. nspin == 4 .AND. ns == 2) THEN 
+         IF ( nspin_ == 2 .AND. nspin == 4 .AND. ns == 2) THEN 
             DO ig = 1, ngm 
                rho(ig, 4 ) = rho(ig, 2) 
                rho(ig, 2 ) = cmplx(0.d0,0.d0, KIND = DP) 

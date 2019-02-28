@@ -50,8 +50,8 @@ SUBROUTINE dynmat_hub_bare
   USE control_flags, ONLY : iverbosity
   USE d2nsq_bare_module
   USE scf,           ONLY : rho
-  USE mp_global,     ONLY : intra_pool_comm, inter_pool_comm       
   USE mp,            ONLY : mp_sum, mp_bcast
+  USE mp_pools,      ONLY : intra_pool_comm, inter_pool_comm       
   USE mp_world,      ONLY : world_comm
   USE io_files,      ONLY : seqopn
   USE buffers,       ONLY : get_buffer
@@ -451,7 +451,7 @@ SUBROUTINE dynmat_hub_bare
                     work = (0.d0, 0.d0)
                     !       
                     DO is = 1, nspin
-                       !      
+                       !
                        DO m1 = 1, 2*Hubbard_l(nt) + 1
                           !
                           DO m2 = 1, 2*Hubbard_l(nt) + 1
@@ -498,11 +498,7 @@ SUBROUTINE dynmat_hub_bare
                     !      
                     DO is = 1, nspin
                        !      
-                       IF ((is==1) .AND. (nspin==2)) THEN
-                          isi = 2
-                       ELSE 
-                          isi = 1
-                       ENDIF
+                       isi = nspin/is
                        !
                        DO m1 = 1, 2*Hubbard_l(nt) + 1
                           !
@@ -520,8 +516,7 @@ SUBROUTINE dynmat_hub_bare
                              ! DO NOT include the delta_m1m2 contribution  
                              ! Note the sign change            
                              !
-                             work = work + nsaux *  d2ns_bare_aux + &
-                                         + dnsaux1 * CONJG(dnsaux2) 
+                             work = work + nsaux *  d2ns_bare_aux + dnsaux1 * CONJG(dnsaux2) 
                              ! 
                           ENDDO ! m2
                           !
@@ -600,4 +595,3 @@ SUBROUTINE dynmat_hub_bare
   RETURN
   !      
 END SUBROUTINE dynmat_hub_bare
-      

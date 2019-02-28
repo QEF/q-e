@@ -14,6 +14,8 @@
 ! please send bugs and comments to 
 ! Jonathan Yates and Arash Mostofi
 ! Takashi Koretsune and Florian Thoele -- noncollinear and USPPs
+! Valerio Vitale - Selected columns of density matrix (SCDM)
+!
 !
 ! NOTE: old_spinor_proj is still available for compatibility with old
 !       nnkp files but should be removed soon.
@@ -50,7 +52,7 @@ module wannier
    ! end change Lopez, Thonhauser, Souza
    ! vv: Begin SCDM keywords
                             scdm_proj
-   integer               :: scdm_entanglement
+   character(LEN=15)     :: scdm_entanglement
    real(DP)              :: scdm_mu, scdm_sigma
    ! vv: End SCDM keywords
    ! run check for regular mesh
@@ -82,6 +84,7 @@ module wannier
    real(DP), allocatable    :: eigval(:,:)
    logical                  :: old_spinor_proj  ! for compatability for nnkp files prior to W90v2.0
    integer,allocatable :: rir(:,:)
+   logical,allocatable :: zerophase(:,:)
 end module wannier
 !
 
@@ -92,7 +95,8 @@ PROGRAM pw2wannier90
   !------------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout, ionode, ionode_id
-  USE mp_global,  ONLY : mp_startup, npool, nproc_pool, nproc_pool_file
+  USE mp_global,  ONLY : mp_startup
+  USE mp_pools,   ONLY : npool
   USE mp,         ONLY : mp_bcast
   USE mp_world,   ONLY : world_comm
   USE cell_base,  ONLY : at, bg
@@ -100,7 +104,7 @@ PROGRAM pw2wannier90
   USE klist,      ONLY : nkstot
   USE io_files,   ONLY : prefix, tmp_dir
   USE noncollin_module, ONLY : noncolin
-  USE control_flags,    ONLY : gamma_only, twfcollect
+  USE control_flags,    ONLY : gamma_only
   USE environment,ONLY : environment_start, environment_end
   USE wannier
   !
@@ -120,7 +124,10 @@ PROGRAM pw2wannier90
        write_dmn, read_sym, & !YN:
        write_uIu, spn_formatted, uHu_formatted, uIu_formatted,& !ivo
    ! end change Lopez, Thonhauser, Souza
-       regular_mesh !gresch
+       regular_mesh,& !gresch
+   ! begin change Vitale
+       scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma
+   ! end change Vitale
   !
   ! initialise environment
   !
@@ -166,6 +173,10 @@ PROGRAM pw2wannier90
      write_unkg= .false.
      write_dmn = .false. !YN:
      read_sym  = .false. !YN:
+     scdm_proj = .false.
+     scdm_entanglement = 'isolated'
+     scdm_mu = 0.0_dp
+     scdm_sigma = 1.0_dp
      !
      !     reading the namelist inputpp
      !
@@ -202,6 +213,10 @@ PROGRAM pw2wannier90
   CALL mp_bcast(write_unkg,ionode_id, world_comm)
   CALL mp_bcast(write_dmn,ionode_id, world_comm)
   CALL mp_bcast(read_sym,ionode_id, world_comm)
+  CALL mp_bcast(scdm_proj,ionode_id, world_comm)
+  CALL mp_bcast(scdm_entanglement,ionode_id, world_comm)
+  CALL mp_bcast(scdm_mu,ionode_id, world_comm)
+  CALL mp_bcast(scdm_sigma,ionode_id, world_comm)
   !
   ! Check: kpoint distribution with pools not implemented
   !
@@ -217,12 +232,21 @@ PROGRAM pw2wannier90
   !
   IF (noncolin.and.gamma_only) CALL errore('pw2wannier90',&
        'Non-collinear and gamma_only not implemented',1)
-  !
-  ! Here we trap restarts from a different number of nodes.
-  !
-  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
-     CALL errore('pw2wannier90', &
-     'pw.x run on a different number of procs/pools. Use wf_collect=.true.',1)
+  IF (noncolin.and.scdm_proj) CALL errore('pw2wannier90',&
+       'Non-collinear and SCDM not implemented',1)
+  IF (gamma_only.and.scdm_proj) CALL errore('pw2wannier90',&
+       'Gamma_only and SCDM not implemented',1)
+  IF (scdm_proj) then
+    IF ((trim(scdm_entanglement) /= 'isolated') .AND. &
+        (trim(scdm_entanglement) /= 'erfc') .AND. &
+        (trim(scdm_entanglement) /= 'gaussian')) then
+        call errore('pw2wannier90', &
+             'Can not recognize the choice for scdm_entanglement. ' &
+                    //'Valid options are: isolated, erfc and gaussian')
+    ENDIF
+  ENDIF
+  IF (scdm_sigma <= 0._dp) &
+    call errore('pw2wannier90','Sigma in the SCDM method must be positive.')
   !
   SELECT CASE ( trim( spin_component ) )
   CASE ( 'up' )
@@ -469,7 +493,7 @@ SUBROUTINE setup_nnkp
   USE ions_base, ONLY : nat, tau, ityp, atm
   USE klist,     ONLY : xk
   USE mp,        ONLY : mp_bcast, mp_sum
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_pools,  ONLY : intra_pool_comm
   USE mp_world,  ONLY : world_comm
   USE wvfct,     ONLY : nbnd,npwx
   USE control_flags,    ONLY : gamma_only
@@ -604,9 +628,14 @@ SUBROUTINE setup_nnkp
   nnb=max(nnbx,nnb)
 
   ALLOCATE( ig_(iknum,nnb), ig_check(iknum,nnb) )
+  ALLOCATE( zerophase(iknum,nnb) )
+  zerophase = .false.
 
   DO ik=1, iknum
      DO ib = 1, nnb
+        IF ( (g_kpb(1,ik,ib).eq.0) .and.  &
+             (g_kpb(2,ik,ib).eq.0) .and.  &
+             (g_kpb(3,ik,ib).eq.0) ) zerophase(ik,ib) = .true.
         g_(:) = REAL( g_kpb(:,ik,ib) )
         CALL cryst_to_cart (1, g_, bg, 1)
         gg_ = g_(1)*g_(1) + g_(2)*g_(2) + g_(3)*g_(3)
@@ -745,7 +774,7 @@ SUBROUTINE read_nnkp
   USE gvect,     ONLY : g, gg
   USE klist,     ONLY : nkstot, xk
   USE mp,        ONLY : mp_bcast, mp_sum
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_pools,  ONLY : intra_pool_comm
   USE mp_world,  ONLY : world_comm
   USE wvfct,     ONLY : npwx, nbnd
   USE noncollin_module, ONLY : noncolin
@@ -761,8 +790,7 @@ SUBROUTINE read_nnkp
   INTEGER, ALLOCATABLE :: ig_check(:,:)
   real(DP) :: xx(3), xnorm, znorm, coseno
   LOGICAL :: have_nnkp,found
-  ! vv: tmp integer for reading in SCDM info 
-  INTEGER :: scdm_proj_tmp 
+  INTEGER :: tmp_auto ! vv: Needed for the selection of projections with SCDM
 
   IF (ionode) THEN  ! Read nnkp file on ionode only
 
@@ -894,7 +922,7 @@ SUBROUTINE read_nnkp
 
   IF(old_spinor_proj)THEN
   WRITE(stdout,'(//," ****** begin WARNING ****** ",/)') 
-  WRITE(stdout,'(" The pw.x calculation wa done with non-collinear spin ")') 
+  WRITE(stdout,'(" The pw.x calculation was done with non-collinear spin ")') 
   WRITE(stdout,'(" but spinor = T was not specified in the wannier90 .win file!")') 
   WRITE(stdout,'(" Please set spinor = T and rerun wannier90.x -pp  ")') 
 !  WRITE(stdout,'(/," If you are trying to reuse an old nnkp file, you can remove  ")') 
@@ -911,8 +939,6 @@ SUBROUTINE read_nnkp
      n_wannier=n_proj
   ENDIF
 
-
-
   ALLOCATE( center_w(3,n_proj), alpha_w(n_proj), gf(npwx,n_proj), &
        l_w(n_proj), mr_w(n_proj), r_w(n_proj), &
        zaxis(3,n_proj), xaxis(3,n_proj), csph(16,n_proj) )
@@ -920,7 +946,37 @@ SUBROUTINE read_nnkp
      ALLOCATE( spin_eig(n_proj),spin_qaxis(3,n_proj) ) 
   endif
 
-  WRITE(stdout,'("  - Number of wannier functions is ok (",i3,")")') n_wannier
+  ! automatic projections
+  IF (ionode) THEN
+     CALL scan_file_to('auto_projections',found)
+     IF (found) THEN
+        IF (scdm_proj) THEN
+           IF (n_proj > 0) THEN
+              WRITE(stdout,'(//, " ****** begin Error message ******",/)')
+              WRITE(stdout,'(/," Found a projection block, an auto_projections block",/)')
+              WRITE(stdout,'(/," and scdm_proj = T in the input file. These three options are inconsistent.",/)') 
+              WRITE(stdout,'(/," Please refer to the Wannier90 User guide for correct use of these flags.",/)')
+              WRITE(stdout,'(/, " ****** end Error message ******",//)')
+              CALL errore( 'pw2wannier90', 'Inconsistent options for projections.', 1 )
+           ELSE
+              READ (iun_nnkp, *) n_wannier
+              READ (iun_nnkp, *) tmp_auto
+              IF (tmp_auto /= 0) CALL errore( 'pw2wannier90', 'Second entry in auto_projections block is not 0. ' // &
+              'See Wannier90 User Guide in the auto_projections section for clarifications.', 1 )
+           ENDIF
+        ELSE
+           ! Fire an error whether or not a projections block is found
+           CALL errore( 'pw2wannier90', 'scdm_proj = F but found an auto_projections block in '&
+                &//trim(seedname)//'.nnkp', 1 )
+        ENDIF
+     ELSE
+        IF (scdm_proj) THEN
+           ! Fire an error whether or not a projections block is found
+           CALL errore( 'pw2wannier90', 'scdm_proj = T but cannot find an auto_projections block in '& 
+                &//trim(seedname)//'.nnkp', 1 )
+        ENDIF
+     ENDIF
+  ENDIF
 
   IF (ionode) THEN   ! read from ionode only
      DO iw=1,n_proj
@@ -950,9 +1006,8 @@ SUBROUTINE read_nnkp
      ENDDO
   ENDIF
 
-  WRITE(stdout,*) ' - All guiding functions are given '
-
   ! Broadcast
+  CALL mp_bcast(n_wannier,ionode_id, world_comm)
   CALL mp_bcast(center_w,ionode_id, world_comm)
   CALL mp_bcast(l_w,ionode_id, world_comm)
   CALL mp_bcast(mr_w,ionode_id, world_comm)
@@ -964,6 +1019,10 @@ SUBROUTINE read_nnkp
      CALL mp_bcast(spin_eig,ionode_id, world_comm)
      CALL mp_bcast(spin_qaxis,ionode_id, world_comm)
   end if
+
+  WRITE(stdout,'("  - Number of wannier functions is ok (",i3,")")') n_wannier
+
+  IF (.not. scdm_proj) WRITE(stdout,*) ' - All guiding functions are given '
   !
   WRITE(stdout,*)
   WRITE(stdout,*) 'Projections:'
@@ -971,40 +1030,6 @@ SUBROUTINE read_nnkp
      WRITE(stdout,'(3f12.6,3i3,f12.6)') &
           center_w(1:3,iw),l_w(iw),mr_w(iw),r_w(iw),alpha_w(iw)
   ENDDO
-
-  ! vv: Read SCDM block
-  scdm_proj_tmp = 0
-  scdm_proj = .false.
-  scdm_entanglement = 0
-  scdm_mu = 0.0_DP
-  scdm_sigma = 1.0_DP
-  IF (ionode) THEN
-     CALL scan_file_to('scdm_info',found)
-     !IF(.NOT. found) THEN
-     !   CALL errore( 'pw2wannier90', 'Could not find scdm info block in'&
-     !        &//trim(seedname)//'.nnkp',1)
-     !ENDIF
-     IF (found) THEN
-        READ (iun_nnkp,*) scdm_proj_tmp
-        IF(scdm_proj_tmp==1) THEN
-           scdm_proj = .true. 
-           READ (iun_nnkp,*) n_wannier
-           READ (iun_nnkp,*) scdm_entanglement
-           READ (iun_nnkp,*) scdm_mu, scdm_sigma
-        ENDIF
-     ENDIF
-  ENDIF
-
-  ! vv: Broadcast
-  CALL mp_bcast(n_wannier,ionode_id, world_comm)
-  CALL mp_bcast(scdm_proj,ionode_id, world_comm)
-  CALL mp_bcast(scdm_entanglement,ionode_id, world_comm)
-  CALL mp_bcast(scdm_mu,ionode_id, world_comm)
-  CALL mp_bcast(scdm_sigma,ionode_id, world_comm)
-
-  WRITE(stdout,'("  - Number of wannier functions is ok (",i3,")")') n_wannier
-
-  WRITE(stdout,*) ' - All guiding functions are given '
 
   IF (ionode) THEN   ! read from ionode only
      CALL scan_file_to('nnkpts',found)
@@ -1022,6 +1047,8 @@ SUBROUTINE read_nnkp
   !
   ALLOCATE ( kpb(iknum,nnbx), g_kpb(3,iknum,nnbx),&
              ig_(iknum,nnbx), ig_check(iknum,nnbx) )
+  ALLOCATE( zerophase(iknum,nnbx) )
+  zerophase = .false.
 
   !  read data about neighbours
   WRITE(stdout,*)
@@ -1042,6 +1069,9 @@ SUBROUTINE read_nnkp
 
   DO ik=1, iknum
      DO ib = 1, nnb
+        IF ( (g_kpb(1,ik,ib).eq.0) .and.  &
+             (g_kpb(2,ik,ib).eq.0) .and.  &
+             (g_kpb(3,ik,ib).eq.0) ) zerophase(ik,ib) = .true.
         g_(:) = REAL( g_kpb(:,ik,ib) )
         CALL cryst_to_cart (1, g_, bg, 1)
         gg_ = g_(1)*g_(1) + g_(2)*g_(2) + g_(3)*g_(3)
@@ -1236,9 +1266,9 @@ SUBROUTINE compute_dmn
    USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
-   USE mp_global,       ONLY : intra_pool_comm
+   USE mp_pools,        ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum, mp_bcast
-   USE mp_world,        ONLY : world_comm, nproc
+   USE mp_world,        ONLY : world_comm
    USE noncollin_module,ONLY : noncolin, npol
    USE gvecw,           ONLY : gcutw
    USE wannier
@@ -1918,7 +1948,7 @@ SUBROUTINE compute_mmn
    USE uspp_param,      ONLY : upf, nh, lmaxq, nhm
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
-   USE mp_global,       ONLY : intra_pool_comm
+   USE mp_pools,        ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
    USE spin_orb,             ONLY : lspinorb
@@ -1938,7 +1968,7 @@ SUBROUTINE compute_mmn
                                becp2(:,:), Mkb(:,:), aux_nc(:,:), becp2_nc(:,:,:)
    real(DP), ALLOCATABLE    :: rbecp2(:,:)
    COMPLEX(DP), ALLOCATABLE :: qb(:,:,:,:), qgm(:), qq_so(:,:,:,:)
-   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:), workg(:)
+   real(DP), ALLOCATABLE    :: qg(:), ylm(:,:), dxk(:,:)
    COMPLEX(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: arg, g_(3)
    CHARACTER (len=9)        :: cdate,ctime
@@ -1992,32 +2022,27 @@ SUBROUTINE compute_mmn
       ELSE
          ALLOCATE ( becp2(nkb,nbnd) )
       ENDIF
-   ENDIF
-   !
-   !     qb is  FT of Q(r)
-   !
-   nbt = nnb * iknum
-   !
-   ALLOCATE( qg(nbt) )
-   ALLOCATE (dxk(3,nbt))
-   !
-   ind = 0
-   DO ik=1,iknum
-      DO ib=1,nnb
-         ind = ind + 1
-         ikp = kpb(ik,ib)
-         !
-         g_(:) = REAL( g_kpb(:,ik,ib) )
-         CALL cryst_to_cart (1, g_, bg, 1)
-         dxk(:,ind) = xk(:,ikp) +g_(:) - xk(:,ik)
-         qg(ind) = dxk(1,ind)*dxk(1,ind)+dxk(2,ind)*dxk(2,ind)+dxk(3,ind)*dxk(3,ind)
+      !
+      !     qb is  FT of Q(r)
+      !
+      nbt = nnb * iknum
+      !
+      ALLOCATE( qg(nbt) )
+      ALLOCATE (dxk(3,nbt))
+      !
+      ind = 0
+      DO ik=1,iknum
+         DO ib=1,nnb
+            ind = ind + 1
+            ikp = kpb(ik,ib)
+            !
+            g_(:) = REAL( g_kpb(:,ik,ib) )
+            CALL cryst_to_cart (1, g_, bg, 1)
+            dxk(:,ind) = xk(:,ikp) +g_(:) - xk(:,ik)
+            qg(ind) = dxk(1,ind)*dxk(1,ind)+dxk(2,ind)*dxk(2,ind)+dxk(3,ind)*dxk(3,ind)
+         ENDDO
+!         write (stdout,'(i3,12f8.4)')  ik, qg((ik-1)*nnb+1:ik*nnb)
       ENDDO
-!      write (stdout,'(i3,12f8.4)')  ik, qg((ik-1)*nnb+1:ik*nnb)
-   ENDDO
-   !
-   !  USPP
-   !
-   IF(any_uspp) THEN
 
       ALLOCATE( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
       ALLOCATE( qb (nhm, nhm, ntyp, nbt) )
@@ -2044,7 +2069,6 @@ SUBROUTINE compute_mmn
    WRITE(stdout,'(a,i8)') '  MMN: iknum = ',iknum
    !
    ALLOCATE( Mkb(nbnd,nbnd) )
-   ALLOCATE( workg(npwx) )
    !
    ind = 0
    DO ik=1,iknum
@@ -2076,9 +2100,11 @@ SUBROUTINE compute_mmn
             CALL davcio (evcq, 2*nwordwfc, iunwfc, ikpevcq, -1 )
 !         end if
 ! compute the phase
-         phase(:) = (0.d0,0.d0)
-         IF ( ig_(ik,ib)>0) phase( dffts%nl(ig_(ik,ib)) ) = (1.d0,0.d0)
-         CALL invfft ('Wave', phase, dffts)
+         IF (.not.zerophase(ik,ib)) THEN
+            phase(:) = (0.d0,0.d0)
+            IF ( ig_(ik,ib)>0) phase( dffts%nl(ig_(ik,ib)) ) = (1.d0,0.d0)
+            CALL invfft ('Wave', phase, dffts)
+         ENDIF
          !
          !  USPP
          !
@@ -2184,19 +2210,23 @@ SUBROUTINE compute_mmn
                   istart=(ipol-1)*npwx+1
                   iend=istart+npw-1
                   psic_nc(dffts%nl (igk_k(1:npw,ik) ),ipol ) = evc(istart:iend, m)
-                  CALL invfft ('Wave', psic_nc(:,ipol), dffts)
-                  psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * &
+		  IF (.not.zerophase(ik,ib)) THEN
+                     CALL invfft ('Wave', psic_nc(:,ipol), dffts)
+                     psic_nc(1:dffts%nnr,ipol) = psic_nc(1:dffts%nnr,ipol) * &
                                                  phase(1:dffts%nnr)
-                  CALL fwfft ('Wave', psic_nc(:,ipol), dffts)
+                     CALL fwfft ('Wave', psic_nc(:,ipol), dffts)
+                  ENDIF
                   aux_nc(1:npwq,ipol) = psic_nc(dffts%nl (igk_k(1:npwq,ikp)),ipol )
                ENDDO
             ELSE
                psic(:) = (0.d0, 0.d0)
                psic(dffts%nl (igk_k (1:npw,ik) ) ) = evc (1:npw, m)
                IF(gamma_only) psic(dffts%nlm(igk_k(1:npw,ik) ) ) = conjg(evc (1:npw, m))
-               CALL invfft ('Wave', psic, dffts)
-               psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
-               CALL fwfft ('Wave', psic, dffts)
+               IF (.not.zerophase(ik,ib)) THEN
+                  CALL invfft ('Wave', psic, dffts)
+                  psic(1:dffts%nnr) = psic(1:dffts%nnr) * phase(1:dffts%nnr)
+                  CALL fwfft ('Wave', psic, dffts)
+               ENDIF
                aux(1:npwq)  = psic(dffts%nl (igk_k(1:npwq,ikp) ) )
             ENDIF
             IF(gamma_only) THEN
@@ -2258,12 +2288,12 @@ SUBROUTINE compute_mmn
 
       ENDDO !ib
    ENDDO  !ik
-   DEALLOCATE(workg)
    
    IF (ionode .and. wan_mode=='standalone') CLOSE (iun_mmn)
 
    IF (gamma_only) DEALLOCATE(aux2)
-   DEALLOCATE (Mkb, dxk, phase)
+   DEALLOCATE (Mkb, phase)
+   IF (any_uspp) DEALLOCATE (dxk)
    IF(noncolin) THEN
       DEALLOCATE(aux_nc)
    ELSE
@@ -2313,7 +2343,7 @@ SUBROUTINE compute_spin
    USE uspp_param,      ONLY : upf, nh, lmaxq
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
-   USE mp_global,       ONLY : intra_pool_comm
+   USE mp_pools,        ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
    USE gvecw,           ONLY : gcutw
@@ -2555,7 +2585,7 @@ SUBROUTINE compute_orb
    USE uspp_param,      ONLY : upf, nh, lmaxq
    USE becmod,          ONLY : bec_type, becp, calbec, &
                                allocate_bec_type, deallocate_bec_type
-   USE mp_global,       ONLY : intra_pool_comm
+   USE mp_pools,        ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
    USE gvecw,           ONLY : gcutw
@@ -2973,7 +3003,7 @@ SUBROUTINE compute_amn
    USE wannier
    USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
    USE uspp_param,      ONLY : upf
-   USE mp_global,       ONLY : intra_pool_comm
+   USE mp_pools,        ONLY : intra_pool_comm
    USE mp,              ONLY : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
    USE gvecw,           ONLY : gcutw
@@ -3274,6 +3304,15 @@ SUBROUTINE compute_amn_with_scdm
    ALLOCATE(psic_all(nxxs) )
 #endif
 
+   ! vv: Write info about SCDM in output
+   IF (TRIM(scdm_entanglement) == 'isolated') THEN
+      WRITE(stdout,'(1x,a,a/)') 'Case  : ',trim(scdm_entanglement)
+   ELSEIF (TRIM(scdm_entanglement) == 'erfc' .OR. &
+        TRIM(scdm_entanglement) == 'gaussian') THEN
+      WRITE(stdout,'(1x,a,a)') 'Case  : ',trim(scdm_entanglement)
+      WRITE(stdout,'(1x,a,f10.3,a/,1x,a,f10.3,a/)') 'mu    = ', scdm_mu, ' eV', 'sigma =', scdm_sigma, ' eV'
+   ENDIF
+
    CALL start_clock( 'compute_amn' )
 
    any_uspp =any (upf(1:ntyp)%tvanp)
@@ -3296,7 +3335,7 @@ SUBROUTINE compute_amn_with_scdm
    !     1)For the QR decomposition 
    !     2)For the unk's on the real grid
    !     3)For the SVD 
-   IF(scdm_entanglement==0) THEN
+   IF(TRIM(scdm_entanglement) == 'isolated') THEN
       numbands=n_wannier
       nbtot=n_wannier + nexband
    ELSE 
@@ -3340,10 +3379,10 @@ SUBROUTINE compute_amn_with_scdm
    !
    IF (wan_mode=='standalone') THEN
       CALL date_and_tim( cdate, ctime )
-      header='Created on '//cdate//' at '//ctime
+      header='Created on '//cdate//' at '//ctime//' with SCDM '
       IF (ionode) THEN
          WRITE (iun_amn,*) header
-         WRITE (iun_amn,*) numbands,  iknum, n_wannier
+         WRITE (iun_amn,'(3i8,xxx,2f10.6)') numbands,  iknum, n_wannier, scdm_mu, scdm_sigma
       ENDIF
    ENDIF
 
@@ -3372,11 +3411,11 @@ SUBROUTINE compute_amn_with_scdm
       locibnd = locibnd + 1
       ! check locibnd <= numbands
       IF (locibnd > numbands) call errore('compute_amn','Something wrong with the number of bands. Check exclude_bands.')
-      IF(scdm_entanglement == 0) THEN
+      IF(TRIM(scdm_entanglement) == 'isolated') THEN
          f_gamma = 1.0_DP
-      ELSEIF (scdm_entanglement == 1) THEN
+      ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
          f_gamma = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
-      ELSEIF (scdm_entanglement == 2) THEN
+      ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
          f_gamma = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
       ELSE
          call errore('compute_amn','scdm_entanglement value not recognized.',1)
@@ -3471,11 +3510,11 @@ SUBROUTINE compute_amn_with_scdm
          IF (excluded_band(ibnd)) CYCLE
          locibnd = locibnd + 1
          ! vv: Define the occupation numbers matrix according to scdm_entanglement
-         IF(scdm_entanglement == 0) THEN
+         IF(TRIM(scdm_entanglement) == 'isolated') THEN
             focc(locibnd) = 1.0_DP
-         ELSEIF (scdm_entanglement == 1) THEN
+         ELSEIF (TRIM(scdm_entanglement) == 'erfc') THEN
             focc(locibnd) = 0.5_DP*ERFC((et(ibnd,ik)*rytoev - scdm_mu)/scdm_sigma)
-         ELSEIF (scdm_entanglement == 2) THEN
+         ELSEIF (TRIM(scdm_entanglement) == 'gaussian') THEN
             focc(locibnd) = EXP(-1.0_DP*((et(ibnd,ik)*rytoev - scdm_mu)**2)/(scdm_sigma**2))
          ELSE
             call errore('compute_amn','scdm_entanglement value not recognized.',1)
@@ -3641,7 +3680,7 @@ SUBROUTINE generate_guiding_functions(ik)
    USE klist,      ONLY : xk, ngk, igk_k
    USE cell_base, ONLY : bg
    USE mp, ONLY : mp_sum
-   USE mp_global, ONLY : intra_pool_comm
+   USE mp_pools,  ONLY : intra_pool_comm
 
    IMPLICIT NONE
 
@@ -4014,7 +4053,7 @@ END SUBROUTINE write_plot
 
 SUBROUTINE write_parity
 
-   USE mp_global,            ONLY : intra_pool_comm
+   USE mp_pools,             ONLY : intra_pool_comm
    USE mp_world,             ONLY : mpime, nproc
    USE mp,                   ONLY : mp_sum
    USE io_global,            ONLY : stdout, ionode
@@ -4434,7 +4473,9 @@ SUBROUTINE wan2sic
   USE klist, ONLY : nkstot, xk, wk, ngk
   USE wannier
 
-  INTEGER :: npw, i, j, nn, ik, ibnd, iw, ikevc
+  IMPLICIT NONE
+
+  INTEGER :: i, j, nn, ik, ibnd, iw, ikevc, npw
   COMPLEX(DP), ALLOCATABLE :: orbital(:,:), u_matrix(:,:,:)
   INTEGER :: iunatsicwfc = 31 ! unit for sic wfc
 

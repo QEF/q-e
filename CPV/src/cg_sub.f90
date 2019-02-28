@@ -33,7 +33,7 @@
       use cell_base, only: omega, alat, tpiba2
       use local_pseudo, only: vps, rhops
       use io_global,                ONLY : stdout, ionode, ionode_id
-      use mp_global,                ONLY : intra_bgrp_comm, np_ortho, me_ortho, ortho_comm
+      use mp_global,                ONLY : intra_bgrp_comm
       use dener
       use constants,                only : pi, au_gpa
       USE io_files,                 ONLY : tmp_dir, prefix

@@ -38,15 +38,15 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE symme,                ONLY : sym_rho, sym_rho_init, sym_rho_deallocate
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : upf, nh, nhm
-  USE wavefunctions, ONLY : evc, psic, psic_nc
+  USE wavefunctions,        ONLY : evc, psic, psic_nc
   USE wvfct,                ONLY : nbnd, npwx, wg, et
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE io_files,             ONLY : iunwfc, nwordwfc
-  USE mp_global,            ONLY : me_pool, nproc_pool, my_pool_id, npool
+  USE mp_pools,             ONLY : me_pool, nproc_pool, my_pool_id, npool, &
+                                   inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
-  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE becmod,               ONLY : calbec
   IMPLICIT NONE
   !
@@ -366,32 +366,41 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
         DEALLOCATE(becp)
      ENDIF
   ENDIF
-  IF (doublegrid) THEN
-     IF (noncolin) THEN
-       CALL fft_interpolate(dffts, rho%of_r(:,1), dfftp, rho%of_r(:,1) )
-     ELSE
-       DO is = 1, nspin
-         CALL fft_interpolate(dffts, rho%of_r(:, is), dfftp, rho%of_r(:, is))
-       ENDDO
-     ENDIF
-  ENDIF
+  !
+  ! ... bring rho(r) to G-space (use psic as work array)
+  !
+  DO is = 1, nspin
+     psic(1:dffts%nnr) = rho%of_r(1:dffts%nnr,is)
+     psic(dffts%nnr+1:) = 0.0_dp
+     CALL fwfft ('Rho', psic, dffts)
+     rho%of_g(1:dffts%ngm,is) = psic(dffts%nl(1:dffts%ngm))
+     rho%of_g(dffts%ngm+1:,is) = (0.0_dp,0.0_dp)
+  END DO
   !
   !    Here we add the US contribution to the charge
   !
-  CALL addusdens(rho%of_r(:,:))
+  CALL addusdens(rho%of_g(:,:))
   !
+  !    Now select the desired component, bring it to real space
+  !
+  psic(:) = (0.0_dp, 0.0_dp)
   IF (nspin == 1 .or. nspin==4) THEN
      is = 1
-     dos(:) = rho%of_r (:, is)
+     psic(dfftp%nl(:)) = rho%of_g (:, is)
   ELSE
      IF ( iflag==3 .and. (spin_component==1 .or. spin_component==2 ) ) THEN
-        dos(:) = rho%of_r (:, spin_component)
+        psic(dfftp%nl(:)) = rho%of_g (:, spin_component)
      ELSE
         isup = 1
         isdw = 2
-        dos(:) = rho%of_r (:, isup) + rho%of_r (:, isdw)
+        psic(dfftp%nl(:)) = rho%of_g (:, isup) + rho%of_g (:, isdw)
      ENDIF
   ENDIF
+  !
+  CALL invfft ('Rho', psic, dfftp)
+  !
+  dos(:) = DBLE ( psic(:) )
+  !
   IF (lsign) THEN
      dos(:) = dos(:) * segno(:)
      DEALLOCATE(segno)
@@ -399,7 +408,7 @@ SUBROUTINE local_dos (iflag, lsign, kpoint, kband, spin_component, &
 #if defined(__MPI)
   CALL mp_sum( dos, inter_pool_comm )
 #endif
-
+  !
   IF (iflag == 0 .or. gamma_only) RETURN
   !
   !    symmetrization of the local dos

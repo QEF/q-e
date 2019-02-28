@@ -33,6 +33,7 @@ SUBROUTINE run_dist ( exit_status )
   REAL(dp) :: dr(3), dd, dn1, dn2, dn3, scalef, arg
   REAL(dp) :: angolo(nn*(nn-1)/2), drv(3), drn(3,nn), temp, rtemp(3)
   REAL(dp) :: celldm(6), a, b, c, cosab, cosac, cosbc
+  INTEGER, EXTERNAL :: at2ibrav
   !
   exit_status=0
   !
@@ -40,6 +41,7 @@ SUBROUTINE run_dist ( exit_status )
   ! and reprinted along with the lattice vectors, irrespective of
   ! what was provided in output - useful for checking and conversion
   !
+  IF ( ibrav == 0  ) ibrav= at2ibrav (at(1,1), at(1,2), at(1,3))
   CALL at2celldm ( ibrav, alat, at(1,1), at(1,2), at(1,3), celldm )
   CALL celldm2abc ( ibrav, celldm, a,b,c,cosab,cosac,cosbc )
   !

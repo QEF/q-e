@@ -190,8 +190,8 @@ CONTAINS
     !
     USE becmod,  ONLY : becp
     USE klist, only :         xk
-    USE mp,         only :  mp_sum  ! CG
-    USE mp_global,  ONLY : intra_pool_comm ! CG
+    USE mp,        ONLY : mp_sum  ! CG
+    USE mp_pools,  ONLY : intra_pool_comm ! CG
     !
     IMPLICIT NONE
     !
@@ -425,8 +425,8 @@ SUBROUTINE pw_gemm( sum_over_nodes, na, nb, n, a, lda, b, ldb, c, ldc )
   !
   USE kinds, ONLY : DP
   USE gvect, ONLY : gstart
-  USE mp,         only :  mp_sum  ! CG
-  USE mp_global,  ONLY : intra_pool_comm ! CG
+  USE mp,        ONLy : mp_sum  ! CG
+  USE mp_pools,  ONLY : intra_pool_comm ! CG
   !
   IMPLICIT NONE
   !

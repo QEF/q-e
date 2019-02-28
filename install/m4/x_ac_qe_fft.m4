@@ -100,35 +100,22 @@ then
 
 fi
 
-# Check for fftw v3, both native and MKL interfaces
+# Check MKL dfti first, fftw v3 then (both native and MKL interfaces)
 if test "$have_fft" -eq 0 
 then
 
-        try_libdirs="/usr/local/lib"
-        try_libdirs="$libdirs $try_libdirs $ld_library_path "
-
         AC_LANG_POP(Fortran 77)
         AC_LANG_PUSH(C)
-        #for dir in none $try_libdirs
-        #do
         unset ac_cv_lib_mkl_intel_lp64_DftiComputeForward
-        if test "$dir" = "none"
-        then
-                try_loption=
-        else
-                echo $ECHO_N "in $dir: " $ECHO_C
-                try_loption="-L$dir"
-        fi
 
         CFLAGS="$test_cflags"
         CPPFLAGS="$test_cppflags"
-        LDFLAGS=" $test_ldflags $try_loption"
+        LDFLAGS=" $test_ldflags"
         LIBS="$fft_libs"
-
-        #here we check if dfti explicit calls work
-        #it should work with blas flags
+        # here we check if dfti explicit calls work
+        # it should work with blas flags
         AC_CHECK_LIB([mkl_intel_lp64],DftiComputeForward,have_fft=1,
-        ,$blas_libs -lm $MKL_FLAGS)
+        ,$blas_libs -lm )
 
         if test "$have_fft" == "1" 
         then
@@ -170,6 +157,8 @@ then
 
         if test "$have_fft" -eq 0
         then
+	  try_libdirs="/usr/local/lib"
+          try_libdirs="$libdirs $try_libdirs $ld_library_path "
           for dir in none $try_libdirs
           do
                   unset ac_cv_search_dfftw_execute_dft # clear cached value
@@ -208,14 +197,7 @@ then
                         try_incdir="$FFTW_INCLUDE $FFTW_INC $INCLUDE_PATH $CPATH $FPATH"
                         for inc in $try_incdir
                         do
-                           #AC_LANG_POP([Fortran 77])
-                           #AC_LANG_PUSH([C])
-
                            AC_COMPILE_IFELSE([include "fftw3.f03"],have_fft_include=1,)
-                           
-                           #AC_LANG_POP([C])
-                           #AC_LANG_PUSH([Fortran 77])
-
                            if test "$have_fft_include" -eq 1
                            then
                              try_iflags="$try_iflags -I$inc"

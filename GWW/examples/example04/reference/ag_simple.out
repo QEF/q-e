@@ -1,0 +1,1322 @@
+
+     Program SIMPLE v.6.3 starts on 14Dec2018 at 14: 0:46 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI & OpenMP), running on      64 processor cores
+     Number of MPI processes:                 4
+     Threads/MPI process:                    16
+
+     MPI processes distributed on     1 nodes
+     R & G space division:  proc/nbgrp/npool/nimage =       4
+
+     Reading data from directory:
+     /marconi_scratch/userexternal/pumari00/tmp/ag.save/
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     Parallelization info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Min         107     107     40                 1454     1454     340
+     Max         109     109     41                 1455     1455     342
+     Sum         433     433    163                 5817     5817    1363
+ 
+ nkstot=          15
+ after first init
+ after g stuff
+ after wfc waves
+ after davcio
+
+
+     bravais-lattice index     =            2
+     lattice parameter (alat)  =       7.8500  a.u.
+     unit-cell volume          =     120.9342 (a.u.)^3
+     number of atoms/cell      =            1
+     number of atomic types    =            1
+     number of electrons       =        19.00
+     number of Kohn-Sham states=           20
+     kinetic-energy cutoff     =      50.0000  Ry
+     charge density cutoff     =     200.0000  Ry
+     Exchange-correlation      = PBE ( 1  4  3  4 0 0)
+
+     celldm(1)=   7.850000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (  -0.500000   0.000000   0.500000 )  
+               a(2) = (   0.000000   0.500000   0.500000 )  
+               a(3) = (  -0.500000   0.500000   0.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = ( -1.000000 -1.000000  1.000000 )  
+               b(2) = (  1.000000  1.000000  1.000000 )  
+               b(3) = ( -1.000000  1.000000 -1.000000 )  
+
+
+     PseudoPot. # 1 for Ag read from file:
+     /marconi/home/userexternal/pumari00/QE_LAST/develop/GWW/examples/example04/Ag_ONCV_PBE-1.0.upf
+     MD5 check sum: 1729d99cb13f85829ebd93c2bd5b61b4
+     Pseudo is Norm-conserving, Zval = 19.0
+     Generated using ONCVPSP code by D. R. Hamann
+     Using radial grid of  602 points,  6 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+                l(5) =   2
+                l(6) =   2
+
+     atomic species   valence    mass     pseudopotential
+        Ag            19.00   196.96657     Ag( 1.00)
+
+     No symmetry found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           Ag  tau(   1) = (   0.0000000   0.0000000   0.0000000  )
+
+     number of k points=    15  mv smearing, width (Ry)=  0.0200
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.1333333
+        k(    2) = (  -0.5000000   0.5000000  -0.5000000), wk =   0.1333333
+        k(    3) = (   0.5000000   0.5000000   0.5000000), wk =   0.1333333
+        k(    4) = (   0.0000000   1.0000000   0.0000000), wk =   0.1333333
+        k(    5) = (  -0.5000000  -0.5000000   0.5000000), wk =   0.1333333
+        k(    6) = (  -1.0000000   0.0000000   0.0000000), wk =   0.1333333
+        k(    7) = (   0.0000000   0.0000000   1.0000000), wk =   0.1333333
+        k(    8) = (  -0.5000000   0.5000000   0.5000000), wk =   0.1333333
+        k(    9) = (  -1.0000000   1.0000000  -1.0000000), wk =   0.1333333
+        k(   10) = (   1.0000000   1.0000000   1.0000000), wk =   0.1333333
+        k(   11) = (  -1.0000000  -1.0000000   1.0000000), wk =   0.1333333
+        k(   12) = (   0.0000000   0.0000000   2.0000000), wk =   0.1333333
+        k(   13) = (  -2.0000000   0.0000000   0.0000000), wk =   0.1333333
+        k(   14) = (   0.0000000   2.0000000   0.0000000), wk =   0.1333333
+        k(   15) = (  -1.0000000   1.0000000   1.0000000), wk =   0.1333333
+
+     Dense  grid:     5817 G-vectors     FFT dimensions: (  25,  25,  25)
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+   -75.1352 -38.5112 -38.5112 -38.5112   9.4304  12.1983  12.1983  12.1983
+    13.1451  13.1451  32.9807  36.1928  36.1928  36.1928  40.7579  41.3537
+    41.3537  41.3537  45.3358  45.3358
+
+          k =-0.5000 0.5000-0.5000     band energies (ev):
+
+   -75.1219 -38.6441 -38.5316 -38.5316  10.7395  12.1807  12.1807  13.8725
+    13.8725  16.5743  20.1702  32.1603  34.3074  34.3074  38.8599  38.8599
+    41.8985  49.1224  49.1224  50.7325
+
+          k = 0.5000 0.5000 0.5000     band energies (ev):
+
+   -75.1219 -38.6441 -38.5316 -38.5316  10.7395  12.1807  12.1807  13.8725
+    13.8725  16.5743  20.1702  32.1603  34.3074  34.3074  38.8599  38.8599
+    41.8985  49.1224  49.1224  50.7325
+
+          k = 0.0000 1.0000 0.0000     band energies (ev):
+
+   -75.1175 -38.6379 -38.5627 -38.5627  10.7066  10.8272  13.8431  14.0614
+    14.0614  18.4977  23.1957  27.3138  27.3138  33.3527  33.4346  46.4777
+    50.6767  52.3287  52.3287  53.9354
+
+          k =-0.5000-0.5000 0.5000     band energies (ev):
+
+   -75.1219 -38.6441 -38.5316 -38.5316  10.7395  12.1807  12.1807  13.8725
+    13.8725  16.5743  20.1702  32.1603  34.3074  34.3074  38.8599  38.8599
+    41.8985  49.1224  49.1224  50.7325
+
+          k =-1.0000 0.0000 0.0000     band energies (ev):
+
+   -75.1175 -38.6379 -38.5627 -38.5627  10.7066  10.8272  13.8431  14.0614
+    14.0614  18.4977  23.1957  27.3138  27.3138  33.3527  33.4346  46.4777
+    50.6767  52.3287  52.3287  53.9354
+
+          k = 0.0000 0.0000 1.0000     band energies (ev):
+
+   -75.1175 -38.6379 -38.5627 -38.5627  10.7066  10.8272  13.8431  14.0614
+    14.0614  18.4977  23.1957  27.3138  27.3138  33.3527  33.4346  46.4777
+    50.6767  52.3287  52.3287  53.9354
+
+          k =-0.5000 0.5000 0.5000     band energies (ev):
+
+   -75.1219 -38.6441 -38.5316 -38.5316  10.7395  12.1807  12.1807  13.8725
+    13.8725  16.5743  20.1702  32.1603  34.3074  34.3074  38.8599  38.8599
+    41.8985  49.1224  49.1224  50.7325
+
+          k =-1.0000 1.0000-1.0000     band energies (ev):
+
+   -75.1352 -38.5112 -38.5112 -38.5112   9.4304  12.1983  12.1983  12.1983
+    13.1451  13.1451  32.9807  36.1928  36.1928  36.1928  40.7579  41.3537
+    41.3537  41.3537  45.3358  45.3358
+
+          k = 1.0000 1.0000 1.0000     band energies (ev):
+
+   -75.1352 -38.5112 -38.5112 -38.5112   9.4304  12.1983  12.1983  12.1983
+    13.1451  13.1451  32.9807  36.1928  36.1928  36.1928  40.7579  41.3537
+    41.3537  41.3537  45.3358  45.3358
+
+          k =-1.0000-1.0000 1.0000     band energies (ev):
+
+   -75.1352 -38.5112 -38.5112 -38.5112   9.4304  12.1983  12.1983  12.1983
+    13.1451  13.1451  32.9807  36.1928  36.1928  36.1928  40.7579  41.3537
+    41.3537  41.3537  45.3358  45.3358
+
+          k = 0.0000 0.0000 2.0000     band energies (ev):
+
+   -75.1352 -38.5112 -38.5112 -38.5112   9.4304  12.1983  12.1983  12.1983
+    13.1451  13.1451  32.9807  36.1928  36.1928  36.1928  40.7579  41.3537
+    41.3537  41.3537  45.3358  45.3358
+
+          k =-2.0000 0.0000 0.0000     band energies (ev):
+
+   -75.1352 -38.5112 -38.5112 -38.5112   9.4304  12.1983  12.1983  12.1983
+    13.1451  13.1451  32.9807  36.1928  36.1928  36.1928  40.7579  41.3537
+    41.3537  41.3537  45.3358  45.3358
+
+          k = 0.0000 2.0000 0.0000     band energies (ev):
+
+   -75.1352 -38.5112 -38.5112 -38.5112   9.4304  12.1983  12.1983  12.1983
+    13.1451  13.1451  32.9807  36.1928  36.1928  36.1928  40.7579  41.3537
+    41.3537  41.3537  45.3358  45.3358
+
+          k =-1.0000 1.0000 1.0000     band energies (ev):
+
+   -75.1352 -38.5112 -38.5112 -38.5112   9.4304  12.1983  12.1983  12.1983
+    13.1451  13.1451  32.9807  36.1928  36.1928  36.1928  40.7579  41.3537
+    41.3537  41.3537  45.3358  45.3358
+
+     the Fermi energy is    14.2027 ev
+ NPWX NPW_MAX         185         307
+ K POINT:            2
+ DIMENSION OF BASIS          34
+     wfc_loop     :      0.21s CPU      0.02s WALL (       1 calls)
+     wfc_optimal  :      0.10s CPU      0.01s WALL (       1 calls)
+     zgemm        :      0.10s CPU      0.01s WALL (      20 calls)
+ K POINT:            3
+ DIMENSION OF BASIS          44
+     wfc_loop     :      0.33s CPU      0.03s WALL (       2 calls)
+     wfc_optimal  :      0.18s CPU      0.01s WALL (       2 calls)
+     zgemm        :      0.14s CPU      0.02s WALL (      37 calls)
+ K POINT:            4
+ DIMENSION OF BASIS          47
+     wfc_loop     :      0.44s CPU      0.04s WALL (       3 calls)
+     wfc_optimal  :      0.24s CPU      0.02s WALL (       3 calls)
+     zgemm        :      0.19s CPU      0.02s WALL (      50 calls)
+ K POINT:            5
+ DIMENSION OF BASIS          56
+     wfc_loop     :      0.56s CPU      0.05s WALL (       4 calls)
+     wfc_optimal  :      0.31s CPU      0.02s WALL (       4 calls)
+     zgemm        :      0.22s CPU      0.02s WALL (      67 calls)
+ K POINT:            6
+ DIMENSION OF BASIS          58
+     wfc_loop     :      0.63s CPU      0.05s WALL (       5 calls)
+     wfc_optimal  :      0.33s CPU      0.02s WALL (       5 calls)
+     zgemm        :      0.23s CPU      0.02s WALL (      71 calls)
+ K POINT:            7
+ DIMENSION OF BASIS          61
+     wfc_loop     :      0.71s CPU      0.06s WALL (       6 calls)
+     wfc_optimal  :      0.36s CPU      0.03s WALL (       6 calls)
+     zgemm        :      0.25s CPU      0.02s WALL (      76 calls)
+ K POINT:            8
+ DIMENSION OF BASIS          62
+     wfc_loop     :      0.78s CPU      0.06s WALL (       7 calls)
+     wfc_optimal  :      0.38s CPU      0.03s WALL (       7 calls)
+     zgemm        :      0.26s CPU      0.02s WALL (      78 calls)
+ K POINT:            9
+ DIMENSION OF BASIS          69
+     wfc_loop     :      0.90s CPU      0.07s WALL (       8 calls)
+     wfc_optimal  :      0.44s CPU      0.03s WALL (       8 calls)
+     zgemm        :      0.29s CPU      0.03s WALL (      94 calls)
+ K POINT:           10
+ DIMENSION OF BASIS          74
+     wfc_loop     :      1.01s CPU      0.08s WALL (       9 calls)
+     wfc_optimal  :      0.50s CPU      0.04s WALL (       9 calls)
+     zgemm        :      0.33s CPU      0.03s WALL (     109 calls)
+ K POINT:           11
+ DIMENSION OF BASIS          81
+     wfc_loop     :      1.13s CPU      0.09s WALL (      10 calls)
+     wfc_optimal  :      0.56s CPU      0.04s WALL (      10 calls)
+     zgemm        :      0.36s CPU      0.03s WALL (     123 calls)
+ K POINT:           12
+ DIMENSION OF BASIS          89
+     wfc_loop     :      1.27s CPU      0.10s WALL (      11 calls)
+     wfc_optimal  :      0.63s CPU      0.05s WALL (      11 calls)
+     zgemm        :      0.40s CPU      0.04s WALL (     139 calls)
+ K POINT:           13
+ DIMENSION OF BASIS          97
+     wfc_loop     :      1.41s CPU      0.11s WALL (      12 calls)
+     wfc_optimal  :      0.69s CPU      0.05s WALL (      12 calls)
+     zgemm        :      0.44s CPU      0.04s WALL (     155 calls)
+ K POINT:           14
+ DIMENSION OF BASIS         103
+     wfc_loop     :      1.55s CPU      0.12s WALL (      13 calls)
+     wfc_optimal  :      0.75s CPU      0.06s WALL (      13 calls)
+     zgemm        :      0.48s CPU      0.04s WALL (     168 calls)
+ K POINT:           15
+ DIMENSION OF BASIS         104
+     wfc_loop     :      1.64s CPU      0.13s WALL (      14 calls)
+     wfc_optimal  :      0.78s CPU      0.06s WALL (      14 calls)
+     zgemm        :      0.51s CPU      0.04s WALL (     173 calls)
+  IK           1
+  IK           2
+  IK           3
+  IK           4
+  IK           5
+  IK           6
+  IK           7
+  IK           8
+  IK           9
+  IK          10
+  IK          11
+  IK          12
+  IK          13
+  IK          14
+  IK          15
+  
+ TOTAL NUMBER OF OPTIMAL BASIS VECTORS :         104
+  
+ *********************************************************
+ Preparing for subsequent IP calculation (for simple_ip.x)
+ *********************************************************
+   
+ Compute and store (in files prefix.hamiltonian and prefix.hamiltonian_k) the
+ matrix elements needed for the k-dependent Hamiltonian in the optimal basis:
+ K0_ij
+ K1_ij
+ Vloc_ij
+ Vnonloc_ij(k) (projectors)
+ WARNING: Non local commutator from the velocity operator will NOT be computed
+ Total number of k-points:   1000
+ k-point:      1
+ k-point:      2
+ k-point:      3
+ k-point:      4
+ k-point:      5
+ k-point:      6
+ k-point:      7
+ k-point:      8
+ k-point:      9
+ k-point:     10
+ k-point:     11
+ k-point:     12
+ k-point:     13
+ k-point:     14
+ k-point:     15
+ k-point:     16
+ k-point:     17
+ k-point:     18
+ k-point:     19
+ k-point:     20
+ k-point:     21
+ k-point:     22
+ k-point:     23
+ k-point:     24
+ k-point:     25
+ k-point:     26
+ k-point:     27
+ k-point:     28
+ k-point:     29
+ k-point:     30
+ k-point:     31
+ k-point:     32
+ k-point:     33
+ k-point:     34
+ k-point:     35
+ k-point:     36
+ k-point:     37
+ k-point:     38
+ k-point:     39
+ k-point:     40
+ k-point:     41
+ k-point:     42
+ k-point:     43
+ k-point:     44
+ k-point:     45
+ k-point:     46
+ k-point:     47
+ k-point:     48
+ k-point:     49
+ k-point:     50
+ k-point:     51
+ k-point:     52
+ k-point:     53
+ k-point:     54
+ k-point:     55
+ k-point:     56
+ k-point:     57
+ k-point:     58
+ k-point:     59
+ k-point:     60
+ k-point:     61
+ k-point:     62
+ k-point:     63
+ k-point:     64
+ k-point:     65
+ k-point:     66
+ k-point:     67
+ k-point:     68
+ k-point:     69
+ k-point:     70
+ k-point:     71
+ k-point:     72
+ k-point:     73
+ k-point:     74
+ k-point:     75
+ k-point:     76
+ k-point:     77
+ k-point:     78
+ k-point:     79
+ k-point:     80
+ k-point:     81
+ k-point:     82
+ k-point:     83
+ k-point:     84
+ k-point:     85
+ k-point:     86
+ k-point:     87
+ k-point:     88
+ k-point:     89
+ k-point:     90
+ k-point:     91
+ k-point:     92
+ k-point:     93
+ k-point:     94
+ k-point:     95
+ k-point:     96
+ k-point:     97
+ k-point:     98
+ k-point:     99
+ k-point:    100
+ k-point:    101
+ k-point:    102
+ k-point:    103
+ k-point:    104
+ k-point:    105
+ k-point:    106
+ k-point:    107
+ k-point:    108
+ k-point:    109
+ k-point:    110
+ k-point:    111
+ k-point:    112
+ k-point:    113
+ k-point:    114
+ k-point:    115
+ k-point:    116
+ k-point:    117
+ k-point:    118
+ k-point:    119
+ k-point:    120
+ k-point:    121
+ k-point:    122
+ k-point:    123
+ k-point:    124
+ k-point:    125
+ k-point:    126
+ k-point:    127
+ k-point:    128
+ k-point:    129
+ k-point:    130
+ k-point:    131
+ k-point:    132
+ k-point:    133
+ k-point:    134
+ k-point:    135
+ k-point:    136
+ k-point:    137
+ k-point:    138
+ k-point:    139
+ k-point:    140
+ k-point:    141
+ k-point:    142
+ k-point:    143
+ k-point:    144
+ k-point:    145
+ k-point:    146
+ k-point:    147
+ k-point:    148
+ k-point:    149
+ k-point:    150
+ k-point:    151
+ k-point:    152
+ k-point:    153
+ k-point:    154
+ k-point:    155
+ k-point:    156
+ k-point:    157
+ k-point:    158
+ k-point:    159
+ k-point:    160
+ k-point:    161
+ k-point:    162
+ k-point:    163
+ k-point:    164
+ k-point:    165
+ k-point:    166
+ k-point:    167
+ k-point:    168
+ k-point:    169
+ k-point:    170
+ k-point:    171
+ k-point:    172
+ k-point:    173
+ k-point:    174
+ k-point:    175
+ k-point:    176
+ k-point:    177
+ k-point:    178
+ k-point:    179
+ k-point:    180
+ k-point:    181
+ k-point:    182
+ k-point:    183
+ k-point:    184
+ k-point:    185
+ k-point:    186
+ k-point:    187
+ k-point:    188
+ k-point:    189
+ k-point:    190
+ k-point:    191
+ k-point:    192
+ k-point:    193
+ k-point:    194
+ k-point:    195
+ k-point:    196
+ k-point:    197
+ k-point:    198
+ k-point:    199
+ k-point:    200
+ k-point:    201
+ k-point:    202
+ k-point:    203
+ k-point:    204
+ k-point:    205
+ k-point:    206
+ k-point:    207
+ k-point:    208
+ k-point:    209
+ k-point:    210
+ k-point:    211
+ k-point:    212
+ k-point:    213
+ k-point:    214
+ k-point:    215
+ k-point:    216
+ k-point:    217
+ k-point:    218
+ k-point:    219
+ k-point:    220
+ k-point:    221
+ k-point:    222
+ k-point:    223
+ k-point:    224
+ k-point:    225
+ k-point:    226
+ k-point:    227
+ k-point:    228
+ k-point:    229
+ k-point:    230
+ k-point:    231
+ k-point:    232
+ k-point:    233
+ k-point:    234
+ k-point:    235
+ k-point:    236
+ k-point:    237
+ k-point:    238
+ k-point:    239
+ k-point:    240
+ k-point:    241
+ k-point:    242
+ k-point:    243
+ k-point:    244
+ k-point:    245
+ k-point:    246
+ k-point:    247
+ k-point:    248
+ k-point:    249
+ k-point:    250
+ k-point:    251
+ k-point:    252
+ k-point:    253
+ k-point:    254
+ k-point:    255
+ k-point:    256
+ k-point:    257
+ k-point:    258
+ k-point:    259
+ k-point:    260
+ k-point:    261
+ k-point:    262
+ k-point:    263
+ k-point:    264
+ k-point:    265
+ k-point:    266
+ k-point:    267
+ k-point:    268
+ k-point:    269
+ k-point:    270
+ k-point:    271
+ k-point:    272
+ k-point:    273
+ k-point:    274
+ k-point:    275
+ k-point:    276
+ k-point:    277
+ k-point:    278
+ k-point:    279
+ k-point:    280
+ k-point:    281
+ k-point:    282
+ k-point:    283
+ k-point:    284
+ k-point:    285
+ k-point:    286
+ k-point:    287
+ k-point:    288
+ k-point:    289
+ k-point:    290
+ k-point:    291
+ k-point:    292
+ k-point:    293
+ k-point:    294
+ k-point:    295
+ k-point:    296
+ k-point:    297
+ k-point:    298
+ k-point:    299
+ k-point:    300
+ k-point:    301
+ k-point:    302
+ k-point:    303
+ k-point:    304
+ k-point:    305
+ k-point:    306
+ k-point:    307
+ k-point:    308
+ k-point:    309
+ k-point:    310
+ k-point:    311
+ k-point:    312
+ k-point:    313
+ k-point:    314
+ k-point:    315
+ k-point:    316
+ k-point:    317
+ k-point:    318
+ k-point:    319
+ k-point:    320
+ k-point:    321
+ k-point:    322
+ k-point:    323
+ k-point:    324
+ k-point:    325
+ k-point:    326
+ k-point:    327
+ k-point:    328
+ k-point:    329
+ k-point:    330
+ k-point:    331
+ k-point:    332
+ k-point:    333
+ k-point:    334
+ k-point:    335
+ k-point:    336
+ k-point:    337
+ k-point:    338
+ k-point:    339
+ k-point:    340
+ k-point:    341
+ k-point:    342
+ k-point:    343
+ k-point:    344
+ k-point:    345
+ k-point:    346
+ k-point:    347
+ k-point:    348
+ k-point:    349
+ k-point:    350
+ k-point:    351
+ k-point:    352
+ k-point:    353
+ k-point:    354
+ k-point:    355
+ k-point:    356
+ k-point:    357
+ k-point:    358
+ k-point:    359
+ k-point:    360
+ k-point:    361
+ k-point:    362
+ k-point:    363
+ k-point:    364
+ k-point:    365
+ k-point:    366
+ k-point:    367
+ k-point:    368
+ k-point:    369
+ k-point:    370
+ k-point:    371
+ k-point:    372
+ k-point:    373
+ k-point:    374
+ k-point:    375
+ k-point:    376
+ k-point:    377
+ k-point:    378
+ k-point:    379
+ k-point:    380
+ k-point:    381
+ k-point:    382
+ k-point:    383
+ k-point:    384
+ k-point:    385
+ k-point:    386
+ k-point:    387
+ k-point:    388
+ k-point:    389
+ k-point:    390
+ k-point:    391
+ k-point:    392
+ k-point:    393
+ k-point:    394
+ k-point:    395
+ k-point:    396
+ k-point:    397
+ k-point:    398
+ k-point:    399
+ k-point:    400
+ k-point:    401
+ k-point:    402
+ k-point:    403
+ k-point:    404
+ k-point:    405
+ k-point:    406
+ k-point:    407
+ k-point:    408
+ k-point:    409
+ k-point:    410
+ k-point:    411
+ k-point:    412
+ k-point:    413
+ k-point:    414
+ k-point:    415
+ k-point:    416
+ k-point:    417
+ k-point:    418
+ k-point:    419
+ k-point:    420
+ k-point:    421
+ k-point:    422
+ k-point:    423
+ k-point:    424
+ k-point:    425
+ k-point:    426
+ k-point:    427
+ k-point:    428
+ k-point:    429
+ k-point:    430
+ k-point:    431
+ k-point:    432
+ k-point:    433
+ k-point:    434
+ k-point:    435
+ k-point:    436
+ k-point:    437
+ k-point:    438
+ k-point:    439
+ k-point:    440
+ k-point:    441
+ k-point:    442
+ k-point:    443
+ k-point:    444
+ k-point:    445
+ k-point:    446
+ k-point:    447
+ k-point:    448
+ k-point:    449
+ k-point:    450
+ k-point:    451
+ k-point:    452
+ k-point:    453
+ k-point:    454
+ k-point:    455
+ k-point:    456
+ k-point:    457
+ k-point:    458
+ k-point:    459
+ k-point:    460
+ k-point:    461
+ k-point:    462
+ k-point:    463
+ k-point:    464
+ k-point:    465
+ k-point:    466
+ k-point:    467
+ k-point:    468
+ k-point:    469
+ k-point:    470
+ k-point:    471
+ k-point:    472
+ k-point:    473
+ k-point:    474
+ k-point:    475
+ k-point:    476
+ k-point:    477
+ k-point:    478
+ k-point:    479
+ k-point:    480
+ k-point:    481
+ k-point:    482
+ k-point:    483
+ k-point:    484
+ k-point:    485
+ k-point:    486
+ k-point:    487
+ k-point:    488
+ k-point:    489
+ k-point:    490
+ k-point:    491
+ k-point:    492
+ k-point:    493
+ k-point:    494
+ k-point:    495
+ k-point:    496
+ k-point:    497
+ k-point:    498
+ k-point:    499
+ k-point:    500
+ k-point:    501
+ k-point:    502
+ k-point:    503
+ k-point:    504
+ k-point:    505
+ k-point:    506
+ k-point:    507
+ k-point:    508
+ k-point:    509
+ k-point:    510
+ k-point:    511
+ k-point:    512
+ k-point:    513
+ k-point:    514
+ k-point:    515
+ k-point:    516
+ k-point:    517
+ k-point:    518
+ k-point:    519
+ k-point:    520
+ k-point:    521
+ k-point:    522
+ k-point:    523
+ k-point:    524
+ k-point:    525
+ k-point:    526
+ k-point:    527
+ k-point:    528
+ k-point:    529
+ k-point:    530
+ k-point:    531
+ k-point:    532
+ k-point:    533
+ k-point:    534
+ k-point:    535
+ k-point:    536
+ k-point:    537
+ k-point:    538
+ k-point:    539
+ k-point:    540
+ k-point:    541
+ k-point:    542
+ k-point:    543
+ k-point:    544
+ k-point:    545
+ k-point:    546
+ k-point:    547
+ k-point:    548
+ k-point:    549
+ k-point:    550
+ k-point:    551
+ k-point:    552
+ k-point:    553
+ k-point:    554
+ k-point:    555
+ k-point:    556
+ k-point:    557
+ k-point:    558
+ k-point:    559
+ k-point:    560
+ k-point:    561
+ k-point:    562
+ k-point:    563
+ k-point:    564
+ k-point:    565
+ k-point:    566
+ k-point:    567
+ k-point:    568
+ k-point:    569
+ k-point:    570
+ k-point:    571
+ k-point:    572
+ k-point:    573
+ k-point:    574
+ k-point:    575
+ k-point:    576
+ k-point:    577
+ k-point:    578
+ k-point:    579
+ k-point:    580
+ k-point:    581
+ k-point:    582
+ k-point:    583
+ k-point:    584
+ k-point:    585
+ k-point:    586
+ k-point:    587
+ k-point:    588
+ k-point:    589
+ k-point:    590
+ k-point:    591
+ k-point:    592
+ k-point:    593
+ k-point:    594
+ k-point:    595
+ k-point:    596
+ k-point:    597
+ k-point:    598
+ k-point:    599
+ k-point:    600
+ k-point:    601
+ k-point:    602
+ k-point:    603
+ k-point:    604
+ k-point:    605
+ k-point:    606
+ k-point:    607
+ k-point:    608
+ k-point:    609
+ k-point:    610
+ k-point:    611
+ k-point:    612
+ k-point:    613
+ k-point:    614
+ k-point:    615
+ k-point:    616
+ k-point:    617
+ k-point:    618
+ k-point:    619
+ k-point:    620
+ k-point:    621
+ k-point:    622
+ k-point:    623
+ k-point:    624
+ k-point:    625
+ k-point:    626
+ k-point:    627
+ k-point:    628
+ k-point:    629
+ k-point:    630
+ k-point:    631
+ k-point:    632
+ k-point:    633
+ k-point:    634
+ k-point:    635
+ k-point:    636
+ k-point:    637
+ k-point:    638
+ k-point:    639
+ k-point:    640
+ k-point:    641
+ k-point:    642
+ k-point:    643
+ k-point:    644
+ k-point:    645
+ k-point:    646
+ k-point:    647
+ k-point:    648
+ k-point:    649
+ k-point:    650
+ k-point:    651
+ k-point:    652
+ k-point:    653
+ k-point:    654
+ k-point:    655
+ k-point:    656
+ k-point:    657
+ k-point:    658
+ k-point:    659
+ k-point:    660
+ k-point:    661
+ k-point:    662
+ k-point:    663
+ k-point:    664
+ k-point:    665
+ k-point:    666
+ k-point:    667
+ k-point:    668
+ k-point:    669
+ k-point:    670
+ k-point:    671
+ k-point:    672
+ k-point:    673
+ k-point:    674
+ k-point:    675
+ k-point:    676
+ k-point:    677
+ k-point:    678
+ k-point:    679
+ k-point:    680
+ k-point:    681
+ k-point:    682
+ k-point:    683
+ k-point:    684
+ k-point:    685
+ k-point:    686
+ k-point:    687
+ k-point:    688
+ k-point:    689
+ k-point:    690
+ k-point:    691
+ k-point:    692
+ k-point:    693
+ k-point:    694
+ k-point:    695
+ k-point:    696
+ k-point:    697
+ k-point:    698
+ k-point:    699
+ k-point:    700
+ k-point:    701
+ k-point:    702
+ k-point:    703
+ k-point:    704
+ k-point:    705
+ k-point:    706
+ k-point:    707
+ k-point:    708
+ k-point:    709
+ k-point:    710
+ k-point:    711
+ k-point:    712
+ k-point:    713
+ k-point:    714
+ k-point:    715
+ k-point:    716
+ k-point:    717
+ k-point:    718
+ k-point:    719
+ k-point:    720
+ k-point:    721
+ k-point:    722
+ k-point:    723
+ k-point:    724
+ k-point:    725
+ k-point:    726
+ k-point:    727
+ k-point:    728
+ k-point:    729
+ k-point:    730
+ k-point:    731
+ k-point:    732
+ k-point:    733
+ k-point:    734
+ k-point:    735
+ k-point:    736
+ k-point:    737
+ k-point:    738
+ k-point:    739
+ k-point:    740
+ k-point:    741
+ k-point:    742
+ k-point:    743
+ k-point:    744
+ k-point:    745
+ k-point:    746
+ k-point:    747
+ k-point:    748
+ k-point:    749
+ k-point:    750
+ k-point:    751
+ k-point:    752
+ k-point:    753
+ k-point:    754
+ k-point:    755
+ k-point:    756
+ k-point:    757
+ k-point:    758
+ k-point:    759
+ k-point:    760
+ k-point:    761
+ k-point:    762
+ k-point:    763
+ k-point:    764
+ k-point:    765
+ k-point:    766
+ k-point:    767
+ k-point:    768
+ k-point:    769
+ k-point:    770
+ k-point:    771
+ k-point:    772
+ k-point:    773
+ k-point:    774
+ k-point:    775
+ k-point:    776
+ k-point:    777
+ k-point:    778
+ k-point:    779
+ k-point:    780
+ k-point:    781
+ k-point:    782
+ k-point:    783
+ k-point:    784
+ k-point:    785
+ k-point:    786
+ k-point:    787
+ k-point:    788
+ k-point:    789
+ k-point:    790
+ k-point:    791
+ k-point:    792
+ k-point:    793
+ k-point:    794
+ k-point:    795
+ k-point:    796
+ k-point:    797
+ k-point:    798
+ k-point:    799
+ k-point:    800
+ k-point:    801
+ k-point:    802
+ k-point:    803
+ k-point:    804
+ k-point:    805
+ k-point:    806
+ k-point:    807
+ k-point:    808
+ k-point:    809
+ k-point:    810
+ k-point:    811
+ k-point:    812
+ k-point:    813
+ k-point:    814
+ k-point:    815
+ k-point:    816
+ k-point:    817
+ k-point:    818
+ k-point:    819
+ k-point:    820
+ k-point:    821
+ k-point:    822
+ k-point:    823
+ k-point:    824
+ k-point:    825
+ k-point:    826
+ k-point:    827
+ k-point:    828
+ k-point:    829
+ k-point:    830
+ k-point:    831
+ k-point:    832
+ k-point:    833
+ k-point:    834
+ k-point:    835
+ k-point:    836
+ k-point:    837
+ k-point:    838
+ k-point:    839
+ k-point:    840
+ k-point:    841
+ k-point:    842
+ k-point:    843
+ k-point:    844
+ k-point:    845
+ k-point:    846
+ k-point:    847
+ k-point:    848
+ k-point:    849
+ k-point:    850
+ k-point:    851
+ k-point:    852
+ k-point:    853
+ k-point:    854
+ k-point:    855
+ k-point:    856
+ k-point:    857
+ k-point:    858
+ k-point:    859
+ k-point:    860
+ k-point:    861
+ k-point:    862
+ k-point:    863
+ k-point:    864
+ k-point:    865
+ k-point:    866
+ k-point:    867
+ k-point:    868
+ k-point:    869
+ k-point:    870
+ k-point:    871
+ k-point:    872
+ k-point:    873
+ k-point:    874
+ k-point:    875
+ k-point:    876
+ k-point:    877
+ k-point:    878
+ k-point:    879
+ k-point:    880
+ k-point:    881
+ k-point:    882
+ k-point:    883
+ k-point:    884
+ k-point:    885
+ k-point:    886
+ k-point:    887
+ k-point:    888
+ k-point:    889
+ k-point:    890
+ k-point:    891
+ k-point:    892
+ k-point:    893
+ k-point:    894
+ k-point:    895
+ k-point:    896
+ k-point:    897
+ k-point:    898
+ k-point:    899
+ k-point:    900
+ k-point:    901
+ k-point:    902
+ k-point:    903
+ k-point:    904
+ k-point:    905
+ k-point:    906
+ k-point:    907
+ k-point:    908
+ k-point:    909
+ k-point:    910
+ k-point:    911
+ k-point:    912
+ k-point:    913
+ k-point:    914
+ k-point:    915
+ k-point:    916
+ k-point:    917
+ k-point:    918
+ k-point:    919
+ k-point:    920
+ k-point:    921
+ k-point:    922
+ k-point:    923
+ k-point:    924
+ k-point:    925
+ k-point:    926
+ k-point:    927
+ k-point:    928
+ k-point:    929
+ k-point:    930
+ k-point:    931
+ k-point:    932
+ k-point:    933
+ k-point:    934
+ k-point:    935
+ k-point:    936
+ k-point:    937
+ k-point:    938
+ k-point:    939
+ k-point:    940
+ k-point:    941
+ k-point:    942
+ k-point:    943
+ k-point:    944
+ k-point:    945
+ k-point:    946
+ k-point:    947
+ k-point:    948
+ k-point:    949
+ k-point:    950
+ k-point:    951
+ k-point:    952
+ k-point:    953
+ k-point:    954
+ k-point:    955
+ k-point:    956
+ k-point:    957
+ k-point:    958
+ k-point:    959
+ k-point:    960
+ k-point:    961
+ k-point:    962
+ k-point:    963
+ k-point:    964
+ k-point:    965
+ k-point:    966
+ k-point:    967
+ k-point:    968
+ k-point:    969
+ k-point:    970
+ k-point:    971
+ k-point:    972
+ k-point:    973
+ k-point:    974
+ k-point:    975
+ k-point:    976
+ k-point:    977
+ k-point:    978
+ k-point:    979
+ k-point:    980
+ k-point:    981
+ k-point:    982
+ k-point:    983
+ k-point:    984
+ k-point:    985
+ k-point:    986
+ k-point:    987
+ k-point:    988
+ k-point:    989
+ k-point:    990
+ k-point:    991
+ k-point:    992
+ k-point:    993
+ k-point:    994
+ k-point:    995
+ k-point:    996
+ k-point:    997
+ k-point:    998
+ k-point:    999
+ k-point:   1000
+  
+ **********************************
+ Matrix elements computed and saved
+ **********************************
+                      
+ INPUT PARAMETERS:
+ s_bands [a.u.] =    0.01000
+ k-grid =  10 10 10
+ nonlocal_commutator =    False
+                      
+     K0           :      0.15s CPU      0.01s WALL (       1 calls)
+     K1           :      0.10s CPU      0.01s WALL (       1 calls)
+     Vloc         :      1.29s CPU      0.09s WALL (       1 calls)
+     Vnloc        :     18.11s CPU      1.28s WALL (    1000 calls)
+     Vnloc_write  :      3.05s CPU      0.52s WALL (     100 calls)
+     commutator   :      0.64s CPU      0.05s WALL (    1000 calls)
+     khamiltonian :     25.87s CPU      2.15s WALL (       1 calls)
+     optimal_basi :      2.23s CPU      0.17s WALL (       1 calls)
+     simple       :     34.04s CPU      3.23s WALL (       1 calls)

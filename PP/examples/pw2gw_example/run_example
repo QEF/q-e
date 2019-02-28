@@ -96,7 +96,6 @@ cat > bn.scf.in << EOF
     outdir            = '$TMP_DIR'
     verbosity         = 'high'
     disk_io = 'minimal'
-    wf_collect        = .true.
 /
 &system
     ibrav             = 4
@@ -145,7 +144,6 @@ cat > bn.nscf.in << EOF
     outdir            = '$TMP_DIR'
     verbosity         = 'high'
     disk_io = 'minimal'
-    wf_collect        = .true.
 /
 &system
     ibrav             = 4

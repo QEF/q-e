@@ -15,7 +15,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
 !   gqq output: as defined above
 
   use kinds,              only: dp
-  use uspp_param,         only: upf, lmaxq, nbetam, nh, nhm, oldvan, nvb
+  use uspp_param,         only: upf, lmaxq, nbetam, nh, nhm, nvb
   use uspp,               only: indv, lpx, lpl, ap,nhtolm
   use atom,               only: rgrid
   use core
@@ -96,13 +96,8 @@ subroutine qqberry2( gqq,gqqm, ipol)
               do ir=1,upf(is)%kkbeta
                  fint(ir)=qrl(ir,ijv,l)*jl(ir)
               end do
-              if (oldvan(is)) then
-                 call herman_skillman_int ( upf(is)%kkbeta,fint,rgrid(is)%rab,&
-                                            qradb2(iv,jv,l,is) )
-              else
-                 call simpson ( upf(is)%kkbeta,fint,rgrid(is)%rab,&
+              call simpson ( upf(is)%kkbeta,fint,rgrid(is)%rab,&
                                 qradb2(iv,jv,l,is) )
-              endif
               qradb2(iv,jv,l,is)=  c*qradb2(iv,jv,l,is)
               if ( iv /= jv ) qradb2(jv,iv,l,is)=  qradb2(iv,jv,l,is)
            end do

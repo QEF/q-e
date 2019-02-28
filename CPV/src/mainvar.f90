@@ -114,8 +114,8 @@ MODULE cp_main_variables
                                  gstart, nudx, tpre, nbspx_bgrp )
       !------------------------------------------------------------------------
       !
-      USE mp_global,   ONLY: np_ortho, me_ortho, intra_bgrp_comm, ortho_comm, &
-                             me_bgrp, ortho_comm_id, ortho_cntx
+      USE mp_diag,     ONLY: np_ortho, me_ortho, ortho_comm, ortho_comm_id, ortho_cntx
+      USE mp_bands,    ONLY: intra_bgrp_comm, me_bgrp
       USE mp,          ONLY: mp_max, mp_min
       USE descriptors, ONLY: la_descriptor, descla_init
       !
