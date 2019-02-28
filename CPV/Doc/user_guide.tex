@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{6.3}
+\def\version{6.4}
 \def\qe{{\sc Quantum ESPRESSO}}
 
 \usepackage{html}
@@ -124,16 +124,18 @@ Symlinks to executable programs will be placed in the \texttt{bin/} subdirectory
 
 As a final check that compilation was successful,
 you may want to run some or all of the tests
-and examples. Please see the general User's Guide for their setup. Automated tests for \cpx\ are in directory 
-\texttt{tests/} and can be run via the
-script \texttt{check\_cp.x.j}
+and examples. 
+Automated tests for \cpx\ are in directory 
+\texttt{test-suite/} and can be run via the 
+\texttt{Makefile} found there.
+Please see the general User's Guide for their setup. 
 
 You may take the tests and examples distributed 
 with \CP\ as templates for writing your own input
-files. Input files for tests are contained
-in \texttt{tests/} subdirectory with file type 
-\texttt{*.in1}, \texttt{*.in2}, ... . Input file for examples
-are produced if you run the examples in the 
+files. Input files for tests are contained in
+subdirectories \texttt{test-suite/cp\_*} with file type 
+\texttt{*.in1}, \texttt{*.in2}, ... . Input files for examples
+are produced, if you run the examples, in the 
 \texttt{results/} subdirectories, with names ending
 with \texttt{.in}.
 
