@@ -246,7 +246,7 @@ MODULE pw_restart_new
                     n_opt_steps = istep 
                 END IF 
                 scf_has_converged = conv_elec 
-                n_scf_steps = n_scf_steps
+                n_scf_steps_ = n_scf_steps
             CASE ("nscf", "bands" )
                 n_opt_steps = 0
                 scf_has_converged = .FALSE. 
