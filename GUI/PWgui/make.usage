@@ -8,9 +8,9 @@
 	If you donwloaded any of the *.tgz package, you do not need to 
 	call "make". See INSTALL file instead.
 
-* SVN-related target:
+* Repository-related target:
  
-	svninit ...   initialize the PWgui after it was SVN-downloaded
+	init ...   initialize the PWgui after it was downloaded from repository
 
 * Distribution-related targets:
 

@@ -146,8 +146,21 @@ travis : pwall epw
 	( cd test-suite ; make run-travis || exit 1 ) ; fi
 
 gui :
-	@echo 'Check "GUI/README" how to access the Graphical User Interface'
-#@echo 'Check "PWgui-X.Y/README" how to access the Graphical User Interface'
+	@if test -d GUI/PWgui ; then \
+	    cd GUI/PWgui ; \
+	    $(MAKE) TLDEPS= init; \
+	    echo ; \
+	    echo "  PWgui has been built in ./GUI/PWgui/. You may try it either as:  "; \
+	    echo "         ./GUI/PWgui/pwgui" ; \
+	    echo "     or"; \
+	    echo "         cd ./GUI/PWgui";\
+	    echo "         ./pwgui" ; \
+	    echo ; \
+	else \
+	    echo ; \
+	    echo "  Sorry, gui works only for git sources !!!" ; \
+	    echo ; \
+	fi
 
 examples :
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
@@ -351,11 +364,11 @@ tar :
 tar-gui :
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
-	    $(MAKE) TLDEPS= clean svninit pwgui-source; \
+	    $(MAKE) TLDEPS= clean init pwgui-source; \
 	    mv PWgui-*.tgz ../.. ; \
 	else \
 	    echo ; \
-	    echo "  Sorry, tar-gui works only for svn sources !!!" ; \
+	    echo "  Sorry, tar-gui works only for git sources !!!" ; \
 	    echo ; \
 	fi
 
@@ -366,7 +379,7 @@ tar-qe-modes :
 	    mv QE-modes-*.tar.gz ../.. ; \
 	else \
 	    echo ; \
-	    echo "  Sorry, tar-qe-modes works only for svn sources !!!" ; \
+	    echo "  Sorry, tar-qe-modes works only for git sources !!!" ; \
 	    echo ; \
 	fi
 
