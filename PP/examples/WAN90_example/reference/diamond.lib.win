@@ -2,8 +2,8 @@ num_wann        =  4
 num_iter        = 20
 
 begin atoms_frac
-C   -0.12500  -0.1250    -0.125000
-C    0.12500   0.1250     0.125000
+C   -0.2500  -0.250    -0.25000
+C    0.00000   0.0000     0.000000
 end atoms_frac
 
 begin projections
