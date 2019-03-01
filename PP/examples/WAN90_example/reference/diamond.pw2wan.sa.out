@@ -1,25 +1,36 @@
 
-     Program POST-PROC v.3.1.1  starts ...
-     Today is  9Oct2006 at 15:37: 9 
+     Program PW2WANNIER v.6.4rc starts on  1Mar2019 at 15:58:51 
 
-     Parallel version (MPI)
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 29 465901 (2017);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
 
-     Number of processors in use:       2
-     R & G space division:  proc/pool =    2
+     Parallel version (MPI), running on     1 processors
+
+     MPI processes distributed on     1 nodes
  
   Reading nscf_save data
 
-     Planes per process (thick) : nr3 = 18 npp =   9 ncplane =  324
- 
- Proc/  planes cols    G   planes cols    G    columns  G
- Pool       (dense grid)      (smooth grid)   (wavefct grid)
-  1      9     99    957    9     99    957   42    230
-  2      9    100    960    9    100    960   43    229
-  0     18    199   1917   18    199   1917   85    459
- 
+     Reading data from directory:
+     /home/giannozz/q-e-mio/tempdir/di.save/
+     Message from routine pw_readschema_file:
+     failed retrieving input info from xml file, please check it
 
-     nbndx  =     4  nbnd   =     4  natomwfc =     8  npwx   =     133
-     nelec  =   8.00  nkb   =     2  ngl    =      52
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      = PZ ( 1  1  0  0 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+ 
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         199     199     85                 1917     1917     459
+ 
  
   Spin CASE ( default = unpolarized )
  
@@ -50,152 +61,39 @@
   Opening pp-files 
  
  
-  ---------------
-  *** Compute  A 
-  ---------------
+  --------------------------
+  *** Compute  A projections
+  --------------------------
  
- AMN
- iknum =       64
-       1
-       2
-       3
-       4
-       5
-       6
-       7
-       8
-       9
-      10
-      11
-      12
-      13
-      14
-      15
-      16
-      17
-      18
-      19
-      20
-      21
-      22
-      23
-      24
-      25
-      26
-      27
-      28
-      29
-      30
-      31
-      32
-      33
-      34
-      35
-      36
-      37
-      38
-      39
-      40
-      41
-      42
-      43
-      44
-      45
-      46
-      47
-      48
-      49
-      50
-      51
-      52
-      53
-      54
-      55
-      56
-      57
-      58
-      59
-      60
-      61
-      62
-      63
-      64
- 
+  AMN: iknum =       64
+       1       2       3       4       5       6       7       8       9      10
+      11      12      13      14      15      16      17      18      19      20
+      21      22      23      24      25      26      27      28      29      30
+      31      32      33      34      35      36      37      38      39      40
+      41      42      43      44      45      46      47      48      49      50
+      51      52      53      54      55      56      57      58      59      60
+      61      62      63      64
+
   AMN calculated
  
   ---------------
   *** Compute  M 
   ---------------
  
+  MMN: iknum =       64
+       1       2       3       4       5       6       7       8       9      10
+      11      12      13      14      15      16      17      18      19      20
+      21      22      23      24      25      26      27      28      29      30
+      31      32      33      34      35      36      37      38      39      40
+      41      42      43      44      45      46      47      48      49      50
+      51      52      53      54      55      56      57      58      59      60
+      61      62      63      64
 
-MMN
- iknum =       64
-       1
-       2
-       3
-       4
-       5
-       6
-       7
-       8
-       9
-      10
-      11
-      12
-      13
-      14
-      15
-      16
-      17
-      18
-      19
-      20
-      21
-      22
-      23
-      24
-      25
-      26
-      27
-      28
-      29
-      30
-      31
-      32
-      33
-      34
-      35
-      36
-      37
-      38
-      39
-      40
-      41
-      42
-      43
-      44
-      45
-      46
-      47
-      48
-      49
-      50
-      51
-      52
-      53
-      54
-      55
-      56
-      57
-      58
-      59
-      60
-      61
-      62
-      63
-      64
- 
   MMN calculated
+ 
+  -----------------------------------
+  *** Orbital terms are not computed 
+  -----------------------------------
  
   ----------------
   *** Write bands 
@@ -206,7 +104,25 @@ MMN
   *** Plot info is not printed 
   -----------------------------
  
+  -----------------------------
+  *** Parity info is not printed 
+  -----------------------------
+ 
   ------------
   *** Stop pp 
   ------------
+ 
+ 
+     init_pw2wan  :      0.10s CPU      0.11s WALL (       1 calls)
+     compute_amn  :      2.55s CPU      2.55s WALL (       1 calls)
+     compute_mmn  :      0.25s CPU      0.27s WALL (       1 calls)
+ 
+     PW2WANNIER   :      2.91s CPU      2.94s WALL
+
+ 
+   This run was terminated on:  15:58:54   1Mar2019            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=
  
