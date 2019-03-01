@@ -108,10 +108,12 @@ $gui addModule module ld "LD1.X" [file join $env(PWGUI) modules atomic atomic.tc
 # ------------------------------------------------------------------------
 # help Files
 # ------------------------------------------------------------------------
-#$gui addHelp help usersguide "User's Guide for Quantum-ESPRESSO" [file join $env(PWGUI) doc pwdocs users-guide users-guide.html]
-$gui addHelp help usersguide "User's Guide for Quantum-ESPRESSO" [file join $env(PWGUI) doc pwdocs user_guide user_guide.html] word
 
-$gui addHelp separator
+set user_guide_html [file join $env(PWGUI) doc pwdocs user_guide user_guide.html]
+if { [file exists $user_guide_html] } {
+    $gui addHelp help usersguide "User's Guide for Quantum-ESPRESSO" $user_guide_html word
+    $gui addHelp separator
+}
 
 $gui addHelp help pw           "PW.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PW.html] none
 $gui addHelp help neb       "NEB.DAT Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_NEB.html] none

@@ -19,7 +19,7 @@ all: input_html make_user_guide
 
 
 links:
-	( cd $(TOPDIR); $(MAKE) doc )
+	- ( cd $(TOPDIR); $(MAKE) doc )
 	for file in $(LINK_FILES); do \
 		if test ! -f $$file; then ln -sf $(QE_DOC_DIR)/$$file . ; fi; \
 	done
@@ -52,7 +52,7 @@ make_user_guide: links
 
 
 clean: clean_links
-	-rm -f INPUT_*.html *~
+	-rm -f INPUT_*.html INPUT_*.txt *~
 	-rm -f *.tex *.aux *.log *.out *.toc *.gif *.pdf *.png
 	-rm -rf user_guide/	
 

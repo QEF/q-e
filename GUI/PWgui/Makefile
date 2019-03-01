@@ -68,6 +68,7 @@ clean:
 	-rm -f *~ */*~ */*/*~
 	-rm -f *.tgz 
 	-rm -f *.tar
+	-cd doc/pwdocs; $(MAKE) clean
 
 veryclean: 
 	$(MAKE) clean
