@@ -98,7 +98,6 @@ doc:
 	cd Doc; $(MAKE)
 
 clean:
-	- rm -f qe-modes/$(ELISP_FILES)	
 	- cd Doc; $(MAKE) clean
 
 veryclean: clean

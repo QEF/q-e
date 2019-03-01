@@ -321,7 +321,7 @@ clean :
 		CPV LAXlib FFTXlib UtilXlib Modules PP PW EPW KS_Solvers \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
 		atomic clib LR_Modules pwtools upftools \
-		dev-tools extlibs Environ TDDFPT PHonon HP GWW \
+		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
