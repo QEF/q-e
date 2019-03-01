@@ -337,8 +337,7 @@ veryclean : clean
 	- @(cd install ; $(MAKE) -f plugins_makefile veryclean)
 	- @(cd install ; $(MAKE) -f extlibs_makefile veryclean)
 	- rm -rf install/patch-plumed
-	- cd install ; rm -f config.log configure.msg config.status \
-		CPV/version.h ChangeLog* intel.pcl */intel.pcl
+	- cd install ; rm -f config.log configure.msg config.status
 	- rm -rf include/configure.h install/make_wannier90.inc
 	- cd install ; rm -fr autom4te.cache
 	- cd install; ./clean.sh ; cd -
@@ -391,10 +390,10 @@ tar-qe-modes :
 # "latex2html" and "convert" (from Image-Magick) are needed.
 doc : 
 	if test -d Doc ; then \
-	( cd Doc ; $(MAKE) TLDEPS= all ) ; fi
+	( cd Doc ; $(MAKE) VERSION=6.4 TLDEPS= all ) ; fi
 	for dir in */Doc; do \
 	( if test -f $$dir/Makefile ; then \
-	( cd $$dir; $(MAKE) TLDEPS= all ) ; fi ) ;  done
+	( cd $$dir; $(MAKE) VERSION=6.4 TLDEPS= all ) ; fi ) ;  done
 
 doc_clean :
 	if test -d Doc ; then \
