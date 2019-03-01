@@ -1048,6 +1048,7 @@ SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
   USE kinds,           ONLY : DP
   USE fft_base,        ONLY : dfftp
   USE fft_interfaces,  ONLY : fwfft
+  USE lsda_mod,        ONLY : nspin
   !
   IMPLICIT NONE
   !
@@ -1061,6 +1062,7 @@ SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
   !
   COMPLEX( DP ), ALLOCATABLE :: rhog( : )
   COMPLEX( DP ), ALLOCATABLE :: aux( : )
+  REAL( DP ), ALLOCATABLE :: vaux(:,:)
   INTEGER :: is
   !
   ! ... bring the (unsymmetrized) rho(r) to G-space (use aux as work array)
@@ -1074,9 +1076,13 @@ SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
   !
   ! ... compute VH(r) from n(G)
   !
-  CALL v_h( rhog, ehart, charge, v )
+  ALLOCATE( vaux( dfftp%nnr, nspin ) )
+  vaux = 0.D0
+  CALL v_h( rhog, ehart, charge, vaux )
+  v(:) = v(:) + vaux(:,1)
   !
   DEALLOCATE( rhog )
+  DEALLOCATE( vaux )
   !
   RETURN
   !
