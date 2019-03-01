@@ -1,5 +1,5 @@
 TOPDIR   = $(shell cd ../..; pwd)
-VERSION  = svn
+VERSION  = 6.4
 GEN_MODE = $(TOPDIR)/dev-tools/gen-emacs-mode
 LATEX    = pdflatex
 
