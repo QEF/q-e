@@ -28,7 +28,7 @@ namespace eval ::helpdoc::gui_help {
 	if { [info exists ::guib::moduleObj::module_item($name)] } {
 	    if { $::guib::moduleObj::module_item(ident,$name) != "" } {
 		switch -- $::guib::moduleObj::module_item($name) {
-		    var - dimension - table - text {
+		    var - dimension - multidimension - table - text {
 			# important: we must pass from name to ident		    
 			
 			addHelp_ $::guib::moduleObj::module_item(ident,$name) $helpTxt
@@ -46,7 +46,7 @@ namespace eval ::helpdoc::gui_help {
 	    if { [info exists ::guib::moduleObj::module_item($name)] } {
 		if { $::guib::moduleObj::module_item(ident,$name) != "" } {
 		    switch -- $::guib::moduleObj::module_item($name) {
-			var - dimension - table  {
+			var - dimension - multidimension - table  {
 			    lappend ok_names $::guib::moduleObj::module_item(ident,$name)
 			}
 			
@@ -62,7 +62,7 @@ namespace eval ::helpdoc::gui_help {
 		if { [info exists ::guib::moduleObj::module_item($name)] } {
 		    if { $::guib::moduleObj::module_item(ident,$name) != "" } {
 			switch -- $::guib::moduleObj::module_item($name) {
-			    var - dimension - table  {
+			    var - dimension - multidimension - table  {
 				lappend ok_names $::guib::moduleObj::module_item(ident,$name)
 			    }
 			    
