@@ -44,13 +44,9 @@ make_user_guide: links
 	rm -rf user_guide/
 	cp -a $(QE_DOC_DIR)/user_guide .
 	cd user_guide/; \
-	for file in *.png; do \
-		convert $$file $${file%.png}.gif; \
-		rm -f $$file; \
-	done; \
 	for file in *.html; do \
 		cp $$file /tmp/$$file; \
-		cat /tmp/$$file | sed 's/\.png/\.gif/g' - | sed 's/&nbsp;/ /g' - > $$file; \
+		cat /tmp/$$file | sed 's/&nbsp;/ /g' - > $$file; \
 		rm -f /tmp/$$file; \
 	done
 
