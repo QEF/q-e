@@ -3,7 +3,7 @@
 ------------------------------------------------------------------------
 INPUT FILE DESCRIPTION
 
-Program: ph.x / PWscf / Quantum Espresso (version: svn)
+Program: ph.x / PWscf / Quantum Espresso (version: 6.4)
 ------------------------------------------------------------------------
 
 
@@ -489,6 +489,22 @@ NAMELIST: &INPUTPH
                    with offset determined by k1,k2,k3.
    +--------------------------------------------------------------------
    
+   +--------------------------------------------------------------------
+   Variable:       read_dns_bare
+   
+   Type:           LOGICAL
+   Default:        .false.
+   Description:    If .true. the PH code tries to read three files in the DFPT+U
+                   calculation: dns_orth, dns_bare, d2ns_bare.
+                   dns_orth and dns_bare are the first-order variations of
+                   the occupation matrix, while d2ns_bare is the second-order
+                   variation of the occupation matrix. These matrices are
+                   computed only once during the DFPT+U calculation. However,
+                   their calculation (especially of d2ns_bare) is computationally
+                   expensive, this is why they are written to file and then can be
+                   read (e.g. for restart) in order to save time.
+   +--------------------------------------------------------------------
+   
    ///---
       SPECIFICATION OF IRREDUCIBLE REPRESENTATION
       
@@ -816,4 +832,4 @@ ________________________________________________________________________
    information.
    
 
-This file has been created by helpdoc utility on Fri Jun 22 17:11:33 CEST 2018
+This file has been created by helpdoc utility on Fri Mar 01 17:57:19 CET 2019
