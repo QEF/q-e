@@ -1,4 +1,4 @@
-VERSION = svn
+VERSION = git
 HELPDOC = ../../dev-tools/helpdoc -version $(VERSION)
 LATEX   = pdflatex
 LATEX2HTML = latex2html
