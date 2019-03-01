@@ -10,7 +10,7 @@
 8. verify that install/configure is updated and aligned with install/configure.ac
 9. update version number in Modules/version.f90
 10. set a git branch "qe-x.y[.z]" for version x.y[.z]
-11. align github to gitlab
+11. align master to develop, github to gitlab
 12. make packages on gitlab and github
 13. if there are changes to che schema, copy the new schema to 
 quantumespresso@qe.safevps.it:/storage/vhosts/quantum-espresso.org/ns/qes

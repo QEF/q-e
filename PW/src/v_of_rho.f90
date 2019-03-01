@@ -1043,56 +1043,39 @@ END SUBROUTINE v_hubbard_nc
 SUBROUTINE v_h_of_rho_r( rhor, ehart, charge, v )
   !----------------------------------------------------------------------------
   !
-  ! ... Hartree potential VH(r) from a density in R space n(r) 
+  ! ... Hartree potential VH(r) from a density in R space n(r)
   !
   USE kinds,           ONLY : DP
   USE fft_base,        ONLY : dfftp
   USE fft_interfaces,  ONLY : fwfft
-  USE lsda_mod,        ONLY : nspin
   !
   IMPLICIT NONE
   !
   ! ... Declares variables
   !
-  REAL( DP ), INTENT(IN)     :: rhor( dfftp%nnr, nspin )
-  REAL( DP ), INTENT(INOUT)  :: v( dfftp%nnr, nspin )
+  REAL( DP ), INTENT(IN)     :: rhor( dfftp%nnr )
+  REAL( DP ), INTENT(INOUT)  :: v( dfftp%nnr )
   REAL( DP ), INTENT(OUT)    :: ehart, charge
   !
   ! ... Local variables
   !
-  COMPLEX( DP ), ALLOCATABLE :: rhog( : , : )
+  COMPLEX( DP ), ALLOCATABLE :: rhog( : )
   COMPLEX( DP ), ALLOCATABLE :: aux( : )
   INTEGER :: is
   !
   ! ... bring the (unsymmetrized) rho(r) to G-space (use aux as work array)
   !
-  ALLOCATE( rhog( dfftp%ngm, nspin ) )
+  ALLOCATE( rhog( dfftp%ngm ) )
   ALLOCATE( aux( dfftp%nnr ) )
-  DO is = 1, nspin
-     aux(:) = CMPLX(rhor( : , is ),0.D0,kind=dp) 
-     CALL fwfft ('Rho', aux, dfftp)
-     rhog(:,is) = aux(dfftp%nl(:))
-  END DO
+  aux = CMPLX(rhor,0.D0,kind=dp)
+  CALL fwfft ('Rho', aux, dfftp)
+  rhog(:) = aux(dfftp%nl(:))
   DEALLOCATE( aux )
   !
-  ! ... compute VH(r) from n(G) 
+  ! ... compute VH(r) from n(G)
   !
-  !^^ ... TEMPORARY FIX (newlsda-CPV) ...
-  IF ( nspin==2 ) THEN
-     rhog(:,1) = rhog(:,1) + rhog(:,2) 
-     rhog(:,2) = rhog(:,1) - rhog(:,2)*2._dp
-  ENDIF
-  !^^.......................
-  !     
-  CALL v_h( rhog(:,1), ehart, charge, v )
+  CALL v_h( rhog, ehart, charge, v )
   !
-  !^^ ... TEMPORARY FIX (newlsda) ...
-  IF ( nspin==2 ) THEN
-     rhog(:,1) = ( rhog(:,1) + rhog(:,2) )*0.5_dp
-     rhog(:,2) = rhog(:,1) - rhog(:,2)
-  ENDIF
-  !^^.......................
-  !  
   DEALLOCATE( rhog )
   !
   RETURN
@@ -1102,7 +1085,7 @@ END SUBROUTINE v_h_of_rho_r
 SUBROUTINE gradv_h_of_rho_r( rho, gradv )
   !----------------------------------------------------------------------------
   !
-  ! ... Gradient of Hartree potential in R space from a total 
+  ! ... Gradient of Hartree potential in R space from a total
   !     (spinless) density in R space n(r)
   !
   USE kinds,           ONLY : DP

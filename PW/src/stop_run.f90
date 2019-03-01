@@ -50,7 +50,6 @@ SUBROUTINE stop_run( exit_status )
   !
   CALL environment_end( 'PWSCF' )
   !
-  CALL unset_mpi_comm_4_solvers()
   CALL mp_global_end ()
   !
 END SUBROUTINE stop_run

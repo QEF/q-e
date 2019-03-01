@@ -1317,7 +1317,7 @@ CONTAINS
     step_counter = step_counter+1
     !
     step_obj%tagname="step"
-    step_obj%n_step = step_counter
+    step_obj%n_step = i_step 
     !
     CALL qes_init( scf_conv_obj,"scf_conv", scf_has_converged, n_scf_steps, scf_error )
     !

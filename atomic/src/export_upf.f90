@@ -393,9 +393,9 @@ SUBROUTINE export_upf(filename, unit_loc)
       ENDDO
 
       upf%gipaw_vlocal_ae(1:upf%mesh) &
-            = grid%r(1:upf%mesh) * vpot(1:mesh,1)
+            = grid%r(1:upf%mesh) * vpot(1:upf%mesh,1)
       upf%gipaw_vlocal_ps(1:upf%mesh) &
-            = grid%r(1:upf%mesh) * vpstot(1:mesh,1)
+            = grid%r(1:upf%mesh) * vpstot(1:upf%mesh,1)
 
       upf%gipaw_wfs_el(1:nw)     = elts(1:nw)
       upf%gipaw_wfs_ll(1:nw)     = lltsc(1:nw,1)
