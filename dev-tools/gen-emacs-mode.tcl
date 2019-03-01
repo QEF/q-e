@@ -67,7 +67,7 @@ proc ::helpdoc::getFontlockKeys {tree node action} {
 		lappend fontlock(namelists) $name
 		lappend defun($module,namelists) $name
 	    }
-	    var - dimension {
+	    var - dimension - multidimension {
 		if { $inside_namelist } {
 		    set bare_name [lindex [split $name \(] 0]; # strips "(index)" from variable's name if var is a dimension
 		    lappend fontlock(vars) $bare_name

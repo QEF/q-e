@@ -27,7 +27,10 @@
   <!--    *** NAMELIST ***  -->
 
   <xsl:template match="namelist">
-    <xsl:apply-templates match="descendant::var | descendant::vargroup | descendant::dimension | descendant::dimensiongroup | descendant::table"/>
+    <xsl:apply-templates match="descendant::var | descendant::vargroup |
+				descendant::dimension | descendant::dimensiongroup |
+				descendant::multidimension | descendant::multidimensiongroup |
+				descendant::table"/>
   </xsl:template>
 
 
@@ -44,8 +47,10 @@
       }
     </xsl:if>
     
-    <xsl:apply-templates select="descendant::var | descendant::vargroup | descendant::dimension |
-				 descendant::dimensiongroup | descendant::list | descendant::table"
+    <xsl:apply-templates select="descendant::var | descendant::vargroup |
+				 descendant::dimension | descendant::dimensiongroup |
+				 descendant::multidimension | descendant::multidimensiongroup |
+				 descendant::list | descendant::table"
 				 mode="card_description"/>
   </xsl:template>
 
@@ -59,17 +64,17 @@
   </xsl:template>
   
 
-  <!--    *** VAR | DIMENSION | LIST ***  -->
+  <!--    *** VAR | DIMENSION | MULTIDIMENSION | LIST ***  -->
 
-  <xsl:template match="var | dimension | vargroup | dimensiongroup |
+  <xsl:template match="var | dimension | multidimension | vargroup | dimensiongroup | multidimensiongroup |
 		       list | list/format" mode="card_description">
     <xsl:if test="info != '' or options != '' or status != '' or see != ''">
       <xsl:apply-templates select="."/>
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="var | dimension">
-    <xsl:if test="name(..) != 'vargroup' and name(..) != 'dimensiongroup'">
+  <xsl:template match="var | dimension | multidimension">
+    <xsl:if test="name(..) != 'vargroup' and name(..) != 'dimensiongroup' and name(..) != 'multidimensiongroup'">
       help <xsl:value-of select="@name"/> {
       <ul>      
 	<xsl:choose>
@@ -78,6 +83,9 @@
 	  </xsl:when>
 	  <xsl:when test="name(.)='dimension'">
 	    <li><xsl:text>&#160;</xsl:text> <em>Variables: </em> <big><b><xsl:value-of select="@name"/>(i), i=<xsl:value-of select="@start"/>,<xsl:value-of select="@end"/></b></big></li><br/>
+	  </xsl:when>
+	  <xsl:when test="name(.)='multidimension'">
+	    <li><xsl:text>&#160;</xsl:text> <em>Variables: </em> <big><b><xsl:value-of select="@name"/>(<xsl:value-of select="@indexes"/>), (<xsl:value-of select="@indexes"/>) = (<xsl:value-of select="@start"/>) ... (<xsl:value-of select="@end"/>)</b></big></li><br/>
 	  </xsl:when>
 	</xsl:choose>
 
@@ -120,11 +128,11 @@
     }
   </xsl:template>
 
-  <!-- *** VARGROUP | DIMENSIONGROUP *** -->
+  <!-- *** VARGROUP | DIMENSIONGROUP | MULTIDIMENSIONGROUP *** -->
 
-  <xsl:template match="vargroup | dimensiongroup">
+  <xsl:template match="vargroup | dimensiongroup | multidimensiongroup">
     grouphelp {
-    <xsl:for-each select="var | dimension">
+    <xsl:for-each select="var | dimension | multidimension">
       <xsl:value-of select="@name"/><xsl:text> </xsl:text> 
     </xsl:for-each>
     } {
@@ -146,6 +154,19 @@
 		<xsl:value-of select="@name"/>(i), 
 		<xsl:if test="position()=last()"> 
 		  i=<xsl:value-of select="../@start"/>,<xsl:value-of select="../@end"/>
+		</xsl:if>
+	      </xsl:for-each>
+	  </b></big>
+	</li><br/>
+      </xsl:if>
+
+      <xsl:if test="name(.)='multidimensiongroup'">
+	<li><xsl:text>&#160;</xsl:text> <em>Variables: </em>
+	  <big><b>
+	      <xsl:for-each select="multidimension">
+		<xsl:value-of select="@name"/>(<xsl:value-of select="@indexes"/>),
+		<xsl:if test="position()=last()"> 
+		  (<xsl:value-of select="@indexes"/>) = (<xsl:value-of select="@start"/>) ... (<xsl:value-of select="@end"/>)
 		</xsl:if>
 	      </xsl:for-each>
 	  </b></big>
